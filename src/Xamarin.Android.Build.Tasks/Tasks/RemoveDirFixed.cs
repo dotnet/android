@@ -28,6 +28,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Runtime.InteropServices;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
@@ -37,6 +39,9 @@ namespace Xamarin.Android.Tasks
 	public class RemoveDirFixed : AndroidTask
 	{
 		public override string TaskPrefix => "RDF";
+
+		const int ERROR_ACCESS_DENIED = -2147024891;
+		const int ERROR_SHARING_VIOLATION = -2147024864;
 
 		public override bool RunTask ()
 		{
@@ -48,36 +53,41 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ($"Directory did not exist: {fullPath}");
 					continue;
 				}
+				int retryCount = 0;
+				int attempts = Files.GetFileWriteRetryAttempts ();
+				int delay = Files.GetFileWriteRetryDelay ();
 				try {
-					// try to do a normal "fast" delete of the directory.
-					Directory.Delete (fullPath, true);
-					temporaryRemovedDirectories.Add (directory);
-				} catch (UnauthorizedAccessException ex) {
-					// if that fails we probably have readonly files (or locked files)
-					// so try to make them writable and try again.
-					try {
-						Files.SetDirectoryWriteable (fullPath);
-						Directory.Delete (fullPath, true);
-						temporaryRemovedDirectories.Add (directory);
-					} catch (Exception inner) {
-						Log.LogUnhandledException (TaskPrefix, ex);
-						Log.LogUnhandledException (TaskPrefix, inner);
-					}
-				} catch (DirectoryNotFoundException ex) {
-					// This could be a file inside the directory over MAX_PATH.
-					// We can attempt using the \\?\ syntax.
-					if (OS.IsWindows) {
+					while (retryCount <= attempts) {
 						try {
-							fullPath = Files.ToLongPath (fullPath);
-							Log.LogDebugMessage ("Trying long path: " + fullPath);
+							// try to do a normal "fast" delete of the directory.
+							// only do the set writable on the second attempt
+							if (retryCount == 1)
+								Files.SetDirectoryWriteable (fullPath);
 							Directory.Delete (fullPath, true);
 							temporaryRemovedDirectories.Add (directory);
-						} catch (Exception inner) {
-							Log.LogUnhandledException (TaskPrefix, ex);
-							Log.LogUnhandledException (TaskPrefix, inner);
+							break;
+						} catch (Exception e) {
+							switch (e) {
+								case DirectoryNotFoundException:
+									if (OS.IsWindows) {
+										fullPath = Files.ToLongPath (fullPath);
+										Log.LogDebugMessage ("Trying long path: " + fullPath);
+										break;
+									}
+									throw;
+								case UnauthorizedAccessException:
+								case IOException:
+									int code = Marshal.GetHRForException(e);
+									if ((code != ERROR_ACCESS_DENIED && code != ERROR_SHARING_VIOLATION) || retryCount >= attempts) {
+										throw;
+									};
+									break;
+								default:
+									throw;
+							}
+							Thread.Sleep (delay);
+							retryCount++;
 						}
-					} else {
-						Log.LogUnhandledException (TaskPrefix, ex);
 					}
 				} catch (Exception ex) {
 					Log.LogUnhandledException (TaskPrefix, ex);

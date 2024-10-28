@@ -207,7 +207,7 @@ namespace xamarin::android
 		template<size_t N, size_t MaxStackSize, typename TStorage, typename TChar = char>
 		static bool ends_with (internal::string_base<MaxStackSize, TStorage, TChar> const& str, const char (&end)[N]) noexcept
 		{
-			constexpr size_t end_length = N - 1;
+			constexpr size_t end_length = N - 1uz;
 
 			size_t len = str.length ();
 			if (len < end_length) [[unlikely]] {
@@ -220,7 +220,7 @@ namespace xamarin::android
 		template<size_t N, size_t MaxStackSize, typename TStorage, typename TChar = char>
 		static bool ends_with (internal::string_base<MaxStackSize, TStorage, TChar> const& str, std::array<TChar, N> const& end) noexcept
 		{
-			constexpr size_t end_length = N - 1;
+			constexpr size_t end_length = N - 1uz;
 
 			size_t len = str.length ();
 			if (len < end_length) [[unlikely]] {
@@ -233,7 +233,7 @@ namespace xamarin::android
 		template<size_t N, size_t MaxStackSize, typename TStorage, typename TChar = char>
 		static bool ends_with (internal::string_base<MaxStackSize, TStorage, TChar> const& str, helper_char_array<N> const& end) noexcept
 		{
-			constexpr size_t end_length = N - 1;
+			constexpr size_t end_length = N - 1uz;
 
 			size_t len = str.length ();
 			if (len < end_length) [[unlikely]] {
@@ -250,8 +250,8 @@ namespace xamarin::android
 				return nullptr;
 			}
 
-			for (size_t i = str.length (); i > 0; i--) {
-				const size_t index = i - 1;
+			for (size_t i = str.length (); i > 0uz; i--) {
+				const size_t index = i - 1uz;
 				if (str[index] == ch) {
 					return str.get () + index;
 				}
@@ -304,7 +304,7 @@ namespace xamarin::android
 			return strdup_new (buf.get (), buf.length ());
 		}
 
-		static char *strdup_new (xamarin::android::internal::string_segment const& s, size_t from_index = 0) noexcept
+		static char *strdup_new (xamarin::android::internal::string_segment const& s, size_t from_index = 0uz) noexcept
 		{
 			if (from_index >= s.length ()) {
 				return nullptr;

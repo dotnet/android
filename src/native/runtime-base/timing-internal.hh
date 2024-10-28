@@ -82,9 +82,9 @@ namespace xamarin::android::internal
 		// time of class instantiation.  It's an arbitrary value, but it should
 		// be large enough to not require any dynamic reallocation of memory at
 		// the run time.
-		static constexpr size_t INITIAL_EVENT_VECTOR_SIZE = 4096;
-		static constexpr uint32_t ns_in_millisecond = 1000000;
-		static constexpr uint32_t ms_in_second = 1000;
+		static constexpr size_t INITIAL_EVENT_VECTOR_SIZE = 4096uz;
+		static constexpr uint32_t ns_in_millisecond = 1000000u;
+		static constexpr uint32_t ms_in_second = 1000u;
 		static constexpr uint32_t ns_in_second = ms_in_second * ns_in_millisecond;
 
 	protected:
@@ -440,7 +440,7 @@ namespace xamarin::android::internal
 		}
 
 	private:
-		std::atomic_size_t next_event_index = 0;
+		std::atomic_size_t next_event_index = 0uz;
 		xamarin::android::mutex event_vector_realloc_mutex;
 		std::vector<TimingEvent> events;
 

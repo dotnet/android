@@ -39,7 +39,7 @@ Util::recv_uninterrupted (int fd, void *buf, size_t len)
 	using nbytes_type = size_t;
 
 	ssize_t res;
-	size_t total = 0;
+	size_t total = 0uz;
 	int flags = 0;
 	nbytes_type nbytes;
 
@@ -47,9 +47,9 @@ Util::recv_uninterrupted (int fd, void *buf, size_t len)
 		nbytes = static_cast<nbytes_type>(len - total);
 		res = recv (fd, (char *) buf + total, nbytes, flags);
 
-		if (res > 0)
+		if (res > 0z)
 			total += static_cast<size_t>(res);
-	} while ((res > 0 && total < len) || (res == -1 && errno == EINTR));
+	} while ((res > 0z && total < len) || (res == -1z && errno == EINTR));
 
 	return static_cast<ssize_t>(total);
 }
@@ -64,8 +64,12 @@ Util::monodroid_load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, const
 	mono_assembly_name_free (aname);
 
 	if (assm == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
-		log_fatal (LOG_DEFAULT, "Unable to find assembly '%s'.", basename);
-		Helpers::abort_application ();
+		Helpers::abort_application (
+			monodroid_strdup_printf (
+				"Unable to find assembly '%s'.",
+				basename
+			)
+		);
 	}
 	return assm;
 }
@@ -91,8 +95,12 @@ Util::monodroid_load_assembly (MonoDomain *domain, const char *basename)
 	mono_assembly_name_free (aname);
 
 	if (!assm) {
-		log_fatal (LOG_DEFAULT, "Unable to find assembly '%s'.", basename);
-		Helpers::abort_application ();
+		Helpers::abort_application (
+			monodroid_strdup_printf (
+				"Unable to find assembly '%s'.",
+				basename
+			)
+		);
 	}
 	return assm;
 }
@@ -124,13 +132,13 @@ Util::path_combine (const char *path1, const char *path2)
 	if (path2 == nullptr)
 		return strdup_new (path1);
 
-	size_t len = Helpers::add_with_overflow_check<size_t> (strlen (path1), strlen (path2) + 2);
+	size_t len = Helpers::add_with_overflow_check<size_t> (strlen (path1), strlen (path2) + 2uz);
 	char *ret = new char [len];
 	*ret = '\0';
 
-	strncat (ret, path1, len - 1);
-	strncat (ret, "/", len - 1);
-	strncat (ret, path2, len - 1);
+	strncat (ret, path1, len - 1uz);
+	strncat (ret, "/", len - 1uz);
+	strncat (ret, path2, len - 1uz);
 
 	return ret;
 }
@@ -325,7 +333,7 @@ Util::monodroid_strsplit (const char *str, const char *delimiter, size_t max_tok
 	}
 
 	const char *p_str = str;
-	size_t tokens_in_str = 0;
+	size_t tokens_in_str = 0uz;
 	size_t delimiter_len = strlen (delimiter);
 
 	while (*p_str != '\0') {
@@ -339,10 +347,10 @@ Util::monodroid_strsplit (const char *str, const char *delimiter, size_t max_tok
 		p_str += bytes;
 	}
 
-	size_t vector_size = (max_tokens > 0 && tokens_in_str >= max_tokens) ? max_tokens + 1 : tokens_in_str + 2; // Includes the terminating 'nullptr` entry
+	size_t vector_size = (max_tokens > 0uz && tokens_in_str >= max_tokens) ? max_tokens + 1uz : tokens_in_str + 2uz; // Includes the terminating 'nullptr` entry
 
 	char **vector = static_cast<char**>(xmalloc (Helpers::multiply_with_overflow_check<size_t> (sizeof(char*), vector_size)));
-	size_t vector_idx = 0;
+	size_t vector_idx = 0uz;
 
 	while (*str != '\0' && !(max_tokens > 0 && vector_idx + 1 >= max_tokens)) {
 		const char *c = str;
@@ -363,7 +371,7 @@ Util::monodroid_strsplit (const char *str, const char *delimiter, size_t max_tok
 		}
 
 		size_t toklen = static_cast<size_t>((str - c));
-		size_t alloc_size = Helpers::add_with_overflow_check<size_t> (toklen, 1);
+		size_t alloc_size = Helpers::add_with_overflow_check<size_t> (toklen, 1uz);
 		char *token = static_cast<char*>(xmalloc (alloc_size));
 		strncpy (token, c, toklen);
 		token [toklen] = '\0';

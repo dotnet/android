@@ -12,7 +12,6 @@ namespace std {
 	[[noreturn]] void
 	terminate () noexcept
 	{
-		__android_log_write (ANDROID_LOG_FATAL, "monodroid", "std::terminate() called. Aborting.");
-		xamarin::android::Helpers::abort_application ();
+		xamarin::android::Helpers::abort_application ("std::terminate() called. Aborting.");
 	}
 }

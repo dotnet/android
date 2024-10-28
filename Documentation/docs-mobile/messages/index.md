@@ -144,6 +144,7 @@ or 'Help->Report a Problem' in Visual Studio for Mac.
 + [XA1036](xa1036.md): AndroidManifest.xml //uses-sdk/@android:minSdkVersion '29' does not match the $(SupportedOSPlatformVersion) value '21' in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).
 Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn't already exist).
 + [XA1037](xa1037.md): The '{0}' MSBuild property is deprecated and will be removed in .NET {1}. See https://aka.ms/net-android-deprecations for more details.
++ [XA1038](xa1038.md): The '{0}' MSBuild property has an invalid value. Value values are {1}.
 
 ## XA2xxx: Linker
 
@@ -201,6 +202,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4246](xa4246.md): Could not parse POM file '{file}'. - {exception}
 + [XA4247](xa4247.md): Could not resolve POM file for artifact '{artifact}'.
 + [XA4248](xa4248.md): Could not find NuGet package '{nugetId}' version '{version}' in lock file. Ensure NuGet Restore has run since this `<PackageReference>` was added.
++ [XA4235](xa4249.md): Maven artifact specification '{artifact}' is invalid. The correct format is 'group_id:artifact_id:version'.
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}

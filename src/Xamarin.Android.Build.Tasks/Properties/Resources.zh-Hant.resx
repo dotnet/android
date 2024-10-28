@@ -829,7 +829,7 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 </comment>
   </data>
   <data name="XA4315" xml:space="preserve">
-    <value>Ignoring `{0}`. Manifest does not have the required 'package' attribute on the manifest element.</value>
+    <value>正在跳過 `{0}`。Manifest 在 manifest 元素上沒有必要的 'package' 属性。</value>
     <comment>{0} - The path the the file.
 </comment>
   </data>
@@ -1013,6 +1013,13 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>The following are literal names and should not be translated: MSBuild, .NET.
 {0} - The deprecated MSBuild property name
 {1} - The numeric version of .NET</comment>
+  </data>
+  <data name="XA1038" xml:space="preserve">
+    <value>'{0}' MSBuild 屬性有 '{1}' 的無效值。有效的值為下列之一: {2}。</value>
+    <comment>The following are literal names and should not be translated: MSBuild.
+{0} - The MSBuild property name which has invalid values.
+{1} - The current value of the property
+{2} - The list of valid values for the property these can be Comma-separated.</comment>
   </data>
   <data name="XA1039" xml:space="preserve">
     <value>.NET 9 及更新版本不支援 Android 支援程式庫，請移轉至 AndroidX。如需詳細資料，請參閲 https://aka.ms/net-android/androidx。</value>

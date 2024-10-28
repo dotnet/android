@@ -39,14 +39,12 @@
 			<field name="handle" />
 			<field name="handle_type" />
 			<field name="refs_added" />
-			<field name="weak_handle" />
 			<method name="SetHandleOnDeserialized" />
 		</type>
 		<type fullname="Java.Lang.Throwable">
 			<field name="handle" />
 			<field name="handle_type" />
 			<field name="refs_added" />
-			<field name="weak_handle" />
 		</type>
 	</assembly>
 </linker>

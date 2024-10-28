@@ -87,9 +87,9 @@ stages:
           avdApiLevel: 21
           avdAbi: x86
           avdType: default
-        Android23-x86:
+        Android23-x86_64:
           avdApiLevel: 23
-          avdAbi: x86
+          avdAbi: x86_64
           avdType: default
         Android24-x86:
           avdApiLevel: 24

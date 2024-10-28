@@ -43,16 +43,16 @@ const char* xa_get_native_backtrace () noexcept
 	unw_context_t          uc;
 	unw_word_t             ip;
 	unw_word_t             offp;
-	std::array<char, 512>  name_buf;
-	std::array<char, 32>   num_buf; // Enough for text representation of a decimal 64-bit integer + some possible
-									// additions (sign, padding, punctuation etc)
+	std::array<char, 512uz>  name_buf;
+	std::array<char, 32uz>   num_buf; // Enough for text representation of a decimal 64-bit integer + some possible
+	                                  // additions (sign, padding, punctuation etc)
 	const char            *symbol_name;
 	Dl_info                info;
 
 	unw_getcontext (&uc);
 	unw_init_local (&cursor, &uc);
 
-	size_t frame_counter = 0;
+	size_t frame_counter = 0uz;
 
 	std::string trace;
 	while (unw_step (&cursor) > 0) {
@@ -304,7 +304,7 @@ void init_jni (JNIEnv *env) noexcept
 	if (env->ExceptionOccurred ()) {
 		env->ExceptionDescribe ();
 		env->ExceptionClear ();
-		xamarin::android::Helpers::abort_application ();
+		xamarin::android::Helpers::abort_application ("Java exception occurred");
 	}
 
 	bool all_found = assert_valid_jni_pointer (java_lang_Thread, "class", "java.lang.Thread");
@@ -314,7 +314,7 @@ void init_jni (JNIEnv *env) noexcept
 	all_found &= assert_valid_jni_pointer (java_lang_Thread_currentThread, "method", "java.lang.StackTraceElement.toString ()");
 
 	if (!all_found) {
-		xamarin::android::Helpers::abort_application ();
+		xamarin::android::Helpers::abort_application ("JNI failure to look up type or method pointers");
 	}
 }
 

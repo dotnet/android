@@ -86,12 +86,16 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(data);
 	if (header->magic == COMPRESSED_DATA_MAGIC) {
 		if (compressed_assemblies.descriptors == nullptr) [[unlikely]] {
-			log_fatal (LOG_ASSEMBLY, "Compressed assembly found but no descriptor defined");
-			Helpers::abort_application ();
+			Helpers::abort_application (LOG_ASSEMBLY, "Compressed assembly found but no descriptor defined");
 		}
 		if (header->descriptor_index >= compressed_assemblies.count) [[unlikely]] {
-			log_fatal (LOG_ASSEMBLY, "Invalid compressed assembly descriptor index %u", header->descriptor_index);
-			Helpers::abort_application ();
+			Helpers::abort_application (
+				LOG_ASSEMBLY,
+				Util::monodroid_strdup_printf (
+					"Invalid compressed assembly descriptor index %u",
+					header->descriptor_index
+				)
+			);
 		}
 
 		CompressedAssemblyDescriptor &cad = compressed_assemblies.descriptors[header->descriptor_index];
@@ -105,14 +109,26 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 			}
 
 			if (cad.data == nullptr) [[unlikely]] {
-				log_fatal (LOG_ASSEMBLY, "Invalid compressed assembly descriptor at %u: no data", header->descriptor_index);
-				Helpers::abort_application ();
+				Helpers::abort_application (
+					LOG_ASSEMBLY,
+					Util::monodroid_strdup_printf (
+						"Invalid compressed assembly descriptor at %u: no data",
+						header->descriptor_index
+					)
+				);
 			}
 
 			if (header->uncompressed_length != cad.uncompressed_file_size) {
 				if (header->uncompressed_length > cad.uncompressed_file_size) {
-					log_fatal (LOG_ASSEMBLY, "Compressed assembly '%s' is larger than when the application was built (expected at most %u, got %u). Assemblies don't grow just like that!", name, cad.uncompressed_file_size, header->uncompressed_length);
-					Helpers::abort_application ();
+					Helpers::abort_application (
+						LOG_ASSEMBLY,
+						Util::monodroid_strdup_printf (
+							"Compressed assembly '%s' is larger than when the application was built (expected at most %u, got %u). Assemblies don't grow just like that!",
+							name,
+							cad.uncompressed_file_size,
+							header->uncompressed_length
+						)
+					);
 				} else {
 					log_debug (LOG_ASSEMBLY, "Compressed assembly '%s' is smaller than when the application was built. Adjusting accordingly.", name);
 				}
@@ -123,13 +139,26 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 			int ret = LZ4_decompress_safe (data_start, reinterpret_cast<char*>(cad.data), static_cast<int>(assembly_data_size), static_cast<int>(cad.uncompressed_file_size));
 
 			if (ret < 0) {
-				log_fatal (LOG_ASSEMBLY, "Decompression of assembly %s failed with code %d", name, ret);
-				Helpers::abort_application ();
+				Helpers::abort_application (
+					LOG_ASSEMBLY,
+					Util::monodroid_strdup_printf (
+						"Decompression of assembly %s failed with code %d",
+						name,
+						ret
+					)
+				);
 			}
 
 			if (static_cast<uint64_t>(ret) != cad.uncompressed_file_size) {
-				log_debug (LOG_ASSEMBLY, "Decompression of assembly %s yielded a different size (expected %lu, got %u)", name, cad.uncompressed_file_size, static_cast<uint32_t>(ret));
-				Helpers::abort_application ();
+				Helpers::abort_application (
+					LOG_ASSEMBLY,
+					Util::monodroid_strdup_printf (
+						"Decompression of assembly %s yielded a different size (expected %lu, got %u)",
+						name,
+						cad.uncompressed_file_size,
+						static_cast<uint32_t>(ret)
+					)
+				);
 			}
 			cad.loaded = true;
 		}
@@ -209,8 +238,8 @@ EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexc
 		if (Util::should_log (LOG_ASSEMBLY) && map_info.area != nullptr) [[unlikely]] {
 			const char *p = (const char*) file.data;
 
-			std::array<char, 9> header;
-			for (size_t j = 0; j < header.size () - 1; ++j)
+			std::array<char, 9uz> header;
+			for (size_t j = 0uz; j < header.size () - 1uz; ++j)
 				header[j] = isprint (p [j]) ? p [j] : '.';
 			header [header.size () - 1] = '\0';
 
@@ -320,7 +349,7 @@ EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_strin
 
 	MonoAssembly *a = nullptr;
 
-	for (size_t i = 0; i < application_config.number_of_assemblies_in_apk; i++) {
+	for (size_t i = 0uz; i < application_config.number_of_assemblies_in_apk; i++) {
 		a = load_bundled_assembly (bundled_assemblies [i], name, abi_name, loader_data, ref_only);
 		if (a != nullptr) {
 			return a;
@@ -366,8 +395,14 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 	}
 
 	if (hash_entry->descriptor_index >= assembly_store.assembly_count) {
-		log_fatal (LOG_ASSEMBLY, "Invalid assembly descriptor index %u, exceeds the maximum value of %u", hash_entry->descriptor_index, assembly_store.assembly_count - 1);
-		Helpers::abort_application ();
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			Util::monodroid_strdup_printf (
+				"Invalid assembly descriptor index %u, exceeds the maximum value of %u",
+				hash_entry->descriptor_index,
+				assembly_store.assembly_count - 1
+			)
+		);
 	}
 
 	AssemblyStoreEntryDescriptor &store_entry = assembly_store.assemblies[hash_entry->descriptor_index];
@@ -499,8 +534,7 @@ EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nme
 
 	// This is a coding error on our part, crash!
 	if (base == nullptr) {
-		log_fatal (LOG_ASSEMBLY, "Map address not passed to binary_search");
-		Helpers::abort_application ();
+		Helpers::abort_application (LOG_ASSEMBLY, "Map address not passed to binary_search");
 	}
 
 	[[maybe_unused]]
@@ -541,7 +575,7 @@ EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nme
 force_inline const TypeMapModuleEntry*
 EmbeddedAssemblies::binary_search (uint32_t key, const TypeMapModuleEntry *arr, uint32_t n) noexcept
 {
-	ssize_t left = -1;
+	ssize_t left = -1z;
 	ssize_t right = static_cast<ssize_t>(n);
 	ssize_t middle;
 
@@ -855,8 +889,15 @@ EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, size_t size, cons
 	mmap_info.area        = mmap (nullptr, offsetSize, PROT_READ, MAP_PRIVATE, fd, static_cast<off_t>(offsetPage));
 
 	if (mmap_info.area == MAP_FAILED) {
-		log_fatal (LOG_DEFAULT, "Could not `mmap` apk fd %d entry `%s`: %s", fd, filename, strerror (errno));
-		Helpers::abort_application ();
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			Util::monodroid_strdup_printf (
+				"Could not mmap APK fd %d: %s; File=%s",
+				fd,
+				strerror (errno),
+				filename
+			)
+		);
 	}
 
 	mmap_info.size  = offsetSize;
@@ -876,10 +917,15 @@ EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodro
 	int fd;
 
 	if ((fd = open (apk, O_RDONLY)) < 0) {
-		log_error (LOG_DEFAULT, "ERROR: Unable to load application package %s.", apk);
-		Helpers::abort_application ();
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			Util::monodroid_strdup_printf (
+				"ERROR: Unable to load application package %s.",
+				apk
+			)
+		);
 	}
-	log_info (LOG_ASSEMBLY, "APK %s FD: %d", apk, fd);
+	log_debug (LOG_ASSEMBLY, "APK %s FD: %d", apk, fd);
 
 	zip_load_entries (fd, apk, should_register);
 }
@@ -964,7 +1010,7 @@ EmbeddedAssemblies::typemap_load_index (TypeMapIndexHeader &header, size_t file_
 	}
 
 	uint8_t *p = data.get ();
-	for (size_t i = 0; i < type_map_count; i++) {
+	for (size_t i = 0uz; i < type_map_count; i++) {
 		type_maps[i].assembly_name = reinterpret_cast<char*>(p);
 		p += entry_size;
 	}
@@ -997,7 +1043,7 @@ EmbeddedAssemblies::typemap_load_index (int dir_fd, const char *dir_path, const 
 bool
 EmbeddedAssemblies::typemap_load_file (BinaryTypeMapHeader &header, const char *dir_path, const char *file_path, int file_fd, TypeMap &module)
 {
-	size_t alloc_size = Helpers::add_with_overflow_check<size_t> (header.assembly_name_length, 1);
+	size_t alloc_size = Helpers::add_with_overflow_check<size_t> (header.assembly_name_length, 1uz);
 	module.assembly_name = new char[alloc_size];
 
 	ssize_t nread = do_read (file_fd, module.assembly_name, header.assembly_name_length);
@@ -1040,7 +1086,7 @@ EmbeddedAssemblies::typemap_load_file (BinaryTypeMapHeader &header, const char *
 	TypeMapEntry *cur;
 
 	constexpr uint32_t INVALID_TYPE_INDEX = std::numeric_limits<uint32_t>::max ();
-	for (size_t i = 0; i < module.entry_count; i++) {
+	for (size_t i = 0uz; i < module.entry_count; i++) {
 		cur = const_cast<TypeMapEntry*> (&module.java_to_managed[i]);
 		cur->from = reinterpret_cast<char*>(java_pos);
 
@@ -1245,7 +1291,7 @@ EmbeddedAssemblies::register_from_filesystem (const char *lib_dir_path,bool look
 		)
 	);
 
-	size_t assembly_count = 0;
+	size_t assembly_count = 0uz;
 	do {
 		errno = 0;
 		dirent *cur = readdir (lib_dir);

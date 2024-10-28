@@ -14,6 +14,7 @@
 #include "xxhash.hh"
 #include "search.hh"
 #include "strings.hh"
+#include "util.hh"
 
 #if defined (RELEASE)
 #define USE_CACHE 1
@@ -101,7 +102,7 @@ namespace xamarin::android::internal {
 		force_inline static ssize_t find_index (hash_t hash) noexcept
 		{
 			ssize_t idx = Search::binary_search (hash, assembly_image_cache_hashes, number_of_cache_index_entries);
-			return idx >= 0 ? static_cast<ssize_t>(assembly_image_cache_indices[idx]) : -1;
+			return idx >= 0 ? static_cast<ssize_t>(assembly_image_cache_indices[idx]) : -1z;
 
 		}
 #endif // def USE_CACHE
@@ -116,8 +117,13 @@ namespace xamarin::android::internal {
 #if defined (USE_CACHE)
 			ssize_t index = find_index (hash);
 			if (index < 0) {
-				log_fatal (LOG_ASSEMBLY, "Failed to look up image index for hash 0x%zx", hash);
-				Helpers::abort_application ();
+				Helpers::abort_application (
+					LOG_ASSEMBLY,
+					Util::monodroid_strdup_printf (
+						"Failed to look up image index for hash 0x%zx",
+						hash
+					)
+				);
 			}
 
 			// We don't need to worry about locking here.  Even if we're overwriting an entry just set by another

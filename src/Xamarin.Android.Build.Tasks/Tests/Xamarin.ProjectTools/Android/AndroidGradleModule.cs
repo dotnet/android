@@ -17,7 +17,7 @@ namespace Xamarin.ProjectTools
 
 		public int CompileSdk { get; set; } = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
 
-		public int MinSdk { get; set; } = 21;
+		public int MinSdk { get; set; } = XABuildConfig.AndroidMinimumDotNetApiLevel;
 
 		public bool IsApplication { get; set; } = false;
 

@@ -43,7 +43,7 @@ MonodroidRuntime::mono_log_handler (const char *log_domain, const char *log_leve
 
 	__android_log_write (prio, log_domain, message);
 	if (fatal) {
-		Helpers::abort_application ();
+		Helpers::abort_application (message);
 	}
 }
 

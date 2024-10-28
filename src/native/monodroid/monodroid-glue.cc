@@ -83,8 +83,7 @@ MonodroidRuntime::thread_start ([[maybe_unused]] MonoProfiler *prof, [[maybe_unu
 
 	if (r != JNI_OK) {
 #if DEBUG
-		log_fatal (LOG_DEFAULT, "ERROR: Unable to attach current thread to the Java VM!");
-		Helpers::abort_application ();
+		Helpers::abort_application ("ERROR: Unable to attach current thread to the Java VM!");
 #endif
 	}
 }
@@ -158,7 +157,7 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 	pname.append (name, name_len);
 
 	bool is_dll = Util::ends_with (name, SharedConstants::DLL_EXTENSION);
-	size_t file_name_len = pname.length () + 1;
+	size_t file_name_len = pname.length () + 1uz;
 	if (!is_dll)
 		file_name_len += SharedConstants::DLL_EXTENSION.length ();
 
@@ -206,7 +205,7 @@ MonodroidRuntime::should_register_file ([[maybe_unused]] const char *filename)
 		return true;
 	}
 
-	size_t filename_len = strlen (filename) + 1; // includes space for path separator
+	size_t filename_len = strlen (filename) + 1uz; // includes space for path separator
 	for (const char *odir : AndroidSystem::override_dirs) {
 		if (odir == nullptr) {
 			continue;
@@ -234,7 +233,7 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 	}
 
 	int64_t apk_count = static_cast<int64_t>(runtimeApks.get_length ());
-	size_t prev_num_assemblies = 0;
+	size_t prev_num_assemblies = 0uz;
 	bool got_split_config_abi_apk = false;
 	bool got_base_apk = false;
 
@@ -331,11 +330,9 @@ MonodroidRuntime::monodroid_debug_accept (int sock, struct sockaddr_in addr)
 	if (accepted < 0)
 		return -3;
 
-	constexpr const char handshake_msg [] = "MonoDroid-Handshake\n";
-	constexpr size_t handshake_length = sizeof (handshake_msg) - 1;
-
+	constexpr std::string_view msg { "MonoDroid-Handshake\n" };
 	do {
-		res = send (accepted, handshake_msg, handshake_length, 0);
+		res = send (accepted, msg.data (), msg.size (), 0);
 	} while (res == -1 && errno == EINTR);
 	if (res < 0)
 		return -4;
@@ -414,16 +411,16 @@ MonodroidRuntime::parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER
 			options->debug = true;
 
 			if (token.has_at ('=', ARG_DEBUG.length ())) {
-				constexpr size_t arg_name_length = ARG_DEBUG.length () + 1; // Includes the '='
+				constexpr size_t arg_name_length = ARG_DEBUG.length () + 1uz; // Includes the '='
 
 				static_local_string<SMALL_STRING_PARSE_BUFFER_LEN> hostport (token.length () - arg_name_length);
 				hostport.assign (token.start () + arg_name_length, token.length () - arg_name_length);
 
 				string_segment address;
-				size_t field = 0;
-				while (field < 3 && hostport.next_token (':', address)) {
+				size_t field = 0uz;
+				while (field < 3uz && hostport.next_token (':', address)) {
 					switch (field) {
-						case 0: // host
+						case 0uz: // host
 							if (address.empty ()) {
 								log_error (LOG_DEFAULT, "Invalid --debug argument for the host field (empty string)");
 							} else {
@@ -431,13 +428,13 @@ MonodroidRuntime::parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER
 							}
 							break;
 
-						case 1: // sdb_port
+						case 1uz: // sdb_port
 							if (!address.to_integer (sdb_port)) {
 								log_error (LOG_DEFAULT, "Invalid --debug argument for the sdb_port field");
 							}
 							break;
 
-						case 2: // out_port
+						case 2uz: // out_port
 							if (!address.to_integer (out_port)) {
 								log_error (LOG_DEFAULT, "Invalid --debug argument for the sdb_port field");
 							}
@@ -545,8 +542,13 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 		if (options.out_port > 0) {
 			int sock = socket (PF_INET, SOCK_STREAM, IPPROTO_TCP);
 			if (sock < 0) {
-				log_fatal (LOG_DEBUGGER, "Could not construct a socket for stdout and stderr; does your app have the android.permission.INTERNET permission? %s", strerror (errno));
-				Helpers::abort_application ();
+				Helpers::abort_application (
+					LOG_DEBUGGER,
+					Util::monodroid_strdup_printf (
+						"Could not construct a socket for stdout and stderr; does your app have the android.permission.INTERNET permission? %s",
+						strerror (errno)
+					)
+				);
 			}
 
 			sockaddr_in addr;
@@ -557,27 +559,43 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 
 			int r;
 			if ((r = inet_pton (AF_INET, options.host, &addr.sin_addr)) != 1) {
-				log_error (LOG_DEBUGGER, "Could not setup a socket for stdout and stderr: %s",
-						r == -1 ? strerror (errno) : "address not parseable in the specified address family");
-				Helpers::abort_application ();
+				Helpers::abort_application (
+					LOG_DEBUGGER,
+					Util::monodroid_strdup_printf (
+						"Could not setup a socket for stdout and stderr: %s",
+						r == -1 ? strerror (errno) : "address not parseable in the specified address family"
+					)
+				);
 			}
 
 			if (options.server) {
 				int accepted = monodroid_debug_accept (sock, addr);
 				log_warn (LOG_DEBUGGER, "Accepted stdout connection: %d", accepted);
 				if (accepted < 0) {
-					log_fatal (LOG_DEBUGGER, "Error accepting stdout and stderr (%s:%d): %s",
-							     options.host, options.out_port, strerror (errno));
-					Helpers::abort_application ();
+					Helpers::abort_application (
+						LOG_DEBUGGER,
+						Util::monodroid_strdup_printf (
+							"Error accepting stdout and stderr (%s:%d): %s",
+							options.host,
+							options.out_port,
+							strerror (errno)
+						)
+					);
 				}
 
 				dup2 (accepted, 1);
 				dup2 (accepted, 2);
 			} else {
 				if (monodroid_debug_connect (sock, addr) != 1) {
-					log_fatal (LOG_DEBUGGER, "Error connecting stdout and stderr (%s:%d): %s",
-							     options.host, options.out_port, strerror (errno));
-					Helpers::abort_application ();
+					Helpers::abort_application (
+						LOG_DEBUGGER,
+						Util::monodroid_strdup_printf (
+							"Error connecting stdout and stderr (%s:%d): %s",
+							options.host,
+							options.out_port,
+							strerror (errno)
+						)
+					);
 				}
 
 				dup2 (sock, 1);
@@ -682,7 +700,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 }
 
 void
-MonodroidRuntime::cleanup_runtime_config (MonovmRuntimeConfigArguments *args, [[maybe_unused]] void *user_data)
+MonodroidRuntime::cleanup_runtime_config ([[maybe_unused]] MonovmRuntimeConfigArguments *args, [[maybe_unused]] void *user_data)
 {
 	embeddedAssemblies.unmap_runtime_config_blob ();
 }
@@ -690,7 +708,7 @@ MonodroidRuntime::cleanup_runtime_config (MonovmRuntimeConfigArguments *args, [[
 MonoDomain*
 MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain, bool have_split_apks)
 {
-	size_t user_assemblies_count   = 0;
+	size_t user_assemblies_count = 0uz;
 
 	gather_bundled_assemblies (runtimeApks, &user_assemblies_count, have_split_apks);
 
@@ -718,10 +736,12 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 		log_fatal (LOG_DEFAULT, "No assemblies (or assembly blobs) were found in the application APK file(s) or on the filesystem");
 #endif
 		constexpr const char *assemblies_prefix = EmbeddedAssemblies::get_assemblies_prefix ().data ();
-		log_fatal (LOG_DEFAULT, "Make sure that all entries in the APK directory named `%s` are STORED (not compressed)", assemblies_prefix);
-		log_fatal (LOG_DEFAULT, "If Android Gradle Plugin's minification feature is enabled, it is likely all the entries in `%s` are compressed", assemblies_prefix);
-
-		Helpers::abort_application ();
+		Helpers::abort_application (
+			Util::monodroid_strdup_printf (
+				"ALL entries in APK named `%s` MUST be STORED. Gradle's minification may COMPRESS such entries.",
+				assemblies_prefix
+			)
+		);
 	}
 
 	MonoDomain *domain = mono_jit_init_version (const_cast<char*> ("RootDomain"), const_cast<char*> ("mobile"));
@@ -759,16 +779,17 @@ MonodroidRuntime::lookup_bridge_info (MonoClass *klass, const OSBridge::MonoJava
 	info->handle            = mono_class_get_field_from_name (info->klass, const_cast<char*> ("handle"));
 	info->handle_type       = mono_class_get_field_from_name (info->klass, const_cast<char*> ("handle_type"));
 	info->refs_added        = mono_class_get_field_from_name (info->klass, const_cast<char*> ("refs_added"));
-	info->weak_handle       = mono_class_get_field_from_name (info->klass, const_cast<char*> ("weak_handle"));
-	if (info->klass == nullptr || info->handle == nullptr || info->handle_type == nullptr ||
-			info->refs_added == nullptr || info->weak_handle == nullptr) {
-		log_fatal (LOG_DEFAULT, "The type `%s.%s` is missing required instance fields! handle=%p handle_type=%p refs_added=%p weak_handle=%p",
-				type->_namespace, type->_typename,
+	if (info->klass == nullptr || info->handle == nullptr || info->handle_type == nullptr || info->refs_added == nullptr) {
+		Helpers::abort_application (
+			Util::monodroid_strdup_printf (
+				"The type `%s.%s` is missing required instance fields! handle=%p handle_type=%p refs_added=%p",
+				type->_namespace,
+				type->_typename,
 				info->handle,
 				info->handle_type,
-				info->refs_added,
-				info->weak_handle);
-		Helpers::abort_application ();
+				info->refs_added
+			)
+		);
 	}
 }
 
@@ -1069,7 +1090,7 @@ MonodroidRuntime::set_profile_options ()
 	}
 
 	constexpr std::string_view OUTPUT_ARG { "output=" };
-	constexpr size_t start_index = AOT_PREFIX.length () + 1; // one char past ':'
+	constexpr size_t start_index = AOT_PREFIX.length () + 1uz; // one char past ':'
 
 	dynamic_local_string<SENSIBLE_PATH_MAX> output_path;
 	bool have_output_arg = false;
@@ -1172,7 +1193,7 @@ MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly)
 		internal_timing->end_event (total_time_index, true /* uses_more_info */);
 
 		constexpr std::string_view PREFIX { " (domain): " };
-		constexpr size_t PREFIX_SIZE = sizeof(PREFIX) - 1;
+		constexpr size_t PREFIX_SIZE = sizeof(PREFIX) - 1uz;
 
 		dynamic_local_string<SENSIBLE_PATH_MAX + PREFIX_SIZE> more_info { PREFIX };
 		more_info.append_c (assm_name);
@@ -1188,8 +1209,8 @@ MonodroidRuntime::load_assemblies (load_assemblies_context_type ctx, bool preloa
 		total_time_index = internal_timing->start_event (TimingEventKind::AssemblyPreload);
 	}
 
-	size_t i = 0;
-	for (i = 0; i < assemblies.get_length (); ++i) {
+	size_t i = 0uz;
+	for (i = 0uz; i < assemblies.get_length (); ++i) {
 		jstring_wrapper &assembly = assemblies [i];
 		load_assembly (ctx, assembly);
 		// only load the first "main" assembly if we are not preloading.
@@ -1201,7 +1222,7 @@ MonodroidRuntime::load_assemblies (load_assemblies_context_type ctx, bool preloa
 		internal_timing->end_event (total_time_index, true /* uses-more_info */);
 
 		static_local_string<SharedConstants::INTEGER_BASE10_BUFFER_SIZE> more_info;
-		more_info.append (static_cast<uint64_t>(i + 1));
+		more_info.append (static_cast<uint64_t>(i + 1u));
 		internal_timing->add_more_info (total_time_index, more_info);
 	}
 }
@@ -1530,7 +1551,7 @@ JNIEXPORT void JNICALL
 Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                 jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
                                 [[maybe_unused]] jobjectArray externalStorageDirs, jobjectArray assembliesJava, [[maybe_unused]] jstring packageName,
-                                jint apiLevel, [[maybe_unused]] jobjectArray environmentVariables)
+                                [[maybe_unused]] jint apiLevel, [[maybe_unused]] jobjectArray environmentVariables)
 {
 	monodroidRuntime.Java_mono_android_Runtime_initInternal (
 		env,

@@ -21,7 +21,6 @@ namespace Java.Lang {
 	{
 		[NonSerialized] IntPtr key_handle;
 #pragma warning disable CS0649, CS0169, CS0414 // Suppress fields are never used warnings, these fields are used directly by monodroid-glue.cc
-		[NonSerialized] IntPtr weak_handle;
 		[NonSerialized] int refs_added;
 #pragma warning restore CS0649, CS0169, CS0414
 		[NonSerialized] JObjectRefType handle_type;
@@ -117,9 +116,6 @@ namespace Java.Lang {
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		public IntPtr Handle {
 			get {
-				if (weak_handle != IntPtr.Zero)
-					Logger.Log (LogLevel.Warn, "Mono.Android.dll", "Accessing object which is out for collection via original handle");
-
 				return handle;
 			}
 		}

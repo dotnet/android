@@ -36,11 +36,11 @@ class DSOWrapperGenerator
 
 	internal class Config
 	{
-		public Dictionary<AndroidTargetArch, ITaskItem> DSOStubPaths { get; }
+		public Dictionary<AndroidTargetArch, string> DSOStubPaths    { get; }
 		public string AndroidBinUtilsDirectory                       { get; }
 		public string BaseOutputDirectory                            { get; }
 
-		public Config (Dictionary<AndroidTargetArch, ITaskItem> stubPaths, string androidBinUtilsDirectory, string baseOutputDirectory)
+		public Config (Dictionary<AndroidTargetArch, string> stubPaths, string androidBinUtilsDirectory, string baseOutputDirectory)
 		{
 			DSOStubPaths = stubPaths;
 			AndroidBinUtilsDirectory = androidBinUtilsDirectory;
@@ -53,6 +53,30 @@ class DSOWrapperGenerator
 	//
 	const ulong PayloadSectionAlignment = 0x4000;
 
+	public static Config GetConfig (TaskLoggingHelper log, string androidBinUtilsDirectory, string baseOutputDirectory)
+	{
+		var stubPaths = new Dictionary<AndroidTargetArch, string> ();
+		string archiveDSOStubsRootDir = MonoAndroidHelper.GetDSOStubsRootDirectoryPath (androidBinUtilsDirectory);
+
+		foreach (string dir in Directory.EnumerateDirectories (archiveDSOStubsRootDir, "android-*")) {
+			string rid = Path.GetFileName (dir);
+			AndroidTargetArch arch = MonoAndroidHelper.RidToArchMaybe (rid);
+			if (arch == AndroidTargetArch.None) {
+				log.LogDebugMessage ($"Unable to extract a supported RID name from directory path '{dir}'");
+				continue;
+			}
+
+			string stubPath = Path.Combine (dir, "libarchive-dso-stub.so");
+			if (!File.Exists (stubPath)) {
+				throw new InvalidOperationException ($"Internal error: archive DSO stub file '{stubPath}' does not exist");
+			}
+
+			stubPaths.Add (arch, stubPath);
+		}
+
+		return new Config (stubPaths, androidBinUtilsDirectory, baseOutputDirectory);
+	}
+
 	static string GetArchOutputPath (AndroidTargetArch targetArch, Config config)
 	{
 		return Path.Combine (config.BaseOutputDirectory, MonoAndroidHelper.ArchToRid (targetArch), "wrapped");
@@ -62,22 +86,20 @@ class DSOWrapperGenerator
 	/// Puts the indicated file (<paramref name="payloadFilePath"/>) inside an ELF shared library and returns
 	/// path to the wrapped file.
 	/// </summary>
-	public static string WrapIt (AndroidTargetArch targetArch, string payloadFilePath, string outputFileName, BuildApk task)
+	public static string WrapIt (TaskLoggingHelper log, Config config, AndroidTargetArch targetArch, string payloadFilePath, string outputFileName)
 	{
-		TaskLoggingHelper log = task.Log;
 		log.LogDebugMessage ($"[{targetArch}] Putting '{payloadFilePath}' inside ELF shared library '{outputFileName}'");
-		Config config = task.EnsureConfig ();
 		string outputDir = GetArchOutputPath (targetArch, config);
 		Directory.CreateDirectory (outputDir);
 
 		string outputFile = Path.Combine (outputDir, outputFileName);
 		log.LogDebugMessage ($"  output file path: {outputFile}");
 
-		if (!config.DSOStubPaths.TryGetValue (targetArch, out ITaskItem? stubItem)) {
+		if (!config.DSOStubPaths.TryGetValue (targetArch, out string? stubPath)) {
 			throw new InvalidOperationException ($"Internal error: archive DSO stub location not known for architecture '{targetArch}'");
 		}
 
-		File.Copy (stubItem.ItemSpec, outputFile, overwrite: true);
+		File.Copy (stubPath, outputFile, overwrite: true);
 
 		string quotedOutputFile = MonoAndroidHelper.QuoteFileNameArgument (outputFile);
 		string objcopy = Path.Combine (config.AndroidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (config.AndroidBinUtilsDirectory, "llvm-objcopy"));
@@ -107,10 +129,8 @@ class DSOWrapperGenerator
 	/// created by this class.  The reason to do so is to ensure that we don't package any "stale" content and those
 	/// wrapper files aren't part of any dependency chain so it's hard to check their up to date state.
 	/// </summary>
-	public static void CleanUp (BuildApk task)
+	public static void CleanUp (Config config)
 	{
-		Config config = task.EnsureConfig();
-
 		foreach (var kvp in config.DSOStubPaths) {
 			string outputDir = GetArchOutputPath (kvp.Key, config);
 			if (!Directory.Exists (outputDir)) {

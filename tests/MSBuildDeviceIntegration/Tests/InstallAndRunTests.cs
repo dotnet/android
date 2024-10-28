@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Mono.Cecil;
 using NUnit.Framework;
+
+using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -950,12 +951,20 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void FastDeployEnvironmentFiles ([Values (false, true)] bool isRelease)
+		[TestCase (false, true)]
+		[TestCase (false, false)]
+		[TestCase (true, false)]
+		public void FastDeployEnvironmentFiles (bool isRelease, bool embedAssembliesIntoApk)
 		{
+			if (embedAssembliesIntoApk) {
+				AssertCommercialBuild ();
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				ProjectName = nameof (FastDeployEnvironmentFiles),
 				RootNamespace = nameof (FastDeployEnvironmentFiles),
 				IsRelease = isRelease,
+				EmbedAssembliesIntoApk = embedAssembliesIntoApk,
 				EnableDefaultItems = true,
 				OtherBuildItems = {
 					new BuildItem("AndroidEnvironment", "env.txt") {
@@ -966,7 +975,8 @@ Bar34=Foo55",
 			};
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
 		Console.WriteLine (""Foo="" + Environment.GetEnvironmentVariable(""Foo""));
-		Console.WriteLine (""Bar34="" + Environment.GetEnvironmentVariable(""Bar34""));");
+		Console.WriteLine (""Bar34="" + Environment.GetEnvironmentVariable(""Bar34""));
+		Console.WriteLine (""DOTNET_MODIFIABLE_ASSEMBLIES="" + Environment.GetEnvironmentVariable(""DOTNET_MODIFIABLE_ASSEMBLIES""));");
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
 			RunProjectAndAssert (proj, builder);
@@ -988,6 +998,14 @@ Bar34=Foo55",
 					logcatOutput,
 					"The Environment variable \"Bar34\" was not set."
 			);
+			// NOTE: set when $(UseInterpreter) is true, default for Debug mode
+			if (!isRelease) {
+				StringAssert.Contains (
+						"DOTNET_MODIFIABLE_ASSEMBLIES=Debug",
+						logcatOutput,
+						"The Environment variable \"DOTNET_MODIFIABLE_ASSEMBLIES\" was not set."
+				);
+			}
 		}
 
 		[Test]
@@ -1117,5 +1135,127 @@ Bar34=Foo55",
 				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
 			Assert.IsTrue (didLaunch, "Activity should have started.");
 		}
+
+		[Test]
+		public void GradleFBProj ([Values (false, true)] bool isRelease)
+		{
+			var moduleName = "Library";
+			var gradleTestProjectDir = Path.Combine (Root, "temp", "gradle", TestName);
+			var gradleModule = new AndroidGradleModule (Path.Combine (gradleTestProjectDir, moduleName));
+			gradleModule.PackageName = "com.microsoft.mauifacebook";
+			gradleModule.BuildGradleFileContent = $@"
+plugins {{
+    id(""com.android.library"")
+}}
+android {{
+    namespace = ""{gradleModule.PackageName}""
+    compileSdk = {XABuildConfig.AndroidDefaultTargetDotnetApiLevel}
+    defaultConfig {{
+        minSdk = {XABuildConfig.AndroidMinimumDotNetApiLevel}
+    }}
+}}
+dependencies {{
+    implementation(""androidx.appcompat:appcompat:1.7.0"")
+    implementation(""com.google.android.material:material:1.11.0"")
+    implementation(""com.facebook.android:facebook-android-sdk:17.0.2"")
+}}
+";
+			gradleModule.JavaSources.Add (new AndroidItem.AndroidJavaSource ("FacebookSdk.java") {
+				TextContent = () => $@"
+package com.microsoft.mauifacebook;
+public class FacebookSdk {{
+    static com.facebook.appevents.AppEventsLogger _logger;
+    public static void initializeSDK(android.app.Activity activity, Boolean isDebug) {{
+        android.app.Application application = activity.getApplication();
+        com.facebook.FacebookSdk.sdkInitialize(application);
+        com.facebook.FacebookSdk.addLoggingBehavior(com.facebook.LoggingBehavior.APP_EVENTS);
+        com.facebook.appevents.AppEventsLogger.activateApp(application);
+        _logger = com.facebook.appevents.AppEventsLogger.newLogger(activity);
+    }}
+    public static void logEvent(String eventName) {{
+        _logger.logEvent(eventName);
+    }}
+}}
+",
+			});
+
+			var gradleProject = new AndroidGradleProject (gradleTestProjectDir) {
+				Modules = {
+					gradleModule,
+				},
+			};
+			gradleProject.Create ();
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				ExtraNuGetConfigSources = {
+					"https://api.nuget.org/v3/index.json",
+				},
+				OtherBuildItems = {
+					new AndroidItem.TransformFile ("Transforms\\Metadata.xml") {
+						TextContent = () => $@"<metadata><attr path=""/api/package[@name='{gradleModule.PackageName}']"" name=""managedName"">Facebook</attr></metadata>",
+					},
+					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
+						Metadata = {
+							{ "ModuleName", moduleName },
+						},
+					},
+					new BuildItem ("AndroidMavenLibrary", "com.facebook.android:facebook-core") {
+						Metadata = {
+							{ "Version", "17.0.2" },
+							{ "Bind", "false" },
+						},
+					},
+					new BuildItem ("AndroidMavenLibrary", "com.facebook.android:facebook-bolts") {
+						Metadata = {
+							{ "Version", "17.0.2" },
+							{ "Bind", "false" },
+						},
+					},
+				},
+				PackageReferences = {
+					new Package {
+						Id = "Xamarin.AndroidX.AppCompat",
+						Version = "1.7.0.3",
+					},
+					new Package {
+						Id = "Xamarin.AndroidX.Annotation",
+						Version = "1.8.2.1",
+					},
+					new Package {
+						Id = "Xamarin.AndroidX.Legacy.Support.Core.Utils",
+						Version = "1.0.0.29",
+					},
+					new Package {
+						Id = "Xamarin.Google.Android.InstallReferrer",
+						Version = "1.1.2.6",
+					},
+					new Package {
+						Id = "Xamarin.AndroidX.Core.Core.Ktx",
+						Version = "1.13.1.5",
+					},
+					new Package {
+						Id = "Xamarin.Kotlin.StdLib",
+						Version = "2.0.21",
+					},
+				},
+			};
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
+Facebook.FacebookSdk.InitializeSDK(this, Java.Lang.Boolean.True);
+Facebook.FacebookSdk.LogEvent(""TestFacebook"");
+");
+			proj.AndroidManifest =@"<?xml version=""1.0"" encoding=""utf-8""?>
+<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" xmlns:tools=""http://schemas.android.com/tools"" android:versionCode=""1"" android:versionName=""1.0"" package=""com.xamarin.gradleproj"">
+  <application android:label=""UnnamedProject"">
+    <meta-data android:name=""com.facebook.sdk.ApplicationId"" android:value=""appid""/>
+    <meta-data android:name=""com.facebook.sdk.ClientToken"" android:value=""token""/>
+  </application>
+</manifest>";
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj));
+			RunProjectAndAssert (proj, builder);
+		}
+
 	}
 }
