@@ -371,8 +371,10 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		.max_assembly_file_name_size = 0u,
 	};
 
+	std::unique_ptr<uint8_t[]> raw_data (new uint8_t[cd_size]);
+	std::span<uint8_t> buf (raw_data.get (), cd_size);
 	ssize_t nread = read (fd, buf.data (), buf.size ());
-	if (static_cast<size_t>(nread) != cd_size) {
+	if (static_cast<size_t>(nread) != cd_size) [[unlikely]] {
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			std::format (
