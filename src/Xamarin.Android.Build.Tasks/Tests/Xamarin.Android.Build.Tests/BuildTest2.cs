@@ -154,7 +154,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.AotAssemblies = false; // Release defaults to Profiled AOT for .NET 6
 			proj.SetAndroidSupportedAbis ("arm64-v8a");
 			proj.SetProperty ("LinkerDumpDependencies", "True");
-			proj.SetProperty ("AndroidUseAssemblyStore", "False");
 
 			var flavor = (forms ? "XForms" : "Simple") + "DotNet";
 			var apkDescFilename = $"BuildReleaseArm64{flavor}.apkdesc";
@@ -319,7 +318,7 @@ namespace Xamarin.Android.Build.Tests
 			XamarinAndroidProject proj = isBindingProject ? new XamarinAndroidBindingProject () : new XamarinAndroidApplicationProject ();
 			proj.IsRelease = isRelease;
 			proj.SetProperty (property, value);
-			
+
 			using (ProjectBuilder b = isBindingProject ? CreateDllBuilder (Path.Combine ("temp", TestName)) : CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, $"The '{property}' MSBuild property is deprecated and will be removed"),
@@ -1369,7 +1368,7 @@ namespace App1
 					};
 
 					string apkPath = Path.Combine (outputPath, proj.PackageName + "-Signed.apk");
-					var helper = new ArchiveAssemblyHelper (apkPath, useAssemblyStores: false, proj.GetRuntimeIdentifiers ().ToArray ());
+					var helper = new ArchiveAssemblyHelper (apkPath, proj.GetRuntimeIdentifiers ().ToArray ());
 					foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 						foreach ((string fileName, bool existsInBin) in fileNames) {
 							EnsureFilesAreTheSame (intermediate, existsInBin ? outputPath : null, fileName, abi, helper, uncompressIfNecessary: fileName.EndsWith (".dll", StringComparison.Ordinal));

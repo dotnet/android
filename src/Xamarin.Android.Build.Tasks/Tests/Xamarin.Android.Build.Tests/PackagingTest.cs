@@ -83,7 +83,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[NonParallelizable] // Commonly fails NuGet restore
-		public void CheckIncludedAssemblies ([Values (false, true)] bool usesAssemblyStores)
+		public void CheckIncludedAssemblies ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true
@@ -93,7 +93,6 @@ namespace Xamarin.Android.Build.Tests
 				AndroidTargetArch.Arm,
 			};
 
-			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
 			proj.SetRuntimeIdentifiers (supportedArches);
 			proj.PackageReferences.Add (new Package {
 				Id = "Humanizer.Core",
@@ -136,7 +135,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				var helper = new ArchiveAssemblyHelper (apk, usesAssemblyStores);
+				var helper = new ArchiveAssemblyHelper (apk);
 				List<string> existingFiles;
 				List<string> missingFiles;
 				List<string> additionalFiles;

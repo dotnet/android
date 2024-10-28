@@ -27,20 +27,18 @@ namespace Xamarin.Android.Build.Tests
 
 		readonly string archivePath;
 		readonly string assembliesRootDir;
-		bool useAssemblyStores;
 		bool haveMultipleRids;
 		List<string> archiveContents;
 
 		public string ArchivePath => archivePath;
 
-		public ArchiveAssemblyHelper (string archivePath, bool useAssemblyStores = true, string[] rids = null)
+		public ArchiveAssemblyHelper (string archivePath, string[] rids = null)
 		{
 			if (String.IsNullOrEmpty (archivePath)) {
 				throw new ArgumentException ("must not be null or empty", nameof (archivePath));
 			}
 
 			this.archivePath = archivePath;
-			this.useAssemblyStores = useAssemblyStores;
 			haveMultipleRids = rids != null && rids.Length > 1;
 
 			string extension = Path.GetExtension (archivePath) ?? String.Empty;
@@ -57,13 +55,7 @@ namespace Xamarin.Android.Build.Tests
 
 		public Stream? ReadEntry (string path, AndroidTargetArch arch = AndroidTargetArch.None, bool uncompressIfNecessary = false)
 		{
-			Stream? ret;
-			if (useAssemblyStores) {
-				ret = ReadStoreEntry (path, arch, uncompressIfNecessary);
-			} else {
-				ret = ReadZipEntry (path, arch, uncompressIfNecessary);
-			}
-
+			Stream? ret = ReadStoreEntry (path, arch, uncompressIfNecessary);
 			if (ret == null) {
 				return null;
 			}
@@ -115,29 +107,6 @@ namespace Xamarin.Android.Build.Tests
 
 			payload.Seek (0, SeekOrigin.Begin);
 			return payload;
-		}
-
-		Stream? ReadZipEntry (string path, AndroidTargetArch arch, bool uncompressIfNecessary)
-		{
-			List<string>? potentialEntries = TransformArchiveAssemblyPath (path, arch);
-			if (potentialEntries == null || potentialEntries.Count == 0) {
-				return null;
-			}
-
-			using var zip = ZipHelper.OpenZip (archivePath);
-			foreach (string assemblyPath in potentialEntries) {
-				if (!zip.ContainsEntry (assemblyPath)) {
-					continue;
-				}
-
-				ZipEntry entry = zip.ReadEntry (assemblyPath);
-				var ret = new MemoryStream ();
-				entry.Extract (ret);
-				ret.Flush ();
-				return ret;
-			}
-
-			return null;
 		}
 
 		Stream? ReadStoreEntry (string path, AndroidTargetArch arch, bool uncompressIfNecessary)
@@ -199,11 +168,6 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			archiveContents = entries;
-			if (!useAssemblyStores) {
-				Console.WriteLine ("Not using assembly stores");
-				return entries;
-			}
-
 			Console.WriteLine ($"Creating AssemblyStoreExplorer for archive '{archivePath}'");
 			(IList<AssemblyStoreExplorer>? explorers, string? errorMessage) = AssemblyStoreExplorer.Open (archivePath);
 
@@ -448,11 +412,7 @@ namespace Xamarin.Android.Build.Tests
 				throw new ArgumentException ("must not be empty", nameof (fileNames));
 			}
 
-			if (useAssemblyStores) {
-				StoreContains (fileNames, out existingFiles, out missingFiles, out additionalFiles, targetArches);
-			} else {
-				ArchiveContains (fileNames, out existingFiles, out missingFiles, out additionalFiles, targetArches);
-			}
+			StoreContains (fileNames, out existingFiles, out missingFiles, out additionalFiles, targetArches);
 		}
 
 		List<AndroidTargetArch> GetSupportedArches (IEnumerable<AndroidTargetArch>? runtimeIdentifiers)

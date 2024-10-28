@@ -261,21 +261,20 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void RemoveDesigner ([Values (true, false)] bool useAssemblyStore)
+		public void RemoveDesigner ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "False");
 			proj.SetProperty ("AndroidLinkResources", "True");
-			proj.SetProperty ("AndroidUseAssemblyStore", useAssemblyStore.ToString ());
 			string assemblyName = proj.ProjectName;
 
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 			var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 			FileAssert.Exists (apk);
-			var helper = new ArchiveAssemblyHelper (apk, useAssemblyStore);
+			var helper = new ArchiveAssemblyHelper (apk);
 			foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 				Assert.IsTrue (helper.Exists ($"assemblies/{abi}/{assemblyName}.dll"), $"{assemblyName}.dll should exist in apk!");
 
@@ -297,7 +296,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void LinkDescription ([Values (true, false)] bool useAssemblyStore)
+		public void LinkDescription ()
 		{
 			string assembly_name = "System.Console";
 			string linker_xml = "<linker/>";
@@ -312,7 +311,6 @@ namespace Xamarin.Android.Build.Tests
 			};
 			// So we can use Mono.Cecil to open assemblies directly
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "False");
-			proj.SetProperty ("AndroidUseAssemblyStore", useAssemblyStore.ToString ());
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
@@ -331,7 +329,7 @@ $@"<linker>
 
 				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				FileAssert.Exists (apk);
-				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStore);
+				var helper = new ArchiveAssemblyHelper (apk);
 				foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 					Assert.IsTrue (helper.Exists ($"assemblies/{abi}/{assembly_name}.dll"), $"{assembly_name}.dll should exist in apk!");
 				}

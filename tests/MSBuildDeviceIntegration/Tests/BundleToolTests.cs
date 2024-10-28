@@ -10,22 +10,15 @@ using Xamarin.Tools.Zip;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[TestFixtureSource(nameof(FixtureArgs))]
 	[Category ("XamarinBuildDownload")]
 	public class BundleToolTests : DeviceTest
 	{
-		static readonly object[] FixtureArgs = {
-			new object[] { false },
-			new object[] { true },
-		};
-
 		static readonly string [] Abis = new [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
 		XamarinAndroidLibraryProject lib;
 		XamarinAndroidApplicationProject app;
 		ProjectBuilder libBuilder, appBuilder;
 		string intermediate;
 		string bin;
-		bool usesAssemblyBlobs;
 
 		// Disable split by language
 		const string BuildConfig = @"{
@@ -46,11 +39,6 @@ namespace Xamarin.Android.Build.Tests
 	}
 }";
 
-		public BundleToolTests (bool usesAssemblyBlobs)
-		{
-			this.usesAssemblyBlobs = usesAssemblyBlobs;
-		}
-
 		[OneTimeSetUp]
 		public void OneTimeSetUp ()
 		{
@@ -67,8 +55,6 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 			};
-
-			lib.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 
 			var bytes = new byte [1024];
 			app = new XamarinFormsMapsApplicationProject {
@@ -96,7 +82,6 @@ namespace Xamarin.Android.Build.Tests
 			app.SetProperty (app.ReleaseProperties, "AndroidPackageFormat", "aab");
 			app.SetAndroidSupportedAbis (Abis);
 			app.SetProperty ("AndroidBundleConfigurationFile", "buildConfig.json");
-			app.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 
 			libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), cleanupOnDispose: true);
 			Assert.IsTrue (libBuilder.Build (lib), "Library build should have succeeded.");
@@ -127,9 +112,9 @@ namespace Xamarin.Android.Build.Tests
 			appBuilder?.Dispose ();
 		}
 
-		string [] ListArchiveContents (string archive, bool usesAssembliesBlob)
+		string [] ListArchiveContents (string archive)
 		{
-			var helper = new ArchiveAssemblyHelper (archive, usesAssembliesBlob);
+			var helper = new ArchiveAssemblyHelper (archive);
 			List<string> entries = helper.ListArchiveContents ();
 			entries.Sort ();
 			return entries.ToArray ();
@@ -139,7 +124,7 @@ namespace Xamarin.Android.Build.Tests
 		public void BaseZip ()
 		{
 			var baseZip = Path.Combine (intermediate, "android", "bin", "base.zip");
-			var contents = ListArchiveContents (baseZip, usesAssemblyBlobs);
+			var contents = ListArchiveContents (baseZip);
 			var expectedFiles = new List<string> {
 				"dex/classes.dex",
 				"manifest/AndroidManifest.xml",
@@ -162,28 +147,17 @@ namespace Xamarin.Android.Build.Tests
 
 			foreach (var abi in Abis) {
 				// All assemblies are in per-abi directories now
-				if (usesAssemblyBlobs) {
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Java.Interop.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Mono.Android.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Localization.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib-es{MonoAndroidHelper.SATELLITE_CULTURE_END_MARKER_CHAR}Localization.resources.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_UnnamedProject.dll.so");
-				} else {
-					expectedFiles.Add ($"lib/{abi}/lib_Java.Interop.dll.so");
-					expectedFiles.Add ($"lib/{abi}/lib_Mono.Android.dll.so");
-					expectedFiles.Add ($"lib/{abi}/lib_Localization.dll.so");
-					expectedFiles.Add ($"lib/{abi}/lib-es{MonoAndroidHelper.SATELLITE_CULTURE_END_MARKER_CHAR}Localization.resources.dll.so");
-					expectedFiles.Add ($"lib/{abi}/lib_UnnamedProject.dll.so");
-				}
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Java.Interop.dll.so");
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Mono.Android.dll.so");
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Localization.dll.so");
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib-es{MonoAndroidHelper.SATELLITE_CULTURE_END_MARKER_CHAR}Localization.resources.dll.so");
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_UnnamedProject.dll.so");
 
 				expectedFiles.Add ($"lib/{abi}/libmonodroid.so");
 				expectedFiles.Add ($"lib/{abi}/libmonosgen-2.0.so");
 				expectedFiles.Add ($"lib/{abi}/libxamarin-app.so");
-				if (usesAssemblyBlobs) {
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_System.Private.CoreLib.dll.so");
-				} else {
-					expectedFiles.Add ($"lib/{abi}/lib_System.Private.CoreLib.dll.so");
-				}
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_System.Private.CoreLib.dll.so");
+
 				expectedFiles.Add ($"lib/{abi}/libSystem.IO.Compression.Native.so");
 				expectedFiles.Add ($"lib/{abi}/libSystem.Native.so");
 			}
@@ -197,7 +171,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var aab = Path.Combine (intermediate, "android", "bin", $"{app.PackageName}.aab");
 			FileAssert.Exists (aab);
-			var contents = ListArchiveContents (aab, usesAssemblyBlobs);
+			var contents = ListArchiveContents (aab);
 			var expectedFiles = new List<string> {
 				"base/dex/classes.dex",
 				"base/manifest/AndroidManifest.xml",
@@ -222,28 +196,17 @@ namespace Xamarin.Android.Build.Tests
 
 			foreach (var abi in Abis) {
 				// All assemblies are in per-abi directories now
-				if (usesAssemblyBlobs) {
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Java.Interop.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Mono.Android.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Localization.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib-es{MonoAndroidHelper.SATELLITE_CULTURE_END_MARKER_CHAR}Localization.resources.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_UnnamedProject.dll.so");
-				} else {
-					expectedFiles.Add ($"base/lib/{abi}/lib_Java.Interop.dll.so");
-					expectedFiles.Add ($"base/lib/{abi}/lib_Mono.Android.dll.so");
-					expectedFiles.Add ($"base/lib/{abi}/lib_Localization.dll.so");
-					expectedFiles.Add ($"base/lib/{abi}/lib-es{MonoAndroidHelper.SATELLITE_CULTURE_END_MARKER_CHAR}Localization.resources.dll.so");
-					expectedFiles.Add ($"base/lib/{abi}/lib_UnnamedProject.dll.so");
-				}
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Java.Interop.dll.so");
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Mono.Android.dll.so");
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Localization.dll.so");
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib-es{MonoAndroidHelper.SATELLITE_CULTURE_END_MARKER_CHAR}Localization.resources.dll.so");
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_UnnamedProject.dll.so");
 
 				expectedFiles.Add ($"base/lib/{abi}/libmonodroid.so");
 				expectedFiles.Add ($"base/lib/{abi}/libmonosgen-2.0.so");
 				expectedFiles.Add ($"base/lib/{abi}/libxamarin-app.so");
-				if (usesAssemblyBlobs) {
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_System.Private.CoreLib.dll.so");
-				} else {
-					expectedFiles.Add ($"base/lib/{abi}/lib_System.Private.CoreLib.dll.so");
-				}
+				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_System.Private.CoreLib.dll.so");
+
 				expectedFiles.Add ($"base/lib/{abi}/libSystem.IO.Compression.Native.so");
 				expectedFiles.Add ($"base/lib/{abi}/libSystem.Native.so");
 			}
@@ -257,7 +220,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var aab = Path.Combine (bin, $"{app.PackageName}-Signed.aab");
 			FileAssert.Exists (aab);
-			var contents = ListArchiveContents (aab, usesAssembliesBlob: false);
+			var contents = ListArchiveContents (aab);
 			Assert.IsTrue (StringAssertEx.ContainsText (contents, "META-INF/MANIFEST.MF"), $"{aab} is not signed!");
 		}
 
@@ -271,11 +234,11 @@ namespace Xamarin.Android.Build.Tests
 			FileAssert.Exists (aab);
 			// Expecting: splits/base-arm64_v8a.apk, splits/base-master.apk, splits/base-xxxhdpi.apk
 			// This are split up based on: abi, base, and dpi
-			var contents = ListArchiveContents (aab, usesAssembliesBlob: false).Where (a => a.EndsWith (".apk", StringComparison.OrdinalIgnoreCase)).ToArray ();
+			var contents = ListArchiveContents (aab).Where (a => a.EndsWith (".apk", StringComparison.OrdinalIgnoreCase)).ToArray ();
 			Assert.AreEqual (3, contents.Length, "Expecting three APKs!");
 
 			// Language split has been removed by the bundle configuration file, and therefore shouldn't be present
-			var languageSplitContent = ListArchiveContents (aab, usesAssemblyBlobs).Where (a => a.EndsWith ("-en.apk", StringComparison.OrdinalIgnoreCase)).ToArray ();
+			var languageSplitContent = ListArchiveContents (aab).Where (a => a.EndsWith ("-en.apk", StringComparison.OrdinalIgnoreCase)).ToArray ();
 			Assert.AreEqual (0, languageSplitContent.Length, "Found language split apk in bundle, but disabled by bundle configuration file!");
 
 			using (var stream = new MemoryStream ())
@@ -289,13 +252,9 @@ namespace Xamarin.Android.Build.Tests
 					".bar",
 					".wav",
 					".data",
+					".blob",
 				};
 
-				if (usesAssemblyBlobs) {
-					uncompressed.Add (".blob");
-				} else {
-					uncompressed.Add (".dll");
-				}
 				using (var baseApk = ZipArchive.Open (stream)) {
 					foreach (var file in baseApk) {
 						foreach (var ext in uncompressed) {
