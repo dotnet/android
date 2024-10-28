@@ -210,7 +210,11 @@ namespace MonoDroid.Generation {
 			StringBuilder sb = new StringBuilder ();
 			foreach (Parameter p in items) {
 				if (p.Name == "__self") {
-					sb.AppendFormat ("L\" + global::Android.Runtime.JNIEnv.GetJniName (GetType ().DeclaringType{0}) + \";", opt.NullForgivingOperator);
+					if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
+						sb.AppendFormat ("L\" + global::Java.Interop.JniEnvironment.Runtime.TypeManager.GetTypeSignature (GetType ().DeclaringType{0}).SimpleReference + \";", opt.NullForgivingOperator);
+					} else {
+						sb.AppendFormat ("L\" + global::Android.Runtime.JNIEnv.GetJniName (GetType ().DeclaringType{0}) + \";", opt.NullForgivingOperator);
+					}
 					continue;
 				}
 				sb.Append (p.JniType);

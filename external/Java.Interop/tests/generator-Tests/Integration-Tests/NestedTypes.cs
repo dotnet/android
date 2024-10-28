@@ -6,7 +6,7 @@ namespace generatortests
 	[TestFixture]
 	public class NestedTypes : BaseGeneratorTest
 	{
-		protected override bool TryJavaInterop1 => false;
+		protected override bool TryJavaInterop1 => true;
 
 		[Test]
 		public void GeneratedOK ()

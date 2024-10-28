@@ -4,6 +4,7 @@
       not(
         starts-with(@name, 'java.lang')
         or starts-with(@name, 'java.io')
+        or starts-with(@name, 'java.util.concurrent')
         or starts-with(@name, 'java.util.function')
       )]" />
 
@@ -87,4 +88,36 @@
       name="managedOverride">reabstract</attr>
   <attr path="/api/package[@name='java.lang.reflect']/interface[@name='AnnotatedType']/method[@name='getDeclaredAnnotations' and count(parameter)=0]"
       name="explicitInterface">IAnnotatedElement</attr>
+
+  <attr path="/api/package[@name='java.util.concurrent']/interface[@name='RunnableFuture']/method[@name='run' and count(parameter)=0]"
+      name="managedOverride">reabstract</attr>
+  <attr path="/api/package[@name='java.util.concurrent']/interface[@name='RunnableFuture']/method[@name='run' and count(parameter)=0]"
+      name="explicitInterface">global::Java.Lang.IRunnable</attr>
+  <attr path="/api/package[@name='java.util.concurrent']/class[@name='CompletableFuture']/method[@name='applyToEither'
+          or @name='applyToEitherAsync'
+          or @name='acceptEither'
+          or @name='acceptEitherAsync'
+          or @name='exceptionally'
+          or @name='handle'
+          or @name='handleAsync'
+          or @name='runAfterBoth'
+          or @name='runAfterBothAsync'
+          or @name='runAfterEither'
+          or @name='runAfterEitherAsync'
+          or @name='thenAccept'
+          or @name='thenAcceptAsync'
+          or @name='thenAcceptBoth'
+          or @name='thenAcceptBothAsync'
+          or @name='thenApply'
+          or @name='thenApplyAsync'
+          or @name='thenCombine'
+          or @name='thenCombineAsync'
+          or @name='thenCompose'
+          or @name='thenComposeAsync'
+          or @name='thenRun'
+          or @name='thenRunAsync'
+          or @name='whenComplete'
+          or @name='whenCompleteAsync'
+      ]"
+      name="managedReturn">Java.Util.Concurrent.ICompletionStage</attr>
 </metadata>

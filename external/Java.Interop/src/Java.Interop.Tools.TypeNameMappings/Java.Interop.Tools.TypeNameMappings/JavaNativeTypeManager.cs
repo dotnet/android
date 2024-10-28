@@ -737,7 +737,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 			foreach (var baseType in type.GetBaseTypes (cache)) {
 				if (baseType == null)
 					continue;
-				if (!baseType.AnyCustomAttributes (typeof (RegisterAttribute)))
+				if (!HasTypeRegistrationAttribute (baseType))
 					continue;
 
 				foreach (var method in baseType.Methods) {
@@ -752,6 +752,14 @@ namespace Java.Interop.Tools.TypeNameMappings
 			}
 
 			return false;
+		}
+
+		static bool HasTypeRegistrationAttribute (TypeDefinition type)
+		{
+			if (!type.HasCustomAttributes)
+				return false;
+			return type.AnyCustomAttributes (typeof (RegisterAttribute)) ||
+				type.AnyCustomAttributes ("Java.Interop.JniTypeSignatureAttribute");
 		}
 #endif  // HAVE_CECIL
 

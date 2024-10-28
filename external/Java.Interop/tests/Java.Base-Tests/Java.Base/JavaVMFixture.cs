@@ -20,6 +20,8 @@ namespace Java.BaseTests {
 						["example/MyIntConsumer"]   = typeof (MyIntConsumer),
 						["example/MyRunnable"]      = typeof (MyRunnable),
 						[JavaInvoker.JniTypeName]   = typeof (JavaInvoker),
+						[MyQueuedSynchronizer.JniTypeName]      = typeof (MyQueuedSynchronizer),
+						["example/MyQueuedSynchronizer$MyQueuedSynchronizer_MyConditionObject"] = typeof (MyQueuedSynchronizer.MyConditionObject),
 					}
 			);
 			JniRuntime.SetCurrent (c);
