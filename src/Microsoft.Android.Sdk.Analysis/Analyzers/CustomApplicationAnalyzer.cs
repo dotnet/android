@@ -32,7 +32,10 @@ public class CustomApplicationAnalyzer : DiagnosticAnalyzer
 
     private static void AnalyzeClass (SyntaxNodeAnalysisContext context)
     {
-        var classDeclarationSyntax = (ClassDeclarationSyntax) context.Node;
+        var classDeclarationSyntax = context.Node as ClassDeclarationSyntax;
+        if (classDeclarationSyntax == null)
+            return;
+
         var classSymbol = context.SemanticModel.GetDeclaredSymbol (classDeclarationSyntax) as INamedTypeSymbol;
         if (classSymbol == null)
             return;
