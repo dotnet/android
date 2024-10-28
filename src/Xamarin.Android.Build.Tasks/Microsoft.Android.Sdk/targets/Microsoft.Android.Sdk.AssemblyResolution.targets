@@ -185,8 +185,7 @@ _ResolveAssemblies MSBuild target.
 
   <Target Name="_PrepareAssemblies"
       DependsOnTargets="$(_PrepareAssembliesDependsOnTargets)">
-    <!-- Condition should be inverse of <ItemGroup> below -->
-    <ItemGroup Condition=" '$(PublishTrimmed)' != 'true' or '$(AndroidIncludeDebugSymbols)' == 'true' ">
+    <ItemGroup Condition=" '$(PublishTrimmed)' != 'true' ">
       <_ResolvedAssemblies          Include="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"          Condition=" '%(DestinationSubPath)' != '' " />
       <_ResolvedUserAssemblies      Include="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"      Condition=" '%(DestinationSubPath)' != '' " />
       <_ResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')" Condition=" '%(DestinationSubPath)' != '' " />
@@ -195,8 +194,7 @@ _ResolveAssemblies MSBuild target.
       <_ShrunkUserAssemblies        Include="@(_ResolvedUserAssemblies)" />
       <_ShrunkFrameworkAssemblies   Include="@(_ResolvedFrameworkAssemblies)" />
     </ItemGroup>
-    <!-- Condition should match <ProcessAssemblies/> task's logic for ShrunkAssemblies -->
-    <ItemGroup Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidIncludeDebugSymbols)' != 'true' ">
+    <ItemGroup Condition=" '$(PublishTrimmed)' == 'true' ">
       <_ResolvedAssemblies          Include="@(ResolvedAssemblies)" />
       <_ResolvedUserAssemblies      Include="@(ResolvedUserAssemblies)" />
       <_ResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies)" />
