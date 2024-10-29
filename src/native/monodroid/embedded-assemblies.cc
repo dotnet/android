@@ -190,12 +190,32 @@ EmbeddedAssemblies::find_assembly_store_entry (hash_t hash, const AssemblyStoreI
 	return nullptr;
 }
 
+// TODO: need to forbid loading assemblies into non-default ALC if they contain marshal method callbacks.
+//       The best way is probably to store the information in the assembly `MonoImage*` cache. We should
+//       abort() if the assembly contains marshal callbacks.
 template<LoaderData TLoaderData>
 force_inline MonoAssembly*
-EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data, bool ref_only) noexcept
+EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, TLoaderData loader_data, [[maybe_unused]] MonoError *error, bool ref_only) noexcept
 {
+#if defined (DEBUG)
+	if (assembly_store_hashes == nullptr) {
+		// With FastDev we might not have any assembly stores present
+		return nullptr;
+	}
+#endif
+
+	const char *culture = mono_assembly_name_get_culture (aname);
+	const char *asmname = mono_assembly_name_get_name (aname);
+
+	dynamic_local_string<SENSIBLE_PATH_MAX> name;
+	if (culture != nullptr && *culture != '\0') {
+		name.append_c (culture);
+		name.append (zip_path_separator);
+	}
+	name.append_c (asmname);
+
 	hash_t name_hash = xxhash::hash (name.get (), name.length ());
-	log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: looking for bundled name: '%s' (hash 0x%zx)", name.get (), name_hash);
+	log_debug (LOG_ASSEMBLY, "open_from_bundles: looking for bundled assembly '%s' (hash 0x%zx)", name.get (), name_hash);
 
 	const AssemblyStoreIndexEntry *hash_entry = find_assembly_store_entry (name_hash, assembly_store_hashes, assembly_store.index_entry_count);
 	if (hash_entry == nullptr) {
@@ -256,32 +276,7 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 
 	MonoImageOpenStatus status;
 	MonoAssembly *a = mono_assembly_load_from_full (image, name.get (), &status, ref_only);
-	if (a == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
-		log_warn (LOG_ASSEMBLY, "Failed to load managed assembly '%s'. %s", name.get (), mono_image_strerror (status));
-		return nullptr;
-	}
 
-	return a;
-}
-
-// TODO: need to forbid loading assemblies into non-default ALC if they contain marshal method callbacks.
-//       The best way is probably to store the information in the assembly `MonoImage*` cache. We should
-//       abort() if the assembly contains marshal callbacks.
-template<LoaderData TLoaderData>
-force_inline MonoAssembly*
-EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, TLoaderData loader_data, [[maybe_unused]] MonoError *error, bool ref_only) noexcept
-{
-	const char *culture = mono_assembly_name_get_culture (aname);
-	const char *asmname = mono_assembly_name_get_name (aname);
-
-	dynamic_local_string<SENSIBLE_PATH_MAX> name;
-	if (culture != nullptr && *culture != '\0') {
-		name.append_c (culture);
-		name.append (zip_path_separator);
-	}
-	name.append_c (asmname);
-
-	MonoAssembly *a = assembly_store_open_from_bundles (name, loader_data, ref_only);
 	if (a == nullptr) {
 		log_warn (LOG_ASSEMBLY, "open_from_bundles: failed to load bundled assembly %s", name.get ());
 #if defined(DEBUG)

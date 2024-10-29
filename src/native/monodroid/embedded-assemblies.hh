@@ -198,9 +198,6 @@ namespace xamarin::android::internal {
 		void gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register);
 
 		template<LoaderData TLoaderData>
-		MonoAssembly* assembly_store_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data, bool ref_only) noexcept;
-
-		template<LoaderData TLoaderData>
 		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, TLoaderData loader_data, MonoError *error, bool ref_only) noexcept;
 
 #if defined (DEBUG)
