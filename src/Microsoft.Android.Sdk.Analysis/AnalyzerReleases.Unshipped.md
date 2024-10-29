@@ -5,4 +5,4 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-XAA0001 | Usage | Warning | CustomApplicationAnalyzer
+DNAA0001 | Usage | Warning | CustomApplicationAnalyzer
