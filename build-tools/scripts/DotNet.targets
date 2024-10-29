@@ -58,21 +58,26 @@
       Query="/Project/ItemGroup/PackageDownload[contains(@Include,'Microsoft.NET.Sdk.Android.Manifest-')]/@Include" />
     <XmlPeek
         XmlInputPath="$(_Root)NuGet.config"
+        Query="/configuration/packageSources/add[starts-with(@key,'darc-pub-dotnet-android-')]/@key">
+      <Output TaskParameter="Result" PropertyName="_DotNetAndroidNuGetKey" />
+    </XmlPeek>
+    <XmlPeek
+        XmlInputPath="$(_Root)NuGet.config"
         Query="/configuration/packageSources/add[starts-with(@key,'darc-pub-dotnet-android-')]/@value">
-      <Output TaskParameter="Result" PropertyName="_DotNetAndroidNuGetSource" />
+      <Output TaskParameter="Result" PropertyName="_DotNetAndroidNuGetValue" />
     </XmlPeek>
     <!-- Updates an element such as <add key="nuget-only" value="NUGET_ONLY_PLACEHOLDER" /> -->
     <XmlPoke
-        Condition=" '$(_DotNetAndroidNuGetSource)' != '' "
+        Condition=" '$(_DotNetAndroidNuGetValue)' != '' "
         XmlInputPath="$(MauiSourcePath)\NuGet.config"
-        Value="$(_DotNetAndroidNuGetSource)"
+        Value="$(_DotNetAndroidNuGetValue)"
         Query="/configuration/packageSources/add[@key='nuget-only']/@value"
     />
     <XmlPoke
-        Condition=" '$(_DotNetAndroidNuGetSource)' != '' "
+        Condition=" '$(_DotNetAndroidNuGetKey)' != '' "
         XmlInputPath="$(MauiSourcePath)\NuGet.config"
-        Value="false"
-        Query="/configuration/disabledPackageSources/add[@key='nuget-only']/@value"
+        Value="$(_DotNetAndroidNuGetKey)"
+        Query="/configuration/packageSources/add[@key='nuget-only']/@key"
     />
   </Target>
 
