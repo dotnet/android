@@ -52,6 +52,10 @@ stages:
     #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
     - checkout: maui
 
+    - template: /build-tools/automation/yaml-templates/use-dot-net.yaml
+      parameters:
+        remove_dotnet: true
+
     - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
       - checkout: monodroid
         clean: true
