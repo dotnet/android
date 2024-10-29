@@ -43,9 +43,10 @@ namespace Android.App
 					SupportsGLTextureAttribute self = new SupportsGLTextureAttribute((string)attr.ConstructorArguments[0].Value);
 					self.specified = mapping.Load (self, attr, cache);
 					self.specified.Add("Name");
-					yield return self;
+					yield return self;					 
 				}
 			}
 		}
 	}
 }
+

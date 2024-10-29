@@ -16,7 +16,7 @@ using Android.Content.PM;
 namespace Android.App {
 
 	partial class PermissionTreeAttribute {
-
+		
 		ICollection<string> specified;
 
 		public static IEnumerable<PermissionTreeAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider, TypeDefinitionCache cache)

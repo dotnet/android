@@ -48,7 +48,7 @@ namespace Android.App {
 
 				UsesFeatureAttribute self = new UsesFeatureAttribute ();
 
-				if (attr.HasProperties) {
+				if (attr.HasProperties) {	
 					// handle the case where the user sets additional properties
 					self.specified = mapping.Load (self, attr, cache);
 					if (self.specified.Contains("GLESVersion") && self.GLESVersion==0) {
@@ -72,3 +72,4 @@ namespace Android.App {
 		}
 	}
 }
+

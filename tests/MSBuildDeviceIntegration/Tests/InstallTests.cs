@@ -201,7 +201,6 @@ namespace Xamarin.Android.Build.Tests
 				//Assert.AreEqual (0, RunAdbCommand ("shell pm list packages Mono.Android.DebugRuntime").Trim ().Length,
 				//	"The Shared Runtime should not have been installed.");
 				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, DeviceAbi);
-				Console.WriteLine ($"InstallWithoutSharedRuntime: directoryList == '{directorylist}'");
 				StringAssert.Contains ($"{proj.ProjectName}.dll", directorylist, $"{proj.ProjectName}.dll should exist in the .__override__/{DeviceAbi} directory.");
 				StringAssert.Contains ($"System.Private.CoreLib.dll", directorylist, $"System.Private.CoreLib.dll should exist in the .__override__/{DeviceAbi} directory.");
 				StringAssert.Contains ($"Mono.Android.dll", directorylist, $"Mono.Android.dll should exist in the .__override__/{DeviceAbi} directory.");
@@ -547,7 +546,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			long lib1FirstBuildSize = new FileInfo (Path.Combine (rootPath, lib1.ProjectName, lib1.OutputPath, "Library1.dll")).Length;
-
+			
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, app.ProjectName))) {
 				builder.Verbosity = LoggerVerbosity.Detailed;
 				builder.ThrowOnBuildFailure = false;
@@ -654,7 +653,7 @@ namespace Xamarin.Android.Build.Tests
 public class TestJavaClass2 {
 
 	public String test(){
-
+		
 		return ""Java is called"";
 	}
 }",
@@ -672,7 +671,7 @@ public class TestJavaClass2 {
 public class TestJavaClass {
 
 	public String test(){
-
+		
 		return ""Java is called"";
 	}
 }",

@@ -16,7 +16,7 @@ using Android.Content.PM;
 namespace Android.App {
 
 	partial class PermissionAttribute {
-
+		
 		ICollection<string> specified;
 
 		public static IEnumerable<PermissionAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider, TypeDefinitionCache cache)
