@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 public class CustomApplicationAnalyzer : DiagnosticAnalyzer
 {
     private const string AndroidApplication = "Android.App.Application";
-    public const string DiagnosticId = "XAA001";
+    public const string DiagnosticId = "XAA0001";
     private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor (
         id: DiagnosticId,
         title: "Application class does not have an Activation Constructor",
