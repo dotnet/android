@@ -1049,7 +1049,7 @@ Bar34=Foo55",
 		[Test]
 		public void FixLegacyResourceDesignerStep ([Values (true, false)] bool isRelease)
 		{
-			string previousTargetFramework = "net8.0-android";
+			string previousTargetFramework = "net9.0-android";
 
 			var library1 = new XamarinAndroidLibraryProject {
 				IsRelease = isRelease,

@@ -47,22 +47,22 @@ namespace Xamarin.Android.Build.Tests
 
 		static readonly object[] DotNetPackTargetFrameworks = new object[] {
 			new object[] {
-				"net8.0",
+				"net9.0",
 				"android",
-				34,
-			},
-			new object[] {
-				"net8.0",
-				"android34",
-				34,
+				35,
 			},
 			new object[] {
 				"net9.0",
+				"android35",
+				35,
+			},
+			new object[] {
+				"net10.0",
 				"android",
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 			},
 			new object[] {
-				"net9.0",
+				"net10.0",
 				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 			},
@@ -146,29 +146,29 @@ public class JavaSourceTest {
 
 		static readonly object[] DotNetTargetFrameworks = new object[] {
 			new object[] {
-				"net8.0",
+				"net9.0",
 				"android",
-				34,
+				35,
 			},
 			new object[] {
-				"net9.0",
+				"net10.0",
 				"android",
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 			},
 
 			new object[] {
-				"net9.0",
+				"net10.0",
 				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 			},
 
 			new object[] {
-				"net9.0",
+				"net10.0",
 				XABuildConfig.AndroidLatestStableApiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel ? null : $"android{XABuildConfig.AndroidLatestStableApiLevel}.0",
 				XABuildConfig.AndroidLatestStableApiLevel,
 			},
 			new object[] {
-				"net9.0",
+				"net10.0",
 				XABuildConfig.AndroidLatestUnstableApiLevel == XABuildConfig.AndroidLatestStableApiLevel ? null : $"android{XABuildConfig.AndroidLatestUnstableApiLevel}.0",
 				XABuildConfig.AndroidLatestUnstableApiLevel,
 			},
@@ -234,7 +234,7 @@ public class JavaSourceTest {
 			}
 
 			// Only check latest TFM, as previous will come from NuGet
-			if (dotnetVersion == "net9.0") {
+			if (dotnetVersion == "net10.0") {
 				var refDirectory = Directory.GetDirectories (Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Ref.{apiLevel}")).LastOrDefault ();
 				var expectedMonoAndroidRefPath = Path.Combine (refDirectory, "ref", dotnetVersion, "Mono.Android.dll");
 				Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRefPath), $"Build should be using {expectedMonoAndroidRefPath}");
