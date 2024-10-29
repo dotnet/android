@@ -54,7 +54,8 @@ public class CustomApplicationAnalyzer : DiagnosticAnalyzer
 				continue;
 			if (parameters [0].Type.ToString () != "IntPtr")
 				continue;
-			if (parameters [1].Type.ToString () != "JniHandleOwnership")
+			var info = context.SemanticModel.GetSymbolInfo (parameters [1].Type);
+			if (info.Symbol.ContainingNamespace.Name != "Android.Runtime" && info.Symbol.Name != "JniHandleOwnership")
 				continue;
 			foundActivationConstructor = true;
 		}

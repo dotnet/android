@@ -46,7 +46,7 @@ public class CustomApplicationCodeFixProvider : CodeFixProvider
 				SyntaxFactory.Parameter (SyntaxFactory.Identifier ("javaReference"))
 					.WithType (SyntaxFactory.ParseTypeName ("IntPtr")),
 				SyntaxFactory.Parameter (SyntaxFactory.Identifier ("transfer"))
-					.WithType (SyntaxFactory.ParseTypeName ("JniHandleOwnership"))
+					.WithType (SyntaxFactory.ParseTypeName ("Android.Runtime.JniHandleOwnership"))
 			}));
 		var baseArguments = SyntaxFactory.ArgumentList (SyntaxFactory.SeparatedList (new [] {
 				SyntaxFactory.Argument (SyntaxFactory.IdentifierName ("javaReference")),
