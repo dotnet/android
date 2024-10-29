@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Linq;
+using Microsoft.Android.Sdk.Analysis;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -12,8 +13,8 @@ public class CustomApplicationAnalyzer : DiagnosticAnalyzer
 	public const string DiagnosticId = "DNAA0001";
 	private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor (
 		id: DiagnosticId,
-		title: "Application class does not have an Activation Constructor",
-		messageFormat: "Application class '{0}' does not have an Activation Constructor",
+		title: Resources.DNAA0001_Title,
+		messageFormat: Resources.DNAA0001_MessageFormat,
 		category: "Usage",
 		defaultSeverity: DiagnosticSeverity.Warning,
 		isEnabledByDefault: true
