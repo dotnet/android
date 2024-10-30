@@ -40,7 +40,6 @@ namespace xamarin::android::internal
 			MonoClassField  *handle;
 			MonoClassField  *handle_type;
 			MonoClassField  *refs_added;
-			MonoClassField  *weak_handle;
 		};
 
 		// add_reference can work with objects which are either MonoObjects with java peers, or raw jobjects
@@ -134,8 +133,6 @@ namespace xamarin::android::internal
 		int _monodroid_gref_dec ();
 		char* _get_stack_trace_line_end (char *m);
 		void _write_stack_trace (FILE *to, char *from, LogCategories = LOG_NONE);
-		mono_bool take_global_ref_2_1_compat (JNIEnv *env, MonoObject *obj);
-		mono_bool take_weak_global_ref_2_1_compat (JNIEnv *env, MonoObject *obj);
 		mono_bool take_global_ref_jni (JNIEnv *env, MonoObject *obj);
 		mono_bool take_weak_global_ref_jni (JNIEnv *env, MonoObject *obj);
 		mono_bool add_reference_jobject (JNIEnv *env, jobject handle, jobject reffed_handle);
@@ -152,7 +149,6 @@ namespace xamarin::android::internal
 		void gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBridgeSCC **sccs);
 		void java_gc (JNIEnv *env);
 		void set_bridge_processing_field (MonodroidBridgeProcessingInfo *list, mono_bool value);
-		int platform_supports_weak_refs ();
 
 #if DEBUG
 		char* describe_target (AddReferenceTarget target);

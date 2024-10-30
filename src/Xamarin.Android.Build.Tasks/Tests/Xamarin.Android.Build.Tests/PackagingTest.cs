@@ -57,6 +57,31 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void CheckDebugModeWithTrimming ()
+		{
+			bool usesAssemblyStores = false;
+			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = "MyApp",
+				IsRelease = false,
+				EmbedAssembliesIntoApk = true,
+			};
+			proj.SetProperty ("PublishTrimmed", "true");
+			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
+
+			using var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj), "build should have succeeded.");
+
+			var apk = Path.Combine (Root, b.ProjectDirectory,
+				proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			var helper = new ArchiveAssemblyHelper (apk, usesAssemblyStores);
+			helper.Contains (["Mono.Android.dll", $"{proj.ProjectName}.dll"], out _, out var missingFiles, out _, [AndroidTargetArch.Arm64, AndroidTargetArch.X86_64]);
+
+			Assert.IsTrue (missingFiles == null || missingFiles.Count == 0,
+				string.Format ("The following Expected files are missing. {0}",
+				string.Join (Environment.NewLine, missingFiles)));
+		}
+
+		[Test]
 		[NonParallelizable] // Commonly fails NuGet restore
 		public void CheckIncludedAssemblies ([Values (false, true)] bool usesAssemblyStores)
 		{

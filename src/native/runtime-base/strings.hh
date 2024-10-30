@@ -15,8 +15,8 @@
 
 namespace xamarin::android::internal
 {
-	static constexpr size_t SENSIBLE_TYPE_NAME_LENGTH = 128;
-	static constexpr size_t SENSIBLE_PATH_MAX = 256;
+	static constexpr size_t SENSIBLE_TYPE_NAME_LENGTH = 128uz;
+	static constexpr size_t SENSIBLE_PATH_MAX = 256uz;
 
 #if DEBUG
 	static constexpr bool BoundsCheck = true;
@@ -144,14 +144,14 @@ namespace xamarin::android::internal
 		}
 
 		template<typename T>
-		force_inline bool to_integer (T &val, size_t start_index = 0, int base = 10) const noexcept
+		force_inline bool to_integer (T &val, size_t start_index = 0uz, int base = 10) const noexcept
 		{
 			static_assert (std::is_integral_v<T>);
 			constexpr T min = std::numeric_limits<T>::min ();
 			constexpr T max = std::numeric_limits<T>::max ();
 			using integer = typename std::conditional<std::is_signed_v<T>, int64_t, uint64_t>::type;
 
-			if (length () == 0) {
+			if (length () == 0uz) {
 				return false;
 			}
 
@@ -212,10 +212,10 @@ namespace xamarin::android::internal
 		}
 
 	protected:
-		size_t       _last_index = 0;
+		size_t       _last_index = 0uz;
 		bool         _fresh = true;
 		const char  *_start = nullptr;
-		size_t       _length = 0;
+		size_t       _length = 0uz;
 
 		template<size_t MaxStackSize, typename TStorage, typename TChar> friend class string_base;
 	};
@@ -319,7 +319,7 @@ namespace xamarin::android::internal
 		using base = dynamic_local_storage_base<MaxStackSize, T>;
 
 	public:
-		explicit dynamic_local_storage (size_t initial_size = 0) noexcept
+		explicit dynamic_local_storage (size_t initial_size = 0uz) noexcept
 			: base (initial_size)
 		{}
 
@@ -375,7 +375,7 @@ namespace xamarin::android::internal
 		static constexpr TChar ZERO = '0';
 
 	public:
-		explicit string_base (size_t initial_size = 0)
+		explicit string_base (size_t initial_size = 0uz)
 			: buffer (initial_size)
 		{
 			// Currently we care only about `char`, maybe in the future we'll add support for `wchar` (if needed)
@@ -428,7 +428,7 @@ namespace xamarin::android::internal
 				return *this;
 			}
 
-			for (size_t i = 0; i < length (); i++) {
+			for (size_t i = 0uz; i < length (); i++) {
 				if (buffer.get ()[i] == c1) {
 					buffer.get ()[i] = c2;
 				}
@@ -439,7 +439,7 @@ namespace xamarin::android::internal
 
 		force_inline string_base& append (const TChar* s, size_t length) noexcept
 		{
-			if (s == nullptr || length == 0)
+			if (s == nullptr || length == 0uz)
 				return *this;
 
 			resize_for_extra (length);
@@ -713,19 +713,19 @@ namespace xamarin::android::internal
 
 			if (i == 0) {
 				constexpr char zero[] = "0";
-				constexpr size_t zero_len = sizeof(zero) - 1;
+				constexpr size_t zero_len = sizeof(zero) - 1uz;
 
 				append (zero, zero_len);
 				return;
 			}
 
-			TChar temp_buf[SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10 + 1];
+			TChar temp_buf[SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10 + 1uz];
 			TChar *p = temp_buf + SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10;
 			*p = NUL;
 			TChar *end = p;
 
 			uint32_t x;
-			if constexpr (sizeof(Integer) > 4) {
+			if constexpr (sizeof(Integer) > 4uz) {
 				uint64_t y;
 
 				if constexpr (std::is_signed_v<Integer>) {
@@ -788,10 +788,10 @@ namespace xamarin::android::internal
 		force_inline void resize_for_extra (size_t needed_space) noexcept
 		{
 			if constexpr (TStorage::has_resize) {
-				size_t required_space = Helpers::add_with_overflow_check<size_t> (needed_space, idx + 1);
+				size_t required_space = Helpers::add_with_overflow_check<size_t> (needed_space, idx + 1uz);
 				size_t current_size = buffer.size ();
 				if (required_space > current_size) {
-					size_t new_size = Helpers::add_with_overflow_check<size_t> (current_size, (current_size / 2));
+					size_t new_size = Helpers::add_with_overflow_check<size_t> (current_size, (current_size / 2uz));
 					new_size = Helpers::add_with_overflow_check<size_t> (new_size, required_space);
 					buffer.resize (new_size);
 				}
@@ -809,7 +809,7 @@ namespace xamarin::android::internal
 		using base = string_base<MaxStackSize, static_local_storage<MaxStackSize, TChar>, TChar>;
 
 	public:
-		explicit static_local_string (size_t initial_size = 0) noexcept
+		explicit static_local_string (size_t initial_size = 0uz) noexcept
 			: base (initial_size)
 		{}
 
@@ -831,7 +831,7 @@ namespace xamarin::android::internal
 		using base = string_base<MaxStackSize, dynamic_local_storage<MaxStackSize, TChar>, TChar>;
 
 	public:
-		explicit dynamic_local_string (size_t initial_size = 0)
+		explicit dynamic_local_string (size_t initial_size = 0uz)
 			: base (initial_size)
 		{}
 

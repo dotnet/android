@@ -45,13 +45,13 @@ FastTiming::dump () noexcept
 	dynamic_local_string<SharedConstants::MAX_LOGCAT_MESSAGE_LENGTH, char> message;
 
 	// Values are in nanoseconds
-	uint64_t total_assembly_load_time = 0;
-	uint64_t total_java_to_managed_time = 0;
-	uint64_t total_managed_to_java_time = 0;
+	uint64_t total_assembly_load_time = 0u;
+	uint64_t total_java_to_managed_time = 0u;
+	uint64_t total_managed_to_java_time = 0u;
 	uint64_t total_ns;
 
 	format_and_log (init_time, message, total_ns, true /* indent */);
-	for (size_t i = 0; i < entries; i++) {
+	for (size_t i = 0uz; i < entries; i++) {
 		TimingEvent const& event = events[i];
 		format_and_log (event, message, total_ns, true /* indent */);
 

@@ -21,15 +21,12 @@ public class MonoRuntimeProvider
 		// Mono Runtime Initialization {{{
 		android.content.pm.ApplicationInfo applicationInfo = context.getApplicationInfo ();
 		String[] apks = null;
-		if (android.os.Build.VERSION.SDK_INT >= 21) {
-			String[] splitApks = applicationInfo.splitPublicSourceDirs;
-			if (splitApks != null && splitApks.length > 0) {
-				apks = new String[splitApks.length + 1];
-				apks [0] = applicationInfo.sourceDir;
-				System.arraycopy (splitApks, 0, apks, 1, splitApks.length);
-			}
-		}
-		if (apks == null) {
+		String[] splitApks = applicationInfo.splitSourceDirs;
+		if (splitApks != null && splitApks.length > 0) {
+			apks = new String[splitApks.length + 1];
+			apks [0] = applicationInfo.sourceDir;
+			System.arraycopy (splitApks, 0, apks, 1, splitApks.length);
+		} else {
 			apks = new String[] { applicationInfo.sourceDir };
 		}
 		mono.MonoPackageManager.LoadApplication (context, applicationInfo, apks);
@@ -67,4 +64,3 @@ public class MonoRuntimeProvider
 		throw new RuntimeException ("This operation is not supported.");
 	}
 }
-

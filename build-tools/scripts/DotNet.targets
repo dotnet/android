@@ -56,6 +56,26 @@
       XmlInputPath="$(MauiSourcePath)\src\DotNet\Dependencies\Workloads.csproj"
       Value="Microsoft.NET.Sdk.Android.Manifest-$(DotNetSdkManifestsFolder)"
       Query="/Project/ItemGroup/PackageDownload[contains(@Include,'Microsoft.NET.Sdk.Android.Manifest-')]/@Include" />
+    <XmlPeek
+        XmlInputPath="$(_Root)NuGet.config"
+        Query="/configuration/packageSources/add[starts-with(@key,'darc-pub-dotnet-android-')]">
+      <Output TaskParameter="Result" ItemName="_DotNetAndroidFeeds" />
+    </XmlPeek>
+    <XmlPeek
+        Condition=" '@(_DotNetAndroidFeeds->Count())' != '0' "
+        XmlInputPath="$(MauiSourcePath)\NuGet.config"
+        Query="/configuration/packageSources/*">
+      <Output TaskParameter="Result" ItemName="_DotNetMauiFeeds" />
+    </XmlPeek>
+    <ItemGroup>
+      <_DotNetMauiFeeds Include="@(_DotNetAndroidFeeds)" />
+    </ItemGroup>
+    <XmlPoke
+        Condition=" '@(_DotNetAndroidFeeds->Count())' != '0' "
+        XmlInputPath="$(MauiSourcePath)\NuGet.config"
+        Value="@(_DotNetMauiFeeds, ' ')"
+        Query="/configuration/packageSources"
+    />
   </Target>
 
   <Target Name="InstallMaui">
