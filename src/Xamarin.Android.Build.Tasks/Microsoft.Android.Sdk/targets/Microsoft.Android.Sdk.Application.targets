@@ -15,8 +15,6 @@ This file contains targets specific for Android application projects.
     <UseAppHost>false</UseAppHost>
     <!-- see: https://github.com/xamarin/xamarin-macios/blob/a6eb528197854c074d9dd5847328c096890337be/dotnet/targets/Xamarin.Shared.Sdk.props#L38-L52 -->
     <_RuntimeIdentifierUsesAppHost>false</_RuntimeIdentifierUsesAppHost>
-    <RunCommand>dotnet</RunCommand>
-    <RunArguments>build &quot;$(MSBuildProjectFullPath)&quot; -target:Run --configuration &quot;$(Configuration)&quot;</RunArguments>
 
     <!-- If Xamarin.Android.Common.Debugging.targets exists, we can rely on _Run for debugging. -->
     <_RunDependsOn Condition=" '$(_XASupportsFastDev)' == 'true' ">
@@ -27,7 +25,28 @@ This file contains targets specific for Android application projects.
       Install;
       StartAndroidActivity;
     </_RunDependsOn>
+    <_AndroidComputeRunArgumentsDependsOn>
+      Install;
+    </_AndroidComputeRunArgumentsDependsOn>
   </PropertyGroup>
+
+  <Target Name="_AndroidComputeRunArguments"
+      BeforeTargets="ComputeRunArguments"
+      DependsOnTargets="$(_AndroidComputeRunArgumentsDependsOn)">
+    <GetAndroidActivityName
+        Condition=" '$(AndroidLaunchActivity)' == '' "
+        ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml">
+      <Output TaskParameter="ActivityName" PropertyName="AndroidLaunchActivity" />
+    </GetAndroidActivityName>
+    <PropertyGroup>
+      <RunCommand>$(AdbToolExe)</RunCommand>
+      <RunCommand Condition=" $(RunCommand) == '' and $([MSBuild]::IsOSPlatform('windows')) ">adb.exe</RunCommand>
+      <RunCommand Condition=" $(RunCommand) == '' and !$([MSBuild]::IsOSPlatform('windows')) ">adb</RunCommand>
+      <RunCommand>$([System.IO.Path]::Combine ('$(AdbToolPath)', '$(RunCommand)'))</RunCommand>
+      <RunArguments>$(AdbTarget) shell am start -S -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;</RunArguments>
+      <RunWorkingDirectory>$(MSBuildProjectDirectory)</RunWorkingDirectory>
+    </PropertyGroup>
+  </Target>
 
   <Target Name="Run" DependsOnTargets="$(_RunDependsOn)" />
 
