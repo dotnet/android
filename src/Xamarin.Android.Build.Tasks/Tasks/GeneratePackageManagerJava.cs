@@ -74,6 +74,7 @@ namespace Xamarin.Android.Tasks
 		public string AndroidSequencePointsMode { get; set; }
 		public bool EnableSGenConcurrent { get; set; }
 		public string? CustomBundleConfigFile { get; set; }
+		public bool FastDevEnabled { get; set; }
 
 		bool _Debug {
 			get {
@@ -314,6 +315,7 @@ namespace Xamarin.Android.Tasks
 				JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
 				MarshalMethodsEnabled = EnableMarshalMethods,
 				IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
+				FastDevEnabled = FastDevEnabled,
 			};
 			LLVMIR.LlvmIrModule appConfigModule = appConfigAsmGen.Construct ();
 

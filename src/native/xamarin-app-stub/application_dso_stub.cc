@@ -49,6 +49,7 @@ const ApplicationConfig application_config = {
 	.broken_exception_transitions = false,
 	.jni_add_native_method_registration_attribute_present = false,
 	.have_runtime_config_blob = false,
+	.fastdev_enabled = false,
 	.marshal_methods_enabled = false,
 	.ignore_split_configs = false,
 	.bound_exception_type = 0, // System

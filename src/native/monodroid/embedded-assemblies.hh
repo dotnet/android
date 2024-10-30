@@ -183,6 +183,12 @@ namespace xamarin::android::internal {
 
 		void ensure_valid_assembly_stores () const noexcept
 		{
+			if constexpr (SharedConstants::debug_build) {
+				if (application_config.fastdev_enabled) {
+					return;
+				}
+			}
+
 			abort_unless (assembly_store_hashes != nullptr, "Invalid or incomplete assembly store data");
 		}
 

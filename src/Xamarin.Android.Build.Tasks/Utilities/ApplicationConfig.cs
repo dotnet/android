@@ -31,6 +31,7 @@ namespace Xamarin.Android.Tasks
 		public bool   broken_exception_transitions;
 		public bool   jni_add_native_method_registration_attribute_present;
 		public bool   have_runtime_config_blob;
+		public bool   fastdev_enabled;
 		public bool   marshal_methods_enabled;
 		public bool   ignore_split_configs;
 		public byte   bound_stream_io_exception_type;

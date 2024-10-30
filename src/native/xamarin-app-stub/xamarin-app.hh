@@ -228,6 +228,7 @@ struct ApplicationConfig
 	bool broken_exception_transitions;
 	bool jni_add_native_method_registration_attribute_present;
 	bool have_runtime_config_blob;
+	bool fastdev_enabled;
 	bool marshal_methods_enabled;
 	bool ignore_split_configs;
 	uint8_t bound_exception_type;

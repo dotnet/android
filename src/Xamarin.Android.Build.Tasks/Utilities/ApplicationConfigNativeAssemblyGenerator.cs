@@ -186,6 +186,7 @@ namespace Xamarin.Android.Tasks
 		public List<ITaskItem> NativeLibraries { get; set; }
 		public bool MarshalMethodsEnabled { get; set; }
 		public bool IgnoreSplitConfigs { get; set; }
+		public bool FastDevEnabled { get; set; }
 
 		public ApplicationConfigNativeAssemblyGenerator (IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties, TaskLoggingHelper log)
 			: base (log)
@@ -225,6 +226,7 @@ namespace Xamarin.Android.Tasks
 				broken_exception_transitions = BrokenExceptionTransitions,
 				jni_add_native_method_registration_attribute_present = JniAddNativeMethodRegistrationAttributePresent,
 				have_runtime_config_blob = HaveRuntimeConfigBlob,
+				fastdev_enabled = FastDevEnabled,
 				marshal_methods_enabled = MarshalMethodsEnabled,
 				ignore_split_configs = IgnoreSplitConfigs,
 				bound_stream_io_exception_type = (byte)BoundExceptionType,

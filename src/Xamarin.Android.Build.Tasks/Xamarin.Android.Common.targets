@@ -1,4 +1,4 @@
-﻿<!--
+<!--
 ***********************************************************************************************
 Xamarin.Android.Common.targets
 
@@ -161,6 +161,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' And '$(Optimize)' != 'True' And '$(_XASupportsFastDev)' == 'True' ">False</EmbedAssembliesIntoApk>
 	<EmbedAssembliesIntoApk Condition=" '$(_XASupportsFastDev)' == 'False' ">True</EmbedAssembliesIntoApk>
 	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">True</EmbedAssembliesIntoApk>
+  <_XAFastDevEnabled Condition=" '$(_XASupportsFastDev)' == 'True' And '$(EmbedAssembliesIntoApk)' != 'True' ">True</_XAFastDevEnabled>
+  <_XAFastDevEnabled Condition=" '$(_XAFastDevEnabled)' == '' ">False</_XAFastDevEnabled>
   <AndroidPreferNativeLibrariesWithDebugSymbols Condition=" '$(AndroidPreferNativeLibrariesWithDebugSymbols)' == '' ">False</AndroidPreferNativeLibrariesWithDebugSymbols>
 	<AndroidSkipJavacVersionCheck Condition="'$(AndroidSkipJavacVersionCheck)' == ''">False</AndroidSkipJavacVersionCheck>
 	<AndroidBuildApplicationPackage Condition=" '$(AndroidBuildApplicationPackage)' == ''">False</AndroidBuildApplicationPackage>
@@ -1742,6 +1744,7 @@ because xbuild doesn't support framework reference assemblies.
     RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
     EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
     CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
+    FastDevEnabled="$(_XAFastDevEnabled)"
   >
   </GeneratePackageManagerJava>
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />

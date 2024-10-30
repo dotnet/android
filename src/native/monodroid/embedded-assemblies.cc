@@ -197,12 +197,12 @@ template<LoaderData TLoaderData>
 force_inline MonoAssembly*
 EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, TLoaderData loader_data, [[maybe_unused]] MonoError *error, bool ref_only) noexcept
 {
-#if defined (DEBUG)
-	if (assembly_store_hashes == nullptr) {
-		// With FastDev we might not have any assembly stores present
-		return nullptr;
+	if constexpr (SharedConstants::debug_build) {
+		if (application_config.fastdev_enabled && assembly_store_hashes == nullptr) {
+			// With FastDev we might not have any assembly stores present
+			return nullptr;
+		}
 	}
-#endif
 
 	const char *culture = mono_assembly_name_get_culture (aname);
 	const char *asmname = mono_assembly_name_get_name (aname);
