@@ -4,7 +4,7 @@ description: "This document will list all supported targets in the .NET for Andr
 ms.date: 04/11/2024
 ---
 
-# Build Targets
+# Build targets
 
 The following build targets are defined in .NET for Android projects.
 
