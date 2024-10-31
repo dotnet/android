@@ -880,7 +880,9 @@ OSBridge::gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBri
 				if (j > 0) {
 					abort_unless (
 						sccs [i]->is_alive,
-						[&i] { return detail::_format_message ("Bridge SCC at index %d must be alive", i); }
+						[&i] {
+							return Util::monodroid_strdup_printf ("Bridge SCC at index %d must be alive", i);
+						}
 					);
 				}
 				sccs [i]->is_alive = 1;
@@ -908,7 +910,7 @@ OSBridge::gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBri
 			} else {
 				abort_unless (
 					!sccs [i]->is_alive,
-					[&i] { return detail::_format_message ("Bridge SCC at index %d must NOT be alive", i); }
+					[&i] { return Util::monodroid_strdup_printf ("Bridge SCC at index %d must NOT be alive", i); }
 				);
 			}
 		}
