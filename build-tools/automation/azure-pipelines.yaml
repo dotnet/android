@@ -99,7 +99,7 @@ stages:
     displayName: macOS > Build
     pool:
       name: Azure Pipelines
-      value: macOS-13
+      vmImage: macOS-13
       #name: $(MacBuildPoolName)
       #vmImage: $(MacBuildPoolImage)
       #${{ if eq(variables['MacBuildPoolName'], 'VSEng-VSMac-Xamarin-Shared') }}:
