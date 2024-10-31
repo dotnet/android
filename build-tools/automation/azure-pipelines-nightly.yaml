@@ -37,8 +37,10 @@ stages:
   - job: mac_build_create_installers
     displayName: macOS > Create Installers
     pool:
-      name: VSEng-Xamarin-RedmondMac-Android-Untrusted
-      demands: macOS.Name -equals Monterey
+      name: VSEng-VSMac-Xamarin-Shared
+      demands:
+      - macOS.Name -equals Ventura
+      - macOS.Architecture -equals x64
     timeoutInMinutes: 420
     workspace:
       clean: all
