@@ -61,7 +61,7 @@ stages:
       name: $(SharedMacPool)
       demands:
       - macOS.Name -equals $(SharedMacName)
-      - macOS.Architecture -equals $(SharedMacArch)
+      - Agent.OSArchitecture -equals $(SharedMacArch)
     timeoutInMinutes: 120
     workspace:
       clean: all
