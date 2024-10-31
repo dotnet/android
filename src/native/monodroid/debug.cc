@@ -603,7 +603,7 @@ Debug::enable_soft_breakpoints (void)
 void*
 xamarin::android::conn_thread (void *arg)
 {
-	abort_if_invalid_pointer_argument (arg);
+	abort_if_invalid_pointer_argument (arg, "arg");
 
 	int res;
 	Debug *instance = static_cast<Debug*> (arg);

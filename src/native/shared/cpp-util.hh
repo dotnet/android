@@ -4,6 +4,7 @@
 #include <array>
 #include <cstdarg>
 #include <cstdlib>
+#include <concepts>
 #include <memory>
 #include <source_location>
 #include <string_view>
@@ -13,6 +14,7 @@
 #include <android/log.h>
 
 #include "helpers.hh"
+
 
 static inline void
 do_abort_unless (const char* fmt, ...)
@@ -27,13 +29,51 @@ do_abort_unless (const char* fmt, ...)
 	xamarin::android::Helpers::abort_application (n == -1 ? "Unable to allocate memory for abort message" : message);
 }
 
-#define abort_unless(_condition_, _fmt_, ...) \
-	if (!(_condition_)) [[unlikely]] { \
-		do_abort_unless ("%s:%d (%s): " _fmt_, __FILE__, __LINE__, __FUNCTION__, ## __VA_ARGS__); \
+// #define abort_unless(_condition_, _fmt_, ...) \
+// 	if (!(_condition_)) [[unlikely]] { \
+// 		do_abort_unless ("%s:%d (%s): " _fmt_, __FILE__, __LINE__, __FUNCTION__, ## __VA_ARGS__); \
+// 	}
+
+template<std::invocable<> F>
+[[gnu::always_inline, gnu::flatten]]
+static inline void
+abort_unless (bool condition, F&& get_message, std::source_location sloc = std::source_location::current ()) noexcept
+{
+	if (condition) [[likely]] {
+		return;
 	}
 
-#define abort_if_invalid_pointer_argument(_ptr_) abort_unless ((_ptr_) != nullptr, "Parameter '%s' must be a valid pointer", #_ptr_)
-#define abort_if_negative_integer_argument(_arg_) abort_unless ((_arg_) > 0, "Parameter '%s' must be larger than 0", #_arg_)
+//	static_assert (std::is_same<std::invoke_result<F>, char*>::value, "get_message must return 'char*'");
+	xamarin::android::Helpers::abort_application (std::invoke (get_message), true /* log_location */, sloc);
+}
+
+[[gnu::always_inline, gnu::flatten]]
+static inline void
+abort_unless (bool condition, const char *message, std::source_location sloc = std::source_location::current ()) noexcept
+{
+	if (condition) [[likely]] {
+		return;
+	}
+	xamarin::android::Helpers::abort_application (message, true /* log_location */, sloc);
+}
+
+// #define abort_if_invalid_pointer_argument(_ptr_) abort_unless ((_ptr_) != nullptr, "Parameter '%s' must be a valid pointer", #_ptr_)
+// #define abort_if_negative_integer_argument(_arg_) abort_unless ((_arg_) > 0, "Parameter '%s' must be larger than 0", #_arg_)
+
+template<typename T>
+[[gnu::always_inline, gnu::flatten]]
+static inline void
+abort_if_invalid_pointer_argument (T *ptr, const char *ptr_name, std::source_location sloc = std::source_location::current ()) noexcept
+{
+	abort_unless (ptr != nullptr, "Parameter '%s' must be a valid pointer", sloc);
+}
+
+[[gnu::always_inline, gnu::flatten]]
+static inline void
+abort_if_negative_integer_argument (int arg, const char *arg_name, std::source_location sloc = std::source_location::current ()) noexcept
+{
+	abort_unless (arg > 0, "Parameter '%s' must be a valid pointer", sloc);
+}
 
 // Helper to use in "printf debugging". Normally not used in code anywhere. No code should be shipped with any
 // of the calls present.
