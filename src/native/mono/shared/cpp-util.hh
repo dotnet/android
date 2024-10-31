@@ -4,7 +4,6 @@
 #include <array>
 #include <cstdarg>
 #include <cstdlib>
-#include <cstdio>
 #include <concepts>
 #include <memory>
 #include <ranges>
@@ -19,77 +18,33 @@
 
 #include <shared/helpers.hh>
 
-namespace xamarin::android::detail {
-	[[gnu::always_inline, gnu::flatten]]
-	static inline const char*
-	_format_message (const char *format, ...) noexcept
-	{
-		va_list ap;
-		va_start (ap, format);
+
+static inline void
+do_abort_unless (const char* fmt, ...)
+{
+	va_list ap;
 
 		char *message;
 		int ret = vasprintf (&message, format, ap);
 
-		va_end (ap);
-		return ret == -1 ? "Out of memory" : message;
-	}
-
-	[[gnu::always_inline]]
-	static inline std::string get_function_name (const char *signature)
-	{
-		using std::operator""sv;
-
-		std::string_view sig { signature };
-		if (sig.length () == 0) {
-			return "<unknown function>";
-		}
-
-		auto splitSignature = sig | std::views::split ("::"sv) | std::ranges::to<std::vector<std::string>> ();
-
-		std::string ret;
-		if (splitSignature.size () > 1) {
-			ret.append (splitSignature [splitSignature.size () - 2]);
-			ret.append ("::"sv);
-		}
-		std::string_view func_name { splitSignature[splitSignature.size () - 1] };
-		std::string_view::size_type args_pos = func_name.find ('(');
-		std::string_view::size_type name_start_pos = func_name.find (' ');
-
-		if (name_start_pos == std::string_view::npos) {
-			name_start_pos = 0;
-		} else {
-			name_start_pos++; // point to after the space which separates return type from name
-			if (name_start_pos >= func_name.length ()) [[unlikely]] {
-				name_start_pos = 0;
-			}
-		}
-
-		if (args_pos == std::string_view::npos) {
-			ret.append (func_name.substr (name_start_pos));
-		} else {
-			// If there's a snafu with positions, start from 0
-			if (name_start_pos >= args_pos || name_start_pos > func_name.length ()) [[unlikely]] {
-				name_start_pos = 0;
-			}
-
-			ret.append (func_name.substr (name_start_pos, args_pos - name_start_pos));
-		}
-
-		return ret;
-	}
+	xamarin::android::Helpers::abort_application (n == -1 ? "Unable to allocate memory for abort message" : message);
 }
+
+// #define abort_unless(_condition_, _fmt_, ...) \
+// 	if (!(_condition_)) [[unlikely]] { \
+// 		do_abort_unless ("%s:%d (%s): " _fmt_, __FILE__, __LINE__, __FUNCTION__, ## __VA_ARGS__); \
+// 	}
 
 template<std::invocable<> F>
 [[gnu::always_inline, gnu::flatten]]
 static inline void
 abort_unless (bool condition, F&& get_message, std::source_location sloc = std::source_location::current ()) noexcept
 {
-	static_assert (std::is_same<typename std::invoke_result<F>::type, const char*>::value, "get_message must return 'const char*'");
-
 	if (condition) [[likely]] {
 		return;
 	}
 
+//	static_assert (std::is_same<std::invoke_result<F>, char*>::value, "get_message must return 'char*'");
 	xamarin::android::Helpers::abort_application (std::invoke (get_message), true /* log_location */, sloc);
 }
 
@@ -103,39 +58,22 @@ abort_unless (bool condition, const char *message, std::source_location sloc = s
 	xamarin::android::Helpers::abort_application (message, true /* log_location */, sloc);
 }
 
+// #define abort_if_invalid_pointer_argument(_ptr_) abort_unless ((_ptr_) != nullptr, "Parameter '%s' must be a valid pointer", #_ptr_)
+// #define abort_if_negative_integer_argument(_arg_) abort_unless ((_arg_) > 0, "Parameter '%s' must be larger than 0", #_arg_)
+
 template<typename T>
 [[gnu::always_inline, gnu::flatten]]
 static inline void
 abort_if_invalid_pointer_argument (T *ptr, const char *ptr_name, std::source_location sloc = std::source_location::current ()) noexcept
 {
-	abort_unless (
-		ptr != nullptr,
-		[&ptr_name, &sloc] {
-			return xamarin::android::detail::_format_message (
-				"%s: parameter '%s' must be a valid pointer",
-				xamarin::android::detail::get_function_name (sloc.function_name ()).c_str (),
-				ptr_name
-			);
-		},
-		sloc
-	);
+	abort_unless (ptr != nullptr, "Parameter '%s' must be a valid pointer", sloc);
 }
 
 [[gnu::always_inline, gnu::flatten]]
 static inline void
 abort_if_negative_integer_argument (int arg, const char *arg_name, std::source_location sloc = std::source_location::current ()) noexcept
 {
-	abort_unless (
-		arg > 0,
-		[&arg_name, &sloc] {
-			return xamarin::android::detail::_format_message (
-				"%s: parameter '%s' must be a positive integer",
-				xamarin::android::detail::get_function_name (sloc.function_name ()).c_str (),
-				arg_name
-			);
-		},
-		sloc
-	);
+	abort_unless (arg > 0, "Parameter '%s' must be a valid pointer", sloc);
 }
 
 // Helper to use in "printf debugging". Normally not used in code anywhere. No code should be shipped with any

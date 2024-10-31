@@ -917,10 +917,7 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 	abort_unless (
 		registerType != nullptr,
 		[&error] {
-			return detail::_format_message (
-				"INTERNAL ERROR: Unable to find Android.Runtime.JNIEnvInit.RegisterJniNatives! %s",
-				mono_error_get_message (&error)
-			);
+			return Util::monodroid_strdup_printf("INTERNAL ERROR: Unable to find Android.Runtime.JNIEnvInit.RegisterJniNatives! %s", mono_error_get_message (&error));
 		}
 	);
 
@@ -949,7 +946,7 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 	abort_unless (
 		initialize != nullptr,
 		[&error] {
-			return detail::_format_message (
+			return Util::monodroid_strdup_printf (
 				"Failed to obtain unmanaged-callers-only pointer to the Android.Runtime.JNIEnvInit.Initialize method. %s",
 				mono_error_get_message (&error)
 			);
