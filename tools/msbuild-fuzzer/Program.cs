@@ -48,7 +48,6 @@ namespace MSBuild.Fuzzer
 					Build,
 					ChangePackageName,
 					Clean,
-					DesignerBuild,
 					DesignTimeBuild,
 					Install,
 					NuGetRestore,
@@ -89,14 +88,6 @@ namespace MSBuild.Fuzzer
 		{
 			Console.WriteLine (nameof (DesignTimeBuild));
 			return builder.DesignTimeBuild (application, doNotCleanupOnUpdate: true);
-		}
-
-		static readonly string [] DesignerParameters = new [] { "DesignTimeBuild=True", "AndroidUseManagedDesignTimeResourceGenerator=False" };
-
-		static bool DesignerBuild ()
-		{
-			Console.WriteLine (nameof (DesignerBuild));
-			return builder.RunTarget (application, "SetupDependenciesForDesigner", doNotCleanupOnUpdate: true, parameters: DesignerParameters);
 		}
 
 		static bool Clean ()
