@@ -912,7 +912,12 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 			jnienv_register_jni_natives = reinterpret_cast<jnienv_register_jni_natives_fn>(mono_method_get_unmanaged_callers_only_ftnptr (registerType, &error));
 		}
 	}
-	abort_unless (registerType != nullptr, "INTERNAL ERROR: Unable to find Android.Runtime.JNIEnvInit.RegisterJniNatives! %s", mono_error_get_message (&error));
+	abort_unless (
+		registerType != nullptr,
+		[&error] {
+			return Util::monodroid_strdup_printf("INTERNAL ERROR: Unable to find Android.Runtime.JNIEnvInit.RegisterJniNatives! %s", mono_error_get_message (&error));
+		}
+	);
 
 	jclass lrefLoaderClass = env->GetObjectClass (loader);
 	init.Loader_loadClass     = env->GetMethodID (lrefLoaderClass, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
@@ -937,8 +942,12 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 
 	abort_unless (
 		initialize != nullptr,
-		"Failed to obtain unmanaged-callers-only pointer to the Android.Runtime.JNIEnvInit.Initialize method. %s",
-		mono_error_get_message (&error)
+		[&error] {
+			return Util::monodroid_strdup_printf (
+				"Failed to obtain unmanaged-callers-only pointer to the Android.Runtime.JNIEnvInit.Initialize method. %s",
+				mono_error_get_message (&error)
+			);
+		}
 	);
 	initialize (&init);
 

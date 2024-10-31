@@ -26,6 +26,7 @@
 #include "cppcompat.hh"
 #include "shared-constants.hh"
 #include "xxhash.hh"
+#include "util.hh"
 
 #include <concepts>
 
@@ -158,7 +159,13 @@ namespace xamarin::android::internal {
 		{
 			area = static_cast<char*>(runtime_config_data);
 
-			abort_unless (runtime_config_data_size < std::numeric_limits<uint32_t>::max (), "Runtime config binary blob size exceeds %u bytes", std::numeric_limits<uint32_t>::max ());
+			abort_unless (
+				runtime_config_data_size < std::numeric_limits<uint32_t>::max (),
+				[] {
+					return Util::monodroid_strdup_printf ("Runtime config binary blob size exceeds %u bytes",
+														  std::numeric_limits<uint32_t>::max ());
+				}
+			);
 			size = static_cast<uint32_t>(runtime_config_data_size);
 		}
 
