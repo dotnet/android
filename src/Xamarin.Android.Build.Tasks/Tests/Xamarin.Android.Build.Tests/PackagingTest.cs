@@ -66,14 +66,13 @@ namespace Xamarin.Android.Build.Tests
 				EmbedAssembliesIntoApk = true,
 			};
 			proj.SetProperty ("PublishTrimmed", "true");
-			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
 
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 
 			var apk = Path.Combine (Root, b.ProjectDirectory,
 				proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-			var helper = new ArchiveAssemblyHelper (apk, usesAssemblyStores);
+			var helper = new ArchiveAssemblyHelper (apk);
 			helper.Contains (["Mono.Android.dll", $"{proj.ProjectName}.dll"], out _, out var missingFiles, out _, [AndroidTargetArch.Arm64, AndroidTargetArch.X86_64]);
 
 			Assert.IsTrue (missingFiles == null || missingFiles.Count == 0,
