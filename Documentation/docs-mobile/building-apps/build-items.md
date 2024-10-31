@@ -4,7 +4,7 @@ description: .NET for Android Build Items
 ms.date: 09/09/2024
 ---
 
-# Build Items
+# Build items
 
 Build items control how a .NET for Android application
 or library project is built.
@@ -18,9 +18,8 @@ an [MSBuild ItemGroup](/visualstudio/msbuild/itemgroup-element-msbuild).
 ## AndroidAdditionalJavaManifest
 
 `<AndroidAdditionalJavaManifest>` is used in conjunction with
-[Java Dependency Resolution](../features/maven/java-dependency-verification.md).
-
-It is used to specify additional POM files that will be needed to verify dependencies.
+[Java Dependency Resolution](../features/maven/java-dependency-verification.md)
+to specify additional POM files that will be needed to verify dependencies.
 These are often parent or imported POM files referenced by a Java library's POM file.
 
 ```xml
@@ -237,7 +236,7 @@ This simplification means you can use **AndroidLibrary** everywhere.
 ## AndroidLintConfig
 
 The Build action 'AndroidLintConfig' should be used in conjunction with the
-[`$(AndroidLintEnabled)`](/xamarin/android/deploy-test/building-apps/build-properties.md#androidlintenabled)
+[`$(AndroidLintEnabled)`](/xamarin/android/deploy-test/building-apps/build-properties#androidlintenabled)
 property. Files with this build action will be merged together and passed to the
 android `lint` tooling. They should be XML files containing information on
 tests to enable and disable.
@@ -325,7 +324,7 @@ used to specify the ABI that the library targets. Thus, if you add
 `lib/armeabi-v7a/libfoo.so` to the build, then the ABI will be "sniffed" as
 `armeabi-v7a`.
 
-### Item Attribute Name
+### Item attribute name
 
 **Abi** &ndash; Specifies the ABI of the native library.
 
@@ -354,7 +353,7 @@ However these Items MUST be URL encoded or use
 [`$([MSBuild]::Escape(''))`](/visualstudio/msbuild/how-to-escape-special-characters-in-msbuild).
 This is so MSBuild does not try to interpret them as actual file wildcards.
 
-For example 
+For example
 
 ```xml
 <ItemGroup>
@@ -366,7 +365,7 @@ For example
 NOTE: `*`, `?` and `.` will be replaced in the `BuildApk` task with the
 appropriate file globs.
 
-If the default file glob is too restrictive you can remove it by adding the 
+If the default file glob is too restrictive you can remove it by adding the
 following to your csproj
 
 ```xml
@@ -391,7 +390,7 @@ included from the final package. The default values are as follows
 Items can use file blob characters for wildcards such as `*` and `?`.
 However these Items MUST use URL encoding or '$([MSBuild]::Escape(''))'.
 This is so MSBuild does not try to interpret them as actual file wildcards.
-For example 
+For example
 
 ```xml
 <ItemGroup>
@@ -566,5 +565,5 @@ this build action, see
 [ProGuard](/xamarin/android/deploy-test/release-prep/proguard).
 
 These files are ignored unless the
-[`$(EnableProguard)`](/xamarin/android/deploy-test/building-apps/build-properties.md#enableproguard)
+[`$(EnableProguard)`](/xamarin/android/deploy-test/building-apps/build-properties#enableproguard)
 MSBuild property is `True`.
