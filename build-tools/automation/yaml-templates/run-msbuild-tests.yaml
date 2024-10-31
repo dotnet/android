@@ -22,9 +22,10 @@ jobs:
       os: windows
   ${{ if eq(parameters.testOS, 'macOS') }}:
     pool:
-      name: Azure Pipelines
-      vmImage: $(HostedMacImage)
-      os: macOS
+      name: $(SharedMacPool)
+      demands:
+      - macOS.Name -equals $(SharedMacName)
+      - Agent.OSArchitecture -equals $(SharedMacArch)
   timeoutInMinutes: 240
   cancelTimeoutInMinutes: 5
   steps:

@@ -22,7 +22,7 @@ stages:
       testOS: macOS
       jobName: mac_msbuild_tests
       jobDisplayName: macOS > Tests > MSBuild
-      agentCount: 14
+      agentCount: 8
       xaSourcePath: ${{ parameters.xaSourcePath }}
       repositoryAlias: ${{ parameters.repositoryAlias }}
       commit: ${{ parameters.commit }}
@@ -34,7 +34,7 @@ stages:
       testOS: Windows
       jobName: win_msbuild_tests
       jobDisplayName: Windows > Tests > MSBuild
-      agentCount: 6
+      agentCount: 8
       xaSourcePath: ${{ parameters.xaSourcePath }}
       repositoryAlias: ${{ parameters.repositoryAlias }}
       commit: ${{ parameters.commit }}
