@@ -173,8 +173,8 @@ namespace xamarin::android::internal {
 			abort_unless (
 				runtime_config_data_size < std::numeric_limits<uint32_t>::max (),
 				[] {
-					return detail::_format_message ("Runtime config binary blob size exceeds %u bytes",
-													std::numeric_limits<uint32_t>::max ());
+					return Util::monodroid_strdup_printf ("Runtime config binary blob size exceeds %u bytes",
+														  std::numeric_limits<uint32_t>::max ());
 				}
 			);
 			size = static_cast<uint32_t>(runtime_config_data_size);
