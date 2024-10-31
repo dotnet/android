@@ -21,12 +21,6 @@ namespace Android.App {
 
 		public static IEnumerable<PermissionAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider, TypeDefinitionCache cache)
 		{
-			// `provider` might be null in situations when application configuration is broken, and it surfaces in a number of
-			// tests which check these situations.
-			if (provider == null) {
-				yield break;
-			}
-
 			var attrs = provider.GetCustomAttributes ("Android.App.PermissionAttribute");
 			foreach (var attr in attrs) {
 				PermissionAttribute self = new PermissionAttribute ();
