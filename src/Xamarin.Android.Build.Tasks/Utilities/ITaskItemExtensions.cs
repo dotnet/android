@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Xml.Linq;
 using Microsoft.Android.Build.Tasks;
@@ -23,7 +24,8 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		public static string GetMetadataOrDefault (this ITaskItem item, string name, string defaultValue)
+		[return: NotNullIfNotNull (nameof (defaultValue))]
+		public static string? GetMetadataOrDefault (this ITaskItem item, string name, string? defaultValue)
 		{
 			var value = item.GetMetadata (name);
 
