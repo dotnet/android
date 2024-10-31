@@ -41,10 +41,10 @@ stages:
   - job: mac_build_create_installers
     displayName: macOS > Create Installers
     pool:
-      name: VSEng-VSMac-Xamarin-Shared
+      name: $(SharedMacPool)
       demands:
-      - macOS.Name -equals Ventura
-      - macOS.Architecture -equals x64
+      - macOS.Name -equals $(SharedMacName)
+      - macOS.Architecture -equals $(SharedMacArch)
     timeoutInMinutes: 420
     workspace:
       clean: all
@@ -185,9 +185,9 @@ stages:
     strategy:
       parallel: 3
     pool:
-      name: VSEng-VSMac-Xamarin-Shared
+      name: $(SharedMacPool)
       demands:
-      - macOS.Name -equals Ventura
+      - macOS.Name -equals $(SharedMacName)
       - macOS.Architecture -equals x64
     timeoutInMinutes: 120
     workspace:
@@ -241,9 +241,9 @@ stages:
     strategy:
       parallel: 6
     pool:
-      name: VSEng-VSMac-Xamarin-Shared
+      name: $(SharedMacPool)
       demands:
-      - macOS.Name -equals Ventura
+      - macOS.Name -equals $(SharedMacName)
       - macOS.Architecture -equals x64
     timeoutInMinutes: 150
     workspace:
