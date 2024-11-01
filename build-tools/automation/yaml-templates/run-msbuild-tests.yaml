@@ -26,6 +26,7 @@ jobs:
       demands:
       - macOS.Name -equals $(SharedMacName)
       - Agent.OSArchitecture -equals $(SharedMacArch)
+      os: macOS
   timeoutInMinutes: 240
   cancelTimeoutInMinutes: 5
   steps:
