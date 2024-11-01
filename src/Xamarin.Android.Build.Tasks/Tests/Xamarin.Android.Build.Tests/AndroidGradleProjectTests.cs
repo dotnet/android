@@ -210,6 +210,33 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void BuildCustomOutputPaths ()
+		{
+			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir);
+			var moduleName = gradleProject.Modules.First ().Name;
+
+			using var builder = CreateDllBuilder ();
+			var customOutputPathsRoot = Path.Combine (Root, builder.ProjectDirectory, "customout");
+			var gradleOutputPath = Path.Combine (customOutputPathsRoot, "gradleoutdir");
+
+			var proj = new XamarinAndroidLibraryProject {
+				OtherBuildItems = {
+					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
+						Metadata = {
+							{ "ModuleName", moduleName },
+							{ "OutputPath", gradleOutputPath },
+						},
+					},
+				},
+				OutputPath = Path.Combine (customOutputPathsRoot, "outdir"),
+				IntermediateOutputPath = Path.Combine (customOutputPathsRoot, "intermediatedir"),
+			};
+
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+			FileAssert.Exists (Path.Combine (proj.OutputPath, $"{moduleName}-release.aar"));
+		}
+
+		[Test]
 		public void BuildMultipleModules ()
 		{
 			var gradleProject = new AndroidGradleProject (GradleTestProjectDir) {
