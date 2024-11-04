@@ -2023,7 +2023,6 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
 	<_CompileToDalvikDependsOnTargets>
 		_CompileJava;
-		_RemoveRegisterAttribute;
 		_CreateApplicationSharedLibraries;
 		_GetMonoPlatformJarPath;
 		_GetLibraryImports;

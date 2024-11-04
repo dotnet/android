@@ -62,6 +62,7 @@ properties that determine build ordering.
     <_PrepareBuildApkDependsOnTargets>
       _SetLatestTargetFrameworkVersion;
       _GetLibraryImports;
+      _RemoveRegisterAttribute;
       _ResolveAssemblies;
       _ResolveSatellitePaths;
       _CreatePackageWorkspace;
