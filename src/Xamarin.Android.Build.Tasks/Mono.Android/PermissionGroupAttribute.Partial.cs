@@ -17,7 +17,7 @@ namespace Android.App {
 
 	partial class PermissionGroupAttribute {
 		
-		ICollection<string> specified;
+		ICollection<string>? specified;
 
 		public static IEnumerable<PermissionGroupAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider, TypeDefinitionCache cache)
 		{

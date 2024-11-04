@@ -16,9 +16,9 @@ namespace Android.App {
 
 	partial class ActivityAttribute {
 
-		string _ParentActivity;
-		TypeDefinition type;
-		ICollection<string> specified;
+		string? _ParentActivity;
+		TypeDefinition? type;
+		ICollection<string>? specified;
 
 		static partial void AddManualMapping ()
 		{

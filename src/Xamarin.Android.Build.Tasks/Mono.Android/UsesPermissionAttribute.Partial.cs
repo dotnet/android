@@ -12,7 +12,7 @@ namespace Android.App {
 
 	partial class UsesPermissionAttribute {
 
-		ICollection<string> specified;
+		ICollection<string>? specified;
 
 		public static IEnumerable<UsesPermissionAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider, TypeDefinitionCache cache)
 		{

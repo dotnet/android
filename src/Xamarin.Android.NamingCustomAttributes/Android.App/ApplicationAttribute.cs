@@ -10,6 +10,7 @@
 #nullable enable
 
 using System;
+using Java.Interop;
 
 namespace Android.App;
 
@@ -73,6 +74,8 @@ public sealed partial class ApplicationAttribute : Attribute, Java.Interop.IJniN
 	public string? Logo { get; set; }
 
 	public Type? ManageSpaceActivity { get; set; }
+
+	string IJniNameProviderAttribute.Name => Name ?? "";
 
 	public string? Name { get; set; }
 

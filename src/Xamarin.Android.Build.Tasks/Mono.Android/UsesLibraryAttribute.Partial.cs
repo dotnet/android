@@ -12,7 +12,7 @@ namespace Android.App {
 
 	partial class UsesLibraryAttribute {
 
-		ICollection<string> specified;
+		ICollection<string>? specified;
 
 		public static IEnumerable<UsesLibraryAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider, TypeDefinitionCache cache)
 		{

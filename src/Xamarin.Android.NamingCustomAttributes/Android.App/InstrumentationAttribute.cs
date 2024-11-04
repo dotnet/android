@@ -10,6 +10,7 @@
 #nullable enable
 
 using System;
+using Java.Interop;
 
 namespace Android.App;
 
@@ -27,6 +28,8 @@ public sealed partial class InstrumentationAttribute : Attribute, Java.Interop.I
 	public string? Icon { get; set; }
 
 	public string? Label { get; set; }
+
+	string IJniNameProviderAttribute.Name => Name ?? "";
 
 	public string? Name { get; set; }
 
