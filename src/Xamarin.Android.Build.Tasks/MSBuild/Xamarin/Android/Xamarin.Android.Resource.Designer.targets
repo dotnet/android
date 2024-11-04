@@ -58,9 +58,24 @@ Copyright (C) 2016 Xamarin. All rights reserved.
   <Message Text="IntermediateOutputPath: $(IntermediateOutputPath)" />
 </Target>
 
+<Target Name="_GetProjectResourceDirectory" Returns="$(MSBuildProjectDirectory)\$(MonoAndroidResourcePrefix)">
+</Target>
+
+<Target Name="_CollectProjectReferenceResources"
+    Condition="'$(AndroidUseDesignerAssembly)' == 'True' And '$(DesignTimeBuild)' == 'True' "
+>
+  <MSBuild
+      Projects="@(ProjectReference)"
+      Targets="Restore;_GetProjectResourceDirectory"
+      SkipNonexistentTargets="true"
+  >
+    <Output TaskParameter="TargetOutputs" ItemName="LibraryResourceDirectories" />
+  </MSBuild>
+</Target>
+
 <Target Name="_GenerateRtxt"
     Condition="'$(AndroidUseDesignerAssembly)' == 'True' And '$(DesignTimeBuild)' == 'True' "
-    DependsOnTargets="_CreatePropertiesCache;_ResolveSdks;_ResolveAndroidTooling;_GetJavaPlatformJar;_GenerateAndroidResourceDir;_SetupDesignerProperties"
+    DependsOnTargets="_CreatePropertiesCache;_ResolveSdks;_ResolveAndroidTooling;_GetJavaPlatformJar;_GenerateAndroidResourceDir;_SetupDesignerProperties;_CollectProjectReferenceResources"
     Inputs="$(_AndroidResFlagFile);@(_AndroidResourceDest);@(LibraryResourceDirectories->'%(StampFile)')"
     Outputs="$(_DesignerIntermediateOutputPath)R.txt"
   >
@@ -78,7 +93,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_GenerateResourceCaseMap"
-    DependsOnTargets="_ComputeAndroidResourcePaths;_SetupDesignerProperties;_GetLibraryImports"
+    DependsOnTargets="_ComputeAndroidResourcePaths;_SetupDesignerProperties;_GetLibraryImports;_CollectProjectReferenceResources"
     Inputs="@(_AndroidResourceDest);@(LibraryResourceDirectories->'%(StampFile)')"
     Outputs="$(_GenerateResourceCaseMapFile)"
   >

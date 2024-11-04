@@ -1202,14 +1202,19 @@ namespace Lib2
 				Assert.IsTrue (b.DesignTimeBuild (proj), "first dtb should have succeeded.");
 				var target = "_GenerateResourceDesignerAssembly";
 				Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should not have been skipped.");
+				var importsTarget = "_ResolveLibraryProjectImports";
+				Assert.IsTrue (b.Output.IsTargetSkipped (importsTarget, defaultIfNotUsed: true), $"`{importsTarget}` should have been skipped.");
 				// DesignTimeBuild=true lowercased
 				var parameters = new [] { "DesignTimeBuild=true" };
 				Assert.IsTrue (b.RunTarget (proj, "Compile", doNotCleanupOnUpdate: true, parameters: parameters), "second dtb should have succeeded.");
 				Assert.IsTrue (b.Output.IsTargetSkipped (target, defaultIfNotUsed: true), $"`{target}` should have been skipped.");
+				Assert.IsTrue (b.Output.IsTargetSkipped (importsTarget, defaultIfNotUsed: true), $"`{importsTarget}` should have been skipped.");
 				Assert.IsTrue (b.RunTarget (proj, "UpdateGeneratedFiles", doNotCleanupOnUpdate: true, parameters: parameters), "UpdateGeneratedFiles should have succeeded.");
 				Assert.IsTrue (b.Output.IsTargetSkipped (target, defaultIfNotUsed: true), $"`{target}` should have been skipped.");
+				Assert.IsTrue (b.Output.IsTargetSkipped (importsTarget, defaultIfNotUsed: true), $"`{importsTarget}` should have been skipped.");
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "full build should have succeeded.");
 				Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should not have been skipped.");
+				Assert.IsFalse (b.Output.IsTargetSkipped (importsTarget), $"`{importsTarget}` should not have been skipped.");
 			}
 		}
 
