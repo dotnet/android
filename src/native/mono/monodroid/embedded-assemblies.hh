@@ -92,9 +92,7 @@ namespace xamarin::android::internal {
 
 		static constexpr size_t assemblies_prefix_size = calc_size(apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator);
 		static constexpr auto assemblies_prefix_array = concat_string_views<assemblies_prefix_size> (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator);
-
-		// .data() must be used otherwise string_view length will include the trailing \0 in the array
-		static constexpr std::string_view assemblies_prefix { assemblies_prefix_array.data () };
+		static constexpr std::string_view assemblies_prefix { assemblies_prefix_array };
 
 		// We have two records for each assembly, for names with and without the extension
 		static constexpr uint32_t assembly_store_index_entries_per_assembly = 2;
@@ -107,14 +105,11 @@ namespace xamarin::android::internal {
 
 		static constexpr size_t assembly_store_file_name_size = calc_size (assembly_store_prefix, SharedConstants::android_lib_abi, assembly_store_extension, dso_suffix);
 		static constexpr auto assembly_store_file_name_array = concat_string_views<assembly_store_file_name_size> (assembly_store_prefix, SharedConstants::android_lib_abi, assembly_store_extension, dso_suffix);
-
-		// .data() must be used otherwise string_view length will include the trailing \0 in the array
-		static constexpr std::string_view assembly_store_file_name { assembly_store_file_name_array.data () };
+		static constexpr std::string_view assembly_store_file_name { assembly_store_file_name_array };
 
 		static constexpr size_t assembly_store_file_path_size = calc_size(apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator, assembly_store_prefix, SharedConstants::android_lib_abi, assembly_store_extension, dso_suffix);
 		static constexpr auto assembly_store_file_path_array = concat_string_views<assembly_store_file_path_size> (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator, assembly_store_prefix, SharedConstants::android_lib_abi, assembly_store_extension, dso_suffix);
-		// .data() must be used otherwise string_view length will include the trailing \0 in the array
-		static constexpr std::string_view assembly_store_file_path { assembly_store_file_path_array.data () };
+		static constexpr std::string_view assembly_store_file_path { assembly_store_file_path_array };
 
 		static constexpr size_t dso_size_overhead = ArchiveDSOStubConfig::PayloadSectionOffset + (ArchiveDSOStubConfig::SectionHeaderEntryCount * ArchiveDSOStubConfig::SectionHeaderEntrySize);
 
@@ -173,8 +168,8 @@ namespace xamarin::android::internal {
 			abort_unless (
 				runtime_config_data_size < std::numeric_limits<uint32_t>::max (),
 				[] {
-					return Util::monodroid_strdup_printf ("Runtime config binary blob size exceeds %u bytes",
-														  std::numeric_limits<uint32_t>::max ());
+					return detail::_format_message ("Runtime config binary blob size exceeds %u bytes",
+													std::numeric_limits<uint32_t>::max ());
 				}
 			);
 			size = static_cast<uint32_t>(runtime_config_data_size);
