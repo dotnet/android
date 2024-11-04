@@ -4,6 +4,7 @@
 #include <array>
 #include <cstdarg>
 #include <cstdlib>
+#include <cstdio>
 #include <concepts>
 #include <memory>
 #include <source_location>
@@ -15,35 +16,33 @@
 
 #include "helpers.hh"
 
+namespace xamarin::android::detail {
+	[[gnu::always_inline, gnu::flatten]]
+	static inline const char*
+	_format_message (const char *format, ...) noexcept
+	{
+		va_list ap;
+		va_start (ap, format);
 
-static inline void
-do_abort_unless (const char* fmt, ...)
-{
-	va_list ap;
+		char *message;
+		int ret = vasprintf (&message, format, ap);
 
-	va_start (ap, fmt);
-	char *message = nullptr;
-	int n = vasprintf (&message, fmt, ap);
-	va_end (ap);
-
-	xamarin::android::Helpers::abort_application (n == -1 ? "Unable to allocate memory for abort message" : message);
+		va_end (ap);
+		return ret == -1 ? "Out of memory" : message;
+	}
 }
-
-// #define abort_unless(_condition_, _fmt_, ...) \
-// 	if (!(_condition_)) [[unlikely]] { \
-// 		do_abort_unless ("%s:%d (%s): " _fmt_, __FILE__, __LINE__, __FUNCTION__, ## __VA_ARGS__); \
-// 	}
 
 template<std::invocable<> F>
 [[gnu::always_inline, gnu::flatten]]
 static inline void
 abort_unless (bool condition, F&& get_message, std::source_location sloc = std::source_location::current ()) noexcept
 {
+	static_assert (std::is_same<typename std::invoke_result<F>::type, const char*>::value, "get_message must return 'const char*'");
+
 	if (condition) [[likely]] {
 		return;
 	}
 
-//	static_assert (std::is_same<std::invoke_result<F>, char*>::value, "get_message must return 'char*'");
 	xamarin::android::Helpers::abort_application (std::invoke (get_message), true /* log_location */, sloc);
 }
 
@@ -57,22 +56,27 @@ abort_unless (bool condition, const char *message, std::source_location sloc = s
 	xamarin::android::Helpers::abort_application (message, true /* log_location */, sloc);
 }
 
-// #define abort_if_invalid_pointer_argument(_ptr_) abort_unless ((_ptr_) != nullptr, "Parameter '%s' must be a valid pointer", #_ptr_)
-// #define abort_if_negative_integer_argument(_arg_) abort_unless ((_arg_) > 0, "Parameter '%s' must be larger than 0", #_arg_)
-
 template<typename T>
 [[gnu::always_inline, gnu::flatten]]
 static inline void
 abort_if_invalid_pointer_argument (T *ptr, const char *ptr_name, std::source_location sloc = std::source_location::current ()) noexcept
 {
-	abort_unless (ptr != nullptr, "Parameter '%s' must be a valid pointer", sloc);
+	abort_unless (
+		ptr != nullptr,
+		[&ptr_name] { return xamarin::android::detail::_format_message ("Parameter '%s' must be a valid pointer", ptr_name); },
+		sloc
+	);
 }
 
 [[gnu::always_inline, gnu::flatten]]
 static inline void
 abort_if_negative_integer_argument (int arg, const char *arg_name, std::source_location sloc = std::source_location::current ()) noexcept
 {
-	abort_unless (arg > 0, "Parameter '%s' must be a valid pointer", sloc);
+	abort_unless (
+		arg > 0,
+		[&arg_name] { return xamarin::android::detail::_format_message ("Parameter '%s' must be a valid pointer", arg_name); },
+		sloc
+	);
 }
 
 // Helper to use in "printf debugging". Normally not used in code anywhere. No code should be shipped with any
@@ -105,32 +109,6 @@ namespace xamarin::android
 
 	template <typename T>
 	using c_unique_ptr = std::unique_ptr<T, CDeleter<T>>;
-
-	template<size_t Size>
-	struct helper_char_array final
-	{
-		constexpr char* data () noexcept
-		{
-			return _elems;
-		}
-
-		constexpr const char* data () const noexcept
-		{
-			return _elems;
-		}
-
-		constexpr char const& operator[] (size_t n) const noexcept
-		{
-			return _elems[n];
-		}
-
-		constexpr char& operator[] (size_t n) noexcept
-		{
-			return _elems[n];
-		}
-
-		char _elems[Size]{};
-	};
 
 	template<size_t Size>
 	using char_array = std::array<char, Size>;
