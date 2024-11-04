@@ -209,7 +209,7 @@ namespace xamarin::android
 		}
 
 		template<size_t N, size_t MaxStackSize, typename TStorage, typename TChar = char>
-		static bool ends_with (string_base<MaxStackSize, TStorage, TChar> const& str, std::array<TChar, N> const& end) noexcept
+		static bool ends_with (internal::string_base<MaxStackSize, TStorage, TChar> const& str, std::array<TChar, N> const& end) noexcept
 		{
 			constexpr size_t end_length = N - 1uz;
 
