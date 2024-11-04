@@ -90,7 +90,7 @@ namespace Xamarin.Android.Tasks
 						var path = Directory.GetParent (entry.FullName).Name;
 						if (ext == ".xml" || ext == ".axml") {
 							if (string.Compare (path, "raw", StringComparison.OrdinalIgnoreCase) != 0) {
-								using var ms = new MemoryStream();
+								using var ms = new MemoryStream ();
 								entry.Extract (ms);
 								ms.Position = 0;
 								using XmlReader reader = XmlReader.Create (ms);
