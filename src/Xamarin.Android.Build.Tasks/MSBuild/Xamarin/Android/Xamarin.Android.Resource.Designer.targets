@@ -58,7 +58,13 @@ Copyright (C) 2016 Xamarin. All rights reserved.
   <Message Text="IntermediateOutputPath: $(IntermediateOutputPath)" />
 </Target>
 
-<Target Name="_GetProjectResourceDirectory" Returns="$(MSBuildProjectDirectory)\$(MonoAndroidResourcePrefix)">
+<Target Name="_GetProjectResourceDirectory" Returns="@(_ProjectReferenceResourceDirectory)">
+  <ItemGroup>
+    <_ProjectReferenceResourceDirectory Include="$(MSBuildProjectDirectory)\$(MonoAndroidResourcePrefix)"
+      StampFile="$(MSBuildProjectFile)"
+      Condition="!Exists('$(OutputPath)$(TargetName).aar')"
+    />
+  </ItemGroup>
 </Target>
 
 <Target Name="_CollectProjectReferenceResources"
