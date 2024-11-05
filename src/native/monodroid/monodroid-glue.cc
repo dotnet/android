@@ -102,37 +102,93 @@ MonodroidRuntime::thread_end ([[maybe_unused]] MonoProfiler *prof, [[maybe_unuse
 }
 
 inline void
-MonodroidRuntime::log_jit_event (MonoMethod *method, const char *event_name)
+MonodroidRuntime::log_method_event (MonoMethod *method, MethodEvent event)
 {
-	jit_time.mark_end ();
-
-	if (jit_log == nullptr)
+	if (!method_event_map) [[unlikely]] {
 		return;
+	}
 
-	char* name = mono_method_full_name (method, 1);
+	char* name = mono_method_full_name (method, TRUE);
+	hash_t name_hash = xxhash::hash (name, strlen (name));
 
-	timing_diff diff (jit_time);
-	fprintf (jit_log, "JIT method %6s: %s elapsed: %lis:%u::%u\n", event_name, name, static_cast<long>(diff.sec), diff.ms, diff.ns);
+	lock_guard write_lock { *method_event_map_write_lock.get () };
 
-	free (name);
+	auto iter = method_event_map->find (name_hash);
+	if (iter == method_event_map->end ()) {
+		(*method_event_map)[name_hash] = MethodEventRecord {
+			.method_name_hash = name_hash,
+			.method_name = name,
+		};
+	}
+
+	MethodEventRecord &record = method_event_map->at (name_hash);
+	switch (event) {
+		case MethodEvent::JitBegin:
+			record.jit_elapsed.mark_start ();
+			record.state |= MethodEventRecord::JitStateStarted;
+			break;
+
+		case MethodEvent::JitDone:
+			record.state |= MethodEventRecord::JitStateSuccess;
+			[[fallthrough]];
+
+		case MethodEvent::JitFailed:
+			record.jit_elapsed.mark_end ();
+			record.state |= MethodEventRecord::JitStateCompleted;
+			break;
+
+		case MethodEvent::Enter:
+			record.invocation_count++;
+			break;
+	}
 }
 
 void
 MonodroidRuntime::jit_begin ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method)
 {
-	monodroidRuntime.log_jit_event (method, "begin");
+	monodroidRuntime.log_method_event (method, MethodEvent::JitBegin);
 }
 
 void
 MonodroidRuntime::jit_failed ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method)
 {
-	monodroidRuntime.log_jit_event (method, "failed");
+	monodroidRuntime.log_method_event (method, MethodEvent::JitFailed);
 }
 
 void
 MonodroidRuntime::jit_done ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method, [[maybe_unused]] MonoJitInfo* jinfo)
 {
-	monodroidRuntime.log_jit_event (method, "done");
+	monodroidRuntime.log_method_event (method, MethodEvent::JitDone);
+}
+
+// This is called only for `mono_runtime_invoke`
+void
+MonodroidRuntime::prof_method_begin_invoke ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method) noexcept
+{
+	monodroidRuntime.log_method_event (method, MethodEvent::Enter);
+}
+
+void
+MonodroidRuntime::prof_method_end_invoke ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method) noexcept
+{}
+
+// This is called only when the interpreter is used
+void
+MonodroidRuntime::prof_method_enter ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method, [[maybe_unused]] MonoProfilerCallContext *context) noexcept
+{
+	log_debug (LOG_ASSEMBLY, "prof_method_enter");
+	monodroidRuntime.log_method_event (method, MethodEvent::Enter);
+}
+
+void
+MonodroidRuntime::prof_method_leave ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method, [[maybe_unused]] MonoProfilerCallContext *context) noexcept
+{}
+
+MonoProfilerCallInstrumentationFlags
+MonodroidRuntime::prof_method_filter ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] MonoMethod *method) noexcept
+{
+	return MONO_PROFILER_CALL_INSTRUMENTATION_ENTER |
+		   MONO_PROFILER_CALL_INSTRUMENTATION_LEAVE;
 }
 
 #ifndef RELEASE
@@ -631,9 +687,11 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 
 	bool log_methods = FastTiming::enabled () && !FastTiming::is_bare_mode ();
 	if (log_methods) [[unlikely]] {
+		log_debug (LOG_ASSEMBLY, "Enabling method logging");
 		std::unique_ptr<char> jit_log_path {Util::path_combine (AndroidSystem::override_dirs [0], "methods.txt")};
+		log_debug (LOG_ASSEMBLY, "JIT log path: %s", jit_log_path.get ());
 		Util::create_directory (AndroidSystem::override_dirs [0], 0755);
-		jit_log = Util::monodroid_fopen (jit_log_path.get (), "a");
+		jit_log = Util::monodroid_fopen (jit_log_path.get (), "w");
 		Util::set_world_accessable (jit_log_path.get ());
 	}
 
@@ -642,10 +700,31 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 	mono_profiler_set_thread_stopped_callback (profiler_handle, thread_end);
 
 	if (log_methods) [[unlikely]]{
-		jit_time.mark_start ();
+		method_event_map_write_lock = std::make_unique<mutex> ();
+		method_event_map = std::make_unique<method_event_map_t> ();
+
 		mono_profiler_set_jit_begin_callback (profiler_handle, jit_begin);
 		mono_profiler_set_jit_done_callback (profiler_handle, jit_done);
 		mono_profiler_set_jit_failed_callback (profiler_handle, jit_failed);
+		mono_profiler_set_method_begin_invoke_callback (profiler_handle, prof_method_begin_invoke);
+		mono_profiler_set_method_end_invoke_callback (profiler_handle, prof_method_end_invoke);
+
+		// The method enter/leave callbacks are supported only when the interpreter is used.
+		switch (AndroidSystem::get_mono_aot_mode ()) {
+			case MonoAotMode::MONO_AOT_MODE_INTERP:
+			case MonoAotMode::MONO_AOT_MODE_INTERP_ONLY:
+			case MonoAotMode::MONO_AOT_MODE_INTERP_LLVMONLY:
+			case MonoAotMode::MONO_AOT_MODE_LLVMONLY_INTERP:
+				log_debug (LOG_ASSEMBLY, "Enabling method enter/leave profiler callbacks");
+				mono_profiler_set_call_instrumentation_filter_callback (profiler_handle, prof_method_filter);
+				mono_profiler_set_method_enter_callback (profiler_handle, prof_method_enter);
+				mono_profiler_set_method_leave_callback (profiler_handle, prof_method_leave);
+				break;
+
+			default:
+				// Other AOT modes are ignored
+				break;
+		}
 	}
 
 	parse_gdb_options ();
@@ -1627,11 +1706,11 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 JNIEXPORT void
 JNICALL Java_mono_android_Runtime_dumpTimingData ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] jclass klass)
 {
-	if (internal_timing == nullptr) {
-		return;
+	if (internal_timing != nullptr) {
+		internal_timing->dump ();
 	}
 
-	internal_timing->dump ();
+	monodroidRuntime.dump_method_events ();
 }
 
 JNIEXPORT void

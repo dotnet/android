@@ -108,6 +108,7 @@ set(XAMARIN_MONODROID_SOURCES
   monodroid-tracing.cc
   monovm-properties.cc
   osbridge.cc
+  performance-methods.cc
   runtime-util.cc
   timezones.cc
   xamarin_getifaddrs.cc

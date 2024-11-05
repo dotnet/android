@@ -10,6 +10,7 @@
 #include "osbridge.hh"
 #include "timing.hh"
 #include "cpp-util.hh"
+#include "performance-methods.hh"
 #include "xxhash.hh"
 #include "monodroid-dl.hh"
 
@@ -57,6 +58,14 @@ namespace xamarin::android::internal
 		Managed = 0x02,
 		Native  = 0x04,
 		Signals = 0x08,
+	};
+
+	enum class MethodEvent
+	{
+		JitBegin,
+		JitFailed,
+		JitDone,
+		Enter,
 	};
 
 	class MonodroidRuntime
@@ -146,6 +155,7 @@ namespace xamarin::android::internal
 		void propagate_uncaught_exception (JNIEnv *env, jobject javaThread, jthrowable javaException);
 		char*	get_java_class_name_for_TypeManager (jclass klass);
 		void log_traces (JNIEnv *env, TraceKind kind, const char *first_line) noexcept;
+		void dump_method_events ();
 
 	private:
 		static void mono_log_handler (const char *log_domain, const char *log_level, const char *message, mono_bool fatal, void *user_data);
@@ -212,12 +222,18 @@ namespace xamarin::android::internal
 		void set_trace_options ();
 		void set_profile_options ();
 
-		void log_jit_event (MonoMethod *method, const char *event_name);
+		void log_method_event (MonoMethod *method, MethodEvent event);
 		static void jit_begin (MonoProfiler *prof, MonoMethod *method);
 		static void jit_failed (MonoProfiler *prof, MonoMethod *method);
 		static void jit_done (MonoProfiler *prof, MonoMethod *method, MonoJitInfo* jinfo);
 		static void thread_start (MonoProfiler *prof, uintptr_t tid);
 		static void thread_end (MonoProfiler *prof, uintptr_t tid);
+		static void prof_method_begin_invoke (MonoProfiler *prof, MonoMethod *method) noexcept;
+		static void prof_method_end_invoke (MonoProfiler *prof, MonoMethod *method) noexcept;
+		static void prof_method_enter (MonoProfiler *prof, MonoMethod *method, MonoProfilerCallContext *context) noexcept;
+        static void prof_method_leave (MonoProfiler *prof, MonoMethod *method, MonoProfilerCallContext *context) noexcept;
+		static MonoProfilerCallInstrumentationFlags prof_method_filter (MonoProfiler *prof, MonoMethod *method) noexcept;
+
 #if !defined (RELEASE)
 		static MonoReflectionType* typemap_java_to_managed (MonoString *java_type_name) noexcept;
 		static const char* typemap_managed_to_java (MonoReflectionType *type, const uint8_t *mvid) noexcept;
@@ -252,7 +268,6 @@ namespace xamarin::android::internal
 		jmethodID           java_System_identityHashCode;
 		jmethodID           Class_getName;
 		jclass              java_TimeZone;
-		timing_period       jit_time;
 		FILE               *jit_log;
 		MonoProfilerHandle  profiler_handle;
 
@@ -274,6 +289,9 @@ namespace xamarin::android::internal
 
 		static MonoCoreRuntimeProperties monovm_core_properties;
 		MonovmRuntimeConfigArguments  runtime_config_args;
+
+		std::unique_ptr<method_event_map_t> method_event_map{};
+		static inline std::unique_ptr<xamarin::android::mutex> method_event_map_write_lock;
 	};
 }
 #endif
