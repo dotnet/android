@@ -160,7 +160,7 @@ namespace jittimes {
 					var info = GetMethodInfo (method);
 
 					if (info.state != MethodInfo.State.None && Verbose)
-						Warning ($"duplicite begin of `{info.method}`");
+						Warning ($"duplicate begin of `{info.method}`");
 
 					info.state = MethodInfo.State.Begin;
 					info.begin = time;
