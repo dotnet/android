@@ -176,7 +176,6 @@ MonodroidRuntime::prof_method_end_invoke ([[maybe_unused]] MonoProfiler *prof, M
 void
 MonodroidRuntime::prof_method_enter ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method, [[maybe_unused]] MonoProfilerCallContext *context) noexcept
 {
-	log_debug (LOG_ASSEMBLY, "prof_method_enter");
 	monodroidRuntime.log_method_event (method, MethodEvent::Enter);
 }
 
