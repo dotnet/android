@@ -1,113 +1,53 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace jittimes {
-	public struct Timestamp : IComparable {
-		public Int64 seconds;
-		public int milliseconds;
-		public int nanoseconds;
-
+	public record struct Timestamp(long nanoseconds) : IComparable {
 		static readonly Regex regex = new Regex ("^([0-9]+)s:([0-9]+)::([0-9]+)$");
 
 		public static Timestamp Parse (string time)
 		{
-			Timestamp ts = new Timestamp ();
-
 			var match = regex.Match (time);
-			if (!match.Success || match.Groups.Count <= 3) {
-				ts.seconds = 0;
-				ts.milliseconds = 0;
-				ts.nanoseconds = 0;
-				return ts;
-			}
+			if (!match.Success || match.Groups.Count <= 3)
+				return default;
 
-			ts.seconds = Convert.ToInt64 (match.Groups [1].Value);
-			ts.milliseconds = Convert.ToInt32 (match.Groups [2].Value);
-			ts.nanoseconds = Convert.ToInt32 (match.Groups [3].Value);
-
-			return ts;
+			var s = Convert.ToInt64 (match.Groups [1].Value);
+			var ms = Convert.ToInt32 (match.Groups [2].Value);
+			var ns = Convert.ToInt32 (match.Groups [3].Value);
+			return new Timestamp(1000_000_000*s + 1000_000*ms + ns);
 		}
 
 		static public Timestamp operator - (Timestamp ts1, Timestamp ts2)
-		{
-			Timestamp result = new Timestamp ();
-
-			if (ts1.nanoseconds >= ts2.nanoseconds)
-				result.nanoseconds = ts1.nanoseconds - ts2.nanoseconds;
-			else {
-				result.nanoseconds = 1000000 + ts1.nanoseconds - ts2.nanoseconds;
-				result.milliseconds--;
-			}
-
-			if (ts1.milliseconds >= ts2.milliseconds)
-				result.milliseconds += ts1.milliseconds - ts2.milliseconds;
-			else {
-				result.milliseconds += 1000 + ts1.milliseconds - ts2.milliseconds;
-				result.seconds--;
-			}
-
-			result.seconds += ts1.seconds - ts2.seconds;
-
-			return result;
-		}
+			=> new Timestamp(ts1.nanoseconds - ts2.nanoseconds);
 
 		static public Timestamp operator + (Timestamp ts1, Timestamp ts2)
-		{
-			Timestamp result = new Timestamp {
-				nanoseconds = ts1.nanoseconds + ts2.nanoseconds
-			};
-
-			if (result.nanoseconds > 1000000) {
-				result.milliseconds += result.nanoseconds / 1000000;
-				result.nanoseconds %= 1000000;
-			}
-
-			result.milliseconds += ts1.milliseconds + ts2.milliseconds;
-
-			if (result.milliseconds > 1000) {
-				result.seconds += result.milliseconds / 1000;
-				result.milliseconds %= 1000;
-			}
-
-			return result;
-		}
+			=> new Timestamp(ts1.nanoseconds + ts2.nanoseconds);
 
 		public override string ToString ()
 		{
-			var sec = seconds != 0 ? $"{seconds}(s):" : "";
-
-			return $"{sec}{milliseconds}::{nanoseconds}";
+			var remainder = Math.Abs(nanoseconds);
+			var s = remainder / 1000_000_000;
+			remainder -= 1000_000_000*s;
+			var ms = remainder / 1000_000;
+			var ns = remainder - 1000_000*ms;
+			var sign = nanoseconds < 0 ? "-" : "";
+			var sec = s != 0 ? $"{s}(s):" : "";
+			return $"{sign}{sec}{ms}::{ns}";
 		}
+
+		public Timestamp Positive ()
+			=> new Timestamp(Math.Max(0L, nanoseconds));
 
 		public double Milliseconds ()
-		{
-			return seconds * 1000.0 + (double)milliseconds + nanoseconds / 1000000.0;
-		}
+			=> nanoseconds / 1000_000;
 
-		public int CompareTo (object o)
+		public int CompareTo(object o)
 		{
 			if (!(o is Timestamp other))
 				throw new ArgumentException ("Object is not a Timestamp");
 
-			if (seconds > other.seconds)
-				return 1;
-
-			if (seconds < other.seconds)
-				return -1;
-
-			if (milliseconds > other.milliseconds)
-				return 1;
-
-			if (milliseconds < other.milliseconds)
-				return -1;
-
-			if (nanoseconds > other.nanoseconds)
-				return 1;
-
-			if (nanoseconds < other.nanoseconds)
-				return -1;
-
-			return 0;
+			return Comparer<long>.Default.Compare(this.nanoseconds, other.nanoseconds);
 		}
 	}
 }
