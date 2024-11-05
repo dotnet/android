@@ -98,6 +98,9 @@ namespace Xamarin.Android.Tasks
 			case "full":
 				aotMode = AotMode.Full;
 				return true;
+			case "fullinterp":
+				aotMode = AotMode.FullInterp;
+				return true;
 			case "interpreter":
 				// We don't do anything here for this mode, this is just to set the flag for the XA
 				// runtime to initialize Mono in the interpreter "AOT" mode.
