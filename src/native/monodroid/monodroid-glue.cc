@@ -684,21 +684,11 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 	// TESTING UBSAN: integer overflow
 	//log_warn (LOG_DEFAULT, "Let us have an overflow: %d", INT_MAX + 1);
 
-	bool log_methods = FastTiming::enabled () && !FastTiming::is_bare_mode ();
-	if (log_methods) [[unlikely]] {
-		log_debug (LOG_ASSEMBLY, "Enabling method logging");
-		std::unique_ptr<char> jit_log_path {Util::path_combine (AndroidSystem::override_dirs [0], "methods.txt")};
-		log_debug (LOG_ASSEMBLY, "JIT log path: %s", jit_log_path.get ());
-		Util::create_directory (AndroidSystem::override_dirs [0], 0755);
-		jit_log = Util::monodroid_fopen (jit_log_path.get (), "w");
-		Util::set_world_accessable (jit_log_path.get ());
-	}
-
 	profiler_handle = mono_profiler_create (nullptr);
 	mono_profiler_set_thread_started_callback (profiler_handle, thread_start);
 	mono_profiler_set_thread_stopped_callback (profiler_handle, thread_end);
 
-	if (log_methods) [[unlikely]]{
+	if (FastTiming::enabled () && !FastTiming::is_bare_mode ()) [[unlikely]]{
 		method_event_map_write_lock = std::make_unique<mutex> ();
 		method_event_map = std::make_unique<method_event_map_t> ();
 

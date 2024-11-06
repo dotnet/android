@@ -268,7 +268,6 @@ namespace xamarin::android::internal
 		jmethodID           java_System_identityHashCode;
 		jmethodID           Class_getName;
 		jclass              java_TimeZone;
-		FILE               *jit_log;
 		MonoProfilerHandle  profiler_handle;
 
 		/*
