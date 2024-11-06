@@ -122,8 +122,8 @@
     <comment>The following are literal names and should not be translated: `Application`, `class`, `Activation`, `Constructor`</comment>
   </data>
   <data name="DNAA0001_MessageFormat" xml:space="preserve">
-    <value>Application class '{0}' does not have an Activation Constructor</value>
-    <comment>The following are literal names and should not be translated: `Application`, `class`, `Activation`, `Constructor`
+    <value>Application class '{0}' does not have an Activation Constructor '{0}(IntPtr handle, JniHandleOwnership transfer)'.</value>
+    <comment>The following are literal names and should not be translated: `Application`, `class`, `Activation`, `Constructor`, `(IntPtr handle, JniHandleOwnership transfer)`
 {0} - The name of the class with the issue</comment>
   </data>
 </root>
