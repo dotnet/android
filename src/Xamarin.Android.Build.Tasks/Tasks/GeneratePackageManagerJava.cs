@@ -62,7 +62,6 @@ public class GeneratePackageManagerJava : AndroidTask
 		[Required]
 		public bool EnablePreloadAssembliesDefault { get; set; }
 
-		// This property should be required but it will require modifying `monodroid` first
 		[Required]
 		public string AndroidBinUtilsDirectory { get; set; }
 
