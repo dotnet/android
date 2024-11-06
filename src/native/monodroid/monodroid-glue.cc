@@ -965,7 +965,6 @@ MonodroidRuntime::propagate_uncaught_exception (JNIEnv *env, jobject javaThread,
 	mono_runtime_invoke (method, nullptr, args, nullptr);
 }
 
-#if DEBUG
 static void
 setup_gc_logging (void)
 {
@@ -974,7 +973,6 @@ setup_gc_logging (void)
 		log_categories |= LOG_GC;
 	}
 }
-#endif
 
 inline void
 MonodroidRuntime::set_environment_variable_for_directory (const char *name, jstring_wrapper &value, bool createDirectory, mode_t mode)
@@ -1431,8 +1429,9 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 
 	Logger::init_reference_logging (AndroidSystem::get_primary_override_dir ());
 
-#if DEBUG
 	setup_gc_logging ();
+
+#if DEBUG
 	set_debug_env_vars ();
 #endif
 

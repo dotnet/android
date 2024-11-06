@@ -461,18 +461,16 @@ OSBridge::take_global_ref_jni (JNIEnv *env, MonoObject *obj)
 		_monodroid_gref_log_new (weak, get_object_ref_type (env, weak),
 				handle, get_object_ref_type (env, handle),
 				"finalizer", gettid (),
-				"take_global_ref_jni", 0);
+				"   at [[gc:take_global_ref_jni]]", 0);
 	}
-	_monodroid_weak_gref_delete (weak, get_object_ref_type (env, weak),
-			"finalizer", gettid (), "take_global_ref_jni", 0);
-	env->DeleteWeakGlobalRef (weak);
-	if (!handle) {
-		void *old_handle = nullptr;
 
-		mono_field_get_value (obj, bridge_info->handle, &old_handle);
-	}
 	mono_field_set_value (obj, bridge_info->handle, &handle);
 	mono_field_set_value (obj, bridge_info->handle_type, &type);
+
+	_monodroid_weak_gref_delete (weak, get_object_ref_type (env, weak),
+			"finalizer", gettid (), "   at [[gc:take_global_ref_jni]]", 0);
+	env->DeleteWeakGlobalRef (weak);
+
 	return handle != nullptr;
 }
 
@@ -495,13 +493,14 @@ OSBridge::take_weak_global_ref_jni (JNIEnv *env, MonoObject *obj)
 	weak = env->NewWeakGlobalRef (handle);
 	_monodroid_weak_gref_new (handle, get_object_ref_type (env, handle),
 			weak, get_object_ref_type (env, weak),
-			"finalizer", gettid (), "take_weak_global_ref_jni", 0);
+			"finalizer", gettid (), "   at [[gc:take_weak_global_ref_jni]]", 0);
 
-	_monodroid_gref_log_delete (handle, get_object_ref_type (env, handle),
-			"finalizer", gettid (), "take_weak_global_ref_jni", 0);
-	env->DeleteGlobalRef (handle);
 	mono_field_set_value (obj, bridge_info->handle, &weak);
 	mono_field_set_value (obj, bridge_info->handle_type, &type);
+
+	_monodroid_gref_log_delete (handle, get_object_ref_type (env, handle),
+			"finalizer", gettid (), "   at [[gc:take_weak_global_ref_jni]]", 0);
+	env->DeleteGlobalRef (handle);
 	return 1;
 }
 
@@ -903,7 +902,6 @@ OSBridge::gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xre
 	if (gc_disabled)
 		return;
 
-#if DEBUG
 	if (Logger::gc_spew_enabled ()) {
 		int i, j;
 		log_info (LOG_GC, "cross references callback invoked with %d sccs and %d xrefs.", num_sccs, num_xrefs);
@@ -912,11 +910,18 @@ OSBridge::gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xre
 			log_info (LOG_GC, "group %d with %d objects", i, sccs [i]->num_objs);
 			for (j = 0; j < sccs [i]->num_objs; ++j) {
 				MonoObject *obj = sccs [i]->objs [j];
+
+				MonoJavaGCBridgeInfo    *bridge_info    = get_gc_bridge_info_for_object (obj);
+				jobject handle = 0;
+				if (bridge_info != nullptr) {
+					mono_field_get_value (obj, bridge_info->handle, &handle);
+				}
 				MonoClass *klass = mono_object_get_class (obj);
-				log_info (LOG_GC, "\tobj %p [%s::%s]",
+				log_info (LOG_GC, "\tobj %p [%s::%s] handle %p",
 						obj,
 						mono_class_get_namespace (klass),
-						mono_class_get_name (klass));
+						mono_class_get_name (klass),
+						handle);
 			}
 		}
 
@@ -925,7 +930,6 @@ OSBridge::gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xre
 				log_info_nocheck (LOG_GC, "xref [%d] %d -> %d", i, xrefs [i].src_scc_index, xrefs [i].dst_scc_index);
 		}
 	}
-#endif
 
 	env = ensure_jnienv ();
 
