@@ -2,7 +2,7 @@
 using NUnit.Framework;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Testing;
-using VerifyCS = CSharpCodeFixVerifier<ResourceDesignerDiagnosticSuppressor, CustomApplicationCodeFixProvider>;
+using VerifyCS = CSharpCodeFixVerifier<CustomApplicationAnalyzer, CustomApplicationCodeFixProvider>;
 
 [TestFixture]
 public class DNAA0001Tests
