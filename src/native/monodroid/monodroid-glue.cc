@@ -779,15 +779,19 @@ MonodroidRuntime::lookup_bridge_info (MonoClass *klass, const OSBridge::MonoJava
 	info->handle            = mono_class_get_field_from_name (info->klass, const_cast<char*> ("handle"));
 	info->handle_type       = mono_class_get_field_from_name (info->klass, const_cast<char*> ("handle_type"));
 	info->refs_added        = mono_class_get_field_from_name (info->klass, const_cast<char*> ("refs_added"));
+	info->key_handle        = mono_class_get_field_from_name (info->klass, const_cast<char*> ("key_handle"));
+
+	// key_handle is optional, as Java.Interop.JavaObject doesn't currently have it
 	if (info->klass == nullptr || info->handle == nullptr || info->handle_type == nullptr || info->refs_added == nullptr) {
 		Helpers::abort_application (
 			Util::monodroid_strdup_printf (
-				"The type `%s.%s` is missing required instance fields! handle=%p handle_type=%p refs_added=%p",
+				"The type `%s.%s` is missing required instance fields! handle=%p handle_type=%p refs_added=%p key_handle=%p",
 				type->_namespace,
 				type->_typename,
 				info->handle,
 				info->handle_type,
-				info->refs_added
+				info->refs_added,
+				info->key_handle
 			)
 		);
 	}

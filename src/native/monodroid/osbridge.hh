@@ -40,6 +40,7 @@ namespace xamarin::android::internal
 			MonoClassField  *handle;
 			MonoClassField  *handle_type;
 			MonoClassField  *refs_added;
+			MonoClassField  *key_handle;
 		};
 
 		// add_reference can work with objects which are either MonoObjects with java peers, or raw jobjects

@@ -47,6 +47,7 @@ OSBridge::MonoJavaGCBridgeInfo OSBridge::empty_bridge_info = {
 	nullptr,
 	nullptr,
 	nullptr,
+	nullptr,
 	nullptr
 };
 
@@ -462,6 +463,21 @@ OSBridge::take_global_ref_jni (JNIEnv *env, MonoObject *obj)
 				handle, get_object_ref_type (env, handle),
 				"finalizer", gettid (),
 				"   at [[gc:take_global_ref_jni]]", 0);
+	} else if (Logger::gc_spew_enabled ()) [[unlikely]] {
+		void   *key_handle  = nullptr;
+		if (bridge_info->key_handle) {
+			mono_field_get_value (obj, bridge_info->key_handle, &key_handle);
+		}
+
+		MonoClass *klass = mono_object_get_class (obj);
+		char *message = Util::monodroid_strdup_printf (
+				"handle %p/W; key_handle %p; MCW type: `%s.%s`: was collected by a Java GC",
+				weak,
+				key_handle,
+				mono_class_get_namespace (klass),
+				mono_class_get_name (klass));
+		_monodroid_gref_log (message);
+		free (message);
 	}
 
 	mono_field_set_value (obj, bridge_info->handle, &handle);
@@ -912,16 +928,21 @@ OSBridge::gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xre
 				MonoObject *obj = sccs [i]->objs [j];
 
 				MonoJavaGCBridgeInfo    *bridge_info    = get_gc_bridge_info_for_object (obj);
-				jobject handle = 0;
+				jobject handle      = 0;
+				void   *key_handle  = nullptr;
 				if (bridge_info != nullptr) {
 					mono_field_get_value (obj, bridge_info->handle, &handle);
+					if (bridge_info->key_handle != nullptr) {
+						mono_field_get_value (obj, bridge_info->key_handle, &key_handle);
+					}
 				}
 				MonoClass *klass = mono_object_get_class (obj);
-				log_info (LOG_GC, "\tobj %p [%s::%s] handle %p",
+				log_info (LOG_GC, "\tobj %p [%s::%s] handle %p key_handle %p",
 						obj,
 						mono_class_get_namespace (klass),
 						mono_class_get_name (klass),
-						handle);
+						handle,
+						key_handle);
 			}
 		}
 
