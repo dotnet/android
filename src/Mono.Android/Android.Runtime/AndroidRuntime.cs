@@ -846,7 +846,13 @@ namespace Android.Runtime {
 				throw new ArgumentNullException (nameof (value));
 
 			if (Logger.LogGlobalRef) {
-				RuntimeNativeMethods._monodroid_gref_log ($"Finalizing handle {value.PeerReference}\n");
+				RuntimeNativeMethods._monodroid_gref_log (
+						string.Format (CultureInfo.InvariantCulture,
+							"Finalizing Instance.Type={0} PeerReference={1} IdentityHashCode=0x{2:x} Instance=0x{3:x}",
+							value.GetType ().ToString (),
+							value.PeerReference.ToString (),
+							value.JniIdentityHashCode,
+							RuntimeHelpers.GetHashCode (value)));
 			}
 
 			// FIXME: need hash cleanup mechanism.
