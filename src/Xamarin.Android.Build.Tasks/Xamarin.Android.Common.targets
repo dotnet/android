@@ -1,4 +1,4 @@
-﻿<!--
+<!--
 ***********************************************************************************************
 Xamarin.Android.Common.targets
 
@@ -1540,7 +1540,7 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <AndroidManifestOverlay
         Include="$(MSBuildThisFileDirectory)\ManifestOverlays\Timing.xml"
-        Condition=" '$(_AndroidFastTiming)' == 'True' "
+        Condition=" '$(_AndroidFastTiming)' == 'True' Or '$(_AndroidMethodsStats)' == 'True' "
     />
   </ItemGroup>
   <ManifestMerger

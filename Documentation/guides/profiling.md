@@ -174,72 +174,53 @@ If profiling a Release build, you'll need to edit your
 
 Debug builds already set this value by default.
 
+In order to save method JIT statistics, the application has to be built
+with the `$(_AndroidMethodsStats)` MSBuild property set to `true`.
+
 Next, run the `adb` command:
 
     > adb shell setprop debug.mono.log timing,default
 
-After launching the app, you can find a file that was recorded during
-startup:
+After launching the app, wait for the desired period of time and then send
+an Android intent to the application in order to actually save data into
+the `methods.xml` file:
+
+    > adb shell am broadcast -a mono.android.app.DUMP_TIMING_DATA com.xamarin.android.helloworld
+
+After this is done, you can find a file that was recorded during startup:
 
     > adb shell run-as com.xamarin.android.helloworld ls files/.__override__
-    counters.txt
-    methods.txt
+    methods.xml
 
-Make sure to use your app's package name instead of
-`com.xamarin.android.helloworld`.
+Make sure to use your app's package name instead of `com.xamarin.android.helloworld`.
 
 You can pull these files to your machine by doing:
 
-    > adb shell run-as com.xamarin.android.helloworld cat files/.__override__/counters.txt > counters.txt
-    > adb shell run-as com.xamarin.android.helloworld cat files/.__override__/methods.txt > methods.txt
+    > adb shell run-as com.xamarin.android.helloworld cat files/.__override__/methods.xml > methods.xml
 
 If you ever need to reset/clear these directories, you can
 uninstall/reinstall the app or merely:
 
-    > adb shell run-as com.xamarin.android.helloworld rm -r files/.__override__/
+    > adb shell run-as com.xamarin.android.helloworld rm files/.__override__/methods.xml
 
-`counters.txt` has some interesting summary information provided by
-Mono:
+`methods.xml` has the individual JIT times of each method:
 
-    ## Runtime.register: type=HelloWorld.MainActivity, HelloWorld
-    JIT statistics
-    Discarded method code               : 1
-    Time spent JITting discarded code   : 0.82 ms
-    Try holes memory size               : 896
-    Dynamic code allocs                 : 3
-    Dynamic code bytes                  : 584
-    Dynamic code frees                  : 0
-    Unwind info size                    : 5985
-    Calls to trampolines                : 1994
-    JIT trampolines                     : 952
-    Unbox trampolines                   : 2
-    Static rgctx trampolines            : 7
-    Async JIT info size                 : 0
-    Max native code in a domain         : 0
-    Max code space allocated in a domain: 0
-    Total code space allocated          : 0
-    Hazardous pointers                  : 0
-    Compiled methods                    : 921
-    Methods from AOT                    : 0
-    Methods JITted using mono JIT       : 921
-    Methods JITted using LLVM           : 0
-    Methods using the interpreter       : 0
+    <method name="Java.Lang.Object:GetObject (intptr,Android.Runtime.JniHandleOwnership,System.Type)" invocation_count="1" jit_time="0:0::20915" jit_status="success" />
 
-_NOTE: that `counters.txt` is not available in .NET 6 projects._
-
-`methods.txt` has the individual JIT times of each method:
-
-    JIT method  begin: System.OutOfMemoryException:.ctor (string) elapsed: 0s:20::136721
-    JIT method   done: System.OutOfMemoryException:.ctor (string) elapsed: 0s:20::605627
+If methods statistics were gathered in `Release` mode, the `invocation_count` attribute of most entries
+will be `0`.  This is due to the fact that the Mono runtime allows us to gather call statistics only
+when running with the interpreter instead of JIT.  In order to properly count calls to each method, the
+application needs to be built with the `$(UseInterpreter)` MSBuild property set to `true` (it works both in
+`Debug` and `Release` modes).
 
 This is not particularly readable, so you can use our
 [jit-times][jit_times] command-line tool to get better/sorted output:
 
     # Windows / .NET
-    jit-times.exe methods.txt > methods-sorted.txt
+    jit-times.exe methods.xml > methods-sorted.txt
 
     # Mac / Mono
-    mono jit-times.exe methods.txt > methods-sorted.txt
+    mono jit-times.exe methods.xml > methods-sorted.txt
 
 Which outputs:
 
@@ -441,7 +422,7 @@ target:
     Project Evaluation Performance Summary:
            12 ms  samples\HelloWorld\HelloLibrary\HelloLibrary.csproj   1 calls
            98 ms  samples\HelloWorld\HelloWorld.csproj   1 calls
-    
+
     Target Performance Summary:
           275 ms  _UpdateAndroidResgen                       2 calls
           354 ms  _GenerateJavaStubs                         1 calls
@@ -450,7 +431,7 @@ target:
           865 ms  _ResolveSdks                               2 calls
           953 ms  ResolveProjectReferences                   2 calls
          1219 ms  _CompileToDalvikWithD8                     1 calls
-    
+
     Task Performance Summary:
           681 ms  Csc                                        2 calls
           809 ms  ValidateJavaVersion                        2 calls

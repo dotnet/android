@@ -231,7 +231,7 @@ namespace xamarin::android::internal
 		static void prof_method_begin_invoke (MonoProfiler *prof, MonoMethod *method) noexcept;
 		static void prof_method_end_invoke (MonoProfiler *prof, MonoMethod *method) noexcept;
 		static void prof_method_enter (MonoProfiler *prof, MonoMethod *method, MonoProfilerCallContext *context) noexcept;
-        static void prof_method_leave (MonoProfiler *prof, MonoMethod *method, MonoProfilerCallContext *context) noexcept;
+		static void prof_method_leave (MonoProfiler *prof, MonoMethod *method, MonoProfilerCallContext *context) noexcept;
 		static MonoProfilerCallInstrumentationFlags prof_method_filter (MonoProfiler *prof, MonoMethod *method) noexcept;
 
 #if !defined (RELEASE)

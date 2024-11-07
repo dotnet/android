@@ -169,8 +169,10 @@ categories:
   * `timing`
     Enable logging of native code performance information, including
     method execution timing which is written to a file named
-    `methods.txt`.  `timing=bare` should be used in preference to this
-    category.
+    `methods.xml` (see [profiling][profiling] for more information).
+    `timing=bare` should be used in preference to this category.
+
+[profiling]: ../guides/profiling.md
 
 #### Timing events format
 

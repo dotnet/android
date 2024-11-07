@@ -35,11 +35,10 @@ namespace {
 void
 MonodroidRuntime::dump_method_events ()
 {
-	if (!method_event_map) {
+	if (!method_event_map || !method_event_map_write_lock) {
 		return;
 	}
 
-	log_debug (LOG_ASSEMBLY, "Dumping method events");
 	lock_guard<mutex> write_mutex { *method_event_map_write_lock.get () };
 
 	mono_profiler_set_jit_begin_callback (profiler_handle, nullptr);
@@ -71,6 +70,7 @@ MonodroidRuntime::dump_method_events ()
 		return;
 	}
 	Util::set_world_accessable (jit_log_path.get ());
+	log_info (LOG_DEFAULT, "Saving managed method statistics to: %s", jit_log_path.get ());
 
 	dprintf (
 		jit_log,
