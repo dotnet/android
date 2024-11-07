@@ -83,6 +83,13 @@ stages:
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\$(DotNetStableTargetFramework)\Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "TestCategory = SmokeTests"
 
+    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
+      parameters:
+        project: src/Microsoft.Android.Sdk.Analysis/Tests/Microsoft.Android.Sdk.Analysis.Tests.csproj 
+        arguments: test -c $(XA.Build.Configuration)
+        displayName: Test Microsoft.Android.Sdk.Analysis $(XA.Build.Configuration)
+        continueOnError: false
+
     - task: BatchScript@1
       displayName: Test dotnet-local.cmd - create template
       inputs:
