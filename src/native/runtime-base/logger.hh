@@ -32,12 +32,12 @@ namespace xamarin::android {
 		}
 #endif // def DEBUG
 
-		static void set_gc_spew_enabled (int yesno) noexcept
+		static void set_gc_spew_enabled (bool yesno) noexcept
 		{
 			_gc_spew_enabled = yesno;
 		}
 
-		static int gc_spew_enabled () noexcept
+		static bool gc_spew_enabled () noexcept
 		{
 			return _gc_spew_enabled;
 		}
