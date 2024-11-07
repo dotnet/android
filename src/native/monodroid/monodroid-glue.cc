@@ -256,7 +256,7 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 			}
 		}
 
-		size_t cur_num_assemblies  = embeddedAssemblies.register_from_apk<should_register_file> (apk_file.get_cstr ());
+		size_t cur_num_assemblies  = EmbeddedAssemblies::register_from_apk<should_register_file> (apk_file.get_cstr ());
 
 		*out_user_assemblies_count += (cur_num_assemblies - prev_num_assemblies);
 		prev_num_assemblies = cur_num_assemblies;
