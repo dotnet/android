@@ -210,6 +210,69 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void BuildCustomOutputPaths ()
+		{
+			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir);
+			var moduleName = gradleProject.Modules.First ().Name;
+
+			using var builder = CreateDllBuilder ();
+			var customOutputPathsRoot = Path.Combine (Root, builder.ProjectDirectory, "customout");
+			var gradleOutputPath = Path.Combine (customOutputPathsRoot, "gradleoutdir");
+
+			var proj = new XamarinAndroidLibraryProject {
+				OtherBuildItems = {
+					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
+						Metadata = {
+							{ "ModuleName", moduleName },
+							{ "OutputPath", gradleOutputPath },
+						},
+					},
+				},
+				OutputPath = Path.Combine (customOutputPathsRoot, "outdir"),
+				IntermediateOutputPath = Path.Combine (customOutputPathsRoot, "intermediatedir"),
+			};
+
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+			FileAssert.Exists (Path.Combine (proj.OutputPath, $"{moduleName}-release.aar"));
+		}
+
+		[Test]
+		public void BuildArtifactsOutputPaths ()
+		{
+			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir);
+			var moduleName = gradleProject.Modules.First ().Name;
+
+			using var builder = CreateDllBuilder ();
+			var customOutputPathsRoot = Path.Combine (Root, builder.ProjectDirectory, "customout");
+
+			var proj = new XamarinAndroidLibraryProject {
+				OtherBuildItems = {
+					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
+						Metadata = {
+							{ "ModuleName", moduleName },
+						},
+					},
+				},
+				Imports = {
+					new Import ("Directory.Build.props") {
+						TextContent = () =>
+$@"<Project>
+	<PropertyGroup>
+		<UseArtifactsOutput>true</UseArtifactsOutput>
+		<ArtifactsPath>{customOutputPathsRoot}</ArtifactsPath>
+	</PropertyGroup>
+</Project>"
+					},
+				},
+				OutputPath = "",
+				IntermediateOutputPath = "",
+			};
+
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+			FileAssert.Exists (Path.Combine (customOutputPathsRoot, "bin", "UnnamedProject", "Debug", $"{moduleName}-release.aar"));
+		}
+
+		[Test]
 		public void BuildMultipleModules ()
 		{
 			var gradleProject = new AndroidGradleProject (GradleTestProjectDir) {
