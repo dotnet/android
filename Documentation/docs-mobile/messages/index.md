@@ -1,4 +1,4 @@
---
+---
 title: .NET for Android errors and warnings reference
 description: Build and deployment error and warning codes in .NET for Android, their meanings, and guidance on how to address them.
 ms.date: 04/11/2024

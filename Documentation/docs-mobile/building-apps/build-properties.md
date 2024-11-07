@@ -4,7 +4,7 @@ description: .NET for Android Build Properties
 ms.date: 09/09/2024
 ---
 
-# Build Properties
+# Build properties
 
 MSBuild properties control the behavior of the
 [targets](build-targets.md).
