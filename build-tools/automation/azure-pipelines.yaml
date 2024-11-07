@@ -152,6 +152,13 @@ extends:
             displayName: prepare java.interop $(XA.Build.Configuration)
             continueOnError: false
 
+        - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
+          parameters:
+            project: src/Microsoft.Android.Sdk.Analysis/Tests/Microsoft.Android.Sdk.Analysis.Tests.csproj 
+            arguments: test -c $(XA.Build.Configuration)
+            displayName: Test Microsoft.Android.Sdk.Analysis $(XA.Build.Configuration)
+            continueOnError: false
+
         - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml@self
 
         - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml@self

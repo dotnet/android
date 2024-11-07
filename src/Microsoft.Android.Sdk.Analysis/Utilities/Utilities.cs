@@ -1,6 +1,29 @@
+using System;
+using System.Collections.Generic;
+using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
+public class AssemblyLoader : IAnalyzerAssemblyLoader
+{
+    private readonly HashSet<string> _loadedAssemblies = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+
+    public static AssemblyLoader Instance = new AssemblyLoader ();
+
+    public void AddDependencyLocation (string fullPath)
+    {
+        _loadedAssemblies.Add (fullPath);
+    }
+
+    public Assembly LoadFromPath (string fullPath)
+    {
+        if (_loadedAssemblies.Contains (fullPath)) {
+            return Assembly.LoadFrom (fullPath);
+        }
+
+        throw new InvalidOperationException ($"Assembly at path '{fullPath}' was not added as a dependency location.");
+    }
+}
 public static class Utilities
 {
 	internal static bool IsDerivedFrom (INamedTypeSymbol typeSymbol, string baseClassName)
