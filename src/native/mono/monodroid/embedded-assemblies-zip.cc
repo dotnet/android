@@ -581,7 +581,7 @@ EmbeddedAssemblies::zip_extract_cd_info (std::array<uint8_t, BufSize> const& buf
 }
 
 template<class T>
-[[gnu::always_inline]] bool
+force_inline bool
 EmbeddedAssemblies::zip_ensure_valid_params (T const& buf, size_t index, size_t to_read) noexcept
 {
 	if (index + to_read > buf.size ()) {
