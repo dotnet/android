@@ -65,7 +65,7 @@ private:
 	char *guid = nullptr;
 };
 
-void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix)
+void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix) noexcept
 {
 	if (assemblies_prefix_override != nullptr)
 		delete[] assemblies_prefix_override;
@@ -912,7 +912,7 @@ EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, size_t size, cons
 }
 
 void
-EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register)
+EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register) noexcept
 {
 	int fd;
 
@@ -1284,12 +1284,10 @@ EmbeddedAssemblies::register_from_filesystem (const char *lib_dir_path,bool look
 	}
 
 	auto register_fn =
-		application_config.have_assembly_store ? std::mem_fn (&EmbeddedAssemblies::maybe_register_blob_from_filesystem) :
+		application_config.have_assembly_store ? &EmbeddedAssemblies::maybe_register_blob_from_filesystem :
 		(look_for_mangled_names ?
-		 std::mem_fn (&EmbeddedAssemblies::maybe_register_assembly_from_filesystem<true>) :
-		 std::mem_fn (&EmbeddedAssemblies::maybe_register_assembly_from_filesystem<false>
-		)
-	);
+		 &EmbeddedAssemblies::maybe_register_assembly_from_filesystem<true> :
+		 &EmbeddedAssemblies::maybe_register_assembly_from_filesystem<false>);
 
 	size_t assembly_count = 0uz;
 	do {
@@ -1334,7 +1332,7 @@ EmbeddedAssemblies::register_from_filesystem (const char *lib_dir_path,bool look
 		}
 
 		// We get `true` if it's time to terminate
-		if (register_fn (this, should_register, assembly_count, cur, state)) {
+		if (register_fn (should_register, assembly_count, cur, state)) {
 			break;
 		}
 	} while (true);

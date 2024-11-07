@@ -298,7 +298,7 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 }
 
 void
-EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unused]] monodroid_should_register should_register)
+EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unused]] monodroid_should_register should_register) noexcept
 {
 	uint32_t cd_offset;
 	uint32_t cd_size;
@@ -412,7 +412,7 @@ EmbeddedAssemblies::set_debug_entry_data (XamarinAndroidBundledAssembly &entry, 
 }
 
 bool
-EmbeddedAssemblies::zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries)
+EmbeddedAssemblies::zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries) noexcept
 {
 	// The simplest case - no file comment
 	off_t ret = ::lseek (fd, -ZIP_EOCD_LEN, SEEK_END);
@@ -478,7 +478,7 @@ EmbeddedAssemblies::zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_
 }
 
 bool
-EmbeddedAssemblies::zip_adjust_data_offset (int fd, ZipEntryLoadState &state)
+EmbeddedAssemblies::zip_adjust_data_offset (int fd, ZipEntryLoadState &state) noexcept
 {
 	static constexpr size_t LH_FILE_NAME_LENGTH_OFFSET   = 26uz;
 	static constexpr size_t LH_EXTRA_LENGTH_OFFSET       = 28uz;
@@ -530,7 +530,7 @@ EmbeddedAssemblies::zip_adjust_data_offset (int fd, ZipEntryLoadState &state)
 
 template<size_t BufSize>
 bool
-EmbeddedAssemblies::zip_extract_cd_info (std::array<uint8_t, BufSize> const& buf, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries)
+EmbeddedAssemblies::zip_extract_cd_info (std::array<uint8_t, BufSize> const& buf, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries) noexcept
 {
 	constexpr size_t EOCD_TOTAL_ENTRIES_OFFSET = 10uz;
 	constexpr size_t EOCD_CD_SIZE_OFFSET       = 12uz;
@@ -558,7 +558,7 @@ EmbeddedAssemblies::zip_extract_cd_info (std::array<uint8_t, BufSize> const& buf
 
 template<class T>
 force_inline bool
-EmbeddedAssemblies::zip_ensure_valid_params (T const& buf, size_t index, size_t to_read) const noexcept
+EmbeddedAssemblies::zip_ensure_valid_params (T const& buf, size_t index, size_t to_read) noexcept
 {
 	if (index + to_read > buf.size ()) {
 		log_error (LOG_ASSEMBLY, "Buffer too short to read %u bytes of data", to_read);
@@ -570,7 +570,7 @@ EmbeddedAssemblies::zip_ensure_valid_params (T const& buf, size_t index, size_t 
 
 template<ByteArrayContainer T>
 bool
-EmbeddedAssemblies::zip_read_field (T const& src, size_t source_index, uint16_t& dst) const noexcept
+EmbeddedAssemblies::zip_read_field (T const& src, size_t source_index, uint16_t& dst) noexcept
 {
 	if (!zip_ensure_valid_params (src, source_index, sizeof (dst))) {
 		return false;
@@ -583,7 +583,7 @@ EmbeddedAssemblies::zip_read_field (T const& src, size_t source_index, uint16_t&
 
 template<ByteArrayContainer T>
 bool
-EmbeddedAssemblies::zip_read_field (T const& src, size_t source_index, uint32_t& dst) const noexcept
+EmbeddedAssemblies::zip_read_field (T const& src, size_t source_index, uint32_t& dst) noexcept
 {
 	if (!zip_ensure_valid_params (src, source_index, sizeof (dst))) {
 		return false;
@@ -600,7 +600,7 @@ EmbeddedAssemblies::zip_read_field (T const& src, size_t source_index, uint32_t&
 
 template<ByteArrayContainer T>
 bool
-EmbeddedAssemblies::zip_read_field (T const& src, size_t source_index, std::array<uint8_t, 4>& dst_sig) const noexcept
+EmbeddedAssemblies::zip_read_field (T const& src, size_t source_index, std::array<uint8_t, 4>& dst_sig) noexcept
 {
 	if (!zip_ensure_valid_params (src, source_index, dst_sig.size ())) {
 		return false;
@@ -612,7 +612,7 @@ EmbeddedAssemblies::zip_read_field (T const& src, size_t source_index, std::arra
 
 template<ByteArrayContainer T>
 bool
-EmbeddedAssemblies::zip_read_field (T const& buf, size_t index, size_t count, dynamic_local_string<SENSIBLE_PATH_MAX>& characters) const noexcept
+EmbeddedAssemblies::zip_read_field (T const& buf, size_t index, size_t count, dynamic_local_string<SENSIBLE_PATH_MAX>& characters) noexcept
 {
 	if (!zip_ensure_valid_params (buf, index, count)) {
 		return false;
@@ -623,7 +623,7 @@ EmbeddedAssemblies::zip_read_field (T const& buf, size_t index, size_t count, dy
 }
 
 bool
-EmbeddedAssemblies::zip_read_entry_info (std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name, ZipEntryLoadState &state)
+EmbeddedAssemblies::zip_read_entry_info (std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name, ZipEntryLoadState &state) noexcept
 {
 	constexpr size_t CD_COMPRESSION_METHOD_OFFSET = 10uz;
 	constexpr size_t CD_UNCOMPRESSED_SIZE_OFFSET  = 24uz;
