@@ -208,8 +208,8 @@ namespace xamarin::android::internal {
 		}
 
 	private:
-		static const char* typemap_managed_to_java (MonoType *type, MonoClass *klass, const uint8_t *mvid) noexcept;
-		static MonoReflectionType* typemap_java_to_managed (hash_t hash, const MonoString *java_type_name) noexcept;
+		STATIC_IN_ANDROID_RELEASE const char* typemap_managed_to_java (MonoType *type, MonoClass *klass, const uint8_t *mvid) noexcept;
+		STATIC_IN_ANDROID_RELEASE MonoReflectionType* typemap_java_to_managed (hash_t hash, const MonoString *java_type_name) noexcept;
 		static size_t register_from_apk (const char *apk_file, monodroid_should_register should_register) noexcept;
 		static size_t register_from_filesystem (monodroid_should_register should_register) noexcept;
 		static size_t register_from_filesystem (const char *dir, bool look_for_mangled_names, monodroid_should_register should_register) noexcept;
@@ -462,8 +462,8 @@ namespace xamarin::android::internal {
 		static inline uint32_t      number_of_zip_dso_entries = 0u;
 		static inline bool          need_to_scan_more_apks = true;
 
-		static inline AssemblyStoreIndexEntry *assembly_store_hashes = nullptr;
-		static inline xamarin::android::mutex  assembly_decompress_mutex {};
+		static inline AssemblyStoreIndexEntry *assembly_store_hashes;
+		static inline xamarin::android::mutex  assembly_decompress_mutex;
 	};
 }
 
