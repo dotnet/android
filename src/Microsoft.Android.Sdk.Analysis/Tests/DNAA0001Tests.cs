@@ -2,22 +2,22 @@
 using NUnit.Framework;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Testing;
-using VerifyCS = CSharpCodeFixVerifier<CustomApplicationAnalyzer, CustomApplicationCodeFixProvider>;
+using VerifyCS = CSharpCodeFixVerifier <CustomApplicationAnalyzer, CustomApplicationCodeFixProvider>;
 
 [TestFixture]
 public class DNAA0001Tests
 {
 	[Test]
-	public async Task DNAA0001DoesNotShow()
+	public async Task DNAA0001DoesNotShow ()
 	{
 		var test = @"";
-		await VerifyCS.VerifyAnalyzerAsync(test);
+		await VerifyCS.VerifyAnalyzerAsync (test);
 	}
 
 	[Test]
-	[TestCase("JniHandleOwnership")]
-	[TestCase("Android.Runtime.JniHandleOwnership")]
-	public async Task DNAA0001DoesNotShowForExistingCode(string type)
+	[TestCase ("JniHandleOwnership")]
+	[TestCase ("Android.Runtime.JniHandleOwnership")]
+	public async Task DNAA0001DoesNotShowForExistingCode (string type)
 	{
 		var test = $@"
 using System;
@@ -46,11 +46,11 @@ namespace Android.App {{
 	}}
 }}
 ";
-		await VerifyCS.VerifyAnalyzerAsync(test);
+		await VerifyCS.VerifyAnalyzerAsync (test);
 	}
 
 	[Test]
-	public async Task DNAA0001IsShownWhenUsingFullyQualifiedType()
+	public async Task DNAA0001IsShownWhenUsingFullyQualifiedType ()
 	{
 		var brokenCode = @"
 using System;
@@ -77,12 +77,12 @@ namespace Android.App {
 	}
 }
 ";
-		var expected = VerifyCS.Diagnostic().WithSpan(8, 15, 8, 18).WithArguments("Foo");
-		await VerifyCS.VerifyAnalyzerAsync(brokenCode, expected);
+		var expected = VerifyCS.Diagnostic ().WithSpan (8, 15, 8, 18).WithArguments ("Foo");
+		await VerifyCS.VerifyAnalyzerAsync (brokenCode, expected);
 	}
 
 	[Test]
-	public async Task DNAA0001IsShownWhen()
+	public async Task DNAA0001IsShownWhen ()
 	{
 		var brokenCode = @"
 using System;
@@ -110,8 +110,8 @@ namespace Android.App {
 	}
 }
 ";
-		var expected = VerifyCS.Diagnostic().WithSpan(8, 15, 8, 18).WithArguments("Foo");
-		await VerifyCS.VerifyAnalyzerAsync(brokenCode, expected);
+		var expected = VerifyCS.Diagnostic ().WithSpan (8, 15, 8, 18).WithArguments ("Foo");
+		await VerifyCS.VerifyAnalyzerAsync (brokenCode, expected);
 	}
 
 	[Test]
@@ -172,7 +172,7 @@ namespace Android.App {
 }
 ";
 
-		var expected = VerifyCS.Diagnostic("DNAA0001").WithSpan(6, 15, 6, 18).WithArguments("Foo");
-		await VerifyCS.VerifyCodeFixAsync(brokenCode, expected, expectedFixedCode);
+		var expected = VerifyCS.Diagnostic ("DNAA0001").WithSpan (6, 15, 6, 18).WithArguments ("Foo");
+		await VerifyCS.VerifyCodeFixAsync (brokenCode, expected, expectedFixedCode);
 	}
 }

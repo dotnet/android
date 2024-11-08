@@ -9,8 +9,8 @@ using Microsoft.CodeAnalysis;
 using System.IO;
 using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 using System.Linq;
-using VerifyCSAnalyser = CSharpAnalyzerVerifier<DNAS0001Tests.IDE0002AnalyserWrapper>;
-using VerifyCSSuppressor = CSharpSuppressorVerifier<DNAS0001Tests.IDE0002AnalyserWrapper, ResourceDesignerDiagnosticSuppressor>;
+using VerifyCSAnalyser = CSharpAnalyzerVerifier <DNAS0001Tests.IDE0002AnalyserWrapper>;
+using VerifyCSSuppressor = CSharpSuppressorVerifier <DNAS0001Tests.IDE0002AnalyserWrapper, ResourceDesignerDiagnosticSuppressor>;
 using System.Security.Cryptography;
 
 [TestFixture]
@@ -43,18 +43,18 @@ namespace _Microsoft.Android.Resource.Designer {
 }
 ";
 	[Test]
-	public async Task IDE0001IsNotSuppressed()
+	public async Task IDE0001IsNotSuppressed ()
 	{
-		var expected = VerifyCSAnalyser.Diagnostic(new DiagnosticDescriptor("IDE0002", "", "Name can be simplified", "", DiagnosticSeverity.Hidden, isEnabledByDefault: true)).WithSpan(11, 23, 11, 31);
-		await VerifyCSAnalyser.VerifyAnalyzerAsync(brokenCode, expected);
+		var expected = VerifyCSAnalyser.Diagnostic (new DiagnosticDescriptor ("IDE0002", "", "Name can be simplified", "", DiagnosticSeverity.Hidden, isEnabledByDefault: true)).WithSpan (11, 23, 11, 31);
+		await VerifyCSAnalyser.VerifyAnalyzerAsync (brokenCode, expected);
 	}
 
 	[Test]
-	[Ignore("It crashes")]
-	public async Task IDE0001IsSuppressed()
+	[Ignore ("It crashes")]
+	public async Task IDE0001IsSuppressed ()
 	{
-		var expected = VerifyCSSuppressor.Diagnostic(new DiagnosticDescriptor("IDE0002", "", "Name can be simplified", "", DiagnosticSeverity.Hidden, isEnabledByDefault: true)).WithSpan(11, 23, 11, 31).WithIsSuppressed(true);
-		await VerifyCSSuppressor.VerifySuppressorAsync(brokenCode, expected);
+		var expected = VerifyCSSuppressor.Diagnostic (new DiagnosticDescriptor ("IDE0002", "", "Name can be simplified", "", DiagnosticSeverity.Hidden, isEnabledByDefault: true)).WithSpan (11, 23, 11, 31).WithIsSuppressed (true);
+		await VerifyCSSuppressor.VerifySuppressorAsync (brokenCode, expected);
 	}
 
 	[DiagnosticAnalyzer(LanguageNames.CSharp)]
@@ -65,19 +65,18 @@ namespace _Microsoft.Android.Resource.Designer {
 	public class IDE0002AnalyserWrapper : DiagnosticAnalyzer
 	{
 		DiagnosticAnalyzer analyzer;
-		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => GetDiagnostics();
+		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => GetDiagnostics ();
 
-		private ImmutableArray<DiagnosticDescriptor> GetDiagnostics()
-		{
-			return ImmutableArray.Create(analyzer.SupportedDiagnostics.ToArray());
+		private ImmutableArray<DiagnosticDescriptor> GetDiagnostics () {
+			return ImmutableArray.Create (analyzer.SupportedDiagnostics.ToArray ());
 		}
 
-		public IDE0002AnalyserWrapper()
+		public IDE0002AnalyserWrapper ()
 		{
-			var a = new AnalyzerFileReference(Path.GetFullPath("Microsoft.CodeAnalysis.CSharp.Features.dll"), assemblyLoader: AssemblyLoader.Instance);
-			foreach (var a1 in a.GetAnalyzers(LanguageNames.CSharp))
+			var a = new AnalyzerFileReference (Path.GetFullPath ("Microsoft.CodeAnalysis.CSharp.Features.dll"), assemblyLoader: AssemblyLoader.Instance);
+			foreach (var a1 in a.GetAnalyzers (LanguageNames.CSharp))
 			{
-				if (a1.SupportedDiagnostics.Any(x => x.Id == "IDE0002"))
+				if (a1.SupportedDiagnostics.Any (x => x.Id == "IDE0002"))
 				{
 					analyzer = a1;
 					break;
@@ -85,9 +84,9 @@ namespace _Microsoft.Android.Resource.Designer {
 			}
 		}
 
-		public override void Initialize(AnalysisContext context)
+		public override void Initialize (AnalysisContext context)
 		{
-			analyzer.Initialize(context);
+			analyzer.Initialize (context);
 		}
 	}
 #pragma warning restore RS1026
