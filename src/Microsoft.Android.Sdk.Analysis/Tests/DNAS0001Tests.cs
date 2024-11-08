@@ -16,7 +16,7 @@ using System.Security.Cryptography;
 [TestFixture]
 public class DNAS0001Tests
 {
-    static string brokenCode = @"
+	static string brokenCode = @"
 using System;
 using System.Diagnostics;
 
@@ -42,47 +42,50 @@ namespace _Microsoft.Android.Resource.Designer {
     }
 }
 ";
-    [Test]
-    public async Task IDE0001IsNotSuppressed ()
-    {
-        var expected = VerifyCSAnalyser.Diagnostic (new DiagnosticDescriptor ("IDE0002", "", "Name can be simplified", "", DiagnosticSeverity.Hidden, isEnabledByDefault: true)).WithSpan (11, 23, 11, 31);
-        await VerifyCSAnalyser.VerifyAnalyzerAsync (brokenCode, expected);
-    }
+	[Test]
+	public async Task IDE0001IsNotSuppressed()
+	{
+		var expected = VerifyCSAnalyser.Diagnostic(new DiagnosticDescriptor("IDE0002", "", "Name can be simplified", "", DiagnosticSeverity.Hidden, isEnabledByDefault: true)).WithSpan(11, 23, 11, 31);
+		await VerifyCSAnalyser.VerifyAnalyzerAsync(brokenCode, expected);
+	}
 
-    // [Test]
-    // public async Task IDE0001IsSuppressed ()
-    // {
-    //     var expected = VerifyCSSuppressor.Diagnostic (new DiagnosticDescriptor ("IDE0002", "", "Name can be simplified", "", DiagnosticSeverity.Hidden, isEnabledByDefault: true)).WithSpan (11, 23, 11, 31).WithIsSuppressed (true);
-    //     await VerifyCSSuppressor.VerifySuppressorAsync (brokenCode, expected);
-    // }
+	[Test]
+	[Ignore]
+	public async Task IDE0001IsSuppressed()
+	{
+		var expected = VerifyCSSuppressor.Diagnostic(new DiagnosticDescriptor("IDE0002", "", "Name can be simplified", "", DiagnosticSeverity.Hidden, isEnabledByDefault: true)).WithSpan(11, 23, 11, 31).WithIsSuppressed(true);
+		await VerifyCSSuppressor.VerifySuppressorAsync(brokenCode, expected);
+	}
 
-    [DiagnosticAnalyzer (LanguageNames.CSharp)]
+	[DiagnosticAnalyzer(LanguageNames.CSharp)]
 #pragma warning disable RS1036 // Specify analyzer banned API enforcement setting
-    public class IDE0002AnalyserWrapper : DiagnosticAnalyzer
-    {
-        DiagnosticAnalyzer analyzer;
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => GetDiagnostics ();
+	public class IDE0002AnalyserWrapper : DiagnosticAnalyzer
+	{
+		DiagnosticAnalyzer analyzer;
+		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => GetDiagnostics();
 
-        private ImmutableArray<DiagnosticDescriptor> GetDiagnostics ()
-        {
-            return ImmutableArray.Create (analyzer.SupportedDiagnostics.ToArray ());
-        }
+		private ImmutableArray<DiagnosticDescriptor> GetDiagnostics()
+		{
+			return ImmutableArray.Create(analyzer.SupportedDiagnostics.ToArray());
+		}
 
-        public IDE0002AnalyserWrapper ()
-        {
-            var a = new AnalyzerFileReference (Path.GetFullPath ("Microsoft.CodeAnalysis.CSharp.Features.dll"), assemblyLoader: AssemblyLoader.Instance);
-            foreach (var a1 in a.GetAnalyzers (LanguageNames.CSharp)) {
-                if (a1.SupportedDiagnostics.Any (x => x.Id == "IDE0002")) {
-                    analyzer = a1;
-                    break;
-                }
-            }
-        }
+		public IDE0002AnalyserWrapper()
+		{
+			var a = new AnalyzerFileReference(Path.GetFullPath("Microsoft.CodeAnalysis.CSharp.Features.dll"), assemblyLoader: AssemblyLoader.Instance);
+			foreach (var a1 in a.GetAnalyzers(LanguageNames.CSharp))
+			{
+				if (a1.SupportedDiagnostics.Any(x => x.Id == "IDE0002"))
+				{
+					analyzer = a1;
+					break;
+				}
+			}
+		}
 
-        public override void Initialize (AnalysisContext context)
-        {
-            analyzer.Initialize (context);
-        }
-    }
+		public override void Initialize(AnalysisContext context)
+		{
+			analyzer.Initialize(context);
+		}
+	}
 #pragma warning restore RS1036 // Specify analyzer banned API enforcement settingX
 }
