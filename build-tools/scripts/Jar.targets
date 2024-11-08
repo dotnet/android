@@ -33,7 +33,7 @@
       <_Jar>"$(JarPath)"</_Jar>
       <_Targets>-source $(JavacSourceVersion) -target $(JavacTargetVersion)</_Targets>
       <_DestDir>$(IntermediateOutputPath)__CreateTestJarFile-bin</_DestDir>
-      <_AndroidJar>-bootclasspath "$(AndroidSdkDirectory)\platforms\android-$(_AndroidApiLevelName)\android.jar"</_AndroidJar>
+      <_AndroidJar>-classpath "$(AndroidSdkDirectory)\platforms\android-$(_AndroidApiLevelName)\android.jar"</_AndroidJar>
       <_CP>-cp "$(_JavaInteropJarPath)"</_CP>
       <_JavacFilesResponse>$(IntermediateOutputPath)__javac_response.txt</_JavacFilesResponse>
     </PropertyGroup>

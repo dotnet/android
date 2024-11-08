@@ -54,7 +54,7 @@
     <_AndroidJar>"$(AndroidSdkDirectory)\platforms\android-$(AndroidJavaRuntimeApiLevel)\android.jar"</_AndroidJar>
   </PropertyGroup>
   <Exec
-      Command="&quot;$(JavaCPath)&quot; $(_Target) -d %(_RuntimeOutput.IntermediateRuntimeOutputPath) -h %(_RuntimeOutput.IntermediateRuntimeOutputPath) -bootclasspath $(_AndroidJar)$(PathSeparator)&quot;%(_RuntimeOutput.OutputJar)&quot; @%(_RuntimeOutput.IntermediateRuntimeClassesTxt)"
+      Command="&quot;$(JavaCPath)&quot; $(_Target) -d %(_RuntimeOutput.IntermediateRuntimeOutputPath) -h %(_RuntimeOutput.IntermediateRuntimeOutputPath) -classpath $(_AndroidJar)$(PathSeparator)&quot;%(_RuntimeOutput.OutputJar)&quot; @%(_RuntimeOutput.IntermediateRuntimeClassesTxt)"
   />
   <Copy
       SourceFiles="$(IntermediateOutputPath)release/mono_android_Runtime.h"

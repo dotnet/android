@@ -1588,7 +1588,7 @@ public class ToolbarEx {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");
 				var ext = b.IsUnix ? "" : ".exe";
-				var text = $"TestMe.java(1,8): javac{ext} error JAVAC0000:  error: class, interface, or enum expected";
+				var text = $"TestMe.java(1,8): javac{ext} error JAVAC0000:  error: class, interface, enum, or record expected";
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, text), "TestMe.java(1,8) expected");
 				text = $"TestMe2.java(1,41): javac{ext} error JAVAC0000:  error: ';' expected";
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, text), "TestMe2.java(1,41) expected");

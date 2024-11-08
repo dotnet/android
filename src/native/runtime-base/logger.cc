@@ -239,8 +239,6 @@ Logger::init_logging_categories (char*& mono_log_mask, char*& mono_log_level) no
 #endif
 	}
 
-#if DEBUG
 	if ((log_categories & LOG_GC) != 0)
-		_gc_spew_enabled = 1;
-#endif  /* DEBUG */
+		_gc_spew_enabled = true;
 }

@@ -103,7 +103,7 @@ namespace Xamarin.Android.Tasks
 
 			if (BootClassPath != null && BootClassPath.Any ()) {
 				var classpath = string.Join (Path.PathSeparator.ToString (), BootClassPath.Select (p => Path.GetFullPath (p.ItemSpec)));
-				AppendArg (response, "--bootclasspath");
+				AppendArg (response, "--classpath");
 				AppendArg (response, classpath);
 			}
 
