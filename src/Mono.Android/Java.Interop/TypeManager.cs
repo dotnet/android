@@ -229,34 +229,6 @@ namespace Java.Interop {
 				return null;
 			}
 
-			if (AndroidEnvironment.VSAndroidDesignerIsEnabled)
-				return TypeRegistrationFallback (class_name);
-
-			return null;
-		}
-
-		internal static Type? TypeRegistrationFallback (string class_name)
-		{
-			[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type should be preserved by the MarkJavaObjects trimmer step.")]
-			static Type? TypeGetType (string name) =>
-				Type.GetType (name, throwOnError: false);
-
-			__TypeRegistrations.RegisterPackages ();
-
-			Type? type = null;
-			int ls = class_name.LastIndexOf ('/');
-			var package = ls >= 0 ? class_name.Substring (0, ls) : "";
-			if (packageLookup!.TryGetValue (package, out var mappers)) {
-				foreach (Converter<string, Type?> c in mappers) {
-					type = c (class_name);
-					if (type == null)
-						continue;
-					return type;
-				}
-			}
-			if ((type = TypeGetType (JavaNativeTypeManager.ToCliType (class_name))) != null) {
-				return type;
-			}
 			return null;
 		}
 
