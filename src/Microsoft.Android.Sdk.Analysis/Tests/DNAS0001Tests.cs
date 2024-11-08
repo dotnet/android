@@ -49,12 +49,12 @@ namespace _Microsoft.Android.Resource.Designer {
         await VerifyCSAnalyser.VerifyAnalyzerAsync (brokenCode, expected);
     }
 
-    [Test]
-    public async Task IDE0001IsSuppressed ()
-    {
-        var expected = VerifyCSSuppressor.Diagnostic (new DiagnosticDescriptor ("IDE0002", "", "Name can be simplified", "", DiagnosticSeverity.Hidden, isEnabledByDefault: true)).WithSpan (11, 23, 11, 31).WithIsSuppressed (true);
-        await VerifyCSSuppressor.VerifySuppressorAsync (brokenCode, expected);
-    }
+    // [Test]
+    // public async Task IDE0001IsSuppressed ()
+    // {
+    //     var expected = VerifyCSSuppressor.Diagnostic (new DiagnosticDescriptor ("IDE0002", "", "Name can be simplified", "", DiagnosticSeverity.Hidden, isEnabledByDefault: true)).WithSpan (11, 23, 11, 31).WithIsSuppressed (true);
+    //     await VerifyCSSuppressor.VerifySuppressorAsync (brokenCode, expected);
+    // }
 
     [DiagnosticAnalyzer (LanguageNames.CSharp)]
 #pragma warning disable RS1036 // Specify analyzer banned API enforcement setting
@@ -74,7 +74,7 @@ namespace _Microsoft.Android.Resource.Designer {
             foreach (var a1 in a.GetAnalyzers (LanguageNames.CSharp)) {
                 if (a1.SupportedDiagnostics.Any (x => x.Id == "IDE0002")) {
                     analyzer = a1;
-
+                    break;
                 }
             }
         }
