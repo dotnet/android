@@ -58,7 +58,10 @@ namespace _Microsoft.Android.Resource.Designer {
 	}
 
 	[DiagnosticAnalyzer(LanguageNames.CSharp)]
+// disable warnings as we are not actually creating a DiagnosticAnalyzer
 #pragma warning disable RS1036 // Specify analyzer banned API enforcement setting
+#pragma warning disable RS1025 // Configure generated code analysis
+#pragma warning disable RS1026 // Enable concurrent execution
 	public class IDE0002AnalyserWrapper : DiagnosticAnalyzer
 	{
 		DiagnosticAnalyzer analyzer;
@@ -87,5 +90,7 @@ namespace _Microsoft.Android.Resource.Designer {
 			analyzer.Initialize(context);
 		}
 	}
+#pragma warning restore RS1026
+#pragma warning restore RS1025
 #pragma warning restore RS1036 // Specify analyzer banned API enforcement settingX
 }
