@@ -13,7 +13,7 @@
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
     <Exec
-        Command="&quot;$(GradleWPath)&quot; jar $(GradleArgs)"
+        Command="&quot;$(GradleWPath)&quot; jar $(GradleArgs) -PjavaSourceVer=$(JavacSourceVersion) -PjavaTargetVer=$(JavacTargetVersion)"
         EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
