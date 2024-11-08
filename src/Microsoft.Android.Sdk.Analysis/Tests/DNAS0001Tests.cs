@@ -50,7 +50,7 @@ namespace _Microsoft.Android.Resource.Designer {
 	}
 
 	[Test]
-	[Ignore]
+	[Ignore("It crashes")]
 	public async Task IDE0001IsSuppressed()
 	{
 		var expected = VerifyCSSuppressor.Diagnostic(new DiagnosticDescriptor("IDE0002", "", "Name can be simplified", "", DiagnosticSeverity.Hidden, isEnabledByDefault: true)).WithSpan(11, 23, 11, 31).WithIsSuppressed(true);
