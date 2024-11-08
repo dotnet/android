@@ -178,7 +178,7 @@ namespace Java.Interop {
 		public new unsafe JniBooleanArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
-				throw new ObjectDisposedException (this.GetType ().FullName);
+				throw JniEnvironment.CreateObjectDisposedException (this);
 			var elements = JniEnvironment.Arrays.GetBooleanArrayElements (PeerReference, null);
 			if (elements == null)
 				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetBooleanArrayElements()` returned NULL!");
@@ -382,7 +382,7 @@ namespace Java.Interop {
 		public new unsafe JniSByteArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
-				throw new ObjectDisposedException (this.GetType ().FullName);
+				throw JniEnvironment.CreateObjectDisposedException (this);
 			var elements = JniEnvironment.Arrays.GetByteArrayElements (PeerReference, null);
 			if (elements == null)
 				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetByteArrayElements()` returned NULL!");
@@ -586,7 +586,7 @@ namespace Java.Interop {
 		public new unsafe JniCharArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
-				throw new ObjectDisposedException (this.GetType ().FullName);
+				throw JniEnvironment.CreateObjectDisposedException (this);
 			var elements = JniEnvironment.Arrays.GetCharArrayElements (PeerReference, null);
 			if (elements == null)
 				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetCharArrayElements()` returned NULL!");
@@ -790,7 +790,7 @@ namespace Java.Interop {
 		public new unsafe JniInt16ArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
-				throw new ObjectDisposedException (this.GetType ().FullName);
+				throw JniEnvironment.CreateObjectDisposedException (this);
 			var elements = JniEnvironment.Arrays.GetShortArrayElements (PeerReference, null);
 			if (elements == null)
 				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetShortArrayElements()` returned NULL!");
@@ -994,7 +994,7 @@ namespace Java.Interop {
 		public new unsafe JniInt32ArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
-				throw new ObjectDisposedException (this.GetType ().FullName);
+				throw JniEnvironment.CreateObjectDisposedException (this);
 			var elements = JniEnvironment.Arrays.GetIntArrayElements (PeerReference, null);
 			if (elements == null)
 				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetIntArrayElements()` returned NULL!");
@@ -1198,7 +1198,7 @@ namespace Java.Interop {
 		public new unsafe JniInt64ArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
-				throw new ObjectDisposedException (this.GetType ().FullName);
+				throw JniEnvironment.CreateObjectDisposedException (this);
 			var elements = JniEnvironment.Arrays.GetLongArrayElements (PeerReference, null);
 			if (elements == null)
 				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetLongArrayElements()` returned NULL!");
@@ -1402,7 +1402,7 @@ namespace Java.Interop {
 		public new unsafe JniSingleArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
-				throw new ObjectDisposedException (this.GetType ().FullName);
+				throw JniEnvironment.CreateObjectDisposedException (this);
 			var elements = JniEnvironment.Arrays.GetFloatArrayElements (PeerReference, null);
 			if (elements == null)
 				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetFloatArrayElements()` returned NULL!");
@@ -1606,7 +1606,7 @@ namespace Java.Interop {
 		public new unsafe JniDoubleArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
-				throw new ObjectDisposedException (this.GetType ().FullName);
+				throw JniEnvironment.CreateObjectDisposedException (this);
 			var elements = JniEnvironment.Arrays.GetDoubleArrayElements (PeerReference, null);
 			if (elements == null)
 				throw new InvalidOperationException ("`JniEnvironment.Arrays.GetDoubleArrayElements()` returned NULL!");

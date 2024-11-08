@@ -91,6 +91,12 @@ namespace Java.Interop {
 			return Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
+		internal    static  Exception   CreateObjectDisposedException (IJavaPeerable value)
+		{
+			return new ObjectDisposedException (value.GetType ().FullName,
+					$"Cannot access disposed object with JniIdentityHashCode={value.JniIdentityHashCode}.");
+		}
+
 		internal    static  void        LogCreateLocalRef (JniObjectReference value)
 		{
 			if (!value.IsValid)

@@ -175,7 +175,7 @@ namespace Java.Interop {
 		public new unsafe Jni<#= info.TypeModifier #>ArrayElements GetElements ()
 		{
 			if (!PeerReference.IsValid)
-				throw new ObjectDisposedException (this.GetType ().FullName);
+				throw JniEnvironment.CreateObjectDisposedException (this);
 			var elements = JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayElements (PeerReference, null);
 			if (elements == null)
 				throw new InvalidOperationException ("`JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayElements()` returned NULL!");
@@ -280,6 +280,7 @@ namespace Java.Interop {
 				JavaArray<<#= info.ManagedType #>>.DestroyArgumentState<Java<#= info.TypeModifier #>Array> (value, ref state, synchronize);
 			}
 
+			[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
 			[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type? targetType = null)
 			{

@@ -150,7 +150,7 @@ namespace Java.Interop {
 
 			var peer    = self.PeerReference;
 			if (!peer.IsValid)
-				throw new ObjectDisposedException (self.GetType ().FullName);
+				throw JniEnvironment.CreateObjectDisposedException (self);
 
 #if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 			var lref    = peer.SafeHandle as JniLocalReference;

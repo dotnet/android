@@ -140,7 +140,7 @@ namespace Java.Interop
 		public void UnregisterFromRuntime ()
 		{
 			if (!PeerReference.IsValid)
-				throw new ObjectDisposedException (GetType ().FullName);
+				throw JniEnvironment.CreateObjectDisposedException (this);
 			JniEnvironment.Runtime.ValueManager.RemovePeer (this);
 		}
 
