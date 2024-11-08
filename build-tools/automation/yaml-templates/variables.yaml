@@ -31,6 +31,12 @@ variables:
   value: $(github--pat--vs-mobiletools-engineering-service2)
 - name: HostedMacImage
   value: macOS-14
+- name: SharedMacPool
+  value: VSEng-VSMac-Xamarin-Shared
+- name: SharedMacName
+  value: Sonoma
+- name: SharedMacArch
+  value: arm64
 - name: HostedWinImage
   value: windows-2022
 - name: WindowsPoolImage1ESPT
