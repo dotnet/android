@@ -37,7 +37,7 @@
       <_MonoAndroidRuntimeJar>$(MicrosoftAndroidSdkOutDir)java_runtime.jar</_MonoAndroidRuntimeJar>
     </PropertyGroup>
     <Exec
-        Command="&quot;$(JavaCPath)&quot; $(_Target) $(_D) -bootclasspath $(_AndroidJar)$(PathSeparator)&quot;$(_MonoAndroidJar)&quot;$(PathSeparator)&quot;$(_MonoAndroidRuntimeJar)&quot; @$(IntermediateOutputPath)jcw/classes.txt"
+        Command="&quot;$(JavaCPath)&quot; $(_Target) $(_D) -classpath $(_AndroidJar)$(PathSeparator)&quot;$(_MonoAndroidJar)&quot;$(PathSeparator)&quot;$(_MonoAndroidRuntimeJar)&quot; @$(IntermediateOutputPath)jcw/classes.txt"
     />
     <Exec
         Condition="Exists('$(_MonoAndroidJar)')"
