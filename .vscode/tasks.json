@@ -98,6 +98,20 @@
             ]
         },
         {
+            "label": "Build Microsoft.Android.Sdk.Analysis Tests",
+            "type": "shell",
+            "windows": { "command": "dotnet-local.cmd build src/Microsoft.Android.Sdk.Analysis/Tests/Microsoft.Android.Sdk.Analysis.Tests.csproj -c ${input:configuration}", },
+            "linux": { "command": "./dotnet-local.sh build src/Microsoft.Android.Sdk.Analysis/Tests/Microsoft.Android.Sdk.Analysis.Tests.csproj -c ${input:configuration}",},
+            "osx": { "command": "./dotnet-local.sh build src/Microsoft.Android.Sdk.Analysis/Tests/Microsoft.Android.Sdk.Analysis.Tests.csproj -c ${input:configuration}",},
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ]
+        },
+        {
           "label": "build-emulator-checkboottimes",
           "type": "shell",
           "command": "msbuild build-tools/check-boot-times/check-boot-times.csproj /p:Configuration=${input:configuration}",

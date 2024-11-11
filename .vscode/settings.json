@@ -3,5 +3,5 @@
         "bin/Test*/**/net472/*.dll",
     ],
     "cmake.configureOnOpen": false,
-    "dotnetCoreExplorer.searchpatterns": "bin/Test{Debug,Release}/**/net?.0/{Xamarin.Android.Build.Tests,MSBuildDeviceIntegration,Microsoft.Android.Sdk.Analysis.Tests}.dll",
+    "dotnetCoreExplorer.searchpatterns": "bin/Test{Debug}/**/net?.0/{Xamarin.Android.Build.Tests,MSBuildDeviceIntegration,Microsoft.Android.Sdk.Analysis.Tests}.dll",
 }
