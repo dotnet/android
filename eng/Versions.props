@@ -1,10 +1,10 @@
 <Project>
   <!--Package versions-->
   <PropertyGroup>
-    <MicrosoftNETSdkPackageVersion>10.0.100-alpha.1.24553.6</MicrosoftNETSdkPackageVersion>
+    <MicrosoftNETSdkPackageVersion>10.0.100-alpha.1.24560.6</MicrosoftNETSdkPackageVersion>
     <MicrosoftDotnetSdkInternalPackageVersion>$(MicrosoftNETSdkPackageVersion)</MicrosoftDotnetSdkInternalPackageVersion>
-    <MicrosoftNETILLinkTasksPackageVersion>10.0.0-alpha.1.24552.2</MicrosoftNETILLinkTasksPackageVersion>
-    <MicrosoftNETCoreAppRefPackageVersion>10.0.0-alpha.1.24552.2</MicrosoftNETCoreAppRefPackageVersion>
+    <MicrosoftNETILLinkTasksPackageVersion>10.0.0-alpha.1.24557.1</MicrosoftNETILLinkTasksPackageVersion>
+    <MicrosoftNETCoreAppRefPackageVersion>10.0.0-alpha.1.24557.1</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
     <MicrosoftDotNetBuildTasksFeedPackageVersion>10.0.0-beta.24476.2</MicrosoftDotNetBuildTasksFeedPackageVersion>
     <MicrosoftNETWorkloadEmscriptenCurrentManifest100100TransportVersion>10.0.0-alpha.1.24524.3</MicrosoftNETWorkloadEmscriptenCurrentManifest100100TransportVersion>
