@@ -50,7 +50,6 @@ namespace _Microsoft.Android.Resource.Designer {
 	}
 
 	[Test]
-	[Ignore ("It crashes")]
 	public async Task IDE0001IsSuppressed ()
 	{
 		var expected = VerifyCSSuppressor.Diagnostic (new DiagnosticDescriptor ("IDE0002", "", "Name can be simplified", "", DiagnosticSeverity.Hidden, isEnabledByDefault: true)).WithSpan (11, 23, 11, 31).WithIsSuppressed (true);
@@ -65,11 +64,8 @@ namespace _Microsoft.Android.Resource.Designer {
 	public class IDE0002AnalyserWrapper : DiagnosticAnalyzer
 	{
 		DiagnosticAnalyzer analyzer;
-		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => GetDiagnostics ();
-
-		private ImmutableArray<DiagnosticDescriptor> GetDiagnostics () {
-			return ImmutableArray.Create (analyzer.SupportedDiagnostics.ToArray ());
-		}
+		ImmutableArray<DiagnosticDescriptor> diagnostics;
+		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => diagnostics;
 
 		public IDE0002AnalyserWrapper ()
 		{
@@ -79,6 +75,7 @@ namespace _Microsoft.Android.Resource.Designer {
 				if (a1.SupportedDiagnostics.Any (x => x.Id == "IDE0002"))
 				{
 					analyzer = a1;
+					diagnostics = ImmutableArray.Create (analyzer.SupportedDiagnostics.First(x => x.Id == "IDE0002"));
 					break;
 				}
 			}
