@@ -145,6 +145,8 @@ namespace Xamarin.Android.Tasks
 				var aapt2 = Path.Combine (osBinPath, Aapt2);
 				if (File.Exists (aapt2))
 					Aapt2ToolPath = osBinPath;
+				else
+					Log.LogDebugMessage ("Could not find `{0}`; tried: {1}", Aapt2, aapt2);
 			}
 			if (string.IsNullOrEmpty (Aapt2ToolPath) || !File.Exists (Path.Combine (Aapt2ToolPath, Aapt2))) {
 				Log.LogCodedError ("XA0112", Properties.Resources.XA0112, Aapt2ToolPath);

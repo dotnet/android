@@ -7,6 +7,7 @@ using System.Xml;
 using System.Xml.Linq;
 using NUnit.Framework;
 using Xamarin.Android.Tools;
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 using Microsoft.Build.Framework;
 
@@ -146,6 +147,7 @@ namespace Xamarin.Android.Build.Tests
 			var apis = new ApiInfo [] {
 			};
 			var path = Path.Combine ("temp", TestName);
+			CreateFauxOSBin (MonoAndroidHelper.GetOSBinPath ());
 			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"),
 					null, apis);
 			var referencesPath = CreateFauxReferencesDirectory (Path.Combine (path, "xbuild-frameworks"), apis);
