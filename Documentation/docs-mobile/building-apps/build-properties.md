@@ -989,7 +989,6 @@ that are intended for submission on Google Play. The default value is `apk`.
 When `$(AndroidPackageFormat)` is set to `aab`, other MSBuild
 properties are set, which are required for Android App Bundles:
 
-- [`$(AndroidUseAapt2)`](build-properties.md#androiduseaapt2) is `True`.
 - [`$(AndroidUseApkSigner)`](#androiduseapksigner) is `False`.
 - [`$(AndroidCreatePackagePerAbi)`](#androidcreatepackageperabi) is `False`.
 
@@ -1250,14 +1249,6 @@ Supported values include:
 ## AndroidTlsProvider
 
 This property is obsolete and should not be used.
-
-## AndroidUseAapt2
-
-A boolean property that allows the developer to
-control the use of the `aapt2` tool for packaging.
-By default this will be True.
-
-This property cannot be set to false.
 
 ## AndroidUseApkSigner
 

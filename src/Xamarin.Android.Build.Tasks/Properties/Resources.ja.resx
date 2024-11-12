@@ -460,14 +460,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>'AndroidAotMode' MSBuild プロパティの試験的な 'Hybrid' 値は、現在、armeabi-v7a ターゲット ABI と互換性がありません。'AndroidAotMode' の試験的な 'Hybrid' 値を継続して使用するには、Visual Studio プロジェクト プロパティ ページで armeabi-v7a ターゲット ABI の選択を解除するか、テキスト エディターでプロジェクト ファイルを編集して、'AndroidSupportedAbis' MSBuild プロパティから 'armeabi-v7a' を削除します。</value>
     <comment>The following are literal names and should not be translated: 'Hybrid', 'AndroidAotMode', armeabi-v7a,  'AndroidSupportedAbis'</comment>
   </data>
-  <data name="XA1026" xml:space="preserve">
-    <value>AAPT の使用は非推奨になり、AAPT2 を使用するようになりました。Visual Studio プロジェクトのプロパティ ページで [インクリメンタル Android パッケージ システム (aapt2) を使用します] を有効にするか、テキスト エディターでプロジェクト ファイルを編集して 'AndroidUseAapt2' MSBuild プロパティを 'true' に設定してください。</value>
-    <comment>The following are literal names and should not be translated: AAPT, AAPT2, Android, AndroidUseAapt2, true.</comment>
-  </data>
-  <data name="XA1026_dotnet" xml:space="preserve">
-    <value>.NET 6 以降を対象とする .NET for Android プロジェクトでは、AAPT の使用はサポートされていません。Visual Studio プロジェクトのプロパティ ページで [インクリメンタル Android パッケージ システム (aapt2) を使用する] を有効にするか、テキスト エディターでプロジェクト ファイルを編集して 'AndroidUseAapt2' MSBuild プロパティを 'true' に設定してください。</value>
-    <comment>The following are literal names and should not be translated: AAPT, Android, AndroidUseAapt2, true.</comment>
-  </data>
   <data name="XA1027" xml:space="preserve">
     <value>'EnableProguard' MSBuild プロパティが 'true' に設定されており、'AndroidLinkTool' MSBuild プロパティが空であるため、'AndroidLinkTool' の既定値は 'proguard' になります。</value>
     <comment>The following are literal names and should not be translated: 'EnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>

@@ -36,8 +36,6 @@ namespace Xamarin.Android.Tasks
 
 		public bool AndroidApplication { get; set; } = true;
 
-		public bool AndroidUseAapt2 { get; set; }
-
 		[Output]
 		public string AndroidApiLevel { get; set; }
 
@@ -142,18 +140,16 @@ namespace Xamarin.Android.Tasks
 			ApkSignerJar = Path.Combine (AndroidSdkBuildToolsBinPath, "lib", ApkSigner);
 			AndroidUseApkSigner = File.Exists (ApkSignerJar);
 
-			if (AndroidUseAapt2) {
-				if (string.IsNullOrEmpty (Aapt2ToolPath)) {
-					var osBinPath = MonoAndroidHelper.GetOSBinPath ();
-					var aapt2 = Path.Combine (osBinPath, Aapt2);
-					if (File.Exists (aapt2))
-						Aapt2ToolPath = osBinPath;
-				}
-				if (string.IsNullOrEmpty (Aapt2ToolPath) || !File.Exists (Path.Combine (Aapt2ToolPath, Aapt2))) {
-					Log.LogCodedError ("XA0112", Properties.Resources.XA0112, Aapt2ToolPath);
-				} else if (!GetAapt2Version ()) {
-					Log.LogCodedError ("XA0111", Properties.Resources.XA0111, Aapt2ToolPath);
-				}
+			if (string.IsNullOrEmpty (Aapt2ToolPath)) {
+				var osBinPath = MonoAndroidHelper.GetOSBinPath ();
+				var aapt2 = Path.Combine (osBinPath, Aapt2);
+				if (File.Exists (aapt2))
+					Aapt2ToolPath = osBinPath;
+			}
+			if (string.IsNullOrEmpty (Aapt2ToolPath) || !File.Exists (Path.Combine (Aapt2ToolPath, Aapt2))) {
+				Log.LogCodedError ("XA0112", Properties.Resources.XA0112, Aapt2ToolPath);
+			} else if (!GetAapt2Version ()) {
+				Log.LogCodedError ("XA0111", Properties.Resources.XA0111, Aapt2ToolPath);
 			}
 
 			if (string.IsNullOrEmpty (ZipAlignPath) || !Directory.Exists (ZipAlignPath)) {

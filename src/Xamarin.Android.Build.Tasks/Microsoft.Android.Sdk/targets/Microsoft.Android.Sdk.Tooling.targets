@@ -39,7 +39,6 @@ This file contains .NET 6+ calls to the <ValidateJavaVersion/> and
         AndroidApplication="$(AndroidApplication)"
         AndroidSdkPath="$(_AndroidSdkDirectory)"
         AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
-        AndroidUseAapt2="$(AndroidUseAapt2)"
         AotAssemblies="$(AotAssemblies)"
         Aapt2ToolPath="$(Aapt2ToolPath)"
         CommandLineToolsVersion="$(AndroidCommandLineToolsVersion)"

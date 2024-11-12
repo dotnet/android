@@ -460,14 +460,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>Der experimentelle Wert "Hybrid" für die MSBuild-Eigenschaft "AndroidAotMode" ist derzeit nicht mit der Ziel-ABI "armeabi-v7a" kompatibel. Um den experimentellen Wert "Hybrid" für "AndroidAotMode" weiterhin zu verwenden, heben Sie die Auswahl der Ziel-ABI "armeabi-v7a" auf den Visual Studio-Projekteigenschaftenseiten auf, oder bearbeiten Sie die Projektdatei in einem Text-Editor, und entfernen Sie "armeabi-v7a" aus der MSBuild-Eigenschaft "AndroidSupportedAbis".</value>
     <comment>The following are literal names and should not be translated: 'Hybrid', 'AndroidAotMode', armeabi-v7a,  'AndroidSupportedAbis'</comment>
   </data>
-  <data name="XA1026" xml:space="preserve">
-    <value>Die Verwendung von AAPT wird zugunsten von AAPT2 eingestellt. Aktivieren Sie "Inkrementelles Android-Paketierungssystem (aapt2) verwenden" in den Visual Studio-Projekteigenschaftenseiten, oder bearbeiten Sie die Projektdatei in einem Text-Editor, und legen Sie die MSBuild-Eigenschaft "AndroidUseAapt2" auf TRUE fest.</value>
-    <comment>The following are literal names and should not be translated: AAPT, AAPT2, Android, AndroidUseAapt2, true.</comment>
-  </data>
-  <data name="XA1026_dotnet" xml:space="preserve">
-    <value>Die Verwendung von AAPT wird in .NET für Android-Projekten, die auf .NET 6 oder höher ausgerichtet sind, nicht unterstützt. Aktivieren Sie „Inkrementelles Android-Paketierungssystem (AAPT2) verwenden“ auf den Visual Studio-Projekteigenschaftsseiten, oder bearbeiten Sie die Projektdatei in einem Text-Editor, und legen Sie die MSBuild-Eigenschaft „AndroidUseAapt2“ auf WAHR fest.</value>
-    <comment>The following are literal names and should not be translated: AAPT, Android, AndroidUseAapt2, true.</comment>
-  </data>
   <data name="XA1027" xml:space="preserve">
     <value>Die MSBuild-Eigenschaft "EnableProguard" ist auf TRUE festgelegt, und die MSBuild-Eigenschaft "AndroidLinkTool" ist leer. Daher wird "AndroidLinkTool" standardmäßig auf "proguard" festgelegt.</value>
     <comment>The following are literal names and should not be translated: 'EnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
