@@ -363,7 +363,7 @@ namespace Xamarin.Android.Build.Tests
 		void CreateFauxExecutable (string exeFullPath, StringBuilder sb) {
 			File.WriteAllText (exeFullPath, sb.ToString ());
 			if (!IsWindows) {
-				RunProcess ("chmod", $"u+x {exeFullPath}");
+				RunProcess ("chmod", $"u+x \"{exeFullPath}\"");
 			}
 		}
 

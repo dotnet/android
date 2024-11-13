@@ -112,7 +112,7 @@ namespace Xamarin.Android.Tasks
 					Path.Combine (dir, "bin"),
 				};
 
-				string aapt = toolsPaths.FirstOrDefault (x => File.Exists (Path.Combine (x, Aapt2)));
+				string aapt = toolsPaths.FirstOrDefault (x => File.Exists (Path.Combine (x, MonoAndroidHelper.GetExecutablePath (x, Aapt2))));
 				if (string.IsNullOrEmpty (aapt)) {
 					Log.LogDebugMessage ("Could not find `{0}`; tried: {1}", Aapt2,
 						string.Join (Path.PathSeparator.ToString (), toolsPaths.Select (x => Path.Combine (x, Aapt2))));
@@ -141,7 +141,7 @@ namespace Xamarin.Android.Tasks
 
 			if (string.IsNullOrEmpty (Aapt2ToolPath)) {
 				var osBinPath = MonoAndroidHelper.GetOSBinPath ();
-				var aapt2 = MonoAndroidHelper.GetExecutablePath (osBinPath, Aapt2);
+				var aapt2 = Path.Combine (osBinPath, MonoAndroidHelper.GetExecutablePath (osBinPath, Aapt2));
 				if (File.Exists (aapt2))
 					Aapt2ToolPath = osBinPath;
 				else {
