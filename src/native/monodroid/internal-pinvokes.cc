@@ -135,13 +135,13 @@ _monodroid_gc_wait_for_bridge_processing ()
 void
 monodroid_clear_gdb_wait ()
 {
-    monodroidRuntime.set_monodroid_gdb_wait (false);
+    MonodroidRuntime::set_monodroid_gdb_wait (false);
 }
 
 void*
 _monodroid_get_identity_hash_code (JNIEnv *env, void *v)
 {
-    intptr_t rv = env->CallStaticIntMethod (monodroidRuntime.get_java_class_System (), monodroidRuntime.get_java_class_method_System_identityHashCode (), v);
+    intptr_t rv = env->CallStaticIntMethod (MonodroidRuntime::get_java_class_System (), MonodroidRuntime::get_java_class_method_System_identityHashCode (), v);
     return (void*) rv;
 }
 
@@ -149,9 +149,9 @@ void*
 _monodroid_timezone_get_default_id ()
 {
 	JNIEnv *env          = osBridge.ensure_jnienv ();
-	jmethodID getDefault = env->GetStaticMethodID (monodroidRuntime.get_java_class_TimeZone (), "getDefault", "()Ljava/util/TimeZone;");
-	jmethodID getID      = env->GetMethodID (monodroidRuntime.get_java_class_TimeZone (), "getID",      "()Ljava/lang/String;");
-	jobject d            = env->CallStaticObjectMethod (monodroidRuntime.get_java_class_TimeZone (), getDefault);
+	jmethodID getDefault = env->GetStaticMethodID (MonodroidRuntime::get_java_class_TimeZone (), "getDefault", "()Ljava/util/TimeZone;");
+	jmethodID getID      = env->GetMethodID (MonodroidRuntime::get_java_class_TimeZone (), "getID",      "()Ljava/lang/String;");
+	jobject d            = env->CallStaticObjectMethod (MonodroidRuntime::get_java_class_TimeZone (), getDefault);
 	jstring id           = reinterpret_cast<jstring> (env->CallObjectMethod (d, getID));
 	const char *mutf8    = env->GetStringUTFChars (id, nullptr);
 
@@ -175,7 +175,7 @@ void
 _monodroid_counters_dump ([[maybe_unused]] const char *format, [[maybe_unused]] va_list args)
 {
 #if !defined (NET)
-	monodroidRuntime.dump_counters_v (format, args);
+	MonodroidRuntime::dump_counters_v (format, args);
 #endif // ndef NET
 }
 
@@ -234,7 +234,7 @@ monodroid_strdup_printf (const char *format, ...)
 char*
 monodroid_TypeManager_get_java_class_name (jclass klass)
 {
-	return monodroidRuntime.get_java_class_name_for_TypeManager (klass);
+	return MonodroidRuntime::get_java_class_name_for_TypeManager (klass);
 }
 
 int
@@ -333,5 +333,5 @@ monodroid_log_traces (uint32_t kind, const char *first_line)
 	JNIEnv *env = osBridge.ensure_jnienv ();
 	auto tk = static_cast<TraceKind>(kind);
 
-	monodroidRuntime.log_traces (env, tk, first_line);
+	MonodroidRuntime::log_traces (env, tk, first_line);
 }

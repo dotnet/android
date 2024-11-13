@@ -115,45 +115,45 @@ namespace xamarin::android::internal
 		static constexpr int XA_LOG_COUNTERS = MONO_COUNTER_JIT | MONO_COUNTER_METADATA | MONO_COUNTER_GC | MONO_COUNTER_GENERICS | MONO_COUNTER_INTERP;
 
 	public:
-		void Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods);
-		void Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
+		static void Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring  methods) noexcept;
+		static void Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
 		                                             jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset,
 		                                             jobject loader, jobjectArray assembliesJava, jboolean isEmulator,
-		                                             jboolean haveSplitApks);
+		                                             jboolean haveSplitApks) noexcept;
 
-		jint Java_JNI_OnLoad (JavaVM *vm, void *reserved);
+		static jint Java_JNI_OnLoad (JavaVM *vm, void *reserved) noexcept;
 
-		jclass get_java_class_System () const
+		static jclass get_java_class_System () noexcept
 		{
 			return java_System;
 		}
 
-		jmethodID get_java_class_method_System_identityHashCode () const
+		static jmethodID get_java_class_method_System_identityHashCode () noexcept
 		{
 			return java_System_identityHashCode;
 		}
 
-		jclass get_java_class_TimeZone () const
+		static jclass get_java_class_TimeZone () noexcept
 		{
 			return java_TimeZone;
 		}
 
-		void set_monodroid_gdb_wait (bool yes_no)
+		static void set_monodroid_gdb_wait (bool yes_no) noexcept
 		{
 			monodroid_gdb_wait = yes_no;
 		}
 
-		void propagate_uncaught_exception (JNIEnv *env, jobject javaThread, jthrowable javaException);
-		char*	get_java_class_name_for_TypeManager (jclass klass);
-		void log_traces (JNIEnv *env, TraceKind kind, const char *first_line) noexcept;
+		static void propagate_uncaught_exception (JNIEnv *env, jobject javaThread, jthrowable javaException) noexcept;
+		static char*	get_java_class_name_for_TypeManager (jclass klass) noexcept;
+		static void log_traces (JNIEnv *env, TraceKind kind, const char *first_line) noexcept;
 
 	private:
 		static void mono_log_handler (const char *log_domain, const char *log_level, const char *message, mono_bool fatal, void *user_data);
 		static void mono_log_standard_streams_handler (const char *str, mono_bool is_stdout);
 
 		// A reference to unique_ptr is not the best practice ever, but it's faster this way
-		void setup_mono_tracing (std::unique_ptr<char[]> const& mono_log_mask, bool have_log_assembly, bool have_log_gc);
-		void install_logging_handlers ();
+		static void setup_mono_tracing (std::unique_ptr<char[]> const& mono_log_mask, bool have_log_assembly, bool have_log_gc) noexcept;
+		static void install_logging_handlers () noexcept;
 
 		unsigned int convert_dl_flags (int flags);
 
@@ -174,45 +174,45 @@ namespace xamarin::android::internal
 			fnptr = reinterpret_cast<TFunc*>(symptr);
 		}
 
-		void create_xdg_directory (jstring_wrapper& home, size_t home_len, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept;
-		void create_xdg_directories_and_environment (jstring_wrapper &homeDir);
-		void lookup_bridge_info (MonoClass *klass, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info);
-		void lookup_bridge_info (MonoImage *image, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info);
-		void load_assembly (MonoDomain *domain, jstring_wrapper &assembly);
-		void load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, jstring_wrapper &assembly);
-		void load_assemblies (load_assemblies_context_type ctx, bool preload, jstring_array_wrapper &assemblies);
+		static void create_xdg_directory (jstring_wrapper& home, size_t home_len, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept;
+		static void create_xdg_directories_and_environment (jstring_wrapper &homeDir) noexcept;
+		static void lookup_bridge_info (MonoClass *klass, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info) noexcept;
+		static void lookup_bridge_info (MonoImage *image, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info) noexcept;
+		static void load_assembly (MonoDomain *domain, jstring_wrapper &assembly) noexcept;
+		static void load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, jstring_wrapper &assembly) noexcept;
+		static void load_assemblies (load_assemblies_context_type ctx, bool preload, jstring_array_wrapper &assemblies) noexcept;
 
-		void set_debug_options ();
-		void parse_gdb_options ();
-		void mono_runtime_init (JNIEnv *env, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& runtime_args);
-		void init_android_runtime (JNIEnv *env, jclass runtimeClass, jobject loader);
-		void set_environment_variable_for_directory (const char *name, jstring_wrapper &value, bool createDirectory, mode_t mode);
+		static void set_debug_options () noexcept;
+		static void parse_gdb_options () noexcept;
+		static void mono_runtime_init (JNIEnv *env, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& runtime_args) noexcept;
+		static void init_android_runtime (JNIEnv *env, jclass runtimeClass, jobject loader) noexcept;
+		static void set_environment_variable_for_directory (const char *name, jstring_wrapper &value, bool createDirectory, mode_t mode) noexcept;
 
-		void set_environment_variable_for_directory (const char *name, jstring_wrapper &value)
+		static void set_environment_variable_for_directory (const char *name, jstring_wrapper &value) noexcept
 		{
 			set_environment_variable_for_directory (name, value, true, DEFAULT_DIRECTORY_MODE);
 		}
 
-		void set_environment_variable (const char *name, jstring_wrapper &value)
+		static void set_environment_variable (const char *name, jstring_wrapper &value) noexcept
 		{
 			set_environment_variable_for_directory (name, value, false, 0);
 		}
 
 		static void monodroid_unhandled_exception (MonoObject *java_exception);
-		MonoClass* get_android_runtime_class ();
+		static MonoClass* get_android_runtime_class () noexcept;
 
-		MonoDomain*	create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain, bool have_split_apks);
-		MonoDomain* create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wrapper &runtimeApks,
+		static MonoDomain* create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain, bool have_split_apks) noexcept;
+		static MonoDomain* create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wrapper &runtimeApks,
 		                                          jstring_array_wrapper &assemblies, jobjectArray assembliesBytes, jstring_array_wrapper &assembliesPaths,
 		                                          jobject loader, bool is_root_domain, bool force_preload_assemblies,
-		                                          bool have_split_apks);
+		                                          bool have_split_apks) noexcept;
 
-		void gather_bundled_assemblies (jstring_array_wrapper &runtimeApks, size_t *out_user_assemblies_count, bool have_split_apks);
+		static void gather_bundled_assemblies (jstring_array_wrapper &runtimeApks, size_t *out_user_assemblies_count, bool have_split_apks) noexcept;
 		static bool should_register_file (const char *filename);
-		void set_trace_options ();
-		void set_profile_options ();
+		static void set_trace_options () noexcept;
+		static void set_profile_options () noexcept;
 
-		void log_jit_event (MonoMethod *method, const char *event_name);
+		static void log_jit_event (MonoMethod *method, const char *event_name) noexcept;
 		static void jit_begin (MonoProfiler *prof, MonoMethod *method);
 		static void jit_failed (MonoProfiler *prof, MonoMethod *method);
 		static void jit_done (MonoProfiler *prof, MonoMethod *method, MonoJitInfo* jinfo);
@@ -236,44 +236,36 @@ namespace xamarin::android::internal
 #endif // def RELEASE
 
 #if defined (DEBUG)
-		void set_debug_env_vars (void);
-		bool parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> &runtime_args, RuntimeOptions *options);
-		int monodroid_debug_connect (int sock, struct sockaddr_in addr);
-		int monodroid_debug_accept (int sock, struct sockaddr_in addr);
+		static inline void set_debug_env_vars (void) noexcept;
+		static inline bool parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> &runtime_args, RuntimeOptions *options) noexcept;
+		static inline int monodroid_debug_connect (int sock, struct sockaddr_in addr) noexcept;
+		static inline int monodroid_debug_accept (int sock, struct sockaddr_in addr) noexcept;
 #endif // DEBUG
 
 #if !defined (RELEASE)
 		static MonoAssembly* open_from_update_dir (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
 #endif
 	private:
-		MonoMethod         *registerType          = nullptr;
-		volatile bool       monodroid_gdb_wait    = true;
-		jclass              java_System;
-		jmethodID           java_System_identityHashCode;
-		jmethodID           Class_getName;
-		jclass              java_TimeZone;
-		timing_period       jit_time;
-		FILE               *jit_log;
-		MonoProfilerHandle  profiler_handle;
+		static inline MonoMethod         *registerType          = nullptr;
+		static inline bool  monodroid_gdb_wait    = true;
+		static inline jclass              java_System;
+		static inline jmethodID           java_System_identityHashCode;
+		static inline jmethodID           Class_getName;
+		static inline jclass              java_TimeZone;
+		static inline timing_period       jit_time;
+		static inline FILE               *jit_log = nullptr;
+		static inline MonoProfilerHandle  profiler_handle;
 
 		/*
 		 * If set, monodroid will spin in a loop until the debugger breaks the wait by
 		 * clearing monodroid_gdb_wait.
 		 */
-		bool                wait_for_gdb;
-
-		/* The context (mapping to a Mono AppDomain) that is currently selected as the
-		 * active context from the point of view of Java. We cannot rely on the value
-		 * of `mono_domain_get` for this as it's stored per-thread and we want to be
-		 * able to switch our different contexts from different threads.
-		 */
-		int                 current_context_id = -1;
-
-		jnienv_register_jni_natives_fn jnienv_register_jni_natives = nullptr;
-		MonoAssemblyLoadContextGCHandle default_alc = nullptr;
+		static inline bool                wait_for_gdb = false;
+		static inline jnienv_register_jni_natives_fn jnienv_register_jni_natives = nullptr;
+		static inline MonoAssemblyLoadContextGCHandle default_alc = nullptr;
 
 		static MonoCoreRuntimeProperties monovm_core_properties;
-		MonovmRuntimeConfigArguments  runtime_config_args;
+		static inline MonovmRuntimeConfigArguments  runtime_config_args;
 	};
 }
 #endif
