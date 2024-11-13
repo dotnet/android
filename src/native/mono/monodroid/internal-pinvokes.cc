@@ -18,7 +18,7 @@ int
 monodroid_embedded_assemblies_set_assemblies_prefix (const char *prefix)
 {
 	EmbeddedAssemblies::set_assemblies_prefix (prefix);
-	return 0;
+    return 0;
 }
 
 void
