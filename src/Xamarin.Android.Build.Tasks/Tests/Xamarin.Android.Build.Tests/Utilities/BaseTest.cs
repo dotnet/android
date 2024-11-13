@@ -208,8 +208,16 @@ namespace Xamarin.Android.Build.Tests
 			File.WriteAllText (Path.Combine (androidSdkPlatformToolsPath, IsWindows ? "adb.exe" : "adb"), "");
 			if (!string.IsNullOrEmpty (buildToolsVersion)) {
 				File.WriteAllText (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "zipalign.exe" : "zipalign"), "");
-				File.WriteAllText (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "aapt.exe" : "aapt"), "");
-				File.WriteAllText (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "aapt2.exe" : "aapt2"), "");
+				//File.WriteAllText (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "aapt.exe" : "aapt"), "");
+				var sb  = new StringBuilder ();
+				if (IsWindows) {
+					sb.AppendLine ("@echo off");
+					sb.AppendLine ($"echo Android Asset Packaging Tool (aapt) 2.19-10229193");
+				} else {
+					sb.AppendLine ("#!/bin/bash");
+					sb.AppendLine ($"echo \"Android Asset Packaging Tool (aapt) 2.19-10229193\"");
+				}
+				CreateFauxExecutable (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "aapt2.cmd" : "aapt2"), sb);
 			}
 			File.WriteAllText (Path.Combine (androidSdkToolsPath, IsWindows ? "lint.bat" : "lint"), "");
 

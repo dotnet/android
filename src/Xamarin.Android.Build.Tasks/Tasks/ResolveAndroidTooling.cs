@@ -71,7 +71,6 @@ namespace Xamarin.Android.Tasks
 
 		protected static readonly bool IsWindows = Path.DirectorySeparatorChar == '\\';
 		protected static readonly string ZipAlign = IsWindows ? "zipalign.exe" : "zipalign";
-		protected static readonly string Aapt = IsWindows ? "aapt.exe" : "aapt";
 		protected static readonly string Aapt2 = IsWindows ? "aapt2.exe" : "aapt2";
 		protected static readonly string Android = IsWindows ? "android.bat" : "android";
 		protected static readonly string Lint = IsWindows ? "lint.bat" : "lint";
@@ -113,10 +112,10 @@ namespace Xamarin.Android.Tasks
 					Path.Combine (dir, "bin"),
 				};
 
-				string aapt = toolsPaths.FirstOrDefault (x => File.Exists (Path.Combine (x, Aapt)));
+				string aapt = toolsPaths.FirstOrDefault (x => File.Exists (Path.Combine (x, Aapt2)));
 				if (string.IsNullOrEmpty (aapt)) {
-					Log.LogDebugMessage ("Could not find `{0}`; tried: {1}", Aapt,
-						string.Join (Path.PathSeparator.ToString (), toolsPaths.Select (x => Path.Combine (x, Aapt))));
+					Log.LogDebugMessage ("Could not find `{0}`; tried: {1}", Aapt2,
+						string.Join (Path.PathSeparator.ToString (), toolsPaths.Select (x => Path.Combine (x, Aapt2))));
 					continue;
 				}
 				AndroidSdkBuildToolsPath = Path.GetFullPath (dir);
@@ -133,7 +132,7 @@ namespace Xamarin.Android.Tasks
 
 			if (string.IsNullOrEmpty (AndroidSdkBuildToolsPath)) {
 				Log.LogCodedError ("XA5205", Properties.Resources.XA5205,
-						Aapt, AndroidSdkPath, Path.DirectorySeparatorChar, Android);
+						Aapt2, AndroidSdkPath, Path.DirectorySeparatorChar, Android);
 				return false;
 			}
 
@@ -142,7 +141,7 @@ namespace Xamarin.Android.Tasks
 
 			if (string.IsNullOrEmpty (Aapt2ToolPath)) {
 				var osBinPath = MonoAndroidHelper.GetOSBinPath ();
-				var aapt2 = Path.Combine (osBinPath, Aapt2);
+				var aapt2 = MonoAndroidHelper.GetExecutablePath (osBinPath, Aapt2);
 				if (File.Exists (aapt2))
 					Aapt2ToolPath = osBinPath;
 				else {
