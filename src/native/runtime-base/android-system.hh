@@ -174,13 +174,15 @@ namespace xamarin::android::internal {
 
 		static bool is_interpreter_enabled () noexcept
 		{
-			return get_mono_aot_mode () == MonoAotMode::MONO_AOT_MODE_INTERP_ONLY;
-		}
+			switch (get_mono_aot_mode ()) {
+				case MonoAotMode::MONO_AOT_MODE_INTERP:
+				case MonoAotMode::MONO_AOT_MODE_INTERP_ONLY:
+				case MonoAotMode::MONO_AOT_MODE_INTERP_LLVMONLY:
+					return true;
 
-		// Hack, see comment for `aot_mode_last_is_interpreter` at the bottom of the class declaration
-		static bool is_aot_mode_last_really_interpreter_mode () noexcept
-		{
-			return false;
+				default:
+					return false;
+			}
 		}
 
 		static void set_running_in_emulator (bool yesno) noexcept
