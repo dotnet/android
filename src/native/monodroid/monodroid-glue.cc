@@ -228,7 +228,7 @@ inline void
 MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks, size_t *out_user_assemblies_count, bool have_split_apks)
 {
 	if (!AndroidSystem::is_embedded_dso_mode_enabled ()) {
-		*out_user_assemblies_count = embeddedAssemblies.register_from_filesystem<should_register_file> ();
+		*out_user_assemblies_count = EmbeddedAssemblies::register_from_filesystem<should_register_file> ();
 		return;
 	}
 
@@ -261,12 +261,12 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 		*out_user_assemblies_count += (cur_num_assemblies - prev_num_assemblies);
 		prev_num_assemblies = cur_num_assemblies;
 
-		if (!embeddedAssemblies.keep_scanning ()) {
+		if (!EmbeddedAssemblies::keep_scanning ()) {
 			break;
 		}
 	}
 
-	embeddedAssemblies.ensure_valid_assembly_stores ();
+	EmbeddedAssemblies::ensure_valid_assembly_stores ();
 }
 
 #if defined (DEBUG)
@@ -495,7 +495,7 @@ MonodroidRuntime::set_debug_options (void)
 	if (AndroidSystem::monodroid_get_system_property (SharedConstants::DEBUG_MONO_DEBUG_PROPERTY, nullptr) == 0)
 		return;
 
-	embeddedAssemblies.set_register_debug_symbols (true);
+	EmbeddedAssemblies::set_register_debug_symbols (true);
 	mono_debug_init (MONO_DEBUG_FORMAT_MONO);
 }
 
@@ -513,7 +513,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 	} else if (options.debug && cur_time > options.timeout_time) {
 		log_warn (LOG_DEBUGGER, "Not starting the debugger as the timeout value has been reached; current-time: %lli  timeout: %lli", cur_time, options.timeout_time);
 	} else if (options.debug && cur_time <= options.timeout_time) {
-		embeddedAssemblies.set_register_debug_symbols (true);
+		EmbeddedAssemblies::set_register_debug_symbols (true);
 
 		int loglevel;
 		if (Logger::have_debugger_log_level ())
@@ -687,7 +687,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 	 * Looking for assemblies from the update dir takes precedence over
 	 * everything else, and thus must go LAST.
 	 */
-	embeddedAssemblies.install_preload_hooks_for_appdomains ();
+	EmbeddedAssemblies::install_preload_hooks_for_appdomains ();
 #ifndef RELEASE
 	mono_install_assembly_preload_hook (open_from_update_dir, nullptr);
 #endif
@@ -702,7 +702,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 void
 MonodroidRuntime::cleanup_runtime_config ([[maybe_unused]] MonovmRuntimeConfigArguments *args, [[maybe_unused]] void *user_data)
 {
-	embeddedAssemblies.unmap_runtime_config_blob ();
+	EmbeddedAssemblies::unmap_runtime_config_blob ();
 }
 
 MonoDomain*
@@ -712,14 +712,14 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 
 	gather_bundled_assemblies (runtimeApks, &user_assemblies_count, have_split_apks);
 
-	if (embeddedAssemblies.have_runtime_config_blob ()) {
+	if (EmbeddedAssemblies::have_runtime_config_blob ()) {
 		size_t blob_time_index;
 		if (FastTiming::enabled ()) [[unlikely]] {
 			blob_time_index = internal_timing->start_event (TimingEventKind::RuntimeConfigBlob);
 		}
 
 		runtime_config_args.kind = 1;
-		embeddedAssemblies.get_runtime_config_blob (runtime_config_args.runtimeconfig.data.data, runtime_config_args.runtimeconfig.data.data_len);
+		EmbeddedAssemblies::get_runtime_config_blob (runtime_config_args.runtimeconfig.data.data, runtime_config_args.runtimeconfig.data.data_len);
 		monovm_runtimeconfig_initialize (&runtime_config_args, cleanup_runtime_config, nullptr);
 
 		if (FastTiming::enabled ()) [[unlikely]] {
@@ -1267,7 +1267,7 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 	default_alc = mono_alc_get_default_gchandle ();
 	abort_unless (default_alc != nullptr, "Default AssemblyLoadContext not found");
 
-	embeddedAssemblies.install_preload_hooks_for_alc ();
+	EmbeddedAssemblies::install_preload_hooks_for_alc ();
 	log_debug (LOG_ASSEMBLY, "ALC hooks installed");
 
 	bool preload = (AndroidSystem::is_assembly_preload_enabled () || (is_running_on_desktop && force_preload_assemblies));
@@ -1289,13 +1289,13 @@ MonodroidRuntime::monodroid_unhandled_exception (MonoObject *java_exception)
 MonoReflectionType*
 MonodroidRuntime::typemap_java_to_managed (MonoString *java_type_name) noexcept
 {
-	return embeddedAssemblies.typemap_java_to_managed (java_type_name);
+	return EmbeddedAssemblies::typemap_java_to_managed (java_type_name);
 }
 
 const char*
 MonodroidRuntime::typemap_managed_to_java (MonoReflectionType *type, const uint8_t *mvid) noexcept
 {
-	return embeddedAssemblies.typemap_managed_to_java (type, mvid);
+	return EmbeddedAssemblies::typemap_managed_to_java (type, mvid);
 }
 #endif // !def RELEASE
 
