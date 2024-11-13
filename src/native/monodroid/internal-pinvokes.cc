@@ -21,7 +21,7 @@ monodroid_get_system_property (const char *name, char **value)
 int
 monodroid_embedded_assemblies_set_assemblies_prefix (const char *prefix)
 {
-    embeddedAssemblies.set_assemblies_prefix (prefix);
+	EmbeddedAssemblies::set_assemblies_prefix (prefix);
     return 0;
 }
 

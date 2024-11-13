@@ -122,11 +122,11 @@ namespace xamarin::android::internal {
 		{}
 #endif  // def RELEASE
 
-		STATIC_IN_ANDROID_RELEASE const char* typemap_managed_to_java (MonoReflectionType *type, const uint8_t *mvid) noexcept;
+		static const char* typemap_managed_to_java (MonoReflectionType *type, const uint8_t *mvid) noexcept;
 
-		void install_preload_hooks_for_appdomains ();
-		void install_preload_hooks_for_alc ();
-		STATIC_IN_ANDROID_RELEASE MonoReflectionType* typemap_java_to_managed (MonoString *java_type) noexcept;
+		static void install_preload_hooks_for_appdomains () noexcept;
+		static void install_preload_hooks_for_alc () noexcept;
+		static MonoReflectionType* typemap_java_to_managed (MonoString *java_type) noexcept;
 
 		/* returns current number of *all* assemblies found from all invocations */
 		template<bool (*should_register_fn)(const char*)>
@@ -205,8 +205,8 @@ namespace xamarin::android::internal {
 		}
 
 	private:
-		STATIC_IN_ANDROID_RELEASE const char* typemap_managed_to_java (MonoType *type, MonoClass *klass, const uint8_t *mvid) noexcept;
-		STATIC_IN_ANDROID_RELEASE MonoReflectionType* typemap_java_to_managed (hash_t hash, const MonoString *java_type_name) noexcept;
+		static const char* typemap_managed_to_java (MonoType *type, MonoClass *klass, const uint8_t *mvid) noexcept;
+		static MonoReflectionType* typemap_java_to_managed (hash_t hash, const MonoString *java_type_name) noexcept;
 		static size_t register_from_apk (const char *apk_file, monodroid_should_register should_register) noexcept;
 		static size_t register_from_filesystem (monodroid_should_register should_register) noexcept;
 		static size_t register_from_filesystem (const char *dir, bool look_for_mangled_names, monodroid_should_register should_register) noexcept;
@@ -247,7 +247,7 @@ namespace xamarin::android::internal {
 		bool typemap_load_file (int dir_fd, const char *dir_path, const char *file_path, TypeMap &module);
 		bool typemap_load_file (BinaryTypeMapHeader &header, const char *dir_path, const char *file_path, int file_fd, TypeMap &module);
 		static ssize_t do_read (int fd, void *buf, size_t count);
-		const TypeMapEntry *typemap_managed_to_java (const char *managed_type_name) noexcept;
+		static const TypeMapEntry *typemap_managed_to_java (const char *managed_type_name) noexcept;
 #endif // DEBUG
 
 		static md_mmap_info md_mmap_apk_file (int fd, uint32_t offset, size_t size, const char* filename);

@@ -493,7 +493,7 @@ MonoAssembly*
 EmbeddedAssemblies::open_from_bundles (MonoAssemblyLoadContextGCHandle alc_gchandle, MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data, MonoError *error)
 {
 	constexpr bool ref_only = false;
-	return embeddedAssemblies.open_from_bundles (aname, alc_gchandle, error, ref_only);
+	return EmbeddedAssemblies::open_from_bundles (aname, alc_gchandle, error, ref_only);
 }
 
 MonoAssembly*
@@ -501,17 +501,17 @@ EmbeddedAssemblies::open_from_bundles_full (MonoAssemblyName *aname, [[maybe_unu
 {
 	constexpr bool ref_only = false;
 
-	return embeddedAssemblies.open_from_bundles (aname, ref_only /* loader_data */, nullptr /* error */, ref_only);
+	return EmbeddedAssemblies::open_from_bundles (aname, ref_only /* loader_data */, nullptr /* error */, ref_only);
 }
 
 void
-EmbeddedAssemblies::install_preload_hooks_for_appdomains ()
+EmbeddedAssemblies::install_preload_hooks_for_appdomains () noexcept
 {
 	mono_install_assembly_preload_hook (open_from_bundles_full, nullptr);
 }
 
 void
-EmbeddedAssemblies::install_preload_hooks_for_alc ()
+EmbeddedAssemblies::install_preload_hooks_for_alc () noexcept
 {
 	mono_install_assembly_preload_hook_v3 (
 		open_from_bundles,
@@ -679,7 +679,7 @@ EmbeddedAssemblies::typemap_java_to_managed (hash_t hash, const MonoString *java
 			} else {
 				MonoAssemblyLoadContextGCHandle alc_gchandle = mono_alc_get_default_gchandle ();
 				MonoError mono_error;
-				assm = embeddedAssemblies.open_from_bundles (assembly_name, alc_gchandle, &mono_error, false /* ref_only */);
+				assm = EmbeddedAssemblies::open_from_bundles (assembly_name, alc_gchandle, &mono_error, false /* ref_only */);
 			}
 
 			if (assm == nullptr) {
