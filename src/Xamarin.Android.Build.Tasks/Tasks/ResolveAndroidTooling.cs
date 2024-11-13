@@ -139,17 +139,19 @@ namespace Xamarin.Android.Tasks
 			ApkSignerJar = Path.Combine (AndroidSdkBuildToolsBinPath, "lib", ApkSigner);
 			AndroidUseApkSigner = File.Exists (ApkSignerJar);
 
+			var aapt2Exe = Aapt2;
 			if (string.IsNullOrEmpty (Aapt2ToolPath)) {
 				var osBinPath = MonoAndroidHelper.GetOSBinPath ();
-				var aapt2 = Path.Combine (osBinPath, MonoAndroidHelper.GetExecutablePath (osBinPath, Aapt2));
+				aapt2Exe = MonoAndroidHelper.GetExecutablePath (osBinPath, Aapt2);
+				var aapt2 = Path.Combine (osBinPath, aapt2Exe);
 				if (File.Exists (aapt2))
 					Aapt2ToolPath = osBinPath;
 				else {
-					Log.LogDebugMessage ("Could not find `{0}`; tried: {1}", Aapt2, aapt2);
+					Log.LogDebugMessage ("Could not find `{0}`; tried: {1}", aapt2Exe, aapt2);
 					Aapt2ToolPath = AndroidSdkBuildToolsBinPath;
 				}
 			}
-			if (string.IsNullOrEmpty (Aapt2ToolPath) || !File.Exists (Path.Combine (Aapt2ToolPath, Aapt2))) {
+			if (string.IsNullOrEmpty (Aapt2ToolPath) || !File.Exists (Path.Combine (Aapt2ToolPath, aapt2Exe))) {
 				Log.LogCodedError ("XA0112", Properties.Resources.XA0112, Aapt2ToolPath);
 			} else if (!GetAapt2Version ()) {
 				Log.LogCodedError ("XA0111", Properties.Resources.XA0111, Aapt2ToolPath);
