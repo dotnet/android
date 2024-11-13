@@ -148,7 +148,10 @@ namespace Xamarin.Android.Tasks
 					Aapt2ToolPath = osBinPath;
 				else {
 					Log.LogDebugMessage ("Could not find `{0}`; tried: {1}", aapt2Exe, aapt2);
-					Aapt2ToolPath = AndroidSdkBuildToolsBinPath;
+					aapt2Exe = MonoAndroidHelper.GetExecutablePath (AndroidSdkBuildToolsBinPath, Aapt2);
+					aapt2 = Path.Combine (osBinPath, aapt2Exe);
+					if (File.Exists (aapt2))
+						Aapt2ToolPath = AndroidSdkBuildToolsBinPath;
 				}
 			}
 			if (string.IsNullOrEmpty (Aapt2ToolPath) || !File.Exists (Path.Combine (Aapt2ToolPath, aapt2Exe))) {
