@@ -190,21 +190,6 @@ namespace Xamarin.Android.Build.Tests
 			return androidNdkDirectory;
 		}
 
-		protected string CreateFauxOSBin (string path)
-		{
-			var sb  = new StringBuilder ();
-			if (IsWindows) {
-				sb.AppendLine ("@echo off");
-				sb.AppendLine ($"echo Android Asset Packaging Tool (aapt) 2.19-10229193");
-			} else {
-				sb.AppendLine ("#!/bin/bash");
-				sb.AppendLine ($"echo \"Android Asset Packaging Tool (aapt) 2.19-10229193\"");
-			}
-			Directory.CreateDirectory (path);
-			CreateFauxExecutable (Path.Combine(path, IsWindows ? "aapt2.exe" : "aapt2"), sb);
-			return path;
-		}
-
 		protected string CreateFauxAndroidSdkDirectory (string path, string buildToolsVersion, ApiInfo [] apiLevels = null)
 		{
 			var androidSdkDirectory = Path.Combine (Root, path);

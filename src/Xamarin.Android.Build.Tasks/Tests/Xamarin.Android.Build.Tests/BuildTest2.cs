@@ -728,7 +728,6 @@ namespace UnamedProject
 		public void DesignTimeBuildMissingAndroidPlatformJar ()
 		{
 			var path = Path.Combine ("temp", TestName);
-			CreateFauxOSBin (MonoAndroidHelper.GetOSBinPath ());
 			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "35.0.0", []);
 			try {
 				var proj = new XamarinAndroidApplicationProject ();

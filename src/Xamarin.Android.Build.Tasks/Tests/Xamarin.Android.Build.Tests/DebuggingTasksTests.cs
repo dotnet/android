@@ -36,7 +36,6 @@ namespace Xamarin.Android.Build.Tests
 			var frameworksRoot = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "packs", "Microsoft.NETCore.App.Ref");
 			var mscorlibDll = Directory.GetFiles (frameworksRoot, "mscorlib.dll", SearchOption.AllDirectories).LastOrDefault ();
 			var frameworksPath = Path.GetDirectoryName (mscorlibDll);
-			CreateFauxOSBin (MonoAndroidHelper.GetOSBinPath ());
 			var androidSdk = CreateFauxAndroidSdkDirectory (Path.Combine (path, "Sdk"), "24.0.1", new[]
 			{
 				new ApiInfo { Id = "23", Level = 23, Name = "Marshmallow", FrameworkVersion = "v6.0", Stable = true },

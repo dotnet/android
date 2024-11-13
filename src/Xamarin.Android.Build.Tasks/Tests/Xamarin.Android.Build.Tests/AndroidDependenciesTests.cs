@@ -147,7 +147,6 @@ namespace Xamarin.Android.Build.Tests
 			var apis = new ApiInfo [] {
 			};
 			var path = Path.Combine ("temp", TestName);
-			CreateFauxOSBin (MonoAndroidHelper.GetOSBinPath ());
 			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"),
 					null, apis);
 			var referencesPath = CreateFauxReferencesDirectory (Path.Combine (path, "xbuild-frameworks"), apis);

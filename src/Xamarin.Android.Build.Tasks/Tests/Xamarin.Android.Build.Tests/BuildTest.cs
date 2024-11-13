@@ -777,7 +777,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		public void IfAndroidJarDoesNotExistThrowXA5207 ([Values(true, false)] bool buildingInsideVisualStudio)
 		{
 			var path = Path.Combine ("temp", TestName);
-			CreateFauxOSBin (MonoAndroidHelper.GetOSBinPath ());
 			var AndroidSdkDirectory = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "24.0.1", new ApiInfo [] { new ApiInfo { Id = "30" } });
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,

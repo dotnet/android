@@ -171,7 +171,6 @@ namespace Xamarin.Android.Build.Tests {
 		public void UseLatestAndroidSdk (string buildtools, string jdk, ApiInfo[] apis, bool useLatestAndroidSdk, string targetFrameworkVersion, bool expectedTaskResult, string expectedTargetFramework, string expectedError = "", string expectedErrorMessage = "")
 		{
 			var path = Path.Combine ("temp", "UseLatestAndroidSdk_" + Guid.NewGuid ());
-			CreateFauxOSBin (MonoAndroidHelper.GetOSBinPath ());
 			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), buildtools, apis);
 			var androidNdkPath = CreateFauxAndroidNdkDirectory (Path.Combine (path, "android-ndk"));
 			string javaExe = string.Empty;
@@ -225,7 +224,6 @@ namespace Xamarin.Android.Build.Tests {
 		public void ResolveSdkTiming ()
 		{
 			var path = Path.Combine ("temp", TestName);
-			CreateFauxOSBin (MonoAndroidHelper.GetOSBinPath ());
 			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "26.0.3");
 			var androidNdkPath = CreateFauxAndroidNdkDirectory (Path.Combine (path, "android-ndk"));
 			string javaExe = string.Empty;
@@ -405,7 +403,6 @@ namespace Xamarin.Android.Build.Tests {
 		public void TargetFrameworkPairing (string description, ApiInfo[] androidSdk, ApiInfo[] targetFrameworks, string userSelected, string androidApiLevel, string androidApiLevelName, string targetFrameworkVersion)
 		{
 			var path = Path.Combine ("temp", $"{nameof (TargetFrameworkPairing)}_{description}");
-			CreateFauxOSBin (MonoAndroidHelper.GetOSBinPath ());
 			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "26.0.3", androidSdk);
 			var androidNdkPath = CreateFauxAndroidNdkDirectory (Path.Combine (path, "android-ndk"));
 			string javaExe = string.Empty;
