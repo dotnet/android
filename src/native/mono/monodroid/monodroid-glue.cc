@@ -1271,7 +1271,7 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 	abort_unless (default_alc != nullptr, "Default AssemblyLoadContext not found");
 
 	EmbeddedAssemblies::install_preload_hooks_for_alc ();
-	log_debug (LOG_ASSEMBLY, "ALC hooks installed"sv);
+	log_debug (LOG_ASSEMBLY, "ALC hooks installed");
 
 	bool preload = (AndroidSystem::is_assembly_preload_enabled () || (is_running_on_desktop && force_preload_assemblies));
 
