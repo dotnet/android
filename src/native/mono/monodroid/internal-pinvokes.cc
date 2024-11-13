@@ -135,6 +135,13 @@ monodroid_clear_gdb_wait ()
 }
 
 void*
+_monodroid_get_identity_hash_code (JNIEnv *env, void *v)
+{
+    intptr_t rv = env->CallStaticIntMethod (MonodroidRuntime::get_java_class_System (), MonodroidRuntime::get_java_class_method_System_identityHashCode (), v);
+    return (void*) rv;
+}
+
+void*
 _monodroid_timezone_get_default_id ()
 {
 	JNIEnv *env          = osBridge.ensure_jnienv ();
