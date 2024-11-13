@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
@@ -46,6 +47,7 @@ namespace Java.Interop.BootstrapTasks
 				.Where (j => maxVersion != null ? j.Version <= maxVersion : true)
 				.Where (j => j.IncludePath.Any ());
 			var jdk             = explicitJdks.Concat (defaultJdks)
+				.Where (j => JdkRunsOnHost (j))
 				.FirstOrDefault ();
 
 			if (jdk == null) {
@@ -69,6 +71,19 @@ namespace Java.Interop.BootstrapTasks
 			}
 
 			return !Log.HasLoggedErrors;
+		}
+
+		static bool JdkRunsOnHost (XATInfo jdk)
+		{
+			var cputype = RuntimeInformation.ProcessArchitecture;
+			if (jdk.ReleaseProperties.TryGetValue ("OS_ARCH", out var arch)) {
+				return (cputype, arch) switch {
+					(Architecture.Arm64,    "aarch64")  => true,
+					(Architecture.X64,      "x86_64")   => true,
+					_ => false,
+				};
+			}
+			return true;
 		}
 
 		XATInfo[] GetJdkRoots ()
