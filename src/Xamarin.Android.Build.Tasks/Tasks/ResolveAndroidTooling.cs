@@ -156,7 +156,7 @@ namespace Xamarin.Android.Tasks
 			}
 			if (string.IsNullOrEmpty (Aapt2ToolPath) || !File.Exists (Path.Combine (Aapt2ToolPath, aapt2Exe))) {
 				Log.LogCodedError ("XA0112", Properties.Resources.XA0112, Aapt2ToolPath);
-			} else if (!GetAapt2Version ()) {
+			} else if (!GetAapt2Version (aapt2Exe)) {
 				Log.LogCodedError ("XA0111", Properties.Resources.XA0111, Aapt2ToolPath);
 			}
 
@@ -212,10 +212,10 @@ namespace Xamarin.Android.Tasks
 		//  Android Asset Packaging Tool (aapt) 2.19-6051327
 		static readonly Regex Aapt2VersionRegex = new Regex (@"(?<version>[\d\:|\.]+)(\d+)?");
 
-		bool GetAapt2Version ()
+		bool GetAapt2Version (string aapt2Exe)
 		{
 			var sb = new StringBuilder ();
-			var aapt2Tool = Path.Combine (Aapt2ToolPath, Aapt2);
+			var aapt2Tool = Path.Combine (Aapt2ToolPath, aapt2Exe);
 
 			// Try to use a cached value for Aapt2Version
 			// NOTE: this doesn't need to use GetRegisteredTaskObjectAssemblyLocal()
