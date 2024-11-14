@@ -257,7 +257,7 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
 	bool assembly_store_found = false;
 
-	log_debug (LOG_ASSEMBLY, "Looking for assembly stores in APK ('%s)", assembly_store_file_path.data ());
+	log_debug (LOG_ASSEMBLY, "Looking for assembly stores in APK ('%s')", assembly_store_file_path.data ());
 	for (size_t i = 0uz; i < num_entries; i++) {
 		if (all_required_zip_entries_found ()) {
 			need_to_scan_more_apks = false;
@@ -269,7 +269,7 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 			continue;
 		}
 
-		if (!assembly_store_found && Util::ends_with (entry_name, assembly_store_file_path)) {
+		if (!assembly_store_found && Util::ends_with (entry_name, assembly_store_file_path.data ())) {
 			assembly_store_found = true;
 			map_assembly_store (entry_name, state);
 			continue;
