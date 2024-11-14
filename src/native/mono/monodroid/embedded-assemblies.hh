@@ -462,8 +462,8 @@ namespace xamarin::android::internal {
 		static inline uint32_t      number_of_zip_dso_entries = 0u;
 		static inline bool          need_to_scan_more_apks = true;
 
-		static inline AssemblyStoreIndexEntry *assembly_store_hashes;
-		static inline xamarin::android::mutex  assembly_decompress_mutex;
+		static inline AssemblyStoreIndexEntry *assembly_store_hashes = nullptr;
+		static inline xamarin::android::mutex  assembly_decompress_mutex {};
 	};
 }
 
