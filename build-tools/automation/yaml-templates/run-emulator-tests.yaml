@@ -12,9 +12,9 @@ jobs:
   - job: mac_${{ parameters.jobName }}_tests
     displayName: ${{ parameters.jobName }} Emulator Tests
     pool:
-      name: VSEng-VSMac-Xamarin-Shared
+      name: $(SharedMacPool)
       demands:
-      - macOS.Name -equals Ventura
+      - macOS.Name -equals $(SharedMacName)
       - macOS.Architecture -equals x64
     timeoutInMinutes: ${{ parameters.jobTimeout }}
     workspace:

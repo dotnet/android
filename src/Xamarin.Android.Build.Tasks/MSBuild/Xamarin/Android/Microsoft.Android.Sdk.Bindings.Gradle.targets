@@ -12,8 +12,9 @@ This file contains MSBuild targets that support building and operating on Androi
   <UsingTask TaskName="Xamarin.Android.Tasks.Gradle"              AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
   <PropertyGroup>
-    <_AndroidGradleDefaultOutputPathRoot>$(MSBuildProjectDirectory)/$(IntermediateOutputPath)gradle/</_AndroidGradleDefaultOutputPathRoot>
-    <_AndroidGradleBuildDirInitScriptPath>$(_AndroidGradleDefaultOutputPathRoot)net.android.init.gradle.kts</_AndroidGradleBuildDirInitScriptPath>
+    <_AGPOutDirAbs>$(IntermediateOutputPath)gradle/</_AGPOutDirAbs>
+    <_AGPOutDirAbs Condition=" !$([System.IO.Path]::IsPathRooted('$(_AGPOutDirAbs)')) ">$(MSBuildProjectDirectory)/$(_AGPOutDirAbs)</_AGPOutDirAbs>
+    <_AGPInitScriptPath>$(_AGPOutDirAbs)net.android.init.gradle.kts</_AGPInitScriptPath>
     <_BuildAndroidGradleProjectsStamp>$(_AndroidStampDirectory)_BuildAndroidGradleProjects.stamp</_BuildAndroidGradleProjectsStamp>
   </PropertyGroup>
 
@@ -56,7 +57,10 @@ This file contains MSBuild targets that support building and operating on Androi
     </Hash>
     <ItemGroup>
       <AndroidGradleProject Condition=" '%(AndroidGradleProject.OutputPath)' == '' " >
-        <OutputPath>$(_AndroidGradleDefaultOutputPathRoot)%(ModuleName)%(Configuration)-$([System.String]::Copy($(_AndroidGradleProjectHash)).Substring(0, 5))/</OutputPath>
+        <OutputPath>$(_AGPOutDirAbs)%(ModuleName)%(Configuration)-$([System.String]::Copy($(_AndroidGradleProjectHash)).Substring(0, 5))</OutputPath>
+      </AndroidGradleProject>
+      <AndroidGradleProject>
+        <OutputPath>$([MSBuild]::EnsureTrailingSlash('%(OutputPath)'))</OutputPath>
       </AndroidGradleProject>
     </ItemGroup>
   </Target>
@@ -72,12 +76,12 @@ This file contains MSBuild targets that support building and operating on Androi
     <!-- Create the net.android.init.gradle.kts script used to override the Gradle project output directory -->
     <CopyResource
         ResourceName="net.android.init.gradle.kts"
-        OutputPath="$(_AndroidGradleBuildDirInitScriptPath)"
+        OutputPath="$(_AGPInitScriptPath)"
     />
 
     <!-- Run assemble task for project outputs, android app and library project outputs are currently supported -->
     <Gradle ToolPath="%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)"
-        BuildDirInitScriptPath="$(_AndroidGradleBuildDirInitScriptPath)"
+        BuildDirInitScriptPath="$(_AGPInitScriptPath)"
         Command="assemble%(AndroidGradleProject.Configuration)"
         ModuleName="%(AndroidGradleProject.ModuleName)"
         OutputPath="%(AndroidGradleProject.OutputPath)"
@@ -89,9 +93,9 @@ This file contains MSBuild targets that support building and operating on Androi
       <_AndroidGradleProjectAppOutputs      Include="%(AndroidGradleProject.OutputPath)outputs/**/*.apk" />
       <_AndroidGradleProjectLibraryOutputs  Include="%(AndroidGradleProject.OutputPath)outputs/**/*.aar"
           Condition=" '%(CreateAndroidLibrary)' == 'true' "
-          Bind="%(Bind)"
-          Pack="%(Pack)"
-          Visible="%(Visible)" />
+          Bind="%(AndroidGradleProject.Bind)"
+          Pack="%(AndroidGradleProject.Pack)"
+          Visible="%(AndroidGradleProject.Visible)" />
     </ItemGroup>
 
     <AndroidMessage ResourceName="XAGRDLRefLibraryOutputs"
@@ -113,7 +117,7 @@ This file contains MSBuild targets that support building and operating on Androi
       Condition=" '@(AndroidGradleProject->Count())' != '0' "
       DependsOnTargets="_CalculateAndroidGradleProjectOutputPath" >
     <Gradle ToolPath="%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)"
-        BuildDirInitScriptPath="$(_AndroidGradleBuildDirInitScriptPath)"
+        BuildDirInitScriptPath="%(AndroidGradleProject.OutputPath)$(_AGPInitScriptPath)"
         Command="clean"
         ModuleName="%(AndroidGradleProject.ModuleName)"
         OutputPath="%(AndroidGradleProject.OutputPath)"

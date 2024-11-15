@@ -30,17 +30,17 @@ namespace xamarin::android {
 		{
 			return _debugger_log_level;
 		}
+#endif // def DEBUG
 
-		static void set_gc_spew_enabled (int yesno) noexcept
+		static void set_gc_spew_enabled (bool yesno) noexcept
 		{
 			_gc_spew_enabled = yesno;
 		}
 
-		static int gc_spew_enabled () noexcept
+		static bool gc_spew_enabled () noexcept
 		{
 			return _gc_spew_enabled;
 		}
-#endif // def DEBUG
 
 	private:
 		static bool set_category (std::string_view const& name, internal::string_segment& arg, unsigned int entry, bool arg_starts_with_name = false) noexcept;
@@ -50,8 +50,8 @@ namespace xamarin::android {
 #if defined(DEBUG)
 		static inline bool _got_debugger_log_level = false;
 		static inline int _debugger_log_level = 0;
-		static inline int _gc_spew_enabled = 0;
 #endif // def DEBUG
+		static inline bool _gc_spew_enabled = false;
 	};
 }
 #endif

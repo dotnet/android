@@ -60,7 +60,7 @@
         href: binding-libs/advanced-concepts/resolving-java-dependencies.md
       - name: Distribute bindings libraries
         href: binding-libs/advanced-concepts/distributing.md
-      - name: Native Library Interop
+      - name: Native library interop
         href: binding-libs/advanced-concepts/native-library-interop.md
     - name: Troubleshoot bindings
       href: binding-libs/customizing-bindings/troubleshooting-bindings.md

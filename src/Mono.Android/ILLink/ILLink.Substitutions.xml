@@ -1,13 +1,5 @@
 <linker>
   <assembly fullname="Mono.Android">
-    <type fullname="Android.Runtime.AndroidEnvironment" feature="Android.Runtime.AndroidEnvironment.VSAndroidDesignerIsEnabled" featurevalue="false">
-      <method signature="System.Boolean get_VSAndroidDesignerIsEnabled()" body="stub" value="false" />
-    </type>
-    <type fullname="Java.Interop.TypeManager" feature="Android.Runtime.AndroidEnvironment.VSAndroidDesignerIsEnabled" featurevalue="false">
-      <method signature="System.Type TypeRegistrationFallback(System.String)" body="stub" />
-      <method signature="System.Void RegisterPackage(System.String,System.Converter`2&lt;System.String,System.Type&gt;)" body="stub" />
-      <method signature="System.Void RegisterPackages(System.String[],System.Converter`2&lt;System.String,System.Type&gt;[])" body="stub" />
-    </type>
     <type fullname="Xamarin.Android.Net.AndroidMessageHandler">
       <method signature="System.Boolean get_NegotiateAuthenticationIsEnabled()" body="stub" feature="Xamarin.Android.Net.UseNegotiateAuthentication" featurevalue="false" value="false" />
       <method signature="System.Boolean get_NegotiateAuthenticationIsEnabled()" body="stub" feature="Xamarin.Android.Net.UseNegotiateAuthentication" featurevalue="true" value="true" />

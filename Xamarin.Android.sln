@@ -19,8 +19,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Export", "exte
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "generator", "external\Java.Interop\tools\generator\generator.csproj", "{D14A1B5C-2060-4930-92BE-F7190256C735}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Java.Interop.NamingCustomAttributes", "external\Java.Interop\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.shproj", "{FE789F04-5E95-42C5-AEF1-E33F8DF06B3F}"
-EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Xamarin.Android.NamingCustomAttributes", "src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.shproj", "{74598F5C-B8CC-4CE6-8EE2-AB9CA1400076}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.Aidl", "src\Xamarin.Android.Tools.Aidl\Xamarin.Android.Tools.Aidl.csproj", "{D27AD8F7-7710-40BE-B03B-55EFBEC13C44}"
@@ -354,7 +352,6 @@ Global
 		{94BD81F7-B06F-4295-9636-F8A3B6BDC762} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{B501D075-6183-4E1D-92C9-F7B5002475B1} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{D14A1B5C-2060-4930-92BE-F7190256C735} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
-		{FE789F04-5E95-42C5-AEF1-E33F8DF06B3F} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{74598F5C-B8CC-4CE6-8EE2-AB9CA1400076} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{D27AD8F7-7710-40BE-B03B-55EFBEC13C44} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
@@ -412,7 +409,6 @@ Global
 		src\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems*{74598f5c-b8cc-4ce6-8ee2-ab9ca1400076}*SharedItemsImports = 13
 		external\Java.Interop\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems*{d1295a8f-4f42-461d-a046-564476c10002}*SharedItemsImports = 5
 		external\Java.Interop\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems*{d18fcf91-8876-48a0-a693-2dc1e7d3d80a}*SharedItemsImports = 5
-		external\Java.Interop\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems*{fe789f04-5e95-42c5-aef1-e33f8df06b3f}*SharedItemsImports = 13
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0
