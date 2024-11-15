@@ -19,7 +19,7 @@ resources:
   - repository: android-platform-support
     type: git
     name: DevDiv/android-platform-support
-    ref: refs/heads/new-main
+    ref: refs/heads/main
   - repository: maui
     type: github
     name: dotnet/maui
