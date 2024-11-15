@@ -7,7 +7,7 @@ else
 	$(MAKE) prepare
 endif
 ifneq ("$(wildcard $(topdir)/external/android-platform-support/src/Xamarin.Android.Build.Debugging.Tasks/Xamarin.Android.Build.Debugging.Tasks.csproj)","")
-	$(call DOTNET_BINLOG,build-commercial) $(SOLUTION) -t:BuildExternal
+	$(call SYSTEM_DOTNET_BINLOG,build-commercial,msbuild) $(SOLUTION) -t:BuildExternal
 endif
 	$(MAKE) leeroy
 
