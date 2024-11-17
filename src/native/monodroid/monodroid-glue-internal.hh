@@ -12,6 +12,7 @@
 #include "cpp-util.hh"
 #include "xxhash.hh"
 #include "monodroid-dl.hh"
+#include "tracing.hh"
 
 #include <mono/utils/mono-counters.h>
 #include <mono/metadata/profiler.h>
@@ -209,8 +210,9 @@ namespace xamarin::android::internal
 
 		void gather_bundled_assemblies (jstring_array_wrapper &runtimeApks, size_t *out_user_assemblies_count, bool have_split_apks);
 		static bool should_register_file (const char *filename);
-		void set_trace_options ();
+		void set_mono_jit_trace_options ();
 		void set_profile_options ();
+		void initialize_native_tracing ();
 
 		void log_jit_event (MonoMethod *method, const char *event_name);
 		static void jit_begin (MonoProfiler *prof, MonoMethod *method);
@@ -255,6 +257,10 @@ namespace xamarin::android::internal
 		timing_period       jit_time;
 		FILE               *jit_log;
 		MonoProfilerHandle  profiler_handle;
+		TracingAutoStartMode tracing_auto_start_mode = TracingAutoStartMode::None;
+		TracingAutoStopMode  tracing_auto_stop_mode = TracingAutoStopMode::None;
+		size_t               tracing_start_delay_ms = 0;
+		size_t               tracing_stop_delay_ms = 0;
 
 		/*
 		 * If set, monodroid will spin in a loop until the debugger breaks the wait by
