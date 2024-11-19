@@ -23,13 +23,11 @@ namespace Xamarin.Android.Prepare
 			};
 			foreach (ExternalGitDependency egd in externalDependencies) {
 				Log.StatusLine ($"  {context.Characters.Bullet} {egd.Name}");
-
+				var egdUrl = await GetGitHubURL (egd, git);
 				string destDir = Path.Combine (Configurables.Paths.ExternalGitDepsDestDir, egd.Name);
 				if (!Directory.Exists (destDir)) {
-					var egdUrl = await GetGitHubURL (egd, git);
 					if (egd.Owner == "DevDiv") {
 						egdUrl = GetDevDivUrl (egd);
-						Log.WarningLine ($"You may be prompted to enter DevDiv credentials to clone {egd.Name}. Please navigate to {egdUrl} and click the 'Generate Git Credentials' button to get credentials.");
 					}
 					Log.StatusLine ($"    {context.Characters.Link} cloning from {egd.Owner}/{egd.Name}");
 					if (!await git.Clone (egdUrl, destDir)) {
@@ -61,6 +59,11 @@ namespace Xamarin.Android.Prepare
 				if (!await git.SubmoduleUpdate (destDir)) {
 					Log.ErrorLine ($"Failed to update submodules for {egd.Name}");
 					failed = true;
+				}
+
+				if (failed) {
+					Log.WarningLine ($"If an attempt to clone or update a private repo failed you may need to refresh your credentials."
+						+ $" Please install https://github.com/microsoft/artifacts-credprovider, or navigate to {egdUrl} and click the 'Generate Git Credentials' button and attempt to clone manually.");
 				}
 			}
 
