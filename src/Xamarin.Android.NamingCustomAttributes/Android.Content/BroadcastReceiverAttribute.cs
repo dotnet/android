@@ -10,7 +10,6 @@
 #nullable enable
 
 using System;
-using Java.Interop;
 
 namespace Android.Content;
 
@@ -32,8 +31,6 @@ public partial class BroadcastReceiverAttribute : Attribute, Java.Interop.IJniNa
 	public string? Icon { get; set; }
 
 	public string? Label { get; set; }
-
-	string IJniNameProviderAttribute.Name => Name ?? "";
 
 	public string? Name { get; set; }
 

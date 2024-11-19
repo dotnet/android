@@ -10,7 +10,6 @@
 #nullable enable
 
 using System;
-using Java.Interop;
 
 namespace Android.Content;
 
@@ -34,8 +33,6 @@ public partial class ContentProviderAttribute : Attribute, Java.Interop.IJniName
 	public string? Label { get; set; }
 
 	public bool MultiProcess { get; set; }
-
-	string IJniNameProviderAttribute.Name => Name ?? "";
 
 	public string? Name { get; set; }
 

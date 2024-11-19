@@ -10,7 +10,6 @@
 #nullable enable
 
 using System;
-using Java.Interop;
 
 namespace Android.App;
 
@@ -36,8 +35,6 @@ public sealed partial class ServiceAttribute : Attribute, Java.Interop.IJniNameP
 	public bool IsolatedProcess { get; set; }
 
 	public string? Label { get; set; }
-
-	string IJniNameProviderAttribute.Name => Name ?? "";
 
 	public string? Name { get; set; }
 

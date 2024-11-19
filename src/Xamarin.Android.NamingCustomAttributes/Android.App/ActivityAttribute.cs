@@ -10,7 +10,6 @@
 #nullable enable
 
 using System;
-using Java.Interop;
 
 namespace Android.App;
 
@@ -78,8 +77,6 @@ public sealed partial class ActivityAttribute : Attribute, Java.Interop.IJniName
 	public int MaxRecents { get; set; }
 
 	public bool MultiProcess { get; set; }
-
-	string IJniNameProviderAttribute.Name => Name ?? "";
 
 	public string? Name { get; set; }
 
