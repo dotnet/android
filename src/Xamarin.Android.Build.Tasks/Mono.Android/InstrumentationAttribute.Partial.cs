@@ -12,7 +12,7 @@ namespace Android.App {
 
 	partial class InstrumentationAttribute {
 		
-		ICollection<string> specified;
+		ICollection<string>? specified;
 
 		public static IEnumerable<InstrumentationAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider, TypeDefinitionCache cache)
 		{

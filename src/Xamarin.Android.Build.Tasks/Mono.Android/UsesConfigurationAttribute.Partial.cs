@@ -16,7 +16,7 @@ namespace Android.App {
 			return mapping.ToElement (this, specified, packageName, cache);
 		}
 
-		ICollection<string> specified;
+		ICollection<string>? specified;
 
 		public static IEnumerable<UsesConfigurationAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider, TypeDefinitionCache cache)
 		{

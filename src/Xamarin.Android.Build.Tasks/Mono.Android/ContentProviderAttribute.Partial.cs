@@ -28,7 +28,7 @@ namespace Android.Content {
 			return values.Select (v => (string) v.Value).ToArray ();
 		}
 
-		ICollection<string> specified;
+		ICollection<string>? specified;
 
 		public static ContentProviderAttribute FromTypeDefinition (TypeDefinition type, TypeDefinitionCache cache)
 		{

@@ -18,10 +18,10 @@ namespace Android.App {
 
 	partial class ApplicationAttribute {
 
-		string _BackupAgent;
-		ICustomAttributeProvider provider;
+		string? _BackupAgent;
+		ICustomAttributeProvider? provider;
 
-		ICollection<string> specified;
+		ICollection<string>? specified;
 
 		static partial void AddManualMapping ()
 		{

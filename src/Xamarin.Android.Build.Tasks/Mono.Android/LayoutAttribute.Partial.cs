@@ -17,8 +17,8 @@ namespace Android.App
 
 	partial class LayoutAttribute
 	{
-		TypeDefinition type;
-		ICollection<string> specified;
+		TypeDefinition? type;
+		ICollection<string>? specified;
 
 		public static LayoutAttribute FromTypeDefinition (TypeDefinition type, TypeDefinitionCache cache)
 		{
