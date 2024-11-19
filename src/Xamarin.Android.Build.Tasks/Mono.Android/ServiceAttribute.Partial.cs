@@ -14,7 +14,7 @@ namespace Android.App {
 
 	partial class ServiceAttribute {
 
-		ICollection<string> specified;
+		ICollection<string>? specified;
 
 		public static ServiceAttribute FromTypeDefinition (TypeDefinition type, TypeDefinitionCache cache)
 		{

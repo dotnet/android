@@ -12,7 +12,7 @@ namespace Android.Content {
 
 	partial class GrantUriPermissionAttribute {
 
-		ICollection<string> specified;
+		ICollection<string>? specified;
 
 		public static IEnumerable<GrantUriPermissionAttribute> FromTypeDefinition (TypeDefinition type, TypeDefinitionCache cache)
 		{

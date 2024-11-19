@@ -12,7 +12,7 @@ namespace Android.Content {
 
 	partial class BroadcastReceiverAttribute {
 		
-		ICollection<string> specified;
+		ICollection<string>? specified;
 
 		public static BroadcastReceiverAttribute FromTypeDefinition (TypeDefinition type, TypeDefinitionCache cache)
 		{

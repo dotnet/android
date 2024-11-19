@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Android.Content\BroadcastReceiverAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.Content\BroadcastReceiverAttribute.Partial.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.Content\ContentProviderAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.Content\ContentProviderAttribute.Partial.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.Runtime\RegisterAttribute.cs" />
@@ -20,8 +21,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)Android.App\ActivityAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.App\ActivityAttribute.Partial.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.App\ApplicationAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.App\ApplicationAttribute.Partial.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.App\ServiceAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.App\ServiceAttribute.Partial.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.App\InstrumentationAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.App\InstrumentationAttribute.Partial.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.App\LayoutAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\IJniNameProviderAttribute.cs" />
   </ItemGroup>

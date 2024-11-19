@@ -26,11 +26,6 @@ This file contains the .NET 5-specific targets to customize ILLink
       <_ProguardProjectConfiguration Condition=" '$(AndroidLinkTool)' != '' ">$(IntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
     </PropertyGroup>
     <ItemGroup>
-      <RuntimeHostConfigurationOption Include="Android.Runtime.AndroidEnvironment.VSAndroidDesignerIsEnabled"
-          Condition="'$(VSAndroidDesigner)' != ''"
-          Value="$(VSAndroidDesigner)"
-          Trim="true" />
-
       <!--
         Used for the <ILLink CustomData="@(_TrimmerCustomData)" /> value:
         https://github.com/dotnet/sdk/blob/a5393731b5b7b225692fff121f747fbbc9e8b140/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.ILLink.targets#L147

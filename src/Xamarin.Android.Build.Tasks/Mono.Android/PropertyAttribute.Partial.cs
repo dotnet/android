@@ -12,7 +12,7 @@ namespace Android.App {
 
 	partial class PropertyAttribute {
 
-		ICollection<string> specified;
+		ICollection<string>? specified;
 
 		public static IEnumerable<PropertyAttribute> FromCustomAttributeProvider (ICustomAttributeProvider type, TypeDefinitionCache cache)
 		{
