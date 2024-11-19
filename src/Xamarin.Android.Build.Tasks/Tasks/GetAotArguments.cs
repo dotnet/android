@@ -149,7 +149,7 @@ namespace Xamarin.Android.Tasks
 				// level already set
 			} else {
 				// Probably not ideal!
-				level       = MonoAndroidHelper.SupportedVersions.MaxStableVersion?.ApiLevel ?? 0;
+				level       = MonoAndroidHelper.SupportedVersions.MaxStableVersion?.ApiLevel ?? 21;
 			}
 
 			// Some Android API levels do not exist on the NDK level. Workaround this my mapping them to the
