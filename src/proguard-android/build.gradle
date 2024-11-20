@@ -1,0 +1,14 @@
+plugins {
+    id 'com.android.application' version '8.7.0'
+}
+
+repositories {
+    google()
+    mavenCentral()
+}
+
+android {
+    namespace 'com.microsoft.proguard.android'
+    // Setting the minimum we support at the moment, might not matter
+    compileSdk 21
+}
