@@ -38,7 +38,8 @@
     <AndroidLinkTool Condition=" '$(AndroidLinkTool)' == '' ">r8</AndroidLinkTool>
     <TrimMode Condition=" '$(TrimMode)' == '' ">full</TrimMode>
     <!-- Trimmer switches required for tests -->
-    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+    <JsonSerializerIsReflectionEnabledByDefault Condition="'$(TrimMode)' == 'full'">true</JsonSerializerIsReflectionEnabledByDefault>
+    <_DefaultValueAttributeSupport Condition="'$(TrimMode)' == 'full'">true</_DefaultValueAttributeSupport>
   </PropertyGroup>
 
   <ItemGroup>

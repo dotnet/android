@@ -12,7 +12,7 @@ namespace Android.App {
 
 	partial class MetaDataAttribute {
 
-		ICollection<string> specified;
+		ICollection<string>? specified;
 
 		public static IEnumerable<MetaDataAttribute> FromCustomAttributeProvider (ICustomAttributeProvider type, TypeDefinitionCache cache)
 		{

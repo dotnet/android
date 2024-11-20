@@ -77,8 +77,8 @@ namespace Xamarin.Android.Manifest {
 
 		class MappingInfo {
 			public string             AttributeName;
-			public Func<T, object>    Getter;
-			public Action<T, object>  Setter;
+			public Func<T, object?>    Getter;
+			public Action<T, object>?  Setter;
 			public Type               MemberType;
 			public Func<T, string>    AttributeValue;
 			public Func<T, ICustomAttributeProvider, IAssemblyResolver, TypeDefinitionCache, string>    AttributeValue2;
@@ -86,7 +86,7 @@ namespace Xamarin.Android.Manifest {
 
 		readonly IDictionary<string, MappingInfo>   Mappings = new Dictionary<string, MappingInfo> ();
 
-		public void Add (string member, string attributeName, Func<T, object> getter, Action<T, object> setter, Type memberType = null)
+		public void Add (string member, string attributeName, Func<T, object?> getter, Action<T, object>? setter, Type memberType = null)
 		{
 			Mappings.Add (member, new MappingInfo {
 					AttributeName   = attributeName,

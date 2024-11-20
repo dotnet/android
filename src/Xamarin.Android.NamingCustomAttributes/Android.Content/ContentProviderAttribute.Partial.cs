@@ -1,4 +1,5 @@
 using System;
+using Java.Interop;
 
 namespace Android.Content;
 
@@ -12,4 +13,6 @@ public partial class ContentProviderAttribute
 			throw new ArgumentException ("At least one authority must be specified.", "authorities");
 		Authorities = authorities;
 	}
+
+	string IJniNameProviderAttribute.Name => Name ?? "";
 }

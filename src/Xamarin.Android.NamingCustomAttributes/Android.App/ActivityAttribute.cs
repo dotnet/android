@@ -397,8 +397,10 @@ public sealed partial class ActivityAttribute : Attribute, Java.Interop.IJniName
 		mapping.Add (
 			member: "ShowOnLockScreen",
 			attributeName: "showOnLockScreen",
+#pragma warning disable CS0618 // Type or member is obsolete
 			getter: self => self.ShowOnLockScreen,
 			setter: (self, value) => self.ShowOnLockScreen = (bool) value
+#pragma warning restore CS0618 // Type or member is obsolete
 		);
 		mapping.Add (
 			member: "ShowWhenLocked",

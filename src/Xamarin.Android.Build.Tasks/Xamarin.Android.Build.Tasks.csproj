@@ -22,6 +22,7 @@
     <Nullable>annotations</Nullable>
     <!-- Causes issues with linker files imported from Mono -->
     <NoWarn>$(NoWarn);CA1310;CA1305</NoWarn>
+    <WarningsAsErrors>Nullable</WarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
