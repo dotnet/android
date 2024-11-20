@@ -222,7 +222,7 @@ namespace Xamarin.Android.Tasks
 			}
 			JCWGenerator.EnsureAllArchitecturesAreIdentical (Log, nativeCodeGenStates);
 
-			NativeCodeGenState.Template = templateCodeGenState;
+			NativeCodeGenState.TemplateJniAddNativeMethodRegistrationAttributePresent = templateCodeGenState.JniAddNativeMethodRegistrationAttributePresent;
 			BuildEngine4.RegisterTaskObjectAssemblyLocal (ProjectSpecificTaskObjectKey (NativeCodeGenStateRegisterTaskKey), nativeCodeGenStates, RegisteredTaskObjectLifetime.Build);
 
 			if (useMarshalMethods) {
@@ -269,6 +269,11 @@ namespace Xamarin.Android.Tasks
 
 			IList<string> additionalProviders = MergeManifest (templateCodeGenState, MaybeGetArchAssemblies (userAssembliesPerArch, templateCodeGenState.TargetArch));
 			GenerateAdditionalProviderSources (templateCodeGenState, additionalProviders);
+
+			// Dispose all XAAssemblyResolvers
+			foreach (var state in nativeCodeGenStates.Values) {
+				state.Resolver.Dispose ();
+			}
 
 			Dictionary<string, ITaskItem> MaybeGetArchAssemblies (Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> dict, AndroidTargetArch arch)
 			{
