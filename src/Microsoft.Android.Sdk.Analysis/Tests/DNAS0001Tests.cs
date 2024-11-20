@@ -43,14 +43,15 @@ namespace _Microsoft.Android.Resource.Designer {
 }
 ";
 	[Test]
-	public async Task IDE0001IsNotSuppressed ()
+	public async Task IDE0002IsNotSuppressed ()
 	{
 		var expected = VerifyCSAnalyser.Diagnostic (new DiagnosticDescriptor ("IDE0002", "", "Name can be simplified", "", DiagnosticSeverity.Hidden, isEnabledByDefault: true)).WithSpan (11, 23, 11, 31);
 		await VerifyCSAnalyser.VerifyAnalyzerAsync (brokenCode, expected);
 	}
 
 	[Test]
-	public async Task IDE0001IsSuppressed ()
+	[Ignore ("needs https://github.com/dotnet/roslyn-sdk/issues/1175 to be figured out")]
+	public async Task IDE0002IsSuppressed ()
 	{
 		var expected = VerifyCSSuppressor.Diagnostic (new DiagnosticDescriptor ("IDE0002", "", "Name can be simplified", "", DiagnosticSeverity.Hidden, isEnabledByDefault: true)).WithSpan (11, 23, 11, 31).WithIsSuppressed (true);
 		await VerifyCSSuppressor.VerifySuppressorAsync (brokenCode, expected);
