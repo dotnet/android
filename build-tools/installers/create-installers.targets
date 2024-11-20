@@ -138,6 +138,7 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_net6.dex" ExcludeFromLegacy="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_fastdev_net6.dex" ExcludeFromLegacy="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)manifestmerger.jar" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)proguard-android.txt" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)protobuf-net.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)System.CodeDom.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)System.Collections.Immutable.dll" />

@@ -1,0 +1,34 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_Destination>$(MicrosoftAndroidSdkOutDir)proguard-android.txt</_Destination>
+  </PropertyGroup>
+
+  <Target Name="_GenerateProGuardRules"
+      BeforeTargets="Build"
+      Inputs="$(MSBuildThisFile);build.gradle;settings.gradle"
+      Outputs="$(_Destination)">
+    <Exec
+        Command="&quot;$(GradleWPath)&quot; extractProguardFiles $(GradleArgs)"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
+    <ItemGroup>
+      <_ProguardRules Include="$(MSBuildThisFileDirectory)build\intermediates\default_proguard_files\global\proguard-android.txt-*" />
+    </ItemGroup>
+    <Copy
+        SourceFiles="@(_ProguardRules)"
+        DestinationFiles="$(_Destination)"
+    />
+    <Touch Files="$(_Destination)" />
+  </Target>
+
+  <Target Name="_CleanProguardRules" BeforeTargets="Clean">
+    <Delete Files="$(_Destination)" />
+    <Exec
+        Command="&quot;$(GradleWPath)&quot; clean $(GradleArgs)"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
+  </Target>
+
+</Project>
