@@ -405,7 +405,7 @@ namespace xamarin::android::internal {
 			if constexpr (IsSatelliteAssembly) {
 				// Make sure assembly name is {CULTURE}/assembly.dll
 				for (size_t idx = start_idx; idx < name.length (); idx++) {
-					if (name[idx] == SharedConstants::SATELLITE_ASSEMBLY_MARKER_CHAR) {
+					if (name[idx] == SharedConstants::SATELLITE_CULTURE_END_MARKER_CHAR) {
 						name[idx] = '/';
 						break;
 					}

@@ -208,7 +208,7 @@ partial class MonoAndroidHelper
 	public static string MakeDiscreteAssembliesEntryName (string name, string? culture = null)
 	{
 		if (!String.IsNullOrEmpty (culture)) {
-			return $"{MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER}{culture}-{name}{MANGLED_ASSEMBLY_NAME_EXT}";
+			return $"{MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER}{culture}_{name}{MANGLED_ASSEMBLY_NAME_EXT}";
 		}
 
 		return $"{MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER}{name}{MANGLED_ASSEMBLY_NAME_EXT}";
