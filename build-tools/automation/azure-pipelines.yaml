@@ -206,6 +206,16 @@ extends:
         - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml@self
           parameters:
             configuration: $(XA.Build.Configuration)
+            testName: Mono.Android.NET_Tests-TrimModePartial
+            project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
+            testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)TrimModePartial.xml
+            extraBuildArgs: -p:TestsFlavor=TrimModePartial -p:TrimMode=partial
+            artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
+            artifactFolder: $(DotNetTargetFramework)-TrimModePartial
+
+        - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml@self
+          parameters:
+            configuration: $(XA.Build.Configuration)
             testName: Mono.Android.NET_Tests-AotLlvm
             project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
             testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)AotLlvm.xml
