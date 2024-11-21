@@ -77,6 +77,11 @@ namespace Xamarin.Android.Tasks
 			public TypeDefinition TypeDefinition;
 			public bool SkipInJavaToManaged;
 			public TypeMapDebugEntry DuplicateForJavaToManaged;
+
+			public override string ToString ()
+			{
+				return $"TypeMapDebugEntry{{JavaName={JavaName}, ManagedName={ManagedName}, JavaIndex={JavaIndex}, ManagedIndex={ManagedIndex}, SkipInJavaToManaged={SkipInJavaToManaged}, DuplicateForJavaToManaged={DuplicateForJavaToManaged}}}";
+			}
 		}
 
 		// Widths include the terminating nul character but not the padding!
@@ -170,6 +175,7 @@ namespace Xamarin.Android.Tasks
 
 		bool GenerateDebug (bool skipJniAddNativeMethodRegistrationAttributeScan, string outputDirectory, bool generateNativeAssembly)
 		{
+			log.LogDebugMessage ($"# jonp: TypeMapGenerator.GenerateDebug: generateNativeAssembly: {generateNativeAssembly}");
 			if (generateNativeAssembly) {
 				return GenerateDebugNativeAssembly (skipJniAddNativeMethodRegistrationAttributeScan, outputDirectory);
 			}
@@ -192,11 +198,13 @@ namespace Xamarin.Android.Tasks
 
 			var javaDuplicates = new Dictionary<string, List<TypeMapDebugEntry>> (StringComparer.Ordinal);
 			foreach (TypeDefinition td in state.AllJavaTypes) {
+				log.LogDebugMessage ($"# jonp: TypeMapGenerator.GenerateDebugFiles: td={td.FullName}");
 				UpdateApplicationConfig (td);
 				string moduleName = td.Module.Assembly.Name.Name;
 				ModuleDebugData module;
 
 				if (!modules.TryGetValue (moduleName, out module)) {
+					log.LogDebugMessage ($"# jonp: TypeMapGenerator.GenerateDebugFiles: adding new module: {moduleName}");
 					string outputFileName = $"{moduleName}{TypemapExtension}";
 					module = new ModuleDebugData {
 						EntryCount = 0,
@@ -219,6 +227,8 @@ namespace Xamarin.Android.Tasks
 				}
 
 				TypeMapDebugEntry entry = GetDebugEntry (td, state.TypeCache);
+				log.LogDebugMessage ($"# jonp: TypeMapGenerator.GenerateDebugFiles: entry={{JavaName={entry.JavaName}, ManagedName={entry.ManagedName}, SkipInJavaToManaged={entry.SkipInJavaToManaged}}}");
+
 				HandleDebugDuplicates (javaDuplicates, entry, td, state.TypeCache);
 				if (entry.JavaName.Length > module.JavaNameWidth)
 					module.JavaNameWidth = (uint)entry.JavaName.Length + 1;
@@ -230,6 +240,13 @@ namespace Xamarin.Android.Tasks
 				module.ManagedToJavaMap.Add (entry);
 			}
 			SyncDebugDuplicates (javaDuplicates);
+			log.LogDebugMessage ($"# jonp: TypeMapGenerator.GenerateDebugFiles: javaDuplicates:");
+			foreach (var e in javaDuplicates) {
+				log.LogDebugMessage ($"# jonp: TypeMapGenerator.GenerateDebugFiles:   {e.Key}:");
+				foreach (var entry in e.Value) {
+					log.LogDebugMessage ($"# jonp: TypeMapGenerator.GenerateDebugFiles:     {entry}");
+				}
+			}
 
 			foreach (ModuleDebugData module in modules.Values) {
 				PrepareDebugMaps (module);
@@ -251,6 +268,7 @@ namespace Xamarin.Android.Tasks
 
 		bool GenerateDebugNativeAssembly (bool skipJniAddNativeMethodRegistrationAttributeScan, string outputDirectory)
 		{
+			log.LogDebugMessage ($"# jonp: TypeMapGenerator.GenerateDebugNativeAssembly");
 			var javaToManaged = new List<TypeMapDebugEntry> ();
 			var managedToJava = new List<TypeMapDebugEntry> ();
 
@@ -259,12 +277,20 @@ namespace Xamarin.Android.Tasks
 				UpdateApplicationConfig (td);
 
 				TypeMapDebugEntry entry = GetDebugEntry (td, state.TypeCache);
+				log.LogDebugMessage ($"# jonp: TypeMapGenerator.GenerateDebugNativeAssembly: entry={{JavaName={entry.JavaName}, ManagedName={entry.ManagedName}, SkipInJavaToManaged={entry.SkipInJavaToManaged}}}");
 				HandleDebugDuplicates (javaDuplicates, entry, td, state.TypeCache);
 
 				javaToManaged.Add (entry);
 				managedToJava.Add (entry);
 			}
 			SyncDebugDuplicates (javaDuplicates);
+			log.LogDebugMessage ($"# jonp: TypeMapGenerator.GenerateDebugNativeAssembly: javaDuplicates:");
+			foreach (var e in javaDuplicates) {
+				log.LogDebugMessage ($"# jonp: TypeMapGenerator.GenerateDebugNativeAssembly:   Java type: {e.Key}:");
+				foreach (var entry in e.Value) {
+					log.LogDebugMessage ($"# jonp: TypeMapGenerator.GenerateDebugNativeAssembly:     {entry}");
+				}
+			}
 
 			var data = new ModuleDebugData {
 				EntryCount = (uint)javaToManaged.Count,
@@ -305,13 +331,18 @@ namespace Xamarin.Android.Tasks
 			if (!javaDuplicates.TryGetValue (entry.JavaName, out duplicates)) {
 				javaDuplicates.Add (entry.JavaName, new List<TypeMapDebugEntry> { entry });
 			} else {
-				duplicates.Add (entry);
 				TypeMapDebugEntry oldEntry = duplicates[0];
-				if (td.IsAbstract || td.IsInterface || oldEntry.TypeDefinition.IsAbstract || oldEntry.TypeDefinition.IsInterface) {
-					if (td.IsAssignableFrom (oldEntry.TypeDefinition, cache)) {
-						oldEntry.TypeDefinition = td;
-						oldEntry.ManagedName = GetManagedTypeName (td);
-					}
+				if ((td.IsAbstract || td.IsInterface) &&
+						!oldEntry.TypeDefinition.IsAbstract &&
+						!oldEntry.TypeDefinition.IsInterface &&
+						td.IsAssignableFrom (oldEntry.TypeDefinition, cache)) {
+					// We found the `Invoker` type *before* the declared type
+					// Fix things up so the abstract type is first, and the `Invoker` is considered a duplicate.
+					duplicates.Insert (0, entry);
+					oldEntry.SkipInJavaToManaged = false;
+				} else {
+					// ¯\_(ツ)_/¯
+					duplicates.Add (entry);
 				}
 			}
 		}

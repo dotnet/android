@@ -120,6 +120,12 @@
       <Link>Assets\subfolder\asset2.txt</Link>
     </AndroidAsset>
   </ItemGroup>
+
+  <ItemGroup>
+    <AndroidJavaSource Include="$(MSBuildThisFileDirectory)java/net/dot/android/test/ValueProvider.java" />
+    <AndroidJavaSource Include="$(MSBuildThisFileDirectory)java/net/dot/android/test/Example.java" />
+  </ItemGroup>
+
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)LinkedAssets\" />
   </ItemGroup>
