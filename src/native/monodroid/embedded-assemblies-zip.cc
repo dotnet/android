@@ -46,7 +46,6 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 
 	log_debug (LOG_ASSEMBLY, "    ZIP: local header offset: %u; data offset: %u; file size: %u", state.local_header_offset, state.data_offset, state.file_size);
 	if (state.compression_method != 0) {
-		log_debug (LOG_ASSEMBLY, "  here #1");
 		return false;
 	}
 
@@ -54,28 +53,20 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 		// state.prefix and apk_lib_prefix can point to the same location, see get_assemblies_prefix_and_length()
 		// In such instance we short-circuit and avoid a couple of comparisons below.
 		if (state.prefix == apk_lib_prefix.data ()) {
-			log_debug (LOG_ASSEMBLY, "  here #2");
 			return false;
 		}
 
 		if (entry_name.get ()[0] != apk_lib_prefix[0] || memcmp (apk_lib_prefix.data (), entry_name.get (), apk_lib_prefix.size () - 1) != 0) {
-			log_debug (LOG_ASSEMBLY, "  here #3");
 			return false;
 		}
 	}
 
 	if (application_config.have_runtime_config_blob && !runtime_config_blob_found) {
-		log_debug (LOG_ASSEMBLY, "  here #4 (blob name: '%s'; runtime_config_blob_name_size == %uz)",
-				   SharedConstants::RUNTIME_CONFIG_BLOB_NAME.data (),
-				   SharedConstants::runtime_config_blob_name_size
-		);
 		if (Util::ends_with (entry_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME)) {
-			log_debug (LOG_ASSEMBLY, "  here #5");
 			runtime_config_blob_mmap = md_mmap_apk_file (state.file_fd, state.data_offset, state.file_size, entry_name.get ());
 			store_mapped_runtime_config_data (runtime_config_blob_mmap, entry_name.get ());
 			return false;
 		}
-		log_debug (LOG_ASSEMBLY, "  here #6");
 	}
 
 	// assemblies must be 16-byte or 4-byte aligned, or Bad Things happen
