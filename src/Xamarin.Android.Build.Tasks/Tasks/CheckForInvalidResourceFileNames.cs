@@ -22,6 +22,7 @@ namespace Xamarin.Android.Tasks {
 		Regex fileNameCheck = new Regex ("[^a-zA-Z0-9_.]+", RegexOptions.Compiled);
 		Regex fileNameWithHyphenCheck = new Regex ("[^a-zA-Z0-9_.-]+", RegexOptions.Compiled);
 
+		// Source https://docs.oracle.com/javase/tutorial/java/nutsandbolts/_keywords.html
 		static string [] javaKeywords = {
 			"abstract",
 			"assert",
