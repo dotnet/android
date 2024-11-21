@@ -2,7 +2,7 @@
 ***********************************************************************************************
 Microsoft.Android.Runtime.proj
 
-This project file is used to create Microsoft.Android.Runtime.[API].[RID] NuGets, which are
+This project file is used to create Microsoft.Android.Runtime.[Mono|NativeAOT|etc.].[API].[RID] NuGets, which are
 runtime packs that contain the assets required for a self-contained publish of
 projects that use the Microsoft.Android framework in .NET 6+.
 ***********************************************************************************************
@@ -11,7 +11,8 @@ projects that use the Microsoft.Android framework in .NET 6+.
 
   <PropertyGroup>
     <AndroidRID Condition=" '$(AndroidRID)' == '' ">android-arm64</AndroidRID>
-    <PackageId>Microsoft.Android.Runtime.$(AndroidApiLevel).$(AndroidRID)</PackageId>
+    <AndroidRuntime Condition=" '$(AndroidRuntime)' == '' ">Mono</AndroidRuntime>
+    <PackageId>Microsoft.Android.Runtime.$(AndroidRuntime).$(AndroidApiLevel).$(AndroidRID)</PackageId>
     <Description>Microsoft.Android runtime components for API $(AndroidApiLevel). Please do not reference directly.</Description>
     <_AndroidRuntimePackAssemblyPath>runtimes\$(AndroidRID)\lib\$(DotNetTargetFramework)</_AndroidRuntimePackAssemblyPath>
     <_AndroidRuntimePackNativePath>runtimes\$(AndroidRID)\native</_AndroidRuntimePackNativePath>

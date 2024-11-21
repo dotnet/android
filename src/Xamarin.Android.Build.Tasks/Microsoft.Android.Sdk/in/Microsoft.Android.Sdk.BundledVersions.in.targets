@@ -20,6 +20,8 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
     <_AndroidTargetingPackId Condition=" '$(_AndroidTargetingPackId)' != '$(_AndroidLatestStableApiLevel)' and '$(_AndroidTargetingPackId)' != '$(_AndroidLatestUnstableApiLevel)' ">$(_AndroidLatestStableApiLevel)</_AndroidTargetingPackId>
     <_AndroidRuntimePackId Condition=" '$(_AndroidRuntimePackId)' == '' ">$(_AndroidTargetingPackId)</_AndroidRuntimePackId>
     <_AndroidRuntimePackId Condition=" '$(_AndroidRuntimePackId)' != '$(_AndroidLatestStableApiLevel)' and '$(_AndroidRuntimePackId)' != '$(_AndroidLatestUnstableApiLevel)' ">$(_AndroidLatestStableApiLevel)</_AndroidRuntimePackId>
+    <_AndroidRuntimePackRuntime Condition=" '$(PublishAot)' == 'true' ">NativeAOT</_AndroidRuntimePackRuntime>
+    <_AndroidRuntimePackRuntime Condition=" '$(_AndroidRuntimePackRuntime)' == '' ">Mono</_AndroidRuntimePackRuntime>
   </PropertyGroup>
   <ItemGroup>
     <KnownFrameworkReference
@@ -29,7 +31,7 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
         LatestRuntimeFrameworkVersion="**FromWorkload**"
         TargetingPackName="Microsoft.Android.Ref.$(_AndroidTargetingPackId)"
         TargetingPackVersion="**FromWorkload**"
-        RuntimePackNamePatterns="Microsoft.Android.Runtime.$(_AndroidRuntimePackId).**RID**"
+        RuntimePackNamePatterns="Microsoft.Android.Runtime.$(_AndroidRuntimePackRuntime).$(_AndroidRuntimePackId).**RID**"
         RuntimePackRuntimeIdentifiers="android-arm;android-arm64;android-x86;android-x64"
         Profile="Android"
     />
