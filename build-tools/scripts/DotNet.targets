@@ -10,8 +10,8 @@
 
   <Target Name="BuildExternal">
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; build monodroid.proj -c $(Configuration) -p:XamarinAndroidSourcePath=$(_Root) -p:DebuggingToolsOutputDirectory=$(MicrosoftAndroidSdkOutDir) -p:CompatTargetsOutputDirectory=$(XAInstallPrefix)xbuild/Novell -bl:$(_BinlogPathPrefix)-build-monodroid.binlog"
-        WorkingDirectory="$(_Root)external\monodroid"
+        Command="&quot;$(DotNetPreviewTool)&quot; build monodroid.proj -c $(Configuration) -p:XamarinAndroidSourcePath=$(_Root) -p:XAIntegrationBuild=true -bl:$(_BinlogPathPrefix)-build-monodroid.binlog"
+        WorkingDirectory="$(_Root)external\android-platform-support\build-tools"
     />
   </Target>
 
