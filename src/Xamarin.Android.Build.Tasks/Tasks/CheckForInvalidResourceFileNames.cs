@@ -22,7 +22,62 @@ namespace Xamarin.Android.Tasks {
 		Regex fileNameCheck = new Regex ("[^a-zA-Z0-9_.]+", RegexOptions.Compiled);
 		Regex fileNameWithHyphenCheck = new Regex ("[^a-zA-Z0-9_.-]+", RegexOptions.Compiled);
 
-		Regex fileNameJavaReservedWordCheck = new Regex("^\\b(abstract|continue|for|new|switch|assert|default|goto|package|synchronized|boolean|do|if|private|this|break|double|implements|protected|throw|byte|else|import|public|throws|case|enum|instanceof|return|transient|catch|extends|int|short|try|char|final|interface|static|void|class|finally|long|strict|fp|volatile|const|float|native|super|while)\\b$", RegexOptions.Compiled);
+		static string [] keywords = {
+			"abstract",
+			"assert",
+			"boolean",
+			"break",
+			"byte",
+			"case",
+			"catch",
+			"char",
+			"class",
+			"const",
+			"continue",
+			"default",
+			"do",
+			"double",
+			"else",
+			"enum",
+			"extends",
+			"final",
+			"finally",
+			"float",
+			"for",
+			"fp",
+			"goto",
+			"if",
+			"implements",
+			"import",
+			"instanceof",
+			"int",
+			"interface",
+			"long",
+			"native",
+			"new",
+			"package",
+			"private",
+			"protected",
+			"public",
+			"record",
+			"return",
+			"short",
+			"static",
+			"strict",
+			"super",
+			"switch",
+			"synchronized",
+			"this",
+			"throw",
+			"throws",
+			"transient",
+			"try",
+			"void",
+			"volatile",
+			"while",
+		};
+
+		Regex fileNameJavaReservedWordCheck = new Regex($"^\\b({string.Join ('|', keywords)})\\b$", RegexOptions.Compiled);
 
 		public override bool RunTask ()
 		{
