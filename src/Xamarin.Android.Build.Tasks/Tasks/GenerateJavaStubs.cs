@@ -222,7 +222,6 @@ namespace Xamarin.Android.Tasks
 			}
 			JCWGenerator.EnsureAllArchitecturesAreIdentical (Log, nativeCodeGenStates);
 
-			NativeCodeGenState.TemplateJniAddNativeMethodRegistrationAttributePresent = templateCodeGenState.JniAddNativeMethodRegistrationAttributePresent;
 			if (useMarshalMethods) {
 				// We need to parse the environment files supplied by the user to see if they want to use broken exception transitions. This information is needed
 				// in order to properly generate wrapper methods in the marshal methods assembly rewriter.
@@ -259,6 +258,9 @@ namespace Xamarin.Android.Tasks
 				first = false;
 				WriteTypeMappings (state);
 			}
+
+			// Set for use by <GeneratePackageManagerJava/> task later
+			NativeCodeGenState.TemplateJniAddNativeMethodRegistrationAttributePresent = templateCodeGenState.JniAddNativeMethodRegistrationAttributePresent;
 
 			var acwMapGen = new ACWMapGenerator (Log);
 			if (!acwMapGen.Generate (templateCodeGenState, AcwMapFile)) {
