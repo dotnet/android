@@ -22,6 +22,8 @@ namespace Xamarin.Android.Tasks {
 		Regex fileNameCheck = new Regex ("[^a-zA-Z0-9_.]+", RegexOptions.Compiled);
 		Regex fileNameWithHyphenCheck = new Regex ("[^a-zA-Z0-9_.-]+", RegexOptions.Compiled);
 
+		Regex fileNameJavaReservedWordCheck = new Regex("^\\b(abstract|continue|for|new|switch|assert|default|goto|package|synchronized|boolean|do|if|private|this|break|double|implements|protected|throw|byte|else|import|public|throws|case|enum|instanceof|return|transient|catch|extends|int|short|try|char|final|interface|static|void|class|finally|long|strict|fp|volatile|const|float|native|super|while)\\b$", RegexOptions.Compiled);
+
 		public override bool RunTask ()
 		{
 			foreach (var resource in Resources) {
@@ -44,6 +46,10 @@ namespace Xamarin.Android.Tasks {
 					var match = fileNameCheck.Match (fileName);
 					if (match.Success) {
 						Log.LogCodedError ("APT0003", resource.ItemSpec, 0, Properties.Resources.APT0003, fileNameCheck);
+					}
+					match = fileNameJavaReservedWordCheck.Match (Path.GetFileNameWithoutExtension (fileName));
+					if (match.Success) {
+						Log.LogCodedError ("APT0005", resource.ItemSpec, 0, Properties.Resources.APT0005, fileNameCheck);
 					}
 				}
 			}

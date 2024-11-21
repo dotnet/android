@@ -108,6 +108,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Invalid file name: filenames cannot use java reserved words..
+        /// </summary>
+        public static string APT0005 {
+            get {
+                return ResourceManager.GetString("APT0005", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to This could be caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/dotnet/android/messages/apt2264 for details..
         /// </summary>
         public static string APT2264 {
