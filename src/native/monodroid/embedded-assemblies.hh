@@ -182,7 +182,9 @@ namespace xamarin::android::internal {
 
 			munmap (runtime_config_blob_mmap.area, runtime_config_blob_mmap.size);
 			runtime_config_blob_mmap.area = nullptr;
-			runtime_config_blob_mmap.size = 0;
+			runtime_config_blob_mmap.size = 0uz;
+			runtime_config_data = nullptr;
+			runtime_config_data_size = 0uz;
 		}
 
 		static bool have_runtime_config_blob () noexcept
