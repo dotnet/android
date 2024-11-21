@@ -22,7 +22,7 @@ namespace Xamarin.Android.Tasks {
 		Regex fileNameCheck = new Regex ("[^a-zA-Z0-9_.]+", RegexOptions.Compiled);
 		Regex fileNameWithHyphenCheck = new Regex ("[^a-zA-Z0-9_.-]+", RegexOptions.Compiled);
 
-		static string [] keywords = {
+		static string [] javaKeywords = {
 			"abstract",
 			"assert",
 			"boolean",
@@ -77,7 +77,7 @@ namespace Xamarin.Android.Tasks {
 			"while",
 		};
 
-		Regex fileNameJavaReservedWordCheck = new Regex($"^\\b({string.Join ('|', keywords)})\\b$", RegexOptions.Compiled);
+		Regex fileNameJavaReservedWordCheck = new Regex($"^\\b({string.Join ("|", javaKeywords)})\\b$", RegexOptions.Compiled);
 
 		public override bool RunTask ()
 		{
