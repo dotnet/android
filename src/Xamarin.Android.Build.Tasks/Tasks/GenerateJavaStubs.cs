@@ -222,9 +222,6 @@ namespace Xamarin.Android.Tasks
 			}
 			JCWGenerator.EnsureAllArchitecturesAreIdentical (Log, nativeCodeGenStates);
 
-			NativeCodeGenState.Template = templateCodeGenState;
-			BuildEngine4.RegisterTaskObjectAssemblyLocal (ProjectSpecificTaskObjectKey (NativeCodeGenStateRegisterTaskKey), nativeCodeGenStates, RegisteredTaskObjectLifetime.Build);
-
 			if (useMarshalMethods) {
 				// We need to parse the environment files supplied by the user to see if they want to use broken exception transitions. This information is needed
 				// in order to properly generate wrapper methods in the marshal methods assembly rewriter.
@@ -262,6 +259,9 @@ namespace Xamarin.Android.Tasks
 				WriteTypeMappings (state);
 			}
 
+			// Set for use by <GeneratePackageManagerJava/> task later
+			NativeCodeGenState.TemplateJniAddNativeMethodRegistrationAttributePresent = templateCodeGenState.JniAddNativeMethodRegistrationAttributePresent;
+
 			var acwMapGen = new ACWMapGenerator (Log);
 			if (!acwMapGen.Generate (templateCodeGenState, AcwMapFile)) {
 				Log.LogDebugMessage ("ACW map generation failed");
@@ -269,6 +269,18 @@ namespace Xamarin.Android.Tasks
 
 			IList<string> additionalProviders = MergeManifest (templateCodeGenState, MaybeGetArchAssemblies (userAssembliesPerArch, templateCodeGenState.TargetArch));
 			GenerateAdditionalProviderSources (templateCodeGenState, additionalProviders);
+
+			if (useMarshalMethods) {
+				// Save NativeCodeGenState for <GeneratePackageManagerJava/> task later
+				Log.LogDebugMessage ($"Saving {nameof (NativeCodeGenState)} to {nameof (NativeCodeGenStateRegisterTaskKey)}");
+				BuildEngine4.RegisterTaskObjectAssemblyLocal (ProjectSpecificTaskObjectKey (NativeCodeGenStateRegisterTaskKey), nativeCodeGenStates, RegisteredTaskObjectLifetime.Build);
+			} else {
+				// Otherwise, dispose all XAAssemblyResolvers
+				Log.LogDebugMessage ($"Disposing all {nameof (NativeCodeGenState)}.{nameof (NativeCodeGenState.Resolver)}");
+				foreach (var state in nativeCodeGenStates.Values) {
+					state.Resolver.Dispose ();
+				}
+			}
 
 			Dictionary<string, ITaskItem> MaybeGetArchAssemblies (Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> dict, AndroidTargetArch arch)
 			{

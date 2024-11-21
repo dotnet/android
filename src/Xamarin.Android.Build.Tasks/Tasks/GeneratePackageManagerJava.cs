@@ -331,7 +331,7 @@ namespace Xamarin.Android.Tasks
 				BrokenExceptionTransitions = environmentParser.BrokenExceptionTransitions,
 				PackageNamingPolicy = pnp,
 				BoundExceptionType = boundExceptionType,
-				JniAddNativeMethodRegistrationAttributePresent = NativeCodeGenState.Template != null ? NativeCodeGenState.Template.JniAddNativeMethodRegistrationAttributePresent : false,
+				JniAddNativeMethodRegistrationAttributePresent = NativeCodeGenState.TemplateJniAddNativeMethodRegistrationAttributePresent,
 				HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
 				NumberOfAssembliesInApk = assemblyCount,
 				BundledAssemblyNameWidth = assemblyNameWidth,
@@ -392,6 +392,14 @@ namespace Xamarin.Android.Tasks
 				} finally {
 					marshalMethodsWriter.Flush ();
 					Files.CopyIfStreamChanged (marshalMethodsWriter.BaseStream, marshalMethodsLlFilePath);
+				}
+			}
+
+			if (nativeCodeGenStates is not null) {
+				// Dispose all XAAssemblyResolvers
+				Log.LogDebugMessage ($"Disposing all {nameof (NativeCodeGenState)}.{nameof (NativeCodeGenState.Resolver)}");
+				foreach	(var state in nativeCodeGenStates.Values) {
+					state.Resolver.Dispose ();
 				}
 			}
 
