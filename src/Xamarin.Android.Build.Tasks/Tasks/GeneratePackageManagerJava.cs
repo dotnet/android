@@ -397,7 +397,7 @@ namespace Xamarin.Android.Tasks
 
 			if (nativeCodeGenStates is not null) {
 				// Dispose all XAAssemblyResolvers
-				Log.LogDebugMessage($"Disposing all {nameof (NativeCodeGenState)}.{nameof (NativeCodeGenState.Resolver)}");
+				Log.LogDebugMessage ($"Disposing all {nameof (NativeCodeGenState)}.{nameof (NativeCodeGenState.Resolver)}");
 				foreach	(var state in nativeCodeGenStates.Values) {
 					state.Resolver.Dispose ();
 				}

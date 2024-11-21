@@ -272,11 +272,11 @@ namespace Xamarin.Android.Tasks
 
 			if (useMarshalMethods) {
 				// Save NativeCodeGenState for <GeneratePackageManagerJava/> task later
-				Log.LogDebugMessage($"Saving {nameof (NativeCodeGenState)} to {nameof (NativeCodeGenStateRegisterTaskKey)}");
+				Log.LogDebugMessage ($"Saving {nameof (NativeCodeGenState)} to {nameof (NativeCodeGenStateRegisterTaskKey)}");
 				BuildEngine4.RegisterTaskObjectAssemblyLocal (ProjectSpecificTaskObjectKey (NativeCodeGenStateRegisterTaskKey), nativeCodeGenStates, RegisteredTaskObjectLifetime.Build);
 			} else {
 				// Otherwise, dispose all XAAssemblyResolvers
-				Log.LogDebugMessage($"Disposing all {nameof (NativeCodeGenState)}.{nameof (NativeCodeGenState.Resolver)}");
+				Log.LogDebugMessage ($"Disposing all {nameof (NativeCodeGenState)}.{nameof (NativeCodeGenState.Resolver)}");
 				foreach (var state in nativeCodeGenStates.Values) {
 					state.Resolver.Dispose ();
 				}
