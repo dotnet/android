@@ -150,10 +150,10 @@
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\workloadsets" />
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\microsoft.net.sdk.android" />
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Ref.%(_PackApiLevels.Identity)" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Runtime.%(_PackApiLevels.Identity).android-arm" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Runtime.%(_PackApiLevels.Identity).android-arm64" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Runtime.%(_PackApiLevels.Identity).android-x86" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Runtime.%(_PackApiLevels.Identity).android-x64" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Runtime.Mono.%(_PackApiLevels.Identity).android-arm" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Runtime.Mono.%(_PackApiLevels.Identity).android-arm64" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Runtime.Mono.%(_PackApiLevels.Identity).android-x86" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Runtime.Mono.%(_PackApiLevels.Identity).android-x64" />
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk.Darwin" />
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk.Linux" />
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk.Windows" />
