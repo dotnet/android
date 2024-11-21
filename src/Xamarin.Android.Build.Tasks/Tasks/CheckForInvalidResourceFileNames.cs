@@ -78,7 +78,7 @@ namespace Xamarin.Android.Tasks {
 			"while",
 		};
 
-		Regex fileNameJavaReservedWordCheck = new Regex($"^\\b({string.Join ("|", javaKeywords)})\\b$", RegexOptions.Compiled);
+		Regex fileNameJavaReservedWordCheck = new Regex ($@"^\b({string.Join ("|", javaKeywords)})\b$", RegexOptions.Compiled);
 
 		public override bool RunTask ()
 		{
