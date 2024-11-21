@@ -199,6 +199,7 @@ partial class MonoAndroidHelper
 	public const string MANGLED_ASSEMBLY_NAME_EXT = ".so";
 	public const string MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER = "lib_";
 	public const string MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER = "lib-";
+	public const string SATELLITE_CULTURE_END_MARKER_CHAR = "_";
 
 	/// <summary>
 	/// Mangles APK/AAB entry name for assembly and their associated pdb and config entries in the
