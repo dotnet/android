@@ -1647,13 +1647,14 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_GenerateEmptyAndroidRemapNativeCode"
         DependsOnTargets="_PrepareAndroidRemapNativeAssemblySources"
         Condition=" '@(_AndroidRemapMembers->Count())' == '0' "
-        Inputs="$(MSBuildProjectFullPath)"
+        Inputs="$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
         Outputs="@(_AndroidRemapAssemblySource)">
   <GenerateJniRemappingNativeCode
       OutputDirectory="$(_NativeAssemblySourceDir)"
       GenerateEmptyCode="True"
       SupportedAbis="@(_BuildTargetAbis)"
    />
+   <Touch Files="@(_AndroidRemapAssemblySource)" />
 </Target>
 
 <PropertyGroup>
@@ -1667,13 +1668,14 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_GenerateAndroidRemapNativeCode"
         DependsOnTargets="$(_GenerateAndroidRemapNativeCodeDependsOn)"
         Condition=" '@(_AndroidRemapMembers->Count())' != '0' "
-        Inputs="$(_XARemapMembersFilePath)"
+        Inputs="$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects);$(_XARemapMembersFilePath)"
         Outputs="@(_AndroidRemapAssemblySource)">
   <GenerateJniRemappingNativeCode
       OutputDirectory="$(_NativeAssemblySourceDir)"
       RemappingXmlFilePath="$(_XARemapMembersFilePath)"
       SupportedAbis="@(_BuildTargetAbis)"
       />
+  <Touch Files="@(_AndroidRemapAssemblySource)" />
 </Target>
 
 <Target Name="_RunAotForAllRIDs"
