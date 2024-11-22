@@ -7,7 +7,7 @@ namespace Xamarin.Android.Prepare
 	[TPN]
 	class XamarinAndroidBuildTasks_AOSP : ThirdPartyNotice
 	{
-		static readonly Uri    url         = new Uri ("https://android.googlesource.com/platform/tools/base/+/d41d662dbf89f9b60ca6256415a059c0107749b8/sdk-common/NOTICE");
+		static readonly Uri    url         = new Uri ("https://android.googlesource.com/platform/tools/base/+/refs/heads/main/sdk-common/NOTICE");
 
 		public override string LicenseText => String.Empty;
 		public override string LicenseFile => CommonLicenses.Apache20Path;

@@ -11,7 +11,7 @@ bring it to our attention. Post an issue or email us:
 
 The attached notices are provided for information only.
 
-1. android/platform/tools/base (https://android.googlesource.com/platform/tools/base/+/d41d662dbf89f9b60ca6256415a059c0107749b8/sdk-common/NOTICE)
+1. android/platform/tools/base (https://android.googlesource.com/platform/tools/base/+/refs/heads/main/sdk-common/NOTICE)
 2. bazelbuild/bazel (https://github.com/bazelbuild/bazel/)
 3. chys87/constexpr-xxh3 (https://github.com/chys87/constexpr-xxh3/)
 4. Cyan4973/xxHash (https://github.com/Cyan4973/xxHash/)

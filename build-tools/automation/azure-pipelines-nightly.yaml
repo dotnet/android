@@ -16,10 +16,10 @@ resources:
     name: xamarin/yaml-templates
     ref: refs/heads/main
     endpoint: xamarin
-  - repository: monodroid
-    type: github
-    name: xamarin/monodroid
-    endpoint: xamarin
+  - repository: android-platform-support
+    type: git
+    name: DevDiv/android-platform-support
+    ref: refs/heads/main
   - repository: maui
     type: github
     name: dotnet/maui

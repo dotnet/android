@@ -77,6 +77,11 @@ namespace Xamarin.Android.Tasks
 			public TypeDefinition TypeDefinition;
 			public bool SkipInJavaToManaged;
 			public TypeMapDebugEntry DuplicateForJavaToManaged;
+
+			public override string ToString ()
+			{
+				return $"TypeMapDebugEntry{{JavaName={JavaName}, ManagedName={ManagedName}, JavaIndex={JavaIndex}, ManagedIndex={ManagedIndex}, SkipInJavaToManaged={SkipInJavaToManaged}, DuplicateForJavaToManaged={DuplicateForJavaToManaged}}}";
+			}
 		}
 
 		// Widths include the terminating nul character but not the padding!
@@ -305,13 +310,18 @@ namespace Xamarin.Android.Tasks
 			if (!javaDuplicates.TryGetValue (entry.JavaName, out duplicates)) {
 				javaDuplicates.Add (entry.JavaName, new List<TypeMapDebugEntry> { entry });
 			} else {
-				duplicates.Add (entry);
 				TypeMapDebugEntry oldEntry = duplicates[0];
-				if (td.IsAbstract || td.IsInterface || oldEntry.TypeDefinition.IsAbstract || oldEntry.TypeDefinition.IsInterface) {
-					if (td.IsAssignableFrom (oldEntry.TypeDefinition, cache)) {
-						oldEntry.TypeDefinition = td;
-						oldEntry.ManagedName = GetManagedTypeName (td);
-					}
+				if ((td.IsAbstract || td.IsInterface) &&
+						!oldEntry.TypeDefinition.IsAbstract &&
+						!oldEntry.TypeDefinition.IsInterface &&
+						td.IsAssignableFrom (oldEntry.TypeDefinition, cache)) {
+					// We found the `Invoker` type *before* the declared type
+					// Fix things up so the abstract type is first, and the `Invoker` is considered a duplicate.
+					duplicates.Insert (0, entry);
+					oldEntry.SkipInJavaToManaged = false;
+				} else {
+					// ¯\_(ツ)_/¯
+					duplicates.Add (entry);
 				}
 			}
 		}

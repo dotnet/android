@@ -19,7 +19,7 @@
     <LibExtension Condition=" '$(HostOS)' == 'Windows' ">dll</LibExtension>
     <UseCommercialInstallerName Condition="'$(UseCommercialInstallerName)' == ''">False</UseCommercialInstallerName>
     <_HasCommercialFiles Condition="Exists('$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Common.Debugging.targets')">True</_HasCommercialFiles>
-    <_MonoDroidPath Condition=" '$(_MonoDroidPath)' == '' ">..\..\external\monodroid</_MonoDroidPath>
+    <_MonoDroidPath Condition=" '$(_MonoDroidPath)' == '' ">..\..\external\android-platform-support</_MonoDroidPath>
   </PropertyGroup>
   <Target Name="_FindFrameworkDirs">
     <ItemGroup>
@@ -138,6 +138,7 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_net6.dex" ExcludeFromLegacy="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_fastdev_net6.dex" ExcludeFromLegacy="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)manifestmerger.jar" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)proguard-android.txt" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)protobuf-net.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)System.CodeDom.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)System.Collections.Immutable.dll" />

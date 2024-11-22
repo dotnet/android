@@ -25,25 +25,10 @@ steps:
 - checkout: maui
 
 - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
-  # Clone 'monodroid' without submodules
-  - checkout: monodroid
-    clean: true
-    path: s/xamarin-android/external/monodroid
-
-  # Tell git to ignore the 'xamarin-android' submodule, which is large and unneeded
-  - script: git config submodule."external/xamarin-android".update none
-    workingDirectory: xamarin-android/external/monodroid
-    displayName: Ignore XA submodule
-
-  # Clone 'monodroid' with the rest of the submodules
-  - checkout: monodroid
+  - checkout: android-platform-support
     submodules: recursive
-    path: s/xamarin-android/external/monodroid
+    path: s/xamarin-android/external/android-platform-support
     persistCredentials: true
-
-  - script: rm -rf external/monodroid/external/xamarin-android
-    workingDirectory: ${{ parameters.xaSourcePath }}
-    displayName: delete legacy xamarin-android submodule
 
   - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
     workingDirectory: ${{ parameters.xaSourcePath }}
