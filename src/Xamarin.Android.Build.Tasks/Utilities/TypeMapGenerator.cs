@@ -224,7 +224,6 @@ namespace Xamarin.Android.Tasks
 				}
 
 				TypeMapDebugEntry entry = GetDebugEntry (td, state.TypeCache);
-
 				HandleDebugDuplicates (javaDuplicates, entry, td, state.TypeCache);
 				if (entry.JavaName.Length > module.JavaNameWidth)
 					module.JavaNameWidth = (uint)entry.JavaName.Length + 1;
