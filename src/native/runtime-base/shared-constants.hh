@@ -27,6 +27,7 @@ namespace xamarin::android::internal
 		static constexpr std::string_view MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER { "lib-" };
 		static constexpr size_t SATELLITE_ASSEMBLY_MARKER_INDEX = 3;              // this ☝️
 		static constexpr char SATELLITE_ASSEMBLY_MARKER_CHAR = MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER[SATELLITE_ASSEMBLY_MARKER_INDEX];
+		static constexpr char SATELLITE_CULTURE_END_MARKER_CHAR = '_';
 
 		static constexpr std::string_view MONO_ANDROID_RUNTIME_ASSEMBLY_NAME  { "Mono.Android.Runtime" };
 		static constexpr std::string_view MONO_ANDROID_ASSEMBLY_NAME          { "Mono.Android" };

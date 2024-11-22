@@ -50,6 +50,9 @@ namespace Xamarin.Android.Build.Tests
 					new BuildItem ("EmbeddedResource", "Resource.es.resx") {
 						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancelar</value></data>")
 					},
+					new BuildItem ("EmbeddedResource", "Resource.de-DE.resx") {
+						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Abbrechen</value></data>")
+					},
 					new AndroidItem.TransformFile ("Transforms.xml") {
 						// Remove two methods that introduced warnings:
 						// Com.Balysv.Material.Drawable.Menu.MaterialMenuView.cs(214,30): warning CS0114: 'MaterialMenuView.OnRestoreInstanceState(IParcelable)' hides inherited member 'View.OnRestoreInstanceState(IParcelable?)'. To make the current member override that implementation, add the override keyword. Otherwise add the new keyword.
@@ -114,6 +117,7 @@ namespace Xamarin.Android.Build.Tests
 				.ToArray ();
 			var expectedFiles = new List<string> {
 				$"{proj.PackageName}-Signed.apk",
+				"de-DE",
 				"es",
 				$"{proj.ProjectName}.dll",
 				$"{proj.ProjectName}.pdb",
@@ -163,6 +167,7 @@ namespace Xamarin.Android.Build.Tests
 			helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.pdb", shouldContainEntry: !TestEnvironment.CommercialBuildAvailable && !isRelease);
 			helper.AssertContainsEntry ($"assemblies/Mono.Android.dll",        shouldContainEntry: expectEmbeddedAssembies);
 			helper.AssertContainsEntry ($"assemblies/es/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
+			helper.AssertContainsEntry ($"assemblies/de-DE/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
 			foreach (var abi in rids.Select (AndroidRidAbiHelper.RuntimeIdentifierToAbi)) {
 				helper.AssertContainsEntry ($"lib/{abi}/libmonodroid.so");
 				helper.AssertContainsEntry ($"lib/{abi}/libmonosgen-2.0.so");
