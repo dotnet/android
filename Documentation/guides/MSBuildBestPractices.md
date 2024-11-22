@@ -391,6 +391,7 @@ First, I would read up on the [Clean target][clean] and understand how
 any file produced by a previous build. It does *not* simply delete
 `bin` and `obj`.
 
+
 `IncrementalClean` has the job of deleting "extra files" that might be
 hanging out in `$(IntermediateOutputPath)`. So it might happily go
 delete your stamp file, and completely break your incremental build!
@@ -727,7 +728,7 @@ as:
 </Target>
 ```
 
-There is no `$(IncrementalCleanDependsOn)` property, what do you do?
+Then use the `$(IncrementalCleanDependsOn)` property defined in the Microsoft.Common.CurrentVersion.targets. If you are on an older version of the SDK where `$(IncrementalCleanDependsOn)` property defined is not defined, what do you do?
 
 Since using `BeforeTargets` and `AfterTargets` is a no-no, we have
 modified `$(CoreBuildDependsOn)` so you can run a target *before*
