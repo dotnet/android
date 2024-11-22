@@ -72,7 +72,16 @@ namespace Xamarin.Android.Tasks
 				log.LogDebugMessage ($"    expected segment alignment of 0x{pageSize:x}, found 0x{segment64.Alignment:x}");
 
 				(string packageId, string packageVersion) = GetNugetPackageInfo ();
-				log.LogCodedWarning ("XA0141", Properties.Resources.XA0141, packageId, packageVersion, Path.GetFileName (path), archName);
+				log.LogCodedWarning (
+					"XA0141",
+					path,
+					lineNumber: 0,
+					Properties.Resources.XA0141,
+					packageId,
+					packageVersion,
+					Path.GetFileName (path),
+					archName
+				);
 				break;
 			}
 
