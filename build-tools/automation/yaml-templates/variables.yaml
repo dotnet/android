@@ -24,7 +24,7 @@ variables:
 - name: NUnit.NumberOfTestWorkers
   value: 4
 - name: DotNetSdkVersion
-  value: 8.0
+  value: 9.0
 - name: DotNetSdkQuality
   value: GA
 - name: GitHub.Token
@@ -44,7 +44,7 @@ variables:
 - name: DotNetTargetFramework
   value: net9.0
 - name: DotNetStableTargetFramework
-  value: net8.0
+  value: net9.0
 # Workaround: https://devdiv.visualstudio.com/DevDiv/_workitems/edit/1585820
 - name: _WriteTelemetryProperties
   value: false
