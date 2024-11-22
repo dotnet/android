@@ -29,13 +29,14 @@ namespace Java.InteropTests {
 		public void JavaCast_InterfaceCast ()
 		{
 			IntPtr g;
-			using (var n = new Java.Lang.Integer (42)) {
-				g = JNIEnv.NewGlobalRef (n.Handle);
+			using (var vp = global::Net.Dot.Android.Test.Example.ValueProvider) {
+				g = JNIEnv.NewGlobalRef (vp.Handle);
 			}
-			// We want a Java.Lang.Object so that we create an IComparableInvoker
+			// We want a Java.Lang.Object so that we create an IIValueProviderInvoker
 			// instead of just getting back the original instance.
 			using (var o = Java.Lang.Object.GetObject<Java.Lang.Object> (g, JniHandleOwnership.TransferGlobalRef)) {
-				var c = JavaObjectExtensions.JavaCast<Java.Lang.IComparable> (o);
+				var c = JavaObjectExtensions.JavaCast<global::Net.Dot.Android.Test.IValueProvider> (o);
+				Assert.AreEqual (42, c.Value);
 				c.Dispose ();
 			}
 		}
@@ -111,3 +112,7 @@ namespace Java.InteropTests {
 	}
 }
 
+namespace Net.Dot.Android.Test {
+	partial class IValueProviderInvoker {
+	}
+}
