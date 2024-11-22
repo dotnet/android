@@ -1063,12 +1063,13 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
 {1} - NuGet package version</comment>
   </data>
   <data name="XA0141" xml:space="preserve">
-    <value>NuGet package '{0}' version '{1}' contains a shared library '{2}' ({3}) which is not correctly aligned. See https://developer.android.com/guide/practices/page-sizes for more details</value>
+    <value>NuGet package '{0}' version '{1}' contains a shared library '{2}' ({3}) which is not aligned to the {4} byte boundary. Google will require such alignment in the future. See https://developer.android.com/guide/practices/page-sizes for more details</value>
     <comment>The following is a literal name and should not be translated: NuGet
 {0} - NuGet package id
 {1} - NuGet package version
 {2} - shared library file name
 {3} - target architecture name
+{4} - is an integer (size in bytes)
     </comment>
   </data>
   <data name="XA4249" xml:space="preserve">

@@ -80,7 +80,8 @@ namespace Xamarin.Android.Tasks
 					packageId,
 					packageVersion,
 					Path.GetFileName (path),
-					archName
+					archName,
+					pageSize
 				);
 				break;
 			}

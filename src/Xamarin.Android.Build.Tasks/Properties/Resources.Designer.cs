@@ -531,7 +531,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to NuGet package &apos;{0}&apos; version &apos;{1}&apos; contains a shared library &apos;{2}&apos; ({3}) which is not correctly aligned. See https://developer.android.com/guide/practices/page-sizes for more details.
+        ///   Looks up a localized string similar to NuGet package '{0}' version '{1}' contains a shared library '{2}' ({3}) which is not aligned to the {4} byte boundary. Google will require such alignment in the future. See https://developer.android.com/guide/practices/page-sizes for more details
         /// </summary>
         public static string XA0141 {
             get {
