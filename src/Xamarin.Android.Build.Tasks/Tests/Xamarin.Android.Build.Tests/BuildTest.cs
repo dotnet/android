@@ -117,6 +117,7 @@ namespace Xamarin.Android.Build.Tests
 				.ToArray ();
 			var expectedFiles = new List<string> {
 				$"{proj.PackageName}-Signed.apk",
+				"de-DE",
 				"es",
 				$"{proj.ProjectName}.dll",
 				$"{proj.ProjectName}.pdb",
