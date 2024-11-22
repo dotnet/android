@@ -45,6 +45,12 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ($"Internal error: {elf} is not ELF<ulong>");
 			}
 
+			string archName = elf.Machine switch {
+				Machine.AArch64 => "arm64-v8a",
+				Machine.AMD64   => "x86_64",
+				_ => throw new NotSupportedException ($"Internal error: ELF architecture {elf.Machine} is not supported")
+			};
+
 			// We need to find all segments of Load type and make sure their alignment is as expected.
 			foreach (ISegment segment in elf64.Segments) {
 				if (segment.Type != SegmentType.Load) {
@@ -66,7 +72,7 @@ namespace Xamarin.Android.Tasks
 				log.LogDebugMessage ($"    expected segment alignment of 0x{pageSize:x}, found 0x{segment64.Alignment:x}");
 
 				(string packageId, string packageVersion) = GetNugetPackageInfo ();
-				log.LogCodedWarning ("XA0141", Properties.Resources.XA0141, packageId, packageVersion, Path.GetFileName (path));
+				log.LogCodedWarning ("XA0141", Properties.Resources.XA0141, packageId, packageVersion, Path.GetFileName (path), archName);
 				break;
 			}
 
