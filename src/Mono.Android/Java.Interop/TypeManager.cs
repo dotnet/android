@@ -241,7 +241,6 @@ namespace Java.Interop {
 		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "TypeManager.CreateProxy() does not statically know the value of the 'type' local variable.")]
 		internal static IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{
-			Console.WriteLine ($"# jonp: TypeManager.CreateInstance ({handle}, {transfer}, typeof({targetType}))");
 			Type? type = null;
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
 			string? class_name = GetClassName (class_ptr);
@@ -275,7 +274,6 @@ namespace Java.Interop {
 				type = targetType;
 			}
 
-			Console.WriteLine ($"# jonp: TypeManager.CreateInstance: type={type}");
 			if (type == null) {
 				class_name = JNIEnv.GetClassNameFromInstance (handle);
 				JNIEnv.DeleteRef (handle, transfer);
@@ -285,17 +283,14 @@ namespace Java.Interop {
 			}
 
 			if (type.IsInterface || type.IsAbstract) {
-				Console.WriteLine ($"# jonp: TypeManager.CreateInstance: looking up invoker type…");
 				var invokerType = JavaObjectExtensions.GetInvokerType (type);
 				if (invokerType == null)
 					throw new NotSupportedException ("Unable to find Invoker for type '" + type.FullName + "'. Was it linked away?",
 							CreateJavaLocationException ());
 				type = invokerType;
 			}
-			Console.WriteLine ($"# jonp: TypeManager.CreateInstance: type (2)={type}");
 
 			var typeSig  = JNIEnvInit.androidRuntime?.TypeManager.GetTypeSignature (type) ?? default;
-			Console.WriteLine ($"# jonp: TypeManager.CreateInstance: typesig={typeSig}");
 			if (!typeSig.IsValid || typeSig.SimpleReference == null) {
 				throw new ArgumentException ($"Could not determine Java type corresponding to `{type.AssemblyQualifiedName}`.", nameof (targetType));
 			}
