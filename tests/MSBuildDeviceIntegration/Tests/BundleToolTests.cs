@@ -166,13 +166,13 @@ namespace Xamarin.Android.Build.Tests
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Java.Interop.dll.so");
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Mono.Android.dll.so");
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Localization.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib-es-Localization.resources.dll.so");
+					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib-es{MonoAndroidHelper.SATELLITE_CULTURE_END_MARKER_CHAR}Localization.resources.dll.so");
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_UnnamedProject.dll.so");
 				} else {
 					expectedFiles.Add ($"lib/{abi}/lib_Java.Interop.dll.so");
 					expectedFiles.Add ($"lib/{abi}/lib_Mono.Android.dll.so");
 					expectedFiles.Add ($"lib/{abi}/lib_Localization.dll.so");
-					expectedFiles.Add ($"lib/{abi}/lib-es-Localization.resources.dll.so");
+					expectedFiles.Add ($"lib/{abi}/lib-es{MonoAndroidHelper.SATELLITE_CULTURE_END_MARKER_CHAR}Localization.resources.dll.so");
 					expectedFiles.Add ($"lib/{abi}/lib_UnnamedProject.dll.so");
 				}
 
@@ -226,13 +226,13 @@ namespace Xamarin.Android.Build.Tests
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Java.Interop.dll.so");
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Mono.Android.dll.so");
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Localization.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib-es-Localization.resources.dll.so");
+					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib-es{MonoAndroidHelper.SATELLITE_CULTURE_END_MARKER_CHAR}Localization.resources.dll.so");
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_UnnamedProject.dll.so");
 				} else {
 					expectedFiles.Add ($"base/lib/{abi}/lib_Java.Interop.dll.so");
 					expectedFiles.Add ($"base/lib/{abi}/lib_Mono.Android.dll.so");
 					expectedFiles.Add ($"base/lib/{abi}/lib_Localization.dll.so");
-					expectedFiles.Add ($"base/lib/{abi}/lib-es-Localization.resources.dll.so");
+					expectedFiles.Add ($"base/lib/{abi}/lib-es{MonoAndroidHelper.SATELLITE_CULTURE_END_MARKER_CHAR}Localization.resources.dll.so");
 					expectedFiles.Add ($"base/lib/{abi}/lib_UnnamedProject.dll.so");
 				}
 

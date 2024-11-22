@@ -389,7 +389,7 @@ namespace Xamarin.Android.Build.Tests
 				// Android doesn't allow us to put satellite assemblies in lib/{CULTURE}/assembly.dll.so, we must instead
 				// mangle the name.
 				fileTypeMarker = MonoAndroidHelper.MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER;
-				fileName = $"{culture}-{fileName}";
+				fileName = $"{culture}{MonoAndroidHelper.SATELLITE_CULTURE_END_MARKER_CHAR}{fileName}";
 			}
 
 			var ret = new List<string> ();
