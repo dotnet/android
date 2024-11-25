@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask TaskName="Xamarin.Android.Tasks.CreateEmbeddedAssemblyStore" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.PrepareAbiItems" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+
+  <Target Name="_PrepareCreateEmbeddedAssemblyStoreOutputItems">
+    <PrepareAbiItems
+      BuildTargetAbis="@(_BuildTargetAbis)"
+      NativeSourcesDir="$(_NativeAssemblySourceDir)"
+      Mode="EmbeddedAssemblyStore">
+      <Output TaskParameter="AssemblySources" ItemName="_EmbeddedAssemblyStoreSourceFiles" />
+    </PrepareAbiItems>
+
+    <ItemGroup>
+      <_CreateEmbeddedAssemblyStoreAssembly Include="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths);@(_ShrunkFrameworkAssemblies)"/>
+      <_CreateEmbeddedAssemblyStoreAssembly Condition=" '@(_CreateEmbeddedAssemblyStoreAssembly->Count())' == '0' " Include="@(_ResolvedUserAssemblies);@(_ResolvedFrameworkAssemblies);@(_AndroidResolvedSatellitePaths)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_CreateEmbeddedAssemblyStore"
+          DependsOnTargets="_PrepareCreateEmbeddedAssemblyStoreOutputItems"
+          Inputs="@(_CreateEmbeddedAssemblyStoreAssembly)"
+          Outputs="@(_EmbeddedAssemblyStoreSourceFiles)">
+    <CreateEmbeddedAssemblyStore
+        AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+        AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
+        AssemblySourcesDir="$(IntermediateOutputPath)android"
+        AssemblyStoreEmbeddedInRuntime="$(_AndroidEmbedAssemblyStoreInRuntime)"
+        CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)\test\"
+        Debug="$(AndroidIncludeDebugSymbols)"
+        EnableCompression="$(AndroidEnableAssemblyCompression)"
+        ProjectFullPath="$(MSBuildProjectFullPath)"
+        ResolvedUserAssemblies="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths)"
+        ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
+        SupportedAbis="@(_BuildTargetAbis)" />
+
+    <ItemGroup>
+      <FileWrites Include="@(_EmbeddedAssemblyStoreSourceFiles)" />
+    </ItemGroup>
+  </Target>
+</Project>

@@ -48,11 +48,11 @@ namespace xamarin::android::internal
 			size_t arr_size;
 
 			if constexpr (WhichCache == CacheKind::AOT) {
-				log_debug (LOG_ASSEMBLY, "Looking for hash 0x%x in AOT cache", hash);
+				log_debug (LOG_ASSEMBLY, "Looking for hash 0x%zx in AOT cache", hash);
 				arr = aot_dso_cache;
 				arr_size = application_config.number_of_aot_cache_entries;
 			} else if constexpr (WhichCache == CacheKind::DSO) {
-				log_debug (LOG_ASSEMBLY, "Looking for hash 0x%x in DSO cache", hash);
+				log_debug (LOG_ASSEMBLY, "Looking for hash 0x%zx in DSO cache", hash);
 				arr = dso_cache;
 				arr_size = application_config.number_of_dso_cache_entries;
 			}

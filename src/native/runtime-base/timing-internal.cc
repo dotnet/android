@@ -22,8 +22,6 @@ FastTiming::really_initialize (bool log_immediately) noexcept
 	if (immediate_logging) {
 		return;
 	}
-
-	log_write (LOG_TIMING, LogLevel::Info, "[2/1] To get timing results, send the mono.android.app.DUMP_TIMING_DATA intent to the application");
 }
 
 void

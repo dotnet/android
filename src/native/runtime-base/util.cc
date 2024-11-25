@@ -146,16 +146,14 @@ Util::path_combine (const char *path1, const char *path2)
 void
 Util::create_public_directory (const char *dir)
 {
-	mode_t m = umask (0);
-	int ret = mkdir (dir, 0777);
+	int ret = create_directory (dir, 0777, 0);
 	if (ret < 0) {
-		log_warn (LOG_DEFAULT, "Failed to create directory '%s'. %s", dir, std::strerror (errno));
+		log_warn (LOG_DEFAULT, "Failed to create public directory '%s'. %s", dir, std::strerror (errno));
 	}
-	umask (m);
 }
 
 int
-Util::create_directory (const char *pathname, mode_t mode)
+Util::create_directory (const char *pathname, mode_t mode, mode_t mask)
 {
 	if (mode <= 0)
 		mode = DEFAULT_DIRECTORY_MODE;
@@ -164,7 +162,7 @@ Util::create_directory (const char *pathname, mode_t mode)
 		errno = EINVAL;
 		return -1;
 	}
-	mode_t oldumask = umask (022);
+	mode_t oldumask = umask (mask);
 	std::unique_ptr<char> path {strdup_new (pathname)};
 	int rv, ret = 0;
 	for (char *d = path.get (); d != nullptr && *d; ++d) {

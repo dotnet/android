@@ -99,8 +99,6 @@ namespace Xamarin.Android.Tasks
 
 		public string CheckedBuild { get; set; }
 
-		public string RuntimeConfigBinFilePath { get; set; }
-
 		public bool UseAssemblyStore { get; set; }
 
 		public string ZipFlushFilesLimit { get; set; }
@@ -117,6 +115,12 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public string ProjectFullPath { get; set; }
+
+		[Required]
+		public string CompressedAssembliesDir { get; set; }
+
+		[Required]
+		public bool AssemblyStoreEmbeddedInRuntime { get; set; }
 
 		[Output]
 		public ITaskItem[] OutputFiles { get; set; }
@@ -218,7 +222,6 @@ namespace Xamarin.Android.Tasks
 					apk.Flush ();
 				}
 
-				AddRuntimeConfigBlob (dsoWrapperConfig, apk);
 				AddRuntimeLibraries (apk, supportedAbis);
 				apk.Flush();
 				AddNativeLibraries (files, supportedAbis);
@@ -354,7 +357,7 @@ namespace Xamarin.Android.Tasks
 
 			if (compress) {
 				string key = CompressedAssemblyInfo.GetKey (ProjectFullPath);
-				Log.LogDebugMessage ($"Retrieving assembly compression info with key '{key}'");
+				Log.LogDebugMessage ($"[{TaskPrefix}] Retrieving assembly compression info with key '{key}'");
 				compressedAssembliesInfo = BuildEngine4.UnregisterTaskObjectAssemblyLocal<IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>> (key, RegisteredTaskObjectLifetime.Build);
 				if (compressedAssembliesInfo == null)
 					throw new InvalidOperationException ($"Assembly compression info not found for key '{key}'. Compression will not be performed.");
@@ -403,31 +406,17 @@ namespace Xamarin.Android.Tasks
 			return new Regex (sb.ToString (), options);
 		}
 
-		void AddRuntimeConfigBlob (DSOWrapperGenerator.Config dsoWrapperConfig, ZipArchiveEx apk)
-		{
-			// We will place rc.bin in the `lib` directory next to the blob, to make startup slightly faster, as we will find the config file right after we encounter
-			// our assembly store.  Not only that, but also we'll be able to skip scanning the `base.apk` archive when split configs are enabled (which they are in 99%
-			// of cases these days, since AAB enforces that split).  `base.apk` contains only ABI-agnostic file, while one of the split config files contains only
-			// ABI-specific data+code.
-			if (!String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath)) {
-				foreach (string abi in SupportedAbis) {
-					// Prefix it with `a` because bundletool sorts entries alphabetically, and this will place it right next to `assemblies.*.blob.so`, which is what we
-					// like since we can finish scanning the zip central directory earlier at startup.
-					string inArchivePath = MakeArchiveLibPath (abi, "libarc.bin.so");
-					string wrappedSourcePath = DSOWrapperGenerator.WrapIt (Log, dsoWrapperConfig, MonoAndroidHelper.AbiToTargetArch (abi), RuntimeConfigBinFilePath, Path.GetFileName (inArchivePath));
-					AddFileToArchiveIfNewer (apk, wrappedSourcePath, inArchivePath, compressionMethod: GetCompressionMethod (inArchivePath));
-				}
-			}
-		}
-
 		void AddAssemblies (DSOWrapperGenerator.Config dsoWrapperConfig, ZipArchiveEx apk, bool debug, bool compress, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo, string assemblyStoreApkName)
 		{
 			string sourcePath;
-			AssemblyCompression.AssemblyData compressedAssembly = null;
-			string compressedOutputDir = Path.GetFullPath (Path.Combine (Path.GetDirectoryName (ApkOutputPath), "..", "lz4"));
 			AssemblyStoreBuilder? storeBuilder = null;
 
 			if (UseAssemblyStore) {
+				if (AssemblyStoreEmbeddedInRuntime) {
+					// We don't need to do anything here, the store is in `libxamarin-app.so`
+					return;
+				}
+
 				storeBuilder = new AssemblyStoreBuilder (Log);
 			}
 
@@ -501,21 +490,13 @@ namespace Xamarin.Android.Tasks
 				);
 			}
 
-			void EnsureCompressedAssemblyData (string sourcePath, uint descriptorIndex)
-			{
-				if (compressedAssembly == null)
-					compressedAssembly = new AssemblyCompression.AssemblyData (sourcePath, descriptorIndex);
-				else
-					compressedAssembly.SetData (sourcePath, descriptorIndex);
-			}
-
 			string CompressAssembly (ITaskItem assembly)
 			{
 				if (!compress) {
 					return assembly.ItemSpec;
 				}
 
-				return AssemblyCompression.Compress (Log, assembly, compressedAssembliesInfo, compressedOutputDir);
+				return AssemblyCompression.Compress (Log, assembly, compressedAssembliesInfo, CompressedAssembliesDir);
 			}
 		}
 

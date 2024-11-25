@@ -61,6 +61,9 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool EnablePreloadAssembliesDefault { get; set; }
 
+		[Required]
+		public string AndroidBinUtilsDirectory { get; set; }
+
 		public bool EnableMarshalMethods { get; set; }
 		public string RuntimeConfigBinFilePath { get; set; }
 		public string BoundExceptionType { get; set; }
@@ -238,7 +241,7 @@ namespace Xamarin.Android.Tasks
 					uniqueAssemblyNames.Add (assemblyName);
 				}
 
-				string abi = MonoAndroidHelper.GetAssemblyAbi (assembly);
+				string abi = MonoAndroidHelper.GetItemAbi (assembly);
 				archAssemblyNames ??= new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
 				if (!archAssemblyNames.Contains (assemblyName)) {
@@ -297,6 +300,10 @@ namespace Xamarin.Android.Tasks
 			}
 
 			var uniqueNativeLibraries = new List<ITaskItem> ();
+
+			// Number of DSOs that will be packaged, it may be different to the number of items in the above
+			// `uniqueNativeLibraries` list.
+			uint packagedNativeLibrariesCount = 0;
 			var seenNativeLibraryNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 			if (NativeLibraries != null) {
 				foreach (ITaskItem item in NativeLibraries) {
@@ -306,8 +313,18 @@ namespace Xamarin.Android.Tasks
 						continue;
 					}
 
+					if (!ELFHelper.IsEmptyAOTLibrary (Log, item.ItemSpec)) {
+						packagedNativeLibrariesCount++;
+					}
+
 					seenNativeLibraryNames.Add (name);
 					uniqueNativeLibraries.Add (item);
+				}
+
+				// libxamarin-app.so is not in NativeLibraries, but we must count it
+				if (!seenNativeLibraryNames.Contains ("libxamarin-app.so")) {
+					uniqueNativeLibraries.Add (new TaskItem ("libxamarin-app.so"));
+					packagedNativeLibrariesCount++;
 				}
 			}
 
@@ -320,6 +337,16 @@ namespace Xamarin.Android.Tasks
 			}
 
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
+			ELFEmbeddingHelper.EmbedBinary (
+				Log,
+				SupportedAbis,
+				AndroidBinUtilsDirectory,
+				RuntimeConfigBinFilePath,
+				ELFEmbeddingHelper.KnownEmbedItems.RuntimeConfig,
+				EnvironmentOutputDirectory,
+				missingContentOK: !haveRuntimeConfigBlob
+			);
+
 			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (ProjectSpecificTaskObjectKey (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey), RegisteredTaskObjectLifetime.Build);
 			var appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {
 				UsesMonoAOT = usesMonoAOT,
@@ -337,6 +364,7 @@ namespace Xamarin.Android.Tasks
 				BundledAssemblyNameWidth = assemblyNameWidth,
 				MonoComponents = (MonoComponent)monoComponents,
 				NativeLibraries = uniqueNativeLibraries,
+				PackagedNativeLibrariesCount = packagedNativeLibrariesCount,
 				HaveAssemblyStore = UseAssemblyStore,
 				AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
 				JNIEnvInitializeToken = jnienv_initialize_method_token,
@@ -447,9 +475,16 @@ namespace Xamarin.Android.Tasks
 
 		void GetRequiredTokens (string assemblyFilePath, out int android_runtime_jnienv_class_token, out int jnienv_initialize_method_token, out int jnienv_registerjninatives_method_token)
 		{
-			using (var pe = new PEReader (File.OpenRead (assemblyFilePath))) {
-				GetRequiredTokens (pe.GetMetadataReader (), out android_runtime_jnienv_class_token, out jnienv_initialize_method_token, out jnienv_registerjninatives_method_token);
+			if (!File.Exists (assemblyFilePath)) {
+				android_runtime_jnienv_class_token = -1;
+				jnienv_initialize_method_token = -1;
+				jnienv_registerjninatives_method_token = -1;
+				Log.LogDebugMessage ($"Assembly '{assemblyFilePath}' does not exist, unable to read required tokens from it");
+				return;
 			}
+
+			using var pe = new PEReader (File.OpenRead (assemblyFilePath));
+			GetRequiredTokens (pe.GetMetadataReader (), out android_runtime_jnienv_class_token, out jnienv_initialize_method_token, out jnienv_registerjninatives_method_token);
 
 			if (android_runtime_jnienv_class_token == -1 || jnienv_initialize_method_token == -1 || jnienv_registerjninatives_method_token == -1) {
 				throw new InvalidOperationException ($"Unable to find the required Android.Runtime.JNIEnvInit method tokens for {assemblyFilePath}");
