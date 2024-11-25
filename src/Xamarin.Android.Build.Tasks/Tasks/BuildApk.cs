@@ -18,6 +18,7 @@ using Mono.Cecil;
 using Xamarin.Android.Tools;
 using Xamarin.Tools.Zip;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
@@ -147,8 +148,10 @@ namespace Xamarin.Android.Tasks
 
 		List<Regex> includePatterns = new List<Regex> ();
 
-		void ExecuteWithAbi (DSOWrapperGenerator.Config dsoWrapperConfig, string [] supportedAbis, string apkInputPath, string apkOutputPath, bool debug, bool compress, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo, string assemblyStoreApkName)
+		void ExecuteWithAbi (DSOWrapperGenerator.Config dsoWrapperConfig, string [] supportedAbis, string apkInputPath, string apkOutputPath, bool debug, bool compress, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo, string assemblyStoreApkName, PerformanceTimer timer)
 		{
+			timer.StartSubTask ("Setup");
+
 			ArchiveFileList files = new ArchiveFileList ();
 			bool refresh = true;
 			if (apkInputPath != null && File.Exists (apkInputPath) && !File.Exists (apkOutputPath)) {
@@ -204,6 +207,8 @@ namespace Xamarin.Android.Tasks
 				}
 				apk.FixupWindowsPathSeparators ((a, b) => Log.LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`"));
 
+				timer.StartSubTask ("Add DalvikClasses");
+
 				// Add classes.dx
 				CompressionMethod dexCompressionMethod = GetCompressionMethod (".dex");
 				foreach (var dex in DalvikClasses) {
@@ -214,21 +219,35 @@ namespace Xamarin.Android.Tasks
 				}
 
 				if (EmbedAssemblies) {
-					AddAssemblies (dsoWrapperConfig, apk, debug, compress, compressedAssembliesInfo, assemblyStoreApkName);
-					apk.Flush ();
+					using var embed_assemblies_timer = timer.StartSubTask ("Embed Assemblies"); {
+						AddAssemblies (dsoWrapperConfig, apk, debug, compress, compressedAssembliesInfo, assemblyStoreApkName, embed_assemblies_timer);
+						apk.Flush ();
+					}
 				}
 
+				timer.StartSubTask ("AddRuntimeConfigBlob");
 				AddRuntimeConfigBlob (dsoWrapperConfig, apk);
+
+				timer.StartSubTask ("AddRuntimeLibraries");
 				AddRuntimeLibraries (apk, supportedAbis);
+
+				timer.StartSubTask ("Flush");
 				apk.Flush();
+
+				timer.StartSubTask ("AddNativeLibraries");
 				AddNativeLibraries (files, supportedAbis);
+
+				timer.StartSubTask ("AddAdditionalNativeLibraries");
 				AddAdditionalNativeLibraries (files, supportedAbis);
 
 				if (TypeMappings != null) {
+					timer.StartSubTask ("Add TypeMappings");
 					foreach (ITaskItem typemap in TypeMappings) {
 						AddFileToArchiveIfNewer (apk, typemap.ItemSpec, RootPath + Path.GetFileName(typemap.ItemSpec), compressionMethod: UncompressedMethod);
 					}
 				}
+
+				timer.StartSubTask ("Add files");
 
 				foreach (var file in files) {
 					var item = Path.Combine (file.archivePath.Replace (Path.DirectorySeparatorChar, '/'));
@@ -241,6 +260,8 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ("\tAdding {0}", file.filePath);
 					apk.AddFileAndFlush (file.filePath, item, compressionMethod: compressionMethod);
 				}
+
+				timer.StartSubTask ("Add Jars");
 
 				var jarFiles = (JavaSourceFiles != null) ? JavaSourceFiles.Where (f => f.ItemSpec.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)) : null;
 				if (jarFiles != null && JavaLibraries != null)
@@ -308,6 +329,9 @@ namespace Xamarin.Android.Tasks
 						}
 					}
 				}
+
+				timer.StartSubTask ("Clean up Removed files");
+
 				// Clean up Removed files.
 				foreach (var entry in existingEntries) {
 					// never remove an AndroidManifest. It may be renamed when using aab.
@@ -316,13 +340,23 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ($"Removing {entry} as it is not longer required.");
 					apk.Archive.DeleteEntry (entry);
 				}
+
+				timer.StartSubTask ("Flush");
 				apk.Flush ();
+
+				timer.StartSubTask ("FixupArchive");
 				FixupArchive (apk);
+
+				timer.Stop ();
 			}
 		}
 
 		public override bool RunTask ()
 		{
+			var timer = PerformanceTimer.Create ("BuildApk.RunTask");
+
+			timer.StartSubTask ("Setup");
+
 			Aot.TryGetSequencePointsMode (AndroidSequencePointsMode, out sequencePointsMode);
 
 			var outputFiles = new List<string> ();
@@ -348,6 +382,8 @@ namespace Xamarin.Android.Tasks
 				includePatterns.Add (FileGlobToRegEx (pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled));
 			}
 
+			timer.StartSubTask ("Compression");
+
 			bool debug = _Debug;
 			bool compress = !debug && EnableCompression;
 			IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo = null;
@@ -360,8 +396,13 @@ namespace Xamarin.Android.Tasks
 					throw new InvalidOperationException ($"Assembly compression info not found for key '{key}'. Compression will not be performed.");
 			}
 
+			timer.StartSubTask ("DSOWrapperGenerator");
+
 			DSOWrapperGenerator.Config dsoWrapperConfig = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, IntermediateOutputPath);
-			ExecuteWithAbi (dsoWrapperConfig, SupportedAbis, ApkInputPath, ApkOutputPath, debug, compress, compressedAssembliesInfo, assemblyStoreApkName: null);
+
+			using var abi_timer = timer.StartSubTask ($"ExecuteWithAbi '{string.Join (", ", SupportedAbis)}'");
+				ExecuteWithAbi (dsoWrapperConfig, SupportedAbis, ApkInputPath, ApkOutputPath, debug, compress, compressedAssembliesInfo, assemblyStoreApkName: null, abi_timer);
+
 			outputFiles.Add (ApkOutputPath);
 			if (CreatePackagePerAbi && SupportedAbis.Length > 1) {
 				var abiArray = new string[] { String.Empty };
@@ -370,9 +411,11 @@ namespace Xamarin.Android.Tasks
 					var path = Path.GetDirectoryName (ApkOutputPath);
 					var apk = Path.GetFileNameWithoutExtension (ApkOutputPath);
 					abiArray[0] = abi;
-					ExecuteWithAbi (dsoWrapperConfig, abiArray, String.Format ("{0}-{1}", ApkInputPath, abi),
-						Path.Combine (path, String.Format ("{0}-{1}.apk", apk, abi)),
-					        debug, compress, compressedAssembliesInfo, assemblyStoreApkName: abi);
+
+					using var inner_abi_timer = timer.StartSubTask ($"ExecuteWithAbi '{abi}'");
+						ExecuteWithAbi (dsoWrapperConfig, abiArray, String.Format ("{0}-{1}", ApkInputPath, abi),
+							Path.Combine (path, String.Format ("{0}-{1}.apk", apk, abi)),
+							debug, compress, compressedAssembliesInfo, assemblyStoreApkName: abi, inner_abi_timer);
 					outputFiles.Add (Path.Combine (path, String.Format ("{0}-{1}.apk", apk, abi)));
 				}
 			}
@@ -380,7 +423,13 @@ namespace Xamarin.Android.Tasks
 			OutputFiles = outputFiles.Select (a => new TaskItem (a)).ToArray ();
 
 			Log.LogDebugTaskItems ("  [Output] OutputFiles :", OutputFiles);
+
+			timer.StartSubTask ("Cleanup");
+
 			DSOWrapperGenerator.CleanUp (dsoWrapperConfig);
+
+			timer.Stop ();
+			timer.WriteLog (Log);
 
 			return !Log.HasLoggedErrors;
 		}
@@ -420,7 +469,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		void AddAssemblies (DSOWrapperGenerator.Config dsoWrapperConfig, ZipArchiveEx apk, bool debug, bool compress, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo, string assemblyStoreApkName)
+		void AddAssemblies (DSOWrapperGenerator.Config dsoWrapperConfig, ZipArchiveEx apk, bool debug, bool compress, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo, string assemblyStoreApkName, PerformanceTimer timer)
 		{
 			string sourcePath;
 			AssemblyCompression.AssemblyData compressedAssembly = null;
@@ -432,15 +481,18 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Add user assemblies
+			timer.StartSubTask ($"Add {ResolvedUserAssemblies.Length} user assemblies");
 			AssemblyPackagingHelper.AddAssembliesFromCollection (Log, SupportedAbis, ResolvedUserAssemblies, DoAddAssembliesFromArchCollection);
 
 			// Add framework assemblies
+			timer.StartSubTask ($"Add {ResolvedFrameworkAssemblies.Length} framework assemblies");
 			AssemblyPackagingHelper.AddAssembliesFromCollection (Log, SupportedAbis, ResolvedFrameworkAssemblies, DoAddAssembliesFromArchCollection);
 
 			if (!UseAssemblyStore) {
 				return;
 			}
 
+			timer.StartSubTask ("Generate assembly store");
 			Dictionary<AndroidTargetArch, string> assemblyStorePaths = storeBuilder.Generate (AppSharedLibrariesDir);
 
 			if (assemblyStorePaths.Count == 0) {
@@ -452,6 +504,9 @@ namespace Xamarin.Android.Tasks
 			}
 
 			string inArchivePath;
+
+			timer.StartSubTask ("Add assembly store");
+
 			foreach (var kvp in assemblyStorePaths) {
 				string abi = MonoAndroidHelper.ArchToAbi (kvp.Key);
 				inArchivePath = MakeArchiveLibPath (abi, "lib" + Path.GetFileName (kvp.Value));
