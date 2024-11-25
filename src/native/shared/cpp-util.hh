@@ -15,7 +15,7 @@
 #include "helpers.hh"
 
 static inline void
-do_abort_unless (const char* fmt, ...)
+do_abort_unless (std::source_location sloc, const char* fmt, ...)
 {
 	va_list ap;
 
@@ -24,12 +24,12 @@ do_abort_unless (const char* fmt, ...)
 	int n = vasprintf (&message, fmt, ap);
 	va_end (ap);
 
-	xamarin::android::Helpers::abort_application (n == -1 ? "Unable to allocate memory for abort message" : message);
+	xamarin::android::Helpers::abort_application (n == -1 ? "Unable to allocate memory for abort message" : message, true /* log_location */, sloc);
 }
 
 #define abort_unless(_condition_, _fmt_, ...) \
 	if (!(_condition_)) [[unlikely]] { \
-		do_abort_unless ("%s:%d (%s): " _fmt_, __FILE__, __LINE__, __FUNCTION__, ## __VA_ARGS__); \
+		do_abort_unless (std::source_location::current (), _fmt_, ## __VA_ARGS__); \
 	}
 
 #define abort_if_invalid_pointer_argument(_ptr_) abort_unless ((_ptr_) != nullptr, "Parameter '%s' must be a valid pointer", #_ptr_)

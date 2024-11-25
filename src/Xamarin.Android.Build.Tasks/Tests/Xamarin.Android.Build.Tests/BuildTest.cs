@@ -26,7 +26,7 @@ namespace Xamarin.Android.Build.Tests
 		[Category ("SmokeTests")]
 		[TestCaseSource (nameof (DotNetBuildSource))]
 		[NonParallelizable] // On MacOS, parallel /restore causes issues
-		public void DotNetBuild (string runtimeIdentifiers, bool isRelease, bool aot, bool usesAssemblyStore)
+		public void DotNetBuild (string runtimeIdentifiers, bool isRelease, bool aot)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
@@ -66,7 +66,6 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": AndroidX.AppCompat.App.AppCompatActivity")
 				.Replace ("//${AFTER_ONCREATE}", @"button.Text = Resource.CancelButton;");
-			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStore.ToString ());
 			proj.SetProperty ("RunAOTCompilation", aot.ToString ());
 			proj.OtherBuildItems.Add (new AndroidItem.InputJar ("javaclasses.jar") {
 				BinaryContent = () => ResourceData.JavaSourceJarTestJar,
@@ -162,7 +161,7 @@ namespace Xamarin.Android.Build.Tests
 			bool expectEmbeddedAssembies = !(TestEnvironment.CommercialBuildAvailable && !isRelease);
 			var apkPath = Path.Combine (outputPath, $"{proj.PackageName}-Signed.apk");
 			FileAssert.Exists (apkPath);
-			var helper = new ArchiveAssemblyHelper (apkPath, usesAssemblyStore, rids);
+			var helper = new ArchiveAssemblyHelper (apkPath, rids);
 			helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.dll", shouldContainEntry: expectEmbeddedAssembies);
 			helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.pdb", shouldContainEntry: !TestEnvironment.CommercialBuildAvailable && !isRelease);
 			helper.AssertContainsEntry ($"assemblies/Mono.Android.dll",        shouldContainEntry: expectEmbeddedAssembies);
@@ -267,7 +266,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var abis = new [] { "armeabi-v7a", "x86" };
 			proj.SetRuntimeIdentifiers (abis);
-			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidUseAssemblyStore", "True");
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -284,7 +282,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				string apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStores: true);
+				var helper = new ArchiveAssemblyHelper (apk);
 
 				foreach (string abi in abis) {
 					AndroidTargetArch arch = MonoAndroidHelper.AbiToTargetArch (abi);

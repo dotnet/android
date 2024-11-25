@@ -137,34 +137,30 @@ namespace Xamarin.Android.Build.Tests
 			new object[] {
 				/* supportedAbis */   "arm64-v8a",
 				/* enableLLVM */      false,
-				/* usesAssemblyBlobs */ false,
 			},
 			new object[] {
 				/* supportedAbis */   "armeabi-v7a;x86",
 				/* enableLLVM */      true,
-				/* usesAssemblyBlobs */ true,
 			},
 			new object[] {
 				/* supportedAbis */   "armeabi-v7a;arm64-v8a;x86;x86_64",
 				/* enableLLVM */      false,
-				/* usesAssemblyBlobs */ true,
 			},
 			new object[] {
 				/* supportedAbis */   "armeabi-v7a;arm64-v8a;x86;x86_64",
 				/* enableLLVM */      true,
-				/* usesAssemblyBlobs */ false,
 			},
 		};
 
 		[Test]
 		[TestCaseSource (nameof (AotChecks))]
-		public void BuildAotApplicationWithNdkAndBundleAndÜmläüts (string supportedAbis, bool enableLLVM, bool usesAssemblyBlobs)
+		public void BuildAotApplicationWithNdkAndBundleAndÜmläüts (string supportedAbis, bool enableLLVM)
 		{
 			if (IsWindows)
 				Assert.Ignore ("https://github.com/dotnet/runtime/issues/88625");
 
 			var abisSanitized = supportedAbis.Replace (";", "").Replace ("-", "").Replace ("_", "");
-			var path = Path.Combine ("temp", string.Format ("BuildAotNdk AndÜmläüts_{0}_{1}_{2}", abisSanitized, enableLLVM, usesAssemblyBlobs));
+			var path = Path.Combine ("temp", string.Format ("BuildAotNdk AndÜmläüts_{0}_{1}", abisSanitized, enableLLVM));
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				AotAssemblies = true,
@@ -174,7 +170,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidNdkDirectory", AndroidNdkPath);
 			proj.SetRuntimeIdentifiers (supportedAbis.Split (';'));
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
-			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 			bool checkMinLlvmPath = enableLLVM && (supportedAbis == "armeabi-v7a" || supportedAbis == "x86");
 			if (checkMinLlvmPath) {
 				// Set //uses-sdk/@android:minSdkVersion so that LLVM uses the right libc.so
@@ -195,7 +190,7 @@ namespace Xamarin.Android.Build.Tests
 					var apk = Path.Combine (Root, b.ProjectDirectory,
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 
-					var helper = new ArchiveAssemblyHelper (apk, usesAssemblyBlobs);
+					var helper = new ArchiveAssemblyHelper (apk);
 					Assert.IsTrue (helper.Exists ($"assemblies/{abi}/UnnamedProject.dll"), $"{abi}/UnnamedProject.dll should be in {proj.PackageName}-Signed.apk");
 					using (var zipFile = ZipHelper.OpenZip (apk)) {
 						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
@@ -215,13 +210,13 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (AotChecks))]
-		public void BuildAotApplicationAndÜmläüts (string supportedAbis, bool enableLLVM, bool usesAssemblyBlobs)
+		public void BuildAotApplicationAndÜmläüts (string supportedAbis, bool enableLLVM)
 		{
 			if (IsWindows)
 				Assert.Ignore ("https://github.com/dotnet/runtime/issues/88625");
 
 			var abisSanitized = supportedAbis.Replace (";", "").Replace ("-", "").Replace ("_", "");
-			var path = Path.Combine ("temp", string.Format ("BuildAot AndÜmläüts_{0}_{1}_{2}", abisSanitized, enableLLVM, usesAssemblyBlobs));
+			var path = Path.Combine ("temp", string.Format ("BuildAot AndÜmläüts_{0}_{1}", abisSanitized, enableLLVM));
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				AotAssemblies = true,
@@ -229,7 +224,6 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetRuntimeIdentifiers (supportedAbis.Split (';'));
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
-			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 			using (var b = CreateApkBuilder (path)) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -240,7 +234,7 @@ namespace Xamarin.Android.Build.Tests
 					var apk = Path.Combine (Root, b.ProjectDirectory,
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 
-					var helper = new ArchiveAssemblyHelper (apk, usesAssemblyBlobs);
+					var helper = new ArchiveAssemblyHelper (apk);
 					Assert.IsTrue (helper.Exists ($"assemblies/{abi}/UnnamedProject.dll"), $"{abi}/UnnamedProject.dll should be in {proj.PackageName}-Signed.apk");
 					using (var zipFile = ZipHelper.OpenZip (apk)) {
 						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,

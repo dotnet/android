@@ -66,14 +66,13 @@ namespace Xamarin.Android.Build.Tests
 				EmbedAssembliesIntoApk = true,
 			};
 			proj.SetProperty ("PublishTrimmed", "true");
-			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
 
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 
 			var apk = Path.Combine (Root, b.ProjectDirectory,
 				proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-			var helper = new ArchiveAssemblyHelper (apk, usesAssemblyStores);
+			var helper = new ArchiveAssemblyHelper (apk);
 			helper.Contains (["Mono.Android.dll", $"{proj.ProjectName}.dll"], out _, out var missingFiles, out _, [AndroidTargetArch.Arm64, AndroidTargetArch.X86_64]);
 
 			Assert.IsTrue (missingFiles == null || missingFiles.Count == 0,
@@ -83,7 +82,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[NonParallelizable] // Commonly fails NuGet restore
-		public void CheckIncludedAssemblies ([Values (false, true)] bool usesAssemblyStores)
+		public void CheckIncludedAssemblies ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true
@@ -93,7 +92,6 @@ namespace Xamarin.Android.Build.Tests
 				AndroidTargetArch.Arm,
 			};
 
-			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
 			proj.SetRuntimeIdentifiers (supportedArches);
 			proj.PackageReferences.Add (new Package {
 				Id = "Humanizer.Core",
@@ -136,7 +134,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				var helper = new ArchiveAssemblyHelper (apk, usesAssemblyStores);
+				var helper = new ArchiveAssemblyHelper (apk);
 				List<string> existingFiles;
 				List<string> missingFiles;
 				List<string> additionalFiles;

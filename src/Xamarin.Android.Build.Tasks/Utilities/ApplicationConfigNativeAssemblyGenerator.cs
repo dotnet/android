@@ -175,9 +175,7 @@ namespace Xamarin.Android.Tasks
 		public global::Android.Runtime.BoundExceptionType BoundExceptionType { get; set; }
 		public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
 		public bool HaveRuntimeConfigBlob { get; set; }
-		public bool HaveAssemblyStore { get; set; }
 		public int NumberOfAssembliesInApk { get; set; }
-		public int BundledAssemblyNameWidth { get; set; } // including the trailing NUL
 		public int AndroidRuntimeJNIEnvToken { get; set; }
 		public int JNIEnvInitializeToken { get; set; }
 		public int JNIEnvRegisterJniNativesToken { get; set; }
@@ -188,6 +186,7 @@ namespace Xamarin.Android.Tasks
 		public List<ITaskItem> NativeLibraries { get; set; }
 		public bool MarshalMethodsEnabled { get; set; }
 		public bool IgnoreSplitConfigs { get; set; }
+		public bool FastDevEnabled { get; set; }
 
 		public ApplicationConfigNativeAssemblyGenerator (IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties, TaskLoggingHelper log)
 			: base (log)
@@ -227,7 +226,7 @@ namespace Xamarin.Android.Tasks
 				broken_exception_transitions = BrokenExceptionTransitions,
 				jni_add_native_method_registration_attribute_present = JniAddNativeMethodRegistrationAttributePresent,
 				have_runtime_config_blob = HaveRuntimeConfigBlob,
-				have_assemblies_blob = HaveAssemblyStore,
+				fastdev_enabled = FastDevEnabled,
 				marshal_methods_enabled = MarshalMethodsEnabled,
 				ignore_split_configs = IgnoreSplitConfigs,
 				bound_stream_io_exception_type = (byte)BoundExceptionType,
@@ -236,7 +235,6 @@ namespace Xamarin.Android.Tasks
 				system_property_count = (uint)(systemProperties == null ? 0 : systemProperties.Count * 2),
 				number_of_assemblies_in_apk = (uint)NumberOfAssembliesInApk,
 				number_of_shared_libraries = (uint)NativeLibraries.Count,
-				bundled_assembly_name_width = (uint)BundledAssemblyNameWidth,
 				number_of_dso_cache_entries = (uint)dsoCache.Count,
 				number_of_aot_cache_entries = (uint)aotDsoCache.Count,
 				android_runtime_jnienv_class_token = (uint)AndroidRuntimeJNIEnvToken,
@@ -269,36 +267,12 @@ namespace Xamarin.Android.Tasks
 			};
 			module.Add (dso_apk_entries);
 
-			if (!HaveAssemblyStore) {
-				xamarinAndroidBundledAssemblies = new List<StructureInstance<XamarinAndroidBundledAssembly>> (NumberOfAssembliesInApk);
-
-				var emptyBundledAssemblyData = new XamarinAndroidBundledAssembly {
-					file_fd = -1,
-					data_offset = 0,
-					data_size = 0,
-					data = 0,
-					name_length = (uint)BundledAssemblyNameWidth,
-					name = null,
-				};
-
-				for (int i = 0; i < NumberOfAssembliesInApk; i++) {
-					xamarinAndroidBundledAssemblies.Add (new StructureInstance<XamarinAndroidBundledAssembly> (xamarinAndroidBundledAssemblyStructureInfo, emptyBundledAssemblyData));
-				}
-			}
-
-			string bundledBuffersSize = xamarinAndroidBundledAssemblies == null ? "empty (unused when assembly stores are enabled)" : $"{BundledAssemblyNameWidth} bytes long";
-			var bundled_assemblies = new LlvmIrGlobalVariable (typeof(List<StructureInstance<XamarinAndroidBundledAssembly>>), "bundled_assemblies", LlvmIrVariableOptions.GlobalWritable) {
-				Value = xamarinAndroidBundledAssemblies,
-				Comment = $" Bundled assembly name buffers, all {bundledBuffersSize}",
-			};
-			module.Add (bundled_assemblies);
-
 			AddAssemblyStores (module);
 		}
 
 		void AddAssemblyStores (LlvmIrModule module)
 		{
-			ulong itemCount = (ulong)(HaveAssemblyStore ? NumberOfAssembliesInApk : 0);
+			ulong itemCount = (ulong)NumberOfAssembliesInApk;
 			var assembly_store_bundled_assemblies = new LlvmIrGlobalVariable (typeof(List<StructureInstance<AssemblyStoreSingleAssemblyRuntimeData>>), "assembly_store_bundled_assemblies", LlvmIrVariableOptions.GlobalWritable) {
 				ZeroInitializeArray = true,
 				ArrayItemCount = itemCount,

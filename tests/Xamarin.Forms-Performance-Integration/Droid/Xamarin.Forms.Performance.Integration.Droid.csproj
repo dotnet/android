@@ -19,7 +19,6 @@
     <AndroidSupportedAbis Condition=" '$(Enable64BitBuild)' == '' ">armeabi-v7a;x86</AndroidSupportedAbis>
     <AndroidSupportedAbis  Condition=" '$(Enable64BitBuild)' != '' ">arm64-v8a;x86</AndroidSupportedAbis>
     <AndroidEnablePreloadAssemblies Condition=" '$(AndroidEnablePreloadAssemblies)' == '' ">True</AndroidEnablePreloadAssemblies>
-    <AndroidUseAssemblyStore>False</AndroidUseAssemblyStore>
     <AndroidIncludeWrapSh Condition=" '$(UseASAN)' != '' Or '$(UseUBSAN)' != '' ">true</AndroidIncludeWrapSh>
     <_AndroidCheckedBuild Condition=" '$(UseASAN)' != '' ">asan</_AndroidCheckedBuild>
     <_AndroidCheckedBuild Condition=" '$(UseUBSAN)' != '' ">ubsan</_AndroidCheckedBuild>
