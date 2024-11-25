@@ -341,10 +341,10 @@ namespace xamarin::android::internal {
 			}
 
 			if (application_config.have_assembly_store) {
-				return { apk_lib_prefix.data (), apk_lib_prefix.size () - 1 };
+				return { apk_lib_prefix.data (), apk_lib_prefix.size () };
 			}
 
-			return {assemblies_prefix.data (), assemblies_prefix.size () - 1};
+			return {assemblies_prefix.data (), assemblies_prefix.size () };
 		}
 
 		static bool all_required_zip_entries_found () noexcept
