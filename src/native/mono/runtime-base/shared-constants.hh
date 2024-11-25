@@ -40,7 +40,7 @@ namespace xamarin::android::internal
 		static constexpr std::string_view DLL_EXTENSION                       { ".dll" };
 		static constexpr std::string_view PDB_EXTENSION                       { ".pdb" };
 
-//	private:
+	private:
 		static constexpr std::string_view RUNTIME_CONFIG_BLOB_BASE_NAME       { "libarc.bin" };
 		static constexpr size_t runtime_config_blob_name_size                 = calc_size (RUNTIME_CONFIG_BLOB_BASE_NAME, MANGLED_ASSEMBLY_NAME_EXT);
 		static constexpr auto RUNTIME_CONFIG_BLOB_NAME_ARRAY                  = concat_string_views<runtime_config_blob_name_size> (RUNTIME_CONFIG_BLOB_BASE_NAME, MANGLED_ASSEMBLY_NAME_EXT);
