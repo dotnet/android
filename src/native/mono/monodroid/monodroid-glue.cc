@@ -713,7 +713,6 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 	gather_bundled_assemblies (runtimeApks, &user_assemblies_count, have_split_apks);
 
 	if (EmbeddedAssemblies::have_runtime_config_blob ()) {
-		log_info (LOG_ASSEMBLY, "Got runtime config blob");
 		size_t blob_time_index;
 		if (FastTiming::enabled ()) [[unlikely]] {
 			blob_time_index = internal_timing->start_event (TimingEventKind::RuntimeConfigBlob);
@@ -721,9 +720,7 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 
 		runtime_config_args.kind = 1;
 		EmbeddedAssemblies::get_runtime_config_blob (runtime_config_args.runtimeconfig.data.data, runtime_config_args.runtimeconfig.data.data_len);
-		log_info (LOG_ASSEMBLY, " rc data == %p; rc size == %zu", runtime_config_args.runtimeconfig.data.data, runtime_config_args.runtimeconfig.data.data_len);
-		int ret = monovm_runtimeconfig_initialize (&runtime_config_args, cleanup_runtime_config, nullptr);
-		log_info (LOG_ASSEMBLY, " ret == %d", ret);
+		monovm_runtimeconfig_initialize (&runtime_config_args, cleanup_runtime_config, nullptr);
 
 		if (FastTiming::enabled ()) [[unlikely]] {
 			internal_timing->end_event (blob_time_index);
