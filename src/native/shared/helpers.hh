@@ -2,6 +2,7 @@
 #define __HELPERS_HH
 
 #include <cstdlib>
+#include <concepts>
 #include <source_location>
 #include <string>
 #include <string_view>
@@ -14,6 +15,11 @@ using namespace std::string_view_literals;
 
 namespace xamarin::android
 {
+	namespace detail {
+		template<typename T>
+		concept TPointer = requires { std::is_pointer_v<T>; };
+	}
+
 	class [[gnu::visibility("hidden")]] Helpers
 	{
 	public:
@@ -76,5 +82,11 @@ namespace xamarin::android
 			abort_application (LOG_DEFAULT, message.data (), log_location, sloc);
 		}
 	};
+
+	template<detail::TPointer TRet = void*, detail::TPointer TPtr> [[gnu::always_inline]]
+	static inline constexpr auto pointer_add (TPtr ptr, size_t offset) noexcept -> TRet
+	{
+		return reinterpret_cast<TRet>(reinterpret_cast<uintptr_t>(ptr) + offset);
+	}
 }
 #endif // __HELPERS_HH

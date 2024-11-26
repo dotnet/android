@@ -135,7 +135,7 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 				cad.uncompressed_file_size = header->uncompressed_length;
 			}
 
-			const char *data_start = reinterpret_cast<const char*>(data + sizeof(CompressedAssemblyHeader));
+			const char *data_start = pointer_add<const char*>(data, sizeof(CompressedAssemblyHeader));
 			int ret = LZ4_decompress_safe (data_start, reinterpret_cast<char*>(cad.data), static_cast<int>(assembly_data_size), static_cast<int>(cad.uncompressed_file_size));
 
 			if (ret < 0) {
@@ -249,7 +249,7 @@ EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexc
 					"file-offset: {:<8x}  start: {:<8p}  end: {:<8p}  len: {:<12}  zip-entry: {} name: {} [{}]",
 					file.data_offset,
 					static_cast<void*>(file.data),
-					reinterpret_cast<void*>(file.data + file.data_size),
+					pointer_add (file.data, file.data_size),
 					file.data_size,
 					file.name,
 					file.name,
@@ -560,7 +560,7 @@ EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nme
 	while (nmemb > 0) {
 		const Entry *ret;
 		if constexpr (use_precalculated_size) {
-			ret = reinterpret_cast<const Entry*>(reinterpret_cast<const uint8_t*>(base) + (precalculated_size * (nmemb / 2)));
+			ret = pointer_add<const Entry*>(reinterpret_cast<const uint8_t*>(base), precalculated_size * (nmemb / 2));
 		} else {
 			ret = base + (nmemb / 2);
 		}
@@ -570,7 +570,7 @@ EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nme
 			nmemb /= 2;
 		} else if (result > 0) {
 			if constexpr (use_precalculated_size) {
-				base = reinterpret_cast<const Entry*>(reinterpret_cast<const uint8_t*>(ret) + precalculated_size);
+				base = pointer_add<const Entry*>(reinterpret_cast<const uint8_t*>(ret), precalculated_size);
 			} else {
 				base = ret + 1;
 			}
@@ -914,17 +914,17 @@ EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, size_t size, cons
 	}
 
 	mmap_info.size  = offsetSize;
-	file_info.area  = (void*)((const char*)mmap_info.area + offsetFromPage);
+	file_info.area  = pointer_add (mmap_info.area, offsetFromPage);
 	file_info.size  = size;
 
 	log_info (
 		LOG_ASSEMBLY,
 			std::format ("  mmap_start: {:<8p}; mmap_end: {:<8p}  mmap_len: {:<12}  file_start: {:<8p}  file_end: {:<8p}  file_len: {:<12}     apk descriptor: {}  file: {}",
 			mmap_info.area,
-			reinterpret_cast<void*>(reinterpret_cast<int*> (mmap_info.area) + mmap_info.size),
+			pointer_add (mmap_info.area, mmap_info.size),
 			mmap_info.size,
 			file_info.area,
-			reinterpret_cast<void*>(reinterpret_cast<int*> (file_info.area) + file_info.size),
+			pointer_add (file_info.area, file_info.size),
 			file_info.size,
 			fd,
 			filename
@@ -1126,7 +1126,7 @@ EmbeddedAssemblies::typemap_load_file (BinaryTypeMapHeader &header, const char *
 		// integer from unaligned memory
 		memcpy (&idx, java_pos + header.java_name_width, sizeof (idx));
 		if (idx < INVALID_TYPE_INDEX) {
-			cur->to = reinterpret_cast<char*>(managed_start + (managed_entry_size * idx));
+			cur->to = pointer_add<char*>(managed_start, managed_entry_size * idx);
 		} else {
 			// Ignore the type mapping
 			cur->to = nullptr;
@@ -1137,7 +1137,7 @@ EmbeddedAssemblies::typemap_load_file (BinaryTypeMapHeader &header, const char *
 		cur->from = reinterpret_cast<char*>(managed_pos);
 
 		memcpy (&idx, managed_pos + header.managed_name_width, sizeof (idx));
-		cur->to = reinterpret_cast<char*>(java_start + (java_entry_size * idx));
+		cur->to = pointer_add<char*>(java_start, java_entry_size * idx);
 		managed_pos += managed_entry_size;
 	}
 
