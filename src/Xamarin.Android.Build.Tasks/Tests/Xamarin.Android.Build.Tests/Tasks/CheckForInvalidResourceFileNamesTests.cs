@@ -50,6 +50,21 @@ namespace Xamarin.Android.Build.Tests
 				false,
 				2,
 			},
+			new object[] {
+				"import.xml",
+				false,
+				1,
+			},
+			new object[] {
+				"class.png",
+				false,
+				1,
+			},
+			new object[] {
+				"class1.png",
+				true,
+				0,
+			},
 		};
 #pragma warning restore 414
 		[Test]

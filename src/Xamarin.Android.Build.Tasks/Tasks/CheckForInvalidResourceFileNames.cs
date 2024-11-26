@@ -22,6 +22,64 @@ namespace Xamarin.Android.Tasks {
 		Regex fileNameCheck = new Regex ("[^a-zA-Z0-9_.]+", RegexOptions.Compiled);
 		Regex fileNameWithHyphenCheck = new Regex ("[^a-zA-Z0-9_.-]+", RegexOptions.Compiled);
 
+		// Source https://docs.oracle.com/javase/tutorial/java/nutsandbolts/_keywords.html
+		static string [] javaKeywords = {
+			"abstract",
+			"assert",
+			"boolean",
+			"break",
+			"byte",
+			"case",
+			"catch",
+			"char",
+			"class",
+			"const",
+			"continue",
+			"default",
+			"do",
+			"double",
+			"else",
+			"enum",
+			"extends",
+			"final",
+			"finally",
+			"float",
+			"for",
+			"fp",
+			"goto",
+			"if",
+			"implements",
+			"import",
+			"instanceof",
+			"int",
+			"interface",
+			"long",
+			"native",
+			"new",
+			"package",
+			"private",
+			"protected",
+			"public",
+			"record",
+			"return",
+			"short",
+			"static",
+			"strict",
+			"super",
+			"switch",
+			"synchronized",
+			"this",
+			"throw",
+			"throws",
+			"transient",
+			"try",
+			"void",
+			"volatile",
+			"while",
+		};
+
+		Regex fileNameJavaReservedWordCheck = new Regex ($@"^\b({string.Join ("|", javaKeywords)})\b$", RegexOptions.Compiled);
+
 		public override bool RunTask ()
 		{
 			foreach (var resource in Resources) {
@@ -44,6 +102,10 @@ namespace Xamarin.Android.Tasks {
 					var match = fileNameCheck.Match (fileName);
 					if (match.Success) {
 						Log.LogCodedError ("APT0003", resource.ItemSpec, 0, Properties.Resources.APT0003, fileNameCheck);
+					}
+					match = fileNameJavaReservedWordCheck.Match (Path.GetFileNameWithoutExtension (fileName));
+					if (match.Success) {
+						Log.LogCodedError ("APT0005", resource.ItemSpec, 0, Properties.Resources.APT0005, fileNameCheck);
 					}
 				}
 			}
