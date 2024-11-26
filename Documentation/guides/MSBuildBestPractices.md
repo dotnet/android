@@ -727,10 +727,11 @@ as:
 </Target>
 ```
 
-There is no `$(IncrementalCleanDependsOn)` property, what do you do?
+Then use the [`$(IncrementalCleanDependsOn)` property used in `Microsoft.Common.CurrentVersion.targets`][msbuild_incrementalcleandependson].
 
-Since using `BeforeTargets` and `AfterTargets` is a no-no, we have
-modified `$(CoreBuildDependsOn)` so you can run a target *before*
+If you are on an older version of the SDK where `$(IncrementalCleanDependsOn)` property defined is not used, *and*
+since using `BeforeTargets` and `AfterTargets` is a no-no, you can instead
+modify `$(CoreBuildDependsOn)` to run a target *before*
 `IncrementalClean`:
 
 ```xml
@@ -758,3 +759,4 @@ See the following links about this problem:
 [clean]: https://github.com/Microsoft/msbuild/issues/2408#issuecomment-321082997
 [msbuild_issue]: https://github.com/Microsoft/msbuild/issues/3916
 [msbuild_repro]: https://github.com/jonathanpeppers/MSBuildIncrementalClean
+[msbuild_incrementalcleandependson]: https://github.com/dotnet/msbuild/commit/fdddb27ebec8f6a51513b6e869f039a32d3a8c39
