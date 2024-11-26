@@ -87,8 +87,11 @@ public class MavenDownload : AsyncTask
 		if (repository is null)
 			return null;
 
+		// Allow user to override the Maven filename of the artifact
+		var maven_override_filename = item.GetMetadataOrDefault ("ArtifactFilename", null);
+
 		// Download artifact
-		var artifact_file = await MavenExtensions.DownloadPayload (repository, artifact, MavenCacheDirectory, Log, CancellationToken);
+		var artifact_file = await MavenExtensions.DownloadPayload (repository, artifact, MavenCacheDirectory, maven_override_filename, Log, CancellationToken);
 
 		if (artifact_file is null)
 			return null;

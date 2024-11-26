@@ -1264,8 +1264,7 @@ namespace Xamarin.Android.Tasks.Properties {
 
         /// <summary>
         ///   Looks up a localized string similar to Cannot download Maven artifact &apos;{0}:{1}&apos;.
-        ///- {2}: {3}
-        ///- {4}: {5}.
+        ///{2}.
         /// </summary>
         public static string XA4236 {
             get {
