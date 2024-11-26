@@ -1,0 +1,15 @@
+LIBMONO_ANDROID {
+  global:
+    JNI_OnLoad;
+    Java_mono_android_Runtime_dumpTimingData;
+    Java_mono_android_Runtime_init;
+    Java_mono_android_Runtime_initInternal;
+    Java_mono_android_Runtime_notifyTimeZoneChanged;
+    Java_mono_android_Runtime_propagateUncaughtException;
+    Java_mono_android_Runtime_register;
+    _monodroid_freeifaddrs;
+    _monodroid_getifaddrs;
+
+  local:
+    *;
+};
