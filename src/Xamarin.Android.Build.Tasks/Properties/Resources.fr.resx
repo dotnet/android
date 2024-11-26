@@ -460,14 +460,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>L'utilisation de la valeur expérimentale 'Hybrid' pour la propriété MSBuild 'AndroidAotMode' n'est pas compatible avec l'ABI cible armeabi-v7a. Si vous souhaitez continuer à utiliser la valeur expérimentale 'Hybrid' pour 'AndroidAotMode', désélectionnez l'ABI cible armeabi-v7a dans les pages de propriétés de projet Visual Studio, ou modifiez le fichier projet dans un éditeur de texte, puis supprimez 'armeabi-v7a' dans la propriété MSBuild 'AndroidSupportedAbis'.</value>
     <comment>The following are literal names and should not be translated: 'Hybrid', 'AndroidAotMode', armeabi-v7a,  'AndroidSupportedAbis'</comment>
   </data>
-  <data name="XA1026" xml:space="preserve">
-    <value>L'utilisation d'AAPT est dépréciée en faveur d'AAPT2. Activez 'Utiliser le système d'empaquetage Android incrémentiel (aapt2)' dans les pages de propriétés de projet Visual Studio, ou modifiez le fichier projet dans un éditeur de texte et définissez la propriété MSBuild 'AndroidUseAapt2' sur 'true'.</value>
-    <comment>The following are literal names and should not be translated: AAPT, AAPT2, Android, AndroidUseAapt2, true.</comment>
-  </data>
-  <data name="XA1026_dotnet" xml:space="preserve">
-    <value>L’utilisation d’AAPT n’est pas prise en charge dans .NET pour les projets Android qui ciblent .NET 6 ou une version ultérieure. Activez 'Utiliser le système d'empaquetage Android incrémentiel (aapt2)' dans les pages de propriétés de projet Visual Studio, ou modifiez le fichier projet dans un éditeur de texte, puis affectez la valeur 'true' à la propriété MSBuild 'AndroidUseAapt2'.</value>
-    <comment>The following are literal names and should not be translated: AAPT, Android, AndroidUseAapt2, true.</comment>
-  </data>
   <data name="XA1027" xml:space="preserve">
     <value>La propriété MSBuild 'EnableProguard' est définie sur 'true' et la propriété MSBuild 'AndroidLinkTool' est vide. Par conséquent, 'AndroidLinkTool' a 'ProGuard' comme valeur par défaut.</value>
     <comment>The following are literal names and should not be translated: 'EnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>

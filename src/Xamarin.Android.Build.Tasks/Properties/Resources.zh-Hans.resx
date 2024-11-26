@@ -460,14 +460,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>"AndroidAotMode" MSBuild 属性的实验性“混合”值当前与 armeabi-v7a 目标 ABI 不兼容。若要继续使用 "AndroidAotMode" 的实验性“混合”值，请在 Visual Studio 项目属性页中取消选择 armeabi-v7a 目标 ABI，或在文本编辑器中编辑项目文件，并从 "AndroidSupportedAbis' MSBuild" 属性中删除 "armeabi-v7a"。</value>
     <comment>The following are literal names and should not be translated: 'Hybrid', 'AndroidAotMode', armeabi-v7a,  'AndroidSupportedAbis'</comment>
   </data>
-  <data name="XA1026" xml:space="preserve">
-    <value>已禁止使用 AAPT，取而代之的是使用 AAPT2。请在 Visual Studio 项目属性页面中启用“使用增量 Android 打包系统(aapt2)”，或者在文本编辑器中编辑项目文件，并将 "AndroidUseAapt2" MSBuild 属性设置为 "true"。</value>
-    <comment>The following are literal names and should not be translated: AAPT, AAPT2, Android, AndroidUseAapt2, true.</comment>
-  </data>
-  <data name="XA1026_dotnet" xml:space="preserve">
-    <value>面向 .NET 6 或更高版本的 .NET for Android 项目不支持使用 AAPT。请在 Visual Studio 项目属性页面中启用“使用增量 Android 打包系统(aapt2)”，或者在文本编辑器中编辑项目文件，并将 "AndroidUseAapt2" MSBuild 属性设置为 "true"。</value>
-    <comment>The following are literal names and should not be translated: AAPT, Android, AndroidUseAapt2, true.</comment>
-  </data>
   <data name="XA1027" xml:space="preserve">
     <value>"EnableProguard" MSBuild 属性设置为 "true"，并且 "AndroidLinkTool" MSBuild 属性为空，因此 "AndroidLinkTool" 将默认为 "proguard"。</value>
     <comment>The following are literal names and should not be translated: 'EnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>

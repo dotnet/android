@@ -460,14 +460,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>Experimentální hodnota Hybrid pro vlastnost MSBuildu AndroidAotMode není v tuto chvíli kompatibilní s cílovým ABI armeabi-v7a. Pokud chcete i nadále používat experimentální hodnotu Hybrid pro AndroidAotMode, zrušte výběr cílového ABI armeabi-v7a na stránkách vlastností projektu sady Visual Studio, nebo upravte soubor projektu v textovém editoru a odeberte z vlastnosti MSBuild AndroidSupportedAbis možnost armeabi-v7a.</value>
     <comment>The following are literal names and should not be translated: 'Hybrid', 'AndroidAotMode', armeabi-v7a,  'AndroidSupportedAbis'</comment>
   </data>
-  <data name="XA1026" xml:space="preserve">
-    <value>Používání AAPT je zastaralé, místo něj se používá AAPT2. Povolte prosím možnost Použít systém přírůstkového balení pro Android (aapt2) na stránce vlastností projektu sady Visual Studio, nebo upravte soubor projektu v textovém editoru a nastavte vlastnost MSBuildu AndroidUseAapt2 na true.</value>
-    <comment>The following are literal names and should not be translated: AAPT, AAPT2, Android, AndroidUseAapt2, true.</comment>
-  </data>
-  <data name="XA1026_dotnet" xml:space="preserve">
-    <value>Používání AAPT se v projektech .NET pro Android, které cílí na .NET 6 nebo vyšší, nepodporuje. Povolte prosím možnost Použít systém přírůstkového balení pro Android (aapt2) na stránce vlastností projektu sady Visual Studio, nebo upravte soubor projektu v textovém editoru a nastavte vlastnost MSBuild AndroidUseAapt2 na true.</value>
-    <comment>The following are literal names and should not be translated: AAPT, Android, AndroidUseAapt2, true.</comment>
-  </data>
   <data name="XA1027" xml:space="preserve">
     <value>Vlastnost MSBuildu EnableProguard je nastavená na true a vlastnost MSBuildu AndroidLinkTool je prázdná, proto se AndroidLinkTool nastaví na výchozí možnost proguard.</value>
     <comment>The following are literal names and should not be translated: 'EnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>

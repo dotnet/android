@@ -94,7 +94,6 @@ The Following MSBuild properties are used to control generation of the
 - [`$(AndroidR8IgnoreWarnings)`](build-properties.md#androidr8ignorewarnings)
 - [`$(AndroidResgenExtraArgs)`](build-properties.md#androidresgenextraargs)
 - [`$(AndroidResgenFile)`](build-properties.md#androidresgenfile)
-- [`$(AndroidUseAapt2)`](build-properties.md#androiduseaapt2)
 - [`$(MonoAndroidResourcePrefix)`](build-properties.md#monoandroidresourceprefix)
 
 ## Signing properties

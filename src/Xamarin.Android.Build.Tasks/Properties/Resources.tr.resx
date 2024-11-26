@@ -460,14 +460,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>'AndroidAotMode' MSBuild özelliği için deneysel 'Hybrid' değeri şu anda armeabi-v7a hedef ABI ile uyumlu değil. 'AndroidAotMode' için deneysel 'Hybrid' değerini kullanmaya devam etmek için Visual Studio projesinin özellik sayfalarındaki armeabi-v7a hedef ABI seçimini kaldırın veya metin düzenleyicisinde proje dosyasını düzenleyerek 'AndroidSupportedAbis' MSBuild özelliğinden 'armeabi-v7a' öğesini kaldırın.</value>
     <comment>The following are literal names and should not be translated: 'Hybrid', 'AndroidAotMode', armeabi-v7a,  'AndroidSupportedAbis'</comment>
   </data>
-  <data name="XA1026" xml:space="preserve">
-    <value>AAPT kullanımı, kullanım dışı bırakılarak yerine AAPT2 getirildi. Lütfen Visual Studio projesinin özellik sayfalarındaki 'Artımlı Android paketleme sistemini (aapt2) kullan' seçeneğini etkinleştirin veya proje dosyasını bir metin düzenleyicisinde düzenleyip 'AndroidUseAapt2' MSBuild özelliğini 'true' olarak ayarlayın.</value>
-    <comment>The following are literal names and should not be translated: AAPT, AAPT2, Android, AndroidUseAapt2, true.</comment>
-  </data>
-  <data name="XA1026_dotnet" xml:space="preserve">
-    <value>.NET 6 veya üstünü hedefleyen Android için .NET projelerinde AAPT kullanımı desteklenmez. Lütfen Visual Studio projesinin özellik sayfalarındaki 'Artımlı Android paketleme sistemini (aapt2) kullan' seçeneğini etkinleştirin veya proje dosyasını bir metin düzenleyicisinde düzenleyip 'AndroidUseAapt2' MSBuild özelliğini 'true' olarak ayarlayın.</value>
-    <comment>The following are literal names and should not be translated: AAPT, Android, AndroidUseAapt2, true.</comment>
-  </data>
   <data name="XA1027" xml:space="preserve">
     <value>'EnableProguard' MSBuild özelliği 'true' olarak ayarlandığından ve 'AndroidLinkTool' MSBuild özelliği boş olduğundan 'AndroidLinkTool' varsayılan olarak 'proguard' değerini alır.</value>
     <comment>The following are literal names and should not be translated: 'EnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
