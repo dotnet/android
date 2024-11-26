@@ -167,11 +167,6 @@ namespace xamarin::android
 				return false;
 			}
 
-			// log_debug (LOG_ASSEMBLY, "  ends_with: '%s' -> '%s'; sv.length () == %zu",
-			// 		   str.get () + str.length () - sv.length (),
-			// 		   sv.data (),
-			// 		   sv.length ()
-			// );
 			return memcmp (str.get () + str.length () - sv.length (), sv.data (), sv.length ()) == 0;
 		}
 
