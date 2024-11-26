@@ -140,9 +140,9 @@ namespace Xamarin.Android.Tasks
 		HashSet<string> uncompressedFileExtensions;
 
 		// Do not use trailing / in the path
-		protected virtual string RootPath => "";
+		public string RootPath { get; set; } = "";
 
-		protected virtual string DalvikPath => "";
+		public string DalvikPath { get; set; } = "";
 
 		protected virtual CompressionMethod UncompressedMethod => CompressionMethod.Store;
 

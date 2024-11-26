@@ -23,6 +23,8 @@ public class BuildApkArchive : AndroidTask
 	[Required]
 	public string Abi { get;set; } = null!; // NRT enforced by [Required]
 
+	public string? AndroidPackageFormat { get; set; }
+
 	public string? ApkInputPath { get; set; }
 
 	[Required]
@@ -38,9 +40,7 @@ public class BuildApkArchive : AndroidTask
 	public string? ZipFlushSizeLimit { get; set; }
 
 	readonly HashSet<string> uncompressedFileExtensions;
-
-	// TODO: Make a property?
-	protected virtual CompressionMethod UncompressedMethod => CompressionMethod.Store;
+	readonly CompressionMethod uncompressedMethod = CompressionMethod.Store;
 
 	public BuildApkArchive ()
 	{
@@ -59,6 +59,10 @@ public class BuildApkArchive : AndroidTask
 
 			uncompressedFileExtensions.Add (ext);
 		}
+
+		// Nothing needs to be compressed with app bundles. BundleConfig.json specifies the final compression mode.
+		if (string.Compare (AndroidPackageFormat, "aab", true) == 0)
+			uncompressedMethod = CompressionMethod.Default;
 	}
 
 	public override bool RunTask ()
@@ -200,6 +204,9 @@ public class BuildApkArchive : AndroidTask
 			apk.Archive.DeleteEntry (entry);
 		}
 
+		if (string.Compare (AndroidPackageFormat, "aab", true) == 0)
+			FixupArchive (apk);
+
 		return !Log.HasLoggedErrors;
 	}
 
@@ -219,8 +226,29 @@ public class BuildApkArchive : AndroidTask
 		return true;
 	}
 
+	/// <summary>
+	/// aapt2 is putting AndroidManifest.xml in the root of the archive instead of at manifest/AndroidManifest.xml that bundletool expects.
+	/// I see no way to change this behavior, so we can move the file for now:
+	/// https://github.com/aosp-mirror/platform_frameworks_base/blob/e80b45506501815061b079dcb10bf87443bd385d/tools/aapt2/LoadedApk.h#L34
+	/// </summary>
+	void FixupArchive (ZipArchiveEx zip)
+	{
+		if (!zip.Archive.ContainsEntry ("AndroidManifest.xml")) {
+			Log.LogDebugMessage ($"No AndroidManifest.xml. Skipping Fixup");
+			return;
+		}
+
+		var entry = zip.Archive.ReadEntry ("AndroidManifest.xml");
+		Log.LogDebugMessage ($"Fixing up AndroidManifest.xml to be manifest/AndroidManifest.xml.");
+
+		if (zip.Archive.ContainsEntry ("manifest/AndroidManifest.xml"))
+			zip.Archive.DeleteEntry (zip.Archive.ReadEntry ("manifest/AndroidManifest.xml"));
+
+		entry.Rename ("manifest/AndroidManifest.xml");
+	}
+
 	CompressionMethod GetCompressionMethod (string fileName)
 	{
-		return uncompressedFileExtensions.Contains (Path.GetExtension (fileName)) ? UncompressedMethod : CompressionMethod.Default;
+		return uncompressedFileExtensions.Contains (Path.GetExtension (fileName)) ? uncompressedMethod : CompressionMethod.Default;
 	}
 }
