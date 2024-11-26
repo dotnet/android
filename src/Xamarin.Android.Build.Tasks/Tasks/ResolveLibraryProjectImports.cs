@@ -210,7 +210,6 @@ namespace Xamarin.Android.Tasks
 				string assetsDir = Path.Combine (importsDir, "assets");
 				string nuGetPackageId = assemblyItem.GetMetadata (NuGetPackageId) ?? string.Empty;
 				string nuGetPackageVersion = assemblyItem.GetMetadata (NuGetPackageVersion) ?? string.Empty;
-				Console.WriteLine ($"{assemblyPath}: {nuGetPackageId} {nuGetPackageVersion}");
 				extractedDirectories.Add (new TaskItem (outDirForDll, new Dictionary<string, string> {
 					{ OriginalFile, assemblyPath },
 					{ NuGetPackageId, nuGetPackageId },
