@@ -4,7 +4,6 @@ set(LIB_ALIAS xa::shared)
 set(XA_SHARED_SOURCES
   helpers.cc
   log_functions.cc
-  new_delete.cc
 )
 add_clang_check_sources("${XA_SHARED_SOURCES};")
 

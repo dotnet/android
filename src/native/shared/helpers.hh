@@ -3,9 +3,14 @@
 
 #include <cstdlib>
 #include <source_location>
+#include <string>
+#include <string_view>
 
 #include <java-interop-util.h>
 #include "platform-compat.hh"
+#include "log_types.hh"
+
+using namespace std::string_view_literals;
 
 namespace xamarin::android
 {
@@ -46,9 +51,29 @@ namespace xamarin::android
 
 		[[noreturn]] static void abort_application (LogCategories category, const char *message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept;
 
+		[[noreturn]] static void abort_application (LogCategories category, std::string const& message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept
+		{
+			abort_application (category, message.c_str (), log_location, sloc);
+		}
+
+		[[noreturn]] static void abort_application (LogCategories category, std::string_view const& message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept
+		{
+			abort_application (category, message.data (), log_location, sloc);
+		}
+
 		[[noreturn]] static void abort_application (const char *message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept
 		{
 			abort_application (LOG_DEFAULT, message, log_location, sloc);
+		}
+
+		[[noreturn]] static void abort_application (std::string const& message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept
+		{
+			abort_application (LOG_DEFAULT, message.c_str (), log_location, sloc);
+		}
+
+		[[noreturn]] static void abort_application (std::string_view const& message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept
+		{
+			abort_application (LOG_DEFAULT, message.data (), log_location, sloc);
 		}
 	};
 }
