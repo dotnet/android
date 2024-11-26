@@ -191,7 +191,7 @@ public class BuildApkArchive : AndroidTask
 				continue;
 			}
 
-			AddFileToArchiveIfNewer (apk, disk_path, apk_path, existingEntries);
+			AddFileToArchiveIfNewer (apk, disk_path, apk_path, file, existingEntries);
 		}
 
 		// Clean up Removed files.
@@ -210,9 +210,9 @@ public class BuildApkArchive : AndroidTask
 		return !Log.HasLoggedErrors;
 	}
 
-	bool AddFileToArchiveIfNewer (ZipArchiveEx apk, string file, string inArchivePath, List<string> existingEntries)
+	bool AddFileToArchiveIfNewer (ZipArchiveEx apk, string file, string inArchivePath, ITaskItem item, List<string> existingEntries)
 	{
-		var compressionMethod = GetCompressionMethod (file);
+		var compressionMethod = GetCompressionMethod (item);
 		existingEntries.Remove (inArchivePath.Replace (Path.DirectorySeparatorChar, '/'));
 
 		if (apk.SkipExistingFile (file, inArchivePath, compressionMethod)) {
@@ -247,8 +247,15 @@ public class BuildApkArchive : AndroidTask
 		entry.Rename ("manifest/AndroidManifest.xml");
 	}
 
-	CompressionMethod GetCompressionMethod (string fileName)
+	CompressionMethod GetCompressionMethod (ITaskItem item)
 	{
-		return uncompressedFileExtensions.Contains (Path.GetExtension (fileName)) ? uncompressedMethod : CompressionMethod.Default;
+		var compression = item.GetMetadataOrDefault ("Compression", "");
+
+		if (compression.HasValue ()) {
+			if (Enum.TryParse (compression, out CompressionMethod result))
+				return result;
+		}
+
+		return uncompressedFileExtensions.Contains (Path.GetExtension (item.ItemSpec)) ? uncompressedMethod : CompressionMethod.Default;
 	}
 }
