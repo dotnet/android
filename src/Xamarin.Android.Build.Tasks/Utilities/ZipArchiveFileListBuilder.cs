@@ -34,7 +34,9 @@ public class ZipArchiveFileListBuilder : IDisposable
 	public void AddFileAndFlush (string filename, string archiveFileName, CompressionMethod compressionMethod)
 	{
 		var item = new TaskItem (filename);
+
 		item.SetMetadata ("ApkPath", archiveFileName);
+		item.SetMetadata ("Compression", compressionMethod.ToString ());
 
 		if (abi.HasValue ())
 			item.SetMetadata ("Abi", abi);
