@@ -120,7 +120,7 @@ else()
   set(USES_LIBSTDCPP True)
 endif()
 
-set(SHARED_LIB_NAME xa::shared-no-abi)
+set(SHARED_LIB_NAME xa::shared)
 
 #
 # Needed modules
