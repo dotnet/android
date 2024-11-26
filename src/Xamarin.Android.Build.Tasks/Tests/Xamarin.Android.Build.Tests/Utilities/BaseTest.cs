@@ -101,12 +101,13 @@ namespace Xamarin.Android.Build.Tests
 			return RunProcess (adb, $"{adbTarget} {command}", timeout);
 		}
 
-		protected static (int code, string stdOutput, string stdError) RunApkDiffCommand (string args)
+		protected static (int code, string stdOutput, string stdError) RunApkDiffCommand (string args, string logFilePath)
 		{
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
+			(int code, string stdOutput, string stdError) result;
 
 			try {
-				return RunProcessWithExitCode ("apkdiff" + ext, args);
+				result = RunProcessWithExitCode ("apkdiff" + ext, args);
 			} catch (System.ComponentModel.Win32Exception) {
 				// apkdiff's location might not be in the $PATH, try known locations
 				var profileDir = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
@@ -117,8 +118,13 @@ namespace Xamarin.Android.Build.Tests
 						apkdiffPath = Path.Combine (agentToolsDir, "apkdiff" + ext);
 					}
 				}
-				return RunProcessWithExitCode (apkdiffPath, args);
+				result = RunProcessWithExitCode (apkdiffPath, args);
 			}
+			var logContent = $"apkdiff exited with code: {result.code}" +
+				$"\ncontext: https://github.com/xamarin/xamarin-android/blob/main/Documentation/project-docs/ApkSizeRegressionChecks.md" +
+				$"\nstdOut:\n{result.stdOutput}\nstdErr:\n{result.stdError}";
+			File.WriteAllText (logFilePath, logContent);
+			return result;
 		}
 
 		protected static string RunProcess (string exe, string args, int timeoutInSeconds = 30)
