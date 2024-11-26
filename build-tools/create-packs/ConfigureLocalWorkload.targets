@@ -10,9 +10,9 @@
     <_RuntimeListInputs  Include="$(MicrosoftAndroidArm64PackDir)**" />
     <_RuntimeListInputs  Include="$(MicrosoftAndroidx86PackDir)**" />
     <_RuntimeListInputs  Include="$(MicrosoftAndroidx64PackDir)**" />
-    <_RuntimeListOutputs Include="@(AndroidSupportedTargetJitAbi->'$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.$(AndroidDefaultTargetDotnetApiLevel).%(AndroidRID)\$(AndroidPackVersion)\data\RuntimeList.xml')" AndroidRID="%(AndroidRID)" />
-    <_RuntimeListOutputs Include="@(AndroidSupportedTargetJitAbi->'$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.$(AndroidLatestStableApiLevel).%(AndroidRID)\$(AndroidPackVersion)\data\RuntimeList.xml')" AndroidRID="%(AndroidRID)" />
-    <_RuntimeListOutputs Include="@(AndroidSupportedTargetJitAbi->'$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.$(AndroidLatestUnstableApiLevel).%(AndroidRID)\$(AndroidPackVersion)\data\RuntimeList.xml')" AndroidRID="%(AndroidRID)" />
+    <_RuntimeListOutputs Include="@(AndroidSupportedTargetJitAbi->'$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.Mono.$(AndroidDefaultTargetDotnetApiLevel).%(AndroidRID)\$(AndroidPackVersion)\data\RuntimeList.xml')" AndroidRID="%(AndroidRID)" />
+    <_RuntimeListOutputs Include="@(AndroidSupportedTargetJitAbi->'$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.Mono.$(AndroidLatestStableApiLevel).%(AndroidRID)\$(AndroidPackVersion)\data\RuntimeList.xml')" AndroidRID="%(AndroidRID)" />
+    <_RuntimeListOutputs Include="@(AndroidSupportedTargetJitAbi->'$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.Mono.$(AndroidLatestUnstableApiLevel).%(AndroidRID)\$(AndroidPackVersion)\data\RuntimeList.xml')" AndroidRID="%(AndroidRID)" />
     <_TemplatesInputs Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\**" />
     <_TemplatesOutputs Include="$(BuildOutputDirectory)lib\template-packs\microsoft.android.templates.$(AndroidPackVersion).nupkg" />
   </ItemGroup>
