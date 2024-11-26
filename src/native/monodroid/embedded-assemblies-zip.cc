@@ -269,7 +269,7 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 			continue;
 		}
 
-		if (!assembly_store_found && Util::ends_with (entry_name, assembly_store_file_path.data ())) {
+		if (!assembly_store_found && Util::ends_with (entry_name, assembly_store_file_path)) {
 			assembly_store_found = true;
 			map_assembly_store (entry_name, state);
 			continue;
