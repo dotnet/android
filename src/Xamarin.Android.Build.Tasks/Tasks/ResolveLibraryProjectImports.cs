@@ -393,7 +393,6 @@ namespace Xamarin.Android.Tasks
 				string proguardFile = Path.Combine (importsDir, "proguard.txt");
 				string nuGetPackageId = aarFile.GetMetadata (NuGetPackageId) ?? string.Empty;
 				string nuGetPackageVersion = aarFile.GetMetadata (NuGetPackageVersion) ?? string.Empty;
-				Console.WriteLine ($"{aarFile.ItemSpec}: {nuGetPackageId} {nuGetPackageVersion}");
 				extractedDirectories.Add (new TaskItem (outDirForDll, new Dictionary<string, string> {
 					{ OriginalFile, aarFile.ItemSpec },
 					{ NuGetPackageId, nuGetPackageId },
