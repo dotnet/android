@@ -197,7 +197,7 @@ namespace xamarin::android {
 			}
 
 			if (!can_access (start_index)) {
-				log_error (LOG_DEFAULT, "Cannot convert string to integer, index {} is out of range", start_index);
+				log_error (LOG_DEFAULT, std::format ("Cannot convert string to integer, index {} is out of range", start_index));
 				return false;
 			}
 
@@ -221,17 +221,17 @@ namespace xamarin::android {
 			}
 
 			if (out_of_range || errno == ERANGE) {
-				log_error (LOG_DEFAULT, "Value {} is out of range of this type ({}..{})", reinterpret_cast<char*>(s), static_cast<int64_t>(min), static_cast<uint64_t>(max));
+				log_error (LOG_DEFAULT, std::format ("Value {} is out of range of this type ({}..{})", reinterpret_cast<char*>(s), static_cast<int64_t>(min), static_cast<uint64_t>(max)));
 				return false;
 			}
 
 			if (endp == s) {
-				log_error (LOG_DEFAULT, "Value {} does not represent a base {} integer", reinterpret_cast<char*>(s), base);
+				log_error (LOG_DEFAULT, std::format ("Value {} does not represent a base {} integer", reinterpret_cast<char*>(s), base));
 				return false;
 			}
 
 			if (*endp != '\0') {
-				log_error (LOG_DEFAULT, "Value {} has non-numeric characters at the end", reinterpret_cast<char*>(s));
+				log_error (LOG_DEFAULT, std::format ("Value {} has non-numeric characters at the end", reinterpret_cast<char*>(s)));
 				return false;
 			}
 
