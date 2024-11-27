@@ -331,9 +331,9 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		);
 	}
 #ifdef DEBUG
-	log_info (LOG_ASSEMBLY, "Central directory offset: {}", cd_offset);
-	log_info (LOG_ASSEMBLY, "Central directory size: {}", cd_size);
-	log_info (LOG_ASSEMBLY, "Central directory entries: {}", cd_entries);
+	log_info (LOG_ASSEMBLY, std::format ("Central directory offset: {}", cd_offset));
+	log_info (LOG_ASSEMBLY, std::format ("Central directory size: {}", cd_size));
+	log_info (LOG_ASSEMBLY, std::format ("Central directory entries: {}", cd_entries));
 #endif
 	off_t retval = ::lseek (fd, static_cast<off_t>(cd_offset), SEEK_SET);
 	if (retval < 0) {
