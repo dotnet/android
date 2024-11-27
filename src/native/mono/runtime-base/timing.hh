@@ -93,14 +93,14 @@ namespace xamarin::android
 		{
 			timing_diff diff (period);
 
-			log_info_nocheck (LOG_TIMING, MESSAGE_FORMAT.data (), message == nullptr ? ""sv : message, diff.sec, diff.ms, diff.ns);
+			log_info_nocheck (LOG_TIMING, std::format (MESSAGE_FORMAT, message == nullptr ? ""sv : message, diff.sec, diff.ms, diff.ns));
 		}
 
 		static void warn (timing_period const &period, const char *message) noexcept
 		{
 			timing_diff diff (period);
 
-			log_warn (LOG_TIMING, MESSAGE_FORMAT.data (), message == nullptr ? ""sv : message, diff.sec, diff.ms, diff.ns);
+			log_warn (LOG_TIMING, std::format (MESSAGE_FORMAT, message == nullptr ? ""sv : message, diff.sec, diff.ms, diff.ns));
 		}
 
 		managed_timing_sequence* get_available_sequence () noexcept
