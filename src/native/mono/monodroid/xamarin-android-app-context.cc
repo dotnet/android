@@ -15,7 +15,7 @@ MonodroidRuntime::get_method_name (uint32_t mono_image_index, uint32_t method_to
 {
 	uint64_t id = (static_cast<uint64_t>(mono_image_index) << 32) | method_token;
 
-	log_debug (LOG_ASSEMBLY, "MM: looking for name of method with id {:x}, in mono image at index {}", id, mono_image_index);
+	log_debug (LOG_ASSEMBLY, std::format ("MM: looking for name of method with id {:x}, in mono image at index {}", id, mono_image_index));
 	size_t i = 0uz;
 	while (mm_method_names[i].id != 0) {
 		if (mm_method_names[i].id == id) {
@@ -43,9 +43,10 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 {
 	log_debug (
 		LOG_ASSEMBLY,
-		"MM: Trying to look up pointer to method '{}' (token {:x}) in class '{}' (index {})",
-		optional_string (get_method_name (mono_image_index, method_token)), method_token,
-		optional_string (get_class_name (class_index)), class_index
+		std::format ("MM: Trying to look up pointer to method '{}' (token {:x}) in class '{}' (index {})",
+			get_method_name (mono_image_index, method_token), method_token,
+			get_class_name (class_index), class_index
+		)
 	);
 
 	if (class_index >= marshal_methods_number_of_classes) [[unlikely]] {
@@ -80,29 +81,32 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 
 		log_debug (
 			LOG_ASSEMBLY,
-			"Loaded pointer to method {} ({:p}) (mono_image_index == {}; class_index == {}; method_token == {:x})",
-			optional_string (mono_method_full_name (method, true)),
-			ret,
-			mono_image_index,
-			class_index,
-			method_token
+			std::format ("Loaded pointer to method {} ({:p}) (mono_image_index == {}; class_index == {}; method_token == {:x})",
+				mono_method_full_name (method, true),
+				ret,
+				mono_image_index,
+				class_index,
+				method_token
+			)
 		);
 		return;
 	}
 
 	log_fatal (
 		LOG_DEFAULT,
-		"Failed to obtain function pointer to method '{}' in class '{}'",
-		optional_string (get_method_name (mono_image_index, method_token)),
-		optional_string (get_class_name (class_index))
+		std::format ("Failed to obtain function pointer to method '{}' in class '{}'",
+				get_method_name (mono_image_index, method_token),
+				get_class_name (class_index)
+		)
 	);
 
 	log_fatal (
 		LOG_DEFAULT,
-		"Looked for image index {}, class index {}, method token {:x}",
-		mono_image_index,
-		class_index,
-		method_token
+		std::format ("Looked for image index {}, class index {}, method token {:x}",
+			mono_image_index,
+			class_index,
+			method_token
+		)
 	);
 
 	if (image == nullptr) {

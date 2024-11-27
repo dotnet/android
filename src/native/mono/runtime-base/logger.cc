@@ -29,11 +29,13 @@ namespace {
 
 		if (path && access (path, W_OK) < 0) {
 			log_warn (category,
-				"Could not open path '{}' for logging (\"{}\"). Using '{}/{}' instead.",
-				optional_string (path),
-				strerror (errno),
-				optional_string (override_dir),
-				optional_string (filename)
+				std::format (
+					"Could not open path '{}' for logging (\"{}\"). Using '{}/{}' instead.",
+					path,
+					strerror (errno),
+					override_dir,
+					filename
+				)
 			);
 			path  = NULL;
 		}
@@ -51,7 +53,7 @@ namespace {
 		if (f) {
 			Util::set_world_accessable (path);
 		} else {
-			log_warn (category, "Could not open path '{}' for logging: {}", optional_string (path), strerror (errno));
+			log_warn (category, std::format ("Could not open path '{}' for logging: {}", path, strerror (errno)));
 		}
 
 		free (p);
@@ -77,12 +79,12 @@ Logger::set_debugger_log_level (const char *level) noexcept
 
 	unsigned long v = strtoul (level, nullptr, 0);
 	if (v == std::numeric_limits<unsigned long>::max () && errno == ERANGE) {
-		log_error (LOG_DEFAULT, "Invalid debugger log level value '{}', expecting a positive integer or zero", level);
+		log_error (LOG_DEFAULT, std::format ("Invalid debugger log level value '{}', expecting a positive integer or zero", level));
 		return;
 	}
 
 	if (v > std::numeric_limits<int>::max ()) {
-		log_warn (LOG_DEFAULT, "Debugger log level value is higher than the maximum of {}, resetting to the maximum value.", std::numeric_limits<int>::max ());
+		log_warn (LOG_DEFAULT, std::format ("Debugger log level value is higher than the maximum of {}, resetting to the maximum value.", std::numeric_limits<int>::max ()));
 		v = std::numeric_limits<int>::max ();
 	}
 
