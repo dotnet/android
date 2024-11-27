@@ -45,7 +45,7 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 		);
 	}
 
-	log_debug (LOG_ASSEMBLY, std::format ("    ZIP: local header offset: {}; data offset: {}; file size: {}", state.local_header_offset, state.data_offset, state.file_size).c_str ());
+	log_debug (LOG_ASSEMBLY, std::format ("    ZIP: local header offset: {}; data offset: {}; file size: {}", state.local_header_offset, state.data_offset, state.file_size));
 	if (state.compression_method != 0) {
 		return false;
 	}

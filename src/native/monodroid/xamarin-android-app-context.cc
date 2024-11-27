@@ -15,7 +15,7 @@ MonodroidRuntime::get_method_name (uint32_t mono_image_index, uint32_t method_to
 {
 	uint64_t id = (static_cast<uint64_t>(mono_image_index) << 32) | method_token;
 
-	log_debug (LOG_ASSEMBLY, "MM: looking for name of method with id 0x%llx, in mono image at index %u", id, mono_image_index);
+	log_debug (LOG_ASSEMBLY, std::format ("MM: looking for name of method with id {:x}, in mono image at index {}", id, mono_image_index));
 	size_t i = 0uz;
 	while (mm_method_names[i].id != 0) {
 		if (mm_method_names[i].id == id) {
@@ -43,15 +43,16 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 {
 	log_debug (
 		LOG_ASSEMBLY,
-		"MM: Trying to look up pointer to method '%s' (token 0x%x) in class '%s' (index %u)",
-		get_method_name (mono_image_index, method_token), method_token,
-		get_class_name (class_index), class_index
+		std::format ("MM: Trying to look up pointer to method '{}' (token {:x}) in class '{}' (index {})",
+			get_method_name (mono_image_index, method_token), method_token,
+			get_class_name (class_index), class_index
+		)
 	);
 
 	if (class_index >= marshal_methods_number_of_classes) [[unlikely]] {
 		Helpers::abort_application (
-			Util::monodroid_strdup_printf (
-				"Internal error: invalid index for class cache (expected at most %u, got %u)",
+			std::format (
+				"Internal error: invalid index for class cache (expected at most {}, got {})",
 				marshal_methods_number_of_classes - 1,
 				class_index
 			)
@@ -78,29 +79,40 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 			target_ptr = ret;
 		}
 
-		log_debug (LOG_ASSEMBLY, "Loaded pointer to method %s (%p) (mono_image_index == %u; class_index == %u; method_token == 0x%x)", mono_method_full_name (method, true), ret, mono_image_index, class_index, method_token);
+		log_debug (
+			LOG_ASSEMBLY,
+			std::format ("Loaded pointer to method {} ({:p}) (mono_image_index == {}; class_index == {}; method_token == {:x})",
+				mono_method_full_name (method, true),
+				ret,
+				mono_image_index,
+				class_index,
+				method_token
+			)
+		);
 		return;
 	}
 
 	log_fatal (
 		LOG_DEFAULT,
-		"Failed to obtain function pointer to method '%s' in class '%s'",
-		get_method_name (mono_image_index, method_token),
-		get_class_name (class_index)
+		std::format ("Failed to obtain function pointer to method '{}' in class '{}'",
+				get_method_name (mono_image_index, method_token),
+				get_class_name (class_index)
+		)
 	);
 
 	log_fatal (
 		LOG_DEFAULT,
-		"Looked for image index %u, class index %u, method token 0x%x",
-		mono_image_index,
-		class_index,
-		method_token
+		std::format ("Looked for image index {}, class index {}, method token {:x}",
+			mono_image_index,
+			class_index,
+			method_token
+		)
 	);
 
 	if (image == nullptr) {
-		log_fatal (LOG_DEFAULT, "Failed to load MonoImage for the assembly");
+		log_fatal (LOG_DEFAULT, "Failed to load MonoImage for the assembly"sv);
 	} else if (method == nullptr) {
-		log_fatal (LOG_DEFAULT, "Failed to load class from the assembly");
+		log_fatal (LOG_DEFAULT, "Failed to load class from the assembly"sv);
 	}
 
 	const char *message = nullptr;
@@ -109,7 +121,7 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 	}
 
 	Helpers::abort_application (
-		message == nullptr ? "Failure to obtain marshal methods function pointer" : message
+		message == nullptr ? "Failure to obtain marshal methods function pointer"sv : message
 	);
 }
 

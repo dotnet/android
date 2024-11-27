@@ -76,10 +76,10 @@ _monodroid_get_network_interface_state (const char *ifname, mono_bool *is_up, mo
 
 	if (!NetworkInterface_class || !NetworkInterface_getByName) {
 		if (!NetworkInterface_class)
-			log_warn (LOG_NET, "Failed to find the 'java.net.NetworkInterface' Java class");
+			log_warn (LOG_NET, "Failed to find the 'java.net.NetworkInterface' Java class"sv);
 		if (!NetworkInterface_getByName)
-			log_warn (LOG_NET, "Failed to find the 'java.net.NetworkInterface.getByName' function");
-		log_warn (LOG_NET, "Unable to determine network interface state because of missing Java API");
+			log_warn (LOG_NET, "Failed to find the 'java.net.NetworkInterface.getByName' function"sv);
+		log_warn (LOG_NET, "Unable to determine network interface state because of missing Java API"sv);
 		goto leave;
 	}
 
@@ -88,21 +88,21 @@ _monodroid_get_network_interface_state (const char *ifname, mono_bool *is_up, mo
 	networkInterface = env->CallStaticObjectMethod (NetworkInterface_class, NetworkInterface_getByName, NetworkInterface_nameArg);
 	env->DeleteLocalRef (NetworkInterface_nameArg);
 	if (env->ExceptionOccurred ()) {
-		log_warn (LOG_NET, "Java exception occurred while looking up the interface '%s'", ifname);
+		log_warn (LOG_NET, std::format ("Java exception occurred while looking up the interface '{}'", ifname));
 		env->ExceptionDescribe ();
 		env->ExceptionClear ();
 		goto leave;
 	}
 
 	if (!networkInterface) {
-		log_warn (LOG_NET, "Failed to look up interface '%s' using Java API", ifname);
+		log_warn (LOG_NET, std::format ("Failed to look up interface '{}' using Java API", ifname));
 		ret = FALSE;
 		goto leave;
 	}
 
 	if (is_up) {
 		if (!NetworkInterface_isUp) {
-			log_warn (LOG_NET, "Failed to find the 'java.net.NetworkInterface.isUp' function. Unable to determine interface operational state");
+			log_warn (LOG_NET, "Failed to find the 'java.net.NetworkInterface.isUp' function. Unable to determine interface operational state"sv);
 			ret = FALSE;
 		} else
 			*is_up = (mono_bool)env->CallBooleanMethod (networkInterface, NetworkInterface_isUp);
@@ -110,7 +110,7 @@ _monodroid_get_network_interface_state (const char *ifname, mono_bool *is_up, mo
 
 	if (supports_multicast) {
 		if (!NetworkInterface_supportsMulticast) {
-			log_warn (LOG_NET, "Failed to find the 'java.net.NetworkInterface.supportsMulticast' function. Unable to determine whether interface supports multicast");
+			log_warn (LOG_NET, "Failed to find the 'java.net.NetworkInterface.supportsMulticast' function. Unable to determine whether interface supports multicast"sv);
 			ret = FALSE;
 		} else
 			*supports_multicast = (mono_bool)env->CallBooleanMethod (networkInterface, NetworkInterface_supportsMulticast);
@@ -118,7 +118,7 @@ _monodroid_get_network_interface_state (const char *ifname, mono_bool *is_up, mo
 
   leave:
 	if (!ret)
-		log_warn (LOG_NET, "Unable to determine interface '%s' state using Java API", ifname);
+		log_warn (LOG_NET, std::format ("Unable to determine interface '{}' state using Java API", ifname));
 
 	if (networkInterface != nullptr && env != nullptr) {
 		env->DeleteLocalRef (networkInterface);
@@ -143,7 +143,7 @@ int
 _monodroid_get_dns_servers (void **dns_servers_array)
 {
 	if (!dns_servers_array) {
-		log_warn (LOG_NET, "Unable to get DNS servers, no location to store data in");
+		log_warn (LOG_NET, "Unable to get DNS servers, no location to store data in"sv);
 		return -1;
 	}
 	*dns_servers_array = nullptr;

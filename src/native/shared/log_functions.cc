@@ -3,7 +3,7 @@
 
 #include <android/log.h>
 
-#include "java-interop-logger.h"
+//#include "java-interop-logger.h"
 #include "log_types.hh"
 
 // Must match the same ordering as LogCategories

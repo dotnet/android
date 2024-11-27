@@ -67,7 +67,7 @@ PinvokeOverride::monodroid_pinvoke_override (const char *library_name, const cha
 
 			load_library_entry (library_name, entrypoint_name, *entry, dotnet_dso_handle);
 			if (entry->func == nullptr) {
-				log_fatal (LOG_ASSEMBLY, "Failed to load symbol '%s' from shared library '%s'", entrypoint_name, library_name);
+				log_fatal (LOG_ASSEMBLY, std::format ("Failed to load symbol '{}' from shared library '{}'", entrypoint_name, library_name));
 				return nullptr; // let Mono deal with the fallout
 			}
 

@@ -1,5 +1,4 @@
-#if !defined(LOG_LEVEL_HH)
-#define LOG_LEVEL_HH
+#pragma once
 
 #include <cstdint>
 #include <format>
@@ -127,4 +126,3 @@ static inline constexpr void log_fatal (LogCategories category, std::string_view
 }
 
 extern unsigned int log_categories;
-#endif // ndef LOG_LEVEL_HH
