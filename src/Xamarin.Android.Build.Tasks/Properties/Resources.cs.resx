@@ -139,6 +139,9 @@ Tato chyba je pravděpodobně způsobená problémem se souborem AndroidManifest
   <data name="APT0004" xml:space="preserve">
     <value>Neplatný název souboru: Musí začínat A–z, a–z nebo podtržítkem.</value>
   </data>
+  <data name="APT0005" xml:space="preserve">
+    <value>Invalid file name: Filenames cannot use Java reserved words.</value>
+  </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Nepovedlo se určit úroveň rozhraní API pro $(TargetFrameworkVersion) {0}.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -976,16 +979,12 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 {0} - A Maven artifact specification</comment>
   </data>
   <data name="XA4236" xml:space="preserve">
-    <value>Artefakt Maven {0}{1} se nedá stáhnout.
-- {2}: {3}
-- {4}: {5}</value>
+    <value>Cannot download Maven artifact '{0}:{1}'.
+{2}</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - Maven artifact group id
 {1} - Maven artifact id
-{2} - The .jar filename we tried to download
-{3} - The HttpClient reported download exception message
-{4} - The .aar filename we tried to download
-{5} - The HttpClient provided download exception message</comment>
+{2} - The filenames we tried to download and the HttpClient reported download exception messages</comment>
   </data>
   <data name="XA4237" xml:space="preserve">
     <value>Nelze stáhnout soubor POM pro artefakt Maven {0}.

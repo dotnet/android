@@ -139,6 +139,9 @@ Bu hata, büyük olasılıkla AndroidManifest.xml dosyasında veya kaynak kod do
   <data name="APT0004" xml:space="preserve">
     <value>Geçersiz dosya adı: A-z ya da a-z veya alt çizgi ile başlamalıdır.</value>
   </data>
+  <data name="APT0005" xml:space="preserve">
+    <value>Invalid file name: Filenames cannot use Java reserved words.</value>
+  </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>'{0}' değerine sahip $(TargetFrameworkVersion) için API düzeyi belirlenemedi.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -976,16 +979,12 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
 {0} - A Maven artifact specification</comment>
   </data>
   <data name="XA4236" xml:space="preserve">
-    <value>'{0}:{1}' Maven yapıtı indirilemiyor.
-- {2}: {3}
-- {4}: {5}</value>
+    <value>Cannot download Maven artifact '{0}:{1}'.
+{2}</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - Maven artifact group id
 {1} - Maven artifact id
-{2} - The .jar filename we tried to download
-{3} - The HttpClient reported download exception message
-{4} - The .aar filename we tried to download
-{5} - The HttpClient provided download exception message</comment>
+{2} - The filenames we tried to download and the HttpClient reported download exception messages</comment>
   </data>
   <data name="XA4237" xml:space="preserve">
     <value>'{0}' Maven yapıtı için POM dosyası indirilemiyor.
