@@ -48,11 +48,11 @@ namespace xamarin::android::internal
 			size_t arr_size;
 
 			if constexpr (WhichCache == CacheKind::AOT) {
-				log_debug (LOG_ASSEMBLY, std::format ("Looking for hash {:x} in AOT cache", hash));
+				log_debug (LOG_ASSEMBLY, "Looking for hash {:x} in AOT cache", hash);
 				arr = aot_dso_cache;
 				arr_size = application_config.number_of_aot_cache_entries;
 			} else if constexpr (WhichCache == CacheKind::DSO) {
-				log_debug (LOG_ASSEMBLY, std::format ("Looking for hash {:x} in DSO cache", hash));
+				log_debug (LOG_ASSEMBLY, "Looking for hash {:x} in DSO cache", hash);
 				arr = dso_cache;
 				arr_size = application_config.number_of_dso_cache_entries;
 			}
@@ -102,7 +102,7 @@ namespace xamarin::android::internal
 			if (MonodroidState::is_startup_in_progress ()) {
 				auto ignore_component = [&](const char *label, MonoComponent component) -> bool {
 					if ((application_config.mono_components_mask & component) != component) {
-						log_info (LOG_ASSEMBLY, std::format ("Mono '{}' component requested but not packaged, ignoring", label));
+						log_info (LOG_ASSEMBLY, "Mono '{}' component requested but not packaged, ignoring", label);
 						return true;
 					}
 
@@ -150,7 +150,7 @@ namespace xamarin::android::internal
 			}
 
 			hash_t name_hash = xxhash::hash (name, strlen (name));
-			log_debug (LOG_ASSEMBLY, std::format ("monodroid_dlopen: hash for name '{}' is {:x}", name, name_hash));
+			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash for name '{}' is {:x}", name, name_hash);
 
 			DSOCacheEntry *dso = nullptr;
 			if (prefer_aot_cache) {
@@ -167,7 +167,7 @@ namespace xamarin::android::internal
 				dso = find_only_dso_cache_entry (name_hash);
 			}
 
-			log_debug (LOG_ASSEMBLY, std::format ("monodroid_dlopen: hash match {}found, DSO name is '{}'", dso == nullptr ? "not "sv : ""sv, dso == nullptr ? "<unknown>"sv : dso->name));
+			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash match {}found, DSO name is '{}'", dso == nullptr ? "not "sv : ""sv, dso == nullptr ? "<unknown>"sv : dso->name);
 
 			if (dso == nullptr) {
 				// DSO not known at build time, try to load it
@@ -177,7 +177,7 @@ namespace xamarin::android::internal
 			}
 
 			if (dso->ignore) {
-				log_info (LOG_ASSEMBLY, std::format ("Request to load '{}' ignored, it is known not to exist", dso->name));
+				log_info (LOG_ASSEMBLY, "Request to load '{}' ignored, it is known not to exist", dso->name);
 				return nullptr;
 			}
 

@@ -95,10 +95,9 @@ Debug::monodroid_profiler_load (const char *libmono_path, const char *desc, cons
 
 	if (!found)
 		log_warn (LOG_DEFAULT,
-				std::format ("The '{}' profiler wasn't found in the main executable nor could it be loaded from '{}'.",
-					mname.get (),
-					libname.get ()
-				)
+			"The '{}' profiler wasn't found in the main executable nor could it be loaded from '{}'.",
+			mname.get (),
+			libname.get ()
 		);
 }
 
@@ -110,7 +109,7 @@ bool
 Debug::load_profiler (void *handle, const char *desc, const char *symbol)
 {
 	ProfilerInitializer func = reinterpret_cast<ProfilerInitializer> (java_interop_lib_symbol (handle, symbol, nullptr));
-	log_warn (LOG_DEFAULT, std::format ("Looking for profiler init symbol '{}'? {:p}", symbol, reinterpret_cast<void*>(func)));
+	log_warn (LOG_DEFAULT, "Looking for profiler init symbol '{}'? {:p}", symbol, reinterpret_cast<void*>(func));
 
 	if (func != nullptr) {
 		func (desc);
@@ -140,7 +139,7 @@ Debug::parse_options (char *options, ConnOptions *opts)
 {
 	char **args, **ptr;
 
-	log_info (LOG_DEFAULT, std::format ("Connection options: '{}'", options));
+	log_info (LOG_DEFAULT, "Connection options: '{}'", options);
 
 	args = Util::monodroid_strsplit (options, ",", 0);
 
@@ -150,12 +149,12 @@ Debug::parse_options (char *options, ConnOptions *opts)
 		if (strstr (arg, "port=") == arg) {
 			int port = atoi (arg + strlen ("port="));
 			if (port < 0 || port > std::numeric_limits<unsigned short>::max ()) {
-				log_error (LOG_DEFAULT, std::format ("Invalid debug port value {}", port));
+				log_error (LOG_DEFAULT, "Invalid debug port value {}", port);
 				continue;
 			}
 
 			conn_port = static_cast<uint16_t>(port);
-			log_info (LOG_DEFAULT, std::format ("XS port = {}", conn_port));
+			log_info (LOG_DEFAULT, "XS port = {}", conn_port);
 		} else if (strstr (arg, "timeout=") == arg) {
 			char *endp;
 
@@ -164,7 +163,7 @@ Debug::parse_options (char *options, ConnOptions *opts)
 			if ((endp == arg) || (*endp != '\0'))
 				log_error (LOG_DEFAULT, "Invalid --timeout argument."sv);
 		} else {
-			log_info (LOG_DEFAULT, std::format ("Unknown connection option: '{}'", arg));
+			log_info (LOG_DEFAULT, "Unknown connection option: '{}'", arg);
 		}
 	}
 }
@@ -188,7 +187,7 @@ Debug::start_connection (char *options)
 	cur_time = time (nullptr);
 
 	if (opts.timeout_time && cur_time > opts.timeout_time) {
-		log_warn (LOG_DEBUGGER, std::format ("Not connecting to IDE as the timeout value has been reached; current-time: {}  timeout: {}", cur_time, opts.timeout_time));
+		log_warn (LOG_DEBUGGER, "Not connecting to IDE as the timeout value has been reached; current-time: {}  timeout: {}", cur_time, opts.timeout_time);
 		return DebuggerConnectionStatus::Unconnected;
 	}
 
@@ -199,7 +198,7 @@ Debug::start_connection (char *options)
 
 	res = pthread_create (&conn_thread_id, nullptr, xamarin::android::conn_thread, this);
 	if (res) {
-		log_error (LOG_DEFAULT, std::format ("Failed to create connection thread: {}", strerror (errno)));
+		log_error (LOG_DEFAULT, "Failed to create connection thread: {}", strerror (errno));
 		return DebuggerConnectionStatus::Error;
 	}
 
@@ -263,20 +262,20 @@ Debug::process_connection (int fd)
 			return false;
 		}
 		if (rv <= 0) {
-			log_info (LOG_DEFAULT, std::format ("Error while receiving command from XS ({})", strerror (errno)));
+			log_info (LOG_DEFAULT, "Error while receiving command from XS ({})", strerror (errno));
 			return false;
 		}
 
 		rv = Util::recv_uninterrupted (fd, command, cmd_len);
 		if (rv <= 0) {
-			log_info (LOG_DEFAULT, std::format ("Error while receiving command from XS ({})", strerror (errno)));
+			log_info (LOG_DEFAULT, "Error while receiving command from XS ({})", strerror (errno));
 			return false;
 		}
 
 		// null-terminate
 		command [cmd_len] = 0;
 
-		log_info (LOG_DEFAULT, std::format ("Received cmd: '{}'.", command));
+		log_info (LOG_DEFAULT, "Received cmd: '{}'.", command);
 
 		if (process_cmd (fd, command))
 			return true;
@@ -288,14 +287,14 @@ Debug::handle_server_connection (void)
 {
 	int listen_socket = socket (PF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (listen_socket == -1) {
-		log_info (LOG_DEFAULT, std::format ("Could not create socket for XS to connect to: {}", strerror (errno)));
+		log_info (LOG_DEFAULT, "Could not create socket for XS to connect to: {}", strerror (errno));
 		return 1;
 	}
 
 	int flags = 1;
 	int rv = setsockopt (listen_socket, SOL_SOCKET, SO_REUSEADDR, &flags, sizeof (flags));
 	if (rv == -1 && Util::should_log (LOG_DEFAULT)) {
-		log_info_nocheck (LOG_DEFAULT, std::format ("Could not set SO_REUSEADDR on the listening socket ({})", strerror (errno)));
+		log_info_nocheck_fmt (LOG_DEFAULT, "Could not set SO_REUSEADDR on the listening socket ({})", strerror (errno));
 		// not a fatal failure
 	}
 
@@ -309,7 +308,7 @@ Debug::handle_server_connection (void)
 	listen_addr.sin_addr.s_addr = INADDR_ANY;
 	rv = bind (listen_socket, (struct sockaddr *) &listen_addr, sizeof (listen_addr));
 	if (rv == -1) {
-		log_info (LOG_DEFAULT, std::format ("Could not bind to address: {}", strerror (errno)));
+		log_info (LOG_DEFAULT, "Could not bind to address: {}", strerror (errno));
 		rv = 2;
 		goto cleanup;
 	}
@@ -321,7 +320,7 @@ Debug::handle_server_connection (void)
 
 	rv = listen (listen_socket, 1);
 	if (rv == -1) {
-		log_info (LOG_DEFAULT, std::format ("Could not listen for XS: {}", strerror (errno)));
+		log_info (LOG_DEFAULT, "Could not listen for XS: {}", strerror (errno));
 		rv = 2;
 		goto cleanup;
 	}
@@ -371,7 +370,7 @@ Debug::handle_server_connection (void)
 		} while (rv == -1 && errno == EINTR);
 
 		if (rv == -1) {
-			log_info (LOG_DEFAULT, std::format ("Failed while waiting for XS to connect: {}", strerror (errno)));
+			log_info (LOG_DEFAULT, "Failed while waiting for XS to connect: {}", strerror (errno));
 			rv = 2;
 			goto cleanup;
 		}
@@ -379,18 +378,18 @@ Debug::handle_server_connection (void)
 		socklen_t len = sizeof (struct sockaddr_in);
 		int fd = accept (listen_socket, (struct sockaddr *) &listen_addr, &len);
 		if (fd == -1) {
-			log_info (LOG_DEFAULT, std::format ("Failed to accept connection from XS: {}", strerror (errno)));
+			log_info (LOG_DEFAULT, "Failed to accept connection from XS: {}", strerror (errno));
 			rv = 3;
 			goto cleanup;
 		}
 
 		flags = 1;
 		if (setsockopt (fd, IPPROTO_TCP, TCP_NODELAY, (char *) &flags, sizeof (flags)) < 0) {
-			log_info (LOG_DEFAULT, std::format ("Could not set TCP_NODELAY on socket ({})", strerror (errno)));
+			log_info (LOG_DEFAULT, "Could not set TCP_NODELAY on socket ({})", strerror (errno));
 			// not a fatal failure
 		}
 
-		log_info (LOG_DEFAULT, std::format ("Successfully received connection from XS on port {}, fd: {}", listen_port, fd));
+		log_info (LOG_DEFAULT, "Successfully received connection from XS on port {}, fd: {}", listen_port, fd);
 
 		need_new_conn = process_connection (fd);
 	}
@@ -442,7 +441,7 @@ Debug::process_cmd (int fd, char *cmd)
 	constexpr std::string_view PONG_REPLY { "pong" };
 	if (strcmp (cmd, PING_CMD.data ()) == 0) {
 		if (!Util::send_uninterrupted (fd, const_cast<void*> (reinterpret_cast<const void*> (PONG_REPLY.data ())), 5))
-			log_error (LOG_DEFAULT, std::format ("Got keepalive request from XS, but could not send response back ({})", strerror (errno)));
+			log_error (LOG_DEFAULT, "Got keepalive request from XS, but could not send response back ({})", strerror (errno));
 		return false;
 	}
 
@@ -488,7 +487,7 @@ Debug::process_cmd (int fd, char *cmd)
 			profiler_fd = fd;
 			profiler_description = Util::monodroid_strdup_printf ("%s,output=#%i", prof, profiler_fd);
 		} else {
-			log_error (LOG_DEFAULT, std::format ("Unknown profiler: '{}'", prof));
+			log_error (LOG_DEFAULT, "Unknown profiler: '{}'", prof);
 		}
 		/* Notify the main thread (start_profiling ()) */
 		profiler_configured = true;
@@ -497,7 +496,7 @@ Debug::process_cmd (int fd, char *cmd)
 		pthread_mutex_unlock (&process_cmd_mutex);
 		return use_fd;
 	} else {
-		log_error (LOG_DEFAULT, std::format ("Unsupported command: '{}'", cmd));
+		log_error (LOG_DEFAULT, "Unsupported command: '{}'", cmd);
 	}
 
 	return false;
@@ -527,7 +526,7 @@ Debug::start_debugging (void)
 
 	// this text is used in unit tests to check the debugger started
 	// do not change it without updating the test.
-	log_warn (LOG_DEBUGGER, std::format ("Trying to initialize the debugger with options: {}", debug_arg));
+	log_warn (LOG_DEBUGGER, "Trying to initialize the debugger with options: {}", debug_arg);
 
 	if (enable_soft_breakpoints ()) {
 		constexpr std::string_view soft_breakpoints { "--soft-breakpoints" };
@@ -554,7 +553,7 @@ Debug::start_profiling ()
 	if (!profiler_description)
 		return;
 
-	log_info (LOG_DEFAULT, std::format ("Loading profiler: '{}'", profiler_description));
+	log_info (LOG_DEFAULT, "Loading profiler: '{}'", profiler_description);
 	monodroid_profiler_load (AndroidSystem::get_runtime_libdir (), profiler_description, nullptr);
 }
 
@@ -574,7 +573,7 @@ Debug::enable_soft_breakpoints (void)
 	uname (&name);
 	for (const char** ptr = soft_breakpoint_kernel_list; *ptr; ptr++) {
 		if (strcmp (name.release, *ptr) == 0) {
-			log_info (LOG_DEBUGGER, std::format ("soft breakpoints enabled due to kernel version match ({})", name.release));
+			log_info (LOG_DEBUGGER, "soft breakpoints enabled due to kernel version match ({})", name.release);
 			return 1;
 		}
 	}
@@ -582,17 +581,17 @@ Debug::enable_soft_breakpoints (void)
 	char *value;
 	/* Soft breakpoints are enabled by default */
 	if (AndroidSystem::monodroid_get_system_property (SharedConstants::DEBUG_MONO_SOFT_BREAKPOINTS, &value) <= 0) {
-		log_info (LOG_DEBUGGER, std::format ("soft breakpoints enabled by default ({} property not defined)", SharedConstants::DEBUG_MONO_SOFT_BREAKPOINTS.data ()));
+		log_info (LOG_DEBUGGER, "soft breakpoints enabled by default ({} property not defined)", SharedConstants::DEBUG_MONO_SOFT_BREAKPOINTS.data ());
 		return 1;
 	}
 
 	bool ret;
 	if (strcmp ("0", value) == 0) {
 		ret = false;
-		log_info (LOG_DEBUGGER, std::format ("soft breakpoints disabled ({} property set to {})", SharedConstants::DEBUG_MONO_SOFT_BREAKPOINTS.data (), value));
+		log_info (LOG_DEBUGGER, "soft breakpoints disabled ({} property set to {})", SharedConstants::DEBUG_MONO_SOFT_BREAKPOINTS.data (), value);
 	} else {
 		ret = true;
-		log_info (LOG_DEBUGGER, std::format ("soft breakpoints enabled ({} property set to {})", SharedConstants::DEBUG_MONO_SOFT_BREAKPOINTS.data (), value));
+		log_info (LOG_DEBUGGER, "soft breakpoints enabled ({} property set to {})", SharedConstants::DEBUG_MONO_SOFT_BREAKPOINTS.data (), value);
 	}
 	delete[] value;
 	return ret;
