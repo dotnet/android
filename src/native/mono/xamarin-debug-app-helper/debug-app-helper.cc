@@ -48,7 +48,7 @@ Java_mono_android_DebugRuntime_init (JNIEnv *env, [[maybe_unused]] jclass klass,
 	if (runtimeNativeLibDir != nullptr) {
 		jstr = runtimeNativeLibDir;
 		AndroidSystem::set_runtime_libdir (Util::strdup_new (jstr.get_cstr ()));
-		log_warn (LOG_DEFAULT, std::format ("Using runtime path: {}", AndroidSystem::get_runtime_libdir ()));
+		log_warn (LOG_DEFAULT, "Using runtime path: {}", AndroidSystem::get_runtime_libdir ());
 	}
 
 	const char *monosgen_path = get_libmonosgen_path ();
@@ -74,10 +74,8 @@ copy_file_to_internal_location (char *to_dir, char *from_dir, char *file)
 			break;
 
 		log_warn (LOG_DEFAULT,
-			std::format (
-				"Copying file `{}` from external location `{}` to internal location `{}`",
-				file, from_dir, to_dir
-			)
+			"Copying file `{}` from external location `{}` to internal location `{}`",
+			file, from_dir, to_dir
 		);
 
 		to_file = Util::path_combine (to_dir, file);
@@ -86,12 +84,12 @@ copy_file_to_internal_location (char *to_dir, char *from_dir, char *file)
 
 		int r = unlink (to_file);
 		if (r < 0 && errno != ENOENT) {
-			log_warn (LOG_DEFAULT, std::format ("Unable to delete file `{}`: {}", to_file, strerror (errno)));
+			log_warn (LOG_DEFAULT, "Unable to delete file `{}`: {}", to_file, strerror (errno));
 			break;
 		}
 
 		if (!Util::file_copy (to_file, from_file)) {
-			log_warn (LOG_DEFAULT, std::format ("Copy failed from `{}` to `{}`: {}", from_file, to_file, strerror (errno)));
+			log_warn (LOG_DEFAULT, "Copy failed from `{}` to `{}`: {}", from_file, to_file, strerror (errno));
 			break;
 		}
 
@@ -110,22 +108,22 @@ copy_native_libraries_to_internal_location ()
 		dirent *e;
 
 		char *dir_path = Util::path_combine (od, "lib");
-		log_warn (LOG_DEFAULT, std::format ("checking directory: `{}`", dir_path));
+		log_warn (LOG_DEFAULT, "checking directory: `{}`", dir_path);
 
 		if (dir_path == nullptr || !Util::directory_exists (dir_path)) {
-			log_warn (LOG_DEFAULT, std::format ("directory does not exist: `{}`", dir_path));
+			log_warn (LOG_DEFAULT, "directory does not exist: `{}`", dir_path);
 			delete[] dir_path;
 			continue;
 		}
 
 		if ((dir = ::opendir (dir_path)) == nullptr) {
-			log_warn (LOG_DEFAULT, std::format ("could not open directory: `{}`", dir_path));
+			log_warn (LOG_DEFAULT, "could not open directory: `{}`", dir_path);
 			delete[] dir_path;
 			continue;
 		}
 
 		while ((e = readdir (dir)) != nullptr) {
-			log_warn (LOG_DEFAULT, std::format ("checking file: `{}`", e->d_name));
+			log_warn (LOG_DEFAULT, "checking file: `{}`", e->d_name);
 			if (Util::monodroid_dirent_hasextension (e, ".so")) {
 				copy_file_to_internal_location (AndroidSystem::get_primary_override_dir (), dir_path, e->d_name);
 			}
@@ -142,9 +140,9 @@ runtime_exists (const char *dir, char*& libmonoso)
 		return false;
 
 	libmonoso = Util::path_combine (dir, SharedConstants::MONO_SGEN_SO);
-	log_warn (LOG_DEFAULT, std::format ("Checking whether Mono runtime exists at: {}", libmonoso));
+	log_warn (LOG_DEFAULT, "Checking whether Mono runtime exists at: {}", libmonoso);
 	if (Util::file_exists (libmonoso)) {
-		log_info (LOG_DEFAULT, std::format ("Mono runtime found at: {}", libmonoso));
+		log_info (LOG_DEFAULT, "Mono runtime found at: {}", libmonoso);
 		return true;
 	}
 	delete[] libmonoso;
@@ -196,25 +194,25 @@ get_libmonosgen_path ()
 		if (!Util::file_exists (link)) {
 			int result = symlink (libmonoso, link);
 			if (result != 0 && errno == EEXIST) {
-				log_warn (LOG_DEFAULT, std::format ("symlink exists, recreating: {} -> {}", link, libmonoso));
+				log_warn (LOG_DEFAULT, "symlink exists, recreating: {} -> {}", link, libmonoso);
 				unlink (link);
 				result = symlink (libmonoso, link);
 			}
 			if (result != 0)
-				log_warn (LOG_DEFAULT, std::format ("symlink failed with errno={} {}", errno, strerror (errno)));
+				log_warn (LOG_DEFAULT, "symlink failed with errno={} {}", errno, strerror (errno));
 		}
 		delete[] libmonoso;
 		libmonoso = link;
 	}
 
-	log_warn (LOG_DEFAULT, std::format ("Trying to load sgen from: {}", libmonoso != nullptr ? libmonoso : "<NULL>"sv));
+	log_warn (LOG_DEFAULT, "Trying to load sgen from: {}", libmonoso != nullptr ? libmonoso : "<NULL>"sv);
 	if (libmonoso != nullptr && Util::file_exists (libmonoso))
 		return libmonoso;
 	delete[] libmonoso;
 
 	if (runtime_exists (AndroidSystem::SYSTEM_LIB_PATH.data (), libmonoso))
 		return libmonoso;
-	log_fatal (LOG_DEFAULT, std::format ("Cannot find '{}'. Looked in the following locations:", SharedConstants::MONO_SGEN_SO));
+	log_fatal (LOG_DEFAULT, "Cannot find '{}'. Looked in the following locations:", SharedConstants::MONO_SGEN_SO);
 
 	for (const char *od : AndroidSystem::override_dirs) {
 		if (od == nullptr)
