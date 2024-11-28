@@ -54,6 +54,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";APT0005" ItemType="0;.resx" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Invalid file name: Filenames cannot use Java reserved words.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Neplatný název souboru: Názvy souborů nemůžou používat vyhrazená slova Java.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";APT2264" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[This could be caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/dotnet/android/messages/apt2264 for details.]]></Val>
@@ -1223,10 +1232,13 @@
       </Item>
       <Item ItemId=";XA4236" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Cannot download Maven artifact '{0}:{1}'.]D;]A;- {2}: {3}]D;]A;- {4}: {5}]]></Val>
+          <Val><![CDATA[Cannot download Maven artifact '{0}:{1}'.]D;]A;{2}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Artefakt Maven {0}{1} se nedá stáhnout.]D;]A;- {2}: {3}]D;]A;- {4}: {5}]]></Val>
+            <Val><![CDATA[Nelze stáhnout artefakt Maven „{0}:{1}“.]D;]A;{2}]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Cannot download Maven artifact '{0}:{1}'.]D;]A;- {2}: {3}]D;]A;- {4}: {5}]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
