@@ -12,6 +12,7 @@
 
 #include "android-system.hh"
 #include "cpp-util.hh"
+#include "log_level.hh"
 #include "logger.hh"
 #include "shared-constants.hh"
 #include "util.hh"

@@ -144,7 +144,7 @@ namespace xamarin::android::internal
 					// likely we'll run out of memory way, way, way before that happens
 					size_t old_size = events.capacity ();
 					events.reserve (old_size << 1);
-					log_warn (LOG_TIMING, std::format ("Reallocated timing event buffer from {} to {}", old_size, events.size ()));
+					log_warn (LOG_TIMING, "Reallocated timing event buffer from {} to {}", old_size, events.size ());
 				}
 			}
 
@@ -246,7 +246,7 @@ namespace xamarin::android::internal
 		force_inline bool is_valid_event_index (size_t index, const char *method_name) noexcept
 		{
 			if (index >= events.capacity ()) [[unlikely]] {
-				log_warn (LOG_TIMING, std::format ("Invalid event index passed to method '{}'", method_name));
+				log_warn (LOG_TIMING, "Invalid event index passed to method '{}'", method_name);
 				return false;
 			}
 
