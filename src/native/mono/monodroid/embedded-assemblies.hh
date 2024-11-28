@@ -310,7 +310,7 @@ namespace xamarin::android::internal {
 						elf_header->e_ident[EI_MAG1] != ELFMAG1 ||
 						elf_header->e_ident[EI_MAG2] != ELFMAG2 ||
 						elf_header->e_ident[EI_MAG3] != ELFMAG3) {
-					log_debug (LOG_ASSEMBLY, std::format ("Not an ELF image: {}", file_name));
+					log_debug (LOG_ASSEMBLY, "Not an ELF image: {}", file_name);
 					// Not an ELF image, just return what we mmapped before
 					return { map_info.area, map_info.size };
 				}
@@ -329,7 +329,7 @@ namespace xamarin::android::internal {
 		static void store_mapped_runtime_config_data (md_mmap_info const& map_info, const char *file_name) noexcept
 		{
 			auto [payload_start, payload_size] = get_wrapper_dso_payload_pointer_and_size (map_info, file_name);
-			log_debug (LOG_ASSEMBLY, std::format ("Runtime config: payload pointer {:p} ; size {}", payload_start, payload_size));
+			log_debug (LOG_ASSEMBLY, "Runtime config: payload pointer {:p} ; size {}", payload_start, payload_size);
 			runtime_config_data = payload_start;
 			runtime_config_data_size = payload_size;
 			runtime_config_blob_found = true;
@@ -436,7 +436,7 @@ namespace xamarin::android::internal {
 					}
 				}
 			}
-			log_debug (LOG_ASSEMBLY, std::format ("Unmangled name to '{}'", name.get ()));
+			log_debug (LOG_ASSEMBLY, "Unmangled name to '{}'", name.get ());
 		};
 
 	private:
