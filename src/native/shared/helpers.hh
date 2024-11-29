@@ -86,5 +86,15 @@ namespace xamarin::android
 	{
 		return reinterpret_cast<TRet>(reinterpret_cast<uintptr_t>(ptr) + offset);
 	}
+
+	[[gnu::always_inline]]
+	static inline constexpr auto optional_string (const char* s, const char *replacement = nullptr) noexcept -> const char*
+	{
+		if (s != nullptr) [[likely]] {
+			return s;
+		}
+
+		return replacement == nullptr ? "<null>" : replacement;
+	}
 }
 #endif // __HELPERS_HH

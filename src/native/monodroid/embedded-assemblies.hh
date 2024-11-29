@@ -310,7 +310,7 @@ namespace xamarin::android::internal {
 						elf_header->e_ident[EI_MAG1] != ELFMAG1 ||
 						elf_header->e_ident[EI_MAG2] != ELFMAG2 ||
 						elf_header->e_ident[EI_MAG3] != ELFMAG3) {
-					log_debug (LOG_ASSEMBLY, "Not an ELF image: {}", file_name);
+					log_debug (LOG_ASSEMBLY, "Not an ELF image: {}", optional_string (file_name));
 					// Not an ELF image, just return what we mmapped before
 					return { map_info.area, map_info.size };
 				}
@@ -357,6 +357,11 @@ namespace xamarin::android::internal {
 
 		force_inline static c_unique_ptr<char> to_utf8 (const MonoString *s) noexcept
 		{
+			if (s == nullptr) [[unlikely]] {
+				// We need to duplicate mono_string_to_utf8 behavior
+				return c_unique_ptr<char> (strdup ("<null>"));
+			}
+
 			return c_unique_ptr<char> (mono_string_to_utf8 (const_cast<MonoString*>(s)));
 		}
 
@@ -431,7 +436,7 @@ namespace xamarin::android::internal {
 					}
 				}
 			}
-			log_debug (LOG_ASSEMBLY, "Unmangled name to '{}'", name.get ());
+			log_debug (LOG_ASSEMBLY, "Unmangled name to '{}'", optional_string (name.get ()));
 		};
 
 	private:

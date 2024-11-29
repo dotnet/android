@@ -174,12 +174,12 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 			fullpath.append (SharedConstants::DLL_EXTENSION);
 		}
 
-		log_debug (LOG_ASSEMBLY, "open_from_update_dir: trying to open assembly: {}", fullpath.get ());
+		log_debug (LOG_ASSEMBLY, "open_from_update_dir: trying to open assembly: {}", optional_string (fullpath.get ()));
 		if (Util::file_exists (fullpath.get ())) {
 			MonoImageOpenStatus status{};
 			result = mono_assembly_open_full (fullpath.get (), &status, 0);
 			if (result == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
-				log_warn (LOG_ASSEMBLY, "Failed to load managed assembly '{}'. {}", fullpath.get (), mono_image_strerror (status));
+				log_warn (LOG_ASSEMBLY, "Failed to load managed assembly '{}'. {}", optional_string (fullpath.get ()), mono_image_strerror (status));
 			}
 		} else {
 			log_warn (LOG_ASSEMBLY, "open_from_update_dir: assembly file DOES NOT EXIST"sv);
@@ -480,7 +480,7 @@ MonodroidRuntime::parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER
 			}
 		} else {
 			static_local_string<SMALL_STRING_PARSE_BUFFER_LEN> arg (token);
-			log_error (LOG_DEFAULT, "Unknown runtime argument: '{}'", arg.get ());
+			log_error (LOG_DEFAULT, "Unknown runtime argument: '{}'", optional_string (arg.get ()));
 			ret = false;
 		}
 	}
@@ -509,7 +509,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 	cur_time = time (nullptr);
 
 	if (!parse_runtime_args (runtime_args, &options)) {
-		log_error (LOG_DEFAULT, "Failed to parse runtime args: '{}'", runtime_args.get ());
+		log_error (LOG_DEFAULT, "Failed to parse runtime args: '{}'", optional_string (runtime_args.get ()));
 	} else if (options.debug && cur_time > options.timeout_time) {
 		log_warn (LOG_DEBUGGER, "Not starting the debugger as the timeout value has been reached; current-time: {}; timeout: {}", cur_time, options.timeout_time);
 	} else if (options.debug && cur_time <= options.timeout_time) {
@@ -537,7 +537,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 
 		// this text is used in unit tests to check the debugger started
 		// do not change it without updating the test.
-		log_warn (LOG_DEBUGGER, "Trying to initialize the debugger with options: {}", debug_arg);
+		log_warn (LOG_DEBUGGER, "Trying to initialize the debugger with options: {}", optional_string (debug_arg));
 
 		if (options.out_port > 0) {
 			int sock = socket (PF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -576,7 +576,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 						LOG_DEBUGGER,
 						std::format (
 							"Error accepting stdout and stderr ({}:{}): {}",
-							options.host,
+							optional_string (options.host),
 							options.out_port,
 							strerror (errno)
 						)
@@ -591,7 +591,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 						LOG_DEBUGGER,
 						std::format (
 							"Error connecting stdout and stderr ({}:{}): {}",
-							options.host,
+							optional_string (options.host),
 							options.out_port,
 							strerror (errno)
 						)
@@ -662,7 +662,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 	if (AndroidSystem::monodroid_get_system_property (SharedConstants::DEBUG_MONO_RUNTIME_ARGS_PROPERTY, prop_val) > 0) {
 		char **ptr;
 
-		log_warn (LOG_DEBUGGER, "passing '{}' as extra arguments to the runtime.", prop_val.get ());
+		log_warn (LOG_DEBUGGER, "passing '{}' as extra arguments to the runtime.", optional_string (prop_val.get ()));
 
 		char **args = Util::monodroid_strsplit (prop_val.get (), " ", 0);
 		int argc = 0;
@@ -731,8 +731,8 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 #if defined (DEBUG)
 		log_fatal (LOG_DEFAULT,
 			"No assemblies found in '{}' or '{}'. Assuming this is part of Fast Deployment. Exiting...",
-			AndroidSystem::override_dirs [0],
-			(AndroidSystem::override_dirs.size () > 1 && AndroidSystem::override_dirs [1] != nullptr) ? AndroidSystem::override_dirs [1] : "<unavailable>"sv
+			optional_string (AndroidSystem::override_dirs [0]),
+			(AndroidSystem::override_dirs.size () > 1 && AndroidSystem::override_dirs [1] != nullptr) ? optional_string (AndroidSystem::override_dirs [1]) : "<unavailable>"
 		);
 #else
 		log_fatal (LOG_DEFAULT, "No assemblies (or assembly blobs) were found in the application APK file(s) or on the filesystem"sv);
@@ -741,7 +741,7 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 		Helpers::abort_application (
 			std::format (
 				"ALL entries in APK named `{}` MUST be STORED. Gradle's minification may COMPRESS such entries.",
-				assemblies_prefix
+				optional_string (assemblies_prefix)
 			)
 		);
 	}
@@ -942,7 +942,7 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 
 	auto initialize = reinterpret_cast<jnienv_initialize_fn> (mono_method_get_unmanaged_callers_only_ftnptr (method, &error));
 	if (initialize == nullptr) {
-		log_fatal (LOG_DEFAULT, "Failed to get pointer to Initialize. Mono error: {}", mono_error_get_message (&error));
+		log_fatal (LOG_DEFAULT, "Failed to get pointer to Initialize. Mono error: {}", optional_string (mono_error_get_message (&error)));
 	}
 
 	abort_unless (
@@ -998,7 +998,7 @@ MonodroidRuntime::set_environment_variable_for_directory (const char *name, jstr
 	if (createDirectory) {
 		int rv = Util::create_directory (value.get_cstr (), mode);
 		if (rv < 0 && errno != EEXIST)
-			log_warn (LOG_DEFAULT, "Failed to create directory for environment variable {}. {}", name, strerror (errno));
+			log_warn (LOG_DEFAULT, "Failed to create directory for environment variable {}. {}", optional_string (name), strerror (errno));
 	}
 	setenv (name, value.get_cstr (), 1);
 }
@@ -1008,10 +1008,10 @@ MonodroidRuntime::create_xdg_directory (jstring_wrapper& home, size_t home_len, 
 {
 	static_local_string<SENSIBLE_PATH_MAX> dir (home_len + relative_path.length ());
 	Util::path_combine (dir, home.get_cstr (), home_len, relative_path.data (), relative_path.length ());
-	log_debug (LOG_DEFAULT, "Creating XDG directory: {}", dir.get ());
+	log_debug (LOG_DEFAULT, "Creating XDG directory: {}", optional_string (dir.get ()));
 	int rv = Util::create_directory (dir.get (), DEFAULT_DIRECTORY_MODE);
 	if (rv < 0 && errno != EEXIST)
-		log_warn (LOG_DEFAULT, "Failed to create XDG directory {}. {}", dir.get (), strerror (errno));
+		log_warn (LOG_DEFAULT, "Failed to create XDG directory {}. {}", optional_string (dir.get ()), strerror (errno));
 	if (!environment_variable_name.empty ()) {
 		setenv (environment_variable_name.data (), dir.get (), 1);
 	}
@@ -1040,7 +1040,7 @@ MonodroidRuntime::set_debug_env_vars (void) noexcept
 		return;
 
 	auto log_envvar = [](const char *name, const char *v) {
-		log_debug (LOG_DEFAULT, "Env variable '{}' set to '{}'.", name, v);
+		log_debug (LOG_DEFAULT, "Env variable '{}' set to '{}'.", optional_string (name), optional_string (v));
 	};
 
 	string_segment arg_token;
@@ -1060,7 +1060,7 @@ MonodroidRuntime::set_debug_env_vars (void) noexcept
 			log_envvar (arg.get (), one.data ());
 		} else if (index == 0) {
 			// ’=value’
-			log_warn (LOG_DEFAULT, "Attempt to set environment variable without specifying name: '{}'", arg.get ());
+			log_warn (LOG_DEFAULT, "Attempt to set environment variable without specifying name: '{}'", optional_string (arg.get ()));
 		} else {
 			// ’name=value’
 			arg[index] = '\0';
@@ -1140,10 +1140,10 @@ MonodroidRuntime::set_profile_options () noexcept
 			.append (output_path.get (), output_path.length ());
 	}
 	if (Util::create_directory (AndroidSystem::override_dirs[0], 0) < 0) {
-		log_warn (LOG_DEFAULT, "Failed to create directory '{}'. {}", AndroidSystem::override_dirs[0], std::strerror (errno));
+		log_warn (LOG_DEFAULT, "Failed to create directory '{}'. {}", optional_string (AndroidSystem::override_dirs[0]), std::strerror (errno));
 	}
 
-	log_warn (LOG_DEFAULT, "Initializing profiler with options: {}", value.get ());
+	log_warn (LOG_DEFAULT, "Initializing profiler with options: {}", optional_string (value.get ()));
 	debug.monodroid_profiler_load (AndroidSystem::get_runtime_libdir (), value.get (), output_path.get ());
 }
 
@@ -1468,7 +1468,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	if (runtimeNativeLibDir != nullptr) {
 		jstr = runtimeNativeLibDir;
 		AndroidSystem::set_runtime_libdir (strdup (jstr.get_cstr ()));
-		log_debug (LOG_DEFAULT, "Using runtime path: {}", AndroidSystem::get_runtime_libdir ());
+		log_debug (LOG_DEFAULT, "Using runtime path: {}", optional_string (AndroidSystem::get_runtime_libdir ()));
 	}
 
 	AndroidSystem::setup_process_args (runtimeApks);

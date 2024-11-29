@@ -48,7 +48,7 @@ Java_mono_android_DebugRuntime_init (JNIEnv *env, [[maybe_unused]] jclass klass,
 	if (runtimeNativeLibDir != nullptr) {
 		jstr = runtimeNativeLibDir;
 		AndroidSystem::set_runtime_libdir (Util::strdup_new (jstr.get_cstr ()));
-		log_warn (LOG_DEFAULT, "Using runtime path: {}", AndroidSystem::get_runtime_libdir ());
+		log_warn (LOG_DEFAULT, "Using runtime path: {}", optional_string (AndroidSystem::get_runtime_libdir ()));
 	}
 
 	const char *monosgen_path = get_libmonosgen_path ();
@@ -75,7 +75,9 @@ copy_file_to_internal_location (char *to_dir, char *from_dir, char *file)
 
 		log_warn (LOG_DEFAULT,
 			"Copying file `{}` from external location `{}` to internal location `{}`",
-			file, from_dir, to_dir
+			optional_string (file),
+			optional_string (from_dir),
+			optional_string (to_dir)
 		);
 
 		to_file = Util::path_combine (to_dir, file);
@@ -84,12 +86,12 @@ copy_file_to_internal_location (char *to_dir, char *from_dir, char *file)
 
 		int r = unlink (to_file);
 		if (r < 0 && errno != ENOENT) {
-			log_warn (LOG_DEFAULT, "Unable to delete file `{}`: {}", to_file, strerror (errno));
+			log_warn (LOG_DEFAULT, "Unable to delete file `{}`: {}", optional_string (to_file), strerror (errno));
 			break;
 		}
 
 		if (!Util::file_copy (to_file, from_file)) {
-			log_warn (LOG_DEFAULT, "Copy failed from `{}` to `{}`: {}", from_file, to_file, strerror (errno));
+			log_warn (LOG_DEFAULT, "Copy failed from `{}` to `{}`: {}", optional_string (from_file), optional_string (to_file), strerror (errno));
 			break;
 		}
 
@@ -108,22 +110,22 @@ copy_native_libraries_to_internal_location ()
 		dirent *e;
 
 		char *dir_path = Util::path_combine (od, "lib");
-		log_warn (LOG_DEFAULT, "checking directory: `{}`", dir_path);
+		log_warn (LOG_DEFAULT, "checking directory: `{}`", optional_string (dir_path));
 
 		if (dir_path == nullptr || !Util::directory_exists (dir_path)) {
-			log_warn (LOG_DEFAULT, "directory does not exist: `{}`", dir_path);
+			log_warn (LOG_DEFAULT, "directory does not exist: `{}`", optional_string (dir_path));
 			delete[] dir_path;
 			continue;
 		}
 
 		if ((dir = ::opendir (dir_path)) == nullptr) {
-			log_warn (LOG_DEFAULT, "could not open directory: `{}`", dir_path);
+			log_warn (LOG_DEFAULT, "could not open directory: `{}`", optional_string (dir_path));
 			delete[] dir_path;
 			continue;
 		}
 
 		while ((e = readdir (dir)) != nullptr) {
-			log_warn (LOG_DEFAULT, "checking file: `{}`", e->d_name);
+			log_warn (LOG_DEFAULT, "checking file: `{}`", optional_string (e->d_name));
 			if (Util::monodroid_dirent_hasextension (e, ".so")) {
 				copy_file_to_internal_location (AndroidSystem::get_primary_override_dir (), dir_path, e->d_name);
 			}
@@ -140,9 +142,9 @@ runtime_exists (const char *dir, char*& libmonoso)
 		return false;
 
 	libmonoso = Util::path_combine (dir, SharedConstants::MONO_SGEN_SO);
-	log_warn (LOG_DEFAULT, "Checking whether Mono runtime exists at: {}", libmonoso);
+	log_warn (LOG_DEFAULT, "Checking whether Mono runtime exists at: {}", optional_string (libmonoso));
 	if (Util::file_exists (libmonoso)) {
-		log_info (LOG_DEFAULT, "Mono runtime found at: {}", libmonoso);
+		log_info (LOG_DEFAULT, "Mono runtime found at: {}", optional_string (libmonoso));
 		return true;
 	}
 	delete[] libmonoso;
@@ -194,7 +196,7 @@ get_libmonosgen_path ()
 		if (!Util::file_exists (link)) {
 			int result = symlink (libmonoso, link);
 			if (result != 0 && errno == EEXIST) {
-				log_warn (LOG_DEFAULT, "symlink exists, recreating: {} -> {}", link, libmonoso);
+				log_warn (LOG_DEFAULT, "symlink exists, recreating: {} -> {}", optional_string (link), optional_string (libmonoso));
 				unlink (link);
 				result = symlink (libmonoso, link);
 			}
@@ -205,7 +207,7 @@ get_libmonosgen_path ()
 		libmonoso = link;
 	}
 
-	log_warn (LOG_DEFAULT, "Trying to load sgen from: {}", libmonoso != nullptr ? libmonoso : "<NULL>"sv);
+	log_warn (LOG_DEFAULT, "Trying to load sgen from: {}", optional_string (libmonoso));
 	if (libmonoso != nullptr && Util::file_exists (libmonoso))
 		return libmonoso;
 	delete[] libmonoso;
@@ -217,11 +219,11 @@ get_libmonosgen_path ()
 	for (const char *od : AndroidSystem::override_dirs) {
 		if (od == nullptr)
 			continue;
-		log_fatal (LOG_DEFAULT, "  %s", od);
+		log_fatal (LOG_DEFAULT, "  {}", optional_string (od));
 	}
 
 	for (const char *app_lib_dir : AndroidSystem::app_lib_directories) {
-		log_fatal (LOG_DEFAULT, "  %s", app_lib_dir);
+		log_fatal (LOG_DEFAULT, "  {}", optional_string (app_lib_dir));
 	}
 
 	Helpers::abort_application (
