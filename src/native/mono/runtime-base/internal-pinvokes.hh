@@ -3,7 +3,6 @@
 #include <cstdio>
 
 #include <mono/utils/mono-publib.h>
-//#include <java-interop-logger.h>
 #include <java-interop.h>
 #include <jni.h>
 
