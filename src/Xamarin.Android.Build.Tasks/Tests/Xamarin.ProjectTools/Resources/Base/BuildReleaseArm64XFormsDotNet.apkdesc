@@ -5,10 +5,7 @@
       "Size": 6652
     },
     "classes.dex": {
-      "Size": 9448880
-    },
-    "classes2.dex": {
-      "Size": 154180
+      "Size": 9172764
     },
     "kotlin/annotation/annotation.kotlin_builtins": {
       "Size": 928
@@ -35,16 +32,16 @@
       "Size": 19544
     },
     "lib/arm64-v8a/lib_FormsViewGroup.dll.so": {
-      "Size": 25184
+      "Size": 25424
     },
     "lib/arm64-v8a/lib_Java.Interop.dll.so": {
       "Size": 94736
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
-      "Size": 522832
+      "Size": 524256
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 22416
+      "Size": 22408
     },
     "lib/arm64-v8a/lib_mscorlib.dll.so": {
       "Size": 21448
@@ -173,31 +170,31 @@
       "Size": 22096
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.Activity.dll.so": {
-      "Size": 34760
+      "Size": 34960
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.AppCompat.AppCompatResources.dll.so": {
-      "Size": 24296
+      "Size": 24512
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.AppCompat.dll.so": {
-      "Size": 163072
+      "Size": 163240
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.CardView.dll.so": {
       "Size": 24560
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.CoordinatorLayout.dll.so": {
-      "Size": 35680
+      "Size": 35912
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.Core.dll.so": {
-      "Size": 151216
+      "Size": 151408
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.CursorAdapter.dll.so": {
       "Size": 27168
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.DrawerLayout.dll.so": {
-      "Size": 33760
+      "Size": 33944
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.Fragment.dll.so": {
-      "Size": 72224
+      "Size": 72528
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.Legacy.Support.Core.UI.dll.so": {
       "Size": 23896
@@ -215,16 +212,16 @@
       "Size": 31592
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.RecyclerView.dll.so": {
-      "Size": 111896
+      "Size": 112248
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.SavedState.dll.so": {
       "Size": 23144
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.SwipeRefreshLayout.dll.so": {
-      "Size": 31672
+      "Size": 31952
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.ViewPager.dll.so": {
-      "Size": 37752
+      "Size": 38048
     },
     "lib/arm64-v8a/lib_Xamarin.Forms.Core.dll.so": {
       "Size": 581000
@@ -239,7 +236,7 @@
       "Size": 80632
     },
     "lib/arm64-v8a/lib_Xamarin.Google.Android.Material.dll.so": {
-      "Size": 84400
+      "Size": 84768
     },
     "lib/arm64-v8a/libarc.bin.so": {
       "Size": 18832
@@ -248,7 +245,7 @@
       "Size": 36440
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 903032
+      "Size": 1501240
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
       "Size": 3196512
@@ -266,7 +263,7 @@
       "Size": 165000
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 120016
+      "Size": 349440
     },
     "META-INF/androidx.activity_activity.version": {
       "Size": 6
@@ -419,10 +416,10 @@
       "Size": 6
     },
     "META-INF/BNDLTOOL.RSA": {
-      "Size": 1221
+      "Size": 1223
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 98661
+      "Size": 98577
     },
     "META-INF/com.android.tools/proguard/coroutines.pro": {
       "Size": 1345
@@ -449,7 +446,7 @@
       "Size": 5
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 98534
+      "Size": 98450
     },
     "META-INF/maven/com.google.guava/listenablefuture/pom.properties": {
       "Size": 96
@@ -2489,5 +2486,5 @@
       "Size": 812848
     }
   },
-  "PackageSize": 10796357
+  "PackageSize": 10947851
 }
