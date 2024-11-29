@@ -962,7 +962,7 @@ get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **if
 		log_debug (LOG_NETLINK, "   address has no name/label, getting one from interface"sv);
 		ifa->ifa_name = name ? strdup (name) : NULL;
 	}
-	log_debug (LOG_NETLINK, "   address label: {}", ifa->ifa_name);
+	log_debug (LOG_NETLINK, "   address label: {}", optional_string (ifa->ifa_name));
 
 	if (calculate_address_netmask (ifa, net_address) < 0) {
 		goto error;
@@ -1017,7 +1017,7 @@ get_link_info (const struct nlmsghdr *message)
 				}
 				if (Util::should_log (LOG_NETLINK)) {
 					log_debug_nocheck_fmt (LOG_NETLINK, "   interface name (payload length: {}; string length: {})", RTA_PAYLOAD (attribute), strlen (ifa->ifa_name));
-					log_debug_nocheck_fmt (LOG_NETLINK, "     {}", ifa->ifa_name);
+					log_debug_nocheck_fmt (LOG_NETLINK, "     {}", optional_string (ifa->ifa_name));
 				}
 				break;
 
@@ -1150,7 +1150,7 @@ print_ifla_name (int id)
 			i++;
 			continue;
 		}
-		log_info_nocheck_fmt (LOG_NETLINK, "ifla->name: {} ({})", iflas [i].name, iflas [i].value);
+		log_info_nocheck_fmt (LOG_NETLINK, "ifla->name: {} ({})", optional_string (iflas [i].name), iflas [i].value);
 		break;
 	}
 }
@@ -1180,7 +1180,7 @@ print_address_list (const char title[], struct _monodroid_ifaddrs *list)
 		cur = cur->ifa_next;
 	}
 
-	log_info_nocheck_fmt (LOG_NETLINK, "{}: {}", title, msg ? msg : "[no addresses]"sv);
+	log_info_nocheck_fmt (LOG_NETLINK, "{}: {}", title, optional_string (msg, "[no addresses]"));
 	free (msg);
 }
 #endif

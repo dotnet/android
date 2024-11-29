@@ -22,7 +22,7 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 
 	bool result = zip_read_entry_info (buf, entry_name, state);
 
-	log_debug (LOG_ASSEMBLY, "{} entry: {}", state.file_name, entry_name.get () == nullptr ? "unknown"sv : entry_name.get ());
+	log_debug (LOG_ASSEMBLY, "{} entry: {}", optional_string (state.file_name), optional_string (entry_name.get (), "unknown"));
 	if (!result || entry_name.empty ()) {
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
@@ -76,7 +76,7 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 			LOG_ASSEMBLY,
 			std::format (
 				"Assembly '{}' is at bad offset {} in the APK (not aligned to 4 or 16 bytes). 'zipalign' MUST be used on {} to align it properly",
-				entry_name.get (),
+				optional_string (entry_name.get ()),
 				state.data_offset,
 				strrchr (state.file_name, '/') + 1
 			)
@@ -139,7 +139,12 @@ EmbeddedAssemblies::store_individual_assembly_data (dynamic_local_string<SENSIBL
 
 	log_debug (LOG_ASSEMBLY, "Setting bundled assembly entry data at index {}", bundled_assembly_index);
 	set_assembly_entry_data (bundled_assemblies [bundled_assembly_index], state, entry_name);
-	log_debug (LOG_ASSEMBLY, "[{}] data set: name == '{}'; file_name == '{}'", bundled_assembly_index, bundled_assemblies [bundled_assembly_index].name, bundled_assemblies [bundled_assembly_index].file_name);
+	log_debug (LOG_ASSEMBLY,
+		"[{}] data set: name == '{}'; file_name == '{}'",
+		bundled_assembly_index,
+		optional_string (bundled_assemblies [bundled_assembly_index].name),
+		optional_string (bundled_assemblies [bundled_assembly_index].file_name)
+	);
 	bundled_assembly_index++;
 	number_of_found_assemblies = bundled_assembly_index;
 	have_and_want_debug_symbols = register_debug_symbols && bundled_debug_data != nullptr;
@@ -222,7 +227,7 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 			LOG_ASSEMBLY,
 			std::format (
 				"Assembly store '{}' is not a valid .NET for Android assembly store file",
-				entry_name.get ()
+				optional_string (entry_name.get ())
 			)
 		);
 	}
@@ -232,7 +237,7 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 			LOG_ASSEMBLY,
 			std::format (
 				"Assembly store '{}' uses format version {:x}, instead of the expected {:x}",
-				entry_name.get (),
+				optional_string (entry_name.get ()),
 				header->version,
 				ASSEMBLY_STORE_FORMAT_VERSION
 			)
@@ -299,9 +304,9 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 			log_debug (
 				LOG_ASSEMBLY,
 				"Found a shared library entry {} (index: {}; name: {}; hash: {:x}; apk offset: {})",
-				entry_name.get (),
+				optional_string (entry_name.get ()),
 				number_of_zip_dso_entries,
-				name,
+				optional_string (name),
 				apk_entry->name_hash,
 				apk_entry->offset
 			);
@@ -408,7 +413,9 @@ EmbeddedAssemblies::set_entry_data (XamarinAndroidBundledAssembly &entry, ZipEnt
 	log_debug (
 		LOG_ASSEMBLY,
 		"Set bundled assembly entry data. file name: '{}'; entry name: '{}'; data size: {}",
-		entry.file_name, entry.name, entry.data_size
+		optional_string (entry.file_name),
+		optional_string (entry.name),
+		entry.data_size
 	);
 }
 
