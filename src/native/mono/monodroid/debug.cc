@@ -96,8 +96,8 @@ Debug::monodroid_profiler_load (const char *libmono_path, const char *desc, cons
 	if (!found)
 		log_warn (LOG_DEFAULT,
 			"The '{}' profiler wasn't found in the main executable nor could it be loaded from '{}'.",
-			mname.get (),
-			libname.get ()
+			optional_string (mname.get ()),
+			optional_string (libname.get ())
 		);
 }
 
@@ -109,7 +109,7 @@ bool
 Debug::load_profiler (void *handle, const char *desc, const char *symbol)
 {
 	ProfilerInitializer func = reinterpret_cast<ProfilerInitializer> (java_interop_lib_symbol (handle, symbol, nullptr));
-	log_warn (LOG_DEFAULT, "Looking for profiler init symbol '{}'? {:p}", symbol, reinterpret_cast<void*>(func));
+	log_warn (LOG_DEFAULT, "Looking for profiler init symbol '{}'? {:p}", optional_string (symbol), reinterpret_cast<void*>(func));
 
 	if (func != nullptr) {
 		func (desc);
@@ -139,7 +139,7 @@ Debug::parse_options (char *options, ConnOptions *opts)
 {
 	char **args, **ptr;
 
-	log_info (LOG_DEFAULT, "Connection options: '{}'", options);
+	log_info (LOG_DEFAULT, "Connection options: '{}'", optional_string (options));
 
 	args = Util::monodroid_strsplit (options, ",", 0);
 
@@ -163,7 +163,7 @@ Debug::parse_options (char *options, ConnOptions *opts)
 			if ((endp == arg) || (*endp != '\0'))
 				log_error (LOG_DEFAULT, "Invalid --timeout argument."sv);
 		} else {
-			log_info (LOG_DEFAULT, "Unknown connection option: '{}'", arg);
+			log_info (LOG_DEFAULT, "Unknown connection option: '{}'", optional_string (arg));
 		}
 	}
 }
@@ -275,7 +275,7 @@ Debug::process_connection (int fd)
 		// null-terminate
 		command [cmd_len] = 0;
 
-		log_info (LOG_DEFAULT, "Received cmd: '{}'.", command);
+		log_info (LOG_DEFAULT, "Received cmd: '{}'.", optional_string (command));
 
 		if (process_cmd (fd, command))
 			return true;
@@ -487,7 +487,7 @@ Debug::process_cmd (int fd, char *cmd)
 			profiler_fd = fd;
 			profiler_description = Util::monodroid_strdup_printf ("%s,output=#%i", prof, profiler_fd);
 		} else {
-			log_error (LOG_DEFAULT, "Unknown profiler: '{}'", prof);
+			log_error (LOG_DEFAULT, "Unknown profiler: '{}'", optional_string (prof));
 		}
 		/* Notify the main thread (start_profiling ()) */
 		profiler_configured = true;
@@ -496,7 +496,7 @@ Debug::process_cmd (int fd, char *cmd)
 		pthread_mutex_unlock (&process_cmd_mutex);
 		return use_fd;
 	} else {
-		log_error (LOG_DEFAULT, "Unsupported command: '{}'", cmd);
+		log_error (LOG_DEFAULT, "Unsupported command: '{}'", optional_string (cmd));
 	}
 
 	return false;
@@ -526,7 +526,7 @@ Debug::start_debugging (void)
 
 	// this text is used in unit tests to check the debugger started
 	// do not change it without updating the test.
-	log_warn (LOG_DEBUGGER, "Trying to initialize the debugger with options: {}", debug_arg);
+	log_warn (LOG_DEBUGGER, "Trying to initialize the debugger with options: {}", optional_string (debug_arg));
 
 	if (enable_soft_breakpoints ()) {
 		constexpr std::string_view soft_breakpoints { "--soft-breakpoints" };
@@ -588,10 +588,10 @@ Debug::enable_soft_breakpoints (void)
 	bool ret;
 	if (strcmp ("0", value) == 0) {
 		ret = false;
-		log_info (LOG_DEBUGGER, "soft breakpoints disabled ({} property set to {})", SharedConstants::DEBUG_MONO_SOFT_BREAKPOINTS.data (), value);
+		log_info (LOG_DEBUGGER, "soft breakpoints disabled ({} property set to {})", SharedConstants::DEBUG_MONO_SOFT_BREAKPOINTS.data (), optional_string (value));
 	} else {
 		ret = true;
-		log_info (LOG_DEBUGGER, "soft breakpoints enabled ({} property set to {})", SharedConstants::DEBUG_MONO_SOFT_BREAKPOINTS.data (), value);
+		log_info (LOG_DEBUGGER, "soft breakpoints enabled ({} property set to {})", SharedConstants::DEBUG_MONO_SOFT_BREAKPOINTS.data (), optional_string (value));
 	}
 	delete[] value;
 	return ret;
