@@ -6,6 +6,7 @@
 #include <string_view>
 
 #include <java-interop-util.h>
+#include "platform-compat.hh"
 
 using namespace std::string_view_literals;
 
