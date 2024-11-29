@@ -186,7 +186,7 @@ OSBridge::_write_stack_trace (FILE *to, char *from, LogCategories category)
 		*end    = '\0';
 		if ((category == LOG_GREF && gref_to_logcat) ||
 				(category == LOG_LREF && lref_to_logcat)) {
-			log_debug (category, "{}", m);
+			log_debug (category, "{}", optional_string (m));
 		}
 		if (to != nullptr) {
 			fprintf (to, "%s\n", optional_string (m));
@@ -200,7 +200,7 @@ void
 OSBridge::_monodroid_gref_log (const char *message)
 {
 	if (gref_to_logcat) {
-		log_debug (LOG_GREF, "{}", message);
+		log_debug (LOG_GREF, "{}", optional_string (message));
 	}
 	if (!gref_log)
 		return;
@@ -214,6 +214,7 @@ OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject newH
 	int c = _monodroid_gref_inc ();
 	if ((log_categories & LOG_GREF) == 0)
 		return c;
+
 	log_info (LOG_GREF,
 		"+g+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})",
 		c,
@@ -222,14 +223,14 @@ OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject newH
 		curType,
 		reinterpret_cast<void*>(newHandle),
 		newType,
-		threadName,
+		optional_string (threadName),
 		threadId
 	);
 	if (gref_to_logcat) {
 		if (from_writable) {
 			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
 		} else {
-			log_info (LOG_GREF, "{}", from);
+			log_info (LOG_GREF, "{}", optional_string (from));
 		}
 	}
 	if (!gref_log)
@@ -265,14 +266,14 @@ OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char *thr
 		gc_weak_gref_count,
 		reinterpret_cast<void*>(handle),
 		type,
-		threadName,
+		optional_string (threadName),
 		threadId
 	);
 	if (gref_to_logcat) {
 		if (from_writable) {
 			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
 		} else {
-			log_info (LOG_GREF, "{}", from);
+			log_info (LOG_GREF, "{}", optional_string (from));
 		}
 	}
 	if (!gref_log)
@@ -306,14 +307,14 @@ OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobject new
 		curType,
 		reinterpret_cast<void*>(newHandle),
 		newType,
-		threadName,
+		optional_string (threadName),
 		threadId
 	);
 	if (gref_to_logcat) {
 		if (from_writable) {
 			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
 		} else {
-			log_info (LOG_GREF, "{}", from);
+			log_info (LOG_GREF, "{}", optional_string (from));
 		}
 	}
 	if (!gref_log)
@@ -347,14 +348,14 @@ OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const char *th
 		gc_weak_gref_count,
 		reinterpret_cast<void*>(handle),
 		type,
-		threadName,
+		optional_string (threadName),
 		threadId
 	);
 	if (gref_to_logcat) {
 		if (from_writable) {
 			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
 		} else {
-			log_info (LOG_GREF, "{}", from);
+			log_info (LOG_GREF, "{}", optional_string (from));
 		}
 	}
 	if (!gref_log)
@@ -384,14 +385,14 @@ OSBridge::_monodroid_lref_log_new (int lrefc, jobject handle, char type, const c
 		lrefc,
 		reinterpret_cast<void*>(handle),
 		type,
-		threadName,
+		optional_string (threadName),
 		threadId
 	);
 	if (lref_to_logcat) {
 		if (from_writable) {
 			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
 		} else {
-			log_info (LOG_GREF, "{}", from);
+			log_info (LOG_GREF, "{}", optional_string (from));
 		}
 	}
 	if (!lref_log)
@@ -420,14 +421,14 @@ OSBridge::_monodroid_lref_log_delete (int lrefc, jobject handle, char type, cons
 		lrefc,
 		reinterpret_cast<void*>(handle),
 		type,
-		threadName,
+		optional_string (threadName),
 		threadId
 	);
 	if (lref_to_logcat) {
 		if (from_writable) {
 			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
 		} else {
-			log_info (LOG_GREF, "{}", from);
+			log_info (LOG_GREF, "{}", optional_string (from));
 		}
 	}
 	if (!lref_log)
@@ -541,8 +542,8 @@ OSBridge::gc_bridge_class_kind (MonoClass *klass)
 	if (i == static_cast<int> (-NUM_GC_BRIDGE_TYPES)) {
 		log_info (LOG_GC,
 			"asked if a class {}.{} is a bridge before we inited java.lang.Object",
-			mono_class_get_namespace (klass),
-			mono_class_get_name (klass)
+			optional_string (mono_class_get_namespace (klass)),
+			optional_string (mono_class_get_name (klass))
 		);
 		return MonoGCBridgeObjectKind::GC_BRIDGE_TRANSPARENT_CLASS;
 	}
@@ -569,8 +570,8 @@ OSBridge::gc_is_bridge_object (MonoObject *object)
 		MonoClass *mclass = mono_object_get_class (object);
 		log_info (LOG_GC,
 			"object of class {}.{} with null handle",
-			mono_class_get_namespace (mclass),
-			mono_class_get_name (mclass)
+			optional_string (mono_class_get_namespace (mclass)),
+			optional_string (mono_class_get_name (mclass))
 		);
 #endif
 		return 0;
@@ -657,9 +658,9 @@ OSBridge::add_reference (JNIEnv *env, OSBridge::AddReferenceTarget target, OSBri
 			 *reffed_description = describe_target (reffed_target);
 
 		if (success)
-			log_warn (LOG_GC, "Added reference for {} to {}", description, reffed_description);
+			log_warn (LOG_GC, "Added reference for {} to {}", optional_string (description), optional_string (reffed_description));
 		else
-			log_error (LOG_GC, "Missing monodroidAddReference method for {}", description);
+			log_error (LOG_GC, "Missing monodroidAddReference method for {}", optional_string (description));
 
 		free (description);
 		free (reffed_description);
@@ -897,8 +898,8 @@ OSBridge::gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBri
 							klass = mono_object_get_class (obj);
 							log_error (LOG_GC,
 								"Missing monodroidClearReferences method for object of class {}.{}",
-								mono_class_get_namespace (klass),
-								mono_class_get_name (klass)
+								optional_string (mono_class_get_namespace (klass)),
+								optional_string (mono_class_get_name (klass))
 							);
 						}
 #endif
@@ -963,8 +964,8 @@ OSBridge::gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xre
 				log_info (LOG_GC,
 					"\tobj {:p} [{}::{}] handle {:p} key_handle {:p}",
 					reinterpret_cast<void*>(obj),
-					mono_class_get_namespace (klass),
-					mono_class_get_name (klass),
+					optional_string (mono_class_get_namespace (klass)),
+					optional_string (mono_class_get_name (klass)),
 					reinterpret_cast<void*>(handle),
 					key_handle
 				);
