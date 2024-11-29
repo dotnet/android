@@ -44,8 +44,8 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 	log_debug (
 		LOG_ASSEMBLY,
 		"MM: Trying to look up pointer to method '{}' (token {:x}) in class '{}' (index {})",
-		get_method_name (mono_image_index, method_token), method_token,
-		get_class_name (class_index), class_index
+		optional_string (get_method_name (mono_image_index, method_token)), method_token,
+		optional_string (get_class_name (class_index)), class_index
 	);
 
 	if (class_index >= marshal_methods_number_of_classes) [[unlikely]] {
@@ -81,7 +81,7 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 		log_debug (
 			LOG_ASSEMBLY,
 			"Loaded pointer to method {} ({:p}) (mono_image_index == {}; class_index == {}; method_token == {:x})",
-			mono_method_full_name (method, true),
+			optional_string (mono_method_full_name (method, true)),
 			ret,
 			mono_image_index,
 			class_index,
@@ -93,8 +93,8 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 	log_fatal (
 		LOG_DEFAULT,
 		"Failed to obtain function pointer to method '{}' in class '{}'",
-		get_method_name (mono_image_index, method_token),
-		get_class_name (class_index)
+		optional_string (get_method_name (mono_image_index, method_token)),
+		optional_string (get_class_name (class_index))
 	);
 
 	log_fatal (
