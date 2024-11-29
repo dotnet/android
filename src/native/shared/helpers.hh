@@ -2,14 +2,12 @@
 #define __HELPERS_HH
 
 #include <cstdlib>
-#include <concepts>
 #include <source_location>
 #include <string>
 #include <string_view>
 
 #include <java-interop-util.h>
 #include "platform-compat.hh"
-#include "log_types.hh"
 
 using namespace std::string_view_literals;
 
