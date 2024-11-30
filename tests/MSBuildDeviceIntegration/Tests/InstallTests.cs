@@ -333,7 +333,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.True (didLaunch, "Activity should have started.");
 				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, DeviceAbi);
 				builder.Uninstall (proj);
-				StringAssert.Contains ("methods.txt", directorylist, $"methods.txt did not exist in the .__override__ directory.\nFound:{directorylist}");
+				StringAssert.Contains ("methods.xml", directorylist, $"methods.xml did not exist in the .__override__ directory.\nFound:{directorylist}");
 			}
 		}
 
@@ -546,7 +546,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			long lib1FirstBuildSize = new FileInfo (Path.Combine (rootPath, lib1.ProjectName, lib1.OutputPath, "Library1.dll")).Length;
-			
+
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, app.ProjectName))) {
 				builder.Verbosity = LoggerVerbosity.Detailed;
 				builder.ThrowOnBuildFailure = false;
@@ -653,7 +653,7 @@ namespace Xamarin.Android.Build.Tests
 public class TestJavaClass2 {
 
 	public String test(){
-		
+
 		return ""Java is called"";
 	}
 }",
@@ -671,7 +671,7 @@ public class TestJavaClass2 {
 public class TestJavaClass {
 
 	public String test(){
-		
+
 		return ""Java is called"";
 	}
 }",
