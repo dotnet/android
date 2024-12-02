@@ -176,6 +176,7 @@ namespace Xamarin.Android.Prepare
 			public static readonly string ExternalGitDepsDestDir           = ExternalDir;
 			public static readonly string ExternalXamarinAndroidToolsSln   = Path.Combine (ExternalDir, "xamarin-android-tools", "Xamarin.Android.Tools.sln");
 			public static readonly string NativeSourcesDir                 = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "src", "native");
+			public static readonly string NativeCLRSourcesDir              = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "src", "native-clr");
 
 			// Dynamic locations used throughout the code
 			public static string ExternalJavaInteropDir              => GetCachedPath (ref externalJavaInteropDir, ()              => ctx.Properties.GetRequiredValue (KnownProperties.JavaInteropFullPath));
