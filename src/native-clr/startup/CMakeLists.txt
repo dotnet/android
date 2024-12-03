@@ -1,4 +1,4 @@
-set(LIB_NAME xamarin-startup-clr)
+set(LIB_NAME xamarin-startup)
 set(LIB_ALIAS xa::xamarin-startup-clr)
 
 set(XAMARIN_STARTUP_SOURCES
@@ -8,11 +8,12 @@ add_clang_check_sources("${XAMARIN_STARTUP_SOURCES}")
 
 add_library(
   ${LIB_NAME}
-  SHARED
+  STATIC
   ${XAMARIN_STARTUP_SOURCES}
 )
 
 add_library(${LIB_ALIAS} ALIAS ${LIB_NAME})
+set_static_library_suffix(${LIB_NAME})
 
 target_include_directories(
   ${LIB_NAME}
