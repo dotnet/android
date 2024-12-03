@@ -140,7 +140,7 @@ Tato chyba je pravděpodobně způsobená problémem se souborem AndroidManifest
     <value>Neplatný název souboru: Musí začínat A–z, a–z nebo podtržítkem.</value>
   </data>
   <data name="APT0005" xml:space="preserve">
-    <value>Invalid file name: Filenames cannot use Java reserved words.</value>
+    <value>Neplatný název souboru: Názvy souborů nemůžou používat vyhrazená slova Java.</value>
   </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Nepovedlo se určit úroveň rozhraní API pro $(TargetFrameworkVersion) {0}.</value>
@@ -979,7 +979,7 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 {0} - A Maven artifact specification</comment>
   </data>
   <data name="XA4236" xml:space="preserve">
-    <value>Cannot download Maven artifact '{0}:{1}'.
+    <value>Nelze stáhnout artefakt Maven „{0}:{1}“.
 {2}</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - Maven artifact group id

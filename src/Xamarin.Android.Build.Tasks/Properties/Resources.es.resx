@@ -140,7 +140,7 @@ Este error se debe probablemente a un problema con el archivo AndroidManifest.xm
     <value>Nombre de archivo no válido: debe comenzar con A-z o a-z o un guion bajo.</value>
   </data>
   <data name="APT0005" xml:space="preserve">
-    <value>Invalid file name: Filenames cannot use Java reserved words.</value>
+    <value>Nombre de archivo no válido: los nombres de archivo no pueden usar palabras reservadas de Java.</value>
   </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>No se pudo determinar el nivel de API para $(TargetFrameworkVersion) de "{0}".</value>
@@ -979,7 +979,7 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
 {0} - A Maven artifact specification</comment>
   </data>
   <data name="XA4236" xml:space="preserve">
-    <value>Cannot download Maven artifact '{0}:{1}'.
+    <value>No se puede descargar el artefacto de Maven "{0}:{1}".
 {2}</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - Maven artifact group id

@@ -140,7 +140,7 @@ Dieser Fehler wird wahrscheinlich durch ein Problem mit der Datei "AndroidManife
     <value>Ungültiger Dateiname: Er muss mit A-z oder a-z oder einem Unterstrich beginnen.</value>
   </data>
   <data name="APT0005" xml:space="preserve">
-    <value>Invalid file name: Filenames cannot use Java reserved words.</value>
+    <value>Ungültiger Dateiname: Dateinamen können keine reservierten Java-Wörter verwenden.</value>
   </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Die API-Ebene für $(TargetFrameworkVersion) {0} konnte nicht bestimmt werden.</value>
@@ -979,7 +979,7 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
 {0} - A Maven artifact specification</comment>
   </data>
   <data name="XA4236" xml:space="preserve">
-    <value>Cannot download Maven artifact '{0}:{1}'.
+    <value>Das Maven-Artefakt „{0}:{1}“ kann nicht heruntergeladen werden.
 {2}</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - Maven artifact group id
