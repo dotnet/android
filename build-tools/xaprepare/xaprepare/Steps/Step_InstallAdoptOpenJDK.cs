@@ -63,9 +63,9 @@ namespace Xamarin.Android.Prepare
 			var jiJavaHomeVarValue = Environment.GetEnvironmentVariable ("JI_JAVA_HOME");
 			if (AllowJIJavaHomeMatch && Directory.Exists (jiJavaHomeVarValue)) {
 				jdkInstallDir = jiJavaHomeVarValue;
-				OpenJDKExistsAndIsValid (jdkInstallDir, out string? installedJIVersion);
-				if (!Version.TryParse (installedJIVersion, out Version? cversion) || cversion == null) {
-					Log.DebugLine ($"Unable to parse {ProductName} version from: {installedJIVersion}");
+				OpenJDKExistsAndIsValid (jdkInstallDir, out installedVersion);
+				if (!Version.TryParse (installedVersion, out Version? cversion) || cversion == null) {
+					Log.DebugLine ($"Unable to parse {ProductName} version from: {installedVersion}");
 					return false;
 				}
 				if (cversion.Major != JdkVersion.Major) {
