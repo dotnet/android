@@ -1,0 +1,31 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Sdk.NativeAOT.targets
+
+This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
+***********************************************************************************************
+-->
+<Project>
+  <Target Name="_AndroidNativeAOTSettings" AfterTargets="_ResolveMonoAndroidSdks">
+    <!-- Example settings from: https://github.com/jonathanpeppers/Android-NativeAOT/blob/ea69d122cdc7de67aa6a5db14b7e560763c63cdd/DotNet/libdotnet.targets -->
+    <PropertyGroup>
+      <_NdkSysrootAbi>aarch64-linux-android</_NdkSysrootAbi>
+      <_NdkClangPrefix>aarch64-linux-android21-</_NdkClangPrefix>
+      <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('osx')) ">darwin-x86_64</_NdkPrebuiltAbi>
+      <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('linux')) ">linux-x86_64</_NdkPrebuiltAbi>
+      <_NdkSysrootDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/sysroot/usr/lib/$(_NdkSysrootAbi)</_NdkSysrootDir>
+      <_NdkBinDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/bin/</_NdkBinDir>
+      <CppCompilerAndLinker>$(_NdkBinDir)$(_NdkClangPrefix)clang++</CppCompilerAndLinker>
+      <ObjCopyName>$(_NdkBinDir)llvm-objcopy</ObjCopyName>
+    </PropertyGroup>
+    <ItemGroup>
+      <LinkerArg Include="-Wl,--undefined-version" />
+    </ItemGroup>
+  </Target>
+  <Target Name="_AndroidBeforeIlc" BeforeTargets="WriteIlcRspFileForCompilation">
+    <!-- HACK: -targetos:android results in error, so use linux -->
+    <PropertyGroup>
+      <_targetOS>linux</_targetOS>
+    </PropertyGroup>
+  </Target>
+</Project>
