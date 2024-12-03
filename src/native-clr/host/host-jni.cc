@@ -25,10 +25,10 @@ JNICALL Java_mono_android_Runtime_register (JNIEnv *env, [[maybe_unused]] jclass
 }
 
 JNIEXPORT void JNICALL
-Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
-                                jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset, jobject loader,
-                                jobjectArray assembliesJava, jboolean isEmulator,
-                                jboolean haveSplitApks)
+Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
+	jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset, jobject loader,
+	jobjectArray assembliesJava, jboolean isEmulator,
+	jboolean haveSplitApks)
 {
 }
 

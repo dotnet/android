@@ -11,13 +11,13 @@ auto
 AndroidSystem::lookup_system_property (std::string_view const& name, size_t &value_len) noexcept -> const char*
 {
 	value_len = 0;
-#if defined (DEBUG)
-	BundledProperty *p = lookup_system_property (name);
-	if (p != nullptr) {
-		value_len = p->value_len;
-		return p->name;
-	}
-#endif // DEBUG || !ANDROID
+// #if defined (DEBUG)
+// 	BundledProperty *p = lookup_system_property (name);
+// 	if (p != nullptr) {
+// 		value_len = p->value_len;
+// 		return p->name;
+// 	}
+// #endif // DEBUG || !ANDROID
 
 	if (application_config.system_property_count == 0) {
 		return nullptr;
