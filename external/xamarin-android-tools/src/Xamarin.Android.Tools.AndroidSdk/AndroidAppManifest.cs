@@ -329,7 +329,9 @@ namespace Xamarin.Android.Tools
 
 		IEnumerable<XElement> GetLaunchableActivities ()
 		{
-			foreach (var activity in application.Elements ("activity")) {
+			var activities = application.Elements ("activity");
+			var aliases = application.Elements ("activity-alias");
+			foreach (var activity in activities.Union (aliases)) {
 				foreach (var filter in activity.Elements ("intent-filter")) {
 					foreach (var category in filter.Elements ("category"))
 						if (category != null && (string?)category.Attribute (aName) == "android.intent.category.LAUNCHER")
