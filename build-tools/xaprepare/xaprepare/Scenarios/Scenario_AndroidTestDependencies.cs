@@ -18,7 +18,7 @@ namespace Xamarin.Android.Prepare
 		protected override void AddSteps (Context context)
 		{
 			Steps.Add (new Step_InstallDotNetPreview ());
-			Steps.Add (new Step_InstallMicrosoftOpenJDK ());
+			Steps.Add (new Step_InstallMicrosoftOpenJDK (allowJIJavaHomeMatch: true));
 			Steps.Add (new Step_Android_SDK_NDK (AndroidSdkNdkType));
 
 			// disable installation of missing programs...
