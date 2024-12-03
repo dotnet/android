@@ -9,8 +9,6 @@ updates:
     directory: "/src/manifestmerger/"
     schedule:
       interval: "weekly"
-    pull-request-branch-name:
-      max_length: 50
   - package-ecosystem: "gitsubmodule"
     directory: "/"
     schedule:
