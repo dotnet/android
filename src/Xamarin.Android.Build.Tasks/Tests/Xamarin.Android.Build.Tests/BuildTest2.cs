@@ -115,6 +115,10 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
+				// Add locally downloaded NativeAOT packs
+				ExtraNuGetConfigSources = {
+					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
+				}
 			};
 			proj.SetRuntimeIdentifier ("arm64-v8a");
 			proj.SetProperty ("PublishAot", "true");
