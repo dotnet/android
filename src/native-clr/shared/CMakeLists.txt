@@ -1,4 +1,4 @@
-set(LIB_NAME xa-shared-bits-clr)
+set(LIB_NAME xa-shared-bits)
 set(LIB_ALIAS xa::shared-clr)
 
 set(XA_SHARED_SOURCES
@@ -11,7 +11,6 @@ add_library(
   ${LIB_NAME}
   STATIC
   ${XA_SHARED_SOURCES}
-  ${XA_SHARED_CXX_ABI_SOURCES}
 )
 add_library(${LIB_ALIAS} ALIAS ${LIB_NAME})
 
@@ -43,14 +42,6 @@ macro(lib_target_options TARGET_NAME)
     PRIVATE
     ${XA_COMMON_CXX_ARGS}
   )
-
-  if(DEBUG_BUILD)
-    set_target_properties(
-      ${TARGET_NAME}
-      PROPERTIES
-      ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-    )
-  endif()
 
   xa_add_compile_definitions(${TARGET_NAME})
   xa_add_include_directories(${TARGET_NAME})

@@ -133,6 +133,10 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_fastdev_net6.jar" ExcludeFromLegacy="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_net6.dex" ExcludeFromLegacy="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_fastdev_net6.dex" ExcludeFromLegacy="true" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_clr.jar" ExcludeFromLegacy="true" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_fastdev_clr.jar" ExcludeFromLegacy="true" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_clr.dex" ExcludeFromLegacy="true" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_fastdev_clr.dex" ExcludeFromLegacy="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)manifestmerger.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)proguard-android.txt" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)protobuf-net.dll" />

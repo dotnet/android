@@ -1,4 +1,4 @@
-set(LIB_NAME runtime-base-clr)
+set(LIB_NAME runtime-base)
 set(LIB_ALIAS xa::runtime-base-clr)
 
 set(XA_RUNTIME_BASE_SOURCES
@@ -42,14 +42,6 @@ target_link_libraries(
   xa::shared-clr
   xa::xamarin-app-clr
 )
-
-if(DEBUG_BUILD)
-  set_target_properties(
-    ${LIB_NAME}
-    PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-  )
-endif()
 
 xa_add_compile_definitions(${LIB_NAME})
 xa_add_include_directories(${LIB_NAME})

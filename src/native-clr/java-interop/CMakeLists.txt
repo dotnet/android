@@ -1,4 +1,4 @@
-set(LIB_NAME xa-java-interop-clr)
+set(LIB_NAME xa-java-interop)
 set(LIB_ALIAS xa::java-interop-clr)
 
 set(JAVA_INTEROP_SOURCES
