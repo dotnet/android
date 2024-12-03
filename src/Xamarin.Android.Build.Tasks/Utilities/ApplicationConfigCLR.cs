@@ -3,7 +3,7 @@ using System;
 namespace Xamarin.Android.Tasks;
 
 // Declaration order of fields and their types must correspond *exactly* to that in
-// src/native/clr/xamarin-app-stub/xamarin-app.hh ApplicationConfig structure
+// src/native-clr/xamarin-app-stub/xamarin-app.hh ApplicationConfig structure
 //
 // Type mappings:
 //
@@ -26,9 +26,9 @@ sealed class ApplicationConfigCLR
 {
 	public bool   uses_assembly_preload;
 	public bool   jni_add_native_method_registration_attribute_present;
+	public bool   have_runtime_config_blob;
 	public bool   marshal_methods_enabled;
 	public bool   ignore_split_configs;
-	public uint   number_of_runtime_properties;
 	public uint   package_naming_policy;
 	public uint   environment_variable_count;
 	public uint   system_property_count;

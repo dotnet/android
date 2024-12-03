@@ -1805,6 +1805,7 @@ because xbuild doesn't support framework reference assemblies.
     UseAssemblyStore="$(AndroidUseAssemblyStore)"
     EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
     CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
+    TargetsCLR="$(_AndroidUseCLR)"
   >
   </GeneratePackageManagerJava>
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
@@ -2066,9 +2067,15 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<Target Name="_PrepareApplicationSharedLibraryItems" Condition=" '$(_AndroidRuntime)' == 'MonoVM' ">
-  <ItemGroup>
+<Target Name="_PrepareApplicationSharedLibraryItems">
+  <ItemGroup Condition=" '$(_AndroidUseCLR)' != 'True' ">
     <_ApplicationSharedLibrary Include="$(_AndroidApplicationSharedLibraryPath)%(_BuildTargetAbis.Identity)\libxamarin-app.so">
+      <abi>%(_BuildTargetAbis.Identity)</abi>
+    </_ApplicationSharedLibrary>
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(_AndroidUseCLR)' == 'True' ">
+    <_ApplicationSharedLibrary Include="$(_AndroidApplicationSharedLibraryPath)%(_BuildTargetAbis.Identity)\libxamarin-app-clr.so">
       <abi>%(_BuildTargetAbis.Identity)</abi>
     </_ApplicationSharedLibrary>
   </ItemGroup>
@@ -2084,6 +2091,7 @@ because xbuild doesn't support framework reference assemblies.
       DebugBuild="$(AndroidIncludeDebugSymbols)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       ZipAlignmentPages="$(AndroidZipAlignment)"
+      TargetsCLR="$(_AndroidUseCLR)"
   />
   <ItemGroup>
     <FileWrites Include="@(_ApplicationSharedLibrary)" />

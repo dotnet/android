@@ -1,11 +1,14 @@
 #include <host/host.hh>
 #include <host/host-jni.hh>
+#include <shared/log_types.hh>
 
 using namespace xamarin::android;
 
 JNIEXPORT jint JNICALL
 JNI_OnLoad (JavaVM *vm, void *reserved)
 {
+	log_write (LOG_DEFAULT, LogLevel::Info, "JNI_OnLoad");
+
 	return Host::Java_JNI_OnLoad (vm, reserved);
 }
 

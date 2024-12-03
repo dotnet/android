@@ -1,4 +1,4 @@
-set(LIB_NAME xa-lz4-clr)
+set(LIB_NAME xa-lz4)
 set(LIB_ALIAS xa::lz4-clr)
 
 set(LZ4_SRC_DIR "${EXTERNAL_DIR}/lz4/lib")
@@ -15,6 +15,8 @@ add_library(
 )
 
 add_library(${LIB_ALIAS} ALIAS ${LIB_NAME})
+
+set_static_library_suffix(${LIB_NAME})
 
 target_compile_definitions(
   ${LIB_NAME}

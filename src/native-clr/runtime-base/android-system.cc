@@ -86,8 +86,9 @@ auto AndroidSystem::monodroid_get_system_property (std::string_view const& name,
 
 	size_t plen;
 	const char *v = lookup_system_property (name, plen);
-	if (v == nullptr)
+	if (v == nullptr) {
 		return len;
+	}
 
 	value.assign (v, plen);
 	return Helpers::add_with_overflow_check<int> (plen, 0);
@@ -107,7 +108,7 @@ AndroidSystem::get_max_gref_count_from_system () noexcept -> long
 	dynamic_local_string<Constants::PROPERTY_VALUE_BUFFER_LEN> override;
 	if (monodroid_get_system_property (Constants::DEBUG_MONO_MAX_GREFC, override) > 0) {
 		char *e;
-		max       = strtol (override.get (), &e, 10);
+		max = strtol (override.get (), &e, 10);
 		switch (*e) {
 			case 'k':
 				e++;
