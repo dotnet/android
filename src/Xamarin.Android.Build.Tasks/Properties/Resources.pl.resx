@@ -140,7 +140,7 @@ Ten błąd jest prawdopodobnie spowodowany problemem dotyczącym pliku AndroidMa
     <value>Nieprawidłowa nazwa pliku: musi zaczynać się od litery w zakresie od A-z lub a-z bądź od podkreślenia.</value>
   </data>
   <data name="APT0005" xml:space="preserve">
-    <value>Invalid file name: Filenames cannot use Java reserved words.</value>
+    <value>Nieprawidłowa nazwa pliku: nazwy plików nie mogą używać słów zastrzeżonych języka Java.</value>
   </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Nie można określić poziomu interfejsu API dla parametru $(TargetFrameworkVersion) elementu „{0}”.</value>
@@ -979,7 +979,7 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
 {0} - A Maven artifact specification</comment>
   </data>
   <data name="XA4236" xml:space="preserve">
-    <value>Cannot download Maven artifact '{0}:{1}'.
+    <value>Nie można pobrać artefaktu Maven „{0}:{1}”.
 {2}</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - Maven artifact group id

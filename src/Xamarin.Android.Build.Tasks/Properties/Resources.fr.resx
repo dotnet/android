@@ -140,7 +140,7 @@ Cette erreur est probablement due à un problème avec le fichier AndroidManifes
     <value>Nom de fichier non valide : il doit commencer par A-z, a-z ou un trait de soulignement.</value>
   </data>
   <data name="APT0005" xml:space="preserve">
-    <value>Invalid file name: Filenames cannot use Java reserved words.</value>
+    <value>Nom de fichier non valide : les noms de fichiers ne peuvent pas utiliser de mots réservés Java.</value>
   </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Impossible de déterminer le niveau d'API pour $(TargetFrameworkVersion) '{0}'.</value>
@@ -979,7 +979,7 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
 {0} - A Maven artifact specification</comment>
   </data>
   <data name="XA4236" xml:space="preserve">
-    <value>Cannot download Maven artifact '{0}:{1}'.
+    <value>Impossible de télécharger l’artefact Maven '{0}:{1}'.
 {2}</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - Maven artifact group id

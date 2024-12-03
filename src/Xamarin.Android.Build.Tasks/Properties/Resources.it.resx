@@ -140,7 +140,7 @@ Questo errore è probabilmente causato da un problema con il file di AndroidMani
     <value>Nome file non valido: deve iniziare con A-z, a-z o un carattere di sottolineatura.</value>
   </data>
   <data name="APT0005" xml:space="preserve">
-    <value>Invalid file name: Filenames cannot use Java reserved words.</value>
+    <value>Nome file non valido: i nomi di file non possono usare parole riservate in Java.</value>
   </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Non è stato possibile determinare il livello API per $(TargetFrameworkVersion) di '{0}'.</value>
@@ -979,7 +979,7 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
 {0} - A Maven artifact specification</comment>
   </data>
   <data name="XA4236" xml:space="preserve">
-    <value>Cannot download Maven artifact '{0}:{1}'.
+    <value>Non è possibile scaricare l'artefatto Maven '{0}:{1}'.
 {2}</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - Maven artifact group id

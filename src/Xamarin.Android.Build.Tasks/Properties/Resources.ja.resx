@@ -140,7 +140,7 @@
     <value>無効なファイル名: a-z または A-Z で始まり、またはアンダースコアで始まる必要があります。</value>
   </data>
   <data name="APT0005" xml:space="preserve">
-    <value>Invalid file name: Filenames cannot use Java reserved words.</value>
+    <value>無効なファイル名: ファイル名には Java の予約語を使用できません。</value>
   </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>'{0}' の $(TargetFrameworkVersion) の API レベルを特定できませんでした。</value>
@@ -980,7 +980,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - A Maven artifact specification</comment>
   </data>
   <data name="XA4236" xml:space="preserve">
-    <value>Cannot download Maven artifact '{0}:{1}'.
+    <value>Maven 成果物 '{0}:{1}' をダウンロードできません。
 {2}</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - Maven artifact group id
