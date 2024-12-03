@@ -64,18 +64,14 @@ namespace Xamarin.Android.Prepare
 			if (AllowJIJavaHomeMatch && Directory.Exists (jiJavaHomeVarValue)) {
 				jdkInstallDir = jiJavaHomeVarValue;
 				OpenJDKExistsAndIsValid (jdkInstallDir, out installedVersion);
-				if (!Version.TryParse (installedVersion, out Version? cversion) || cversion == null) {
-					Log.DebugLine ($"Unable to parse {ProductName} version from: {installedVersion}");
-					return false;
+				if (Version.TryParse (installedVersion, out Version? cversion) && cversion != null) {
+					if (cversion.Major == JdkVersion.Major) {
+						Log.Status ($"{ProductName} with version ");
+						Log.Status (installedVersion ?? "Unknown", ConsoleColor.Yellow);
+						Log.StatusLine (" already installed in: ", jdkInstallDir, tailColor: ConsoleColor.Cyan);
+						return true;
+					}
 				}
-				if (cversion.Major != JdkVersion.Major) {
-					Log.DebugLine ($"Invalid {ProductName} version. Need {JdkVersion}, found {cversion}");
-					return false;
-				}
-				Log.Status ($"{ProductName} with version ");
-				Log.Status (installedVersion ?? "Unknown", ConsoleColor.Yellow);
-				Log.StatusLine (" already installed in: ", jdkInstallDir, tailColor: ConsoleColor.Cyan);
-				return true;
 			}
 
 			Log.StatusLine ($"{ProductName} {JdkVersion} r{JdkRelease} will be installed to {jdkInstallDir}");
