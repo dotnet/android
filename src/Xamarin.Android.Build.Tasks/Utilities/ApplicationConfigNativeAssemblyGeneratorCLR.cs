@@ -12,11 +12,6 @@ namespace Xamarin.Android.Tasks;
 
 class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 {
-	// From host_runtime_contract.h in dotnet/runtime
-	const string HOST_PROPERTY_RUNTIME_CONTRACT = "HOST_RUNTIME_CONTRACT";
-	const string HOST_PROPERTY_BUNDLE_PROBE     = "BUNDLE_PROBE";
-	const string HOST_PROPERTY_PINVOKE_OVERRIDE = "PINVOKE_OVERRIDE";
-
 	sealed class DSOCacheEntryContextDataProvider : NativeAssemblerStructContextDataProvider
 	{
 		public override string GetComment (object data, string fieldName)
@@ -33,11 +28,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			return String.Empty;
 		}
 	}
-
-	// Disable "Field 'X' is never assigned to, and will always have its default value Y"
-	// Classes below are used in native code generation, thus all the fields must be present
-	// but they aren't always assigned values (which is fine).
-	#pragma warning disable CS0649
 
 	// Order of fields and their type must correspond *exactly* (with exception of the
 	// ignored managed members) to that in
@@ -99,7 +89,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	}
 
 	// Order of fields and their type must correspond *exactly* to that in
-	// src/native/clr/include/xamarin-app.hh AssemblyStoreRuntimeData structure
+	// src/monodroid/jni/xamarin-app.hh AssemblyStoreRuntimeData structure
 	sealed class AssemblyStoreRuntimeData
 	{
 		[NativePointer (IsNull = true)]
@@ -109,27 +99,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 		[NativePointer (IsNull = true)]
 		public AssemblyStoreAssemblyDescriptor assemblies;
-	}
-
-	// Order of fields and their types must correspond *exactly* to that in
-	// src/native/clr/include/xamarin-app.hh RuntimeProperty structure
-	sealed class RuntimeProperty
-	{
-		public string key;
-		public string value;
-		public uint value_size;
-	}
-
-	// Order of fields and their types must correspond *exactly* to that in
-	// src/native/clr/include/xamarin-app.hh RuntimePropertyIndexEntry structure
-	sealed class RuntimePropertyIndexEntry
-	{
-		[NativeAssembler (Ignore = true)]
-		public string HashedKey;
-
-		[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
-		public ulong key_hash;
-		public uint index;
 	}
 
 	sealed class XamarinAndroidBundledAssemblyContextDataProvider : NativeAssemblerStructContextDataProvider
@@ -168,20 +137,16 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToPreAllocatedBuffer = true)]
 		public string name;
 	}
-#pragma warning restore CS0649
 
 	// Keep in sync with FORMAT_TAG in src/monodroid/jni/xamarin-app.hh
 	const ulong FORMAT_TAG = 0x00025E6972616D58; // 'Xmari^XY' where XY is the format version
 
 	SortedDictionary <string, string>? environmentVariables;
 	SortedDictionary <string, string>? systemProperties;
-	SortedDictionary <string, string>? runtimeProperties;
 	StructureInstance? application_config;
 	List<StructureInstance<DSOCacheEntry>>? dsoCache;
 	List<StructureInstance<DSOCacheEntry>>? aotDsoCache;
 	List<StructureInstance<XamarinAndroidBundledAssembly>>? xamarinAndroidBundledAssemblies;
-	List<StructureInstance<RuntimeProperty>>? runtimePropertiesData;
-	List<StructureInstance<RuntimePropertyIndexEntry>>? runtimePropertyIndex;
 
 	StructureInfo? applicationConfigStructureInfo;
 	StructureInfo? dsoCacheEntryStructureInfo;
@@ -189,14 +154,11 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	StructureInfo? xamarinAndroidBundledAssemblyStructureInfo;
 	StructureInfo? assemblyStoreSingleAssemblyRuntimeDataStructureinfo;
 	StructureInfo? assemblyStoreRuntimeDataStructureInfo;
-	StructureInfo? runtimePropertyStructureInfo;
-	StructureInfo? runtimePropertyIndexEntryStructureInfo;
-	StructureInfo? hostConfigurationPropertyStructureInfo;
-	StructureInfo? hostConfigurationPropertiesStructureInfo;
 
 	public bool UsesAssemblyPreload { get; set; }
 	public string AndroidPackageName { get; set; }
 	public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
+	public bool HaveRuntimeConfigBlob { get; set; }
 	public int NumberOfAssembliesInApk { get; set; }
 	public int BundledAssemblyNameWidth { get; set; } // including the trailing NUL
 	public int AndroidRuntimeJNIEnvToken { get; set; }
@@ -209,8 +171,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	public bool MarshalMethodsEnabled { get; set; }
 	public bool IgnoreSplitConfigs { get; set; }
 
-	public ApplicationConfigNativeAssemblyGeneratorCLR (IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties,
-		IDictionary<string, string>? runtimeProperties, TaskLoggingHelper log)
+	public ApplicationConfigNativeAssemblyGeneratorCLR (IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties, TaskLoggingHelper log)
 	: base (log)
 	{
 		if (environmentVariables != null) {
@@ -220,19 +181,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		if (systemProperties != null) {
 			this.systemProperties = new SortedDictionary<string, string> (systemProperties, StringComparer.Ordinal);
 		}
-
-		if (runtimeProperties != null) {
-			this.runtimeProperties = new SortedDictionary<string, string> (runtimeProperties, StringComparer.Ordinal);
-		} else {
-			this.runtimeProperties = new SortedDictionary<string, string> (StringComparer.Ordinal);
-		}
-
-		// This will be filled in by the native host.
-		this.runtimeProperties[HOST_PROPERTY_RUNTIME_CONTRACT] = String.Empty;
-
-		// these mustn't be there, they would break our host contract
-		this.runtimeProperties.Remove (HOST_PROPERTY_PINVOKE_OVERRIDE);
-		this.runtimeProperties.Remove (HOST_PROPERTY_BUNDLE_PROBE);
 	}
 
 	protected override void Construct (LlvmIrModule module)
@@ -255,9 +203,9 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		var app_cfg = new ApplicationConfigCLR {
 			uses_assembly_preload = UsesAssemblyPreload,
 			jni_add_native_method_registration_attribute_present = JniAddNativeMethodRegistrationAttributePresent,
+			have_runtime_config_blob = HaveRuntimeConfigBlob,
 			marshal_methods_enabled = MarshalMethodsEnabled,
 			ignore_split_configs = IgnoreSplitConfigs,
-			number_of_runtime_properties = (uint)(runtimeProperties == null ? 0 : runtimeProperties.Count),
 			package_naming_policy = (uint)PackageNamingPolicy,
 			environment_variable_count = (uint)(environmentVariables == null ? 0 : environmentVariables.Count * 2),
 			system_property_count = (uint)(systemProperties == null ? 0 : systemProperties.Count * 2),
@@ -302,106 +250,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		};
 		module.Add (bundled_assemblies);
 
-		(runtimePropertiesData, runtimePropertyIndex) = InitRuntimeProperties ();
-		var runtime_properties = new LlvmIrGlobalVariable (runtimePropertiesData, "runtime_properties", LlvmIrVariableOptions.GlobalConstant) {
-			Comment = "Runtime config properties",
-		};
-		module.Add (runtime_properties);
-
-		var runtime_property_index = new LlvmIrGlobalVariable (runtimePropertyIndex, "runtime_property_index", LlvmIrVariableOptions.GlobalConstant) {
-			Comment = "Runtime config property index, sorted on property key hash",
-			BeforeWriteCallback = HashAndSortRuntimePropertiesIndex,
-		};
-		module.Add (runtime_property_index);
-
-		// HOST_PROPERTY_RUNTIME_CONTRACT will come first, our native runtime requires that since it needs
-		// to set its value in the values array and we don't want to spend time searching for the index, nor
-		// we want to add yet another variable storing the index to the entry. KISS.
-		var runtime_property_names = new List<string> {
-			HOST_PROPERTY_RUNTIME_CONTRACT,
-		};
-		var runtime_property_values = new List<string?> {
-			null,
-		};
-
-		foreach (var kvp in runtimeProperties) {
-			if (String.Compare (kvp.Key, HOST_PROPERTY_RUNTIME_CONTRACT, StringComparison.Ordinal) == 0) {
-				continue;
-			}
-			runtime_property_names.Add (kvp.Key);
-			runtime_property_values.Add (kvp.Value);
-		}
-
-		var init_runtime_property_names = new LlvmIrGlobalVariable (runtime_property_names, "init_runtime_property_names", LlvmIrVariableOptions.GlobalConstant) {
-			Comment = "Names of properties passed to coreclr_initialize",
-		};
-		module.Add (init_runtime_property_names);
-
-		var init_runtime_property_values = new LlvmIrGlobalVariable (runtime_property_values, "init_runtime_property_values", LlvmIrVariableOptions.GlobalWritable) {
-			Comment = "Values of properties passed to coreclr_initialize",
-		};
-		module.Add (init_runtime_property_values);
-
 		AddAssemblyStores (module);
-	}
-
-	void HashAndSortRuntimePropertiesIndex (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
-	{
-		var index = variable.Value as List<StructureInstance<RuntimePropertyIndexEntry>>;
-		if (index == null) {
-			return;
-		}
-
-		bool is64Bit = target.Is64Bit;
-		foreach (StructureInstance instance in index) {
-			if (instance.Obj == null) {
-				throw new InvalidOperationException ("Internal error: runtime property index must not contain null entries");
-			}
-
-			var entry = instance.Obj as RuntimePropertyIndexEntry;
-			if (entry == null) {
-				throw new InvalidOperationException ($"Internal error: runtime property index entry has unexpected type {instance.Obj.GetType ()}");
-			}
-
-			entry.key_hash = MonoAndroidHelper.GetXxHash (entry.HashedKey, is64Bit);
-		};
-
-		index.Sort ((StructureInstance<RuntimePropertyIndexEntry> a, StructureInstance<RuntimePropertyIndexEntry> b) => a.Instance.key_hash.CompareTo (b.Instance.key_hash));
-	}
-
-	(
-		List<StructureInstance<RuntimeProperty>> runtimeProps,
-		List<StructureInstance<RuntimePropertyIndexEntry>> runtimePropsIndex
-	) InitRuntimeProperties ()
-	{
-		var runtimeProps = new List<StructureInstance<RuntimeProperty>> ();
-		var runtimePropsIndex = new List<StructureInstance<RuntimePropertyIndexEntry>> ();
-
-		if (runtimeProperties == null || runtimeProperties.Count == 0) {
-			return (runtimeProps, runtimePropsIndex);
-		}
-
-		foreach (var kvp in runtimeProperties) {
-			string name = kvp.Key;
-			string value = kvp.Value;
-
-			var prop = new RuntimeProperty {
-				key = name,
-				value = value,
-
-				// Includes the terminating NUL
-				value_size = (uint)(MonoAndroidHelper.Utf8StringToBytes (value).Length + 1),
-			};
-			runtimeProps.Add (new StructureInstance<RuntimeProperty> (runtimePropertyStructureInfo, prop));
-
-			var indexEntry = new RuntimePropertyIndexEntry {
-				HashedKey = prop.key,
-				index = (uint)(runtimeProps.Count - 1),
-			};
-			runtimePropsIndex.Add (new StructureInstance<RuntimePropertyIndexEntry> (runtimePropertyIndexEntryStructureInfo, indexEntry));
-		}
-
-		return (runtimeProps, runtimePropsIndex);
 	}
 
 	void AddAssemblyStores (LlvmIrModule module)
@@ -535,7 +384,5 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		xamarinAndroidBundledAssemblyStructureInfo = module.MapStructure<XamarinAndroidBundledAssembly> ();
 		dsoCacheEntryStructureInfo = module.MapStructure<DSOCacheEntry> ();
 		dsoApkEntryStructureInfo = module.MapStructure<DSOApkEntry> ();
-		runtimePropertyStructureInfo = module.MapStructure<RuntimeProperty> ();
-		runtimePropertyIndexEntryStructureInfo = module.MapStructure<RuntimePropertyIndexEntry> ();
 	}
 }

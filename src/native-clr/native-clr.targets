@@ -15,6 +15,11 @@
   <Target Name="_ConfigureRuntimesInputs">
     <ItemGroup>
       <_ConfigureRuntimesInputs  Include="CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="host\CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="runtime-base\CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="shared\CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="startup\CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="xamarin-app-stub\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="java-interop\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="lz4\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="..\..\build-tools\scripts\Ndk.targets" />
@@ -58,6 +63,12 @@
   <!-- TODO: update for the changes -->
   <Target Name="_FindMonoDroidSources">
     <ItemGroup>
+      <_MonoDroidSources Include="include/**/*.hh" />
+      <_MonoDroidSources Include="host/*.cc" />
+      <_MonoDroidSources Include="runtime-base/*.cc" />
+      <_MonoDroidSources Include="shared/*.cc" />
+      <_MonoDroidSources Include="startup/*.cc" />
+      <_MonoDroidSources Include="xamarin-app-stub/*.cc" />
       <_MonoDroidSources Include="$(JavaInteropFullPath)\src\java-interop\*.cc;$(JavaInteropFullPath)\src\java-interop\*.h" />
       <_MonoDroidSources Include="$(LZ4SourceFullPath)\lib\lz4.c;$(LZ4SourceFullPath)\lib\lz4.h" />
     </ItemGroup>

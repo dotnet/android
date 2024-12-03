@@ -43,6 +43,9 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AndroidBinUtilsDirectory { get; set; }
 
+		[Required]
+		public bool TargetsCLR { get; set; }
+
 		public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment64Bit;
 
 		public override System.Threading.Tasks.Task RunTaskAsync ()
@@ -123,11 +126,12 @@ namespace Xamarin.Android.Tasks
 				abis [abi] = GatherFilesForABI (item.ItemSpec, abi, ObjectFiles, runtimeNativeLibsDir, runtimeNativeLibStubsDir);
 			}
 
-			const string commonLinkerArgs =
+			string soname = TargetsCLR ? "libxamarin-app-clr.so" : "libxamarin-app.so";
+			string commonLinkerArgs =
 				"--shared " +
 				"--allow-shlib-undefined " +
 				"--export-dynamic " +
-				"-soname libxamarin-app.so " +
+				$"-soname {soname} " +
 				"-z relro " +
 				"-z noexecstack " +
 				"--enable-new-dtags " +
