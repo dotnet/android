@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fcntl.h>
 #include <sys/system_properties.h>
 
 #include <string_view>
@@ -95,5 +96,12 @@ namespace xamarin::android {
 
 		// Documented in NDK's <android/log.h> comments
 		static constexpr size_t MAX_LOGCAT_MESSAGE_LENGTH = 1023uz;
+
+		// PATH_MAX is always 4096 on Linux, but for our purposes it's most likely too much and since
+		// we use this value to allocate stack variables mostly, let's downsize it a bit to what the
+		// _XOPEN_PATH_MAX is set to
+		static constexpr size_t SENSIBLE_PATH_MAX = 1024uz;
+
+		static constexpr int DEFAULT_DIRECTORY_MODE = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
 	};
 }
