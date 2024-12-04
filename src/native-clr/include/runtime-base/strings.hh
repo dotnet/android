@@ -3,6 +3,7 @@
 #include <array>
 #include <cstring>
 #include <cerrno>
+#include <expected>
 #include <limits>
 #include <string_view>
 #include <type_traits>
@@ -21,6 +22,24 @@ namespace xamarin::android {
 	static constexpr bool BoundsCheck = false;
 #endif
 
+	enum class string_segment_error
+	{
+		index_out_of_range,
+	};
+
+	static inline auto to_string (string_segment_error error) -> std::string_view const
+	{
+		using std::operator""sv;
+
+		switch (error) {
+			case string_segment_error::index_out_of_range:
+				return "Index out of range"sv;
+
+			default:
+				return "Unknown error"sv;
+		}
+	}
+
 	class string_segment
 	{
 	public:
@@ -34,6 +53,16 @@ namespace xamarin::android {
 		auto start () const noexcept -> const char*
 		{
 			return _start;
+		}
+
+		[[gnu::always_inline]]
+		auto at (size_t offset) const noexcept -> std::expected<const char*, string_segment_error>
+		{
+			if (offset >= length ()) {
+				return std::unexpected (string_segment_error::index_out_of_range);
+			}
+
+			return _start + offset;
 		}
 
 		[[gnu::always_inline]]
