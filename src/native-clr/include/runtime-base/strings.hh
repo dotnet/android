@@ -534,8 +534,9 @@ namespace xamarin::android {
 		[[gnu::always_inline]]
 		auto append_c (const char *s) noexcept -> string_base&
 		{
-			if (s == nullptr)
+			if (s == nullptr) {
 				return *this;
+			}
 
 			return append (s, strlen (s));
 		}

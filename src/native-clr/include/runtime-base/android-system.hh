@@ -4,6 +4,7 @@
 
 #include "../constants.hh"
 #include "../shared/log_types.hh"
+#include "jni-wrappers.hh"
 #include "strings.hh"
 
 namespace xamarin::android {
@@ -26,14 +27,21 @@ namespace xamarin::android {
 		}
 
 		static auto monodroid_get_system_property (std::string_view const& name, dynamic_local_string<Constants::PROPERTY_VALUE_BUFFER_LEN> &value) noexcept -> int;
+		static void detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept;
 
 	private:
 		static auto lookup_system_property (std::string_view const &name, size_t &value_len) noexcept -> const char*;
 		static auto monodroid__system_property_get (std::string_view const&, char *sp_value, size_t sp_value_len) noexcept -> int;
 		static auto get_max_gref_count_from_system () noexcept -> long;
 
+		static void set_embedded_dso_mode_enabled (bool yesno) noexcept
+		{
+			embedded_dso_mode_enabled = yesno;
+		}
+
 	private:
 		static inline long max_gref_count = 0;
 		static inline bool running_in_emulator = false;
+		static inline bool embedded_dso_mode_enabled = false;
 	};
 }

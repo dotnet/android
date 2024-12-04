@@ -1,6 +1,6 @@
 #pragma once
 
-#include <memory>
+#include <string_view>
 
 #include <jni.h>
 

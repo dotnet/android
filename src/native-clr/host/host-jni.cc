@@ -33,6 +33,19 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 	jobjectArray assembliesJava, jboolean isEmulator,
 	jboolean haveSplitApks)
 {
+	Host::Java_mono_android_Runtime_initInternal (
+		env,
+		klass,
+		lang,
+		runtimeApksJava,
+		runtimeNativeLibDir,
+		appDirs,
+		localDateTimeOffset,
+		loader,
+		assembliesJava,
+		isEmulator,
+		haveSplitApks
+	);
 }
 
 JNIEXPORT void

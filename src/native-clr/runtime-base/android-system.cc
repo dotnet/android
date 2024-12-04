@@ -1,11 +1,34 @@
 #include <limits>
+#include <string_view>
 
 #include <constants.hh>
 #include <xamarin-app.hh>
 #include <runtime-base/android-system.hh>
 #include <runtime-base/strings.hh>
+#include <runtime-base/util.hh>
 
 using namespace xamarin::android;
+using std::operator""sv;
+
+void
+AndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept
+{
+	// appDirs[Constants::APP_DIRS_DATA_DIR_INDEX] points to the native library directory
+	dynamic_local_string<Constants::SENSIBLE_PATH_MAX> libmonodroid_path;
+	Util::path_combine (libmonodroid_path, appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_string_view (), "libmonodroid.so"sv);
+
+	log_debug (LOG_ASSEMBLY, "Checking if libmonodroid was unpacked to {}", libmonodroid_path.get ());
+	if (!Util::file_exists (libmonodroid_path)) {
+		log_debug (LOG_ASSEMBLY, "{} not found, assuming application/android:extractNativeLibs == false", libmonodroid_path.get ());
+		set_embedded_dso_mode_enabled (true);
+	} else {
+		log_debug (LOG_ASSEMBLY, "Native libs extracted to {}, assuming application/android:extractNativeLibs == true", appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
+		set_embedded_dso_mode_enabled (false);
+	}
+
+	Util::path_combine (libmonodroid_path, "first_part"sv, "second_part"sv, "third_part"sv, "file.txt"sv);
+	log_warn (LOG_DEFAULT, "path_combine test: {}", libmonodroid_path.get ());
+}
 
 auto
 AndroidSystem::lookup_system_property (std::string_view const& name, size_t &value_len) noexcept -> const char*
