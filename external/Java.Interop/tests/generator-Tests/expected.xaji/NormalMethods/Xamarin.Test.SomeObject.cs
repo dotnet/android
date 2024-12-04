@@ -70,15 +70,24 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetGetTypeHandler ()
 		{
-			if (cb_getType_GetType_arrayI == null)
-				cb_getType_GetType_arrayI = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_L (n_GetType));
-			return cb_getType_GetType_arrayI;
+			return cb_getType_GetType_arrayI ??= new _JniMarshal_PP_L (n_GetType);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static IntPtr n_GetType (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return JNIEnv.NewArray (__this.GetType ());
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return default;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				return JNIEnv.NewArray (__this.GetType ());
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return default;
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 
@@ -98,18 +107,27 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetHandle_Ljava_lang_Object_Ljava_lang_Throwable_Handler ()
 		{
-			if (cb_handle_Handle_Ljava_lang_Object_Ljava_lang_Throwable__I == null)
-				cb_handle_Handle_Ljava_lang_Object_Ljava_lang_Throwable__I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPLL_I (n_Handle_Ljava_lang_Object_Ljava_lang_Throwable_));
-			return cb_handle_Handle_Ljava_lang_Object_Ljava_lang_Throwable__I;
+			return cb_handle_Handle_Ljava_lang_Object_Ljava_lang_Throwable__I ??= new _JniMarshal_PPLL_I (n_Handle_Ljava_lang_Object_Ljava_lang_Throwable_);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static int n_Handle_Ljava_lang_Object_Ljava_lang_Throwable_ (IntPtr jnienv, IntPtr native__this, IntPtr native_o, IntPtr native_t)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var o = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_o, JniHandleOwnership.DoNotTransfer);
-			var t = global::Java.Lang.Object.GetObject<global::Java.Lang.Throwable> (native_t, JniHandleOwnership.DoNotTransfer);
-			int __ret = __this.Handle (o, t);
-			return __ret;
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return default;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var o = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_o, JniHandleOwnership.DoNotTransfer);
+				var t = global::Java.Lang.Object.GetObject<global::Java.Lang.Throwable> (native_t, JniHandleOwnership.DoNotTransfer);
+				int __ret = __this.Handle (o, t);
+				return __ret;
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return default;
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 
@@ -134,15 +152,24 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetIntegerMethodHandler ()
 		{
-			if (cb_IntegerMethod_IntegerMethod_I == null)
-				cb_IntegerMethod_IntegerMethod_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_I (n_IntegerMethod));
-			return cb_IntegerMethod_IntegerMethod_I;
+			return cb_IntegerMethod_IntegerMethod_I ??= new _JniMarshal_PP_I (n_IntegerMethod);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static int n_IntegerMethod (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return __this.IntegerMethod ();
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return default;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				return __this.IntegerMethod ();
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return default;
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 
@@ -162,15 +189,23 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetVoidMethodHandler ()
 		{
-			if (cb_VoidMethod_VoidMethod_V == null)
-				cb_VoidMethod_VoidMethod_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_VoidMethod));
-			return cb_VoidMethod_VoidMethod_V;
+			return cb_VoidMethod_VoidMethod_V ??= new _JniMarshal_PP_V (n_VoidMethod);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static void n_VoidMethod (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.VoidMethod ();
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.VoidMethod ();
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 
@@ -189,15 +224,24 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetStringMethodHandler ()
 		{
-			if (cb_StringMethod_StringMethod_Ljava_lang_String_ == null)
-				cb_StringMethod_StringMethod_Ljava_lang_String_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_L (n_StringMethod));
-			return cb_StringMethod_StringMethod_Ljava_lang_String_;
+			return cb_StringMethod_StringMethod_Ljava_lang_String_ ??= new _JniMarshal_PP_L (n_StringMethod);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static IntPtr n_StringMethod (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return JNIEnv.NewString (__this.StringMethod ());
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return default;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				return JNIEnv.NewString (__this.StringMethod ());
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return default;
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 
@@ -217,15 +261,24 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetObjectMethodHandler ()
 		{
-			if (cb_ObjectMethod_ObjectMethod_Ljava_lang_Object_ == null)
-				cb_ObjectMethod_ObjectMethod_Ljava_lang_Object_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_L (n_ObjectMethod));
-			return cb_ObjectMethod_ObjectMethod_Ljava_lang_Object_;
+			return cb_ObjectMethod_ObjectMethod_Ljava_lang_Object_ ??= new _JniMarshal_PP_L (n_ObjectMethod);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static IntPtr n_ObjectMethod (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return JNIEnv.ToLocalJniHandle (__this.ObjectMethod ());
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return default;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				return JNIEnv.ToLocalJniHandle (__this.ObjectMethod ());
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return default;
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 
@@ -245,17 +298,25 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetVoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_Handler ()
 		{
-			if (cb_VoidMethodWithParams_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object__V == null)
-				cb_VoidMethodWithParams_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object__V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPLIL_V (n_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_));
-			return cb_VoidMethodWithParams_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object__V;
+			return cb_VoidMethodWithParams_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object__V ??= new _JniMarshal_PPLIL_V (n_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static void n_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_astring, int anint, IntPtr native_anObject)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var astring = JNIEnv.GetString (native_astring, JniHandleOwnership.DoNotTransfer);
-			var anObject = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_anObject, JniHandleOwnership.DoNotTransfer);
-			__this.VoidMethodWithParams (astring, anint, anObject);
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var astring = JNIEnv.GetString (native_astring, JniHandleOwnership.DoNotTransfer);
+				var anObject = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_anObject, JniHandleOwnership.DoNotTransfer);
+				__this.VoidMethodWithParams (astring, anint, anObject);
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 
@@ -282,16 +343,25 @@ namespace Xamarin.Test {
 		[global::System.Obsolete]
 		static Delegate GetObsoleteMethodHandler ()
 		{
-			if (cb_ObsoleteMethod_ObsoleteMethod_I == null)
-				cb_ObsoleteMethod_ObsoleteMethod_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_I (n_ObsoleteMethod));
-			return cb_ObsoleteMethod_ObsoleteMethod_I;
+			return cb_ObsoleteMethod_ObsoleteMethod_I ??= new _JniMarshal_PP_I (n_ObsoleteMethod);
 		}
 
 		[global::System.Obsolete]
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static int n_ObsoleteMethod (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return __this.ObsoleteMethod ();
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return default;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				return __this.ObsoleteMethod ();
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return default;
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 
@@ -312,16 +382,24 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetArrayListTest_Ljava_util_ArrayList_Handler ()
 		{
-			if (cb_ArrayListTest_ArrayListTest_Ljava_util_ArrayList__V == null)
-				cb_ArrayListTest_ArrayListTest_Ljava_util_ArrayList__V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_ArrayListTest_Ljava_util_ArrayList_));
-			return cb_ArrayListTest_ArrayListTest_Ljava_util_ArrayList__V;
+			return cb_ArrayListTest_ArrayListTest_Ljava_util_ArrayList__V ??= new _JniMarshal_PPL_V (n_ArrayListTest_Ljava_util_ArrayList_);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static void n_ArrayListTest_Ljava_util_ArrayList_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var p0 = global::Android.Runtime.JavaList<global::Java.Lang.Integer>.FromJniHandle (native_p0, JniHandleOwnership.DoNotTransfer);
-			__this.ArrayListTest (p0);
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var p0 = global::Android.Runtime.JavaList<global::Java.Lang.Integer>.FromJniHandle (native_p0, JniHandleOwnership.DoNotTransfer);
+				__this.ArrayListTest (p0);
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 

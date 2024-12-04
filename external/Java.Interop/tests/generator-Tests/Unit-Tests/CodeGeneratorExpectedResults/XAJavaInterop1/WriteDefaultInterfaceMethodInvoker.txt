@@ -11,15 +11,23 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 #pragma warning disable 0169
 	private static Delegate GetDoDefaultHandler ()
 	{
-		if (cb_DoDefault_DoDefault_V == null)
-			cb_DoDefault_DoDefault_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_DoDefault));
-		return cb_DoDefault_DoDefault_V;
+		return cb_DoDefault_DoDefault_V ??= new _JniMarshal_PP_V (n_DoDefault);
 	}
 
+	[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 	private static void n_DoDefault (IntPtr jnienv, IntPtr native__this)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-		__this.DoDefault ();
+		if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+			return;
+
+		try {
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			__this.DoDefault ();
+		} catch (global::System.Exception __e) {
+			__r.OnUserUnhandledException (ref __envp, __e);
+		} finally {
+			global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+		}
 	}
 #pragma warning restore 0169
 
@@ -95,15 +103,23 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 #pragma warning disable 0169
 	static Delegate GetDoDeclarationHandler ()
 	{
-		if (cb_DoDeclaration_DoDeclaration_V == null)
-			cb_DoDeclaration_DoDeclaration_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_DoDeclaration));
-		return cb_DoDeclaration_DoDeclaration_V;
+		return cb_DoDeclaration_DoDeclaration_V ??= new _JniMarshal_PP_V (n_DoDeclaration);
 	}
 
+	[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 	static void n_DoDeclaration (IntPtr jnienv, IntPtr native__this)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-		__this.DoDeclaration ();
+		if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+			return;
+
+		try {
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			__this.DoDeclaration ();
+		} catch (global::System.Exception __e) {
+			__r.OnUserUnhandledException (ref __envp, __e);
+		} finally {
+			global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+		}
 	}
 #pragma warning restore 0169
 

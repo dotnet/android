@@ -70,15 +70,24 @@ internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, Anima
 #pragma warning disable 0169
 	static Delegate GetOnAnimationEnd_IHandler ()
 	{
-		if (cb_OnAnimationEnd_OnAnimationEnd_I_Z == null)
-			cb_OnAnimationEnd_OnAnimationEnd_I_Z = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_Z (n_OnAnimationEnd_I));
-		return cb_OnAnimationEnd_OnAnimationEnd_I_Z;
+		return cb_OnAnimationEnd_OnAnimationEnd_I_Z ??= new _JniMarshal_PPI_Z (n_OnAnimationEnd_I);
 	}
 
+	[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 	static bool n_OnAnimationEnd_I (IntPtr jnienv, IntPtr native__this, int param1)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.AnimatorListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-		return __this.OnAnimationEnd (param1);
+		if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+			return default;
+
+		try {
+			var __this = global::Java.Lang.Object.GetObject<java.code.AnimatorListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			return __this.OnAnimationEnd (param1);
+		} catch (global::System.Exception __e) {
+			__r.OnUserUnhandledException (ref __envp, __e);
+			return default;
+		} finally {
+			global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+		}
 	}
 #pragma warning restore 0169
 
@@ -96,15 +105,24 @@ internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, Anima
 #pragma warning disable 0169
 	static Delegate GetOnAnimationEnd_IIHandler ()
 	{
-		if (cb_OnAnimationEnd_OnAnimationEnd_II_Z == null)
-			cb_OnAnimationEnd_OnAnimationEnd_II_Z = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPII_Z (n_OnAnimationEnd_II));
-		return cb_OnAnimationEnd_OnAnimationEnd_II_Z;
+		return cb_OnAnimationEnd_OnAnimationEnd_II_Z ??= new _JniMarshal_PPII_Z (n_OnAnimationEnd_II);
 	}
 
+	[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 	static bool n_OnAnimationEnd_II (IntPtr jnienv, IntPtr native__this, int param1, int param2)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.AnimatorListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-		return __this.OnAnimationEnd (param1, param2);
+		if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+			return default;
+
+		try {
+			var __this = global::Java.Lang.Object.GetObject<java.code.AnimatorListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			return __this.OnAnimationEnd (param1, param2);
+		} catch (global::System.Exception __e) {
+			__r.OnUserUnhandledException (ref __envp, __e);
+			return default;
+		} finally {
+			global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+		}
 	}
 #pragma warning restore 0169
 

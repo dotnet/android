@@ -61,15 +61,23 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 			static Delegate GetFooHandler ()
 			{
-				if (cb_foo_Foo_V == null)
-					cb_foo_Foo_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Foo));
-				return cb_foo_Foo_V;
+				return cb_foo_Foo_V ??= new _JniMarshal_PP_V (n_Foo);
 			}
 
+			[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 			static void n_Foo (IntPtr jnienv, IntPtr native__this)
 			{
-				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.PublicClass.IProtectedInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-				__this.Foo ();
+				if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+					return;
+
+				try {
+					var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.PublicClass.IProtectedInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+					__this.Foo ();
+				} catch (global::System.Exception __e) {
+					__r.OnUserUnhandledException (ref __envp, __e);
+				} finally {
+					global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+				}
 			}
 #pragma warning restore 0169
 
@@ -133,15 +141,23 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetFooHandler ()
 		{
-			if (cb_foo_Foo_V == null)
-				cb_foo_Foo_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Foo));
-			return cb_foo_Foo_V;
+			return cb_foo_Foo_V ??= new _JniMarshal_PP_V (n_Foo);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static void n_Foo (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.PublicClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.Foo ();
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.PublicClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.Foo ();
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 

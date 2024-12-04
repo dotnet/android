@@ -54,15 +54,23 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetExtendedMethodHandler ()
 		{
-			if (cb_extendedMethod_ExtendedMethod_V == null)
-				cb_extendedMethod_ExtendedMethod_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_ExtendedMethod));
-			return cb_extendedMethod_ExtendedMethod_V;
+			return cb_extendedMethod_ExtendedMethod_V ??= new _JniMarshal_PP_V (n_ExtendedMethod);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static void n_ExtendedMethod (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.IExtendedInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.ExtendedMethod ();
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.IExtendedInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.ExtendedMethod ();
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 
@@ -79,15 +87,23 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetBaseMethodHandler ()
 		{
-			if (cb_baseMethod_BaseMethod_V == null)
-				cb_baseMethod_BaseMethod_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_BaseMethod));
-			return cb_baseMethod_BaseMethod_V;
+			return cb_baseMethod_BaseMethod_V ??= new _JniMarshal_PP_V (n_BaseMethod);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static void n_BaseMethod (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.IExtendedInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.BaseMethod ();
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.IExtendedInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.BaseMethod ();
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 

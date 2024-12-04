@@ -66,15 +66,23 @@ internal partial class IMyInterface2Invoker : global::Java.Lang.Object, IMyInter
 #pragma warning disable 0169
 	static Delegate GetDoSomethingHandler ()
 	{
-		if (cb_DoSomething_DoSomething_V == null)
-			cb_DoSomething_DoSomething_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_DoSomething));
-		return cb_DoSomething_DoSomething_V;
+		return cb_DoSomething_DoSomething_V ??= new _JniMarshal_PP_V (n_DoSomething);
 	}
 
+	[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 	static void n_DoSomething (IntPtr jnienv, IntPtr native__this)
 	{
-		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface2> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-		__this.DoSomething ();
+		if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+			return;
+
+		try {
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface2> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			__this.DoSomething ();
+		} catch (global::System.Exception __e) {
+			__r.OnUserUnhandledException (ref __envp, __e);
+		} finally {
+			global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+		}
 	}
 #pragma warning restore 0169
 

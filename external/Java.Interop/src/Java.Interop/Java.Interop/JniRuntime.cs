@@ -437,6 +437,19 @@ namespace Java.Interop
 
 	partial class JniRuntime {
 
+		public virtual void OnEnterMarshalMethod ()
+		{
+			ValueManager.WaitForGCBridgeProcessing ();
+		}
+
+		public virtual void OnUserUnhandledException (ref JniTransition transition, Exception e)
+		{
+			transition.SetPendingException (e);
+
+			// TODO: Enable when we move to 'net9.0'
+			//Debugger.BreakForUserUnhandledException (e);
+		}
+
 		public virtual void RaisePendingException (Exception pendingException)
 		{
 			JniEnvironment.Exceptions.Throw (pendingException);

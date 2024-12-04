@@ -67,18 +67,26 @@ namespace Test.ME {
 #pragma warning disable 0169
 		static Delegate GetSetObject_arrayBHandler ()
 		{
-			if (cb_SetObject_SetObject_arrayB_V == null)
-				cb_SetObject_SetObject_arrayB_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetObject_arrayB));
-			return cb_SetObject_SetObject_arrayB_V;
+			return cb_SetObject_SetObject_arrayB_V ??= new _JniMarshal_PPL_V (n_SetObject_arrayB);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static void n_SetObject_arrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Test.ME.GenericImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var value = (byte[]) JNIEnv.GetArray (native_value, JniHandleOwnership.DoNotTransfer, typeof (byte));
-			__this.SetObject (value);
-			if (value != null)
-				JNIEnv.CopyArray (value, native_value);
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Test.ME.GenericImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var value = (byte[]) JNIEnv.GetArray (native_value, JniHandleOwnership.DoNotTransfer, typeof (byte));
+				__this.SetObject (value);
+				if (value != null)
+					JNIEnv.CopyArray (value, native_value);
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 

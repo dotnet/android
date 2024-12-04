@@ -48,17 +48,26 @@ namespace Com.Google.Android.Exoplayer.Drm {
 #pragma warning disable 0169
 		static Delegate GetRequiresSecureDecoderComponent_Ljava_lang_String_Handler ()
 		{
-			if (cb_requiresSecureDecoderComponent_RequiresSecureDecoderComponent_Ljava_lang_String__Z == null)
-				cb_requiresSecureDecoderComponent_RequiresSecureDecoderComponent_Ljava_lang_String__Z = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_Z (n_RequiresSecureDecoderComponent_Ljava_lang_String_));
-			return cb_requiresSecureDecoderComponent_RequiresSecureDecoderComponent_Ljava_lang_String__Z;
+			return cb_requiresSecureDecoderComponent_RequiresSecureDecoderComponent_Ljava_lang_String__Z ??= new _JniMarshal_PPL_Z (n_RequiresSecureDecoderComponent_Ljava_lang_String_);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static bool n_RequiresSecureDecoderComponent_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Com.Google.Android.Exoplayer.Drm.IExoMediaCrypto> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var p0 = JNIEnv.GetString (native_p0, JniHandleOwnership.DoNotTransfer);
-			bool __ret = __this.RequiresSecureDecoderComponent (p0);
-			return __ret;
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return default;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Com.Google.Android.Exoplayer.Drm.IExoMediaCrypto> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var p0 = JNIEnv.GetString (native_p0, JniHandleOwnership.DoNotTransfer);
+				bool __ret = __this.RequiresSecureDecoderComponent (p0);
+				return __ret;
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return default;
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 

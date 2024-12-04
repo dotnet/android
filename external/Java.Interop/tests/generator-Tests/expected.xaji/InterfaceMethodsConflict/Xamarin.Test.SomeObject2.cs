@@ -50,15 +50,23 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetIrrelevantHandler ()
 		{
-			if (cb_irrelevant_Irrelevant_V == null)
-				cb_irrelevant_Irrelevant_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Irrelevant));
-			return cb_irrelevant_Irrelevant_V;
+			return cb_irrelevant_Irrelevant_V ??= new _JniMarshal_PP_V (n_Irrelevant);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static void n_Irrelevant (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject2> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.Irrelevant ();
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject2> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.Irrelevant ();
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 
@@ -77,15 +85,23 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetCloseHandler ()
 		{
-			if (cb_close_Close_V == null)
-				cb_close_Close_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Close));
-			return cb_close_Close_V;
+			return cb_close_Close_V ??= new _JniMarshal_PP_V (n_Close);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static void n_Close (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject2> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.Close ();
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject2> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.Close ();
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 

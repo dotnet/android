@@ -67,15 +67,24 @@ namespace Java.IO {
 #pragma warning disable 0169
 		static Delegate GetAvailableHandler ()
 		{
-			if (cb_available_Available_I == null)
-				cb_available_Available_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_I (n_Available));
-			return cb_available_Available_I;
+			return cb_available_Available_I ??= new _JniMarshal_PP_I (n_Available);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static int n_Available (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return __this.Available ();
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return default;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				return __this.Available ();
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return default;
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 
@@ -95,15 +104,23 @@ namespace Java.IO {
 #pragma warning disable 0169
 		static Delegate GetCloseHandler ()
 		{
-			if (cb_close_Close_V == null)
-				cb_close_Close_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Close));
-			return cb_close_Close_V;
+			return cb_close_Close_V ??= new _JniMarshal_PP_V (n_Close);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static void n_Close (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.Close ();
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.Close ();
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 
@@ -122,15 +139,23 @@ namespace Java.IO {
 #pragma warning disable 0169
 		static Delegate GetMark_IHandler ()
 		{
-			if (cb_mark_Mark_I_V == null)
-				cb_mark_Mark_I_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_V (n_Mark_I));
-			return cb_mark_Mark_I_V;
+			return cb_mark_Mark_I_V ??= new _JniMarshal_PPI_V (n_Mark_I);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static void n_Mark_I (IntPtr jnienv, IntPtr native__this, int readlimit)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.Mark (readlimit);
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.Mark (readlimit);
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 
@@ -151,15 +176,24 @@ namespace Java.IO {
 #pragma warning disable 0169
 		static Delegate GetMarkSupportedHandler ()
 		{
-			if (cb_markSupported_MarkSupported_Z == null)
-				cb_markSupported_MarkSupported_Z = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_Z (n_MarkSupported));
-			return cb_markSupported_MarkSupported_Z;
+			return cb_markSupported_MarkSupported_Z ??= new _JniMarshal_PP_Z (n_MarkSupported);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static bool n_MarkSupported (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return __this.MarkSupported ();
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return default;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				return __this.MarkSupported ();
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return default;
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 
@@ -179,15 +213,24 @@ namespace Java.IO {
 #pragma warning disable 0169
 		static Delegate GetReadHandler ()
 		{
-			if (cb_read_Read_I == null)
-				cb_read_Read_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_I (n_Read));
-			return cb_read_Read_I;
+			return cb_read_Read_I ??= new _JniMarshal_PP_I (n_Read);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static int n_Read (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return __this.Read ();
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return default;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				return __this.Read ();
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return default;
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 
@@ -199,19 +242,28 @@ namespace Java.IO {
 #pragma warning disable 0169
 		static Delegate GetRead_arrayBHandler ()
 		{
-			if (cb_read_Read_arrayB_I == null)
-				cb_read_Read_arrayB_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_I (n_Read_arrayB));
-			return cb_read_Read_arrayB_I;
+			return cb_read_Read_arrayB_I ??= new _JniMarshal_PPL_I (n_Read_arrayB);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static int n_Read_arrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var buffer = (byte[]) JNIEnv.GetArray (native_buffer, JniHandleOwnership.DoNotTransfer, typeof (byte));
-			int __ret = __this.Read (buffer);
-			if (buffer != null)
-				JNIEnv.CopyArray (buffer, native_buffer);
-			return __ret;
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return default;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var buffer = (byte[]) JNIEnv.GetArray (native_buffer, JniHandleOwnership.DoNotTransfer, typeof (byte));
+				int __ret = __this.Read (buffer);
+				if (buffer != null)
+					JNIEnv.CopyArray (buffer, native_buffer);
+				return __ret;
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return default;
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 
@@ -239,19 +291,28 @@ namespace Java.IO {
 #pragma warning disable 0169
 		static Delegate GetRead_arrayBIIHandler ()
 		{
-			if (cb_read_Read_arrayBII_I == null)
-				cb_read_Read_arrayBII_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPLII_I (n_Read_arrayBII));
-			return cb_read_Read_arrayBII_I;
+			return cb_read_Read_arrayBII_I ??= new _JniMarshal_PPLII_I (n_Read_arrayBII);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static int n_Read_arrayBII (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer, int byteOffset, int byteCount)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var buffer = (byte[]) JNIEnv.GetArray (native_buffer, JniHandleOwnership.DoNotTransfer, typeof (byte));
-			int __ret = __this.Read (buffer, byteOffset, byteCount);
-			if (buffer != null)
-				JNIEnv.CopyArray (buffer, native_buffer);
-			return __ret;
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return default;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var buffer = (byte[]) JNIEnv.GetArray (native_buffer, JniHandleOwnership.DoNotTransfer, typeof (byte));
+				int __ret = __this.Read (buffer, byteOffset, byteCount);
+				if (buffer != null)
+					JNIEnv.CopyArray (buffer, native_buffer);
+				return __ret;
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return default;
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 
@@ -281,15 +342,23 @@ namespace Java.IO {
 #pragma warning disable 0169
 		static Delegate GetResetHandler ()
 		{
-			if (cb_reset_Reset_V == null)
-				cb_reset_Reset_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Reset));
-			return cb_reset_Reset_V;
+			return cb_reset_Reset_V ??= new _JniMarshal_PP_V (n_Reset);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static void n_Reset (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.Reset ();
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.Reset ();
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 
@@ -308,15 +377,24 @@ namespace Java.IO {
 #pragma warning disable 0169
 		static Delegate GetSkip_JHandler ()
 		{
-			if (cb_skip_Skip_J_J == null)
-				cb_skip_Skip_J_J = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPJ_J (n_Skip_J));
-			return cb_skip_Skip_J_J;
+			return cb_skip_Skip_J_J ??= new _JniMarshal_PPJ_J (n_Skip_J);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static long n_Skip_J (IntPtr jnienv, IntPtr native__this, long byteCount)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return __this.Skip (byteCount);
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return default;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				return __this.Skip (byteCount);
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return default;
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 

@@ -51,15 +51,24 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetGetAdapterHandler ()
 		{
-			if (cb_getAdapter_GetAdapter_Lxamarin_test_Adapter_ == null)
-				cb_getAdapter_GetAdapter_Lxamarin_test_Adapter_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_L (n_GetAdapter));
-			return cb_getAdapter_GetAdapter_Lxamarin_test_Adapter_;
+			return cb_getAdapter_GetAdapter_Lxamarin_test_Adapter_ ??= new _JniMarshal_PP_L (n_GetAdapter);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static IntPtr n_GetAdapter (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.AdapterView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return JNIEnv.ToLocalJniHandle (__this.RawAdapter);
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return default;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.AdapterView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				return JNIEnv.ToLocalJniHandle (__this.RawAdapter);
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return default;
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 
@@ -67,16 +76,24 @@ namespace Xamarin.Test {
 #pragma warning disable 0169
 		static Delegate GetSetAdapter_Lxamarin_test_Adapter_Handler ()
 		{
-			if (cb_setAdapter_SetAdapter_Lxamarin_test_Adapter__V == null)
-				cb_setAdapter_SetAdapter_Lxamarin_test_Adapter__V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetAdapter_Lxamarin_test_Adapter_));
-			return cb_setAdapter_SetAdapter_Lxamarin_test_Adapter__V;
+			return cb_setAdapter_SetAdapter_Lxamarin_test_Adapter__V ??= new _JniMarshal_PPL_V (n_SetAdapter_Lxamarin_test_Adapter_);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static void n_SetAdapter_Lxamarin_test_Adapter_ (IntPtr jnienv, IntPtr native__this, IntPtr native_adapter)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.AdapterView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var adapter = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_adapter, JniHandleOwnership.DoNotTransfer);
-			__this.RawAdapter = adapter;
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.AdapterView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var adapter = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_adapter, JniHandleOwnership.DoNotTransfer);
+				__this.RawAdapter = adapter;
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 

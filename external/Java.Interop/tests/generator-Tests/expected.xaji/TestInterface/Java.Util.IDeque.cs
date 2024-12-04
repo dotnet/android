@@ -53,17 +53,26 @@ namespace Java.Util {
 #pragma warning disable 0169
 		static Delegate GetAdd_Ljava_lang_Object_Handler ()
 		{
-			if (cb_add_Add_Ljava_lang_Object__Z == null)
-				cb_add_Add_Ljava_lang_Object__Z = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_Z (n_Add_Ljava_lang_Object_));
-			return cb_add_Add_Ljava_lang_Object__Z;
+			return cb_add_Add_Ljava_lang_Object__Z ??= new _JniMarshal_PPL_Z (n_Add_Ljava_lang_Object_);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static bool n_Add_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_e)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.Util.IDeque> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var e = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_e, JniHandleOwnership.DoNotTransfer);
-			bool __ret = __this.Add (e);
-			return __ret;
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return default;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Java.Util.IDeque> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var e = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_e, JniHandleOwnership.DoNotTransfer);
+				bool __ret = __this.Add (e);
+				return __ret;
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return default;
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 
@@ -86,15 +95,23 @@ namespace Java.Util {
 #pragma warning disable 0169
 		static Delegate GetClearHandler ()
 		{
-			if (cb_clear_Clear_V == null)
-				cb_clear_Clear_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Clear));
-			return cb_clear_Clear_V;
+			return cb_clear_Clear_V ??= new _JniMarshal_PP_V (n_Clear);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static void n_Clear (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<global::Java.Util.IDeque> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.Clear ();
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<global::Java.Util.IDeque> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.Clear ();
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 

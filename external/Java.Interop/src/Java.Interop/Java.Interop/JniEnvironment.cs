@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -48,6 +49,50 @@ namespace Java.Interop {
 			[MethodImpl (MethodImplOptions.AggressiveInlining)]
 			get {return CurrentInfo.WithinNewObjectScope;}
 			internal set {CurrentInfo.WithinNewObjectScope = value;}
+		}
+
+		[global::System.Diagnostics.CodeAnalysis.SuppressMessage (
+			"Design",
+			"CA1031:Do not catch general exception types",
+			Justification = "Exceptions cannot cross a JNI boundary.")]
+		public static bool BeginMarshalMethod (IntPtr jnienv, out JniTransition transition, [NotNullWhen (true)] out JniRuntime? runtime)
+		{
+			runtime = null;
+			Exception?          ex  = null;
+			try {
+				runtime = Info.Value?.Runtime;
+			}
+			catch (Exception e) {
+				ex  = e;
+			}
+			if (runtime == null || ex != null) {
+				transition  = default;
+				runtime     = null;
+				Console.Error.WriteLine ("JNI Environment Information is not available on this thread.");
+				if (ex != null) {
+					Console.Error.WriteLine (ex);
+				}
+				return false;
+			}
+
+			try {
+				runtime.OnEnterMarshalMethod ();
+				transition  = new JniTransition (jnienv);
+			}
+			catch (Exception e) {
+				runtime     = null;
+				transition  = default;
+
+				Console.Error.WriteLine ($"OnEnterMarshalMethod failed: {e}");
+				return false;
+			}
+
+			return true;
+		}
+
+		public static void EndMarshalMethod (ref JniTransition transition)
+		{
+			transition.Dispose ();
 		}
 
 		internal    static  void    SetEnvironmentPointer (IntPtr environmentPointer)

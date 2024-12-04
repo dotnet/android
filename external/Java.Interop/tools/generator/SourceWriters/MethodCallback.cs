@@ -47,6 +47,8 @@ namespace generator.SourceWriters
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
+			Attributes.Add (new DebuggerDisableUserUnhandledExceptionsAttributeAttr ());
+
 			Parameters.Add (new MethodParameterWriter ("jnienv", TypeReferenceWriter.IntPtr));
 			Parameters.Add (new MethodParameterWriter ("native__this", TypeReferenceWriter.IntPtr));
 
@@ -56,6 +58,15 @@ namespace generator.SourceWriters
 
 		protected override void WriteBody (CodeWriter writer)
 		{
+			writer.WriteLine ("if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))");
+			writer.Indent ();
+			writer.WriteLine (method.IsVoid ? "return;" : "return default;");
+			writer.Unindent ();
+
+			writer.WriteLine ();
+			writer.WriteLine ("try {");
+
+			writer.Indent ();
 			writer.WriteLine ($"var __this = global::Java.Lang.Object.GetObject<{opt.GetOutputName (type.FullName)}> (jnienv, native__this, JniHandleOwnership.DoNotTransfer){opt.NullForgivingOperator};");
 
 			foreach (var s in method.Parameters.GetCallbackPrep (opt))
@@ -79,6 +90,24 @@ namespace generator.SourceWriters
 
 			if (!method.IsVoid && method.Parameters.HasCleanup)
 				writer.WriteLine ("return __ret;");
+
+			writer.Unindent ();
+
+			writer.WriteLine ("} catch (global::System.Exception __e) {");
+			writer.Indent ();
+			writer.WriteLine ("__r.OnUserUnhandledException (ref __envp, __e);");
+
+			if (!method.IsVoid)
+				writer.WriteLine ("return default;");
+
+			writer.Unindent ();
+			writer.WriteLine ("} finally {");
+			writer.Indent ();
+			writer.WriteLine ("global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);");
+			writer.Unindent ();
+			writer.WriteLine ("}");
+
+
 		}
 
 		public override void Write (CodeWriter writer)
@@ -143,10 +172,7 @@ namespace generator.SourceWriters
 		protected override void WriteBody (CodeWriter writer)
 		{
 			var callback_name = method.EscapedCallbackName;
-
-			writer.WriteLine ($"if ({callback_name} == null)");
-			writer.WriteLine ($"\t{callback_name} = JNINativeWrapper.CreateDelegate (new {method.GetDelegateType (opt)} (n_{method.Name + method.IDSignature}));");
-			writer.WriteLine ($"return {callback_name};");
+			writer.WriteLine ($"return {callback_name} ??= new {method.GetDelegateType (opt)} (n_{method.Name + method.IDSignature});");
 		}
 	}
 }
