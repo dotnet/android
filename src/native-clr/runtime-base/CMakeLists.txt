@@ -3,6 +3,10 @@ set(LIB_ALIAS xa::runtime-base-clr)
 
 set(XA_RUNTIME_BASE_SOURCES
   android-system.cc
+  logger.cc
+  timing.cc
+  timing-internal.cc
+  util.cc
 )
 add_clang_check_sources("${XA_RUNTIME_BASE_SOURCES}")
 
