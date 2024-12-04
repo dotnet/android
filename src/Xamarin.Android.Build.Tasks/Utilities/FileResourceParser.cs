@@ -333,8 +333,6 @@ namespace Xamarin.Android.Tasks
 						fields.Add (r);
 					}
 				}
-				//if (field.Type != RType.Array)
-				//	return;
 				arrayMapping.Add (field, fields.ToArray ());
 
 				field.Ids = new int [attribs.Count];
