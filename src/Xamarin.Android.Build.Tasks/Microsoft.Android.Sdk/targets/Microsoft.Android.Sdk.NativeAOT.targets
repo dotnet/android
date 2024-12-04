@@ -6,6 +6,19 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 ***********************************************************************************************
 -->
 <Project>
+
+  <!-- Make IlcCompile depend on the trimmer -->
+  <PropertyGroup>
+    <IlcCompileDependsOn>
+      _AndroidBeforeIlcCompile;
+      _ComputeManagedAssemblyToLink;
+      PrepareForILLink;
+      _AndroidComputeIlcCompileInputs;
+      ComputeIlcCompileInputs;
+      $(IlcCompileDependsOn)
+    </IlcCompileDependsOn>
+  </PropertyGroup>
+
   <Target Name="_AndroidNativeAOTSettings" AfterTargets="_ResolveMonoAndroidSdks">
     <!-- Example settings from: https://github.com/jonathanpeppers/Android-NativeAOT/blob/ea69d122cdc7de67aa6a5db14b7e560763c63cdd/DotNet/libdotnet.targets -->
     <PropertyGroup>
@@ -22,10 +35,32 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <LinkerArg Include="-Wl,--undefined-version" />
     </ItemGroup>
   </Target>
-  <Target Name="_AndroidBeforeIlc" BeforeTargets="WriteIlcRspFileForCompilation">
+
+  <!-- https://github.com/xamarin/xamarin-macios/blob/c43d4ea40bc777969e3b158cf46446df292d8449/dotnet/targets/Xamarin.Shared.Sdk.targets#L541-L550 -->
+  <Target Name="_AndroidBeforeIlcCompile">
+    <PropertyGroup>
+      <RunILLink>true</RunILLink>
+      <!--
+        We want to suppress warnings from trimmer and only show warnings from ILC.
+        Otherwise, you would get 2x for every warning.
+      -->
+      <_OriginalSuppressTrimAnalysisWarnings>$(SuppressTrimAnalysisWarnings)</_OriginalSuppressTrimAnalysisWarnings>
+      <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_AndroidComputeIlcCompileInputs">
+    <PropertyGroup>
+      <!-- Turn trimmer warnings back to original value -->
+      <SuppressTrimAnalysisWarnings>$(_OriginalSuppressTrimAnalysisWarnings)</SuppressTrimAnalysisWarnings>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_AndroidBeforeIlcRspFile" BeforeTargets="WriteIlcRspFileForCompilation">
     <!-- HACK: -targetos:android results in error, so use linux -->
     <PropertyGroup>
       <_targetOS>linux</_targetOS>
     </PropertyGroup>
   </Target>
+
 </Project>
