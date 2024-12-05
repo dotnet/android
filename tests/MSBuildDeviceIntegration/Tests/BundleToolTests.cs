@@ -15,8 +15,23 @@ namespace Xamarin.Android.Build.Tests
 	public class BundleToolTests : DeviceTest
 	{
 		static readonly object[] FixtureArgs = {
-			new object[] { false },
-			new object[] { true },
+			new object[] {
+				false, // useAssemblyBlobs
+				false, // useNativeRuntimeLinkingMode
+			},
+
+			new object[] {
+				true,  // useAssemblyBlobs
+				false, // useNativeRuntimeLinkingMode
+			},
+
+			new object[] {
+				true,  // useAssemblyBlobs
+				true, // useNativeRuntimeLinkingMode
+			},
+
+			// There's no point in testing further combinations of the two parameters, the tests
+			// wouldn't actually differ.
 		};
 
 		static readonly string [] Abis = new [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
@@ -26,6 +41,7 @@ namespace Xamarin.Android.Build.Tests
 		string intermediate;
 		string bin;
 		bool usesAssemblyBlobs;
+		bool useNativeRuntimeLinkingMode;
 
 		// Disable split by language
 		const string BuildConfig = @"{
@@ -46,9 +62,10 @@ namespace Xamarin.Android.Build.Tests
 	}
 }";
 
-		public BundleToolTests (bool usesAssemblyBlobs)
+		public BundleToolTests (bool usesAssemblyBlobs, bool useNativeRuntimeLinkingMode)
 		{
 			this.usesAssemblyBlobs = usesAssemblyBlobs;
+			this.useNativeRuntimeLinkingMode = useNativeRuntimeLinkingMode;
 		}
 
 		[OneTimeSetUp]
@@ -97,6 +114,7 @@ namespace Xamarin.Android.Build.Tests
 			app.SetAndroidSupportedAbis (Abis);
 			app.SetProperty ("AndroidBundleConfigurationFile", "buildConfig.json");
 			app.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
+			app.SetProperty ("_AndroidEnableNativeRuntimeLinking", useNativeRuntimeLinkingMode.ToString ());
 
 			libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), cleanupOnDispose: true);
 			Assert.IsTrue (libBuilder.Build (lib), "Library build should have succeeded.");
@@ -177,15 +195,19 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				expectedFiles.Add ($"lib/{abi}/libmonodroid.so");
-				expectedFiles.Add ($"lib/{abi}/libmonosgen-2.0.so");
-				expectedFiles.Add ($"lib/{abi}/libxamarin-app.so");
+				if (!useNativeRuntimeLinkingMode) {
+					// None of these exist if dynamic native runtime linking is enabled
+					expectedFiles.Add ($"lib/{abi}/libmonosgen-2.0.so");
+					expectedFiles.Add ($"lib/{abi}/libxamarin-app.so");
+					expectedFiles.Add ($"lib/{abi}/libSystem.IO.Compression.Native.so");
+					expectedFiles.Add ($"lib/{abi}/libSystem.Native.so");
+				}
+
 				if (usesAssemblyBlobs) {
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_System.Private.CoreLib.dll.so");
 				} else {
 					expectedFiles.Add ($"lib/{abi}/lib_System.Private.CoreLib.dll.so");
 				}
-				expectedFiles.Add ($"lib/{abi}/libSystem.IO.Compression.Native.so");
-				expectedFiles.Add ($"lib/{abi}/libSystem.Native.so");
 			}
 			foreach (var expected in expectedFiles) {
 				CollectionAssert.Contains (contents, expected, $"`{baseZip}` did not contain `{expected}`");
@@ -237,15 +259,20 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				expectedFiles.Add ($"base/lib/{abi}/libmonodroid.so");
-				expectedFiles.Add ($"base/lib/{abi}/libmonosgen-2.0.so");
-				expectedFiles.Add ($"base/lib/{abi}/libxamarin-app.so");
+
+				if (!useNativeRuntimeLinkingMode) {
+					// None of these exist if dynamic native runtime linking is enabled
+					expectedFiles.Add ($"base/lib/{abi}/libmonosgen-2.0.so");
+					expectedFiles.Add ($"base/lib/{abi}/libxamarin-app.so");
+					expectedFiles.Add ($"base/lib/{abi}/libSystem.IO.Compression.Native.so");
+					expectedFiles.Add ($"base/lib/{abi}/libSystem.Native.so");
+				}
+
 				if (usesAssemblyBlobs) {
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_System.Private.CoreLib.dll.so");
 				} else {
 					expectedFiles.Add ($"base/lib/{abi}/lib_System.Private.CoreLib.dll.so");
 				}
-				expectedFiles.Add ($"base/lib/{abi}/libSystem.IO.Compression.Native.so");
-				expectedFiles.Add ($"base/lib/{abi}/libSystem.Native.so");
 			}
 			foreach (var expected in expectedFiles) {
 				CollectionAssert.Contains (contents, expected, $"`{aab}` did not contain `{expected}`");

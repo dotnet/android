@@ -90,6 +90,8 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem[] Environments { get; set; }
 
+		public bool EnableNativeRuntimeLinking { get; set; }
+
 		[Output]
 		public ITaskItem[] GeneratedBinaryTypeMaps { get; set; }
 
@@ -186,6 +188,7 @@ namespace Xamarin.Android.Tasks
 			// Now that "never" never happened, we can proceed knowing that at least the assembly sets are the same for each architecture
 			var nativeCodeGenStates = new ConcurrentDictionary<AndroidTargetArch, NativeCodeGenState> ();
 			NativeCodeGenState? templateCodeGenState = null;
+			PinvokeScanner? pinvokeScanner = EnableNativeRuntimeLinking ? new PinvokeScanner (Log) : null;
 
 			var firstArch = allAssembliesPerArch.First ().Key;
 			var generateSucceeded = true;
@@ -203,6 +206,19 @@ namespace Xamarin.Android.Tasks
 
 				if (!success) {
 					generateSucceeded = false;
+				}
+
+				if (!success || state == null) {
+					return;
+				}
+
+				if (pinvokeScanner != null) {
+					(success, List<PinvokeScanner.PinvokeEntryInfo> pinfos) = ScanForUsedPinvokes (pinvokeScanner, arch, state.Resolver);
+					if (!success) {
+						return;
+					}
+					state.PinvokeInfos = pinfos;
+					Log.LogDebugMessage ($"Number of unique p/invokes for architecture '{arch}': {pinfos.Count}");
 				}
 
 				// If this is the first architecture, we need to store the state for later use
@@ -371,6 +387,31 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return additionalProviders;
+		}
+
+		(bool success, List<PinvokeScanner.PinvokeEntryInfo>? pinfos) ScanForUsedPinvokes (PinvokeScanner scanner, AndroidTargetArch arch, XAAssemblyResolver resolver)
+		{
+			if (!EnableNativeRuntimeLinking) {
+				return (true, null);
+			}
+
+			var frameworkAssemblies = new List<ITaskItem> ();
+
+			foreach (ITaskItem asm in ResolvedAssemblies) {
+				string? metadata = asm.GetMetadata ("FrameworkAssembly");
+				if (String.IsNullOrEmpty (metadata)) {
+					continue;
+				}
+
+				if (!Boolean.TryParse (metadata, out bool isFrameworkAssembly) || !isFrameworkAssembly) {
+					continue;
+				}
+
+				frameworkAssemblies.Add (asm);
+			}
+
+			var pinfos = scanner.Scan (arch, resolver, frameworkAssemblies);
+			return (true, pinfos);
 		}
 
 		(bool success, NativeCodeGenState? stubsState) GenerateJavaSourcesAndMaybeClassifyMarshalMethods (AndroidTargetArch arch, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods, bool generateJavaCode)

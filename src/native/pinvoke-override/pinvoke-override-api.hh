@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include <jni.h>
+
 #include "cppcompat.hh"
 #include "xxhash.hh"
 
@@ -75,7 +77,8 @@ namespace xamarin::android {
 		static void* fetch_or_create_pinvoke_map_entry (std::string const& library_name, std::string const& entrypoint_name, hash_t entrypoint_name_hash, pinvoke_api_map_ptr api_map, bool need_lock) noexcept;
 		static PinvokeEntry* find_pinvoke_address (hash_t hash, const PinvokeEntry *entries, size_t entry_count) noexcept;
 		static void* handle_other_pinvoke_request (const char *library_name, hash_t library_name_hash, const char *entrypoint_name, hash_t entrypoint_name_hash) noexcept;
-		static void* monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name);
+		static void* monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name) noexcept;
+		static void handle_jni_on_load (JavaVM *vm, void *reserved) noexcept;
 
 	private:
 		static xamarin::android::mutex  pinvoke_map_write_lock;
