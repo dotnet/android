@@ -23,6 +23,7 @@ apk-sizes-*.txt
 *~
 external/android-platform-support/
 external/monodroid/
+external/android-platform-support/
 external/mono/
 tests/api-compatibility/reference/*/*.dll
 tests/api-compatibility/reference/*/*.cs

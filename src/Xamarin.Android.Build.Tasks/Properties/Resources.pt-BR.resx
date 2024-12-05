@@ -140,7 +140,7 @@ Provavelmente esse erro foi causado por um problema com o arquivo AndroidManifes
     <value>Nome de arquivo inválido: ele deve começar com A-z ou a-z ou um sublinhado.</value>
   </data>
   <data name="APT0005" xml:space="preserve">
-    <value>Invalid file name: Filenames cannot use Java reserved words.</value>
+    <value>Nome de arquivo inválido: os nomes de arquivo não podem usar palavras reservadas para Java.</value>
   </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Não foi possível determinar o nível da API da $(TargetFrameworkVersion) de '{0}'.</value>
@@ -979,7 +979,7 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
 {0} - A Maven artifact specification</comment>
   </data>
   <data name="XA4236" xml:space="preserve">
-    <value>Cannot download Maven artifact '{0}:{1}'.
+    <value>Não é possível baixar o artefato Maven ''{0}:{1}''.
 {2}</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - Maven artifact group id

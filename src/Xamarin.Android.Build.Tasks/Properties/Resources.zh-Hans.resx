@@ -140,7 +140,7 @@
     <value>文件名无效: 必须以 A-z、a-z 或下划线开头。</value>
   </data>
   <data name="APT0005" xml:space="preserve">
-    <value>Invalid file name: Filenames cannot use Java reserved words.</value>
+    <value>文件名无效: 文件名不能使用 Java 保留字。</value>
   </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>无法确定 $(TargetFrameworkVersion) "{0}" 的 API 级别。</value>
@@ -979,7 +979,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - A Maven artifact specification</comment>
   </data>
   <data name="XA4236" xml:space="preserve">
-    <value>Cannot download Maven artifact '{0}:{1}'.
+    <value>无法下载 Maven 项目“{0}:{1}”。
 {2}</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - Maven artifact group id

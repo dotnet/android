@@ -140,7 +140,7 @@
     <value>잘못된 파일 이름: A-z 또는 a-z 또는 밑줄로 시작해야 합니다.</value>
   </data>
   <data name="APT0005" xml:space="preserve">
-    <value>Invalid file name: Filenames cannot use Java reserved words.</value>
+    <value>잘못된 파일 이름: 파일 이름은 Java 예약어를 사용할 수 없습니다.</value>
   </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>'{0}'의 $(TargetFrameworkVersion)에 대한 API 레벨을 확인할 수 없습니다.</value>
@@ -979,7 +979,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - A Maven artifact specification</comment>
   </data>
   <data name="XA4236" xml:space="preserve">
-    <value>Cannot download Maven artifact '{0}:{1}'.
+    <value>Maven 아티팩트 '{0}:{1}'을(를) 다운로드할 수 없습니다.
 {2}</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - Maven artifact group id
