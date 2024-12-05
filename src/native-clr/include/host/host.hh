@@ -4,6 +4,7 @@
 
 #include <jni.h>
 
+#include "../runtime-base/jni-wrappers.hh"
 #include "../runtime-base/timing.hh"
 #include "../shared/log_types.hh"
 
@@ -20,6 +21,10 @@ namespace xamarin::android {
 		{
 			return _timing.get ();
 		}
+
+	private:
+		static void create_xdg_directory (jstring_wrapper& home, size_t home_len, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept;
+		static void create_xdg_directories_and_environment (jstring_wrapper &homeDir) noexcept;
 
 	private:
 		static inline std::unique_ptr<Timing> _timing{};

@@ -8,6 +8,35 @@
 
 using namespace xamarin::android;
 
+void Host::create_xdg_directory (jstring_wrapper& home, size_t home_len, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept
+{
+	static_local_string<SENSIBLE_PATH_MAX> dir (home_len + relative_path.length ());
+	Util::path_combine (dir, home.get_string_view (), relative_path);
+
+	log_debug (LOG_DEFAULT, "Creating XDG directory: {}", optional_string (dir.get ()));
+	int rv = Util::create_directory (dir.get (), Constants::DEFAULT_DIRECTORY_MODE);
+	if (rv < 0 && errno != EEXIST) {
+		log_warn (LOG_DEFAULT, "Failed to create XDG directory {}. {}", optional_string (dir.get ()), strerror (errno));
+	}
+
+	if (!environment_variable_name.empty ()) {
+		setenv (environment_variable_name.data (), dir.get (), 1);
+	}
+}
+
+void Host::create_xdg_directories_and_environment (jstring_wrapper &homeDir) noexcept
+{
+	size_t home_len = strlen (homeDir.get_cstr ());
+
+	constexpr auto XDG_DATA_HOME = "XDG_DATA_HOME"sv;
+	constexpr auto HOME_PATH = ".local/share"sv;
+	create_xdg_directory (homeDir, home_len, HOME_PATH, XDG_DATA_HOME);
+
+	constexpr auto XDG_CONFIG_HOME = "XDG_CONFIG_HOME"sv;
+	constexpr auto CONFIG_PATH = ".config"sv;
+	create_xdg_directory (homeDir, home_len, CONFIG_PATH, XDG_CONFIG_HOME);
+}
+
 void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
 	jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset, jobject loader,
 	jobjectArray assembliesJava, jboolean isEmulator, jboolean haveSplitApks)
@@ -31,9 +60,13 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, js
 	jstring_wrapper &home = applicationDirs[Constants::APP_DIRS_FILES_DIR_INDEX];
 	Util::set_environment_variable_for_directory ("TMPDIR", applicationDirs[Constants::APP_DIRS_CACHE_DIR_INDEX]);
 	Util::set_environment_variable_for_directory ("HOME", home);
+	create_xdg_directories_and_environment (home);
 
 	AndroidSystem::detect_embedded_dso_mode (applicationDirs);
 	AndroidSystem::set_running_in_emulator (isEmulator);
+	AndroidSystem::set_primary_override_dir (home);
+	AndroidSystem::create_update_dir (AndroidSystem::get_primary_override_dir ());
+	AndroidSystem::setup_environment ();
 
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing->end_event (total_time_index);

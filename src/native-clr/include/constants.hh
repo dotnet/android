@@ -17,6 +17,13 @@ namespace xamarin::android {
 #endif
 
 	public:
+#if defined(RELEASE)
+		static constexpr bool IsReleaseBuild = true;
+		static constexpr bool IsDebugBuild = false;
+#else
+		static constexpr bool IsReleaseBuild = false;
+		static constexpr bool IsDebugBuild = true;
+#endif
 		static constexpr std::string_view MANGLED_ASSEMBLY_NAME_EXT { ".so" };
 
 	private:
@@ -103,5 +110,10 @@ namespace xamarin::android {
 		static constexpr size_t SENSIBLE_PATH_MAX = 1024uz;
 
 		static constexpr int DEFAULT_DIRECTORY_MODE = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+
+#if defined (DEBUG)
+		static constexpr std::string_view OVERRIDE_ENVIRONMENT_FILE_NAME { "environment" };
+		static constexpr uint32_t OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE = 22;
+#endif
 	};
 }
