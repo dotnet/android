@@ -67,6 +67,9 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <IlcReference Remove="@(IlcReference)" />
       <IlcReference Include="@(PrivateSdkAssemblies)" />
       <IlcReference Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" Exclude="@(IlcCompileInput)" />
+      <!-- HACK: this file doesn't exist in linux-bionic-arm64 pack -->
+      <LinkerArg Remove="@(LinkerArg)" Condition=" '%(FileName)' == 'libSystem.Net.Security.Native' " />
+      <NativeLibrary Remove="@(NativeLibrary)" Condition=" '%(FileName)' == 'libSystem.Net.Security.Native' " />
     </ItemGroup>
   </Target>
 
