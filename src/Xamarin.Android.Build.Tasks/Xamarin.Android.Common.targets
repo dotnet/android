@@ -1057,13 +1057,24 @@ because xbuild doesn't support framework reference assemblies.
 	>
 		<Output ItemName="_AndroidResourceDest" TaskParameter="IntermediateFiles" />
 		<Output ItemName="_AndroidResolvedResources" TaskParameter="ResolvedResourceFiles" />
+		<Output PropertyName="_AndroidResolvedResourcesFilesHash" TaskParameter="FilesHash" />
 	</AndroidComputeResPaths>
+
+	<WriteLinesToFile
+		File="$(IntermediateOutputPath)_AndroidResolvedResourcesFilesHash.txt"
+		Lines="$(_AndroidResolvedResourcesFilesHash)"
+		Overwrite="True"
+		WriteOnlyWhenDifferent="True"
+	/>
+  <ItemGroup>
+    <FileWrites Include="$(IntermediateOutputPath)_AndroidResolvedResourcesFilesHash.txt"/>
+  </ItemGroup>
 
 	<MakeDir Directories="$(MonoAndroidResDirIntermediate)" />
 </Target>
 
 <Target Name="_GenerateAndroidResourceDir"
-	Inputs="$(MSBuildProjectFullPath);@(_AndroidMSBuildAllProjects);@(_AndroidResolvedResources);$(_AndroidBuildPropertiesCache)"
+	Inputs="$(MSBuildProjectFullPath);@(_AndroidMSBuildAllProjects);@(_AndroidResolvedResources);$(_AndroidBuildPropertiesCache);$(IntermediateOutputPath)_AndroidResolvedResourcesFilesHash.txt"
 	Outputs="$(_AndroidResFlagFile)"
 	DependsOnTargets="$(_OnResolveMonoAndroidSdks)">
 	<CheckForInvalidResourceFileNames
