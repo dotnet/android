@@ -49,6 +49,7 @@ namespace Xamarin.Android.Prepare
 			//  https://dl-ssl.google.com/android/repository/sys-img/google_apis/sys-img2-1.xml
 			//    * system images
 			//
+			// Note "isLatestStable" is a bad name, it's actually "xaprepare should install this API by default"
 			Components = new List<AndroidToolchainComponent> {
 				new AndroidPlatformComponent ("android-2.3.3_r02", apiLevel: "10", pkgRevision: "2"),
 				new AndroidPlatformComponent ("android-15_r05",    apiLevel: "15", pkgRevision: "5"),
@@ -72,6 +73,7 @@ namespace Xamarin.Android.Prepare
 				new AndroidPlatformComponent ("platform-33-ext3_r03",   apiLevel: "33", pkgRevision: "3"),
 				new AndroidPlatformComponent ("platform-34-ext7_r02",   apiLevel: "34", pkgRevision: "2"),
 				new AndroidPlatformComponent ("platform-35_r01",   apiLevel: "35", pkgRevision: "1", isLatestStable: true),
+				new AndroidPlatformComponent ("platform-Baklava_r01",   apiLevel: "Baklava", pkgRevision: "1", isLatestStable: true),
 
 				new AndroidToolchainComponent ("sources-34_r01",
 					destDir: Path.Combine ("sources", "android-34"),
