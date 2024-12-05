@@ -13,8 +13,9 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       _AndroidBeforeIlcCompile;
       _ComputeManagedAssemblyToLink;
       PrepareForILLink;
-      _AndroidComputeIlcCompileInputs;
+      _RunILLink;
       ComputeIlcCompileInputs;
+      _AndroidComputeIlcCompileInputs;
       $(IlcCompileDependsOn)
     </IlcCompileDependsOn>
   </PropertyGroup>
@@ -53,14 +54,16 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <PropertyGroup>
       <!-- Turn trimmer warnings back to original value -->
       <SuppressTrimAnalysisWarnings>$(_OriginalSuppressTrimAnalysisWarnings)</SuppressTrimAnalysisWarnings>
-    </PropertyGroup>
-  </Target>
-
-  <Target Name="_AndroidBeforeIlcRspFile" BeforeTargets="WriteIlcRspFileForCompilation">
-    <!-- HACK: -targetos:android results in error, so use linux -->
-    <PropertyGroup>
+      <!-- HACK: -targetos:android results in error, so use linux -->
       <_targetOS>linux</_targetOS>
     </PropertyGroup>
+    <ItemGroup>
+      <!-- Give ILLink's output to ILC -->
+      <IlcCompileInput Remove="@(IlcCompileInput)" />
+      <IlcCompileInput Include="$(IntermediateLinkDir)$(TargetName)$(TargetExt)" />
+      <IlcReference Remove="@(IlcReference)" />
+      <IlcReference Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" Exclude="@(IlcCompileInput)" />
+    </ItemGroup>
   </Target>
 
 </Project>
