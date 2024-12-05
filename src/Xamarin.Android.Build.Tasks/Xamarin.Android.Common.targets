@@ -545,6 +545,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       FormatArguments="AndroidFastDeploymentType;9"
       Condition=" '$(AndroidFastDeploymentType)' != '' "
   />
+  <AndroidWarning Code="XA1037"
+      ResourceName="XA1037"
+      FormatArguments="AndroidCreatePackagePerAbi;10"
+      Condition=" '$(AndroidCreatePackagePerAbi)' == 'true' "
+  />
 </Target>
 
 <Target Name="_CheckNonIdealConfigurations"
