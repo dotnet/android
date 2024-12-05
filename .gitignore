@@ -22,6 +22,7 @@ apk-sizes-*.txt
 *.ProjectImports.zip
 *~
 external/monodroid/
+external/android-platform-support/
 external/mono/
 tests/api-compatibility/reference/*/*.dll
 tests/api-compatibility/reference/*/*.cs
