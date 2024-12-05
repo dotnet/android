@@ -62,6 +62,7 @@ const ApplicationConfig application_config = {
 	.android_package_name = android_package_name,
 };
 
+// TODO: migrate to std::string_view for these two
 const char* const app_environment_variables[] = {};
 const char* const app_system_properties[] = {};
 

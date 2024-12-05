@@ -86,6 +86,7 @@ namespace xamarin::android {
 		}
 
 	private:
+		// TODO: needs some work to accept mixed params of different accepted types
 		template<size_t MaxStackSpace, detail::PathBuffer<MaxStackSpace> TBuffer, detail::PathComponentString ...TPart>
 		static void path_combine_common (TBuffer& buf, TPart&&... parts) noexcept
 		{
@@ -109,6 +110,12 @@ namespace xamarin::android {
 	public:
 		template<size_t MaxStackSpace, detail::PathComponentString ...TParts>
 		static void path_combine (dynamic_local_string<MaxStackSpace>& buf, TParts&&... parts) noexcept
+		{
+			path_combine_common<MaxStackSpace> (buf, std::forward<TParts>(parts)...);
+		}
+
+		template<size_t MaxStackSpace, detail::PathComponentString ...TParts>
+		static void path_combine (static_local_string<MaxStackSpace>& buf, TParts&&... parts) noexcept
 		{
 			path_combine_common<MaxStackSpace> (buf, std::forward<TParts>(parts)...);
 		}
