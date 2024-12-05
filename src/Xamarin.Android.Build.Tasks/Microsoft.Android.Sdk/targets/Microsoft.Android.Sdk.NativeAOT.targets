@@ -63,6 +63,11 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <IlcCompileInput Include="$(IntermediateLinkDir)$(TargetName)$(TargetExt)" />
       <IlcReference Remove="@(IlcReference)" />
       <IlcReference Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" Exclude="@(IlcCompileInput)" />
+      <!-- HACK: these are missing from microsoft.netcore.app.runtime.linux-bionic-arm64 -->
+      <AutoInitializedAssemblies Remove="System.Private.StackTraceMetadata" />
+      <AutoInitializedAssemblies Remove="System.Private.TypeLoader" />
+      <AutoInitializedAssemblies Remove="System.Private.Reflection.Execution" />
+      <AutoInitializedAssemblies Remove="System.Private.Reflection.DisabledReflection" />
     </ItemGroup>
   </Target>
 
