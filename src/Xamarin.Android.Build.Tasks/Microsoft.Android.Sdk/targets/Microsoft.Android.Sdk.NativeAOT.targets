@@ -11,6 +11,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   <PropertyGroup>
     <IlcCompileDependsOn>
       _AndroidBeforeIlcCompile;
+      SetupOSSpecificProps;
       _ComputeManagedAssemblyToLink;
       PrepareForILLink;
       _RunILLink;
@@ -20,7 +21,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     </IlcCompileDependsOn>
   </PropertyGroup>
 
-  <Target Name="_AndroidNativeAOTSettings" AfterTargets="_ResolveMonoAndroidSdks">
+  <Target Name="_AndroidBeforeIlcCompile" BeforeTargets="SetupProperties">
     <!-- Example settings from: https://github.com/jonathanpeppers/Android-NativeAOT/blob/ea69d122cdc7de67aa6a5db14b7e560763c63cdd/DotNet/libdotnet.targets -->
     <PropertyGroup>
       <_NdkSysrootAbi>aarch64-linux-android</_NdkSysrootAbi>
@@ -31,15 +32,14 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_NdkSysrootDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/sysroot/usr/lib/$(_NdkSysrootAbi)</_NdkSysrootDir>
       <_NdkBinDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/bin/</_NdkBinDir>
       <CppCompilerAndLinker>$(_NdkBinDir)$(_NdkClangPrefix)clang++</CppCompilerAndLinker>
+      <CppLinker>$(CppCompilerAndLinker)</CppLinker>
       <ObjCopyName>$(_NdkBinDir)llvm-objcopy</ObjCopyName>
     </PropertyGroup>
     <ItemGroup>
       <LinkerArg Include="-Wl,--undefined-version" />
     </ItemGroup>
-  </Target>
 
-  <!-- https://github.com/xamarin/xamarin-macios/blob/c43d4ea40bc777969e3b158cf46446df292d8449/dotnet/targets/Xamarin.Shared.Sdk.targets#L541-L550 -->
-  <Target Name="_AndroidBeforeIlcCompile" BeforeTargets="SetupProperties">
+    <!-- https://github.com/xamarin/xamarin-macios/blob/c43d4ea40bc777969e3b158cf46446df292d8449/dotnet/targets/Xamarin.Shared.Sdk.targets#L541-L550 -->
     <PropertyGroup>
       <RunILLink>true</RunILLink>
       <!--
