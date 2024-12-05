@@ -31,9 +31,12 @@ namespace MonoDroid.Generation
 					sw.WriteLine ();
 				}
 
+				// [UnmanagedFunctionPointer (CallingConvention.Winapi)]
 				// delegate bool _JniMarshal_PPL_Z (IntPtr jnienv, IntPtr klass, IntPtr a);
-				foreach (var jni in opt.GetJniMarshalDelegates ())
+				foreach (var jni in opt.GetJniMarshalDelegates ()) {
+					sw.WriteLine ("[global::System.Runtime.InteropServices.UnmanagedFunctionPointer (global::System.Runtime.InteropServices.CallingConvention.Winapi)]");
 					sw.WriteLine ($"delegate {FromJniType (jni[jni.Length - 1])} {jni} (IntPtr jnienv, IntPtr klass{GetDelegateParameters (jni)});");
+				}
 
 				// [SupportedOSPlatform] only exists in .NET 5.0+, so we need to generate a
 				// dummy one so earlier frameworks can compile.
