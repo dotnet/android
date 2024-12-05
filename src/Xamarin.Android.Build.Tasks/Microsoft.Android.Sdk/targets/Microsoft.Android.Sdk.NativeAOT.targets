@@ -39,7 +39,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   </Target>
 
   <!-- https://github.com/xamarin/xamarin-macios/blob/c43d4ea40bc777969e3b158cf46446df292d8449/dotnet/targets/Xamarin.Shared.Sdk.targets#L541-L550 -->
-  <Target Name="_AndroidBeforeIlcCompile">
+  <Target Name="_AndroidBeforeIlcCompile" BeforeTargets="SetupProperties">
     <PropertyGroup>
       <RunILLink>true</RunILLink>
       <!--
@@ -48,6 +48,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       -->
       <_OriginalSuppressTrimAnalysisWarnings>$(SuppressTrimAnalysisWarnings)</_OriginalSuppressTrimAnalysisWarnings>
       <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+      <!-- HACK: we are android-arm64, so this is required for the right path(s) to be found -->
+      <RuntimeIdentifier Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">linux-bionic-arm64</RuntimeIdentifier>
     </PropertyGroup>
   </Target>
 
@@ -63,12 +65,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <IlcCompileInput Remove="@(IlcCompileInput)" />
       <IlcCompileInput Include="$(IntermediateLinkDir)$(TargetName)$(TargetExt)" />
       <IlcReference Remove="@(IlcReference)" />
+      <IlcReference Include="@(PrivateSdkAssemblies)" />
       <IlcReference Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" Exclude="@(IlcCompileInput)" />
-      <!-- HACK: these are missing from microsoft.netcore.app.runtime.linux-bionic-arm64 -->
-      <AutoInitializedAssemblies Remove="System.Private.StackTraceMetadata" />
-      <AutoInitializedAssemblies Remove="System.Private.TypeLoader" />
-      <AutoInitializedAssemblies Remove="System.Private.Reflection.Execution" />
-      <AutoInitializedAssemblies Remove="System.Private.Reflection.DisabledReflection" />
     </ItemGroup>
   </Target>
 
