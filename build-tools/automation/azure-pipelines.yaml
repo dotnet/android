@@ -115,7 +115,7 @@ extends:
           name: Azure Pipelines
           vmImage: $(HostedMacImage)
           os: macOS
-        timeoutInMinutes: 180
+        timeoutInMinutes: 150
         workspace:
           clean: all
         steps:
