@@ -683,7 +683,7 @@ OSBridge::target_from_jobject (jobject jobj)
 int
 OSBridge::scc_get_stashed_index (MonoGCBridgeSCC *scc)
 {
-	abort_if_invalid_pointer_argument (scc);
+	abort_if_invalid_pointer_argument (scc, "scc");
 	abort_unless (scc->num_objs < 0, "Attempted to load stashed index from an object which does not contain one.");
 
 	return -scc->num_objs - 1;
@@ -862,8 +862,12 @@ OSBridge::gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBri
 			mono_field_get_value (obj, bridge_info->handle, &jref);
 			if (jref) {
 				alive++;
-				if (j > 0)
-					abort_unless (sccs [i]->is_alive, "Bridge SCC at index %d must be alive", i);
+				if (j > 0) {
+					abort_unless (
+						sccs [i]->is_alive,
+						[&i] { return detail::_format_message ("Bridge SCC at index %d must be alive", i); }
+					);
+				}
 				sccs [i]->is_alive = 1;
 				mono_field_get_value (obj, bridge_info->refs_added, &refs_added);
 				if (refs_added) {
@@ -885,7 +889,10 @@ OSBridge::gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBri
 					}
 				}
 			} else {
-				abort_unless (!sccs [i]->is_alive, "Bridge SCC at index %d must NOT be alive", i);
+				abort_unless (
+					!sccs [i]->is_alive,
+					[&i] { return detail::_format_message ("Bridge SCC at index %d must NOT be alive", i); }
+				);
 			}
 		}
 	}
@@ -993,8 +1000,8 @@ OSBridge::ensure_jnienv (void)
 void
 OSBridge::initialize_on_onload (JavaVM *vm, JNIEnv *env)
 {
-	abort_if_invalid_pointer_argument (env);
-	abort_if_invalid_pointer_argument (vm);
+	abort_if_invalid_pointer_argument (env, "env");
+	abort_if_invalid_pointer_argument (vm, "vm");
 
 	jvm = vm;
 	jclass lref = env->FindClass ("java/lang/Runtime");
@@ -1018,7 +1025,7 @@ OSBridge::initialize_on_onload (JavaVM *vm, JNIEnv *env)
 void
 OSBridge::initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass)
 {
-	abort_if_invalid_pointer_argument (env);
+	abort_if_invalid_pointer_argument (env, "env");
 	GCUserPeer_class      = RuntimeUtil::get_class_from_runtime_field(env, runtimeClass, "mono_android_GCUserPeer", true);
 	GCUserPeer_ctor       = env->GetMethodID (GCUserPeer_class, "<init>", "()V");
 	abort_unless (GCUserPeer_class != nullptr && GCUserPeer_ctor != nullptr, "Failed to load mono.android.GCUserPeer!");
