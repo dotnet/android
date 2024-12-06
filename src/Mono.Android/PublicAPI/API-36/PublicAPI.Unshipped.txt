@@ -1,6 +1,6 @@
 #nullable enable
-abstract Android.App.Appfunctions.AppFunctionService.OnExecuteFunction(Android.App.Appfunctions.ExecuteAppFunctionRequest! request, string! callingPackage, Android.OS.CancellationSignal! cancellationSignal, Java.Util.Functions.IConsumer! callback) -> void
-abstract Android.App.Appsearch.Functions.AppFunctionService.OnExecuteFunction(Android.App.Appsearch.Functions.ExecuteAppFunctionRequest! request, Java.Util.Functions.IConsumer! callback) -> void
+abstract Android.App.AppFunctions.AppFunctionService.OnExecuteFunction(Android.App.AppFunctions.ExecuteAppFunctionRequest! request, string! callingPackage, Android.OS.CancellationSignal! cancellationSignal, Java.Util.Functions.IConsumer! callback) -> void
+abstract Android.App.AppSearch.Functions.AppFunctionService.OnExecuteFunction(Android.App.AppSearch.Functions.ExecuteAppFunctionRequest! request, Java.Util.Functions.IConsumer! callback) -> void
 Android.AdServices.AdSelection.GetAdSelectionDataRequest.Builder.SetSellerConfiguration(Android.AdServices.AdSelection.SellerConfiguration? sellerConfiguration) -> Android.AdServices.AdSelection.GetAdSelectionDataRequest.Builder!
 Android.AdServices.AdSelection.GetAdSelectionDataRequest.SellerConfiguration.get -> Android.AdServices.AdSelection.SellerConfiguration?
 Android.AdServices.AdSelection.PerBuyerConfiguration
@@ -27,7 +27,6 @@ Android.AdServices.AdSelection.SellerConfiguration.PerBuyerConfigurations.get ->
 Android.AdServices.AdSelection.SellerConfiguration.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
 Android.AdServices.CustomAudiences.CustomAudience.Builder.SetPriority(double priority) -> Android.AdServices.CustomAudiences.CustomAudience.Builder!
 Android.AdServices.CustomAudiences.CustomAudience.Priority.get -> double
-Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest.Builder.SetPartialCustomAudienceList(System.Collections.Generic.IList<Android.AdServices.CustomAudiences.PartialCustomAudience!>! partialCustomAudienceList) -> Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest.Builder!
 Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest.Builder.SetShouldReplacePendingUpdates(bool shouldReplacePendingUpdates) -> Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest.Builder!
 Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest.ShouldReplacePendingUpdates() -> bool
 Android.AdServices.OnDevicePersonalization.AppInfo.AppInfo(bool installed) -> void
@@ -55,35 +54,35 @@ Android.AdServices.OnDevicePersonalization.RenderInput.RenderInput(int width, in
 Android.AdServices.OnDevicePersonalization.TrainingExamplesInput.CollectionName.get -> string?
 Android.AdServices.OnDevicePersonalization.TrainingExamplesInput.TrainingExamplesInput(string! populationName, string! taskName, byte[]? resumptionToken, string? collectionName) -> void
 Android.AdServices.OnDevicePersonalization.WebTriggerInput.WebTriggerInput(Android.Net.Uri! destinationUrl, string! appPackageName, byte[]! data) -> void
-Android.App.Appfunctions.AppFunctionManager
-Android.App.Appfunctions.AppFunctionManager.ExecuteAppFunction(Android.App.Appfunctions.ExecuteAppFunctionRequest! request, Java.Util.Concurrent.IExecutor! executor, Android.OS.CancellationSignal! cancellationSignal, Java.Util.Functions.IConsumer! callback) -> void
-Android.App.Appfunctions.AppFunctionManager.IsAppFunctionEnabled(string! functionIdentifier, string! targetPackage, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
-Android.App.Appfunctions.AppFunctionManager.SetAppFunctionEnabled(string! functionIdentifier, int newEnabledState, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
-Android.App.Appfunctions.AppFunctionService
-Android.App.Appfunctions.AppFunctionService.AppFunctionService() -> void
-Android.App.Appfunctions.AppFunctionService.AppFunctionService(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
-Android.App.Appfunctions.ExecuteAppFunctionRequest
-Android.App.Appfunctions.ExecuteAppFunctionRequest.Builder
-Android.App.Appfunctions.ExecuteAppFunctionRequest.Builder.Build() -> Android.App.Appfunctions.ExecuteAppFunctionRequest!
-Android.App.Appfunctions.ExecuteAppFunctionRequest.Builder.Builder(string! targetPackageName, string! functionIdentifier) -> void
-Android.App.Appfunctions.ExecuteAppFunctionRequest.Builder.SetExtras(Android.OS.Bundle! extras) -> Android.App.Appfunctions.ExecuteAppFunctionRequest.Builder!
-Android.App.Appfunctions.ExecuteAppFunctionRequest.Builder.SetParameters(Android.App.AppSearch.GenericDocument! parameters) -> Android.App.Appfunctions.ExecuteAppFunctionRequest.Builder!
-Android.App.Appfunctions.ExecuteAppFunctionRequest.DescribeContents() -> int
-Android.App.Appfunctions.ExecuteAppFunctionRequest.Extras.get -> Android.OS.Bundle!
-Android.App.Appfunctions.ExecuteAppFunctionRequest.FunctionIdentifier.get -> string!
-Android.App.Appfunctions.ExecuteAppFunctionRequest.InterfaceConsts
-Android.App.Appfunctions.ExecuteAppFunctionRequest.Parameters.get -> Android.App.AppSearch.GenericDocument!
-Android.App.Appfunctions.ExecuteAppFunctionRequest.TargetPackageName.get -> string!
-Android.App.Appfunctions.ExecuteAppFunctionRequest.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
-Android.App.Appfunctions.ExecuteAppFunctionResponse
-Android.App.Appfunctions.ExecuteAppFunctionResponse.DescribeContents() -> int
-Android.App.Appfunctions.ExecuteAppFunctionResponse.ErrorMessage.get -> string?
-Android.App.Appfunctions.ExecuteAppFunctionResponse.Extras.get -> Android.OS.Bundle!
-Android.App.Appfunctions.ExecuteAppFunctionResponse.InterfaceConsts
-Android.App.Appfunctions.ExecuteAppFunctionResponse.IsSuccess.get -> bool
-Android.App.Appfunctions.ExecuteAppFunctionResponse.ResultCode.get -> int
-Android.App.Appfunctions.ExecuteAppFunctionResponse.ResultDocument.get -> Android.App.AppSearch.GenericDocument!
-Android.App.Appfunctions.ExecuteAppFunctionResponse.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.App.AppFunctions.AppFunctionManager
+Android.App.AppFunctions.AppFunctionManager.ExecuteAppFunction(Android.App.AppFunctions.ExecuteAppFunctionRequest! request, Java.Util.Concurrent.IExecutor! executor, Android.OS.CancellationSignal! cancellationSignal, Java.Util.Functions.IConsumer! callback) -> void
+Android.App.AppFunctions.AppFunctionManager.IsAppFunctionEnabled(string! functionIdentifier, string! targetPackage, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
+Android.App.AppFunctions.AppFunctionManager.SetAppFunctionEnabled(string! functionIdentifier, int newEnabledState, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
+Android.App.AppFunctions.AppFunctionService
+Android.App.AppFunctions.AppFunctionService.AppFunctionService() -> void
+Android.App.AppFunctions.AppFunctionService.AppFunctionService(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
+Android.App.AppFunctions.ExecuteAppFunctionRequest
+Android.App.AppFunctions.ExecuteAppFunctionRequest.Builder
+Android.App.AppFunctions.ExecuteAppFunctionRequest.Builder.Build() -> Android.App.AppFunctions.ExecuteAppFunctionRequest!
+Android.App.AppFunctions.ExecuteAppFunctionRequest.Builder.Builder(string! targetPackageName, string! functionIdentifier) -> void
+Android.App.AppFunctions.ExecuteAppFunctionRequest.Builder.SetExtras(Android.OS.Bundle! extras) -> Android.App.AppFunctions.ExecuteAppFunctionRequest.Builder!
+Android.App.AppFunctions.ExecuteAppFunctionRequest.Builder.SetParameters(Android.App.AppSearch.GenericDocument! parameters) -> Android.App.AppFunctions.ExecuteAppFunctionRequest.Builder!
+Android.App.AppFunctions.ExecuteAppFunctionRequest.DescribeContents() -> int
+Android.App.AppFunctions.ExecuteAppFunctionRequest.Extras.get -> Android.OS.Bundle!
+Android.App.AppFunctions.ExecuteAppFunctionRequest.FunctionIdentifier.get -> string!
+Android.App.AppFunctions.ExecuteAppFunctionRequest.InterfaceConsts
+Android.App.AppFunctions.ExecuteAppFunctionRequest.Parameters.get -> Android.App.AppSearch.GenericDocument!
+Android.App.AppFunctions.ExecuteAppFunctionRequest.TargetPackageName.get -> string!
+Android.App.AppFunctions.ExecuteAppFunctionRequest.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.App.AppFunctions.ExecuteAppFunctionResponse
+Android.App.AppFunctions.ExecuteAppFunctionResponse.DescribeContents() -> int
+Android.App.AppFunctions.ExecuteAppFunctionResponse.ErrorMessage.get -> string?
+Android.App.AppFunctions.ExecuteAppFunctionResponse.Extras.get -> Android.OS.Bundle!
+Android.App.AppFunctions.ExecuteAppFunctionResponse.InterfaceConsts
+Android.App.AppFunctions.ExecuteAppFunctionResponse.IsSuccess.get -> bool
+Android.App.AppFunctions.ExecuteAppFunctionResponse.ResultCode.get -> int
+Android.App.AppFunctions.ExecuteAppFunctionResponse.ResultDocument.get -> Android.App.AppSearch.GenericDocument!
+Android.App.AppFunctions.ExecuteAppFunctionResponse.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
 Android.App.AppSearch.AppSearchSchema.BooleanPropertyConfig.Builder.SetDescription(string! description) -> Android.App.AppSearch.AppSearchSchema.BooleanPropertyConfig.Builder!
 Android.App.AppSearch.AppSearchSchema.Builder.SetDescription(string! description) -> Android.App.AppSearch.AppSearchSchema.Builder!
 Android.App.AppSearch.AppSearchSchema.BytesPropertyConfig.Builder.SetDescription(string! description) -> Android.App.AppSearch.AppSearchSchema.BytesPropertyConfig.Builder!
@@ -107,37 +106,37 @@ Android.App.AppSearch.EmbeddingVector.GetValues() -> float[]!
 Android.App.AppSearch.EmbeddingVector.InterfaceConsts
 Android.App.AppSearch.EmbeddingVector.ModelSignature.get -> string!
 Android.App.AppSearch.EmbeddingVector.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
-Android.App.Appsearch.Functions.AppFunctionManager
-Android.App.Appsearch.Functions.AppFunctionManager.ExecuteAppFunction(Android.App.Appsearch.Functions.ExecuteAppFunctionRequest! request, Java.Util.Concurrent.IExecutor! executor, Java.Util.Functions.IConsumer! callback) -> void
-Android.App.Appsearch.Functions.AppFunctionService
-Android.App.Appsearch.Functions.AppFunctionService.AppFunctionService() -> void
-Android.App.Appsearch.Functions.AppFunctionService.AppFunctionService(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
-Android.App.Appsearch.Functions.ExecuteAppFunctionRequest
-Android.App.Appsearch.Functions.ExecuteAppFunctionRequest.Builder
-Android.App.Appsearch.Functions.ExecuteAppFunctionRequest.Builder.Build() -> Android.App.Appsearch.Functions.ExecuteAppFunctionRequest!
-Android.App.Appsearch.Functions.ExecuteAppFunctionRequest.Builder.Builder(string! packageName, string! functionIdentifier) -> void
-Android.App.Appsearch.Functions.ExecuteAppFunctionRequest.Builder.SetExtras(Android.OS.Bundle! extras) -> Android.App.Appsearch.Functions.ExecuteAppFunctionRequest.Builder!
-Android.App.Appsearch.Functions.ExecuteAppFunctionRequest.Builder.SetParameters(Android.App.AppSearch.GenericDocument! parameters) -> Android.App.Appsearch.Functions.ExecuteAppFunctionRequest.Builder!
-Android.App.Appsearch.Functions.ExecuteAppFunctionRequest.Builder.SetSha256Certificate(byte[]? sha256Certificate) -> Android.App.Appsearch.Functions.ExecuteAppFunctionRequest.Builder!
-Android.App.Appsearch.Functions.ExecuteAppFunctionRequest.DescribeContents() -> int
-Android.App.Appsearch.Functions.ExecuteAppFunctionRequest.Extras.get -> Android.OS.Bundle!
-Android.App.Appsearch.Functions.ExecuteAppFunctionRequest.FunctionIdentifier.get -> string!
-Android.App.Appsearch.Functions.ExecuteAppFunctionRequest.GetSha256Certificate() -> byte[]?
-Android.App.Appsearch.Functions.ExecuteAppFunctionRequest.InterfaceConsts
-Android.App.Appsearch.Functions.ExecuteAppFunctionRequest.Parameters.get -> Android.App.AppSearch.GenericDocument!
-Android.App.Appsearch.Functions.ExecuteAppFunctionRequest.TargetPackageName.get -> string!
-Android.App.Appsearch.Functions.ExecuteAppFunctionRequest.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
-Android.App.Appsearch.Functions.ExecuteAppFunctionResponse
-Android.App.Appsearch.Functions.ExecuteAppFunctionResponse.Builder
-Android.App.Appsearch.Functions.ExecuteAppFunctionResponse.Builder.Build() -> Android.App.Appsearch.Functions.ExecuteAppFunctionResponse!
-Android.App.Appsearch.Functions.ExecuteAppFunctionResponse.Builder.Builder() -> void
-Android.App.Appsearch.Functions.ExecuteAppFunctionResponse.Builder.SetExtras(Android.OS.Bundle! extras) -> Android.App.Appsearch.Functions.ExecuteAppFunctionResponse.Builder!
-Android.App.Appsearch.Functions.ExecuteAppFunctionResponse.Builder.SetResult(Android.App.AppSearch.GenericDocument! result) -> Android.App.Appsearch.Functions.ExecuteAppFunctionResponse.Builder!
-Android.App.Appsearch.Functions.ExecuteAppFunctionResponse.DescribeContents() -> int
-Android.App.Appsearch.Functions.ExecuteAppFunctionResponse.Extras.get -> Android.OS.Bundle!
-Android.App.Appsearch.Functions.ExecuteAppFunctionResponse.InterfaceConsts
-Android.App.Appsearch.Functions.ExecuteAppFunctionResponse.Result.get -> Android.App.AppSearch.GenericDocument!
-Android.App.Appsearch.Functions.ExecuteAppFunctionResponse.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.App.AppSearch.Functions.AppFunctionManager
+Android.App.AppSearch.Functions.AppFunctionManager.ExecuteAppFunction(Android.App.AppSearch.Functions.ExecuteAppFunctionRequest! request, Java.Util.Concurrent.IExecutor! executor, Java.Util.Functions.IConsumer! callback) -> void
+Android.App.AppSearch.Functions.AppFunctionService
+Android.App.AppSearch.Functions.AppFunctionService.AppFunctionService() -> void
+Android.App.AppSearch.Functions.AppFunctionService.AppFunctionService(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Builder
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Builder.Build() -> Android.App.AppSearch.Functions.ExecuteAppFunctionRequest!
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Builder.Builder(string! packageName, string! functionIdentifier) -> void
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Builder.SetExtras(Android.OS.Bundle! extras) -> Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Builder!
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Builder.SetParameters(Android.App.AppSearch.GenericDocument! parameters) -> Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Builder!
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Builder.SetSha256Certificate(byte[]? sha256Certificate) -> Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Builder!
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.DescribeContents() -> int
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Extras.get -> Android.OS.Bundle!
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.FunctionIdentifier.get -> string!
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.GetSha256Certificate() -> byte[]?
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.InterfaceConsts
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Parameters.get -> Android.App.AppSearch.GenericDocument!
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.TargetPackageName.get -> string!
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.App.AppSearch.Functions.ExecuteAppFunctionResponse
+Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.Builder
+Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.Builder.Build() -> Android.App.AppSearch.Functions.ExecuteAppFunctionResponse!
+Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.Builder.Builder() -> void
+Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.Builder.SetExtras(Android.OS.Bundle! extras) -> Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.Builder!
+Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.Builder.SetResult(Android.App.AppSearch.GenericDocument! result) -> Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.Builder!
+Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.DescribeContents() -> int
+Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.Extras.get -> Android.OS.Bundle!
+Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.InterfaceConsts
+Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.Result.get -> Android.App.AppSearch.GenericDocument!
+Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
 Android.App.AppSearch.SearchResult.Builder.AddInformationalRankingSignal(double rankingSignal) -> Android.App.AppSearch.SearchResult.Builder!
 Android.App.AppSearch.SearchResult.InformationalRankingSignals.get -> System.Collections.Generic.IList<Java.Lang.Double!>!
 Android.App.AppSearch.SearchSpec.Builder.AddEmbeddingParameters(params Android.App.AppSearch.EmbeddingVector![]! searchEmbeddings) -> Android.App.AppSearch.SearchSpec.Builder!
@@ -159,9 +158,9 @@ Android.App.SdkSandbox.SdkProvider.ISdkSandboxClientImportanceListener.OnForegro
 Android.App.SdkSandbox.SdkProvider.SdkSandboxClientImportanceEventArgs
 Android.App.SdkSandbox.SdkProvider.SdkSandboxClientImportanceEventArgs.IsForeground.get -> bool
 Android.App.SdkSandbox.SdkProvider.SdkSandboxClientImportanceEventArgs.SdkSandboxClientImportanceEventArgs(bool isForeground) -> void
-Android.Configinfrastructure.Aconfig.AconfigPackage
-Android.Configinfrastructure.Aconfig.AconfigPackage.AconfigPackage() -> void
-Android.Configinfrastructure.Aconfig.AconfigPackage.AconfigPackage(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
+Android.ConfigInfrastructure.Aconfig.AconfigPackage
+Android.ConfigInfrastructure.Aconfig.AconfigPackage.AconfigPackage() -> void
+Android.ConfigInfrastructure.Aconfig.AconfigPackage.AconfigPackage(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
 Android.Content.PM.SharedLibraryInfo.OptionalDependentPackages.get -> System.Collections.Generic.IList<Android.Content.PM.VersionedPackage!>!
 Android.Health.Connect.CreateMedicalDataSourceRequest
 Android.Health.Connect.CreateMedicalDataSourceRequest.Builder
@@ -339,45 +338,43 @@ Android.Health.Connect.UpsertMedicalResourceRequest.InterfaceConsts
 Android.Health.Connect.UpsertMedicalResourceRequest.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
 Android.OS.Build.VERSION_CODES_FULL
 Android.OS.Build.VERSION_CODES_FULL.VERSION_CODES_FULL(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
-Android.Widget.CompoundButton.IOnCheckedChangeListener.OnCheckedChanged(Android.Widget.CompoundButton! buttonView, bool isChecked) -> void
-Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo
-Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.AccentColor.get -> long
-Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.Builder
-Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.Builder.Build() -> Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo!
-Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.Builder.Builder() -> void
-Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.Builder.SetAccentColor(long accentColor) -> Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.Builder!
-Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.Builder.SetMaxSelectionLimit(int maxSelectionLimit) -> Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.Builder!
-Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.Builder.SetMimeTypes(System.Collections.Generic.IList<string!>! mimeTypes) -> Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.Builder!
-Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.Builder.SetOrderedSelection(bool orderedSelection) -> Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.Builder!
-Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.Builder.SetPreSelectedUris(System.Collections.Generic.IList<Android.Net.Uri!>! preSelectedUris) -> Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.Builder!
-Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.Builder.SetThemeNightMode(int themeNightMode) -> Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.Builder!
-Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.DescribeContents() -> int
-Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.InterfaceConsts
-Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.IsOrderedSelection.get -> bool
-Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.MaxSelectionLimit.get -> int
-Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.MimeTypes.get -> System.Collections.Generic.IList<string!>!
-Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.PreSelectedUris.get -> System.Collections.Generic.IList<Android.Net.Uri!>!
-Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.ThemeNightMode.get -> int
-Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
-Android.Widget.Photopicker.EmbeddedPhotoPickerProviderFactory
-Android.Widget.Photopicker.EmbeddedPhotoPickerProviderFactory.EmbeddedPhotoPickerProviderFactory(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
-Android.Widget.Photopicker.IEmbeddedPhotoPickerClient
-Android.Widget.Photopicker.IEmbeddedPhotoPickerClient.OnSelectionComplete() -> void
-Android.Widget.Photopicker.IEmbeddedPhotoPickerClient.OnSessionError(Java.Lang.Throwable! cause) -> void
-Android.Widget.Photopicker.IEmbeddedPhotoPickerClient.OnSessionOpened(Android.Widget.Photopicker.IEmbeddedPhotoPickerSession! session) -> void
-Android.Widget.Photopicker.IEmbeddedPhotoPickerClient.OnUriPermissionGranted(System.Collections.Generic.IList<Android.Net.Uri!>! uris) -> void
-Android.Widget.Photopicker.IEmbeddedPhotoPickerClient.OnUriPermissionRevoked(System.Collections.Generic.IList<Android.Net.Uri!>! uris) -> void
-Android.Widget.Photopicker.IEmbeddedPhotoPickerProvider
-Android.Widget.Photopicker.IEmbeddedPhotoPickerProvider.OpenSession(Android.OS.IBinder! hostToken, int displayId, int width, int height, Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo! featureInfo, Java.Util.Concurrent.IExecutor! clientExecutor, Android.Widget.Photopicker.IEmbeddedPhotoPickerClient! callback) -> void
-Android.Widget.Photopicker.IEmbeddedPhotoPickerSession
-Android.Widget.Photopicker.IEmbeddedPhotoPickerSession.Close() -> void
-Android.Widget.Photopicker.IEmbeddedPhotoPickerSession.NotifyConfigurationChanged(Android.Content.Res.Configuration! configuration) -> void
-Android.Widget.Photopicker.IEmbeddedPhotoPickerSession.NotifyPhotoPickerExpanded(bool isExpanded) -> void
-Android.Widget.Photopicker.IEmbeddedPhotoPickerSession.NotifyResized(int width, int height) -> void
-Android.Widget.Photopicker.IEmbeddedPhotoPickerSession.NotifyVisibilityChanged(bool isVisible) -> void
-Android.Widget.Photopicker.IEmbeddedPhotoPickerSession.RequestRevokeUriPermission(System.Collections.Generic.IList<Android.Net.Uri!>! uris) -> void
-Android.Widget.Photopicker.IEmbeddedPhotoPickerSession.SurfacePackage.get -> Android.Views.SurfaceControlViewHost.SurfacePackage!
-Android.Widget.RadioGroup.IOnCheckedChangeListener.OnCheckedChanged(Android.Widget.RadioGroup! group, int checkedId) -> void
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.AccentColor.get -> long
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder.Build() -> Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo!
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder.Builder() -> void
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder.SetAccentColor(long accentColor) -> Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder!
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder.SetMaxSelectionLimit(int maxSelectionLimit) -> Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder!
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder.SetMimeTypes(System.Collections.Generic.IList<string!>! mimeTypes) -> Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder!
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder.SetOrderedSelection(bool orderedSelection) -> Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder!
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder.SetPreSelectedUris(System.Collections.Generic.IList<Android.Net.Uri!>! preSelectedUris) -> Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder!
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder.SetThemeNightMode(int themeNightMode) -> Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder!
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.DescribeContents() -> int
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.InterfaceConsts
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.IsOrderedSelection.get -> bool
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.MaxSelectionLimit.get -> int
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.MimeTypes.get -> System.Collections.Generic.IList<string!>!
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.PreSelectedUris.get -> System.Collections.Generic.IList<Android.Net.Uri!>!
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.ThemeNightMode.get -> int
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerProviderFactory
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerProviderFactory.EmbeddedPhotoPickerProviderFactory(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerClient
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerClient.OnSelectionComplete() -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerClient.OnSessionError(Java.Lang.Throwable! cause) -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerClient.OnSessionOpened(Android.Widget.PhotoPicker.IEmbeddedPhotoPickerSession! session) -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerClient.OnUriPermissionGranted(System.Collections.Generic.IList<Android.Net.Uri!>! uris) -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerClient.OnUriPermissionRevoked(System.Collections.Generic.IList<Android.Net.Uri!>! uris) -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerProvider
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerProvider.OpenSession(Android.OS.IBinder! hostToken, int displayId, int width, int height, Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo! featureInfo, Java.Util.Concurrent.IExecutor! clientExecutor, Android.Widget.PhotoPicker.IEmbeddedPhotoPickerClient! callback) -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerSession
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerSession.Close() -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerSession.NotifyConfigurationChanged(Android.Content.Res.Configuration! configuration) -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerSession.NotifyPhotoPickerExpanded(bool isExpanded) -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerSession.NotifyResized(int width, int height) -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerSession.NotifyVisibilityChanged(bool isVisible) -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerSession.RequestRevokeUriPermission(System.Collections.Generic.IList<Android.Net.Uri!>! uris) -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerSession.SurfacePackage.get -> Android.Views.SurfaceControlViewHost.SurfacePackage!
 const Android.AdServices.AdSelection.PerBuyerConfiguration.InterfaceConsts.ContentsFileDescriptor = 1 -> int
 const Android.AdServices.AdSelection.PerBuyerConfiguration.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
 const Android.AdServices.AdSelection.SellerConfiguration.InterfaceConsts.ContentsFileDescriptor = 1 -> int
@@ -392,34 +389,34 @@ const Android.AdServices.OnDevicePersonalization.OnDevicePersonalizationExceptio
 const Android.AdServices.OnDevicePersonalization.OnDevicePersonalizationException.ErrorIsolatedServiceManifestParsingFailed = 4 -> int
 const Android.AdServices.OnDevicePersonalization.OnDevicePersonalizationException.ErrorIsolatedServiceTimeout = 5 -> int
 const Android.AdServices.OnDevicePersonalization.OnDevicePersonalizationException.ErrorScheduleTrainingFailed = 6 -> int
-const Android.App.Appfunctions.AppFunctionManager.AppFunctionStateDefault = 0 -> int
-const Android.App.Appfunctions.AppFunctionManager.AppFunctionStateDisabled = 2 -> int
-const Android.App.Appfunctions.AppFunctionManager.AppFunctionStateEnabled = 1 -> int
-const Android.App.Appfunctions.AppFunctionService.ServiceInterface = "android.app.appfunctions.AppFunctionService" -> string!
-const Android.App.Appfunctions.ExecuteAppFunctionRequest.InterfaceConsts.ContentsFileDescriptor = 1 -> int
-const Android.App.Appfunctions.ExecuteAppFunctionRequest.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
-const Android.App.Appfunctions.ExecuteAppFunctionResponse.InterfaceConsts.ContentsFileDescriptor = 1 -> int
-const Android.App.Appfunctions.ExecuteAppFunctionResponse.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
-const Android.App.Appfunctions.ExecuteAppFunctionResponse.PropertyReturnValue = "returnValue" -> string!
-const Android.App.Appfunctions.ExecuteAppFunctionResponse.ResultAppUnknownError = 2 -> int
-const Android.App.Appfunctions.ExecuteAppFunctionResponse.ResultCancelled = 6 -> int
-const Android.App.Appfunctions.ExecuteAppFunctionResponse.ResultDenied = 1 -> int
-const Android.App.Appfunctions.ExecuteAppFunctionResponse.ResultDisabled = 5 -> int
-const Android.App.Appfunctions.ExecuteAppFunctionResponse.ResultInternalError = 3 -> int
-const Android.App.Appfunctions.ExecuteAppFunctionResponse.ResultInvalidArgument = 4 -> int
-const Android.App.Appfunctions.ExecuteAppFunctionResponse.ResultOk = 0 -> int
+const Android.App.AppFunctions.AppFunctionManager.AppFunctionStateDefault = 0 -> int
+const Android.App.AppFunctions.AppFunctionManager.AppFunctionStateDisabled = 2 -> int
+const Android.App.AppFunctions.AppFunctionManager.AppFunctionStateEnabled = 1 -> int
+const Android.App.AppFunctions.AppFunctionService.ServiceInterface = "android.app.appfunctions.AppFunctionService" -> string!
+const Android.App.AppFunctions.ExecuteAppFunctionRequest.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.App.AppFunctions.ExecuteAppFunctionRequest.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.App.AppFunctions.ExecuteAppFunctionResponse.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.App.AppFunctions.ExecuteAppFunctionResponse.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.App.AppFunctions.ExecuteAppFunctionResponse.PropertyReturnValue = "returnValue" -> string!
+const Android.App.AppFunctions.ExecuteAppFunctionResponse.ResultAppUnknownError = 2 -> int
+const Android.App.AppFunctions.ExecuteAppFunctionResponse.ResultCancelled = 6 -> int
+const Android.App.AppFunctions.ExecuteAppFunctionResponse.ResultDenied = 1 -> int
+const Android.App.AppFunctions.ExecuteAppFunctionResponse.ResultDisabled = 5 -> int
+const Android.App.AppFunctions.ExecuteAppFunctionResponse.ResultInternalError = 3 -> int
+const Android.App.AppFunctions.ExecuteAppFunctionResponse.ResultInvalidArgument = 4 -> int
+const Android.App.AppFunctions.ExecuteAppFunctionResponse.ResultOk = 0 -> int
 const Android.App.AppSearch.AppSearchResult.ResultTimedOut = 11 -> int
 const Android.App.AppSearch.AppSearchSchema.EmbeddingPropertyConfig.IndexingTypeNone = 0 -> int
 const Android.App.AppSearch.AppSearchSchema.EmbeddingPropertyConfig.IndexingTypeSimilarity = 1 -> int
 const Android.App.AppSearch.EmbeddingVector.InterfaceConsts.ContentsFileDescriptor = 1 -> int
 const Android.App.AppSearch.EmbeddingVector.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
-const Android.App.Appsearch.Functions.AppFunctionManager.PermissionBindAppFunctionService = "android.permission.BIND_APP_FUNCTION_SERVICE" -> string!
-const Android.App.Appsearch.Functions.AppFunctionService.ServiceInterface = "android.app.appsearch.functions.AppFunctionService" -> string!
-const Android.App.Appsearch.Functions.ExecuteAppFunctionRequest.InterfaceConsts.ContentsFileDescriptor = 1 -> int
-const Android.App.Appsearch.Functions.ExecuteAppFunctionRequest.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
-const Android.App.Appsearch.Functions.ExecuteAppFunctionResponse.InterfaceConsts.ContentsFileDescriptor = 1 -> int
-const Android.App.Appsearch.Functions.ExecuteAppFunctionResponse.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
-const Android.App.Appsearch.Functions.ExecuteAppFunctionResponse.PropertyResult = "result" -> string!
+const Android.App.AppSearch.Functions.AppFunctionManager.PermissionBindAppFunctionService = "android.permission.BIND_APP_FUNCTION_SERVICE" -> string!
+const Android.App.AppSearch.Functions.AppFunctionService.ServiceInterface = "android.app.appsearch.functions.AppFunctionService" -> string!
+const Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.PropertyResult = "result" -> string!
 const Android.App.AppSearch.SearchSpec.EmbeddingSearchMetricTypeCosine = 1 -> int
 const Android.App.AppSearch.SearchSpec.EmbeddingSearchMetricTypeDotProduct = 2 -> int
 const Android.App.AppSearch.SearchSpec.EmbeddingSearchMetricTypeEuclidean = 3 -> int
@@ -582,8 +579,8 @@ const Android.Provider.MediaStore.Video.Media.InterfaceConsts.OemMetadata = "oem
 const Android.Provider.MediaStore.Video.VideoColumns.InferredDate = "inferred_date" -> string!
 const Android.Provider.MediaStore.Video.VideoColumns.OemMetadata = "oem_metadata" -> string!
 const Android.Telephony.CarrierConfigManager.Gps.KeyEnableNiSuplMessageInjectionBool = "gps.enable_ni_supl_message_injection_bool" -> string!
-const Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.InterfaceConsts.ContentsFileDescriptor = 1 -> int
-const Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
 Java.Util.Concurrent.IExecutorService.Close() -> void
 override Android.AdServices.AdSelection.PerBuyerConfiguration.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.AdServices.AdSelection.PerBuyerConfiguration.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
@@ -599,27 +596,27 @@ override Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequ
 override Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceResponse.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceResponse.ThresholdClass.get -> nint
 override Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceResponse.ThresholdType.get -> System.Type!
-override Android.App.Appfunctions.AppFunctionManager.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Android.App.Appfunctions.AppFunctionService.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Android.App.Appfunctions.AppFunctionService.ThresholdClass.get -> nint
-override Android.App.Appfunctions.AppFunctionService.ThresholdType.get -> System.Type!
-override Android.App.Appfunctions.ExecuteAppFunctionRequest.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Android.App.Appfunctions.ExecuteAppFunctionRequest.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Android.App.Appfunctions.ExecuteAppFunctionResponse.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.AppFunctions.AppFunctionManager.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.AppFunctions.AppFunctionService.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.AppFunctions.AppFunctionService.ThresholdClass.get -> nint
+override Android.App.AppFunctions.AppFunctionService.ThresholdType.get -> System.Type!
+override Android.App.AppFunctions.ExecuteAppFunctionRequest.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.AppFunctions.ExecuteAppFunctionRequest.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.AppFunctions.ExecuteAppFunctionResponse.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.App.AppSearch.AppSearchSchema.EmbeddingPropertyConfig.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.App.AppSearch.AppSearchSchema.EmbeddingPropertyConfig.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.App.AppSearch.EmbeddingVector.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Android.App.Appsearch.Functions.AppFunctionManager.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Android.App.Appsearch.Functions.AppFunctionService.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Android.App.Appsearch.Functions.AppFunctionService.ThresholdClass.get -> nint
-override Android.App.Appsearch.Functions.AppFunctionService.ThresholdType.get -> System.Type!
-override Android.App.Appsearch.Functions.ExecuteAppFunctionRequest.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Android.App.Appsearch.Functions.ExecuteAppFunctionRequest.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Android.App.Appsearch.Functions.ExecuteAppFunctionResponse.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Android.App.Appsearch.Functions.ExecuteAppFunctionResponse.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Android.Configinfrastructure.Aconfig.AconfigPackage.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Android.Configinfrastructure.Aconfig.AconfigPackage.ThresholdClass.get -> nint
-override Android.Configinfrastructure.Aconfig.AconfigPackage.ThresholdType.get -> System.Type!
+override Android.App.AppSearch.Functions.AppFunctionManager.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.AppSearch.Functions.AppFunctionService.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.AppSearch.Functions.AppFunctionService.ThresholdClass.get -> nint
+override Android.App.AppSearch.Functions.AppFunctionService.ThresholdType.get -> System.Type!
+override Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.ConfigInfrastructure.Aconfig.AconfigPackage.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.ConfigInfrastructure.Aconfig.AconfigPackage.ThresholdClass.get -> nint
+override Android.ConfigInfrastructure.Aconfig.AconfigPackage.ThresholdType.get -> System.Type!
 override Android.Health.Connect.CreateMedicalDataSourceRequest.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Health.Connect.CreateMedicalDataSourceRequest.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Health.Connect.DataTypes.FhirResource.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
@@ -649,25 +646,25 @@ override Android.Health.Connect.UpsertMedicalResourceRequest.JniPeerMembers.get 
 override Android.OS.Build.VERSION_CODES_FULL.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.OS.Build.VERSION_CODES_FULL.ThresholdClass.get -> nint
 override Android.OS.Build.VERSION_CODES_FULL.ThresholdType.get -> System.Type!
-override Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Android.Widget.Photopicker.EmbeddedPhotoPickerProviderFactory.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Android.Widget.Photopicker.EmbeddedPhotoPickerProviderFactory.ThresholdClass.get -> nint
-override Android.Widget.Photopicker.EmbeddedPhotoPickerProviderFactory.ThresholdType.get -> System.Type!
-override sealed Android.App.Appfunctions.AppFunctionService.OnBind(Android.Content.Intent? intent) -> Android.OS.IBinder!
-override sealed Android.App.Appsearch.Functions.AppFunctionService.OnBind(Android.Content.Intent? intent) -> Android.OS.IBinder!
+override Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Widget.PhotoPicker.EmbeddedPhotoPickerProviderFactory.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Widget.PhotoPicker.EmbeddedPhotoPickerProviderFactory.ThresholdClass.get -> nint
+override Android.Widget.PhotoPicker.EmbeddedPhotoPickerProviderFactory.ThresholdType.get -> System.Type!
+override sealed Android.App.AppFunctions.AppFunctionService.OnBind(Android.Content.Intent? intent) -> Android.OS.IBinder!
+override sealed Android.App.AppSearch.Functions.AppFunctionService.OnBind(Android.Content.Intent? intent) -> Android.OS.IBinder!
 static Android.AdServices.AdSelection.PerBuyerConfiguration.Creator.get -> Android.OS.IParcelableCreator!
 static Android.AdServices.AdSelection.SellerConfiguration.Creator.get -> Android.OS.IParcelableCreator!
 static Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.OutputSpec.BuildBestValueSpec(int maxIntValue) -> Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.OutputSpec!
 static Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.OutputSpec.Default.get -> Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.OutputSpec!
-static Android.App.Appfunctions.ExecuteAppFunctionRequest.Creator.get -> Android.OS.IParcelableCreator!
-static Android.App.Appfunctions.ExecuteAppFunctionResponse.Creator.get -> Android.OS.IParcelableCreator!
-static Android.App.Appfunctions.ExecuteAppFunctionResponse.NewFailure(int resultCode, string? errorMessage, Android.OS.Bundle? extras) -> Android.App.Appfunctions.ExecuteAppFunctionResponse!
-static Android.App.Appfunctions.ExecuteAppFunctionResponse.NewSuccess(Android.App.AppSearch.GenericDocument! resultDocument, Android.OS.Bundle? extras) -> Android.App.Appfunctions.ExecuteAppFunctionResponse!
+static Android.App.AppFunctions.ExecuteAppFunctionRequest.Creator.get -> Android.OS.IParcelableCreator!
+static Android.App.AppFunctions.ExecuteAppFunctionResponse.Creator.get -> Android.OS.IParcelableCreator!
+static Android.App.AppFunctions.ExecuteAppFunctionResponse.NewFailure(int resultCode, string? errorMessage, Android.OS.Bundle? extras) -> Android.App.AppFunctions.ExecuteAppFunctionResponse!
+static Android.App.AppFunctions.ExecuteAppFunctionResponse.NewSuccess(Android.App.AppSearch.GenericDocument! resultDocument, Android.OS.Bundle? extras) -> Android.App.AppFunctions.ExecuteAppFunctionResponse!
 static Android.App.AppSearch.EmbeddingVector.Creator.get -> Android.OS.IParcelableCreator!
-static Android.App.Appsearch.Functions.ExecuteAppFunctionRequest.Creator.get -> Android.OS.IParcelableCreator!
-static Android.App.Appsearch.Functions.ExecuteAppFunctionResponse.Creator.get -> Android.OS.IParcelableCreator!
-static Android.Configinfrastructure.Aconfig.AconfigPackage.Load(string! packageName) -> Android.Configinfrastructure.Aconfig.AconfigPackage!
+static Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Creator.get -> Android.OS.IParcelableCreator!
+static Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.Creator.get -> Android.OS.IParcelableCreator!
+static Android.ConfigInfrastructure.Aconfig.AconfigPackage.Load(string! packageName) -> Android.ConfigInfrastructure.Aconfig.AconfigPackage!
 static Android.Graphics.ColorSpace.Named.OkLab.get -> Android.Graphics.ColorSpace.Named?
 static Android.Health.Connect.CreateMedicalDataSourceRequest.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Health.Connect.DataTypes.FhirResource.Creator.get -> Android.OS.IParcelableCreator!
@@ -689,8 +686,8 @@ static Android.Provider.MediaStore.OpenAssetFileDescriptor(Android.Content.Conte
 static Android.Provider.MediaStore.OpenFileDescriptor(Android.Content.ContentResolver! resolver, Android.Net.Uri! uri, string! mode, Android.OS.CancellationSignal? cancellationSignal) -> Android.OS.ParcelFileDescriptor?
 static Android.Provider.MediaStore.OpenTypedAssetFileDescriptor(Android.Content.ContentResolver! resolver, Android.Net.Uri! uri, string! mimeType, Android.OS.Bundle? opts, Android.OS.CancellationSignal? cancellationSignal) -> Android.Content.Res.AssetFileDescriptor?
 static Android.Resource.Attribute.Optional.get -> int
-static Android.Widget.Photopicker.EmbeddedPhotoPickerFeatureInfo.Creator.get -> Android.OS.IParcelableCreator!
-static Android.Widget.Photopicker.EmbeddedPhotoPickerProviderFactory.Create(Android.Content.Context! context) -> Android.Widget.Photopicker.IEmbeddedPhotoPickerProvider!
+static Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Widget.PhotoPicker.EmbeddedPhotoPickerProviderFactory.Create(Android.Content.Context! context) -> Android.Widget.PhotoPicker.IEmbeddedPhotoPickerProvider!
 virtual Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.AppParams.get -> Android.OS.PersistableBundle!
 virtual Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.GetOutputSpec() -> Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.OutputSpec!
 virtual Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.OutputSpec.MaxIntValue.get -> int
@@ -699,14 +696,14 @@ virtual Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceReque
 virtual Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceResponse.BestValue.get -> int
 virtual Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceResponse.SurfacePackageToken.get -> Android.AdServices.OnDevicePersonalization.SurfacePackageToken?
 virtual Android.AdServices.OnDevicePersonalization.OnDevicePersonalizationManager.ExecuteInIsolatedService(Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest! request, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! receiver) -> void
-virtual Android.App.AppSearch.AppSearchManager.AppFunctionManager.get -> Android.App.Appsearch.Functions.AppFunctionManager!
+virtual Android.App.AppSearch.AppSearchManager.AppFunctionManager.get -> Android.App.AppSearch.Functions.AppFunctionManager!
 virtual Android.App.AppSearch.AppSearchSchema.PropertyConfig.Description.get -> string!
 virtual Android.App.AppSearch.GenericDocument.Builder.SetPropertyEmbedding(string! name, params Android.App.AppSearch.EmbeddingVector![]! values) -> Java.Lang.Object!
 virtual Android.App.AppSearch.GenericDocument.GetPropertyEmbedding(string! path) -> Android.App.AppSearch.EmbeddingVector?
 virtual Android.App.AppSearch.GenericDocument.GetPropertyEmbeddingArray(string! path) -> Android.App.AppSearch.EmbeddingVector![]?
 virtual Android.App.SdkSandbox.SdkProvider.SdkSandboxController.RegisterSdkSandboxClientImportanceListener(Java.Util.Concurrent.IExecutor! executor, Android.App.SdkSandbox.SdkProvider.ISdkSandboxClientImportanceListener! listener) -> void
 virtual Android.App.SdkSandbox.SdkProvider.SdkSandboxController.UnregisterSdkSandboxClientImportanceListener(Android.App.SdkSandbox.SdkProvider.ISdkSandboxClientImportanceListener! listener) -> void
-virtual Android.Configinfrastructure.Aconfig.AconfigPackage.GetBooleanFlagValue(string! flagName, bool defaultValue) -> bool
+virtual Android.ConfigInfrastructure.Aconfig.AconfigPackage.GetBooleanFlagValue(string! flagName, bool defaultValue) -> bool
 virtual Android.Health.Connect.HealthConnectManager.CreateMedicalDataSource(Android.Health.Connect.CreateMedicalDataSourceRequest! request, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
 virtual Android.Health.Connect.HealthConnectManager.DeleteMedicalDataSourceWithData(string! id, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
 virtual Android.Health.Connect.HealthConnectManager.DeleteMedicalResources(Android.Health.Connect.DeleteMedicalResourcesRequest! request, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
