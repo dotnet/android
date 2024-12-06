@@ -106,6 +106,28 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void NativeAOT ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				// Add locally downloaded NativeAOT packs
+				ExtraNuGetConfigSources = {
+					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
+				}
+			};
+			proj.SetRuntimeIdentifier ("arm64-v8a");
+			proj.SetProperty ("PublishAot", "true");
+			proj.SetProperty ("PublishAotUsingRuntimePack", "true");
+			if (IsWindows) {
+				// Allows ILC to attempt to run on Windows
+				proj.SetProperty ("DisableUnsupportedError", "true");
+			}
+
+			using var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+		}
+
+		[Test]
 		public void BuildBasicApplicationThenMoveIt ([Values (true, false)] bool isRelease)
 		{
 			string path = Path.Combine (Root, "temp", TestName, "App1");

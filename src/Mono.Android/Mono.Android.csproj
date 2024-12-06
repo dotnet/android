@@ -405,10 +405,12 @@
     </BuildDependsOn>
   </PropertyGroup>
 
-  <Target Name="_CopyToPackDirs" >
+  <Target Name="_CopyToPackDirs">
     <ItemGroup>
       <_RefExtras Include="$(OutputPath)*.*" Exclude="$(OutputPath)*.dll" />
-      <_SourceFiles Include="$(OutputPath)Mono.Android.*;$(OutputPath)Java.Interop.*" />
+      <_SourceFiles Include="$(OutputPath)Mono.Android.*" />
+      <_SourceFiles Include="$(OutputPath)Java.Interop.*" />
+      <_RuntimePackFiles Include="@(_SourceFiles)" AndroidRID="%(AndroidAbiAndRuntimeFlavor.AndroidRID)" AndroidRuntime="%(AndroidAbiAndRuntimeFlavor.AndroidRuntime)" />
     </ItemGroup>
     <Copy
         SourceFiles="@(_RefExtras)"
@@ -421,23 +423,8 @@
         SkipUnchangedFiles="true"
     />
     <Copy
-        SourceFiles="@(_SourceFiles)"
-        DestinationFolder="$(MicrosoftAndroidArmPackDir)lib\$(DotNetTargetFramework)"
-        SkipUnchangedFiles="true"
-    />
-    <Copy
-        SourceFiles="@(_SourceFiles)"
-        DestinationFolder="$(MicrosoftAndroidArm64PackDir)lib\$(DotNetTargetFramework)"
-        SkipUnchangedFiles="true"
-    />
-    <Copy
-        SourceFiles="@(_SourceFiles)"
-        DestinationFolder="$(MicrosoftAndroidx86PackDir)lib\$(DotNetTargetFramework)"
-        SkipUnchangedFiles="true"
-    />
-    <Copy
-        SourceFiles="@(_SourceFiles)"
-        DestinationFolder="$(MicrosoftAndroidx64PackDir)lib\$(DotNetTargetFramework)"
+        SourceFiles="%(_RuntimePackFiles.Identity)"
+        DestinationFolder="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.%(_RuntimePackFiles.AndroidRuntime).$(AndroidApiLevel).%(_RuntimePackFiles.AndroidRID)\$(AndroidPackVersion)\runtimes\%(_RuntimePackFiles.AndroidRID)\lib\$(DotNetTargetFramework)"
         SkipUnchangedFiles="true"
     />
     <Copy

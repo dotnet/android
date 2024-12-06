@@ -63,10 +63,6 @@
     <_MonoAndroidNETOutputRoot>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\</_MonoAndroidNETOutputRoot>
     <_MonoAndroidNETDefaultOutDir>$(_MonoAndroidNETOutputRoot)$(AndroidApiLevel)\</_MonoAndroidNETDefaultOutDir>
     <MicrosoftAndroidRefPackDir>$(BuildOutputDirectory)lib\packs\Microsoft.Android.Ref.$(AndroidApiLevel)\$(AndroidPackVersion)\ref\$(DotNetTargetFramework)\</MicrosoftAndroidRefPackDir>
-    <MicrosoftAndroidArmPackDir>$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.Mono.$(AndroidApiLevel).android-arm\$(AndroidPackVersion)\runtimes\android-arm\</MicrosoftAndroidArmPackDir>
-    <MicrosoftAndroidArm64PackDir>$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.Mono.$(AndroidApiLevel).android-arm64\$(AndroidPackVersion)\runtimes\android-arm64\</MicrosoftAndroidArm64PackDir>
-    <MicrosoftAndroidx86PackDir>$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.Mono.$(AndroidApiLevel).android-x86\$(AndroidPackVersion)\runtimes\android-x86\</MicrosoftAndroidx86PackDir>
-    <MicrosoftAndroidx64PackDir>$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.Mono.$(AndroidApiLevel).android-x64\$(AndroidPackVersion)\runtimes\android-x64\</MicrosoftAndroidx64PackDir>
     <MicrosoftAndroidSdkPackDir>$(BuildOutputDirectory)lib\packs\$(MicrosoftAndroidSdkPackName)\$(AndroidPackVersion)\</MicrosoftAndroidSdkPackDir>
     <MicrosoftAndroidSdkOutDir>$(MicrosoftAndroidSdkPackDir)\tools\</MicrosoftAndroidSdkOutDir>
     <MicrosoftAndroidSdkAnalysisOutDir>$(BuildOutputDirectory)lib\packs\Microsoft.Android.Ref.$(AndroidApiLevel)\$(AndroidPackVersion)\analyzers\dotnet\cs\</MicrosoftAndroidSdkAnalysisOutDir>
@@ -219,4 +215,8 @@
   </PropertyGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\Ndk.targets" />
+  <ItemGroup>
+    <AndroidAbiAndRuntimeFlavor Include="@(AndroidSupportedTargetJitAbi)" AndroidRuntime="Mono" />
+    <AndroidAbiAndRuntimeFlavor Include="@(AndroidSupportedTargetJitAbi)" AndroidRuntime="NativeAOT" />
+  </ItemGroup>
 </Project>
