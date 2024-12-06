@@ -26,6 +26,8 @@
     <_GetChildProjectCopyToPublishDirectoryItems>false</_GetChildProjectCopyToPublishDirectoryItems>
     <UseMonoRuntime Condition=" '$(PublishAot)' == 'true' and '$(UseMonoRuntime)' == '' ">false</UseMonoRuntime>
     <UseMonoRuntime Condition=" '$(UseMonoRuntime)' == '' ">true</UseMonoRuntime>
+    <!-- HACK: make dotnet restore include Microsoft.NETCore.App.Runtime.NativeAOT.linux-bionic-arm64 -->
+    <_IsPublishing Condition=" '$(_IsPublishing)' == '' and '$(PublishAot)' == 'true' ">true</_IsPublishing>
 
     <!-- Use $(AndroidMinimumSupportedApiLevel) for $(SupportedOSPlatformVersion) if unset -->
     <SupportedOSPlatformVersion Condition=" '$(SupportedOSPlatformVersion)' == '' ">$(AndroidMinimumSupportedApiLevel)</SupportedOSPlatformVersion>
