@@ -31,8 +31,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.Aot" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CilStrip" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildApk" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.BuildApkArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildApkTemporary" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.BuildArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildBaseAppBundle" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildAppBundle" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildApkSet" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -2109,7 +2109,6 @@ because xbuild doesn't support framework reference assemblies.
       EmbeddedNativeLibraryAssemblies="$(OutDir)$(TargetFileName);@(_ReferencePath);@(_ReferenceDependencyPaths)"
       DalvikClasses="@(_DexFile)"
       SupportedAbis="@(_BuildTargetAbis)"
-      CreatePackagePerAbi="$(_AndroidCreatePackagePerAbi)"
       Debug="$(AndroidIncludeDebugSymbols)"
       EnableCompression="$(AndroidEnableAssemblyCompression)"
       JavaSourceFiles="@(AndroidJavaSource)"
@@ -2137,12 +2136,11 @@ because xbuild doesn't support framework reference assemblies.
       <Output TaskParameter="DSODirectoriesToDelete" ItemName="DSODirectoriesToDelete" />
   </BuildApkTemporary>
 
-  <!-- This task uses MSBuild task batching. It will be called once for each unique '%(FilesToAddToApk.Abi)'. -->
-  <BuildApkArchive
-      Abi="%(FilesToAddToApk.Abi)"
+  <!-- Create the actual zip archive -->
+  <BuildArchive
       AndroidPackageFormat="$(AndroidPackageFormat)"
       ApkInputPath="$(_PackagedResources)"
-      ApkOutputPaths="@(ApkFiles)"
+      ApkOutputPath="$(_ApkOutputPath)"
       FilesToAddToApk="@(FilesToAddToApk)"
       UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
       ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
@@ -2230,7 +2228,6 @@ because xbuild doesn't support framework reference assemblies.
 			DalvikClasses="@(_DalvikClasses)"
 			SupportedAbis="@(_BuildTargetAbis)"
 			AndroidSequencePointsMode="$(_SequencePointsMode)"
-			CreatePackagePerAbi="$(_AndroidCreatePackagePerAbi)"
 			Debug="$(AndroidIncludeDebugSymbols)"
 			EnableCompression="$(AndroidEnableAssemblyCompression)"
 			TypeMappings="@(_AndroidTypeMaps)"
@@ -2256,12 +2253,11 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="DSODirectoriesToDelete" ItemName="DSODirectoriesToDelete" />
   </BuildApkTemporary>
 
-  <!-- This task uses MSBuild task batching. It will be called once for each unique '%(FilesToAddToApk.Abi)'. -->
-  <BuildApkArchive
-      Abi="%(FilesToAddToApk.Abi)"
+  <!-- Create the actual zip archive -->
+  <BuildArchive
       AndroidPackageFormat="$(AndroidPackageFormat)"
       ApkInputPath="$(_PackagedResources)"
-      ApkOutputPaths="@(ApkFiles)"
+      ApkOutputPath="$(_ApkOutputPath)"
       FilesToAddToApk="@(FilesToAddToApk)"
       UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
       ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"

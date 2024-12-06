@@ -8,27 +8,22 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Xamarin.Tools.Zip;
 
-// TODO: Need to handle BuildBaseAppBundle.FixupArchive somewhere.
-
 namespace Xamarin.Android.Tasks;
 
 /// <summary>
 /// Takes a list of files and adds them to an APK archive. If the APK archive already
 /// exists, files are only added if they were changed.
 /// </summary>
-public class BuildApkArchive : AndroidTask
+public class BuildArchive : AndroidTask
 {
 	public override string TaskPrefix => "BAA";
-
-	[Required]
-	public string Abi { get;set; } = null!; // NRT enforced by [Required]
 
 	public string? AndroidPackageFormat { get; set; }
 
 	public string? ApkInputPath { get; set; }
 
 	[Required]
-	public ITaskItem [] ApkOutputPaths { get; set; } = null!; // NRT enforced by [Required]
+	public string ApkOutputPath { get; set; } = null!; // NRT enforced by [Required]
 
 	[Required]
 	public ITaskItem [] FilesToAddToApk { get; set; } = null!; // NRT enforced by [Required]
@@ -42,7 +37,7 @@ public class BuildApkArchive : AndroidTask
 	readonly HashSet<string> uncompressedFileExtensions;
 	readonly CompressionMethod uncompressedMethod = CompressionMethod.Store;
 
-	public BuildApkArchive ()
+	public BuildArchive ()
 	{
 		uncompressedFileExtensions = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
@@ -69,18 +64,15 @@ public class BuildApkArchive : AndroidTask
 	{
 		var refresh = true;
 
-		// Find the output apk filename
-		var apk_output_path = ApkOutputPaths.Single (i => i.GetMetadataOrDefault ("Abi", string.Empty) == Abi).ItemSpec;
-
 		// If we have an input apk but no output apk, copy it to the output
 		// so we don't modify the original.
-		if (ApkInputPath is not null && File.Exists (ApkInputPath) && !File.Exists (apk_output_path)) {
-			Log.LogDebugMessage ($"Copying {ApkInputPath} to {apk_output_path}");
-			File.Copy (ApkInputPath, apk_output_path, overwrite: true);
+		if (ApkInputPath is not null && File.Exists (ApkInputPath) && !File.Exists (ApkOutputPath)) {
+			Log.LogDebugMessage ($"Copying {ApkInputPath} to {ApkOutputPath}");
+			File.Copy (ApkInputPath, ApkOutputPath, overwrite: true);
 			refresh = false;
 		}
 
-		using var apk = new ZipArchiveEx (apk_output_path, FileMode.Open);
+		using var apk = new ZipArchiveEx (ApkOutputPath, FileMode.Open);
 
 		// Set up AutoFlush
 		if (int.TryParse (ZipFlushFilesLimit, out int flushFilesLimit)) {
@@ -107,7 +99,7 @@ public class BuildApkArchive : AndroidTask
 		// of date entries in the output APK from the input APK.
 		if (ApkInputPath is not null && File.Exists (ApkInputPath) && refresh) {
 
-			var lastWriteOutput = File.Exists (apk_output_path) ? File.GetLastWriteTimeUtc (apk_output_path) : DateTime.MinValue;
+			var lastWriteOutput = File.Exists (ApkOutputPath) ? File.GetLastWriteTimeUtc (ApkOutputPath) : DateTime.MinValue;
 			var lastWriteInput = File.GetLastWriteTimeUtc (ApkInputPath);
 
 			using (var packaged = new ZipArchiveEx (ApkInputPath, FileMode.Open)) {
