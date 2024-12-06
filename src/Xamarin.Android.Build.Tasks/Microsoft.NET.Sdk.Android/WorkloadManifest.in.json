@@ -69,6 +69,22 @@
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
+    "Microsoft.Android.Runtime.NativeAOT.35.android-arm": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "Microsoft.Android.Runtime.NativeAOT.35.android-arm64": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "Microsoft.Android.Runtime.NativeAOT.35.android-x86": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "Microsoft.Android.Runtime.NativeAOT.35.android-x64": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
     "Microsoft.Android.Templates": {
       "kind": "template",
       "version": "@WORKLOAD_VERSION@"
