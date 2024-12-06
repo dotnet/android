@@ -139,6 +139,9 @@
   <data name="APT0004" xml:space="preserve">
     <value>잘못된 파일 이름: A-z 또는 a-z 또는 밑줄로 시작해야 합니다.</value>
   </data>
+  <data name="APT0005" xml:space="preserve">
+    <value>잘못된 파일 이름: 파일 이름은 Java 예약어를 사용할 수 없습니다.</value>
+  </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>'{0}'의 $(TargetFrameworkVersion)에 대한 API 레벨을 확인할 수 없습니다.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -459,14 +462,6 @@ In this message, the term "binding" means a piece of generated code that makes i
   <data name="XA1025" xml:space="preserve">
     <value>'AndroidAotMode' MSBuild 속성의 실험적 'Hybrid' 값은 현재 armeabi-v7a 대상 ABI와 호환되지 않습니다. 'AndroidAotMode'에 대해 실험적 'Hybrid' 값을 계속 사용하려면 Visual Studio 프로젝트 속성 페이지에서 armeabi-v7a 대상 ABI를 선택 취소하거나 텍스트 편집기에서 프로젝트 파일을 편집하고 'AndroidSupportedAbis' MSBuild 속성에서 'armeabi-v7a'를 제거하세요.</value>
     <comment>The following are literal names and should not be translated: 'Hybrid', 'AndroidAotMode', armeabi-v7a,  'AndroidSupportedAbis'</comment>
-  </data>
-  <data name="XA1026" xml:space="preserve">
-    <value>AAPT는 사용되지 않으며 대신 AAPT2가 사용됩니다. Visual Studio 프로젝트 속성 페이지에서 '증분 Android 패키징 시스템(aapt2) 사용'을 사용하도록 설정하거나 텍스트 편집기에서 프로젝트 파일을 편집하고 'AndroidUseAapt2' MSBuild 속성을 'true'로 설정하세요.</value>
-    <comment>The following are literal names and should not be translated: AAPT, AAPT2, Android, AndroidUseAapt2, true.</comment>
-  </data>
-  <data name="XA1026_dotnet" xml:space="preserve">
-    <value>AAPT는 .NET 6 이상을 대상으로 하는 Android용 .NET 프로젝트에서 사용할 수 없습니다. Visual Studio 프로젝트 속성 페이지에서 '증분 Android 패키징 시스템(aapt2) 사용'을 사용하도록 설정하거나 텍스트 편집기에서 프로젝트 파일을 편집하고 'AndroidUseAapt2' MSBuild 속성을 'true'로 설정하세요.</value>
-    <comment>The following are literal names and should not be translated: AAPT, Android, AndroidUseAapt2, true.</comment>
   </data>
   <data name="XA1027" xml:space="preserve">
     <value>'EnableProguard' MSBuild 속성이 'true'로 설정되어 있고 'AndroidLinkTool' MSBuild 속성이 비어 있으므로 'AndroidLinkTool'이 기본값적으로 'proguard'로 설정됩니다.</value>
@@ -985,15 +980,11 @@ In this message, the term "handheld app" means "app for handheld devices."
   </data>
   <data name="XA4236" xml:space="preserve">
     <value>Maven 아티팩트 '{0}:{1}'을(를) 다운로드할 수 없습니다.
-- {2}: {3}
-- {4}: {5}</value>
+{2}</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - Maven artifact group id
 {1} - Maven artifact id
-{2} - The .jar filename we tried to download
-{3} - The HttpClient reported download exception message
-{4} - The .aar filename we tried to download
-{5} - The HttpClient provided download exception message</comment>
+{2} - The filenames we tried to download and the HttpClient reported download exception messages</comment>
   </data>
   <data name="XA4237" xml:space="preserve">
     <value>Maven 아티팩트 '{0}'에 대한 POM 파일 다운로드할 수 없습니다.

@@ -515,7 +515,7 @@ Debug::start_debugging (void)
 	if (sdb_fd == 0)
 		return;
 
-	embeddedAssemblies.set_register_debug_symbols (true);
+	EmbeddedAssemblies::set_register_debug_symbols (true);
 
 	char *debug_arg = Util::monodroid_strdup_printf ("--debugger-agent=transport=socket-fd,address=%d,embedding=1", sdb_fd);
 	std::array<char*, 2> debug_options = {
@@ -603,7 +603,7 @@ Debug::enable_soft_breakpoints (void)
 void*
 xamarin::android::conn_thread (void *arg)
 {
-	abort_if_invalid_pointer_argument (arg);
+	abort_if_invalid_pointer_argument (arg, "arg");
 
 	int res;
 	Debug *instance = static_cast<Debug*> (arg);

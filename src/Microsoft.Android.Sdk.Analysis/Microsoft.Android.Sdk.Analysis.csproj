@@ -15,6 +15,9 @@
 		<PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="4.11.0" PrivateAssets="all" />
 	</ItemGroup>
 	<ItemGroup>
+		<Compile Remove="Tests/**" />
+	</ItemGroup>
+	<ItemGroup>
 		<Compile Update="Properties\Resources.Designer.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>

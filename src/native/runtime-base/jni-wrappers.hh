@@ -20,21 +20,21 @@ namespace xamarin::android
 			: env (_env),
 			  jstr (nullptr)
 		{
-			abort_if_invalid_pointer_argument (_env);
+			abort_if_invalid_pointer_argument (_env, "_env");
 		}
 
 		explicit jstring_wrapper (JNIEnv *_env, const jobject jo) noexcept
 			: env (_env),
 			  jstr (reinterpret_cast<jstring> (jo))
 		{
-			abort_if_invalid_pointer_argument (_env);
+			abort_if_invalid_pointer_argument (_env, "_env");
 		}
 
 		explicit jstring_wrapper (JNIEnv *_env, const jstring js) noexcept
 			: env (_env),
 			  jstr (js)
 		{
-			abort_if_invalid_pointer_argument (_env);
+			abort_if_invalid_pointer_argument (_env, "_env");
 		}
 
 		jstring_wrapper (const jstring_wrapper&) = delete;
@@ -137,7 +137,7 @@ namespace xamarin::android
 			: env (_env),
 			  arr (_arr)
 		{
-			abort_if_invalid_pointer_argument (_env);
+			abort_if_invalid_pointer_argument (_env, "_env");
 			if (_arr != nullptr) {
 				len = static_cast<size_t>(_env->GetArrayLength (_arr));
 				if (len > sizeof (static_wrappers) / sizeof (jstring_wrapper))

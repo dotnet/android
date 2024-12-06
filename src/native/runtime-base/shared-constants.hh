@@ -27,6 +27,7 @@ namespace xamarin::android::internal
 		static constexpr std::string_view MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER { "lib-" };
 		static constexpr size_t SATELLITE_ASSEMBLY_MARKER_INDEX = 3uz;            // this ☝️
 		static constexpr char SATELLITE_ASSEMBLY_MARKER_CHAR = MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER[SATELLITE_ASSEMBLY_MARKER_INDEX];
+		static constexpr char SATELLITE_CULTURE_END_MARKER_CHAR = '_';
 
 		static constexpr std::string_view MONO_ANDROID_RUNTIME_ASSEMBLY_NAME  { "Mono.Android.Runtime" };
 		static constexpr std::string_view MONO_ANDROID_ASSEMBLY_NAME          { "Mono.Android" };
@@ -39,10 +40,14 @@ namespace xamarin::android::internal
 		static constexpr std::string_view DLL_EXTENSION                       { ".dll" };
 		static constexpr std::string_view PDB_EXTENSION                       { ".pdb" };
 
+	private:
 		static constexpr std::string_view RUNTIME_CONFIG_BLOB_BASE_NAME       { "libarc.bin" };
 		static constexpr size_t runtime_config_blob_name_size                 = calc_size (RUNTIME_CONFIG_BLOB_BASE_NAME, MANGLED_ASSEMBLY_NAME_EXT);
-		static constexpr auto RUNTIME_CONFIG_BLOB_NAME                        = concat_string_views<runtime_config_blob_name_size> (RUNTIME_CONFIG_BLOB_BASE_NAME, MANGLED_ASSEMBLY_NAME_EXT);
+		static constexpr auto RUNTIME_CONFIG_BLOB_NAME_ARRAY                  = concat_string_views<runtime_config_blob_name_size> (RUNTIME_CONFIG_BLOB_BASE_NAME, MANGLED_ASSEMBLY_NAME_EXT);
 
+	public:
+		// .data() must be used otherwise string_view length will include the trailing \0 in the array
+		static constexpr std::string_view RUNTIME_CONFIG_BLOB_NAME            { RUNTIME_CONFIG_BLOB_NAME_ARRAY.data () };
 		static constexpr std::string_view MONO_SGEN_SO                        { "libmonosgen-2.0.so" };
 		static constexpr std::string_view MONO_SGEN_ARCH_SO                   { "libmonosgen-" __BITNESS__ "-2.0.so" };
 		static constexpr std::string_view OVERRIDE_DIRECTORY_NAME             { ".__override__" };

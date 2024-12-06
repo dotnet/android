@@ -108,6 +108,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Invalid file name: filenames cannot use java reserved words..
+        /// </summary>
+        public static string APT0005 {
+            get {
+                return ResourceManager.GetString("APT0005", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to This could be caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/dotnet/android/messages/apt2264 for details..
         /// </summary>
         public static string APT2264 {
@@ -756,24 +765,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Using AAPT is deprecated in favor of AAPT2. Please enable &apos;Use incremental Android packaging system (aapt2)&apos; in the Visual Studio project property pages or edit the project file in a text editor and set the &apos;AndroidUseAapt2&apos; MSBuild property to &apos;true&apos;..
-        /// </summary>
-        public static string XA1026 {
-            get {
-                return ResourceManager.GetString("XA1026", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Using AAPT is not supported in .NET for Android projects that target .NET 6 or higher. Please enable &apos;Use incremental Android packaging system (aapt2)&apos; in the Visual Studio project property pages or edit the project file in a text editor and set the &apos;AndroidUseAapt2&apos; MSBuild property to &apos;true&apos;..
-        /// </summary>
-        public static string XA1026_dotnet {
-            get {
-                return ResourceManager.GetString("XA1026_dotnet", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to The &apos;EnableProguard&apos; MSBuild property is set to &apos;true&apos; and the &apos;AndroidLinkTool&apos; MSBuild property is empty, so &apos;AndroidLinkTool&apos; will default to &apos;proguard&apos;..
         /// </summary>
         public static string XA1027 {
@@ -1282,8 +1273,7 @@ namespace Xamarin.Android.Tasks.Properties {
 
         /// <summary>
         ///   Looks up a localized string similar to Cannot download Maven artifact &apos;{0}:{1}&apos;.
-        ///- {2}: {3}
-        ///- {4}: {5}.
+        ///{2}.
         /// </summary>
         public static string XA4236 {
             get {

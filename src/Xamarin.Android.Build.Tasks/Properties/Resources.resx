@@ -139,6 +139,9 @@ This error is likely caused by an issue with the AndroidManifest.xml file or an 
   <data name="APT0004" xml:space="preserve">
     <value>Invalid file name: It must start with A-z or a-z or an underscore.</value>
   </data>
+  <data name="APT0005" xml:space="preserve">
+    <value>Invalid file name: Filenames cannot use Java reserved words.</value>
+  </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Could not determine API level for $(TargetFrameworkVersion) of '{0}'.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -459,14 +462,6 @@ In this message, the term "binding" means a piece of generated code that makes i
   <data name="XA1025" xml:space="preserve">
     <value>The experimental 'Hybrid' value for the 'AndroidAotMode' MSBuild property is not currently compatible with the armeabi-v7a target ABI. To continue using the experimental 'Hybrid' value for 'AndroidAotMode', deselect the armeabi-v7a target ABI in the Visual Studio project property pages or edit the project file in a text editor and remove 'armeabi-v7a' from the 'AndroidSupportedAbis' MSBuild property.</value>
     <comment>The following are literal names and should not be translated: 'Hybrid', 'AndroidAotMode', armeabi-v7a,  'AndroidSupportedAbis'</comment>
-  </data>
-  <data name="XA1026" xml:space="preserve">
-    <value>Using AAPT is deprecated in favor of AAPT2. Please enable 'Use incremental Android packaging system (aapt2)' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidUseAapt2' MSBuild property to 'true'.</value>
-    <comment>The following are literal names and should not be translated: AAPT, AAPT2, Android, AndroidUseAapt2, true.</comment>
-  </data>
-  <data name="XA1026_dotnet" xml:space="preserve">
-    <value>Using AAPT is not supported in .NET for Android projects that target .NET 6 or higher. Please enable 'Use incremental Android packaging system (aapt2)' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidUseAapt2' MSBuild property to 'true'.</value>
-    <comment>The following are literal names and should not be translated: AAPT, Android, AndroidUseAapt2, true.</comment>
   </data>
   <data name="XA1027" xml:space="preserve">
     <value>The 'EnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.</value>
@@ -985,15 +980,11 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
   </data>
   <data name="XA4236" xml:space="preserve">
     <value>Cannot download Maven artifact '{0}:{1}'.
-- {2}: {3}
-- {4}: {5}</value>
+{2}</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - Maven artifact group id
 {1} - Maven artifact id
-{2} - The .jar filename we tried to download
-{3} - The HttpClient reported download exception message
-{4} - The .aar filename we tried to download
-{5} - The HttpClient provided download exception message</comment>
+{2} - The filenames we tried to download and the HttpClient reported download exception messages</comment>
   </data>
   <data name="XA4237" xml:space="preserve">
     <value>Cannot download POM file for Maven artifact '{0}'.

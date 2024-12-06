@@ -139,6 +139,9 @@
   <data name="APT0004" xml:space="preserve">
     <value>無效檔案名稱: 必須以 A-z、a-z 或底線開頭。</value>
   </data>
+  <data name="APT0005" xml:space="preserve">
+    <value>檔案名稱無效: 檔案名稱不能使用 JAVA 保留字。</value>
+  </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>無法判斷 '{0}' 的 $(TargetFrameworkVersion) API 層級。</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -459,14 +462,6 @@ In this message, the term "binding" means a piece of generated code that makes i
   <data name="XA1025" xml:space="preserve">
     <value>'AndroidAotMode' MSBuild 屬性的實驗性 'Hybrid' 值目前與 armeabi v7a 目標 ABI 不相容。若要繼續使用 'AndroidAotMode' 的實驗性 'Hybrid' 值，請取消選取 Visual Studio 專案屬性頁面中的 armeabi-v7a 目標 ABI，或在文字編輯器中編輯專案檔，從 'AndroidSupportedAbis' MSBuild 屬性中移除 'armeabi-v7a'。</value>
     <comment>The following are literal names and should not be translated: 'Hybrid', 'AndroidAotMode', armeabi-v7a,  'AndroidSupportedAbis'</comment>
-  </data>
-  <data name="XA1026" xml:space="preserve">
-    <value>已不再使用 AAPT，改用 AAPT 2。請在 Visual Studio 專案屬性頁中啟用 [使用增量 Android 封裝系統 (aapt2)]，或在文字編輯器中編輯專案檔，並將 'AndroidUseAapt2' MSBuild 屬性設定為 'true'。</value>
-    <comment>The following are literal names and should not be translated: AAPT, AAPT2, Android, AndroidUseAapt2, true.</comment>
-  </data>
-  <data name="XA1026_dotnet" xml:space="preserve">
-    <value>目標為 .NET 6 或更新版本的 Android 專案的 .NET 不支援使用 AAPT。請在 Visual Studio 專案屬性頁中啟用 [使用增量 Android 套件系統 (aapt2)]，或在文字編輯器中編輯專案檔，並將 'AndroidUseAapt2' MSBuild 屬性設定為 'true'。</value>
-    <comment>The following are literal names and should not be translated: AAPT, Android, AndroidUseAapt2, true.</comment>
   </data>
   <data name="XA1027" xml:space="preserve">
     <value>'EnableProguard' MSBuild 屬性設定為 'true'，而且 'AndroidLinkTool' MSBuild 屬性是空的，因此 'AndroidLinkTool' 預設為 'proguard'。</value>
@@ -985,15 +980,11 @@ In this message, the term "handheld app" means "app for handheld devices."
   </data>
   <data name="XA4236" xml:space="preserve">
     <value>無法下載 Maven 成品 '{0}:{1}'。
-- {2}: {3}
-- {4}: {5}</value>
+{2}</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - Maven artifact group id
 {1} - Maven artifact id
-{2} - The .jar filename we tried to download
-{3} - The HttpClient reported download exception message
-{4} - The .aar filename we tried to download
-{5} - The HttpClient provided download exception message</comment>
+{2} - The filenames we tried to download and the HttpClient reported download exception messages</comment>
   </data>
   <data name="XA4237" xml:space="preserve">
     <value>無法下載 Maven 成品 '{0}' 的 POM 檔案。

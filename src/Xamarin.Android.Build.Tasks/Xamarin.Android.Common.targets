@@ -256,7 +256,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidPackageFormat Condition=" $(AndroidPackageFormats.Contains('aab')) And '$(AndroidPackageFormat)' == '' ">aab</AndroidPackageFormat>
 	<_AndroidAdditionalPackageFormats Condition=" $(AndroidPackageFormats.Contains('apk')) And '$(AndroidPackageFormat)' == 'aab' ">apk</_AndroidAdditionalPackageFormats>
 	<AndroidPackageFormat       Condition=" '$(AndroidPackageFormat)' == '' ">apk</AndroidPackageFormat>
-	<AndroidUseAapt2            Condition=" '$(AndroidPackageFormat)' == 'aab' ">True</AndroidUseAapt2>
 	<AndroidUseApkSigner        Condition=" '$(AndroidPackageFormat)' == 'aab' ">False</AndroidUseApkSigner>
 	<AndroidCreatePackagePerAbi Condition=" '$(AndroidCreatePackagePerAbi)' == 'aab' ">False</AndroidCreatePackagePerAbi>
 	<AndroidApkSigningAlgorithm Condition=" '$(AndroidApkSigningAlgorithm)' == '' ">SHA256withRSA</AndroidApkSigningAlgorithm>
@@ -324,7 +323,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' ">true</AndroidUseAssemblyStore>
   <AndroidAotEnableLazyLoad Condition=" '$(AndroidAotEnableLazyLoad)' == '' And '$(AotAssemblies)' == 'true' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</AndroidAotEnableLazyLoad>
   <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and ('$(UsingMicrosoftNETSdkRazor)' == 'true') ">False</AndroidEnableMarshalMethods>
-  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' ">False</AndroidEnableMarshalMethods>
+  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' ">True</AndroidEnableMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">False</_AndroidUseMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">$(AndroidEnableMarshalMethods)</_AndroidUseMarshalMethods>
 </PropertyGroup>
@@ -531,10 +530,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidError Code="XA1023"
       ResourceName="XA1023"
       Condition="  '$(AndroidDexTool)' == 'dx' "
-  />
-  <AndroidError Code="XA1026"
-      ResourceName="XA1026_dotnet"
-      Condition=" '$(AndroidUseAapt2)' != 'true' "
   />
   <AndroidWarning Code="XA1035"
       ResourceName="XA1035"
@@ -1072,7 +1067,6 @@ because xbuild doesn't support framework reference assemblies.
 	Outputs="$(_AndroidResFlagFile)"
 	DependsOnTargets="$(_OnResolveMonoAndroidSdks)">
 	<CheckForInvalidResourceFileNames
-		Condition=" '$(AndroidUseAapt2)' == 'true' "
 		Resources="@(_AndroidResolvedResources)"
 	/>
 	<CopyIfChanged SourceFiles="@(_AndroidResolvedResources)"
@@ -1225,8 +1219,7 @@ because xbuild doesn't support framework reference assemblies.
 	Outputs="$(_AndroidResgenFlagFile)"
 	DependsOnTargets="$(_UpdateAndroidResgenDependsOnTargets);$(_AfterGenerateAndroidResourceDir);_PrepareUpdateAndroidResgen">
 
-	<CallTarget Targets="_UpdateAndroidResgenAapt"  Condition=" '$(AndroidUseAapt2)' != 'true' " />
-	<CallTarget Targets="_UpdateAndroidResgenAapt2" Condition=" '$(AndroidUseAapt2)' == 'true' " />
+	<CallTarget Targets="_UpdateAndroidResgenAapt2" />
 
 	<GenerateLibraryResources
 		Condition=" ('$(_AndroidResourceDesignerFile)' != '' Or '$(AndroidUseDesignerAssembly)' == 'True') And Exists('$(IntermediateOutputPath)R.txt') "
@@ -1246,8 +1239,7 @@ because xbuild doesn't support framework reference assemblies.
   <PropertyGroup>
     <!-- We need to strip out just filename from request Designer file location -->
     <AndroidResgenFilename>$([System.IO.Path]::GetFileName ('$(_AndroidResourceDesignerFile)'))</AndroidResgenFilename>
-    <_UseManagedResourceGenerator Condition=" '$(AndroidUseAapt2)' == 'True' ">True</_UseManagedResourceGenerator>
-    <_UseManagedResourceGenerator Condition=" '$(_UseManagedResourceGenerator)' == '' ">False</_UseManagedResourceGenerator>
+    <_UseManagedResourceGenerator Condition=" '$(_UseManagedResourceGenerator)' == '' ">True</_UseManagedResourceGenerator>
   </PropertyGroup>
 
   <!-- Parse primary R.java and create Resources.Designer.cs -->
@@ -1647,13 +1639,14 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_GenerateEmptyAndroidRemapNativeCode"
         DependsOnTargets="_PrepareAndroidRemapNativeAssemblySources"
         Condition=" '@(_AndroidRemapMembers->Count())' == '0' "
-        Inputs="$(MSBuildProjectFullPath)"
+        Inputs="$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
         Outputs="@(_AndroidRemapAssemblySource)">
   <GenerateJniRemappingNativeCode
       OutputDirectory="$(_NativeAssemblySourceDir)"
       GenerateEmptyCode="True"
       SupportedAbis="@(_BuildTargetAbis)"
    />
+   <Touch Files="@(_AndroidRemapAssemblySource)" />
 </Target>
 
 <PropertyGroup>
@@ -1667,13 +1660,14 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_GenerateAndroidRemapNativeCode"
         DependsOnTargets="$(_GenerateAndroidRemapNativeCodeDependsOn)"
         Condition=" '@(_AndroidRemapMembers->Count())' != '0' "
-        Inputs="$(_XARemapMembersFilePath)"
+        Inputs="$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects);$(_XARemapMembersFilePath)"
         Outputs="@(_AndroidRemapAssemblySource)">
   <GenerateJniRemappingNativeCode
       OutputDirectory="$(_NativeAssemblySourceDir)"
       RemappingXmlFilePath="$(_XARemapMembersFilePath)"
       SupportedAbis="@(_BuildTargetAbis)"
       />
+  <Touch Files="@(_AndroidRemapAssemblySource)" />
 </Target>
 
 <Target Name="_RunAotForAllRIDs"
@@ -1811,8 +1805,7 @@ because xbuild doesn't support framework reference assemblies.
   Outputs="$(_PackagedResources)">
 
   <!-- Create the base .apk with resources and assets -->
-  <CallTarget Targets="_CreateBaseApkWithAapt"  Condition=" '$(AndroidUseAapt2)' != 'true' " />
-  <CallTarget Targets="_CreateBaseApkWithAapt2" Condition=" '$(AndroidUseAapt2)' == 'true' " />
+  <CallTarget Targets="_CreateBaseApkWithAapt2" />
   <Touch Files="$(_PackagedResources)" />
   <!-- LibraryProjectJars must not be used for aapt in BuildApk*, or it will *bundle* the jar! -->
 

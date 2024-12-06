@@ -139,6 +139,9 @@ Ten błąd jest prawdopodobnie spowodowany problemem dotyczącym pliku AndroidMa
   <data name="APT0004" xml:space="preserve">
     <value>Nieprawidłowa nazwa pliku: musi zaczynać się od litery w zakresie od A-z lub a-z bądź od podkreślenia.</value>
   </data>
+  <data name="APT0005" xml:space="preserve">
+    <value>Nieprawidłowa nazwa pliku: nazwy plików nie mogą używać słów zastrzeżonych języka Java.</value>
+  </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Nie można określić poziomu interfejsu API dla parametru $(TargetFrameworkVersion) elementu „{0}”.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -459,14 +462,6 @@ In this message, the term "binding" means a piece of generated code that makes i
   <data name="XA1025" xml:space="preserve">
     <value>Eksperymentalna wartość „Hybrid” dla właściwości programu MSBuild „AndroidAotMode” jest obecnie niezgodna z docelowym interfejsem ABI armeabi-v7a. Aby nadal używać eksperymentalnej wartości „Hybrid” dla właściwości „AndroidAotMode”, usuń zaznaczenie docelowego interfejsu ABI armeabi-v7a na stronach właściwości projektu w programie Visual Studio albo zmodyfikuj plik projektu w edytorze tekstów, usuwając wartość „armeabi-v7a” z właściwości programu MSBuild „AndroidSupportedAbis”.</value>
     <comment>The following are literal names and should not be translated: 'Hybrid', 'AndroidAotMode', armeabi-v7a,  'AndroidSupportedAbis'</comment>
-  </data>
-  <data name="XA1026" xml:space="preserve">
-    <value>Narzędzie AAPT zostało wycofane na rzecz narzędzia AAPT2. Włącz opcję „Użyj systemu przyrostowego tworzenia pakietów systemu Android (aapt2)” na stronach właściwości projektu programu Visual Studio lub edytuj plik projektu w edytorze tekstu i ustaw właściwość programu MSBuild o nazwie „AndroidUseAapt2” na wartość „true”.</value>
-    <comment>The following are literal names and should not be translated: AAPT, AAPT2, Android, AndroidUseAapt2, true.</comment>
-  </data>
-  <data name="XA1026_dotnet" xml:space="preserve">
-    <value>Używanie narzędzia AAPT nie jest obsługiwane w projektach platformy .NET dla systemu Android przeznaczonych dla platformy .NET 6 lub nowszej. Włącz opcję „Użyj systemu przyrostowego tworzenia pakietów systemu Android (aapt2)” na stronach właściwości projektu w programie Visual Studio lub zmodyfikuj plik projektu w edytorze tekstów, ustawiając właściwość programu MSBuild o nazwie „AndroidUseAapt2” na wartość „true”.</value>
-    <comment>The following are literal names and should not be translated: AAPT, Android, AndroidUseAapt2, true.</comment>
   </data>
   <data name="XA1027" xml:space="preserve">
     <value>Właściwość programu MSBuild „EnableProguard” ma wartość „true”, a właściwość programu MSBuild „AndroidLinkTool” jest pusta, dlatego właściwość „AndroidLinkTool” zostanie ustawiona na wartość domyślną „proguard”.</value>
@@ -985,15 +980,11 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
   </data>
   <data name="XA4236" xml:space="preserve">
     <value>Nie można pobrać artefaktu Maven „{0}:{1}”.
-— {2}: {3}
-— {4}: {5}</value>
+{2}</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - Maven artifact group id
 {1} - Maven artifact id
-{2} - The .jar filename we tried to download
-{3} - The HttpClient reported download exception message
-{4} - The .aar filename we tried to download
-{5} - The HttpClient provided download exception message</comment>
+{2} - The filenames we tried to download and the HttpClient reported download exception messages</comment>
   </data>
   <data name="XA4237" xml:space="preserve">
     <value>Nie można pobrać pliku POM dla artefaktu Maven „{0}”.

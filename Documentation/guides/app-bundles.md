@@ -133,7 +133,6 @@ Due to the various requirements for Android App Bundles, here are a
 reasonable set of defaults for `bundletool`:
 ```xml
 <AndroidPackageFormat       Condition=" '$(AndroidPackageFormat)' == '' ">apk</AndroidPackageFormat>
-<AndroidUseAapt2            Condition=" '$(AndroidPackageFormat)' == 'aab' ">True</AndroidUseAapt2>
 <AndroidUseApkSigner        Condition=" '$(AndroidPackageFormat)' == 'aab' ">False</AndroidUseApkSigner>
 <AndroidCreatePackagePerAbi Condition=" '$(AndroidCreatePackagePerAbi)' == 'aab' ">False</AndroidCreatePackagePerAbi>
 ```
