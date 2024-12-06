@@ -589,7 +589,11 @@ AndroidSystem::setup_environment () noexcept
 				break;
 
 			case 'f':
-				aotMode = MonoAotMode::MONO_AOT_MODE_FULL;
+				if (strcmp (mono_aot_mode_name, "fullinterp") == 0) {
+					aotMode = MonoAotMode::MONO_AOT_MODE_INTERP;
+				} else {
+					aotMode = MonoAotMode::MONO_AOT_MODE_FULL;
+				}
 				break;
 
 			case 'i':
