@@ -58,6 +58,7 @@ namespace Xamarin.Android.Prepare
 						Get_Configuration_Generated_Props (context),
 						Get_Cmake_XA_Build_Configuration (context),
 						Get_Cmake_Presets (context),
+						Get_Cmake_Presets_CLR (context),
 					};
 				} else {
 					return new List <GeneratedFile> {
@@ -66,6 +67,7 @@ namespace Xamarin.Android.Prepare
 						Get_Configuration_Generated_Props (context),
 						Get_Cmake_XA_Build_Configuration (context),
 						Get_Cmake_Presets (context),
+						Get_Cmake_Presets_CLR (context),
 						Get_Ndk_projitems (context),
 						Get_XABuildConfig_cs (context),
 						Get_Omnisharp_Json (context),
@@ -107,7 +109,7 @@ namespace Xamarin.Android.Prepare
 			);
 		}
 
-		GeneratedFile Get_Cmake_Presets (Context context)
+		GeneratedFile GetCmakePresetsCommon (Context context, string sourcesDir)
 		{
 			const string OutputFileName = "CMakePresets.json";
 
@@ -126,9 +128,19 @@ namespace Xamarin.Android.Prepare
 
 			return new GeneratedPlaceholdersFile (
 				replacements,
-				Path.Combine (Configurables.Paths.NativeSourcesDir, $"{OutputFileName}.in"),
-				Path.Combine (Configurables.Paths.NativeSourcesDir, OutputFileName)
+				Path.Combine (sourcesDir, $"{OutputFileName}.in"),
+				Path.Combine (sourcesDir, OutputFileName)
 			);
+		}
+
+		GeneratedFile Get_Cmake_Presets (Context context)
+		{
+			return GetCmakePresetsCommon (context, Configurables.Paths.NativeSourcesDir);
+		}
+
+		GeneratedFile Get_Cmake_Presets_CLR (Context context)
+		{
+			return GetCmakePresetsCommon (context, Configurables.Paths.NativeCLRSourcesDir);
 		}
 
 		GeneratedFile Get_Configuration_Generated_Props (Context context)
