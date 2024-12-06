@@ -68,8 +68,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string [] SupportedAbis { get; set; }
 
-		public bool CreatePackagePerAbi { get; set; }
-
 		public bool EmbedAssemblies { get; set; }
 
 		public bool BundleAssemblies { get; set; }
@@ -154,11 +152,11 @@ namespace Xamarin.Android.Tasks
 
 		List<Regex> includePatterns = new List<Regex> ();
 
-		void ExecuteWithAbi (DSOWrapperGenerator.Config dsoWrapperConfig, string [] supportedAbis, string apkInputPath, string apkOutputPath, bool debug, bool compress, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo, string assemblyStoreApkName, string? abiMetadata)
+		void ExecuteWithAbi (DSOWrapperGenerator.Config dsoWrapperConfig, string [] supportedAbis, string apkInputPath, string apkOutputPath, bool debug, bool compress, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo, string assemblyStoreApkName)
 		{
 			ArchiveFileList files = new ArchiveFileList ();
 
-			using (var apk = new ZipArchiveFileListBuilder (apkOutputPath, File.Exists (apkOutputPath) ? FileMode.Open : FileMode.Create, abiMetadata)) {
+			using (var apk = new ZipArchiveFileListBuilder (apkOutputPath, File.Exists (apkOutputPath) ? FileMode.Open : FileMode.Create)) {
 
 				// Add classes.dx
 				CompressionMethod dexCompressionMethod = GetCompressionMethod (".dex");
@@ -302,21 +300,8 @@ namespace Xamarin.Android.Tasks
 			}
 
 			DSOWrapperGenerator.Config dsoWrapperConfig = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, IntermediateOutputPath);
-			ExecuteWithAbi (dsoWrapperConfig, SupportedAbis, ApkInputPath, ApkOutputPath, debug, compress, compressedAssembliesInfo, assemblyStoreApkName: null, abiMetadata: "all");
+			ExecuteWithAbi (dsoWrapperConfig, SupportedAbis, ApkInputPath, ApkOutputPath, debug, compress, compressedAssembliesInfo, assemblyStoreApkName: null);
 			outputFiles.Add ("all", ApkOutputPath);
-			if (CreatePackagePerAbi && SupportedAbis.Length > 1) {
-				var abiArray = new string[] { String.Empty };
-				foreach (var abi in SupportedAbis) {
-					existingEntries.Clear ();
-					var path = Path.GetDirectoryName (ApkOutputPath);
-					var apk = Path.GetFileNameWithoutExtension (ApkOutputPath);
-					abiArray[0] = abi;
-					ExecuteWithAbi (dsoWrapperConfig, abiArray, String.Format ("{0}-{1}", ApkInputPath, abi),
-						Path.Combine (path, String.Format ("{0}-{1}.apk", apk, abi)),
-					        debug, compress, compressedAssembliesInfo, assemblyStoreApkName: abi, abiMetadata: abi);
-					outputFiles.Add (abi, Path.Combine (path, String.Format ("{0}-{1}.apk", apk, abi)));
-				}
-			}
 
 			OutputFiles = outputFiles.Select (a => new TaskItem (a.Value, new Dictionary<string, string> () { { "Abi", a.Key } })).ToArray ();
 

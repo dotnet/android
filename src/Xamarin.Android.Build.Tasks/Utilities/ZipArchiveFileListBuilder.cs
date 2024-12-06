@@ -12,13 +12,10 @@ namespace Xamarin.Android.Tasks;
 // reviewed easier. This class should not exist in this form in the final state.
 public class ZipArchiveFileListBuilder : IDisposable
 {
-	readonly string? abi;
-
 	public List<ITaskItem> ApkFiles { get; } = [];
 
-	public ZipArchiveFileListBuilder (string archive, FileMode filemode, string? abi)
+	public ZipArchiveFileListBuilder (string archive, FileMode filemode)
 	{
-		this.abi = abi;
 	}
 
 	public void Dispose ()
@@ -38,9 +35,6 @@ public class ZipArchiveFileListBuilder : IDisposable
 		item.SetMetadata ("ApkPath", archiveFileName);
 		item.SetMetadata ("Compression", compressionMethod.ToString ());
 
-		if (abi.HasValue ())
-			item.SetMetadata ("Abi", abi);
-
 		ApkFiles.Add (item);
 	}
 
@@ -50,9 +44,6 @@ public class ZipArchiveFileListBuilder : IDisposable
 		var item = new TaskItem ($"{javaFilename}#{javaEntryName}");
 		item.SetMetadata ("ApkPath", archiveFileName);
 		item.SetMetadata ("JavaArchiveEntry", javaEntryName);
-
-		if (abi.HasValue ())
-			item.SetMetadata ("Abi", abi);
 
 		ApkFiles.Add (item);
 	}
