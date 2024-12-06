@@ -39,8 +39,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <LinkerArg Include="-Wl,--undefined-version" />
     </ItemGroup>
 
-    <!-- https://github.com/xamarin/xamarin-macios/blob/c43d4ea40bc777969e3b158cf46446df292d8449/dotnet/targets/Xamarin.Shared.Sdk.targets#L541-L550 -->
     <PropertyGroup>
+      <!-- Example settings from: https://github.com/xamarin/xamarin-macios/blob/c43d4ea40bc777969e3b158cf46446df292d8449/dotnet/targets/Xamarin.Shared.Sdk.targets#L541-L550 -->
       <RunILLink>true</RunILLink>
       <!--
         We want to suppress warnings from trimmer and only show warnings from ILC.
@@ -48,8 +48,15 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       -->
       <_OriginalSuppressTrimAnalysisWarnings>$(SuppressTrimAnalysisWarnings)</_OriginalSuppressTrimAnalysisWarnings>
       <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+
+      <!-- The list of hacks below should go away when we have NativeAOT.android-* packs -->
       <!-- HACK: we are android-arm64, so this is required for the right path(s) to be found -->
+      <_OriginalRuntimeIdentifier>$(RuntimeIdentifier)</_OriginalRuntimeIdentifier>
       <RuntimeIdentifier Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">linux-bionic-arm64</RuntimeIdentifier>
+      <!-- HACK: -targetos:android results in error, so use linux -->
+      <_targetOS>linux</_targetOS>
+      <!-- HACK: prevents libSystem.Net.Security.Native.a from being added -->
+      <_linuxLibcFlavor>bionic</_linuxLibcFlavor>
     </PropertyGroup>
   </Target>
 
@@ -57,8 +64,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <PropertyGroup>
       <!-- Turn trimmer warnings back to original value -->
       <SuppressTrimAnalysisWarnings>$(_OriginalSuppressTrimAnalysisWarnings)</SuppressTrimAnalysisWarnings>
-      <!-- HACK: -targetos:android results in error, so use linux -->
-      <_targetOS>linux</_targetOS>
     </PropertyGroup>
     <ItemGroup>
       <!-- Give ILLink's output to ILC -->
@@ -67,10 +72,14 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <IlcReference Remove="@(IlcReference)" />
       <IlcReference Include="@(PrivateSdkAssemblies)" />
       <IlcReference Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" Exclude="@(IlcCompileInput)" />
-      <!-- HACK: this file doesn't exist in linux-bionic-arm64 pack -->
-      <LinkerArg Remove="@(LinkerArg)" Condition=" '%(FileName)' == 'libSystem.Net.Security.Native' " />
-      <NativeLibrary Remove="@(NativeLibrary)" Condition=" '%(FileName)' == 'libSystem.Net.Security.Native' " />
     </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidAfterLinkNative" AfterTargets="LinkNative">
+    <PropertyGroup>
+      <!-- Turn $(RuntimeIdentifier) back to original value -->
+      <RuntimeIdentifier>$(_OriginalRuntimeIdentifier)</RuntimeIdentifier>
+    </PropertyGroup>
   </Target>
 
 </Project>
