@@ -4,6 +4,7 @@
   <PropertyGroup Condition=" '$(BuildLatestPreview)' == 'true' ">
     <AndroidApiLevel>36</AndroidApiLevel>
     <AndroidPlatformId>Baklava</AndroidPlatformId>
+    <AndroidFrameworkVersion>v15.0.99</AndroidFrameworkVersion>
   </PropertyGroup>
 
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
