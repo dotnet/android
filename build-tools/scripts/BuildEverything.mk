@@ -13,4 +13,5 @@ endif
 
 leeroy:
 	$(call DOTNET_BINLOG,leeroy) $(SOLUTION) $(_MSBUILD_ARGS)
+	$(call DOTNET_BINLOG,preview-monoandroid) src/Mono.Android/Mono.Android.csproj -p:BuildLatestPreview=true
 	$(call DOTNET_BINLOG,setup-workload) -t:ConfigureLocalWorkload build-tools/create-packs/Microsoft.Android.Sdk.proj
