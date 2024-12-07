@@ -232,6 +232,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidBuildIdFile>$(IntermediateOutputPath)buildid.txt</_AndroidBuildIdFile>
         <_AndroidApplicationSharedLibraryPath>$(IntermediateOutputPath)app_shared_libraries\</_AndroidApplicationSharedLibraryPath>
 	<_ResolvedUserAssembliesHashFile>$(IntermediateOutputPath)resolvedassemblies.hash</_ResolvedUserAssembliesHashFile>
+  <_AndroidResolvedResourcesHashFile>$(IntermediateOutputPath)_AndroidResolvedResources.hash</_AndroidResolvedResourcesHashFile>
 
 	<AndroidDexTool   Condition=" '$(AndroidDexTool)' != 'dx' ">d8</AndroidDexTool>
 	<_AndroidXA1027 Condition=" '$(EnableProguard)' == 'true' And '$(AndroidEnableProguard)' == '' And '$(AndroidDexTool)' == 'd8' And $(AndroidLinkTool) == '' ">true</_AndroidXA1027>
@@ -1057,13 +1058,24 @@ because xbuild doesn't support framework reference assemblies.
 	>
 		<Output ItemName="_AndroidResourceDest" TaskParameter="IntermediateFiles" />
 		<Output ItemName="_AndroidResolvedResources" TaskParameter="ResolvedResourceFiles" />
+		<Output PropertyName="_AndroidResolvedResourcesFilesHash" TaskParameter="FilesHash" />
 	</AndroidComputeResPaths>
+
+	<WriteLinesToFile
+		File="$(_AndroidResolvedResourcesHashFile)"
+		Lines="$(_AndroidResolvedResourcesFilesHash)"
+		Overwrite="True"
+		WriteOnlyWhenDifferent="True"
+	/>
+  <ItemGroup>
+    <FileWrites Include="$(_AndroidResolvedResourcesHashFile)"/>
+  </ItemGroup>
 
 	<MakeDir Directories="$(MonoAndroidResDirIntermediate)" />
 </Target>
 
 <Target Name="_GenerateAndroidResourceDir"
-	Inputs="$(MSBuildProjectFullPath);@(_AndroidMSBuildAllProjects);@(_AndroidResolvedResources);$(_AndroidBuildPropertiesCache)"
+	Inputs="$(MSBuildProjectFullPath);@(_AndroidMSBuildAllProjects);@(_AndroidResolvedResources);$(_AndroidBuildPropertiesCache);$(_AndroidResolvedResourcesHashFile)"
 	Outputs="$(_AndroidResFlagFile)"
 	DependsOnTargets="$(_OnResolveMonoAndroidSdks)">
 	<CheckForInvalidResourceFileNames
