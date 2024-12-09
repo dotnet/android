@@ -1,8 +1,8 @@
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.NET.Sdk" Version="10.0.100-alpha.1.24605.38">
+    <Dependency Name="Microsoft.NET.Sdk" Version="10.0.100-alpha.1.24609.2">
       <Uri>https://github.com/dotnet/sdk</Uri>
-      <Sha>1fb1a92a76a595401dcd82662426afeec5daf424</Sha>
+      <Sha>3f26c6e94d9bc3ee87b88bc81c0606f619579ec4</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="10.0.0-alpha.1.24570.9" CoherentParentDependency="Microsoft.NET.Sdk">
       <Uri>https://github.com/dotnet/runtime</Uri>
