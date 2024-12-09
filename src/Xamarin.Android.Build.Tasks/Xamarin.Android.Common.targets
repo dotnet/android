@@ -31,9 +31,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.Aot" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CilStrip" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildApk" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.BuildApkTemporary" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.BuildBaseAppBundle" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildAppBundle" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildApkSet" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.InstallApkSet" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -2093,7 +2091,7 @@ because xbuild doesn't support framework reference assemblies.
     also need to have the args added to Xamarin.Android.Common.Debugging.targets
     in monodroid.
   -->
-  <BuildApkTemporary
+  <BuildApk
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"
       ApkInputPath="$(_PackagedResources)"
       ApkOutputPath="$(_ApkOutputPath)"
@@ -2132,16 +2130,16 @@ because xbuild doesn't support framework reference assemblies.
       RootPath="$(_RootPath)"
       DalvikPath="$(_DalvikPath)">
       <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
-      <Output TaskParameter="OutputApkFiles" ItemName="FilesToAddToApk" />
+      <Output TaskParameter="OutputApkFiles" ItemName="FilesToAddToArchive" />
       <Output TaskParameter="DSODirectoriesToDelete" ItemName="DSODirectoriesToDelete" />
-  </BuildApkTemporary>
+  </BuildApk>
 
   <!-- Create the actual zip archive -->
   <BuildArchive
       AndroidPackageFormat="$(AndroidPackageFormat)"
       ApkInputPath="$(_PackagedResources)"
       ApkOutputPath="$(_ApkOutputPath)"
-      FilesToAddToApk="@(FilesToAddToApk)"
+      FilesToAddToArchive="@(FilesToAddToArchive)"
       UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
       ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
       ZipFlushSizeLimit="$(_ZipFlushSizeLimit)" />
@@ -2210,7 +2208,7 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 
   <!-- Put the assemblies and native libraries in the apk -->
-	<BuildApkTemporary
+	<BuildApk
 			AndroidNdkDirectory="$(_AndroidNdkDirectory)"
 			ApkInputPath="$(_PackagedResources)"
 			ApkOutputPath="$(_ApkOutputPath)"
@@ -2249,16 +2247,16 @@ because xbuild doesn't support framework reference assemblies.
       RootPath="$(_RootPath)"
       DalvikPath="$(_DalvikPath)">
 		<Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
-    <Output TaskParameter="OutputApkFiles" ItemName="FilesToAddToApk" />
+    <Output TaskParameter="OutputApkFiles" ItemName="FilesToAddToArchive" />
     <Output TaskParameter="DSODirectoriesToDelete" ItemName="DSODirectoriesToDelete" />
-  </BuildApkTemporary>
+  </BuildApk>
 
   <!-- Create the actual zip archive -->
   <BuildArchive
       AndroidPackageFormat="$(AndroidPackageFormat)"
       ApkInputPath="$(_PackagedResources)"
       ApkOutputPath="$(_ApkOutputPath)"
-      FilesToAddToApk="@(FilesToAddToApk)"
+      FilesToAddToArchive="@(FilesToAddToArchive)"
       UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
       ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
       ZipFlushSizeLimit="$(_ZipFlushSizeLimit)" />

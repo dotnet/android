@@ -26,7 +26,7 @@ public class BuildArchive : AndroidTask
 	public string ApkOutputPath { get; set; } = null!; // NRT enforced by [Required]
 
 	[Required]
-	public ITaskItem [] FilesToAddToApk { get; set; } = null!; // NRT enforced by [Required]
+	public ITaskItem [] FilesToAddToArchive { get; set; } = null!; // NRT enforced by [Required]
 
 	public string? UncompressedFileExtensions { get; set; }
 
@@ -141,9 +141,9 @@ public class BuildArchive : AndroidTask
 		apk.FixupWindowsPathSeparators ((a, b) => Log.LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`"));
 
 		// Add the files to the apk
-		foreach (var file in FilesToAddToApk) {
+		foreach (var file in FilesToAddToArchive) {
 			var disk_path = file.ItemSpec;
-			var apk_path = file.GetRequiredMetadata ("FilesToAddToApk", "ApkPath", Log);
+			var apk_path = file.GetRequiredMetadata ("FilesToAddToArchive", "ArchivePath", Log);
 
 			// An error will already be logged
 			if (apk_path is null) {

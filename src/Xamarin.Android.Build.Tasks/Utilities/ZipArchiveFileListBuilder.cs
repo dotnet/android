@@ -32,7 +32,7 @@ public class ZipArchiveFileListBuilder : IDisposable
 	{
 		var item = new TaskItem (filename);
 
-		item.SetMetadata ("ApkPath", archiveFileName);
+		item.SetMetadata ("ArchivePath", archiveFileName);
 		item.SetMetadata ("Compression", compressionMethod.ToString ());
 
 		ApkFiles.Add (item);
@@ -42,7 +42,7 @@ public class ZipArchiveFileListBuilder : IDisposable
 	{
 		// An item's ItemSpec must be unique so use both the jar file name and the entry name
 		var item = new TaskItem ($"{javaFilename}#{javaEntryName}");
-		item.SetMetadata ("ApkPath", archiveFileName);
+		item.SetMetadata ("ArchivePath", archiveFileName);
 		item.SetMetadata ("JavaArchiveEntry", javaEntryName);
 
 		ApkFiles.Add (item);
