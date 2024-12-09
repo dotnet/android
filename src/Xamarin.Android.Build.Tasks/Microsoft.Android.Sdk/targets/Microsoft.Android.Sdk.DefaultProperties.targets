@@ -13,6 +13,7 @@
     <AndroidUseIntermediateDesignerFile Condition=" '$(AndroidUseDesignerAssembly)' == 'True' ">false</AndroidUseIntermediateDesignerFile>
     <AndroidUseIntermediateDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' == '' ">$(AndroidGenerateResourceDesigner)</AndroidUseIntermediateDesignerFile>
     <AllowSelfContainedWithoutRuntimeIdentifier Condition =" '$(AllowSelfContainedWithoutRuntimeIdentifier)' == '' ">true</AllowSelfContainedWithoutRuntimeIdentifier>
+    <SelfContained Condition=" '$(SelfContained)' == '' ">true</SelfContained>
     <GenerateDependencyFile Condition=" '$(GenerateDependencyFile)' == '' ">false</GenerateDependencyFile>
     <CopyLocalLockFileAssemblies Condition=" '$(CopyLocalLockFileAssemblies)' == '' ">false</CopyLocalLockFileAssemblies>
     <ComputeNETCoreBuildOutputFiles Condition=" '$(ComputeNETCoreBuildOutputFiles)' == '' ">false</ComputeNETCoreBuildOutputFiles>
@@ -23,7 +24,10 @@
       See: https://github.com/dotnet/sdk/blob/955c0fc7b06e2fa34bacd076ed39f61e4fb61716/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Publish.targets#L16
     -->
     <_GetChildProjectCopyToPublishDirectoryItems>false</_GetChildProjectCopyToPublishDirectoryItems>
+    <UseMonoRuntime Condition=" '$(PublishAot)' == 'true' and '$(UseMonoRuntime)' == '' ">false</UseMonoRuntime>
     <UseMonoRuntime Condition=" '$(UseMonoRuntime)' == '' ">true</UseMonoRuntime>
+    <!-- HACK: make dotnet restore include Microsoft.NETCore.App.Runtime.NativeAOT.linux-bionic-arm64 -->
+    <_IsPublishing Condition=" '$(_IsPublishing)' == '' and '$(PublishAot)' == 'true' ">true</_IsPublishing>
 
     <!-- Use $(AndroidMinimumSupportedApiLevel) for $(SupportedOSPlatformVersion) if unset -->
     <SupportedOSPlatformVersion Condition=" '$(SupportedOSPlatformVersion)' == '' ">$(AndroidMinimumSupportedApiLevel)</SupportedOSPlatformVersion>
@@ -89,8 +93,8 @@
     <RuntimeIdentifiers Condition=" '$(RuntimeIdentifier)' == '' And '$(RuntimeIdentifiers)' == '' ">android-arm64;android-x64</RuntimeIdentifiers>
     <RuntimeIdentifier  Condition=" '$(RuntimeIdentifiers)' != '' And '$(RuntimeIdentifier)' != '' " />
     <GenerateApplicationManifest Condition=" '$(GenerateApplicationManifest)' == '' ">true</GenerateApplicationManifest>
-    <!-- Default to AOT in Release mode -->
-    <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' and '$(AotAssemblies)' == '' and '$(Configuration)' == 'Release' ">true</RunAOTCompilation>
+    <!-- Default to Mono's AOT in Release mode -->
+    <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' and '$(AotAssemblies)' == '' and '$(Configuration)' == 'Release' and '$(PublishAot)' != 'true' ">true</RunAOTCompilation>
     <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' and '$(AotAssemblies)' == 'true' ">true</RunAOTCompilation>
     <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' ">false</RunAOTCompilation>
     <_AndroidXA1029 Condition=" '$(AotAssemblies)' != '' ">true</_AndroidXA1029>
