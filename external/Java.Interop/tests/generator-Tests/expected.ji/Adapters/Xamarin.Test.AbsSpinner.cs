@@ -15,7 +15,7 @@ using Java.Interop;
 namespace Xamarin.Test {
 
 	// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='AbsSpinner']"
-	[global::Java.Interop.JniTypeSignature ("xamarin/test/AbsSpinner", GenerateJavaPeer=false)]
+	[global::Java.Interop.JniTypeSignature ("xamarin/test/AbsSpinner", GenerateJavaPeer=false, InvokerType=typeof (AbsSpinnerInvoker))]
 	public abstract partial class AbsSpinner : Xamarin.Test.AdapterView<Xamarin.Test.ISpinnerAdapter> {
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/AbsSpinner", typeof (AbsSpinner));
 

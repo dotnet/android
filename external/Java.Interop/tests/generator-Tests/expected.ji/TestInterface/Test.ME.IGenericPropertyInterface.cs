@@ -5,7 +5,7 @@ using Java.Interop;
 namespace Test.ME {
 
 	// Metadata.xml XPath interface reference: path="/api/package[@name='test.me']/interface[@name='GenericPropertyInterface']"
-	[global::Java.Interop.JniTypeSignature ("test/me/GenericPropertyInterface", GenerateJavaPeer=false)]
+	[global::Java.Interop.JniTypeSignature ("test/me/GenericPropertyInterface", GenerateJavaPeer=false, InvokerType=typeof (Test.ME.IGenericPropertyInterfaceInvoker))]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"T"})]
 	public partial interface IGenericPropertyInterface : IJavaPeerable {
 		global::Java.Lang.Object Object {

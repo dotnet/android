@@ -15,7 +15,7 @@ using Java.Interop;
 namespace Xamarin.Test {
 
 	// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']"
-	[global::Java.Interop.JniTypeSignature ("xamarin/test/SomeObject", GenerateJavaPeer=false)]
+	[global::Java.Interop.JniTypeSignature ("xamarin/test/SomeObject", GenerateJavaPeer=false, InvokerType=typeof (SomeObjectInvoker))]
 	public abstract partial class SomeObject : global::Java.Lang.Object {
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/SomeObject", typeof (SomeObject));
 

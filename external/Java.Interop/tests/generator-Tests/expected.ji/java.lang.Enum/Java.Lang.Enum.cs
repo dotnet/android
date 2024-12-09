@@ -15,7 +15,7 @@ using Java.Interop;
 namespace Java.Lang {
 
 	// Metadata.xml XPath class reference: path="/api/package[@name='java.lang']/class[@name='Enum']"
-	[global::Java.Interop.JniTypeSignature ("java/lang/Enum", GenerateJavaPeer=false)]
+	[global::Java.Interop.JniTypeSignature ("java/lang/Enum", GenerateJavaPeer=false, InvokerType=typeof (EnumInvoker))]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"E extends java.lang.Enum<E>"})]
 	public abstract partial class Enum : global::Java.Lang.Object, global::Java.Lang.IComparable {
 		static readonly JniPeerMembers _members = new JniPeerMembers ("java/lang/Enum", typeof (Enum));

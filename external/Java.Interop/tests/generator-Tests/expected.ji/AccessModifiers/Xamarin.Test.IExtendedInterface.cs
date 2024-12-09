@@ -5,7 +5,7 @@ using Java.Interop;
 namespace Xamarin.Test {
 
 	// Metadata.xml XPath interface reference: path="/api/package[@name='xamarin.test']/interface[@name='ExtendedInterface']"
-	[global::Java.Interop.JniTypeSignature ("xamarin/test/ExtendedInterface", GenerateJavaPeer=false)]
+	[global::Java.Interop.JniTypeSignature ("xamarin/test/ExtendedInterface", GenerateJavaPeer=false, InvokerType=typeof (Xamarin.Test.IExtendedInterfaceInvoker))]
 	public partial interface IExtendedInterface : IJavaPeerable {
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/interface[@name='ExtendedInterface']/method[@name='extendedMethod' and count(parameter)=0]"
 		[global::Java.Interop.JniMethodSignature ("extendedMethod", "()V")]

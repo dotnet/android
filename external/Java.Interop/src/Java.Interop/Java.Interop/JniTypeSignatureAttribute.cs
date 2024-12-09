@@ -1,6 +1,7 @@
 ﻿#nullable enable
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Java.Interop
 {
@@ -31,6 +32,9 @@ namespace Java.Interop
 		}
 
 		public      bool        GenerateJavaPeer        {get; set;}
+
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		public      Type?       InvokerType             {get; set;}
 	}
 }
 

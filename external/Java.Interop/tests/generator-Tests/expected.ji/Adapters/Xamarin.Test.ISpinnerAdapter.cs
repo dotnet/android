@@ -5,7 +5,7 @@ using Java.Interop;
 namespace Xamarin.Test {
 
 	// Metadata.xml XPath interface reference: path="/api/package[@name='xamarin.test']/interface[@name='SpinnerAdapter']"
-	[global::Java.Interop.JniTypeSignature ("xamarin/test/SpinnerAdapter", GenerateJavaPeer=false)]
+	[global::Java.Interop.JniTypeSignature ("xamarin/test/SpinnerAdapter", GenerateJavaPeer=false, InvokerType=typeof (Xamarin.Test.ISpinnerAdapterInvoker))]
 	public partial interface ISpinnerAdapter : global::Xamarin.Test.IAdapter {
 	}
 

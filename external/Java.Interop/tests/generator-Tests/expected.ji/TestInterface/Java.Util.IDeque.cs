@@ -5,7 +5,7 @@ using Java.Interop;
 namespace Java.Util {
 
 	// Metadata.xml XPath interface reference: path="/api/package[@name='java.util']/interface[@name='Deque']"
-	[global::Java.Interop.JniTypeSignature ("java/util/Deque", GenerateJavaPeer=false)]
+	[global::Java.Interop.JniTypeSignature ("java/util/Deque", GenerateJavaPeer=false, InvokerType=typeof (Java.Util.IDequeInvoker))]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"E"})]
 	public partial interface IDeque : global::Java.Util.IQueue {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.util']/interface[@name='Deque']/method[@name='add' and count(parameter)=1 and parameter[1][@type='E']]"

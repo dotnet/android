@@ -601,7 +601,7 @@ namespace Java.IO
         [Java.Interop.JniMethodSignatureAttribute("write", "(I)V")]
         public override void Write(int b) { }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/io/FilterReader", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/io/FilterReader", GenerateJavaPeer=false, InvokerType=typeof(Java.IO.FilterReaderInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public abstract partial class FilterReader : Java.IO.Reader
@@ -619,7 +619,7 @@ namespace Java.IO
         [Java.Interop.JniMethodSignatureAttribute("read", "([CII)I")]
         public override int Read(Java.Interop.JavaCharArray? cbuf, int off, int len) { throw null; }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/io/FilterWriter", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/io/FilterWriter", GenerateJavaPeer=false, InvokerType=typeof(Java.IO.FilterWriterInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public abstract partial class FilterWriter : Java.IO.Writer
@@ -639,13 +639,13 @@ namespace Java.IO
         [Java.Interop.JniMethodSignatureAttribute("write", "([CII)V")]
         public override void Write(Java.Interop.JavaCharArray? cbuf, int off, int len) { }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/io/Closeable", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/io/Closeable", GenerateJavaPeer=false, InvokerType=typeof(Java.IO.ICloseableInvoker))]
     public partial interface ICloseable : Java.Interop.IJavaPeerable, Java.Lang.IAutoCloseable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("close", "()V")]
         void Java.Lang.IAutoCloseable.Close();
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/io/DataInput", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/io/DataInput", GenerateJavaPeer=false, InvokerType=typeof(Java.IO.IDataInputInvoker))]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public partial interface IDataInput : Java.Interop.IJavaPeerable, System.IDisposable
     {
@@ -680,7 +680,7 @@ namespace Java.IO
         [Java.Interop.JniMethodSignatureAttribute("skipBytes", "(I)I")]
         int SkipBytes(int p0);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/io/DataOutput", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/io/DataOutput", GenerateJavaPeer=false, InvokerType=typeof(Java.IO.IDataOutputInvoker))]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public partial interface IDataOutput : Java.Interop.IJavaPeerable, System.IDisposable
     {
@@ -713,7 +713,7 @@ namespace Java.IO
         [Java.Interop.JniMethodSignatureAttribute("writeUTF", "(Ljava/lang/String;)V")]
         void WriteUTF(string? p0);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/io/Externalizable", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/io/Externalizable", GenerateJavaPeer=false, InvokerType=typeof(Java.IO.IExternalizableInvoker))]
     public partial interface IExternalizable : Java.Interop.IJavaPeerable, Java.IO.ISerializable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("readExternal", "(Ljava/io/ObjectInput;)V")]
@@ -723,27 +723,27 @@ namespace Java.IO
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
         void WriteExternal(Java.IO.IObjectOutput? p0);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/io/FileFilter", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/io/FileFilter", GenerateJavaPeer=false, InvokerType=typeof(Java.IO.IFileFilterInvoker))]
     public partial interface IFileFilter : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("accept", "(Ljava/io/File;)Z")]
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
         bool Accept(Java.IO.File? p0);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/io/FilenameFilter", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/io/FilenameFilter", GenerateJavaPeer=false, InvokerType=typeof(Java.IO.IFilenameFilterInvoker))]
     public partial interface IFilenameFilter : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("accept", "(Ljava/io/File;Ljava/lang/String;)Z")]
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
         bool Accept(Java.IO.File? p0, string? p1);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/io/Flushable", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/io/Flushable", GenerateJavaPeer=false, InvokerType=typeof(Java.IO.IFlushableInvoker))]
     public partial interface IFlushable : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("flush", "()V")]
         void Flush();
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/io/InputStream", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/io/InputStream", GenerateJavaPeer=false, InvokerType=typeof(Java.IO.InputStreamInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public abstract partial class InputStream : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.IO.ICloseable, Java.Lang.IAutoCloseable, System.IDisposable
@@ -850,7 +850,7 @@ namespace Java.IO
         [System.Diagnostics.DebuggerBrowsableAttribute(System.Diagnostics.DebuggerBrowsableState.Never)]
         public override Java.Interop.JniPeerMembers JniPeerMembers { get { throw null; } }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/io/ObjectInput", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/io/ObjectInput", GenerateJavaPeer=false, InvokerType=typeof(Java.IO.IObjectInputInvoker))]
     public partial interface IObjectInput : Java.Interop.IJavaPeerable, Java.IO.IDataInput, Java.Lang.IAutoCloseable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("available", "()I")]
@@ -871,7 +871,7 @@ namespace Java.IO
         [Java.Interop.JniMethodSignatureAttribute("skip", "(J)J")]
         long Skip(long p0);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/io/ObjectInputFilter", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/io/ObjectInputFilter", GenerateJavaPeer=false, InvokerType=typeof(Java.IO.IObjectInputFilterInvoker))]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public partial interface IObjectInputFilter : Java.Interop.IJavaPeerable, System.IDisposable
     {
@@ -912,7 +912,7 @@ namespace Java.IO
                 public Java.IO.IObjectInputFilter.Status? CheckInput(Java.IO.IObjectInputFilter.IFilterInfo? filterInfo) { throw null; }
             }
         }
-        [Java.Interop.JniTypeSignatureAttribute("java/io/ObjectInputFilter$FilterInfo", GenerateJavaPeer=false)]
+        [Java.Interop.JniTypeSignatureAttribute("java/io/ObjectInputFilter$FilterInfo", GenerateJavaPeer=false, InvokerType=typeof(Java.IO.IObjectInputFilter.IFilterInfoInvoker))]
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)0)]
         public partial interface IFilterInfo : Java.Interop.IJavaPeerable, System.IDisposable
         {
@@ -947,13 +947,13 @@ namespace Java.IO
             public static Java.Interop.JavaObjectArray<Java.IO.IObjectInputFilter.Status>? Values() { throw null; }
         }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/io/ObjectInputValidation", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/io/ObjectInputValidation", GenerateJavaPeer=false, InvokerType=typeof(Java.IO.IObjectInputValidationInvoker))]
     public partial interface IObjectInputValidation : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("validateObject", "()V")]
         void ValidateObject();
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/io/ObjectOutput", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/io/ObjectOutput", GenerateJavaPeer=false, InvokerType=typeof(Java.IO.IObjectOutputInvoker))]
     public partial interface IObjectOutput : Java.Interop.IJavaPeerable, Java.IO.IDataOutput, Java.Lang.IAutoCloseable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("flush", "()V")]
@@ -1036,11 +1036,11 @@ namespace Java.IO
         [System.Diagnostics.DebuggerBrowsableAttribute(System.Diagnostics.DebuggerBrowsableState.Never)]
         public override Java.Interop.JniPeerMembers JniPeerMembers { get { throw null; } }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/io/Serial", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/io/Serial", GenerateJavaPeer=false, InvokerType=typeof(Java.IO.ISerialInvoker))]
     public partial interface ISerial : Java.Interop.IJavaPeerable, Java.Lang.Annotation.IAnnotation, System.IDisposable
     {
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/io/Serializable", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/io/Serializable", GenerateJavaPeer=false, InvokerType=typeof(Java.IO.ISerializableInvoker))]
     public partial interface ISerializable : Java.Interop.IJavaPeerable, System.IDisposable
     {
     }
@@ -1178,7 +1178,7 @@ namespace Java.IO
         protected virtual Java.Lang.Class? ResolveProxyClass([System.Runtime.CompilerServices.NullableAttribute(new byte[]{ (byte)2, (byte)1})] Java.Interop.JavaObjectArray<string>? interfaces) { throw null; }
         [Java.Interop.JniMethodSignatureAttribute("skipBytes", "(I)I")]
         public virtual int SkipBytes(int len) { throw null; }
-        [Java.Interop.JniTypeSignatureAttribute("java/io/ObjectInputStream$GetField", GenerateJavaPeer=false)]
+        [Java.Interop.JniTypeSignatureAttribute("java/io/ObjectInputStream$GetField", GenerateJavaPeer=false, InvokerType=typeof(Java.IO.ObjectInputStream.GetFieldInvoker))]
         [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
         public abstract partial class GetField : Java.Lang.Object
         {
@@ -1330,7 +1330,7 @@ namespace Java.IO
             public const sbyte TcReset = (sbyte)121;
             public const sbyte TcString = (sbyte)116;
         }
-        [Java.Interop.JniTypeSignatureAttribute("java/io/ObjectOutputStream$PutField", GenerateJavaPeer=false)]
+        [Java.Interop.JniTypeSignatureAttribute("java/io/ObjectOutputStream$PutField", GenerateJavaPeer=false, InvokerType=typeof(Java.IO.ObjectOutputStream.PutFieldInvoker))]
         [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
         public abstract partial class PutField : Java.Lang.Object
         {
@@ -1381,7 +1381,7 @@ namespace Java.IO
         [Java.Interop.JniMethodSignatureAttribute("lookupAny", "(Ljava/lang/Class;)Ljava/io/ObjectStreamClass;")]
         public static Java.IO.ObjectStreamClass? LookupAny(Java.Lang.Class? cl) { throw null; }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/io/ObjectStreamException", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/io/ObjectStreamException", GenerateJavaPeer=false, InvokerType=typeof(Java.IO.ObjectStreamExceptionInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)1)]
     public abstract partial class ObjectStreamException : Java.IO.IOException
@@ -1435,7 +1435,7 @@ namespace Java.IO
         public override Java.Interop.JniPeerMembers JniPeerMembers { get { throw null; } }
         public int Length { get { throw null; } set { } }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/io/OutputStream", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/io/OutputStream", GenerateJavaPeer=false, InvokerType=typeof(Java.IO.OutputStreamInvoker))]
     public abstract partial class OutputStream : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.IO.ICloseable, Java.IO.IFlushable, Java.Lang.IAutoCloseable, System.IDisposable
     {
         [Java.Interop.JniConstructorSignatureAttribute("()V")]
@@ -1882,7 +1882,7 @@ namespace Java.IO
         [Java.Interop.JniMethodSignatureAttribute("writeUTF", "(Ljava/lang/String;)V")]
         public void WriteUTF(string? str) { }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/io/Reader", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/io/Reader", GenerateJavaPeer=false, InvokerType=typeof(Java.IO.ReaderInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public abstract partial class Reader : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.IO.ICloseable, Java.Lang.IAutoCloseable, System.IDisposable
@@ -2133,7 +2133,7 @@ namespace Java.IO
         [System.Runtime.CompilerServices.NullableAttribute((byte)1)]
         public override Java.Interop.JniPeerMembers JniPeerMembers { [System.Runtime.CompilerServices.NullableContextAttribute((byte)1)] get { throw null; } }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/io/Writer", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/io/Writer", GenerateJavaPeer=false, InvokerType=typeof(Java.IO.WriterInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public abstract partial class Writer : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.IO.ICloseable, Java.IO.IFlushable, Java.Lang.IAppendable, Java.Lang.IAutoCloseable, System.IDisposable
@@ -3377,7 +3377,7 @@ namespace Java.Lang
         [System.Diagnostics.DebuggerBrowsableAttribute(System.Diagnostics.DebuggerBrowsableState.Never)]
         public override Java.Interop.JniPeerMembers JniPeerMembers { get { throw null; } }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/ClassLoader", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/ClassLoader", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.ClassLoaderInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public abstract partial class ClassLoader : Java.Lang.Object
@@ -3469,7 +3469,7 @@ namespace Java.Lang
         public override Java.Interop.JniPeerMembers JniPeerMembers { [System.Runtime.CompilerServices.NullableContextAttribute((byte)1)] get { throw null; } }
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/ClassValue", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/ClassValue", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.ClassValueInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)1)]
     public abstract partial class ClassValue : Java.Lang.Object
@@ -3604,7 +3604,7 @@ namespace Java.Lang
         public static Java.Lang.Double? ValueOf(string? s) { throw null; }
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "E extends java.lang.Enum<E>"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/Enum", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/Enum", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.EnumInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public abstract partial class Enum : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.IO.ISerializable, Java.Lang.IComparable, System.IDisposable
@@ -3804,7 +3804,7 @@ namespace Java.Lang
         [Java.Interop.JniMethodSignatureAttribute("valueOf", "(Ljava/lang/String;)Ljava/lang/Float;")]
         public static Java.Lang.Float? ValueOf(string? s) { throw null; }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/Appendable", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/Appendable", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.IAppendableInvoker))]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public partial interface IAppendable : Java.Interop.IJavaPeerable, System.IDisposable
     {
@@ -3822,13 +3822,13 @@ namespace Java.Lang
         public static Java.Lang.IAppendable? Append([System.Runtime.CompilerServices.NullableAttribute((byte)1)] this Java.Lang.IAppendable self, string? p0) { throw null; }
         public static Java.Lang.IAppendable? Append([System.Runtime.CompilerServices.NullableAttribute((byte)1)] this Java.Lang.IAppendable self, string? p0, int p1, int p2) { throw null; }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/AutoCloseable", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/AutoCloseable", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.IAutoCloseableInvoker))]
     public partial interface IAutoCloseable : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("close", "()V")]
         void Close();
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/CharSequence", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/CharSequence", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.ICharSequenceInvoker))]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public partial interface ICharSequence : Java.Interop.IJavaPeerable, System.IDisposable
     {
@@ -3854,19 +3854,19 @@ namespace Java.Lang
         [return: System.Runtime.CompilerServices.NullableAttribute(new byte[]{ (byte)2, (byte)1})]
         public static Java.Lang.ICharSequence[]? ToCharSequenceArray(this string?[]? values) { throw null; }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/Cloneable", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/Cloneable", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.ICloneableInvoker))]
     public partial interface ICloneable : Java.Interop.IJavaPeerable, System.IDisposable
     {
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/Comparable", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/Comparable", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.IComparableInvoker))]
     public partial interface IComparable : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("compareTo", "(Ljava/lang/Object;)I")]
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
         int CompareTo(Java.Lang.Object? p0);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/Deprecated", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/Deprecated", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.IDeprecatedInvoker))]
     public partial interface IDeprecated : Java.Interop.IJavaPeerable, Java.Lang.Annotation.IAnnotation, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("forRemoval", "()Z")]
@@ -3875,7 +3875,7 @@ namespace Java.Lang
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
         string? Since();
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/FunctionalInterface", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/FunctionalInterface", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.IFunctionalInterfaceInvoker))]
     public partial interface IFunctionalInterface : Java.Interop.IJavaPeerable, Java.Lang.Annotation.IAnnotation, System.IDisposable
     {
     }
@@ -4233,21 +4233,21 @@ namespace Java.Lang
         [System.Diagnostics.DebuggerBrowsableAttribute(System.Diagnostics.DebuggerBrowsableState.Never)]
         public override Java.Interop.JniPeerMembers JniPeerMembers { get { throw null; } }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/Override", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/Override", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.IOverrideInvoker))]
     public partial interface IOverride : Java.Interop.IJavaPeerable, Java.Lang.Annotation.IAnnotation, System.IDisposable
     {
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/Runnable", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/Runnable", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.IRunnableInvoker))]
     public partial interface IRunnable : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("run", "()V")]
         void Run();
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/SafeVarargs", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/SafeVarargs", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.ISafeVarargsInvoker))]
     public partial interface ISafeVarargs : Java.Interop.IJavaPeerable, Java.Lang.Annotation.IAnnotation, System.IDisposable
     {
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/SuppressWarnings", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/SuppressWarnings", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.ISuppressWarningsInvoker))]
     public partial interface ISuppressWarnings : Java.Interop.IJavaPeerable, Java.Lang.Annotation.IAnnotation, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("value", "()[Ljava/lang/String;")]
@@ -4777,7 +4777,7 @@ namespace Java.Lang
         [System.Diagnostics.DebuggerBrowsableAttribute(System.Diagnostics.DebuggerBrowsableState.Never)]
         public override Java.Interop.JniPeerMembers JniPeerMembers { get { throw null; } }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/Number", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/Number", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.NumberInvoker))]
     public abstract partial class Number : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.IO.ISerializable, System.IDisposable
     {
         [Java.Interop.JniConstructorSignatureAttribute("()V")]
@@ -4906,7 +4906,7 @@ namespace Java.Lang
         [Java.Interop.JniMethodSignatureAttribute("isCompatibleWith", "(Ljava/lang/String;)Z")]
         public virtual bool IsCompatibleWith(string? desired) { throw null; }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/Process", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/Process", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.ProcessInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public abstract partial class Process : Java.Lang.Object
@@ -4985,7 +4985,7 @@ namespace Java.Lang
         public Java.Lang.ProcessBuilder? RedirectOutput(Java.Lang.ProcessBuilder.Redirect? destination) { throw null; }
         [Java.Interop.JniMethodSignatureAttribute("start", "()Ljava/lang/Process;")]
         public Java.Lang.Process? Start() { throw null; }
-        [Java.Interop.JniTypeSignatureAttribute("java/lang/ProcessBuilder$Redirect", GenerateJavaPeer=false)]
+        [Java.Interop.JniTypeSignatureAttribute("java/lang/ProcessBuilder$Redirect", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.ProcessBuilder.RedirectInvoker))]
         [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
         public abstract partial class Redirect : Java.Lang.Object
         {
@@ -5028,7 +5028,7 @@ namespace Java.Lang
             }
         }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/Record", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/Record", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.RecordInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)1)]
     public abstract partial class Record : Java.Lang.Object
@@ -5371,7 +5371,7 @@ namespace Java.Lang
         public void ForEach(Java.Util.Function.IConsumer? action) { }
         [Java.Interop.JniMethodSignatureAttribute("getInstance", "(Ljava/lang/StackWalker$Option;)Ljava/lang/StackWalker;")]
         public static Java.Lang.StackWalker? GetInstance(Java.Lang.StackWalker.Option? option) { throw null; }
-        [Java.Interop.JniTypeSignatureAttribute("java/lang/StackWalker$StackFrame", GenerateJavaPeer=false)]
+        [Java.Interop.JniTypeSignatureAttribute("java/lang/StackWalker$StackFrame", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.StackWalker.IStackFrameInvoker))]
         public partial interface IStackFrame : Java.Interop.IJavaPeerable, System.IDisposable
         {
             int ByteCodeIndex { [Java.Interop.JniMethodSignatureAttribute("getByteCodeIndex", "()I")] get; }
@@ -6100,7 +6100,7 @@ namespace Java.Lang
         public static void SetOut(Java.IO.PrintStream? @out) { }
         [Java.Interop.JniMethodSignatureAttribute("setProperty", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;")]
         public static string? SetProperty(string? key, string? value) { throw null; }
-        [Java.Interop.JniTypeSignatureAttribute("java/lang/System$LoggerFinder", GenerateJavaPeer=false)]
+        [Java.Interop.JniTypeSignatureAttribute("java/lang/System$LoggerFinder", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.System.LoggerFinderInvoker))]
         [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)1)]
         public abstract partial class LoggerFinder : Java.Lang.Object
@@ -6209,7 +6209,7 @@ namespace Java.Lang
         public void Suspend() { }
         [Java.Interop.JniMethodSignatureAttribute("yield", "()V")]
         public static void Yield() { }
-        [Java.Interop.JniTypeSignatureAttribute("java/lang/Thread$UncaughtExceptionHandler", GenerateJavaPeer=false)]
+        [Java.Interop.JniTypeSignatureAttribute("java/lang/Thread$UncaughtExceptionHandler", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Thread.IUncaughtExceptionHandlerInvoker))]
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)0)]
         public partial interface IUncaughtExceptionHandler : Java.Interop.IJavaPeerable, System.IDisposable
         {
@@ -6475,7 +6475,7 @@ namespace Java.Lang
         [System.Diagnostics.DebuggerBrowsableAttribute(System.Diagnostics.DebuggerBrowsableState.Never)]
         public override Java.Interop.JniPeerMembers JniPeerMembers { get { throw null; } }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/VirtualMachineError", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/VirtualMachineError", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.VirtualMachineErrorInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)1)]
     public abstract partial class VirtualMachineError : Java.Lang.Error
@@ -6577,7 +6577,7 @@ namespace Java.Lang.Annotation
         [return: System.Runtime.CompilerServices.NullableAttribute(new byte[]{ (byte)2, (byte)1})]
         public static Java.Interop.JavaObjectArray<Java.Lang.Annotation.ElementType>? Values() { throw null; }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/annotation/Annotation", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/annotation/Annotation", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Annotation.IAnnotationInvoker))]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public partial interface IAnnotation : Java.Interop.IJavaPeerable, System.IDisposable
     {
@@ -6590,15 +6590,15 @@ namespace Java.Lang.Annotation
         [Java.Interop.JniMethodSignatureAttribute("toString", "()Ljava/lang/String;")]
         string? ToString();
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/annotation/Documented", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/annotation/Documented", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Annotation.IDocumentedInvoker))]
     public partial interface IDocumented : Java.Interop.IJavaPeerable, Java.Lang.Annotation.IAnnotation, System.IDisposable
     {
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/annotation/Inherited", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/annotation/Inherited", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Annotation.IInheritedInvoker))]
     public partial interface IInherited : Java.Interop.IJavaPeerable, Java.Lang.Annotation.IAnnotation, System.IDisposable
     {
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/annotation/Native", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/annotation/Native", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Annotation.INativeInvoker))]
     public partial interface INative : Java.Interop.IJavaPeerable, Java.Lang.Annotation.IAnnotation, System.IDisposable
     {
     }
@@ -6621,21 +6621,21 @@ namespace Java.Lang.Annotation
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
         public virtual string? ElementName() { throw null; }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/annotation/Repeatable", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/annotation/Repeatable", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Annotation.IRepeatableInvoker))]
     public partial interface IRepeatable : Java.Interop.IJavaPeerable, Java.Lang.Annotation.IAnnotation, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("value", "()Ljava/lang/Class;")]
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
         Java.Lang.Class? Value();
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/annotation/Retention", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/annotation/Retention", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Annotation.IRetentionInvoker))]
     public partial interface IRetention : Java.Interop.IJavaPeerable, Java.Lang.Annotation.IAnnotation, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("value", "()Ljava/lang/annotation/RetentionPolicy;")]
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
         Java.Lang.Annotation.RetentionPolicy? Value();
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/annotation/Target", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/annotation/Target", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Annotation.ITargetInvoker))]
     public partial interface ITarget : Java.Interop.IJavaPeerable, Java.Lang.Annotation.IAnnotation, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("value", "()[Ljava/lang/annotation/ElementType;")]
@@ -6704,7 +6704,7 @@ namespace Java.Lang.Constants
         public virtual Java.Lang.Constants.DynamicCallSiteDesc? WithArgs([System.Runtime.CompilerServices.NullableAttribute(new byte[]{ (byte)2, (byte)1})] params Java.Lang.Constants.IConstantDesc[]? bootstrapArgs) { throw null; }
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/constant/DynamicConstantDesc", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/constant/DynamicConstantDesc", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Constants.DynamicConstantDescInvoker))]
     public abstract partial class DynamicConstantDesc : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.Lang.Constants.IConstantDesc, System.IDisposable
     {
         protected DynamicConstantDesc(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
@@ -6727,7 +6727,7 @@ namespace Java.Lang.Constants
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
         public virtual Java.Lang.Object? ResolveConstantDesc(Java.Lang.Invoke.MethodHandles.Lookup? lookup) { throw null; }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/constant/ConstantDesc", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/constant/ConstantDesc", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Constants.IConstantDescInvoker))]
     public partial interface IConstantDesc : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("resolveConstantDesc", "(Ljava/lang/invoke/MethodHandles$Lookup;)Ljava/lang/Object;")]
@@ -6737,7 +6737,7 @@ namespace Java.Lang.Constants
 }
 namespace Java.Lang.Invoke
 {
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/invoke/CallSite", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/invoke/CallSite", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Invoke.CallSiteInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public abstract partial class CallSite : Java.Lang.Object
@@ -6842,7 +6842,7 @@ namespace Java.Lang.Invoke
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
         public static Java.Lang.Invoke.CallSite? Metafactory(Java.Lang.Invoke.MethodHandles.Lookup? caller, string? interfaceMethodName, Java.Lang.Invoke.MethodType? factoryType, Java.Lang.Invoke.MethodType? interfaceMethodType, Java.Lang.Invoke.MethodHandle? implementation, Java.Lang.Invoke.MethodType? dynamicMethodType) { throw null; }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/invoke/MethodHandle", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/invoke/MethodHandle", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Invoke.MethodHandleInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public abstract partial class MethodHandle : Java.Lang.Object
@@ -7263,7 +7263,7 @@ namespace Java.Lang.Invoke
         [Java.Interop.JniMethodSignatureAttribute("invalidateAll", "([Ljava/lang/invoke/SwitchPoint;)V")]
         public static void InvalidateAll([System.Runtime.CompilerServices.NullableAttribute(new byte[]{ (byte)2, (byte)1})] Java.Interop.JavaObjectArray<Java.Lang.Invoke.SwitchPoint>? switchPoints) { }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/invoke/VarHandle", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/invoke/VarHandle", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Invoke.VarHandleInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public abstract partial class VarHandle : Java.Lang.Object
@@ -7733,7 +7733,7 @@ namespace Java.Lang.Modules
             public static Java.Lang.Modules.ModuleDescriptor.Version? Parse(string? v) { throw null; }
         }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/module/ModuleReference", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/module/ModuleReference", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Modules.ModuleReferenceInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)1)]
     public abstract partial class ModuleReference : Java.Lang.Object
@@ -7806,7 +7806,7 @@ namespace Java.Lang.Ref
         [Java.Interop.JniMethodSignatureAttribute("register", "(Ljava/lang/Object;Ljava/lang/Runnable;)Ljava/lang/ref/Cleaner$Cleanable;")]
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
         public Java.Lang.Ref.Cleaner.ICleanable? Register(Java.Lang.Object? obj, Java.Lang.IRunnable? action) { throw null; }
-        [Java.Interop.JniTypeSignatureAttribute("java/lang/ref/Cleaner$Cleanable", GenerateJavaPeer=false)]
+        [Java.Interop.JniTypeSignatureAttribute("java/lang/ref/Cleaner$Cleanable", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Ref.Cleaner.ICleanableInvoker))]
         public partial interface ICleanable : Java.Interop.IJavaPeerable, System.IDisposable
         {
             [Java.Interop.JniMethodSignatureAttribute("clean", "()V")]
@@ -7828,7 +7828,7 @@ namespace Java.Lang.Ref
         public override Java.Interop.JniPeerMembers JniPeerMembers { get { throw null; } }
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/ref/Reference", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/ref/Reference", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Ref.ReferenceInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)1)]
     public abstract partial class Reference : Java.Lang.Object
@@ -8040,7 +8040,7 @@ namespace Java.Lang.Reflect
         [Java.Interop.JniMethodSignatureAttribute("toGenericString", "()Ljava/lang/String;")]
         public override string? ToGenericString() { throw null; }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/Executable", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/Executable", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Reflect.ExecutableInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public abstract partial class Executable : Java.Lang.Reflect.AccessibleObject, Java.Interop.IJavaPeerable, Java.Lang.Reflect.IAnnotatedElement, Java.Lang.Reflect.IGenericDeclaration, Java.Lang.Reflect.IMember, System.IDisposable
@@ -8167,7 +8167,7 @@ namespace Java.Lang.Reflect
         [System.Diagnostics.DebuggerBrowsableAttribute(System.Diagnostics.DebuggerBrowsableState.Never)]
         public override Java.Interop.JniPeerMembers JniPeerMembers { get { throw null; } }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/AnnotatedArrayType", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/AnnotatedArrayType", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Reflect.IAnnotatedArrayTypeInvoker))]
     public partial interface IAnnotatedArrayType : Java.Interop.IJavaPeerable, Java.Lang.Reflect.IAnnotatedElement, Java.Lang.Reflect.IAnnotatedType, System.IDisposable
     {
         [System.Runtime.CompilerServices.NullableAttribute((byte)2)]
@@ -8175,7 +8175,7 @@ namespace Java.Lang.Reflect
         [System.Runtime.CompilerServices.NullableAttribute((byte)2)]
         Java.Lang.Reflect.IAnnotatedType? Java.Lang.Reflect.IAnnotatedType.AnnotatedOwnerType { [Java.Interop.JniMethodSignatureAttribute("getAnnotatedOwnerType", "()Ljava/lang/reflect/AnnotatedType;"), System.Runtime.CompilerServices.NullableContextAttribute((byte)2)] get; }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/AnnotatedElement", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/AnnotatedElement", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Reflect.IAnnotatedElementInvoker))]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public partial interface IAnnotatedElement : Java.Interop.IJavaPeerable, System.IDisposable
     {
@@ -8202,7 +8202,7 @@ namespace Java.Lang.Reflect
         [Java.Interop.JniMethodSignatureAttribute("isAnnotationPresent", "(Ljava/lang/Class;)Z")]
         bool IsAnnotationPresent(Java.Lang.Class? annotationClass) { throw null; }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/AnnotatedParameterizedType", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/AnnotatedParameterizedType", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Reflect.IAnnotatedParameterizedTypeInvoker))]
     public partial interface IAnnotatedParameterizedType : Java.Interop.IJavaPeerable, Java.Lang.Reflect.IAnnotatedElement, Java.Lang.Reflect.IAnnotatedType, System.IDisposable
     {
         [System.Runtime.CompilerServices.NullableAttribute((byte)2)]
@@ -8211,7 +8211,7 @@ namespace Java.Lang.Reflect
         [return: System.Runtime.CompilerServices.NullableAttribute(new byte[]{ (byte)2, (byte)1})]
         Java.Interop.JavaObjectArray<Java.Lang.Reflect.IAnnotatedType>? GetAnnotatedActualTypeArguments();
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/AnnotatedType", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/AnnotatedType", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Reflect.IAnnotatedTypeInvoker))]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public partial interface IAnnotatedType : Java.Interop.IJavaPeerable, Java.Lang.Reflect.IAnnotatedElement, System.IDisposable
     {
@@ -8227,7 +8227,7 @@ namespace Java.Lang.Reflect
         [return: System.Runtime.CompilerServices.NullableAttribute(new byte[]{ (byte)2, (byte)1})]
         Java.Interop.JavaObjectArray<Java.Lang.Annotation.IAnnotation>? Java.Lang.Reflect.IAnnotatedElement.GetDeclaredAnnotations();
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/AnnotatedTypeVariable", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/AnnotatedTypeVariable", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Reflect.IAnnotatedTypeVariableInvoker))]
     public partial interface IAnnotatedTypeVariable : Java.Interop.IJavaPeerable, Java.Lang.Reflect.IAnnotatedElement, Java.Lang.Reflect.IAnnotatedType, System.IDisposable
     {
         [System.Runtime.CompilerServices.NullableAttribute((byte)2)]
@@ -8236,7 +8236,7 @@ namespace Java.Lang.Reflect
         [return: System.Runtime.CompilerServices.NullableAttribute(new byte[]{ (byte)2, (byte)1})]
         Java.Interop.JavaObjectArray<Java.Lang.Reflect.IAnnotatedType>? GetAnnotatedBounds();
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/AnnotatedWildcardType", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/AnnotatedWildcardType", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Reflect.IAnnotatedWildcardTypeInvoker))]
     public partial interface IAnnotatedWildcardType : Java.Interop.IJavaPeerable, Java.Lang.Reflect.IAnnotatedElement, Java.Lang.Reflect.IAnnotatedType, System.IDisposable
     {
         [System.Runtime.CompilerServices.NullableAttribute((byte)2)]
@@ -8248,20 +8248,20 @@ namespace Java.Lang.Reflect
         [return: System.Runtime.CompilerServices.NullableAttribute(new byte[]{ (byte)2, (byte)1})]
         Java.Interop.JavaObjectArray<Java.Lang.Reflect.IAnnotatedType>? GetAnnotatedUpperBounds();
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/GenericArrayType", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/GenericArrayType", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Reflect.IGenericArrayTypeInvoker))]
     public partial interface IGenericArrayType : Java.Interop.IJavaPeerable, Java.Lang.Reflect.IType, System.IDisposable
     {
         [System.Runtime.CompilerServices.NullableAttribute((byte)2)]
         Java.Lang.Reflect.IType? GenericComponentType { [Java.Interop.JniMethodSignatureAttribute("getGenericComponentType", "()Ljava/lang/reflect/Type;"), System.Runtime.CompilerServices.NullableContextAttribute((byte)2)] get; }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/GenericDeclaration", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/GenericDeclaration", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Reflect.IGenericDeclarationInvoker))]
     public partial interface IGenericDeclaration : Java.Interop.IJavaPeerable, Java.Lang.Reflect.IAnnotatedElement, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("getTypeParameters", "()[Ljava/lang/reflect/TypeVariable;")]
         [return: System.Runtime.CompilerServices.NullableAttribute(new byte[]{ (byte)2, (byte)1})]
         Java.Interop.JavaObjectArray<Java.Lang.Reflect.ITypeVariable>? GetTypeParameters();
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/InvocationHandler", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/InvocationHandler", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Reflect.IInvocationHandlerInvoker))]
     public partial interface IInvocationHandler : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("invoke", "(Ljava/lang/Object;Ljava/lang/reflect/Method;[Ljava/lang/Object;)Ljava/lang/Object;")]
@@ -8271,7 +8271,7 @@ namespace Java.Lang.Reflect
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
         static Java.Lang.Object? InvokeDefault(Java.Lang.Object? proxy, Java.Lang.Reflect.Method? method, [System.Runtime.CompilerServices.NullableAttribute(new byte[]{ (byte)2, (byte)1})] params Java.Lang.Object[]? args) { throw null; }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/Member", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/Member", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Reflect.IMemberInvoker))]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public partial interface IMember : Java.Interop.IJavaPeerable, System.IDisposable
     {
@@ -8315,7 +8315,7 @@ namespace Java.Lang.Reflect
         public override Java.Interop.JniPeerMembers JniPeerMembers { [System.Runtime.CompilerServices.NullableContextAttribute((byte)1)] get { throw null; } }
         public virtual Java.Lang.Throwable? TargetException { get { throw null; } }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/ParameterizedType", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/ParameterizedType", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Reflect.IParameterizedTypeInvoker))]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public partial interface IParameterizedType : Java.Interop.IJavaPeerable, Java.Lang.Reflect.IType, System.IDisposable
     {
@@ -8325,14 +8325,14 @@ namespace Java.Lang.Reflect
         [return: System.Runtime.CompilerServices.NullableAttribute(new byte[]{ (byte)2, (byte)1})]
         Java.Interop.JavaObjectArray<Java.Lang.Reflect.IType>? GetActualTypeArguments();
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/Type", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/Type", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Reflect.ITypeInvoker))]
     public partial interface IType : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [System.Runtime.CompilerServices.NullableAttribute((byte)2)]
         string? TypeName { [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)] get { throw null; } }
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "D extends java.lang.reflect.GenericDeclaration"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/TypeVariable", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/TypeVariable", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Reflect.ITypeVariableInvoker))]
     public partial interface ITypeVariable : Java.Interop.IJavaPeerable, Java.Lang.Reflect.IAnnotatedElement, Java.Lang.Reflect.IType, System.IDisposable
     {
         [System.Runtime.CompilerServices.NullableAttribute((byte)2)]
@@ -8346,7 +8346,7 @@ namespace Java.Lang.Reflect
         [return: System.Runtime.CompilerServices.NullableAttribute(new byte[]{ (byte)2, (byte)1})]
         Java.Interop.JavaObjectArray<Java.Lang.Reflect.IType>? GetBounds();
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/WildcardType", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/WildcardType", GenerateJavaPeer=false, InvokerType=typeof(Java.Lang.Reflect.IWildcardTypeInvoker))]
     public partial interface IWildcardType : Java.Interop.IJavaPeerable, Java.Lang.Reflect.IType, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("getLowerBounds", "()[Ljava/lang/reflect/Type;")]
@@ -8637,7 +8637,7 @@ namespace Java.Nio.Channels
 }
 namespace Java.Util.Concurrent
 {
-    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/AbstractExecutorService", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/AbstractExecutorService", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.AbstractExecutorServiceInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public abstract partial class AbstractExecutorService : Java.Lang.Object
@@ -8880,7 +8880,7 @@ namespace Java.Util.Concurrent
         public virtual Java.Util.Concurrent.ICompletionStage? WhenCompleteAsync(Java.Util.Function.IBiConsumer? action) { throw null; }
         [Java.Interop.JniMethodSignatureAttribute("whenCompleteAsync", "(Ljava/util/function/BiConsumer;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;")]
         public virtual Java.Util.Concurrent.ICompletionStage? WhenCompleteAsync(Java.Util.Function.IBiConsumer? action, Java.Util.Concurrent.IExecutor? executor) { throw null; }
-        [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/CompletableFuture$AsynchronousCompletionTask", GenerateJavaPeer=false)]
+        [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/CompletableFuture$AsynchronousCompletionTask", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.CompletableFuture.IAsynchronousCompletionTaskInvoker))]
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)0)]
         public partial interface IAsynchronousCompletionTask : Java.Interop.IJavaPeerable, System.IDisposable
         {
@@ -8988,7 +8988,7 @@ namespace Java.Util.Concurrent
         public virtual void CountDown() { }
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/CountedCompleter", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/CountedCompleter", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.CountedCompleterInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public abstract partial class CountedCompleter : Java.Util.Concurrent.ForkJoinTask
@@ -9167,12 +9167,12 @@ namespace Java.Util.Concurrent
         [Java.Interop.JniMethodSignatureAttribute("defaultBufferSize", "()I")]
         public static int DefaultBufferSize() { throw null; }
         [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T", "R"})]
-        [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/Flow$Processor", GenerateJavaPeer=false)]
+        [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/Flow$Processor", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.Flow.IProcessorInvoker))]
         public partial interface IProcessor : Java.Interop.IJavaPeerable, Java.Util.Concurrent.Flow.IPublisher, Java.Util.Concurrent.Flow.ISubscriber, System.IDisposable
         {
         }
         [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
-        [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/Flow$Publisher", GenerateJavaPeer=false)]
+        [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/Flow$Publisher", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.Flow.IPublisherInvoker))]
         public partial interface IPublisher : Java.Interop.IJavaPeerable, System.IDisposable
         {
             [Java.Interop.JniMethodSignatureAttribute("subscribe", "(Ljava/util/concurrent/Flow$Subscriber;)V")]
@@ -9180,7 +9180,7 @@ namespace Java.Util.Concurrent
             void Subscribe(Java.Util.Concurrent.Flow.ISubscriber? p0);
         }
         [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
-        [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/Flow$Subscriber", GenerateJavaPeer=false)]
+        [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/Flow$Subscriber", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.Flow.ISubscriberInvoker))]
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
         public partial interface ISubscriber : Java.Interop.IJavaPeerable, System.IDisposable
         {
@@ -9193,7 +9193,7 @@ namespace Java.Util.Concurrent
             [Java.Interop.JniMethodSignatureAttribute("onSubscribe", "(Ljava/util/concurrent/Flow$Subscription;)V")]
             void OnSubscribe(Java.Util.Concurrent.Flow.ISubscription? p0);
         }
-        [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/Flow$Subscription", GenerateJavaPeer=false)]
+        [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/Flow$Subscription", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.Flow.ISubscriptionInvoker))]
         public partial interface ISubscription : Java.Interop.IJavaPeerable, System.IDisposable
         {
             [Java.Interop.JniMethodSignatureAttribute("cancel", "()V")]
@@ -9259,7 +9259,7 @@ namespace Java.Util.Concurrent
         [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
         [Java.Interop.JniMethodSignatureAttribute("submit", "(Ljava/util/concurrent/ForkJoinTask;)Ljava/util/concurrent/ForkJoinTask;")]
         public virtual Java.Util.Concurrent.ForkJoinTask? Submit(Java.Util.Concurrent.ForkJoinTask? task) { throw null; }
-        [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/ForkJoinPool$ForkJoinWorkerThreadFactory", GenerateJavaPeer=false)]
+        [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/ForkJoinPool$ForkJoinWorkerThreadFactory", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.ForkJoinPool.IForkJoinWorkerThreadFactoryInvoker))]
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)0)]
         public partial interface IForkJoinWorkerThreadFactory : Java.Interop.IJavaPeerable, System.IDisposable
         {
@@ -9267,7 +9267,7 @@ namespace Java.Util.Concurrent
             [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
             Java.Util.Concurrent.ForkJoinWorkerThread? NewThread(Java.Util.Concurrent.ForkJoinPool? p0);
         }
-        [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/ForkJoinPool$ManagedBlocker", GenerateJavaPeer=false)]
+        [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/ForkJoinPool$ManagedBlocker", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.ForkJoinPool.IManagedBlockerInvoker))]
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)0)]
         public partial interface IManagedBlocker : Java.Interop.IJavaPeerable, System.IDisposable
         {
@@ -9277,7 +9277,7 @@ namespace Java.Util.Concurrent
         }
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "V"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/ForkJoinTask", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/ForkJoinTask", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.ForkJoinTaskInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public abstract partial class ForkJoinTask : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.IO.ISerializable, Java.Util.Concurrent.IFuture, System.IDisposable
@@ -9414,7 +9414,7 @@ namespace Java.Util.Concurrent
         protected virtual void SetException(Java.Lang.Throwable? t) { }
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "V"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/Callable", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/Callable", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.ICallableInvoker))]
     public partial interface ICallable : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("call", "()Ljava/lang/Object;")]
@@ -9422,7 +9422,7 @@ namespace Java.Util.Concurrent
         Java.Lang.Object? Call();
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "V"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/CompletionService", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/CompletionService", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.ICompletionServiceInvoker))]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public partial interface ICompletionService : Java.Interop.IJavaPeerable, System.IDisposable
     {
@@ -9438,7 +9438,7 @@ namespace Java.Util.Concurrent
         Java.Util.Concurrent.IFuture? Take();
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/CompletionStage", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/CompletionStage", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.ICompletionStageInvoker))]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public partial interface ICompletionStage : Java.Interop.IJavaPeerable, System.IDisposable
     {
@@ -9547,14 +9547,14 @@ namespace Java.Util.Concurrent
         [Java.Interop.JniMethodSignatureAttribute("whenCompleteAsync", "(Ljava/util/function/BiConsumer;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletionStage;")]
         Java.Util.Concurrent.ICompletionStage? WhenCompleteAsync(Java.Util.Function.IBiConsumer? p0, Java.Util.Concurrent.IExecutor? p1);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/Delayed", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/Delayed", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.IDelayedInvoker))]
     public partial interface IDelayed : Java.Interop.IJavaPeerable, Java.Lang.IComparable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("getDelay", "(Ljava/util/concurrent/TimeUnit;)J")]
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
         long GetDelay(Java.Util.Concurrent.TimeUnit? p0);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/Executor", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/Executor", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.IExecutorInvoker))]
     public partial interface IExecutor : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("execute", "(Ljava/lang/Runnable;)V")]
@@ -9562,7 +9562,7 @@ namespace Java.Util.Concurrent
         void Execute(Java.Lang.IRunnable? p0);
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "V"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/Future", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/Future", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.IFutureInvoker))]
     public partial interface IFuture : Java.Interop.IJavaPeerable, System.IDisposable
     {
         bool IsCancelled { [Java.Interop.JniMethodSignatureAttribute("isCancelled", "()Z")] get; }
@@ -9576,7 +9576,7 @@ namespace Java.Util.Concurrent
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
         Java.Lang.Object? Get(long p0, Java.Util.Concurrent.TimeUnit? p1);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/RejectedExecutionHandler", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/RejectedExecutionHandler", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.IRejectedExecutionHandlerInvoker))]
     public partial interface IRejectedExecutionHandler : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("rejectedExecution", "(Ljava/lang/Runnable;Ljava/util/concurrent/ThreadPoolExecutor;)V")]
@@ -9584,24 +9584,24 @@ namespace Java.Util.Concurrent
         void RejectedExecution(Java.Lang.IRunnable? p0, Java.Util.Concurrent.ThreadPoolExecutor? p1);
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "V"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/RunnableFuture", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/RunnableFuture", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.IRunnableFutureInvoker))]
     public partial interface IRunnableFuture : Java.Interop.IJavaPeerable, Java.Lang.IRunnable, Java.Util.Concurrent.IFuture, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("run", "()V")]
         void Java.Lang.IRunnable.Run();
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "V"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/RunnableScheduledFuture", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/RunnableScheduledFuture", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.IRunnableScheduledFutureInvoker))]
     public partial interface IRunnableScheduledFuture : Java.Interop.IJavaPeerable, Java.Lang.IComparable, Java.Lang.IRunnable, Java.Util.Concurrent.IDelayed, Java.Util.Concurrent.IFuture, Java.Util.Concurrent.IRunnableFuture, Java.Util.Concurrent.IScheduledFuture, System.IDisposable
     {
         bool IsPeriodic { [Java.Interop.JniMethodSignatureAttribute("isPeriodic", "()Z")] get; }
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "V"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/ScheduledFuture", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/ScheduledFuture", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.IScheduledFutureInvoker))]
     public partial interface IScheduledFuture : Java.Interop.IJavaPeerable, Java.Lang.IComparable, Java.Util.Concurrent.IDelayed, Java.Util.Concurrent.IFuture, System.IDisposable
     {
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/ThreadFactory", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/ThreadFactory", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.IThreadFactoryInvoker))]
     public partial interface IThreadFactory : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("newThread", "(Ljava/lang/Runnable;)Ljava/lang/Thread;")]
@@ -9654,7 +9654,7 @@ namespace Java.Util.Concurrent
         [Java.Interop.JniMethodSignatureAttribute("register", "()I")]
         public virtual int Register() { throw null; }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/RecursiveAction", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/RecursiveAction", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.RecursiveActionInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)1)]
     public abstract partial class RecursiveAction : Java.Util.Concurrent.ForkJoinTask
@@ -9675,7 +9675,7 @@ namespace Java.Util.Concurrent
         protected void SetRawResult(Java.Lang.Void? mustBeNull) { }
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "V"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/RecursiveTask", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/RecursiveTask", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.RecursiveTaskInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public abstract partial class RecursiveTask : Java.Util.Concurrent.ForkJoinTask
@@ -10211,7 +10211,7 @@ namespace Java.Util.Concurrent.Atomic
         public bool WeakCompareAndSetVolatile(int i, int expectedValue, int newValue) { throw null; }
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/atomic/AtomicIntegerFieldUpdater", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/atomic/AtomicIntegerFieldUpdater", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.Atomic.AtomicIntegerFieldUpdaterInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public abstract partial class AtomicIntegerFieldUpdater : Java.Lang.Object
@@ -10406,7 +10406,7 @@ namespace Java.Util.Concurrent.Atomic
         public bool WeakCompareAndSetVolatile(int i, long expectedValue, long newValue) { throw null; }
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/atomic/AtomicLongFieldUpdater", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/atomic/AtomicLongFieldUpdater", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.Atomic.AtomicLongFieldUpdaterInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public abstract partial class AtomicLongFieldUpdater : Java.Lang.Object
@@ -10597,7 +10597,7 @@ namespace Java.Util.Concurrent.Atomic
         public bool WeakCompareAndSetVolatile(int i, Java.Lang.Object? expectedValue, Java.Lang.Object? newValue) { throw null; }
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T", "V"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/atomic/AtomicReferenceFieldUpdater", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/atomic/AtomicReferenceFieldUpdater", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.Atomic.AtomicReferenceFieldUpdaterInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public abstract partial class AtomicReferenceFieldUpdater : Java.Lang.Object
@@ -10769,7 +10769,7 @@ namespace Java.Util.Concurrent.Atomic
 }
 namespace Java.Util.Concurrent.Locks
 {
-    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/locks/AbstractOwnableSynchronizer", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/locks/AbstractOwnableSynchronizer", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.Locks.AbstractOwnableSynchronizerInvoker))]
     public abstract partial class AbstractOwnableSynchronizer : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.IO.ISerializable, System.IDisposable
     {
         [Java.Interop.JniConstructorSignatureAttribute("()V")]
@@ -10782,7 +10782,7 @@ namespace Java.Util.Concurrent.Locks
         [System.Runtime.CompilerServices.NullableAttribute((byte)1)]
         public override Java.Interop.JniPeerMembers JniPeerMembers { [System.Runtime.CompilerServices.NullableContextAttribute((byte)1)] get { throw null; } }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/locks/AbstractQueuedLongSynchronizer", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/locks/AbstractQueuedLongSynchronizer", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.Locks.AbstractQueuedLongSynchronizerInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public abstract partial class AbstractQueuedLongSynchronizer : Java.Util.Concurrent.Locks.AbstractOwnableSynchronizer, Java.Interop.IJavaPeerable, Java.IO.ISerializable, System.IDisposable
@@ -10864,7 +10864,7 @@ namespace Java.Util.Concurrent.Locks
             public void SignalAll() { }
         }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/locks/AbstractQueuedSynchronizer", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/concurrent/locks/AbstractQueuedSynchronizer", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Concurrent.Locks.AbstractQueuedSynchronizerInvoker))]
     [System.Runtime.CompilerServices.NullableAttribute((byte)0)]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public abstract partial class AbstractQueuedSynchronizer : Java.Util.Concurrent.Locks.AbstractOwnableSynchronizer, Java.Interop.IJavaPeerable, Java.IO.ISerializable, System.IDisposable
@@ -11154,7 +11154,7 @@ namespace Java.Util.Concurrent.Locks
 namespace Java.Util.Function
 {
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T", "U"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/BiConsumer", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/BiConsumer", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IBiConsumerInvoker))]
     public partial interface IBiConsumer : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("accept", "(Ljava/lang/Object;Ljava/lang/Object;)V")]
@@ -11165,7 +11165,7 @@ namespace Java.Util.Function
         Java.Util.Function.IBiConsumer? AndThen(Java.Util.Function.IBiConsumer? after) { throw null; }
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T", "U", "R"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/BiFunction", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/BiFunction", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IBiFunctionInvoker))]
     public partial interface IBiFunction : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JavaTypeParametersAttribute(new string[]{ "V"})]
@@ -11177,12 +11177,12 @@ namespace Java.Util.Function
         Java.Lang.Object? Apply(Java.Lang.Object? p0, Java.Lang.Object? p1);
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/BinaryOperator", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/BinaryOperator", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IBinaryOperatorInvoker))]
     public partial interface IBinaryOperator : Java.Interop.IJavaPeerable, Java.Util.Function.IBiFunction, System.IDisposable
     {
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T", "U"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/BiPredicate", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/BiPredicate", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IBiPredicateInvoker))]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public partial interface IBiPredicate : Java.Interop.IJavaPeerable, System.IDisposable
     {
@@ -11195,13 +11195,13 @@ namespace Java.Util.Function
         [Java.Interop.JniMethodSignatureAttribute("test", "(Ljava/lang/Object;Ljava/lang/Object;)Z")]
         bool Test(Java.Lang.Object? p0, Java.Lang.Object? p1);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/BooleanSupplier", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/BooleanSupplier", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IBooleanSupplierInvoker))]
     public partial interface IBooleanSupplier : Java.Interop.IJavaPeerable, System.IDisposable
     {
         bool AsBoolean { [Java.Interop.JniMethodSignatureAttribute("getAsBoolean", "()Z")] get; }
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/Consumer", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/Consumer", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IConsumerInvoker))]
     public partial interface IConsumer : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("accept", "(Ljava/lang/Object;)V")]
@@ -11211,13 +11211,13 @@ namespace Java.Util.Function
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
         Java.Util.Function.IConsumer? AndThen(Java.Util.Function.IConsumer? after) { throw null; }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoubleBinaryOperator", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoubleBinaryOperator", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IDoubleBinaryOperatorInvoker))]
     public partial interface IDoubleBinaryOperator : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("applyAsDouble", "(DD)D")]
         double ApplyAsDouble(double p0, double p1);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoubleConsumer", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoubleConsumer", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IDoubleConsumerInvoker))]
     public partial interface IDoubleConsumer : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("accept", "(D)V")]
@@ -11227,14 +11227,14 @@ namespace Java.Util.Function
         Java.Util.Function.IDoubleConsumer? AndThen(Java.Util.Function.IDoubleConsumer? after) { throw null; }
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "R"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoubleFunction", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoubleFunction", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IDoubleFunctionInvoker))]
     public partial interface IDoubleFunction : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("apply", "(D)Ljava/lang/Object;")]
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
         Java.Lang.Object? Apply(double p0);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoublePredicate", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoublePredicate", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IDoublePredicateInvoker))]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public partial interface IDoublePredicate : Java.Interop.IJavaPeerable, System.IDisposable
     {
@@ -11247,24 +11247,24 @@ namespace Java.Util.Function
         [Java.Interop.JniMethodSignatureAttribute("test", "(D)Z")]
         bool Test(double p0);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoubleSupplier", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoubleSupplier", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IDoubleSupplierInvoker))]
     public partial interface IDoubleSupplier : Java.Interop.IJavaPeerable, System.IDisposable
     {
         double AsDouble { [Java.Interop.JniMethodSignatureAttribute("getAsDouble", "()D")] get; }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoubleToIntFunction", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoubleToIntFunction", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IDoubleToIntFunctionInvoker))]
     public partial interface IDoubleToIntFunction : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("applyAsInt", "(D)I")]
         int ApplyAsInt(double p0);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoubleToLongFunction", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoubleToLongFunction", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IDoubleToLongFunctionInvoker))]
     public partial interface IDoubleToLongFunction : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("applyAsLong", "(D)J")]
         long ApplyAsLong(double p0);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoubleUnaryOperator", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoubleUnaryOperator", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IDoubleUnaryOperatorInvoker))]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public partial interface IDoubleUnaryOperator : Java.Interop.IJavaPeerable, System.IDisposable
     {
@@ -11278,7 +11278,7 @@ namespace Java.Util.Function
         static Java.Util.Function.IDoubleUnaryOperator? Identity() { throw null; }
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T", "R"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/Function", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/Function", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IFunctionInvoker))]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public partial interface IFunction : Java.Interop.IJavaPeerable, System.IDisposable
     {
@@ -11294,13 +11294,13 @@ namespace Java.Util.Function
         [Java.Interop.JniMethodSignatureAttribute("identity", "()Ljava/util/function/Function;")]
         static Java.Util.Function.IFunction? Identity() { throw null; }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntBinaryOperator", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntBinaryOperator", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IIntBinaryOperatorInvoker))]
     public partial interface IIntBinaryOperator : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("applyAsInt", "(II)I")]
         int ApplyAsInt(int p0, int p1);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntConsumer", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntConsumer", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IIntConsumerInvoker))]
     public partial interface IIntConsumer : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("accept", "(I)V")]
@@ -11310,14 +11310,14 @@ namespace Java.Util.Function
         Java.Util.Function.IIntConsumer? AndThen(Java.Util.Function.IIntConsumer? after) { throw null; }
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "R"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntFunction", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntFunction", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IIntFunctionInvoker))]
     public partial interface IIntFunction : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("apply", "(I)Ljava/lang/Object;")]
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
         Java.Lang.Object? Apply(int p0);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntPredicate", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntPredicate", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IIntPredicateInvoker))]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public partial interface IIntPredicate : Java.Interop.IJavaPeerable, System.IDisposable
     {
@@ -11330,24 +11330,24 @@ namespace Java.Util.Function
         [Java.Interop.JniMethodSignatureAttribute("test", "(I)Z")]
         bool Test(int p0);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntSupplier", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntSupplier", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IIntSupplierInvoker))]
     public partial interface IIntSupplier : Java.Interop.IJavaPeerable, System.IDisposable
     {
         int AsInt { [Java.Interop.JniMethodSignatureAttribute("getAsInt", "()I")] get; }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntToDoubleFunction", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntToDoubleFunction", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IIntToDoubleFunctionInvoker))]
     public partial interface IIntToDoubleFunction : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("applyAsDouble", "(I)D")]
         double ApplyAsDouble(int p0);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntToLongFunction", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntToLongFunction", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IIntToLongFunctionInvoker))]
     public partial interface IIntToLongFunction : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("applyAsLong", "(I)J")]
         long ApplyAsLong(int p0);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntUnaryOperator", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntUnaryOperator", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IIntUnaryOperatorInvoker))]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public partial interface IIntUnaryOperator : Java.Interop.IJavaPeerable, System.IDisposable
     {
@@ -11360,13 +11360,13 @@ namespace Java.Util.Function
         [Java.Interop.JniMethodSignatureAttribute("identity", "()Ljava/util/function/IntUnaryOperator;")]
         static Java.Util.Function.IIntUnaryOperator? Identity() { throw null; }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongBinaryOperator", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongBinaryOperator", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.ILongBinaryOperatorInvoker))]
     public partial interface ILongBinaryOperator : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("applyAsLong", "(JJ)J")]
         long ApplyAsLong(long p0, long p1);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongConsumer", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongConsumer", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.ILongConsumerInvoker))]
     public partial interface ILongConsumer : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("accept", "(J)V")]
@@ -11376,14 +11376,14 @@ namespace Java.Util.Function
         Java.Util.Function.ILongConsumer? AndThen(Java.Util.Function.ILongConsumer? after) { throw null; }
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "R"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongFunction", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongFunction", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.ILongFunctionInvoker))]
     public partial interface ILongFunction : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("apply", "(J)Ljava/lang/Object;")]
         [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
         Java.Lang.Object? Apply(long p0);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongPredicate", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongPredicate", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.ILongPredicateInvoker))]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public partial interface ILongPredicate : Java.Interop.IJavaPeerable, System.IDisposable
     {
@@ -11396,24 +11396,24 @@ namespace Java.Util.Function
         [Java.Interop.JniMethodSignatureAttribute("test", "(J)Z")]
         bool Test(long p0);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongSupplier", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongSupplier", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.ILongSupplierInvoker))]
     public partial interface ILongSupplier : Java.Interop.IJavaPeerable, System.IDisposable
     {
         long AsLong { [Java.Interop.JniMethodSignatureAttribute("getAsLong", "()J")] get; }
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongToDoubleFunction", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongToDoubleFunction", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.ILongToDoubleFunctionInvoker))]
     public partial interface ILongToDoubleFunction : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("applyAsDouble", "(J)D")]
         double ApplyAsDouble(long p0);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongToIntFunction", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongToIntFunction", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.ILongToIntFunctionInvoker))]
     public partial interface ILongToIntFunction : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("applyAsInt", "(J)I")]
         int ApplyAsInt(long p0);
     }
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongUnaryOperator", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongUnaryOperator", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.ILongUnaryOperatorInvoker))]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public partial interface ILongUnaryOperator : Java.Interop.IJavaPeerable, System.IDisposable
     {
@@ -11427,7 +11427,7 @@ namespace Java.Util.Function
         static Java.Util.Function.ILongUnaryOperator? Identity() { throw null; }
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ObjDoubleConsumer", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ObjDoubleConsumer", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IObjDoubleConsumerInvoker))]
     public partial interface IObjDoubleConsumer : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("accept", "(Ljava/lang/Object;D)V")]
@@ -11435,7 +11435,7 @@ namespace Java.Util.Function
         void Accept(Java.Lang.Object? p0, double p1);
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ObjIntConsumer", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ObjIntConsumer", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IObjIntConsumerInvoker))]
     public partial interface IObjIntConsumer : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("accept", "(Ljava/lang/Object;I)V")]
@@ -11443,7 +11443,7 @@ namespace Java.Util.Function
         void Accept(Java.Lang.Object? p0, int p1);
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ObjLongConsumer", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ObjLongConsumer", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IObjLongConsumerInvoker))]
     public partial interface IObjLongConsumer : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("accept", "(Ljava/lang/Object;J)V")]
@@ -11451,7 +11451,7 @@ namespace Java.Util.Function
         void Accept(Java.Lang.Object? p0, long p1);
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/Predicate", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/Predicate", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IPredicateInvoker))]
     [System.Runtime.CompilerServices.NullableContextAttribute((byte)2)]
     public partial interface IPredicate : Java.Interop.IJavaPeerable, System.IDisposable
     {
@@ -11471,7 +11471,7 @@ namespace Java.Util.Function
         bool Test(Java.Lang.Object? p0);
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/Supplier", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/Supplier", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.ISupplierInvoker))]
     public partial interface ISupplier : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("get", "()Ljava/lang/Object;")]
@@ -11479,7 +11479,7 @@ namespace Java.Util.Function
         Java.Lang.Object? Get();
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T", "U"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ToDoubleBiFunction", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ToDoubleBiFunction", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IToDoubleBiFunctionInvoker))]
     public partial interface IToDoubleBiFunction : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("applyAsDouble", "(Ljava/lang/Object;Ljava/lang/Object;)D")]
@@ -11487,7 +11487,7 @@ namespace Java.Util.Function
         double ApplyAsDouble(Java.Lang.Object? p0, Java.Lang.Object? p1);
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ToDoubleFunction", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ToDoubleFunction", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IToDoubleFunctionInvoker))]
     public partial interface IToDoubleFunction : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("applyAsDouble", "(Ljava/lang/Object;)D")]
@@ -11495,7 +11495,7 @@ namespace Java.Util.Function
         double ApplyAsDouble(Java.Lang.Object? p0);
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T", "U"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ToIntBiFunction", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ToIntBiFunction", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IToIntBiFunctionInvoker))]
     public partial interface IToIntBiFunction : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("applyAsInt", "(Ljava/lang/Object;Ljava/lang/Object;)I")]
@@ -11503,7 +11503,7 @@ namespace Java.Util.Function
         int ApplyAsInt(Java.Lang.Object? p0, Java.Lang.Object? p1);
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ToIntFunction", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ToIntFunction", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IToIntFunctionInvoker))]
     public partial interface IToIntFunction : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("applyAsInt", "(Ljava/lang/Object;)I")]
@@ -11511,7 +11511,7 @@ namespace Java.Util.Function
         int ApplyAsInt(Java.Lang.Object? p0);
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T", "U"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ToLongBiFunction", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ToLongBiFunction", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IToLongBiFunctionInvoker))]
     public partial interface IToLongBiFunction : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("applyAsLong", "(Ljava/lang/Object;Ljava/lang/Object;)J")]
@@ -11519,7 +11519,7 @@ namespace Java.Util.Function
         long ApplyAsLong(Java.Lang.Object? p0, Java.Lang.Object? p1);
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ToLongFunction", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ToLongFunction", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IToLongFunctionInvoker))]
     public partial interface IToLongFunction : Java.Interop.IJavaPeerable, System.IDisposable
     {
         [Java.Interop.JniMethodSignatureAttribute("applyAsLong", "(Ljava/lang/Object;)J")]
@@ -11527,7 +11527,7 @@ namespace Java.Util.Function
         long ApplyAsLong(Java.Lang.Object? p0);
     }
     [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
-    [Java.Interop.JniTypeSignatureAttribute("java/util/function/UnaryOperator", GenerateJavaPeer=false)]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/UnaryOperator", GenerateJavaPeer=false, InvokerType=typeof(Java.Util.Function.IUnaryOperatorInvoker))]
     public partial interface IUnaryOperator : Java.Interop.IJavaPeerable, Java.Util.Function.IFunction, System.IDisposable
     {
     }

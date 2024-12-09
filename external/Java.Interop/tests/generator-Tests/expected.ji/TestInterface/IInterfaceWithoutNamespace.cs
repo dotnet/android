@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Java.Interop;
 
 // Metadata.xml XPath interface reference: path="/api/package[@name='']/interface[@name='InterfaceWithoutNamespace']"
-[global::Java.Interop.JniTypeSignature ("InterfaceWithoutNamespace", GenerateJavaPeer=false)]
+[global::Java.Interop.JniTypeSignature ("InterfaceWithoutNamespace", GenerateJavaPeer=false, InvokerType=typeof (IInterfaceWithoutNamespaceInvoker))]
 public partial interface IInterfaceWithoutNamespace : IJavaPeerable {
 	// Metadata.xml XPath method reference: path="/api/package[@name='']/interface[@name='InterfaceWithoutNamespace']/method[@name='Foo' and count(parameter)=0]"
 	[global::Java.Interop.JniMethodSignature ("Foo", "()V")]

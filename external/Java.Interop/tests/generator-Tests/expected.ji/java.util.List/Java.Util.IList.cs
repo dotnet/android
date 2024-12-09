@@ -5,7 +5,7 @@ using Java.Interop;
 namespace Java.Util {
 
 	// Metadata.xml XPath interface reference: path="/api/package[@name='java.util']/interface[@name='List']"
-	[global::Java.Interop.JniTypeSignature ("java/util/List", GenerateJavaPeer=false)]
+	[global::Java.Interop.JniTypeSignature ("java/util/List", GenerateJavaPeer=false, InvokerType=typeof (Java.Util.IListInvoker))]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"E"})]
 	public partial interface IList : IJavaPeerable {
 	}

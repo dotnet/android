@@ -15,7 +15,7 @@ using Java.Interop;
 namespace Java.IO {
 
 	// Metadata.xml XPath class reference: path="/api/package[@name='java.io']/class[@name='InputStream']"
-	[global::Java.Interop.JniTypeSignature ("java/io/InputStream", GenerateJavaPeer=false)]
+	[global::Java.Interop.JniTypeSignature ("java/io/InputStream", GenerateJavaPeer=false, InvokerType=typeof (InputStreamInvoker))]
 	public abstract partial class InputStream : global::Java.Lang.Object {
 		static readonly JniPeerMembers _members = new JniPeerMembers ("java/io/InputStream", typeof (InputStream));
 

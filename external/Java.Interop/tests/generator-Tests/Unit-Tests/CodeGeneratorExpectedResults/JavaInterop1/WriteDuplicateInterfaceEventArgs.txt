@@ -1,5 +1,5 @@
 // Metadata.xml XPath interface reference: path="/api/package[@name='java.code']/interface[@name='AnimatorListener']"
-[global::Java.Interop.JniTypeSignature ("java/code/AnimatorListener", GenerateJavaPeer=false)]
+[global::Java.Interop.JniTypeSignature ("java/code/AnimatorListener", GenerateJavaPeer=false, InvokerType=typeof (java.code.AnimatorListenerInvoker))]
 public partial interface AnimatorListener : IJavaPeerable {
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='AnimatorListener']/method[@name='OnAnimationEnd' and count(parameter)=1 and parameter[1][@type='int']]"
 	[global::Java.Interop.JniMethodSignature ("OnAnimationEnd", "(I)Z")]

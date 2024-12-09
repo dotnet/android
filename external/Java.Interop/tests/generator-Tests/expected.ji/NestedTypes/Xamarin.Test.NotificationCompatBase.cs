@@ -18,10 +18,10 @@ namespace Xamarin.Test {
 	[global::Java.Interop.JniTypeSignature ("xamarin/test/NotificationCompatBase", GenerateJavaPeer=false)]
 	public partial class NotificationCompatBase : global::Java.Lang.Object {
 		// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='NotificationCompatBase.Action']"
-		[global::Java.Interop.JniTypeSignature ("xamarin/test/NotificationCompatBase$Action", GenerateJavaPeer=false)]
+		[global::Java.Interop.JniTypeSignature ("xamarin/test/NotificationCompatBase$Action", GenerateJavaPeer=false, InvokerType=typeof (ActionInvoker))]
 		public abstract partial class Action : global::Java.Lang.Object {
 			// Metadata.xml XPath interface reference: path="/api/package[@name='xamarin.test']/interface[@name='NotificationCompatBase.Action.Factory']"
-			[global::Java.Interop.JniTypeSignature ("xamarin/test/NotificationCompatBase$Action$Factory", GenerateJavaPeer=false)]
+			[global::Java.Interop.JniTypeSignature ("xamarin/test/NotificationCompatBase$Action$Factory", GenerateJavaPeer=false, InvokerType=typeof (Xamarin.Test.NotificationCompatBase.Action.IFactoryInvoker))]
 			public partial interface IFactory : IJavaPeerable {
 				// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/interface[@name='NotificationCompatBase.Action.Factory']/method[@name='build' and count(parameter)=1 and parameter[1][@type='int']]"
 				[global::Java.Interop.JniMethodSignature ("build", "(I)Lxamarin/test/NotificationCompatBase$Action;")]
@@ -88,7 +88,7 @@ namespace Xamarin.Test {
 		}
 
 		// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='NotificationCompatBase.InstanceInner']"
-		[global::Java.Interop.JniTypeSignature ("xamarin/test/NotificationCompatBase$InstanceInner", GenerateJavaPeer=false)]
+		[global::Java.Interop.JniTypeSignature ("xamarin/test/NotificationCompatBase$InstanceInner", GenerateJavaPeer=false, InvokerType=typeof (InstanceInnerInvoker))]
 		public abstract partial class InstanceInner : global::Java.Lang.Object {
 			static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/NotificationCompatBase$InstanceInner", typeof (InstanceInner));
 

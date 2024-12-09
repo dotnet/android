@@ -3,3 +3,5 @@ static Java.Interop.JniEnvironment.BeginMarshalMethod(nint jnienv, out Java.Inte
 static Java.Interop.JniEnvironment.EndMarshalMethod(ref Java.Interop.JniTransition transition) -> void
 virtual Java.Interop.JniRuntime.OnEnterMarshalMethod() -> void
 virtual Java.Interop.JniRuntime.OnUserUnhandledException(ref Java.Interop.JniTransition transition, System.Exception! e) -> void
+Java.Interop.JniTypeSignatureAttribute.InvokerType.get -> System.Type?
+Java.Interop.JniTypeSignatureAttribute.InvokerType.set -> void

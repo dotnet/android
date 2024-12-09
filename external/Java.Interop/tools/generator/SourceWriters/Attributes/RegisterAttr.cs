@@ -64,7 +64,10 @@ namespace generator.SourceWriters
 		{
 			switch (MemberType) {
 				case MemberTypes.TypeInfo:
-					writer.WriteLine ($"[global::Java.Interop.JniTypeSignature (\"{Name}\", GenerateJavaPeer={(DoNotGenerateAcw ? "false" : "true")})]");
+					var invokerType = string.IsNullOrEmpty (Connector)
+						? ""
+						: $", InvokerType=typeof ({Connector.Replace ('/', '.')})";
+					writer.WriteLine ($"[global::Java.Interop.JniTypeSignature (\"{Name}\", GenerateJavaPeer={(DoNotGenerateAcw ? "false" : "true")}{invokerType})]");
 					break;
 				case MemberTypes.Constructor:
 					writer.WriteLine ($"[global::Java.Interop.JniConstructorSignature (\"{Signature}\")]");

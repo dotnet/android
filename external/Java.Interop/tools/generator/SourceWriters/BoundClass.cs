@@ -49,7 +49,11 @@ namespace generator.SourceWriters
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, klass, opt);
 
-			Attributes.Add (new RegisterAttr (klass.RawJniName, null, null, true, klass.AdditionalAttributeString ()) {
+			Attributes.Add (new RegisterAttr (klass.RawJniName,
+					signature: null,
+					connector: IsAbstract ? Name + "Invoker" : null,
+					noAcw: true,
+					additionalProperties: klass.AdditionalAttributeString ()) {
 				UseGlobal       = true,
 				UseShortForm    = true,
 				MemberType      = opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 ? null : (MemberTypes?) MemberTypes.TypeInfo,

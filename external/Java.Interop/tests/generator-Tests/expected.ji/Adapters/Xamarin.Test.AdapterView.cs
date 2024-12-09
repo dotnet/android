@@ -15,7 +15,7 @@ using Java.Interop;
 namespace Xamarin.Test {
 
 	// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='AdapterView']"
-	[global::Java.Interop.JniTypeSignature ("xamarin/test/AdapterView", GenerateJavaPeer=false)]
+	[global::Java.Interop.JniTypeSignature ("xamarin/test/AdapterView", GenerateJavaPeer=false, InvokerType=typeof (AdapterViewInvoker))]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"T extends xamarin.test.Adapter"})]
 	public abstract partial class AdapterView : global::Java.Lang.Object {
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/AdapterView", typeof (AdapterView));

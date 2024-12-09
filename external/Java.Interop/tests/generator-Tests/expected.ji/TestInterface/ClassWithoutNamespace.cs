@@ -13,7 +13,7 @@ using System.Collections.Generic;
 using Java.Interop;
 
 // Metadata.xml XPath class reference: path="/api/package[@name='']/class[@name='ClassWithoutNamespace']"
-[global::Java.Interop.JniTypeSignature ("ClassWithoutNamespace", GenerateJavaPeer=false)]
+[global::Java.Interop.JniTypeSignature ("ClassWithoutNamespace", GenerateJavaPeer=false, InvokerType=typeof (ClassWithoutNamespaceInvoker))]
 public abstract partial class ClassWithoutNamespace : global::Java.Lang.Object, IInterfaceWithoutNamespace {
 	static readonly JniPeerMembers _members = new JniPeerMembers ("ClassWithoutNamespace", typeof (ClassWithoutNamespace));
 

@@ -15,7 +15,7 @@ using Java.Interop;
 namespace Test.ME {
 
 	// Metadata.xml XPath class reference: path="/api/package[@name='test.me']/class[@name='TestInterfaceImplementation']"
-	[global::Java.Interop.JniTypeSignature ("test/me/TestInterfaceImplementation", GenerateJavaPeer=false)]
+	[global::Java.Interop.JniTypeSignature ("test/me/TestInterfaceImplementation", GenerateJavaPeer=false, InvokerType=typeof (TestInterfaceImplementationInvoker))]
 	public abstract partial class TestInterfaceImplementation : global::Java.Lang.Object, global::Test.ME.ITestInterface {
 		public static class InterfaceConsts {
 			// The following are fields from: test.me.TestInterface

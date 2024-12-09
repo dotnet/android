@@ -5,7 +5,7 @@ using Java.Interop;
 namespace Java.Util {
 
 	// Metadata.xml XPath interface reference: path="/api/package[@name='java.util']/interface[@name='Collection']"
-	[global::Java.Interop.JniTypeSignature ("java/util/Collection", GenerateJavaPeer=false)]
+	[global::Java.Interop.JniTypeSignature ("java/util/Collection", GenerateJavaPeer=false, InvokerType=typeof (Java.Util.ICollectionInvoker))]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"E"})]
 	public partial interface ICollection : IJavaPeerable {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.util']/interface[@name='Collection']/method[@name='add' and count(parameter)=1 and parameter[1][@type='E']]"

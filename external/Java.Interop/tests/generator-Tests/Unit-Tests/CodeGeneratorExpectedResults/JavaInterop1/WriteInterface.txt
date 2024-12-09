@@ -1,5 +1,5 @@
 // Metadata.xml XPath interface reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']"
-[global::Java.Interop.JniTypeSignature ("java/code/IMyInterface", GenerateJavaPeer=false)]
+[global::Java.Interop.JniTypeSignature ("java/code/IMyInterface", GenerateJavaPeer=false, InvokerType=typeof (java.code.IMyInterfaceInvoker))]
 public partial interface IMyInterface : IJavaPeerable {
 	private static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterface), isInterface: true);
 

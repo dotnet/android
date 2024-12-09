@@ -5,7 +5,7 @@ using Java.Interop;
 namespace Java.Util {
 
 	// Metadata.xml XPath interface reference: path="/api/package[@name='java.util']/interface[@name='Queue']"
-	[global::Java.Interop.JniTypeSignature ("java/util/Queue", GenerateJavaPeer=false)]
+	[global::Java.Interop.JniTypeSignature ("java/util/Queue", GenerateJavaPeer=false, InvokerType=typeof (Java.Util.IQueueInvoker))]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"E"})]
 	public partial interface IQueue : global::Java.Util.ICollection {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.util']/interface[@name='Queue']/method[@name='add' and count(parameter)=1 and parameter[1][@type='E']]"

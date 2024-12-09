@@ -18,7 +18,7 @@ namespace Xamarin.Test {
 	[global::Java.Interop.JniTypeSignature ("xamarin/test/PublicClass", GenerateJavaPeer=false)]
 	public partial class PublicClass : global::Java.Lang.Object {
 		// Metadata.xml XPath interface reference: path="/api/package[@name='xamarin.test']/interface[@name='PublicClass.ProtectedInterface']"
-		[global::Java.Interop.JniTypeSignature ("xamarin/test/PublicClass$ProtectedInterface", GenerateJavaPeer=false)]
+		[global::Java.Interop.JniTypeSignature ("xamarin/test/PublicClass$ProtectedInterface", GenerateJavaPeer=false, InvokerType=typeof (Xamarin.Test.PublicClass.IProtectedInterfaceInvoker))]
 		protected internal partial interface IProtectedInterface : IJavaPeerable {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/interface[@name='PublicClass.ProtectedInterface']/method[@name='foo' and count(parameter)=0]"
 			[global::Java.Interop.JniMethodSignature ("foo", "()V")]

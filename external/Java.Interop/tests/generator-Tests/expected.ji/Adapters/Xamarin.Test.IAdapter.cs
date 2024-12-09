@@ -5,7 +5,7 @@ using Java.Interop;
 namespace Xamarin.Test {
 
 	// Metadata.xml XPath interface reference: path="/api/package[@name='xamarin.test']/interface[@name='Adapter']"
-	[global::Java.Interop.JniTypeSignature ("xamarin/test/Adapter", GenerateJavaPeer=false)]
+	[global::Java.Interop.JniTypeSignature ("xamarin/test/Adapter", GenerateJavaPeer=false, InvokerType=typeof (Xamarin.Test.IAdapterInvoker))]
 	public partial interface IAdapter : IJavaPeerable {
 	}
 

@@ -5,7 +5,7 @@ using Java.Interop;
 namespace Test.ME {
 
 	// Metadata.xml XPath interface reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']"
-	[global::Java.Interop.JniTypeSignature ("test/me/TestInterface", GenerateJavaPeer=false)]
+	[global::Java.Interop.JniTypeSignature ("test/me/TestInterface", GenerateJavaPeer=false, InvokerType=typeof (Test.ME.ITestInterfaceInvoker))]
 	public partial interface ITestInterface : IJavaPeerable {
 		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']/method[@name='getSpanFlags' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"
 		[global::Java.Interop.JniMethodSignature ("getSpanFlags", "(Ljava/lang/Object;)I")]

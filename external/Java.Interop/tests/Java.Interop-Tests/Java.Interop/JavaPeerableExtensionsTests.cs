@@ -80,7 +80,7 @@ public class MyJavaInterfaceImpl : JavaObject {
 	}
 }
 
-[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
+[JniTypeSignature (JniTypeName, GenerateJavaPeer=false, InvokerType=typeof(IJavaInterfaceInvoker))]
 interface IJavaInterface : IJavaPeerable {
 	internal            const       string          JniTypeName    = "net/dot/jni/test/JavaInterface";
 

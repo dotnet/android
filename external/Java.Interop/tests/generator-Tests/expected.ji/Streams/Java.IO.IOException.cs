@@ -15,7 +15,7 @@ using Java.Interop;
 namespace Java.IO {
 
 	// Metadata.xml XPath class reference: path="/api/package[@name='java.io']/class[@name='IOException']"
-	[global::Java.Interop.JniTypeSignature ("java/io/IOException", GenerateJavaPeer=false)]
+	[global::Java.Interop.JniTypeSignature ("java/io/IOException", GenerateJavaPeer=false, InvokerType=typeof (IOExceptionInvoker))]
 	public abstract partial class IOException : global::Java.Lang.Throwable {
 		static readonly JniPeerMembers _members = new JniPeerMembers ("java/io/IOException", typeof (IOException));
 
