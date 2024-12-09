@@ -1199,17 +1199,26 @@ namespace Lib2
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", $"{nameof (IncrementalBuildTest)}{TestName}"))) {
+				b.BuildLogFile = "dtb1.log";
 				Assert.IsTrue (b.DesignTimeBuild (proj), "first dtb should have succeeded.");
-				var target = "_ResolveLibraryProjectImports";
+				var target = "_GenerateResourceDesignerAssembly";
 				Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should not have been skipped.");
+				var importsTarget = "_ResolveLibraryProjectImports";
+				Assert.IsTrue (b.Output.IsTargetSkipped (importsTarget, defaultIfNotUsed: true), $"`{importsTarget}` should have been skipped.");
 				// DesignTimeBuild=true lowercased
 				var parameters = new [] { "DesignTimeBuild=true" };
+				b.BuildLogFile = "compile.log";
 				Assert.IsTrue (b.RunTarget (proj, "Compile", doNotCleanupOnUpdate: true, parameters: parameters), "second dtb should have succeeded.");
-				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should have been skipped.");
+				Assert.IsTrue (b.Output.IsTargetSkipped (target, defaultIfNotUsed: true), $"`{target}` should have been skipped.");
+				Assert.IsTrue (b.Output.IsTargetSkipped (importsTarget, defaultIfNotUsed: true), $"`{importsTarget}` should have been skipped.");
+				b.BuildLogFile = "updategeneratedfiles.log";
 				Assert.IsTrue (b.RunTarget (proj, "UpdateGeneratedFiles", doNotCleanupOnUpdate: true, parameters: parameters), "UpdateGeneratedFiles should have succeeded.");
-				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should have been skipped.");
+				Assert.IsTrue (b.Output.IsTargetSkipped (target, defaultIfNotUsed: true), $"`{target}` should have been skipped.");
+				Assert.IsTrue (b.Output.IsTargetSkipped (importsTarget, defaultIfNotUsed: true), $"`{importsTarget}` should have been skipped.");
+				b.BuildLogFile = "build.log";
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "full build should have succeeded.");
 				Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should not have been skipped.");
+				Assert.IsFalse (b.Output.IsTargetSkipped (importsTarget), $"`{importsTarget}` should not have been skipped.");
 			}
 		}
 
@@ -1234,7 +1243,7 @@ namespace Lib2
 			Assert.IsTrue (builder.RunTarget (proj, "SignAndroidPackage", parameters: parameters), $"{proj.ProjectName} should succeed");
 			builder.Output.AssertTargetIsNotSkipped ("_GenerateResourceCaseMap", occurrence: 2);
 			builder.Output.AssertTargetIsSkipped ("_GenerateRtxt", occurrence: 1);
-			builder.Output.AssertTargetIsSkipped ("_GenerateResourceDesignerIntermediateClass", occurrence: 1);
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateResourceDesignerIntermediateClass");
 			builder.Output.AssertTargetIsSkipped ("_GenerateResourceDesignerAssembly", occurrence: 2);
 			builder.BuildLogFile = "build2.log";
 			Assert.IsTrue (builder.RunTarget (proj, "SignAndroidPackage", parameters: parameters), $"{proj.ProjectName} should succeed 2");
