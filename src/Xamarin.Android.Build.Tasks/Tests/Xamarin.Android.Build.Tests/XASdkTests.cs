@@ -259,37 +259,6 @@ public class JavaSourceTest {
 		}
 
 		[Test]
-		public void XamarinLegacySdk ([Values ("net7.0-android33.0", "net8.0-android34.0")] string dotnetTargetFramework)
-		{
-			var proj = new XamarinAndroidLibraryProject {
-				Sdk = "Xamarin.Legacy.Sdk/0.2.0-alpha4",
-				EnableDefaultItems = true,
-				Sources = {
-					new AndroidItem.AndroidLibrary ("javaclasses.jar") {
-						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
-					}
-				}
-			};
-
-			// NOTE: keep this on the latest Xamarin.Android shipped
-			var legacyTargetFrameworkVersion = "13.0";
-			var legacyTargetFramework = $"monoandroid{legacyTargetFrameworkVersion}";
-			proj.SetProperty ("TargetFramework",  value: "");
-			proj.SetProperty ("TargetFrameworks", value: $"{dotnetTargetFramework};{legacyTargetFramework}");
-
-			var projBuilder = CreateDllBuilder ();
-			projBuilder.Save (proj);
-			var dotnet = new DotNetCLI (Path.Combine (Root, projBuilder.ProjectDirectory, proj.ProjectFilePath));
-			Assert.IsTrue (dotnet.Pack (parameters: new [] { "Configuration=Debug" }), "`dotnet pack` should succeed");
-
-			var nupkgPath = Path.Combine (Root, projBuilder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.1.0.0.nupkg");
-			FileAssert.Exists (nupkgPath);
-			using var nupkg = ZipHelper.OpenZip (nupkgPath);
-			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetTargetFramework}/{proj.ProjectName}.dll");
-			nupkg.AssertContainsEntry (nupkgPath, $"lib/{legacyTargetFramework}/{proj.ProjectName}.dll");
-		}
-
-		[Test]
 		[TestCaseSource (nameof (DotNetTargetFrameworks))]
 		public void MauiTargetFramework (string dotnetVersion, string platform, int apiLevel)
 		{

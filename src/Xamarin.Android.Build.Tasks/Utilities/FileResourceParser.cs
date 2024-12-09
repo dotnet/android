@@ -32,6 +32,8 @@ namespace Xamarin.Android.Tasks
 		};
 
 		protected XDocument LoadPublicXml () {
+			if (string.IsNullOrEmpty (JavaPlatformDirectory))
+				return null;
 			string publicXmlPath = Path.Combine (JavaPlatformDirectory, "data", "res", "values");
 			foreach (var file in publicXmlFiles) {
 				if (File.Exists (Path.Combine (publicXmlPath, file))) {
@@ -44,7 +46,6 @@ namespace Xamarin.Android.Tasks
 		public IList<R> Parse (string resourceDirectory, IEnumerable<string> additionalResourceDirectories, Dictionary<string, string> resourceMap)
 		{
 			Log.LogDebugMessage ($"Parsing Directory {resourceDirectory}");
-			string publicXmlPath = Path.Combine (JavaPlatformDirectory, "data", "res", "values");
 			publicXml = LoadPublicXml ();
 			var result = new List<R> ();
 			Dictionary<string, ICollection<R>> resources = new Dictionary<string, ICollection<R>> ();

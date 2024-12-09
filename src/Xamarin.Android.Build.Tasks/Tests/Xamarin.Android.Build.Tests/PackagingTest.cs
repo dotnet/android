@@ -33,6 +33,29 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void CheckR8InfoMessagesToNotBreakTheBuild ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, "r8");
+			proj.SetProperty (proj.ReleaseProperties, "AndroidCreateProguardMappingFile", true);
+			var packages = proj.PackageReferences;
+			packages.Add (KnownPackages.Xamarin_KotlinX_Coroutines_Android);
+			proj.OtherBuildItems.Add (new BuildItem ("ProguardConfiguration", "proguard.cfg") {
+				TextContent = () => @"-keepattributes Signature
+-keep class kotlinx.coroutines.channels.** { *; }
+"
+			});
+
+			using (var b = CreateApkBuilder ()) {
+				string mappingFile = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "mapping.txt");
+				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
+				FileAssert.Exists (mappingFile, $"'{mappingFile}' should have been generated.");
+			}
+		}
+
+		[Test]
 		[NonParallelizable] // Commonly fails NuGet restore
 		public void CheckIncludedAssemblies ([Values (false, true)] bool usesAssemblyStores)
 		{

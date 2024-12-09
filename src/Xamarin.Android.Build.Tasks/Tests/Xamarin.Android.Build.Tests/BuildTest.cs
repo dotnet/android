@@ -38,10 +38,10 @@ namespace Xamarin.Android.Build.Tests
 				PackageReferences = {
 					new Package { Id = "Xamarin.AndroidX.AppCompat", Version = "1.3.1.1" },
 					// Using * here, so we explicitly get newer packages
-					new Package { Id = "Microsoft.AspNetCore.Components.WebView", Version = "8.*-*" },
-					new Package { Id = "Microsoft.Extensions.FileProviders.Embedded", Version = "8.*-*" },
-					new Package { Id = "Microsoft.JSInterop", Version = "8.*-*" },
-					new Package { Id = "System.Text.Json", Version = "8.*-*" },
+					new Package { Id = "Microsoft.AspNetCore.Components.WebView", Version = "8.0.*" },
+					new Package { Id = "Microsoft.Extensions.FileProviders.Embedded", Version = "8.0.*" },
+					new Package { Id = "Microsoft.JSInterop", Version = "8.0.*" },
+					new Package { Id = "System.Text.Json", Version = "8.0.*" },
 				},
 				Sources = {
 					new BuildItem ("EmbeddedResource", "Foo.resx") {

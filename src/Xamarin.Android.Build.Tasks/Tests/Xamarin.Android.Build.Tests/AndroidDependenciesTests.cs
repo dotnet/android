@@ -38,7 +38,7 @@ namespace Xamarin.Android.Build.Tests
 					"AcceptAndroidSDKLicenses=true",
 					$"AndroidManifestType={manifestType}",
 				};
-				// When using the default Xamarin manifest, this test should fail if we can't install any of the defaults in Xamarin.Android.Tools.Versions.props
+				// When using the default Xamarin manifest, this test should fail if we can't install any of the defaults in Xamarin.Installer.Common.props
 				// When using the Google manifest, override the platform tools version to the one in their manifest as it only ever contains one version
 				if (manifestType == "GoogleV2") {
 					buildArgs.Add ($"AndroidSdkPlatformToolsVersion={GetCurrentPlatformToolsVersion ()}");
