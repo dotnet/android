@@ -16,7 +16,7 @@ https://github.com/dotnet/designs/blob/4703666296f5e59964961464c25807c727282cae/
 -->
 <Project>
 
-  <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '9.0')) and ('$(ImplicitUsings)' == 'true' or '$(ImplicitUsings)' == 'enable') ">
+  <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '10.0')) and ('$(ImplicitUsings)' == 'true' or '$(ImplicitUsings)' == 'enable') ">
     <Using Include="Android.App" Platform="Android" />
     <Using Include="Android.Widget" Platform="Android" />
     <Using Include="Android.OS.Bundle" Alias="Bundle" Platform="Android" />
@@ -24,7 +24,7 @@ https://github.com/dotnet/designs/blob/4703666296f5e59964961464c25807c727282cae/
 
   <ItemGroup Condition=" '$(MonoAndroidResourcePrefix)' != '' and
       '$(EnableDefaultAndroidItems)' == 'true' and
-      $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '9.0')) ">
+      $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '10.0')) ">
     <!-- Default Resource file inclusion -->
     <!-- https://developer.android.com/guide/topics/resources/providing-resources -->
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\*\*.xml" />
@@ -41,13 +41,13 @@ https://github.com/dotnet/designs/blob/4703666296f5e59964961464c25807c727282cae/
 
   <ItemGroup Condition=" '$(MonoAndroidAssetsPrefix)' != '' and
       '$(EnableDefaultAndroidItems)' == 'true' and
-      $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '9.0')) ">
+      $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '10.0')) ">
     <!-- Default Asset file inclusion -->
     <AndroidAsset Include="$(MonoAndroidAssetsPrefix)\**\*" Exclude="$(MonoAndroidAssetsPrefix)\**\.*\**" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(EnableDefaultAndroidItems)' == 'true'
-      and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '9.0')) ">
+      and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '10.0')) ">
     <!-- Default XPath transforms for bindings -->
     <TransformFile Include="Transforms*.xml" />
     <TransformFile Include="Transforms\**\*.xml" />
@@ -62,7 +62,7 @@ https://github.com/dotnet/designs/blob/4703666296f5e59964961464c25807c727282cae/
     <ProguardConfiguration Include="**\proguard-rules.pro" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '9.0')) ">
+  <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '10.0')) ">
     <AndroidPackagingOptionsExclude Include="DebugProbesKt.bin" />
     <AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.kotlin*'))" />
     <AndroidPackagingOptionsInclude Include="$([MSBuild]::Escape('*.kotlin_builtins'))" />
