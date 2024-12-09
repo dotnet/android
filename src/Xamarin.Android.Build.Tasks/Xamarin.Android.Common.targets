@@ -1,4 +1,4 @@
-﻿<!--
+<!--
 ***********************************************************************************************
 Xamarin.Android.Common.targets
 
@@ -1350,9 +1350,14 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CollectRuntimeJarFilenames">
-  <PropertyGroup>
+  <PropertyGroup Condition=" '$(_AndroidUseCLR)' != 'True' ">
     <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_net6.jar</_RuntimeJar>
     <_RuntimeDex>$(MSBuildThisFileDirectory)\java_runtime_net6.dex</_RuntimeDex>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(_AndroidUseCLR)' == 'True' ">
+    <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_clr.jar</_RuntimeJar>
+    <_RuntimeDex>$(MSBuildThisFileDirectory)\java_runtime_clr.dex</_RuntimeDex>
   </PropertyGroup>
 </Target>
 
@@ -1752,6 +1757,7 @@ because xbuild doesn't support framework reference assemblies.
     UseAssemblyStore="$(AndroidUseAssemblyStore)"
     EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
     CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
+    TargetsCLR="$(_AndroidUseCLR)"
   >
   </GeneratePackageManagerJava>
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
@@ -2014,8 +2020,14 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_PrepareApplicationSharedLibraryItems">
-  <ItemGroup>
+  <ItemGroup Condition=" '$(_AndroidUseCLR)' != 'True' ">
     <_ApplicationSharedLibrary Include="$(_AndroidApplicationSharedLibraryPath)%(_BuildTargetAbis.Identity)\libxamarin-app.so">
+      <abi>%(_BuildTargetAbis.Identity)</abi>
+    </_ApplicationSharedLibrary>
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(_AndroidUseCLR)' == 'True' ">
+    <_ApplicationSharedLibrary Include="$(_AndroidApplicationSharedLibraryPath)%(_BuildTargetAbis.Identity)\libxamarin-app-clr.so">
       <abi>%(_BuildTargetAbis.Identity)</abi>
     </_ApplicationSharedLibrary>
   </ItemGroup>
@@ -2031,6 +2043,7 @@ because xbuild doesn't support framework reference assemblies.
       DebugBuild="$(AndroidIncludeDebugSymbols)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       ZipAlignmentPages="$(AndroidZipAlignment)"
+      TargetsCLR="$(_AndroidUseCLR)"
   />
   <ItemGroup>
     <FileWrites Include="@(_ApplicationSharedLibrary)" />
