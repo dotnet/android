@@ -108,6 +108,11 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void NativeAOT ()
 		{
+			if (IsWindows) {
+				// Microsoft.NETCore.Native.Publish.targets(61,5): Cross-OS native compilation is not supported.
+				Assert.Ignore ("This test is not valid on Windows.");
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 				// Add locally downloaded NativeAOT packs
@@ -118,10 +123,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntimeIdentifier ("arm64-v8a");
 			proj.SetProperty ("PublishAot", "true");
 			proj.SetProperty ("PublishAotUsingRuntimePack", "true");
-			if (IsWindows) {
-				// Allows ILC to attempt to run on Windows
-				proj.SetProperty ("DisableUnsupportedError", "true");
-			}
 
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
