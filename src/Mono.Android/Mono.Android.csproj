@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
 
-  <PropertyGroup Condition=" '$(BuildLatestPreview)' == 'true' ">
-    <AndroidApiLevel>36</AndroidApiLevel>
-    <AndroidPlatformId>Baklava</AndroidPlatformId>
-    <AndroidFrameworkVersion>v15.0.99</AndroidFrameworkVersion>
-  </PropertyGroup>
-
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <Import Project="..\..\Configuration.props" />
   <Import Project="$(XamarinAndroidSourcePath)\build-tools\trim-analyzers\trim-analyzers.props" />
@@ -406,6 +400,7 @@
   <PropertyGroup Condition=" '$(AndroidApiLevel)' &gt;= '$(AndroidDefaultTargetDotnetApiLevel)' ">
     <BuildDependsOn>
       $(BuildDependsOn);
+      _BuildAdditionalApiLevels;
       _ExportMsxDoc;
       _CopyToPackDirs;
     </BuildDependsOn>

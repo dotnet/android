@@ -30,17 +30,6 @@
   </Target>
 
   <Target Name="PackDotNet">
-    <!-- Build extra versions of Mono.Android.dll if necessary -->
-    <MSBuild
-         Condition=" '$(AndroidDefaultTargetDotnetApiLevel)' != '$(AndroidLatestStableApiLevel)' "
-         Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
-         Properties="TargetFramework=$(DotNetTargetFramework);AndroidApiLevel=$(AndroidDefaultTargetDotnetApiLevel);AndroidPlatformId=$(AndroidDefaultTargetDotnetApiLevel);DisableApiCompatibilityCheck=true"
-    />
-    <MSBuild
-         Condition=" '$(AndroidLatestUnstableApiLevel)' != '$(AndroidLatestStableApiLevel)' "
-         Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
-         Properties="TargetFramework=$(DotNetTargetFramework);AndroidApiLevel=$(AndroidLatestUnstableApiLevel);AndroidPlatformId=$(AndroidLatestUnstablePlatformId);DisableApiCompatibilityCheck=true"
-    />
     <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="CreateAllPacks" />
     <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="ExtractWorkloadPacks" />
     <!-- Clean up old, previously restored packages -->
