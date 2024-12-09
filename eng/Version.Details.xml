@@ -4,25 +4,25 @@
       <Uri>https://github.com/dotnet/sdk</Uri>
       <Sha>cbec38b13edc53f701225f8f087fb5a2dbfd3679</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink" Version="9.0.1-rtm.24576.8">
+    <Dependency Name="Microsoft.NET.ILLink" Version="9.0.1-servicing.24603.13">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>f6615d27fdbef2e7216d9762aaea9a6aa49e1be5</Sha>
+      <Sha>462630b3c311cade6426c53e9b3ee3b89bf217a2</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="9.0.1">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>f6615d27fdbef2e7216d9762aaea9a6aa49e1be5</Sha>
+      <Sha>462630b3c311cade6426c53e9b3ee3b89bf217a2</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NETCore.App.Ref" Version="9.0.1">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>f6615d27fdbef2e7216d9762aaea9a6aa49e1be5</Sha>
+      <Sha>462630b3c311cade6426c53e9b3ee3b89bf217a2</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-9.0.100" Version="9.0.0" CoherentParentDependency="Microsoft.NETCore.App.Ref">
+    <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-9.0.100" Version="9.0.1" CoherentParentDependency="Microsoft.NETCore.App.Ref">
       <Uri>https://github.com/dotnet/emsdk</Uri>
-      <Sha>763d10a1a251be35337ee736832bfde3f9200672</Sha>
+      <Sha>5a1972348bdf1daf0ae6c93e6d1ee89400e02cc4</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-alpha.24515.1" CoherentParentDependency="Microsoft.NET.ILLink.Tasks">
+    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-alpha.24602.1" CoherentParentDependency="Microsoft.NET.ILLink.Tasks">
       <Uri>https://github.com/dotnet/cecil</Uri>
-      <Sha>e51bd3677d5674fa34bf5676c5fc5562206bf94e</Sha>
+      <Sha>72791f7604750fb8af9249b94318547c5f1d6683</Sha>
     </Dependency>
     <!-- Previous .NET Android version -->
     <Dependency Name="Microsoft.Android.Sdk.Windows" Version="34.0.147">
