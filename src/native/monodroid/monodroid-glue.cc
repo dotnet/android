@@ -102,7 +102,7 @@ MonodroidRuntime::thread_end ([[maybe_unused]] MonoProfiler *prof, [[maybe_unuse
 }
 
 inline void
-MonodroidRuntime::log_jit_event (MonoMethod *method, const char *event_name)
+MonodroidRuntime::log_jit_event (MonoMethod *method, const char *event_name) noexcept
 {
 	jit_time.mark_end ();
 
@@ -120,19 +120,19 @@ MonodroidRuntime::log_jit_event (MonoMethod *method, const char *event_name)
 void
 MonodroidRuntime::jit_begin ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method)
 {
-	monodroidRuntime.log_jit_event (method, "begin");
+	MonodroidRuntime::log_jit_event (method, "begin");
 }
 
 void
 MonodroidRuntime::jit_failed ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method)
 {
-	monodroidRuntime.log_jit_event (method, "failed");
+	MonodroidRuntime::log_jit_event (method, "failed");
 }
 
 void
 MonodroidRuntime::jit_done ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method, [[maybe_unused]] MonoJitInfo* jinfo)
 {
-	monodroidRuntime.log_jit_event (method, "done");
+	MonodroidRuntime::log_jit_event (method, "done");
 }
 
 #ifndef RELEASE
@@ -225,10 +225,10 @@ MonodroidRuntime::should_register_file ([[maybe_unused]] const char *filename)
 }
 
 inline void
-MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks, size_t *out_user_assemblies_count, bool have_split_apks)
+MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks, size_t *out_user_assemblies_count, bool have_split_apks) noexcept
 {
 	if (!AndroidSystem::is_embedded_dso_mode_enabled ()) {
-		*out_user_assemblies_count = embeddedAssemblies.register_from_filesystem<should_register_file> ();
+		*out_user_assemblies_count = EmbeddedAssemblies::register_from_filesystem<should_register_file> ();
 		return;
 	}
 
@@ -256,22 +256,22 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 			}
 		}
 
-		size_t cur_num_assemblies  = embeddedAssemblies.register_from_apk<should_register_file> (apk_file.get_cstr ());
+		size_t cur_num_assemblies  = EmbeddedAssemblies::register_from_apk<should_register_file> (apk_file.get_cstr ());
 
 		*out_user_assemblies_count += (cur_num_assemblies - prev_num_assemblies);
 		prev_num_assemblies = cur_num_assemblies;
 
-		if (!embeddedAssemblies.keep_scanning ()) {
+		if (!EmbeddedAssemblies::keep_scanning ()) {
 			break;
 		}
 	}
 
-	embeddedAssemblies.ensure_valid_assembly_stores ();
+	EmbeddedAssemblies::ensure_valid_assembly_stores ();
 }
 
 #if defined (DEBUG)
 int
-MonodroidRuntime::monodroid_debug_connect (int sock, struct sockaddr_in addr)
+MonodroidRuntime::monodroid_debug_connect (int sock, struct sockaddr_in addr) noexcept
 {
 	long flags = fcntl (sock, F_GETFL, nullptr);
 	flags |= O_NONBLOCK;
@@ -316,7 +316,7 @@ MonodroidRuntime::monodroid_debug_connect (int sock, struct sockaddr_in addr)
 }
 
 int
-MonodroidRuntime::monodroid_debug_accept (int sock, struct sockaddr_in addr)
+MonodroidRuntime::monodroid_debug_accept (int sock, struct sockaddr_in addr) noexcept
 {
 	ssize_t res = bind (sock, (struct sockaddr *) &addr, sizeof (addr));
 	if (res < 0)
@@ -342,7 +342,7 @@ MonodroidRuntime::monodroid_debug_accept (int sock, struct sockaddr_in addr)
 #endif
 
 inline jint
-MonodroidRuntime::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved)
+MonodroidRuntime::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcept
 {
 	JNIEnv *env;
 
@@ -355,7 +355,7 @@ MonodroidRuntime::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved)
 }
 
 void
-MonodroidRuntime::parse_gdb_options ()
+MonodroidRuntime::parse_gdb_options () noexcept
 {
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> val;
 
@@ -389,7 +389,7 @@ MonodroidRuntime::parse_gdb_options ()
 
 #if defined (DEBUG)
 bool
-MonodroidRuntime::parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> &runtime_args, RuntimeOptions *options)
+MonodroidRuntime::parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> &runtime_args, RuntimeOptions *options) noexcept
 {
 	if (runtime_args.length () == 0) {
 		log_warn (LOG_DEFAULT, "runtime args empty");
@@ -490,17 +490,17 @@ MonodroidRuntime::parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER
 #endif  // def DEBUG && !WINDOWS
 
 inline void
-MonodroidRuntime::set_debug_options (void)
+MonodroidRuntime::set_debug_options (void) noexcept
 {
 	if (AndroidSystem::monodroid_get_system_property (SharedConstants::DEBUG_MONO_DEBUG_PROPERTY, nullptr) == 0)
 		return;
 
-	embeddedAssemblies.set_register_debug_symbols (true);
+	EmbeddedAssemblies::set_register_debug_symbols (true);
 	mono_debug_init (MONO_DEBUG_FORMAT_MONO);
 }
 
 void
-MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& runtime_args)
+MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& runtime_args) noexcept
 {
 #if defined (DEBUG)
 	RuntimeOptions options{};
@@ -513,7 +513,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 	} else if (options.debug && cur_time > options.timeout_time) {
 		log_warn (LOG_DEBUGGER, "Not starting the debugger as the timeout value has been reached; current-time: %lli  timeout: %lli", cur_time, options.timeout_time);
 	} else if (options.debug && cur_time <= options.timeout_time) {
-		embeddedAssemblies.set_register_debug_symbols (true);
+		EmbeddedAssemblies::set_register_debug_symbols (true);
 
 		int loglevel;
 		if (Logger::have_debugger_log_level ())
@@ -687,7 +687,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 	 * Looking for assemblies from the update dir takes precedence over
 	 * everything else, and thus must go LAST.
 	 */
-	embeddedAssemblies.install_preload_hooks_for_appdomains ();
+	EmbeddedAssemblies::install_preload_hooks_for_appdomains ();
 #ifndef RELEASE
 	mono_install_assembly_preload_hook (open_from_update_dir, nullptr);
 #endif
@@ -702,24 +702,24 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 void
 MonodroidRuntime::cleanup_runtime_config ([[maybe_unused]] MonovmRuntimeConfigArguments *args, [[maybe_unused]] void *user_data)
 {
-	embeddedAssemblies.unmap_runtime_config_blob ();
+	EmbeddedAssemblies::unmap_runtime_config_blob ();
 }
 
 MonoDomain*
-MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain, bool have_split_apks)
+MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain, bool have_split_apks) noexcept
 {
 	size_t user_assemblies_count = 0uz;
 
 	gather_bundled_assemblies (runtimeApks, &user_assemblies_count, have_split_apks);
 
-	if (embeddedAssemblies.have_runtime_config_blob ()) {
+	if (EmbeddedAssemblies::have_runtime_config_blob ()) {
 		size_t blob_time_index;
 		if (FastTiming::enabled ()) [[unlikely]] {
 			blob_time_index = internal_timing->start_event (TimingEventKind::RuntimeConfigBlob);
 		}
 
 		runtime_config_args.kind = 1;
-		embeddedAssemblies.get_runtime_config_blob (runtime_config_args.runtimeconfig.data.data, runtime_config_args.runtimeconfig.data.data_len);
+		EmbeddedAssemblies::get_runtime_config_blob (runtime_config_args.runtimeconfig.data.data, runtime_config_args.runtimeconfig.data.data_len);
 		monovm_runtimeconfig_initialize (&runtime_config_args, cleanup_runtime_config, nullptr);
 
 		if (FastTiming::enabled ()) [[unlikely]] {
@@ -773,7 +773,7 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 }
 
 force_inline void
-MonodroidRuntime::lookup_bridge_info (MonoClass *klass, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info)
+MonodroidRuntime::lookup_bridge_info (MonoClass *klass, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info) noexcept
 {
 	info->klass             = klass;
 	info->handle            = mono_class_get_field_from_name (info->klass, const_cast<char*> ("handle"));
@@ -798,7 +798,7 @@ MonodroidRuntime::lookup_bridge_info (MonoClass *klass, const OSBridge::MonoJava
 }
 
 force_inline void
-MonodroidRuntime::lookup_bridge_info (MonoImage *image, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info)
+MonodroidRuntime::lookup_bridge_info (MonoImage *image, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info) noexcept
 {
 	lookup_bridge_info (
 		mono_class_from_name (image, type->_namespace, type->_typename),
@@ -814,7 +814,7 @@ MonodroidRuntime::monodroid_debugger_unhandled_exception (MonoException *ex)
 }
 
 void
-MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobject loader)
+MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobject loader) noexcept
 {
 	constexpr std::string_view icall_typemap_java_to_managed { "Java.Interop.TypeManager::monodroid_typemap_java_to_managed" };
 	constexpr std::string_view icall_typemap_managed_to_java { "Android.Runtime.JNIEnv::monodroid_typemap_managed_to_java" };
@@ -912,7 +912,15 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 			jnienv_register_jni_natives = reinterpret_cast<jnienv_register_jni_natives_fn>(mono_method_get_unmanaged_callers_only_ftnptr (registerType, &error));
 		}
 	}
-	abort_unless (registerType != nullptr, "INTERNAL ERROR: Unable to find Android.Runtime.JNIEnvInit.RegisterJniNatives! %s", mono_error_get_message (&error));
+	abort_unless (
+		registerType != nullptr,
+		[&error] {
+			return detail::_format_message (
+				"INTERNAL ERROR: Unable to find Android.Runtime.JNIEnvInit.RegisterJniNatives! %s",
+				mono_error_get_message (&error)
+			);
+		}
+	);
 
 	jclass lrefLoaderClass = env->GetObjectClass (loader);
 	init.Loader_loadClass     = env->GetMethodID (lrefLoaderClass, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
@@ -937,8 +945,12 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 
 	abort_unless (
 		initialize != nullptr,
-		"Failed to obtain unmanaged-callers-only pointer to the Android.Runtime.JNIEnvInit.Initialize method. %s",
-		mono_error_get_message (&error)
+		[&error] {
+			return detail::_format_message (
+				"Failed to obtain unmanaged-callers-only pointer to the Android.Runtime.JNIEnvInit.Initialize method. %s",
+				mono_error_get_message (&error)
+			);
+		}
 	);
 	initialize (&init);
 
@@ -948,7 +960,7 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 }
 
 MonoClass*
-MonodroidRuntime::get_android_runtime_class ()
+MonodroidRuntime::get_android_runtime_class () noexcept
 {
 	MonoAssembly *assm = Util::monodroid_load_assembly (default_alc, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME.data ());
 	MonoImage *image   = mono_assembly_get_image (assm);
@@ -956,7 +968,7 @@ MonodroidRuntime::get_android_runtime_class ()
 }
 
 inline void
-MonodroidRuntime::propagate_uncaught_exception (JNIEnv *env, jobject javaThread, jthrowable javaException)
+MonodroidRuntime::propagate_uncaught_exception (JNIEnv *env, jobject javaThread, jthrowable javaException) noexcept
 {
 	MonoClass *runtime = get_android_runtime_class ();
 	MonoMethod *method = mono_class_get_method_from_name (runtime, "PropagateUncaughtException", 3);
@@ -979,7 +991,7 @@ setup_gc_logging (void)
 }
 
 inline void
-MonodroidRuntime::set_environment_variable_for_directory (const char *name, jstring_wrapper &value, bool createDirectory, mode_t mode)
+MonodroidRuntime::set_environment_variable_for_directory (const char *name, jstring_wrapper &value, bool createDirectory, mode_t mode) noexcept
 {
 	if (createDirectory) {
 		int rv = Util::create_directory (value.get_cstr (), mode);
@@ -1004,7 +1016,7 @@ MonodroidRuntime::create_xdg_directory (jstring_wrapper& home, size_t home_len, 
 }
 
 inline void
-MonodroidRuntime::create_xdg_directories_and_environment (jstring_wrapper &homeDir)
+MonodroidRuntime::create_xdg_directories_and_environment (jstring_wrapper &homeDir) noexcept
 {
 	size_t home_len = strlen (homeDir.get_cstr ());
 
@@ -1019,7 +1031,7 @@ MonodroidRuntime::create_xdg_directories_and_environment (jstring_wrapper &homeD
 
 #if DEBUG
 void
-MonodroidRuntime::set_debug_env_vars (void)
+MonodroidRuntime::set_debug_env_vars (void) noexcept
 {
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> value;
 	if (AndroidSystem::monodroid_get_system_property (SharedConstants::DEBUG_MONO_ENV_PROPERTY, value) == 0)
@@ -1059,7 +1071,7 @@ MonodroidRuntime::set_debug_env_vars (void)
 #endif /* DEBUG */
 
 inline void
-MonodroidRuntime::set_trace_options (void)
+MonodroidRuntime::set_trace_options (void) noexcept
 {
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> value;
 	if (AndroidSystem::monodroid_get_system_property (SharedConstants::DEBUG_MONO_TRACE_PROPERTY, value) == 0)
@@ -1069,7 +1081,7 @@ MonodroidRuntime::set_trace_options (void)
 }
 
 inline void
-MonodroidRuntime::set_profile_options ()
+MonodroidRuntime::set_profile_options () noexcept
 {
 	// We want to avoid dynamic allocation, thus let’s create a buffer that can take both the property value and a
 	// path without allocation
@@ -1134,7 +1146,7 @@ MonodroidRuntime::set_profile_options ()
 }
 
 inline void
-MonodroidRuntime::load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, jstring_wrapper &assembly)
+MonodroidRuntime::load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, jstring_wrapper &assembly) noexcept
 {
 	size_t total_time_index;
 	if (FastTiming::enabled ()) [[unlikely]] {
@@ -1166,7 +1178,7 @@ MonodroidRuntime::load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, jst
 }
 
 inline void
-MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly)
+MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly) noexcept
 {
 	size_t total_time_index;
 	if (FastTiming::enabled ()) [[unlikely]] {
@@ -1204,7 +1216,7 @@ MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly)
 }
 
 inline void
-MonodroidRuntime::load_assemblies (load_assemblies_context_type ctx, bool preload, jstring_array_wrapper &assemblies)
+MonodroidRuntime::load_assemblies (load_assemblies_context_type ctx, bool preload, jstring_array_wrapper &assemblies) noexcept
 {
 	size_t total_time_index;
 	if (FastTiming::enabled ()) [[unlikely]] {
@@ -1239,7 +1251,7 @@ MonoDomain*
 MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wrapper &runtimeApks,
                                                 jstring_array_wrapper &assemblies, [[maybe_unused]] jobjectArray assembliesBytes,
                                                 [[maybe_unused]] jstring_array_wrapper &assembliesPaths, jobject loader, bool is_root_domain,
-                                                bool force_preload_assemblies, bool have_split_apks)
+                                                bool force_preload_assemblies, bool have_split_apks) noexcept
 {
 	MonoDomain* domain = create_domain (env, runtimeApks, is_root_domain, have_split_apks);
 	// Asserting this on desktop apparently breaks a Designer test
@@ -1255,7 +1267,7 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 	default_alc = mono_alc_get_default_gchandle ();
 	abort_unless (default_alc != nullptr, "Default AssemblyLoadContext not found");
 
-	embeddedAssemblies.install_preload_hooks_for_alc ();
+	EmbeddedAssemblies::install_preload_hooks_for_alc ();
 	log_debug (LOG_ASSEMBLY, "ALC hooks installed");
 
 	bool preload = (AndroidSystem::is_assembly_preload_enabled () || (is_running_on_desktop && force_preload_assemblies));
@@ -1277,18 +1289,18 @@ MonodroidRuntime::monodroid_unhandled_exception (MonoObject *java_exception)
 MonoReflectionType*
 MonodroidRuntime::typemap_java_to_managed (MonoString *java_type_name) noexcept
 {
-	return embeddedAssemblies.typemap_java_to_managed (java_type_name);
+	return EmbeddedAssemblies::typemap_java_to_managed (java_type_name);
 }
 
 const char*
 MonodroidRuntime::typemap_managed_to_java (MonoReflectionType *type, const uint8_t *mvid) noexcept
 {
-	return embeddedAssemblies.typemap_managed_to_java (type, mvid);
+	return EmbeddedAssemblies::typemap_managed_to_java (type, mvid);
 }
 #endif // !def RELEASE
 
 force_inline void
-MonodroidRuntime::setup_mono_tracing (std::unique_ptr<char[]> const& mono_log_mask, bool have_log_assembly, bool have_log_gc)
+MonodroidRuntime::setup_mono_tracing (std::unique_ptr<char[]> const& mono_log_mask, bool have_log_assembly, bool have_log_gc) noexcept
 {
 	constexpr std::string_view MASK_ASM { "asm" };
 	constexpr std::string_view MASK_DLL { "dll" };
@@ -1361,7 +1373,7 @@ MonodroidRuntime::setup_mono_tracing (std::unique_ptr<char[]> const& mono_log_ma
 }
 
 force_inline void
-MonodroidRuntime::install_logging_handlers ()
+MonodroidRuntime::install_logging_handlers () noexcept
 {
 	mono_trace_set_log_handler (mono_log_handler, nullptr);
 	mono_trace_set_print_handler (mono_log_standard_streams_handler);
@@ -1372,7 +1384,7 @@ inline void
 MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                                           jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset,
                                                           jobject loader, jobjectArray assembliesJava, jboolean isEmulator,
-                                                          jboolean haveSplitApks)
+                                                          jboolean haveSplitApks) noexcept
 {
 	char *mono_log_mask_raw = nullptr;
 	char *mono_log_level_raw = nullptr;
@@ -1546,7 +1558,7 @@ JNIEXPORT jint JNICALL
 JNI_OnLoad (JavaVM *vm, void *reserved)
 {
 	Util::initialize ();
-	return monodroidRuntime.Java_JNI_OnLoad (vm, reserved);
+	return MonodroidRuntime::Java_JNI_OnLoad (vm, reserved);
 }
 
 /* !DO NOT REMOVE! Used by the Android Designer */
@@ -1556,7 +1568,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
                                 [[maybe_unused]] jobjectArray externalStorageDirs, jobjectArray assembliesJava, [[maybe_unused]] jstring packageName,
                                 [[maybe_unused]] jint apiLevel, [[maybe_unused]] jobjectArray environmentVariables)
 {
-	monodroidRuntime.Java_mono_android_Runtime_initInternal (
+	MonodroidRuntime::Java_mono_android_Runtime_initInternal (
 		env,
 		klass,
 		lang,
@@ -1577,7 +1589,7 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
                                 jobjectArray assembliesJava, jboolean isEmulator,
                                 jboolean haveSplitApks)
 {
-	monodroidRuntime.Java_mono_android_Runtime_initInternal (
+	MonodroidRuntime::Java_mono_android_Runtime_initInternal (
 		env,
 		klass,
 		lang,
@@ -1593,7 +1605,7 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 }
 
 force_inline void
-MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods)
+MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods) noexcept
 {
 	size_t total_time_index;
 
@@ -1637,11 +1649,11 @@ JNICALL Java_mono_android_Runtime_dumpTimingData ([[maybe_unused]] JNIEnv *env, 
 JNIEXPORT void
 JNICALL Java_mono_android_Runtime_register (JNIEnv *env, [[maybe_unused]] jclass klass, jstring managedType, jclass nativeClass, jstring methods)
 {
-	monodroidRuntime.Java_mono_android_Runtime_register (env, managedType, nativeClass, methods);
+	MonodroidRuntime::Java_mono_android_Runtime_register (env, managedType, nativeClass, methods);
 }
 
 char*
-MonodroidRuntime::get_java_class_name_for_TypeManager (jclass klass)
+MonodroidRuntime::get_java_class_name_for_TypeManager (jclass klass) noexcept
 {
 	if (klass == nullptr || Class_getName == nullptr)
 		return nullptr;
@@ -1682,5 +1694,5 @@ get_jnienv (void)
 JNIEXPORT void
 JNICALL Java_mono_android_Runtime_propagateUncaughtException (JNIEnv *env, [[maybe_unused]] jclass klass, jobject javaThread, jthrowable javaException)
 {
-	monodroidRuntime.propagate_uncaught_exception (env, javaThread, javaException);
+	MonodroidRuntime::propagate_uncaught_exception (env, javaThread, javaException);
 }

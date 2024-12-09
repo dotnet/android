@@ -323,7 +323,7 @@ AndroidSystem::load_dso (const char *path, unsigned int dl_flags, bool skip_exis
 void*
 AndroidSystem::load_dso_from_specified_dirs (const char **directories, size_t num_entries, const char *dso_name, unsigned int dl_flags) noexcept
 {
-	abort_if_invalid_pointer_argument (directories);
+	abort_if_invalid_pointer_argument (directories, "directories");
 	if (dso_name == nullptr)
 		return nullptr;
 

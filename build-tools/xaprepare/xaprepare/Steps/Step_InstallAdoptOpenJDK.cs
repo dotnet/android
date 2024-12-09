@@ -24,9 +24,13 @@ namespace Xamarin.Android.Prepare
 			Path.Combine ("include", "jni.h"),
 		};
 
-		public Step_InstallOpenJDK (string description)
+		bool AllowJIJavaHomeMatch = false;
+
+		public Step_InstallOpenJDK (string description, bool allowJIJavaHomeMatch = false)
 			: base (description)
-		{}
+		{
+			AllowJIJavaHomeMatch = allowJIJavaHomeMatch;
+		}
 
 		protected   abstract    string  ProductName     {get;}
 		protected   abstract    string  JdkInstallDir	{get;}
@@ -55,7 +59,22 @@ namespace Xamarin.Android.Prepare
 				return true;
 			}
 
-			Log.StatusLine ($"{ProductName} {JdkVersion} r{JdkRelease} will be installed");
+			// Check for a JDK installed on CI with a matching major version to use for test jobs
+			var jiJavaHomeVarValue = Environment.GetEnvironmentVariable ("JI_JAVA_HOME");
+			if (AllowJIJavaHomeMatch && Directory.Exists (jiJavaHomeVarValue)) {
+				jdkInstallDir = jiJavaHomeVarValue;
+				OpenJDKExistsAndIsValid (jdkInstallDir, out installedVersion);
+				if (Version.TryParse (installedVersion, out Version? cversion) && cversion != null) {
+					if (cversion.Major == JdkVersion.Major) {
+						Log.Status ($"{ProductName} with version ");
+						Log.Status (installedVersion ?? "Unknown", ConsoleColor.Yellow);
+						Log.StatusLine (" already installed in: ", jdkInstallDir, tailColor: ConsoleColor.Cyan);
+						return true;
+					}
+				}
+			}
+
+			Log.StatusLine ($"{ProductName} {JdkVersion} r{JdkRelease} will be installed to {jdkInstallDir}");
 			Uri jdkURL = JdkUrl;
 			if (jdkURL == null)
 				throw new InvalidOperationException ($"{ProductName} URL must not be null");
@@ -196,9 +215,9 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
+			installedVersion = cv;
 			string xaVersionFile = Path.Combine (installDir, XAVersionInfoFile);
 			if (!File.Exists (xaVersionFile)) {
-				installedVersion = cv;
 				Log.DebugLine ($"Unable to find .NET for Android version file {xaVersionFile}");
 				return false;
 			}
@@ -214,8 +233,6 @@ namespace Xamarin.Android.Prepare
 				Log.DebugLine ($".NET for Android version file {xaVersionFile} does not contain release version information");
 				return false;
 			}
-
-			installedVersion = $"{cv} r{rv}";
 
 			if (!Version.TryParse (cv, out Version? cversion) || cversion == null) {
 				Log.DebugLine ($"Unable to parse {ProductName} version from: {cv}");
@@ -271,8 +288,8 @@ namespace Xamarin.Android.Prepare
 
 		const string _ProductName = "Microsoft OpenJDK";
 
-		public Step_InstallMicrosoftOpenJDK ()
-			: base ($"Installing {_ProductName}")
+		public Step_InstallMicrosoftOpenJDK (bool allowJIJavaHomeMatch = false)
+			: base ($"Installing {_ProductName}", allowJIJavaHomeMatch)
 		{
 		}
 

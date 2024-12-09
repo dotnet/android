@@ -47,9 +47,6 @@ namespace xamarin::android
 {
 	class Util
 	{
-		static constexpr std::array<char, 16> hex_chars = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-		static constexpr uint32_t ms_in_nsec = 1000000ULL;
-
 	public:
 		static void initialize () noexcept;
 
@@ -197,13 +194,6 @@ namespace xamarin::android
 			return p != nullptr && p [N - 1] == '\0';
 		}
 
-		template<size_t N>
-		static bool ends_with (const char *str, helper_char_array<N> const& end) noexcept
-		{
-			char *p = const_cast<char*> (strstr (str, end.data ()));
-			return p != nullptr && p [N - 1] == '\0';
-		}
-
 		template<size_t N, size_t MaxStackSize, typename TStorage, typename TChar = char>
 		static bool ends_with (internal::string_base<MaxStackSize, TStorage, TChar> const& str, const char (&end)[N]) noexcept
 		{
@@ -219,19 +209,6 @@ namespace xamarin::android
 
 		template<size_t N, size_t MaxStackSize, typename TStorage, typename TChar = char>
 		static bool ends_with (internal::string_base<MaxStackSize, TStorage, TChar> const& str, std::array<TChar, N> const& end) noexcept
-		{
-			constexpr size_t end_length = N - 1uz;
-
-			size_t len = str.length ();
-			if (len < end_length) [[unlikely]] {
-				return false;
-			}
-
-			return memcmp (str.get () + len - end_length, end.data (), end_length) == 0;
-		}
-
-		template<size_t N, size_t MaxStackSize, typename TStorage, typename TChar = char>
-		static bool ends_with (internal::string_base<MaxStackSize, TStorage, TChar> const& str, helper_char_array<N> const& end) noexcept
 		{
 			constexpr size_t end_length = N - 1uz;
 

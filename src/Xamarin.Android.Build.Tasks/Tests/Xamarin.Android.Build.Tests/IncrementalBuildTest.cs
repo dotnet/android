@@ -904,6 +904,29 @@ namespace Lib2
 
 		[Test]
 		[NonParallelizable]
+		public void AddNewAndroidResourceOnSecondBuild ()
+		{
+			var xml = new AndroidItem.AndroidResource (@"Resources\values\emptyvalues.xml") {
+				TextContent = () => "<?xml version=\"1.0\" encoding=\"utf-8\" ?><resources></resources>"
+			};
+
+			var proj = new XamarinAndroidApplicationProject ();
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				var projectFile = Path.Combine (Root, b.ProjectDirectory, proj.ProjectFilePath);
+				b.ThrowOnBuildFailure = false;
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				b.Output.AssertTargetIsNotSkipped ("_GenerateAndroidResourceDir");
+				proj.OtherBuildItems.Add (xml);
+				b.Save (proj, doNotCleanupOnUpdate: true);
+				var modified = File.GetLastWriteTimeUtc (Path.Combine (Root, b.ProjectDirectory, "Resources","layout","Main.axml"));
+				File.SetLastWriteTimeUtc (Path.Combine (Root, b.ProjectDirectory, "Resources","values", "emptyvalues.xml"), modified);
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				b.Output.AssertTargetIsNotSkipped ("_GenerateAndroidResourceDir");
+			}
+		}
+
+		[Test]
+		[NonParallelizable]
 		public void InvalidAndroidResource ()
 		{
 			var invalidXml = new AndroidItem.AndroidResource (@"Resources\values\ids.xml") {

@@ -10,7 +10,7 @@ static inline constexpr size_t BUF_SIZE = 512uz;
 static int
 find_in_maps (const char *str)
 {
-	abort_if_invalid_pointer_argument (str);
+	abort_if_invalid_pointer_argument (str, "str");
 
 	FILE *maps = fopen ("/proc/self/maps", "r");
 	char *line;
@@ -112,9 +112,9 @@ get_running_on_cpu (unsigned short *running_on_cpu)
 void
 _monodroid_detect_cpu_and_architecture (unsigned short *built_for_cpu, unsigned short *running_on_cpu, unsigned char *is64bit)
 {
-	abort_if_invalid_pointer_argument (built_for_cpu);
-	abort_if_invalid_pointer_argument (running_on_cpu);
-	abort_if_invalid_pointer_argument (is64bit);
+	abort_if_invalid_pointer_argument (built_for_cpu, "built_for_cpu");
+	abort_if_invalid_pointer_argument (running_on_cpu, "running_on_cpu");
+	abort_if_invalid_pointer_argument (is64bit, "is64bit");
 
 	*is64bit = is_64_bit ();
 	get_built_for_cpu (built_for_cpu);

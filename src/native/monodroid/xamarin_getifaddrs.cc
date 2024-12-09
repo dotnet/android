@@ -370,8 +370,8 @@ get_ifaddrs_impl (int (**getifaddrs_implementation) (struct _monodroid_ifaddrs *
 {
 	void *libc;
 
-	abort_if_invalid_pointer_argument (getifaddrs_implementation);
-	abort_if_invalid_pointer_argument (freeifaddrs_implementation);
+	abort_if_invalid_pointer_argument (getifaddrs_implementation, "getifaddrs_implementation");
+	abort_if_invalid_pointer_argument (freeifaddrs_implementation, "freeifaddrs_implementation");
 
 	libc = dlopen ("libc.so", RTLD_NOW);
 	if (libc) {
@@ -416,7 +416,7 @@ free_single_xamarin_ifaddrs (struct _monodroid_ifaddrs **ifap)
 static int
 open_netlink_session (netlink_session *session)
 {
-	abort_if_invalid_pointer_argument (session);
+	abort_if_invalid_pointer_argument (session, "session");
 
 	memset (session, 0, sizeof (*session));
 	session->sock_fd = socket (AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
@@ -488,9 +488,9 @@ send_netlink_dump_request (netlink_session *session, int type)
 static int
 append_ifaddr (struct _monodroid_ifaddrs *addr, struct _monodroid_ifaddrs **ifaddrs_head, struct _monodroid_ifaddrs **last_ifaddr)
 {
-	abort_if_invalid_pointer_argument (addr);
-	abort_if_invalid_pointer_argument (ifaddrs_head);
-	abort_if_invalid_pointer_argument (last_ifaddr);
+	abort_if_invalid_pointer_argument (addr, "addr");
+	abort_if_invalid_pointer_argument (ifaddrs_head, "ifaddrs_head");
+	abort_if_invalid_pointer_argument (last_ifaddr, "last_ifaddr");
 
 	if (!*ifaddrs_head) {
 		*ifaddrs_head = *last_ifaddr = addr;
@@ -524,9 +524,9 @@ parse_netlink_reply (netlink_session *session, struct _monodroid_ifaddrs **ifadd
 	int ret = -1;
 	unsigned char *response = NULL;
 
-	abort_if_invalid_pointer_argument (session);
-	abort_if_invalid_pointer_argument (ifaddrs_head);
-	abort_if_invalid_pointer_argument (last_ifaddr);
+	abort_if_invalid_pointer_argument (session, "session");
+	abort_if_invalid_pointer_argument (ifaddrs_head, "ifaddrs_head");
+	abort_if_invalid_pointer_argument (last_ifaddr, "last_ifaddr");
 
 	size_t buf_size = static_cast<size_t>(getpagesize ());
 	log_debug (LOG_NETLINK, "receive buffer size == %d", buf_size);
@@ -626,9 +626,9 @@ parse_netlink_reply (netlink_session *session, struct _monodroid_ifaddrs **ifadd
 static int
 fill_sa_address (struct sockaddr **sa, struct ifaddrmsg *net_address, void *rta_data, size_t rta_payload_length)
 {
-	abort_if_invalid_pointer_argument (sa);
-	abort_if_invalid_pointer_argument (net_address);
-	abort_if_invalid_pointer_argument (rta_data);
+	abort_if_invalid_pointer_argument (sa, "sa");
+	abort_if_invalid_pointer_argument (net_address, "net_address");
+	abort_if_invalid_pointer_argument (rta_data, "rta_data");
 
 	switch (net_address->ifa_family) {
 		case AF_INET: {
@@ -688,8 +688,8 @@ fill_sa_address (struct sockaddr **sa, struct ifaddrmsg *net_address, void *rta_
 static int
 fill_ll_address (struct sockaddr_ll_extended **sa, struct ifinfomsg *net_interface, void *rta_data, size_t rta_payload_length)
 {
-	abort_if_invalid_pointer_argument (sa);
-	abort_if_invalid_pointer_argument (net_interface);
+	abort_if_invalid_pointer_argument (sa, "sa");
+	abort_if_invalid_pointer_argument (net_interface, "net_interface");
 
 	/* Always allocate, do not free - caller may reuse the same variable */
 	*sa = reinterpret_cast<sockaddr_ll_extended*>(calloc (1, sizeof (**sa)));
@@ -845,7 +845,7 @@ get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **if
 	struct sockaddr **sa;
 	size_t payload_size;
 
-	abort_if_invalid_pointer_argument (message);
+	abort_if_invalid_pointer_argument (message, "message");
 	net_address = reinterpret_cast<ifaddrmsg*> (NLMSG_DATA (message));
 	length = static_cast<ssize_t>(IFA_PAYLOAD (message));
 	log_debug (LOG_NETLINK, "   address data length: %u", length);
@@ -995,7 +995,7 @@ get_link_info (const struct nlmsghdr *message)
 	struct _monodroid_ifaddrs *ifa = NULL;
 	struct sockaddr_ll_extended *sa = NULL;
 
-	abort_if_invalid_pointer_argument (message);
+	abort_if_invalid_pointer_argument (message, "message");
 	net_interface = reinterpret_cast <ifinfomsg*> (NLMSG_DATA (message));
 	length = static_cast<ssize_t>(message->nlmsg_len - NLMSG_LENGTH (sizeof (*net_interface)));
 	if (length <= 0) {
