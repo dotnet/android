@@ -140,4 +140,20 @@ class DSOWrapperGenerator
 			Directory.Delete (outputDir, recursive: true);
 		}
 	}
+
+	public static string [] GetDirectoriesToCleanUp (Config config)
+	{
+		var dirs = new List<string> ();
+
+		foreach (var kvp in config.DSOStubPaths) {
+			string outputDir = GetArchOutputPath (kvp.Key, config);
+			if (!Directory.Exists (outputDir)) {
+				continue;
+			}
+
+			dirs.Add (outputDir);
+		}
+
+		return dirs.ToArray ();
+	}
 }
