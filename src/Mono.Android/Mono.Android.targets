@@ -235,20 +235,6 @@
     </ItemGroup>
   </Target>
 
-  <!-- Build Mono.Android.dll for additional API levels if necessary -->
-  <Target Name="_BuildAdditionalApiLevels">
-    <MSBuild
-         Condition=" '$(AndroidDefaultTargetDotnetApiLevel)' != '$(AndroidLatestStableApiLevel)' "
-         Projects="$(XamarinAndroidSourcePath)src\Mono.Android\Mono.Android.csproj"
-         Properties="AndroidApiLevel=$(AndroidDefaultTargetDotnetApiLevel);AndroidPlatformId=$(AndroidDefaultTargetDotnetApiLevel)"
-    />
-    <MSBuild
-         Condition=" '$(AndroidLatestUnstableApiLevel)' != '$(AndroidLatestStableApiLevel)' "
-         Projects="$(XamarinAndroidSourcePath)src\Mono.Android\Mono.Android.csproj"
-         Properties="AndroidApiLevel=$(AndroidLatestUnstableApiLevel);AndroidPlatformId=$(AndroidLatestUnstablePlatformId)"
-    />
-  </Target>
-
   <PropertyGroup>
     <!-- Override these properties to generate docs against a specific API level -->
     <DocsApiLevel Condition=" '$(DocsApiLevel)' == '' ">34</DocsApiLevel>

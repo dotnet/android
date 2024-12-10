@@ -400,7 +400,6 @@
   <PropertyGroup Condition=" '$(AndroidApiLevel)' &gt;= '$(AndroidDefaultTargetDotnetApiLevel)' ">
     <BuildDependsOn>
       $(BuildDependsOn);
-      _BuildAdditionalApiLevels;
       _ExportMsxDoc;
       _CopyToPackDirs;
     </BuildDependsOn>
