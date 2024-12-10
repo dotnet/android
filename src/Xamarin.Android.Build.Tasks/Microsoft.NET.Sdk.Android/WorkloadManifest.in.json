@@ -97,23 +97,35 @@
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.Ref.36": {
+    "Microsoft.Android.Runtime.Mono.36.android-arm": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.Runtime.36.android-arm": {
+    "Microsoft.Android.Runtime.Mono.36.android-arm64": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.Runtime.36.android-arm64": {
+    "Microsoft.Android.Runtime.Mono.36.android-x86": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.Runtime.36.android-x86": {
+    "Microsoft.Android.Runtime.Mono.36.android-x64": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.Runtime.36.android-x64": {
+    "Microsoft.Android.Runtime.NativeAOT.36.android-arm": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "Microsoft.Android.Runtime.NativeAOT.36.android-arm64": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "Microsoft.Android.Runtime.NativeAOT.36.android-x86": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "Microsoft.Android.Runtime.NativeAOT.36.android-x64": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
