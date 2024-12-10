@@ -23,10 +23,10 @@ public class BuildArchive : AndroidTask
 	public string? ApkInputPath { get; set; }
 
 	[Required]
-	public string ApkOutputPath { get; set; } = null!; // NRT enforced by [Required]
+	public string ApkOutputPath { get; set; } = "";
 
 	[Required]
-	public ITaskItem [] FilesToAddToArchive { get; set; } = null!; // NRT enforced by [Required]
+	public ITaskItem [] FilesToAddToArchive { get; set; } = [];
 
 	public string? UncompressedFileExtensions { get; set; }
 
