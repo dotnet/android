@@ -98,7 +98,6 @@
     <MonoRequiredMaximumVersion Condition=" '$(MonoRequiredMaximumVersion)' == '' ">$(MonoRequiredMinimumVersion)</MonoRequiredMaximumVersion>
     <IgnoreMaxMonoVersion Condition=" '$(IgnoreMaxMonoVersion)' == '' And '$(RunningOnCI)' == 'true' ">False</IgnoreMaxMonoVersion>
     <IgnoreMaxMonoVersion Condition=" '$(IgnoreMaxMonoVersion)' == '' ">True</IgnoreMaxMonoVersion>
-    <OpenTKSourceDirectory>$(MSBuildThisFileDirectory)external\opentk</OpenTKSourceDirectory>
     <SqliteSourceDirectory Condition=" '$(SqliteSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\sqlite</SqliteSourceDirectory>
     <LibUnwindSourceDirectory Condition=" '$(LibUnwindSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\libunwind</LibUnwindSourceDirectory>
     <LibUnwindGeneratedHeadersDirectory Condition=" '$(LibUnwindGeneratedHeadersDirectory)' == '' ">$(BootstrapOutputDirectory)\libunwind</LibUnwindGeneratedHeadersDirectory>
@@ -143,7 +142,6 @@
     <LibUnwindSourceFullPath>$([System.IO.Path]::GetFullPath ('$(LibUnwindSourceDirectory)'))</LibUnwindSourceFullPath>
     <LibUnwindGeneratedHeadersFullPath>$([System.IO.Path]::GetFullPath ('$(LibUnwindGeneratedHeadersDirectory)'))</LibUnwindGeneratedHeadersFullPath>
     <LZ4SourceFullPath>$([System.IO.Path]::GetFullPath ('$(LZ4SourceDirectory)'))</LZ4SourceFullPath>
-    <OpenTKSourceFullPath>$([System.IO.Path]::GetFullPath ('$(OpenTKSourceDirectory)'))</OpenTKSourceFullPath>
     <JavaInteropTargetFrameworkVersion>net8.0</JavaInteropTargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup>
