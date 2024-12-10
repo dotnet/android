@@ -170,10 +170,13 @@ public class BuildArchive : AndroidTask
 					var jar_item = jar.ReadEntry (jar_entry_name);
 
 					byte [] data;
+					var d = MemoryStreamPool.Shared.Rent ();
 
-					using (var d = new MemoryStream ()) {
+					try {
 						jar_item.Extract (d);
 						data = d.ToArray ();
+					} finally {
+						MemoryStreamPool.Shared.Return (d);
 					}
 
 					Log.LogDebugMessage ($"Adding {jar_entry_name} from {jar_file_path} as the archive file is out of date.");
