@@ -24,6 +24,7 @@ namespace Xamarin.Android.Tasks
 			public FixAbstractMethodsStep? fixAbstractMethodsStep = null;
 			public AddKeepAlivesStep? addKeepAliveStep = null;
 			public FixLegacyResourceDesignerStep? fixLegacyResourceDesignerStep = null;
+			public GenerateJavaStubsStep? generateJavaStubs = null;
 		}
 
 		public override string TaskPrefix => "LNS";
@@ -56,6 +57,16 @@ namespace Xamarin.Android.Tasks
 		/// Defaults to false, enables Mono.Cecil to load symbols
 		/// </summary>
 		public bool ReadSymbols { get; set; }
+
+		[Required]
+		public string ApplicationJavaClass { get; set; } = "";
+
+		public bool EnableMarshalMethods { get; set; }
+
+		public bool NativeAot { get; set; }
+
+		[Required]
+		public string JavaStubsOutputDirectory { get; set; } = "";
 
 		public override bool RunTask ()
 		{
@@ -103,6 +114,13 @@ namespace Xamarin.Android.Tasks
 					runState.fixAbstractMethodsStep = new FixAbstractMethodsStep (runState.resolver, runState.cache, Log);
 					runState.addKeepAliveStep = new AddKeepAlivesStep (runState.resolver, runState.cache, Log);
 					runState.fixLegacyResourceDesignerStep = new FixLegacyResourceDesignerStep (runState.resolver, runState.cache, Log);
+					runState.generateJavaStubs = new GenerateJavaStubsStep (runState.resolver, runState.cache, Log) {
+						AndroidTargetArch = currentArch,
+						ApplicationJavaClass = ApplicationJavaClass,
+						EnableMarshalMethods = EnableMarshalMethods,
+						NativeAot = NativeAot,
+						OutputDirectory = JavaStubsOutputDirectory,
+					};
 				}
 
 				DoRunTask (source, destination, runState, writerParameters);
@@ -124,12 +142,6 @@ namespace Xamarin.Android.Tasks
 		void DoRunTask (ITaskItem source, ITaskItem destination, RunState runState, WriterParameters writerParameters)
 		{
 			var assemblyName = Path.GetFileNameWithoutExtension (source.ItemSpec);
-
-			// In .NET 6+, we can skip the main assembly
-			if (!AddKeepAlives && assemblyName == TargetName) {
-				CopyIfChanged (source, destination);
-				return;
-			}
 			if (runState.fixAbstractMethodsStep!.IsProductOrSdkAssembly (assemblyName)) {
 				CopyIfChanged (source, destination);
 				return;
@@ -141,9 +153,10 @@ namespace Xamarin.Android.Tasks
 
 				bool save = runState.fixAbstractMethodsStep.FixAbstractMethods (assemblyDefinition);
 				if (UseDesignerAssembly)
-				save |= runState.fixLegacyResourceDesignerStep!.ProcessAssemblyDesigner (assemblyDefinition);
+					save |= runState.fixLegacyResourceDesignerStep!.ProcessAssemblyDesigner (assemblyDefinition);
 				if (AddKeepAlives)
-				save |= runState.addKeepAliveStep!.AddKeepAlives (assemblyDefinition);
+					save |= runState.addKeepAliveStep!.AddKeepAlives (assemblyDefinition);
+				runState.generateJavaStubs?.GenerateJavaStubs (assemblyDefinition);
 				if (save) {
 					Log.LogDebugMessage ($"Saving modified assembly: {destination.ItemSpec}");
 					Directory.CreateDirectory (Path.GetDirectoryName (destination.ItemSpec));
@@ -240,6 +253,23 @@ namespace Xamarin.Android.Tasks
 			{
 				logger.LogDebugMessage ("{0}", message);
 			}
+		}
+
+		class GenerateJavaStubsStep : Microsoft.Android.Sdk.ILLink.GenerateJavaStubsStep
+		{
+			readonly TaskLoggingHelper logger;
+
+			public GenerateJavaStubsStep (DirectoryAssemblyResolver resolver, TypeDefinitionCache cache, TaskLoggingHelper logger)
+				: base (resolver, cache)
+			{
+				this.logger = logger;
+			}
+
+			public override void LogMessage (string message) =>
+				logger.LogDebugMessage (message);
+
+			public override void LogWarning (string message) =>
+				logger.LogWarning (message);
 		}
 	}
 }

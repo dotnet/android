@@ -122,6 +122,21 @@
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</comment>
   </data>
+  <data name="XA4209" xml:space="preserve">
+    <value>Failed to generate Java type for class: {0} due to {1}</value>
+    <comment>{0} - The managed type name
+{1} - The exception message of the associated exception</comment>
+  </data>
+  <data name="XA4210" xml:space="preserve">
+    <value>Please add a reference to Mono.Android.Export.dll when using ExportAttribute or ExportFieldAttribute.</value>
+    <comment>The following are literal names and should not be translated: Mono.Android.Export.dll, ExportAttribute, ExportFieldAttribute.</comment>
+  </data>
+  <data name="XA5301" xml:space="preserve">
+    <value>Failed to generate Java type for class: {0} due to MAX_PATH: {1}</value>
+    <comment>The following are literal names and should not be translated: MAX_PATH.
+{0} - The managed type name
+{1} - The exception message of the associated exception</comment>
+  </data>
   <data name="XA8000" xml:space="preserve">
     <value>Could not find Android Resource '{0}'. Please update @(AndroidResource) to add the missing resource.</value>
     <comment>

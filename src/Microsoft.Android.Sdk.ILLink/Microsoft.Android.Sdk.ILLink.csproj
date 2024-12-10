@@ -9,6 +9,9 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.ILLink" Version="$(MicrosoftNETILLinkTasksPackageVersion)" />
     <ProjectReference Include="..\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" ReferenceOutputAssembly="False" />
+    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj" />
+    <ProjectReference Include="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
+    <ProjectReference Include="..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
 
     <Compile Include="..\Xamarin.Android.Build.Tasks\obj\$(Configuration)\Profile.g.cs" Link="Profile.g.cs" />
 
@@ -24,10 +27,9 @@
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\Mobile.Tuner\MobileProfile.cs" Link="Mobile.Tuner\MobileProfile.cs" />
 
     <!--Other .NET for Android / Java.Interop files-->
-    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil\CustomAttributeProviderRocks.cs" Link="Java.Interop\CustomAttributeProviderRocks.cs" />
-    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil\MethodDefinitionRocks.cs" Link="Java.Interop\MethodDefinitionRocks.cs" />
-    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil\TypeDefinitionCache.cs" Link="Java.Interop\TypeDefinitionCache.cs" />
-    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil\TypeDefinitionRocks.cs" Link="Java.Interop\TypeDefinitionRocks.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MarshalMethodsClassifier.cs" Link="Utilities\MarshalMethodsClassifier.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MarshalMethodsHelpers.cs"    Link="Utilities\MarshalMethodsHelpers.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Basic.cs" Link="Utilities\MonoAndroidHelper.Basic.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Linker.cs" Link="Utilities\MonoAndroidHelper.Linker.cs" />
   </ItemGroup>
   <ItemGroup>

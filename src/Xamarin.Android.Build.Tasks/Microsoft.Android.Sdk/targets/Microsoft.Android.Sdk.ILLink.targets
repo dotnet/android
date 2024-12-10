@@ -32,6 +32,11 @@ This file contains the .NET 5-specific targets to customize ILLink
         -->
       <_TrimmerCustomData Include="AndroidHttpClientHandlerType" Value="$(AndroidHttpClientHandlerType)" />
       <_TrimmerCustomData Include="AndroidCustomViewMapFile" Value="$(_OuterCustomViewMapFile)" />
+      <_TrimmerCustomData Include="AndroidIntermediateOutputPath" Value="$(_OuterIntermediateOutputPath)" />
+      <_TrimmerCustomData Include="AndroidNativeAot" Value="$(_AndroidNativeAot)" />
+      <_TrimmerCustomData Include="AndroidUseMarshalMethods" Value="$(_AndroidUseMarshalMethods)" />
+      <_TrimmerCustomData Include="ApplicationJavaClass" Value="$(ApplicationJavaClass)" />
+      <_TrimmerCustomData Include="RuntimeIdentifier" Value="$(RuntimeIdentifier)" />
       <_TrimmerCustomData Include="XATargetFrameworkDirectories" Value="$(_XATargetFrameworkDirectories)" />
       <_TrimmerCustomData
           Condition=" '$(_ProguardProjectConfiguration)' != '' "
@@ -86,6 +91,11 @@ This file contains the .NET 5-specific targets to customize ILLink
           Include="$(_AndroidLinkerCustomStepAssembly)"
           BeforeStep="MarkStep"
           Type="MonoDroid.Tuner.FixLegacyResourceDesignerStep"
+      />
+      <_TrimmerCustomSteps
+          Include="$(_AndroidLinkerCustomStepAssembly)"
+          AfterStep="CleanStep"
+          Type="Microsoft.Android.Sdk.ILLink.GenerateJavaStubs"
       />
       <_PreserveLists Include="$(MSBuildThisFileDirectory)..\PreserveLists\*.xml" />
       <TrimmerRootDescriptor

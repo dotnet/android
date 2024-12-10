@@ -39,16 +39,16 @@ namespace Mono.Linker.Steps {
 		}
 
 		public AnnotationStore Annotations {
-			get { return _context.Annotations; }
+			get { return _context?.Annotations; }
 		}
 
 		public Tracer Tracer {
-			get { return _context.Tracer; }
+			get { return _context?.Tracer; }
 		}
 
-		public MarkingHelpers MarkingHelpers => _context.MarkingHelpers;
+		public MarkingHelpers MarkingHelpers => _context?.MarkingHelpers;
 
-		public void Process (LinkContext context)
+		public virtual void Process (LinkContext context)
 		{
 			_context = context;
 

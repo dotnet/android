@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+#if !ILLINK
 using System.IO.Hashing;
+#endif
 using System.Text;
 
 using Xamarin.Android.Tools;
@@ -229,6 +231,7 @@ partial class MonoAndroidHelper
 
 	public static byte[] Utf8StringToBytes (string str) => Encoding.UTF8.GetBytes (str);
 
+#if !ILLINK
 	public static ulong GetXxHash (string str, bool is64Bit) => GetXxHash (Utf8StringToBytes (str), is64Bit);
 
 	public static ulong GetXxHash (byte[] stringBytes, bool is64Bit)
@@ -239,4 +242,5 @@ partial class MonoAndroidHelper
 
 		return (ulong)XxHash32.HashToUInt32 (stringBytes);
 	}
+#endif
 }

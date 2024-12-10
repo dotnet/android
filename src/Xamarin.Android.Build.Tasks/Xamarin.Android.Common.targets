@@ -1438,6 +1438,10 @@ because xbuild doesn't support framework reference assemblies.
       UseDesignerAssembly="$(AndroidUseDesignerAssembly)"
       Deterministic="$(Deterministic)"
       ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)"
+      ApplicationJavaClass="$(AndroidApplicationJavaClass)"
+      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
+      NativeAot="$(_AndroidNativeAot)"
+      JavaStubsOutputDirectory="$(IntermediateOutputPath)android\src"
   />
   <ItemGroup>
     <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)**" />

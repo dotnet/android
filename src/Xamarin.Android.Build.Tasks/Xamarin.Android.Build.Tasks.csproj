@@ -79,6 +79,9 @@
     <Compile Include="Linker\External\Mono.Tuner\CecilRocks.cs" />
     <Compile Include="Linker\External\Mono.Tuner\Extensions.cs" />
     <Compile Include="Linker\External\Mono.Tuner\Profile.cs" />
+    <Compile Include="..\Microsoft.Android.Sdk.ILLink\GenerateJavaStubsStep.cs">
+      <Link>Linker\GenerateJavaStubsStep.cs</Link>
+    </Compile>
 
     <Compile Include="..\Mono.Android\\Android.App\IntentFilterAttribute.cs">
       <Link>Mono.Android\IntentFilterAttribute.cs</Link>

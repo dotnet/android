@@ -82,7 +82,7 @@ namespace Xamarin.Android.Tasks
 			return s;
 		}
 
-		public string GetStoreMethodKey (TypeDefinitionCache tdCache)
+		public string GetStoreMethodKey (IMetadataResolver tdCache)
 		{
 			MethodDefinition registeredMethod = RegisteredMethod;
 			string typeName = registeredMethod.DeclaringType.FullName.Replace ('/', '+');
@@ -140,13 +140,15 @@ namespace Xamarin.Android.Tasks
 
 			readonly List<string> paramTypes;
 			readonly string returnType;
-			readonly TaskLoggingHelper log;
-			readonly TypeDefinitionCache cache;
+			readonly Action<string> logDebugMessage;
+			readonly Action<string> logWarning;
+			readonly IMetadataResolver cache;
 
-			public NativeCallbackSignature (MethodDefinition target, TaskLoggingHelper log, TypeDefinitionCache cache)
+			public NativeCallbackSignature (MethodDefinition target, Action<string> logDebugMessage, Action<string> logWarning, IMetadataResolver cache)
 			{
-				this.log = log;
 				this.cache = cache;
+				this.logDebugMessage = logDebugMessage;
+				this.logWarning = logWarning;
 				returnType = MapType (target.ReturnType);
 				paramTypes = new List<string> {
 					"System.IntPtr", // jnienv
@@ -204,12 +206,12 @@ namespace Xamarin.Android.Tasks
 			public bool Matches (MethodDefinition method)
 			{
 				if (method.Parameters.Count != paramTypes.Count || !method.IsStatic) {
-					log.LogWarning ($"Method '{method.FullName}' doesn't match native callback signature (invalid parameter count or not static)");
+					logWarning ($"Method '{method.FullName}' doesn't match native callback signature (invalid parameter count or not static)");
 					return false;
 				}
 
 				if (String.Compare (returnType, method.ReturnType.FullName, StringComparison.Ordinal) != 0) {
-					log.LogWarning ($"Method '{method.FullName}' doesn't match native callback signature (invalid return type: expected '{returnType}', found '{method.ReturnType.FullName}')");
+					logWarning ($"Method '{method.FullName}' doesn't match native callback signature (invalid return type: expected '{returnType}', found '{method.ReturnType.FullName}')");
 					return false;
 				}
 
@@ -224,7 +226,7 @@ namespace Xamarin.Android.Tasks
 					}
 
 					if (String.Compare (parameterTypeName, paramTypes[i], StringComparison.Ordinal) != 0) {
-						log.LogWarning ($"Method '{method.FullName}' doesn't match native callback signature, expected parameter type '{paramTypes[i]}' at position {i}, found '{parameterTypeName}'");
+						logWarning ($"Method '{method.FullName}' doesn't match native callback signature, expected parameter type '{paramTypes[i]}' at position {i}, found '{parameterTypeName}'");
 						return false;
 					}
 				}
@@ -233,12 +235,13 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		TypeDefinitionCache tdCache;
-		IAssemblyResolver resolver;
-		Dictionary<string, IList<MarshalMethodEntry>> marshalMethods;
-		HashSet<AssemblyDefinition> assemblies;
-		TaskLoggingHelper log;
-		HashSet<TypeDefinition> typesWithDynamicallyRegisteredMethods;
+		readonly IMetadataResolver tdCache;
+		readonly IAssemblyResolver resolver;
+		readonly Dictionary<string, IList<MarshalMethodEntry>> marshalMethods = new (StringComparer.Ordinal);
+		readonly HashSet<AssemblyDefinition> assemblies = new ();
+		readonly Action<string> logDebugMessage;
+		readonly Action<string> logWarning;
+		readonly HashSet<TypeDefinition> typesWithDynamicallyRegisteredMethods = new ();
 		ulong rejectedMethodCount = 0;
 		ulong wrappedMethodCount = 0;
 		readonly AndroidTargetArch targetArch;
@@ -247,27 +250,30 @@ namespace Xamarin.Android.Tasks
 		public ICollection<AssemblyDefinition> Assemblies => assemblies;
 		public ulong RejectedMethodCount => rejectedMethodCount;
 		public ulong WrappedMethodCount => wrappedMethodCount;
-		public TypeDefinitionCache TypeDefinitionCache => tdCache;
+		public IMetadataResolver TypeDefinitionCache => tdCache;
 
-		public MarshalMethodsClassifier (AndroidTargetArch targetArch, TypeDefinitionCache tdCache, IAssemblyResolver res, TaskLoggingHelper log)
-		{
-			this.targetArch = targetArch;
-			this.log = log ?? throw new ArgumentNullException (nameof (log));
-			this.tdCache = tdCache ?? throw new ArgumentNullException (nameof (tdCache));
-			resolver = res ?? throw new ArgumentNullException (nameof (tdCache));
-			marshalMethods = new Dictionary<string, IList<MarshalMethodEntry>> (StringComparer.Ordinal);
-			assemblies = new HashSet<AssemblyDefinition> ();
-			typesWithDynamicallyRegisteredMethods = new HashSet<TypeDefinition> ();
+		public MarshalMethodsClassifier (AndroidTargetArch targetArch, IMetadataResolver tdCache, IAssemblyResolver res, TaskLoggingHelper log)
+			: this (targetArch, tdCache, res, m => log.LogDebugMessage (m), m => log.LogWarning (m))
+		{ 
+			if (log is null) throw new ArgumentNullException (nameof (log));
 		}
 
-		public MarshalMethodsClassifier (TypeDefinitionCache tdCache, IAssemblyResolver res, TaskLoggingHelper log)
+		public MarshalMethodsClassifier (AndroidTargetArch targetArch, IMetadataResolver tdCache, IAssemblyResolver res, Action<string> logDebugMessage, Action<string> logWarning)
 		{
-			this.log = log ?? throw new ArgumentNullException (nameof (log));
+			this.targetArch = targetArch;
+			this.logDebugMessage = logDebugMessage ?? throw new ArgumentNullException (nameof (logDebugMessage));
+			this.logWarning = logWarning ?? throw new ArgumentNullException (nameof (logWarning));
 			this.tdCache = tdCache ?? throw new ArgumentNullException (nameof (tdCache));
-			resolver = res ?? throw new ArgumentNullException (nameof (tdCache));
-			marshalMethods = new Dictionary<string, IList<MarshalMethodEntry>> (StringComparer.Ordinal);
-			assemblies = new HashSet<AssemblyDefinition> ();
-			typesWithDynamicallyRegisteredMethods = new HashSet<TypeDefinition> ();
+			resolver = res ?? throw new ArgumentNullException (nameof (res));
+		}
+
+		public MarshalMethodsClassifier (IMetadataResolver tdCache, IAssemblyResolver res, TaskLoggingHelper log)
+		{
+			if (log is null) throw new ArgumentNullException (nameof (log));
+			this.tdCache = tdCache ?? throw new ArgumentNullException (nameof (tdCache));
+			resolver = res ?? throw new ArgumentNullException (nameof (res));
+			this.logDebugMessage = m => log.LogDebugMessage (m);
+			this.logWarning = m => log.LogWarning (m);
 		}
 
 		public override bool ShouldBeDynamicallyRegistered (TypeDefinition topType, MethodDefinition registeredMethod, MethodDefinition implementedMethod, CustomAttribute? registerAttribute)
@@ -301,7 +307,7 @@ namespace Xamarin.Android.Tasks
 		{
 			const string FullTypeName = "Java.Interop.TypeManager+JavaTypeManager, Mono.Android";
 
-			AssemblyDefinition monoAndroid = resolver.Resolve ("Mono.Android");
+			AssemblyDefinition monoAndroid = resolver.Resolve (AssemblyNameReference.Parse ("Mono.Android"));
 			TypeDefinition? typeManager = monoAndroid?.MainModule.FindType ("Java.Interop.TypeManager");
 			TypeDefinition? javaTypeManager = typeManager?.GetNestedType ("JavaTypeManager");
 
@@ -317,7 +323,7 @@ namespace Xamarin.Android.Tasks
 					if (method.GetCustomAttributes ("System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute").Any (cattr => cattr != null)) {
 						nActivate_mm = method;
 					} else {
-						log.LogWarning ($"Method '{method.FullName}' isn't decorated with the UnmanagedCallersOnly attribute");
+						logWarning ($"Method '{method.FullName}' isn't decorated with the UnmanagedCallersOnly attribute");
 						continue;
 					}
 				}
@@ -342,7 +348,7 @@ namespace Xamarin.Android.Tasks
 			string? jniTypeName = null;
 			foreach (CustomAttribute cattr in javaTypeManager.GetCustomAttributes ("Android.Runtime.RegisterAttribute")) {
 				if (cattr.ConstructorArguments.Count != 1) {
-					log.LogDebugMessage ($"[Register] attribute on type '{FullTypeName}' is expected to have 1 constructor argument, found {cattr.ConstructorArguments.Count}");
+					logDebugMessage ($"[Register] attribute on type '{FullTypeName}' is expected to have 1 constructor argument, found {cattr.ConstructorArguments.Count}");
 					continue;
 				}
 
@@ -356,7 +362,7 @@ namespace Xamarin.Android.Tasks
 			string? jniSignature = null;
 			foreach (CustomAttribute cattr in nActivate.GetCustomAttributes ("Android.Runtime.RegisterAttribute")) {
 				if (cattr.ConstructorArguments.Count != 3) {
-					log.LogDebugMessage ($"[Register] attribute on method '{nActivate.FullName}' is expected to have 3 constructor arguments, found {cattr.ConstructorArguments.Count}");
+					logDebugMessage ($"[Register] attribute on method '{nActivate.FullName}' is expected to have 3 constructor arguments, found {cattr.ConstructorArguments.Count}");
 					continue;
 				}
 
@@ -371,17 +377,17 @@ namespace Xamarin.Android.Tasks
 			bool missingInfo = false;
 			if (String.IsNullOrEmpty (jniTypeName)) {
 				missingInfo = true;
-				log.LogDebugMessage ($"Failed to obtain Java type name from the [Register] attribute on type '{FullTypeName}'");
+				logDebugMessage ($"Failed to obtain Java type name from the [Register] attribute on type '{FullTypeName}'");
 			}
 
 			if (String.IsNullOrEmpty (jniMethodName)) {
 				missingInfo = true;
-				log.LogDebugMessage ($"Failed to obtain Java method name from the [Register] attribute on method '{nActivate.FullName}'");
+				logDebugMessage ($"Failed to obtain Java method name from the [Register] attribute on method '{nActivate.FullName}'");
 			}
 
 			if (String.IsNullOrEmpty (jniSignature)) {
 				missingInfo = true;
-				log.LogDebugMessage ($"Failed to obtain Java method signature from the [Register] attribute on method '{nActivate.FullName}'");
+				logDebugMessage ($"Failed to obtain Java method signature from the [Register] attribute on method '{nActivate.FullName}'");
 			}
 
 			if (missingInfo) {
@@ -403,12 +409,12 @@ namespace Xamarin.Android.Tasks
 				}
 
 				if (!method.IsStatic) {
-					log.LogWarning ($"Method '{method.FullName}' is not static");
+					logWarning ($"Method '{method.FullName}' is not static");
 					return false;
 				}
 
 				if (!method.IsPrivate) {
-					log.LogWarning ($"Method '{method.FullName}' is not private");
+					logWarning ($"Method '{method.FullName}' is not private");
 					return false;
 				}
 
@@ -446,7 +452,7 @@ namespace Xamarin.Android.Tasks
 		bool IsDynamicallyRegistered (TypeDefinition topType, MethodDefinition registeredMethod, MethodDefinition implementedMethod, CustomAttribute registerAttribute)
 		{
 			if (registerAttribute.ConstructorArguments.Count != 3) {
-				log.LogWarning ($"Method '{registeredMethod.FullName}' will be registered dynamically, not enough arguments to the [Register] attribute to generate marshal method.");
+				logWarning ($"Method '{registeredMethod.FullName}' will be registered dynamically, not enough arguments to the [Register] attribute to generate marshal method.");
 				return true;
 			}
 
@@ -456,7 +462,7 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			log.LogWarning ($"Method '{registeredMethod.FullName}' will be registered dynamically {GetAssemblyPathInfo (registeredMethod)}");
+			logWarning ($"Method '{registeredMethod.FullName}' will be registered dynamically {GetAssemblyPathInfo (registeredMethod)}");
 			rejectedMethodCount++;
 			return true;
 		}
@@ -470,7 +476,7 @@ namespace Xamarin.Android.Tasks
 			if (connectorName.Length < HandlerNameStart.Length + HandlerNameEnd.Length + 1 ||
 			    !connectorName.StartsWith (HandlerNameStart, StringComparison.Ordinal) ||
 			    !connectorName.EndsWith (HandlerNameEnd, StringComparison.Ordinal)) {
-				log.LogWarning ($"Connector name '{connectorName}' must start with '{HandlerNameStart}', end with '{HandlerNameEnd}' and have at least one character between the two parts.");
+				logWarning ($"Connector name '{connectorName}' must start with '{HandlerNameStart}', end with '{HandlerNameEnd}' and have at least one character between the two parts.");
 				return false;
 			}
 
@@ -485,19 +491,19 @@ namespace Xamarin.Android.Tasks
 
 			MethodDefinition connectorMethod = FindMethod (connectorDeclaringType, connectorName);
 			if (connectorMethod == null) {
-				log.LogWarning ($"Connector method '{connectorName}' not found in type '{connectorDeclaringType.FullName}' {GetAssemblyPathInfo (connectorDeclaringType)}");
+				logWarning ($"Connector method '{connectorName}' not found in type '{connectorDeclaringType.FullName}' {GetAssemblyPathInfo (connectorDeclaringType)}");
 				return false;
 			}
 
 			if (String.Compare ("System.Delegate", connectorMethod.ReturnType.FullName, StringComparison.Ordinal) != 0) {
-				log.LogWarning ($"Connector '{connectorName}' in type '{connectorDeclaringType.FullName}' has invalid return type, expected 'System.Delegate', found '{connectorMethod.ReturnType.FullName}' {GetAssemblyPathInfo (connectorDeclaringType)}");
+				logWarning ($"Connector '{connectorName}' in type '{connectorDeclaringType.FullName}' has invalid return type, expected 'System.Delegate', found '{connectorMethod.ReturnType.FullName}' {GetAssemblyPathInfo (connectorDeclaringType)}");
 				return false;
 			}
 
-			var ncbs = new NativeCallbackSignature (registeredMethod, log, tdCache);
+			var ncbs = new NativeCallbackSignature (registeredMethod, logDebugMessage, logWarning, tdCache);
 			MethodDefinition nativeCallbackMethod = FindMethod (connectorDeclaringType, nativeCallbackName, ncbs);
 			if (nativeCallbackMethod == null) {
-				log.LogWarning ($"Unable to find native callback method '{nativeCallbackName}' in type '{connectorDeclaringType.FullName}', matching the '{registeredMethod.FullName}' signature (jniName: '{jniName}') {GetAssemblyPathInfo (connectorDeclaringType)}");
+				logWarning ($"Unable to find native callback method '{nativeCallbackName}' in type '{connectorDeclaringType.FullName}', matching the '{registeredMethod.FullName}' signature (jniName: '{jniName}') {GetAssemblyPathInfo (connectorDeclaringType)}");
 				return false;
 			}
 
@@ -510,7 +516,7 @@ namespace Xamarin.Android.Tasks
 			FieldDefinition delegateField = FindField (nativeCallbackMethod.DeclaringType, delegateFieldName);
 			if (delegateField != null) {
 				if (String.Compare ("System.Delegate", delegateField.FieldType.FullName, StringComparison.Ordinal) != 0) {
-					log.LogWarning ($"delegate field '{delegateFieldName}' in type '{nativeCallbackMethod.DeclaringType.FullName}' has invalid type, expected 'System.Delegate', found '{delegateField.FieldType.FullName}' {GetAssemblyPathInfo (delegateField)}");
+					logWarning ($"delegate field '{delegateFieldName}' in type '{nativeCallbackMethod.DeclaringType.FullName}' has invalid type, expected 'System.Delegate', found '{delegateField.FieldType.FullName}' {GetAssemblyPathInfo (delegateField)}");
 					return false;
 				}
 			}
@@ -645,14 +651,14 @@ namespace Xamarin.Android.Tasks
 
 			bool LogReasonWhyAndReturnFailure (string why)
 			{
-				log.LogWarning ($"Method '{method.FullName}' {why}. It cannot be used with the `[UnmanagedCallersOnly]` attribute");
+				logWarning ($"Method '{method.FullName}' {why}. It cannot be used with the `[UnmanagedCallersOnly]` attribute");
 				return false;
 			}
 
 			void WarnWhy (string why)
 			{
 				// TODO: change to LogWarning once the generator can output code which requires no non-blittable wrappers
-				log.LogDebugMessage ($"Method '{method.FullName}' {why}. A workaround is required, this may make the application slower");
+				logDebugMessage ($"Method '{method.FullName}' {why}. A workaround is required, this may make the application slower");
 			}
 		}
 

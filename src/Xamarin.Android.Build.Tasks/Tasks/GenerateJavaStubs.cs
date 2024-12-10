@@ -80,6 +80,7 @@ namespace Xamarin.Android.Tasks
 
 		public string PackageNamingPolicy { get; set; }
 
+		[Required]
 		public string ApplicationJavaClass { get; set; }
 
 		public bool SkipJniAddNativeMethodRegistrationAttributeScan { get; set; }
@@ -386,23 +387,8 @@ namespace Xamarin.Android.Tasks
 			XAAssemblyResolver resolver = MakeResolver (useMarshalMethods, arch, assemblies);
 			var tdCache = new TypeDefinitionCache ();
 			(List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW) = ScanForJavaTypes (resolver, tdCache, assemblies, userAssemblies, useMarshalMethods);
-			var jcwContext = new JCWGeneratorContext (arch, resolver, assemblies.Values, javaTypesForJCW, tdCache, useMarshalMethods);
-			var jcwGenerator = new JCWGenerator (Log, jcwContext) {
-				NativeAot = NativeAot,
-			};
-			bool success;
-
-			if (generateJavaCode) {
-				success = jcwGenerator.GenerateAndClassify (AndroidSdkPlatform, outputPath: Path.Combine (OutputDirectory, "src"), ApplicationJavaClass);
-			} else {
-				success = jcwGenerator.Classify (AndroidSdkPlatform);
-			}
-
-			if (!success) {
-				return (false, null);
-			}
-
-			return (true, new NativeCodeGenState (arch, tdCache, resolver, allJavaTypes, javaTypesForJCW, jcwGenerator.Classifier));
+			var classifier = new MarshalMethodsClassifier (arch, tdCache, resolver, Log);
+			return (true, new NativeCodeGenState (arch, tdCache, resolver, allJavaTypes, javaTypesForJCW, classifier));
 		}
 
 		(List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW) ScanForJavaTypes (XAAssemblyResolver res, TypeDefinitionCache cache, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods)
