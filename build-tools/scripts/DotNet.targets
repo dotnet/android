@@ -33,12 +33,12 @@
   <Target Name="BuildExtraApiLevels">
     <MSBuild
          Condition=" '$(AndroidDefaultTargetDotnetApiLevel)' != '$(AndroidLatestStableApiLevel)' "
-         Projects="$(XamarinAndroidSourcePath)src\Mono.Android\Mono.Android.csproj"
+         Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
          Properties="AndroidApiLevel=$(AndroidDefaultTargetDotnetApiLevel);AndroidPlatformId=$(AndroidDefaultTargetDotnetApiLevel)"
     />
     <MSBuild
          Condition=" '$(AndroidLatestUnstableApiLevel)' != '$(AndroidLatestStableApiLevel)' "
-         Projects="$(XamarinAndroidSourcePath)src\Mono.Android\Mono.Android.csproj"
+         Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
          Properties="AndroidApiLevel=$(AndroidLatestUnstableApiLevel);AndroidPlatformId=$(AndroidLatestUnstablePlatformId)"
     />
   </Target>
