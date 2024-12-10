@@ -550,6 +550,16 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       FormatArguments="AndroidCreatePackagePerAbi;10"
       Condition=" '$(AndroidCreatePackagePerAbi)' == 'true' "
   />
+  <AndroidWarning Code="XA1037"
+      ResourceName="XA1037"
+      FormatArguments="AndroidUseIntermediateDesignerFile;10"
+      Condition=" '$(AndroidUseIntermediateDesignerFile)' == 'true'"
+  />
+  <AndroidWarning Code="XA1037"
+      ResourceName="XA1037"
+      FormatArguments="AndroidResgenFile;10"
+      Condition=" '$(AndroidResgenFile)' != ''"
+  />
 </Target>
 
 <Target Name="_CheckNonIdealConfigurations"
