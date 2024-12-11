@@ -41,8 +41,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForRemovedItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForInvalidResourceFileNames" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckClientHandlerType" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CollectDalvikFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CollectJarContentFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectPdbFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNonEmptyDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CollectTypeMapFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ComputeHash" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateTypeManagerJava" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ConvertResourcesCases" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -2083,8 +2086,6 @@ because xbuild doesn't support framework reference assemblies.
   <PropertyGroup Condition=" '$(AndroidPackageFormat)' == 'aab' ">
     <_AndroidCreatePackagePerAbi>False</_AndroidCreatePackagePerAbi>
     <_ApkOutputPath>$(_BaseZipIntermediate)</_ApkOutputPath>
-    <_RootPath>root/</_RootPath>
-    <_DalvikPath>dex/</_DalvikPath>
   </PropertyGroup>
   
   <!-- Put the assemblies and native libraries in the apk -->
@@ -2093,6 +2094,22 @@ because xbuild doesn't support framework reference assemblies.
     also need to have the args added to Xamarin.Android.Common.Debugging.targets
     in monodroid.
   -->
+  <CollectDalvikFilesForArchive
+      AndroidPackageFormat="$(AndroidPackageFormat)"
+      DalvikClasses="@(_DexFile)">
+    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+  </CollectDalvikFilesForArchive>
+
+  <CollectJarContentFilesForArchive
+      AndroidPackageFormat="$(AndroidPackageFormat)"
+      ExcludeFiles="@(AndroidPackagingOptionsExclude)"
+      IncludeFiles="@(AndroidPackagingOptionsInclude)"
+      JavaSourceFiles="@(AndroidJavaSource)"
+      JavaLibraries="@(AndroidJavaLibrary)"
+      LibraryProjectJars="@(ExtractedJarImports)">
+    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+  </CollectJarContentFilesForArchive>
+
   <BuildApk
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"
       ApkInputPath="$(_PackagedResources)"
@@ -2107,30 +2124,19 @@ because xbuild doesn't support framework reference assemblies.
       ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
       AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
       EmbeddedNativeLibraryAssemblies="$(OutDir)$(TargetFileName);@(_ReferencePath);@(_ReferenceDependencyPaths)"
-      DalvikClasses="@(_DexFile)"
       SupportedAbis="@(_BuildTargetAbis)"
       Debug="$(AndroidIncludeDebugSymbols)"
       EnableCompression="$(AndroidEnableAssemblyCompression)"
-      JavaSourceFiles="@(AndroidJavaSource)"
-      JavaLibraries="@(AndroidJavaLibrary)"
-      AndroidSequencePointsMode="$(_SequencePointsMode)"
-      LibraryProjectJars="@(ExtractedJarImports)"
       TlsProvider="$(AndroidTlsProvider)"
       UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
       ProjectFullPath="$(MSBuildProjectFullPath)"
       IncludeWrapSh="$(AndroidIncludeWrapSh)"
       CheckedBuild="$(_AndroidCheckedBuild)"
       RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
-      ExcludeFiles="@(AndroidPackagingOptionsExclude)"
-      IncludeFiles="@(AndroidPackagingOptionsInclude)"
-      ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
-      ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
       ZipAlignmentPages="$(AndroidZipAlignment)"
       UseAssemblyStore="$(AndroidUseAssemblyStore)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-      IntermediateOutputPath="$(IntermediateOutputPath)"
-      RootPath="$(_RootPath)"
-      DalvikPath="$(_DalvikPath)">
+      IntermediateOutputPath="$(IntermediateOutputPath)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
     <Output TaskParameter="OutputApkFiles" ItemName="FilesToAddToArchive" />
     <Output TaskParameter="DSODirectoriesToDelete" ItemName="DSODirectoriesToDelete" />
@@ -2198,8 +2204,6 @@ because xbuild doesn't support framework reference assemblies.
   <PropertyGroup Condition=" '$(AndroidPackageFormat)' == 'aab' ">
     <_AndroidCreatePackagePerAbi>False</_AndroidCreatePackagePerAbi>
     <_ApkOutputPath>$(_BaseZipIntermediate)</_ApkOutputPath>
-    <_RootPath>root/</_RootPath>
-    <_DalvikPath>dex/</_DalvikPath>
     <_BundleAssemblies>$(BundleAssemblies)</_BundleAssemblies>
     <_BundleNativeLibraries>$(_BundleResultNativeLibraries)</_BundleNativeLibraries>
   </PropertyGroup>
@@ -2210,7 +2214,30 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 
   <!-- Put the assemblies and native libraries in the apk -->
-	<BuildApk
+	<CollectDalvikFilesForArchive
+      AndroidPackageFormat="$(AndroidPackageFormat)"
+      DalvikClasses="@(_DalvikClasses)">
+    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+  </CollectDalvikFilesForArchive>
+
+  <!-- Only FastDev uses TypeMappings -->
+  <CollectTypeMapFilesForArchive
+      AndroidPackageFormat="$(AndroidPackageFormat)"
+			TypeMappings="@(_AndroidTypeMaps)">
+    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+  </CollectTypeMapFilesForArchive>
+  
+  <CollectJarContentFilesForArchive
+      AndroidPackageFormat="$(AndroidPackageFormat)"
+      ExcludeFiles="@(AndroidPackagingOptionsExclude)"
+      IncludeFiles="@(AndroidPackagingOptionsInclude)"
+      JavaSourceFiles="@(AndroidJavaSource)"
+      JavaLibraries="@(AndroidJavaLibrary)"
+      LibraryProjectJars="@(ExtractedJarImports)">
+    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+  </CollectJarContentFilesForArchive>
+
+<BuildApk
 			AndroidNdkDirectory="$(_AndroidNdkDirectory)"
 			ApkInputPath="$(_PackagedResources)"
 			ApkOutputPath="$(_ApkOutputPath)"
@@ -2225,29 +2252,18 @@ because xbuild doesn't support framework reference assemblies.
 			ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
 			AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
 			EmbeddedNativeLibraryAssemblies="$(OutDir)$(TargetFileName);@(ReferencePath);@(ReferenceDependencyPaths)"
-			DalvikClasses="@(_DalvikClasses)"
 			SupportedAbis="@(_BuildTargetAbis)"
 			AndroidSequencePointsMode="$(_SequencePointsMode)"
 			Debug="$(AndroidIncludeDebugSymbols)"
 			EnableCompression="$(AndroidEnableAssemblyCompression)"
-			TypeMappings="@(_AndroidTypeMaps)"
-			JavaSourceFiles="@(AndroidJavaSource)"
-			JavaLibraries="@(AndroidJavaLibrary)"
-			LibraryProjectJars="@(ExtractedJarImports)"
 			TlsProvider="$(AndroidTlsProvider)"
 			UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
 			ProjectFullPath="$(MSBuildProjectFullPath)"
 			IncludeWrapSh="$(AndroidIncludeWrapSh)"
 			CheckedBuild="$(_AndroidCheckedBuild)"
 			RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
-			ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
-			ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
-			ExcludeFiles="@(AndroidPackagingOptionsExclude)"
-			IncludeFiles="@(AndroidPackagingOptionsInclude)"
 			AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-			IntermediateOutputPath="$(IntermediateOutputPath)"
-      RootPath="$(_RootPath)"
-      DalvikPath="$(_DalvikPath)">
+			IntermediateOutputPath="$(IntermediateOutputPath)">
 		<Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
     <Output TaskParameter="OutputApkFiles" ItemName="FilesToAddToArchive" />
     <Output TaskParameter="DSODirectoriesToDelete" ItemName="DSODirectoriesToDelete" />

@@ -60,11 +60,6 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem[] BundleNativeLibraries { get; set; }
 
-		public ITaskItem[] TypeMappings { get; set; }
-
-		[Required]
-		public ITaskItem [] DalvikClasses { get; set; }
-
 		[Required]
 		public string [] SupportedAbis { get; set; }
 
@@ -72,15 +67,7 @@ namespace Xamarin.Android.Tasks
 
 		public bool BundleAssemblies { get; set; }
 
-		public ITaskItem[] JavaSourceFiles { get; set; }
-
-		public ITaskItem[] JavaLibraries { get; set; }
-
 		public string[] DoNotPackageJavaLibraries { get; set; }
-
-		public string [] ExcludeFiles { get; set; }
-
-		public string [] IncludeFiles { get; set; }
 
 		public string Debug { get; set; }
 
@@ -100,10 +87,6 @@ namespace Xamarin.Android.Tasks
 		public string RuntimeConfigBinFilePath { get; set; }
 
 		public bool UseAssemblyStore { get; set; }
-
-		public string ZipFlushFilesLimit { get; set; }
-
-		public string ZipFlushSizeLimit { get; set; }
 
 		public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment64Bit;
 
@@ -134,13 +117,7 @@ namespace Xamarin.Android.Tasks
 
 		SequencePointsMode sequencePointsMode = SequencePointsMode.None;
 
-		public ITaskItem[] LibraryProjectJars { get; set; }
 		HashSet<string> uncompressedFileExtensions;
-
-		// Do not use trailing / in the path
-		public string RootPath { get; set; } = "";
-
-		public string DalvikPath { get; set; } = "";
 
 		protected virtual CompressionMethod UncompressedMethod => CompressionMethod.Store;
 
@@ -148,24 +125,11 @@ namespace Xamarin.Android.Tasks
 
 		List<string> existingEntries = new List<string> ();
 
-		List<Regex> excludePatterns = new List<Regex> ();
-
-		List<Regex> includePatterns = new List<Regex> ();
-
 		void ExecuteWithAbi (DSOWrapperGenerator.Config dsoWrapperConfig, string [] supportedAbis, string apkInputPath, string apkOutputPath, bool debug, bool compress, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo, string assemblyStoreApkName)
 		{
 			ArchiveFileList files = new ArchiveFileList ();
 
 			using (var apk = new ZipArchiveFileListBuilder (apkOutputPath, File.Exists (apkOutputPath) ? FileMode.Open : FileMode.Create)) {
-
-				// Add classes.dx
-				CompressionMethod dexCompressionMethod = GetCompressionMethod (".dex");
-				foreach (var dex in DalvikClasses) {
-					string apkName = dex.GetMetadata ("ApkName");
-					string dexPath = string.IsNullOrWhiteSpace (apkName) ? Path.GetFileName (dex.ItemSpec) : apkName;
-					AddFileToArchiveIfNewer (apk, dex.ItemSpec, DalvikPath + dexPath, compressionMethod: dexCompressionMethod);
-					apk.Flush ();
-				}
 
 				if (EmbedAssemblies) {
 					AddAssemblies (dsoWrapperConfig, apk, debug, compress, compressedAssembliesInfo, assemblyStoreApkName);
@@ -177,12 +141,6 @@ namespace Xamarin.Android.Tasks
 				apk.Flush();
 				AddNativeLibraries (files, supportedAbis);
 				AddAdditionalNativeLibraries (files, supportedAbis);
-
-				if (TypeMappings != null) {
-					foreach (ITaskItem typemap in TypeMappings) {
-						AddFileToArchiveIfNewer (apk, typemap.ItemSpec, RootPath + Path.GetFileName(typemap.ItemSpec), compressionMethod: UncompressedMethod);
-					}
-				}
 
 				foreach (var file in files) {
 					var item = Path.Combine (file.archivePath.Replace (Path.DirectorySeparatorChar, '/'));
@@ -196,63 +154,6 @@ namespace Xamarin.Android.Tasks
 					apk.AddFileAndFlush (file.filePath, item, compressionMethod: compressionMethod);
 				}
 
-				var jarFiles = (JavaSourceFiles != null) ? JavaSourceFiles.Where (f => f.ItemSpec.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)) : null;
-				if (jarFiles != null && JavaLibraries != null)
-					jarFiles = jarFiles.Concat (JavaLibraries);
-				else if (JavaLibraries != null)
-					jarFiles = JavaLibraries;
-
-				var libraryProjectJars  = MonoAndroidHelper.ExpandFiles (LibraryProjectJars)
-					.Where (jar => !MonoAndroidHelper.IsEmbeddedReferenceJar (jar));
-
-				var jarFilePaths = libraryProjectJars.Concat (jarFiles != null ? jarFiles.Select (j => j.ItemSpec) : Enumerable.Empty<string> ());
-				jarFilePaths = MonoAndroidHelper.DistinctFilesByContent (jarFilePaths);
-
-				foreach (var jarFile in jarFilePaths) {
-					using (var stream = File.OpenRead (jarFile))
-					using (var jar = ZipArchive.Open (stream)) {
-						foreach (var jarItem in jar) {
-							if (jarItem.IsDirectory)
-								continue;
-							var name = jarItem.FullName;
-							if (!PackagingUtils.CheckEntryForPackaging (name)) {
-								continue;
-							}
-							var path = RootPath + name;
-							existingEntries.Remove (path);
-							if (apk.SkipExistingEntry (jarItem, path)) {
-								Log.LogDebugMessage ($"Skipping {path} as the archive file is up to date.");
-								continue;
-							}
-							// check for ignored items
-							bool exclude = false;
-							bool forceInclude = false;
-							foreach (var include in includePatterns) {
-								if (include.IsMatch (path)) {
-									forceInclude = true;
-									break;
-								}
-							}
-							if (!forceInclude) {
-								foreach (var pattern in excludePatterns) {
-									if (pattern.IsMatch (path)) {
-										Log.LogDebugMessage ($"Ignoring jar entry '{name}' from '{Path.GetFileName (jarFile)}'. Filename matched the exclude pattern '{pattern}'.");
-										exclude = true;
-										break;
-									}
-								}
-							}
-							if (exclude)
-								continue;
-							if (string.Compare (Path.GetFileName (name), "AndroidManifest.xml", StringComparison.OrdinalIgnoreCase) == 0) {
-								Log.LogDebugMessage ("Ignoring jar entry {0} from {1}: the same file already exists in the apk", name, Path.GetFileName (jarFile));
-								continue;
-							}
-
-							apk.AddJavaEntryAndFlush (jarFile, jarItem.FullName, path);
-						}
-					}
-				}
 				FixupArchive (apk);
 
 				OutputApkFiles = apk.ApkFiles.ToArray ();
@@ -280,13 +181,6 @@ namespace Xamarin.Android.Tasks
 
 			existingEntries.Clear ();
 
-			foreach (var pattern in ExcludeFiles ?? Array.Empty<string> ()) {
-				excludePatterns.Add (FileGlobToRegEx (pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled));
-			}
-			foreach (var pattern in IncludeFiles ?? Array.Empty<string> ()) {
-				includePatterns.Add (FileGlobToRegEx (pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled));
-			}
-
 			bool debug = _Debug;
 			bool compress = !debug && EnableCompression;
 			IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo = null;
@@ -309,24 +203,6 @@ namespace Xamarin.Android.Tasks
 			DSODirectoriesToDelete = DSOWrapperGenerator.GetDirectoriesToCleanUp (dsoWrapperConfig).Select (d => new TaskItem (d)).ToArray ();
 
 			return !Log.HasLoggedErrors;
-		}
-
-		static Regex FileGlobToRegEx (string fileGlob, RegexOptions options)
-		{
-			StringBuilder sb = new StringBuilder ();
-			foreach (char c in fileGlob) {
-				switch (c) {
-					case '*': sb.Append (".*");
-						break;
-					case '?': sb.Append (".");
-						break;
-					case '.': sb.Append (@"\.");
-						break;
-					default: sb.Append (c);
-						break;
-				}
-			}
-			return new Regex (sb.ToString (), options);
 		}
 
 		void AddRuntimeConfigBlob (DSOWrapperGenerator.Config dsoWrapperConfig, ZipArchiveFileListBuilder apk)

@@ -12,7 +12,9 @@ namespace Xamarin.Android.Tasks;
 
 /// <summary>
 /// Takes a list of files and adds them to an APK archive. If the APK archive already
-/// exists, files are only added if they were changed.
+/// exists, files are only added if they were changed. Note *ALL* files to be in the final
+/// APK must be passed in via @(FilesToAddToArchive). This task will determine any unchanged files
+/// and skip them, as well as remove any existing files in the APK that are no longer required.
 /// </summary>
 public class BuildArchive : AndroidTask
 {
@@ -34,34 +36,17 @@ public class BuildArchive : AndroidTask
 
 	public string? ZipFlushSizeLimit { get; set; }
 
-	readonly HashSet<string> uncompressedFileExtensions;
-	readonly CompressionMethod uncompressedMethod = CompressionMethod.Store;
+	HashSet<string>? uncompressedFileExtensions;
+	HashSet<string> UncompressedFileExtensionsSet => uncompressedFileExtensions ??= ParseUncompressedFileExtensions ();
 
-	public BuildArchive ()
-	{
-		uncompressedFileExtensions = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-
-		foreach (var extension in UncompressedFileExtensions?.Split ([';', ','], StringSplitOptions.RemoveEmptyEntries) ?? []) {
-			var ext = extension.Trim ();
-
-			if (string.IsNullOrEmpty (ext)) {
-				continue;
-			}
-
-			if (ext [0] != '.') {
-				ext = $".{ext}";
-			}
-
-			uncompressedFileExtensions.Add (ext);
-		}
-
-		// Nothing needs to be compressed with app bundles. BundleConfig.json specifies the final compression mode.
-		if (string.Compare (AndroidPackageFormat, "aab", true) == 0)
-			uncompressedMethod = CompressionMethod.Default;
-	}
+	CompressionMethod uncompressedMethod = CompressionMethod.Store;
 
 	public override bool RunTask ()
 	{
+		// Nothing needs to be compressed with app bundles. BundleConfig.json specifies the final compression mode.
+		if (string.Compare (AndroidPackageFormat, "aab", true) == 0)
+			uncompressedMethod = CompressionMethod.Default;
+
 		var refresh = true;
 
 		// If we have an input apk but no output apk, copy it to the output
@@ -251,6 +236,27 @@ public class BuildArchive : AndroidTask
 				return result;
 		}
 
-		return uncompressedFileExtensions.Contains (Path.GetExtension (item.ItemSpec)) ? uncompressedMethod : CompressionMethod.Default;
+		return UncompressedFileExtensionsSet.Contains (Path.GetExtension (item.ItemSpec)) ? uncompressedMethod : CompressionMethod.Default;
+	}
+
+	HashSet<string> ParseUncompressedFileExtensions ()
+	{
+		var uncompressedFileExtensions = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+
+		foreach (var extension in UncompressedFileExtensions?.Split ([';', ','], StringSplitOptions.RemoveEmptyEntries) ?? []) {
+			var ext = extension.Trim ();
+
+			if (string.IsNullOrEmpty (ext)) {
+				continue;
+			}
+
+			if (ext [0] != '.') {
+				ext = $".{ext}";
+			}
+
+			uncompressedFileExtensions.Add (ext);
+		}
+
+		return uncompressedFileExtensions;
 	}
 }
