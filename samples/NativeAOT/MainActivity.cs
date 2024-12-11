@@ -1,5 +1,8 @@
-namespace NativeAOT;
+using Android.Runtime;
 
+namespace Java.Interop.Samples.NativeAotFromAndroid;
+
+[Register("my/MainActivity")] // Required for typemap in NativeAotTypeManager
 [Activity(Label = "@string/app_name", MainLauncher = true)]
 public class MainActivity : Activity
 {
