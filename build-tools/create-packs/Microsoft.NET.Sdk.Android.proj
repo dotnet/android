@@ -43,9 +43,20 @@ about the various Microsoft.Android workloads.
         Replacements="@NET_PREVIOUS_VERSION@=$(AndroidNetPreviousVersion)">
     </ReplaceFileContents>
 
+    <PropertyGroup>
+      <_AndroidPlatformSupportFeed>$(MSBuildThisFileDirectory)/../../external/android-platform-support/Feeds/AndroidManifestFeed_d17.12.xml</_AndroidPlatformSupportFeed>
+      <_Feed Condition=" Exists($(_AndroidPlatformSupportFeed)) ">$(_AndroidPlatformSupportFeed)</_Feed>
+      <_Feed Condition=" '$(_Feed)' == '' ">https://aka.ms/AndroidManifestFeed/d17-12</_Feed>
+      <_Project>$(MSBuildThisFileDirectory)/../../tools/workload-dependencies/workload-dependencies.csproj</_Project>
+      <WorkloadDependenciesPath Condition="'$(WorkloadDependenciesPath)' == ''">$(OutputPath)workload-manifest\workload-dependencies.json</WorkloadDependenciesPath>
+    </PropertyGroup>
+
+    <Exec Command="dotnet run --project &quot;$(_Project)&quot; -- &quot;--feed=$(_Feed)&quot; --workload-version=$(WorkloadVersion) -o &quot;$(WorkloadDependenciesPath)&quot;" />
+
     <ItemGroup>
       <_PackageFiles Include="$(WorkloadManifestJsonPath)" PackagePath="data" />
       <_PackageFiles Include="$(WorkloadManifestTargetsPath)" PackagePath="data" />
+      <_PackageFiles Include="$(WorkloadDependenciesPath)" PackagePath="data" />
     </ItemGroup>
   </Target>
 
