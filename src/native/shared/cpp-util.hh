@@ -142,7 +142,7 @@ abort_if_negative_integer_argument (int arg, const char *arg_name, std::source_l
 // of the calls present.
 force_inline inline void pd_log_location (std::source_location sloc = std::source_location::current ()) noexcept
 {
-	log_info_nocheck (LOG_DEFAULT, "loc: %s:%u ('%s')", sloc.file_name (), sloc.line (), sloc.function_name ());
+	log_info_nocheck (LOG_DEFAULT, "loc: {}:{} ('{}')", sloc.file_name (), sloc.line (), sloc.function_name ());
 }
 
 namespace xamarin::android

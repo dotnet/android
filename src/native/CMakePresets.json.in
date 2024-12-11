@@ -48,8 +48,8 @@
             "hidden": true,
             "inherits": "common",
             "cacheVariables": {
-                "ANDROID_STL": "none",
-                "ANDROID_CPP_FEATURES": "no-rtti no-exceptions"
+                "ANDROID_STL": "c++_static",
+                "ANDROID_CPP_FEATURES": "no-rtti exceptions"
             }
         },
 

@@ -1,3 +1,5 @@
+#include <string_view>
+
 #include "android-system.hh"
 #include "globals.hh"
 #include "internal-pinvokes.hh"
@@ -31,30 +33,30 @@ monodroid_log (LogLevel level, LogCategories category, const char *message)
 	switch (level) {
 		case LogLevel::Verbose:
 		case LogLevel::Debug:
-			log_debug_nocheck (category, message);
+			log_debug_nocheck (category, std::string_view { message });
 			break;
 
 		case LogLevel::Info:
-			log_info_nocheck (category, message);
+			log_info_nocheck (category, std::string_view { message });
 			break;
 
 		case LogLevel::Warn:
 		case LogLevel::Silent: // warn is always printed
-			log_warn (category, message);
+			log_warn (category, std::string_view { message });
 			break;
 
 		case LogLevel::Error:
-			log_error (category, message);
+			log_error (category, std::string_view { message });
 			break;
 
 		case LogLevel::Fatal:
-			log_fatal (category, message);
+			log_fatal (category, std::string_view { message });
 			break;
 
 		default:
 		case LogLevel::Unknown:
 		case LogLevel::Default:
-			log_info_nocheck (category, message);
+			log_info_nocheck (category, std::string_view { message });
 			break;
 	}
 }
@@ -156,7 +158,7 @@ _monodroid_timezone_get_default_id ()
 	const char *mutf8    = env->GetStringUTFChars (id, nullptr);
 
 	if (mutf8 == nullptr) {
-		log_error (LOG_DEFAULT, "Failed to convert Java TimeZone ID to UTF8 (out of memory?)");
+		log_error (LOG_DEFAULT, "Failed to convert Java TimeZone ID to UTF8 (out of memory?)"sv);
 		env->DeleteLocalRef (id);
 		env->DeleteLocalRef (d);
 		return nullptr;
