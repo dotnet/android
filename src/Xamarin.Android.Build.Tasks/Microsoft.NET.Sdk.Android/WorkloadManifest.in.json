@@ -25,10 +25,10 @@
       "description": "Preview support for Android API-36.",
       "packs": [
         "Microsoft.Android.Ref.36",
-        "Microsoft.Android.Runtime.36.android-arm",
-        "Microsoft.Android.Runtime.36.android-arm64",
-        "Microsoft.Android.Runtime.36.android-x86",
-        "Microsoft.Android.Runtime.36.android-x64"
+        "Microsoft.Android.Runtime.Mono.36.android-arm",
+        "Microsoft.Android.Runtime.Mono.36.android-arm64",
+        "Microsoft.Android.Runtime.Mono.36.android-x86",
+        "Microsoft.Android.Runtime.Mono.36.android-x64"
       ],
       "platforms": [ "win-x64", "win-arm64", "linux-x64", "linux-arm64", "osx-x64", "osx-arm64" ],
       "extends" : [ "android" ]
