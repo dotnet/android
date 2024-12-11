@@ -1,11 +1,9 @@
 #nullable enable
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks;
 
@@ -27,16 +25,13 @@ public class CollectDalvikFilesForArchive : AndroidTask
 	public override bool RunTask ()
 	{
 		var dalvikPath = AndroidPackageFormat.Equals ("aab", StringComparison.InvariantCultureIgnoreCase) ? "dex/" : "";
-		var files = new List<ITaskItem> ();
+		var files = new PackageFileListBuilder ();
 
 		foreach (var dex in DalvikClasses) {
 			var apkName = dex.GetMetadata ("ApkName");
 			var dexPath = string.IsNullOrWhiteSpace (apkName) ? Path.GetFileName (dex.ItemSpec) : apkName;
 
-			var item = new TaskItem (dex.ItemSpec);
-			item.SetMetadata ("ArchivePath", dalvikPath + dexPath);
-
-			files.Add (item);
+			files.AddItem (dex.ItemSpec, dalvikPath + dexPath);
 		}
 
 		FilesToAddToArchive = files.ToArray ();

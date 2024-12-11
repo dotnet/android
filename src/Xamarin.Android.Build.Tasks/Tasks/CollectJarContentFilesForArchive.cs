@@ -8,7 +8,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Tasks;
@@ -32,9 +31,9 @@ public class CollectJarContentFilesForArchive : AndroidTask
 
 	public ITaskItem [] LibraryProjectJars { get; set; } = [];
 
-	List<Regex> excludePatterns = new List<Regex> ();
+	readonly List<Regex> excludePatterns = new List<Regex> ();
 
-	List<Regex> includePatterns = new List<Regex> ();
+	readonly List<Regex> includePatterns = new List<Regex> ();
 
 	[Output]
 	public ITaskItem [] FilesToAddToArchive { get; set; } = [];
@@ -69,7 +68,7 @@ public class CollectJarContentFilesForArchive : AndroidTask
 		jarFilePaths = MonoAndroidHelper.DistinctFilesByContent (jarFilePaths);
 
 		// Find files in the .jar files that match our include patterns to be added to the archive
-		var files = new List<ITaskItem> ();
+		var files = new PackageFileListBuilder ();
 
 		foreach (var jarFile in jarFilePaths) {
 			using (var stream = File.OpenRead (jarFile))
@@ -113,11 +112,7 @@ public class CollectJarContentFilesForArchive : AndroidTask
 					}
 
 					// An item's ItemSpec should be unique so use both the jar file name and the entry name
-					var item = new TaskItem ($"{jarFile}#{jarItem.FullName}");
-					item.SetMetadata ("ArchivePath", path);
-					item.SetMetadata ("JavaArchiveEntry", jarItem.FullName);
-
-					files.Add (item);
+					files.AddItem ($"{jarFile}#{jarItem.FullName}", path, jarItem.FullName);
 				}
 			}
 		}

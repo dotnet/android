@@ -41,6 +41,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForRemovedItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForInvalidResourceFileNames" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckClientHandlerType" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CollectAssemblyFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectDalvikFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectJarContentFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectPdbFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -2109,32 +2110,37 @@ because xbuild doesn't support framework reference assemblies.
       LibraryProjectJars="@(ExtractedJarImports)">
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectJarContentFilesForArchive>
+  
+  <CollectAssemblyFilesForArchive
+      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+      ApkOutputPath="$(_ApkOutputPath)"
+      AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
+      EmbedAssemblies="$(EmbedAssembliesIntoApk)"
+      EnableCompression="$(AndroidEnableAssemblyCompression)"
+      IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
+      IntermediateOutputPath="$(IntermediateOutputPath)"
+      ProjectFullPath="$(MSBuildProjectFullPath)"
+      ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
+      ResolvedUserAssemblies="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths)"
+      SupportedAbis="@(_BuildTargetAbis)"
+      UseAssemblyStore="$(AndroidUseAssemblyStore)">
+    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+  </CollectAssemblyFilesForArchive>
 
   <BuildApk
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"
-      ApkInputPath="$(_PackagedResources)"
       ApkOutputPath="$(_ApkOutputPath)"
-      AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
       BundleNativeLibraries="$(_BundleResultNativeLibraries)"
-      EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-      ResolvedUserAssemblies="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths)"
-      ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
       FrameworkNativeLibraries="@(FrameworkNativeLibrary)"
       NativeLibraries="@(AndroidNativeLibrary)"
       ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
       AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
-      EmbeddedNativeLibraryAssemblies="$(OutDir)$(TargetFileName);@(_ReferencePath);@(_ReferenceDependencyPaths)"
       SupportedAbis="@(_BuildTargetAbis)"
-      Debug="$(AndroidIncludeDebugSymbols)"
-      EnableCompression="$(AndroidEnableAssemblyCompression)"
-      TlsProvider="$(AndroidTlsProvider)"
       UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
-      ProjectFullPath="$(MSBuildProjectFullPath)"
       IncludeWrapSh="$(AndroidIncludeWrapSh)"
       CheckedBuild="$(_AndroidCheckedBuild)"
       RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
       ZipAlignmentPages="$(AndroidZipAlignment)"
-      UseAssemblyStore="$(AndroidUseAssemblyStore)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       IntermediateOutputPath="$(IntermediateOutputPath)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
@@ -2236,29 +2242,33 @@ because xbuild doesn't support framework reference assemblies.
       LibraryProjectJars="@(ExtractedJarImports)">
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectJarContentFilesForArchive>
+    
+  <CollectAssemblyFilesForArchive
+      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+      ApkOutputPath="$(_ApkOutputPath)"
+      AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
+      EmbedAssemblies="$(EmbedAssembliesIntoApk)"
+      EnableCompression="$(AndroidEnableAssemblyCompression)"
+      IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
+      IntermediateOutputPath="$(IntermediateOutputPath)"
+      ProjectFullPath="$(MSBuildProjectFullPath)"
+      ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
+      ResolvedUserAssemblies="@(_ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths)"
+      SupportedAbis="@(_BuildTargetAbis)">
+    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+  </CollectAssemblyFilesForArchive>
 
 <BuildApk
 			AndroidNdkDirectory="$(_AndroidNdkDirectory)"
-			ApkInputPath="$(_PackagedResources)"
 			ApkOutputPath="$(_ApkOutputPath)"
-			AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
-      BundleAssemblies="$(_BundleAssemblies)"
       BundleNativeLibraries="$(_BundleNativeLibraries)"
-			EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-			ResolvedUserAssemblies="@(_ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths)"
-			ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
 			FrameworkNativeLibraries="@(FrameworkNativeLibrary)"
 			NativeLibraries="@(_NativeLibraries)"
 			ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
 			AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
-			EmbeddedNativeLibraryAssemblies="$(OutDir)$(TargetFileName);@(ReferencePath);@(ReferenceDependencyPaths)"
 			SupportedAbis="@(_BuildTargetAbis)"
 			AndroidSequencePointsMode="$(_SequencePointsMode)"
-			Debug="$(AndroidIncludeDebugSymbols)"
-			EnableCompression="$(AndroidEnableAssemblyCompression)"
-			TlsProvider="$(AndroidTlsProvider)"
 			UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
-			ProjectFullPath="$(MSBuildProjectFullPath)"
 			IncludeWrapSh="$(AndroidIncludeWrapSh)"
 			CheckedBuild="$(_AndroidCheckedBuild)"
 			RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"

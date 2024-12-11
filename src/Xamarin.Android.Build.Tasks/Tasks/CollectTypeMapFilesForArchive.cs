@@ -1,11 +1,9 @@
 #nullable enable
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks;
 
@@ -29,14 +27,10 @@ public class CollectTypeMapFilesForArchive : AndroidTask
 			return true;
 
 		var rootPath = AndroidPackageFormat.Equals ("aab", StringComparison.InvariantCultureIgnoreCase) ? "root/" : "";
-		var files = new List<ITaskItem> ();
+		var files = new PackageFileListBuilder ();
 
-		foreach (var tm in TypeMappings) {
-			var item = new TaskItem (tm.ItemSpec);
-			item.SetMetadata ("ArchivePath", rootPath + Path.GetFileName (tm.ItemSpec));
-
-			files.Add (item);
-		}
+		foreach (var tm in TypeMappings)
+			files.AddItem (tm.ItemSpec, rootPath + Path.GetFileName (tm.ItemSpec));
 
 		FilesToAddToArchive = files.ToArray ();
 

@@ -4,18 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 
-using Java.Interop.Tools.Cecil;
-
 using ArchiveFileList = System.Collections.Generic.List<(string filePath, string archivePath)>;
-using Mono.Cecil;
-using Xamarin.Android.Tools;
 using Xamarin.Tools.Zip;
 using Microsoft.Android.Build.Tasks;
 
@@ -23,7 +16,6 @@ namespace Xamarin.Android.Tasks
 {
 	public class BuildApk : AndroidTask
 	{
-		const string ArchiveAssembliesPath = "lib";
 		const string ArchiveLibPath = "lib";
 
 		public override string TaskPrefix => "BLD";
@@ -31,23 +23,9 @@ namespace Xamarin.Android.Tasks
 		public string AndroidNdkDirectory { get; set; }
 
 		[Required]
-		public string ApkInputPath { get; set; }
-
-		[Required]
 		public string ApkOutputPath { get; set; }
 
-		[Required]
-		public string AppSharedLibrariesDir { get; set; }
-
-		[Required]
-		public ITaskItem[] ResolvedUserAssemblies { get; set; }
-
-		[Required]
-		public ITaskItem[] ResolvedFrameworkAssemblies { get; set; }
-
 		public ITaskItem[] AdditionalNativeLibraryReferences { get; set; }
-
-		public ITaskItem[] EmbeddedNativeLibraryAssemblies { get; set; }
 
 		[Required]
 		public ITaskItem[] FrameworkNativeLibraries { get; set; }
@@ -63,30 +41,15 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string [] SupportedAbis { get; set; }
 
-		public bool EmbedAssemblies { get; set; }
-
-		public bool BundleAssemblies { get; set; }
-
-		public string[] DoNotPackageJavaLibraries { get; set; }
-
-		public string Debug { get; set; }
-
 		public string AndroidSequencePointsMode { get; set; }
 
-		public string TlsProvider { get; set; }
 		public string UncompressedFileExtensions { get; set; }
-
-		// Make it required after https://github.com/xamarin/monodroid/pull/1094 is merged
-		//[Required]
-		public bool EnableCompression { get; set; }
 
 		public bool IncludeWrapSh { get; set; }
 
 		public string CheckedBuild { get; set; }
 
 		public string RuntimeConfigBinFilePath { get; set; }
-
-		public bool UseAssemblyStore { get; set; }
 
 		public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment64Bit;
 
@@ -95,9 +58,6 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public string IntermediateOutputPath { get; set; }
-
-		[Required]
-		public string ProjectFullPath { get; set; }
 
 		[Output]
 		public ITaskItem[] OutputFiles { get; set; }
@@ -108,13 +68,6 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem [] DSODirectoriesToDelete { get; set; }
 
-
-		bool _Debug {
-			get {
-				return string.Equals (Debug, "true", StringComparison.OrdinalIgnoreCase);
-			}
-		}
-
 		SequencePointsMode sequencePointsMode = SequencePointsMode.None;
 
 		HashSet<string> uncompressedFileExtensions;
@@ -123,18 +76,11 @@ namespace Xamarin.Android.Tasks
 
 		protected virtual void FixupArchive (ZipArchiveFileListBuilder zip) { }
 
-		List<string> existingEntries = new List<string> ();
-
-		void ExecuteWithAbi (DSOWrapperGenerator.Config dsoWrapperConfig, string [] supportedAbis, string apkInputPath, string apkOutputPath, bool debug, bool compress, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo, string assemblyStoreApkName)
+		void ExecuteWithAbi (DSOWrapperGenerator.Config dsoWrapperConfig, string [] supportedAbis, string apkOutputPath)
 		{
 			ArchiveFileList files = new ArchiveFileList ();
 
 			using (var apk = new ZipArchiveFileListBuilder (apkOutputPath, File.Exists (apkOutputPath) ? FileMode.Open : FileMode.Create)) {
-
-				if (EmbedAssemblies) {
-					AddAssemblies (dsoWrapperConfig, apk, debug, compress, compressedAssembliesInfo, assemblyStoreApkName);
-					apk.Flush ();
-				}
 
 				AddRuntimeConfigBlob (dsoWrapperConfig, apk);
 				AddRuntimeLibraries (apk, supportedAbis);
@@ -144,7 +90,6 @@ namespace Xamarin.Android.Tasks
 
 				foreach (var file in files) {
 					var item = Path.Combine (file.archivePath.Replace (Path.DirectorySeparatorChar, '/'));
-					existingEntries.Remove (item);
 					CompressionMethod compressionMethod = GetCompressionMethod (file.filePath);
 					if (apk.SkipExistingFile (file.filePath, item, compressionMethod)) {
 						Log.LogDebugMessage ($"Skipping {file.filePath} as the archive file is up to date.");
@@ -157,7 +102,6 @@ namespace Xamarin.Android.Tasks
 				FixupArchive (apk);
 
 				OutputApkFiles = apk.ApkFiles.ToArray ();
-
 			}
 		}
 
@@ -179,22 +123,8 @@ namespace Xamarin.Android.Tasks
 				uncompressedFileExtensions.Add (ext);
 			}
 
-			existingEntries.Clear ();
-
-			bool debug = _Debug;
-			bool compress = !debug && EnableCompression;
-			IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo = null;
-
-			if (compress) {
-				string key = CompressedAssemblyInfo.GetKey (ProjectFullPath);
-				Log.LogDebugMessage ($"Retrieving assembly compression info with key '{key}'");
-				compressedAssembliesInfo = BuildEngine4.UnregisterTaskObjectAssemblyLocal<IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>> (key, RegisteredTaskObjectLifetime.Build);
-				if (compressedAssembliesInfo == null)
-					throw new InvalidOperationException ($"Assembly compression info not found for key '{key}'. Compression will not be performed.");
-			}
-
 			DSOWrapperGenerator.Config dsoWrapperConfig = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, IntermediateOutputPath);
-			ExecuteWithAbi (dsoWrapperConfig, SupportedAbis, ApkInputPath, ApkOutputPath, debug, compress, compressedAssembliesInfo, assemblyStoreApkName: null);
+			ExecuteWithAbi (dsoWrapperConfig, SupportedAbis, ApkOutputPath);
 			outputFiles.Add (ApkOutputPath);
 
 			OutputFiles = outputFiles.Select (a => new TaskItem (a)).ToArray ();
@@ -222,108 +152,8 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		void AddAssemblies (DSOWrapperGenerator.Config dsoWrapperConfig, ZipArchiveFileListBuilder apk, bool debug, bool compress, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo, string assemblyStoreApkName)
-		{
-			string sourcePath;
-			AssemblyCompression.AssemblyData compressedAssembly = null;
-			string compressedOutputDir = Path.GetFullPath (Path.Combine (Path.GetDirectoryName (ApkOutputPath), "..", "lz4"));
-			AssemblyStoreBuilder? storeBuilder = null;
-
-			if (UseAssemblyStore) {
-				storeBuilder = new AssemblyStoreBuilder (Log);
-			}
-
-			// Add user assemblies
-			AssemblyPackagingHelper.AddAssembliesFromCollection (Log, SupportedAbis, ResolvedUserAssemblies, DoAddAssembliesFromArchCollection);
-
-			// Add framework assemblies
-			AssemblyPackagingHelper.AddAssembliesFromCollection (Log, SupportedAbis, ResolvedFrameworkAssemblies, DoAddAssembliesFromArchCollection);
-
-			if (!UseAssemblyStore) {
-				return;
-			}
-
-			Dictionary<AndroidTargetArch, string> assemblyStorePaths = storeBuilder.Generate (AppSharedLibrariesDir);
-
-			if (assemblyStorePaths.Count == 0) {
-				throw new InvalidOperationException ("Assembly store generator did not generate any stores");
-			}
-
-			if (assemblyStorePaths.Count != SupportedAbis.Length) {
-				throw new InvalidOperationException ("Internal error: assembly store did not generate store for each supported ABI");
-			}
-
-			string inArchivePath;
-			foreach (var kvp in assemblyStorePaths) {
-				string abi = MonoAndroidHelper.ArchToAbi (kvp.Key);
-				inArchivePath = MakeArchiveLibPath (abi, "lib" + Path.GetFileName (kvp.Value));
-				string wrappedSourcePath = DSOWrapperGenerator.WrapIt (Log, dsoWrapperConfig, kvp.Key, kvp.Value, Path.GetFileName (inArchivePath));
-				AddFileToArchiveIfNewer (apk, wrappedSourcePath, inArchivePath, GetCompressionMethod (inArchivePath));
-			}
-
-			void DoAddAssembliesFromArchCollection (TaskLoggingHelper log, AndroidTargetArch arch, ITaskItem assembly)
-			{
-				// In the "all assemblies are per-RID" world, assemblies, pdb and config are disguised as shared libraries (that is,
-				// their names end with the .so extension) so that Android allows us to put them in the `lib/{ARCH}` directory.
-				// For this reason, they have to be treated just like other .so files, as far as compression rules are concerned.
-				// Thus, we no longer just store them in the apk but we call the `GetCompressionMethod` method to find out whether
-				// or not we're supposed to compress .so files.
-				sourcePath = CompressAssembly (assembly);
-				if (UseAssemblyStore) {
-					storeBuilder.AddAssembly (sourcePath, assembly, includeDebugSymbols: debug);
-					return;
-				}
-
-				// Add assembly
-				(string assemblyPath, string assemblyDirectory) = GetInArchiveAssemblyPath (assembly);
-				string wrappedSourcePath = DSOWrapperGenerator.WrapIt (Log, dsoWrapperConfig, arch, sourcePath, Path.GetFileName (assemblyPath));
-				AddFileToArchiveIfNewer (apk, wrappedSourcePath, assemblyPath, compressionMethod: GetCompressionMethod (assemblyPath));
-
-				// Try to add config if exists
-				var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
-				AddAssemblyConfigEntry (dsoWrapperConfig, apk, arch, assemblyDirectory, config);
-
-				// Try to add symbols if Debug
-				if (!debug) {
-					return;
-				}
-
-				string symbols = Path.ChangeExtension (assembly.ItemSpec, "pdb");
-				if (!File.Exists (symbols)) {
-					return;
-				}
-
-				string archiveSymbolsPath = assemblyDirectory + MonoAndroidHelper.MakeDiscreteAssembliesEntryName (Path.GetFileName (symbols));
-				string wrappedSymbolsPath = DSOWrapperGenerator.WrapIt (Log, dsoWrapperConfig, arch, symbols, Path.GetFileName (archiveSymbolsPath));
-				AddFileToArchiveIfNewer (
-					apk,
-					wrappedSymbolsPath,
-					archiveSymbolsPath,
-					compressionMethod: GetCompressionMethod (archiveSymbolsPath)
-				);
-			}
-
-			void EnsureCompressedAssemblyData (string sourcePath, uint descriptorIndex)
-			{
-				if (compressedAssembly == null)
-					compressedAssembly = new AssemblyCompression.AssemblyData (sourcePath, descriptorIndex);
-				else
-					compressedAssembly.SetData (sourcePath, descriptorIndex);
-			}
-
-			string CompressAssembly (ITaskItem assembly)
-			{
-				if (!compress) {
-					return assembly.ItemSpec;
-				}
-
-				return AssemblyCompression.Compress (Log, assembly, compressedAssembliesInfo, compressedOutputDir);
-			}
-		}
-
 		bool AddFileToArchiveIfNewer (ZipArchiveFileListBuilder apk, string file, string inArchivePath, CompressionMethod compressionMethod = CompressionMethod.Default)
 		{
-			existingEntries.Remove (inArchivePath.Replace (Path.DirectorySeparatorChar, '/'));
 			if (apk.SkipExistingFile (file, inArchivePath, compressionMethod)) {
 				Log.LogDebugMessage ($"Skipping {file} as the archive file is up to date.");
 				return false;
@@ -331,68 +161,6 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ($"Adding {file} as the archive file is out of date.");
 			apk.AddFileAndFlush (file, inArchivePath, compressionMethod: compressionMethod);
 			return true;
-		}
-
-		void AddAssemblyConfigEntry (DSOWrapperGenerator.Config dsoWrapperConfig, ZipArchiveFileListBuilder apk, AndroidTargetArch arch, string assemblyPath, string configFile)
-		{
-			string inArchivePath = MonoAndroidHelper.MakeDiscreteAssembliesEntryName (assemblyPath + Path.GetFileName (configFile));
-			existingEntries.Remove (inArchivePath);
-
-			if (!File.Exists (configFile)) {
-				return;
-			}
-
-			CompressionMethod compressionMethod = GetCompressionMethod (inArchivePath);
-			if (apk.SkipExistingFile (configFile, inArchivePath, compressionMethod)) {
-				Log.LogDebugMessage ($"Skipping {configFile} as the archive file is up to date.");
-				return;
-			}
-
-			Log.LogDebugMessage ($"Adding {configFile} as the archive file is out of date.");
-			string wrappedConfigFile = DSOWrapperGenerator.WrapIt (Log, dsoWrapperConfig, arch, configFile, Path.GetFileName (inArchivePath));
-			apk.AddFileAndFlush (wrappedConfigFile, inArchivePath, compressionMethod);
-		}
-
-		/// <summary>
-		/// Returns the in-archive path for an assembly
-		/// </summary>
-		(string assemblyFilePath, string assemblyDirectoryPath) GetInArchiveAssemblyPath (ITaskItem assembly)
-		{
-			var parts = new List<string> ();
-
-			// The PrepareSatelliteAssemblies task takes care of properly setting `DestinationSubDirectory`, so we can just use it here.
-			string? subDirectory = assembly.GetMetadata ("DestinationSubDirectory")?.Replace ('\\', '/');
-			if (string.IsNullOrEmpty (subDirectory)) {
-				throw new InvalidOperationException ($"Internal error: assembly '{assembly}' lacks the required `DestinationSubDirectory` metadata");
-			}
-
-			string assemblyName = Path.GetFileName (assembly.ItemSpec);
-			// For discrete assembly entries we need to treat assemblies specially.
-			// All of the assemblies have their names mangled so that the possibility to clash with "real" shared
-			// library names is minimized. All of the assembly entries will start with a special character:
-			//
-			//   `_` - for regular assemblies (e.g. `_Mono.Android.dll.so`)
-			//   `-` - for satellite assemblies (e.g. `-es-Mono.Android.dll.so`)
-			//
-			// Second of all, we need to treat satellite assemblies with even more care.
-			// If we encounter one of them, we will return the culture as part of the path transformed
-			// so that it forms a `-culture-` assembly file name prefix, not a `culture/` subdirectory.
-			// This is necessary because Android doesn't allow subdirectories in `lib/{ABI}/`
-			//
-			string[] subdirParts = subDirectory.TrimEnd ('/').Split ('/');
-			if (subdirParts.Length == 1) {
-				// Not a satellite assembly
-				parts.Add (subDirectory);
-				parts.Add (MonoAndroidHelper.MakeDiscreteAssembliesEntryName (assemblyName));
-			} else if (subdirParts.Length == 2) {
-				parts.Add (subdirParts[0]);
-				parts.Add (MonoAndroidHelper.MakeDiscreteAssembliesEntryName (assemblyName, subdirParts[1]));
-			} else {
-				throw new InvalidOperationException ($"Internal error: '{assembly}' `DestinationSubDirectory` metadata has too many components ({parts.Count} instead of 1 or 2)");
-			}
-
-			string assemblyFilePath = MonoAndroidHelper.MakeZipArchivePath (ArchiveAssembliesPath, parts);
-			return (assemblyFilePath, Path.GetDirectoryName (assemblyFilePath) + "/");
 		}
 
 		sealed class LibInfo
@@ -412,7 +180,6 @@ namespace Xamarin.Android.Tasks
 		void AddNativeLibraryToArchive (ZipArchiveFileListBuilder apk, string abi, string filesystemPath, string inArchiveFileName, ITaskItem taskItem)
 		{
 			string archivePath = MakeArchiveLibPath (abi, inArchiveFileName);
-			existingEntries.Remove (archivePath);
 			CompressionMethod compressionMethod = GetCompressionMethod (archivePath);
 			if (apk.SkipExistingFile (filesystemPath, archivePath, compressionMethod)) {
 				Log.LogDebugMessage ($"Skipping {filesystemPath} (APK path: {archivePath}) as it is up to date.");
