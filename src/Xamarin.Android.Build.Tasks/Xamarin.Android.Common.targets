@@ -1492,6 +1492,7 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 
   <GenerateJavaStubs
+      NativeAot="$(_AndroidNativeAot)"
       ResolvedAssemblies="@(_ResolvedAssemblies)"
       ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
       ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
@@ -1721,6 +1722,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_GeneratePackageManagerJava"
+  Condition=" '$(_AndroidNativeAot)' != 'true' "
   DependsOnTargets="$(_GeneratePackageManagerJavaDependsOn)"
   Inputs="@(_GeneratePackageManagerJavaInputs)"
   Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">

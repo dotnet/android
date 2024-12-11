@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
+    <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationId>net.dot.hellonativeaot</ApplicationId>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <RootNamespace>Java.Interop.Samples.NativeAotFromAndroid</RootNamespace>
+    <!-- Current required properties for NativeAOT -->
+    <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
+    <PublishAot>true</PublishAot>
+    <PublishAotUsingRuntimePack>true</PublishAotUsingRuntimePack>
+  </PropertyGroup>
+
+  <!-- Temporary, to eventually be included in .NET Android infrastructure -->
+  <ItemGroup>
+    <Compile Include="..\..\external\java.interop\samples\Hello-NativeAOTFromAndroid\JavaInteropRuntime.cs" />
+    <Compile Include="..\..\external\java.interop\samples\Hello-NativeAOTFromAndroid\LogcatTextWriter.cs" />
+    <AndroidJavaSource Update="JavaInteropRuntime.java" Bind="false" />
+    <AndroidJavaSource Include="..\..\external\java.interop\samples\Hello-NativeAOTFromAndroid\app\src\main\java\net\dot\jni\nativeaot\NativeAotRuntimeProvider.java" Bind="false" />
+    <ProjectReference Include="..\..\external\java.interop\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj" />
+  </ItemGroup>
+</Project>
