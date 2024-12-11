@@ -81,12 +81,10 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     </PropertyGroup>
   </Target>
 
-  <Target Name="_AndroidAfterComputeLinkedFilesToPublish"
-      AfterTargets="ComputeLinkedFilesToPublish"
-      BeforeTargets="ComputeResolvedFilesToPublishList">
+  <Target Name="_AndroidFixNativeLibraryFileName" AfterTargets="ComputeFilesToPublish">
     <ItemGroup>
       <!-- Fix paths to contain lib-prefix -->
-      <IntermediateAssembly Update="@(IntermediateAssembly)" ArchiveFileName="lib%(FileName)%(Extension)" Condition=" '%(Filename)%(Extension)' == '$(TargetName)$(NativeBinaryExt)' " />
+      <ResolvedFileToPublish Update="@(ResolvedFileToPublish)" ArchiveFileName="lib%(FileName)%(Extension)" Condition=" '%(Filename)%(Extension)' == '$(TargetName)$(NativeBinaryExt)' " />
     </ItemGroup>
   </Target>
 
