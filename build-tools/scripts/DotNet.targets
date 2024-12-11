@@ -58,7 +58,7 @@
       Query="/Project/ItemGroup/PackageDownload[contains(@Include,'Microsoft.NET.Sdk.Android.Manifest-')]/@Include" />
     <XmlPeek
         XmlInputPath="$(_Root)NuGet.config"
-        Query="/configuration/packageSources/add[starts-with(@key,'darc-pub-dotnet-android-')]">
+        Query="/configuration/packageSources/add[starts-with(@key,'darc-pub-')]">
       <Output TaskParameter="Result" ItemName="_DotNetAndroidFeeds" />
     </XmlPeek>
     <XmlPeek
