@@ -1,1 +1,719 @@
 #nullable enable
+abstract Android.App.AppFunctions.AppFunctionService.OnExecuteFunction(Android.App.AppFunctions.ExecuteAppFunctionRequest! request, string! callingPackage, Android.OS.CancellationSignal! cancellationSignal, Java.Util.Functions.IConsumer! callback) -> void
+abstract Android.App.AppSearch.Functions.AppFunctionService.OnExecuteFunction(Android.App.AppSearch.Functions.ExecuteAppFunctionRequest! request, Java.Util.Functions.IConsumer! callback) -> void
+Android.AdServices.AdSelection.GetAdSelectionDataRequest.Builder.SetSellerConfiguration(Android.AdServices.AdSelection.SellerConfiguration? sellerConfiguration) -> Android.AdServices.AdSelection.GetAdSelectionDataRequest.Builder!
+Android.AdServices.AdSelection.GetAdSelectionDataRequest.SellerConfiguration.get -> Android.AdServices.AdSelection.SellerConfiguration?
+Android.AdServices.AdSelection.PerBuyerConfiguration
+Android.AdServices.AdSelection.PerBuyerConfiguration.Builder
+Android.AdServices.AdSelection.PerBuyerConfiguration.Builder.Build() -> Android.AdServices.AdSelection.PerBuyerConfiguration!
+Android.AdServices.AdSelection.PerBuyerConfiguration.Builder.Builder() -> void
+Android.AdServices.AdSelection.PerBuyerConfiguration.Builder.SetBuyer(Android.AdServices.Common.AdTechIdentifier! buyer) -> Android.AdServices.AdSelection.PerBuyerConfiguration.Builder!
+Android.AdServices.AdSelection.PerBuyerConfiguration.Builder.SetTargetInputSizeBytes(int targetInputSizeB) -> Android.AdServices.AdSelection.PerBuyerConfiguration.Builder!
+Android.AdServices.AdSelection.PerBuyerConfiguration.Buyer.get -> Android.AdServices.Common.AdTechIdentifier!
+Android.AdServices.AdSelection.PerBuyerConfiguration.DescribeContents() -> int
+Android.AdServices.AdSelection.PerBuyerConfiguration.InterfaceConsts
+Android.AdServices.AdSelection.PerBuyerConfiguration.TargetInputSizeBytes.get -> int
+Android.AdServices.AdSelection.PerBuyerConfiguration.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.AdServices.AdSelection.SellerConfiguration
+Android.AdServices.AdSelection.SellerConfiguration.Builder
+Android.AdServices.AdSelection.SellerConfiguration.Builder.Build() -> Android.AdServices.AdSelection.SellerConfiguration!
+Android.AdServices.AdSelection.SellerConfiguration.Builder.Builder() -> void
+Android.AdServices.AdSelection.SellerConfiguration.Builder.SetMaximumPayloadSizeBytes(int maximumPayloadSizeBytes) -> Android.AdServices.AdSelection.SellerConfiguration.Builder!
+Android.AdServices.AdSelection.SellerConfiguration.Builder.SetPerBuyerConfigurations(System.Collections.Generic.ICollection<Android.AdServices.AdSelection.PerBuyerConfiguration!>! perBuyerConfigurations) -> Android.AdServices.AdSelection.SellerConfiguration.Builder!
+Android.AdServices.AdSelection.SellerConfiguration.DescribeContents() -> int
+Android.AdServices.AdSelection.SellerConfiguration.InterfaceConsts
+Android.AdServices.AdSelection.SellerConfiguration.MaximumPayloadSizeBytes.get -> int
+Android.AdServices.AdSelection.SellerConfiguration.PerBuyerConfigurations.get -> System.Collections.Generic.ICollection<Android.AdServices.AdSelection.PerBuyerConfiguration!>!
+Android.AdServices.AdSelection.SellerConfiguration.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.AdServices.CustomAudiences.CustomAudience.Builder.SetPriority(double priority) -> Android.AdServices.CustomAudiences.CustomAudience.Builder!
+Android.AdServices.CustomAudiences.CustomAudience.Priority.get -> double
+Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest.Builder.SetShouldReplacePendingUpdates(bool shouldReplacePendingUpdates) -> Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest.Builder!
+Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest.ShouldReplacePendingUpdates() -> bool
+Android.AdServices.OnDevicePersonalization.AppInfo.AppInfo(bool installed) -> void
+Android.AdServices.OnDevicePersonalization.DownloadCompletedInput.DownloadCompletedInput(Android.AdServices.OnDevicePersonalization.IKeyValueStore! downloadedContents) -> void
+Android.AdServices.OnDevicePersonalization.EventInput.EventInput(Android.AdServices.OnDevicePersonalization.RequestLogRecord? requestLogRecord, Android.OS.PersistableBundle! parameters) -> void
+Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest
+Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.Builder
+Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.Builder.Build() -> Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest!
+Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.Builder.Builder(Android.Content.ComponentName! service) -> void
+Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.Builder.SetAppParams(Android.OS.PersistableBundle! value) -> Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.Builder!
+Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.Builder.SetOutputSpec(Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.OutputSpec! value) -> Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.Builder!
+Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.ExecuteInIsolatedServiceRequest(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
+Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.OutputSpec
+Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.OutputSpec.OutputSpec(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
+Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceResponse
+Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceResponse.ExecuteInIsolatedServiceResponse(Android.AdServices.OnDevicePersonalization.SurfacePackageToken? surfacePackageToken, int bestValue) -> void
+Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceResponse.ExecuteInIsolatedServiceResponse(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
+Android.AdServices.OnDevicePersonalization.ExecuteInput.ExecuteInput(string! appPackageName, Android.OS.PersistableBundle! appParams) -> void
+Android.AdServices.OnDevicePersonalization.ExecuteOutput.BestValue.get -> int
+Android.AdServices.OnDevicePersonalization.ExecuteOutput.Builder.SetBestValue(int value) -> Android.AdServices.OnDevicePersonalization.ExecuteOutput.Builder!
+Android.AdServices.OnDevicePersonalization.IsolatedServiceException.ErrorCode.get -> int
+Android.AdServices.OnDevicePersonalization.IsolatedServiceException.IsolatedServiceException(int errorCode, Java.Lang.Throwable? cause) -> void
+Android.AdServices.OnDevicePersonalization.IsolatedServiceException.IsolatedServiceException(int errorCode, string? message, Java.Lang.Throwable? cause) -> void
+Android.AdServices.OnDevicePersonalization.RenderInput.RenderInput(int width, int height, Android.AdServices.OnDevicePersonalization.RenderingConfig? renderingConfig) -> void
+Android.AdServices.OnDevicePersonalization.TrainingExamplesInput.CollectionName.get -> string?
+Android.AdServices.OnDevicePersonalization.TrainingExamplesInput.TrainingExamplesInput(string! populationName, string! taskName, byte[]? resumptionToken, string? collectionName) -> void
+Android.AdServices.OnDevicePersonalization.WebTriggerInput.WebTriggerInput(Android.Net.Uri! destinationUrl, string! appPackageName, byte[]! data) -> void
+Android.App.AppFunctions.AppFunctionManager
+Android.App.AppFunctions.AppFunctionManager.ExecuteAppFunction(Android.App.AppFunctions.ExecuteAppFunctionRequest! request, Java.Util.Concurrent.IExecutor! executor, Android.OS.CancellationSignal! cancellationSignal, Java.Util.Functions.IConsumer! callback) -> void
+Android.App.AppFunctions.AppFunctionManager.IsAppFunctionEnabled(string! functionIdentifier, string! targetPackage, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
+Android.App.AppFunctions.AppFunctionManager.SetAppFunctionEnabled(string! functionIdentifier, int newEnabledState, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
+Android.App.AppFunctions.AppFunctionService
+Android.App.AppFunctions.AppFunctionService.AppFunctionService() -> void
+Android.App.AppFunctions.AppFunctionService.AppFunctionService(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
+Android.App.AppFunctions.ExecuteAppFunctionRequest
+Android.App.AppFunctions.ExecuteAppFunctionRequest.Builder
+Android.App.AppFunctions.ExecuteAppFunctionRequest.Builder.Build() -> Android.App.AppFunctions.ExecuteAppFunctionRequest!
+Android.App.AppFunctions.ExecuteAppFunctionRequest.Builder.Builder(string! targetPackageName, string! functionIdentifier) -> void
+Android.App.AppFunctions.ExecuteAppFunctionRequest.Builder.SetExtras(Android.OS.Bundle! extras) -> Android.App.AppFunctions.ExecuteAppFunctionRequest.Builder!
+Android.App.AppFunctions.ExecuteAppFunctionRequest.Builder.SetParameters(Android.App.AppSearch.GenericDocument! parameters) -> Android.App.AppFunctions.ExecuteAppFunctionRequest.Builder!
+Android.App.AppFunctions.ExecuteAppFunctionRequest.DescribeContents() -> int
+Android.App.AppFunctions.ExecuteAppFunctionRequest.Extras.get -> Android.OS.Bundle!
+Android.App.AppFunctions.ExecuteAppFunctionRequest.FunctionIdentifier.get -> string!
+Android.App.AppFunctions.ExecuteAppFunctionRequest.InterfaceConsts
+Android.App.AppFunctions.ExecuteAppFunctionRequest.Parameters.get -> Android.App.AppSearch.GenericDocument!
+Android.App.AppFunctions.ExecuteAppFunctionRequest.TargetPackageName.get -> string!
+Android.App.AppFunctions.ExecuteAppFunctionRequest.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.App.AppFunctions.ExecuteAppFunctionResponse
+Android.App.AppFunctions.ExecuteAppFunctionResponse.DescribeContents() -> int
+Android.App.AppFunctions.ExecuteAppFunctionResponse.ErrorMessage.get -> string?
+Android.App.AppFunctions.ExecuteAppFunctionResponse.Extras.get -> Android.OS.Bundle!
+Android.App.AppFunctions.ExecuteAppFunctionResponse.InterfaceConsts
+Android.App.AppFunctions.ExecuteAppFunctionResponse.IsSuccess.get -> bool
+Android.App.AppFunctions.ExecuteAppFunctionResponse.ResultCode.get -> int
+Android.App.AppFunctions.ExecuteAppFunctionResponse.ResultDocument.get -> Android.App.AppSearch.GenericDocument!
+Android.App.AppFunctions.ExecuteAppFunctionResponse.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.App.AppSearch.AppSearchSchema.BooleanPropertyConfig.Builder.SetDescription(string! description) -> Android.App.AppSearch.AppSearchSchema.BooleanPropertyConfig.Builder!
+Android.App.AppSearch.AppSearchSchema.Builder.SetDescription(string! description) -> Android.App.AppSearch.AppSearchSchema.Builder!
+Android.App.AppSearch.AppSearchSchema.BytesPropertyConfig.Builder.SetDescription(string! description) -> Android.App.AppSearch.AppSearchSchema.BytesPropertyConfig.Builder!
+Android.App.AppSearch.AppSearchSchema.Description.get -> string!
+Android.App.AppSearch.AppSearchSchema.DocumentPropertyConfig.Builder.SetDescription(string! description) -> Android.App.AppSearch.AppSearchSchema.DocumentPropertyConfig.Builder!
+Android.App.AppSearch.AppSearchSchema.DoublePropertyConfig.Builder.SetDescription(string! description) -> Android.App.AppSearch.AppSearchSchema.DoublePropertyConfig.Builder!
+Android.App.AppSearch.AppSearchSchema.EmbeddingPropertyConfig
+Android.App.AppSearch.AppSearchSchema.EmbeddingPropertyConfig.Builder
+Android.App.AppSearch.AppSearchSchema.EmbeddingPropertyConfig.Builder.Build() -> Android.App.AppSearch.AppSearchSchema.EmbeddingPropertyConfig!
+Android.App.AppSearch.AppSearchSchema.EmbeddingPropertyConfig.Builder.Builder(string! propertyName) -> void
+Android.App.AppSearch.AppSearchSchema.EmbeddingPropertyConfig.Builder.SetCardinality(int cardinality) -> Android.App.AppSearch.AppSearchSchema.EmbeddingPropertyConfig.Builder!
+Android.App.AppSearch.AppSearchSchema.EmbeddingPropertyConfig.Builder.SetDescription(string! description) -> Android.App.AppSearch.AppSearchSchema.EmbeddingPropertyConfig.Builder!
+Android.App.AppSearch.AppSearchSchema.EmbeddingPropertyConfig.Builder.SetIndexingType(int indexingType) -> Android.App.AppSearch.AppSearchSchema.EmbeddingPropertyConfig.Builder!
+Android.App.AppSearch.AppSearchSchema.EmbeddingPropertyConfig.IndexingType.get -> int
+Android.App.AppSearch.AppSearchSchema.LongPropertyConfig.Builder.SetDescription(string! description) -> Android.App.AppSearch.AppSearchSchema.LongPropertyConfig.Builder!
+Android.App.AppSearch.AppSearchSchema.StringPropertyConfig.Builder.SetDescription(string! description) -> Android.App.AppSearch.AppSearchSchema.StringPropertyConfig.Builder!
+Android.App.AppSearch.EmbeddingVector
+Android.App.AppSearch.EmbeddingVector.DescribeContents() -> int
+Android.App.AppSearch.EmbeddingVector.EmbeddingVector(float[]! values, string! modelSignature) -> void
+Android.App.AppSearch.EmbeddingVector.GetValues() -> float[]!
+Android.App.AppSearch.EmbeddingVector.InterfaceConsts
+Android.App.AppSearch.EmbeddingVector.ModelSignature.get -> string!
+Android.App.AppSearch.EmbeddingVector.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.App.AppSearch.Functions.AppFunctionManager
+Android.App.AppSearch.Functions.AppFunctionManager.ExecuteAppFunction(Android.App.AppSearch.Functions.ExecuteAppFunctionRequest! request, Java.Util.Concurrent.IExecutor! executor, Java.Util.Functions.IConsumer! callback) -> void
+Android.App.AppSearch.Functions.AppFunctionService
+Android.App.AppSearch.Functions.AppFunctionService.AppFunctionService() -> void
+Android.App.AppSearch.Functions.AppFunctionService.AppFunctionService(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Builder
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Builder.Build() -> Android.App.AppSearch.Functions.ExecuteAppFunctionRequest!
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Builder.Builder(string! packageName, string! functionIdentifier) -> void
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Builder.SetExtras(Android.OS.Bundle! extras) -> Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Builder!
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Builder.SetParameters(Android.App.AppSearch.GenericDocument! parameters) -> Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Builder!
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Builder.SetSha256Certificate(byte[]? sha256Certificate) -> Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Builder!
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.DescribeContents() -> int
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Extras.get -> Android.OS.Bundle!
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.FunctionIdentifier.get -> string!
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.GetSha256Certificate() -> byte[]?
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.InterfaceConsts
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Parameters.get -> Android.App.AppSearch.GenericDocument!
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.TargetPackageName.get -> string!
+Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.App.AppSearch.Functions.ExecuteAppFunctionResponse
+Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.Builder
+Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.Builder.Build() -> Android.App.AppSearch.Functions.ExecuteAppFunctionResponse!
+Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.Builder.Builder() -> void
+Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.Builder.SetExtras(Android.OS.Bundle! extras) -> Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.Builder!
+Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.Builder.SetResult(Android.App.AppSearch.GenericDocument! result) -> Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.Builder!
+Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.DescribeContents() -> int
+Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.Extras.get -> Android.OS.Bundle!
+Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.InterfaceConsts
+Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.Result.get -> Android.App.AppSearch.GenericDocument!
+Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.App.AppSearch.SearchResult.Builder.AddInformationalRankingSignal(double rankingSignal) -> Android.App.AppSearch.SearchResult.Builder!
+Android.App.AppSearch.SearchResult.InformationalRankingSignals.get -> System.Collections.Generic.IList<Java.Lang.Double!>!
+Android.App.AppSearch.SearchSpec.Builder.AddEmbeddingParameters(params Android.App.AppSearch.EmbeddingVector![]! searchEmbeddings) -> Android.App.AppSearch.SearchSpec.Builder!
+Android.App.AppSearch.SearchSpec.Builder.AddEmbeddingParameters(System.Collections.Generic.ICollection<Android.App.AppSearch.EmbeddingVector!>! searchEmbeddings) -> Android.App.AppSearch.SearchSpec.Builder!
+Android.App.AppSearch.SearchSpec.Builder.AddInformationalRankingExpressions(params string![]! informationalRankingExpressions) -> Android.App.AppSearch.SearchSpec.Builder!
+Android.App.AppSearch.SearchSpec.Builder.AddInformationalRankingExpressions(System.Collections.Generic.ICollection<string!>! informationalRankingExpressions) -> Android.App.AppSearch.SearchSpec.Builder!
+Android.App.AppSearch.SearchSpec.Builder.AddSearchStringParameters(params string![]! searchStringParameters) -> Android.App.AppSearch.SearchSpec.Builder!
+Android.App.AppSearch.SearchSpec.Builder.AddSearchStringParameters(System.Collections.Generic.IList<string!>! searchStringParameters) -> Android.App.AppSearch.SearchSpec.Builder!
+Android.App.AppSearch.SearchSpec.Builder.SetDefaultEmbeddingSearchMetricType(int defaultEmbeddingSearchMetricType) -> Android.App.AppSearch.SearchSpec.Builder!
+Android.App.AppSearch.SearchSpec.DefaultEmbeddingSearchMetricType.get -> int
+Android.App.AppSearch.SearchSpec.EmbeddingParameters.get -> System.Collections.Generic.IList<Android.App.AppSearch.EmbeddingVector!>!
+Android.App.AppSearch.SearchSpec.InformationalRankingExpressions.get -> System.Collections.Generic.IList<string!>!
+Android.App.AppSearch.SearchSpec.SearchStringParameters.get -> System.Collections.Generic.IList<string!>!
+Android.App.AppSearch.SearchSuggestionSpec.Builder.AddSearchStringParameters(params string![]! searchStringParameters) -> Android.App.AppSearch.SearchSuggestionSpec.Builder!
+Android.App.AppSearch.SearchSuggestionSpec.Builder.AddSearchStringParameters(System.Collections.Generic.IList<string!>! searchStringParameters) -> Android.App.AppSearch.SearchSuggestionSpec.Builder!
+Android.App.AppSearch.SearchSuggestionSpec.SearchStringParameters.get -> System.Collections.Generic.IList<string!>!
+Android.App.SdkSandbox.SdkProvider.ISdkSandboxClientImportanceListener
+Android.App.SdkSandbox.SdkProvider.ISdkSandboxClientImportanceListener.OnForegroundImportanceChanged(bool isForeground) -> void
+Android.App.SdkSandbox.SdkProvider.SdkSandboxClientImportanceEventArgs
+Android.App.SdkSandbox.SdkProvider.SdkSandboxClientImportanceEventArgs.IsForeground.get -> bool
+Android.App.SdkSandbox.SdkProvider.SdkSandboxClientImportanceEventArgs.SdkSandboxClientImportanceEventArgs(bool isForeground) -> void
+Android.ConfigInfrastructure.Aconfig.AconfigPackage
+Android.ConfigInfrastructure.Aconfig.AconfigPackage.AconfigPackage() -> void
+Android.ConfigInfrastructure.Aconfig.AconfigPackage.AconfigPackage(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
+Android.Content.PM.SharedLibraryInfo.OptionalDependentPackages.get -> System.Collections.Generic.IList<Android.Content.PM.VersionedPackage!>!
+Android.Health.Connect.CreateMedicalDataSourceRequest
+Android.Health.Connect.CreateMedicalDataSourceRequest.Builder
+Android.Health.Connect.CreateMedicalDataSourceRequest.Builder.Build() -> Android.Health.Connect.CreateMedicalDataSourceRequest!
+Android.Health.Connect.CreateMedicalDataSourceRequest.Builder.Builder(Android.Health.Connect.CreateMedicalDataSourceRequest! other) -> void
+Android.Health.Connect.CreateMedicalDataSourceRequest.Builder.Builder(Android.Health.Connect.CreateMedicalDataSourceRequest.Builder! other) -> void
+Android.Health.Connect.CreateMedicalDataSourceRequest.Builder.Builder(Android.Net.Uri! fhirBaseUri, string! displayName, Android.Health.Connect.DataTypes.FhirVersion! fhirVersion) -> void
+Android.Health.Connect.CreateMedicalDataSourceRequest.Builder.SetDisplayName(string! displayName) -> Android.Health.Connect.CreateMedicalDataSourceRequest.Builder!
+Android.Health.Connect.CreateMedicalDataSourceRequest.Builder.SetFhirBaseUri(Android.Net.Uri! fhirBaseUri) -> Android.Health.Connect.CreateMedicalDataSourceRequest.Builder!
+Android.Health.Connect.CreateMedicalDataSourceRequest.Builder.SetFhirVersion(Android.Health.Connect.DataTypes.FhirVersion! fhirVersion) -> Android.Health.Connect.CreateMedicalDataSourceRequest.Builder!
+Android.Health.Connect.CreateMedicalDataSourceRequest.DescribeContents() -> int
+Android.Health.Connect.CreateMedicalDataSourceRequest.DisplayName.get -> string!
+Android.Health.Connect.CreateMedicalDataSourceRequest.FhirBaseUri.get -> Android.Net.Uri!
+Android.Health.Connect.CreateMedicalDataSourceRequest.FhirVersion.get -> Android.Health.Connect.DataTypes.FhirVersion!
+Android.Health.Connect.CreateMedicalDataSourceRequest.InterfaceConsts
+Android.Health.Connect.CreateMedicalDataSourceRequest.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.Health.Connect.DataTypes.FhirResource
+Android.Health.Connect.DataTypes.FhirResource.Builder
+Android.Health.Connect.DataTypes.FhirResource.Builder.Build() -> Android.Health.Connect.DataTypes.FhirResource!
+Android.Health.Connect.DataTypes.FhirResource.Builder.Builder(Android.Health.Connect.DataTypes.FhirResource! other) -> void
+Android.Health.Connect.DataTypes.FhirResource.Builder.Builder(Android.Health.Connect.DataTypes.FhirResource.Builder! other) -> void
+Android.Health.Connect.DataTypes.FhirResource.Builder.Builder(int type, string! id, string! data) -> void
+Android.Health.Connect.DataTypes.FhirResource.Builder.SetData(string! data) -> Android.Health.Connect.DataTypes.FhirResource.Builder!
+Android.Health.Connect.DataTypes.FhirResource.Builder.SetId(string! id) -> Android.Health.Connect.DataTypes.FhirResource.Builder!
+Android.Health.Connect.DataTypes.FhirResource.Builder.SetType(int type) -> Android.Health.Connect.DataTypes.FhirResource.Builder!
+Android.Health.Connect.DataTypes.FhirResource.Data.get -> string!
+Android.Health.Connect.DataTypes.FhirResource.DescribeContents() -> int
+Android.Health.Connect.DataTypes.FhirResource.Id.get -> string!
+Android.Health.Connect.DataTypes.FhirResource.InterfaceConsts
+Android.Health.Connect.DataTypes.FhirResource.Type.get -> int
+Android.Health.Connect.DataTypes.FhirResource.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.Health.Connect.DataTypes.FhirVersion
+Android.Health.Connect.DataTypes.FhirVersion.DescribeContents() -> int
+Android.Health.Connect.DataTypes.FhirVersion.InterfaceConsts
+Android.Health.Connect.DataTypes.FhirVersion.IsSupportedFhirVersion.get -> bool
+Android.Health.Connect.DataTypes.FhirVersion.Major.get -> int
+Android.Health.Connect.DataTypes.FhirVersion.Minor.get -> int
+Android.Health.Connect.DataTypes.FhirVersion.Patch.get -> int
+Android.Health.Connect.DataTypes.FhirVersion.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.Health.Connect.DataTypes.MedicalDataSource
+Android.Health.Connect.DataTypes.MedicalDataSource.Builder
+Android.Health.Connect.DataTypes.MedicalDataSource.Builder.Build() -> Android.Health.Connect.DataTypes.MedicalDataSource!
+Android.Health.Connect.DataTypes.MedicalDataSource.Builder.Builder(Android.Health.Connect.DataTypes.MedicalDataSource! other) -> void
+Android.Health.Connect.DataTypes.MedicalDataSource.Builder.Builder(Android.Health.Connect.DataTypes.MedicalDataSource.Builder! other) -> void
+Android.Health.Connect.DataTypes.MedicalDataSource.Builder.Builder(string! id, string! packageName, Android.Net.Uri! fhirBaseUri, string! displayName, Android.Health.Connect.DataTypes.FhirVersion! fhirVersion) -> void
+Android.Health.Connect.DataTypes.MedicalDataSource.Builder.SetDisplayName(string! displayName) -> Android.Health.Connect.DataTypes.MedicalDataSource.Builder!
+Android.Health.Connect.DataTypes.MedicalDataSource.Builder.SetFhirBaseUri(Android.Net.Uri! fhirBaseUri) -> Android.Health.Connect.DataTypes.MedicalDataSource.Builder!
+Android.Health.Connect.DataTypes.MedicalDataSource.Builder.SetFhirVersion(Android.Health.Connect.DataTypes.FhirVersion! fhirVersion) -> Android.Health.Connect.DataTypes.MedicalDataSource.Builder!
+Android.Health.Connect.DataTypes.MedicalDataSource.Builder.SetId(string! id) -> Android.Health.Connect.DataTypes.MedicalDataSource.Builder!
+Android.Health.Connect.DataTypes.MedicalDataSource.Builder.SetLastDataUpdateTime(Java.Time.Instant? lastDataUpdateTime) -> Android.Health.Connect.DataTypes.MedicalDataSource.Builder!
+Android.Health.Connect.DataTypes.MedicalDataSource.Builder.SetPackageName(string! packageName) -> Android.Health.Connect.DataTypes.MedicalDataSource.Builder!
+Android.Health.Connect.DataTypes.MedicalDataSource.DescribeContents() -> int
+Android.Health.Connect.DataTypes.MedicalDataSource.DisplayName.get -> string!
+Android.Health.Connect.DataTypes.MedicalDataSource.FhirBaseUri.get -> Android.Net.Uri!
+Android.Health.Connect.DataTypes.MedicalDataSource.FhirVersion.get -> Android.Health.Connect.DataTypes.FhirVersion!
+Android.Health.Connect.DataTypes.MedicalDataSource.Id.get -> string!
+Android.Health.Connect.DataTypes.MedicalDataSource.InterfaceConsts
+Android.Health.Connect.DataTypes.MedicalDataSource.LastDataUpdateTime.get -> Java.Time.Instant?
+Android.Health.Connect.DataTypes.MedicalDataSource.PackageName.get -> string!
+Android.Health.Connect.DataTypes.MedicalDataSource.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.Health.Connect.DataTypes.MedicalResource
+Android.Health.Connect.DataTypes.MedicalResource.Builder
+Android.Health.Connect.DataTypes.MedicalResource.Builder.Build() -> Android.Health.Connect.DataTypes.MedicalResource!
+Android.Health.Connect.DataTypes.MedicalResource.Builder.Builder(Android.Health.Connect.DataTypes.MedicalResource! other) -> void
+Android.Health.Connect.DataTypes.MedicalResource.Builder.Builder(Android.Health.Connect.DataTypes.MedicalResource.Builder! other) -> void
+Android.Health.Connect.DataTypes.MedicalResource.Builder.Builder(int type, string! dataSourceId, Android.Health.Connect.DataTypes.FhirVersion! fhirVersion, Android.Health.Connect.DataTypes.FhirResource! fhirResource) -> void
+Android.Health.Connect.DataTypes.MedicalResource.Builder.SetDataSourceId(string! dataSourceId) -> Android.Health.Connect.DataTypes.MedicalResource.Builder!
+Android.Health.Connect.DataTypes.MedicalResource.Builder.SetFhirResource(Android.Health.Connect.DataTypes.FhirResource! fhirResource) -> Android.Health.Connect.DataTypes.MedicalResource.Builder!
+Android.Health.Connect.DataTypes.MedicalResource.Builder.SetFhirVersion(Android.Health.Connect.DataTypes.FhirVersion! fhirVersion) -> Android.Health.Connect.DataTypes.MedicalResource.Builder!
+Android.Health.Connect.DataTypes.MedicalResource.Builder.SetType(int type) -> Android.Health.Connect.DataTypes.MedicalResource.Builder!
+Android.Health.Connect.DataTypes.MedicalResource.DataSourceId.get -> string!
+Android.Health.Connect.DataTypes.MedicalResource.DescribeContents() -> int
+Android.Health.Connect.DataTypes.MedicalResource.FhirResource.get -> Android.Health.Connect.DataTypes.FhirResource!
+Android.Health.Connect.DataTypes.MedicalResource.FhirVersion.get -> Android.Health.Connect.DataTypes.FhirVersion!
+Android.Health.Connect.DataTypes.MedicalResource.Id.get -> Android.Health.Connect.MedicalResourceId!
+Android.Health.Connect.DataTypes.MedicalResource.InterfaceConsts
+Android.Health.Connect.DataTypes.MedicalResource.Type.get -> int
+Android.Health.Connect.DataTypes.MedicalResource.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.Health.Connect.DataTypes.MindfulnessSessionRecord
+Android.Health.Connect.DataTypes.MindfulnessSessionRecord.Builder
+Android.Health.Connect.DataTypes.MindfulnessSessionRecord.Builder.Build() -> Android.Health.Connect.DataTypes.MindfulnessSessionRecord!
+Android.Health.Connect.DataTypes.MindfulnessSessionRecord.Builder.Builder(Android.Health.Connect.DataTypes.Metadata! metadata, Java.Time.Instant! startTime, Java.Time.Instant! endTime, int mindfulnessSessionType) -> void
+Android.Health.Connect.DataTypes.MindfulnessSessionRecord.Builder.SetEndZoneOffset(Java.Time.ZoneOffset! endZoneOffset) -> Android.Health.Connect.DataTypes.MindfulnessSessionRecord.Builder!
+Android.Health.Connect.DataTypes.MindfulnessSessionRecord.Builder.SetNotes(Java.Lang.ICharSequence? notes) -> Android.Health.Connect.DataTypes.MindfulnessSessionRecord.Builder!
+Android.Health.Connect.DataTypes.MindfulnessSessionRecord.Builder.SetNotes(string? notes) -> Android.Health.Connect.DataTypes.MindfulnessSessionRecord.Builder!
+Android.Health.Connect.DataTypes.MindfulnessSessionRecord.Builder.SetStartZoneOffset(Java.Time.ZoneOffset! startZoneOffset) -> Android.Health.Connect.DataTypes.MindfulnessSessionRecord.Builder!
+Android.Health.Connect.DataTypes.MindfulnessSessionRecord.Builder.SetTitle(Java.Lang.ICharSequence? title) -> Android.Health.Connect.DataTypes.MindfulnessSessionRecord.Builder!
+Android.Health.Connect.DataTypes.MindfulnessSessionRecord.Builder.SetTitle(string? title) -> Android.Health.Connect.DataTypes.MindfulnessSessionRecord.Builder!
+Android.Health.Connect.DataTypes.MindfulnessSessionRecord.MindfulnessSessionType.get -> int
+Android.Health.Connect.DataTypes.MindfulnessSessionRecord.Notes.get -> string?
+Android.Health.Connect.DataTypes.MindfulnessSessionRecord.NotesFormatted.get -> Java.Lang.ICharSequence?
+Android.Health.Connect.DataTypes.MindfulnessSessionRecord.Title.get -> string?
+Android.Health.Connect.DataTypes.MindfulnessSessionRecord.TitleFormatted.get -> Java.Lang.ICharSequence?
+Android.Health.Connect.DeleteMedicalResourcesRequest
+Android.Health.Connect.DeleteMedicalResourcesRequest.Builder
+Android.Health.Connect.DeleteMedicalResourcesRequest.Builder.AddDataSourceId(string! dataSourceId) -> Android.Health.Connect.DeleteMedicalResourcesRequest.Builder!
+Android.Health.Connect.DeleteMedicalResourcesRequest.Builder.AddMedicalResourceType(int resourceType) -> Android.Health.Connect.DeleteMedicalResourcesRequest.Builder!
+Android.Health.Connect.DeleteMedicalResourcesRequest.Builder.Build() -> Android.Health.Connect.DeleteMedicalResourcesRequest!
+Android.Health.Connect.DeleteMedicalResourcesRequest.Builder.Builder() -> void
+Android.Health.Connect.DeleteMedicalResourcesRequest.Builder.Builder(Android.Health.Connect.DeleteMedicalResourcesRequest! other) -> void
+Android.Health.Connect.DeleteMedicalResourcesRequest.Builder.Builder(Android.Health.Connect.DeleteMedicalResourcesRequest.Builder! other) -> void
+Android.Health.Connect.DeleteMedicalResourcesRequest.Builder.ClearDataSourceIds() -> Android.Health.Connect.DeleteMedicalResourcesRequest.Builder!
+Android.Health.Connect.DeleteMedicalResourcesRequest.Builder.ClearMedicalResourceTypes() -> Android.Health.Connect.DeleteMedicalResourcesRequest.Builder!
+Android.Health.Connect.DeleteMedicalResourcesRequest.DataSourceIds.get -> System.Collections.Generic.ICollection<string!>!
+Android.Health.Connect.DeleteMedicalResourcesRequest.DescribeContents() -> int
+Android.Health.Connect.DeleteMedicalResourcesRequest.InterfaceConsts
+Android.Health.Connect.DeleteMedicalResourcesRequest.MedicalResourceTypes.get -> System.Collections.Generic.ICollection<Java.Lang.Integer!>!
+Android.Health.Connect.DeleteMedicalResourcesRequest.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.Health.Connect.GetMedicalDataSourcesRequest
+Android.Health.Connect.GetMedicalDataSourcesRequest.Builder
+Android.Health.Connect.GetMedicalDataSourcesRequest.Builder.AddPackageName(string! packageName) -> Android.Health.Connect.GetMedicalDataSourcesRequest.Builder!
+Android.Health.Connect.GetMedicalDataSourcesRequest.Builder.Build() -> Android.Health.Connect.GetMedicalDataSourcesRequest!
+Android.Health.Connect.GetMedicalDataSourcesRequest.Builder.Builder() -> void
+Android.Health.Connect.GetMedicalDataSourcesRequest.Builder.Builder(Android.Health.Connect.GetMedicalDataSourcesRequest! other) -> void
+Android.Health.Connect.GetMedicalDataSourcesRequest.Builder.Builder(Android.Health.Connect.GetMedicalDataSourcesRequest.Builder! other) -> void
+Android.Health.Connect.GetMedicalDataSourcesRequest.Builder.ClearPackageNames() -> Android.Health.Connect.GetMedicalDataSourcesRequest.Builder!
+Android.Health.Connect.GetMedicalDataSourcesRequest.DescribeContents() -> int
+Android.Health.Connect.GetMedicalDataSourcesRequest.InterfaceConsts
+Android.Health.Connect.GetMedicalDataSourcesRequest.PackageNames.get -> System.Collections.Generic.ICollection<string!>!
+Android.Health.Connect.GetMedicalDataSourcesRequest.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.Health.Connect.MedicalResourceId
+Android.Health.Connect.MedicalResourceId.DataSourceId.get -> string!
+Android.Health.Connect.MedicalResourceId.DescribeContents() -> int
+Android.Health.Connect.MedicalResourceId.FhirResourceId.get -> string!
+Android.Health.Connect.MedicalResourceId.FhirResourceType.get -> int
+Android.Health.Connect.MedicalResourceId.InterfaceConsts
+Android.Health.Connect.MedicalResourceId.MedicalResourceId(string! dataSourceId, int fhirResourceType, string! fhirResourceId) -> void
+Android.Health.Connect.MedicalResourceId.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.Health.Connect.ReadMedicalResourcesInitialRequest
+Android.Health.Connect.ReadMedicalResourcesInitialRequest.Builder
+Android.Health.Connect.ReadMedicalResourcesInitialRequest.Builder.AddDataSourceId(string! dataSourceId) -> Android.Health.Connect.ReadMedicalResourcesInitialRequest.Builder!
+Android.Health.Connect.ReadMedicalResourcesInitialRequest.Builder.AddDataSourceIds(System.Collections.Generic.ICollection<string!>! dataSourceIds) -> Android.Health.Connect.ReadMedicalResourcesInitialRequest.Builder!
+Android.Health.Connect.ReadMedicalResourcesInitialRequest.Builder.Build() -> Android.Health.Connect.ReadMedicalResourcesInitialRequest!
+Android.Health.Connect.ReadMedicalResourcesInitialRequest.Builder.Builder(Android.Health.Connect.ReadMedicalResourcesInitialRequest! other) -> void
+Android.Health.Connect.ReadMedicalResourcesInitialRequest.Builder.Builder(Android.Health.Connect.ReadMedicalResourcesInitialRequest.Builder! other) -> void
+Android.Health.Connect.ReadMedicalResourcesInitialRequest.Builder.Builder(int medicalResourceType) -> void
+Android.Health.Connect.ReadMedicalResourcesInitialRequest.Builder.ClearDataSourceIds() -> Android.Health.Connect.ReadMedicalResourcesInitialRequest.Builder!
+Android.Health.Connect.ReadMedicalResourcesInitialRequest.Builder.SetMedicalResourceType(int medicalResourceType) -> Android.Health.Connect.ReadMedicalResourcesInitialRequest.Builder!
+Android.Health.Connect.ReadMedicalResourcesInitialRequest.Builder.SetPageSize(int pageSize) -> Android.Health.Connect.ReadMedicalResourcesInitialRequest.Builder!
+Android.Health.Connect.ReadMedicalResourcesInitialRequest.DataSourceIds.get -> System.Collections.Generic.ICollection<string!>!
+Android.Health.Connect.ReadMedicalResourcesInitialRequest.MedicalResourceType.get -> int
+Android.Health.Connect.ReadMedicalResourcesPageRequest
+Android.Health.Connect.ReadMedicalResourcesPageRequest.Builder
+Android.Health.Connect.ReadMedicalResourcesPageRequest.Builder.Build() -> Android.Health.Connect.ReadMedicalResourcesPageRequest!
+Android.Health.Connect.ReadMedicalResourcesPageRequest.Builder.Builder(Android.Health.Connect.ReadMedicalResourcesPageRequest! other) -> void
+Android.Health.Connect.ReadMedicalResourcesPageRequest.Builder.Builder(Android.Health.Connect.ReadMedicalResourcesPageRequest.Builder! other) -> void
+Android.Health.Connect.ReadMedicalResourcesPageRequest.Builder.Builder(string! pageToken) -> void
+Android.Health.Connect.ReadMedicalResourcesPageRequest.Builder.SetPageSize(int pageSize) -> Android.Health.Connect.ReadMedicalResourcesPageRequest.Builder!
+Android.Health.Connect.ReadMedicalResourcesPageRequest.Builder.SetPageToken(string! pageToken) -> Android.Health.Connect.ReadMedicalResourcesPageRequest.Builder!
+Android.Health.Connect.ReadMedicalResourcesPageRequest.PageToken.get -> string!
+Android.Health.Connect.ReadMedicalResourcesRequest
+Android.Health.Connect.ReadMedicalResourcesRequest.ReadMedicalResourcesRequest(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
+Android.Health.Connect.ReadMedicalResourcesResponse
+Android.Health.Connect.ReadMedicalResourcesResponse.DescribeContents() -> int
+Android.Health.Connect.ReadMedicalResourcesResponse.InterfaceConsts
+Android.Health.Connect.ReadMedicalResourcesResponse.MedicalResources.get -> System.Collections.Generic.IList<Android.Health.Connect.DataTypes.MedicalResource!>!
+Android.Health.Connect.ReadMedicalResourcesResponse.NextPageToken.get -> string?
+Android.Health.Connect.ReadMedicalResourcesResponse.ReadMedicalResourcesResponse(System.Collections.Generic.IList<Android.Health.Connect.DataTypes.MedicalResource!>! medicalResources, string? nextPageToken, int remainingCount) -> void
+Android.Health.Connect.ReadMedicalResourcesResponse.RemainingCount.get -> int
+Android.Health.Connect.ReadMedicalResourcesResponse.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.Health.Connect.UpsertMedicalResourceRequest
+Android.Health.Connect.UpsertMedicalResourceRequest.Builder
+Android.Health.Connect.UpsertMedicalResourceRequest.Builder.Build() -> Android.Health.Connect.UpsertMedicalResourceRequest!
+Android.Health.Connect.UpsertMedicalResourceRequest.Builder.Builder(Android.Health.Connect.UpsertMedicalResourceRequest! other) -> void
+Android.Health.Connect.UpsertMedicalResourceRequest.Builder.Builder(Android.Health.Connect.UpsertMedicalResourceRequest.Builder! other) -> void
+Android.Health.Connect.UpsertMedicalResourceRequest.Builder.Builder(string! dataSourceId, Android.Health.Connect.DataTypes.FhirVersion! fhirVersion, string! data) -> void
+Android.Health.Connect.UpsertMedicalResourceRequest.Builder.SetData(string! data) -> Android.Health.Connect.UpsertMedicalResourceRequest.Builder!
+Android.Health.Connect.UpsertMedicalResourceRequest.Builder.SetDataSourceId(string! dataSourceId) -> Android.Health.Connect.UpsertMedicalResourceRequest.Builder!
+Android.Health.Connect.UpsertMedicalResourceRequest.Builder.SetFhirVersion(Android.Health.Connect.DataTypes.FhirVersion! fhirVersion) -> Android.Health.Connect.UpsertMedicalResourceRequest.Builder!
+Android.Health.Connect.UpsertMedicalResourceRequest.Data.get -> string!
+Android.Health.Connect.UpsertMedicalResourceRequest.DataSourceId.get -> string!
+Android.Health.Connect.UpsertMedicalResourceRequest.DescribeContents() -> int
+Android.Health.Connect.UpsertMedicalResourceRequest.FhirVersion.get -> Android.Health.Connect.DataTypes.FhirVersion!
+Android.Health.Connect.UpsertMedicalResourceRequest.InterfaceConsts
+Android.Health.Connect.UpsertMedicalResourceRequest.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.OS.Build.VERSION_CODES_FULL
+Android.OS.Build.VERSION_CODES_FULL.VERSION_CODES_FULL(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.AccentColor.get -> long
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder.Build() -> Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo!
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder.Builder() -> void
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder.SetAccentColor(long accentColor) -> Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder!
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder.SetMaxSelectionLimit(int maxSelectionLimit) -> Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder!
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder.SetMimeTypes(System.Collections.Generic.IList<string!>! mimeTypes) -> Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder!
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder.SetOrderedSelection(bool orderedSelection) -> Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder!
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder.SetPreSelectedUris(System.Collections.Generic.IList<Android.Net.Uri!>! preSelectedUris) -> Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder!
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder.SetThemeNightMode(int themeNightMode) -> Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder!
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.DescribeContents() -> int
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.InterfaceConsts
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.IsOrderedSelection.get -> bool
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.MaxSelectionLimit.get -> int
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.MimeTypes.get -> System.Collections.Generic.IList<string!>!
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.PreSelectedUris.get -> System.Collections.Generic.IList<Android.Net.Uri!>!
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.ThemeNightMode.get -> int
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerProviderFactory
+Android.Widget.PhotoPicker.EmbeddedPhotoPickerProviderFactory.EmbeddedPhotoPickerProviderFactory(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerClient
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerClient.OnSelectionComplete() -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerClient.OnSessionError(Java.Lang.Throwable! cause) -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerClient.OnSessionOpened(Android.Widget.PhotoPicker.IEmbeddedPhotoPickerSession! session) -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerClient.OnUriPermissionGranted(System.Collections.Generic.IList<Android.Net.Uri!>! uris) -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerClient.OnUriPermissionRevoked(System.Collections.Generic.IList<Android.Net.Uri!>! uris) -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerProvider
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerProvider.OpenSession(Android.OS.IBinder! hostToken, int displayId, int width, int height, Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo! featureInfo, Java.Util.Concurrent.IExecutor! clientExecutor, Android.Widget.PhotoPicker.IEmbeddedPhotoPickerClient! callback) -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerSession
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerSession.Close() -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerSession.NotifyConfigurationChanged(Android.Content.Res.Configuration! configuration) -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerSession.NotifyPhotoPickerExpanded(bool isExpanded) -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerSession.NotifyResized(int width, int height) -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerSession.NotifyVisibilityChanged(bool isVisible) -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerSession.RequestRevokeUriPermission(System.Collections.Generic.IList<Android.Net.Uri!>! uris) -> void
+Android.Widget.PhotoPicker.IEmbeddedPhotoPickerSession.SurfacePackage.get -> Android.Views.SurfaceControlViewHost.SurfacePackage!
+const Android.AdServices.AdSelection.PerBuyerConfiguration.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.AdServices.AdSelection.PerBuyerConfiguration.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.AdServices.AdSelection.SellerConfiguration.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.AdServices.AdSelection.SellerConfiguration.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.OutputSpec.OutputTypeBestValue = 1 -> int
+const Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.OutputSpec.OutputTypeNull = 0 -> int
+const Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceResponse.DefaultBestValue = -1 -> int
+const Android.AdServices.OnDevicePersonalization.OnDevicePersonalizationException.ErrorInferenceFailed = 9 -> int
+const Android.AdServices.OnDevicePersonalization.OnDevicePersonalizationException.ErrorInferenceModelNotFound = 8 -> int
+const Android.AdServices.OnDevicePersonalization.OnDevicePersonalizationException.ErrorInvalidTrainingManifest = 7 -> int
+const Android.AdServices.OnDevicePersonalization.OnDevicePersonalizationException.ErrorIsolatedServiceLoadingFailed = 3 -> int
+const Android.AdServices.OnDevicePersonalization.OnDevicePersonalizationException.ErrorIsolatedServiceManifestParsingFailed = 4 -> int
+const Android.AdServices.OnDevicePersonalization.OnDevicePersonalizationException.ErrorIsolatedServiceTimeout = 5 -> int
+const Android.AdServices.OnDevicePersonalization.OnDevicePersonalizationException.ErrorScheduleTrainingFailed = 6 -> int
+const Android.App.AppFunctions.AppFunctionManager.AppFunctionStateDefault = 0 -> int
+const Android.App.AppFunctions.AppFunctionManager.AppFunctionStateDisabled = 2 -> int
+const Android.App.AppFunctions.AppFunctionManager.AppFunctionStateEnabled = 1 -> int
+const Android.App.AppFunctions.AppFunctionService.ServiceInterface = "android.app.appfunctions.AppFunctionService" -> string!
+const Android.App.AppFunctions.ExecuteAppFunctionRequest.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.App.AppFunctions.ExecuteAppFunctionRequest.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.App.AppFunctions.ExecuteAppFunctionResponse.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.App.AppFunctions.ExecuteAppFunctionResponse.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.App.AppFunctions.ExecuteAppFunctionResponse.PropertyReturnValue = "returnValue" -> string!
+const Android.App.AppFunctions.ExecuteAppFunctionResponse.ResultAppUnknownError = 2 -> int
+const Android.App.AppFunctions.ExecuteAppFunctionResponse.ResultCancelled = 6 -> int
+const Android.App.AppFunctions.ExecuteAppFunctionResponse.ResultDenied = 1 -> int
+const Android.App.AppFunctions.ExecuteAppFunctionResponse.ResultDisabled = 5 -> int
+const Android.App.AppFunctions.ExecuteAppFunctionResponse.ResultInternalError = 3 -> int
+const Android.App.AppFunctions.ExecuteAppFunctionResponse.ResultInvalidArgument = 4 -> int
+const Android.App.AppFunctions.ExecuteAppFunctionResponse.ResultOk = 0 -> int
+const Android.App.AppSearch.AppSearchResult.ResultTimedOut = 11 -> int
+const Android.App.AppSearch.AppSearchSchema.EmbeddingPropertyConfig.IndexingTypeNone = 0 -> int
+const Android.App.AppSearch.AppSearchSchema.EmbeddingPropertyConfig.IndexingTypeSimilarity = 1 -> int
+const Android.App.AppSearch.EmbeddingVector.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.App.AppSearch.EmbeddingVector.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.App.AppSearch.Functions.AppFunctionManager.PermissionBindAppFunctionService = "android.permission.BIND_APP_FUNCTION_SERVICE" -> string!
+const Android.App.AppSearch.Functions.AppFunctionService.ServiceInterface = "android.app.appsearch.functions.AppFunctionService" -> string!
+const Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.PropertyResult = "result" -> string!
+const Android.App.AppSearch.SearchSpec.EmbeddingSearchMetricTypeCosine = 1 -> int
+const Android.App.AppSearch.SearchSpec.EmbeddingSearchMetricTypeDotProduct = 2 -> int
+const Android.App.AppSearch.SearchSpec.EmbeddingSearchMetricTypeEuclidean = 3 -> int
+const Android.Content.Context.AppFunctionService = "app_function" -> string!
+const Android.Content.PM.ActivityInfo.ConfigAssetsPaths = -2147483648 -> int
+const Android.Content.PM.ActivityInfo.ConfigResourcesUnused = 134217728 -> int
+const Android.Health.Connect.CreateMedicalDataSourceRequest.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.Health.Connect.CreateMedicalDataSourceRequest.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.Health.Connect.DataTypes.FhirResource.FhirResourceTypeAllergyIntolerance = 2 -> int
+const Android.Health.Connect.DataTypes.FhirResource.FhirResourceTypeCondition = 4 -> int
+const Android.Health.Connect.DataTypes.FhirResource.FhirResourceTypeEncounter = 12 -> int
+const Android.Health.Connect.DataTypes.FhirResource.FhirResourceTypeImmunization = 1 -> int
+const Android.Health.Connect.DataTypes.FhirResource.FhirResourceTypeLocation = 13 -> int
+const Android.Health.Connect.DataTypes.FhirResource.FhirResourceTypeMedication = 6 -> int
+const Android.Health.Connect.DataTypes.FhirResource.FhirResourceTypeMedicationRequest = 7 -> int
+const Android.Health.Connect.DataTypes.FhirResource.FhirResourceTypeMedicationStatement = 8 -> int
+const Android.Health.Connect.DataTypes.FhirResource.FhirResourceTypeObservation = 3 -> int
+const Android.Health.Connect.DataTypes.FhirResource.FhirResourceTypeOrganization = 14 -> int
+const Android.Health.Connect.DataTypes.FhirResource.FhirResourceTypePatient = 9 -> int
+const Android.Health.Connect.DataTypes.FhirResource.FhirResourceTypePractitioner = 10 -> int
+const Android.Health.Connect.DataTypes.FhirResource.FhirResourceTypePractitionerRole = 11 -> int
+const Android.Health.Connect.DataTypes.FhirResource.FhirResourceTypeProcedure = 5 -> int
+const Android.Health.Connect.DataTypes.FhirResource.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.Health.Connect.DataTypes.FhirResource.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.Health.Connect.DataTypes.FhirVersion.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.Health.Connect.DataTypes.FhirVersion.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.Health.Connect.DataTypes.MedicalDataSource.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.Health.Connect.DataTypes.MedicalDataSource.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.Health.Connect.DataTypes.MedicalResource.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.Health.Connect.DataTypes.MedicalResource.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.Health.Connect.DataTypes.MedicalResource.MedicalResourceTypeAllergiesIntolerances = 2 -> int
+const Android.Health.Connect.DataTypes.MedicalResource.MedicalResourceTypeConditions = 7 -> int
+const Android.Health.Connect.DataTypes.MedicalResource.MedicalResourceTypeImmunizations = 1 -> int
+const Android.Health.Connect.DataTypes.MedicalResource.MedicalResourceTypeLaboratoryResults = 6 -> int
+const Android.Health.Connect.DataTypes.MedicalResource.MedicalResourceTypeMedications = 9 -> int
+const Android.Health.Connect.DataTypes.MedicalResource.MedicalResourceTypePersonalDetails = 10 -> int
+const Android.Health.Connect.DataTypes.MedicalResource.MedicalResourceTypePractitionerDetails = 11 -> int
+const Android.Health.Connect.DataTypes.MedicalResource.MedicalResourceTypePregnancy = 3 -> int
+const Android.Health.Connect.DataTypes.MedicalResource.MedicalResourceTypeProcedures = 8 -> int
+const Android.Health.Connect.DataTypes.MedicalResource.MedicalResourceTypeSocialHistory = 4 -> int
+const Android.Health.Connect.DataTypes.MedicalResource.MedicalResourceTypeVisits = 12 -> int
+const Android.Health.Connect.DataTypes.MedicalResource.MedicalResourceTypeVitalSigns = 5 -> int
+const Android.Health.Connect.DataTypes.MindfulnessSessionRecord.MindfulnessSessionTypeBreathing = 3 -> int
+const Android.Health.Connect.DataTypes.MindfulnessSessionRecord.MindfulnessSessionTypeMeditation = 1 -> int
+const Android.Health.Connect.DataTypes.MindfulnessSessionRecord.MindfulnessSessionTypeMovement = 5 -> int
+const Android.Health.Connect.DataTypes.MindfulnessSessionRecord.MindfulnessSessionTypeMusic = 4 -> int
+const Android.Health.Connect.DataTypes.MindfulnessSessionRecord.MindfulnessSessionTypeOther = 2 -> int
+const Android.Health.Connect.DataTypes.MindfulnessSessionRecord.MindfulnessSessionTypeUnguided = 6 -> int
+const Android.Health.Connect.DataTypes.MindfulnessSessionRecord.MindfulnessSessionTypeUnknown = 0 -> int
+const Android.Health.Connect.DeleteMedicalResourcesRequest.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.Health.Connect.DeleteMedicalResourcesRequest.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.Health.Connect.GetMedicalDataSourcesRequest.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.Health.Connect.GetMedicalDataSourcesRequest.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.Health.Connect.HealthPermissions.ReadMedicalDataAllergiesIntolerances = "android.permission.health.READ_MEDICAL_DATA_ALLERGIES_INTOLERANCES" -> string!
+const Android.Health.Connect.HealthPermissions.ReadMedicalDataConditions = "android.permission.health.READ_MEDICAL_DATA_CONDITIONS" -> string!
+const Android.Health.Connect.HealthPermissions.ReadMedicalDataImmunizations = "android.permission.health.READ_MEDICAL_DATA_IMMUNIZATIONS" -> string!
+const Android.Health.Connect.HealthPermissions.ReadMedicalDataLaboratoryResults = "android.permission.health.READ_MEDICAL_DATA_LABORATORY_RESULTS" -> string!
+const Android.Health.Connect.HealthPermissions.ReadMedicalDataMedications = "android.permission.health.READ_MEDICAL_DATA_MEDICATIONS" -> string!
+const Android.Health.Connect.HealthPermissions.ReadMedicalDataPersonalDetails = "android.permission.health.READ_MEDICAL_DATA_PERSONAL_DETAILS" -> string!
+const Android.Health.Connect.HealthPermissions.ReadMedicalDataPractitionerDetails = "android.permission.health.READ_MEDICAL_DATA_PRACTITIONER_DETAILS" -> string!
+const Android.Health.Connect.HealthPermissions.ReadMedicalDataPregnancy = "android.permission.health.READ_MEDICAL_DATA_PREGNANCY" -> string!
+const Android.Health.Connect.HealthPermissions.ReadMedicalDataProcedures = "android.permission.health.READ_MEDICAL_DATA_PROCEDURES" -> string!
+const Android.Health.Connect.HealthPermissions.ReadMedicalDataSocialHistory = "android.permission.health.READ_MEDICAL_DATA_SOCIAL_HISTORY" -> string!
+const Android.Health.Connect.HealthPermissions.ReadMedicalDataVisits = "android.permission.health.READ_MEDICAL_DATA_VISITS" -> string!
+const Android.Health.Connect.HealthPermissions.ReadMedicalDataVitalSigns = "android.permission.health.READ_MEDICAL_DATA_VITAL_SIGNS" -> string!
+const Android.Health.Connect.HealthPermissions.ReadMindfulness = "android.permission.health.READ_MINDFULNESS" -> string!
+const Android.Health.Connect.HealthPermissions.WriteMedicalData = "android.permission.health.WRITE_MEDICAL_DATA" -> string!
+const Android.Health.Connect.HealthPermissions.WriteMindfulness = "android.permission.health.WRITE_MINDFULNESS" -> string!
+const Android.Health.Connect.MedicalResourceId.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.Health.Connect.MedicalResourceId.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.Health.Connect.ReadMedicalResourcesResponse.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.Health.Connect.ReadMedicalResourcesResponse.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.Health.Connect.UpsertMedicalResourceRequest.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.Health.Connect.UpsertMedicalResourceRequest.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.Manifest.Permission.BindAppFunctionService = "android.permission.BIND_APP_FUNCTION_SERVICE" -> string!
+const Android.OS.BatteryManager.BatteryCapacityLevelCritical = 1 -> int
+const Android.OS.BatteryManager.BatteryCapacityLevelFull = 5 -> int
+const Android.OS.BatteryManager.BatteryCapacityLevelHigh = 4 -> int
+const Android.OS.BatteryManager.BatteryCapacityLevelLow = 2 -> int
+const Android.OS.BatteryManager.BatteryCapacityLevelNormal = 3 -> int
+const Android.OS.BatteryManager.BatteryCapacityLevelUnknown = 0 -> int
+const Android.OS.BatteryManager.BatteryCapacityLevelUnsupported = -1 -> int
+const Android.OS.BatteryManager.ExtraCapacityLevel = "android.os.extra.CAPACITY_LEVEL" -> string!
+const Android.OS.Build.VERSION_CODES_FULL.Base = 100000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.Base11 = 200000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.Cupcake = 300000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.Donut = 400000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.Eclair = 500000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.Eclair01 = 600000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.EclairMr1 = 700000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.Froyo = 800000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.Gingerbread = 900000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.GingerbreadMr1 = 1000000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.Honeycomb = 1100000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.HoneycombMr1 = 1200000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.HoneycombMr2 = 1300000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.IceCreamSandwich = 1400000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.IceCreamSandwichMr1 = 1500000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.JellyBean = 1600000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.JellyBeanMr1 = 1700000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.JellyBeanMr2 = 1800000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.Kitkat = 1900000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.KitkatWatch = 2000000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.Lollipop = 2100000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.LollipopMr1 = 2200000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.M = 2300000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.N = 2400000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.NMr1 = 2500000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.O = 2600000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.OMr1 = 2700000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.P = 2800000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.Q = 2900000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.R = 3000000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.S = 3100000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.SV2 = 3200000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.Tiramisu = 3300000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.UpsideDownCake = 3400000 -> int
+const Android.OS.Build.VERSION_CODES_FULL.VanillaIceCream = 3500000 -> int
+const Android.Provider.MediaStore.AccessOemMetadataPermission = "com.android.providers.media.permission.ACCESS_OEM_METADATA" -> string!
+const Android.Provider.MediaStore.Audio.AudioColumns.BitsPerSample = "bits_per_sample" -> string!
+const Android.Provider.MediaStore.Audio.AudioColumns.InferredDate = "inferred_date" -> string!
+const Android.Provider.MediaStore.Audio.AudioColumns.OemMetadata = "oem_metadata" -> string!
+const Android.Provider.MediaStore.Audio.AudioColumns.Samplerate = "samplerate" -> string!
+const Android.Provider.MediaStore.Audio.Genres.Members.InterfaceConsts.BitsPerSample = "bits_per_sample" -> string!
+const Android.Provider.MediaStore.Audio.Genres.Members.InterfaceConsts.InferredDate = "inferred_date" -> string!
+const Android.Provider.MediaStore.Audio.Genres.Members.InterfaceConsts.OemMetadata = "oem_metadata" -> string!
+const Android.Provider.MediaStore.Audio.Genres.Members.InterfaceConsts.Samplerate = "samplerate" -> string!
+const Android.Provider.MediaStore.Audio.IAudioColumns.BitsPerSample = "bits_per_sample" -> string!
+const Android.Provider.MediaStore.Audio.IAudioColumns.Samplerate = "samplerate" -> string!
+const Android.Provider.MediaStore.Audio.Media.InterfaceConsts.BitsPerSample = "bits_per_sample" -> string!
+const Android.Provider.MediaStore.Audio.Media.InterfaceConsts.InferredDate = "inferred_date" -> string!
+const Android.Provider.MediaStore.Audio.Media.InterfaceConsts.OemMetadata = "oem_metadata" -> string!
+const Android.Provider.MediaStore.Audio.Media.InterfaceConsts.Samplerate = "samplerate" -> string!
+const Android.Provider.MediaStore.Audio.Playlists.InterfaceConsts.InferredDate = "inferred_date" -> string!
+const Android.Provider.MediaStore.Audio.Playlists.InterfaceConsts.OemMetadata = "oem_metadata" -> string!
+const Android.Provider.MediaStore.Audio.Playlists.Members.InterfaceConsts.BitsPerSample = "bits_per_sample" -> string!
+const Android.Provider.MediaStore.Audio.Playlists.Members.InterfaceConsts.InferredDate = "inferred_date" -> string!
+const Android.Provider.MediaStore.Audio.Playlists.Members.InterfaceConsts.OemMetadata = "oem_metadata" -> string!
+const Android.Provider.MediaStore.Audio.Playlists.Members.InterfaceConsts.Samplerate = "samplerate" -> string!
+const Android.Provider.MediaStore.Audio.PlaylistsColumns.InferredDate = "inferred_date" -> string!
+const Android.Provider.MediaStore.Audio.PlaylistsColumns.OemMetadata = "oem_metadata" -> string!
+const Android.Provider.MediaStore.DownloadColumns.InferredDate = "inferred_date" -> string!
+const Android.Provider.MediaStore.DownloadColumns.OemMetadata = "oem_metadata" -> string!
+const Android.Provider.MediaStore.Downloads.InterfaceConsts.InferredDate = "inferred_date" -> string!
+const Android.Provider.MediaStore.Downloads.InterfaceConsts.OemMetadata = "oem_metadata" -> string!
+const Android.Provider.MediaStore.ExtraPickerPreSelectionUris = "android.provider.extra.PICKER_PRE_SELECTION_URIS" -> string!
+const Android.Provider.MediaStore.Files.FileColumns.InferredDate = "inferred_date" -> string!
+const Android.Provider.MediaStore.Files.FileColumns.OemMetadata = "oem_metadata" -> string!
+const Android.Provider.MediaStore.Images.ImageColumns.InferredDate = "inferred_date" -> string!
+const Android.Provider.MediaStore.Images.ImageColumns.OemMetadata = "oem_metadata" -> string!
+const Android.Provider.MediaStore.Images.Media.InterfaceConsts.InferredDate = "inferred_date" -> string!
+const Android.Provider.MediaStore.Images.Media.InterfaceConsts.OemMetadata = "oem_metadata" -> string!
+const Android.Provider.MediaStore.IMediaColumns.InferredDate = "inferred_date" -> string!
+const Android.Provider.MediaStore.IMediaColumns.OemMetadata = "oem_metadata" -> string!
+const Android.Provider.MediaStore.MediaColumns.InferredDate = "inferred_date" -> string!
+const Android.Provider.MediaStore.MediaColumns.OemMetadata = "oem_metadata" -> string!
+const Android.Provider.MediaStore.QueryArgMediaStandardSortOrder = "android:query-arg-media-standard-sort-order" -> string!
+const Android.Provider.MediaStore.Video.Media.InterfaceConsts.InferredDate = "inferred_date" -> string!
+const Android.Provider.MediaStore.Video.Media.InterfaceConsts.OemMetadata = "oem_metadata" -> string!
+const Android.Provider.MediaStore.Video.VideoColumns.InferredDate = "inferred_date" -> string!
+const Android.Provider.MediaStore.Video.VideoColumns.OemMetadata = "oem_metadata" -> string!
+const Android.Telephony.CarrierConfigManager.Gps.KeyEnableNiSuplMessageInjectionBool = "gps.enable_ni_supl_message_injection_bool" -> string!
+const Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+Java.Util.Concurrent.IExecutorService.Close() -> void
+override Android.AdServices.AdSelection.PerBuyerConfiguration.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.AdServices.AdSelection.PerBuyerConfiguration.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.AdServices.AdSelection.SellerConfiguration.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.AdServices.AdSelection.SellerConfiguration.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.OutputSpec.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.OutputSpec.ThresholdClass.get -> nint
+override Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.OutputSpec.ThresholdType.get -> System.Type!
+override Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.ThresholdClass.get -> nint
+override Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.ThresholdType.get -> System.Type!
+override Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceResponse.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceResponse.ThresholdClass.get -> nint
+override Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceResponse.ThresholdType.get -> System.Type!
+override Android.App.AppFunctions.AppFunctionManager.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.AppFunctions.AppFunctionService.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.AppFunctions.AppFunctionService.ThresholdClass.get -> nint
+override Android.App.AppFunctions.AppFunctionService.ThresholdType.get -> System.Type!
+override Android.App.AppFunctions.ExecuteAppFunctionRequest.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.AppFunctions.ExecuteAppFunctionRequest.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.AppFunctions.ExecuteAppFunctionResponse.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.AppSearch.AppSearchSchema.EmbeddingPropertyConfig.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.AppSearch.AppSearchSchema.EmbeddingPropertyConfig.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.AppSearch.EmbeddingVector.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.AppSearch.Functions.AppFunctionManager.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.AppSearch.Functions.AppFunctionService.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.AppSearch.Functions.AppFunctionService.ThresholdClass.get -> nint
+override Android.App.AppSearch.Functions.AppFunctionService.ThresholdType.get -> System.Type!
+override Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.ConfigInfrastructure.Aconfig.AconfigPackage.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.ConfigInfrastructure.Aconfig.AconfigPackage.ThresholdClass.get -> nint
+override Android.ConfigInfrastructure.Aconfig.AconfigPackage.ThresholdType.get -> System.Type!
+override Android.Health.Connect.CreateMedicalDataSourceRequest.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.CreateMedicalDataSourceRequest.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.FhirResource.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.FhirResource.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.FhirVersion.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.MedicalDataSource.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.MedicalDataSource.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.MedicalResource.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.MedicalResource.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.MindfulnessSessionRecord.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.MindfulnessSessionRecord.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DeleteMedicalResourcesRequest.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DeleteMedicalResourcesRequest.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.GetMedicalDataSourcesRequest.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.GetMedicalDataSourcesRequest.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.MedicalResourceId.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.ReadMedicalResourcesInitialRequest.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.ReadMedicalResourcesInitialRequest.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.ReadMedicalResourcesPageRequest.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.ReadMedicalResourcesPageRequest.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.ReadMedicalResourcesRequest.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.ReadMedicalResourcesRequest.ThresholdClass.get -> nint
+override Android.Health.Connect.ReadMedicalResourcesRequest.ThresholdType.get -> System.Type!
+override Android.Health.Connect.ReadMedicalResourcesResponse.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.UpsertMedicalResourceRequest.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.UpsertMedicalResourceRequest.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.OS.Build.VERSION_CODES_FULL.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.OS.Build.VERSION_CODES_FULL.ThresholdClass.get -> nint
+override Android.OS.Build.VERSION_CODES_FULL.ThresholdType.get -> System.Type!
+override Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Widget.PhotoPicker.EmbeddedPhotoPickerProviderFactory.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Widget.PhotoPicker.EmbeddedPhotoPickerProviderFactory.ThresholdClass.get -> nint
+override Android.Widget.PhotoPicker.EmbeddedPhotoPickerProviderFactory.ThresholdType.get -> System.Type!
+override sealed Android.App.AppFunctions.AppFunctionService.OnBind(Android.Content.Intent? intent) -> Android.OS.IBinder!
+override sealed Android.App.AppSearch.Functions.AppFunctionService.OnBind(Android.Content.Intent? intent) -> Android.OS.IBinder!
+static Android.AdServices.AdSelection.PerBuyerConfiguration.Creator.get -> Android.OS.IParcelableCreator!
+static Android.AdServices.AdSelection.SellerConfiguration.Creator.get -> Android.OS.IParcelableCreator!
+static Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.OutputSpec.BuildBestValueSpec(int maxIntValue) -> Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.OutputSpec!
+static Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.OutputSpec.Default.get -> Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.OutputSpec!
+static Android.App.AppFunctions.ExecuteAppFunctionRequest.Creator.get -> Android.OS.IParcelableCreator!
+static Android.App.AppFunctions.ExecuteAppFunctionResponse.Creator.get -> Android.OS.IParcelableCreator!
+static Android.App.AppFunctions.ExecuteAppFunctionResponse.NewFailure(int resultCode, string? errorMessage, Android.OS.Bundle? extras) -> Android.App.AppFunctions.ExecuteAppFunctionResponse!
+static Android.App.AppFunctions.ExecuteAppFunctionResponse.NewSuccess(Android.App.AppSearch.GenericDocument! resultDocument, Android.OS.Bundle? extras) -> Android.App.AppFunctions.ExecuteAppFunctionResponse!
+static Android.App.AppSearch.EmbeddingVector.Creator.get -> Android.OS.IParcelableCreator!
+static Android.App.AppSearch.Functions.ExecuteAppFunctionRequest.Creator.get -> Android.OS.IParcelableCreator!
+static Android.App.AppSearch.Functions.ExecuteAppFunctionResponse.Creator.get -> Android.OS.IParcelableCreator!
+static Android.ConfigInfrastructure.Aconfig.AconfigPackage.Load(string! packageName) -> Android.ConfigInfrastructure.Aconfig.AconfigPackage!
+static Android.Graphics.ColorSpace.Named.OkLab.get -> Android.Graphics.ColorSpace.Named?
+static Android.Health.Connect.CreateMedicalDataSourceRequest.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Health.Connect.DataTypes.FhirResource.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Health.Connect.DataTypes.FhirVersion.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Health.Connect.DataTypes.FhirVersion.ParseFhirVersion(string! fhirVersionString) -> Android.Health.Connect.DataTypes.FhirVersion!
+static Android.Health.Connect.DataTypes.MedicalDataSource.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Health.Connect.DataTypes.MedicalResource.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Health.Connect.DataTypes.MindfulnessSessionRecord.MindfulnessDurationTotal.get -> Android.Health.Connect.DataTypes.AggregationType!
+static Android.Health.Connect.DeleteMedicalResourcesRequest.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Health.Connect.GetMedicalDataSourcesRequest.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Health.Connect.MedicalResourceId.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Health.Connect.MedicalResourceId.FromFhirReference(string! dataSourceId, string! fhirReference) -> Android.Health.Connect.MedicalResourceId!
+static Android.Health.Connect.ReadMedicalResourcesResponse.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Health.Connect.UpsertMedicalResourceRequest.Creator.get -> Android.OS.IParcelableCreator!
+static Android.OS.Build.GetMajorSdkVersion(int sdkIntFull) -> int
+static Android.OS.Build.GetMinorSdkVersion(int sdkIntFull) -> int
+static Android.OS.Build.VERSION.SdkIntFull.get -> int
+static Android.Provider.MediaStore.OpenAssetFileDescriptor(Android.Content.ContentResolver! resolver, Android.Net.Uri! uri, string! mode, Android.OS.CancellationSignal? cancellationSignal) -> Android.Content.Res.AssetFileDescriptor?
+static Android.Provider.MediaStore.OpenFileDescriptor(Android.Content.ContentResolver! resolver, Android.Net.Uri! uri, string! mode, Android.OS.CancellationSignal? cancellationSignal) -> Android.OS.ParcelFileDescriptor?
+static Android.Provider.MediaStore.OpenTypedAssetFileDescriptor(Android.Content.ContentResolver! resolver, Android.Net.Uri! uri, string! mimeType, Android.OS.Bundle? opts, Android.OS.CancellationSignal? cancellationSignal) -> Android.Content.Res.AssetFileDescriptor?
+static Android.Resource.Attribute.Optional.get -> int
+static Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Widget.PhotoPicker.EmbeddedPhotoPickerProviderFactory.Create(Android.Content.Context! context) -> Android.Widget.PhotoPicker.IEmbeddedPhotoPickerProvider!
+virtual Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.AppParams.get -> Android.OS.PersistableBundle!
+virtual Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.GetOutputSpec() -> Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.OutputSpec!
+virtual Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.OutputSpec.MaxIntValue.get -> int
+virtual Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.OutputSpec.OutputType.get -> int
+virtual Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest.Service.get -> Android.Content.ComponentName!
+virtual Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceResponse.BestValue.get -> int
+virtual Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceResponse.SurfacePackageToken.get -> Android.AdServices.OnDevicePersonalization.SurfacePackageToken?
+virtual Android.AdServices.OnDevicePersonalization.OnDevicePersonalizationManager.ExecuteInIsolatedService(Android.AdServices.OnDevicePersonalization.ExecuteInIsolatedServiceRequest! request, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! receiver) -> void
+virtual Android.App.AppSearch.AppSearchManager.AppFunctionManager.get -> Android.App.AppSearch.Functions.AppFunctionManager!
+virtual Android.App.AppSearch.AppSearchSchema.PropertyConfig.Description.get -> string!
+virtual Android.App.AppSearch.GenericDocument.Builder.SetPropertyEmbedding(string! name, params Android.App.AppSearch.EmbeddingVector![]! values) -> Java.Lang.Object!
+virtual Android.App.AppSearch.GenericDocument.GetPropertyEmbedding(string! path) -> Android.App.AppSearch.EmbeddingVector?
+virtual Android.App.AppSearch.GenericDocument.GetPropertyEmbeddingArray(string! path) -> Android.App.AppSearch.EmbeddingVector![]?
+virtual Android.App.SdkSandbox.SdkProvider.SdkSandboxController.RegisterSdkSandboxClientImportanceListener(Java.Util.Concurrent.IExecutor! executor, Android.App.SdkSandbox.SdkProvider.ISdkSandboxClientImportanceListener! listener) -> void
+virtual Android.App.SdkSandbox.SdkProvider.SdkSandboxController.UnregisterSdkSandboxClientImportanceListener(Android.App.SdkSandbox.SdkProvider.ISdkSandboxClientImportanceListener! listener) -> void
+virtual Android.ConfigInfrastructure.Aconfig.AconfigPackage.GetBooleanFlagValue(string! flagName, bool defaultValue) -> bool
+virtual Android.Health.Connect.HealthConnectManager.CreateMedicalDataSource(Android.Health.Connect.CreateMedicalDataSourceRequest! request, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
+virtual Android.Health.Connect.HealthConnectManager.DeleteMedicalDataSourceWithData(string! id, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
+virtual Android.Health.Connect.HealthConnectManager.DeleteMedicalResources(Android.Health.Connect.DeleteMedicalResourcesRequest! request, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
+virtual Android.Health.Connect.HealthConnectManager.DeleteMedicalResources(System.Collections.Generic.IList<Android.Health.Connect.MedicalResourceId!>! ids, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
+virtual Android.Health.Connect.HealthConnectManager.GetMedicalDataSources(Android.Health.Connect.GetMedicalDataSourcesRequest! request, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
+virtual Android.Health.Connect.HealthConnectManager.GetMedicalDataSources(System.Collections.Generic.IList<string!>! ids, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
+virtual Android.Health.Connect.HealthConnectManager.ReadMedicalResources(Android.Health.Connect.ReadMedicalResourcesRequest! request, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
+virtual Android.Health.Connect.HealthConnectManager.ReadMedicalResources(System.Collections.Generic.IList<Android.Health.Connect.MedicalResourceId!>! ids, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
+virtual Android.Health.Connect.HealthConnectManager.UpsertMedicalResources(System.Collections.Generic.IList<Android.Health.Connect.UpsertMedicalResourceRequest!>! requests, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
+virtual Android.Health.Connect.ReadMedicalResourcesRequest.PageSize.get -> int
+virtual Android.Views.Display.HighestHdrSdrRatio.get -> float
+virtual Java.Util.IdentityHashMap.Remove(Java.Lang.Object? key, Java.Lang.Object? value) -> bool
+virtual Java.Util.IdentityHashMap.Replace(Java.Lang.Object? key, Java.Lang.Object? oldValue, Java.Lang.Object? newValue) -> bool
