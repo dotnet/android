@@ -1,4 +1,4 @@
-﻿<!--
+<!--
 ***********************************************************************************************
 Xamarin.Android.Common.targets
 
@@ -2129,9 +2129,9 @@ because xbuild doesn't support framework reference assemblies.
       IntermediateOutputPath="$(IntermediateOutputPath)"
       RootPath="$(_RootPath)"
       DalvikPath="$(_DalvikPath)">
-      <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
-      <Output TaskParameter="OutputApkFiles" ItemName="FilesToAddToArchive" />
-      <Output TaskParameter="DSODirectoriesToDelete" ItemName="DSODirectoriesToDelete" />
+    <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
+    <Output TaskParameter="OutputApkFiles" ItemName="FilesToAddToArchive" />
+    <Output TaskParameter="DSODirectoriesToDelete" ItemName="DSODirectoriesToDelete" />
   </BuildApk>
 
   <!-- Create the actual zip archive -->
