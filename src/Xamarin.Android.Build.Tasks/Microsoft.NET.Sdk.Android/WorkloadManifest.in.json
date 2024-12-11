@@ -97,6 +97,10 @@
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
+    "Microsoft.Android.Ref.36": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
     "Microsoft.Android.Runtime.Mono.36.android-arm": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
