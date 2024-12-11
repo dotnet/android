@@ -131,10 +131,10 @@ namespace Xamarin.Android.Tasks
 
 			using (var apk = new ZipArchiveFileListBuilder (apkOutputPath, File.Exists (apkOutputPath) ? FileMode.Open : FileMode.Create)) {
 
-				if (EmbedAssemblies) {
-					AddAssemblies (dsoWrapperConfig, apk, debug, compress, compressedAssembliesInfo, assemblyStoreApkName);
-					apk.Flush ();
-				}
+				//if (EmbedAssemblies) {
+				//	AddAssemblies (dsoWrapperConfig, apk, debug, compress, compressedAssembliesInfo, assemblyStoreApkName);
+				//	apk.Flush ();
+				//}
 
 				AddRuntimeConfigBlob (dsoWrapperConfig, apk);
 				AddRuntimeLibraries (apk, supportedAbis);
@@ -185,13 +185,13 @@ namespace Xamarin.Android.Tasks
 			bool compress = !debug && EnableCompression;
 			IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo = null;
 
-			if (compress) {
-				string key = CompressedAssemblyInfo.GetKey (ProjectFullPath);
-				Log.LogDebugMessage ($"Retrieving assembly compression info with key '{key}'");
-				compressedAssembliesInfo = BuildEngine4.UnregisterTaskObjectAssemblyLocal<IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>> (key, RegisteredTaskObjectLifetime.Build);
-				if (compressedAssembliesInfo == null)
-					throw new InvalidOperationException ($"Assembly compression info not found for key '{key}'. Compression will not be performed.");
-			}
+			//if (compress) {
+			//	string key = CompressedAssemblyInfo.GetKey (ProjectFullPath);
+			//	Log.LogDebugMessage ($"Retrieving assembly compression info with key '{key}'");
+			//	compressedAssembliesInfo = BuildEngine4.UnregisterTaskObjectAssemblyLocal<IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>> (key, RegisteredTaskObjectLifetime.Build);
+			//	if (compressedAssembliesInfo == null)
+			//		throw new InvalidOperationException ($"Assembly compression info not found for key '{key}'. Compression will not be performed.");
+			//}
 
 			DSOWrapperGenerator.Config dsoWrapperConfig = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, IntermediateOutputPath);
 			ExecuteWithAbi (dsoWrapperConfig, SupportedAbis, ApkInputPath, ApkOutputPath, debug, compress, compressedAssembliesInfo, assemblyStoreApkName: null);
