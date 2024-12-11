@@ -63,9 +63,12 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <!-- Give ILLink's output to ILC -->
       <IlcCompileInput Remove="@(IlcCompileInput)" />
       <IlcCompileInput Include="$(IntermediateLinkDir)$(TargetName)$(TargetExt)" />
+      <_AndroidILLinkAssemblies Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" />
       <IlcReference Remove="@(IlcReference)" />
       <IlcReference Include="@(PrivateSdkAssemblies)" />
-      <IlcReference Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" Exclude="@(IlcCompileInput)" />
+      <IlcReference Include="@(_AndroidILLinkAssemblies)" />
+      <!-- Passes linked assemblies to outer MSBuild tasks/targets -->
+      <ResolvedFileToPublish Include="@(IlcCompileInput);@(_AndroidILLinkAssemblies)" RuntimeIdentifier="$(_OriginalRuntimeIdentifier)" />
     </ItemGroup>
   </Target>
 
