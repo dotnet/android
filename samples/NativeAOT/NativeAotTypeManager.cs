@@ -1,4 +1,4 @@
-// To be eventually removed, in favor of .NET Android infrastructure.
+// Temporary, to eventually be included in .NET Android infrastructure
 // From: https://github.com/dotnet/java-interop/blob/f800ea52dce62f126926d4b96121681508d506a1/samples/Hello-NativeAOTFromAndroid/NativeAotTypeManager.cs
 using System.Diagnostics.CodeAnalysis;
 
