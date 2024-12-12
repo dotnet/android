@@ -674,6 +674,7 @@ namespace Xamarin.Android.Tasks {
 		IList<string> AddMonoRuntimeProviders (XElement app)
 		{
 			if (NativeAot) {
+				//TODO: implement NativeAOT provider logic
 				return [];
 			}
 

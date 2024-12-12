@@ -115,18 +115,49 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = "Hello",
 				IsRelease = true,
+				RuntimeIdentifier = "android-arm64",
 				// Add locally downloaded NativeAOT packs
 				ExtraNuGetConfigSources = {
 					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
 				}
 			};
-			proj.SetRuntimeIdentifier ("arm64-v8a");
 			proj.SetProperty ("PublishAot", "true");
 			proj.SetProperty ("PublishAotUsingRuntimePack", "true");
+			proj.SetProperty ("AndroidNdkDirectory", AndroidNdkPath);
 
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+			string [] mono_classes = [
+				"Lmono/MonoRuntimeProvider;",
+			];
+			string[] mono_files = [
+				"lib/arm64-v8a/libmonosgen-2.0.so",
+			];
+			string [] nativeaot_files = [
+				$"lib/arm64-v8a/lib{proj.ProjectName}.so",
+			];
+
+			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, proj.RuntimeIdentifier);
+			var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, proj.RuntimeIdentifier);
+
+			var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
+			FileAssert.Exists (dexFile);
+			foreach (var className in mono_classes) {
+				Assert.IsFalse (DexUtils.ContainsClassWithMethod (className, "<init>", "()V", dexFile, AndroidSdkPath), $"`{dexFile}` should *not* include `{className}`!");
+			}
+
+			var apkFile = Path.Combine (output, $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apkFile);
+			using var zip = ZipHelper.OpenZip (apkFile);
+			foreach (var mono_file in mono_files) {
+				Assert.IsFalse (zip.ContainsEntry (mono_file, caseSensitive: true), $"APK must *not* contain `{mono_file}`.");
+			}
+			foreach (var nativeaot_file in nativeaot_files) {
+				Assert.IsTrue (zip.ContainsEntry (nativeaot_file, caseSensitive: true), $"APK must contain `{nativeaot_file}`.");
+			}
 		}
 
 		[Test]

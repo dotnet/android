@@ -20,7 +20,6 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
     <_AndroidTargetingPackId Condition=" '$(_AndroidTargetingPackId)' != '$(_AndroidLatestStableApiLevel)' and '$(_AndroidTargetingPackId)' != '$(_AndroidLatestUnstableApiLevel)' ">$(_AndroidLatestStableApiLevel)</_AndroidTargetingPackId>
     <_AndroidRuntimePackId Condition=" '$(_AndroidRuntimePackId)' == '' ">$(_AndroidTargetingPackId)</_AndroidRuntimePackId>
     <_AndroidRuntimePackId Condition=" '$(_AndroidRuntimePackId)' != '$(_AndroidLatestStableApiLevel)' and '$(_AndroidRuntimePackId)' != '$(_AndroidLatestUnstableApiLevel)' ">$(_AndroidLatestStableApiLevel)</_AndroidRuntimePackId>
-    <_AndroidRuntimePackRuntime Condition=" '$(PublishAot)' == 'true' ">NativeAOT</_AndroidRuntimePackRuntime>
     <_AndroidRuntimePackRuntime Condition=" '$(_AndroidRuntimePackRuntime)' == '' ">Mono</_AndroidRuntimePackRuntime>
   </PropertyGroup>
   <ItemGroup>

@@ -7,6 +7,11 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 -->
 <Project>
 
+  <!-- Default property values for NativeAOT -->
+  <PropertyGroup>
+    <_AndroidRuntimePackRuntime>NativeAOT</_AndroidRuntimePackRuntime>
+  </PropertyGroup>
+
   <!-- Make IlcCompile depend on the trimmer -->
   <PropertyGroup>
     <IlcCompileDependsOn>
