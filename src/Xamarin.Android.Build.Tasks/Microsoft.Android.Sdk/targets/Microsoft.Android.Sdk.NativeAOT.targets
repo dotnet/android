@@ -7,6 +7,11 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 -->
 <Project>
 
+  <!-- Default property values for NativeAOT -->
+  <PropertyGroup>
+    <_AndroidRuntimePackRuntime>NativeAOT</_AndroidRuntimePackRuntime>
+  </PropertyGroup>
+
   <!-- Make IlcCompile depend on the trimmer -->
   <PropertyGroup>
     <IlcCompileDependsOn>
@@ -60,12 +65,17 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <SuppressTrimAnalysisWarnings>$(_OriginalSuppressTrimAnalysisWarnings)</SuppressTrimAnalysisWarnings>
     </PropertyGroup>
     <ItemGroup>
+      <!-- Android needs a proper soname property or it will refuse to load the library -->
+      <LinkerArg Include="-Wl,-soname,lib$(TargetName)$(NativeBinaryExt)" />
       <!-- Give ILLink's output to ILC -->
       <IlcCompileInput Remove="@(IlcCompileInput)" />
       <IlcCompileInput Include="$(IntermediateLinkDir)$(TargetName)$(TargetExt)" />
+      <_AndroidILLinkAssemblies Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" />
       <IlcReference Remove="@(IlcReference)" />
       <IlcReference Include="@(PrivateSdkAssemblies)" />
-      <IlcReference Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" Exclude="@(IlcCompileInput)" />
+      <IlcReference Include="@(_AndroidILLinkAssemblies)" />
+      <!-- Passes linked assemblies to outer MSBuild tasks/targets -->
+      <ResolvedFileToPublish Include="@(IlcCompileInput);@(_AndroidILLinkAssemblies)" RuntimeIdentifier="$(_OriginalRuntimeIdentifier)" />
     </ItemGroup>
   </Target>
 
@@ -74,6 +84,13 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <!-- Turn $(RuntimeIdentifier) back to original value -->
       <RuntimeIdentifier>$(_OriginalRuntimeIdentifier)</RuntimeIdentifier>
     </PropertyGroup>
+  </Target>
+
+  <Target Name="_AndroidFixNativeLibraryFileName" AfterTargets="ComputeFilesToPublish">
+    <ItemGroup>
+      <!-- Fix paths to contain lib-prefix -->
+      <ResolvedFileToPublish Update="@(ResolvedFileToPublish)" ArchiveFileName="lib%(FileName)%(Extension)" Condition=" '%(Filename)%(Extension)' == '$(TargetName)$(NativeBinaryExt)' " />
+    </ItemGroup>
   </Target>
 
 </Project>
