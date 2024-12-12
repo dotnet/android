@@ -9,6 +9,7 @@
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <RootNamespace>Java.Interop.Samples.NativeAotFromAndroid</RootNamespace>
+    <AndroidPackageFormat>apk</AndroidPackageFormat>
     <!-- Current required properties for NativeAOT -->
     <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
     <PublishAot>true</PublishAot>
@@ -19,7 +20,7 @@
   <ItemGroup>
     <Compile Include="..\..\external\java.interop\samples\Hello-NativeAOTFromAndroid\JavaInteropRuntime.cs" />
     <Compile Include="..\..\external\java.interop\samples\Hello-NativeAOTFromAndroid\LogcatTextWriter.cs" />
-    <AndroidJavaSource Update="JavaInteropRuntime.java" Bind="false" />
+    <AndroidJavaSource Update="*.java" Bind="false" />
     <AndroidJavaSource Include="..\..\external\java.interop\samples\Hello-NativeAOTFromAndroid\app\src\main\java\net\dot\jni\nativeaot\NativeAotRuntimeProvider.java" Bind="false" />
     <ProjectReference Include="..\..\external\java.interop\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj" />
   </ItemGroup>
