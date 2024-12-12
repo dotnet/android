@@ -22,7 +22,7 @@ class Runtime
 
         try
         {
-            activate ??= typeof(TypeManager).GetMethod ("Activate");
+            activate ??= typeof(TypeManager).GetMethod ("n_Activate", BindingFlags.NonPublic | BindingFlags.Static);
             ArgumentNullException.ThrowIfNull (activate);
             activate.Invoke (null, [ jnienv, jclass, typename_ptr, signature_ptr, jobject, parameters_ptr ]);
         }
