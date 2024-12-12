@@ -30,7 +30,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidPackageName" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aot" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CilStrip" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.BuildApk" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildAppBundle" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildApkSet" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -44,8 +43,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectAssemblyFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectDalvikFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectJarContentFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CollectPdbFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CollectNativeFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNonEmptyDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CollectPdbFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CollectRuntimeConfigFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectTypeMapFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ComputeHash" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateTypeManagerJava" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -2080,12 +2081,10 @@ because xbuild doesn't support framework reference assemblies.
   Condition="'$(EmbedAssembliesIntoApk)' == 'True'">
 
   <PropertyGroup Condition=" '$(AndroidPackageFormat)' != 'aab' ">
-    <_AndroidCreatePackagePerAbi>$(AndroidCreatePackagePerAbi)</_AndroidCreatePackagePerAbi>
     <_ApkOutputPath>$(ApkFileIntermediate)</_ApkOutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(AndroidPackageFormat)' == 'aab' ">
-    <_AndroidCreatePackagePerAbi>False</_AndroidCreatePackagePerAbi>
     <_ApkOutputPath>$(_BaseZipIntermediate)</_ApkOutputPath>
   </PropertyGroup>
   
@@ -2127,7 +2126,15 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectAssemblyFilesForArchive>
 
-  <BuildApk
+  <CollectRuntimeConfigFilesForArchive
+      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+      IntermediateOutputPath="$(IntermediateOutputPath)"
+      RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
+      SupportedAbis="@(_BuildTargetAbis)">
+    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+  </CollectRuntimeConfigFilesForArchive>
+
+  <CollectNativeFilesForArchive
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"
       ApkOutputPath="$(_ApkOutputPath)"
       BundleNativeLibraries="$(_BundleResultNativeLibraries)"
@@ -2136,17 +2143,15 @@ because xbuild doesn't support framework reference assemblies.
       ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
       AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
       SupportedAbis="@(_BuildTargetAbis)"
-      UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
       IncludeWrapSh="$(AndroidIncludeWrapSh)"
       CheckedBuild="$(_AndroidCheckedBuild)"
-      RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
       ZipAlignmentPages="$(AndroidZipAlignment)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       IntermediateOutputPath="$(IntermediateOutputPath)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
-    <Output TaskParameter="OutputApkFiles" ItemName="FilesToAddToArchive" />
+    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
     <Output TaskParameter="DSODirectoriesToDelete" ItemName="DSODirectoriesToDelete" />
-  </BuildApk>
+  </CollectNativeFilesForArchive>
 
   <!-- Create the actual zip archive -->
   <BuildArchive
@@ -2198,7 +2203,6 @@ because xbuild doesn't support framework reference assemblies.
 		Outputs="$(_BuildApkEmbedOutputs)">
 
   <PropertyGroup Condition=" '$(AndroidPackageFormat)' != 'aab' ">
-    <_AndroidCreatePackagePerAbi>$(AndroidCreatePackagePerAbi)</_AndroidCreatePackagePerAbi>
     <_ApkOutputPath>$(ApkFileIntermediate)</_ApkOutputPath>
   </PropertyGroup>
 
@@ -2208,9 +2212,7 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(AndroidPackageFormat)' == 'aab' ">
-    <_AndroidCreatePackagePerAbi>False</_AndroidCreatePackagePerAbi>
     <_ApkOutputPath>$(_BaseZipIntermediate)</_ApkOutputPath>
-    <_BundleAssemblies>$(BundleAssemblies)</_BundleAssemblies>
     <_BundleNativeLibraries>$(_BundleResultNativeLibraries)</_BundleNativeLibraries>
   </PropertyGroup>
 
@@ -2229,7 +2231,7 @@ because xbuild doesn't support framework reference assemblies.
   <!-- Only FastDev uses TypeMappings -->
   <CollectTypeMapFilesForArchive
       AndroidPackageFormat="$(AndroidPackageFormat)"
-			TypeMappings="@(_AndroidTypeMaps)">
+      TypeMappings="@(_AndroidTypeMaps)">
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectTypeMapFilesForArchive>
   
@@ -2258,26 +2260,31 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectAssemblyFilesForArchive>
 
-<BuildApk
-			AndroidNdkDirectory="$(_AndroidNdkDirectory)"
-			ApkOutputPath="$(_ApkOutputPath)"
+  <CollectRuntimeConfigFilesForArchive
+      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+      IntermediateOutputPath="$(IntermediateOutputPath)"
+      RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
+      SupportedAbis="@(_BuildTargetAbis)">
+    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+  </CollectRuntimeConfigFilesForArchive>
+
+  <CollectNativeFilesForArchive
+      AndroidNdkDirectory="$(_AndroidNdkDirectory)"
+      ApkOutputPath="$(_ApkOutputPath)"
       BundleNativeLibraries="$(_BundleNativeLibraries)"
-			FrameworkNativeLibraries="@(FrameworkNativeLibrary)"
-			NativeLibraries="@(_NativeLibraries)"
-			ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
-			AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
-			SupportedAbis="@(_BuildTargetAbis)"
-			AndroidSequencePointsMode="$(_SequencePointsMode)"
-			UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
-			IncludeWrapSh="$(AndroidIncludeWrapSh)"
-			CheckedBuild="$(_AndroidCheckedBuild)"
-			RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
-			AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-			IntermediateOutputPath="$(IntermediateOutputPath)">
-		<Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
-    <Output TaskParameter="OutputApkFiles" ItemName="FilesToAddToArchive" />
+      FrameworkNativeLibraries="@(FrameworkNativeLibrary)"
+      NativeLibraries="@(_NativeLibraries)"
+      ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
+      AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
+      SupportedAbis="@(_BuildTargetAbis)"
+      IncludeWrapSh="$(AndroidIncludeWrapSh)"
+      CheckedBuild="$(_AndroidCheckedBuild)"
+      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+      IntermediateOutputPath="$(IntermediateOutputPath)">
+    <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
+    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
     <Output TaskParameter="DSODirectoriesToDelete" ItemName="DSODirectoriesToDelete" />
-  </BuildApk>
+  </CollectNativeFilesForArchive>
 
   <!-- Create the actual zip archive -->
   <BuildArchive
