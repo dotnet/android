@@ -297,6 +297,8 @@ namespace Java.Interop {
 				type = invokerType;
 			}
 
+			Logger.Log (LogLevel.Info, "monodroid", FormattableString.Invariant ($"JNIEnvInit.androidRuntime is null={JNIEnvInit.androidRuntime is null}"));
+
 			var typeSig  = JNIEnvInit.androidRuntime?.TypeManager.GetTypeSignature (type) ?? default;
 			if (!typeSig.IsValid || typeSig.SimpleReference == null) {
 				throw new ArgumentException ($"Could not determine Java type corresponding to `{type.AssemblyQualifiedName}`.", nameof (targetType));
