@@ -387,7 +387,9 @@ namespace Xamarin.Android.Tasks
 			var tdCache = new TypeDefinitionCache ();
 			(List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW) = ScanForJavaTypes (resolver, tdCache, assemblies, userAssemblies, useMarshalMethods);
 			var jcwContext = new JCWGeneratorContext (arch, resolver, assemblies.Values, javaTypesForJCW, tdCache, useMarshalMethods);
-			var jcwGenerator = new JCWGenerator (Log, jcwContext);
+			var jcwGenerator = new JCWGenerator (Log, jcwContext) {
+				NativeAot = NativeAot,
+			};
 			bool success;
 
 			if (generateJavaCode) {
