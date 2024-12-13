@@ -41,14 +41,11 @@ namespace Java.Interop {
 	public static partial class TypeManager {
 		internal static string GetClassName (IntPtr class_ptr)
 		{
-#if MONO
 			IntPtr ptr = RuntimeNativeMethods.monodroid_TypeManager_get_java_class_name (class_ptr);
 			string ret = Marshal.PtrToStringAnsi (ptr)!;
 			RuntimeNativeMethods.monodroid_free (ptr);
+
 			return ret;
-#else // TODO NativeAOT
-			return JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (class_ptr));
-#endif
 		}
 
 		internal static string? GetJniTypeName (Type type)
