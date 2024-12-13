@@ -18,10 +18,10 @@
 
   <!-- Temporary, to eventually be included in .NET Android infrastructure -->
   <ItemGroup>
-    <Compile Include="..\..\external\java.interop\samples\Hello-NativeAOTFromAndroid\JavaInteropRuntime.cs" />
-    <Compile Include="..\..\external\java.interop\samples\Hello-NativeAOTFromAndroid\LogcatTextWriter.cs" />
+    <Compile Include="..\..\external\Java.Interop\samples\Hello-NativeAOTFromAndroid\JavaInteropRuntime.cs" />
+    <Compile Include="..\..\external\Java.Interop\samples\Hello-NativeAOTFromAndroid\LogcatTextWriter.cs" />
     <AndroidJavaSource Update="*.java" Bind="false" />
-    <AndroidJavaSource Include="..\..\external\java.interop\samples\Hello-NativeAOTFromAndroid\app\src\main\java\net\dot\jni\nativeaot\NativeAotRuntimeProvider.java" Bind="false" />
-    <ProjectReference Include="..\..\external\java.interop\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj" />
+    <AndroidJavaSource Include="..\..\external\Java.Interop\samples\Hello-NativeAOTFromAndroid\app\src\main\java\net\dot\jni\nativeaot\NativeAotRuntimeProvider.java" Bind="false" />
+    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj" />
   </ItemGroup>
 </Project>
