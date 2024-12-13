@@ -10,6 +10,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   <!-- Default property values for NativeAOT -->
   <PropertyGroup>
     <_AndroidRuntimePackRuntime>NativeAOT</_AndroidRuntimePackRuntime>
+    <LinkerFlavor Condition=" '$(LinkerFlavor)' == '' ">lld</LinkerFlavor>
   </PropertyGroup>
 
   <!-- Make IlcCompile depend on the trimmer -->
