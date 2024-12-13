@@ -10,7 +10,7 @@ class Runtime
     [UnmanagedCallersOnly (EntryPoint="Java_mono_android_Runtime_register")]
     public static void Register (IntPtr jnienv, IntPtr managedType, IntPtr nativeClass, IntPtr methods)
     {
-        AndroidLog.Print (AndroidLogLevel.Info, "Runtime", $"Runtime.register() called");
+        AndroidLog.Print (AndroidLogLevel.Info, "Runtime", $"Register() called");
 
         //TODO: might need to call something
     }
@@ -18,17 +18,14 @@ class Runtime
     [UnmanagedCallersOnly (EntryPoint="Java_mono_android_TypeManager_n_1activate")]
     static void Activate (IntPtr jnienv, IntPtr jclass, IntPtr typename_ptr, IntPtr signature_ptr, IntPtr jobject, IntPtr parameters_ptr)
     {
-        AndroidLog.Print (AndroidLogLevel.Info, "Runtime", $"Runtime.Activate() called");
+        AndroidLog.Print (AndroidLogLevel.Info, "Runtime", $"Activate() called");
 
-        try
-        {
+        try {
             activate ??= typeof(TypeManager).GetMethod ("n_Activate", BindingFlags.NonPublic | BindingFlags.Static);
             ArgumentNullException.ThrowIfNull (activate);
             activate.Invoke (null, [ jnienv, jclass, typename_ptr, signature_ptr, jobject, parameters_ptr ]);
-        }
-        catch (Exception exc)
-        {
-            AndroidLog.Print (AndroidLogLevel.Error, "Runtime", $"Runtime.Activate() failed: {exc}");
+        } catch (Exception exc) {
+            AndroidLog.Print (AndroidLogLevel.Error, "Runtime", $"Activate() failed: {exc}");
         }
     }
 }
