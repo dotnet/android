@@ -254,14 +254,7 @@ namespace Java.Interop {
 			lock (TypeManagerMapDictionaries.AccessLock) {
 				while (class_ptr != IntPtr.Zero && !TypeManagerMapDictionaries.JniToManaged.TryGetValue (class_name, out type)) {
 
-					switch (class_name) {
-						case "android/os/Bundle":
-							type = typeof (Android.OS.Bundle);
-							break;
-						default:
-							type = GetJavaToManagedType (class_name);
-							break;
-					}
+					type = GetJavaToManagedType (class_name);
 					if (type != null) {
 						TypeManagerMapDictionaries.JniToManaged.Add (class_name, type);
 						break;

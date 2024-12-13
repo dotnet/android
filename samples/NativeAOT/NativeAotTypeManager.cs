@@ -20,6 +20,29 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 		["my/MainActivity"]                     = typeof (MainActivity),
 	};
 
+	public NativeAotTypeManager ()
+	{
+		AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"# jonp: NativeAotTypeManager()");
+
+		var typeManagerDictionaries = Type.GetType("Java.Interop.TypeManagerMapDictionaries, Mono.Android");
+		ArgumentNullException.ThrowIfNull(typeManagerDictionaries);
+
+		var jniToManagedProperty = typeManagerDictionaries.GetProperty("JniToManaged");
+		ArgumentNullException.ThrowIfNull(jniToManagedProperty);
+		var jniToManaged = jniToManagedProperty.GetValue(null, null) as Dictionary<string, Type>;
+		ArgumentNullException.ThrowIfNull(jniToManaged);
+
+		var managedToJniProperty = typeManagerDictionaries.GetProperty("ManagedToJni");
+		ArgumentNullException.ThrowIfNull(managedToJniProperty);
+		var managedToJni = managedToJniProperty.GetValue(null, null) as Dictionary<Type, string>;
+		ArgumentNullException.ThrowIfNull(managedToJni);
+
+		foreach (var pair in typeMappings) {
+			jniToManaged [pair.Key] = pair.Value;
+			managedToJni [pair.Value] = pair.Key;
+		}
+	}
+
 	public override void RegisterNativeMembers (
 			JniType nativeClass,
 			[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
