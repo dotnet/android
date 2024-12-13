@@ -58,8 +58,12 @@ about the various Microsoft.Android workloads.
       <_WorkloadDeps Include="--build-tools-version=$(XABuildToolsFolder)" />
       <_WorkloadDeps Include="--cmdline-tools-version=$(CommandLineToolsFolder)" />
       <_WorkloadDeps Include="--jdk-version=$(JavaSdkVersion)" />
+      <_WorkloadDeps Include="--ndk-version=$(AndroidNdkPkgRevision)" />
       <_WorkloadDeps Include="--platform-version=$(AndroidLatestStableApiLevel)" />
-      <_WorkloadDeps Include="--preview-platform-version=Baklava" /> <!-- #9594 -->
+      <_WorkloadDeps
+          Condition=" '$(AndroidLatestUnstablePlatformId)' != '$(AndroidLatestStablePlatformId)' "
+          Include="--preview-platform-version=$(AndroidLatestUnstablePlatformId)"
+      />
       <_WorkloadDeps Include="--workload-version=$(WorkloadVersion)" />
     </ItemGroup>
 
