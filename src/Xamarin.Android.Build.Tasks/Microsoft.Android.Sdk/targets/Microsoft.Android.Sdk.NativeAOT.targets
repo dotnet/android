@@ -79,6 +79,9 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <IlcReference Remove="@(IlcReference)" />
       <IlcReference Include="@(PrivateSdkAssemblies)" />
       <IlcReference Include="@(_AndroidILLinkAssemblies)" />
+      <!-- Root *everything* for ILC, as it's already trimmed -->
+      <TrimmerRootAssembly Remove="@(TrimmerRootAssembly)" />
+      <TrimmerRootAssembly Include="@(_AndroidILLinkAssemblies)" TrimMode="All" />
       <!-- Passes linked assemblies to outer MSBuild tasks/targets -->
       <ResolvedFileToPublish Include="@(IlcCompileInput);@(_AndroidILLinkAssemblies)" RuntimeIdentifier="$(_OriginalRuntimeIdentifier)" />
     </ItemGroup>
