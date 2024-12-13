@@ -11,7 +11,7 @@ using Xamarin.Android.Tools;
 namespace Xamarin.Android.Tasks;
 
 /// <summary>
-/// Collects TypeMap to be added to the final archive.
+/// Collects managed assemblies to be added to the final archive.
 /// </summary>
 public class CollectAssemblyFilesForArchive : AndroidTask
 {

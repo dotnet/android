@@ -14,6 +14,9 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks;
 
+/// <summary>
+/// Collects native libraries to be added to the final archive.
+/// </summary>
 public class CollectNativeFilesForArchive : AndroidTask
 {
 	const string ArchiveLibPath = "lib";
@@ -292,7 +295,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 	}
 
 	// This method is used only for internal warnings which will never be shown to the end user, therefore there's
-	// no need to use coded warnings.
+	// no need to use coded warnings. (They are only used when the internal property $(_AndroidCheckedBuild) is set.)
 	void LogSanitizerWarning (string message)
 	{
 		Log.LogWarning (message);
