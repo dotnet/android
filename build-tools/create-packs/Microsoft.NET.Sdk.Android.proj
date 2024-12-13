@@ -48,10 +48,22 @@ about the various Microsoft.Android workloads.
       <_Feed Condition=" Exists($(_AndroidPlatformSupportFeed)) ">$(_AndroidPlatformSupportFeed)</_Feed>
       <_Feed Condition=" '$(_Feed)' == '' ">https://aka.ms/AndroidManifestFeed/d17-12</_Feed>
       <_Project>$(MSBuildThisFileDirectory)/../../tools/workload-dependencies/workload-dependencies.csproj</_Project>
-      <WorkloadDependenciesPath Condition="'$(WorkloadDependenciesPath)' == ''">$(OutputPath)workload-manifest\workload-dependencies.json</WorkloadDependenciesPath>
+      <WorkloadDependenciesPath Condition="'$(WorkloadDependenciesPath)' == ''">$(OutputPath)workload-manifest\WorkloadDependencies.json</WorkloadDependenciesPath>
     </PropertyGroup>
+    <ItemGroup>
+      <_WorkloadDeps Include="--project &quot;$(_Project)&quot;" />
+      <_WorkloadDeps Include="--" />
+      <_WorkloadDeps Include="&quot;--feed=$(_Feed)&quot;" />
+      <_WorkloadDeps Include="-o &quot;$(WorkloadDependenciesPath)&quot;" />
+      <_WorkloadDeps Include="--build-tools-version=$(XABuildToolsFolder)" />
+      <_WorkloadDeps Include="--cmdline-tools-version=$(CommandLineToolsFolder)" />
+      <_WorkloadDeps Include="--jdk-version=$(JavaSdkVersion)" />
+      <_WorkloadDeps Include="--platform-version=$(AndroidLatestStableApiLevel)" />
+      <_WorkloadDeps Include="--preview-platform-version=Baklava" /> <!-- #9594 -->
+      <_WorkloadDeps Include="--workload-version=$(WorkloadVersion)" />
+    </ItemGroup>
 
-    <Exec Command="dotnet run --project &quot;$(_Project)&quot; -- &quot;--feed=$(_Feed)&quot; --workload-version=$(WorkloadVersion) -o &quot;$(WorkloadDependenciesPath)&quot;" />
+    <Exec Command="dotnet run @(_WorkloadDeps, ' ')" />
 
     <ItemGroup>
       <_PackageFiles Include="$(WorkloadManifestJsonPath)" PackagePath="data" />
