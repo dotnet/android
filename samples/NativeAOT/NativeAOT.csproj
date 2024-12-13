@@ -10,6 +10,7 @@
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <RootNamespace>Java.Interop.Samples.NativeAotFromAndroid</RootNamespace>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- Current required properties for NativeAOT -->
     <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
     <PublishAot>true</PublishAot>
@@ -20,6 +21,10 @@
   <ItemGroup>
     <Compile Include="..\..\external\Java.Interop\samples\Hello-NativeAOTFromAndroid\JavaInteropRuntime.cs" />
     <Compile Include="..\..\external\Java.Interop\samples\Hello-NativeAOTFromAndroid\LogcatTextWriter.cs" />
+    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings\JavaNativeTypeManager.cs" />
+    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.cs" />
+    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64Helper.cs" />
+    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.Table.cs" />
     <AndroidJavaSource Update="*.java" Bind="false" />
     <AndroidJavaSource Include="..\..\external\Java.Interop\samples\Hello-NativeAOTFromAndroid\app\src\main\java\net\dot\jni\nativeaot\NativeAotRuntimeProvider.java" Bind="false" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj" />
