@@ -81,6 +81,7 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 						callbackDeclaringType = callbackDeclaringType.BaseType!;
 					}
 
+					AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"# jonp: Delegate.CreateDelegate callbackDeclaringType={callbackDeclaringType}, callbackString={callbackString}");
 					GetCallbackHandler connector = (GetCallbackHandler) Delegate.CreateDelegate (typeof (GetCallbackHandler),
 						callbackDeclaringType, callbackString.ToString ());
 					callback = connector ();

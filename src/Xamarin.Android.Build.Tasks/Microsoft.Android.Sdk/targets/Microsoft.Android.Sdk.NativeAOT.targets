@@ -26,7 +26,9 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     </IlcCompileDependsOn>
   </PropertyGroup>
 
-  <Target Name="_AndroidBeforeIlcCompile" BeforeTargets="SetupProperties">
+  <Target Name="_AndroidBeforeIlcCompile"
+      DependsOnTargets="_PrepareLinking"
+      BeforeTargets="SetupProperties">
     <!-- Example settings from: https://github.com/jonathanpeppers/Android-NativeAOT/blob/ea69d122cdc7de67aa6a5db14b7e560763c63cdd/DotNet/libdotnet.targets -->
     <PropertyGroup>
       <_NdkSysrootAbi>aarch64-linux-android</_NdkSysrootAbi>
