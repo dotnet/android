@@ -241,13 +241,24 @@ namespace Java.Interop {
 		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "TypeManager.CreateProxy() does not statically know the value of the 'type' local variable.")]
 		internal static IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{
+			Logger.Log (LogLevel.Info, "monodroid", FormattableString.Invariant ($"TypeManager.CreateInstance {handle} {targetType} "));
+
 			Type? type = null;
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
 			string? class_name = GetClassName (class_ptr);
+			Logger.Log (LogLevel.Info, "monodroid", FormattableString.Invariant ($"TypeManager.CreateInstance class_name={class_name} "));
+
 			lock (TypeManagerMapDictionaries.AccessLock) {
 				while (class_ptr != IntPtr.Zero && !TypeManagerMapDictionaries.JniToManaged.TryGetValue (class_name, out type)) {
 
-					type = GetJavaToManagedType (class_name);
+					switch (class_name) {
+						case "android/os/Bundle":
+							type = typeof (Android.OS.Bundle);
+							break;
+						default:
+							type = GetJavaToManagedType (class_name);
+							break;
+					}
 					if (type != null) {
 						TypeManagerMapDictionaries.JniToManaged.Add (class_name, type);
 						break;
