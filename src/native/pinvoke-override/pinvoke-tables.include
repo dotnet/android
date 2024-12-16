@@ -11,12 +11,11 @@
 namespace {
 #if INTPTR_MAX == INT64_MAX
 	//64-bit internal p/invoke table
-	std::array<PinvokeEntry, 47> internal_pinvokes {{
+	std::array<PinvokeEntry, 46> internal_pinvokes {{
 		{0x452e23128e42f0a, "monodroid_get_log_categories", reinterpret_cast<void*>(&monodroid_get_log_categories)},
 		{0xa50ce5de13bf8b5, "_monodroid_timezone_get_default_id", reinterpret_cast<void*>(&_monodroid_timezone_get_default_id)},
 		{0x19055d65edfd668e, "_monodroid_get_network_interface_up_state", reinterpret_cast<void*>(&_monodroid_get_network_interface_up_state)},
 		{0x2b3b0ca1d14076da, "monodroid_get_dylib", reinterpret_cast<void*>(&monodroid_get_dylib)},
-		{0x2fbe68718cf2510d, "_monodroid_get_identity_hash_code", reinterpret_cast<void*>(&_monodroid_get_identity_hash_code)},
 		{0x3ade4348ac8ce0fa, "_monodroid_freeifaddrs", reinterpret_cast<void*>(&_monodroid_freeifaddrs)},
 		{0x3b2467e7eadd4a6a, "_monodroid_lref_log_new", reinterpret_cast<void*>(&_monodroid_lref_log_new)},
 		{0x3b8097af56b5361f, "monodroid_log_traces", reinterpret_cast<void*>(&monodroid_log_traces)},
@@ -551,10 +550,9 @@ constexpr hash_t system_security_cryptography_native_android_library_hash = 0x18
 constexpr hash_t system_globalization_native_library_hash = 0x28b5c8fca080abd5;
 #else
 	//32-bit internal p/invoke table
-	std::array<PinvokeEntry, 47> internal_pinvokes {{
+	std::array<PinvokeEntry, 46> internal_pinvokes {{
 		{0xb7a486a, "monodroid_TypeManager_get_java_class_name", reinterpret_cast<void*>(&monodroid_TypeManager_get_java_class_name)},
 		{0xf562bd9, "monodroid_embedded_assemblies_set_assemblies_prefix", reinterpret_cast<void*>(&monodroid_embedded_assemblies_set_assemblies_prefix)},
-		{0x1a8eab17, "_monodroid_get_identity_hash_code", reinterpret_cast<void*>(&_monodroid_get_identity_hash_code)},
 		{0x227a2636, "monodroid_get_namespaced_system_property", reinterpret_cast<void*>(&monodroid_get_namespaced_system_property)},
 		{0x2aea7c33, "_monodroid_max_gref_get", reinterpret_cast<void*>(&_monodroid_max_gref_get)},
 		{0x30b9487b, "_monodroid_get_dns_servers", reinterpret_cast<void*>(&_monodroid_get_dns_servers)},
