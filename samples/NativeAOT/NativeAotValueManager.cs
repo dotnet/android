@@ -221,6 +221,8 @@ class NativeAotValueManager : JniRuntime.JniValueManager {
 
     public override void ActivatePeer (IJavaPeerable? self, JniObjectReference reference, ConstructorInfo cinfo, object? []? argumentValues)
     {
+        AndroidLog.Print (AndroidLogLevel.Info, "NativeAotValueManager", $"# jonp: ActivatePeer() {cinfo.DeclaringType}");
+
         var jobject = reference.Handle;
         try {
             var newobj = RuntimeHelpers.GetUninitializedObject (cinfo.DeclaringType!);
