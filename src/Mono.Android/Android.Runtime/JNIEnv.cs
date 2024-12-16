@@ -41,8 +41,7 @@ namespace Android.Runtime {
 		{
 			Logger.Log (LogLevel.Info, "monodroid", FormattableString.Invariant ($"JNIEnv.IdentityHash {v:x} "));
 
-			//TODO: Implement this
-			return v;
+			return JniEnvironment.References.GetIdentityHashCode(new JniObjectReference(v));
 			//return RuntimeNativeMethods._monodroid_get_identity_hash_code (Handle, v);
 		}
 
