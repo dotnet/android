@@ -39,7 +39,11 @@ namespace Android.Runtime {
 
 		internal static IntPtr IdentityHash (IntPtr v)
 		{
-			return RuntimeNativeMethods._monodroid_get_identity_hash_code (Handle, v);
+			Logger.Log (LogLevel.Info, "monodroid", FormattableString.Invariant ($"JNIEnv.IdentityHash {v:x} "));
+
+			//TODO: Implement this
+			return v;
+			//return RuntimeNativeMethods._monodroid_get_identity_hash_code (Handle, v);
 		}
 
 		public static void CheckHandle (IntPtr jnienv)

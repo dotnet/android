@@ -790,6 +790,8 @@ namespace Android.Runtime {
 
 		public override IJavaPeerable? PeekPeer (JniObjectReference reference)
 		{
+			Logger.Log (LogLevel.Info, "monodroid", FormattableString.Invariant ($"AndroidValueManager.PeekPeer {reference.Handle:x} "));
+
 			if (!reference.IsValid)
 				return null;
 
@@ -813,6 +815,8 @@ namespace Android.Runtime {
 
 		public override void ActivatePeer (IJavaPeerable? self, JniObjectReference reference, ConstructorInfo cinfo, object? []? argumentValues)
 		{
+			Logger.Log (LogLevel.Info, "monodroid", FormattableString.Invariant ($"AndroidValueManager.ActivatePeer {reference.Handle:x} {cinfo.DeclaringType} "));
+
 			Java.Interop.TypeManager.Activate (reference.Handle, cinfo, argumentValues);
 		}
 

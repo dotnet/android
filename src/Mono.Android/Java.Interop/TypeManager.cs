@@ -173,7 +173,11 @@ namespace Java.Interop {
 		internal static void Activate (IntPtr jobject, ConstructorInfo cinfo, object? []? parms)
 		{
 			try {
+				Logger.Log (LogLevel.Info, "monodroid", FormattableString.Invariant ($"TypeManager.Activate {jobject:x} {cinfo.DeclaringType} "));
+
 				var newobj = RuntimeHelpers.GetUninitializedObject (cinfo.DeclaringType!);
+				Logger.Log (LogLevel.Info, "monodroid", FormattableString.Invariant ($"TypeManager.Activate RuntimeHelpers.GetUninitializedObject"));
+
 				if (newobj is Java.Lang.Object o) {
 					o.handle = jobject;
 				} else if (newobj is Java.Lang.Throwable throwable) {
