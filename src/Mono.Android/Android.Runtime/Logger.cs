@@ -58,12 +58,19 @@ namespace Android.Runtime {
 			}
 		}
 
+		#if !NATIVEAOT
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		extern static uint monodroid_get_log_categories ();
+		#endif
 
 		static Logger ()
 		{
+			#if NATIVEAOT
+			// TODO: p/invoke into __system_property_get
+			Categories = LogCategories.Default | LogCategories.Assembly;
+			#else // !NATIVEAOT
 			Categories = (LogCategories) monodroid_get_log_categories ();
+			#endif // !NATIVEAOT
 		}
 	}
 }

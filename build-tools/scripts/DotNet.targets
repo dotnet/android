@@ -29,22 +29,30 @@
     <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="ConfigureLocalWorkload" />
   </Target>
 
+  <Target Name="BuildOtherRuntimes">
+    <MSBuild
+        Condition=" '%(AndroidRuntimes.Identity)' != 'Mono' "
+        Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
+        Properties="AndroidRuntime=%(AndroidRuntimes.Identity)"
+    />
+  </Target>
+
   <!-- Build Mono.Android.dll for additional API levels if necessary -->
   <Target Name="BuildExtraApiLevels">
     <MSBuild
          Condition=" '$(AndroidDefaultTargetDotnetApiLevel)' != '$(AndroidLatestStableApiLevel)' "
          Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
-         Properties="AndroidApiLevel=$(AndroidDefaultTargetDotnetApiLevel);AndroidPlatformId=$(AndroidDefaultTargetDotnetApiLevel)"
+         Properties="AndroidApiLevel=$(AndroidDefaultTargetDotnetApiLevel);AndroidPlatformId=$(AndroidDefaultTargetDotnetApiLevel);AndroidRuntime=%(AndroidRuntimes.Identity)"
     />
     <MSBuild
          Condition=" '$(AndroidLatestUnstableApiLevel)' != '$(AndroidLatestStableApiLevel)' "
          Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
-         Properties="AndroidApiLevel=$(AndroidLatestUnstableApiLevel);AndroidPlatformId=$(AndroidLatestUnstablePlatformId);AndroidFrameworkVersion=$(AndroidLatestUnstableFrameworkVersion)"
+         Properties="AndroidApiLevel=$(AndroidLatestUnstableApiLevel);AndroidPlatformId=$(AndroidLatestUnstablePlatformId);AndroidFrameworkVersion=$(AndroidLatestUnstableFrameworkVersion);AndroidRuntime=%(AndroidRuntimes.Identity)"
     />
   </Target>
 
   <Target Name="PackDotNet"
-      DependsOnTargets="BuildExtraApiLevels">
+      DependsOnTargets="BuildExtraApiLevels;BuildOtherRuntimes">
     <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="CreateAllPacks" />
     <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="ExtractWorkloadPacks" />
     <!-- Clean up old, previously restored packages -->

@@ -11,7 +11,6 @@ projects that use the Microsoft.Android framework in .NET 6+.
 
   <PropertyGroup>
     <AndroidRID Condition=" '$(AndroidRID)' == '' ">android-arm64</AndroidRID>
-    <AndroidRuntime Condition=" '$(AndroidRuntime)' == '' ">Mono</AndroidRuntime>
     <PackageId>Microsoft.Android.Runtime.$(AndroidRuntime).$(AndroidApiLevel).$(AndroidRID)</PackageId>
     <Description>Microsoft.Android runtime components for API $(AndroidApiLevel). Please do not reference directly.</Description>
     <_AndroidRuntimePackAssemblyPath>runtimes\$(AndroidRID)\lib\$(DotNetTargetFramework)</_AndroidRuntimePackAssemblyPath>

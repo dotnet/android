@@ -40,6 +40,7 @@
     <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' ">$(AndroidLatestStableFrameworkVersion)</AndroidFrameworkVersion>
     <AndroidUseLatestPlatformSdk Condition=" '$(AndroidFrameworkVersion)' == '' ">True</AndroidUseLatestPlatformSdk>
     <AndroidJavaRuntimeApiLevel Condition="'$(AndroidJavaRuntimeApiLevel)' == ''">$(AndroidLatestStableApiLevel)</AndroidJavaRuntimeApiLevel>
+    <AndroidRuntime Condition=" '$(AndroidRuntime)' == '' ">Mono</AndroidRuntime>
     <DebugType Condition=" '$(DebugType)' == '' ">portable</DebugType>
     <Deterministic Condition=" '$(Deterministic)' == '' ">True</Deterministic>
     <LangVersion Condition=" '$(LangVersion)' == '' ">latest</LangVersion>
@@ -60,7 +61,7 @@
     <AutoProvisionUsesSudo Condition=" '$(AutoProvisionUsesSudo)' == '' ">False</AutoProvisionUsesSudo>
     <_XABinRelativeInstallPrefix>lib\xamarin.android</_XABinRelativeInstallPrefix>
     <XAInstallPrefix Condition=" '$(XAInstallPrefix)' == '' ">$(MSBuildThisFileDirectory)bin\$(Configuration)\$(_XABinRelativeInstallPrefix)\</XAInstallPrefix>
-    <_MonoAndroidNETOutputRoot>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\</_MonoAndroidNETOutputRoot>
+    <_MonoAndroidNETOutputRoot>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android.$(AndroidRuntime)\</_MonoAndroidNETOutputRoot>
     <_MonoAndroidNETDefaultOutDir>$(_MonoAndroidNETOutputRoot)$(AndroidApiLevel)\</_MonoAndroidNETDefaultOutDir>
     <MicrosoftAndroidRefPackDir>$(BuildOutputDirectory)lib\packs\Microsoft.Android.Ref.$(AndroidApiLevel)\$(AndroidPackVersion)\ref\$(DotNetTargetFramework)\</MicrosoftAndroidRefPackDir>
     <MicrosoftAndroidSdkPackDir>$(BuildOutputDirectory)lib\packs\$(MicrosoftAndroidSdkPackName)\$(AndroidPackVersion)\</MicrosoftAndroidSdkPackDir>
@@ -214,7 +215,8 @@
 
   <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\Ndk.targets" />
   <ItemGroup>
-    <AndroidAbiAndRuntimeFlavor Include="@(AndroidSupportedTargetJitAbi)" AndroidRuntime="Mono" />
-    <AndroidAbiAndRuntimeFlavor Include="@(AndroidSupportedTargetJitAbi)" AndroidRuntime="NativeAOT" />
+    <AndroidRuntimes Include="Mono" />
+    <AndroidRuntimes Include="NativeAOT" />
+    <AndroidAbiAndRuntimeFlavor Include="@(AndroidSupportedTargetJitAbi)" AndroidRuntime="%(AndroidRuntimes.Identity)" />
   </ItemGroup>
 </Project>
