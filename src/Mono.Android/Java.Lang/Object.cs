@@ -284,6 +284,7 @@ namespace Java.Lang {
 			return (T?) GetObject (handle, transfer, typeof (T));
 		}
 
+		[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "TODO!")]
 		internal static IJavaPeerable? GetObject (IntPtr handle, JniHandleOwnership transfer, Type? type = null)
 		{
 			if (handle == IntPtr.Zero)
@@ -295,7 +296,28 @@ namespace Java.Lang {
 				return r;
 			}
 
-			return Java.Interop.TypeManager.CreateInstance (handle, transfer, type);
+			// TODO:
+			var reference = new JniObjectReference (handle);
+			JniObjectReferenceOptions options;
+			switch (transfer) {
+				case JniHandleOwnership.DoNotTransfer:
+					options = JniObjectReferenceOptions.Copy;
+					break;
+				case JniHandleOwnership.TransferLocalRef:
+					options = JniObjectReferenceOptions.CopyAndDispose;
+					break;
+				case JniHandleOwnership.TransferGlobalRef:
+					options = JniObjectReferenceOptions.CopyAndDispose;
+					break;
+				case JniHandleOwnership.DoNotRegister:
+					options = JniObjectReferenceOptions.CopyAndDoNotRegister;
+					break;
+				default:
+					throw new InvalidOperationException ($"Unknown transfer mode: {transfer}");
+					break;
+			}
+			return JNIEnvInit.androidRuntime?.ValueManager.GetValue (ref reference, options, type) as IJavaPeerable;
+			//return Java.Interop.TypeManager.CreateInstance (handle, transfer, type);
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
