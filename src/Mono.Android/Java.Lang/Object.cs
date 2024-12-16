@@ -316,7 +316,7 @@ namespace Java.Lang {
 					throw new InvalidOperationException ($"Unknown transfer mode: {transfer}");
 					break;
 			}
-			return JNIEnvInit.androidRuntime?.ValueManager.GetValue (ref reference, options, type) as IJavaPeerable;
+			return JNIEnvInit.AndroidValueManager?.GetValue (ref reference, options, type) as IJavaPeerable;
 			//return Java.Interop.TypeManager.CreateInstance (handle, transfer, type);
 		}
 

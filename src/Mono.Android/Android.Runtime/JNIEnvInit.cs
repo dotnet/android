@@ -77,7 +77,11 @@ namespace Android.Runtime
 			((AndroidTypeManager)androidRuntime!.TypeManager).RegisterNativeMembers (jniType, type, methods);
 		}
 
-		internal static void InitializeNativeAot (JniRuntime runtime) => androidRuntime = runtime;
+		internal static void InitializeNativeAot (JniRuntime runtime)
+		{
+			androidRuntime = runtime;
+			runtime.ValueManager = AndroidValueManager = new AndroidValueManager ();
+		}
 
 		[UnmanagedCallersOnly]
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
