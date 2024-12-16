@@ -301,14 +301,17 @@ namespace Java.Interop {
 
 			var typeSig  = JNIEnvInit.androidRuntime?.TypeManager.GetTypeSignature (type) ?? default;
 			if (!typeSig.IsValid || typeSig.SimpleReference == null) {
+				Logger.Log (LogLevel.Info, "monodroid", FormattableString.Invariant ($"typeSig isValid=false"));
 				throw new ArgumentException ($"Could not determine Java type corresponding to `{type.AssemblyQualifiedName}`.", nameof (targetType));
 			}
 
+			Logger.Log (LogLevel.Info, "monodroid", FormattableString.Invariant ($"typeSig isValid=true"));
 			JniObjectReference typeClass = default;
 			JniObjectReference handleClass = default;
 			try {
 				try {
 					typeClass = JniEnvironment.Types.FindClass (typeSig.SimpleReference);
+					Logger.Log (LogLevel.Info, "monodroid", FormattableString.Invariant ($"typeClass={typeClass}"));
 				} catch (Exception e) {
 					throw new ArgumentException ($"Could not find Java class `{typeSig.SimpleReference}`.",
 							nameof (targetType),
@@ -327,7 +330,9 @@ namespace Java.Interop {
 			IJavaPeerable? result = null;
 
 			try {
+				Logger.Log (LogLevel.Info, "monodroid", FormattableString.Invariant ($"Calling CreateProxy"));
 				result = (IJavaPeerable) CreateProxy (type, handle, transfer);
+				Logger.Log (LogLevel.Info, "monodroid", FormattableString.Invariant ($"resuls={result}"));
 				if (Runtime.IsGCUserPeer (result.PeerReference.Handle)) {
 					result.SetJniManagedPeerState (JniManagedPeerStates.Replaceable);
 				}
