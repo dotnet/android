@@ -1089,6 +1089,6 @@ constexpr hash_t system_security_cryptography_native_android_library_hash = 0x93
 constexpr hash_t system_globalization_native_library_hash = 0xa66f1e5a;
 #endif
 
-constexpr size_t internal_pinvokes_count = 47;
+constexpr size_t internal_pinvokes_count = 46;
 constexpr size_t dotnet_pinvokes_count = 477;
 } // end of anonymous namespace
