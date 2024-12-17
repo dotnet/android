@@ -1,4 +1,4 @@
-﻿<!--
+<!--
 ***********************************************************************************************
 Xamarin.Android.Common.targets
 
@@ -30,8 +30,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidPackageName" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aot" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CilStrip" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.BuildApk" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.BuildBaseAppBundle" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.BuildArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildAppBundle" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildApkSet" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.InstallApkSet" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -41,8 +40,14 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForRemovedItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForInvalidResourceFileNames" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckClientHandlerType" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CollectPdbFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CollectAssemblyFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CollectDalvikFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CollectJarContentFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CollectNativeFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNonEmptyDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CollectPdbFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CollectRuntimeConfigFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CollectTypeMapFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ComputeHash" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateTypeManagerJava" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ConvertResourcesCases" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -324,7 +329,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' ">true</AndroidUseAssemblyStore>
   <AndroidAotEnableLazyLoad Condition=" '$(AndroidAotEnableLazyLoad)' == '' And '$(AotAssemblies)' == 'true' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</AndroidAotEnableLazyLoad>
   <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and ('$(UsingMicrosoftNETSdkRazor)' == 'true') ">False</AndroidEnableMarshalMethods>
-  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' ">True</AndroidEnableMarshalMethods>
+  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and '$(PublishAot)' != 'true' ">True</AndroidEnableMarshalMethods>
+  <!-- NOTE: temporarily disable for NativeAOT for now, to get build passing -->
+  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and '$(PublishAot)' == 'true' ">False</AndroidEnableMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">False</_AndroidUseMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">$(AndroidEnableMarshalMethods)</_AndroidUseMarshalMethods>
 </PropertyGroup>
@@ -1937,7 +1944,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <!-- Shrink Mono.Android.dll by removing attribute only needed for GenerateJavaStubs -->
   <RemoveRegisterAttribute
-    Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidIncludeDebugSymbols)' != 'true' AND '$(AndroidStripILAfterAOT)' != 'true'"
+    Condition="'$(AndroidLinkMode)' != 'None' and '$(AndroidIncludeDebugSymbols)' != 'true' and '$(AndroidStripILAfterAOT)' != 'true' and '$(PublishAot)' != 'true' "
     ShrunkFrameworkAssemblies="@(_ShrunkAssemblies)" />
 
   <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)shrunk" />
@@ -2072,92 +2079,94 @@ because xbuild doesn't support framework reference assemblies.
   Inputs="$(_BuildApkEmbedInputs)"
   Outputs="$(_BuildApkEmbedOutputs)"
   Condition="'$(EmbedAssembliesIntoApk)' == 'True'">
+
+  <PropertyGroup Condition=" '$(AndroidPackageFormat)' != 'aab' ">
+    <_ApkOutputPath>$(ApkFileIntermediate)</_ApkOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(AndroidPackageFormat)' == 'aab' ">
+    <_ApkOutputPath>$(_BaseZipIntermediate)</_ApkOutputPath>
+  </PropertyGroup>
+  
   <!-- Put the assemblies and native libraries in the apk -->
   <!--
     NOTE: Adding Arguments to BuildApk or BuildBaseAppBundle
     also need to have the args added to Xamarin.Android.Common.Debugging.targets
     in monodroid.
   -->
-  <BuildApk
-    Condition=" '$(AndroidPackageFormat)' != 'aab' "
-    AndroidNdkDirectory="$(_AndroidNdkDirectory)"
-    ApkInputPath="$(_PackagedResources)"
-    ApkOutputPath="$(ApkFileIntermediate)"
-    AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
-    BundleNativeLibraries="$(_BundleResultNativeLibraries)"
-    EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-    ResolvedUserAssemblies="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths)"
-    ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
-    FrameworkNativeLibraries="@(FrameworkNativeLibrary)"
-    NativeLibraries="@(AndroidNativeLibrary)"
-    ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
-    AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
-    EmbeddedNativeLibraryAssemblies="$(OutDir)$(TargetFileName);@(_ReferencePath);@(_ReferenceDependencyPaths)"
-    DalvikClasses="@(_DexFile)"
-    SupportedAbis="@(_BuildTargetAbis)"
-    CreatePackagePerAbi="$(AndroidCreatePackagePerAbi)"
-    Debug="$(AndroidIncludeDebugSymbols)"
-    EnableCompression="$(AndroidEnableAssemblyCompression)"
-    JavaSourceFiles="@(AndroidJavaSource)"
-    JavaLibraries="@(AndroidJavaLibrary)"
-    AndroidSequencePointsMode="$(_SequencePointsMode)"
-    LibraryProjectJars="@(ExtractedJarImports)"
-    TlsProvider="$(AndroidTlsProvider)"
-    UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
-    ProjectFullPath="$(MSBuildProjectFullPath)"
-    IncludeWrapSh="$(AndroidIncludeWrapSh)"
-    CheckedBuild="$(_AndroidCheckedBuild)"
-    RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
-    ExcludeFiles="@(AndroidPackagingOptionsExclude)"
-    IncludeFiles="@(AndroidPackagingOptionsInclude)"
-    ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
-    ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
-    ZipAlignmentPages="$(AndroidZipAlignment)"
-    UseAssemblyStore="$(AndroidUseAssemblyStore)"
-    AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-    IntermediateOutputPath="$(IntermediateOutputPath)">
-    <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
-  </BuildApk>
-  <BuildBaseAppBundle
-      Condition=" '$(AndroidPackageFormat)' == 'aab' "
-      AndroidNdkDirectory="$(_AndroidNdkDirectory)"
-      ApkInputPath="$(_PackagedResources)"
-      ApkOutputPath="$(_BaseZipIntermediate)"
+  <CollectDalvikFilesForArchive
+      AndroidPackageFormat="$(AndroidPackageFormat)"
+      DalvikClasses="@(_DexFile)">
+    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+  </CollectDalvikFilesForArchive>
+
+  <CollectJarContentFilesForArchive
+      AndroidPackageFormat="$(AndroidPackageFormat)"
+      ExcludeFiles="@(AndroidPackagingOptionsExclude)"
+      IncludeFiles="@(AndroidPackagingOptionsInclude)"
+      JavaSourceFiles="@(AndroidJavaSource)"
+      JavaLibraries="@(AndroidJavaLibrary)"
+      LibraryProjectJars="@(ExtractedJarImports)">
+    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+  </CollectJarContentFilesForArchive>
+  
+  <CollectAssemblyFilesForArchive
+      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+      ApkOutputPath="$(_ApkOutputPath)"
       AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
-      BundleNativeLibraries="$(_BundleResultNativeLibraries)"
       EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-      ResolvedUserAssemblies="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths)"
+      EnableCompression="$(AndroidEnableAssemblyCompression)"
+      IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
+      IntermediateOutputPath="$(IntermediateOutputPath)"
+      ProjectFullPath="$(MSBuildProjectFullPath)"
       ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
+      ResolvedUserAssemblies="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths)"
+      SupportedAbis="@(_BuildTargetAbis)"
+      UseAssemblyStore="$(AndroidUseAssemblyStore)">
+    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+  </CollectAssemblyFilesForArchive>
+
+  <CollectRuntimeConfigFilesForArchive
+      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+      IntermediateOutputPath="$(IntermediateOutputPath)"
+      RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
+      SupportedAbis="@(_BuildTargetAbis)">
+    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+  </CollectRuntimeConfigFilesForArchive>
+
+  <CollectNativeFilesForArchive
+      AndroidNdkDirectory="$(_AndroidNdkDirectory)"
+      ApkOutputPath="$(_ApkOutputPath)"
+      BundleNativeLibraries="$(_BundleResultNativeLibraries)"
       FrameworkNativeLibraries="@(FrameworkNativeLibrary)"
       NativeLibraries="@(AndroidNativeLibrary)"
       ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
       AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
-      EmbeddedNativeLibraryAssemblies="$(OutDir)$(TargetFileName);@(ReferencePath);@(ReferenceDependencyPaths)"
-      DalvikClasses="@(_DexFile)"
       SupportedAbis="@(_BuildTargetAbis)"
-      CreatePackagePerAbi="False"
-      Debug="$(AndroidIncludeDebugSymbols)"
-      EnableCompression="$(AndroidEnableAssemblyCompression)"
-      JavaSourceFiles="@(AndroidJavaSource)"
-      JavaLibraries="@(AndroidJavaLibrary)"
-      AndroidSequencePointsMode="$(_SequencePointsMode)"
-      LibraryProjectJars="@(ExtractedJarImports)"
-      TlsProvider="$(AndroidTlsProvider)"
-      UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
-      ProjectFullPath="$(MSBuildProjectFullPath)"
       IncludeWrapSh="$(AndroidIncludeWrapSh)"
       CheckedBuild="$(_AndroidCheckedBuild)"
-      RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
-      ExcludeFiles="@(AndroidPackagingOptionsExclude)"
-      IncludeFiles="@(AndroidPackagingOptionsInclude)"
-      ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
-      ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
       ZipAlignmentPages="$(AndroidZipAlignment)"
-      UseAssemblyStore="$(AndroidUseAssemblyStore)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       IntermediateOutputPath="$(IntermediateOutputPath)">
-    <Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
-  </BuildBaseAppBundle>
+    <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
+    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+    <Output TaskParameter="DSODirectoriesToDelete" ItemName="DSODirectoriesToDelete" />
+  </CollectNativeFilesForArchive>
+
+  <!-- Create the actual zip archive -->
+  <BuildArchive
+      AndroidPackageFormat="$(AndroidPackageFormat)"
+      ApkInputPath="$(_PackagedResources)"
+      ApkOutputPath="$(_ApkOutputPath)"
+      FilesToAddToArchive="@(FilesToAddToArchive)"
+      UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
+      ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
+      ZipFlushSizeLimit="$(_ZipFlushSizeLimit)" />
+
+  <!-- Hopefully this is temporary and doesn't actually need to be cleaned up. But for now let's not change existing behavior. -->
+  <RemoveDir
+      Directories="@(DSODirectoriesToDelete)" />
+  
   <BuildAppBundle
       Condition=" '$(AndroidPackageFormat)' == 'aab' "
       ToolPath="$(JavaToolPath)"
@@ -2193,86 +2202,105 @@ because xbuild doesn't support framework reference assemblies.
 		Inputs="$(_BuildApkFastDevStaticInputs)"
 		Outputs="$(_BuildApkEmbedOutputs)">
 
-	<!-- Put the assemblies and native libraries in the apk -->
-	<BuildApk
-			Condition=" '$(AndroidPackageFormat)' != 'aab' "
-			AndroidNdkDirectory="$(_AndroidNdkDirectory)"
-			ApkInputPath="$(_PackagedResources)"
-			ApkOutputPath="$(ApkFileIntermediate)"
-			AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
-			EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-			ResolvedUserAssemblies="@(_ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths)"
-			ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
-			FrameworkNativeLibraries="@(FrameworkNativeLibrary)"
-			NativeLibraries="@(_AndroidNativeLibraryForFastDev)"
-			ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
-			AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
-			EmbeddedNativeLibraryAssemblies="$(OutDir)$(TargetFileName);@(ReferencePath);@(ReferenceDependencyPaths)"
-			DalvikClasses="@(_DexFileForFastDev)"
-			SupportedAbis="@(_BuildTargetAbis)"
-			AndroidSequencePointsMode="$(_SequencePointsMode)"
-			CreatePackagePerAbi="$(AndroidCreatePackagePerAbi)"
-			Debug="$(AndroidIncludeDebugSymbols)"
-			EnableCompression="$(AndroidEnableAssemblyCompression)"
-			TypeMappings="@(_AndroidTypeMaps)"
-			JavaSourceFiles="@(AndroidJavaSource)"
-			JavaLibraries="@(AndroidJavaLibrary)"
-			LibraryProjectJars="@(ExtractedJarImports)"
-			TlsProvider="$(AndroidTlsProvider)"
-			UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
-			ProjectFullPath="$(MSBuildProjectFullPath)"
-			IncludeWrapSh="$(AndroidIncludeWrapSh)"
-			CheckedBuild="$(_AndroidCheckedBuild)"
-			RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
-			ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
-			ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
-			ExcludeFiles="@(AndroidPackagingOptionsExclude)"
-			IncludeFiles="@(AndroidPackagingOptionsInclude)"
-			AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-			IntermediateOutputPath="$(IntermediateOutputPath)">
-		<Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
-	</BuildApk>
-	<BuildBaseAppBundle
-			Condition=" '$(AndroidPackageFormat)' == 'aab' "
-			AndroidNdkDirectory="$(_AndroidNdkDirectory)"
-			ApkInputPath="$(_PackagedResources)"
-			ApkOutputPath="$(_BaseZipIntermediate)"
-			AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
-			BundleAssemblies="$(BundleAssemblies)"
-			BundleNativeLibraries="$(_BundleResultNativeLibraries)"
-			EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-			ResolvedUserAssemblies="@(_ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths)"
-			ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
-			FrameworkNativeLibraries="@(FrameworkNativeLibrary)"
-			NativeLibraries="@(AndroidNativeLibrary)"
-			ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
-			AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
-			EmbeddedNativeLibraryAssemblies="$(OutDir)$(TargetFileName);@(ReferencePath);@(ReferenceDependencyPaths)"
-			DalvikClasses="@(_DexFile)"
-			SupportedAbis="@(_BuildTargetAbis)"
-			CreatePackagePerAbi="False"
-			Debug="$(AndroidIncludeDebugSymbols)"
-			EnableCompression="$(AndroidEnableAssemblyCompression)"
-			TypeMappings="@(_AndroidTypeMaps)"
-			JavaSourceFiles="@(AndroidJavaSource)"
-			JavaLibraries="@(AndroidJavaLibrary)"
-			AndroidSequencePointsMode="$(_SequencePointsMode)"
-			LibraryProjectJars="@(ExtractedJarImports)"
-			TlsProvider="$(AndroidTlsProvider)"
-			UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
-			ProjectFullPath="$(MSBuildProjectFullPath)"
-			IncludeWrapSh="$(AndroidIncludeWrapSh)"
-			CheckedBuild="$(_AndroidCheckedBuild)"
-			RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
-			ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
-			ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
-			ExcludeFiles="@(AndroidPackagingOptionsExclude)"
-			IncludeFiles="@(AndroidPackagingOptionsInclude)"
-			AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-			IntermediateOutputPath="$(IntermediateOutputPath)">
-		<Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
-	</BuildBaseAppBundle>
-	<BuildAppBundle
+  <PropertyGroup Condition=" '$(AndroidPackageFormat)' != 'aab' ">
+    <_ApkOutputPath>$(ApkFileIntermediate)</_ApkOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(AndroidPackageFormat)' != 'aab' ">
+    <_NativeLibraries Include="@(_AndroidNativeLibraryForFastDev)" />
+    <_DalvikClasses Include="@(_DexFileForFastDev)" />
+  </ItemGroup>
+
+  <PropertyGroup Condition=" '$(AndroidPackageFormat)' == 'aab' ">
+    <_ApkOutputPath>$(_BaseZipIntermediate)</_ApkOutputPath>
+    <_BundleNativeLibraries>$(_BundleResultNativeLibraries)</_BundleNativeLibraries>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(AndroidPackageFormat)' == 'aab' ">
+    <_NativeLibraries Include="@(AndroidNativeLibrary)" />
+    <_DalvikClasses Include="@(_DexFile)" />
+  </ItemGroup>
+
+  <!-- Put the assemblies and native libraries in the apk -->
+	<CollectDalvikFilesForArchive
+      AndroidPackageFormat="$(AndroidPackageFormat)"
+      DalvikClasses="@(_DalvikClasses)">
+    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+  </CollectDalvikFilesForArchive>
+
+  <!-- Only FastDev uses TypeMappings -->
+  <CollectTypeMapFilesForArchive
+      AndroidPackageFormat="$(AndroidPackageFormat)"
+      TypeMappings="@(_AndroidTypeMaps)">
+    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+  </CollectTypeMapFilesForArchive>
+  
+  <CollectJarContentFilesForArchive
+      AndroidPackageFormat="$(AndroidPackageFormat)"
+      ExcludeFiles="@(AndroidPackagingOptionsExclude)"
+      IncludeFiles="@(AndroidPackagingOptionsInclude)"
+      JavaSourceFiles="@(AndroidJavaSource)"
+      JavaLibraries="@(AndroidJavaLibrary)"
+      LibraryProjectJars="@(ExtractedJarImports)">
+    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+  </CollectJarContentFilesForArchive>
+    
+  <CollectAssemblyFilesForArchive
+      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+      ApkOutputPath="$(_ApkOutputPath)"
+      AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
+      EmbedAssemblies="$(EmbedAssembliesIntoApk)"
+      EnableCompression="$(AndroidEnableAssemblyCompression)"
+      IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
+      IntermediateOutputPath="$(IntermediateOutputPath)"
+      ProjectFullPath="$(MSBuildProjectFullPath)"
+      ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
+      ResolvedUserAssemblies="@(_ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths)"
+      SupportedAbis="@(_BuildTargetAbis)">
+    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+  </CollectAssemblyFilesForArchive>
+
+  <CollectRuntimeConfigFilesForArchive
+      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+      IntermediateOutputPath="$(IntermediateOutputPath)"
+      RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
+      SupportedAbis="@(_BuildTargetAbis)">
+    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+  </CollectRuntimeConfigFilesForArchive>
+
+  <CollectNativeFilesForArchive
+      AndroidNdkDirectory="$(_AndroidNdkDirectory)"
+      ApkOutputPath="$(_ApkOutputPath)"
+      BundleNativeLibraries="$(_BundleNativeLibraries)"
+      FrameworkNativeLibraries="@(FrameworkNativeLibrary)"
+      NativeLibraries="@(_NativeLibraries)"
+      ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
+      AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
+      SupportedAbis="@(_BuildTargetAbis)"
+      IncludeWrapSh="$(AndroidIncludeWrapSh)"
+      CheckedBuild="$(_AndroidCheckedBuild)"
+      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+      IntermediateOutputPath="$(IntermediateOutputPath)">
+    <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
+    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+    <Output TaskParameter="DSODirectoriesToDelete" ItemName="DSODirectoriesToDelete" />
+  </CollectNativeFilesForArchive>
+
+  <!-- Create the actual zip archive -->
+  <BuildArchive
+      AndroidPackageFormat="$(AndroidPackageFormat)"
+      ApkInputPath="$(_PackagedResources)"
+      ApkOutputPath="$(_ApkOutputPath)"
+      FilesToAddToArchive="@(FilesToAddToArchive)"
+      UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
+      ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
+      ZipFlushSizeLimit="$(_ZipFlushSizeLimit)" />
+
+  <!-- Hopefully this is temporary and doesn't actually need to be cleaned up. But for now let's not change existing behavior. -->
+  <RemoveDir
+      Directories="@(DSODirectoriesToDelete)" />
+
+  <BuildAppBundle
 			Condition=" '$(AndroidPackageFormat)' == 'aab' "
 			ToolPath="$(JavaToolPath)"
 			JavaMaximumHeapSize="$(JavaMaximumHeapSize)"

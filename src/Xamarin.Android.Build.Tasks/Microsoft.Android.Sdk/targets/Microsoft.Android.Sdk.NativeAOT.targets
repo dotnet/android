@@ -1,0 +1,79 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Sdk.NativeAOT.targets
+
+This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
+***********************************************************************************************
+-->
+<Project>
+
+  <!-- Make IlcCompile depend on the trimmer -->
+  <PropertyGroup>
+    <IlcCompileDependsOn>
+      _AndroidBeforeIlcCompile;
+      SetupOSSpecificProps;
+      PrepareForILLink;
+      ILLink;
+      ComputeIlcCompileInputs;
+      _AndroidComputeIlcCompileInputs;
+      $(IlcCompileDependsOn)
+    </IlcCompileDependsOn>
+  </PropertyGroup>
+
+  <Target Name="_AndroidBeforeIlcCompile" BeforeTargets="SetupProperties">
+    <!-- Example settings from: https://github.com/jonathanpeppers/Android-NativeAOT/blob/ea69d122cdc7de67aa6a5db14b7e560763c63cdd/DotNet/libdotnet.targets -->
+    <PropertyGroup>
+      <_NdkSysrootAbi>aarch64-linux-android</_NdkSysrootAbi>
+      <_NdkClangPrefix>aarch64-linux-android21-</_NdkClangPrefix>
+      <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('windows')) ">windows-x86_64</_NdkPrebuiltAbi>
+      <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('osx')) ">darwin-x86_64</_NdkPrebuiltAbi>
+      <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('linux')) ">linux-x86_64</_NdkPrebuiltAbi>
+      <_NdkSysrootDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/sysroot/usr/lib/$(_NdkSysrootAbi)</_NdkSysrootDir>
+      <_NdkBinDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/bin/</_NdkBinDir>
+      <CppCompilerAndLinker>$(_NdkBinDir)$(_NdkClangPrefix)clang++</CppCompilerAndLinker>
+      <CppLinker>$(CppCompilerAndLinker)</CppLinker>
+      <ObjCopyName>$(_NdkBinDir)llvm-objcopy</ObjCopyName>
+
+      <!-- Example settings from: https://github.com/xamarin/xamarin-macios/blob/c43d4ea40bc777969e3b158cf46446df292d8449/dotnet/targets/Xamarin.Shared.Sdk.targets#L541-L550 -->
+      <RunILLink>true</RunILLink>
+      <!--
+        We want to suppress warnings from trimmer and only show warnings from ILC.
+        Otherwise, you would get 2x for every warning.
+      -->
+      <_OriginalSuppressTrimAnalysisWarnings>$(SuppressTrimAnalysisWarnings)</_OriginalSuppressTrimAnalysisWarnings>
+      <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+
+      <!-- The list of hacks below should go away when we have NativeAOT.android-* packs -->
+      <!-- HACK: we are android-arm64, so this is required for the right path(s) to be found -->
+      <_OriginalRuntimeIdentifier>$(RuntimeIdentifier)</_OriginalRuntimeIdentifier>
+      <RuntimeIdentifier Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">linux-bionic-arm64</RuntimeIdentifier>
+      <!-- HACK: -targetos:android results in error, so use linux -->
+      <_targetOS>linux</_targetOS>
+      <!-- HACK: prevents libSystem.Net.Security.Native.a from being added -->
+      <_linuxLibcFlavor>bionic</_linuxLibcFlavor>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_AndroidComputeIlcCompileInputs">
+    <PropertyGroup>
+      <!-- Turn trimmer warnings back to original value -->
+      <SuppressTrimAnalysisWarnings>$(_OriginalSuppressTrimAnalysisWarnings)</SuppressTrimAnalysisWarnings>
+    </PropertyGroup>
+    <ItemGroup>
+      <!-- Give ILLink's output to ILC -->
+      <IlcCompileInput Remove="@(IlcCompileInput)" />
+      <IlcCompileInput Include="$(IntermediateLinkDir)$(TargetName)$(TargetExt)" />
+      <IlcReference Remove="@(IlcReference)" />
+      <IlcReference Include="@(PrivateSdkAssemblies)" />
+      <IlcReference Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" Exclude="@(IlcCompileInput)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidAfterLinkNative" AfterTargets="LinkNative">
+    <PropertyGroup>
+      <!-- Turn $(RuntimeIdentifier) back to original value -->
+      <RuntimeIdentifier>$(_OriginalRuntimeIdentifier)</RuntimeIdentifier>
+    </PropertyGroup>
+  </Target>
+
+</Project>
