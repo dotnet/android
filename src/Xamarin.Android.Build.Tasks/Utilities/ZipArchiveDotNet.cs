@@ -57,23 +57,29 @@ class ZipArchiveDotNet : IZipArchive
 		// We need to use reflection to access the private fields.
 
 		// These private fields exist on both .NET Framework 4.7.2 and .NET 9.0. If they are not found,
-		// we will return a ZipArchiveEx which uses libZipSharp instead.
+		// we will return a ZipArchiveEx which uses LibZipSharp instead.
 		crc_field = typeof (ZipArchiveEntry).GetField ("_crc32", BindingFlags.NonPublic | BindingFlags.Instance);
 		comp_field = typeof (ZipArchiveEntry).GetField ("_storedCompressionMethod", BindingFlags.NonPublic | BindingFlags.Instance);
 	}
 
-	public static IZipArchive Create (TaskLoggingHelper log, string archive, ZipArchiveMode mode)
+	public static IZipArchive Create (TaskLoggingHelper log, string archive, ZipArchiveMode mode, bool fallback)
 	{
+		if (fallback) {
+			log.LogDebugMessage ($"ZipArchiveDotNet: Falling back to LibZipSharp as requested.");
+			return new ZipArchiveEx (archive, mode.ToFileMode ());
+		}
+
 		if (crc_field is null) {
-			log.LogDebugMessage ($"ZipArchiveDotNet: Could not find private CRC field, falling back to libZipSharp.");
+			log.LogDebugMessage ($"ZipArchiveDotNet: Could not find private CRC field, falling back to LibZipSharp.");
 			return new ZipArchiveEx (archive, mode.ToFileMode ());
 		}
 
 		if (comp_field is null) {
-			log.LogDebugMessage ($"ZipArchiveDotNet: Could not find private CompressionMethod field, falling back to libZipSharp.");
+			log.LogDebugMessage ($"ZipArchiveDotNet: Could not find private CompressionMethod field, falling back to LibZipSharp.");
 			return new ZipArchiveEx (archive, mode.ToFileMode ());
 		}
 
+		log.LogDebugMessage ($"ZipArchiveDotNet: Using ZipArchiveDotNet.");
 		return new ZipArchiveDotNet (archive, mode);
 	}
 

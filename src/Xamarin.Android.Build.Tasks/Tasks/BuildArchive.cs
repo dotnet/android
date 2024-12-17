@@ -32,6 +32,8 @@ public class BuildArchive : AndroidTask
 
 	public string? UncompressedFileExtensions { get; set; }
 
+	public bool UseLibZipSharp { get; set; }
+
 	public string? ZipFlushFilesLimit { get; set; }
 
 	public string? ZipFlushSizeLimit { get; set; }
@@ -59,7 +61,7 @@ public class BuildArchive : AndroidTask
 			refresh = false;
 		}
 
-		using var apk = ZipArchiveDotNet.Create (Log, ApkOutputPath, System.IO.Compression.ZipArchiveMode.Update);
+		using var apk = ZipArchiveDotNet.Create (Log, ApkOutputPath, System.IO.Compression.ZipArchiveMode.Update, UseLibZipSharp);
 
 		// Set up AutoFlush
 		if (int.TryParse (ZipFlushFilesLimit, out int flushFilesLimit)) {
