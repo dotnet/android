@@ -515,7 +515,7 @@ namespace Android.Runtime {
 			}
 
 			if (ret == IntPtr.Zero) {
-				if (JNIEnvInit.LogAssemblyCategory) {
+				if (Logger.LogAssembly) {
 					RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"typemap: failed to map managed type to Java type: {type.AssemblyQualifiedName} (Module ID: {type.Module.ModuleVersionId}; Type token: {type.MetadataToken})");
 					LogTypemapTrace (new StackTrace (true));
 				}

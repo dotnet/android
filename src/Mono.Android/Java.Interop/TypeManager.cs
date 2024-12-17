@@ -231,7 +231,7 @@ namespace Java.Interop {
 
 			if (!JNIEnvInit.IsRunningOnDesktop) {
 				// Miss message is logged in the native runtime
-				if (JNIEnvInit.LogAssemblyCategory)
+				if (Logger.LogAssembly)
 					JNIEnv.LogTypemapTrace (new System.Diagnostics.StackTrace (true));
 				return null;
 			}

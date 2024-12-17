@@ -38,7 +38,6 @@ namespace Android.Runtime
 		internal static AndroidValueManager? AndroidValueManager;
 		internal static bool IsRunningOnDesktop;
 		internal static bool jniRemappingInUse;
-		internal static bool LogAssemblyCategory;
 		internal static bool MarshalMethodsEnabled;
 		internal static bool PropagateExceptions;
 		internal static BoundExceptionType BoundExceptionType;
@@ -89,7 +88,7 @@ namespace Android.Runtime
 			IntPtr total_timing_sequence = IntPtr.Zero;
 			IntPtr partial_timing_sequence = IntPtr.Zero;
 
-			LogAssemblyCategory = (args->logCategories & (uint)LogCategories.Assembly) != 0;
+			Logger.SetLogCategories ((LogCategories)args->logCategories);
 
 			gref_gc_threshold = args->grefGcThreshold;
 
