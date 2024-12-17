@@ -208,7 +208,7 @@ IEnumerable<JObject> CreatePackageEntries (XDocument doc, string element, string
 
 	// special-case platform-tools, which doesn't have a revision
 	if (!path.Contains (reqRev)) {
-		sdkPackage.Add (new JProperty ("requestedRevision", reqRev));
+		sdkPackage.Add (new JProperty ("recommendedVersion",    reqRev));
 	}
 	var entry       = new JObject {
 		new JProperty ("desc",          item.ReqAttr ("description")),
