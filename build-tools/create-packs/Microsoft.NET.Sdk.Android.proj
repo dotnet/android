@@ -26,6 +26,7 @@ about the various Microsoft.Android workloads.
   <Target Name="_GenerateXAWorkloadContent"
       DependsOnTargets="_GetDefaultPackageVersion;_GetLicense">
     <PropertyGroup>
+      <WorkloadDependenciesPath Condition="'$(WorkloadDependenciesPath)' == ''">$(OutputPath)workload-manifest\WorkloadDependencies.json</WorkloadDependenciesPath>
       <WorkloadManifestJsonPath Condition="'$(WorkloadManifestJsonPath)' == ''">$(OutputPath)workload-manifest\WorkloadManifest.json</WorkloadManifestJsonPath>
       <WorkloadManifestTargetsPath Condition="'$(WorkloadManifestTargetsPath)' == ''">$(OutputPath)workload-manifest\WorkloadManifest.targets</WorkloadManifestTargetsPath>
       <WorkloadVersion Condition="'$(WorkloadVersion)' == ''">$(AndroidPackVersionLong)</WorkloadVersion>
@@ -43,31 +44,21 @@ about the various Microsoft.Android workloads.
         Replacements="@NET_PREVIOUS_VERSION@=$(AndroidNetPreviousVersion)">
     </ReplaceFileContents>
 
-    <PropertyGroup>
-      <_AndroidPlatformSupportFeed>$(MSBuildThisFileDirectory)/../../external/android-platform-support/Feeds/AndroidManifestFeed_d17.12.xml</_AndroidPlatformSupportFeed>
-      <_Feed Condition=" Exists($(_AndroidPlatformSupportFeed)) ">$(_AndroidPlatformSupportFeed)</_Feed>
-      <_Feed Condition=" '$(_Feed)' == '' ">https://aka.ms/AndroidManifestFeed/d17-12</_Feed>
-      <_Project>$(MSBuildThisFileDirectory)/../../tools/workload-dependencies/workload-dependencies.csproj</_Project>
-      <WorkloadDependenciesPath Condition="'$(WorkloadDependenciesPath)' == ''">$(OutputPath)workload-manifest\WorkloadDependencies.json</WorkloadDependenciesPath>
-    </PropertyGroup>
     <ItemGroup>
-      <_WorkloadDeps Include="--project &quot;$(_Project)&quot;" />
-      <_WorkloadDeps Include="--" />
-      <_WorkloadDeps Include="&quot;--feed=$(_Feed)&quot;" />
-      <_WorkloadDeps Include="-o &quot;$(WorkloadDependenciesPath)&quot;" />
-      <_WorkloadDeps Include="--build-tools-version=$(XABuildToolsFolder)" />
-      <_WorkloadDeps Include="--cmdline-tools-version=$(CommandLineToolsFolder)" />
-      <_WorkloadDeps Include="--jdk-version=$(JavaSdkVersion)" />
-      <_WorkloadDeps Include="--ndk-version=$(AndroidNdkPkgRevision)" />
-      <_WorkloadDeps Include="--platform-version=$(AndroidLatestStableApiLevel)" />
-      <_WorkloadDeps
-          Condition=" '$(AndroidLatestUnstablePlatformId)' != '$(AndroidLatestStablePlatformId)' "
-          Include="--preview-platform-version=$(AndroidLatestUnstablePlatformId)"
-      />
-      <_WorkloadDeps Include="--workload-version=$(WorkloadVersion)" />
+      <_WorkloadDepProp Include="AndroidLatestStablePlatformId=$(AndroidLatestStablePlatformId)" />
+      <_WorkloadDepProp Include="AndroidLatestUnstablePlatformId=$(AndroidLatestUnstablePlatformId)" />
+      <_WorkloadDepProp Include="MicrosoftAndroidSdkOutDir=$(MicrosoftAndroidSdkOutDir)" />
+      <_WorkloadDepProp Include="MonoOptionsVersion=$(MonoOptionsVersion)" />
+      <_WorkloadDepProp Include="NewtonsoftJsonPackageVersion=$(NewtonsoftJsonPackageVersion)" />
+      <_WorkloadDepProp Include="WorkloadDependenciesPath=$(WorkloadDependenciesPath)" />
+      <_WorkloadDepProp Include="WorkloadVersion=$(WorkloadVersion)" />
     </ItemGroup>
 
-    <Exec Command="dotnet run @(_WorkloadDeps, ' ')" />
+    <MSBuild
+        Projects="$(MSBuildThisFileDirectory)/../../tools/workload-dependencies/WorkloadDependencies.proj"
+        Properties="@(_WorkloadDepProp)"
+        Targets="GenerateWorkloadDependencies"
+    />
 
     <ItemGroup>
       <_PackageFiles Include="$(WorkloadManifestJsonPath)" PackagePath="data" />

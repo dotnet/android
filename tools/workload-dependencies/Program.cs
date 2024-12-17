@@ -15,8 +15,9 @@ var CmdlineToolsVersion     = (string?) null;
 var BuildToolsVersion       = (string?) null;
 var JdkVersion              = (string?) null;
 var NdkVersion              = (string?) null;
-var PreviewPlatformVersion  = (string?) null;
+var PlatformToolsVersion    = (string?) null;
 var PlatformVersion         = (string?) null;
+var PreviewPlatformVersion  = (string?) null;
 var WorkloadVersion         = (string?) null;
 
 var options = new OptionSet {
@@ -39,6 +40,9 @@ var options = new OptionSet {
 	{ "ndk-version=",
 	  "The Android NDK {VERSION} dotnet/android is built against.",
 	  v => NdkVersion = v },
+	{ "platform-tools-version=",
+	  "The Android SDK platform-tools version dotnet/android is built against.",
+	  v => PlatformToolsVersion = v },
 	{ "platform-version=",
 	  "The stable Android SDK Platform {VERSION} dotnet/android binds.",
 	  v => PlatformVersion = v },
@@ -96,7 +100,7 @@ var PackageCreators = new Dictionary<string, Func<XDocument, IEnumerable<JObject
 	["emulator"]        = doc => CreatePackageEntries (doc, "emulator",         null,                   optional: true),
 	["cmdline-tools"]   = doc => CreatePackageEntries (doc, "cmdline-tools",    CmdlineToolsVersion),
 	["ndk"]             = doc => CreatePackageEntries (doc, "ndk",              NdkVersion,             optional: true),
-	["platform-tools"]  = doc => CreatePackageEntries (doc, "platform-tools",   null),
+	["platform-tools"]  = doc => CreatePackageEntries (doc, "platform-tools",   PlatformToolsVersion),
 	["platform"]        = CreatePlatformPackageEntries,
 	["system-image"]    = CreateSystemImagePackageEntries,
 	// ndk
@@ -196,11 +200,19 @@ IEnumerable<JObject> CreatePackageEntries (XDocument doc, string element, string
 	if (item == null) {
 		yield break;
 	}
+	var path        = item.ReqAttr ("path");
+	var reqRev      = item.ReqAttr ("revision");
+	var sdkPackage  = new JObject {
+			new JProperty ("id",        path),
+	};
+
+	// special-case platform-tools, which doesn't have a revision
+	if (!path.Contains (reqRev)) {
+		sdkPackage.Add (new JProperty ("requestedRevision", reqRev));
+	}
 	var entry       = new JObject {
 		new JProperty ("desc",          item.ReqAttr ("description")),
-		new JProperty ("sdkPackage", new JObject {
-			new JProperty ("id",    item.ReqAttr ("path")),
-		}),
+		new JProperty ("sdkPackage",    sdkPackage),
 		new JProperty ("optional",      optional.ToString ().ToLowerInvariant ()),
 	};
 	yield return entry;
@@ -228,7 +240,7 @@ XElement? GetElementRevision (XDocument doc, string element, string? revision)
 IEnumerable<JObject> CreatePlatformPackageEntries (XDocument doc)
 {
 	string?     reqVersion  = PlatformVersion != null
-		? $"platforms;android-{PlatformVersion}"
+		? $"platforms;{PlatformVersion}"
 		: null;
 	string?     maxVersion  = null;
 	XElement?	entry       = null;
