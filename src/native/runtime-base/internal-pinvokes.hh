@@ -36,7 +36,6 @@ void _monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *
 void _monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char  *from, int from_writable);
 void _monodroid_gc_wait_for_bridge_processing ();
 void monodroid_clear_gdb_wait ();
-void* _monodroid_get_identity_hash_code (JNIEnv *env, void *v);
 void* _monodroid_timezone_get_default_id ();
 void _monodroid_counters_dump ([[maybe_unused]] const char *format, [[maybe_unused]] va_list args);
 xamarin::android::managed_timing_sequence* monodroid_timing_start (const char *message);
