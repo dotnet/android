@@ -6,12 +6,6 @@
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
 
-unsigned int
-monodroid_get_log_categories ()
-{
-	return log_categories;
-}
-
 int
 monodroid_get_system_property (const char *name, char **value)
 {

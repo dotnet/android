@@ -19,7 +19,6 @@ mono_bool _monodroid_get_network_interface_up_state (const char *ifname, mono_bo
 mono_bool _monodroid_get_network_interface_supports_multicast (const char *ifname, mono_bool *supports_multicast);
 int _monodroid_get_dns_servers (void **dns_servers_array);
 
-unsigned int monodroid_get_log_categories ();
 int monodroid_get_system_property (const char *name, char **value);
 int monodroid_embedded_assemblies_set_assemblies_prefix (const char *prefix);
 void monodroid_log (xamarin::android::LogLevel level, LogCategories category, const char *message);
