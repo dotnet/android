@@ -47,7 +47,6 @@ const std::vector<std::string> internal_pinvoke_names = {
 	"_monodroid_gc_wait_for_bridge_processing",
 	"_monodroid_get_dns_servers",
 	"monodroid_get_dylib",
-	"_monodroid_get_identity_hash_code",
 	"_monodroid_getifaddrs",
 	"monodroid_get_log_categories",
 	"monodroid_get_namespaced_system_property",
