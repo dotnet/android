@@ -19,6 +19,8 @@ namespace Java.Lang {
 		, IJavaPeerable
 #endif  // JAVA_INTEROP
 	{
+		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
 		[NonSerialized] IntPtr key_handle;
 #pragma warning disable CS0649, CS0169, CS0414 // Suppress fields are never used warnings, these fields are used directly by monodroid-glue.cc
 		[NonSerialized] int refs_added;
@@ -263,20 +265,29 @@ namespace Java.Lang {
 			return (T?)PeekObject (handle, typeof (T));
 		}
 
-		public static T? GetObject<T> (IntPtr jnienv, IntPtr handle, JniHandleOwnership transfer)
+		public static T? GetObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		> (IntPtr jnienv, IntPtr handle, JniHandleOwnership transfer)
 			where T : class, IJavaObject
 		{
 			JNIEnv.CheckHandle (jnienv);
 			return GetObject<T> (handle, transfer);
 		}
 
-		public static T? GetObject<T> (IntPtr handle, JniHandleOwnership transfer)
+		public static T? GetObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		> (IntPtr handle, JniHandleOwnership transfer)
 			where T : class, IJavaObject
 		{
 			return _GetObject<T>(handle, transfer);
 		}
 
-		internal static T? _GetObject<T> (IntPtr handle, JniHandleOwnership transfer)
+		internal static T? _GetObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		> (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return default (T);
@@ -284,7 +295,11 @@ namespace Java.Lang {
 			return (T?) GetObject (handle, transfer, typeof (T));
 		}
 
-		internal static IJavaPeerable? GetObject (IntPtr handle, JniHandleOwnership transfer, Type? type = null)
+		internal static IJavaPeerable? GetObject (
+				IntPtr handle,
+				JniHandleOwnership transfer,
+				[DynamicallyAccessedMembers (Constructors)]
+				Type? type = null)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
@@ -295,7 +310,9 @@ namespace Java.Lang {
 				return r;
 			}
 
-			return Java.Interop.TypeManager.CreateInstance (handle, transfer, type);
+			JniObjectReference reference = JNIEnv.CreateJniObjectReference (handle, transfer);
+			JniObjectReferenceOptions options = JNIEnv.ToJniObjectReferenceOptions (transfer);
+			return (IJavaPeerable) JNIEnvInit.AndroidValueManager?.GetValue (ref reference, options, type);
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
