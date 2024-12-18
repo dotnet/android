@@ -32,8 +32,6 @@
     <!-- HACK: make dotnet restore include Microsoft.NETCore.App.Runtime.NativeAOT.linux-bionic-arm64 -->
     <_IsPublishing Condition=" '$(_IsPublishing)' == '' and '$(_AndroidNativeAot)' == 'true' ">true</_IsPublishing>
 
-    <!-- Use $(AndroidMinimumSupportedApiLevel) for $(SupportedOSPlatformVersion) if unset -->
-    <SupportedOSPlatformVersion Condition=" '$(SupportedOSPlatformVersion)' == '' ">$(AndroidMinimumSupportedApiLevel)</SupportedOSPlatformVersion>
     <!-- $(SupportedOSPlatformVersion) must be '21.0', but we should support integer values like '21' -->
     <SupportedOSPlatformVersion Condition=" '$(SupportedOSPlatformVersion)' != '' and !$(SupportedOSPlatformVersion.Contains('.')) ">$(SupportedOSPlatformVersion).0</SupportedOSPlatformVersion>
 
