@@ -83,7 +83,7 @@ namespace Java.Interop {
 
 			internal const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 			internal const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
-			internal const DynamicallyAccessedMemberTypes MethodsConstructorsInterfaces = MethodsAndPrivateNested | DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.Interfaces;
+			internal const DynamicallyAccessedMemberTypes MethodsConstructors = MethodsAndPrivateNested | DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
 			JniRuntime?             runtime;
 			bool                    disposed;
@@ -285,7 +285,7 @@ namespace Java.Interop {
 				#pragma warning restore IL3050
 
 			[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "Types returned here should be preserved via other means.")]
-			[return: DynamicallyAccessedMembers (MethodsConstructorsInterfaces)]
+			[return: DynamicallyAccessedMembers (MethodsConstructors)]
 			public  Type?    GetType (JniTypeSignature typeSignature)
 			{
 				AssertValid ();

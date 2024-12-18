@@ -120,7 +120,7 @@ namespace Java.Interop {
 
 	public abstract class JniValueMarshaler {
 
-		internal const DynamicallyAccessedMemberTypes ConstructorsAndInterfaces = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.Interfaces;
+		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 		internal const string ExpressionRequiresUnreferencedCode = "System.Linq.Expression usage may trim away required code.";
 
 		public  virtual     bool                    IsJniValueType {
@@ -135,7 +135,7 @@ namespace Java.Interop {
 		public  abstract    object?                 CreateValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType = null);
 
 		public  virtual     JniValueMarshalerState  CreateArgumentState (object? value, ParameterAttributes synchronize = 0)
@@ -148,7 +148,7 @@ namespace Java.Interop {
 
 		internal object? CreateValue (
 				IntPtr handle,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			var r = new JniObjectReference (handle);
@@ -236,7 +236,7 @@ namespace Java.Interop {
 	}
 
 	public abstract class JniValueMarshaler<
-			[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+			[DynamicallyAccessedMembers (Constructors)]
 			T
 	>
 		: JniValueMarshaler
@@ -246,7 +246,7 @@ namespace Java.Interop {
 		public  abstract    T                       CreateGenericValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType = null);
 
 		public  virtual     JniValueMarshalerState  CreateGenericArgumentState ([MaybeNull] T value, ParameterAttributes synchronize = 0)
@@ -260,7 +260,7 @@ namespace Java.Interop {
 		public override object? CreateValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType = null)
 		{
 			return CreateGenericValue (ref reference, options, targetType ?? typeof (T));

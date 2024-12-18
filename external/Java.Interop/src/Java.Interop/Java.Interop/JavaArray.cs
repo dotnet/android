@@ -363,7 +363,7 @@ namespace Java.Interop
 	}
 	
 	public abstract class JavaPrimitiveArray<
-			[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+			[DynamicallyAccessedMembers (Constructors)]
 			T
 	>
 		: JavaArray<T>

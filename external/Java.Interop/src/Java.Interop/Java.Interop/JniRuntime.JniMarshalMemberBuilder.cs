@@ -142,12 +142,6 @@ namespace Java.Interop {
 
 			public JniValueMarshaler GetParameterMarshaler (ParameterInfo parameter)
 			{
-				// Activator.CreateInstance requires DynamicallyAccessedMemberTypes.PublicParameterlessConstructor
-				// GetValueMarshaler requires DynamicallyAccessedMemberTypes.Interfaces
-				[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "JniValueMarshalerAttribute is decorated with [DynamicallyAccessedMembers]")]
-				static JniValueMarshaler GetValueMarshaler (JniValueManager manager, ParameterInfo parameter) =>
-					manager.GetValueMarshaler (parameter.ParameterType);
-
 				if (parameter.ParameterType == typeof (IntPtr))
 					return IntPtrValueMarshaler.Instance;
 
@@ -160,7 +154,7 @@ namespace Java.Interop {
 				if (attr != null) {
 					return (JniValueMarshaler) Activator.CreateInstance (attr.MarshalerType)!;
 				}
-				return GetValueMarshaler (Runtime.ValueManager, parameter);
+				return Runtime.ValueManager.GetValueMarshaler (parameter.ParameterType);
 			}
 
 			// Heuristic: if first two parameters are IntPtr, this is a "direct" wrapper.
@@ -200,7 +194,7 @@ namespace Java.Interop {
 		public override object? CreateValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			throw new NotSupportedException ();
@@ -209,7 +203,7 @@ namespace Java.Interop {
 		public override IntPtr CreateGenericValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			throw new NotSupportedException ();

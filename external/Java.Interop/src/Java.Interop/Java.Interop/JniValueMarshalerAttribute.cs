@@ -8,7 +8,7 @@ namespace Java.Interop {
 
 	[AttributeUsage (Targets, AllowMultiple=false)]
 	public class JniValueMarshalerAttribute : Attribute {
-		const DynamicallyAccessedMemberTypes ParameterlessConstructorsInterfaces = DynamicallyAccessedMemberTypes.PublicParameterlessConstructor | DynamicallyAccessedMemberTypes.Interfaces;
+		const DynamicallyAccessedMemberTypes ParameterlessConstructors = DynamicallyAccessedMemberTypes.PublicParameterlessConstructor;
 
 		const   AttributeTargets    Targets =
 			AttributeTargets.Class | AttributeTargets.Enum |
@@ -16,7 +16,7 @@ namespace Java.Interop {
 			AttributeTargets.Parameter | AttributeTargets.ReturnValue;
 
 		public JniValueMarshalerAttribute (
-				[DynamicallyAccessedMembers (ParameterlessConstructorsInterfaces)]
+				[DynamicallyAccessedMembers (ParameterlessConstructors)]
 				Type marshalerType)
 		{
 			if (marshalerType == null)
@@ -29,7 +29,7 @@ namespace Java.Interop {
 			MarshalerType   = marshalerType;
 		}
 
-		[DynamicallyAccessedMembers (ParameterlessConstructorsInterfaces)]
+		[DynamicallyAccessedMembers (ParameterlessConstructors)]
 		public  Type    MarshalerType   {
 			get;
 		}

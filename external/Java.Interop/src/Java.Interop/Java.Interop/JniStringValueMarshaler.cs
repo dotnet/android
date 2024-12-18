@@ -17,7 +17,7 @@ namespace Java.Interop {
 		public override string? CreateGenericValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			return JniEnvironment.Strings.ToString (ref reference, options, targetType ?? typeof (string));

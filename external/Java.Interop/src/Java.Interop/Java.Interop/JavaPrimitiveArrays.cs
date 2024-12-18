@@ -246,7 +246,7 @@ namespace Java.Interop {
 
 		public static object? CreateMarshaledValue (
 				IntPtr handle,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			return ArrayMarshaler.CreateValue (handle, targetType);
@@ -257,7 +257,7 @@ namespace Java.Interop {
 			public override IList<Boolean> CreateGenericValue (
 					ref JniObjectReference reference,
 					JniObjectReferenceOptions options,
-					[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+					[DynamicallyAccessedMembers (Constructors)]
 					Type? targetType)
 			{
 				return JavaArray<Boolean>.CreateValue (
@@ -450,7 +450,7 @@ namespace Java.Interop {
 
 		public static object? CreateMarshaledValue (
 				IntPtr handle,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			return ArrayMarshaler.CreateValue (handle, targetType);
@@ -461,7 +461,7 @@ namespace Java.Interop {
 			public override IList<SByte> CreateGenericValue (
 					ref JniObjectReference reference,
 					JniObjectReferenceOptions options,
-					[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+					[DynamicallyAccessedMembers (Constructors)]
 					Type? targetType)
 			{
 				return JavaArray<SByte>.CreateValue (
@@ -654,7 +654,7 @@ namespace Java.Interop {
 
 		public static object? CreateMarshaledValue (
 				IntPtr handle,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			return ArrayMarshaler.CreateValue (handle, targetType);
@@ -665,7 +665,7 @@ namespace Java.Interop {
 			public override IList<Char> CreateGenericValue (
 					ref JniObjectReference reference,
 					JniObjectReferenceOptions options,
-					[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+					[DynamicallyAccessedMembers (Constructors)]
 					Type? targetType)
 			{
 				return JavaArray<Char>.CreateValue (
@@ -858,7 +858,7 @@ namespace Java.Interop {
 
 		public static object? CreateMarshaledValue (
 				IntPtr handle,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			return ArrayMarshaler.CreateValue (handle, targetType);
@@ -869,7 +869,7 @@ namespace Java.Interop {
 			public override IList<Int16> CreateGenericValue (
 					ref JniObjectReference reference,
 					JniObjectReferenceOptions options,
-					[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+					[DynamicallyAccessedMembers (Constructors)]
 					Type? targetType)
 			{
 				return JavaArray<Int16>.CreateValue (
@@ -1062,7 +1062,7 @@ namespace Java.Interop {
 
 		public static object? CreateMarshaledValue (
 				IntPtr handle,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			return ArrayMarshaler.CreateValue (handle, targetType);
@@ -1073,7 +1073,7 @@ namespace Java.Interop {
 			public override IList<Int32> CreateGenericValue (
 					ref JniObjectReference reference,
 					JniObjectReferenceOptions options,
-					[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+					[DynamicallyAccessedMembers (Constructors)]
 					Type? targetType)
 			{
 				return JavaArray<Int32>.CreateValue (
@@ -1266,7 +1266,7 @@ namespace Java.Interop {
 
 		public static object? CreateMarshaledValue (
 				IntPtr handle,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			return ArrayMarshaler.CreateValue (handle, targetType);
@@ -1277,7 +1277,7 @@ namespace Java.Interop {
 			public override IList<Int64> CreateGenericValue (
 					ref JniObjectReference reference,
 					JniObjectReferenceOptions options,
-					[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+					[DynamicallyAccessedMembers (Constructors)]
 					Type? targetType)
 			{
 				return JavaArray<Int64>.CreateValue (
@@ -1470,7 +1470,7 @@ namespace Java.Interop {
 
 		public static object? CreateMarshaledValue (
 				IntPtr handle,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			return ArrayMarshaler.CreateValue (handle, targetType);
@@ -1481,7 +1481,7 @@ namespace Java.Interop {
 			public override IList<Single> CreateGenericValue (
 					ref JniObjectReference reference,
 					JniObjectReferenceOptions options,
-					[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+					[DynamicallyAccessedMembers (Constructors)]
 					Type? targetType)
 			{
 				return JavaArray<Single>.CreateValue (
@@ -1674,7 +1674,7 @@ namespace Java.Interop {
 
 		public static object? CreateMarshaledValue (
 				IntPtr handle,
-				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			return ArrayMarshaler.CreateValue (handle, targetType);
@@ -1685,7 +1685,7 @@ namespace Java.Interop {
 			public override IList<Double> CreateGenericValue (
 					ref JniObjectReference reference,
 					JniObjectReferenceOptions options,
-					[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+					[DynamicallyAccessedMembers (Constructors)]
 					Type? targetType)
 			{
 				return JavaArray<Double>.CreateValue (

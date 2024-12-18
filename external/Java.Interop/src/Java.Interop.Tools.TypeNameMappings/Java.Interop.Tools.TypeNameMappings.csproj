@@ -3,13 +3,11 @@
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <IsTrimmable>true</IsTrimmable>
-    <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
-    <EnableAotAnalyzer>true</EnableAotAnalyzer>
     <DefineConstants>$(DefineConstants);JCW_ONLY_TYPE_NAMES;HAVE_CECIL</DefineConstants>
   </PropertyGroup>
 
   <Import Project="..\..\TargetFrameworkDependentValues.props" />
+  <Import Project="..\..\build-tools\trim-analyzers\trim-analyzers.props" />
   <Import Project="..\..\build-tools\scripts\cecil.projitems" />
 
   <ItemGroup>

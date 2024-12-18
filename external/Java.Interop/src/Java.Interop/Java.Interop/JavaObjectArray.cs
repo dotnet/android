@@ -8,7 +8,7 @@ using System.Reflection;
 namespace Java.Interop
 {
 	public class JavaObjectArray<
-			[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+			[DynamicallyAccessedMembers (Constructors)]
 			T
 	>
 		: JavaArray<T>
@@ -171,7 +171,7 @@ namespace Java.Interop
 			public override IList<T> CreateGenericValue (
 					ref JniObjectReference reference,
 					JniObjectReferenceOptions options,
-					[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+					[DynamicallyAccessedMembers (Constructors)]
 					Type? targetType)
 			{
 				return JavaArray<T>.CreateValue (ref reference, options, targetType, (ref JniObjectReference h, JniObjectReferenceOptions t) => new JavaObjectArray<T> (ref h, t) {
@@ -203,7 +203,7 @@ namespace Java.Interop
 		partial class Arrays {
 
 			public static JavaObjectArray<T>? CreateMarshalObjectArray<
-					[DynamicallyAccessedMembers (JavaObject.ConstructorsAndInterfaces)]
+					[DynamicallyAccessedMembers (JavaObject.Constructors)]
 					T
 			> (
 					IEnumerable<T>? value)

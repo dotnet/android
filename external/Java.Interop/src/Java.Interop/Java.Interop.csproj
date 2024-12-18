@@ -14,15 +14,13 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
-    <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
-    <IsTrimmable>true</IsTrimmable>
-    <EnableAotAnalyzer>true</EnableAotAnalyzer>
     <MSBuildWarningsAsMessages>NU1702</MSBuildWarningsAsMessages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DefineConstants>DEBUG;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <Import Project="..\..\TargetFrameworkDependentValues.props" />
+  <Import Project="..\..\build-tools\trim-analyzers\trim-analyzers.props" />
   <PropertyGroup>
     <DefineConstants>INTEROP;FEATURE_JNIOBJECTREFERENCE_INTPTRS;$(JavaInteropDefineConstants)</DefineConstants>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework.ToLowerInvariant())\</IntermediateOutputPath>

@@ -9,7 +9,6 @@ namespace Java.Interop
 	unsafe public class JavaObject : IJavaPeerable
 	{
 		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-		internal const DynamicallyAccessedMemberTypes ConstructorsAndInterfaces = Constructors | DynamicallyAccessedMemberTypes.Interfaces;
 
 		readonly static JniPeerMembers _members = new JniPeerMembers ("java/lang/Object", typeof (JavaObject));
 
