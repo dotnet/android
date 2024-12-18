@@ -38,6 +38,10 @@
         Text="AndroidLatestUnstablePlatformId property must be set."
     />
     <Error
+        Condition=" '$(AndroidLatestUnstablePlatformId)' == '' "
+        Text="AndroidLatestUnstablePlatformId property must be set."
+    />
+    <Error
         Condition=" '$(WorkloadVersion)' == '' "
         Text="WorkloadVersion property must be set."
     />

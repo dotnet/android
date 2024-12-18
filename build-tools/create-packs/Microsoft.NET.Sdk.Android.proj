@@ -47,6 +47,7 @@ about the various Microsoft.Android workloads.
     <ItemGroup>
       <_WorkloadDepProp Include="AndroidLatestStablePlatformId=$(AndroidLatestStablePlatformId)" />
       <_WorkloadDepProp Include="AndroidLatestUnstablePlatformId=$(AndroidLatestUnstablePlatformId)" />
+      <_WorkloadDepProp Include="DotNetStableTargetFramework=$(DotNetStableTargetFramework)" />
       <_WorkloadDepProp Include="MicrosoftAndroidSdkOutDir=$(MicrosoftAndroidSdkOutDir)" />
       <_WorkloadDepProp Include="MonoOptionsVersion=$(MonoOptionsVersion)" />
       <_WorkloadDepProp Include="NewtonsoftJsonPackageVersion=$(NewtonsoftJsonPackageVersion)" />
