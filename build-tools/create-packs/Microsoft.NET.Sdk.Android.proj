@@ -26,6 +26,7 @@ about the various Microsoft.Android workloads.
   <Target Name="_GenerateXAWorkloadContent"
       DependsOnTargets="_GetDefaultPackageVersion;_GetLicense">
     <PropertyGroup>
+      <WorkloadDependenciesPath Condition="'$(WorkloadDependenciesPath)' == ''">$(OutputPath)workload-manifest\WorkloadDependencies.json</WorkloadDependenciesPath>
       <WorkloadManifestJsonPath Condition="'$(WorkloadManifestJsonPath)' == ''">$(OutputPath)workload-manifest\WorkloadManifest.json</WorkloadManifestJsonPath>
       <WorkloadManifestTargetsPath Condition="'$(WorkloadManifestTargetsPath)' == ''">$(OutputPath)workload-manifest\WorkloadManifest.targets</WorkloadManifestTargetsPath>
       <WorkloadVersion Condition="'$(WorkloadVersion)' == ''">$(AndroidPackVersionLong)</WorkloadVersion>
@@ -44,8 +45,26 @@ about the various Microsoft.Android workloads.
     </ReplaceFileContents>
 
     <ItemGroup>
+      <_WorkloadDepProp Include="AndroidLatestStablePlatformId=$(AndroidLatestStablePlatformId)" />
+      <_WorkloadDepProp Include="AndroidLatestUnstablePlatformId=$(AndroidLatestUnstablePlatformId)" />
+      <_WorkloadDepProp Include="DotNetStableTargetFramework=$(DotNetStableTargetFramework)" />
+      <_WorkloadDepProp Include="MicrosoftAndroidSdkOutDir=$(MicrosoftAndroidSdkOutDir)" />
+      <_WorkloadDepProp Include="MonoOptionsVersion=$(MonoOptionsVersion)" />
+      <_WorkloadDepProp Include="NewtonsoftJsonPackageVersion=$(NewtonsoftJsonPackageVersion)" />
+      <_WorkloadDepProp Include="WorkloadDependenciesPath=$(WorkloadDependenciesPath)" />
+      <_WorkloadDepProp Include="WorkloadVersion=$(WorkloadVersion)" />
+    </ItemGroup>
+
+    <MSBuild
+        Projects="$(MSBuildThisFileDirectory)/../../tools/workload-dependencies/WorkloadDependencies.proj"
+        Properties="@(_WorkloadDepProp)"
+        Targets="GenerateWorkloadDependencies"
+    />
+
+    <ItemGroup>
       <_PackageFiles Include="$(WorkloadManifestJsonPath)" PackagePath="data" />
       <_PackageFiles Include="$(WorkloadManifestTargetsPath)" PackagePath="data" />
+      <_PackageFiles Include="$(WorkloadDependenciesPath)" PackagePath="data" />
     </ItemGroup>
   </Target>
 
