@@ -65,22 +65,27 @@ namespace Xamarin.Android.Tasks
 				}
 				log.LogDebugMessage ($"    expected segment alignment of 0x{pageSize:x}, found 0x{segment64.Alignment:x}");
 
-				(string packageId, string packageVersion) = GetNugetPackageInfo ();
-				log.LogCodedWarning ("XA0141", Properties.Resources.XA0141, packageId, packageVersion, Path.GetFileName (path));
+				(string packageId, string packageVersion, string originalFile) = GetNugetPackageInfo ();
+				log.LogCodedWarning ("XA0141", Properties.Resources.XA0141, packageId, packageVersion, originalFile, Path.GetFileName (path));
 				break;
 			}
 
-			(string packageId, string packageVersion) GetNugetPackageInfo ()
+			(string packageId, string packageVersion, string originalFile) GetNugetPackageInfo ()
 			{
 				const string Unknown = "<unknown>";
 
 				if (item == null) {
-					return (Unknown, Unknown);
+					return (Unknown, Unknown, Unknown);
 				}
 
-				string? metaValue = item.GetMetadata ("NuGetPackageId");
+				string? metaValue = item.GetMetadata ("OriginalFile");
 				if (String.IsNullOrEmpty (metaValue)) {
-					return (Unknown, Unknown);
+					return (Unknown, Unknown, Unknown);
+				}
+				string originalFile = metaValue;
+				metaValue = item.GetMetadata ("NuGetPackageId");
+				if (String.IsNullOrEmpty (metaValue)) {
+					return (Unknown, Unknown, originalFile);
 				}
 
 				string id = metaValue;
@@ -92,7 +97,7 @@ namespace Xamarin.Android.Tasks
 					version = Unknown;
 				}
 
-				return (id, version);
+				return (id, version, originalFile);
 			}
 		}
 
