@@ -94,6 +94,7 @@ namespace Xamarin.Android.Tasks {
 		public bool ForceDebuggable { get; set; }
 		public string VersionName { get; set; }
 		public IVersionResolver VersionResolver { get; set; } = new MonoAndroidHelperVersionResolver ();
+		public bool NativeAot { get; set; }
 
 		string versionCode;
 
@@ -672,6 +673,11 @@ namespace Xamarin.Android.Tasks {
 
 		IList<string> AddMonoRuntimeProviders (XElement app)
 		{
+			if (NativeAot) {
+				//TODO: implement NativeAOT provider logic
+				return [];
+			}
+
 			app.Add (CreateMonoRuntimeProvider ("mono.MonoRuntimeProvider", null, --AppInitOrder));
 
 			var providerNames = new List<string> ();
