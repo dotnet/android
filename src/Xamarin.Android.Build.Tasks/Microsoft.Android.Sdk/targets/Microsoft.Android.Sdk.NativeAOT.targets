@@ -25,7 +25,9 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     </IlcCompileDependsOn>
   </PropertyGroup>
 
-  <Target Name="_AndroidBeforeIlcCompile" BeforeTargets="SetupProperties">
+  <Target Name="_AndroidBeforeIlcCompile"
+      DependsOnTargets="_PrepareLinking"
+      BeforeTargets="SetupProperties">
     <!-- Example settings from: https://github.com/jonathanpeppers/Android-NativeAOT/blob/ea69d122cdc7de67aa6a5db14b7e560763c63cdd/DotNet/libdotnet.targets -->
     <PropertyGroup>
       <_NdkSysrootAbi>aarch64-linux-android</_NdkSysrootAbi>
@@ -33,7 +35,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('windows')) ">windows-x86_64</_NdkPrebuiltAbi>
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('osx')) ">darwin-x86_64</_NdkPrebuiltAbi>
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('linux')) ">linux-x86_64</_NdkPrebuiltAbi>
-      <_NdkSysrootDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/sysroot/usr/lib/$(_NdkSysrootAbi)</_NdkSysrootDir>
+      <_NdkSysrootDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/sysroot/usr/lib/$(_NdkSysrootAbi)/</_NdkSysrootDir>
       <_NdkBinDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/bin/</_NdkBinDir>
       <CppCompilerAndLinker>$(_NdkBinDir)$(_NdkClangPrefix)clang++</CppCompilerAndLinker>
       <CppLinker>$(CppCompilerAndLinker)</CppLinker>
@@ -56,6 +58,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_targetOS>linux</_targetOS>
       <!-- HACK: prevents libSystem.Net.Security.Native.a from being added -->
       <_linuxLibcFlavor>bionic</_linuxLibcFlavor>
+      <!-- HACK: prevents: java.lang.UnsatisfiedLinkError: dlopen failed: cannot locate symbol "__start___modules" -->
+      <LinkerFlavor Condition=" '$(LinkerFlavor)' == '' ">lld</LinkerFlavor>
     </PropertyGroup>
   </Target>
 
@@ -76,6 +80,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <IlcReference Include="@(_AndroidILLinkAssemblies)" />
       <!-- Passes linked assemblies to outer MSBuild tasks/targets -->
       <ResolvedFileToPublish Include="@(IlcCompileInput);@(_AndroidILLinkAssemblies)" RuntimeIdentifier="$(_OriginalRuntimeIdentifier)" />
+      <!-- Include libc++ -->
+      <ResolvedFileToPublish Include="$(_NdkSysrootDir)libc++_shared.so" RuntimeIdentifier="$(_OriginalRuntimeIdentifier)" />
     </ItemGroup>
   </Target>
 
