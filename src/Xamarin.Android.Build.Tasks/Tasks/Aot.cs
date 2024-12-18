@@ -19,6 +19,7 @@ namespace Xamarin.Android.Tasks
 		Hybrid    = 0x0002,
 		Full      = 0x0003,
 		Interp    = 0x0004,
+		FullInterp = 0x0005,
 	}
 
 	public enum SequencePointsMode {
@@ -180,6 +181,10 @@ namespace Xamarin.Android.Tasks
 
 						case AotMode.Hybrid:
 							aotOptions.Add ("hybrid");
+							break;
+
+						case AotMode.FullInterp:
+							aotOptions.Add ("fullinterp");
 							break;
 					}
 
