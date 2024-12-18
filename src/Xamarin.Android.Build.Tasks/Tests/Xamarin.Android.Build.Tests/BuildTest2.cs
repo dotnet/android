@@ -129,6 +129,7 @@ namespace Xamarin.Android.Build.Tests
 
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			b.Output.AssertTargetIsNotSkipped ("_PrepareLinking");
 
 			string [] mono_classes = [
 				"Lmono/MonoRuntimeProvider;",
@@ -138,10 +139,22 @@ namespace Xamarin.Android.Build.Tests
 			];
 			string [] nativeaot_files = [
 				$"lib/arm64-v8a/lib{proj.ProjectName}.so",
+				"lib/arm64-v8a/libc++_shared.so",
 			];
 
 			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, proj.RuntimeIdentifier);
 			var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, proj.RuntimeIdentifier);
+
+			var linkedMonoAndroidAssembly = Path.Combine (intermediate, "linked", "Mono.Android.dll");
+			FileAssert.Exists (linkedMonoAndroidAssembly);
+			using (var assembly = AssemblyDefinition.ReadAssembly (linkedMonoAndroidAssembly)) {
+				var typeName = "Android.App.Activity";
+				var methodName = "GetOnCreate_Landroid_os_Bundle_Handler";
+				var type = assembly.MainModule.GetType (typeName);
+				Assert.IsNotNull (type, $"{linkedMonoAndroidAssembly} should contain {typeName}");
+				var method = type.Methods.FirstOrDefault (m => m.Name == methodName);
+				Assert.IsNotNull (method, $"{linkedMonoAndroidAssembly} should contain {typeName}.{methodName}");
+			}
 
 			var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
 			FileAssert.Exists (dexFile);
