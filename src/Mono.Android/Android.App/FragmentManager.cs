@@ -5,8 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 #if ANDROID_11
 namespace Android.App {
 	public partial class FragmentManager {
-		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-
 		public T? FindFragmentById<
 				[DynamicallyAccessedMembers (Constructors)]
 				T

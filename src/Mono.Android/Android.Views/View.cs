@@ -13,9 +13,6 @@ namespace Android.Views {
 #endif
 
 	public partial class View {
-
-		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-
 #if ANDROID_16
 		[Obsolete ("This method uses wrong enum type. Please use PerformAccessibilityAction(Action) instead.")]
 		public bool PerformAccessibilityAction (GlobalAction action, Bundle arguments)

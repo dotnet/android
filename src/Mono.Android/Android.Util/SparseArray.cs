@@ -9,7 +9,7 @@ namespace Android.Util
 {
 	[Register ("android/util/SparseArray", DoNotGenerateAcw=true)]
 	public partial class SparseArray<
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			[DynamicallyAccessedMembers (Constructors)]
 			E
 	> : SparseArray
 	{

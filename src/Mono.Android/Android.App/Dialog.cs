@@ -10,7 +10,7 @@ namespace Android.App {
 			: this (context, cancelable, new Android.Content.IDialogInterfaceOnCancelListenerImplementor () { Handler = cancelHandler }) {}
 
 		public T? FindViewById<
-				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				[DynamicallyAccessedMembers (Constructors)]
 				T
 		> (int id)
 			where T : Android.Views.View

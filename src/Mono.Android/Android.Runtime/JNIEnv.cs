@@ -322,6 +322,29 @@ namespace Android.Runtime {
 			}
 		}
 
+		internal static JniObjectReferenceOptions ToJniObjectReferenceOptions (JniHandleOwnership transfer)
+		{
+			JniObjectReferenceOptions options = default;
+			if (transfer.HasFlag (JniHandleOwnership.TransferLocalRef) ||
+					transfer.HasFlag (JniHandleOwnership.TransferGlobalRef))
+				options |= JniObjectReferenceOptions.CopyAndDispose;
+			if (transfer.HasFlag (JniHandleOwnership.DoNotRegister))
+				options |= JniObjectReferenceOptions.CopyAndDoNotRegister;
+			if (transfer == JniHandleOwnership.DoNotTransfer) // 0; can't use with .HasFlag()
+				options |= JniObjectReferenceOptions.Copy;
+
+			return options;
+		}
+
+		internal static JniObjectReference CreateJniObjectReference (IntPtr handle, JniHandleOwnership transfer)
+		{
+			if (transfer.HasFlag (JniHandleOwnership.TransferLocalRef))
+				return new JniObjectReference (handle, JniObjectReferenceType.Local);
+			if (transfer.HasFlag (JniHandleOwnership.TransferGlobalRef))
+				return new JniObjectReference (handle, JniObjectReferenceType.Global);
+			return new JniObjectReference (handle); // there be possible dragons here!
+		}
+
 		const int nameBufferLength = 1024;
 		[ThreadStatic] static char[]? nameBuffer;
 
@@ -704,7 +727,13 @@ namespace Android.Runtime {
 					AssertIsJavaObject (type);
 
 					IntPtr elem = GetObjectArrayElement (source, index);
-					return Java.Lang.Object.GetObject (elem, JniHandleOwnership.TransferLocalRef, type);
+					return GetObject (elem, type);
+
+					// FIXME: Since a Dictionary<Type, Func> is used here, the trimmer will not be able to properly analyze `Type t`
+					// error IL2111: Method 'lambda expression' with parameters or return value with `DynamicallyAccessedMembersAttribute` is accessed via reflection. Trimmer can't guarantee availability of the requirements of the method.
+					[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "FIXME: https://github.com/xamarin/xamarin-android/issues/8724")]
+					static object? GetObject (IntPtr e, Type t) =>
+						Java.Lang.Object.GetObject (e, JniHandleOwnership.TransferLocalRef, t);
 				} },
 				{ typeof (Array), (type, source, index) => {
 					IntPtr  elem      = GetObjectArrayElement (source, index);
