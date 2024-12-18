@@ -1,0 +1,85 @@
+<Project Sdk="Microsoft.Build.NoTargets">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ImportGroup Condition=" '$(MicrosoftAndroidSdkOutDir)' != '' ">
+    <Import
+        Condition="Exists('$(MicrosoftAndroidSdkOutDir)Xamarin.Installer.Common.props')"
+        Project="$(MicrosoftAndroidSdkOutDir)Xamarin.Installer.Common.props"
+    />
+    <Import Project="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Common.props" />
+  </ImportGroup>
+
+  <Target Name="_CheckDeps">
+    <Error
+        Condition=" '$(MicrosoftAndroidSdkOutDir)' == '' "
+        Text="MicrosoftAndroidSdkOutDir property must be set."
+    />
+    <Error
+        Condition=" !HasTrailingSlash('$(MicrosoftAndroidSdkOutDir)') "
+        Text="MicrosoftAndroidSdkOutDir property must end with directory separator char."
+    />
+    <Error
+        Condition=" !Exists('$(MicrosoftAndroidSdkOutDir)') "
+        Text="MicrosoftAndroidSdkOutDir property must exist."
+    />
+    <Error
+        Condition=" '$(WorkloadDependenciesPath)' == '' "
+        Text="WorkloadDependenciesPath property must be set."
+    />
+    <Error
+        Condition=" '$(AndroidLatestStablePlatformId)' == '' "
+        Text="AndroidLatestStablePlatformId property must be set."
+    />
+    <Error
+        Condition=" '$(AndroidLatestUnstablePlatformId)' == '' "
+        Text="AndroidLatestUnstablePlatformId property must be set."
+    />
+    <Error
+        Condition=" '$(AndroidLatestUnstablePlatformId)' == '' "
+        Text="AndroidLatestUnstablePlatformId property must be set."
+    />
+    <Error
+        Condition=" '$(WorkloadVersion)' == '' "
+        Text="WorkloadVersion property must be set."
+    />
+  </Target>
+
+  <Target Name="GenerateWorkloadDependencies"
+      DependsOnTargets="_CheckDeps">
+
+    <PropertyGroup>
+      <_AndroidPlatformSupportFeed>$(MSBuildThisFileDirectory)/../../external/android-platform-support/Feeds/AndroidManifestFeed_d17.12.xml</_AndroidPlatformSupportFeed>
+      <_Feed Condition=" Exists($(_AndroidPlatformSupportFeed)) ">$(_AndroidPlatformSupportFeed)</_Feed>
+      <_Feed Condition=" '$(_Feed)' == '' ">https://aka.ms/AndroidManifestFeed/d17-12</_Feed>
+      <_Project>$(MSBuildThisFileDirectory)workload-dependencies.csproj</_Project>
+      <WorkloadDependenciesPath Condition=" '$(WorkloadDependenciesPath)' == '' ">$(OutputPath)workload-manifest\WorkloadDependencies.json</WorkloadDependenciesPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_WorkloadDeps Include="--project &quot;$(_Project)&quot;" />
+      <_WorkloadDeps Include="-p:MonoOptionsVersion=$(MonoOptionsVersion)" />
+      <_WorkloadDeps Include="-p:NewtonsoftJsonPackageVersion=$(NewtonsoftJsonPackageVersion)" />
+      <_WorkloadDeps Include="--" />
+      <_WorkloadDeps Include="&quot;--feed=$(_Feed)&quot;" />
+      <_WorkloadDeps Include="-o &quot;$(WorkloadDependenciesPath)&quot;" />
+      <_WorkloadDeps Include="--build-tools-version=$(AndroidSdkBuildToolsVersion)" />
+      <_WorkloadDeps Include="--cmdline-tools-version=$(AndroidCommandLineToolsVersion)" />
+      <_WorkloadDeps Include="--jdk-version=$(JavaSdkVersion)" />
+      <_WorkloadDeps Include="--ndk-version=$(AndroidNdkVersion)" />
+      <_WorkloadDeps Include="--platform-tools-version=$(AndroidSdkPlatformToolsVersion)" />
+      <_WorkloadDeps Include="--platform-version=$(AndroidSdkPlatformVersion)" />
+      <_WorkloadDeps
+          Condition=" '$(AndroidLatestUnstablePlatformId)' != '$(AndroidLatestStablePlatformId)' "
+          Include="--preview-platform-version=$(AndroidLatestUnstablePlatformId)"
+      />
+      <_WorkloadDeps Include="--workload-version=$(WorkloadVersion)" />
+      <!-- $(AndroidSdkEmulatorVersion) is unversioned, so skip -->
+    </ItemGroup>
+
+    <Exec Command="dotnet run @(_WorkloadDeps, ' ')" />
+  </Target>
+
+</Project>
