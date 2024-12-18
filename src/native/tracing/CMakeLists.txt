@@ -62,7 +62,7 @@ target_link_options(
 target_link_libraries(
   ${LIB_NAME}
   PRIVATE
-  xa::shared-no-abi
+  xa::shared
   xa::unwind
   xa::runtime-base
   xa::java-interop

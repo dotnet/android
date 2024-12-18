@@ -95,7 +95,7 @@ MonodroidRuntime::thread_end ([[maybe_unused]] MonoProfiler *prof, [[maybe_unuse
 	if (r != JNI_OK) {
 #if DEBUG
 		/*
-		log_fatal (LOG_DEFAULT, "ERROR: Unable to detach current thread from the Java VM!");
+		log_fatal (LOG_DEFAULT, "ERROR: Unable to detach current thread from the Java VM!"sv);
 		 */
 #endif
 	}
@@ -174,15 +174,15 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 			fullpath.append (SharedConstants::DLL_EXTENSION);
 		}
 
-		log_debug (LOG_ASSEMBLY, "open_from_update_dir: trying to open assembly: %s\n", fullpath.get ());
+		log_debug (LOG_ASSEMBLY, "open_from_update_dir: trying to open assembly: {}", optional_string (fullpath.get ()));
 		if (Util::file_exists (fullpath.get ())) {
 			MonoImageOpenStatus status{};
 			result = mono_assembly_open_full (fullpath.get (), &status, 0);
 			if (result == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
-				log_warn (LOG_ASSEMBLY, "Failed to load managed assembly '%s'. %s", fullpath.get (), mono_image_strerror (status));
+				log_warn (LOG_ASSEMBLY, "Failed to load managed assembly '{}'. {}", optional_string (fullpath.get ()), mono_image_strerror (status));
 			}
 		} else {
-			log_warn (LOG_ASSEMBLY, "open_from_update_dir: assembly file DOES NOT EXIST");
+			log_warn (LOG_ASSEMBLY, "open_from_update_dir: assembly file DOES NOT EXIST"sv);
 		}
 		if (result != nullptr) {
 			// TODO: register .mdb, .pdb file
@@ -191,7 +191,7 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 	}
 
 	if (result != nullptr && Util::should_log (LOG_ASSEMBLY)) {
-		log_info_nocheck (LOG_ASSEMBLY, "open_from_update_dir: loaded assembly: %p\n", result);
+		log_info_nocheck_fmt (LOG_ASSEMBLY, "open_from_update_dir: loaded assembly: {:p}", reinterpret_cast<void*>(result));
 	}
 	return result;
 }
@@ -378,7 +378,7 @@ MonodroidRuntime::parse_gdb_options () noexcept
 			time_t secs = time (nullptr);
 
 			if (v + 10 < secs) {
-				log_warn (LOG_DEFAULT, "Found stale %s property with value '%s', not waiting.", SharedConstants::DEBUG_MONO_GDB_PROPERTY.data (), val.get ());
+				log_warn (LOG_DEFAULT, "Found stale {} property with value '{}', not waiting.", SharedConstants::DEBUG_MONO_GDB_PROPERTY.data (), val.get ());
 				do_wait = false;
 			}
 		}
@@ -392,7 +392,7 @@ bool
 MonodroidRuntime::parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> &runtime_args, RuntimeOptions *options) noexcept
 {
 	if (runtime_args.length () == 0) {
-		log_warn (LOG_DEFAULT, "runtime args empty");
+		log_warn (LOG_DEFAULT, "runtime args empty"sv);
 		return true;
 	}
 
@@ -422,7 +422,7 @@ MonodroidRuntime::parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER
 					switch (field) {
 						case 0uz: // host
 							if (address.empty ()) {
-								log_error (LOG_DEFAULT, "Invalid --debug argument for the host field (empty string)");
+								log_error (LOG_DEFAULT, "Invalid --debug argument for the host field (empty string)"sv);
 							} else {
 								host = Util::strdup_new (address.start (), address.length ());
 							}
@@ -430,32 +430,32 @@ MonodroidRuntime::parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER
 
 						case 1uz: // sdb_port
 							if (!address.to_integer (sdb_port)) {
-								log_error (LOG_DEFAULT, "Invalid --debug argument for the sdb_port field");
+								log_error (LOG_DEFAULT, "Invalid --debug argument for the sdb_port field"sv);
 							}
 							break;
 
 						case 2uz: // out_port
 							if (!address.to_integer (out_port)) {
-								log_error (LOG_DEFAULT, "Invalid --debug argument for the sdb_port field");
+								log_error (LOG_DEFAULT, "Invalid --debug argument for the sdb_port field"sv);
 							}
 							break;
 					}
 					field++;
 				}
 			} else if (!token.has_at ('\0', ARG_DEBUG.length ())) {
-				log_error (LOG_DEFAULT, "Invalid --debug argument.");
+				log_error (LOG_DEFAULT, "Invalid --debug argument."sv);
 				ret = false;
 				continue;
 			}
 
 			if (sdb_port < 0 || sdb_port > std::numeric_limits<unsigned short>::max ()) {
-				log_error (LOG_DEFAULT, "Invalid SDB port value %d", sdb_port);
+				log_error (LOG_DEFAULT, "Invalid SDB port value {}", sdb_port);
 				ret = false;
 				continue;
 			}
 
 			if (out_port > std::numeric_limits<unsigned short>::max ()) {
-				log_error (LOG_DEFAULT, "Invalid output port value %d", out_port);
+				log_error (LOG_DEFAULT, "Invalid output port value {}", out_port);
 				ret = false;
 				continue;
 			}
@@ -468,19 +468,19 @@ MonodroidRuntime::parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER
 			options->out_port = out_port == -1 ? 0 : static_cast<uint16_t>(out_port);
 		} else if (token.starts_with (ARG_TIMEOUT)) {
 			if (!token.to_integer (options->timeout_time, ARG_TIMEOUT.length ())) {
-				log_error (LOG_DEFAULT, "Invalid --timeout argument.");
+				log_error (LOG_DEFAULT, "Invalid --timeout argument."sv);
 				ret = false;
 			}
 		} else if (token.starts_with (ARG_SERVER)) {
 			options->server = token.has_at ('y', ARG_SERVER.length ()) || token.has_at ('Y', ARG_SERVER.length ());
 		} else if (token.starts_with (ARG_LOGLEVEL)) {
 			if (!token.to_integer (options->loglevel, ARG_LOGLEVEL.length ())) {
-				log_error (LOG_DEFAULT, "Invalid --loglevel argument.");
+				log_error (LOG_DEFAULT, "Invalid --loglevel argument."sv);
 				ret = false;
 			}
 		} else {
 			static_local_string<SMALL_STRING_PARSE_BUFFER_LEN> arg (token);
-			log_error (LOG_DEFAULT, "Unknown runtime argument: '%s'", arg.get ());
+			log_error (LOG_DEFAULT, "Unknown runtime argument: '{}'", optional_string (arg.get ()));
 			ret = false;
 		}
 	}
@@ -509,9 +509,9 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 	cur_time = time (nullptr);
 
 	if (!parse_runtime_args (runtime_args, &options)) {
-		log_error (LOG_DEFAULT, "Failed to parse runtime args: '%s'", runtime_args.get ());
+		log_error (LOG_DEFAULT, "Failed to parse runtime args: '{}'", optional_string (runtime_args.get ()));
 	} else if (options.debug && cur_time > options.timeout_time) {
-		log_warn (LOG_DEBUGGER, "Not starting the debugger as the timeout value has been reached; current-time: %lli  timeout: %lli", cur_time, options.timeout_time);
+		log_warn (LOG_DEBUGGER, "Not starting the debugger as the timeout value has been reached; current-time: {}; timeout: {}", cur_time, options.timeout_time);
 	} else if (options.debug && cur_time <= options.timeout_time) {
 		EmbeddedAssemblies::set_register_debug_symbols (true);
 
@@ -537,15 +537,15 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 
 		// this text is used in unit tests to check the debugger started
 		// do not change it without updating the test.
-		log_warn (LOG_DEBUGGER, "Trying to initialize the debugger with options: %s", debug_arg);
+		log_warn (LOG_DEBUGGER, "Trying to initialize the debugger with options: {}", optional_string (debug_arg));
 
 		if (options.out_port > 0) {
 			int sock = socket (PF_INET, SOCK_STREAM, IPPROTO_TCP);
 			if (sock < 0) {
 				Helpers::abort_application (
 					LOG_DEBUGGER,
-					Util::monodroid_strdup_printf (
-						"Could not construct a socket for stdout and stderr; does your app have the android.permission.INTERNET permission? %s",
+					std::format (
+						"Could not construct a socket for stdout and stderr; does your app have the android.permission.INTERNET permission? {}",
 						strerror (errno)
 					)
 				);
@@ -561,22 +561,22 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 			if ((r = inet_pton (AF_INET, options.host, &addr.sin_addr)) != 1) {
 				Helpers::abort_application (
 					LOG_DEBUGGER,
-					Util::monodroid_strdup_printf (
-						"Could not setup a socket for stdout and stderr: %s",
-						r == -1 ? strerror (errno) : "address not parseable in the specified address family"
+					std::format (
+						"Could not setup a socket for stdout and stderr: {}",
+						r == -1 ? strerror (errno) : "address not parseable in the specified address family"sv
 					)
 				);
 			}
 
 			if (options.server) {
 				int accepted = monodroid_debug_accept (sock, addr);
-				log_warn (LOG_DEBUGGER, "Accepted stdout connection: %d", accepted);
+				log_warn (LOG_DEBUGGER, "Accepted stdout connection: {}", accepted);
 				if (accepted < 0) {
 					Helpers::abort_application (
 						LOG_DEBUGGER,
-						Util::monodroid_strdup_printf (
-							"Error accepting stdout and stderr (%s:%d): %s",
-							options.host,
+						std::format (
+							"Error accepting stdout and stderr ({}:{}): {}",
+							optional_string (options.host),
 							options.out_port,
 							strerror (errno)
 						)
@@ -589,9 +589,9 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 				if (monodroid_debug_connect (sock, addr) != 1) {
 					Helpers::abort_application (
 						LOG_DEBUGGER,
-						Util::monodroid_strdup_printf (
-							"Error connecting stdout and stderr (%s:%d): %s",
-							options.host,
+						std::format (
+							"Error connecting stdout and stderr ({}:{}): {}",
+							optional_string (options.host),
 							options.out_port,
 							strerror (errno)
 						)
@@ -651,7 +651,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 	parse_gdb_options ();
 
 	if (wait_for_gdb) {
-		log_warn (LOG_DEFAULT, "Waiting for gdb to attach...");
+		log_warn (LOG_DEFAULT, "Waiting for gdb to attach..."sv);
 		while (monodroid_gdb_wait) {
 			sleep (1);
 		}
@@ -662,7 +662,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 	if (AndroidSystem::monodroid_get_system_property (SharedConstants::DEBUG_MONO_RUNTIME_ARGS_PROPERTY, prop_val) > 0) {
 		char **ptr;
 
-		log_warn (LOG_DEBUGGER, "passing '%s' as extra arguments to the runtime.\n", prop_val.get ());
+		log_warn (LOG_DEBUGGER, "passing '{}' as extra arguments to the runtime.", optional_string (prop_val.get ()));
 
 		char **args = Util::monodroid_strsplit (prop_val.get (), " ", 0);
 		int argc = 0;
@@ -729,17 +729,19 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 
 	if (user_assemblies_count == 0 && AndroidSystem::count_override_assemblies () == 0 && !is_running_on_desktop) {
 #if defined (DEBUG)
-		log_fatal (LOG_DEFAULT, "No assemblies found in '%s' or '%s'. Assuming this is part of Fast Deployment. Exiting...",
-		           AndroidSystem::override_dirs [0],
-		           (AndroidSystem::override_dirs.size () > 1 && AndroidSystem::override_dirs [1] != nullptr) ? AndroidSystem::override_dirs [1] : "<unavailable>");
+		log_fatal (LOG_DEFAULT,
+			"No assemblies found in '{}' or '{}'. Assuming this is part of Fast Deployment. Exiting...",
+			optional_string (AndroidSystem::override_dirs [0]),
+			(AndroidSystem::override_dirs.size () > 1 && AndroidSystem::override_dirs [1] != nullptr) ? optional_string (AndroidSystem::override_dirs [1]) : "<unavailable>"
+		);
 #else
-		log_fatal (LOG_DEFAULT, "No assemblies (or assembly blobs) were found in the application APK file(s) or on the filesystem");
+		log_fatal (LOG_DEFAULT, "No assemblies (or assembly blobs) were found in the application APK file(s) or on the filesystem"sv);
 #endif
 		constexpr const char *assemblies_prefix = EmbeddedAssemblies::get_assemblies_prefix ().data ();
 		Helpers::abort_application (
-			Util::monodroid_strdup_printf (
-				"ALL entries in APK named `%s` MUST be STORED. Gradle's minification may COMPRESS such entries.",
-				assemblies_prefix
+			std::format (
+				"ALL entries in APK named `{}` MUST be STORED. Gradle's minification may COMPRESS such entries.",
+				optional_string (assemblies_prefix)
 			)
 		);
 	}
@@ -854,7 +856,7 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 	// GC threshold is 90% of the max GREF count
 	init.grefGcThreshold        = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
 
-	log_info (LOG_GC, "GREF GC Threshold: %i", init.grefGcThreshold);
+	log_info (LOG_GC, "GREF GC Threshold: {}", init.grefGcThreshold);
 
 	init.grefClass = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_Class", true);
 	Class_getName  = env->GetMethodID (init.grefClass, "getName", "()Ljava/lang/String;");
@@ -931,7 +933,7 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 
 	osBridge.initialize_on_runtime_init (env, runtimeClass);
 
-	log_debug (LOG_DEFAULT, "Calling into managed runtime init");
+	log_debug (LOG_DEFAULT, "Calling into managed runtime init"sv);
 
 	size_t native_to_managed_index;
 	if (FastTiming::enabled ()) [[unlikely]] {
@@ -940,7 +942,7 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 
 	auto initialize = reinterpret_cast<jnienv_initialize_fn> (mono_method_get_unmanaged_callers_only_ftnptr (method, &error));
 	if (initialize == nullptr) {
-		log_fatal (LOG_DEFAULT, "Failed to get pointer to Initialize. Mono error: %s", mono_error_get_message (&error));
+		log_fatal (LOG_DEFAULT, "Failed to get pointer to Initialize. Mono error: {}", optional_string (mono_error_get_message (&error)));
 	}
 
 	abort_unless (
@@ -996,7 +998,7 @@ MonodroidRuntime::set_environment_variable_for_directory (const char *name, jstr
 	if (createDirectory) {
 		int rv = Util::create_directory (value.get_cstr (), mode);
 		if (rv < 0 && errno != EEXIST)
-			log_warn (LOG_DEFAULT, "Failed to create directory for environment variable %s. %s", name, strerror (errno));
+			log_warn (LOG_DEFAULT, "Failed to create directory for environment variable {}. {}", optional_string (name), strerror (errno));
 	}
 	setenv (name, value.get_cstr (), 1);
 }
@@ -1006,10 +1008,10 @@ MonodroidRuntime::create_xdg_directory (jstring_wrapper& home, size_t home_len, 
 {
 	static_local_string<SENSIBLE_PATH_MAX> dir (home_len + relative_path.length ());
 	Util::path_combine (dir, home.get_cstr (), home_len, relative_path.data (), relative_path.length ());
-	log_debug (LOG_DEFAULT, "Creating XDG directory: %s", dir.get ());
+	log_debug (LOG_DEFAULT, "Creating XDG directory: {}", optional_string (dir.get ()));
 	int rv = Util::create_directory (dir.get (), DEFAULT_DIRECTORY_MODE);
 	if (rv < 0 && errno != EEXIST)
-		log_warn (LOG_DEFAULT, "Failed to create XDG directory %s. %s", dir.get (), strerror (errno));
+		log_warn (LOG_DEFAULT, "Failed to create XDG directory {}. {}", optional_string (dir.get ()), strerror (errno));
 	if (!environment_variable_name.empty ()) {
 		setenv (environment_variable_name.data (), dir.get (), 1);
 	}
@@ -1038,7 +1040,7 @@ MonodroidRuntime::set_debug_env_vars (void) noexcept
 		return;
 
 	auto log_envvar = [](const char *name, const char *v) {
-		log_debug (LOG_DEFAULT, "Env variable '%s' set to '%s'.", name, v);
+		log_debug (LOG_DEFAULT, "Env variable '{}' set to '{}'.", optional_string (name), optional_string (v));
 	};
 
 	string_segment arg_token;
@@ -1058,7 +1060,7 @@ MonodroidRuntime::set_debug_env_vars (void) noexcept
 			log_envvar (arg.get (), one.data ());
 		} else if (index == 0) {
 			// ’=value’
-			log_warn (LOG_DEFAULT, "Attempt to set environment variable without specifying name: '%s'", arg.get ());
+			log_warn (LOG_DEFAULT, "Attempt to set environment variable without specifying name: '{}'", optional_string (arg.get ()));
 		} else {
 			// ’name=value’
 			arg[index] = '\0';
@@ -1138,10 +1140,10 @@ MonodroidRuntime::set_profile_options () noexcept
 			.append (output_path.get (), output_path.length ());
 	}
 	if (Util::create_directory (AndroidSystem::override_dirs[0], 0) < 0) {
-		log_warn (LOG_DEFAULT, "Failed to create directory '%s'. %s", AndroidSystem::override_dirs[0], std::strerror (errno));
+		log_warn (LOG_DEFAULT, "Failed to create directory '{}'. {}", optional_string (AndroidSystem::override_dirs[0]), std::strerror (errno));
 	}
 
-	log_warn (LOG_DEFAULT, "Initializing profiler with options: %s", value.get ());
+	log_warn (LOG_DEFAULT, "Initializing profiler with options: {}", optional_string (value.get ()));
 	debug.monodroid_profiler_load (AndroidSystem::get_runtime_libdir (), value.get (), output_path.get ());
 }
 
@@ -1155,7 +1157,7 @@ MonodroidRuntime::load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, jst
 
 	const char *assm_name = assembly.get_cstr ();
 	if (assm_name == nullptr) [[unlikely]] {
-		log_warn (LOG_ASSEMBLY, "Unable to load assembly into ALC, name is null");
+		log_warn (LOG_ASSEMBLY, "Unable to load assembly into ALC, name is null"sv);
 		return;
 	}
 
@@ -1187,7 +1189,7 @@ MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly) 
 
 	const char *assm_name = assembly.get_cstr ();
 	if (assm_name == nullptr) [[unlikely]] {
-		log_warn (LOG_ASSEMBLY, "Unable to load assembly into AppDomain, name is null");
+		log_warn (LOG_ASSEMBLY, "Unable to load assembly into AppDomain, name is null"sv);
 		return;
 	}
 
@@ -1268,7 +1270,7 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 	abort_unless (default_alc != nullptr, "Default AssemblyLoadContext not found");
 
 	EmbeddedAssemblies::install_preload_hooks_for_alc ();
-	log_debug (LOG_ASSEMBLY, "ALC hooks installed");
+	log_debug (LOG_ASSEMBLY, "ALC hooks installed"sv);
 
 	bool preload = (AndroidSystem::is_assembly_preload_enabled () || (is_running_on_desktop && force_preload_assemblies));
 
@@ -1466,7 +1468,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	if (runtimeNativeLibDir != nullptr) {
 		jstr = runtimeNativeLibDir;
 		AndroidSystem::set_runtime_libdir (strdup (jstr.get_cstr ()));
-		log_debug (LOG_DEFAULT, "Using runtime path: %s", AndroidSystem::get_runtime_libdir ());
+		log_debug (LOG_DEFAULT, "Using runtime path: {}", optional_string (AndroidSystem::get_runtime_libdir ()));
 	}
 
 	AndroidSystem::setup_process_args (runtimeApks);
@@ -1480,25 +1482,25 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	debug.start_debugging_and_profiling ();
 #endif
 
-	log_debug (LOG_DEFAULT, "Probing for Mono AOT mode\n");
+	log_debug (LOG_DEFAULT, "Probing for Mono AOT mode"sv);
 
 	MonoAotMode mode = MonoAotMode::MONO_AOT_MODE_NONE;
 	if (AndroidSystem::is_mono_aot_enabled ()) {
 		mode = AndroidSystem::get_mono_aot_mode ();
 		if (mode != MonoAotMode::MONO_AOT_MODE_INTERP_ONLY) {
-			log_debug (LOG_DEFAULT, "Enabling AOT mode in Mono");
+			log_debug (LOG_DEFAULT, "Enabling AOT mode in Mono"sv);
 		} else {
-			log_debug (LOG_DEFAULT, "Enabling Mono Interpreter");
+			log_debug (LOG_DEFAULT, "Enabling Mono Interpreter"sv);
 		}
 	}
 	mono_jit_set_aot_mode (mode);
 
-	log_debug (LOG_DEFAULT, "Probing if we should use LLVM\n");
+	log_debug (LOG_DEFAULT, "Probing if we should use LLVM"sv);
 
 	if (AndroidSystem::is_mono_llvm_enabled ()) {
 		char *args [1];
 		args[0] = const_cast<char*> ("--llvm");
-		log_debug (LOG_DEFAULT, "Enabling LLVM mode in Mono\n");
+		log_debug (LOG_DEFAULT, "Enabling LLVM mode in Mono"sv);
 		mono_jit_parse_options (1,  args);
 		mono_set_use_llvm (true);
 	}
@@ -1529,9 +1531,9 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	}
 
 	if (Util::should_log (LOG_DEFAULT)) [[unlikely]] {
-		log_info_nocheck (
+		log_info_nocheck_fmt (
 			LOG_DEFAULT,
-			".NET for Android version: %s (%s; %s); built on %s; NDK version: %s; API level: %s; MonoVM version: %s",
+			".NET for Android version: {} ({}; {}); built on {}; NDK version: {}; API level: {}; MonoVM version: {}",
 			BuildInfo::xa_version.data (),
 			BuildInfo::architecture.data (),
 			BuildInfo::kind.data (),
@@ -1661,13 +1663,13 @@ MonodroidRuntime::get_java_class_name_for_TypeManager (jclass klass) noexcept
 	JNIEnv *env = osBridge.ensure_jnienv ();
 	jstring name = reinterpret_cast<jstring> (env->CallObjectMethod (klass, Class_getName));
 	if (name == nullptr) {
-		log_error (LOG_DEFAULT, "Failed to obtain Java class name for object at %p", klass);
+		log_error (LOG_DEFAULT, "Failed to obtain Java class name for object at {:p}", reinterpret_cast<void*>(klass));
 		return nullptr;
 	}
 
 	const char *mutf8 = env->GetStringUTFChars (name, nullptr);
 	if (mutf8 == nullptr) {
-		log_error (LOG_DEFAULT, "Failed to convert Java class name to UTF8 (out of memory?)");
+		log_error (LOG_DEFAULT, "Failed to convert Java class name to UTF8 (out of memory?)"sv);
 		env->DeleteLocalRef (name);
 		return nullptr;
 	}
