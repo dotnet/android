@@ -100,10 +100,11 @@ stages:
       inputs:
         forceReinstallCredentialProvider: true
 
-    - template: yaml-templates/run-xaprepare.yaml
-      parameters:
-        displayName: update mono
-        arguments: --s=UpdateMono
+    - script: dotnet tool update -v:n boots --version 1.1.0.36 --add-source "https://api.nuget.org/v3/index.json" --global
+      displayName: Install boots
+
+    - script: boots https://download.mono-project.com/archive/6.12.0/macos-10-universal/MonoFramework-MDK-6.12.0.188.macos10.xamarin.universal.pkg
+      displayName: Install Mono
 
     - script: make prepare CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
       workingDirectory: $(Build.SourcesDirectory)
@@ -115,17 +116,11 @@ stages:
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make update-api-docs
 
-    - script: >
-        mkdir -p $(Build.StagingDirectory)/docs-binaries &&
-        ln $(Build.SourcesDirectory)/bin/$(XA.Build.Configuration)/lib/xamarin.android/xbuild-frameworks/Microsoft.Android/34/*.dll $(Build.StagingDirectory)/docs-binaries/ &&
-        ln $(Build.SourcesDirectory)/bin/$(XA.Build.Configuration)/lib/xamarin.android/xbuild-frameworks/Microsoft.Android/34/*.xml $(Build.StagingDirectory)/docs-binaries/
-      displayName: copy docs files
-
     - task: PublishPipelineArtifact@1
       displayName: upload docs files
       inputs:
         artifactName: Binaries
-        targetPath: $(Build.StagingDirectory)/docs-binaries
+        targetPath: $(Build.SourcesDirectory)/src/Mono.Android/obj/docs-gen-temp
 
     - script: >
         mkdir -p $(Build.StagingDirectory)/api-doc-diff &&
