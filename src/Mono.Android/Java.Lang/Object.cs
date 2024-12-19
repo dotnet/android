@@ -286,10 +286,13 @@ namespace Java.Lang {
 
 		internal static IJavaPeerable? GetObject (IntPtr handle, JniHandleOwnership transfer, Type? type = null)
 		{
+			Logger.Log (LogLevel.Info, "monodroid", FormattableString.Invariant ($"Java.Lang.Object.GetObject {handle} {type}"));
+
 			if (handle == IntPtr.Zero)
 				return null;
 
 			var r = PeekObject (handle, type);
+			Logger.Log (LogLevel.Info, "monodroid", FormattableString.Invariant ($"PeekedObject {handle} {type} r={r}"));
 			if (r != null) {
 				JNIEnv.DeleteRef (handle, transfer);
 				return r;
