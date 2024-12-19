@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">HelloNativeAOT</string>
+    <string name="app_text">Hello, NativeAOT on Android!</string>
+</resources>
