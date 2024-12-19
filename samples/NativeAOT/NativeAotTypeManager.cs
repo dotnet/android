@@ -24,14 +24,6 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 	public NativeAotTypeManager ()
 	{
 		AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"# jonp: NativeAotTypeManager()");
-
-		// TODO: should eventually be refactored in Mono.Android.dll
-		var jniToManaged = TypeManagerMapDictionaries.JniToManaged;
-		var managedToJni = TypeManagerMapDictionaries.ManagedToJni;
-		foreach (var pair in typeMappings) {
-			jniToManaged [pair.Key] = pair.Value;
-			managedToJni [pair.Value] = pair.Key;
-		}
 	}
 
 	public override void RegisterNativeMembers (
