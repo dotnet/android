@@ -79,7 +79,7 @@ namespace Android.Runtime
 		internal static void InitializeNativeAot (JniRuntime runtime)
 		{
 			androidRuntime = runtime;
-			runtime.ValueManager = AndroidValueManager = new AndroidValueManager ();
+			AndroidValueManager = new AndroidValueManager ();
 		}
 
 		[UnmanagedCallersOnly]

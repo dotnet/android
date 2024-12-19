@@ -41,6 +41,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <CppCompilerAndLinker>$(_NdkBinDir)$(_NdkClangPrefix)clang++</CppCompilerAndLinker>
       <CppLinker>$(CppCompilerAndLinker)</CppLinker>
       <ObjCopyName>$(_NdkBinDir)llvm-objcopy</ObjCopyName>
+      <ObjCopyName Condition=" $([MSBuild]::IsOSPlatform('windows')) ">$(ObjCopyName).exe</ObjCopyName>
 
       <!-- Example settings from: https://github.com/xamarin/xamarin-macios/blob/c43d4ea40bc777969e3b158cf46446df292d8449/dotnet/targets/Xamarin.Shared.Sdk.targets#L541-L550 -->
       <RunILLink>true</RunILLink>
