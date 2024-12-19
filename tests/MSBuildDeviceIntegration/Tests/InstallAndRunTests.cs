@@ -1275,5 +1275,16 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			RunProjectAndAssert (proj, builder);
 		}
 
+		[Test]
+		public void NativeAOTSample ()
+		{
+			var projectDirectory = Path.Combine (XABuildPaths.TopDirectory, "samples", "NativeAOT");
+			var dotnet = new DotNetCLI (Path.Combine (projectDirectory, "NativeAOT.csproj"));
+			Assert.IsTrue (dotnet.Build (target: "Run", parameters: [$"AndroidNdkDirectory={AndroidNdkPath}"]), "`dotnet build -t:Run` should succeed");
+
+			bool didLaunch = WaitForActivityToStart ("my", "MainActivity",
+				Path.Combine (projectDirectory, "logcat.log"), 30);
+			Assert.IsTrue (didLaunch, "Activity should have started.");
+		}
 	}
 }
