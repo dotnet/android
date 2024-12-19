@@ -38,9 +38,6 @@ public class CollectAssemblyFilesForArchive : AndroidTask
 	public string IntermediateOutputPath { get; set; } = "";
 
 	[Required]
-	public string ProjectFullPath { get; set; } = "";
-
-	[Required]
 	public ITaskItem [] ResolvedFrameworkAssemblies { get; set; } = [];
 
 	[Required]
@@ -58,26 +55,16 @@ public class CollectAssemblyFilesForArchive : AndroidTask
 	{
 		var files = new PackageFileListBuilder ();
 
-		DSOWrapperGenerator.Config dsoWrapperConfig = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, IntermediateOutputPath);
-		bool compress = !IncludeDebugSymbols && EnableCompression;
-		IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>? compressedAssembliesInfo = null;
+		var dsoWrapperConfig = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, IntermediateOutputPath);
 
-		if (compress) {
-			string key = CompressedAssemblyInfo.GetKey (ProjectFullPath);
-			Log.LogDebugMessage ($"Retrieving assembly compression info with key '{key}'");
-			compressedAssembliesInfo = BuildEngine4.UnregisterTaskObjectAssemblyLocal<IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>> (key, RegisteredTaskObjectLifetime.Build);
-			if (compressedAssembliesInfo == null)
-				throw new InvalidOperationException ($"Assembly compression info not found for key '{key}'. Compression will not be performed.");
-		}
-
-		AddAssemblies (dsoWrapperConfig, files, IncludeDebugSymbols, compress, compressedAssembliesInfo, assemblyStoreApkName: null);
+		AddAssemblies (dsoWrapperConfig, files, assemblyStoreApkName: null);
 
 		FilesToAddToArchive = files.ToArray ();
 
 		return !Log.HasLoggedErrors;
 	}
 
-	void AddAssemblies (DSOWrapperGenerator.Config dsoWrapperConfig, PackageFileListBuilder files, bool debug, bool compress, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>? compressedAssembliesInfo, string? assemblyStoreApkName)
+	void AddAssemblies (DSOWrapperGenerator.Config dsoWrapperConfig, PackageFileListBuilder files, string? assemblyStoreApkName)
 	{
 		string compressedOutputDir = Path.GetFullPath (Path.Combine (Path.GetDirectoryName (ApkOutputPath), "..", "lz4"));
 		AssemblyStoreBuilder? storeBuilder = null;
@@ -87,10 +74,10 @@ public class CollectAssemblyFilesForArchive : AndroidTask
 		}
 
 		// Add user assemblies
-		AssemblyPackagingHelper.AddAssembliesFromCollection (Log, SupportedAbis, ResolvedUserAssemblies, (TaskLoggingHelper log, AndroidTargetArch arch, ITaskItem assembly) => DoAddAssembliesFromArchCollection (log, arch, assembly, dsoWrapperConfig, files, debug, compress, compressedAssembliesInfo, compressedOutputDir, storeBuilder));
+		AssemblyPackagingHelper.AddAssembliesFromCollection (Log, SupportedAbis, ResolvedUserAssemblies, (TaskLoggingHelper log, AndroidTargetArch arch, ITaskItem assembly) => DoAddAssembliesFromArchCollection (log, arch, assembly, dsoWrapperConfig, files, storeBuilder));
 
 		// Add framework assemblies
-		AssemblyPackagingHelper.AddAssembliesFromCollection (Log, SupportedAbis, ResolvedFrameworkAssemblies, (TaskLoggingHelper log, AndroidTargetArch arch, ITaskItem assembly) => DoAddAssembliesFromArchCollection (log, arch, assembly, dsoWrapperConfig, files, debug, compress, compressedAssembliesInfo, compressedOutputDir, storeBuilder));
+		AssemblyPackagingHelper.AddAssembliesFromCollection (Log, SupportedAbis, ResolvedFrameworkAssemblies, (TaskLoggingHelper log, AndroidTargetArch arch, ITaskItem assembly) => DoAddAssembliesFromArchCollection (log, arch, assembly, dsoWrapperConfig, files, storeBuilder));
 
 		if (!UseAssemblyStore) {
 			return;
@@ -115,16 +102,17 @@ public class CollectAssemblyFilesForArchive : AndroidTask
 		}
 	}
 
-	void DoAddAssembliesFromArchCollection (TaskLoggingHelper log, AndroidTargetArch arch, ITaskItem assembly, DSOWrapperGenerator.Config dsoWrapperConfig, PackageFileListBuilder files, bool debug, bool compress, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>? compressedAssembliesInfo, string compressedOutputDir, AssemblyStoreBuilder? storeBuilder)
+	void DoAddAssembliesFromArchCollection (TaskLoggingHelper log, AndroidTargetArch arch, ITaskItem assembly, DSOWrapperGenerator.Config dsoWrapperConfig, PackageFileListBuilder files, AssemblyStoreBuilder? storeBuilder)
 	{
 		// In the "all assemblies are per-RID" world, assemblies, pdb and config are disguised as shared libraries (that is,
 		// their names end with the .so extension) so that Android allows us to put them in the `lib/{ARCH}` directory.
 		// For this reason, they have to be treated just like other .so files, as far as compression rules are concerned.
 		// Thus, we no longer just store them in the apk but we call the `GetCompressionMethod` method to find out whether
 		// or not we're supposed to compress .so files.
-		var sourcePath = CompressAssembly (assembly, compress, compressedAssembliesInfo, compressedOutputDir);
+		var sourcePath = assembly.GetMetadataOrDefault ("CompressedAssembly", assembly.ItemSpec);
+
 		if (UseAssemblyStore) {
-			storeBuilder!.AddAssembly (sourcePath, assembly, includeDebugSymbols: debug);
+			storeBuilder!.AddAssembly (sourcePath, assembly, includeDebugSymbols: IncludeDebugSymbols);
 			return;
 		}
 
@@ -138,7 +126,7 @@ public class CollectAssemblyFilesForArchive : AndroidTask
 		AddAssemblyConfigEntry (dsoWrapperConfig, files, arch, assemblyDirectory, config);
 
 		// Try to add symbols if Debug
-		if (!debug) {
+		if (!IncludeDebugSymbols) {
 			return;
 		}
 
@@ -205,16 +193,6 @@ public class CollectAssemblyFilesForArchive : AndroidTask
 		string wrappedConfigFile = DSOWrapperGenerator.WrapIt (Log, dsoWrapperConfig, arch, configFile, Path.GetFileName (inArchivePath));
 
 		files.AddItem (wrappedConfigFile, inArchivePath);
-	}
-
-	string CompressAssembly (ITaskItem assembly, bool compress, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>? compressedAssembliesInfo, string compressedOutputDir)
-	{
-		if (!compress) {
-			return assembly.ItemSpec;
-		}
-
-		// NRT: compressedAssembliesInfo is guaranteed to be non-null if compress is true
-		return AssemblyCompression.Compress (Log, assembly, compressedAssembliesInfo!, compressedOutputDir);
 	}
 
 	static string MakeArchiveLibPath (string abi, string fileName) => MonoAndroidHelper.MakeZipArchivePath (ArchiveLibPath, abi, fileName);

@@ -380,6 +380,16 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		public static bool LogIfReferenceAssembly (ITaskItem assembly, TaskLoggingHelper log)
+		{
+			if (IsReferenceAssembly (assembly.ItemSpec, log)) {
+				log.LogCodedWarning ("XA0107", assembly.ItemSpec, 0, Properties.Resources.XA0107, assembly.ItemSpec);
+				return true;
+			}
+
+			return false;
+		}
+
 		public static bool IsForceRetainedAssembly (string assembly)
 		{
 			switch (assembly) {
