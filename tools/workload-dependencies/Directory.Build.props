@@ -5,4 +5,7 @@
     This is so that we can cleanly import Xamarin.Installer.Common.props and
     Xamarin.Android.Common.props from WorkloadDependencies.proj.
     -->
+  <PropertyGroup>
+    <DotNetStableTargetFramework>net9.0</DotNetStableTargetFramework>
+  </PropertyGroup>
 </Project>
