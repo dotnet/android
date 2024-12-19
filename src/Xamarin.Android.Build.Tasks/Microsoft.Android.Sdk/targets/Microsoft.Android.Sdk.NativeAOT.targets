@@ -62,6 +62,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_targetOS>linux</_targetOS>
       <!-- HACK: prevents libSystem.Net.Security.Native.a from being added -->
       <_linuxLibcFlavor>bionic</_linuxLibcFlavor>
+      <!-- HACK: prevents: java.lang.UnsatisfiedLinkError: dlopen failed: cannot locate symbol "__start___modules" -->
+      <LinkerFlavor Condition=" '$(LinkerFlavor)' == '' ">lld</LinkerFlavor>
     </PropertyGroup>
   </Target>
 
@@ -84,6 +86,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <TrimmerRootAssembly Include="@(_AndroidILLinkAssemblies->'%(Filename)')" Exclude="System.Private.CoreLib" TrimMode="All" />
       <!-- Passes linked assemblies to outer MSBuild tasks/targets -->
       <ResolvedFileToPublish Include="@(IlcCompileInput);@(_AndroidILLinkAssemblies)" RuntimeIdentifier="$(_OriginalRuntimeIdentifier)" />
+      <!-- Include libc++ -->
+      <ResolvedFileToPublish Include="$(_NdkSysrootDir)libc++_shared.so" RuntimeIdentifier="$(_OriginalRuntimeIdentifier)" />
     </ItemGroup>
   </Target>
 
