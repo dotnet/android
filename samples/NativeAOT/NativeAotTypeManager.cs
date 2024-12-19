@@ -47,7 +47,6 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 
 		JniNativeMethodRegistration [] natives = new JniNativeMethodRegistration [methodCount];
 		int nativesIndex = 0;
-		MethodInfo []? typeMethods = null;
 
 		ReadOnlySpan<char> methodsSpan = methods;
 		bool needToRegisterNatives = false;
