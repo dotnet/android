@@ -1,11 +1,14 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Utilities;
 using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Tasks
 {
-	public class ZipArchiveEx : IDisposable
+	public class ZipArchiveEx : IZipArchive
 	{
 
 		const int DEFAULT_FLUSH_SIZE_LIMIT = 100 * 1024 * 1024;
@@ -235,5 +238,71 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 		}
+
+		public void AddEntry (byte [] data, string apkPath)
+			=> AddEntryAndFlush (data, apkPath);
+
+		public void AddEntry (Stream stream, string apkPath, System.IO.Compression.CompressionLevel compression)
+			=> AddEntryAndFlush (apkPath, stream, compression.ToCompressionMethod ());
+
+		public bool AddFileIfChanged (TaskLoggingHelper log, string filename, string archiveFileName, System.IO.Compression.CompressionLevel compression)
+		{
+			var compressionMethod = compression.ToCompressionMethod ();
+
+			if (!SkipExistingFile (filename, archiveFileName, compressionMethod)) {
+				AddFileAndFlush (filename, archiveFileName, compressionMethod);
+				log.LogDebugMessage ($"Adding {filename} as the archive file is out of date.");
+				return true;
+			}
+
+			log.LogDebugMessage ($"Skipping {filename} as the archive file is up to date.");
+
+			return false;
+		}
+
+		public bool ContainsEntry (string entryPath)
+			=> zip.ContainsEntry (entryPath);
+
+		public void DeleteEntry (string entry)
+			=> zip.DeleteEntry (entry);
+
+		public void FixupWindowsPathSeparators (TaskLoggingHelper log)
+			=> FixupWindowsPathSeparators ((a, b) => log.LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`"));
+
+		public IEnumerable<string> GetAllEntryNames ()
+		{
+			for (var i = 0; i < Archive.EntryCount; i++) {
+				var entry = Archive.ReadEntry ((ulong) i);
+				yield return entry.FullName;
+			}
+		}
+
+		IZipArchiveEntry IZipArchive.GetEntry (string entryName)
+		{
+			return new ZipArchiveEntryEx (zip.ReadEntry (entryName));
+		}
+
+		void IZipArchive.MoveEntry (string oldEntry, string newEntry)
+		{
+			if (Archive.ContainsEntry (newEntry))
+				Archive.DeleteEntry (Archive.ReadEntry (newEntry));
+
+			var entry = zip.ReadEntry (oldEntry);
+			entry.Rename (newEntry);
+		}
+	}
+
+	class ZipArchiveEntryEx : IZipArchiveEntry
+	{
+		readonly ZipEntry entry;
+
+		public ZipArchiveEntryEx (ZipEntry entry)
+		{
+			this.entry = entry;
+		}
+
+		public uint CRC => entry.CRC;
+
+		public ulong CompressedSize => entry.CompressedSize;
 	}
 }
