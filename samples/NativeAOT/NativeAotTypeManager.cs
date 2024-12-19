@@ -73,19 +73,7 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 
 				Delegate? callback = null;
 				if (callbackString.SequenceEqual ("__export__")) {
-					var mname = name.Slice (2);
-					MethodInfo? minfo = null;
-					typeMethods ??= type.GetMethods (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
-					foreach (var mi in typeMethods)
-						if (mname.SequenceEqual (mi.Name) && signature.SequenceEqual (JavaNativeTypeManager.GetJniSignature (mi))) {
-							minfo = mi;
-							break;
-						}
-
-					if (minfo == null)
-						throw new InvalidOperationException (FormattableString.Invariant ($"Specified managed method '{mname.ToString ()}' was not found. Signature: {signature.ToString ()}"));
-					callback = CreateDynamicCallback (minfo);
-					needToRegisterNatives = true;
+					throw new InvalidOperationException (FormattableString.Invariant ($"Methods such as {callbackString.ToString ()} are not implemented!"));
 				} else {
 					Type callbackDeclaringType = type;
 					if (!callbackDeclaringTypeString.IsEmpty) {
@@ -182,25 +170,4 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 	}
 
 	delegate Delegate GetCallbackHandler ();
-
-	static MethodInfo? dynamic_callback_gen;
-
-	// See ExportAttribute.cs
-	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
-	[UnconditionalSuppressMessage ("Trimming", "IL2075", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
-	static Delegate CreateDynamicCallback (MethodInfo method)
-	{
-		if (dynamic_callback_gen == null) {
-			var assembly = Assembly.Load ("Mono.Android.Export");
-			if (assembly == null)
-				throw new InvalidOperationException ("To use methods marked with ExportAttribute, Mono.Android.Export.dll needs to be referenced in the application");
-			var type = assembly.GetType ("Java.Interop.DynamicCallbackCodeGenerator");
-			if (type == null)
-				throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. The required type was not found.");
-			dynamic_callback_gen = type.GetMethod ("Create");
-			if (dynamic_callback_gen == null)
-				throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. The required method was not found.");
-		}
-		return (Delegate)dynamic_callback_gen.Invoke (null, new object [] { method })!;
-	}
 }
