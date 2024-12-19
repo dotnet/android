@@ -63,12 +63,13 @@ extends:
   ${{ else }}:
     template: v1/1ES.Unofficial.PipelineTemplate.yml@1esPipelines
   parameters:
-    sourceAnalysisPool:
-      name: AzurePipelines-EO
-      image: $(WindowsPoolImage1ESPT)
-      os: windows
-    suppression:
-      suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
+    sdl:
+      sourceAnalysisPool:
+        name: AzurePipelines-EO
+        image: $(WindowsPoolImage1ESPT)
+        os: windows
+      suppression:
+        suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
     stages:
     - stage: mac_build
       displayName: Build
