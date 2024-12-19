@@ -1,1 +1,2 @@
 Compat issues with assembly Mono.Android:
+CannotChangeAttribute : Attribute 'System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute' on parameter 'targetType' on member 'Android.Graphics.ColorValueMarshaler.CreateGenericValue(Java.Interop.JniObjectReference, Java.Interop.JniObjectReferenceOptions, System.Type)' changed from '[DynamicallyAccessedMembersAttribute(8199)]' in the contract to '[DynamicallyAccessedMembersAttribute(7)]' in the implementation.
