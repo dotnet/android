@@ -46,7 +46,7 @@ namespace Android.Runtime
 		internal static IntPtr java_class_loader;
 		internal static JniMethodInfo? mid_Class_forName;
 
-		internal static AndroidRuntime? androidRuntime;
+		internal static JniRuntime? androidRuntime;
 
 		[UnmanagedCallersOnly]
 		static unsafe void RegisterJniNatives (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
@@ -74,6 +74,12 @@ namespace Android.Runtime
 
 			ReadOnlySpan<char> methods = new ReadOnlySpan<char> ((void*) methods_ptr, methods_len);
 			((AndroidTypeManager)androidRuntime!.TypeManager).RegisterNativeMembers (jniType, type, methods);
+		}
+
+		internal static void InitializeNativeAot (JniRuntime runtime)
+		{
+			androidRuntime = runtime;
+			AndroidValueManager = new AndroidValueManager ();
 		}
 
 		[UnmanagedCallersOnly]

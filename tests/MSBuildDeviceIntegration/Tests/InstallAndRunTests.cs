@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using Microsoft.VisualStudio.TestPlatform.Utilities;
 using Mono.Cecil;
 using NUnit.Framework;
 
@@ -1275,5 +1276,26 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			RunProjectAndAssert (proj, builder);
 		}
 
+		[Test]
+		public void NativeAOTSample ()
+		{
+			var projectDirectory = Path.Combine (XABuildPaths.TopDirectory, "samples", "NativeAOT");
+			try {
+				var dotnet = new DotNetCLI (Path.Combine (projectDirectory, "NativeAOT.csproj"));
+				Assert.IsTrue (dotnet.Build (target: "Run", parameters: [$"AndroidNdkDirectory={AndroidNdkPath}"]), "`dotnet build -t:Run` should succeed");
+
+				bool didLaunch = WaitForActivityToStart ("my", "MainActivity",
+					Path.Combine (projectDirectory, "logcat.log"), 30);
+				Assert.IsTrue (didLaunch, "Activity should have started.");
+			} catch {
+				foreach (var file in Directory.GetFiles (projectDirectory, "*.log", SearchOption.AllDirectories)) {
+					TestContext.AddTestAttachment (file);
+				}
+				foreach (var bl in Directory.GetFiles (projectDirectory, "*.binlog", SearchOption.AllDirectories)) {
+					TestContext.AddTestAttachment (bl);
+				}
+				throw;
+			}
+		}
 	}
 }

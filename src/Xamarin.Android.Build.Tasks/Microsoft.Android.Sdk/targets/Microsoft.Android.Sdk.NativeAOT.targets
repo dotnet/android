@@ -49,6 +49,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       -->
       <_OriginalSuppressTrimAnalysisWarnings>$(SuppressTrimAnalysisWarnings)</_OriginalSuppressTrimAnalysisWarnings>
       <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+      <!-- Ensure ILLink respects the value of SuppressTrimAnalysisWarnings -->
+      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --notrimwarn</_ExtraTrimmerArgs>
 
       <!-- The list of hacks below should go away when we have NativeAOT.android-* packs -->
       <!-- HACK: we are android-arm64, so this is required for the right path(s) to be found -->
@@ -78,6 +80,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <IlcReference Remove="@(IlcReference)" />
       <IlcReference Include="@(PrivateSdkAssemblies)" />
       <IlcReference Include="@(_AndroidILLinkAssemblies)" />
+      <!-- Root *everything* for ILC, as it's already trimmed -->
+      <TrimmerRootAssembly Include="@(_AndroidILLinkAssemblies->'%(Filename)')" Exclude="System.Private.CoreLib" TrimMode="All" />
       <!-- Passes linked assemblies to outer MSBuild tasks/targets -->
       <ResolvedFileToPublish Include="@(IlcCompileInput);@(_AndroidILLinkAssemblies)" RuntimeIdentifier="$(_OriginalRuntimeIdentifier)" />
       <!-- Include libc++ -->
