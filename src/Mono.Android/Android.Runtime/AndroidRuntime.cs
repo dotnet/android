@@ -56,7 +56,7 @@ namespace Android.Runtime {
 		{
 			if (!reference.IsValid)
 				return null;
-			var peeked      = JNIEnvInit.AndroidValueManager?.PeekPeer (reference);
+			var peeked      = JNIEnvInit.ValueManager?.PeekPeer (reference);
 			var peekedExc   = peeked as Exception;
 			if (peekedExc == null) {
 				var throwable = Java.Lang.Object.GetObject<Java.Lang.Throwable> (reference.Handle, JniHandleOwnership.DoNotTransfer);
@@ -64,21 +64,28 @@ namespace Android.Runtime {
 				return throwable;
 			}
 			JniObjectReference.Dispose (ref reference, options);
-			var unwrapped = JNIEnvInit.AndroidValueManager?.UnboxException (peeked!);
+			var unwrapped = UnboxException (peeked!);
 			if (unwrapped != null) {
 				return unwrapped;
 			}
 			return peekedExc;
 		}
 
+		Exception? UnboxException (IJavaPeerable value)
+		{
+			if (JNIEnvInit.ValueManager is AndroidValueManager vm) {
+				return vm.UnboxException (value);
+			}
+			return null;
+		}
+
 		public override void RaisePendingException (Exception pendingException)
 		{
-			var je  = pendingException as JavaProxyThrowable;
+			var je  = pendingException as JavaException;
 			if (je == null) {
 				je  = JavaProxyThrowable.Create (pendingException);
 			}
-			var r = new JniObjectReference (je.Handle);
-			JniEnvironment.Exceptions.Throw (r);
+			JniEnvironment.Exceptions.Throw (je.PeerReference);
 		}
 	}
 
@@ -470,6 +477,7 @@ namespace Android.Runtime {
 			}
 		}
 
+		[Obsolete ("Use RegisterNativeMembers(JniType, Type, ReadOnlySpan<char>) instead.")]
 		public override void RegisterNativeMembers (
 				JniType nativeClass,
 				[DynamicallyAccessedMembers (MethodsAndPrivateNested)]

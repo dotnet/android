@@ -36,15 +36,7 @@
 		-->
 		<type fullname="Java.Interop.TypeManager*JavaTypeManager" />
 		<type fullname="Java.Lang.Object">
-			<field name="handle" />
-			<field name="handle_type" />
-			<field name="refs_added" />
 			<method name="SetHandleOnDeserialized" />
-		</type>
-		<type fullname="Java.Lang.Throwable">
-			<field name="handle" />
-			<field name="handle_type" />
-			<field name="refs_added" />
 		</type>
 	</assembly>
 </linker>

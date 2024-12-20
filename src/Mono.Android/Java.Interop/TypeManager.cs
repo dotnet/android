@@ -133,9 +133,10 @@ namespace Java.Interop {
 		static void n_Activate (IntPtr jnienv, IntPtr jclass, IntPtr typename_ptr, IntPtr signature_ptr, IntPtr jobject, IntPtr parameters_ptr)
 		{
 			var o   = Java.Lang.Object.PeekObject (jobject);
-			var ex  = o as IJavaObjectEx;
+			var ex  = o as IJavaPeerable;
 			if (ex != null) {
-				if (!ex.NeedsActivation && !ex.IsProxy)
+				var state = ex.JniManagedPeerState;
+				if (!state.HasFlag (JniManagedPeerStates.Activatable) && !state.HasFlag (JniManagedPeerStates.Replaceable))
 					return;
 			}
 			if (!ActivationEnabled) {
@@ -171,10 +172,8 @@ namespace Java.Interop {
 		{
 			try {
 				var newobj = RuntimeHelpers.GetUninitializedObject (cinfo.DeclaringType!);
-				if (newobj is Java.Lang.Object o) {
-					o.handle = jobject;
-				} else if (newobj is Java.Lang.Throwable throwable) {
-					throwable.handle = jobject;
+				if (newobj is IJavaPeerable peer) {
+					peer.SetPeerReference (new JniObjectReference (jobject));
 				} else {
 					throw new InvalidOperationException ($"Unsupported type: '{newobj}'");
 				}
@@ -232,7 +231,7 @@ namespace Java.Interop {
 			return null;
 		}
 
-		internal static IJavaPeerable CreateInstance (IntPtr handle, JniHandleOwnership transfer)
+		internal static IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer)
 		{
 			return CreateInstance (handle, transfer, null);
 		}
