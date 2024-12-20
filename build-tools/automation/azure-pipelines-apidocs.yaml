@@ -100,8 +100,12 @@ extends:
         - checkout: self
           submodules: recursive
 
-        - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-17"
-          displayName: set JI_JAVA_HOME
+        - task: JavaToolInstaller@0
+          displayName: Install JDK
+          inputs:
+            versionSpec: 17
+            jdkArchitectureOption: x64
+            jdkSourceOption: PreInstalled
 
         # Set MSBuild property overrides if parameters are set
         - ${{ if ne(parameters.apiLevel, 'default') }}:
@@ -140,6 +144,9 @@ extends:
         - script: make prepare CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
           workingDirectory: $(Build.SourcesDirectory)
           displayName: make prepare
+
+        - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-17"
+          displayName: set JI_JAVA_HOME
 
         - script: >-
             make update-api-docs CONFIGURATION=$(XA.Build.Configuration)
