@@ -100,13 +100,6 @@ extends:
         - checkout: self
           submodules: recursive
 
-        - task: JavaToolInstaller@0
-          displayName: Install JDK
-          inputs:
-            versionSpec: 17
-            jdkArchitectureOption: x64
-            jdkSourceOption: PreInstalled
-
         # Set MSBuild property overrides if parameters are set
         - ${{ if ne(parameters.apiLevel, 'default') }}:
           - script: echo "##vso[task.setvariable variable=DocsApiLevelArg]-p:DocsApiLevel=${{ parameters.apiLevel }}"
@@ -145,7 +138,9 @@ extends:
           workingDirectory: $(Build.SourcesDirectory)
           displayName: make prepare
 
-        - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-17"
+        - script: |
+            echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-17"
+            echo "##vso[task.setvariable variable=JAVA_HOME]$HOME/android-toolchain/jdk-17"
           displayName: set JI_JAVA_HOME
 
         - script: >-
