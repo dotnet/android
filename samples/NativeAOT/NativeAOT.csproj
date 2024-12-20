@@ -10,7 +10,8 @@
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <RestoreAdditionalProjectSources Condition="Exists('../bin/Build$(Configuration)/nuget-unsigned')">../bin/Build$(Configuration)/nuget-unsigned</RestoreAdditionalProjectSources>
+    <_NuGetFolderOnCI>..\..\bin\Build$(Configuration)\nuget-unsigned</_NuGetFolderOnCI>
+    <RestoreAdditionalProjectSources Condition="Exists('$(_NuGetFolderOnCI)')">$(_NuGetFolderOnCI)</RestoreAdditionalProjectSources>
     <!-- Temporary for InternalsVisibleTo -->
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
