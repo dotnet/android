@@ -54,8 +54,7 @@ namespace Xamarin.Android.Prepare
 			var sdk_manifests = Path.Combine (dotnetPath, "sdk-manifests");
 
 			// Copy the WorkloadManifest.* files from the latest Microsoft.NET.Workload.* listed in package-download.proj
-			// TODO: net9 missing from dotnet10 feed
-			var dotnets = new [] { "net6", "net7", "net8", "current" };
+			var dotnets = new [] { "net6", "net7", "net8", "net9", "current" };
 			foreach (var dotnet in dotnets) {
 				var destination = Path.Combine (sdk_manifests,
 					context.Properties.GetRequiredValue (KnownProperties.DotNetMonoManifestVersionBand),
