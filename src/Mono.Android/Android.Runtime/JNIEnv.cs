@@ -39,7 +39,7 @@ namespace Android.Runtime {
 
 		internal static IntPtr IdentityHash (IntPtr v)
 		{
-			return RuntimeNativeMethods._monodroid_get_identity_hash_code (Handle, v);
+			return JniEnvironment.References.GetIdentityHashCode (new JniObjectReference (v));
 		}
 
 		public static void CheckHandle (IntPtr jnienv)
@@ -515,7 +515,7 @@ namespace Android.Runtime {
 			}
 
 			if (ret == IntPtr.Zero) {
-				if (JNIEnvInit.LogAssemblyCategory) {
+				if (Logger.LogAssembly) {
 					RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"typemap: failed to map managed type to Java type: {type.AssemblyQualifiedName} (Module ID: {type.Module.ModuleVersionId}; Type token: {type.MetadataToken})");
 					LogTypemapTrace (new StackTrace (true));
 				}

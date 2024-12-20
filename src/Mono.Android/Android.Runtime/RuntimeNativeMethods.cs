@@ -36,9 +36,6 @@ namespace Android.Runtime
 		internal extern static void monodroid_free (IntPtr ptr);
 
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal extern static IntPtr _monodroid_get_identity_hash_code (IntPtr env, IntPtr value);
-
-		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int _monodroid_gref_get ();
 
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]

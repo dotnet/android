@@ -19,7 +19,6 @@ mono_bool _monodroid_get_network_interface_up_state (const char *ifname, mono_bo
 mono_bool _monodroid_get_network_interface_supports_multicast (const char *ifname, mono_bool *supports_multicast);
 int _monodroid_get_dns_servers (void **dns_servers_array);
 
-unsigned int monodroid_get_log_categories ();
 int monodroid_get_system_property (const char *name, char **value);
 int monodroid_embedded_assemblies_set_assemblies_prefix (const char *prefix);
 void monodroid_log (xamarin::android::LogLevel level, LogCategories category, const char *message);
@@ -36,7 +35,6 @@ void _monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *
 void _monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char  *from, int from_writable);
 void _monodroid_gc_wait_for_bridge_processing ();
 void monodroid_clear_gdb_wait ();
-void* _monodroid_get_identity_hash_code (JNIEnv *env, void *v);
 void* _monodroid_timezone_get_default_id ();
 void _monodroid_counters_dump ([[maybe_unused]] const char *format, [[maybe_unused]] va_list args);
 xamarin::android::managed_timing_sequence* monodroid_timing_start (const char *message);
