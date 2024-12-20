@@ -181,3 +181,4 @@ extends:
                 exit 1
             }
           displayName: Report issues in docs generation
+          continueOnError: true
