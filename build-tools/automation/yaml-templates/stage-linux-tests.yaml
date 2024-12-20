@@ -1,0 +1,87 @@
+# Runs smoke tests on Linux packages.
+
+stages:
+- stage: linux_tests
+  displayName: Linux Tests
+  dependsOn:
+  - mac_build
+  - linux_build
+  jobs:
+  # Check - "Xamarin.Android (Linux Tests Linux > Tests > MSBuild)"
+  - job: linux_tests_smoke_1
+    displayName: Linux > Tests > MSBuild 1
+    pool:
+      name: MAUI-1ESPT
+      image: $(LinuxPoolImage1ESPT)
+      os: linux
+    timeoutInMinutes: 180
+    workspace:
+      clean: all
+    steps:
+    - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml@self
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+
+    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
+      parameters:
+        testRunTitle: Xamarin.Android.Build.Tests - Linux BuildTest
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
+        dotNetTestExtraArgs: --filter "Name = BuildTest"
+
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
+      parameters:
+        configuration: $(XA.Build.Configuration)
+        artifactName: Test Results - MSBuild - Linux 1
+
+    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self
+
+  - job: linux_tests_smoke_2
+    displayName: Linux > Tests > MSBuild 2
+    pool:
+      name: MAUI-1ESPT
+      image: $(LinuxPoolImage1ESPT)
+      os: linux
+    timeoutInMinutes: 180
+    workspace:
+      clean: all
+    steps:
+    - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml@self
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+
+    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
+      parameters:
+        testRunTitle: Xamarin.Android.Build.Tests - Linux PackagingTest
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
+        dotNetTestExtraArgs: --filter "Name = PackagingTest"
+
+    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
+      parameters:
+        testRunTitle: Xamarin.Android.Build.Tests - Linux XASdkTests
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
+        dotNetTestExtraArgs: --filter "Name = XASdkTests & Name != XamarinLegacySdk"
+
+    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
+      parameters:
+        testRunTitle: Xamarin.Android.Build.Tests - Linux AndroidDependenciesTests
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
+        dotNetTestExtraArgs: --filter "Name = AndroidDependenciesTests"
+
+    - task: ShellScript@2
+      displayName: Test dotnet-local.sh
+      inputs:
+        scriptPath: dotnet-local.sh
+        args: build samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj
+
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
+      parameters:
+        configuration: $(XA.Build.Configuration)
+        artifactName: Test Results - MSBuild - Linux 2
+
+    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self
