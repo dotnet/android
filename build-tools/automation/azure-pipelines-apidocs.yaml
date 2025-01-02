@@ -100,6 +100,11 @@ extends:
         - checkout: self
           submodules: recursive
 
+        - script: |
+            echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-17"
+            echo "##vso[task.setvariable variable=JAVA_HOME]$HOME/android-toolchain/jdk-17"
+          displayName: set JI_JAVA_HOME
+
         # Set MSBuild property overrides if parameters are set
         - ${{ if ne(parameters.apiLevel, 'default') }}:
           - script: echo "##vso[task.setvariable variable=DocsApiLevelArg]-p:DocsApiLevel=${{ parameters.apiLevel }}"
@@ -137,11 +142,6 @@ extends:
         - script: make prepare CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
           workingDirectory: $(Build.SourcesDirectory)
           displayName: make prepare
-
-        - script: |
-            echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-17"
-            echo "##vso[task.setvariable variable=JAVA_HOME]$HOME/android-toolchain/jdk-17"
-          displayName: set JI_JAVA_HOME
 
         - script: >-
             make update-api-docs CONFIGURATION=$(XA.Build.Configuration)
