@@ -272,7 +272,7 @@
     />
   </Target>
 
-  <!-- `mdoc fx-bootstrap` and `mdoc update` still require the mono version of mdoc, but these targets are only ran locally an in azure-pipelines-apidocs.yaml -->
+  <!-- `mdoc fx-bootstrap` and `mdoc update` still require the mono version of mdoc, but these targets are only ran ad-hoc and in azure-pipelines-apidocs.yaml -->
   <Target Name="RunMdoc">
     <MSBuild Projects="$(MSBuildThisFileDirectory)Mono.Android.csproj"
         Targets="_RunMdoc"

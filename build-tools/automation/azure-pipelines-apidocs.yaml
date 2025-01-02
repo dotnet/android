@@ -162,13 +162,13 @@ extends:
 
         - powershell: |
             $docsUpdateBinlog = Get-ChildItem -Path "$(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)" -Filter *UpdateApiDocs-*.binlog | Select-Object -First 1
-            $buildLog = "$(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/temp-build.log"
+            $buildLog = "$(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/temp-UpdateApiDocs-build.log"
             & "$(Build.SourcesDirectory)/bin/$(XA.Build.Configuration)/dotnet/dotnet" build $docsUpdateBinlog > $buildLog
 
             $issueContent = & {
-                Get-Content -Path $buildLog | Select-String "## Exception translating remarks"
-                Get-Content -Path $buildLog | Select-String "## Unable to translate remarks"
-                Get-Content -Path $buildLog | Select-String "JavadocImport-"
+                Get-Content -Path $buildLog | Select-String "## Exception translating remarks" -Context 0, 3
+                Get-Content -Path $buildLog | Select-String "## Unable to translate remarks" -Context 0, 3
+                Get-Content -Path $buildLog | Select-String "JavadocImport-" -Context 0, 3
             }
 
             if ($issueContent) {
@@ -180,5 +180,6 @@ extends:
                 }
                 exit 1
             }
+            Write-Host "No issues found."
           displayName: Report issues in docs generation
           continueOnError: true
