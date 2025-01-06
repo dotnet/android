@@ -1958,6 +1958,18 @@
   <attr api-since="36" path="/api/package[@name='android.app.appsearch.functions']" name="managedName">Android.App.AppSearch.Functions</attr>
   <attr api-since="36" path="/api/package[@name='android.configinfrastructure.aconfig']" name="managedName">Android.ConfigInfrastructure.Aconfig</attr>
   <attr api-since="36" path="/api/package[@name='android.widget.photopicker']" name="managedName">Android.Widget.PhotoPicker</attr>
+  <attr api-since="36" path="/api/package[@name='android.os.vibrator']" name="managedName">Android.OS.Vibrators</attr>
+  <attr api-since="36" path="/api/package[@name='android.media.tv.ad']" name="managedName">Android.Media.TV.Ads</attr>
+
+  <!-- Public method cannot override protected base method -->
+  <attr api-since="36" path="/api/package[@name='android.media.tv.ad']/class[@name='TvAdView']/method[@name='onLayout' and count(parameter)=5 and parameter[1][@type='boolean'] and parameter[2][@type='int'] and parameter[3][@type='int'] and parameter[4][@type='int'] and parameter[5][@type='int']]" name="visibility">protected</attr>
+
+  <!-- We were turning 'bool isChecked' into the 'Checked' property. API-36 adds 'int getChecked' which also becomes a 'Checked' property -->
+  <attr api-since="36" path="/api/package[@name='android.view.accessibility']/class[@name='AccessibilityNodeInfo']/method[@name='getChecked' and count(parameter)=0]" name="propertyName">CheckedState</attr>
+  <attr api-since="36" path="/api/package[@name='android.view.accessibility']/class[@name='AccessibilityNodeInfo']/method[@name='setChecked' and count(parameter)=1 and parameter[1][@type='int']]" name="propertyName">CheckedState</attr>
+
+  <!-- Adding new DIM to interface changes existing EventArgs name, revert to old name. -->
+  <attr api-since="36" path="/api/package[@name='android.net.wifi.p2p']/interface[@name='WifiP2pManager.ServiceResponseListener']/method[@name='onServiceAvailable' and count(parameter)=3 and parameter[1][@type='int'] and parameter[2][@type='byte[]'] and parameter[3][@type='android.net.wifi.p2p.WifiP2pDevice']]" name="argsType">ServiceResponseEventArgs</attr>
 
   <!--
     ***********************************************************************
