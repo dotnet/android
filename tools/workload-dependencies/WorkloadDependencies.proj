@@ -60,6 +60,7 @@
 
     <ItemGroup>
       <_WorkloadDeps Include="--project &quot;$(_Project)&quot;" />
+      <_WorkloadDeps Include="-p:DotNetStableTargetFramework=$(DotNetStableTargetFramework)" />
       <_WorkloadDeps Include="-p:MonoOptionsVersion=$(MonoOptionsVersion)" />
       <_WorkloadDeps Include="-p:NewtonsoftJsonPackageVersion=$(NewtonsoftJsonPackageVersion)" />
       <_WorkloadDeps Include="--" />
