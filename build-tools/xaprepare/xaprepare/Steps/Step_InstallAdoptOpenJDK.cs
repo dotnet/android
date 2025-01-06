@@ -294,11 +294,11 @@ namespace Xamarin.Android.Prepare
 		}
 
 		protected   override    string  ProductName      => _ProductName;
-		protected   override    string  JdkInstallDir    => Configurables.Paths.OpenJDK17InstallDir;
-		protected   override    Version JdkVersion       => Configurables.Defaults.MicrosoftOpenJDK17Version;
-		protected   override    Version JdkRelease       => Configurables.Defaults.MicrosoftOpenJDK17Release;
-		protected   override    Uri     JdkUrl           => Configurables.Urls.MicrosoftOpenJDK17;
-		protected   override    string  JdkCacheDir      => Configurables.Paths.OpenJDK17CacheDir;
-		protected   override    string  RootDirName      => Configurables.Defaults.MicrosoftOpenJDK17RootDirName;
+		protected   override    string  JdkInstallDir    => Configurables.Paths.OpenJDK21InstallDir;
+		protected   override    Version JdkVersion       => Configurables.Defaults.MicrosoftOpenJDK21Version;
+		protected   override    Version JdkRelease       => Configurables.Defaults.MicrosoftOpenJDK21Release;
+		protected   override    Uri     JdkUrl           => Configurables.Urls.MicrosoftOpenJDK21;
+		protected   override    string  JdkCacheDir      => Configurables.Paths.OpenJDK21CacheDir;
+		protected   override    string  RootDirName      => Configurables.Defaults.MicrosoftOpenJDK21RootDirName;
 	}
 }

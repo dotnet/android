@@ -10,6 +10,12 @@ namespace Xamarin.Android.Prepare
 		{
 			string realSourceDir = Path.Combine (sourceDir, "Contents", "Home");
 			Utilities.MoveDirectoryContentsRecursively (realSourceDir, destinationDir);
+
+			var xattr_d = new ProcessRunner ("xattr", "-d", "-r", "com.apple.quarantine", ".") {
+				EchoStandardError   = true,
+				WorkingDirectory    = destinationDir,
+			};
+			xattr_d.Run ();
 		}
 	}
 }
