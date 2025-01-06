@@ -18,25 +18,25 @@ stages:
     workspace:
       clean: all
     steps:
-    - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml@self
+    - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
 
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
+    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Linux BuildTest
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "Name = BuildTest"
 
-    - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
         artifactName: Test Results - MSBuild - Linux 1
 
-    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self
+    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
 
   - job: linux_tests_smoke_2
     displayName: Linux > Tests > MSBuild 2
@@ -48,26 +48,26 @@ stages:
     workspace:
       clean: all
     steps:
-    - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml@self
+    - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
 
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
+    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Linux PackagingTest
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "Name = PackagingTest"
 
-    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
+    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Linux XASdkTests
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "Name = XASdkTests & Name != XamarinLegacySdk"
 
-    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
+    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Linux AndroidDependenciesTests
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
@@ -79,9 +79,9 @@ stages:
         scriptPath: dotnet-local.sh
         args: build samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj
 
-    - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
         artifactName: Test Results - MSBuild - Linux 2
 
-    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self
+    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
