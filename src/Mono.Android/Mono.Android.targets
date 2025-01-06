@@ -244,6 +244,7 @@
     <DocsExportOutput Condition=" '$(DocsExportOutput)' == '' ">$(_MonoAndroidNETDefaultOutDir)Mono.Android.xml</DocsExportOutput>
     <_ExternalDocsRoot>$(XamarinAndroidSourcePath)external/android-api-docs/docs/xml</_ExternalDocsRoot>
     <_LogPrefix>$(MSBuildThisFileDirectory)../../bin/Build$(Configuration)/UpdateApiDocs-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss"))</_LogPrefix>
+    <_ManagedRuntime Condition=" !$([MSBuild]::IsOSPlatform('windows')) ">mono</_ManagedRuntime>
     <_MdocExe Condition=" '$(Pkgmdoc)' != '' ">"$(Pkgmdoc)/tools/net471/mdoc.exe"</_MdocExe>
     <_MdocExe Condition=" '$(Pkgmdoc)' == '' ">"$(XAPackagesDir)/mdoc/$(MdocPackageVersion)/tools/net471/mdoc.exe"</_MdocExe>
     <_Mdoc Condition=" '$(Pkgmdoc)' != '' ">"$(Pkgmdoc)/tools/net6.0/mdoc.dll"</_Mdoc>
@@ -280,7 +281,6 @@
   </Target>
   <Target Name="_RunMdoc">
     <PropertyGroup>
-      <_ManagedRuntime Condition=" !$([MSBuild]::IsOSPlatform('windows')) ">mono</_ManagedRuntime>
       <_Libdir>-L "$(DotNetPreviewPath)packs/Microsoft.NETCore.App.Ref"</_Libdir>
       <_Output>-o "$(_ExternalDocsRoot)"</_Output>
       <_DocTypeArgs Condition=" '$(DocTypeName)' != '' ">--type=$(DocTypeName)</_DocTypeArgs>

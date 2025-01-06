@@ -151,7 +151,8 @@ extends:
 
         - script: >
             mkdir -p $(Build.StagingDirectory)/api-doc-diff &&
-            ln $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/UpdateApiDocs*.diff $(Build.StagingDirectory)/api-doc-diff/
+            ln $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/UpdateApiDocs*.diff $(Build.StagingDirectory)/api-doc-diff/ &&
+            ln $(Build.SourcesDirectory)/external/android-api-docs/docs/xml/index.xml $(Build.StagingDirectory)/api-doc-diff/
           displayName: copy api docs diff
 
         - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
