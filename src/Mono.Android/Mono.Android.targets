@@ -272,7 +272,7 @@
     />
   </Target>
 
-  <!-- `mdoc fx-bootstrap` and `mdoc update` still require the mono version of mdoc, but these targets are only ran ad-hoc and in azure-pipelines-apidocs.yaml -->
+  <!-- `mdoc fx-bootstrap` and `mdoc update` require the .NET framework version of mdoc, a mono install will be needed to run the RunMdoc target on macOS/Linux -->
   <Target Name="RunMdoc">
     <MSBuild Projects="$(MSBuildThisFileDirectory)Mono.Android.csproj"
         Targets="_RunMdoc"
@@ -280,6 +280,7 @@
   </Target>
   <Target Name="_RunMdoc">
     <PropertyGroup>
+      <_ManagedRuntime Condition=" !$([MSBuild]::IsOSPlatform('windows')) ">mono</_ManagedRuntime>
       <_Libdir>-L "$(DotNetPreviewPath)packs/Microsoft.NETCore.App.Ref"</_Libdir>
       <_Output>-o "$(_ExternalDocsRoot)"</_Output>
       <_DocTypeArgs Condition=" '$(DocTypeName)' != '' ">--type=$(DocTypeName)</_DocTypeArgs>
@@ -309,11 +310,11 @@
         DestinationFolder="$(_RootFxDir)$(DocsFxMoniker)"
     />
     <Exec
-        Command="mono $(_MdocExe) fx-bootstrap -fx $(_RootFxDir) -importContent true"
+        Command="$(_ManagedRuntime) $(_MdocExe) fx-bootstrap -fx $(_RootFxDir) -importContent true"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
     <Exec
-        Command="mono $(_MdocExe) update $(_Libdir) $(_Output) $(_DocTypeArgs) $(_FxConfig) $(_ExtraMdocArgs)"
+        Command="$(_ManagedRuntime) $(_MdocExe) update $(_Libdir) $(_Output) $(_DocTypeArgs) $(_FxConfig) $(_ExtraMdocArgs)"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
   </Target>
