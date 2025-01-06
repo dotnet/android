@@ -872,7 +872,7 @@ namespace UnnamedProject
 		public void DotNetInstallAndRunPreviousSdk ([Values (false, true)] bool isRelease)
 		{
 			var proj = new XamarinFormsAndroidApplicationProject () {
-				TargetFramework = "net8.0-android",
+				TargetFramework = "net9.0-android",
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
 			};
