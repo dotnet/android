@@ -342,6 +342,11 @@
         DestinationFile="$(MSBuildThisFileDirectory)\Microsoft.Android.Sdk\targets\Microsoft.Android.Sdk.BundledVersions.targets"
         Replacements="@ANDROID_PACK_VERSION_LONG@=$(AndroidPackVersionLong);@ANDROID_LATEST_STABLE_API_LEVEL@=$(AndroidLatestStableApiLevel);@ANDROID_LATEST_UNSTABLE_API_LEVEL@=$(AndroidLatestUnstableApiLevel);@DOTNET_TARGET_FRAMEWORK@=$(DotNetTargetFramework)" >
     </ReplaceFileContents>
+    <ReplaceFileContents
+        SourceFile="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\Sdk\AutoImport.in.props"
+        DestinationFile="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\Sdk\AutoImport.props"
+        Replacements="@DOTNET_TARGET_FRAMEWORK_VERSION@=$(DotNetTargetFrameworkVersion)">
+    </ReplaceFileContents>
   </Target>
 
   <Target Name="_CopyNetSdkTargets">
