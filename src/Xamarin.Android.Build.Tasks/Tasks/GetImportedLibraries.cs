@@ -49,17 +49,17 @@ namespace Xamarin.Android.Tasks
 					if (file.EndsWith (".so", StringComparison.OrdinalIgnoreCase)) {
 						if (AndroidRidAbiHelper.GetNativeLibraryAbi (file) != null)
 							nativeLibraries.Add (new TaskItem (file, new Dictionary<string, string> {
-								{ ResolveLibraryProjectImports.OriginalFile, originalFile },
-								{ ResolveLibraryProjectImports.NuGetPackageId, nuGetPackageId },
-								{ ResolveLibraryProjectImports.NuGetPackageVersion, nuGetPackageVersion }
+								[ResolveLibraryProjectImports.OriginalFile] = originalFile,
+								[ResolveLibraryProjectImports.NuGetPackageId] = nuGetPackageId,
+								[ResolveLibraryProjectImports.NuGetPackageVersion] = nuGetPackageVersion,
 							}));
 						continue;
 					}
 					if (file.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)) {
 						jarFiles.Add (new TaskItem (file, new Dictionary<string, string> {
-								{ ResolveLibraryProjectImports.OriginalFile, originalFile },
-								{ ResolveLibraryProjectImports.NuGetPackageId, nuGetPackageId },
-								{ ResolveLibraryProjectImports.NuGetPackageVersion, nuGetPackageVersion }
+								[ResolveLibraryProjectImports.OriginalFile] = originalFile,
+								[ResolveLibraryProjectImports.NuGetPackageId] = nuGetPackageId,
+								[ResolveLibraryProjectImports.NuGetPackageVersion] = nuGetPackageVersion,
 							}));
 						continue;
 					}
@@ -76,9 +76,9 @@ namespace Xamarin.Android.Tasks
 							continue;
 						}
 						manifestDocuments.Add (new TaskItem (file, new Dictionary<string, string> {
-							{ ResolveLibraryProjectImports.OriginalFile, originalFile },
-							{ ResolveLibraryProjectImports.NuGetPackageId, nuGetPackageId },
-							{ ResolveLibraryProjectImports.NuGetPackageVersion, nuGetPackageVersion }
+							[ResolveLibraryProjectImports.OriginalFile] = originalFile,
+							[ResolveLibraryProjectImports.NuGetPackageId] = nuGetPackageId,
+							[ResolveLibraryProjectImports.NuGetPackageVersion] = nuGetPackageVersion,
 						}));
 					}
 				}
