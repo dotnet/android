@@ -270,9 +270,9 @@ namespace Xamarin.Android.Tasks
 								updated |= Files.CopyIfStreamChanged (stream, outFile);
 							}
 							resolvedEnvironments.Add (new TaskItem (Path.GetFullPath (outFile), new Dictionary<string, string> {
-								{ OriginalFile, assemblyPath },
-								{ NuGetPackageId, nuGetPackageId },
-								{ NuGetPackageVersion, nuGetPackageVersion },
+								[OriginalFile] = assemblyPath,
+								[NuGetPackageId] = nuGetPackageId,
+								[NuGetPackageVersion] = nuGetPackageVersion,
 							}));
 						}
 						// embedded jars (EmbeddedJar, EmbeddedReferenceJar)
@@ -338,10 +338,10 @@ namespace Xamarin.Android.Tasks
 							if (Directory.Exists (resDir)) {
 								CreateResourceArchive (resDir, resDirArchive);
 								var taskItem = new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
-									{ OriginalFile, assemblyPath },
-									{ ResourceDirectoryArchive, Path.GetFullPath (resDirArchive)},
-									{ NuGetPackageId, nuGetPackageId },
-									{ NuGetPackageVersion, nuGetPackageVersion },
+									[OriginalFile] = assemblyPath,
+									[ResourceDirectoryArchive] = Path.GetFullPath (resDirArchive),
+									[NuGetPackageId] = nuGetPackageId,
+									[NuGetPackageVersion] = nuGetPackageVersion,
 								});
 								if (bool.TryParse (assemblyItem.GetMetadata (AndroidSkipResourceProcessing), out skip) && skip)
 									taskItem.SetMetadata (AndroidSkipResourceProcessing, "True");
@@ -349,9 +349,9 @@ namespace Xamarin.Android.Tasks
 							}
 							if (Directory.Exists (assetsDir)) {
 								resolvedAssetDirectories.Add (new TaskItem (Path.GetFullPath (assetsDir), new Dictionary<string, string> {
-									{ OriginalFile, assemblyPath },
-									{ NuGetPackageId, nuGetPackageId },
-									{ NuGetPackageVersion, nuGetPackageVersion },
+									[OriginalFile] = assemblyPath,
+									[NuGetPackageId] = nuGetPackageId,
+									[NuGetPackageVersion] = nuGetPackageVersion,
 								}));
 							}
 						}
@@ -394,9 +394,9 @@ namespace Xamarin.Android.Tasks
 				string nuGetPackageId = aarFile.GetMetadata (NuGetPackageId) ?? string.Empty;
 				string nuGetPackageVersion = aarFile.GetMetadata (NuGetPackageVersion) ?? string.Empty;
 				extractedDirectories.Add (new TaskItem (outDirForDll, new Dictionary<string, string> {
-					{ OriginalFile, aarFile.ItemSpec },
-					{ NuGetPackageId, nuGetPackageId },
-					{ NuGetPackageVersion, nuGetPackageVersion }
+					[OriginalFile] = aarFile.ItemSpec,
+					[NuGetPackageId] = nuGetPackageId,
+					[NuGetPackageVersion] = nuGetPackageVersion,
 				}));
 
 				bool updated = false;
@@ -417,18 +417,18 @@ namespace Xamarin.Android.Tasks
 							skipProcessing = "True";
 						}
 						resolvedResourceDirectories.Add (new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
-							{ OriginalFile, Path.GetFullPath (aarFile.ItemSpec) },
-							{ AndroidSkipResourceProcessing, skipProcessing },
-							{ ResourceDirectoryArchive, Path.GetFullPath (resDirArchive)},
-							{ NuGetPackageId, nuGetPackageId },
-							{ NuGetPackageVersion, nuGetPackageVersion },
+							[OriginalFile] = Path.GetFullPath (aarFile.ItemSpec),
+							[AndroidSkipResourceProcessing] = skipProcessing,
+							[ResourceDirectoryArchive] = Path.GetFullPath (resDirArchive),
+							[NuGetPackageId] = nuGetPackageId,
+							[NuGetPackageVersion] = nuGetPackageVersion,
 						}));
 					}
 					if (Directory.Exists (assetsDir))
 						resolvedAssetDirectories.Add (new TaskItem  (Path.GetFullPath (assetsDir), new Dictionary<string, string> {
-							{ OriginalFile, aarFullPath },
-							{ NuGetPackageId, nuGetPackageId },
-							{ NuGetPackageVersion, nuGetPackageVersion },
+							[OriginalFile] = aarFullPath,
+							[NuGetPackageId] = nuGetPackageId,
+							[NuGetPackageVersion] = nuGetPackageVersion,
 						}));
 					continue;
 				}
@@ -455,9 +455,9 @@ namespace Xamarin.Android.Tasks
 									entryFullName.StartsWith (".net\\env\\", StringComparison.OrdinalIgnoreCase)) {
 								var fullPath = Path.GetFullPath (Path.Combine (importsDir, entryFullName));
 								resolvedEnvironments.Add (new TaskItem (fullPath, new Dictionary<string, string> {
-									{ OriginalFile, aarFile.ItemSpec },
-									{ NuGetPackageId, nuGetPackageId },
-									{ NuGetPackageVersion, nuGetPackageVersion },
+									[OriginalFile] = aarFile.ItemSpec,
+									[NuGetPackageId] = nuGetPackageId,
+									[NuGetPackageVersion] = nuGetPackageVersion,
 								}));
 							}
 							return entryFullName;
@@ -482,24 +482,24 @@ namespace Xamarin.Android.Tasks
 						skipProcessing = "True";
 					}
 					resolvedResourceDirectories.Add (new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
-						{ OriginalFile, aarFullPath },
-						{ AndroidSkipResourceProcessing, skipProcessing },
-						{ ResourceDirectoryArchive, Path.GetFullPath (resDirArchive)},
-						{ NuGetPackageId, nuGetPackageId },
-						{ NuGetPackageVersion, nuGetPackageVersion },
+						[OriginalFile] = aarFullPath,
+						[AndroidSkipResourceProcessing] = skipProcessing,
+						[ResourceDirectoryArchive] = Path.GetFullPath (resDirArchive),
+						[NuGetPackageId] = nuGetPackageId,
+						[NuGetPackageVersion] = nuGetPackageVersion,
 					}));
 				}
 				if (Directory.Exists (assetsDir))
 					resolvedAssetDirectories.Add (new TaskItem (Path.GetFullPath (assetsDir), new Dictionary<string, string> {
-						{ OriginalFile, aarFullPath },
-						{ NuGetPackageId, nuGetPackageId },
-						{ NuGetPackageVersion, nuGetPackageVersion },
+						[OriginalFile] = aarFullPath,
+						[NuGetPackageId] = nuGetPackageId,
+						[NuGetPackageVersion] = nuGetPackageVersion,
 					}));
 				if (AndroidApplication && File.Exists (proguardFile)) {
 					proguardConfigFiles.Add (new TaskItem (Path.GetFullPath (proguardFile), new Dictionary<string, string> {
-						{ OriginalFile, aarFullPath },
-						{ NuGetPackageId, nuGetPackageId },
-						{ NuGetPackageVersion, nuGetPackageVersion },
+						[OriginalFile] = aarFullPath,
+						[NuGetPackageId] = nuGetPackageId,
+						[NuGetPackageVersion] = nuGetPackageVersion,
 					}));
 				}
 			}
@@ -525,9 +525,9 @@ namespace Xamarin.Android.Tasks
 		{
 			if (!jars.ContainsKey (fullPath)) {
 				jars.Add (fullPath, new TaskItem (fullPath, new Dictionary<string, string> {
-					{ OriginalFile, originalFile },
-					{ NuGetPackageId, nuGetPackageId },
-					{ NuGetPackageVersion, nuGetPackageVersion },
+					[OriginalFile] = originalFile,
+					[NuGetPackageId] = nuGetPackageId,
+					[NuGetPackageVersion] = nuGetPackageVersion,
 				}));
 			}
 		}
