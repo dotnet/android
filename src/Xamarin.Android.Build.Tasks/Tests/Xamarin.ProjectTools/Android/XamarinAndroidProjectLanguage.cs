@@ -9,9 +9,6 @@ namespace Xamarin.ProjectTools
 {
 	public abstract class XamarinAndroidProjectLanguage : ProjectLanguage
 	{
-		public abstract string NormalProjectImport { get; }
-		public abstract string BindingProjectImport { get; }
-
 		public static XamarinAndroidProjectLanguage CSharp = new CSharpLanguage ();
 		public static XamarinAndroidProjectLanguage FSharp = new FSharpLanguage ();
 
@@ -39,12 +36,6 @@ namespace Xamarin.ProjectTools
 			public override string DefaultProjectExtension {
 				get { return ".fsproj"; }
 			}
-			public override string NormalProjectImport {
-				get { return "$(MSBuildExtensionsPath)\\Xamarin\\Android\\Xamarin.Android.FSharp.targets"; }
-			}
-			public override string BindingProjectImport {
-				get { throw new NotSupportedException (); }
-			}
 			public override string DefaultAssemblyInfo {
 				get { return default_assembly_info_fs; }
 			}
@@ -67,12 +58,6 @@ namespace Xamarin.ProjectTools
 			}
 			public override string DefaultProjectExtension {
 				get { return ".csproj"; }
-			}
-			public override string NormalProjectImport {
-				get { return "$(MSBuildExtensionsPath)\\Xamarin\\Android\\Xamarin.Android.CSharp.targets"; }
-			}
-			public override string BindingProjectImport {
-				get { return "$(MSBuildExtensionsPath)\\Xamarin\\Android\\Xamarin.Android.Bindings.targets"; }
 			}
 			public override string DefaultAssemblyInfo {
 				get { return default_assembly_info_cs; }

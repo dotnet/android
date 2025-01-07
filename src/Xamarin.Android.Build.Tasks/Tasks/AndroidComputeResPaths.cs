@@ -61,6 +61,9 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem [] ResolvedResourceFiles { get; set; }
 
+		[Output]
+		public string FilesHash { get; set; }
+
 		public override bool RunTask ()
 		{
 			var intermediateFiles = new List<ITaskItem> (ResourceFiles.Length);
@@ -77,6 +80,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			var nameCaseMap = new Dictionary<string, string> (ResourceFiles.Length, StringComparer.Ordinal);
+			var sb = new StringBuilder ();
 
 			for (int i = 0; i < ResourceFiles.Length; i++) {
 				var item = ResourceFiles [i];
@@ -151,10 +155,13 @@ namespace Xamarin.Android.Tasks
 				item.CopyMetadataTo (newItem);
 				intermediateFiles.Add (newItem);
 				resolvedFiles.Add (item);
+				// write both files so we handle changes in destination also
+				sb.AppendLine ($"{item.ItemSpec};{newItem.ItemSpec}");
 			}
 
 			IntermediateFiles = intermediateFiles.ToArray ();
 			ResolvedResourceFiles = resolvedFiles.ToArray ();
+			FilesHash = Files.HashString (sb.ToString ());
 			MonoAndroidHelper.SaveResourceCaseMap (BuildEngine4, nameCaseMap, ProjectSpecificTaskObjectKey);
 			return !Log.HasLoggedErrors;
 		}

@@ -81,7 +81,7 @@ stages:
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 2
     strategy:
-      parallel: 1
+      parallel: 2
     variables:
       avdApiLevel: 30
       avdAbi: x86

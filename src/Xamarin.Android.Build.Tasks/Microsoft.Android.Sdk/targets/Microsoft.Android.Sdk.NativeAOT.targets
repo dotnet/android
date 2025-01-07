@@ -1,0 +1,102 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Sdk.NativeAOT.targets
+
+This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
+***********************************************************************************************
+-->
+<Project>
+
+  <!-- Default property values for NativeAOT -->
+  <PropertyGroup>
+    <_AndroidRuntimePackRuntime>NativeAOT</_AndroidRuntimePackRuntime>
+  </PropertyGroup>
+
+  <!-- Make IlcCompile depend on the trimmer -->
+  <PropertyGroup>
+    <IlcCompileDependsOn>
+      _AndroidBeforeIlcCompile;
+      SetupOSSpecificProps;
+      PrepareForILLink;
+      ILLink;
+      ComputeIlcCompileInputs;
+      _AndroidComputeIlcCompileInputs;
+      $(IlcCompileDependsOn)
+    </IlcCompileDependsOn>
+  </PropertyGroup>
+
+  <Target Name="_AndroidBeforeIlcCompile"
+      DependsOnTargets="_PrepareLinking"
+      BeforeTargets="SetupProperties">
+    <!-- Example settings from: https://github.com/jonathanpeppers/Android-NativeAOT/blob/ea69d122cdc7de67aa6a5db14b7e560763c63cdd/DotNet/libdotnet.targets -->
+    <PropertyGroup>
+      <_NdkSysrootAbi>aarch64-linux-android</_NdkSysrootAbi>
+      <_NdkClangPrefix>aarch64-linux-android21-</_NdkClangPrefix>
+      <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('windows')) ">windows-x86_64</_NdkPrebuiltAbi>
+      <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('osx')) ">darwin-x86_64</_NdkPrebuiltAbi>
+      <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('linux')) ">linux-x86_64</_NdkPrebuiltAbi>
+      <_NdkSysrootDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/sysroot/usr/lib/$(_NdkSysrootAbi)/</_NdkSysrootDir>
+      <_NdkBinDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/bin/</_NdkBinDir>
+      <CppCompilerAndLinker>$(_NdkBinDir)$(_NdkClangPrefix)clang++</CppCompilerAndLinker>
+      <CppLinker>$(CppCompilerAndLinker)</CppLinker>
+      <ObjCopyName>$(_NdkBinDir)llvm-objcopy</ObjCopyName>
+
+      <!-- Example settings from: https://github.com/xamarin/xamarin-macios/blob/c43d4ea40bc777969e3b158cf46446df292d8449/dotnet/targets/Xamarin.Shared.Sdk.targets#L541-L550 -->
+      <RunILLink>true</RunILLink>
+      <!--
+        We want to suppress warnings from trimmer and only show warnings from ILC.
+        Otherwise, you would get 2x for every warning.
+      -->
+      <_OriginalSuppressTrimAnalysisWarnings>$(SuppressTrimAnalysisWarnings)</_OriginalSuppressTrimAnalysisWarnings>
+      <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+
+      <!-- The list of hacks below should go away when we have NativeAOT.android-* packs -->
+      <!-- HACK: we are android-arm64, so this is required for the right path(s) to be found -->
+      <_OriginalRuntimeIdentifier>$(RuntimeIdentifier)</_OriginalRuntimeIdentifier>
+      <RuntimeIdentifier Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">linux-bionic-arm64</RuntimeIdentifier>
+      <!-- HACK: -targetos:android results in error, so use linux -->
+      <_targetOS>linux</_targetOS>
+      <!-- HACK: prevents libSystem.Net.Security.Native.a from being added -->
+      <_linuxLibcFlavor>bionic</_linuxLibcFlavor>
+      <!-- HACK: prevents: java.lang.UnsatisfiedLinkError: dlopen failed: cannot locate symbol "__start___modules" -->
+      <LinkerFlavor Condition=" '$(LinkerFlavor)' == '' ">lld</LinkerFlavor>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_AndroidComputeIlcCompileInputs">
+    <PropertyGroup>
+      <!-- Turn trimmer warnings back to original value -->
+      <SuppressTrimAnalysisWarnings>$(_OriginalSuppressTrimAnalysisWarnings)</SuppressTrimAnalysisWarnings>
+    </PropertyGroup>
+    <ItemGroup>
+      <!-- Android needs a proper soname property or it will refuse to load the library -->
+      <LinkerArg Include="-Wl,-soname,lib$(TargetName)$(NativeBinaryExt)" />
+      <!-- Give ILLink's output to ILC -->
+      <IlcCompileInput Remove="@(IlcCompileInput)" />
+      <IlcCompileInput Include="$(IntermediateLinkDir)$(TargetName)$(TargetExt)" />
+      <_AndroidILLinkAssemblies Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" />
+      <IlcReference Remove="@(IlcReference)" />
+      <IlcReference Include="@(PrivateSdkAssemblies)" />
+      <IlcReference Include="@(_AndroidILLinkAssemblies)" />
+      <!-- Passes linked assemblies to outer MSBuild tasks/targets -->
+      <ResolvedFileToPublish Include="@(IlcCompileInput);@(_AndroidILLinkAssemblies)" RuntimeIdentifier="$(_OriginalRuntimeIdentifier)" />
+      <!-- Include libc++ -->
+      <ResolvedFileToPublish Include="$(_NdkSysrootDir)libc++_shared.so" RuntimeIdentifier="$(_OriginalRuntimeIdentifier)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidAfterLinkNative" AfterTargets="LinkNative">
+    <PropertyGroup>
+      <!-- Turn $(RuntimeIdentifier) back to original value -->
+      <RuntimeIdentifier>$(_OriginalRuntimeIdentifier)</RuntimeIdentifier>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_AndroidFixNativeLibraryFileName" AfterTargets="ComputeFilesToPublish">
+    <ItemGroup>
+      <!-- Fix paths to contain lib-prefix -->
+      <ResolvedFileToPublish Update="@(ResolvedFileToPublish)" ArchiveFileName="lib%(FileName)%(Extension)" Condition=" '%(Filename)%(Extension)' == '$(TargetName)$(NativeBinaryExt)' " />
+    </ItemGroup>
+  </Target>
+
+</Project>

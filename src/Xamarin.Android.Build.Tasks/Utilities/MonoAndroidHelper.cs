@@ -415,17 +415,6 @@ namespace Xamarin.Android.Tasks
 		}
 
 #if MSBUILD
-		internal static IEnumerable<ITaskItem> GetFrameworkAssembliesToTreatAsUserAssemblies (ITaskItem[] resolvedAssemblies)
-		{
-			var ret = new List<ITaskItem> ();
-			foreach (ITaskItem item in resolvedAssemblies) {
-				if (FrameworkAssembliesToTreatAsUserAssemblies.Contains (Path.GetFileName (item.ItemSpec)))
-					ret.Add (item);
-			}
-
-			return ret;
-		}
-
 		public static bool SaveMapFile (IBuildEngine4 engine, string mapFile, Dictionary<string, string> map)
 		{
 			engine?.RegisterTaskObjectAssemblyLocal (mapFile, map, RegisteredTaskObjectLifetime.Build);

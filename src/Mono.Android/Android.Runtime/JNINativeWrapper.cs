@@ -40,7 +40,7 @@ namespace Android.Runtime {
 			if (result != null)
 				return result;
 
-			if (JNIEnvInit.LogAssemblyCategory) {
+			if (Logger.LogAssembly) {
 				RuntimeNativeMethods.monodroid_log (LogLevel.Debug, LogCategories.Assembly, $"Falling back to System.Reflection.Emit for delegate type '{delegateType}': {dlg.Method}");
 			}
 

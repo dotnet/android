@@ -134,6 +134,11 @@ namespace Xamarin.ProjectTools
 			set { SetProperty (KnownProperties.UseJackAndJill, value.ToString ()); }
 		}
 
+		public string RuntimeIdentifier {
+			get { return GetProperty (KnownProperties.RuntimeIdentifier); }
+			set { SetProperty (KnownProperties.RuntimeIdentifier, value); }
+		}
+
 		public AndroidLinkMode AndroidLinkModeDebug {
 			get {
 				AndroidLinkMode m;

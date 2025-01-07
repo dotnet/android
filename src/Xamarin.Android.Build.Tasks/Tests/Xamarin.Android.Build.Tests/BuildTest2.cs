@@ -106,6 +106,74 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void NativeAOT ()
+		{
+			if (IsWindows) {
+				// Microsoft.NETCore.Native.Publish.targets(61,5): Cross-OS native compilation is not supported.
+				// Set $(DisableUnsupportedError)=true, Microsoft.NETCore.Native.Unix.targets(296,5): error : Platform linker ('C:\Android\android-sdk\ndk\26.3.11579264\toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android21-clang++' or 'gcc') not found in PATH. Ensure you have all the required prerequisites documented at https://aka.ms/nativeaot-prerequisites.
+				Assert.Ignore ("This test is not valid on Windows.");
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = "Hello",
+				IsRelease = true,
+				RuntimeIdentifier = "android-arm64",
+				// Add locally downloaded NativeAOT packs
+				ExtraNuGetConfigSources = {
+					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
+				}
+			};
+			proj.SetProperty ("PublishAot", "true");
+			proj.SetProperty ("PublishAotUsingRuntimePack", "true");
+			proj.SetProperty ("AndroidNdkDirectory", AndroidNdkPath);
+
+			using var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			b.Output.AssertTargetIsNotSkipped ("_PrepareLinking");
+
+			string [] mono_classes = [
+				"Lmono/MonoRuntimeProvider;",
+			];
+			string[] mono_files = [
+				"lib/arm64-v8a/libmonosgen-2.0.so",
+			];
+			string [] nativeaot_files = [
+				$"lib/arm64-v8a/lib{proj.ProjectName}.so",
+				"lib/arm64-v8a/libc++_shared.so",
+			];
+
+			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, proj.RuntimeIdentifier);
+			var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, proj.RuntimeIdentifier);
+
+			var linkedMonoAndroidAssembly = Path.Combine (intermediate, "linked", "Mono.Android.dll");
+			FileAssert.Exists (linkedMonoAndroidAssembly);
+			using (var assembly = AssemblyDefinition.ReadAssembly (linkedMonoAndroidAssembly)) {
+				var typeName = "Android.App.Activity";
+				var methodName = "GetOnCreate_Landroid_os_Bundle_Handler";
+				var type = assembly.MainModule.GetType (typeName);
+				Assert.IsNotNull (type, $"{linkedMonoAndroidAssembly} should contain {typeName}");
+				var method = type.Methods.FirstOrDefault (m => m.Name == methodName);
+				Assert.IsNotNull (method, $"{linkedMonoAndroidAssembly} should contain {typeName}.{methodName}");
+			}
+
+			var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
+			FileAssert.Exists (dexFile);
+			foreach (var className in mono_classes) {
+				Assert.IsFalse (DexUtils.ContainsClassWithMethod (className, "<init>", "()V", dexFile, AndroidSdkPath), $"`{dexFile}` should *not* include `{className}`!");
+			}
+
+			var apkFile = Path.Combine (output, $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apkFile);
+			using var zip = ZipHelper.OpenZip (apkFile);
+			foreach (var mono_file in mono_files) {
+				Assert.IsFalse (zip.ContainsEntry (mono_file, caseSensitive: true), $"APK must *not* contain `{mono_file}`.");
+			}
+			foreach (var nativeaot_file in nativeaot_files) {
+				Assert.IsTrue (zip.ContainsEntry (nativeaot_file, caseSensitive: true), $"APK must contain `{nativeaot_file}`.");
+			}
+		}
+
+		[Test]
 		public void BuildBasicApplicationThenMoveIt ([Values (true, false)] bool isRelease)
 		{
 			string path = Path.Combine (Root, "temp", TestName, "App1");

@@ -80,8 +80,6 @@
   <ItemGroup>
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\Mono.Android.Export.dll" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\Mono.Android.Export.pdb" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\OpenTK-1.0.dll" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\OpenTK-1.0.pdb" />
     <_FrameworkFiles Include="@(MonoFacadeAssembly->'$(FrameworkSrcDir)\$(BclFrameworkVersion)\Facades\%(Identity)')" />
     <_FrameworkFiles Include="@(MonoFacadeAssemblySymbol->'$(FrameworkSrcDir)\$(BclFrameworkVersion)\Facades\%(Identity)')" />
     <_FrameworkFiles Include="@(MonoProfileAssembly->'$(FrameworkSrcDir)\$(BclFrameworkVersion)\%(Identity)')" />
@@ -96,7 +94,6 @@
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.EnterpriseServices.pdb" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.dll" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.pdb" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\OpenTK-1.0.xml" />
     <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.xml" />
   </ItemGroup>
   <ItemGroup>

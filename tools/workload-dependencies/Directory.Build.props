@@ -1,0 +1,8 @@
+<Project>
+  <!--
+    This file exists so that we do NOT import top-level Configuration.props/etc.
+
+    This is so that we can cleanly import Xamarin.Installer.Common.props and
+    Xamarin.Android.Common.props from WorkloadDependencies.proj.
+    -->
+</Project>

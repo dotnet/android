@@ -8,12 +8,6 @@
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
 
-unsigned int
-monodroid_get_log_categories ()
-{
-	return log_categories;
-}
-
 int
 monodroid_get_system_property (const char *name, char **value)
 {
@@ -138,13 +132,6 @@ void
 monodroid_clear_gdb_wait ()
 {
     MonodroidRuntime::set_monodroid_gdb_wait (false);
-}
-
-void*
-_monodroid_get_identity_hash_code (JNIEnv *env, void *v)
-{
-    intptr_t rv = env->CallStaticIntMethod (MonodroidRuntime::get_java_class_System (), MonodroidRuntime::get_java_class_method_System_identityHashCode (), v);
-    return (void*) rv;
 }
 
 void*

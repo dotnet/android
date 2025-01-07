@@ -18,12 +18,6 @@ namespace Xamarin.Android.Tasks
 			"Mono.Data.Sqlite.dll",
 			"Mono.Posix.dll",
 		};
-		internal static readonly HashSet<string> FrameworkAssembliesToTreatAsUserAssemblies = new HashSet<string> (StringComparer.OrdinalIgnoreCase) {
-			"OpenTK-1.0.dll",
-			"Mono.Android.Support.v13.dll",
-			"Mono.Android.Support.v4.dll",
-			"Xamarin.Android.NUnitLite.dll",
-		};
 
 		public static bool IsFrameworkAssembly (string assembly)
 		{
@@ -33,14 +27,6 @@ namespace Xamarin.Android.Tasks
 		public static bool IsFrameworkAssembly (string assembly, bool checkSdkPath)
 		{
 			if (IsSharedRuntimeAssembly (assembly)) {
-#if MSBUILD
-				bool treatAsUser = FrameworkAssembliesToTreatAsUserAssemblies.Contains (Path.GetFileName (assembly));
-				// Framework assemblies don't come from outside the SDK Path;
-				// user assemblies do
-				if (checkSdkPath && treatAsUser && TargetFrameworkDirectories != null) {
-					return ExistsInFrameworkPath (assembly);
-				}
-#endif
 				return true;
 			}
 			return TargetFrameworkDirectories == null || !checkSdkPath ? false : ExistsInFrameworkPath (assembly);
