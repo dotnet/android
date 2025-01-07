@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Xamarin.Tools.Zip;
@@ -61,7 +62,7 @@ public class BuildArchive : AndroidTask
 			refresh = false;
 		}
 
-		using var apk = ZipArchiveDotNet.Create (Log, ApkOutputPath, System.IO.Compression.ZipArchiveMode.Update, UseLibZipSharp);
+		using var apk = ZipArchiveDotNet.Create (Log, ApkOutputPath, System.IO.Compression.ZipArchiveMode.Update, ShouldFallbackToLibZipSharp ());
 
 		// Set up AutoFlush
 		if (int.TryParse (ZipFlushFilesLimit, out int flushFilesLimit)) {
@@ -194,7 +195,7 @@ public class BuildArchive : AndroidTask
 			if (string.Compare (Path.GetFileName (entry), "AndroidManifest.xml", StringComparison.OrdinalIgnoreCase) == 0)
 				continue;
 
-			Log.LogDebugMessage ($"Removing {entry} as it is not longer required.");
+			Log.LogDebugMessage ($"Removing {entry} as it is no longer required.");
 			apk.DeleteEntry (entry);
 		}
 
@@ -202,6 +203,48 @@ public class BuildArchive : AndroidTask
 			FixupArchive (apk);
 
 		return !Log.HasLoggedErrors;
+	}
+
+	// .NET Framework has a bug where it doesn't handle uncompressed files correctly.
+	// It writes them as "compressed" (DEFLATE) but with a compression level of 0. This causes
+	// issues with Android, which expect uncompressed files to be stored correctly.
+	// We can work around this by using LibZipSharp, which doesn't have this bug.
+	// This is only necessary if we're on .NET Framework (MSBuild in VSWin) and we have uncompressed files.
+	bool ShouldFallbackToLibZipSharp ()
+	{
+		// Explicitly requested via MSBuild property.
+		if (UseLibZipSharp) {
+			Log.LogDebugMessage ("Falling back to LibZipSharp because '$(_AndroidUseLibZipSharp)' is 'true'.");
+			return true;
+		}
+
+		// .NET 6+ handles uncompressed files correctly, so we don't need to fallback.
+		if (RuntimeInformation.FrameworkDescription == ".NET")
+			return false;
+
+		// Nothing is going to get written uncompressed, so we don't need to fallback.
+		if (uncompressedMethod != CompressionMethod.Store)
+			return false;
+
+		// No uncompressed file extensions were specified, so we don't need to fallback.
+		if (UncompressedFileExtensionsSet.Count == 0)
+			return false;
+
+		// See if any of the files to be added need to be uncompressed.
+		foreach (var file in FilesToAddToArchive) {
+			var file_path = file.ItemSpec;
+
+			// Handle files from inside a .jar/.aar
+			if (file.GetMetadataOrDefault ("JavaArchiveEntry", null) is string jar_entry_name)
+				file_path = jar_entry_name;
+
+			if (UncompressedFileExtensionsSet.Contains (Path.GetExtension (file_path))) {
+				Log.LogDebugMessage ($"Falling back to LibZipSharp because '{file_path}' needs to be stored uncompressed.");
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	bool AddFileToArchiveIfNewer (IZipArchive apk, string file, string inArchivePath, ITaskItem item, List<string> existingEntries)
