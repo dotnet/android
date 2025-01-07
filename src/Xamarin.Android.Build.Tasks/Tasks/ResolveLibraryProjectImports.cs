@@ -211,9 +211,9 @@ namespace Xamarin.Android.Tasks
 				string nuGetPackageId = assemblyItem.GetMetadata (NuGetPackageId) ?? string.Empty;
 				string nuGetPackageVersion = assemblyItem.GetMetadata (NuGetPackageVersion) ?? string.Empty;
 				extractedDirectories.Add (new TaskItem (outDirForDll, new Dictionary<string, string> {
-					{ OriginalFile, assemblyPath },
-					{ NuGetPackageId, nuGetPackageId },
-					{ NuGetPackageVersion, nuGetPackageVersion }
+					[OriginalFile] = assemblyPath,
+					[NuGetPackageId] = nuGetPackageId,
+					[NuGetPackageVersion] = nuGetPackageVersion
 				}));
 
 				// Skip already-extracted resources.
@@ -230,10 +230,10 @@ namespace Xamarin.Android.Tasks
 					}
 					if (Directory.Exists (resDir)) {
 						var taskItem = new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
-							{ OriginalFile, assemblyPath },
-							{ ResourceDirectoryArchive, Path.GetFullPath (resDirArchive)},
-							{ NuGetPackageId, nuGetPackageId },
-							{ NuGetPackageVersion, nuGetPackageVersion },
+							[OriginalFile] = assemblyPath,
+							[ResourceDirectoryArchive] = Path.GetFullPath (resDirArchive),
+							[NuGetPackageId] = nuGetPackageId,
+							[NuGetPackageVersion] = nuGetPackageVersion,
 						});
 						if (bool.TryParse (assemblyItem.GetMetadata (AndroidSkipResourceProcessing), out skip) && skip)
 							taskItem.SetMetadata (AndroidSkipResourceProcessing, "True");
@@ -241,15 +241,15 @@ namespace Xamarin.Android.Tasks
 					}
 					if (Directory.Exists (assetsDir))
 						resolvedAssetDirectories.Add (new TaskItem (Path.GetFullPath (assetsDir), new Dictionary<string, string> {
-							{ OriginalFile, assemblyPath },
-							{ NuGetPackageId, nuGetPackageId },
-							{ NuGetPackageVersion, nuGetPackageVersion },
+							[OriginalFile] = assemblyPath,
+							[NuGetPackageId] = nuGetPackageId,
+							[NuGetPackageVersion] = nuGetPackageVersion,
 						}));
 					foreach (var env in Directory.EnumerateFiles (outDirForDll, "__AndroidEnvironment__*", SearchOption.TopDirectoryOnly)) {
 						resolvedEnvironments.Add (new TaskItem (env, new Dictionary<string, string> {
-							{ OriginalFile, assemblyPath },
-							{ NuGetPackageId, nuGetPackageId },
-							{ NuGetPackageVersion, nuGetPackageVersion },
+							[OriginalFile] = assemblyPath,
+							[NuGetPackageId] = nuGetPackageId,
+							[NuGetPackageVersion] = nuGetPackageVersion,
 						}));
 					}
 					continue;
