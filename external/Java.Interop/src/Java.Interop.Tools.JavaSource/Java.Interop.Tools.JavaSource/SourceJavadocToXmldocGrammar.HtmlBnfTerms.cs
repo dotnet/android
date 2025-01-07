@@ -66,7 +66,7 @@ namespace Java.Interop.Tools.JavaSource {
 				var fontstyle_i     = CreateHtmlToCrefElement (grammar, "i",    "i", InlineDeclarations, optionalEnd: true);
 
 				var preText = new PreBlockDeclarationBodyTerminal ();
-				PreBlockDeclaration.Rule = CreateStartElementIgnoreAttribute ("pre") + preText + CreateEndElement ("pre", grammar, optional: true);
+				PreBlockDeclaration.Rule = CreateStartElement ("pre") + preText + CreateEndElement ("pre", grammar, optional: true);
 				PreBlockDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
 					if (!grammar.ShouldImport (ImportJavadoc.Remarks)) {
 						parseNode.AstNode   = "";
@@ -82,7 +82,7 @@ namespace Java.Interop.Tools.JavaSource {
 				FontStyleDeclaration.Rule = fontstyle_tt | fontstyle_i;
 
 				PBlockDeclaration.Rule =
-					CreateStartElement ("p", grammar) + InlineDeclarations + CreateEndElement ("p", grammar, optional:true)
+					CreateStartElement ("p") + InlineDeclarations + CreateEndElement ("p", grammar, optional:true)
 					;
 				PBlockDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
 					var remarks     = FinishParse (context, parseNode).Remarks;
@@ -260,7 +260,7 @@ namespace Java.Interop.Tools.JavaSource {
 
 			static NonTerminal CreateHtmlToCrefElement (Grammar grammar, string htmlElement, string crefElement, BnfTerm body, bool optionalEnd = false)
 			{
-				var start       = CreateStartElement (htmlElement, grammar);
+				var start       = CreateStartElement (htmlElement);
 				var end         = CreateEndElement (htmlElement, grammar, optionalEnd);
 				var nonTerminal = new NonTerminal ("<" + htmlElement + ">", ConcatChildNodes) {
 					Rule = start + body + end,
@@ -275,26 +275,13 @@ namespace Java.Interop.Tools.JavaSource {
 				return nonTerminal;
 			}
 
-			static NonTerminal CreateStartElement (string startElement, Grammar grammar)
+			static RegexBasedTerminal CreateStartElement (string startElement, string attribute = "")
 			{
-				var start   = new NonTerminal ("<" + startElement + ">", nodeCreator: (context, parseNode) => parseNode.AstNode = "") {
-					Rule    = grammar.ToTerm ("<" + startElement + ">") | "<" + startElement.ToUpperInvariant () + ">",
-				};
-				return start;
-			}
-
-			static RegexBasedTerminal CreateStartElementIgnoreAttribute (string startElement, string attribute)
-			{
-				return new RegexBasedTerminal ($"<{startElement} {attribute}", $@"(?i)<{startElement}\s*{attribute}[^>]*>") {
+				return new RegexBasedTerminal ($"<{startElement} {attribute}>", $@"(?i)<\b{startElement}\b\s*{attribute}[^>]*>") {
 					AstConfig = new AstNodeConfig {
 						NodeCreator = (context, parseNode) => parseNode.AstNode = "",
 					},
 				};
-			}
-
-			static RegexBasedTerminal CreateStartElementIgnoreAttribute (string startElement)
-			{
-				return CreateStartElementIgnoreAttribute (startElement, "");
 			}
 
 			static NonTerminal CreateEndElement (string endElement, Grammar grammar, bool optional = false)

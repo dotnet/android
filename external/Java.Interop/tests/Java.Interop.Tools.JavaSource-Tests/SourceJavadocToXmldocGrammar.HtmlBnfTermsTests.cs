@@ -34,6 +34,10 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			r = p.Parse("<p>r= <em>unknown</em> text");
 			Assert.IsFalse (r.HasErrors (), DumpMessages (r, p));
 			Assert.AreEqual ("<para>r= &lt;em&gt;unknown&lt;/em&gt; text</para>", r.Root.AstNode.ToString ());
+
+			r = p.Parse ("<p>For <li>A <i id=\"deviceowner\">Device Owner</i>");
+			Assert.IsFalse (r.HasErrors (), DumpMessages (r, p));
+			Assert.AreEqual ("<para>For &lt;li&gt;A <i>Device Owner</i></para>", r.Root.AstNode.ToString ());
 		}
 
 		[Test]
