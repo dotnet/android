@@ -26,9 +26,20 @@ public class MonoPackageManager {
 
 	static android.content.Context Context;
 
-	public static void LoadApplication (Context context, ApplicationInfo runtimePackage, String[] apks)
+	public static void LoadApplication (Context context)
 	{
 		synchronized (lock) {
+			android.content.pm.ApplicationInfo runtimePackage = context.getApplicationInfo ();
+			String[] apks = null;
+			String[] splitApks = runtimePackage.splitSourceDirs;
+			if (splitApks != null && splitApks.length > 0) {
+				apks = new String[splitApks.length + 1];
+				apks [0] = runtimePackage.sourceDir;
+				System.arraycopy (splitApks, 0, apks, 1, splitApks.length);
+			} else {
+				apks = new String[] { runtimePackage.sourceDir };
+			}
+
 			if (context instanceof android.app.Application) {
 				Context = context;
 			}
