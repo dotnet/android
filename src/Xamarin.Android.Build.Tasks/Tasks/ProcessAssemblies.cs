@@ -84,7 +84,7 @@ namespace Xamarin.Android.Tasks
 			if (InputJavaLibraries != null) {
 				var javaLibraries = new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
 				foreach (var item in InputJavaLibraries) {
-					if (!IsFromAKnownRuntimePack (item))
+					if (!MonoAndroidHelper.IsFromAKnownRuntimePack (item))
 						continue;
 					var name = Path.GetFileNameWithoutExtension(item.ItemSpec);
 					if (!javaLibraries.ContainsKey (name)) {
@@ -126,7 +126,7 @@ namespace Xamarin.Android.Tasks
 				ITaskItem? symbol = GetOrCreateSymbolItem (symbols, assembly);
 				SetAssemblyAbiMetadata (assembly, symbol);
 				SetDestinationSubDirectory (assembly, symbol);
-				assembly.SetMetadata ("FrameworkAssembly", IsFromAKnownRuntimePack (assembly).ToString ());
+				assembly.SetMetadata ("FrameworkAssembly", MonoAndroidHelper.IsFrameworkAssembly (assembly).ToString ());
 
 				if (!DesignTimeBuild) {
 					// Designer builds don't produce assemblies, the HasMonoAndroidReference call would throw an exception in that case
@@ -134,13 +134,6 @@ namespace Xamarin.Android.Tasks
 				}
 				output.Add (assembly);
 			}
-		}
-
-		static bool IsFromAKnownRuntimePack (ITaskItem assembly)
-		{
-			string packageId = assembly.GetMetadata ("NuGetPackageId") ?? "";
-			return packageId.StartsWith ("Microsoft.NETCore.App.Runtime.", StringComparison.Ordinal) ||
-				packageId.StartsWith ("Microsoft.Android.Runtime.", StringComparison.Ordinal);
 		}
 
 		static ITaskItem? GetOrCreateSymbolItem (Dictionary<string, ITaskItem> symbols, ITaskItem assembly)

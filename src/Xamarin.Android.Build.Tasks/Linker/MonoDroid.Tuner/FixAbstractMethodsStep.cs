@@ -12,7 +12,6 @@ using Mono.Linker.Steps;
 
 using Mono.Tuner;
 #if ILLINK
-using Microsoft.Android.Sdk.ILLink;
 using Resources = Microsoft.Android.Sdk.ILLink.Properties.Resources;
 #else   // !ILLINK
 using Resources = Xamarin.Android.Tasks.Properties.Resources;
@@ -52,9 +51,6 @@ namespace MonoDroid.Tuner
 		{
 			if (!Annotations.HasAction (assembly))
 				Annotations.SetAction (assembly, AssemblyAction.Skip);
-
-			if (IsProductOrSdkAssembly (assembly))
-				return false;
 
 			CheckAppDomainUsage (assembly, (string msg) =>
 #if ILLINK
@@ -129,12 +125,6 @@ namespace MonoDroid.Tuner
 				}
 			}
 		}
-
-		bool IsProductOrSdkAssembly (AssemblyDefinition assembly) =>
-			IsProductOrSdkAssembly (assembly.Name.Name);
-
-		public bool IsProductOrSdkAssembly (string assemblyName) =>
-			Profile.IsSdkAssembly (assemblyName) || Profile.IsProductAssembly (assemblyName);
 
 		bool MightNeedFix (TypeDefinition type)
 		{

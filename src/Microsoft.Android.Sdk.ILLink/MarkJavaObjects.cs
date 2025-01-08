@@ -6,7 +6,6 @@ using Mono.Linker;
 using Mono.Linker.Steps;
 using Java.Interop.Tools.Cecil;
 using Xamarin.Android.Tasks;
-using Profile = Microsoft.Android.Sdk.ILLink.Profile;
 
 namespace MonoDroid.Tuner {
 
@@ -27,11 +26,6 @@ namespace MonoDroid.Tuner {
 
 		bool IsActiveFor (AssemblyDefinition assembly)
 		{
-			if (Profile.IsSdkAssembly (assembly))
-				return false;
-			if (Profile.IsProductAssembly (assembly))
-				return false;
-
 			return assembly.MainModule.HasTypeReference ("System.Net.Http.HttpMessageHandler") ||
 				assembly.MainModule.HasTypeReference ("Java.Lang.Object") ||
 				assembly.MainModule.HasTypeReference ("Android.Util.IAttributeSet");
@@ -107,7 +101,7 @@ namespace MonoDroid.Tuner {
 			// If a user overrode a method, we need to preserve it,
 			// because it won't be referenced anywhere, but it will
 			// be called from Java
-			if (IsUserType (type) && type.HasMethods) {
+			if (type.HasMethods) {
 				foreach (var method in type.Methods.Where (m => m.Overrides != null))
 					PreserveMethod (type, method);
 			}
@@ -393,11 +387,6 @@ namespace MonoDroid.Tuner {
 		static bool IsImplementor (TypeDefinition type, IMetadataResolver cache)
 		{
 			return type.Name.EndsWith ("Implementor", StringComparison.Ordinal) && type.Inherits ("Java.Lang.Object", cache);
-		}
-
-		static bool IsUserType (TypeDefinition type)
-		{
-			return !MonoAndroidHelper.IsFrameworkAssembly (type.Module.Assembly.Name.Name + ".dll");
 		}
 
 		void PreserveImplementor (TypeDefinition type)

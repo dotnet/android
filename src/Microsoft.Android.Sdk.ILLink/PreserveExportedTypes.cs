@@ -24,7 +24,8 @@ namespace Mono.Tuner {
 
 		public override bool IsActiveFor (AssemblyDefinition assembly)
 		{
-			return !Profile.IsSdkAssembly (assembly);
+			return assembly.MainModule.HasTypeReference ("Java.Interop.ExportAttribute") ||
+				assembly.MainModule.HasTypeReference ("Java.Interop.ExportFieldAttribute");
 		}
 
 		public override void ProcessField (FieldDefinition field)

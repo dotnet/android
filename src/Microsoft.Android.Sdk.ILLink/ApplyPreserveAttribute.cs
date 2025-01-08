@@ -25,7 +25,7 @@ namespace Microsoft.Android.Sdk.ILLink
 
 		public override bool IsActiveFor (AssemblyDefinition assembly)
 		{
-			return !Profile.IsSdkAssembly (assembly) && Annotations.GetAction (assembly) == AssemblyAction.Link;
+			return Annotations.GetAction (assembly) == AssemblyAction.Link;
 		}
 
 		public override void ProcessType (TypeDefinition type)

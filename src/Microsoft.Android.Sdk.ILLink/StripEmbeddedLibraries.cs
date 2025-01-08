@@ -18,11 +18,6 @@ namespace MonoDroid.Tuner
 				return;
 
 			var fileName = assembly.Name.Name + ".dll";
-			if (MonoAndroidHelper.IsFrameworkAssembly (fileName) &&
-					!MonoAndroidHelper.FrameworkEmbeddedJarLookupTargets.Contains (fileName) &&
-					!MonoAndroidHelper.FrameworkEmbeddedNativeLibraryAssemblies.Contains (fileName))
-				return;
-
 			bool assembly_modified = false;
 			foreach (var mod in assembly.Modules) {
 				foreach (var r in mod.Resources.ToArray ()) {

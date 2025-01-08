@@ -170,12 +170,6 @@ namespace Xamarin.Android.Tasks
 			foreach (var assemblyItem in Assemblies) {
 				var assemblyPath = assemblyItem.ItemSpec;
 				var fileName = Path.GetFileName (assemblyPath);
-				if (MonoAndroidHelper.IsFrameworkAssembly (fileName) &&
-						!MonoAndroidHelper.FrameworkEmbeddedJarLookupTargets.Contains (fileName) &&
-						!MonoAndroidHelper.FrameworkEmbeddedNativeLibraryAssemblies.Contains (fileName)) {
-					Log.LogDebugMessage ($"Skipping framework assembly '{fileName}'.");
-					continue;
-				}
 				if (!File.Exists (assemblyPath)) {
 					Log.LogDebugMessage ($"Skipping non-existent dependency '{assemblyPath}'.");
 					continue;
@@ -184,8 +178,7 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ("Skipping resource extraction for '{0}' .", assemblyPath);
 					continue;
 				}
-				string assemblyFileName = Path.GetFileName (assemblyPath);
-				string assemblyIdentName = assemblyMap.GetLibraryImportDirectoryNameForAssembly (assemblyFileName);
+				string assemblyIdentName = assemblyMap.GetLibraryImportDirectoryNameForAssembly (fileName);
 				string outDirForDll = Path.Combine (OutputImportDirectory, assemblyIdentName);
 				string importsDir = Path.Combine (outDirForDll, ImportsDirectory);
 				string nativeimportsDir = Path.Combine (outDirForDll, NativeImportsDirectory);
@@ -226,7 +219,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				Log.LogDebugMessage ($"Refreshing {assemblyFileName}");
+				Log.LogDebugMessage ($"Refreshing {fileName}");
 
 				using (var pe = new PEReader (File.OpenRead (assemblyPath))) {
 					var reader = pe.GetMetadataReader ();
