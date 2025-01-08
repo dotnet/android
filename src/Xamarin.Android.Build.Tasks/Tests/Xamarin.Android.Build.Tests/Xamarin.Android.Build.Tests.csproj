@@ -9,6 +9,7 @@
     <DebugSymbols>True</DebugSymbols>
     <DebugType>portable</DebugType>
     <NoWarn>$(NoWarn);CA1305</NoWarn>
+    <Nullable>annotations</Nullable>
   </PropertyGroup>
 
   <Import Project="..\..\..\..\Configuration.props" />
