@@ -78,9 +78,9 @@ namespace Xamarin.Android.Tasks
 					return (Unknown, Unknown, Unknown);
 				}
 
-				string? metaValue = item.GetMetadata ("OriginalFile");
+				string? metaValue = item.GetMetadata ("PathInPackage");
 				if (String.IsNullOrEmpty (metaValue)) {
-					metaValue = item.GetMetadata ("PathInPackage");
+					metaValue = item.GetMetadata ("OriginalFile");
 					if (String.IsNullOrEmpty (metaValue)) {
 						metaValue = item.ItemSpec;
 					}
