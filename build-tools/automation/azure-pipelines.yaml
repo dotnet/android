@@ -212,9 +212,9 @@ extends:
             forceReinstallCredentialProvider: true
 
         - script: |
-            echo ##vso[task.setvariable variable=JI_JAVA_HOME]%JAVA_HOME_17_X64%
-            echo ##vso[task.setvariable variable=JAVA_HOME]%JAVA_HOME_17_X64%
-          displayName: set JI_JAVA_HOME, JAVA_HOME to $(JAVA_HOME_17_X64)
+            echo ##vso[task.setvariable variable=JI_JAVA_HOME]%JAVA_HOME_21_X64%
+            echo ##vso[task.setvariable variable=JAVA_HOME]%JAVA_HOME_21_X64%
+          displayName: set JI_JAVA_HOME, JAVA_HOME to $(JAVA_HOME_21_X64)
 
         - script: echo "##vso[task.prependpath]C:\Windows\System32\WindowsPowerShell\v1.0\"
           displayName: add powershell to path

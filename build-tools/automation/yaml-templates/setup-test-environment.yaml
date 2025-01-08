@@ -1,7 +1,7 @@
 parameters:
   configuration: $(XA.Build.Configuration)
   xaSourcePath: $(System.DefaultWorkingDirectory)
-  jdkTestFolder: $(JAVA_HOME_17_X64)
+  jdkTestFolder: $(JAVA_HOME_21_X64)
   remove_dotnet: false
   dotnetVersion: $(DotNetSdkVersion)
   dotnetQuality: $(DotNetSdkQuality)

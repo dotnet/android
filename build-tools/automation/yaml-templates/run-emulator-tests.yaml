@@ -4,7 +4,7 @@ parameters:
   emulatorMSBuildArgs: ''
   jobName: CheckTimeZoneInfoIsCorrectNode1
   jobTimeout: 360
-  jdkTestFolder: $(JAVA_HOME_17_X64)
+  jdkTestFolder: $(JAVA_HOME_21_X64)
   testSteps: []
   use1ESTemplate: true
 
