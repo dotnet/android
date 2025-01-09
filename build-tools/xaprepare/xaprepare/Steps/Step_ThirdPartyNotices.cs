@@ -151,7 +151,7 @@ implication, estoppel or otherwise."			}
 			if (!File.Exists (path))
 				throw new InvalidOperationException ($"License file {path} does not exist");
 
-			return File.ReadAllText (path);
+			return File.ReadAllText (path).ReplaceLineEndings ();
 		}
 
 		void EnsureValidTPNType (Type type)
