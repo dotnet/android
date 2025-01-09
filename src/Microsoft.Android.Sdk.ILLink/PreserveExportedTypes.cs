@@ -2,12 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-
+using Microsoft.Android.Sdk.ILLink;
+using Mono.Cecil;
 using Mono.Linker;
 using Mono.Linker.Steps;
-
-using Mono.Cecil;
-using Microsoft.Android.Sdk.ILLink;
+using Xamarin.Android.Tasks;
 
 namespace Mono.Tuner {
 

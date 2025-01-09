@@ -2,11 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-
+using Mono.Cecil;
 using Mono.Linker;
 using Mono.Linker.Steps;
-
-using Mono.Cecil;
+using Xamarin.Android.Tasks;
 
 namespace Microsoft.Android.Sdk.ILLink
 {
