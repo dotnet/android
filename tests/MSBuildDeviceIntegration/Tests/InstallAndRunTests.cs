@@ -876,6 +876,8 @@ namespace UnnamedProject
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
 			};
+			// Requires 32-bit ABIs
+			proj.SetAndroidSupportedAbis (["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]);
 
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
