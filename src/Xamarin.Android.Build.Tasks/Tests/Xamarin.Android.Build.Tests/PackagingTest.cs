@@ -397,7 +397,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			} else {
 				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			}
-			using (var b = CreateApkBuilder ()) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
 				Assert.IsTrue (b.Build (proj), "First build failed");
 				b.AssertHasNoWarnings ();
