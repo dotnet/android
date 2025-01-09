@@ -104,7 +104,7 @@ namespace MonoDroid.Tuner {
 			// If a user overrode a method, we need to preserve it,
 			// because it won't be referenced anywhere, but it will
 			// be called from Java
-			if (type.HasMethods) {
+			if (IsUserType (type) && type.HasMethods) {
 				foreach (var method in type.Methods.Where (m => m.Overrides != null))
 					PreserveMethod (type, method);
 			}
@@ -390,6 +390,11 @@ namespace MonoDroid.Tuner {
 		static bool IsImplementor (TypeDefinition type, IMetadataResolver cache)
 		{
 			return type.Name.EndsWith ("Implementor", StringComparison.Ordinal) && type.Inherits ("Java.Lang.Object", cache);
+		}
+
+		static bool IsUserType (TypeDefinition type)
+		{
+			return !MonoAndroidHelper.IsFrameworkAssembly (type.Module.Assembly);
 		}
 
 		void PreserveImplementor (TypeDefinition type)
