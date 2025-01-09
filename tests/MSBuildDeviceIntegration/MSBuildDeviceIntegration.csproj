@@ -9,6 +9,7 @@
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <DebugSymbols>True</DebugSymbols>
     <DebugType>portable</DebugType>
+    <Nullable>annotations</Nullable>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
