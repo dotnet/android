@@ -1063,11 +1063,12 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
 {1} - NuGet package version</comment>
   </data>
   <data name="XA0141" xml:space="preserve">
-    <value>Das NuGet-Paket „{0}“ Version „{1}“ enthält eine freigegebene Bibliothek „{2}“, die nicht ordnungsgemäß ausgerichtet ist. Weitere Informationen finden Sie unter https://developer.android.com/guide/practices/page-sizes</value>
+    <value>Android 16 will require 16 KB page sizes, shared library '{3}' does not have a 16 KB page size. Please inform the authors of the NuGet package '{0}' version '{1}' which contains '{2}'. See https://developer.android.com/guide/practices/page-sizes for more details.</value>
     <comment>The following is a literal name and should not be translated: NuGet
 {0} - NuGet package id
 {1} - NuGet package version
-{2} - shared library file name
+{2} - Source location path
+{3} - shared library file name
     </comment>
   </data>
   <data name="XA4249" xml:space="preserve">
