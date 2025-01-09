@@ -2117,7 +2117,6 @@ because xbuild doesn't support framework reference assemblies.
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       ApkOutputPath="$(_ApkOutputPath)"
       AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
-      EmbedAssemblies="$(EmbedAssembliesIntoApk)"
       EnableCompression="$(AndroidEnableAssemblyCompression)"
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
       IntermediateOutputPath="$(IntermediateOutputPath)"
@@ -2247,21 +2246,6 @@ because xbuild doesn't support framework reference assemblies.
       LibraryProjectJars="@(ExtractedJarImports)">
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectJarContentFilesForArchive>
-    
-  <CollectAssemblyFilesForArchive
-      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-      ApkOutputPath="$(_ApkOutputPath)"
-      AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
-      EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-      EnableCompression="$(AndroidEnableAssemblyCompression)"
-      IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
-      IntermediateOutputPath="$(IntermediateOutputPath)"
-      ProjectFullPath="$(MSBuildProjectFullPath)"
-      ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
-      ResolvedUserAssemblies="@(_ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths)"
-      SupportedAbis="@(_BuildTargetAbis)">
-    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
-  </CollectAssemblyFilesForArchive>
 
   <CollectRuntimeConfigFilesForArchive
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
