@@ -979,7 +979,7 @@ namespace UnamedProject
 				ProjectName = "App1",
 				References = { new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj") },
 			};
-			var projectPath = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
+			var projectPath = Path.Combine ("temp", TestName);
 			using (var libb = CreateDllBuilder (Path.Combine (projectPath, lib.ProjectName), false, false)) {
 				Assert.IsTrue (libb.Build (lib), "Build of library should have succeeded");
 				using (var b = CreateApkBuilder (Path.Combine (projectPath, proj.ProjectName), false, false)) {
