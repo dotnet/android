@@ -27,6 +27,21 @@ steps:
     jdkMajorVersion: ${{ parameters.jdkMajorVersion }}
     useAgentJdkPath: ${{ parameters.useAgentJdkPath }}
 
+# If an explicit Java SDK path wasn't provided, choose JDK-17 for the appropriate architecture
+- pwsh: |
+    Write-Host "##vso[task.setvariable variable=JI_JAVA_HOME]$env:JAVA_HOME_17_X64"
+  displayName: set JI_JAVA_HOME to JAVA_HOME_17_X64
+  condition: and(succeeded(), eq('${{ parameters.jdkTestFolder }}', ''), eq(variables['agent.osarchitecture'], 'X64'))
+
+- pwsh: |
+    Write-Host "##vso[task.setvariable variable=JI_JAVA_HOME]$env:JAVA_HOME_17_arm64"
+  displayName: set JI_JAVA_HOME to JAVA_HOME_17_arm64
+  condition: and(succeeded(), eq('${{ parameters.jdkTestFolder }}', ''), eq(variables['agent.osarchitecture'], 'ARM64'))
+
+- script: |
+    echo $(JI_JAVA_HOME)
+  displayName: print JI_JAVA_HOME
+
 # Install latest .NET
 - template: /build-tools/automation/yaml-templates/use-dot-net.yaml
   parameters:
