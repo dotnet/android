@@ -23,7 +23,7 @@ projects.
       <_AarSearchDirectory   Include="@(_ReferencePath->'%(RootDir)%(Directory)')" />
       <_AarSearchDirectory   Include="@(_ReferenceDependencyPaths->'%(RootDir)%(Directory)')" />
       <_AarDistinctDirectory Include="@(_AarSearchDirectory->Distinct())" />
-      <_AarFromLibraries     Include="%(_AarDistinctDirectory.Identity)*.aar" />
+      <_AarFromLibraries     Include="%(_AarDistinctDirectory.Identity)*.aar" NuGetPackageId="%(_AarDistinctDirectory.NuGetPackageId)" NuGetPackageVersion="%(_AarDistinctDirectory.NuGetPackageVersion)"/>
     </ItemGroup>
     <ItemGroup Condition=" '@(_AarFromLibraries->Count())' != '0' ">
       <!--

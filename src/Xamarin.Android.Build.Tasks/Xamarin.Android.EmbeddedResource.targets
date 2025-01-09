@@ -64,6 +64,7 @@ This file is used by all project types, including binding projects.
       <Output TaskParameter="ResolvedEnvironmentFiles" ItemName="LibraryEnvironments" />
       <Output TaskParameter="ResolvedResourceDirectoryStamps" ItemName="_LibraryResourceDirectoryStamps" />
       <Output TaskParameter="ProguardConfigFiles" ItemName="ProguardConfiguration" />
+      <Output TaskParameter="ExtractedDirectories" ItemName="_ExtractedDirectories" />
     </ReadLibraryProjectImportsCache>
     <ItemGroup>
       <FileWrites Include="@(ResolvedResourceDirectories->'%(ResourceDirectoryArchive)')"
@@ -75,7 +76,7 @@ This file is used by all project types, including binding projects.
       Inputs="$(_AndroidLibraryProjectImportsCache)"
       Outputs="$(_AndroidStampDirectory)_BuildLibraryImportsCache.stamp">
     <GetImportedLibraries
-        TargetDirectory="$(_AndroidLibrayProjectIntermediatePath)"
+        ExtractedDirectories="@(_ExtractedDirectories)"
         CacheFile="$(_AndroidLibraryImportsCache)"
     />
     <Touch Files="$(_AndroidStampDirectory)_BuildLibraryImportsCache.stamp" AlwaysCreate="true" />

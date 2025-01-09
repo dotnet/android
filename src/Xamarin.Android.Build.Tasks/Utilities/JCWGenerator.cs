@@ -99,7 +99,7 @@ class JCWGenerator
 			throw new ArgumentException ("must not be null or empty", nameof (outputPath));
 		}
 
-		string monoInit = GetMonoInitSource (androidSdkPlatform);
+		string monoInit = "mono.MonoPackageManager.LoadApplication (context);";
 		bool hasExportReference = context.ResolvedAssemblies.Any (assembly => Path.GetFileName (assembly.ItemSpec) == "Mono.Android.Export.dll");
 		bool ok = true;
 
@@ -183,44 +183,6 @@ class JCWGenerator
 		};
 
 		return CecilImporter.CreateType (type, context.TypeDefinitionCache, reader_options);
-	}
-
-	static string GetMonoInitSource (string androidSdkPlatform)
-	{
-		if (String.IsNullOrEmpty (androidSdkPlatform)) {
-			throw new ArgumentException ("must not be null or empty", nameof (androidSdkPlatform));
-		}
-
-		// Lookup the mono init section from MonoRuntimeProvider:
-		// Mono Runtime Initialization {{{
-		// }}}
-		var builder = new StringBuilder ();
-		var runtime = "Bundled";
-		var api = "";
-		if (int.TryParse (androidSdkPlatform, out int apiLevel) && apiLevel < 21) {
-			api = ".20";
-		}
-
-		var assembly = Assembly.GetExecutingAssembly ();
-		using var s = assembly.GetManifestResourceStream ($"MonoRuntimeProvider.{runtime}{api}.java");
-		using var reader = new StreamReader (s);
-		bool copy = false;
-		string? line;
-		while ((line = reader.ReadLine ()) != null) {
-			if (string.CompareOrdinal ("\t\t// Mono Runtime Initialization {{{", line) == 0) {
-				copy = true;
-			}
-
-			if (copy) {
-				builder.AppendLine (line);
-			}
-
-			if (string.CompareOrdinal ("\t\t// }}}", line) == 0) {
-				break;
-			}
-		}
-
-		return builder.ToString ();
 	}
 
 	public static void EnsureAllArchitecturesAreIdentical (TaskLoggingHelper logger, ConcurrentDictionary<AndroidTargetArch, NativeCodeGenState> javaStubStates)

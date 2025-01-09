@@ -8,6 +8,7 @@
     <AssemblyOriginatorKeyFile>..\..\..\..\product.snk</AssemblyOriginatorKeyFile>
     <NoWarn>$(NoWarn);CA1305</NoWarn>
     <_IncludeMicrosoftBuildPackage>true</_IncludeMicrosoftBuildPackage>
+    <Nullable>annotations</Nullable>
   </PropertyGroup>
   <Import Project="..\..\..\..\Configuration.props" />
   <Import Project="..\..\..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />

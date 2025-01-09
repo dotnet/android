@@ -29,8 +29,6 @@ public class CollectAssemblyFilesForArchive : AndroidTask
 	[Required]
 	public string AppSharedLibrariesDir { get; set; } = "";
 
-	public bool EmbedAssemblies { get; set; }
-
 	[Required]
 	public bool EnableCompression { get; set; }
 
@@ -58,10 +56,6 @@ public class CollectAssemblyFilesForArchive : AndroidTask
 
 	public override bool RunTask ()
 	{
-		// If we aren't embedding assemblies, we don't need to do anything
-		if (!EmbedAssemblies)
-			return !Log.HasLoggedErrors;
-
 		var files = new PackageFileListBuilder ();
 
 		DSOWrapperGenerator.Config dsoWrapperConfig = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, IntermediateOutputPath);

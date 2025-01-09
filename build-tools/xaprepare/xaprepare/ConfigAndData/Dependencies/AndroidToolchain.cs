@@ -73,13 +73,13 @@ namespace Xamarin.Android.Prepare
 				new AndroidPlatformComponent ("platform-33-ext3_r03",   apiLevel: "33", pkgRevision: "3"),
 				new AndroidPlatformComponent ("platform-34-ext7_r02",   apiLevel: "34", pkgRevision: "2"),
 				new AndroidPlatformComponent ("platform-35_r01",   apiLevel: "35", pkgRevision: "1", isLatestStable: true),
-				new AndroidPlatformComponent ("platform-Baklava_r01",   apiLevel: "Baklava", pkgRevision: "1", isLatestStable: true),
+				new AndroidPlatformComponent ("platform-Baklava_r03",   apiLevel: "Baklava", pkgRevision: "3", isLatestStable: true),
 
-				new AndroidToolchainComponent ("sources-34_r01",
-					destDir: Path.Combine ("sources", "android-34"),
+				new AndroidToolchainComponent ("source-35_r01",
+					destDir: Path.Combine ("sources", "android-35"),
 					pkgRevision: "1",
 					dependencyType: AndroidToolchainComponentType.BuildDependency,
-					buildToolVersion: "34.1"
+					buildToolVersion: "35.1"
 				),
 				new AndroidToolchainComponent ("docs-24_r01",
 					destDir: "docs",

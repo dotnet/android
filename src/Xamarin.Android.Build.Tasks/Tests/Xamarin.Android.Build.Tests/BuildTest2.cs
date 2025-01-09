@@ -376,6 +376,25 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void XA0141ErrorIsRaised ([Values (false, true)] bool isRelease)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				PackageReferences = {
+					KnownPackages.SkiaSharp,
+					KnownPackages.AndroidXAppCompat,
+					KnownPackages.AndroidXAppCompatResources,
+				},
+			};
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "XA0141"),
+					"Error XA0141 should have been raised.");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, $"NuGet package 'SkiaSharp.NativeAssets.Android' version '{KnownPackages.SkiaSharp.Version}' "), "Warning does not have the correct Nuget package information.");
+			}
+		}
+
+		[Test]
 		[TestCase ("AndroidFastDeploymentType", "Assemblies", true, false)]
 		[TestCase ("AndroidFastDeploymentType", "Assemblies", false, false)]
 		[TestCase ("_AndroidUseJavaLegacyResolver", "true", false, true)]
