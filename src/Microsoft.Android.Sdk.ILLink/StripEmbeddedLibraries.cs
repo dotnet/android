@@ -17,12 +17,13 @@ namespace MonoDroid.Tuner
 			if (action == AssemblyAction.Skip || action == AssemblyAction.Delete)
 				return;
 
-			var fileName = assembly.Name.Name + ".dll";
+			if (MonoAndroidHelper.IsFrameworkAssembly (assembly))
+				return;
 			bool assembly_modified = false;
 			foreach (var mod in assembly.Modules) {
 				foreach (var r in mod.Resources.ToArray ()) {
 					if (ShouldStripResource (r)) {
-						Context.LogMessage ($"    Stripped {r.Name} from {fileName}");
+						Context.LogMessage ($"    Stripped {r.Name} from {assembly.Name.Name}.dll");
 						mod.Resources.Remove (r);
 						assembly_modified = true;
 					}

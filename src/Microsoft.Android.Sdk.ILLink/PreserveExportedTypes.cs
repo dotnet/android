@@ -24,6 +24,9 @@ namespace Mono.Tuner {
 
 		public override bool IsActiveFor (AssemblyDefinition assembly)
 		{
+			if (MonoAndroidHelper.IsFrameworkAssembly (assembly))
+				return false;
+
 			return assembly.MainModule.HasTypeReference ("Java.Interop.ExportAttribute") ||
 				assembly.MainModule.HasTypeReference ("Java.Interop.ExportFieldAttribute");
 		}

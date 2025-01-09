@@ -93,6 +93,9 @@ namespace MonoDroid.Tuner
 		{
 			if (mainDesigner == null)
 				return false;
+			if (MonoAndroidHelper.IsFrameworkAssembly (assembly))
+				return false;
+
 			LogMessage ($"  Fixing up {assembly.Name.Name}");
 			TypeDefinition localDesigner = null;
 			CustomAttribute designerAttribute;

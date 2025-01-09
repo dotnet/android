@@ -26,6 +26,9 @@ namespace MonoDroid.Tuner {
 
 		bool IsActiveFor (AssemblyDefinition assembly)
 		{
+			if (MonoAndroidHelper.IsFrameworkAssembly (assembly))
+				return false;
+
 			return assembly.MainModule.HasTypeReference ("System.Net.Http.HttpMessageHandler") ||
 				assembly.MainModule.HasTypeReference ("Java.Lang.Object") ||
 				assembly.MainModule.HasTypeReference ("Android.Util.IAttributeSet");

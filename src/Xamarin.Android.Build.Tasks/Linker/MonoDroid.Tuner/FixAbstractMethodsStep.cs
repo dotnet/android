@@ -52,6 +52,9 @@ namespace MonoDroid.Tuner
 			if (!Annotations.HasAction (assembly))
 				Annotations.SetAction (assembly, AssemblyAction.Skip);
 
+			if (MonoAndroidHelper.IsFrameworkAssembly (assembly))
+				return false;
+
 			CheckAppDomainUsage (assembly, (string msg) =>
 #if ILLINK
 				Context.LogMessage (MessageContainer.CreateCustomWarningMessage (Context, msg, 6200, new MessageOrigin (), WarnVersion.ILLink5))

@@ -2,11 +2,24 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using Mono.Cecil;
 
 namespace Xamarin.Android.Tasks
 {
 	public partial class MonoAndroidHelper
 	{
+		static readonly HashSet<string> KnownAssemblyNames = new (StringComparer.Ordinal) {
+			"Mono.Android",
+			"Mono.Android.Export",
+			"Java.Interop",
+		};
+
+		public static bool IsFrameworkAssembly (AssemblyDefinition assembly) =>
+			KnownAssemblyNames.Contains (assembly.Name.Name);
+
+		public static bool IsFrameworkAssembly (string assembly) =>
+			KnownAssemblyNames.Contains (Path.GetFileNameWithoutExtension (assembly));
+
 		static readonly char [] CustomViewMapSeparator = [';'];
 
 		public static Dictionary<string, HashSet<string>> LoadCustomViewMapFile (string mapFile)
