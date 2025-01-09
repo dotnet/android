@@ -556,7 +556,7 @@ namespace UnnamedProject
 			};
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "False");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+			using (var b = CreateApkBuilder ()) {
 				var designer = Path.Combine ("Resources", "Resource.designer" + proj.Language.DefaultDesignerExtension);
 				if (File.Exists (designer))
 					File.Delete (Path.Combine (Root, b.ProjectDirectory, designer));
