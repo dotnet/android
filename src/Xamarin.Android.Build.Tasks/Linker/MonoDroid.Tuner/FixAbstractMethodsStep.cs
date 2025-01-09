@@ -2,15 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-
-using Mono.Cecil;
-
 using Java.Interop.Tools.Cecil;
-
+using Mono.Cecil;
 using Mono.Linker;
 using Mono.Linker.Steps;
-
 using Mono.Tuner;
+using Xamarin.Android.Tasks;
+
 #if ILLINK
 using Resources = Microsoft.Android.Sdk.ILLink.Properties.Resources;
 #else   // !ILLINK
