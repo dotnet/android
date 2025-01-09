@@ -238,12 +238,15 @@
 
   <PropertyGroup>
     <!-- Override these properties to generate docs against a specific API level -->
-    <DocsApiLevel Condition=" '$(DocsApiLevel)' == '' ">34</DocsApiLevel>
+    <DocsApiLevel Condition=" '$(DocsApiLevel)' == '' ">35</DocsApiLevel>
     <DocsPlatformId Condition=" '$(DocsPlatformId)' == '' ">$(DocsApiLevel)</DocsPlatformId>
     <DocsFxMoniker Condition=" '$(DocsFxMoniker)' == '' ">net-android-$(DocsApiLevel).0</DocsFxMoniker>
     <DocsExportOutput Condition=" '$(DocsExportOutput)' == '' ">$(_MonoAndroidNETDefaultOutDir)Mono.Android.xml</DocsExportOutput>
     <_ExternalDocsRoot>$(XamarinAndroidSourcePath)external/android-api-docs/docs/xml</_ExternalDocsRoot>
     <_LogPrefix>$(MSBuildThisFileDirectory)../../bin/Build$(Configuration)/UpdateApiDocs-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss"))</_LogPrefix>
+    <_ManagedRuntime Condition=" !$([MSBuild]::IsOSPlatform('windows')) ">mono</_ManagedRuntime>
+    <_MdocExe Condition=" '$(Pkgmdoc)' != '' ">"$(Pkgmdoc)/tools/net471/mdoc.exe"</_MdocExe>
+    <_MdocExe Condition=" '$(Pkgmdoc)' == '' ">"$(XAPackagesDir)/mdoc/$(MdocPackageVersion)/tools/net471/mdoc.exe"</_MdocExe>
     <_Mdoc Condition=" '$(Pkgmdoc)' != '' ">"$(Pkgmdoc)/tools/net6.0/mdoc.dll"</_Mdoc>
     <_Mdoc Condition=" '$(Pkgmdoc)' == '' ">"$(XAPackagesDir)/mdoc/$(MdocPackageVersion)/tools/net6.0/mdoc.dll"</_Mdoc>
   </PropertyGroup>
@@ -270,6 +273,7 @@
     />
   </Target>
 
+  <!-- `mdoc fx-bootstrap` and `mdoc update` require the .NET framework version of mdoc, a mono install will be needed to run the RunMdoc target on macOS/Linux -->
   <Target Name="RunMdoc">
     <MSBuild Projects="$(MSBuildThisFileDirectory)Mono.Android.csproj"
         Targets="_RunMdoc"
@@ -305,16 +309,12 @@
         SourceFiles="@(_FxAssembly);@(_FxAssemblyXml)"
         DestinationFolder="$(_RootFxDir)$(DocsFxMoniker)"
     />
-    <WriteLinesToFile
-        File="$(_RootFxDir)frameworks.xml"
-        Lines="$(FrameworksXmlContent)"
-    />
     <Exec
-        Command="dotnet $(_Mdoc) fx-bootstrap -fx $(_RootFxDir) -importContent true"
+        Command="$(_ManagedRuntime) $(_MdocExe) fx-bootstrap -fx $(_RootFxDir) -importContent true"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
     <Exec
-        Command="dotnet $(_Mdoc) update $(_Libdir) $(_Output) $(_DocTypeArgs) $(_FxConfig) $(_ExtraMdocArgs)"
+        Command="$(_ManagedRuntime) $(_MdocExe) update $(_Libdir) $(_Output) $(_DocTypeArgs) $(_FxConfig) $(_ExtraMdocArgs)"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
   </Target>
