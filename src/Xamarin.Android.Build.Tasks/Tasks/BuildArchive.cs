@@ -219,16 +219,22 @@ public class BuildArchive : AndroidTask
 		}
 
 		// .NET 6+ handles uncompressed files correctly, so we don't need to fallback.
-		if (RuntimeInformation.FrameworkDescription == ".NET")
+		if (RuntimeInformation.FrameworkDescription == ".NET") {
+			Log.LogDebugMessage ("Using System.IO.Compression because we're running on .NET 6+.");
 			return false;
+		}
 
 		// Nothing is going to get written uncompressed, so we don't need to fallback.
-		if (uncompressedMethod != CompressionMethod.Store)
+		if (uncompressedMethod != CompressionMethod.Store) {
+			Log.LogDebugMessage ("Using System.IO.Compression because uncompressedMethod isn't 'Store'.");
 			return false;
+		}
 
 		// No uncompressed file extensions were specified, so we don't need to fallback.
-		if (UncompressedFileExtensionsSet.Count == 0)
+		if (UncompressedFileExtensionsSet.Count == 0) {
+			Log.LogDebugMessage ("Using System.IO.Compression because no uncompressed file extensions were specified.");
 			return false;
+		}
 
 		// See if any of the files to be added need to be uncompressed.
 		foreach (var file in FilesToAddToArchive) {
@@ -244,6 +250,7 @@ public class BuildArchive : AndroidTask
 			}
 		}
 
+		Log.LogDebugMessage ("Using System.IO.Compression because no files need to be stored uncompressed.");
 		return false;
 	}
 
