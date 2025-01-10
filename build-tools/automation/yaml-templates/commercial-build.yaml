@@ -10,7 +10,7 @@ parameters:
 steps:
 - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml
   parameters:
-    useXAPrepareJdkPath: true
+    useAgentJdkPath: false
 
 - template: /build-tools/automation/yaml-templates/use-dot-net.yaml
   parameters:

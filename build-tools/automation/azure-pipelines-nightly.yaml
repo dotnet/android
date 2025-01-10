@@ -198,7 +198,7 @@ stages:
       parameters:
         installTestSlicer: true
         xaprepareScenario: EmulatorTestDependencies
-        useXAPrepareJdkPath: true
+        useAgentJdkPath: false
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -250,7 +250,7 @@ stages:
       parameters:
         installTestSlicer: true
         xaprepareScenario: EmulatorTestDependencies
-        useXAPrepareJdkPath: true
+        useAgentJdkPath: false
 
     - task: DownloadPipelineArtifact@2
       inputs:

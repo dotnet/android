@@ -1,21 +1,21 @@
 parameters:
   jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
-  useXAPrepareJdkPath: false
+  useAgentJdkPath: true
 
 steps:
 - pwsh: |
     $jdkMajorVersion="${{ parameters.jdkMajorVersion }}"
     $agentArch="$(Agent.OSArchitecture)"
-    $jdkHomeVarName="JAVA_HOME_${jdkMajorVersion}_${agentArch}"
-    $jdkHomePath = (Get-Item -Path "env:$jdkHomeVarName").Value
     $xaPrepareJdkPath="$env:HOME/android-toolchain/jdk-$jdkMajorVersion"
     if ("$AgentOS" -eq "Windows_NT") {
       $xaPrepareJdkPath="$env:USERPROFILE\android-toolchain\jdk-$jdkMajorVersion"
     }
-    if ("${{ parameters.useXAPrepareJdkPath }}" -eq "true") {
-      $jdkHomePath=$xaPrepareJdkPath
+    $jdkHomePath=$xaPrepareJdkPath
+    if ("${{ parameters.useAgentJdkPath }}" -eq "true") {
+      $jdkHomeVarName="JAVA_HOME_${jdkMajorVersion}_${agentArch}"
+      $jdkHomePath=(Get-Item -Path "env:$jdkHomeVarName").Value
     }
-    Write-Host "Setting variable 'JI_JAVA_HOME' to '$jdkHomePath'"
+    Write-Host "Setting variable 'JAVA_HOME' and 'JI_JAVA_HOME' to '$jdkHomePath'"
     Write-Host "##vso[task.setvariable variable=JAVA_HOME]$jdkHomePath"
     Write-Host "##vso[task.setvariable variable=JI_JAVA_HOME]$jdkHomePath"
   displayName: set JAVA_HOME and JI_JAVA_HOME

@@ -102,7 +102,7 @@ extends:
 
         - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml@self
           parameters:
-            useXAPrepareJdkPath: true
+            useAgentJdkPath: false
 
         # Set MSBuild property overrides if parameters are set
         - ${{ if ne(parameters.apiLevel, 'default') }}:

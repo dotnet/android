@@ -5,7 +5,7 @@ parameters:
   jobName: CheckTimeZoneInfoIsCorrectNode1
   jobTimeout: 360
   jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
-  useXAPrepareJdkPath: true
+  useAgentJdkPath: false
   testSteps: []
   use1ESTemplate: true
 
@@ -27,7 +27,7 @@ jobs:
       parameters:
         xaprepareScenario: EmulatorTestDependencies
         jdkMajorVersion: ${{ parameters.jdkMajorVersion }}
-        useXAPrepareJdkPath: ${{ parameters.useXAPrepareJdkPath }}
+        useAgentJdkPath: ${{ parameters.useAgentJdkPath }}
 
     - task: DownloadPipelineArtifact@2
       inputs:

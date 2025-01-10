@@ -2,7 +2,7 @@ parameters:
   configuration: $(XA.Build.Configuration)
   xaSourcePath: $(System.DefaultWorkingDirectory)
   jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
-  useXAPrepareJdkPath: false
+  useAgentJdkPath: true
   remove_dotnet: false
   dotnetVersion: $(DotNetSdkVersion)
   dotnetQuality: $(DotNetSdkQuality)
@@ -25,7 +25,7 @@ steps:
 - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml
   parameters:
     jdkMajorVersion: ${{ parameters.jdkMajorVersion }}
-    useXAPrepareJdkPath: ${{ parameters.useXAPrepareJdkPath }}
+    useAgentJdkPath: ${{ parameters.useAgentJdkPath }}
 
 # Install latest .NET
 - template: /build-tools/automation/yaml-templates/use-dot-net.yaml
