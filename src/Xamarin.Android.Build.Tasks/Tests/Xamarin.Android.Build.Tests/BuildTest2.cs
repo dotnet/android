@@ -979,7 +979,7 @@ namespace UnamedProject
 				ProjectName = "App1",
 				References = { new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj") },
 			};
-			var projectPath = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
+			var projectPath = Path.Combine ("temp", TestName);
 			using (var libb = CreateDllBuilder (Path.Combine (projectPath, lib.ProjectName), false, false)) {
 				Assert.IsTrue (libb.Build (lib), "Build of library should have succeeded");
 				using (var b = CreateApkBuilder (Path.Combine (projectPath, proj.ProjectName), false, false)) {
@@ -1382,7 +1382,7 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 		{
 			AssertCommercialBuild (); // FIXME: when Fast Deployment isn't available, we would need to use `llvm-objcopy` to extract the debug symbols
 
-			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
+			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject () {
 				IsRelease = false,
 				ProjectName = "Library1",
@@ -1552,7 +1552,7 @@ namespace App1
 		[Test]
 		public void LibraryWithGenericAttribute ()
 		{
-			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
+			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
 				ProjectName = "Library1",
 				IsRelease = true,
