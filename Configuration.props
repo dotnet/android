@@ -216,5 +216,6 @@
   <ItemGroup>
     <AndroidAbiAndRuntimeFlavor Include="@(AndroidSupportedTargetJitAbi)" AndroidRuntime="Mono" />
     <AndroidAbiAndRuntimeFlavor Include="@(AndroidSupportedTargetJitAbi)" AndroidRuntime="NativeAOT" />
+    <AndroidAbiAndRuntimeFlavor Include="@(AndroidSupportedTargetJitAbi)" AndroidRuntime="CoreCLR" />
   </ItemGroup>
 </Project>
