@@ -4,10 +4,11 @@ parameters:
 
 steps:
 - pwsh: |
-    $jdkMajorVersion="${{ parameters.jdkMajorVersion }}"
+    $agentOS="$(Agent.OS)"
     $agentArch="$(Agent.OSArchitecture)"
+    $jdkMajorVersion="${{ parameters.jdkMajorVersion }}"
     $xaPrepareJdkPath="$env:HOME/android-toolchain/jdk-$jdkMajorVersion"
-    if ("$AgentOS" -eq "Windows_NT") {
+    if ("$agentOS" -eq "Windows_NT") {
       $xaPrepareJdkPath="$env:USERPROFILE\android-toolchain\jdk-$jdkMajorVersion"
     }
     $jdkHomePath=$xaPrepareJdkPath
