@@ -60,10 +60,23 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("-J-Dfile.encoding=", "UTF8");
 
 			cmd.AppendFileNameIfNotNull (string.Format ("@{0}", TemporarySourceListFile));
-			cmd.AppendSwitchIfNotNull ("-target ", JavacTargetVersion);
-			cmd.AppendSwitchIfNotNull ("-source ", JavacSourceVersion);
+
+			if (int.TryParse (JavacSourceVersion, out int sourceVersion) &&
+					int.TryParse (JavacTargetVersion, out int targetVersion) &&
+					JavacSupportsRelease ()) {
+				cmd.AppendSwitchIfNotNull ("--release ", Math.Max (sourceVersion, targetVersion).ToString ());
+			} else {
+				cmd.AppendSwitchIfNotNull ("-target ", JavacTargetVersion);
+				cmd.AppendSwitchIfNotNull ("-source ", JavacSourceVersion);
+			}
 
 			return cmd.ToString ();
+		}
+
+		bool JavacSupportsRelease ()
+		{
+			var jdkInfo = new JdkInfo (Path.Combine (ToolPath, ".."));
+			return jdkInfo.Version.Major >= 17;
 		}
 
 		protected override void WriteOptionsToResponseFile (StreamWriter sw)
