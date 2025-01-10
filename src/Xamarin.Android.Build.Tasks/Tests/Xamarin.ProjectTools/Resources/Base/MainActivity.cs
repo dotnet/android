@@ -11,6 +11,7 @@ using Android.OS;
 namespace ${ROOT_NAMESPACE}
 {
 	[Register ("${JAVA_PACKAGENAME}.MainActivity"), Activity (Label = "${PROJECT_NAME}", MainLauncher = true, Icon = "@drawable/icon")]
+	//${ATTRIBUTES}
 	public class MainActivity : Activity
 	{
 		//${FIELDS}
