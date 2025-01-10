@@ -45,8 +45,9 @@ projects that use the Microsoft.Android framework in .NET 6+.
           Condition=" '$(AndroidRuntime)' == 'NativeAOT' "
       />
       <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\Mono.Android.Export.dll" />
-      <_AndroidRuntimePackAssets Condition=" Exists('$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libmono-android.debug.so') " Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libmono-android.debug.so" />
-      <_AndroidRuntimePackAssets Condition=" Exists('$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libmono-android.release.so') " Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libmono-android.release.so" />
+    </ItemGroup>
+
+    <ItemGroup Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">
       <_AndroidRuntimePackAssets Condition=" Exists('$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libnet-android.debug.so') " Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libnet-android.debug.so" />
       <_AndroidRuntimePackAssets Condition=" Exists('$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libnet-android.release.so') " Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libnet-android.release.so" />
       <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libxamarin-debug-app-helper.so" />

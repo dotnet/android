@@ -11,7 +11,7 @@
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <OutputPath>$(MicrosoftAndroidSdkOutDir)lib\</OutputPath>
+    <OutputPath>$(MicrosoftAndroidSdkOutDir)lib\coreclr\</OutputPath>
   </PropertyGroup>
 
   <Import Project="native-clr.targets" />
