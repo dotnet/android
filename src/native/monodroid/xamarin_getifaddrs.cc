@@ -381,9 +381,9 @@ get_ifaddrs_impl (int (**getifaddrs_implementation) (struct _monodroid_ifaddrs *
 	}
 
 	if (!*getifaddrs_implementation) {
-		log_info (LOG_NET, "This libc does not have getifaddrs/freeifaddrs, using Xamarin's\n");
+		log_info (LOG_NET, "This libc does not have getifaddrs/freeifaddrs, using Xamarin's"sv);
 	} else {
-		log_info (LOG_NET, "This libc has getifaddrs/freeifaddrs\n");
+		log_info (LOG_NET, "This libc has getifaddrs/freeifaddrs"sv);
 	}
 }
 
@@ -421,7 +421,7 @@ open_netlink_session (netlink_session *session)
 	memset (session, 0, sizeof (*session));
 	session->sock_fd = socket (AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
 	if (session->sock_fd == -1) {
-		log_warn (LOG_NETLINK, "Failed to create a netlink socket. %s\n", strerror (errno));
+		log_warn (LOG_NETLINK, "Failed to create a netlink socket. {}", strerror (errno));
 		return -1;
 	}
 
@@ -440,7 +440,7 @@ open_netlink_session (netlink_session *session)
 	session->them.nl_family = AF_NETLINK;
 
 	if (bind (session->sock_fd, (struct sockaddr *)&session->us, sizeof (session->us)) < 0) {
-		log_warn (LOG_NETLINK, "Failed to bind to the netlink socket. %s\n", strerror (errno));
+		log_warn (LOG_NETLINK, "Failed to bind to the netlink socket. {}", strerror (errno));
 		return -1;
 	}
 
@@ -478,7 +478,7 @@ send_netlink_dump_request (netlink_session *session, int type)
 	session->message_header.msg_iov = &session->payload_vector;
 
 	if (sendmsg (session->sock_fd, (const struct msghdr*)&session->message_header, 0) < 0) {
-		log_warn (LOG_NETLINK, "Failed to send netlink message. %s\n", strerror (errno));
+		log_warn (LOG_NETLINK, "Failed to send netlink message. {}", strerror (errno));
 		return -1;
 	}
 
@@ -529,7 +529,7 @@ parse_netlink_reply (netlink_session *session, struct _monodroid_ifaddrs **ifadd
 	abort_if_invalid_pointer_argument (last_ifaddr, "last_ifaddr");
 
 	size_t buf_size = static_cast<size_t>(getpagesize ());
-	log_debug (LOG_NETLINK, "receive buffer size == %d", buf_size);
+	log_debug (LOG_NETLINK, "receive buffer size == {}", buf_size);
 
 	size_t alloc_size = Helpers::multiply_with_overflow_check<size_t> (sizeof(*response), buf_size);
 	response = (unsigned char*)malloc (alloc_size);
@@ -551,29 +551,29 @@ parse_netlink_reply (netlink_session *session, struct _monodroid_ifaddrs **ifadd
 		netlink_reply.msg_iov = &reply_vector;
 
 		length = recvmsg (session->sock_fd, &netlink_reply, 0);
-		log_debug (LOG_NETLINK, "  length == %d\n", (int)length);
+		log_debug (LOG_NETLINK, "  length == {}", (int)length);
 
 		if (length < 0) {
-			log_debug (LOG_NETLINK, "Failed to receive reply from netlink. %s\n", strerror (errno));
+			log_debug (LOG_NETLINK, "Failed to receive reply from netlink. {}", strerror (errno));
 			goto cleanup;
 		}
 
 #if DEBUG
 		if (Util::should_log (LOG_NETLINK)) {
-			log_debug_nocheck (LOG_NETLINK, "response flags:");
+			log_debug_nocheck (LOG_NETLINK, "response flags:"sv);
 			if (netlink_reply.msg_flags == 0)
-				log_debug_nocheck (LOG_NETLINK, "   [NONE]");
+				log_debug_nocheck (LOG_NETLINK, "   [NONE]"sv);
 			else {
 				if (netlink_reply.msg_flags & MSG_EOR)
-					log_debug_nocheck (LOG_NETLINK, "   MSG_EOR");
+					log_debug_nocheck (LOG_NETLINK, "   MSG_EOR"sv);
 				if (netlink_reply.msg_flags & MSG_TRUNC)
-					log_debug_nocheck (LOG_NETLINK, "   MSG_TRUNC");
+					log_debug_nocheck (LOG_NETLINK, "   MSG_TRUNC"sv);
 				if (netlink_reply.msg_flags & MSG_CTRUNC)
-					log_debug_nocheck (LOG_NETLINK, "   MSG_CTRUNC");
+					log_debug_nocheck (LOG_NETLINK, "   MSG_CTRUNC"sv);
 				if (netlink_reply.msg_flags & MSG_OOB)
-					log_debug_nocheck (LOG_NETLINK, "   MSG_OOB");
+					log_debug_nocheck (LOG_NETLINK, "   MSG_OOB"sv);
 				if (netlink_reply.msg_flags & MSG_ERRQUEUE)
-					log_debug_nocheck (LOG_NETLINK, "   MSG_ERRQUEUE");
+					log_debug_nocheck (LOG_NETLINK, "   MSG_ERRQUEUE"sv);
 			}
 		}
 #endif
@@ -582,21 +582,21 @@ parse_netlink_reply (netlink_session *session, struct _monodroid_ifaddrs **ifadd
 			break;
 
 		for (current_message = (struct nlmsghdr*)response; current_message && NLMSG_OK (current_message, static_cast<size_t>(length)); current_message = NLMSG_NEXT (current_message, length)) {
-			log_debug (LOG_NETLINK, "next message... (type: %u)\n", current_message->nlmsg_type);
+			log_debug (LOG_NETLINK, "next message... (type: {})", current_message->nlmsg_type);
 			switch (current_message->nlmsg_type) {
 				/* See rtnetlink.h */
 				case RTM_NEWLINK:
-					log_debug (LOG_NETLINK, "  dumping link...\n");
+					log_debug (LOG_NETLINK, "  dumping link..."sv);
 					addr = get_link_info (current_message);
 					if (!addr || append_ifaddr (addr, ifaddrs_head, last_ifaddr) < 0) {
 						ret = -1;
 						goto cleanup;
 					}
-					log_debug (LOG_NETLINK, "  done\n");
+					log_debug (LOG_NETLINK, "  done"sv);
 					break;
 
 				case RTM_NEWADDR:
-					log_debug (LOG_NETLINK, "  got an address\n");
+					log_debug (LOG_NETLINK, "  got an address"sv);
 					addr = get_link_address (current_message, ifaddrs_head);
 					if (!addr || append_ifaddr (addr, ifaddrs_head, last_ifaddr) < 0) {
 						ret = -1;
@@ -605,13 +605,13 @@ parse_netlink_reply (netlink_session *session, struct _monodroid_ifaddrs **ifadd
 					break;
 
 				case NLMSG_DONE:
-					log_debug (LOG_NETLINK, "  message done\n");
+					log_debug (LOG_NETLINK, "  message done"sv);
 					ret = 0;
 					goto cleanup;
 					break;
 
 				default:
-					log_debug (LOG_NETLINK, "  message type: %u", current_message->nlmsg_type);
+					log_debug (LOG_NETLINK, "  message type: {}", current_message->nlmsg_type);
 					break;
 			}
 		}
@@ -634,7 +634,7 @@ fill_sa_address (struct sockaddr **sa, struct ifaddrmsg *net_address, void *rta_
 		case AF_INET: {
 			struct sockaddr_in *sa4;
 			if (rta_payload_length != 4) /* IPv4 address length */ {
-				log_warn (LOG_NETLINK, "Unexpected IPv4 address payload length %u", rta_payload_length);
+				log_warn (LOG_NETLINK, "Unexpected IPv4 address payload length {}", rta_payload_length);
 				return -1;
 			}
 			sa4 = (struct sockaddr_in*)calloc (1, sizeof (*sa4));
@@ -650,7 +650,7 @@ fill_sa_address (struct sockaddr **sa, struct ifaddrmsg *net_address, void *rta_
 		case AF_INET6: {
 			struct sockaddr_in6 *sa6;
 			if (rta_payload_length != 16) /* IPv6 address length */ {
-				log_warn (LOG_NETLINK, "Unexpected IPv6 address payload length %u", rta_payload_length);
+				log_warn (LOG_NETLINK, "Unexpected IPv6 address payload length {}", rta_payload_length);
 				return -1;
 			}
 			sa6 = (struct sockaddr_in6*)calloc (1, sizeof (*sa6));
@@ -668,7 +668,7 @@ fill_sa_address (struct sockaddr **sa, struct ifaddrmsg *net_address, void *rta_
 		default: {
 			struct sockaddr *sagen;
 			if (rta_payload_length > sizeof (sagen->sa_data)) {
-				log_warn (LOG_NETLINK, "Unexpected RTA payload length %u (wanted at most %u)", rta_payload_length, sizeof (sagen->sa_data));
+				log_warn (LOG_NETLINK, "Unexpected RTA payload length {} (wanted at most {})", rta_payload_length, sizeof (sagen->sa_data));
 				return -1;
 			}
 
@@ -701,16 +701,16 @@ fill_ll_address (struct sockaddr_ll_extended **sa, struct ifinfomsg *net_interfa
 	/* The assert can only fail for Iniband links, which are quite unlikely to be found
 	 * in any mobile devices
 	 */
-	log_debug (LOG_NETLINK, "rta_payload_length == %d; sizeof sll_addr == %d; hw type == 0x%X\n", rta_payload_length, sizeof ((*sa)->sll_addr), net_interface->ifi_type);
+	log_debug (LOG_NETLINK, "rta_payload_length == {}; sizeof sll_addr == {}; hw type == {:x}", rta_payload_length, sizeof ((*sa)->sll_addr), net_interface->ifi_type);
 	if (static_cast<size_t>(rta_payload_length) > sizeof ((*sa)->sll_addr)) {
-		log_info (LOG_NETLINK, "Address is too long to place in sockaddr_ll (%d > %d)", rta_payload_length, sizeof ((*sa)->sll_addr));
+		log_info (LOG_NETLINK, "Address is too long to place in sockaddr_ll ({} > {})", rta_payload_length, sizeof ((*sa)->sll_addr));
 		free (*sa);
 		*sa = NULL;
 		return -1;
 	}
 
 	if (rta_payload_length > std::numeric_limits<unsigned char>::max ()) {
-		log_info (LOG_NETLINK, "Payload length too big to fit in the address structure");
+		log_info (LOG_NETLINK, "Payload length too big to fit in the address structure"sv);
 		free (*sa);
 		*sa = NULL;
 		return -1;
@@ -817,16 +817,15 @@ calculate_address_netmask (struct _monodroid_ifaddrs *ifa, struct ifaddrmsg *net
 			memset (netmask_data, 0xFF, prefix_bytes);
 			if (postfix_bytes > 0)
 				memset (netmask_data + prefix_bytes + 1, 0x00, postfix_bytes);
-			log_debug (LOG_NETLINK, "   calculating netmask, prefix length is %u bits (%u bytes), data length is %u bytes\n", prefix_length, prefix_bytes, data_length);
+			log_debug (LOG_NETLINK, "   calculating netmask, prefix length is {} bits ({} bytes), data length is {} bytes\n", prefix_length, prefix_bytes, data_length);
 			if (prefix_bytes + 2 < data_length)
 				/* Set the rest of the mask bits in the byte following the last 0xFF value */
 				netmask_data [prefix_bytes + 1] = static_cast<unsigned char>(0xff << (8 - (prefix_length % 8)));
 			if (Util::should_log (LOG_NETLINK)) {
-				log_debug_nocheck (LOG_NETLINK, "   netmask is: ");
+				log_debug_nocheck (LOG_NETLINK, "   netmask is: "sv);
 				for (uint32_t i = 0; i < data_length; i++) {
-					log_debug_nocheck (LOG_NETLINK, "%s%u", i == 0 ? " " : ".", (unsigned char)ifa->ifa_netmask->sa_data [i]);
+					log_debug_nocheck_fmt (LOG_NETLINK, "{}{}", i == 0 ? " "sv : "."sv, (unsigned char)ifa->ifa_netmask->sa_data [i]);
 				}
-				log_debug_nocheck (LOG_NETLINK, "\n");
 			}
 		}
 	}
@@ -848,7 +847,7 @@ get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **if
 	abort_if_invalid_pointer_argument (message, "message");
 	net_address = reinterpret_cast<ifaddrmsg*> (NLMSG_DATA (message));
 	length = static_cast<ssize_t>(IFA_PAYLOAD (message));
-	log_debug (LOG_NETLINK, "   address data length: %u", length);
+	log_debug (LOG_NETLINK, "   address data length: {}", length);
 	if (length <= 0) {
 		goto error;
 	}
@@ -862,17 +861,17 @@ get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **if
 	ifa->ifa_flags = static_cast<unsigned int>(get_interface_flags_by_index (static_cast<int>(net_address->ifa_index), ifaddrs_head));
 
 	attribute = IFA_RTA (net_address);
-	log_debug (LOG_NETLINK, "   reading attributes");
+	log_debug (LOG_NETLINK, "   reading attributes"sv);
 	while (RTA_OK (attribute, length)) {
 		payload_size = RTA_PAYLOAD (attribute);
-		log_debug (LOG_NETLINK, "     attribute payload_size == %u\n", payload_size);
+		log_debug (LOG_NETLINK, "     attribute payload_size == {}", payload_size);
 		sa = NULL;
 
 		switch (attribute->rta_type) {
 			case IFA_LABEL: {
 				size_t room_for_trailing_null = 0uz;
 
-				log_debug (LOG_NETLINK, "     attribute type: LABEL");
+				log_debug (LOG_NETLINK, "     attribute type: LABEL"sv);
 				if (payload_size > MAX_IFA_LABEL_SIZE) {
 					payload_size = MAX_IFA_LABEL_SIZE;
 					room_for_trailing_null = 1;
@@ -893,7 +892,7 @@ get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **if
 			}
 
 			case IFA_LOCAL:
-				log_debug (LOG_NETLINK, "     attribute type: LOCAL");
+				log_debug (LOG_NETLINK, "     attribute type: LOCAL"sv);
 				if (ifa->ifa_addr) {
 					/* P2P protocol, set the dst/broadcast address union from the original address.
 					 * Since ifa_addr is set it means IFA_ADDRESS occured earlier and that address
@@ -906,7 +905,7 @@ get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **if
 				break;
 
 			case IFA_BROADCAST:
-				log_debug (LOG_NETLINK, "     attribute type: BROADCAST");
+				log_debug (LOG_NETLINK, "     attribute type: BROADCAST"sv);
 				if (ifa->_monodroid_ifa_dstaddr) {
 					/* IFA_LOCAL happened earlier, undo its effect here */
 					free (ifa->_monodroid_ifa_dstaddr);
@@ -916,7 +915,7 @@ get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **if
 				break;
 
 			case IFA_ADDRESS:
-				log_debug (LOG_NETLINK, "     attribute type: ADDRESS");
+				log_debug (LOG_NETLINK, "     attribute type: ADDRESS"sv);
 				if (ifa->ifa_addr) {
 					/* Apparently IFA_LOCAL occured earlier and we have a P2P connection
 					 * here. IFA_LOCAL carries the destination address, move it there
@@ -928,23 +927,23 @@ get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **if
 				break;
 
 			case IFA_UNSPEC:
-				log_debug (LOG_NETLINK, "     attribute type: UNSPEC");
+				log_debug (LOG_NETLINK, "     attribute type: UNSPEC"sv);
 				break;
 
 			case IFA_ANYCAST:
-				log_debug (LOG_NETLINK, "     attribute type: ANYCAST");
+				log_debug (LOG_NETLINK, "     attribute type: ANYCAST"sv);
 				break;
 
 			case IFA_CACHEINFO:
-				log_debug (LOG_NETLINK, "     attribute type: CACHEINFO");
+				log_debug (LOG_NETLINK, "     attribute type: CACHEINFO"sv);
 				break;
 
 			case IFA_MULTICAST:
-				log_debug (LOG_NETLINK, "     attribute type: MULTICAST");
+				log_debug (LOG_NETLINK, "     attribute type: MULTICAST"sv);
 				break;
 
 			default:
-				log_debug (LOG_NETLINK, "     attribute type: %u", attribute->rta_type);
+				log_debug (LOG_NETLINK, "     attribute type: {}", attribute->rta_type);
 				break;
 		}
 
@@ -960,10 +959,10 @@ get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **if
 	/* glibc stores the associated interface name in the address if IFA_LABEL never occured */
 	if (!ifa->ifa_name) {
 		char *name = get_interface_name_by_index (static_cast<int>(net_address->ifa_index), ifaddrs_head);
-		log_debug (LOG_NETLINK, "   address has no name/label, getting one from interface\n");
+		log_debug (LOG_NETLINK, "   address has no name/label, getting one from interface"sv);
 		ifa->ifa_name = name ? strdup (name) : NULL;
 	}
-	log_debug (LOG_NETLINK, "   address label: %s\n", ifa->ifa_name);
+	log_debug (LOG_NETLINK, "   address label: {}", optional_string (ifa->ifa_name));
 
 	if (calculate_address_netmask (ifa, net_address) < 0) {
 		goto error;
@@ -1017,13 +1016,13 @@ get_link_info (const struct nlmsghdr *message)
 					goto error;
 				}
 				if (Util::should_log (LOG_NETLINK)) {
-					log_debug_nocheck (LOG_NETLINK, "   interface name (payload length: %d; string length: %d)\n", RTA_PAYLOAD (attribute), strlen (ifa->ifa_name));
-					log_debug_nocheck (LOG_NETLINK, "     %s\n", ifa->ifa_name);
+					log_debug_nocheck_fmt (LOG_NETLINK, "   interface name (payload length: {}; string length: {})", RTA_PAYLOAD (attribute), strlen (ifa->ifa_name));
+					log_debug_nocheck_fmt (LOG_NETLINK, "     {}", optional_string (ifa->ifa_name));
 				}
 				break;
 
 			case IFLA_BROADCAST:
-				log_debug (LOG_NETLINK, "   interface broadcast (%d bytes)\n", RTA_PAYLOAD (attribute));
+				log_debug (LOG_NETLINK, "   interface broadcast ({} bytes)", RTA_PAYLOAD (attribute));
 				if (fill_ll_address (&sa, net_interface, RTA_DATA (attribute), RTA_PAYLOAD (attribute)) < 0) {
 					goto error;
 				}
@@ -1031,7 +1030,7 @@ get_link_info (const struct nlmsghdr *message)
 				break;
 
 			case IFLA_ADDRESS:
-				log_debug (LOG_NETLINK, "   interface address (%d bytes)\n", RTA_PAYLOAD (attribute));
+				log_debug (LOG_NETLINK, "   interface address ({} bytes)", RTA_PAYLOAD (attribute));
 				if (fill_ll_address (&sa, net_interface, RTA_DATA (attribute), RTA_PAYLOAD (attribute)) < 0) {
 					goto error;
 				}
@@ -1040,7 +1039,7 @@ get_link_info (const struct nlmsghdr *message)
 
 			default:
 #if DEBUG
-				log_debug (LOG_NETLINK, "     rta_type: ");
+				log_debug (LOG_NETLINK, "     rta_type: "sv);
 				print_ifla_name (attribute->rta_type);
 #endif // DEBUG
 				break;
@@ -1048,7 +1047,7 @@ get_link_info (const struct nlmsghdr *message)
 
 		attribute = RTA_NEXT (attribute, length);
 	}
-	log_debug (LOG_NETLINK, "link flags: 0x%X", ifa->ifa_flags);
+	log_debug (LOG_NETLINK, "link flags: {:X}", ifa->ifa_flags);
 	return ifa;
 
   error:
@@ -1143,7 +1142,7 @@ print_ifla_name (int id)
 	int i = 0;
 	while (1) {
 		if (iflas [i].value == -1 && iflas [i].name == 0) {
-			log_info_nocheck (LOG_NETLINK, "Unknown ifla->name: unknown id %d\n", id);
+			log_info_nocheck_fmt (LOG_NETLINK, "Unknown ifla->name: unknown id {}", id);
 			break;
 		}
 
@@ -1151,7 +1150,7 @@ print_ifla_name (int id)
 			i++;
 			continue;
 		}
-		log_info_nocheck (LOG_NETLINK, "ifla->name: %s (%d)\n", iflas [i].name, iflas [i].value);
+		log_info_nocheck_fmt (LOG_NETLINK, "ifla->name: {} ({})", optional_string (iflas [i].name), iflas [i].value);
 		break;
 	}
 }
@@ -1166,7 +1165,7 @@ print_address_list (const char title[], struct _monodroid_ifaddrs *list)
 	char *msg, *tmp;
 
 	if (!list) {
-		log_info_nocheck (LOG_NETLINK, "monodroid-net", "No list to print in %s", __FUNCTION__);
+		log_info_nocheck_fmt (LOG_NETLINK, "No list to print in {}", __FUNCTION__);
 		return;
 	}
 
@@ -1181,7 +1180,7 @@ print_address_list (const char title[], struct _monodroid_ifaddrs *list)
 		cur = cur->ifa_next;
 	}
 
-	log_info_nocheck (LOG_NETLINK, "%s: %s", title, msg ? msg : "[no addresses]");
+	log_info_nocheck_fmt (LOG_NETLINK, "{}: {}", title, optional_string (msg, "[no addresses]"));
 	free (msg);
 }
 #endif

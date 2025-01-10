@@ -120,13 +120,8 @@ else()
   set(USES_LIBSTDCPP True)
 endif()
 
-if(ANALYZERS_ENABLED)
-  message(STATUS "Analyzers enabled")
-  set(SHARED_LIB_NAME xa::shared-no-abi)
-else()
-  message(STATUS "NO analyzers enabled")
-  set(SHARED_LIB_NAME xa::shared)
-endif()
+set(SHARED_LIB_NAME xa::shared)
+
 #
 # Needed modules
 #

@@ -3,12 +3,21 @@
 
 #include <cstdlib>
 #include <source_location>
+#include <string>
+#include <string_view>
 
 #include <java-interop-util.h>
 #include "platform-compat.hh"
 
+using namespace std::string_view_literals;
+
 namespace xamarin::android
 {
+	namespace detail {
+		template<typename T>
+		concept TPointer = requires { std::is_pointer_v<T>; };
+	}
+
 	class [[gnu::visibility("hidden")]] Helpers
 	{
 	public:
@@ -46,10 +55,46 @@ namespace xamarin::android
 
 		[[noreturn]] static void abort_application (LogCategories category, const char *message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept;
 
+		[[noreturn]] static void abort_application (LogCategories category, std::string const& message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept
+		{
+			abort_application (category, message.c_str (), log_location, sloc);
+		}
+
+		[[noreturn]] static void abort_application (LogCategories category, std::string_view const& message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept
+		{
+			abort_application (category, message.data (), log_location, sloc);
+		}
+
 		[[noreturn]] static void abort_application (const char *message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept
 		{
 			abort_application (LOG_DEFAULT, message, log_location, sloc);
 		}
+
+		[[noreturn]] static void abort_application (std::string const& message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept
+		{
+			abort_application (LOG_DEFAULT, message.c_str (), log_location, sloc);
+		}
+
+		[[noreturn]] static void abort_application (std::string_view const& message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept
+		{
+			abort_application (LOG_DEFAULT, message.data (), log_location, sloc);
+		}
 	};
+
+	template<detail::TPointer TRet = void*, detail::TPointer TPtr> [[gnu::always_inline]]
+	static inline constexpr auto pointer_add (TPtr ptr, size_t offset) noexcept -> TRet
+	{
+		return reinterpret_cast<TRet>(reinterpret_cast<uintptr_t>(ptr) + offset);
+	}
+
+	[[gnu::always_inline]]
+	static inline constexpr auto optional_string (const char* s, const char *replacement = nullptr) noexcept -> const char*
+	{
+		if (s != nullptr) [[likely]] {
+			return s;
+		}
+
+		return replacement == nullptr ? "<null>" : replacement;
+	}
 }
 #endif // __HELPERS_HH

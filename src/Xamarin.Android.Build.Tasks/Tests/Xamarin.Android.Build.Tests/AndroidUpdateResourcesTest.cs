@@ -1179,7 +1179,7 @@ namespace UnnamedProject
 		public void LightlyModifyLayout ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
 
 				//Just change something, doesn't matter
@@ -1198,7 +1198,7 @@ namespace UnnamedProject
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.LayoutMain = proj.LayoutMain.Replace ("</LinearLayout>", "<android.support.design.widget.BottomNavigationView android:id=\"@+id/navigation\" /></LinearLayout>");
 			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				b.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
 
@@ -1227,7 +1227,7 @@ namespace UnnamedProject
 		public void CheckNoVersionVectors ()
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				b.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 

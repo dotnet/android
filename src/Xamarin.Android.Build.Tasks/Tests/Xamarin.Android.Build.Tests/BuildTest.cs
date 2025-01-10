@@ -717,7 +717,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				Version = "1.6.1.5",
 			});
 
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				//[TearDown] will still delete if test outcome successful, I need logs if assertions fail but build passes
 				b.CleanupAfterSuccessfulBuild =
 					b.CleanupOnDispose = false;
@@ -842,7 +842,7 @@ namespace UnnamedProject {
         }
     }
 }" });
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (proj), "Build should have failed with XA4212.");
 				StringAssertEx.Contains ($"error : XA4", builder.LastBuildOutput, "Error should be XA4212");

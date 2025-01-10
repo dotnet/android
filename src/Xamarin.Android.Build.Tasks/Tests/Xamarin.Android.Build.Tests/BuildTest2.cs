@@ -1383,7 +1383,7 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 		{
 			AssertCommercialBuild (); // FIXME: when Fast Deployment isn't available, we would need to use `llvm-objcopy` to extract the debug symbols
 
-			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
+			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject () {
 				IsRelease = false,
 				ProjectName = "Library1",
@@ -1553,7 +1553,7 @@ namespace App1
 		[Test]
 		public void LibraryWithGenericAttribute ()
 		{
-			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
+			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
 				ProjectName = "Library1",
 				IsRelease = true,

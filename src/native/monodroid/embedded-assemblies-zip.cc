@@ -1,6 +1,7 @@
 #include <array>
 #include <cerrno>
 #include <cctype>
+#include <format>
 #include <vector>
 #include <libgen.h>
 
@@ -21,14 +22,14 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 
 	bool result = zip_read_entry_info (buf, entry_name, state);
 
-	log_debug (LOG_ASSEMBLY, "%s entry: %s", state.file_name, entry_name.get () == nullptr ? "unknown" : entry_name.get ());
+	log_debug (LOG_ASSEMBLY, "{} entry: {}", optional_string (state.file_name), optional_string (entry_name.get (), "unknown"));
 	if (!result || entry_name.empty ()) {
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
-			Util::monodroid_strdup_printf (
-				"Failed to read Central Directory info for entry %u in APK %s",
+			std::format (
+				"Failed to read Central Directory info for entry {} in APK {}",
 				entry_index,
-				state.file_name
+				optional_string (state.file_name)
 			)
 		);
 	}
@@ -36,15 +37,15 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 	if (!zip_adjust_data_offset (state.file_fd, state)) {
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
-			Util::monodroid_strdup_printf (
-				"Failed to adjust data start offset for entry %u in APK %s",
+			std::format (
+				"Failed to adjust data start offset for entry {} in APK {}",
 				entry_index,
-				state.file_name
+				optional_string (state.file_name)
 			)
 		);
 	}
 
-	log_debug (LOG_ASSEMBLY, "    ZIP: local header offset: %u; data offset: %u; file size: %u", state.local_header_offset, state.data_offset, state.file_size);
+	log_debug (LOG_ASSEMBLY, "    ZIP: local header offset: {}; data offset: {}; file size: {}", state.local_header_offset, state.data_offset, state.file_size);
 	if (state.compression_method != 0) {
 		return false;
 	}
@@ -73,9 +74,9 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 	if (((state.data_offset & 0xf) != 0) || ((state.data_offset & 0x3) != 0)) {
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
-			Util::monodroid_strdup_printf (
-				"Assembly '%s' is at bad offset %lu in the APK (not aligned to 4 or 16 bytes). 'zipalign' MUST be used on %s to align it properly",
-				entry_name.get (),
+			std::format (
+				"Assembly '{}' is at bad offset {} in the APK (not aligned to 4 or 16 bytes). 'zipalign' MUST be used on {} to align it properly",
+				optional_string (entry_name.get ()),
 				state.data_offset,
 				strrchr (state.file_name, '/') + 1
 			)
@@ -118,7 +119,11 @@ EmbeddedAssemblies::store_individual_assembly_data (dynamic_local_string<SENSIBL
 
 	if (bundled_assembly_index >= application_config.number_of_assemblies_in_apk || state.bundled_assemblies_slow_path) [[unlikely]] {
 		if (!state.bundled_assemblies_slow_path && bundled_assembly_index == application_config.number_of_assemblies_in_apk) {
-			log_warn (LOG_ASSEMBLY, "Number of assemblies stored at build time (%u) was incorrect, switching to slow bundling path.", application_config.number_of_assemblies_in_apk);
+			log_warn (
+				LOG_ASSEMBLY,
+				"Number of assemblies stored at build time ({}) was incorrect, switching to slow bundling path.",
+				application_config.number_of_assemblies_in_apk
+			);
 		}
 
 		if (extra_bundled_assemblies == nullptr) {
@@ -132,9 +137,14 @@ EmbeddedAssemblies::store_individual_assembly_data (dynamic_local_string<SENSIBL
 		return;
 	}
 
-	log_debug (LOG_ASSEMBLY, "Setting bundled assembly entry data at index %zu", bundled_assembly_index);
+	log_debug (LOG_ASSEMBLY, "Setting bundled assembly entry data at index {}", bundled_assembly_index);
 	set_assembly_entry_data (bundled_assemblies [bundled_assembly_index], state, entry_name);
-	log_debug (LOG_ASSEMBLY, "[%zu] data set: name == '%s'; file_name == '%s'", bundled_assembly_index, bundled_assemblies [bundled_assembly_index].name, bundled_assemblies [bundled_assembly_index].file_name);
+	log_debug (LOG_ASSEMBLY,
+		"[{}] data set: name == '{}'; file_name == '{}'",
+		bundled_assembly_index,
+		optional_string (bundled_assemblies [bundled_assembly_index].name),
+		optional_string (bundled_assemblies [bundled_assembly_index].file_name)
+	);
 	bundled_assembly_index++;
 	number_of_found_assemblies = bundled_assembly_index;
 	have_and_want_debug_symbols = register_debug_symbols && bundled_debug_data != nullptr;
@@ -179,8 +189,8 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 	if (number_of_mapped_assembly_stores > number_of_assembly_store_files) {
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
-			Util::monodroid_strdup_printf (
-				"Too many assembly stores. Expected at most %u",
+			std::format (
+				"Too many assembly stores. Expected at most {}",
 				number_of_assembly_store_files
 			)
 		);
@@ -189,7 +199,7 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 	int fd;
 	bool close_fd;
 	if (!AndroidSystem::is_embedded_dso_mode_enabled ()) {
-		log_debug (LOG_ASSEMBLY, "Mapping assembly blob file from filesystem");
+		log_debug (LOG_ASSEMBLY, "Mapping assembly blob file from filesystem"sv);
 		close_fd = true;
 
 		// state.file_fd refers to the directory where our files live
@@ -209,15 +219,15 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 	}
 
 	auto [payload_start, payload_size] = get_wrapper_dso_payload_pointer_and_size (assembly_store_map, entry_name.get ());
-	log_debug (LOG_ASSEMBLY, "Adjusted assembly store pointer: %p; size: %zu", payload_start, payload_size);
+	log_debug (LOG_ASSEMBLY, "Adjusted assembly store pointer: {:p}; size: {}", payload_start, payload_size);
 	auto header = static_cast<AssemblyStoreHeader*>(payload_start);
 
 	if (header->magic != ASSEMBLY_STORE_MAGIC) {
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
-			Util::monodroid_strdup_printf (
-				"Assembly store '%s' is not a valid .NET for Android assembly store file",
-				entry_name.get ()
+			std::format (
+				"Assembly store '{}' is not a valid .NET for Android assembly store file",
+				optional_string (entry_name.get ())
 			)
 		);
 	}
@@ -225,9 +235,9 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 	if (header->version != ASSEMBLY_STORE_FORMAT_VERSION) {
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
-			Util::monodroid_strdup_printf (
-				"Assembly store '%s' uses format version 0x%x, instead of the expected 0x%x",
-				entry_name.get (),
+			std::format (
+				"Assembly store '{}' uses format version {:x}, instead of the expected {:x}",
+				optional_string (entry_name.get ()),
 				header->version,
 				ASSEMBLY_STORE_FORMAT_VERSION
 			)
@@ -257,7 +267,7 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
 	bool assembly_store_found = false;
 
-	log_debug (LOG_ASSEMBLY, "Looking for assembly stores in APK ('%s')", assembly_store_file_path.data ());
+	log_debug (LOG_ASSEMBLY, "Looking for assembly stores in APK ('{}')", assembly_store_file_path.data ());
 	for (size_t i = 0uz; i < num_entries; i++) {
 		if (all_required_zip_entries_found ()) {
 			need_to_scan_more_apks = false;
@@ -291,7 +301,15 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 			apk_entry->offset = state.data_offset;
 			apk_entry->fd = state.file_fd;
 
-			log_debug (LOG_ASSEMBLY, "Found a shared library entry %s (index: %u; name: %s; hash: 0x%llx; apk offset: %u)", entry_name.get (), number_of_zip_dso_entries, name, apk_entry->name_hash, apk_entry->offset);
+			log_debug (
+				LOG_ASSEMBLY,
+				"Found a shared library entry {} (index: {}; name: {}; hash: {:x}; apk offset: {})",
+				optional_string (entry_name.get ()),
+				number_of_zip_dso_entries,
+				optional_string (name),
+				apk_entry->name_hash,
+				apk_entry->offset
+			);
 			number_of_zip_dso_entries++;
 		}
 	}
@@ -307,27 +325,27 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 	if (!zip_read_cd_info (fd, cd_offset, cd_size, cd_entries)) {
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
-			Util::monodroid_strdup_printf (
+			std::format (
 				"Failed to read the EOCD record from APK file %s",
-				apk_name
+				optional_string (apk_name)
 			)
 		);
 	}
 #ifdef DEBUG
-	log_info (LOG_ASSEMBLY, "Central directory offset: %u", cd_offset);
-	log_info (LOG_ASSEMBLY, "Central directory size: %u", cd_size);
-	log_info (LOG_ASSEMBLY, "Central directory entries: %u", cd_entries);
+	log_info (LOG_ASSEMBLY, "Central directory offset: {}", cd_offset);
+	log_info (LOG_ASSEMBLY, "Central directory size: {}", cd_size);
+	log_info (LOG_ASSEMBLY, "Central directory entries: {}", cd_entries);
 #endif
 	off_t retval = ::lseek (fd, static_cast<off_t>(cd_offset), SEEK_SET);
 	if (retval < 0) {
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
-			Util::monodroid_strdup_printf (
-				"Failed to seek to central directory position in APK: %s. retval=%d errno=%d, File=%s",
+			std::format (
+				"Failed to seek to central directory position in APK: {}. retval={} errno={}, File={}",
 				std::strerror (errno),
 				retval,
 				errno,
-				apk_name
+				optional_string (apk_name)
 			)
 		);
 	}
@@ -353,12 +371,12 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 	if (static_cast<size_t>(nread) != cd_size) {
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
-			Util::monodroid_strdup_printf (
-				"Failed to read Central Directory from APK: %s. nread=%d errno=%d File=%s",
+			std::format (
+				"Failed to read Central Directory from APK: {}. nread={} errno={} File={}",
 				std::strerror (errno),
 				nread,
 				errno,
-				apk_name
+				optional_string (apk_name)
 			)
 		);
 	}
@@ -394,8 +412,10 @@ EmbeddedAssemblies::set_entry_data (XamarinAndroidBundledAssembly &entry, ZipEnt
 
 	log_debug (
 		LOG_ASSEMBLY,
-		"Set bundled assembly entry data. file name: '%s'; entry name: '%s'; data size: %u",
-		entry.file_name, entry.name, entry.data_size
+		"Set bundled assembly entry data. file name: '{}'; entry name: '{}'; data size: {}",
+		optional_string (entry.file_name),
+		optional_string (entry.name),
+		entry.data_size
 	);
 }
 
@@ -417,14 +437,14 @@ EmbeddedAssemblies::zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_
 	// The simplest case - no file comment
 	off_t ret = ::lseek (fd, -ZIP_EOCD_LEN, SEEK_END);
 	if (ret < 0) {
-		log_error (LOG_ASSEMBLY, "Unable to seek into the APK to find ECOD: %s (ret: %d; errno: %d)", std::strerror (errno), ret, errno);
+		log_error (LOG_ASSEMBLY, "Unable to seek into the APK to find ECOD: {} (ret: {}; errno: {})", std::strerror (errno), ret, errno);
 		return false;
 	}
 
 	std::array<uint8_t, ZIP_EOCD_LEN> eocd;
 	ssize_t nread = ::read (fd, eocd.data (), eocd.size ());
 	if (nread < 0 || nread != eocd.size ()) {
-		log_error (LOG_ASSEMBLY, "Failed to read EOCD from the APK: %s (nread: %d; errno: %d)", std::strerror (errno), nread, errno);
+		log_error (LOG_ASSEMBLY, "Failed to read EOCD from the APK: {} (nread: {}; errno: {})", std::strerror (errno), nread, errno);
 		return false;
 	}
 
@@ -432,7 +452,7 @@ EmbeddedAssemblies::zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_
 	std::array<uint8_t, 4uz> signature;
 
 	if (!zip_read_field (eocd, index, signature)) {
-		log_error (LOG_ASSEMBLY, "Failed to read EOCD signature");
+		log_error (LOG_ASSEMBLY, "Failed to read EOCD signature"sv);
 		return false;
 	}
 
@@ -444,7 +464,7 @@ EmbeddedAssemblies::zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_
 	constexpr size_t alloc_size = 65535uz + ZIP_EOCD_LEN; // 64k is the biggest comment size allowed
 	ret = ::lseek (fd, static_cast<off_t>(-alloc_size), SEEK_END);
 	if (ret < 0) {
-		log_error (LOG_ASSEMBLY, "Unable to seek into the file to find ECOD before APK comment: %s (ret: %d; errno: %d)", std::strerror (errno), ret, errno);
+		log_error (LOG_ASSEMBLY, "Unable to seek into the file to find ECOD before APK comment: {} (ret: {}; errno: {})", std::strerror (errno), ret, errno);
 		return false;
 	}
 
@@ -453,7 +473,7 @@ EmbeddedAssemblies::zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_
 	nread = ::read (fd, buf.data (), buf.size ());
 
 	if (nread < 0 || static_cast<size_t>(nread) != alloc_size) {
-		log_error (LOG_ASSEMBLY, "Failed to read EOCD and comment from the APK: %s (nread: %d; errno: %d)", std::strerror (errno), nread, errno);
+		log_error (LOG_ASSEMBLY, "Failed to read EOCD and comment from the APK: {} (nread: {}; errno: {})", std::strerror (errno), nread, errno);
 		return false;
 	}
 
@@ -470,7 +490,7 @@ EmbeddedAssemblies::zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_
 	}
 
 	if (!found) {
-		log_error (LOG_ASSEMBLY, "Unable to find EOCD in the APK (with comment)");
+		log_error (LOG_ASSEMBLY, "Unable to find EOCD in the APK (with comment)"sv);
 		return false;
 	}
 
@@ -485,7 +505,11 @@ EmbeddedAssemblies::zip_adjust_data_offset (int fd, ZipEntryLoadState &state) no
 
 	off_t result = ::lseek (fd, static_cast<off_t>(state.local_header_offset), SEEK_SET);
 	if (result < 0) {
-		log_error (LOG_ASSEMBLY, "Failed to seek to archive entry local header at offset %u. %s (result: %d; errno: %d)", state.local_header_offset, result, errno);
+		log_error (
+			LOG_ASSEMBLY,
+			"Failed to seek to archive entry local header at offset {}. {} (result: {}; errno: {})",
+			state.local_header_offset, std::strerror (errno), result, errno
+		);
 		return false;
 	}
 
@@ -494,32 +518,32 @@ EmbeddedAssemblies::zip_adjust_data_offset (int fd, ZipEntryLoadState &state) no
 
 	ssize_t nread = ::read (fd, local_header.data (), local_header.size ());
 	if (nread < 0 || nread != ZIP_LOCAL_LEN) {
-		log_error (LOG_ASSEMBLY, "Failed to read local header at offset %u: %s (nread: %d; errno: %d)", state.local_header_offset, std::strerror (errno), nread, errno);
+		log_error (LOG_ASSEMBLY, "Failed to read local header at offset {}: {} (nread: {}; errno: {})", state.local_header_offset, std::strerror (errno), nread, errno);
 		return false;
 	}
 
 	size_t index = 0;
 	if (!zip_read_field (local_header, index, signature)) {
-		log_error (LOG_ASSEMBLY, "Failed to read Local Header entry signature at offset %u", state.local_header_offset);
+		log_error (LOG_ASSEMBLY, "Failed to read Local Header entry signature at offset {}", state.local_header_offset);
 		return false;
 	}
 
 	if (memcmp (signature.data (), ZIP_LOCAL_MAGIC.data (), signature.size ()) != 0) {
-		log_error (LOG_ASSEMBLY, "Invalid Local Header entry signature at offset %u", state.local_header_offset);
+		log_error (LOG_ASSEMBLY, "Invalid Local Header entry signature at offset {}", state.local_header_offset);
 		return false;
 	}
 
 	uint16_t file_name_length;
 	index = LH_FILE_NAME_LENGTH_OFFSET;
 	if (!zip_read_field (local_header, index, file_name_length)) {
-		log_error (LOG_ASSEMBLY, "Failed to read Local Header 'file name length' field at offset %u", (state.local_header_offset + index));
+		log_error (LOG_ASSEMBLY, "Failed to read Local Header 'file name length' field at offset {}", (state.local_header_offset + index));
 		return false;
 	}
 
 	uint16_t extra_field_length;
 	index = LH_EXTRA_LENGTH_OFFSET;
 	if (!zip_read_field (local_header, index, extra_field_length)) {
-		log_error (LOG_ASSEMBLY, "Failed to read Local Header 'extra field length' field at offset %u", (state.local_header_offset + index));
+		log_error (LOG_ASSEMBLY, "Failed to read Local Header 'extra field length' field at offset {}", (state.local_header_offset + index));
 		return false;
 	}
 
@@ -539,17 +563,17 @@ EmbeddedAssemblies::zip_extract_cd_info (std::array<uint8_t, BufSize> const& buf
 	static_assert (BufSize >= ZIP_EOCD_LEN, "Buffer too short for EOCD");
 
 	if (!zip_read_field (buf, EOCD_TOTAL_ENTRIES_OFFSET, cd_entries)) {
-		log_error (LOG_ASSEMBLY, "Failed to read EOCD 'total number of entries' field");
+		log_error (LOG_ASSEMBLY, "Failed to read EOCD 'total number of entries' field"sv);
 		return false;
 	}
 
 	if (!zip_read_field (buf, EOCD_CD_START_OFFSET, cd_offset)) {
-		log_error (LOG_ASSEMBLY, "Failed to read EOCD 'central directory size' field");
+		log_error (LOG_ASSEMBLY, "Failed to read EOCD 'central directory size' field"sv);
 		return false;
 	}
 
 	if (!zip_read_field (buf, EOCD_CD_SIZE_OFFSET, cd_size)) {
-		log_error (LOG_ASSEMBLY, "Failed to read EOCD 'central directory offset' field");
+		log_error (LOG_ASSEMBLY, "Failed to read EOCD 'central directory offset' field"sv);
 		return false;
 	}
 
@@ -561,7 +585,7 @@ force_inline bool
 EmbeddedAssemblies::zip_ensure_valid_params (T const& buf, size_t index, size_t to_read) noexcept
 {
 	if (index + to_read > buf.size ()) {
-		log_error (LOG_ASSEMBLY, "Buffer too short to read %u bytes of data", to_read);
+		log_error (LOG_ASSEMBLY, "Buffer too short to read {} bytes of data", to_read);
 		return false;
 	}
 
@@ -637,51 +661,51 @@ EmbeddedAssemblies::zip_read_entry_info (std::vector<uint8_t> const& buf, dynami
 
 	std::array<uint8_t, 4> signature;
 	if (!zip_read_field (buf, index, signature)) {
-		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry signature");
+		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry signature"sv);
 		return false;
 	}
 
 	if (memcmp (signature.data (), ZIP_CENTRAL_MAGIC.data (), signature.size ()) != 0) {
-		log_error (LOG_ASSEMBLY, "Invalid Central Directory entry signature");
+		log_error (LOG_ASSEMBLY, "Invalid Central Directory entry signature"sv);
 		return false;
 	}
 
 	index = state.buf_offset + CD_COMPRESSION_METHOD_OFFSET;
 	if (!zip_read_field (buf, index, state.compression_method)) {
-		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'compression method' field");
+		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'compression method' field"sv);
 		return false;
 	}
 
 	index = state.buf_offset + CD_UNCOMPRESSED_SIZE_OFFSET;;
 	if (!zip_read_field (buf, index, state.file_size)) {
-		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'uncompressed size' field");
+		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'uncompressed size' field"sv);
 		return false;
 	}
 
 	uint16_t file_name_length;
 	index = state.buf_offset + CD_FILENAME_LENGTH_OFFSET;
 	if (!zip_read_field (buf, index, file_name_length)) {
-		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'file name length' field");
+		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'file name length' field"sv);
 		return false;
 	}
 
 	uint16_t extra_field_length;
 	index = state.buf_offset + CD_EXTRA_LENGTH_OFFSET;
 	if (!zip_read_field (buf, index, extra_field_length)) {
-		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'extra field length' field");
+		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'extra field length' field"sv);
 		return false;
 	}
 
 	uint16_t comment_length;
 	index = state.buf_offset + CD_COMMENT_LENGTH_OFFSET;
 	if (!zip_read_field (buf, index, comment_length)) {
-		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'file comment length' field");
+		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'file comment length' field"sv);
 		return false;
 	}
 
 	index = state.buf_offset + CD_LOCAL_HEADER_POS_OFFSET;
 	if (!zip_read_field (buf, index, state.local_header_offset)) {
-		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'relative offset of local header' field");
+		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'relative offset of local header' field"sv);
 		return false;
 	}
 	index += sizeof(state.local_header_offset);
@@ -689,7 +713,7 @@ EmbeddedAssemblies::zip_read_entry_info (std::vector<uint8_t> const& buf, dynami
 	if (file_name_length == 0) {
 		file_name.clear ();
 	} else if (!zip_read_field (buf, index, file_name_length, file_name)) {
-		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'file name' field");
+		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'file name' field"sv);
 		return false;
 	}
 

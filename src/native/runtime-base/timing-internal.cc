@@ -78,11 +78,11 @@ FastTiming::dump () noexcept
 	log_write (LOG_TIMING, LogLevel::Info, "[2/4] Accumulated performance results");
 
 	ns_to_time (total_assembly_load_time, sec, ms, ns);
-	log_info_nocheck (LOG_TIMING, "  [2/5] Assembly load: %u:%u::%u", sec, ms, ns);
+	log_info_nocheck (LOG_TIMING, "  [2/5] Assembly load: {}:{}::{}", sec, ms, ns);
 
 	ns_to_time (total_java_to_managed_time, sec, ms, ns);
-	log_info_nocheck (LOG_TIMING, "  [2/6] Java to Managed lookup: %u:%u::%u", sec, ms, ns);
+	log_info_nocheck (LOG_TIMING, "  [2/6] Java to Managed lookup: {}:{}::{}", sec, ms, ns);
 
 	ns_to_time (total_managed_to_java_time, sec, ms, ns);
-	log_info_nocheck (LOG_TIMING, "  [2/7] Managed to Java lookup: %u:%u::%u", sec, ms, ns);
+	log_info_nocheck (LOG_TIMING, "  [2/7] Managed to Java lookup: {}:{}::{}", sec, ms, ns);
 }
