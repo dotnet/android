@@ -1063,11 +1063,12 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
 {1} - NuGet package version</comment>
   </data>
   <data name="XA0141" xml:space="preserve">
-    <value>El paquete NuGet '{0}' en su versión '{1}' contiene una biblioteca compartida '{2}' que no está alineada correctamente. Consulte https://developer.android.com/guide/practices/page-sizes para más detalles</value>
+    <value>Android 16 will require 16 KB page sizes, shared library '{3}' does not have a 16 KB page size. Please inform the authors of the NuGet package '{0}' version '{1}' which contains '{2}'. See https://developer.android.com/guide/practices/page-sizes for more details.</value>
     <comment>The following is a literal name and should not be translated: NuGet
 {0} - NuGet package id
 {1} - NuGet package version
-{2} - shared library file name
+{2} - Source location path
+{3} - shared library file name
     </comment>
   </data>
   <data name="XA4249" xml:space="preserve">
