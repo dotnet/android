@@ -11,8 +11,7 @@
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <OutputPath>$(NativeRuntimeOutputRootDir)mono\</OutputPath>
-    <CMakeRuntimeFlavor>MonoVM</CMakeRuntimeFlavor>
+    <OutputPath>$(MicrosoftAndroidSdkOutDir)lib\mono\</OutputPath>
   </PropertyGroup>
 
   <Import Project="native.targets" />

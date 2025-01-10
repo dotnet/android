@@ -113,7 +113,7 @@
       <_NoInline Condition=" '$(DoNotInlineMonodroid)' == 'true' ">-DDONT_INLINE=ON</_NoInline>
       <_NoStrip Condition=" '$(DoNotStripMonodroid)' == 'true' ">-DSTRIP_DEBUG=OFF</_NoStrip>
 
-      <_CmakeAndroidFlags>-DOUTPUT_PATH="$(OutputPath.TrimEnd('\'))" -DRUNTIME_FLAVOR="$(CMakeRuntimeFlavor)" $(_NoInline) $(_NoStrip) "$(MSBuildThisFileDirectory)"</_CmakeAndroidFlags>
+      <_CmakeAndroidFlags>-DOUTPUT_PATH="$(OutputPath)" $(_NoInline) $(_NoStrip) "$(MSBuildThisFileDirectory)"</_CmakeAndroidFlags>
     </PropertyGroup>
 
     <ItemGroup>

@@ -38,7 +38,7 @@
       <_NoInline Condition=" '$(DoNotInlineMonodroid)' == 'true' ">-DDONT_INLINE=ON</_NoInline>
       <_NoStrip Condition=" '$(DoNotStripMonodroid)' == 'true' ">-DSTRIP_DEBUG=OFF</_NoStrip>
 
-      <_CmakeAndroidFlags>$(_NoInline) $(_NoStrip) "$(MSBuildThisFileDirectory)"</_CmakeAndroidFlags>
+      <_CmakeAndroidFlags>-DOUTPUT_PATH="$(OutputPath)" $(_NoInline) $(_NoStrip) "$(MSBuildThisFileDirectory)"</_CmakeAndroidFlags>
     </PropertyGroup>
 
     <ItemGroup>
@@ -129,27 +129,12 @@
 
   <Target Name="_CopyToPackDirs">
     <ItemGroup>
-      <_ArmRuntimePackFiles   Include="$(OutputPath)\android-arm\*.*" />
-      <_Arm64RuntimePackFiles Include="$(OutputPath)\android-arm64\*.*" />
-      <_x86RuntimePackFiles   Include="$(OutputPath)\android-x86\*.*" />
-      <_x64RuntimePackFiles   Include="$(OutputPath)\android-x64\*.*" />
+      <_RuntimePackFiles Include="$(OutputPath)\%(AndroidSupportedTargetJitAbi.AndroidRID)\*" AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)" AndroidRuntime="CoreCLR" />
     </ItemGroup>
 
     <Copy
-        SourceFiles="@(_ArmRuntimePackFiles)"
-        DestinationFolder="$(MicrosoftAndroidArmPackDir)native"
-        SkipUnchangedFiles="true" />
-    <Copy
-        SourceFiles="@(_Arm64RuntimePackFiles)"
-        DestinationFolder="$(MicrosoftAndroidArm64PackDir)native"
-        SkipUnchangedFiles="true" />
-    <Copy
-        SourceFiles="@(_x86RuntimePackFiles)"
-        DestinationFolder="$(MicrosoftAndroidx86PackDir)native"
-        SkipUnchangedFiles="true" />
-    <Copy
-        SourceFiles="@(_x64RuntimePackFiles)"
-        DestinationFolder="$(MicrosoftAndroidx64PackDir)native"
+        SourceFiles="%(_RuntimePackFiles.Identity)"
+        DestinationFolder="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.%(_RuntimePackFiles.AndroidRuntime).$(AndroidApiLevel).%(_RuntimePackFiles.AndroidRID)\$(AndroidPackVersion)\runtimes\%(_RuntimePackFiles.AndroidRID)\native"
         SkipUnchangedFiles="true" />
   </Target>
 </Project>
