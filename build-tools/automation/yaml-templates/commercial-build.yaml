@@ -8,8 +8,9 @@ parameters:
   use1ESTemplate: true
 
 steps:
-- script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-17"
-  displayName: set JI_JAVA_HOME
+- template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml
+  parameters:
+    useXAPrepareJdkPath: true
 
 - template: /build-tools/automation/yaml-templates/use-dot-net.yaml
   parameters:
