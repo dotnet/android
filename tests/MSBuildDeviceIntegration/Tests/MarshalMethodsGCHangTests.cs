@@ -88,7 +88,6 @@ public class MainActivity : Activity
 		var proj = new XamarinAndroidApplicationProject (packageName: "marshal2") {
 			IsRelease = true,
 			EnableMarshalMethods = true,
-			TargetFramework = "net9.0-android",
 			SupportedOSPlatformVersion = "23",
 			TrimModeRelease = TrimMode.Full,
 			ProjectName = "marshal2",

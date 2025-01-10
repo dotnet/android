@@ -48,7 +48,7 @@ variables:
 - name: TeamName
   value: XamarinAndroid
 - name: DotNetTargetFramework
-  value: net9.0
+  value: net10.0
 - name: DotNetStableTargetFramework
   value: net9.0
 # Workaround: https://devdiv.visualstudio.com/DevDiv/_workitems/edit/1585820

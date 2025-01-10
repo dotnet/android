@@ -1,29 +1,29 @@
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.NET.Sdk" Version="9.0.100-rtm.24512.1">
+    <Dependency Name="Microsoft.NET.Sdk" Version="10.0.100-alpha.1.25056.1">
       <Uri>https://github.com/dotnet/sdk</Uri>
-      <Sha>5b9d9d4677ea31d954533e9de2f95a3ea638135d</Sha>
+      <Sha>a93a592ce99414d94dafbd0ef0a6f51b6fbcdaf4</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="9.0.0-rtm.24510.3" CoherentParentDependency="Microsoft.NET.Sdk">
+    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="10.0.0-alpha.1.25056.1" CoherentParentDependency="Microsoft.NET.Sdk">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>226c0347b92c4f9649bcc7ad580f74cb0409580e</Sha>
+      <Sha>4b02c51f7158ca9abc68b331ac5ad64d716a0e2a</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NETCore.App.Ref" Version="9.0.0-rtm.24510.3" CoherentParentDependency="Microsoft.NET.Sdk">
+    <Dependency Name="Microsoft.NETCore.App.Ref" Version="10.0.0-alpha.1.25056.1" CoherentParentDependency="Microsoft.NET.Sdk">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>226c0347b92c4f9649bcc7ad580f74cb0409580e</Sha>
+      <Sha>4b02c51f7158ca9abc68b331ac5ad64d716a0e2a</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-9.0.100.Transport" Version="9.0.0-rtm.24469.1" CoherentParentDependency="Microsoft.NETCore.App.Ref">
+    <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-10.0.100.Transport" Version="10.0.0-alpha.1.24628.1" CoherentParentDependency="Microsoft.NETCore.App.Ref">
       <Uri>https://github.com/dotnet/emsdk</Uri>
-      <Sha>8e660ff41e91879977e3a9d837e068bd72234c26</Sha>
+      <Sha>953fd74cd26884432eee21244ff4b031ebbdde32</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-alpha.24480.1" CoherentParentDependency="Microsoft.NET.ILLink.Tasks">
+    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-alpha.24627.1" CoherentParentDependency="Microsoft.NET.ILLink.Tasks">
       <Uri>https://github.com/dotnet/cecil</Uri>
-      <Sha>9c9443396f8deacceb8edb169890e52aac25f311</Sha>
+      <Sha>9e8bd520939ddfee686261267a1646c1b113d9e1</Sha>
     </Dependency>
     <!-- Previous .NET Android version -->
-    <Dependency Name="Microsoft.Android.Sdk.Windows" Version="34.0.147">
+    <Dependency Name="Microsoft.Android.Sdk.Windows" Version="35.0.24">
       <Uri>https://github.com/dotnet/android</Uri>
-      <Sha>a8cd27e430e55df3e3c1e3a43d35c11d9512a2db</Sha>
+      <Sha>4b20432d95ea8965a41cc73997e459d7fa561233</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>

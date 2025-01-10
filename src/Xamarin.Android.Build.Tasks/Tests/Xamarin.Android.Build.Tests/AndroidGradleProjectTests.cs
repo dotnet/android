@@ -126,7 +126,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void BindPackLibrary ([Values (false, true)] bool packGradleRef)
 		{
-			var dotnetVersion = "net9.0";
+			var dotnetVersion = "net10.0";
 			var apiLevel = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
 			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir);
 			var moduleName = gradleProject.Modules.First ().Name;

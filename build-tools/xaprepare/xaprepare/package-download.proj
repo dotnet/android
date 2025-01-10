@@ -24,10 +24,12 @@ Otherwise, $(MicrosoftNETCoreAppRefPackageVersion) from eng/Versions.props will 
     <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.net6.Manifest-$(DotNetMonoManifestVersionBand)" Version="[$(DotNetRuntimePacksVersion)]" />
     <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.net7.Manifest-$(DotNetMonoManifestVersionBand)" Version="[$(DotNetRuntimePacksVersion)]" />
     <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.net8.Manifest-$(DotNetMonoManifestVersionBand)" Version="[$(DotNetRuntimePacksVersion)]" />
+    <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.net9.Manifest-$(DotNetMonoManifestVersionBand)" Version="[$(DotNetRuntimePacksVersion)]" />
     <PackageDownload Include="Microsoft.NET.Workload.Emscripten.Current.Manifest-$(DotNetEmscriptenManifestVersionBand)" Version="[$(MicrosoftNETWorkloadEmscriptenPackageVersion)]" />
     <PackageDownload Include="Microsoft.NET.Workload.Emscripten.net6.Manifest-$(DotNetEmscriptenManifestVersionBand)" Version="[$(MicrosoftNETWorkloadEmscriptenPackageVersion)]" />
     <PackageDownload Include="Microsoft.NET.Workload.Emscripten.net7.Manifest-$(DotNetEmscriptenManifestVersionBand)" Version="[$(MicrosoftNETWorkloadEmscriptenPackageVersion)]" />
     <PackageDownload Include="Microsoft.NET.Workload.Emscripten.net8.Manifest-$(DotNetEmscriptenManifestVersionBand)" Version="[$(MicrosoftNETWorkloadEmscriptenPackageVersion)]" />
+    <PackageDownload Include="Microsoft.NET.Workload.Emscripten.net9.Manifest-$(DotNetEmscriptenManifestVersionBand)" Version="[$(MicrosoftNETWorkloadEmscriptenPackageVersion)]" />
   </ItemGroup>
 
 </Project>

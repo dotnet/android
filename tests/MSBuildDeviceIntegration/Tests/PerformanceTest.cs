@@ -313,7 +313,7 @@ namespace Xamarin.Android.Build.Tests
 			var lib = new DotNetStandard {
 				ProjectName = "MyLibrary",
 				Sdk = "Microsoft.NET.Sdk",
-				TargetFramework = "net8.0", // Vanilla project
+				TargetFramework = "net10.0", // Vanilla project
 				Sources = {
 					new BuildItem.Source ("Bar.cs") {
 						TextContent = () => "public class Bar { public Bar () { System.Console.WriteLine (" + count++ + "); } }"
