@@ -1,3 +1,4 @@
+/Microsoft.Android.Sdk/Sdk/AutoImport.props
 /Microsoft.Android.Sdk/targets/Microsoft.Android.Sdk.BundledVersions.targets
 /Microsoft.Android.Sdk/targets/Microsoft.Android.Sdk.SupportedPlatforms.targets
 /Xamarin.Android.Common.props

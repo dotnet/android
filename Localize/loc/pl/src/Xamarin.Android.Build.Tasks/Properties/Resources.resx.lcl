@@ -458,10 +458,13 @@
       </Item>
       <Item ItemId=";XA0141" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[NuGet package '{0}' version '{1}' contains a shared library '{2}' which is not correctly aligned. See https://developer.android.com/guide/practices/page-sizes for more details]]></Val>
+          <Val><![CDATA[Android 16 will require 16 KB page sizes, shared library '{3}' does not have a 16 KB page size. Please inform the authors of the NuGet package '{0}' version '{1}' which contains '{2}'. See https://developer.android.com/guide/practices/page-sizes for more details.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Pakiet NuGet „{0}” w wersji „{1}” zawiera bibliotekę udostępnioną „{2}”, która nie jest poprawnie wyrównana. Zobacz https://developer.android.com/guide/practices/page-sizes, aby uzyskać więcej szczegółów]]></Val>
+            <Val><![CDATA[System Android 16 będzie wymagał rozmiaru strony o rozmiarze 16 KB, biblioteka udostępniona '{3}' nie ma rozmiaru strony 16 KB. Poinformuj autorów pakietu NuGet '{0}' wersji '{1}' zawierającej '{2}'. Zobacz https://developer.android.com/guide/practices/page-sizes, aby uzyskać więcej szczegółów.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[NuGet package '{0}' version '{1}' contains a shared library '{2}' which is not correctly aligned. See https://developer.android.com/guide/practices/page-sizes for more details]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>

@@ -458,7 +458,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
 				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"error XA4301: Cannot determine ABI of native library 'not-a-real-abi{Path.DirectorySeparatorChar}libtest.so'. Move this file to a directory with a valid Android ABI name such as 'libs/armeabi-v7a/'."),
@@ -502,7 +502,7 @@ namespace Xamarin.Android.Build.Tests
 				TextContent = () => $@"
 					<Project>
 					  <PropertyGroup>
-						<IntermediateOutputPath>$(MSBuildThisFileDirectory)../{TestContext.CurrentContext.Test.Name}/obj/$(Configuration)/foo/</IntermediateOutputPath>
+						<IntermediateOutputPath>$(MSBuildThisFileDirectory)../{TestName}/obj/$(Configuration)/foo/</IntermediateOutputPath>
 					  </PropertyGroup>
 					</Project>"
 			});
