@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <cstring>
 #include <cstdlib>
+#include <string_view>
 #include <sys/time.h>
 
 #include <android/log.h>
@@ -69,11 +70,9 @@ namespace xamarin::android
 
 	// This class is intended to be used by the managed code. It can be used by the native code as
 	// well, but the overhead it has (out of necessity) might not be desirable in native code.
-#define TIMING_FORMAT "; elapsed: %lis:%lu::%lu"
-
 	class Timing
 	{
-		static constexpr char MESSAGE_FORMAT[] = "%s" TIMING_FORMAT;
+		static inline constexpr std::string_view MESSAGE_FORMAT { "{}; elapsed: {}:{}::{}" };
 
 	public:
 		static constexpr size_t DEFAULT_POOL_SIZE = 16uz;
@@ -94,14 +93,14 @@ namespace xamarin::android
 		{
 			timing_diff diff (period);
 
-			log_info_nocheck (LOG_TIMING, MESSAGE_FORMAT, message == nullptr ? "" : message, diff.sec, diff.ms, diff.ns);
+			log_info_nocheck (LOG_TIMING, MESSAGE_FORMAT.data (), message == nullptr ? ""sv : message, diff.sec, diff.ms, diff.ns);
 		}
 
 		static void warn (timing_period const &period, const char *message) noexcept
 		{
 			timing_diff diff (period);
 
-			log_warn (LOG_TIMING, MESSAGE_FORMAT, message == nullptr ? "" : message, diff.sec, diff.ms, diff.ns);
+			log_warn (LOG_TIMING, MESSAGE_FORMAT.data (), message == nullptr ? ""sv : message, diff.sec, diff.ms, diff.ns);
 		}
 
 		managed_timing_sequence* get_available_sequence () noexcept
@@ -147,20 +146,5 @@ namespace xamarin::android
 		size_t                    sequence_pool_size;
 		xamarin::android::mutex   sequence_lock;
 	};
-
-	// This is a hack to avoid having to allocate memory when rendering messages that use additional
-	// format placeholders on the caller side. Memory allocation would be necessary since we append
-	// the standard timing suffix to every message printed. Using a variadic macro allows us to
-	// compose a call with all the elements present and make the composition compile-time.
-	//
-	// It could be done with template packs but that would result in extra code generated whenever a
-	// call with a different set of parameters would be made, plus the code to implement that would
-	// be a bit verbose and unwieldy, so we will stick to this simple method.
-#define TIMING_DO_LOG(_level, _category_, ...) ::log_ ## _level ## _nocheck ((_category_), __VA_ARGS__)
-
-#define TIMING_LOG_INFO(__period__, __format__, ...) {                \
-		timing_diff diff ((__period__)); \
-		TIMING_DO_LOG (info, LOG_TIMING, __format__ TIMING_FORMAT, __VA_ARGS__, diff.sec, diff.ms, diff.ns); \
-	}
 }
 #endif // __TIMING_HH

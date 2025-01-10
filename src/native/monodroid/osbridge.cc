@@ -188,10 +188,10 @@ OSBridge::_write_stack_trace (FILE *to, char *from, LogCategories category)
 		*end    = '\0';
 		if ((category == LOG_GREF && gref_to_logcat) ||
 				(category == LOG_LREF && lref_to_logcat)) {
-			log_debug (category, "%s", m);
+			log_debug (category, "{}", optional_string (m));
 		}
 		if (to != nullptr) {
-			fprintf (to, "%s\n", m);
+			fprintf (to, "%s\n", optional_string (m));
 			fflush (to);
 		}
 		*end    = c;
@@ -202,11 +202,11 @@ void
 OSBridge::_monodroid_gref_log (const char *message)
 {
 	if (gref_to_logcat) {
-		log_debug (LOG_GREF, "%s", message);
+		log_debug (LOG_GREF, "{}", optional_string (message));
 	}
 	if (!gref_log)
 		return;
-	fprintf (gref_log, "%s", message);
+	fprintf (gref_log, "%s", optional_string (message));
 	fflush (gref_log);
 }
 
@@ -216,20 +216,23 @@ OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject newH
 	int c = _monodroid_gref_inc ();
 	if ((log_categories & LOG_GREF) == 0)
 		return c;
-	log_info (LOG_GREF, "+g+ grefc %i gwrefc %i obj-handle %p/%c -> new-handle %p/%c from thread '%s'(%i)",
-	          c,
-	          gc_weak_gref_count,
-	          curHandle,
-	          curType,
-	          newHandle,
-	          newType,
-	          threadName,
-	          threadId);
+
+	log_info (LOG_GREF,
+		"+g+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})",
+		c,
+		gc_weak_gref_count,
+		reinterpret_cast<void*>(curHandle),
+		curType,
+		reinterpret_cast<void*>(newHandle),
+		newType,
+		optional_string (threadName),
+		threadId
+	);
 	if (gref_to_logcat) {
 		if (from_writable) {
 			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
 		} else {
-			log_info (LOG_GREF, "%s", from);
+			log_info (LOG_GREF, "{}", optional_string (from));
 		}
 	}
 	if (!gref_log)
@@ -241,7 +244,7 @@ OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject newH
 	         curType,
 	         newHandle,
 	         newType,
-	         threadName,
+	         optional_string (threadName),
 	         threadId);
 	if (from_writable)
 		_write_stack_trace (gref_log, const_cast<char*>(from));
@@ -259,18 +262,20 @@ OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char *thr
 	int c = _monodroid_gref_dec ();
 	if ((log_categories & LOG_GREF) == 0)
 		return;
-	log_info (LOG_GREF, "-g- grefc %i gwrefc %i handle %p/%c from thread '%s'(%i)",
-	          c,
-	          gc_weak_gref_count,
-	          handle,
-	          type,
-	          threadName,
-	          threadId);
+	log_info (LOG_GREF,
+		"-g- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})",
+		c,
+		gc_weak_gref_count,
+		reinterpret_cast<void*>(handle),
+		type,
+		optional_string (threadName),
+		threadId
+	);
 	if (gref_to_logcat) {
 		if (from_writable) {
 			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
 		} else {
-			log_info (LOG_GREF, "%s", from);
+			log_info (LOG_GREF, "{}", optional_string (from));
 		}
 	}
 	if (!gref_log)
@@ -280,12 +285,12 @@ OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char *thr
 	         gc_weak_gref_count,
 	         handle,
 	         type,
-	         threadName,
+	         optional_string (threadName),
 	         threadId);
 	if (from_writable)
 		_write_stack_trace (gref_log, const_cast<char*>(from));
 	else
-		fprintf (gref_log, "%s\n", from);
+		fprintf (gref_log, "%s\n", optional_string (from));
 
 	fflush (gref_log);
 }
@@ -296,20 +301,22 @@ OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobject new
 	++gc_weak_gref_count;
 	if ((log_categories & LOG_GREF) == 0)
 		return;
-	log_info (LOG_GREF, "+w+ grefc %i gwrefc %i obj-handle %p/%c -> new-handle %p/%c from thread '%s'(%i)",
-	          gc_gref_count,
-	          gc_weak_gref_count,
-	          curHandle,
-	          curType,
-	          newHandle,
-	          newType,
-	          threadName,
-	          threadId);
+	log_info (LOG_GREF,
+		"+w+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})",
+		gc_gref_count,
+		gc_weak_gref_count,
+		reinterpret_cast<void*>(curHandle),
+		curType,
+		reinterpret_cast<void*>(newHandle),
+		newType,
+		optional_string (threadName),
+		threadId
+	);
 	if (gref_to_logcat) {
 		if (from_writable) {
 			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
 		} else {
-			log_info (LOG_GREF, "%s", from);
+			log_info (LOG_GREF, "{}", optional_string (from));
 		}
 	}
 	if (!gref_log)
@@ -321,12 +328,12 @@ OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobject new
 	         curType,
 	         newHandle,
 	         newType,
-	         threadName,
+	         optional_string (threadName),
 	         threadId);
 	if (from_writable)
 		_write_stack_trace (gref_log, const_cast<char*>(from));
 	else
-		fprintf (gref_log, "%s\n", from);
+		fprintf (gref_log, "%s\n", optional_string (from));
 
 	fflush (gref_log);
 }
@@ -337,18 +344,20 @@ OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const char *th
 	--gc_weak_gref_count;
 	if ((log_categories & LOG_GREF) == 0)
 		return;
-	log_info (LOG_GREF, "-w- grefc %i gwrefc %i handle %p/%c from thread '%s'(%i)",
-	          gc_gref_count,
-	          gc_weak_gref_count,
-	          handle,
-	          type,
-	          threadName,
-	          threadId);
+	log_info (LOG_GREF,
+		"-w- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})",
+		gc_gref_count,
+		gc_weak_gref_count,
+		reinterpret_cast<void*>(handle),
+		type,
+		optional_string (threadName),
+		threadId
+	);
 	if (gref_to_logcat) {
 		if (from_writable) {
 			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
 		} else {
-			log_info (LOG_GREF, "%s", from);
+			log_info (LOG_GREF, "{}", optional_string (from));
 		}
 	}
 	if (!gref_log)
@@ -358,12 +367,12 @@ OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const char *th
 	         gc_weak_gref_count,
 	         handle,
 	         type,
-	         threadName,
+	         optional_string (threadName),
 	         threadId);
 	if (from_writable)
 		_write_stack_trace (gref_log, const_cast<char*>(from));
 	else
-		fprintf (gref_log, "%s\n", from);
+		fprintf (gref_log, "%s\n", optional_string (from));
 
 	fflush (gref_log);
 }
@@ -373,17 +382,19 @@ OSBridge::_monodroid_lref_log_new (int lrefc, jobject handle, char type, const c
 {
 	if ((log_categories & LOG_LREF) == 0)
 		return;
-	log_info (LOG_LREF, "+l+ lrefc %i handle %p/%c from thread '%s'(%i)",
-	          lrefc,
-	          handle,
-	          type,
-	          threadName,
-	          threadId);
+	log_info (LOG_LREF,
+		"+l+ lrefc {} handle {:p}/{} from thread '{}'({})",
+		lrefc,
+		reinterpret_cast<void*>(handle),
+		type,
+		optional_string (threadName),
+		threadId
+	);
 	if (lref_to_logcat) {
 		if (from_writable) {
 			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
 		} else {
-			log_info (LOG_GREF, "%s", from);
+			log_info (LOG_GREF, "{}", optional_string (from));
 		}
 	}
 	if (!lref_log)
@@ -392,12 +403,12 @@ OSBridge::_monodroid_lref_log_new (int lrefc, jobject handle, char type, const c
 	         lrefc,
 	         handle,
 	         type,
-	         threadName,
+	         optional_string (threadName),
 	         threadId);
 	if (from_writable)
 		_write_stack_trace (lref_log, const_cast<char*>(from));
 	else
-		fprintf (lref_log, "%s\n", from);
+		fprintf (lref_log, "%s\n", optional_string (from));
 
 	fflush (lref_log);
 }
@@ -407,17 +418,19 @@ OSBridge::_monodroid_lref_log_delete (int lrefc, jobject handle, char type, cons
 {
 	if ((log_categories & LOG_LREF) == 0)
 		return;
-	log_info (LOG_LREF, "-l- lrefc %i handle %p/%c from thread '%s'(%i)",
-	          lrefc,
-	          handle,
-	          type,
-	          threadName,
-	          threadId);
+	log_info (LOG_LREF,
+		"-l- lrefc {} handle {:p}/{} from thread '{}'({})",
+		lrefc,
+		reinterpret_cast<void*>(handle),
+		type,
+		optional_string (threadName),
+		threadId
+	);
 	if (lref_to_logcat) {
 		if (from_writable) {
 			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
 		} else {
-			log_info (LOG_GREF, "%s", from);
+			log_info (LOG_GREF, "{}", optional_string (from));
 		}
 	}
 	if (!lref_log)
@@ -426,12 +439,12 @@ OSBridge::_monodroid_lref_log_delete (int lrefc, jobject handle, char type, cons
 	         lrefc,
 	         handle,
 	         type,
-	         threadName,
+	         optional_string (threadName),
 	         threadId);
 	if (from_writable)
 		_write_stack_trace (lref_log, const_cast<char*>(from));
 	else
-		fprintf (lref_log, "%s\n", from);
+		fprintf (lref_log, "%s\n", optional_string (from));
 
 	fflush (lref_log);
 }
@@ -529,9 +542,11 @@ OSBridge::gc_bridge_class_kind (MonoClass *klass)
 
 	i = get_gc_bridge_index (klass);
 	if (i == static_cast<int> (-NUM_GC_BRIDGE_TYPES)) {
-		log_info (LOG_GC, "asked if a class %s.%s is a bridge before we inited java.lang.Object",
-			mono_class_get_namespace (klass),
-			mono_class_get_name (klass));
+		log_info (LOG_GC,
+			"asked if a class {}.{} is a bridge before we inited java.lang.Object",
+			optional_string (mono_class_get_namespace (klass)),
+			optional_string (mono_class_get_name (klass))
+		);
 		return MonoGCBridgeObjectKind::GC_BRIDGE_TRANSPARENT_CLASS;
 	}
 
@@ -555,9 +570,11 @@ OSBridge::gc_is_bridge_object (MonoObject *object)
 	if (handle == nullptr) {
 #if DEBUG
 		MonoClass *mclass = mono_object_get_class (object);
-		log_info (LOG_GC, "object of class %s.%s with null handle",
-				mono_class_get_namespace (mclass),
-				mono_class_get_name (mclass));
+		log_info (LOG_GC,
+			"object of class {}.{} with null handle",
+			optional_string (mono_class_get_namespace (mclass)),
+			optional_string (mono_class_get_name (mclass))
+		);
 #endif
 		return 0;
 	}
@@ -643,9 +660,9 @@ OSBridge::add_reference (JNIEnv *env, OSBridge::AddReferenceTarget target, OSBri
 			 *reffed_description = describe_target (reffed_target);
 
 		if (success)
-			log_warn (LOG_GC, "Added reference for %s to %s", description, reffed_description);
+			log_warn (LOG_GC, "Added reference for {} to {}", optional_string (description), optional_string (reffed_description));
 		else
-			log_error (LOG_GC, "Missing monodroidAddReference method for %s", description);
+			log_error (LOG_GC, "Missing monodroidAddReference method for {}", optional_string (description));
 
 		free (description);
 		free (reffed_description);
@@ -881,9 +898,11 @@ OSBridge::gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBri
 #if DEBUG
 						if (Logger::gc_spew_enabled ()) {
 							klass = mono_object_get_class (obj);
-							log_error (LOG_GC, "Missing monodroidClearReferences method for object of class %s.%s",
-									mono_class_get_namespace (klass),
-									mono_class_get_name (klass));
+							log_error (LOG_GC,
+								"Missing monodroidClearReferences method for object of class {}.{}",
+								optional_string (mono_class_get_namespace (klass)),
+								optional_string (mono_class_get_name (klass))
+							);
 						}
 #endif
 					}
@@ -897,7 +916,7 @@ OSBridge::gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBri
 		}
 	}
 #if DEBUG
-	log_info (LOG_GC, "GC cleanup summary: %d objects tested - resurrecting %d.", total, alive);
+	log_info (LOG_GC, "GC cleanup summary: {} objects tested - resurrecting {}.", total, alive);
 #endif
 }
 
@@ -927,10 +946,10 @@ OSBridge::gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xre
 
 	if (Logger::gc_spew_enabled ()) {
 		int i, j;
-		log_info (LOG_GC, "cross references callback invoked with %d sccs and %d xrefs.", num_sccs, num_xrefs);
+		log_info (LOG_GC, "cross references callback invoked with {} sccs and {} xrefs.", num_sccs, num_xrefs);
 
 		for (i = 0; i < num_sccs; ++i) {
-			log_info (LOG_GC, "group %d with %d objects", i, sccs [i]->num_objs);
+			log_info (LOG_GC, "group {} with {} objects", i, sccs [i]->num_objs);
 			for (j = 0; j < sccs [i]->num_objs; ++j) {
 				MonoObject *obj = sccs [i]->objs [j];
 
@@ -944,18 +963,20 @@ OSBridge::gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xre
 					}
 				}
 				MonoClass *klass = mono_object_get_class (obj);
-				log_info (LOG_GC, "\tobj %p [%s::%s] handle %p key_handle %p",
-						obj,
-						mono_class_get_namespace (klass),
-						mono_class_get_name (klass),
-						handle,
-						key_handle);
+				log_info (LOG_GC,
+					"\tobj {:p} [{}::{}] handle {:p} key_handle {:p}",
+					reinterpret_cast<void*>(obj),
+					optional_string (mono_class_get_namespace (klass)),
+					optional_string (mono_class_get_name (klass)),
+					reinterpret_cast<void*>(handle),
+					key_handle
+				);
 			}
 		}
 
 		if (Util::should_log (LOG_GC)) {
 			for (i = 0; i < num_xrefs; ++i)
-				log_info_nocheck (LOG_GC, "xref [%d] %d -> %d", i, xrefs [i].src_scc_index, xrefs [i].dst_scc_index);
+				log_info_nocheck_fmt (LOG_GC, "xref [{}] {} -> {}", i, xrefs [i].src_scc_index, xrefs [i].dst_scc_index);
 		}
 	}
 

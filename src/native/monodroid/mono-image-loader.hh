@@ -110,7 +110,7 @@ namespace xamarin::android::internal {
 		force_inline static MonoImage* stash_and_return (MonoImage *image, MonoImageOpenStatus status, [[maybe_unused]] hash_t hash) noexcept
 		{
 			if (image == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
-				log_warn (LOG_ASSEMBLY, "Failed to open assembly image. %s", mono_image_strerror (status));
+				log_warn (LOG_ASSEMBLY, "Failed to open assembly image. {}", optional_string (mono_image_strerror (status)));
 				return nullptr;
 			}
 
@@ -119,8 +119,8 @@ namespace xamarin::android::internal {
 			if (index < 0) {
 				Helpers::abort_application (
 					LOG_ASSEMBLY,
-					Util::monodroid_strdup_printf (
-						"Failed to look up image index for hash 0x%zx",
+					std::format (
+						"Failed to look up image index for hash {:x}",
 						hash
 					)
 				);
