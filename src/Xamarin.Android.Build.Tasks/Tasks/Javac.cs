@@ -27,6 +27,8 @@ namespace Xamarin.Android.Tasks
 		public string JavacTargetVersion { get; set; }
 		public string JavacSourceVersion { get; set; }
 
+		public string JdkVersion { get; set; }
+
 		public override string DefaultErrorCode => "JAVAC0000";
 
 		public override bool RunTask ()
@@ -75,8 +77,11 @@ namespace Xamarin.Android.Tasks
 
 		bool JavacSupportsRelease ()
 		{
-			var jdkInfo = new JdkInfo (Path.Combine (ToolPath, ".."));
-			return jdkInfo.Version.Major >= 17;
+			if (string.IsNullOrEmpty (JdkVersion)) {
+				return false;
+			}
+			var jdkVersion  = Version.Parse (JdkVersion);
+			return jdkVersion.Major >= 17;
 		}
 
 		protected override void WriteOptionsToResponseFile (StreamWriter sw)
