@@ -9,8 +9,6 @@ import java.io.*;
 
 import org.junit.Test;
 
-import jdk.nashorn.internal.AssertsEnabled;
-
 import static org.junit.Assert.*;
 
 public class JavaSourceUtilsOptionsTest {

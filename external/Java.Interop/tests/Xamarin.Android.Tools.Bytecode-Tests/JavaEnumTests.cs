@@ -22,7 +22,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			new ExpectedTypeDeclaration {
 				MajorVersion        = 0x37,
 				MinorVersion        = 0,
-				ConstantPoolCount   = 53,
+				ConstantPoolCount   = 55,
 				AccessFlags         = ClassAccessFlags.Final | ClassAccessFlags.Super | ClassAccessFlags.Enum,
 				FullName            = "com/xamarin/JavaEnum",
 				Superclass          = new TypeInfo ("java/lang/Enum",   "Ljava/lang/Enum<Lcom/xamarin/JavaEnum;>;"),
@@ -70,6 +70,11 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 						Name                    = "switchValue",
 						AccessFlags             = MethodAccessFlags.Public,
 						ReturnDescriptor        = "I",
+					},
+					new ExpectedMethodDeclaration {
+						Name                    = "$values",
+						AccessFlags             = MethodAccessFlags.Private | MethodAccessFlags.Static | MethodAccessFlags.Synthetic,
+						ReturnDescriptor        = "[Lcom/xamarin/JavaEnum;",
 					},
 					new ExpectedMethodDeclaration {
 						Name                    = "<clinit>",

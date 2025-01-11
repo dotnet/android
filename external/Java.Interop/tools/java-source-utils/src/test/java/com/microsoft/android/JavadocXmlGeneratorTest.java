@@ -99,9 +99,12 @@ public final class JavadocXmlGeneratorTest {
 
 		generator.writePackages(packagesInfo);
 		generator.close();
-		// try (FileOutputStream o = new FileOutputStream(assertDescription + "-jonp.xml")) {
-		// 	bytes.writeTo(o);
-		// }
+
+		final   File                    actual          = new File(assertDescription + "-jonp.xml");
+		try (FileOutputStream o = new FileOutputStream(actual)) {
+			bytes.writeTo(o);
+		}
 		assertEquals(assertDescription, expected, bytes.toString());
+		actual.delete();
 	}
 }
