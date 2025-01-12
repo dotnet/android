@@ -1072,7 +1072,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - NuGet package version</comment>
   </data>
   <data name="XA0141" xml:space="preserve">
-    <value>NuGet 套件 '{0}' 版本 '{1}' 包含未正確對齊的共用程式庫 '{2}'。如需更多詳細資料，請參閱 https://developer.android.com/guide/practices/page-sizes</value>
+    <value>Android 16 將需要 16 KB 的頁面大小，共用連結庫 '{3}' 沒有 16 KB 的頁面大小。請將包含 '{2}' 的 NuGet 套件 '{0}' 版本 '{1}' 通知作者。如需詳細數據，請參閱 https://developer.android.com/guide/practices/page-sizes。</value>
     <comment>The following is a literal name and should not be translated: NuGet
 {0} - NuGet package id
 {1} - NuGet package version

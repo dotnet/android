@@ -1072,7 +1072,7 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
 {1} - NuGet package version</comment>
   </data>
   <data name="XA0141" xml:space="preserve">
-    <value>Il pacchetto NuGet '{0}' versione '{1}' contiene una libreria condivisa '{2}' che non è allineata correttamente. Per altri dettagli, vedere https://developer.android.com/guide/practices/page-sizes.</value>
+    <value>Android 16 richiederà dimensioni di pagina di 16 KB, la libreria condivisa '{3}' non ha dimensioni di pagina di 16 KB. Informare gli autori del pacchetto NuGet '{0}' versione '{1}' che contiene '{2}'. Per altri dettagli, vedere https://developer.android.com/guide/practices/page-sizes.</value>
     <comment>The following is a literal name and should not be translated: NuGet
 {0} - NuGet package id
 {1} - NuGet package version
