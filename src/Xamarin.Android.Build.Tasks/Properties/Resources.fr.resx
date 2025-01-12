@@ -1072,7 +1072,7 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
 {1} - NuGet package version</comment>
   </data>
   <data name="XA0141" xml:space="preserve">
-    <value>Le paquet NuGet « {0} » version « {1} » contient une bibliothèque partagée « {2} » qui n'est pas correctement alignée. Pour plus d’informations, consultez https://developer.android.com/guide/practices/page-sizes</value>
+    <value>Android 16 nécessite une taille de page de 16 Ko, la bibliothèque partagée '{3}' n’a pas une taille de page de 16 Ko. Informez les auteurs du package NuGet '{0}' version '{1}' qui contient '{2}'. Pour plus d’informations, consultez https://developer.android.com/guide/practices/page-sizes.</value>
     <comment>The following is a literal name and should not be translated: NuGet
 {0} - NuGet package id
 {1} - NuGet package version
