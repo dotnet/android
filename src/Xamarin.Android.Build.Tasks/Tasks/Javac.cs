@@ -27,6 +27,8 @@ namespace Xamarin.Android.Tasks
 		public string JavacTargetVersion { get; set; }
 		public string JavacSourceVersion { get; set; }
 
+		public string JdkVersion { get; set; }
+
 		public override string DefaultErrorCode => "JAVAC0000";
 
 		public override bool RunTask ()
@@ -60,10 +62,26 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("-J-Dfile.encoding=", "UTF8");
 
 			cmd.AppendFileNameIfNotNull (string.Format ("@{0}", TemporarySourceListFile));
-			cmd.AppendSwitchIfNotNull ("-target ", JavacTargetVersion);
-			cmd.AppendSwitchIfNotNull ("-source ", JavacSourceVersion);
+
+			if (int.TryParse (JavacSourceVersion, out int sourceVersion) &&
+					int.TryParse (JavacTargetVersion, out int targetVersion) &&
+					JavacSupportsRelease ()) {
+				cmd.AppendSwitchIfNotNull ("--release ", Math.Max (sourceVersion, targetVersion).ToString ());
+			} else {
+				cmd.AppendSwitchIfNotNull ("-target ", JavacTargetVersion);
+				cmd.AppendSwitchIfNotNull ("-source ", JavacSourceVersion);
+			}
 
 			return cmd.ToString ();
+		}
+
+		bool JavacSupportsRelease ()
+		{
+			if (string.IsNullOrEmpty (JdkVersion)) {
+				return false;
+			}
+			var jdkVersion  = Version.Parse (JdkVersion);
+			return jdkVersion.Major >= 17;
 		}
 
 		protected override void WriteOptionsToResponseFile (StreamWriter sw)
