@@ -1,5 +1,5 @@
-set(LIB_NAME xamarin-app-clr)
-set(LIB_ALIAS xa::xamarin-app-clr)
+set(LIB_NAME xamarin-app)
+set(LIB_ALIAS xa::xamarin-app)
 
 set(XAMARIN_APP_SOURCES
   application_dso_stub.cc

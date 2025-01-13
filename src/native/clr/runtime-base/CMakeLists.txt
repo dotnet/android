@@ -1,5 +1,5 @@
 set(LIB_NAME runtime-base)
-set(LIB_ALIAS xa::runtime-base-clr)
+set(LIB_ALIAS xa::runtime-base)
 
 set(XA_RUNTIME_BASE_SOURCES
   android-system.cc
@@ -43,8 +43,8 @@ target_include_directories(
 target_link_libraries(
   ${LIB_NAME}
   PRIVATE
-  xa::shared-clr
-  xa::xamarin-app-clr
+  xa::shared
+  xa::xamarin-app
 )
 
 xa_add_compile_definitions(${LIB_NAME})

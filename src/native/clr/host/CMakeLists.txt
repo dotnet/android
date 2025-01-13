@@ -128,12 +128,12 @@ macro(lib_target_options TARGET_NAME)
   target_link_libraries(
     ${TARGET_NAME}
     ${LINK_LIBS}
-    xa::xamarin-app-clr
+    xa::xamarin-app
     ${SHARED_LIB_NAME}
-    xa::runtime-base-clr
-    xa::java-interop-clr
+    xa::runtime-base
+    xa::java-interop
 #    xa::pinvoke-override-precompiled
-    xa::lz4-clr
+    xa::lz4
     -llog
   )
 endmacro ()
