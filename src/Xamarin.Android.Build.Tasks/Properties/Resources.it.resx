@@ -1063,7 +1063,7 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
 {1} - NuGet package version</comment>
   </data>
   <data name="XA0141" xml:space="preserve">
-    <value>Android 16 will require 16 KB page sizes, shared library '{3}' does not have a 16 KB page size. Please inform the authors of the NuGet package '{0}' version '{1}' which contains '{2}'. See https://developer.android.com/guide/practices/page-sizes for more details.</value>
+    <value>Android 16 richiederà dimensioni di pagina di 16 KB, la libreria condivisa '{3}' non ha dimensioni di pagina di 16 KB. Informare gli autori del pacchetto NuGet '{0}' versione '{1}' che contiene '{2}'. Per altri dettagli, vedere https://developer.android.com/guide/practices/page-sizes.</value>
     <comment>The following is a literal name and should not be translated: NuGet
 {0} - NuGet package id
 {1} - NuGet package version

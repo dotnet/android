@@ -1063,7 +1063,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - NuGet package version</comment>
   </data>
   <data name="XA0141" xml:space="preserve">
-    <value>Android 16 will require 16 KB page sizes, shared library '{3}' does not have a 16 KB page size. Please inform the authors of the NuGet package '{0}' version '{1}' which contains '{2}'. See https://developer.android.com/guide/practices/page-sizes for more details.</value>
+    <value>Android 16에는 16KB 페이지 크기가 필요하며, 공유 라이브러리 '{3}' 페이지 크기가 16KB가 아닙니다. '{2}' 포함된 NuGet 패키지 '{0}' 버전 '{1}' 작성자에게 알려주세요. 자세한 내용은 https://developer.android.com/guide/practices/page-sizes 참조하세요.</value>
     <comment>The following is a literal name and should not be translated: NuGet
 {0} - NuGet package id
 {1} - NuGet package version
