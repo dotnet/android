@@ -69,10 +69,6 @@ elseif(NOT ANALYZERS_ENABLED)
   set(BUILD_STATIC_LIBRARY OFF) # Turn off for now, until we implement dynamic runtime linking at app build time
 endif()
 
-# Library directories
-set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/lib/${ANDROID_RID}")
-set(XA_LIBRARY_STUBS_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/libstubs/${ANDROID_RID}")
-
 # Header checks
 
 if(ENABLE_CLANG_UBSAN OR ENABLE_CLANG_ASAN)
@@ -245,7 +241,7 @@ xa_add_compile_definitions(${XAMARIN_MONO_ANDROID_LIB})
 
 target_link_options(${XAMARIN_MONO_ANDROID_LIB}
   PRIVATE
-  -Wl,--version-script,${CMAKE_SOURCE_DIR}/libmono-android.map.txt
+  -Wl,--version-script,${CMAKE_SOURCE_DIR}/mono/libmono-android.map.txt
   -Wl,--no-undefined-version
 )
 

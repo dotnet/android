@@ -11,7 +11,7 @@
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <OutputPath>$(MicrosoftAndroidSdkOutDir)lib\mono</OutputPath>
+    <OutputPath>$(NativeRuntimeOutputRootDir)mono</OutputPath>
     <CMakeRuntimeFlavor>Mono</CMakeRuntimeFlavor>
   </PropertyGroup>
 
