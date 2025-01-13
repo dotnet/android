@@ -21,6 +21,7 @@
                 "ANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES": "ON",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "CMAKE_MAKE_PROGRAM": "@NinjaPath@",
+                "OUTPUT_PATH": "@OutputPath@",
                 "XA_LIB_TOP_DIR": "@MicrosoftAndroidSdkOutDir@",
                 "XA_BUILD_CONFIGURATION": "@XA_BUILD_CONFIGURATION@"
             }

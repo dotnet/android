@@ -35,7 +35,7 @@ Helpers::abort_application (LogCategories category, const char *message, bool lo
 
 		log_fatal (
 			category,
-			"Abort at {}:{}:{} ('{}')",
+			"Abort at {}:{}:{} ('%s')",
 			file_name,
 			sloc.line (),
 			sloc.column (),

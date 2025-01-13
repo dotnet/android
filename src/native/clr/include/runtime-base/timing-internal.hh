@@ -10,7 +10,7 @@
 #include <shared/cpp-util.hh>
 #include <runtime-base/logger.hh>
 #include "startup-aware-lock.hh"
-#include <runtime-base/strings.hh>
+#include "strings.hh"
 #include "util.hh"
 #include "../constants.hh"
 #include "monodroid-state.hh"
