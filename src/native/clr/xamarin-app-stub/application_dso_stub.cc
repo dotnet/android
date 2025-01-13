@@ -44,16 +44,15 @@ constexpr char android_package_name[] = "com.xamarin.test";
 const ApplicationConfig application_config = {
 	.uses_assembly_preload = false,
 	.jni_add_native_method_registration_attribute_present = false,
+	.have_runtime_config_blob = false,
 	.marshal_methods_enabled = false,
 	.ignore_split_configs = false,
-	.number_of_runtime_properties = 3,
 	.package_naming_policy = 0,
 	.environment_variable_count = 0,
 	.system_property_count = 0,
 	.number_of_assemblies_in_apk = 2,
 	.bundled_assembly_name_width = 0,
 	.number_of_dso_cache_entries = 2,
-	.number_of_aot_cache_entries = 2,
 	.number_of_shared_libraries = 2,
 	.android_runtime_jnienv_class_token = 1,
 	.jnienv_initialize_method_token = 2,
@@ -296,69 +295,4 @@ const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[] = {
 		},
 		.replacement = "another/replacement/java/type",
 	},
-};
-
-constexpr char prop_test_string_key[] = "test_string";
-constexpr char prop_test_integer_key[] = "test_integer";
-constexpr char prop_test_boolean_key[] = "test_boolean";
-
-const RuntimeProperty runtime_properties[] = {
-	{
-		.key = prop_test_string_key,
-		.value = "test",
-		.value_size = sizeof("test"),
-	},
-
-	{
-		.key = prop_test_integer_key,
-		.value = "42",
-		.value_size = sizeof("42"),
-	},
-
-	{
-		.key = prop_test_boolean_key,
-		.value = "true",
-		.value_size = sizeof("true"),
-	},
-};
-
-const RuntimePropertyIndexEntry runtime_property_index[] = {
-	{
-		.key_hash = xamarin::android::xxhash::hash (prop_test_string_key, sizeof(prop_test_string_key) - 1),
-		.index = 0,
-	},
-
-	{
-		.key_hash = xamarin::android::xxhash::hash (prop_test_integer_key, sizeof(prop_test_integer_key) - 1),
-		.index = 1,
-	},
-
-	{
-		.key_hash = xamarin::android::xxhash::hash (prop_test_boolean_key, sizeof(prop_test_boolean_key) - 1),
-		.index = 2,
-	},
-};
-
-namespace {
-	const host_configuration_property _host_configuration_properties_data[] = {
-		{
-			.name = u"test_string",
-			.value = u"string value",
-		},
-
-		{
-			.name = u"test_integer",
-			.value = u"23",
-		},
-
-		{
-			.name = u"test_boolean",
-			.value = u"true",
-		},
-	};
-}
-
-const host_configuration_properties host_config_properties = {
-	.nitems = 3,
-	.data = _host_configuration_properties_data,
 };

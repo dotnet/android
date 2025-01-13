@@ -1,5 +1,5 @@
 set(LIB_NAME xamarin-startup)
-set(LIB_ALIAS xa::xamarin-startup)
+set(LIB_ALIAS xa::xamarin-startup-clr)
 
 set(XAMARIN_STARTUP_SOURCES
   zip.cc
@@ -32,7 +32,7 @@ target_compile_options(
 target_link_directories(
   ${LIB_NAME}
   PRIVATE
-  ${NET_RUNTIME_DIR}/native
+  ${NET_RUNTIME_DIR}/native-clr
 )
 
 target_link_options(
@@ -45,7 +45,7 @@ target_link_options(
 target_link_libraries(
   ${LIB_NAME}
   PRIVATE
-  xa::shared
+  xa::shared-clr
   -llog
 )
 

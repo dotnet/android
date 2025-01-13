@@ -6,7 +6,7 @@
 #include <string_view>
 
 #include "java-interop-logger.h"
-#include <shared/log_level.hh>
+#include "log_level.hh"
 
 // We redeclare macros here
 #if defined(log_debug)

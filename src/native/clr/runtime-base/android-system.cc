@@ -1,19 +1,13 @@
 #include <limits>
 #include <string_view>
 
-#include <java-interop-dlfcn.h>
-#include <java-interop.h>
-
 #include <constants.hh>
 #include <xamarin-app.hh>
 #include <runtime-base/android-system.hh>
-#include <runtime-base/cpu-arch.hh>
 #include <runtime-base/strings.hh>
 #include <runtime-base/util.hh>
 
-using namespace microsoft::java_interop;
 using namespace xamarin::android;
-
 using std::operator""sv;
 
 #if defined(DEBUG)
@@ -146,80 +140,6 @@ AndroidSystem::setup_environment_from_override_file (dynamic_local_string<Consta
 }
 #endif
 
-[[gnu::always_inline]]
-void
-AndroidSystem::add_apk_libdir (std::string_view const& apk, size_t &index, std::string_view const& abi) noexcept
-{
-	abort_unless (index < app_lib_directories.size (), "Index out of range");
-	static constexpr std::string_view lib_prefix { "!/lib/" };
-	std::string dir;
-
-	dir.reserve (apk.size () + lib_prefix.size () + abi.size ());
-	dir.assign (apk);
-	dir.append (lib_prefix);
-	dir.append (abi);
-	app_lib_directories [index] = dir;
-	log_debug (LOG_ASSEMBLY, "Added APK DSO lookup location: {}", dir);
-	index++;
-}
-
-[[gnu::always_inline]]
-void
-AndroidSystem::setup_apk_directories (unsigned short running_on_cpu, jstring_array_wrapper &runtimeApks, bool have_split_apks) noexcept
-{
-	std::string_view const& abi = android_abi_names [running_on_cpu];
-	size_t number_of_added_directories = 0uz;
-
-	for (size_t i = 0uz; i < runtimeApks.get_length (); ++i) {
-		jstring_wrapper &e = runtimeApks [i];
-		std::string_view apk = e.get_string_view ();
-
-		if (have_split_apks) {
-			if (apk.ends_with (Constants::split_config_abi_apk_name.data ())) {
-				add_apk_libdir (apk, number_of_added_directories, abi);
-				break;
-			}
-		} else {
-			add_apk_libdir (apk, number_of_added_directories, abi);
-		}
-	}
-
-	if (app_lib_directories.size () == number_of_added_directories) [[likely]] {
-		return;
-	}
-
-	abort_unless (number_of_added_directories > 0, "At least a single application lib directory must be added");
-	app_lib_directories = app_lib_directories.subspan (0, number_of_added_directories);
-}
-
-void
-AndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks) noexcept
-{
-	if (!is_embedded_dso_mode_enabled ()) {
-		log_debug (LOG_DEFAULT, "Setting up for DSO lookup in app data directories"sv);
-
-		app_lib_directories = std::span<std::string> (single_app_lib_directory);
-		app_lib_directories [0] = std::string (appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
-		log_debug (LOG_ASSEMBLY, "Added filesystem DSO lookup location: {}", app_lib_directories [0]);
-		return;
-	}
-
-	log_debug (LOG_DEFAULT, "Setting up for DSO lookup directly in the APK"sv);
-	if (have_split_apks) {
-		// If split apks are used, then we will have just a single app library directory. Don't allocate any memory
-		// dynamically in this case
-		AndroidSystem::app_lib_directories = std::span<std::string> (single_app_lib_directory);
-	} else {
-		size_t app_lib_directories_size = runtimeApks.get_length ();
-		AndroidSystem::app_lib_directories = std::span<std::string> (new std::string[app_lib_directories_size], app_lib_directories_size);
-	}
-
-	uint16_t built_for_cpu = 0, running_on_cpu = 0;
-	bool is64bit = false;
-	_monodroid_detect_cpu_and_architecture (built_for_cpu, running_on_cpu, is64bit);
-	setup_apk_directories (running_on_cpu, runtimeApks, have_split_apks);
-}
-
 void
 AndroidSystem::setup_environment () noexcept
 {
@@ -241,7 +161,7 @@ AndroidSystem::setup_environment () noexcept
 			var_value = "";
 		}
 
-		if constexpr (Constants::is_debug_build) {
+		if constexpr (Constants::IsDebugBuild) {
 			log_info (LOG_DEFAULT, "Setting environment variable '{}' to '{}'", var_name, var_value);
 		}
 
@@ -407,87 +327,4 @@ AndroidSystem::get_max_gref_count_from_system () noexcept -> long
 	}
 
 	return max;
-}
-
-auto AndroidSystem::get_full_dso_path (std::string const& base_dir, const char *dso_path, dynamic_local_string<SENSIBLE_PATH_MAX>& path) noexcept -> bool
-{
-	if (dso_path == nullptr) {
-		return false;
-	}
-
-	if (base_dir.empty () || Util::is_path_rooted (dso_path))
-		return const_cast<char*>(dso_path); // Absolute path or no base path, can't do much with it
-
-	path.assign (base_dir)
-		.append ("/"sv)
-		.append_c (dso_path);
-
-	return true;
-}
-
-auto AndroidSystem::load_dso (const char *path, unsigned int dl_flags, bool skip_exists_check) noexcept -> void*
-{
-	if (path == nullptr || *path == '\0') {
-		return nullptr;
-	}
-
-	log_info (LOG_ASSEMBLY, "Trying to load shared library '{}'", path);
-	if (!skip_exists_check && !is_embedded_dso_mode_enabled () && !Util::file_exists (path)) {
-		log_info (LOG_ASSEMBLY, "Shared library '{}' not found", path);
-		return nullptr;
-	}
-
-	char *error = nullptr;
-	void *handle = java_interop_lib_load (path, dl_flags, &error);
-	if (handle == nullptr && Util::should_log (LOG_ASSEMBLY)) {
-		log_info_nocheck (LOG_ASSEMBLY, "Failed to load shared library '{}'. {}", path, error);
-	}
-	java_interop_free (error);
-	return handle;
-}
-
-template<class TContainer> [[gnu::always_inline]] // TODO: replace with a concept
-auto AndroidSystem::load_dso_from_specified_dirs (TContainer directories, const char *dso_name, unsigned int dl_flags) noexcept -> void*
-{
-	if (dso_name == nullptr) {
-		return nullptr;
-	}
-
-	dynamic_local_string<SENSIBLE_PATH_MAX> full_path;
-	for (std::string const& dir : directories) {
-		if (!get_full_dso_path (dir, dso_name, full_path)) {
-			continue;
-		}
-
-		void *handle = load_dso (full_path.get (), dl_flags, false);
-		if (handle != nullptr) {
-			return handle;
-		}
-	}
-
-	return nullptr;
-}
-
-auto AndroidSystem::load_dso_from_app_lib_dirs (const char *name, unsigned int dl_flags) noexcept -> void*
-{
-	return load_dso_from_specified_dirs (app_lib_directories, name, dl_flags);
-}
-
-auto AndroidSystem::load_dso_from_override_dirs (const char *name, unsigned int dl_flags) noexcept -> void*
-{
-	if constexpr (Constants::is_release_build) {
-		return nullptr;
-	} else {
-		return load_dso_from_specified_dirs (AndroidSystem::override_dirs, name, dl_flags);
-	}
-}
-
-[[gnu::flatten]]
-auto AndroidSystem::load_dso_from_any_directories (const char *name, unsigned int dl_flags) noexcept -> void*
-{
-	void *handle = load_dso_from_override_dirs (name, dl_flags);
-	if (handle == nullptr) {
-		handle = load_dso_from_app_lib_dirs (name, dl_flags);
-	}
-	return handle;
 }
