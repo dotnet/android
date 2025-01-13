@@ -118,6 +118,7 @@ namespace Xamarin.Android.Prepare
 				{ "@AndroidNdkDirectory@",       Utilities.EscapePathSeparators (props.GetRequiredValue (KnownProperties.AndroidNdkDirectory)) },
 				{ "@NinjaPath@",                 Utilities.EscapePathSeparators (props.GetRequiredValue (KnownProperties.NinjaPath)) },
 				{ "@MicrosoftAndroidSdkOutDir@", Utilities.EscapePathSeparators (props.GetRequiredValue (KnownProperties.MicrosoftAndroidSdkOutDir)) },
+				{ "@OutputPath@",                Utilities.EscapePathSeparators (Path.Combine (props.GetRequiredValue (KnownProperties.MicrosoftAndroidSdkOutDir), "lib")) },
 				{ "@NDK_ARMEABI_V7_API_NET@",    BuildAndroidPlatforms.NdkMinimumAPI.ToString () },
 				{ "@NDK_ARM64_V8A_API_NET@",     BuildAndroidPlatforms.NdkMinimumAPI.ToString () },
 				{ "@NDK_X86_API_NET@",           BuildAndroidPlatforms.NdkMinimumAPI.ToString () },

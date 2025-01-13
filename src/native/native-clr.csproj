@@ -11,7 +11,8 @@
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <OutputPath>$(MicrosoftAndroidSdkOutDir)lib\mono\</OutputPath>
+    <OutputPath>$(MicrosoftAndroidSdkOutDir)lib\clr</OutputPath>
+    <CMakeRuntimeFlavor>CoreCLR</CMakeRuntimeFlavor>
   </PropertyGroup>
 
   <Import Project="native.targets" />
