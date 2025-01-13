@@ -138,7 +138,7 @@ stages:
         avdApiLevel: $(avdApiLevel)
         avdAbi: $(avdAbi)
         avdType: $(avdType)
-        emulatorMSBuildArgs: -p:JavaSdkDirectory=-$(JI_JAVA_HOME_DEFAULT)
+        emulatorMSBuildArgs: -p:JavaSdkDirectory=$(JI_JAVA_HOME_DEFAULT)
 
     - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
       parameters:
