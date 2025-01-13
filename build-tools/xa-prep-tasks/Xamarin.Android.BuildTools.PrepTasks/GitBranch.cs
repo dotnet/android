@@ -15,7 +15,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 	public sealed class GitBranch : Git
 	{
 		[Output]
-		public                  string      Branch              { get; set; }
+		public                  string      Branch              { get; set; } = string.Empty;
 
 		protected   override    bool        LogTaskMessages     {
 			get { return false; }
@@ -46,6 +46,12 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			if (string.IsNullOrEmpty (Branch)) {
 				Log.LogMessage ("Using git command");
 				base.Execute ();
+			}
+
+			// Trim generated dependabot branch names that are too long to produce useful package names
+			var lastSlashIndex = Branch.LastIndexOf ('/');
+			if (Branch.StartsWith ("dependabot") && lastSlashIndex != -1 && Branch.Length > 60) {
+				Branch = Branch.Substring (lastSlashIndex + 1);
 			}
 
 			Log.LogMessage (MessageImportance.Low, $"  [Output] {nameof (Branch)}: {Branch}");
