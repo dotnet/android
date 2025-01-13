@@ -17,6 +17,7 @@ public class DNAA0001Tests
 	[Test]
 	[TestCase ("JniHandleOwnership")]
 	[TestCase ("Android.Runtime.JniHandleOwnership")]
+	[TestCase ("global::Android.Runtime.JniHandleOwnership")]
 	public async Task DNAA0001DoesNotShowForExistingCode (string type)
 	{
 		var test = $@"
