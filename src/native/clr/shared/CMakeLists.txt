@@ -1,5 +1,5 @@
 set(LIB_NAME xa-shared-bits)
-set(LIB_ALIAS xa::shared-clr)
+set(LIB_ALIAS xa::shared)
 
 set(XA_SHARED_SOURCES
   helpers.cc
@@ -27,7 +27,7 @@ macro(lib_target_options TARGET_NAME)
   target_link_libraries(
     ${TARGET_NAME}
     PUBLIC
-    xa::java-interop-clr
+    xa::java-interop
     -llog
   )
 
