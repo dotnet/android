@@ -56,14 +56,14 @@
     <MicrosoftAndroidSdkPackName Condition="$([MSBuild]::IsOSPlatform('osx'))">Microsoft.Android.Sdk.Darwin</MicrosoftAndroidSdkPackName>
   </PropertyGroup>
   <PropertyGroup>
-    <MicrosoftAndroidPacksRootDir>$(BuildOutputDirectory)lib\packs\</MicrosoftAndroidPacksRootDir>
+	<MicrosoftAndroidPacksRootDir>$(BuildOutputDirectory)lib\packs\</MicrosoftAndroidPacksRootDir>
     <AutoProvision Condition=" '$(AutoProvision)' == '' ">False</AutoProvision>
     <AutoProvisionUsesSudo Condition=" '$(AutoProvisionUsesSudo)' == '' ">False</AutoProvisionUsesSudo>
     <_XABinRelativeInstallPrefix>lib\xamarin.android</_XABinRelativeInstallPrefix>
     <XAInstallPrefix Condition=" '$(XAInstallPrefix)' == '' ">$(MSBuildThisFileDirectory)bin\$(Configuration)\$(_XABinRelativeInstallPrefix)\</XAInstallPrefix>
     <_MonoAndroidNETOutputRoot>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\</_MonoAndroidNETOutputRoot>
     <_MonoAndroidNETDefaultOutDir>$(_MonoAndroidNETOutputRoot)$(AndroidApiLevel)\</_MonoAndroidNETDefaultOutDir>
-    <NativeRuntimeOutputRootDir>$(BuildOutputDirectory)lib\runtimes\</NativeRuntimeOutputRootDir>
+	<NativeRuntimeOutputRootDir>$(BuildOutputDirectory)lib\runtimes\</NativeRuntimeOutputRootDir>
     <MicrosoftAndroidRefPackDir>$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Ref.$(AndroidApiLevel)\$(AndroidPackVersion)\ref\$(DotNetTargetFramework)\</MicrosoftAndroidRefPackDir>
     <MicrosoftAndroidSdkPackDir>$(MicrosoftAndroidPacksRootDir)$(MicrosoftAndroidSdkPackName)\$(AndroidPackVersion)\</MicrosoftAndroidSdkPackDir>
     <MicrosoftAndroidSdkOutDir>$(MicrosoftAndroidSdkPackDir)\tools\</MicrosoftAndroidSdkOutDir>
