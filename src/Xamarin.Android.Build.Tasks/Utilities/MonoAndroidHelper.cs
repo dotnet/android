@@ -437,8 +437,8 @@ namespace Xamarin.Android.Tasks
 		public static bool IsFromAKnownRuntimePack (ITaskItem assembly)
 		{
 			string packageId = assembly.GetMetadata ("NuGetPackageId") ?? "";
-			return packageId.StartsWith ("Microsoft.NETCore.App.Runtime.", StringComparison.Ordinal) ||
-				packageId.StartsWith ("Microsoft.Android.Runtime.", StringComparison.Ordinal);
+			return packageId.StartsWith ("Microsoft.NETCore.App.Runtime.", StringComparison.OrdinalIgnoreCase) ||
+				packageId.StartsWith ("Microsoft.Android.Runtime.", StringComparison.OrdinalIgnoreCase);
 		}
 
 		public static bool SaveMapFile (IBuildEngine4 engine, string mapFile, Dictionary<string, string> map)

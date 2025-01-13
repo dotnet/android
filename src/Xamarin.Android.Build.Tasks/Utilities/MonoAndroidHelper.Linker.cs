@@ -8,7 +8,7 @@ namespace Xamarin.Android.Tasks
 {
 	public partial class MonoAndroidHelper
 	{
-		static readonly HashSet<string> KnownAssemblyNames = new (StringComparer.Ordinal) {
+		static readonly HashSet<string> KnownAssemblyNames = new (StringComparer.OrdinalIgnoreCase) {
 			"Mono.Android",
 			"Mono.Android.Export",
 			"Java.Interop",
