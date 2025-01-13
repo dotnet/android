@@ -5,7 +5,7 @@
 
 #include <string_view>
 
-#include <shared/cpp-util.hh>
+#include "shared/cpp-util.hh"
 
 namespace xamarin::android {
 	class Constants
@@ -17,18 +17,12 @@ namespace xamarin::android {
 #endif
 
 	public:
-#if INTPTR_MAX == INT64_MAX
-		static inline constexpr bool is_64_bit_target = true;
-#else
-		static inline constexpr bool is_64_bit_target = false;
-#endif
-
 #if defined(RELEASE)
-		static constexpr bool is_release_build = true;
-		static constexpr bool is_debug_build = false;
+		static constexpr bool IsReleaseBuild = true;
+		static constexpr bool IsDebugBuild = false;
 #else
-		static constexpr bool is_release_build = false;
-		static constexpr bool is_debug_build = true;
+		static constexpr bool IsReleaseBuild = false;
+		static constexpr bool IsDebugBuild = true;
 #endif
 		static constexpr std::string_view MANGLED_ASSEMBLY_NAME_EXT { ".so" };
 
@@ -91,10 +85,7 @@ namespace xamarin::android {
 		static constexpr std::string_view split_config_prefix { "/split_config." };
 		static constexpr std::string_view split_config_extension { ".apk" };
 
-	private:
 		static constexpr size_t split_config_abi_apk_name_size = calc_size (split_config_prefix, android_abi, split_config_extension);
-
-	public:
 		static constexpr auto split_config_abi_apk_name = concat_string_views<split_config_abi_apk_name_size> (split_config_prefix, android_abi, split_config_extension);
 
 		//
@@ -124,20 +115,5 @@ namespace xamarin::android {
 		static constexpr std::string_view OVERRIDE_ENVIRONMENT_FILE_NAME { "environment" };
 		static constexpr uint32_t OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE = 22;
 #endif
-
-		static constexpr std::string_view MONO_ANDROID_ASSEMBLY_NAME          { "Mono.Android" };
-		static constexpr std::string_view ANDROID_RUNTIME_NS_NAME             { "Android.Runtime" };
-		static constexpr std::string_view JNIENVINIT_CLASS_NAME               { "JNIEnvInit" };
-		static constexpr std::string_view JNIENV_CLASS_NAME                   { "JNIEnv" };
-
-	private:
-		static constexpr size_t JNIENVINIT_FULL_TYPE_NAME_SIZE = calc_size (ANDROID_RUNTIME_NS_NAME, "."sv, JNIENVINIT_CLASS_NAME);
-		static constexpr auto JNIENVINIT_FULL_TYPE_NAME_ARRAY = concat_string_views<JNIENVINIT_FULL_TYPE_NAME_SIZE> (ANDROID_RUNTIME_NS_NAME, "."sv, JNIENVINIT_CLASS_NAME);
-
-	public:
-		static constexpr std::string_view JNIENVINIT_FULL_TYPE_NAME { JNIENVINIT_FULL_TYPE_NAME_ARRAY.data () };
-
-		static constexpr std::string_view ANDROID_ENVIRONMENT_CLASS_NAME      { "AndroidEnvironment" };
-		static constexpr std::string_view ANDROID_RUNTIME_INTERNAL_CLASS_NAME { "AndroidRuntimeInternal" };
 	};
 }
