@@ -55,8 +55,12 @@ public class CustomApplicationAnalyzer : DiagnosticAnalyzer
 			if (parameters [0].Type.ToString () != "IntPtr")
 				continue;
 			var ns = Utilities.GetNamespaceForParameterType (parameters [1], context.SemanticModel);
-            var type = parameters [1].Type.ToString();
-			var isJniHandle = (ns == "Android.Runtime") && (type == "JniHandleOwnership") || (type == "Android.Runtime.JniHandleOwnership");
+			var type = parameters [1].Type switch {
+				IdentifierNameSyntax identifierNameSyntax => identifierNameSyntax.Identifier.Text,
+				QualifiedNameSyntax qualifiedNameSyntax => qualifiedNameSyntax.Right.Identifier.Text,
+				_ => parameters [1].Type.ToString ()
+			};
+			var isJniHandle = (ns == "Android.Runtime") && (type == "JniHandleOwnership");
 			if (!isJniHandle)
 				continue;
 			foundActivationConstructor = true;
