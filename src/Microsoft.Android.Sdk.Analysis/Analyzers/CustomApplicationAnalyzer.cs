@@ -52,10 +52,15 @@ public class CustomApplicationAnalyzer : DiagnosticAnalyzer
 			var parameters = constructor.ParameterList.Parameters;
 			if (parameters.Count != 2)
 				continue;
-			if (parameters [0].Type.ToString () != "IntPtr")
+			var type = parameters [0].Type switch {
+				IdentifierNameSyntax identifierNameSyntax => identifierNameSyntax.Identifier.Text,
+				QualifiedNameSyntax qualifiedNameSyntax => qualifiedNameSyntax.Right.Identifier.Text,
+				_ => parameters [0].Type.ToString ()
+			};
+			if (type != "IntPtr" && type != "nint")
 				continue;
 			var ns = Utilities.GetNamespaceForParameterType (parameters [1], context.SemanticModel);
-			var type = parameters [1].Type switch {
+			type = parameters [1].Type switch {
 				IdentifierNameSyntax identifierNameSyntax => identifierNameSyntax.Identifier.Text,
 				QualifiedNameSyntax qualifiedNameSyntax => qualifiedNameSyntax.Right.Identifier.Text,
 				_ => parameters [1].Type.ToString ()
