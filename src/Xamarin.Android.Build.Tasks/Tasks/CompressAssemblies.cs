@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks;
@@ -22,6 +21,8 @@ public class CompressAssemblies : AndroidTask
 
 	[Required]
 	public string ApkOutputPath { get; set; } = "";
+
+	public bool EmbedAssemblies { get; set; }
 
 	[Required]
 	public bool EnableCompression { get; set; }
@@ -48,7 +49,7 @@ public class CompressAssemblies : AndroidTask
 
 	public override bool RunTask ()
 	{
-		if (IncludeDebugSymbols || !EnableCompression) {
+		if (IncludeDebugSymbols || !EnableCompression || !EmbedAssemblies) {
 			ResolvedFrameworkAssembliesOutput = ResolvedFrameworkAssemblies;
 			ResolvedUserAssembliesOutput = ResolvedUserAssemblies;
 			return true;

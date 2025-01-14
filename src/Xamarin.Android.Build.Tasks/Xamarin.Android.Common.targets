@@ -40,7 +40,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForRemovedItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForInvalidResourceFileNames" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckClientHandlerType" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CollectAssemblyFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectDalvikFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectJarContentFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNativeFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -55,6 +54,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyIfChanged" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyResource" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateAdditionalLibraryResourceCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CreateAssemblyStore" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateMsymManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateResgenManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateTemporaryDirectory" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -97,6 +97,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CompileNativeAssembly" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.LinkApplicationSharedLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.PrepareAbiItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.WrapAssembliesAsSharedLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.WriteLockFile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="GenerateCompressedAssembliesNativeSourceFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.UnzipToFolder" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -2100,6 +2101,7 @@ because xbuild doesn't support framework reference assemblies.
   -->
   <CompressAssemblies
       ApkOutputPath="$(_ApkOutputPath)"
+      EmbedAssemblies="$(EmbedAssembliesIntoApk)"
       EnableCompression="$(AndroidEnableAssemblyCompression)"
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
       ProjectFullPath="$(MSBuildProjectFullPath)"
@@ -2109,6 +2111,26 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="ResolvedFrameworkAssembliesOutput" ItemName="_BuildApkResolvedFrameworkAssemblies" />
     <Output TaskParameter="ResolvedUserAssembliesOutput" ItemName="_BuildApkResolvedUserAssemblies" />
   </CompressAssemblies>
+
+  <CreateAssemblyStore
+      AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
+      IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
+      ResolvedFrameworkAssemblies="@(_BuildApkResolvedFrameworkAssemblies)"
+      ResolvedUserAssemblies="@(_BuildApkResolvedUserAssemblies)"
+      SupportedAbis="@(_BuildTargetAbis)"
+      UseAssemblyStore="$(AndroidUseAssemblyStore)">
+    <Output TaskParameter="AssembliesToAddToArchive" ItemName="_BuildApkAssembliesToAddToArchive" />
+  </CreateAssemblyStore>
+    
+  <WrapAssembliesAsSharedLibraries
+      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+      IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
+      IntermediateOutputPath="$(IntermediateOutputPath)"
+      ResolvedAssemblies="@(_BuildApkAssembliesToAddToArchive)"
+      SupportedAbis="@(_BuildTargetAbis)"
+      UseAssemblyStore="$(AndroidUseAssemblyStore)">
+    <Output TaskParameter="WrappedAssemblies" ItemName="FilesToAddToArchive" />
+  </WrapAssembliesAsSharedLibraries>
 
   <CollectDalvikFilesForArchive
       AndroidPackageFormat="$(AndroidPackageFormat)"
@@ -2125,20 +2147,6 @@ because xbuild doesn't support framework reference assemblies.
       LibraryProjectJars="@(ExtractedJarImports)">
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectJarContentFilesForArchive>
-  
-  <CollectAssemblyFilesForArchive
-      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-      ApkOutputPath="$(_ApkOutputPath)"
-      AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
-      EnableCompression="$(AndroidEnableAssemblyCompression)"
-      IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
-      IntermediateOutputPath="$(IntermediateOutputPath)"
-      ResolvedFrameworkAssemblies="@(_BuildApkResolvedFrameworkAssemblies)"
-      ResolvedUserAssemblies="@(_BuildApkResolvedUserAssemblies)"
-      SupportedAbis="@(_BuildTargetAbis)"
-      UseAssemblyStore="$(AndroidUseAssemblyStore)">
-    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
-  </CollectAssemblyFilesForArchive>
 
   <CollectRuntimeConfigFilesForArchive
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
@@ -2238,6 +2246,7 @@ because xbuild doesn't support framework reference assemblies.
   <!-- Put the assemblies and native libraries in the apk -->
   <CompressAssemblies
       ApkOutputPath="$(_ApkOutputPath)"
+      EmbedAssemblies="$(EmbedAssembliesIntoApk)"
       EnableCompression="$(AndroidEnableAssemblyCompression)"
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
       ProjectFullPath="$(MSBuildProjectFullPath)"
