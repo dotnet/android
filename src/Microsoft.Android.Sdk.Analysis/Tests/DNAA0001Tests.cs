@@ -18,12 +18,14 @@ public class DNAA0001Tests
 	[TestCase ("JniHandleOwnership")]
 	[TestCase ("Android.Runtime.JniHandleOwnership")]
 	[TestCase ("global::Android.Runtime.JniHandleOwnership")]
+	[TestCase ("AR.JniHandleOwnership")]
 	public async Task DNAA0001DoesNotShowForExistingCode (string type)
 	{
 		var test = $@"
 using System;
 using Android.App;
 using Android.Runtime;
+using AR = Android.Runtime;
 namespace ConsoleApplication1
 {{
 	public class Foo : Application
