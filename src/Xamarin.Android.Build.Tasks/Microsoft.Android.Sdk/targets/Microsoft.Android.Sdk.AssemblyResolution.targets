@@ -13,6 +13,7 @@ _ResolveAssemblies MSBuild target.
   <UsingTask TaskName="Xamarin.Android.Tasks.ProcessAssemblies"      AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ProcessNativeLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.StripNativeLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.RecreateResolvedRuntimePacks" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <!-- HACK: workaround for: https://github.com/dotnet/sdk/issues/25679 -->
   <Target Name="_RemoveLinuxFrameworkReferences"
@@ -247,6 +248,10 @@ _ResolveAssemblies MSBuild target.
         IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)">
       <Output TaskParameter="OutputLibraries" ItemName="FrameworkNativeLibrary" />
     </ProcessNativeLibraries>
+
+    <RecreateResolvedRuntimePacks ResolvedNativeLibraries="@(_ResolvedNativeLibraries)">
+      <Output TaskParameter="ResolvedRuntimePacks" ItemName="ResolvedRuntimePack" />
+    </RecreateResolvedRuntimePacks>
   </Target>
 
 </Project>
