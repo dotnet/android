@@ -5,6 +5,7 @@ parameters:
   agentCount: 1           # Number of build agents to run in parallel
   testFilter: ''          # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
   xaSourcePath: $(System.DefaultWorkingDirectory)
+  jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
   repositoryAlias: 'self'
   commit: ''
   shouldFailOnIssue: true
@@ -41,6 +42,7 @@ jobs:
       xaSourcePath: ${{ parameters.xaSourcePath }}
       repositoryAlias: ${{ parameters.repositoryAlias }}
       commit: ${{ parameters.commit }}
+      jdkMajorVersion: ${{ parameters.jdkMajorVersion }}
 
   - task: DownloadPipelineArtifact@2
     inputs:
