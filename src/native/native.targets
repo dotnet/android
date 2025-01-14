@@ -196,13 +196,19 @@
       <_BuildAndroidRuntimesInputs  Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-Release\CMakeCache.txt')" />
       <_BuildAndroidRuntimesInputs  Include="@(_RuntimeSources)" />
 	  <_BuildAndroidRuntimesInputs  Include="..\..\build-tools\scripts\Ndk.targets" />
+
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\Debug\libxamarin-app.so')" />
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\Release\libxamarin-app.so')" />
 	</ItemGroup>
 	
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'Mono' ">
       <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android.debug.so')" />
       <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android.release.so')" />
-      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\Debug\libxamarin-app.so')" />
-      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\Release\libxamarin-app.so')" />
+    </ItemGroup>
+    
+    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libnet-android.debug.so')" />
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libnet-android.release.so')" />
     </ItemGroup>
 
     <ItemGroup  Condition=" '$(EnableNativeAnalyzers)' == 'true' And '$(CMakeRuntimeFlavor)' == 'Mono' ">

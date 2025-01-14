@@ -144,7 +144,7 @@ xa_add_include_directories(${XAMARIN_NET_ANDROID_LIB})
 
 target_link_options(${XAMARIN_NET_ANDROID_LIB}
   PRIVATE
-  -Wl,--version-script,${CMAKE_SOURCE_DIR}/libnet-android.map.txt
+  -Wl,--version-script,${CMAKE_SOURCE_DIR}/clr/libnet-android.map.txt
   -Wl,--no-undefined-version
 )
 
