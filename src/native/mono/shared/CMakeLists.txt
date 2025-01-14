@@ -7,9 +7,6 @@ set(XA_SHARED_SOURCES
 )
 add_clang_check_sources("${XA_SHARED_SOURCES};")
 
-set(XXHASH_DIR "${EXTERNAL_DIR}/xxHash")
-set(CONSTEXPR_XXH3_DIR "${EXTERNAL_DIR}/constexpr-xxh3")
-
 add_library(
   ${LIB_NAME}
   STATIC
