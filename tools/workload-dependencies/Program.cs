@@ -14,6 +14,7 @@ int Verbosity               = 0;
 var CmdlineToolsVersion     = (string?) null;
 var BuildToolsVersion       = (string?) null;
 var JdkVersion              = (string?) null;
+var JdkMaxVersion           = (string?) null;
 var NdkVersion              = (string?) null;
 var PlatformToolsVersion    = (string?) null;
 var PlatformVersion         = (string?) null;
@@ -37,6 +38,9 @@ var options = new OptionSet {
 	{ "jdk-version=",
 	  "The JDK {VERSION} dotnet/android is built against.",
 	  v => JdkVersion = v },
+	{ "jdk-max-version=",
+	  "The maximum JDK {VERSION} dotnet/android supports.",
+	  v => JdkMaxVersion = v },
 	{ "ndk-version=",
 	  "The Android NDK {VERSION} dotnet/android is built against.",
 	  v => NdkVersion = v },
@@ -160,13 +164,24 @@ JProperty CreateJdkProperty (XDocument doc)
 {
 	var v               = new Version (JdkVersion ?? "17.0");
 	var start           = new Version (v.Major, v.Minor);
-	var end             = new Version (v.Major+1, 0);
+	var end             = GetMaxJdkVersion (v);
 	var latestRevision  = JdkVersion ?? GetLatestRevision (doc, "jdk");
 	var contents        = new JObject (
 		new JProperty ("version", $"[{start},{end})"));
 	if (!string.IsNullOrEmpty (latestRevision))
 		contents.Add (new JProperty ("recommendedVersion", latestRevision));
 	return new JProperty ("jdk", contents);
+}
+
+string GetMaxJdkVersion (Version v)
+{
+	if (!string.IsNullOrEmpty (JdkMaxVersion)) {
+		// JdkMaxVersion is `$(LatestSupportedJavaVersion)`, which is still a supported version!
+		// Return the major version past JdkMaxVersion
+		var x   = new Version (JdkMaxVersion);
+		return new Version (x.Major+1, 0).ToString ();
+	}
+	return new Version (v.Major+1, 0).ToString ();
 }
 
 IEnumerable<XElement> GetSupportedElements (XDocument doc, string element)
