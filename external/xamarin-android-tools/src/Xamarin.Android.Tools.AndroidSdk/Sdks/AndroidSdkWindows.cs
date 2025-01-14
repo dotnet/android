@@ -106,7 +106,6 @@ namespace Xamarin.Android.Tools
 					: Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFiles), "Android", "android-sdk"),
 				Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData), "Android", "android-sdk"),
 				Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.CommonApplicationData), "Android", "android-sdk"),
-				@"C:\android-sdk-windows"
 			};
 			foreach (var basePath in paths)
 				if (Directory.Exists (basePath))
