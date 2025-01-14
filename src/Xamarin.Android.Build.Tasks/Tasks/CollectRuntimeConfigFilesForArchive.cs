@@ -20,6 +20,9 @@ public class CollectRuntimeConfigFilesForArchive : AndroidTask
 	public string AndroidBinUtilsDirectory { get; set; } = "";
 
 	[Required]
+	public ITaskItem[] ResolvedRuntimePacks { get; set; } = Array.Empty<ITaskItem> ();
+
+	[Required]
 	public string IntermediateOutputPath { get; set; } = "";
 
 	public string RuntimeConfigBinFilePath { get; set; } = "";
@@ -33,7 +36,7 @@ public class CollectRuntimeConfigFilesForArchive : AndroidTask
 	public override bool RunTask ()
 	{
 		var files = new PackageFileListBuilder ();
-		var dsoWrapperConfig = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, IntermediateOutputPath);
+		var dsoWrapperConfig = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, ResolvedRuntimePacks, IntermediateOutputPath);
 
 		// We will place rc.bin in the `lib` directory next to the blob, to make startup slightly faster, as we will find the config file right after we encounter
 		// our assembly store.  Not only that, but also we'll be able to skip scanning the `base.apk` archive when split configs are enabled (which they are in 99%

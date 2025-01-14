@@ -53,24 +53,22 @@ class DSOWrapperGenerator
 	//
 	const ulong PayloadSectionAlignment = 0x4000;
 
-	public static Config GetConfig (TaskLoggingHelper log, string androidBinUtilsDirectory, string baseOutputDirectory)
+	public static Config GetConfig (TaskLoggingHelper log, string androidBinUtilsDirectory, ITaskItem[] runtimePacks, string baseOutputDirectory)
 	{
 		var stubPaths = new Dictionary<AndroidTargetArch, string> ();
-		string archiveDSOStubsRootDir = MonoAndroidHelper.GetDSOStubsRootDirectoryPath (androidBinUtilsDirectory);
 
-		foreach (string dir in Directory.EnumerateDirectories (archiveDSOStubsRootDir, "android-*")) {
-			string rid = Path.GetFileName (dir);
-			AndroidTargetArch arch = MonoAndroidHelper.RidToArchMaybe (rid);
-			if (arch == AndroidTargetArch.None) {
-				log.LogDebugMessage ($"Unable to extract a supported RID name from directory path '{dir}'");
+		foreach (ITaskItem maybePack in runtimePacks) {
+			if (!MonoAndroidHelper.IsAndroidRuntimePack (maybePack, out string? packRID) || String.IsNullOrEmpty (packRID)) {
 				continue;
 			}
 
-			string stubPath = Path.Combine (dir, "libarchive-dso-stub.so");
+			string packDir = MonoAndroidHelper.GetAndroidRuntimePackDir (maybePack);
+			string stubPath = Path.Combine (packDir, "libarchive-dso-stub.so");
 			if (!File.Exists (stubPath)) {
-				throw new InvalidOperationException ($"Internal error: archive DSO stub file '{stubPath}' does not exist");
+				throw new InvalidOperationException ($"Internal error: archive DSO stub file '{stubPath}' does not exist in runtime pack {packDir}");
 			}
 
+			AndroidTargetArch arch = MonoAndroidHelper.RidToArch (packRID);
 			stubPaths.Add (arch, stubPath);
 		}
 

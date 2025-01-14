@@ -22,7 +22,14 @@ public class CollectAssemblyFilesToCompress : AndroidTask
 	[Required]
 	public string AssemblyCompressionDirectory { get; set; } = "";
 
-	public bool EmbedAssemblies { get; set; }
+	[Required]
+	public ITaskItem[] ResolvedRuntimePacks { get; set; } = Array.Empty<ITaskItem> ();
+
+	[Required]
+	public string ApkOutputPath { get; set; } = "";
+
+	[Required]
+	public string AppSharedLibrariesDir { get; set; } = "";
 
 	[Required]
 	public bool EnableCompression { get; set; }
@@ -55,9 +62,9 @@ public class CollectAssemblyFilesToCompress : AndroidTask
 		ResolvedFrameworkAssembliesOutput = ResolvedFrameworkAssemblies;
 		ResolvedUserAssembliesOutput = ResolvedUserAssemblies;
 
-		// We aren't going to compress any assemblies
-		if (IncludeDebugSymbols || !EnableCompression || !EmbedAssemblies)
-			return true;
+		DSOWrapperGenerator.Config dsoWrapperConfig = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, ResolvedRuntimePacks, IntermediateOutputPath);
+		bool compress = !IncludeDebugSymbols && EnableCompression;
+		IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>? compressedAssembliesInfo = null;
 
 		var assemblies_to_compress = new List<ITaskItem> ();
 		var compressed_assemblies_info = GetCompressedAssemblyInfo ();

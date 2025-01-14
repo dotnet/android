@@ -2092,6 +2092,7 @@ because xbuild doesn't support framework reference assemblies.
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       ZipAlignmentPages="$(AndroidZipAlignment)"
       TargetsCLR="$(_AndroidUseCLR)"
+      ResolvedRuntimePacks="@(ResolvedRuntimePack)"
   />
   <ItemGroup>
     <FileWrites Include="@(_ApplicationSharedLibrary)" />
@@ -2194,7 +2195,7 @@ because xbuild doesn't support framework reference assemblies.
   <PropertyGroup Condition=" '$(AndroidPackageFormat)' == 'aab' ">
     <_ApkOutputPath>$(_BaseZipIntermediate)</_ApkOutputPath>
   </PropertyGroup>
-  
+
   <!-- Put the assemblies and native libraries in the apk -->
   <!--
     NOTE: Adding Arguments to BuildApk or BuildBaseAppBundle
@@ -2237,11 +2238,28 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectJarContentFilesForArchive>
 
+  <CollectAssemblyFilesForArchive
+      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+      ApkOutputPath="$(_ApkOutputPath)"
+      AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
+      EnableCompression="$(AndroidEnableAssemblyCompression)"
+      IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
+      IntermediateOutputPath="$(IntermediateOutputPath)"
+      ProjectFullPath="$(MSBuildProjectFullPath)"
+      ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
+      ResolvedUserAssemblies="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths)"
+      SupportedAbis="@(_BuildTargetAbis)"
+      UseAssemblyStore="$(AndroidUseAssemblyStore)"
+      ResolvedRuntimePacks="@(ResolvedRuntimePack)">
+    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
+  </CollectAssemblyFilesForArchive>
+
   <CollectRuntimeConfigFilesForArchive
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       IntermediateOutputPath="$(IntermediateOutputPath)"
       RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
-      SupportedAbis="@(_BuildTargetAbis)">
+      SupportedAbis="@(_BuildTargetAbis)"
+      ResolvedRuntimePacks="@(ResolvedRuntimePack)">
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectRuntimeConfigFilesForArchive>
 
@@ -2258,7 +2276,8 @@ because xbuild doesn't support framework reference assemblies.
       CheckedBuild="$(_AndroidCheckedBuild)"
       ZipAlignmentPages="$(AndroidZipAlignment)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-      IntermediateOutputPath="$(IntermediateOutputPath)">
+      IntermediateOutputPath="$(IntermediateOutputPath)"
+      ResolvedRuntimePacks="@(ResolvedRuntimePack)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
     <Output TaskParameter="DSODirectoriesToDelete" ItemName="DSODirectoriesToDelete" />
@@ -2278,7 +2297,7 @@ because xbuild doesn't support framework reference assemblies.
   <!-- Hopefully this is temporary and doesn't actually need to be cleaned up. But for now let's not change existing behavior. -->
   <RemoveDir
       Directories="@(DSODirectoriesToDelete)" />
-  
+
   <BuildAppBundle
       Condition=" '$(AndroidPackageFormat)' == 'aab' "
       ToolPath="$(JavaToolPath)"
@@ -2345,7 +2364,7 @@ because xbuild doesn't support framework reference assemblies.
       TypeMappings="@(_AndroidTypeMaps)">
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectTypeMapFilesForArchive>
-  
+
   <CollectJarContentFilesForArchive
       AndroidPackageFormat="$(AndroidPackageFormat)"
       ExcludeFiles="@(AndroidPackagingOptionsExclude)"

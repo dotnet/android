@@ -32,6 +32,9 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string TargetName { get; set; } = "";
 
+		[Required]
+		public ITaskItem[] ResolvedRuntimePacks { get; set; } = Array.Empty<ITaskItem> ();
+
 		/// <summary>
 		/// Will be blank in .NET 6+
 		/// </summary>
@@ -295,7 +298,7 @@ namespace Xamarin.Android.Tasks
 				libs.Add (Path.Combine (androidLibPath, "libc.so"));
 				libs.Add (Path.Combine (androidLibPath, "libm.so"));
 			} else if (!UseAndroidNdk && EnableLLVM) {
-				string libstubsPath = MonoAndroidHelper.GetLibstubsArchDirectoryPath (AndroidBinUtilsDirectory, arch);
+				string libstubsPath = MonoAndroidHelper.GetLibstubsArchDirectoryPath (ResolvedRuntimePacks, arch);
 
 				libs.Add (Path.Combine (libstubsPath, "libc.so"));
 				libs.Add (Path.Combine (libstubsPath, "libm.so"));
