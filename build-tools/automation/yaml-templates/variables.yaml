@@ -58,6 +58,8 @@ variables:
   value: $[or(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), startsWith(variables['System.PullRequest.TargetBranch'], 'release/'))]
 - name: DefaultTestSdkPlatforms  # Comma-separated SDK Platform(s) to install on test agents (no spaces)
   value: 35,Baklava
+- name: DefaultJavaSdkMajorVersion
+  value: 17
 - name: ExcludedNightlyNUnitCategories
   value: 'cat != SystemApplication & cat != TimeZoneInfo & cat != Localization'
 - name: RunMAUITestJob
