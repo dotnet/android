@@ -61,6 +61,8 @@ jobs:
       nativeAotRid: win-x64
       platformName: .NET - Windows
 
+  - template: templates\fail-on-dirty-tree.yaml
+
   - template: templates\fail-on-issue.yaml
 
   - task: PublishPipelineArtifact@1
@@ -91,6 +93,8 @@ jobs:
       runNativeTests: true
       nativeAotRid: osx-x64
       platformName: .NET - MacOS
+
+  - template: templates\fail-on-dirty-tree.yaml
 
   - template: templates\fail-on-issue.yaml
 

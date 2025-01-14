@@ -84,4 +84,18 @@
     </PropertyGroup>
   </Target>
 
+  <!--
+    The <GenAPITask/> task always generates files with WIndows line endings,
+    which causes `git status` to show the file as modified.
+
+    Update `$(GenAPITargetPath)` so that it contains Unix line endings..
+    -->
+  <Target Name="_FixGenApiLineEndings"
+      Condition=" !$([MSBuild]::IsOSPlatform ('windows')) "
+      AfterTargets="GenerateReferenceAssemblySource">
+    <Move SourceFiles="$(GenAPITargetPath)" DestinationFiles="$(GenAPITargetPath).crlf" />
+    <Exec Command="tr -d '\015' &lt; $(GenAPITargetPath).crlf > $(GenAPITargetPath)" />
+    <Delete Files="$(GenAPITargetPath).crlf" />
+  </Target>
+
 </Project>
