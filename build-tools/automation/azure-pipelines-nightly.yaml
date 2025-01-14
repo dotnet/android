@@ -123,7 +123,7 @@ stages:
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
         xaprepareScenario: EmulatorTestDependencies
-        jdkMajorVersion: 21
+        jdkMajorVersion: $(LatestJavaSdkMajorVersion)
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:

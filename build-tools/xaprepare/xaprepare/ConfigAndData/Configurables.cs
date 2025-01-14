@@ -45,10 +45,10 @@ namespace Xamarin.Android.Prepare
 
 			public static readonly string JdkFolder                        = "jdk-21";
 
-			public static readonly Version MicrosoftMinOpenJDKVersion    = new Version (17, 0);
-			public static readonly Version MicrosoftOpenJDKVersion       = new Version (Configurables.MicrosoftOpenJDKVersion);
-			public static readonly Version MicrosoftOpenJDKRelease       = new Version (Configurables.MicrosoftOpenJDKRelease);
-			public static readonly string  MicrosoftOpenJDKRootDirName   = Configurables.MicrosoftOpenJDKRootDirName;
+			public static readonly Version MicrosoftMinOpenJDKVersion      = new Version (17, 0);
+			public static readonly Version MicrosoftOpenJDKVersion         = new Version (Configurables.MicrosoftOpenJDKVersion);
+			public static readonly Version MicrosoftOpenJDKRelease         = new Version (Configurables.MicrosoftOpenJDKRelease);
+			public static readonly string  MicrosoftOpenJDKRootDirName     = Configurables.MicrosoftOpenJDKRootDirName;
 
 			public const string DotNetTestRuntimeVersion                   = "3.1.11";
 
@@ -188,8 +188,8 @@ namespace Xamarin.Android.Prepare
 			public static string InstallMSBuildDir                   => GetCachedPath (ref installMSBuildDir, ()                   => ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftAndroidSdkOutDir));
 
 			// OpenJDK
-			public static string OpenJDKInstallDir                 => GetCachedPath (ref openJDKInstallDir, ()                   => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), Defaults.JdkFolder));
-			public static string OpenJDKCacheDir                   => GetCachedPath (ref openJDKCacheDir, ()                     => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory));
+			public static string OpenJDKInstallDir                   => GetCachedPath (ref openJDKInstallDir, ()                   => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), Defaults.JdkFolder));
+			public static string OpenJDKCacheDir                     => GetCachedPath (ref openJDKCacheDir, ()                     => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory));
 
 			// .NET 6
 			public static string NetcoreAppRuntimeAndroidARM         => GetCachedPath (ref netcoreAppRuntimeAndroidARM, () => GetNetcoreAppRuntimePath (ctx, "arm"));
