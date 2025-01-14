@@ -24,6 +24,9 @@ public class CollectAssemblyFilesForArchive : AndroidTask
 	public string AndroidBinUtilsDirectory { get; set; } = "";
 
 	[Required]
+	public ITaskItem[] ResolvedRuntimePacks { get; set; } = Array.Empty<ITaskItem> ();
+
+	[Required]
 	public string ApkOutputPath { get; set; } = "";
 
 	[Required]
@@ -58,7 +61,7 @@ public class CollectAssemblyFilesForArchive : AndroidTask
 	{
 		var files = new PackageFileListBuilder ();
 
-		DSOWrapperGenerator.Config dsoWrapperConfig = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, IntermediateOutputPath);
+		DSOWrapperGenerator.Config dsoWrapperConfig = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, ResolvedRuntimePacks, IntermediateOutputPath);
 		bool compress = !IncludeDebugSymbols && EnableCompression;
 		IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>? compressedAssembliesInfo = null;
 
