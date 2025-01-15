@@ -200,6 +200,7 @@ stages:
         installTestSlicer: true
         xaprepareScenario: EmulatorTestDependencies
         useAgentJdkPath: false
+        jdkMajorVersion: $(LatestJavaSdkMajorVersion)
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -252,6 +253,7 @@ stages:
         installTestSlicer: true
         xaprepareScenario: EmulatorTestDependencies
         useAgentJdkPath: false
+        jdkMajorVersion: $(LatestJavaSdkMajorVersion)
 
     - task: DownloadPipelineArtifact@2
       inputs:

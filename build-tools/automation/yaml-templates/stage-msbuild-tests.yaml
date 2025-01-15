@@ -6,7 +6,6 @@ parameters:
   dependsOn: mac_build
   stagePrefix: ''
   xaSourcePath: $(System.DefaultWorkingDirectory)
-  jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
   repositoryAlias: 'self'
   commit: ''
   shouldFailOnIssue: true
@@ -25,7 +24,6 @@ stages:
       jobDisplayName: macOS > Tests > MSBuild
       agentCount: 14
       xaSourcePath: ${{ parameters.xaSourcePath }}
-      jdkMajorVersion: $(LatestJavaSdkMajorVersion)
       repositoryAlias: ${{ parameters.repositoryAlias }}
       commit: ${{ parameters.commit }}
       shouldFailOnIssue: ${{ parameters.shouldFailOnIssue }}
@@ -38,7 +36,6 @@ stages:
       jobDisplayName: Windows > Tests > MSBuild
       agentCount: 6
       xaSourcePath: ${{ parameters.xaSourcePath }}
-      jdkMajorVersion: ${{ parameters.jdkMajorVersion }}
       repositoryAlias: ${{ parameters.repositoryAlias }}
       commit: ${{ parameters.commit }}
       shouldFailOnIssue: ${{ parameters.shouldFailOnIssue }}
