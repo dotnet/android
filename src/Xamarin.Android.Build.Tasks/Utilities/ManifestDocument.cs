@@ -94,7 +94,7 @@ namespace Xamarin.Android.Tasks {
 		public bool ForceDebuggable { get; set; }
 		public string VersionName { get; set; }
 		public IVersionResolver VersionResolver { get; set; } = new MonoAndroidHelperVersionResolver ();
-		public string AndroidRuntime { get; set; } = "";
+		public string AndroidRuntime { get; set; } = "MonoVM";
 
 		string versionCode;
 
