@@ -12,6 +12,13 @@ public class RecreateResolvedRuntimePacks : AndroidTask
 {
 	public override string TaskPrefix => "RRRP";
 
+	static readonly string[] RuntimeLibraries = [
+		"libmono-android.debug.so",
+		"libmono-android.release.so",
+		"libnet-android.debug.so",
+		"libnet-android.release.so",
+	];
+
 	[Required]
 	public ITaskItem[] ResolvedNativeLibraries { get; set; }
 
@@ -47,6 +54,30 @@ public class RecreateResolvedRuntimePacks : AndroidTask
 			}
 			string packageDir = library.ItemSpec.Substring (0, tailIndex);
 
+			// Double-check that this is in fact our runtime pack.  This is needed to avoid the (however improbable)
+			// situation where the application references a nuget which comes with `libc.so` and we mistakenly identify
+			// it to be our runtime pack.
+
+			// Archive DSO stub must always exist
+			if (!PackNativeFileExists (packageDir, rid, DSOWrapperGenerator.StubFileName)) {
+				Log.LogDebugMessage ($"Runtime pack '{packageDir}' doesn't contain '{DSOWrapperGenerator.StubFileName}'. Pack ignored.");
+				continue;
+			}
+
+			// Either one of the runtime libraries must exist
+			bool runtimeLibraryFound = false;
+			foreach (string runtimeLibrary in RuntimeLibraries) {
+				if (PackNativeFileExists (packageDir, rid, runtimeLibrary)) {
+					runtimeLibraryFound = true;
+					continue;
+				}
+				Log.LogDebugMessage ($"Runtime library '{runtimeLibrary}' not found in pack '{packageDir}'");
+			}
+			if (!runtimeLibraryFound) {
+				Log.LogDebugMessage ($"Runtime pack '{packageDir}' doesn't contain any runtime shared libraries.  Pack ignored.");
+				continue;
+			}
+
 			var pack = new TaskItem (nugetPackageId);
 			pack.SetMetadata ("FrameworkName", "Microsoft.Android");
 			pack.SetMetadata ("NuGetPackageId", nugetPackageId);
@@ -64,6 +95,12 @@ public class RecreateResolvedRuntimePacks : AndroidTask
 		{
 			metadataValue = item.GetMetadata (metadataName);
 			return !String.IsNullOrEmpty (metadataValue);
+		}
+
+		bool PackNativeFileExists (string packageDir, string rid, string fileName)
+		{
+			string packFilePath = Path.Combine (packageDir, "runtimes", rid, "native", fileName);
+			return File.Exists (packFilePath);
 		}
 	}
 }
