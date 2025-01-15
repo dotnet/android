@@ -111,8 +111,7 @@ namespace Xamarin.Android.Tasks
 				foreach (var assembly in References) {
 					var assemblyPath = assembly.ItemSpec;
 					var fileName = Path.GetFileName (assemblyPath);
-					if (MonoAndroidHelper.IsFrameworkAssembly (fileName) &&
-							!MonoAndroidHelper.FrameworkEmbeddedJarLookupTargets.Contains (fileName)) {
+					if (MonoAndroidHelper.IsFrameworkAssembly (fileName)) {
 						Log.LogDebugMessage ($"Skipping framework assembly '{fileName}'.");
 						continue;
 					}

@@ -128,8 +128,6 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			MonoAndroidHelper.TargetFrameworkDirectories = ReferenceAssemblyPaths;
-
 			Log.LogDebugMessage ($"{nameof (ResolveSdks)} Outputs:");
 			Log.LogDebugMessage ($"  {nameof (AndroidSdkPath)}: {AndroidSdkPath}");
 			Log.LogDebugMessage ($"  {nameof (AndroidNdkPath)}: {AndroidNdkPath}");

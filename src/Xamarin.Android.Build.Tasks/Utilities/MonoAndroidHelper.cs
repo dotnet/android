@@ -415,6 +415,32 @@ namespace Xamarin.Android.Tasks
 		}
 
 #if MSBUILD
+		public static bool IsFrameworkAssembly (ITaskItem assembly)
+		{
+			// Known assembly names: Mono.Android, Java.Interop, etc.
+			if (IsFrameworkAssembly (assembly.ItemSpec))
+				return true;
+
+			// Known %(FrameworkReferenceName)
+			var frameworkReferenceName = assembly.GetMetadata ("FrameworkReferenceName") ?? "";
+			if (frameworkReferenceName == "Microsoft.Android") {
+				return true; // Microsoft.Android assemblies
+			}
+			if (frameworkReferenceName.StartsWith ("Microsoft.NETCore.", StringComparison.OrdinalIgnoreCase)) {
+				return true; // BCL assemblies
+			}
+
+			// Known %(NuGetPackageId) runtime pack names
+			return IsFromAKnownRuntimePack (assembly);
+		}
+
+		public static bool IsFromAKnownRuntimePack (ITaskItem assembly)
+		{
+			string packageId = assembly.GetMetadata ("NuGetPackageId") ?? "";
+			return packageId.StartsWith ("Microsoft.NETCore.App.Runtime.", StringComparison.OrdinalIgnoreCase) ||
+				packageId.StartsWith ("Microsoft.Android.Runtime.", StringComparison.OrdinalIgnoreCase);
+		}
+
 		public static bool SaveMapFile (IBuildEngine4 engine, string mapFile, Dictionary<string, string> map)
 		{
 			engine?.RegisterTaskObjectAssemblyLocal (mapFile, map, RegisteredTaskObjectLifetime.Build);

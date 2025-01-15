@@ -6,7 +6,6 @@ using Mono.Linker;
 using Mono.Linker.Steps;
 using Java.Interop.Tools.Cecil;
 using Xamarin.Android.Tasks;
-using Profile = Microsoft.Android.Sdk.ILLink.Profile;
 
 namespace MonoDroid.Tuner {
 
@@ -27,9 +26,7 @@ namespace MonoDroid.Tuner {
 
 		bool IsActiveFor (AssemblyDefinition assembly)
 		{
-			if (Profile.IsSdkAssembly (assembly))
-				return false;
-			if (Profile.IsProductAssembly (assembly))
+			if (MonoAndroidHelper.IsFrameworkAssembly (assembly))
 				return false;
 
 			return assembly.MainModule.HasTypeReference ("System.Net.Http.HttpMessageHandler") ||
@@ -397,7 +394,7 @@ namespace MonoDroid.Tuner {
 
 		static bool IsUserType (TypeDefinition type)
 		{
-			return !MonoAndroidHelper.IsFrameworkAssembly (type.Module.Assembly.Name.Name + ".dll");
+			return !MonoAndroidHelper.IsFrameworkAssembly (type.Module.Assembly);
 		}
 
 		void PreserveImplementor (TypeDefinition type)

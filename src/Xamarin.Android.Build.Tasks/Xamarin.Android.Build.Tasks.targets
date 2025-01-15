@@ -8,7 +8,6 @@
 
   <PropertyGroup>
     <_SharedRuntimeBuildPath Condition=" '$(_SharedRuntimeBuildPath)' == '' ">$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\</_SharedRuntimeBuildPath>
-    <_GeneratedProfileClass>$(MSBuildThisFileDirectory)$(IntermediateOutputPath)Profile.g.cs</_GeneratedProfileClass>
     <ResolveReferencesDependsOn>
       $(ResolveReferencesDependsOn);
       _GenerateSupportedPlatforms;
@@ -163,16 +162,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <_SharedRuntimeAssemblies Include="@(MonoProfileAssembly->'$(_SharedRuntimeBuildPath)v1.0\%(Identity)')" />
-    <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)v1.0\Mono.Data.Sqlite.dll" />
-    <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)v1.0\Mono.Posix.dll" />
-    <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)v1.0\Java.Interop.dll" />
-    <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)v1.0\System.EnterpriseServices.dll" />
-    <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)$(AndroidFrameworkVersion)\Mono.Android.Export.dll" />
-    <!-- These files are build after Xamarin.Android.Build.Tasks but MUST be included in Profile.g.cs -->
-    <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)$(AndroidFrameworkVersion)\Mono.Android.dll" />
-  </ItemGroup>
 
   <Target Name="_GenerateMonoAndroidEnums"
       BeforeTargets="CoreCompile"
@@ -226,19 +215,6 @@
         MinimumApiLevel="$(AndroidMinimumDotNetApiLevel)"
         OutputFile="Microsoft.Android.Sdk\targets\Microsoft.Android.Sdk.SupportedPlatforms.targets"
     />
-  </Target>
-  <Target Name="_GenerateProfileClass"
-      BeforeTargets="CoreCompile"
-      Inputs="@(_SharedRuntimeAssemblies)"
-      Outputs="$(_GeneratedProfileClass)">
-    <GenerateProfile Files="@(_SharedRuntimeAssemblies)" OutputFile="$(_GeneratedProfileClass)" />
-    <WriteLinesToFile
-        File="$(IntermediateOutputPath)$(CleanFile)"
-        Lines="$(_GeneratedProfileClass)"
-        Overwrite="false"/>
-    <ItemGroup>
-      <FileWrites Include="$(_GeneratedProfileClass)" />
-    </ItemGroup>
   </Target>
 
   <Target Name="_CopyExtractedMultiDexJar"

@@ -44,7 +44,6 @@
     <Compile Remove="Tests\**" />
     <EmbeddedResource Remove="Tests\**" />
     <None Remove="Tests\**" />
-    <Compile Include="$(IntermediateOutputPath)Profile.g.cs" />
     <Compile Include="..\..\bin\Build$(Configuration)\XABuildConfig.cs" />
 
     <!-- Include only the linker sources required for LinkAssembliesNoShrink - AddKeepAlivesStep, FixAbstractMethodsStep, FixLegacyResourceDesignerStep -->
@@ -56,8 +55,6 @@
     <Compile Include="Linker\MonoDroid.Tuner\FixLegacyResourceDesignerStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\LinkDesignerBase.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\RemoveResourceDesignerStep.cs" />
-    <Compile Include="Linker\MonoDroid.Tuner\MonoDroidProfile.cs" />
-    <Compile Include="Linker\Mobile.Tuner\MobileProfile.cs" />
     <Compile Include="Linker\External\Linker\Annotations.cs" />
     <Compile Include="Linker\External\Linker\AssemblyAction.cs" />
     <Compile Include="Linker\External\Linker\AssemblyResolver.cs" />
@@ -78,7 +75,6 @@
     <Compile Include="Linker\External\Linker\KnownMembers.cs" />
     <Compile Include="Linker\External\Mono.Tuner\CecilRocks.cs" />
     <Compile Include="Linker\External\Mono.Tuner\Extensions.cs" />
-    <Compile Include="Linker\External\Mono.Tuner\Profile.cs" />
 
     <Compile Include="..\Mono.Android\\Android.App\IntentFilterAttribute.cs">
       <Link>Mono.Android\IntentFilterAttribute.cs</Link>

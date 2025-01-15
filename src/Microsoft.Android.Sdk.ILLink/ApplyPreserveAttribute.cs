@@ -2,11 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-
+using Mono.Cecil;
 using Mono.Linker;
 using Mono.Linker.Steps;
-
-using Mono.Cecil;
+using Xamarin.Android.Tasks;
 
 namespace Microsoft.Android.Sdk.ILLink
 {
@@ -25,7 +24,7 @@ namespace Microsoft.Android.Sdk.ILLink
 
 		public override bool IsActiveFor (AssemblyDefinition assembly)
 		{
-			return !Profile.IsSdkAssembly (assembly) && Annotations.GetAction (assembly) == AssemblyAction.Link;
+			return !MonoAndroidHelper.IsFrameworkAssembly (assembly) && Annotations.GetAction (assembly) == AssemblyAction.Link;
 		}
 
 		public override void ProcessType (TypeDefinition type)

@@ -2,12 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-
+using Microsoft.Android.Sdk.ILLink;
+using Mono.Cecil;
 using Mono.Linker;
 using Mono.Linker.Steps;
-
-using Mono.Cecil;
-using Microsoft.Android.Sdk.ILLink;
+using Xamarin.Android.Tasks;
 
 namespace Mono.Tuner {
 
@@ -24,7 +23,11 @@ namespace Mono.Tuner {
 
 		public override bool IsActiveFor (AssemblyDefinition assembly)
 		{
-			return !Profile.IsSdkAssembly (assembly);
+			if (MonoAndroidHelper.IsFrameworkAssembly (assembly))
+				return false;
+
+			return assembly.MainModule.HasTypeReference ("Java.Interop.ExportAttribute") ||
+				assembly.MainModule.HasTypeReference ("Java.Interop.ExportFieldAttribute");
 		}
 
 		public override void ProcessField (FieldDefinition field)
