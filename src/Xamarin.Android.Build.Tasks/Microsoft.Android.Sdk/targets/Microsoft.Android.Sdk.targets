@@ -27,6 +27,6 @@
   <Import Project="Microsoft.Android.Sdk.DefaultProperties.targets" />
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.Debugging.props"
       Condition="Exists('$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.Debugging.props')"/>
-  <Import Project="Microsoft.Android.Sdk.NativeAOT.targets" Condition=" '$(_AndroidNativeAot)' == 'true' " />
+  <Import Project="Microsoft.Android.Sdk.NativeAOT.targets" Condition=" '$(_AndroidRuntime)' == 'NativeAOT' " />
 
 </Project>
