@@ -15,19 +15,22 @@ public class DNAA0001Tests
 	}
 
 	[Test]
-	[TestCase ("JniHandleOwnership")]
-	[TestCase ("Android.Runtime.JniHandleOwnership")]
-	public async Task DNAA0001DoesNotShowForExistingCode (string type)
+	[TestCase ("IntPtr", "JniHandleOwnership")]
+	[TestCase ("nint", "Android.Runtime.JniHandleOwnership")]
+	[TestCase ("global::System.IntPtr", "global::Android.Runtime.JniHandleOwnership")]
+	[TestCase ("System.IntPtr", "AR.JniHandleOwnership")]
+	public async Task DNAA0001DoesNotShowForExistingCode (string handle, string type)
 	{
 		var test = $@"
 using System;
 using Android.App;
 using Android.Runtime;
+using AR = Android.Runtime;
 namespace ConsoleApplication1
 {{
 	public class Foo : Application
 	{{
-		public Foo(IntPtr javaReference, {type} transfer) : base(javaReference, transfer)
+		public Foo({handle} javaReference, {type} transfer) : base(javaReference, transfer)
 		{{
 		}}
 	}}

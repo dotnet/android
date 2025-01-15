@@ -130,16 +130,16 @@ namespace Xamarin.Android.Tasks
 				CopyIfChanged (source, destination);
 				return;
 			}
-			if (runState.fixAbstractMethodsStep!.IsProductOrSdkAssembly (assemblyName)) {
+			if (MonoAndroidHelper.IsFrameworkAssembly (source)) {
 				CopyIfChanged (source, destination);
 				return;
 			}
 
 			// Only run the step on "MonoAndroid" assemblies
-			if (MonoAndroidHelper.IsMonoAndroidAssembly (source) && !MonoAndroidHelper.IsSharedRuntimeAssembly (source.ItemSpec)) {
+			if (MonoAndroidHelper.IsMonoAndroidAssembly (source)) {
 				AssemblyDefinition assemblyDefinition = runState.resolver!.GetAssembly (source.ItemSpec);
 
-				bool save = runState.fixAbstractMethodsStep.FixAbstractMethods (assemblyDefinition);
+				bool save = runState.fixAbstractMethodsStep!.FixAbstractMethods (assemblyDefinition);
 				if (UseDesignerAssembly)
 				save |= runState.fixLegacyResourceDesignerStep!.ProcessAssemblyDesigner (assemblyDefinition);
 				if (AddKeepAlives)

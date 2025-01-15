@@ -13,7 +13,6 @@ using Mono.Linker.Steps;
 
 using Mono.Tuner;
 #if ILLINK
-using Microsoft.Android.Sdk.ILLink;
 using Resources = Microsoft.Android.Sdk.ILLink.Properties.Resources;
 #else   // !ILLINK
 using Resources = Xamarin.Android.Tasks.Properties.Resources;

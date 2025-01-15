@@ -2,17 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-
-using Mono.Cecil;
-
 using Java.Interop.Tools.Cecil;
-
+using Mono.Cecil;
 using Mono.Linker;
 using Mono.Linker.Steps;
-
 using Mono.Tuner;
+using Xamarin.Android.Tasks;
+
 #if ILLINK
-using Microsoft.Android.Sdk.ILLink;
 using Resources = Microsoft.Android.Sdk.ILLink.Properties.Resources;
 #else   // !ILLINK
 using Resources = Xamarin.Android.Tasks.Properties.Resources;
@@ -53,7 +50,7 @@ namespace MonoDroid.Tuner
 			if (!Annotations.HasAction (assembly))
 				Annotations.SetAction (assembly, AssemblyAction.Skip);
 
-			if (IsProductOrSdkAssembly (assembly))
+			if (MonoAndroidHelper.IsFrameworkAssembly (assembly))
 				return false;
 
 			CheckAppDomainUsage (assembly, (string msg) =>
@@ -129,12 +126,6 @@ namespace MonoDroid.Tuner
 				}
 			}
 		}
-
-		bool IsProductOrSdkAssembly (AssemblyDefinition assembly) =>
-			IsProductOrSdkAssembly (assembly.Name.Name);
-
-		public bool IsProductOrSdkAssembly (string assemblyName) =>
-			Profile.IsSdkAssembly (assemblyName) || Profile.IsProductAssembly (assemblyName);
 
 		bool MightNeedFix (TypeDefinition type)
 		{

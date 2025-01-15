@@ -34,12 +34,7 @@ namespace Xamarin.Android.Tasks
 
 			var output = new List<ITaskItem> (InputAssemblies.Length);
 			foreach (var assemblyItem in InputAssemblies) {
-				// Skip .NET 6.0 <FrameworkReference/> assemblies
-				var frameworkReferenceName = assemblyItem.GetMetadata ("FrameworkReferenceName") ?? "";
-				if (frameworkReferenceName == "Microsoft.Android") {
-					continue; // No need to process Mono.Android.dll or Java.Interop.dll
-				}
-				if (frameworkReferenceName.StartsWith ("Microsoft.NETCore.", StringComparison.OrdinalIgnoreCase)) {
+				if (MonoAndroidHelper.IsFrameworkAssembly (assemblyItem)) {
 					continue; // No need to process BCL assemblies
 				}
 				if (string.Equals (assemblyItem.GetMetadata ("TargetPlatformIdentifier"), "android", StringComparison.OrdinalIgnoreCase)) {
