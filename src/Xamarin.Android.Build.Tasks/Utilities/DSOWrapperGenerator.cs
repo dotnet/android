@@ -34,6 +34,8 @@ class DSOWrapperGenerator
 {
 	internal const string RegisteredConfigKey = ".:!DSOWrapperGeneratorConfig!:.";
 
+	public const string StubFileName = "libarchive-dso-stub.so";
+
 	internal class Config
 	{
 		public Dictionary<AndroidTargetArch, string> DSOStubPaths    { get; }
@@ -63,9 +65,10 @@ class DSOWrapperGenerator
 			}
 
 			string packDir = MonoAndroidHelper.GetAndroidRuntimePackDir (maybePack);
-			string stubPath = Path.Combine (packDir, "libarchive-dso-stub.so");
+			string stubRelPath = Path.Combine ("runtimes", packRID, "native", StubFileName);
+			string stubPath = Path.Combine (packDir, stubRelPath);
 			if (!File.Exists (stubPath)) {
-				throw new InvalidOperationException ($"Internal error: archive DSO stub file '{stubPath}' does not exist in runtime pack {packDir}");
+				throw new InvalidOperationException ($"Internal error: archive DSO stub file '{stubRelPath}' does not exist in runtime pack at {packDir}");
 			}
 
 			AndroidTargetArch arch = MonoAndroidHelper.RidToArch (packRID);
