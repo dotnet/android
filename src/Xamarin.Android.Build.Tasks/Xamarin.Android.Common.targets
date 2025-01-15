@@ -305,6 +305,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' And '$(EmbedAssembliesIntoApk)' == 'False' ">True</_AndroidFastDeployEnvironmentFiles>
 	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' ">False</_AndroidFastDeployEnvironmentFiles>
 
+  <_AndroidUseCLR Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">True</_AndroidUseCLR>
+  <_AndroidUseCLR Condition=" '$(AndroidRuntime)' != 'CoreCLR' ">False</_AndroidUseCLR>
 </PropertyGroup>
 
 <Choose>
@@ -1364,12 +1366,12 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CollectRuntimeJarFilenames">
-  <PropertyGroup Condition=" '$(RuntimeFlavor)' == 'Mono' ">
+  <PropertyGroup Condition=" '$(AndroidRuntime)' == 'Mono' Or '$(AndroidRuntime)' == '' ">
     <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_net6.jar</_RuntimeJar>
     <_RuntimeDex>$(MSBuildThisFileDirectory)\java_runtime_net6.dex</_RuntimeDex>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(RuntimeFlavor)' == 'CoreCLR' ">
+  <PropertyGroup Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">
     <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_clr.jar</_RuntimeJar>
     <_RuntimeDex>$(MSBuildThisFileDirectory)\java_runtime_clr.dex</_RuntimeDex>
   </PropertyGroup>
@@ -2068,13 +2070,13 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_PrepareApplicationSharedLibraryItems">
-  <ItemGroup Condition=" '$(_AndroidUseCLR)' != 'True' ">
+  <ItemGroup Condition=" '$(AndroidRuntime)' != 'CoreCLR' ">
     <_ApplicationSharedLibrary Include="$(_AndroidApplicationSharedLibraryPath)%(_BuildTargetAbis.Identity)\libxamarin-app.so">
       <abi>%(_BuildTargetAbis.Identity)</abi>
     </_ApplicationSharedLibrary>
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(_AndroidUseCLR)' == 'True' ">
+  <ItemGroup Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">
     <_ApplicationSharedLibrary Include="$(_AndroidApplicationSharedLibraryPath)%(_BuildTargetAbis.Identity)\libxamarin-app-clr.so">
       <abi>%(_BuildTargetAbis.Identity)</abi>
     </_ApplicationSharedLibrary>
