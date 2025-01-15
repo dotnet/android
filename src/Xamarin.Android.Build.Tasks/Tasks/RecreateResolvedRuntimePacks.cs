@@ -130,11 +130,9 @@ public class RecreateResolvedRuntimePacks : AndroidTask
 				runtimePackPath = $"{path}{Path.DirectorySeparatorChar}";
 			}
 
-			Log.LogDebugMessage ($"Runtime pack path: {runtimePackPath}");
 			foreach (ITaskItem library in maybeIgnoreLibs.Values) {
 				if (library.ItemSpec.StartsWith (runtimePackPath)) {
 					librariesToIgnore.Add (library);
-					Log.LogDebugMessage ($"  ignore library: {library}");
 				}
 			}
 		};
