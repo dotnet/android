@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -17,18 +18,21 @@ namespace Xamarin.Android.Build.Tests
 {
 	public class LinkerTests : BaseTest
 	{
+		void Logger (TraceLevel level, string message) =>
+			TestContext.WriteLine ($"{level}: {message}");
+
 		[Test]
 		public void FixAbstractMethodsStep_SkipDimMembers ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
-			var step = new FixAbstractMethodsStep (new TypeDefinitionCache ());
-			var pipeline = new Pipeline ();
+			var step = new FixAbstractMethodsStep ();
 
 			Directory.CreateDirectory (path);
 
-			using (var context = new LinkContext (pipeline)) {
-
-				context.Resolver.AddSearchDirectory (path);
+			using (var resolver = new DirectoryAssemblyResolver (Logger, false))
+			using (var context = new LinkContext (resolver)) {
+				step.Initialize (context, null!);
+				resolver.SearchDirectories.Add (path);
 
 				var myAssemblyPath = Path.Combine (path, "MyAssembly.dll");
 
@@ -38,7 +42,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				using (var assm = context.Resolve (myAssemblyPath)) {
-					step.Process (context);
+					step.FixAbstractMethods (assm);
 
 					var impl = assm.MainModule.GetType ("MyNamespace.MyClass");
 
@@ -80,14 +84,14 @@ namespace Xamarin.Android.Build.Tests
 		public void FixAbstractMethodsStep_Explicit ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
-			var step = new FixAbstractMethodsStep (new TypeDefinitionCache ());
-			var pipeline = new Pipeline ();
+			var step = new FixAbstractMethodsStep ();
 
 			Directory.CreateDirectory (path);
 
-			using (var context = new LinkContext (pipeline)) {
-
-				context.Resolver.AddSearchDirectory (path);
+			using (var resolver = new DirectoryAssemblyResolver (Logger, false))
+			using (var context = new LinkContext (resolver)) {
+				step.Initialize (context, null!);
+				resolver.SearchDirectories.Add (path);
 
 				var myAssemblyPath = Path.Combine (path, "MyAssembly.dll");
 
@@ -97,7 +101,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				using (var assm = context.Resolve (myAssemblyPath)) {
-					step.Process (context);
+					step.FixAbstractMethods (assm);
 
 					var impl = assm.MainModule.GetType ("MyNamespace.MyClass");
 					Assert.AreEqual (2, impl.Methods.Count, "MyClass should contain 2 methods");

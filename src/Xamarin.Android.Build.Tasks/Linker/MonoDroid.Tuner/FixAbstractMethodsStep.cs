@@ -20,30 +20,16 @@ namespace MonoDroid.Tuner
 	/// <summary>
 	/// NOTE: this step is subclassed so it can be called directly from Xamarin.Android.Build.Tasks
 	/// </summary>
-	public class FixAbstractMethodsStep :
-#if ILLINK
-	BaseMarkHandler
-#else   // !ILLINK
-	BaseStep
-#endif  // !ILLINK
+	public class FixAbstractMethodsStep : BaseMarkHandler
 	{
+		IMetadataResolver cache;
 
-#if ILLINK
 		public override void Initialize (LinkContext context, MarkContext markContext)
 		{
 			this.cache = context;
 			base.Initialize (context, markContext);
 			markContext.RegisterMarkTypeAction (type => ProcessType (type));
 		}
-#else   // !ILLINK
-		public FixAbstractMethodsStep (IMetadataResolver cache)
-		{
-			this.cache = cache;
-		}
-
-		readonly
-#endif  // !ILLINK
-		IMetadataResolver cache;
 
 		bool CheckShouldProcessAssembly (AssemblyDefinition assembly)
 		{
@@ -57,7 +43,7 @@ namespace MonoDroid.Tuner
 #if ILLINK
 				Context.LogMessage (MessageContainer.CreateCustomWarningMessage (Context, msg, 6200, new MessageOrigin (), WarnVersion.ILLink5))
 #else   // !ILLINK
-				Context.LogMessage (MessageImportance.High, "warning XA2000: " + msg)
+				Context.LogWarning ("XA2000", msg)
 #endif  // !ILLINK
 			);
 
@@ -70,8 +56,7 @@ namespace MonoDroid.Tuner
 				Annotations.SetAction (assembly, AssemblyAction.Save);
 		}
 
-#if ILLINK
-		protected void ProcessType (TypeDefinition type)
+		void ProcessType (TypeDefinition type)
 		{
 			var assembly = type.Module.Assembly;
 			if (!CheckShouldProcessAssembly (assembly))
@@ -86,18 +71,6 @@ namespace MonoDroid.Tuner
 			UpdateAssemblyAction (assembly);
 			MarkAbstractMethodErrorType ();
 		}
-#else   // !ILLINK
-		protected override void ProcessAssembly (AssemblyDefinition assembly)
-		{
-			if (!CheckShouldProcessAssembly (assembly))
-				return;
-
-			if (FixAbstractMethods (assembly)) {
-				Context.SafeReadSymbols (assembly);
-				UpdateAssemblyAction (assembly);
-				MarkAbstractMethodErrorType ();
-			}
-		}
 
 		internal bool FixAbstractMethods (AssemblyDefinition assembly)
 		{
@@ -108,7 +81,6 @@ namespace MonoDroid.Tuner
 			}
 			return changed;
 		}
-#endif  // !ILLINK
 
 		readonly HashSet<string> warnedAssemblies = new (StringComparer.Ordinal);
 
@@ -343,14 +315,10 @@ namespace MonoDroid.Tuner
 			Context.LogMessage (message);
 		}
 
-		protected virtual AssemblyDefinition GetMonoAndroidAssembly ()
+		AssemblyDefinition GetMonoAndroidAssembly ()
 		{
 #if !ILLINK
-			foreach (var assembly in Context.GetAssemblies ()) {
-				if (assembly.Name.Name == "Mono.Android")
-					return assembly;
-			}
-			return null;
+			return Context.Resolver.GetAssembly ("Mono.Android.dll");
 #else   // ILLINK
 			return Context.GetLoadedAssembly ("Mono.Android");
 #endif  // ILLINK

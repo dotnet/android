@@ -21,10 +21,6 @@ namespace MonoDroid.Tuner
 		Dictionary<string, int> designerConstants;
 		Regex opCodeRegex = new Regex (@"([\w]+): ([\w]+) ([\w.]+) ([\w:./]+)");
 
-#if !ILLINK
-		public RemoveResourceDesignerStep (IMetadataResolver cache) : base (cache) { }
-#endif
-
 		protected override void LoadDesigner ()
 		{
 			if (mainAssembly != null)

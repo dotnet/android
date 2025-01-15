@@ -1,4 +1,3 @@
-using Microsoft.Android.Sdk.ILLink;
 using Mono.Cecil;
 using Mono.Linker.Steps;
 

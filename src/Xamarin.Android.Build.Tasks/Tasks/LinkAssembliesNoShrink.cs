@@ -5,6 +5,7 @@ using Java.Interop.Tools.Cecil;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
+using MonoDroid.Tuner;
 using System;
 using System.IO;
 using Microsoft.Android.Build.Tasks;
@@ -20,7 +21,6 @@ namespace Xamarin.Android.Tasks
 		sealed class RunState
 		{
 			public DirectoryAssemblyResolver? resolver = null;
-			public TypeDefinitionCache? cache = null;
 			public FixAbstractMethodsStep? fixAbstractMethodsStep = null;
 			public AddKeepAlivesStep? addKeepAliveStep = null;
 			public FixLegacyResourceDesignerStep? fixLegacyResourceDesignerStep = null;
@@ -99,10 +99,19 @@ namespace Xamarin.Android.Tasks
 					}
 
 					// Set up the FixAbstractMethodsStep and AddKeepAlivesStep
-					runState.cache = new TypeDefinitionCache ();
-					runState.fixAbstractMethodsStep = new FixAbstractMethodsStep (runState.resolver, runState.cache, Log);
-					runState.addKeepAliveStep = new AddKeepAlivesStep (runState.resolver, runState.cache, Log);
-					runState.fixLegacyResourceDesignerStep = new FixLegacyResourceDesignerStep (runState.resolver, runState.cache, Log);
+					var context = new MSBuildLinkContext (runState.resolver, Log);
+
+					var fixAbstractMethodsStep = new FixAbstractMethodsStep ();
+					fixAbstractMethodsStep.Initialize (context, null!);
+					runState.fixAbstractMethodsStep = fixAbstractMethodsStep;
+
+					var addKeepAliveStep = new AddKeepAlivesStep ();
+					addKeepAliveStep.Initialize (context);
+					runState.addKeepAliveStep = addKeepAliveStep;
+
+					var fixLegacyResourceDesignerStep = new FixLegacyResourceDesignerStep ();
+					fixLegacyResourceDesignerStep.Initialize (context);
+					runState.fixLegacyResourceDesignerStep = fixLegacyResourceDesignerStep;
 				}
 
 				DoRunTask (source, destination, runState, writerParameters);
@@ -165,80 +174,6 @@ namespace Xamarin.Android.Tasks
 
 				// NOTE: We still need to update the timestamp on this file, or this target would run again
 				File.SetLastWriteTimeUtc (destination.ItemSpec, DateTime.UtcNow);
-			}
-		}
-
-		class FixLegacyResourceDesignerStep : MonoDroid.Tuner.FixLegacyResourceDesignerStep
-		{
-			readonly DirectoryAssemblyResolver resolver;
-			readonly TaskLoggingHelper logger;
-
-			public FixLegacyResourceDesignerStep (DirectoryAssemblyResolver resolver, TypeDefinitionCache cache, TaskLoggingHelper logger)
-				: base(cache)
-			{
-				this.resolver = resolver;
-				this.logger = logger;
-			}
-
-			public override void LogMessage (string message)
-			{
-				logger.LogDebugMessage ("{0}", message);
-			}
-
-			public override void LogError (int code, string message)
-			{
-				logger.LogCodedError ($"XA{code}", message);
-			}
-
-			public override AssemblyDefinition Resolve (AssemblyNameReference name)
-			{
-				return resolver.Resolve (name);
-			}
-		}
-
-		class FixAbstractMethodsStep : MonoDroid.Tuner.FixAbstractMethodsStep
-		{
-			readonly DirectoryAssemblyResolver resolver;
-			readonly TaskLoggingHelper logger;
-
-			public FixAbstractMethodsStep (DirectoryAssemblyResolver resolver, TypeDefinitionCache cache, TaskLoggingHelper logger)
-				: base (cache)
-			{
-				this.resolver = resolver;
-				this.logger = logger;
-			}
-
-			protected override AssemblyDefinition GetMonoAndroidAssembly ()
-			{
-				return resolver.GetAssembly ("Mono.Android.dll");
-			}
-
-			public override void LogMessage (string message)
-			{
-				logger.LogDebugMessage ("{0}", message);
-			}
-		}
-
-		class AddKeepAlivesStep : MonoDroid.Tuner.AddKeepAlivesStep
-		{
-			readonly DirectoryAssemblyResolver resolver;
-			readonly TaskLoggingHelper logger;
-
-			public AddKeepAlivesStep (DirectoryAssemblyResolver resolver, TypeDefinitionCache cache, TaskLoggingHelper logger)
-				: base (cache)
-			{
-				this.resolver = resolver;
-				this.logger = logger;
-			}
-
-			protected override AssemblyDefinition GetCorlibAssembly ()
-			{
-				return resolver.GetAssembly ("System.Private.CoreLib.dll");
-			}
-
-			public override void LogMessage (string message)
-			{
-				logger.LogDebugMessage ("{0}", message);
 			}
 		}
 	}
