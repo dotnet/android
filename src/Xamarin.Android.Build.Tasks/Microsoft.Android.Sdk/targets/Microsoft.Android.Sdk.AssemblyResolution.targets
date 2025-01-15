@@ -251,7 +251,13 @@ _ResolveAssemblies MSBuild target.
 
     <RecreateResolvedRuntimePacks ResolvedNativeLibraries="@(_ResolvedNativeLibraries)">
       <Output TaskParameter="ResolvedRuntimePacks" ItemName="ResolvedRuntimePack" />
+      <Output TaskParameter="SharedLibrariesToIgnore" ItemName="_IgnoreSharedLibraries" />
     </RecreateResolvedRuntimePacks>
+
+    <ItemGroup>
+      <_ResolvedNativeLibraries Remove="@(_IgnoreSharedLibraries)" />
+      <FrameworkNativeLibrary Remove="@(_IgnoreSharedLibraries)" />
+    </ItemGroup>
   </Target>
 
 </Project>
