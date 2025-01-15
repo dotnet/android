@@ -1,11 +1,11 @@
 parameters:
-  jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
-  useAgentJdkPath: true
+  jdkMajorVersion: $(DefaultJavaSdkMajorVersion)   # Generally 11|17|21
+  useAgentJdkPath: true                            # true to use preinstalled agent JDK, false to use 'android-toolchain/jdk-NN'
 
 steps:
 - pwsh: |
     $agentOS="$(Agent.OS)"
-    $agentArch="$(Agent.OSArchitecture)"
+    $agentArch="$(Agent.OSArchitecture)" -eq "ARM64" ? "arm64" : "$(Agent.OSArchitecture)"
     $jdkMajorVersion="${{ parameters.jdkMajorVersion }}"
     $xaPrepareJdkPath="$env:HOME/android-toolchain/jdk-$jdkMajorVersion"
     if ("$agentOS" -eq "Windows_NT") {
