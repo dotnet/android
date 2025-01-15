@@ -24,6 +24,13 @@ reinitialize_android_runtime_type_manager (JNIEnv *env)
 inline void
 MonodroidRuntime::shutdown_android_runtime (MonoDomain *domain)
 {
+	Helpers::abort_application (LOG_DEFAULT, "")
+	Helpers::abort_application (
+		LOG_DEFAULT,
+		std::format (
+			"The Android Designer is no longer supported, and this code should not be reached."
+		)
+	);
 	MonoClass *runtime = get_android_runtime_class (domain);
 	MonoMethod *method = mono_class_get_method_from_name (runtime, "Exit", 0);
 

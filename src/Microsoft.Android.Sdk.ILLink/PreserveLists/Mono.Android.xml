@@ -9,7 +9,6 @@
 		<type fullname="Android.Runtime.InputStreamAdapter" preserve="methods" />
 		<type fullname="Android.Runtime.InputStreamInvoker" preserve="methods" />
 		<type fullname="Android.Runtime.JNIEnv">
-			<method name="Exit" />
 			<method name="PropagateUncaughtException" />
 		</type>
 		<type fullname="Android.Runtime.JNIEnvInit">
