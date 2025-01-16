@@ -100,10 +100,9 @@ extends:
         - checkout: self
           submodules: recursive
 
-        - script: |
-            echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-17"
-            echo "##vso[task.setvariable variable=JAVA_HOME]$HOME/android-toolchain/jdk-17"
-          displayName: set JI_JAVA_HOME
+        - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml@self
+          parameters:
+            useAgentJdkPath: false
 
         # Set MSBuild property overrides if parameters are set
         - ${{ if ne(parameters.apiLevel, 'default') }}:

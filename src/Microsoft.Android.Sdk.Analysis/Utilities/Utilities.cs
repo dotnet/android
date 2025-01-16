@@ -45,7 +45,7 @@ public static class Utilities
 		}
 
 		// Get the symbol for the type of the parameter
-		var typeSymbol = semanticModel.GetSymbolInfo (parameterSyntax.Type).Symbol as ITypeSymbol;
+		var typeSymbol = semanticModel.GetTypeInfo (parameterSyntax.Type).Type;
 
 		if (typeSymbol == null) {
 			return null; // Unable to resolve the symbol

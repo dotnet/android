@@ -27,7 +27,7 @@ stages:
     displayName: "macOS > Tests > MSBuild+Emulator"
     pool:
       name: Azure Pipelines
-      vmImage: $(HostedMacImage)
+      vmImage: $(HostedMacImageWithEmulator)
       os: macOS
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
@@ -89,7 +89,7 @@ stages:
       deviceName: wear_square
     pool:
       name: Azure Pipelines
-      vmImage: $(HostedMacImage)
+      vmImage: $(HostedMacImageWithEmulator)
       os: macOS
     workspace:
       clean: all
