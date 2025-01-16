@@ -15,12 +15,6 @@ namespace MonoDroid.Tuner
 {
 	public class AddKeepAlivesStep : BaseStep
 	{
-		IMetadataResolver cache;
-
-		protected override void Process ()
-		{
-			cache = Context;
-		}
 
 		protected override void ProcessAssembly (AssemblyDefinition assembly)
 		{
@@ -63,7 +57,7 @@ namespace MonoDroid.Tuner
 
 		bool MightNeedFix (TypeDefinition type)
 		{
-			return !type.IsAbstract && type.IsSubclassOf ("Java.Lang.Object", cache);
+			return !type.IsAbstract && type.IsSubclassOf ("Java.Lang.Object", Context);
 		}
 
 		MethodDefinition methodKeepAlive = null;
