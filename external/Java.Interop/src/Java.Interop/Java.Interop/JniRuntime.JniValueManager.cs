@@ -97,8 +97,13 @@ namespace Java.Interop
 
 				var newRef  = peer.PeerReference;
 				if (newRef.IsValid) {
-					// Activation! See ManagedPeer.RunConstructor
-					peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Activatable);
+					JniObjectReference.Dispose (ref reference, options);
+
+					// Activation? See ManagedPeer.Construct, CreatePeer
+					// Instance was already added, don't add again
+					if (peer.JniManagedPeerState.HasFlag (JniManagedPeerStates.Activatable)) {
+						return;
+					}
 					JniObjectReference.Dispose (ref reference, options);
 					newRef   = newRef.NewGlobalRef ();
 				} else if (options == JniObjectReferenceOptions.None) {

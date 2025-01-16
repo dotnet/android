@@ -38,7 +38,7 @@ namespace Java.Interop
 			var peer = JniPeerMembers.InstanceMethods.StartCreateInstance ("()V", GetType (), null);
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 			JniPeerMembers.InstanceMethods.FinishCreateInstance ("()V", this, null);
-			JavaStackTrace    = GetJavaStack (PeerReference);
+			SetJavaStackTrace ();
 		}
 
 		public unsafe JavaException (string message)
@@ -55,7 +55,7 @@ namespace Java.Interop
 			} finally {
 				JniObjectReference.Dispose (ref native_message, JniObjectReferenceOptions.CopyAndDispose);
 			}
-			JavaStackTrace    = GetJavaStack (PeerReference);
+			SetJavaStackTrace ();
 		}
 
 		public unsafe JavaException (string message, Exception innerException)
@@ -72,7 +72,14 @@ namespace Java.Interop
 			} finally {
 				JniObjectReference.Dispose (ref native_message, JniObjectReferenceOptions.CopyAndDispose);
 			}
-			JavaStackTrace    = GetJavaStack (PeerReference);
+			SetJavaStackTrace ();
+		}
+
+		protected JavaException (ref JniObjectReference reference, JniObjectReferenceOptions transfer, JniObjectReference throwableOverride)
+			: base (GetMessage (throwableOverride), GetCause (throwableOverride))
+		{
+			Construct (ref reference, transfer);
+			SetJavaStackTrace (throwableOverride);
 		}
 
 		public JavaException (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
@@ -80,7 +87,7 @@ namespace Java.Interop
 		{
 			Construct (ref reference, transfer);
 			if (PeerReference.IsValid)
-				JavaStackTrace    = GetJavaStack (PeerReference);
+				SetJavaStackTrace ();
 		}
 
 		protected void Construct (ref JniObjectReference reference, JniObjectReferenceOptions options)
@@ -183,6 +190,13 @@ namespace Java.Interop
 		{
 			if (transfer == JniObjectReferenceOptions.None)
 				return null;
+			return GetMessage (reference);
+		}
+
+		static string? GetMessage (JniObjectReference reference)
+		{
+			if (!reference.IsValid)
+				return null;
 
 			var m = _members.InstanceMethods.GetMethodInfo ("getMessage.()Ljava/lang/String;");
 			var s = JniEnvironment.InstanceMethods.CallObjectMethod (reference, m);
@@ -193,10 +207,28 @@ namespace Java.Interop
 		{
 			if (transfer == JniObjectReferenceOptions.None)
 				return null;
+			return GetCause (reference);
+		}
+
+		static Exception? GetCause (JniObjectReference reference)
+		{
+			if (!reference.IsValid)
+				return null;
 
 			var m = _members.InstanceMethods.GetMethodInfo ("getCause.()Ljava/lang/Throwable;");
 			var e = JniEnvironment.InstanceMethods.CallObjectMethod (reference, m);
 			return JniEnvironment.Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.CopyAndDispose);
+		}
+
+		protected void SetJavaStackTrace (JniObjectReference peerReferenceOverride = default)
+		{
+			if (!peerReferenceOverride.IsValid) {
+				peerReferenceOverride   = PeerReference;
+			}
+			if (!peerReferenceOverride.IsValid) {
+				return;
+			}
+			JavaStackTrace  = GetJavaStack (peerReferenceOverride);
 		}
 
 		unsafe string? GetJavaStack (JniObjectReference handle)
