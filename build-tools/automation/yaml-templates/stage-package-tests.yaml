@@ -13,7 +13,7 @@ stages:
     displayName: macOS > Tests > APKs 1
     pool:
       name: Azure Pipelines
-      vmImage: $(HostedMacImage)
+      vmImage: $(HostedMacImageWithEmulator)
       os: macOS
     timeoutInMinutes: 180
     workspace:
@@ -120,7 +120,7 @@ stages:
     displayName: macOS > Tests > APKs 2
     pool:
       name: Azure Pipelines
-      vmImage: $(HostedMacImage)
+      vmImage: $(HostedMacImageWithEmulator)
       os: macOS
     timeoutInMinutes: 180
     workspace:
