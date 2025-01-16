@@ -212,10 +212,11 @@ namespace Mono.Linker {
 			_annotations.SetAction (assembly, action);
 		}
 
-		public virtual AssemblyDefinition [] GetAssemblies ()
-		{
-			return _resolver.ToResolverCache ().Values.ToArray ();
-		}
+		public AssemblyDefinition GetAssembly (string assembly) =>
+			_resolver.GetAssembly (assembly);
+
+		public AssemblyDefinition [] GetAssemblies () =>
+			_resolver.ToResolverCache ().Values.ToArray ();
 
 		public void Dispose ()
 		{
