@@ -7,6 +7,7 @@ using Java.Interop.Tools.Cecil;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Linker;
+using Mono.Linker.Steps;
 using Mono.Tuner;
 using MonoDroid.Tuner;
 using NUnit.Framework;
@@ -31,7 +32,7 @@ namespace Xamarin.Android.Build.Tests
 
 			using (var resolver = new DirectoryAssemblyResolver (Logger, false))
 			using (var context = new LinkContext (resolver)) {
-				step.Initialize (context, null!);
+				step.Initialize (context, new EmptyMarkContext ());
 				resolver.SearchDirectories.Add (path);
 
 				var myAssemblyPath = Path.Combine (path, "MyAssembly.dll");
@@ -90,7 +91,7 @@ namespace Xamarin.Android.Build.Tests
 
 			using (var resolver = new DirectoryAssemblyResolver (Logger, false))
 			using (var context = new LinkContext (resolver)) {
-				step.Initialize (context, null!);
+				step.Initialize (context, new EmptyMarkContext ());
 				resolver.SearchDirectories.Add (path);
 
 				var myAssemblyPath = Path.Combine (path, "MyAssembly.dll");

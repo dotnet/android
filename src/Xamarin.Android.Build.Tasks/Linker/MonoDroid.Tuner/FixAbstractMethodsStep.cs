@@ -22,11 +22,8 @@ namespace MonoDroid.Tuner
 	/// </summary>
 	public class FixAbstractMethodsStep : BaseMarkHandler
 	{
-		IMetadataResolver cache;
-
 		public override void Initialize (LinkContext context, MarkContext markContext)
 		{
-			this.cache = context;
 			base.Initialize (context, markContext);
 			markContext.RegisterMarkTypeAction (type => ProcessType (type));
 		}

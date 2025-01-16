@@ -27,4 +27,14 @@ namespace Mono.Linker.Steps
 		/// </summary>
 		public abstract void RegisterMarkMethodAction (Action<MethodDefinition> action);
 	}
+
+	// Used within MSBuild and tests
+	class EmptyMarkContext : MarkContext
+	{
+		public override void RegisterMarkAssemblyAction (Action<AssemblyDefinition> action) { }
+
+		public override void RegisterMarkTypeAction (Action<TypeDefinition> action) { }
+
+		public override void RegisterMarkMethodAction (Action<MethodDefinition> action) { }
+	}
 }

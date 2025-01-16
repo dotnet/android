@@ -5,6 +5,7 @@ using Java.Interop.Tools.Cecil;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
+using Mono.Linker.Steps;
 using MonoDroid.Tuner;
 using System;
 using System.IO;
@@ -102,7 +103,7 @@ namespace Xamarin.Android.Tasks
 					var context = new MSBuildLinkContext (runState.resolver, Log);
 
 					var fixAbstractMethodsStep = new FixAbstractMethodsStep ();
-					fixAbstractMethodsStep.Initialize (context, null!);
+					fixAbstractMethodsStep.Initialize (context, new EmptyMarkContext ());
 					runState.fixAbstractMethodsStep = fixAbstractMethodsStep;
 
 					var addKeepAliveStep = new AddKeepAlivesStep ();
