@@ -434,8 +434,13 @@ namespace Xamarin.Android.Prepare
 					succeeded = true;
 					break;
 				} catch (Exception ex) {
+					Log.WarningLine ($"Hit exception downloading '{url}': {ex}");
+
 					if (i < ExceptionRetries - 1) {
+						Log.WarningLine ($"Will retry in {delay}.");
 						WaitAWhile ($"Download {url}", i, ref ex, ref delay);
+					} else {
+						Log.WarningLine ("Out of retries, failing.");
 					}
 				}
 			}
