@@ -623,8 +623,13 @@ namespace Xamarin.Android.Tasks
 			return GetAndroidRuntimePackNativeDir (runtimePacks, arch);
 		}
 
-		public static string GetNativeLibsRootDirectoryPath (ITaskItem[] runtimePacks, AndroidTargetArch arch)
+		public static string GetNativeLibsRootDirectoryPath (TaskLoggingHelper log, ITaskItem[] runtimePacks, AndroidTargetArch arch)
 		{
+			log.LogWarning ("Potential runtime packs:");
+			foreach (ITaskItem item in runtimePacks) {
+				log.LogWarning ($"  {item}");
+			}
+
 			return GetAndroidRuntimePackNativeDir (runtimePacks, arch);
 		}
 #endif // MSBUILD

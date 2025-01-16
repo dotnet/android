@@ -24,10 +24,10 @@
       See: https://github.com/dotnet/sdk/blob/955c0fc7b06e2fa34bacd076ed39f61e4fb61716/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Publish.targets#L16
     -->
     <_GetChildProjectCopyToPublishDirectoryItems>false</_GetChildProjectCopyToPublishDirectoryItems>
-    <EnableMonoRuntime Condition=" '$(PublishAot)' == 'true' and '$(EnableMonoRuntime)' == '' ">false</EnableMonoRuntime>
-    <EnableMonoRuntime Condition=" '$(EnableMonoRuntime)' == '' ">true</EnableMonoRuntime>
-    <_AndroidRuntime Condition=" '$(PublishAot)' == 'true' and '$(EnableMonoRuntime)' != 'true' ">NativeAOT</_AndroidRuntime>
-    <_AndroidRuntime Condition=" '$(PublishAot)' != 'true' and '$(EnableMonoRuntime)' != 'true' ">CoreCLR</_AndroidRuntime>
+    <UseMonoRuntime Condition=" '$(PublishAot)' == 'true' and '$(UseMonoRuntime)' == '' ">false</UseMonoRuntime>
+    <UseMonoRuntime Condition=" '$(UseMonoRuntime)' == '' ">true</UseMonoRuntime>
+    <_AndroidRuntime Condition=" '$(PublishAot)' == 'true' and '$(UseMonoRuntime)' != 'true' ">NativeAOT</_AndroidRuntime>
+    <_AndroidRuntime Condition=" '$(PublishAot)' != 'true' and '$(UseMonoRuntime)' != 'true' ">CoreCLR</_AndroidRuntime>
     <_AndroidRuntime Condition=" '$(_AndroidRuntime)' == '' ">MonoVM</_AndroidRuntime>
     <PublishAotUsingRuntimePack Condition=" '$(PublishAotUsingRuntimePack)' == '' and '$(_AndroidRuntime)' == 'NativeAOT' ">true</PublishAotUsingRuntimePack>
     <!-- HACK: make dotnet restore include Microsoft.NETCore.App.Runtime.NativeAOT.linux-bionic-arm64 -->

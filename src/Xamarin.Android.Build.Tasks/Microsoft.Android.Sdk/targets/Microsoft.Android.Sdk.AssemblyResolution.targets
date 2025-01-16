@@ -50,7 +50,6 @@ _ResolveAssemblies MSBuild target.
       <ItemGroup>
         <ResolvedFileToPublish Remove="@(_SourceItemsToCopyToPublishDirectory)" />
         <ResolvedFileToPublish
-            Condition=" '%(ResolvedFileToPublish.RuntimeIdentifier)' == '' "
             Update="@(ResolvedFileToPublish)"
             RuntimeIdentifier="$(RuntimeIdentifier)"
         />
@@ -249,7 +248,9 @@ _ResolveAssemblies MSBuild target.
       <Output TaskParameter="OutputLibraries" ItemName="FrameworkNativeLibrary" />
     </ProcessNativeLibraries>
 
-    <RecreateResolvedRuntimePacks ResolvedNativeLibraries="@(_ResolvedNativeLibraries)">
+    <RecreateResolvedRuntimePacks
+        ResolvedNativeLibraries="@(_ResolvedNativeLibraries)"
+        AndroidRuntime="$(_AndroidRuntime)">
       <Output TaskParameter="ResolvedRuntimePacks" ItemName="ResolvedRuntimePack" />
       <Output TaskParameter="SharedLibrariesToIgnore" ItemName="_IgnoreSharedLibraries" />
     </RecreateResolvedRuntimePacks>
