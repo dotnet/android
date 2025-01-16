@@ -7,7 +7,7 @@
 	  <FlavorIntermediateOutputPath>$(IntermediateOutputPath)\$(CMakeRuntimeFlavor)\</FlavorIntermediateOutputPath>
 	</PropertyGroup>
   </Target>
-  
+
   <Target Name="_BuildRuntimes" BeforeTargets="Build"
           DependsOnTargets="_PrepareCommonProperties;_ConfigureAndBuildArchiveDSOStub;_ConfigureRuntimes;_BuildAndroidRuntimes;_BuildAndroidAnalyzerRuntimes;_CopyToPackDirs">
   </Target>
@@ -36,7 +36,7 @@
       <_ConfigureRuntimesInputs  Include="common\libstub\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="common\libunwind\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="common\lz4\CMakeLists.txt" />
-	  
+
 	  <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-Debug\CMakeCache.txt')" />
       <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-Release\CMakeCache.txt')" />
 
@@ -44,7 +44,7 @@
       <_OutputDirsToCreate       Include="$(FlavorIntermediateOutputPath)\%(AndroidSupportedTargetJitAbi.AndroidRID)-Release" />
     </ItemGroup>
 
-    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'Mono' ">
+    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'MonoVM' ">
       <_ConfigureRuntimesInputs  Include="mono\monodroid\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="mono\runtime-base\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="mono\shared\CMakeLists.txt" />
@@ -52,12 +52,12 @@
       <_ConfigureRuntimesInputs  Include="mono\tracing\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="mono\xamarin-app-debug-helper\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="mono\xamarin-app-stub\CMakeLists.txt" />
-      
+
       <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-asan-Debug\CMakeCache.txt')"    Condition="'$(EnableNativeAnalyzers)' == 'true'" />
       <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-asan-Release\CMakeCache.txt')"  Condition="'$(EnableNativeAnalyzers)' == 'true'" />
       <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-ubsan-Debug\CMakeCache.txt')"   Condition="'$(EnableNativeAnalyzers)' == 'true'" />
       <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-ubsan-Release\CMakeCache.txt')" Condition="'$(EnableNativeAnalyzers)' == 'true'" />
-      
+
       <_OutputDirsToCreate       Include="$(FlavorIntermediateOutputPath)\%(AndroidSupportedTargetJitAbi.AndroidRID)-asan-Debug"     Condition="'$(EnableNativeAnalyzers)' == 'true'" />
       <_OutputDirsToCreate       Include="$(FlavorIntermediateOutputPath)\%(AndroidSupportedTargetJitAbi.AndroidRID)-ubsan-Debug"    Condition="'$(EnableNativeAnalyzers)' == 'true'" />
       <_OutputDirsToCreate       Include="$(FlavorIntermediateOutputPath)\%(AndroidSupportedTargetJitAbi.AndroidRID)-asan-Release"   Condition="'$(EnableNativeAnalyzers)' == 'true'" />
@@ -130,7 +130,7 @@
       </_ConfigureRuntimeCommands>
     </ItemGroup>
 
-    <ItemGroup Condition=" '$(EnableNativeAnalyzers)' == 'true' And '$(CMakeRuntimeFlavor)' == 'Mono' " >
+    <ItemGroup Condition=" '$(EnableNativeAnalyzers)' == 'true' And '$(CMakeRuntimeFlavor)' == 'MonoVM' " >
       <_ConfigureRuntimeCommands Include="@(AndroidSupportedTargetJitAbi)">
         <Command>$(CmakePath)</Command>
         <Arguments>--preset asan-debug-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
@@ -169,8 +169,8 @@
 	  <_RuntimeSources Include="common\libstub\*.cc;common\libstub\*.hh" />
       <_RuntimeSources Include="$(LZ4SourceFullPath)\lib\lz4.c;$(LZ4SourceFullPath)\lib\lz4.h" />
 	</ItemGroup>
-	
-    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'Mono' ">
+
+    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'MonoVM' ">
       <_RuntimeSources Include="mono\monodroid\*.cc;mono\monodroid\*.hh" />
       <_RuntimeSources Include="mono\runtime-base\*.cc;mono\runtime-base\*.hh" />
       <_RuntimeSources Include="mono\shared\*.cc;mono\shared\*.hh" />
@@ -200,18 +200,18 @@
       <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\Debug\libxamarin-app.so')" />
       <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\Release\libxamarin-app.so')" />
 	</ItemGroup>
-	
-    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'Mono' ">
+
+    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'MonoVM' ">
       <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android.debug.so')" />
       <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android.release.so')" />
     </ItemGroup>
-    
+
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
       <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libnet-android.debug.so')" />
       <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libnet-android.release.so')" />
     </ItemGroup>
 
-    <ItemGroup  Condition=" '$(EnableNativeAnalyzers)' == 'true' And '$(CMakeRuntimeFlavor)' == 'Mono' ">
+    <ItemGroup  Condition=" '$(EnableNativeAnalyzers)' == 'true' And '$(CMakeRuntimeFlavor)' == 'MonoVM' ">
       <_BuildAndroidAnalyzerRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android-checked+ubsan.debug.so')" />
       <_BuildAndroidAnalyzerRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android-checked+asan.debug.so')" />
       <_BuildAndroidAnalyzerRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android-checked+asan.release.so')" />
@@ -235,7 +235,7 @@
   </Target>
 
   <Target Name="_BuildAndroidAnalyzerRuntimes"
-          Condition=" '$(EnableNativeAnalyzers)' == 'true' And '$(CMakeRuntimeFlavor)' == 'Mono' "
+          Condition=" '$(EnableNativeAnalyzers)' == 'true' And '$(CMakeRuntimeFlavor)' == 'MonoVM' "
           DependsOnTargets="_BuildAndroidRuntimesInputs"
           Inputs="@(_BuildAndroidRuntimesInputs)"
           Outputs="@(_BuildAndroidAnalyzerRuntimesOutputs)">
