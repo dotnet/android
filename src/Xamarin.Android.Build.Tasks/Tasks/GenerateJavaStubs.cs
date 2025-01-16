@@ -96,14 +96,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AndroidRuntime { get; set; } = "";
 
-		public string CodeGenerationTarget { get; set; } = "";
-
-		[Required]
-		public string TargetName { get; set; } = "";
-
-		AndroidRuntime androidRuntime;
-		JavaPeerStyle codeGenerationTarget;
-
 		internal const string AndroidSkipJavaStubGeneration = "AndroidSkipJavaStubGeneration";
 
 		public override bool RunTask ()
@@ -307,23 +299,9 @@ namespace Xamarin.Android.Tasks
 
 		void GenerateAdditionalProviderSources (NativeCodeGenState codeGenState, IList<string> additionalProviders)
 		{
-			if (androidRuntime != Xamarin.Android.Tasks.AndroidRuntime.CoreCLR) {
-				// Create additional runtime provider java sources.
-				bool isMonoVM = androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.MonoVM;
-				string providerTemplateFile = isMonoVM ?
-					"MonoRuntimeProvider.Bundled.java" :
-					"NativeAotRuntimeProvider.java";
-				string providerTemplate = GetResource (providerTemplateFile);
-
-				foreach (var provider in additionalProviders) {
-					var contents = providerTemplate.Replace (isMonoVM ? "MonoRuntimeProvider" : "NativeAotRuntimeProvider", provider);
-					var real_provider = isMonoVM ?
-						Path.Combine (OutputDirectory, "src", "mono", provider + ".java") :
-						Path.Combine (OutputDirectory, "src", "net", "dot", "jni", "nativeaot", provider + ".java");
-					Files.CopyIfStringChanged (contents, real_provider);
-				}
-			} else {
-				Log.LogDebugMessage ($"Skipping android.content.ContentProvider generation for: {androidRuntime}");
+			if (!string.Equals (AndroidRuntime, "MonoVM", StringComparison.OrdinalIgnoreCase)) {
+				Log.LogDebugMessage ($"Skipping MonoRuntimeProvider generation for {AndroidRuntime}");
+				return;
 			}
 
 			// For NativeAOT, generate JavaInteropRuntime.java
@@ -381,7 +359,7 @@ namespace Xamarin.Android.Tasks
 				Debug = Debug,
 				MultiDex = MultiDex,
 				NeedsInternet = NeedsInternet,
-				AndroidRuntime = androidRuntime,
+				AndroidRuntime = AndroidRuntime,
 			};
 			// Only set manifest.VersionCode if there is no existing value in AndroidManifest.xml.
 			if (manifest.HasVersionCode) {
@@ -415,7 +393,7 @@ namespace Xamarin.Android.Tasks
 			(List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW) = ScanForJavaTypes (resolver, tdCache, assemblies, userAssemblies, useMarshalMethods);
 			var jcwContext = new JCWGeneratorContext (arch, resolver, assemblies.Values, javaTypesForJCW, tdCache, useMarshalMethods);
 			var jcwGenerator = new JCWGenerator (Log, jcwContext) {
-				CodeGenerationTarget = codeGenerationTarget,
+				CodeGenerationTarget = string.Equals (AndroidRuntime, "MonoVM", StringComparison.OrdinalIgnoreCase) ? JavaPeerStyle.XAJavaInterop1 : JavaPeerStyle.JavaInterop1
 			};
 			bool success;
 
