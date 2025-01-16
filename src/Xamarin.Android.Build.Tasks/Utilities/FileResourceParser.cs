@@ -12,7 +12,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
-using Xamarin.Tools.Zip;
+using System.IO.Compression;
 
 namespace Xamarin.Android.Tasks
 {
@@ -80,9 +80,9 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 				using (var file = File.Open (aar, FileMode.Open, FileAccess.ReadWrite, FileShare.Read)) {
-					using var zip = ZipArchive.Open (file);
-					foreach (var entry in zip) {
-						if (entry.IsDirectory)
+					using var zip = new ZipArchive (file);
+					foreach (var entry in zip.Entries) {
+						if (entry.IsDirectory ())
 							continue;
 						if (!entry.FullName.StartsWith ("res"))
 							continue;
@@ -92,7 +92,9 @@ namespace Xamarin.Android.Tasks
 							if (string.Compare (path, "raw", StringComparison.OrdinalIgnoreCase) != 0) {
 								var ms = MemoryStreamPool.Shared.Rent ();
 								try {
-									entry.Extract (ms);
+									using (var entryStream = entry.Open ()) {
+										entryStream.CopyTo (ms);
+									}
 									ms.Position = 0;
 									using XmlReader reader = XmlReader.Create (ms);
 									ProcessXmlFile (reader, resources);
