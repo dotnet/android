@@ -212,7 +212,7 @@ namespace Xamarin.Android.Tasks
 		{
 			AndroidTargetArch arch = MonoAndroidHelper.AbiToTargetArch (abi);
 			var libDirs = new HashSet<string> (StringComparer.OrdinalIgnoreCase) {
-				MonoAndroidHelper.GetNativeLibsRootDirectoryPath (ResolvedRuntimePacks, arch),
+				MonoAndroidHelper.GetNativeLibsRootDirectoryPath (Log, ResolvedRuntimePacks, arch),
 				MonoAndroidHelper.GetLibstubsArchDirectoryPath (ResolvedRuntimePacks, arch),
 			};
 
