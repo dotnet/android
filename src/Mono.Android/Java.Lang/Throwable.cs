@@ -13,8 +13,6 @@ namespace Java.Lang {
 	{
 		protected bool is_generated;
 
-		string? nativeStack;
-
 		public unsafe Throwable (IntPtr handle, JniHandleOwnership transfer)
 			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None, new JniObjectReference (handle))
 		{
@@ -42,11 +40,11 @@ namespace Java.Lang {
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		public int JniIdentityHashCode => base.JniIdentityHashCode;
+		public new int JniIdentityHashCode => base.JniIdentityHashCode;
 
 		[DebuggerBrowsable (DebuggerBrowsableState.Never)]
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		public JniObjectReference PeerReference => base.PeerReference;
+		public new JniObjectReference PeerReference => base.PeerReference;
 
 		[DebuggerBrowsable (DebuggerBrowsableState.Never)]
 		[EditorBrowsable (EditorBrowsableState.Never)]
@@ -58,8 +56,9 @@ namespace Java.Lang {
 		public IntPtr Handle {
 			get {
 				var peerRef = PeerReference;
-				if (!peerRef.IsValid)
+				if (!peerRef.IsValid) {
 					return IntPtr.Zero;
+				}
 				return peerRef.Handle;
 			}
 		}
@@ -133,9 +132,9 @@ namespace Java.Lang {
 		{
 		}
 
-		public void UnregisterFromRuntime () => base.UnregisterFromRuntime ();
+		public new void UnregisterFromRuntime () => base.UnregisterFromRuntime ();
 
-		public void Dispose () => base.Dispose ();
+		public new void Dispose () => base.Dispose ();
 
 		protected override void Dispose (bool disposing)
 		{

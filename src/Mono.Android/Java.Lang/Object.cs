@@ -50,11 +50,11 @@ namespace Java.Lang {
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		public int JniIdentityHashCode => base.JniIdentityHashCode;
+		public new int JniIdentityHashCode => base.JniIdentityHashCode;
 
 		[DebuggerBrowsable (DebuggerBrowsableState.Never)]
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		public JniObjectReference PeerReference => base.PeerReference;
+		public new JniObjectReference PeerReference => base.PeerReference;
 
 		[DebuggerBrowsable (DebuggerBrowsableState.Never)]
 		[EditorBrowsable (EditorBrowsableState.Never)]
@@ -66,8 +66,9 @@ namespace Java.Lang {
 		public IntPtr Handle {
 			get {
 				var peerRef = PeerReference;
-				if (!peerRef.IsValid)
+				if (!peerRef.IsValid) {
 					return IntPtr.Zero;
+				}
 				return peerRef.Handle;
 			}
 		}
