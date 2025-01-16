@@ -94,7 +94,7 @@ namespace Xamarin.Android.Tasks {
 		public bool ForceDebuggable { get; set; }
 		public string VersionName { get; set; }
 		public IVersionResolver VersionResolver { get; set; } = new MonoAndroidHelperVersionResolver ();
-		public string AndroidRuntime { get; set; } = "MonoVM";
+		public AndroidRuntime AndroidRuntime { get; set; }
 
 		string versionCode;
 
@@ -673,7 +673,7 @@ namespace Xamarin.Android.Tasks {
 
 		IList<string> AddMonoRuntimeProviders (XElement app)
 		{
-			if (!string.Equals (AndroidRuntime, "MonoVM", StringComparison.OrdinalIgnoreCase)) {
+			if (AndroidRuntime != AndroidRuntime.MonoVM) {
 				//TODO: implement provider logic for non-Mono runtimes
 				return [];
 			}
