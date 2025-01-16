@@ -298,8 +298,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' And '$(EmbedAssembliesIntoApk)' == 'False' ">True</_AndroidFastDeployEnvironmentFiles>
 	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' ">False</_AndroidFastDeployEnvironmentFiles>
 
-  <_AndroidUseCLR Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">True</_AndroidUseCLR>
-  <_AndroidUseCLR Condition=" '$(AndroidRuntime)' != 'CoreCLR' ">False</_AndroidUseCLR>
+  <_AndroidUseCLR Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">True</_AndroidUseCLR>
+  <_AndroidUseCLR Condition=" '$(_AndroidRuntime)' != 'CoreCLR' ">False</_AndroidUseCLR>
 </PropertyGroup>
 
 <Choose>
@@ -331,9 +331,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' ">true</AndroidUseAssemblyStore>
   <AndroidAotEnableLazyLoad Condition=" '$(AndroidAotEnableLazyLoad)' == '' And '$(AotAssemblies)' == 'true' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</AndroidAotEnableLazyLoad>
   <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and ('$(UsingMicrosoftNETSdkRazor)' == 'true') ">False</AndroidEnableMarshalMethods>
-  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and '$(_AndroidNativeAot)' != 'true' ">True</AndroidEnableMarshalMethods>
+  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and '$(_AndroidRuntime)' != 'NativeAOT' ">True</AndroidEnableMarshalMethods>
   <!-- NOTE: temporarily disable for NativeAOT for now, to get build passing -->
-  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and '$(_AndroidNativeAot)' == 'true' ">False</AndroidEnableMarshalMethods>
+  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and '$(_AndroidRuntime)' == 'NativeAOT' ">False</AndroidEnableMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">False</_AndroidUseMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">$(AndroidEnableMarshalMethods)</_AndroidUseMarshalMethods>
 </PropertyGroup>
@@ -1359,12 +1359,12 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CollectRuntimeJarFilenames">
-  <PropertyGroup Condition=" '$(AndroidRuntime)' == 'Mono' Or '$(AndroidRuntime)' == '' ">
+  <PropertyGroup Condition=" '$(_AndroidRuntime)' == 'Mono' Or '$(_AndroidRuntime)' == '' ">
     <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_net6.jar</_RuntimeJar>
     <_RuntimeDex>$(MSBuildThisFileDirectory)\java_runtime_net6.dex</_RuntimeDex>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">
+  <PropertyGroup Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">
     <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_clr.jar</_RuntimeJar>
     <_RuntimeDex>$(MSBuildThisFileDirectory)\java_runtime_clr.dex</_RuntimeDex>
   </PropertyGroup>
@@ -1386,7 +1386,7 @@ because xbuild doesn't support framework reference assemblies.
 		DependsOnTargets="_CollectRuntimeJarFilenames;$(_BeforeAddStaticResources);_GetMonoPlatformJarPath">
 	<CopyResource ResourceName="machine.config" OutputPath="$(MonoAndroidIntermediateAssemblyDir)machine.config" />
   <CopyResource
-      Condition=" '$(_AndroidNativeAot)' != 'true' "
+      Condition=" '$(_AndroidRuntime)' == 'MonoVM' "
       ResourceName="MonoRuntimeProvider.Bundled.java"
       OutputPath="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java"
   />
@@ -1505,7 +1505,7 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 
   <GenerateJavaStubs
-      NativeAot="$(_AndroidNativeAot)"
+      AndroidRuntime="$(_AndroidRuntime)"
       ResolvedAssemblies="@(_ResolvedAssemblies)"
       ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
       ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
@@ -1735,7 +1735,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_GeneratePackageManagerJava"
-  Condition=" '$(_AndroidNativeAot)' != 'true' "
+  Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
   DependsOnTargets="$(_GeneratePackageManagerJavaDependsOn)"
   Inputs="@(_GeneratePackageManagerJavaInputs)"
   Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
@@ -1955,7 +1955,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <!-- Shrink Mono.Android.dll by removing attribute only needed for GenerateJavaStubs -->
   <RemoveRegisterAttribute
-    Condition="'$(AndroidLinkMode)' != 'None' and '$(AndroidIncludeDebugSymbols)' != 'true' and '$(AndroidStripILAfterAOT)' != 'true' and '$(_AndroidNativeAot)' != 'true' "
+    Condition="'$(AndroidLinkMode)' != 'None' and '$(AndroidIncludeDebugSymbols)' != 'true' and '$(AndroidStripILAfterAOT)' != 'true' and '$(_AndroidRuntime)' != 'NativeAOT' "
     ShrunkFrameworkAssemblies="@(_ShrunkAssemblies)" />
 
   <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)shrunk" />
@@ -2032,13 +2032,13 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_PrepareApplicationSharedLibraryItems">
-  <ItemGroup Condition=" '$(AndroidRuntime)' != 'CoreCLR' ">
+  <ItemGroup Condition=" '$(_AndroidRuntime)' != 'CoreCLR' ">
     <_ApplicationSharedLibrary Include="$(_AndroidApplicationSharedLibraryPath)%(_BuildTargetAbis.Identity)\libxamarin-app.so">
       <abi>%(_BuildTargetAbis.Identity)</abi>
     </_ApplicationSharedLibrary>
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">
+  <ItemGroup Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">
     <_ApplicationSharedLibrary Include="$(_AndroidApplicationSharedLibraryPath)%(_BuildTargetAbis.Identity)\libxamarin-app-clr.so">
       <abi>%(_BuildTargetAbis.Identity)</abi>
     </_ApplicationSharedLibrary>

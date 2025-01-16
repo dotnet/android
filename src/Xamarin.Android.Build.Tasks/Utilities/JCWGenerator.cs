@@ -44,7 +44,7 @@ class JCWGenerator
 	readonly TaskLoggingHelper log;
 	readonly JCWGeneratorContext context;
 
-	public bool NativeAot { get; set; }
+	public JavaPeerStyle CodeGenerationTarget { get; set; } = JavaPeerStyle.XAJavaInterop1;
 
 	public MarshalMethodsClassifier? Classifier { get; private set; }
 
@@ -127,7 +127,7 @@ class JCWGenerator
 		bool ok = true;
 		using var writer = MemoryStreamPool.Shared.CreateStreamWriter ();
 		var writer_options = new CallableWrapperWriterOptions {
-			CodeGenerationTarget    = NativeAot ? JavaPeerStyle.JavaInterop1 : JavaPeerStyle.XAJavaInterop1
+			CodeGenerationTarget    = CodeGenerationTarget
 		};
 
 		try {
