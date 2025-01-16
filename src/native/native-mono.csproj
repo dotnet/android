@@ -12,7 +12,7 @@
 
   <PropertyGroup>
     <OutputPath>$(NativeRuntimeOutputRootDir)mono</OutputPath>
-    <CMakeRuntimeFlavor>Mono</CMakeRuntimeFlavor>
+    <CMakeRuntimeFlavor>MonoVM</CMakeRuntimeFlavor>
   </PropertyGroup>
 
   <Import Project="native.targets" />
