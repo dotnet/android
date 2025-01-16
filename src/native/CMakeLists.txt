@@ -46,7 +46,7 @@ include("${CMAKE_ANDROID_NDK}/build/cmake/abis.cmake")
 include("${CMAKE_SOURCE_DIR}/cmake/ArchiveDSOStub.cmake")
 
 string(TOLOWER "${RUNTIME_FLAVOR}" RUNTIME_FLAVOR_LOWER)
-if (RUNTIME_FLAVOR_LOWER STREQUAL mono)
+if (RUNTIME_FLAVOR_LOWER STREQUAL monovm)
   set(IS_MONO_RUNTIME True)
   set(IS_CLR_RUNTIME False)
   set(SOURCES_PREFIX "mono")

@@ -1366,7 +1366,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CollectRuntimeJarFilenames">
-  <PropertyGroup Condition=" '$(_AndroidRuntime)' == 'Mono' Or '$(_AndroidRuntime)' == '' ">
+  <PropertyGroup Condition=" '$(_AndroidRuntime)' == 'MonoVM' Or '$(_AndroidRuntime)' == '' ">
     <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_net6.jar</_RuntimeJar>
     <_RuntimeDex>$(MSBuildThisFileDirectory)\java_runtime_net6.dex</_RuntimeDex>
   </PropertyGroup>
