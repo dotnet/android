@@ -12,9 +12,12 @@ public class RecreateResolvedRuntimePacks : AndroidTask
 {
 	public override string TaskPrefix => "RRRP";
 
-	static readonly string[] RuntimeLibraries = [
+	static readonly string[] RuntimeLibrariesMonoVM = [
 		"libmono-android.debug.so",
 		"libmono-android.release.so",
+	];
+
+	static readonly string[] RuntimeLibrariesCoreCLR = [
 		"libnet-android.debug.so",
 		"libnet-android.release.so",
 	];
@@ -31,6 +34,9 @@ public class RecreateResolvedRuntimePacks : AndroidTask
 	[Required]
 	public ITaskItem[] ResolvedNativeLibraries { get; set; }
 
+	[Required]
+	public string AndroidRuntime { get; set; }
+
 	[Output]
 	public ITaskItem[] ResolvedRuntimePacks { get; set; }
 
@@ -45,6 +51,15 @@ public class RecreateResolvedRuntimePacks : AndroidTask
 		var ignoreLibNames = new List<string> ();
 		foreach (string libName in LibraryNamesToIgnore) {
 			ignoreLibNames.Add (String.Format ("{0}native{0}{1}", Path.DirectorySeparatorChar, libName));
+		}
+
+		string[] runtimeLibraries;
+		if (String.Compare ("MonoVM", AndroidRuntime, StringComparison.OrdinalIgnoreCase) == 0) {
+			runtimeLibraries = RuntimeLibrariesMonoVM;
+		} else if (String.Compare ("CoreCLR", AndroidRuntime, StringComparison.OrdinalIgnoreCase) == 0) {
+			runtimeLibraries = RuntimeLibrariesCoreCLR;
+		} else {
+			throw new NotSupportedException ($"Internal error: unsupported runtime flavor '{AndroidRuntime}'");
 		}
 
 		// We need to find `libc.so` that comes from one of our runtime packs
@@ -99,7 +114,7 @@ public class RecreateResolvedRuntimePacks : AndroidTask
 
 			// Either one of the runtime libraries must exist
 			bool runtimeLibraryFound = false;
-			foreach (string runtimeLibrary in RuntimeLibraries) {
+			foreach (string runtimeLibrary in runtimeLibraries) {
 				if (PackNativeFileExists (packageDir, rid, runtimeLibrary)) {
 					runtimeLibraryFound = true;
 					continue;

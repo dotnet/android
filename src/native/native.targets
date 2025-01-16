@@ -286,14 +286,22 @@
   </Target>
 
   <Target Name="_CopyToPackDirs">
+    <PropertyGroup>
+      <_RuntimePackName Condition=" '$(CMakeRuntimeFlavor)' == 'MonoVM' ">Mono</_RuntimePackName>
+      <_RuntimePackName Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">CoreCLR</_RuntimePackName>
+    </PropertyGroup>
+
     <ItemGroup>
-      <_RuntimePackFiles Include="$(OutputPath)\%(AndroidSupportedTargetJitAbi.AndroidRID)\*" AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)" AndroidRuntime="$(CMakeRuntimeFlavor)" />
+      <_RuntimePackFiles Include="$(OutputPath)\%(AndroidSupportedTargetJitAbi.AndroidRID)\*"
+                         AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
+                         AndroidRuntime="$(CMakeRuntimeFlavor)"
+                         RuntimePackName="$(_RuntimePackName)" />
       <!-- NOTE: not building native libraries for NativeAOT yet -->
     </ItemGroup>
 
     <Copy
         SourceFiles="%(_RuntimePackFiles.Identity)"
-        DestinationFolder="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.%(_RuntimePackFiles.AndroidRuntime).$(AndroidApiLevel).%(_RuntimePackFiles.AndroidRID)\$(AndroidPackVersion)\runtimes\%(_RuntimePackFiles.AndroidRID)\native"
+        DestinationFolder="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.%(_RuntimePackFiles.RuntimePackName).$(AndroidApiLevel).%(_RuntimePackFiles.AndroidRID)\$(AndroidPackVersion)\runtimes\%(_RuntimePackFiles.AndroidRID)\native"
         SkipUnchangedFiles="true" />
   </Target>
 </Project>
