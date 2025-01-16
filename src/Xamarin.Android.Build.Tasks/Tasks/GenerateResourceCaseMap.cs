@@ -7,7 +7,8 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tools;
-using Xamarin.Tools.Zip;
+//using Xamarin.Tools.Zip;
+using System.IO.Compression;
 
 namespace Xamarin.Android.Tasks
 {
@@ -76,16 +77,18 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 				using (var file = File.OpenRead (aar)) {
-					using var zip = ZipArchive.Open (file);
-					if (!zip.ContainsEntry (resmap)) {
+					using var zip = new ZipArchive (file);
+					var entry = zip.GetEntry (resmap);
+					if (entry is null) {
 						Log.LogDebugMessage ($"Skipping non-existent file: {resmap}");
 						continue;
 					}
-					ZipEntry entry = zip.ReadEntry (resmap);
 					Log.LogDebugMessage ($"Found: {entry.FullName}");
 					var ms = MemoryStreamPool.Shared.Rent ();
 					try {
-						entry.Extract (ms);
+						using (var entryStream = entry.Open ()) {
+							entryStream.CopyTo (ms);
+						}
 						ms.Position = 0;
 						using var reader = new StreamReader (ms);
 						string line;
