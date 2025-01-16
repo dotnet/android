@@ -32,6 +32,7 @@ namespace Android.Runtime
 			public int             jniAddNativeMethodRegistrationAttributePresent;
 			public bool            jniRemappingInUse;
 			public bool            marshalMethodsEnabled;
+			public IntPtr          grefGCUserPeerable;
 		}
 #pragma warning restore 0649
 
@@ -43,6 +44,7 @@ namespace Android.Runtime
 		internal static BoundExceptionType BoundExceptionType;
 		internal static int gref_gc_threshold;
 		internal static IntPtr grefIGCUserPeer_class;
+		internal static IntPtr grefGCUserPeerable_class;
 		internal static IntPtr java_class_loader;
 		internal static JniMethodInfo? mid_Class_forName;
 
@@ -99,6 +101,7 @@ namespace Android.Runtime
 			IsRunningOnDesktop = args->isRunningOnDesktop == 1;
 
 			grefIGCUserPeer_class = args->grefIGCUserPeer;
+			grefGCUserPeerable_class = args->grefGCUserPeerable;
 
 			PropagateExceptions = args->brokenExceptionTransitions == 0;
 

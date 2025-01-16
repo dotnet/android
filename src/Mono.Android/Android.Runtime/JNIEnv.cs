@@ -52,7 +52,8 @@ namespace Android.Runtime {
 			if (value == IntPtr.Zero)
 				return false;
 
-			return IsInstanceOf (value, JNIEnvInit.grefIGCUserPeer_class);
+			return IsInstanceOf (value, JNIEnvInit.grefIGCUserPeer_class) ||
+				IsInstanceOf (value, JNIEnvInit.grefGCUserPeerable_class);
 		}
 
 		internal static bool ShouldWrapJavaException (Java.Lang.Throwable? t, [CallerMemberName] string? caller = null)
