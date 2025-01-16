@@ -21,16 +21,6 @@ namespace Java.Lang {
 			if (GetType () == typeof (Throwable))
 				is_generated = true;
 
-			// Check if handle was preset by our java activation mechanism
-			var peerRef = PeerReference;
-			if (peerRef.IsValid) {
-				((IJavaPeerable) this).SetJniManagedPeerState (JniManagedPeerStates.Activatable);
-				handle          = peerRef.Handle;
-				if (peerRef.Type != JniObjectReferenceType.Invalid)
-					return;
-				transfer        = JniHandleOwnership.DoNotTransfer;
-			}
-
 			SetHandle (handle, transfer);
 		}
 

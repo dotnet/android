@@ -33,16 +33,6 @@ namespace Java.Lang {
 		public unsafe Object (IntPtr handle, JniHandleOwnership transfer)
 			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
-			// Check if handle was preset by our java activation mechanism
-			var peerRef = PeerReference;
-			if (peerRef.IsValid) {
-				handle  = peerRef.Handle;
-				((IJavaPeerable) this).SetJniManagedPeerState (JniManagedPeerStates.Activatable);
-				if (peerRef.Type != JniObjectReferenceType.Invalid)
-					return;
-				transfer  = JniHandleOwnership.DoNotTransfer;
-			}
-
 			SetHandle (handle, transfer);
 		}
 

@@ -319,7 +319,7 @@ namespace Java.Interop {
 			try {
 				result = (IJavaPeerable) CreateProxy (type, handle, transfer);
 				if (Runtime.IsGCUserPeer (result.PeerReference.Handle)) {
-					result.SetJniManagedPeerState (JniManagedPeerStates.Replaceable);
+					result.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
 				}
 			} catch (MissingMethodException e) {
 				var key_handle  = JNIEnv.IdentityHash (handle);
@@ -352,7 +352,6 @@ namespace Java.Interop {
 				JniObjectReferenceOptions   o = JniObjectReferenceOptions.Copy;
 				var peer = (IJavaPeerable) c.Invoke (new object [] { r, o });
 				JNIEnv.DeleteRef (handle, transfer);
-				peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
 				return peer;
 			}
 			throw new MissingMethodException (

@@ -116,7 +116,6 @@ namespace Android.Runtime {
 
 		void TranslateStackTrace ()
 		{
-			Console.WriteLine ("# jonp: JavaProxyThrowable.TranslateStackTrace: InnerException={0} {1}", InnerException?.GetType(), InnerException);
 			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
 			// StackFrame.GetMethod() will return null under NativeAOT;
 			// However, you can still get useful information from StackFrame.ToString():

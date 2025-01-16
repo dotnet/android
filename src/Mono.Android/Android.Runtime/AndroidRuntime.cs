@@ -165,6 +165,14 @@ namespace Android.Runtime {
 			return r;
 		}
 
+		public override bool LogGlobalReferenceMessages => Logger.LogGlobalRef;
+		public override bool LogLocalReferenceMessages  => Logger.LogLocalRef;
+
+		public override void WriteLocalReferenceLine (string format, params object?[] args)
+		{
+			RuntimeNativeMethods._monodroid_gref_log ("[LREF] " + string.Format (CultureInfo.InvariantCulture, format, args));
+		}
+
 		public override void WriteGlobalReferenceLine (string format, params object?[] args)
 		{
 			RuntimeNativeMethods._monodroid_gref_log (string.Format (CultureInfo.InvariantCulture, format, args));
