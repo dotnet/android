@@ -305,8 +305,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' And '$(EmbedAssembliesIntoApk)' == 'False' ">True</_AndroidFastDeployEnvironmentFiles>
 	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' ">False</_AndroidFastDeployEnvironmentFiles>
 
-  <_AndroidUseCLR Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">True</_AndroidUseCLR>
-  <_AndroidUseCLR Condition=" '$(AndroidRuntime)' != 'CoreCLR' ">False</_AndroidUseCLR>
+  <_AndroidUseCLR Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">True</_AndroidUseCLR>
+  <_AndroidUseCLR Condition=" '$(_AndroidRuntime)' != 'CoreCLR' ">False</_AndroidUseCLR>
 </PropertyGroup>
 
 <Choose>
@@ -1366,12 +1366,12 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CollectRuntimeJarFilenames">
-  <PropertyGroup Condition=" '$(AndroidRuntime)' == 'Mono' Or '$(AndroidRuntime)' == '' ">
+  <PropertyGroup Condition=" '$(_AndroidRuntime)' == 'Mono' Or '$(_AndroidRuntime)' == '' ">
     <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_net6.jar</_RuntimeJar>
     <_RuntimeDex>$(MSBuildThisFileDirectory)\java_runtime_net6.dex</_RuntimeDex>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">
+  <PropertyGroup Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">
     <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_clr.jar</_RuntimeJar>
     <_RuntimeDex>$(MSBuildThisFileDirectory)\java_runtime_clr.dex</_RuntimeDex>
   </PropertyGroup>
@@ -1523,7 +1523,6 @@ because xbuild doesn't support framework reference assemblies.
 
   <GenerateJavaStubs
       AndroidRuntime="$(_AndroidRuntime)"
-      CodeGenerationTarget="$(AndroidCodegenTarget)"
       ResolvedAssemblies="@(_ResolvedAssemblies)"
       ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
       ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
@@ -2070,13 +2069,13 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_PrepareApplicationSharedLibraryItems">
-  <ItemGroup Condition=" '$(AndroidRuntime)' != 'CoreCLR' ">
+  <ItemGroup Condition=" '$(_AndroidRuntime)' != 'CoreCLR' ">
     <_ApplicationSharedLibrary Include="$(_AndroidApplicationSharedLibraryPath)%(_BuildTargetAbis.Identity)\libxamarin-app.so">
       <abi>%(_BuildTargetAbis.Identity)</abi>
     </_ApplicationSharedLibrary>
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">
+  <ItemGroup Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">
     <_ApplicationSharedLibrary Include="$(_AndroidApplicationSharedLibraryPath)%(_BuildTargetAbis.Identity)\libxamarin-app-clr.so">
       <abi>%(_BuildTargetAbis.Identity)</abi>
     </_ApplicationSharedLibrary>

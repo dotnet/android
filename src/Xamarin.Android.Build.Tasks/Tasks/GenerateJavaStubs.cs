@@ -72,11 +72,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AndroidRuntime { get; set; } = "";
 
-		public string CodeGenerationTarget { get; set; } = "";
-
-		AndroidRuntime androidRuntime;
-		JavaPeerStyle codeGenerationTarget;
-
 		internal const string AndroidSkipJavaStubGeneration = "AndroidSkipJavaStubGeneration";
 
 		public override bool RunTask ()
@@ -248,11 +243,91 @@ namespace Xamarin.Android.Tasks
 
 		internal static Dictionary<string, ITaskItem> MaybeGetArchAssemblies (Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> dict, AndroidTargetArch arch)
 		{
-			if (!dict.TryGetValue (arch, out Dictionary<string, ITaskItem> archDict)) {
-				return new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
+			if (!string.Equals (AndroidRuntime, "MonoVM", StringComparison.OrdinalIgnoreCase)) {
+				Log.LogDebugMessage ($"Skipping MonoRuntimeProvider generation for {AndroidRuntime}");
+				return;
 			}
 
-			return archDict;
+			// For NativeAOT, generate JavaInteropRuntime.java
+			if (androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
+				const string fileName = "JavaInteropRuntime.java";
+				string template = GetResource (fileName);
+				var contents = template.Replace ("@MAIN_ASSEMBLY_NAME@", TargetName);
+				var path = Path.Combine (OutputDirectory, "src", "net", "dot", "jni", "nativeaot", fileName);
+				Log.LogDebugMessage ($"Writing: {path}");
+				Files.CopyIfStringChanged (contents, path);
+			}
+
+			// Create additional application java sources.
+			StringWriter regCallsWriter = new StringWriter ();
+			regCallsWriter.WriteLine ("// Application and Instrumentation ACWs must be registered first.");
+			foreach (TypeDefinition type in codeGenState.JavaTypesForJCW) {
+				if (JavaNativeTypeManager.IsApplication (type, codeGenState.TypeCache) || JavaNativeTypeManager.IsInstrumentation (type, codeGenState.TypeCache)) {
+					if (codeGenState.Classifier != null && !codeGenState.Classifier.FoundDynamicallyRegisteredMethods (type)) {
+						continue;
+					}
+
+					string javaKey = JavaNativeTypeManager.ToJniName (type, codeGenState.TypeCache).Replace ('/', '.');
+					regCallsWriter.WriteLine (
+						codeGenerationTarget == JavaPeerStyle.XAJavaInterop1 ?
+							"\t\tmono.android.Runtime.register (\"{0}\", {1}.class, {1}.__md_methods);" :
+							"\t\tnet.dot.jni.ManagedPeer.registerNativeMembers ({1}.class, {1}.__md_methods);",
+						type.GetAssemblyQualifiedName (codeGenState.TypeCache),
+						javaKey
+					);
+				}
+			}
+			regCallsWriter.Close ();
+
+			var real_app_dir = Path.Combine (OutputDirectory, "src", "net", "dot", "android");
+			string applicationTemplateFile = "ApplicationRegistration.java";
+			SaveResource (
+				applicationTemplateFile,
+				applicationTemplateFile,
+				real_app_dir,
+				template => template.Replace ("// REGISTER_APPLICATION_AND_INSTRUMENTATION_CLASSES_HERE", regCallsWriter.ToString ())
+			);
+		}
+
+		IList<string> MergeManifest (NativeCodeGenState codeGenState, Dictionary<string, ITaskItem> userAssemblies)
+		{
+			var manifest = new ManifestDocument (ManifestTemplate) {
+				PackageName = PackageName,
+				VersionName = VersionName,
+				ApplicationLabel = ApplicationLabel ?? PackageName,
+				Placeholders = ManifestPlaceholders,
+				Resolver = codeGenState.Resolver,
+				SdkDir = AndroidSdkDir,
+				TargetSdkVersion = AndroidSdkPlatform,
+				MinSdkVersion = MonoAndroidHelper.ConvertSupportedOSPlatformVersionToApiLevel (SupportedOSPlatformVersion).ToString (),
+				Debug = Debug,
+				MultiDex = MultiDex,
+				NeedsInternet = NeedsInternet,
+				AndroidRuntime = AndroidRuntime,
+			};
+			// Only set manifest.VersionCode if there is no existing value in AndroidManifest.xml.
+			if (manifest.HasVersionCode) {
+				Log.LogDebugMessage ($"Using existing versionCode in: {ManifestTemplate}");
+			} else if (!string.IsNullOrEmpty (VersionCode)) {
+				manifest.VersionCode = VersionCode;
+			}
+			manifest.Assemblies.AddRange (userAssemblies.Values.Select (item => item.ItemSpec));
+
+			if (!String.IsNullOrWhiteSpace (CheckedBuild)) {
+				// We don't validate CheckedBuild value here, this will be done in BuildApk. We just know that if it's
+				// on then we need android:debuggable=true and android:extractNativeLibs=true
+				manifest.ForceDebuggable = true;
+				manifest.ForceExtractNativeLibs = true;
+			}
+
+			IList<string> additionalProviders = manifest.Merge (Log, codeGenState.TypeCache, codeGenState.AllJavaTypes, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments);
+
+			// Only write the new manifest if it actually changed
+			if (manifest.SaveIfChanged (Log, MergedAndroidManifestOutput)) {
+				Log.LogDebugMessage ($"Saving: {MergedAndroidManifestOutput}");
+			}
+
+			return additionalProviders;
 		}
 
 		(bool success, NativeCodeGenState? stubsState) GenerateJavaSourcesAndMaybeClassifyMarshalMethods (AndroidTargetArch arch, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods, bool generateJavaCode)
@@ -262,7 +337,7 @@ namespace Xamarin.Android.Tasks
 			(List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW) = ScanForJavaTypes (resolver, tdCache, assemblies, userAssemblies, useMarshalMethods);
 			var jcwContext = new JCWGeneratorContext (arch, resolver, assemblies.Values, javaTypesForJCW, tdCache, useMarshalMethods);
 			var jcwGenerator = new JCWGenerator (Log, jcwContext) {
-				CodeGenerationTarget = codeGenerationTarget,
+				CodeGenerationTarget = string.Equals (AndroidRuntime, "MonoVM", StringComparison.OrdinalIgnoreCase) ? JavaPeerStyle.XAJavaInterop1 : JavaPeerStyle.JavaInterop1
 			};
 			bool success;
 

@@ -35,7 +35,6 @@ projects that use the Microsoft.Android framework in .NET 6+.
       <_RuntimeFlavorDirName Condition=" '$(AndroidRuntime)' == 'Mono' Or '$(AndroidRuntime)' == '' ">mono</_RuntimeFlavorDirName>
     </PropertyGroup>
 
-    <Message Text="Create packs: AndroidRuntime == '$(AndroidRuntime)'; _RuntimeFlavorDirName == '$(_RuntimeFlavorDirName)' " Importance="High" />
     <ItemGroup>
       <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETDefaultOutDir)Java.Interop.dll" />
       <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETDefaultOutDir)Mono.Android.dll" />
