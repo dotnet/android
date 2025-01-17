@@ -58,21 +58,17 @@
     <Compile Include="Linker\External\Linker\Annotations.cs" />
     <Compile Include="Linker\External\Linker\AssemblyAction.cs" />
     <Compile Include="Linker\External\Linker\AssemblyResolver.cs" />
+    <Compile Include="Linker\External\Linker\BaseMarkHandler.cs" />
     <Compile Include="Linker\External\Linker\LinkContext.cs" />
     <Compile Include="Linker\External\Linker\MethodAction.cs" />
     <Compile Include="Linker\External\Linker\OverrideInformation.cs" />
-    <Compile Include="Linker\External\Linker\Pipeline.cs" />
     <Compile Include="Linker\External\Linker\TypePreserve.cs" />
     <Compile Include="Linker\External\Linker.Steps\BaseStep.cs" />
+    <Compile Include="Linker\External\Linker.Steps\IMarkHandler.cs" />
     <Compile Include="Linker\External\Linker.Steps\IStep.cs" />
+    <Compile Include="Linker\External\Linker.Steps\MarkContext.cs" />
     <Compile Include="Linker\External\Linker\IDependencyRecorder.cs" />
-    <Compile Include="Linker\External\Linker\IReflectionPatternRecorder.cs" />
-    <Compile Include="Linker\External\Linker\LoggingReflectionPatternRecorder.cs" />
-    <Compile Include="Linker\External\Linker\ConsoleLogger.cs" />
-    <Compile Include="Linker\External\Linker\ILogger.cs" />
     <Compile Include="Linker\External\Linker\Tracer.cs" />
-    <Compile Include="Linker\External\Linker\MarkingHelpers.cs" />
-    <Compile Include="Linker\External\Linker\KnownMembers.cs" />
     <Compile Include="Linker\External\Mono.Tuner\CecilRocks.cs" />
     <Compile Include="Linker\External\Mono.Tuner\Extensions.cs" />
 

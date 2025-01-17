@@ -50,8 +50,8 @@ namespace MonoDroid.Tuner {
 		public static AssemblyDefinition GetAssembly (this LinkContext context, string assemblyName)
 		{
 			AssemblyDefinition ad;
-#if !NETCOREAPP
-			context.TryGetLinkedAssembly (assemblyName, out ad);
+#if !ILLINK
+			ad = context.GetAssembly (assemblyName);
 #else
 			ad = context.GetLoadedAssembly (assemblyName);
 #endif

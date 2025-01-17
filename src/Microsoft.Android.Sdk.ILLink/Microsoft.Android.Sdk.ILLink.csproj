@@ -12,6 +12,7 @@
     <ProjectReference Include="..\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" ReferenceOutputAssembly="False" />
 
     <!--Include shared linker sources-->
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\External\Linker\BaseMarkHandler.cs" Link="External\BaseMarkHandler.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\AddKeepAlivesStep.cs" Link="MonoDroid.Tuner\AddKeepAlivesStep.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\AndroidLinkConfiguration.cs" Link="MonoDroid.Tuner\AndroidLinkConfiguration.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\Extensions.cs" Link="MonoDroid.Tuner\Extensions.cs" />
