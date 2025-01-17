@@ -1063,11 +1063,12 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - NuGet package version</comment>
   </data>
   <data name="XA0141" xml:space="preserve">
-    <value>Пакет NuGet "{0}" версии "{1}" содержит общую библиотеку "{2}", которая сопоставлена неправильно. Дополнительные сведения см. на странице https://developer.android.com/guide/practices/page-sizes</value>
+    <value>Для Android 16 потребуется размер страницы 16 КБ, размер общей библиотеки '{3}' не должен превышать 16 КБ. Сообщите авторам о том, что пакет NuGet '{0}' версии '{1}', которая содержит '{2}'. Дополнительные https://developer.android.com/guide/practices/page-sizes см. в https://developer.android.com/guide/practices/page-sizes.</value>
     <comment>The following is a literal name and should not be translated: NuGet
 {0} - NuGet package id
 {1} - NuGet package version
-{2} - shared library file name
+{2} - Source location path
+{3} - shared library file name
     </comment>
   </data>
   <data name="XA4249" xml:space="preserve">

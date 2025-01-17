@@ -93,8 +93,7 @@ namespace MonoDroid.Tuner
 		{
 			if (mainDesigner == null)
 				return false;
-			var fileName = assembly.Name.Name + ".dll";
-			if (MonoAndroidHelper.IsFrameworkAssembly (fileName))
+			if (MonoAndroidHelper.IsFrameworkAssembly (assembly))
 				return false;
 
 			LogMessage ($"  Fixing up {assembly.Name.Name}");

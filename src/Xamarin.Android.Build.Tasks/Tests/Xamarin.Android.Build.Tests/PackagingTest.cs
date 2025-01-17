@@ -362,7 +362,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			if (useApkSigner && !foundApkSigner) {
 				Assert.Ignore ("Skipping test. Required build-tools verison which contains apksigner is not installed.");
 			}
-			string keyfile = Path.Combine (Root, "temp", TestName, "release.keystore");
+			string keyfile = Path.Combine (Root, "temp", TestName, "keystore", "release.keystore");
 			if (File.Exists (keyfile))
 				File.Delete (keyfile);
 			string keyToolPath = Path.Combine (AndroidSdkResolver.GetJavaSdkPath (), "bin");
@@ -397,7 +397,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			} else {
 				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			}
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName, "App"))) {
 				var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
 				Assert.IsTrue (b.Build (proj), "First build failed");
 				b.AssertHasNoWarnings ();

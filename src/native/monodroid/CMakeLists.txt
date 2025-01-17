@@ -243,6 +243,12 @@ endmacro ()
 lib_target_options(${XAMARIN_MONO_ANDROID_LIB})
 xa_add_compile_definitions(${XAMARIN_MONO_ANDROID_LIB})
 
+target_link_options(${XAMARIN_MONO_ANDROID_LIB}
+  PRIVATE
+  -Wl,--version-script,${CMAKE_SOURCE_DIR}/libmono-android.map.txt
+  -Wl,--no-undefined-version
+)
+
 if(BUILD_STATIC_LIBRARY)
   lib_target_options(${XAMARIN_MONO_ANDROID_STATIC_LIB})
   xa_add_compile_definitions(${XAMARIN_MONO_ANDROID_STATIC_LIB})

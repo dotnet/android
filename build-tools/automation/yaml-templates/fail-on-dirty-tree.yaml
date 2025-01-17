@@ -1,0 +1,22 @@
+# Ensure the build did not produce any modified checked in files
+
+parameters:
+  condition: succeeded()
+  xaSourcePath: 
+
+steps:
+- powershell: |
+    # Run this to log the output for the user
+    git status
+
+    # Run this to error the build if untracked files
+    $process= git status --porcelain --untracked-files=no
+
+    if ($process)
+    {
+        Write-Host "##vso[task.logissue type=error]git tree has modified tracked files."
+        Write-Host "##vso[task.complete result=Failed;]"
+    }
+  displayName: Ensure no modified committed files
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  condition: ${{ parameters.condition }}

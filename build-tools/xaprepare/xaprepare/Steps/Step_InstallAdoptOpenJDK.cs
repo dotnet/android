@@ -44,11 +44,6 @@ namespace Xamarin.Android.Prepare
 
 		protected override async Task<bool> Execute (Context context)
 		{
-			if (Directory.Exists (Configurables.Paths.OldOpenJDKInstallDir)) {
-				Log.DebugLine ($"Found old OpenJDK directory at {Configurables.Paths.OldOpenJDKInstallDir}, removing");
-				Utilities.DeleteDirectorySilent (Configurables.Paths.OldOpenJDKInstallDir);
-			}
-
 			AddToInventory ();
 
 			string jdkInstallDir = JdkInstallDir;
@@ -59,19 +54,11 @@ namespace Xamarin.Android.Prepare
 				return true;
 			}
 
-			// Check for a JDK installed on CI with a matching major version to use for test jobs
+			// Check for a JDK installed on CI to use for test jobs
 			var jiJavaHomeVarValue = Environment.GetEnvironmentVariable ("JI_JAVA_HOME");
-			if (AllowJIJavaHomeMatch && Directory.Exists (jiJavaHomeVarValue)) {
-				jdkInstallDir = jiJavaHomeVarValue;
-				OpenJDKExistsAndIsValid (jdkInstallDir, out installedVersion);
-				if (Version.TryParse (installedVersion, out Version? cversion) && cversion != null) {
-					if (cversion.Major == JdkVersion.Major) {
-						Log.Status ($"{ProductName} with version ");
-						Log.Status (installedVersion ?? "Unknown", ConsoleColor.Yellow);
-						Log.StatusLine (" already installed in: ", jdkInstallDir, tailColor: ConsoleColor.Cyan);
-						return true;
-					}
-				}
+			if (AllowJIJavaHomeMatch && Directory.Exists (jiJavaHomeVarValue) && JdkFilesExist (jiJavaHomeVarValue)) {
+				Log.StatusLine ("Skipping JDK install for test job, JDK exists at: ", jdkInstallDir, tailColor: ConsoleColor.Cyan);
+				return true;
 			}
 
 			Log.StatusLine ($"{ProductName} {JdkVersion} r{JdkRelease} will be installed to {jdkInstallDir}");
@@ -254,6 +241,11 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
+			return JdkFilesExist (installDir);
+		}
+
+		bool JdkFilesExist (string installDir)
+		{
 			foreach (string f in jdkFiles) {
 				string file = Path.Combine (installDir, f);
 				if (!File.Exists (file)) {
@@ -294,11 +286,11 @@ namespace Xamarin.Android.Prepare
 		}
 
 		protected   override    string  ProductName      => _ProductName;
-		protected   override    string  JdkInstallDir    => Configurables.Paths.OpenJDK17InstallDir;
-		protected   override    Version JdkVersion       => Configurables.Defaults.MicrosoftOpenJDK17Version;
-		protected   override    Version JdkRelease       => Configurables.Defaults.MicrosoftOpenJDK17Release;
-		protected   override    Uri     JdkUrl           => Configurables.Urls.MicrosoftOpenJDK17;
-		protected   override    string  JdkCacheDir      => Configurables.Paths.OpenJDK17CacheDir;
-		protected   override    string  RootDirName      => Configurables.Defaults.MicrosoftOpenJDK17RootDirName;
+		protected   override    string  JdkInstallDir    => Configurables.Paths.OpenJDKInstallDir;
+		protected   override    Version JdkVersion       => Configurables.Defaults.MicrosoftOpenJDKVersion;
+		protected   override    Version JdkRelease       => Configurables.Defaults.MicrosoftOpenJDKRelease;
+		protected   override    Uri     JdkUrl           => Configurables.Urls.MicrosoftOpenJDK;
+		protected   override    string  JdkCacheDir      => Configurables.Paths.OpenJDKCacheDir;
+		protected   override    string  RootDirName      => Configurables.Defaults.MicrosoftOpenJDKRootDirName;
 	}
 }

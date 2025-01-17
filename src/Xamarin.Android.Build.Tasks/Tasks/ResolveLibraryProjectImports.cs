@@ -64,14 +64,24 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem [] ProguardConfigFiles { get; set; }
 
+		[Output]
+		public ITaskItem [] ExtractedDirectories { get; set; }
+
 		internal const string OriginalFile = "OriginalFile";
 		internal const string AndroidSkipResourceProcessing = "AndroidSkipResourceProcessing";
 
 		internal const string ResourceDirectoryArchive = "ResourceDirectoryArchive";
-		static readonly string [] knownMetadata = new [] {
+
+		internal const string NuGetPackageVersion = "NuGetPackageVersion";
+
+		internal const string NuGetPackageId = "NuGetPackageId";
+
+		internal static readonly string [] KnownMetadata = new [] {
 			OriginalFile,
 			AndroidSkipResourceProcessing,
-			ResourceDirectoryArchive
+			ResourceDirectoryArchive,
+			NuGetPackageId,
+			NuGetPackageVersion,
 		};
 
 		AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap();
@@ -89,10 +99,11 @@ namespace Xamarin.Android.Tasks
 			var resolvedAssetDirectories      = new List<ITaskItem> ();
 			var resolvedEnvironmentFiles      = new List<ITaskItem> ();
 			var proguardConfigFiles           = new List<ITaskItem> ();
+			var extractedDirectories          = new List<ITaskItem> ();
 
 			assemblyMap.Load (AssemblyIdentityMapFile);
 			try {
-				Extract (jars, resolvedResourceDirectories, resolvedAssetDirectories, resolvedEnvironmentFiles, proguardConfigFiles);
+				Extract (jars, resolvedResourceDirectories, resolvedAssetDirectories, resolvedEnvironmentFiles, proguardConfigFiles, extractedDirectories);
 			} catch (ZipIOException ex) {
 				Log.LogCodedError ("XA1004", ex.Message);
 				Log.LogDebugMessage (ex.ToString ());
@@ -103,6 +114,7 @@ namespace Xamarin.Android.Tasks
 			ResolvedAssetDirectories    = resolvedAssetDirectories.ToArray ();
 			ResolvedEnvironmentFiles    = resolvedEnvironmentFiles.ToArray ();
 			ProguardConfigFiles         = proguardConfigFiles.ToArray ();
+			ExtractedDirectories        = extractedDirectories.ToArray ();
 
 			ResolvedResourceDirectoryStamps = ResolvedResourceDirectories
 				.Select (s => new TaskItem (Path.GetFullPath (Path.Combine (s.ItemSpec, "../..")) + ".stamp"))
@@ -123,15 +135,17 @@ namespace Xamarin.Android.Tasks
 						new XElement ("Jars",
 							Jars.Select(e => new XElement ("Jar", e))),
 						new XElement ("ResolvedResourceDirectories",
-							ResolvedResourceDirectories.ToXElements ("ResolvedResourceDirectory", knownMetadata)),
+							ResolvedResourceDirectories.ToXElements ("ResolvedResourceDirectory", KnownMetadata)),
 						new XElement ("ResolvedAssetDirectories",
-							ResolvedAssetDirectories.ToXElements ("ResolvedAssetDirectory", knownMetadata)),
+							ResolvedAssetDirectories.ToXElements ("ResolvedAssetDirectory", KnownMetadata)),
 						new XElement ("ResolvedEnvironmentFiles",
-							ResolvedEnvironmentFiles.ToXElements ("ResolvedEnvironmentFile", knownMetadata)),
+							ResolvedEnvironmentFiles.ToXElements ("ResolvedEnvironmentFile", KnownMetadata)),
 						new XElement ("ResolvedResourceDirectoryStamps",
-							ResolvedResourceDirectoryStamps.ToXElements ("ResolvedResourceDirectoryStamp", knownMetadata)),
+							ResolvedResourceDirectoryStamps.ToXElements ("ResolvedResourceDirectoryStamp", KnownMetadata)),
 						new XElement ("ProguardConfigFiles",
-							ProguardConfigFiles.ToXElements ("ProguardConfigFile", knownMetadata))
+							ProguardConfigFiles.ToXElements ("ProguardConfigFile", KnownMetadata)),
+						new XElement ("ExtractedDirectories",
+							ExtractedDirectories.ToXElements ("ExtractedDirectory", KnownMetadata))
 					));
 				document.SaveIfChanged (CacheFile);
 			}
@@ -144,6 +158,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugTaskItems ("  ResolvedEnvironmentFiles: ", ResolvedEnvironmentFiles);
 			Log.LogDebugTaskItems ("  ResolvedResourceDirectoryStamps: ", ResolvedResourceDirectoryStamps);
 			Log.LogDebugTaskItems ("  ProguardConfigFiles:", ProguardConfigFiles);
+			Log.LogDebugTaskItems ("  ExtractedDirectories:", ExtractedDirectories);
 
 			return !Log.HasLoggedErrors;
 		}
@@ -155,7 +170,8 @@ namespace Xamarin.Android.Tasks
 				ICollection<ITaskItem> resolvedResourceDirectories,
 				ICollection<ITaskItem> resolvedAssetDirectories,
 				ICollection<ITaskItem> resolvedEnvironments,
-				ICollection<ITaskItem> proguardConfigFiles)
+				ICollection<ITaskItem> proguardConfigFiles,
+				ICollection<ITaskItem> extractedDirectories)
 		{
 			// lets "upgrade" the old directory.
 			string oldPath = Path.GetFullPath (Path.Combine (OutputImportDirectory, "..", "__library_projects__"));
@@ -170,9 +186,7 @@ namespace Xamarin.Android.Tasks
 			foreach (var assemblyItem in Assemblies) {
 				var assemblyPath = assemblyItem.ItemSpec;
 				var fileName = Path.GetFileName (assemblyPath);
-				if (MonoAndroidHelper.IsFrameworkAssembly (fileName) &&
-						!MonoAndroidHelper.FrameworkEmbeddedJarLookupTargets.Contains (fileName) &&
-						!MonoAndroidHelper.FrameworkEmbeddedNativeLibraryAssemblies.Contains (fileName)) {
+				if (MonoAndroidHelper.IsFrameworkAssembly (fileName)) {
 					Log.LogDebugMessage ($"Skipping framework assembly '{fileName}'.");
 					continue;
 				}
@@ -184,14 +198,20 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ("Skipping resource extraction for '{0}' .", assemblyPath);
 					continue;
 				}
-				string assemblyFileName = Path.GetFileName (assemblyPath);
-				string assemblyIdentName = assemblyMap.GetLibraryImportDirectoryNameForAssembly (assemblyFileName);
+				string assemblyIdentName = assemblyMap.GetLibraryImportDirectoryNameForAssembly (fileName);
 				string outDirForDll = Path.Combine (OutputImportDirectory, assemblyIdentName);
 				string importsDir = Path.Combine (outDirForDll, ImportsDirectory);
 				string nativeimportsDir = Path.Combine (outDirForDll, NativeImportsDirectory);
 				string resDir = Path.Combine (importsDir, "res");
 				string resDirArchive = Path.Combine (resDir, "..", "res.zip");
 				string assetsDir = Path.Combine (importsDir, "assets");
+				string nuGetPackageId = assemblyItem.GetMetadata (NuGetPackageId) ?? string.Empty;
+				string nuGetPackageVersion = assemblyItem.GetMetadata (NuGetPackageVersion) ?? string.Empty;
+				extractedDirectories.Add (new TaskItem (outDirForDll, new Dictionary<string, string> {
+					[OriginalFile] = assemblyPath,
+					[NuGetPackageId] = nuGetPackageId,
+					[NuGetPackageVersion] = nuGetPackageVersion
+				}));
 
 				// Skip already-extracted resources.
 				bool updated = false;
@@ -202,13 +222,15 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ("Skipped resource lookup for {0}: extracted files are up to date", assemblyPath);
 					if (Directory.Exists (importsDir)) {
 						foreach (var file in Directory.EnumerateFiles (importsDir, "*.jar", SearchOption.AllDirectories)) {
-							AddJar (jars, Path.GetFullPath (file));
+							AddJar (jars, Path.GetFullPath (file), nuGetPackageId: nuGetPackageId, nuGetPackageVersion: nuGetPackageVersion);
 						}
 					}
 					if (Directory.Exists (resDir)) {
 						var taskItem = new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
-							{ OriginalFile, assemblyPath },
-							{ ResourceDirectoryArchive, Path.GetFullPath (resDirArchive)},
+							[OriginalFile] = assemblyPath,
+							[ResourceDirectoryArchive] = Path.GetFullPath (resDirArchive),
+							[NuGetPackageId] = nuGetPackageId,
+							[NuGetPackageVersion] = nuGetPackageVersion,
 						});
 						if (bool.TryParse (assemblyItem.GetMetadata (AndroidSkipResourceProcessing), out skip) && skip)
 							taskItem.SetMetadata (AndroidSkipResourceProcessing, "True");
@@ -216,17 +238,21 @@ namespace Xamarin.Android.Tasks
 					}
 					if (Directory.Exists (assetsDir))
 						resolvedAssetDirectories.Add (new TaskItem (Path.GetFullPath (assetsDir), new Dictionary<string, string> {
-							{ OriginalFile, assemblyPath }
+							[OriginalFile] = assemblyPath,
+							[NuGetPackageId] = nuGetPackageId,
+							[NuGetPackageVersion] = nuGetPackageVersion,
 						}));
 					foreach (var env in Directory.EnumerateFiles (outDirForDll, "__AndroidEnvironment__*", SearchOption.TopDirectoryOnly)) {
 						resolvedEnvironments.Add (new TaskItem (env, new Dictionary<string, string> {
-							{ OriginalFile, assemblyPath }
+							[OriginalFile] = assemblyPath,
+							[NuGetPackageId] = nuGetPackageId,
+							[NuGetPackageVersion] = nuGetPackageVersion,
 						}));
 					}
 					continue;
 				}
 
-				Log.LogDebugMessage ($"Refreshing {assemblyFileName}");
+				Log.LogDebugMessage ($"Refreshing {fileName}");
 
 				using (var pe = new PEReader (File.OpenRead (assemblyPath))) {
 					var reader = pe.GetMetadataReader ();
@@ -241,13 +267,15 @@ namespace Xamarin.Android.Tasks
 								updated |= Files.CopyIfStreamChanged (stream, outFile);
 							}
 							resolvedEnvironments.Add (new TaskItem (Path.GetFullPath (outFile), new Dictionary<string, string> {
-								{ OriginalFile, assemblyPath }
+								[OriginalFile] = assemblyPath,
+								[NuGetPackageId] = nuGetPackageId,
+								[NuGetPackageVersion] = nuGetPackageVersion,
 							}));
 						}
 						// embedded jars (EmbeddedJar, EmbeddedReferenceJar)
 						else if (name.EndsWith (".jar", StringComparison.InvariantCultureIgnoreCase)) {
 							using (var stream = pe.GetEmbeddedResourceStream (resource)) {
-								AddJar (jars, importsDir, name, assemblyPath);
+								AddJar (jars, importsDir, name, assemblyPath, nuGetPackageId: nuGetPackageId, nuGetPackageVersion: nuGetPackageVersion);
 								updated |= Files.CopyIfStreamChanged (stream, Path.Combine (importsDir, name));
 							}
 						}
@@ -286,7 +314,7 @@ namespace Xamarin.Android.Tasks
 											.Replace ("library_project_imports\\", "")
 											.Replace ("library_project_imports/", "");
 										if (path.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)) {
-											AddJar (jars, importsDir, path, assemblyPath);
+											AddJar (jars, importsDir, path, assemblyPath, nuGetPackageId, nuGetPackageVersion);
 										}
 										return path;
 									}, deleteCallback: (fileToDelete) => {
@@ -307,9 +335,10 @@ namespace Xamarin.Android.Tasks
 							if (Directory.Exists (resDir)) {
 								CreateResourceArchive (resDir, resDirArchive);
 								var taskItem = new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
-									{ OriginalFile, assemblyPath },
-									{ ResourceDirectoryArchive, Path.GetFullPath (resDirArchive)},
-
+									[OriginalFile] = assemblyPath,
+									[ResourceDirectoryArchive] = Path.GetFullPath (resDirArchive),
+									[NuGetPackageId] = nuGetPackageId,
+									[NuGetPackageVersion] = nuGetPackageVersion,
 								});
 								if (bool.TryParse (assemblyItem.GetMetadata (AndroidSkipResourceProcessing), out skip) && skip)
 									taskItem.SetMetadata (AndroidSkipResourceProcessing, "True");
@@ -317,7 +346,9 @@ namespace Xamarin.Android.Tasks
 							}
 							if (Directory.Exists (assetsDir)) {
 								resolvedAssetDirectories.Add (new TaskItem (Path.GetFullPath (assetsDir), new Dictionary<string, string> {
-									{ OriginalFile, assemblyPath }
+									[OriginalFile] = assemblyPath,
+									[NuGetPackageId] = nuGetPackageId,
+									[NuGetPackageVersion] = nuGetPackageVersion,
 								}));
 							}
 						}
@@ -357,6 +388,13 @@ namespace Xamarin.Android.Tasks
 				string rTxt = Path.Combine (importsDir, "R.txt");
 				string assetsDir = Path.Combine (importsDir, "assets");
 				string proguardFile = Path.Combine (importsDir, "proguard.txt");
+				string nuGetPackageId = aarFile.GetMetadata (NuGetPackageId) ?? string.Empty;
+				string nuGetPackageVersion = aarFile.GetMetadata (NuGetPackageVersion) ?? string.Empty;
+				extractedDirectories.Add (new TaskItem (outDirForDll, new Dictionary<string, string> {
+					[OriginalFile] = aarFile.ItemSpec,
+					[NuGetPackageId] = nuGetPackageId,
+					[NuGetPackageVersion] = nuGetPackageVersion,
+				}));
 
 				bool updated = false;
 				string aarHash = Files.HashFile (aarFile.ItemSpec);
@@ -367,7 +405,7 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ("Skipped {0}: extracted files are up to date", aarFile.ItemSpec);
 					if (Directory.Exists (importsDir)) {
 						foreach (var file in Directory.EnumerateFiles (importsDir, "*.jar", SearchOption.AllDirectories)) {
-							AddJar (jars, Path.GetFullPath (file));
+							AddJar (jars, Path.GetFullPath (file), nuGetPackageId: nuGetPackageId, nuGetPackageVersion: nuGetPackageVersion);
 						}
 					}
 					if (Directory.Exists (resDir) || File.Exists (rTxt)) {
@@ -376,14 +414,18 @@ namespace Xamarin.Android.Tasks
 							skipProcessing = "True";
 						}
 						resolvedResourceDirectories.Add (new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
-							{ OriginalFile, Path.GetFullPath (aarFile.ItemSpec) },
-							{ AndroidSkipResourceProcessing, skipProcessing },
-							{ ResourceDirectoryArchive, Path.GetFullPath (resDirArchive)},
+							[OriginalFile] = Path.GetFullPath (aarFile.ItemSpec),
+							[AndroidSkipResourceProcessing] = skipProcessing,
+							[ResourceDirectoryArchive] = Path.GetFullPath (resDirArchive),
+							[NuGetPackageId] = nuGetPackageId,
+							[NuGetPackageVersion] = nuGetPackageVersion,
 						}));
 					}
 					if (Directory.Exists (assetsDir))
 						resolvedAssetDirectories.Add (new TaskItem  (Path.GetFullPath (assetsDir), new Dictionary<string, string> {
-							{ OriginalFile, aarFullPath },
+							[OriginalFile] = aarFullPath,
+							[NuGetPackageId] = nuGetPackageId,
+							[NuGetPackageVersion] = nuGetPackageVersion,
 						}));
 					continue;
 				}
@@ -401,16 +443,18 @@ namespace Xamarin.Android.Tasks
 							if (entryFileName.StartsWith ("internal_impl", StringComparison.InvariantCulture)) {
 								var hash = Files.HashString (entryFileName);
 								var jar = Path.Combine (entryPath, $"internal_impl-{hash}.jar");
-								AddJar (jars, importsDir, jar, aarFullPath);
+								AddJar (jars, importsDir, jar, aarFullPath, nuGetPackageId: nuGetPackageId, nuGetPackageVersion: nuGetPackageVersion);
 								return jar;
 							}
 							if (entryFullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)) {
-								AddJar (jars, importsDir, entryFullName, aarFullPath);
+								AddJar (jars, importsDir, entryFullName, aarFullPath, nuGetPackageId: nuGetPackageId, nuGetPackageVersion: nuGetPackageVersion);
 							} else if (entryFullName.StartsWith (".net/env/", StringComparison.OrdinalIgnoreCase) ||
 									entryFullName.StartsWith (".net\\env\\", StringComparison.OrdinalIgnoreCase)) {
 								var fullPath = Path.GetFullPath (Path.Combine (importsDir, entryFullName));
 								resolvedEnvironments.Add (new TaskItem (fullPath, new Dictionary<string, string> {
-									{ OriginalFile, aarFile.ItemSpec }
+									[OriginalFile] = aarFile.ItemSpec,
+									[NuGetPackageId] = nuGetPackageId,
+									[NuGetPackageVersion] = nuGetPackageVersion,
 								}));
 							}
 							return entryFullName;
@@ -435,18 +479,24 @@ namespace Xamarin.Android.Tasks
 						skipProcessing = "True";
 					}
 					resolvedResourceDirectories.Add (new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
-						{ OriginalFile, aarFullPath },
-						{ AndroidSkipResourceProcessing, skipProcessing },
-						{ ResourceDirectoryArchive, Path.GetFullPath (resDirArchive)},
+						[OriginalFile] = aarFullPath,
+						[AndroidSkipResourceProcessing] = skipProcessing,
+						[ResourceDirectoryArchive] = Path.GetFullPath (resDirArchive),
+						[NuGetPackageId] = nuGetPackageId,
+						[NuGetPackageVersion] = nuGetPackageVersion,
 					}));
 				}
 				if (Directory.Exists (assetsDir))
 					resolvedAssetDirectories.Add (new TaskItem (Path.GetFullPath (assetsDir), new Dictionary<string, string> {
-						{ OriginalFile, aarFullPath },
+						[OriginalFile] = aarFullPath,
+						[NuGetPackageId] = nuGetPackageId,
+						[NuGetPackageVersion] = nuGetPackageVersion,
 					}));
 				if (AndroidApplication && File.Exists (proguardFile)) {
 					proguardConfigFiles.Add (new TaskItem (Path.GetFullPath (proguardFile), new Dictionary<string, string> {
-						{ OriginalFile, aarFullPath },
+						[OriginalFile] = aarFullPath,
+						[NuGetPackageId] = nuGetPackageId,
+						[NuGetPackageVersion] = nuGetPackageVersion,
 					}));
 				}
 			}
@@ -462,17 +512,19 @@ namespace Xamarin.Android.Tasks
 			});
 		}
 
-		static void AddJar (IDictionary<string, ITaskItem> jars, string destination, string path, string originalFile = null)
+		static void AddJar (IDictionary<string, ITaskItem> jars, string destination, string path, string originalFile = null, string nuGetPackageId = null, string nuGetPackageVersion = null)
 		{
 			var fullPath = Path.GetFullPath (Path.Combine (destination, path));
-			AddJar (jars, fullPath, originalFile);
+			AddJar (jars, fullPath, originalFile: originalFile, nuGetPackageId: nuGetPackageId, nuGetPackageVersion: nuGetPackageVersion);
 		}
 
-		static void AddJar (IDictionary<string, ITaskItem> jars, string fullPath, string originalFile = null)
+		static void AddJar (IDictionary<string, ITaskItem> jars, string fullPath, string originalFile = null, string nuGetPackageId = null, string nuGetPackageVersion = null)
 		{
 			if (!jars.ContainsKey (fullPath)) {
 				jars.Add (fullPath, new TaskItem (fullPath, new Dictionary<string, string> {
-					{  OriginalFile, originalFile },
+					[OriginalFile] = originalFile,
+					[NuGetPackageId] = nuGetPackageId,
+					[NuGetPackageVersion] = nuGetPackageVersion,
 				}));
 			}
 		}

@@ -86,3 +86,7 @@ stages:
         artifactName: ${{ parameters.buildResultArtifactName }}
         includeBuildResults: true
         use1ESTemplate: ${{ parameters.use1ESTemplate }}
+
+    - template: /build-tools/automation/yaml-templates/fail-on-dirty-tree.yaml
+      parameters:
+        xaSourcePath: ${{ parameters.xaSourcePath }}

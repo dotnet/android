@@ -578,7 +578,7 @@ namespace Bug12935
 	</activity>
 </application>");
 			proj.AndroidManifest = s;
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
 				var messages = builder.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal));
@@ -621,7 +621,7 @@ namespace Bug12935
 			Assert.AreNotEqual (proj.AndroidManifest, s, "#0");
 			proj.SetProperty ("AndroidManifestPlaceholders", "FOOBARNAME=AAAAAAAA");
 			proj.AndroidManifest = s;
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name), false, false)) {
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 				var manifest = builder.Output.GetIntermediaryAsText (Root, "android/AndroidManifest.xml");
 				Assert.IsTrue (manifest.Contains ("AAAAAAAA"), "#1");
@@ -745,7 +745,7 @@ namespace Bug12935
 				}
 				data = ms.ToArray ();
 			}
-			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
+			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidBindingProject () {
 				ProjectName = "Binding1",
 				AndroidClassParser = "class-parse",
@@ -1068,6 +1068,7 @@ class TestActivity : Activity { }"
 
 			var minSdkVersionInt = MonoAndroidHelper.ConvertSupportedOSPlatformVersionToApiLevel (minSdkVersion);
 			if (minSdkVersionInt < 22) {
+				Assert.Ignore ("https://github.com/dotnet/roslyn-analyzers/issues/7525");
 				StringAssertEx.Contains ("warning CA1416", builder.LastBuildOutput, "Should get warning about Android 22 API");
 			} else {
 				builder.AssertHasNoWarnings ();

@@ -10,9 +10,6 @@ using Mono.Linker;
 using Mono.Linker.Steps;
 
 using Mono.Cecil.Cil;
-#if ILLINK
-using Microsoft.Android.Sdk.ILLink;
-#endif  // ILLINK
 
 namespace MonoDroid.Tuner
 {

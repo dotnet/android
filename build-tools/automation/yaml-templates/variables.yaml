@@ -14,7 +14,7 @@ variables:
 - name: WindowsToolchainPdbArtifactName
   value: windows-toolchain-pdb
 - name: ApkDiffToolVersion
-  value: 0.0.15
+  value: 0.0.17
 - name: TestSlicerToolVersion
   value: 0.1.0-alpha7
 - name: BootsToolVersion
@@ -30,6 +30,8 @@ variables:
 - name: GitHub.Token
   value: $(github--pat--vs-mobiletools-engineering-service2)
 - name: HostedMacImage
+  value: macOS-14-arm64
+- name: HostedMacImageWithEmulator
   value: macOS-14
 - name: SharedMacPool
   value: VSEng-VSMac-Xamarin-Shared
@@ -48,7 +50,7 @@ variables:
 - name: TeamName
   value: XamarinAndroid
 - name: DotNetTargetFramework
-  value: net9.0
+  value: net10.0
 - name: DotNetStableTargetFramework
   value: net9.0
 # Workaround: https://devdiv.visualstudio.com/DevDiv/_workitems/edit/1585820
@@ -58,6 +60,10 @@ variables:
   value: $[or(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), startsWith(variables['System.PullRequest.TargetBranch'], 'release/'))]
 - name: DefaultTestSdkPlatforms  # Comma-separated SDK Platform(s) to install on test agents (no spaces)
   value: 35,Baklava
+- name: DefaultJavaSdkMajorVersion
+  value: 17
+- name: LatestJavaSdkMajorVersion
+  value: 21
 - name: ExcludedNightlyNUnitCategories
   value: 'cat != SystemApplication & cat != TimeZoneInfo & cat != Localization'
 - name: RunMAUITestJob

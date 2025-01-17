@@ -60,6 +60,7 @@
 
     <ItemGroup>
       <_WorkloadDeps Include="--project &quot;$(_Project)&quot;" />
+      <_WorkloadDeps Include="-p:DotNetStableTargetFramework=$(DotNetStableTargetFramework)" />
       <_WorkloadDeps Include="-p:MonoOptionsVersion=$(MonoOptionsVersion)" />
       <_WorkloadDeps Include="-p:NewtonsoftJsonPackageVersion=$(NewtonsoftJsonPackageVersion)" />
       <_WorkloadDeps Include="--" />
@@ -68,6 +69,7 @@
       <_WorkloadDeps Include="--build-tools-version=$(AndroidSdkBuildToolsVersion)" />
       <_WorkloadDeps Include="--cmdline-tools-version=$(AndroidCommandLineToolsVersion)" />
       <_WorkloadDeps Include="--jdk-version=$(JavaSdkVersion)" />
+      <_WorkloadDeps Include="--jdk-max-version=$(LatestSupportedJavaVersion)" />
       <_WorkloadDeps Include="--ndk-version=$(AndroidNdkVersion)" />
       <_WorkloadDeps Include="--platform-tools-version=$(AndroidSdkPlatformToolsVersion)" />
       <_WorkloadDeps Include="--platform-version=$(AndroidSdkPlatformVersion)" />

@@ -18,19 +18,7 @@ public class MonoRuntimeProvider
 	@Override
 	public void attachInfo (android.content.Context context, android.content.pm.ProviderInfo info)
 	{
-		// Mono Runtime Initialization {{{
-		android.content.pm.ApplicationInfo applicationInfo = context.getApplicationInfo ();
-		String[] apks = null;
-		String[] splitApks = applicationInfo.splitSourceDirs;
-		if (splitApks != null && splitApks.length > 0) {
-			apks = new String[splitApks.length + 1];
-			apks [0] = applicationInfo.sourceDir;
-			System.arraycopy (splitApks, 0, apks, 1, splitApks.length);
-		} else {
-			apks = new String[] { applicationInfo.sourceDir };
-		}
-		mono.MonoPackageManager.LoadApplication (context, applicationInfo, apks);
-		// }}}
+		mono.MonoPackageManager.LoadApplication (context);
 		super.attachInfo (context, info);
 	}
 

@@ -121,6 +121,7 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         Jars="@(_BindingJavaLibrariesToCompile);@(_ReferenceJavaLibs)"
         JavacTargetVersion="$(JavacTargetVersion)"
         JavacSourceVersion="$(JavacSourceVersion)"
+        JdkVersion="$(_JdkVersion)"
         IntermediateOutputPath="$(IntermediateOutputPath)"
         AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
     />
@@ -168,6 +169,7 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         Jars="@(_JavaLibrariesToCompile);@(_ReferenceJavaLibs)"
         JavacTargetVersion="$(JavacTargetVersion)"
         JavacSourceVersion="$(JavacSourceVersion)"
+        JdkVersion="$(_JdkVersion)"
         IntermediateOutputPath="$(IntermediateOutputPath)"
         AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
     />

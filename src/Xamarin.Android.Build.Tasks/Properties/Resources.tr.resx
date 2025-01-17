@@ -1063,11 +1063,12 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
 {1} - NuGet package version</comment>
   </data>
   <data name="XA0141" xml:space="preserve">
-    <value>'{0}' NuGet paketi '{1}' sürümü düzgün uyumlanmamış '{2}' paylaşılan kitaplığını içeriyor. Daha fazla ayrıntı için https://developer.android.com/guide/practices/page-sizes sayfasına bakın</value>
+    <value>Android 16 için 16 KB sayfa boyutu gerekir, paylaşılan kitaplık '{3}' boyutu 16 KB'tır. Lütfen nuGet paketinin yazarlarını, '{0}' içeren '{1}' sürümünü '{2}'. Daha https://developer.android.com/guide/practices/page-sizes için ayrıntılara bakın.</value>
     <comment>The following is a literal name and should not be translated: NuGet
 {0} - NuGet package id
 {1} - NuGet package version
-{2} - shared library file name
+{2} - Source location path
+{3} - shared library file name
     </comment>
   </data>
   <data name="XA4249" xml:space="preserve">

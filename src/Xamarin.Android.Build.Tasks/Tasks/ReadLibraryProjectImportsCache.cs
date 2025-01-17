@@ -58,6 +58,9 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem [] ProguardConfigFiles { get; set; }
 
+		[Output]
+		public ITaskItem [] ExtractedDirectories { get; set; }
+
 		public override bool RunTask ()
 		{
 			Log.LogDebugMessage ("Task ReadLibraryProjectImportsCache");
@@ -74,6 +77,7 @@ namespace Xamarin.Android.Tasks
 			ResolvedResourceDirectoryStamps = doc.GetPathsAsTaskItems ("ResolvedResourceDirectoryStamps"
 				, "ResolvedResourceDirectoryStamp");
 			ProguardConfigFiles = doc.GetPathsAsTaskItems ("ProguardConfigFiles", "ProguardConfigFile");
+			ExtractedDirectories = doc.GetPathsAsTaskItems ("ExtractedDirectories", "ExtractedDirectory");
 
 			Log.LogDebugTaskItems ("  Jars: ", Jars);
 			Log.LogDebugTaskItems ("  ResolvedAssetDirectories: ", ResolvedAssetDirectories);
@@ -81,6 +85,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugTaskItems ("  ResolvedEnvironmentFiles: ", ResolvedEnvironmentFiles);
 			Log.LogDebugTaskItems ("  ResolvedResourceDirectoryStamps: ", ResolvedResourceDirectoryStamps);
 			Log.LogDebugTaskItems ("  ProguardConfigFiles: ", ProguardConfigFiles);
+			Log.LogDebugTaskItems ("  ExtractedDirectories: ", ExtractedDirectories);
 
 			return !Log.HasLoggedErrors;
 		}

@@ -39,9 +39,10 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/clean.yaml
 
-    - script: |
-        echo ##vso[task.setvariable variable=JI_JAVA_HOME]%JAVA_HOME_17_X64%
-      displayName: set JI_JAVA_HOME to $(JAVA_HOME_17_X64)
+    - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml
+      parameters:
+        useAgentJdkPath: false
+        jdkMajorVersion: $(LatestJavaSdkMajorVersion)
 
     - template: /build-tools/automation/yaml-templates/use-dot-net.yaml
       parameters:
@@ -116,5 +117,7 @@ stages:
       parameters:
         artifactName: ${{ parameters.buildResultArtifactName }}
         includeBuildResults: true
+
+    - template: /build-tools/automation/yaml-templates/fail-on-dirty-tree.yaml
 
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml

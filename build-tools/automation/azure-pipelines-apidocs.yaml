@@ -8,6 +8,13 @@
 trigger: none
 pr: none
 
+resources:
+  repositories:
+  - repository: 1esPipelines
+    type: git
+    name: 1ESPipelineTemplates/1ESPipelineTemplates
+    ref: refs/tags/release
+
 parameters:
 - name: apiLevel
   displayName: AndroidApiLevel property value
@@ -50,118 +57,129 @@ variables:
   value: ''
 
 
-stages:
-- stage: mac_build
-  displayName: Build
-  dependsOn: []
-  jobs:
-  - job: mac_build_update_docs
-    displayName: Update API Docs
-    pool:
-      name: $(SharedMacPool)
-      demands:
-      - macOS.Name -equals $(SharedMacName)
-      - Agent.OSArchitecture -equals $(SharedMacArch)
-    timeoutInMinutes: 120
-    workspace:
-      clean: all
-    steps:
-    - checkout: self
-      submodules: recursive
+extends:
+  ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    template: v1/1ES.Official.PipelineTemplate.yml@1esPipelines
+  ${{ else }}:
+    template: v1/1ES.Unofficial.PipelineTemplate.yml@1esPipelines
+  parameters:
+    sdl:
+      sourceAnalysisPool:
+        name: AzurePipelines-EO
+        image: $(WindowsPoolImage1ESPT)
+        os: windows
+      suppression:
+        suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
+    stages:
+    - stage: mac_build
+      displayName: Build
+      dependsOn: []
+      jobs:
+      - job: mac_build_update_docs
+        displayName: Update API Docs
+        pool:
+          name: $(SharedMacPool)
+          demands:
+          - macOS.Name -equals $(SharedMacName)
+          - Agent.OSArchitecture -equals $(SharedMacArch)
+          os: macOS
+        timeoutInMinutes: 120
+        workspace:
+          clean: all
+        templateContext:
+          outputs:
+          - output: pipelineArtifact
+            displayName: upload docs binaries
+            artifactName: Binaries
+            targetPath: $(Build.SourcesDirectory)/src/Mono.Android/obj/docs-gen-temp
+          - output: pipelineArtifact
+            displayName: upload docs diff
+            artifactName: Api Docs Diff
+            targetPath: $(Build.StagingDirectory)/api-doc-diff
+        steps:
+        - checkout: self
+          submodules: recursive
 
-    - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-17"
-      displayName: set JI_JAVA_HOME
+        - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml@self
+          parameters:
+            useAgentJdkPath: false
 
-    # Set MSBuild property overrides if parameters are set
-    - ${{ if ne(parameters.apiLevel, 'default') }}:
-      - script: echo "##vso[task.setvariable variable=DocsApiLevelArg]-p:DocsApiLevel=${{ parameters.apiLevel }}"
-        displayName: set DocsApiLevelArg
+        # Set MSBuild property overrides if parameters are set
+        - ${{ if ne(parameters.apiLevel, 'default') }}:
+          - script: echo "##vso[task.setvariable variable=DocsApiLevelArg]-p:DocsApiLevel=${{ parameters.apiLevel }}"
+            displayName: set DocsApiLevelArg
 
-    - ${{ if ne(parameters.platformId, 'default') }}:
-      - script: echo "##vso[task.setvariable variable=DocsPlatformIdArg]-p:DocsPlatformId=${{ parameters.platformId }}"
-        displayName: set DocsPlatformIdArg
+        - ${{ if ne(parameters.platformId, 'default') }}:
+          - script: echo "##vso[task.setvariable variable=DocsPlatformIdArg]-p:DocsPlatformId=${{ parameters.platformId }}"
+            displayName: set DocsPlatformIdArg
 
-    - ${{ if ne(parameters.frameworkVersion, 'default') }}:
-      - script: echo "##vso[task.setvariable variable=DocsFxVersionArg]-p:DocsFxVersion=${{ parameters.frameworkVersion }}"
-        displayName: set DocsFxVersionArg
+        - ${{ if ne(parameters.frameworkVersion, 'default') }}:
+          - script: echo "##vso[task.setvariable variable=DocsFxVersionArg]-p:DocsFxVersion=${{ parameters.frameworkVersion }}"
+            displayName: set DocsFxVersionArg
 
-    - ${{ if ne(parameters.mdocVersion, 'default') }}:
-      - script: echo "##vso[task.setvariable variable=MdocPackageVersionArg]-p:MdocPackageVersion=${{ parameters.mdocVersion }}"
-        displayName: set MdocPackageVersionArg
+        - ${{ if ne(parameters.mdocVersion, 'default') }}:
+          - script: echo "##vso[task.setvariable variable=MdocPackageVersionArg]-p:MdocPackageVersion=${{ parameters.mdocVersion }}"
+            displayName: set MdocPackageVersionArg
 
-    - ${{ if ne(parameters.javadocVerbosity, 'default') }}:
-      - script: echo "##vso[task.setvariable variable=AndroidJavadocVerbosity]-p:AndroidJavadocVerbosity=${{ parameters.javadocVerbosity }}"
-        displayName: set AndroidJavadocVerbosity
+        - ${{ if ne(parameters.javadocVerbosity, 'default') }}:
+          - script: echo "##vso[task.setvariable variable=AndroidJavadocVerbosity]-p:AndroidJavadocVerbosity=${{ parameters.javadocVerbosity }}"
+            displayName: set AndroidJavadocVerbosity
 
-    - template: yaml-templates/use-dot-net.yaml
+        - template: /build-tools/automation/yaml-templates/use-dot-net.yaml@self
 
-    - task: NuGetAuthenticate@1
-      displayName: authenticate with azure artifacts
-      inputs:
-        forceReinstallCredentialProvider: true
+        - task: NuGetAuthenticate@1
+          displayName: authenticate with azure artifacts
+          inputs:
+            forceReinstallCredentialProvider: true
 
-    - template: yaml-templates/run-xaprepare.yaml
-      parameters:
-        displayName: update mono
-        arguments: --s=UpdateMono
+        - script: dotnet tool update -v:n boots --version 1.1.0.36 --add-source "https://api.nuget.org/v3/index.json" --global
+          displayName: Install boots
 
-    - script: make prepare CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
-      workingDirectory: $(Build.SourcesDirectory)
-      displayName: make prepare
+        - script: boots https://download.mono-project.com/archive/6.12.0/macos-10-universal/MonoFramework-MDK-6.12.0.188.macos10.xamarin.universal.pkg
+          displayName: Install Mono
 
-    - script: >-
-        make update-api-docs CONFIGURATION=$(XA.Build.Configuration)
-        MSBUILD_ARGS='$(DocsApiLevelArg) $(DocsPlatformIdArg) $(DocsFxVersionArg) $(MdocPackageVersionArg) $(AndroidJavadocVerbosity)'
-      workingDirectory: $(Build.SourcesDirectory)
-      displayName: make update-api-docs
+        - script: make prepare CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
+          workingDirectory: $(Build.SourcesDirectory)
+          displayName: make prepare
 
-    - script: >
-        mkdir -p $(Build.StagingDirectory)/docs-binaries &&
-        ln $(Build.SourcesDirectory)/bin/$(XA.Build.Configuration)/lib/xamarin.android/xbuild-frameworks/Microsoft.Android/34/*.dll $(Build.StagingDirectory)/docs-binaries/ &&
-        ln $(Build.SourcesDirectory)/bin/$(XA.Build.Configuration)/lib/xamarin.android/xbuild-frameworks/Microsoft.Android/34/*.xml $(Build.StagingDirectory)/docs-binaries/
-      displayName: copy docs files
+        - script: >-
+            make update-api-docs CONFIGURATION=$(XA.Build.Configuration)
+            MSBUILD_ARGS='$(DocsApiLevelArg) $(DocsPlatformIdArg) $(DocsFxVersionArg) $(MdocPackageVersionArg) $(AndroidJavadocVerbosity)'
+          workingDirectory: $(Build.SourcesDirectory)
+          displayName: make update-api-docs
 
-    - task: PublishPipelineArtifact@1
-      displayName: upload docs files
-      inputs:
-        artifactName: Binaries
-        targetPath: $(Build.StagingDirectory)/docs-binaries
+        - script: >
+            mkdir -p $(Build.StagingDirectory)/api-doc-diff &&
+            ln $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/UpdateApiDocs*.diff $(Build.StagingDirectory)/api-doc-diff/ &&
+            ln $(Build.SourcesDirectory)/external/android-api-docs/docs/xml/index.xml $(Build.StagingDirectory)/api-doc-diff/
+          displayName: copy api docs diff
 
-    - script: >
-        mkdir -p $(Build.StagingDirectory)/api-doc-diff &&
-        ln $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/UpdateApiDocs*.diff $(Build.StagingDirectory)/api-doc-diff/
-      displayName: copy api docs diff
+        - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
+          parameters:
+            artifactName: Build Results - API Docs Update
+            includeBuildResults: true
+            condition: always()
 
-    - task: PublishPipelineArtifact@1
-      displayName: upload api docs diff
-      inputs:
-        artifactName: Api Docs Diff
-        targetPath: $(Build.StagingDirectory)/api-doc-diff
+        - powershell: |
+            $docsUpdateBinlog = Get-ChildItem -Path "$(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)" -Filter *UpdateApiDocs-*.binlog | Select-Object -First 1
+            $buildLog = "$(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/temp-UpdateApiDocs-build.log"
+            & "$(Build.SourcesDirectory)/bin/$(XA.Build.Configuration)/dotnet/dotnet" build $docsUpdateBinlog > $buildLog
 
-    - template: yaml-templates/upload-results.yaml
-      parameters:
-        artifactName: Build Results - API Docs Update
-        includeBuildResults: true
-        condition: always()
-
-    - powershell: |
-        $docsUpdateBinlog = Get-ChildItem -Path "$(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)" -Filter *UpdateApiDocs-*.binlog | Select-Object -First 1
-        $buildLog = "$(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/temp-build.log"
-        & "$(Build.SourcesDirectory)/bin/$(XA.Build.Configuration)/dotnet/dotnet" build $docsUpdateBinlog > $buildLog
-
-        $issueContent = & {
-            Get-Content -Path $buildLog | Select-String "## Exception translating remarks"
-            Get-Content -Path $buildLog | Select-String "## Unable to translate remarks"
-            Get-Content -Path $buildLog | Select-String "JavadocImport-"
-        }
-
-        if ($issueContent) {
-            Write-Host "The following issues were found, review the build log for more details:"
-            Write-Host ""
-            foreach ($line in $issueContent) {
-                Write-Host $line
-                Write-Host ""
+            $issueContent = & {
+                Get-Content -Path $buildLog | Select-String "## Exception translating remarks" -Context 0, 3
+                Get-Content -Path $buildLog | Select-String "## Unable to translate remarks" -Context 0, 3
+                Get-Content -Path $buildLog | Select-String "JavadocImport-" -Context 0, 3
             }
-            exit 1
-        }
-      displayName: Report issues in docs generation
+
+            if ($issueContent) {
+                Write-Host "The following issues were found, review the build log for more details:"
+                Write-Host ""
+                foreach ($line in $issueContent) {
+                    Write-Host $line
+                    Write-Host ""
+                }
+                exit 1
+            }
+            Write-Host "No issues found."
+          displayName: Report issues in docs generation
+          continueOnError: true

@@ -1063,11 +1063,12 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 {1} - NuGet package version</comment>
   </data>
   <data name="XA0141" xml:space="preserve">
-    <value>Balíček NuGet {0} verze {1} obsahuje sdílenou knihovnu {2}, která není správně zarovnaná. Další podrobnosti najdete na https://developer.android.com/guide/practices/page-sizes.</value>
+    <value>Android 16 bude vyžadovat velikost stránky o velikosti 16 kB, sdílená knihovna '{3}' nemá velikost stránky o velikosti 16 kB. Informujte prosím autory balíčku NuGet '{0}' verzi '{1}', která obsahuje '{2}'. Další podrobnosti najdete https://developer.android.com/guide/practices/page-sizes.</value>
     <comment>The following is a literal name and should not be translated: NuGet
 {0} - NuGet package id
 {1} - NuGet package version
-{2} - shared library file name
+{2} - Source location path
+{3} - shared library file name
     </comment>
   </data>
   <data name="XA4249" xml:space="preserve">

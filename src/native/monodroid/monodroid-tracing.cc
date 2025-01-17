@@ -27,7 +27,7 @@ MonodroidRuntime::log_traces (JNIEnv *env, TraceKind kind, const char *first_lin
 		char *err = nullptr;
 		void *handle = MonodroidDl::monodroid_dlopen (SharedConstants::xamarin_native_tracing_name.data (), MONO_DL_EAGER, &err, nullptr);
 		if (handle == nullptr) {
-			log_warn (LOG_DEFAULT, "Failed to load native tracing library '%s'. %s", SharedConstants::xamarin_native_tracing_name, err == nullptr ? "Unknown error" : err);
+			log_warn (LOG_DEFAULT, "Failed to load native tracing library '{}'. {}", SharedConstants::xamarin_native_tracing_name, err == nullptr ? "Unknown error"sv : err);
 		} else {
 			load_symbol (handle, "xa_get_native_backtrace", _xa_get_native_backtrace);
 			load_symbol (handle, "xa_get_managed_backtrace", _xa_get_managed_backtrace);

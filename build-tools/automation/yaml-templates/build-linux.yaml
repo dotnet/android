@@ -52,6 +52,11 @@ stages:
     #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
     - checkout: maui
 
+    - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml
+      parameters:
+        useAgentJdkPath: false
+        jdkMajorVersion: $(LatestJavaSdkMajorVersion)
+
     - template: /build-tools/automation/yaml-templates/use-dot-net.yaml
       parameters:
         remove_dotnet: true
@@ -103,5 +108,9 @@ stages:
         artifactName: ${{ parameters.buildResultArtifactName }}
         includeBuildResults: true
         use1ESTemplate: ${{ parameters.use1ESTemplate }}
+
+    - template: /build-tools/automation/yaml-templates/fail-on-dirty-tree.yaml
+      parameters:
+        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
 
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml

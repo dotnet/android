@@ -1298,7 +1298,7 @@ namespace Lib2
 
 				// Build app before library is built
 				Assert.IsFalse (appBuilder.Build (app), "app build should have failed.");
-				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, $"The referenced project '{reference.Replace ('\\', Path.DirectorySeparatorChar)}' does not exist."));
+				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, "warning MSB9008"), "Should receive MSB9008");
 				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, " 1 Warning(s)"), "Should receive 1 Warning");
 				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, "error CS0246"), "Should receive CS0246");
 				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, " 1 Error(s)"), "Should receive 1 Error");
