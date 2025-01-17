@@ -90,14 +90,15 @@ namespace Xamarin.Android.Tasks
 							entryStream.CopyTo (ms);
 						}
 						ms.Position = 0;
-						using var reader = new StreamReader (ms);
-						string line;
-						// Read each line until the end of the file
-						while ((line = reader.ReadLine()) != null) {
-							if (string.IsNullOrEmpty (line))
-								continue;
-							string [] tok = line.Split (';');
-							AddRename (tok [1].Replace ('/', Path.DirectorySeparatorChar), tok [0].Replace ('/', Path.DirectorySeparatorChar));
+						using (var reader = new StreamReader (ms)) {
+							string line;
+							// Read each line until the end of the file
+							while ((line = reader.ReadLine()) != null) {
+								if (string.IsNullOrEmpty (line))
+									continue;
+								string [] tok = line.Split (';');
+								AddRename (tok [1].Replace ('/', Path.DirectorySeparatorChar), tok [0].Replace ('/', Path.DirectorySeparatorChar));
+							}
 						}
 					} finally {
 						MemoryStreamPool.Shared.Return (ms);
