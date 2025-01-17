@@ -406,6 +406,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
 			proj.MainActivity = proj.DefaultMainActivity;
 			using (var builder = CreateBuilderWithoutLogFile ()) {
+				builder.ThrowOnBuildFailure = false;
 				builder.BuildLogFile = "designtimebuild.log";
 				builder.Verbosity = LoggerVerbosity.Quiet;
 				builder.Clean (proj);

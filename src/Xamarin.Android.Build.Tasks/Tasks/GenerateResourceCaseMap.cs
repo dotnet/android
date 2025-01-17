@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
@@ -90,7 +91,7 @@ namespace Xamarin.Android.Tasks
 							entryStream.CopyTo (ms);
 						}
 						ms.Position = 0;
-						using (var reader = new StreamReader (ms)) {
+						using (var reader = new StreamReader (ms, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: -1, leaveOpen: true)) {
 							string line;
 							// Read each line until the end of the file
 							while ((line = reader.ReadLine()) != null) {

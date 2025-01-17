@@ -83,6 +83,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
   <ItemGroup>
     <!-- Only use the aar files if we have not extracted the data -->
     <_DesignTimeAarFiles Include="@(AndroidAarLibrary)" Condition=" '@(LibraryResourceDirectories->Count())' == '0' " />
+    <_DesignTimeAarFiles Include="@(LibraryProjectZip)" Condition="'%(LibraryProjectZip.Extension)' == '.aar' and '@(LibraryResourceDirectories->Count())' == '0'" />
   </ItemGroup>
 </Target>
 

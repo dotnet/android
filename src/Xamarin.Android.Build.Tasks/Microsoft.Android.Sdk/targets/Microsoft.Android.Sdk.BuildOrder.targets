@@ -165,6 +165,7 @@ properties that determine build ordering.
     </CleanDependsOn>
     <ExportJarToXmlDependsOnTargets>
       _ResolveMonoAndroidSdks;
+      ResolveAssemblyReferences;
       _ExtractLibraryProjectImports;
       _GetLibraryImports;
       _ExtractAar;
