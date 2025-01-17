@@ -45,7 +45,7 @@ static class JavaInteropRuntime
 			runtime = options.CreateJreVM ();
 
 			// Entry point into Mono.Android.dll
-			JNIEnvInit.InitializeNativeAot (runtime);
+			JNIEnvInit.Initialize (runtime);
 		}
 		catch (Exception e) {
 			AndroidLog.Print (AndroidLogLevel.Error, "JavaInteropRuntime", $"JavaInteropRuntime.init: error: {e}");
