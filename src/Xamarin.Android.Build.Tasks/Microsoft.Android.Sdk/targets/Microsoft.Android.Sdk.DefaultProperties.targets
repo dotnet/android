@@ -24,13 +24,13 @@
       See: https://github.com/dotnet/sdk/blob/955c0fc7b06e2fa34bacd076ed39f61e4fb61716/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Publish.targets#L16
     -->
     <_GetChildProjectCopyToPublishDirectoryItems>false</_GetChildProjectCopyToPublishDirectoryItems>
-    <!-- Define a $(_AndroidNativeAot) property, as the logic detecting NativeAOT may change in the future -->
-    <_AndroidNativeAot Condition=" '$(PublishAot)' == 'true' ">true</_AndroidNativeAot>
-    <_AndroidNativeAot Condition=" '$(_AndroidNativeAot)' == '' ">false</_AndroidNativeAot>
-    <UseMonoRuntime Condition=" '$(_AndroidNativeAot)' == 'true' and '$(UseMonoRuntime)' == '' ">false</UseMonoRuntime>
+    <UseMonoRuntime Condition=" '$(PublishAot)' == 'true' and '$(UseMonoRuntime)' == '' ">false</UseMonoRuntime>
     <UseMonoRuntime Condition=" '$(UseMonoRuntime)' == '' ">true</UseMonoRuntime>
+    <_AndroidRuntime Condition=" '$(PublishAot)' == 'true' and '$(UseMonoRuntime)' != 'true' ">NativeAOT</_AndroidRuntime>
+    <_AndroidRuntime Condition=" '$(PublishAot)' != 'true' and '$(UseMonoRuntime)' != 'true' ">CoreCLR</_AndroidRuntime>
+    <_AndroidRuntime Condition=" '$(_AndroidRuntime)' == '' ">MonoVM</_AndroidRuntime>
     <!-- HACK: make dotnet restore include Microsoft.NETCore.App.Runtime.NativeAOT.linux-bionic-arm64 -->
-    <_IsPublishing Condition=" '$(_IsPublishing)' == '' and '$(_AndroidNativeAot)' == 'true' ">true</_IsPublishing>
+    <_IsPublishing Condition=" '$(_IsPublishing)' == '' and '$(_AndroidRuntime)' == 'NativeAOT' ">true</_IsPublishing>
 
     <!-- Use $(AndroidMinimumSupportedApiLevel) for $(SupportedOSPlatformVersion) if unset -->
     <SupportedOSPlatformVersion Condition=" '$(SupportedOSPlatformVersion)' == '' ">$(AndroidMinimumSupportedApiLevel)</SupportedOSPlatformVersion>
@@ -88,7 +88,7 @@
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' and '$(PublishTrimmed)' == 'true' ">SdkOnly</AndroidLinkMode>
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">None</AndroidLinkMode>
     <!-- For compat with user code not marked trimmable, only trim opt-in by default. -->
-    <TrimMode Condition=" '$(TrimMode)' == '' and ('$(AndroidLinkMode)' == 'Full' or '$(_AndroidNativeAot)' == 'true') ">full</TrimMode>
+    <TrimMode Condition=" '$(TrimMode)' == '' and ('$(AndroidLinkMode)' == 'Full' or '$(_AndroidRuntime)' == 'NativeAOT') ">full</TrimMode>
 		<TrimMode Condition="'$(TrimMode)' == ''">partial</TrimMode>
     <SuppressTrimAnalysisWarnings Condition=" '$(SuppressTrimAnalysisWarnings)' == '' and ('$(TrimMode)' == 'full' or '$(IsAotCompatible)' == 'true') ">false</SuppressTrimAnalysisWarnings>
     <SuppressTrimAnalysisWarnings Condition=" '$(SuppressTrimAnalysisWarnings)' == '' ">true</SuppressTrimAnalysisWarnings>
@@ -97,7 +97,7 @@
     <RuntimeIdentifier  Condition=" '$(RuntimeIdentifiers)' != '' And '$(RuntimeIdentifier)' != '' " />
     <GenerateApplicationManifest Condition=" '$(GenerateApplicationManifest)' == '' ">true</GenerateApplicationManifest>
     <!-- Default to Mono's AOT in Release mode -->
-    <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' and '$(AotAssemblies)' == '' and '$(Configuration)' == 'Release' and '$(_AndroidNativeAot)' != 'true' ">true</RunAOTCompilation>
+    <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' and '$(AotAssemblies)' == '' and '$(Configuration)' == 'Release' and '$(_AndroidRuntime)' == 'MonoVM' ">true</RunAOTCompilation>
     <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' and '$(AotAssemblies)' == 'true' ">true</RunAOTCompilation>
     <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' ">false</RunAOTCompilation>
     <_AndroidXA1029 Condition=" '$(AotAssemblies)' != '' ">true</_AndroidXA1029>
