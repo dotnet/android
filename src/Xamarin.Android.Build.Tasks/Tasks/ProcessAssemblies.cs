@@ -100,7 +100,7 @@ namespace Xamarin.Android.Tasks
 		void SetAssemblyAbiMetadata (string abi, ITaskItem assembly, ITaskItem? symbol)
 		{
 			if (String.IsNullOrEmpty (abi)) {
-				throw new ArgumentException ("must not be null or empty", nameof (abi));
+				throw new ArgumentException ($"must not be null or empty for assembly item '{assembly}'", nameof (abi));
 			}
 
 			assembly.SetMetadata ("Abi", abi);
