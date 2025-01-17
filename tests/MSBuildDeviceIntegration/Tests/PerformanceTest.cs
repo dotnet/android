@@ -395,5 +395,27 @@ namespace Xamarin.Android.Build.Tests
 				});
 			}
 		}
+
+		[Test]
+		public void DesignTimeBuild_CSharp_From_Clean ()
+		{
+			AssertCommercialBuild (); // This test will fail without Fast Deployment
+
+			var proj = CreateApplicationProject ();
+			proj.PackageName = "com.xamarin.designtimebuild_csharp_from_clean";
+			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
+			proj.MainActivity = proj.DefaultMainActivity;
+			using (var builder = CreateBuilderWithoutLogFile ()) {
+				builder.ThrowOnBuildFailure = false;
+				builder.BuildLogFile = "designtimebuild.log";
+				builder.Verbosity = LoggerVerbosity.Quiet;
+				builder.Clean (proj);
+				builder.Restore (proj);
+				builder.AutomaticNuGetRestore = false;
+				Profile (builder, b => {
+					b.DesignTimeBuild (proj, "CoreCompile", parameters: new string[] { "BuildingInsideVisualStudio=true", "SkipCompilerExecution=true" });
+				});
+			}
+		}
 	}
 }
