@@ -1,10 +1,11 @@
-using Microsoft.Android.Build.Tasks;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System;
+
+using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks;
 
@@ -65,7 +66,7 @@ public class RecreateResolvedRuntimePacks : AndroidTask
 		// We need to find `libc.so` that comes from one of our runtime packs
 		var libcPath = String.Format ("{0}native{0}libc.so", Path.DirectorySeparatorChar);
 		var runtimePacks = new Dictionary <string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
-		var maybeIgnoreLibs = new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
+		var maybeIgnoreLibs = new List<ITaskItem> ();
 		var runtimePackPaths = new List<string> ();
 
 		// HACK START: must be removed when CoreCLR runtime pack is properly resolved by the SDK
@@ -93,7 +94,7 @@ public class RecreateResolvedRuntimePacks : AndroidTask
 
 				var fakeLibcItem = new TaskItem (fakePath);
 				item.CopyMetadataTo (fakeLibcItem);
-				item.SetMetadata ("FakeCoreClrRuntimePack", "True");
+				fakeLibcItem.SetMetadata ("NuGetPackageId", item.GetMetadata ("NuGetPackageId").Replace ("Mono", "CoreCLR"));
 				MaybeMakeRuntimePackItem (fakeLibcItem, useCoreClrHack: false);
 			}
 		}
@@ -107,7 +108,13 @@ public class RecreateResolvedRuntimePacks : AndroidTask
 				runtimePackPath = $"{path}{Path.DirectorySeparatorChar}";
 			}
 
-			foreach (ITaskItem library in maybeIgnoreLibs.Values) {
+			// HACK START: must be removed when CoreCLR runtime pack is properly resolved by the SDK
+			if (coreClrHackLibcItems != null) {
+				LogHackWarning ();
+				runtimePackPath = runtimePackPath.Replace ("CoreCLR", "Mono");
+			}
+			// HACK END
+			foreach (ITaskItem library in maybeIgnoreLibs) {
 				if (library.ItemSpec.StartsWith (runtimePackPath)) {
 					librariesToIgnore.Add (library);
 				}
@@ -136,8 +143,7 @@ public class RecreateResolvedRuntimePacks : AndroidTask
 					continue;
 				}
 
-				string libraryRid = library.GetMetadata ("RuntimeIdentifier") ?? String.Empty;
-				maybeIgnoreLibs[$"{libraryRid}{libPathTail}"] = library;
+				maybeIgnoreLibs.Add (library);
 				break;
 			}
 
@@ -208,7 +214,7 @@ public class RecreateResolvedRuntimePacks : AndroidTask
 
 		void LogHackWarning ()
 		{
-			Log.LogWarning ("HACK! HACK! Using CoreCLR resolution hack. Remove once SDK is updated!");
+			Log.LogWarning ("[RecreateResolvedRuntimePacks] HACK! HACK! Using CoreCLR resolution hack. Remove once SDK is updated!");
 		}
 	}
 }
