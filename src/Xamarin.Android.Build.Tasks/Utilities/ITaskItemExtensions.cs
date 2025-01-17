@@ -25,14 +25,14 @@ namespace Xamarin.Android.Tasks
 		}
 
 		[return: NotNullIfNotNull (nameof (defaultValue))]
-		public static string? GetMetadataOrDefault (this ITaskItem item, string name, string? defaultValue)
+		public static T? GetMetadataOrDefault<T> (this ITaskItem item, string name, T? defaultValue)
 		{
 			var value = item.GetMetadata (name);
 
 			if (string.IsNullOrWhiteSpace (value))
 				return defaultValue;
 
-			return value;
+			return (T?)Convert.ChangeType (value, typeof (T));
 		}
 
 		public static string? GetRequiredMetadata (this ITaskItem item, string itemName, string name, TaskLoggingHelper log)
