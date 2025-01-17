@@ -96,8 +96,9 @@ namespace Xamarin.Android.Tasks
 										entryStream.CopyTo (ms);
 									}
 									ms.Position = 0;
-									using XmlReader reader = XmlReader.Create (ms);
-									ProcessXmlFile (reader, resources);
+									using (XmlReader reader = XmlReader.Create (ms)) {
+										ProcessXmlFile (reader, resources);
+									}
 								} finally {
 									MemoryStreamPool.Shared.Return (ms);
 								}
