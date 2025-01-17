@@ -287,6 +287,8 @@ namespace Java.InteropTests
 		{
 			if (Build.VERSION.SdkInt <= BuildVersionCodes.GingerbreadMr1)
 				Assert.Ignore ("Skipping test due to Bug #34141");
+			
+			Console.Error.WriteLine ($"# jonp: BEGIN ActivatedDirectThrowableSubclassesShouldBeRegistered!!!");
 
 			using (var ThrowableActivatedFromJava_class  = Java.Lang.Class.FromType (typeof (ThrowableActivatedFromJava))) {
 				var ThrowableActivatedFromJava_init = JNIEnv.GetMethodID (ThrowableActivatedFromJava_class.Handle, "<init>", "()V");
@@ -302,6 +304,7 @@ namespace Java.InteropTests
 				Assert.IsTrue (v.Constructed);
 				v.Dispose ();
 			}
+			Console.Error.WriteLine ($"# jonp:   END ActivatedDirectThrowableSubclassesShouldBeRegistered!!!");
 		}
 
 		[Test]
