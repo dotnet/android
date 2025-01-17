@@ -547,7 +547,7 @@ namespace Foo {
 				var assemblyFile = Path.Combine (intermediate, proj.ProjectName + ".dll");
 				using (var assembly = AssemblyDefinition.ReadAssembly (assemblyFile)) {
 					var typeName = "Com.Balysv.Material.Drawable.Menu.MaterialMenuView";
-					Assert.IsTrue (assembly.MainModule.Types.Any (t => t.FullName == typeName), $"Type `{typeName}` should exist!");
+					Assert.IsTrue (assembly.MainModule.Types.Any (t => t.FullName == typeName), $"Type `{typeName}` should exist in '{assemblyFile}'!");
 				}
 			}
 		}
