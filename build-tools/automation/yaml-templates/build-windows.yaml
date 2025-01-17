@@ -40,6 +40,9 @@ stages:
     - template: /build-tools/automation/yaml-templates/clean.yaml
 
     - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml
+      parameters:
+        useAgentJdkPath: false
+        jdkMajorVersion: $(LatestJavaSdkMajorVersion)
 
     - template: /build-tools/automation/yaml-templates/use-dot-net.yaml
       parameters:

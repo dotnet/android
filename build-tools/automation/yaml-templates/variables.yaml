@@ -62,6 +62,8 @@ variables:
   value: 35,Baklava
 - name: DefaultJavaSdkMajorVersion
   value: 17
+- name: LatestJavaSdkMajorVersion
+  value: 21
 - name: ExcludedNightlyNUnitCategories
   value: 'cat != SystemApplication & cat != TimeZoneInfo & cat != Localization'
 - name: RunMAUITestJob

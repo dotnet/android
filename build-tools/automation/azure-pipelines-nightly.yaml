@@ -123,7 +123,7 @@ stages:
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
         xaprepareScenario: EmulatorTestDependencies
-        jdkMajorVersion: 11
+        jdkMajorVersion: $(LatestJavaSdkMajorVersion)
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
@@ -200,6 +200,7 @@ stages:
         installTestSlicer: true
         xaprepareScenario: EmulatorTestDependencies
         useAgentJdkPath: false
+        jdkMajorVersion: $(LatestJavaSdkMajorVersion)
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -252,6 +253,7 @@ stages:
         installTestSlicer: true
         xaprepareScenario: EmulatorTestDependencies
         useAgentJdkPath: false
+        jdkMajorVersion: $(LatestJavaSdkMajorVersion)
 
     - task: DownloadPipelineArtifact@2
       inputs:

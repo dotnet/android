@@ -258,8 +258,8 @@ namespace Xamarin.Android.NetTests {
 				RunIgnoringNetworkIssues (() => tr.Wait (), out connectionFailed);
 				if (connectionFailed)
 					return;
-
-				tr.Result.EnsureSuccessStatusCode ();
+				
+				EnsureSuccessStatusCode (tr.Result);
 				Assert.AreEqual (redirectedURI, tr.Result.RequestMessage.RequestUri, "Invalid redirected URI");
 			}
 		}
@@ -281,9 +281,20 @@ namespace Xamarin.Android.NetTests {
 				if (connectionFailed)
 					return;
 
-				response.EnsureSuccessStatusCode ();
+				EnsureSuccessStatusCode (response);
 				Assert.AreEqual (redirectedURI, response.RequestMessage.RequestUri, "Invalid redirected URI");
 			}
+		}
+
+		void EnsureSuccessStatusCode (HttpResponseMessage response)
+		{
+			// If we hit a 502 (which is quite common on CI) just ignore the test
+			if (response.StatusCode == HttpStatusCode.BadGateway) {
+				Assert.Ignore ($"Ignoring network failure: {response.StatusCode}");
+				return;
+			}
+
+			response.EnsureSuccessStatusCode ();
 		}
 	}
 

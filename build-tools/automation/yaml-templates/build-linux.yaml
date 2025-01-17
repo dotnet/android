@@ -52,6 +52,11 @@ stages:
     #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
     - checkout: maui
 
+    - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml
+      parameters:
+        useAgentJdkPath: false
+        jdkMajorVersion: $(LatestJavaSdkMajorVersion)
+
     - template: /build-tools/automation/yaml-templates/use-dot-net.yaml
       parameters:
         remove_dotnet: true
