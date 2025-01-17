@@ -412,7 +412,7 @@ namespace Xamarin.Android.Build.Tests
 				builder.Restore (proj);
 				builder.AutomaticNuGetRestore = false;
 				Profile (builder, b => {
-					b.DesignTimeBuild (proj, "CoreCompile", parameters: new string[] { "BuildingInsideVisualStudio=true" });
+					b.DesignTimeBuild (proj, "CoreCompile", parameters: new string[] { "BuildingInsideVisualStudio=true", "SkipCompilerExecution=true" });
 				});
 			}
 		}
