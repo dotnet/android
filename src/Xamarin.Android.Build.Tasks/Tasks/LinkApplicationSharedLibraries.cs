@@ -43,6 +43,12 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AndroidBinUtilsDirectory { get; set; }
 
+		[Required]
+		public ITaskItem[] ResolvedRuntimePacks { get; set; } = Array.Empty<ITaskItem> ();
+
+		[Required]
+		public bool TargetsCLR { get; set; }
+
 		public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment64Bit;
 
 		public override System.Threading.Tasks.Task RunTaskAsync ()
@@ -114,20 +120,19 @@ namespace Xamarin.Android.Tasks
 
 		IEnumerable<Config> GetLinkerConfigs ()
 		{
-			string runtimeNativeLibsDir = MonoAndroidHelper.GetNativeLibsRootDirectoryPath (AndroidBinUtilsDirectory);
-			string runtimeNativeLibStubsDir = MonoAndroidHelper.GetLibstubsRootDirectoryPath (AndroidBinUtilsDirectory);
 			var abis = new Dictionary <string, InputFiles> (StringComparer.Ordinal);
 			ITaskItem[] dsos = ApplicationSharedLibraries;
 			foreach (ITaskItem item in dsos) {
 				string abi = item.GetMetadata ("abi");
-				abis [abi] = GatherFilesForABI (item.ItemSpec, abi, ObjectFiles, runtimeNativeLibsDir, runtimeNativeLibStubsDir);
+				abis [abi] = GatherFilesForABI (item.ItemSpec, abi, ObjectFiles);
 			}
 
-			const string commonLinkerArgs =
+			string soname = TargetsCLR ? "libxamarin-app-clr.so" : "libxamarin-app.so";
+			string commonLinkerArgs =
 				"--shared " +
 				"--allow-shlib-undefined " +
 				"--export-dynamic " +
-				"-soname libxamarin-app.so " +
+				$"-soname {soname} " +
 				"-z relro " +
 				"-z noexecstack " +
 				"--enable-new-dtags " +
@@ -203,19 +208,22 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		InputFiles GatherFilesForABI (string runtimeSharedLibrary, string abi, ITaskItem[] objectFiles, string runtimeNativeLibsDir, string runtimeNativeLibStubsDir)
+		InputFiles GatherFilesForABI (string runtimeSharedLibrary, string abi, ITaskItem[] objectFiles)
 		{
-			List<string> extraLibraries = null;
+			AndroidTargetArch arch = MonoAndroidHelper.AbiToTargetArch (abi);
+			var libDirs = new HashSet<string> (StringComparer.OrdinalIgnoreCase) {
+				MonoAndroidHelper.GetNativeLibsRootDirectoryPath (Log, ResolvedRuntimePacks, arch),
+				MonoAndroidHelper.GetLibstubsArchDirectoryPath (ResolvedRuntimePacks, arch),
+			};
+
 			string RID = MonoAndroidHelper.AbiToRid (abi);
 			AndroidTargetArch targetArch = MonoAndroidHelper.AbiToTargetArch (abi);
-			string libStubsPath = Path.Combine (runtimeNativeLibStubsDir, RID);
-			string runtimeLibsDir = Path.Combine (runtimeNativeLibsDir, RID);
 
-			extraLibraries = new List<string> {
-				$"-L \"{runtimeLibsDir}\"",
-				$"-L \"{libStubsPath}\"",
-				"-lc",
-			};
+			var extraLibraries = new List<string> ();
+			foreach (string dir in libDirs) {
+				extraLibraries.Add ($"-L \"{dir}\"");
+			}
+			extraLibraries.Add ("-lc");
 
 			return new InputFiles {
 				OutputSharedLibrary = runtimeSharedLibrary,

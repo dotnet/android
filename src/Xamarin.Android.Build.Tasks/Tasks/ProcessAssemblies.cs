@@ -110,6 +110,13 @@ namespace Xamarin.Android.Tasks
 		void SetAssemblyAbiMetadata (ITaskItem assembly, ITaskItem? symbol)
 		{
 			string rid = assembly.GetMetadata ("RuntimeIdentifier");
+			if (String.IsNullOrEmpty (rid)) {
+				throw new InvalidOperationException ($"Assembly '{assembly}' item doesn't have the required RuntimeIdentifier metadata");
+			}
+
+			if (!MonoAndroidHelper.IsValidRID (rid)) {
+				throw new InvalidOperationException ($"Assembly '{assembly}' item targets unsupported RuntimeIdentifier '{rid}'");
+			}
 
 			SetAssemblyAbiMetadata (AndroidRidAbiHelper.RuntimeIdentifierToAbi (rid), assembly, symbol);
 		}
@@ -165,7 +172,7 @@ namespace Xamarin.Android.Tasks
 		{
 			string? rid = assembly.GetMetadata ("RuntimeIdentifier");
 			if (String.IsNullOrEmpty (rid)) {
-				throw new InvalidOperationException ($"Assembly '{assembly}' item is missing required ");
+				throw new InvalidOperationException ($"Assembly '{assembly}' item is missing required RuntimeIdentifier data");
 			}
 
 			string? abi = AndroidRidAbiHelper.RuntimeIdentifierToAbi (rid);

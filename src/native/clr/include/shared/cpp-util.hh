@@ -1,5 +1,4 @@
-#ifndef __CPP_UTIL_HH
-#define __CPP_UTIL_HH
+#pragma once
 
 #include <array>
 #include <cstdarg>
@@ -129,7 +128,7 @@ abort_if_negative_integer_argument (int arg, const char *arg_name, std::source_l
 		arg > 0,
 		[&arg_name, &sloc] {
 			return xamarin::android::detail::_format_message (
-				"%s: parameter '%s' must be a valid pointer",
+				"%s: parameter '%s' must be a positive integer",
 				xamarin::android::detail::get_function_name (sloc.function_name ()).c_str (),
 				arg_name
 			);
@@ -140,7 +139,8 @@ abort_if_negative_integer_argument (int arg, const char *arg_name, std::source_l
 
 // Helper to use in "printf debugging". Normally not used in code anywhere. No code should be shipped with any
 // of the calls present.
-force_inline inline void pd_log_location (std::source_location sloc = std::source_location::current ()) noexcept
+[[gnu::always_inline]]
+inline void pd_log_location (std::source_location sloc = std::source_location::current ()) noexcept
 {
 	log_info_nocheck (LOG_DEFAULT, "loc: {}:{} ('{}')", sloc.file_name (), sloc.line (), sloc.function_name ());
 }
@@ -269,4 +269,3 @@ namespace xamarin::android
 		return l = (l ^ r);
 	}
 }
-#endif // !def __CPP_UTIL_HH

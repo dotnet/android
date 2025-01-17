@@ -149,6 +149,7 @@ partial class MonoAndroidHelper
 	}
 
 	public static bool IsValidAbi (string abi) => AbiToRidMap.ContainsKey (abi);
+	public static bool IsValidRID (string rid) => RidToAbiMap.ContainsKey (rid);
 
 	public static string? CultureInvariantToString (object? obj)
 	{
