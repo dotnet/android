@@ -78,7 +78,9 @@ namespace Android.Runtime
 			((AndroidTypeManager)androidRuntime!.TypeManager).RegisterNativeMembers (jniType, type, methods);
 		}
 
-		internal static void Initialize (JniRuntime runtime)
+		// NOTE: should have different name than `Initialize` to avoid:
+		// * Assertion at /__w/1/s/src/mono/mono/metadata/icall.c:6258, condition `!only_unmanaged_callers_only' not met
+		internal static void InitializeJniRuntime (JniRuntime runtime)
 		{
 			androidRuntime = runtime;
 			ValueManager = runtime.ValueManager;
