@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
+using System.Text;
 
 namespace Xamarin.Android.Tasks
 {
@@ -47,6 +48,44 @@ namespace Xamarin.Android.Tasks
 			return GetCommandLineBuilder ().ToString ();
 		}
 
+		protected override string GenerateResponseFileCommands ()
+		{
+			var cmd = new CommandLineBuilder ();
+
+			var injars = new List<string> ();
+			var libjars = new List<string> ();
+			if (AlternativeJarLibrariesToEmbed?.Length > 0) {
+				Log.LogDebugMessage ("  processing AlternativeJarLibrariesToEmbed...");
+				foreach (var jar in AlternativeJarLibrariesToEmbed) {
+					injars.Add (jar.ItemSpec);
+				}
+			} else if (JavaLibrariesToEmbed != null) {
+				Log.LogDebugMessage ("  processing ClassesZip, JavaLibrariesToEmbed...");
+				if (!string.IsNullOrEmpty (ClassesZip) && File.Exists (ClassesZip)) {
+					injars.Add (ClassesZip);
+				}
+				foreach (var jar in JavaLibrariesToEmbed) {
+					injars.Add (jar.ItemSpec);
+				}
+			}
+			libjars.Add (JavaPlatformJarPath);
+			if (JavaLibrariesToReference != null) {
+				foreach (var jar in JavaLibrariesToReference) {
+					libjars.Add (jar.ItemSpec);
+				}
+			}
+
+			//foreach (var jar in libjars)
+			//	cmd.AppendSwitchIfNotNull ("--lib ", jar);
+
+			foreach (var jar in injars)
+				cmd.AppendFileNameIfNotNull (jar);
+
+			return cmd.ToString ();
+		}
+
+		protected override Encoding ResponseFileEncoding => Encoding.UTF8;
+
 		protected virtual string MainClass => "com.android.tools.r8.D8";
 
 		protected int MinSdkVersion { get; set; }
@@ -81,6 +120,8 @@ namespace Xamarin.Android.Tasks
 			if (!EnableDesugar)
 				cmd.AppendSwitch ("--no-desugaring");
 
+			cmd.AppendSwitchIfNotNull ("--output ", OutputDirectory);
+
 			var injars = new List<string> ();
 			var libjars = new List<string> ();
 			if (AlternativeJarLibrariesToEmbed?.Length > 0) {
@@ -104,11 +145,12 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			cmd.AppendSwitchIfNotNull ("--output ", OutputDirectory);
 			foreach (var jar in libjars)
 				cmd.AppendSwitchIfNotNull ("--lib ", jar);
-			foreach (var jar in injars)
-				cmd.AppendFileNameIfNotNull (jar);
+
+			//foreach (var jar in injars)
+			//	cmd.AppendFileNameIfNotNull (jar);
+
 
 			if (MapDiagnostics != null) {
 				foreach (var diagnostic in MapDiagnostics) {
