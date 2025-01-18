@@ -47,6 +47,33 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void ActivityAliasRuns ([Values (true, false)] bool isRelease)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease
+			};
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("</application>", @"
+<activity-alias
+			android:name="".MainActivityAlias""
+			android:enabled=""true""
+			android:icon=""@drawable/icon""
+			android:targetActivity="".MainActivity""
+			android:exported=""true"">
+			<intent-filter>
+				<action android:name=""android.intent.action.MAIN"" />
+				<category android:name=""android.intent.category.LAUNCHER"" />
+			</intent-filter>
+		</activity-alias>
+</application>");
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${ATTRIBUTES}",$"[Register(\"{proj.PackageName}.MainActivity\")]").Replace("MainLauncher = true", "MainLauncher = false");
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+			RunProjectAndAssert (proj, builder);
+			Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivityAlias",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30), "Activity MainActivityAlias should have started.");
+		}
+
+		[Test]
 		public void NativeAssemblyCacheWithSatelliteAssemblies ([Values (true, false)] bool enableMarshalMethods)
 		{
 			var path = Path.Combine ("temp", TestName);
