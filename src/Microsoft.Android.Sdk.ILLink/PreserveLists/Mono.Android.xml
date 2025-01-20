@@ -9,7 +9,6 @@
 		<type fullname="Android.Runtime.InputStreamAdapter" preserve="methods" />
 		<type fullname="Android.Runtime.InputStreamInvoker" preserve="methods" />
 		<type fullname="Android.Runtime.JNIEnv">
-			<method name="Exit" />
 			<method name="PropagateUncaughtException" />
 		</type>
 		<type fullname="Android.Runtime.JNIEnvInit">
@@ -36,15 +35,7 @@
 		-->
 		<type fullname="Java.Interop.TypeManager*JavaTypeManager" />
 		<type fullname="Java.Lang.Object">
-			<field name="handle" />
-			<field name="handle_type" />
-			<field name="refs_added" />
 			<method name="SetHandleOnDeserialized" />
-		</type>
-		<type fullname="Java.Lang.Throwable">
-			<field name="handle" />
-			<field name="handle_type" />
-			<field name="refs_added" />
 		</type>
 	</assembly>
 </linker>

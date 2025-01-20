@@ -930,6 +930,7 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 
 	init.grefLoader           = env->NewGlobalRef (loader);
 	init.grefIGCUserPeer      = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_android_IGCUserPeer", true);
+	init.grefGCUserPeerable   = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "net_dot_jni_GCUserPeerable", true);
 
 	osBridge.initialize_on_runtime_init (env, runtimeClass);
 
