@@ -364,7 +364,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Assets.targets" Condition=" '$(DesignTimeBuild)' != 'true' " />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.DesignTime.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.EmbeddedResource.targets" />
-<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Javac.targets" />
+<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Javac.targets" Condition=" '$(DesignTimeBuild)' != 'true' " />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Resource.Designer.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Tooling.targets" />
 
