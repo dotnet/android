@@ -14,6 +14,7 @@ _ResolveAssemblies MSBuild target.
   <UsingTask TaskName="Xamarin.Android.Tasks.ProcessNativeLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.StripNativeLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.RecreateResolvedRuntimePacks" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.MaybeUseLocalCLR" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <!-- HACK: workaround for: https://github.com/dotnet/sdk/issues/25679 -->
   <Target Name="_RemoveLinuxFrameworkReferences"
@@ -112,6 +113,20 @@ _ResolveAssemblies MSBuild target.
         Targets="_ComputeFilesToPublishForRuntimeIdentifiers">
       <Output TaskParameter="TargetOutputs" ItemName="ResolvedFileToPublish" />
     </MSBuild>
+
+    <MaybeUseLocalCLR
+        LocalClrDirectory="$(_LocalClrDirectory)"
+        ResolvedFilesToPublish="@(ResolvedFileToPublish)"
+        AndroidRuntime="$(_AndroidRuntime)">
+      <Output TaskParameter="SharedLibrariesToAdd" ItemName="_AddSharedLibraries" />
+      <Output TaskParameter="SharedLibrariesToIgnore" ItemName="_IgnoreSharedLibraries" />
+    </MaybeUseLocalCLR>
+
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(_IgnoreSharedLibraries)" />
+      <ResolvedFileToPublish Include="@(_AddSharedLibraries)" />
+    </ItemGroup>
+
     <!-- Properties produced by the inner build in Microsoft.Android.Sdk.ILLink.targets -->
     <PropertyGroup>
       <_InnerIntermediateOutputPath Condition=" '$(RuntimeIdentifier)' == '' ">$(IntermediateOutputPath)%(_RIDs.Identity)\</_InnerIntermediateOutputPath>

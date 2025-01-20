@@ -36,6 +36,9 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem [] InputJavaLibraries { get; set; } = Array.Empty<ITaskItem> ();
 
+		public string AndroidRuntime { get; set; } = String.Empty;
+		public string LocalClrDirectory { get; set; } = String.Empty;
+
 		[Output]
 		public ITaskItem []? OutputAssemblies { get; set; }
 
