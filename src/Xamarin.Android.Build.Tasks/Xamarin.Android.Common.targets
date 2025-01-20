@@ -548,11 +548,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       FormatArguments="AndroidFastDeploymentType;9"
       Condition=" '$(AndroidFastDeploymentType)' != '' "
   />
-  <AndroidWarning Code="XA1037"
-      ResourceName="XA1037"
-      FormatArguments="AndroidUseManagedDesignTimeResourceGenerator;11"
-      Condition=" '$(AndroidUseManagedDesignTimeResourceGenerator)' != '' "
-  />
 </Target>
 
 <Target Name="_CheckNonIdealConfigurations"
