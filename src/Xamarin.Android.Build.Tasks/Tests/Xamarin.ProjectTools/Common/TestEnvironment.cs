@@ -125,13 +125,19 @@ namespace Xamarin.ProjectTools
 				"Microsoft.Android.Sdk.Linux";
 
 			var sdkDir = Path.Combine (packsDirectory, sdkName);
-			if (!Directory.Exists (sdkDir))
+			if (!Directory.Exists (sdkDir)) {
+				Console.WriteLine ($"Unable to locate a Microsoft.Android.Sdk in '{sdkDir}'.");
 				return string.Empty;
+			}
 
 			var dirs = from d in Directory.GetDirectories (sdkDir)
 				   let version = ParseVersion (d)
 				   orderby version descending
 				   select d;
+
+			foreach (var dir in dirs) {
+				Console.WriteLine ($"DEBUG! found'{dir}'.");
+			}
 
 			return dirs.FirstOrDefault ();
 		}
