@@ -13,14 +13,17 @@
     <!-- Temporary for InternalsVisibleTo -->
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <!-- Current required properties for NativeAOT -->
+    <!-- Default to arm64 device -->
     <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
+    <!-- Current required properties for NativeAOT -->
     <PublishAot>true</PublishAot>
     <PublishAotUsingRuntimePack>true</PublishAotUsingRuntimePack>
   </PropertyGroup>
 
   <!-- Settings for CI -->
   <PropertyGroup Condition=" '$(RunningOnCI)' == 'true' ">
+    <!-- x86_64 emulator -->
+    <RuntimeIdentifier>android-x64</RuntimeIdentifier>
     <_NuGetFolderOnCI>..\..\bin\Build$(Configuration)\nuget-unsigned</_NuGetFolderOnCI>
     <RestoreAdditionalProjectSources Condition="Exists('$(_NuGetFolderOnCI)')">$(_NuGetFolderOnCI)</RestoreAdditionalProjectSources>
     <_FastDeploymentDiagnosticLogging>true</_FastDeploymentDiagnosticLogging>
