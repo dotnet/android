@@ -21,5 +21,7 @@ steps:
   continueOnError: true
   timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
   retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
+  env:
+    RunningOnCI: true
 
 - template: /build-tools/automation/yaml-templates/kill-processes.yaml
