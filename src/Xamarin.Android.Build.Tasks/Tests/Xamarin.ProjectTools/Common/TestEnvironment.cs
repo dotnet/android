@@ -150,8 +150,13 @@ namespace Xamarin.ProjectTools
 
 		public static bool CommercialBuildAvailable {
 			get {
-				Console.WriteLine ("DEBUG! checking `{AndroidMSBuildDirectory}` for `Xamarin.Android.Common.Debugging.targets`.");
-				return File.Exists (Path.Combine (AndroidMSBuildDirectory, "Xamarin.Android.Common.Debugging.targets"));
+				var result = File.Exists (Path.Combine (AndroidMSBuildDirectory, "Xamarin.Android.Common.Debugging.targets"));
+				Console.WriteLine ($"DEBUG! checking `{AndroidMSBuildDirectory}` for `Xamarin.Android.Common.Debugging.targets`: {result}.");
+				if (!result) {
+					Console.WriteLine ($"DEBUG! checking `{LocalDotNetAndroidSdkDirectory}\tools` for `Xamarin.Android.Common.Debugging.targets`: {result}.");
+					result = File.Exists (Path.Combine (LocalDotNetAndroidSdkDirectory, "tools", "Xamarin.Android.Common.Debugging.targets"));
+				}
+				return result;
 			}
 		}
 
