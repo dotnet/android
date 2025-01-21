@@ -18,7 +18,7 @@ target_include_directories(
   ${LIB_NAME}
   SYSTEM PRIVATE
   ${SYSROOT_CXX_INCLUDE_DIR}
-  ${MONO_RUNTIME_INCLUDE_DIR}
+  ${RUNTIME_INCLUDE_DIR}
 )
 
 target_compile_definitions(
