@@ -809,5 +809,16 @@ namespace Xamarin.Android.Tasks
 			builder.AppendFileNameIfNotNull (fileName);
 			return builder.ToString ();
 		}
+
+		public static AndroidRuntime ParseAndroidRuntime (string androidRuntime)
+		{
+			if (string.Equals (androidRuntime, "CoreCLR", StringComparison.OrdinalIgnoreCase))
+				return AndroidRuntime.CoreCLR;
+			if (string.Equals (androidRuntime, "NativeAOT", StringComparison.OrdinalIgnoreCase))
+				return AndroidRuntime.NativeAOT;
+
+			// Default runtime is MonoVM
+			return AndroidRuntime.MonoVM;
+		}
 	}
 }
