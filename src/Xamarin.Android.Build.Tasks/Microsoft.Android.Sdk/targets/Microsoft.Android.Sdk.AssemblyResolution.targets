@@ -15,6 +15,7 @@ _ResolveAssemblies MSBuild target.
   <UsingTask TaskName="Xamarin.Android.Tasks.StripNativeLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.RecreateResolvedRuntimePacks" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.MaybeUseLocalCLR" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.CoreClrHackInjectAndroidRuntimeSharedLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <!-- HACK: workaround for: https://github.com/dotnet/sdk/issues/25679 -->
   <Target Name="_RemoveLinuxFrameworkReferences"
@@ -113,6 +114,16 @@ _ResolveAssemblies MSBuild target.
         Targets="_ComputeFilesToPublishForRuntimeIdentifiers">
       <Output TaskParameter="TargetOutputs" ItemName="ResolvedFileToPublish" />
     </MSBuild>
+
+    <CoreClrHackInjectAndroidRuntimeSharedLibraries
+        ResolvedFilesToPublish="@(ResolvedFileToPublish)"
+        AndroidRuntime="$(_AndroidRuntime)">
+      <Output TaskParameter="SharedLibrariesToAdd" ItemName="_AddSharedLibrariesClrHack" />
+    </CoreClrHackInjectAndroidRuntimeSharedLibraries>
+
+    <ItemGroup>
+      <ResolvedFileToPublish Include="@(_AddSharedLibrariesClrHack)" />
+    </ItemGroup>
 
     <MaybeUseLocalCLR
         LocalClrDirectory="$(_LocalClrDirectory)"
@@ -255,13 +266,6 @@ _ResolveAssemblies MSBuild target.
       <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " Include="libmono-android.debug" />
       <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " Include="libmono-android.release" />
     </ItemGroup>
-    <ProcessNativeLibraries
-        InputLibraries="@(_ResolvedNativeLibraries)"
-        ExcludedLibraries="@(_ExcludedNativeLibraries)"
-        Components="@(_MonoComponent->Distinct())"
-        IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)">
-      <Output TaskParameter="OutputLibraries" ItemName="FrameworkNativeLibrary" />
-    </ProcessNativeLibraries>
 
     <RecreateResolvedRuntimePacks
         ResolvedNativeLibraries="@(_ResolvedNativeLibraries)"
@@ -272,8 +276,15 @@ _ResolveAssemblies MSBuild target.
 
     <ItemGroup>
       <_ResolvedNativeLibraries Remove="@(_IgnoreSharedLibraries)" />
-      <FrameworkNativeLibrary Remove="@(_IgnoreSharedLibraries)" />
     </ItemGroup>
+
+    <ProcessNativeLibraries
+        InputLibraries="@(_ResolvedNativeLibraries)"
+        ExcludedLibraries="@(_ExcludedNativeLibraries)"
+        Components="@(_MonoComponent->Distinct())"
+        IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)">
+      <Output TaskParameter="OutputLibraries" ItemName="FrameworkNativeLibrary" />
+    </ProcessNativeLibraries>
   </Target>
 
 </Project>

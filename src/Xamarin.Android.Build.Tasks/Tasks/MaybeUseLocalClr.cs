@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -10,6 +9,11 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks;
 
+//
+// Optionally replaces all the CoreCLR items with corresponding ones found in a local
+// directory, instead of a nuget.  This is used whenever a developer wants to quickly
+// iterate over changes to CoreCLR without publishing packages.
+//
 public class MaybeUseLocalCLR : AndroidTask
 {
 	//

@@ -103,7 +103,8 @@ namespace Xamarin.Android.Tasks
 		void SetAssemblyAbiMetadata (string abi, ITaskItem assembly, ITaskItem? symbol)
 		{
 			if (String.IsNullOrEmpty (abi)) {
-				throw new ArgumentException ($"must not be null or empty for assembly item '{assembly}'", nameof (abi));
+				string rid = assembly.GetMetadata ("RuntimeIdentifier") ?? "unknown";
+				throw new ArgumentException ($"must not be null or empty for assembly item '{assembly}' (RID '{rid}')", nameof (abi));
 			}
 
 			assembly.SetMetadata ("Abi", abi);
