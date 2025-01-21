@@ -32,8 +32,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <PropertyGroup>
       <_NdkAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">aarch64</_NdkAbi>
       <_NdkAbi Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">x86_64</_NdkAbi>
-      <_NdkSysrootAbi>$(NdkAbi)-linux-android</_NdkSysrootAbi>      
-      <_NdkClangPrefix>$(NdkAbi)-linux-android21-</_NdkClangPrefix>
+      <_NdkSysrootAbi>$(_NdkAbi)-linux-android</_NdkSysrootAbi>      
+      <_NdkClangPrefix>$(_NdkAbi)-linux-android21-</_NdkClangPrefix>
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('windows')) ">windows-x86_64</_NdkPrebuiltAbi>
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('osx')) ">darwin-x86_64</_NdkPrebuiltAbi>
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('linux')) ">linux-x86_64</_NdkPrebuiltAbi>
