@@ -59,8 +59,10 @@
   
   <PropertyGroup>
     <!-- 
-      Use $(TreatWarningsAsErrors) for 'Release' builds. We have grandfathered some projects that have existing warnings,
+      Use $(TreatWarningsAsErrors) for CI builds. We have grandfathered some projects that have existing warnings,
       but we would like to go ahead and prevent any other projects from getting new warnings.
+      
+      This can be opted into locally with $(_AndroidTreatWarningsAsErrors) = true.
     -->
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'assembly-store-reader.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'decompress-assemblies.csproj' ">true</_AllowProjectWarnings>
@@ -76,7 +78,7 @@
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Android.JcwGen-Tests.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Android.NUnitLite.NET.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.ProjectTools.csproj' ">true</_AllowProjectWarnings>
-    <TreatWarningsAsErrors Condition=" '$(Configuration)' == 'Release' AND $(_AllowProjectWarnings) != 'true' ">true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors Condition=" ('$(RunningOnCI)' == 'true' OR '$(_AndroidTreatWarningsAsErrors)' == 'true') AND '$(_AllowProjectWarnings)' != 'true' ">true</TreatWarningsAsErrors>
   </PropertyGroup>
 
 </Project>
