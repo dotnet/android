@@ -10,8 +10,6 @@
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <_NuGetFolderOnCI>..\..\bin\Build$(Configuration)\nuget-unsigned</_NuGetFolderOnCI>
-    <RestoreAdditionalProjectSources Condition="Exists('$(_NuGetFolderOnCI)')">$(_NuGetFolderOnCI)</RestoreAdditionalProjectSources>
     <!-- Temporary for InternalsVisibleTo -->
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
@@ -20,6 +18,14 @@
     <PublishAot>true</PublishAot>
     <PublishAotUsingRuntimePack>true</PublishAotUsingRuntimePack>
   </PropertyGroup>
+
+  <!-- Settings for CI -->
+  <PropertyGroup Condition=" '$(RunningOnCI)' == 'true' ">
+    <_NuGetFolderOnCI>..\..\bin\Build$(Configuration)\nuget-unsigned</_NuGetFolderOnCI>
+    <RestoreAdditionalProjectSources Condition="Exists('$(_NuGetFolderOnCI)')">$(_NuGetFolderOnCI)</RestoreAdditionalProjectSources>
+    <_FastDeploymentDiagnosticLogging>true</_FastDeploymentDiagnosticLogging>
+  </PropertyGroup>
+
   <ItemGroup>
     <AndroidJavaSource Update="*.java" Bind="false" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj" />
