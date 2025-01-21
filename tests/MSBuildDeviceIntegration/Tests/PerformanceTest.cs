@@ -11,7 +11,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("Performance")]
+	//[Category ("Performance")]
 	public class PerformanceTest : DeviceTest
 	{
 		const int Retry = 2;
