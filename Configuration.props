@@ -223,6 +223,6 @@
 
    <!-- TEMPORARY: to be removed once this PR is ready to be merged -->
   <PropertyGroup>
-    <_LocalClrDirectory>$(AndroidToolchainDirectory)\clr</_LocalClrDirectory>
+    <_LocalClrDirectory Condition=" Exists('$(AndroidToolchainDirectory)\clr') ">$(AndroidToolchainDirectory)\clr</_LocalClrDirectory>
   </PropertyGroup>
 </Project>
