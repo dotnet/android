@@ -44,11 +44,6 @@ namespace Xamarin.Android.Prepare
 
 		protected override async Task<bool> Execute (Context context)
 		{
-			if (Directory.Exists (Configurables.Paths.OldOpenJDKInstallDir)) {
-				Log.DebugLine ($"Found old OpenJDK directory at {Configurables.Paths.OldOpenJDKInstallDir}, removing");
-				Utilities.DeleteDirectorySilent (Configurables.Paths.OldOpenJDKInstallDir);
-			}
-
 			AddToInventory ();
 
 			string jdkInstallDir = JdkInstallDir;
@@ -291,11 +286,11 @@ namespace Xamarin.Android.Prepare
 		}
 
 		protected   override    string  ProductName      => _ProductName;
-		protected   override    string  JdkInstallDir    => Configurables.Paths.OpenJDK17InstallDir;
-		protected   override    Version JdkVersion       => Configurables.Defaults.MicrosoftOpenJDK17Version;
-		protected   override    Version JdkRelease       => Configurables.Defaults.MicrosoftOpenJDK17Release;
-		protected   override    Uri     JdkUrl           => Configurables.Urls.MicrosoftOpenJDK17;
-		protected   override    string  JdkCacheDir      => Configurables.Paths.OpenJDK17CacheDir;
-		protected   override    string  RootDirName      => Configurables.Defaults.MicrosoftOpenJDK17RootDirName;
+		protected   override    string  JdkInstallDir    => Configurables.Paths.OpenJDKInstallDir;
+		protected   override    Version JdkVersion       => Configurables.Defaults.MicrosoftOpenJDKVersion;
+		protected   override    Version JdkRelease       => Configurables.Defaults.MicrosoftOpenJDKRelease;
+		protected   override    Uri     JdkUrl           => Configurables.Urls.MicrosoftOpenJDK;
+		protected   override    string  JdkCacheDir      => Configurables.Paths.OpenJDKCacheDir;
+		protected   override    string  RootDirName      => Configurables.Defaults.MicrosoftOpenJDKRootDirName;
 	}
 }

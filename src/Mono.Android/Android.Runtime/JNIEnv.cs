@@ -52,7 +52,8 @@ namespace Android.Runtime {
 			if (value == IntPtr.Zero)
 				return false;
 
-			return IsInstanceOf (value, JNIEnvInit.grefIGCUserPeer_class);
+			return IsInstanceOf (value, JNIEnvInit.grefIGCUserPeer_class) ||
+				IsInstanceOf (value, JNIEnvInit.grefGCUserPeerable_class);
 		}
 
 		internal static bool ShouldWrapJavaException (Java.Lang.Throwable? t, [CallerMemberName] string? caller = null)
@@ -74,49 +75,6 @@ namespace Android.Runtime {
 			}
 
 			return wrap;
-		}
-
-		[DllImport ("libc")]
-		static extern int gettid ();
-
-		internal static void Exit ()
-		{
-			/* Manually dispose surfaced objects and close the current JniEnvironment to
-			 * avoid ObjectDisposedException thrown on finalizer threads after shutdown
-			 */
-			foreach (var surfacedObject in Java.Interop.Runtime.GetSurfacedObjects ()) {
-				try {
-					var obj = surfacedObject.Target as IDisposable;
-					if (obj != null)
-						obj.Dispose ();
-					continue;
-				} catch (Exception e) {
-					RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"Couldn't dispose object: {e}");
-				}
-				/* If calling Dispose failed, the assumption is that user-code in
-				 * the Dispose(bool) overload is to blame for it. In that case we
-				 * fallback to manual deletion of the surfaced object.
-				 */
-				var jobj = surfacedObject.Target as Java.Lang.Object;
-				if (jobj != null)
-					ManualJavaObjectDispose (jobj);
-			}
-			JniEnvironment.Runtime.Dispose ();
-		}
-
-		/* FIXME: This reproduces the minimal steps in Java.Lang.Object.Dispose
-		 * that needs to be executed so that we don't leak any GREF and prevent
-		 * code execution into an appdomain that we are disposing via a finalizer.
-		 * Ideally it should be done via another more generic mechanism, likely
-		 * from the Java.Interop.Runtime API.
-		 */
-		static void ManualJavaObjectDispose (Java.Lang.Object obj)
-		{
-			var peer = obj.PeerReference;
-			var handle = peer.Handle;
-			var keyHandle = ((IJavaObjectEx)obj).KeyHandle;
-			Java.Lang.Object.Dispose (obj, ref handle, keyHandle, (JObjectRefType)peer.Type);
-			GC.SuppressFinalize (obj);
 		}
 
 		internal static void PropagateUncaughtException (IntPtr env, IntPtr javaThreadPtr, IntPtr javaExceptionPtr)

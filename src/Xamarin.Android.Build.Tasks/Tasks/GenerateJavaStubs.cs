@@ -93,13 +93,17 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem[] GeneratedBinaryTypeMaps { get; set; }
 
-		public bool NativeAot { get; set; }
+		[Required]
+		public string AndroidRuntime { get; set; } = "";
+
+		AndroidRuntime androidRuntime;
 
 		internal const string AndroidSkipJavaStubGeneration = "AndroidSkipJavaStubGeneration";
 
 		public override bool RunTask ()
 		{
 			try {
+				androidRuntime = MonoAndroidHelper.ParseAndroidRuntime (AndroidRuntime);
 				bool useMarshalMethods = !Debug && EnableMarshalMethods;
 				Run (useMarshalMethods);
 			} catch (XamarinAndroidException e) {
@@ -296,8 +300,8 @@ namespace Xamarin.Android.Tasks
 
 		void GenerateAdditionalProviderSources (NativeCodeGenState codeGenState, IList<string> additionalProviders)
 		{
-			if (NativeAot) {
-				Log.LogDebugMessage ("Skipping MonoRuntimeProvider generation for NativeAot");
+			if (androidRuntime != Xamarin.Android.Tasks.AndroidRuntime.MonoVM) {
+				Log.LogDebugMessage ($"Skipping MonoRuntimeProvider generation for: {androidRuntime}");
 				return;
 			}
 
@@ -354,7 +358,7 @@ namespace Xamarin.Android.Tasks
 				Debug = Debug,
 				MultiDex = MultiDex,
 				NeedsInternet = NeedsInternet,
-				NativeAot = NativeAot,
+				AndroidRuntime = androidRuntime,
 			};
 			// Only set manifest.VersionCode if there is no existing value in AndroidManifest.xml.
 			if (manifest.HasVersionCode) {
@@ -388,7 +392,7 @@ namespace Xamarin.Android.Tasks
 			(List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW) = ScanForJavaTypes (resolver, tdCache, assemblies, userAssemblies, useMarshalMethods);
 			var jcwContext = new JCWGeneratorContext (arch, resolver, assemblies.Values, javaTypesForJCW, tdCache, useMarshalMethods);
 			var jcwGenerator = new JCWGenerator (Log, jcwContext) {
-				NativeAot = NativeAot,
+				CodeGenerationTarget = androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.MonoVM ? JavaPeerStyle.XAJavaInterop1 : JavaPeerStyle.JavaInterop1
 			};
 			bool success;
 

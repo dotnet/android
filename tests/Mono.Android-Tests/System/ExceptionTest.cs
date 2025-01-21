@@ -43,6 +43,9 @@ namespace Xamarin.Android.RuntimeTests {
 			using var source = new Java.Lang.Throwable ("detailMessage", proxy);
 			using var alias  = new Java.Lang.Throwable (source.Handle, JniHandleOwnership.DoNotTransfer);
 
+			Console.Error.WriteLine ("# jonp: InnerExceptionIsSet: ex={0}", ex);
+			Console.Error.WriteLine ("# jonp: InnerExceptionIsSet: proxy={0}", proxy);
+
 			CompareStackTraces (ex, proxy);
 			Assert.AreEqual ("detailMessage", alias.Message);
 			Assert.AreSame (ex, alias.InnerException);
@@ -51,7 +54,7 @@ namespace Xamarin.Android.RuntimeTests {
 		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		void CompareStackTraces (Exception ex, Java.Lang.Throwable throwable)
 		{
-			var managedTrace = new StackTrace (ex);
+			var managedTrace = new StackTrace (ex, fNeedFileInfo: true);
 			StackFrame[] managedFrames = managedTrace.GetFrames ();
 			Java.Lang.StackTraceElement[] javaFrames = throwable.GetStackTrace ();
 
@@ -68,15 +71,21 @@ namespace Xamarin.Android.RuntimeTests {
 					managedLine = mf.HasNativeImage () ? -2 :  -1;
 				}
 
+				Console.WriteLine ("# jonp: CompareStackTraces: managedFrame[{0}]: {1}", i, mf);
+				Console.WriteLine ("# jonp: CompareStackTraces:    javaFrame[{0}]: {1}", i, jf);
 				if (managedLine > 0) {
 					Assert.AreEqual (mf.GetMethod ()?.Name,                   jf.MethodName, $"Frame {i}: method names differ");
 				} else {
 					string managedMethodName = mf.GetMethod ()?.Name ?? String.Empty;
-					Assert.IsTrue (jf.MethodName.StartsWith ($"{managedMethodName} + 0x"), $"Frame {i}: method name should start with: '{managedMethodName} + 0x'");
+					Assert.IsTrue (jf.MethodName.StartsWith ($"{managedMethodName} + 0x"),
+						$"Frame {i}: method name should start with: '{managedMethodName} + 0x'; was `{jf.MethodName}`; ");
 				}
-				Assert.AreEqual (mf.GetMethod ()?.DeclaringType.FullName, jf.ClassName,  $"Frame {i}: class names differ");
-				Assert.AreEqual (mf.GetFileName (),                       jf.FileName,   $"Frame {i}: file names differ");
-				Assert.AreEqual (managedLine,                             jf.LineNumber, $"Frame {i}: line numbers differ");
+				Assert.AreEqual (mf.GetMethod ()?.DeclaringType.FullName, jf.ClassName,
+					$"Frame {i}: class names differ: `{mf.GetMethod ()?.DeclaringType.FullName}` != `{jf.ClassName}`");
+				Assert.AreEqual (mf.GetFileName (),                       jf.FileName,
+					$"Frame {i}: file names differ: `{mf.GetFileName ()}` != `{jf.FileName}`");
+				Assert.AreEqual (managedLine,                             jf.LineNumber,
+					$"Frame {i}: line numbers differ: {managedLine} != {jf.LineNumber}");
 			}
 		}
 	}

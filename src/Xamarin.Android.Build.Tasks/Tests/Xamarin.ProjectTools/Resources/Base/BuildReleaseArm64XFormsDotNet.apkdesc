@@ -5,7 +5,7 @@
       "Size": 6652
     },
     "classes.dex": {
-      "Size": 9172764
+      "Size": 9172540
     },
     "kotlin/annotation/annotation.kotlin_builtins": {
       "Size": 928
@@ -35,136 +35,136 @@
       "Size": 25424
     },
     "lib/arm64-v8a/lib_Java.Interop.dll.so": {
-      "Size": 94736
+      "Size": 94792
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
-      "Size": 524256
+      "Size": 535520
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 22408
+      "Size": 22432
     },
     "lib/arm64-v8a/lib_mscorlib.dll.so": {
-      "Size": 21432
-    },
-    "lib/arm64-v8a/lib_netstandard.dll.so": {
-      "Size": 23072
-    },
-    "lib/arm64-v8a/lib_System.Collections.Concurrent.dll.so": {
-      "Size": 29792
-    },
-    "lib/arm64-v8a/lib_System.Collections.dll.so": {
-      "Size": 36288
-    },
-    "lib/arm64-v8a/lib_System.Collections.NonGeneric.dll.so": {
-      "Size": 25760
-    },
-    "lib/arm64-v8a/lib_System.Collections.Specialized.dll.so": {
-      "Size": 23840
-    },
-    "lib/arm64-v8a/lib_System.ComponentModel.dll.so": {
-      "Size": 19584
-    },
-    "lib/arm64-v8a/lib_System.ComponentModel.Primitives.dll.so": {
-      "Size": 21304
-    },
-    "lib/arm64-v8a/lib_System.ComponentModel.TypeConverter.dll.so": {
-      "Size": 42456
-    },
-    "lib/arm64-v8a/lib_System.Console.dll.so": {
-      "Size": 24416
-    },
-    "lib/arm64-v8a/lib_System.Core.dll.so": {
-      "Size": 19448
-    },
-    "lib/arm64-v8a/lib_System.Diagnostics.DiagnosticSource.dll.so": {
-      "Size": 28440
-    },
-    "lib/arm64-v8a/lib_System.Diagnostics.TraceSource.dll.so": {
-      "Size": 24688
-    },
-    "lib/arm64-v8a/lib_System.dll.so": {
-      "Size": 19848
-    },
-    "lib/arm64-v8a/lib_System.Drawing.dll.so": {
-      "Size": 19424
-    },
-    "lib/arm64-v8a/lib_System.Drawing.Primitives.dll.so": {
-      "Size": 30040
-    },
-    "lib/arm64-v8a/lib_System.Formats.Asn1.dll.so": {
-      "Size": 49928
-    },
-    "lib/arm64-v8a/lib_System.IO.Compression.Brotli.dll.so": {
-      "Size": 29472
-    },
-    "lib/arm64-v8a/lib_System.IO.Compression.dll.so": {
-      "Size": 33784
-    },
-    "lib/arm64-v8a/lib_System.IO.IsolatedStorage.dll.so": {
-      "Size": 28288
-    },
-    "lib/arm64-v8a/lib_System.Linq.dll.so": {
-      "Size": 38736
-    },
-    "lib/arm64-v8a/lib_System.Linq.Expressions.dll.so": {
-      "Size": 185800
-    },
-    "lib/arm64-v8a/lib_System.Net.Http.dll.so": {
-      "Size": 89488
-    },
-    "lib/arm64-v8a/lib_System.Net.Primitives.dll.so": {
-      "Size": 41112
-    },
-    "lib/arm64-v8a/lib_System.Net.Requests.dll.so": {
-      "Size": 21544
-    },
-    "lib/arm64-v8a/lib_System.ObjectModel.dll.so": {
-      "Size": 27064
-    },
-    "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
-      "Size": 956552
-    },
-    "lib/arm64-v8a/lib_System.Private.DataContractSerialization.dll.so": {
-      "Size": 216720
-    },
-    "lib/arm64-v8a/lib_System.Private.Uri.dll.so": {
-      "Size": 62184
-    },
-    "lib/arm64-v8a/lib_System.Private.Xml.dll.so": {
-      "Size": 237120
-    },
-    "lib/arm64-v8a/lib_System.Private.Xml.Linq.dll.so": {
-      "Size": 35584
-    },
-    "lib/arm64-v8a/lib_System.Runtime.dll.so": {
-      "Size": 20200
-    },
-    "lib/arm64-v8a/lib_System.Runtime.InteropServices.dll.so": {
-      "Size": 21584
-    },
-    "lib/arm64-v8a/lib_System.Runtime.Numerics.dll.so": {
-      "Size": 54408
-    },
-    "lib/arm64-v8a/lib_System.Runtime.Serialization.dll.so": {
-      "Size": 19352
-    },
-    "lib/arm64-v8a/lib_System.Runtime.Serialization.Formatters.dll.so": {
-      "Size": 20328
-    },
-    "lib/arm64-v8a/lib_System.Runtime.Serialization.Primitives.dll.so": {
       "Size": 21448
     },
+    "lib/arm64-v8a/lib_netstandard.dll.so": {
+      "Size": 23096
+    },
+    "lib/arm64-v8a/lib_System.Collections.Concurrent.dll.so": {
+      "Size": 29896
+    },
+    "lib/arm64-v8a/lib_System.Collections.dll.so": {
+      "Size": 36304
+    },
+    "lib/arm64-v8a/lib_System.Collections.NonGeneric.dll.so": {
+      "Size": 25776
+    },
+    "lib/arm64-v8a/lib_System.Collections.Specialized.dll.so": {
+      "Size": 23856
+    },
+    "lib/arm64-v8a/lib_System.ComponentModel.dll.so": {
+      "Size": 19608
+    },
+    "lib/arm64-v8a/lib_System.ComponentModel.Primitives.dll.so": {
+      "Size": 21328
+    },
+    "lib/arm64-v8a/lib_System.ComponentModel.TypeConverter.dll.so": {
+      "Size": 42480
+    },
+    "lib/arm64-v8a/lib_System.Console.dll.so": {
+      "Size": 24440
+    },
+    "lib/arm64-v8a/lib_System.Core.dll.so": {
+      "Size": 19464
+    },
+    "lib/arm64-v8a/lib_System.Diagnostics.DiagnosticSource.dll.so": {
+      "Size": 28456
+    },
+    "lib/arm64-v8a/lib_System.Diagnostics.TraceSource.dll.so": {
+      "Size": 24704
+    },
+    "lib/arm64-v8a/lib_System.dll.so": {
+      "Size": 19864
+    },
+    "lib/arm64-v8a/lib_System.Drawing.dll.so": {
+      "Size": 19448
+    },
+    "lib/arm64-v8a/lib_System.Drawing.Primitives.dll.so": {
+      "Size": 30056
+    },
+    "lib/arm64-v8a/lib_System.Formats.Asn1.dll.so": {
+      "Size": 50312
+    },
+    "lib/arm64-v8a/lib_System.IO.Compression.Brotli.dll.so": {
+      "Size": 29496
+    },
+    "lib/arm64-v8a/lib_System.IO.Compression.dll.so": {
+      "Size": 33808
+    },
+    "lib/arm64-v8a/lib_System.IO.IsolatedStorage.dll.so": {
+      "Size": 28336
+    },
+    "lib/arm64-v8a/lib_System.Linq.dll.so": {
+      "Size": 38784
+    },
+    "lib/arm64-v8a/lib_System.Linq.Expressions.dll.so": {
+      "Size": 185880
+    },
+    "lib/arm64-v8a/lib_System.Net.Http.dll.so": {
+      "Size": 90320
+    },
+    "lib/arm64-v8a/lib_System.Net.Primitives.dll.so": {
+      "Size": 41152
+    },
+    "lib/arm64-v8a/lib_System.Net.Requests.dll.so": {
+      "Size": 21568
+    },
+    "lib/arm64-v8a/lib_System.ObjectModel.dll.so": {
+      "Size": 27096
+    },
+    "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
+      "Size": 958672
+    },
+    "lib/arm64-v8a/lib_System.Private.DataContractSerialization.dll.so": {
+      "Size": 216680
+    },
+    "lib/arm64-v8a/lib_System.Private.Uri.dll.so": {
+      "Size": 62784
+    },
+    "lib/arm64-v8a/lib_System.Private.Xml.dll.so": {
+      "Size": 236920
+    },
+    "lib/arm64-v8a/lib_System.Private.Xml.Linq.dll.so": {
+      "Size": 35600
+    },
+    "lib/arm64-v8a/lib_System.Runtime.dll.so": {
+      "Size": 20216
+    },
+    "lib/arm64-v8a/lib_System.Runtime.InteropServices.dll.so": {
+      "Size": 21480
+    },
+    "lib/arm64-v8a/lib_System.Runtime.Numerics.dll.so": {
+      "Size": 54168
+    },
+    "lib/arm64-v8a/lib_System.Runtime.Serialization.dll.so": {
+      "Size": 19368
+    },
+    "lib/arm64-v8a/lib_System.Runtime.Serialization.Formatters.dll.so": {
+      "Size": 20344
+    },
+    "lib/arm64-v8a/lib_System.Runtime.Serialization.Primitives.dll.so": {
+      "Size": 21472
+    },
     "lib/arm64-v8a/lib_System.Security.Cryptography.dll.so": {
-      "Size": 80496
+      "Size": 81248
     },
     "lib/arm64-v8a/lib_System.Text.RegularExpressions.dll.so": {
-      "Size": 183584
+      "Size": 186352
     },
     "lib/arm64-v8a/lib_System.Xml.dll.so": {
-      "Size": 19248
+      "Size": 19272
     },
     "lib/arm64-v8a/lib_System.Xml.Linq.dll.so": {
-      "Size": 19264
+      "Size": 19280
     },
     "lib/arm64-v8a/lib_UnnamedProject.dll.so": {
       "Size": 22096
@@ -239,31 +239,31 @@
       "Size": 84768
     },
     "lib/arm64-v8a/libarc.bin.so": {
-      "Size": 18776
+      "Size": 18832
     },
     "lib/arm64-v8a/libmono-component-marshal-ilgen.so": {
-      "Size": 87432
+      "Size": 36440
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 1501240
+      "Size": 1524624
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3196512
+      "Size": 3101160
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
-      "Size": 67248
+      "Size": 71976
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
-      "Size": 775136
+      "Size": 758896
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 95632
+      "Size": 103520
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
-      "Size": 160232
+      "Size": 165000
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 349440
+      "Size": 349384
     },
     "META-INF/androidx.activity_activity.version": {
       "Size": 6
@@ -416,7 +416,7 @@
       "Size": 6
     },
     "META-INF/BNDLTOOL.RSA": {
-      "Size": 1223
+      "Size": 1221
     },
     "META-INF/BNDLTOOL.SF": {
       "Size": 98577
@@ -2486,5 +2486,5 @@
       "Size": 812848
     }
   },
-  "PackageSize": 10947851
+  "PackageSize": 10923275
 }

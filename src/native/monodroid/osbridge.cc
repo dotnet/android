@@ -23,8 +23,6 @@ using namespace xamarin::android;
 using namespace xamarin::android::internal;
 
 const OSBridge::MonoJavaGCBridgeType OSBridge::mono_xa_gc_bridge_types[] = {
-	{ "Java.Lang",  "Object" },
-	{ "Java.Lang",  "Throwable" },
 };
 
 const OSBridge::MonoJavaGCBridgeType OSBridge::mono_ji_gc_bridge_types[] = {
