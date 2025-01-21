@@ -3,9 +3,9 @@
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunParallelCmds" />
 
   <Target Name="_PrepareCommonProperties">
-	<PropertyGroup>
-	  <FlavorIntermediateOutputPath>$(IntermediateOutputPath)\$(CMakeRuntimeFlavor)\</FlavorIntermediateOutputPath>
-	</PropertyGroup>
+    <PropertyGroup>
+      <FlavorIntermediateOutputPath>$(IntermediateOutputPath)\$(CMakeRuntimeFlavor)\</FlavorIntermediateOutputPath>
+    </PropertyGroup>
   </Target>
 
   <Target Name="_BuildRuntimes" BeforeTargets="Build"
@@ -30,17 +30,17 @@
 
   <Target Name="_ConfigureRuntimesInputs">
     <ItemGroup>
-	  <_ConfigureRuntimesInputs  Include="..\..\build-tools\scripts\Ndk.targets" />
-	  <_ConfigureRuntimesInputs  Include="CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="..\..\build-tools\scripts\Ndk.targets" />
+      <_ConfigureRuntimesInputs  Include="CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="common\java-interop\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="common\libstub\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="common\libunwind\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="common\lz4\CMakeLists.txt" />
 
-	  <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-Debug\CMakeCache.txt')" />
+      <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-Debug\CMakeCache.txt')" />
       <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-Release\CMakeCache.txt')" />
 
-	  <_OutputDirsToCreate       Include="$(FlavorIntermediateOutputPath)\%(AndroidSupportedTargetJitAbi.AndroidRID)-Debug" />
+      <_OutputDirsToCreate       Include="$(FlavorIntermediateOutputPath)\%(AndroidSupportedTargetJitAbi.AndroidRID)-Debug" />
       <_OutputDirsToCreate       Include="$(FlavorIntermediateOutputPath)\%(AndroidSupportedTargetJitAbi.AndroidRID)-Release" />
     </ItemGroup>
 
@@ -64,13 +64,13 @@
       <_OutputDirsToCreate       Include="$(FlavorIntermediateOutputPath)\%(AndroidSupportedTargetJitAbi.AndroidRID)-ubsan-Release"  Condition="'$(EnableNativeAnalyzers)' == 'true'" />
     </ItemGroup>
 
-	<ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
-	  <_ConfigureRuntimesInputs  Include="clr\host\CMakeLists.txt" />
-	  <_ConfigureRuntimesInputs  Include="clr\runtime-base\CMakeLists.txt" />
-	  <_ConfigureRuntimesInputs  Include="clr\shared\CMakeLists.txt" />
-	  <_ConfigureRuntimesInputs  Include="clr\startup\CMakeLists.txt" />
-	  <_ConfigureRuntimesInputs  Include="clr\xamarin-app-stub\CMakeLists.txt" />
-	</ItemGroup>
+    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
+      <_ConfigureRuntimesInputs  Include="clr\host\CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="clr\runtime-base\CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="clr\shared\CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="clr\startup\CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="clr\xamarin-app-stub\CMakeLists.txt" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_ConfigureArchiveDSOInputsAndOutputs">
@@ -163,12 +163,12 @@
 
   <!-- TODO: update for the changes -->
   <Target Name="_FindRuntimeSources">
-	<ItemGroup>
-	  <_RuntimeSources Include="$(JavaInteropFullPath)\src\java-interop\*.cc;$(JavaInteropFullPath)\src\java-interop\*.h" />
-	  <_RuntimeSources Include="common\archive-dso-stub\*.cc" />
-	  <_RuntimeSources Include="common\libstub\*.cc;common\libstub\*.hh" />
+    <ItemGroup>
+      <_RuntimeSources Include="$(JavaInteropFullPath)\src\java-interop\*.cc;$(JavaInteropFullPath)\src\java-interop\*.h" />
+      <_RuntimeSources Include="common\archive-dso-stub\*.cc" />
+      <_RuntimeSources Include="common\libstub\*.cc;common\libstub\*.hh" />
       <_RuntimeSources Include="$(LZ4SourceFullPath)\lib\lz4.c;$(LZ4SourceFullPath)\lib\lz4.h" />
-	</ItemGroup>
+    </ItemGroup>
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'MonoVM' ">
       <_RuntimeSources Include="mono\monodroid\*.cc;mono\monodroid\*.hh" />
@@ -179,27 +179,27 @@
       <_RuntimeSources Include="mono\xamarin-debug-app-helper\*.cc;mono\xamarin-debug-app-helper\*.hh" />
     </ItemGroup>
 
-	<ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
-	  <_RuntimeSources Include="clr\host\*.cc;clr\host\*.hh" />
-	  <_RuntimeSources Include="clr\include\**\*.hh" />
-	  <_RuntimeSources Include="clr\startup\*.cc;clr\startup\*.hh" />
-	  <_RuntimeSources Include="clr\xamarin-app-stub\*.cc;clr\xamarin-app-stub\*.hh" />
+    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
+      <_RuntimeSources Include="clr\host\*.cc;clr\host\*.hh" />
+      <_RuntimeSources Include="clr\include\**\*.hh" />
+      <_RuntimeSources Include="clr\startup\*.cc;clr\startup\*.hh" />
+      <_RuntimeSources Include="clr\xamarin-app-stub\*.cc;clr\xamarin-app-stub\*.hh" />
       <_RuntimeSources Include="clr\runtime-base\*.cc;clr\runtime-base\*.hh" />
       <_RuntimeSources Include="clr\shared\*.cc;clr\shared\*.hh" />
-	</ItemGroup>
+    </ItemGroup>
   </Target>
 
   <Target Name="_BuildAndroidRuntimesInputs"
           DependsOnTargets="_FindRuntimeSources">
-	<ItemGroup>
-	  <_BuildAndroidRuntimesInputs  Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-Debug\CMakeCache.txt')" />
+    <ItemGroup>
+      <_BuildAndroidRuntimesInputs  Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-Debug\CMakeCache.txt')" />
       <_BuildAndroidRuntimesInputs  Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-Release\CMakeCache.txt')" />
       <_BuildAndroidRuntimesInputs  Include="@(_RuntimeSources)" />
-	  <_BuildAndroidRuntimesInputs  Include="..\..\build-tools\scripts\Ndk.targets" />
+      <_BuildAndroidRuntimesInputs  Include="..\..\build-tools\scripts\Ndk.targets" />
 
       <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\Debug\libxamarin-app.so')" />
       <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\Release\libxamarin-app.so')" />
-	</ItemGroup>
+    </ItemGroup>
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'MonoVM' ">
       <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android.debug.so')" />
