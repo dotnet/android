@@ -98,6 +98,11 @@ namespace Xamarin.Android.Prepare
 				{ "@NETCORE_APP_RUNTIME_ANDROID_ARM64@",  Utilities.EscapePathSeparators (Configurables.Paths.NetcoreAppRuntimeAndroidARM64) },
 				{ "@NETCORE_APP_RUNTIME_ANDROID_X86@",    Utilities.EscapePathSeparators (Configurables.Paths.NetcoreAppRuntimeAndroidX86) },
 				{ "@NETCORE_APP_RUNTIME_ANDROID_X86_64@", Utilities.EscapePathSeparators (Configurables.Paths.NetcoreAppRuntimeAndroidX86_64) },
+
+				{ "@CORECLR_APP_RUNTIME_ANDROID_ARM@",    Utilities.EscapePathSeparators (Configurables.Paths.CoreClrAppRuntimeAndroidARM) },
+				{ "@CORECLR_APP_RUNTIME_ANDROID_ARM64@",  Utilities.EscapePathSeparators (Configurables.Paths.CoreClrAppRuntimeAndroidARM64) },
+				{ "@CORECLR_APP_RUNTIME_ANDROID_X86@",    Utilities.EscapePathSeparators (Configurables.Paths.CoreClrAppRuntimeAndroidX86) },
+				{ "@CORECLR_APP_RUNTIME_ANDROID_X86_64@", Utilities.EscapePathSeparators (Configurables.Paths.CoreClrAppRuntimeAndroidX86_64) },
 			};
 
 			return new GeneratedPlaceholdersFile (
