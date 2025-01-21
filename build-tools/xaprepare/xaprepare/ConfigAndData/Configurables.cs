@@ -191,11 +191,17 @@ namespace Xamarin.Android.Prepare
 			public static string OpenJDKInstallDir                   => GetCachedPath (ref openJDKInstallDir, ()                   => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), Defaults.JdkFolder));
 			public static string OpenJDKCacheDir                     => GetCachedPath (ref openJDKCacheDir, ()                     => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory));
 
-			// .NET 6
+			// .NET 6+
 			public static string NetcoreAppRuntimeAndroidARM         => GetCachedPath (ref netcoreAppRuntimeAndroidARM, () => GetNetcoreAppRuntimePath (ctx, "arm"));
 			public static string NetcoreAppRuntimeAndroidARM64       => GetCachedPath (ref netcoreAppRuntimeAndroidARM64, () => GetNetcoreAppRuntimePath (ctx, "arm64"));
 			public static string NetcoreAppRuntimeAndroidX86         => GetCachedPath (ref netcoreAppRuntimeAndroidX86, () => GetNetcoreAppRuntimePath (ctx, "x86"));
 			public static string NetcoreAppRuntimeAndroidX86_64      => GetCachedPath (ref netcoreAppRuntimeAndroidX86_64, () => GetNetcoreAppRuntimePath (ctx, "x64"));
+
+			// CoreCLR
+			public static string CoreClrAppRuntimeAndroidARM         => GetCachedPath (ref coreclrAppRuntimeAndroidARM, () => GetCoreClrAppRuntimePath (ctx, "arm"));
+			public static string CoreClrAppRuntimeAndroidARM64       => GetCachedPath (ref coreclrAppRuntimeAndroidARM64, () => GetCoreClrAppRuntimePath (ctx, "arm64"));
+			public static string CoreClrAppRuntimeAndroidX86         => GetCachedPath (ref coreclrAppRuntimeAndroidX86, () => GetCoreClrAppRuntimePath (ctx, "x86"));
+			public static string CoreClrAppRuntimeAndroidX86_64      => GetCachedPath (ref coreclrAppRuntimeAndroidX86_64, () => GetCoreClrAppRuntimePath (ctx, "x64"));
 
 			public static string MicrosoftNETWorkloadMonoPackageDir => Path.Combine (
 				XAPackagesDir,
@@ -242,6 +248,24 @@ namespace Xamarin.Android.Prepare
 				);
 			}
 
+			static string GetCoreClrAppRuntimePath (Context ctx, string androidTarget)
+			{
+				string? localClrDir = ctx.Properties.GetValue (KnownProperties.LocalClrDirectory);
+				if (!String.IsNullOrEmpty (localClrDir)) {
+					return Path.Combine (localClrDir, "runtimes", $"android-{androidTarget}");
+				}
+
+				// TODO: The nuget id and the ref package version are guesses atm, since the CoreCLR packages don't exist yet
+				Log.Instance.Todo ("The nuget id and the ref package version are guesses atm, since the CoreCLR packages don't exist yet");
+				return Path.Combine (
+					XAPackagesDir,
+					$"microsoft.netcore.app.runtime.coreclr.android-{androidTarget}",
+					ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETCoreAppRefPackageVersion),
+					"runtimes",
+					$"android-{androidTarget}"
+				);
+			}
+
 			static string EnsureAndroidToolchainBinDirectories ()
 			{
 				if (androidToolchainBinDirectory != null)
@@ -278,6 +302,10 @@ namespace Xamarin.Android.Prepare
 			static string? netcoreAppRuntimeAndroidARM64;
 			static string? netcoreAppRuntimeAndroidX86;
 			static string? netcoreAppRuntimeAndroidX86_64;
+			static string? coreclrAppRuntimeAndroidARM;
+			static string? coreclrAppRuntimeAndroidARM64;
+			static string? coreclrAppRuntimeAndroidX86;
+			static string? coreclrAppRuntimeAndroidX86_64;
 		}
 	}
 }
