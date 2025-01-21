@@ -3,8 +3,7 @@
   <PropertyGroup>
     <XamarinAndroidToolsDirectory>$(MSBuildThisFileDirectory)xamarin-android-tools</XamarinAndroidToolsDirectory>
     <RestoreAdditionalProjectSources>
-      https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-c1ae9626/nuget/v3/index.json;
-      https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-061c8b71/nuget/v3/index.json;
+      https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-e346656d/nuget/v3/index.json
     </RestoreAdditionalProjectSources>
   </PropertyGroup>
 
