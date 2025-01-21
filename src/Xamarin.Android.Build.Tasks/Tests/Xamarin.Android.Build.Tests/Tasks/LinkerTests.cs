@@ -42,7 +42,7 @@ namespace Xamarin.Android.Build.Tests
 					CreateAbstractIfaceImplementation (myAssemblyPath, android);
 				}
 
-				using (var assm = context.Resolve (myAssemblyPath)) {
+				using (var assm = context.Resolve ("MyAssembly.dll")) {
 					step.FixAbstractMethods (assm);
 
 					var impl = assm.MainModule.GetType ("MyNamespace.MyClass");
@@ -101,7 +101,7 @@ namespace Xamarin.Android.Build.Tests
 					CreateExplicitInterface (myAssemblyPath, android);
 				}
 
-				using (var assm = context.Resolve (myAssemblyPath)) {
+				using (var assm = context.Resolve ("MyAssembly.dll")) {
 					step.FixAbstractMethods (assm);
 
 					var impl = assm.MainModule.GetType ("MyNamespace.MyClass");
