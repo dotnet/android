@@ -11,7 +11,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	//[Category ("Performance")]
+	[Category ("Performance")]
 	public class PerformanceTest : DeviceTest
 	{
 		const int Retry = 2;
@@ -60,13 +60,13 @@ namespace Xamarin.Android.Build.Tests
 			for (int i=0; i < iterations; i++) {
 				action (builder);
 				var actual = GetDurationFromBinLog (builder);
-				TestContext.Out.WriteLine($"run {i} took: {actual}ms");
+				TestContext.Out.WriteLine ($"run {i} took: {actual}ms");
 				total += actual; 
 				if (afterRun is not null)
 					afterRun (builder);
 			}
 			total /= iterations;
-			TestContext.Out.WriteLine($"expected: {expected}ms, actual: {total}ms");
+			TestContext.Out.WriteLine ($"expected: {expected}ms, actual: {total}ms");
 			if (total > expected) {
 				Assert.Fail ($"Exceeded expected time of {expected}ms, actual {total}ms");
 			}
