@@ -224,13 +224,14 @@ if(IS_CLR_RUNTIME)
   set(XA_RUNTIME_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/clr/include)
 
   macro(xa_add_include_directories TARGET)
-	target_include_directories(
+	  target_include_directories(
       ${TARGET}
       PRIVATE
       ${XA_RUNTIME_INCLUDE_DIR}
       ${EXTERNAL_DIR}
       ${CONSTEXPR_XXH3_DIR}
-	)
+      ${RUNTIME_INCLUDE_DIR}
+	  )
   endmacro()
 endif()
 
