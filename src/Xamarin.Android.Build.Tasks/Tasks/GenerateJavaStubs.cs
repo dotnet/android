@@ -338,7 +338,7 @@ namespace Xamarin.Android.Tasks
 			(List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW) = ScanForJavaTypes (resolver, tdCache, assemblies, userAssemblies, useMarshalMethods);
 			var jcwContext = new JCWGeneratorContext (arch, resolver, assemblies.Values, javaTypesForJCW, tdCache, useMarshalMethods);
 			var jcwGenerator = new JCWGenerator (Log, jcwContext) {
-				CodeGenerationTarget = androidRuntime != Xamarin.Android.Tasks.AndroidRuntime.NativeAOT ? JavaPeerStyle.XAJavaInterop1 : JavaPeerStyle.JavaInterop1
+				CodeGenerationTarget = androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.MonoVM ? JavaPeerStyle.XAJavaInterop1 : JavaPeerStyle.JavaInterop1
 			};
 			bool success;
 
