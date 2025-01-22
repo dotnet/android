@@ -44,8 +44,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     This will mean only one copy of the assembly will be created. Rather than one
     per TargetFramework.
     -->
-    <_DesignerIntermediateOutputPath Condition=" '$(_DesignerIntermediateOutputPath)' == '' And '$(_OuterIntermediateOutputPath)' != '' ">$(_OuterIntermediateOutputPath)</_DesignerIntermediateOutputPath>
     <_DesignerIntermediateOutputPath Condition=" '$(_DesignerIntermediateOutputPath)' == '' And '$(_OuterIntermediateOutputPath)' != '' And '$(AndroidUseDesignerAssembly)' == 'True' And '$(DesignTimeBuild)' == 'true' ">$(_OuterIntermediateOutputPath)designtime\</_DesignerIntermediateOutputPath>
+    <_DesignerIntermediateOutputPath Condition=" '$(_DesignerIntermediateOutputPath)' == '' And '$(_OuterIntermediateOutputPath)' != '' ">$(_OuterIntermediateOutputPath)</_DesignerIntermediateOutputPath>
     <_DesignerIntermediateOutputPath Condition=" '$(_DesignerIntermediateOutputPath)' == '' And '$(AndroidUseDesignerAssembly)' == 'True' And '$(DesignTimeBuild)' == 'true' ">$(IntermediateOutputPath)designtime\</_DesignerIntermediateOutputPath>
     <_DesignerIntermediateOutputPath Condition=" '$(_DesignerIntermediateOutputPath)' == '' ">$(IntermediateOutputPath)</_DesignerIntermediateOutputPath>
     <_GenerateResourceDesignerAssemblyOutput>$(_DesignerIntermediateOutputPath)$(_DesignerAssemblyName).dll</_GenerateResourceDesignerAssemblyOutput>
