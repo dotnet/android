@@ -30,8 +30,10 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       BeforeTargets="SetupProperties">
     <!-- Example settings from: https://github.com/jonathanpeppers/Android-NativeAOT/blob/ea69d122cdc7de67aa6a5db14b7e560763c63cdd/DotNet/libdotnet.targets -->
     <PropertyGroup>
-      <_NdkSysrootAbi>aarch64-linux-android</_NdkSysrootAbi>
-      <_NdkClangPrefix>aarch64-linux-android21-</_NdkClangPrefix>
+      <_NdkAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">aarch64</_NdkAbi>
+      <_NdkAbi Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">x86_64</_NdkAbi>
+      <_NdkSysrootAbi>$(_NdkAbi)-linux-android</_NdkSysrootAbi>      
+      <_NdkClangPrefix>$(_NdkAbi)-linux-android21-</_NdkClangPrefix>
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('windows')) ">windows-x86_64</_NdkPrebuiltAbi>
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('osx')) ">darwin-x86_64</_NdkPrebuiltAbi>
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('linux')) ">linux-x86_64</_NdkPrebuiltAbi>
@@ -49,11 +51,14 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       -->
       <_OriginalSuppressTrimAnalysisWarnings>$(SuppressTrimAnalysisWarnings)</_OriginalSuppressTrimAnalysisWarnings>
       <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+      <!-- Ensure ILLink respects the value of SuppressTrimAnalysisWarnings -->
+      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --notrimwarn</_ExtraTrimmerArgs>
 
       <!-- The list of hacks below should go away when we have NativeAOT.android-* packs -->
       <!-- HACK: we are android-arm64, so this is required for the right path(s) to be found -->
       <_OriginalRuntimeIdentifier>$(RuntimeIdentifier)</_OriginalRuntimeIdentifier>
       <RuntimeIdentifier Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">linux-bionic-arm64</RuntimeIdentifier>
+      <RuntimeIdentifier Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">linux-bionic-x64</RuntimeIdentifier>
       <!-- HACK: -targetos:android results in error, so use linux -->
       <_targetOS>linux</_targetOS>
       <!-- HACK: prevents libSystem.Net.Security.Native.a from being added -->
@@ -78,6 +83,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <IlcReference Remove="@(IlcReference)" />
       <IlcReference Include="@(PrivateSdkAssemblies)" />
       <IlcReference Include="@(_AndroidILLinkAssemblies)" />
+      <!-- Root *everything* for ILC, as it's already trimmed -->
+      <TrimmerRootAssembly Include="@(_AndroidILLinkAssemblies->'%(Filename)')" Exclude="System.Private.CoreLib" TrimMode="All" />
       <!-- Passes linked assemblies to outer MSBuild tasks/targets -->
       <ResolvedFileToPublish Include="@(IlcCompileInput);@(_AndroidILLinkAssemblies)" RuntimeIdentifier="$(_OriginalRuntimeIdentifier)" />
       <!-- Include libc++ -->
