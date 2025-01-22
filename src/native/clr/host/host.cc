@@ -1,3 +1,5 @@
+#include <corehost/host_runtime_contract.h>
+
 #include <host/host.hh>
 #include <host/host-jni.hh>
 #include <runtime-base/android-system.hh>
