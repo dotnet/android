@@ -28,6 +28,7 @@ public class MonoPackageManager {
 
 	public static void LoadApplication (Context context)
 	{
+		Log.w ("XACLR", "MonoPackageManager.LoadApplication: start");
 		synchronized (lock) {
 			android.content.pm.ApplicationInfo runtimePackage = context.getApplicationInfo ();
 			String[] apks = null;
@@ -44,6 +45,7 @@ public class MonoPackageManager {
 				Context = context;
 			}
 			if (!initialized) {
+				Log.w ("XACLR", "MonoPackageManager.LoadApplication: initializing");
 				android.content.IntentFilter timezoneChangedFilter  = new android.content.IntentFilter (
 					android.content.Intent.ACTION_TIMEZONE_CHANGED
 				);
@@ -70,8 +72,10 @@ public class MonoPackageManager {
 				String[] appDirs = new String[] {filesDir, cacheDir, dataDir};
 				boolean haveSplitApks = runtimePackage.splitSourceDirs != null && runtimePackage.splitSourceDirs.length > 0;
 
+				Log.w ("XACLR", "MonoPackageManager.LoadApplication: load monodroid");
 				System.loadLibrary("monodroid");
 
+				Log.w ("XACLR", "MonoPackageManager.LoadApplication: call Runtime.initInternal");
 				Runtime.initInternal (
 					language,
 					apks,
@@ -84,8 +88,10 @@ public class MonoPackageManager {
 					haveSplitApks
 				);
 
+				Log.w ("XACLR", "MonoPackageManager.LoadApplication: call registerApplications");
 				mono.android.app.ApplicationRegistration.registerApplications ();
 
+				Log.w ("XACLR", "MonoPackageManager.LoadApplication: initialized");
 				initialized = true;
 			}
 		}
