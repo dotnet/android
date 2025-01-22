@@ -243,8 +243,9 @@ namespace Xamarin.Android.Tasks
 
 		internal static Dictionary<string, ITaskItem> MaybeGetArchAssemblies (Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> dict, AndroidTargetArch arch)
 		{
-			if (!string.Equals (AndroidRuntime, "MonoVM", StringComparison.OrdinalIgnoreCase)) {
-				Log.LogDebugMessage ($"Skipping MonoRuntimeProvider generation for {AndroidRuntime}");
+			if (androidRuntime != Xamarin.Android.Tasks.AndroidRuntime.MonoVM &&
+			    androidRuntime != Xamarin.Android.Tasks.AndroidRuntime.CoreCLR) {
+				Log.LogDebugMessage ($"Skipping MonoRuntimeProvider generation for: {androidRuntime}");
 				return;
 			}
 

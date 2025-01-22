@@ -673,7 +673,7 @@ namespace Xamarin.Android.Tasks {
 
 		IList<string> AddMonoRuntimeProviders (XElement app)
 		{
-			if (!string.Equals (AndroidRuntime, "MonoVM", StringComparison.OrdinalIgnoreCase)) {
+			if (AndroidRuntime != AndroidRuntime.MonoVM && AndroidRuntime != AndroidRuntime.CoreCLR) {
 				//TODO: implement provider logic for non-Mono runtimes
 				return [];
 			}
