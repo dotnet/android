@@ -299,8 +299,9 @@ namespace Xamarin.Android.Tasks
 
 		void GenerateAdditionalProviderSources (NativeCodeGenState codeGenState, IList<string> additionalProviders)
 		{
-			if (!string.Equals (AndroidRuntime, "MonoVM", StringComparison.OrdinalIgnoreCase)) {
-				Log.LogDebugMessage ($"Skipping MonoRuntimeProvider generation for {AndroidRuntime}");
+			if (androidRuntime != Xamarin.Android.Tasks.AndroidRuntime.MonoVM &&
+			    androidRuntime != Xamarin.Android.Tasks.AndroidRuntime.CoreCLR) {
+				Log.LogDebugMessage ($"Skipping MonoRuntimeProvider generation for: {androidRuntime}");
 				return;
 			}
 
