@@ -32,7 +32,7 @@ target_compile_options(
 target_link_directories(
   ${LIB_NAME}
   PRIVATE
-  ${NET_RUNTIME_DIR}/native-clr
+  ${NET_RUNTIME_DIR}/native
 )
 
 target_link_options(
