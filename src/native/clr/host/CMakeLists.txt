@@ -128,7 +128,6 @@ macro(lib_target_options TARGET_NAME)
 
   target_link_libraries(
     ${TARGET_NAME}
-    ${LINK_LIBS}
     xa::xamarin-app
     ${SHARED_LIB_NAME}
     xa::runtime-base
@@ -136,6 +135,7 @@ macro(lib_target_options TARGET_NAME)
 #    xa::pinvoke-override-precompiled
     xa::lz4
     -llog
+    -lcoreclr
   )
 endmacro ()
 

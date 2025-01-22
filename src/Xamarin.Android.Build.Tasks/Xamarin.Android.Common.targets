@@ -2069,14 +2069,8 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_PrepareApplicationSharedLibraryItems">
-  <ItemGroup Condition=" '$(_AndroidRuntime)' != 'CoreCLR' ">
+  <ItemGroup>
     <_ApplicationSharedLibrary Include="$(_AndroidApplicationSharedLibraryPath)%(_BuildTargetAbis.Identity)\libxamarin-app.so">
-      <abi>%(_BuildTargetAbis.Identity)</abi>
-    </_ApplicationSharedLibrary>
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">
-    <_ApplicationSharedLibrary Include="$(_AndroidApplicationSharedLibraryPath)%(_BuildTargetAbis.Identity)\libxamarin-app-clr.so">
       <abi>%(_BuildTargetAbis.Identity)</abi>
     </_ApplicationSharedLibrary>
   </ItemGroup>
