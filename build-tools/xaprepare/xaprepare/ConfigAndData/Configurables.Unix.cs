@@ -15,7 +15,11 @@ namespace Xamarin.Android.Prepare
 
 		partial class Urls
 		{
-			public static readonly Uri DotNetInstallScript = new Uri ("https://dot.net/v1/dotnet-install.sh");
+			// This is the "public" url that we really should be using, but it keeps failing with:
+			// AuthenticationException: The remote certificate is invalid because of errors in the certificate chain: RevocationStatusUnknown
+			// For now we'll grab it directly from GitHub
+			// public static readonly Uri DotNetInstallScript = new Uri ("https://dot.net/v1/dotnet-install.sh");
+			public static readonly Uri DotNetInstallScript = new Uri ("https://raw.githubusercontent.com/dotnet/install-scripts/refs/heads/main/src/dotnet-install.sh");
 		}
 	}
 }
