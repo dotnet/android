@@ -27,7 +27,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 
 <Target Name="_InjectAaptDependencies">
-  <PropertyGroup>
+  <PropertyGroup Condition="'$(DesignTimeBuild)' != 'True' Or ('$(DesignTimeBuild)' == 'True' And '$(AndroidUseManagedDesignTimeResourceGenerator)' == 'False') ">
     <_SetLatestTargetFrameworkVersionDependsOnTargets>
       $(_SetLatestTargetFrameworkVersionDependsOnTargets);
       _CreateAapt2VersionCache;

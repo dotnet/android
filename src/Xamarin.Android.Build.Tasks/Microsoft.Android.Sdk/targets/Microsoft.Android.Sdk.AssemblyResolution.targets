@@ -92,6 +92,7 @@ _ResolveAssemblies MSBuild target.
       <_AdditionalProperties>
         _ComputeFilesToPublishForRuntimeIdentifiers=true
         ;SelfContained=true
+        ;DesignTimeBuild=$(DesignTimeBuild)
         ;AppendRuntimeIdentifierToOutputPath=true
         ;ResolveAssemblyReferencesFindRelatedSatellites=false
         ;SkipCompilerExecution=true
@@ -107,6 +108,7 @@ _ResolveAssemblies MSBuild target.
       <_ProjectToBuild Include="$(MSBuildProjectFile)" AdditionalProperties="RuntimeIdentifier=%(_RIDs.Identity);$(_AdditionalProperties)" />
     </ItemGroup>
     <MSBuild
+        Condition=" '$(DesignTimeBuild)' != 'true' "
         Projects="@(_ProjectToBuild)"
         BuildInParallel="$(_AndroidBuildRuntimeIdentifiersInParallel)"
         Targets="_ComputeFilesToPublishForRuntimeIdentifiers">

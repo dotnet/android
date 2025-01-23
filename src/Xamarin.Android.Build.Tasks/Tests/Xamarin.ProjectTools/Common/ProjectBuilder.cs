@@ -101,11 +101,12 @@ namespace Xamarin.ProjectTools
 		public bool DesignTimeBuild (XamarinProject project, string target = "Compile", bool doNotCleanupOnUpdate = false, string [] parameters = null)
 		{
 			if (parameters == null) {
-				return RunTarget (project, target, doNotCleanupOnUpdate, parameters: new string [] { "DesignTimeBuild=True" });
+				return RunTarget (project, target, doNotCleanupOnUpdate, parameters: new string [] { "DesignTimeBuild=True", "SkipCompilerExecution=true" });
 			} else {
-				var designTimeParameters = new string [parameters.Length + 1];
+				var designTimeParameters = new string [parameters.Length + 2];
 				parameters.CopyTo (designTimeParameters, 0);
-				designTimeParameters [parameters.Length] = "DesignTimeBuild=True";
+				designTimeParameters [designTimeParameters.Length - 2] = "DesignTimeBuild=True";
+				designTimeParameters [designTimeParameters.Length - 1] = "SkipCompilerExecution=true";
 				return RunTarget (project, target, doNotCleanupOnUpdate, parameters: designTimeParameters);
 			}
 		}
