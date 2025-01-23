@@ -544,11 +544,8 @@ namespace Foo {
 				Assert.IsNotNull (element, "api.xml should contain an `api` element!");
 				Assert.IsTrue (element.HasElements, "api.xml should contain elements!");
 
-				var assemblyFile = Path.Combine (intermediate, proj.ProjectName + ".dll");
-				using (var assembly = AssemblyDefinition.ReadAssembly (assemblyFile)) {
-					var typeName = "Com.Balysv.Material.Drawable.Menu.MaterialMenuView";
-					Assert.IsTrue (assembly.MainModule.Types.Any (t => t.FullName == typeName), $"Type `{typeName}` should exist!");
-				}
+				var sourceFile = Path.Combine (intermediate, "generated", "src", "Com.Balysv.Material.Drawable.Menu.MaterialMenuView.cs");
+				FileAssert.Exists (sourceFile, $"'{sourceFile}' should have been generated.");
 			}
 		}
 

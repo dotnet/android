@@ -49,6 +49,14 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
+    # Currently needed for samples/NativeAOT
+    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
+      parameters:
+        project: Xamarin.Android.sln
+        arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
+        displayName: prepare java.interop $(XA.Build.Configuration)
+        continueOnError: false
+
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
       parameters:
         xaSourcePath: ${{ parameters.xaSourcePath }}

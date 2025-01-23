@@ -44,7 +44,9 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     This will mean only one copy of the assembly will be created. Rather than one
     per TargetFramework.
     -->
+    <_DesignerIntermediateOutputPath Condition=" '$(_DesignerIntermediateOutputPath)' == '' And '$(_OuterIntermediateOutputPath)' != '' And '$(AndroidUseDesignerAssembly)' == 'True' And '$(DesignTimeBuild)' == 'true' ">$(_OuterIntermediateOutputPath)designtime\</_DesignerIntermediateOutputPath>
     <_DesignerIntermediateOutputPath Condition=" '$(_DesignerIntermediateOutputPath)' == '' And '$(_OuterIntermediateOutputPath)' != '' ">$(_OuterIntermediateOutputPath)</_DesignerIntermediateOutputPath>
+    <_DesignerIntermediateOutputPath Condition=" '$(_DesignerIntermediateOutputPath)' == '' And '$(AndroidUseDesignerAssembly)' == 'True' And '$(DesignTimeBuild)' == 'true' ">$(IntermediateOutputPath)designtime\</_DesignerIntermediateOutputPath>
     <_DesignerIntermediateOutputPath Condition=" '$(_DesignerIntermediateOutputPath)' == '' ">$(IntermediateOutputPath)</_DesignerIntermediateOutputPath>
     <_GenerateResourceDesignerAssemblyOutput>$(_DesignerIntermediateOutputPath)$(_DesignerAssemblyName).dll</_GenerateResourceDesignerAssemblyOutput>
     <_GenerateResourceDesignerClassFile Condition=" '$(Language)' == 'F#' ">$(_DesignerIntermediateOutputPath)_$(_DesignerAssemblyName).fs</_GenerateResourceDesignerClassFile>
@@ -56,15 +58,45 @@ Copyright (C) 2016 Xamarin. All rights reserved.
   <Message Text="IntermediateOutputPath: $(IntermediateOutputPath)" />
 </Target>
 
+<Target Name="_GetProjectResourceDirectory" Returns="@(_ProjectReferenceResourceDirectory)">
+  <ItemGroup>
+    <_ProjectReferenceResourceDirectory Include="$(MSBuildProjectDirectory)\$(MonoAndroidResourcePrefix)"
+        Condition=" !Exists('$(OutputPath)$(TargetName).aar') "
+        StampFile="$(MSBuildProjectFile)"
+    />
+  </ItemGroup>
+</Target>
+
+<Target Name="_CollectProjectReferenceResources"
+    Condition=" '$(AndroidUseDesignerAssembly)' == 'True' And '$(DesignTimeBuild)' == 'True' "
+>
+  <MSBuild
+      Projects="@(ProjectReference)"
+      Targets="_GetProjectResourceDirectory"
+      SkipNonexistentTargets="true"
+  >
+    <Output TaskParameter="TargetOutputs" ItemName="LibraryResourceDirectories" />
+  </MSBuild>
+</Target>
+
+<Target Name="_CalculateDesignTimeAars" Condition=" '$(DesignTimeBuild)' == 'True' ">
+  <ItemGroup>
+    <!-- Only use the aar files if we have not extracted the data -->
+    <_DesignTimeAarFiles Include="@(AndroidAarLibrary)" Condition=" '@(LibraryResourceDirectories->Count())' == '0' " />
+    <_DesignTimeAarFiles Include="@(LibraryProjectZip)" Condition=" '%(LibraryProjectZip.Extension)' == '.aar' and '@(LibraryResourceDirectories->Count())' == '0' " />
+  </ItemGroup>
+</Target>
+
 <Target Name="_GenerateRtxt"
     Condition="'$(AndroidUseDesignerAssembly)' == 'True' And '$(DesignTimeBuild)' == 'True' "
-    DependsOnTargets="_CreatePropertiesCache;_ResolveSdks;_ResolveAndroidTooling;_GetJavaPlatformJar;_GenerateAndroidResourceDir;_SetupDesignerProperties"
+    DependsOnTargets="_CreatePropertiesCache;_ResolveSdks;_ResolveAndroidTooling;_GetJavaPlatformJar;_GenerateAndroidResourceDir;_SetupDesignerProperties;_CollectProjectReferenceResources;_CalculateDesignTimeAars"
     Inputs="$(_AndroidResFlagFile);@(_AndroidResourceDest);@(LibraryResourceDirectories->'%(StampFile)')"
     Outputs="$(_DesignerIntermediateOutputPath)R.txt"
   >
   <!-- Generate an R.txt file using the Managed Parser -->
   <GenerateRtxt
       AdditionalResourceDirectories="@(LibraryResourceDirectories)"
+      AarLibraries="@(_DesignTimeAarFiles)"
       CaseMapFile="$(_GenerateResourceCaseMapFile)"
       JavaPlatformJarPath="$(JavaPlatformJarPath)"
       ResourceDirectory="$(MonoAndroidResDirIntermediate)"
@@ -75,13 +107,14 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_GenerateResourceCaseMap"
-    DependsOnTargets="_ComputeAndroidResourcePaths;_SetupDesignerProperties;_GetLibraryImports"
+    DependsOnTargets="_ComputeAndroidResourcePaths;_SetupDesignerProperties;_GetLibraryImports;_CollectProjectReferenceResources;_CalculateDesignTimeAars"
     Inputs="@(_AndroidResourceDest);@(LibraryResourceDirectories->'%(StampFile)')"
     Outputs="$(_GenerateResourceCaseMapFile)"
   >
   <!-- Generate a ResourceMap file for the project and its resources -->
   <GenerateResourceCaseMap
       AdditionalResourceDirectories="@(LibraryResourceDirectories)"
+      AarLibraries="@(_DesignTimeAarFiles)"
       OutputFile="$(_GenerateResourceCaseMapFile)"
       ProjectDir="$(ProjectDir)"
       ResourceDirectory="$(MonoAndroidResDirIntermediate)"
@@ -159,6 +192,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 <PropertyGroup>
   <_BuildResourceDesignerDependsOn>
     _SetupDesignerProperties;
+    _ResolveAars;
+    _CalculateDesignTimeAars;
     _GenerateResourceCaseMap;
     _GenerateRtxt;
     _GenerateResourceDesignerIntermediateClass;
