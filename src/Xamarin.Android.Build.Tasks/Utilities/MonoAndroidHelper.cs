@@ -830,5 +830,22 @@ namespace Xamarin.Android.Tasks
 			// Default runtime is MonoVM
 			return AndroidRuntime.MonoVM;
 		}
+
+		/// <summary>
+		/// Returns true if the input file is newer than the output file.
+		/// </summary>
+		public static bool IsFileOutOfDate (string input, string output)
+		{
+			if (!File.Exists (output))
+				return true;
+
+			var inputInfo = new FileInfo (input);
+			var outputInfo = new FileInfo (output);
+
+			if (inputInfo.LastWriteTimeUtc > outputInfo.LastWriteTimeUtc)
+				return true;
+
+			return false;
+		}
 	}
 }

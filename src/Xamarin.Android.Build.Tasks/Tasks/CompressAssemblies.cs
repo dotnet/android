@@ -66,14 +66,32 @@ public class CompressAssemblies : AndroidTask
 			Log.LogDebugMessage ($"Compressing assemblies for architecture '{kvp.Key}'");
 
 			foreach (var asm in kvp.Value.Values) {
+				if (bool.TryParse (asm.GetMetadata ("AndroidSkipCompression"), out bool value) && value) {
+					Log.LogDebugMessage ($"Skipping compression of {asm.ItemSpec} due to 'AndroidSkipCompression' == 'true' ");
+					continue;
+				}
+
+				if (!AssemblyCompression.TryGetDescriptorIndex (Log, asm, compressed_assemblies_info, out var descriptor_index)) {
+					Log.LogDebugMessage ($"Skipping compression of {asm.ItemSpec} due to missing descriptor index.");
+					continue;
+				}
+
+				var compressed_assembly = AssemblyCompression.GetCompressedAssemblyOutputPath (asm, compressed_output_dir);
+
+				if (!MonoAndroidHelper.IsFileOutOfDate (asm.ItemSpec, compressed_assembly)) {
+					asm.SetMetadata ("CompressedAssembly", compressed_assembly);
+					Log.LogDebugMessage ($"Skipping compression of {asm.ItemSpec} because the compressed assembly is up to date.");
+					continue;
+				}
+
 				MonoAndroidHelper.LogIfReferenceAssembly (asm, Log);
 
-				var compressed_assembly = AssemblyCompression.Compress (Log, asm, compressed_assemblies_info, compressed_output_dir);
-
-				if (compressed_assembly.HasValue ()) {
-					Log.LogDebugMessage ($"Compressed '{asm.ItemSpec}' to '{compressed_assembly}'.");
-					asm.SetMetadata ("CompressedAssembly", compressed_assembly);
+				if (!AssemblyCompression.TryCompress (Log, asm.ItemSpec, compressed_assembly, descriptor_index)) {
+					continue;
 				}
+
+				Log.LogDebugMessage ($"Compressed '{asm.ItemSpec}' to '{compressed_assembly}'.");
+				asm.SetMetadata ("CompressedAssembly", compressed_assembly);
 			}
 		}
 
