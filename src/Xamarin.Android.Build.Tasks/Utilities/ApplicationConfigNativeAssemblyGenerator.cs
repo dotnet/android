@@ -39,6 +39,11 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		// Disable "Field 'X' is never assigned to, and will always have its default value Y"
+		// Classes below are used in native code generation, thus all the fields must be present
+		// but they aren't always assigned values (which is fine).
+		#pragma warning disable CS0649
+
 		// Order of fields and their type must correspond *exactly* (with exception of the
 		// ignored managed members) to that in
 		// src/monodroid/jni/xamarin-app.hh DSOCacheEntry structure
@@ -147,6 +152,7 @@ namespace Xamarin.Android.Tasks
 			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToPreAllocatedBuffer = true)]
 			public string name;
 		}
+		#pragma warning restore CS0649
 
 		// Keep in sync with FORMAT_TAG in src/monodroid/jni/xamarin-app.hh
 		const ulong FORMAT_TAG = 0x00025E6972616D58; // 'Xmari^XY' where XY is the format version
