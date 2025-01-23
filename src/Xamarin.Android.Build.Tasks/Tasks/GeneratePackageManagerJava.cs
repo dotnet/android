@@ -69,6 +69,7 @@ namespace Xamarin.Android.Tasks
 
 		public bool EnableMarshalMethods { get; set; }
 		public string RuntimeConfigBinFilePath { get; set; }
+		public string ProjectRuntimeConfigFilePath { get; set; } = String.Empty;
 		public string BoundExceptionType { get; set; }
 
 		public string PackageNamingPolicy { get; set; }
@@ -325,12 +326,12 @@ namespace Xamarin.Android.Tasks
 			LLVMIR.LlvmIrComposer appConfigAsmGen;
 
 			if (TargetsCLR) {
-				appConfigAsmGen = new ApplicationConfigNativeAssemblyGeneratorCLR (environmentVariables, systemProperties, Log) {
+				Dictionary<string, string>? runtimeProperties = RuntimePropertiesParser.ParseConfig (ProjectRuntimeConfigFilePath);
+				appConfigAsmGen = new ApplicationConfigNativeAssemblyGeneratorCLR (environmentVariables, systemProperties, runtimeProperties, Log) {
 					UsesAssemblyPreload = environmentParser.UsesAssemblyPreload,
 					AndroidPackageName = AndroidPackageName,
 					PackageNamingPolicy = pnp,
 					JniAddNativeMethodRegistrationAttributePresent = NativeCodeGenState.TemplateJniAddNativeMethodRegistrationAttributePresent,
-					HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
 					NumberOfAssembliesInApk = assemblyCount,
 					BundledAssemblyNameWidth = assemblyNameWidth,
 					NativeLibraries = uniqueNativeLibraries,
