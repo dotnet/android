@@ -61,14 +61,14 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 <Target Name="_GetProjectResourceDirectory" Returns="@(_ProjectReferenceResourceDirectory)">
   <ItemGroup>
     <_ProjectReferenceResourceDirectory Include="$(MSBuildProjectDirectory)\$(MonoAndroidResourcePrefix)"
-      StampFile="$(MSBuildProjectFile)"
-      Condition="!Exists('$(OutputPath)$(TargetName).aar')"
+        Condition=" !Exists('$(OutputPath)$(TargetName).aar') "
+        StampFile="$(MSBuildProjectFile)"
     />
   </ItemGroup>
 </Target>
 
 <Target Name="_CollectProjectReferenceResources"
-    Condition="'$(AndroidUseDesignerAssembly)' == 'True' And '$(DesignTimeBuild)' == 'True' "
+    Condition=" '$(AndroidUseDesignerAssembly)' == 'True' And '$(DesignTimeBuild)' == 'True' "
 >
   <MSBuild
       Projects="@(ProjectReference)"
@@ -83,7 +83,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
   <ItemGroup>
     <!-- Only use the aar files if we have not extracted the data -->
     <_DesignTimeAarFiles Include="@(AndroidAarLibrary)" Condition=" '@(LibraryResourceDirectories->Count())' == '0' " />
-    <_DesignTimeAarFiles Include="@(LibraryProjectZip)" Condition="'%(LibraryProjectZip.Extension)' == '.aar' and '@(LibraryResourceDirectories->Count())' == '0'" />
+    <_DesignTimeAarFiles Include="@(LibraryProjectZip)" Condition=" '%(LibraryProjectZip.Extension)' == '.aar' and '@(LibraryResourceDirectories->Count())' == '0' " />
   </ItemGroup>
 </Target>
 
