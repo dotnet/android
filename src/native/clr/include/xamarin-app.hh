@@ -222,9 +222,9 @@ struct ApplicationConfig
 {
 	bool uses_assembly_preload;
 	bool jni_add_native_method_registration_attribute_present;
-	bool have_runtime_config_blob;
 	bool marshal_methods_enabled;
 	bool ignore_split_configs;
+	uint32_t number_of_runtime_properties;
 	uint32_t package_naming_policy;
 	uint32_t environment_variable_count;
 	uint32_t system_property_count;
@@ -239,6 +239,19 @@ struct ApplicationConfig
 	uint32_t jni_remapping_replacement_type_count;
 	uint32_t jni_remapping_replacement_method_index_entry_count;
 	const char *android_package_name;
+};
+
+struct RuntimeProperty
+{
+	const char *key;
+	const char *value;
+	uint32_t value_size; // including the terminating NUL
+};
+
+struct RuntimePropertyIndexEntry
+{
+	xamarin::android::hash_t key_hash;
+	uint32_t index;
 };
 
 struct DSOApkEntry
@@ -323,6 +336,9 @@ extern "C" {
 	[[gnu::visibility("default")]] extern DSOCacheEntry dso_cache[];
 	[[gnu::visibility("default")]] extern DSOCacheEntry aot_dso_cache[];
 	[[gnu::visibility("default")]] extern DSOApkEntry dso_apk_entries[];
+
+	[[gnu::visibility("default")]] extern const RuntimeProperty runtime_properties[];
+	[[gnu::visibility("default")]] extern const RuntimePropertyIndexEntry runtime_property_index[];
 }
 
 //
