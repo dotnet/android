@@ -115,10 +115,10 @@ stages:
     #       -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-pack.binlog
     #     displayName: Test PackDotNet
 
-    # - template: /build-tools/automation/yaml-templates/upload-results.yaml
-    #   parameters:
-    #     artifactName: ${{ parameters.buildResultArtifactName }}
-    #     includeBuildResults: true
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml
+      parameters:
+        artifactName: ${{ parameters.buildResultArtifactName }}
+        includeBuildResults: true
 
     - template: /build-tools/automation/yaml-templates/fail-on-dirty-tree.yaml
 
