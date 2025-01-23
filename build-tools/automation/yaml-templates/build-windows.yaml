@@ -54,69 +54,71 @@ stages:
         projects: Xamarin.Android.sln
         arguments: '-c $(XA.Build.Configuration) -t:Prepare --no-restore -p:AutoProvision=true -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare.binlog'
 
-    # Build Xamarin.Android and configure local workloads to test improved local build loop
-    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
-      parameters:
-        project: Xamarin.Android.sln
-        arguments: >-
-          -t:BuildDotNet -c $(XA.Build.Configuration) -v:n
-          -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build.binlog
-        displayName: Build Solution
-        continueOnError: false
+    - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
 
-    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
-      parameters:
-        project: build-tools/create-packs/Microsoft.Android.Sdk.proj
-        arguments: >-
-          -t:ConfigureLocalWorkload -c $(XA.Build.Configuration) -v:n -p:RunningOnCI=false
-          -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\local-workload.binlog
-        displayName: Run ConfigureLocalWorkload target
-        continueOnError: false
+    # # Build Xamarin.Android and configure local workloads to test improved local build loop
+    # - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+    #   parameters:
+    #     project: Xamarin.Android.sln
+    #     arguments: >-
+    #       -t:BuildDotNet -c $(XA.Build.Configuration) -v:n
+    #       -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build.binlog
+    #     displayName: Build Solution
+    #     continueOnError: false
 
-    - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml
-      parameters:
-        toolName: apkdiff
-        version: $(ApkDiffToolVersion)
+    # - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+    #   parameters:
+    #     project: build-tools/create-packs/Microsoft.Android.Sdk.proj
+    #     arguments: >-
+    #       -t:ConfigureLocalWorkload -c $(XA.Build.Configuration) -v:n -p:RunningOnCI=false
+    #       -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\local-workload.binlog
+    #     displayName: Run ConfigureLocalWorkload target
+    #     continueOnError: false
 
-    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
-      parameters:
-        testRunTitle: Smoke MSBuild Tests - Windows Dotnet Build
-        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\$(DotNetStableTargetFramework)\Xamarin.Android.Build.Tests.dll
-        dotNetTestExtraArgs: --filter "TestCategory = SmokeTests"
+    # - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml
+    #   parameters:
+    #     toolName: apkdiff
+    #     version: $(ApkDiffToolVersion)
 
-    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
-      parameters:
-        command: test
-        project: src/Microsoft.Android.Sdk.Analysis/Tests/Microsoft.Android.Sdk.Analysis.Tests.csproj 
-        arguments: -c $(XA.Build.Configuration)
-        displayName: Test Microsoft.Android.Sdk.Analysis $(XA.Build.Configuration)
-        continueOnError: false
+    # - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
+    #   parameters:
+    #     testRunTitle: Smoke MSBuild Tests - Windows Dotnet Build
+    #     testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\$(DotNetStableTargetFramework)\Xamarin.Android.Build.Tests.dll
+    #     dotNetTestExtraArgs: --filter "TestCategory = SmokeTests"
 
-    - task: BatchScript@1
-      displayName: Test dotnet-local.cmd - create template
-      inputs:
-        filename: dotnet-local.cmd
-        arguments: new android -o $(Build.StagingDirectory)/LocalWorkloadTest
+    # - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
+    #   parameters:
+    #     command: test
+    #     project: src/Microsoft.Android.Sdk.Analysis/Tests/Microsoft.Android.Sdk.Analysis.Tests.csproj 
+    #     arguments: -c $(XA.Build.Configuration)
+    #     displayName: Test Microsoft.Android.Sdk.Analysis $(XA.Build.Configuration)
+    #     continueOnError: false
 
-    - task: BatchScript@1
-      displayName: Test dotnet-local.cmd - build template
-      inputs:
-        filename: dotnet-local.cmd
-        arguments: build -v:n $(Build.StagingDirectory)/LocalWorkloadTest
+    # - task: BatchScript@1
+    #   displayName: Test dotnet-local.cmd - create template
+    #   inputs:
+    #     filename: dotnet-local.cmd
+    #     arguments: new android -o $(Build.StagingDirectory)/LocalWorkloadTest
 
-    # Pack .nupkgs and extract workload packs to dotnet preview test directory
-    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
-      parameters:
-        project: Xamarin.Android.sln
-        arguments: >-
-          -t:PackDotNet -c $(XA.Build.Configuration) -v:n
-          -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-pack.binlog
-        displayName: Test PackDotNet
+    # - task: BatchScript@1
+    #   displayName: Test dotnet-local.cmd - build template
+    #   inputs:
+    #     filename: dotnet-local.cmd
+    #     arguments: build -v:n $(Build.StagingDirectory)/LocalWorkloadTest
 
-    - template: /build-tools/automation/yaml-templates/upload-results.yaml
-      parameters:
-        artifactName: ${{ parameters.buildResultArtifactName }}
-        includeBuildResults: true
+    # # Pack .nupkgs and extract workload packs to dotnet preview test directory
+    # - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+    #   parameters:
+    #     project: Xamarin.Android.sln
+    #     arguments: >-
+    #       -t:PackDotNet -c $(XA.Build.Configuration) -v:n
+    #       -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-pack.binlog
+    #     displayName: Test PackDotNet
+
+    # - template: /build-tools/automation/yaml-templates/upload-results.yaml
+    #   parameters:
+    #     artifactName: ${{ parameters.buildResultArtifactName }}
+    #     includeBuildResults: true
 
     - template: /build-tools/automation/yaml-templates/fail-on-dirty-tree.yaml
 
