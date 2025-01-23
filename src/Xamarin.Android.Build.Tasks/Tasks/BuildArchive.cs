@@ -241,7 +241,7 @@ public class BuildArchive : AndroidTask
 			var file_path = file.ItemSpec;
 
 			// Handle files from inside a .jar/.aar
-			if (file.GetMetadataOrDefault ("JavaArchiveEntry", null) is string jar_entry_name)
+			if (file.GetMetadataOrDefault ("JavaArchiveEntry", (string?)null) is string jar_entry_name)
 				file_path = jar_entry_name;
 
 			if (UncompressedFileExtensionsSet.Contains (Path.GetExtension (file_path))) {
