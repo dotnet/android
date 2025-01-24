@@ -51,7 +51,8 @@ stages:
     - script: systeminfo
       displayName: Display system information
 
-    - pwsh: $env:USERPROFILE\android-toolchain\sdk\emulator\emulator.exe -accel-check
+    - pwsh: >
+        & "$env:USERPROFILE\android-toolchain\sdk\emulator\emulator.exe" -accel-check
       displayName: emulator -accel-check
 
     - task: DotNetCoreCLI@2
