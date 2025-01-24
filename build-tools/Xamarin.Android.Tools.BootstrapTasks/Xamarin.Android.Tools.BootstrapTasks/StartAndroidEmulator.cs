@@ -70,6 +70,10 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 			var port = string.IsNullOrEmpty (Port) ? "" : $"-port {Port}";
 			var arguments = $"{Arguments ?? string.Empty} -verbose -detect-image-hang -logcat-output \"{LogcatFile}\" -no-audio -no-snapshot -cache-size 512 -change-locale en-US -timezone \"Etc/UTC\" {port} -avd {ImageName}";
+			bool.TryParse (Environment.GetEnvironmentVariable ("RunningOnCI"), out bool runningOnCI);
+			if (Environment.OSVersion.Platform == PlatformID.Win32NT && runningOnCI) {
+				arguments += " -accel off";
+			}
 			Log.LogMessage ($"Tool {emulator} execution started with arguments: {arguments}");
 			var psi = new ProcessStartInfo () {
 				FileName                = emulator,
