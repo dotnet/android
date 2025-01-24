@@ -1,0 +1,27 @@
+﻿using Android.App;
+using Android.Runtime;
+
+namespace NativeAOT;
+
+/// <summary>
+/// NOTE: This class is not required, but used for testing Android.App.Application subclasses.
+/// Name required for typemap in NativeAotTypeManager
+/// </summary>
+[Application (Name = "my.MainApplication")]
+public class MainApplication : MauiApplication
+{
+	public MainApplication(IntPtr handle, JniHandleOwnership ownership)
+		: base(handle, ownership)
+	{
+		Log.Debug ("NativeAOT", $"Application..ctor({handle.ToString ("x2")}, {transfer})");
+	}
+
+	public override void OnCreate ()
+	{
+		Log.Debug ("NativeAOT", "Application.OnCreate()");
+
+		base.OnCreate ();
+	}
+
+	protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
+}
