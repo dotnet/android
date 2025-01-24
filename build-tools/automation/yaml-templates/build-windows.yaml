@@ -48,6 +48,9 @@ stages:
       parameters:
         remove_dotnet: true
 
+    - script: systeminfo
+      displayName: Display system information
+
     - task: DotNetCoreCLI@2
       displayName: Prepare Solution
       inputs:
@@ -55,6 +58,8 @@ stages:
         arguments: '-c $(XA.Build.Configuration) -t:Prepare --no-restore -p:AutoProvision=true -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare.binlog'
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
+      parameters:
+        emulatorMSBuildArgs: -p:TestAvdShowWindow=true
 
     # # Build Xamarin.Android and configure local workloads to test improved local build loop
     # - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
