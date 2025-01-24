@@ -58,7 +58,7 @@ stages:
         arguments: '-c $(XA.Build.Configuration) -t:Prepare --no-restore -p:AutoProvision=true -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare.binlog'
 
     - pwsh: >
-        & "$env:USERPROFILE\android-toolchain\sdk\emulator\emulator.exe" -accel-check
+        & "C:\Android\android-sdk\emulator\emulator.exe" -accel-check
       displayName: emulator -accel-check
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
