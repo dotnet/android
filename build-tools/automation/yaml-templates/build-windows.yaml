@@ -63,7 +63,11 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
       parameters:
-        emulatorMSBuildArgs: -p:TestAvdShowWindow=true
+        specificImage: true
+        avdApiLevel: 34
+        avdAbi: x86_64
+        avdType: google_apis
+        #emulatorMSBuildArgs: -p:TestAvdShowWindow=true
 
     # # Build Xamarin.Android and configure local workloads to test improved local build loop
     # - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
