@@ -108,12 +108,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void NativeAOT ()
 		{
-			if (IsWindows) {
-				// Microsoft.NETCore.Native.Publish.targets(61,5): Cross-OS native compilation is not supported.
-				// Set $(DisableUnsupportedError)=true, Microsoft.NETCore.Native.Unix.targets(296,5): error : Platform linker ('C:\Android\android-sdk\ndk\26.3.11579264\toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android21-clang++' or 'gcc') not found in PATH. Ensure you have all the required prerequisites documented at https://aka.ms/nativeaot-prerequisites.
-				Assert.Ignore ("This test is not valid on Windows.");
-			}
-
 			var proj = new XamarinAndroidApplicationProject {
 				ProjectName = "Hello",
 				IsRelease = true,
