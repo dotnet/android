@@ -2286,20 +2286,6 @@ because xbuild doesn't support framework reference assemblies.
     <_DalvikClasses Include="@(_DexFile)" />
   </ItemGroup>
 
-  <!-- Put the assemblies and native libraries in the apk -->
-  <CompressAssemblies
-      ApkOutputPath="$(_ApkOutputPath)"
-      EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-      EnableCompression="$(AndroidEnableAssemblyCompression)"
-      IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
-      ProjectFullPath="$(MSBuildProjectFullPath)"
-      ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
-      ResolvedUserAssemblies="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths)"
-      SupportedAbis="@(_BuildTargetAbis)">
-    <Output TaskParameter="ResolvedFrameworkAssembliesOutput" ItemName="_BuildApkResolvedFrameworkAssemblies" />
-    <Output TaskParameter="ResolvedUserAssembliesOutput" ItemName="_BuildApkResolvedUserAssemblies" />
-  </CompressAssemblies>
-
 	<CollectDalvikFilesForArchive
       AndroidPackageFormat="$(AndroidPackageFormat)"
       DalvikClasses="@(_DalvikClasses)">
