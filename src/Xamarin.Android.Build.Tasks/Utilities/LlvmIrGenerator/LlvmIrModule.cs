@@ -49,8 +49,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		public readonly LlvmIrTypeCache TypeCache;
 
-		public string? DefaultStringGroup { get; set; }
-
 		public LlvmIrModule (LlvmIrTypeCache cache, TaskLoggingHelper log)
 		{
 			this.log = log;
@@ -404,30 +402,20 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			globalVariables.Add (variable);
 		}
 
-		void EnsureStringManager ()
-		{
-			if (stringManager == null) {
-				stringManager = new LlvmIrStringManager (log, DefaultStringGroup);
-			}
-		}
-
 		void AddStringGlobalVariable (LlvmIrStringVariable variable, string? stringGroupName = null, string? stringGroupComment = null, string? symbolSuffix = null)
 		{
-			RegisterString (variable, stringGroupName, stringGroupComment, symbolSuffix);
+			RegisterString ((string)variable.Value, stringGroupName, stringGroupComment, symbolSuffix, variable.Encoding);
 			AddStandardGlobalVariable (variable);
 		}
 
-		public void RegisterString (LlvmIrStringVariable variable, string? stringGroupName = null, string? stringGroupComment = null, string? symbolSuffix = null)
-		{
-			EnsureStringManager ();
-			stringManager.Add (variable, stringGroupName, stringGroupComment, symbolSuffix);
-		}
-
 		public void RegisterString (string value, string? stringGroupName = null, string? stringGroupComment = null, string? symbolSuffix = null,
-			LlvmIrStringEncoding encoding = LlvmIrStringEncoding.UTF8, StringComparison comparison = StringComparison.Ordinal)
+			LlvmIrStringEncoding encoding = LlvmIrStringEncoding.UTF8)
 		{
-			EnsureStringManager ();
-			stringManager.Add (value, stringGroupName, stringGroupComment, symbolSuffix, encoding, comparison);
+			if (stringManager == null) {
+				stringManager = new LlvmIrStringManager (log);
+			}
+
+			stringManager.Add (value, stringGroupName, stringGroupComment, symbolSuffix, encoding);
 		}
 
 		void AddStructureArrayGlobalVariable (LlvmIrGlobalVariable variable)
@@ -592,9 +580,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		/// are part of structure instances.  Such strings **MUST** be registered by <see cref="LlvmIrModule"/> and, thus, failure to do
 		/// so is an internal error.
 		/// </summary>
-		public LlvmIrStringVariable LookupRequiredVariableForString (StringHolder value)
+		public LlvmIrStringVariable LookupRequiredVariableForString (string value, LlvmIrStringEncoding encoding)
 		{
-			LlvmIrStringVariable? sv = stringManager?.Lookup (value);
+			LlvmIrStringVariable? sv = stringManager?.Lookup (value, encoding);
 			if (sv == null) {
 				throw new InvalidOperationException ($"Internal error: string '{value}' wasn't registered with string manager");
 			}

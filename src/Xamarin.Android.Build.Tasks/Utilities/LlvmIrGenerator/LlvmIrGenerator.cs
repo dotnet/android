@@ -205,6 +205,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 						WriteCommentLine (context, $" '{info.Value}'");
 					}
 
+					if (!info.IsConstantStringLiteral) {
+						WriteCommentLine (context, $" '{info.Value}'");
+					}
+
 					WriteGlobalVariableName (context, info);
 
 					// Strings must always be local symbols, global variables will point to them
@@ -749,7 +753,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					return;
 				}
 
-				LlvmIrStringVariable sv = context.Module.LookupRequiredVariableForString (StringHolder.AsHolder (value, stringEncoding));
+				LlvmIrStringVariable sv = context.Module.LookupRequiredVariableForString ((string)value, stringEncoding);
 				context.Output.Write (sv.Reference);
 				return;
 			}
@@ -1607,19 +1611,16 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return $"\"{s}\"";
 		}
 
+		delegate string QuoteStringEncoder (byte[] bytes, int byteCount, out ulong stringSize, bool nullTerminated);
 		public static string QuoteString (LlvmIrStringVariable variable, out ulong stringSize, bool nullTerminated = true)
 		{
 			if (variable.Encoding == LlvmIrStringEncoding.UTF8) {
-				var value = (StringHolder)variable.Value;
-				if (value.Data == null) {
-					throw new InvalidOperationException ("Internal error: null strings not supported here, they should be handled elsewhere.");
-				}
-
-				int byteCount = Encoding.UTF8.GetByteCount (value.Data);
+				var value = (string)variable.Value;
+				int byteCount = Encoding.UTF8.GetByteCount (value);
 				var bytes = ArrayPool<byte>.Shared.Rent (byteCount);
 
 				try {
-					Encoding.UTF8.GetBytes (value.Data, 0, value.Data.Length, bytes, 0);
+					Encoding.UTF8.GetBytes (value, 0, value.Length, bytes, 0);
 					return QuoteUtf8String (bytes, byteCount, out stringSize, nullTerminated);
 				} finally {
 					ArrayPool<byte>.Shared.Return (bytes);
@@ -1635,16 +1636,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		static string QuoteUnicodeString (LlvmIrStringVariable variable, out ulong stringSize, bool nullTerminated = true)
 		{
-			var value = (StringHolder)variable.Value;
-			if (value.Data == null) {
-				throw new InvalidOperationException ("Internal error: null strings not supported here, they should be handled elsewhere.");
-			}
+			var value = (string)variable.Value;
 
 			// Each character/lexeme is encoded as iXY u0xVXYZ + comma and a space, and on top of that we have two square brackets and a trailing nul
-			var sb = new StringBuilder ((value.Data.Length * 13) + 3); // rough estimate of capacity
+			var sb = new StringBuilder ((value.Length * 13) + 3); // rough estimate of capacity
 			sb.Append ('[');
-			for (int i = 0; i < value.Data.Length; i++) {
-				var ch = (short)value.Data[i];
+			for (int i = 0; i < value.Length; i++) {
+				var ch = (short)value[i];
 				if (i > 0) {
 					sb.Append (", ");
 				}
@@ -1652,14 +1650,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			if (nullTerminated) {
-				if (value.Data.Length > 0) {
-					sb.Append (", ");
-				}
-				sb.Append ($"{variable.IrType} 0");
+				sb.Append ($", {variable.IrType} 0");
 			}
 			sb.Append (']');
 
-			stringSize = (ulong)value.Data.Length + (nullTerminated ? 1u : 0u);
+			stringSize = (ulong)value.Length + (nullTerminated ? 1u : 0u);
 			return sb.ToString ();
 		}
 

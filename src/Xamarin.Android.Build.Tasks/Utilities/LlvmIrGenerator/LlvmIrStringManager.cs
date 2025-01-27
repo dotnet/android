@@ -9,9 +9,44 @@ partial class LlvmIrModule
 {
 	protected class LlvmIrStringManager
 	{
-		readonly string defaultGroupName = "str";
+		sealed class ByteArrayEqualityComparer : EqualityComparer<byte []>
+		{
+			public override bool Equals (byte [] x, byte [] y)
+			{
+				if (x == null || y == null) {
+					return x == y;
+				}
 
-		Dictionary<StringHolder, LlvmIrStringVariable> stringSymbolCache = new Dictionary<StringHolder, LlvmIrStringVariable> ();
+				if (ReferenceEquals (x, y)) {
+					return true;
+				}
+
+				if (x.Length != y.Length) {
+					return false;
+				}
+
+				if (x.Length == 0) {
+					return true;
+				}
+
+				for (int i = 0; i < x.Length; i++) {
+					if (x[i] != y[i]) {
+						return false;
+					}
+				}
+
+				return true;
+			}
+
+			public override int GetHashCode (byte [] obj)
+			{
+				return 0; // force use of Equals
+			}
+		}
+
+		// A byte array is needed for caching since it's possible that we might have two distinct variables
+		// with the same string, only encoded in different encodings.  Slow...
+		Dictionary<byte[], LlvmIrStringVariable> stringSymbolCache = new Dictionary<byte[], LlvmIrStringVariable> (new ByteArrayEqualityComparer ());
 		Dictionary<string, LlvmIrStringGroup> stringGroupCache = new Dictionary<string, LlvmIrStringGroup> (StringComparer.Ordinal);
 		List<LlvmIrStringGroup> stringGroups = new List<LlvmIrStringGroup> ();
 
@@ -20,37 +55,24 @@ partial class LlvmIrModule
 
 		public List<LlvmIrStringGroup> StringGroups => stringGroups;
 
-		public LlvmIrStringManager (TaskLoggingHelper log, string? defaultStringGroup = null)
+		public LlvmIrStringManager (TaskLoggingHelper log)
 		{
 			this.log = log;
-			if (!String.IsNullOrEmpty (defaultStringGroup)) {
-				defaultGroupName = defaultStringGroup;
-			}
-
 			defaultGroup = new LlvmIrStringGroup ();
 			stringGroupCache.Add (String.Empty, defaultGroup);
 			stringGroups.Add (defaultGroup);
 		}
 
-		public LlvmIrStringVariable Add (LlvmIrStringVariable variable, string? groupName = null, string? groupComment = null, string? symbolSuffix = null)
-		{
-			// Let it throw if Value isn't a StringHolder, it must be.
-			return Add((StringHolder)variable.Value, groupName, groupComment, symbolSuffix);
-		}
-
 		public LlvmIrStringVariable Add (string value, string? groupName = null, string? groupComment = null, string? symbolSuffix = null,
-			LlvmIrStringEncoding encoding = LlvmIrStringEncoding.UTF8, StringComparison comparison = StringComparison.Ordinal)
+			LlvmIrStringEncoding encoding = LlvmIrStringEncoding.UTF8)
 		{
 			if (value == null) {
 				throw new ArgumentNullException (nameof (value));
 			}
 
-			return Add (new StringHolder (value, encoding, comparison), groupName, groupComment, symbolSuffix);
-		}
-
-		LlvmIrStringVariable Add (StringHolder holder, string? groupName = null, string? groupComment = null, string? symbolSuffix = null)
-		{
-			if (stringSymbolCache.TryGetValue (holder, out LlvmIrStringVariable? stringVar) && stringVar != null) {
+			byte[] valueBytes = GetStringBytes (value, encoding);
+			LlvmIrStringVariable? stringVar;
+			if (stringSymbolCache.TryGetValue (valueBytes, out stringVar) && stringVar != null) {
 				return stringVar;
 			}
 
@@ -73,20 +95,31 @@ partial class LlvmIrModule
 				symbolName = $"{symbolName}_{symbolSuffix}";
 			}
 
-			stringVar = new LlvmIrStringVariable (symbolName, holder);
+			stringVar = new LlvmIrStringVariable (symbolName, value, encoding);
 			group.Strings.Add (stringVar);
-			stringSymbolCache.Add (holder, stringVar);
+			stringSymbolCache.Add (valueBytes, stringVar);
 
 			return stringVar;
 		}
 
-		public LlvmIrStringVariable? Lookup (StringHolder value)
+		// TODO: introduce a "string holder" type which will keep the encoding alongside the actual value
+		public LlvmIrStringVariable? Lookup (string value, LlvmIrStringEncoding encoding)
 		{
-			if (stringSymbolCache.TryGetValue (value, out LlvmIrStringVariable? sv)) {
+			byte[] valueBytes = GetStringBytes (value, encoding);
+			if (stringSymbolCache.TryGetValue (valueBytes, out LlvmIrStringVariable? sv)) {
 				return sv;
 			}
 
 			return null;
+		}
+
+		byte[] GetStringBytes (string value, LlvmIrStringEncoding encoding)
+		{
+			return encoding switch {
+				LlvmIrStringEncoding.UTF8    => MonoAndroidHelper.Utf8StringToBytes (value),
+				LlvmIrStringEncoding.Unicode => MonoAndroidHelper.Utf16StringToBytes (value),
+				_                            => throw new InvalidOperationException ($"Internal error: unsupported encoding '{encoding}'")
+			};
 		}
 	}
 }
