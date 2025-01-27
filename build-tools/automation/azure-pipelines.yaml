@@ -152,9 +152,6 @@ extends:
           inputs:
             forceReinstallCredentialProvider: true
 
-        - script: echo "##vso[task.prependpath]C:\Windows\System32\WindowsPowerShell\v1.0\"
-          displayName: add powershell to path
-
         - task: DownloadPipelineArtifact@2
           inputs:
             artifactName: $(NuGetArtifactName)
