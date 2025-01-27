@@ -301,13 +301,13 @@ class LlvmIrStringVariable : LlvmIrGlobalVariable
 	public string IrType { get; }
 	public bool IsConstantStringLiteral { get; }
 
-	public LlvmIrStringVariable (string name, StringHolder value, LlvmIrVariableOptions? options = null)
-		: base (typeof(string), name, options ?? LlvmIrVariableOptions.GlobalConstantStringPointer)
+	public LlvmIrStringVariable (string name, string value, LlvmIrStringEncoding encoding)
+		: base (typeof(string), name, LlvmIrVariableOptions.LocalString)
 	{
 		Value = value;
-		Encoding = value.Encoding;
+		Encoding = encoding;
 
-		switch (value.Encoding) {
+		switch (encoding) {
 			case LlvmIrStringEncoding.UTF8:
 				IrType = "i8";
 				IsConstantStringLiteral = true;
@@ -318,7 +318,7 @@ class LlvmIrStringVariable : LlvmIrGlobalVariable
 				break;
 
 			default:
-				throw new InvalidOperationException ($"Internal error: unsupported string encoding {value.Encoding}");
+				throw new InvalidOperationException ($"Internal error: unsupported string encoding {encoding}");
 		}
 	}
 
