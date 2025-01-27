@@ -44,7 +44,6 @@ namespace HelloLibrary
 
 #if __ANDROID_8__
     public class MyBackupAgent : BackupAgent {
-      [Preserve]
       public MyBackupAgent ()
       {
       }
