@@ -229,6 +229,7 @@ partial class MonoAndroidHelper
 	}
 
 	public static byte[] Utf8StringToBytes (string str) => Encoding.UTF8.GetBytes (str);
+	public static byte[] Utf16StringToBytes (string str) => Encoding.Unicode.GetBytes (str);
 
 	public static ulong GetXxHash (string str, bool is64Bit) => GetXxHash (Utf8StringToBytes (str), is64Bit);
 

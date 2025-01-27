@@ -35,6 +35,12 @@ namespace Xamarin.Android.Tasks
 		public bool NeedsPadding     { get; set; }
 
 		public LLVMIR.LlvmIrVariableNumberFormat NumberFormat { get; set; } = LLVMIR.LlvmIrVariableNumberFormat.Default;
+
+		/// <summary>
+		/// Taken into account only for fields of string types.  If set to <c>true</c>, the string is output as an UTF16 in
+		/// the native assembly file.
+		/// </summary>
+		public bool IsUTF16 { get; set; }
 	}
 
 	[AttributeUsage (AttributeTargets.Class, Inherited = true)]
