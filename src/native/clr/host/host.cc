@@ -1,5 +1,6 @@
-#include <corehost/host_runtime_contract.h>
+#include <clr/hosts/coreclrhost.h>
 
+#include <xamarin-app.hh>
 #include <host/host.hh>
 #include <host/host-jni.hh>
 #include <runtime-base/android-system.hh>
@@ -9,6 +10,25 @@
 #include <shared/log_types.hh>
 
 using namespace xamarin::android;
+
+size_t Host::clr_get_runtime_property (const char *key, char *value_buffer, size_t value_buffer_size, void *contract_context) noexcept
+{
+	log_info (LOG_DEFAULT, "clr_get_runtime_property (\"{}\"...)", key);
+	return 0;
+}
+
+bool Host::clr_bundle_probe (const char *path, int64_t *offset, int64_t *size, int64_t *compressedSize) noexcept
+{
+	log_info (LOG_DEFAULT, "clr_bundle_probe (\"{}\"...)", path);
+	Helpers::abort_application ("Gimme stack trace");
+	return false;
+}
+
+const void* Host::clr_pinvoke_override (const char *library_name, const char *entry_point_name) noexcept
+{
+	log_info (LOG_DEFAULT, "clr_pinvoke_override (\"{}\", \"{}\")", library_name, entry_point_name);
+	return nullptr;
+}
 
 void Host::create_xdg_directory (jstring_wrapper& home, size_t home_len, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept
 {
@@ -69,6 +89,17 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, js
 	AndroidSystem::set_primary_override_dir (home);
 	AndroidSystem::create_update_dir (AndroidSystem::get_primary_override_dir ());
 	AndroidSystem::setup_environment ();
+
+	log_write (LOG_DEFAULT, LogLevel::Info, "Calling CoreCLR initialization routine");
+	android_coreclr_initialize (
+		application_config.android_package_name,
+		u"Xamarin.Android",
+		&runtime_contract,
+		&host_config_properties,
+		&clr_host,
+		&domain_id
+	);
+	log_write (LOG_DEFAULT, LogLevel::Info, "CoreCLR initialization routine returned");
 
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing->end_event (total_time_index);

@@ -260,13 +260,6 @@ macro(xa_add_compile_definitions TARGET)
       ${TARGET}
       PRIVATE
       TARGET_ANDROID
-      XA_HOST_CLR
-    )
-  else()
-    target_compile_definitions(
-      ${TARGET}
-      PRIVATE
-      XA_HOST_MONOVM
     )
   endif()
 endmacro()
