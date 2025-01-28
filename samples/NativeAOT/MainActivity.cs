@@ -1,4 +1,5 @@
 using Android.Runtime;
+using Android.Util;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -10,6 +11,8 @@ public class MainActivity : Activity
 {
     protected override void OnCreate(Bundle? savedInstanceState)
     {
+        Log.Debug ("NativeAOT", "Application.OnCreate()");
+
         base.OnCreate(savedInstanceState);
 
         // Set our view from the "main" layout resource

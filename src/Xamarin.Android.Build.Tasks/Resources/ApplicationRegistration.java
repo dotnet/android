@@ -1,4 +1,4 @@
-﻿package mono.android.app;
+﻿package JAVA_PACKAGE_NAME;
 
 public class ApplicationRegistration {
 

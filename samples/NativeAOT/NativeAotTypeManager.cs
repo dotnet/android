@@ -19,6 +19,7 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 		["android/os/Bundle"]                   = typeof (Android.OS.Bundle),
 		["android/view/ContextThemeWrapper"]    = typeof (Android.Views.ContextThemeWrapper),
 		["my/MainActivity"]                     = typeof (MainActivity),
+		["my/MainApplication"]                  = typeof (MainApplication),
 	};
 
 	public NativeAotTypeManager ()

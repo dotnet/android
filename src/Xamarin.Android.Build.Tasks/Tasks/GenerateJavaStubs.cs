@@ -300,19 +300,19 @@ namespace Xamarin.Android.Tasks
 
 		void GenerateAdditionalProviderSources (NativeCodeGenState codeGenState, IList<string> additionalProviders)
 		{
-			if (androidRuntime != Xamarin.Android.Tasks.AndroidRuntime.MonoVM) {
+			bool isMonoVm = androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.MonoVM;
+			if (!isMonoVm) {
 				Log.LogDebugMessage ($"Skipping MonoRuntimeProvider generation for: {androidRuntime}");
-				return;
-			}
+			} else {
+				// Create additional runtime provider java sources.
+				string providerTemplateFile = "MonoRuntimeProvider.Bundled.java";
+				string providerTemplate = GetResource (providerTemplateFile);
 
-			// Create additional runtime provider java sources.
-			string providerTemplateFile = "MonoRuntimeProvider.Bundled.java";
-			string providerTemplate = GetResource (providerTemplateFile);
-
-			foreach (var provider in additionalProviders) {
-				var contents = providerTemplate.Replace ("MonoRuntimeProvider", provider);
-				var real_provider = Path.Combine (OutputDirectory, "src", "mono", provider + ".java");
-				Files.CopyIfStringChanged (contents, real_provider);
+				foreach (var provider in additionalProviders) {
+					var contents = providerTemplate.Replace ("MonoRuntimeProvider", provider);
+					var real_provider = Path.Combine (OutputDirectory, "src", "mono", provider + ".java");
+					Files.CopyIfStringChanged (contents, real_provider);
+				}
 			}
 
 			// Create additional application java sources.
@@ -326,7 +326,9 @@ namespace Xamarin.Android.Tasks
 
 					string javaKey = JavaNativeTypeManager.ToJniName (type, codeGenState.TypeCache).Replace ('/', '.');
 					regCallsWriter.WriteLine (
-						"\t\tmono.android.Runtime.register (\"{0}\", {1}.class, {1}.__md_methods);",
+						isMonoVm ?
+							"\t\tmono.android.Runtime.register (\"{0}\", {1}.class, {1}.__md_methods);" :
+							"\t\tnet.dot.jni.ManagedPeer.registerNativeMembers ({1}.class, {1}.__md_methods);",
 						type.GetAssemblyQualifiedName (codeGenState.TypeCache),
 						javaKey
 					);
@@ -334,13 +336,17 @@ namespace Xamarin.Android.Tasks
 			}
 			regCallsWriter.Close ();
 
-			var real_app_dir = Path.Combine (OutputDirectory, "src", "mono", "android", "app");
+			var real_app_dir = isMonoVm ?
+				Path.Combine (OutputDirectory, "src", "mono", "android", "app") :
+				Path.Combine (OutputDirectory, "src", "net", "dot", "jni");
 			string applicationTemplateFile = "ApplicationRegistration.java";
 			SaveResource (
 				applicationTemplateFile,
 				applicationTemplateFile,
 				real_app_dir,
-				template => template.Replace ("// REGISTER_APPLICATION_AND_INSTRUMENTATION_CLASSES_HERE", regCallsWriter.ToString ())
+				template => template
+					.Replace ("JAVA_PACKAGE_NAME", isMonoVm ? "mono.android.app" : "net.dot.jni")
+					.Replace ("// REGISTER_APPLICATION_AND_INSTRUMENTATION_CLASSES_HERE", regCallsWriter.ToString ())
 			);
 		}
 
