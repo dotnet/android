@@ -96,7 +96,11 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AndroidRuntime { get; set; } = "";
 
+		[Required]
+		public string CodeGenerationTarget { get; set; } = "";
+
 		AndroidRuntime androidRuntime;
+		JavaPeerStyle codeGenerationTarget;
 
 		internal const string AndroidSkipJavaStubGeneration = "AndroidSkipJavaStubGeneration";
 
@@ -104,6 +108,7 @@ namespace Xamarin.Android.Tasks
 		{
 			try {
 				androidRuntime = MonoAndroidHelper.ParseAndroidRuntime (AndroidRuntime);
+				codeGenerationTarget = MonoAndroidHelper.ParseCodeGenerationTarget (CodeGenerationTarget);
 				bool useMarshalMethods = !Debug && EnableMarshalMethods;
 				Run (useMarshalMethods);
 			} catch (XamarinAndroidException e) {
@@ -317,7 +322,7 @@ namespace Xamarin.Android.Tasks
 
 			// Create additional application java sources.
 			StringWriter regCallsWriter = new StringWriter ();
-			regCallsWriter.WriteLine ("\t\t// Application and Instrumentation ACWs must be registered first.");
+			regCallsWriter.WriteLine ("// Application and Instrumentation ACWs must be registered first.");
 			foreach (TypeDefinition type in codeGenState.JavaTypesForJCW) {
 				if (JavaNativeTypeManager.IsApplication (type, codeGenState.TypeCache) || JavaNativeTypeManager.IsInstrumentation (type, codeGenState.TypeCache)) {
 					if (codeGenState.Classifier != null && !codeGenState.Classifier.FoundDynamicallyRegisteredMethods (type)) {
@@ -326,7 +331,7 @@ namespace Xamarin.Android.Tasks
 
 					string javaKey = JavaNativeTypeManager.ToJniName (type, codeGenState.TypeCache).Replace ('/', '.');
 					regCallsWriter.WriteLine (
-						isMonoVm ?
+						codeGenerationTarget == JavaPeerStyle.XAJavaInterop1 ?
 							"\t\tmono.android.Runtime.register (\"{0}\", {1}.class, {1}.__md_methods);" :
 							"\t\tnet.dot.jni.ManagedPeer.registerNativeMembers ({1}.class, {1}.__md_methods);",
 						type.GetAssemblyQualifiedName (codeGenState.TypeCache),
@@ -336,17 +341,13 @@ namespace Xamarin.Android.Tasks
 			}
 			regCallsWriter.Close ();
 
-			var real_app_dir = isMonoVm ?
-				Path.Combine (OutputDirectory, "src", "mono", "android", "app") :
-				Path.Combine (OutputDirectory, "src", "net", "dot", "jni");
+			var real_app_dir = Path.Combine (OutputDirectory, "src", "net", "dot", "jni");
 			string applicationTemplateFile = "ApplicationRegistration.java";
 			SaveResource (
 				applicationTemplateFile,
 				applicationTemplateFile,
 				real_app_dir,
-				template => template
-					.Replace ("JAVA_PACKAGE_NAME", isMonoVm ? "mono.android.app" : "net.dot.jni")
-					.Replace ("// REGISTER_APPLICATION_AND_INSTRUMENTATION_CLASSES_HERE", regCallsWriter.ToString ())
+				template => template.Replace ("// REGISTER_APPLICATION_AND_INSTRUMENTATION_CLASSES_HERE", regCallsWriter.ToString ())
 			);
 		}
 
@@ -398,7 +399,7 @@ namespace Xamarin.Android.Tasks
 			(List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW) = ScanForJavaTypes (resolver, tdCache, assemblies, userAssemblies, useMarshalMethods);
 			var jcwContext = new JCWGeneratorContext (arch, resolver, assemblies.Values, javaTypesForJCW, tdCache, useMarshalMethods);
 			var jcwGenerator = new JCWGenerator (Log, jcwContext) {
-				CodeGenerationTarget = androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.MonoVM ? JavaPeerStyle.XAJavaInterop1 : JavaPeerStyle.JavaInterop1
+				CodeGenerationTarget = codeGenerationTarget,
 			};
 			bool success;
 

@@ -1,4 +1,4 @@
-﻿package JAVA_PACKAGE_NAME;
+﻿package net.dot.jni;
 
 public class ApplicationRegistration {
 

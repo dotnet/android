@@ -129,7 +129,7 @@ public class MonoPackageManager {
 						haveSplitApks
 					);
 
-				mono.android.app.ApplicationRegistration.registerApplications ();
+				net.dot.jni.ApplicationRegistration.registerApplications ();
 
 				initialized = true;
 			}
