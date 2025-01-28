@@ -23,8 +23,8 @@ stages:
   - job: ${{ parameters.jobName }}
     displayName: ${{ parameters.jobDisplayName }}
     pool:
-      name: MAUI-1ESPT
-      image: $(WindowsPoolImage1ESPT)
+      name: Azure Pipelines
+      vmImage: windows-2022
       os: windows
     timeoutInMinutes: 240
     steps:
@@ -75,7 +75,7 @@ stages:
     - task: BatchScript@1
       inputs:
         filename: C:\Android\android-sdk\cmdline-tools\12.0\bin\avdmanager.bat
-        arguments: create avd --abi x86_64 --force --name XamarinAndroidTestRunner34-x86_64 --package "system-images;android-34;default;x86_64"
+        arguments: create avd --abi x86_64 --force --name XamarinAndroidTestRunner34-x86_64 --package "system-images;android-34;default;x86_64" --device pixel_7
 
     - pwsh: >
         & "C:\Android\android-sdk\emulator\emulator.exe" -no-window -no-boot-anim -debug -verbose -avd XamarinAndroidTestRunner34-x86_64
