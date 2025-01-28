@@ -56,5 +56,30 @@
     <HumanizerVersion>2.14.1</HumanizerVersion>
     <MdocPackageVersion Condition=" '$(MdocPackageVersion)' == '' ">5.9.3</MdocPackageVersion>
   </PropertyGroup>
+  
+  <PropertyGroup>
+    <!-- 
+      Use $(TreatWarningsAsErrors) for CI builds. We have grandfathered some projects that have existing warnings,
+      but we would like to go ahead and prevent any other projects from getting new warnings.
+      
+      This can be opted into locally with $(_AndroidTreatWarningsAsErrors) = true.
+    -->
+    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'assembly-store-reader.csproj' ">true</_AllowProjectWarnings>
+    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'decompress-assemblies.csproj' ">true</_AllowProjectWarnings>
+    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'jnienv-gen.csproj' ">true</_AllowProjectWarnings>
+    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Microsoft.Android.Sdk.ILLink.csproj' ">true</_AllowProjectWarnings>
+    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Microsoft.Android.Templates.csproj' ">true</_AllowProjectWarnings>
+    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Mono.Android.csproj' ">true</_AllowProjectWarnings>
+    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Mono.Android.NET-Tests.csproj' ">true</_AllowProjectWarnings>
+    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'MSBuildDeviceIntegration.csproj' ">true</_AllowProjectWarnings>
+    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'NativeAOT.csproj' ">true</_AllowProjectWarnings>
+    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'TestRunner.Core.NET.csproj' ">true</_AllowProjectWarnings>
+    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Android.Build.Tasks.csproj' ">true</_AllowProjectWarnings>
+    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Android.Build.Tests.csproj' ">true</_AllowProjectWarnings>
+    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Android.JcwGen-Tests.csproj' ">true</_AllowProjectWarnings>
+    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Android.NUnitLite.NET.csproj' ">true</_AllowProjectWarnings>
+    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.ProjectTools.csproj' ">true</_AllowProjectWarnings>
+    <TreatWarningsAsErrors Condition=" ('$(RunningOnCI)' == 'true' OR '$(_AndroidTreatWarningsAsErrors)' == 'true') AND '$(_AllowProjectWarnings)' != 'true' ">true</TreatWarningsAsErrors>
+  </PropertyGroup>
 
 </Project>

@@ -91,7 +91,7 @@ namespace Xamarin.Android.Tasks
 							entryStream.CopyTo (ms);
 						}
 						ms.Position = 0;
-						using (var reader = new StreamReader (ms, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: -1, leaveOpen: true)) {
+						using (var reader = new StreamReader (ms, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 4096, leaveOpen: true)) {
 							string line;
 							// Read each line until the end of the file
 							while ((line = reader.ReadLine()) != null) {
