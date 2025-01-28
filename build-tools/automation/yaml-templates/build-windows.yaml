@@ -23,8 +23,8 @@ stages:
   - job: ${{ parameters.jobName }}
     displayName: ${{ parameters.jobDisplayName }}
     pool:
-      name: Azure Pipelines
-      vmImage: windows-2022
+      name: MAUI-1ESPT
+      image: $(WindowsPoolImage1ESPT)
       os: windows
     timeoutInMinutes: 240
     steps:
