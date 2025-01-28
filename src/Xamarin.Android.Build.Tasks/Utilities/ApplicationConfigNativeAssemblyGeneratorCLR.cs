@@ -322,14 +322,22 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		};
 		module.Add (runtime_property_index);
 
+		var _host_configuration_properties_data = new LlvmIrGlobalVariable (hostConfigurationPropertiesData, HostConfigurationPropertiesDataSymbol, LlvmIrVariableOptions.LocalConstant) {
+			Comment = "Runtime host configuration properties data, encoded using 16-bit Unicode, as expected by CoreCLR",
+		};
+		module.Add (_host_configuration_properties_data);
+
 		var hostConfigProps = new host_configuration_properties {
 			nitems = (ulong)hostConfigurationPropertiesData.Count,
 		};
-
-		var _host_configuration_properties_data = new LlvmIrGlobalVariable (hostConfigurationPropertiesData, HostConfigurationPropertiesDataSymbol, LlvmIrVariableOptions.LocalConstant) {
-			Comment = "Runtime host configuration properties, encoded using 16-bit Unicode, as expected by CoreCLR",
+		var host_config_props = new LlvmIrGlobalVariable (
+			new StructureInstance<host_configuration_properties> (hostConfigurationPropertiesStructureInfo, hostConfigProps),
+			"host_configuration_properties",
+			LlvmIrVariableOptions.GlobalConstant)
+		{
+			Comment = "Runtime host config properties, for CoreCLR initialization phase"
 		};
-		module.Add (_host_configuration_properties_data);
+		module.Add (host_config_props);
 
 		AddAssemblyStores (module);
 	}
