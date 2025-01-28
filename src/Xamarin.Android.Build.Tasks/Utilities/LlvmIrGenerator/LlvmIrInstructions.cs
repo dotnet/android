@@ -366,8 +366,8 @@ sealed class LlvmIrInstructions
 				throw new InvalidOperationException ($"Internal error: value type '{value.GetType ()}' for argument {index} to function '{function.Signature.Name}' is invalid. Expected '{parameter.Type}' or compatible");
 			}
 
-			if (value is string str) {
-				context.Output.Write (context.Module.LookupRequiredVariableForString (str).Reference);
+			if (value is string || value is StringHolder) {
+				context.Output.Write (context.Module.LookupRequiredVariableForString (StringHolder.AsHolder (value)).Reference);
 				return;
 			}
 

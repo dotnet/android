@@ -723,7 +723,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					return;
 				}
 
-				LlvmIrStringVariable sv = context.Module.LookupRequiredVariableForString ((string)value, stringEncoding);
+				LlvmIrStringVariable sv = context.Module.LookupRequiredVariableForString (StringHolder.AsHolder (value, stringEncoding));
 				context.Output.Write (sv.Reference);
 				return;
 			}
@@ -782,7 +782,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				string? comment = info.GetCommentFromProvider (smi, instance);
 				if (String.IsNullOrEmpty (comment)) {
 					var sb = new StringBuilder (" ");
-					sb.Append (MapManagedTypeToNative (smi));
+					sb.Append (MapManagedTypeToNative (context, smi));
 					sb.Append (' ');
 					sb.Append (smi.Info.Name);
 					comment = sb.ToString ();
@@ -1467,8 +1467,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return type.GetShortName ();
 		}
 
-		static string MapManagedTypeToNative (StructureMemberInfo smi)
+		static string MapManagedTypeToNative (GeneratorWriteContext context, StructureMemberInfo smi)
 		{
+			if (smi.Info.IsUnicodeString (context.TypeCache)) {
+				return "char16_t*";
+			}
+
 			string nativeType = MapManagedTypeToNative (smi.MemberType);
 			// Silly, but effective
 			if (nativeType[nativeType.Length - 1] == '*') {
@@ -1494,8 +1498,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				throw new InvalidOperationException ($"Field '{smi.Info.Name}' of structure '{info.Name}' should have a value of '{expectedType}' type, instead it had a '{value.GetType ()}'");
 			}
 
-			if (valueType == typeof(string)) {
-				return context.Module.LookupRequiredVariableForString ((string)value);
+			if (valueType == typeof(string) || valueType == typeof(StringHolder)) {
+				var encoding = smi.Info.GetStringEncoding (context.TypeCache);
+				return context.Module.LookupRequiredVariableForString (StringHolder.AsHolder (value, encoding));
 			}
 
 			return value;
@@ -1562,16 +1567,19 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return $"\"{s}\"";
 		}
 
-		delegate string QuoteStringEncoder (byte[] bytes, int byteCount, out ulong stringSize, bool nullTerminated);
 		public static string QuoteString (LlvmIrStringVariable variable, out ulong stringSize, bool nullTerminated = true)
 		{
 			if (variable.Encoding == LlvmIrStringEncoding.UTF8) {
-				var value = (string)variable.Value;
-				int byteCount = Encoding.UTF8.GetByteCount (value);
+				var value = (StringHolder)variable.Value;
+				if (value.Data == null) {
+					throw new InvalidOperationException ("Internal error: null strings not supported here, they should be handled elsewhere.");
+				}
+
+				int byteCount = Encoding.UTF8.GetByteCount (value.Data);
 				var bytes = ArrayPool<byte>.Shared.Rent (byteCount);
 
 				try {
-					Encoding.UTF8.GetBytes (value, 0, value.Length, bytes, 0);
+					Encoding.UTF8.GetBytes (value.Data, 0, value.Data.Length, bytes, 0);
 					return QuoteUtf8String (bytes, byteCount, out stringSize, nullTerminated);
 				} finally {
 					ArrayPool<byte>.Shared.Return (bytes);
@@ -1587,13 +1595,16 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		static string QuoteUnicodeString (LlvmIrStringVariable variable, out ulong stringSize, bool nullTerminated = true)
 		{
-			var value = (string)variable.Value;
+			var value = (StringHolder)variable.Value;
+			if (value.Data == null) {
+				throw new InvalidOperationException ("Internal error: null strings not supported here, they should be handled elsewhere.");
+			}
 
 			// Each character/lexeme is encoded as iXY u0xVXYZ + comma and a space, and on top of that we have two square brackets and a trailing nul
-			var sb = new StringBuilder ((value.Length * 13) + 3); // rough estimate of capacity
+			var sb = new StringBuilder ((value.Data.Length * 13) + 3); // rough estimate of capacity
 			sb.Append ('[');
-			for (int i = 0; i < value.Length; i++) {
-				var ch = (short)value[i];
+			for (int i = 0; i < value.Data.Length; i++) {
+				var ch = (short)value.Data[i];
 				if (i > 0) {
 					sb.Append (", ");
 				}
@@ -1601,11 +1612,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			if (nullTerminated) {
-				sb.Append ($", {variable.IrType} 0");
+				if (value.Data.Length > 0) {
+					sb.Append (", ");
+				}
+				sb.Append ($"{variable.IrType} 0");
 			}
 			sb.Append (']');
 
-			stringSize = (ulong)value.Length + (nullTerminated ? 1u : 0u);
+			stringSize = (ulong)value.Data.Length + (nullTerminated ? 1u : 0u);
 			return sb.ToString ();
 		}
 
