@@ -73,9 +73,12 @@ stages:
           -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/install-emulator-34.binlog
 
     - pwsh: >
+        & "C:\Android\android-sdk\cmdline-tools\12.0\bin\avdmanager.bat" create avd --abi x86_64 --force --name XamarinAndroidTestRunner34-x86_64 --package "system-images;android-34;default;x86_64"
+      displayName: create avd
+
+    - pwsh: >
         & "C:\Android\android-sdk\emulator\emulator.exe" -no-window -no-boot-anim -debug -verbose -avd XamarinAndroidTestRunner34-x86_64
       displayName: start avd
-
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
       parameters:
