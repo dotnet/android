@@ -2105,7 +2105,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <!--
-  LZ4 Compress all compressable assemblies. Note this is an incremental MSBuild target.
+  LZ4 compress all compressable assemblies. Note this is an incremental MSBuild target.
   @(AssembliesToCmpress) will only contain assemblies that have changed since the last build.
 -->
 <Target Name="_CompressAssemblies"

@@ -75,7 +75,6 @@ namespace Xamarin.Android.Tasks
 			// }
 
 			data.DestinationPath = outputFilePath;
-				//Path.Combine (outputDirectory, $"{Path.GetFileName (data.SourcePath)}.lz4");
 			data.SourceSize = checked((uint)fi.Length);
 
 			int bytesRead;
