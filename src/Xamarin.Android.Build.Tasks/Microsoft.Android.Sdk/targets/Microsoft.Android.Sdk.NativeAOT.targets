@@ -7,9 +7,13 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 -->
 <Project>
 
+  <UsingTask TaskName="Xamarin.Android.Tasks.SetNdkPathForIlc" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+
   <!-- Default property values for NativeAOT -->
   <PropertyGroup>
     <_AndroidRuntimePackRuntime>NativeAOT</_AndroidRuntimePackRuntime>
+    <!-- NativeAOT's targets currently gives an error about cross-compilation -->
+    <DisableUnsupportedError Condition=" $([MSBuild]::IsOSPlatform('windows')) and '$(DisableUnsupportedError)' == '' ">true</DisableUnsupportedError>
   </PropertyGroup>
 
   <!-- Make IlcCompile depend on the trimmer -->
@@ -32,16 +36,14 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <PropertyGroup>
       <_NdkAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">aarch64</_NdkAbi>
       <_NdkAbi Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">x86_64</_NdkAbi>
-      <_NdkSysrootAbi>$(_NdkAbi)-linux-android</_NdkSysrootAbi>      
-      <_NdkClangPrefix>$(_NdkAbi)-linux-android21-</_NdkClangPrefix>
+      <_NdkSysrootAbi>$(_NdkAbi)-linux-android</_NdkSysrootAbi>
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('windows')) ">windows-x86_64</_NdkPrebuiltAbi>
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('osx')) ">darwin-x86_64</_NdkPrebuiltAbi>
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('linux')) ">linux-x86_64</_NdkPrebuiltAbi>
       <_NdkSysrootDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/sysroot/usr/lib/$(_NdkSysrootAbi)/</_NdkSysrootDir>
       <_NdkBinDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/bin/</_NdkBinDir>
-      <CppCompilerAndLinker>$(_NdkBinDir)$(_NdkClangPrefix)clang++</CppCompilerAndLinker>
-      <CppLinker>$(CppCompilerAndLinker)</CppLinker>
-      <ObjCopyName>$(_NdkBinDir)llvm-objcopy</ObjCopyName>
+      <CppCompilerAndLinker>clang++</CppCompilerAndLinker>
+      <ObjCopyName>llvm-objcopy</ObjCopyName>
 
       <!-- Example settings from: https://github.com/xamarin/xamarin-macios/blob/c43d4ea40bc777969e3b158cf46446df292d8449/dotnet/targets/Xamarin.Shared.Sdk.targets#L541-L550 -->
       <RunILLink>true</RunILLink>
@@ -66,6 +68,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <!-- HACK: prevents: java.lang.UnsatisfiedLinkError: dlopen failed: cannot locate symbol "__start___modules" -->
       <LinkerFlavor Condition=" '$(LinkerFlavor)' == '' ">lld</LinkerFlavor>
     </PropertyGroup>
+
+    <SetNdkPathForIlc NdkBinDirectory="$(_NdkBinDir)" />
   </Target>
 
   <Target Name="_AndroidComputeIlcCompileInputs">

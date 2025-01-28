@@ -16,9 +16,7 @@ package android.accessibilityservice
     gestureIdToString(int id)
     writeToParcel(android.os.Parcel parcel, int flags)
   class AccessibilityService
-    attachAccessibilityOverlayToDisplay(int displayId, android.view.SurfaceControl sc, java.util.concurrent.Executor executor, java.util.function.IntConsumer callback)
     attachAccessibilityOverlayToDisplay(int displayId, android.view.SurfaceControl sc)
-    attachAccessibilityOverlayToWindow(int accessibilityWindowId, android.view.SurfaceControl sc, java.util.concurrent.Executor executor, java.util.function.IntConsumer callback)
     attachAccessibilityOverlayToWindow(int accessibilityWindowId, android.view.SurfaceControl sc)
     clearCachedSubtree(android.view.accessibility.AccessibilityNodeInfo node)
     createDisplayContext(android.view.Display display)
@@ -300,6 +298,7 @@ package android.adservices.adselection
     equals(java.lang.Object o)
   class AdSelectionOutcome.Builder
     setAdSelectionId(long adSelectionId)
+    setComponentAdUris(java.util.List<android.net.Uri> componentAdUris)
     setRenderUri(android.net.Uri renderUri)
   class AdWithBid
     #ctor(android.adservices.common.AdData adData, double bid)
@@ -416,6 +415,10 @@ package android.adservices.common
     writeToParcel(android.os.Parcel dest, int flags)
   class AppInstallFilters.Builder
     setPackageNames(java.util.Set<java.lang.String> packageNames)
+  class ComponentAdData
+    #ctor(android.net.Uri renderUri, java.lang.String adRenderId)
+    equals(java.lang.Object o)
+    writeToParcel(android.os.Parcel dest, int flags)
   class FrequencyCapFilters
     equals(java.lang.Object o)
     writeToParcel(android.os.Parcel dest, int flags)
@@ -452,6 +455,7 @@ package android.adservices.customaudience
     setAuctionServerRequestFlags(int auctionServerRequestFlags)
     setBiddingLogicUri(android.net.Uri biddingLogicUri)
     setBuyer(android.adservices.common.AdTechIdentifier buyer)
+    setComponentAds(java.util.List<android.adservices.common.ComponentAdData> componentAds)
     setDailyUpdateUri(android.net.Uri dailyUpdateUri)
     setExpirationTime(java.time.Instant expirationTime)
     setName(java.lang.String name)
@@ -499,6 +503,7 @@ package android.adservices.customaudience
     equals(java.lang.Object o)
   class ScheduleCustomAudienceUpdateRequest.Builder
     #ctor(android.net.Uri updateUri, java.time.Duration minDelay, java.util.List<android.adservices.customaudience.PartialCustomAudience> partialCustomAudienceList)
+    #ctor(android.net.Uri updateUri, java.time.Duration minDelay)
     setMinDelay(java.time.Duration minDelay)
     setPartialCustomAudienceList(java.util.List<android.adservices.customaudience.PartialCustomAudience> partialCustomAudienceList)
     setShouldReplacePendingUpdates(boolean shouldReplacePendingUpdates)
@@ -638,14 +643,23 @@ package android.adservices.ondevicepersonalization
   class FederatedComputeScheduler
     cancel(android.adservices.ondevicepersonalization.FederatedComputeInput input)
     schedule(android.adservices.ondevicepersonalization.FederatedComputeScheduler.Params params, android.adservices.ondevicepersonalization.FederatedComputeInput input)
+    schedule(android.adservices.ondevicepersonalization.FederatedComputeScheduleRequest federatedComputeScheduleRequest, android.os.OutcomeReceiver<android.adservices.ondevicepersonalization.FederatedComputeScheduleResponse,java.lang.Exception> outcomeReceiver)
   class FederatedComputeScheduler.Params
     #ctor(android.adservices.ondevicepersonalization.TrainingInterval trainingInterval)
+  class FederatedComputeScheduleRequest
+    equals(java.lang.Object o)
+    #ctor(android.adservices.ondevicepersonalization.FederatedComputeScheduler.Params params, java.lang.String populationName)
+  class FederatedComputeScheduleResponse
+    equals(java.lang.Object o)
+    #ctor(android.adservices.ondevicepersonalization.FederatedComputeScheduleRequest federatedComputeScheduleRequest)
   class InferenceInput
     equals(java.lang.Object o)
   class InferenceInput.Builder
+    #ctor(android.adservices.ondevicepersonalization.InferenceInput.Params params, byte[] inputData)
     #ctor(android.adservices.ondevicepersonalization.InferenceInput.Params params, java.lang.Object[] inputData, android.adservices.ondevicepersonalization.InferenceOutput expectedOutputStructure)
     setBatchSize(int value)
     setExpectedOutputStructure(android.adservices.ondevicepersonalization.InferenceOutput value)
+    setInputData(byte[] value)
     setInputData(java.lang.Object... value)
     setParams(android.adservices.ondevicepersonalization.InferenceInput.Params value)
   class InferenceInput.Params
@@ -661,6 +675,7 @@ package android.adservices.ondevicepersonalization
     equals(java.lang.Object o)
   class InferenceOutput.Builder
     addDataOutput(int key, java.lang.Object value)
+    setData(byte[] value)
     setDataOutputs(java.util.Map<java.lang.Integer,java.lang.Object> value)
   class IsolatedService
     getEventUrlProvider(android.adservices.ondevicepersonalization.RequestToken requestToken)
@@ -696,6 +711,7 @@ package android.adservices.ondevicepersonalization
   class OnDevicePersonalizationManager
     execute(android.content.ComponentName service, android.os.PersistableBundle params, java.util.concurrent.Executor executor, android.os.OutcomeReceiver<android.adservices.ondevicepersonalization.OnDevicePersonalizationManager.ExecuteResult,java.lang.Exception> receiver)
     executeInIsolatedService(android.adservices.ondevicepersonalization.ExecuteInIsolatedServiceRequest request, java.util.concurrent.Executor executor, android.os.OutcomeReceiver<android.adservices.ondevicepersonalization.ExecuteInIsolatedServiceResponse,java.lang.Exception> receiver)
+    queryFeatureAvailability(java.lang.String featureName, java.util.concurrent.Executor executor, android.os.OutcomeReceiver<java.lang.Integer,java.lang.Exception> receiver)
     requestSurfacePackage(android.adservices.ondevicepersonalization.SurfacePackageToken surfacePackageToken, android.os.IBinder surfaceViewHostToken, int displayId, int width, int height, java.util.concurrent.Executor executor, android.os.OutcomeReceiver<android.view.SurfaceControlViewHost.SurfacePackage,java.lang.Exception> receiver)
   class RenderingConfig
     equals(java.lang.Object o)
@@ -2860,6 +2876,7 @@ package android.app.admin
     setAffiliationIds(android.content.ComponentName admin, java.util.Set<java.lang.String> ids)
     setAlwaysOnVpnPackage(android.content.ComponentName admin, java.lang.String vpnPackage, boolean lockdownEnabled, java.util.Set<java.lang.String> lockdownAllowlist)
     setAlwaysOnVpnPackage(android.content.ComponentName admin, java.lang.String vpnPackage, boolean lockdownEnabled)
+    setAppFunctionsPolicy(int policy)
     setApplicationHidden(android.content.ComponentName admin, java.lang.String packageName, boolean hidden)
     setApplicationRestrictions(android.content.ComponentName admin, java.lang.String packageName, android.os.Bundle settings)
     setApplicationRestrictionsManagingPackage(android.content.ComponentName admin, java.lang.String packageName)
@@ -3064,9 +3081,14 @@ package android.app.appfunctions
 package android.app.appsearch
 ;---------------------------------------
   class AppSearchBatchResult.Builder<KeyType,ValueType>
+    #ctor(android.app.appsearch.AppSearchBatchResult<KeyType,ValueType> appSearchBatchResult)
     setFailure(KeyType key, int resultCode, java.lang.String errorMessage)
     setResult(KeyType key, android.app.appsearch.AppSearchResult<ValueType> result)
     setSuccess(KeyType key, ValueType value)
+  class AppSearchBlobHandle
+    createWithSha256(byte[] digest, java.lang.String packageName, java.lang.String databaseName, java.lang.String namespace)
+    equals(java.lang.Object o)
+    writeToParcel(android.os.Parcel dest, int flags)
   class AppSearchManager
     createEnterpriseGlobalSearchSession(java.util.concurrent.Executor executor, java.util.function.Consumer<android.app.appsearch.AppSearchResult<android.app.appsearch.EnterpriseGlobalSearchSession>> callback)
     createGlobalSearchSession(java.util.concurrent.Executor executor, java.util.function.Consumer<android.app.appsearch.AppSearchResult<android.app.appsearch.GlobalSearchSession>> callback)
@@ -3080,19 +3102,22 @@ package android.app.appsearch
   class AppSearchSchema
     equals(java.lang.Object other)
     writeToParcel(android.os.Parcel dest, int flags)
+  class AppSearchSchema.BlobHandlePropertyConfig.Builder
+    #ctor(java.lang.String propertyName)
+    setCardinality(int cardinality)
   class AppSearchSchema.BooleanPropertyConfig.Builder
     #ctor(java.lang.String propertyName)
     setCardinality(int cardinality)
-    setDescription(java.lang.String description)
+    setScoringEnabled(boolean scoringEnabled)
   class AppSearchSchema.Builder
     addParentType(java.lang.String parentSchemaType)
     addProperty(android.app.appsearch.AppSearchSchema.PropertyConfig propertyConfig)
+    #ctor(android.app.appsearch.AppSearchSchema schema)
     #ctor(java.lang.String schemaType)
-    setDescription(java.lang.String description)
+    setSchemaType(java.lang.String schemaType)
   class AppSearchSchema.BytesPropertyConfig.Builder
     #ctor(java.lang.String propertyName)
     setCardinality(int cardinality)
-    setDescription(java.lang.String description)
   class AppSearchSchema.DocumentPropertyConfig.Builder
     addIndexableNestedProperties(java.lang.String... indexableNestedProperties)
     addIndexableNestedProperties(java.util.Collection<java.lang.String> indexableNestedProperties)
@@ -3100,46 +3125,52 @@ package android.app.appsearch
     addIndexableNestedPropertyPaths(java.util.Collection<android.app.appsearch.PropertyPath> indexableNestedPropertyPaths)
     #ctor(java.lang.String propertyName, java.lang.String schemaType)
     setCardinality(int cardinality)
-    setDescription(java.lang.String description)
     setShouldIndexNestedProperties(boolean indexNestedProperties)
   class AppSearchSchema.DoublePropertyConfig.Builder
     #ctor(java.lang.String propertyName)
     setCardinality(int cardinality)
-    setDescription(java.lang.String description)
+    setScoringEnabled(boolean scoringEnabled)
   class AppSearchSchema.EmbeddingPropertyConfig.Builder
     #ctor(java.lang.String propertyName)
     setCardinality(int cardinality)
-    setDescription(java.lang.String description)
     setIndexingType(int indexingType)
+    setQuantizationType(int quantizationType)
   class AppSearchSchema.LongPropertyConfig.Builder
     #ctor(java.lang.String propertyName)
     setCardinality(int cardinality)
-    setDescription(java.lang.String description)
     setIndexingType(int indexingType)
+    setScoringEnabled(boolean scoringEnabled)
   class AppSearchSchema.PropertyConfig
     equals(java.lang.Object other)
   class AppSearchSchema.StringPropertyConfig.Builder
     #ctor(java.lang.String propertyName)
     setCardinality(int cardinality)
-    setDescription(java.lang.String description)
     setIndexingType(int indexingType)
     setJoinableValueType(int joinableValueType)
     setTokenizerType(int tokenizerType)
   class AppSearchSession
+    commitBlob(java.util.Set<android.app.appsearch.AppSearchBlobHandle> handles, java.util.concurrent.Executor executor, java.util.function.Consumer<android.app.appsearch.AppSearchResult<android.app.appsearch.CommitBlobResponse>> callback)
     getByDocumentId(android.app.appsearch.GetByDocumentIdRequest request, java.util.concurrent.Executor executor, android.app.appsearch.BatchResultCallback<java.lang.String,android.app.appsearch.GenericDocument> callback)
     getNamespaces(java.util.concurrent.Executor executor, java.util.function.Consumer<android.app.appsearch.AppSearchResult<java.util.Set<java.lang.String>>> callback)
     getSchema(java.util.concurrent.Executor executor, java.util.function.Consumer<android.app.appsearch.AppSearchResult<android.app.appsearch.GetSchemaResponse>> callback)
     getStorageInfo(java.util.concurrent.Executor executor, java.util.function.Consumer<android.app.appsearch.AppSearchResult<android.app.appsearch.StorageInfo>> callback)
+    openBlobForRead(java.util.Set<android.app.appsearch.AppSearchBlobHandle> handles, java.util.concurrent.Executor executor, java.util.function.Consumer<android.app.appsearch.AppSearchResult<android.app.appsearch.OpenBlobForReadResponse>> callback)
+    openBlobForWrite(java.util.Set<android.app.appsearch.AppSearchBlobHandle> handles, java.util.concurrent.Executor executor, java.util.function.Consumer<android.app.appsearch.AppSearchResult<android.app.appsearch.OpenBlobForWriteResponse>> callback)
     put(android.app.appsearch.PutDocumentsRequest request, java.util.concurrent.Executor executor, android.app.appsearch.BatchResultCallback<java.lang.String,java.lang.Void> callback)
     remove(android.app.appsearch.RemoveByDocumentIdRequest request, java.util.concurrent.Executor executor, android.app.appsearch.BatchResultCallback<java.lang.String,java.lang.Void> callback)
     remove(java.lang.String queryExpression, android.app.appsearch.SearchSpec searchSpec, java.util.concurrent.Executor executor, java.util.function.Consumer<android.app.appsearch.AppSearchResult<java.lang.Void>> callback)
+    removeBlob(java.util.Set<android.app.appsearch.AppSearchBlobHandle> handles, java.util.concurrent.Executor executor, java.util.function.Consumer<android.app.appsearch.AppSearchResult<android.app.appsearch.RemoveBlobResponse>> callback)
     reportUsage(android.app.appsearch.ReportUsageRequest request, java.util.concurrent.Executor executor, java.util.function.Consumer<android.app.appsearch.AppSearchResult<java.lang.Void>> callback)
     search(java.lang.String queryExpression, android.app.appsearch.SearchSpec searchSpec)
     searchSuggestion(java.lang.String suggestionQueryExpression, android.app.appsearch.SearchSuggestionSpec searchSuggestionSpec, java.util.concurrent.Executor executor, java.util.function.Consumer<android.app.appsearch.AppSearchResult<java.util.List<android.app.appsearch.SearchSuggestionResult>>> callback)
+    setBlobVisibility(android.app.appsearch.SetBlobVisibilityRequest request, java.util.concurrent.Executor executor, java.util.function.Consumer<android.app.appsearch.AppSearchResult<java.lang.Void>> callback)
     setSchema(android.app.appsearch.SetSchemaRequest request, java.util.concurrent.Executor workExecutor, java.util.concurrent.Executor callbackExecutor, java.util.function.Consumer<android.app.appsearch.AppSearchResult<android.app.appsearch.SetSchemaResponse>> callback)
   interface BatchResultCallback<KeyType,ValueType>
     onResult(android.app.appsearch.AppSearchBatchResult<KeyType,ValueType> result)
     onSystemError(java.lang.Throwable throwable)
+  class CommitBlobResponse
+    #ctor(android.app.appsearch.AppSearchBatchResult<android.app.appsearch.AppSearchBlobHandle,java.lang.Void> result)
+    writeToParcel(android.os.Parcel dest, int flags)
   class EmbeddingVector
     #ctor(float[] values, java.lang.String modelSignature)
     equals(java.lang.Object o)
@@ -3147,11 +3178,14 @@ package android.app.appsearch
   class EnterpriseGlobalSearchSession
     getByDocumentId(java.lang.String packageName, java.lang.String databaseName, android.app.appsearch.GetByDocumentIdRequest request, java.util.concurrent.Executor executor, android.app.appsearch.BatchResultCallback<java.lang.String,android.app.appsearch.GenericDocument> callback)
     getSchema(java.lang.String packageName, java.lang.String databaseName, java.util.concurrent.Executor executor, java.util.function.Consumer<android.app.appsearch.AppSearchResult<android.app.appsearch.GetSchemaResponse>> callback)
+    openBlobForRead(java.util.Set<android.app.appsearch.AppSearchBlobHandle> handles, java.util.concurrent.Executor executor, java.util.function.Consumer<android.app.appsearch.AppSearchResult<android.app.appsearch.OpenBlobForReadResponse>> callback)
     search(java.lang.String queryExpression, android.app.appsearch.SearchSpec searchSpec)
   class GenericDocument
     equals(java.lang.Object other)
     #ctor(android.app.appsearch.GenericDocument document)
     getProperty(java.lang.String path)
+    getPropertyBlobHandle(java.lang.String path)
+    getPropertyBlobHandleArray(java.lang.String path)
     getPropertyBoolean(java.lang.String path)
     getPropertyBooleanArray(java.lang.String path)
     getPropertyBytes(java.lang.String path)
@@ -3173,6 +3207,7 @@ package android.app.appsearch
     setCreationTimestampMillis(long creationTimestampMillis)
     setId(java.lang.String id)
     setNamespace(java.lang.String namespace)
+    setPropertyBlobHandle(java.lang.String name, android.app.appsearch.AppSearchBlobHandle... values)
     setPropertyBoolean(java.lang.String name, boolean... values)
     setPropertyBytes(java.lang.String name, byte[]... values)
     setPropertyDocument(java.lang.String name, android.app.appsearch.GenericDocument... values)
@@ -3196,6 +3231,12 @@ package android.app.appsearch
   class GetSchemaResponse.Builder
     addSchema(android.app.appsearch.AppSearchSchema schema)
     addSchemaTypeNotDisplayedBySystem(java.lang.String schemaType)
+    clearPubliclyVisibleSchema(java.lang.String schemaType)
+    clearRequiredPermissionsForSchemaTypeVisibility(java.lang.String schemaType)
+    clearSchemaTypeNotDisplayedBySystem(java.lang.String schemaType)
+    clearSchemaTypeVisibleToConfigs(java.lang.String schemaType)
+    clearSchemaTypeVisibleToPackages(java.lang.String schemaType)
+    #ctor(android.app.appsearch.GetSchemaResponse getSchemaResponse)
     setPubliclyVisibleSchema(java.lang.String schemaType, android.app.appsearch.PackageIdentifier packageIdentifier)
     setRequiredPermissionsForSchemaTypeVisibility(java.lang.String schemaType, java.util.Set<java.util.Set<java.lang.Integer>> visibleToPermissionSets)
     setSchemaTypeVisibleToConfigs(java.lang.String schemaType, java.util.Set<android.app.appsearch.SchemaVisibilityConfig> visibleToConfigs)
@@ -3204,6 +3245,7 @@ package android.app.appsearch
   class GlobalSearchSession
     getByDocumentId(java.lang.String packageName, java.lang.String databaseName, android.app.appsearch.GetByDocumentIdRequest request, java.util.concurrent.Executor executor, android.app.appsearch.BatchResultCallback<java.lang.String,android.app.appsearch.GenericDocument> callback)
     getSchema(java.lang.String packageName, java.lang.String databaseName, java.util.concurrent.Executor executor, java.util.function.Consumer<android.app.appsearch.AppSearchResult<android.app.appsearch.GetSchemaResponse>> callback)
+    openBlobForRead(java.util.Set<android.app.appsearch.AppSearchBlobHandle> handles, java.util.concurrent.Executor executor, java.util.function.Consumer<android.app.appsearch.AppSearchResult<android.app.appsearch.OpenBlobForReadResponse>> callback)
     registerObserverCallback(java.lang.String targetPackageName, android.app.appsearch.observer.ObserverSpec spec, java.util.concurrent.Executor executor, android.app.appsearch.observer.ObserverCallback observer)
     reportSystemUsage(android.app.appsearch.ReportSystemUsageRequest request, java.util.concurrent.Executor executor, java.util.function.Consumer<android.app.appsearch.AppSearchResult<java.lang.Void>> callback)
     search(java.lang.String queryExpression, android.app.appsearch.SearchSpec searchSpec)
@@ -3211,14 +3253,22 @@ package android.app.appsearch
   class JoinSpec
     writeToParcel(android.os.Parcel dest, int flags)
   class JoinSpec.Builder
+    #ctor(android.app.appsearch.JoinSpec joinSpec)
     #ctor(java.lang.String childPropertyExpression)
     setAggregationScoringStrategy(int aggregationScoringStrategy)
+    setChildPropertyExpression(java.lang.String childPropertyExpression)
     setMaxJoinedResultCount(int maxJoinedResultCount)
     setNestedSearch(java.lang.String nestedQuery, android.app.appsearch.SearchSpec nestedSearchSpec)
   class Migrator
     onDowngrade(int currentVersion, int finalVersion, android.app.appsearch.GenericDocument document)
     onUpgrade(int currentVersion, int finalVersion, android.app.appsearch.GenericDocument document)
     shouldMigrate(int currentVersion, int finalVersion)
+  class OpenBlobForReadResponse
+    #ctor(android.app.appsearch.AppSearchBatchResult<android.app.appsearch.AppSearchBlobHandle,android.os.ParcelFileDescriptor> result)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class OpenBlobForWriteResponse
+    #ctor(android.app.appsearch.AppSearchBatchResult<android.app.appsearch.AppSearchBlobHandle,android.os.ParcelFileDescriptor> result)
+    writeToParcel(android.os.Parcel dest, int flags)
   class PackageIdentifier
     equals(java.lang.Object obj)
     #ctor(java.lang.String packageName, byte[] sha256Certificate)
@@ -3236,6 +3286,9 @@ package android.app.appsearch
     addGenericDocuments(java.util.Collection<? extends android.app.appsearch.GenericDocument> documents)
     addTakenActionGenericDocuments(android.app.appsearch.GenericDocument... takenActionGenericDocuments)
     addTakenActionGenericDocuments(java.util.Collection<? extends android.app.appsearch.GenericDocument> takenActionGenericDocuments)
+  class RemoveBlobResponse
+    #ctor(android.app.appsearch.AppSearchBatchResult<android.app.appsearch.AppSearchBlobHandle,java.lang.Void> result)
+    writeToParcel(android.os.Parcel dest, int flags)
   class RemoveByDocumentIdRequest
     writeToParcel(android.os.Parcel dest, int flags)
   class RemoveByDocumentIdRequest.Builder
@@ -3265,6 +3318,7 @@ package android.app.appsearch
     addMatchInfo(android.app.appsearch.SearchResult.MatchInfo matchInfo)
     #ctor(java.lang.String packageName, java.lang.String databaseName)
     setGenericDocument(android.app.appsearch.GenericDocument document)
+    setParentTypeMap(java.util.Map<java.lang.String,java.util.List<java.lang.String>> parentTypeMap)
     setRankingSignal(double rankingSignal)
   class SearchResult.MatchInfo
     writeToParcel(android.os.Parcel dest, int flags)
@@ -3283,6 +3337,8 @@ package android.app.appsearch
   class SearchSpec.Builder
     addEmbeddingParameters(android.app.appsearch.EmbeddingVector... searchEmbeddings)
     addEmbeddingParameters(java.util.Collection<android.app.appsearch.EmbeddingVector> searchEmbeddings)
+    addFilterDocumentIds(java.lang.String... documentIds)
+    addFilterDocumentIds(java.util.Collection<java.lang.String> documentIds)
     addFilterNamespaces(java.lang.String... namespaces)
     addFilterNamespaces(java.util.Collection<java.lang.String> namespaces)
     addFilterPackageNames(java.lang.String... packageNames)
@@ -3297,9 +3353,11 @@ package android.app.appsearch
     addProjectionPaths(java.lang.String schema, java.util.Collection<android.app.appsearch.PropertyPath> propertyPaths)
     addSearchStringParameters(java.lang.String... searchStringParameters)
     addSearchStringParameters(java.util.List<java.lang.String> searchStringParameters)
+    #ctor(android.app.appsearch.SearchSpec searchSpec)
     setDefaultEmbeddingSearchMetricType(int defaultEmbeddingSearchMetricType)
     setJoinSpec(android.app.appsearch.JoinSpec joinSpec)
     setListFilterHasPropertyFunctionEnabled(boolean enabled)
+    setListFilterMatchScoreExpressionFunctionEnabled(boolean enabled)
     setListFilterQueryLanguageEnabled(boolean enabled)
     setMaxSnippetSize(int maxSnippetSize)
     setNumericSearchEnabled(boolean enabled)
@@ -3310,6 +3368,7 @@ package android.app.appsearch
     setRankingStrategy(java.lang.String advancedRankingExpression)
     setResultCountPerPage(int resultCountPerPage)
     setResultGrouping(int groupingTypeFlags, int limit)
+    setScorablePropertyRankingEnabled(boolean enabled)
     setSearchSourceLogTag(java.lang.String searchSourceLogTag)
     setSnippetCount(int snippetCount)
     setSnippetCountPerProperty(int snippetCountPerProperty)
@@ -3335,6 +3394,10 @@ package android.app.appsearch
     addSearchStringParameters(java.util.List<java.lang.String> searchStringParameters)
     #ctor(int maximumResultCount)
     setRankingStrategy(int rankingStrategy)
+  class SetBlobVisibilityRequest.Builder
+    addNamespaceVisibleToConfig(java.lang.String namespace, android.app.appsearch.SchemaVisibilityConfig visibilityConfig)
+    clearNamespaceVisibleToConfigs(java.lang.String namespace)
+    setNamespaceDisplayedBySystem(java.lang.String namespace, boolean displayed)
   class SetSchemaRequest.Builder
     addRequiredPermissionsForSchemaTypeVisibility(java.lang.String schemaType, java.util.Set<java.lang.Integer> permissions)
     addSchemas(android.app.appsearch.AppSearchSchema... schemas)
@@ -3346,6 +3409,7 @@ package android.app.appsearch
     setMigrator(java.lang.String schemaType, android.app.appsearch.Migrator migrator)
     setMigrators(java.util.Map<java.lang.String,android.app.appsearch.Migrator> migrators)
     setPubliclyVisibleSchema(java.lang.String schema, android.app.appsearch.PackageIdentifier packageIdentifier)
+    #ctor(android.app.appsearch.SetSchemaRequest request)
     setSchemaTypeDisplayedBySystem(java.lang.String schemaType, boolean displayed)
     setSchemaTypeVisibilityForPackage(java.lang.String schemaType, boolean visible, android.app.appsearch.PackageIdentifier packageIdentifier)
     setVersion(int version)
@@ -3368,6 +3432,8 @@ package android.app.appsearch
   class StorageInfo.Builder
     setAliveDocumentsCount(int aliveDocumentsCount)
     setAliveNamespacesCount(int aliveNamespacesCount)
+    setBlobsCount(int blobsCount)
+    setBlobsSizeBytes(long blobsSizeBytes)
     setSizeBytes(long sizeBytes)
 
 package android.app.appsearch.exceptions
@@ -3376,26 +3442,6 @@ package android.app.appsearch.exceptions
     #ctor(int resultCode, java.lang.String message, java.lang.Throwable cause)
     #ctor(int resultCode, java.lang.String message)
     #ctor(int resultCode)
-
-package android.app.appsearch.functions
-;---------------------------------------
-  class AppFunctionManager
-    executeAppFunction(android.app.appsearch.functions.ExecuteAppFunctionRequest request, java.util.concurrent.Executor executor, java.util.function.Consumer<android.app.appsearch.AppSearchResult<android.app.appsearch.functions.ExecuteAppFunctionResponse>> callback)
-  class AppFunctionService
-    onBind(android.content.Intent intent)
-    onExecuteFunction(android.app.appsearch.functions.ExecuteAppFunctionRequest request, java.util.function.Consumer<android.app.appsearch.AppSearchResult<android.app.appsearch.functions.ExecuteAppFunctionResponse>> callback)
-  class ExecuteAppFunctionRequest
-    writeToParcel(android.os.Parcel dest, int flags)
-  class ExecuteAppFunctionRequest.Builder
-    #ctor(java.lang.String packageName, java.lang.String functionIdentifier)
-    setExtras(android.os.Bundle extras)
-    setParameters(android.app.appsearch.GenericDocument parameters)
-    setSha256Certificate(byte[] sha256Certificate)
-  class ExecuteAppFunctionResponse
-    writeToParcel(android.os.Parcel dest, int flags)
-  class ExecuteAppFunctionResponse.Builder
-    setExtras(android.os.Bundle extras)
-    setResult(android.app.appsearch.GenericDocument result)
 
 package android.app.appsearch.observer
 ;---------------------------------------
@@ -4243,7 +4289,6 @@ package android.companion
     associate(android.companion.AssociationRequest request, java.util.concurrent.Executor executor, android.companion.CompanionDeviceManager.Callback callback)
     attachSystemDataTransport(int associationId, java.io.InputStream in, java.io.OutputStream out)
     buildPermissionTransferUserConsentIntent(int associationId)
-    clearAssociationTag(int associationId)
     detachSystemDataTransport(int associationId)
     disableSystemDataSyncForTypes(int associationId, int flags)
     disassociate(int associationId)
@@ -4253,7 +4298,7 @@ package android.companion
     isPermissionTransferUserConsented(int associationId)
     removeBond(int associationId)
     requestNotificationAccess(android.content.ComponentName component)
-    setAssociationTag(int associationId, java.lang.String tag)
+    setDeviceId(int associationId, android.companion.DeviceId deviceId)
     startObservingDevicePresence(android.companion.ObservingDevicePresenceRequest request)
     startObservingDevicePresence(java.lang.String deviceAddress)
     startSystemDataTransfer(int associationId, java.util.concurrent.Executor executor, android.os.OutcomeReceiver<java.lang.Void,android.companion.CompanionException> result)
@@ -4274,6 +4319,12 @@ package android.companion
     onDeviceDisappeared(android.companion.AssociationInfo associationInfo)
     onDeviceDisappeared(java.lang.String address)
     onDevicePresenceEvent(android.companion.DevicePresenceEvent event)
+  class DeviceId
+    equals(java.lang.Object o)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class DeviceId.Builder
+    setCustomId(java.lang.String customId)
+    setMacAddress(android.net.MacAddress macAddress)
   class DevicePresenceEvent
     #ctor(int associationId, int event, android.os.ParcelUuid uuid)
     equals(java.lang.Object o)
@@ -4345,7 +4396,6 @@ package android.content
     setAttributionTag(java.lang.String value)
     setDeviceId(int deviceId)
     setNext(android.content.AttributionSource value)
-    setNextAttributionSource(android.content.AttributionSource value)
     setPackageName(java.lang.String value)
     setPid(int value)
   class BroadcastReceiver
@@ -5364,6 +5414,7 @@ package android.content.pm
     onPackagesUnavailable(java.lang.String[] packageNames, android.os.UserHandle user, boolean replacing)
     onPackagesUnsuspended(java.lang.String[] packageNames, android.os.UserHandle user)
     onShortcutsChanged(java.lang.String packageName, java.util.List<android.content.pm.ShortcutInfo> shortcuts, android.os.UserHandle user)
+    onUserConfigChanged(android.content.pm.LauncherUserInfo launcherUserInfo)
   class LauncherApps.PinItemRequest
     accept(android.os.Bundle options)
     getAppWidgetProviderInfo(android.content.Context context)
@@ -5575,6 +5626,7 @@ package android.content.pm
     getUserBadgedDrawableForDensity(android.graphics.drawable.Drawable drawable, android.os.UserHandle user, android.graphics.Rect badgeLocation, int badgeDensity)
     getUserBadgedIcon(android.graphics.drawable.Drawable drawable, android.os.UserHandle user)
     getUserBadgedLabel(java.lang.CharSequence label, android.os.UserHandle user)
+    getVerifiedSigningInfo(java.lang.String path, int minAppSigningSchemeVersion)
     getWhitelistedRestrictedPermissions(java.lang.String packageName, int whitelistFlag)
     getXml(java.lang.String packageName, int resid, android.content.pm.ApplicationInfo appInfo)
     hasSigningCertificate(int uid, byte[] certificate, int type)
@@ -5729,6 +5781,7 @@ package android.content.pm
     toChars(char[] existingArray, int[] outLen)
     writeToParcel(android.os.Parcel dest, int parcelableFlags)
   class SigningInfo
+    signersMatchExactly(android.content.pm.SigningInfo other)
     #ctor(android.content.pm.SigningInfo orig)
     #ctor(int schemeVersion, java.util.Collection<android.content.pm.Signature> apkContentsSigners, java.util.Collection<java.security.PublicKey> publicKeys, java.util.Collection<android.content.pm.Signature> signingCertificateHistory)
     writeToParcel(android.os.Parcel dest, int parcelableFlags)
@@ -7254,7 +7307,6 @@ package android.graphics
     arcTo(android.graphics.RectF oval, float startAngle, float sweepAngle)
     arcTo(float left, float top, float right, float bottom, float startAngle, float sweepAngle, boolean forceMoveTo)
     computeBounds(android.graphics.RectF bounds, boolean exact)
-    computeBounds(android.graphics.RectF bounds)
     conicTo(float x1, float y1, float x2, float y2, float weight)
     cubicTo(float x1, float y1, float x2, float y2, float x3, float y3)
     incReserve(int extraPtCount)
@@ -7581,7 +7633,6 @@ package android.graphics
     #ctor(android.graphics.fonts.FontFamily family)
   class YuvImage
     compressToJpeg(android.graphics.Rect rectangle, int quality, java.io.OutputStream stream)
-    compressToJpegR(android.graphics.YuvImage sdr, int quality, java.io.OutputStream stream, byte[] exif)
     compressToJpegR(android.graphics.YuvImage sdr, int quality, java.io.OutputStream stream)
     #ctor(byte[] yuv, int format, int width, int height, int[] strides, android.graphics.ColorSpace colorSpace)
     #ctor(byte[] yuv, int format, int width, int height, int[] strides)
@@ -8683,6 +8734,7 @@ package android.hardware.camera2
     writeInputStream(java.io.OutputStream dngOutput, android.util.Size size, java.io.InputStream pixels, long offset)
   class MultiResolutionImageReader
     getStreamInfoForImageReader(android.media.ImageReader reader)
+    #ctor(java.util.Collection<android.hardware.camera2.params.MultiResolutionStreamInfo> streams, int format, int maxImages, long usage)
     #ctor(java.util.Collection<android.hardware.camera2.params.MultiResolutionStreamInfo> streams, int format, int maxImages)
     setOnImageAvailableListener(android.media.ImageReader.OnImageAvailableListener listener, java.util.concurrent.Executor executor)
 
@@ -8867,8 +8919,13 @@ package android.hardware.display
   class VirtualDisplayConfig
     equals(java.lang.Object o)
     writeToParcel(android.os.Parcel dest, int flags)
+  interface VirtualDisplayConfig.BrightnessListener
+    onBrightnessChanged(float brightness)
   class VirtualDisplayConfig.Builder
     addDisplayCategory(java.lang.String displayCategory)
+    setBrightnessListener(java.util.concurrent.Executor executor, android.hardware.display.VirtualDisplayConfig.BrightnessListener listener)
+    setDefaultBrightness(float brightness)
+    setDimBrightness(float brightness)
     setDisplayCategories(java.util.Set<java.lang.String> displayCategories)
     setFlags(int flags)
     setRequestedRefreshRate(float requestedRefreshRate)
@@ -11248,6 +11305,7 @@ package android.inputmethodservice
     onBind(android.content.Intent intent)
     onConfigurationChanged(android.content.res.Configuration configuration)
     onGenericMotionEvent(android.view.MotionEvent event)
+    onShouldVerifyKeyEvent(android.view.KeyEvent event)
     onTrackballEvent(android.view.MotionEvent event)
     onTrimMemory(int level)
     registerComponentCallbacks(android.content.ComponentCallbacks callback)
@@ -11260,6 +11318,7 @@ package android.inputmethodservice
     dispatchGenericMotionEvent(int seq, android.view.MotionEvent event, android.view.inputmethod.InputMethodSession.EventCallback callback)
     dispatchKeyEvent(int seq, android.view.KeyEvent event, android.view.inputmethod.InputMethodSession.EventCallback callback)
     dispatchTrackballEvent(int seq, android.view.MotionEvent event, android.view.inputmethod.InputMethodSession.EventCallback callback)
+    onShouldVerifyKeyEvent(android.view.KeyEvent event)
     setEnabled(boolean enabled)
   class ExtractEditText
     #ctor(android.content.Context context, android.util.AttributeSet attrs, int defStyleAttr, int defStyleRes)
@@ -11294,6 +11353,7 @@ package android.inputmethodservice
     onKeyLongPress(int keyCode, android.view.KeyEvent event)
     onKeyMultiple(int keyCode, int count, android.view.KeyEvent event)
     onKeyUp(int keyCode, android.view.KeyEvent event)
+    onShouldVerifyKeyEvent(android.view.KeyEvent keyEvent)
     onShowInputRequested(int flags, boolean configChange)
     onStartCandidatesView(android.view.inputmethod.EditorInfo editorInfo, boolean restarting)
     onStartConnectionlessStylusHandwriting(int inputType, android.view.inputmethod.CursorAnchorInfo cursorAnchorInfo)
@@ -11320,6 +11380,7 @@ package android.inputmethodservice
     setExtractView(android.view.View view)
     setExtractViewShown(boolean shown)
     setInputView(android.view.View view)
+    setStylusHandwritingRegion(android.graphics.Region handwritingRegion)
     setStylusHandwritingSessionTimeout(java.time.Duration duration)
     setTheme(int theme)
     showStatusIcon(int iconResId)
@@ -14263,6 +14324,7 @@ package android.net
     requestNetwork(android.net.NetworkRequest request, android.net.ConnectivityManager.NetworkCallback networkCallback, android.os.Handler handler)
     requestNetwork(android.net.NetworkRequest request, android.net.ConnectivityManager.NetworkCallback networkCallback, int timeoutMs)
     requestNetwork(android.net.NetworkRequest request, android.net.ConnectivityManager.NetworkCallback networkCallback)
+    reserveNetwork(android.net.NetworkRequest request, android.os.Handler handler, android.net.ConnectivityManager.NetworkCallback networkCallback)
     setNetworkPreference(int preference)
     setProcessDefaultNetwork(android.net.Network network)
     unregisterNetworkCallback(android.app.PendingIntent operation)
@@ -14275,6 +14337,7 @@ package android.net
     onLinkPropertiesChanged(android.net.Network network, android.net.LinkProperties linkProperties)
     onLosing(android.net.Network network, int maxMsToLive)
     onLost(android.net.Network network)
+    onReserved(android.net.NetworkCapabilities networkCapabilities)
   class Credentials
     #ctor(int pid, int uid, int gid)
   class DhcpInfo
@@ -14489,6 +14552,28 @@ package android.net
     writeToParcel(android.os.Parcel dest, int flags)
   class TelephonyNetworkSpecifier.Builder
     setSubscriptionId(int subId)
+  class TetheringInterface
+    equals(java.lang.Object obj)
+    #ctor(int type, java.lang.String iface, android.net.wifi.SoftApConfiguration softApConfig)
+    #ctor(int type, java.lang.String iface)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class TetheringManager
+    registerTetheringEventCallback(java.util.concurrent.Executor executor, android.net.TetheringManager.TetheringEventCallback callback)
+    startTethering(android.net.TetheringManager.TetheringRequest request, java.util.concurrent.Executor executor, android.net.TetheringManager.StartTetheringCallback callback)
+    stopTethering(android.net.TetheringManager.TetheringRequest request, java.util.concurrent.Executor executor, android.net.TetheringManager.StopTetheringCallback callback)
+    unregisterTetheringEventCallback(android.net.TetheringManager.TetheringEventCallback callback)
+  interface TetheringManager.StartTetheringCallback
+    onTetheringFailed(int error)
+  interface TetheringManager.StopTetheringCallback
+    onStopTetheringFailed(int error)
+  interface TetheringManager.TetheringEventCallback
+    onTetheredInterfacesChanged(java.util.Set<android.net.TetheringInterface> interfaces)
+  class TetheringManager.TetheringRequest
+    equals(java.lang.Object obj)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class TetheringManager.TetheringRequest.Builder
+    setSoftApConfiguration(android.net.wifi.SoftApConfiguration softApConfig)
+    #ctor(int type)
   class TrafficStats
     getAndSetThreadStatsTag(int tag)
     getRxBytes(java.lang.String iface)
@@ -14754,6 +14839,7 @@ package android.net.http
   interface UrlRequest.StatusListener
     onStatus(int status)
   class X509TrustManagerExtensions
+    checkServerTrusted(java.security.cert.X509Certificate[] chain, byte[] ocspData, byte[] tlsSctData, java.lang.String authType, java.lang.String host)
     checkServerTrusted(java.security.cert.X509Certificate[] chain, java.lang.String authType, java.lang.String host)
     isSameTrustConfiguration(java.lang.String hostname1, java.lang.String hostname2)
     isUserAddedCertificate(java.security.cert.X509Certificate cert)
@@ -14899,6 +14985,13 @@ package android.net.ipsec.ike.exceptions
 
 package android.net.nsd
 ;---------------------------------------
+  class AdvertisingRequest
+    equals(java.lang.Object other)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class AdvertisingRequest.Builder
+    #ctor(android.net.nsd.NsdServiceInfo serviceInfo)
+    setFlags(long flags)
+    setProtocolType(int protocolType)
   class DiscoveryRequest
     equals(java.lang.Object other)
     writeToParcel(android.os.Parcel dest, int flags)
@@ -15132,6 +15225,12 @@ package android.net.vcn
 
 package android.net.wifi
 ;---------------------------------------
+  class BlockingOption
+    equals(java.lang.Object obj)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class BlockingOption.Builder
+    #ctor(int blockingTimeSec)
+    setBlockingBssidOnly(boolean bssidOnly)
   class MloLink
     equals(java.lang.Object o)
     writeToParcel(android.os.Parcel dest, int flags)
@@ -15148,6 +15247,8 @@ package android.net.wifi
   class SoftApConfiguration
     equals(java.lang.Object otherObj)
     writeToParcel(android.os.Parcel dest, int flags)
+  class SoftApConfiguration.Builder
+    setChannels(android.util.SparseIntArray channels)
   class SupplicantState
     isValidState(android.net.wifi.SupplicantState state)
     writeToParcel(android.os.Parcel dest, int flags)
@@ -15213,6 +15314,7 @@ package android.net.wifi
     createWifiLock(int lockType, java.lang.String tag)
     createWifiLock(java.lang.String tag)
     disableNetwork(int netId)
+    disallowCurrentSuggestedNetwork(android.net.wifi.BlockingOption blockingOption)
     enableNetwork(int netId, boolean attemptConnect)
     getAllowedChannels(int band, int mode)
     getChannelData(java.util.concurrent.Executor executor, java.util.function.Consumer<java.util.List<android.os.Bundle>> resultsCallback)
@@ -15245,6 +15347,7 @@ package android.net.wifi
     setTdlsEnabledWithMacAddress(java.lang.String remoteMacAddress, boolean enable)
     setWifiEnabled(boolean enabled)
     startLocalOnlyHotspot(android.net.wifi.WifiManager.LocalOnlyHotspotCallback callback, android.os.Handler handler)
+    startLocalOnlyHotspotWithConfiguration(android.net.wifi.SoftApConfiguration config, java.util.concurrent.Executor executor, android.net.wifi.WifiManager.LocalOnlyHotspotCallback callback)
     startWps(android.net.wifi.WpsInfo config, android.net.wifi.WifiManager.WpsCallback listener)
     unregisterScanResultsCallback(android.net.wifi.WifiManager.ScanResultsCallback callback)
     unregisterSubsystemRestartTrackingCallback(android.net.wifi.WifiManager.SubsystemRestartTrackingCallback callback)
@@ -15270,8 +15373,6 @@ package android.net.wifi
   class WifiManager.WifiLock
     setReferenceCounted(boolean refCounted)
     setWorkSource(android.os.WorkSource ws)
-  interface WifiManager.WifiStateChangedListener
-    onWifiStateChanged(int state)
   class WifiManager.WpsCallback
     onFailed(int reason)
     onStarted(java.lang.String pin)
@@ -15530,6 +15631,7 @@ package android.net.wifi.p2p
     writeToParcel(android.os.Parcel dest, int flags)
   class WifiP2pConfig.Builder
     enablePersistentMode(boolean persistent)
+    setAuthorizeConnectionFromPeerEnabled(boolean enabled)
     setDeviceAddress(android.net.MacAddress deviceAddress)
     setGroupClientIpProvisioningMode(int groupClientIpProvisioningMode)
     setGroupOperatingBand(int band)
@@ -15546,6 +15648,9 @@ package android.net.wifi.p2p
   class WifiP2pDeviceList
     get(java.lang.String deviceAddress)
     #ctor(android.net.wifi.p2p.WifiP2pDeviceList source)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class WifiP2pDirInfo
+    #ctor(android.net.MacAddress macAddress, byte[] nonce, byte[] dirTag)
     writeToParcel(android.os.Parcel dest, int flags)
   class WifiP2pDiscoveryConfig
     writeToParcel(android.os.Parcel dest, int flags)
@@ -15583,6 +15688,7 @@ package android.net.wifi.p2p
     removeServiceRequest(android.net.wifi.p2p.WifiP2pManager.Channel channel, android.net.wifi.p2p.nsd.WifiP2pServiceRequest req, android.net.wifi.p2p.WifiP2pManager.ActionListener listener)
     requestConnectionInfo(android.net.wifi.p2p.WifiP2pManager.Channel channel, android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener listener)
     requestDeviceInfo(android.net.wifi.p2p.WifiP2pManager.Channel c, android.net.wifi.p2p.WifiP2pManager.DeviceInfoListener listener)
+    requestDirInfo(android.net.wifi.p2p.WifiP2pManager.Channel c, java.util.concurrent.Executor executor, android.os.OutcomeReceiver<android.net.wifi.p2p.WifiP2pDirInfo,java.lang.Exception> callback)
     requestDiscoveryState(android.net.wifi.p2p.WifiP2pManager.Channel c, android.net.wifi.p2p.WifiP2pManager.DiscoveryStateListener listener)
     requestGroupInfo(android.net.wifi.p2p.WifiP2pManager.Channel channel, android.net.wifi.p2p.WifiP2pManager.GroupInfoListener listener)
     requestNetworkInfo(android.net.wifi.p2p.WifiP2pManager.Channel c, android.net.wifi.p2p.WifiP2pManager.NetworkInfoListener listener)
@@ -15601,6 +15707,7 @@ package android.net.wifi.p2p
     stopListening(android.net.wifi.p2p.WifiP2pManager.Channel channel, android.net.wifi.p2p.WifiP2pManager.ActionListener listener)
     stopPeerDiscovery(android.net.wifi.p2p.WifiP2pManager.Channel channel, android.net.wifi.p2p.WifiP2pManager.ActionListener listener)
     unregisterWifiP2pListener(android.net.wifi.p2p.WifiP2pManager.WifiP2pListener listener)
+    validateDirInfo(android.net.wifi.p2p.WifiP2pManager.Channel c, android.net.wifi.p2p.WifiP2pDirInfo dirInfo, java.util.concurrent.Executor executor, android.os.OutcomeReceiver<java.lang.Boolean,java.lang.Exception> callback)
   interface WifiP2pManager.ActionListener
     onFailure(int reason)
   interface WifiP2pManager.ConnectionInfoListener
@@ -15704,6 +15811,7 @@ package android.net.wifi.rtt
     writeToParcel(android.os.Parcel dest, int flags)
   class PasnConfig.Builder
     #ctor(int baseAkms, int ciphers)
+    setPasnComebackCookie(byte[] pasnComebackCookie)
     setPassword(java.lang.String password)
     setWifiSsid(android.net.wifi.WifiSsid wifiSsid)
   class RangingRequest
@@ -15741,6 +15849,8 @@ package android.net.wifi.rtt
     setMinTimeBetweenNtbMeasurementsMicros(long ntbMinMeasurementTime)
     setNumAttemptedMeasurements(int numAttemptedMeasurements)
     setNumSuccessfulMeasurements(int numSuccessfulMeasurements)
+    setPasnComebackAfterMillis(long comebackAfterMillis)
+    setPasnComebackCookie(byte[] pasnComebackCookie)
     setPeerHandle(android.net.wifi.aware.PeerHandle peerHandle)
     setRangingAuthenticated(boolean isRangingAuthenticated)
     setRangingFrameProtected(boolean isRangingFrameProtected)
@@ -17480,7 +17590,7 @@ package android.os
   class ProfilingManager
     addProfilingTriggers(java.util.List<android.os.ProfilingTrigger> triggers)
     registerForAllProfilingResults(java.util.concurrent.Executor executor, java.util.function.Consumer<android.os.ProfilingResult> listener)
-    removeProfilingTriggers(java.util.List<java.lang.Integer> triggers)
+    removeProfilingTriggersByType(int[] triggers)
     requestProfiling(int profilingType, android.os.Bundle parameters, java.lang.String tag, android.os.CancellationSignal cancellationSignal, java.util.concurrent.Executor executor, java.util.function.Consumer<android.os.ProfilingResult> listener)
     unregisterForAllProfilingResults(java.util.function.Consumer<android.os.ProfilingResult> listener)
   class ProfilingResult
@@ -17607,6 +17717,7 @@ package android.os
     addControlPoint(float intensity, float sharpness, long durationMillis)
     setInitialSharpness(float initialSharpness)
   class VibrationEffect.Composition
+    addPrimitive(int primitiveId, float scale, int delay, int delayType)
     addPrimitive(int primitiveId, float scale, int delay)
     addPrimitive(int primitiveId, float scale)
     addPrimitive(int primitiveId)
@@ -18216,7 +18327,7 @@ package android.provider
   class CloudMediaProviderContract.Capabilities
     writeToParcel(android.os.Parcel dest, int flags)
   class CloudMediaProviderContract.Capabilities.Builder
-    setMediaCollectionsEnabled(boolean enabled)
+    setMediaCategoriesEnabled(boolean enabled)
     setSearchEnabled(boolean enabled)
   class Contacts.ContactMethods
     addPostalLocation(android.content.Context context, long postalId, double latitude, double longitude)
@@ -18308,6 +18419,12 @@ package android.provider
     getLocalAccountName(android.content.Context context)
     getLocalAccountType(android.content.Context context)
     newEntityIterator(android.database.Cursor cursor)
+  class ContactsContract.RawContacts.DefaultAccount
+    getDefaultAccountForNewContacts(android.content.ContentResolver resolver)
+  class ContactsContract.RawContacts.DefaultAccount.DefaultAccountAndState
+    equals(java.lang.Object obj)
+    ofCloud(android.accounts.Account cloudAccount)
+    ofSim(android.accounts.Account simAccount)
   class ContactsContract.Settings
     getDefaultAccount(android.content.ContentResolver resolver)
   class ContactsContract.SimAccount
@@ -18450,6 +18567,7 @@ package android.provider
     isCurrentCloudMediaProviderAuthority(android.content.ContentResolver resolver, java.lang.String authority)
     isCurrentSystemGallery(android.content.ContentResolver resolver, int uid, java.lang.String packageName)
     isSupportedCloudMediaProviderAuthority(android.content.ContentResolver resolver, java.lang.String authority)
+    markIsFavoriteStatus(android.content.ContentResolver resolver, java.util.Collection<android.net.Uri> uris, boolean areFavorites)
     notifyCloudMediaChangedEvent(android.content.ContentResolver resolver, java.lang.String authority, java.lang.String currentMediaCollectionId)
     openAssetFileDescriptor(android.content.ContentResolver resolver, android.net.Uri uri, java.lang.String mode, android.os.CancellationSignal cancellationSignal)
     openFileDescriptor(android.content.ContentResolver resolver, android.net.Uri uri, java.lang.String mode, android.os.CancellationSignal cancellationSignal)
@@ -18610,6 +18728,162 @@ package android.provider
     buildSourceUri(java.lang.String packageName)
   class VoicemailContract.Voicemails
     buildSourceUri(java.lang.String packageName)
+
+package android.ranging
+;---------------------------------------
+  class DataNotificationConfig
+    writeToParcel(android.os.Parcel dest, int flags)
+  class DataNotificationConfig.Builder
+    setNotificationConfigType(int config)
+    setProximityFarCm(int proximityCm)
+    setProximityNearCm(int proximityCm)
+  class RangingCapabilities
+    writeToParcel(android.os.Parcel dest, int flags)
+  class RangingData
+    writeToParcel(android.os.Parcel dest, int flags)
+  class RangingDevice
+    equals(java.lang.Object obj)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class RangingDevice.Builder
+    setUuid(java.util.UUID id)
+  class RangingManager
+    createRangingSession(java.util.concurrent.Executor executor, android.ranging.RangingSession.Callback callback)
+    registerCapabilitiesCallback(java.util.concurrent.Executor executor, android.ranging.RangingManager.RangingCapabilitiesCallback callback)
+    unregisterCapabilitiesCallback(android.ranging.RangingManager.RangingCapabilitiesCallback callback)
+  interface RangingManager.RangingCapabilitiesCallback
+    onRangingCapabilities(android.ranging.RangingCapabilities capabilities)
+  class RangingMeasurement
+    writeToParcel(android.os.Parcel dest, int flags)
+  class RangingPreference
+    writeToParcel(android.os.Parcel dest, int flags)
+  class RangingPreference.Builder
+    #ctor(int role, android.ranging.RangingConfig rangingConfig)
+    setSessionConfig(android.ranging.SessionConfig config)
+  class RangingSession
+    addDeviceToRangingSession(android.ranging.RangingConfig deviceRangingParams)
+    reconfigureRangingInterval(int intervalSkipCount)
+    removeDeviceFromRangingSession(android.ranging.RangingDevice rangingDevice)
+    start(android.ranging.RangingPreference rangingPreference)
+  interface RangingSession.Callback
+    onClosed(int reason)
+    onOpenFailed(int reason)
+    onResults(android.ranging.RangingDevice peer, android.ranging.RangingData data)
+    onStarted(android.ranging.RangingDevice peer, int technology)
+    onStopped(android.ranging.RangingDevice peer, int technology)
+  class SensorFusionParams
+    writeToParcel(android.os.Parcel dest, int flags)
+  class SensorFusionParams.Builder
+    setSensorFusionEnabled(boolean sensorFusionEnabled)
+  class SessionConfig
+    writeToParcel(android.os.Parcel dest, int flags)
+  class SessionConfig.Builder
+    setAngleOfArrivalNeeded(boolean isAngleOfArrivalNeeded)
+    setDataNotificationConfig(android.ranging.DataNotificationConfig config)
+    setRangingMeasurementsLimit(int rangingMeasurementsLimit)
+    setSensorFusionParams(android.ranging.SensorFusionParams parameters)
+
+package android.ranging.ble.cs
+;---------------------------------------
+  class BleCsRangingCapabilities
+    writeToParcel(android.os.Parcel dest, int flags)
+  class BleCsRangingParams
+    writeToParcel(android.os.Parcel dest, int flags)
+  class BleCsRangingParams.Builder
+    #ctor(java.lang.String peerBluetoothAddress)
+    setLocationType(int locationType)
+    setRangingUpdateRate(int updateRate)
+    setSecurityLevel(int securityLevel)
+    setSightType(int sightType)
+
+package android.ranging.ble.rssi
+;---------------------------------------
+  class BleRssiRangingParams
+    writeToParcel(android.os.Parcel dest, int flags)
+  class BleRssiRangingParams.Builder
+    #ctor(java.lang.String peerBluetoothAddress)
+    setRangingUpdateRate(int updateRate)
+
+package android.ranging.oob
+;---------------------------------------
+  class DeviceHandle
+    writeToParcel(android.os.Parcel dest, int flags)
+  class DeviceHandle.Builder
+    #ctor(android.ranging.RangingDevice rangingDevice, android.ranging.oob.TransportHandle transportHandle)
+  class OobInitiatorRangingConfig
+    writeToParcel(android.os.Parcel dest, int flags)
+  class OobInitiatorRangingConfig.Builder
+    addDeviceHandle(android.ranging.oob.DeviceHandle deviceHandle)
+    addDeviceHandles(java.util.List<android.ranging.oob.DeviceHandle> deviceHandles)
+    setFastestRangingInterval(java.time.Duration intervalMs)
+    setRangingMode(int rangingMode)
+    setSecurityLevel(int securityLevel)
+    setSlowestRangingInterval(java.time.Duration intervalMs)
+  class OobResponderRangingConfig
+    writeToParcel(android.os.Parcel dest, int flags)
+  class OobResponderRangingConfig.Builder
+    #ctor(android.ranging.oob.DeviceHandle deviceHandle)
+  interface TransportHandle
+    registerReceiveCallback(java.util.concurrent.Executor executor, android.ranging.oob.TransportHandle.ReceiveCallback callback)
+    sendData(byte[] data)
+  interface TransportHandle.ReceiveCallback
+    onReceiveData(byte[] data)
+
+package android.ranging.raw
+;---------------------------------------
+  class RawInitiatorRangingConfig
+    writeToParcel(android.os.Parcel dest, int flags)
+  class RawInitiatorRangingConfig.Builder
+    addRawRangingDevice(android.ranging.raw.RawRangingDevice rangingDevice)
+    addRawRangingDevices(java.util.List<android.ranging.raw.RawRangingDevice> rangingDevices)
+  class RawRangingDevice
+    writeToParcel(android.os.Parcel dest, int flags)
+  class RawRangingDevice.Builder
+    setBleRssiRangingParams(android.ranging.ble.rssi.BleRssiRangingParams params)
+    setCsRangingParams(android.ranging.ble.cs.BleCsRangingParams params)
+    setRangingDevice(android.ranging.RangingDevice rangingDevice)
+    setRttRangingParams(android.ranging.wifi.rtt.RttRangingParams params)
+    setUwbRangingParams(android.ranging.uwb.UwbRangingParams params)
+  class RawResponderRangingConfig
+    writeToParcel(android.os.Parcel dest, int flags)
+  class RawResponderRangingConfig.Builder
+    setRawRangingDevice(android.ranging.raw.RawRangingDevice rangingDevice)
+
+package android.ranging.uwb
+;---------------------------------------
+  class UwbAddress
+    equals(java.lang.Object obj)
+    fromBytes(byte[] address)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class UwbComplexChannel
+    equals(java.lang.Object o)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class UwbComplexChannel.Builder
+    setChannel(int channel)
+    setPreambleIndex(int preambleIndex)
+  class UwbRangingCapabilities
+    writeToParcel(android.os.Parcel dest, int flags)
+  class UwbRangingParams
+    writeToParcel(android.os.Parcel dest, int flags)
+  class UwbRangingParams.Builder
+    setComplexChannel(android.ranging.uwb.UwbComplexChannel complexChannel)
+    setRangingUpdateRate(int rate)
+    setSessionKeyInfo(byte[] sessionKeyInfo)
+    setSlotDuration(int durationMs)
+    setSubSessionId(int subSessionId)
+    setSubSessionKeyInfo(byte[] subSessionKeyInfo)
+    #ctor(int sessionId, int configId, android.ranging.uwb.UwbAddress deviceAddress, android.ranging.uwb.UwbAddress peerAddress)
+
+package android.ranging.wifi.rtt
+;---------------------------------------
+  class RttRangingCapabilities
+    writeToParcel(android.os.Parcel dest, int flags)
+  class RttRangingParams
+    writeToParcel(android.os.Parcel dest, int flags)
+  class RttRangingParams.Builder
+    #ctor(java.lang.String serviceName)
+    setMatchFilter(byte[] matchFilter)
+    setPeriodicRangingHwFeatureEnabled(boolean periodicRangingHwFeatureEnabled)
+    setRangingUpdateRate(int updateRate)
 
 package android.renderscript
 ;---------------------------------------
@@ -20696,8 +20970,6 @@ package android.telecom
     createRemoteOutgoingConnection(android.telecom.PhoneAccountHandle connectionManagerPhoneAccount, android.telecom.ConnectionRequest request)
     onBind(android.content.Intent intent)
     onConference(android.telecom.Connection connection1, android.telecom.Connection connection2)
-    onCreateConferenceComplete(android.telecom.Conference conference)
-    onCreateConnectionComplete(android.telecom.Connection connection)
     onCreateIncomingConference(android.telecom.PhoneAccountHandle connectionManagerPhoneAccount, android.telecom.ConnectionRequest request)
     onCreateIncomingConferenceFailed(android.telecom.PhoneAccountHandle connectionManagerPhoneAccount, android.telecom.ConnectionRequest request)
     onCreateIncomingConnection(android.telecom.PhoneAccountHandle connectionManagerPhoneAccount, android.telecom.ConnectionRequest request)
@@ -21197,7 +21469,6 @@ package android.telephony
     getSubscriptionsInGroup(android.os.ParcelUuid groupUuid)
     isActiveSubscriptionId(int subscriptionId)
     isNetworkRoaming(int subId)
-    isSubscriptionAssociatedWithUser(int subscriptionId)
     isUsableSubscriptionId(int subscriptionId)
     isValidSubscriptionId(int subscriptionId)
     removeOnOpportunisticSubscriptionsChangedListener(android.telephony.SubscriptionManager.OnOpportunisticSubscriptionsChangedListener listener)
@@ -21223,6 +21494,7 @@ package android.telephony
     setDataLimit(long dataLimitBytes, int dataLimitBehavior)
     setDataUsage(long dataUsageBytes, long dataUsageTime)
     setNetworkTypes(int[] networkTypes)
+    setSubscriptionStatus(int subscriptionStatus)
     setSummary(java.lang.CharSequence summary)
     setTitle(java.lang.CharSequence title)
   interface TelephonyCallback.ActiveDataSubscriptionIdListener
@@ -21602,6 +21874,14 @@ package android.telephony.mbms
     onStreamStateUpdated(int state, int reason)
   class StreamingServiceInfo
     writeToParcel(android.os.Parcel dest, int flags)
+
+package android.telephony.satellite
+;---------------------------------------
+  class SatelliteManager
+    registerStateChangeListener(java.util.concurrent.Executor executor, android.telephony.satellite.SatelliteStateChangeListener listener)
+    unregisterStateChangeListener(android.telephony.satellite.SatelliteStateChangeListener listener)
+  interface SatelliteStateChangeListener
+    onEnabledStateChanged(boolean isEnabled)
 
 package android.text
 ;---------------------------------------
@@ -22506,6 +22786,10 @@ package android.text.style
   class TtsSpan.DigitsBuilder
     setDigits(java.lang.String digits)
     #ctor(java.lang.String digits)
+  class TtsSpan.DurationBuilder
+    setHours(int hours)
+    setMinutes(int minutes)
+    setSeconds(int seconds)
   class TtsSpan.ElectronicBuilder
     setDomain(java.lang.String domain)
     setEmailArguments(java.lang.String username, java.lang.String domain)
@@ -22563,6 +22847,7 @@ package android.text.style
   class TtsSpan.TimeBuilder
     setHours(int hours)
     setMinutes(int minutes)
+    setSeconds(int seconds)
     #ctor(int hours, int minutes)
   class TtsSpan.VerbatimBuilder
     setVerbatim(java.lang.String verbatim)
@@ -23740,7 +24025,6 @@ package android.view
   class Surface
     lockCanvas(android.graphics.Rect inOutDirty)
     readFromParcel(android.os.Parcel source)
-    setFrameRate(android.view.Surface.FrameRateParams frameRateParams)
     setFrameRate(float frameRate, int compatibility, int changeFrameRateStrategy)
     setFrameRate(float frameRate, int compatibility)
     #ctor(android.graphics.SurfaceTexture surfaceTexture)
@@ -23748,10 +24032,6 @@ package android.view
     unlockCanvas(android.graphics.Canvas canvas)
     unlockCanvasAndPost(android.graphics.Canvas canvas)
     writeToParcel(android.os.Parcel dest, int flags)
-  class Surface.FrameRateParams.Builder
-    setChangeFrameRateStrategy(int changeFrameRateStrategy)
-    setDesiredRateRange(float desiredMinRate, float desiredMaxRate)
-    setFixedSourceRate(float fixedSourceRate)
   class Surface.OutOfResourcesException
     #ctor(java.lang.String name)
   class SurfaceControl
@@ -23783,7 +24063,6 @@ package android.view
     setDesiredHdrHeadroom(android.view.SurfaceControl sc, float desiredRatio)
     setDesiredPresentTimeNanos(long desiredPresentTimeNanos)
     setExtendedRangeBrightness(android.view.SurfaceControl sc, float currentBufferRatio, float desiredRatio)
-    setFrameRate(android.view.SurfaceControl sc, android.view.Surface.FrameRateParams frameRateParams)
     setFrameRate(android.view.SurfaceControl sc, float frameRate, int compatibility, int changeFrameRateStrategy)
     setFrameRate(android.view.SurfaceControl sc, float frameRate, int compatibility)
     setFrameTimeline(long vsyncId)
@@ -23838,6 +24117,7 @@ package android.view
     setAlpha(float alpha)
     setChildSurfacePackage(android.view.SurfaceControlViewHost.SurfacePackage p)
     setClipBounds(android.graphics.Rect clipBounds)
+    setCompositionOrder(int compositionOrder)
     setDesiredHdrHeadroom(float desiredHeadroom)
     setSecure(boolean isSecure)
     setSurfaceLifecycle(int lifecycleStrategy)
@@ -24237,6 +24517,7 @@ package android.view
     setSoundEffectsEnabled(boolean soundEffectsEnabled)
     setStateDescription(java.lang.CharSequence stateDescription)
     setStateListAnimator(android.animation.StateListAnimator stateListAnimator)
+    setSupplementalDescription(java.lang.CharSequence supplementalDescription)
     setSystemGestureExclusionRects(java.util.List<android.graphics.Rect> rects)
     setSystemUiVisibility(int visibility)
     setTag(int key, java.lang.Object tag)
@@ -24979,6 +25260,7 @@ package android.view.accessibility
     addAccessibilityStateChangeListener(android.view.accessibility.AccessibilityManager.AccessibilityStateChangeListener listener, android.os.Handler handler)
     addAccessibilityStateChangeListener(android.view.accessibility.AccessibilityManager.AccessibilityStateChangeListener listener)
     addAudioDescriptionRequestedChangeListener(java.util.concurrent.Executor executor, android.view.accessibility.AccessibilityManager.AudioDescriptionRequestedChangeListener listener)
+    addHighContrastTextStateChangeListener(java.util.concurrent.Executor executor, android.view.accessibility.AccessibilityManager.HighContrastTextStateChangeListener listener)
     addTouchExplorationStateChangeListener(android.view.accessibility.AccessibilityManager.TouchExplorationStateChangeListener listener, android.os.Handler handler)
     addTouchExplorationStateChangeListener(android.view.accessibility.AccessibilityManager.TouchExplorationStateChangeListener listener)
     getEnabledAccessibilityServiceList(int feedbackTypeFlags)
@@ -24987,6 +25269,7 @@ package android.view.accessibility
     removeAccessibilityServicesStateChangeListener(android.view.accessibility.AccessibilityManager.AccessibilityServicesStateChangeListener listener)
     removeAccessibilityStateChangeListener(android.view.accessibility.AccessibilityManager.AccessibilityStateChangeListener listener)
     removeAudioDescriptionRequestedChangeListener(android.view.accessibility.AccessibilityManager.AudioDescriptionRequestedChangeListener listener)
+    removeHighContrastTextStateChangeListener(android.view.accessibility.AccessibilityManager.HighContrastTextStateChangeListener listener)
     removeTouchExplorationStateChangeListener(android.view.accessibility.AccessibilityManager.TouchExplorationStateChangeListener listener)
     sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent event)
   interface AccessibilityManager.AccessibilityServicesStateChangeListener
@@ -24995,6 +25278,8 @@ package android.view.accessibility
     onAccessibilityStateChanged(boolean enabled)
   interface AccessibilityManager.AudioDescriptionRequestedChangeListener
     onAudioDescriptionRequestedChanged(boolean enabled)
+  interface AccessibilityManager.HighContrastTextStateChangeListener
+    onHighContrastTextStateChanged(boolean enabled)
   interface AccessibilityManager.TouchExplorationStateChangeListener
     onTouchExplorationStateChanged(boolean enabled)
   class AccessibilityNodeInfo
@@ -25054,6 +25339,7 @@ package android.view.accessibility
     setEnabled(boolean enabled)
     setError(java.lang.CharSequence error)
     setExpandedState(int state)
+    setFieldRequired(boolean required)
     setFocusable(boolean focusable)
     setFocused(boolean focused)
     setGranularScrollingSupported(boolean granularScrollingSupported)
@@ -25086,6 +25372,7 @@ package android.view.accessibility
     setSource(android.view.View root, int virtualDescendantId)
     setSource(android.view.View source)
     setStateDescription(java.lang.CharSequence stateDescription)
+    setSupplementalDescription(java.lang.CharSequence supplementalDescription)
     setText(java.lang.CharSequence text)
     setTextEntryKey(boolean isTextEntryKey)
     setTextSelectable(boolean selectableText)
@@ -25516,6 +25803,7 @@ package android.view.inputmethod
     getInitialTextAfterCursor(int length, int flags)
     getInitialTextBeforeCursor(int length, int flags)
     makeCompatible(int targetSdkVersion)
+    setAutofillId(android.view.autofill.AutofillId autofillId)
     setInitialSurroundingSubText(java.lang.CharSequence subText, int subTextStart)
     setInitialSurroundingText(java.lang.CharSequence sourceText)
     setInitialToolType(int toolType)
@@ -29431,6 +29719,12 @@ package java.lang
     isDefined(int codePoint)
     isDigit(char ch)
     isDigit(int codePoint)
+    isEmoji(int codePoint)
+    isEmojiComponent(int codePoint)
+    isEmojiModifier(int codePoint)
+    isEmojiModifierBase(int codePoint)
+    isEmojiPresentation(int codePoint)
+    isExtendedPictographic(int codePoint)
     isHighSurrogate(char ch)
     isIdentifierIgnorable(char ch)
     isIdentifierIgnorable(int codePoint)
@@ -29616,6 +29910,8 @@ package java.lang
     #ctor(double value)
     #ctor(float value)
     #ctor(java.lang.String s)
+    float16ToFloat(short floatBinary16)
+    floatToFloat16(float f)
     floatToIntBits(float value)
     floatToRawIntBits(float value)
     hashCode(float value)
@@ -29664,9 +29960,11 @@ package java.lang
     compare(int x, int y)
     compareTo(java.lang.Integer anotherInteger)
     compareUnsigned(int x, int y)
+    compress(int i, int mask)
     decode(java.lang.String nm)
     divideUnsigned(int dividend, int divisor)
     equals(java.lang.Object obj)
+    expand(int i, int mask)
     getInteger(java.lang.String nm, int val)
     getInteger(java.lang.String nm, java.lang.Integer val)
     getInteger(java.lang.String nm)
@@ -29719,9 +30017,11 @@ package java.lang
     compare(long x, long y)
     compareTo(java.lang.Long anotherLong)
     compareUnsigned(long x, long y)
+    compress(long i, long mask)
     decode(java.lang.String nm)
     divideUnsigned(long dividend, long divisor)
     equals(java.lang.Object obj)
+    expand(long i, long mask)
     getLong(java.lang.String nm, java.lang.Long val)
     getLong(java.lang.String nm, long val)
     getLong(java.lang.String nm)
@@ -30311,7 +30611,6 @@ package java.lang
     setUncaughtExceptionHandler(java.lang.Thread.UncaughtExceptionHandler eh)
     sleep(long millis, int nanos)
     sleep(long millis)
-    stop(java.lang.Throwable obj)
     #ctor(java.lang.Runnable target, java.lang.String name)
     #ctor(java.lang.Runnable target)
     #ctor(java.lang.String name)
@@ -30497,6 +30796,9 @@ package java.lang.invoke
     #ctor(java.lang.invoke.MethodHandle target)
     #ctor(java.lang.invoke.MethodType type)
     setTarget(java.lang.invoke.MethodHandle newTarget)
+  class StringConcatException
+    #ctor(java.lang.String msg, java.lang.Throwable cause)
+    #ctor(java.lang.String msg)
   interface TypeDescriptor.OfMethod<F,M>
     changeParameterType(int index, F paramType)
     changeReturnType(F newReturn)
@@ -30689,6 +30991,9 @@ package java.lang.runtime
 ;---------------------------------------
   class ObjectMethods
     bootstrap(java.lang.invoke.MethodHandles.Lookup lookup, java.lang.String methodName, java.lang.invoke.TypeDescriptor type, java.lang.Class<?> recordClass, java.lang.String names, java.lang.invoke.MethodHandle... getters)
+  class SwitchBootstraps
+    enumSwitch(java.lang.invoke.MethodHandles.Lookup lookup, java.lang.String invocationName, java.lang.invoke.MethodType invocationType, java.lang.Object... labels)
+    typeSwitch(java.lang.invoke.MethodHandles.Lookup lookup, java.lang.String invocationName, java.lang.invoke.MethodType invocationType, java.lang.Object... labels)
 
 package java.math
 ;---------------------------------------

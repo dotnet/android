@@ -26,14 +26,16 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <DefineConstants Condition=" '$(AndroidApiLevel)' &gt; '$(AndroidLatestStableApiLevel)' ">$(DefineConstants);ANDROID_UNSTABLE</DefineConstants>
+    <IsUnstableVersion Condition=" '$(AndroidApiLevel)' &gt; '$(AndroidLatestStableApiLevel)' ">true</IsUnstableVersion>
+    <DefineConstants Condition=" '$(IsUnstableVersion)' == 'True' ">$(DefineConstants);ANDROID_UNSTABLE</DefineConstants>
     <OutputPath>$(_MonoAndroidNETDefaultOutDir)</OutputPath>
 
     <!-- Allow PublicApiAnalyzers to be turned off -->
     <RunAnalyzers Condition=" '$(DisableApiCompatibilityCheck)' == 'True' ">false</RunAnalyzers>
 
     <!-- PublicApiAnalyzers warnings should be errors, but building in VS throws incorrect extra warnings -->
-    <WarningsAsErrors Condition=" '$(BuildingInsideVisualStudio)' != 'True' ">$(WarningsAsErrors);RS0016,RS0017</WarningsAsErrors>
+    <!-- Temporarily ignore unstable version warnings until VS can build .NET 10 projects -->
+    <WarningsAsErrors Condition=" '$(BuildingInsideVisualStudio)' != 'True' AND '$(IsUnstableVersion)' != 'True' ">$(WarningsAsErrors);RS0016,RS0017</WarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(IncludeAndroidJavadoc)' == 'True' ">
