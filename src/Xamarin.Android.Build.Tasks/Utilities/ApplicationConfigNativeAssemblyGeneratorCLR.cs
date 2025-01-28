@@ -332,7 +332,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		};
 		var host_config_props = new LlvmIrGlobalVariable (
 			new StructureInstance<host_configuration_properties> (hostConfigurationPropertiesStructureInfo, hostConfigProps),
-			"host_configuration_properties",
+			"host_config_properties",
 			LlvmIrVariableOptions.GlobalConstant)
 		{
 			Comment = "Runtime host config properties, for CoreCLR initialization phase"

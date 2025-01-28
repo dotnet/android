@@ -254,6 +254,14 @@ macro(xa_add_compile_definitions TARGET)
       ANDROID64
     )
   endif()
+
+  if(IS_CLR_RUNTIME)
+    target_compile_definitions(
+      ${TARGET}
+      PRIVATE
+      TARGET_ANDROID
+    )
+  endif()
 endmacro()
 
 if(NOT BUILD_ARCHIVE_DSO_STUB)
