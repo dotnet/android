@@ -61,6 +61,22 @@ stages:
         & "C:\Android\android-sdk\emulator\emulator.exe" -accel-check
       displayName: emulator -accel-check
 
+    - task: DotNetCoreCLI@2
+      displayName: install emulator
+      inputs:
+        projects: $(System.DefaultWorkingDirectory)/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Emulator.csproj
+        arguments: >-
+          -c $(XA.Build.Configuration) -t:InstallAvdImage
+          -p:TestAvdApiLevel=34
+          -p:TestAvdAbi=x86_64
+          -p:TestAvdType=default
+          -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/install-emulator-34.binlog
+
+    - pwsh: >
+        & "C:\Android\android-sdk\emulator\emulator.exe" -no-window -no-boot-anim -debug -verbose -avd XamarinAndroidTestRunner34-x86_64
+      displayName: start avd
+
+
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
       parameters:
         specificImage: true
