@@ -11,7 +11,7 @@ public class MainActivity : Activity
 {
     protected override void OnCreate(Bundle? savedInstanceState)
     {
-        Log.Debug ("NativeAOT", "Application.OnCreate()");
+        Log.Debug ("NativeAOT", "MainActivity.OnCreate()");
 
         base.OnCreate(savedInstanceState);
 
