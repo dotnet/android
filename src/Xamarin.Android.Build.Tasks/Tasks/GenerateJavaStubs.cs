@@ -96,7 +96,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AndroidRuntime { get; set; } = "";
 
-		[Required]
 		public string CodeGenerationTarget { get; set; } = "";
 
 		AndroidRuntime androidRuntime;
