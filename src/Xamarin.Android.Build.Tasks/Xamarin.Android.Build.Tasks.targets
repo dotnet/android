@@ -30,11 +30,6 @@
   </PropertyGroup>
   <ItemGroup>
     <None
-        Include="MSBuild\Xamarin\Android\Xamarin.Android.Bindings.Before.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>Xamarin.Android.Bindings.Before.targets</Link>
-    </None>
-    <None
         Include="MSBuild\Xamarin\Android\Xamarin.Android.Bindings.ClassParse.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Xamarin.Android.Bindings.ClassParse.targets</Link>
