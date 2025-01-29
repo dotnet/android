@@ -340,7 +340,7 @@ namespace Xamarin.Android.Tasks
 			}
 			regCallsWriter.Close ();
 
-			var real_app_dir = Path.Combine (OutputDirectory, "src", "net", "dot", "jni");
+			var real_app_dir = Path.Combine (OutputDirectory, "src", "net", "dot", "android");
 			string applicationTemplateFile = "ApplicationRegistration.java";
 			SaveResource (
 				applicationTemplateFile,

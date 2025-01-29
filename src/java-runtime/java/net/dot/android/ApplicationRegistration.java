@@ -1,4 +1,4 @@
-package net.dot.jni;
+package net.dot.android;
 
 public class ApplicationRegistration {
 

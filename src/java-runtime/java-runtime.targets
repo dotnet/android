@@ -62,7 +62,7 @@
   />
   <!-- These files are auto generated at app build time so should be removed from the runtime.jar -->
   <Delete Files="%(_RuntimeOutput.IntermediateRuntimeOutputPath)\mono\MonoPackageManager_Resources.class" />
-  <Delete Files="%(_RuntimeOutput.IntermediateRuntimeOutputPath)\net\dot\jni\ApplicationRegistration.class" />
+  <Delete Files="%(_RuntimeOutput.IntermediateRuntimeOutputPath)\net\dot\android\ApplicationRegistration.class" />
   <Delete Files="%(_RuntimeOutput.IntermediateRuntimeOutputPath)\mono\android\app\XamarinAndroidEnvironmentVariables.class" />
   <Exec
       Condition="Exists('%(_RuntimeOutput.OutputJar)')"

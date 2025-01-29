@@ -22,7 +22,7 @@ public class NativeAotRuntimeProvider
         Log.d(TAG, "NativeAotRuntimeProvider.attachInfo(): calling JavaInteropRuntime.init()…");
         JavaInteropRuntime.init();
         // NOTE: only required for custom applications
-        net.dot.jni.ApplicationRegistration.registerApplications();
+        net.dot.android.ApplicationRegistration.registerApplications();
         super.attachInfo (context, info);
     }
 

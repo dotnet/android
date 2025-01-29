@@ -1093,12 +1093,12 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 				};
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				var oldMonoPackageManager = Path.Combine (intermediate, "android", "src", "mono", "MonoPackageManager.java");
-				var notifyTimeZoneChanges = Path.Combine (intermediate, "android", "src", "net", "dot", "jni", "NotifyTimeZoneChanges.java");
+				var notifyTimeZoneChanges = Path.Combine (intermediate, "android", "src", "net", "dot", "android", "NotifyTimeZoneChanges.java");
 				Directory.CreateDirectory (Path.GetDirectoryName (notifyTimeZoneChanges));
 				File.WriteAllText (oldMonoPackageManager, @"package mono;
 public class MonoPackageManager { }
 class MonoPackageManager_Resources { }");
-				File.WriteAllText (notifyTimeZoneChanges, @"package net.dot.jni;
+				File.WriteAllText (notifyTimeZoneChanges, @"package net.dot.android;
 public class ApplicationRegistration { }");
 				var oldMonoPackageManagerClass = Path.Combine (intermediate, "android", "bin", "classes" , "mono", "MonoPackageManager.class");
 				File.WriteAllText (oldMonoPackageManagerClass, "");
