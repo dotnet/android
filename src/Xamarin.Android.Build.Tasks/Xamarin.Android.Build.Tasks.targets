@@ -20,7 +20,6 @@
       _CopyExtraPackageContent;
       _GenerateBundledVersions;
       _CopyNetSdkTargets;
-      _CopyVSExtensionTargets;
       _WriteVersionFiles;
     </BuildDependsOn>
     <_AndroidSdkLocation Condition="'$(_AndroidSdkLocation)'==''">$(AndroidSdkDirectory)</_AndroidSdkLocation>
