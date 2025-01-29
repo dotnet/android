@@ -4,6 +4,7 @@
 #include <constants.hh>
 #include <xamarin-app.hh>
 #include <runtime-base/android-system.hh>
+#include <runtime-base/cpu-arch.hh>
 #include <runtime-base/strings.hh>
 #include <runtime-base/util.hh>
 
@@ -139,6 +140,80 @@ AndroidSystem::setup_environment_from_override_file (dynamic_local_string<Consta
 	}
 }
 #endif
+
+[[gnu::always_inline]]
+void
+AndroidSystem::add_apk_libdir (std::string_view const& apk, size_t &index, std::string_view const& abi) noexcept
+{
+	abort_unless (index < app_lib_directories.size (), "Index out of range");
+	static constexpr std::string_view lib_prefix { "!/lib/" };
+	std::string dir;
+
+	dir.reserve (apk.size () + lib_prefix.size () + abi.size ());
+	dir.assign (apk);
+	dir.append (lib_prefix);
+	dir.append (abi);
+	app_lib_directories [index] = dir;
+	log_debug (LOG_ASSEMBLY, "Added APK DSO lookup location: {}", dir);
+	index++;
+}
+
+[[gnu::always_inline]]
+void
+AndroidSystem::setup_apk_directories (unsigned short running_on_cpu, jstring_array_wrapper &runtimeApks, bool have_split_apks) noexcept
+{
+	std::string_view const& abi = android_abi_names [running_on_cpu];
+	size_t number_of_added_directories = 0uz;
+
+	for (size_t i = 0uz; i < runtimeApks.get_length (); ++i) {
+		jstring_wrapper &e = runtimeApks [i];
+		std::string_view apk = e.get_string_view ();
+
+		if (have_split_apks) {
+			if (apk.ends_with (Constants::split_config_abi_apk_name.data ())) {
+				add_apk_libdir (apk, number_of_added_directories, abi);
+				break;
+			}
+		} else {
+			add_apk_libdir (apk, number_of_added_directories, abi);
+		}
+	}
+
+	if (app_lib_directories.size () == number_of_added_directories) [[likely]] {
+		return;
+	}
+
+	abort_unless (number_of_added_directories > 0, "At least a single application lib directory must be added");
+	app_lib_directories = app_lib_directories.subspan (0, number_of_added_directories);
+}
+
+void
+AndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks) noexcept
+{
+	if (!is_embedded_dso_mode_enabled ()) {
+		log_debug (LOG_DEFAULT, "Setting up for DSO lookup in app data directories"sv);
+
+		app_lib_directories = std::span<std::string> (single_app_lib_directory);
+		app_lib_directories [0] = std::string (appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
+		log_debug (LOG_ASSEMBLY, "Added filesystem DSO lookup location: {}", app_lib_directories [0]);
+		return;
+	}
+
+	log_debug (LOG_DEFAULT, "Setting up for DSO lookup directly in the APK"sv);
+	if (have_split_apks) {
+		// If split apks are used, then we will have just a single app library directory. Don't allocate any memory
+		// dynamically in this case
+		AndroidSystem::app_lib_directories = std::span<std::string> (single_app_lib_directory);
+	} else {
+		size_t app_lib_directories_size = runtimeApks.get_length ();
+		AndroidSystem::app_lib_directories = std::span<std::string> (new std::string[app_lib_directories_size], app_lib_directories_size);
+	}
+
+	uint16_t built_for_cpu = 0, running_on_cpu = 0;
+	bool is64bit = false;
+	_monodroid_detect_cpu_and_architecture (built_for_cpu, running_on_cpu, is64bit);
+	setup_apk_directories (running_on_cpu, runtimeApks, have_split_apks);
+}
 
 void
 AndroidSystem::setup_environment () noexcept

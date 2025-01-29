@@ -2238,23 +2238,9 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectJarContentFilesForArchive>
 
-  <CollectAssemblyFilesForArchive
-      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-      ApkOutputPath="$(_ApkOutputPath)"
-      AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
-      EnableCompression="$(AndroidEnableAssemblyCompression)"
-      IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
-      IntermediateOutputPath="$(IntermediateOutputPath)"
-      ProjectFullPath="$(MSBuildProjectFullPath)"
-      ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
-      ResolvedUserAssemblies="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths)"
-      SupportedAbis="@(_BuildTargetAbis)"
-      UseAssemblyStore="$(AndroidUseAssemblyStore)"
-      ResolvedRuntimePacks="@(ResolvedRuntimePack)">
-    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
-  </CollectAssemblyFilesForArchive>
-
+  <!-- CoreCLR builds embed runtime config in libxamarin-app.so -->
   <CollectRuntimeConfigFilesForArchive
+      Condition=" '$(_AndroidRuntime)' != 'CoreCLR' "
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       IntermediateOutputPath="$(IntermediateOutputPath)"
       RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"

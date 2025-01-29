@@ -8,6 +8,7 @@
 #include <runtime-base/logger.hh>
 #include <runtime-base/timing-internal.hh>
 #include <shared/log_types.hh>
+#include <startup/zip.hh>
 
 using namespace xamarin::android;
 
@@ -17,10 +18,13 @@ size_t Host::clr_get_runtime_property (const char *key, char *value_buffer, size
 	return 0;
 }
 
-bool Host::clr_bundle_probe (const char *path, int64_t *offset, int64_t *size, int64_t *compressedSize) noexcept
+bool Host::clr_bundle_probe (const char *path, void **data_start, int64_t *size) noexcept
 {
 	log_info (LOG_DEFAULT, "clr_bundle_probe (\"{}\"...)", path);
-	Helpers::abort_application ("Gimme stack trace");
+	if (data_start == nullptr || size == nullptr) {
+		return false; // TODO: abort instead?
+	}
+
 	return false;
 }
 
@@ -28,6 +32,10 @@ const void* Host::clr_pinvoke_override (const char *library_name, const char *en
 {
 	log_info (LOG_DEFAULT, "clr_pinvoke_override (\"{}\", \"{}\")", library_name, entry_point_name);
 	return nullptr;
+}
+
+void Host::gather_assemblies_and_libraries (jstring_array_wrapper& runtimeApks, bool have_split_apks)
+{
 }
 
 void Host::create_xdg_directory (jstring_wrapper& home, size_t home_len, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept
@@ -89,6 +97,11 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, js
 	AndroidSystem::set_primary_override_dir (home);
 	AndroidSystem::create_update_dir (AndroidSystem::get_primary_override_dir ());
 	AndroidSystem::setup_environment ();
+
+	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
+    AndroidSystem::setup_app_library_directories (runtimeApks, applicationDirs, haveSplitApks);
+
+	gather_assemblies_and_libraries (runtimeApks, haveSplitApks);
 
 	log_write (LOG_DEFAULT, LogLevel::Info, "Calling CoreCLR initialization routine");
 	android_coreclr_initialize (
