@@ -208,7 +208,7 @@ namespace Xamarin.Android.Tasks
 					return false;
 				}
 
-				if (String.Compare (returnType, method.ReturnType.FullName, StringComparison.Ordinal) != 0) {
+				if (!TypeMatches (returnType, method.ReturnType.FullName)) {
 					log.LogWarning ($"Method '{method.FullName}' doesn't match native callback signature (invalid return type: expected '{returnType}', found '{method.ReturnType.FullName}')");
 					return false;
 				}
@@ -223,13 +223,36 @@ namespace Xamarin.Android.Tasks
 						parameterTypeName = pd.ParameterType.FullName;
 					}
 
-					if (String.Compare (parameterTypeName, paramTypes[i], StringComparison.Ordinal) != 0) {
+					if (!TypeMatches (parameterTypeName, paramTypes[i])) {
 						log.LogWarning ($"Method '{method.FullName}' doesn't match native callback signature, expected parameter type '{paramTypes[i]}' at position {i}, found '{parameterTypeName}'");
 						return false;
 					}
 				}
 
 				return true;
+			}
+
+			// Because these types are marshaled as different blittable types,
+			// we need to accept them as equivalent
+			static readonly Tuple<string, string>[] equivalent_types = new [] {
+				Tuple.Create ("System.Boolean", "System.SByte"),
+				Tuple.Create ("System.Char", "System.UInt16"),
+			};
+
+			static bool TypeMatches (string type, string methodType)
+			{
+				if (String.Compare (type, methodType, StringComparison.Ordinal) == 0)
+					return true;
+
+				foreach (var eq in equivalent_types) {
+					if (string.Compare (eq.Item1, type, StringComparison.Ordinal) == 0 && string.Compare (eq.Item2, methodType, StringComparison.Ordinal) == 0)
+						return true;
+
+					if (string.Compare (eq.Item1, methodType, StringComparison.Ordinal) == 0 && string.Compare (eq.Item2, type, StringComparison.Ordinal) == 0)
+						return true;
+				}
+
+				return false;
 			}
 		}
 
