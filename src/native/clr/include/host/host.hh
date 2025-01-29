@@ -26,9 +26,10 @@ namespace xamarin::android {
 	private:
 		static void create_xdg_directory (jstring_wrapper& home, size_t home_len, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept;
 		static void create_xdg_directories_and_environment (jstring_wrapper &homeDir) noexcept;
+		static void gather_assemblies_and_libraries (jstring_array_wrapper& runtimeApks, bool have_split_apks);
 
 		static size_t clr_get_runtime_property (const char *key, char *value_buffer, size_t value_buffer_size, void *contract_context) noexcept;
-		static bool clr_bundle_probe (const char *path, int64_t *offset, int64_t *size, int64_t *compressedSize) noexcept;
+		static bool clr_bundle_probe (const char *path, void **data_start, int64_t *size) noexcept;
 		static const void* clr_pinvoke_override (const char *library_name, const char *entry_point_name) noexcept;
 
 	private:
@@ -40,7 +41,7 @@ namespace xamarin::android {
 			.size = sizeof(host_runtime_contract),
 			.context = nullptr,
 			.get_runtime_property = clr_get_runtime_property,
-			.bundle_probe = clr_bundle_probe,
+			.android_bundle_probe = clr_bundle_probe,
 			.pinvoke_override = clr_pinvoke_override,
 		};
 	};
