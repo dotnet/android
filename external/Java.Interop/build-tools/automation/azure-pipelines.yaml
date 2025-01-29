@@ -5,6 +5,7 @@ trigger:
   - release/*
   - d17-*
   - dependabot/*
+  - dev/*
 
 pr:
   branches:
