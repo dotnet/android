@@ -2908,14 +2908,4 @@ because xbuild doesn't support framework reference assemblies.
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Installer.Common.targets"
         Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Installer.Common.targets') And '$(DesignTimeBuild)' != 'true' "/>
-<!--
-*******************************************
-  Extensibility hook that allows VS to
-  provide extra behavior without modifying
-  the core targets.
-*******************************************
--->
-<Import Project="$(MSBuildThisFileDirectory)$(MSBuildThisFileName).After.targets"
-        Condition="Exists('$(MSBuildThisFileDirectory)$(MSBuildThisFileName).After.targets')"/>
-
 </Project>
