@@ -304,8 +304,7 @@ namespace Xamarin.Android.Tasks
 
 		void GenerateAdditionalProviderSources (NativeCodeGenState codeGenState, IList<string> additionalProviders)
 		{
-			bool isMonoVm = androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.MonoVM;
-			if (!isMonoVm) {
+			if (androidRuntime != Xamarin.Android.Tasks.AndroidRuntime.MonoVM) {
 				Log.LogDebugMessage ($"Skipping MonoRuntimeProvider generation for: {androidRuntime}");
 			} else {
 				// Create additional runtime provider java sources.
