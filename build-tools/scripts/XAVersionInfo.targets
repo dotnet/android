@@ -10,7 +10,6 @@
     <ItemGroup>
       <!-- If anything changes in this list, make sure to update:
            src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.targets (the _GenerateXACommonProps target)
-           build-tools/create-vsix/create-vsix.targets (the _CreateDependencies target)
       -->
       <_SubmoduleBranchInfo Include="external/Java.Interop">
         <OutputPropertyName>_BuildInfo_JavaInteropCommit</OutputPropertyName>
