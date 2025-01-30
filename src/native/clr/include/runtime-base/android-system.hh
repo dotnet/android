@@ -60,7 +60,7 @@ namespace xamarin::android {
 
 		static void create_update_dir (std::string const& override_dir) noexcept
 		{
-			if constexpr (Constants::IsReleaseBuild) {
+			if constexpr (Constants::is_release_build) {
 				/*
 				 * Don't create .__override__ on Release builds, because Google requires
 				 * that pre-loaded apps not create world-writable directories.
@@ -76,6 +76,11 @@ namespace xamarin::android {
 
 			Util::create_public_directory (override_dir);
 			log_warn (LOG_DEFAULT, "Creating public update directory: `{}`", override_dir);
+		}
+
+		static auto is_embedded_dso_mode_enabled () noexcept -> bool
+		{
+			return embedded_dso_mode_enabled;
 		}
 
 		static auto monodroid_get_system_property (std::string_view const& name, dynamic_local_string<Constants::PROPERTY_VALUE_BUFFER_LEN> &value) noexcept -> int;
@@ -98,11 +103,6 @@ namespace xamarin::android {
 		static void set_embedded_dso_mode_enabled (bool yesno) noexcept
 		{
 			embedded_dso_mode_enabled = yesno;
-		}
-
-		static auto is_embedded_dso_mode_enabled () noexcept -> bool
-		{
-			return embedded_dso_mode_enabled;
 		}
 
 		static auto determine_primary_override_dir (jstring_wrapper &home) noexcept -> std::string
