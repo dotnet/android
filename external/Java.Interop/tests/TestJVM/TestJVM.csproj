@@ -4,6 +4,8 @@
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <Import Project="..\..\TargetFrameworkDependentValues.props" />

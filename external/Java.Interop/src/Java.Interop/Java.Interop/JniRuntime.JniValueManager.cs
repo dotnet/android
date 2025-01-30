@@ -32,7 +32,7 @@ namespace Java.Interop
 			public  JniValueManager?        ValueManager                {get; set;}
 		}
 
-		JniValueManager?                    valueManager;
+		internal    JniValueManager?        valueManager;
 		public  JniValueManager             ValueManager                {
 			get => valueManager ?? throw new NotSupportedException ();
 		}
@@ -269,6 +269,28 @@ namespace Java.Interop
 				if (type == typeof (Exception))
 					return typeof (JavaException);
 				return type;
+			}
+
+			public IJavaPeerable? GetPeer (
+					JniObjectReference reference,
+					[DynamicallyAccessedMembers (Constructors)]
+					Type? targetType = null)
+			{
+				if (disposed) {
+					throw new ObjectDisposedException (GetType ().Name);
+				}
+
+				if (!reference.IsValid) {
+					return null;
+				}
+
+				var peeked  = PeekPeer (reference);
+				if (peeked != null &&
+						(targetType == null ||
+						 targetType.IsAssignableFrom (peeked.GetType ()))) {
+					return peeked;
+				}
+				return CreatePeer (ref reference, JniObjectReferenceOptions.Copy, targetType);
 			}
 
 			public virtual IJavaPeerable? CreatePeer (
