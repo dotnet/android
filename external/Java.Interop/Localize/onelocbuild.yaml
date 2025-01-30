@@ -1,0 +1,72 @@
+trigger: none
+pr: none
+
+schedules:
+- cron: "0 6 * * *"
+  displayName: Run daily at 6:00 UTC
+  branches:
+    include:
+    - main
+- cron: "0 6 * * Sunday"
+  displayName: Run weekly on Sunday at 6:00 UTC
+  branches:
+    include:
+    - main
+  always: true
+
+jobs:
+- job: OneLocBuild
+  displayName: OneLocBuild
+  condition: and(eq(variables['System.TeamProject'], 'DevDiv'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  pool:
+    name: AzurePipelines-EO
+    demands:
+    - ImageOverride -equals 1ESPT-Windows2022
+  timeoutInMinutes: 30
+  variables:
+  - group: Xamarin-Secrets
+  workspace:
+    clean: all
+  steps:
+  - checkout: self
+    clean: true
+
+  # https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/1es-security-configuration/configuration-guides/pat-burndown-guidance#authentication-from-pipelines
+  # Requires Azure client 2.x
+  - task: AzureCLI@2
+    displayName: 'Set AzDO.OneLocBuildToken'
+    enabled: true
+    inputs:
+      azureSubscription: 'VSEng-AzureDevOps-ceapex-OneLocBuild'   # Azure DevOps service connection
+      scriptType: 'pscore'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        # if this fails, check out this bash script that includes diagnostics:
+        # https://gist.github.com/johnterickson/19f80a3e969e39f1000d118739176e62
+        # Note that the resource is specified to limit the token to Azure DevOps
+        $token = az account get-access-token --query accessToken --resource 499b84ac-1321-427f-aa17-267ca6975798 -o tsv
+        Write-Host "##vso[task.setvariable variable=AzDO.OneLocBuildToken;issecret=true]${token}"
+
+  - task: OneLocBuild@2
+    displayName: OneLocBuild
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+    inputs:
+      locProj: Localize/LocProject.json
+      outDir: $(Build.StagingDirectory)
+      packageSourceAuth: patAuth
+      patVariable: $(AzDO.OneLocBuildToken)
+      isCreatePrSelected: true
+      repoType: gitHub
+      gitHubPatVariable: $(github--pat--vs-mobiletools-engineering-service2)
+      prSourceBranchPrefix: locpr
+      isShouldReusePrSelected: true
+      isAutoCompletePrSelected: false
+      isUseLfLineEndingsSelected: true
+
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Localization Files
+    inputs:
+      PathtoPublish: $(Build.StagingDirectory)/loc
+      ArtifactName: Loc
+    condition: succeededOrFailed()
