@@ -12,8 +12,6 @@ namespace Android.Runtime {
 	// java.util.HashMap allows null keys and values
 	public class JavaDictionary : Java.Lang.Object, System.Collections.IDictionary {
 
-		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-
 		class DictionaryEnumerator : IDictionaryEnumerator {
 
 			IEnumerator simple_enumerator;

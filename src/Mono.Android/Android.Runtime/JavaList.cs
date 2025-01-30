@@ -10,7 +10,6 @@ namespace Android.Runtime {
 	// java.util.ArrayList allows null values
 	public partial class JavaList : Java.Lang.Object, System.Collections.IList {
 
-		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 		internal static readonly JniPeerMembers list_members = new XAPeerMembers ("java/util/List", typeof (JavaList), isInterface: true);
 
 		//
