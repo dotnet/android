@@ -23,22 +23,22 @@ namespace xamarin::android {
 	{
 	public:
 		// Returns `true` if the entry was something we need.
-		using ScanCallbackFn = bool(const char *apk_path, int apk_fd, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, uint32_t offset, uint32_t size);
+		using ScanCallbackFn = bool(std::string_view const& apk_path, int apk_fd, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, uint32_t offset, uint32_t size);
 
 		struct zip_scan_state
 		{
-			int					  file_fd;
-			const char *		  file_name;
-			const char * const	  prefix;
-			uint32_t			  prefix_len;
-			size_t				  buf_offset;
-			uint16_t			  compression_method;
-			uint32_t			  local_header_offset;
-			uint32_t			  data_offset;
-			uint32_t			  file_size;
-			bool				  bundled_assemblies_slow_path;
-			uint32_t			  max_assembly_name_size;
-			uint32_t			  max_assembly_file_name_size;
+			int					    file_fd;
+			std::string_view const& file_name;
+			const char * const	    prefix;
+			uint32_t			    prefix_len;
+			size_t				    buf_offset;
+			uint16_t			    compression_method;
+			uint32_t			    local_header_offset;
+			uint32_t			    data_offset;
+			uint32_t			    file_size;
+			bool				    bundled_assemblies_slow_path;
+			uint32_t			    max_assembly_name_size;
+			uint32_t			    max_assembly_file_name_size;
 		};
 
 	private:
@@ -59,18 +59,36 @@ namespace xamarin::android {
 		// .data() must be used otherwise string_view length will include the trailing \0 in the array
 		static constexpr std::string_view lib_prefix { lib_prefix_array.data () };
 
+		static constexpr std::string_view dso_suffix { ".so" };
+
+        static constexpr std::string_view assembly_store_prefix { "libassemblies." };
+        static constexpr std::string_view assembly_store_extension { ".blob" };
+
+        static constexpr size_t assembly_store_file_name_size = calc_size (assembly_store_prefix, Constants::android_lib_abi, assembly_store_extension, dso_suffix);
+        static constexpr auto assembly_store_file_name_array = concat_string_views<assembly_store_file_name_size> (assembly_store_prefix, Constants::android_lib_abi, assembly_store_extension, dso_suffix);
+
+        // .data() must be used otherwise string_view length will include the trailing \0 in the array
+        static constexpr std::string_view assembly_store_file_name { assembly_store_file_name_array.data () };
+
+        static constexpr size_t assembly_store_file_path_size = calc_size(lib_prefix, assembly_store_file_name);
+        static constexpr auto assembly_store_file_path_array = concat_string_views<assembly_store_file_path_size> (lib_prefix, assembly_store_file_name);
+
+	public:
+        // .data() must be used otherwise string_view length will include the trailing \0 in the array
+        static constexpr std::string_view assembly_store_file_path { assembly_store_file_path_array.data () };
+
 	public:
 		// Scans the ZIP archive for any entries matching the `lib/{ARCH}/` prefix and calls `entry_cb`
 		// for each of them. If the callback returns `false` for all of the entries (meaning none of them
 		// was interesting/useful), then the APK file descriptor is closed. Otherwise, the descriptor is
 		// kept open since we will need it later on.
-		static void scan_archive (const char *apk_path, ScanCallbackFn entry_cb) noexcept;
+		static void scan_archive (std::string_view const& apk_path, ScanCallbackFn entry_cb) noexcept;
 
 	private:
 		static std::tuple<const char*, uint32_t> get_assemblies_prefix_and_length () noexcept;
 
 		// Returns `true` if the APK fd needs to remain open.
-		static bool zip_scan_entries (int apk_fd, const char *apk_path, ScanCallbackFn entry_cb) noexcept;
+		static bool zip_scan_entries (int apk_fd, std::string_view const& apk_path, ScanCallbackFn entry_cb) noexcept;
 		static bool zip_read_cd_info (int apk_fd, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries) noexcept;
 		static bool zip_read_entry_info (std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name, zip_scan_state &state) noexcept;
 		static bool zip_load_entry_common (size_t entry_index, std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX> &entry_name, zip_scan_state &state) noexcept;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string_view>
+
 #if INTPTR_MAX == INT64_MAX
 #define XXH_NO_STREAM
 #define XXH_INLINE_ALL
