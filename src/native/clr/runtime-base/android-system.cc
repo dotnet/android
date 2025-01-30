@@ -236,7 +236,7 @@ AndroidSystem::setup_environment () noexcept
 			var_value = "";
 		}
 
-		if constexpr (Constants::IsDebugBuild) {
+		if constexpr (Constants::is_debug_build) {
 			log_info (LOG_DEFAULT, "Setting environment variable '{}' to '{}'", var_name, var_value);
 		}
 

@@ -28,6 +28,7 @@ set(XAMARIN_NET_ANDROID_LIB "net-android${CHECKED_BUILD_INFIX}.${XAMARIN_NET_AND
 set(XAMARIN_NET_ANDROID_STATIC_LIB "${XAMARIN_NET_ANDROID_LIB}-static")
 
 set(XAMARIN_MONODROID_SOURCES
+  assembly-store.cc
   host.cc
   host-jni.cc
 )
@@ -130,6 +131,7 @@ macro(lib_target_options TARGET_NAME)
     ${TARGET_NAME}
     xa::xamarin-app
     ${SHARED_LIB_NAME}
+    xa::xamarin-startup
     xa::runtime-base
     xa::java-interop
 #    xa::pinvoke-override-precompiled

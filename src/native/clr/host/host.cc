@@ -1,6 +1,7 @@
 #include <clr/hosts/coreclrhost.h>
 
 #include <xamarin-app.hh>
+#include <host/assembly-store.hh>
 #include <host/host.hh>
 #include <host/host-jni.hh>
 #include <runtime-base/android-system.hh>
@@ -25,7 +26,16 @@ bool Host::clr_bundle_probe (const char *path, void **data_start, int64_t *size)
 		return false; // TODO: abort instead?
 	}
 
-	return false;
+	*data_start = AssemblyStore::open_assembly (path, *size);
+	log_debug (
+		LOG_ASSEMBLY,
+		"Assembly data {}mapped ({:p}, {} bytes)",
+		*data_start == nullptr ? "not "sv : ""sv,
+		*data_start,
+		*size
+	);
+
+	return *data_start != nullptr && *size > 0;
 }
 
 const void* Host::clr_pinvoke_override (const char *library_name, const char *entry_point_name) noexcept
@@ -34,8 +44,48 @@ const void* Host::clr_pinvoke_override (const char *library_name, const char *en
 	return nullptr;
 }
 
+auto Host::zip_scan_callback (std::string_view const& apk_path, int apk_fd, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, uint32_t offset, uint32_t size) -> bool
+{
+	log_debug (LOG_ASSEMBLY, "zip entry: {}", entry_name.get ());
+	if (!found_assembly_store) {
+		found_assembly_store = Zip::assembly_store_file_path.compare (0, entry_name.length (), entry_name.get ()) == 0;
+		if (found_assembly_store) {
+			log_debug (LOG_ASSEMBLY, "Found assembly store in '{}': {}", apk_path, Zip::assembly_store_file_path);
+			AssemblyStore::map (apk_fd, apk_path, Zip::assembly_store_file_path, offset, size);
+			return false; // This will make the scanner keep the APK open
+		}
+	}
+	return false;
+}
+
 void Host::gather_assemblies_and_libraries (jstring_array_wrapper& runtimeApks, bool have_split_apks)
 {
+	if (!AndroidSystem::is_embedded_dso_mode_enabled ()) {
+		Helpers::abort_application ("Filesystem mode not supported yet.");
+	}
+
+	int64_t apk_count = static_cast<int64_t>(runtimeApks.get_length ());
+	bool got_split_config_abi_apk = false;
+
+	for (int64_t i = 0; i < apk_count; i++) {
+		std::string_view apk_file = runtimeApks [static_cast<size_t>(i)].get_string_view ();
+
+		if (have_split_apks) {
+			bool scan_apk = false;
+
+			// With split configs we need to scan only the abi apk, because both the assembly stores and the runtime
+			// configuration blob are in `lib/{ARCH}`, which in turn lives in the split config APK
+			if (!got_split_config_abi_apk && apk_file.ends_with (Constants::split_config_abi_apk_name.data ())) {
+				got_split_config_abi_apk = scan_apk = true;
+			}
+
+			if (!scan_apk) {
+				continue;
+			}
+		}
+
+		Zip::scan_archive (apk_file, zip_scan_callback);
+	}
 }
 
 void Host::create_xdg_directory (jstring_wrapper& home, size_t home_len, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept

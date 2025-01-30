@@ -154,14 +154,14 @@ bool Zip::zip_load_entry_common (size_t entry_index, std::vector<uint8_t> const&
 
 	bool result = zip_read_entry_info (buf, entry_name, state);
 
-	log_debug (LOG_ASSEMBLY, "{} entry: {}", optional_string (state.file_name), optional_string (entry_name.get (), "unknown"));
+	log_debug (LOG_ASSEMBLY, "{} entry: {}", state.file_name, optional_string (entry_name.get (), "unknown"));
 	if (!result || entry_name.empty ()) {
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			std::format (
 				"Failed to read Central Directory info for entry {} in APK {}",
 				entry_index,
-				optional_string (state.file_name)
+				state.file_name
 			)
 		);
 	}
@@ -172,7 +172,7 @@ bool Zip::zip_load_entry_common (size_t entry_index, std::vector<uint8_t> const&
 			std::format (
 				"Failed to adjust data start offset for entry {} in APK {}",
 				entry_index,
-				optional_string (state.file_name)
+				state.file_name
 			)
 		);
 	}
@@ -196,13 +196,21 @@ bool Zip::zip_load_entry_common (size_t entry_index, std::vector<uint8_t> const&
 
 	// assemblies must be 16-byte or 4-byte aligned, or Bad Things happen
 	if (((state.data_offset & 0xf) != 0) || ((state.data_offset & 0x3) != 0)) {
+		std::string_view::size_type pos = state.file_name.find_last_of ('/');
+		if (pos == state.file_name.npos) {
+			pos = 0;
+		} else {
+			pos++;
+		}
+		std::string_view const& name_no_path = state.file_name.substr (pos);
+
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			std::format (
 				"Assembly '{}' is at bad offset {} in the APK (not aligned to 4 or 16 bytes). 'zipalign' MUST be used on {} to align it properly",
 				optional_string (entry_name.get ()),
 				state.data_offset,
-				strrchr (state.file_name, '/') + 1
+				name_no_path
 			)
 		);
 	}
@@ -364,7 +372,7 @@ bool Zip::zip_read_cd_info (int apk_fd, uint32_t& cd_offset, uint32_t& cd_size, 
 }
 
 [[gnu::always_inline]]
-bool Zip::zip_scan_entries (int apk_fd, const char *apk_path, ScanCallbackFn entry_cb) noexcept
+bool Zip::zip_scan_entries (int apk_fd, std::string_view const& apk_path, ScanCallbackFn entry_cb) noexcept
 {
 	uint32_t cd_offset;
 	uint32_t cd_size;
@@ -375,7 +383,7 @@ bool Zip::zip_scan_entries (int apk_fd, const char *apk_path, ScanCallbackFn ent
 			LOG_ASSEMBLY,
 			std::format (
 				"Failed to read the EOCD record from APK file %s",
-				optional_string (apk_path)
+				apk_path
 			)
 		);
 	}
@@ -393,7 +401,7 @@ bool Zip::zip_scan_entries (int apk_fd, const char *apk_path, ScanCallbackFn ent
 				std::strerror (errno),
 				retval,
 				errno,
-				optional_string (apk_path)
+				apk_path
 			)
 		);
 	}
@@ -428,7 +436,7 @@ bool Zip::zip_scan_entries (int apk_fd, const char *apk_path, ScanCallbackFn ent
 				std::strerror (errno),
 				nread,
 				errno,
-				optional_string (apk_path)
+				apk_path
 			)
 		);
 	}
@@ -448,11 +456,11 @@ bool Zip::zip_scan_entries (int apk_fd, const char *apk_path, ScanCallbackFn ent
 	return keep_archive_open;
 }
 
-void Zip::scan_archive (const char *apk_path, ScanCallbackFn entry_cb) noexcept
+void Zip::scan_archive (std::string_view const& apk_path, ScanCallbackFn entry_cb) noexcept
 {
 	int fd;
 	do {
-		fd = open (apk_path, O_RDONLY);
+		fd = open (apk_path.data (), O_RDONLY);
 	} while (fd < 0 && errno == EINTR);
 
 	if (fd < 0) {
@@ -460,11 +468,11 @@ void Zip::scan_archive (const char *apk_path, ScanCallbackFn entry_cb) noexcept
 			LOG_ASSEMBLY,
 			std::format (
 				"ERROR: Unable to load application package {}. {}",
-				optional_string (apk_path), strerror (errno)
+				apk_path, strerror (errno)
 			)
 		);
 	}
-	log_debug (LOG_ASSEMBLY, "APK {} FD: {}", optional_string (apk_path), fd);
+	log_debug (LOG_ASSEMBLY, "APK {} FD: {}", apk_path, fd);
 	if (!zip_scan_entries (fd, apk_path, entry_cb)) {
 		return;
 	}
@@ -473,7 +481,7 @@ void Zip::scan_archive (const char *apk_path, ScanCallbackFn entry_cb) noexcept
 		log_warn (
 			LOG_ASSEMBLY,
 			"Failed to close file descriptor for {}. {}",
-			optional_string (apk_path),
+			apk_path,
 			strerror (errno)
 		);
 	}
