@@ -57,7 +57,7 @@ done:
 		void CheckBranchLength ()
 		{
 			// Trim generated dependabot branch names that are too long to produce useful package names
-			const int maxBranchLength = 60;
+			const int maxBranchLength = 50;
 			var lastSlashIndex = Branch.LastIndexOf ('/');
 			if (Branch.StartsWith ("dependabot") && lastSlashIndex != -1 && Branch.Length > maxBranchLength) {
 				Log.LogMessage ($"Trimming characters from the branch name at index {lastSlashIndex}: {Branch}");
