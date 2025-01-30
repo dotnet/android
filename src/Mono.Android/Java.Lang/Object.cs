@@ -156,9 +156,13 @@ namespace Java.Lang {
 			if (handle == IntPtr.Zero)
 				return null;
 
-			var p   = JNIEnvInit.ValueManager!.GetPeer (new JniObjectReference (handle), type);
-			JNIEnv.DeleteRef (handle, transfer);
-			return p;
+			var r = PeekObject (handle, type);
+			if (r != null) {
+				JNIEnv.DeleteRef (handle, transfer);
+				return r;
+			}
+
+			return Java.Interop.TypeManager.CreateInstance (handle, transfer, type);
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
