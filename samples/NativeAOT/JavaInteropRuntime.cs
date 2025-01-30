@@ -34,10 +34,11 @@ static class JavaInteropRuntime
 	static void init (IntPtr jnienv, IntPtr klass)
 	{
 		try {
+			var typeManager = new NativeAotTypeManager ();
 			var options = new JreRuntimeOptions {
 				EnvironmentPointer          = jnienv,
-				TypeManager                 = new NativeAotTypeManager (),
-				ValueManager                = new NativeAotValueManager (),
+				TypeManager                 = typeManager,
+				ValueManager                = new NativeAotValueManager (typeManager),
 				UseMarshalMemberBuilder     = false,
 				JniGlobalReferenceLogWriter = new LogcatTextWriter (AndroidLogLevel.Debug, "NativeAot:GREF"),
 				JniLocalReferenceLogWriter  = new LogcatTextWriter (AndroidLogLevel.Debug, "NativeAot:LREF"),
