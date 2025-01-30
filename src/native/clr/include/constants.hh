@@ -17,12 +17,18 @@ namespace xamarin::android {
 #endif
 
 	public:
-#if defined(RELEASE)
-		static constexpr bool IsReleaseBuild = true;
-		static constexpr bool IsDebugBuild = false;
+#if INTPTR_MAX == INT64_MAX
+		static inline constexpr bool is_64_bit_target = true;
 #else
-		static constexpr bool IsReleaseBuild = false;
-		static constexpr bool IsDebugBuild = true;
+		static inline constexpr bool is_64_bit_target = false;
+#endif
+
+#if defined(RELEASE)
+		static constexpr bool is_release_build = true;
+		static constexpr bool is_debug_build = false;
+#else
+		static constexpr bool is_release_build = false;
+		static constexpr bool is_debug_build = true;
 #endif
 		static constexpr std::string_view MANGLED_ASSEMBLY_NAME_EXT { ".so" };
 

@@ -565,16 +565,16 @@ else()
   add_subdirectory(${SOURCES_PREFIX}/xamarin-app-stub)
 
   if (IS_MONO_RUNTIME)
-	add_subdirectory(mono/tracing)
-	add_subdirectory(mono/pinvoke-override)
+    add_subdirectory(mono/tracing)
+    add_subdirectory(mono/pinvoke-override)
 
-	if(DEBUG_BUILD)
+    if(DEBUG_BUILD)
       add_subdirectory(mono/xamarin-debug-app-helper)
-	endif()
+    endif()
 
-	add_subdirectory(mono/monodroid)
+    add_subdirectory(mono/monodroid)
 
-	add_custom_target(run_static_analysis
+    add_custom_target(run_static_analysis
     COMMAND ${ANDROID_TOOLCHAIN_ROOT}/bin/clang-check -analyze -p="${CMAKE_CURRENT_BINARY_DIR}" ${CLANG_CHECK_SOURCES} > ${CMAKE_SOURCE_DIR}/static-analysis.${ANDROID_ABI}.${CMAKE_BUILD_TYPE}.txt 2>&1
     COMMAND_EXPAND_LISTS
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
@@ -583,7 +583,7 @@ else()
   endif()
 
   if (IS_CLR_RUNTIME)
-	add_subdirectory(clr/host)
-	add_subdirectory(clr/startup)
+    add_subdirectory(clr/host)
+    add_subdirectory(clr/startup)
   endif()
 endif()
