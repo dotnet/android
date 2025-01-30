@@ -730,8 +730,11 @@ namespace Xamarin.Android.Tests
 		}
 
 		[Test]
-		public void SwitchBetweenDesignTimeBuild ()
+		public void SwitchBetweenDesignTimeBuild ([Values (false, true)] bool useMSBuild)
 		{
+			if (useMSBuild && !IsWindows) {
+				Assert.Ignore ("This test is only relevant when using Windows");
+			}
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\custom_text.xml") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8"" ?>
@@ -767,14 +770,14 @@ namespace UnamedProject
 			});
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				b.UseMSBuild = useMSBuild;
 				Assert.IsTrue (b.Build (proj), "first *regular* build should have succeeded.");
 				var build_props = b.Output.GetIntermediaryPath ("build.props");
 				var designtime_build_props = b.Output.GetIntermediaryPath (Path.Combine ("designtime", "build.props"));
 				FileAssert.Exists (build_props, "build.props should exist after a first `Build`.");
 				FileAssert.DoesNotExist (designtime_build_props, "designtime/build.props should *not* exist after a first `Build`.");
 
-				b.Target = "Compile";
-				Assert.IsTrue (b.Build (proj, parameters: new [] { "DesignTimeBuild=True" }), "first design-time build should have succeeded.");
+				Assert.IsTrue (b.DesignTimeBuild (proj), "first design-time build should have succeeded.");
 				FileAssert.Exists (build_props, "build.props should exist after a design-time build.");
 				FileAssert.Exists (designtime_build_props, "designtime/build.props should exist after a design-time build.");
 
