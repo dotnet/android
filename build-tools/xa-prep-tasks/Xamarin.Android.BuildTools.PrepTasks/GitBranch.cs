@@ -50,7 +50,8 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 			// Trim generated dependabot branch names that are too long to produce useful package names
 			var lastSlashIndex = Branch.LastIndexOf ('/');
-			if (Branch.StartsWith ("dependabot") && lastSlashIndex != -1 && Branch.Length > 60) {
+			if ((Branch.StartsWith ("dependabot") || Branch.StartsWith ("darc-release/")) &&
+					lastSlashIndex != -1 && Branch.Length > 60) {
 				Branch = Branch.Substring (lastSlashIndex + 1);
 			}
 
