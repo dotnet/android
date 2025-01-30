@@ -5,8 +5,6 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <RootNamespace>Xamarin.Android.Tools.VSWhere</RootNamespace>
     <AssemblyName>vswhere</AssemblyName>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />

@@ -17,8 +17,6 @@
     <DefineConstants>$(DefineConstants);TRACE;HAVE_CECIL;MSBUILD;XABT_MANIFEST_EXTENSIONS</DefineConstants>
     <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' ">..\..\src\Mono.Android\obj\$(Configuration)\$(DotNetTargetFramework)\android-$(AndroidLatestStablePlatformId)\mcw</AndroidGeneratedClassDirectory>
     <NoWarn>8632</NoWarn>
-    <SignAssembly>false</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <Nullable>annotations</Nullable>
     <!-- Causes issues with linker files imported from Mono -->
     <NoWarn>$(NoWarn);CA1310;CA1305</NoWarn>

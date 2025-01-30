@@ -6,8 +6,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(DotNetTargetFramework)</TargetFrameworks>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <NoStdLib>true</NoStdLib>
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>

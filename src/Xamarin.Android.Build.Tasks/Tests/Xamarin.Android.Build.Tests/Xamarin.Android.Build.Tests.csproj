@@ -4,8 +4,6 @@
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
     <OutputPath>..\..\..\..\bin\Test$(Configuration)</OutputPath>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\..\..\product.snk</AssemblyOriginatorKeyFile>
     <DebugSymbols>True</DebugSymbols>
     <DebugType>portable</DebugType>
     <NoWarn>$(NoWarn);CA1305</NoWarn>

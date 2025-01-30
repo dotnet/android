@@ -8,7 +8,6 @@
     <TargetFrameworks>$(DotNetTargetFramework)</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -17,7 +16,6 @@
     <NoStdLib>true</NoStdLib>
     <Nullable>enable</Nullable>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
-    <SignAssembly>true</SignAssembly>
 
     <!-- Ignore "unused member" warnings from code that originates from Mono.CodeGeneration -->
     <NoWarn>$(NoWarn);CS0169;CS0414;CS0649</NoWarn>

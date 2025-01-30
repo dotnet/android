@@ -5,8 +5,6 @@
     <RootNamespace>Xamarin.Android.Build.Tests</RootNamespace>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
     <OutputPath>..\..\bin\Test$(Configuration)\MSBuildDeviceIntegration\</OutputPath>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <DebugSymbols>True</DebugSymbols>
     <DebugType>portable</DebugType>
     <Nullable>annotations</Nullable>

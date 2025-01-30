@@ -8,8 +8,6 @@
   <PropertyGroup>
     <TargetFrameworks>$(DotNetTargetFramework)</TargetFrameworks>
     <RootNamespace>Android</RootNamespace>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <NoWarn>0618;0809;0108;0114;0465;8609;8610;8614;8617;8613;8764;8765;8766;8767;RS0041</NoWarn>
     <WarningsAsErrors>$(WarningsAsErrors);CS2002</WarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

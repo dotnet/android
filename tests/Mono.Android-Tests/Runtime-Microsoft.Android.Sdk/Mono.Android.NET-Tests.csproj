@@ -8,8 +8,6 @@
     <SupportedOSPlatformVersion>$(AndroidMinimumDotNetApiLevel)</SupportedOSPlatformVersion>
     <RootNamespace>Xamarin.Android.RuntimeTests</RootNamespace>
     <OutputType>Exe</OutputType>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>$(XamarinAndroidSourcePath)product.snk</AssemblyOriginatorKeyFile>
     <_SkipJniAddNativeMethodRegistrationAttributeScan>True</_SkipJniAddNativeMethodRegistrationAttributeScan>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>$(XamarinAndroidSourcePath)bin\Test$(Configuration)</OutputPath>

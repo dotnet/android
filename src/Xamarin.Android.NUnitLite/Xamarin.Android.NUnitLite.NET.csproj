@@ -5,8 +5,6 @@
     <SupportedOSPlatformVersion>$(AndroidMinimumDotNetApiLevel)</SupportedOSPlatformVersion>
     <OutputType>Library</OutputType>
     <RootNamespace>Xamarin.Android.NUnitLite</RootNamespace>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <AndroidApplication>false</AndroidApplication>
     <NoStdLib>true</NoStdLib>
     <!-- Disable XML doc warnings:

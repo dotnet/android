@@ -10,9 +10,6 @@
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <!-- Temporary for InternalsVisibleTo -->
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <!-- Default to arm64 device -->
     <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
     <!-- Current required properties for NativeAOT -->
