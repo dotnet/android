@@ -13,7 +13,7 @@
     <MicrosoftDotNetCecilPackageVersion>0.11.5-alpha.25056.3</MicrosoftDotNetCecilPackageVersion>
     <SystemIOHashingPackageVersion>$(MicrosoftNETCoreAppRefPackageVersion)</SystemIOHashingPackageVersion>
     <!-- Previous .NET Android version -->
-    <MicrosoftAndroidSdkWindowsPackageVersion>34.0.147</MicrosoftAndroidSdkWindowsPackageVersion>
+    <MicrosoftAndroidSdkWindowsPackageVersion>34.0.148</MicrosoftAndroidSdkWindowsPackageVersion>
     <AndroidNetPreviousVersion>$(MicrosoftAndroidSdkWindowsPackageVersion)</AndroidNetPreviousVersion>
   </PropertyGroup>
   <PropertyGroup>
