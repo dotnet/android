@@ -1,12 +1,15 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-
+using System.Diagnostics.CodeAnalysis;
 
 namespace Android.Runtime {
 
 	[Register ("mono/android/runtime/JavaArray", DoNotGenerateAcw=true)]
-	public sealed class JavaArray<T> : Java.Lang.Object, IList<T> {
+	public sealed class JavaArray<
+			[DynamicallyAccessedMembers (Constructors)]
+			T
+	> : Java.Lang.Object, IList<T> {
 
 		public JavaArray (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)

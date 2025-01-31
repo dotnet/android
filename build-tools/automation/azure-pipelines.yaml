@@ -20,11 +20,6 @@ resources:
     name: xamarin/yaml-templates
     ref: refs/heads/main
     endpoint: xamarin
-  - repository: sdk-insertions
-    type: github
-    name: xamarin/sdk-insertions
-    ref: refs/heads/main
-    endpoint: xamarin
   - repository: android-platform-support
     type: git
     name: DevDiv/android-platform-support
@@ -46,7 +41,6 @@ parameters:
 # Global variables
 variables:
 - template: /build-tools/automation/yaml-templates/variables.yaml@self
-- template: templates/common/vs-release-vars.yml@sdk-insertions
 - ${{ if eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private') }}:
   - group: AzureDevOps-Artifact-Feeds-Pats
   - group: DotNet-MSRC-Storage

@@ -14,8 +14,6 @@ namespace Android.Runtime {
 	// java.util.Collection allows null values
 	public class JavaCollection : Java.Lang.Object, System.Collections.ICollection {
 
-		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-
 		internal static IntPtr collection_class = JNIEnv.FindClass ("java/util/Collection");
 
 		internal static IntPtr id_add;

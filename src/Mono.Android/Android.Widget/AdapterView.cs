@@ -51,7 +51,7 @@ namespace Android.Widget {
 
 	[Register ("android/widget/AdapterView", DoNotGenerateAcw=true)]
 	public abstract class AdapterView<
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			[DynamicallyAccessedMembers (Constructors)]
 			T
 	> : AdapterView  where T : IAdapter {
 
