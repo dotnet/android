@@ -1,24 +1,24 @@
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.NET.Sdk" Version="10.0.100-preview.2.25080.3">
+    <Dependency Name="Microsoft.NET.Sdk" Version="10.0.100-preview.2.25081.9">
       <Uri>https://github.com/dotnet/sdk</Uri>
-      <Sha>0a336b340d7bb71f3bf99dc35f0e9064127ca087</Sha>
+      <Sha>dfd6a8432dc30613731089e265712c27f3b1e8b3</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="10.0.0-preview.2.25078.10" CoherentParentDependency="Microsoft.NET.Sdk">
+    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="10.0.0-preview.2.25080.11" CoherentParentDependency="Microsoft.NET.Sdk">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>a9d67ec265ed4078265d70d155d06316acadf6fe</Sha>
+      <Sha>62528e7271721691e6aa47846d1270286d0ba37a</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NETCore.App.Ref" Version="10.0.0-preview.2.25078.10" CoherentParentDependency="Microsoft.NET.Sdk">
+    <Dependency Name="Microsoft.NETCore.App.Ref" Version="10.0.0-preview.2.25080.11" CoherentParentDependency="Microsoft.NET.Sdk">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>a9d67ec265ed4078265d70d155d06316acadf6fe</Sha>
+      <Sha>62528e7271721691e6aa47846d1270286d0ba37a</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-10.0.100.Transport" Version="10.0.0-alpha.1.25059.1" CoherentParentDependency="Microsoft.NETCore.App.Ref">
       <Uri>https://github.com/dotnet/emsdk</Uri>
       <Sha>0de3165cb0d56323b6caaf8e9916d4d9e72da32d</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-alpha.24627.1" CoherentParentDependency="Microsoft.NET.ILLink.Tasks">
+    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-alpha.25069.2" CoherentParentDependency="Microsoft.NET.ILLink.Tasks">
       <Uri>https://github.com/dotnet/cecil</Uri>
-      <Sha>9e8bd520939ddfee686261267a1646c1b113d9e1</Sha>
+      <Sha>2d5c8fb9aa8bd4c7fc085a73520061075c601655</Sha>
     </Dependency>
     <!-- Previous .NET Android version -->
     <Dependency Name="Microsoft.Android.Sdk.Windows" Version="35.0.24">
