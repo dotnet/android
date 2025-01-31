@@ -11,6 +11,7 @@ public class MainApplication : Application
     public MainApplication (IntPtr handle, JniHandleOwnership transfer)
         : base (handle, transfer)
     {
+        Log.Debug ("NativeAOT", $"Application..ctor({handle.ToString ("x2")}, {transfer})");
     }
 
     public override void OnCreate ()
