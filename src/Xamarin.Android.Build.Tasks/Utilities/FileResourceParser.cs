@@ -79,7 +79,7 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ($"Skipping non-existent aar: {aar}");
 					continue;
 				}
-				using (var file = File.Open (aar, FileMode.Open, FileAccess.ReadWrite, FileShare.Read)) {
+				using (var file = File.OpenRead (aar)) {
 					using var zip = new ZipArchive (file);
 					foreach (var entry in zip.Entries) {
 						if (entry.IsDirectory ())
