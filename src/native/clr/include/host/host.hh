@@ -57,6 +57,7 @@ namespace xamarin::android {
 		static size_t clr_get_runtime_property (const char *key, char *value_buffer, size_t value_buffer_size, void *contract_context) noexcept;
 		static bool clr_bundle_probe (const char *path, void **data_start, int64_t *size) noexcept;
 		static const void* clr_pinvoke_override (const char *library_name, const char *entry_point_name) noexcept;
+		static void clr_error_writer (const char *message) noexcept;
 
 	private:
 		static inline void *clr_host = nullptr;

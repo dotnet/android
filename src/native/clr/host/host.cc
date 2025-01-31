@@ -15,6 +15,11 @@
 
 using namespace xamarin::android;
 
+void Host::clr_error_writer (const char *message) noexcept
+{
+	log_error (LOG_DEFAULT, "CLR error: {}", optional_string (message));
+}
+
 size_t Host::clr_get_runtime_property (const char *key, char *value_buffer, size_t value_buffer_size, void *contract_context) noexcept
 {
 	log_info (LOG_DEFAULT, "clr_get_runtime_property (\"{}\"...)", key);
@@ -156,6 +161,7 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	gather_assemblies_and_libraries (runtimeApks, haveSplitApks);
 
 	log_write (LOG_DEFAULT, LogLevel::Info, "Calling CoreCLR initialization routine");
+	coreclr_set_error_writer (clr_error_writer);
 	int hr = android_coreclr_initialize (
 		application_config.android_package_name,
 		u"Xamarin.Android",
@@ -164,7 +170,7 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 		&clr_host,
 		&domain_id
 	);
-	log_debug (LOG_ASSEMBLY, "CoreCLR init result == {}; clr_host == {:p}; domain ID == {}", hr, clr_host, domain_id);
+	log_debug (LOG_ASSEMBLY, "CoreCLR init result == {:x}; clr_host == {:p}; domain ID == {}", static_cast<unsigned int>(hr), clr_host, domain_id);
 	// TODO: make S_OK & friends known to us
 	// if (hr != S_OK) {
 	// }
@@ -173,7 +179,7 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	abort_unless (
 		clr_host != nullptr,
 		[&hr] {
-			return detail::_format_message ("Failure to initialize CoreCLR host instance. Returned result %d", hr);
+			return detail::_format_message ("Failure to initialize CoreCLR host instance. Returned result 0x%x", static_cast<unsigned int>(hr));
 		}
 	);
 
@@ -227,7 +233,7 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 		"Initialize",
 		&delegate
 	);
-	log_debug (LOG_ASSEMBLY, "Delegate creation result == {}; delegate == {:p}", hr, delegate);
+	log_debug (LOG_ASSEMBLY, "Delegate creation result == {:x}; delegate == {:p}", static_cast<unsigned int>(hr), delegate);
 	// TODO: make S_OK & friends known to us
 	// if (hr != S_OK) {
 	// }
