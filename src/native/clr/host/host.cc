@@ -4,6 +4,8 @@
 #include <host/assembly-store.hh>
 #include <host/host.hh>
 #include <host/host-jni.hh>
+#include <host/host-util.hh>
+#include <host/os-bridge.hh>
 #include <runtime-base/android-system.hh>
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
@@ -117,7 +119,7 @@ void Host::create_xdg_directories_and_environment (jstring_wrapper &homeDir) noe
 	create_xdg_directory (homeDir, home_len, CONFIG_PATH, XDG_CONFIG_HOME);
 }
 
-void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
+void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeClass, jstring lang, jobjectArray runtimeApksJava,
 	jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset, jobject loader,
 	jobjectArray assembliesJava, jboolean isEmulator, jboolean haveSplitApks)
 {
@@ -149,12 +151,12 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, js
 	AndroidSystem::setup_environment ();
 
 	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
-    AndroidSystem::setup_app_library_directories (runtimeApks, applicationDirs, haveSplitApks);
+	AndroidSystem::setup_app_library_directories (runtimeApks, applicationDirs, haveSplitApks);
 
 	gather_assemblies_and_libraries (runtimeApks, haveSplitApks);
 
 	log_write (LOG_DEFAULT, LogLevel::Info, "Calling CoreCLR initialization routine");
-	android_coreclr_initialize (
+	int hr = android_coreclr_initialize (
 		application_config.android_package_name,
 		u"Xamarin.Android",
 		&runtime_contract,
@@ -162,7 +164,84 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, js
 		&clr_host,
 		&domain_id
 	);
+	log_debug (LOG_ASSEMBLY, "CoreCLR init result == {}; clr_host == {:p}; domain ID == {}", hr, clr_host, domain_id);
+	// TODO: make S_OK & friends known to us
+	// if (hr != S_OK) {
+	// }
 	log_write (LOG_DEFAULT, LogLevel::Info, "CoreCLR initialization routine returned");
+
+	abort_unless (
+		clr_host != nullptr,
+		[&hr] {
+			return detail::_format_message ("Failure to initialize CoreCLR host instance. Returned result %d", hr);
+		}
+	);
+
+	struct JnienvInitializeArgs init = {};
+	init.javaVm                                         = jvm;
+	init.env                                            = env;
+	init.logCategories                                  = log_categories;
+	init.version                                        = env->GetVersion ();
+	init.isRunningOnDesktop                             = false;
+	init.brokenExceptionTransitions                     = 0;
+	init.packageNamingPolicy                            = static_cast<int>(application_config.package_naming_policy);
+	init.boundExceptionType                             = 0; // System
+	init.jniAddNativeMethodRegistrationAttributePresent = application_config.jni_add_native_method_registration_attribute_present ? 1 : 0;
+	init.jniRemappingInUse                              = application_config.jni_remapping_replacement_type_count > 0 || application_config.jni_remapping_replacement_method_index_entry_count > 0;
+	init.marshalMethodsEnabled                          = application_config.marshal_methods_enabled;
+
+	// GC threshold is 90% of the max GREF count
+	init.grefGcThreshold                                = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
+	init.grefClass                                      = HostUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_Class", true);
+	Class_getName                                       = env->GetMethodID (init.grefClass, "getName", "()Ljava/lang/String;");
+	init.Class_forName                                  = env->GetStaticMethodID (init.grefClass, "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;");
+
+	jclass lrefLoaderClass                              = env->GetObjectClass (loader);
+    init.Loader_loadClass                               = env->GetMethodID (lrefLoaderClass, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+    env->DeleteLocalRef (lrefLoaderClass);
+
+	init.grefLoader                                     = env->NewGlobalRef (loader);
+	init.grefIGCUserPeer                                = HostUtil::get_class_from_runtime_field (env, runtimeClass, "mono_android_IGCUserPeer", true);
+	init.grefGCUserPeerable                             = HostUtil::get_class_from_runtime_field (env, runtimeClass, "net_dot_jni_GCUserPeerable", true);
+
+	log_info (LOG_GC, "GREF GC Threshold: {}", init.grefGcThreshold);
+
+	// TODO: GC bridge to initialize here
+
+	OSBridge::initialize_on_runtime_init (env, runtimeClass);
+
+	log_debug (LOG_DEFAULT, "Calling into managed runtime init"sv);
+
+	size_t native_to_managed_index;
+	if (FastTiming::enabled ()) [[unlikely]] {
+		native_to_managed_index = internal_timing->start_event (TimingEventKind::NativeToManagedTransition);
+	}
+
+	log_debug (LOG_ASSEMBLY, "Creating UCO delegate to {}.Initialize", Constants::JNIENVINIT_FULL_TYPE_NAME);
+	void *delegate = nullptr;
+	hr = coreclr_create_delegate (
+		clr_host,
+		domain_id,
+		Constants::MONO_ANDROID_ASSEMBLY_NAME.data (),
+		Constants::JNIENVINIT_FULL_TYPE_NAME.data (),
+		"Initialize",
+		&delegate
+	);
+	log_debug (LOG_ASSEMBLY, "Delegate creation result == {}; delegate == {:p}", hr, delegate);
+	// TODO: make S_OK & friends known to us
+	// if (hr != S_OK) {
+	// }
+
+	auto initialize = reinterpret_cast<jnienv_initialize_fn> (delegate);
+	abort_unless (
+		initialize != nullptr,
+		"Failed to obtain unmanaged-callers-only pointer to the Android.Runtime.JNIEnvInit.Initialize method."
+	);
+	initialize (&init);
+
+	if (FastTiming::enabled ()) [[unlikely]] {
+		internal_timing->end_event (native_to_managed_index);
+	}
 
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing->end_event (total_time_index);
@@ -171,8 +250,8 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, js
 
 auto Host::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcept -> jint
 {
-	log_write (LOG_DEFAULT, LogLevel::Info, "Host init");
-
+	log_write (LOG_DEFAULT, LogLevel::Info, "Host OnLoad");
+	jvm = vm;
 	AndroidSystem::init_max_gref_count ();
 	return JNI_VERSION_1_6;
 }

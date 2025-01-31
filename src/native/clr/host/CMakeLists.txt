@@ -31,6 +31,8 @@ set(XAMARIN_MONODROID_SOURCES
   assembly-store.cc
   host.cc
   host-jni.cc
+  host-util.cc
+  os-bridge.cc
 )
 
 list(APPEND LOCAL_CLANG_CHECK_SOURCES
