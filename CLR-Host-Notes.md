@@ -11,3 +11,4 @@
       p/invoke names for instance, can be Unicode. So can be the assembly names. Native library
       names should be UTF-8, but we can generate lookup tables for those at application build time
       (e.g. indexed by an xxHash of the Unicode version of the name) - no conversion at run time.
+    * We need declarations of all he possible HRESULT errors (`S_OK` etc)
