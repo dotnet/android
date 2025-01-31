@@ -19,10 +19,10 @@ internal class NativeAotValueManager : JniRuntime.JniValueManager
 {
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
-	readonly NativeAotTypeManager TypeManager;
+	readonly JniRuntime.JniTypeManager TypeManager;
 	Dictionary<int, List<IJavaPeerable>>?   RegisteredInstances = new Dictionary<int, List<IJavaPeerable>>();
 
-	public NativeAotValueManager(NativeAotTypeManager typeManager) =>
+	public NativeAotValueManager(JniRuntime.JniTypeManager typeManager) =>
 		TypeManager = typeManager;
 
 	public override void WaitForGCBridgeProcessing ()
