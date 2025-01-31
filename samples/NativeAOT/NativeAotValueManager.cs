@@ -104,7 +104,7 @@ internal class NativeAotValueManager : JniRuntime.JniValueManager
 	{
 		if (peer == null)
 			return true;
-		return (peer.JniManagedPeerState & JniManagedPeerStates.Replaceable) == JniManagedPeerStates.Replaceable;
+		return peer.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable);
 	}
 
 	void WarnNotReplacing (int key, IJavaPeerable ignoreValue, IJavaPeerable keepValue)
