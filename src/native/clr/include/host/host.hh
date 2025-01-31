@@ -10,8 +10,33 @@
 #include "../shared/log_types.hh"
 
 namespace xamarin::android {
+	// NOTE: Keep this in sync with managed side in src/Mono.Android/Android.Runtime/JNIEnvInit.cs
+	struct JnienvInitializeArgs
+	{
+		JavaVM         *javaVm;
+		JNIEnv         *env;
+		jobject         grefLoader;
+		jmethodID       Loader_loadClass;
+		jclass          grefClass;
+		jmethodID       Class_forName;
+		unsigned int    logCategories;
+		int             version;
+		int             grefGcThreshold;
+		jobject         grefIGCUserPeer;
+		int             isRunningOnDesktop;
+		uint8_t         brokenExceptionTransitions;
+		int             packageNamingPolicy;
+		uint8_t         boundExceptionType;
+		int             jniAddNativeMethodRegistrationAttributePresent;
+		bool            jniRemappingInUse;
+		bool            marshalMethodsEnabled;
+		jobject         grefGCUserPeerable;
+	};
+
 	class Host
 	{
+		using jnienv_initialize_fn = void (*) (JnienvInitializeArgs*);
+
 	public:
 		static auto Java_JNI_OnLoad (JavaVM *vm, void *reserved) noexcept -> jint;
 		static void Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
@@ -38,6 +63,9 @@ namespace xamarin::android {
 		static inline unsigned int domain_id = 0;
 		static inline std::unique_ptr<Timing> _timing{};
 		static inline bool found_assembly_store = false;
+
+		static inline JavaVM *jvm = nullptr;
+		static inline jmethodID Class_getName = nullptr;
 
 		static inline host_runtime_contract runtime_contract{
 			.size = sizeof(host_runtime_contract),
