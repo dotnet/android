@@ -316,8 +316,6 @@ internal class NativeAotValueManager : JniRuntime.JniValueManager
 		return type;
 	}
 
-	static  readonly    Type    ByRefJniObjectReference = typeof (JniObjectReference).MakeByRefType ();
-
 	IJavaPeerable? CreatePeerProxy (
 			ref JniObjectReference klass,
 			[DynamicallyAccessedMembers (Constructors)]
@@ -353,23 +351,6 @@ internal class NativeAotValueManager : JniRuntime.JniValueManager
 		JniObjectReference.Dispose (ref klass, JniObjectReferenceOptions.CopyAndDispose);
 
 		return TryCreatePeerProxy (fallbackType, ref reference, options);
-	}
-
-	static ConstructorInfo? GetActivationConstructor (
-			[DynamicallyAccessedMembers (Constructors)]
-			Type type)
-	{
-		if (type.IsAbstract || type.IsInterface) {
-			type = GetInvokerType (type) ?? type;
-		}
-		foreach (var c in type.GetConstructors (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
-			var p = c.GetParameters ();
-			if (p.Length == 2 && p [0].ParameterType == ByRefJniObjectReference && p [1].ParameterType == typeof (JniObjectReferenceOptions))
-				return c;
-			if (p.Length == 2 && p [0].ParameterType == typeof (IntPtr) && p [1].ParameterType == typeof (JniHandleOwnership))
-				return c;
-		}
-		return null;
 	}
 
 	[return: DynamicallyAccessedMembers (Constructors)]
