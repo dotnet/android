@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <limits>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -33,6 +34,14 @@ namespace xamarin::android {
 		};
 
 	public:
+		static auto get_gref_gc_threshold () noexcept -> long
+		{
+			if (max_gref_count == std::numeric_limits<int>::max ()) {
+				return max_gref_count;
+			}
+			return static_cast<int> ((max_gref_count * 90LL) / 100LL);
+		}
+
 		static auto get_max_gref_count () noexcept -> long
 		{
 			return max_gref_count;
