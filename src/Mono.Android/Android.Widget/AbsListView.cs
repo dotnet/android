@@ -13,31 +13,49 @@ namespace Android.Widget {
 #pragma warning disable 0169
 		static Delegate GetGetAdapterHandler ()
 		{
-			if (cb_getAdapter == null)
-				cb_getAdapter = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr>) n_GetAdapter);
-			return cb_getAdapter;
+			return cb_getAdapter ??= new _JniMarshal_PP_L (n_GetAdapter);
 		}
 
 		static IntPtr id_getAdapter;
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static IntPtr n_GetAdapter (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<Android.Widget.AbsListView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-			return JNIEnv.ToLocalJniHandle (__this.Adapter);
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return default;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<Android.Widget.AbsListView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+				return JNIEnv.ToLocalJniHandle (__this.Adapter);
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return default;
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 
 		static Delegate? cb_setAdapter_Landroid_widget_Adapter_;
 #pragma warning disable 0169
 		static Delegate GetSetAdapter_Landroid_widget_ListAdapter_Handler ()
 		{
-			if (cb_setAdapter_Landroid_widget_Adapter_ == null)
-				cb_setAdapter_Landroid_widget_Adapter_ = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, IntPtr>) n_SetAdapter_Landroid_widget_ListAdapter_);
-			return cb_setAdapter_Landroid_widget_Adapter_;
+			return cb_setAdapter_Landroid_widget_Adapter_ ??= new _JniMarshal_PPL_V (n_SetAdapter_Landroid_widget_ListAdapter_);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static void n_SetAdapter_Landroid_widget_ListAdapter_ (IntPtr jnienv, IntPtr native__this, IntPtr native_adapter)
 		{
-			var __this  = Java.Lang.Object.GetObject<Android.Widget.AbsListView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-			__this.Adapter      = Java.Interop.JavaConvert.FromJniHandle<IListAdapter> (native_adapter, JniHandleOwnership.DoNotTransfer);
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return;
+
+			try {
+				var __this  = Java.Lang.Object.GetObject<Android.Widget.AbsListView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+				__this.Adapter      = Java.Interop.JavaConvert.FromJniHandle<IListAdapter> (native_adapter, JniHandleOwnership.DoNotTransfer);
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return;
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 
