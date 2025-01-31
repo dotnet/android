@@ -5,8 +5,8 @@ using System.Runtime.InteropServices;
 
 namespace NativeAOT;
 
-[Register("my/MainActivity")] // Required for typemap in NativeAotTypeManager
-[Activity(Label = "@string/app_name", MainLauncher = true)]
+// Name required for typemap in NativeAotTypeManager
+[Activity (Label = "@string/app_name", MainLauncher = true, Name = "my.MainActivity")]
 public class MainActivity : Activity
 {
     protected override void OnCreate(Bundle? savedInstanceState)

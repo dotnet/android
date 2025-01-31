@@ -3,9 +3,9 @@ using Android.Util;
 
 /// <summary>
 /// NOTE: This class is not required, but used for testing Android.App.Application subclasses.
+/// Name required for typemap in NativeAotTypeManager
 /// </summary>
-[Register ("my/MainApplication")] // Required for typemap in NativeAotTypeManager
-[Application]
+[Application (Name = "my.MainApplication")]
 public class MainApplication : Application
 {
     public MainApplication (IntPtr handle, JniHandleOwnership transfer)
