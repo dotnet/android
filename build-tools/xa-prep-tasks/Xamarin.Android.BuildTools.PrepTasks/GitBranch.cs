@@ -32,7 +32,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			if (!string.IsNullOrEmpty (build_sourcebranchname) && build_sourcebranchname.IndexOf ("merge", StringComparison.OrdinalIgnoreCase) == -1) {
 				Branch = build_sourcebranchname.Replace ("refs/heads/", string.Empty);
 				Log.LogMessage ($"Using BUILD_SOURCEBRANCH value: {Branch}");
-				return true;
+				goto done;
 			}
 
 			string gitHeadFile = Path.Combine (WorkingDirectory.ItemSpec, ".git", "HEAD");
@@ -48,15 +48,27 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				base.Execute ();
 			}
 
+done:
+			CheckBranchLength ();
+			Log.LogMessage (MessageImportance.Low, $"  [Output] {nameof (Branch)}: {Branch}");
+			return !Log.HasLoggedErrors;
+		}
+
+		void CheckBranchLength ()
+		{
 			// Trim generated dependabot branch names that are too long to produce useful package names
+			const int maxBranchLength = 32;
 			var lastSlashIndex = Branch.LastIndexOf ('/');
-			if (Branch.StartsWith ("dependabot") && lastSlashIndex != -1 && Branch.Length > 60) {
+			if (Branch.StartsWith ("dependabot") && lastSlashIndex != -1 && Branch.Length > maxBranchLength) {
+				Log.LogMessage ($"Trimming characters from the branch name at index {lastSlashIndex}: {Branch}");
 				Branch = Branch.Substring (lastSlashIndex + 1);
 			}
 
-			Log.LogMessage (MessageImportance.Low, $"  [Output] {nameof (Branch)}: {Branch}");
-
-			return !Log.HasLoggedErrors;
+			// Trim darc/Maestro branch names that are too long
+			if (Branch.StartsWith ("darc-") && Branch.Length > maxBranchLength) {
+				Log.LogMessage ($"Trimming to {maxBranchLength} characters from the branch name: {Branch}");
+				Branch = Branch.Substring (0, maxBranchLength);
+			}
 		}
 
 		protected override string GenerateCommandLineCommands ()
