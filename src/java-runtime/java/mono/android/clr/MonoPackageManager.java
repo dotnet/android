@@ -89,7 +89,7 @@ public class MonoPackageManager {
 				);
 
 				Log.w ("XACLR", "MonoPackageManager.LoadApplication: call registerApplications");
-				mono.android.app.ApplicationRegistration.registerApplications ();
+				net.dot.android.ApplicationRegistration.registerApplications ();
 
 				Log.w ("XACLR", "MonoPackageManager.LoadApplication: initialized");
 				initialized = true;
