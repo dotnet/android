@@ -96,7 +96,10 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AndroidRuntime { get; set; } = "";
 
+		public string CodeGenerationTarget { get; set; } = "";
+
 		AndroidRuntime androidRuntime;
+		JavaPeerStyle codeGenerationTarget;
 
 		internal const string AndroidSkipJavaStubGeneration = "AndroidSkipJavaStubGeneration";
 
@@ -104,6 +107,7 @@ namespace Xamarin.Android.Tasks
 		{
 			try {
 				androidRuntime = MonoAndroidHelper.ParseAndroidRuntime (AndroidRuntime);
+				codeGenerationTarget = MonoAndroidHelper.ParseCodeGenerationTarget (CodeGenerationTarget);
 				bool useMarshalMethods = !Debug && EnableMarshalMethods;
 				Run (useMarshalMethods);
 			} catch (XamarinAndroidException e) {
@@ -302,22 +306,21 @@ namespace Xamarin.Android.Tasks
 		{
 			if (androidRuntime != Xamarin.Android.Tasks.AndroidRuntime.MonoVM) {
 				Log.LogDebugMessage ($"Skipping MonoRuntimeProvider generation for: {androidRuntime}");
-				return;
-			}
+			} else {
+				// Create additional runtime provider java sources.
+				string providerTemplateFile = "MonoRuntimeProvider.Bundled.java";
+				string providerTemplate = GetResource (providerTemplateFile);
 
-			// Create additional runtime provider java sources.
-			string providerTemplateFile = "MonoRuntimeProvider.Bundled.java";
-			string providerTemplate = GetResource (providerTemplateFile);
-
-			foreach (var provider in additionalProviders) {
-				var contents = providerTemplate.Replace ("MonoRuntimeProvider", provider);
-				var real_provider = Path.Combine (OutputDirectory, "src", "mono", provider + ".java");
-				Files.CopyIfStringChanged (contents, real_provider);
+				foreach (var provider in additionalProviders) {
+					var contents = providerTemplate.Replace ("MonoRuntimeProvider", provider);
+					var real_provider = Path.Combine (OutputDirectory, "src", "mono", provider + ".java");
+					Files.CopyIfStringChanged (contents, real_provider);
+				}
 			}
 
 			// Create additional application java sources.
 			StringWriter regCallsWriter = new StringWriter ();
-			regCallsWriter.WriteLine ("\t\t// Application and Instrumentation ACWs must be registered first.");
+			regCallsWriter.WriteLine ("// Application and Instrumentation ACWs must be registered first.");
 			foreach (TypeDefinition type in codeGenState.JavaTypesForJCW) {
 				if (JavaNativeTypeManager.IsApplication (type, codeGenState.TypeCache) || JavaNativeTypeManager.IsInstrumentation (type, codeGenState.TypeCache)) {
 					if (codeGenState.Classifier != null && !codeGenState.Classifier.FoundDynamicallyRegisteredMethods (type)) {
@@ -326,7 +329,9 @@ namespace Xamarin.Android.Tasks
 
 					string javaKey = JavaNativeTypeManager.ToJniName (type, codeGenState.TypeCache).Replace ('/', '.');
 					regCallsWriter.WriteLine (
-						"\t\tmono.android.Runtime.register (\"{0}\", {1}.class, {1}.__md_methods);",
+						codeGenerationTarget == JavaPeerStyle.XAJavaInterop1 ?
+							"\t\tmono.android.Runtime.register (\"{0}\", {1}.class, {1}.__md_methods);" :
+							"\t\tnet.dot.jni.ManagedPeer.registerNativeMembers ({1}.class, {1}.__md_methods);",
 						type.GetAssemblyQualifiedName (codeGenState.TypeCache),
 						javaKey
 					);
@@ -334,7 +339,7 @@ namespace Xamarin.Android.Tasks
 			}
 			regCallsWriter.Close ();
 
-			var real_app_dir = Path.Combine (OutputDirectory, "src", "mono", "android", "app");
+			var real_app_dir = Path.Combine (OutputDirectory, "src", "net", "dot", "android");
 			string applicationTemplateFile = "ApplicationRegistration.java";
 			SaveResource (
 				applicationTemplateFile,
@@ -392,7 +397,7 @@ namespace Xamarin.Android.Tasks
 			(List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW) = ScanForJavaTypes (resolver, tdCache, assemblies, userAssemblies, useMarshalMethods);
 			var jcwContext = new JCWGeneratorContext (arch, resolver, assemblies.Values, javaTypesForJCW, tdCache, useMarshalMethods);
 			var jcwGenerator = new JCWGenerator (Log, jcwContext) {
-				CodeGenerationTarget = androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.MonoVM ? JavaPeerStyle.XAJavaInterop1 : JavaPeerStyle.JavaInterop1
+				CodeGenerationTarget = codeGenerationTarget,
 			};
 			bool success;
 

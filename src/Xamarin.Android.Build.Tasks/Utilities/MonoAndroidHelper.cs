@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using Xamarin.Android.Tools;
 using Xamarin.Tools.Zip;
+using Java.Interop.Tools.JavaCallableWrappers;
 
 #if MSBUILD
 using Microsoft.Android.Build.Tasks;
@@ -829,6 +830,15 @@ namespace Xamarin.Android.Tasks
 
 			// Default runtime is MonoVM
 			return AndroidRuntime.MonoVM;
+		}
+
+		public static JavaPeerStyle ParseCodeGenerationTarget (string codeGenerationTarget)
+		{
+			if (Enum.TryParse (codeGenerationTarget, ignoreCase: true, out JavaPeerStyle style))
+				return style;
+
+			// Default is XAJavaInterop1
+			return JavaPeerStyle.XAJavaInterop1;
 		}
 	}
 }
