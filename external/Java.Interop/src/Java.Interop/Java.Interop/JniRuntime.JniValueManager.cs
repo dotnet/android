@@ -336,31 +336,21 @@ namespace Java.Interop
 
 				JniObjectReference.Dispose (ref targetClass);
 
-				var ctor = GetPeerConstructor (ref refClass, targetType);
-				if (ctor == null) {
+				var peer = CreatePeerInstance (ref refClass, targetType, ref reference, transfer);
+				if (peer == null) {
 					throw new NotSupportedException (string.Format ("Could not find an appropriate constructable wrapper type for Java type '{0}', targetType='{1}'.",
 							JniEnvironment.Types.GetJniTypeNameFromInstance (reference), targetType));
 				}
-
-				var acts = new object[] {
-					reference,
-					transfer,
-				};
-				try {
-					var peer    = (IJavaPeerable) ctor.Invoke (acts);
-					peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
-					return peer;
-				} finally {
-					reference   = (JniObjectReference) acts [0];
-				}
+				peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
+				return peer;
 			}
 
-			static  readonly    Type    ByRefJniObjectReference = typeof (JniObjectReference).MakeByRefType ();
-
-			ConstructorInfo? GetPeerConstructor (
+			IJavaPeerable? CreatePeerInstance (
 					ref JniObjectReference klass,
 					[DynamicallyAccessedMembers (Constructors)]
-					Type fallbackType)
+					Type fallbackType,
+					ref JniObjectReference reference,
+					JniObjectReferenceOptions transfer)
 			{
 				var jniTypeName = JniEnvironment.Types.GetJniTypeNameFromClass (klass);
 
@@ -373,11 +363,11 @@ namespace Java.Interop
 					type    = Runtime.TypeManager.GetType (sig);
 
 					if (type != null) {
-						var ctor = GetActivationConstructor (type);
+						var peer = TryCreatePeerInstance (ref reference, transfer, type);
 
-						if (ctor != null) {
+						if (peer != null) {
 							JniObjectReference.Dispose (ref klass);
-							return ctor;
+							return peer;
 						}
 					}
 
@@ -391,51 +381,41 @@ namespace Java.Interop
 				}
 				JniObjectReference.Dispose (ref klass, JniObjectReferenceOptions.CopyAndDispose);
 
-				return GetActivationConstructor (fallbackType);
+				return TryCreatePeerInstance (ref reference, transfer, fallbackType);
 			}
 
-			static ConstructorInfo? GetActivationConstructor (
+			IJavaPeerable? TryCreatePeerInstance (
+					ref JniObjectReference reference,
+					JniObjectReferenceOptions options,
 					[DynamicallyAccessedMembers (Constructors)]
 					Type type)
 			{
-				if (type.IsAbstract || type.IsInterface) {
-					type = GetInvokerType (type) ?? type;
-				}
-				foreach (var c in type.GetConstructors (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
-					var p = c.GetParameters ();
-					if (p.Length == 2 && p [0].ParameterType == ByRefJniObjectReference && p [1].ParameterType == typeof (JniObjectReferenceOptions))
-						return c;
-				}
-				return null;
+				type    = Runtime.TypeManager.GetInvokerType (type) ?? type;
+				return TryCreatePeer (ref reference, options, type);
 			}
 
-			[return: DynamicallyAccessedMembers (Constructors)]
-			static Type? GetInvokerType (Type type)
+			const               BindingFlags    ActivationConstructorBindingFlags   = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+			static  readonly    Type            ByRefJniObjectReference = typeof (JniObjectReference).MakeByRefType ();
+			static  readonly    Type[]          JIConstructorSignature  = new Type [] { ByRefJniObjectReference, typeof (JniObjectReferenceOptions) };
+
+
+			protected virtual IJavaPeerable? TryCreatePeer (
+					ref JniObjectReference reference,
+					JniObjectReferenceOptions options,
+					[DynamicallyAccessedMembers (Constructors)]
+					Type type)
 			{
-				// https://github.com/xamarin/xamarin-android/blob/5472eec991cc075e4b0c09cd98a2331fb93aa0f3/src/Microsoft.Android.Sdk.ILLink/MarkJavaObjects.cs#L176-L186
-				const string makeGenericTypeMessage = "Generic 'Invoker' types are preserved by the MarkJavaObjects trimmer step.";
-
-				[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = makeGenericTypeMessage)]
-				[return: DynamicallyAccessedMembers (Constructors)]
-				static Type MakeGenericType (
-						[DynamicallyAccessedMembers (Constructors)]
-						Type type,
-						Type [] arguments) =>
-					// FIXME: https://github.com/dotnet/java-interop/issues/1192
-					#pragma warning disable IL3050
-					type.MakeGenericType (arguments);
-					#pragma warning restore IL3050
-
-				var signature   = type.GetCustomAttribute<JniTypeSignatureAttribute> ();
-				if (signature == null || signature.InvokerType == null) {
-					return null;
+				var c = type.GetConstructor (ActivationConstructorBindingFlags, null, JIConstructorSignature, null);
+				if (c != null) {
+					var args = new object[] {
+						reference,
+						options,
+					};
+					var p       = (IJavaPeerable) c.Invoke (args);
+					reference   = (JniObjectReference) args [0];
+					return p;
 				}
-
-				Type[] arguments = type.GetGenericArguments ();
-				if (arguments.Length == 0)
-					return signature.InvokerType;
-
-				return MakeGenericType (signature.InvokerType, arguments);
+				return null;
 			}
 
 			public object? CreateValue (
