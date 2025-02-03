@@ -2110,7 +2110,7 @@ because xbuild doesn't support framework reference assemblies.
 -->
 <Target Name="_CompressAssemblies"
     DependsOnTargets="_CollectAssembliesToCompress"
-    Inputs="@(_AssembliesToCompress);@(_AndroidMSBuildAllProjects)"
+    Inputs="@(_AssembliesToCompress);@(_AndroidMSBuildAllProjects);$(_AndroidBuildPropertiesCache)"
     Outputs="@(_AssembliesToCompress->'%(DestinationPath)')"
     Condition="'$(EmbedAssembliesIntoApk)' == 'True'">
 
