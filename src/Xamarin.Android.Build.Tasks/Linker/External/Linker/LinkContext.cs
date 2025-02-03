@@ -212,8 +212,12 @@ namespace Mono.Linker {
 			_annotations.SetAction (assembly, action);
 		}
 
-		public AssemblyDefinition GetAssembly (string assembly) =>
-			_resolver.GetAssembly (assembly);
+		public AssemblyDefinition GetAssembly (string assembly)
+		{
+			if (!assembly.EndsWith (".dll", StringComparison.OrdinalIgnoreCase))
+				assembly += ".dll";
+			return _resolver.GetAssembly (assembly);
+		}
 
 		public AssemblyDefinition [] GetAssemblies () =>
 			_resolver.ToResolverCache ().Values.ToArray ();
