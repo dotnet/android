@@ -40,6 +40,7 @@ public class MaybeUseLocalCLR : AndroidTask
 		"libSystem.Native",
 		"libSystem.Security.Cryptography.Native.Android",
 		"libcoreclr",
+		"libclrjit",
 	];
 
 	static readonly string[] ClrLibraryExtensions = [
