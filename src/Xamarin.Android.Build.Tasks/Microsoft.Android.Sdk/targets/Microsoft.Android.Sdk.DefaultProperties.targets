@@ -138,6 +138,9 @@
 
     <!-- profiler won't work without internet permission, we must thus force it -->
     <AndroidNeedsInternetPermission Condition=" '$(AndroidEnableProfiler)' == 'true' ">True</AndroidNeedsInternetPermission>
+
+    <!-- FIXME: error ANDZA0000: 01-30 21:38:27.669 38611 159726 W zip     : WARNING: header mismatch -->
+    <_AndroidUseLibZipSharp Condition=" '$(_AndroidUseLibZipSharp)' == '' ">true</_AndroidUseLibZipSharp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' and '$(GenerateApplicationManifest)' == 'true' ">
     <!-- Default to 1, if blank -->

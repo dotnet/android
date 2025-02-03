@@ -1,4 +1,4 @@
-﻿package mono.android.app;
+﻿package net.dot.android;
 
 public class ApplicationRegistration {
 

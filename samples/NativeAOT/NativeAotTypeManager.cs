@@ -13,12 +13,14 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 	// TODO: list of types specific to this application
 	Dictionary<string, Type> typeMappings = new () {
 		["android/app/Activity"]                = typeof (Android.App.Activity),
+		["android/app/Application"]             = typeof (Android.App.Application),
 		["android/content/Context"]             = typeof (Android.Content.Context),
 		["android/content/ContextWrapper"]      = typeof (Android.Content.ContextWrapper),
 		["android/os/BaseBundle"]               = typeof (Android.OS.BaseBundle),
 		["android/os/Bundle"]                   = typeof (Android.OS.Bundle),
 		["android/view/ContextThemeWrapper"]    = typeof (Android.Views.ContextThemeWrapper),
 		["my/MainActivity"]                     = typeof (MainActivity),
+		["my/MainApplication"]                  = typeof (MainApplication),
 	};
 
 	public NativeAotTypeManager ()

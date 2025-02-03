@@ -21,6 +21,8 @@ public class NativeAotRuntimeProvider
     public void attachInfo(android.content.Context context, android.content.pm.ProviderInfo info) {
         Log.d(TAG, "NativeAotRuntimeProvider.attachInfo(): calling JavaInteropRuntime.init()…");
         JavaInteropRuntime.init();
+        // NOTE: only required for custom applications
+        net.dot.android.ApplicationRegistration.registerApplications();
         super.attachInfo (context, info);
     }
 
