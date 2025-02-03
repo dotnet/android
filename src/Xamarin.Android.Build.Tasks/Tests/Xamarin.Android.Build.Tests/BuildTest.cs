@@ -752,6 +752,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void BuildInDesignTimeMode ([Values(false, true)] bool useManagedParser)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -762,20 +763,20 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				builder.Target = "UpdateAndroidResources";
 				builder.Build (proj, parameters: new string[] { "DesignTimeBuild=true" });
 				Assert.IsFalse (builder.Output.IsTargetSkipped ("_CreatePropertiesCache"), "target \"_CreatePropertiesCache\" should have been run.");
-				Assert.IsFalse (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"), "target \"_ResolveLibraryProjectImports\' should have been run.");
+				Assert.IsFalse (builder.Output.IsTargetSkipped ("_GenerateRtxt"), "target \"_GenerateRtxt\' should have been run.");
 				var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-				var librarycache = Path.Combine (intermediate, "designtime", "libraryprojectimports.cache");
-				Assert.IsTrue (File.Exists (librarycache), $"'{librarycache}' should exist.");
-				librarycache = Path.Combine (intermediate, "libraryprojectimports.cache");
-				Assert.IsFalse (File.Exists (librarycache), $"'{librarycache}' should not exist.");
+				var rTxtFile = Path.Combine (intermediate, "designtime", "R.txt");
+				Assert.IsTrue (File.Exists (rTxtFile), $"'{rTxtFile}' should exist.");
+				rTxtFile = Path.Combine (intermediate, "R.txt");
+				Assert.IsFalse (File.Exists (rTxtFile), $"'{rTxtFile}' should not exist.");
 				builder.Build (proj, parameters: new string[] { "DesignTimeBuild=true" });
 				Assert.IsFalse (builder.Output.IsTargetSkipped ("_CreatePropertiesCache"), "target \"_CreatePropertiesCache\" should have been run.");
-				Assert.IsTrue (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"), "target \"_ResolveLibraryProjectImports\' should have been skipped.");
+				Assert.IsTrue (builder.Output.IsTargetSkipped ("_GenerateRtxt"), "target \"_GenerateRtxt\' should have been skipped.");
 				Assert.IsTrue (builder.Clean (proj), "Clean Should have succeeded");
 				builder.Target = "_CleanDesignTimeIntermediateDir";
 				Assert.IsTrue (builder.Build (proj), "_CleanDesignTimeIntermediateDir should have succeeded");
-				librarycache = Path.Combine (intermediate, "designtime", "libraryprojectimports.cache");
-				Assert.IsFalse (File.Exists (librarycache), $"'{librarycache}' should not exist.");
+				rTxtFile = Path.Combine (intermediate, "designtime", "R.txt");
+				Assert.IsFalse (File.Exists (rTxtFile), $"'{rTxtFile}' should not exist.");
 			}
 		}
 

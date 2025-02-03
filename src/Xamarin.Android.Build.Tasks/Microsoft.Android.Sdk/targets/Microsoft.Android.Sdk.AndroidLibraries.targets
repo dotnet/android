@@ -18,7 +18,7 @@ projects.
     <_AarOutputPath>$(OutputPath)$(TargetName).aar</_AarOutputPath>
   </PropertyGroup>
 
-  <Target Name="_ResolveAars">
+  <Target Name="_ResolveAars" AfterTargets="ResolveReferences">
     <ItemGroup>
       <_AarSearchDirectory   Include="@(_ReferencePath->'%(RootDir)%(Directory)')" />
       <_AarSearchDirectory   Include="@(_ReferenceDependencyPaths->'%(RootDir)%(Directory)')" />

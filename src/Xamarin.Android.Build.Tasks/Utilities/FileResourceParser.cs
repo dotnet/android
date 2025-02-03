@@ -1,5 +1,6 @@
 using System;
 using System.CodeDom;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,6 +12,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
+using System.IO.Compression;
 
 namespace Xamarin.Android.Tasks
 {
@@ -43,7 +45,7 @@ namespace Xamarin.Android.Tasks
 			return null;
 		}
 
-		public IList<R> Parse (string resourceDirectory, IEnumerable<string> additionalResourceDirectories, Dictionary<string, string> resourceMap)
+		public IList<R> Parse (string resourceDirectory, IEnumerable<string> additionalResourceDirectories, IEnumerable<string> aarLibraries, Dictionary<string, string> resourceMap)
 		{
 			Log.LogDebugMessage ($"Parsing Directory {resourceDirectory}");
 			publicXml = LoadPublicXml ();
@@ -69,6 +71,40 @@ namespace Xamarin.Android.Tasks
 					}
 				} else {
 					Log.LogDebugMessage ($"Skipping non-existent directory: {dir}");
+				}
+			}
+			foreach (var aar in aarLibraries ??  Array.Empty<string>()) {
+				Log.LogDebugMessage ($"Processing Aar file {aar}");
+				if (!File.Exists (aar)) {
+					Log.LogDebugMessage ($"Skipping non-existent aar: {aar}");
+					continue;
+				}
+				using (var file = File.OpenRead (aar)) {
+					using var zip = new ZipArchive (file);
+					foreach (var entry in zip.Entries) {
+						if (entry.IsDirectory ())
+							continue;
+						if (!entry.FullName.StartsWith ("res"))
+							continue;
+						var ext = Path.GetExtension (entry.FullName);
+						var path = Directory.GetParent (entry.FullName).Name;
+						if (ext == ".xml" || ext == ".axml") {
+							if (string.Compare (path, "raw", StringComparison.OrdinalIgnoreCase) != 0) {
+								var ms = MemoryStreamPool.Shared.Rent ();
+								try {
+									using (var entryStream = entry.Open ()) {
+										entryStream.CopyTo (ms);
+									}
+									ms.Position = 0;
+									using XmlReader reader = XmlReader.Create (ms);
+									ProcessXmlFile (reader, resources);
+								} finally {
+									MemoryStreamPool.Shared.Return (ms);
+								}
+							}
+						}
+						ProcessResourceFile (entry.FullName, resources, processXml: false);
+					}
 				}
 			}
 
@@ -172,7 +208,7 @@ namespace Xamarin.Android.Tasks
 			return -1;
 		}
 
-		void ProcessResourceFile (string file, Dictionary<string, ICollection<R>> resources)
+		void ProcessResourceFile (string file, Dictionary<string, ICollection<R>> resources, bool processXml = true)
 		{
 			Log.LogDebugMessage ($"{nameof(ProcessResourceFile)} {file}");
 			var fileName = Path.GetFileNameWithoutExtension (file);
@@ -181,6 +217,10 @@ namespace Xamarin.Android.Tasks
 			if (fileName.EndsWith (".9", StringComparison.OrdinalIgnoreCase))
 				fileName = Path.GetFileNameWithoutExtension (fileName);
 			var path = Directory.GetParent (file).Name;
+			if (!processXml) {
+				CreateResourceField (path, fileName, resources);
+				return;
+			}
 			var ext = Path.GetExtension (file);
 			switch (ext) {
 				case ".xml":
@@ -299,8 +339,6 @@ namespace Xamarin.Android.Tasks
 						fields.Add (r);
 					}
 				}
-				if (field.Type != RType.Array)
-					return;
 				arrayMapping.Add (field, fields.ToArray ());
 
 				field.Ids = new int [attribs.Count];
@@ -321,71 +359,80 @@ namespace Xamarin.Android.Tasks
 
 		void ProcessXmlFile (string file, Dictionary<string, ICollection<R>> resources)
 		{
-			Log.LogDebugMessage ($"{nameof(ProcessXmlFile)}");
 			using (var reader = XmlReader.Create (file)) {
-				while (reader.Read ()) {
-					if (reader.NodeType == XmlNodeType.Whitespace || reader.NodeType == XmlNodeType.Comment)
-						continue;
-					if (reader.IsStartElement ()) {
-						var elementName = reader.Name;
-						var elementNS = reader.NamespaceURI;
-						if (!string.IsNullOrEmpty (elementNS)) {
-							if (elementNS != "http://schemas.android.com/apk/res/android")
-								continue;
-						}
-						if (elementName == "declare-styleable" || elementName == "configVarying" || elementName == "add-resource") {
-							ProcessStyleable (reader.ReadSubtree (), resources);
-							continue;
-						}
-						if (reader.HasAttributes) {
-							string name = null;
-							string type = null;
-							string id = null;
-							string custom_id = null;
-							while (reader.MoveToNextAttribute ()) {
-								if (reader.LocalName == "name")
-									name = reader.Value;
-								if (reader.LocalName == "type")
-									type = reader.Value;
-								if (reader.LocalName == "id") {
-									string[] values = reader.Value.Split ('/');
-									if (values.Length != 2) {
-										id = reader.Value.Replace ("@+id/", "").Replace ("@id/", "");
-									} else {
-										if (values [0] != "@+id" && values [0] != "@id" && !values [0].Contains ("android:")) {
-											custom_id = values [0].Replace ("@", "").Replace ("+", "");
-										}
-										id = values [1];
-									}
+				ProcessXmlFile (reader, resources);
+			}
+		}
 
+		void ProcessXmlFile (XmlReader reader, Dictionary<string, ICollection<R>> resources)
+		{
+			Log.LogDebugMessage ($"{nameof(ProcessXmlFile)}");
+			while (reader.Read ()) {
+				if (reader.NodeType == XmlNodeType.Whitespace || reader.NodeType == XmlNodeType.Comment)
+					continue;
+				if (reader.IsStartElement ()) {
+					var elementName = reader.Name;
+					var elementNS = reader.NamespaceURI;
+					if (!string.IsNullOrEmpty (elementNS)) {
+						if (elementNS != "http://schemas.android.com/apk/res/android")
+							continue;
+					}
+					if (elementName == "declare-styleable" || elementName == "configVarying" || elementName == "add-resource") {
+						try {
+							ProcessStyleable (reader.ReadSubtree (), resources);
+						} catch (Exception ex) {
+							Log.LogErrorFromException (ex);
+						}
+						continue;
+					}
+					if (reader.HasAttributes) {
+						string name = null;
+						string type = null;
+						string id = null;
+						string custom_id = null;
+						while (reader.MoveToNextAttribute ()) {
+							if (reader.LocalName == "name")
+								name = reader.Value;
+							if (reader.LocalName == "type")
+								type = reader.Value;
+							if (reader.LocalName == "id") {
+								string[] values = reader.Value.Split ('/');
+								if (values.Length != 2) {
+									id = reader.Value.Replace ("@+id/", "").Replace ("@id/", "");
+								} else {
+									if (values [0] != "@+id" && values [0] != "@id" && !values [0].Contains ("android:")) {
+										custom_id = values [0].Replace ("@", "").Replace ("+", "");
+									}
+									id = values [1];
 								}
-								if (reader.LocalName == "inflatedId") {
-									string inflateId = reader.Value.Replace ("@+id/", "").Replace ("@id/", "");
-									var r = new R () {
-										ResourceTypeName = "id",
-										Identifier = inflateId,
-										Id = -1,
-									};
-									Log.LogDebugMessage ($"Adding 1 {r}");
-									resources[r.ResourceTypeName].Add (r);
-								}
+
 							}
-							if (name?.Contains ("android:") ?? false)
-								continue;
-							if (id?.Contains ("android:") ?? false)
-								continue;
-							// Move the reader back to the element node.
-							reader.MoveToElement ();
-							if (!string.IsNullOrEmpty (name)) {
-								CreateResourceField (type ?? elementName, name, resources);
+							if (reader.LocalName == "inflatedId") {
+								string inflateId = reader.Value.Replace ("@+id/", "").Replace ("@id/", "");
+								var r = new R () {
+									ResourceTypeName = "id",
+									Identifier = inflateId,
+									Id = -1,
+								};
+								Log.LogDebugMessage ($"Adding 1 {r}");
+								resources[r.ResourceTypeName].Add (r);
 							}
-							if (!string.IsNullOrEmpty (custom_id) && !resources.ContainsKey (custom_id)) {
-								resources.Add (custom_id, new SortedSet<R> (new RComparer ()));
-								custom_types.Add (custom_id);
-							}
-							if (!string.IsNullOrEmpty (id)) {
-								CreateResourceField (custom_id ?? "id", id.Replace ("-", "_").Replace (".", "_"), resources);
-							}
+						}
+						if (name?.Contains ("android:") ?? false)
+							continue;
+						if (id?.Contains ("android:") ?? false)
+							continue;
+						// Move the reader back to the element node.
+						reader.MoveToElement ();
+						if (!string.IsNullOrEmpty (name)) {
+							CreateResourceField (type ?? elementName, name, resources);
+						}
+						if (!string.IsNullOrEmpty (custom_id) && !resources.ContainsKey (custom_id)) {
+							resources.Add (custom_id, new SortedSet<R> (new RComparer ()));
+							custom_types.Add (custom_id);
+						}
+						if (!string.IsNullOrEmpty (id)) {
+							CreateResourceField (custom_id ?? "id", id.Replace ("-", "_").Replace (".", "_"), resources);
 						}
 					}
 				}

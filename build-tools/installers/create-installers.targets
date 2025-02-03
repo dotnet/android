@@ -11,7 +11,7 @@
     <_MonoDocOutputPath>$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\monodoc\</_MonoDocOutputPath>
     <LegacyMSBuildSrcDir>$(XAInstallPrefix)xbuild\Xamarin\Android\</LegacyMSBuildSrcDir>
     <MSBuildTargetsSrcDir>$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\MSBuild\Xamarin\Android</MSBuildTargetsSrcDir>
-    <DefaultRuntimeEntitlementsPath>$(MSBuildThisFileDirectory)\..\create-pkg\runtime-entitlements.plist</DefaultRuntimeEntitlementsPath>
+    <DefaultRuntimeEntitlementsPath>$(MSBuildThisFileDirectory)runtime-entitlements.plist</DefaultRuntimeEntitlementsPath>
     <FirstInstallerFrameworkVersion Condition="'$(FirstInstallerFrameworkVersion)' == ''">$(AndroidLatestStableFrameworkVersion)</FirstInstallerFrameworkVersion>
     <BclFrameworkVersion>v1.0</BclFrameworkVersion>
     <LibExtension Condition=" '$(HostOS)' == 'Darwin' ">dylib</LibExtension>
@@ -191,11 +191,7 @@
   </ItemGroup>
   <ItemGroup>
     <_MSBuildTargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\Xamarin.Android.AvailableItems.targets" />
-    <_MSBuildTargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\Xamarin.Android.Bindings.After.targets" />
-    <_MSBuildTargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\Xamarin.Android.Bindings.Before.targets" />
     <_MSBuildTargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\Xamarin.Android.Common\ImportAfter\Microsoft.Cpp.Android.targets" />
-    <_MSBuildTargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\Xamarin.Android.Common.After.targets" />
-    <_MSBuildTargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\Xamarin.Android.Common.Before.targets" />
     <_MSBuildTargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\Xamarin.Android.DefaultOutputPaths.targets" />
   </ItemGroup>
   <ItemGroup>
@@ -247,10 +243,6 @@
     <_MSBuildFilesUnixSignAndHarden Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\aapt2" />
     <_MSBuildFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)libZipSharpNative-*.$(LibExtension)" />
     <_MSBuildFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)libMono.Unix.$(LibExtension)" />
-  </ItemGroup>
-  <ItemGroup>
-    <XATargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\..\Xamarin.Android.Sdk.props" />
-    <XATargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\..\Xamarin.Android.Sdk.targets" />
   </ItemGroup>
   <ItemGroup>
     <LegacyTargetsFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\MSBuild\Novell\MonoDroid.FSharp.targets" />

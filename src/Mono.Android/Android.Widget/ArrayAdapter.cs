@@ -9,7 +9,7 @@ namespace Android.Widget {
 
 	[Register ("android/widget/ArrayAdapter", DoNotGenerateAcw=true)]
 	public partial class ArrayAdapter<
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			[DynamicallyAccessedMembers (Constructors)]
 			T
 	> : ArrayAdapter {
 

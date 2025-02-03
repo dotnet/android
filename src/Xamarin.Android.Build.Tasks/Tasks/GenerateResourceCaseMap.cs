@@ -3,9 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tools;
+//using Xamarin.Tools.Zip;
+using System.IO.Compression;
 
 namespace Xamarin.Android.Tasks
 {
@@ -21,6 +25,8 @@ namespace Xamarin.Android.Tasks
 		public string ProjectDir { get; set; }
 
 		public ITaskItem[] AdditionalResourceDirectories { get; set; }
+
+		public string[] AarLibraries { get; set; }
 
 		[Required]
 		public ITaskItem OutputFile { get; set; }
@@ -62,6 +68,42 @@ namespace Xamarin.Android.Tasks
 						continue;
 					string [] tok = line.Split (';');
 					AddRename (tok [1].Replace ('/', Path.DirectorySeparatorChar), tok [0].Replace ('/', Path.DirectorySeparatorChar));
+				}
+			}
+			var resmap = ".net/__res_name_case_map.txt";
+			foreach (var aar in AarLibraries ??  Array.Empty<string>()) {
+				Log.LogDebugMessage ($"Processing Aar file {aar}");
+				if (!File.Exists (aar)) {
+					Log.LogDebugMessage ($"Skipping non-existent aar: {aar}");
+					continue;
+				}
+				using (var file = File.OpenRead (aar)) {
+					using var zip = new ZipArchive (file);
+					var entry = zip.GetEntry (resmap);
+					if (entry is null) {
+						Log.LogDebugMessage ($"Skipping non-existent file: {resmap}");
+						continue;
+					}
+					Log.LogDebugMessage ($"Found: {entry.FullName}");
+					var ms = MemoryStreamPool.Shared.Rent ();
+					try {
+						using (var entryStream = entry.Open ()) {
+							entryStream.CopyTo (ms);
+						}
+						ms.Position = 0;
+						using (var reader = new StreamReader (ms, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 4096, leaveOpen: true)) {
+							string line;
+							// Read each line until the end of the file
+							while ((line = reader.ReadLine()) != null) {
+								if (string.IsNullOrEmpty (line))
+									continue;
+								string [] tok = line.Split (';');
+								AddRename (tok [1].Replace ('/', Path.DirectorySeparatorChar), tok [0].Replace ('/', Path.DirectorySeparatorChar));
+							}
+						}
+					} finally {
+						MemoryStreamPool.Shared.Return (ms);
+					}
 				}
 			}
 

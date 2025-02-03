@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using Microsoft.VisualStudio.TestPlatform.Utilities;
 using Mono.Cecil;
 using NUnit.Framework;
 
@@ -44,6 +45,33 @@ namespace Xamarin.Android.Build.Tests
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
 			Assert.IsTrue (didLaunch, "Activity should have started.");
+		}
+
+		[Test]
+		public void ActivityAliasRuns ([Values (true, false)] bool isRelease)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease
+			};
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("</application>", @"
+<activity-alias
+			android:name="".MainActivityAlias""
+			android:enabled=""true""
+			android:icon=""@drawable/icon""
+			android:targetActivity="".MainActivity""
+			android:exported=""true"">
+			<intent-filter>
+				<action android:name=""android.intent.action.MAIN"" />
+				<category android:name=""android.intent.category.LAUNCHER"" />
+			</intent-filter>
+		</activity-alias>
+</application>");
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${ATTRIBUTES}",$"[Register(\"{proj.PackageName}.MainActivity\")]").Replace("MainLauncher = true", "MainLauncher = false");
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+			RunProjectAndAssert (proj, builder);
+			Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivityAlias",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30), "Activity MainActivityAlias should have started.");
 		}
 
 		[Test]
@@ -1277,5 +1305,30 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			RunProjectAndAssert (proj, builder);
 		}
 
+		[Test]
+		public void NativeAOTSample ()
+		{
+			string [] properties = [
+				$"AndroidNdkDirectory={AndroidNdkPath}",
+				"Configuration=Release",
+			];
+			var projectDirectory = Path.Combine (XABuildPaths.TopDirectory, "samples", "NativeAOT");
+			try {
+				var dotnet = new DotNetCLI (Path.Combine (projectDirectory, "NativeAOT.csproj"));
+				Assert.IsTrue (dotnet.Build (target: "Run", parameters: properties), "`dotnet build -t:Run` should succeed");
+
+				bool didLaunch = WaitForActivityToStart ("my", "MainActivity",
+					Path.Combine (projectDirectory, "logcat.log"), 30);
+				Assert.IsTrue (didLaunch, "Activity should have started.");
+			} catch {
+				foreach (var file in Directory.GetFiles (projectDirectory, "*.log", SearchOption.AllDirectories)) {
+					TestContext.AddTestAttachment (file);
+				}
+				foreach (var bl in Directory.GetFiles (projectDirectory, "*.binlog", SearchOption.AllDirectories)) {
+					TestContext.AddTestAttachment (bl);
+				}
+				throw;
+			}
+		}
 	}
 }
