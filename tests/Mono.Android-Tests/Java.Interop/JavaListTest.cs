@@ -16,6 +16,18 @@ namespace Java.InteropTests
 		public void Setup () => list = new T ();
 
 		[Test]
+		public void Add ()
+		{
+			list.Add ("foo");
+			Assert.AreEqual ("foo", list [0]);
+
+			// Ensure duplicates are allowed.
+			list.Add ("foo");
+			Assert.AreEqual (2, list.Count);
+			Assert.AreEqual ("foo", list [1]);
+		}
+
+		[Test]
 		public void Count ()
 		{
 			list.Add ("foo");
