@@ -27,7 +27,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(_UseLegacyJavadocImport)' != 'true' ">
-    <DocumentationFile Condition=" '$(DocumentationFile)' == '' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+    <DocumentationFile Condition=" '$(DocumentationFile)' == '' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">$([MSBuild]::EnsureTrailingSlash('$(OutputPath)'))$(AssemblyName).xml</DocumentationFile>
     <NoWarn Condition=" '$(DocumentationFile)' != '' ">$(NoWarn);CS1573;CS1591</NoWarn>
   </PropertyGroup>
 
