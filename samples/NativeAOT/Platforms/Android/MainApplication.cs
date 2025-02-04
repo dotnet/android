@@ -1,5 +1,6 @@
 ﻿using Android.App;
 using Android.Runtime;
+using Android.Util;
 
 namespace NativeAOT;
 
@@ -10,8 +11,8 @@ namespace NativeAOT;
 [Application (Name = "my.MainApplication")]
 public class MainApplication : MauiApplication
 {
-	public MainApplication(IntPtr handle, JniHandleOwnership ownership)
-		: base(handle, ownership)
+	public MainApplication (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
 		Log.Debug ("NativeAOT", $"Application..ctor({handle.ToString ("x2")}, {transfer})");
 	}

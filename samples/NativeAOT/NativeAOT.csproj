@@ -17,6 +17,8 @@
     <!-- Current required properties for NativeAOT -->
     <PublishAot>true</PublishAot>
     <PublishAotUsingRuntimePack>true</PublishAotUsingRuntimePack>
+    <!-- Verify we get a specific MAUI version -->
+    <MauiVersion>10.0.0-ci.net10.25074.1</MauiVersion>
   </PropertyGroup>
 
   <!-- Settings for CI -->
