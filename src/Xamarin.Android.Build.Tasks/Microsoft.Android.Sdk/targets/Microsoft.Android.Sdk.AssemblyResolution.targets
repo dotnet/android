@@ -129,13 +129,13 @@ _ResolveAssemblies MSBuild target.
         LocalClrDirectory="$(_LocalClrDirectory)"
         ResolvedFilesToPublish="@(ResolvedFileToPublish)"
         AndroidRuntime="$(_AndroidRuntime)">
-      <Output TaskParameter="SharedLibrariesToAdd" ItemName="_AddSharedLibraries" />
-      <Output TaskParameter="SharedLibrariesToIgnore" ItemName="_IgnoreSharedLibraries" />
+      <Output TaskParameter="ResolvedFilesToAdd" ItemName="_AddResolvedFile" />
+      <Output TaskParameter="ResolvedFilesToIgnore" ItemName="_IgnoreResolvedFile" />
     </MaybeUseLocalCLR>
 
     <ItemGroup>
-      <ResolvedFileToPublish Remove="@(_IgnoreSharedLibraries)" />
-      <ResolvedFileToPublish Include="@(_AddSharedLibraries)" />
+      <ResolvedFileToPublish Remove="@(_IgnoreResolvedFile)" />
+      <ResolvedFileToPublish Include="@(_AddResolvedFile)" />
     </ItemGroup>
 
     <!-- Properties produced by the inner build in Microsoft.Android.Sdk.ILLink.targets -->

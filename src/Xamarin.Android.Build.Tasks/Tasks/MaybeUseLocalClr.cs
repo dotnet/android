@@ -16,39 +16,6 @@ namespace Xamarin.Android.Tasks;
 //
 public class MaybeUseLocalCLR : AndroidTask
 {
-	//
-	// Lists of items below must together create a full CoreCLR
-	// runtime pack.  All components must be listed.  This is just
-	// a temporary measure until there exist CoreCLR packs.
-	// When we have the packs, we will simply make sure that all the
-	// required CoreCLR pack items found in ResolvedFilesToPublish are
-	// also in our local directory.
-	//
-
-	// Full file names, no path.
-	static readonly string[] RequiredClrComponents = [
-		"System.Private.CoreLib.dll",
-		"libSystem.Security.Cryptography.Native.Android.dex",
-		"libSystem.Security.Cryptography.Native.Android.jar",
-	];
-
-	// Just stems, without extension. Extensions we'll check for are:
-	static readonly string[] RequiredClrLibraries = [
-		"libSystem.IO.Compression.Native",
-		"libSystem.Globalization.Native",
-		"libSystem.IO.Ports.Native",
-		"libSystem.Native",
-		"libSystem.Security.Cryptography.Native.Android",
-		"libcoreclr",
-		"libclrjit",
-	];
-
-	static readonly string[] ClrLibraryExtensions = [
-		".so",
-		".so.dbg",
-		".a",
-	];
-
 	public override string TaskPrefix => "MULC";
 
 	public string LocalClrDirectory { get; set; } = String.Empty;
@@ -60,10 +27,10 @@ public class MaybeUseLocalCLR : AndroidTask
 	public string AndroidRuntime { get; set; } = String.Empty;
 
 	[Output]
-	public ITaskItem[] SharedLibrariesToAdd { get; set; }
+	public ITaskItem[] ResolvedFilesToAdd { get; set; }
 
 	[Output]
-	public ITaskItem[] SharedLibrariesToIgnore { get; set; }
+	public ITaskItem[] ResolvedFilesToIgnore { get; set; }
 
 	public override bool RunTask ()
 	{
@@ -83,28 +50,39 @@ public class MaybeUseLocalCLR : AndroidTask
 		}
 
 		var itemsToRemove = new List<ITaskItem> ();
+		var requiredClrItems = new List<ITaskItem> ();
 		var supportedArchitectures = new HashSet<AndroidTargetArch> ();
 		foreach (ITaskItem lib in ResolvedFilesToPublish) {
-			ProcessItem (lib, itemsToRemove, supportedArchitectures);
+			ProcessItem (lib, itemsToRemove, requiredClrItems, supportedArchitectures);
 		}
 
 		var itemsToAdd = new List<ITaskItem> ();
-		foreach (string required in RequiredClrComponents) {
+		foreach (ITaskItem required in requiredClrItems) {
 			MakeLocalPackItem (required, itemsToAdd, supportedArchitectures);
 		}
 
-		foreach (string required in RequiredClrLibraries) {
-			foreach (string ext in ClrLibraryExtensions) {
-				MakeLocalPackItem ($"{required}{ext}", itemsToAdd, supportedArchitectures);
-			}
-		}
-
-		SharedLibrariesToAdd = itemsToAdd.ToArray ();
-		SharedLibrariesToIgnore = itemsToRemove.ToArray ();
+		ResolvedFilesToAdd = itemsToAdd.ToArray ();
+		ResolvedFilesToIgnore = itemsToRemove.ToArray ();
 		return !Log.HasLoggedErrors;
 	}
 
-	void MakeLocalPackItem (string required, List<ITaskItem> itemsToAdd, HashSet<AndroidTargetArch> supportedArchitectures)
+	bool IsNativeAsset (ITaskItem item)
+	{
+		string? assetType = item.GetMetadata ("AssetType");
+		if (String.IsNullOrEmpty (assetType)) {
+			return false;
+		}
+
+		// System.Private.CoreLib.dll is an exception - it has `AssetType` set to `runtime`, but it's actually in the `native`
+		// portion of the runtime pack.
+		if (String.Compare ("System.Private.CoreLib.dll", Path.GetFileName (item.ItemSpec), StringComparison.OrdinalIgnoreCase) == 0) {
+			return true;
+		}
+
+		return String.Compare (assetType, "native", StringComparison.OrdinalIgnoreCase) == 0;
+	}
+
+	void MakeLocalPackItem (ITaskItem required, List<ITaskItem> itemsToAdd, HashSet<AndroidTargetArch> supportedArchitectures)
 	{
 		foreach (AndroidTargetArch arch in MonoAndroidHelper.SupportedTargetArchitectures) {
 			if (!supportedArchitectures.Contains (arch)) {
@@ -112,33 +90,35 @@ public class MaybeUseLocalCLR : AndroidTask
 			}
 
 			string rid = MonoAndroidHelper.ArchToRid (arch);
-			string filePath = Path.Combine (LocalClrDirectory, "runtimes", rid, "native", required);
+			string fileName = Path.GetFileName (required.ItemSpec);
+			string basePath = Path.Combine (LocalClrDirectory, "runtimes", rid);
+			string filePath;
+
+			if (IsNativeAsset (required)) {
+				filePath = Path.Combine (basePath, "native", fileName);
+			} else {
+				// TODO: don't hardcode framework name (`net10.0`), figure out how to compute it
+				filePath = Path.Combine (basePath, "lib", "net10.0", fileName);
+			}
 
 			if (!File.Exists (filePath)) {
 				Log.LogWarning ($"Local CoreCLR pack file '{filePath}' does not exist.");
 				continue;
 			}
 
-			string fileName = Path.GetFileName (filePath);
 			var item = new TaskItem (filePath);
-			item.SetMetadata ("AssetType", "native");
-			item.SetMetadata ("CopyLocal", "true");
-			item.SetMetadata ("CopyToPublishDirectory", "PreserveNewest");
-			item.SetMetadata ("DestinationSubPath", fileName);
-			item.SetMetadata ("DropFromSingleFile", "true");
+			required.CopyMetadataTo (item);
 			item.SetMetadata ("NuGetPackageId", $"Local.App.Runtime.CoreCLR.{rid}");
 			item.SetMetadata ("NuGetPackageVersion", "0.0.0.0");
-			item.SetMetadata ("RelativePath", fileName);
-			item.SetMetadata ("RuntimeIdentifier", rid);
 
 			Log.LogDebugMessage ($"Creating local CoreCLR runtime package item: {item}");
 			itemsToAdd.Add (item);
 		}
 	}
 
-	void ProcessItem (ITaskItem item, List<ITaskItem> itemsToRemove, HashSet<AndroidTargetArch> supportedArchitectures)
+	void ProcessItem (ITaskItem item, List<ITaskItem> itemsToRemove, List<ITaskItem> requiredClrItems, HashSet<AndroidTargetArch> supportedArchitectures)
 	{
-		if (LinuxBionicHack (item, itemsToRemove) || CoreClrItem (item, itemsToRemove)) {
+		if (LinuxBionicHack (item, itemsToRemove) || CoreClrItem (item, itemsToRemove, requiredClrItems)) {
 			return;
 		}
 
@@ -150,16 +130,26 @@ public class MaybeUseLocalCLR : AndroidTask
 		supportedArchitectures.Add (MonoAndroidHelper.RidToArch (rid));
 	}
 
-	bool CoreClrItem (ITaskItem item, List<ITaskItem> itemsToRemove)
+	bool CoreClrItem (ITaskItem item, List<ITaskItem> itemsToRemove, List<ITaskItem> requiredClrItems)
 	{
-		// TODO: implement once CoreCLR runtime packs are available
-		return false;
+		string? nugetId = item.GetMetadata ("NuGetPackageId");
+		if (String.IsNullOrEmpty (nugetId)) {
+			return false;
+		}
+
+		const string BionicNugetIdPrefix = "Microsoft.NETCore.App.Runtime.android-";
+		if (!nugetId.StartsWith (BionicNugetIdPrefix, StringComparison.OrdinalIgnoreCase)) {
+			return false;
+		}
+
+		itemsToRemove.Add (item);
+		requiredClrItems.Add (item);
+		return true;
 	}
 
 	bool LinuxBionicHack (ITaskItem item, List<ITaskItem> itemsToRemove)
 	{
 		string? nugetId = item.GetMetadata ("NuGetPackageId");
-
 		if (String.IsNullOrEmpty (nugetId)) {
 			return false;
 		}
