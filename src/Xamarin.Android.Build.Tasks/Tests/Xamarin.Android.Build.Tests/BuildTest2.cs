@@ -106,6 +106,21 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void BasicApplicationOtherRuntime ([Values (true, false)] bool isRelease)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				// Add locally downloaded CoreCLR packs
+				ExtraNuGetConfigSources = {
+					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
+				}
+			};
+			proj.SetProperty ("UseMonoRuntime", "false"); // Enables CoreCLR
+			var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+		}
+
+		[Test]
 		public void NativeAOT ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
