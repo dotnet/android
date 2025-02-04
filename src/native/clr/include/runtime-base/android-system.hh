@@ -23,6 +23,9 @@ namespace xamarin::android {
 		inline static std::array<std::string, 1> single_app_lib_directory{};
 		inline static std::span<std::string> app_lib_directories;
 
+		// TODO: override dirs not implemented
+		inline static std::array<std::string, 1> override_dirs{};
+
 		static constexpr std::array<std::string_view, 7> android_abi_names {
 			std::string_view { "unknown" },     // CPU_KIND_UNKNOWN
 			std::string_view { "armeabi-v7a" }, // CPU_KIND_ARM
@@ -96,8 +99,16 @@ namespace xamarin::android {
 		static void detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept;
 		static void setup_environment () noexcept;
 		static void setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks) noexcept;
+		static auto load_dso (const char *path, unsigned int dl_flags, bool skip_exists_check) noexcept -> void*;
+		static auto load_dso_from_any_directories (const char *name, unsigned int dl_flags) noexcept -> void*;
 
 	private:
+		static auto get_full_dso_path (std::string const& base_dir, const char *dso_path, dynamic_local_string<SENSIBLE_PATH_MAX>& path) noexcept -> bool;
+
+		template<class TContainer> // TODO: replace with a concept
+		static auto load_dso_from_specified_dirs (TContainer directories, const char *dso_name, unsigned int dl_flags) noexcept -> void*;
+		static auto load_dso_from_app_lib_dirs (const char *name, unsigned int dl_flags) noexcept -> void*;
+		static auto load_dso_from_override_dirs (const char *name, unsigned int dl_flags) noexcept -> void*;
 		static auto lookup_system_property (std::string_view const &name, size_t &value_len) noexcept -> const char*;
 		static auto monodroid__system_property_get (std::string_view const&, char *sp_value, size_t sp_value_len) noexcept -> int;
 		static auto get_max_gref_count_from_system () noexcept -> long;
