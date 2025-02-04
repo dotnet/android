@@ -2,11 +2,14 @@
 MY_DIR="$(dirname $0)"
 HOST="$(uname | tr A-Z a-z)"
 
-NATIVE_DIR="${MY_DIR}/../../src/native/mono"
-MONODROID_SOURCE_DIR="${NATIVE_DIR}/pinvoke-override"
-GENERATOR_SOURCE="${MONODROID_SOURCE_DIR}/generate-pinvoke-tables.cc"
-GENERATOR_BINARY="${MONODROID_SOURCE_DIR}/generate-pinvoke-tables"
-TARGET_FILE="${MONODROID_SOURCE_DIR}/pinvoke-tables.include"
+NATIVE_DIR="${MY_DIR}/../../src/native"
+MONODROID_SOURCE_DIR="${NATIVE_DIR}/mono/pinvoke-override"
+MONODROID_INCLUDE_DIR="${NATIVE_DIR}/mono/shared"
+CLR_SOURCE_DIR="${NATIVE_DIR}/clr/host"
+CLR_INCLUDE_DIR="${NATIVE_DIR}/clr/include/shared"
+GENERATOR_SOURCE="generate-pinvoke-tables.cc"
+GENERATOR_BINARY="generate-pinvoke-tables"
+TARGET_FILE="pinvoke-tables.include"
 GENERATED_FILE="${TARGET_FILE}.generated"
 DIFF_FILE="${TARGET_FILE}.diff"
 EXTERNAL_DIR="${MY_DIR}/../../external/"
@@ -64,33 +67,61 @@ case ${HOST} in
 	*) die Unsupported OS ;;
 esac
 
-${COMPILER} -O2 -std=c++20 -I${EXTERNAL_DIR} -I${EXTERNAL_DIR}/constexpr-xxh3 -I${NATIVE_DIR}/shared -I${NATIVE_DIR}/../common/include "${GENERATOR_SOURCE}" -o "${GENERATOR_BINARY}"
-"${GENERATOR_BINARY}" "${GENERATED_FILE}"
+function generate()
+{
+	local SOURCE_DIR="${1}"
+	local INCLUDE_DIR="${2}"
+	local SOURCE="${SOURCE_DIR}/${GENERATOR_SOURCE}"
+	local BINARY="${SOURCE_DIR}/${GENERATOR_BINARY}"
+	local RESULT="${SOURCE_DIR}/${GENERATED_FILE}"
+	local TARGET="${SOURCE_DIR}/${TARGET_FILE}"
+	local DIFF="${SOURCE_DIR}/${DIFF_FILE}"
 
-FILES_DIFFER="no"
-cmp "${GENERATED_FILE}" "${TARGET_FILE}" > /dev/null 2>&1 || FILES_DIFFER="yes"
+	${COMPILER} -O2 -std=c++20 -I${EXTERNAL_DIR} -I${EXTERNAL_DIR}/constexpr-xxh3 -I${INCLUDE_DIR} "${SOURCE}" -o "${BINARY}"
+	"${BINARY}" "${RESULT}"
+
+	FILES_DIFFER="no"
+	cmp "${RESULT}" "${TARGET}" > /dev/null 2>&1 || FILES_DIFFER="yes"
+
+	if [ "${TEST_ONLY}" == "no" ]; then
+		if [ "${FILES_DIFFER}" == "yes" ]; then
+			  mv "${RESULT}" "${TARGET}"
+		else
+			rm "${RESULT}"
+		fi
+	else
+		if [ "${FILES_DIFFER}" == "yes" ]; then
+			echo "Generated p/invokes table file differs from the current one"
+			diff -U3 -Narp "${TARGET}" "${RESULT}" > "${DIFF}"
+
+			echo "Diff file saved in: ${DIFF}"
+			echo "------ DIFF START ------"
+			cat "${DIFF}"
+			echo "------ DIFF END ------"
+			echo
+			RETVAL=1
+		else
+			echo Generated file is identical to the current one
+		fi
+	fi
+}
 
 RETVAL=0
-if [ "${TEST_ONLY}" == "no" ]; then
-	if [ "${FILES_DIFFER}" == "yes" ]; then
-		mv "${GENERATED_FILE}" "${TARGET_FILE}"
-	else
-		rm "${GENERATED_FILE}"
-	fi
-else
-	if [ "${FILES_DIFFER}" == "yes" ]; then
-		echo "Generated p/invokes table file differs from the current one"
-		diff -U3 -Narp "${TARGET_FILE}" "${GENERATED_FILE}" > "${DIFF_FILE}"
+cat <<EOF
+**
+** Generating for MonoVM
+**
+EOF
+generate "${MONODROID_SOURCE_DIR}" "${MONODROID_INCLUDE_DIR}"
 
-		echo "Diff file saved in: ${DIFF_FILE}"
-		echo "------ DIFF START ------"
-		cat "${DIFF_FILE}"
-		echo "------ DIFF END ------"
-		echo
-		RETVAL=1
-	else
-		echo Generated file is identical to the current one
-	fi
-fi
+cat <<EOF
+
+--------------------------------------
+
+**
+** Generating for CoreCLR
+**
+EOF
+generate "${CLR_SOURCE_DIR}" "${CLR_INCLUDE_DIR}"
 
 exit ${RETVAL}

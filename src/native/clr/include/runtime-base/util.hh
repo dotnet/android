@@ -176,6 +176,15 @@ namespace xamarin::android {
 			};
 		}
 
+		static auto is_path_rooted (const char *path) noexcept -> bool
+		{
+			if (path == nullptr) {
+				return false;
+			}
+
+			return path [0] == '/';
+		}
+
 	private:
 		// TODO: needs some work to accept mixed params of different accepted types
 		template<size_t MaxStackSpace, detail::PathBuffer<MaxStackSpace> TBuffer, detail::PathComponentString ...TPart>
