@@ -253,142 +253,11 @@ internal class NativeAotValueManager : JniRuntime.JniValueManager
 		}
 	}
 
-	public override IJavaPeerable? CreatePeer (
-			ref JniObjectReference reference,
-			JniObjectReferenceOptions transfer,
-			[DynamicallyAccessedMembers (Constructors)]
-			Type? targetType)
-	{
-		if (!reference.IsValid) {
-			return null;
-		}
-
-		targetType  = targetType ?? typeof (global::Java.Interop.JavaObject);
-		targetType  = GetPeerType (targetType);
-
-		if (!typeof (IJavaPeerable).IsAssignableFrom (targetType))
-			throw new ArgumentException ($"targetType `{targetType.AssemblyQualifiedName}` must implement IJavaPeerable!", nameof (targetType));
-
-		var targetSig  = Runtime.TypeManager.GetTypeSignature (targetType);
-		if (!targetSig.IsValid || targetSig.SimpleReference == null) {
-			throw new ArgumentException ($"Could not determine Java type corresponding to `{targetType.AssemblyQualifiedName}`.", nameof (targetType));
-		}
-
-		var refClass    = JniEnvironment.Types.GetObjectClass (reference);
-		JniObjectReference targetClass;
-		try {
-			targetClass = JniEnvironment.Types.FindClass (targetSig.SimpleReference);
-		} catch (Exception e) {
-			JniObjectReference.Dispose (ref refClass);
-			throw new ArgumentException ($"Could not find Java class `{targetSig.SimpleReference}`.",
-					nameof (targetType),
-					e);
-		}
-
-		if (!JniEnvironment.Types.IsAssignableFrom (refClass, targetClass)) {
-			JniObjectReference.Dispose (ref refClass);
-			JniObjectReference.Dispose (ref targetClass);
-			return null;
-		}
-
-		JniObjectReference.Dispose (ref targetClass);
-
-		var proxy   = CreatePeerProxy (ref refClass, targetType, ref reference, transfer);
-
-		if (proxy == null) {
-			throw new NotSupportedException (string.Format ("Could not find an appropriate constructable wrapper type for Java type '{0}', targetType='{1}'.",
-					JniEnvironment.Types.GetJniTypeNameFromInstance (reference), targetType));
-		}
-
-		proxy.SetJniManagedPeerState (proxy.JniManagedPeerState | JniManagedPeerStates.Replaceable);
-		return proxy;
-	}
-
-	[return: DynamicallyAccessedMembers (Constructors)]
-	static Type GetPeerType ([DynamicallyAccessedMembers (Constructors)] Type type)
-	{
-		if (type == typeof (object))
-			return typeof (global::Java.Interop.JavaObject);
-		if (type == typeof (IJavaPeerable))
-			return typeof (global::Java.Interop.JavaObject);
-		if (type == typeof (Exception))
-			return typeof (global::Java.Interop.JavaException);
-		return type;
-	}
-
-	IJavaPeerable? CreatePeerProxy (
-			ref JniObjectReference klass,
-			[DynamicallyAccessedMembers (Constructors)]
-			Type fallbackType,
-			ref JniObjectReference reference,
-			JniObjectReferenceOptions options)
-	{
-		var jniTypeName = JniEnvironment.Types.GetJniTypeNameFromClass (klass);
-
-		Type? type = null;
-		while (jniTypeName != null) {
-			JniTypeSignature sig;
-			if (!JniTypeSignature.TryParse (jniTypeName, out sig))
-				return null;
-
-			type    = Runtime.TypeManager.GetType (sig);
-
-			if (type != null) {
-				var peer = TryCreatePeerProxy (type, ref reference, options);
-				if (peer != null) {
-					return peer;
-				}
-			}
-
-			var super   = JniEnvironment.Types.GetSuperclass (klass);
-			jniTypeName = super.IsValid
-				? JniEnvironment.Types.GetJniTypeNameFromClass (super)
-				: null;
-
-			JniObjectReference.Dispose (ref klass, JniObjectReferenceOptions.CopyAndDispose);
-			klass      = super;
-		}
-		JniObjectReference.Dispose (ref klass, JniObjectReferenceOptions.CopyAndDispose);
-
-		return TryCreatePeerProxy (fallbackType, ref reference, options);
-	}
-
-	[return: DynamicallyAccessedMembers (Constructors)]
-	static Type? GetInvokerType (Type type)
-	{
-		// https://github.com/xamarin/xamarin-android/blob/5472eec991cc075e4b0c09cd98a2331fb93aa0f3/src/Microsoft.Android.Sdk.ILLink/MarkJavaObjects.cs#L176-L186
-		const string makeGenericTypeMessage = "Generic 'Invoker' types are preserved by the MarkJavaObjects trimmer step.";
-
-		[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = makeGenericTypeMessage)]
-		[return: DynamicallyAccessedMembers (Constructors)]
-		static Type MakeGenericType (
-				[DynamicallyAccessedMembers (Constructors)]
-				Type type,
-				Type [] arguments) =>
-			// FIXME: https://github.com/dotnet/java-interop/issues/1192
-			#pragma warning disable IL3050
-			type.MakeGenericType (arguments);
-			#pragma warning restore IL3050
-
-		var signature   = type.GetCustomAttribute<JniTypeSignatureAttribute> ();
-		if (signature == null || signature.InvokerType == null) {
-			return null;
-		}
-
-		Type[] arguments = type.GetGenericArguments ();
-		if (arguments.Length == 0)
-			return signature.InvokerType;
-
-		return MakeGenericType (signature.InvokerType, arguments);
-	}
-
 	const   BindingFlags    ActivationConstructorBindingFlags   = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
-
 	static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
-	static  readonly    Type[]  JIConstructorSignature  = new Type [] { typeof (JniObjectReference).MakeByRefType (), typeof (JniObjectReferenceOptions) };
 
-	protected virtual IJavaPeerable? TryCreatePeerProxy (Type type, ref JniObjectReference reference, JniObjectReferenceOptions options)
+	protected override IJavaPeerable? TryCreatePeer (ref JniObjectReference reference, JniObjectReferenceOptions options, Type type)
 	{
 		var c = type.GetConstructor (ActivationConstructorBindingFlags, null, XAConstructorSignature, null);
 		if (c != null) {
@@ -400,16 +269,6 @@ internal class NativeAotValueManager : JniRuntime.JniValueManager
 			JniObjectReference.Dispose (ref reference, options);
 			return p;
 		}
-		c = type.GetConstructor (ActivationConstructorBindingFlags, null, JIConstructorSignature, null);
-		if (c != null) {
-			var args = new object[] {
-				reference,
-				options,
-			};
-			var p       = (IJavaPeerable) c.Invoke (args);
-			reference   = (JniObjectReference) args [0];
-			return p;
-		}
-		return null;
+		return base.TryCreatePeer (ref reference, options, type);
 	}
 }
