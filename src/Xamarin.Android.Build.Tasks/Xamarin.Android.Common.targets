@@ -40,6 +40,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForRemovedItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForInvalidResourceFileNames" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckClientHandlerType" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.CollectAssemblyFilesToCompress" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectDalvikFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectJarContentFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNativeFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -83,6 +84,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.MamJsonToXml" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ManifestMerger" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.MonoSymbolicate" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.ProcessAssemblyCompressionFailures" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.RemoveDirFixed" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.RemoveRegisterAttribute" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ReadAndroidManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -2080,8 +2082,61 @@ because xbuild doesn't support framework reference assemblies.
 	</_BuildApkEmbedInputs>
 </PropertyGroup>
 
-<Target Name="_BuildApkEmbed"
+<!--
+  Find all assemblies that need to be compressed and set up the @(_AssembliesToCompress) item
+  group so that we can run an MSBuild incremental target to compress them.
+-->
+<Target Name="_CollectAssembliesToCompress"
   DependsOnTargets="_PrepareBuildApk"
+  Condition="'$(EmbedAssembliesIntoApk)' == 'True'">
+
+  <CollectAssemblyFilesToCompress
+      AssemblyCompressionDirectory="$(IntermediateOutputPath)android\lz4\"
+      EmbedAssemblies="$(EmbedAssembliesIntoApk)"
+      EnableCompression="$(AndroidEnableAssemblyCompression)"
+      IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
+      ProjectFullPath="$(MSBuildProjectFullPath)"
+      ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
+      ResolvedUserAssemblies="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths)"
+      SupportedAbis="@(_BuildTargetAbis)">
+    <Output TaskParameter="AssembliesToCompressOutput" ItemName="_AssembliesToCompress" />
+    <Output TaskParameter="ResolvedFrameworkAssembliesOutput" ItemName="_CompressedResolvedFrameworkAssemblies" />
+    <Output TaskParameter="ResolvedUserAssembliesOutput" ItemName="_CompressedBuildApkResolvedUserAssemblies" />
+  </CollectAssemblyFilesToCompress>
+</Target>
+
+<!--
+  LZ4 compress all compressable assemblies. Note this is an incremental MSBuild target.
+  @(AssembliesToCmpress) will only contain assemblies that have changed since the last build.
+-->
+<Target Name="_CompressAssemblies"
+    DependsOnTargets="_CollectAssembliesToCompress"
+    Inputs="@(_AssembliesToCompress);@(_AndroidMSBuildAllProjects);$(_AndroidBuildPropertiesCache)"
+    Outputs="@(_AssembliesToCompress->'%(DestinationPath)')"
+    Condition="'$(EmbedAssembliesIntoApk)' == 'True'">
+
+    <CompressAssemblies
+        AssembliesToCompress="@(_AssembliesToCompress)">
+      <Output TaskParameter="FailedToCompressAssembliesOutput" ItemName="_FailedToCompressAssemblies" />
+    </CompressAssemblies>
+</Target>
+
+<!-- Remove "CompressedAssembly" metadata from any assemblies that failed to compress. -->
+<Target Name="_ProcessAssemblyCompressionFailures"
+    DependsOnTargets="_CompressAssemblies"
+    Condition="'$(EmbedAssembliesIntoApk)' == 'True'">
+
+    <ProcessAssemblyCompressionFailures
+        FailedToCompressAssembliesOutput="@(_FailedToCompressAssemblies)"
+        ResolvedFrameworkAssemblies="@(_CompressedResolvedFrameworkAssemblies)"
+        ResolvedUserAssemblies="@(_CompressedBuildApkResolvedUserAssemblies)">
+      <Output TaskParameter="ResolvedFrameworkAssembliesOutput" ItemName="_BuildApkResolvedFrameworkAssemblies" />
+      <Output TaskParameter="ResolvedUserAssembliesOutput" ItemName="_BuildApkResolvedUserAssemblies" />
+    </ProcessAssemblyCompressionFailures>
+</Target>
+
+<Target Name="_BuildApkEmbed"
+  DependsOnTargets="_ProcessAssemblyCompressionFailures"
   Inputs="$(_BuildApkEmbedInputs)"
   Outputs="$(_BuildApkEmbedOutputs)"
   Condition="'$(EmbedAssembliesIntoApk)' == 'True'">
@@ -2100,19 +2155,6 @@ because xbuild doesn't support framework reference assemblies.
     also need to have the args added to Xamarin.Android.Common.Debugging.targets
     in monodroid.
   -->
-  <CompressAssemblies
-      ApkOutputPath="$(_ApkOutputPath)"
-      EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-      EnableCompression="$(AndroidEnableAssemblyCompression)"
-      IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
-      ProjectFullPath="$(MSBuildProjectFullPath)"
-      ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
-      ResolvedUserAssemblies="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths)"
-      SupportedAbis="@(_BuildTargetAbis)">
-    <Output TaskParameter="ResolvedFrameworkAssembliesOutput" ItemName="_BuildApkResolvedFrameworkAssemblies" />
-    <Output TaskParameter="ResolvedUserAssembliesOutput" ItemName="_BuildApkResolvedUserAssemblies" />
-  </CompressAssemblies>
-
   <CreateAssemblyStore
       AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
@@ -2244,20 +2286,6 @@ because xbuild doesn't support framework reference assemblies.
     <_NativeLibraries Include="@(AndroidNativeLibrary)" />
     <_DalvikClasses Include="@(_DexFile)" />
   </ItemGroup>
-
-  <!-- Put the assemblies and native libraries in the apk -->
-  <CompressAssemblies
-      ApkOutputPath="$(_ApkOutputPath)"
-      EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-      EnableCompression="$(AndroidEnableAssemblyCompression)"
-      IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
-      ProjectFullPath="$(MSBuildProjectFullPath)"
-      ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
-      ResolvedUserAssemblies="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths)"
-      SupportedAbis="@(_BuildTargetAbis)">
-    <Output TaskParameter="ResolvedFrameworkAssembliesOutput" ItemName="_BuildApkResolvedFrameworkAssemblies" />
-    <Output TaskParameter="ResolvedUserAssembliesOutput" ItemName="_BuildApkResolvedUserAssemblies" />
-  </CompressAssemblies>
 
 	<CollectDalvikFilesForArchive
       AndroidPackageFormat="$(AndroidPackageFormat)"
