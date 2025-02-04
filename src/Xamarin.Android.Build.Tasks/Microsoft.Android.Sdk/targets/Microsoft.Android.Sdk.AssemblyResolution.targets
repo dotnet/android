@@ -65,6 +65,16 @@ _ResolveAssemblies MSBuild target.
   </Target>
 
   <Target Name="_FixupIntermediateAssembly" Condition=" '$(_OuterIntermediateAssembly)' != '' ">
+    <!-- These assemblies are loaded by libcoreclr.so dynamically, they aren't referenced by
+         anything in a `dotnet new android` template, and without them the process crashes.
+         For now defining them to be root assemblies makes things work, but it's not the correct
+         solution since the assemblies mentioned here won't be trimmed themselves.
+    -->
+    <ItemGroup>
+      <TrimmerRootAssembly Include="System.Threading" RootMode="Library" />
+      <TrimmerRootAssembly Include="System.Memory" RootMode="Library" />
+    </ItemGroup>
+
     <ItemGroup>
       <IntermediateAssembly Remove="@(IntermediateAssembly)" />
       <IntermediateAssembly Include="$(_OuterIntermediateAssembly)" />
@@ -106,6 +116,10 @@ _ResolveAssemblies MSBuild target.
     </PropertyGroup>
     <ItemGroup>
       <_ProjectToBuild Include="$(MSBuildProjectFile)" AdditionalProperties="RuntimeIdentifier=%(_RIDs.Identity);$(_AdditionalProperties)" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <TrimmerRootAssembly Include="System.Threading" />
     </ItemGroup>
     <MSBuild
         Condition=" '$(DesignTimeBuild)' != 'true' "
