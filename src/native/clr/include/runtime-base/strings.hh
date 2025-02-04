@@ -5,6 +5,7 @@
 #include <cerrno>
 #include <expected>
 #include <limits>
+#include <string>
 #include <string_view>
 #include <type_traits>
 #include <unistd.h>
@@ -610,6 +611,12 @@ namespace xamarin::android {
 		auto assign (std::string_view const& sv) noexcept -> string_base&
 		{
 			return assign (sv.data (), sv.size ());
+		}
+
+		[[gnu::always_inline]]
+		auto assign (std::string const& s) noexcept -> string_base&
+		{
+			return assign (s.data (), s.size ());
 		}
 
 		template<size_t Size> [[gnu::always_inline]]

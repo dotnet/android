@@ -32,7 +32,9 @@ set(XAMARIN_MONODROID_SOURCES
   host.cc
   host-jni.cc
   host-util.cc
+  internal-pinvokes.cc
   os-bridge.cc
+  pinvoke-override.cc
 )
 
 list(APPEND LOCAL_CLANG_CHECK_SOURCES

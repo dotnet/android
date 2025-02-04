@@ -45,12 +45,6 @@ bool Host::clr_bundle_probe (const char *path, void **data_start, int64_t *size)
 	return *data_start != nullptr && *size > 0;
 }
 
-const void* Host::clr_pinvoke_override (const char *library_name, const char *entry_point_name) noexcept
-{
-	log_info (LOG_DEFAULT, "clr_pinvoke_override (\"{}\", \"{}\")", library_name, entry_point_name);
-	return nullptr;
-}
-
 auto Host::zip_scan_callback (std::string_view const& apk_path, int apk_fd, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, uint32_t offset, uint32_t size) -> bool
 {
 	log_debug (LOG_ASSEMBLY, "zip entry: {}", entry_name.get ());
