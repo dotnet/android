@@ -1,0 +1,15 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Sdk.CoreCLR.targets
+
+This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
+***********************************************************************************************
+-->
+<Project>
+
+  <!-- Default property values for CoreCLR -->
+  <PropertyGroup>
+    <_AndroidRuntimePackRuntime>CoreCLR</_AndroidRuntimePackRuntime>
+  </PropertyGroup>
+
+</Project>
