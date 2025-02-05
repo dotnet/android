@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk" >
 
   <Import Project="..\..\..\Configuration.props" />
-  <Import Project="..\Mono.Android-Test.Shared.projitems" Label="Shared" Condition="Exists('..\Mono.Android-Test.Shared.projitems')" />
 
   <PropertyGroup>
     <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
@@ -34,6 +33,10 @@
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):InetAccess:NetworkInterfaces</ExcludeCategories>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Mono.Linq.Expressions" Version="2.0.0" />
+  </ItemGroup>
+
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <AndroidLinkTool Condition=" '$(AndroidLinkTool)' == '' ">r8</AndroidLinkTool>
     <TrimMode Condition=" '$(TrimMode)' == '' ">full</TrimMode>
@@ -43,16 +46,141 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" />
-    <_AndroidRemapMembers Include="Remaps.xml" />
+    <ProjectReference Include="..\..\TestRunner.Core\TestRunner.Core.NET.csproj" />
+    <ProjectReference Include="..\..\TestRunner.NUnit\TestRunner.NUnit.NET.csproj" />
+    <ProjectReference Include="..\Java.Interop-Tests\Java.Interop-Tests.NET.csproj" />
+    <ProjectReference Include="..\Mono.Android-Test.Library\Mono.Android-Test.Library.NET.csproj" />
+    <ProjectReference Include="..\..\..\src\Xamarin.Android.NUnitLite\Xamarin.Android.NUnitLite.NET.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="..\Resources\Resource.designer.cs" />
-    <Compile Remove="..\Java.Interop-Tests\obj\Release\net7.0-android\designtime\Resource.designer.cs" />
+    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" />
+    <_AndroidRemapMembers Include="Remaps.xml" />
+    <ProguardConfiguration Include="proguard.cfg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Android.App\ApplicationTest.cs" />
+    <Compile Include="Android.Content.Res\AssetManagerTest.cs" />
+    <Compile Include="Android.Content\IntentTest.cs" />
+    <Compile Include="Android.Content\SharedPreferencesTest.cs" />
+    <Compile Include="Android.Graphics\NinePatchTests.cs" />
+    <Compile Include="Android.OS\BundleTest.cs" />
+    <Compile Include="Android.Runtime\AndroidEnvironmentTest.cs" />
+    <Compile Include="Android.Runtime\CharSequenceTest.cs" />
+    <Compile Include="Android.Runtime\InputStreamInvokerTest.cs" />
+    <Compile Include="Android.Runtime\JavaCollectionTest.cs" />
+    <Compile Include="Android.Runtime\JnienvArrayMarshaling.cs" />
+    <Compile Include="Android.Runtime\XmlReaderPullParserTest.cs" />
+    <Compile Include="Android.Runtime\XmlReaderResourceParserTest.cs" />
+    <Compile Include="Android.Widget\AdapterTests.cs" />
+    <Compile Include="Android.Widget\CustomWidgetTests.cs" />
+    <Compile Include="Java.Interop\JavaConvertTest.cs" />
+    <Compile Include="Java.Interop\JavaListTest.cs" />
+    <Compile Include="Java.Interop\JavaObjectExtensionsTests.cs" />
+    <Compile Include="Java.Interop\JnienvTest.cs" />
+    <Compile Include="Java.Lang\ObjectArrayMarshaling.cs" />
+    <Compile Include="Java.Lang\ObjectTest.cs" />
     <Compile Include="System\AppContextTests.cs" />
-    <!-- Mono.Data.Sqlite is not supported in .NET 6 -->
-    <Compile Remove="..\Mono.Data.Sqlite\SqliteTests.cs" />
+    <Compile Include="System\AppDomainTest.cs" />
+    <Compile Include="System\AssemblyInformationalVersionAttributeTest.cs" />
+    <Compile Include="System\ExceptionTest.cs" />
+    <Compile Include="System\TimeZoneTest.cs" />
+    <Compile Include="System.Drawing\TypeConverterTest.cs" />
+    <Compile Include="System.IO\DriveInfoTest.cs" />
+    <Compile Include="System.IO.Compression\GZipStreamTest.cs" />
+    <Compile Include="System.Linq\LinqExpressionTest.cs" />
+    <Compile Include="System.Net\ProxyTest.cs" />
+    <Compile Include="System.Net\SslTest.cs" />
+    <Compile Include="System.Net\NetworkInterfaces.cs" />
+    <Compile Include="System.Net\WebSocketTests.cs" />
+    <Compile Include="System.Runtime.InteropServices\DllImportTest.cs" />
+    <Compile Include="System.Text\EncodingTests.cs" />
+    <Compile Include="System.Text.Json\JsonSerializerTest.cs" />
+    <Compile Include="System.Threading\InterlockedTest.cs" />
+    <Compile Include="System.Xml\XmlSerializer.cs" />
+    <Compile Include="Xamarin.Android.Net\AndroidClientHandlerTests.cs" />
+    <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerTests.cs" />
+    <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerNegotiateAuthenticationTests.cs" />
+    <Compile Include="Xamarin.Android.Net\HttpClientIntegrationTests.cs" />
+    <Compile Include="Xamarin.Android.RuntimeTests\MainActivity.cs" />
+    <Compile Include="Xamarin.Android.RuntimeTests\MyIntent.cs" />
+    <Compile Include="Xamarin.Android.RuntimeTests\NonJavaObject.cs" />
+    <Compile Include="Xamarin.Android.RuntimeTests\NUnitInstrumentation.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AndroidJavaSource Include="java/net/dot/android/test/ValueProvider.java" />
+    <AndroidJavaSource Include="java/net/dot/android/test/Example.java" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <AndroidResource Include="..\..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Resources\Base\Image.9.png">
+      <Link>Resources\Drawable\Image.9.png</Link>
+    </AndroidResource>
+    <AndroidResource Include="Resources\drawable\Icon.png">
+      <Link>Resources\drawable\Icon.png</Link>
+    </AndroidResource>
+    <AndroidResource Include="Resources\drawable\AndroidPressed.png">
+      <Link>Resources\drawable\AndroidPressed.png</Link>
+    </AndroidResource>
+    <AndroidResource Include="Resources\drawable\android_focused.png">
+      <Link>Resources\drawable\android_focused.png</Link>
+    </AndroidResource>
+    <AndroidResource Include="Resources\drawable\android_normal.png">
+      <Link>Resources\drawable\android_normal.png</Link>
+    </AndroidResource>
+    <AndroidResource Include="Resources\drawable\android_button.xml">
+      <Link>Resources\drawable\android_button.xml</Link>
+    </AndroidResource>
+    <AndroidResource Include="Resources\layout\uppercase_custom.axml">
+      <Link>Resources\layout\uppercase_custom.axml</Link>
+    </AndroidResource>
+    <AndroidResource Include="Resources\layout\lowercase_custom.axml">
+      <Link>Resources\layout\lowercase_custom.axml</Link>
+    </AndroidResource>
+    <AndroidResource Include="Resources\xml\XmlReaderResourceParser.xml">
+      <Link>Resources\xml\XmlReaderResourceParser.xml</Link>
+    </AndroidResource>
+    <AndroidResource Include="Resources\layout\FragmentFixup.axml">
+      <Link>Resources\layout\FragmentFixup.axml</Link>
+    </AndroidResource>
+    <AndroidBoundLayout Include="Resources\layout\Main.axml">
+      <Link>Resources\layout\Main.axml</Link>
+    </AndroidBoundLayout>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="LinkedAssets\folder.png" />
+    <None Include="LinkedAssets\hamburger.png" />
+    <None Include="LinkedAssets\linked_text.txt" />
+    <None Include="LinkedAssets\linked_text2.txt" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <AndroidAsset Include="LinkedAssets\hamburger.png">
+      <Link>Assets\hamburger.png</Link>
+    </AndroidAsset>
+    <AndroidAsset Include="LinkedAssets\linked_text.txt">
+      <Link>Assets\linked_text.txt</Link>
+    </AndroidAsset>
+    <AndroidAsset Include="Assets\subfolder\accept_request.png">
+      <Link>Assets\subfolder\accept_request.png</Link>
+    </AndroidAsset>
+    <AndroidAsset Include="Assets\asset1.txt">
+      <Link>Assets\asset1.txt</Link>
+    </AndroidAsset>
+    <AndroidAsset Include="Assets\subfolder\asset2.txt">
+      <Link>Assets\subfolder\asset2.txt</Link>
+    </AndroidAsset>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AndroidNativeLibrary Include="..\libs\arm64-v8a\libreuse-threads.so" />
+    <AndroidNativeLibrary Include="..\libs\armeabi-v7a\libreuse-threads.so" />
+    <AndroidNativeLibrary Include="..\libs\x86\libreuse-threads.so" />
+    <AndroidNativeLibrary Include="..\libs\x86_64\libreuse-threads.so" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(AndroidPackageFormat)' != 'aab' ">
