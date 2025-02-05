@@ -67,6 +67,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");
 				b.Output.AssertTargetIsNotSkipped ("CoreCompile");
 				b.Output.AssertTargetIsNotSkipped ("_Sign");
+				b.Output.AssertTargetIsPartiallyBuilt ("_CompressAssemblies");
 			}
 		}
 

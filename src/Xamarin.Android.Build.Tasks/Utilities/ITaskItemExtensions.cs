@@ -47,6 +47,18 @@ namespace Xamarin.Android.Tasks
 			return value;
 		}
 
+		public static bool TryGetRequiredMetadata (this ITaskItem item, string itemName, string name, TaskLoggingHelper log, out string value)
+		{
+			value = item.GetMetadata (name);
+
+			if (string.IsNullOrWhiteSpace (value)) {
+				log.LogCodedError ("XA4234", Properties.Resources.XA4234, itemName, item.ToString (), name);
+				return false;
+			}
+
+			return true;
+		}
+
 		public static bool HasMetadata (this ITaskItem item, string name)
 			=> item.MetadataNames.OfType<string> ().Contains (name, StringComparer.OrdinalIgnoreCase);
 	}
