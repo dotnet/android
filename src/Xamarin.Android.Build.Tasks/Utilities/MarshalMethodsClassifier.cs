@@ -109,7 +109,9 @@ namespace Xamarin.Android.Tasks
 
 				string fullTypeName = connectorSpec[1];
 				int comma = fullTypeName.IndexOf (',');
-				TypeName = fullTypeName.Substring (0, comma);
+
+				// Need to use IL convention, not Reflection convention
+				TypeName = fullTypeName.Substring (0, comma).Replace ('+', '/');
 				AssemblyName = AssemblyNameReference.Parse (fullTypeName.Substring (comma + 1).Trim ());
 			}
 		}
