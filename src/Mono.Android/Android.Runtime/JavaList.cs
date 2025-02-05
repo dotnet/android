@@ -551,7 +551,7 @@ namespace Android.Runtime {
 
 		public virtual bool Add (int index, Java.Lang.Object? item)
 		{
-			Add ((object?) item);
+			Insert (index, (object?) item);
 			return true;
 		}
 

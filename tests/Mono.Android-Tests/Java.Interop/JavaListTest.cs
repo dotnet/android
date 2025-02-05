@@ -28,6 +28,26 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void AddWithIndex ()
+		{
+			list.Add ("Apple");
+			list.Add ("Banana");
+			list.Add ("Cherry");
+
+			// Ensure index is respected.
+			list.Add (3, "Grape");
+			list.Add (2, "Blueberry");
+			list.Add (4, "Fig");
+
+			Assert.AreEqual ("Apple", list [0]);
+			Assert.AreEqual ("Banana", list [1]);
+			Assert.AreEqual ("Blueberry", list [2]);
+			Assert.AreEqual ("Cherry", list [3]);
+			Assert.AreEqual ("Fig", list [4]);
+			Assert.AreEqual ("Grape", list [5]);
+		}
+
+		[Test]
 		public void Count ()
 		{
 			list.Add ("foo");
