@@ -6,7 +6,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace NativeAOT;
+namespace Android.Runtime.NativeAOT;
 
 internal sealed class LogcatTextWriter : TextWriter {
 

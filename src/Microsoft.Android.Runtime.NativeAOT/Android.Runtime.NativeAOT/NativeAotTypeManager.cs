@@ -3,7 +3,7 @@ using System.Reflection;
 using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 
-namespace NativeAOT;
+namespace Android.Runtime.NativeAOT;
 
 partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 
@@ -11,25 +11,24 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 	internal const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 	internal const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
 
-	// TODO: list of types specific to this application
-	Dictionary<string, Type> typeMappings = new () {
-		["android/app/Activity"]                = typeof (Android.App.Activity),
-		["android/app/Application"]             = typeof (Android.App.Application),
-		["android/content/Context"]             = typeof (Android.Content.Context),
-		["android/content/ContextWrapper"]      = typeof (Android.Content.ContextWrapper),
-		["android/os/BaseBundle"]               = typeof (Android.OS.BaseBundle),
-		["android/os/Bundle"]                   = typeof (Android.OS.Bundle),
-		["android/view/ContextThemeWrapper"]    = typeof (Android.Views.ContextThemeWrapper),
-		["my/MainActivity"]                     = typeof (MainActivity),
-		["my/MainApplication"]                  = typeof (MainApplication),
-	};
+	static readonly IDictionary<string, Type> TypeMappings = new Dictionary<string, Type> (StringComparer.Ordinal);
 
 	public NativeAotTypeManager ()
 	{
 		AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"# jonp: NativeAotTypeManager()");
+		InitializeTypeMappings ();
 	}
 
-	protected override Type? GetInvokerTypeCore (Type type)
+	void InitializeTypeMappings ()
+	{
+		// Should be replaced by src/Microsoft.Android.Sdk.ILLink/TypeMappingStep.cs
+		throw new InvalidOperationException ("TypeMappings should be replaced during trimming!");
+	}
+
+	[return: DynamicallyAccessedMembers (Constructors)]
+	protected override Type? GetInvokerTypeCore (
+			[DynamicallyAccessedMembers (Constructors)]
+			Type type)
 	{
 		const string suffix = "Invoker";
 
@@ -68,6 +67,10 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 		return MakeGenericType (suffixDefinition, arguments);
 	}
 
+	// NOTE: suppressions below also in `src/Mono.Android/Android.Runtime/AndroidRuntime.cs`
+	[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value parsed from parameter 'methods'.")]
+	[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
+	[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
 	public override void RegisterNativeMembers (
 			JniType nativeClass,
 			[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
@@ -143,7 +146,7 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 	protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 	{
 		AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"# jonp: GetTypesForSimpleReference: jniSimpleReference=`{jniSimpleReference}`");
-		if (typeMappings.TryGetValue (jniSimpleReference, out var target)) {
+		if (TypeMappings.TryGetValue (jniSimpleReference, out var target)) {
 			Console.WriteLine ($"# jonp:   GetTypesForSimpleReference: jniSimpleReference=`{jniSimpleReference}` -> `{target}`");
 			yield return target;
 		}
@@ -161,9 +164,7 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 
 	IEnumerable<string> CreateSimpleReferencesEnumerator (Type type)
 	{
-		if (typeMappings == null)
-			yield break;
-		foreach (var e in typeMappings) {
+		foreach (var e in TypeMappings) {
 			if (e.Value == type)
 				yield return e.Key;
 		}

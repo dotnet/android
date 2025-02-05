@@ -2,7 +2,7 @@ using Android.Runtime;
 using Java.Interop;
 using System.Runtime.InteropServices;
 
-namespace NativeAOT;
+namespace Android.Runtime.NativeAOT;
 
 static class JavaInteropRuntime
 {

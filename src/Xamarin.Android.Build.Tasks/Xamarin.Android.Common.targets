@@ -1387,6 +1387,11 @@ because xbuild doesn't support framework reference assemblies.
       ResourceName="MonoRuntimeProvider.Bundled.java"
       OutputPath="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java"
   />
+  <CopyResource
+      Condition=" '$(_AndroidRuntime)' == 'NativeAOT' "
+      ResourceName="NativeAotRuntimeProvider.java"
+      OutputPath="$(_AndroidIntermediateJavaSourceDirectory)net\dot\jni\nativeaot\NativeAotRuntimeProvider.java"
+  />
   <CreateTypeManagerJava
       Condition=" '$(_AndroidUseMarshalMethods)' == 'True' "
       ResourceName="JavaInteropTypeManager.java"
@@ -1537,6 +1542,7 @@ because xbuild doesn't support framework reference assemblies.
       LinkingEnabled="$(_LinkingEnabled)"
       HaveMultipleRIDs="$(_HaveMultipleRIDs)"
       IntermediateOutputDirectory="$(IntermediateOutputPath)"
+      TargetName="$(TargetName)"
       Environments="@(_EnvironmentFiles)">
   </GenerateJavaStubs>
 
