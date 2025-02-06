@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using Microsoft.Build.Utilities;
+
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks.LLVMIR
@@ -43,10 +45,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		LlvmIrFunction? puts;
 		LlvmIrFunction? abort;
 
+		TaskLoggingHelper log;
+
 		public readonly LlvmIrTypeCache TypeCache;
 
-		public LlvmIrModule (LlvmIrTypeCache cache)
+		public LlvmIrModule (LlvmIrTypeCache cache, TaskLoggingHelper log)
 		{
+			this.log = log;
 			TypeCache = cache;
 			metadataManager = new LlvmIrMetadataManager (cache);
 
@@ -275,7 +280,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			EnsureValidGlobalVariableType (variable);
 
 			if (IsStringVariable (variable)) {
-				AddStringGlobalVariable (variable, stringGroupName, stringGroupComment, symbolSuffix);
+				AddStringGlobalVariable ((LlvmIrStringVariable)variable, stringGroupName, stringGroupComment, symbolSuffix);
 				return;
 			}
 
@@ -299,7 +304,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			EnsureValidGlobalVariableType (variable);
 
 			if (IsStringVariable (variable)) {
-				AddStringGlobalVariable (variable);
+				AddStringGlobalVariable ((LlvmIrStringVariable)variable);
 				return;
 			}
 
@@ -359,7 +364,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 				string? value = smi.GetValue (structure.Obj) as string;
 				if (value != null) {
-					RegisterString (value, stringGroupName: structure.Info.Name, symbolSuffix: smi.Info.Name);
+					RegisterString (value, stringGroupName: structure.Info.Name, symbolSuffix: smi.Info.Name, encoding: smi.Info.GetStringEncoding (TypeCache));
 				}
 			}
 		}
@@ -387,24 +392,20 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			globalVariables.Add (variable);
 		}
 
-		void AddStringGlobalVariable (LlvmIrGlobalVariable variable, string? stringGroupName = null, string? stringGroupComment = null, string? symbolSuffix = null)
+		void AddStringGlobalVariable (LlvmIrStringVariable variable, string? stringGroupName = null, string? stringGroupComment = null, string? symbolSuffix = null)
 		{
-			RegisterString (variable, stringGroupName, stringGroupComment, symbolSuffix);
+			RegisterString ((string)variable.Value, stringGroupName, stringGroupComment, symbolSuffix, variable.Encoding);
 			AddStandardGlobalVariable (variable);
 		}
 
-		void RegisterString (LlvmIrGlobalVariable variable, string? stringGroupName = null, string? stringGroupComment = null, string? symbolSuffix = null)
-		{
-			RegisterString ((string)variable.Value, stringGroupName, stringGroupComment, symbolSuffix);
-		}
-
-		public void RegisterString (string value, string? stringGroupName = null, string? stringGroupComment = null, string? symbolSuffix = null)
+		public void RegisterString (string value, string? stringGroupName = null, string? stringGroupComment = null, string? symbolSuffix = null,
+			LlvmIrStringEncoding encoding = LlvmIrStringEncoding.UTF8, StringComparison comparison = StringComparison.Ordinal)
 		{
 			if (stringManager == null) {
-				stringManager = new LlvmIrStringManager ();
+				stringManager = new LlvmIrStringManager (log);
 			}
 
-			stringManager.Add (value, stringGroupName, stringGroupComment, symbolSuffix);
+			stringManager.Add (value, stringGroupName, stringGroupComment, symbolSuffix, encoding, comparison);
 		}
 
 		void AddStructureArrayGlobalVariable (LlvmIrGlobalVariable variable)
@@ -569,7 +570,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		/// are part of structure instances.  Such strings **MUST** be registered by <see cref="LlvmIrModule"/> and, thus, failure to do
 		/// so is an internal error.
 		/// </summary>
-		public LlvmIrStringVariable LookupRequiredVariableForString (string value)
+		public LlvmIrStringVariable LookupRequiredVariableForString (StringHolder value)
 		{
 			LlvmIrStringVariable? sv = stringManager?.Lookup (value);
 			if (sv == null) {

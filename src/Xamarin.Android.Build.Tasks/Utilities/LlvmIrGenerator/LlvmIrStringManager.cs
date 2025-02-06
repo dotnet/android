@@ -1,35 +1,40 @@
 using System;
 using System.Collections.Generic;
 
+using Microsoft.Build.Utilities;
+
 namespace Xamarin.Android.Tasks.LLVMIR;
 
 partial class LlvmIrModule
 {
 	protected class LlvmIrStringManager
 	{
-		Dictionary<string, LlvmIrStringVariable> stringSymbolCache = new Dictionary<string, LlvmIrStringVariable> (StringComparer.Ordinal);
+		Dictionary<StringHolder, LlvmIrStringVariable> stringSymbolCache = new Dictionary<StringHolder, LlvmIrStringVariable> ();
 		Dictionary<string, LlvmIrStringGroup> stringGroupCache = new Dictionary<string, LlvmIrStringGroup> (StringComparer.Ordinal);
 		List<LlvmIrStringGroup> stringGroups = new List<LlvmIrStringGroup> ();
 
 		LlvmIrStringGroup defaultGroup;
+		TaskLoggingHelper log;
 
 		public List<LlvmIrStringGroup> StringGroups => stringGroups;
 
-		public LlvmIrStringManager ()
+		public LlvmIrStringManager (TaskLoggingHelper log)
 		{
+			this.log = log;
 			defaultGroup = new LlvmIrStringGroup ();
 			stringGroupCache.Add (String.Empty, defaultGroup);
 			stringGroups.Add (defaultGroup);
 		}
 
-		public LlvmIrStringVariable Add (string value, string? groupName = null, string? groupComment = null, string? symbolSuffix = null)
+		public LlvmIrStringVariable Add (string value, string? groupName = null, string? groupComment = null, string? symbolSuffix = null,
+			LlvmIrStringEncoding encoding = LlvmIrStringEncoding.UTF8, StringComparison comparison = StringComparison.Ordinal)
 		{
 			if (value == null) {
 				throw new ArgumentNullException (nameof (value));
 			}
 
-			LlvmIrStringVariable? stringVar;
-			if (stringSymbolCache.TryGetValue (value, out stringVar) && stringVar != null) {
+			var holder = new StringHolder (value, encoding, comparison);
+			if (stringSymbolCache.TryGetValue (holder, out LlvmIrStringVariable? stringVar) && stringVar != null) {
 				return stringVar;
 			}
 
@@ -52,14 +57,14 @@ partial class LlvmIrModule
 				symbolName = $"{symbolName}_{symbolSuffix}";
 			}
 
-			stringVar = new LlvmIrStringVariable (symbolName, value);
+			stringVar = new LlvmIrStringVariable (symbolName, holder);
 			group.Strings.Add (stringVar);
-			stringSymbolCache.Add (value, stringVar);
+			stringSymbolCache.Add (holder, stringVar);
 
 			return stringVar;
 		}
 
-		public LlvmIrStringVariable? Lookup (string value)
+		public LlvmIrStringVariable? Lookup (StringHolder value)
 		{
 			if (stringSymbolCache.TryGetValue (value, out LlvmIrStringVariable? sv)) {
 				return sv;

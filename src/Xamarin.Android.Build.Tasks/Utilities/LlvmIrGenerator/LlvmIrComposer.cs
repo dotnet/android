@@ -23,7 +23,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		public LlvmIrModule Construct ()
 		{
-			var module = new LlvmIrModule (cache);
+			var module = new LlvmIrModule (cache, Log);
 			Construct (module);
 			module.AfterConstruction ();
 			constructed = true;

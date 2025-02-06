@@ -199,12 +199,19 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				}
 
 				foreach (LlvmIrStringVariable info in group.Strings) {
-					string s = QuoteString ((string)info.Value, out ulong size);
+					string s = QuoteString (info, out ulong size);
+
+					if (!info.IsConstantStringLiteral) {
+						WriteCommentLine (context, $" '{info.Value}'");
+					}
 
 					WriteGlobalVariableStart (context, info);
 					context.Output.Write ('[');
 					context.Output.Write (size.ToString (CultureInfo.InvariantCulture));
-					context.Output.Write (" x i8] c");
+					context.Output.Write ($" x {info.IrType}] ");
+					if (info.IsConstantStringLiteral) {
+						context.Output.Write ('c');
+					}
 					context.Output.Write (s);
 					context.Output.Write (", align ");
 					context.Output.WriteLine (target.GetAggregateAlignment (1, size).ToString (CultureInfo.InvariantCulture));
@@ -560,7 +567,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			if (encodeAsASCII) {
 				context.Output.Write ('c');
-				context.Output.Write (QuoteString (bytes, bytes.Length, out _, nullTerminated: false));
+				context.Output.Write (QuoteUtf8String (bytes, bytes.Length, out _, nullTerminated: false));
 				return;
 			}
 
@@ -616,7 +623,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return;
 			}
 
-			WriteValue (context, smi.MemberType, value);
+			WriteValue (context, smi.MemberType, value, smi.Info.GetStringEncoding (context.TypeCache));
 		}
 
 		bool WriteNativePointerValue (GeneratorWriteContext context, StructureInstance si, StructureMemberInfo smi, object? value)
@@ -670,7 +677,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return $"{(basicTypeDesc.IsUnsigned ? prefixUnsigned : prefixSigned)}0x{hex}";
 		}
 
-		void WriteValue (GeneratorWriteContext context, Type type, object? value)
+		void WriteValue (GeneratorWriteContext context, Type type, object? value, LlvmIrStringEncoding stringEncoding = LlvmIrStringEncoding.UTF8)
 		{
 			if (value is LlvmIrVariable variableRef) {
 				context.Output.Write (variableRef.Reference);
@@ -716,7 +723,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					return;
 				}
 
-				LlvmIrStringVariable sv = context.Module.LookupRequiredVariableForString ((string)value);
+				LlvmIrStringVariable sv = context.Module.LookupRequiredVariableForString (StringHolder.AsHolder (value, stringEncoding));
 				context.Output.Write (sv.Reference);
 				return;
 			}
@@ -775,7 +782,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				string? comment = info.GetCommentFromProvider (smi, instance);
 				if (String.IsNullOrEmpty (comment)) {
 					var sb = new StringBuilder (" ");
-					sb.Append (MapManagedTypeToNative (smi));
+					sb.Append (MapManagedTypeToNative (context, smi));
 					sb.Append (' ');
 					sb.Append (smi.Info.Name);
 					comment = sb.ToString ();
@@ -1460,8 +1467,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return type.GetShortName ();
 		}
 
-		static string MapManagedTypeToNative (StructureMemberInfo smi)
+		static string MapManagedTypeToNative (GeneratorWriteContext context, StructureMemberInfo smi)
 		{
+			if (smi.Info.IsUnicodeString (context.TypeCache)) {
+				return "char16_t*";
+			}
+
 			string nativeType = MapManagedTypeToNative (smi.MemberType);
 			// Silly, but effective
 			if (nativeType[nativeType.Length - 1] == '*') {
@@ -1487,8 +1498,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				throw new InvalidOperationException ($"Field '{smi.Info.Name}' of structure '{info.Name}' should have a value of '{expectedType}' type, instead it had a '{value.GetType ()}'");
 			}
 
-			if (valueType == typeof(string)) {
-				return context.Module.LookupRequiredVariableForString ((string)value);
+			if (valueType == typeof(string) || valueType == typeof(StringHolder)) {
+				var encoding = smi.Info.GetStringEncoding (context.TypeCache);
+				return context.Module.LookupRequiredVariableForString (StringHolder.AsHolder (value, encoding));
 			}
 
 			return value;
@@ -1555,30 +1567,63 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return $"\"{s}\"";
 		}
 
-		public static string QuoteString (string value, bool nullTerminated = true)
+		public static string QuoteString (LlvmIrStringVariable variable, out ulong stringSize, bool nullTerminated = true)
 		{
-			return QuoteString (value, out _, nullTerminated);
-		}
+			if (variable.Encoding == LlvmIrStringEncoding.UTF8) {
+				var value = (StringHolder)variable.Value;
+				if (value.Data == null) {
+					throw new InvalidOperationException ("Internal error: null strings not supported here, they should be handled elsewhere.");
+				}
 
-		public static string QuoteString (byte[] bytes)
-		{
-			return QuoteString (bytes, bytes.Length, out _, nullTerminated: false);
-		}
+				int byteCount = Encoding.UTF8.GetByteCount (value.Data);
+				var bytes = ArrayPool<byte>.Shared.Rent (byteCount);
 
-		public static string QuoteString (string value, out ulong stringSize, bool nullTerminated = true)
-		{
-			var encoding = Encoding.UTF8;
-			int byteCount = encoding.GetByteCount (value);
-			var bytes = ArrayPool<byte>.Shared.Rent (byteCount);
-			try {
-				encoding.GetBytes (value, 0, value.Length, bytes, 0);
-				return QuoteString (bytes, byteCount, out stringSize, nullTerminated);
-			} finally {
-				ArrayPool<byte>.Shared.Return (bytes);
+				try {
+					Encoding.UTF8.GetBytes (value.Data, 0, value.Data.Length, bytes, 0);
+					return QuoteUtf8String (bytes, byteCount, out stringSize, nullTerminated);
+				} finally {
+					ArrayPool<byte>.Shared.Return (bytes);
+				}
 			}
+
+			if (variable.Encoding == LlvmIrStringEncoding.Unicode) {
+				return QuoteUnicodeString (variable, out stringSize, nullTerminated);
+			}
+
+			throw new InvalidOperationException ($"Internal error: unsupported string encoding {variable.Encoding}");
 		}
 
-		public static string QuoteString (byte[] bytes, int byteCount, out ulong stringSize, bool nullTerminated = true)
+		static string QuoteUnicodeString (LlvmIrStringVariable variable, out ulong stringSize, bool nullTerminated = true)
+		{
+			var value = (StringHolder)variable.Value;
+			if (value.Data == null) {
+				throw new InvalidOperationException ("Internal error: null strings not supported here, they should be handled elsewhere.");
+			}
+
+			// Each character/lexeme is encoded as iXY u0xVXYZ + comma and a space, and on top of that we have two square brackets and a trailing nul
+			var sb = new StringBuilder ((value.Data.Length * 13) + 3); // rough estimate of capacity
+			sb.Append ('[');
+			for (int i = 0; i < value.Data.Length; i++) {
+				var ch = (short)value.Data[i];
+				if (i > 0) {
+					sb.Append (", ");
+				}
+				sb.Append ($"{variable.IrType} u0x{ch:X2}");
+			}
+
+			if (nullTerminated) {
+				if (value.Data.Length > 0) {
+					sb.Append (", ");
+				}
+				sb.Append ($"{variable.IrType} 0");
+			}
+			sb.Append (']');
+
+			stringSize = (ulong)value.Data.Length + (nullTerminated ? 1u : 0u);
+			return sb.ToString ();
+		}
+
+		static string QuoteUtf8String (byte[] bytes, int byteCount, out ulong stringSize, bool nullTerminated = true)
 		{
 			var sb = new StringBuilder (byteCount * 2); // rough estimate of capacity
 
