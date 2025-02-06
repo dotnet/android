@@ -145,11 +145,13 @@ namespace Xamarin.Android.Prepare
 
 		string[] GetInstallationScriptArgs (string version, string dotnetPath, string dotnetScriptPath, bool onlyGetUrls, bool runtimeOnly)
 		{
+			const string feed = "https://ci.dot.net/public";
+
 			List<string> args;
 			if (Context.IsWindows) {
 				args = new List<string> {
 					"-NoProfile", "-ExecutionPolicy", "unrestricted", "-file", dotnetScriptPath,
-					"-Version", version, "-InstallDir", dotnetPath, "-Verbose"
+					"-Version", version, "-InstallDir", dotnetPath, "-AzureFeed", feed, "-Verbose"
 				};
 				if (runtimeOnly) {
 					args.AddRange (new string [] { "-Runtime", "dotnet" });
@@ -162,7 +164,7 @@ namespace Xamarin.Android.Prepare
 			}
 
 			args = new List<string> {
-				dotnetScriptPath, "--version", version, "--install-dir", dotnetPath, "--verbose"
+				dotnetScriptPath, "--version", version, "--install-dir", dotnetPath, "--azure-feed", feed, "--verbose",
 			};
 
 			if (runtimeOnly) {
