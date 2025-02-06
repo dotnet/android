@@ -2,7 +2,7 @@
 MY_DIR="$(dirname $0)"
 HOST="$(uname | tr A-Z a-z)"
 
-NATIVE_DIR="${MY_DIR}/../../src/native"
+NATIVE_DIR="${MY_DIR}/../../src/native/mono"
 MONODROID_SOURCE_DIR="${NATIVE_DIR}/pinvoke-override"
 GENERATOR_SOURCE="${MONODROID_SOURCE_DIR}/generate-pinvoke-tables.cc"
 GENERATOR_BINARY="${MONODROID_SOURCE_DIR}/generate-pinvoke-tables"
