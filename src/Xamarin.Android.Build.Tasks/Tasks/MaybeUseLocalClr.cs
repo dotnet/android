@@ -118,7 +118,7 @@ public class MaybeUseLocalCLR : AndroidTask
 
 	void ProcessItem (ITaskItem item, List<ITaskItem> itemsToRemove, List<ITaskItem> requiredClrItems, HashSet<AndroidTargetArch> supportedArchitectures)
 	{
-		if (LinuxBionicHack (item, itemsToRemove) || CoreClrItem (item, itemsToRemove, requiredClrItems)) {
+		if (CoreClrItem (item, itemsToRemove, requiredClrItems)) {
 			return;
 		}
 
@@ -144,24 +144,6 @@ public class MaybeUseLocalCLR : AndroidTask
 
 		itemsToRemove.Add (item);
 		requiredClrItems.Add (item);
-		return true;
-	}
-
-	bool LinuxBionicHack (ITaskItem item, List<ITaskItem> itemsToRemove)
-	{
-		string? nugetId = item.GetMetadata ("NuGetPackageId");
-		if (String.IsNullOrEmpty (nugetId)) {
-			return false;
-		}
-
-		const string BionicNugetIdPrefix = "Microsoft.NETCore.App.Runtime.linux-bionic-";
-		if (!nugetId.StartsWith (BionicNugetIdPrefix, StringComparison.OrdinalIgnoreCase)) {
-			return false;
-		}
-
-		Log.LogWarning ($"[MaybeUseLocalClr] HACK! HACK! Ignoring linux-bionic item {item}. Remove once SDK is updated!");
-		itemsToRemove.Add (item);
-
 		return true;
 	}
 }

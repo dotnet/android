@@ -69,36 +69,70 @@ public class RecreateResolvedRuntimePacks : AndroidTask
 		var maybeIgnoreLibs = new List<ITaskItem> ();
 		var runtimePackPaths = new List<string> ();
 
-		// HACK START: must be removed when CoreCLR runtime pack is properly resolved by the SDK
-		HashSet<ITaskItem>? coreClrHackLibcItems = AndroidRuntime == "CoreCLR" ? new HashSet<ITaskItem> () : null;
-		if (coreClrHackLibcItems != null) {
-			LogHackWarning ();
-		}
-		// HACK END
-
 		foreach (ITaskItem library in ResolvedNativeLibraries) {
-			// HACK START: when CoreCLR runtime pack is properly resolved by the SDK, this method's body
-			//             should be moved here and the method removed.
-			MaybeMakeRuntimePackItem (library, useCoreClrHack: true);
-			// HACK END
-		}
-
-		// HACK START: must be removed when CoreCLR runtime pack is properly resolved by the SDK
-		if (coreClrHackLibcItems != null) {
-			LogHackWarning ();
-			foreach (ITaskItem item in coreClrHackLibcItems) {
-				string fakePath = item.ItemSpec.Replace ("Mono", "CoreCLR");
-				if (fakePath.IndexOf ("CoreCLR") < 0) {
-					throw new InvalidOperationException ("CoreCLR runtime pack hack doesn't work");
+			foreach (string libPathTail in ignoreLibNames) {
+				if (!library.ItemSpec.EndsWith (libPathTail, StringComparison.OrdinalIgnoreCase)) {
+					continue;
 				}
 
-				var fakeLibcItem = new TaskItem (fakePath);
-				item.CopyMetadataTo (fakeLibcItem);
-				fakeLibcItem.SetMetadata ("NuGetPackageId", item.GetMetadata ("NuGetPackageId").Replace ("Mono", "CoreCLR"));
-				MaybeMakeRuntimePackItem (fakeLibcItem, useCoreClrHack: false);
+				maybeIgnoreLibs.Add (library);
+				break;
 			}
+
+			if (!library.ItemSpec.EndsWith (libcPath, StringComparison.OrdinalIgnoreCase)) {
+				continue;
+			}
+
+			if (!GetMetadata (library, "RuntimeIdentifier", out string? rid) || runtimePacks.ContainsKey (rid)) {
+				continue;
+			}
+
+			if (!GetMetadata (library, "NuGetPackageId", out string? nugetPackageId)) {
+				continue;
+			}
+
+			if (!GetMetadata (library, "NuGetPackageVersion", out string? nugetPackageVersion)) {
+				continue;
+			}
+
+			string tail = String.Format ("{0}runtimes{0}{1}{2}", Path.DirectorySeparatorChar, rid, libcPath);
+			int tailIndex = library.ItemSpec.IndexOf (tail);
+			if (tailIndex < 0) {
+				continue;
+			}
+			string packageDir = library.ItemSpec.Substring (0, tailIndex);
+
+			// Archive DSO stub must always exist
+			if (!PackNativeFileExists (packageDir, rid, DSOWrapperGenerator.StubFileName)) {
+				Log.LogDebugMessage ($"Runtime pack '{packageDir}' doesn't contain '{DSOWrapperGenerator.StubFileName}'. Pack ignored.");
+				continue;
+			}
+
+			// Either one of the runtime libraries must exist
+			bool runtimeLibraryFound = false;
+			foreach (string runtimeLibrary in runtimeLibraries) {
+				if (PackNativeFileExists (packageDir, rid, runtimeLibrary)) {
+					runtimeLibraryFound = true;
+					continue;
+				}
+				Log.LogDebugMessage ($"Runtime library '{runtimeLibrary}' not found in pack '{packageDir}'");
+			}
+			if (!runtimeLibraryFound) {
+				Log.LogDebugMessage ($"Runtime pack '{packageDir}' doesn't contain any {AndroidRuntime} runtime shared libraries.  Pack ignored.");
+				continue;
+			}
+
+			var pack = new TaskItem (nugetPackageId);
+			pack.SetMetadata ("FrameworkName", "Microsoft.Android");
+			pack.SetMetadata ("NuGetPackageId", nugetPackageId);
+			pack.SetMetadata ("NuGetPackageVersion", nugetPackageVersion);
+			pack.SetMetadata ("RuntimeIdentifier", rid);
+			pack.SetMetadata ("PackageDirectory", packageDir);
+
+			runtimePackPaths.Add (packageDir);
+			runtimePacks.Add (rid, pack);
 		}
-		// HACK END
+
 		ResolvedRuntimePacks = runtimePacks.Values.ToArray ();
 
 		var librariesToIgnore = new List<ITaskItem> ();
@@ -108,12 +142,6 @@ public class RecreateResolvedRuntimePacks : AndroidTask
 				runtimePackPath = $"{path}{Path.DirectorySeparatorChar}";
 			}
 
-			// HACK START: must be removed when CoreCLR runtime pack is properly resolved by the SDK
-			if (coreClrHackLibcItems != null) {
-				LogHackWarning ();
-				runtimePackPath = runtimePackPath.Replace ("CoreCLR", "Mono");
-			}
-			// HACK END
 			foreach (ITaskItem library in maybeIgnoreLibs) {
 				if (library.ItemSpec.StartsWith (runtimePackPath)) {
 					librariesToIgnore.Add (library);
@@ -134,87 +162,6 @@ public class RecreateResolvedRuntimePacks : AndroidTask
 		{
 			string packFilePath = Path.Combine (packageDir, "runtimes", rid, "native", fileName);
 			return File.Exists (packFilePath);
-		}
-
-		void MaybeMakeRuntimePackItem (ITaskItem library, bool useCoreClrHack)
-		{
-			foreach (string libPathTail in ignoreLibNames) {
-				if (!library.ItemSpec.EndsWith (libPathTail, StringComparison.OrdinalIgnoreCase)) {
-					continue;
-				}
-
-				maybeIgnoreLibs.Add (library);
-				break;
-			}
-
-			if (!library.ItemSpec.EndsWith (libcPath, StringComparison.OrdinalIgnoreCase)) {
-				return;
-			}
-
-			if (!GetMetadata (library, "RuntimeIdentifier", out string? rid) || runtimePacks.ContainsKey (rid)) {
-				return;
-			}
-
-			if (!GetMetadata (library, "NuGetPackageId", out string? nugetPackageId)) {
-				return;
-			}
-
-			if (!GetMetadata (library, "NuGetPackageVersion", out string? nugetPackageVersion)) {
-				return;
-			}
-
-			string tail = String.Format ("{0}runtimes{0}{1}{2}", Path.DirectorySeparatorChar, rid, libcPath);
-			int tailIndex = library.ItemSpec.IndexOf (tail);
-			if (tailIndex < 0) {
-				return;
-			}
-			string packageDir = library.ItemSpec.Substring (0, tailIndex);
-
-			// HACK START: must be removed when CoreCLR runtime pack is properly resolved by the SDK
-			if (useCoreClrHack && coreClrHackLibcItems != null) {
-				LogHackWarning ();
-				coreClrHackLibcItems.Add (library);
-			}
-			// HACK END
-
-			// Double-check that this is in fact our runtime pack.  This is needed to avoid the (however improbable)
-			// situation where the application references a nuget which comes with `libc.so` and we mistakenly identify
-			// it to be our runtime pack.
-
-			// Archive DSO stub must always exist
-			if (!PackNativeFileExists (packageDir, rid, DSOWrapperGenerator.StubFileName)) {
-				Log.LogDebugMessage ($"Runtime pack '{packageDir}' doesn't contain '{DSOWrapperGenerator.StubFileName}'. Pack ignored.");
-				return;
-			}
-
-			// Either one of the runtime libraries must exist
-			bool runtimeLibraryFound = false;
-			foreach (string runtimeLibrary in runtimeLibraries) {
-				if (PackNativeFileExists (packageDir, rid, runtimeLibrary)) {
-					runtimeLibraryFound = true;
-					continue;
-				}
-				Log.LogDebugMessage ($"Runtime library '{runtimeLibrary}' not found in pack '{packageDir}'");
-			}
-			if (!runtimeLibraryFound) {
-				Log.LogDebugMessage ($"Runtime pack '{packageDir}' doesn't contain any {AndroidRuntime} runtime shared libraries.  Pack ignored.");
-				return;
-			}
-
-			var pack = new TaskItem (nugetPackageId);
-			pack.SetMetadata ("FrameworkName", "Microsoft.Android");
-			pack.SetMetadata ("NuGetPackageId", nugetPackageId);
-			pack.SetMetadata ("NuGetPackageVersion", nugetPackageVersion);
-			pack.SetMetadata ("RuntimeIdentifier", rid);
-			pack.SetMetadata ("PackageDirectory", packageDir);
-
-			runtimePackPaths.Add (packageDir);
-			runtimePacks.Add (rid, pack);
-		}
-
-		void LogHackWarning ()
-		{
-			Log.LogWarning ("[RecreateResolvedRuntimePacks] HACK! HACK! Using CoreCLR resolution hack. Remove once SDK is updated!");
 		}
 	}
 }
