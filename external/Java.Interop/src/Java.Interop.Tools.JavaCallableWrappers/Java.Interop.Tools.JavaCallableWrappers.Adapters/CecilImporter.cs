@@ -269,7 +269,7 @@ public class CecilImporter
 	static CallableWrapperMethod CreateMethod (string name, CallableWrapperType declaringType, string? signature, string? connector, string? managedParameters, string? outerType, string? superCall)
 	{
 		signature = signature ?? throw new ArgumentNullException ("`connector` cannot be null.", nameof (connector));
-		var method_name = "n_" + name + ":" + signature + ":" + connector;
+		var method_name = "n_" + name + ":" + signature + ":" + connector?.Replace ('/', '+');
 
 		var method = new CallableWrapperMethod (declaringType, name, method_name, signature);
 

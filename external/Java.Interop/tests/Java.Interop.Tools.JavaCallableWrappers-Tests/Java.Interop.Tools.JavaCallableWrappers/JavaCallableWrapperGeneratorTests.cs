@@ -104,6 +104,55 @@ public class Name
 			Assert.AreEqual (expected, actual);
 		}
 
+		[Test]
+		public void GenerateTypeMentioningNestedInvoker ()
+		{
+			var actual      = Generate (typeof (ApplicationName.ActivityLifecycleCallbacks));
+			var expected    = """
+package application;
+
+
+public class Name_ActivityLifecycleCallbacks
+	extends java.lang.Object
+	implements
+		mono.android.IGCUserPeer,
+		java.lang.Object
+{
+/** @hide */
+	public static final String __md_methods;
+	static {
+		__md_methods = 
+			"n_onActivityCreated:(Landroid/app/Activity;Landroid/os/Bundle;)V:GetOnActivityCreated_Landroid_app_Activity_Landroid_os_Bundle_Handler:Android.App.Application+IActivityLifecycleCallbacksInvoker, Mono.Android\n" +
+			"";
+		mono.android.Runtime.register ("Xamarin.Android.ToolsTests.ApplicationName+ActivityLifecycleCallbacks, Java.Interop.Tools.JavaCallableWrappers-Tests", Name_ActivityLifecycleCallbacks.class, __md_methods);
+	}
+
+	public void onActivityCreated (android.app.Activity p0, android.os.Bundle p1)
+	{
+		n_onActivityCreated (p0, p1);
+	}
+
+	private native void n_onActivityCreated (android.app.Activity p0, android.os.Bundle p1);
+
+	private java.util.ArrayList refList;
+	public void monodroidAddReference (java.lang.Object obj)
+	{
+		if (refList == null)
+			refList = new java.util.ArrayList ();
+		refList.add (obj);
+	}
+
+	public void monodroidClearReferences ()
+	{
+		if (refList != null)
+			refList.clear ();
+	}
+}
+
+""";
+			Assert.AreEqual (expected, actual);
+		}
+
 		static string Generate (Type type, string applicationJavaClass = null, string monoRuntimeInit = null, JavaPeerStyle style = JavaPeerStyle.XAJavaInterop1)
 		{
 			var reader_options = new CallableWrapperReaderOptions {

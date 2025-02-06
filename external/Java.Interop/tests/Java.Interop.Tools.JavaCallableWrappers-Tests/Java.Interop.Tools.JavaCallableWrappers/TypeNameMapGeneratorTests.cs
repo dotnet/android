@@ -50,7 +50,7 @@ namespace Xamarin.Android.ToolsTests
 			v.WriteJavaToManaged (o);
 			var a = ToArray (o);
 			Save (a, "__j2m");
-			var length = 190;
+			var length = 193;
 			var offset = 76;
 			var e =
 				"version=1\u0000" +
@@ -59,6 +59,7 @@ namespace Xamarin.Android.ToolsTests
 				"value-offset=" + offset + "\u0000" +
 				GetJ2MEntryLine (typeof (ActivityName),                             "activity/Name",                                                                                offset, length) +
 				GetJ2MEntryLine (typeof (ApplicationName),                          "application/Name",                                                                             offset, length) +
+				GetJ2MEntryLine (typeof (ApplicationName.ActivityLifecycleCallbacks),   "application/Name_ActivityLifecycleCallbacks",                                              offset, length) +
 				GetJ2MEntryLine (typeof (DefaultName),                              "crc64197ae30a36756915/DefaultName",                                                            offset, length) +
 				GetJ2MEntryLine (typeof (DefaultName.A),                            "crc64197ae30a36756915/DefaultName_A",                                                          offset, length) +
 				GetJ2MEntryLine (typeof (DefaultName.A.B),                          "crc64197ae30a36756915/DefaultName_A_B",                                                        offset, length) +
@@ -128,8 +129,8 @@ namespace Xamarin.Android.ToolsTests
 			v.WriteManagedToJava (o);
 			var a = ToArray (o);
 			Save (a, "__m2j");
-			var length = 190;
-			var offset = 114;
+			var length = 193;
+			var offset = 117;
 			var e =
 				"version=1\u0000" +
 				$"entry-count={types.Count}\u0000" +
@@ -138,6 +139,7 @@ namespace Xamarin.Android.ToolsTests
 				GetM2JEntryLine (typeof (AbstractClass),                            "my/AbstractClass",                                                                             offset, length) +
 				GetM2JEntryLine (typeof (AbstractClassInvoker),                     "my/AbstractClass",                                                                             offset, length) +
 				GetM2JEntryLine (typeof (ActivityName),                             "activity/Name",                                                                                offset, length) +
+				GetM2JEntryLine (typeof (ApplicationName.ActivityLifecycleCallbacks),   "application/Name_ActivityLifecycleCallbacks",                                              offset, length) +
 				GetM2JEntryLine (typeof (ApplicationName),                          "application/Name",                                                                             offset, length) +
 				GetM2JEntryLine (typeof (DefaultName.A.B),                          "crc64197ae30a36756915/DefaultName_A_B",                                                        offset, length) +
 				GetM2JEntryLine (typeof (DefaultName.A),                            "crc64197ae30a36756915/DefaultName_A",                                                          offset, length) +

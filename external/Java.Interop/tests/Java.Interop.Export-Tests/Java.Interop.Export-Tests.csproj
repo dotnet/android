@@ -26,6 +26,10 @@
     <ProjectReference Include="..\..\src\Java.Interop.Export\Java.Interop.Export.csproj" />
     <ProjectReference Include="..\..\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj" />
     <ProjectReference Include="..\TestJVM\TestJVM.csproj" />
+    <ProjectReference
+        Include="..\..\tools\jcw-gen\jcw-gen.csproj"
+        ReferenceOutputAssembly="false"
+    />
   </ItemGroup>
   
   <ItemGroup>

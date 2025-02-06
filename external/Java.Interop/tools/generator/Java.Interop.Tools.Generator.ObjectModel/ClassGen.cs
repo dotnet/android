@@ -181,7 +181,7 @@ namespace MonoDroid.Generation
 					int ls = reg.Key.LastIndexOf ('/');
 					string package = ls >= 0 ? reg.Key.Substring (0, ls) : "";
 
-					if (JavaNativeTypeManager.ToCliType (reg.Key) == reg.Value)
+					if (JavaNativeTypeManager.ToCliType (reg.Key) == reg.Value.Replace ('/', '+'))
 						continue;
 					if (!mapping.TryGetValue (package, out var v))
 						mapping.Add (package, v = new List<KeyValuePair<string, string>> ());

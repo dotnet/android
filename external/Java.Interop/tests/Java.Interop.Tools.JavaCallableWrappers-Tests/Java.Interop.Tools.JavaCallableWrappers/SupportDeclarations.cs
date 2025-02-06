@@ -22,6 +22,26 @@ namespace Android.App {
 		protected virtual void OnCreate ()
 		{
 		}
+
+		[Register ("android/app/Application$ActivityLifecycleCallbacks", DoNotGenerateAcw = true)]
+		public partial interface IActivityLifecycleCallbacks {
+			[Register (
+				name: "onActivityCreated",
+				signature: "(Landroid/app/Activity;Landroid/os/Bundle;)V",
+				connector: "GetOnActivityCreated_Landroid_app_Activity_Landroid_os_Bundle_Handler:Android.App.Application/IActivityLifecycleCallbacksInvoker, Mono.Android")]
+			void OnActivityCreated (Android.App.Activity activity, global::Android.OS.Bundle savedInstanceState);
+		}
+
+		internal class IActivityLifecycleCallbacksInvoker : Java.Lang.Object, IActivityLifecycleCallbacks {
+			static Delegate GetOnActivityCreated_Landroid_app_Activity_Landroid_os_Bundle_Handler ()
+			{
+				return null;
+			}
+
+			public void OnActivityCreated (Android.App.Activity activity, global::Android.OS.Bundle savedInstanceState)
+			{
+			}
+		}
 	}
 
 	[Register ("android/app/Activity", DoNotGenerateAcw = true)]
@@ -40,6 +60,14 @@ namespace Android.App {
 		public virtual void OnCreate (Java.Lang.Object arguments)
 		{
 		}
+	}
+}
+
+namespace Android.OS {
+
+	[Register ("android/os/Bundle", DoNotGenerateAcw = true)]
+	class Bundle : Java.Lang.Object
+	{
 	}
 }
 
@@ -72,6 +100,7 @@ namespace Xamarin.Android.ToolsTests {
 			typeof (AbstractClass),
 			typeof (ActivityName),
 			typeof (ApplicationName),
+			typeof (ApplicationName.ActivityLifecycleCallbacks),
 			typeof (DefaultName),
 			typeof (DefaultName.A),
 			typeof (DefaultName.A.B),
@@ -139,6 +168,12 @@ namespace Xamarin.Android.ToolsTests {
 	[Application (Name = "application.Name")]
 	class ApplicationName : Application
 	{
+		public class ActivityLifecycleCallbacks : Java.Lang.Object, Application.IActivityLifecycleCallbacks
+		{
+			public void OnActivityCreated (Activity activity, global::Android.OS.Bundle savedInstanceState)
+			{
+			}
+		}
 	}
 
 	class IndirectApplication : ApplicationName

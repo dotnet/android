@@ -150,7 +150,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 			for (int i = 0; i < parts.Length; ++i) {
 				parts [i] = ToPascalCase (parts [i], 1);
 			}
-			return string.Join ("/", parts);
+			return string.Join ("+", parts);
 		}
 
 		static string ToPascalCase (string value, int minLength)
