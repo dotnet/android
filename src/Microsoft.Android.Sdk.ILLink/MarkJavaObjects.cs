@@ -232,7 +232,7 @@ namespace MonoDroid.Tuner {
 
 		bool CheckInvokerType (TypeDefinition type, string name)
 		{
-			return TypeNameWithoutKey (name) == TypeNameWithoutKey ($"{ type.FullName}, { type.Module.Assembly.FullName}");
+			return TypeNameWithoutKey (name.Replace ('+', '/')) == TypeNameWithoutKey ($"{ type.FullName}, { type.Module.Assembly.FullName}");
 		}
 
 		void PreserveInterfaceMethods (TypeDefinition type, TypeDefinition invoker)

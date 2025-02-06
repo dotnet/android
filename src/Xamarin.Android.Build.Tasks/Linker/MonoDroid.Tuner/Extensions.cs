@@ -116,7 +116,7 @@ namespace MonoDroid.Tuner {
 
 		public static TypeDefinition GetType (AssemblyDefinition assembly, string typeName)
 		{
-			return assembly.MainModule.GetType (typeName);
+			return assembly.MainModule.GetType (typeName.Replace ('+', '/'));
 		}
 
 		public static bool Implements (this TypeReference self, string interfaceName, IMetadataResolver resolver)
