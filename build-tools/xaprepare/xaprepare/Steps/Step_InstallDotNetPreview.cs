@@ -112,24 +112,11 @@ namespace Xamarin.Android.Prepare
 		{
 			Log.StatusLine ("Downloading dotnet archive...");
 
-			(bool success, ulong size, HttpStatusCode status) = await Utilities.GetDownloadSizeWithStatus (archiveUrl);
-			if (!success) {
-				if (status == HttpStatusCode.NotFound) {
-					Log.InfoLine ($"dotnet archive URL {archiveUrl} not found");
-					return false;
-				} else {
-					Log.WarningLine ($"Failed to obtain dotnet archive size. HTTP status code: {status} ({(int)status})");
-				}
-
-				return false;
-			}
-
 			string tempArchiveDestinationPath = archiveDestinationPath + "-tmp";
 			Utilities.DeleteFile (tempArchiveDestinationPath);
 
-			DownloadStatus downloadStatus = Utilities.SetupDownloadStatus (context, size, context.InteractiveSession);
 			Log.StatusLine ($"  {context.Characters.Link} {archiveUrl}", ConsoleColor.White);
-			await Download (context, archiveUrl, tempArchiveDestinationPath, "dotnet archive", Path.GetFileName (archiveUrl.LocalPath), downloadStatus);
+			await Download (context, archiveUrl, tempArchiveDestinationPath, "dotnet archive", Path.GetFileName (archiveUrl.LocalPath), DownloadStatus.Empty);
 
 			if (!File.Exists (tempArchiveDestinationPath)) {
 				return false;
