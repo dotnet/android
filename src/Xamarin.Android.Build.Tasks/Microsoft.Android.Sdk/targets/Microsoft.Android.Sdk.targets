@@ -20,15 +20,6 @@
         Pack="false"
         PrivateAssets="All"
     />
-
-    <!-- Hack: Makes SDK not try to download the
-         Microsoft.NETCore.App.Runtime.linux-bionic-{x86,arm} nuget packages.
-
-         MUST BE REMOVED after SDK targets are fixed
-    -->
-    <KnownRuntimePack Update="@(KnownRuntimePack)">
-      <RuntimePackRuntimeIdentifiers Condition="'%(KnownRuntimePack.TargetFramework)' == 'net10.0'">%(RuntimePackRuntimeIdentifiers);android-arm64</RuntimePackRuntimeIdentifiers>
-    </KnownRuntimePack>
   </ItemGroup>
 
   <Import Project="Microsoft.Android.Sdk.SupportedPlatforms.targets" />
