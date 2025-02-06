@@ -46,7 +46,7 @@ namespace Mono.Linker.Steps {
 			get { return _context.Tracer; }
 		}
 
-		public MarkingHelpers MarkingHelpers => _context.MarkingHelpers;
+		public void Initialize (LinkContext context) => _context = context;
 
 		public void Process (LinkContext context)
 		{
@@ -78,6 +78,20 @@ namespace Mono.Linker.Steps {
 
 		protected virtual void ProcessAssembly (AssemblyDefinition assembly)
 		{
+		}
+
+		public virtual void LogMessage (string message)
+		{
+			Context.LogMessage (message);
+		}
+
+		public virtual void LogError (int code, string message)
+		{
+#if ILLINK
+			Context.LogMessage (MessageContainer.CreateCustomErrorMessage (message, code, origin: new MessageOrigin ()));
+#else   // !ILLINK
+			Context.LogError ($"XA{code}", message);
+#endif  // !ILLINK
 		}
 	}
 }
