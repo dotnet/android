@@ -85,7 +85,9 @@ namespace Xamarin.Android.Prepare
 			Log.StatusLine ("Downloading dotnet-install script...");
 
 			if (File.Exists (dotnetScriptPath)) {
-				Log.WarningLine ($"Using cached installation script found in '{dotnetScriptPath}'");
+				if (!bool.TryParse (Environment.GetEnvironmentVariable ("RunningOnCI"), out var ci) || !ci) {
+					Log.WarningLine ($"Using cached installation script found in '{dotnetScriptPath}'");
+				}
 				return true;
 			}
 
