@@ -16,21 +16,6 @@ namespace MonoDroid.Tuner
 	public class AddKeepAlivesStep : BaseStep
 	{
 
-#if ILLINK
-		protected override void Process ()
-		{
-			cache = Context;
-		}
-#else   // !ILLINK
-		public AddKeepAlivesStep (IMetadataResolver cache)
-		{
-			this.cache = cache;
-		}
-
-		readonly
-#endif  // !ILLINK
-		IMetadataResolver cache;
-
 		protected override void ProcessAssembly (AssemblyDefinition assembly)
 		{
 			var action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
@@ -72,7 +57,7 @@ namespace MonoDroid.Tuner
 
 		bool MightNeedFix (TypeDefinition type)
 		{
-			return !type.IsAbstract && type.IsSubclassOf ("Java.Lang.Object", cache);
+			return !type.IsAbstract && type.IsSubclassOf ("Java.Lang.Object", Context);
 		}
 
 		MethodDefinition methodKeepAlive = null;
@@ -129,13 +114,7 @@ namespace MonoDroid.Tuner
 
 		protected virtual AssemblyDefinition GetCorlibAssembly ()
 		{
-			return Context.GetAssembly (
-#if NETCOREAPP
-							"System.Private.CoreLib"
-#else
-							"mscorlib"
-#endif
-				);
+			return Context.GetAssembly ("System.Private.CoreLib");
 		}
 
 		MethodDefinition GetKeepAliveMethod ()
