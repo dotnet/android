@@ -56,7 +56,7 @@
 
   <Target Name="_CreateItemGroups">
     <ItemGroup>
-      <_AndroidRuntimeNames Include="Mono;NativeAOT" />
+      <_AndroidRuntimeNames Include="@(AndroidAbiAndRuntimeFlavor->'%(AndroidRuntime)'->Distinct())" />
       <_AndroidRIDs Include="android-arm;android-arm64;android-x86;android-x64" Runtime="%(_AndroidRuntimeNames.Identity)" />
     </ItemGroup>
   </Target>
