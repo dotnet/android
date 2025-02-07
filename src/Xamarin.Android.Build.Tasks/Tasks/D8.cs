@@ -1,3 +1,5 @@
+#nullable enable
+
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Collections.Generic;
@@ -15,32 +17,32 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "DX8";
 
 		[Required]
-		public string JarPath { get; set; }
+		public string JarPath { get; set; } = "";
 
 		/// <summary>
 		/// Output for *.dex files. R8 can be invoked for just --main-dex-list-output, so this is not [Required]
 		/// </summary>
-		public string OutputDirectory { get; set; }
+		public string OutputDirectory { get; set; } = "";
 
 		/// <summary>
 		/// It is loaded to calculate --min-api, which is used by desugaring part to determine which levels of desugaring it performs.
 		/// </summary>
-		public string AndroidManifestFile { get; set; }
+		public string AndroidManifestFile { get; set; } = "";
 
 		// general d8 feature options.
 		public bool Debug { get; set; }
 		public bool EnableDesugar { get; set; } = true;
 
 		// Java libraries to embed or reference
-		public string ClassesZip { get; set; }
+		public string ClassesZip { get; set; } = "";
 		[Required]
-		public string JavaPlatformJarPath { get; set; }
-		public ITaskItem [] JavaLibrariesToEmbed { get; set; }
-		public ITaskItem [] AlternativeJarLibrariesToEmbed { get; set; }
-		public ITaskItem [] JavaLibrariesToReference { get; set; }
-		public ITaskItem [] MapDiagnostics { get; set; }
+		public string JavaPlatformJarPath { get; set; } = "";
+		public ITaskItem [] JavaLibrariesToEmbed { get; set; } = [];
+		public ITaskItem [] AlternativeJarLibrariesToEmbed { get; set; } = [];
+		public ITaskItem [] JavaLibrariesToReference { get; set; } = [];
+		public ITaskItem [] MapDiagnostics { get; set; } = [];
 
-		public string ExtraArguments { get; set; }
+		public string ExtraArguments { get; set; } = "";
 
 		protected override string GenerateCommandLineCommands ()
 		{
