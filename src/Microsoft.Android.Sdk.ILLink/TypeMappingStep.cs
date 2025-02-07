@@ -15,7 +15,7 @@ namespace Microsoft.Android.Sdk.ILLink;
 public class TypeMappingStep : BaseStep
 {
 	const string AssemblyName = "Microsoft.Android.Runtime.NativeAOT";
-	const string TypeName = "Android.Runtime.NativeAOT.NativeAotTypeManager";
+	const string TypeName = "Microsoft.Android.Runtime.NativeAotTypeManager";
 	readonly IDictionary<string, TypeDefinition> TypeMappings = new Dictionary<string, TypeDefinition> (StringComparer.Ordinal);
 	AssemblyDefinition? MicrosoftAndroidRuntimeNativeAot;
 
@@ -68,7 +68,7 @@ public class TypeMappingStep : BaseStep
 		var getTypeFromHandle = module.ImportReference (typeof (Type).GetMethod ("GetTypeFromHandle"));
 		foreach (var (javaKey, typeDefinition) in TypeMappings) {
 			/*
-			 * IL_0000: ldsfld class [System.Runtime]System.Collections.Generic.IDictionary`2<string, class [System.Runtime]System.Type> Android.Runtime.NativeAOT.NativeAotTypeManager::TypeMappings
+			 * IL_0000: ldsfld class [System.Runtime]System.Collections.Generic.IDictionary`2<string, class [System.Runtime]System.Type> Microsoft.Android.Runtime.NativeAotTypeManager::TypeMappings
 			 * IL_0005: ldstr "android/app/Activity"
 			 * IL_000a: ldtoken [Mono.Android]Android.App.Activity
 			 * IL_000f: call class [System.Runtime]System.Type [System.Runtime]System.Type::GetTypeFromHandle(valuetype [System.Runtime]System.RuntimeTypeHandle)

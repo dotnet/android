@@ -10,6 +10,7 @@
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
     <OutputPath>$(_MonoAndroidNETDefaultOutDir)</OutputPath>
+    <RootNamespace>Microsoft.Android.Runtime</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

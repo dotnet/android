@@ -10,7 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Android.Runtime.NativeAOT;
+using Microsoft.Android.Runtime;
 
 namespace Java.Interop {
 

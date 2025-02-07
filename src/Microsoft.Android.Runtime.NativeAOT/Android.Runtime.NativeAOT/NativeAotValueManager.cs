@@ -14,7 +14,7 @@ using System.Threading;
 using Android.Runtime;
 using Java.Interop;
 
-namespace Android.Runtime.NativeAOT;
+namespace Microsoft.Android.Runtime;
 
 class NativeAotValueManager : JniRuntime.JniValueManager
 {

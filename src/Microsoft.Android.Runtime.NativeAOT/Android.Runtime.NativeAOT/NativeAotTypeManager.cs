@@ -3,7 +3,7 @@ using System.Reflection;
 using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 
-namespace Android.Runtime.NativeAOT;
+namespace Microsoft.Android.Runtime;
 
 partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 
