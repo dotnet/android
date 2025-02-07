@@ -280,52 +280,9 @@ namespace Android.Runtime {
 			}
 		}
 
-		const int nameBufferLength = 1024;
-		[ThreadStatic] static char[]? nameBuffer;
-
-		static unsafe IntPtr BinaryName (string classname)
+		public static IntPtr FindClass (string classname)
 		{
-			int index = classname.IndexOf ('/');
-
-			if (index == -1)
-				return NewString (classname);
-
-			int length = classname.Length;
-			if (length > nameBufferLength)
-				return NewString (classname.Replace ('/', '.'));
-
-			if (nameBuffer == null)
-				nameBuffer = new char[nameBufferLength];
-
-			fixed (char* src = classname, dst = nameBuffer) {
-				char* src_ptr = src;
-				char* dst_ptr = dst;
-				char* end_ptr = src + length;
-				while (src_ptr < end_ptr) {
-					*dst_ptr = (*src_ptr == '/') ? '.' : *src_ptr;
-					src_ptr++;
-					dst_ptr++;
-				}
-			}
-			return NewString (nameBuffer, length);
-		}
-
-		public unsafe static IntPtr FindClass (string classname)
-		{
-			JniObjectReference local_ref;
-
-			IntPtr native_str = BinaryName (classname);
-			try {
-				JniArgumentValue* parameters = stackalloc JniArgumentValue [3] {
-					new JniArgumentValue (native_str),
-					new JniArgumentValue (true),
-					new JniArgumentValue (JNIEnvInit.java_class_loader),
-				};
-				local_ref = JniEnvironment.StaticMethods.CallStaticObjectMethod (Java.Lang.Class.Members.JniPeerType.PeerReference, JNIEnvInit.mid_Class_forName!, parameters);
-			} finally {
-				DeleteLocalRef (native_str);
-			}
-
+			JniObjectReference local_ref = JniEnvironment.Types.FindClass (classname);
 			IntPtr global_ref = NewGlobalRef (local_ref.Handle);
 			JniObjectReference.Dispose (ref local_ref);
 			return global_ref;
