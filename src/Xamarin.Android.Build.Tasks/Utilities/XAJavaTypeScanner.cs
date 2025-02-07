@@ -17,6 +17,7 @@ class XAJavaTypeScanner
 	// Names of assemblies which don't have Mono.Android.dll references, or are framework assemblies, but which must
 	// be scanned for Java types.
 	static readonly HashSet<string> SpecialAssemblies = new HashSet<string> (StringComparer.OrdinalIgnoreCase) {
+		"Java.Interop.dll",
 		"Mono.Android.dll",
 		"Mono.Android.Runtime.dll",
 	};
