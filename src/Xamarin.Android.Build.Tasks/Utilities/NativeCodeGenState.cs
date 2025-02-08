@@ -35,6 +35,8 @@ class NativeCodeGenState
 	public TypeDefinitionCache TypeCache                       { get; }
 	public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
 
+	public ManagedMarshalMethodsLookupInfo? ManagedMarshalMethodsLookupInfo { get; set; }
+
 	public NativeCodeGenState (AndroidTargetArch arch, TypeDefinitionCache tdCache, XAAssemblyResolver resolver, List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW, MarshalMethodsClassifier? classifier)
 	{
 		TargetArch = arch;

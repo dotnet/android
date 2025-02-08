@@ -65,6 +65,7 @@ namespace Xamarin.Android.Build.Tests
 			public uint   jni_remapping_replacement_method_index_entry_count;
 			public uint   mono_components_mask;
 			public string android_package_name = String.Empty;
+			public bool   managed_marshal_methods_lookup_enabled;
 		}
 
 		const uint ApplicationConfigFieldCount = 26;
@@ -334,6 +335,11 @@ namespace Xamarin.Android.Build.Tests
 					case 25: // android_package_name: string / [pointer type]
 						Assert.IsTrue (expectedPointerTypes.Contains (field [0]), $"Unexpected pointer field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						pointers.Add (field [1].Trim ());
+						break;
+
+					case 26: // managed_marshal_methods_lookup_enabled: bool / .byte
+						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
+						ret.managed_marshal_methods_lookup_enabled = ConvertFieldToBool ("managed_marshal_methods_lookup_enabled", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 				}
 				fieldCount++;
