@@ -46,6 +46,7 @@ namespace Android.Runtime
 		internal static IntPtr grefIGCUserPeer_class;
 		internal static IntPtr grefGCUserPeerable_class;
 		internal static IntPtr java_class_loader;
+		internal static IntPtr applicationContext;
 
 		internal static JniRuntime? androidRuntime;
 
@@ -98,6 +99,7 @@ namespace Android.Runtime
 			jniRemappingInUse = args->jniRemappingInUse;
 			MarshalMethodsEnabled = args->marshalMethodsEnabled;
 			java_class_loader = args->grefLoader;
+			applicationContext = args->applicationContext;
 
 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
 			androidRuntime = new AndroidRuntime (args->env, args->javaVm, args->grefLoader, args->Loader_loadClass, args->jniAddNativeMethodRegistrationAttributePresent != 0);
@@ -119,7 +121,6 @@ namespace Android.Runtime
 			}
 
 			SetSynchronizationContext ();
-			Android.App.Application.ContextHandle = args->applicationContext;
 		}
 
 		// NOTE: prevents Android.App.Application static ctor from running

@@ -14,16 +14,14 @@ namespace Android.App {
 				if (_context != null)
 					return _context;
 
-				var lref = ContextHandle;
+				var lref = JNIEnvInit.applicationContext;
 				if (lref == IntPtr.Zero)
-					throw new InvalidOperationException ("Application.ContextHandle is not set!");
+					throw new InvalidOperationException ("JNIEnvInit.applicationContext is not set!");
 					
 				return _context = Java.Lang.Object.GetObject<Context> (lref, JniHandleOwnership.TransferLocalRef)!;
 			}
 			internal set => _context = value;
 		}
-
-		internal static IntPtr ContextHandle { get; set; }
 
 		static SyncContext? _sync;
 		public static SynchronizationContext SynchronizationContext {
