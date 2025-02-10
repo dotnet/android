@@ -101,6 +101,7 @@ namespace xamarin::android::internal
 			bool            jniRemappingInUse;
 			bool            marshalMethodsEnabled;
 			jobject         grefGCUserPeerable;
+			jobject         applicationContext;
 		};
 
 		using jnienv_initialize_fn = void (*) (JnienvInitializeArgs*);
@@ -119,7 +120,7 @@ namespace xamarin::android::internal
 		static void Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
 		                                             jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset,
 		                                             jobject loader, jobjectArray assembliesJava, jboolean isEmulator,
-		                                             jboolean haveSplitApks) noexcept;
+		                                             jboolean haveSplitApks, jobject context) noexcept;
 
 		static jint Java_JNI_OnLoad (JavaVM *vm, void *reserved) noexcept;
 
@@ -185,7 +186,7 @@ namespace xamarin::android::internal
 		static void set_debug_options () noexcept;
 		static void parse_gdb_options () noexcept;
 		static void mono_runtime_init (JNIEnv *env, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& runtime_args) noexcept;
-		static void init_android_runtime (JNIEnv *env, jclass runtimeClass, jobject loader) noexcept;
+		static void init_android_runtime (JNIEnv *env, jclass runtimeClass, jobject loader, jobject context) noexcept;
 		static void set_environment_variable_for_directory (const char *name, jstring_wrapper &value, bool createDirectory, mode_t mode) noexcept;
 
 		static void set_environment_variable_for_directory (const char *name, jstring_wrapper &value) noexcept
@@ -205,7 +206,7 @@ namespace xamarin::android::internal
 		static MonoDomain* create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wrapper &runtimeApks,
 		                                          jstring_array_wrapper &assemblies, jobjectArray assembliesBytes, jstring_array_wrapper &assembliesPaths,
 		                                          jobject loader, bool is_root_domain, bool force_preload_assemblies,
-		                                          bool have_split_apks) noexcept;
+		                                          bool have_split_apks, jobject context) noexcept;
 
 		static void gather_bundled_assemblies (jstring_array_wrapper &runtimeApks, size_t *out_user_assemblies_count, bool have_split_apks) noexcept;
 		static bool should_register_file (const char *filename);

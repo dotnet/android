@@ -816,7 +816,7 @@ MonodroidRuntime::monodroid_debugger_unhandled_exception (MonoException *ex)
 }
 
 void
-MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobject loader) noexcept
+MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobject loader, jobject context) noexcept
 {
 	constexpr std::string_view icall_typemap_java_to_managed { "Java.Interop.TypeManager::monodroid_typemap_java_to_managed" };
 	constexpr std::string_view icall_typemap_managed_to_java { "Android.Runtime.JNIEnv::monodroid_typemap_managed_to_java" };
@@ -849,6 +849,7 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 	init.jniAddNativeMethodRegistrationAttributePresent = application_config.jni_add_native_method_registration_attribute_present ? 1 : 0;
 	init.jniRemappingInUse = application_config.jni_remapping_replacement_type_count > 0 || application_config.jni_remapping_replacement_method_index_entry_count > 0;
 	init.marshalMethodsEnabled  = application_config.marshal_methods_enabled;
+	init.applicationContext     = context;
 
 	java_System = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_System", true);
 	java_System_identityHashCode = env->GetStaticMethodID (java_System, "identityHashCode", "(Ljava/lang/Object;)I");
@@ -1253,7 +1254,7 @@ MonoDomain*
 MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wrapper &runtimeApks,
                                                 jstring_array_wrapper &assemblies, [[maybe_unused]] jobjectArray assembliesBytes,
                                                 [[maybe_unused]] jstring_array_wrapper &assembliesPaths, jobject loader, bool is_root_domain,
-                                                bool force_preload_assemblies, bool have_split_apks) noexcept
+                                                bool force_preload_assemblies, bool have_split_apks, jobject context) noexcept
 {
 	MonoDomain* domain = create_domain (env, runtimeApks, is_root_domain, have_split_apks);
 	// Asserting this on desktop apparently breaks a Designer test
@@ -1275,7 +1276,7 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 	bool preload = (AndroidSystem::is_assembly_preload_enabled () || (is_running_on_desktop && force_preload_assemblies));
 
 	load_assemblies (default_alc, preload, assemblies);
-	init_android_runtime (env, runtimeClass, loader);
+	init_android_runtime (env, runtimeClass, loader, context);
 	osBridge.add_monodroid_domain (domain);
 
 	return domain;
@@ -1386,7 +1387,7 @@ inline void
 MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                                           jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset,
                                                           jobject loader, jobjectArray assembliesJava, jboolean isEmulator,
-                                                          jboolean haveSplitApks) noexcept
+                                                          jboolean haveSplitApks, jobject context) noexcept
 {
 	char *mono_log_mask_raw = nullptr;
 	char *mono_log_level_raw = nullptr;
@@ -1522,7 +1523,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	jstring_array_wrapper assemblies (env, assembliesJava);
 	jstring_array_wrapper assembliesPaths (env);
 	/* the first assembly is used to initialize the AppDomain name */
-	create_and_initialize_domain (env, klass, runtimeApks, assemblies, nullptr, assembliesPaths, loader, /*is_root_domain:*/ true, /*force_preload_assemblies:*/ false, haveSplitApks);
+	create_and_initialize_domain (env, klass, runtimeApks, assemblies, nullptr, assembliesPaths, loader, /*is_root_domain:*/ true, /*force_preload_assemblies:*/ false, haveSplitApks, context);
 
 	// Install our dummy exception handler on Desktop
 	if constexpr (is_running_on_desktop) {
@@ -1581,7 +1582,8 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 		loader,
 		assembliesJava,
 		/* isEmulator */ JNI_FALSE,
-		/* haveSplitApks */ JNI_FALSE
+		/* haveSplitApks */ JNI_FALSE,
+		/* context */ nullptr
 	);
 }
 
@@ -1589,7 +1591,7 @@ JNIEXPORT void JNICALL
 Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                 jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset, jobject loader,
                                 jobjectArray assembliesJava, jboolean isEmulator,
-                                jboolean haveSplitApks)
+                                jboolean haveSplitApks, jobject context)
 {
 	MonodroidRuntime::Java_mono_android_Runtime_initInternal (
 		env,
@@ -1602,7 +1604,8 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 		loader,
 		assembliesJava,
 		isEmulator,
-		application_config.ignore_split_configs ? false : haveSplitApks
+		application_config.ignore_split_configs ? false : haveSplitApks,
+		context
 	);
 }
 

@@ -25,7 +25,8 @@ public class Runtime {
 		ClassLoader loader,
 		String[] assemblies,
 		boolean isEmulator,
-		boolean haveSplitApks
+		boolean haveSplitApks,
+		android.content.Context context
 	);
 	public static native void register (String managedType, java.lang.Class nativeClass, String methods);
 	public static native void notifyTimeZoneChanged ();

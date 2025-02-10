@@ -14,16 +14,16 @@ namespace Android.App {
 				if (_context != null)
 					return _context;
 
-				IntPtr klass = JNIEnv.FindClass ("mono/MonoPackageManager");
-				try {
-					IntPtr field  = JNIEnv.GetStaticFieldID (klass, "Context", "Landroid/content/Context;");
-					IntPtr lref   = JNIEnv.GetStaticObjectField (klass, field);
-					return _context = Java.Lang.Object.GetObject<Context> (lref, JniHandleOwnership.TransferLocalRef)!;
-				} finally {
-					JNIEnv.DeleteGlobalRef (klass);
-				}
+				var lref = ContextHandle;
+				if (lref == IntPtr.Zero)
+					throw new InvalidOperationException ("Application.ContextHandle is not set!");
+					
+				return _context = Java.Lang.Object.GetObject<Context> (lref, JniHandleOwnership.TransferLocalRef)!;
 			}
+			internal set => _context = value;
 		}
+
+		internal static IntPtr ContextHandle { get; set; }
 
 		static SyncContext? _sync;
 		public static SynchronizationContext SynchronizationContext {

@@ -32,6 +32,7 @@ namespace Android.Runtime
 			public bool            jniRemappingInUse;
 			public bool            marshalMethodsEnabled;
 			public IntPtr          grefGCUserPeerable;
+			public IntPtr          applicationContext;
 		}
 #pragma warning restore 0649
 
@@ -92,6 +93,7 @@ namespace Android.Runtime
 
 			Logger.SetLogCategories ((LogCategories)args->logCategories);
 
+			Android.App.Application.ContextHandle = args->applicationContext;
 			gref_gc_threshold = args->grefGcThreshold;
 
 			jniRemappingInUse = args->jniRemappingInUse;
