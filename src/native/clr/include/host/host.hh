@@ -18,7 +18,6 @@ namespace xamarin::android {
 		jobject         grefLoader;
 		jmethodID       Loader_loadClass;
 		jclass          grefClass;
-		jmethodID       Class_forName;
 		unsigned int    logCategories;
 		int             version;
 		int             grefGcThreshold;
