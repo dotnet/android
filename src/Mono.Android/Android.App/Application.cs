@@ -14,11 +14,11 @@ namespace Android.App {
 				if (_context != null)
 					return _context;
 
-				var lref = JNIEnvInit.applicationContext;
-				if (lref == IntPtr.Zero)
+				var gref = JNIEnvInit.applicationContext;
+				if (gref == IntPtr.Zero)
 					throw new InvalidOperationException ("JNIEnvInit.applicationContext is not set!");
 					
-				return _context = Java.Lang.Object.GetObject<Context> (lref, JniHandleOwnership.TransferLocalRef)!;
+				return _context = Java.Lang.Object.GetObject<Context> (gref, JniHandleOwnership.TransferGlobalRef)!;
 			}
 		}
 

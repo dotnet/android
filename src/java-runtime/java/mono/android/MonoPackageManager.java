@@ -24,8 +24,6 @@ public class MonoPackageManager {
 	static Object lock = new Object ();
 	static boolean initialized;
 
-	static android.content.Context Context;
-
 	public static void LoadApplication (Context context)
 	{
 		synchronized (lock) {
@@ -40,9 +38,6 @@ public class MonoPackageManager {
 				apks = new String[] { runtimePackage.sourceDir };
 			}
 
-			if (context instanceof android.app.Application) {
-				Context = context;
-			}
 			if (!initialized) {
 				android.content.IntentFilter timezoneChangedFilter  = new android.content.IntentFilter (
 						android.content.Intent.ACTION_TIMEZONE_CHANGED
@@ -127,7 +122,7 @@ public class MonoPackageManager {
 						MonoPackageManager_Resources.Assemblies,
 						isEmulator (),
 						haveSplitApks,
-						Context
+						context
 					);
 
 				net.dot.android.ApplicationRegistration.registerApplications ();

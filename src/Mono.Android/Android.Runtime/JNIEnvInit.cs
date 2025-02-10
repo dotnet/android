@@ -99,7 +99,6 @@ namespace Android.Runtime
 			jniRemappingInUse = args->jniRemappingInUse;
 			MarshalMethodsEnabled = args->marshalMethodsEnabled;
 			java_class_loader = args->grefLoader;
-			applicationContext = args->applicationContext;
 
 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
 			androidRuntime = new AndroidRuntime (args->env, args->javaVm, args->grefLoader, args->Loader_loadClass, args->jniAddNativeMethodRegistrationAttributePresent != 0);
@@ -120,6 +119,7 @@ namespace Android.Runtime
 				}
 			}
 
+			applicationContext = JNIEnv.NewGlobalRef (args->applicationContext);
 			SetSynchronizationContext ();
 		}
 
