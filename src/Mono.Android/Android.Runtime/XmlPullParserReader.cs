@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 
+using Java.Interop;
+
 using Android.Content.Res;
 using Android.Runtime;
 using Org.XmlPull.V1;
@@ -34,12 +36,24 @@ namespace Android.Runtime
 		{
 			if (handle == IntPtr.Zero)
 				return null;
-			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
-			if (inst == null)
-				inst = (IJavaObject) Java.Interop.TypeManager.CreateInstance (handle, transfer);
-			else
+			var peeked = Java.Lang.Object.PeekObject (handle);
+			if (peeked == null) {
+				peeked = Java.Interop.TypeManager.CreateInstance (handle, transfer);
+			} else {
 				JNIEnv.DeleteRef (handle, transfer);
-			return new XmlResourceParserReader (inst.JavaCast<Android.Content.Res.IXmlResourceParser> ()!);
+			}
+			try {
+				return new XmlResourceParserReader (((IJavaObject) peeked).JavaCast<Android.Content.Res.IXmlResourceParser> ()!);
+			}
+			catch (global::System.Exception e) {
+				var javaType = global::Java.Interop.JniEnvironment.Types.GetJniTypeNameFromInstance (new JniObjectReference(handle));
+				var mappedType = global::Java.Interop.JniEnvironment.Runtime.TypeManager.GetType (new JniTypeSignature (javaType));
+				throw new InvalidOperationException (
+					$"Failed to convert instance of type '{peeked.GetType ()}' to type 'IJavaObject'. " +
+					$"Java type: `{javaType}` <=> `{mappedType.AssemblyQualifiedName}`",
+					e
+				);
+			}
 		}
 	}
 	
