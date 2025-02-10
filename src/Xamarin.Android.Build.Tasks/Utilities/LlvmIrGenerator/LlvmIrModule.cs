@@ -273,14 +273,15 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				ret = new LlvmIrStringVariable (name, new StringHolder ((string?)value)) {
 					Comment = comment,
 				};
+				AddStringGlobalVariable ((LlvmIrStringVariable)ret);
 			} else {
 				ret = new LlvmIrGlobalVariable (type, name, options) {
 					Value = value,
 					Comment = comment,
 				};
+				Add (ret);
 			}
 
-			Add (ret);
 			return ret;
 		}
 
@@ -401,19 +402,29 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			globalVariables.Add (variable);
 		}
 
+		void EnsureStringManager ()
+		{
+			if (stringManager == null) {
+				stringManager = new LlvmIrStringManager (log);
+			}
+		}
+
 		void AddStringGlobalVariable (LlvmIrStringVariable variable, string? stringGroupName = null, string? stringGroupComment = null, string? symbolSuffix = null)
 		{
-			RegisterString ((string)variable.Value, stringGroupName, stringGroupComment, symbolSuffix, variable.Encoding);
+			RegisterString (variable, stringGroupName, stringGroupComment, symbolSuffix);
 			AddStandardGlobalVariable (variable);
+		}
+
+		public void RegisterString (LlvmIrStringVariable variable, string? stringGroupName = null, string? stringGroupComment = null, string? symbolSuffix = null)
+		{
+			EnsureStringManager ();
+			stringManager.Add (variable, stringGroupName, stringGroupComment, symbolSuffix);
 		}
 
 		public void RegisterString (string value, string? stringGroupName = null, string? stringGroupComment = null, string? symbolSuffix = null,
 			LlvmIrStringEncoding encoding = LlvmIrStringEncoding.UTF8, StringComparison comparison = StringComparison.Ordinal)
 		{
-			if (stringManager == null) {
-				stringManager = new LlvmIrStringManager (log);
-			}
-
+			EnsureStringManager ();
 			stringManager.Add (value, stringGroupName, stringGroupComment, symbolSuffix, encoding, comparison);
 		}
 
