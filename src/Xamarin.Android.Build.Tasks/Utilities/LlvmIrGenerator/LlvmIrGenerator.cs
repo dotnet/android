@@ -326,11 +326,20 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				throw new InvalidOperationException ($"Internal error: variable '{variable.Name}'' of type {variable.Type} must not have a null value");
 			}
 
-			if (valueType != variable.Type && !LlvmIrModule.NameValueArrayType.IsAssignableFrom (variable.Type)) {
+			if (!IsValueAssignableFrom (valueType, variable) && !IsValueAssignableFrom (LlvmIrModule.NameValueArrayType, variable)) {
 				throw new InvalidOperationException ($"Internal error: variable type '{variable.Type}' is different to its value type, '{valueType}'");
 			}
 
 			WriteValue (context, valueType, variable);
+		}
+
+		bool IsValueAssignableFrom (Type valueType, LlvmIrVariable variable)
+		{
+			if (valueType != typeof(string) && valueType != typeof(StringHolder)) {
+				return valueType.IsAssignableFrom (variable.Type);
+			}
+
+			return variable.Type == typeof(string) || variable.Type == typeof(StringHolder);
 		}
 
 		ulong GetAggregateValueElementCount (GeneratorWriteContext context, LlvmIrVariable variable) => GetAggregateValueElementCount (context, variable.Type, variable.Value, variable as LlvmIrGlobalVariable);
@@ -717,7 +726,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return;
 			}
 
-			if (type == typeof(string)) {
+			if (type == typeof(string) || type == typeof(StringHolder)) {
 				if (value == null) {
 					context.Output.Write ("null");
 					return;
