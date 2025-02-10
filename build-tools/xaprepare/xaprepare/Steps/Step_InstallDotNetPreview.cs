@@ -21,7 +21,8 @@ namespace Xamarin.Android.Prepare
 			var dotnetPath = Configurables.Paths.DotNetPreviewPath;
 			dotnetPath = dotnetPath.TrimEnd (new char [] { Path.DirectorySeparatorChar });
 
-			if (!await InstallDotNetAsync (context, dotnetPath, BuildToolVersion)) {
+			if (!await InstallDotNetAsync (context, dotnetPath, BuildToolVersion, useCachedInstallScript: true) &&
+					!await InstallDotNetAsync (context, dotnetPath, BuildToolVersion, useCachedInstallScript: false)) {
 				Log.ErrorLine ($"Installation of dotnet SDK '{BuildToolVersion}' failed.");
 				return false;
 			}
@@ -77,17 +78,18 @@ namespace Xamarin.Android.Prepare
 			return true;
 		}
 
-		async Task<bool> DownloadDotNetInstallScript (Context context, string dotnetScriptPath, Uri dotnetScriptUrl)
+		async Task<bool> DownloadDotNetInstallScript (Context context, string dotnetScriptPath, Uri dotnetScriptUrl, bool useCachedInstallScript)
 		{
 			string tempDotnetScriptPath = dotnetScriptPath + "-tmp";
 			Utilities.DeleteFile (tempDotnetScriptPath);
 
 			Log.StatusLine ("Downloading dotnet-install script...");
 
-			if (File.Exists (dotnetScriptPath)) {
+			if (useCachedInstallScript && File.Exists (dotnetScriptPath)) {
 				Log.WarningLine ($"Using cached installation script found in '{dotnetScriptPath}'");
 				return true;
 			}
+			Utilities.DeleteFile (dotnetScriptPath);
 
 			Log.StatusLine ($"  {context.Characters.Link} {dotnetScriptUrl}", ConsoleColor.White);
 			await Utilities.Download (dotnetScriptUrl, tempDotnetScriptPath, DownloadStatus.Empty);
@@ -173,7 +175,7 @@ namespace Xamarin.Android.Prepare
 			return args.ToArray ();
 		}
 
-		async Task<bool> InstallDotNetAsync (Context context, string dotnetPath, string version, bool runtimeOnly = false)
+		async Task<bool> InstallDotNetAsync (Context context, string dotnetPath, string version, bool useCachedInstallScript, bool runtimeOnly = false)
 		{
 			string cacheDir = context.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory);
 
@@ -183,7 +185,7 @@ namespace Xamarin.Android.Prepare
 			Uri dotnetScriptUrl = Configurables.Urls.DotNetInstallScript;
 			string scriptFileName = Path.GetFileName (dotnetScriptUrl.LocalPath);
 			string cachedDotnetScriptPath = Path.Combine (cacheDir, scriptFileName);
-			if (!await DownloadDotNetInstallScript (context, cachedDotnetScriptPath, dotnetScriptUrl)) {
+			if (!await DownloadDotNetInstallScript (context, cachedDotnetScriptPath, dotnetScriptUrl, useCachedInstallScript)) {
 				return false;
 			}
 

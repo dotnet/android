@@ -860,7 +860,6 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 
 	init.grefClass = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_Class", true);
 	Class_getName  = env->GetMethodID (init.grefClass, "getName", "()Ljava/lang/String;");
-	init.Class_forName = env->GetStaticMethodID (init.grefClass, "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;");
 
 	MonoAssembly *mono_android_assembly;
 

@@ -20,7 +20,6 @@ namespace Android.Runtime
 			public IntPtr          grefLoader;
 			public IntPtr          Loader_loadClass;
 			public IntPtr          grefClass; // TODO: remove, not needed anymore
-			public IntPtr          Class_forName;
 			public uint            logCategories;
 			public int             version; // TODO: remove, not needed anymore
 			public int             grefGcThreshold;
@@ -46,7 +45,6 @@ namespace Android.Runtime
 		internal static IntPtr grefIGCUserPeer_class;
 		internal static IntPtr grefGCUserPeerable_class;
 		internal static IntPtr java_class_loader;
-		internal static JniMethodInfo? mid_Class_forName;
 
 		internal static JniRuntime? androidRuntime;
 
@@ -99,8 +97,6 @@ namespace Android.Runtime
 			jniRemappingInUse = args->jniRemappingInUse;
 			MarshalMethodsEnabled = args->marshalMethodsEnabled;
 			java_class_loader = args->grefLoader;
-
-			mid_Class_forName = new JniMethodInfo (args->Class_forName, isStatic: true);
 
 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
 			androidRuntime = new AndroidRuntime (args->env, args->javaVm, args->grefLoader, args->Loader_loadClass, args->jniAddNativeMethodRegistrationAttributePresent != 0);
