@@ -26,6 +26,12 @@ partial class LlvmIrModule
 			stringGroups.Add (defaultGroup);
 		}
 
+		public LlvmIrStringVariable Add (LlvmIrStringVariable variable, string? groupName = null, string? groupComment = null, string? symbolSuffix = null)
+		{
+			// Let it throw if Value isn't a StringHolder, it must be.
+			return Add((StringHolder)variable.Value, groupName, groupComment, symbolSuffix);
+		}
+
 		public LlvmIrStringVariable Add (string value, string? groupName = null, string? groupComment = null, string? symbolSuffix = null,
 			LlvmIrStringEncoding encoding = LlvmIrStringEncoding.UTF8, StringComparison comparison = StringComparison.Ordinal)
 		{
@@ -33,7 +39,11 @@ partial class LlvmIrModule
 				throw new ArgumentNullException (nameof (value));
 			}
 
-			var holder = new StringHolder (value, encoding, comparison);
+			return Add (new StringHolder (value, encoding, comparison), groupName, groupComment, symbolSuffix);
+		}
+
+		LlvmIrStringVariable Add (StringHolder holder, string? groupName = null, string? groupComment = null, string? symbolSuffix = null)
+		{
 			if (stringSymbolCache.TryGetValue (holder, out LlvmIrStringVariable? stringVar) && stringVar != null) {
 				return stringVar;
 			}
