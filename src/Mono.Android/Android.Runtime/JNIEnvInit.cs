@@ -93,7 +93,6 @@ namespace Android.Runtime
 
 			Logger.SetLogCategories ((LogCategories)args->logCategories);
 
-			Android.App.Application.ContextHandle = args->applicationContext;
 			gref_gc_threshold = args->grefGcThreshold;
 
 			jniRemappingInUse = args->jniRemappingInUse;
@@ -120,6 +119,7 @@ namespace Android.Runtime
 			}
 
 			SetSynchronizationContext ();
+			Android.App.Application.ContextHandle = args->applicationContext;
 		}
 
 		// NOTE: prevents Android.App.Application static ctor from running
