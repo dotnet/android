@@ -234,10 +234,10 @@ namespace Xamarin.Android.Tasks
 
 			// Because these types are marshaled as different blittable types,
 			// we need to accept them as equivalent
-			static readonly Tuple<string, string>[] equivalent_types = new [] {
-				Tuple.Create ("System.Boolean", "System.SByte"),
-				Tuple.Create ("System.Char", "System.UInt16"),
-			};
+			static readonly (string Source, string Replacement)[] equivalent_types = [
+				(Source: "System.Boolean", Replacement: "System.SByte"),
+				(Source: "System.Char", Replacement: "System.UInt16"),
+			];
 
 			static bool TypeMatches (string type, string methodType)
 			{
@@ -245,10 +245,10 @@ namespace Xamarin.Android.Tasks
 					return true;
 
 				foreach (var eq in equivalent_types) {
-					if (string.Compare (eq.Item1, type, StringComparison.Ordinal) == 0 && string.Compare (eq.Item2, methodType, StringComparison.Ordinal) == 0)
+					if (string.Compare (eq.Source, type, StringComparison.Ordinal) == 0 && string.Compare (eq.Replacement, methodType, StringComparison.Ordinal) == 0)
 						return true;
 
-					if (string.Compare (eq.Item1, methodType, StringComparison.Ordinal) == 0 && string.Compare (eq.Item2, type, StringComparison.Ordinal) == 0)
+					if (string.Compare (eq.Source, methodType, StringComparison.Ordinal) == 0 && string.Compare (eq.Replacement, type, StringComparison.Ordinal) == 0)
 						return true;
 				}
 
