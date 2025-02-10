@@ -6,6 +6,7 @@
       "packs": [
         "Microsoft.Android.Sdk.net10",
         "Microsoft.Android.Sdk.net9",
+        "Microsoft.Android.Sdk.net8",
         "Microsoft.Android.Ref.35",
         "Microsoft.Android.Runtime.Mono.35.android-arm",
         "Microsoft.Android.Runtime.Mono.35.android-arm64",
