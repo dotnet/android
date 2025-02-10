@@ -267,10 +267,19 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		/// </summary>
 		public LlvmIrGlobalVariable AddGlobalVariable (Type type, string name, object? value, LlvmIrVariableOptions? options = null, string? comment = null)
 		{
-			var ret = new LlvmIrGlobalVariable (type, name, options) {
-				Value = value,
-				Comment = comment,
-			};
+			LlvmIrGlobalVariable ret;
+			if (type == typeof(string)) {
+				// The cast to `string?` is intentionally meant to throw if `value` type isn't a string.
+				ret = new LlvmIrStringVariable (name, new StringHolder ((string?)value)) {
+					Comment = comment,
+				};
+			} else {
+				ret = new LlvmIrGlobalVariable (type, name, options) {
+					Value = value,
+					Comment = comment,
+				};
+			}
+
 			Add (ret);
 			return ret;
 		}
