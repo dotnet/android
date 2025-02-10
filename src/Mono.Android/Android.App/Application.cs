@@ -20,7 +20,6 @@ namespace Android.App {
 					
 				return _context = Java.Lang.Object.GetObject<Context> (lref, JniHandleOwnership.TransferLocalRef)!;
 			}
-			internal set => _context = value;
 		}
 
 		static SyncContext? _sync;
