@@ -205,7 +205,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 						WriteCommentLine (context, $" '{info.Value}'");
 					}
 
-					WriteGlobalVariableStart (context, info);
+					WriteGlobalVariableName (context, info);
+
+					// Strings must always be local symbols, global variables will point to them
+					WriteVariableOptions (context, LlvmIrVariableOptions.LocalString);
 					context.Output.Write ('[');
 					context.Output.Write (size.ToString (CultureInfo.InvariantCulture));
 					context.Output.Write ($" x {info.IrType}] ");
@@ -253,7 +256,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 		}
 
-		void WriteGlobalVariableStart (GeneratorWriteContext context, LlvmIrGlobalVariable variable)
+		void WriteGlobalVariableName (GeneratorWriteContext context, LlvmIrGlobalVariable variable)
 		{
 			if (!String.IsNullOrEmpty (variable.Comment)) {
 				WriteCommentLine (context, variable.Comment);
@@ -261,13 +264,27 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			context.Output.Write ('@');
 			context.Output.Write (variable.Name);
 			context.Output.Write (" = ");
+		}
 
-			LlvmIrVariableOptions options = variable.Options ?? LlvmIrGlobalVariable.DefaultOptions;
+		void WriteVariableOptions (GeneratorWriteContext context, LlvmIrVariableOptions options)
+		{
 			WriteLinkage (context, options.Linkage);
 			WritePreemptionSpecifier (context, options.RuntimePreemption);
 			WriteVisibility (context, options.Visibility);
 			WriteAddressSignificance (context, options.AddressSignificance);
 			WriteWritability (context, options.Writability);
+		}
+
+		void WriteVariableOptions (GeneratorWriteContext context, LlvmIrGlobalVariable variable, LlvmIrVariableOptions? defaultOptions = null)
+		{
+			LlvmIrVariableOptions options = variable.Options ?? defaultOptions ?? LlvmIrGlobalVariable.DefaultOptions;
+			WriteVariableOptions (context, options);
+		}
+
+		void WriteGlobalVariableStart (GeneratorWriteContext context, LlvmIrGlobalVariable variable)
+		{
+			WriteGlobalVariableName (context, variable);
+			WriteVariableOptions (context, variable, LlvmIrGlobalVariable.DefaultOptions);
 		}
 
 		void WriteGlobalVariable (GeneratorWriteContext context, LlvmIrGlobalVariable variable)
