@@ -179,54 +179,6 @@ namespace Xamarin.Android.Tasks
 			return Path.Combine (toolsDir, "lib", $"host-{uname.Value}");
 		}
 
-#if MSBUILD
-		public static void RefreshAndroidSdk (string sdkPath, string ndkPath, string javaPath, TaskLoggingHelper logHelper = null)
-		{
-			Action<TraceLevel, string> logger = (level, value) => {
-				var log = logHelper;
-				switch (level) {
-				case TraceLevel.Error:
-					if (log == null)
-						Console.Error.Write (value);
-					else
-						log.LogCodedError ("XA5300", "{0}", value);
-					break;
-				case TraceLevel.Warning:
-					if (log == null)
-						Console.WriteLine (value);
-					else
-						log.LogCodedWarning ("XA5300", "{0}", value);
-					break;
-				default:
-					if (log == null)
-						Console.WriteLine (value);
-					else
-						log.LogDebugMessage ("{0}", value);
-					break;
-				}
-			};
-			AndroidSdk  = new AndroidSdkInfo (logger, sdkPath, ndkPath, javaPath);
-		}
-
-		public static void RefreshSupportedVersions (string[] referenceAssemblyPaths)
-		{
-			SupportedVersions   = new AndroidVersions (referenceAssemblyPaths);
-		}
-#endif  // MSBUILD
-
-		public static JdkInfo GetJdkInfo (Action<TraceLevel, string> logger, string javaSdkPath, Version minSupportedVersion, Version maxSupportedVersion)
-		{
-			JdkInfo info = null;
-			try {
-				info = new JdkInfo (javaSdkPath, logger:logger);
-			} catch {
-				info = JdkInfo.GetKnownSystemJdkInfos (logger)
-					.Where (jdk => jdk.Version >= minSupportedVersion && jdk.Version <= maxSupportedVersion)
-					.FirstOrDefault ();
-			}
-			return info;
-		}
-
 		class SizeAndContentFileComparer : IEqualityComparer<FileInfo>
 #if MSBUILD
 			, IEqualityComparer<ITaskItem>
@@ -511,29 +463,6 @@ namespace Xamarin.Android.Tasks
 				// On the other hand, xbuild has a bug and fails to parse '=' in the value, so we skip JAVA_TOOL_OPTIONS on Mono runtime.
 				new string [] { proguardHomeVariable, "JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8" };
 		}
-
-		public static string GetExecutablePath (string dir, string exe)
-		{
-			if (string.IsNullOrEmpty (dir))
-				return exe;
-			foreach (var e in Executables (exe))
-				if (File.Exists (Path.Combine (dir, e)))
-					return e;
-			return exe;
-		}
-
-		public static IEnumerable<string> Executables (string executable)
-		{
-			var pathExt = Environment.GetEnvironmentVariable ("PATHEXT");
-			var pathExts = pathExt?.Split (new char [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
-
-			if (pathExts != null) {
-				foreach (var ext in pathExts)
-					yield return Path.ChangeExtension (executable, ext);
-			}
-			yield return executable;
-		}
-
 
 #if MSBUILD
 		public static string TryGetAndroidJarPath (TaskLoggingHelper log, string platform, bool designTimeBuild = false, bool buildingInsideVisualStudio = false, string targetFramework = "", string androidSdkDirectory = "")
