@@ -1283,8 +1283,6 @@ namespace UnnamedProject
 			proj.SetProperty ("UseInterpreter", "true");
 			proj.SetProperty ("AndroidPackageNamingPolicy", "LowercaseMD5");
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
-
-			proj.SetProperty ("AndroidManifest", "DoesNotExist");
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (proj), "Build should have failed.");

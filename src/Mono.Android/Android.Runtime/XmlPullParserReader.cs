@@ -36,6 +36,7 @@ namespace Android.Runtime
 		{
 			if (handle == IntPtr.Zero)
 				return null;
+			var javaType = global::Java.Interop.JniEnvironment.Types.GetJniTypeNameFromInstance (new JniObjectReference(handle));
 			var peeked = Java.Lang.Object.PeekObject (handle);
 			if (peeked == null) {
 				peeked = Java.Interop.TypeManager.CreateInstance (handle, transfer);
@@ -46,7 +47,6 @@ namespace Android.Runtime
 				return new XmlResourceParserReader (((IJavaObject) peeked).JavaCast<Android.Content.Res.IXmlResourceParser> ()!);
 			}
 			catch (global::System.Exception e) {
-				var javaType = global::Java.Interop.JniEnvironment.Types.GetJniTypeNameFromInstance (new JniObjectReference(handle));
 				var mappedType = global::Java.Interop.JniEnvironment.Runtime.TypeManager.GetType (new JniTypeSignature (javaType));
 				throw new InvalidOperationException (
 					$"Failed to convert instance of type '{peeked.GetType ()}' to type 'IJavaObject'. " +
