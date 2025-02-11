@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-
+using System.Linq;
 using Java.Interop.Tools.Cecil;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -38,11 +38,15 @@ class XAJavaTypeScanner
 	public List<TypeDefinition> GetJavaTypes (ICollection<ITaskItem> inputAssemblies, XAAssemblyResolver resolver)
 	{
 		var types = new List<TypeDefinition> ();
-		foreach (ITaskItem asmItem in inputAssemblies) {
-			if (!ShouldScan (asmItem)) {
-				log.LogDebugMessage ($"[{targetArch}] Skipping Java type scanning in assembly '{asmItem.ItemSpec}'");
-				continue;
-			}
+		var inputItems  = inputAssemblies
+			.Where (a => ShouldScan (a))
+			.ToList ();
+		var monoAndroid = inputItems.FirstOrDefault (a => Path.GetFileName (a.ItemSpec) == "Mono.Android.dll");
+		if (monoAndroid != null) {
+			inputItems.Remove (monoAndroid);
+			inputItems.Insert (0, monoAndroid);
+		}
+		foreach (ITaskItem asmItem in inputItems) {
 			log.LogDebugMessage ($"[{targetArch}] Scanning assembly '{asmItem.ItemSpec}' for Java types");
 
 			AndroidTargetArch arch = MonoAndroidHelper.GetTargetArch (asmItem);
