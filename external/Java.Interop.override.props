@@ -1,8 +1,6 @@
 <Project>
 
   <PropertyGroup>
-    <!-- NU1510 warning as error -->
-    <RestoreEnablePackagePruning>true</RestoreEnablePackagePruning>
     <XamarinAndroidToolsDirectory>$(MSBuildThisFileDirectory)xamarin-android-tools</XamarinAndroidToolsDirectory>
     <Standalone>True</Standalone>
     <RestoreAdditionalProjectSources>
