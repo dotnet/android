@@ -35,7 +35,7 @@ static class JavaInteropRuntime
 	{
 		try {
 			var typeManager = new NativeAotTypeManager ();
-			var options = new JreRuntimeOptions {
+			var options = new NativeAotRuntimeOptions {
 				EnvironmentPointer          = jnienv,
 				TypeManager                 = typeManager,
 				ValueManager                = new NativeAotValueManager (typeManager),
