@@ -203,6 +203,8 @@ namespace Xamarin.Android.Tasks
 
 		protected override void Construct (LlvmIrModule module)
 		{
+			module.DefaultStringGroup = "env";
+
 			MapStructures (module);
 
 			module.AddGlobalVariable ("format_tag", FORMAT_TAG, comment: $" 0x{FORMAT_TAG:x}");
@@ -211,7 +213,7 @@ namespace Xamarin.Android.Tasks
 			var envVars = new LlvmIrGlobalVariable (environmentVariables, "app_environment_variables") {
 				Comment = " Application environment variables array, name:value",
 			};
-			module.Add (envVars, stringGroupName: "env", stringGroupComment: " Application environment variables name:value pairs");
+			module.Add (envVars, stringGroupName: "env.var", stringGroupComment: " Application environment variables name:value pairs");
 
 			var sysProps = new LlvmIrGlobalVariable (systemProperties, "app_system_properties") {
 				Comment = " System properties defined by the application",

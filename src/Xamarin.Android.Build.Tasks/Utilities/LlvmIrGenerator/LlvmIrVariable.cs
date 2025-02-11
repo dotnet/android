@@ -301,8 +301,8 @@ class LlvmIrStringVariable : LlvmIrGlobalVariable
 	public string IrType { get; }
 	public bool IsConstantStringLiteral { get; }
 
-	public LlvmIrStringVariable (string name, StringHolder value)
-		: base (typeof(string), name, LlvmIrVariableOptions.LocalString)
+	public LlvmIrStringVariable (string name, StringHolder value, LlvmIrVariableOptions? options = null)
+		: base (typeof(string), name, options ?? LlvmIrVariableOptions.GlobalConstexprString)
 	{
 		Value = value;
 		Encoding = value.Encoding;
@@ -322,8 +322,8 @@ class LlvmIrStringVariable : LlvmIrGlobalVariable
 		}
 	}
 
-	public LlvmIrStringVariable (string name, string value, LlvmIrStringEncoding encoding, StringComparison comparison = StringComparison.Ordinal)
-		: this (name, new StringHolder (value, encoding, comparison))
+	public LlvmIrStringVariable (string name, string value, LlvmIrStringEncoding encoding, StringComparison comparison = StringComparison.Ordinal, LlvmIrVariableOptions? options = null)
+		: this (name, new StringHolder (value, encoding, comparison), options)
 	{}
 }
 

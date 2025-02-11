@@ -129,6 +129,8 @@ namespace Xamarin.Android.Tasks
 
 		protected override void Construct (LlvmIrModule module)
 		{
+			module.DefaultStringGroup = "tmd";
+
 			MapStructures (module);
 
 			if (data.ManagedToJavaMap != null && data.ManagedToJavaMap.Count > 0) {
