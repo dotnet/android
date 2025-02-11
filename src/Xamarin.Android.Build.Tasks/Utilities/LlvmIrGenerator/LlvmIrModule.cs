@@ -49,6 +49,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		public readonly LlvmIrTypeCache TypeCache;
 
+		public string? DefaultStringGroup { get; set; }
+
 		public LlvmIrModule (LlvmIrTypeCache cache, TaskLoggingHelper log)
 		{
 			this.log = log;
@@ -405,7 +407,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		void EnsureStringManager ()
 		{
 			if (stringManager == null) {
-				stringManager = new LlvmIrStringManager (log);
+				stringManager = new LlvmIrStringManager (log, DefaultStringGroup);
 			}
 		}
 
