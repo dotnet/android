@@ -68,13 +68,15 @@ public class TypeMappingStep : BaseStep
 		var getTypeFromHandle = module.ImportReference (typeof (Type).GetMethod ("GetTypeFromHandle"));
 		foreach (var (javaKey, typeDefinition) in TypeMappings) {
 			/*
-			 * IL_0000: ldsfld class [System.Runtime]System.Collections.Generic.IDictionary`2<string, class [System.Runtime]System.Type> Microsoft.Android.Runtime.NativeAotTypeManager::TypeMappings
-			 * IL_0005: ldstr "android/app/Activity"
-			 * IL_000a: ldtoken [Mono.Android]Android.App.Activity
-			 * IL_000f: call class [System.Runtime]System.Type [System.Runtime]System.Type::GetTypeFromHandle(valuetype [System.Runtime]System.RuntimeTypeHandle)
-			 * IL_0014: callvirt instance void class [System.Runtime]System.Collections.Generic.IDictionary`2<string, class [System.Runtime]System.Type>::Add(!0, !1)
+			 * IL_0000: ldarg.0
+			 * IL_0001: ldfld class [System.Runtime]System.Collections.Generic.IDictionary`2<string, class [System.Runtime]System.Type> Microsoft.Android.Runtime.NativeAotTypeManager::TypeMappings
+			 * IL_0006: ldstr "java/lang/Object"
+			 * IL_000b: ldtoken [Mono.Android]Java.Lang.Object
+			 * IL_0010: call class [System.Runtime]System.Type [System.Runtime]System.Type::GetTypeFromHandle(valuetype [System.Runtime]System.RuntimeTypeHandle)
+			 * IL_0015: callvirt instance void class [System.Runtime]System.Collections.Generic.IDictionary`2<string, class [System.Runtime]System.Type>::Add(!0, !1)
 			 */
-			il.Emit (Mono.Cecil.Cil.OpCodes.Ldsfld, field);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_0);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldfld, field);
 			il.Emit (Mono.Cecil.Cil.OpCodes.Ldstr, javaKey);
 			il.Emit (Mono.Cecil.Cil.OpCodes.Ldtoken, module.ImportReference (typeDefinition));
 			il.Emit (Mono.Cecil.Cil.OpCodes.Call, getTypeFromHandle);
