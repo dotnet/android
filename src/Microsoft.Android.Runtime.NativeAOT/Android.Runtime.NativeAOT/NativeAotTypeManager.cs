@@ -11,7 +11,7 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 	internal const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 	internal const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
 
-	static readonly IDictionary<string, Type> TypeMappings = new Dictionary<string, Type> (StringComparer.Ordinal);
+	readonly IDictionary<string, Type> TypeMappings = new Dictionary<string, Type> (StringComparer.Ordinal);
 
 	public NativeAotTypeManager ()
 	{
