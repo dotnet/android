@@ -23,6 +23,8 @@
     <!-- Causes issues with linker files imported from Mono -->
     <NoWarn>$(NoWarn);CA1310;CA1305</NoWarn>
     <WarningsAsErrors>Nullable</WarningsAsErrors>
+     <!-- NU1510 warning as error -->
+    <RestoreEnablePackagePruning>true</RestoreEnablePackagePruning>
   </PropertyGroup>
 
   <ItemGroup>
