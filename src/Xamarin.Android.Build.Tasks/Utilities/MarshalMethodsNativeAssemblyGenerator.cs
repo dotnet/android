@@ -592,6 +592,8 @@ namespace Xamarin.Android.Tasks
 
 		protected override void Construct (LlvmIrModule module)
 		{
+			module.DefaultStringGroup = "mm";
+
 			MapStructures (module);
 
 			Init ();

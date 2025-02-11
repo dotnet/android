@@ -9,6 +9,8 @@ partial class LlvmIrModule
 {
 	protected class LlvmIrStringManager
 	{
+		readonly string defaultGroupName = "str";
+
 		Dictionary<StringHolder, LlvmIrStringVariable> stringSymbolCache = new Dictionary<StringHolder, LlvmIrStringVariable> ();
 		Dictionary<string, LlvmIrStringGroup> stringGroupCache = new Dictionary<string, LlvmIrStringGroup> (StringComparer.Ordinal);
 		List<LlvmIrStringGroup> stringGroups = new List<LlvmIrStringGroup> ();
@@ -18,9 +20,13 @@ partial class LlvmIrModule
 
 		public List<LlvmIrStringGroup> StringGroups => stringGroups;
 
-		public LlvmIrStringManager (TaskLoggingHelper log)
+		public LlvmIrStringManager (TaskLoggingHelper log, string? defaultStringGroup = null)
 		{
 			this.log = log;
+			if (!String.IsNullOrEmpty (defaultStringGroup)) {
+				defaultGroupName = defaultStringGroup;
+			}
+
 			defaultGroup = new LlvmIrStringGroup ();
 			stringGroupCache.Add (String.Empty, defaultGroup);
 			stringGroups.Add (defaultGroup);
@@ -52,7 +58,7 @@ partial class LlvmIrModule
 			string groupPrefix;
 			if (String.IsNullOrEmpty (groupName) || String.Compare ("str", groupName, StringComparison.Ordinal) == 0) {
 				group = defaultGroup;
-				groupPrefix = ".str";
+				groupPrefix = $".{defaultGroupName}";
 			} else if (!stringGroupCache.TryGetValue (groupName, out group) || group == null) {
 				group = new LlvmIrStringGroup (groupComment ?? groupName);
 				stringGroups.Add (group);

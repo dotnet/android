@@ -149,6 +149,8 @@ namespace Xamarin.Android.Tasks
 
 		protected override void Construct (LlvmIrModule module)
 		{
+			module.DefaultStringGroup = "cas";
+
 			MapStructures (module);
 
 			InitCompressedAssemblies (

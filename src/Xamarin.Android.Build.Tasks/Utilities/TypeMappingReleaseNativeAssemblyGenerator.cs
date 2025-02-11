@@ -189,6 +189,8 @@ namespace Xamarin.Android.Tasks
 
 		protected override void Construct (LlvmIrModule module)
 		{
+			module.DefaultStringGroup = "tmr";
+
 			MapStructures (module);
 
 			var cs = new ConstructionState ();

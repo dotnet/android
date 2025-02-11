@@ -284,6 +284,8 @@ namespace Xamarin.Android.Tasks
 
 		protected override void Construct (LlvmIrModule module)
 		{
+			module.DefaultStringGroup = "jremap";
+
 			MapStructures (module);
 			List<StructureInstance<JniRemappingTypeReplacementEntry>>? typeReplacements;
 			List<StructureInstance<JniRemappingIndexTypeEntry>>? methodIndexTypes;
