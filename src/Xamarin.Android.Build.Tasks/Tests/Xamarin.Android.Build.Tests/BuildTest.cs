@@ -1257,7 +1257,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void PackageNamingPolicy ([Values ("LowercaseCrc64")] string packageNamingPolicy)
+		public void PackageNamingPolicy ([Values ("LowercaseMD5", "LowercaseCrc64")] string packageNamingPolicy)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("UseInterpreter", "true");
@@ -1273,23 +1273,6 @@ namespace UnnamedProject
 				values.Add ("mono.enable_assembly_preload=0");
 				values.Add ("DOTNET_MODIFIABLE_ASSEMBLIES=Debug");
 				Assert.AreEqual (string.Join (Environment.NewLine, values), File.ReadAllText (environment).Trim ());
-			}
-		}
-
-		[Test]
-		public void PackageNamingPolicy_LowercaseMD5_IsObsolete ()
-		{
-			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetProperty ("UseInterpreter", "true");
-			proj.SetProperty ("AndroidPackageNamingPolicy", "LowercaseMD5");
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
-			using (var builder = CreateApkBuilder ()) {
-				builder.ThrowOnBuildFailure = false;
-				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
-				string error = builder.LastBuildOutput
-						.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal))
-						.FirstOrDefault (x => x.Contains ("error XAGJS7015:"));
-				Assert.IsNotNull (error, "Build should have failed with XAGJS7015.");
 			}
 		}
 
