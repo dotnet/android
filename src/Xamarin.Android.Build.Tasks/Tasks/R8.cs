@@ -23,18 +23,18 @@ namespace Xamarin.Android.Tasks
 
 		// multidex
 		public bool EnableMultiDex { get; set; }
-		public ITaskItem [] CustomMainDexListFiles { get; set; } = [];
-		public string MultiDexMainDexListFile { get; set; } = "";
+		public ITaskItem []? CustomMainDexListFiles { get; set; }
+		public string? MultiDexMainDexListFile { get; set; }
 
 		// proguard-like configuration settings
 		public bool EnableShrinking { get; set; } = true;
 		public bool IgnoreWarnings { get; set; }
-		public string AcwMapFile { get; set; } = "";
-		public string ProguardGeneratedReferenceConfiguration { get; set; } = "";
-		public string ProguardGeneratedApplicationConfiguration { get; set; } = "";
-		public string ProguardCommonXamarinConfiguration { get; set; } = "";
-		public string ProguardMappingFileOutput { get; set; } = "";
-		public string [] ProguardConfigurationFiles { get; set; } = [];
+		public string? AcwMapFile { get; set; }
+		public string? ProguardGeneratedReferenceConfiguration { get; set; }
+		public string? ProguardGeneratedApplicationConfiguration { get; set; }
+		public string? ProguardCommonXamarinConfiguration { get; set; }
+		public string? ProguardMappingFileOutput { get; set; }
+		public string []? ProguardConfigurationFiles { get; set; }
 
 		protected override string MainClass => "com.android.tools.r8.R8";
 

@@ -15,12 +15,12 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "RIAB";
 
-		public string RuntimeIdentifier { get; set; } = "";
+		public string? RuntimeIdentifier { get; set; }
 
-		public string [] RuntimeIdentifiers { get; set; } = [];
+		public string []? RuntimeIdentifiers { get; set; }
 
 		[Output]
-		public string SupportedAbis { get; set; } = "";
+		public string? SupportedAbis { get; set; }
 
 		public override bool RunTask ()
 		{

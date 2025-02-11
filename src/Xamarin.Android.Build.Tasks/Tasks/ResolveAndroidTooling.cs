@@ -22,15 +22,15 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "RAT";
 
-		public string TargetPlatformVersion { get; set; } = "";
+		public string? TargetPlatformVersion { get; set; }
 
-		public string AndroidSdkPath { get; set; } = "";
+		public string? AndroidSdkPath { get; set; }
 
-		public string AndroidSdkBuildToolsVersion { get; set; } = "";
+		public string? AndroidSdkBuildToolsVersion { get; set; }
 
-		public string CommandLineToolsVersion { get; set; } = "";
+		public string? CommandLineToolsVersion { get; set; }
 
-		public string ProjectFilePath { get; set; } = "";
+		public string? ProjectFilePath { get; set; }
 
 		public string? SequencePointsMode { get; set; }
 
@@ -39,37 +39,37 @@ namespace Xamarin.Android.Tasks
 		public bool AndroidApplication { get; set; } = true;
 
 		[Output]
-		public string AndroidApiLevel { get; set; } = "";
+		public string? AndroidApiLevel { get; set; }
 
 		[Output]
 		public string? AndroidApiLevelName { get; set; }
 
 		[Output]
-		public string AndroidSdkBuildToolsPath { get; set; } = "";
+		public string? AndroidSdkBuildToolsPath { get; set; }
 
 		[Output]
-		public string AndroidSdkBuildToolsBinPath { get; set; } = "";
+		public string? AndroidSdkBuildToolsBinPath { get; set; }
 
 		[Output]
-		public string ZipAlignPath { get; set; } = "";
+		public string? ZipAlignPath { get; set; }
 
 		[Output]
-		public string AndroidSequencePointsMode { get; set; } = "";
+		public string? AndroidSequencePointsMode { get; set; }
 
 		[Output]
 		public string? LintToolPath { get; set; }
 
 		[Output]
-		public string ApkSignerJar { get; set; } = "";
+		public string? ApkSignerJar { get; set; }
 
 		[Output]
 		public bool AndroidUseApkSigner { get; set; }
 
 		[Output]
-		public string Aapt2Version { get; set; } = "";
+		public string? Aapt2Version { get; set; }
 
 		[Output]
-		public string Aapt2ToolPath { get; set; } = "";
+		public string? Aapt2ToolPath { get; set; }
 
 		protected static readonly bool IsWindows = Path.DirectorySeparatorChar == '\\';
 		protected static readonly string ZipAlign = IsWindows ? "zipalign.exe" : "zipalign";
@@ -90,7 +90,7 @@ namespace Xamarin.Android.Tasks
 			string toolsZipAlignPath = Path.Combine (AndroidSdkPath, "tools", ZipAlign);
 			bool findZipAlign = (string.IsNullOrEmpty (ZipAlignPath) || !Directory.Exists (ZipAlignPath)) && !File.Exists (toolsZipAlignPath);
 
-			var lintPaths = MonoAndroidHelper.AndroidSdk.GetCommandLineToolsPaths (CommandLineToolsVersion)
+			var lintPaths = MonoAndroidHelper.AndroidSdk.GetCommandLineToolsPaths (CommandLineToolsVersion ?? "")
 				.SelectMany (p => new[]{
 					p,
 					Path.Combine (p, "bin"),
@@ -104,7 +104,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			foreach (var dir in MonoAndroidHelper.AndroidSdk.GetBuildToolsPaths (AndroidSdkBuildToolsVersion)) {
+			foreach (var dir in MonoAndroidHelper.AndroidSdk.GetBuildToolsPaths (AndroidSdkBuildToolsVersion ?? "")) {
 				Log.LogDebugMessage ("Trying build-tools path: {0}", dir);
 				if (dir == null || !Directory.Exists (dir))
 					continue;

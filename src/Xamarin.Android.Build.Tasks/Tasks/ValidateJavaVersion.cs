@@ -17,13 +17,13 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "VJV";
 
-		public string JavaSdkPath { get; set; } = "";
+		public string? JavaSdkPath { get; set; }
 
 		public string? JavaToolExe { get; set; }
 
 		public string? JavacToolExe { get; set; }
 
-		public string TargetPlatformVersion { get; set; } = "";
+		public string? TargetPlatformVersion { get; set; }
 
 		[Required]
 		public string LatestSupportedJavaVersion { get; set; } = "";
@@ -38,10 +38,10 @@ namespace Xamarin.Android.Tasks
 		public bool UseJavaExeVersion { get; set; } = true;
 
 		[Output]
-		public string MinimumRequiredJdkVersion { get; set; } = "";
+		public string? MinimumRequiredJdkVersion { get; set; }
 
 		[Output]
-		public string JdkVersion { get; set; } = "";
+		public string? JdkVersion { get; set; }
 
 		public override bool RunTask ()
 		{
