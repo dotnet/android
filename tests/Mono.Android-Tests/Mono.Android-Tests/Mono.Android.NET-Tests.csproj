@@ -16,6 +16,7 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <EnableDefaultAndroidResourceItems>false</EnableDefaultAndroidResourceItems>
     <EnableDefaultAndroidAssetItems>false</EnableDefaultAndroidAssetItems>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
     <_MonoAndroidTestPackage>Mono.Android.NET_Tests</_MonoAndroidTestPackage>
     <PlotDataLabelSuffix>-$(TestsFlavor)NET6</PlotDataLabelSuffix>
     <WarningsAsErrors>IL2037</WarningsAsErrors>
@@ -67,6 +68,7 @@
     <Compile Include="Android.Content\SharedPreferencesTest.cs" />
     <Compile Include="Android.Graphics\NinePatchTests.cs" />
     <Compile Include="Android.OS\BundleTest.cs" />
+    <Compile Include="Android.OS\HandlerTest.cs" />
     <Compile Include="Android.Runtime\AndroidEnvironmentTest.cs" />
     <Compile Include="Android.Runtime\CharSequenceTest.cs" />
     <Compile Include="Android.Runtime\InputStreamInvokerTest.cs" />
@@ -82,6 +84,7 @@
     <Compile Include="Java.Interop\JnienvTest.cs" />
     <Compile Include="Java.Lang\ObjectArrayMarshaling.cs" />
     <Compile Include="Java.Lang\ObjectTest.cs" />
+    <Compile Include="Localization\LocalizationTests.cs" />
     <Compile Include="System\AppContextTests.cs" />
     <Compile Include="System\AppDomainTest.cs" />
     <Compile Include="System\AssemblyInformationalVersionAttributeTest.cs" />
@@ -176,6 +179,26 @@
     </AndroidAsset>
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="AppResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>AppResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AppResources.it-IT.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>AppResources.it-IT.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Compile Include="AppResources.Designer.cs">
+      <DependentUpon>AppResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="AppResources.it-IT.Designer.cs">
+      <DependentUpon>AppResources.it-IT.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  
   <ItemGroup>
     <AndroidNativeLibrary Include="..\libs\arm64-v8a\libreuse-threads.so" />
     <AndroidNativeLibrary Include="..\libs\armeabi-v7a\libreuse-threads.so" />
