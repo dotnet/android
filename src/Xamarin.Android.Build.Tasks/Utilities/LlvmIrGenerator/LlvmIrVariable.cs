@@ -302,7 +302,7 @@ class LlvmIrStringVariable : LlvmIrGlobalVariable
 	public bool IsConstantStringLiteral { get; }
 
 	public LlvmIrStringVariable (string name, StringHolder value, LlvmIrVariableOptions? options = null)
-		: base (typeof(string), name, options ?? LlvmIrVariableOptions.GlobalConstexprString)
+		: base (typeof(string), name, options ?? LlvmIrVariableOptions.GlobalConstantStringPointer)
 	{
 		Value = value;
 		Encoding = value.Encoding;

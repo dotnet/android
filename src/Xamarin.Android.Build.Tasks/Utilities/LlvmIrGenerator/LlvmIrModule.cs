@@ -272,7 +272,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			LlvmIrGlobalVariable ret;
 			if (type == typeof(string)) {
 				// The cast to `string?` is intentionally meant to throw if `value` type isn't a string.
-				ret = new LlvmIrStringVariable (name, new StringHolder ((string?)value)) {
+				ret = new LlvmIrStringVariable (name, new StringHolder ((string?)value), options) {
 					Comment = comment,
 				};
 				AddStringGlobalVariable ((LlvmIrStringVariable)ret);

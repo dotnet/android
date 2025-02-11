@@ -205,10 +205,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 						WriteCommentLine (context, $" '{info.Value}'");
 					}
 
-					if (!info.IsConstantStringLiteral) {
-						WriteCommentLine (context, $" '{info.Value}'");
-					}
-
 					WriteGlobalVariableName (context, info);
 
 					// Strings must always be local symbols, global variables will point to them
