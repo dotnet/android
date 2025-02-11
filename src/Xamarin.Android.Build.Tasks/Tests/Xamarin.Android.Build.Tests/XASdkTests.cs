@@ -47,6 +47,11 @@ namespace Xamarin.Android.Build.Tests
 
 		static readonly object[] DotNetPackTargetFrameworks = new object[] {
 			new object[] {
+				"net8.0",
+				"android",
+				34,
+			},
+			new object[] {
 				"net9.0",
 				"android",
 				35,
@@ -146,6 +151,11 @@ public class JavaSourceTest {
 
 		static readonly object[] DotNetTargetFrameworks = new object[] {
 			new object[] {
+				"net8.0",
+				"android",
+				34,
+			},
+			new object[] {
 				"net9.0",
 				"android",
 				35,
@@ -200,7 +210,7 @@ public class JavaSourceTest {
 			var apiLevel = (int)data[2];
 
 			//FIXME: will revisit this in a future PR
-			if (dotnetVersion == "net9.0") {
+			if (dotnetVersion != "net10.0") {
 				Assert.Ignore ("error NETSDK1185: The Runtime Pack for FrameworkReference 'Microsoft.Android.Runtime.34.android-arm' was not available. This may be because DisableTransitiveFrameworkReferenceDownloads was set to true.");
 			}
 

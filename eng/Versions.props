@@ -15,6 +15,8 @@
     <!-- Previous .NET Android version -->
     <MicrosoftAndroidSdkWindowsPackageVersion>35.0.24</MicrosoftAndroidSdkWindowsPackageVersion>
     <AndroidNetPreviousVersion>$(MicrosoftAndroidSdkWindowsPackageVersion)</AndroidNetPreviousVersion>
+    <!-- To be removed before .NET 10 GA -->
+    <AndroidNet8PreviousVersion>34.0.147</AndroidNet8PreviousVersion>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Match the first three version numbers and append 00 -->
