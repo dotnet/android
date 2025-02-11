@@ -1,7 +1,5 @@
 <Project>
   <PropertyGroup>
-    <!-- NU1510 warning as error -->
-    <RestoreEnablePackagePruning>true</RestoreEnablePackagePruning>
     <!-- Disables the transitive restore of packages like Microsoft.AspNetCore.App.Ref, Microsoft.WindowsDesktop.App.Ref -->
     <DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
     <RestoreAdditionalProjectSources>
