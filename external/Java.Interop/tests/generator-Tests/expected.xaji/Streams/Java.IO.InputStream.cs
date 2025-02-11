@@ -176,18 +176,18 @@ namespace Java.IO {
 #pragma warning disable 0169
 		static Delegate GetMarkSupportedHandler ()
 		{
-			return cb_markSupported_MarkSupported_Z ??= new _JniMarshal_PP_Z (n_MarkSupported);
+			return cb_markSupported_MarkSupported_Z ??= new _JniMarshal_PP_B (n_MarkSupported);
 		}
 
 		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
-		static bool n_MarkSupported (IntPtr jnienv, IntPtr native__this)
+		static sbyte n_MarkSupported (IntPtr jnienv, IntPtr native__this)
 		{
 			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
 			try {
 				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-				return __this.MarkSupported ();
+				return __this.MarkSupported () ? (sbyte)1 : (sbyte)0;
 			} catch (global::System.Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);
 				return default;

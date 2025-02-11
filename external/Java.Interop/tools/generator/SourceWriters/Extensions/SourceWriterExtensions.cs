@@ -284,7 +284,7 @@ namespace generator.SourceWriters
 				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 && invokeType == "Object") {
 					r += ".Handle";
 				}
-				body.Add ($"\treturn {method.RetVal.ReturnCast}{method.RetVal.FromNative (opt, r, true) + opt.GetNullForgiveness (method.RetVal)};");
+				body.Add ($"\treturn {method.RetVal.ReturnCast}{method.RetVal.FromNative (opt, r, true, false) + opt.GetNullForgiveness (method.RetVal)};");
 			}
 		}
 

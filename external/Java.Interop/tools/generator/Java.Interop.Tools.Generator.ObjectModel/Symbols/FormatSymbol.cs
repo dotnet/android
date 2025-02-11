@@ -116,6 +116,8 @@ namespace MonoDroid.Generation {
 		}
 
 		public bool NeedsPrep { get { return false; } }
+
+		public bool OnlyFormatOnMarshal { get; set; }
 	}
 }
 

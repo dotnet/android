@@ -94,7 +94,7 @@ namespace generator.SourceWriters
 			writer.WriteLine ($"var __v = {field.Symbol.ReturnCast}_members.{indirect}.{invoke} (__id{(field.IsStatic ? "" : ", this")});");
 
 			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
-				if (field.Symbol.NativeType == field.Symbol.FullName) {
+				if (field.Symbol.NativeType == field.Symbol.FullName || field.Symbol.OnlyFormatOnMarshal) {
 					writer.WriteLine ("return __v;");
 					return;
 				}
@@ -107,8 +107,8 @@ namespace generator.SourceWriters
 
 			if (field.Symbol.IsArray) {
 				writer.WriteLine ($"return global::Android.Runtime.JavaArray<{opt.GetOutputName (field.Symbol.ElementType)}>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);");
-			} else if (field.Symbol.NativeType != field.Symbol.FullName) {
-				writer.WriteLine ($"return {field.Symbol.ReturnCast}{(field.Symbol.FromNative (opt, invokeType != "Object" ? "__v" : "__v.Handle", true) + opt.GetNullForgiveness (field))};");
+			} else if (field.Symbol.NativeType != field.Symbol.FullName && !field.Symbol.OnlyFormatOnMarshal) {
+				writer.WriteLine ($"return {field.Symbol.ReturnCast}{(field.Symbol.FromNative (opt, invokeType != "Object" ? "__v" : "__v.Handle", true, false) + opt.GetNullForgiveness (field))};");
 			} else {
 				writer.WriteLine ("return __v;");
 			}
@@ -155,7 +155,10 @@ namespace generator.SourceWriters
 
 			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
 				if (invokeType != "Object" || have_prep) {
-					writer.Write (arg);
+					if (field.SetParameters [0].Symbol.OnlyFormatOnMarshal)
+						writer.Write (opt.GetSafeIdentifier (field.SetParameters [0].Name));
+					else
+						writer.Write (arg);
 				} else {
 					writer.Write ($"{arg}?.PeerReference ?? default");
 				}

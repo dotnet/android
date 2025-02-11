@@ -131,5 +131,14 @@ namespace generatortests
 				$"Expected:\n```\n{expected}\n```\n" +
 				$"Actual:\n```\n{actual}\n```";
 		}
+
+		protected string GetGeneratedTypeOutput (GenBase gen)
+		{
+			generator.Context.ContextTypes.Push (gen);
+			generator.WriteType (gen, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			return writer.ToString ();
+		}
 	}
 }

@@ -48,11 +48,11 @@ namespace Com.Google.Android.Exoplayer.Drm {
 #pragma warning disable 0169
 		static Delegate GetRequiresSecureDecoderComponent_Ljava_lang_String_Handler ()
 		{
-			return cb_requiresSecureDecoderComponent_RequiresSecureDecoderComponent_Ljava_lang_String__Z ??= new _JniMarshal_PPL_Z (n_RequiresSecureDecoderComponent_Ljava_lang_String_);
+			return cb_requiresSecureDecoderComponent_RequiresSecureDecoderComponent_Ljava_lang_String__Z ??= new _JniMarshal_PPL_B (n_RequiresSecureDecoderComponent_Ljava_lang_String_);
 		}
 
 		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
-		static bool n_RequiresSecureDecoderComponent_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)
+		static sbyte n_RequiresSecureDecoderComponent_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)
 		{
 			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
@@ -60,7 +60,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 			try {
 				var __this = global::Java.Lang.Object.GetObject<global::Com.Google.Android.Exoplayer.Drm.IExoMediaCrypto> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				var p0 = JNIEnv.GetString (native_p0, JniHandleOwnership.DoNotTransfer);
-				bool __ret = __this.RequiresSecureDecoderComponent (p0);
+				sbyte __ret = __this.RequiresSecureDecoderComponent (p0) ? (sbyte)1 : (sbyte)0;
 				return __ret;
 			} catch (global::System.Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);

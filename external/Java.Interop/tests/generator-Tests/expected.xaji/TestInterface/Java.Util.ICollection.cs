@@ -53,11 +53,11 @@ namespace Java.Util {
 #pragma warning disable 0169
 		static Delegate GetAdd_Ljava_lang_Object_Handler ()
 		{
-			return cb_add_Add_Ljava_lang_Object__Z ??= new _JniMarshal_PPL_Z (n_Add_Ljava_lang_Object_);
+			return cb_add_Add_Ljava_lang_Object__Z ??= new _JniMarshal_PPL_B (n_Add_Ljava_lang_Object_);
 		}
 
 		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
-		static bool n_Add_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_e)
+		static sbyte n_Add_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_e)
 		{
 			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
@@ -65,7 +65,7 @@ namespace Java.Util {
 			try {
 				var __this = global::Java.Lang.Object.GetObject<global::Java.Util.ICollection> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				var e = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_e, JniHandleOwnership.DoNotTransfer);
-				bool __ret = __this.Add (e);
+				sbyte __ret = __this.Add (e) ? (sbyte)1 : (sbyte)0;
 				return __ret;
 			} catch (global::System.Exception __e) {
 				__r.OnUserUnhandledException (ref __envp, __e);

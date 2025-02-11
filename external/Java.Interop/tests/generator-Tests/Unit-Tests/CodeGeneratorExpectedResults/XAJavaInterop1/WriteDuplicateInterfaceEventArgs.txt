@@ -70,18 +70,18 @@ internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, Anima
 #pragma warning disable 0169
 	static Delegate GetOnAnimationEnd_IHandler ()
 	{
-		return cb_OnAnimationEnd_OnAnimationEnd_I_Z ??= new _JniMarshal_PPI_Z (n_OnAnimationEnd_I);
+		return cb_OnAnimationEnd_OnAnimationEnd_I_Z ??= new _JniMarshal_PPI_B (n_OnAnimationEnd_I);
 	}
 
 	[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
-	static bool n_OnAnimationEnd_I (IntPtr jnienv, IntPtr native__this, int param1)
+	static sbyte n_OnAnimationEnd_I (IntPtr jnienv, IntPtr native__this, int param1)
 	{
 		if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 			return default;
 
 		try {
 			var __this = global::Java.Lang.Object.GetObject<java.code.AnimatorListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return __this.OnAnimationEnd (param1);
+			return __this.OnAnimationEnd (param1) ? (sbyte)1 : (sbyte)0;
 		} catch (global::System.Exception __e) {
 			__r.OnUserUnhandledException (ref __envp, __e);
 			return default;
@@ -105,18 +105,18 @@ internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, Anima
 #pragma warning disable 0169
 	static Delegate GetOnAnimationEnd_IIHandler ()
 	{
-		return cb_OnAnimationEnd_OnAnimationEnd_II_Z ??= new _JniMarshal_PPII_Z (n_OnAnimationEnd_II);
+		return cb_OnAnimationEnd_OnAnimationEnd_II_Z ??= new _JniMarshal_PPII_B (n_OnAnimationEnd_II);
 	}
 
 	[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
-	static bool n_OnAnimationEnd_II (IntPtr jnienv, IntPtr native__this, int param1, int param2)
+	static sbyte n_OnAnimationEnd_II (IntPtr jnienv, IntPtr native__this, int param1, int param2)
 	{
 		if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 			return default;
 
 		try {
 			var __this = global::Java.Lang.Object.GetObject<java.code.AnimatorListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return __this.OnAnimationEnd (param1, param2);
+			return __this.OnAnimationEnd (param1, param2) ? (sbyte)1 : (sbyte)0;
 		} catch (global::System.Exception __e) {
 			__r.OnUserUnhandledException (ref __envp, __e);
 			return default;

@@ -97,7 +97,7 @@ namespace MonoDroid.Generation {
 
 		public ISymbol Symbol => sym;
 
-		public string FromNative (CodeGenerationOptions opt, string var_name, bool owned)
+		public string FromNative (CodeGenerationOptions opt, string var_name, bool owned, bool isMarshal = false)
 		{
 			if (!string.IsNullOrEmpty (managed_type) && (sym is ClassGen || sym is InterfaceGen)) {
 				if (opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.JavaInterop1) {
@@ -108,7 +108,7 @@ namespace MonoDroid.Generation {
 				return string.Format ("global::Java.Lang.Object.GetObject<{0}> ({1}, {2})", 
 				                      opt.GetOutputName (managed_type), var_name, owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer");
  			}
-			return sym.FromNative (opt, var_name, owned);
+			return sym.FromNative (opt, var_name, owned, isMarshal);
 		}
 
 		public string ToNative (CodeGenerationOptions opt, string var_name)
