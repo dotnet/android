@@ -1,6 +1,7 @@
 package net.dot.jni.nativeaot;
 
 import android.util.Log;
+import net.dot.android.ApplicationRegistration;
 
 public class NativeAotRuntimeProvider
     extends android.content.ContentProvider
@@ -20,9 +21,12 @@ public class NativeAotRuntimeProvider
     @Override
     public void attachInfo(android.content.Context context, android.content.pm.ProviderInfo info) {
         Log.d(TAG, "NativeAotRuntimeProvider.attachInfo(): calling JavaInteropRuntime.init()…");
+        if (context instanceof android.app.Application) {
+            ApplicationRegistration.Context = context;
+        }
         JavaInteropRuntime.init();
         // NOTE: only required for custom applications
-        net.dot.android.ApplicationRegistration.registerApplications();
+        ApplicationRegistration.registerApplications();
         super.attachInfo (context, info);
     }
 
