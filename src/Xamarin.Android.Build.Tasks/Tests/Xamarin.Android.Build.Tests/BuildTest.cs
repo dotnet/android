@@ -41,7 +41,6 @@ namespace Xamarin.Android.Build.Tests
 					new Package { Id = "Microsoft.AspNetCore.Components.WebView", Version = "8.0.*" },
 					new Package { Id = "Microsoft.Extensions.FileProviders.Embedded", Version = "8.0.*" },
 					new Package { Id = "Microsoft.JSInterop", Version = "8.0.*" },
-					new Package { Id = "System.Text.Json", Version = "8.0.*" },
 				},
 				Sources = {
 					new BuildItem ("EmbeddedResource", "Resource.resx") {
