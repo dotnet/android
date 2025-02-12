@@ -15,8 +15,11 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 
 	public NativeAotTypeManager ()
 	{
-		AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"# jonp: NativeAotTypeManager()");
+		AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"NativeAotTypeManager()");
+		var startTicks  = global::System.Environment.TickCount;
 		InitializeTypeMappings ();
+		var endTicks    = global::System.Environment.TickCount;
+		AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"InitializeTypeMappings() took {endTicks - startTicks}ms");
 	}
 
 	void InitializeTypeMappings ()
