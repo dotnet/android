@@ -62,6 +62,3 @@ variables:
   value: 'cat != SystemApplication & cat != TimeZoneInfo & cat != Localization'
 - name: RunMAUITestJob
   value: true
-# https://github.com/dotnet/sdk/pull/31868
-- name: DOTNET_NUGET_SIGNATURE_VERIFICATION
-  value: false
