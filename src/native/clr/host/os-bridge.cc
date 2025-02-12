@@ -6,6 +6,30 @@
 
 using namespace xamarin::android;
 
+void OSBridge::initialize_on_onload (JavaVM *vm, JNIEnv *env) noexcept
+{
+	abort_if_invalid_pointer_argument (env, "env");
+	abort_if_invalid_pointer_argument (vm, "vm");
+
+	jvm = vm;
+	// jclass lref = env->FindClass ("java/lang/Runtime");
+	// jmethodID Runtime_getRuntime = env->GetStaticMethodID (lref, "getRuntime", "()Ljava/lang/Runtime;");
+
+	// Runtime_gc			= env->GetMethodID (lref, "gc", "()V");
+	// Runtime_instance	= lref_to_gref (env, env->CallStaticObjectMethod (lref, Runtime_getRuntime));
+	// env->DeleteLocalRef (lref);
+	// lref = env->FindClass ("java/lang/ref/WeakReference");
+	// weakrefClass = reinterpret_cast<jclass> (env->NewGlobalRef (lref));
+	// env->DeleteLocalRef (lref);
+	// weakrefCtor = env->GetMethodID (weakrefClass, "<init>", "(Ljava/lang/Object;)V");
+	// weakrefGet = env->GetMethodID (weakrefClass, "get", "()Ljava/lang/Object;");
+
+	// abort_unless (
+	// 	weakrefClass != nullptr && weakrefCtor != nullptr && weakrefGet != nullptr,
+	// 	"Failed to look up required java.lang.ref.WeakReference members"
+	// );
+}
+
 void OSBridge::initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass) noexcept
 {
 	abort_if_invalid_pointer_argument (env, "env");
@@ -71,6 +95,20 @@ void OSBridge::_write_stack_trace (FILE *to, char *from, LogCategories category)
 	} while (c);
 }
 
+void OSBridge::_monodroid_gref_log (const char *message) noexcept
+{
+	if (Logger::gref_to_logcat ()) {
+		log_debug (LOG_GREF, "{}", optional_string (message));
+	}
+
+	if (Logger::gref_log () == nullptr) {
+		return;
+	}
+
+	fprintf (Logger::gref_log (), "%s", optional_string (message));
+	fflush (Logger::gref_log ());
+}
+
 auto OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable) noexcept -> int
 {
 	int c = _monodroid_gref_inc ();
@@ -123,4 +161,51 @@ auto OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject
 
 	fflush (Logger::gref_log ());
 	return c;
+}
+
+void OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable) noexcept
+{
+	int c = _monodroid_gref_dec ();
+	if ((log_categories & LOG_GREF) == 0) {
+		return;
+	}
+
+	log_info (LOG_GREF,
+			  "-g- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})",
+			  c,
+			  gc_weak_gref_count,
+			  reinterpret_cast<void*>(handle),
+			  type,
+			  optional_string (threadName),
+			  threadId
+	);
+	if (Logger::gref_to_logcat ()) {
+		if (from_writable) {
+			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+		} else {
+			log_info (LOG_GREF, "{}", optional_string (from));
+		}
+	}
+
+	if (Logger::gref_log () == nullptr) {
+		return;
+	}
+
+	fprintf (Logger::gref_log (),
+			 "-g- grefc %i gwrefc %i handle %p/%c from thread '%s'(%i)\n",
+			 c,
+			 gc_weak_gref_count,
+			 handle,
+			 type,
+			 optional_string (threadName),
+			 threadId
+	);
+
+	if (from_writable) {
+		_write_stack_trace (Logger::gref_log (), const_cast<char*>(from));
+	} else {
+		fprintf (Logger::gref_log(), "%s\n", optional_string (from));
+	}
+
+	fflush (Logger::gref_log ());
 }

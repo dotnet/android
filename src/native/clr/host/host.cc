@@ -118,9 +118,46 @@ void Host::create_xdg_directories_and_environment (jstring_wrapper &homeDir) noe
 	create_xdg_directory (homeDir, home_len, CONFIG_PATH, XDG_CONFIG_HOME);
 }
 
+[[gnu::always_inline]]
+auto Host::create_delegate (
+	std::string_view const& assembly_name, std::string_view const& type_name,
+	std::string_view const& method_name) noexcept -> void*
+{
+	void *delegate = nullptr;
+	int hr = coreclr_create_delegate (
+		clr_host,
+		domain_id,
+		assembly_name.data (),
+		type_name.data (),
+		method_name.data (),
+		&delegate
+	);
+	log_debug (LOG_ASSEMBLY,
+			   "{} delegate creation result == {:x}; delegate == {:p}",
+			   Constants::JNIENVINIT_FULL_TYPE_NAME,
+			   static_cast<unsigned int>(hr),
+			   delegate
+	);
+
+	// TODO: make S_OK & friends known to us
+	if (hr != 0 /* S_OK */) {
+		Helpers::abort_application (
+			LOG_DEFAULT,
+			std::format (
+				"Failed to create delegate for {}.{}.{} (result == {:x})",
+				assembly_name,
+				type_name,
+				method_name,
+				hr)
+		);
+	}
+
+	return delegate;
+}
+
 void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeClass, jstring lang, jobjectArray runtimeApksJava,
 	jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset, jobject loader,
-	jobjectArray assembliesJava, jboolean isEmulator, jboolean haveSplitApks)
+	jobjectArray assembliesJava, jboolean isEmulator, jboolean haveSplitApks) noexcept
 {
 	Logger::init_logging_categories ();
 
@@ -166,9 +203,15 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	);
 	log_debug (LOG_ASSEMBLY, "CoreCLR init result == {:x}; clr_host == {:p}; domain ID == {}", static_cast<unsigned int>(hr), clr_host, domain_id);
 	// TODO: make S_OK & friends known to us
-	// if (hr != S_OK) {
-	// }
-	log_write (LOG_DEFAULT, LogLevel::Info, "CoreCLR initialization routine returned");
+	if (hr != 0 /* S_OK */) {
+		Helpers::abort_application (
+			LOG_DEFAULT,
+			std::format (
+				"Failed to initialize CoreCLR. Error code: {:x}",
+				static_cast<unsigned int>(hr)
+			)
+		);
+	}
 
 	abort_unless (
 		clr_host != nullptr,
@@ -178,6 +221,7 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	);
 
 	struct JnienvInitializeArgs init = {};
+	init.runtimeType                                    = RuntimeTypeCoreCLR;
 	init.javaVm                                         = jvm;
 	init.env                                            = env;
 	init.logCategories                                  = log_categories;
@@ -216,25 +260,33 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 		native_to_managed_index = internal_timing->start_event (TimingEventKind::NativeToManagedTransition);
 	}
 
-	log_debug (LOG_ASSEMBLY, "Creating UCO delegate to {}.Initialize", Constants::JNIENVINIT_FULL_TYPE_NAME);
 	void *delegate = nullptr;
-	hr = coreclr_create_delegate (
-		clr_host,
-		domain_id,
-		Constants::MONO_ANDROID_ASSEMBLY_NAME.data (),
-		Constants::JNIENVINIT_FULL_TYPE_NAME.data (),
-		"Initialize",
-		&delegate
+	log_debug (LOG_ASSEMBLY, "Creating UCO delegate to {}.RegisterJniNatives", Constants::JNIENVINIT_FULL_TYPE_NAME);
+	delegate = create_delegate (Constants::MONO_ANDROID_ASSEMBLY_NAME, Constants::JNIENVINIT_FULL_TYPE_NAME, "RegisterJniNatives"sv);
+	jnienv_register_jni_natives = reinterpret_cast<jnienv_register_jni_natives_fn> (delegate);
+	abort_unless (
+		jnienv_register_jni_natives != nullptr,
+		[] {
+			return detail::_format_message (
+				"Failed to obtain unmanaged-callers-only pointer to the %s.%s.RegisterJniNatives method.",
+				Constants::MONO_ANDROID_ASSEMBLY_NAME,
+				Constants::JNIENVINIT_FULL_TYPE_NAME
+			);
+		}
 	);
-	log_debug (LOG_ASSEMBLY, "Delegate creation result == {:x}; delegate == {:p}", static_cast<unsigned int>(hr), delegate);
-	// TODO: make S_OK & friends known to us
-	// if (hr != S_OK) {
-	// }
 
+	log_debug (LOG_ASSEMBLY, "Creating UCO delegate to {}.Initialize", Constants::JNIENVINIT_FULL_TYPE_NAME);
+	delegate = create_delegate (Constants::MONO_ANDROID_ASSEMBLY_NAME, Constants::JNIENVINIT_FULL_TYPE_NAME, "Initialize"sv);
 	auto initialize = reinterpret_cast<jnienv_initialize_fn> (delegate);
 	abort_unless (
 		initialize != nullptr,
-		"Failed to obtain unmanaged-callers-only pointer to the Android.Runtime.JNIEnvInit.Initialize method."
+		[] {
+			return detail::_format_message (
+				"Failed to obtain unmanaged-callers-only pointer to the %s.%s.Initialize method.",
+				Constants::MONO_ANDROID_ASSEMBLY_NAME,
+				Constants::JNIENVINIT_FULL_TYPE_NAME
+			);
+		}
 	);
 	initialize (&init);
 
@@ -247,10 +299,78 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	}
 }
 
+void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods) noexcept
+{
+	size_t total_time_index;
+	if (FastTiming::enabled ()) [[unlikely]] {
+		total_time_index = internal_timing->start_event (TimingEventKind::RuntimeRegister);
+	}
+
+	jsize managedType_len = env->GetStringLength (managedType);
+	const jchar *managedType_ptr = env->GetStringChars (managedType, nullptr);
+	int methods_len = env->GetStringLength (methods);
+	const jchar *methods_ptr = env->GetStringChars (methods, nullptr);
+
+	// TODO: must attach thread to the runtime here
+	jnienv_register_jni_natives (managedType_ptr, managedType_len, nativeClass, methods_ptr, methods_len);
+
+	env->ReleaseStringChars (methods, methods_ptr);
+	env->ReleaseStringChars (managedType, managedType_ptr);
+
+	if (FastTiming::enabled ()) [[unlikely]] {
+		internal_timing->end_event (total_time_index, true /* uses_more_info */);
+
+		dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> type;
+		const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
+		type.assign (mt_ptr, strlen (mt_ptr));
+		env->ReleaseStringUTFChars (managedType, mt_ptr);
+
+		internal_timing->add_more_info (total_time_index, type);
+	}
+}
+
+auto Host::get_java_class_name_for_TypeManager (jclass klass) noexcept -> char*
+{
+	if (klass == nullptr || Class_getName == nullptr) {
+		return nullptr;
+	}
+
+	JNIEnv *env = OSBridge::ensure_jnienv ();
+	jstring name = reinterpret_cast<jstring> (env->CallObjectMethod (klass, Class_getName));
+	if (name == nullptr) {
+		log_error (LOG_DEFAULT, "Failed to obtain Java class name for object at {:p}", reinterpret_cast<void*>(klass));
+		return nullptr;
+	}
+
+	const char *mutf8 = env->GetStringUTFChars (name, nullptr);
+	if (mutf8 == nullptr) {
+		log_error (LOG_DEFAULT, "Failed to convert Java class name to UTF8 (out of memory?)"sv);
+		env->DeleteLocalRef (name);
+		return nullptr;
+	}
+	char *ret = strdup (mutf8);
+
+	env->ReleaseStringUTFChars (name, mutf8);
+	env->DeleteLocalRef (name);
+
+	char *dot = strchr (ret, '.');
+	while (dot != nullptr) {
+		*dot = '/';
+		dot = strchr (dot + 1, '.');
+	}
+
+	return ret;
+}
+
 auto Host::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcept -> jint
 {
 	log_write (LOG_DEFAULT, LogLevel::Info, "Host OnLoad");
 	jvm = vm;
+
+	JNIEnv *env = nullptr;
+	vm->GetEnv ((void**)&env, JNI_VERSION_1_6);
+	OSBridge::initialize_on_onload (vm, env);
+
 	AndroidSystem::init_max_gref_count ();
 	return JNI_VERSION_1_6;
 }

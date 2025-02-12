@@ -8,39 +8,19 @@
 #include "../runtime-base/jni-wrappers.hh"
 #include "../runtime-base/timing.hh"
 #include "../shared/log_types.hh"
+#include "managed-interface.hh"
 
 namespace xamarin::android {
-	// NOTE: Keep this in sync with managed side in src/Mono.Android/Android.Runtime/JNIEnvInit.cs
-	struct JnienvInitializeArgs
-	{
-		JavaVM         *javaVm;
-		JNIEnv         *env;
-		jobject         grefLoader;
-		jmethodID       Loader_loadClass;
-		jclass          grefClass;
-		unsigned int    logCategories;
-		int             version;
-		int             grefGcThreshold;
-		jobject         grefIGCUserPeer;
-		int             isRunningOnDesktop;
-		uint8_t         brokenExceptionTransitions;
-		int             packageNamingPolicy;
-		uint8_t         boundExceptionType;
-		int             jniAddNativeMethodRegistrationAttributePresent;
-		bool            jniRemappingInUse;
-		bool            marshalMethodsEnabled;
-		jobject         grefGCUserPeerable;
-	};
-
 	class Host
 	{
-		using jnienv_initialize_fn = void (*) (JnienvInitializeArgs*);
-
 	public:
 		static auto Java_JNI_OnLoad (JavaVM *vm, void *reserved) noexcept -> jint;
 		static void Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
 			jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset, jobject loader,
-			jobjectArray assembliesJava, jboolean isEmulator, jboolean haveSplitApks);
+			jobjectArray assembliesJava, jboolean isEmulator, jboolean haveSplitApks) noexcept;
+		static void Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods) noexcept;
+
+		static auto get_java_class_name_for_TypeManager (jclass klass) noexcept -> char*;
 
 		static auto get_timing () -> Timing*
 		{
@@ -58,11 +38,16 @@ namespace xamarin::android {
 		static const void* clr_pinvoke_override (const char *library_name, const char *entry_point_name) noexcept;
 		static void clr_error_writer (const char *message) noexcept;
 
+		static auto create_delegate (
+			std::string_view const& assembly_name, std::string_view const& type_name,
+			std::string_view const& method_name) noexcept -> void*;
+
 	private:
 		static inline void *clr_host = nullptr;
 		static inline unsigned int domain_id = 0;
 		static inline std::unique_ptr<Timing> _timing{};
 		static inline bool found_assembly_store = false;
+		static inline jnienv_register_jni_natives_fn jnienv_register_jni_natives = nullptr;
 
 		static inline JavaVM *jvm = nullptr;
 		static inline jmethodID Class_getName = nullptr;

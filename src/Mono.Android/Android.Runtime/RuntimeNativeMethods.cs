@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Android.Runtime
 {
-	// Values must be identical to those in src/monodroid/jni/monodroid-glue-internal.hh
+	// NOTE: Keep this in sync with the native side in src/native/common/include/managed-interface.hh
 	[Flags]
 	enum TraceKind : uint
 	{
@@ -88,6 +88,9 @@ namespace Android.Runtime
 
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int _monodroid_max_gref_get ();
+
+		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern IntPtr clr_typemap_managed_to_java (string fullName, IntPtr mvid);
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		internal static extern void monodroid_unhandled_exception (Exception javaException);
