@@ -34,15 +34,7 @@ class StringHolder : IComparable, IComparable<StringHolder>, IEquatable<StringHo
 		return holder;
 	}
 
-	public int CompareTo (object obj)
-	{
-		var holder = obj as StringHolder;
-		if (holder == null) {
-			return 1;
-		}
-
-		return CompareTo (holder);
-	}
+	public int CompareTo (object obj) => CompareTo (obj as StringHolder);
 
 	public int CompareTo (StringHolder? other)
 	{
@@ -83,15 +75,7 @@ class StringHolder : IComparable, IComparable<StringHolder>, IEquatable<StringHo
 		return hc ^ Encoding.GetHashCode ();
 	}
 
-	public override bool Equals (object obj)
-	{
-		var holder = obj as StringHolder;
-		if (holder == null) {
-			return false;
-		}
-
-		return Equals (holder);
-	}
+	public override bool Equals (object obj) => Equals (obj as StringHolder);
 
 	public bool Equals (StringHolder? other)
 	{
@@ -103,22 +87,22 @@ class StringHolder : IComparable, IComparable<StringHolder>, IEquatable<StringHo
 	}
 
 	public static bool operator > (StringHolder a, StringHolder b)
-        {
-                return a.CompareTo (b) > 0;
-        }
+	{
+		return a.CompareTo (b) > 0;
+	}
 
-        public static bool operator < (StringHolder a, StringHolder b)
-        {
-                return a.CompareTo (b) < 0;
-        }
+	public static bool operator < (StringHolder a, StringHolder b)
+	{
+		return a.CompareTo (b) < 0;
+	}
 
-        public static bool operator >= (StringHolder a, StringHolder b)
-        {
-                return a.CompareTo (b) >= 0;
-        }
+	public static bool operator >= (StringHolder a, StringHolder b)
+	{
+		return a.CompareTo (b) >= 0;
+	}
 
-        public static bool operator <= (StringHolder a, StringHolder b)
-        {
-                return a.CompareTo (b) <= 0;
-        }
+	public static bool operator <= (StringHolder a, StringHolder b)
+	{
+		return a.CompareTo (b) <= 0;
+	}
 }
