@@ -96,6 +96,7 @@
     <Compile Include="Android.Icu\DateIntervalFormat.cs" />
     <Compile Include="Android.Net.Wifi.P2p\WifiP2pManager.cs" />
     <Compile Include="Android.Runtime\DynamicMethodNameCounter.cs" />
+    <Compile Include="Android.Runtime\ExtraDelegates.cs" />
     <Compile Include="Android.Runtime\IJavaObjectValueMarshaler.cs" />
     <Compile Include="Android.Telecom\InCallService.cs" />
     <Compile Include="Android.Telephony.Mbms\StreamingService.cs" />
