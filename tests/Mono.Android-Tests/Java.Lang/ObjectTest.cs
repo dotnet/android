@@ -10,6 +10,8 @@ using Android.Content;
 using Android.Runtime;
 using Android.Widget;
 
+using Java.Interop;
+
 using NUnit.Framework;
 
 namespace Java.LangTests
@@ -82,6 +84,14 @@ namespace Java.LangTests
 			var value = new MyDisposableObject ();
 			value.Dispose ();
 			value.Dispose ();
+		}
+
+		[Test]
+		public void java_lang_Object_Is_Java_Lang_Object ()
+		{
+			var jloType = global::Java.Interop.JniEnvironment.Runtime.TypeManager.GetType (new JniTypeSignature ("java/lang/Object"));
+			Assert.AreSame (typeof (Java.Lang.Object), jloType,
+					$"`java/lang/Object` is typemap'd to `{jloType}`, not `Java.Lang.Object, Mono.Android`!");
 		}
 	}
 
