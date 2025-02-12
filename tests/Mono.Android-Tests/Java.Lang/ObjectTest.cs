@@ -89,7 +89,6 @@ namespace Java.LangTests
 		[Test]
 		public void java_lang_Object_Is_Java_Lang_Object ()
 		{
-			Console.WriteLine ($"# jonp: java_lang_Object_Is_Java_Lang_Object!");
 			var jloType = global::Java.Interop.JniEnvironment.Runtime.TypeManager.GetType (new JniTypeSignature ("java/lang/Object"));
 			Assert.AreSame (typeof (Java.Lang.Object), jloType,
 					$"`java/lang/Object` is typemap'd to `{jloType}`, not `Java.Lang.Object, Mono.Android`!");
