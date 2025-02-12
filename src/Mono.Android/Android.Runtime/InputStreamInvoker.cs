@@ -6,6 +6,7 @@ namespace Android.Runtime
 	public class InputStreamInvoker : Stream
 	{
 		public Java.IO.InputStream BaseInputStream {get; private set;}
+		private IntPtr inputStreamGref;
 
 		protected Java.Nio.Channels.FileChannel? BaseFileChannel {get; private set;}
 
@@ -15,6 +16,10 @@ namespace Android.Runtime
 				throw new ArgumentNullException (nameof (stream));
 
 			BaseInputStream = stream;
+
+			// We need to keep a global reference to the Java.IO.InputStream instance
+			// so that it doesn't get garbage collected on the Java side while we're using it.
+			inputStreamGref = JNIEnv.NewGlobalRef (stream.Handle);
 
 			Java.IO.FileInputStream? fileStream = stream as Java.IO.FileInputStream;
 			if (fileStream != null)
@@ -44,6 +49,11 @@ namespace Android.Runtime
 				} catch (Java.IO.IOException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 					throw new IOException (ex.Message, ex);
 				}
+			}
+
+			if (inputStreamGref != IntPtr.Zero) {
+				JNIEnv.DeleteGlobalRef (inputStreamGref);
+				inputStreamGref = IntPtr.Zero;
 			}
 		}
 
