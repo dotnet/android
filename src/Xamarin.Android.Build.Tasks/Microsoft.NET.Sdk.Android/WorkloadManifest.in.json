@@ -6,7 +6,6 @@
       "packs": [
         "Microsoft.Android.Sdk.net10",
         "Microsoft.Android.Sdk.net9",
-        "Microsoft.Android.Sdk.net8",
         "Microsoft.Android.Ref.35",
         "Microsoft.Android.Runtime.Mono.35.android-arm",
         "Microsoft.Android.Runtime.Mono.35.android-arm64",
@@ -15,13 +14,21 @@
         "Microsoft.Android.Templates"
       ],
       "platforms": [ "win-x64", "win-arm64", "linux-x64", "linux-arm64", "osx-x64", "osx-arm64" ],
-      "extends" : [ 
-        "microsoft-net-runtime-android-net8",
-        "microsoft-net-runtime-android-aot-net8",
+      "extends" : [
         "microsoft-net-runtime-android-net9",
         "microsoft-net-runtime-android-aot-net9",
         "microsoft-net-runtime-android",
         "microsoft-net-runtime-android-aot"
+      ]
+    },
+    "android-net8": {
+      "description": ".NET SDK Workload for building .NET 8 Android applications.",
+      "packs": [ "Microsoft.Android.Sdk.net8" ],
+      "platforms": [ "win-x64", "win-arm64", "linux-x64", "linux-arm64", "osx-x64", "osx-arm64" ],
+      "extends" : [
+        "android",
+        "microsoft-net-runtime-android-net8",
+        "microsoft-net-runtime-android-aot-net8"
       ]
     },
     "android-36": {
