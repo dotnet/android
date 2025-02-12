@@ -2,10 +2,11 @@
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
-    <DefineConstants>ILLINK</DefineConstants>
+    <DefineConstants>ILLINK;HAVE_CECIL</DefineConstants>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
     <Nullable>annotations</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.ILLink" Version="$(MicrosoftNETILLinkTasksPackageVersion)" />
@@ -26,8 +27,13 @@
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil\MethodDefinitionRocks.cs" Link="Java.Interop\MethodDefinitionRocks.cs" />
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil\TypeDefinitionCache.cs" Link="Java.Interop\TypeDefinitionCache.cs" />
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil\TypeDefinitionRocks.cs" Link="Java.Interop\TypeDefinitionRocks.cs" />
+    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.cs" />
+    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.Table.cs" />
+    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64Helper.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Linker.cs" Link="Utilities\MonoAndroidHelper.Linker.cs" />
   </ItemGroup>
+  <Import Project="..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems" />
+  <Import Project="..\..\external\Java.Interop\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems" />
   <ItemGroup>
     <Folder Include="Java.Interop\" />
     <Folder Include="Utilities\" />

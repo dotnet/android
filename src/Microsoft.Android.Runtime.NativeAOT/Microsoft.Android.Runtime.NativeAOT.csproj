@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="$(XamarinAndroidSourcePath)\build-tools\trim-analyzers\trim-analyzers.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>$(DotNetTargetFramework)</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
+    <SignAssembly>true</SignAssembly>
+    <OutputPath>$(_MonoAndroidNETDefaultOutDir)</OutputPath>
+    <RootNamespace>Microsoft.Android.Runtime</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
+    <ProjectReference Include="..\Mono.Android\Mono.Android.csproj" />
+  </ItemGroup>
+
+  <!-- Copy runtime assemblies to bin/$(Configuration)/dotnet/packs folder -->
+  <PropertyGroup Condition=" '$(AndroidApiLevel)' == '$(AndroidLatestStableApiLevel)' ">
+    <BuildDependsOn>
+      $(BuildDependsOn);
+      _CopyToPackDirs;
+    </BuildDependsOn>
+  </PropertyGroup>
+
+  <Target Name="_CopyToPackDirs">
+    <ItemGroup>
+      <_RuntimePackFiles Include="$(OutputPath)Microsoft.Android.Runtime.NativeAOT.dll" AndroidRID="%(AndroidAbiAndRuntimeFlavor.AndroidRID)" AndroidRuntime="%(AndroidAbiAndRuntimeFlavor.AndroidRuntime)" />
+    </ItemGroup>
+    <Message Importance="high" Text="$(TargetPath) %(AndroidAbiAndRuntimeFlavor.AndroidRID)" />
+    <Copy
+        SourceFiles="%(_RuntimePackFiles.Identity)"
+        DestinationFolder="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.%(_RuntimePackFiles.AndroidRuntime).$(AndroidApiLevel).%(_RuntimePackFiles.AndroidRID)\$(AndroidPackVersion)\runtimes\%(_RuntimePackFiles.AndroidRID)\lib\$(DotNetTargetFramework)"
+        SkipUnchangedFiles="true"
+    />
+  </Target>
+
+</Project>

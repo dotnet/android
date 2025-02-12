@@ -37,7 +37,11 @@ projects that use the Microsoft.Android framework in .NET 6+.
       <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETDefaultOutDir)Java.Interop.dll" />
       <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETDefaultOutDir)Mono.Android.dll" />
       <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETDefaultOutDir)Mono.Android.Runtime.dll" />
-      <!-- Always include stable Mono.Android.Export.dll -->
+      <!-- Always include stable versions of the following assemblies -->
+      <_AndroidRuntimePackAssemblies
+          Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\Microsoft.Android.Runtime.NativeAOT.dll"
+          Condition=" '$(AndroidRuntime)' == 'NativeAOT' "
+      />
       <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\Mono.Android.Export.dll" />
     </ItemGroup>
 

@@ -98,6 +98,9 @@ namespace Xamarin.Android.Tasks
 
 		public string CodeGenerationTarget { get; set; } = "";
 
+		[Required]
+		public string TargetName { get; set; } = "";
+
 		AndroidRuntime androidRuntime;
 		JavaPeerStyle codeGenerationTarget;
 
@@ -304,18 +307,33 @@ namespace Xamarin.Android.Tasks
 
 		void GenerateAdditionalProviderSources (NativeCodeGenState codeGenState, IList<string> additionalProviders)
 		{
-			if (androidRuntime != Xamarin.Android.Tasks.AndroidRuntime.MonoVM) {
-				Log.LogDebugMessage ($"Skipping MonoRuntimeProvider generation for: {androidRuntime}");
-			} else {
+			if (androidRuntime != Xamarin.Android.Tasks.AndroidRuntime.CoreCLR) {
 				// Create additional runtime provider java sources.
-				string providerTemplateFile = "MonoRuntimeProvider.Bundled.java";
+				bool isMonoVM = androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.MonoVM;
+				string providerTemplateFile = isMonoVM ?
+					"MonoRuntimeProvider.Bundled.java" :
+					"NativeAotRuntimeProvider.java";
 				string providerTemplate = GetResource (providerTemplateFile);
 
 				foreach (var provider in additionalProviders) {
-					var contents = providerTemplate.Replace ("MonoRuntimeProvider", provider);
-					var real_provider = Path.Combine (OutputDirectory, "src", "mono", provider + ".java");
+					var contents = providerTemplate.Replace (isMonoVM ? "MonoRuntimeProvider" : "NativeAotRuntimeProvider", provider);
+					var real_provider = isMonoVM ?
+						Path.Combine (OutputDirectory, "src", "mono", provider + ".java") :
+						Path.Combine (OutputDirectory, "src", "net", "dot", "jni", "nativeaot", provider + ".java");
 					Files.CopyIfStringChanged (contents, real_provider);
 				}
+			} else {
+				Log.LogDebugMessage ($"Skipping android.content.ContentProvider generation for: {androidRuntime}");
+			}
+
+			// For NativeAOT, generate JavaInteropRuntime.java
+			if (androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
+				const string fileName = "JavaInteropRuntime.java";
+				string template = GetResource (fileName);
+				var contents = template.Replace ("@MAIN_ASSEMBLY_NAME@", TargetName);
+				var path = Path.Combine (OutputDirectory, "src", "net", "dot", "jni", "nativeaot", fileName);
+				Log.LogDebugMessage ($"Writing: {path}");
+				Files.CopyIfStringChanged (contents, path);
 			}
 
 			// Create additional application java sources.

@@ -2,7 +2,7 @@ using Android.Runtime;
 using Java.Interop;
 using System.Runtime.InteropServices;
 
-namespace NativeAOT;
+namespace Microsoft.Android.Runtime;
 
 static class JavaInteropRuntime
 {
@@ -35,7 +35,7 @@ static class JavaInteropRuntime
 	{
 		try {
 			var typeManager = new NativeAotTypeManager ();
-			var options = new JreRuntimeOptions {
+			var options = new NativeAotRuntimeOptions {
 				EnvironmentPointer          = jnienv,
 				TypeManager                 = typeManager,
 				ValueManager                = new NativeAotValueManager (typeManager),
