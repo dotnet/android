@@ -18,13 +18,12 @@ import android.util.Log;
 import mono.android.Runtime;
 import mono.android.DebugRuntime;
 import mono.android.BuildConfig;
+import net.dot.android.ApplicationRegistration;
 
 public class MonoPackageManager {
 
 	static Object lock = new Object ();
 	static boolean initialized;
-
-	static android.content.Context Context;
 
 	public static void LoadApplication (Context context)
 	{
@@ -41,7 +40,7 @@ public class MonoPackageManager {
 			}
 
 			if (context instanceof android.app.Application) {
-				Context = context;
+				ApplicationRegistration.Context = context;
 			}
 			if (!initialized) {
 				android.content.IntentFilter timezoneChangedFilter  = new android.content.IntentFilter (
@@ -129,7 +128,7 @@ public class MonoPackageManager {
 						haveSplitApks
 					);
 
-				net.dot.android.ApplicationRegistration.registerApplications ();
+				ApplicationRegistration.registerApplications ();
 
 				initialized = true;
 			}

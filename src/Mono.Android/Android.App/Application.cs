@@ -14,7 +14,7 @@ namespace Android.App {
 				if (_context != null)
 					return _context;
 
-				IntPtr klass = JNIEnv.FindClass ("mono/MonoPackageManager");
+				IntPtr klass = JNIEnv.FindClass ("net/dot/android/ApplicationRegistration");
 				try {
 					IntPtr field  = JNIEnv.GetStaticFieldID (klass, "Context", "Landroid/content/Context;");
 					IntPtr lref   = JNIEnv.GetStaticObjectField (klass, field);

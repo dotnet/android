@@ -15,10 +15,10 @@ number, it should be *close enough* to work.
 You can guess what the URL is, if you need a specific version like
 `7.0.100-preview.6.22277.6`, for example:
 
-* Windows x64: https://dotnetbuilds.azureedge.net/public/Sdk/7.0.100-preview.6.22277.6/dotnet-sdk-7.0.100-preview.6.22277.6-win-x64.exe
-* Windows arm64: https://dotnetbuilds.azureedge.net/public/Sdk/7.0.100-preview.6.22277.6/dotnet-sdk-7.0.100-preview.6.22277.6-win-arm64.exe
-* macOS x64: https://dotnetbuilds.azureedge.net/public/Sdk/7.0.100-preview.6.22277.6/dotnet-sdk-7.0.100-preview.6.22277.6-osx-x64.pkg
-* macOS arm64: https://dotnetbuilds.azureedge.net/public/Sdk/7.0.100-preview.6.22277.6/dotnet-sdk-7.0.100-preview.6.22277.6-osx-arm64.pkg
+* Windows x64: https://ci.dot.net/public/Sdk/7.0.100-preview.6.22277.6/dotnet-sdk-7.0.100-preview.6.22277.6-win-x64.exe
+* Windows arm64: https://ci.dot.net/public/Sdk/7.0.100-preview.6.22277.6/dotnet-sdk-7.0.100-preview.6.22277.6-win-arm64.exe
+* macOS x64: https://ci.dot.net/public/Sdk/7.0.100-preview.6.22277.6/dotnet-sdk-7.0.100-preview.6.22277.6-osx-x64.pkg
+* macOS arm64: https://ci.dot.net/public/Sdk/7.0.100-preview.6.22277.6/dotnet-sdk-7.0.100-preview.6.22277.6-osx-arm64.pkg
 
 *See [WindowsOnArm64.md][3] for further details about Windows on Arm64.*
 

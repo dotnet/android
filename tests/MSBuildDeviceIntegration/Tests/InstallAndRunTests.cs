@@ -897,10 +897,12 @@ namespace UnnamedProject
 
 		[Test]
 		[Category ("WearOS")]
-		public void DotNetInstallAndRunPreviousSdk ([Values (false, true)] bool isRelease)
+		public void DotNetInstallAndRunPreviousSdk (
+				[Values (false, true)] bool isRelease,
+				[Values ("net8.0-android", "net9.0-android")] string targetFramework)
 		{
 			var proj = new XamarinFormsAndroidApplicationProject () {
-				TargetFramework = "net9.0-android",
+				TargetFramework = targetFramework,
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
 			};
