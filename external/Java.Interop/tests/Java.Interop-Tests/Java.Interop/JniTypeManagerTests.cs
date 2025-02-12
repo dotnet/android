@@ -79,6 +79,9 @@ namespace Java.InteropTests
 
 #if !__ANDROID__
 			// Re-enable once typemap files contain `JavaObject` subclasses, not just Java.Lang.Object subclasses
+			//
+			// Note: dotnet/android@5c23bcda updates Java.Lang.Object to inherit JavaObject; this is not enough,
+			// as `<GenerateJavaStubs/>` only processes assemblies if they reference Mono.Android.dll.
 			AssertGetJniTypeInfoForType (typeof (GenericHolder<int>),       GenericHolder<int>.JniTypeName,    false,   0);
 #endif  // !__ANDROID__
 		}
@@ -86,8 +89,14 @@ namespace Java.InteropTests
 		static void AssertGetJniTypeInfoForType (Type type, string jniType, bool isKeyword, int arrayRank)
 		{
 			var info = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (type);
-			Assert.AreEqual (jniType,   info.Name);
-			Assert.AreEqual (arrayRank, info.ArrayRank);
+
+			// `GetTypeSignature() and `GetTypeSignatures()` should be "in sync"; verify that!
+			var info2   = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignatures (type).FirstOrDefault ();
+
+			Assert.AreEqual (jniType,   info.Name,          $"info.Name for `{type}`");
+			Assert.AreEqual (jniType,   info2.Name,         $"info.Name for `{type}`");
+			Assert.AreEqual (arrayRank, info.ArrayRank,     $"info.ArrayRank for `{type}`");
+			Assert.AreEqual (arrayRank, info2.ArrayRank,    $"info.ArrayRank for `{type}`");
 		}
 
 		[Test]

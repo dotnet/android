@@ -156,21 +156,6 @@ namespace Java.Interop {
 				if (GetBuiltInTypeArraySignature (type, ref signature))
 					return signature.AddArrayRank (rank);
 
-				var simpleRef = GetSimpleReference (type);
-				if (simpleRef != null)
-					return new JniTypeSignature (simpleRef, rank, false);
-
-				var name = type.GetCustomAttribute<JniTypeSignatureAttribute> (inherit: false);
-				if (name != null) {
-#if NET
-					var altRef = GetReplacementType (name.SimpleReference);
-					if (altRef != null) {
-						return new JniTypeSignature (altRef, name.ArrayRank + rank, name.IsKeyword);
-					}
-#endif  // NET
-					return new JniTypeSignature (name.SimpleReference, name.ArrayRank + rank, name.IsKeyword);
-				}
-
 				var isGeneric = type.IsGenericType;
 				var genericDef = isGeneric ? type.GetGenericTypeDefinition () : type;
 				if (isGeneric) {
@@ -178,13 +163,15 @@ namespace Java.Interop {
 						var r = GetTypeSignature (type.GenericTypeArguments [0]);
 						return r.AddArrayRank (rank + 1);
 					}
+
+					var genericSimpleRef = GetSimpleReference (genericDef);
+					if (genericSimpleRef != null)
+						return new JniTypeSignature (genericSimpleRef, rank, false);
 				}
 
-				if (isGeneric) {
-					simpleRef = GetSimpleReference (genericDef);
-					if (simpleRef != null)
-						return new JniTypeSignature (simpleRef, rank, false);
-				}
+				var simpleRef = GetSimpleReference (type);
+				if (simpleRef != null)
+					return new JniTypeSignature (simpleRef, rank, false);
 
 				return default;
 			}
@@ -194,43 +181,38 @@ namespace Java.Interop {
 			{
 				AssertValid ();
 
+				if (type == null)
+					yield break;
 				if (type.ContainsGenericParameters)
 					throw new ArgumentException ($"'{type}' contains a generic type definition. This is not supported.", nameof (type));
 
 				type = GetUnderlyingType (type, out int rank);
 
-				var signature = new JniTypeSignature (null);
+				var signature = JniTypeSignature.Empty;
 				if (GetBuiltInTypeSignature (type, ref signature))
 					yield return signature.AddArrayRank (rank);
 				if (GetBuiltInTypeArraySignature (type, ref signature))
 					yield return signature.AddArrayRank (rank);
 
+				var isGeneric = type.IsGenericType;
+				var genericDef = isGeneric ? type.GetGenericTypeDefinition () : type;
+				if (isGeneric) {
+					if (genericDef == typeof (JavaArray<>) || genericDef == typeof (JavaObjectArray<>)) {
+						var r = GetTypeSignature (type.GenericTypeArguments [0]);
+						yield return r.AddArrayRank (rank + 1);
+					}
+
+					foreach (var genericSimpleRef in GetSimpleReferences (genericDef)) {
+						if (genericSimpleRef == null)
+							continue;
+						yield return new JniTypeSignature (genericSimpleRef, rank, false);
+					}
+				}
+
 				foreach (var simpleRef in GetSimpleReferences (type)) {
 					if (simpleRef == null)
 						continue;
 					yield return new JniTypeSignature (simpleRef, rank, false);
-				}
-
-				var name = type.GetCustomAttribute<JniTypeSignatureAttribute> (inherit: false);
-				if (name != null) {
-					yield return new JniTypeSignature (name.SimpleReference, name.ArrayRank + rank, name.IsKeyword);
-				}
-
-				var isGeneric   = type.IsGenericType;
-				var genericDef  = isGeneric ? type.GetGenericTypeDefinition () : type;
-				if (isGeneric) {
-					if (genericDef == typeof(JavaArray<>) || genericDef == typeof(JavaObjectArray<>)) {
-						var r = GetTypeSignature (type.GenericTypeArguments [0]);
-						yield return r.AddArrayRank (rank + 1);
-					}
-				}
-
-				if (isGeneric) {
-					foreach (var simpleRef in GetSimpleReferences (genericDef)) {
-						if (simpleRef == null)
-							continue;
-						yield return new JniTypeSignature (simpleRef, rank, false);
-					}
 				}
 			}
 
@@ -266,7 +248,18 @@ namespace Java.Interop {
 					throw new ArgumentNullException (nameof (type));
 				if (type.IsArray)
 					throw new ArgumentException ("Array type '" + type.FullName + "' is not supported.", nameof (type));
-				return EmptyStringArray;
+
+				var name = type.GetCustomAttribute<JniTypeSignatureAttribute> (inherit: false);
+				if (name != null) {
+					var altRef = GetReplacementType (name.SimpleReference);
+					if (altRef != null) {
+						yield return altRef;
+					} else {
+						yield return name.SimpleReference;
+					}
+				}
+
+				yield break;
 			}
 
 			static  readonly    string[]    EmptyStringArray    = Array.Empty<string> ();

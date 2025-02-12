@@ -7,6 +7,7 @@ using System.Reflection;
 
 namespace Java.Interop
 {
+	[JniTypeSignature ("java/lang/Object", ArrayRank=1, GenerateJavaPeer=false)]
 	public class JavaObjectArray<
 			[DynamicallyAccessedMembers (Constructors)]
 			T

@@ -10,6 +10,7 @@ using System.Reflection;
 
 namespace Java.Interop
 {
+	[JniTypeSignature ("java/lang/Object", ArrayRank=1, GenerateJavaPeer=false)]
 	public abstract class JavaArray<T> : JavaObject, IList, IList<T>
 	{
 		internal delegate TArray ArrayCreator<TArray> (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
@@ -362,6 +363,7 @@ namespace Java.Interop
 		}
 	}
 	
+	[JniTypeSignature ("java/lang/Object", ArrayRank=1, GenerateJavaPeer=false)]
 	public abstract class JavaPrimitiveArray<
 			[DynamicallyAccessedMembers (Constructors)]
 			T
