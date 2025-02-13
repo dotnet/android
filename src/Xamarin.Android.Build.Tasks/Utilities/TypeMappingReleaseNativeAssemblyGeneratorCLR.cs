@@ -58,19 +58,61 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		sealed class TypeMapJavaContextDataProvider : NativeAssemblerStructContextDataProvider
+		{
+			public override string GetComment (object data, string fieldName)
+			{
+				var java_map_entry = EnsureType<TypeMapJava> (data);
+
+				if (String.Compare ("managed_type_name_index", fieldName, StringComparison.Ordinal) == 0) {
+					return $" managed type name: {java_map_entry.ManagedTypeName}";
+				}
+
+				if (String.Compare ("java_name_index", fieldName, StringComparison.Ordinal) == 0) {
+					return $" Java type name: {java_map_entry.JavaName}";
+				}
+
+				return String.Empty;
+			}
+		};
+
+		sealed class TypeMapModuleEntryContextDataProvider : NativeAssemblerStructContextDataProvider
+		{
+			public override string GetComment (object data, string fieldName)
+			{
+				var module_map_entry = EnsureType<TypeMapModuleEntry> (data);
+
+				if (String.Compare ("managed_type_name_hash_32", fieldName, StringComparison.Ordinal) == 0 ||
+				    String.Compare ("managed_type_name_hash_64", fieldName, StringComparison.Ordinal) == 0) {
+					return $" managed type name: {module_map_entry.ManagedTypeName}";
+				}
+
+				if (String.Compare ("java_map_index", fieldName, StringComparison.Ordinal) == 0) {
+					return $" Java type name: {module_map_entry.JavaTypeMapEntry.JavaName}";
+				}
+
+				return String.Empty;
+			}
+		};
+
 		// Order of fields and their type must correspond *exactly* to that in
 		// src/native/clr/include/xamarin-app.hh TypeMapModuleEntry structure
+		[NativeAssemblerStructContextDataProvider (typeof (TypeMapModuleEntryContextDataProvider))]
 		sealed class TypeMapModuleEntry
 		{
 			[NativeAssembler (Ignore = true)]
 			public TypeMapJava JavaTypeMapEntry;
 
-			[NativeAssembler (ValidTarget = NativeAssemblerValidTarget.ThirtyTwoBit, MemberName = "managed_type_name_hash", NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
+			[NativeAssembler (Ignore = true)]
+			public string ManagedTypeName;
+
+			[NativeAssembler (UsesDataProvider = true, ValidTarget = NativeAssemblerValidTarget.ThirtyTwoBit, MemberName = "managed_type_name_hash", NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 			public uint managed_type_name_hash_32;
 
-			[NativeAssembler (ValidTarget = NativeAssemblerValidTarget.SixtyFourBit, MemberName = "managed_type_name_hash", NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
+			[NativeAssembler (UsesDataProvider = true, ValidTarget = NativeAssemblerValidTarget.SixtyFourBit, MemberName = "managed_type_name_hash", NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 			public ulong managed_type_name_hash_64;
 
+			[NativeAssembler (UsesDataProvider = true)]
 			public uint java_map_index;
 		}
 
@@ -111,10 +153,14 @@ namespace Xamarin.Android.Tasks
 
 		// Order of fields and their type must correspond *exactly* to that in
 		// src/native/clr/include/xamarin-app.hh TypeMapJava structure
+		[NativeAssemblerStructContextDataProvider (typeof (TypeMapJavaContextDataProvider))]
 		sealed class TypeMapJava
 		{
 			[NativeAssembler (Ignore = true)]
 			public string JavaName;
+
+			[NativeAssembler (Ignore = true)]
+			public string ManagedTypeName;
 
 			[NativeAssembler (Ignore = true)]
 			public uint JavaNameHash32;
@@ -122,14 +168,12 @@ namespace Xamarin.Android.Tasks
 			[NativeAssembler (Ignore = true)]
 			public ulong JavaNameHash64;
 
-			[NativeAssembler (Ignore = true)]
-			public uint ManagedNameHash32;
-
-			[NativeAssembler (Ignore = true)]
-			public ulong ManagedNameHash64;
-
 			public uint module_index;
+
+			[NativeAssembler (UsesDataProvider = true)]
 			public uint managed_type_name_index;
+
+			[NativeAssembler (UsesDataProvider = true)]
 			public uint java_name_index;
 		}
 
@@ -166,6 +210,7 @@ namespace Xamarin.Android.Tasks
 			public List<StructureInstance<TypeMapModule>> MapModules;
 			public Dictionary<string, TypeMapJava> JavaTypesByName;
 			public List<string> JavaNames;
+			public List<string> ManagedTypeNames;
 			public List<StructureInstance<TypeMapJava>> JavaMap;
 			public List<ModuleMapData> AllModulesData;
 			public List<string> AssemblyNames;
@@ -226,7 +271,7 @@ namespace Xamarin.Android.Tasks
 
 			foreach (ModuleMapData mmd in cs.AllModulesData) {
 				var mmdVar = new LlvmIrGlobalVariable (mmd.Entries, mmd.SymbolLabel, LlvmIrVariableOptions.LocalConstant) {
-					BeforeWriteCallback = UpdateJavaIndexes,
+					BeforeWriteCallback = SortEntriesAndUpdateJavaIndexes,
 					BeforeWriteCallbackCallerState = cs,
 				};
 				module.Add (mmdVar);
@@ -234,16 +279,27 @@ namespace Xamarin.Android.Tasks
 
 			module.AddGlobalVariable ("java_to_managed_map", cs.JavaMap, LlvmIrVariableOptions.GlobalConstant, " Java to managed map");
 			module.AddGlobalVariable ("java_type_names", cs.JavaNames, LlvmIrVariableOptions.GlobalConstant, " Java type names");
+			module.AddGlobalVariable ("managed_type_names", cs.ManagedTypeNames, LlvmIrVariableOptions.GlobalConstant, " Managed type names");
 			module.AddGlobalVariable ("managed_assembly_names", cs.AssemblyNames, LlvmIrVariableOptions.GlobalConstant, " Managed assembly names");
 		}
 
-		void UpdateJavaIndexes (LlvmIrVariable variable, LlvmIrModuleTarget target, object? callerState)
+		void SortEntriesAndUpdateJavaIndexes (LlvmIrVariable variable, LlvmIrModuleTarget target, object? callerState)
 		{
 			ConstructionState cs = EnsureConstructionState (callerState);
 			LlvmIrGlobalVariable gv = EnsureGlobalVariable (variable);
 			IComparer<StructureInstance<TypeMapJava>> hashComparer = target.Is64Bit ? javaNameHash64Comparer : javaNameHash32Comparer;
 
 			var entries = (List<StructureInstance<TypeMapModuleEntry>>)variable.Value;
+			if (target.Is64Bit) {
+				entries.Sort (
+					(StructureInstance<TypeMapModuleEntry> a, StructureInstance<TypeMapModuleEntry> b) => a.Instance.managed_type_name_hash_64.CompareTo (b.Instance.managed_type_name_hash_64)
+				);
+			} else {
+				entries.Sort (
+					(StructureInstance<TypeMapModuleEntry> a, StructureInstance<TypeMapModuleEntry> b) => a.Instance.managed_type_name_hash_32.CompareTo (b.Instance.managed_type_name_hash_32)
+				);
+			}
+
 			foreach (StructureInstance<TypeMapModuleEntry> entry in entries) {
 				entry.Instance.java_map_index = GetJavaEntryIndex (entry.Instance.JavaTypeMapEntry);
 			}
@@ -309,16 +365,33 @@ namespace Xamarin.Android.Tasks
 			return cs;
 		}
 
+		uint GetEntryIndex (string entryValue, Dictionary<string, uint> seenCache, List<string> entryList)
+		{
+			if (!seenCache.TryGetValue (entryValue, out uint assemblyNameIndex)) {
+				entryList.Add (entryValue);
+				assemblyNameIndex = (uint)(entryList.Count - 1);
+				seenCache.Add (entryValue, assemblyNameIndex);
+			}
+
+			return assemblyNameIndex;
+		}
+
 		void InitJavaMap (ConstructionState cs)
 		{
+			var seenManagedTypeNames = new Dictionary<string, uint> (StringComparer.Ordinal);
 			cs.JavaMap = new List<StructureInstance<TypeMapJava>> ();
+			cs.ManagedTypeNames = new List<string> ();
+
 			TypeMapJava map_entry;
 			foreach (TypeMapGenerator.TypeMapReleaseEntry entry in mappingData.JavaTypes) {
+				uint managedTypeNameIndex = GetEntryIndex (entry.ManagedTypeName, seenManagedTypeNames, cs.ManagedTypeNames);
 				cs.JavaNames.Add (entry.JavaName);
 
 				map_entry = new TypeMapJava {
+					ManagedTypeName = cs.ManagedTypeNames[(int)managedTypeNameIndex],
+
 					module_index = (uint)entry.ModuleIndex, // UInt32.MaxValue,
-//					type_token_id = entry.SkipInJavaToManaged ? 0 : entry.Token,
+					managed_type_name_index = managedTypeNameIndex,
 					java_name_index = (uint)(cs.JavaNames.Count - 1),
 					JavaName = entry.JavaName,
 				};
@@ -331,16 +404,11 @@ namespace Xamarin.Android.Tasks
 		void InitMapModules (ConstructionState cs)
 		{
 			var seenAssemblyNames = new Dictionary<string, uint> (StringComparer.OrdinalIgnoreCase);
-			var assemblyNames = new List<string> ();
 
 			cs.MapModules = new List<StructureInstance<TypeMapModule>> ();
+			cs.AssemblyNames = new List<string> ();
 			foreach (TypeMapGenerator.ModuleReleaseData data in mappingData.Modules) {
-				if (!seenAssemblyNames.TryGetValue (data.AssemblyName, out uint assemblyNameIndex)) {
-					assemblyNames.Add (data.AssemblyName);
-					assemblyNameIndex = (uint)(assemblyNames.Count - 1);
-					seenAssemblyNames.Add (data.AssemblyName, assemblyNameIndex);
-				}
-
+				uint assemblyNameIndex = GetEntryIndex (data.AssemblyName, seenAssemblyNames, cs.AssemblyNames);
 				string mapName = $"module{moduleCounter++}_managed_to_java";
 				string duplicateMapName;
 
@@ -355,7 +423,7 @@ namespace Xamarin.Android.Tasks
 					MapSymbolName = mapName,
 					DuplicateMapSymbolName = duplicateMapName.Length == 0 ? null : duplicateMapName,
 					Data = data,
-					AssemblyName = assemblyNames[(int)assemblyNameIndex],
+					AssemblyName = cs.AssemblyNames[(int)assemblyNameIndex],
 
 					module_uuid = data.MvidBytes,
 					entry_count = (uint)data.Types.Length,
@@ -365,7 +433,6 @@ namespace Xamarin.Android.Tasks
 
 				cs.MapModules.Add (new StructureInstance<TypeMapModule> (typeMapModuleStructureInfo, map_module));
 			}
-			cs.AssemblyNames = assemblyNames;
 		}
 
 		void MapStructures (LlvmIrModule module)
@@ -378,20 +445,23 @@ namespace Xamarin.Android.Tasks
 		void PrepareMapModuleData (string moduleDataSymbolLabel, IEnumerable<TypeMapGenerator.TypeMapReleaseEntry> moduleEntries, ConstructionState cs)
 		{
 			var mapModuleEntries = new List<StructureInstance<TypeMapModuleEntry>> ();
-			// foreach (TypeMapGenerator.TypeMapReleaseEntry entry in moduleEntries) {
-			// 	if (!cs.JavaTypesByName.TryGetValue (entry.JavaName, out TypeMapJava javaType)) {
-			// 		throw new InvalidOperationException ($"Internal error: Java type '{entry.JavaName}' not found in cache");
-			// 	}
+			foreach (TypeMapGenerator.TypeMapReleaseEntry entry in moduleEntries) {
+				if (!cs.JavaTypesByName.TryGetValue (entry.JavaName, out TypeMapJava javaType)) {
+					throw new InvalidOperationException ($"Internal error: Java type '{entry.JavaName}' not found in cache");
+				}
 
-			// 	var map_entry = new TypeMapModuleEntry {
-			// 		JavaTypeMapEntry = javaType,
-			// 		type_token_id = entry.Token,
-			// 		java_map_index = UInt32.MaxValue, // will be set later, when the target is known
-			// 	};
-			// 	mapModuleEntries.Add (new StructureInstance<TypeMapModuleEntry> (typeMapModuleEntryStructureInfo, map_entry));
-			// }
+				var map_entry = new TypeMapModuleEntry {
+					JavaTypeMapEntry = javaType,
+					ManagedTypeName = entry.ManagedTypeName,
 
-			// mapModuleEntries.Sort ((StructureInstance<TypeMapModuleEntry> a, StructureInstance<TypeMapModuleEntry> b) => a.Instance.type_token_id.CompareTo (b.Instance.type_token_id));
+					managed_type_name_hash_32 = (uint)MonoAndroidHelper.GetXxHash (entry.ManagedTypeName, is64Bit: false),
+					managed_type_name_hash_64 = MonoAndroidHelper.GetXxHash (entry.ManagedTypeName, is64Bit: true),
+					java_map_index = UInt32.MaxValue, // will be set later, when the target is known
+				};
+				mapModuleEntries.Add (new StructureInstance<TypeMapModuleEntry> (typeMapModuleEntryStructureInfo, map_entry));
+			}
+
+//			mapModuleEntries.Sort ((StructureInstance<TypeMapModuleEntry> a, StructureInstance<TypeMapModuleEntry> b) => a.Instance.type_token_id.CompareTo (b.Instance.type_token_id));
 			cs.AllModulesData.Add (new ModuleMapData (moduleDataSymbolLabel, mapModuleEntries));
 		}
 

@@ -25,6 +25,7 @@ const TypeMap type_map = {
 const uint32_t managed_to_java_map_module_count = 0;
 const uint32_t java_type_count = 0;
 const char* const java_type_names[] = {};
+const char* const managed_type_names[] = {};
 const char* const managed_assembly_names[] = {};
 TypeMapModule managed_to_java_map[] = {};
 const TypeMapJava java_to_managed_map[] = {};
