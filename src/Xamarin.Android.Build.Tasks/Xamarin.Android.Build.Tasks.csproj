@@ -204,26 +204,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Resources\machine.config">
-      <LogicalName>machine.config</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\MonoRuntimeProvider.Bundled.java">
-      <LogicalName>MonoRuntimeProvider.Bundled.java</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\proguard_xamarin.cfg">
-      <LogicalName>proguard_xamarin.cfg</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\ApplicationRegistration.java">
-      <LogicalName>ApplicationRegistration.java</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\net.android.init.gradle.kts">
-      <LogicalName>net.android.init.gradle.kts</LogicalName>
-    </EmbeddedResource>
     <EmbeddedResource Include="..\Mono.Android\java\mono\android\TypeManager.java">
       <LogicalName>JavaInteropTypeManager.java</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Resource.Designer.snk">
-      <LogicalName>Resource.Designer.snk</LogicalName>
+    <EmbeddedResource Include="Resources\*" Exclude="Resources\LayoutBinding.cs">
+      <LogicalName>%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
 

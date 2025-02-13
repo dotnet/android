@@ -12,10 +12,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AndroidAsset Include="..\LinkedAssets\linked_text2.txt">
+    <AndroidAsset Include="..\Mono.Android-Tests\LinkedAssets\linked_text2.txt">
       <Link>Assets\linked_text2.txt</Link>
     </AndroidAsset>
-    <AndroidAsset Include="..\LinkedAssets\folder.png">
+    <AndroidAsset Include="..\Mono.Android-Tests\LinkedAssets\folder.png">
       <Link>Assets\LibAssetSubFolder\folder.png</Link>
     </AndroidAsset>
   </ItemGroup>

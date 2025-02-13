@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -13,9 +14,9 @@ using System.Threading;
 using Android.Runtime;
 using Java.Interop;
 
-namespace NativeAOT;
+namespace Microsoft.Android.Runtime;
 
-internal class NativeAotValueManager : JniRuntime.JniValueManager
+class NativeAotValueManager : JniRuntime.JniValueManager
 {
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
@@ -113,12 +114,12 @@ internal class NativeAotValueManager : JniRuntime.JniValueManager
 				"Warning: Not registering PeerReference={0} IdentityHashCode=0x{1} Instance={2} Instance.Type={3} Java.Type={4}; " +
 				"keeping previously registered PeerReference={5} Instance={6} Instance.Type={7} Java.Type={8}.",
 				ignoreValue.PeerReference.ToString (),
-				key.ToString ("x"),
-				RuntimeHelpers.GetHashCode (ignoreValue).ToString ("x"),
+				key.ToString ("x", CultureInfo.InvariantCulture),
+				RuntimeHelpers.GetHashCode (ignoreValue).ToString ("x", CultureInfo.InvariantCulture),
 				ignoreValue.GetType ().FullName,
 				JniEnvironment.Types.GetJniTypeNameFromInstance (ignoreValue.PeerReference),
 				keepValue.PeerReference.ToString (),
-				RuntimeHelpers.GetHashCode (keepValue).ToString ("x"),
+				RuntimeHelpers.GetHashCode (keepValue).ToString ("x", CultureInfo.InvariantCulture),
 				keepValue.GetType ().FullName,
 				JniEnvironment.Types.GetJniTypeNameFromInstance (keepValue.PeerReference));
 	}
@@ -186,8 +187,8 @@ internal class NativeAotValueManager : JniRuntime.JniValueManager
 			if (o.LogGlobalReferenceMessages) {
 				o.WriteGlobalReferenceLine ("Finalizing PeerReference={0} IdentityHashCode=0x{1} Instance=0x{2} Instance.Type={3}",
 						h.ToString (),
-						value.JniIdentityHashCode.ToString ("x"),
-						RuntimeHelpers.GetHashCode (value).ToString ("x"),
+						value.JniIdentityHashCode.ToString ("x", CultureInfo.InvariantCulture),
+						RuntimeHelpers.GetHashCode (value).ToString ("x", CultureInfo.InvariantCulture),
 						value.GetType ().ToString ());
 			}
 			RemovePeer (value);
@@ -200,8 +201,8 @@ internal class NativeAotValueManager : JniRuntime.JniValueManager
 		if (o.LogGlobalReferenceMessages) {
 			o.WriteGlobalReferenceLine ("Finalizing PeerReference={0} IdentityHashCode=0x{1} Instance=0x{2} Instance.Type={3}",
 					h.ToString (),
-					value.JniIdentityHashCode.ToString ("x"),
-					RuntimeHelpers.GetHashCode (value).ToString ("x"),
+					value.JniIdentityHashCode.ToString ("x", CultureInfo.InvariantCulture),
+					RuntimeHelpers.GetHashCode (value).ToString ("x", CultureInfo.InvariantCulture),
 					value.GetType ().ToString ());
 		}
 		value.SetPeerReference (new JniObjectReference ());
@@ -214,9 +215,11 @@ internal class NativeAotValueManager : JniRuntime.JniValueManager
 		try {
 			ActivateViaReflection (reference, cinfo, argumentValues);
 		} catch (Exception e) {
-			var m = string.Format ("Could not activate {{ PeerReference={0} IdentityHashCode=0x{1} Java.Type={2} }} for managed type '{3}'.",
+			var m = string.Format (
+					CultureInfo.InvariantCulture,
+					"Could not activate {{ PeerReference={0} IdentityHashCode=0x{1} Java.Type={2} }} for managed type '{3}'.",
 					reference,
-					GetJniIdentityHashCode (reference).ToString ("x"),
+					GetJniIdentityHashCode (reference).ToString ("x", CultureInfo.InvariantCulture),
 					JniEnvironment.Types.GetJniTypeNameFromInstance (reference),
 					cinfo.DeclaringType?.FullName);
 			Debug.WriteLine (m);
@@ -257,7 +260,11 @@ internal class NativeAotValueManager : JniRuntime.JniValueManager
 
 	static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
 
-	protected override IJavaPeerable? TryCreatePeer (ref JniObjectReference reference, JniObjectReferenceOptions options, Type type)
+	protected override IJavaPeerable? TryCreatePeer (
+			ref JniObjectReference reference,
+			JniObjectReferenceOptions options,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type type)
 	{
 		var c = type.GetConstructor (ActivationConstructorBindingFlags, null, XAConstructorSignature, null);
 		if (c != null) {

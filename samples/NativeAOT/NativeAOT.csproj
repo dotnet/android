@@ -9,10 +9,6 @@
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <!-- Temporary for InternalsVisibleTo -->
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <!-- Default to arm64 device -->
     <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
     <!-- Current required properties for NativeAOT -->
@@ -29,8 +25,4 @@
     <_FastDeploymentDiagnosticLogging>true</_FastDeploymentDiagnosticLogging>
   </PropertyGroup>
 
-  <ItemGroup>
-    <AndroidJavaSource Update="*.java" Bind="false" />
-    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj" />
-  </ItemGroup>
 </Project>

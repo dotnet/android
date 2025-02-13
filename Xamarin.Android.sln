@@ -127,6 +127,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "proguard-android", "src\pro
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "native-clr", "src\native\native-clr.csproj", "{39F49484-872A-489D-8E6B-3BC532DD571D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Android.Runtime.NativeAOT", "src\Microsoft.Android.Runtime.NativeAOT\Microsoft.Android.Runtime.NativeAOT.csproj", "{E8831F32-11D7-D42C-E43C-711998BC357A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AnyCPU = Debug|AnyCPU
@@ -353,6 +355,10 @@ Global
 		{39F49484-872A-489D-8E6B-3BC532DD571D}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{39F49484-872A-489D-8E6B-3BC532DD571D}.Release|AnyCPU.ActiveCfg = Release|Any CPU
 		{39F49484-872A-489D-8E6B-3BC532DD571D}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{E8831F32-11D7-D42C-E43C-711998BC357A}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{E8831F32-11D7-D42C-E43C-711998BC357A}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{E8831F32-11D7-D42C-E43C-711998BC357A}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{E8831F32-11D7-D42C-E43C-711998BC357A}.Release|AnyCPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -413,6 +419,7 @@ Global
 		{5E806C9F-1B67-4B6B-A6AB-258834250DBB} = {FFCF518F-2A4A-40A2-9174-2EE13B76C723}
 		{5FD0133B-69E5-4474-9B67-9FD1D0150C70} = {FFCF518F-2A4A-40A2-9174-2EE13B76C723}
 		{39F49484-872A-489D-8E6B-3BC532DD571D} = {FFCF518F-2A4A-40A2-9174-2EE13B76C723}
+		{E8831F32-11D7-D42C-E43C-711998BC357A} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {53A1F287-EFB2-4D97-A4BB-4A5E145613F6}

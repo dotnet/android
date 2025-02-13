@@ -4,8 +4,8 @@ import android.util.Log;
 
 public class JavaInteropRuntime {
     static {
-        Log.d("JavaInteropRuntime", "Loading NativeAOT.so...");
-        System.loadLibrary("NativeAOT");
+        Log.d("JavaInteropRuntime", "Loading @MAIN_ASSEMBLY_NAME@.so...");
+        System.loadLibrary("@MAIN_ASSEMBLY_NAME@");
     }
 
     private JavaInteropRuntime() {
