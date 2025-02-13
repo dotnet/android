@@ -315,6 +315,7 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const uint32_t managed_to_java_map_module_count;
 	[[gnu::visibility("default")]] extern const uint32_t java_type_count;
 	[[gnu::visibility("default")]] extern const char* const java_type_names[];
+	[[gnu::visibility("default")]] extern const char* const managed_type_names[];
 	[[gnu::visibility("default")]] extern const char* const managed_assembly_names[];
 	[[gnu::visibility("default")]] extern TypeMapModule managed_to_java_map[];
 	[[gnu::visibility("default")]] extern const TypeMapJava java_to_managed_map[];
