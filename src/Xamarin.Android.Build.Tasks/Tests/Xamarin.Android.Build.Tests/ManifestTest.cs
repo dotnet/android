@@ -1068,7 +1068,6 @@ class TestActivity : Activity { }"
 
 			var minSdkVersionInt = MonoAndroidHelper.ConvertSupportedOSPlatformVersionToApiLevel (minSdkVersion);
 			if (minSdkVersionInt < 22) {
-				Assert.Ignore ("https://github.com/dotnet/roslyn-analyzers/issues/7525");
 				StringAssertEx.Contains ("warning CA1416", builder.LastBuildOutput, "Should get warning about Android 22 API");
 			} else {
 				builder.AssertHasNoWarnings ();

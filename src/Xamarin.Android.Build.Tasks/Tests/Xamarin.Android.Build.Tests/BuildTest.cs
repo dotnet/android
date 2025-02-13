@@ -651,8 +651,7 @@ public class Test
 		[NonParallelizable]
 		public void BuildApplicationWithSpacesInPath ([Values (true, false)] bool enableMultiDex, [Values ("", "r8")] string linkTool)
 		{
-			// FIXME: https://github.com/dotnet/msbuild/issues/11237, removed `(` and `)` characters
-			var folderName = $"BuildReleaseApp AndÜmläüts{enableMultiDex}{linkTool}";
+			var folderName = $"BuildReleaseApp AndÜmläüts({enableMultiDex}{linkTool})";
 			var lib = new XamarinAndroidLibraryProject {
 				IsRelease = true,
 				ProjectName = "Library1"
