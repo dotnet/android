@@ -8,7 +8,7 @@
 
 #include "shared/xxhash.hh"
 
-static constexpr uint64_t FORMAT_TAG = 0x00035E6972616D58; // 'Xmari^XY' where XY is the format version
+static constexpr uint64_t FORMAT_TAG = 0x00045E6972616D58; // 'Xmari^XY' where XY is the format version
 static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x5A4C4158; // 'XALZ', little-endian
 static constexpr uint32_t ASSEMBLY_STORE_MAGIC = 0x41424158; // 'XABA', little-endian
 
@@ -74,8 +74,8 @@ struct TypeMap
 #else
 struct TypeMapModuleEntry
 {
-	uint32_t       type_token_id;
-	uint32_t       java_map_index;
+	xamarin::android::hash_t managed_type_name_hash;
+	uint32_t                 java_map_index;
 };
 
 struct TypeMapModule
@@ -83,19 +83,16 @@ struct TypeMapModule
 	uint8_t                   module_uuid[16];
 	uint32_t                  entry_count;
 	uint32_t                  duplicate_count;
+	uint32_t                  assembly_name_index;
 	TypeMapModuleEntry const *map;
 	TypeMapModuleEntry const *duplicate_map;
-	char const               *assembly_name;
-	uint8_t                  *image;
-	uint32_t                  java_name_width;
-	uint8_t                  *java_map;
 };
 
 struct TypeMapJava
 {
-	uint32_t module_index;
-	uint32_t type_token_id;
-	uint32_t java_name_index;
+	uint32_t  module_index;
+	uint32_t  managed_type_name_index;
+	uint32_t  java_name_index;
 };
 #endif
 
@@ -315,12 +312,13 @@ extern "C" {
 #if defined (DEBUG)
 	[[gnu::visibility("default")]] extern const TypeMap type_map; // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGenerator.cs
 #else
-	[[gnu::visibility("default")]] extern const uint32_t map_module_count;
+	[[gnu::visibility("default")]] extern const uint32_t managed_to_java_map_module_count;
 	[[gnu::visibility("default")]] extern const uint32_t java_type_count;
 	[[gnu::visibility("default")]] extern const char* const java_type_names[];
-	[[gnu::visibility("default")]] extern TypeMapModule map_modules[];
-	[[gnu::visibility("default")]] extern const TypeMapJava map_java[];
-	[[gnu::visibility("default")]] extern const xamarin::android::hash_t map_java_hashes[];
+	[[gnu::visibility("default")]] extern const char* const managed_assembly_names[];
+	[[gnu::visibility("default")]] extern TypeMapModule managed_to_java_map[];
+	[[gnu::visibility("default")]] extern const TypeMapJava java_to_managed_map[];
+	[[gnu::visibility("default")]] extern const xamarin::android::hash_t java_to_managed_hashes[];
 #endif
 
 	[[gnu::visibility("default")]] extern CompressedAssemblies compressed_assemblies;
