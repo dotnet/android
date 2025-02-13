@@ -135,6 +135,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("PublishAot", "true");
 			proj.SetProperty ("PublishAotUsingRuntimePack", "true");
 			proj.SetProperty ("AndroidNdkDirectory", AndroidNdkPath);
+			proj.SetProperty ("_ExtraTrimmerArgs", "--verbose");
 
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -165,6 +166,38 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsNotNull (method, $"{linkedMonoAndroidAssembly} should contain {typeName}.{methodName}");
 			}
 
+			var typemap = new Dictionary<string, TypeReference> ();
+			var linkedRuntimeAssembly = Path.Combine (intermediate, "linked", "Microsoft.Android.Runtime.NativeAOT.dll");
+			FileAssert.Exists (linkedRuntimeAssembly);
+			using (var assembly = AssemblyDefinition.ReadAssembly (linkedRuntimeAssembly)) {
+				var type = assembly.MainModule.Types.FirstOrDefault (t => t.Name == "NativeAotTypeManager");
+				Assert.IsNotNull (type, $"{linkedRuntimeAssembly} should contain NativeAotTypeManager");
+				var method = type.Methods.FirstOrDefault (m => m.Name == "InitializeTypeMappings");
+				Assert.IsNotNull (method, "NativeAotTypeManager should contain InitializeTypeMappings");
+
+				foreach (var i in method.Body.Instructions) {
+					if (i.OpCode != Mono.Cecil.Cil.OpCodes.Ldstr)
+						continue;
+					if (i.Operand is not string javaName)
+						continue;
+					if (i.Next.Operand is not TypeReference t)
+						continue;
+					typemap.Add (javaName, t);
+				}
+
+				// Basic types
+				AssertTypeMap ("java/lang/Object", "Java.Lang.Object");
+				AssertTypeMap ("java/lang/String", "Java.Lang.String");
+				AssertTypeMap ("android/app/Activity", "Android.App.Activity");
+				AssertTypeMap ("android/widget/Button", "Android.Widget.Button");
+
+				// Special *Invoker case
+				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput,
+					"ILLink: Duplicate typemap entry for android/view/View$OnClickListener => Android.Views.View/IOnClickListenerInvoker"),
+					"Should get log message about duplicate IOnClickListenerInvoker!");
+				AssertTypeMap ("android/view/View$OnClickListener", "Android.Views.View/IOnClickListener");
+			}
+
 			var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
 			FileAssert.Exists (dexFile);
 			foreach (var className in mono_classes) {
@@ -179,6 +212,15 @@ namespace Xamarin.Android.Build.Tests
 			}
 			foreach (var nativeaot_file in nativeaot_files) {
 				Assert.IsTrue (zip.ContainsEntry (nativeaot_file, caseSensitive: true), $"APK must contain `{nativeaot_file}`.");
+			}
+
+			void AssertTypeMap(string javaName, string managedName)
+			{
+				if (typemap.TryGetValue (javaName, out var reference)) {
+					Assert.AreEqual (managedName, reference.ToString ());
+				} else {
+					Assert.Fail ($"InitializeTypeMappings should contain Ldstr \"{javaName}\"!");
+				}
 			}
 		}
 
