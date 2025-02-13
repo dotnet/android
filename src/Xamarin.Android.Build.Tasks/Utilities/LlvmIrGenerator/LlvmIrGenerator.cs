@@ -781,6 +781,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			for (int i = 0; i < info.Members.Count; i++) {
 				StructureMemberInfo smi = info.Members[i];
+				if (!smi.IsSupportedForTarget (context.Target)) {
+					continue;
+				}
 
 				context.Output.Write (context.CurrentIndent);
 				WriteType (context, instance, smi, out _);
@@ -810,7 +813,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					var sb = new StringBuilder (" ");
 					sb.Append (MapManagedTypeToNative (context, smi));
 					sb.Append (' ');
-					sb.Append (smi.Info.Name);
+					sb.Append (smi.MappedName);
 					comment = sb.ToString ();
 				}
 				WriteCommentLine (context, comment);
