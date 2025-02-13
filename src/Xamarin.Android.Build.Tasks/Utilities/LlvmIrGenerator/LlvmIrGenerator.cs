@@ -1098,6 +1098,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			context.IncreaseIndent ();
 			for (int i = 0; i < si.Members.Count; i++) {
 				StructureMemberInfo info = si.Members[i];
+				if (!info.IsSupportedForTarget (context.Target)) {
+					continue;
+				}
+
 				string nativeType = MapManagedTypeToNative (info.MemberType);
 
 				// TODO: nativeType can be an array, update to indicate that (and get the size)
@@ -1108,7 +1112,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					arraySize = String.Empty;
 				}
 
-				var comment = $" {nativeType} {info.Info.Name}{arraySize}";
+				var comment = $" {nativeType} {info.MappedName}{arraySize}";
 				WriteStructureDeclarationField (info.IRType, comment, i == si.Members.Count - 1);
 			}
 			context.DecreaseIndent ();
