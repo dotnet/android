@@ -297,11 +297,34 @@ class LlvmIrGlobalVariable : LlvmIrVariable
 
 class LlvmIrStringVariable : LlvmIrGlobalVariable
 {
-	public LlvmIrStringVariable (string name, string value)
-		: base (typeof(string), name, LlvmIrVariableOptions.LocalString)
+	public LlvmIrStringEncoding Encoding { get; }
+	public string IrType { get; }
+	public bool IsConstantStringLiteral { get; }
+
+	public LlvmIrStringVariable (string name, StringHolder value, LlvmIrVariableOptions? options = null)
+		: base (typeof(string), name, options ?? LlvmIrVariableOptions.GlobalConstantStringPointer)
 	{
 		Value = value;
+		Encoding = value.Encoding;
+
+		switch (value.Encoding) {
+			case LlvmIrStringEncoding.UTF8:
+				IrType = "i8";
+				IsConstantStringLiteral = true;
+				break;
+
+			case LlvmIrStringEncoding.Unicode:
+				IrType = "i16";
+				break;
+
+			default:
+				throw new InvalidOperationException ($"Internal error: unsupported string encoding {value.Encoding}");
+		}
 	}
+
+	public LlvmIrStringVariable (string name, string value, LlvmIrStringEncoding encoding, StringComparison comparison = StringComparison.Ordinal, LlvmIrVariableOptions? options = null)
+		: this (name, new StringHolder (value, encoding, comparison), options)
+	{}
 }
 
 /// <summary>

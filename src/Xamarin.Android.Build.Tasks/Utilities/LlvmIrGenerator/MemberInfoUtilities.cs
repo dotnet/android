@@ -34,6 +34,28 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return true;
 		}
 
+		public static bool IsUnicodeString (this MemberInfo mi, LlvmIrTypeCache cache)
+		{
+			var attr = cache.GetNativeAssemblerAttribute (mi);
+			if (attr == null) {
+				return false;
+			}
+
+			return attr.IsUTF16;
+		}
+
+		public static LlvmIrStringEncoding GetStringEncoding (this MemberInfo mi, LlvmIrTypeCache cache)
+		{
+			const LlvmIrStringEncoding DefaultStringEncoding = LlvmIrStringEncoding.UTF8;
+
+			var attr = cache.GetNativeAssemblerAttribute (mi);
+			if (attr == null) {
+				return DefaultStringEncoding;
+			}
+
+			return attr.IsUTF16 ? LlvmIrStringEncoding.Unicode : DefaultStringEncoding;
+		}
+
 		public static bool ShouldBeIgnored (this MemberInfo mi, LlvmIrTypeCache cache)
 		{
 			var attr = cache.GetNativeAssemblerAttribute (mi);
