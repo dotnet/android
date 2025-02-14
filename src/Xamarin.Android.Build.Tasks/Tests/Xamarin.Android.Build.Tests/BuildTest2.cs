@@ -137,6 +137,10 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidNdkDirectory", AndroidNdkPath);
 			proj.SetProperty ("_ExtraTrimmerArgs", "--verbose");
 
+			// Required for java/util/ArrayList assertion below
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${AFTER_ONCREATE}", "new Android.Runtime.JavaList (); new Android.Runtime.JavaList<int> ();");
+
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			b.Output.AssertTargetIsNotSkipped ("_PrepareLinking");
@@ -188,14 +192,19 @@ namespace Xamarin.Android.Build.Tests
 				// Basic types
 				AssertTypeMap ("java/lang/Object", "Java.Lang.Object");
 				AssertTypeMap ("java/lang/String", "Java.Lang.String");
+				AssertTypeMap ("[Ljava/lang/Object;", "Java.Interop.JavaArray`1");
+				AssertTypeMap ("java/util/ArrayList", "Android.Runtime.JavaList");
 				AssertTypeMap ("android/app/Activity", "Android.App.Activity");
 				AssertTypeMap ("android/widget/Button", "Android.Widget.Button");
+				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput,
+					"Duplicate typemap entry for java/util/ArrayList => Android.Runtime.JavaList`1"),
+					"Should get log message about duplicate Android.Runtime.JavaList`1!");
 
 				// Special *Invoker case
-				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput,
-					"ILLink: Duplicate typemap entry for android/view/View$OnClickListener => Android.Views.View/IOnClickListenerInvoker"),
-					"Should get log message about duplicate IOnClickListenerInvoker!");
 				AssertTypeMap ("android/view/View$OnClickListener", "Android.Views.View/IOnClickListener");
+				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput,
+					"Duplicate typemap entry for android/view/View$OnClickListener => Android.Views.View/IOnClickListenerInvoker"),
+					"Should get log message about duplicate IOnClickListenerInvoker!");
 			}
 
 			var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");

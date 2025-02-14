@@ -95,6 +95,12 @@ public class TypeMappingStep : BaseStep
 		foreach (var type in list) {
 			if (type == best)
 				continue;
+			// Types in Mono.Android assembly should be first in the list
+			if (best.Module.Assembly.Name.Name != "Mono.Android" &&
+					type.Module.Assembly.Name.Name == "Mono.Android") {
+				best = type;
+				continue;
+			}
 			// We found the `Invoker` type *before* the declared type 
  			// Fix things up so the abstract type is first, and the `Invoker` is considered a duplicate. 
 			if ((type.IsAbstract || type.IsInterface) &&
@@ -102,6 +108,7 @@ public class TypeMappingStep : BaseStep
 					!best.IsInterface &&
 					type.IsAssignableFrom (best, Context)) {
 				best = type;
+				continue;
 			}
 		}
 		foreach (var type in list) {
@@ -119,12 +126,7 @@ public class TypeMappingStep : BaseStep
 			if (!TypeMappings.TryGetValue (javaName, out var list)) {
 				TypeMappings.Add (javaName, list = new List<TypeDefinition> ());
 			}
-			// Types in Mono.Android assembly should be first in the list
-			if (assembly.Name.Name == "Mono.Android") {
-				list.Insert (0, type);
-			} else {
-				list.Add (type);
-			}
+			list.Add (type);
 		}
 
 		if (!type.HasNestedTypes)
