@@ -21,12 +21,12 @@
 
 #include "archive-dso-stub-config.hh"
 #include "log_types.hh"
-#include "strings.hh"
+#include <runtime-base/strings.hh>
 #include "xamarin-app.hh"
-#include "cpp-util.hh"
+#include <shared/cpp-util.hh>
 #include "cppcompat.hh"
 #include "shared-constants.hh"
-#include "xxhash.hh"
+#include <shared/xxhash.hh>
 #include "util.hh"
 
 #include <concepts>
@@ -355,7 +355,7 @@ namespace xamarin::android::internal {
 				&& ((application_config.have_runtime_config_blob && runtime_config_blob_found) || !application_config.have_runtime_config_blob);
 		}
 
-		force_inline static c_unique_ptr<char> to_utf8 (const MonoString *s) noexcept
+		[[gnu::always_inline]] static c_unique_ptr<char> to_utf8 (const MonoString *s) noexcept
 		{
 			if (s == nullptr) [[unlikely]] {
 				// We need to duplicate mono_string_to_utf8 behavior

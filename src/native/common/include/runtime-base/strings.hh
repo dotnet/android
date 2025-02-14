@@ -1,20 +1,26 @@
-#ifndef __STRINGS_HH
-#define __STRINGS_HH
+#pragma once
 
 #include <array>
 #include <cstring>
 #include <cerrno>
+#include <expected>
 #include <limits>
+#include <string>
 #include <string_view>
 #include <type_traits>
 #include <unistd.h>
 
-#include "platform-compat.hh"
-#include "helpers.hh"
-#include "shared-constants.hh"
+#include <shared/helpers.hh>
 
-namespace xamarin::android::internal
-{
+#if defined(XA_HOST_CLR)
+#include <constants.hh>
+#else
+#include <runtime-base/shared-constants.hh>
+
+using Constants = xamarin::android::internal::SharedConstants;
+#endif
+
+namespace xamarin::android {
 	static constexpr size_t SENSIBLE_TYPE_NAME_LENGTH = 128uz;
 	static constexpr size_t SENSIBLE_PATH_MAX = 256uz;
 
@@ -24,47 +30,83 @@ namespace xamarin::android::internal
 	static constexpr bool BoundsCheck = false;
 #endif
 
+	enum class string_segment_error
+	{
+		index_out_of_range,
+	};
+
+	static inline auto to_string (string_segment_error error) -> std::string_view const
+	{
+		using std::operator""sv;
+
+		switch (error) {
+			case string_segment_error::index_out_of_range:
+				return "Index out of range"sv;
+
+			default:
+				return "Unknown error"sv;
+		}
+	}
+
 	class string_segment
 	{
 	public:
-		force_inline bool initialized () const noexcept
+		[[gnu::always_inline]]
+		auto initialized () const noexcept -> bool
 		{
 			return !_fresh;
 		}
 
-		force_inline const char* start () const noexcept
+		[[gnu::always_inline]]
+		auto start () const noexcept -> const char*
 		{
 			return _start;
 		}
 
-		force_inline size_t length () const noexcept
+		[[gnu::always_inline]]
+		auto at (size_t offset) const noexcept -> std::expected<const char*, string_segment_error>
+		{
+			if (offset >= length ()) {
+				return std::unexpected (string_segment_error::index_out_of_range);
+			}
+
+			return _start + offset;
+		}
+
+		[[gnu::always_inline]]
+		auto length () const noexcept -> size_t
 		{
 			return _length;
 		}
 
-		force_inline bool empty () const noexcept
+		[[gnu::always_inline]]
+		auto empty () const noexcept -> bool
 		{
 			return length () == 0;
 		}
 
-		force_inline bool equal (const char *s) const noexcept
+		[[gnu::always_inline]]
+		auto equal (const char *s) const noexcept -> bool
 		{
-			if (s == nullptr)
+			if (s == nullptr) {
 				return false;
+			}
 
 			return equal (s, strlen (s));
 		}
 
-		force_inline bool equal (const char *s, size_t s_length) const noexcept
+		[[gnu::always_inline]]
+		auto equal (const char *s, size_t s_length) const noexcept -> bool
 		{
-			if (s == nullptr)
-				return false;
-
-			if (!can_access (s_length)) {
+			if (s == nullptr) {
 				return false;
 			}
 
 			if (length () != s_length) {
+				return false;
+			}
+
+			if (!can_access (s_length)) [[unlikely]] {
 				return false;
 			}
 
@@ -75,26 +117,30 @@ namespace xamarin::android::internal
 			return memcmp (_start, s, length ()) == 0;
 		}
 
-		template<size_t Size>
-		force_inline bool equal (const char (&s)[Size]) noexcept
+		template<size_t Size> [[gnu::always_inline]]
+		auto equal (const char (&s)[Size]) noexcept -> bool
 		{
 			return equal (s, Size - 1);
 		}
 
-		force_inline bool equal (std::string_view const& s) noexcept
+		[[gnu::always_inline]]
+		auto equal (std::string_view const& s) noexcept -> bool
 		{
 			return equal (s.data (), s.length ());
 		}
 
-		force_inline bool starts_with_c (const char *s) const noexcept
+		[[gnu::always_inline]]
+		auto starts_with_c (const char *s) const noexcept -> bool
 		{
-			if (s == nullptr)
+			if (s == nullptr) {
 				return false;
+			}
 
 			return starts_with (s, strlen (s));
 		}
 
-		force_inline bool starts_with (const char *s, size_t s_length) const noexcept
+		[[gnu::always_inline]]
+		auto starts_with (const char *s, size_t s_length) const noexcept -> bool
 		{
 			if (s == nullptr || !can_access (s_length)) {
 				return false;
@@ -107,18 +153,20 @@ namespace xamarin::android::internal
 			return memcmp (start (), s, s_length) == 0;
 		}
 
-		template<size_t Size>
-		force_inline bool starts_with (const char (&s)[Size]) const noexcept
+		template<size_t Size> [[gnu::always_inline]]
+		auto starts_with (const char (&s)[Size]) const noexcept -> bool
 		{
 			return starts_with (s, Size - 1);
 		}
 
-		force_inline bool starts_with (std::string_view const& s) const noexcept
+		[[gnu::always_inline]]
+		auto starts_with (std::string_view const& s) const noexcept -> bool
 		{
 			return starts_with (s.data (), s.length ());
 		}
 
-		force_inline bool has_at (const char ch, size_t index) const noexcept
+		[[gnu::always_inline]]
+		auto has_at (const char ch, size_t index) const noexcept -> bool
 		{
 			if (!can_access (index)) {
 				return false;
@@ -127,7 +175,8 @@ namespace xamarin::android::internal
 			return start ()[index] == ch;
 		}
 
-		force_inline ssize_t find (const char ch, size_t start_index) const noexcept
+		[[gnu::always_inline]]
+		auto find (const char ch, size_t start_index) const noexcept -> ssize_t
 		{
 			if (!can_access (start_index)) {
 				return -1;
@@ -143,8 +192,8 @@ namespace xamarin::android::internal
 			return -1;
 		}
 
-		template<typename T>
-		force_inline bool to_integer (T &val, size_t start_index = 0uz, int base = 10) const noexcept
+		template<typename T> [[gnu::always_inline]]
+		auto to_integer (T &val, size_t start_index = 0uz, int base = 10) const noexcept -> bool
 		{
 			static_assert (std::is_integral_v<T>);
 			constexpr T min = std::numeric_limits<T>::min ();
@@ -199,14 +248,16 @@ namespace xamarin::android::internal
 		}
 
 	private:
-		force_inline bool can_access (size_t index) const noexcept
+		[[gnu::always_inline]]
+		auto can_access (size_t index) const noexcept -> bool
 		{
 			if (!initialized () || start () == nullptr) [[unlikely]] {
 				return false;
 			}
 
-			if (index > length ())
+			if (index > length ()) {
 				return false;
+			}
 
 			return true;
 		}
@@ -241,23 +292,24 @@ namespace xamarin::android::internal
 			free_store ();
 		}
 
-		T* get () noexcept
+		auto get () noexcept -> T*
 		{
 			return allocated_store == nullptr ? local_store.data () : allocated_store;
 		}
 
-		const T* get () const noexcept
+		auto get () const noexcept -> const T*
 		{
 			return allocated_store == nullptr ? local_store.data () : allocated_store;
 		}
 
-		size_t size () const noexcept
+		auto size () const noexcept -> size_t
 		{
 			return store_size;
 		}
 
 	protected:
-		force_inline void init_store (size_t new_size) noexcept
+		[[gnu::always_inline]]
+		void init_store (size_t new_size) noexcept
 		{
 			if (new_size > MaxStackSize) {
 				allocated_store = new T[new_size];
@@ -267,19 +319,24 @@ namespace xamarin::android::internal
 			store_size = new_size;
 		}
 
-		force_inline void free_store () noexcept
+		[[gnu::always_inline]]
+		void free_store () noexcept
 		{
-			if (allocated_store == nullptr)
+			if (allocated_store == nullptr) {
 				return;
+			}
+
 			delete[] allocated_store;
 		}
 
-		force_inline LocalStoreArray& get_local_store () noexcept
+		[[gnu::always_inline]]
+		auto get_local_store () noexcept -> LocalStoreArray&
 		{
 			return local_store;
 		}
 
-		force_inline T* get_allocated_store () noexcept
+		[[gnu::always_inline]]
+		auto get_allocated_store () noexcept -> T*
 		{
 			return allocated_store;
 		}
@@ -387,21 +444,25 @@ namespace xamarin::android::internal
 		explicit string_base (const string_segment &token)
 			: string_base (token.initialized () ? token.length () : 0)
 		{
-			if (token.initialized ())
+			if (token.initialized ()) {
 				assign (token.start (), token.length ());
+			}
 		}
 
-		force_inline size_t length () const noexcept
+		[[gnu::always_inline]]
+		auto length () const noexcept -> size_t
 		{
 			return idx;
 		}
 
-		force_inline bool empty () const noexcept
+		[[gnu::always_inline]]
+		auto empty () const noexcept -> bool
 		{
 			return length () == 0;
 		}
 
-		force_inline void set_length (size_t new_length) noexcept
+		[[gnu::always_inline]]
+		void set_length (size_t new_length) noexcept
 		{
 			if (new_length >= buffer.size ()) {
 				return;
@@ -411,18 +472,21 @@ namespace xamarin::android::internal
 			terminate ();
 		}
 
-		force_inline void clear () noexcept
+		[[gnu::always_inline]]
+		void clear () noexcept
 		{
 			set_length (0);
 			buffer.get ()[0] = NUL;
 		}
 
-		force_inline void terminate () noexcept
+		[[gnu::always_inline]]
+		void terminate () noexcept
 		{
 			buffer.get ()[idx] = NUL;
 		}
 
-		force_inline string_base& replace (const TChar c1, const TChar c2) noexcept
+		[[gnu::always_inline]]
+		auto replace (const TChar c1, const TChar c2) noexcept -> string_base&
 		{
 			if (empty ()) {
 				return *this;
@@ -437,10 +501,12 @@ namespace xamarin::android::internal
 			return *this;
 		}
 
-		force_inline string_base& append (const TChar* s, size_t length) noexcept
+		[[gnu::always_inline]]
+		auto append (const TChar* s, size_t length) noexcept -> string_base&
 		{
-			if (s == nullptr || length == 0uz)
+			if (s == nullptr || length == 0uz) {
 				return *this;
+			}
 
 			resize_for_extra (length);
 			if constexpr (BoundsCheck) {
@@ -455,107 +521,130 @@ namespace xamarin::android::internal
 		}
 
 		template<size_t LocalMaxStackSize, typename LocalTStorage, typename LocalTChar = char>
-		force_inline string_base& append (internal::string_base<LocalMaxStackSize, LocalTStorage, LocalTChar> const& str) noexcept
+		[[gnu::always_inline]]
+		auto append (string_base<LocalMaxStackSize, LocalTStorage, LocalTChar> const& str) noexcept -> string_base&
 		{
 			return append (str.get (), str.length ());
 		}
 
-		force_inline string_base& append (std::string_view const& sv) noexcept
+		[[gnu::always_inline]]
+		auto append (std::string_view const& sv) noexcept -> string_base&
 		{
 			return append (sv.data (), sv.length ());
 		}
 
-		template<size_t Size>
-		force_inline string_base& append (const char (&s)[Size]) noexcept
+		template<size_t Size> [[gnu::always_inline]]
+		auto append (const char (&s)[Size]) noexcept -> string_base&
 		{
 			return append (s, Size - 1);
 		}
 
-		force_inline string_base& append_c (const char *s) noexcept
+		[[gnu::always_inline]]
+		auto append_c (const char *s) noexcept -> string_base&
 		{
-			if (s == nullptr)
+			if (s == nullptr) {
 				return *this;
+			}
 
 			return append (s, strlen (s));
 		}
 
-		force_inline string_base& append (int16_t i) noexcept
+		[[gnu::always_inline]]
+		auto append (int16_t i) noexcept -> string_base&
 		{
-			resize_for_extra (SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10);
+			resize_for_extra (Constants::MAX_INTEGER_DIGIT_COUNT_BASE10);
 			append_integer (buffer.get (), i);
 			return *this;
 		}
 
-		force_inline string_base& append (uint16_t i) noexcept
+		[[gnu::always_inline]]
+		auto append (uint16_t i) noexcept -> string_base&
 		{
-			resize_for_extra (SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10);
+			resize_for_extra (Constants::MAX_INTEGER_DIGIT_COUNT_BASE10);
 			append_integer (i);
 			return *this;
 		}
 
-		force_inline string_base& append (int32_t i) noexcept
+		[[gnu::always_inline]]
+		auto append (int32_t i) noexcept -> string_base&
 		{
-			resize_for_extra (SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10);
+			resize_for_extra (Constants::MAX_INTEGER_DIGIT_COUNT_BASE10);
 			append_integer (i);
 			return *this;
 		}
 
-		force_inline string_base& append (uint32_t i) noexcept
+		[[gnu::always_inline]]
+		auto append (uint32_t i) noexcept -> string_base&
 		{
-			resize_for_extra (SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10);
+			resize_for_extra (Constants::MAX_INTEGER_DIGIT_COUNT_BASE10);
 			append_integer (i);
 			return *this;
 		}
 
-		force_inline string_base& append (int64_t i) noexcept
+		[[gnu::always_inline]]
+		auto append (int64_t i) noexcept -> string_base&
 		{
-			resize_for_extra (SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10);
+			resize_for_extra (Constants::MAX_INTEGER_DIGIT_COUNT_BASE10);
 			append_integer (i);
 			return *this;
 		}
 
-		force_inline string_base& append (uint64_t i) noexcept
+		[[gnu::always_inline]]
+		auto append (uint64_t i) noexcept -> string_base&
 		{
-			resize_for_extra (SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10);
+			resize_for_extra (Constants::MAX_INTEGER_DIGIT_COUNT_BASE10);
 			append_integer (i);
 			return *this;
 		}
 
-		force_inline string_base& assign (const TChar* s, size_t length) noexcept
+		[[gnu::always_inline]]
+		auto assign (const TChar* s, size_t length) noexcept -> string_base&
 		{
 			idx = 0;
 			return append (s, length);
 		}
 
-		force_inline string_base& assign_c (const TChar* s) noexcept
+		[[gnu::always_inline]]
+		auto assign_c (const TChar* s) noexcept -> string_base&
 		{
-			if (s == nullptr)
+			if (s == nullptr) {
 				return *this;
+			}
 
 			return assign (s, strlen (s));
 		}
 
-		force_inline string_base& assign (std::string_view const& sv) noexcept
+		[[gnu::always_inline]]
+		auto assign (std::string_view const& sv) noexcept -> string_base&
 		{
 			return assign (sv.data (), sv.size ());
 		}
 
-		template<size_t Size>
-		force_inline string_base& assign (const char (&s)[Size]) noexcept
+		[[gnu::always_inline]]
+		auto assign (std::string const& s) noexcept -> string_base&
+		{
+			return assign (s.data (), s.size ());
+		}
+
+		template<size_t Size> [[gnu::always_inline]]
+		auto assign (const char (&s)[Size]) noexcept -> string_base&
 		{
 			return assign (s, Size - 1);
 		}
 
 		template<size_t LocalMaxStackSize, typename LocalTStorage, typename LocalTChar = char>
-		force_inline string_base& assign (internal::string_base<LocalMaxStackSize, LocalTStorage, LocalTChar> const& str) noexcept
+		[[gnu::always_inline]]
+		auto assign (string_base<LocalMaxStackSize, LocalTStorage, LocalTChar> const& str) noexcept -> string_base&
 		{
 			return assign (str.get (), str.length ());
 		}
 
-		force_inline string_base& assign (const TChar* s, size_t offset, size_t count) noexcept
+		[[gnu::always_inline]]
+		auto assign (const TChar* s, size_t offset, size_t count) noexcept -> string_base&
 		{
-			if (s == nullptr)
+			if (s == nullptr) {
 				return *this;
+			}
 
 			if constexpr (BoundsCheck) {
 				size_t slen = strlen (s);
@@ -567,7 +656,8 @@ namespace xamarin::android::internal
 			return assign (s + offset, count);
 		}
 
-		force_inline bool next_token (size_t start_index, const TChar separator, string_segment& token) const noexcept
+		[[gnu::always_inline]]
+		auto next_token (size_t start_index, const TChar separator, string_segment& token) const noexcept -> bool
 		{
 			size_t index;
 			if (token._fresh) {
@@ -601,12 +691,14 @@ namespace xamarin::android::internal
 			return true;
 		}
 
-		force_inline bool next_token (const char separator, string_segment& token) const noexcept
+		[[gnu::always_inline]]
+		auto next_token (const char separator, string_segment& token) const noexcept -> bool
 		{
 			return next_token (0, separator, token);
 		}
 
-		force_inline ssize_t index_of (const TChar ch) const noexcept
+		[[gnu::always_inline]]
+		auto index_of (const TChar ch) const noexcept -> ssize_t
 		{
 			const TChar *p = buffer.get ();
 			while (p != nullptr && *p != NUL) {
@@ -619,40 +711,47 @@ namespace xamarin::android::internal
 			return -1;
 		}
 
-		force_inline bool starts_with (const TChar *s, size_t s_length) const noexcept
+		[[gnu::always_inline]]
+		auto starts_with (const TChar *s, size_t s_length) const noexcept -> bool
 		{
-			if (s == nullptr || s_length == 0 || s_length > buffer.size ())
+			if (s == nullptr || s_length == 0 || s_length > buffer.size ()) {
 				return false;
+			}
 
 			return memcmp (buffer.get (), s, s_length) == 0;
 		}
 
-		force_inline bool starts_with_c (const char* s) noexcept
+		[[gnu::always_inline]]
+		auto starts_with_c (const char* s) noexcept -> bool
 		{
-			if (s == nullptr)
+			if (s == nullptr) {
 				return false;
+			}
 
 			return starts_with (s, strlen (s));
 		}
 
-		template<size_t Size>
-		force_inline bool starts_with (const char (&s)[Size]) noexcept
+		template<size_t Size> [[gnu::always_inline]]
+		auto starts_with (const char (&s)[Size]) noexcept -> bool
 		{
 			return starts_with (s, Size - 1);
 		}
 
-		force_inline bool starts_with (std::string_view const& s) noexcept
+		[[gnu::always_inline]]
+		auto starts_with (std::string_view const& s) noexcept -> bool
 		{
 			return starts_with (s.data (), s.length ());
 		}
 
-		force_inline void set_length_after_direct_write (size_t new_length) noexcept
+		[[gnu::always_inline]]
+		void set_length_after_direct_write (size_t new_length) noexcept
 		{
 			set_length (new_length);
 			terminate ();
 		}
 
-		force_inline void set_at (size_t index, const TChar ch) noexcept
+		[[gnu::always_inline]]
+		void set_at (size_t index, const TChar ch) noexcept
 		{
 			ensure_valid_index (index);
 			TChar *p = buffer + index;
@@ -663,52 +762,59 @@ namespace xamarin::android::internal
 			*p = ch;
 		}
 
-		force_inline const TChar get_at (size_t index) const noexcept
+		[[gnu::always_inline]]
+		auto get_at (size_t index) const noexcept -> const TChar
 		{
 			ensure_valid_index (index);
 			return *(buffer.get () + index);
 		}
 
-		force_inline TChar& get_at (size_t index) noexcept
+		[[gnu::always_inline]]
+		auto get_at (size_t index) noexcept -> TChar&
 		{
 			ensure_valid_index (index);
 			return *(buffer.get () + index);
 		}
 
-		force_inline const TChar* get () const noexcept
+		[[gnu::always_inline]]
+		auto get () const noexcept -> const TChar*
 		{
 			return buffer.get ();
 		}
 
-		force_inline TChar* get () noexcept
+		[[gnu::always_inline]]
+		auto get () noexcept -> TChar*
 		{
 			return buffer.get ();
 		}
 
-		force_inline size_t size () const noexcept
+		[[gnu::always_inline]]
+		auto size () const noexcept -> size_t
 		{
 			return buffer.size ();
 		}
 
-		char operator[] (size_t index) const noexcept
+		[[gnu::always_inline]]
+		auto operator[] (size_t index) const noexcept -> char
 		{
 			return get_at (index);
 		}
 
-		char& operator[] (size_t index) noexcept
+		[[gnu::always_inline]]
+		auto operator[] (size_t index) noexcept -> char&
 		{
 			return get_at (index);
 		}
 
 	protected:
-		template<typename Integer>
-		force_inline void append_integer (Integer i) noexcept
+		template<typename Integer> [[gnu::always_inline]]
+		void append_integer (Integer i) noexcept
 		{
 			static_assert (std::is_integral_v<Integer>);
 
-			resize_for_extra (SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10);
+			resize_for_extra (Constants::MAX_INTEGER_DIGIT_COUNT_BASE10);
 			if constexpr (BoundsCheck) {
-				ensure_have_extra (SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10);
+				ensure_have_extra (Constants::MAX_INTEGER_DIGIT_COUNT_BASE10);
 			}
 
 			if (i == 0) {
@@ -719,8 +825,8 @@ namespace xamarin::android::internal
 				return;
 			}
 
-			TChar temp_buf[SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10 + 1uz];
-			TChar *p = temp_buf + SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10;
+			TChar temp_buf[Constants::MAX_INTEGER_DIGIT_COUNT_BASE10 + 1uz];
+			TChar *p = temp_buf + Constants::MAX_INTEGER_DIGIT_COUNT_BASE10;
 			*p = NUL;
 			TChar *end = p;
 
@@ -759,7 +865,8 @@ namespace xamarin::android::internal
 			append (p, static_cast<size_t>(end - p));
 		}
 
-		force_inline void ensure_valid_index (size_t access_index) const noexcept
+		[[gnu::always_inline]]
+		void ensure_valid_index (size_t access_index) const noexcept
 		{
 			if (access_index < idx && access_index < buffer.size ()) [[likely]] {
 				return;
@@ -770,7 +877,8 @@ namespace xamarin::android::internal
 			Helpers::abort_application (n == -1 ? "Index out of range" : message);
 		}
 
-		force_inline void ensure_have_extra (size_t length) noexcept
+		[[gnu::always_inline]]
+		void ensure_have_extra (size_t length) noexcept
 		{
 			size_t needed_space = Helpers::add_with_overflow_check<size_t> (length, idx + 1);
 			if (needed_space > buffer.size ()) {
@@ -785,7 +893,8 @@ namespace xamarin::android::internal
 			}
 		}
 
-		force_inline void resize_for_extra (size_t needed_space) noexcept
+		[[gnu::always_inline]]
+		void resize_for_extra (size_t needed_space) noexcept
 		{
 			if constexpr (TStorage::has_resize) {
 				size_t required_space = Helpers::add_with_overflow_check<size_t> (needed_space, idx + 1uz);
@@ -853,4 +962,3 @@ namespace xamarin::android::internal
 		}
 	};
 }
-#endif // __STRINGS_HH

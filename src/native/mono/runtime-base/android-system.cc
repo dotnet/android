@@ -6,12 +6,12 @@
 #include <mono/metadata/object.h>
 
 #include "android-system.hh"
-#include "cpp-util.hh"
+#include <shared/cpp-util.hh>
 #include "java-interop-dlfcn.h"
 #include "java-interop.h"
-#include "jni-wrappers.hh"
+#include <runtime-base/jni-wrappers.hh>
 #include "shared-constants.hh"
-#include "strings.hh"
+#include <runtime-base/strings.hh>
 #include "util.hh"
 #include "xamarin-app.hh"
 
@@ -720,7 +720,7 @@ AndroidSystem::for_each_apk (jstring_array_wrapper &runtimeApks, ForEachApkHandl
 	}
 }
 
-force_inline void
+[[gnu::always_inline]] void
 AndroidSystem::add_apk_libdir (const char *apk, size_t &index, const char *abi) noexcept
 {
 	abort_unless (index < app_lib_directories.size (), "Index out of range");
@@ -729,7 +729,7 @@ AndroidSystem::add_apk_libdir (const char *apk, size_t &index, const char *abi) 
 	index++;
 }
 
-force_inline void
+[[gnu::always_inline]] void
 AndroidSystem::setup_apk_directories (unsigned short running_on_cpu, jstring_array_wrapper &runtimeApks, bool have_split_apks) noexcept
 {
 	const char *abi = android_abi_names [running_on_cpu];

@@ -16,7 +16,7 @@
 #include <semaphore.h>
 #include <android/log.h>
 
-#include "helpers.hh"
+#include <shared/helpers.hh>
 
 namespace xamarin::android::detail {
 	[[gnu::always_inline, gnu::flatten]]

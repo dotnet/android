@@ -3,7 +3,7 @@
 #include <string>
 
 #include "cppcompat.hh"
-#include "xxhash.hh"
+#include <shared/xxhash.hh>
 
 // NDEBUG causes robin_map.h not to include <iostream> which, in turn, prevents indirect inclusion of <mutex>. <mutex>
 // conflicts with our std::mutex definition in cppcompat.hh
@@ -39,7 +39,7 @@ namespace xamarin::android {
 
 	struct string_hash
 	{
-		force_inline xamarin::android::hash_t operator() (std::string const& s) const noexcept
+		[[gnu::always_inline]] xamarin::android::hash_t operator() (std::string const& s) const noexcept
 		{
 			return xamarin::android::xxhash::hash (s.c_str (), s.length ());
 		}

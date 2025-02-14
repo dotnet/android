@@ -9,13 +9,13 @@
 
 #include "embedded-assemblies.hh"
 #include "globals.hh"
-#include "strings.hh"
+#include <runtime-base/strings.hh>
 #include "xamarin-app.hh"
-#include "xxhash.hh"
+#include <shared/xxhash.hh>
 
 using namespace xamarin::android::internal;
 
-force_inline bool
+[[gnu::always_inline]] bool
 EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX> &entry_name, ZipEntryLoadState &state) noexcept
 {
 	entry_name.clear ();
@@ -150,7 +150,7 @@ EmbeddedAssemblies::store_individual_assembly_data (dynamic_local_string<SENSIBL
 	have_and_want_debug_symbols = register_debug_symbols && bundled_debug_data != nullptr;
 }
 
-force_inline void
+[[gnu::always_inline]] void
 EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, [[maybe_unused]] monodroid_should_register should_register, ZipEntryLoadState &state) noexcept
 {
 	// TODO: do away with all the string manipulation here. Replace it with generating xxhash for the entry name
@@ -257,7 +257,7 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 	have_and_want_debug_symbols = register_debug_symbols;
 }
 
-force_inline void
+[[gnu::always_inline]] void
 EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept
 {
 	if (all_required_zip_entries_found ()) {
@@ -389,7 +389,7 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 }
 
 template<bool NeedsNameAlloc>
-force_inline void
+[[gnu::always_inline]] void
 EmbeddedAssemblies::set_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept
 {
 	entry.file_fd = state.file_fd;
@@ -419,13 +419,13 @@ EmbeddedAssemblies::set_entry_data (XamarinAndroidBundledAssembly &entry, ZipEnt
 	);
 }
 
-force_inline void
+[[gnu::always_inline]] void
 EmbeddedAssemblies::set_assembly_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept
 {
 	set_entry_data<false> (entry, state, entry_name);
 }
 
-force_inline void
+[[gnu::always_inline]] void
 EmbeddedAssemblies::set_debug_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept
 {
 	set_entry_data<true> (entry, state, entry_name);
@@ -581,7 +581,7 @@ EmbeddedAssemblies::zip_extract_cd_info (std::array<uint8_t, BufSize> const& buf
 }
 
 template<class T>
-force_inline bool
+[[gnu::always_inline]] bool
 EmbeddedAssemblies::zip_ensure_valid_params (T const& buf, size_t index, size_t to_read) noexcept
 {
 	if (index + to_read > buf.size ()) {

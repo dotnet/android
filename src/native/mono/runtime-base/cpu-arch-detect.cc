@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <cstring>
 
-#include "cpp-util.hh"
+#include <shared/cpp-util.hh>
 #include "cpu-arch.hh"
 
 #if __arm__

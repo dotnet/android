@@ -6,10 +6,10 @@
 #include <ctime>
 #include <vector>
 
-#include "cpp-util.hh"
+#include <shared/cpp-util.hh>
 #include "logger.hh"
 #include "startup-aware-lock.hh"
-#include "strings.hh"
+#include <runtime-base/strings.hh>
 #include "util.hh"
 #include "shared-constants.hh"
 #include "monodroid-state.hh"
@@ -94,19 +94,19 @@ namespace xamarin::android::internal
 		}
 
 	public:
-		force_inline static bool enabled () noexcept
+		[[gnu::always_inline]] static bool enabled () noexcept
 		{
 			return is_enabled;
 		}
 
-		force_inline static bool is_bare_mode () noexcept
+		[[gnu::always_inline]] static bool is_bare_mode () noexcept
 		{
 			return
 				(Logger::log_timing_categories() & LogTimingCategories::Bare) == LogTimingCategories::Bare ||
 				(Logger::log_timing_categories() & LogTimingCategories::FastBare) == LogTimingCategories::FastBare;
 		}
 
-		force_inline static void initialize (bool log_immediately) noexcept
+		[[gnu::always_inline]] static void initialize (bool log_immediately) noexcept
 		{
 			if (!Util::should_log (LOG_TIMING)) [[likely]] {
 				return;
@@ -133,7 +133,7 @@ namespace xamarin::android::internal
 		// worrying about concurrency.  Emplacing a new element in the vector would require holding the mutex, something
 		// that's fairly costly and has unpredictable effect on time spent acquiring and holding the lock (the OS can
 		// preempt us at this point)
-		force_inline size_t start_event (TimingEventKind kind = TimingEventKind::Unspecified) noexcept
+		[[gnu::always_inline]] size_t start_event (TimingEventKind kind = TimingEventKind::Unspecified) noexcept
 		{
 			size_t index = next_event_index.fetch_add (1);
 
@@ -157,7 +157,7 @@ namespace xamarin::android::internal
 			return index;
 		}
 
-		force_inline void end_event (size_t event_index, bool uses_more_info = false) noexcept
+		[[gnu::always_inline]] void end_event (size_t event_index, bool uses_more_info = false) noexcept
 		{
 			if (!is_valid_event_index (event_index, __PRETTY_FUNCTION__)) [[unlikely]] {
 				return;
@@ -168,7 +168,7 @@ namespace xamarin::android::internal
 		}
 
 		template<size_t MaxStackSize, typename TStorage, typename TChar = char>
-		force_inline void add_more_info (size_t event_index, string_base<MaxStackSize, TStorage, TChar> const& str) noexcept
+		[[gnu::always_inline]] void add_more_info (size_t event_index, string_base<MaxStackSize, TStorage, TChar> const& str) noexcept
 		{
 			if (!is_valid_event_index (event_index, __PRETTY_FUNCTION__)) [[unlikely]] {
 				return;
@@ -178,7 +178,7 @@ namespace xamarin::android::internal
 			log (events[event_index], false /* skip_log_if_more_info_missing */);
 		}
 
-		force_inline void add_more_info (size_t event_index, const char* str) noexcept
+		[[gnu::always_inline]] void add_more_info (size_t event_index, const char* str) noexcept
 		{
 			if (!is_valid_event_index (event_index, __PRETTY_FUNCTION__)) [[unlikely]] {
 				return;
@@ -188,7 +188,7 @@ namespace xamarin::android::internal
 			log (events[event_index], false /* skip_log_if_more_info_missing */);
 		}
 
-		force_inline static void get_time (time_t &seconds_out, uint64_t& ns_out) noexcept
+		[[gnu::always_inline]] static void get_time (time_t &seconds_out, uint64_t& ns_out) noexcept
 		{
 			int ret;
 			timespec tv_ctm;
@@ -199,7 +199,7 @@ namespace xamarin::android::internal
 		}
 
 		template<TimingPointType P, TimingIntervalType I>
-		force_inline static void calculate_interval (P const& start, P const& end, I &result) noexcept
+		[[gnu::always_inline]] static void calculate_interval (P const& start, P const& end, I &result) noexcept
 		{
 			uint64_t nsec;
 			if (end.ns < start.ns) {
@@ -223,7 +223,7 @@ namespace xamarin::android::internal
 		}
 
 		template<TimingPointType P, TimingIntervalType I>
-		force_inline static void calculate_interval (P const& start, P const& end, I &result, uint64_t& total_ns) noexcept
+		[[gnu::always_inline]] static void calculate_interval (P const& start, P const& end, I &result, uint64_t& total_ns) noexcept
 		{
 			calculate_interval (start, end, result);
 			total_ns =
@@ -238,12 +238,12 @@ namespace xamarin::android::internal
 		static void really_initialize (bool log_immediately) noexcept;
 		static void* timing_signal_thread (void *arg) noexcept;
 
-		force_inline static void mark (TimingEventPoint &point) noexcept
+		[[gnu::always_inline]] static void mark (TimingEventPoint &point) noexcept
 		{
 			get_time (point.sec, point.ns);
 		}
 
-		force_inline bool is_valid_event_index (size_t index, const char *method_name) noexcept
+		[[gnu::always_inline]] bool is_valid_event_index (size_t index, const char *method_name) noexcept
 		{
 			if (index >= events.capacity ()) [[unlikely]] {
 				log_warn (LOG_TIMING, "Invalid event index passed to method '{}'", method_name);
@@ -254,7 +254,7 @@ namespace xamarin::android::internal
 		}
 
 		template<size_t BufferSize>
-		force_inline static void append_event_kind_description (TimingEventKind kind, dynamic_local_string<BufferSize, char>& message) noexcept
+		[[gnu::always_inline]] static void append_event_kind_description (TimingEventKind kind, dynamic_local_string<BufferSize, char>& message) noexcept
 		{
 			switch (kind) {
 				case TimingEventKind::AssemblyDecompression: {
@@ -353,7 +353,7 @@ namespace xamarin::android::internal
 		// having to be kept in sync with the actual wording used for the event message.
 		//
 		template<size_t BufferSize>
-		force_inline static void format_and_log (TimingEvent const& event, TimingInterval const& interval, dynamic_local_string<BufferSize, char>& message, bool indent = false) noexcept
+		[[gnu::always_inline]] static void format_and_log (TimingEvent const& event, TimingInterval const& interval, dynamic_local_string<BufferSize, char>& message, bool indent = false) noexcept
 		{
 			constexpr char INDENT[] = "  ";
 			constexpr char NATIVE_INIT_TAG[] = "[0/";
@@ -392,14 +392,14 @@ namespace xamarin::android::internal
 		}
 
 		template<size_t BufferSize>
-		force_inline static void format_and_log (TimingEvent const& event, dynamic_local_string<BufferSize, char>& message, uint64_t& total_ns, bool indent = false) noexcept
+		[[gnu::always_inline]] static void format_and_log (TimingEvent const& event, dynamic_local_string<BufferSize, char>& message, uint64_t& total_ns, bool indent = false) noexcept
 		{
 			TimingInterval interval;
 			calculate_interval (event.start, event.end, interval, total_ns);
 			format_and_log (event, interval, message, indent);
 		}
 
-		force_inline static void format_and_log (TimingEvent const& event) noexcept
+		[[gnu::always_inline]] static void format_and_log (TimingEvent const& event) noexcept
 		{
 			TimingInterval interval;
 			calculate_interval (event.start, event.end, interval);
@@ -410,7 +410,7 @@ namespace xamarin::android::internal
 			format_and_log (event, interval, message);
 		}
 
-		force_inline static void log (TimingEvent const& event, bool skip_log_if_more_info_missing) noexcept
+		[[gnu::always_inline]] static void log (TimingEvent const& event, bool skip_log_if_more_info_missing) noexcept
 		{
 			if (!immediate_logging) {
 				return;
@@ -423,7 +423,7 @@ namespace xamarin::android::internal
 			format_and_log (event);
 		}
 
-		force_inline static void ns_to_time (uint64_t total_ns, uint32_t &sec, uint32_t &ms, uint32_t &ns) noexcept
+		[[gnu::always_inline]] static void ns_to_time (uint64_t total_ns, uint32_t &sec, uint32_t &ms, uint32_t &ns) noexcept
 		{
 			sec = static_cast<uint32_t>(total_ns / ns_in_second);
 			if (sec > 0) {

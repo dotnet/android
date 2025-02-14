@@ -1,7 +1,7 @@
 #ifndef INC_MONODROID_DESIGNER_ASSEMBLIES_H
 #define INC_MONODROID_DESIGNER_ASSEMBLIES_H
 
-#include "jni-wrappers.hh"
+#include <runtime-base/jni-wrappers.hh>
 #include <string.h>
 #include <mono/metadata/appdomain.h>
 #include <mono/metadata/assembly.h>

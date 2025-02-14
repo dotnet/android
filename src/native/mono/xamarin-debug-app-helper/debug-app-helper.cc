@@ -13,7 +13,7 @@
 #include "util.hh"
 #include "debug-app-helper.hh"
 #include "shared-constants.hh"
-#include "jni-wrappers.hh"
+#include <runtime-base/jni-wrappers.hh>
 #include "log_types.hh"
 
 using namespace xamarin::android;

@@ -31,12 +31,12 @@
 #include "globals.hh"
 #include "mono-image-loader.hh"
 #include "xamarin-app.hh"
-#include "cpp-util.hh"
+#include <shared/cpp-util.hh>
 #include "monodroid-glue-internal.hh"
 #include "monodroid-state.hh"
 #include "startup-aware-lock.hh"
 #include "timing-internal.hh"
-#include "search.hh"
+#include <runtime-base/search.hh>
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
@@ -72,14 +72,14 @@ void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix) noexcept
 	assemblies_prefix_override = prefix != nullptr ? Util::strdup_new (prefix) : nullptr;
 }
 
-force_inline void
+[[gnu::always_inline]] void
 EmbeddedAssemblies::set_assembly_data_and_size (uint8_t* source_assembly_data, uint32_t source_assembly_data_size, uint8_t*& dest_assembly_data, uint32_t& dest_assembly_data_size) noexcept
 {
 	dest_assembly_data = source_assembly_data;
 	dest_assembly_data_size = source_assembly_data_size;
 }
 
-force_inline void
+[[gnu::always_inline]] void
 EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[maybe_unused]] const char *name, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept
 {
 #if defined (HAVE_LZ4) && defined (RELEASE)
@@ -171,20 +171,20 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 	}
 }
 
-force_inline void
+[[gnu::always_inline]] void
 EmbeddedAssemblies::get_assembly_data (XamarinAndroidBundledAssembly const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept
 {
 	get_assembly_data (e.data, e.data_size, e.name, assembly_data, assembly_data_size);
 }
 
-force_inline void
+[[gnu::always_inline]] void
 EmbeddedAssemblies::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept
 {
 	get_assembly_data (e.image_data, e.descriptor->data_size, "<assembly_store>", assembly_data, assembly_data_size);
 }
 
 template<bool LogMapping>
-force_inline void
+[[gnu::always_inline]] void
 EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexcept
 {
 	int fd;
@@ -258,20 +258,20 @@ EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexc
 	}
 }
 
-force_inline void
+[[gnu::always_inline]] void
 EmbeddedAssemblies::map_assembly (XamarinAndroidBundledAssembly& file) noexcept
 {
 	map_runtime_file<true> (file);
 }
 
-force_inline void
+[[gnu::always_inline]] void
 EmbeddedAssemblies::map_debug_data (XamarinAndroidBundledAssembly& file) noexcept
 {
 	map_runtime_file<false> (file);
 }
 
 template<LoaderData TLoaderData>
-force_inline MonoAssembly*
+[[gnu::always_inline]] MonoAssembly*
 EmbeddedAssemblies::load_bundled_assembly (
 	XamarinAndroidBundledAssembly& assembly,
 	dynamic_local_string<SENSIBLE_PATH_MAX> const& name,
@@ -341,7 +341,7 @@ EmbeddedAssemblies::load_bundled_assembly (
 }
 
 template<LoaderData TLoaderData>
-force_inline MonoAssembly*
+[[gnu::always_inline]] MonoAssembly*
 EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data, bool ref_only) noexcept
 {
 	if (!Util::ends_with (name, SharedConstants::DLL_EXTENSION)) {
@@ -377,7 +377,7 @@ EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_strin
 	return nullptr;
 }
 
-force_inline const AssemblyStoreIndexEntry*
+[[gnu::always_inline]] const AssemblyStoreIndexEntry*
 EmbeddedAssemblies::find_assembly_store_entry (hash_t hash, const AssemblyStoreIndexEntry *entries, size_t entry_count) noexcept
 {
 	auto equal = [](AssemblyStoreIndexEntry const& entry, hash_t key) -> bool { return entry.name_hash == key; };
@@ -391,7 +391,7 @@ EmbeddedAssemblies::find_assembly_store_entry (hash_t hash, const AssemblyStoreI
 }
 
 template<LoaderData TLoaderData>
-force_inline MonoAssembly*
+[[gnu::always_inline]] MonoAssembly*
 EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data, bool ref_only) noexcept
 {
 	hash_t name_hash = xxhash::hash (name.get (), name.length ());
@@ -468,7 +468,7 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 //       The best way is probably to store the information in the assembly `MonoImage*` cache. We should
 //       abort() if the assembly contains marshal callbacks.
 template<LoaderData TLoaderData>
-force_inline MonoAssembly*
+[[gnu::always_inline]] MonoAssembly*
 EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, TLoaderData loader_data, [[maybe_unused]] MonoError *error, bool ref_only) noexcept
 {
 	const char *culture = mono_assembly_name_get_culture (aname);
@@ -530,7 +530,7 @@ EmbeddedAssemblies::install_preload_hooks_for_alc () noexcept
 }
 
 template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*), bool use_precalculated_size>
-force_inline const Entry*
+[[gnu::always_inline]] const Entry*
 EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nmemb, [[maybe_unused]] size_t precalculated_size) noexcept
 {
 	static_assert (compare != nullptr, "compare is a required template parameter");
@@ -581,7 +581,7 @@ EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nme
 }
 
 #if defined (RELEASE)
-force_inline const TypeMapModuleEntry*
+[[gnu::always_inline]] const TypeMapModuleEntry*
 EmbeddedAssemblies::binary_search (uint32_t key, const TypeMapModuleEntry *arr, uint32_t n) noexcept
 {
 	ssize_t left = -1z;
@@ -602,7 +602,7 @@ EmbeddedAssemblies::binary_search (uint32_t key, const TypeMapModuleEntry *arr, 
 #endif // def RELEASE
 
 #if defined (DEBUG)
-force_inline int
+[[gnu::always_inline]] int
 EmbeddedAssemblies::compare_type_name (const char *type_name, const TypeMapEntry *entry) noexcept
 {
 	if (entry == nullptr)
@@ -611,7 +611,7 @@ EmbeddedAssemblies::compare_type_name (const char *type_name, const TypeMapEntry
 	return strcmp (type_name, entry->from);
 }
 
-force_inline MonoReflectionType*
+[[gnu::always_inline]] MonoReflectionType*
 EmbeddedAssemblies::typemap_java_to_managed ([[maybe_unused]] hash_t hash, const MonoString *java_type) noexcept
 {
 	c_unique_ptr<char> java_type_name {mono_string_to_utf8 (const_cast<MonoString*>(java_type))};
@@ -646,7 +646,7 @@ EmbeddedAssemblies::typemap_java_to_managed ([[maybe_unused]] hash_t hash, const
 	return ret;
 }
 #else // def DEBUG
-force_inline MonoReflectionType*
+[[gnu::always_inline]] MonoReflectionType*
 EmbeddedAssemblies::typemap_java_to_managed (hash_t hash, const MonoString *java_type_name) noexcept
 {
 	// In microbrenchmarks, `binary_search_branchless` is faster than `binary_search` but in "real" application tests,
@@ -771,13 +771,13 @@ EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type) noexcept
 }
 
 #if defined (DEBUG)
-force_inline const TypeMapEntry*
+[[gnu::always_inline]] const TypeMapEntry*
 EmbeddedAssemblies::typemap_managed_to_java (const char *managed_type_name) noexcept
 {
 	return binary_search<const char, TypeMapEntry, compare_type_name, false> (managed_type_name, type_map.managed_to_java, type_map.entry_count);
 }
 
-force_inline const char*
+[[gnu::always_inline]] const char*
 EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, MonoClass *klass, [[maybe_unused]] const uint8_t *mvid) noexcept
 {
 	c_unique_ptr<char> type_name {mono_type_get_name_full (type, MONO_TYPE_NAME_FORMAT_FULL_NAME)};
@@ -801,13 +801,13 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 	return entry->to;
 }
 #else // def DEBUG
-force_inline int
+[[gnu::always_inline]] int
 EmbeddedAssemblies::compare_mvid (const uint8_t *mvid, const TypeMapModule *module) noexcept
 {
 	return memcmp (mvid, module->module_uuid, sizeof(module->module_uuid));
 }
 
-force_inline const char*
+[[gnu::always_inline]] const char*
 EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, MonoClass *klass, const uint8_t *mvid) noexcept
 {
 	const TypeMapModule *match = mvid != nullptr ? binary_search<uint8_t, TypeMapModule, compare_mvid> (mvid, map_modules, map_module_count) : nullptr;
@@ -1269,7 +1269,7 @@ EmbeddedAssemblies::register_from_apk (const char *apk_file, monodroid_should_re
 }
 
 template<bool MangledNamesMode>
-force_inline bool
+[[gnu::always_inline]] bool
 EmbeddedAssemblies::maybe_register_assembly_from_filesystem (
 	[[maybe_unused]] monodroid_should_register should_register,
 	size_t &assembly_count,
@@ -1331,7 +1331,7 @@ EmbeddedAssemblies::maybe_register_assembly_from_filesystem (
 	return false;
 }
 
-force_inline bool
+[[gnu::always_inline]] bool
 EmbeddedAssemblies::maybe_register_blob_from_filesystem (
 	[[maybe_unused]] monodroid_should_register should_register,
 	size_t &assembly_count,
@@ -1364,7 +1364,7 @@ EmbeddedAssemblies::maybe_register_blob_from_filesystem (
 	return true;
 }
 
-force_inline size_t
+[[gnu::always_inline]] size_t
 EmbeddedAssemblies::register_from_filesystem (const char *lib_dir_path,bool look_for_mangled_names, monodroid_should_register should_register) noexcept
 {
 	log_debug (LOG_ASSEMBLY, "Looking for assemblies in '{}'", optional_string (lib_dir_path));

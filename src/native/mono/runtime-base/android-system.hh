@@ -17,8 +17,8 @@
 
 #include "xamarin-app.hh"
 #include "cpu-arch.hh"
-#include "jni-wrappers.hh"
-#include "strings.hh"
+#include <runtime-base/jni-wrappers.hh>
+#include <runtime-base/strings.hh>
 
 static inline constexpr size_t PROPERTY_VALUE_BUFFER_LEN = PROP_VALUE_MAX + 1uz;
 

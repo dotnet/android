@@ -34,7 +34,7 @@
 #include "debug.hh"
 #include "util.hh"
 #include "globals.hh"
-#include "cpp-util.hh"
+#include <shared/cpp-util.hh>
 #include "timing-internal.hh"
 
 #include "java-interop-dlfcn.h"

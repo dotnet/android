@@ -5,7 +5,7 @@
 #include <jni.h>
 #include <corehost/host_runtime_contract.h>
 
-#include "../runtime-base/jni-wrappers.hh"
+#include <runtime-base/jni-wrappers.hh>
 #include "../runtime-base/timing.hh"
 #include "../shared/log_types.hh"
 #include "managed-interface.hh"

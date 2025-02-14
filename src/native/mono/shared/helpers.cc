@@ -2,7 +2,7 @@
 #include <cstring>
 #include <android/set_abort_message.h>
 
-#include "helpers.hh"
+#include <shared/helpers.hh>
 #include "log_types.hh"
 
 using namespace xamarin::android;
