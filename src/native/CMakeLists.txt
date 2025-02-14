@@ -239,6 +239,9 @@ else()
   include_directories(mono)
 endif()
 
+include_directories(common/include)
+include_directories(mono)
+
 #
 # Compiler defines
 #
