@@ -21,12 +21,12 @@
 
 #include "archive-dso-stub-config.hh"
 #include "log_types.hh"
-#include "strings.hh"
+#include <runtime-base/strings.hh>
 #include "xamarin-app.hh"
 #include <shared/cpp-util.hh>
 #include "cppcompat.hh"
 #include "shared-constants.hh"
-#include "xxhash.hh"
+#include <shared/xxhash.hh>
 #include "util.hh"
 
 #include <concepts>

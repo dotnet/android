@@ -11,8 +11,8 @@
 #include <mono/utils/mono-publib.h>
 
 #include "android-system.hh"
-#include "cpp-util.hh"
-#include "log_level.hh"
+#include <shared/cpp-util.hh>
+#include <shared/log_level.hh>
 #include "logger.hh"
 #include "shared-constants.hh"
 #include "util.hh"

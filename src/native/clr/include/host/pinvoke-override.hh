@@ -28,7 +28,7 @@
 #endif
 
 #include "../runtime-base/monodroid-dl.hh"
-#include "../shared/xxhash.hh"
+#include <shared/xxhash.hh>
 
 namespace xamarin::android {
 	struct PinvokeEntry

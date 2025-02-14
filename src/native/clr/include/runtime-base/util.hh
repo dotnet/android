@@ -11,11 +11,11 @@
 #include <string_view>
 
 #include "../constants.hh"
-#include "../shared/helpers.hh"
+#include <shared/helpers.hh>
 #include "archive-dso-stub-config.hh"
-#include "jni-wrappers.hh"
+#include <runtime-base/jni-wrappers.hh>
 #include "logger.hh"
-#include "strings.hh"
+#include <runtime-base/strings.hh>
 
 namespace xamarin::android {
 	namespace detail {
