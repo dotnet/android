@@ -37,3 +37,49 @@ be shared between all targets, which then can (if needed) translate it to the ta
 Runtime currently calls `abort()` in several places.  This should probably become part of the host contract instead.
 Being part of the contract, the target platform could implement process termination on `abort()` in a uniform way
 (includes platform-specific logging, preparation etc)
+
+## Issues and workarounds
+
+### Trimmer issue (as of 14.02.2025)
+
+It appears the trimmer removes a bit too much at this point. In order to make the application run with trimming, one
+needs to add the following to their .csproj (solution found by Ivan Povazan):
+
+```xml
+  <ItemGroup>
+    <TrimmerRootDescriptor Include="MyRoots.xml" />
+  </ItemGroup>
+```
+
+and put the following in the `MyRoots.xml` file:
+
+```xml
+<linker>
+  <assembly fullname="Java.Interop">
+    <type fullname="Java.Interop.JavaArray`1">
+      <method name="get_IsReadOnly" />
+      <method name="System.Collections.ICollection.get_Count" />
+      <method name="System.Collections.ICollection.get_IsSynchronized" />
+      <method name="System.Collections.ICollection.get_SyncRoot" />
+      <method name="System.Collections.ICollection.CopyTo" />
+      <method name="System.Collections.IEnumerable.GetEnumerator" />
+      <method name="System.Collections.IList.get_IsFixedSize" />
+      <method name="System.Collections.IList.get_Item" />
+      <method name="System.Collections.IList.set_Item" />
+      <method name="System.Collections.IList.Add" />
+      <method name="System.Collections.IList.Contains" />
+      <method name="System.Collections.IList.IndexOf" />
+      <method name="System.Collections.IList.Insert" />
+      <method name="System.Collections.IList.Remove" />
+      <method name="System.Collections.IList.RemoveAt" />
+      <method name="System.Collections.Generic.ICollection&lt;T&gt;.Add" />
+      <method name="System.Collections.Generic.ICollection&lt;T&gt;.Remove" />
+      <method name="System.Collections.Generic.IList&lt;T&gt;.Insert" />
+      <method name="System.Collections.Generic.IList&lt;T&gt;.RemoveAt" />
+    </type>
+    <type fullname="Java.Interop.JavaObjectArray`1">
+      <method name="Clear" />
+    </type>
+  </assembly>
+</linker>
+```
