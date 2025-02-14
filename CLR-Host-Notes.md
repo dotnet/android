@@ -42,8 +42,10 @@ Being part of the contract, the target platform could implement process terminat
 
 ### Trimmer issue (as of 14.02.2025)
 
+https://github.com/dotnet/runtime/issues/112559
+
 It appears the trimmer removes a bit too much at this point. In order to make the application run with trimming, one
-needs to add the following to their .csproj (solution found by Ivan Povazan):
+needs to add the following to their .csproj (solution provided by Ivan Povazan):
 
 ```xml
   <ItemGroup>
