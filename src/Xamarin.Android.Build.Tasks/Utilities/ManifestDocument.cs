@@ -673,10 +673,12 @@ namespace Xamarin.Android.Tasks {
 
 		IList<string> AddMonoRuntimeProviders (XElement app)
 		{
-			if (AndroidRuntime != AndroidRuntime.MonoVM && AndroidRuntime != AndroidRuntime.CoreCLR) {
-				//TODO: implement provider logic for non-Mono runtimes
-				return [];
-			}
+			(string packageName, string className) = AndroidRuntime switch {
+				AndroidRuntime.MonoVM => ("mono", "MonoRuntimeProvider"),
+				AndroidRuntime.CoreCLR => ("mono", "MonoRuntimeProvider"),
+				AndroidRuntime.NativeAOT => ("net.dot.jni.nativeaot", "NativeAotRuntimeProvider"),
+				_ => throw new NotSupportedException ($"Internal error: unsupported runtime type: {AndroidRuntime}")
+			};
 
 			app.Add (CreateMonoRuntimeProvider ($"{packageName}.{className}", null, --AppInitOrder));
 

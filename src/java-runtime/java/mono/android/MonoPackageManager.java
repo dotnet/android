@@ -27,6 +27,7 @@ public class MonoPackageManager {
 
 	public static void LoadApplication (Context context)
 	{
+		Log.w ("XAMONO", "MonoPackageManager.LoadApplication: start");
 		synchronized (lock) {
 			android.content.pm.ApplicationInfo runtimePackage = context.getApplicationInfo ();
 			String[] apks = null;

@@ -77,6 +77,11 @@ namespace Android.Runtime {
 			return wrap;
 		}
 
+		static void MonoDroidUnhandledException (Exception ex)
+		{
+			RuntimeNativeMethods.monodroid_unhandled_exception (ex);
+		}
+
 		internal static void PropagateUncaughtException (IntPtr env, IntPtr javaThreadPtr, IntPtr javaExceptionPtr)
 		{
 			if (!JNIEnvInit.PropagateExceptions)
@@ -95,7 +100,17 @@ namespace Android.Runtime {
 				Logger.Log (LogLevel.Info, "MonoDroid", "UNHANDLED EXCEPTION:");
 				Logger.Log (LogLevel.Info, "MonoDroid", javaException.ToString ());
 
-				RuntimeNativeMethods.monodroid_unhandled_exception (innerException ?? javaException);
+				switch (JNIEnvInit.RuntimeType) {
+					case DotNetRuntimeType.MonoVM:
+						MonoDroidUnhandledException (innerException ?? javaException);
+						break;
+					case DotNetRuntimeType.CoreCLR:
+						// TODO: what to do here?
+						break;
+
+					default:
+						throw new NotSupportedException ($"Internal error: runtime type {JNIEnvInit.RuntimeType} not supported");
+				}
 			} catch (Exception e) {
 				Logger.Log (LogLevel.Error, "monodroid", "Exception thrown while raising AppDomain.UnhandledException event: " + e.ToString ());
 			}
