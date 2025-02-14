@@ -5,7 +5,7 @@
 #include <string_view>
 
 #include "monodroid-glue-internal.hh"
-#include "jni-wrappers.hh"
+#include <runtime-base/jni-wrappers.hh>
 
 namespace xamarin::android::internal
 {

@@ -3,7 +3,7 @@
 
 #include <sys/types.h>
 
-#include "../shared/xxhash.hh"
+#include <shared/xxhash.hh>
 
 namespace xamarin::android {
 	class Search final

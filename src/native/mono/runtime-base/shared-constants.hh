@@ -2,8 +2,8 @@
 #define __SHARED_CONSTANTS_HH
 
 #include <string_view>
-#include "cpp-util.hh"
-#include "xxhash.hh"
+#include <shared/cpp-util.hh>
+#include <shared/xxhash.hh>
 
 namespace xamarin::android::internal
 {

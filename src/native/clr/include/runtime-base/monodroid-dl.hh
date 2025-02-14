@@ -7,11 +7,11 @@
 
 #include <java-interop-dlfcn.h>
 
-#include "../shared/xxhash.hh"
+#include <shared/xxhash.hh>
 #include "../xamarin-app.hh"
 
 #include "android-system.hh"
-#include "search.hh"
+#include <runtime-base/search.hh>
 #include "startup-aware-lock.hh"
 
 namespace xamarin::android

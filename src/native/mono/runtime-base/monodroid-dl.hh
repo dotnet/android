@@ -5,12 +5,12 @@
 
 #include <mono/utils/mono-dl-fallback.h>
 #include <java-interop-dlfcn.h>
-#include <xxhash.hh>
+#include <shared/xxhash.hh>
 #include <xamarin-app.hh>
 
 #include "android-system.hh"
 #include "monodroid-state.hh"
-#include "search.hh"
+#include <runtime-base/search.hh>
 #include "shared-constants.hh"
 #include "startup-aware-lock.hh"
 #include "util.hh"

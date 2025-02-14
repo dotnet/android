@@ -9,7 +9,7 @@
 #include <mono/metadata/image.h>
 #include <mono/utils/mono-publib.h>
 
-#include "xxhash.hh"
+#include <shared/xxhash.hh>
 
 static constexpr uint64_t FORMAT_TAG = 0x00035E6972616D58; // 'Xmari^XY' where XY is the format version
 static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x5A4C4158; // 'XALZ', little-endian

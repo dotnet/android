@@ -2,7 +2,7 @@
 #include <mono/utils/mono-logger.h>
 
 #include "monodroid-glue-internal.hh"
-#include "strings.hh"
+#include <runtime-base/strings.hh>
 #include "logger.hh"
 
 using namespace xamarin::android::internal;

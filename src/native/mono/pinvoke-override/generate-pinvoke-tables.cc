@@ -26,7 +26,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "xxhash.hh"
+#include <shared/xxhash.hh>
 
 namespace fs = std::filesystem;
 using namespace xamarin::android;

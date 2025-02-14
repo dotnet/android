@@ -12,6 +12,7 @@
 #include <mono/metadata/assembly.h>
 #include <mono/metadata/class.h>
 
+#include <shared/platform-compat.hh>
 #include "util.hh"
 
 using namespace xamarin::android;

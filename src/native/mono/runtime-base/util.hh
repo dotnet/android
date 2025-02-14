@@ -23,6 +23,7 @@ static inline constexpr int FALSE = 0;
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <fcntl.h>
 #include <optional>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -37,10 +38,10 @@ static inline constexpr int FALSE = 0;
 #include <mono/metadata/mono-private-unstable.h>
 #include <mono/utils/mono-publib.h>
 
-#include "jni-wrappers.hh"
+#include <runtime-base/jni-wrappers.hh>
 #include "java-interop-util.h"
 #include "logger.hh"
-#include "strings.hh"
+#include <runtime-base/strings.hh>
 
 #ifdef __cplusplus
 namespace xamarin::android
@@ -126,25 +127,25 @@ namespace xamarin::android
 		}
 
 		template<size_t MaxStackSpace>
-		static void path_combine (internal::static_local_string<MaxStackSpace>& buf, const char* path1, const char* path2) noexcept
+		static void path_combine (static_local_string<MaxStackSpace>& buf, const char* path1, const char* path2) noexcept
 		{
 			path_combine <MaxStackSpace, decltype(buf)> (buf, path1, path2);
 		}
 
 		template<size_t MaxStackSpace>
-		static void path_combine (internal::static_local_string<MaxStackSpace>& buf, const char* path1, size_t path1_len, const char* path2, size_t path2_len) noexcept
+		static void path_combine (static_local_string<MaxStackSpace>& buf, const char* path1, size_t path1_len, const char* path2, size_t path2_len) noexcept
 		{
 			path_combine <MaxStackSpace, decltype(buf)> (buf, path1, path1_len, path2, path2_len);
 		}
 
 		template<size_t MaxStackSpace>
-		static void path_combine (internal::dynamic_local_string<MaxStackSpace>& buf, const char* path1, const char* path2) noexcept
+		static void path_combine (dynamic_local_string<MaxStackSpace>& buf, const char* path1, const char* path2) noexcept
 		{
 			path_combine <MaxStackSpace, decltype(buf)> (buf, path1, path2);
 		}
 
 		template<size_t MaxStackSpace>
-		static void path_combine (internal::dynamic_local_string<MaxStackSpace>& buf, const char* path1, size_t path1_len, const char* path2, size_t path2_len) noexcept
+		static void path_combine (dynamic_local_string<MaxStackSpace>& buf, const char* path1, size_t path1_len, const char* path2, size_t path2_len) noexcept
 		{
 			path_combine <MaxStackSpace, decltype(buf)> (buf, path1, path1_len, path2, path2_len);
 		}
@@ -161,7 +162,7 @@ namespace xamarin::android
 		}
 
 		template<size_t MaxStackSpace>
-		static bool ends_with (internal::dynamic_local_string<MaxStackSpace> const& str, std::string_view const& sv) noexcept
+		static bool ends_with (dynamic_local_string<MaxStackSpace> const& str, std::string_view const& sv) noexcept
 		{
 			if (str.length () < sv.length ()) {
 				return false;
@@ -195,7 +196,7 @@ namespace xamarin::android
 		}
 
 		template<size_t N, size_t MaxStackSize, typename TStorage, typename TChar = char>
-		static bool ends_with (internal::string_base<MaxStackSize, TStorage, TChar> const& str, const char (&end)[N]) noexcept
+		static bool ends_with (string_base<MaxStackSize, TStorage, TChar> const& str, const char (&end)[N]) noexcept
 		{
 			constexpr size_t end_length = N - 1uz;
 
@@ -208,7 +209,7 @@ namespace xamarin::android
 		}
 
 		template<size_t N, size_t MaxStackSize, typename TStorage, typename TChar = char>
-		static bool ends_with (internal::string_base<MaxStackSize, TStorage, TChar> const& str, std::array<TChar, N> const& end) noexcept
+		static bool ends_with (string_base<MaxStackSize, TStorage, TChar> const& str, std::array<TChar, N> const& end) noexcept
 		{
 			constexpr size_t end_length = N - 1uz;
 
@@ -221,7 +222,7 @@ namespace xamarin::android
 		}
 
 		template<size_t MaxStackSize, typename TStorage, typename TChar = char>
-		static const TChar* find_last (internal::string_base<MaxStackSize, TStorage, TChar> const& str, const char ch) noexcept
+		static const TChar* find_last (string_base<MaxStackSize, TStorage, TChar> const& str, const char ch) noexcept
 		{
 			if (str.empty ()) {
 				return nullptr;
@@ -276,12 +277,12 @@ namespace xamarin::android
 		}
 
 		template<size_t BufferSize>
-		static char *strdup_new (internal::dynamic_local_string<BufferSize> const& buf) noexcept
+		static char *strdup_new (dynamic_local_string<BufferSize> const& buf) noexcept
 		{
 			return strdup_new (buf.get (), buf.length ());
 		}
 
-		static char *strdup_new (xamarin::android::internal::string_segment const& s, size_t from_index = 0uz) noexcept
+		static char *strdup_new (string_segment const& s, size_t from_index = 0uz) noexcept
 		{
 			if (from_index >= s.length ()) {
 				return nullptr;

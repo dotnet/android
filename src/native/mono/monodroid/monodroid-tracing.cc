@@ -5,7 +5,7 @@
 #include "mono/utils/details/mono-dl-fallback-types.h"
 #include "monodroid-glue-internal.hh"
 #include "native-tracing.hh"
-#include <cpp-util.hh>
+#include <shared/cpp-util.hh>
 
 using namespace xamarin::android::internal;
 

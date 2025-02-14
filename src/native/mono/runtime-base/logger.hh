@@ -4,7 +4,7 @@
 #include <string_view>
 
 #include "log_types.hh"
-#include "strings.hh"
+#include <runtime-base/strings.hh>
 
 namespace xamarin::android {
 	class Logger
@@ -43,7 +43,7 @@ namespace xamarin::android {
 		}
 
 	private:
-		static bool set_category (std::string_view const& name, internal::string_segment& arg, unsigned int entry, bool arg_starts_with_name = false) noexcept;
+		static bool set_category (std::string_view const& name, string_segment& arg, unsigned int entry, bool arg_starts_with_name = false) noexcept;
 
 	private:
 		static inline LogTimingCategories _log_timing_categories;

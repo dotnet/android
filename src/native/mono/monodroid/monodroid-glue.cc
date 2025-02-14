@@ -61,8 +61,8 @@
 #include "runtime-util.hh"
 #include "monodroid-state.hh"
 #include "pinvoke-override-api.hh"
-#include "cpp-util.hh"
-#include "strings.hh"
+#include <shared/cpp-util.hh>
+#include <runtime-base/strings.hh>
 
 using namespace microsoft::java_interop;
 using namespace xamarin::android;
@@ -774,7 +774,7 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 	return domain;
 }
 
-force_inline void
+[[gnu::always_inline]] void
 MonodroidRuntime::lookup_bridge_info (MonoClass *klass, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info) noexcept
 {
 	info->klass             = klass;
@@ -799,7 +799,7 @@ MonodroidRuntime::lookup_bridge_info (MonoClass *klass, const OSBridge::MonoJava
 	}
 }
 
-force_inline void
+[[gnu::always_inline]] void
 MonodroidRuntime::lookup_bridge_info (MonoImage *image, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info) noexcept
 {
 	lookup_bridge_info (
@@ -1301,7 +1301,7 @@ MonodroidRuntime::typemap_managed_to_java (MonoReflectionType *type, const uint8
 }
 #endif // !def RELEASE
 
-force_inline void
+[[gnu::always_inline]] void
 MonodroidRuntime::setup_mono_tracing (std::unique_ptr<char[]> const& mono_log_mask, bool have_log_assembly, bool have_log_gc) noexcept
 {
 	constexpr std::string_view MASK_ASM { "asm" };
@@ -1374,7 +1374,7 @@ MonodroidRuntime::setup_mono_tracing (std::unique_ptr<char[]> const& mono_log_ma
 	mono_trace_set_mask_string (input_log_mask.get ());
 }
 
-force_inline void
+[[gnu::always_inline]] void
 MonodroidRuntime::install_logging_handlers () noexcept
 {
 	mono_trace_set_log_handler (mono_log_handler, nullptr);
@@ -1606,7 +1606,7 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 	);
 }
 
-force_inline void
+[[gnu::always_inline]] void
 MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods) noexcept
 {
 	size_t total_time_index;

@@ -11,9 +11,9 @@
 
 #include "platform-compat.hh"
 #include "xamarin-app.hh"
-#include "xxhash.hh"
-#include "search.hh"
-#include "strings.hh"
+#include <shared/xxhash.hh>
+#include <runtime-base/search.hh>
+#include <runtime-base/strings.hh>
 #include "util.hh"
 
 #if defined (RELEASE)
