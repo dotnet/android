@@ -64,7 +64,7 @@ case ${HOST} in
 	*) die Unsupported OS ;;
 esac
 
-${COMPILER} -O2 -std=c++20 -I${EXTERNAL_DIR} -I${EXTERNAL_DIR}/constexpr-xxh3 -I${NATIVE_DIR}/shared "${GENERATOR_SOURCE}" -o "${GENERATOR_BINARY}"
+${COMPILER} -O2 -std=c++20 -I${EXTERNAL_DIR} -I${EXTERNAL_DIR}/constexpr-xxh3 -I${NATIVE_DIR}/shared -I${NATIVE_DIR}/../common/include "${GENERATOR_SOURCE}" -o "${GENERATOR_BINARY}"
 "${GENERATOR_BINARY}" "${GENERATED_FILE}"
 
 FILES_DIFFER="no"
