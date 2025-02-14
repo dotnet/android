@@ -170,6 +170,9 @@ set(SYSROOT_CXX_INCLUDE_DIR ${CMAKE_SYSROOT}/usr/include/c++/v1)
 set(MONO_RUNTIME_INCLUDE_DIR ${NET_RUNTIME_DIR}/native/include/mono-2.0)
 set(JAVA_INTEROP_INCLUDE_DIR ${JAVA_INTEROP_SRC_PATH})
 
+include_directories(common/include)
+include_directories(mono)
+
 #
 # Compiler defines
 #

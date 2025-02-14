@@ -1,5 +1,4 @@
-#ifndef __HELPERS_HH
-#define __HELPERS_HH
+#pragma once
 
 #include <cstdlib>
 #include <source_location>
@@ -7,7 +6,6 @@
 #include <string_view>
 
 #include <java-interop-util.h>
-#include "platform-compat.hh"
 
 using namespace std::string_view_literals;
 
@@ -22,7 +20,8 @@ namespace xamarin::android
 	{
 	public:
 		template<typename Ret, typename P1, typename P2>
-		force_inline static Ret add_with_overflow_check (P1 a, P2 b, std::source_location sloc = std::source_location::current ()) noexcept
+		[[gnu::always_inline]]
+		static auto add_with_overflow_check (P1 a, P2 b, std::source_location sloc = std::source_location::current ()) noexcept -> Ret
 		{
 			constexpr bool DoNotLogLocation = false;
 			Ret ret;
@@ -38,7 +37,8 @@ namespace xamarin::android
 		}
 
 		template<typename Ret, typename P1, typename P2>
-		force_inline static Ret multiply_with_overflow_check (P1 a, P2 b, std::source_location sloc = std::source_location::current ()) noexcept
+		[[gnu::always_inline]]
+		static auto multiply_with_overflow_check (P1 a, P2 b, std::source_location sloc = std::source_location::current ()) noexcept -> Ret
 		{
 			constexpr bool DoNotLogLocation = false;
 			Ret ret;
@@ -53,29 +53,35 @@ namespace xamarin::android
 			return ret;
 		}
 
-		[[noreturn]] static void abort_application (LogCategories category, const char *message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept;
+		[[noreturn]]
+		static void abort_application (LogCategories category, const char *message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept;
 
-		[[noreturn]] static void abort_application (LogCategories category, std::string const& message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept
+		[[noreturn]]
+		static void abort_application (LogCategories category, std::string const& message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept
 		{
 			abort_application (category, message.c_str (), log_location, sloc);
 		}
 
-		[[noreturn]] static void abort_application (LogCategories category, std::string_view const& message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept
+		[[noreturn]]
+		static void abort_application (LogCategories category, std::string_view const& message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept
 		{
 			abort_application (category, message.data (), log_location, sloc);
 		}
 
-		[[noreturn]] static void abort_application (const char *message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept
+		[[noreturn]]
+		static void abort_application (const char *message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept
 		{
 			abort_application (LOG_DEFAULT, message, log_location, sloc);
 		}
 
-		[[noreturn]] static void abort_application (std::string const& message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept
+		[[noreturn]]
+		static void abort_application (std::string const& message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept
 		{
 			abort_application (LOG_DEFAULT, message.c_str (), log_location, sloc);
 		}
 
-		[[noreturn]] static void abort_application (std::string_view const& message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept
+		[[noreturn]]
+		static void abort_application (std::string_view const& message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept
 		{
 			abort_application (LOG_DEFAULT, message.data (), log_location, sloc);
 		}
@@ -97,4 +103,3 @@ namespace xamarin::android
 		return replacement == nullptr ? "<null>" : replacement;
 	}
 }
-#endif // __HELPERS_HH

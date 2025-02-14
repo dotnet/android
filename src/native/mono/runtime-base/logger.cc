@@ -11,8 +11,8 @@
 #include <mono/utils/mono-publib.h>
 
 #include "android-system.hh"
-#include "cpp-util.hh"
-#include "log_level.hh"
+#include <shared/cpp-util.hh>
+#include <shared/log_level.hh>
 #include "logger.hh"
 #include "shared-constants.hh"
 #include "util.hh"
@@ -108,7 +108,7 @@ Logger::init_reference_logging (const char *override_dir) noexcept
 	}
 }
 
-force_inline bool
+[[gnu::always_inline]] bool
 Logger::set_category (std::string_view const& name, string_segment& arg, unsigned int entry, bool arg_starts_with_name) noexcept
 {
 	if ((log_categories & entry) == entry) {

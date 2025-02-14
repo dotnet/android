@@ -90,6 +90,17 @@
       "justification": "Matching against `aapt2` tool output.",
       "createdDate": "2025-02-05 11:48:04Z"
     },
+    "26d3e99b351de02627162b255b2513d833a0343a6f25064f35d7310eb07cf3ff": {
+      "signature": "26d3e99b351de02627162b255b2513d833a0343a6f25064f35d7310eb07cf3ff",
+      "alternativeSignatures": [
+        "d23c1bf667150310fd782f0ad92064dcf077226a64d9bf1dd6762ead152f7703"
+      ],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Reference to ffs(3) find first set bit function.",
+      "createdDate": "2025-02-10 19:44:17Z"
+    },
     "a5555a74b0e940543802a63a6465b4d965eff4f6c858552813df633186794c45": {
       "signature": "a5555a74b0e940543802a63a6465b4d965eff4f6c858552813df633186794c45",
       "alternativeSignatures": [

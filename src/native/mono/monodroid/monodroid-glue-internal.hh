@@ -9,9 +9,10 @@
 #include "android-system.hh"
 #include "osbridge.hh"
 #include "timing.hh"
-#include "cpp-util.hh"
-#include "xxhash.hh"
+#include <shared/cpp-util.hh>
+#include <shared/xxhash.hh>
 #include "monodroid-dl.hh"
+#include <shared/platform-compat.hh>
 
 #include <mono/utils/mono-counters.h>
 #include <mono/metadata/profiler.h>

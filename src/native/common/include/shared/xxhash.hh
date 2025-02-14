@@ -1,7 +1,6 @@
-#if !defined (__XXHASH_HH)
-#define __XXHASH_HH
+#pragma once
 
-#include <type_traits>
+#include <string_view>
 
 #if INTPTR_MAX == INT64_MAX
 #define XXH_NO_STREAM
@@ -44,8 +43,6 @@
 #include <cstdint>
 #include <string_view>
 
-#include "platform-compat.hh"
-
 namespace xamarin::android
 {
 	class xxhash32 final
@@ -60,7 +57,8 @@ namespace xamarin::android
 		// We don't use any special seed in XA, the template parameter is just to keep the algorithm more easily
 		// understood and to run compile-time algorithm correctness tests
 		template<uint32_t Seed = 0>
-		force_inline static constexpr uint32_t hash (const char *input, size_t len) noexcept
+		[[gnu::always_inline]]
+		static constexpr auto hash (const char *input, size_t len) noexcept -> uint32_t
 		{
 			return finalize (
 				(len >= 16 ? h16bytes<Seed> (input, len) : Seed + PRIME5) + static_cast<uint32_t>(len),
@@ -70,39 +68,43 @@ namespace xamarin::android
 		}
 
 		template<size_t Size, uint32_t Seed = 0>
-		force_inline static constexpr uint32_t hash (const char (&input)[Size]) noexcept
+		[[gnu::always_inline]]
+		static constexpr auto hash (const char (&input)[Size]) noexcept -> uint32_t
 		{
 			return hash<Seed> (input, Size - 1);
 		}
 
 		template<uint32_t Seed = 0>
-		force_inline static constexpr uint32_t hash (std::string_view const& input) noexcept
+		[[gnu::always_inline]]
+		static constexpr auto hash (std::string_view const& input) noexcept -> uint32_t
 		{
 			return hash<Seed> (input.data (), input.length ());
 		}
 
 	private:
 		// 32-bit rotate left.
-		template<int Bits>
-		force_inline static constexpr uint32_t rotl (uint32_t x) noexcept
+		template<int Bits> [[gnu::always_inline]]
+		static constexpr auto rotl (uint32_t x) noexcept -> uint32_t
 		{
 			return ((x << Bits) | (x >> (32 - Bits)));
 		}
 
 		// Normal stripe processing routine.
-		force_inline static constexpr uint32_t round (uint32_t acc, const uint32_t input) noexcept
+		[[gnu::always_inline]]
+		static constexpr auto round (uint32_t acc, const uint32_t input) noexcept -> uint32_t
 		{
 			return rotl<13> (acc + (input * PRIME2)) * PRIME1;
 		}
 
-		template<int RShift, uint32_t Prime>
-		force_inline static constexpr uint32_t avalanche_step (const uint32_t h) noexcept
+		template<int RShift, uint32_t Prime> [[gnu::always_inline]]
+		static constexpr auto avalanche_step (const uint32_t h) noexcept -> uint32_t
 		{
 			return (h ^ (h >> RShift)) * Prime;
 		}
 
 		// Mixes all bits to finalize the hash.
-		force_inline static constexpr uint32_t avalanche (const uint32_t h) noexcept
+		[[gnu::always_inline]]
+		static constexpr auto avalanche (const uint32_t h) noexcept -> uint32_t
 		{
 			return
 				avalanche_step<16, 1> (
@@ -113,7 +115,8 @@ namespace xamarin::android
 		}
 
 		// little-endian version: all our target platforms are little-endian
-		force_inline static constexpr uint32_t endian32 (const char *v) noexcept
+		[[gnu::always_inline]]
+		static constexpr auto endian32 (const char *v) noexcept -> uint32_t
 		{
 			return
 				static_cast<uint32_t>(static_cast<uint8_t>(v[0])) |
@@ -122,13 +125,15 @@ namespace xamarin::android
 				(static_cast<uint32_t>(static_cast<uint8_t>(v[3])) << 24);
 		}
 
-		force_inline static constexpr uint32_t fetch32 (const char *p, const uint32_t v) noexcept
+		[[gnu::always_inline]]
+		static constexpr auto fetch32 (const char *p, const uint32_t v) noexcept -> uint32_t
 		{
 			return round (v, endian32 (p));
 		}
 
 		// Processes the last 0-15 bytes of p.
-		force_inline static constexpr uint32_t finalize (const uint32_t h, const char *p, size_t len) noexcept
+		[[gnu::always_inline]]
+		static constexpr auto finalize (const uint32_t h, const char *p, size_t len) noexcept -> uint32_t
 		{
 			return
 				(len >= 4) ? finalize (rotl<17> (h + (endian32 (p) * PRIME3)) * PRIME4, p + 4, len - 4) :
@@ -136,7 +141,8 @@ namespace xamarin::android
 				avalanche (h);
 		}
 
-		force_inline static constexpr uint32_t h16bytes (const char *p, size_t len, const uint32_t v1, const uint32_t v2, const uint32_t v3, const uint32_t v4) noexcept
+		[[gnu::always_inline]]
+		static constexpr auto h16bytes (const char *p, size_t len, const uint32_t v1, const uint32_t v2, const uint32_t v3, const uint32_t v4) noexcept -> uint32_t
 		{
 			return
 				(len >= 16) ? h16bytes (p + 16, len - 16, fetch32 (p, v1), fetch32 (p+4, v2), fetch32 (p+8, v3), fetch32 (p+12, v4)) :
@@ -146,7 +152,8 @@ namespace xamarin::android
 		// We don't use any special seed in XA, the template parameter is just to keep the algorithm more easily
 		// understood
 		template<uint32_t Seed = 0>
-		force_inline static constexpr uint32_t h16bytes (const char *p, size_t len)
+		[[gnu::always_inline]]
+		static constexpr auto h16bytes (const char *p, size_t len) noexcept -> uint32_t
 		{
 			return h16bytes(p, len, Seed + PRIME1 + PRIME2, Seed + PRIME2, Seed, Seed - PRIME1);
 		}
@@ -156,12 +163,14 @@ namespace xamarin::android
 	class xxhash64 final
 	{
 	public:
-		force_inline static XXH64_hash_t hash (const char *p, size_t len) noexcept
+		[[gnu::always_inline]]
+		static auto hash (const char *p, size_t len) noexcept -> XXH64_hash_t
 		{
 			return XXH3_64bits (static_cast<const void*>(p), len);
 		}
 
-		force_inline static consteval XXH64_hash_t hash (std::string_view const& input) noexcept
+		[[gnu::always_inline]]
+		static consteval auto hash (std::string_view const& input) noexcept -> XXH64_hash_t
 		{
 			return constexpr_xxh3::XXH3_64bits_const (input.data (), input.length ());
 		}
@@ -169,8 +178,8 @@ namespace xamarin::android
 		// The C XXH64_64bits function from xxhash.h is not `constexpr` or `consteval`, so we cannot call it here.
 		// At the same time, at build time performance is not that important, so we call the "unoptmized" `consteval`
 		// C++  implementation here
-		template<size_t Size>
-		force_inline static consteval XXH64_hash_t hash (const char (&input)[Size]) noexcept
+		template<size_t Size> [[gnu::always_inline]]
+		static consteval auto hash (const char (&input)[Size]) noexcept -> XXH64_hash_t
 		{
 			return constexpr_xxh3::XXH3_64bits_const (input);
 		}
@@ -183,4 +192,3 @@ namespace xamarin::android
 	using xxhash = xxhash32;
 #endif
 }
-#endif

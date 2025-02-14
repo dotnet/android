@@ -1,13 +1,10 @@
-// Dear Emacs, this is a -*- C++ -*- header
-#ifndef __JNI_WRAPPERS_H
-#define __JNI_WRAPPERS_H
+#pragma once
 
-#include <jni.h>
 #include <cstdlib>
 
-#include "cpp-util.hh"
+#include <jni.h>
 
-#ifdef __cplusplus
+#include <shared/cpp-util.hh>
 
 namespace xamarin::android
 {
@@ -51,14 +48,37 @@ namespace xamarin::android
 			return jstr != nullptr;
 		}
 
+	private:
+		[[gnu::always_inline]]
+		void ensure_cstr () noexcept
+		{
+			if (cstr != nullptr || env == nullptr) {
+				return;
+			}
+
+			cstr = env->GetStringUTFChars (jstr, nullptr);
+		}
+
+	public:
 		const char* get_cstr () noexcept
 		{
-			if (jstr == nullptr)
+			if (jstr == nullptr) {
 				return nullptr;
-			if (cstr == nullptr && env != nullptr)
-				cstr = env->GetStringUTFChars (jstr, nullptr);
+			}
 
+			ensure_cstr ();
 			return cstr;
+		}
+
+		[[gnu::always_inline]]
+		const std::string_view get_string_view () noexcept
+		{
+			if (jstr == nullptr) {
+				return {};
+			}
+
+			ensure_cstr ();
+			return {cstr};
 		}
 
 		jstring_wrapper& operator= (const jobject new_jo) noexcept
@@ -76,8 +96,9 @@ namespace xamarin::android
 	protected:
 		void release () noexcept
 		{
-			if (jstr == nullptr || cstr == nullptr || env == nullptr)
+			if (jstr == nullptr || cstr == nullptr || env == nullptr) {
 				return;
+			}
 			env->ReleaseStringUTFChars (jstr, cstr);
 			jobjectRefType type = env->GetObjectRefType (jstr);
 			switch (type) {
@@ -104,8 +125,9 @@ namespace xamarin::android
 		void assign (const jstring new_js) noexcept
 		{
 			release ();
-			if (new_js == nullptr)
+			if (new_js == nullptr) {
 				return;
+			}
 
 			jstr = new_js;
 			cstr = nullptr;
@@ -130,8 +152,7 @@ namespace xamarin::android
 	public:
 		explicit jstring_array_wrapper (JNIEnv *_env) noexcept
 			: jstring_array_wrapper(_env, nullptr)
-		{
-		}
+		{}
 
 		explicit jstring_array_wrapper (JNIEnv *_env, jobjectArray _arr)
 			: env (_env),
@@ -140,10 +161,11 @@ namespace xamarin::android
 			abort_if_invalid_pointer_argument (_env, "_env");
 			if (_arr != nullptr) {
 				len = static_cast<size_t>(_env->GetArrayLength (_arr));
-				if (len > sizeof (static_wrappers) / sizeof (jstring_wrapper))
+				if (len > sizeof (static_wrappers) / sizeof (jstring_wrapper)) {
 					wrappers = new jstring_wrapper [len];
-				else
+				} else {
 					wrappers = static_wrappers;
+				}
 			} else {
 				len = 0;
 				wrappers = nullptr;
@@ -152,8 +174,9 @@ namespace xamarin::android
 
 		~jstring_array_wrapper () noexcept
 		{
-			if (wrappers != nullptr && wrappers != static_wrappers)
+			if (wrappers != nullptr && wrappers != static_wrappers) {
 				delete[] wrappers;
+			}
 		}
 
 		size_t get_length () const noexcept
@@ -163,8 +186,9 @@ namespace xamarin::android
 
 		jstring_wrapper& operator[] (size_t index) noexcept
 		{
-			if (index >= len)
+			if (index >= len) {
 				return invalid_wrapper;
+			}
 
 			if (wrappers [index].env == nullptr) {
 				wrappers [index].env = env;
@@ -183,6 +207,3 @@ namespace xamarin::android
 		jstring_wrapper  invalid_wrapper;
 	};
 }
-
-#endif // __cplusplus
-#endif // __JNI_WRAPPERS_H

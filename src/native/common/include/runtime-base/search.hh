@@ -3,15 +3,15 @@
 
 #include <sys/types.h>
 
-#include "platform-compat.hh"
-#include "xxhash.hh"
+#include <shared/xxhash.hh>
 
-namespace xamarin::android::internal {
+namespace xamarin::android {
 	class Search final
 	{
 	public:
 		template<class T, bool (*equal) (T const&, hash_t), bool (*less_than) (T const&, hash_t)>
-		force_inline static ssize_t binary_search (hash_t key, const T *arr, size_t n) noexcept
+		[[gnu::always_inline]]
+		static ssize_t binary_search (hash_t key, const T *arr, size_t n) noexcept
 		{
 			static_assert (equal != nullptr, "equal is a required template parameter");
 			static_assert (less_than != nullptr, "less_than is a required template parameter");
@@ -31,7 +31,8 @@ namespace xamarin::android::internal {
 			return equal (arr[right], key) ? right : -1z;
 		}
 
-		force_inline static ssize_t binary_search (hash_t key, const hash_t *arr, size_t n) noexcept
+		[[gnu::always_inline]]
+		static ssize_t binary_search (hash_t key, const hash_t *arr, size_t n) noexcept
 		{
 			auto equal = [](hash_t const& entry, hash_t key) -> bool { return entry == key; };
 			auto less_than = [](hash_t const& entry, hash_t key) -> bool { return entry < key; };
@@ -39,7 +40,8 @@ namespace xamarin::android::internal {
 			return binary_search<hash_t, equal, less_than> (key, arr, n);
 		}
 
-		force_inline static ptrdiff_t binary_search_branchless (hash_t x, const hash_t *arr, uint32_t len) noexcept
+		[[gnu::always_inline]]
+		static ptrdiff_t binary_search_branchless (hash_t x, const hash_t *arr, uint32_t len) noexcept
 		{
 			const hash_t *base = arr;
 			while (len > 1) {

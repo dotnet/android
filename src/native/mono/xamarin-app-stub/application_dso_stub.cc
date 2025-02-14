@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include "xamarin-app.hh"
-#include "xxhash.hh"
+#include <shared/xxhash.hh>
 
 // This file MUST have "valid" values everywhere - the DSO it is compiled into is loaded by the
 // designer on desktop.
