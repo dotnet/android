@@ -77,7 +77,7 @@ function generate()
 	local TARGET="${SOURCE_DIR}/${TARGET_FILE}"
 	local DIFF="${SOURCE_DIR}/${DIFF_FILE}"
 
-	${COMPILER} -O2 -std=c++20 -I${EXTERNAL_DIR} -I${EXTERNAL_DIR}/constexpr-xxh3 -I${INCLUDE_DIR} "${SOURCE}" -o "${BINARY}"
+	${COMPILER} -O2 -std=c++20 -I${EXTERNAL_DIR} -I${EXTERNAL_DIR}/constexpr-xxh3 -I${INCLUDE_DIR} -I${NATIVE_DIR}/common/include "${SOURCE}" -o "${BINARY}"
 	"${BINARY}" "${RESULT}"
 
 	FILES_DIFFER="no"
