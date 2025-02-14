@@ -851,6 +851,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			bool ignoreComments = stride > 1;
 			string? prevItemComment = null;
 			ulong counter = 0;
+			bool writeStringInComment = !ignoreComments && (elementType == typeof(string) || elementType == typeof(StringHolder));
 
 			if (entries != null) {
 				foreach (object entry in entries) {
@@ -874,7 +875,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 						}
 
 						if (writeIndices && String.IsNullOrEmpty (prevItemComment)) {
-							prevItemComment = $" {counter}";
+							string stringComment = String.Empty;
+							if (writeStringInComment) {
+								var holder = StringHolder.AsHolder (entry);
+								stringComment = $" ('{holder.Data}')";
+							}
+
+							prevItemComment = $" {counter}{stringComment}";
 						}
 					}
 
