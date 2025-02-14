@@ -6,7 +6,7 @@
 #include <jni.h>
 #include <corehost/host_runtime_contract.h>
 
-#include "shared/xxhash.hh"
+#include <shared/xxhash.hh>
 
 static constexpr uint64_t FORMAT_TAG = 0x00045E6972616D58; // 'Xmari^XY' where XY is the format version
 static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x5A4C4158; // 'XALZ', little-endian

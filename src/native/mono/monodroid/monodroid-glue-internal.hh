@@ -13,6 +13,7 @@
 #include <shared/xxhash.hh>
 #include "monodroid-dl.hh"
 #include <managed-interface.hh>
+#include <shared/platform-compat.hh>
 
 #include <mono/utils/mono-counters.h>
 #include <mono/metadata/profiler.h>

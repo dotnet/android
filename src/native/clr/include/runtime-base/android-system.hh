@@ -9,8 +9,8 @@
 #include "../constants.hh"
 #include "../shared/log_types.hh"
 #include "../runtime-base/cpu-arch.hh"
-#include "jni-wrappers.hh"
-#include "strings.hh"
+#include <runtime-base/jni-wrappers.hh>
+#include <runtime-base/strings.hh>
 #include "util.hh"
 
 struct BundledProperty;
