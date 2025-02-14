@@ -7,9 +7,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <OutputPath>..\..\bin\Test$(Configuration)</OutputPath>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Program.cs" />
     <Compile Include="MamXmlParser.cs" />
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\MamJsonParser.cs" />
   </ItemGroup>
