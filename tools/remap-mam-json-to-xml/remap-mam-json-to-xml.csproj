@@ -23,9 +23,5 @@
         IncludeAssets="none"
         ReferenceOutputAssembly="False"
     />
-    <PackageReference
-        Include="Newtonsoft.Json"
-        Version="$(NewtonsoftJsonPackageVersion)"
-    />
   </ItemGroup>
 </Project>
