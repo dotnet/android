@@ -1133,8 +1133,7 @@ namespace UnamedProject
 			if (!string.IsNullOrEmpty (rid)) {
 				proj.SetProperty ("RuntimeIdentifier", rid);
 			}
-			// FIXME: https://github.com/dotnet/msbuild/issues/11237, removed `(` and `)` characters
-			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildProguard Enabled1{rid}"))) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildProguard Enabled(1){rid}"))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				// warning XA4304: ProGuard configuration file 'XYZ' was not found.
 				StringAssertEx.DoesNotContain ("XA4304", b.LastBuildOutput, "Output should *not* contain XA4304 warnings");
