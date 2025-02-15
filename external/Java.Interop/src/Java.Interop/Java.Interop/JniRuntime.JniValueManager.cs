@@ -348,7 +348,7 @@ namespace Java.Interop
 			IJavaPeerable? CreatePeerInstance (
 					ref JniObjectReference klass,
 					[DynamicallyAccessedMembers (Constructors)]
-					Type fallbackType,
+					Type targetType,
 					ref JniObjectReference reference,
 					JniObjectReferenceOptions transfer)
 			{
@@ -362,7 +362,7 @@ namespace Java.Interop
 
 					type    = Runtime.TypeManager.GetType (sig);
 
-					if (type != null) {
+					if (type != null && targetType.IsAssignableFrom (type)) {
 						var peer = TryCreatePeerInstance (ref reference, transfer, type);
 
 						if (peer != null) {
@@ -381,7 +381,7 @@ namespace Java.Interop
 				}
 				JniObjectReference.Dispose (ref klass, JniObjectReferenceOptions.CopyAndDispose);
 
-				return TryCreatePeerInstance (ref reference, transfer, fallbackType);
+				return TryCreatePeerInstance (ref reference, transfer, targetType);
 			}
 
 			IJavaPeerable? TryCreatePeerInstance (

@@ -134,6 +134,30 @@ namespace Java.InteropTests {
 		}
 
 		[Test]
+		public void CreatePeer_InvalidHandleReturnsNull ()
+		{
+			var r = new JniObjectReference ();
+			var o = valueManager.CreatePeer (ref r, JniObjectReferenceOptions.Copy, null);
+			Assert.IsNull (o);
+		}
+
+		[Test]
+		public unsafe void CreatePeer_UsesFallbackType ()
+		{
+			using var t = new JniType (AnotherJavaInterfaceImpl.JniTypeName);
+
+			var ctor    = t.GetConstructor ("()V");
+			var lref    = t.NewObject (ctor, null);
+
+			using var p = valueManager.CreatePeer (ref lref, JniObjectReferenceOptions.CopyAndDispose, typeof (IJavaInterface));
+
+			Assert.IsFalse (lref.IsValid);  // .CopyAndDispose disposes
+
+			Assert.IsNotNull (p);
+			Assert.AreSame (typeof (IJavaInterfaceInvoker), p!.GetType ());
+		}
+
+		[Test]
 		public void CreateValue ()
 		{
 			using (var o = new JavaObject ()) {
@@ -294,4 +318,38 @@ namespace Java.InteropTests {
 		protected override Type ValueManagerType => ManagedValueManagerType;
 	}
 #endif  // !__ANDROID__
+
+	// Note: Java side implements JavaInterface, while managed binding DOES NOT.
+	// This is so that `CreatePeer(…, typeof(IJavaInterface))` tests don't use an existing AnotherJavaInterfaceImpl instance.
+	//
+	// This is mostly identical to MyJavaInterfaceImpl; the important difference is that
+	// it contains an activation constructor, while MyJavaInterfaceImpl does not.
+	// MyJavaInterfaceImpl can't have one, as that's what provokes the NotSupportedException in the JavaAs() tests.
+	//
+	// We want one here so that in "bad" `CreatePeer()` implementations, we'll find this peer and construct it
+	// before verifying that it satisfies the targetType requirement.
+	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
+	public class AnotherJavaInterfaceImpl : JavaObject {
+		internal            const       string          JniTypeName    = "net/dot/jni/test/AnotherJavaInterfaceImpl";
+
+		internal    static  readonly    JniPeerMembers  _members    = new JniPeerMembers (JniTypeName, typeof (AnotherJavaInterfaceImpl));
+
+		public override JniPeerMembers JniPeerMembers {
+			get {return _members;}
+		}
+
+		AnotherJavaInterfaceImpl (ref JniObjectReference reference, JniObjectReferenceOptions options)
+			: base (ref reference, options)
+		{
+		}
+
+		public unsafe AnotherJavaInterfaceImpl ()
+			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+		{
+			const   string  id  = "()V";
+			var peer = _members.InstanceMethods.StartCreateInstance (id, GetType (), null);
+			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
+			_members.InstanceMethods.FinishCreateInstance (id, this, null);
+		}
+	}
 }

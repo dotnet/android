@@ -37,6 +37,7 @@ namespace Java.InteropTests {
 			[GenericHolder<int>.JniTypeName]    = typeof (GenericHolder<>),
 			[RenameClassBase.JniTypeName]       = typeof (RenameClassBase),
 			[RenameClassDerived.JniTypeName]    = typeof (RenameClassDerived),
+			[AnotherJavaInterfaceImpl.JniTypeName]          = typeof (AnotherJavaInterfaceImpl),
 			[CallVirtualFromConstructorBase.JniTypeName]    = typeof (CallVirtualFromConstructorBase),
 			[CallVirtualFromConstructorDerived.JniTypeName] = typeof (CallVirtualFromConstructorDerived),
 			[CrossReferenceBridge.JniTypeName]              = typeof (CrossReferenceBridge),
