@@ -167,7 +167,7 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	size_t total_time_index;
 	if (FastTiming::enabled ()) [[unlikely]] {
 		_timing = std::make_unique<Timing> ();
-		total_time_index = internal_timing->start_event (TimingEventKind::TotalRuntimeInit);
+		total_time_index = internal_timing.start_event (TimingEventKind::TotalRuntimeInit);
 	}
 
 	jstring_array_wrapper applicationDirs (env, appDirs);
@@ -257,7 +257,7 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 
 	size_t native_to_managed_index;
 	if (FastTiming::enabled ()) [[unlikely]] {
-		native_to_managed_index = internal_timing->start_event (TimingEventKind::NativeToManagedTransition);
+		native_to_managed_index = internal_timing.start_event (TimingEventKind::NativeToManagedTransition);
 	}
 
 	void *delegate = nullptr;
@@ -291,11 +291,11 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	initialize (&init);
 
 	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing->end_event (native_to_managed_index);
+		internal_timing.end_event (native_to_managed_index);
 	}
 
 	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing->end_event (total_time_index);
+		internal_timing.end_event (total_time_index);
 	}
 }
 
@@ -303,7 +303,7 @@ void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType,
 {
 	size_t total_time_index;
 	if (FastTiming::enabled ()) [[unlikely]] {
-		total_time_index = internal_timing->start_event (TimingEventKind::RuntimeRegister);
+		total_time_index = internal_timing.start_event (TimingEventKind::RuntimeRegister);
 	}
 
 	jsize managedType_len = env->GetStringLength (managedType);
@@ -318,14 +318,14 @@ void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType,
 	env->ReleaseStringChars (managedType, managedType_ptr);
 
 	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing->end_event (total_time_index, true /* uses_more_info */);
+		internal_timing.end_event (total_time_index, true /* uses_more_info */);
 
 		dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> type;
 		const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
 		type.assign (mt_ptr, strlen (mt_ptr));
 		env->ReleaseStringUTFChars (managedType, mt_ptr);
 
-		internal_timing->add_more_info (total_time_index, type);
+		internal_timing.add_more_info (total_time_index, type);
 	}
 }
 

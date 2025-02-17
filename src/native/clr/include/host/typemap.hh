@@ -1,18 +1,28 @@
 #pragma once
 
 #include <cstdint>
+
 #include "../runtime-base/logger.hh"
+#include <shared/xxhash.hh>
+#include "../xamarin-app.hh"
 
 namespace xamarin::android {
-	class TypeMap
+	class TypeMapper
 	{
 	public:
-		static auto typemap_managed_to_java ([[maybe_unused]] const char *typeName, [[maybe_unused]] const uint8_t *mvid) noexcept -> const char*
-		{
-			log_warn (LOG_ASSEMBLY, "{} not implemented yet", __PRETTY_FUNCTION__);
-			log_warn (LOG_ASSEMBLY, "  asked for '{}'", optional_string (typeName));
+		static auto typemap_managed_to_java (const char *typeName, const uint8_t *mvid) noexcept -> const char*;
+		static auto typemap_java_to_managed (const char *typeName) noexcept -> const char*;
 
-			return nullptr;
-		}
+	private:
+#if defined(RELEASE)
+		static auto compare_mvid (const uint8_t *mvid, TypeMapModule const& module) noexcept -> int;
+		static auto find_module_entry (const uint8_t *mvid, const TypeMapModule *entries, size_t entry_count) noexcept -> const TypeMapModule*;
+		static auto find_managed_to_java_map_entry (hash_t name_hash, const TypeMapModuleEntry *map, size_t entry_count) noexcept -> const TypeMapModuleEntry*;
+		static auto typemap_managed_to_java_release (const char *typeName, const uint8_t *mvid) noexcept -> const char*;
+
+		static auto find_java_to_managed_entry (hash_t name_hash) noexcept -> const TypeMapJava*;
+#else
+		static auto typemap_managed_to_java_debug (const char *typeName, const uint8_t *mvid) noexcept -> const char*;
+#endif
 	};
 }
