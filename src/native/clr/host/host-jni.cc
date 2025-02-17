@@ -19,7 +19,7 @@ JNICALL Java_mono_android_Runtime_dumpTimingData ([[maybe_unused]] JNIEnv *env, 
 	// 	return;
 	// }
 
-	// internal_timing->dump ();
+	// internal_timing.dump ();
 }
 
 JNIEXPORT void
