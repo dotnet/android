@@ -59,15 +59,14 @@ namespace Xamarin.Android.Tasks
 
 		static JsonObject ReadJson (string path)
 		{
-			using (var f = File.OpenRead (path))
-			{
-				return JsonNode.Parse(f)!.AsObject();
+			using (var f = File.OpenRead (path)) {
+				return JsonNode.Parse (f)!.AsObject ();
 			}
 		}
 
 		void ReadClassRewrites (JsonNode classRewrites)
 		{
-			foreach (var classRewrite in classRewrites.AsArray()) {
+			foreach (var classRewrite in classRewrites.AsArray ()) {
 				if (classRewrite == null) {
 					continue;
 				}
@@ -80,14 +79,14 @@ namespace Xamarin.Android.Tasks
 				if (methods == null) {
 					continue;
 				}
-				foreach (var method in methods.AsArray()) {
+				foreach (var method in methods.AsArray ()) {
 					if (method == null) {
 						continue;
 					}
-					var makeStatic = (bool?) method["MakeStatic"] ?? false;
-					var oldName = (string?) method["OriginalName"];
-					var newName = (string?) method["NewName"];
-					var oldSig  = ReadSignature (method["OriginalParams"]);
+					var makeStatic = (bool?) method ["MakeStatic"] ?? false;
+					var oldName = (string?) method ["OriginalName"];
+					var newName = (string?) method ["NewName"];
+					var oldSig  = ReadSignature (method ["OriginalParams"]);
 					if (oldName == null || newName == null) {
 						continue;
 					}
@@ -98,8 +97,8 @@ namespace Xamarin.Android.Tasks
 
 		bool TryReadClassFromTo (JsonNode token, [NotNullWhen(true)] out string? from, [NotNullWhen(true)] out string? to)
 		{
-			from    = (string?) token["Class"]?["From"];
-			to      = (string?) token["Class"]?["To"];
+			from    = (string?) token ["Class"]? ["From"];
+			to      = (string?) token ["Class"]? ["To"];
 			if (from == null || to == null) {
 				return false;
 			}
@@ -177,7 +176,7 @@ namespace Xamarin.Android.Tasks
 
 		void ReadGlobalMethodCalls (JsonNode globalMethodCalls)
 		{
-			foreach (var globalMethodCall in globalMethodCalls.AsArray()) {
+			foreach (var globalMethodCall in globalMethodCalls.AsArray ()) {
 				if (globalMethodCall == null) {
 					continue;
 				}
@@ -189,13 +188,13 @@ namespace Xamarin.Android.Tasks
 				if (methods == null) {
 					continue;
 				}
-				foreach (var method in methods.AsArray()) {
+				foreach (var method in methods.AsArray ()) {
 					if (method == null) {
 						continue;
 					}
-					var makeStatic = (bool?) method["MakeStatic"] ?? false;
-					var oldName = (string?) method["OriginalName"];
-					var oldSig  = ReadSignature (method["OriginalParams"]);
+					var makeStatic = (bool?) method ["MakeStatic"] ?? false;
+					var oldName = (string?) method ["OriginalName"];
+					var oldSig  = ReadSignature (method ["OriginalParams"]);
 					if (oldSig != null) {
 						throw new Exception ("huh?");
 					}
