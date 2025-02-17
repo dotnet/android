@@ -81,10 +81,13 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 				foreach (var method in methods.AsArray()) {
-					var makeStatic = (bool?) method!["MakeStatic"] ?? false;
-					var oldName = (string?) method!["OriginalName"];
-					var newName = (string?) method!["NewName"];
-					var oldSig  = ReadSignature (method!["OriginalParams"]);
+					if (method == null) {
+						continue;
+					}
+					var makeStatic = (bool?) method["MakeStatic"] ?? false;
+					var oldName = (string?) method["OriginalName"];
+					var newName = (string?) method["NewName"];
+					var oldSig  = ReadSignature (method["OriginalParams"]);
 					if (oldName == null || newName == null) {
 						continue;
 					}
@@ -187,9 +190,12 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 				foreach (var method in methods.AsArray()) {
-					var makeStatic = (bool?) method!["MakeStatic"] ?? false;
-					var oldName = (string?) method!["OriginalName"];
-					var oldSig  = ReadSignature (method!["OriginalParams"]);
+					if (method == null) {
+						continue;
+					}
+					var makeStatic = (bool?) method["MakeStatic"] ?? false;
+					var oldName = (string?) method["OriginalName"];
+					var oldSig  = ReadSignature (method["OriginalParams"]);
 					if (oldSig != null) {
 						throw new Exception ("huh?");
 					}
