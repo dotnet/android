@@ -231,6 +231,19 @@ namespace Xamarin.Android.Tasks
 			this.mappingData = mappingData ?? throw new ArgumentNullException (nameof (mappingData));
 			javaNameHash32Comparer = new JavaNameHash32Comparer ();
 			javaNameHash64Comparer = new JavaNameHash64Comparer ();
+
+			// Unfortunate, but we have to fix this up before proceeding
+			foreach (TypeMapGenerator.ModuleReleaseData module in mappingData.Modules) {
+				foreach (TypeMapGenerator.TypeMapReleaseEntry entry in module.Types) {
+					if (entry.ManagedTypeName.IndexOf ('/') < 0) {
+						continue;
+					}
+
+					// CoreCLR will request for subtypes with the `+` level separator instead of
+					// the `/` one.
+					entry.ManagedTypeName = entry.ManagedTypeName.Replace ('/', '+');
+				}
+			}
 		}
 
 		protected override void Construct (LlvmIrModule module)
@@ -384,7 +397,9 @@ namespace Xamarin.Android.Tasks
 
 			TypeMapJava map_entry;
 			foreach (TypeMapGenerator.TypeMapReleaseEntry entry in mappingData.JavaTypes) {
-				uint managedTypeNameIndex = GetEntryIndex (entry.ManagedTypeName, seenManagedTypeNames, cs.ManagedTypeNames);
+				string assemblyName = mappingData.Modules[entry.ModuleIndex].AssemblyName;
+				string fullManagedTypeName = $"{assemblyName}, {entry.ManagedTypeName}";
+				uint managedTypeNameIndex = GetEntryIndex (fullManagedTypeName, seenManagedTypeNames, cs.ManagedTypeNames);
 				cs.JavaNames.Add (entry.JavaName);
 
 				map_entry = new TypeMapJava {
@@ -489,10 +504,10 @@ namespace Xamarin.Android.Tasks
 				TypeMapJava entry = cs.JavaMap[i].Instance;
 
 				// The cast is safe, xxHash will return a 32-bit value which (for convenience) was upcast to 64-bit
-				entry.JavaNameHash32 = (uint)TypeMapHelper.HashJavaName (entry.JavaName, is64Bit: false);
+				entry.JavaNameHash32 = (uint)TypeMapHelper.HashJavaNameForCLR (entry.JavaName, is64Bit: false);
 				hashes32.Add (entry.JavaNameHash32);
 
-				entry.JavaNameHash64 = TypeMapHelper.HashJavaName (entry.JavaName, is64Bit: true);
+				entry.JavaNameHash64 = TypeMapHelper.HashJavaNameForCLR (entry.JavaName, is64Bit: true);
 				hashes64.Add (entry.JavaNameHash64);
 			}
 		}
