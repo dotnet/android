@@ -35,6 +35,7 @@ set(XAMARIN_MONODROID_SOURCES
   internal-pinvokes.cc
   os-bridge.cc
   pinvoke-override.cc
+  typemap.cc
 )
 
 list(APPEND LOCAL_CLANG_CHECK_SOURCES

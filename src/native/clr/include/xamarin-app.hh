@@ -1,6 +1,7 @@
 // Dear Emacs, this is a -*- C++ -*- header
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 #include <jni.h>

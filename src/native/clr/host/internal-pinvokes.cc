@@ -25,7 +25,12 @@ void _monodroid_gref_log_delete (jobject handle, char type, const char *threadNa
 
 const char* clr_typemap_managed_to_java (const char *typeName, const uint8_t *mvid) noexcept
 {
-	return TypeMap::typemap_managed_to_java (typeName, mvid);
+	return TypeMapper::typemap_managed_to_java (typeName, mvid);
+}
+
+const char* clr_typemap_java_to_managed (const char *typeName) noexcept
+{
+	return TypeMapper::typemap_java_to_managed (typeName);
 }
 
 void monodroid_log (LogLevel level, LogCategories category, const char *message) noexcept
