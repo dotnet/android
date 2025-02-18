@@ -1332,5 +1332,32 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				throw;
 			}
 		}
+
+		[Test]
+		public void EnableManagedMarshalMethodsLookup ()
+		{
+			string [] properties = [
+				"Configuration=Release",
+				"AndroidUseMarshalMethods=true",
+				"_AndroidUseManagedMarshalMethodsLookup=true",
+			];
+			var projectDirectory = Path.Combine (XABuildPaths.TopDirectory, "samples", "HelloWorld", "HelloWorld");
+			try {
+				var dotnet = new DotNetCLI (Path.Combine (projectDirectory, "HelloWorld.DotNet.csproj"));
+				Assert.IsTrue (dotnet.Build (target: "Run", parameters: properties), "`dotnet build -t:Run` should succeed");
+
+				bool didLaunch = WaitForActivityToStart ("example", "MainActivity",
+					Path.Combine (projectDirectory, "logcat.log"), 30);
+				Assert.IsTrue (didLaunch, "Activity should have started.");
+			} catch {
+				foreach (var file in Directory.GetFiles (projectDirectory, "*.log", SearchOption.AllDirectories)) {
+					TestContext.AddTestAttachment (file);
+				}
+				foreach (var bl in Directory.GetFiles (projectDirectory, "*.binlog", SearchOption.AllDirectories)) {
+					TestContext.AddTestAttachment (bl);
+				}
+				throw;
+			}
+		}
 	}
 }
