@@ -79,6 +79,9 @@ const std::vector<std::string> internal_pinvoke_names = {
 //	"recv_uninterrupted",
 //	"send_uninterrupted",
 //	"set_world_accessable",
+
+// We can treat liblog as "internal", since we link against it
+	"__android_log_print",
 };
 
 const std::vector<std::string> dotnet_pinvoke_names = {
@@ -647,6 +650,7 @@ void write_library_name_hashes (Hash (*hasher)(const char*, size_t), std::ostrea
 {
 	write_library_name_hash (hasher, output, "java-interop", "java_interop");
 	write_library_name_hash (hasher, output, "xa-internal-api", "xa_internal_api");
+	write_library_name_hash (hasher, output, "liblog", "android_liblog");
 	write_library_name_hash (hasher, output, "libSystem.Native", "system_native");
 	write_library_name_hash (hasher, output, "libSystem.IO.Compression.Native", "system_io_compression_native");
 	write_library_name_hash (hasher, output, "libSystem.Security.Cryptography.Native.Android", "system_security_cryptography_native_android");
