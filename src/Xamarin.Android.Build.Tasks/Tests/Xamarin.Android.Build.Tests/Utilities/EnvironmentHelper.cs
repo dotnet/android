@@ -68,7 +68,7 @@ namespace Xamarin.Android.Build.Tests
 			public bool   managed_marshal_methods_lookup_enabled;
 		}
 
-		const uint ApplicationConfigFieldCount = 26;
+		const uint ApplicationConfigFieldCount = 27;
 
 		const string ApplicationConfigSymbolName = "application_config";
 		const string AppEnvironmentVariablesSymbolName = "app_environment_variables";
