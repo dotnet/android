@@ -480,7 +480,7 @@ namespace Xamarin.Android.Tasks
 		void WriteTypeMappings (NativeCodeGenState state)
 		{
 			Log.LogDebugMessage ($"Generating type maps for architecture '{state.TargetArch}'");
-			var tmg = new TypeMapGenerator (Log, state);
+			var tmg = new TypeMapGenerator (Log, state, androidRuntime);
 			if (!tmg.Generate (Debug, SkipJniAddNativeMethodRegistrationAttributeScan, TypemapOutputDirectory, GenerateNativeAssembly)) {
 				throw new XamarinAndroidException (4308, Properties.Resources.XA4308);
 			}
