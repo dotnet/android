@@ -1334,30 +1334,22 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		}
 
 		[Test]
-		public void EnableManagedMarshalMethodsLookup ()
+		public void AppStartsWithManagedMarshalMethodsLookupEnabled ()
 		{
-			string [] properties = [
-				"Configuration=Release",
-				"AndroidUseMarshalMethods=true",
-				"_AndroidUseManagedMarshalMethodsLookup=true",
-			];
-			var projectDirectory = Path.Combine (XABuildPaths.TopDirectory, "samples", "HelloWorld", "HelloWorld");
-			try {
-				var dotnet = new DotNetCLI (Path.Combine (projectDirectory, "HelloWorld.DotNet.csproj"));
-				Assert.IsTrue (dotnet.Build (target: "Run", parameters: properties), "`dotnet build -t:Run` should succeed");
+			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
+			proj.SetProperty ("AndroidUseMarshalMethods", "true");
+			proj.SetProperty ("_AndroidUseManagedMarshalMethodsLookup", "true");
 
-				bool didLaunch = WaitForActivityToStart ("example", "MainActivity",
-					Path.Combine (projectDirectory, "logcat.log"), 30);
-				Assert.IsTrue (didLaunch, "Activity should have started.");
-			} catch {
-				foreach (var file in Directory.GetFiles (projectDirectory, "*.log", SearchOption.AllDirectories)) {
-					TestContext.AddTestAttachment (file);
-				}
-				foreach (var bl in Directory.GetFiles (projectDirectory, "*.binlog", SearchOption.AllDirectories)) {
-					TestContext.AddTestAttachment (bl);
-				}
-				throw;
-			}
+			using var builder = CreateApkBuilder ();
+			builder.Save (proj);
+
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+			Assert.IsTrue (dotnet.Run (), "`dotnet run --no-build` should succeed");
+
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+			Assert.IsTrue (didLaunch, "Activity should have started.");
 		}
 	}
 }
