@@ -63,8 +63,13 @@ namespace Xamarin.Android.Tasks {
 			cmd.Add ("--custom-package");
 			cmd.Add (PackageName);
 			foreach (var assetDirectory in AssetDirectories) {
+				var fullPath = GetFullPath (assetDirectory.ItemSpec);
+				if (IsInvalidDirectoryName (fullPath)) {
+					LogCodedError ("APT2266", Properties.Resources.APT2266, fullPath);
+					continue;
+				}
 				cmd.Add ("-A");
-				cmd.Add (GetFullPath (assetDirectory.ItemSpec));
+				cmd.Add (fullPath);
 			}
 			cmd.Add ($"-o");
 			cmd.Add (GetFullPath (output.ItemSpec));
