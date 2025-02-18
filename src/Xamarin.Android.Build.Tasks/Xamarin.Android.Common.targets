@@ -1508,7 +1508,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <GenerateJavaStubs
       AndroidRuntime="$(_AndroidRuntime)"
-      CodeGenerationTarget="$(_AndroidCodeGenerationTarget)"
+      CodeGenerationTarget="$(AndroidCodegenTarget)"
       ResolvedAssemblies="@(_ResolvedAssemblies)"
       ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
       ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
