@@ -22,6 +22,9 @@
     <IlcGenerateDgmlFile>true</IlcGenerateDgmlFile>
     <!-- Verify we get a specific MAUI version -->
     <MauiVersion>10.0.0-ci.net10.25074.1</MauiVersion>
+    <!-- local packages folder -->
+    <RestorePackagesPath>$(MSBuildThisFileDirectory)..\..\packages</RestorePackagesPath>
+    <RestoreAdditionalProjectSources>D:\src\android-libraries\output</RestoreAdditionalProjectSources>
   </PropertyGroup>
 
   <!-- Settings for CI -->
@@ -29,7 +32,7 @@
     <!-- x86_64 emulator -->
     <RuntimeIdentifier>android-x64</RuntimeIdentifier>
     <_NuGetFolderOnCI>..\..\bin\Build$(Configuration)\nuget-unsigned</_NuGetFolderOnCI>
-    <RestoreAdditionalProjectSources Condition="Exists('$(_NuGetFolderOnCI)')">$(_NuGetFolderOnCI)</RestoreAdditionalProjectSources>
+    <RestoreAdditionalProjectSources Condition="Exists('$(_NuGetFolderOnCI)')">$(RestoreAdditionalProjectSources);$(_NuGetFolderOnCI)</RestoreAdditionalProjectSources>
     <_FastDeploymentDiagnosticLogging>true</_FastDeploymentDiagnosticLogging>
   </PropertyGroup>
 
