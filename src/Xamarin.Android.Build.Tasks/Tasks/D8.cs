@@ -30,6 +30,7 @@ namespace Xamarin.Android.Tasks
 		// general d8 feature options.
 		public bool Debug { get; set; }
 		public bool EnableDesugar { get; set; } = true;
+		public bool DisablePrecompiledDex { get; set; }
 
 		// Java libraries to embed or reference
 		public string ClassesZip { get; set; }
@@ -94,7 +95,7 @@ namespace Xamarin.Android.Tasks
 					injars.Add (ClassesZip);
 				}
 				foreach (var jar in JavaLibrariesToEmbed) {
-					injars.Add (jar.ItemSpec);
+					injars.Add (FindJavaLibraryToEmbed (jar));
 				}
 			}
 			libjars.Add (JavaPlatformJarPath);
@@ -131,6 +132,24 @@ namespace Xamarin.Android.Tasks
 		{
 			CheckForError (singleLine);
 			Log.LogMessage (messageImportance, singleLine);
+		}
+
+		string FindJavaLibraryToEmbed (ITaskItem jar)
+		{
+			// Just use the jar if precompiling is disabled or the minSdkVersion is less than 24
+			if (DisablePrecompiledDex || MinSdkVersion < 24)
+				return jar.ItemSpec;
+
+			// For ex: "mono.android.jar", we look for "mono.android.dex"
+			var dex_file = Path.ChangeExtension (jar.ItemSpec, ".dex");
+
+			if (File.Exists (dex_file)) {
+				Log.LogDebugMessage ("  Found precompiled dex file: '{0}'", dex_file);
+				return dex_file;
+			}
+
+			Log.LogDebugMessage ("  No precompiled dex file found: '{0}'", dex_file);
+			return jar.ItemSpec;
 		}
 	}
 }
