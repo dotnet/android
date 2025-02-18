@@ -266,18 +266,16 @@ namespace Java.Interop {
 			static  readonly    Type[]      EmptyTypeArray      = Array.Empty<Type> ();
 			const string NotUsedInAndroid = "This code path is not used in Android projects.";
 
+			// FIXME: https://github.com/dotnet/java-interop/issues/1192
+			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = NotUsedInAndroid)]
 			static Type MakeArrayType (Type type) =>
-				// FIXME: https://github.com/dotnet/java-interop/issues/1192
-				#pragma warning disable IL3050
 				type.MakeArrayType ();
-				#pragma warning restore IL3050
 
+			// FIXME: https://github.com/dotnet/java-interop/issues/1192
 			[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = NotUsedInAndroid)]
+			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = NotUsedInAndroid)]
 			static Type MakeGenericType (Type type, Type arrayType) =>
-				// FIXME: https://github.com/dotnet/java-interop/issues/1192
-				#pragma warning disable IL3050
 				type.MakeGenericType (arrayType);
-				#pragma warning restore IL3050
 
 			[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "Types returned here should be preserved via other means.")]
 			[return: DynamicallyAccessedMembers (MethodsConstructors)]
@@ -400,16 +398,15 @@ namespace Java.Interop {
 				// https://github.com/xamarin/xamarin-android/blob/5472eec991cc075e4b0c09cd98a2331fb93aa0f3/src/Microsoft.Android.Sdk.ILLink/MarkJavaObjects.cs#L176-L186
 				const string makeGenericTypeMessage = "Generic 'Invoker' types are preserved by the MarkJavaObjects trimmer step.";
 
+				// FIXME: https://github.com/dotnet/java-interop/issues/1192
 				[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = makeGenericTypeMessage)]
+				[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = makeGenericTypeMessage)]
 				[return: DynamicallyAccessedMembers (Constructors)]
 				static Type MakeGenericType (
 						[DynamicallyAccessedMembers (Constructors)]
 						Type type,
 						Type [] arguments) =>
-					// FIXME: https://github.com/dotnet/java-interop/issues/1192
-					#pragma warning disable IL3050
 					type.MakeGenericType (arguments);
-					#pragma warning restore IL3050
 
 				var signature   = type.GetCustomAttribute<JniTypeSignatureAttribute> ();
 				if (signature == null || signature.InvokerType == null) {

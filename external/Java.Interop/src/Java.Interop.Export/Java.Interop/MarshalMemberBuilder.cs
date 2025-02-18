@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -11,8 +12,12 @@ using Java.Interop.Expressions;
 
 namespace Java.Interop {
 
+	[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
+	[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 	public class MarshalMemberBuilder : JniRuntime.JniMarshalMemberBuilder
 	{
+		internal const string ExpressionRequiresUnreferencedCode = "System.Linq.Expression usage may trim away required code.";
+
 		public MarshalMemberBuilder ()
 		{
 		}

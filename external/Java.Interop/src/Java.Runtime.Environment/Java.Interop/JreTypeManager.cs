@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -17,7 +18,13 @@ namespace Java.Interop {
 
 	public class JreTypeManager : JniRuntime.JniTypeManager {
 
-		public override void RegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
+		const string NotUsedInAndroid = "This code path is not used in Android projects.";
+
+		public override void RegisterNativeMembers (
+				JniType nativeClass,
+				[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
+				Type type,
+				ReadOnlySpan<char> methods)
 		{
 			if (base.TryRegisterNativeMembers (nativeClass, type, methods)) {
 				return;
@@ -63,6 +70,10 @@ namespace Java.Interop {
 			nativeClass.RegisterNativeMethods (registrations.ToArray ());
 		}
 
+		// FIXME: https://github.com/dotnet/java-interop/issues/1192
+		[UnconditionalSuppressMessage ("Trimming", "IL2062", Justification = NotUsedInAndroid)]
+		[UnconditionalSuppressMessage ("Trimming", "IL2070", Justification = NotUsedInAndroid)]
+		[UnconditionalSuppressMessage ("Trimming", "IL2078", Justification = NotUsedInAndroid)]
 		static void AddInterfaceMethods (JniMethodMap toRegister, Type type)
 		{
 			foreach (var iface in type.GetInterfaces ()) {
@@ -86,7 +97,9 @@ namespace Java.Interop {
 			toRegister [("n_" + signature.MemberName, signature.MemberSignature)]   = targetMethod ?? declaringMethod;
 		}
 
-		static void AddClassMethods (JniMethodMap toRegister, Type type)
+		// FIXME: https://github.com/dotnet/java-interop/issues/1192
+		[UnconditionalSuppressMessage ("Trimming", "IL2070", Justification = NotUsedInAndroid)]
+		static void AddClassMethods (JniMethodMap toRegister, [DynamicallyAccessedMembers (Methods)] Type type)
 		{
 			const BindingFlags Flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 			foreach (var method in type.GetMethods (Flags)) {

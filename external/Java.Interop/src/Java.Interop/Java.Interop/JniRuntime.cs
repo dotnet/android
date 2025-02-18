@@ -446,8 +446,7 @@ namespace Java.Interop
 		{
 			transition.SetPendingException (e);
 
-			// TODO: Enable when we move to 'net9.0'
-			//Debugger.BreakForUserUnhandledException (e);
+			Debugger.BreakForUserUnhandledException (e);
 		}
 
 		public virtual void RaisePendingException (Exception pendingException)

@@ -29,8 +29,13 @@ namespace Java.Interop {
 
 		internal    bool                       UseMarshalMemberBuilder  => marshalMemberBuilder != null;
 
+		const string NotUsedInAndroid = "This code path is not used in Android projects.";
+
+		// FIXME: https://github.com/dotnet/java-interop/issues/1192
 		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, "Java.Interop.MarshalMemberBuilder", "Java.Interop.Export")]
+		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = NotUsedInAndroid)]
 		[UnconditionalSuppressMessage ("Trimming", "IL2035", Justification = "Java.Interop.Export.dll is not always present.")]
+		[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = NotUsedInAndroid)]
 		partial void SetMarshalMemberBuilder (CreationOptions options)
 		{
 			if (!options.UseMarshalMemberBuilder) {

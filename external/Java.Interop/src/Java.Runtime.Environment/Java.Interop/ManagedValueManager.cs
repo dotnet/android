@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -231,12 +232,17 @@ namespace Java.Interop {
 		{
 			var declType  = cinfo.DeclaringType ?? throw new NotSupportedException ("Do not know the type to create!");
 
-#pragma warning disable IL2072
-			var self      = (IJavaPeerable) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject (declType);
-#pragma warning restore IL2072
+			var self      = GetUninitializedObject (declType);
 			self.SetPeerReference (reference);
 
 			cinfo.Invoke (self, argumentValues);
+
+			// FIXME: https://github.com/dotnet/java-interop/issues/1192
+			const string getUninitializedObject = "This code path is not used in Android projects.";
+			[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = getUninitializedObject)]
+			[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = getUninitializedObject)]
+			static IJavaPeerable GetUninitializedObject (Type type) =>
+				(IJavaPeerable) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject (type);
 		}
 
 		public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()

@@ -177,6 +177,7 @@ namespace Java.Interop {
 			return self;
 		}
 
+		[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = ExpressionRequiresUnreferencedCode)]
 		[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
 		Type _GetType () => GetType ();
 

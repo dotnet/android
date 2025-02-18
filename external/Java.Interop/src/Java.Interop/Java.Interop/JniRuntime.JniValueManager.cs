@@ -675,12 +675,11 @@ namespace Java.Interop
 			{
 				const string makeGenericMethodMessage = "This code path is not used in Android projects.";
 
+				// FIXME: https://github.com/dotnet/java-interop/issues/1192
 				[UnconditionalSuppressMessage ("Trimming", "IL2060", Justification = makeGenericMethodMessage)]
+				[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = makeGenericMethodMessage)]
 				static MethodInfo MakeGenericMethod (MethodInfo method, Type type) =>
-					// FIXME: https://github.com/dotnet/java-interop/issues/1192
-					#pragma warning disable IL3050
 					method.MakeGenericMethod (type);
-					#pragma warning restore IL3050
 
 				Func<JniValueMarshaler> indirect = GetObjectArrayMarshalerHelper<object>;
 				var reifiedMethodInfo = MakeGenericMethod (
