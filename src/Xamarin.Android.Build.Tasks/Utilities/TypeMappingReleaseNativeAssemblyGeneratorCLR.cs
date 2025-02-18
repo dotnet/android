@@ -398,7 +398,7 @@ namespace Xamarin.Android.Tasks
 			TypeMapJava map_entry;
 			foreach (TypeMapGenerator.TypeMapReleaseEntry entry in mappingData.JavaTypes) {
 				string assemblyName = mappingData.Modules[entry.ModuleIndex].AssemblyName;
-				string fullManagedTypeName = $"{assemblyName}, {entry.ManagedTypeName}";
+				string fullManagedTypeName = $"{entry.ManagedTypeName}, {assemblyName}";
 				uint managedTypeNameIndex = GetEntryIndex (fullManagedTypeName, seenManagedTypeNames, cs.ManagedTypeNames);
 				cs.JavaNames.Add (entry.JavaName);
 

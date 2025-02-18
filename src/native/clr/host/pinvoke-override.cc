@@ -16,7 +16,7 @@ auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, cons
 	hash_t library_name_hash = xxhash::hash (library_name, strlen (library_name));
 	hash_t entrypoint_hash = xxhash::hash (entrypoint_name, strlen (entrypoint_name));
 
-	if (library_name_hash == java_interop_library_hash || library_name_hash == xa_internal_api_library_hash) {
+	if (library_name_hash == java_interop_library_hash || library_name_hash == xa_internal_api_library_hash || library_name_hash == android_liblog_library_hash) {
 		PinvokeEntry *entry = find_pinvoke_address (entrypoint_hash, internal_pinvokes.data (), internal_pinvokes_count);
 
 		if (entry == nullptr) [[unlikely]] {

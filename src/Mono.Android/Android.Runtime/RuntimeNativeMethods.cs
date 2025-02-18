@@ -93,7 +93,7 @@ namespace Android.Runtime
 		internal static extern IntPtr clr_typemap_managed_to_java (string fullName, IntPtr mvid);
 
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern string clr_typemap_java_to_managed (string fullName);
+		internal static extern IntPtr clr_typemap_java_to_managed (string fullName);
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		internal static extern void monodroid_unhandled_exception (Exception javaException);
