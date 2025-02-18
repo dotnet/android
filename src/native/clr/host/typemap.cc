@@ -282,9 +282,10 @@ auto TypeMapper::typemap_java_to_managed (const char *typeName) noexcept -> cons
 
 	log_debug (
 		LOG_ASSEMBLY,
-		"Java type '{}' corresponds to managed type '{}'",
+		"Java type '{}' corresponds to managed type '{}' ({:p}",
 		optional_string (typeName),
-		optional_string (managed_type_names[java_entry->managed_type_name_index])
+		optional_string (managed_type_names[java_entry->managed_type_name_index]),
+		reinterpret_cast<const void*>(managed_type_names[java_entry->managed_type_name_index])
 	);
 	return managed_type_names[java_entry->managed_type_name_index];
 }

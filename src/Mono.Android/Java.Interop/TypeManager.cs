@@ -232,12 +232,16 @@ namespace Java.Interop {
 		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Value of java_type_name isn't statically known.")]
 		static Type? clr_typemap_java_to_managed (string java_type_name)
 		{
-			string? managedTypeName = RuntimeNativeMethods.clr_typemap_java_to_managed (java_type_name);
-			if (String.IsNullOrEmpty (managedTypeName)) {
+			IntPtr managedTypeNamePointer = RuntimeNativeMethods.clr_typemap_java_to_managed (java_type_name);
+			if (managedTypeNamePointer == IntPtr.Zero) {
 				return null;
 			}
 
-			return Type.GetType (managedTypeName);
+			string managedTypeName = Marshal.PtrToStringAnsi (managedTypeNamePointer);
+			Logger.Log (LogLevel.Info, "monodroid", $"clr_typemap_java_to_managed ('{java_type_name}') returned '{managedTypeName}'");
+			Type ret = Type.GetType (managedTypeName);
+			Logger.Log (LogLevel.Info, "monodroid", $"Loaded type: {ret}");
+			return ret;
 		}
 
 		internal static Type? GetJavaToManagedType (string class_name)
