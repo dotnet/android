@@ -180,7 +180,7 @@ namespace Xamarin.Android.Tasks
 				if (globalMethodCall == null) {
 					continue;
 				}
-				if (!TryReadClassFromTo (globalMethodCall!, out var from, out var to)) {
+				if (!TryReadClassFromTo (globalMethodCall, out var from, out var to)) {
 					Logger (TraceLevel.Info, $"No from or to! {globalMethodCall}");
 					continue;
 				}
