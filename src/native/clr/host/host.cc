@@ -22,13 +22,13 @@ void Host::clr_error_writer (const char *message) noexcept
 
 size_t Host::clr_get_runtime_property (const char *key, char *value_buffer, size_t value_buffer_size, void *contract_context) noexcept
 {
-	log_info (LOG_DEFAULT, "clr_get_runtime_property (\"{}\"...)", key);
+	log_debug (LOG_DEFAULT, "clr_get_runtime_property (\"{}\"...)", key);
 	return 0;
 }
 
 bool Host::clr_bundle_probe (const char *path, void **data_start, int64_t *size) noexcept
 {
-	log_info (LOG_DEFAULT, "clr_bundle_probe (\"{}\"...)", path);
+	log_debug (LOG_DEFAULT, "clr_bundle_probe (\"{}\"...)", path);
 	if (data_start == nullptr || size == nullptr) {
 		return false; // TODO: abort instead?
 	}
