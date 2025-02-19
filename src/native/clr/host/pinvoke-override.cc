@@ -81,6 +81,16 @@ auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, cons
 			optional_string (entrypoint_name),
 			optional_string (library_name)
 		);
+
+		// This is temporary, to catch p/invokes we might be missing that are used in the default templates
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			std::format (
+				"Missing pinvoke {}@{}",
+				optional_string (entrypoint_name),
+				optional_string (library_name)
+			)
+		);
 	}
 
 	return handle_other_pinvoke_request (library_name, library_name_hash, entrypoint_name, entrypoint_hash);
@@ -88,7 +98,7 @@ auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, cons
 
 const void* Host::clr_pinvoke_override (const char *library_name, const char *entry_point_name) noexcept
 {
-	log_info (LOG_ASSEMBLY, "clr_pinvoke_override (\"{}\", \"{}\")", library_name, entry_point_name);
+	log_debug (LOG_ASSEMBLY, "clr_pinvoke_override (\"{}\", \"{}\")", library_name, entry_point_name);
 	void *ret = PinvokeOverride::monodroid_pinvoke_override (library_name, entry_point_name);
 	log_debug (LOG_DEFAULT, "p/invoke {}found", ret == nullptr ? "not"sv : ""sv);
 	return ret;

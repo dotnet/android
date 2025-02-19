@@ -451,7 +451,6 @@ namespace Android.Runtime {
 				mvid_data = mvid_bytes;
 			}
 
-			RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"Current runtime type: {JNIEnvInit.RuntimeType}");
 			IntPtr ret;
 			fixed (byte* mvidptr = mvid_data) {
 				ret = JNIEnvInit.RuntimeType switch {
