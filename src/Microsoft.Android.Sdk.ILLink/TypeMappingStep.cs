@@ -16,7 +16,7 @@ public class TypeMappingStep : BaseStep
 {
 	const string AssemblyName = "Microsoft.Android.Runtime.NativeAOT";
 	const string TypeName = "Microsoft.Android.Runtime.NativeAotTypeManager";
-	readonly IDictionary<string, TypeDefinition> TypeMappings = new Dictionary<string, TypeDefinition> (StringComparer.Ordinal);
+	readonly IDictionary<string, List<TypeDefinition>> TypeMappings = new Dictionary<string, List<TypeDefinition>> (StringComparer.Ordinal);
 	AssemblyDefinition? MicrosoftAndroidRuntimeNativeAot;
 
 	protected override void ProcessAssembly (AssemblyDefinition assembly)
@@ -66,7 +66,7 @@ public class TypeMappingStep : BaseStep
 		var il = method.Body.GetILProcessor ();
 		var addMethod = module.ImportReference (typeof (IDictionary<string, Type>).GetMethod ("Add"));
 		var getTypeFromHandle = module.ImportReference (typeof (Type).GetMethod ("GetTypeFromHandle"));
-		foreach (var (javaKey, typeDefinition) in TypeMappings) {
+		foreach (var (javaName, list) in TypeMappings) {
 			/*
 			 * IL_0000: ldarg.0
 			 * IL_0001: ldfld class [System.Runtime]System.Collections.Generic.IDictionary`2<string, class [System.Runtime]System.Type> Microsoft.Android.Runtime.NativeAotTypeManager::TypeMappings
@@ -77,8 +77,8 @@ public class TypeMappingStep : BaseStep
 			 */
 			il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_0);
 			il.Emit (Mono.Cecil.Cil.OpCodes.Ldfld, field);
-			il.Emit (Mono.Cecil.Cil.OpCodes.Ldstr, javaKey);
-			il.Emit (Mono.Cecil.Cil.OpCodes.Ldtoken, module.ImportReference (typeDefinition));
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldstr, javaName);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldtoken, module.ImportReference (SelectTypeDefinition (javaName, list)));
 			il.Emit (Mono.Cecil.Cil.OpCodes.Call, getTypeFromHandle);
 			il.Emit (Mono.Cecil.Cil.OpCodes.Callvirt, addMethod);
 		}
@@ -86,13 +86,47 @@ public class TypeMappingStep : BaseStep
 		il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
 	}
 
+	TypeDefinition SelectTypeDefinition (string javaName, List<TypeDefinition> list)
+	{
+		if (list.Count == 1)
+			return list[0];
+
+		var best = list[0];
+		foreach (var type in list) {
+			if (type == best)
+				continue;
+			// Types in Mono.Android assembly should be first in the list
+			if (best.Module.Assembly.Name.Name != "Mono.Android" &&
+					type.Module.Assembly.Name.Name == "Mono.Android") {
+				best = type;
+				continue;
+			}
+			// We found the `Invoker` type *before* the declared type 
+ 			// Fix things up so the abstract type is first, and the `Invoker` is considered a duplicate. 
+			if ((type.IsAbstract || type.IsInterface) &&
+					!best.IsAbstract &&
+					!best.IsInterface &&
+					type.IsAssignableFrom (best, Context)) {
+				best = type;
+				continue;
+			}
+		}
+		foreach (var type in list) {
+			if (type == best)
+				continue;
+			Context.LogMessage ($"Duplicate typemap entry for {javaName} => {type.FullName}");
+		}
+		return best;
+	}
+
 	void ProcessType (AssemblyDefinition assembly, TypeDefinition type)
 	{
 		if (type.HasJavaPeer (Context)) {
 			var javaName = JavaNativeTypeManager.ToJniName (type, Context);
-			if (!TypeMappings.TryAdd (javaName, type)) {
-				Context.LogMessage ($"Duplicate typemap entry for {javaName}");
+			if (!TypeMappings.TryGetValue (javaName, out var list)) {
+				TypeMappings.Add (javaName, list = new List<TypeDefinition> ());
 			}
+			list.Add (type);
 		}
 
 		if (!type.HasNestedTypes)
