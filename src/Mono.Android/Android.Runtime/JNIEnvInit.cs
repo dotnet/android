@@ -24,7 +24,6 @@ namespace Android.Runtime
 			public int             version; // TODO: remove, not needed anymore
 			public int             grefGcThreshold;
 			public IntPtr          grefIGCUserPeer;
-			public int             isRunningOnDesktop;
 			public byte            brokenExceptionTransitions;
 			public int             packageNamingPolicy;
 			public byte            ioExceptionType;
@@ -36,7 +35,6 @@ namespace Android.Runtime
 #pragma warning restore 0649
 
 		internal static JniRuntime.JniValueManager? ValueManager;
-		internal static bool IsRunningOnDesktop;
 		internal static bool jniRemappingInUse;
 		internal static bool MarshalMethodsEnabled;
 		internal static bool PropagateExceptions;
@@ -102,21 +100,12 @@ namespace Android.Runtime
 			androidRuntime = new AndroidRuntime (args->env, args->javaVm, args->grefLoader, args->Loader_loadClass, args->jniAddNativeMethodRegistrationAttributePresent != 0);
 			ValueManager = androidRuntime.ValueManager;
 
-			IsRunningOnDesktop = args->isRunningOnDesktop == 1;
-
 			grefIGCUserPeer_class = args->grefIGCUserPeer;
 			grefGCUserPeerable_class = args->grefGCUserPeerable;
 
 			PropagateExceptions = args->brokenExceptionTransitions == 0;
 
 			JavaNativeTypeManager.PackageNamingPolicy = (PackageNamingPolicy)args->packageNamingPolicy;
-			if (IsRunningOnDesktop) {
-				var packageNamingPolicy = Environment.GetEnvironmentVariable ("__XA_PACKAGE_NAMING_POLICY__");
-				if (Enum.TryParse (packageNamingPolicy, out PackageNamingPolicy pnp)) {
-					JavaNativeTypeManager.PackageNamingPolicy = pnp;
-				}
-			}
-
 			SetSynchronizationContext ();
 		}
 

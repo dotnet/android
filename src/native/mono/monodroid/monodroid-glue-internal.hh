@@ -94,7 +94,6 @@ namespace xamarin::android::internal
 			int             version;
 			int             grefGcThreshold;
 			jobject         grefIGCUserPeer;
-			int             isRunningOnDesktop;
 			uint8_t         brokenExceptionTransitions;
 			int             packageNamingPolicy;
 			uint8_t         boundExceptionType;

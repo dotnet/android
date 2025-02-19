@@ -278,23 +278,22 @@ namespace Android.Runtime {
 
 		protected override string? GetSimpleReference (Type type)
 		{
+			if (RuntimeFeature.UseReflectionForManagedToJava) {
+				return JavaNativeTypeManager.ToJniName (type);
+			}
 			string? j = JNIEnv.TypemapManagedToJava (type);
 			if (j != null) {
 				return GetReplacementTypeCore (j) ?? j;
-			}
-			if (JNIEnvInit.IsRunningOnDesktop) {
-				return JavaNativeTypeManager.ToJniName (type);
 			}
 			return null;
 		}
 
 		protected override IEnumerable<string> GetSimpleReferences (Type type)
 		{
-			string? j = JNIEnv.TypemapManagedToJava (type);
-			j   = GetReplacementTypeCore (j) ?? j;
-
-			if (JNIEnvInit.IsRunningOnDesktop) {
+			string? j;
+			if (RuntimeFeature.UseReflectionForManagedToJava) {
 				string? d = JavaNativeTypeManager.ToJniName (type);
+				j   = GetReplacementTypeCore (d);
 				if (j != null && d != null) {
 					return new[]{j, d};
 				}
@@ -302,6 +301,9 @@ namespace Android.Runtime {
 					return new[]{d};
 				}
 			}
+
+			j = JNIEnv.TypemapManagedToJava (type);
+			j   = GetReplacementTypeCore (j) ?? j;
 			if (j != null) {
 				return new[]{j};
 			}

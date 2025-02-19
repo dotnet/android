@@ -4,5 +4,9 @@
       <method signature="System.Boolean get_NegotiateAuthenticationIsEnabled()" body="stub" feature="Xamarin.Android.Net.UseNegotiateAuthentication" featurevalue="false" value="false" />
       <method signature="System.Boolean get_NegotiateAuthenticationIsEnabled()" body="stub" feature="Xamarin.Android.Net.UseNegotiateAuthentication" featurevalue="true" value="true" />
     </type>
+    <type fullname="Android.Runtime.RuntimeFeature">
+      <method signature="System.Boolean get_UseReflectionForManagedToJava()" body="stub" feature="Android.Runtime.RuntimeFeature.UseReflectionForManagedToJava" featurevalue="false" value="false" />
+      <method signature="System.Boolean get_UseReflectionForManagedToJava()" body="stub" feature="Android.Runtime.RuntimeFeature.UseReflectionForManagedToJava" featurevalue="true" value="true" />
+    </type>
   </assembly>
 </linker>

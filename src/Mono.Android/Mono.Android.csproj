@@ -258,6 +258,7 @@
     <Compile Include="Android.Runtime\RequiresPermissionAttribute.cs" />
     <Compile Include="Android.Runtime\ResourceDesignerAttribute.cs" />
     <Compile Include="Android.Runtime\RuntimeConstants.cs" />
+    <Compile Include="Android.Runtime\RuntimeFeature.cs" />
     <Compile Include="Android.Runtime\ResourceIdManager.cs" />
     <Compile Include="Android.Runtime\RuntimeNativeMethods.cs" />
     <Compile Include="Android.Runtime\StringDefAttribute.cs" />
