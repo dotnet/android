@@ -339,7 +339,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">False</_AndroidUseMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">$(AndroidEnableMarshalMethods)</_AndroidUseMarshalMethods>
 
-  <_AndroidUseManagedMarshalMethodsLookup Condition=" '$(_AndroidUseManagedMarshalMethodsLookup)' == '' and '$(AndroidEnableMarshalMethods)' == 'True' and '$(_AndroidRuntime)' != 'MonoVM' ">True</_AndroidUseManagedMarshalMethodsLookup>
+  <_AndroidUseManagedMarshalMethodsLookup Condition=" '$(_AndroidUseManagedMarshalMethodsLookup)' == '' and '$(_AndroidUseMarshalMethods)' == 'True' and '$(_AndroidRuntime)' != 'MonoVM' ">True</_AndroidUseManagedMarshalMethodsLookup>
   <_AndroidUseManagedMarshalMethodsLookup Condition=" '$(_AndroidUseManagedMarshalMethodsLookup)' == '' ">False</_AndroidUseManagedMarshalMethodsLookup>
 </PropertyGroup>
 
@@ -2159,7 +2159,7 @@ because xbuild doesn't support framework reference assemblies.
   <PropertyGroup Condition=" '$(AndroidPackageFormat)' == 'aab' ">
     <_ApkOutputPath>$(_BaseZipIntermediate)</_ApkOutputPath>
   </PropertyGroup>
-  
+
   <!-- Put the assemblies and native libraries in the apk -->
   <!--
     NOTE: Adding Arguments to BuildApk or BuildBaseAppBundle
@@ -2175,7 +2175,7 @@ because xbuild doesn't support framework reference assemblies.
       UseAssemblyStore="$(AndroidUseAssemblyStore)">
     <Output TaskParameter="AssembliesToAddToArchive" ItemName="_BuildApkAssembliesToAddToArchive" />
   </CreateAssemblyStore>
-    
+
   <WrapAssembliesAsSharedLibraries
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
@@ -2243,7 +2243,7 @@ because xbuild doesn't support framework reference assemblies.
   <!-- Hopefully this is temporary and doesn't actually need to be cleaned up. But for now let's not change existing behavior. -->
   <RemoveDir
       Directories="@(DSODirectoriesToDelete)" />
-  
+
   <BuildAppBundle
       Condition=" '$(AndroidPackageFormat)' == 'aab' "
       ToolPath="$(JavaToolPath)"
@@ -2310,7 +2310,7 @@ because xbuild doesn't support framework reference assemblies.
       TypeMappings="@(_AndroidTypeMaps)">
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectTypeMapFilesForArchive>
-  
+
   <CollectJarContentFilesForArchive
       AndroidPackageFormat="$(AndroidPackageFormat)"
       ExcludeFiles="@(AndroidPackagingOptionsExclude)"
