@@ -14,8 +14,6 @@ steps:
   displayName: install ${{ parameters.toolName }} ${{ parameters.version }}
   condition: ${{ parameters.condition }}
   continueOnError: ${{ parameters.continueOnError }}
-  env:
-    DOTNET_NUGET_SIGNATURE_VERIFICATION: false
   inputs:
     command: custom
     custom: tool
