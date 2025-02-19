@@ -83,6 +83,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         IntermediateOutputPath="$(IntermediateOutputPath)"
         AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
         MapDiagnostics="@(_AndroidR8MapDiagnostics)"
+        DisablePrecompiledDex="$(_AndroidDisablePrecompiledDex)"
     />
     <D8
         Condition=" '$(_UseR8)' != 'True' "
