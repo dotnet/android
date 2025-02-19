@@ -660,12 +660,6 @@ public class Test
 				AotAssemblies = true,
 				LinkTool = linkTool,
 				References = { new BuildItem ("ProjectReference", $"..\\{folderName}Library1\\Library1.csproj") },
-				OtherBuildItems = {
-					new AndroidItem.AndroidAsset ("Assets\\asset1.txt") {
-						TextContent = () => "Asset1",
-						Encoding = Encoding.ASCII,
-					},
-				},
 			};
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "Hello (World).jar") { BinaryContent = () => Convert.FromBase64String (@"
 UEsDBBQACAgIAMl8lUsAAAAAAAAAAAAAAAAJAAQATUVUQS1JTkYv/soAAAMAUEsHCAAAAAACAAAAA
