@@ -254,12 +254,20 @@ namespace Android.Runtime {
 
 		public static IntPtr FindClass (System.Type type)
 		{
-			int rank = JavaNativeTypeManager.GetArrayInfo (type, out type);
 			try {
-				return FindClass (JavaNativeTypeManager.ToJniName (GetJniName (type), rank));
+				var sig  = JNIEnvInit.androidRuntime?.TypeManager.GetTypeSignature (type) ?? default;
+				if (!sig.IsValid || sig.SimpleReference == null) {
+					throw new ArgumentException ($"Could not determine Java type corresponding to `{type.AssemblyQualifiedName}`.", nameof (type));
+				}
+
+				JniObjectReference local_ref = JniEnvironment.Types.FindClass (sig.Name);
+				IntPtr global_ref = NewGlobalRef (local_ref.Handle);
+				JniObjectReference.Dispose (ref local_ref);
+				return global_ref;
 			} catch (Java.Lang.Throwable e) {
 				if (!((e is Java.Lang.NoClassDefFoundError) || (e is Java.Lang.ClassNotFoundException)))
 					throw;
+				int rank = JavaNativeTypeManager.GetArrayInfo (type, out type);
 				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"JNIEnv.FindClass(Type) caught unexpected exception: {e}");
 				var jni = Java.Interop.TypeManager.GetJniTypeName (type);
 				if (jni != null) {
