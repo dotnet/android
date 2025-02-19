@@ -31,6 +31,7 @@ ms.date: 04/11/2024
 + APT0003: Invalid file name: It must contain only \[^a-zA-Z0-9_.\]+.
 + APT0004: Invalid file name: It must start with either A-Z or a-z or an underscore.
 + APT0005: Invalid file name: filenames cannot use java reserved words.
++ [APT2000](apt2000.md): Generic `aapt2` error/warning.
 + [APT2264](apt2264.md): The system cannot find the file specified. (2).
 + [APT2265](apt2265.md): The system cannot find the file specified. (2).
 
