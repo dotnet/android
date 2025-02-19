@@ -479,6 +479,10 @@ namespace Xamarin.Android.Tasks
 
 		void WriteTypeMappings (NativeCodeGenState state)
 		{
+			if (androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
+				// NativeAOT typemaps are generated in `Microsoft.Android.Sdk.ILLink.TypeMappingStep`
+				return;
+			}
 			Log.LogDebugMessage ($"Generating type maps for architecture '{state.TargetArch}'");
 			var tmg = new TypeMapGenerator (Log, state, androidRuntime);
 			if (!tmg.Generate (Debug, SkipJniAddNativeMethodRegistrationAttributeScan, TypemapOutputDirectory, GenerateNativeAssembly)) {
