@@ -52,12 +52,13 @@ class ManagedMarshalMethodsLookupGenerator
 	MethodDefinition GenerateGetFunctionPointer (ManagedMarshalMethodsLookupInfo.ClassLookupInfo classLookup)
 	{
 		var declaringType = classLookup.DeclaringType;
-		log.LogDebugMessage ($"Generating `GetFunctionPointer` for {declaringType.FullName} ({classLookup.MethodLookup.Count} UCO methods)");
+		log.LogDebugMessage ($"Generating `<JI>GetFunctionPointer` for {declaringType.FullName} ({classLookup.MethodLookup.Count} UCO methods)");
 
 		var intType = ImportReference (declaringType.Module, typeof (int));
 		var intPtrType = ImportReference (declaringType.Module, typeof (System.IntPtr));
 
-		var getFunctionPointerMethod = classLookup.GetFunctionPointerMethod = new MethodDefinition ("GetFunctionPointer", MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig, intPtrType);
+		// an "unspeakable" method name is used to avoid conflicts with user-defined methods
+		var getFunctionPointerMethod = classLookup.GetFunctionPointerMethod = new MethodDefinition ("<JI>GetFunctionPointer", MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig, intPtrType);
 
 		getFunctionPointerMethod.DeclaringType = declaringType;
 		declaringType.Methods.Add (getFunctionPointerMethod);
@@ -97,7 +98,8 @@ class ManagedMarshalMethodsLookupGenerator
 		while (declaringType.IsNested && (declaringType.IsNestedPrivate || declaringType.IsNestedFamily || declaringType.IsNestedFamilyAndAssembly)) {
 			var parentType = declaringType.DeclaringType;
 
-			var parentProxyMethod = new MethodDefinition ($"GetFunctionPointer_{declaringType.Name}", MethodAttributes.Assembly | MethodAttributes.Static | MethodAttributes.HideBySig, intPtrType);
+			// an "unspeakable" method name is used to avoid conflicts with user-defined methods
+			var parentProxyMethod = new MethodDefinition ($"<JI>GetFunctionPointer_{declaringType.Name}", MethodAttributes.Assembly | MethodAttributes.Static | MethodAttributes.HideBySig, intPtrType);
 			parentProxyMethod.DeclaringType = parentType;
 			parentType.Methods.Add (parentProxyMethod);
 
