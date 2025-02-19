@@ -53,15 +53,15 @@ namespace Xamarin.Android.Tasks {
 			Path.GetFileName (path).StartsWith (".", StringComparison.Ordinal);
 
 		/// <summary>
-        /// Returns <see langword="true"/> if <paramref name="c"/> is an ASCII
-        /// character ([ U+0000..U+007F ]).
-        /// </summary>
-        /// <remarks>
-        /// Per http://www.unicode.org/glossary/#ASCII, ASCII is only U+0000..U+007F.
+		/// Returns <see langword="true"/> if <paramref name="c"/> is an ASCII
+		/// character ([ U+0000..U+007F ]).
+		/// </summary>
+		/// <remarks>
+		/// Per http://www.unicode.org/glossary/#ASCII, ASCII is only U+0000..U+007F.
 		/// We cannot use Char.IsAscii cos we are .netstandard2.0
 		/// Source https://github.com/dotnet/runtime/blob/1d1bf92fcf43aa6981804dc53c5174445069c9e4/src/libraries/System.Private.CoreLib/src/System/Char.cs#L91
-        /// </remarks>
-        public static bool IsAscii(char c) => (uint)c <= '\x007f';
+		/// </remarks>
+		public static bool IsAscii(char c) => (uint)c <= '\x007f';
 		/// <summary>
 		 /// Returns true if the path has non-ASCII characters.
 		 /// </summary>
