@@ -60,7 +60,7 @@ projects that use the Microsoft.Android framework in .NET 6+.
       <_AndroidRuntimePackAssets Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libunwind_xamarin.a" />
     </ItemGroup>
 
-    <ItemGroup Condition=" '$(AndroidRuntime)' != 'NativeAOT' ">
+    <ItemGroup Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">
       <!-- TODO: the Exists() checks must go away once we build CoreCLR host for all the targets -->
       <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libc.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libc.so" />
       <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libdl.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libdl.so" />
