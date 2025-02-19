@@ -47,7 +47,6 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == '' And '$(AndroidUseLatestPlatformSdk)' == 'False'">v5.0</TargetFrameworkVersion>
     <LangVersion Condition=" '$(LangVersion)' == '' ">8.0</LangVersion>
     <AndroidClassParser Condition=" '$(AndroidClassParser)' == '' ">jar2xml</AndroidClassParser>
-    <AndroidCodegenTarget Condition=" '$(AndroidCodegenTarget)' == '' ">XAJavaInterop1</AndroidCodegenTarget>
     <_AndroidIsBindingProject>True</_AndroidIsBindingProject>
   </PropertyGroup>
 

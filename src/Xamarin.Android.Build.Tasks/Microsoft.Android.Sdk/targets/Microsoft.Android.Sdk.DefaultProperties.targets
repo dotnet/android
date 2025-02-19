@@ -40,8 +40,7 @@
     <!-- Bindings properties -->
     <!-- jar2xml is not supported -->
     <AndroidClassParser>class-parse</AndroidClassParser>
-    <!-- Anything other than XAJavaInterop1 is not supported -->
-    <AndroidCodegenTarget>XAJavaInterop1</AndroidCodegenTarget>
+    <AndroidCodegenTarget Condition=" '$(AndroidCodegenTarget)' == '' and '$(_AndroidRuntime)' != 'NativeAOT' ">XAJavaInterop1</AndroidCodegenTarget>
     <AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods Condition=" '$(AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods)' == '' ">true</AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods>
     <AndroidBoundInterfacesContainTypes Condition=" '$(AndroidBoundInterfacesContainTypes)' == '' ">true</AndroidBoundInterfacesContainTypes>
     <AndroidBoundInterfacesContainConstants Condition=" '$(AndroidBoundInterfacesContainConstants)' == '' ">true</AndroidBoundInterfacesContainConstants>

@@ -12,7 +12,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   <!-- Default property values for NativeAOT -->
   <PropertyGroup>
     <_AndroidRuntimePackRuntime>NativeAOT</_AndroidRuntimePackRuntime>
-    <_AndroidCodeGenerationTarget Condition=" '$(_AndroidCodeGenerationTarget)' == '' ">JavaInterop1</_AndroidCodeGenerationTarget>
+    <AndroidCodegenTarget Condition=" '$(AndroidCodegenTarget)' == '' ">JavaInterop1</AndroidCodegenTarget>
     <!-- NativeAOT's targets currently gives an error about cross-compilation -->
     <DisableUnsupportedError Condition=" $([MSBuild]::IsOSPlatform('windows')) and '$(DisableUnsupportedError)' == '' ">true</DisableUnsupportedError>
   </PropertyGroup>
