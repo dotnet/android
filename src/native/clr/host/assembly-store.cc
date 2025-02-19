@@ -135,7 +135,7 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 
 	const AssemblyStoreIndexEntry *hash_entry = find_assembly_store_entry (name_hash, assembly_store_hashes, assembly_store.index_entry_count);
 	if (hash_entry == nullptr) {
-		log_warn (LOG_ASSEMBLY, "Assembly '{}' (hash {:x}) not found", optional_string (name.data ()), name_hash);
+		log_warn (LOG_ASSEMBLY, "Assembly '{}' (hash 0x{:x}) not found", optional_string (name.data ()), name_hash);
 		return nullptr;
 	}
 
