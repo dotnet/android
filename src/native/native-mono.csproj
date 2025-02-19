@@ -11,7 +11,7 @@
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <OutputPath>$(NativeRuntimeOutputRootDir)mono</OutputPath>
+    <OutputPath>$(NativeRuntimeOutputRootDir)mono\</OutputPath>
     <CMakeRuntimeFlavor>MonoVM</CMakeRuntimeFlavor>
   </PropertyGroup>
 
