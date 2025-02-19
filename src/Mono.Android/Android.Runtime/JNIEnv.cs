@@ -446,6 +446,9 @@ namespace Android.Runtime {
 			if (type == null)
 				throw new ArgumentNullException ("type");
 
+			if (RuntimeFeature.UseReflectionForManagedToJava)
+				return JavaNativeTypeManager.ToJniName (type);
+
 			string? java = TypemapManagedToJava (type);
 			return java == null
 				? JavaNativeTypeManager.ToJniName (type)

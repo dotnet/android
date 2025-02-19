@@ -46,6 +46,10 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
         Value="$(AndroidAvoidEmitForPerformance)"
         Trim="true"
     />
+    <RuntimeHostConfigurationOption Include="Android.Runtime.RuntimeFeature.UseReflectionForManagedToJava"
+        Value="$([MSBuild]::ValueOrDefault('$(_AndroidUseReflectionForManagedToJava)', 'false'))"
+        Trim="true"
+    />
   </ItemGroup>
 
   <Target Name="_ParseRuntimeConfigFiles"
