@@ -207,6 +207,10 @@ namespace Xamarin.Android.Build.Tests
 					"Should get log message about duplicate IOnClickListenerInvoker!");
 			}
 
+			// Verify that Java stubs for Mono.Android.dll were generated, instead of using mono.android.jar/dex
+			var onLayoutChangeListenerImplementor = Path.Combine (intermediate, "android", "src", "mono", "android", "view", "View_OnClickListenerImplementor.java");
+			FileAssert.Exists (onLayoutChangeListenerImplementor);
+
 			var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
 			FileAssert.Exists (dexFile);
 			foreach (var className in mono_classes) {
