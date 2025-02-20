@@ -10,6 +10,7 @@
     <IsPackable>false</IsPackable>
     <OutputPath>$(TestOutputFullPath)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <RollForward>Major</RollForward>
   </PropertyGroup>
 
   <ItemGroup>

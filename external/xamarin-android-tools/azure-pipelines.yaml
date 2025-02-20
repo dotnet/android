@@ -8,14 +8,10 @@ pr:
 - main
 - release/*
 
-parameters:
-- name: ApiScanSourceBranch
-  default: refs/heads/main
-
 # Global variables
 variables:
   - name: DotNetCoreVersion
-    value: 6.0.x
+    value: 9.0.x
 
 jobs:
 - job: build
@@ -24,10 +20,9 @@ jobs:
   strategy:
     matrix:
       macOS:
-        vmImage: macOS-13
+        vmImage: macOS-15
       windows:
         vmImage: windows-2022
-        Codeql.Enabled: true
   pool:
     vmImage: $(vmImage)
   workspace:
@@ -40,11 +35,6 @@ jobs:
     displayName: Use .NET Core $(DotNetCoreVersion)
     inputs:
       version: $(DotNetCoreVersion)
-
-  - task: UseDotNet@2
-    displayName: Use .NET Core 8.0.x
-    inputs:
-      version: 8.0.x
 
   - task: DotNetCoreCLI@2
     displayName: Build solution Xamarin.Android.Tools.sln
@@ -87,68 +77,3 @@ jobs:
       path: $(Build.ArtifactStagingDirectory)
       artifactName: Artifacts - $(System.JobName)
     condition: always()
-
-- job: api_scan
-  displayName: API Scan
-  dependsOn: build
-  condition: false
-  #condition: and(eq(dependencies.build.result, 'Succeeded'), eq(variables['Build.SourceBranch'], '${{ parameters.ApiScanSourceBranch }}'))
-  pool:
-    name: Azure Pipelines
-    vmImage: windows-2022
-  timeoutInMinutes: 480
-  workspace:
-    clean: all
-  steps:
-  - task: DownloadPipelineArtifact@2
-    displayName: Download build artifacts
-    inputs:
-      artifactName: Output - windows
-      downloadPath: $(Build.SourcesDirectory)
-
-  - task: CopyFiles@2
-    displayName: Collect Files for APIScan
-    inputs:
-      Contents: |
-        $(Build.SourcesDirectory)\**\?(*.dll|*.exe|*.pdb)
-        !$(Build.SourcesDirectory)\**\ls-jdks.*
-      TargetFolder: $(Build.StagingDirectory)\apiscan
-      OverWrite: true
-      flattenFolders: true
-
-  - powershell: Get-ChildItem -Path "$(Build.StagingDirectory)\apiscan" -Recurse
-    displayName: List Files for APIScan
-
-  - task: APIScan@2
-    displayName: Run APIScan
-    inputs:
-      softwareFolder: $(Build.StagingDirectory)\apiscan
-      symbolsFolder: 'SRV*http://symweb;$(Build.StagingDirectory)\apiscan'
-      softwareName: $(ApiScanName)
-      softwareVersionNum: $(Build.SourceBranchName)-$(Build.SourceVersion)$(System.JobAttempt)
-      isLargeApp: true
-      toolVersion: Latest
-    env:
-      AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
-
-  - task: SdtReport@2
-    displayName: Guardian Export - Security Report
-    inputs:
-      GdnExportAllTools: false
-      GdnExportGdnToolApiScan: true
-      GdnExportOutputSuppressionFile: source.gdnsuppress
-
-  - task: PublishSecurityAnalysisLogs@3
-    displayName: Publish Guardian Artifacts
-    inputs:
-      ArtifactName: APIScan Logs
-      ArtifactType: Container
-      AllTools: false
-      APIScan: true
-      ToolLogsNotFoundAction: Warning
-
-  - task: PostAnalysis@2
-    displayName: Fail Build on Guardian Issues
-    inputs:
-      GdnBreakAllTools: false
-      GdnBreakGdnToolApiScan: true
