@@ -237,6 +237,7 @@ namespace Xamarin.Android.Tasks
 
 		readonly LlvmIrCallMarker defaultCallMarker;
 		readonly bool generateEmptyCode;
+		readonly bool managedMarshalMethodsLookupEnabled;
 		readonly AndroidTargetArch targetArch;
 		readonly NativeCodeGenState? codeGenState;
 
@@ -256,12 +257,13 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Constructor to be used ONLY when marshal methods are ENABLED
 		/// </summary>
-		public MarshalMethodsNativeAssemblyGenerator (TaskLoggingHelper log, int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, NativeCodeGenState codeGenState)
+		public MarshalMethodsNativeAssemblyGenerator (TaskLoggingHelper log, int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, NativeCodeGenState codeGenState, bool managedMarshalMethodsLookupEnabled)
 			: base (log)
 		{
 			this.numberOfAssembliesInApk = numberOfAssembliesInApk;
 			this.uniqueAssemblyNames = uniqueAssemblyNames ?? throw new ArgumentNullException (nameof (uniqueAssemblyNames));
 			this.codeGenState = codeGenState ?? throw new ArgumentNullException (nameof (codeGenState));
+			this.managedMarshalMethodsLookupEnabled = managedMarshalMethodsLookupEnabled;
 
 			generateEmptyCode = false;
 			defaultCallMarker = LlvmIrCallMarker.Tail;
@@ -703,12 +705,16 @@ namespace Xamarin.Android.Tasks
 				LlvmIrLocalVariable getFuncPtrResult = func.CreateLocalVariable (typeof(IntPtr), "get_func_ptr");
 				body.Load (writeState.GetFunctionPtrVariable, getFuncPtrResult, tbaa: module.TbaaAnyPointer);
 
-				var placeholder = new MarshalMethodAssemblyIndexValuePlaceholder (method, writeState.AssemblyCacheState);
-				LlvmIrInstructions.Call call = body.Call (
-					writeState.GetFunctionPtrFunction,
-					arguments: new List<object?> { placeholder, method.ClassCacheIndex, nativeCallback.MetadataToken.ToUInt32 (), backingField },
-					funcPointer: getFuncPtrResult
-				);
+				List<object?> getFunctionPointerArguments;
+				if (managedMarshalMethodsLookupEnabled) {
+					(uint assemblyIndex, uint classIndex, uint methodIndex) = codeGenState.ManagedMarshalMethodsLookupInfo.GetIndex (nativeCallback);
+					getFunctionPointerArguments = new List<object?> { assemblyIndex, classIndex, methodIndex, backingField };
+				} else {
+					var placeholder = new MarshalMethodAssemblyIndexValuePlaceholder (method, writeState.AssemblyCacheState);
+					getFunctionPointerArguments = new List<object?> { placeholder, method.ClassCacheIndex, nativeCallback.MetadataToken.ToUInt32 (), backingField };
+				}
+
+				LlvmIrInstructions.Call call = body.Call (writeState.GetFunctionPtrFunction, arguments: getFunctionPointerArguments, funcPointer: getFuncPtrResult);
 
 				LlvmIrLocalVariable cb2 = func.CreateLocalVariable (typeof(IntPtr), "cb2");
 				body.Load (backingField, cb2, tbaa: module.TbaaAnyPointer);

@@ -694,7 +694,11 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 
 #if defined (RELEASE)
 	if (application_config.marshal_methods_enabled) {
-		xamarin_app_init (env, get_function_pointer_at_startup);
+		if (!application_config.managed_marshal_methods_lookup_enabled) {
+			xamarin_app_init (env, get_function_pointer_at_startup);
+		} else {
+			xamarin_app_init (env, managed_marshal_method_lookup);
+		}
 	}
 #endif // def RELEASE && def ANDROID && def NET
 }
@@ -849,6 +853,7 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 	init.jniAddNativeMethodRegistrationAttributePresent = application_config.jni_add_native_method_registration_attribute_present ? 1 : 0;
 	init.jniRemappingInUse = application_config.jni_remapping_replacement_type_count > 0 || application_config.jni_remapping_replacement_method_index_entry_count > 0;
 	init.marshalMethodsEnabled  = application_config.marshal_methods_enabled;
+	init.managedMarshalMethodsLookupEnabled = application_config.managed_marshal_methods_lookup_enabled;
 
 	java_System = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_System", true);
 	java_System_identityHashCode = env->GetStaticMethodID (java_System, "identityHashCode", "(Ljava/lang/Object;)I");
@@ -1550,7 +1555,11 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 
 #if defined (RELEASE)
 	if (application_config.marshal_methods_enabled) {
-		xamarin_app_init (env, get_function_pointer_at_runtime);
+		if (!application_config.managed_marshal_methods_lookup_enabled) {
+			xamarin_app_init (env, get_function_pointer_at_runtime);
+		} else {
+			xamarin_app_init (env, managed_marshal_method_lookup);
+		}
 	}
 #endif // def RELEASE && def ANDROID && def NET
 	MonodroidState::mark_startup_done ();

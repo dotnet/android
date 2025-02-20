@@ -67,6 +67,7 @@ const ApplicationConfig application_config = {
 	.jni_remapping_replacement_method_index_entry_count = 2,
 	.mono_components_mask = MonoComponent::None,
 	.android_package_name = android_package_name,
+	.managed_marshal_methods_lookup_enabled = false,
 };
 
 const char* const mono_aot_mode_name = "normal";
