@@ -341,7 +341,8 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const RuntimeProperty runtime_properties[];
 	[[gnu::visibility("default")]] extern const RuntimePropertyIndexEntry runtime_property_index[];
 
-	[[gnu::visibility("default")]] extern const host_configuration_properties host_config_properties;
+	[[gnu::visibility("default")]] extern const char *init_runtime_property_names[];
+	[[gnu::visibility("default")]] extern char *init_runtime_property_values[];
 }
 
 //
