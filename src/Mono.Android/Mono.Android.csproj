@@ -221,6 +221,7 @@
     <Compile Include="Android.Runtime\BoundExceptionType.cs" />
     <Compile Include="Android.Runtime\CharSequence.cs" />
     <Compile Include="Android.Runtime\CPUArchitecture.cs" />
+    <Compile Include="Android.Runtime\DotNetRuntimeType.cs" />
     <Compile Include="Android.Runtime\Extensions.cs" />
     <Compile Include="Android.Runtime\GeneratedEnumAttribute.cs" />
     <Compile Include="Android.Runtime\IJavaObject.cs" />

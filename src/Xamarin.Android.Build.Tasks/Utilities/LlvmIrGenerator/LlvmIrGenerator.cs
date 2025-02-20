@@ -781,6 +781,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			for (int i = 0; i < info.Members.Count; i++) {
 				StructureMemberInfo smi = info.Members[i];
+				if (!smi.IsSupportedForTarget (context.Target)) {
+					continue;
+				}
 
 				context.Output.Write (context.CurrentIndent);
 				WriteType (context, instance, smi, out _);
@@ -810,7 +813,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					var sb = new StringBuilder (" ");
 					sb.Append (MapManagedTypeToNative (context, smi));
 					sb.Append (' ');
-					sb.Append (smi.Info.Name);
+					sb.Append (smi.MappedName);
 					comment = sb.ToString ();
 				}
 				WriteCommentLine (context, comment);
@@ -848,6 +851,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			bool ignoreComments = stride > 1;
 			string? prevItemComment = null;
 			ulong counter = 0;
+			bool writeStringInComment = !ignoreComments && (elementType == typeof(string) || elementType == typeof(StringHolder));
 
 			if (entries != null) {
 				foreach (object entry in entries) {
@@ -871,7 +875,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 						}
 
 						if (writeIndices && String.IsNullOrEmpty (prevItemComment)) {
-							prevItemComment = $" {counter}";
+							string stringComment = String.Empty;
+							if (writeStringInComment) {
+								var holder = StringHolder.AsHolder (entry);
+								stringComment = $" ('{holder.Data}')";
+							}
+
+							prevItemComment = $" {counter}{stringComment}";
 						}
 					}
 
@@ -1098,6 +1108,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			context.IncreaseIndent ();
 			for (int i = 0; i < si.Members.Count; i++) {
 				StructureMemberInfo info = si.Members[i];
+				if (!info.IsSupportedForTarget (context.Target)) {
+					continue;
+				}
+
 				string nativeType = MapManagedTypeToNative (info.MemberType);
 
 				// TODO: nativeType can be an array, update to indicate that (and get the size)
@@ -1108,7 +1122,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					arraySize = String.Empty;
 				}
 
-				var comment = $" {nativeType} {info.Info.Name}{arraySize}";
+				var comment = $" {nativeType} {info.MappedName}{arraySize}";
 				WriteStructureDeclarationField (info.IRType, comment, i == si.Members.Count - 1);
 			}
 			context.DecreaseIndent ();
