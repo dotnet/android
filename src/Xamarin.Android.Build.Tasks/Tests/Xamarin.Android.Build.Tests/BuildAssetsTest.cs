@@ -134,6 +134,26 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void InvalidAssetDirectoryWithNonASCIIChars ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				ProjectName = "App1",
+				IsRelease = true,
+				OtherBuildItems = {
+					new AndroidItem.AndroidAsset ("Assets\\asset1.txt") {
+						TextContent = () => "Asset1",
+						Encoding = Encoding.ASCII,
+					},
+				},
+			};
+			using (var b = CreateApkBuilder (Path.Combine ("temp", "InvalidAssetDirectoryWithNonASCIIChars_Ümläüt", proj.ProjectName))) {
+				b.ThrowOnBuildFailure = false;
+				Assert.IsFalse (b.Build (proj), "{0} should not have built successfully.", proj.ProjectName);
+				Assert.IsTrue (b.LastBuildOutput.ContainsText ("APT2266"), "Expected APT2266 error not found.");
+			}
+		}
+
+		[Test]
 		public void FullPath ()
 		{
 			var assetPath = Path.GetFullPath (Path.Combine (Root, "temp", TestName, "Assets", "foo.txt"));
