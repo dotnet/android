@@ -271,6 +271,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidApkSigningAlgorithm Condition=" '$(AndroidApkSigningAlgorithm)' == '' ">SHA256withRSA</AndroidApkSigningAlgorithm>
 	<AndroidApkDigestAlgorithm  Condition=" '$(AndroidApkDigestAlgorithm)' == '' ">SHA-256</AndroidApkDigestAlgorithm>
 	<AndroidManifestMerger      Condition=" '$(AndroidManifestMerger)' == '' ">manifestmerger.jar</AndroidManifestMerger>
+	<AndroidCodegenTarget       Condition=" '$(AndroidCodegenTarget)' == '' ">XAJavaInterop1</AndroidCodegenTarget>
 
 	<!-- Default Java heap size to 1GB (-Xmx1G) if not specified-->
 	<JavaMaximumHeapSize Condition=" '$(JavaMaximumHeapSize)' == '' ">1G</JavaMaximumHeapSize>
@@ -1371,7 +1372,9 @@ because xbuild doesn't support framework reference assemblies.
   <PropertyGroup>
     <_AndroidJarAndDexDirectory>$(_XATargetFrameworkDirectories)</_AndroidJarAndDexDirectory>
   </PropertyGroup>
-  <GetMonoPlatformJar Condition=" '$(_AndroidUseMarshalMethods)' != 'True' " TargetFrameworkDirectory="$(_AndroidJarAndDexDirectory)">
+  <GetMonoPlatformJar
+      Condition=" '$(_AndroidUseMarshalMethods)' != 'True' and '$(AndroidCodegenTarget)' == 'XAJavaInterop1' "
+      TargetFrameworkDirectory="$(_AndroidJarAndDexDirectory)">
     <Output TaskParameter="MonoPlatformJarPath" PropertyName="MonoPlatformJarPath" />
     <Output TaskParameter="MonoPlatformDexPath" PropertyName="MonoPlatformDexPath" />
   </GetMonoPlatformJar>
@@ -1399,12 +1402,12 @@ because xbuild doesn't support framework reference assemblies.
   />
 
   <Copy
-    Condition=" '$(_AndroidUseMarshalMethods)' != 'True' "
+    Condition=" '$(_AndroidUseMarshalMethods)' != 'True' and '$(AndroidCodegenTarget)' == 'XAJavaInterop1' "
     SourceFiles="$(MonoPlatformJarPath)"
     DestinationFiles="$(IntermediateOutputPath)android\bin\mono.android.jar"
     SkipUnchangedFiles="true" />
   <Touch
-    Condition=" '$(_AndroidUseMarshalMethods)' != 'True' "
+    Condition=" '$(_AndroidUseMarshalMethods)' != 'True' and '$(AndroidCodegenTarget)' == 'XAJavaInterop1' "
     Files="$(IntermediateOutputPath)android\bin\mono.android.jar" />
 
   <Touch Files="$(_AndroidStaticResourcesFlag)" AlwaysCreate="true" />
@@ -1413,7 +1416,10 @@ because xbuild doesn't support framework reference assemblies.
     <FileWrites Include="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java" />
     <FileWrites Include="$(_AndroidIntermediateJavaSourceDirectory)mono\JavaInteropTypeManager.java" />
     <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)machine.config" />
-    <FileWrites Condition=" '$(_AndroidUseMarshalMethods)' != 'True' " Include="$(IntermediateOutputPath)android\bin\mono.android.jar" />
+    <FileWrites
+        Condition=" '$(_AndroidUseMarshalMethods)' != 'True' and '$(AndroidCodegenTarget)' == 'XAJavaInterop1' "
+        Include="$(IntermediateOutputPath)android\bin\mono.android.jar"
+    />
     <FileWrites Include="$(_AndroidStaticResourcesFlag)" />
   </ItemGroup>
 </Target>

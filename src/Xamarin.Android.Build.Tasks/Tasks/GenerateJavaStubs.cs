@@ -440,11 +440,12 @@ namespace Xamarin.Android.Tasks
 			List<TypeDefinition> allJavaTypes = scanner.GetJavaTypes (assemblies.Values, res);
 			var javaTypesForJCW = new List<TypeDefinition> ();
 
+			// When marshal methods or non-JavaPeerStyle.XAJavaInterop1 are in use we do not want to skip non-user assemblies (such as Mono.Android) - we need to generate JCWs for them during
+			// application build, unlike in Debug configuration or when marshal methods are disabled, in which case we use JCWs generated during Xamarin.Android
+			// build and stored in a jar file.
+			bool shouldSkipNonUserAssemblies = !useMarshalMethods && codeGenerationTarget == JavaPeerStyle.XAJavaInterop1;
 			foreach (TypeDefinition type in allJavaTypes) {
-				// When marshal methods are in use we do not want to skip non-user assemblies (such as Mono.Android) - we need to generate JCWs for them during
-				// application build, unlike in Debug configuration or when marshal methods are disabled, in which case we use JCWs generated during Xamarin.Android
-				// build and stored in a jar file.
-				if ((!useMarshalMethods && !userAssemblies.ContainsKey (type.Module.Assembly.Name.Name)) || JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (type, cache)) {
+				if ((shouldSkipNonUserAssemblies && !userAssemblies.ContainsKey (type.Module.Assembly.Name.Name)) || JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (type, cache)) {
 					continue;
 				}
 				javaTypesForJCW.Add (type);
