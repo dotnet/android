@@ -18,6 +18,7 @@ namespace MonoDroid.Generation
 		public interface IApiAvailability
 		{
 			int ApiAvailableSince { get; set; }
+			int ApiRemovedSince { get; set; }
 		}
 
 		static IEnumerable<GenBase> FlattenGens (IEnumerable<GenBase> gens)

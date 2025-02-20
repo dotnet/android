@@ -159,6 +159,7 @@ namespace MonoDroid.Generation
 			var ctor = new Ctor (declaringType) {
 				AnnotatedVisibility = elem.XGetAttribute ("annotated-visibility"),
 				ApiAvailableSince = declaringType.ApiAvailableSince,
+				ApiRemovedSince = declaringType.ApiRemovedSince,
 				CustomAttributes = elem.XGetAttribute ("customAttributes"),
 				Deprecated = elem.Deprecated (),
 				DeprecatedSince = elem.XGetAttributeAsIntOrNull ("deprecated-since"),
@@ -211,6 +212,7 @@ namespace MonoDroid.Generation
 			var field = new Field {
 				AnnotatedVisibility = elem.XGetAttribute ("annotated-visibility"),
 				ApiAvailableSince = declaringType.ApiAvailableSince,
+				ApiRemovedSince = declaringType.ApiRemovedSince,
 				DeprecatedComment = elem.XGetAttribute ("deprecated"),
 				DeprecatedSince = elem.XGetAttributeAsIntOrNull ("deprecated-since"),
 				IsAcw = true,
@@ -369,6 +371,7 @@ namespace MonoDroid.Generation
 			var method = new Method (declaringType) {
 				AnnotatedVisibility = elem.XGetAttribute ("annotated-visibility"),
 				ApiAvailableSince = declaringType.ApiAvailableSince,
+				ApiRemovedSince = declaringType.ApiRemovedSince,
 				ArgsType = elem.Attribute ("argsType")?.Value,
 				CustomAttributes = elem.XGetAttribute ("customAttributes"),
 				Deprecated = elem.Deprecated (),
@@ -515,9 +518,12 @@ namespace MonoDroid.Generation
 		// Elements need to be passed in the above order. (package, class, member)
 		static void FillApiSince (ApiVersionsSupport.IApiAvailability model, params XElement[] elems)
 		{
-			foreach (var elem in elems)
+			foreach (var elem in elems) {
 				if (int.TryParse (elem.XGetAttribute ("api-since"), out var result))
 					model.ApiAvailableSince = result;
+				if (int.TryParse (elem.XGetAttribute ("removed-since"), out var removed))
+					model.ApiRemovedSince = removed;
+			}
 		}
 
 		static bool IsObfuscatedName (int threshold, string name)

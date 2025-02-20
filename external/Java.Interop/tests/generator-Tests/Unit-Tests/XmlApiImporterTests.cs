@@ -52,6 +52,15 @@ namespace generatortests
 		}
 
 		[Test]
+		public void CreateClass_CorrectApiRemoved ()
+		{
+			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='myclass' removed-since='7' /></package>");
+			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), opt);
+
+			Assert.AreEqual (7, klass.ApiRemovedSince);
+		}
+
+		[Test]
 		public void CreateCtor_EnsureValidName ()
 		{
 			var xml = XDocument.Parse ("<package name=\"com.example.test\" jni-name=\"com/example/test\"><class name=\"test\"><constructor name=\"$3\" /></class></package>");
