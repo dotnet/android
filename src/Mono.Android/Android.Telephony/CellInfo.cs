@@ -14,16 +14,25 @@ namespace Android.Telephony {
 		[global::System.Runtime.Versioning.SupportedOSPlatform ("android28.0")]
 		static Delegate GetGetCellIdentityHandler ()
 		{
-			if (cb_getCellIdentity == null)
-				cb_getCellIdentity = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr>) n_GetCellIdentity);
-			return cb_getCellIdentity;
+			return cb_getCellIdentity ??= new _JniMarshal_PP_L (n_GetCellIdentity);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		[global::System.Runtime.Versioning.SupportedOSPlatform ("android28.0")]
 		static IntPtr n_GetCellIdentity (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<Android.Telephony.CellInfo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-			return JNIEnv.ToLocalJniHandle (__this.CellIdentity);
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return default;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<Android.Telephony.CellInfo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+				return JNIEnv.ToLocalJniHandle (__this.CellIdentity);
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return default;
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 
@@ -47,15 +56,24 @@ namespace Android.Telephony {
 #pragma warning disable 0169
 		static Delegate GetGetCellSignalStrengthHandler ()
 		{
-			if (cb_getCellSignalStrength == null)
-				cb_getCellSignalStrength = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr>) n_GetCellSignalStrength);
-			return cb_getCellSignalStrength;
+			return cb_getCellSignalStrength ??= new _JniMarshal_PP_L (n_GetCellSignalStrength);
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static IntPtr n_GetCellSignalStrength (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<Android.Telephony.CellInfo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-			return JNIEnv.ToLocalJniHandle (__this.CellSignalStrength);
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return default;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<Android.Telephony.CellInfo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+				return JNIEnv.ToLocalJniHandle (__this.CellSignalStrength);
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return default;
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 #pragma warning restore 0169
 
