@@ -215,9 +215,34 @@ namespace Java.Interop {
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		static extern Type monodroid_typemap_java_to_managed (string java_type_name);
 
+		static Type monovm_typemap_java_to_managed (string java_type_name)
+		{
+			return monodroid_typemap_java_to_managed (java_type_name);
+		}
+
+		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Value of java_type_name isn't statically known.")]
+		static Type? clr_typemap_java_to_managed (string java_type_name)
+		{
+			IntPtr managedTypeNamePointer = RuntimeNativeMethods.clr_typemap_java_to_managed (java_type_name);
+			if (managedTypeNamePointer == IntPtr.Zero) {
+				return null;
+			}
+
+			string managedTypeName = Marshal.PtrToStringAnsi (managedTypeNamePointer);
+			Logger.Log (LogLevel.Info, "monodroid", $"clr_typemap_java_to_managed ('{java_type_name}') returned '{managedTypeName}'");
+			Type ret = Type.GetType (managedTypeName);
+			Logger.Log (LogLevel.Info, "monodroid", $"Loaded type: {ret}");
+			return ret;
+		}
+
 		internal static Type? GetJavaToManagedType (string class_name)
 		{
-			Type? type = monodroid_typemap_java_to_managed (class_name);
+			Type? type = JNIEnvInit.RuntimeType switch {
+				DotNetRuntimeType.MonoVM  => monovm_typemap_java_to_managed (class_name),
+				DotNetRuntimeType.CoreCLR => clr_typemap_java_to_managed (class_name),
+				_                         => throw new NotSupportedException ($"Internal error: runtime type {JNIEnvInit.RuntimeType} not supported")
+			};
+
 			if (type != null)
 				return type;
 

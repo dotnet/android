@@ -66,7 +66,7 @@ macro(create_library _libname _alias _sources)
     ${_libname}
     SYSTEM PRIVATE
     ${SYSROOT_CXX_INCLUDE_DIR}
-    ${MONO_RUNTIME_INCLUDE_DIR}
+    ${RUNTIME_INCLUDE_DIR}
   )
 
   target_link_libraries(

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.Build.NoTargets">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Exe</OutputType>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
+    <!-- HACK HACK: until CoreCLR exists for all the targets, work only with arm64 -->
+    <AndroidSupportedTargetAotAbis>arm64</AndroidSupportedTargetAotAbis>
+    <AndroidSupportedTargetJitAbis>arm64-v8a</AndroidSupportedTargetJitAbis>
+  </PropertyGroup>
+
+  <Import Project="..\..\Configuration.props" />
+
+  <PropertyGroup>
+    <OutputPath>$(NativeRuntimeOutputRootDir)clr</OutputPath>
+    <CMakeRuntimeFlavor>CoreCLR</CMakeRuntimeFlavor>
+  </PropertyGroup>
+
+  <Import Project="native.targets" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\java-runtime\java-runtime.csproj" ReferenceOutputAssembly="False" />
+  </ItemGroup>
+</Project>

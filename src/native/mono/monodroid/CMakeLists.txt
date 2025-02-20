@@ -69,10 +69,6 @@ elseif(NOT ANALYZERS_ENABLED)
   set(BUILD_STATIC_LIBRARY OFF) # Turn off for now, until we implement dynamic runtime linking at app build time
 endif()
 
-# Library directories
-set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/lib/${ANDROID_RID}")
-set(XA_LIBRARY_STUBS_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/libstubs/${ANDROID_RID}")
-
 # Header checks
 
 if(ENABLE_CLANG_UBSAN OR ENABLE_CLANG_ASAN)
@@ -207,7 +203,7 @@ macro(lib_target_options TARGET_NAME)
     ${TARGET_NAME}
     SYSTEM PRIVATE
     ${SYSROOT_CXX_INCLUDE_DIR}
-    ${MONO_RUNTIME_INCLUDE_DIR}
+    ${RUNTIME_INCLUDE_DIR}
     ${NATIVE_TRACING_INCLUDE_DIRS}
     ${LIBUNWIND_INCLUDE_DIRS}
   )

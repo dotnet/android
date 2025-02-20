@@ -2,6 +2,13 @@ using System;
 
 namespace Xamarin.Android.Tasks
 {
+	enum NativeAssemblerValidTarget
+	{
+		Any,
+		ThirtyTwoBit,
+		SixtyFourBit,
+	}
+
 	[AttributeUsage (AttributeTargets.Field | AttributeTargets.Property, Inherited = true)]
 	class NativeAssemblerAttribute : Attribute
 	{
@@ -41,6 +48,22 @@ namespace Xamarin.Android.Tasks
 		/// the native assembly file.
 		/// </summary>
 		public bool IsUTF16 { get; set; }
+
+		/// <summary>
+		/// Allows choosing that a structure/class field/property will be considered only for the target of
+		/// specific bitness. Mainly useful when dealing with hash fields.
+		/// </summary>
+		public NativeAssemblerValidTarget ValidTarget { get; set; } = NativeAssemblerValidTarget.Any;
+
+		/// <summary>
+		/// Allows overriding of the field name when mapping the structure. This is purely cosmetic, but allows to avoid
+		/// confusion when dealing with fields/properties that have a different size for 32-bit and 64-bit targets. In such
+		/// case the structure being mapped will have a separate member per bitness, with the members requiring different names
+		/// while in reality they have the same name in the native world, regardless of bitness.
+		///
+		/// This field is only considered only when <see cref="ValidTarget" /> is not set to <see cref="NativeAssemblerValidTarget.Any"/>
+		/// </summary>
+		public string? MemberName { get; set; }
 	}
 
 	[AttributeUsage (AttributeTargets.Class, Inherited = true)]

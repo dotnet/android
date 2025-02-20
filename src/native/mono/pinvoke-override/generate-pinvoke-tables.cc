@@ -1,7 +1,7 @@
 //
 // To build and run this utility run (on Linux or macOS):
 //
-//   ../../../build-tools/scripts/generate-pinvoke-tables.sh
+//   ../../../../build-tools/scripts/generate-pinvoke-tables.sh
 //
 // A reasonable C++20 compiler is required (g++ 10+, clang 11+, on mac it may require XCode 12.5 or newer)
 //
@@ -699,7 +699,7 @@ int main (int argc, char **argv)
 	output << "//" << std::endl;
 	output << "// Autogenarated file. DO NOT EDIT." << std::endl;
 	output << "//" << std::endl;
-	output << "// To regenerate run ../../../build-tools/scripts/generate-pinvoke-tables.sh on Linux or macOS" << std::endl;
+	output << "// To regenerate run ../../../../build-tools/scripts/generate-pinvoke-tables.sh on Linux or macOS" << std::endl;
 	output << "// A compiler with support for C++20 ranges is required" << std::endl;
 	output << "//" << std::endl << std::endl;
 

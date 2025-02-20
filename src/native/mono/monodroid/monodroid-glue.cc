@@ -838,6 +838,7 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 	mono_add_internal_call ("Android.Runtime.RuntimeNativeMethods::monodroid_unhandled_exception", reinterpret_cast<const void*>(monodroid_unhandled_exception));
 
 	struct JnienvInitializeArgs init = {};
+	init.runtimeType            = RuntimeTypeMonoVM;
 	init.javaVm                 = osBridge.get_jvm ();
 	init.env                    = env;
 	init.logCategories          = log_categories;

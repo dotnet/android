@@ -7,9 +7,6 @@ set(XA_SHARED_SOURCES
 )
 add_clang_check_sources("${XA_SHARED_SOURCES};")
 
-set(XXHASH_DIR "${EXTERNAL_DIR}/xxHash")
-set(CONSTEXPR_XXH3_DIR "${EXTERNAL_DIR}/constexpr-xxh3")
-
 add_library(
   ${LIB_NAME}
   STATIC
@@ -41,7 +38,7 @@ macro(lib_target_options TARGET_NAME)
     ${TARGET_NAME}
     SYSTEM PRIVATE
     ${SYSROOT_CXX_INCLUDE_DIR}
-    ${MONO_RUNTIME_INCLUDE_DIR}
+    ${RUNTIME_INCLUDE_DIR}
   )
 
   target_compile_options(
