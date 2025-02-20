@@ -1,3 +1,5 @@
+#include <cstdio>
+
 #include <clr/hosts/coreclrhost.h>
 
 #include <xamarin-app.hh>
@@ -26,7 +28,7 @@ size_t Host::clr_get_runtime_property (const char *key, char *value_buffer, size
 	return 0;
 }
 
-bool Host::clr_bundle_probe (const char *path, void **data_start, int64_t *size) noexcept
+bool Host::clr_external_assembly_probe (const char *path, void **data_start, int64_t *size) noexcept
 {
 	log_debug (LOG_DEFAULT, "clr_bundle_probe (\"{}\"...)", path);
 	if (data_start == nullptr || size == nullptr) {
@@ -133,8 +135,10 @@ auto Host::create_delegate (
 		&delegate
 	);
 	log_debug (LOG_ASSEMBLY,
-			   "{} delegate creation result == {:x}; delegate == {:p}",
-			   Constants::JNIENVINIT_FULL_TYPE_NAME,
+			   "{}@{}.{} delegate creation result == {:x}; delegate == {:p}",
+			   assembly_name,
+			   type_name,
+			   method_name,
 			   static_cast<unsigned int>(hr),
 			   delegate
 	);
@@ -191,17 +195,32 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 
 	gather_assemblies_and_libraries (runtimeApks, haveSplitApks);
 
-	log_write (LOG_DEFAULT, LogLevel::Info, "Calling CoreCLR initialization routine");
+	size_t clr_init_time_index;
+	if (FastTiming::enabled ()) [[unlikely]] {
+		clr_init_time_index = internal_timing.start_event (TimingEventKind::MonoRuntimeInit);
+	}
+
 	coreclr_set_error_writer (clr_error_writer);
-	int hr = android_coreclr_initialize (
+	// We REALLY shouldn't be doing this
+	snprintf (host_contract_ptr_buffer.data (), host_contract_ptr_buffer.size (), "%p", &runtime_contract);
+
+	// The first entry in the property arrays is for the host contract pointer. Application build makes sure
+	// of that.
+	init_runtime_property_values[0] = host_contract_ptr_buffer.data ();
+	int hr = coreclr_initialize (
 		application_config.android_package_name,
-		u"Xamarin.Android",
-		&runtime_contract,
-		&host_config_properties,
+		"Xamarin.Android",
+		(int)application_config.number_of_runtime_properties,
+		init_runtime_property_names,
+		const_cast<const char**>(init_runtime_property_values),
 		&clr_host,
 		&domain_id
 	);
-	log_debug (LOG_ASSEMBLY, "CoreCLR init result == {:x}; clr_host == {:p}; domain ID == {}", static_cast<unsigned int>(hr), clr_host, domain_id);
+
+	if (FastTiming::enabled ()) [[unlikely]] {
+		internal_timing.end_event (clr_init_time_index);
+	}
+
 	// TODO: make S_OK & friends known to us
 	if (hr != 0 /* S_OK */) {
 		Helpers::abort_application (
@@ -253,8 +272,6 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 
 	OSBridge::initialize_on_runtime_init (env, runtimeClass);
 
-	log_debug (LOG_DEFAULT, "Calling into managed runtime init"sv);
-
 	size_t native_to_managed_index;
 	if (FastTiming::enabled ()) [[unlikely]] {
 		native_to_managed_index = internal_timing.start_event (TimingEventKind::NativeToManagedTransition);
@@ -288,13 +305,12 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 			);
 		}
 	);
+
+	log_debug (LOG_DEFAULT, "Calling into managed runtime init"sv);
 	initialize (&init);
 
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.end_event (native_to_managed_index);
-	}
-
-	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.end_event (total_time_index);
 	}
 }

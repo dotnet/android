@@ -260,9 +260,6 @@ auto TypeMapper::find_java_to_managed_entry (hash_t name_hash) noexcept -> const
 [[gnu::flatten]]
 auto TypeMapper::typemap_java_to_managed (const char *typeName) noexcept -> const char*
 {
-	log_warn (LOG_ASSEMBLY, "{} WIP"sv, __PRETTY_FUNCTION__);
-	log_warn (LOG_ASSEMBLY, "  asking for '{}'"sv, optional_string (typeName));
-
 	if (typeName == nullptr) [[unlikely]] {
 		return nullptr;
 	}

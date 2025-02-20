@@ -340,26 +340,10 @@ const RuntimePropertyIndexEntry runtime_property_index[] = {
 	},
 };
 
-namespace {
-	const host_configuration_property _host_configuration_properties_data[] = {
-		{
-			.name = u"test_string",
-			.value = u"string value",
-		},
+const char *init_runtime_property_names[] = {
+	"HOST_RUNTIME_CONTRACT",
+};
 
-		{
-			.name = u"test_integer",
-			.value = u"23",
-		},
-
-		{
-			.name = u"test_boolean",
-			.value = u"true",
-		},
-	};
-}
-
-const host_configuration_properties host_config_properties = {
-	.nitems = 3,
-	.data = _host_configuration_properties_data,
+char *init_runtime_property_values[] {
+	nullptr,
 };

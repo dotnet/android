@@ -12,6 +12,11 @@ namespace Xamarin.Android.Tasks;
 
 class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 {
+	// From host_runtime_contract.h in dotnet/runtime
+	const string HOST_PROPERTY_RUNTIME_CONTRACT = "HOST_RUNTIME_CONTRACT";
+	const string HOST_PROPERTY_BUNDLE_PROBE     = "BUNDLE_PROBE";
+	const string HOST_PROPERTY_PINVOKE_OVERRIDE = "PINVOKE_OVERRIDE";
+
 	sealed class DSOCacheEntryContextDataProvider : NativeAssemblerStructContextDataProvider
 	{
 		public override string GetComment (object data, string fieldName)
@@ -127,26 +132,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public uint index;
 	}
 
-	// Order of fields and their types must correspond **exactly** to those in CoreCLR's host_runtime_contract.h
-	sealed class host_configuration_property
-	{
-		[NativeAssembler (IsUTF16 = true)]
-		public string name;
-
-		[NativeAssembler (IsUTF16 = true)]
-		public string value;
-	}
-
-	// Order of fields and their types must correspond **exactly** to those in CoreCLR's host_runtime_contract.h
-	const string HostConfigurationPropertiesDataSymbol = "_host_configuration_properties_data";
-	sealed class host_configuration_properties
-	{
-		public ulong nitems;
-
-		[NativePointer (PointsToSymbol = HostConfigurationPropertiesDataSymbol)]
-		public host_configuration_property data;
-	}
-
 	sealed class XamarinAndroidBundledAssemblyContextDataProvider : NativeAssemblerStructContextDataProvider
 	{
 		public override ulong GetBufferSize (object data, string fieldName)
@@ -197,8 +182,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	List<StructureInstance<XamarinAndroidBundledAssembly>>? xamarinAndroidBundledAssemblies;
 	List<StructureInstance<RuntimeProperty>>? runtimePropertiesData;
 	List<StructureInstance<RuntimePropertyIndexEntry>>? runtimePropertyIndex;
-	List<StructureInstance<host_configuration_property>> hostConfigurationPropertiesData;
-	StructureInstance<host_configuration_properties> hostConfigurationProperties;
 
 	StructureInfo? applicationConfigStructureInfo;
 	StructureInfo? dsoCacheEntryStructureInfo;
@@ -240,7 +223,16 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 		if (runtimeProperties != null) {
 			this.runtimeProperties = new SortedDictionary<string, string> (runtimeProperties, StringComparer.Ordinal);
+		} else {
+			this.runtimeProperties = new SortedDictionary<string, string> (StringComparer.Ordinal);
 		}
+
+		// This will be filled in by the native host.
+		this.runtimeProperties[HOST_PROPERTY_RUNTIME_CONTRACT] = String.Empty;
+
+		// these mustn't be there, they would break our host contract
+		this.runtimeProperties.Remove (HOST_PROPERTY_PINVOKE_OVERRIDE);
+		this.runtimeProperties.Remove (HOST_PROPERTY_BUNDLE_PROBE);
 	}
 
 	protected override void Construct (LlvmIrModule module)
@@ -310,7 +302,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		};
 		module.Add (bundled_assemblies);
 
-		(runtimePropertiesData, runtimePropertyIndex, hostConfigurationPropertiesData) = InitRuntimeProperties ();
+		(runtimePropertiesData, runtimePropertyIndex) = InitRuntimeProperties ();
 		var runtime_properties = new LlvmIrGlobalVariable (runtimePropertiesData, "runtime_properties", LlvmIrVariableOptions.GlobalConstant) {
 			Comment = "Runtime config properties",
 		};
@@ -322,22 +314,33 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		};
 		module.Add (runtime_property_index);
 
-		var _host_configuration_properties_data = new LlvmIrGlobalVariable (hostConfigurationPropertiesData, HostConfigurationPropertiesDataSymbol, LlvmIrVariableOptions.LocalConstant) {
-			Comment = "Runtime host configuration properties data, encoded using 16-bit Unicode, as expected by CoreCLR",
+		// HOST_PROPERTY_RUNTIME_CONTRACT will come first, our native runtime requires that since it needs
+		// to set its value in the values array and we don't want to spend time searching for the index, nor
+		// we want to add yet another variable storing the index to the entry. KISS.
+		var runtime_property_names = new List<string> {
+			HOST_PROPERTY_RUNTIME_CONTRACT,
 		};
-		module.Add (_host_configuration_properties_data);
+		var runtime_property_values = new List<string?> {
+			null,
+		};
 
-		var hostConfigProps = new host_configuration_properties {
-			nitems = (ulong)hostConfigurationPropertiesData.Count,
+		foreach (var kvp in runtimeProperties) {
+			if (String.Compare (kvp.Key, HOST_PROPERTY_RUNTIME_CONTRACT, StringComparison.Ordinal) == 0) {
+				continue;
+			}
+			runtime_property_names.Add (kvp.Key);
+			runtime_property_values.Add (kvp.Value);
+		}
+
+		var init_runtime_property_names = new LlvmIrGlobalVariable (runtime_property_names, "init_runtime_property_names", LlvmIrVariableOptions.GlobalConstant) {
+			Comment = "Names of properties passed to coreclr_initialize",
 		};
-		var host_config_props = new LlvmIrGlobalVariable (
-			new StructureInstance<host_configuration_properties> (hostConfigurationPropertiesStructureInfo, hostConfigProps),
-			"host_config_properties",
-			LlvmIrVariableOptions.GlobalConstant)
-		{
-			Comment = "Runtime host config properties, for CoreCLR initialization phase"
+		module.Add (init_runtime_property_names);
+
+		var init_runtime_property_values = new LlvmIrGlobalVariable (runtime_property_values, "init_runtime_property_values", LlvmIrVariableOptions.GlobalWritable) {
+			Comment = "Values of properties passed to coreclr_initialize",
 		};
-		module.Add (host_config_props);
+		module.Add (init_runtime_property_values);
 
 		AddAssemblyStores (module);
 	}
@@ -368,16 +371,14 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 	(
 		List<StructureInstance<RuntimeProperty>> runtimeProps,
-		List<StructureInstance<RuntimePropertyIndexEntry>> runtimePropsIndex,
-		List<StructureInstance<host_configuration_property>> configProps
+		List<StructureInstance<RuntimePropertyIndexEntry>> runtimePropsIndex
 	) InitRuntimeProperties ()
 	{
 		var runtimeProps = new List<StructureInstance<RuntimeProperty>> ();
 		var runtimePropsIndex = new List<StructureInstance<RuntimePropertyIndexEntry>> ();
-		var configProps = new List<StructureInstance<host_configuration_property>> ();
 
 		if (runtimeProperties == null || runtimeProperties.Count == 0) {
-			return (runtimeProps, runtimePropsIndex, configProps);
+			return (runtimeProps, runtimePropsIndex);
 		}
 
 		foreach (var kvp in runtimeProperties) {
@@ -398,15 +399,9 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 				index = (uint)(runtimeProps.Count - 1),
 			};
 			runtimePropsIndex.Add (new StructureInstance<RuntimePropertyIndexEntry> (runtimePropertyIndexEntryStructureInfo, indexEntry));
-
-			var hostConfigProperty = new host_configuration_property {
-				name = name,
-				value = value,
-			};
-			configProps.Add (new StructureInstance<host_configuration_property> (hostConfigurationPropertyStructureInfo, hostConfigProperty));
 		}
 
-		return (runtimeProps, runtimePropsIndex, configProps);
+		return (runtimeProps, runtimePropsIndex);
 	}
 
 	void AddAssemblyStores (LlvmIrModule module)
@@ -542,7 +537,5 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		dsoApkEntryStructureInfo = module.MapStructure<DSOApkEntry> ();
 		runtimePropertyStructureInfo = module.MapStructure<RuntimeProperty> ();
 		runtimePropertyIndexEntryStructureInfo = module.MapStructure<RuntimePropertyIndexEntry> ();
-		hostConfigurationPropertyStructureInfo = module.MapStructure<host_configuration_property> ();
-		hostConfigurationPropertiesStructureInfo = module.MapStructure<host_configuration_properties> ();
 	}
 }
