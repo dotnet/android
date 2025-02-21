@@ -586,11 +586,11 @@ else()
     add_subdirectory(mono/monodroid)
 
     add_custom_target(run_static_analysis
-    COMMAND ${ANDROID_TOOLCHAIN_ROOT}/bin/clang-check -analyze -p="${CMAKE_CURRENT_BINARY_DIR}" ${CLANG_CHECK_SOURCES} > ${CMAKE_SOURCE_DIR}/static-analysis.${ANDROID_ABI}.${CMAKE_BUILD_TYPE}.txt 2>&1
-    COMMAND_EXPAND_LISTS
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-    USES_TERMINAL
-  )
+      COMMAND ${ANDROID_TOOLCHAIN_ROOT}/bin/clang-check -analyze -p="${CMAKE_CURRENT_BINARY_DIR}" ${CLANG_CHECK_SOURCES} > ${CMAKE_SOURCE_DIR}/static-analysis.${ANDROID_ABI}.${CMAKE_BUILD_TYPE}.txt 2>&1
+      COMMAND_EXPAND_LISTS
+      WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+      USES_TERMINAL
+    )
   endif()
 
   if (IS_CLR_RUNTIME)
