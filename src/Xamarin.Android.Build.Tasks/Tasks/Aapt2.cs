@@ -236,7 +236,7 @@ namespace Xamarin.Android.Tasks {
 			return false;
 		}
 
-		static bool IsPathOnlyASCII (string filePath)
+		static protected bool IsPathOnlyASCII (string filePath)
 		{
 			if (!OS.IsWindows)
 				return true;
