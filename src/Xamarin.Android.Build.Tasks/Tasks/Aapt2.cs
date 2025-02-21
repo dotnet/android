@@ -242,7 +242,7 @@ namespace Xamarin.Android.Tasks {
 				return true;
 
 			foreach (var c in filePath)
-				if (!IsAscii(c))
+				if (!IsAscii (c))
 					return false;
 			return true;
 		}
