@@ -11,7 +11,8 @@ using Java.Interop.Tools.Maven.Models;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using NuGet.ProjectModel;
 
 namespace Xamarin.Android.Tasks;
@@ -318,7 +319,7 @@ class MicrosoftNuGetPackageFinder
 
 		try {
 			var json = File.ReadAllText (file);
-			package_list = JsonConvert.DeserializeObject<PackageListFile> (json);
+			package_list = JsonSerializer.Deserialize<PackageListFile> (json);
 		} catch (Exception ex) {
 			log.LogMessage ("There was an error reading 'microsoft-packages.json', Android NuGet suggestions will not be provided: {0}", ex);
 		}
@@ -331,16 +332,16 @@ class MicrosoftNuGetPackageFinder
 
 	public class PackageListFile
 	{
-		[JsonProperty ("packages")]
+		[JsonPropertyName ("packages")]
 		public List<Package>? Packages { get; set; }
 	}
 
 	public class Package
 	{
-		[JsonProperty ("javaId")]
+		[JsonPropertyName ("javaId")]
 		public string? JavaId { get; set; }
 
-		[JsonProperty ("nugetId")]
+		[JsonPropertyName ("nugetId")]
 		public string? NuGetId { get; set; }
 	}
 }
