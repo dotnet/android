@@ -13,6 +13,8 @@ _ResolveAssemblies MSBuild target.
   <UsingTask TaskName="Xamarin.Android.Tasks.ProcessAssemblies"      AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ProcessNativeLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.StripNativeLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.RecreateResolvedRuntimePacks" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.CoreClrHackInjectAndroidRuntimeSharedLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <!-- HACK: workaround for: https://github.com/dotnet/sdk/issues/25679 -->
   <Target Name="_RemoveLinuxFrameworkReferences"
@@ -112,6 +114,11 @@ _ResolveAssemblies MSBuild target.
         Targets="_ComputeFilesToPublishForRuntimeIdentifiers">
       <Output TaskParameter="TargetOutputs" ItemName="ResolvedFileToPublish" />
     </MSBuild>
+
+    <ItemGroup>
+      <ResolvedFileToPublish Include="@(_AddSharedLibrariesClrHack)" />
+    </ItemGroup>
+
     <!-- Properties produced by the inner build in Microsoft.Android.Sdk.ILLink.targets -->
     <PropertyGroup>
       <_InnerIntermediateOutputPath Condition=" '$(RuntimeIdentifier)' == '' ">$(IntermediateOutputPath)%(_RIDs.Identity)\</_InnerIntermediateOutputPath>
@@ -235,7 +242,23 @@ _ResolveAssemblies MSBuild target.
       <!-- Filename without extension -->
       <_ExcludedNativeLibraries Condition=" '$(_AndroidIncludeSystemGlobalizationNative)' != 'true' " Include="libSystem.Globalization.Native" />
       <_ExcludedNativeLibraries Condition=" '$(_AndroidEnableNativeStackTracing)' != 'true' " Include="libxamarin-native-tracing" />
+      <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'MonoVM' Or '$(_AndroidRuntime)' == '' " Include="libnet-android.debug" />
+      <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'MonoVM' Or '$(_AndroidRuntime)' == '' " Include="libnet-android.release" />
+      <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " Include="libmono-android.debug" />
+      <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " Include="libmono-android.release" />
     </ItemGroup>
+
+    <RecreateResolvedRuntimePacks
+        ResolvedNativeLibraries="@(_ResolvedNativeLibraries)"
+        AndroidRuntime="$(_AndroidRuntime)">
+      <Output TaskParameter="ResolvedRuntimePacks" ItemName="ResolvedRuntimePack" />
+      <Output TaskParameter="SharedLibrariesToIgnore" ItemName="_IgnoreSharedLibraries" />
+    </RecreateResolvedRuntimePacks>
+
+    <ItemGroup>
+      <_ResolvedNativeLibraries Remove="@(_IgnoreSharedLibraries)" />
+    </ItemGroup>
+
     <ProcessNativeLibraries
         InputLibraries="@(_ResolvedNativeLibraries)"
         ExcludedLibraries="@(_ExcludedNativeLibraries)"
