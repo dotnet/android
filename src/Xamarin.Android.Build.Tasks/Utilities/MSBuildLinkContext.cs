@@ -9,13 +9,11 @@ namespace Xamarin.Android.Tasks;
 
 class MSBuildLinkContext : LinkContext
 {
-    public DirectoryAssemblyResolver Resolver { get; private set; }
     readonly TaskLoggingHelper logger;
 
     public MSBuildLinkContext (DirectoryAssemblyResolver resolver, TaskLoggingHelper logger)
         : base (resolver)
     {
-        Resolver = resolver;
         this.logger = logger;
     }
 

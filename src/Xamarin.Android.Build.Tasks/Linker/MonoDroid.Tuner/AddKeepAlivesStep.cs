@@ -132,10 +132,12 @@ namespace MonoDroid.Tuner
 			return Extensions.GetMethod (gcType, "KeepAlive", new string [] { "System.Object" });
 		}
 
+#if ILLINK
 		public virtual void LogMessage (string message)
 		{
 			Context.LogMessage (message);
 		}
+#endif // ILLINK
 
 		// Adapted from src/Mono.Android.Export/Mono.CodeGeneration/CodeArgumentReference.cs
 		static Instruction GetLoadArgumentInstruction (int argNum, ParameterDefinition parameter)

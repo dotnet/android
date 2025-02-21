@@ -172,7 +172,7 @@ namespace Xamarin.Android.Tasks
 				try {
 					ndk.GetDirectoryPath (NdkToolchainDir.PlatformLib, arch, level);
 					break;
-				} catch (InvalidOperationException ex) {
+				} catch (InvalidOperationException) {
 					// Path not found, continue searching...
 					continue;
 				}

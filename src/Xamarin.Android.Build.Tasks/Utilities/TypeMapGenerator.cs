@@ -1,15 +1,13 @@
 using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
-using Microsoft.Build.Utilities;
-
 using Java.Interop.Tools.Cecil;
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
-using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks

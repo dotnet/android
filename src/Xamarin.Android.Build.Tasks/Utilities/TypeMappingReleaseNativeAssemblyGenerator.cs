@@ -96,6 +96,7 @@ namespace Xamarin.Android.Tasks
 			public uint    entry_count;
 			public uint    duplicate_count;
 
+			#pragma warning disable CS0649 // C# warns fields are unused
 			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
 			public TypeMapModuleEntry map;
 
@@ -111,6 +112,7 @@ namespace Xamarin.Android.Tasks
 
 			[NativePointer (IsNull = true)]
 			public byte java_map;
+			#pragma warning restore CS0649 // C# warns fields are unused
 		}
 
 		// Order of fields and their type must correspond *exactly* to that in

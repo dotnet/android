@@ -132,7 +132,7 @@ namespace MonoDroid.Tuner
 			if (tTypeDef == null)
 				return false;
 
-			if (iTypeDef.Module.FullyQualifiedName != tTypeDef.Module.FullyQualifiedName)
+			if (iTypeDef.Module.FileName != tTypeDef.Module.FileName)
 				return false;
 
 			if (iType is Mono.Cecil.GenericInstanceType && tType is Mono.Cecil.GenericInstanceType) {
@@ -245,7 +245,7 @@ namespace MonoDroid.Tuner
 			if (type.IsGenericParameter)
 				return type;
 
-			return declaringType.Module.Import (type);
+			return declaringType.Module.ImportReference (type);
 		}
 
 		void AddNewExceptionMethod (TypeDefinition type, MethodDefinition method)
@@ -257,7 +257,7 @@ namespace MonoDroid.Tuner
 
 			var ilP = newMethod.Body.GetILProcessor ();
 
-			ilP.Append (ilP.Create (Mono.Cecil.Cil.OpCodes.Newobj, type.Module.Import (AbstractMethodErrorConstructor)));
+			ilP.Append (ilP.Create (Mono.Cecil.Cil.OpCodes.Newobj, type.Module.ImportReference (AbstractMethodErrorConstructor)));
 			ilP.Append (ilP.Create (Mono.Cecil.Cil.OpCodes.Throw));
 
 			type.Methods.Add (newMethod);

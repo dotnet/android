@@ -13,7 +13,6 @@ class LlvmIrFunctionAttributeSet : IEnumerable<LlvmIrFunctionAttribute>, IEquata
 	public bool DoNotAddTargetSpecificAttributes { get; set; }
 
 	HashSet<LlvmIrFunctionAttribute> attributes;
-	Dictionary<AndroidTargetArch, List<LlvmIrFunctionAttribute>>? privateTargetSpecificAttributes;
 
 	public LlvmIrFunctionAttributeSet ()
 	{
@@ -26,14 +25,7 @@ class LlvmIrFunctionAttributeSet : IEnumerable<LlvmIrFunctionAttribute>, IEquata
 		Number = other.Number;
 	}
 
-	public IList<LlvmIrFunctionAttribute>? GetPrivateTargetAttributes (AndroidTargetArch targetArch)
-	{
-		if (privateTargetSpecificAttributes == null || !privateTargetSpecificAttributes.TryGetValue (targetArch, out List<LlvmIrFunctionAttribute> list)) {
-			return null;
-		}
-
-		return list.AsReadOnly ();
-	}
+	public IList<LlvmIrFunctionAttribute>? GetPrivateTargetAttributes (AndroidTargetArch targetArch) => null;
 
 	public void Add (LlvmIrFunctionAttribute attr)
 	{

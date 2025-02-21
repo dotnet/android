@@ -68,7 +68,9 @@ namespace Xamarin.Android.Tasks
 			public uint count;
 
 			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = DescriptorsArraySymbolName)]
+			#pragma warning disable CS0649 // C# warns field is unused
 			public CompressedAssemblyDescriptor descriptors;
+			#pragma warning restore CS0649 // C# warns field is unused
 		};
 
 		IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>? archAssemblies;

@@ -42,7 +42,6 @@ namespace Mono.Linker {
 		string _outputDirectory;
 
 		DirectoryAssemblyResolver _resolver;
-		ReaderParameters _readerParameters;
 		ISymbolReaderProvider _symbolReaderProvider;
 		ISymbolWriterProvider _symbolWriterProvider;
 		AnnotationStore _annotations;
@@ -62,10 +61,6 @@ namespace Mono.Linker {
 
 		public DirectoryAssemblyResolver Resolver {
 			get { return _resolver; }
-		}
-
-		public ReaderParameters ReaderParameters {
-			get { return _readerParameters; }
 		}
 
 		public ISymbolReaderProvider SymbolReaderProvider {
@@ -101,7 +96,7 @@ namespace Mono.Linker {
 		{
 			if (File.Exists (name)) {
 				try {
-					return AssemblyDefinition.ReadAssembly (name, _readerParameters);
+					return AssemblyDefinition.ReadAssembly (name);
 				} catch (Exception e) {
 					throw new AssemblyResolutionException (new AssemblyNameReference (name, new Version ()), e);
 				}
@@ -114,7 +109,7 @@ namespace Mono.Linker {
 		{
 			AssemblyNameReference reference = GetReference (scope);
 			try {
-				AssemblyDefinition assembly = _resolver.Resolve (reference, _readerParameters);
+				AssemblyDefinition assembly = _resolver.Resolve (reference);
 
 				if (assembly != null)
 					RegisterAssembly (assembly);

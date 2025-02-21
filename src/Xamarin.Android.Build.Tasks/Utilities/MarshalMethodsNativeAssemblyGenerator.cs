@@ -31,7 +31,7 @@ namespace Xamarin.Android.Tasks
 		[NativeClass]
 		class _jobject
 		{
-			public byte b;
+			public byte b = 0;
 		}
 
 		sealed class _jclass : _jobject
@@ -123,7 +123,7 @@ namespace Xamarin.Android.Tasks
 			public uint       token;
 
 			[NativePointer (IsNull = true)]
-			public MonoClass  klass;
+			public MonoClass  klass = null;
 
 			[NativeAssembler (Ignore = true)]
 			public string ClassName;
@@ -235,7 +235,6 @@ namespace Xamarin.Android.Tasks
 		List<MarshalMethodInfo> methods;
 		List<StructureInstance<MarshalMethodsManagedClass>> classes = new List<StructureInstance<MarshalMethodsManagedClass>> ();
 
-		readonly LlvmIrCallMarker defaultCallMarker;
 		readonly bool generateEmptyCode;
 		readonly AndroidTargetArch targetArch;
 		readonly NativeCodeGenState? codeGenState;
@@ -250,7 +249,6 @@ namespace Xamarin.Android.Tasks
 			this.numberOfAssembliesInApk = numberOfAssembliesInApk;
 			this.uniqueAssemblyNames = uniqueAssemblyNames ?? throw new ArgumentNullException (nameof (uniqueAssemblyNames));
 			generateEmptyCode = true;
-			defaultCallMarker = LlvmIrCallMarker.Tail;
 		}
 
 		/// <summary>
@@ -264,7 +262,6 @@ namespace Xamarin.Android.Tasks
 			this.codeGenState = codeGenState ?? throw new ArgumentNullException (nameof (codeGenState));
 
 			generateEmptyCode = false;
-			defaultCallMarker = LlvmIrCallMarker.Tail;
 		}
 
 		void Init ()

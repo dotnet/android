@@ -162,7 +162,9 @@ namespace Xamarin.Android.Tasks
 			public uint                method_count;
 
 			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
+			#pragma warning disable CS0649 // C# warns field is unused
 			public JniRemappingIndexMethodEntry methods;
+			#pragma warning restore CS0649 // C# warns field is unused
 
 			[NativeAssembler (Ignore = true)]
 			public string MethodsArraySymbolName;
