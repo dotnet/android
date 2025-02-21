@@ -229,17 +229,24 @@ namespace Java.Interop {
 			return monodroid_typemap_java_to_managed (java_type_name);
 		}
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Value of java_type_name isn't statically known.")]
+		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Value of java_type_name isn't statically known.")]
 		static Type? clr_typemap_java_to_managed (string java_type_name)
 		{
-			IntPtr managedTypeNamePointer = RuntimeNativeMethods.clr_typemap_java_to_managed (java_type_name);
-			if (managedTypeNamePointer == IntPtr.Zero) {
+			bool result = RuntimeNativeMethods.clr_typemap_java_to_managed (java_type_name, out IntPtr managedAssemblyNamePointer, out uint managedTypeTokenId);
+			if (!result || managedAssemblyNamePointer == IntPtr.Zero) {
 				return null;
 			}
 
-			string managedTypeName = Marshal.PtrToStringAnsi (managedTypeNamePointer);
-			Logger.Log (LogLevel.Info, "monodroid", $"clr_typemap_java_to_managed ('{java_type_name}') returned '{managedTypeName}'");
-			Type ret = Type.GetType (managedTypeName);
+			string managedAssemblyName = Marshal.PtrToStringAnsi (managedAssemblyNamePointer);
+			Assembly assembly = Assembly.Load (managedAssemblyName);
+			Type? ret = null;
+			foreach (Module module in assembly.Modules) {
+				ret = module.ResolveType ((int)managedTypeTokenId);
+				if (ret != null) {
+					break;
+				}
+			}
+
 			Logger.Log (LogLevel.Info, "monodroid", $"Loaded type: {ret}");
 			return ret;
 		}
