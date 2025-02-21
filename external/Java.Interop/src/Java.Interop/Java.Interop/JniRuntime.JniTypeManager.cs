@@ -146,7 +146,7 @@ namespace Java.Interop {
 				if (type == null)
  					throw new ArgumentNullException (nameof (type));
 				if (type.ContainsGenericParameters)
-					throw new ArgumentException ($"'{type}' contains a generic type definition. This is not supported.", nameof (type));
+					throw new NotSupportedException ($"'{type}' contains a generic type definition. This is not supported.");
 
 				type = GetUnderlyingType (type, out int rank);
 
@@ -184,7 +184,7 @@ namespace Java.Interop {
 				if (type == null)
 					yield break;
 				if (type.ContainsGenericParameters)
-					throw new ArgumentException ($"'{type}' contains a generic type definition. This is not supported.", nameof (type));
+					throw new NotSupportedException ($"'{type}' contains a generic type definition. This is not supported.");
 
 				type = GetUnderlyingType (type, out int rank);
 
