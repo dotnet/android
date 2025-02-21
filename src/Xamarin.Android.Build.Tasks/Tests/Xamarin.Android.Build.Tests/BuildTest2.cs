@@ -133,7 +133,6 @@ namespace Xamarin.Android.Build.Tests
 				}
 			};
 			proj.SetProperty ("PublishAot", "true");
-			proj.SetProperty ("PublishAotUsingRuntimePack", "true");
 			proj.SetProperty ("AndroidNdkDirectory", AndroidNdkPath);
 			proj.SetProperty ("_ExtraTrimmerArgs", "--verbose");
 
