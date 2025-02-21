@@ -34,7 +34,6 @@
 		<type fullname="Android.Runtime.XmlReaderPullParser" />
 		-->
 		<type fullname="Java.Interop.TypeManager*JavaTypeManager" />
-		<type fullname="Java.Interop.ManagedMarshalMethodsLookupTable" preserve="methods" />
 		<type fullname="Java.Lang.Object">
 			<method name="SetHandleOnDeserialized" />
 		</type>
