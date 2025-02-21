@@ -32,6 +32,7 @@ namespace Android.Runtime
 			public bool            jniRemappingInUse;
 			public bool            marshalMethodsEnabled;
 			public IntPtr          grefGCUserPeerable;
+			public bool            managedMarshalMethodsLookupEnabled;
 		}
 #pragma warning restore 0649
 
@@ -117,8 +118,16 @@ namespace Android.Runtime
 				}
 			}
 
+			if (args->managedMarshalMethodsLookupEnabled) {
+				delegate* unmanaged <int, int, int, IntPtr*, void> getFunctionPointer = &ManagedMarshalMethodsLookupTable.GetFunctionPointer;
+				xamarin_app_init (args->env, getFunctionPointer);
+			}
+
 			SetSynchronizationContext ();
 		}
+
+		[DllImport ("xamarin-app")]
+		static extern unsafe void xamarin_app_init (IntPtr env, delegate* unmanaged <int, int, int, IntPtr*, void> get_function_pointer);
 
 		// NOTE: prevents Android.App.Application static ctor from running
 		[MethodImpl (MethodImplOptions.NoInlining)]

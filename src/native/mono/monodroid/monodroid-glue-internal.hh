@@ -102,6 +102,7 @@ namespace xamarin::android::internal
 			bool            jniRemappingInUse;
 			bool            marshalMethodsEnabled;
 			jobject         grefGCUserPeerable;
+			bool            managedMarshalMethodsLookupEnabled;
 		};
 
 		using jnienv_initialize_fn = void (*) (JnienvInitializeArgs*);

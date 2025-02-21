@@ -312,6 +312,7 @@
     <Compile Include="Java.Interop\JavaLocationException.cs" />
     <Compile Include="Java.Interop\JavaObjectExtensions.cs" />
     <Compile Include="Java.Interop\JavaTypeParametersAttribute.cs" />
+    <Compile Include="Java.Interop\ManagedMarshalMethodsLookupTable.cs" />
     <Compile Include="Java.Interop\Runtime.cs" />
     <Compile Include="Java.Interop\TypeManager.cs" />
     <Compile Include="Java.Lang\Boolean.cs" />
