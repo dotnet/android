@@ -278,7 +278,7 @@ namespace Xamarin.Android.Tasks {
 			if (!string.IsNullOrEmpty (AssetsDirectory)) {
 				var assetDir = GetFullPath (AssetsDirectory.TrimEnd ('\\'));
 				if (Directory.Exists (assetDir)) {
-					if (!IsPathOnlyASCII (assetDir)) {
+					if (OS.IsWindows && !IsPathOnlyASCII (assetDir)) {
 						hasAssetsErrors = true;
 						LogCodedError ("APT2265", Properties.Resources.APT2265, assetDir);
 					}
@@ -294,7 +294,7 @@ namespace Xamarin.Android.Tasks {
 					var assetDir = GetFullPath (AdditionalAndroidAssetPaths [i].ItemSpec.TrimEnd ('\\'));
 					if (!string.IsNullOrWhiteSpace (assetDir)) {
 						if (Directory.Exists (assetDir)) {
-							if (!IsPathOnlyASCII (assetDir)) {
+							if (OS.IsWindows && !IsPathOnlyASCII (assetDir)) {
 								hasAssetsErrors = true;
 								LogCodedError ("APT2265", Properties.Resources.APT2265, assetDir);
 								continue;
