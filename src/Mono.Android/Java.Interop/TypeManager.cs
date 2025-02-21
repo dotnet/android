@@ -243,14 +243,25 @@ namespace Java.Interop {
 			Type? type = null;
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
 			string? class_name = GetClassName (class_ptr);
+			List<string>? class_names = null;
 			lock (TypeManagerMapDictionaries.AccessLock) {
 				while (class_ptr != IntPtr.Zero && !TypeManagerMapDictionaries.JniToManaged.TryGetValue (class_name, out type)) {
-
 					type = GetJavaToManagedType (class_name);
 					if (type != null) {
 						TypeManagerMapDictionaries.JniToManaged.Add (class_name, type);
+
+						// cache shortcuts for the class names of the subclasses in the hierarchy we just explored
+						if (class_names is not null) {
+							foreach (var subclass_name in class_names) {
+								TypeManagerMapDictionaries.JniToManaged.Add (subclass_name, type);
+							}
+						}
+
 						break;
 					}
+
+					class_names ??= new List<string> ();
+					class_names.Add (class_name);
 
 					IntPtr super_class_ptr = JNIEnv.GetSuperclass (class_ptr);
 					JNIEnv.DeleteLocalRef (class_ptr);
