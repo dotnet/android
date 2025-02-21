@@ -2093,7 +2093,7 @@ because xbuild doesn't support framework reference assemblies.
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       ZipAlignmentPages="$(AndroidZipAlignment)"
       TargetsCLR="$(_AndroidUseCLR)"
-      ResolvedRuntimePacks="@(ResolvedRuntimePack)"
+      RuntimePackLibraryDirectories="@(RuntimePackLibraryDirectory)"
   />
   <ItemGroup>
     <FileWrites Include="@(_ApplicationSharedLibrary)" />
@@ -2220,7 +2220,7 @@ because xbuild doesn't support framework reference assemblies.
       ResolvedAssemblies="@(_BuildApkAssembliesToAddToArchive)"
       SupportedAbis="@(_BuildTargetAbis)"
       UseAssemblyStore="$(AndroidUseAssemblyStore)"
-      ResolvedRuntimePacks="@(ResolvedRuntimePack)">
+      RuntimePackLibraryDirectories="@(RuntimePackLibraryDirectory)">
     <Output TaskParameter="WrappedAssemblies" ItemName="FilesToAddToArchive" />
   </WrapAssembliesAsSharedLibraries>
 
@@ -2247,7 +2247,7 @@ because xbuild doesn't support framework reference assemblies.
       IntermediateOutputPath="$(IntermediateOutputPath)"
       RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
       SupportedAbis="@(_BuildTargetAbis)"
-      ResolvedRuntimePacks="@(ResolvedRuntimePack)">
+      RuntimePackLibraryDirectories="@(RuntimePackLibraryDirectory)">
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectRuntimeConfigFilesForArchive>
 
@@ -2265,7 +2265,7 @@ because xbuild doesn't support framework reference assemblies.
       ZipAlignmentPages="$(AndroidZipAlignment)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       IntermediateOutputPath="$(IntermediateOutputPath)"
-      ResolvedRuntimePacks="@(ResolvedRuntimePack)">
+      RuntimePackLibraryDirectories="@(RuntimePackLibraryDirectory)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
     <Output TaskParameter="DSODirectoriesToDelete" ItemName="DSODirectoriesToDelete" />

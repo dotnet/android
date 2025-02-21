@@ -44,7 +44,7 @@ namespace Xamarin.Android.Tasks
 		public string AndroidBinUtilsDirectory { get; set; }
 
 		[Required]
-		public ITaskItem[] ResolvedRuntimePacks { get; set; } = Array.Empty<ITaskItem> ();
+		public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = Array.Empty<ITaskItem> ();
 
 		[Required]
 		public bool TargetsCLR { get; set; }
@@ -212,8 +212,8 @@ namespace Xamarin.Android.Tasks
 		{
 			AndroidTargetArch arch = MonoAndroidHelper.AbiToTargetArch (abi);
 			var libDirs = new HashSet<string> (StringComparer.OrdinalIgnoreCase) {
-				MonoAndroidHelper.GetNativeLibsRootDirectoryPath (Log, ResolvedRuntimePacks, arch),
-				MonoAndroidHelper.GetLibstubsArchDirectoryPath (ResolvedRuntimePacks, arch),
+				MonoAndroidHelper.GetNativeLibsRootDirectoryPath (Log, RuntimePackLibraryDirectories, arch),
+				MonoAndroidHelper.GetLibstubsArchDirectoryPath (RuntimePackLibraryDirectories, arch),
 			};
 
 			string RID = MonoAndroidHelper.AbiToRid (abi);
