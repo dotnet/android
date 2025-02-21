@@ -3,6 +3,7 @@
 #include <host/typemap.hh>
 #include <runtime-base/timing-internal.hh>
 #include <runtime-base/search.hh>
+#include <runtime-base/util.hh>
 #include <shared/xxhash.hh>
 #include <xamarin-app.hh>
 
@@ -14,10 +15,6 @@ namespace {
 		static inline constexpr size_t MVID_SIZE = 16;
 		static inline constexpr size_t NUM_HYPHENS = 4;
 		static inline constexpr size_t BUF_SIZE = (MVID_SIZE * 2) + NUM_HYPHENS + 1;
-		static inline std::array<char, 16> hex_map {
-			'0', '1', '2', '3', '4', '5', '6', '7',
-			'8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
-		};
 
 	public:
 		explicit MonoGuidString (const uint8_t *mvid) noexcept
@@ -29,8 +26,8 @@ namespace {
 
 			// In the caller we trust, we have no way to validate the size here
 			auto to_hex = [this, &mvid] (size_t &dest_idx, size_t src_idx) {
-				_ascii_form[dest_idx++] = hex_map[(mvid[src_idx] & 0xf0) >> 4];
-				_ascii_form[dest_idx++] = hex_map[mvid[src_idx] & 0x0f];
+				Util::to_hex (mvid[src_idx], _ascii_form[dest_idx], _ascii_form[dest_idx + 1]);
+				dest_idx += 2;
 			};
 
 			auto hyphen = [this] (size_t &dest_idx) {
@@ -240,7 +237,7 @@ auto TypeMapper::typemap_managed_to_java (const char *typeName, const uint8_t *m
 
 #if defined(DEBUG)
 [[gnu::flatten]]
-auto TypeMapper::typemap_java_to_managed (const char *typeName) noexcept -> const char*
+auto TypeMapper::typemap_java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept -> bool
 {
 	Helpers::abort_application ("typemap_java_to_managed not implemented for debug builds yet");
 }
@@ -258,32 +255,65 @@ auto TypeMapper::find_java_to_managed_entry (hash_t name_hash) noexcept -> const
 }
 
 [[gnu::flatten]]
-auto TypeMapper::typemap_java_to_managed (const char *typeName) noexcept -> const char*
+auto TypeMapper::typemap_java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept -> bool
 {
-	if (typeName == nullptr) [[unlikely]] {
-		return nullptr;
+	if (java_type_name == nullptr || assembly_name == nullptr || managed_type_token_id == nullptr) [[unlikely]] {
+		if (java_type_name == nullptr) {
+			log_warn (
+				LOG_ASSEMBLY,
+				"typemap: required parameter `{}` not passed to {}",
+				"java_type_name"sv,
+				__PRETTY_FUNCTION__
+			);
+		}
+
+		if (assembly_name == nullptr) {
+			log_warn (
+				LOG_ASSEMBLY,
+				"typemap: required parameter `{}` not passed to {}",
+				"assembly_name"sv,
+				__PRETTY_FUNCTION__
+			);
+		}
+
+		if (managed_type_token_id == nullptr) {
+			log_warn (
+				LOG_ASSEMBLY,
+				"typemap: required parameter `{}` not passed to {}",
+				"managed_type_token_id"sv,
+				__PRETTY_FUNCTION__
+			);
+		}
+
+		return false;
 	}
 
-	hash_t name_hash = xxhash::hash (typeName, strlen (typeName));
+	hash_t name_hash = xxhash::hash (java_type_name, strlen (java_type_name));
 	TypeMapJava const* java_entry = find_java_to_managed_entry (name_hash);
 	if (java_entry == nullptr) {
 		log_info (
 			LOG_ASSEMBLY,
 			"typemap: unable to find mapping to a managed type from Java type '{}' (hash {:x})",
-			optional_string (typeName),
+			optional_string (java_type_name),
 			name_hash
 		);
 
-		return nullptr;
+		return false;
 	}
+
+	TypeMapModule const &module = managed_to_java_map[java_entry->module_index];
+	*assembly_name = managed_assembly_names[module.assembly_name_index];
+	*managed_type_token_id = java_entry->managed_type_token_id;
 
 	log_debug (
 		LOG_ASSEMBLY,
-		"Java type '{}' corresponds to managed type '{}' ({:p}",
-		optional_string (typeName),
+		"Java type '{}' corresponds to managed type '{}' (token 0x{:x} in assembly '{}')",
+		optional_string (java_type_name),
 		optional_string (managed_type_names[java_entry->managed_type_name_index]),
-		reinterpret_cast<const void*>(managed_type_names[java_entry->managed_type_name_index])
+		*managed_type_token_id,
+		optional_string (*assembly_name)
 	);
-	return managed_type_names[java_entry->managed_type_name_index];
+
+	return true;
 }
 #endif // ndef DEBUG

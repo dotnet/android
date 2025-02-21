@@ -173,6 +173,9 @@ namespace Xamarin.Android.Tasks
 			[NativeAssembler (UsesDataProvider = true)]
 			public uint managed_type_name_index;
 
+			[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
+			public uint managed_type_token_id;
+
 			[NativeAssembler (UsesDataProvider = true)]
 			public uint java_name_index;
 		}
@@ -398,8 +401,7 @@ namespace Xamarin.Android.Tasks
 			TypeMapJava map_entry;
 			foreach (TypeMapGenerator.TypeMapReleaseEntry entry in mappingData.JavaTypes) {
 				string assemblyName = mappingData.Modules[entry.ModuleIndex].AssemblyName;
-				string fullManagedTypeName = $"{entry.ManagedTypeName}, {assemblyName}";
-				uint managedTypeNameIndex = GetEntryIndex (fullManagedTypeName, seenManagedTypeNames, cs.ManagedTypeNames);
+				uint managedTypeNameIndex = GetEntryIndex (entry.ManagedTypeName, seenManagedTypeNames, cs.ManagedTypeNames);
 				cs.JavaNames.Add (entry.JavaName);
 
 				map_entry = new TypeMapJava {
@@ -407,6 +409,7 @@ namespace Xamarin.Android.Tasks
 
 					module_index = (uint)entry.ModuleIndex, // UInt32.MaxValue,
 					managed_type_name_index = managedTypeNameIndex,
+					managed_type_token_id = entry.Token,
 					java_name_index = (uint)(cs.JavaNames.Count - 1),
 					JavaName = entry.JavaName,
 				};

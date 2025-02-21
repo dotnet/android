@@ -11,7 +11,7 @@ namespace xamarin::android {
 	{
 	public:
 		static auto typemap_managed_to_java (const char *typeName, const uint8_t *mvid) noexcept -> const char*;
-		static auto typemap_java_to_managed (const char *typeName) noexcept -> const char*;
+		static auto typemap_java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_doken_id) noexcept -> bool;
 
 	private:
 #if defined(RELEASE)
