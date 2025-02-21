@@ -464,6 +464,9 @@ namespace UnnamedProject {
 
 			proj.SetProperty ("AllowUnsafeBlocks", "True");
 
+			// We don't want `[TargetPlatform ("android35")]` to get set because we don't do AddKeepAlives on .NET for Android assemblies
+			proj.SetProperty ("GenerateAssemblyInfo", "False");
+
 			if (setAndroidAddKeepAlivesTrue)
 				proj.SetProperty ("AndroidAddKeepAlives", "True");
 

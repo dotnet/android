@@ -1,15 +1,12 @@
+#nullable enable
 using System;
-using System.Collections.Generic;
 using System.Linq;
-
-using Mono.Cecil;
-
 using Java.Interop.Tools.Cecil;
-
+using Mono.Cecil;
+using Mono.Cecil.Cil;
 using Mono.Linker;
 using Mono.Linker.Steps;
-
-using Mono.Cecil.Cil;
+using Xamarin.Android.Tasks;
 
 namespace MonoDroid.Tuner
 {
@@ -31,6 +28,11 @@ namespace MonoDroid.Tuner
 		internal bool AddKeepAlives (AssemblyDefinition assembly)
 		{
 			if (!assembly.MainModule.HasTypeReference ("Java.Lang.Object"))
+				return false;
+
+			// Anything that was built against .NET for Android will have
+			// keep-alives already compiled in.
+			if (MonoAndroidHelper.IsDotNetAndroidAssembly (assembly))
 				return false;
 
 			bool changed = false;
@@ -60,7 +62,7 @@ namespace MonoDroid.Tuner
 			return !type.IsAbstract && type.IsSubclassOf ("Java.Lang.Object", Context);
 		}
 
-		MethodDefinition methodKeepAlive = null;
+		MethodDefinition? methodKeepAlive = null;
 
 		bool AddKeepAlives (TypeDefinition type)
 		{
@@ -117,7 +119,7 @@ namespace MonoDroid.Tuner
 			return Context.GetAssembly ("System.Private.CoreLib");
 		}
 
-		MethodDefinition GetKeepAliveMethod ()
+		MethodDefinition? GetKeepAliveMethod ()
 		{
 			var corlibAssembly = GetCorlibAssembly ();
 			if (corlibAssembly == null)
