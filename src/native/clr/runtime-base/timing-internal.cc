@@ -4,13 +4,13 @@
 using namespace xamarin::android;
 
 namespace xamarin::android {
-	FastTiming *internal_timing = nullptr;
+	FastTiming internal_timing;
 }
 
 void
 FastTiming::really_initialize (bool log_immediately) noexcept
 {
-	internal_timing = new FastTiming ();
+	internal_timing.configure_for_use ();
 	is_enabled = true;
 	immediate_logging = log_immediately;
 

@@ -77,6 +77,11 @@ namespace Android.Runtime {
 			return wrap;
 		}
 
+		static void MonoDroidUnhandledException (Exception ex)
+		{
+			RuntimeNativeMethods.monodroid_unhandled_exception (ex);
+		}
+
 		internal static void PropagateUncaughtException (IntPtr env, IntPtr javaThreadPtr, IntPtr javaExceptionPtr)
 		{
 			if (!JNIEnvInit.PropagateExceptions)
@@ -95,7 +100,17 @@ namespace Android.Runtime {
 				Logger.Log (LogLevel.Info, "MonoDroid", "UNHANDLED EXCEPTION:");
 				Logger.Log (LogLevel.Info, "MonoDroid", javaException.ToString ());
 
-				RuntimeNativeMethods.monodroid_unhandled_exception (innerException ?? javaException);
+				switch (JNIEnvInit.RuntimeType) {
+					case DotNetRuntimeType.MonoVM:
+						MonoDroidUnhandledException (innerException ?? javaException);
+						break;
+					case DotNetRuntimeType.CoreCLR:
+						// TODO: what to do here?
+						break;
+
+					default:
+						throw new NotSupportedException ($"Internal error: runtime type {JNIEnvInit.RuntimeType} not supported");
+				}
 			} catch (Exception e) {
 				Logger.Log (LogLevel.Error, "monodroid", "Exception thrown while raising AppDomain.UnhandledException event: " + e.ToString ());
 			}
@@ -414,6 +429,14 @@ namespace Android.Runtime {
 			}
 		}
 
+		// We need this proxy method because if `TypeManagedToJava` contained the call to `monodroid_typemap_managed_to_java`
+		// (which is an icall, or ecall in CoreCLR parlance), CoreCLR JIT would throw an exception, refusing to compile the
+		// method.  The exception would be thrown even if the icall weren't called (e.g. hidden behind a runtime type check)
+		static unsafe IntPtr monovm_typemap_managed_to_java (Type type, byte* mvidptr)
+		{
+			return monodroid_typemap_managed_to_java (type, mvidptr);
+		}
+
 		internal static unsafe string? TypemapManagedToJava (Type type)
 		{
 			if (mvid_bytes == null)
@@ -430,7 +453,11 @@ namespace Android.Runtime {
 
 			IntPtr ret;
 			fixed (byte* mvidptr = mvid_data) {
-				ret = monodroid_typemap_managed_to_java (type, mvidptr);
+				ret = JNIEnvInit.RuntimeType switch {
+					DotNetRuntimeType.MonoVM  => monovm_typemap_managed_to_java (type, mvidptr),
+					DotNetRuntimeType.CoreCLR => RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, (IntPtr)mvidptr),
+					_                         => throw new NotSupportedException ($"Internal error: runtime type {JNIEnvInit.RuntimeType} not supported")
+				};
 			}
 
 			if (ret == IntPtr.Zero) {

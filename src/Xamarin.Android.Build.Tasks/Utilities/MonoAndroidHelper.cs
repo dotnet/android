@@ -569,28 +569,70 @@ namespace Xamarin.Android.Tasks
 			return relPath;
 		}
 
-		public static string GetLibstubsArchDirectoryPath (string androidBinUtilsDirectory, AndroidTargetArch arch)
+#if MSBUILD
+		public static bool IsAndroidRuntimePack (ITaskItem maybePack, out string? packRID)
 		{
-			return Path.Combine (GetLibstubsRootDirectoryPath (androidBinUtilsDirectory), ArchToRid (arch));
+			string? framework = maybePack.GetMetadata ("FrameworkName");
+			if (String.IsNullOrEmpty (framework) || String.Compare ("Microsoft.Android", framework, StringComparison.Ordinal) != 0) {
+				packRID = null;
+				return false;
+			}
+
+			packRID = maybePack.GetMetadata ("RuntimeIdentifier");
+			return !String.IsNullOrEmpty (packRID);
 		}
 
-		public static string GetLibstubsRootDirectoryPath (string androidBinUtilsDirectory)
+		public static string GetAndroidRuntimePackDir (ITaskItem pack)
 		{
-			string relPath = GetToolsRootDirectoryRelativePath (androidBinUtilsDirectory);
-			return Path.GetFullPath (Path.Combine (androidBinUtilsDirectory, relPath, "libstubs"));
+			return pack.GetMetadata ("PackageDirectory");
 		}
 
-		public static string GetDSOStubsRootDirectoryPath (string androidBinUtilsDirectory)
+		public static string GetAndroidRuntimePackNativeDir (ITaskItem[] runtimePacks, AndroidTargetArch arch)
 		{
-			string relPath = GetToolsRootDirectoryRelativePath (androidBinUtilsDirectory);
-			return Path.GetFullPath (Path.Combine (androidBinUtilsDirectory, relPath, "dsostubs"));
+			string rid = ArchToRid (arch);
+			ITaskItem? androidRuntimePack = null;
+
+			foreach (ITaskItem pack in runtimePacks) {
+				if (!IsAndroidRuntimePack (pack, out string? packRID) || String.Compare (rid, packRID, StringComparison.OrdinalIgnoreCase) != 0) {
+					continue;
+				}
+
+				androidRuntimePack = pack;
+				break;
+			}
+
+			if (androidRuntimePack == null) {
+				throw new InvalidOperationException ($"Internal error: Android runtime pack for architecture {arch} not found");
+			}
+
+			string? packageDir = GetAndroidRuntimePackDir (androidRuntimePack);
+			if (String.IsNullOrEmpty (packageDir)) {
+				throw new InvalidOperationException ($"Internal error: Android runtime pack for architecture {arch} is missing package directory metadata");
+			}
+
+			return Path.Combine (packageDir, "runtimes", rid, "native");
 		}
 
-		public static string GetNativeLibsRootDirectoryPath (string androidBinUtilsDirectory)
+		public static string GetLibstubsArchDirectoryPath (ITaskItem[] runtimePacks, AndroidTargetArch arch)
 		{
-			string relPath = GetToolsRootDirectoryRelativePath (androidBinUtilsDirectory);
-			return Path.GetFullPath (Path.Combine (androidBinUtilsDirectory, relPath, "lib"));
+			return GetAndroidRuntimePackNativeDir (runtimePacks, arch);
 		}
+
+		public static string GetDSOStubsRootDirectoryPath (ITaskItem[] runtimePacks, AndroidTargetArch arch)
+		{
+			return GetAndroidRuntimePackNativeDir (runtimePacks, arch);
+		}
+
+		public static string GetNativeLibsRootDirectoryPath (TaskLoggingHelper log, ITaskItem[] runtimePacks, AndroidTargetArch arch)
+		{
+			log.LogWarning ("Potential runtime packs:");
+			foreach (ITaskItem item in runtimePacks) {
+				log.LogWarning ($"  {item}");
+			}
+
+			return GetAndroidRuntimePackNativeDir (runtimePacks, arch);
+		}
+#endif // MSBUILD
 
 		public static string? GetAssemblyCulture (ITaskItem assembly)
 		{
