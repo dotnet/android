@@ -56,6 +56,18 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return attr.IsUTF16 ? LlvmIrStringEncoding.Unicode : DefaultStringEncoding;
 		}
 
+		public static string? GetOverriddenName (this MemberInfo mi, LlvmIrTypeCache cache)
+		{
+			var attr = cache.GetNativeAssemblerAttribute (mi);
+			return attr != null ? attr.MemberName : null;
+		}
+
+		public static NativeAssemblerValidTarget GetValidTarget (this MemberInfo mi, LlvmIrTypeCache cache)
+		{
+			var attr = cache.GetNativeAssemblerAttribute (mi);
+			return attr != null ? attr.ValidTarget : NativeAssemblerValidTarget.Any;
+		}
+
 		public static bool ShouldBeIgnored (this MemberInfo mi, LlvmIrTypeCache cache)
 		{
 			var attr = cache.GetNativeAssemblerAttribute (mi);
