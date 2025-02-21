@@ -396,12 +396,7 @@ namespace Android.Runtime {
 
 		public static string GetClassNameFromInstance (IntPtr jobject)
 		{
-			IntPtr jclass = GetObjectClass (jobject);
-			try {
-				return Java.Interop.TypeManager.GetClassName (jclass);
-			} finally {
-				DeleteLocalRef (jclass);
-			}
+			return JniEnvironment.Types.GetJniTypeNameFromInstance (new JniObjectReference (jobject));
 		}
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
