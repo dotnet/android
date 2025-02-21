@@ -1,3 +1,4 @@
+using Android.Content.Res;
 using Android.Runtime;
 using Android.Util;
 using System.Reflection;
@@ -17,5 +18,9 @@ public class MainActivity : Activity
 
         // Set our view from the "main" layout resource
         SetContentView(Resource.Layout.activity_main);
+
+        // An example of an Android API that uses a Java array
+        var list = new ColorStateList (new int[][] { [ 0, 1 ]}, [0, 1]);
+        Log.Debug ("NativeAOT", "MainActivity.OnCreate() ColorStateList: " + list);
     }
 }
