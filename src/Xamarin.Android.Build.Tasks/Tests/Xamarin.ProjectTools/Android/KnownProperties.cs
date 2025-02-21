@@ -36,5 +36,6 @@ namespace Xamarin.ProjectTools
 		public const string _AndroidAllowDeltaInstall = "_AndroidAllowDeltaInstall";
 		public const string Nullable = "Nullable";
 		public const string ImplicitUsings = "ImplicitUsings";
+		public const string PublishAot = "PublishAot";
 	}
 }
