@@ -280,7 +280,7 @@ namespace Xamarin.Android.Tasks {
 				if (Directory.Exists (assetDir)) {
 					if (IsInvalidDirectoryName (assetDir)) {
 						hasAssetsErrors = true;
-						LogCodedError ("APT2266", Properties.Resources.APT2266, assetDir);
+						LogCodedError ("APT2267", Properties.Resources.APT2267, assetDir);
 					}
 					cmd.Add ("-A");
 					cmd.Add (assetDir);
@@ -296,7 +296,7 @@ namespace Xamarin.Android.Tasks {
 						if (Directory.Exists (assetDir)) {
 							if (IsInvalidDirectoryName (assetDir)) {
 								hasAssetsErrors = true;
-								LogCodedError ("APT2266", Properties.Resources.APT2266, assetDir);
+								LogCodedError ("APT2267", Properties.Resources.APT2267, assetDir);
 								continue;
 							}
 							cmd.Add ("-A");
