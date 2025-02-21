@@ -149,7 +149,7 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateApkBuilder (Path.Combine ("temp", "InvalidAssetDirectoryWithNonASCIIChars_Ümläüt", proj.ProjectName))) {
 				b.ThrowOnBuildFailure = false;
 				Assert.AreEqual (!IsWindows, b.Build (proj), $"{proj.ProjectName} should {(IsWindows ? "not " : "")}have built successfully.");
-				Assert.AreEqual (IsWindows, b.LastBuildOutput.ContainsText ("APT2265"), $"APT2265 should {(IsWindows ? "not " : "")}have been raised.");
+				Assert.AreEqual (IsWindows, b.LastBuildOutput.ContainsText ("APT2265"), $"APT2265 should {(IsWindows ? "" : "not ")}have been raised.");
 			}
 		}
 
