@@ -149,7 +149,7 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateApkBuilder (Path.Combine ("temp", "InvalidAssetDirectoryWithNonASCIIChars_Ümläüt", proj.ProjectName))) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "{0} should not have built successfully.", proj.ProjectName);
-				Assert.IsTrue (b.LastBuildOutput.ContainsText ("APT2266"), "Expected APT2266 error not found.");
+				Assert.IsTrue (b.LastBuildOutput.ContainsText ("APT2267"), "Expected APT2267 error not found.");
 			}
 		}
 
