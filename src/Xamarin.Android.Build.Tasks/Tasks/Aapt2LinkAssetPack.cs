@@ -64,8 +64,8 @@ namespace Xamarin.Android.Tasks {
 			cmd.Add (PackageName);
 			foreach (var assetDirectory in AssetDirectories) {
 				var fullPath = GetFullPath (assetDirectory.ItemSpec);
-				if (IsInvalidDirectoryName (fullPath)) {
-					LogCodedError ("APT2267", Properties.Resources.APT2267, fullPath);
+				if (!IsPathOnlyASCII (fullPath)) {
+					LogCodedError ("APT2265", Properties.Resources.APT2265, fullPath);
 					continue;
 				}
 				cmd.Add ("-A");
