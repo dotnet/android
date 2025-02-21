@@ -34,7 +34,7 @@ ms.date: 04/11/2024
 + [APT2000](apt2000.md): Generic `aapt2` error/warning.
 + [APT2264](apt2264.md): The system cannot find the file specified. (2).
 + [APT2265](apt2265.md): The system cannot find the file specified. (2).
-+ [APT2266](apt2267.md): Asset directories cannot use non-ASCII characters. This could be caused by the directory having non-ASCII characters in its filename or path. See https://learn.microsoft.com/dotnet/android/messages/apt2267 for details.
++ [APT2267](apt2267.md): Asset directories cannot use non-ASCII characters. This could be caused by the directory having non-ASCII characters in its filename or path. See https://learn.microsoft.com/dotnet/android/messages/apt2267 for details.
 
 ## JAVAxxxx: Java Tool
 

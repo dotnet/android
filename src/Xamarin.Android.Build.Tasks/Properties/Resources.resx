@@ -564,8 +564,8 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
     <value>This could be caused by the project having non-ASCII characters in its filename or path. See https://learn.microsoft.com/dotnet/android/messages/apt2265 for details.</value>
     <comment>The following are literal names and should not be translated:</comment>
   </data>
-  <data name="APT2266" xml:space="preserve">
-    <value>Asset directories cannot use non-ASCII characters. This could be caused by the directory having non-ASCII characters in its filename or path. See https://learn.microsoft.com/dotnet/android/messages/apt2266 for details.</value>
+  <data name="APT2267" xml:space="preserve">
+    <value>Asset directories cannot use non-ASCII characters. This could be caused by the directory having non-ASCII characters in its filename or path. See https://learn.microsoft.com/dotnet/android/messages/apt2267 for details.</value>
     <comment>The following are literal names and should not be translated:
 ASCII</comment>
   </data>

@@ -135,11 +135,11 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to This could be caused by the project having non-ASCII characters in its filename or path. See https://learn.microsoft.com/dotnet/android/messages/apt2265 for details..
+        ///   Looks up a localized string similar to This could be caused by the project having non-ASCII characters in its filename or path. See https://learn.microsoft.com/dotnet/android/messages/apt2267 for details..
         /// </summary>
-        public static string APT2266 {
+        public static string APT2267 {
             get {
-                return ResourceManager.GetString("APT2266", resourceCulture);
+                return ResourceManager.GetString("APT2267", resourceCulture);
             }
         }
 
