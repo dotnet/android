@@ -10,21 +10,18 @@ namespace Java.Interop;
 internal class ManagedMarshalMethodsLookupTable
 {
 	[UnmanagedCallersOnly]
-	static unsafe void GetFunctionPointer (int assemblyIndex, int classIndex, int methodIndex, IntPtr target)
+	internal static unsafe void GetFunctionPointer (int assemblyIndex, int classIndex, int methodIndex, IntPtr* target)
 	{
-		try
-		{
+		try {
 			IntPtr result = GetFunctionPointer (assemblyIndex, classIndex, methodIndex);
-			if (result == IntPtr.Zero || result == (IntPtr)(-1))
-			{
+			if (result == IntPtr.Zero || result == (IntPtr)(-1)) {
 				throw new InvalidOperationException ($"Failed to get function pointer for ({assemblyIndex}, {classIndex}, {methodIndex})");
 			}
 
-			*(IntPtr*)target = result;
-		}
-		catch (Exception ex)
-		{
+			*target = result;
+		} catch (Exception ex) {
 			AndroidEnvironment.UnhandledException (ex);
+			AndroidEnvironment.FailFast ("GetFunctionPointer failed: should not be reached");
 		}
 	}
 

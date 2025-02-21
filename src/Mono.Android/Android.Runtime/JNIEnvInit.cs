@@ -40,7 +40,6 @@ namespace Android.Runtime
 		internal static bool IsRunningOnDesktop;
 		internal static bool jniRemappingInUse;
 		internal static bool MarshalMethodsEnabled;
-		internal static bool ManagedMarshalMethodsLookupEnabled;
 		internal static bool PropagateExceptions;
 		internal static BoundExceptionType BoundExceptionType;
 		internal static int gref_gc_threshold;
@@ -98,7 +97,6 @@ namespace Android.Runtime
 
 			jniRemappingInUse = args->jniRemappingInUse;
 			MarshalMethodsEnabled = args->marshalMethodsEnabled;
-			ManagedMarshalMethodsLookupEnabled = args->managedMarshalMethodsLookupEnabled;
 			java_class_loader = args->grefLoader;
 
 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
@@ -120,8 +118,16 @@ namespace Android.Runtime
 				}
 			}
 
+			if (args->managedMarshalMethodsLookupEnabled) {
+				delegate* unmanaged <int, int, int, IntPtr*, void> getFunctionPointer = &ManagedMarshalMethodsLookupTable.GetFunctionPointer;
+				xamarin_app_init (args->env, getFunctionPointer);
+			}
+
 			SetSynchronizationContext ();
 		}
+
+		[DllImport ("xamarin-app")]
+		static extern unsafe void xamarin_app_init (IntPtr env, delegate* unmanaged <int, int, int, IntPtr*, void> get_function_pointer);
 
 		// NOTE: prevents Android.App.Application static ctor from running
 		[MethodImpl (MethodImplOptions.NoInlining)]

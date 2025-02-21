@@ -144,7 +144,7 @@ class ManagedMarshalMethodsLookupGenerator
 		uint classIndex = 0;
 		foreach (var classInfo in assemblyInfo.ClassLookup.Values) {
 			classInfo.Index = classIndex++;
-			targets [classInfo.Index] = Instruction.Create (OpCodes.Call, module.Import (classInfo.GetFunctionPointerMethod));
+			targets [classInfo.Index] = Instruction.Create (OpCodes.Call, module.ImportReference (classInfo.GetFunctionPointerMethod));
 		}
 
 		var il = getFunctionPointerMethod.Body.GetILProcessor ();
@@ -186,7 +186,7 @@ class ManagedMarshalMethodsLookupGenerator
 		uint assemblyIndex = 0;
 		foreach (var assemblyInfo in managedMarshalMethodsLookupInfo.AssemblyLookup.Values) {
 			assemblyInfo.Index = assemblyIndex++;
-			targets [assemblyInfo.Index] = Instruction.Create (OpCodes.Call, module.Import (assemblyInfo.GetFunctionPointerMethod));
+			targets [assemblyInfo.Index] = Instruction.Create (OpCodes.Call, module.ImportReference (assemblyInfo.GetFunctionPointerMethod));
 		}
 
 		var il = getFunctionPointerMethod.Body.GetILProcessor ();

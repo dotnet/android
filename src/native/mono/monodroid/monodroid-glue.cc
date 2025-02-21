@@ -697,7 +697,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 		if (!application_config.managed_marshal_methods_lookup_enabled) {
 			xamarin_app_init (env, get_function_pointer_at_startup);
 		} else {
-			xamarin_app_init (env, managed_marshal_method_lookup);
+			// xamarin_app_init is called via p/invoke from JNIEnvInit.Initialize
 		}
 	}
 #endif // def RELEASE && def ANDROID && def NET
@@ -1558,7 +1558,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		if (!application_config.managed_marshal_methods_lookup_enabled) {
 			xamarin_app_init (env, get_function_pointer_at_runtime);
 		} else {
-			xamarin_app_init (env, managed_marshal_method_lookup);
+			// xamarin_app_init is called via p/invoke from JNIEnvInit.Initialize
 		}
 	}
 #endif // def RELEASE && def ANDROID && def NET
