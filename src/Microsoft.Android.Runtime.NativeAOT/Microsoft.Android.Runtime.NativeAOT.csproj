@@ -11,6 +11,7 @@
     <SignAssembly>true</SignAssembly>
     <OutputPath>$(_MonoAndroidNETDefaultOutDir)</OutputPath>
     <RootNamespace>Microsoft.Android.Runtime</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
