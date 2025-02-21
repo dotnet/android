@@ -235,8 +235,6 @@ namespace xamarin::android::internal
 		static void get_function_pointer (uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr) noexcept;
 		static void get_function_pointer_at_startup (uint32_t mono_image_index, uint32_t class_token, uint32_t method_token, void*& target_ptr) noexcept;
 		static void get_function_pointer_at_runtime (uint32_t mono_image_index, uint32_t class_token, uint32_t method_token, void*& target_ptr) noexcept;
-		static get_function_pointer_fn get_managed_marshal_methods_lookup_uco () noexcept;
-		static void managed_marshal_method_lookup (uint32_t assembly_index, uint32_t class_index, uint32_t method_index, void*& target_ptr) noexcept;
 #endif // def RELEASE
 
 #if defined (DEBUG)
