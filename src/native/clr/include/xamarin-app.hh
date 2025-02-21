@@ -93,6 +93,7 @@ struct TypeMapJava
 {
 	uint32_t  module_index;
 	uint32_t  managed_type_name_index;
+	uint32_t  managed_type_token_id;
 	uint32_t  java_name_index;
 };
 #endif
