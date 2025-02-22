@@ -132,3 +132,9 @@ MonodroidRuntime::get_function_pointer_at_runtime (uint32_t mono_image_index, ui
 {
 	get_function_pointer<true> (mono_image_index, class_index, method_token, target_ptr);
 }
+
+void
+MonodroidRuntime::get_function_pointer_placeholder (uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr) noexcept
+{
+	Helpers::abort_application ("The callback for get_function_pointer has not been initialized yet. Failed to resolve ({}, {}, {})."sv, mono_image_index, class_index, method_token);
+}

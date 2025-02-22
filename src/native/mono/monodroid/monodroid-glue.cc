@@ -697,7 +697,9 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 		if (!application_config.managed_marshal_methods_lookup_enabled) {
 			xamarin_app_init (env, get_function_pointer_at_startup);
 		} else {
-			// xamarin_app_init is called via p/invoke from JNIEnvInit.Initialize
+			// xamarin_app_init will be called with the actual get_function_pointer method
+			// via p/invoke from JNIEnvInit.Initialize
+			xamarin_app_init (env, get_function_pointer_placeholder);
 		}
 	}
 #endif // def RELEASE && def ANDROID && def NET
