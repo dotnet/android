@@ -106,7 +106,8 @@ namespace xamarin::android::internal
 		}
 
 		static void propagate_uncaught_exception (JNIEnv *env, jobject javaThread, jthrowable javaException) noexcept;
-		static char*	get_java_class_name_for_TypeManager (jclass klass) noexcept;
+		static char* get_java_class_name_for_TypeManager (jclass klass) noexcept;
+		static uint64_t get_java_class_name_hash_for_TypeManager (jclass klass) noexcept;
 		static void log_traces (JNIEnv *env, TraceKind kind, const char *first_line) noexcept;
 
 	private:

@@ -87,6 +87,9 @@ namespace Android.Runtime
 		internal static extern IntPtr monodroid_TypeManager_get_java_class_name (IntPtr klass);
 
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern ulong monodroid_TypeManager_get_java_class_name_hash (IntPtr klass);
+
+		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int _monodroid_max_gref_get ();
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
