@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.ILLink" Version="$(MicrosoftNETILLinkTasksPackageVersion)" />
+    <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
     <ProjectReference Include="..\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" ReferenceOutputAssembly="False" />
 
     <!--Include shared linker sources-->

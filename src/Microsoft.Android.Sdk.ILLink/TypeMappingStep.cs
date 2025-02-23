@@ -4,6 +4,7 @@ using System.Linq;
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.TypeNameMappings;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 using Mono.Linker;
 using Mono.Linker.Steps;
 
@@ -15,7 +16,7 @@ namespace Microsoft.Android.Sdk.ILLink;
 public class TypeMappingStep : BaseStep
 {
 	const string AssemblyName = "Microsoft.Android.Runtime.NativeAOT";
-	const string TypeName = "Microsoft.Android.Runtime.NativeAotTypeManager";
+	const string TypeName = "Microsoft.Android.Runtime.TypeMap";
 	readonly IDictionary<string, List<TypeDefinition>> TypeMappings = new Dictionary<string, List<TypeDefinition>> (StringComparer.Ordinal);
 	AssemblyDefinition? MicrosoftAndroidRuntimeNativeAot;
 
@@ -47,15 +48,9 @@ public class TypeMappingStep : BaseStep
 			return;
 		}
 
-		var method = type.Methods.FirstOrDefault (m => m.Name == "InitializeTypeMappings");
+		var method = type.Methods.FirstOrDefault (m => m.Name == "GetTypeByIndex");
 		if (method is null) {
-			Context.LogMessage ($"Unable to find {TypeName}.InitializeTypeMappings() method");
-			return;
-		}
-
-		var field = type.Fields.FirstOrDefault (f => f.Name == "TypeMappings");
-		if (field is null) {
-			Context.LogMessage ($"Unable to find {TypeName}.TypeMappings field");
+			Context.LogMessage ($"Unable to find {TypeName}.GetTypeByIndex() method");
 			return;
 		}
 
@@ -64,26 +59,107 @@ public class TypeMappingStep : BaseStep
 
 		Context.LogMessage ($"Writing {TypeMappings.Count} typemap entries");
 		var il = method.Body.GetILProcessor ();
-		var addMethod = module.ImportReference (typeof (IDictionary<string, Type>).GetMethod ("Add"));
+
 		var getTypeFromHandle = module.ImportReference (typeof (Type).GetMethod ("GetTypeFromHandle"));
-		foreach (var (javaName, list) in TypeMappings) {
-			/*
-			 * IL_0000: ldarg.0
-			 * IL_0001: ldfld class [System.Runtime]System.Collections.Generic.IDictionary`2<string, class [System.Runtime]System.Type> Microsoft.Android.Runtime.NativeAotTypeManager::TypeMappings
-			 * IL_0006: ldstr "java/lang/Object"
-			 * IL_000b: ldtoken [Mono.Android]Java.Lang.Object
-			 * IL_0010: call class [System.Runtime]System.Type [System.Runtime]System.Type::GetTypeFromHandle(valuetype [System.Runtime]System.RuntimeTypeHandle)
-			 * IL_0015: callvirt instance void class [System.Runtime]System.Collections.Generic.IDictionary`2<string, class [System.Runtime]System.Type>::Add(!0, !1)
-			 */
-			il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_0);
-			il.Emit (Mono.Cecil.Cil.OpCodes.Ldfld, field);
-			il.Emit (Mono.Cecil.Cil.OpCodes.Ldstr, javaName);
-			il.Emit (Mono.Cecil.Cil.OpCodes.Ldtoken, module.ImportReference (SelectTypeDefinition (javaName, list)));
-			il.Emit (Mono.Cecil.Cil.OpCodes.Call, getTypeFromHandle);
-			il.Emit (Mono.Cecil.Cil.OpCodes.Callvirt, addMethod);
+		var orderedMapping = TypeMappings.Select(kvp => (Hash (kvp.Key), SelectTypeDefinition (kvp.Key, kvp.Value))).OrderBy (x => x.Item1);
+
+		var hashes = new List<ulong> ();
+		var targets = new List<Instruction> ();
+		foreach (var (hash, target) in orderedMapping) {
+			hashes.Add (hash);
+			targets.Add (il.Create (OpCodes.Ldtoken, module.ImportReference (target)));
 		}
 
-		il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
+		il.Emit (OpCodes.Ldarg_0);
+		il.Emit (OpCodes.Switch, targets.ToArray ());
+
+		var defaultTarget = il.Create (OpCodes.Ldnull);
+		il.Emit (OpCodes.Br, defaultTarget);
+
+		foreach (var target in targets) {
+			il.Append (target);
+			il.Emit (OpCodes.Call, getTypeFromHandle);
+			il.Emit (OpCodes.Ret);
+		}
+
+		il.Append (defaultTarget);
+		il.Emit (OpCodes.Ret);
+
+		AddHashesRVAField (module, type, hashes.ToArray ());
+	}
+
+	void AddHashesRVAField (ModuleDefinition module, TypeDefinition type, ulong[] hashes)
+	{
+		var privateImplementationDetails = GetPrivateImplementationType ();
+		if (privateImplementationDetails is null) {
+			Context.LogMessage ($"Unable to find <PrivateImplementationDetails> class");
+			return;
+		}
+
+		// Create static array struct for `byte[#number-of-hashes]`
+		var arraySize = hashes.Length * sizeof (ulong);
+		var arrayTypeName = $"__StaticArrayInitTypeSize={arraySize}";
+		var arrayType = privateImplementationDetails.NestedTypes.FirstOrDefault (t => t.Name == arrayTypeName);
+		if (arrayType is null) {
+			arrayType = new TypeDefinition (
+				"",
+				arrayTypeName,
+				TypeAttributes.NestedAssembly | TypeAttributes.ExplicitLayout,
+				module.ImportReference (typeof (ValueType)))
+			{
+				PackingSize = 1,
+				ClassSize = arraySize,
+			};
+
+			privateImplementationDetails.NestedTypes.Add (arrayType);
+		}
+
+		// Create field in `<PrivateImplementationDetails>...`
+		var bytesField = new FieldDefinition (
+			"<Microsoft.Android.Runtime.TypeMap>s_hashes",
+			FieldAttributes.Assembly | FieldAttributes.Static | FieldAttributes.InitOnly,
+			arrayType)
+		{
+			InitialValue = hashes.Select(h => BitConverter.GetBytes (h)).SelectMany (x => x).ToArray (),
+		};
+
+		if (!bytesField.Attributes.HasFlag (FieldAttributes.HasFieldRVA)) {
+			throw new InvalidOperationException ($"Field {bytesField.Name} does not have RVA");
+		}
+
+		privateImplementationDetails.Fields.Add (bytesField);
+
+		// Initialize s_hashes in .cctor from the RVA
+		var field = type.Fields.FirstOrDefault (f => f.Name == "s_hashes");
+		if (field is null) {
+			Context.LogMessage ($"Unable to find {TypeName}.s_hashes field");
+			return;
+		}
+
+		var cctor = new MethodDefinition (
+			".cctor",
+			MethodAttributes.Static | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
+			module.TypeSystem.Void);
+
+		var il = cctor.Body.GetILProcessor ();
+		il.Emit (OpCodes.Ldc_I4, hashes.Length);
+		il.Emit (OpCodes.Newarr, module.ImportReference (typeof (ulong)));
+		il.Emit (OpCodes.Dup);
+		il.Emit (OpCodes.Ldtoken, bytesField);
+		il.Emit (OpCodes.Call, module.ImportReference (typeof (System.Runtime.CompilerServices.RuntimeHelpers).GetMethod("InitializeArray")));
+		il.Emit (OpCodes.Stsfld, field);
+		il.Emit (OpCodes.Ret);
+
+		type.Methods.Add (cctor);
+
+		TypeDefinition? GetPrivateImplementationType ()
+		{
+			foreach (var type in module.Types)
+				if (type.FullName.Contains ("<PrivateImplementationDetails>"))
+					return type;
+
+			return null;
+		}
 	}
 
 	TypeDefinition SelectTypeDefinition (string javaName, List<TypeDefinition> list)
@@ -101,8 +177,8 @@ public class TypeMappingStep : BaseStep
 				best = type;
 				continue;
 			}
-			// We found the `Invoker` type *before* the declared type 
- 			// Fix things up so the abstract type is first, and the `Invoker` is considered a duplicate. 
+			// We found the `Invoker` type *before* the declared type
+ 			// Fix things up so the abstract type is first, and the `Invoker` is considered a duplicate.
 			if ((type.IsAbstract || type.IsInterface) &&
 					!best.IsAbstract &&
 					!best.IsInterface &&
@@ -134,5 +210,14 @@ public class TypeMappingStep : BaseStep
 
 		foreach (TypeDefinition nested in type.NestedTypes)
 			ProcessType (assembly, nested);
+	}
+
+	static ulong Hash (string javaName)
+	{
+		var bytes = System.Text.Encoding.UTF8.GetBytes (javaName);
+		// TODO the custom linker step cannot have a dependency??
+		// or we would need to copy the System.IO.Hashing.dll manually to make it work?
+		// return System.IO.Hashing.XxHash3.HashToUInt64 (bytes);
+		return (ulong)javaName.GetHashCode ();
 	}
 }

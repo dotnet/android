@@ -18,6 +18,11 @@ namespace Android.Runtime
 				return;
 			RuntimeNativeMethods._monodroid_gc_wait_for_bridge_processing ();
 		}
+
+		public static ulong GetJavaClassNameHash (IntPtr javaClass)
+		{
+			return RuntimeNativeMethods.monodroid_TypeManager_get_java_class_name_hash (javaClass);
+		}
 	}
 }
 #endif // INSIDE_MONO_ANDROID_RUNTIME

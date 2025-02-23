@@ -11,20 +11,8 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 	internal const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 	internal const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
 
-	readonly IDictionary<string, Type> TypeMappings = new Dictionary<string, Type> (StringComparer.Ordinal);
-
 	public NativeAotTypeManager ()
 	{
-		var startTicks  = global::System.Environment.TickCount;
-		InitializeTypeMappings ();
-		var endTicks    = global::System.Environment.TickCount;
-		AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"InitializeTypeMappings() took {endTicks - startTicks}ms");
-	}
-
-	void InitializeTypeMappings ()
-	{
-		// Should be replaced by src/Microsoft.Android.Sdk.ILLink/TypeMappingStep.cs
-		throw new InvalidOperationException ("TypeMappings should be replaced during trimming!");
 	}
 
 	[return: DynamicallyAccessedMembers (Constructors)]
@@ -155,10 +143,7 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 
 	IEnumerable<string> CreateSimpleReferencesEnumerator (Type type)
 	{
-		foreach (var e in TypeMappings) {
-			if (e.Value == type)
-				yield return e.Key;
-		}
+		yield break; // TODD figure this out
 	}
 
 	static int CountMethods (ReadOnlySpan<char> methodsSpan)
