@@ -13,6 +13,11 @@
     <PublishAot>true</PublishAot>
   </PropertyGroup>
 
+  <!-- TODO: the System.IO.Hashing is a dependency of Microsoft.Android.Runtime.NativeAOT but it is not automatically included in the final linked assembly -->
+  <ItemGroup>
+    <PackageReference Include="System.IO.Hashing" Version="10.0.0-preview.2.25112.7" />
+  </ItemGroup>
+
   <!-- Settings for CI -->
   <PropertyGroup Condition=" '$(RunningOnCI)' == 'true' ">
     <_NuGetFolderOnCI>..\..\bin\Build$(Configuration)\nuget-unsigned</_NuGetFolderOnCI>

@@ -129,6 +129,8 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 	{
 		if (TypeMappings.TryGetValue (jniSimpleReference, out var target)) {
 			yield return target;
+		} else {
+			AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"# simonrozsival:   GetTypesForSimpleReference: jniSimpleReference=`{jniSimpleReference}` -> NOT FOUND");
 		}
 		foreach (var t in base.GetTypesForSimpleReference (jniSimpleReference)) {
 			yield return t;
@@ -143,7 +145,12 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 
 	IEnumerable<string> CreateSimpleReferencesEnumerator (Type type)
 	{
-		yield break; // TODD figure this out
+		for (int i = 0; i < TypeMap.Count; i++) {
+			if (TypeMap.GetTypeByIndex (i) == type) {
+				AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"# simonrozsival: CreateSimpleReferencesEnumerator: `{type}` -> [{i}: `{TypeMap.GetJavaClassNameByIndex (i)}`]");
+				yield return TypeMap.GetJavaClassNameByIndex (i);
+			}
+		}
 	}
 
 	static int CountMethods (ReadOnlySpan<char> methodsSpan)

@@ -1,3 +1,6 @@
+using System.Diagnostics;
+using System.IO.Hashing;
+
 using Android.Runtime;
 
 namespace Microsoft.Android.Runtime;
@@ -11,25 +14,31 @@ internal static class TypeMap
 
 	internal static Type? GetType (string javaClassName)
 	{
-		// // TODO in this case it would be faster to calculate the hash without the JNI call
-		// IntPtr javaClass = JNIEnv.FindClass (javaClassName);
-		// if (javaClass == IntPtr.Zero) {
-		// 	return null;
-		// }
+		// TODO how would this work without allocating?
+		byte[] bytes = System.Text.Encoding.UTF8.GetBytes (javaClassName);
+		ulong hash = XxHash3.HashToUInt64 (bytes);
+		AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"GetType {javaClassName} (hash: 0x{hash:x16})");
+		AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", new StackTrace(false).ToString());
 
-		// return GetType (javaClass);
-		throw new NotImplementedException ();
+		int index = MemoryExtensions.BinarySearch (s_hashes, hash);
+		if (index < 0) {
+			AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"GetType {javaClassName} (hash: 0x{hash:x16}) -> NOT FOUND ({index})");
+			return null;
+		}
+
+		var type = GetTypeByIndex (index);
+		AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"GetType {javaClassName} (hash: 0x{hash:x16}) -> {type}");
+		return type;
 	}
 
+	// TODO: My idea was to get the hash directly from the java class name in C++ without
+	// java class name marshalling and whatnot...
 	internal static Type? GetType (IntPtr javaClass)
 	{
-		// TODO use the xxhash64 once I figure out the damned
-		// ulong hash = AndroidRuntimeInternal.GetJavaClassNameHash (javaClass);
-		// if (hash == 0) {
-		// 	return null;
-		// }
-		string name = Java.Interop.TypeManager.GetClassName (javaClass);
-		ulong hash = (ulong)name.GetHashCode ();
+		ulong hash = AndroidRuntimeInternal.GetJavaClassNameHash (javaClass);
+		if (hash == 0) {
+			return null;
+		}
 
 		int index = MemoryExtensions.BinarySearch (s_hashes, hash);
 		if (index < 0) {
@@ -40,6 +49,14 @@ internal static class TypeMap
 	}
 
 	internal static Type? GetTypeByIndex (int index)
+	{
+		// Replaced by src/Microsoft.Android.Sdk.ILLink/TypeMappingStep.cs
+		throw new NotImplementedException ();
+	}
+
+	// TODO: this seems to be necessary for NativeAotTypeManager.CreateSimpleReferencesEnumerator at the moment
+	// it's a method so the trimmer might be eventually able to remove it... but it IS called at app startup -- WHY???
+	internal static string? GetJavaClassNameByIndex (int index)
 	{
 		// Replaced by src/Microsoft.Android.Sdk.ILLink/TypeMappingStep.cs
 		throw new NotImplementedException ();

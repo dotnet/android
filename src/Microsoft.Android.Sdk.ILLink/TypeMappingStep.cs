@@ -36,6 +36,8 @@ public class TypeMappingStep : BaseStep
 
 	protected override void EndProcess ()
 	{
+		Context.LogMessage ($"Writing {TypeMappings.Count} typemap entries");
+
 		if (MicrosoftAndroidRuntimeNativeAot is null) {
 			Context.LogMessage ($"Unable to find {AssemblyName} assembly");
 			return;
@@ -48,119 +50,164 @@ public class TypeMappingStep : BaseStep
 			return;
 		}
 
-		var method = type.Methods.FirstOrDefault (m => m.Name == "GetTypeByIndex");
-		if (method is null) {
-			Context.LogMessage ($"Unable to find {TypeName}.GetTypeByIndex() method");
-			return;
-		}
+		KeyValuePair<string, List<TypeDefinition>>[] orderedMapping = TypeMappings.OrderBy (kvp => Hash (kvp.Key)).ToArray ();
 
-		// Clear IL in method body
-		method.Body.Instructions.Clear ();
+		var hashes = orderedMapping.Select (kvp => Hash (kvp.Key)).ToArray ();
+		GenerateHashesFieldInitialization (hashes);
 
-		Context.LogMessage ($"Writing {TypeMappings.Count} typemap entries");
-		var il = method.Body.GetILProcessor ();
+		var types = orderedMapping.Select (kvp => SelectTypeDefinition (kvp.Key, kvp.Value));
+		GenerateGetTypeByIndex (types);
 
-		var getTypeFromHandle = module.ImportReference (typeof (Type).GetMethod ("GetTypeFromHandle"));
-		var orderedMapping = TypeMappings.Select(kvp => (Hash (kvp.Key), SelectTypeDefinition (kvp.Key, kvp.Value))).OrderBy (x => x.Item1);
+		var javaClassNames = orderedMapping.Select(kvp => kvp.Key);
+		GenerateGetJavaClassNameByIndex (javaClassNames);
 
-		var hashes = new List<ulong> ();
-		var targets = new List<Instruction> ();
-		foreach (var (hash, target) in orderedMapping) {
-			hashes.Add (hash);
-			targets.Add (il.Create (OpCodes.Ldtoken, module.ImportReference (target)));
-		}
+		void GenerateGetTypeByIndex (IEnumerable<TypeDefinition> types)
+		{
+			var method = type.Methods.FirstOrDefault (m => m.Name == "GetTypeByIndex");
+			if (method is null) {
+				Context.LogMessage ($"Unable to find {TypeName}.GetTypeByIndex() method");
+				return;
+			}
 
-		il.Emit (OpCodes.Ldarg_0);
-		il.Emit (OpCodes.Switch, targets.ToArray ());
+			var getTypeFromHandle = module.ImportReference (typeof (Type).GetMethod ("GetTypeFromHandle"));
+			if (getTypeFromHandle is null) {
+				Context.LogMessage ($"Unable to find Type.GetTypeFromHandle() method");
+				return;
+			}
 
-		var defaultTarget = il.Create (OpCodes.Ldnull);
-		il.Emit (OpCodes.Br, defaultTarget);
+			// Clear IL in method body
+			method.Body.Instructions.Clear ();
 
-		foreach (var target in targets) {
-			il.Append (target);
-			il.Emit (OpCodes.Call, getTypeFromHandle);
+			var il = method.Body.GetILProcessor ();
+
+			var targets = new List<Instruction> ();
+			foreach (var target in types) {
+				targets.Add (il.Create (OpCodes.Ldtoken, module.ImportReference (target)));
+			}
+
+			il.Emit (OpCodes.Ldarg_0);
+			il.Emit (OpCodes.Switch, targets.ToArray ());
+
+			var defaultTarget = il.Create (OpCodes.Ldnull);
+			il.Emit (OpCodes.Br, defaultTarget);
+
+			foreach (var target in targets) {
+				il.Append (target);
+				il.Emit (OpCodes.Call, getTypeFromHandle);
+				il.Emit (OpCodes.Ret);
+			}
+
+			il.Append (defaultTarget);
 			il.Emit (OpCodes.Ret);
 		}
 
-		il.Append (defaultTarget);
-		il.Emit (OpCodes.Ret);
+		void GenerateGetJavaClassNameByIndex (IEnumerable<string> names)
+		{
+			var method = type.Methods.FirstOrDefault (m => m.Name == "GetJavaClassNameByIndex");
+			if (method is null) {
+				Context.LogMessage ($"Unable to find {TypeName}.GetJavaClassNameByIndex() method");
+				return;
+			}
 
-		AddHashesRVAField (module, type, hashes.ToArray ());
-	}
+			// Clear IL in method body
+			method.Body.Instructions.Clear ();
 
-	void AddHashesRVAField (ModuleDefinition module, TypeDefinition type, ulong[] hashes)
-	{
-		var privateImplementationDetails = GetPrivateImplementationType ();
-		if (privateImplementationDetails is null) {
-			Context.LogMessage ($"Unable to find <PrivateImplementationDetails> class");
-			return;
+			var il = method.Body.GetILProcessor ();
+
+			var orderedMapping = TypeMappings.Select(kvp => (Hash (kvp.Key), SelectTypeDefinition (kvp.Key, kvp.Value))).OrderBy (x => x.Item1);
+
+			var targets = new List<Instruction> ();
+			foreach (var name in names) {
+				targets.Add (il.Create (OpCodes.Ldstr, name));
+			}
+
+			il.Emit (OpCodes.Ldarg_0);
+			il.Emit (OpCodes.Switch, targets.ToArray ());
+
+			var defaultTarget = il.Create (OpCodes.Ldnull);
+			il.Emit (OpCodes.Br, defaultTarget);
+
+			foreach (var target in targets) {
+				il.Append (target);
+				il.Emit (OpCodes.Ret);
+			}
+
+			il.Append (defaultTarget);
+			il.Emit (OpCodes.Ret);
 		}
 
-		// Create static array struct for `byte[#number-of-hashes]`
-		var arraySize = hashes.Length * sizeof (ulong);
-		var arrayTypeName = $"__StaticArrayInitTypeSize={arraySize}";
-		var arrayType = privateImplementationDetails.NestedTypes.FirstOrDefault (t => t.Name == arrayTypeName);
-		if (arrayType is null) {
-			arrayType = new TypeDefinition (
-				"",
-				arrayTypeName,
-				TypeAttributes.NestedAssembly | TypeAttributes.ExplicitLayout,
-				module.ImportReference (typeof (ValueType)))
+		void GenerateHashesFieldInitialization (ulong[] hashes)
+		{
+			var privateImplementationDetails = module.Types.FirstOrDefault (t => t.Name.Contains ("<PrivateImplementationDetails>"));
+			if (privateImplementationDetails is null) {
+				Context.LogMessage ($"Unable to find <PrivateImplementationDetails> class");
+				return;
+			}
+
+			// Create static array struct for `byte[#number-of-hashes]`
+			var arraySize = hashes.Length * sizeof (ulong);
+			var arrayTypeName = $"__StaticArrayInitTypeSize={arraySize}";
+			var arrayType = privateImplementationDetails.NestedTypes.FirstOrDefault (t => t.Name == arrayTypeName);
+			if (arrayType is null) {
+				arrayType = new TypeDefinition (
+					"",
+					arrayTypeName,
+					TypeAttributes.NestedAssembly | TypeAttributes.ExplicitLayout,
+					module.ImportReference (typeof (ValueType)))
+				{
+					PackingSize = 1,
+					ClassSize = arraySize,
+				};
+
+				privateImplementationDetails.NestedTypes.Add (arrayType);
+			}
+
+			// Create field in `<PrivateImplementationDetails>...`
+			var bytesField = new FieldDefinition (
+				"<Microsoft.Android.Runtime.TypeMap>s_hashes",
+				FieldAttributes.Assembly | FieldAttributes.Static | FieldAttributes.InitOnly,
+				arrayType)
 			{
-				PackingSize = 1,
-				ClassSize = arraySize,
+				InitialValue = hashes.Select(h => BitConverter.GetBytes (h)).SelectMany (x => x).ToArray (),
 			};
 
-			privateImplementationDetails.NestedTypes.Add (arrayType);
-		}
+			if (!bytesField.Attributes.HasFlag (FieldAttributes.HasFieldRVA)) {
+				throw new InvalidOperationException ($"Field {bytesField.Name} does not have RVA");
+			}
 
-		// Create field in `<PrivateImplementationDetails>...`
-		var bytesField = new FieldDefinition (
-			"<Microsoft.Android.Runtime.TypeMap>s_hashes",
-			FieldAttributes.Assembly | FieldAttributes.Static | FieldAttributes.InitOnly,
-			arrayType)
-		{
-			InitialValue = hashes.Select(h => BitConverter.GetBytes (h)).SelectMany (x => x).ToArray (),
-		};
+			privateImplementationDetails.Fields.Add (bytesField);
 
-		if (!bytesField.Attributes.HasFlag (FieldAttributes.HasFieldRVA)) {
-			throw new InvalidOperationException ($"Field {bytesField.Name} does not have RVA");
-		}
+			// Initialize s_hashes in .cctor from the RVA
+			var field = type.Fields.FirstOrDefault (f => f.Name == "s_hashes");
+			if (field is null) {
+				Context.LogMessage ($"Unable to find {TypeName}.s_hashes field");
+				return;
+			}
 
-		privateImplementationDetails.Fields.Add (bytesField);
+			var cctor = type.Methods.FirstOrDefault (m => m.Name == ".cctor");
+			if (cctor is null) {
+				cctor = new MethodDefinition (
+					".cctor",
+					MethodAttributes.Static | MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
+					module.TypeSystem.Void);
 
-		// Initialize s_hashes in .cctor from the RVA
-		var field = type.Fields.FirstOrDefault (f => f.Name == "s_hashes");
-		if (field is null) {
-			Context.LogMessage ($"Unable to find {TypeName}.s_hashes field");
-			return;
-		}
+				type.Methods.Add (cctor);
+			} else {
+				cctor.Body.Instructions.Clear ();
+			}
 
-		var cctor = new MethodDefinition (
-			".cctor",
-			MethodAttributes.Static | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
-			module.TypeSystem.Void);
+			var il = cctor.Body.GetILProcessor ();
 
-		var il = cctor.Body.GetILProcessor ();
-		il.Emit (OpCodes.Ldc_I4, hashes.Length);
-		il.Emit (OpCodes.Newarr, module.ImportReference (typeof (ulong)));
-		il.Emit (OpCodes.Dup);
-		il.Emit (OpCodes.Ldtoken, bytesField);
-		il.Emit (OpCodes.Call, module.ImportReference (typeof (System.Runtime.CompilerServices.RuntimeHelpers).GetMethod("InitializeArray")));
-		il.Emit (OpCodes.Stsfld, field);
-		il.Emit (OpCodes.Ret);
-
-		type.Methods.Add (cctor);
-
-		TypeDefinition? GetPrivateImplementationType ()
-		{
-			foreach (var type in module.Types)
-				if (type.FullName.Contains ("<PrivateImplementationDetails>"))
-					return type;
-
-			return null;
+			il.Emit (OpCodes.Ldc_I4, hashes.Length);
+			il.Emit (OpCodes.Newarr, module.ImportReference (typeof (ulong)));
+			il.Emit (OpCodes.Dup);
+			il.Emit (OpCodes.Ldtoken, bytesField);
+			il.Emit (OpCodes.Call, module.ImportReference (typeof (System.Runtime.CompilerServices.RuntimeHelpers).GetMethod("InitializeArray")));
+			il.Emit (OpCodes.Stsfld, field);
+			il.Emit (OpCodes.Ret);
 		}
 	}
+
 
 	TypeDefinition SelectTypeDefinition (string javaName, List<TypeDefinition> list)
 	{
