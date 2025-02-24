@@ -226,12 +226,6 @@ monodroid_TypeManager_get_java_class_name (jclass klass)
 	return MonodroidRuntime::get_java_class_name_for_TypeManager (klass);
 }
 
-uint64_t
-monodroid_TypeManager_get_java_class_name_hash (jclass klass)
-{
-	return MonodroidRuntime::get_java_class_name_hash_for_TypeManager (klass);
-}
-
 int
 monodroid_get_namespaced_system_property (const char *name, char **value)
 {

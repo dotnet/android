@@ -42,7 +42,6 @@ char** monodroid_strsplit (const char *str, const char *delimiter, size_t max_to
 void monodroid_strfreev (char **str_array);
 char* monodroid_strdup_printf (const char *format, ...);
 char* monodroid_TypeManager_get_java_class_name (jclass klass);
-uint64_t monodroid_TypeManager_get_java_class_name_hash (jclass klass);
 int monodroid_get_namespaced_system_property (const char *name, char **value);
 FILE* monodroid_fopen (const char* filename, const char* mode);
 int send_uninterrupted (int fd, void *buf, int len);

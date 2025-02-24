@@ -721,7 +721,6 @@ Methods:
 	intptr Android.Runtime.JNIEnv:ToLocalJniHandle (Android.Runtime.IJavaObject)
 	intptr Android.Runtime.RuntimeNativeMethods:_monodroid_get_identity_hash_code (intptr,intptr)
 	intptr Android.Runtime.RuntimeNativeMethods:monodroid_TypeManager_get_java_class_name (intptr)
-	ulong Android.Runtime.RuntimeNativeMethods:monodroid_TypeManager_get_java_class_name_hash (intptr)
 	intptr Java.Interop.JavaConvert:ToLocalJniHandle (object)
 	intptr Java.Interop.JavaConvert:WithLocalJniHandle (string,System.Func`2<intptr, intptr>)
 	intptr Java.Interop.JavaConvert/<>c:<.cctor>b__21_29 (object)

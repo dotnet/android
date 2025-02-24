@@ -70,7 +70,6 @@ const std::vector<std::string> internal_pinvoke_names = {
 	"monodroid_timing_start",
 	"monodroid_timing_stop",
 	"monodroid_TypeManager_get_java_class_name",
-	"monodroid_TypeManager_get_java_class_name_hash",
 	"_monodroid_weak_gref_delete",
 	"_monodroid_weak_gref_get",
 	"_monodroid_weak_gref_new",

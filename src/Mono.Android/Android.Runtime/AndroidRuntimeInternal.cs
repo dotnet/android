@@ -21,7 +21,8 @@ namespace Android.Runtime
 
 		public static ulong GetJavaClassNameHash (IntPtr javaClass)
 		{
-			return RuntimeNativeMethods.monodroid_TypeManager_get_java_class_name_hash (javaClass);
+			// return RuntimeNativeMethods.monodroid_TypeManager_get_java_class_name_hash (javaClass);
+			throw new NotImplementedException();
 		}
 	}
 }
