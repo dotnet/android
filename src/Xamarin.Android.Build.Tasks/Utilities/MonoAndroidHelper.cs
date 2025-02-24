@@ -570,67 +570,21 @@ namespace Xamarin.Android.Tasks
 		}
 
 #if MSBUILD
-		public static bool IsAndroidRuntimePack (ITaskItem maybePack, out string? packRID)
+		public static string? GetRuntimePackNativeLibDir (AndroidTargetArch arch, IEnumerable<ITaskItem> runtimePackLibDirs)
 		{
-			string? framework = maybePack.GetMetadata ("FrameworkName");
-			if (String.IsNullOrEmpty (framework) || String.Compare ("Microsoft.Android", framework, StringComparison.Ordinal) != 0) {
-				packRID = null;
-				return false;
-			}
-
-			packRID = maybePack.GetMetadata ("RuntimeIdentifier");
-			return !String.IsNullOrEmpty (packRID);
-		}
-
-		public static string GetAndroidRuntimePackDir (ITaskItem pack)
-		{
-			return pack.GetMetadata ("PackageDirectory");
-		}
-
-		public static string GetAndroidRuntimePackNativeDir (ITaskItem[] runtimePacks, AndroidTargetArch arch)
-		{
-			string rid = ArchToRid (arch);
-			ITaskItem? androidRuntimePack = null;
-
-			foreach (ITaskItem pack in runtimePacks) {
-				if (!IsAndroidRuntimePack (pack, out string? packRID) || String.Compare (rid, packRID, StringComparison.OrdinalIgnoreCase) != 0) {
+			foreach (ITaskItem item in runtimePackLibDirs) {
+				string? rid = item.GetMetadata ("RuntimeIdentifier");
+				if (String.IsNullOrEmpty (rid)) {
 					continue;
 				}
 
-				androidRuntimePack = pack;
-				break;
+				AndroidTargetArch itemArch = RidToArch (rid);
+				if (itemArch == arch) {
+					return item.ItemSpec;
+				}
 			}
 
-			if (androidRuntimePack == null) {
-				throw new InvalidOperationException ($"Internal error: Android runtime pack for architecture {arch} not found");
-			}
-
-			string? packageDir = GetAndroidRuntimePackDir (androidRuntimePack);
-			if (String.IsNullOrEmpty (packageDir)) {
-				throw new InvalidOperationException ($"Internal error: Android runtime pack for architecture {arch} is missing package directory metadata");
-			}
-
-			return Path.Combine (packageDir, "runtimes", rid, "native");
-		}
-
-		public static string GetLibstubsArchDirectoryPath (ITaskItem[] runtimePacks, AndroidTargetArch arch)
-		{
-			return GetAndroidRuntimePackNativeDir (runtimePacks, arch);
-		}
-
-		public static string GetDSOStubsRootDirectoryPath (ITaskItem[] runtimePacks, AndroidTargetArch arch)
-		{
-			return GetAndroidRuntimePackNativeDir (runtimePacks, arch);
-		}
-
-		public static string GetNativeLibsRootDirectoryPath (TaskLoggingHelper log, ITaskItem[] runtimePacks, AndroidTargetArch arch)
-		{
-			log.LogWarning ("Potential runtime packs:");
-			foreach (ITaskItem item in runtimePacks) {
-				log.LogWarning ($"  {item}");
-			}
-
-			return GetAndroidRuntimePackNativeDir (runtimePacks, arch);
+			return null;
 		}
 #endif // MSBUILD
 

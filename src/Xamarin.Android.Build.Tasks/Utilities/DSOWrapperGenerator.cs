@@ -55,20 +55,19 @@ class DSOWrapperGenerator
 	//
 	const ulong PayloadSectionAlignment = 0x4000;
 
-	public static Config GetConfig (TaskLoggingHelper log, string androidBinUtilsDirectory, ITaskItem[] runtimePacks, string baseOutputDirectory)
+	public static Config GetConfig (TaskLoggingHelper log, string androidBinUtilsDirectory, ITaskItem[] runtimePackLibraryDirs, string baseOutputDirectory)
 	{
 		var stubPaths = new Dictionary<AndroidTargetArch, string> ();
 
-		foreach (ITaskItem maybePack in runtimePacks) {
-			if (!MonoAndroidHelper.IsAndroidRuntimePack (maybePack, out string? packRID) || String.IsNullOrEmpty (packRID)) {
+		foreach (ITaskItem packLibDir in runtimePackLibraryDirs) {
+			string ?packRID = packLibDir.GetMetadata ("RuntimeIdentifier");
+			if (String.IsNullOrEmpty (packRID)) {
 				continue;
 			}
 
-			string packDir = MonoAndroidHelper.GetAndroidRuntimePackDir (maybePack);
-			string stubRelPath = Path.Combine ("runtimes", packRID, "native", StubFileName);
-			string stubPath = Path.Combine (packDir, stubRelPath);
+			string stubPath = Path.Combine (packLibDir.ItemSpec, StubFileName);
 			if (!File.Exists (stubPath)) {
-				throw new InvalidOperationException ($"Internal error: archive DSO stub file '{stubRelPath}' does not exist in runtime pack at {packDir}");
+				throw new InvalidOperationException ($"Internal error: archive DSO stub file '{stubPath}' does not exist in runtime pack at {packLibDir}");
 			}
 
 			AndroidTargetArch arch = MonoAndroidHelper.RidToArch (packRID);
