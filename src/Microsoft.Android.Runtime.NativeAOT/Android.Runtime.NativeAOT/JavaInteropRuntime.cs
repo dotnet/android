@@ -4,14 +4,6 @@ using System.Runtime.InteropServices;
 
 namespace Microsoft.Android.Runtime;
 
-[Flags]
-enum DebugMonoLog {
-	None,
-	Gref = 1 << 0,
-	Lref = 1 << 1,
-	All  = Gref | Lref,
-}
-
 static partial class JavaInteropRuntime
 {
 	static JniRuntime? runtime;
@@ -42,15 +34,17 @@ static partial class JavaInteropRuntime
 	static void init (IntPtr jnienv, IntPtr klass)
 	{
 		try {
-			var log = GetDebugMonoLog ();
+			var settings    = new DiagnosticSettings ();
+			settings.AddDebugDotnetLog ();
+
 			var typeManager = new NativeAotTypeManager ();
 			var options = new NativeAotRuntimeOptions {
 				EnvironmentPointer          = jnienv,
 				TypeManager                 = typeManager,
 				ValueManager                = new NativeAotValueManager (typeManager),
 				UseMarshalMemberBuilder     = false,
-				JniGlobalReferenceLogWriter = log.HasFlag (DebugMonoLog.Gref) ? new LogcatTextWriter (AndroidLogLevel.Debug, "NativeAot:GREF") : null,
-				JniLocalReferenceLogWriter  = log.HasFlag (DebugMonoLog.Lref) ? new LogcatTextWriter (AndroidLogLevel.Debug, "NativeAot:LREF") : null,
+				JniGlobalReferenceLogWriter = settings.GrefLog,
+				JniLocalReferenceLogWriter  = settings.LrefLog,
 			};
 			runtime = options.CreateJreVM ();
 
@@ -59,60 +53,6 @@ static partial class JavaInteropRuntime
 		}
 		catch (Exception e) {
 			AndroidLog.Print (AndroidLogLevel.Error, "JavaInteropRuntime", $"JavaInteropRuntime.init: error: {e}");
-		}
-	}
-
-	[LibraryImport ("c", EntryPoint="__system_property_get")]
-	static private partial int GetSystemProperty (ReadOnlySpan<byte> name, Span<byte> value);
-
-	static DebugMonoLog GetDebugMonoLog ()
-	{
-		Span<byte>  buffer  = stackalloc byte [PROP_VALUE_MAX];
-		int len     = GetSystemProperty ("debug.mono.log"u8, buffer);
-		if (len <= 0) {
-			return DebugMonoLog.None;
-		}
-
-		ReadOnlySpan<byte>  value   = buffer;
-		value = value.Slice (0, len);
-
-		return Parse (value);
-	}
-
-	const int PROP_VALUE_MAX = 92;
-
-	static DebugMonoLog Parse (ReadOnlySpan<byte> value)
-	{
-		DebugMonoLog log = default;
-
-		// warning CS9087: This returns a parameter by reference 'value' but it is not a ref parameter
-		// Use of `ref` is for my purposes, and shouldn't be visible to callers.
-#pragma warning disable CS9087
-		ReadOnlySpan<byte> v;
-		while (value.Length > 0 && (v = GetNextValue (ref value)).Length > 0) {
-			if (v.SequenceEqual ("lref"u8))
-				log |= DebugMonoLog.Lref;
-			else if (v.SequenceEqual ("gref"u8))
-				log |= DebugMonoLog.Gref;
-			else if (v.SequenceEqual ("all"u8))
-				log |= DebugMonoLog.All;
-		}
-#pragma warning restore CS9087
-		return log;
-
-		ReadOnlySpan<byte> GetNextValue (ref ReadOnlySpan<byte> value)
-		{
-			int c = value.IndexOf ((byte) ',');
-			if (c >= 0) {
-				var n = value.Slice (0, c);
-				value = value.Slice (c + 1);
-				return n;
-			}
-			else {
-				var n = value;
-				value = default;
-				return n;
-			}
 		}
 	}
 }
