@@ -1436,6 +1436,39 @@ namespace generatortests
 			StringAssert.Contains ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android30.0\")]", builder.ToString (), "Should contain UnsupportedOSPlatform!");
 		}
 
+
+		[Test]
+		public void UnsupportedOSPlatformIgnoresMethodOverrides ()
+		{
+			// Given:
+			// public class TextView {
+			//   public Object doThing () { ... }
+			// }
+			// public class TextView2 : TextView {
+			//   public Object doThing () { ... }   // removed-since = 30
+			// }
+			// We should not write [UnsupportedOSPlatform] on TextView2.doThing (), because the base method isn't "removed".
+			var xml = @$"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='android.widget' jni-name='android/widget'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' final='false' name='TextView' static='false' visibility='public'>
+			       <method abstract='false' deprecated='not deprecated' final='false' name='doThing' bridge='false' native='false' return='java.lang.Object' static='false' synchronized='false' synthetic='false' visibility='public' />
+			     </class>
+			    <class abstract='false' deprecated='not deprecated' extends='android.widget.TextView' extends-generic-aware='java.lang.Object' final='false' name='TextView2' static='false' visibility='public'>
+			       <method abstract='false' deprecated='not deprecated' final='false' name='doThing' bridge='false' native='false' return='java.lang.Object' static='false' synchronized='false' synthetic='false' visibility='public' removed-since='30' />
+			     </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var klass = gens.Single (g => g.Name == "TextView2");
+			var actual = GetGeneratedTypeOutput (klass);
+
+			StringAssert.DoesNotContain ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android30.0\")]", actual, "Should contain UnsupportedOSPlatform!");
+		}
+
 		[Test]
 		public void StringPropertyOverride ([Values ("true", "false")] string final)
 		{

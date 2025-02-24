@@ -323,6 +323,11 @@ namespace MonoDroid.Generation
 								m.DeprecatedSince = bm.DeprecatedSince;
 						}
 
+						// If a "removed" method overrides a "not removed" method, the method was
+						// likely moved to a base class, so don't mark it as removed.
+						if (m.ApiRemovedSince > 0 && bm.ApiRemovedSince == 0)
+							m.ApiRemovedSince = 0;
+
 						break;
 					}
 				}
