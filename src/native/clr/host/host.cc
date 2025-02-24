@@ -30,6 +30,7 @@ size_t Host::clr_get_runtime_property (const char *key, char *value_buffer, size
 
 bool Host::clr_external_assembly_probe (const char *path, void **data_start, int64_t *size) noexcept
 {
+	// TODO: `path` might be a full path, make sure it isn't
 	log_debug (LOG_DEFAULT, "clr_bundle_probe (\"{}\"...)", path);
 	if (data_start == nullptr || size == nullptr) {
 		return false; // TODO: abort instead?
