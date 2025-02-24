@@ -26,6 +26,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 	uint32_t assembly_data_size = 0;
 
 #if defined (HAVE_LZ4) && defined (RELEASE)
+	log_debug (LOG_ASSEMBLY, "Decompressing assembly '{}' from the assembly store", name);
 	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(e.image_data);
 	if (header->magic == COMPRESSED_DATA_MAGIC) {
 		if (compressed_assemblies.descriptors == nullptr) [[unlikely]] {
@@ -110,6 +111,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 	} else
 #endif // def HAVE_LZ4 && def RELEASE
 	{
+		log_debug (LOG_ASSEMBLY, "Assembly '{}' is not compressed in the assembly store", name);
 		set_assembly_data_and_size (e.image_data, e.descriptor->data_size, assembly_data, assembly_data_size);
 	}
 

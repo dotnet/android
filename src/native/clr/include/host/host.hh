@@ -57,9 +57,9 @@ namespace xamarin::android {
 			.size = sizeof(host_runtime_contract),
 			.context = nullptr,
 			.get_runtime_property = clr_get_runtime_property,
-			.external_assembly_probe = clr_external_assembly_probe,
 			.bundle_probe = nullptr,
 			.pinvoke_override = clr_pinvoke_override,
+			.external_assembly_probe = clr_external_assembly_probe,
 		};
 
 		// Enough to fit 0xffffffffffffffff + terminating NUL
