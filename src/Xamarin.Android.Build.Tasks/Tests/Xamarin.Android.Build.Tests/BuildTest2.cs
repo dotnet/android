@@ -565,9 +565,11 @@ class MemTest {
 
 		[Test]
 		[NonParallelizable]
-		public void BuildBasicApplicationAppCompat ()
+		public void BuildBasicApplicationAppCompat ([Values (true, false)] bool publishAot)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetPublishAot (true, AndroidNdkPath);
+
 			var packages = proj.PackageReferences;
 			packages.Add (KnownPackages.AndroidXAppCompat);
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : AndroidX.AppCompat.App.AppCompatActivity");
