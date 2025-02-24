@@ -165,6 +165,30 @@ namespace Xamarin.ProjectTools
 			set { SetProperty (KnownProperties.AndroidEnableMarshalMethods, value.ToString ()); }
 		}
 
+		private bool PublishAot {
+			get { return string.Equals (GetProperty (KnownProperties.PublishAot), "True", StringComparison.OrdinalIgnoreCase); }
+			set { SetProperty (KnownProperties.PublishAot, value.ToString ()); }
+		}
+
+		/// <summary>
+		/// Sets properties required for $(PublishAot)=true
+		/// </summary>
+		public void SetPublishAot (bool value, string androidNdkPath)
+		{
+			IsRelease = value;
+			PublishAot = value;
+			SetProperty ("AndroidNdkDirectory", androidNdkPath);
+
+			// NuGet feed needed as Microsoft.Android.Runtime.NativeAOT packs not installed in workload by default
+			var source = Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned");
+			if (value) {
+				if (!ExtraNuGetConfigSources.Contains (source))
+					ExtraNuGetConfigSources.Add (source);
+			} else {
+				ExtraNuGetConfigSources.Remove (source);
+			}
+		}
+
 		public string AndroidManifest { get; set; }
 		public string LayoutMain { get; set; }
 		public string MainActivity { get; set; }

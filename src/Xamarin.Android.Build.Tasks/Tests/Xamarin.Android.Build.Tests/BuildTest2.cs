@@ -125,15 +125,8 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				ProjectName = "Hello",
-				IsRelease = true,
-				RuntimeIdentifier = "android-arm64",
-				// Add locally downloaded NativeAOT packs
-				ExtraNuGetConfigSources = {
-					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
-				}
 			};
-			proj.SetProperty ("PublishAot", "true");
-			proj.SetProperty ("AndroidNdkDirectory", AndroidNdkPath);
+			proj.SetPublishAot (true, AndroidNdkPath);
 			proj.SetProperty ("_ExtraTrimmerArgs", "--verbose");
 
 			// Required for java/util/ArrayList assertion below
@@ -149,16 +142,19 @@ namespace Xamarin.Android.Build.Tests
 			];
 			string[] mono_files = [
 				"lib/arm64-v8a/libmonosgen-2.0.so",
+				"lib/x86_64/libmonosgen-2.0.so",
 			];
 			string [] nativeaot_files = [
 				$"lib/arm64-v8a/lib{proj.ProjectName}.so",
 				"lib/arm64-v8a/libc++_shared.so",
+				$"lib/x86_64/lib{proj.ProjectName}.so",
+				"lib/x86_64/libc++_shared.so",
 			];
 
-			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, proj.RuntimeIdentifier);
-			var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, proj.RuntimeIdentifier);
+			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+			var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
 
-			var linkedMonoAndroidAssembly = Path.Combine (intermediate, "linked", "Mono.Android.dll");
+			var linkedMonoAndroidAssembly = Path.Combine (intermediate, "android-arm64", "linked", "Mono.Android.dll");
 			FileAssert.Exists (linkedMonoAndroidAssembly);
 			using (var assembly = AssemblyDefinition.ReadAssembly (linkedMonoAndroidAssembly)) {
 				var typeName = "Android.App.Activity";
@@ -170,7 +166,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var typemap = new Dictionary<string, TypeReference> ();
-			var linkedRuntimeAssembly = Path.Combine (intermediate, "linked", "Microsoft.Android.Runtime.NativeAOT.dll");
+			var linkedRuntimeAssembly = Path.Combine (intermediate, "android-arm64", "linked", "Microsoft.Android.Runtime.NativeAOT.dll");
 			FileAssert.Exists (linkedRuntimeAssembly);
 			using (var assembly = AssemblyDefinition.ReadAssembly (linkedRuntimeAssembly)) {
 				var type = assembly.MainModule.Types.FirstOrDefault (t => t.Name == "NativeAotTypeManager");
