@@ -298,10 +298,12 @@ namespace Xamarin.Android.Tasks
 				libs.Add (Path.Combine (androidLibPath, "libc.so"));
 				libs.Add (Path.Combine (androidLibPath, "libm.so"));
 			} else if (!UseAndroidNdk && EnableLLVM) {
-				string libstubsPath = MonoAndroidHelper.GetLibstubsArchDirectoryPath (RuntimePackLibraryDirectories, arch);
+				string? libstubsPath = MonoAndroidHelper.GetRuntimePackNativeLibDir (arch, RuntimePackLibraryDirectories);
 
-				libs.Add (Path.Combine (libstubsPath, "libc.so"));
-				libs.Add (Path.Combine (libstubsPath, "libm.so"));
+				if (!String.IsNullOrEmpty (libstubsPath)) {
+					libs.Add (Path.Combine (libstubsPath, "libc.so"));
+					libs.Add (Path.Combine (libstubsPath, "libm.so"));
+				}
 			}
 
 			if (libs.Count > 0) {
