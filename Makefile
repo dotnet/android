@@ -15,7 +15,6 @@ PREPARE_SCENARIO =
 PREPARE_CI_PR ?= 0
 PREPARE_CI ?= 0
 PREPARE_AUTOPROVISION ?= 0
-LOCAL_CLR ?=
 
 _PREPARE_CI_MODE_PR_ARGS = --no-emoji --run-mode=CI
 _PREPARE_CI_MODE_ARGS = $(_PREPARE_CI_MODE_PR_ARGS) -a
@@ -64,10 +63,6 @@ endif
 
 ifeq ($(XA_FORCE_COMPONENT_REFRESH),true)
 _PREPARE_ARGS += -refresh
-endif
-
-ifneq ($(LOCAL_CLR),)
-_PREPARE_ARGS += -p:_LocalClrDirectory="$(LOCAL_CLR)"
 endif
 
 _PREPARE_ARGS += $(PREPARE_ARGS)

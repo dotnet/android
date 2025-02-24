@@ -250,11 +250,6 @@ namespace Xamarin.Android.Prepare
 
 			static string GetCoreClrAppRuntimePath (Context ctx, string androidTarget)
 			{
-				string? localClrDir = ctx.Properties.GetValue (KnownProperties.LocalClrDirectory);
-				if (!String.IsNullOrEmpty (localClrDir)) {
-					return Path.Combine (localClrDir, "runtimes", $"android-{androidTarget}");
-				}
-
 				// TODO: The nuget id and the ref package version are guesses atm, since the CoreCLR packages don't exist yet
 				Log.Instance.Todo ("The nuget id and the ref package version are guesses atm, since the CoreCLR packages don't exist yet");
 				return Path.Combine (

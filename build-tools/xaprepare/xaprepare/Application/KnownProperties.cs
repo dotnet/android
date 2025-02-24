@@ -39,7 +39,6 @@ namespace Xamarin.Android.Prepare
 		public const string JavaSdkDirectory                    = "JavaSdkDirectory";
 		public const string JdkIncludePath                      = "JdkIncludePath";
 		public const string LibZipSourceFullPath                = "LibZipSourceFullPath";
-		public const string LocalClrDirectory                   = "_LocalClrDirectory";
 		public const string ManagedRuntime                      = "ManagedRuntime";
 		public const string MicrosoftAndroidSdkOutDir           = "MicrosoftAndroidSdkOutDir";
 		public const string MonoCecilVersion                    = "MonoCecilVersion";

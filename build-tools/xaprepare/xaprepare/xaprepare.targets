@@ -76,7 +76,6 @@
       <Replacement Include="@JavaSdkDirectory@=$(JavaSdkDirectory)" />
       <Replacement Include="@JdkIncludePath@=$(JavaIncludePath)" />
       <Replacement Include="@LibZipSourceFullPath@=$(LibZipSourceFullPath)" />
-      <Replacement Include="@_LocalClrDirectory@=$(_LocalClrDirectory)" />
       <Replacement Include="@ManagedRuntime@=$(ManagedRuntime)" />
       <Replacement Include="@MicrosoftAndroidSdkOutDir@=$(MicrosoftAndroidSdkOutDir)" />
       <Replacement Include="@MonoCecilVersion@=$(MonoCecilVersion)" />
