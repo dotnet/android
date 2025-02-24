@@ -271,6 +271,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidApkSigningAlgorithm Condition=" '$(AndroidApkSigningAlgorithm)' == '' ">SHA256withRSA</AndroidApkSigningAlgorithm>
 	<AndroidApkDigestAlgorithm  Condition=" '$(AndroidApkDigestAlgorithm)' == '' ">SHA-256</AndroidApkDigestAlgorithm>
 	<AndroidManifestMerger      Condition=" '$(AndroidManifestMerger)' == '' ">manifestmerger.jar</AndroidManifestMerger>
+	<AndroidCodegenTarget       Condition=" '$(AndroidCodegenTarget)' == '' ">XAJavaInterop1</AndroidCodegenTarget>
 
 	<!-- Default Java heap size to 1GB (-Xmx1G) if not specified-->
 	<JavaMaximumHeapSize Condition=" '$(JavaMaximumHeapSize)' == '' ">1G</JavaMaximumHeapSize>
@@ -1374,7 +1375,9 @@ because xbuild doesn't support framework reference assemblies.
   <PropertyGroup>
     <_AndroidJarAndDexDirectory>$(_XATargetFrameworkDirectories)</_AndroidJarAndDexDirectory>
   </PropertyGroup>
-  <GetMonoPlatformJar Condition=" '$(_AndroidUseMarshalMethods)' != 'True' " TargetFrameworkDirectory="$(_AndroidJarAndDexDirectory)">
+  <GetMonoPlatformJar
+      Condition=" '$(_AndroidUseMarshalMethods)' != 'True' and '$(AndroidCodegenTarget)' == 'XAJavaInterop1' "
+      TargetFrameworkDirectory="$(_AndroidJarAndDexDirectory)">
     <Output TaskParameter="MonoPlatformJarPath" PropertyName="MonoPlatformJarPath" />
     <Output TaskParameter="MonoPlatformDexPath" PropertyName="MonoPlatformDexPath" />
   </GetMonoPlatformJar>
@@ -1402,12 +1405,12 @@ because xbuild doesn't support framework reference assemblies.
   />
 
   <Copy
-    Condition=" '$(_AndroidUseMarshalMethods)' != 'True' "
+    Condition=" '$(_AndroidUseMarshalMethods)' != 'True' and '$(AndroidCodegenTarget)' == 'XAJavaInterop1' "
     SourceFiles="$(MonoPlatformJarPath)"
     DestinationFiles="$(IntermediateOutputPath)android\bin\mono.android.jar"
     SkipUnchangedFiles="true" />
   <Touch
-    Condition=" '$(_AndroidUseMarshalMethods)' != 'True' "
+    Condition=" '$(_AndroidUseMarshalMethods)' != 'True' and '$(AndroidCodegenTarget)' == 'XAJavaInterop1' "
     Files="$(IntermediateOutputPath)android\bin\mono.android.jar" />
 
   <Touch Files="$(_AndroidStaticResourcesFlag)" AlwaysCreate="true" />
@@ -1416,7 +1419,10 @@ because xbuild doesn't support framework reference assemblies.
     <FileWrites Include="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java" />
     <FileWrites Include="$(_AndroidIntermediateJavaSourceDirectory)mono\JavaInteropTypeManager.java" />
     <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)machine.config" />
-    <FileWrites Condition=" '$(_AndroidUseMarshalMethods)' != 'True' " Include="$(IntermediateOutputPath)android\bin\mono.android.jar" />
+    <FileWrites
+        Condition=" '$(_AndroidUseMarshalMethods)' != 'True' and '$(AndroidCodegenTarget)' == 'XAJavaInterop1' "
+        Include="$(IntermediateOutputPath)android\bin\mono.android.jar"
+    />
     <FileWrites Include="$(_AndroidStaticResourcesFlag)" />
   </ItemGroup>
 </Target>
@@ -1458,7 +1464,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <!-- _PrepareAssemblies lives in Microsoft.Android.Sdk.AssemblyResolution.targets -->
 
-<Target Name="_PrepareNativeAssemblySources">
+<Target Name="_PrepareNativeAssemblySources" Condition=" '$(_AndroidRuntime)' == 'MonoVM' ">
   <PrepareAbiItems
       BuildTargetAbis="@(_BuildTargetAbis)"
       NativeSourcesDir="$(_NativeAssemblySourceDir)"
@@ -1511,7 +1517,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <GenerateJavaStubs
       AndroidRuntime="$(_AndroidRuntime)"
-      CodeGenerationTarget="$(_AndroidCodeGenerationTarget)"
+      CodeGenerationTarget="$(AndroidCodegenTarget)"
       ResolvedAssemblies="@(_ResolvedAssemblies)"
       ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
       ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
@@ -1743,7 +1749,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_GeneratePackageManagerJava"
-  Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
+  Condition=" '$(_AndroidRuntime)' == 'MonoVM' "
   DependsOnTargets="$(_GeneratePackageManagerJavaDependsOn)"
   Inputs="@(_GeneratePackageManagerJavaInputs)"
   Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
@@ -1963,7 +1969,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <!-- Shrink Mono.Android.dll by removing attribute only needed for GenerateJavaStubs -->
   <RemoveRegisterAttribute
-    Condition="'$(AndroidLinkMode)' != 'None' and '$(AndroidIncludeDebugSymbols)' != 'true' and '$(AndroidStripILAfterAOT)' != 'true' and '$(_AndroidRuntime)' != 'NativeAOT' "
+    Condition="'$(AndroidLinkMode)' != 'None' and '$(AndroidIncludeDebugSymbols)' != 'true' and '$(AndroidStripILAfterAOT)' != 'true' and '$(_AndroidRuntime)' == 'MonoVM' "
     ShrunkFrameworkAssemblies="@(_ShrunkAssemblies)" />
 
   <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)shrunk" />
@@ -2039,7 +2045,7 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<Target Name="_PrepareApplicationSharedLibraryItems">
+<Target Name="_PrepareApplicationSharedLibraryItems" Condition=" '$(_AndroidRuntime)' == 'MonoVM' ">
   <ItemGroup>
     <_ApplicationSharedLibrary Include="$(_AndroidApplicationSharedLibraryPath)%(_BuildTargetAbis.Identity)\libxamarin-app.so">
       <abi>%(_BuildTargetAbis.Identity)</abi>

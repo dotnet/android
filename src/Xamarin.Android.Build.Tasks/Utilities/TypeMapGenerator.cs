@@ -131,13 +131,15 @@ namespace Xamarin.Android.Tasks
 		readonly byte[] typemapIndexMagicString;
 		readonly TaskLoggingHelper log;
 		readonly NativeCodeGenState state;
+		readonly AndroidRuntime runtime;
 
 		public IList<string> GeneratedBinaryTypeMaps { get; } = new List<string> ();
 
-		public TypeMapGenerator (TaskLoggingHelper log, NativeCodeGenState state)
+		public TypeMapGenerator (TaskLoggingHelper log, NativeCodeGenState state, AndroidRuntime runtime)
 		{
 			this.log = log ?? throw new ArgumentNullException (nameof (log));
 			this.state = state ?? throw new ArgumentNullException (nameof (state));
+			this.runtime = runtime;
 			outputEncoding = Files.UTF8withoutBOM;
 			moduleMagicString = outputEncoding.GetBytes (TypeMapMagicString);
 			typemapIndexMagicString = outputEncoding.GetBytes (TypeMapIndexMagicString);
@@ -444,7 +446,12 @@ namespace Xamarin.Android.Tasks
 				module.Types = module.TypesScratch.Values.ToArray ();
 			}
 
-			var composer = new TypeMappingReleaseNativeAssemblyGenerator (log, new NativeTypeMappingData (log, modules));
+			LLVMIR.LlvmIrComposer composer = runtime switch {
+				AndroidRuntime.MonoVM => new TypeMappingReleaseNativeAssemblyGenerator (log, new NativeTypeMappingData (log, modules)),
+				AndroidRuntime.CoreCLR => throw new NotImplementedException ("CoreCLR support not implemented yet"),
+				_ => throw new NotSupportedException ($"Internal error: unsupported runtime {runtime}")
+			};
+
 			GenerateNativeAssembly (composer, composer.Construct (), outputDirectory);
 
 			return true;

@@ -27,9 +27,25 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public bool IsInlineArray   { get; }
 		public bool NeedsPadding    { get; }
 
+		/// <summary>
+		/// Some fields/properties may override their name for presentation purposes, <see cref="NativeAssemblerAttribute.MemberName" />.
+		/// In such instances, this property will return the overridden/mapped name, otherwise it returns <see cref="Info.Name"/>.
+		/// This property should be used only for "presentation" purposes - for instance when generating comments which refer to
+		/// native field names.
+		/// </summary>
+		public string MappedName {
+			get {
+				string? name = Info.GetOverriddenName (typeCache);
+				return String.IsNullOrEmpty (name) ? Info.Name : name;
+			}
+		}
+
+		readonly LlvmIrTypeCache typeCache;
+
 		public StructureMemberInfo (MemberInfo mi, LlvmIrModule module, LlvmIrTypeCache cache)
 		{
 			Info = mi;
+			typeCache = cache;
 
 			MemberType = mi switch {
 				FieldInfo fi => fi.FieldType,
@@ -95,6 +111,17 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			if (Alignment == 0) {
 				Alignment = size;
 			}
+		}
+
+		public bool IsSupportedForTarget (LlvmIrModuleTarget target)
+		{
+			NativeAssemblerValidTarget validTarget = Info.GetValidTarget (typeCache);
+			return validTarget switch {
+				NativeAssemblerValidTarget.Any => true,
+				NativeAssemblerValidTarget.ThirtyTwoBit => !target.Is64Bit,
+				NativeAssemblerValidTarget.SixtyFourBit => target.Is64Bit,
+				_ => throw new NotSupportedException ($"Internal error: unsupported native assembler valid target value: {validTarget}")
+			};
 		}
 
 		public object? GetValue (object instance)

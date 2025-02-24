@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.IO;
 using System.Text;
@@ -15,19 +17,19 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "VJV";
 
-		public string JavaSdkPath { get; set; }
+		public string? JavaSdkPath { get; set; }
 
-		public string JavaToolExe { get; set; }
+		public string? JavaToolExe { get; set; }
 
-		public string JavacToolExe { get; set; }
+		public string? JavacToolExe { get; set; }
 
-		public string TargetPlatformVersion { get; set; }
-
-		[Required]
-		public string LatestSupportedJavaVersion { get; set; }
+		public string? TargetPlatformVersion { get; set; }
 
 		[Required]
-		public string MinimumSupportedJavaVersion { get; set; }
+		public string LatestSupportedJavaVersion { get; set; } = "";
+
+		[Required]
+		public string MinimumSupportedJavaVersion { get; set; } = "";
 
 		/// <summary>
 		/// If true use the old method of calling `java -version` and `javac -version`
@@ -36,10 +38,10 @@ namespace Xamarin.Android.Tasks
 		public bool UseJavaExeVersion { get; set; } = true;
 
 		[Output]
-		public string MinimumRequiredJdkVersion { get; set; }
+		public string? MinimumRequiredJdkVersion { get; set; }
 
 		[Output]
-		public string JdkVersion { get; set; }
+		public string? JdkVersion { get; set; }
 
 		public override bool RunTask ()
 		{
@@ -101,7 +103,7 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		protected Version GetVersionFromTool (string javaExe, Regex versionRegex)
+		protected Version? GetVersionFromTool (string javaExe, Regex versionRegex)
 		{
 			// New code path, reads directly from `release` text file
 			if (!UseJavaExeVersion && GetVersionFromFile (javaExe, out var version)) {
@@ -130,7 +132,7 @@ namespace Xamarin.Android.Tasks
 			});
 			var versionInfo = sb.ToString ();
 			var versionNumberMatch = versionRegex.Match (versionInfo);
-			Version versionNumber;
+			Version? versionNumber;
 			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value, out versionNumber)) {
 				BuildEngine4.RegisterTaskObject (key, versionNumber, RegisteredTaskObjectLifetime.AppDomain, allowEarlyCollection: false);
 				JdkVersion = versionNumberMatch.Groups ["version"].Value;
@@ -156,7 +158,7 @@ namespace Xamarin.Android.Tasks
 			using var stream = File.OpenRead (path);
 			using var reader = new StreamReader (stream);
 
-			string line;
+			string? line;
 			while ((line = reader.ReadLine ()) != null) {
 				const string JAVA_VERSION = "JAVA_VERSION=\"";
 				int index = line.IndexOf (JAVA_VERSION, StringComparison.OrdinalIgnoreCase);

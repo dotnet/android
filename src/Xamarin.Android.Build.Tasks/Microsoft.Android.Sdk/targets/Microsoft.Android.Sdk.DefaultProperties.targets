@@ -29,6 +29,7 @@
     <_AndroidRuntime Condition=" '$(PublishAot)' == 'true' and '$(UseMonoRuntime)' != 'true' ">NativeAOT</_AndroidRuntime>
     <_AndroidRuntime Condition=" '$(PublishAot)' != 'true' and '$(UseMonoRuntime)' != 'true' ">CoreCLR</_AndroidRuntime>
     <_AndroidRuntime Condition=" '$(_AndroidRuntime)' == '' ">MonoVM</_AndroidRuntime>
+    <PublishAotUsingRuntimePack Condition=" '$(PublishAotUsingRuntimePack)' == '' and '$(_AndroidRuntime)' == 'NativeAOT' ">true</PublishAotUsingRuntimePack>
     <!-- HACK: make dotnet restore include Microsoft.NETCore.App.Runtime.NativeAOT.linux-bionic-arm64 -->
     <_IsPublishing Condition=" '$(_IsPublishing)' == '' and '$(_AndroidRuntime)' == 'NativeAOT' ">true</_IsPublishing>
 
@@ -40,8 +41,7 @@
     <!-- Bindings properties -->
     <!-- jar2xml is not supported -->
     <AndroidClassParser>class-parse</AndroidClassParser>
-    <!-- Anything other than XAJavaInterop1 is not supported -->
-    <AndroidCodegenTarget>XAJavaInterop1</AndroidCodegenTarget>
+    <AndroidCodegenTarget Condition=" '$(AndroidCodegenTarget)' == '' and '$(_AndroidRuntime)' != 'NativeAOT' ">XAJavaInterop1</AndroidCodegenTarget>
     <AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods Condition=" '$(AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods)' == '' ">true</AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods>
     <AndroidBoundInterfacesContainTypes Condition=" '$(AndroidBoundInterfacesContainTypes)' == '' ">true</AndroidBoundInterfacesContainTypes>
     <AndroidBoundInterfacesContainConstants Condition=" '$(AndroidBoundInterfacesContainConstants)' == '' ">true</AndroidBoundInterfacesContainConstants>

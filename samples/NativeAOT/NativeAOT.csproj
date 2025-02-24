@@ -11,9 +11,8 @@
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <!-- Default to arm64 device -->
     <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
-    <!-- Current required properties for NativeAOT -->
+    <!-- Only property required to opt into NativeAOT -->
     <PublishAot>true</PublishAot>
-    <PublishAotUsingRuntimePack>true</PublishAotUsingRuntimePack>
   </PropertyGroup>
 
   <!-- Settings for CI -->

@@ -256,7 +256,16 @@ namespace Android.Runtime {
 		{
 			int rank = JavaNativeTypeManager.GetArrayInfo (type, out type);
 			try {
-				return FindClass (JavaNativeTypeManager.ToJniName (GetJniName (type), rank));
+				var sig  = JNIEnvInit.androidRuntime?.TypeManager.GetTypeSignature (type) ?? default;
+				if (!sig.IsValid || sig.SimpleReference == null) {
+					sig = new JniTypeSignature ("java/lang/Object");
+				}
+				sig = sig.AddArrayRank (rank);
+
+				JniObjectReference local_ref = JniEnvironment.Types.FindClass (sig.Name);
+				IntPtr global_ref = local_ref.NewGlobalRef ().Handle;
+				JniObjectReference.Dispose (ref local_ref);
+				return global_ref;
 			} catch (Java.Lang.Throwable e) {
 				if (!((e is Java.Lang.NoClassDefFoundError) || (e is Java.Lang.ClassNotFoundException)))
 					throw;
@@ -387,12 +396,7 @@ namespace Android.Runtime {
 
 		public static string GetClassNameFromInstance (IntPtr jobject)
 		{
-			IntPtr jclass = GetObjectClass (jobject);
-			try {
-				return Java.Interop.TypeManager.GetClassName (jclass);
-			} finally {
-				DeleteLocalRef (jclass);
-			}
+			return JniEnvironment.Types.GetJniTypeNameFromInstance (new JniObjectReference (jobject));
 		}
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]

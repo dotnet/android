@@ -13,7 +13,7 @@ namespace Android.Runtime
 	static internal class JNIEnvInit
 	{
 #pragma warning disable 0649
-		// NOTE: Keep this in sync with the native side in src/native/monodroid/monodroid-glue-internal.hh
+		// NOTE: Keep this in sync with the native side in src/native/common/include/managed-interface.hh
 		internal struct JnienvInitializeArgs {
 			public IntPtr          javaVm;
 			public IntPtr          env;
@@ -32,6 +32,7 @@ namespace Android.Runtime
 			public bool            jniRemappingInUse;
 			public bool            marshalMethodsEnabled;
 			public IntPtr          grefGCUserPeerable;
+			public uint            runtimeType;
 			public bool            managedMarshalMethodsLookupEnabled;
 		}
 #pragma warning restore 0649
@@ -48,6 +49,8 @@ namespace Android.Runtime
 		internal static IntPtr java_class_loader;
 
 		internal static JniRuntime? androidRuntime;
+
+		public static DotNetRuntimeType RuntimeType { get; private set; } = DotNetRuntimeType.Unknown;
 
 		[UnmanagedCallersOnly]
 		static unsafe void RegisterJniNatives (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
@@ -88,6 +91,8 @@ namespace Android.Runtime
 		[UnmanagedCallersOnly]
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
+			RuntimeType = DotNetRuntimeTypeConverter.Convert (args->runtimeType);
+
 			IntPtr total_timing_sequence = IntPtr.Zero;
 			IntPtr partial_timing_sequence = IntPtr.Zero;
 

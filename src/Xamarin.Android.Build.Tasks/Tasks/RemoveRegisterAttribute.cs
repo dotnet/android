@@ -8,6 +8,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using Microsoft.Android.Build.Tasks;
+using Java.Interop.Tools.Cecil;
 
 namespace Xamarin.Android.Tasks
 {
@@ -24,8 +25,11 @@ namespace Xamarin.Android.Tasks
 		{
 			// Find Mono.Android.dll
 			var mono_android = ShrunkFrameworkAssemblies.First (f => Path.GetFileNameWithoutExtension (f.ItemSpec) == "Mono.Android").ItemSpec;
-
-			using (var assembly = AssemblyDefinition.ReadAssembly (mono_android, new ReaderParameters { ReadWrite = true })) {
+			var path = Path.GetFullPath (Path.GetDirectoryName (mono_android));
+			using var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false, loadReaderParameters: new ReaderParameters { ReadWrite = true });
+			resolver.SearchDirectories.Add (path);
+			
+			using (var assembly = resolver.Load (mono_android)) {
 				// Strip out [Register] attributes
 				foreach (TypeDefinition type in assembly.MainModule.Types)
 					ProcessType (type);
