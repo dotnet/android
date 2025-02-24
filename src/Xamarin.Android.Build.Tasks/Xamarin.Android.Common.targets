@@ -1474,7 +1474,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <!-- _PrepareAssemblies lives in Microsoft.Android.Sdk.AssemblyResolution.targets -->
 
-<Target Name="_PrepareNativeAssemblySources" Condition=" '$(_AndroidRuntime)' != 'CoreCLR' ">
+<Target Name="_PrepareNativeAssemblySources" Condition=" '$(_AndroidRuntime)' != 'NativeAOT' ">
   <PrepareAbiItems
       BuildTargetAbis="@(_BuildTargetAbis)"
       NativeSourcesDir="$(_NativeAssemblySourceDir)"
