@@ -60,27 +60,27 @@ namespace Xamarin.Android.Tasks
 		};
 
 		[Required]
-		public string BaseZip { get; set; }
+		public string BaseZip { get; set; } = "";
 
-		public string CustomBuildConfigFile { get; set; }
+		public string? CustomBuildConfigFile { get; set; }
 
-		public string [] Modules { get; set; }
+		public string []? Modules { get; set; }
 
-		public ITaskItem [] MetaDataFiles { get; set; }
+		public ITaskItem []? MetaDataFiles { get; set; }
 
 		[Required]
-		public string Output { get; set; }
+		public string Output { get; set; } = "";
 
-		public string UncompressedFileExtensions { get; set; }
+		public string? UncompressedFileExtensions { get; set; }
 
-		string temp;
+		string temp = "";
 
 		public override bool RunTask ()
 		{
 			temp = Path.GetTempFileName ();
 			try {
 				var uncompressed = new List<string> (UncompressedByDefault);
-				if (!string.IsNullOrEmpty (UncompressedFileExtensions)) {
+				if (UncompressedFileExtensions is { Length: > 0 }) {
 					//NOTE: these are file extensions, that need converted to glob syntax
 					var split = UncompressedFileExtensions.Split (new char [] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries);
 					foreach (var extension in split) {
@@ -88,10 +88,11 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 
-				JsonNode json = JsonNode.Parse("{}");
-				if (!string.IsNullOrEmpty (CustomBuildConfigFile) && File.Exists (CustomBuildConfigFile)) {
+				JsonNode json = JsonNode.Parse ("{}")!;
+				if (CustomBuildConfigFile is { Length: > 0 } && File.Exists (CustomBuildConfigFile)) {
 					using Stream fs = File.OpenRead (CustomBuildConfigFile);
-					json = JsonNode.Parse (fs);
+					using JsonDocument doc = JsonDocument.Parse (fs, new JsonDocumentOptions { AllowTrailingCommas = true });
+					json = doc.RootElement.ToNode ();
 				}
 				var jsonAddition = new {
 					compression = new {
@@ -130,7 +131,7 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("--modules ", string.Join (",", modules));
 			cmd.AppendSwitchIfNotNull ("--output ", Output);
 			cmd.AppendSwitchIfNotNull ("--config ", temp);
-			foreach (var file in MetaDataFiles ?? Array.Empty<ITaskItem> ()) {
+			foreach (var file in MetaDataFiles ?? []) {
 				cmd.AppendSwitch ($"--metadata-file={file.ItemSpec}");
 			}
 			return cmd;

@@ -47,4 +47,41 @@ public static class JsonExtensions
         }
         return jsonBase;
     }
+
+    public static JsonNode? ToNode (this JsonElement element)
+    {
+        switch (element.ValueKind) {
+            case JsonValueKind.Object:
+                var obj = new JsonObject ();
+                foreach (JsonProperty prop in element.EnumerateObject()) {
+                    obj [prop.Name] = prop.Value.ToNode ();
+                }
+                return obj;
+
+            case JsonValueKind.Array:
+                var arr = new JsonArray();
+                foreach (JsonElement item in element.EnumerateArray ()) {
+                    arr.Add (item.ToNode ());
+                }
+                return arr;
+
+            case JsonValueKind.String:
+                return element.GetString ();
+
+            case JsonValueKind.Number:
+                return element.TryGetInt32 (out int intValue) ? intValue : element.GetDouble ();
+
+            case JsonValueKind.True:
+                return true;
+
+            case JsonValueKind.False:
+                return false;
+
+            case JsonValueKind.Null:
+                return null;
+
+            default:
+                throw new NotSupportedException ($"Unsupported JSON value kind: {element.ValueKind}");
+        }
+    }
 }

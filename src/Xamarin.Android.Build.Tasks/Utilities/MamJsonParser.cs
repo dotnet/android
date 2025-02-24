@@ -57,10 +57,11 @@ namespace Xamarin.Android.Tasks
 				GetReplacementMethods ());
 		}
 
-		static JsonObject ReadJson (string path)
+		static JsonNode ReadJson (string path)
 		{
-			using (var f = File.OpenRead (path)) {
-				return JsonNode.Parse (f)!.AsObject ();
+			using (var fs = File.OpenRead (path)) {
+				using JsonDocument doc = JsonDocument.Parse (fs, new JsonDocumentOptions { AllowTrailingCommas = true });
+				return doc.RootElement.ToNode () ?? JsonNode.Parse ("{}")!;
 			}
 		}
 
