@@ -306,7 +306,7 @@ class MSBuildLoggingPomResolver : IProjectResolver
 	}
 }
 
-class MicrosoftNuGetPackageFinder
+partial class MicrosoftNuGetPackageFinder
 {
 	readonly PackageListFile? package_list;
 
@@ -319,7 +319,7 @@ class MicrosoftNuGetPackageFinder
 
 		try {
 			var json = File.ReadAllText (file);
-			package_list = JsonSerializer.Deserialize<PackageListFile> (json);
+			package_list = JsonSerializer.Deserialize<PackageListFile> (json, PackageListFileContext.Default.PackageListFile);
 		} catch (Exception ex) {
 			log.LogMessage ("There was an error reading 'microsoft-packages.json', Android NuGet suggestions will not be provided: {0}", ex);
 		}
@@ -343,6 +343,14 @@ class MicrosoftNuGetPackageFinder
 
 		[JsonPropertyName ("nugetId")]
 		public string? NuGetId { get; set; }
+	}
+
+	[JsonSourceGenerationOptions(WriteIndented = true)]
+	[JsonSerializable(typeof(PackageListFile))]
+	[JsonSerializable(typeof(List<Package>))]
+	[JsonSerializable(typeof(string))]
+	internal partial class PackageListFileContext : JsonSerializerContext
+	{
 	}
 }
 
