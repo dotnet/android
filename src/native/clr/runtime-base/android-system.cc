@@ -241,9 +241,9 @@ AndroidSystem::setup_environment () noexcept
 			var_value = "";
 		}
 
-//		if constexpr (Constants::is_debug_build) {
+		if constexpr (Constants::is_debug_build) {
 			log_info (LOG_DEFAULT, "Setting environment variable '{}' to '{}'", var_name, var_value);
-//		}
+		}
 
 		if (setenv (var_name, var_value, 1) < 0) {
 			log_warn (LOG_DEFAULT, "Failed to set environment variable: {}", strerror (errno));

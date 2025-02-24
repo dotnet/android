@@ -220,9 +220,4 @@
     <AndroidAbiAndRuntimeFlavor Include="@(AndroidSupportedTargetJitAbi)" AndroidRuntime="NativeAOT" />
     <AndroidAbiAndRuntimeFlavor Include="@(AndroidSupportedTargetJitAbi)" AndroidRuntime="CoreCLR" />
   </ItemGroup>
-
-   <!-- TEMPORARY: to be removed once this PR is ready to be merged -->
-  <PropertyGroup>
-    <_LocalClrDirectory Condition=" Exists('$(AndroidToolchainDirectory)\clr') ">$(AndroidToolchainDirectory)\clr</_LocalClrDirectory>
-  </PropertyGroup>
 </Project>
