@@ -1,4 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project>
+
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <Import Project="..\..\Configuration.props" />
   <Import Project="$(XamarinAndroidSourcePath)\build-tools\trim-analyzers\trim-analyzers.props" />
 
@@ -18,6 +20,8 @@
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
     <ProjectReference Include="..\Mono.Android\Mono.Android.csproj" />
   </ItemGroup>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 
   <!-- Copy runtime assemblies to bin/$(Configuration)/dotnet/packs folder -->
   <PropertyGroup Condition=" '$(AndroidApiLevel)' == '$(AndroidLatestStableApiLevel)' ">
