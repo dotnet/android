@@ -27,11 +27,11 @@
   <PropertyGroup Condition=" '$(AndroidApiLevel)' == '$(AndroidLatestStableApiLevel)' ">
     <BuildDependsOn>
       $(BuildDependsOn);
-      _CopyNativeAOTRuntimeToPackDirs;
+      _CopyToPackDirs;
     </BuildDependsOn>
   </PropertyGroup>
 
-  <Target Name="_CopyNativeAOTRuntimeToPackDirs">
+  <Target Name="_CopyToPackDirs">
     <ItemGroup>
       <_RuntimePackFiles Include="$(OutputPath)Microsoft.Android.Runtime.NativeAOT.dll" AndroidRID="%(AndroidAbiAndRuntimeFlavor.AndroidRID)" AndroidRuntime="%(AndroidAbiAndRuntimeFlavor.AndroidRuntime)" />
       <!-- How do I propagate the System.IO.Hashing.dll file so that it is included with all apps which reference Microsoft.Android.Runtime.NativeAOT.dll ?? -->

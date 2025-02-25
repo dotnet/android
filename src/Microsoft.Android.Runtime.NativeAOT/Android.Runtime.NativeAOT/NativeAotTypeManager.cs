@@ -129,8 +129,6 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 	{
 		if (TypeMap.TryGetType (jniSimpleReference, out var target)) {
 			yield return target;
-		} else {
-			AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"# simonrozsival:   GetTypesForSimpleReference: jniSimpleReference=`{jniSimpleReference}` -> NOT FOUND");
 		}
 		foreach (var t in base.GetTypesForSimpleReference (jniSimpleReference)) {
 			yield return t;
@@ -140,20 +138,7 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 	protected override IEnumerable<string> GetSimpleReferences (Type type)
 	{
 		return base.GetSimpleReferences (type)
-			.Concat (CreateSimpleReferencesEnumerator (type));
-	}
-
-	IEnumerable<string> CreateSimpleReferencesEnumerator (Type type)
-	{
-		for (int i = 0; i < TypeMap.Count; i++) {
-			if (TypeMap.GetTypeByIndex (i) == type) {
-				AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"# simonrozsival: CreateSimpleReferencesEnumerator: `{type}` -> [{i}: `{TypeMap.GetJavaClassNameByIndex (i)}`]");
-				var javaClassName = TypeMap.GetJavaClassNameByIndex (i);
-				if (javaClassName is not null) {
-					yield return javaClassName;
-				}
-			}
-		}
+			.Concat (TypeMap.GetJavaClassNames (type));
 	}
 
 	static int CountMethods (ReadOnlySpan<char> methodsSpan)

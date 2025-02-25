@@ -15,38 +15,36 @@ internal static class TypeMap
 
 	internal static bool TryGetType (string javaClassName, [NotNullWhen (true)] out Type? type)
 	{
-		type = GetType (javaClassName);
+		byte[] bytes = System.Text.Encoding.UTF8.GetBytes (javaClassName);
+		ulong hash = XxHash3.HashToUInt64 (bytes);
+		type = GetType (hash);
 		return type is not null;
 	}
 
-	internal static Type? GetType (string javaClassName)
-	{
-		// TODO how would this work without allocating?
-		byte[] bytes = System.Text.Encoding.UTF8.GetBytes (javaClassName);
-		ulong hash = XxHash3.HashToUInt64 (bytes);
-		AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"GetType {javaClassName} (hash: 0x{hash:x16})");
-		AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", new StackTrace(false).ToString());
-
-		int index = MemoryExtensions.BinarySearch (s_hashes, hash);
-		if (index < 0) {
-			AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"GetType {javaClassName} (hash: 0x{hash:x16}) -> NOT FOUND ({index})");
-			return null;
-		}
-
-		var type = GetTypeByIndex (index);
-		AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"GetType {javaClassName} (hash: 0x{hash:x16}) -> {type}");
-		return type;
-	}
-
 	// TODO: My idea was to get the hash directly from the java class name in C++ without
-	// java class name marshalling and whatnot...
+	// java class name without copying the name, marshalling, converting UTF-16/UTF-8, etc.
+	// but it seems that would only be useful once we remove reflection-based activation
+	// and creation of managed peers
 	internal static Type? GetType (IntPtr javaClass)
 	{
 		ulong hash = AndroidRuntimeInternal.GetJavaClassNameHash (javaClass);
-		if (hash == 0) {
-			return null;
-		}
+		return GetType (hash);
+	}
 
+	internal static IEnumerable<string> GetJavaClassNames (Type type)
+	{
+		for (int i = 0; i < Count; i++) {
+			if (GetTypeByIndex (i) == type) {
+				var javaClassName = TypeMap.GetJavaClassNameByIndex (i);
+				if (javaClassName is not null) {
+					yield return javaClassName;
+				}
+			}
+		}
+	}
+
+	private static Type? GetType (ulong hash)
+	{
 		int index = MemoryExtensions.BinarySearch (s_hashes, hash);
 		if (index < 0) {
 			return null;
@@ -55,17 +53,7 @@ internal static class TypeMap
 		return GetTypeByIndex (index);
 	}
 
-	internal static Type? GetTypeByIndex (int index)
-	{
-		// Replaced by src/Microsoft.Android.Sdk.ILLink/TypeMappingStep.cs
-		throw new NotImplementedException ();
-	}
-
-	// TODO: this seems to be necessary for NativeAotTypeManager.CreateSimpleReferencesEnumerator at the moment
-	// it's a method so the trimmer might be eventually able to remove it... but it IS called at app startup -- WHY???
-	internal static string? GetJavaClassNameByIndex (int index)
-	{
-		// Replaced by src/Microsoft.Android.Sdk.ILLink/TypeMappingStep.cs
-		throw new NotImplementedException ();
-	}
+	// Replaced by src/Microsoft.Android.Sdk.ILLink/TypeMappingStep.cs
+	private static Type? GetTypeByIndex (int index) => throw new NotImplementedException ();
+	private static string? GetJavaClassNameByIndex (int index) => throw new NotImplementedException ();
 }
