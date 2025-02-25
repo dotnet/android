@@ -15,7 +15,9 @@ internal static class TypeMap
 
 	internal static bool TryGetType (string javaClassName, [NotNullWhen (true)] out Type? type)
 	{
-		byte[] bytes = System.Text.Encoding.UTF8.GetBytes (javaClassName);
+		int byteCount = System.Text.Encoding.UTF8.GetByteCount (javaClassName);
+		Span<byte> bytes = stackalloc byte [byteCount];
+		System.Text.Encoding.UTF8.GetBytes (javaClassName, bytes);
 		ulong hash = XxHash3.HashToUInt64 (bytes);
 		type = GetType (hash);
 		return type is not null;
