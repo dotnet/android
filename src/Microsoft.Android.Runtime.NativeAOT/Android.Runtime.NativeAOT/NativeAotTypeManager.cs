@@ -127,7 +127,7 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 
 	protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 	{
-		if (TypeMappings.TryGetValue (jniSimpleReference, out var target)) {
+		if (TypeMap.TryGetType (jniSimpleReference, out var target)) {
 			yield return target;
 		} else {
 			AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"# simonrozsival:   GetTypesForSimpleReference: jniSimpleReference=`{jniSimpleReference}` -> NOT FOUND");
@@ -148,7 +148,10 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 		for (int i = 0; i < TypeMap.Count; i++) {
 			if (TypeMap.GetTypeByIndex (i) == type) {
 				AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"# simonrozsival: CreateSimpleReferencesEnumerator: `{type}` -> [{i}: `{TypeMap.GetJavaClassNameByIndex (i)}`]");
-				yield return TypeMap.GetJavaClassNameByIndex (i);
+				var javaClassName = TypeMap.GetJavaClassNameByIndex (i);
+				if (javaClassName is not null) {
+					yield return javaClassName;
+				}
 			}
 		}
 	}

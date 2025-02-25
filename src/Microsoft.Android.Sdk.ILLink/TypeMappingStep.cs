@@ -262,9 +262,6 @@ public class TypeMappingStep : BaseStep
 	static ulong Hash (string javaName)
 	{
 		var bytes = System.Text.Encoding.UTF8.GetBytes (javaName);
-		// TODO the custom linker step cannot have a dependency??
-		// or we would need to copy the System.IO.Hashing.dll manually to make it work?
-		// return System.IO.Hashing.XxHash3.HashToUInt64 (bytes);
-		return (ulong)javaName.GetHashCode ();
+		return System.IO.Hashing.XxHash3.HashToUInt64 (bytes);
 	}
 }
