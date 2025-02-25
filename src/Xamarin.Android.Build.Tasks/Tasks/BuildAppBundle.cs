@@ -62,16 +62,16 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string BaseZip { get; set; }
 
-		public string? CustomBuildConfigFile { get; set; }
+		public string CustomBuildConfigFile { get; set; }
 
-		public string []? Modules { get; set; }
+		public string [] Modules { get; set; }
 
-		public ITaskItem []? MetaDataFiles { get; set; }
+		public ITaskItem [] MetaDataFiles { get; set; }
 
 		[Required]
 		public string Output { get; set; }
 
-		public string? UncompressedFileExtensions { get; set; }
+		public string UncompressedFileExtensions { get; set; }
 
 		string temp;
 
