@@ -250,11 +250,9 @@ namespace Xamarin.Android.Prepare
 
 			static string GetCoreClrAppRuntimePath (Context ctx, string androidTarget)
 			{
-				// TODO: The nuget id and the ref package version are guesses atm, since the CoreCLR packages don't exist yet
-				Log.Instance.Todo ("The nuget id and the ref package version are guesses atm, since the CoreCLR packages don't exist yet");
 				return Path.Combine (
 					XAPackagesDir,
-					$"microsoft.netcore.app.runtime.coreclr.android-{androidTarget}",
+					$"microsoft.netcore.app.runtime.android-{androidTarget}",
 					ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETCoreAppRefPackageVersion),
 					"runtimes",
 					$"android-{androidTarget}"

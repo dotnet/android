@@ -1,6 +1,6 @@
 #include <cstdio>
 
-#include <clr/hosts/coreclrhost.h>
+#include <coreclrhost.h>
 
 #include <xamarin-app.hh>
 #include <host/assembly-store.hh>

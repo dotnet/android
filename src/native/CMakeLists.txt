@@ -213,7 +213,12 @@ if(IS_MONO_RUNTIME)
 else()
   # TEMPORARY: for now JI needs to build with MonoVM embedding APIs
   set(TEMP_MONO_RUNTIME_INCLUDE_DIR ${TEMP_NETCORE_NET_RUNTIME_DIR}/native/include/mono-2.0)
-  set(RUNTIME_INCLUDE_DIR ${NET_RUNTIME_DIR}/native/include/clr)
+
+  if(LOCAL_CORECLR_PATH)
+    set(RUNTIME_INCLUDE_DIR ${LOCAL_CORECLR_PATH}/src/native/corehost)
+  else()
+    set(RUNTIME_INCLUDE_DIR ${REPO_ROOT_DIR}/src-ThirdParty/dotnet/runtime)
+  endif()
 endif()
 
 set(JAVA_INTEROP_INCLUDE_DIR ${JAVA_INTEROP_SRC_PATH})
