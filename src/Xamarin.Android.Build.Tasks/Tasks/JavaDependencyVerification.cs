@@ -332,20 +332,20 @@ partial class MicrosoftNuGetPackageFinder
 
 	public class PackageListFile
 	{
-		[JsonPropertyName ("packages")]
 		public List<Package>? Packages { get; set; }
 	}
 
 	public class Package
 	{
-		[JsonPropertyName ("javaId")]
 		public string? JavaId { get; set; }
-
-		[JsonPropertyName ("nugetId")]
 		public string? NuGetId { get; set; }
 	}
 
-	[JsonSourceGenerationOptions(WriteIndented = true)]
+	[JsonSourceGenerationOptions(
+		AllowTrailingCommas = true,
+		WriteIndented = true,
+		PropertyNameCaseInsensitive = true
+	)]
 	[JsonSerializable(typeof(PackageListFile))]
 	[JsonSerializable(typeof(List<Package>))]
 	[JsonSerializable(typeof(string))]
