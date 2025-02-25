@@ -138,6 +138,20 @@ public class TypeMappingStep : BaseStep
 
 		void GenerateHashesFieldInitialization (ulong[] hashes)
 		{
+			// Sanity check: hashes must be unique and sorted
+			if (hashes.Length > 0) {
+				ulong previous = hashes[0];
+				for (int i = 1; i < hashes.Length; ++i) {
+					if (hashes[i] == previous) {
+						throw new InvalidOperationException ($"Duplicate hashes");
+					} else if (hashes[i] < previous) {
+						throw new InvalidOperationException ($"Hashes are not in ascending order");
+					}
+
+					previous = hashes[i];
+				}
+			}
+
 			var privateImplementationDetails = module.Types.FirstOrDefault (t => t.Name.Contains ("<PrivateImplementationDetails>"));
 			if (privateImplementationDetails is null) {
 				Context.LogMessage ($"Unable to find <PrivateImplementationDetails> class");
