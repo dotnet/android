@@ -659,7 +659,7 @@ public class Test
 				IsRelease = true,
 				AotAssemblies = true,
 				LinkTool = linkTool,
-				References = { new BuildItem ("ProjectReference", $"..\\{folderName}Library1\\Library1.csproj") }
+				References = { new BuildItem ("ProjectReference", $"..\\{folderName}Library1\\Library1.csproj") },
 			};
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "Hello (World).jar") { BinaryContent = () => Convert.FromBase64String (@"
 UEsDBBQACAgIAMl8lUsAAAAAAAAAAAAAAAAJAAQATUVUQS1JTkYv/soAAAMAUEsHCAAAAAACAAAAA
