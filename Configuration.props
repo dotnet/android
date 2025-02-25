@@ -220,4 +220,15 @@
     <AndroidAbiAndRuntimeFlavor Include="@(AndroidSupportedTargetJitAbi)" AndroidRuntime="NativeAOT" />
     <AndroidAbiAndRuntimeFlavor Include="@(AndroidSupportedTargetJitAbi)" AndroidRuntime="CoreCLR" />
   </ItemGroup>
+
+  <!-- Whenever there's a need to use a locally built CoreCLR, both .NET for Android and the
+       application(s) must be built with the same runtime. This property should point to the CoreCLR
+       artifact directory in its repository checkout:
+
+          {PATH_TO_DOTNET_RUNTIME_REPO}/artifacts/bin/microsoft.netcore.app.runtime.android-{ARCH}/{CONFIG}
+
+      <PropertyGroup>
+         <CLRLocalRuntimePath></CLRLocalRuntimePath>
+      </PropertyGroup>
+  -->
 </Project>

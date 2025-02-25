@@ -1,0 +1,11 @@
+The header files in this directory are verbatim copies taken from the
+https://github.com/dotnet/runtime/ repository. 
+
+They can be found in the following locations in the repository:
+
+  src/native/corehost/host_runtime_contract.h
+  src/coreclr/hosts/inc/coreclrhost.h
+
+and they MUST be in sync with the current version of the runtime being 
+used. They don't have to come from the same version, but their content 
+must be ABI and API compatible with it.
