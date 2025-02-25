@@ -271,7 +271,6 @@ namespace Xamarin.Android.Tasks
 				Files.CopyIfStringChanged (contents, real_provider);
 			}
 
-
 			// For NativeAOT, generate JavaInteropRuntime.java
 			if (androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
 				const string fileName = "JavaInteropRuntime.java";

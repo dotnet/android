@@ -20,15 +20,15 @@ void AssemblyStore::set_assembly_data_and_size (uint8_t* source_assembly_data, u
 }
 
 [[gnu::always_inline]]
-auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData const& e, std::string_view const& name) noexcept -> std::tuple<uint8_t*, uint32_t>
+auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData const& e, std::string_view const& name, bool force_rw) noexcept -> std::tuple<uint8_t*, uint32_t>
 {
 	uint8_t *assembly_data = nullptr;
 	uint32_t assembly_data_size = 0;
 
 #if defined (HAVE_LZ4) && defined (RELEASE)
-	log_debug (LOG_ASSEMBLY, "Decompressing assembly '{}' from the assembly store", name);
 	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(e.image_data);
 	if (header->magic == COMPRESSED_DATA_MAGIC) {
+		log_debug (LOG_ASSEMBLY, "Decompressing assembly '{}' from the assembly store", name);
 		if (compressed_assemblies.descriptors == nullptr) [[unlikely]] {
 			Helpers::abort_application (LOG_ASSEMBLY, "Compressed assembly found but no descriptor defined"sv);
 		}
@@ -112,7 +112,16 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 #endif // def HAVE_LZ4 && def RELEASE
 	{
 		log_debug (LOG_ASSEMBLY, "Assembly '{}' is not compressed in the assembly store", name);
-		set_assembly_data_and_size (e.image_data, e.descriptor->data_size, assembly_data, assembly_data_size);
+
+		// HACK! START
+		// Currently, MAUI crashes when we return a pointer to read-only data, so we must copy
+		// the assembly data to a read-write area.
+		log_debug (LOG_ASSEMBLY, "Copying assembly data to an r/w memory area");
+		uint8_t *rw_pointer = static_cast<uint8_t*>(malloc (e.descriptor->data_size));
+		memcpy (rw_pointer, e.image_data, e.descriptor->data_size);
+		set_assembly_data_and_size (rw_pointer, e.descriptor->data_size, assembly_data, assembly_data_size);
+		// HACK! END
+		// 	set_assembly_data_and_size (e.image_data, e.descriptor->data_size, assembly_data, assembly_data_size);
 	}
 
 	return {assembly_data, assembly_data_size};
@@ -178,7 +187,8 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 		);
 	}
 
-	auto [assembly_data, assembly_data_size] = get_assembly_data (assembly_runtime_info, name);
+	constexpr hash_t mscorlib_hash = 0x579a06fed6eec900;
+	auto [assembly_data, assembly_data_size] = get_assembly_data (assembly_runtime_info, name, name_hash == mscorlib_hash);
 	size = assembly_data_size;
 	return assembly_data;
 }
