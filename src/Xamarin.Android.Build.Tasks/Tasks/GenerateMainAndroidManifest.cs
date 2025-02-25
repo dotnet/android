@@ -13,7 +13,7 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks;
 
-public class GenerateMergedAndroidManifest : AndroidTask
+public class GenerateMainAndroidManifest : AndroidTask
 {
 	public override string TaskPrefix => "GMM";
 

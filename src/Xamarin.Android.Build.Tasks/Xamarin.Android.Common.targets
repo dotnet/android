@@ -69,7 +69,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateJavaStubs" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.GenerateMergedAndroidManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.GenerateMainAndroidManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GeneratePackageManagerJava" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidDefineConstants" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAppSettingsDirectory" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1543,7 +1543,7 @@ because xbuild doesn't support framework reference assemblies.
       IntermediateOutputDirectory="$(IntermediateOutputPath)">
   </GenerateACWMap>
 
-  <GenerateMergedAndroidManifest
+  <GenerateMainAndroidManifest
       AndroidRuntime="$(_AndroidRuntime)"
       AndroidSdkDir="$(_AndroidSdkDirectory)"
       AndroidSdkPlatform="$(_AndroidApiLevel)"
@@ -1570,7 +1570,7 @@ because xbuild doesn't support framework reference assemblies.
       TargetName="$(TargetName)"
       VersionCode="$(_AndroidVersionCode)"
       VersionName="$(_AndroidVersionName)">
-  </GenerateMergedAndroidManifest>
+  </GenerateMainAndroidManifest>
 
   <ItemGroup>
     <FileWrites Include="@(_TypeMapAssemblySource)" />
