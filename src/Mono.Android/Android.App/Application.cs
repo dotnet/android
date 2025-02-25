@@ -8,6 +8,10 @@ namespace Android.App {
 
 	partial class Application {
 
+		static Application () {
+			// NOTE: do not remove, removes the beforefieldinit flag for JNIEnvInit.SetSynchronizationContext()
+		}
+
 		static Context? _context;
 		public static Context Context {
 			get {
