@@ -43,7 +43,7 @@ namespace SystemTests
 			},
 		};
 
-		[Test]
+		[Test, Category ("Mono")]
 		[TestCaseSource (nameof (TestPrivateSwitchesSource))]
 		public void TestPrivateSwitches (
 				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.All)]

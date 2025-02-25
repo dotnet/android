@@ -86,6 +86,7 @@ namespace Android.Runtime
 		{
 			androidRuntime = runtime;
 			ValueManager = runtime.ValueManager;
+			SetSynchronizationContext ();
 		}
 
 		[UnmanagedCallersOnly]
@@ -136,8 +137,6 @@ namespace Android.Runtime
 		[DllImport ("xamarin-app")]
 		static extern unsafe void xamarin_app_init (IntPtr env, delegate* unmanaged <int, int, int, IntPtr*, void> get_function_pointer);
 
-		// NOTE: prevents Android.App.Application static ctor from running
-		[MethodImpl (MethodImplOptions.NoInlining)]
 		static void SetSynchronizationContext () =>
 			SynchronizationContext.SetSynchronizationContext (Android.App.Application.SynchronizationContext);
 	}
