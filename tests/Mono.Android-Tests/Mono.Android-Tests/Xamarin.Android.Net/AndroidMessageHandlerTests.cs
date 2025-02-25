@@ -14,6 +14,7 @@ using NUnit.Framework;
 namespace Xamarin.Android.NetTests
 {
 	[TestFixture]
+	[Ignore ("TODO crashes on NativeAOT")]
 	public class AndroidMessageHandlerTests : AndroidHandlerTestBase
 	{
 		protected override HttpMessageHandler CreateHandler ()

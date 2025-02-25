@@ -238,7 +238,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[Test, Category ("Export")]
 		public void CreateTypeWithExportedMethods ()
 		{
 			using (var e = new ContainsExportedMethods ()) {
@@ -250,7 +250,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[Test, Category ("Export")]
 		public void ActivatedDirectObjectSubclassesShouldBeRegistered ()
 		{
 			if (Build.VERSION.SdkInt <= BuildVersionCodes.GingerbreadMr1)
@@ -405,7 +405,7 @@ namespace Java.InteropTests
 			Assert.IsNull (ignore_t2, string.Format ("No exception should be thrown [t2]! Got: {0}", ignore_t2));
 		}
 
-		[Test]
+		[Test, Category ("Mono")]
 		public void JavaToManagedTypeMapping ()
 		{
 			Type m = Java.Interop.TypeManager.GetJavaToManagedType ("android/content/res/Resources");
@@ -414,7 +414,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (null, m);
 		}
 
-		[Test]
+		[Test, Category ("Mono")]
 		public void ManagedToJavaTypeMapping ()
 		{
 			Type type = typeof(Activity);
@@ -426,7 +426,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (null, m, "`JnienvTest` does *not* subclass Java.Lang.Object, it should *not* be in the typemap!");
 		}
 
-		[Test]
+		[Test, Category ("GCBridge")]
 		public void DoNotLeakWeakReferences ()
 		{
 			GC.Collect ();
