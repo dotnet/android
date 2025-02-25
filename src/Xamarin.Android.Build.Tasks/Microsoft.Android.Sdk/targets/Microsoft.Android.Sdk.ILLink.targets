@@ -90,10 +90,7 @@ This file contains the .NET 5-specific targets to customize ILLink
           AfterStep="CleanStep"
           Type="Microsoft.Android.Sdk.ILLink.TypeMappingStep"
       />
-      <_PreserveLists Include="$(MSBuildThisFileDirectory)..\PreserveLists\*.xml" />
-      <TrimmerRootDescriptor
-          Condition=" '@(ResolvedFileToPublish->Count())' != '0' and '%(Filename)' != '' "
-          Include="@(_PreserveLists)" />
+      <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)..\PreserveLists\*.xml" />
       <TrimmerRootDescriptor Include="@(LinkDescription)" />
       <TrimmerRootAssembly Include="Microsoft.Android.Runtime.NativeAOT" Condition=" '$(_AndroidRuntime)' == 'NativeAOT' " RootMode="All" />
     </ItemGroup>
