@@ -1,8 +1,11 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Java.Interop.GenericMarshaler {
 
 	public static partial class JniPeerInstanceMethodsExtensions {
+
+		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
 		public static JniObjectReference StartGenericCreateInstance<T> (
 			this    JniPeerMembers.JniInstanceMethods peer,
@@ -17,7 +20,9 @@ namespace Java.Interop.GenericMarshaler {
 			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniObjectReference NewObject<T> (
+		static unsafe JniObjectReference NewObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -37,7 +42,9 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static void FinishGenericCreateInstance<T> (
+		public static void FinishGenericCreateInstance<
+				[DynamicallyAccessedMembers (Constructors)]
+				T> (
 			this        JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -52,7 +59,9 @@ namespace Java.Interop.GenericMarshaler {
 			_InvokeConstructor (peer, constructorSignature, self, value);
 		}
 
-		static unsafe void _InvokeConstructor<T> (
+		static unsafe void _InvokeConstructor<
+				[DynamicallyAccessedMembers (Constructors)]
+				T> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -87,7 +96,11 @@ namespace Java.Interop.GenericMarshaler {
 			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniObjectReference NewObject<T1, T2> (
+		static unsafe JniObjectReference NewObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -111,7 +124,11 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static void FinishGenericCreateInstance<T1, T2> (
+		public static void FinishGenericCreateInstance<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2> (
 			this        JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -126,7 +143,11 @@ namespace Java.Interop.GenericMarshaler {
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2);
 		}
 
-		static unsafe void _InvokeConstructor<T1, T2> (
+		static unsafe void _InvokeConstructor<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -165,7 +186,13 @@ namespace Java.Interop.GenericMarshaler {
 			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniObjectReference NewObject<T1, T2, T3> (
+		static unsafe JniObjectReference NewObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -193,7 +220,13 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static void FinishGenericCreateInstance<T1, T2, T3> (
+		public static void FinishGenericCreateInstance<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3> (
 			this        JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -208,7 +241,13 @@ namespace Java.Interop.GenericMarshaler {
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3);
 		}
 
-		static unsafe void _InvokeConstructor<T1, T2, T3> (
+		static unsafe void _InvokeConstructor<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -251,7 +290,15 @@ namespace Java.Interop.GenericMarshaler {
 			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniObjectReference NewObject<T1, T2, T3, T4> (
+		static unsafe JniObjectReference NewObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -283,7 +330,15 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static void FinishGenericCreateInstance<T1, T2, T3, T4> (
+		public static void FinishGenericCreateInstance<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4> (
 			this        JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -298,7 +353,15 @@ namespace Java.Interop.GenericMarshaler {
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4);
 		}
 
-		static unsafe void _InvokeConstructor<T1, T2, T3, T4> (
+		static unsafe void _InvokeConstructor<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -345,7 +408,17 @@ namespace Java.Interop.GenericMarshaler {
 			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5> (
+		static unsafe JniObjectReference NewObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -381,7 +454,17 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5> (
+		public static void FinishGenericCreateInstance<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5> (
 			this        JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -396,7 +479,17 @@ namespace Java.Interop.GenericMarshaler {
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5);
 		}
 
-		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5> (
+		static unsafe void _InvokeConstructor<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -447,7 +540,19 @@ namespace Java.Interop.GenericMarshaler {
 			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5, T6> (
+		static unsafe JniObjectReference NewObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -487,7 +592,19 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6> (
+		public static void FinishGenericCreateInstance<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6> (
 			this        JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -502,7 +619,19 @@ namespace Java.Interop.GenericMarshaler {
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6);
 		}
 
-		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6> (
+		static unsafe void _InvokeConstructor<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -557,7 +686,21 @@ namespace Java.Interop.GenericMarshaler {
 			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5, T6, T7> (
+		static unsafe JniObjectReference NewObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -601,7 +744,21 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7> (
+		public static void FinishGenericCreateInstance<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7> (
 			this        JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -616,7 +773,21 @@ namespace Java.Interop.GenericMarshaler {
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7);
 		}
 
-		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7> (
+		static unsafe void _InvokeConstructor<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -675,7 +846,23 @@ namespace Java.Interop.GenericMarshaler {
 			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8> (
+		static unsafe JniObjectReference NewObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -723,7 +910,23 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static void FinishGenericCreateInstance<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8> (
 			this        JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -738,7 +941,23 @@ namespace Java.Interop.GenericMarshaler {
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8);
 		}
 
-		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8> (
+		static unsafe void _InvokeConstructor<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -801,7 +1020,25 @@ namespace Java.Interop.GenericMarshaler {
 			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		static unsafe JniObjectReference NewObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -853,7 +1090,25 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static void FinishGenericCreateInstance<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9> (
 			this        JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -868,7 +1123,25 @@ namespace Java.Interop.GenericMarshaler {
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9);
 		}
 
-		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		static unsafe void _InvokeConstructor<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -935,7 +1208,27 @@ namespace Java.Interop.GenericMarshaler {
 			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		static unsafe JniObjectReference NewObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -991,7 +1284,27 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static void FinishGenericCreateInstance<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10> (
 			this        JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -1006,7 +1319,27 @@ namespace Java.Interop.GenericMarshaler {
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10);
 		}
 
-		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		static unsafe void _InvokeConstructor<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -1077,7 +1410,29 @@ namespace Java.Interop.GenericMarshaler {
 			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		static unsafe JniObjectReference NewObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -1137,7 +1492,29 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static void FinishGenericCreateInstance<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11> (
 			this        JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -1152,7 +1529,29 @@ namespace Java.Interop.GenericMarshaler {
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11);
 		}
 
-		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		static unsafe void _InvokeConstructor<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -1227,7 +1626,31 @@ namespace Java.Interop.GenericMarshaler {
 			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		static unsafe JniObjectReference NewObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -1291,7 +1714,31 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static void FinishGenericCreateInstance<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12> (
 			this        JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -1306,7 +1753,31 @@ namespace Java.Interop.GenericMarshaler {
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12);
 		}
 
-		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		static unsafe void _InvokeConstructor<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -1385,7 +1856,33 @@ namespace Java.Interop.GenericMarshaler {
 			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		static unsafe JniObjectReference NewObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -1453,7 +1950,33 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static void FinishGenericCreateInstance<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13> (
 			this        JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -1468,7 +1991,33 @@ namespace Java.Interop.GenericMarshaler {
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13);
 		}
 
-		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		static unsafe void _InvokeConstructor<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -1551,7 +2100,35 @@ namespace Java.Interop.GenericMarshaler {
 			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		static unsafe JniObjectReference NewObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -1623,7 +2200,35 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static void FinishGenericCreateInstance<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14> (
 			this        JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -1638,7 +2243,35 @@ namespace Java.Interop.GenericMarshaler {
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14);
 		}
 
-		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		static unsafe void _InvokeConstructor<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -1725,7 +2358,37 @@ namespace Java.Interop.GenericMarshaler {
 			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		static unsafe JniObjectReference NewObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -1801,7 +2464,37 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static void FinishGenericCreateInstance<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15> (
 			this        JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -1816,7 +2509,37 @@ namespace Java.Interop.GenericMarshaler {
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15);
 		}
 
-		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		static unsafe void _InvokeConstructor<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -1907,7 +2630,39 @@ namespace Java.Interop.GenericMarshaler {
 			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniObjectReference NewObject<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		static unsafe JniObjectReference NewObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T16> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -1987,7 +2742,39 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static void FinishGenericCreateInstance<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static void FinishGenericCreateInstance<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T16> (
 			this        JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -2002,7 +2789,39 @@ namespace Java.Interop.GenericMarshaler {
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16);
 		}
 
-		static unsafe void _InvokeConstructor<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		static unsafe void _InvokeConstructor<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T16> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -2103,7 +2922,9 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVirtualVoidMethod<T> (
+		public static unsafe void InvokeGenericVirtualVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -2127,7 +2948,11 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVirtualVoidMethod<T1, T2> (
+		public static unsafe void InvokeGenericVirtualVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -2155,7 +2980,13 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVirtualVoidMethod<T1, T2, T3> (
+		public static unsafe void InvokeGenericVirtualVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -2187,7 +3018,15 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVirtualVoidMethod<T1, T2, T3, T4> (
+		public static unsafe void InvokeGenericVirtualVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -2223,7 +3062,17 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVirtualVoidMethod<T1, T2, T3, T4, T5> (
+		public static unsafe void InvokeGenericVirtualVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -2263,7 +3112,19 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVirtualVoidMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe void InvokeGenericVirtualVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -2307,7 +3168,21 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVirtualVoidMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe void InvokeGenericVirtualVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -2355,7 +3230,23 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVirtualVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe void InvokeGenericVirtualVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -2407,7 +3298,25 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVirtualVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe void InvokeGenericVirtualVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -2463,7 +3372,27 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVirtualVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe void InvokeGenericVirtualVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -2523,7 +3452,29 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVirtualVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe void InvokeGenericVirtualVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -2587,7 +3538,31 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVirtualVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe void InvokeGenericVirtualVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -2655,7 +3630,33 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVirtualVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe void InvokeGenericVirtualVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -2727,7 +3728,35 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVirtualVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe void InvokeGenericVirtualVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -2803,7 +3832,37 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVirtualVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe void InvokeGenericVirtualVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -2883,7 +3942,39 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVirtualVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe void InvokeGenericVirtualVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T16> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -2986,7 +4077,9 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericVirtualBooleanMethod<T> (
+		public static unsafe bool InvokeGenericVirtualBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3010,7 +4103,11 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericVirtualBooleanMethod<T1, T2> (
+		public static unsafe bool InvokeGenericVirtualBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3038,7 +4135,13 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericVirtualBooleanMethod<T1, T2, T3> (
+		public static unsafe bool InvokeGenericVirtualBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3070,7 +4173,15 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericVirtualBooleanMethod<T1, T2, T3, T4> (
+		public static unsafe bool InvokeGenericVirtualBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3106,7 +4217,17 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericVirtualBooleanMethod<T1, T2, T3, T4, T5> (
+		public static unsafe bool InvokeGenericVirtualBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3146,7 +4267,19 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericVirtualBooleanMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe bool InvokeGenericVirtualBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3190,7 +4323,21 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericVirtualBooleanMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe bool InvokeGenericVirtualBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3238,7 +4385,23 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericVirtualBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe bool InvokeGenericVirtualBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3290,7 +4453,25 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericVirtualBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe bool InvokeGenericVirtualBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3346,7 +4527,27 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericVirtualBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe bool InvokeGenericVirtualBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3406,7 +4607,29 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericVirtualBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe bool InvokeGenericVirtualBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3470,7 +4693,31 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericVirtualBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe bool InvokeGenericVirtualBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3538,7 +4785,33 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericVirtualBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe bool InvokeGenericVirtualBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3610,7 +4883,35 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericVirtualBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe bool InvokeGenericVirtualBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3686,7 +4987,37 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericVirtualBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe bool InvokeGenericVirtualBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3766,7 +5097,39 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericVirtualBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe bool InvokeGenericVirtualBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T16> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3869,7 +5232,9 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericVirtualSByteMethod<T> (
+		public static unsafe sbyte InvokeGenericVirtualSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3893,7 +5258,11 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericVirtualSByteMethod<T1, T2> (
+		public static unsafe sbyte InvokeGenericVirtualSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3921,7 +5290,13 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericVirtualSByteMethod<T1, T2, T3> (
+		public static unsafe sbyte InvokeGenericVirtualSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3953,7 +5328,15 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericVirtualSByteMethod<T1, T2, T3, T4> (
+		public static unsafe sbyte InvokeGenericVirtualSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -3989,7 +5372,17 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericVirtualSByteMethod<T1, T2, T3, T4, T5> (
+		public static unsafe sbyte InvokeGenericVirtualSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4029,7 +5422,19 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericVirtualSByteMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe sbyte InvokeGenericVirtualSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4073,7 +5478,21 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericVirtualSByteMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe sbyte InvokeGenericVirtualSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4121,7 +5540,23 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericVirtualSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe sbyte InvokeGenericVirtualSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4173,7 +5608,25 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericVirtualSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe sbyte InvokeGenericVirtualSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4229,7 +5682,27 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericVirtualSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe sbyte InvokeGenericVirtualSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4289,7 +5762,29 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericVirtualSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe sbyte InvokeGenericVirtualSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4353,7 +5848,31 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericVirtualSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe sbyte InvokeGenericVirtualSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4421,7 +5940,33 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericVirtualSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe sbyte InvokeGenericVirtualSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4493,7 +6038,35 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericVirtualSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe sbyte InvokeGenericVirtualSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4569,7 +6142,37 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericVirtualSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe sbyte InvokeGenericVirtualSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4649,7 +6252,39 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericVirtualSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe sbyte InvokeGenericVirtualSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T16> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4752,7 +6387,9 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharMethod<T> (
+		public static unsafe char InvokeGenericVirtualCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4776,7 +6413,11 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2> (
+		public static unsafe char InvokeGenericVirtualCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4804,7 +6445,13 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3> (
+		public static unsafe char InvokeGenericVirtualCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4836,7 +6483,15 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4> (
+		public static unsafe char InvokeGenericVirtualCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4872,7 +6527,17 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5> (
+		public static unsafe char InvokeGenericVirtualCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4912,7 +6577,19 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe char InvokeGenericVirtualCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -4956,7 +6633,21 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe char InvokeGenericVirtualCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -5004,7 +6695,23 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe char InvokeGenericVirtualCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -5056,7 +6763,25 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe char InvokeGenericVirtualCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -5112,7 +6837,27 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe char InvokeGenericVirtualCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -5172,7 +6917,29 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe char InvokeGenericVirtualCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -5236,7 +7003,31 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe char InvokeGenericVirtualCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -5304,7 +7095,33 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe char InvokeGenericVirtualCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -5376,7 +7193,35 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe char InvokeGenericVirtualCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -5452,7 +7297,37 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe char InvokeGenericVirtualCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -5532,7 +7407,39 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericVirtualCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe char InvokeGenericVirtualCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T16> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -5635,7 +7542,9 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericVirtualInt16Method<T> (
+		public static unsafe short InvokeGenericVirtualInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -5659,7 +7568,11 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericVirtualInt16Method<T1, T2> (
+		public static unsafe short InvokeGenericVirtualInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -5687,7 +7600,13 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericVirtualInt16Method<T1, T2, T3> (
+		public static unsafe short InvokeGenericVirtualInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -5719,7 +7638,15 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericVirtualInt16Method<T1, T2, T3, T4> (
+		public static unsafe short InvokeGenericVirtualInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -5755,7 +7682,17 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericVirtualInt16Method<T1, T2, T3, T4, T5> (
+		public static unsafe short InvokeGenericVirtualInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -5795,7 +7732,19 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericVirtualInt16Method<T1, T2, T3, T4, T5, T6> (
+		public static unsafe short InvokeGenericVirtualInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -5839,7 +7788,21 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericVirtualInt16Method<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe short InvokeGenericVirtualInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -5887,7 +7850,23 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericVirtualInt16Method<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe short InvokeGenericVirtualInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -5939,7 +7918,25 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericVirtualInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe short InvokeGenericVirtualInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -5995,7 +7992,27 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericVirtualInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe short InvokeGenericVirtualInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -6055,7 +8072,29 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericVirtualInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe short InvokeGenericVirtualInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -6119,7 +8158,31 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericVirtualInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe short InvokeGenericVirtualInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -6187,7 +8250,33 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericVirtualInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe short InvokeGenericVirtualInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -6259,7 +8348,35 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericVirtualInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe short InvokeGenericVirtualInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -6335,7 +8452,37 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericVirtualInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe short InvokeGenericVirtualInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -6415,7 +8562,39 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericVirtualInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe short InvokeGenericVirtualInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T16> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -6518,7 +8697,9 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericVirtualInt32Method<T> (
+		public static unsafe int InvokeGenericVirtualInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -6542,7 +8723,11 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericVirtualInt32Method<T1, T2> (
+		public static unsafe int InvokeGenericVirtualInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -6570,7 +8755,13 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericVirtualInt32Method<T1, T2, T3> (
+		public static unsafe int InvokeGenericVirtualInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -6602,7 +8793,15 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericVirtualInt32Method<T1, T2, T3, T4> (
+		public static unsafe int InvokeGenericVirtualInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -6638,7 +8837,17 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericVirtualInt32Method<T1, T2, T3, T4, T5> (
+		public static unsafe int InvokeGenericVirtualInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -6678,7 +8887,19 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericVirtualInt32Method<T1, T2, T3, T4, T5, T6> (
+		public static unsafe int InvokeGenericVirtualInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -6722,7 +8943,21 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericVirtualInt32Method<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe int InvokeGenericVirtualInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -6770,7 +9005,23 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericVirtualInt32Method<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe int InvokeGenericVirtualInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -6822,7 +9073,25 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericVirtualInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe int InvokeGenericVirtualInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -6878,7 +9147,27 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericVirtualInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe int InvokeGenericVirtualInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -6938,7 +9227,29 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericVirtualInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe int InvokeGenericVirtualInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -7002,7 +9313,31 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericVirtualInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe int InvokeGenericVirtualInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -7070,7 +9405,33 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericVirtualInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe int InvokeGenericVirtualInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -7142,7 +9503,35 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericVirtualInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe int InvokeGenericVirtualInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -7218,7 +9607,37 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericVirtualInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe int InvokeGenericVirtualInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -7298,7 +9717,39 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericVirtualInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe int InvokeGenericVirtualInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T16> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -7401,7 +9852,9 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericVirtualInt64Method<T> (
+		public static unsafe long InvokeGenericVirtualInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -7425,7 +9878,11 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericVirtualInt64Method<T1, T2> (
+		public static unsafe long InvokeGenericVirtualInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -7453,7 +9910,13 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericVirtualInt64Method<T1, T2, T3> (
+		public static unsafe long InvokeGenericVirtualInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -7485,7 +9948,15 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericVirtualInt64Method<T1, T2, T3, T4> (
+		public static unsafe long InvokeGenericVirtualInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -7521,7 +9992,17 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericVirtualInt64Method<T1, T2, T3, T4, T5> (
+		public static unsafe long InvokeGenericVirtualInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -7561,7 +10042,19 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericVirtualInt64Method<T1, T2, T3, T4, T5, T6> (
+		public static unsafe long InvokeGenericVirtualInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -7605,7 +10098,21 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericVirtualInt64Method<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe long InvokeGenericVirtualInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -7653,7 +10160,23 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericVirtualInt64Method<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe long InvokeGenericVirtualInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -7705,7 +10228,25 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericVirtualInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe long InvokeGenericVirtualInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -7761,7 +10302,27 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericVirtualInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe long InvokeGenericVirtualInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -7821,7 +10382,29 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericVirtualInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe long InvokeGenericVirtualInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -7885,7 +10468,31 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericVirtualInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe long InvokeGenericVirtualInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -7953,7 +10560,33 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericVirtualInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe long InvokeGenericVirtualInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -8025,7 +10658,35 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericVirtualInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe long InvokeGenericVirtualInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -8101,7 +10762,37 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericVirtualInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe long InvokeGenericVirtualInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -8181,7 +10872,39 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericVirtualInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe long InvokeGenericVirtualInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T16> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -8284,7 +11007,9 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericVirtualSingleMethod<T> (
+		public static unsafe float InvokeGenericVirtualSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -8308,7 +11033,11 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericVirtualSingleMethod<T1, T2> (
+		public static unsafe float InvokeGenericVirtualSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -8336,7 +11065,13 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericVirtualSingleMethod<T1, T2, T3> (
+		public static unsafe float InvokeGenericVirtualSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -8368,7 +11103,15 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericVirtualSingleMethod<T1, T2, T3, T4> (
+		public static unsafe float InvokeGenericVirtualSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -8404,7 +11147,17 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericVirtualSingleMethod<T1, T2, T3, T4, T5> (
+		public static unsafe float InvokeGenericVirtualSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -8444,7 +11197,19 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericVirtualSingleMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe float InvokeGenericVirtualSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -8488,7 +11253,21 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericVirtualSingleMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe float InvokeGenericVirtualSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -8536,7 +11315,23 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericVirtualSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe float InvokeGenericVirtualSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -8588,7 +11383,25 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericVirtualSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe float InvokeGenericVirtualSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -8644,7 +11457,27 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericVirtualSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe float InvokeGenericVirtualSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -8704,7 +11537,29 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericVirtualSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe float InvokeGenericVirtualSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -8768,7 +11623,31 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericVirtualSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe float InvokeGenericVirtualSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -8836,7 +11715,33 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericVirtualSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe float InvokeGenericVirtualSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -8908,7 +11813,35 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericVirtualSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe float InvokeGenericVirtualSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -8984,7 +11917,37 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericVirtualSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe float InvokeGenericVirtualSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -9064,7 +12027,39 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericVirtualSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe float InvokeGenericVirtualSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T16> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -9167,7 +12162,9 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericVirtualDoubleMethod<T> (
+		public static unsafe double InvokeGenericVirtualDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -9191,7 +12188,11 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericVirtualDoubleMethod<T1, T2> (
+		public static unsafe double InvokeGenericVirtualDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -9219,7 +12220,13 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericVirtualDoubleMethod<T1, T2, T3> (
+		public static unsafe double InvokeGenericVirtualDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -9251,7 +12258,15 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericVirtualDoubleMethod<T1, T2, T3, T4> (
+		public static unsafe double InvokeGenericVirtualDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -9287,7 +12302,17 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericVirtualDoubleMethod<T1, T2, T3, T4, T5> (
+		public static unsafe double InvokeGenericVirtualDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -9327,7 +12352,19 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericVirtualDoubleMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe double InvokeGenericVirtualDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -9371,7 +12408,21 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericVirtualDoubleMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe double InvokeGenericVirtualDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -9419,7 +12470,23 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericVirtualDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe double InvokeGenericVirtualDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -9471,7 +12538,25 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericVirtualDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe double InvokeGenericVirtualDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -9527,7 +12612,27 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericVirtualDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe double InvokeGenericVirtualDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -9587,7 +12692,29 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericVirtualDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe double InvokeGenericVirtualDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -9651,7 +12778,31 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericVirtualDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe double InvokeGenericVirtualDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -9719,7 +12870,33 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericVirtualDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe double InvokeGenericVirtualDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -9791,7 +12968,35 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericVirtualDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe double InvokeGenericVirtualDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -9867,7 +13072,37 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericVirtualDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe double InvokeGenericVirtualDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -9947,7 +13182,39 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericVirtualDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe double InvokeGenericVirtualDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T16> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -10050,7 +13317,9 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<T> (
+		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -10074,7 +13343,11 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<T1, T2> (
+		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -10102,7 +13375,13 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<T1, T2, T3> (
+		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -10134,7 +13413,15 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<T1, T2, T3, T4> (
+		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -10170,7 +13457,17 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<T1, T2, T3, T4, T5> (
+		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -10210,7 +13507,19 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -10254,7 +13563,21 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -10302,7 +13625,23 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -10354,7 +13693,25 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -10410,7 +13767,27 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -10470,7 +13847,29 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -10534,7 +13933,31 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -10602,7 +14025,33 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -10674,7 +14123,35 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -10750,7 +14227,37 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -10830,7 +14337,39 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe JniObjectReference InvokeGenericVirtualObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T16> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self,
@@ -10917,8 +14456,12 @@ namespace Java.Interop.GenericMarshaler {
 
 	public static partial class JniPeerStaticMethodsExtensions {
 
+		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
-		public static unsafe void InvokeGenericVoidMethod<T> (
+
+		public static unsafe void InvokeGenericVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T value
@@ -10939,7 +14482,11 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVoidMethod<T1, T2> (
+		public static unsafe void InvokeGenericVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2
@@ -10964,7 +14511,13 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVoidMethod<T1, T2, T3> (
+		public static unsafe void InvokeGenericVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3
@@ -10993,7 +14546,15 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVoidMethod<T1, T2, T3, T4> (
+		public static unsafe void InvokeGenericVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4
@@ -11026,7 +14587,17 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVoidMethod<T1, T2, T3, T4, T5> (
+		public static unsafe void InvokeGenericVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -11063,7 +14634,19 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVoidMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe void InvokeGenericVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -11104,7 +14687,21 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe void InvokeGenericVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -11149,7 +14746,23 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe void InvokeGenericVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -11198,7 +14811,25 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe void InvokeGenericVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -11251,7 +14882,27 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe void InvokeGenericVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -11308,7 +14959,29 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe void InvokeGenericVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -11369,7 +15042,31 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe void InvokeGenericVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -11434,7 +15131,33 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe void InvokeGenericVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -11503,7 +15226,35 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe void InvokeGenericVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -11576,7 +15327,37 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe void InvokeGenericVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -11653,7 +15434,39 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe void InvokeGenericVoidMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe void InvokeGenericVoidMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T16> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -11734,7 +15547,9 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericBooleanMethod<T> (
+		public static unsafe bool InvokeGenericBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T value
@@ -11755,7 +15570,11 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericBooleanMethod<T1, T2> (
+		public static unsafe bool InvokeGenericBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2
@@ -11780,7 +15599,13 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericBooleanMethod<T1, T2, T3> (
+		public static unsafe bool InvokeGenericBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3
@@ -11809,7 +15634,15 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericBooleanMethod<T1, T2, T3, T4> (
+		public static unsafe bool InvokeGenericBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4
@@ -11842,7 +15675,17 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericBooleanMethod<T1, T2, T3, T4, T5> (
+		public static unsafe bool InvokeGenericBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -11879,7 +15722,19 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericBooleanMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe bool InvokeGenericBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -11920,7 +15775,21 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe bool InvokeGenericBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -11965,7 +15834,23 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe bool InvokeGenericBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -12014,7 +15899,25 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe bool InvokeGenericBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -12067,7 +15970,27 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe bool InvokeGenericBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -12124,7 +16047,29 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe bool InvokeGenericBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -12185,7 +16130,31 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe bool InvokeGenericBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -12250,7 +16219,33 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe bool InvokeGenericBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -12319,7 +16314,35 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe bool InvokeGenericBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -12392,7 +16415,37 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe bool InvokeGenericBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -12469,7 +16522,39 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe bool InvokeGenericBooleanMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe bool InvokeGenericBooleanMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T16> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -12550,7 +16635,9 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericSByteMethod<T> (
+		public static unsafe sbyte InvokeGenericSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T value
@@ -12571,7 +16658,11 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericSByteMethod<T1, T2> (
+		public static unsafe sbyte InvokeGenericSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2
@@ -12596,7 +16687,13 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericSByteMethod<T1, T2, T3> (
+		public static unsafe sbyte InvokeGenericSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3
@@ -12625,7 +16722,15 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericSByteMethod<T1, T2, T3, T4> (
+		public static unsafe sbyte InvokeGenericSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4
@@ -12658,7 +16763,17 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericSByteMethod<T1, T2, T3, T4, T5> (
+		public static unsafe sbyte InvokeGenericSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -12695,7 +16810,19 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericSByteMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe sbyte InvokeGenericSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -12736,7 +16863,21 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe sbyte InvokeGenericSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -12781,7 +16922,23 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe sbyte InvokeGenericSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -12830,7 +16987,25 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe sbyte InvokeGenericSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -12883,7 +17058,27 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe sbyte InvokeGenericSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -12940,7 +17135,29 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe sbyte InvokeGenericSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -13001,7 +17218,31 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe sbyte InvokeGenericSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -13066,7 +17307,33 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe sbyte InvokeGenericSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -13135,7 +17402,35 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe sbyte InvokeGenericSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -13208,7 +17503,37 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe sbyte InvokeGenericSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -13285,7 +17610,39 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe sbyte InvokeGenericSByteMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe sbyte InvokeGenericSByteMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T16> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -13366,7 +17723,9 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharMethod<T> (
+		public static unsafe char InvokeGenericCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T value
@@ -13387,7 +17746,11 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharMethod<T1, T2> (
+		public static unsafe char InvokeGenericCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2
@@ -13412,7 +17775,13 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharMethod<T1, T2, T3> (
+		public static unsafe char InvokeGenericCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3
@@ -13441,7 +17810,15 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4> (
+		public static unsafe char InvokeGenericCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4
@@ -13474,7 +17851,17 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5> (
+		public static unsafe char InvokeGenericCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -13511,7 +17898,19 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe char InvokeGenericCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -13552,7 +17951,21 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe char InvokeGenericCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -13597,7 +18010,23 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe char InvokeGenericCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -13646,7 +18075,25 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe char InvokeGenericCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -13699,7 +18146,27 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe char InvokeGenericCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -13756,7 +18223,29 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe char InvokeGenericCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -13817,7 +18306,31 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe char InvokeGenericCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -13882,7 +18395,33 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe char InvokeGenericCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -13951,7 +18490,35 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe char InvokeGenericCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -14024,7 +18591,37 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe char InvokeGenericCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -14101,7 +18698,39 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe char InvokeGenericCharMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe char InvokeGenericCharMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T16> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -14182,7 +18811,9 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericInt16Method<T> (
+		public static unsafe short InvokeGenericInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T value
@@ -14203,7 +18834,11 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericInt16Method<T1, T2> (
+		public static unsafe short InvokeGenericInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2
@@ -14228,7 +18863,13 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericInt16Method<T1, T2, T3> (
+		public static unsafe short InvokeGenericInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3
@@ -14257,7 +18898,15 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericInt16Method<T1, T2, T3, T4> (
+		public static unsafe short InvokeGenericInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4
@@ -14290,7 +18939,17 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericInt16Method<T1, T2, T3, T4, T5> (
+		public static unsafe short InvokeGenericInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -14327,7 +18986,19 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericInt16Method<T1, T2, T3, T4, T5, T6> (
+		public static unsafe short InvokeGenericInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -14368,7 +19039,21 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericInt16Method<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe short InvokeGenericInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -14413,7 +19098,23 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe short InvokeGenericInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -14462,7 +19163,25 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe short InvokeGenericInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -14515,7 +19234,27 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe short InvokeGenericInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -14572,7 +19311,29 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe short InvokeGenericInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -14633,7 +19394,31 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe short InvokeGenericInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -14698,7 +19483,33 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe short InvokeGenericInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -14767,7 +19578,35 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe short InvokeGenericInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -14840,7 +19679,37 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe short InvokeGenericInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -14917,7 +19786,39 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe short InvokeGenericInt16Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe short InvokeGenericInt16Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T16> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -14998,7 +19899,9 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericInt32Method<T> (
+		public static unsafe int InvokeGenericInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T value
@@ -15019,7 +19922,11 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericInt32Method<T1, T2> (
+		public static unsafe int InvokeGenericInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2
@@ -15044,7 +19951,13 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericInt32Method<T1, T2, T3> (
+		public static unsafe int InvokeGenericInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3
@@ -15073,7 +19986,15 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericInt32Method<T1, T2, T3, T4> (
+		public static unsafe int InvokeGenericInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4
@@ -15106,7 +20027,17 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericInt32Method<T1, T2, T3, T4, T5> (
+		public static unsafe int InvokeGenericInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -15143,7 +20074,19 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericInt32Method<T1, T2, T3, T4, T5, T6> (
+		public static unsafe int InvokeGenericInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -15184,7 +20127,21 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericInt32Method<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe int InvokeGenericInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -15229,7 +20186,23 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe int InvokeGenericInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -15278,7 +20251,25 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe int InvokeGenericInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -15331,7 +20322,27 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe int InvokeGenericInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -15388,7 +20399,29 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe int InvokeGenericInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -15449,7 +20482,31 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe int InvokeGenericInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -15514,7 +20571,33 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe int InvokeGenericInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -15583,7 +20666,35 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe int InvokeGenericInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -15656,7 +20767,37 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe int InvokeGenericInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -15733,7 +20874,39 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe int InvokeGenericInt32Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe int InvokeGenericInt32Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T16> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -15814,7 +20987,9 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericInt64Method<T> (
+		public static unsafe long InvokeGenericInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T value
@@ -15835,7 +21010,11 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericInt64Method<T1, T2> (
+		public static unsafe long InvokeGenericInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2
@@ -15860,7 +21039,13 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericInt64Method<T1, T2, T3> (
+		public static unsafe long InvokeGenericInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3
@@ -15889,7 +21074,15 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericInt64Method<T1, T2, T3, T4> (
+		public static unsafe long InvokeGenericInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4
@@ -15922,7 +21115,17 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericInt64Method<T1, T2, T3, T4, T5> (
+		public static unsafe long InvokeGenericInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -15959,7 +21162,19 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericInt64Method<T1, T2, T3, T4, T5, T6> (
+		public static unsafe long InvokeGenericInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -16000,7 +21215,21 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericInt64Method<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe long InvokeGenericInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -16045,7 +21274,23 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe long InvokeGenericInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -16094,7 +21339,25 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe long InvokeGenericInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -16147,7 +21410,27 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe long InvokeGenericInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -16204,7 +21487,29 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe long InvokeGenericInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -16265,7 +21570,31 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe long InvokeGenericInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -16330,7 +21659,33 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe long InvokeGenericInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -16399,7 +21754,35 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe long InvokeGenericInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -16472,7 +21855,37 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe long InvokeGenericInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -16549,7 +21962,39 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe long InvokeGenericInt64Method<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe long InvokeGenericInt64Method<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T16> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -16630,7 +22075,9 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericSingleMethod<T> (
+		public static unsafe float InvokeGenericSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T value
@@ -16651,7 +22098,11 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericSingleMethod<T1, T2> (
+		public static unsafe float InvokeGenericSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2
@@ -16676,7 +22127,13 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericSingleMethod<T1, T2, T3> (
+		public static unsafe float InvokeGenericSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3
@@ -16705,7 +22162,15 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericSingleMethod<T1, T2, T3, T4> (
+		public static unsafe float InvokeGenericSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4
@@ -16738,7 +22203,17 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericSingleMethod<T1, T2, T3, T4, T5> (
+		public static unsafe float InvokeGenericSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -16775,7 +22250,19 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericSingleMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe float InvokeGenericSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -16816,7 +22303,21 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe float InvokeGenericSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -16861,7 +22362,23 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe float InvokeGenericSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -16910,7 +22427,25 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe float InvokeGenericSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -16963,7 +22498,27 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe float InvokeGenericSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -17020,7 +22575,29 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe float InvokeGenericSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -17081,7 +22658,31 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe float InvokeGenericSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -17146,7 +22747,33 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe float InvokeGenericSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -17215,7 +22842,35 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe float InvokeGenericSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -17288,7 +22943,37 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe float InvokeGenericSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -17365,7 +23050,39 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe float InvokeGenericSingleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe float InvokeGenericSingleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T16> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -17446,7 +23163,9 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericDoubleMethod<T> (
+		public static unsafe double InvokeGenericDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T value
@@ -17467,7 +23186,11 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericDoubleMethod<T1, T2> (
+		public static unsafe double InvokeGenericDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2
@@ -17492,7 +23215,13 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericDoubleMethod<T1, T2, T3> (
+		public static unsafe double InvokeGenericDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3
@@ -17521,7 +23250,15 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericDoubleMethod<T1, T2, T3, T4> (
+		public static unsafe double InvokeGenericDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4
@@ -17554,7 +23291,17 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericDoubleMethod<T1, T2, T3, T4, T5> (
+		public static unsafe double InvokeGenericDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -17591,7 +23338,19 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericDoubleMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe double InvokeGenericDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -17632,7 +23391,21 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe double InvokeGenericDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -17677,7 +23450,23 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe double InvokeGenericDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -17726,7 +23515,25 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe double InvokeGenericDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -17779,7 +23586,27 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe double InvokeGenericDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -17836,7 +23663,29 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe double InvokeGenericDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -17897,7 +23746,31 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe double InvokeGenericDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -17962,7 +23835,33 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe double InvokeGenericDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -18031,7 +23930,35 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe double InvokeGenericDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -18104,7 +24031,37 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe double InvokeGenericDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -18181,7 +24138,39 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe double InvokeGenericDoubleMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe double InvokeGenericDoubleMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T16> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16
@@ -18262,7 +24251,9 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericObjectMethod<T> (
+		public static unsafe JniObjectReference InvokeGenericObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T value
@@ -18283,7 +24274,11 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericObjectMethod<T1, T2> (
+		public static unsafe JniObjectReference InvokeGenericObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2
@@ -18308,7 +24303,13 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericObjectMethod<T1, T2, T3> (
+		public static unsafe JniObjectReference InvokeGenericObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3
@@ -18337,7 +24338,15 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericObjectMethod<T1, T2, T3, T4> (
+		public static unsafe JniObjectReference InvokeGenericObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4
@@ -18370,7 +24379,17 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericObjectMethod<T1, T2, T3, T4, T5> (
+		public static unsafe JniObjectReference InvokeGenericObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5
@@ -18407,7 +24426,19 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericObjectMethod<T1, T2, T3, T4, T5, T6> (
+		public static unsafe JniObjectReference InvokeGenericObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6
@@ -18448,7 +24479,21 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7> (
+		public static unsafe JniObjectReference InvokeGenericObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7
@@ -18493,7 +24538,23 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8> (
+		public static unsafe JniObjectReference InvokeGenericObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8
@@ -18542,7 +24603,25 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9> (
+		public static unsafe JniObjectReference InvokeGenericObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9
@@ -18595,7 +24674,27 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (
+		public static unsafe JniObjectReference InvokeGenericObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10
@@ -18652,7 +24751,29 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> (
+		public static unsafe JniObjectReference InvokeGenericObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11
@@ -18713,7 +24834,31 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> (
+		public static unsafe JniObjectReference InvokeGenericObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12
@@ -18778,7 +24923,33 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> (
+		public static unsafe JniObjectReference InvokeGenericObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13
@@ -18847,7 +25018,35 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> (
+		public static unsafe JniObjectReference InvokeGenericObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14
@@ -18920,7 +25119,37 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> (
+		public static unsafe JniObjectReference InvokeGenericObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15
@@ -18997,7 +25226,39 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static unsafe JniObjectReference InvokeGenericObjectMethod<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> (
+		public static unsafe JniObjectReference InvokeGenericObjectMethod<
+				[DynamicallyAccessedMembers (Constructors)]
+				T1, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T2, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T3, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T4, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T5, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T6, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T7, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T8, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T9, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T10, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T11, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T12, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T13, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T14, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T15, 
+				[DynamicallyAccessedMembers (Constructors)]
+				T16> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember,
 			T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16

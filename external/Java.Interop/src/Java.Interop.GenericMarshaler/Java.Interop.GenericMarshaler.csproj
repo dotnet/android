@@ -8,6 +8,7 @@
   </PropertyGroup>
   
   <Import Project="..\..\TargetFrameworkDependentValues.props" />
+  <Import Project="..\..\build-tools\trim-analyzers\trim-analyzers.props" />
   
   <PropertyGroup>
     <OutputPath>$(ToolOutputFullPath)</OutputPath>

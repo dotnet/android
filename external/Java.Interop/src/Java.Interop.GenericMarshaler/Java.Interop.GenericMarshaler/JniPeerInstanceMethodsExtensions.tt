@@ -17,18 +17,27 @@
 		new { JniCallType   = "Object",     ReturnType  = "JniObjectReference" },
 	};
 
+	string indentation = Environment.NewLine + "\t\t\t\t";
+
 #>
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Java.Interop.GenericMarshaler {
 
 	public static partial class JniPeerInstanceMethodsExtensions {
+
+		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 <#
 	for (int i = 1; i <= 16; ++i ) {
 		string typeParams   = i == 1
 			? "T"
 			: string.Join (", ", Enumerable.Range (1, i)
 			.Select (v => "T" + v));
+		string typeParamsWithAttributes = i == 1
+			? $"{indentation}[DynamicallyAccessedMembers (Constructors)]{indentation}T"
+			: string.Join (", ", Enumerable.Range (1, i)
+			.Select (v => $"{indentation}[DynamicallyAccessedMembers (Constructors)]{indentation}T{v}"));
 		string methodParams = i == 1
 			? "T value"
 			: string.Join (", ", Enumerable.Range (1, i)
@@ -39,9 +48,11 @@ namespace Java.Interop.GenericMarshaler {
 			.Select (v => "value" + v));
 		if (i == 0) {
 			typeParams = "";
+			typeParamsWithAttributes = "";
 			methodParams = "";
 		} else {
 			typeParams = "<" + typeParams + ">";
+			typeParamsWithAttributes = "<" + typeParamsWithAttributes + ">";
 		}
 #>
 
@@ -58,7 +69,7 @@ namespace Java.Interop.GenericMarshaler {
 			return peer.AllocObject (declaringType);
 		}
 
-		static unsafe JniObjectReference NewObject<#= typeParams #> (
+		static unsafe JniObjectReference NewObject<#= typeParamsWithAttributes #> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string  constructorSignature,
 		    Type    declaringType,
@@ -95,7 +106,7 @@ namespace Java.Interop.GenericMarshaler {
 			}
 		}
 
-		public static void FinishGenericCreateInstance<#= typeParams #> (
+		public static void FinishGenericCreateInstance<#= typeParamsWithAttributes #> (
 			this        JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -110,7 +121,7 @@ namespace Java.Interop.GenericMarshaler {
 			_InvokeConstructor (peer, constructorSignature, self, <#= methodArgs #>);
 		}
 
-		static unsafe void _InvokeConstructor<#= typeParams #> (
+		static unsafe void _InvokeConstructor<#= typeParamsWithAttributes #> (
 			JniPeerMembers.JniInstanceMethods  peer,
 		    string      constructorSignature,
 		    IJavaPeerable   self,
@@ -174,19 +185,25 @@ namespace Java.Interop.GenericMarshaler {
 				? "T"
 				: string.Join (", ", Enumerable.Range (1, i)
 				.Select (v => "T" + v));
+			string typeParamsWithAttributes = i == 1
+				? $"{indentation}[DynamicallyAccessedMembers (Constructors)]{indentation}T"
+				: string.Join (", ", Enumerable.Range (1, i)
+				.Select (v => $"{indentation}[DynamicallyAccessedMembers (Constructors)]{indentation}T{v}"));
 			string methodParams = i == 1
 				? "T value"
 				: string.Join (", ", Enumerable.Range (1, i)
 				.Select (v => "T" + v + " value" + v));
 			if (i == 0) {
 				typeParams = "";
+				typeParamsWithAttributes = "";
 				methodParams = "";
 			} else {
 				typeParams = "<" + typeParams + ">";
+				typeParamsWithAttributes = "<" + typeParamsWithAttributes + ">";
 			}
 #>
 
-		public static unsafe <#= info.ReturnType #> InvokeGenericVirtual<#= info.JniCallType #>Method<#= typeParams #> (
+		public static unsafe <#= info.ReturnType #> InvokeGenericVirtual<#= info.JniCallType #>Method<#= typeParamsWithAttributes #> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string encodedMember,
 			IJavaPeerable   self<#= i == 0 ? "" : ",\n\t\t\t" + methodParams #>
@@ -233,6 +250,8 @@ namespace Java.Interop.GenericMarshaler {
 
 	public static partial class JniPeerStaticMethodsExtensions {
 
+		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
 <#
 	foreach (var info in jniReturnTypes) {
 		string ret = "";
@@ -247,19 +266,25 @@ namespace Java.Interop.GenericMarshaler {
 				? "T"
 				: string.Join (", ", Enumerable.Range (1, i)
 				.Select (v => "T" + v));
+			string typeParamsWithAttributes = i == 1
+				? $"{indentation}[DynamicallyAccessedMembers (Constructors)]{indentation}T"
+				: string.Join (", ", Enumerable.Range (1, i)
+				.Select (v => $"{indentation}[DynamicallyAccessedMembers (Constructors)]{indentation}T{v}"));
 			string methodParams = i == 1
 				? "T value"
 				: string.Join (", ", Enumerable.Range (1, i)
 				.Select (v => "T" + v + " value" + v));
 			if (i == 0) {
 				typeParams = "";
+				typeParamsWithAttributes = "";
 				methodParams = "";
 			} else {
 				typeParams = "<" + typeParams + ">";
+				typeParamsWithAttributes = "<" + typeParamsWithAttributes + ">";
 			}
 #>
 
-		public static unsafe <#= info.ReturnType #> InvokeGeneric<#= info.JniCallType #>Method<#= typeParams #> (
+		public static unsafe <#= info.ReturnType #> InvokeGeneric<#= info.JniCallType #>Method<#= typeParamsWithAttributes #> (
 		    this    JniPeerMembers.JniStaticMethods    peer,
 			string encodedMember<#= i == 0 ? "" : ",\n\t\t\t" + methodParams #>
 		)
