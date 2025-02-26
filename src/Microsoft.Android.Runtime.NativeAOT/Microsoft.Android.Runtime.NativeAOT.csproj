@@ -38,8 +38,7 @@
   <Target Name="_CopyToPackDirs">
     <ItemGroup>
       <_RuntimePackFiles Include="$(OutputPath)Microsoft.Android.Runtime.NativeAOT.dll" AndroidRID="%(AndroidAbiAndRuntimeFlavor.AndroidRID)" AndroidRuntime="%(AndroidAbiAndRuntimeFlavor.AndroidRuntime)" />
-      <!-- How do I propagate the System.IO.Hashing.dll file so that it is included with all apps which reference Microsoft.Android.Runtime.NativeAOT.dll ?? -->
-      <!-- <_RuntimePackFiles Include="$(OutputPath)System.IO.Hashing.dll" AndroidRID="%(AndroidAbiAndRuntimeFlavor.AndroidRID)" AndroidRuntime="%(AndroidAbiAndRuntimeFlavor.AndroidRuntime)" /> -->
+      <_RuntimePackFiles Include="$(OutputPath)System.IO.Hashing.dll" AndroidRID="%(AndroidAbiAndRuntimeFlavor.AndroidRID)" AndroidRuntime="%(AndroidAbiAndRuntimeFlavor.AndroidRuntime)" />
     </ItemGroup>
     <Message Importance="high" Text="$(TargetPath) %(AndroidAbiAndRuntimeFlavor.AndroidRID)" />
     <Copy
