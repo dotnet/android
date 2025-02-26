@@ -45,7 +45,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Tools.Diagnost
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Tools.Cecil", "external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj", "{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "native", "src\native\native-mono.csproj", "{53EE4C57-1C03-405A-8243-8DA539546C88}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "native-mono", "src\native\native-mono.csproj", "{53EE4C57-1C03-405A-8243-8DA539546C88}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{CAB438D8-B0F5-4AF0-BEBD-9E2ADBD7B483}"
 EndProject
@@ -124,8 +124,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Android.Sdk.Analysis", "src\Microsoft.Android.Sdk.Analysis\Microsoft.Android.Sdk.Analysis.csproj", "{5E806C9F-1B67-4B6B-A6AB-258834250DBB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "proguard-android", "src\proguard-android\proguard-android.csproj", "{5FD0133B-69E5-4474-9B67-9FD1D0150C70}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "native-clr", "src\native\native-clr.csproj", "{39F49484-872A-489D-8E6B-3BC532DD571D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Android.Runtime.NativeAOT", "src\Microsoft.Android.Runtime.NativeAOT\Microsoft.Android.Runtime.NativeAOT.csproj", "{E8831F32-11D7-D42C-E43C-711998BC357A}"
 EndProject
@@ -351,10 +349,6 @@ Global
 		{5FD0133B-69E5-4474-9B67-9FD1D0150C70}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{5FD0133B-69E5-4474-9B67-9FD1D0150C70}.Release|AnyCPU.ActiveCfg = Release|Any CPU
 		{5FD0133B-69E5-4474-9B67-9FD1D0150C70}.Release|AnyCPU.Build.0 = Release|Any CPU
-		{39F49484-872A-489D-8E6B-3BC532DD571D}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
-		{39F49484-872A-489D-8E6B-3BC532DD571D}.Debug|AnyCPU.Build.0 = Debug|Any CPU
-		{39F49484-872A-489D-8E6B-3BC532DD571D}.Release|AnyCPU.ActiveCfg = Release|Any CPU
-		{39F49484-872A-489D-8E6B-3BC532DD571D}.Release|AnyCPU.Build.0 = Release|Any CPU
 		{E8831F32-11D7-D42C-E43C-711998BC357A}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
 		{E8831F32-11D7-D42C-E43C-711998BC357A}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{E8831F32-11D7-D42C-E43C-711998BC357A}.Release|AnyCPU.ActiveCfg = Release|Any CPU
@@ -418,7 +412,6 @@ Global
 		{A39B6D7C-6616-40D6-8AE4-C6CEE93D2708} = {CAB438D8-B0F5-4AF0-BEBD-9E2ADBD7B483}
 		{5E806C9F-1B67-4B6B-A6AB-258834250DBB} = {FFCF518F-2A4A-40A2-9174-2EE13B76C723}
 		{5FD0133B-69E5-4474-9B67-9FD1D0150C70} = {FFCF518F-2A4A-40A2-9174-2EE13B76C723}
-		{39F49484-872A-489D-8E6B-3BC532DD571D} = {FFCF518F-2A4A-40A2-9174-2EE13B76C723}
 		{E8831F32-11D7-D42C-E43C-711998BC357A} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
