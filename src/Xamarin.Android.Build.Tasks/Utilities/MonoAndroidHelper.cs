@@ -769,5 +769,7 @@ namespace Xamarin.Android.Tasks
 			// Default is XAJavaInterop1
 			return JavaPeerStyle.XAJavaInterop1;
 		}
+
+		public static object GetProjectBuildSpecificTaskObjectKey (object key, string workingDirectory, string intermediateOutputPath) => (key, workingDirectory, intermediateOutputPath);
 	}
 }
