@@ -553,6 +553,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       FormatArguments="AndroidFastDeploymentType;9"
       Condition=" '$(AndroidFastDeploymentType)' != '' "
   />
+  <AndroidWarning Code="XA1040"
+      ResourceName="XA1040"
+      FormatArguments="$(_AndroidRuntime)"
+      Condition=" '$(_AndroidRuntime)' != 'MonoVM' and '$(AndroidAllowExperimentalRuntime)' != 'true' "
+  />
 </Target>
 
 <Target Name="_CheckNonIdealConfigurations"
