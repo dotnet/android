@@ -62,12 +62,14 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateTypeManagerJava" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.FilterAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.FindLayoutsToBind" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.GenerateACWMap" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateLayoutBindings" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateLibraryResources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateManagedAidlProxies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateJavaStubs" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.GenerateMainAndroidManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GeneratePackageManagerJava" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidDefineConstants" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAppSettingsDirectory" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1521,40 +1523,58 @@ because xbuild doesn't support framework reference assemblies.
       ResolvedAssemblies="@(_ResolvedAssemblies)"
       ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
       ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
-      ManifestTemplate="$(_AndroidManifestAbs)"
-      MergedManifestDocuments="@(_MergedManifestDocuments)"
       Debug="$(AndroidIncludeDebugSymbols)"
-      MultiDex="$(AndroidEnableMultiDex)"
-      NeedsInternet="$(AndroidNeedsInternetPermission)"
       AndroidSdkPlatform="$(_AndroidApiLevel)"
-      AndroidSdkDir="$(_AndroidSdkDirectory)"
-      PackageName="$(_AndroidPackage)"
-      VersionName="$(_AndroidVersionName)"
-      VersionCode="$(_AndroidVersionCode)"
-      ApplicationLabel="$(_ApplicationLabel)"
-      ManifestPlaceholders="$(AndroidManifestPlaceholders)"
       OutputDirectory="$(IntermediateOutputPath)android"
       TypemapOutputDirectory="$(_NativeAssemblySourceDir)"
       GenerateNativeAssembly="$(_AndroidGenerateNativeAssembly)"
-      MergedAndroidManifestOutput="$(_ManifestOutput)"
-      EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-      BundledWearApplicationName="$(BundledWearApplicationPackageName)"
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
-      AcwMapFile="$(_AcwMapFile)"
       SupportedAbis="@(_BuildTargetAbis)"
-      SupportedOSPlatformVersion="$(SupportedOSPlatformVersion)"
       SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)"
-      CheckedBuild="$(_AndroidCheckedBuild)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
       LinkingEnabled="$(_LinkingEnabled)"
       HaveMultipleRIDs="$(_HaveMultipleRIDs)"
       IntermediateOutputDirectory="$(IntermediateOutputPath)"
-      TargetName="$(TargetName)"
       Environments="@(_EnvironmentFiles)">
   </GenerateJavaStubs>
+
+
+  <GenerateACWMap
+      AcwMapFile="$(_AcwMapFile)"
+      IntermediateOutputDirectory="$(IntermediateOutputPath)">
+  </GenerateACWMap>
+
+  <GenerateMainAndroidManifest
+      AndroidRuntime="$(_AndroidRuntime)"
+      AndroidSdkDir="$(_AndroidSdkDirectory)"
+      AndroidSdkPlatform="$(_AndroidApiLevel)"
+      ApplicationJavaClass="$(AndroidApplicationJavaClass)"
+      ApplicationLabel="$(_ApplicationLabel)"
+      BundledWearApplicationName="$(BundledWearApplicationPackageName)"
+      CheckedBuild="$(_AndroidCheckedBuild)"
+      CodeGenerationTarget="$(AndroidCodegenTarget)"
+      Debug="$(AndroidIncludeDebugSymbols)"
+      EmbedAssemblies="$(EmbedAssembliesIntoApk)"
+      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
+      IntermediateOutputDirectory="$(IntermediateOutputPath)"
+      ManifestPlaceholders="$(AndroidManifestPlaceholders)"
+      ManifestTemplate="$(_AndroidManifestAbs)"
+      MergedAndroidManifestOutput="$(_ManifestOutput)"
+      MergedManifestDocuments="@(_MergedManifestDocuments)"
+      MultiDex="$(AndroidEnableMultiDex)"
+      NeedsInternet="$(AndroidNeedsInternetPermission)"
+      OutputDirectory="$(IntermediateOutputPath)android"
+      PackageName="$(_AndroidPackage)"
+      ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
+      SupportedAbis="@(_BuildTargetAbis)"
+      SupportedOSPlatformVersion="$(SupportedOSPlatformVersion)"
+      TargetName="$(TargetName)"
+      VersionCode="$(_AndroidVersionCode)"
+      VersionName="$(_AndroidVersionName)">
+  </GenerateMainAndroidManifest>
 
   <ItemGroup>
     <FileWrites Include="@(_TypeMapAssemblySource)" />
@@ -1758,6 +1778,7 @@ because xbuild doesn't support framework reference assemblies.
     ResolvedAssemblies="@(_ResolvedAssemblies)"
     ResolvedUserAssemblies="@(_ResolvedUserAssemblies)"
     SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"
+    IntermediateOutputDirectory="$(IntermediateOutputPath)"
     NativeLibraries="@(AndroidNativeLibrary);@(EmbeddedNativeLibrary);@(FrameworkNativeLibrary)"
     MonoComponents="@(_MonoComponent)"
     MainAssembly="$(TargetPath)"

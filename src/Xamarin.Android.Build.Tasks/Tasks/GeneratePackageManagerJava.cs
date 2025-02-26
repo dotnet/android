@@ -44,6 +44,9 @@ namespace Xamarin.Android.Tasks
 		public string EnvironmentOutputDirectory { get; set; }
 
 		[Required]
+		public string IntermediateOutputDirectory { get; set; } = "";
+
+		[Required]
 		public string MainAssembly { get; set; }
 
 		[Required]
@@ -310,7 +313,7 @@ namespace Xamarin.Android.Tasks
 			ConcurrentDictionary<AndroidTargetArch, NativeCodeGenState>? nativeCodeGenStates = null;
 			if (enableMarshalMethods) {
 				nativeCodeGenStates = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ConcurrentDictionary<AndroidTargetArch, NativeCodeGenState>> (
-					ProjectSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateRegisterTaskKey),
+					MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory),
 					RegisteredTaskObjectLifetime.Build
 				);
 			}

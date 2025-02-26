@@ -15,7 +15,6 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 
 	public NativeAotTypeManager ()
 	{
-		AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"NativeAotTypeManager()");
 		var startTicks  = global::System.Environment.TickCount;
 		InitializeTypeMappings ();
 		var endTicks    = global::System.Environment.TickCount;
@@ -80,16 +79,12 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 			Type type,
 			ReadOnlySpan<char> methods)
 	{
-		AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"# jonp: RegisterNativeMembers: nativeClass={nativeClass} type=`{type}`");
-		
 		if (methods.IsEmpty) {
-			AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", "methods.IsEmpty");
 			return;
 		}
 
 		int methodCount = CountMethods (methods);
 		if (methodCount < 1) {
-			AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"methodCount < 1: {methodCount}");
 			return;
 		}
 
@@ -122,7 +117,6 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 						callbackDeclaringType = callbackDeclaringType.BaseType!;
 					}
 
-					AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"# jonp: Delegate.CreateDelegate callbackDeclaringType={callbackDeclaringType}, callbackString={callbackString}");
 					GetCallbackHandler connector = (GetCallbackHandler) Delegate.CreateDelegate (typeof (GetCallbackHandler),
 						callbackDeclaringType, callbackString.ToString ());
 					callback = connector ();
@@ -137,10 +131,7 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 			methodsSpan = newLineIndex != -1 ? methodsSpan.Slice (newLineIndex + 1) : default;
 		}
 
-		AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"# jonp: needToRegisterNatives={needToRegisterNatives}");
-
 		if (needToRegisterNatives) {
-			AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"# jonp: RegisterNatives: nativeClass={nativeClass} type=`{type}` natives={natives.Length} nativesIndex={nativesIndex}");
 			JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, natives, nativesIndex);
 		}
 	}
@@ -148,13 +139,10 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 
 	protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 	{
-		AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"# jonp: GetTypesForSimpleReference: jniSimpleReference=`{jniSimpleReference}`");
 		if (TypeMappings.TryGetValue (jniSimpleReference, out var target)) {
-			Console.WriteLine ($"# jonp:   GetTypesForSimpleReference: jniSimpleReference=`{jniSimpleReference}` -> `{target}`");
 			yield return target;
 		}
 		foreach (var t in base.GetTypesForSimpleReference (jniSimpleReference)) {
-			AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"# jonp:   GetTypesForSimpleReference: jniSimpleReference=`{jniSimpleReference}` -> `{t}`");
 			yield return t;
 		}
 	}

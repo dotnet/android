@@ -7,14 +7,14 @@
     <OutputDex>$(OutputPath)java_runtime.dex</OutputDex>
     <IntermediateRuntimeOutputPath>$(IntermediateOutputPath)release</IntermediateRuntimeOutputPath>
     <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)release.txt</IntermediateRuntimeClassesTxt>
-    <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\debug\MultiDexLoader.java;java\mono\android\debug\BuildConfig.java;java\mono\android\debug-net6\BuildConfig.java;java\mono\android\release-net6\BuildConfig.java</RemoveItems>
+    <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\debug\MultiDexLoader.java;java\mono\android\debug\BuildConfig.java;java\mono\android\debug-net6\BuildConfig.java;java\mono\android\release-net6\BuildConfig.java;java\mono\android\clr\MonoPackageManager.java</RemoveItems>
   </_RuntimeOutput>
   <_RuntimeOutput Include="$(OutputPath)java_runtime_fastdev.jar">
     <OutputJar>$(OutputPath)java_runtime_fastdev.jar</OutputJar>
     <OutputDex>$(OutputPath)java_runtime_fastdev.dex</OutputDex>
     <IntermediateRuntimeOutputPath>$(IntermediateOutputPath)fastdev</IntermediateRuntimeOutputPath>
     <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)fastdev.txt</IntermediateRuntimeClassesTxt>
-    <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\release\MultiDexLoader.java;java\mono\android\release\BuildConfig.java;java\mono\android\release-net6\BuildConfig.java;java\mono\android\debug-net6\BuildConfig.java</RemoveItems>
+    <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\release\MultiDexLoader.java;java\mono\android\release\BuildConfig.java;java\mono\android\release-net6\BuildConfig.java;java\mono\android\debug-net6\BuildConfig.java;java\mono\android\clr\MonoPackageManager.java</RemoveItems>
   </_RuntimeOutput>
 
   <_RuntimeOutput Include="$(OutputPath)java_runtime_net6.jar">
@@ -22,14 +22,29 @@
     <OutputDex>$(OutputPath)java_runtime_net6.dex</OutputDex>
     <IntermediateRuntimeOutputPath>$(IntermediateOutputPath)release-net6</IntermediateRuntimeOutputPath>
     <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)release-net6.txt</IntermediateRuntimeClassesTxt>
-    <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\debug\MultiDexLoader.java;java\mono\android\debug-net6\BuildConfig.java;java\mono\android\debug\BuildConfig.java;java\mono\android\release\BuildConfig.java</RemoveItems>
+    <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\debug\MultiDexLoader.java;java\mono\android\debug-net6\BuildConfig.java;java\mono\android\debug\BuildConfig.java;java\mono\android\release\BuildConfig.java;java\mono\android\clr\MonoPackageManager.java</RemoveItems>
   </_RuntimeOutput>
   <_RuntimeOutput Include="$(OutputPath)java_runtime_fastdev_net6.jar">
     <OutputJar>$(OutputPath)java_runtime_fastdev_net6.jar</OutputJar>
     <OutputDex>$(OutputPath)java_runtime_fastdev_net6.dex</OutputDex>
     <IntermediateRuntimeOutputPath>$(IntermediateOutputPath)fastdev-net6</IntermediateRuntimeOutputPath>
     <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)fastdev-net6.txt</IntermediateRuntimeClassesTxt>
-    <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\release\MultiDexLoader.java;java\mono\android\release-net6\BuildConfig.java;java\mono\android\release\BuildConfig.java;java\mono\android\debug\BuildConfig.java</RemoveItems>
+    <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\release\MultiDexLoader.java;java\mono\android\release-net6\BuildConfig.java;java\mono\android\release\BuildConfig.java;java\mono\android\debug\BuildConfig.java;java\mono\android\clr\MonoPackageManager.java</RemoveItems>
+  </_RuntimeOutput>
+
+  <_RuntimeOutput Include="$(OutputPath)java_runtime_clr.jar">
+    <OutputJar>$(OutputPath)java_runtime_clr.jar</OutputJar>
+    <OutputDex>$(OutputPath)java_runtime_clr.dex</OutputDex>
+    <IntermediateRuntimeOutputPath>$(IntermediateOutputPath)release-clr</IntermediateRuntimeOutputPath>
+    <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)release-clr.txt</IntermediateRuntimeClassesTxt>
+    <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\debug\MultiDexLoader.java;java\mono\android\debug-net6\BuildConfig.java;java\mono\android\debug\BuildConfig.java;java\mono\android\release\BuildConfig.java;java\mono\android\MonoPackageManager.java</RemoveItems>
+  </_RuntimeOutput>
+  <_RuntimeOutput Include="$(OutputPath)java_runtime_fastdev_clr.jar">
+    <OutputJar>$(OutputPath)java_runtime_fastdev_clr.jar</OutputJar>
+    <OutputDex>$(OutputPath)java_runtime_fastdev_clr.dex</OutputDex>
+    <IntermediateRuntimeOutputPath>$(IntermediateOutputPath)fastdev-clr</IntermediateRuntimeOutputPath>
+    <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)fastdev-clr.txt</IntermediateRuntimeClassesTxt>
+    <RemoveItems>..\..\src-ThirdParty\bazel\java\mono\android\release\MultiDexLoader.java;java\mono\android\release-net6\BuildConfig.java;java\mono\android\release\BuildConfig.java;java\mono\android\debug\BuildConfig.java;java\mono\android\MonoPackageManager.java</RemoveItems>
   </_RuntimeOutput>
 </ItemGroup>
 

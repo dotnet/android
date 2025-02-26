@@ -134,6 +134,26 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void InvalidAssetDirectoryWithNonASCIIChars ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				ProjectName = "App1",
+				IsRelease = true,
+				OtherBuildItems = {
+					new AndroidItem.AndroidAsset ("Assets\\asset1.txt") {
+						TextContent = () => "Asset1",
+						Encoding = Encoding.ASCII,
+					},
+				},
+			};
+			using (var b = CreateApkBuilder (Path.Combine ("temp", "InvalidAssetDirectoryWithNonASCIIChars_Ümläüt", proj.ProjectName))) {
+				b.ThrowOnBuildFailure = false;
+				Assert.AreEqual (!IsWindows, b.Build (proj), $"{proj.ProjectName} should {(IsWindows ? "not " : "")}have built successfully.");
+				Assert.AreEqual (IsWindows, b.LastBuildOutput.ContainsText ("APT2265"), $"APT2265 should {(IsWindows ? "" : "not ")}have been raised.");
+			}
+		}
+
+		[Test]
 		public void FullPath ()
 		{
 			var assetPath = Path.GetFullPath (Path.Combine (Root, "temp", TestName, "Assets", "foo.txt"));

@@ -272,11 +272,16 @@ namespace Xamarin.Android.Tasks {
 				}
 			}
 
+			var hasAssetsErrors = false;
 			// When adding Assets the first item found takes precedence.
-			// So we need to add the applicaiton Assets first.
+			// So we need to add the application Assets first.
 			if (!string.IsNullOrEmpty (AssetsDirectory)) {
 				var assetDir = GetFullPath (AssetsDirectory.TrimEnd ('\\'));
 				if (Directory.Exists (assetDir)) {
+					if (OS.IsWindows && !IsPathOnlyASCII (assetDir)) {
+						hasAssetsErrors = true;
+						LogCodedError ("APT2265", Properties.Resources.APT2265, assetDir);
+					}
 					cmd.Add ("-A");
 					cmd.Add (assetDir);
 				} else {
@@ -289,6 +294,11 @@ namespace Xamarin.Android.Tasks {
 					var assetDir = GetFullPath (AdditionalAndroidAssetPaths [i].ItemSpec.TrimEnd ('\\'));
 					if (!string.IsNullOrWhiteSpace (assetDir)) {
 						if (Directory.Exists (assetDir)) {
+							if (OS.IsWindows && !IsPathOnlyASCII (assetDir)) {
+								hasAssetsErrors = true;
+								LogCodedError ("APT2265", Properties.Resources.APT2265, assetDir);
+								continue;
+							}
 							cmd.Add ("-A");
 							cmd.Add (GetFullPath (assetDir));
 						} else {
@@ -296,6 +306,10 @@ namespace Xamarin.Android.Tasks {
 						}
 					}
 				}
+			}
+
+			if (hasAssetsErrors) {
+				return Array.Empty<string> ();
 			}
 
 			if (!string.IsNullOrEmpty (ProguardRuleOutput)) {

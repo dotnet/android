@@ -98,9 +98,7 @@ namespace Java.Interop {
 		static _JniMarshal_PPLLLL_V? cb_activate;
 		internal static Delegate GetActivateHandler ()
 		{
-			if (cb_activate == null)
-				cb_activate = (_JniMarshal_PPLLLL_V) JNINativeWrapper.CreateDelegate ((_JniMarshal_PPLLLL_V) n_Activate);
-			return cb_activate;
+			return cb_activate ??= new _JniMarshal_PPLLLL_V (n_Activate);
 		}
 
 #if JAVA_INTEROP
@@ -129,42 +127,53 @@ namespace Java.Interop {
 			return result;
 		}
 
+		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value from parameter 'typename_ptr'.")]
 		static void n_Activate (IntPtr jnienv, IntPtr jclass, IntPtr typename_ptr, IntPtr signature_ptr, IntPtr jobject, IntPtr parameters_ptr)
 		{
-			var o   = Java.Lang.Object.PeekObject (jobject);
-			var ex  = o as IJavaPeerable;
-			if (ex != null) {
-				var state = ex.JniManagedPeerState;
-				if (!state.HasFlag (JniManagedPeerStates.Activatable) && !state.HasFlag (JniManagedPeerStates.Replaceable))
-					return;
-			}
-			if (!ActivationEnabled) {
-				if (Logger.LogGlobalRef) {
-					Logger.Log (LogLevel.Info, "monodroid-gref",
-						FormattableString.Invariant ($"warning: Skipping managed constructor invocation for handle 0x{jobject:x} (key_handle 0x{JNIEnv.IdentityHash (jobject):x}). Please use JNIEnv.StartCreateInstance() + JNIEnv.FinishCreateInstance() instead of JNIEnv.NewObject() and/or JNIEnv.CreateInstance()."));
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return;
+
+			try {
+				var o   = Java.Lang.Object.PeekObject (jobject);
+				var ex  = o as IJavaPeerable;
+				if (ex != null) {
+					var state = ex.JniManagedPeerState;
+					if (!state.HasFlag (JniManagedPeerStates.Activatable) && !state.HasFlag (JniManagedPeerStates.Replaceable))
+						return;
 				}
-				return;
-			}
+				if (!ActivationEnabled) {
+					if (Logger.LogGlobalRef) {
+						Logger.Log (LogLevel.Info, "monodroid-gref",
+							FormattableString.Invariant ($"warning: Skipping managed constructor invocation for handle 0x{jobject:x} (key_handle 0x{JNIEnv.IdentityHash (jobject):x}). Please use JNIEnv.StartCreateInstance() + JNIEnv.FinishCreateInstance() instead of JNIEnv.NewObject() and/or JNIEnv.CreateInstance()."));
+					}
+					return;
+				}
 
-			Type type = Type.GetType (JNIEnv.GetString (typename_ptr, JniHandleOwnership.DoNotTransfer)!, throwOnError:true)!;
-			if (type.IsGenericTypeDefinition) {
-				throw new NotSupportedException (
-						"Constructing instances of generic types from Java is not supported, as the type parameters cannot be determined.",
-						CreateJavaLocationException ());
-			}
-			Type[] ptypes = GetParameterTypes (JNIEnv.GetString (signature_ptr, JniHandleOwnership.DoNotTransfer));
-			var parms = JNIEnv.GetObjectArray (parameters_ptr, ptypes);
-			var cinfo = type.GetConstructor (ptypes);
-			if (cinfo == null) {
-				throw CreateMissingConstructorException (type, ptypes);
-			}
-			if (o != null) {
-				cinfo.Invoke (o, parms);
-				return;
-			}
+				Type type = Type.GetType (JNIEnv.GetString (typename_ptr, JniHandleOwnership.DoNotTransfer)!, throwOnError:true)!;
+				if (type.IsGenericTypeDefinition) {
+					throw new NotSupportedException (
+							"Constructing instances of generic types from Java is not supported, as the type parameters cannot be determined.",
+							CreateJavaLocationException ());
+				}
+				Type[] ptypes = GetParameterTypes (JNIEnv.GetString (signature_ptr, JniHandleOwnership.DoNotTransfer));
+				var parms = JNIEnv.GetObjectArray (parameters_ptr, ptypes);
+				var cinfo = type.GetConstructor (ptypes);
+				if (cinfo == null) {
+					throw CreateMissingConstructorException (type, ptypes);
+				}
+				if (o != null) {
+					cinfo.Invoke (o, parms);
+					return;
+				}
 
-			Activate (jobject, cinfo, parms);
+				Activate (jobject, cinfo, parms);
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return;
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
 		}
 
 		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "RuntimeHelpers.GetUninitializedObject() does not statically know the return value from ConstructorInfo.DeclaringType.")]
