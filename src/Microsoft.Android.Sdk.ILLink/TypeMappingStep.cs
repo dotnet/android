@@ -198,19 +198,14 @@ public class TypeMappingStep : BaseStep
 				return;
 			}
 
-			var cctor = type.Methods.FirstOrDefault (m => m.Name == ".cctor");
-			if (cctor is null) {
-				cctor = new MethodDefinition (
-					".cctor",
-					MethodAttributes.Static | MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
-					module.TypeSystem.Void);
-
-				type.Methods.Add (cctor);
-			} else {
-				cctor.Body.Instructions.Clear ();
+			var initialize = type.Methods.FirstOrDefault (m => m.Name == "Initialize");
+			if (initialize is null) {
+				Context.LogMessage ($"Unable to find TypeMap.Initialize method");
+				return;
 			}
 
-			var il = cctor.Body.GetILProcessor ();
+			initialize.Body.Instructions.Clear ();
+			var il = initialize.Body.GetILProcessor ();
 
 			il.Emit (OpCodes.Ldc_I4, hashes.Length);
 			il.Emit (OpCodes.Newarr, module.ImportReference (typeof (ulong)));
@@ -218,10 +213,10 @@ public class TypeMappingStep : BaseStep
 			il.Emit (OpCodes.Ldtoken, bytesField);
 			il.Emit (OpCodes.Call, module.ImportReference (typeof (System.Runtime.CompilerServices.RuntimeHelpers).GetMethod("InitializeArray")));
 			il.Emit (OpCodes.Stsfld, field);
+
 			il.Emit (OpCodes.Ret);
 		}
 	}
-
 
 	TypeDefinition SelectTypeDefinition (string javaName, List<TypeDefinition> list)
 	{
