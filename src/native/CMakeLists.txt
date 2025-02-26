@@ -155,10 +155,17 @@ include("${XA_BUILD_DIR}/xa_build_configuration.cmake")
 # Paths
 #
 if(IS_CLR_RUNTIME)
-  set(RUNTIME_DIR_ARM64  "${CORECLR_APP_RUNTIME_DIR_ARM64}")
-  set(RUNTIME_DIR_ARM    "${CORECLR_APP_RUNTIME_DIR_ARM}")
-  set(RUNTIME_DIR_X86_64 "${CORECLR_APP_RUNTIME_DIR_X86_64}")
-  set(RUNTIME_DIR_X86    "${CORECLR_APP_RUNTIME_DIR_X86}")
+  if(LOCAL_CORECLR_PATH)
+    set(RUNTIME_DIR_ARM64  "${LOCAL_CORECLR_PATH}/runtimes/android-arm64")
+    set(RUNTIME_DIR_ARM    "${LOCAL_CORECLR_PATH}/runtimes/android-arm")
+    set(RUNTIME_DIR_X86_64 "${LOCAL_CORECLR_PATH}/runtimes/android-x64")
+    set(RUNTIME_DIR_X86    "${LOCAL_CORECLR_PATH}/runtimes/android-x86")
+  else()
+    set(RUNTIME_DIR_ARM64  "${CORECLR_APP_RUNTIME_DIR_ARM64}")
+    set(RUNTIME_DIR_ARM    "${CORECLR_APP_RUNTIME_DIR_ARM}")
+    set(RUNTIME_DIR_X86_64 "${CORECLR_APP_RUNTIME_DIR_X86_64}")
+    set(RUNTIME_DIR_X86    "${CORECLR_APP_RUNTIME_DIR_X86}")
+  endif()
 
   # TEMPORARY: for now JI needs to build with MonoVM embedding APIs
   set(TEMP_NETCORE_RUNTIME_DIR_ARM64  "${NETCORE_APP_RUNTIME_DIR_ARM64}")
@@ -213,7 +220,13 @@ if(IS_MONO_RUNTIME)
 else()
   # TEMPORARY: for now JI needs to build with MonoVM embedding APIs
   set(TEMP_MONO_RUNTIME_INCLUDE_DIR ${TEMP_NETCORE_NET_RUNTIME_DIR}/native/include/mono-2.0)
-  set(RUNTIME_INCLUDE_DIR ${NET_RUNTIME_DIR}/native/include/clr)
+
+  if(LOCAL_CORECLR_PATH)
+    set(CLR_REPO_ROOT_PATH "${LOCAL_CORECLR_PATH}/../../../..")
+    set(RUNTIME_INCLUDE_DIR "${CLR_REPO_ROOT_PATH}/src/native/corehost;${CLR_REPO_ROOT_PATH}/src/coreclr/hosts/inc")
+  else()
+    set(RUNTIME_INCLUDE_DIR ${REPO_ROOT_DIR}/src-ThirdParty/dotnet/runtime)
+  endif()
 endif()
 
 set(JAVA_INTEROP_INCLUDE_DIR ${JAVA_INTEROP_SRC_PATH})
