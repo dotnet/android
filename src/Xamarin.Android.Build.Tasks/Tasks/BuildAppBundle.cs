@@ -1,7 +1,7 @@
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -88,26 +88,25 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 
-				var json = JObject.FromObject (new { });
+				JsonNode json = JsonNode.Parse ("{}")!;
 				if (!string.IsNullOrEmpty (CustomBuildConfigFile) && File.Exists (CustomBuildConfigFile)) {
-					using (StreamReader file = File.OpenText (CustomBuildConfigFile))
-					using (JsonTextReader reader = new JsonTextReader (file)) {
-						json = (JObject)JToken.ReadFrom(reader);
-					}
+					using Stream fs = File.OpenRead (CustomBuildConfigFile);
+					using JsonDocument doc = JsonDocument.Parse (fs, new JsonDocumentOptions { AllowTrailingCommas = true });
+					json = doc.RootElement.ToNode ();
 				}
-				var jsonAddition = JObject.FromObject (new {
+				var jsonAddition = new {
 					compression = new {
 						uncompressedGlob = uncompressed,
 					}
-				});
-
-				var mergeSettings = new JsonMergeSettings () {
-					MergeArrayHandling = MergeArrayHandling.Union,
-					MergeNullValueHandling = MergeNullValueHandling.Ignore
 				};
-				json.Merge (jsonAddition, mergeSettings);
-				Log.LogDebugMessage ("BundleConfig.json: {0}", json);
-				File.WriteAllText (temp, json.ToString ());
+
+				var jsonAdditionDoc = JsonSerializer.SerializeToNode (jsonAddition);
+
+				var mergedJson = json.Merge (jsonAdditionDoc);
+				var output = mergedJson.ToJsonString (new JsonSerializerOptions { WriteIndented = true });
+
+				Log.LogDebugMessage ("BundleConfig.json: {0}", output);
+				File.WriteAllText (temp, output);
 
 				//NOTE: bundletool will not overwrite
 				if (File.Exists (Output))
