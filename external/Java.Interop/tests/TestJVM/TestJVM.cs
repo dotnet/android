@@ -23,7 +23,6 @@ namespace Java.InteropTests
 
 		public  ICollection<string>         JarFilePaths    {get;}      = new List<string> ();
 		public  Assembly                    CallingAssembly {get; set;}
-		public  Dictionary<string, Type>?   TypeMappings    {get; set;}
 
 		internal    JdkInfo?                JdkInfo         {get; set;}
 	}
@@ -141,9 +140,13 @@ namespace Java.InteropTests
 		static TestJVMOptions CreateOptions (string[]? jarFiles, Assembly callingAssembly, Dictionary<string, Type>? typeMappings)
 		{
 			var o = new TestJVMOptions {
-				TypeMappings    = typeMappings,
 				CallingAssembly = callingAssembly,
 			};
+			if (typeMappings != null) {
+				foreach (var e in typeMappings) {
+					o.TypeMappings.Add (e.Key, e.Value);
+				}
+			}
 			if (jarFiles != null) {
 				foreach (var jar in jarFiles) {
 					o.JarFilePaths.Add (jar);
@@ -153,48 +156,12 @@ namespace Java.InteropTests
 		}
 	}
 
-	public class TestJvmTypeManager :
-#if NET
-			JreTypeManager
-#else   // !NET
-			JniRuntime.JniTypeManager
-#endif  // !NET
+	public class TestJvmTypeManager : JreTypeManager
 	{
 
-		Dictionary<string, Type>? typeMappings;
-
-		public TestJvmTypeManager (Dictionary<string, Type>? typeMappings)
+		public TestJvmTypeManager (IDictionary<string, Type>? typeMappings)
+			: base (typeMappings)
 		{
-			this.typeMappings = typeMappings;
-		}
-
-		protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
-		{
-			foreach (var t in base.GetTypesForSimpleReference (jniSimpleReference))
-				yield return t;
-			if (typeMappings == null)
-				yield break;
-			Type target;
-#pragma warning disable CS8600	// huh?
-			if (typeMappings.TryGetValue (jniSimpleReference, out target))
-				yield return target;
-#pragma warning restore CS8600
-		}
-
-		protected override IEnumerable<string> GetSimpleReferences (Type type)
-		{
-			return base.GetSimpleReferences (type)
-				.Concat (CreateSimpleReferencesEnumerator (type));
-		}
-
-		IEnumerable<string> CreateSimpleReferencesEnumerator (Type type)
-		{
-			if (typeMappings == null)
-				yield break;
-			foreach (var e in typeMappings) {
-				if (e.Value == type)
-					yield return e.Key;
-			}
 		}
 	}
 }

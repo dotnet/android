@@ -35,6 +35,9 @@ namespace Java.Interop {
 		public  TextWriter? JniGlobalReferenceLogWriter {get; set;}
 		public  TextWriter? JniLocalReferenceLogWriter  {get; set;}
 
+		internal    Dictionary<string, Type>?  	typeMappings;
+		public      IDictionary<string, Type>   TypeMappings    => typeMappings ??= new ();
+
 		internal    JvmLibraryHandler?  LibraryHandler  {get; set;}
 
 		public JreRuntimeOptions ()
@@ -85,7 +88,7 @@ namespace Java.Interop {
 			builder.LibraryHandler  = JvmLibraryHandler.Create ();
 
 #if NET
-			builder.TypeManager     ??= new JreTypeManager ();
+			builder.TypeManager     ??= new JreTypeManager (builder.typeMappings);
 #endif  // NET
 
 			bool onMono = Type.GetType ("Mono.Runtime", throwOnError: false) != null;

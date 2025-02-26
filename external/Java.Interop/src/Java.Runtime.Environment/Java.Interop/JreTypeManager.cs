@@ -18,6 +18,44 @@ namespace Java.Interop {
 
 	public class JreTypeManager : JniRuntime.JniTypeManager {
 
+		IDictionary<string, Type>? typeMappings;
+
+		public JreTypeManager ()
+			: this (null)
+		{
+		}
+
+		public JreTypeManager (IDictionary<string, Type>? typeMappings)
+		{
+			this.typeMappings = typeMappings;
+		}
+
+		protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
+		{
+			foreach (var t in base.GetTypesForSimpleReference (jniSimpleReference))
+				yield return t;
+			if (typeMappings == null)
+				yield break;
+			if (typeMappings.TryGetValue (jniSimpleReference, out var target))
+				yield return target;
+		}
+
+		protected override IEnumerable<string> GetSimpleReferences (Type type)
+		{
+			return base.GetSimpleReferences (type)
+				.Concat (CreateSimpleReferencesEnumerator (type));
+		}
+
+		IEnumerable<string> CreateSimpleReferencesEnumerator (Type type)
+		{
+			if (typeMappings == null)
+				yield break;
+			foreach (var e in typeMappings) {
+				if (e.Value == type)
+					yield return e.Key;
+			}
+		}
+
 		const string NotUsedInAndroid = "This code path is not used in Android projects.";
 
 		public override void RegisterNativeMembers (

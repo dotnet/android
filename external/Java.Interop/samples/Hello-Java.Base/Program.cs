@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.IO;
 using System.Threading;
 
 using Mono.Options;
@@ -26,7 +29,7 @@ namespace Hello
 				  $"{{PATH}} to JVM to use.  Default is:\n  {jvmPath}",
 				  v => jvmPath = v },
 				{ "m",
-				  "Create multiple Java VMs.  This will likely creash.",
+				  "Create multiple Java VMs.  This will likely crash.",
 				  v => createMultipleVMs = v != null },
 				{ "t",
 				  $"Timing; invoke Object.hashCode() {N} times, print average.",
@@ -43,6 +46,12 @@ namespace Hello
 			var builder = new JreRuntimeOptions () {
 				JniAddNativeMethodRegistrationAttributePresent  = true,
 				JvmLibraryPath                                  = jvmPath,
+				ClassPath   = {
+					Path.Combine (Path.GetDirectoryName (typeof (App).Assembly.Location)!, "Hello-Java.Base.jar"),
+				},
+				TypeMappings = {
+					[MyJLO.JniTypeName]     = typeof (MyJLO),
+				},
 			};
 			builder.AddOption ("-Xcheck:jni");
 
@@ -63,7 +72,7 @@ namespace Hello
 
 		static void CreateJLO ()
 		{
-			var jlo = new Java.Lang.Object ();
+			var jlo = new MyJLO ();
 			Console.WriteLine ($"binding? {jlo.ToString ()}");
 		}
 
@@ -114,5 +123,10 @@ namespace Hello
 				Console.WriteLine ("POST: GetCreatedJavaVMs: {0}", h);
 			}
 		}
+	}
+
+	[JniTypeSignature (JniTypeName)]
+	class MyJLO : Java.Lang.Object {
+		internal    const   string      JniTypeName = "net/dot/jni/sample/MyJLO";
 	}
 }
