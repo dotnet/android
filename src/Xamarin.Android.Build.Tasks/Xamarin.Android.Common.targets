@@ -71,6 +71,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateJavaStubs" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateMainAndroidManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GeneratePackageManagerJava" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.GenerateTypeMappings" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidDefineConstants" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAppSettingsDirectory" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetConvertedJavaLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -90,6 +91,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.RemoveDirFixed" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.RemoveRegisterAttribute" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ReadAndroidManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.RewriteMarshalMethods" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetExtraPackages" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyGeneratedJavaResourceClasses" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ReadJavaStubsCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1529,7 +1531,6 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 
   <GenerateJavaStubs
-      AndroidRuntime="$(_AndroidRuntime)"
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       ResolvedAssemblies="@(_ResolvedAssemblies)"
       ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
@@ -1537,21 +1538,30 @@ because xbuild doesn't support framework reference assemblies.
       Debug="$(AndroidIncludeDebugSymbols)"
       AndroidSdkPlatform="$(_AndroidApiLevel)"
       OutputDirectory="$(IntermediateOutputPath)android"
-      TypemapOutputDirectory="$(_NativeAssemblySourceDir)"
-      GenerateNativeAssembly="$(_AndroidGenerateNativeAssembly)"
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
       SupportedAbis="@(_BuildTargetAbis)"
-      SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
-      EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
-      LinkingEnabled="$(_LinkingEnabled)"
-      HaveMultipleRIDs="$(_HaveMultipleRIDs)"
-      IntermediateOutputDirectory="$(IntermediateOutputPath)"
-      Environments="@(_EnvironmentFiles)">
+      IntermediateOutputDirectory="$(IntermediateOutputPath)">
   </GenerateJavaStubs>
 
+  <RewriteMarshalMethods
+      Debug="$(AndroidIncludeDebugSymbols)"
+      EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
+      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
+      Environments="@(_EnvironmentFiles)"
+      IntermediateOutputDirectory="$(IntermediateOutputPath)">
+  </RewriteMarshalMethods>
+
+  <GenerateTypeMappings
+      AndroidRuntime="$(_AndroidRuntime)"
+      Debug="$(AndroidIncludeDebugSymbols)"
+      GenerateNativeAssembly="$(_AndroidGenerateNativeAssembly)"
+      IntermediateOutputDirectory="$(IntermediateOutputPath)"
+      SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)"
+      TypemapOutputDirectory="$(_NativeAssemblySourceDir)">
+  </GenerateTypeMappings>
 
   <GenerateACWMap
       AcwMapFile="$(_AcwMapFile)"
