@@ -2242,7 +2242,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <!-- CoreCLR builds embed runtime config in libxamarin-app.so -->
   <CollectRuntimeConfigFilesForArchive
-      Condition=" '$(_AndroidRuntime)' != 'CoreCLR' "
+      Condition=" '$(_AndroidRuntime)' == 'MonoVM' "
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       IntermediateOutputPath="$(IntermediateOutputPath)"
       RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
