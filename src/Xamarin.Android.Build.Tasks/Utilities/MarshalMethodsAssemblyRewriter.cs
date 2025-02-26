@@ -25,13 +25,15 @@ namespace Xamarin.Android.Tasks
 		readonly MarshalMethodsClassifier classifier;
 		readonly XAAssemblyResolver resolver;
 		readonly AndroidTargetArch targetArch;
+		readonly ManagedMarshalMethodsLookupInfo? managedMarshalMethodsLookupInfo;
 
-		public MarshalMethodsAssemblyRewriter (TaskLoggingHelper log, AndroidTargetArch targetArch, MarshalMethodsClassifier classifier, XAAssemblyResolver resolver)
+		public MarshalMethodsAssemblyRewriter (TaskLoggingHelper log, AndroidTargetArch targetArch, MarshalMethodsClassifier classifier, XAAssemblyResolver resolver, ManagedMarshalMethodsLookupInfo? managedMarshalMethodsLookupInfo)
 		{
 			this.log = log ?? throw new ArgumentNullException (nameof (log));
 			this.targetArch = targetArch;
 			this.classifier = classifier ?? throw new ArgumentNullException (nameof (classifier));;
 			this.resolver = resolver ?? throw new ArgumentNullException (nameof (resolver));;
+			this.managedMarshalMethodsLookupInfo = managedMarshalMethodsLookupInfo;
 		}
 
 		// TODO: do away with broken exception transitions, there's no point in supporting them
@@ -101,6 +103,15 @@ namespace Xamarin.Android.Tasks
 
 					processedMethods.Add (fullNativeCallbackName, method.NativeCallback);
 				}
+			}
+
+			if (managedMarshalMethodsLookupInfo is not null) {
+				// TODO the code should probably go to different assemblies than Mono.Android (to avoid recursive dependencies)
+				var rootAssembly = resolver.Resolve ("Mono.Android") ?? throw new InvalidOperationException ($"[{targetArch}] Internal error: unable to load the Mono.Android assembly");
+				var managedMarshalMethodsLookupTableType = FindType (rootAssembly, "Java.Interop.ManagedMarshalMethodsLookupTable", required: true);
+
+				var managedMarshalMethodLookupGenerator = new ManagedMarshalMethodsLookupGenerator (log, targetArch, managedMarshalMethodsLookupInfo, managedMarshalMethodsLookupTableType);
+				managedMarshalMethodLookupGenerator.Generate (classifier.MarshalMethods.Values);
 			}
 
 			foreach (AssemblyDefinition asm in classifier.Assemblies) {
