@@ -885,7 +885,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The {0} runtime is currently experimental in .NET for Android.
+        ///   Looks up a localized string similar to The {0} runtime on Android is an experimental feature and not yet suitable for production use. File issues at: https://github.com/dotnet/android/issues
         /// </summary>
         public static string XA1040 {
             get {
