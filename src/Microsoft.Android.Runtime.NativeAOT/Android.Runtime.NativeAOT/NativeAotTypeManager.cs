@@ -127,7 +127,7 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 
 	protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 	{
-		if (TypeMap.TryGetType (jniSimpleReference, out var target)) {
+		if (TypeMapping.TryGetType (jniSimpleReference, out var target)) {
 			yield return target;
 		}
 		foreach (var t in base.GetTypesForSimpleReference (jniSimpleReference)) {
@@ -138,7 +138,7 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 	protected override IEnumerable<string> GetSimpleReferences (Type type)
 	{
 		return base.GetSimpleReferences (type)
-			.Concat (TypeMap.GetJavaClassNames (type));
+			.Concat (TypeMapping.GetJavaClassNames (type));
 	}
 
 	static int CountMethods (ReadOnlySpan<char> methodsSpan)

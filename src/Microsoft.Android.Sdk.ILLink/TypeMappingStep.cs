@@ -18,7 +18,7 @@ namespace Microsoft.Android.Sdk.ILLink;
 public class TypeMappingStep : BaseStep
 {
 	const string AssemblyName = "Microsoft.Android.Runtime.NativeAOT";
-	const string TypeName = "Microsoft.Android.Runtime.TypeMap";
+	const string TypeName = "Microsoft.Android.Runtime.TypeMapping";
 	const string SystemIOHashingAssemblyPathCustomData = "SystemIOHashingAssemblyPath";
 	readonly IDictionary<string, List<TypeDefinition>> TypeMappings = new Dictionary<string, List<TypeDefinition>> (StringComparer.Ordinal);
 	AssemblyDefinition? MicrosoftAndroidRuntimeNativeAot;
@@ -201,7 +201,7 @@ public class TypeMappingStep : BaseStep
 
 			// Create field in `<PrivateImplementationDetails>...`
 			var bytesField = new FieldDefinition (
-				"<Microsoft.Android.Runtime.TypeMap>s_hashes",
+				"<Microsoft.Android.Runtime.TypeMapping>s_hashes",
 				FieldAttributes.Assembly | FieldAttributes.Static | FieldAttributes.InitOnly,
 				arrayType)
 			{
@@ -223,7 +223,7 @@ public class TypeMappingStep : BaseStep
 
 			var initialize = type.Methods.FirstOrDefault (m => m.Name == "Initialize");
 			if (initialize is null) {
-				Context.LogMessage ($"Unable to find TypeMap.Initialize method");
+				Context.LogMessage ($"Unable to find TypeMapping.Initialize method");
 				return;
 			}
 
