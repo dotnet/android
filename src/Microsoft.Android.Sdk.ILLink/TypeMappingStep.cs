@@ -171,7 +171,7 @@ public class TypeMappingStep : BaseStep
 				}
 			}
 
-			// Create static array struct for `byte[#number-of-hashes]`
+			// Create static array struct for `byte[#number-of-hashes * sizeof(ulong)]`
 			var arrayType = new TypeDefinition (
 				"",
 				"HashesArray",
@@ -199,12 +199,7 @@ public class TypeMappingStep : BaseStep
 			getHashes.Body.Instructions.Clear ();
 			var il = getHashes.Body.GetILProcessor ();
 
-			var genericUnsafeAsPointer = module.ImportReference (typeof (System.Runtime.CompilerServices.Unsafe).GetMethod("AsPointer"));
-			var unsafeAsPointer = new GenericInstanceMethod (genericUnsafeAsPointer);
-			unsafeAsPointer.GenericArguments.Add (module.ImportReference (typeof (byte)));
-
 			il.Emit (OpCodes.Ldsflda, bytesField);
-			il.Emit (OpCodes.Call, module.ImportReference (unsafeAsPointer));
 			il.Emit (OpCodes.Ldc_I4, hashes.Length);
 			il.Emit (OpCodes.Newobj, module.ImportReference (typeof (ReadOnlySpan<ulong>).GetConstructor (new[] { typeof(void*), typeof(int) })));
 
@@ -270,14 +265,14 @@ public class TypeMappingStep : BaseStep
 
 	static HashMethod GetHashMethod (AssemblyLoadContext alc, string assemblyPath)
 	{
-		System.Reflection.Assembly? hashingAssembly;
+		System.Reflection.Assembly hashingAssembly;
 		try {
 			hashingAssembly = alc.LoadFromAssemblyPath (assemblyPath);
 		} catch (Exception ex) {
 			throw new InvalidOperationException ($"Unable to load {assemblyPath}, {nameof(TypeMappingStep)} cannot proceed", ex);
 		}
 
-		var hashToUInt64 = hashingAssembly?.GetType ("System.IO.Hashing.XxHash3")?.GetMethod ("HashToUInt64");
+		var hashToUInt64 = hashingAssembly.GetType ("System.IO.Hashing.XxHash3").GetMethod ("HashToUInt64");
 		if (hashToUInt64 is null) {
 			throw new InvalidOperationException ($"Unable to find System.IO.Hashing.XxHash3.HashToUInt64 method, {nameof(TypeMappingStep)} cannot proceed");
 		}
