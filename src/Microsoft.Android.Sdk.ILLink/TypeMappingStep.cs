@@ -59,15 +59,13 @@ public class TypeMappingStep : BaseStep
 		Context.LogMessage ($"Writing {TypeMappings.Count} typemap entries");
 
 		if (MicrosoftAndroidRuntimeNativeAot is null) {
-			Context.LogMessage ($"Unable to find {AssemblyName} assembly");
-			return;
+			throw new InvalidOperationException ($"Unable to find {AssemblyName} assembly");
 		}
 
 		var module = MicrosoftAndroidRuntimeNativeAot.MainModule;
 		var type = module.GetType (TypeName);
 		if (type is null) {
-			Context.LogMessage ($"Unable to find {TypeName} type");
-			return;
+			throw new InvalidOperationException ($"Unable to find {TypeName} type");
 		}
 
 		KeyValuePair<string, List<TypeDefinition>>[] orderedMapping = TypeMappings.OrderBy (kvp => Hash (kvp.Key)).ToArray ();
@@ -89,14 +87,12 @@ public class TypeMappingStep : BaseStep
 		{
 			var method = type.Methods.FirstOrDefault (m => m.Name == "GetTypeByIndex");
 			if (method is null) {
-				Context.LogMessage ($"Unable to find {TypeName}.GetTypeByIndex() method");
-				return;
+				throw new InvalidOperationException ($"Unable to find {TypeName}.GetTypeByIndex() method");
 			}
 
 			var getTypeFromHandle = module.ImportReference (typeof (Type).GetMethod ("GetTypeFromHandle"));
 			if (getTypeFromHandle is null) {
-				Context.LogMessage ($"Unable to find Type.GetTypeFromHandle() method");
-				return;
+				throw new InvalidOperationException ($"Unable to find Type.GetTypeFromHandle() method");
 			}
 
 			// Clear IL in method body
@@ -129,8 +125,7 @@ public class TypeMappingStep : BaseStep
 		{
 			var method = type.Methods.FirstOrDefault (m => m.Name == "GetJavaClassNameByIndex");
 			if (method is null) {
-				Context.LogMessage ($"Unable to find {TypeName}.GetJavaClassNameByIndex() method");
-				return;
+				throw new InvalidOperationException ($"Unable to find {TypeName}.GetJavaClassNameByIndex() method");
 			}
 
 			// Clear IL in method body
@@ -178,8 +173,13 @@ public class TypeMappingStep : BaseStep
 
 			var privateImplementationDetails = module.Types.FirstOrDefault (t => t.Name.Contains ("<PrivateImplementationDetails>"));
 			if (privateImplementationDetails is null) {
-				Context.LogMessage ($"Unable to find <PrivateImplementationDetails> class");
-				return;
+				privateImplementationDetails = new TypeDefinition (
+					"",
+					"<PrivateImplementationDetails>",
+					TypeAttributes.NotPublic | TypeAttributes.AutoClass | TypeAttributes.AnsiClass | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+					module.ImportReference (typeof (object)));
+
+				module.Types.Add (privateImplementationDetails);
 			}
 
 			// Create static array struct for `byte[#number-of-hashes]`
@@ -202,7 +202,7 @@ public class TypeMappingStep : BaseStep
 
 			// Create field in `<PrivateImplementationDetails>...`
 			var bytesField = new FieldDefinition (
-				"<Microsoft.Android.Runtime.TypeMapping>s_hashes",
+				"<Microsoft.Android.Runtime.TypeMapping>s_hashes_data",
 				FieldAttributes.Assembly | FieldAttributes.Static | FieldAttributes.InitOnly,
 				arrayType)
 			{
@@ -218,14 +218,12 @@ public class TypeMappingStep : BaseStep
 			// Initialize s_hashes in .cctor from the RVA
 			var field = type.Fields.FirstOrDefault (f => f.Name == "s_hashes");
 			if (field is null) {
-				Context.LogMessage ($"Unable to find {TypeName}.s_hashes field");
-				return;
+				throw new InvalidOperationException ($"Unable to find {TypeName}.s_hashes field");
 			}
 
 			var initialize = type.Methods.FirstOrDefault (m => m.Name == "Initialize");
 			if (initialize is null) {
-				Context.LogMessage ($"Unable to find TypeMapping.Initialize method");
-				return;
+				throw new InvalidOperationException ($"Unable to find TypeMapping.Initialize method");
 			}
 
 			initialize.Body.Instructions.Clear ();
