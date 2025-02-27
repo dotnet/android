@@ -199,8 +199,12 @@ public class TypeMappingStep : BaseStep
 			getHashes.Body.Instructions.Clear ();
 			var il = getHashes.Body.GetILProcessor ();
 
+			var genericUnsafeAsPointer = module.ImportReference (typeof (System.Runtime.CompilerServices.Unsafe).GetMethod("AsPointer"));
+			var unsafeAsPointer = new GenericInstanceMethod (genericUnsafeAsPointer);
+			unsafeAsPointer.GenericArguments.Add (module.ImportReference (typeof (byte)));
+
 			il.Emit (OpCodes.Ldsflda, bytesField);
-			il.Emit (OpCodes.Call, module.ImportReference (typeof (System.Runtime.CompilerServices.Unsafe).GetMethod("AsPointer")));
+			il.Emit (OpCodes.Call, module.ImportReference (unsafeAsPointer));
 			il.Emit (OpCodes.Ldc_I4, hashes.Length);
 			il.Emit (OpCodes.Newobj, module.ImportReference (typeof (ReadOnlySpan<ulong>).GetConstructor (new[] { typeof(void*), typeof(int) })));
 
