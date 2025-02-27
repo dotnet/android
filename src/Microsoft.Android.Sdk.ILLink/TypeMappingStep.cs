@@ -71,7 +71,7 @@ public class TypeMappingStep : BaseStep
 		KeyValuePair<string, List<TypeDefinition>>[] orderedMapping = TypeMappings.OrderBy (kvp => Hash (kvp.Key)).ToArray ();
 
 		var hashes = orderedMapping.Select (kvp => Hash (kvp.Key)).ToArray ();
-		GenerateHashesFieldInitialization (hashes);
+		GenerateHashes (hashes);
 
 		var types = orderedMapping.Select (kvp => SelectTypeDefinition (kvp.Key, kvp.Value));
 		GenerateGetTypeByIndex (types);
@@ -155,7 +155,7 @@ public class TypeMappingStep : BaseStep
 			il.Emit (OpCodes.Ret);
 		}
 
-		void GenerateHashesFieldInitialization (ulong[] hashes)
+		void GenerateHashes (ulong[] hashes)
 		{
 			// Sanity check: hashes must be unique and sorted
 			if (hashes.Length > 0) {
@@ -200,7 +200,7 @@ public class TypeMappingStep : BaseStep
 				privateImplementationDetails.NestedTypes.Add (arrayType);
 			}
 
-			// Create field in `<PrivateImplementationDetails>...`
+			// Create field in `<PrivateImplementationDetails>`
 			var bytesField = new FieldDefinition (
 				"<Microsoft.Android.Runtime.TypeMapping>s_hashes_data",
 				FieldAttributes.Assembly | FieldAttributes.Static | FieldAttributes.InitOnly,
@@ -215,26 +215,19 @@ public class TypeMappingStep : BaseStep
 
 			privateImplementationDetails.Fields.Add (bytesField);
 
-			// Initialize s_hashes in .cctor from the RVA
-			var field = type.Fields.FirstOrDefault (f => f.Name == "s_hashes");
-			if (field is null) {
-				throw new InvalidOperationException ($"Unable to find {TypeName}.s_hashes field");
+			// Generate the Hashes getter
+			var getHashes = type.Methods.FirstOrDefault (f => f.Name == "get_Hashes");
+			if (getHashes is null) {
+				throw new InvalidOperationException ($"Unable to find {TypeName}.get_Hashes field");
 			}
 
-			var initialize = type.Methods.FirstOrDefault (m => m.Name == "Initialize");
-			if (initialize is null) {
-				throw new InvalidOperationException ($"Unable to find TypeMapping.Initialize method");
-			}
+			getHashes.Body.Instructions.Clear ();
+			var il = getHashes.Body.GetILProcessor ();
 
-			initialize.Body.Instructions.Clear ();
-			var il = initialize.Body.GetILProcessor ();
-
+			il.Emit (OpCodes.Ldsflda, bytesField);
+			il.Emit (OpCodes.Call, module.ImportReference (typeof (System.Runtime.CompilerServices.Unsafe).GetMethod("AsPointer")));
 			il.Emit (OpCodes.Ldc_I4, hashes.Length);
-			il.Emit (OpCodes.Newarr, module.ImportReference (typeof (ulong)));
-			il.Emit (OpCodes.Dup);
-			il.Emit (OpCodes.Ldtoken, bytesField);
-			il.Emit (OpCodes.Call, module.ImportReference (typeof (System.Runtime.CompilerServices.RuntimeHelpers).GetMethod("InitializeArray")));
-			il.Emit (OpCodes.Stsfld, field);
+			il.Emit (OpCodes.Newobj, module.ImportReference (typeof (ReadOnlySpan<ulong>).GetConstructor (new[] { typeof(void*), typeof(int) })));
 
 			il.Emit (OpCodes.Ret);
 		}
