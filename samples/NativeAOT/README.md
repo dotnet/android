@@ -45,7 +45,7 @@ lldb
 > target create samples/NativeAOT/bin/Debug/net10.0-android/android-arm64/native/NativeAOT.so
 > target symbols add samples/NativeAOT/bin/Debug/net10.0-android/android-arm64/native/NativeAOT.so.dbg
 > target select 0
-> attach <processid>
+> attach --pid <processid>
 ```
 
 Next you need to attach the java debugger to clear the dialog which is currently blocking the
