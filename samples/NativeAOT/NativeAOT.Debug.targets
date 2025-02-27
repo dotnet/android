@@ -1,0 +1,12 @@
+<Project>
+  <Target Name="_Debug" AfterTargets="Install" DependsOnTargets="_GetAndroidPackageName">
+    <PropertyGroup>
+        <_Adb>$(ANDROID_SDK_ROOT)/platform-tools/adb</_Adb>
+    </PropertyGroup>
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)" Command="$(_Adb) push $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/18/lib/linux/aarch64/lldb-server /data/local/tmp/lldb-server" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)" Command="$(_Adb) shell run-as $(_AndroidPackage) cp /data/local/tmp/lldb-server ." />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)" Command="$(_Adb) forward tcp:5039 tcp:5039" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)" Command="$(_Adb) shell run-as $(_AndroidPackage) killall -9 lldb-server" IgnoreExitCode="true"/>
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)" Command="$(_Adb) shell run-as $(_AndroidPackage) ./lldb-server platform --listen &quot;*:5039&quot; --server" IgnoreExitCode="true"/>
+   </Target> 
+</Project>
