@@ -12,7 +12,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   <!-- Default property values for NativeAOT -->
   <PropertyGroup>
     <_AndroidRuntimePackRuntime>NativeAOT</_AndroidRuntimePackRuntime>
-    <AndroidCodegenTarget Condition=" '$(AndroidCodegenTarget)' == '' ">JavaInterop1</AndroidCodegenTarget>
+    <_AndroidJcwCodegenTarget Condition=" '$(_AndroidJcwCodegenTarget)' == '' ">JavaInterop1</_AndroidJcwCodegenTarget>
     <!-- .NET SDK gives: error NETSDK1191: A runtime identifier for the property 'PublishAot' couldn't be inferred. Specify a rid explicitly. -->
     <AllowPublishAotWithoutRuntimeIdentifier Condition=" '$(AllowPublishAotWithoutRuntimeIdentifier)' == '' ">true</AllowPublishAotWithoutRuntimeIdentifier>
     <!-- NativeAOT's targets currently gives an error about cross-compilation -->
