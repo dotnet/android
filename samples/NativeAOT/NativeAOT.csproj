@@ -20,4 +20,6 @@
     <_FastDeploymentDiagnosticLogging>true</_FastDeploymentDiagnosticLogging>
   </PropertyGroup>
 
+  <Import Project="NativeAOT.Debug.targets" Condition="'$(Configuration)' == 'Debug'" />
+
 </Project>
