@@ -185,7 +185,7 @@ public class TypeMappingStep : BaseStep
 			type.NestedTypes.Add (arrayType);
 
 			// Create static field to store the raw bytes
-			var bytesField = new FieldDefinition ("s_hashes", FieldAttributes.Assembly | FieldAttributes.Static | FieldAttributes.InitOnly, arrayType);
+			var bytesField = new FieldDefinition ("s_hashes", FieldAttributes.Private | FieldAttributes.Static | FieldAttributes.InitOnly, arrayType);
 			bytesField.InitialValue = hashes.Select(h => BitConverter.GetBytes (h)).SelectMany (x => x).ToArray ();
 			if (!bytesField.Attributes.HasFlag (FieldAttributes.HasFieldRVA)) {
 				throw new InvalidOperationException ($"Field {bytesField.Name} does not have RVA");
