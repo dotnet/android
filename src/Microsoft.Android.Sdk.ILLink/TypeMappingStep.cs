@@ -171,55 +171,30 @@ public class TypeMappingStep : BaseStep
 				}
 			}
 
-			var privateImplementationDetails = module.Types.FirstOrDefault (t => t.Name.Contains ("<PrivateImplementationDetails>"));
-			if (privateImplementationDetails is null) {
-				privateImplementationDetails = new TypeDefinition (
-					"",
-					"<PrivateImplementationDetails>",
-					TypeAttributes.NotPublic | TypeAttributes.AutoClass | TypeAttributes.AnsiClass | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-					module.ImportReference (typeof (object)));
-
-				module.Types.Add (privateImplementationDetails);
-			}
-
 			// Create static array struct for `byte[#number-of-hashes]`
-			var arraySize = hashes.Length * sizeof (ulong);
-			var arrayTypeName = $"__StaticArrayInitTypeSize={arraySize}";
-			var arrayType = privateImplementationDetails.NestedTypes.FirstOrDefault (t => t.Name == arrayTypeName);
-			if (arrayType is null) {
-				arrayType = new TypeDefinition (
-					"",
-					arrayTypeName,
-					TypeAttributes.NestedAssembly | TypeAttributes.ExplicitLayout,
-					module.ImportReference (typeof (ValueType)))
-				{
-					PackingSize = 1,
-					ClassSize = arraySize,
-				};
-
-				privateImplementationDetails.NestedTypes.Add (arrayType);
-			}
-
-			// Create field in `<PrivateImplementationDetails>`
-			var bytesField = new FieldDefinition (
-				"<Microsoft.Android.Runtime.TypeMapping>s_hashes_data",
-				FieldAttributes.Assembly | FieldAttributes.Static | FieldAttributes.InitOnly,
-				arrayType)
+			var arrayType = new TypeDefinition (
+				"",
+				"HashesArray",
+				TypeAttributes.NestedPrivate | TypeAttributes.ExplicitLayout,
+				module.ImportReference (typeof (ValueType)))
 			{
-				InitialValue = hashes.Select(h => BitConverter.GetBytes (h)).SelectMany (x => x).ToArray (),
+				PackingSize = 1,
+				ClassSize = hashes.Length * sizeof (ulong),
 			};
 
+			type.NestedTypes.Add (arrayType);
+
+			// Create static field to store the raw bytes
+			var bytesField = new FieldDefinition ("s_hashes", FieldAttributes.Assembly | FieldAttributes.Static | FieldAttributes.InitOnly, arrayType);
+			bytesField.InitialValue = hashes.Select(h => BitConverter.GetBytes (h)).SelectMany (x => x).ToArray ();
 			if (!bytesField.Attributes.HasFlag (FieldAttributes.HasFieldRVA)) {
 				throw new InvalidOperationException ($"Field {bytesField.Name} does not have RVA");
 			}
 
-			privateImplementationDetails.Fields.Add (bytesField);
+			type.Fields.Add (bytesField);
 
 			// Generate the Hashes getter
-			var getHashes = type.Methods.FirstOrDefault (f => f.Name == "get_Hashes");
-			if (getHashes is null) {
-				throw new InvalidOperationException ($"Unable to find {TypeName}.get_Hashes field");
-			}
+			var getHashes = type.Methods.FirstOrDefault (f => f.Name == "get_Hashes") ?? throw new InvalidOperationException ($"Unable to find {TypeName}.get_Hashes field");
 
 			getHashes.Body.Instructions.Clear ();
 			var il = getHashes.Body.GetILProcessor ();
