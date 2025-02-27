@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO.Hashing;
+using System.Runtime.InteropServices;
 using System.Text;
 
 using Android.Runtime;
@@ -22,9 +23,7 @@ internal static class TypeMapping
 
 	internal static bool TryGetType (string javaClassName, [NotNullWhen (true)] out Type? type)
 	{
-		int byteCount = Encoding.UTF8.GetByteCount (javaClassName);
-		Span<byte> bytes = stackalloc byte [byteCount];
-		Encoding.UTF8.GetBytes (javaClassName, bytes);
+		ReadOnlySpan<byte> bytes = MemoryMarshal.AsBytes(javaClassName.AsSpan ());
 		ulong hash = XxHash3.HashToUInt64 (bytes);
 		type = GetType (hash);
 		return type is not null;
