@@ -2204,6 +2204,7 @@ because xbuild doesn't support framework reference assemblies.
     in monodroid.
   -->
   <CreateAssemblyStore
+      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
       AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
       ResolvedFrameworkAssemblies="@(_BuildApkResolvedFrameworkAssemblies)"
@@ -2214,6 +2215,7 @@ because xbuild doesn't support framework reference assemblies.
   </CreateAssemblyStore>
 
   <WrapAssembliesAsSharedLibraries
+      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
       IntermediateOutputPath="$(IntermediateOutputPath)"
