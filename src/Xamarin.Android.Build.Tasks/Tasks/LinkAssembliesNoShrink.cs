@@ -1,15 +1,19 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
-
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using Java.Interop.Tools.Cecil;
+using Java.Interop.Tools.JavaCallableWrappers;
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using Mono.Linker.Steps;
 using MonoDroid.Tuner;
-using System;
-using System.IO;
-using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks.Utilities;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
@@ -19,12 +23,15 @@ namespace Xamarin.Android.Tasks
 	/// </summary>
 	public class LinkAssembliesNoShrink : AndroidTask
 	{
+		JavaPeerStyle codeGenerationTarget;
+
 		sealed class RunState
 		{
 			public DirectoryAssemblyResolver? resolver = null;
 			public FixAbstractMethodsStep? fixAbstractMethodsStep = null;
 			public AddKeepAlivesStep? addKeepAliveStep = null;
 			public FixLegacyResourceDesignerStep? fixLegacyResourceDesignerStep = null;
+			public FindJavaObjectsStep? findJavaObjectsStep = null;
 		}
 
 		public override string TaskPrefix => "LNS";
@@ -34,6 +41,9 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		[Required]
 		public ITaskItem [] ResolvedAssemblies { get; set; } = Array.Empty<ITaskItem> ();
+
+		[Required]
+		public ITaskItem [] ResolvedUserAssemblies { get; set; } = [];
 
 		[Required]
 		public ITaskItem [] SourceFiles { get; set; } = Array.Empty<ITaskItem> ();
@@ -49,9 +59,17 @@ namespace Xamarin.Android.Tasks
 
 		public bool AddKeepAlives { get; set; }
 
-		public bool UseDesignerAssembly { get; set; }
+		public string CodeGenerationTarget { get; set; } = "";
+
+		public bool Debug { get; set; }
+
+		public bool EnableMarshalMethods { get; set; }
+
+		public bool ErrorOnCustomJavaObject { get; set; }
 
 		public bool Deterministic { get; set; }
+
+		public bool UseDesignerAssembly { get; set; }
 
 		/// <summary>
 		/// Defaults to false, enables Mono.Cecil to load symbols
@@ -60,6 +78,8 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
+			codeGenerationTarget = MonoAndroidHelper.ParseCodeGenerationTarget (CodeGenerationTarget);
+
 			if (SourceFiles.Length != DestinationFiles.Length)
 				throw new ArgumentException ("source and destination count mismatch");
 
@@ -72,6 +92,7 @@ namespace Xamarin.Android.Tasks
 
 			Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> perArchAssemblies = MonoAndroidHelper.GetPerArchAssemblies (ResolvedAssemblies, Array.Empty<string> (), validate: false);
 			var runState = new RunState ();
+
 			AndroidTargetArch currentArch = AndroidTargetArch.None;
 
 			for (int i = 0; i < SourceFiles.Length; i++) {
@@ -113,11 +134,25 @@ namespace Xamarin.Android.Tasks
 					var fixLegacyResourceDesignerStep = new FixLegacyResourceDesignerStep ();
 					fixLegacyResourceDesignerStep.Initialize (context);
 					runState.fixLegacyResourceDesignerStep = fixLegacyResourceDesignerStep;
+
+					var findJavaObjectsStep = new FindJavaObjectsStep {
+						CodeGenerationTarget = codeGenerationTarget,
+						ErrorOnCustomJavaObject = ErrorOnCustomJavaObject,
+						UserAssemblies = ResolvedUserAssemblies.Select (a => Path.GetFileNameWithoutExtension (a.ItemSpec)).ToList (),
+						UseMarshalMethods = EnableMarshalMethods,
+						Debug = Debug,
+					};
+
+					findJavaObjectsStep.Initialize (context);
+					runState.findJavaObjectsStep = findJavaObjectsStep;
 				}
 
 				DoRunTask (source, destination, runState, writerParameters);
 			}
 			runState.resolver?.Dispose ();
+
+			Log.LogDebugMessage ($"LinkAssembliesNoShrink: total JavaObject time: {total_jlo_ms}ms");
+
 			return !Log.HasLoggedErrors;
 
 			AndroidTargetArch GetValidArchitecture (ITaskItem item)
@@ -131,29 +166,49 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		long total_jlo_ms = 0;
+
 		void DoRunTask (ITaskItem source, ITaskItem destination, RunState runState, WriterParameters writerParameters)
 		{
+			Directory.CreateDirectory (Path.GetDirectoryName (destination.ItemSpec));
+
 			var assemblyName = Path.GetFileNameWithoutExtension (source.ItemSpec);
+			var destinationJLOXml = Path.ChangeExtension (destination.ItemSpec, ".jlo.xml");
 
 			// In .NET 6+, we can skip the main assembly
-			if (!AddKeepAlives && assemblyName == TargetName) {
-				CopyIfChanged (source, destination);
-				return;
-			}
-			if (MonoAndroidHelper.IsFrameworkAssembly (source)) {
-				CopyIfChanged (source, destination);
-				return;
-			}
+			//if (!AddKeepAlives && assemblyName == TargetName) {
+			//	FindJavaObjectsStep.WriteEmptyXmlFile (destinationJLOXml);
+			//	CopyIfChanged (source, destination);
+			//	return;
+			//}
+			//if (MonoAndroidHelper.IsFrameworkAssembly (source)) {
+			//	CopyIfChanged (source, destination);
+			//	FindJavaObjectsStep.WriteEmptyXmlFile (destinationJLOXml);
+			//	return;
+			//}
 
 			// Only run the step on "MonoAndroid" assemblies
-			if (MonoAndroidHelper.IsMonoAndroidAssembly (source)) {
+			if (ShouldScanAssembly (source)) {
 				AssemblyDefinition assemblyDefinition = runState.resolver!.GetAssembly (source.ItemSpec);
+				var sw = Stopwatch.StartNew ();
+				var resolve_ms = sw.ElapsedMilliseconds;
 
+				sw.Restart ();
 				bool save = runState.fixAbstractMethodsStep!.FixAbstractMethods (assemblyDefinition);
+				var fixAbstractMethods_ms = sw.ElapsedMilliseconds;
+				sw.Restart ();
 				if (UseDesignerAssembly)
-				save |= runState.fixLegacyResourceDesignerStep!.ProcessAssemblyDesigner (assemblyDefinition);
+					save |= runState.fixLegacyResourceDesignerStep!.ProcessAssemblyDesigner (assemblyDefinition);
+				var fixLegacyResourceDesigner_ms = sw.ElapsedMilliseconds;
+				sw.Restart ();
 				if (AddKeepAlives)
-				save |= runState.addKeepAliveStep!.AddKeepAlives (assemblyDefinition);
+					save |= runState.addKeepAliveStep!.AddKeepAlives (assemblyDefinition);
+				var addKeepAlives_ms = sw.ElapsedMilliseconds;
+				sw.Restart ();
+				runState.findJavaObjectsStep!.ProcessAssembly (assemblyDefinition, destinationJLOXml);
+				var findJavaObjects_ms = sw.ElapsedMilliseconds;
+				total_jlo_ms += (int) findJavaObjects_ms;
+				Log.LogDebugMessage ($"LinkAssembliesNoShrink: {assemblyName} -> {save} (Resolve: {resolve_ms}ms, FixAbstract: {fixAbstractMethods_ms}ms, Designer: {fixLegacyResourceDesigner_ms}, KeepAlives: {addKeepAlives_ms}ms, JavaObjects: {findJavaObjects_ms}ms)");
 				if (save) {
 					Log.LogDebugMessage ($"Saving modified assembly: {destination.ItemSpec}");
 					Directory.CreateDirectory (Path.GetDirectoryName (destination.ItemSpec));
@@ -161,9 +216,26 @@ namespace Xamarin.Android.Tasks
 					assemblyDefinition.Write (destination.ItemSpec, writerParameters);
 					return;
 				}
+			} else {
+
+				FindJavaObjectsStep.WriteEmptyXmlFile (destinationJLOXml);
 			}
 
 			CopyIfChanged (source, destination);
+		}
+
+		bool ShouldScanAssembly (ITaskItem source)
+		{
+			if (!Debug || EnableMarshalMethods && Path.GetFileName (source.ItemSpec) == "Mono.Android.dll")
+				return true;
+
+			if (MonoAndroidHelper.IsFrameworkAssembly (source))
+				return false;
+
+			if (MonoAndroidHelper.IsMonoAndroidAssembly (source))
+				return true;
+
+			return false;
 		}
 
 		void CopyIfChanged (ITaskItem source, ITaskItem destination)

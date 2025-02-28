@@ -1461,9 +1461,14 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="_LinkAssembliesNoShrinkInputs"
     Condition="'$(AndroidLinkMode)' == 'None'"
     Inputs="@(ResolvedAssemblies);$(_AndroidBuildPropertiesCache)"
-    Outputs="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')">
+    Outputs="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)');@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).jlo.xml')">
   <LinkAssembliesNoShrink
+      CodeGenerationTarget="$(AndroidCodegenTarget)"
+      Debug="$(AndroidIncludeDebugSymbols)"
+      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
+      ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
       ResolvedAssemblies="@(_AllResolvedAssemblies)"
+      ResolvedUserAssemblies="@(ResolvedUserAssemblies)"
       SourceFiles="@(ResolvedAssemblies)"
       DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"
       TargetName="$(TargetName)"
@@ -1531,11 +1536,13 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 
   <GenerateJavaStubs
+      AndroidLinkMode="$(AndroidLinkMode)"
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       ResolvedAssemblies="@(_ResolvedAssemblies)"
       ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
       ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
       Debug="$(AndroidIncludeDebugSymbols)"
+      PublishTrimmed="$(PublishTrimmed)"
       AndroidSdkPlatform="$(_AndroidApiLevel)"
       OutputDirectory="$(IntermediateOutputPath)android"
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
