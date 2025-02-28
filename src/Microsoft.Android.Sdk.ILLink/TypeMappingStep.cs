@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -121,7 +122,7 @@ public class TypeMappingStep : BaseStep
 
 			var il = method.Body.GetILProcessor ();
 
-			var orderedMapping = TypeMappings.Select(kvp => (Hash (kvp.Key), SelectTypeDefinition (kvp.Key, kvp.Value))).OrderBy (x => x.Item1);
+			var orderedMapping = TypeMappings.Select (kvp => (Hash (kvp.Key), SelectTypeDefinition (kvp.Key, kvp.Value))).OrderBy (x => x.Item1);
 
 			var targets = new List<Instruction> ();
 			foreach (var name in names) {
@@ -174,7 +175,7 @@ public class TypeMappingStep : BaseStep
 
 			// Create static field to store the raw bytes
 			var bytesField = new FieldDefinition ("s_hashes", FieldAttributes.Private | FieldAttributes.Static | FieldAttributes.InitOnly, arrayType);
-			bytesField.InitialValue = hashes.Select(h => BitConverter.GetBytes (h)).SelectMany (x => x).ToArray ();
+			bytesField.InitialValue = hashes.SelectMany (BitConverter.GetBytes).ToArray ();
 			if (!bytesField.Attributes.HasFlag (FieldAttributes.HasFieldRVA)) {
 				throw new InvalidOperationException ($"Field {bytesField.Name} does not have RVA");
 			}
@@ -249,6 +250,10 @@ public class TypeMappingStep : BaseStep
 	{
 		ReadOnlySpan<byte> bytes = MemoryMarshal.AsBytes(javaName.AsSpan ());
 		ulong hash = _hashMethod!(bytes);
+
+		if (!BitConverter.IsLittleEndian) {
+			hash = BinaryPrimitives.ReverseEndianness (hash);
+		}
 
 		return hash;
 	}

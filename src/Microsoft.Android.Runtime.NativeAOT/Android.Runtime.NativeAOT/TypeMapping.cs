@@ -1,9 +1,9 @@
+using System.Buffers.Binary;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO.Hashing;
 using System.Runtime.InteropServices;
 using System.Text;
-
 using Android.Runtime;
 
 namespace Microsoft.Android.Runtime;
@@ -14,9 +14,15 @@ internal static class TypeMapping
 
 	internal static bool TryGetType (string javaClassName, [NotNullWhen (true)] out Type? type)
 	{
-		ReadOnlySpan<byte> bytes = MemoryMarshal.AsBytes(javaClassName.AsSpan ());
-		ulong hash = XxHash3.HashToUInt64 (bytes);
-		type = GetType (hash);
+		ulong hash = Hash (javaClassName);
+
+		int index = MemoryExtensions.BinarySearch (Hashes, hash);
+		if (index < 0) {
+			type = null;
+			return false;
+		}
+
+		type = GetTypeByIndex (index);
 		return type is not null;
 	}
 
@@ -42,14 +48,18 @@ internal static class TypeMapping
 		}
 	}
 
-	private static Type? GetType (ulong hash)
+	private static ulong Hash (string javaClassName)
 	{
-		int index = MemoryExtensions.BinarySearch (Hashes, hash);
-		if (index < 0) {
-			return null;
+		ReadOnlySpan<byte> bytes = MemoryMarshal.AsBytes(javaClassName.AsSpan ());
+		ulong hash = XxHash3.HashToUInt64 (bytes);
+
+		// The bytes in the hashes array are stored as little endian. If the target platform is big endian,
+		// we need to reverse the endianness of the hash.
+		if (!BitConverter.IsLittleEndian) {
+			hash = BinaryPrimitives.ReverseEndianness (hash);
 		}
 
-		return GetTypeByIndex (index);
+		return hash;
 	}
 
 	// Replaced by src/Microsoft.Android.Sdk.ILLink/TypeMappingStep.cs
