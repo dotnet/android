@@ -69,6 +69,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		public static bool TargetsMonoVM  => TargetRuntimeHelper.UseMonoRuntime;
+		public static bool TargetsCoreCLR => !TargetRuntimeHelper.UseMonoRuntime;
+
 		/// <summary>
 		/// Windows can only create a file of 255 characters: This type of path is composed of components separated by backslashes, each up to the value returned in the lpMaximumComponentLength parameter of the GetVolumeInformation function (this value is commonly 255 characters).
 		/// See: https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#maximum-path-length-limitation
