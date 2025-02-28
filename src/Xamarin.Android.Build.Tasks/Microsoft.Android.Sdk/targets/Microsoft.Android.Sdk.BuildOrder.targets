@@ -67,6 +67,7 @@ properties that determine build ordering.
       _ResolveSatellitePaths;
       _CreatePackageWorkspace;
       _LinkAssemblies;
+      _LinkAssembliesAdditionalSteps;
       _GenerateJavaStubs;
       _ManifestMerger;
       _ConvertCustomView;
