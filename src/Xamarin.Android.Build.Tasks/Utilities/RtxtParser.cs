@@ -60,7 +60,7 @@ namespace Xamarin.Android.Tasks
 	}
 
 	public class RtxtParser {
-
+		static readonly int DefaultCapacity = 10000; // a Maui template project has 7000+ resource entires.
 		static readonly char[] EmptyChar = new char [] { ' ' };
 		static readonly char[] CurlyBracketsChar = new char [] { '{', '}' };
 		static readonly char[] CommaChar = new char [] { ',' };
@@ -98,7 +98,7 @@ namespace Xamarin.Android.Tasks
 		{
 			log = logger;
 			map = mapping;
-			var result = new List<R> ();
+			var result = new List<R> (DefaultCapacity);
 			if (File.Exists (file))
 				ProcessRtxtFile (file, result);
 			return result;
@@ -106,11 +106,8 @@ namespace Xamarin.Android.Tasks
 
 		void ProcessRtxtFile (string file, List<R> result)
 		{
-			var lines = File.ReadAllLines (file);
-			result.Capacity = lines.Length;
-
 			int lineNumber = 0;
-			foreach (var line in lines) {
+			foreach (var line in File.ReadLines (file) ) {
 				lineNumber++;
 				var items = line.Split (EmptyChar, 4);
 				if (items.Length < 4) {
@@ -122,13 +119,12 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 				int value = items [1] != "styleable" ? Convert.ToInt32 (items [3].Trim (), 16) : -1;
-				var type = items [1] != "styleable" ? RType.Integer : RType.Integer_Styleable;
 				string itemName = ResourceIdentifier.GetResourceName(ResourceParser.GetNestedTypeName (items [1]), items [2], map, log);
 				if (knownTypes.Contains (items [1])) {
 					if (items [1] != "styleable") {
 						result.Add (new R () {
 							ResourceTypeName = items [1],
-							Type =type,
+							Type = RType.Integer,
 							Identifier = itemName,
 							Id = value,
 						});
@@ -138,7 +134,7 @@ namespace Xamarin.Android.Tasks
 						case "int":
 							result.Add (new R () {
 								ResourceTypeName = items [1],
-								Type = type,
+								Type = RType.Integer_Styleable,
 								Identifier = itemName,
 								Id = Convert.ToInt32 (items [3].Trim (), 10),
 							});

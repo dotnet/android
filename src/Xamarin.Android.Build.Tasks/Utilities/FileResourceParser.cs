@@ -352,6 +352,7 @@ namespace Xamarin.Android.Tasks
 						ResourceTypeName = field.ResourceTypeName,
 						Identifier = $"{field.Identifier}_{r.Replace (":", "_")}",
 						Id = id++,
+						Type = RType.Integer_Styleable,
 					});
 				}
 			}
