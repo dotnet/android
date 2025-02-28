@@ -32,14 +32,10 @@ namespace Android.Runtime
 		
 		static XmlResourceParserReader? FromNative (IntPtr handle, JniHandleOwnership transfer)
 		{
-			if (handle == IntPtr.Zero)
+			var inst = Java.Lang.Object.GetObject<Android.Content.Res.IXmlResourceParser> (handle, transfer);
+			if (inst is null)
 				return null;
-			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
-			if (inst == null)
-				inst = (IJavaObject) Java.Interop.TypeManager.CreateInstance (handle, transfer);
-			else
-				JNIEnv.DeleteRef (handle, transfer);
-			return new XmlResourceParserReader (inst.JavaCast<Android.Content.Res.IXmlResourceParser> ()!);
+			return new XmlResourceParserReader (inst);
 		}
 	}
 	
@@ -393,14 +389,10 @@ namespace Android.Runtime
 		
 		static XmlReader? FromNative (IntPtr handle, JniHandleOwnership transfer)
 		{
-			if (handle == IntPtr.Zero)
+			var inst = Java.Lang.Object.GetObject<IXmlPullParser> (handle, transfer);
+			if (inst is null)
 				return null;
-			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
-			if (inst == null)
-				inst = (IJavaObject) Java.Interop.TypeManager.CreateInstance (handle, transfer);
-			else
-				JNIEnv.DeleteRef (handle, transfer);
-			return new XmlPullParserReader (inst.JavaCast<IXmlPullParser> ()!);
+			return new XmlPullParserReader (inst);
 		}
 	}
 }

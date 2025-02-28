@@ -153,17 +153,10 @@ namespace Android.Runtime
 		
 		public static Stream? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
-			if (handle == IntPtr.Zero)
+			var inst = Java.Lang.Object.GetObject<Java.IO.InputStream> (handle, transfer);
+			if (inst is null)
 				return null;
-
-			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
-
-			if (inst == null)
-				inst = (IJavaObject) Java.Interop.TypeManager.CreateInstance (handle, transfer);
-			else
-				JNIEnv.DeleteRef (handle, transfer);
-
-			return new InputStreamInvoker ((Java.IO.InputStream)inst);
+			return new InputStreamInvoker (inst);
 		}
 	}
 }
