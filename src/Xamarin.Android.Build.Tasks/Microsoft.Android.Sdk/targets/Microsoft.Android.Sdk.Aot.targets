@@ -30,6 +30,7 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
   </ImportGroup>
 
   <UsingTask TaskName="Xamarin.Android.Tasks.GetAotAssemblies" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ProcessRuntimePackLibraryDirectories" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <Target Name="_AndroidAotInputs">
     <ItemGroup>
@@ -77,6 +78,17 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
     <ItemGroup>
       <AndroidAotProfile Include="$(MSBuildThisFileDirectory)dotnet.aotprofile" Condition=" '$(AndroidEnableProfiledAot)' == 'true' and '$(AndroidUseDefaultAotProfile)' != 'false' " />
     </ItemGroup>
+
+    <!-- We need to run this here in adddition to the _ResolveAssemblies target, because this code
+         runs in an inner build and `_RuntimePackLibraryDirectory` items aren't carried over to it.
+    -->
+    <ProcessRuntimePackLibraryDirectories
+        Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
+        ResolvedFilesToPublish="@(ResolvedFileToPublish)">
+      <Output TaskParameter="RuntimePackLibraryDirectories" ItemName="_RuntimePackLibraryDirectory" />
+      <Output TaskParameter="NativeLibrariesToRemove" ItemName="_NativeLibraryToRemove" />
+    </ProcessRuntimePackLibraryDirectories>
+
     <GetAotAssemblies
         AndroidAotMode="$(AndroidAotMode)"
         AndroidNdkDirectory="$(AndroidNdkDirectory)"
