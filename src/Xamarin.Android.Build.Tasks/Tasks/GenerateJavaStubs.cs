@@ -1,22 +1,24 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Microsoft.Build.Framework;
-using Mono.Cecil;
-using Microsoft.Build.Utilities;
-
+using System.Threading.Tasks;
+using System.Xml.Serialization;
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.Diagnostics;
 using Java.Interop.Tools.JavaCallableWrappers;
+using Java.Interop.Tools.JavaCallableWrappers.Adapters;
+using Java.Interop.Tools.JavaCallableWrappers.CallableWrapperMembers;
 using Java.Interop.Tools.TypeNameMappings;
-
-using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
+using Mono.Cecil;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -56,9 +58,20 @@ namespace Xamarin.Android.Tasks
 
 		public string CodeGenerationTarget { get; set; } = "";
 
+		public string AndroidLinkMode { get; set; }
+
+		public bool PublishTrimmed { get; set; }
+
+		public bool ShouldUseNewJCWGenerator { get; set; }
+
 		JavaPeerStyle codeGenerationTarget;
 
+		[Output]
+		public ITaskItem [] GeneratedJavaFilesOutput { get; set; }
+
 		internal const string AndroidSkipJavaStubGeneration = "AndroidSkipJavaStubGeneration";
+
+		public bool ShouldGenerateNewJavaCallableWrappers => false;// !PublishTrimmed && string.Compare (AndroidLinkMode, "None", true) == 0 && !(!Debug && EnableMarshalMethods);
 
 		public override bool RunTask ()
 		{
@@ -176,6 +189,12 @@ namespace Xamarin.Android.Tasks
 			if (!generateSucceeded)
 				return;
 
+			if (ShouldGenerateNewJavaCallableWrappers) {
+				var sw = Stopwatch.StartNew ();
+				GenerateJavaCallableWrappers (allAssembliesPerArch.First ().Value.Values.ToList ());
+				Log.LogDebugMessage ($"Generated NEW Java callable wrappers in: '{sw.ElapsedMilliseconds}ms'");
+			}
+
 			if (templateCodeGenState == null) {
 				throw new InvalidOperationException ($"Internal error: no native code generator state defined");
 			}
@@ -184,6 +203,56 @@ namespace Xamarin.Android.Tasks
 			// Save NativeCodeGenState for later tasks
 			Log.LogDebugMessage ($"Saving {nameof (NativeCodeGenState)} to {nameof (NativeCodeGenStateRegisterTaskKey)}");
 			BuildEngine4.RegisterTaskObjectAssemblyLocal (MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (NativeCodeGenStateRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory), nativeCodeGenStates, RegisteredTaskObjectLifetime.Build);
+		}
+
+		public List<string> GeneratedJavaFiles { get; } = new List<string> ();
+
+		bool GenerateJavaCallableWrappers (List<ITaskItem> assemblies)
+		{
+			Directory.CreateDirectory (Path.Combine (OutputDirectory, "src"));
+
+			var sw = Stopwatch.StartNew ();
+			// Deserialize JavaCallableWrappers
+			var wrappers = new List<CallableWrapperType> ();
+
+			foreach (var assembly in assemblies) {
+				var assemblyPath = assembly.ItemSpec;
+				var assemblyName = Path.GetFileNameWithoutExtension (assemblyPath);
+				var wrappersPath = Path.Combine (Path.GetDirectoryName (assemblyPath), $"{assemblyName}.jlo.xml");
+
+				if (!File.Exists (wrappersPath)) {
+					Log.LogError ($"'{wrappersPath}' not found.");
+					return false;
+				}
+
+				wrappers.AddRange (XmlImporter.Import (wrappersPath));
+			}
+			Log.LogDebugMessage ($"Deserialized Java callable wrappers in: '{sw.ElapsedMilliseconds}ms'");
+
+			sw.Restart ();
+			foreach (var generator in wrappers) {
+				using var writer = MemoryStreamPool.Shared.CreateStreamWriter ();
+
+				var writer_options = new CallableWrapperWriterOptions {
+					CodeGenerationTarget = codeGenerationTarget
+				};
+
+				generator.Generate (writer, writer_options);
+				writer.Flush ();
+
+
+				var path = generator.GetDestinationPath (Path.Combine (OutputDirectory, "src"));
+				var changed = Files.CopyIfStreamChanged (writer.BaseStream, path);
+				Log.LogDebugMessage ($"*NEW* Generated Java callable wrapper code: '{path}' (changed: {changed})");
+
+				//if (changed)
+				//	Log.LogError ($"Java callable wrapper code changed: '{path}'");
+
+				GeneratedJavaFiles.Add (path);
+			}
+			Log.LogDebugMessage ($"Wrote Java callable wrappers in: '{sw.ElapsedMilliseconds}ms'");
+
+			return true;
 		}
 
 		internal static Dictionary<string, ITaskItem> MaybeGetArchAssemblies (Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> dict, AndroidTargetArch arch)
@@ -208,6 +277,27 @@ namespace Xamarin.Android.Tasks
 
 			if (generateJavaCode) {
 				success = jcwGenerator.GenerateAndClassify (AndroidSdkPlatform, outputPath: Path.Combine (OutputDirectory, "src"), ApplicationJavaClass);
+
+				GeneratedJavaFilesOutput = jcwGenerator.GeneratedJavaFiles.Select (f => new TaskItem (f)).ToArray ();
+				//if (ShouldGenerateNewJavaCallableWrappers) {
+				//	var new_generated_java_files = GeneratedJavaFiles.Select (f => f.Replace ("src2", "src")).ToList ();
+				//	var old_generated_java_files = jcwGenerator.GeneratedJavaFiles;
+
+				//	var extra_new_files = new_generated_java_files.Except (old_generated_java_files).ToList ();
+
+				//	if (extra_new_files.Count > 0)
+				//		Log.LogWarning ($"The following Java files were generated but not previously generated: {string.Join (", ", extra_new_files)}");
+
+				//	var missing_old_files = old_generated_java_files.Except (new_generated_java_files).ToList ();
+
+				//	if (missing_old_files.Count > 0)
+				//		Log.LogWarning ($"The following Java files were previously generated but not generated this time: {string.Join (", ", missing_old_files)}");
+
+				//	if (extra_new_files.Count > 0 || missing_old_files.Count > 0) {
+				//		Log.LogError ($"New JCW gen ({new_generated_java_files.Count}) mismatch with old JCW gen ({old_generated_java_files.Count})");
+				//		return (false, null);
+				//	}
+				//}
 			} else {
 				success = jcwGenerator.Classify (AndroidSdkPlatform);
 			}

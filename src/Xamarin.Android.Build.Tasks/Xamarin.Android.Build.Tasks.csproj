@@ -47,9 +47,10 @@
 
     <!-- Include only the linker sources required for LinkAssembliesNoShrink - AddKeepAlivesStep, FixAbstractMethodsStep, FixLegacyResourceDesignerStep -->
     <Compile Remove="Linker\**" />
+    <Compile Include="Linker\MonoDroid.Tuner\FindJavaObjectsStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\AddKeepAlivesStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\AndroidLinkConfiguration.cs" />
-    <Compile Include="Linker\MonoDroid.Tuner\Extensions.cs"/>
+    <Compile Include="Linker\MonoDroid.Tuner\Extensions.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\FixAbstractMethodsStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\FixLegacyResourceDesignerStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\LinkDesignerBase.cs" />

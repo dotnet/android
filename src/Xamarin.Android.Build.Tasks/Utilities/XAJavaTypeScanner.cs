@@ -90,7 +90,7 @@ class XAJavaTypeScanner
 		return true;
 	}
 
-	void AddJavaType (TypeDefinition type, List<TypeDefinition> types)
+	public void AddJavaType (TypeDefinition type, List<TypeDefinition> types)
 	{
 		if (type.HasJavaPeer (cache)) {
 			// For subclasses of e.g. Android.App.Activity.
