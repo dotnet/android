@@ -77,12 +77,6 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
     <ItemGroup>
       <AndroidAotProfile Include="$(MSBuildThisFileDirectory)dotnet.aotprofile" Condition=" '$(AndroidEnableProfiledAot)' == 'true' and '$(AndroidUseDefaultAotProfile)' != 'false' " />
     </ItemGroup>
-
-    <!-- Recreate the library directories items, sent to us via a property from the outer build -->
-    <ItemGroup Condition=" '$(_RuntimePackLibraryDirectoriesList)' != '' ">
-      <_RuntimePackLibraryDirectory Include="$(_RuntimePackLibraryDirectoriesList)" />
-    </ItemGroup>
-
     <GetAotAssemblies
         AndroidAotMode="$(AndroidAotMode)"
         AndroidNdkDirectory="$(AndroidNdkDirectory)"

@@ -1742,13 +1742,8 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_RunAotForAllRIDs"
         Condition=" '$(_AndroidUseMarshalMethods)' == 'True' "
         Returns="@(ResolvedFileToPublish)">
-  <PropertyGroup>
-    <_RuntimePackLibraryDirectoriesList>@(_RuntimePackLibraryDirectory)</_RuntimePackLibraryDirectoriesList>
-  </PropertyGroup>
-
   <MSBuild
       Projects="@(_ProjectToBuild)"
-      Properties="_RuntimePackLibraryDirectoriesList=$(_RuntimePackLibraryDirectoriesList)"
       BuildInParallel="$(_AndroidBuildRuntimeIdentifiersInParallel)"
       Targets="_AndroidAotAndComputeFilesToPublishForRuntimeIdentifiers">
     <Output TaskParameter="TargetOutputs" ItemName="ResolvedFileToPublish" />
