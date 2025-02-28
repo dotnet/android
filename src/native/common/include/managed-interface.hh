@@ -41,6 +41,7 @@ namespace xamarin::android {
 		bool            marshalMethodsEnabled;
 		jobject         grefGCUserPeerable;
 		uint32_t        runtimeType;
+		bool            managedMarshalMethodsLookupEnabled;
 	};
 
 	// Keep the enum values in sync with those in src/Mono.Android/AndroidRuntime/BoundExceptionType.cs

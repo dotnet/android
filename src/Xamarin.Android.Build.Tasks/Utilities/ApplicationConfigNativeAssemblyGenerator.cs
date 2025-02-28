@@ -193,6 +193,7 @@ namespace Xamarin.Android.Tasks
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
 		public List<ITaskItem> NativeLibraries { get; set; }
 		public bool MarshalMethodsEnabled { get; set; }
+		public bool ManagedMarshalMethodsLookupEnabled { get; set; }
 		public bool IgnoreSplitConfigs { get; set; }
 
 		public ApplicationConfigNativeAssemblyGenerator (IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties, TaskLoggingHelper log)
@@ -237,6 +238,7 @@ namespace Xamarin.Android.Tasks
 				have_runtime_config_blob = HaveRuntimeConfigBlob,
 				have_assemblies_blob = HaveAssemblyStore,
 				marshal_methods_enabled = MarshalMethodsEnabled,
+				managed_marshal_methods_lookup_enabled = ManagedMarshalMethodsLookupEnabled,
 				ignore_split_configs = IgnoreSplitConfigs,
 				bound_stream_io_exception_type = (byte)BoundExceptionType,
 				package_naming_policy = (uint)PackageNamingPolicy,
