@@ -556,7 +556,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidWarning Code="XA1040"
       ResourceName="XA1040"
       FormatArguments="$(_AndroidRuntime)"
-      Condition=" '$(_AndroidRuntime)' != 'MonoVM' and '$(AndroidAllowExperimentalRuntime)' != 'true' "
+      Condition=" '$(_AndroidRuntime)' != 'MonoVM' and '$(EnablePreviewFeatures)' != 'true' "
   />
 </Target>
 
