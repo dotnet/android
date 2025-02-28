@@ -24,20 +24,12 @@ public class TypeMappingStep : BaseStep
 	readonly IDictionary<string, List<TypeDefinition>> TypeMappings = new Dictionary<string, List<TypeDefinition>> (StringComparer.Ordinal);
 	AssemblyDefinition? MicrosoftAndroidRuntimeNativeAot;
 
-	AssemblyLoadContext? _hashingAssemblyLoadContext;
 	delegate ulong HashMethod (ReadOnlySpan<byte> data, long seed = 0);
 	HashMethod? _hashMethod;
 
 	protected override void Process ()
 	{
-		if (!Context.TryGetCustomData (SystemIOHashingAssemblyPathCustomData, out var assemblyPath)) {
-			throw new InvalidOperationException ($"The {nameof (TypeMappingStep)} step requires setting the '{SystemIOHashingAssemblyPathCustomData}' custom data");
-		} else if (!System.IO.File.Exists (assemblyPath)) {
-			throw new InvalidOperationException ($"The '{SystemIOHashingAssemblyPathCustomData}' custom data must point to a valid assembly path ('{assemblyPath}' does not exist)");
-		}
-
-		_hashingAssemblyLoadContext = new AssemblyLoadContext (name: null, isCollectible: true);
-		_hashMethod = GetHashMethod (_hashingAssemblyLoadContext, assemblyPath);
+		_hashMethod = LoadHashMethod ();
 	}
 
 	protected override void ProcessAssembly (AssemblyDefinition assembly)
@@ -76,12 +68,8 @@ public class TypeMappingStep : BaseStep
 		var types = orderedMapping.Select (kvp => SelectTypeDefinition (kvp.Key, kvp.Value));
 		GenerateGetTypeByIndex (types);
 
-		var javaClassNames = orderedMapping.Select(kvp => kvp.Key);
+		var javaClassNames = orderedMapping.Select (kvp => kvp.Key);
 		GenerateGetJavaClassNameByIndex (javaClassNames);
-
-		_hashingAssemblyLoadContext?.Unload ();
-		_hashingAssemblyLoadContext = null;
-		_hashMethod = null;
 
 		void GenerateGetTypeByIndex (IEnumerable<TypeDefinition> types)
 		{
@@ -260,23 +248,30 @@ public class TypeMappingStep : BaseStep
 	ulong Hash (string javaName)
 	{
 		ReadOnlySpan<byte> bytes = MemoryMarshal.AsBytes(javaName.AsSpan ());
-		return _hashMethod!(bytes);
+		ulong hash = _hashMethod!(bytes);
+
+		return hash;
 	}
 
-	static HashMethod GetHashMethod (AssemblyLoadContext alc, string assemblyPath)
+	HashMethod LoadHashMethod ()
 	{
-		System.Reflection.Assembly hashingAssembly;
-		try {
-			hashingAssembly = alc.LoadFromAssemblyPath (assemblyPath);
-		} catch (Exception ex) {
-			throw new InvalidOperationException ($"Unable to load {assemblyPath}, {nameof(TypeMappingStep)} cannot proceed", ex);
+		if (!Context.TryGetCustomData (SystemIOHashingAssemblyPathCustomData, out var assemblyPath)) {
+			throw new InvalidOperationException ($"The {nameof (TypeMappingStep)} step requires setting the '{SystemIOHashingAssemblyPathCustomData}' custom data");
+		} else if (!System.IO.File.Exists (assemblyPath)) {
+			throw new InvalidOperationException ($"The '{SystemIOHashingAssemblyPathCustomData}' custom data must point to a valid assembly path ('{assemblyPath}' does not exist)");
 		}
 
-		var hashToUInt64 = hashingAssembly.GetType ("System.IO.Hashing.XxHash3").GetMethod ("HashToUInt64");
-		if (hashToUInt64 is null) {
+		System.Reflection.MethodInfo? hashToUInt64MethodInfo;
+		try {
+			hashToUInt64MethodInfo = System.Reflection.Assembly.LoadFile (assemblyPath).GetType ("System.IO.Hashing.XxHash3")?.GetMethod ("HashToUInt64");
+		} catch (Exception ex) {
+			throw new InvalidOperationException ($"The '{SystemIOHashingAssemblyPathCustomData}' custom data must point to a valid assembly path ('{assemblyPath}' could not be loaded)", ex);
+		}
+
+		if (hashToUInt64MethodInfo is null) {
 			throw new InvalidOperationException ($"Unable to find System.IO.Hashing.XxHash3.HashToUInt64 method, {nameof(TypeMappingStep)} cannot proceed");
 		}
 
-		return (HashMethod)Delegate.CreateDelegate (typeof (HashMethod), hashToUInt64, throwOnBindFailure: true);
+		return (HashMethod)Delegate.CreateDelegate (typeof (HashMethod), hashToUInt64MethodInfo, throwOnBindFailure: true);
 	}
 }
