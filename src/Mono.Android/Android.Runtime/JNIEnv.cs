@@ -205,7 +205,7 @@ namespace Android.Runtime {
 				IntPtr ctor = JNIEnv.GetMethodID (lrefClass, "<init>", jniCtorSignature);
 				if (ctor == IntPtr.Zero)
 					throw new ArgumentException (FormattableString.Invariant (
-						$"Could not find constructor JNI signature '{jniCtorSignature}' on type '{Java.Interop.TypeManager.GetClassName (lrefClass)}'."));
+						$"Could not find constructor JNI signature '{jniCtorSignature}' on type '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (lrefClass))}'."));
 				CallNonvirtualVoidMethod (instance, lrefClass, ctor, constructorParameters);
 			} finally {
 				DeleteLocalRef (lrefClass);
@@ -223,7 +223,7 @@ namespace Android.Runtime {
 			IntPtr ctor = JNIEnv.GetMethodID (jniClass, "<init>", signature);
 			if (ctor == IntPtr.Zero)
 				throw new ArgumentException (FormattableString.Invariant (
-					$"Could not find constructor JNI signature '{signature}' on type '{Java.Interop.TypeManager.GetClassName (jniClass)}'."));
+					$"Could not find constructor JNI signature '{signature}' on type '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (jniClass))}'."));
 			return JNIEnv.NewObject (jniClass, ctor, constructorParameters);
 		}
 
@@ -543,7 +543,7 @@ namespace Android.Runtime {
 			try {
 				if (!IsAssignableFrom (grefSource, lrefDest)) {
 					throw new InvalidCastException (FormattableString.Invariant (
-						$"Unable to cast from '{Java.Interop.TypeManager.GetClassName (grefSource)}' to '{Java.Interop.TypeManager.GetClassName (lrefDest)}'."));
+						$"Unable to cast from '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (grefSource))}' to '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (lrefDest))}'."));
 				}
 			} finally {
 				DeleteGlobalRef (grefSource);
@@ -558,7 +558,7 @@ namespace Android.Runtime {
 			try {
 				if (!IsAssignableFrom (lrefSource, grefDest)) {
 					throw new InvalidCastException (FormattableString.Invariant (
-						$"Unable to cast from '{Java.Interop.TypeManager.GetClassName (lrefSource)}' to '{Java.Interop.TypeManager.GetClassName (grefDest)}'."));
+						$"Unable to cast from '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (lrefSource))}' to '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (grefDest))}'."));
 				}
 			} finally {
 				DeleteGlobalRef (grefDest);
@@ -1167,7 +1167,7 @@ namespace Android.Runtime {
 				return IntPtr.Zero;
 
 			IntPtr grefArrayElementClass = GetArrayElementClass (values);
-			if (Java.Interop.TypeManager.GetClassName (grefArrayElementClass) == "mono/android/runtime/JavaObject") {
+			if (JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (grefArrayElementClass)) == "mono/android/runtime/JavaObject") {
 				DeleteGlobalRef (grefArrayElementClass);
 				grefArrayElementClass = NewGlobalRef (Java.Lang.Class.Object);
 			}
