@@ -41,11 +41,24 @@ namespace xamarin::android {
 
 	class Util
 	{
+		static constexpr inline std::array<char, 16> hex_map {
+			'0', '1', '2', '3', '4', '5', '6', '7',
+			'8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
+		};
+
 	public:
 		static int create_directory (const char *pathname, mode_t mode);
 		static void create_public_directory (std::string_view const& dir);
 		static auto monodroid_fopen (std::string_view const& filename, std::string_view const& mode) noexcept -> FILE*;
 		static void set_world_accessable (std::string_view const& path);
+
+		// Puts higher half of the `value` byte as a hexadecimal character in `high_half` and
+		// the lower half in `low_half`
+		static void to_hex (uint8_t value, char &high_half, char &low_half) noexcept
+		{
+			high_half = hex_map[(value & 0xf0) >> 4];
+			low_half = hex_map[value & 0x0f];
+		}
 
 		static auto should_log (LogCategories category) noexcept -> bool
 		{

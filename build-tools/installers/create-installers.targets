@@ -116,7 +116,6 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Options.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Options.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)MULTIDEX_JAR_LICENSE" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Newtonsoft.Json.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.Common.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.Configuration.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.DependencyResolver.Core.dll" />
@@ -134,6 +133,10 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_fastdev_net6.jar" ExcludeFromLegacy="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_net6.dex" ExcludeFromLegacy="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_fastdev_net6.dex" ExcludeFromLegacy="true" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_clr.jar" ExcludeFromLegacy="true" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_fastdev_clr.jar" ExcludeFromLegacy="true" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_clr.dex" ExcludeFromLegacy="true" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_fastdev_clr.dex" ExcludeFromLegacy="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)manifestmerger.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)proguard-android.txt" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)protobuf-net.dll" />
@@ -176,18 +179,6 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)K4os.Compression.LZ4.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)ELFSharp.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)ManifestOverlays\Timing.xml" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-arm64\libc.so" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-arm64\libm.so" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-arm\libc.so" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-arm\libm.so" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x64\libc.so" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x64\libm.so" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x86\libc.so" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x86\libm.so" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)dsostubs\android-arm64\libarchive-dso-stub.so" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)dsostubs\android-arm\libarchive-dso-stub.so" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)dsostubs\android-x64\libarchive-dso-stub.so" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)dsostubs\android-x86\libarchive-dso-stub.so" />
   </ItemGroup>
   <ItemGroup>
     <_MSBuildTargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\Xamarin.Android.AvailableItems.targets" />

@@ -64,9 +64,13 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool EnablePreloadAssembliesDefault { get; set; }
 
+		[Required]
+		public bool TargetsCLR { get; set; }
+
 		public bool EnableMarshalMethods { get; set; }
 		public bool EnableManagedMarshalMethodsLookup { get; set; }
 		public string RuntimeConfigBinFilePath { get; set; }
+		public string ProjectRuntimeConfigFilePath { get; set; } = String.Empty;
 		public string BoundExceptionType { get; set; }
 
 		public string PackageNamingPolicy { get; set; }
@@ -320,32 +324,54 @@ namespace Xamarin.Android.Tasks
 
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
 			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (ProjectSpecificTaskObjectKey (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey), RegisteredTaskObjectLifetime.Build);
-			var appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {
-				UsesMonoAOT = usesMonoAOT,
-				UsesMonoLLVM = EnableLLVM,
-				UsesAssemblyPreload = environmentParser.UsesAssemblyPreload,
-				MonoAOTMode = aotMode.ToString ().ToLowerInvariant (),
-				AotEnableLazyLoad = AndroidAotEnableLazyLoad,
-				AndroidPackageName = AndroidPackageName,
-				BrokenExceptionTransitions = environmentParser.BrokenExceptionTransitions,
-				PackageNamingPolicy = pnp,
-				BoundExceptionType = boundExceptionType,
-				JniAddNativeMethodRegistrationAttributePresent = NativeCodeGenState.TemplateJniAddNativeMethodRegistrationAttributePresent,
-				HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
-				NumberOfAssembliesInApk = assemblyCount,
-				BundledAssemblyNameWidth = assemblyNameWidth,
-				MonoComponents = (MonoComponent)monoComponents,
-				NativeLibraries = uniqueNativeLibraries,
-				HaveAssemblyStore = UseAssemblyStore,
-				AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
-				JNIEnvInitializeToken = jnienv_initialize_method_token,
-				JNIEnvRegisterJniNativesToken = jnienv_registerjninatives_method_token,
-				JniRemappingReplacementTypeCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementTypeCount,
-				JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
-				MarshalMethodsEnabled = EnableMarshalMethods,
-				ManagedMarshalMethodsLookupEnabled = EnableManagedMarshalMethodsLookup,
-				IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
-			};
+			LLVMIR.LlvmIrComposer appConfigAsmGen;
+
+			if (TargetsCLR) {
+				Dictionary<string, string>? runtimeProperties = RuntimePropertiesParser.ParseConfig (ProjectRuntimeConfigFilePath);
+				appConfigAsmGen = new ApplicationConfigNativeAssemblyGeneratorCLR (environmentVariables, systemProperties, runtimeProperties, Log) {
+					UsesAssemblyPreload = environmentParser.UsesAssemblyPreload,
+					AndroidPackageName = AndroidPackageName,
+					PackageNamingPolicy = pnp,
+					JniAddNativeMethodRegistrationAttributePresent = NativeCodeGenState.TemplateJniAddNativeMethodRegistrationAttributePresent,
+					NumberOfAssembliesInApk = assemblyCount,
+					BundledAssemblyNameWidth = assemblyNameWidth,
+					NativeLibraries = uniqueNativeLibraries,
+					AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
+					JNIEnvInitializeToken = jnienv_initialize_method_token,
+					JNIEnvRegisterJniNativesToken = jnienv_registerjninatives_method_token,
+					JniRemappingReplacementTypeCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementTypeCount,
+					JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
+					MarshalMethodsEnabled = EnableMarshalMethods,
+					IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
+				};
+			} else {
+				appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {
+					UsesMonoAOT = usesMonoAOT,
+					UsesMonoLLVM = EnableLLVM,
+					UsesAssemblyPreload = environmentParser.UsesAssemblyPreload,
+					MonoAOTMode = aotMode.ToString ().ToLowerInvariant (),
+					AotEnableLazyLoad = AndroidAotEnableLazyLoad,
+					AndroidPackageName = AndroidPackageName,
+					BrokenExceptionTransitions = environmentParser.BrokenExceptionTransitions,
+					PackageNamingPolicy = pnp,
+					BoundExceptionType = boundExceptionType,
+					JniAddNativeMethodRegistrationAttributePresent = NativeCodeGenState.TemplateJniAddNativeMethodRegistrationAttributePresent,
+					HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
+					NumberOfAssembliesInApk = assemblyCount,
+					BundledAssemblyNameWidth = assemblyNameWidth,
+					MonoComponents = (MonoComponent)monoComponents,
+					NativeLibraries = uniqueNativeLibraries,
+					HaveAssemblyStore = UseAssemblyStore,
+					AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
+					JNIEnvInitializeToken = jnienv_initialize_method_token,
+					JNIEnvRegisterJniNativesToken = jnienv_registerjninatives_method_token,
+					JniRemappingReplacementTypeCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementTypeCount,
+					JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
+					MarshalMethodsEnabled = EnableMarshalMethods,
+					ManagedMarshalMethodsLookupEnabled = EnableManagedMarshalMethodsLookup,
+					IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
+				};
+			}
 			LLVMIR.LlvmIrModule appConfigModule = appConfigAsmGen.Construct ();
 
 			foreach (string abi in SupportedAbis) {

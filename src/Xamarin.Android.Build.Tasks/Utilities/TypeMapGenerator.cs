@@ -448,7 +448,7 @@ namespace Xamarin.Android.Tasks
 
 			LLVMIR.LlvmIrComposer composer = runtime switch {
 				AndroidRuntime.MonoVM => new TypeMappingReleaseNativeAssemblyGenerator (log, new NativeTypeMappingData (log, modules)),
-				AndroidRuntime.CoreCLR => throw new NotImplementedException ("CoreCLR support not implemented yet"),
+				AndroidRuntime.CoreCLR => new TypeMappingReleaseNativeAssemblyGeneratorCLR (log, new NativeTypeMappingData (log, modules)),
 				_ => throw new NotSupportedException ($"Internal error: unsupported runtime {runtime}")
 			};
 

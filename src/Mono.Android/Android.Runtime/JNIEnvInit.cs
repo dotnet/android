@@ -91,7 +91,9 @@ namespace Android.Runtime
 		[UnmanagedCallersOnly]
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
+			// This looks weird, see comments in RuntimeTypeInternal.cs
 			RuntimeType = DotNetRuntimeTypeConverter.Convert (args->runtimeType);
+			InternalRuntimeTypeHolder.SetRuntimeType (args->runtimeType);
 
 			IntPtr total_timing_sequence = IntPtr.Zero;
 			IntPtr partial_timing_sequence = IntPtr.Zero;

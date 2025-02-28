@@ -108,6 +108,9 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void BasicApplicationOtherRuntime ([Values (true, false)] bool isRelease)
 		{
+			// This test would fail, as it requires **our** updated runtime pack, which isn't currently created
+			// It is created in `src/native/native-clr.csproj` which isn't built atm.
+			Assert.Ignore ("CoreCLR support isn't fully enabled yet. This test will be enabled in a follow-up PR.");
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				// Add locally downloaded CoreCLR packs

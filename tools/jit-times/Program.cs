@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text.RegularExpressions;
 using static System.Console;
 
@@ -159,7 +160,7 @@ namespace jittimes {
 					var info = GetMethodInfo (method);
 
 					if (info.state != MethodInfo.State.None && Verbose)
-						Warning ($"duplicit begin of `{info.method}`");
+						Warning ($"duplicate begin of `{info.method}`");
 
 					info.state = MethodInfo.State.Begin;
 					info.begin = time;
@@ -183,6 +184,12 @@ namespace jittimes {
 					info.total = info.done - info.begin;
 
 					info.CalcSelfTime ();
+					if (Verbose) {
+						if (info.self.nanoseconds < 0)
+							Warning ($"negative self time for method {method}: {info.self}");
+						if (info.total.nanoseconds < 0)
+							Warning ($"negative total time for method {method}: {info.total}");
+					}
 
 					jitMethods.Pop ();
 
@@ -229,7 +236,7 @@ namespace jittimes {
 				var info = pair.Value;
 				WriteLine ($"{info.total.Milliseconds (),10:F2} | {info.self.Milliseconds (),10:F2} | {info.method}");
 
-				sum += info.self;
+				sum += info.self.Positive();
 			}
 
 			return sum;

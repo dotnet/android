@@ -45,7 +45,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Tools.Diagnost
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Tools.Cecil", "external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj", "{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "native", "src\native\native-mono.csproj", "{53EE4C57-1C03-405A-8243-8DA539546C88}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "native-mono", "src\native\native-mono.csproj", "{53EE4C57-1C03-405A-8243-8DA539546C88}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{CAB438D8-B0F5-4AF0-BEBD-9E2ADBD7B483}"
 EndProject

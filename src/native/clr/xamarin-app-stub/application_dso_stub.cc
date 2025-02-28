@@ -22,13 +22,14 @@ const TypeMap type_map = {
 	managed_to_java
 };
 #else
-const uint32_t map_module_count = 0;
+const uint32_t managed_to_java_map_module_count = 0;
 const uint32_t java_type_count = 0;
 const char* const java_type_names[] = {};
-
-TypeMapModule map_modules[] = {};
-const TypeMapJava map_java[] = {};
-const xamarin::android::hash_t map_java_hashes[] = {};
+const char* const managed_type_names[] = {};
+const char* const managed_assembly_names[] = {};
+TypeMapModule managed_to_java_map[] = {};
+const TypeMapJava java_to_managed_map[] = {};
+const xamarin::android::hash_t java_to_managed_hashes[] = {};
 #endif
 
 CompressedAssemblies compressed_assemblies = {
@@ -340,26 +341,10 @@ const RuntimePropertyIndexEntry runtime_property_index[] = {
 	},
 };
 
-namespace {
-	const host_configuration_property _host_configuration_properties_data[] = {
-		{
-			.name = u"test_string",
-			.value = u"string value",
-		},
+const char *init_runtime_property_names[] = {
+	"HOST_RUNTIME_CONTRACT",
+};
 
-		{
-			.name = u"test_integer",
-			.value = u"23",
-		},
-
-		{
-			.name = u"test_boolean",
-			.value = u"true",
-		},
-	};
-}
-
-const host_configuration_properties host_config_properties = {
-	.nitems = 3,
-	.data = _host_configuration_properties_data,
+char *init_runtime_property_values[] {
+	nullptr,
 };
