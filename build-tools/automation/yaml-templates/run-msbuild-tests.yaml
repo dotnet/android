@@ -42,6 +42,10 @@ jobs:
       repositoryAlias: ${{ parameters.repositoryAlias }}
       commit: ${{ parameters.commit }}
 
+  - template: /build-tools/automation/yaml-templates/select-test-runtime.yaml
+    parameters:
+      runtimeName: ${{ parameters.runtimeName }}
+
   - task: DownloadPipelineArtifact@2
     inputs:
       artifactName: $(TestAssembliesArtifactName)
