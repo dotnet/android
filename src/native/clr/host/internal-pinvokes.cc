@@ -7,7 +7,7 @@ using namespace xamarin::android;
 
 int _monodroid_gref_get () noexcept
 {
-    return OSBridge::get_gc_gref_count ();
+	return OSBridge::get_gc_gref_count ();
 }
 
 void _monodroid_gref_log (const char *message) noexcept
@@ -16,7 +16,7 @@ void _monodroid_gref_log (const char *message) noexcept
 
 int _monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable) noexcept
 {
-    return OSBridge::_monodroid_gref_log_new (curHandle, curType, newHandle, newType, threadName, threadId, from, from_writable);
+	return OSBridge::_monodroid_gref_log_new (curHandle, curType, newHandle, newType, threadName, threadId, from, from_writable);
 }
 
 void _monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable) noexcept

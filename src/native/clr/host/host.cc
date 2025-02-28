@@ -260,8 +260,8 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	Class_getName                                       = env->GetMethodID (init.grefClass, "getName", "()Ljava/lang/String;");
 
 	jclass lrefLoaderClass                              = env->GetObjectClass (loader);
-    init.Loader_loadClass                               = env->GetMethodID (lrefLoaderClass, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
-    env->DeleteLocalRef (lrefLoaderClass);
+	init.Loader_loadClass                               = env->GetMethodID (lrefLoaderClass, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+	env->DeleteLocalRef (lrefLoaderClass);
 
 	init.grefLoader                                     = env->NewGlobalRef (loader);
 	init.grefIGCUserPeer                                = HostUtil::get_class_from_runtime_field (env, runtimeClass, "mono_android_IGCUserPeer", true);
