@@ -3,7 +3,7 @@ parameters:
   runtimeName: ''
 
 stages:
-- stage: linux_tests
+- stage: linux_tests_${{ parameters.runtimeName }}
   displayName: Linux Tests (${{ parameters.runtimeName }})
   dependsOn:
   - mac_build
