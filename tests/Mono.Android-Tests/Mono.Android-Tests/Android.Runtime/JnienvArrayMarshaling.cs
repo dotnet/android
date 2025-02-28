@@ -91,7 +91,7 @@ namespace Android.RuntimeTests {
 			}
 		}
 
-		[Test, Ignore]
+		[Test, Ignore ("TODO hangs test suite")]
 		public void CopyArray_JavaLangObjectArrayToJavaLangStringArray ()
 		{
 			using (var stringArray = new Java.Lang.Object (JNIEnv.NewArray (new[]{"a", "b"}), JniHandleOwnership.TransferLocalRef)) {
