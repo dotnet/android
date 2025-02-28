@@ -208,7 +208,7 @@ namespace Java.Interop {
 		{
 			var lref = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
 			try {
-				string className = TypeManager.GetClassName (lref.Handle);
+				string className = JniEnvironment.Types.GetJniTypeNameFromClass (lref);
 				if (TypeMappings.TryGetValue (className, out var match))
 					return match;
 				if (JniEnvironment.Types.IsAssignableFrom (lref, new JniObjectReference (JavaDictionary.map_class)))
