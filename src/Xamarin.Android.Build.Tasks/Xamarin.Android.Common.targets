@@ -305,6 +305,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' And '$(EmbedAssembliesIntoApk)' == 'False' ">True</_AndroidFastDeployEnvironmentFiles>
 	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' ">False</_AndroidFastDeployEnvironmentFiles>
 
+  <_AndroidUseCLR Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">True</_AndroidUseCLR>
+  <_AndroidUseCLR Condition=" '$(_AndroidRuntime)' != 'CoreCLR' ">False</_AndroidUseCLR>
 </PropertyGroup>
 
 <Choose>
@@ -339,6 +341,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and '$(_AndroidRuntime)' != 'NativeAOT' ">True</AndroidEnableMarshalMethods>
   <!-- NOTE: temporarily disable for NativeAOT for now, to get build passing -->
   <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and '$(_AndroidRuntime)' == 'NativeAOT' ">False</AndroidEnableMarshalMethods>
+
+  <!-- NOTE: temporarily disable for CoreCLR for now, until we have an implementation that works
+       with the new runtime -->
+  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and '$(_AndroidRuntime)' == 'CoreCLR' ">False</AndroidEnableMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">False</_AndroidUseMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">$(AndroidEnableMarshalMethods)</_AndroidUseMarshalMethods>
 </PropertyGroup>
@@ -1364,9 +1370,14 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CollectRuntimeJarFilenames">
-  <PropertyGroup>
+  <PropertyGroup Condition=" '$(_AndroidRuntime)' != 'CoreCLR' ">
     <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_net6.jar</_RuntimeJar>
     <_RuntimeDex>$(MSBuildThisFileDirectory)\java_runtime_net6.dex</_RuntimeDex>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">
+    <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_clr.jar</_RuntimeJar>
+    <_RuntimeDex>$(MSBuildThisFileDirectory)\java_runtime_clr.dex</_RuntimeDex>
   </PropertyGroup>
 </Target>
 
@@ -1388,7 +1399,7 @@ because xbuild doesn't support framework reference assemblies.
 		DependsOnTargets="_CollectRuntimeJarFilenames;$(_BeforeAddStaticResources);_GetMonoPlatformJarPath">
 	<CopyResource ResourceName="machine.config" OutputPath="$(MonoAndroidIntermediateAssemblyDir)machine.config" />
   <CopyResource
-      Condition=" '$(_AndroidRuntime)' == 'MonoVM' "
+      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
       ResourceName="MonoRuntimeProvider.Bundled.java"
       OutputPath="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java"
   />
@@ -1463,7 +1474,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <!-- _PrepareAssemblies lives in Microsoft.Android.Sdk.AssemblyResolution.targets -->
 
-<Target Name="_PrepareNativeAssemblySources" Condition=" '$(_AndroidRuntime)' == 'MonoVM' ">
+<Target Name="_PrepareNativeAssemblySources" Condition=" '$(_AndroidRuntime)' != 'NativeAOT' ">
   <PrepareAbiItems
       BuildTargetAbis="@(_BuildTargetAbis)"
       NativeSourcesDir="$(_NativeAssemblySourceDir)"
@@ -1765,7 +1776,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_GeneratePackageManagerJava"
-  Condition=" '$(_AndroidRuntime)' == 'MonoVM' "
+  Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
   DependsOnTargets="$(_GeneratePackageManagerJavaDependsOn)"
   Inputs="@(_GeneratePackageManagerJavaInputs)"
   Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
@@ -1800,6 +1811,8 @@ because xbuild doesn't support framework reference assemblies.
     UseAssemblyStore="$(AndroidUseAssemblyStore)"
     EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
     CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
+    TargetsCLR="$(_AndroidUseCLR)"
+    ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)"
   >
   </GeneratePackageManagerJava>
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
@@ -1985,7 +1998,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <!-- Shrink Mono.Android.dll by removing attribute only needed for GenerateJavaStubs -->
   <RemoveRegisterAttribute
-    Condition="'$(AndroidLinkMode)' != 'None' and '$(AndroidIncludeDebugSymbols)' != 'true' and '$(AndroidStripILAfterAOT)' != 'true' and '$(_AndroidRuntime)' == 'MonoVM' "
+    Condition="'$(AndroidLinkMode)' != 'None' and '$(AndroidIncludeDebugSymbols)' != 'true' and '$(AndroidStripILAfterAOT)' != 'true' and '$(_AndroidRuntime)' != 'NativeAOT' "
     ShrunkFrameworkAssemblies="@(_ShrunkAssemblies)" />
 
   <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)shrunk" />
@@ -2061,7 +2074,7 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<Target Name="_PrepareApplicationSharedLibraryItems" Condition=" '$(_AndroidRuntime)' == 'MonoVM' ">
+<Target Name="_PrepareApplicationSharedLibraryItems" Condition=" '$(_AndroidRuntime)' != 'NativeAOT' ">
   <ItemGroup>
     <_ApplicationSharedLibrary Include="$(_AndroidApplicationSharedLibraryPath)%(_BuildTargetAbis.Identity)\libxamarin-app.so">
       <abi>%(_BuildTargetAbis.Identity)</abi>
@@ -2079,6 +2092,8 @@ because xbuild doesn't support framework reference assemblies.
       DebugBuild="$(AndroidIncludeDebugSymbols)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       ZipAlignmentPages="$(AndroidZipAlignment)"
+      TargetsCLR="$(_AndroidUseCLR)"
+      RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)"
   />
   <ItemGroup>
     <FileWrites Include="@(_ApplicationSharedLibrary)" />
@@ -2181,7 +2196,7 @@ because xbuild doesn't support framework reference assemblies.
   <PropertyGroup Condition=" '$(AndroidPackageFormat)' == 'aab' ">
     <_ApkOutputPath>$(_BaseZipIntermediate)</_ApkOutputPath>
   </PropertyGroup>
-  
+
   <!-- Put the assemblies and native libraries in the apk -->
   <!--
     NOTE: Adding Arguments to BuildApk or BuildBaseAppBundle
@@ -2189,6 +2204,7 @@ because xbuild doesn't support framework reference assemblies.
     in monodroid.
   -->
   <CreateAssemblyStore
+      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
       AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
       ResolvedFrameworkAssemblies="@(_BuildApkResolvedFrameworkAssemblies)"
@@ -2197,14 +2213,16 @@ because xbuild doesn't support framework reference assemblies.
       UseAssemblyStore="$(AndroidUseAssemblyStore)">
     <Output TaskParameter="AssembliesToAddToArchive" ItemName="_BuildApkAssembliesToAddToArchive" />
   </CreateAssemblyStore>
-    
+
   <WrapAssembliesAsSharedLibraries
+      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
       IntermediateOutputPath="$(IntermediateOutputPath)"
       ResolvedAssemblies="@(_BuildApkAssembliesToAddToArchive)"
       SupportedAbis="@(_BuildTargetAbis)"
-      UseAssemblyStore="$(AndroidUseAssemblyStore)">
+      UseAssemblyStore="$(AndroidUseAssemblyStore)"
+      RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">
     <Output TaskParameter="WrappedAssemblies" ItemName="FilesToAddToArchive" />
   </WrapAssembliesAsSharedLibraries>
 
@@ -2224,11 +2242,14 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectJarContentFilesForArchive>
 
+  <!-- CoreCLR builds embed runtime config in libxamarin-app.so -->
   <CollectRuntimeConfigFilesForArchive
+      Condition=" '$(_AndroidRuntime)' == 'MonoVM' "
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       IntermediateOutputPath="$(IntermediateOutputPath)"
       RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
-      SupportedAbis="@(_BuildTargetAbis)">
+      SupportedAbis="@(_BuildTargetAbis)"
+      RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectRuntimeConfigFilesForArchive>
 
@@ -2245,7 +2266,8 @@ because xbuild doesn't support framework reference assemblies.
       CheckedBuild="$(_AndroidCheckedBuild)"
       ZipAlignmentPages="$(AndroidZipAlignment)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-      IntermediateOutputPath="$(IntermediateOutputPath)">
+      IntermediateOutputPath="$(IntermediateOutputPath)"
+      RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
     <Output TaskParameter="DSODirectoriesToDelete" ItemName="DSODirectoriesToDelete" />
@@ -2265,7 +2287,7 @@ because xbuild doesn't support framework reference assemblies.
   <!-- Hopefully this is temporary and doesn't actually need to be cleaned up. But for now let's not change existing behavior. -->
   <RemoveDir
       Directories="@(DSODirectoriesToDelete)" />
-  
+
   <BuildAppBundle
       Condition=" '$(AndroidPackageFormat)' == 'aab' "
       ToolPath="$(JavaToolPath)"
@@ -2332,7 +2354,7 @@ because xbuild doesn't support framework reference assemblies.
       TypeMappings="@(_AndroidTypeMaps)">
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectTypeMapFilesForArchive>
-  
+
   <CollectJarContentFilesForArchive
       AndroidPackageFormat="$(AndroidPackageFormat)"
       ExcludeFiles="@(AndroidPackagingOptionsExclude)"
@@ -2343,11 +2365,14 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectJarContentFilesForArchive>
 
+  <!-- CoreCLR builds embed runtime config in libxamarin-app.so -->
   <CollectRuntimeConfigFilesForArchive
+      Condition=" '$(_AndroidRuntime)' == 'MonoVM' "
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       IntermediateOutputPath="$(IntermediateOutputPath)"
       RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
-      SupportedAbis="@(_BuildTargetAbis)">
+      SupportedAbis="@(_BuildTargetAbis)"
+      RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectRuntimeConfigFilesForArchive>
 
@@ -2363,7 +2388,8 @@ because xbuild doesn't support framework reference assemblies.
       IncludeWrapSh="$(AndroidIncludeWrapSh)"
       CheckedBuild="$(_AndroidCheckedBuild)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-      IntermediateOutputPath="$(IntermediateOutputPath)">
+      IntermediateOutputPath="$(IntermediateOutputPath)"
+      RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
     <Output TaskParameter="DSODirectoriesToDelete" ItemName="DSODirectoriesToDelete" />

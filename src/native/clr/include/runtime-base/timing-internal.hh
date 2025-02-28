@@ -88,12 +88,15 @@ namespace xamarin::android {
 		static constexpr uint32_t ns_in_second = ms_in_second * ns_in_millisecond;
 
 	protected:
-		FastTiming () noexcept
+		void configure_for_use () noexcept
 		{
 			events.reserve (INITIAL_EVENT_VECTOR_SIZE);
 		}
 
 	public:
+		constexpr FastTiming () noexcept
+		{}
+
 		[[gnu::always_inline]]
 		static auto enabled () noexcept -> bool
 		{
@@ -462,5 +465,5 @@ namespace xamarin::android {
 		static inline bool immediate_logging = false;
 	};
 
-	extern FastTiming *internal_timing;
+	extern FastTiming internal_timing;
 }

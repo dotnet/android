@@ -65,7 +65,8 @@ public class MonoPackageManager {
 				}
 
 				//
-				// Should the order change here, src/monodroid/jni/SharedConstants.hh must be updated accordingly
+				// Should the order change here, src/mono/native/runtime-base/shared-constants.hh and
+				// src/native/clr/include/constants.hh must be updated accordingly
 				//
 				String[] appDirs = new String[] {filesDir, cacheDir, dataDir};
 				boolean haveSplitApks = runtimePackage.splitSourceDirs != null && runtimePackage.splitSourceDirs.length > 0;

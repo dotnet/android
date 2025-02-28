@@ -52,6 +52,7 @@
   <ItemGroup>
     <Compile Include="$(IntermediateOutputPath)AssemblyInfo.cs" />
     <Compile Include="..\Mono.Android\Android.Runtime\AndroidRuntimeInternal.cs" />
+    <Compile Include="..\Mono.Android\Android.Runtime\DotNetRuntimeType.cs" />
     <Compile Include="..\Mono.Android\Android.Runtime\LogCategories.cs" />
     <Compile Include="..\Mono.Android\Android.Runtime\LogLevel.cs" />
     <Compile Include="..\Mono.Android\Android.Runtime\RuntimeConstants.cs" />

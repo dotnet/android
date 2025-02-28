@@ -569,28 +569,24 @@ namespace Xamarin.Android.Tasks
 			return relPath;
 		}
 
-		public static string GetLibstubsArchDirectoryPath (string androidBinUtilsDirectory, AndroidTargetArch arch)
+#if MSBUILD
+		public static string? GetRuntimePackNativeLibDir (AndroidTargetArch arch, IEnumerable<ITaskItem> runtimePackLibDirs)
 		{
-			return Path.Combine (GetLibstubsRootDirectoryPath (androidBinUtilsDirectory), ArchToRid (arch));
-		}
+			foreach (ITaskItem item in runtimePackLibDirs) {
+				string? rid = item.GetMetadata ("RuntimeIdentifier");
+				if (String.IsNullOrEmpty (rid)) {
+					continue;
+				}
 
-		public static string GetLibstubsRootDirectoryPath (string androidBinUtilsDirectory)
-		{
-			string relPath = GetToolsRootDirectoryRelativePath (androidBinUtilsDirectory);
-			return Path.GetFullPath (Path.Combine (androidBinUtilsDirectory, relPath, "libstubs"));
-		}
+				AndroidTargetArch itemArch = RidToArch (rid);
+				if (itemArch == arch) {
+					return item.ItemSpec;
+				}
+			}
 
-		public static string GetDSOStubsRootDirectoryPath (string androidBinUtilsDirectory)
-		{
-			string relPath = GetToolsRootDirectoryRelativePath (androidBinUtilsDirectory);
-			return Path.GetFullPath (Path.Combine (androidBinUtilsDirectory, relPath, "dsostubs"));
+			return null;
 		}
-
-		public static string GetNativeLibsRootDirectoryPath (string androidBinUtilsDirectory)
-		{
-			string relPath = GetToolsRootDirectoryRelativePath (androidBinUtilsDirectory);
-			return Path.GetFullPath (Path.Combine (androidBinUtilsDirectory, relPath, "lib"));
-		}
+#endif // MSBUILD
 
 		public static string? GetAssemblyCulture (ITaskItem assembly)
 		{

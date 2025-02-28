@@ -136,23 +136,23 @@ public class GenerateMainAndroidManifest : AndroidTask
 
 	void GenerateAdditionalProviderSources (NativeCodeGenState codeGenState, IList<string> additionalProviders)
 	{
-		if (androidRuntime != Xamarin.Android.Tasks.AndroidRuntime.CoreCLR) {
-			// Create additional runtime provider java sources.
-			bool isMonoVM = androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.MonoVM;
-			string providerTemplateFile = isMonoVM ?
-				"MonoRuntimeProvider.Bundled.java" :
-				"NativeAotRuntimeProvider.java";
-			string providerTemplate = GetResource (providerTemplateFile);
+		// Create additional runtime provider java sources.
+		bool isMonoVM = androidRuntime switch {
+			Xamarin.Android.Tasks.AndroidRuntime.MonoVM => true,
+			Xamarin.Android.Tasks.AndroidRuntime.CoreCLR => true,
+			_ => false,
+		};
+		string providerTemplateFile = isMonoVM ?
+			"MonoRuntimeProvider.Bundled.java" :
+			"NativeAotRuntimeProvider.java";
+		string providerTemplate = GetResource (providerTemplateFile);
 
-			foreach (var provider in additionalProviders) {
-				var contents = providerTemplate.Replace (isMonoVM ? "MonoRuntimeProvider" : "NativeAotRuntimeProvider", provider);
-				var real_provider = isMonoVM ?
-					Path.Combine (OutputDirectory, "src", "mono", provider + ".java") :
-					Path.Combine (OutputDirectory, "src", "net", "dot", "jni", "nativeaot", provider + ".java");
-				Files.CopyIfStringChanged (contents, real_provider);
-			}
-		} else {
-			Log.LogDebugMessage ($"Skipping android.content.ContentProvider generation for: {androidRuntime}");
+		foreach (var provider in additionalProviders) {
+			var contents = providerTemplate.Replace (isMonoVM ? "MonoRuntimeProvider" : "NativeAotRuntimeProvider", provider);
+			var real_provider = isMonoVM ?
+				Path.Combine (OutputDirectory, "src", "mono", provider + ".java") :
+				Path.Combine (OutputDirectory, "src", "net", "dot", "jni", "nativeaot", provider + ".java");
+			Files.CopyIfStringChanged (contents, real_provider);
 		}
 
 		// For NativeAOT, generate JavaInteropRuntime.java

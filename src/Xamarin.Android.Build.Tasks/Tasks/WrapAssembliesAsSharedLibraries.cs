@@ -24,6 +24,9 @@ public class WrapAssembliesAsSharedLibraries : AndroidTask
 	[Required]
 	public string AndroidBinUtilsDirectory { get; set; } = "";
 
+	[Required]
+	public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = Array.Empty<ITaskItem> ();
+
 	public bool IncludeDebugSymbols { get; set; }
 
 	[Required]
@@ -42,7 +45,7 @@ public class WrapAssembliesAsSharedLibraries : AndroidTask
 
 	public override bool RunTask ()
 	{
-		var wrapper_config = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, IntermediateOutputPath);
+		var wrapper_config = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, RuntimePackLibraryDirectories, IntermediateOutputPath);
 		var files = new PackageFileListBuilder ();
 
 		if (UseAssemblyStore)

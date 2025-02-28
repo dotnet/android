@@ -98,6 +98,11 @@ namespace Xamarin.Android.Prepare
 				{ "@NETCORE_APP_RUNTIME_ANDROID_ARM64@",  Utilities.EscapePathSeparators (Configurables.Paths.NetcoreAppRuntimeAndroidARM64) },
 				{ "@NETCORE_APP_RUNTIME_ANDROID_X86@",    Utilities.EscapePathSeparators (Configurables.Paths.NetcoreAppRuntimeAndroidX86) },
 				{ "@NETCORE_APP_RUNTIME_ANDROID_X86_64@", Utilities.EscapePathSeparators (Configurables.Paths.NetcoreAppRuntimeAndroidX86_64) },
+
+				{ "@CORECLR_APP_RUNTIME_ANDROID_ARM@",    Utilities.EscapePathSeparators (Configurables.Paths.CoreClrAppRuntimeAndroidARM) },
+				{ "@CORECLR_APP_RUNTIME_ANDROID_ARM64@",  Utilities.EscapePathSeparators (Configurables.Paths.CoreClrAppRuntimeAndroidARM64) },
+				{ "@CORECLR_APP_RUNTIME_ANDROID_X86@",    Utilities.EscapePathSeparators (Configurables.Paths.CoreClrAppRuntimeAndroidX86) },
+				{ "@CORECLR_APP_RUNTIME_ANDROID_X86_64@", Utilities.EscapePathSeparators (Configurables.Paths.CoreClrAppRuntimeAndroidX86_64) },
 			};
 
 			return new GeneratedPlaceholdersFile (
@@ -107,7 +112,7 @@ namespace Xamarin.Android.Prepare
 			);
 		}
 
-		GeneratedFile Get_Cmake_Presets (Context context)
+		GeneratedFile GetCmakePresetsCommon (Context context, string sourcesDir)
 		{
 			const string OutputFileName = "CMakePresets.json";
 
@@ -126,9 +131,14 @@ namespace Xamarin.Android.Prepare
 
 			return new GeneratedPlaceholdersFile (
 				replacements,
-				Path.Combine (Configurables.Paths.NativeSourcesDir, $"{OutputFileName}.in"),
-				Path.Combine (Configurables.Paths.NativeSourcesDir, OutputFileName)
+				Path.Combine (sourcesDir, $"{OutputFileName}.in"),
+				Path.Combine (sourcesDir, OutputFileName)
 			);
+		}
+
+		GeneratedFile Get_Cmake_Presets (Context context)
+		{
+			return GetCmakePresetsCommon (context, Configurables.Paths.NativeSourcesDir);
 		}
 
 		GeneratedFile Get_Configuration_Generated_Props (Context context)
