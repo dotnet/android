@@ -18,7 +18,7 @@ stages:
   dependsOn: ${{ parameters.dependsOn }}
   condition: ${{ parameters.stageCondition }}
   jobs:
-  - template: /build-tools/automation/yaml-templates/select-test-runtim.yaml
+  - template: /build-tools/automation/yaml-templates/select-test-runtime.yaml
     parameters:
       runtimeName: ${{ parameters.runtimeName }}
 
