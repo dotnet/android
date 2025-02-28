@@ -27,6 +27,10 @@ namespace Xamarin.Android.Build.Tests
 		[NonParallelizable]
 		public void BuildBasicApplicationAndAotProfileIt ()
 		{
+			if (!TargetsMonoVM) {
+				Assert.Ignore ("This test runs only when targetting MonoVM");
+			}
+
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				AotAssemblies = false,

@@ -1,8 +1,10 @@
 # Runs smoke tests on Linux packages.
+parameters:
+  runtimeName: ''
 
 stages:
 - stage: linux_tests
-  displayName: Linux Tests
+  displayName: Linux Tests (${{ parameters.runtimeName }})
   dependsOn:
   - mac_build
   - linux_build
@@ -19,6 +21,10 @@ stages:
       clean: all
     steps:
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
+
+    - template: /build-tools/automation/yaml-templates/select-test-runtim.yaml
+      parameters:
+        runtimeName: ${{ parameters.runtimeName }}
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -39,7 +45,7 @@ stages:
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
 
   - job: linux_tests_smoke_2
-    displayName: Linux > Tests > MSBuild 2
+    displayName: Linux > Tests > MSBuild 2 (${{ parameters.runtimeName }})
     pool:
       name: MAUI-1ESPT
       image: $(LinuxPoolImage1ESPT)
@@ -49,6 +55,10 @@ stages:
       clean: all
     steps:
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
+
+    - template: /build-tools/automation/yaml-templates/select-test-runtim.yaml
+      parameters:
+        runtimeName: ${{ parameters.runtimeName }}
 
     - task: DownloadPipelineArtifact@2
       inputs:

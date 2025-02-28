@@ -1,0 +1,14 @@
+parameters:
+  runtimeName: ''
+
+steps:
+- pwsh: |
+    Write-Host "Selecting target runtime: "${{ parameters.runtimeName }}""
+    if ("${{ parameters.runtimeName }}" -eq "CoreCLR") {
+      $useMonoRuntime="false"
+    } else {
+      $useMonoRuntime="true"
+    }
+
+    Write-Host "##vso[task.setvariable variable=USE_MONO_RUNTIME]$useMonoRuntime"
+  displayName: select target runtime (MonoVM or CoreCLR)

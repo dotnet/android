@@ -102,12 +102,30 @@ extends:
         macTestAgentsUseCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
 
     - template: /build-tools/automation/yaml-templates/stage-linux-tests.yaml@self
+      parameters:
+        runtimeName: "MonoVM"
 
     - template: /build-tools/automation/yaml-templates/stage-msbuild-tests.yaml@self
+      parameters:
+        runtimeName: "MonoVM"
 
     - template: /build-tools/automation/yaml-templates/stage-msbuild-emulator-tests.yaml@self
       parameters:
         usesCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
+        runtimeName: "MonoVM"
+
+    - template: /build-tools/automation/yaml-templates/stage-linux-tests.yaml@self
+      parameters:
+        runtimeName: "CoreCLR"
+
+    - template: /build-tools/automation/yaml-templates/stage-msbuild-tests.yaml@self
+      parameters:
+        runtimeName: "CoreCLR"
+
+    - template: /build-tools/automation/yaml-templates/stage-msbuild-emulator-tests.yaml@self
+      parameters:
+        usesCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
+        runtimeName: "CoreCLR"
 
     - stage: maui_tests
       displayName: MAUI Tests
