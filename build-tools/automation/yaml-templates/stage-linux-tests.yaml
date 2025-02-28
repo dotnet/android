@@ -22,7 +22,7 @@ stages:
     steps:
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
 
-    - template: /build-tools/automation/yaml-templates/select-test-runtim.yaml
+    - template: /build-tools/automation/yaml-templates/select-test-runtime.yaml
       parameters:
         runtimeName: ${{ parameters.runtimeName }}
 
@@ -56,7 +56,7 @@ stages:
     steps:
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
 
-    - template: /build-tools/automation/yaml-templates/select-test-runtim.yaml
+    - template: /build-tools/automation/yaml-templates/select-test-runtime.yaml
       parameters:
         runtimeName: ${{ parameters.runtimeName }}
 
