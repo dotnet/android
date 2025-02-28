@@ -76,6 +76,9 @@ namespace Xamarin.ProjectTools
 			PropertyGroups.Add (release);
 			Imports = new List<Import> ();
 
+			// Selects between MonoVM and CoreCLR (based on presence of the USE_MONO_RUNTIME environment variable)
+			SetProperty ("UseMonoRuntime", TargetRuntimeHelper.UseMonoRuntime ? "true" : "false");
+
 			//NOTE: for SDK-style projects, we need $(Configuration) set before Microsoft.NET.Sdk.targets
 			Imports.Add (new Import ("Directory.Build.props") {
 				TextContent = () =>
@@ -107,6 +110,11 @@ $@"<Project>
 		public string TargetFrameworks {
 			get { return GetProperty ("TargetFrameworks"); }
 			set { SetProperty ("TargetFrameworks", value); }
+		}
+
+		public string UseMonoRuntime {
+			get { return GetProperty ("UseMonoRuntime"); }
+			set { SetProperty ("UseMonoRuntime", value); }
 		}
 
 		public string GetProperty (string name)
