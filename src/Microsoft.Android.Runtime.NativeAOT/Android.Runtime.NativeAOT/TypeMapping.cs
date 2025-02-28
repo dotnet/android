@@ -16,8 +16,16 @@ internal static class TypeMapping
 	{
 		ulong hash = Hash (javaClassName);
 
+		// the hashes array is sorted and all the hashes are unique
 		int index = MemoryExtensions.BinarySearch (Hashes, hash);
 		if (index < 0) {
+			type = null;
+			return false;
+		}
+
+		// ensure this is not a hash collision
+		string resolvedJavaClassName = GetJavaClassNameByIndex (index);
+		if (!resolvedJavaClassName.Equals (javaClassName, StringComparison.Ordinal)) {
 			type = null;
 			return false;
 		}
