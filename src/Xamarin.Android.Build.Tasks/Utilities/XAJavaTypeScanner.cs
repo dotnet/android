@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -35,7 +36,7 @@ class XAJavaTypeScanner
 		this.cache = cache;
 	}
 
-	public List<TypeDefinition> GetJavaTypes (ICollection<ITaskItem> inputAssemblies, XAAssemblyResolver resolver)
+	public List<TypeDefinition> GetJavaTypes (ICollection<ITaskItem> inputAssemblies, XAAssemblyResolver resolver, ConcurrentDictionary<string, ITaskItem> scannedAssemblies)
 	{
 		var types = new List<TypeDefinition> ();
 		var inputItems  = inputAssemblies
@@ -65,6 +66,8 @@ class XAJavaTypeScanner
 					AddJavaType (td, types);
 				}
 			}
+
+			scannedAssemblies.TryAdd (asmItem.ItemSpec, asmItem);
 		}
 
 		return types;
@@ -90,7 +93,7 @@ class XAJavaTypeScanner
 		return true;
 	}
 
-	void AddJavaType (TypeDefinition type, List<TypeDefinition> types)
+	public void AddJavaType (TypeDefinition type, List<TypeDefinition> types)
 	{
 		if (type.HasJavaPeer (cache)) {
 			// For subclasses of e.g. Android.App.Activity.
