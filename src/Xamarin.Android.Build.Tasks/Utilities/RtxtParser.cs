@@ -33,7 +33,7 @@ namespace Xamarin.Android.Tasks
 		public override string ToString ()
 		{
 			if (Type != RType.Array) {
-				return $"int {ResourceTypeName} {Identifier} { (Type == RType.Integer ? $"0x{Id.ToString ("x8")}" : "{Id}")}";
+				return $"int {ResourceTypeName} {Identifier} { (Type == RType.Integer ? $"0x{Id.ToString ("x8")}" : $"{Id}")}";
 			}
 			return $"int[] {ResourceTypeName} {Identifier} {{ {String.Join (", ", Ids.Select (x => $"0x{x.ToString ("x8")}"))} }}";
 		}
