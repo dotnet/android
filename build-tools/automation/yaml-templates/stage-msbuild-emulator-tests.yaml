@@ -45,7 +45,7 @@ stages:
         commit: ${{ parameters.commit }}
         xaprepareScenario: EmulatorTestDependencies
 
-    - template: /build-tools/automation/yaml-templates/select-test-runtim.yaml
+    - template: /build-tools/automation/yaml-templates/select-test-runtime.yaml
       parameters:
         runtimeName: ${{ parameters.runtimeName }}
 
@@ -116,7 +116,7 @@ stages:
         commit: ${{ parameters.commit }}
         xaprepareScenario: EmulatorTestDependencies
 
-    - template: /build-tools/automation/yaml-templates/select-test-runtim.yaml
+    - template: /build-tools/automation/yaml-templates/select-test-runtime.yaml
       parameters:
         runtimeName: ${{ parameters.runtimeName }}
 
