@@ -13,7 +13,7 @@ parameters:
   use1ESTemplate: true
 
 stages:
-- stage: ${{ parameters.stageName }}
+- stage: ${{ parameters.stageName }}_${{ parameters.runtimeName }}
   displayName: ${{ parameters.stagePrefix }}MSBuild Tests (${{ parameters.runtimeName }})
   dependsOn: ${{ parameters.dependsOn }}
   condition: ${{ parameters.stageCondition }}
