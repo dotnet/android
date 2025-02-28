@@ -25,7 +25,7 @@ internal static class TypeMapping
 
 		// ensure this is not a hash collision
 		string resolvedJavaClassName = GetJavaClassNameByIndex (index);
-		if (!resolvedJavaClassName.Equals (javaClassName, StringComparison.Ordinal)) {
+		if (resolvedJavaClassName != javaClassName) {
 			type = null;
 			return false;
 		}
