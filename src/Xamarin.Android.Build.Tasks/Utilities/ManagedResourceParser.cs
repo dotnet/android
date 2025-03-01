@@ -295,6 +295,7 @@ namespace Xamarin.Android.Tasks
 				var cl = CreateClass (r.ResourceTypeName);
 				switch (r.Type) {
 					case RType.Integer:
+					case RType.Integer_Styleable:
 						CreateIntField (cl, r.Identifier, r.Id);
 						break;
 					case RType.Array:
