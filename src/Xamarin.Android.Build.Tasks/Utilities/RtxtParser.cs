@@ -25,9 +25,9 @@ namespace Xamarin.Android.Tasks
 		public int Id;
 		public RType Type;
 		public ResourceType ResourceType;
-		public int [] Ids;
 		public string Identifier;
 		public string ResourceTypeName;
+		public int [] Ids;
 		public string Key => $"{ResourceTypeName}:{Identifier}";
 
 		public override string ToString ()
