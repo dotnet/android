@@ -176,6 +176,8 @@
 
     <ItemGroup>
       <ItemsToPush Include="$(OutputPath)*.nupkg" />
+      <WorkloadArtifacts Include="$(OutputPath)*.zip" />
+      <ItemsToPush Include="@(WorkloadArtifacts)" PublishFlatContainer="true" RelativeBlobPath="android/$(AndroidPackVersionLong)/%(Filename)%(Extension)" />
     </ItemGroup>
 
     <Error Condition="'@(ItemsToPush)' == ''" Text="No packages to push." />
