@@ -156,7 +156,7 @@ namespace Xamarin.Android.Tasks
 				foreach (R r in resources[t].OrderBy(x => x.ToSortedString(), StringComparer.Ordinal)) {
 
 					int id = Convert.ToInt32 (itemPackageId + typeid.ToString ("X2") + itemid.ToString ("X4"), fromBase: 16);
-					if (r.Type == RType.Integer && r.Id == -1) {
+					if ((r.Type != RType.Array) && r.Id == -1) {
 						itemid++;
 						r.UpdateId (id);
 					} else {
@@ -352,6 +352,7 @@ namespace Xamarin.Android.Tasks
 						ResourceTypeName = field.ResourceTypeName,
 						Identifier = $"{field.Identifier}_{r.Replace (":", "_")}",
 						Id = id++,
+						Type = RType.Integer_Styleable,
 					});
 				}
 			}

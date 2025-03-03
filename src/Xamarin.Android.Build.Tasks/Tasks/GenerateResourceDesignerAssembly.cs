@@ -177,6 +177,7 @@ namespace Xamarin.Android.Tasks
 				foreach (var r in resources) {
 					switch (r.Type) {
 						case RType.Integer:
+						case RType.Integer_Styleable:
 							if (IsApplication)
 								CreateIntField (cache, r.ResourceTypeName, r.Identifier, r.Id, constDesigner, module);
 							CreateIntProperty (cache, r.ResourceTypeName, r.Identifier, r.Id, resourceDesigner, module);
