@@ -504,15 +504,10 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 {
 #if defined (DEBUG)
 	RuntimeOptions options{};
-	int64_t cur_time;
-
-	cur_time = time (nullptr);
-
+	
 	if (!parse_runtime_args (runtime_args, &options)) {
 		log_error (LOG_DEFAULT, "Failed to parse runtime args: '{}'", optional_string (runtime_args.get ()));
-	} else if (options.debug && cur_time > options.timeout_time) {
-		log_warn (LOG_DEBUGGER, "Not starting the debugger as the timeout value has been reached; current-time: {}; timeout: {}", cur_time, options.timeout_time);
-	} else if (options.debug && cur_time <= options.timeout_time) {
+	} else if (options.debug) {
 		EmbeddedAssemblies::set_register_debug_symbols (true);
 
 		int loglevel;
@@ -521,14 +516,16 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 		else
 			loglevel = options.loglevel;
 
-		char *debug_arg = strdup (std::format (
-			"--debugger-agent=transport=dt_socket,loglevel={},address={}:{},{}embedding=1,timeout={}",
+		options.timeout_time = 30000; // 30 seconds
+
+		char *debug_arg = Util::monodroid_strdup_printf (
+			"--debugger-agent=transport=dt_socket,loglevel=%d,address=%s:%d,%sembedding=1,timeout=%d",
 			loglevel,
 			options.host,
 			options.sdb_port,
 			options.server ? "server=y," : "",
 			options.timeout_time
-		).c_str ());
+		);
 
 		char *debug_options [2] = {
 			debug_arg,
