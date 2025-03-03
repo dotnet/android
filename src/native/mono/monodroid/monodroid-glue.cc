@@ -521,14 +521,14 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 		else
 			loglevel = options.loglevel;
 
-		char *debug_arg = Util::monodroid_strdup_printf (
-			"--debugger-agent=transport=dt_socket,loglevel=%d,address=%s:%d,%sembedding=1,timeout=%d",
+		char *debug_arg = strdup (std::format (
+			"--debugger-agent=transport=dt_socket,loglevel={},address={}:{},{}embedding=1,timeout={}",
 			loglevel,
 			options.host,
 			options.sdb_port,
 			options.server ? "server=y," : "",
 			options.timeout_time
-		);
+		).c_str ());
 
 		char *debug_options [2] = {
 			debug_arg,
