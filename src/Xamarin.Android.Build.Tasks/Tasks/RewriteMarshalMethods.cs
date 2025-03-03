@@ -10,11 +10,7 @@ public class RewriteMarshalMethods : AndroidTask
 {
 	public override string TaskPrefix => "RMM";
 
-	public bool Debug { get; set; }
-
 	public bool EnableManagedMarshalMethodsLookup { get; set; }
-
-	public bool EnableMarshalMethods { get; set; }
 
 	public ITaskItem [] Environments { get; set; } = [];
 
@@ -23,11 +19,6 @@ public class RewriteMarshalMethods : AndroidTask
 
 	public override bool RunTask ()
 	{
-		bool useMarshalMethods = !Debug && EnableMarshalMethods;
-
-		if (!useMarshalMethods)
-			return true;
-
 		// Retrieve the stored NativeCodeGenState
 		var nativeCodeGenStates = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ConcurrentDictionary<AndroidTargetArch, NativeCodeGenState>> (
 			MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory),

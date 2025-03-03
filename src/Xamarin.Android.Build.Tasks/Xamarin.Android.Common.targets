@@ -1547,9 +1547,8 @@ because xbuild doesn't support framework reference assemblies.
   </GenerateJavaStubs>
 
   <RewriteMarshalMethods
-      Debug="$(AndroidIncludeDebugSymbols)"
+      Condition=" '$(_AndroidUseMarshalMethods)' == 'true' And '$(AndroidIncludeDebugSymbols)' == 'false' "
       EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
-      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       Environments="@(_EnvironmentFiles)"
       IntermediateOutputDirectory="$(IntermediateOutputPath)">
   </RewriteMarshalMethods>
