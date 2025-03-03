@@ -286,12 +286,17 @@ namespace Xamarin.Android.NetTests {
 			}
 		}
 
-		void EnsureSuccessStatusCode (HttpResponseMessage response)
+		public void EnsureSuccessStatusCode (HttpResponseMessage response)
 		{
-			// If we hit a 502 (which is quite common on CI) just ignore the test
-			if (response.StatusCode == HttpStatusCode.BadGateway) {
-				Assert.Ignore ($"Ignoring network failure: {response.StatusCode}");
-				return;
+			// These status codes all indicate a temporary network/server failure,
+			// so just ignore the test if we hit them.
+			switch (response.StatusCode) {
+				case HttpStatusCode.InternalServerError:
+				case HttpStatusCode.BadGateway:
+				case HttpStatusCode.ServiceUnavailable:
+				case HttpStatusCode.GatewayTimeout:
+					Assert.Ignore ($"Ignoring network/server failure: {response.StatusCode}");
+					return;
 			}
 
 			response.EnsureSuccessStatusCode ();
