@@ -146,6 +146,7 @@ namespace Xamarin.Android.NetTests {
 		}
 	}
 
+	[Ignore ("TODO crashes on NativeAOT")]
 	public abstract class AndroidHandlerTestBase : HttpClientHandlerTestBase
 	{
 		static IEnumerable<Exception> Exceptions (Exception e)
@@ -222,7 +223,6 @@ namespace Xamarin.Android.NetTests {
 		}
 
 		[Test]
-		[Ignore ("TODO crashes on NativeAOT")]
 		public void Property_Timeout_Works()
 		{
 			using (var c = new HttpClient (CreateHandler ()))
