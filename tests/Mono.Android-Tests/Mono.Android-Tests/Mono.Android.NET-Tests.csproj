@@ -30,8 +30,7 @@
     -->
     <ExcludeCategories>DotNetIgnore</ExcludeCategories>
     <!-- Features that do not work on NativeAOT -->
-    <ExcludeCategories Condition=" '$(PublishAot)' == 'true' ">$(ExcludeCategories):Export</ExcludeCategories>
-    <ExcludeCategories Condition=" '$(PublishAot)' == 'true' ">$(ExcludeCategories):GCBridge</ExcludeCategories>
+    <ExcludeCategories Condition=" '$(PublishAot)' == 'true' ">$(ExcludeCategories):Mono:Export:GCBridge</ExcludeCategories>
     <!-- FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190 -->
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):LLVMIgnore</ExcludeCategories>
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):InetAccess:NetworkInterfaces</ExcludeCategories>

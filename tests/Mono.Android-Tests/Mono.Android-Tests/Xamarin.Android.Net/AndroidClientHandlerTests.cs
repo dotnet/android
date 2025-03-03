@@ -298,7 +298,7 @@ namespace Xamarin.Android.NetTests {
 		}
 	}
 
-	[TestFixture]
+	[TestFixture, Category ("Mono")]
 	public class AndroidClientHandlerTests : AndroidHandlerTestBase
 	{
 		protected override HttpMessageHandler CreateHandler ()
