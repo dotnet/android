@@ -11,7 +11,7 @@ using Java.Interop;
 using NUnit.Framework;
 
 namespace Java.InteropTests {
-	[TestFixture]
+	[TestFixture, Category ("Mono")]
 	public class AndroidValueManagerContractTests : JniRuntimeJniValueManagerContract {
 
 		protected override Type ValueManagerType => typeof (Android.Runtime.AndroidValueManager);
