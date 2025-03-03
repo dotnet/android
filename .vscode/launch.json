@@ -49,6 +49,33 @@
           "type": "coreclr",
           "request": "attach",
           "processId": "${input:processid}"
+        },
+        {
+          "name": "Debug NativeAOT",
+          "type": "lldb",
+            "request": "attach",
+            "initCommands": [
+                "platform select remote-android",
+                "platform connect connect://localhost:5039",
+                "settings set target.process.thread.step-in-avoid-nodebug true",
+                "settings set target.process.thread.step-out-avoid-nodebug true",
+                //"settings set target.process.thread.step-instruction-source-only true"
+            ],
+            "sourceMap": {
+                "/Users/dean/Documents/Sandbox/Xamarin/android": "${workspaceFolder}"
+            },
+            "stopOnEntry": false,
+            "targetCreateCommands": [
+                "target create samples/NativeAOT/bin/Debug/net10.0-android/android-arm64/native/NativeAOT.so",
+                "target symbols add samples/NativeAOT/bin/Debug/net10.0-android/android-arm64/native/NativeAOT.so.dbg",
+                "target select 0",
+            ],
+            "pid": "${input:lldbprocessid}",
+            //"postRunCommands": [
+                //"add-dsym samples/NativeAOT/bin/Debug/net10.0-android/android-arm64/native/NativeAOT.so",
+                //"add-dsym samples/NativeAOT/bin/Debug/net10.0-android/android-arm64/native/NativeAOT.so.dbg",
+                //"settings set target.source-map ${workspaceFolder}/samples/NativeAOT/ ${workspaceFolder}/samples/NativeAOT/"
+            //]
         }
     ],
     "inputs": [
@@ -64,6 +91,12 @@
         "type": "promptString",
         "default": "0",
         "description": "Enter dotnet build process id reported when setting the env var MSBUILDDEBUGONSTART=2",
+      },
+      {
+        "id": "lldbprocessid",
+        "type": "promptString",
+        "default": "0",
+        "description": "Enter process id for your native aot app",
       },
     ]
 }
