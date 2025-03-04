@@ -28,7 +28,7 @@ stages:
 
     - task: DownloadPipelineArtifact@2
       inputs:
-        artifactName: $(TestAssembliesArtifactName)-${{ parameters.rutimeName }}
+        artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
@@ -62,7 +62,7 @@ stages:
 
     - task: DownloadPipelineArtifact@2
       inputs:
-        artifactName: $(TestAssembliesArtifactName)-${{ parameters.runtimeName }}
+        artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml

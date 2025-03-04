@@ -49,7 +49,7 @@ jobs:
 
   - task: DownloadPipelineArtifact@2
     inputs:
-      artifactName: $(TestAssembliesArtifactName)-${{ parameters.runtimeName }}
+      artifactName: $(TestAssembliesArtifactName)
       downloadPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
   - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
@@ -62,7 +62,7 @@ jobs:
 
   - template: /build-tools/automation/yaml-templates/upload-results.yaml
     parameters:
-      artifactName: Test Results - MSBuild - ${{ parameters.testOS }}-${{ parameters.runtimeName }}-$(System.JobPositionInPhase)
+      artifactName: Test Results - MSBuild - ${{ parameters.testOS }}-${{ parameters.runtimeName }}
       xaSourcePath: ${{ parameters.xaSourcePath }}
       use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
