@@ -21,6 +21,7 @@ stages:
   - template: /build-tools/automation/yaml-templates/run-msbuild-tests.yaml
     parameters:
       testOS: macOS
+      runtimeName: ${{ parameters.runtimeName }}
       jobName: mac_msbuild_tests
       jobDisplayName: macOS > Tests > MSBuild
       agentCount: 10
@@ -33,6 +34,7 @@ stages:
   - template: /build-tools/automation/yaml-templates/run-msbuild-tests.yaml
     parameters:
       testOS: Windows
+      runtimeName: ${{ parameters.runtimeName }}
       jobName: win_msbuild_tests
       jobDisplayName: Windows > Tests > MSBuild
       agentCount: 8
