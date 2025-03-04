@@ -507,7 +507,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 	int64_t cur_time;
 
 	cur_time = time (nullptr);
-	
+
 	if (!parse_runtime_args (runtime_args, &options)) {
 		log_error (LOG_DEFAULT, "Failed to parse runtime args: '{}'", optional_string (runtime_args.get ()));
 	} else if (options.debug && cur_time > options.timeout_time) {
