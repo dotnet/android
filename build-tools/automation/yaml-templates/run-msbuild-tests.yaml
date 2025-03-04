@@ -1,5 +1,6 @@
 parameters:
   testOS: ''              # 'macOS' or 'Windows'
+  runtimeName: ''         # MonoVM or CoreCLR
   jobName: ''             # Name of the job
   jobDisplayName: ''      # Display name of the job
   agentCount: 1           # Number of build agents to run in parallel
@@ -48,20 +49,20 @@ jobs:
 
   - task: DownloadPipelineArtifact@2
     inputs:
-      artifactName: $(TestAssembliesArtifactName)
+      artifactName: $(TestAssembliesArtifactName)-${{ parameters.runtimeName }}
       downloadPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
   - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
     parameters:
       testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
       testFilter: ${{ parameters.testFilter }}
-      testRunTitle: Xamarin.Android.Build.Tests - ${{ parameters.testOS }}
+      testRunTitle: Xamarin.Android.Build.Tests - ${{ parameters.testOS }} (${{ parameters.runtimeName }})
       retryFailedTests: false
       xaSourcePath: ${{ parameters.xaSourcePath }}
 
   - template: /build-tools/automation/yaml-templates/upload-results.yaml
     parameters:
-      artifactName: Test Results - MSBuild - ${{ parameters.testOS }}-$(System.JobPositionInPhase)
+      artifactName: Test Results - MSBuild - ${{ parameters.testOS }}-${{ parameters.runtimeName }}-$(System.JobPositionInPhase)
       xaSourcePath: ${{ parameters.xaSourcePath }}
       use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
