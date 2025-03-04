@@ -38,7 +38,13 @@ internal static class TypeMapping
 
 	internal static bool TryGetJavaClassName (Type type, [NotNullWhen (true)] out string? className)
 	{
-		ulong hash = Hash (type.FullName);
+		string? fullName = type.FullName;
+		if (fullName is null) {
+			className = null;
+			return false;
+		}
+
+		ulong hash = Hash (fullName);
 
 		// the hashes array is sorted and all the hashes are unique
 		int javaClassNameIndex = MemoryExtensions.BinarySearch (TypeNameHashes, hash);
