@@ -23,7 +23,8 @@ Once `lldb-server` is up and running, you will want to run up the app using the 
 adb shell am start -S --user "0" -a "android.intent.action.MAIN" -c "android.intent.category.LAUNCHER" -n "net.dot.hellonativeaot/my.MainActivity" -D
 ```
 
-The `-D` is important as it stops the app from running until the java debugger is attached.
+The `-D` is important as it stops the app from running until the java debugger is attached. If you do not want to the app to pause on startup, you can omit the `-D` argument.
+
 Now that the app is running we need to get the process id.
 
 ```dotnetcli
@@ -45,11 +46,11 @@ lldb
 > target create samples/NativeAOT/bin/Debug/net10.0-android/android-arm64/native/NativeAOT.so
 > target symbols add samples/NativeAOT/bin/Debug/net10.0-android/android-arm64/native/NativeAOT.so.dbg
 > target select 0
-> attach --pid <processid>
+> process attach --pid <processid>
 ```
 
-Next you need to attach the java debugger to clear the dialog which is currently blocking the
-application execution.
+Next you need to attach the java debugger to clear the dialog which is currently blocking the application execution. You can skip this step if you omited the `-D` when
+launching the activity.
 
 ```dotnetcli
 adb forward --remove tcp:8700
