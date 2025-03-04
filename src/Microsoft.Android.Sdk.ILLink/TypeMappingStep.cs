@@ -61,16 +61,28 @@ public class TypeMappingStep : BaseStep
 			throw new InvalidOperationException ($"Unable to find {TypeName} type");
 		}
 
-		KeyValuePair<string, List<TypeDefinition>>[] orderedMapping = TypeMappings.OrderBy (kvp => Hash (kvp.Key)).ToArray ();
+		// Java -> .NET mapping
+		KeyValuePair<string, List<TypeDefinition>>[] orderedJavaToDotnetMapping = TypeMappings.OrderBy (kvp => Hash (kvp.Key)).ToArray ();
 
-		var hashes = orderedMapping.Select (kvp => Hash (kvp.Key)).ToArray ();
-		GenerateHashes (hashes);
+		var javaClassNameHashes = orderedJavaToDotnetMapping.Select (kvp => Hash (kvp.Key)).ToArray ();
+		GenerateHashes (javaClassNameHashes, methodName: "get_JavaClassNameHashes");
 
-		var types = orderedMapping.Select (kvp => SelectTypeDefinition (kvp.Key, kvp.Value));
+		var types = orderedJavaToDotnetMapping.Select (kvp => SelectTypeDefinition (kvp.Key, kvp.Value));
 		GenerateGetTypeByIndex (types);
 
-		var javaClassNames = orderedMapping.Select (kvp => kvp.Key);
+		// .NET -> Java mapping
+		KeyValuePair<string, List<TypeDefinition>>[] orderedManagedToJavaMapping = TypeMappings.OrderBy (kvp => Hash (SelectTypeDefinition(kvp.Key, kvp.Value).FullName)).ToArray ();
+
+		var dotnetTypeNameHashes = orderedManagedToJavaMapping.Select (kvp => Hash (SelectTypeDefinition(kvp.Key, kvp.Value).FullName)).ToArray ();
+		GenerateHashes (dotnetTypeNameHashes, methodName: "get_TypeNameHashes");
+
+		string[] javaClassNames = orderedManagedToJavaMapping.Select (kvp => kvp.Key).ToArray ();
 		GenerateGetJavaClassNameByIndex (javaClassNames);
+
+		// Generate remap arrays
+		var typeIndexKeys = orderedJavaToDotnetMapping.Select (kvp => kvp.Key).ToArray ();
+		var javaClassNameIndexKeys = orderedManagedToJavaMapping.Select (kvp => kvp.Key).ToArray ();
+		GenerateIndexRemapping (typeIndexKeys, javaClassNameIndexKeys);
 
 		void GenerateGetTypeByIndex (IEnumerable<TypeDefinition> types)
 		{
@@ -110,7 +122,7 @@ public class TypeMappingStep : BaseStep
 			il.Emit (OpCodes.Ret);
 		}
 
-		void GenerateGetJavaClassNameByIndex (IEnumerable<string> names)
+		void GenerateGetJavaClassNameByIndex (string[] javaClassNames)
 		{
 			var method = type.Methods.FirstOrDefault (m => m.Name == "GetJavaClassNameByIndex");
 			if (method is null) {
@@ -122,10 +134,8 @@ public class TypeMappingStep : BaseStep
 
 			var il = method.Body.GetILProcessor ();
 
-			var orderedMapping = TypeMappings.Select (kvp => (Hash (kvp.Key), SelectTypeDefinition (kvp.Key, kvp.Value))).OrderBy (x => x.Item1);
-
 			var targets = new List<Instruction> ();
-			foreach (var name in names) {
+			foreach (var name in javaClassNames) {
 				targets.Add (il.Create (OpCodes.Ldstr, name));
 			}
 
@@ -144,7 +154,7 @@ public class TypeMappingStep : BaseStep
 			il.Emit (OpCodes.Ret);
 		}
 
-		void GenerateHashes (ulong[] hashes)
+		void GenerateHashes (ulong[] hashes, string methodName)
 		{
 			// Sanity check: hashes must be unique and sorted
 			if (hashes.Length > 0) {
@@ -160,22 +170,40 @@ public class TypeMappingStep : BaseStep
 				}
 			}
 
-			// Create static array struct for `byte[#number-of-hashes * sizeof(ulong)]`
-			var arrayType = new TypeDefinition (
-				"",
-				"HashesArray",
-				TypeAttributes.NestedPrivate | TypeAttributes.ExplicitLayout,
-				module.ImportReference (typeof (ValueType)))
-			{
-				PackingSize = 1,
-				ClassSize = hashes.Length * sizeof (ulong),
-			};
+			GenerateReadOnlySpanGetter<ulong> (type, methodName, hashes, sizeof (ulong), BitConverter.GetBytes);
+		}
 
-			type.NestedTypes.Add (arrayType);
+		void GenerateIndexRemapping (string[] typeIndexKeys, string[] javaClassNameIndexKeys)
+		{
+			System.Diagnostics.Debug.Assert(typeIndexKeys.Length == javaClassNameIndexKeys.Length);
+			int length = typeIndexKeys.Length;
+
+			var javaClassNameIndexToTypeIndex = new int[length];
+			var typeIndexToJavaClassNameIndex = new int[length];
+
+			for (int i = 0; i < length; i++) {
+				for (int j = 0; j < length; j++) {
+					if (typeIndexKeys[i] == javaClassNameIndexKeys[j]) {
+						typeIndexToJavaClassNameIndex[i] = j;
+						javaClassNameIndexToTypeIndex[j] = i;
+						break;
+					}
+				}
+			}
+
+			GenerateReadOnlySpanGetter (type, "get_JavaClassNameIndexToTypeIndex", javaClassNameIndexToTypeIndex, sizeof (int), BitConverter.GetBytes);
+			GenerateReadOnlySpanGetter (type, "get_TypeIndexToJavaClassNameIndex", typeIndexToJavaClassNameIndex, sizeof (int), BitConverter.GetBytes);
+		}
+
+		void GenerateReadOnlySpanGetter<T> (TypeDefinition type, string name, T[] data, int sizeOfT, Func<T, byte[]> getBytes)
+			where T : struct
+		{
+			// Create static array struct for `byte[#data * sizeof(T)]`
+			var arrayType = GetArrayType (type, data.Length * sizeOfT);
 
 			// Create static field to store the raw bytes
-			var bytesField = new FieldDefinition ("s_hashes", FieldAttributes.Private | FieldAttributes.Static | FieldAttributes.InitOnly, arrayType);
-			bytesField.InitialValue = hashes.SelectMany (BitConverter.GetBytes).ToArray ();
+			var bytesField = new FieldDefinition ($"s_{name}_data", FieldAttributes.Private | FieldAttributes.Static | FieldAttributes.InitOnly, arrayType);
+			bytesField.InitialValue = data.SelectMany (getBytes).ToArray ();
 			if (!bytesField.Attributes.HasFlag (FieldAttributes.HasFieldRVA)) {
 				throw new InvalidOperationException ($"Field {bytesField.Name} does not have RVA");
 			}
@@ -183,16 +211,36 @@ public class TypeMappingStep : BaseStep
 			type.Fields.Add (bytesField);
 
 			// Generate the Hashes getter
-			var getHashes = type.Methods.FirstOrDefault (f => f.Name == "get_Hashes") ?? throw new InvalidOperationException ($"Unable to find {TypeName}.get_Hashes field");
+			var getHashes = type.Methods.FirstOrDefault (f => f.Name == name) ?? throw new InvalidOperationException ($"Unable to find {TypeName}.{name} field");
 
 			getHashes.Body.Instructions.Clear ();
 			var il = getHashes.Body.GetILProcessor ();
 
 			il.Emit (OpCodes.Ldsflda, bytesField);
-			il.Emit (OpCodes.Ldc_I4, hashes.Length);
-			il.Emit (OpCodes.Newobj, module.ImportReference (typeof (ReadOnlySpan<ulong>).GetConstructor (new[] { typeof(void*), typeof(int) })));
+			il.Emit (OpCodes.Ldc_I4, data.Length);
+			il.Emit (OpCodes.Newobj, module.ImportReference (typeof (ReadOnlySpan<T>).GetConstructor (new[] { typeof(void*), typeof(int) })));
 
 			il.Emit (OpCodes.Ret);
+		}
+
+		TypeDefinition GetArrayType (TypeDefinition type, int size)
+		{
+			var arrayType = type.NestedTypes.FirstOrDefault (td => td.Name == "HashesArray");
+			if (arrayType is null) {
+				arrayType = new TypeDefinition (
+					"",
+					$"HashesArray_{size}",
+					TypeAttributes.NestedPrivate | TypeAttributes.ExplicitLayout,
+					module.ImportReference (typeof (ValueType)))
+				{
+					PackingSize = 1,
+					ClassSize = size,
+				};
+
+				type.NestedTypes.Add (arrayType);
+			}
+
+			return arrayType;
 		}
 	}
 
@@ -246,9 +294,9 @@ public class TypeMappingStep : BaseStep
 			ProcessType (assembly, nested);
 	}
 
-	ulong Hash (string javaName)
+	ulong Hash (string value)
 	{
-		ReadOnlySpan<byte> bytes = MemoryMarshal.AsBytes(javaName.AsSpan ());
+		ReadOnlySpan<byte> bytes = MemoryMarshal.AsBytes(value.AsSpan ());
 		ulong hash = _hashMethod!(bytes);
 
 		if (!BitConverter.IsLittleEndian) {
