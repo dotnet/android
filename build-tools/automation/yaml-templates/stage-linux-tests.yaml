@@ -11,7 +11,7 @@ stages:
   jobs:
   # Check - "Xamarin.Android (Linux Tests Linux > Tests > MSBuild)"
   - job: linux_tests_smoke_1
-    displayName: Linux > Tests > MSBuild 1
+    displayName: Linux > Tests > MSBuild 1 (${{ parameters.runtimeName }})
     pool:
       name: MAUI-1ESPT
       image: $(LinuxPoolImage1ESPT)
@@ -28,19 +28,19 @@ stages:
 
     - task: DownloadPipelineArtifact@2
       inputs:
-        artifactName: $(TestAssembliesArtifactName)
+        artifactName: $(TestAssembliesArtifactName)-${{ parameters.rutimeName }}
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
-        testRunTitle: Xamarin.Android.Build.Tests - Linux BuildTest
+        testRunTitle: Xamarin.Android.Build.Tests - Linux BuildTest (${{ parameters.runtimeName }})
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "Name = BuildTest"
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
-        artifactName: Test Results - MSBuild - Linux 1
+        artifactName: Test Results - MSBuild - Linux 1 - ${{ parameters.runtimeName }}
 
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
 
@@ -62,24 +62,24 @@ stages:
 
     - task: DownloadPipelineArtifact@2
       inputs:
-        artifactName: $(TestAssembliesArtifactName)
+        artifactName: $(TestAssembliesArtifactName)-${{ parameters.runtimeName }}
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
-        testRunTitle: Xamarin.Android.Build.Tests - Linux PackagingTest
+        testRunTitle: Xamarin.Android.Build.Tests - Linux PackagingTest (${{ parameters.runtimeName }})
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "Name = PackagingTest"
 
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
-        testRunTitle: Xamarin.Android.Build.Tests - Linux XASdkTests
+        testRunTitle: Xamarin.Android.Build.Tests - Linux XASdkTests (${{ parameters.runtimeName }})
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "Name = XASdkTests & Name != XamarinLegacySdk"
 
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
-        testRunTitle: Xamarin.Android.Build.Tests - Linux AndroidDependenciesTests
+        testRunTitle: Xamarin.Android.Build.Tests - Linux AndroidDependenciesTests (${{ parameters.runtimeName }})
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "Name = AndroidDependenciesTests"
 
@@ -92,6 +92,6 @@ stages:
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
-        artifactName: Test Results - MSBuild - Linux 2
+        artifactName: Test Results - MSBuild - Linux 2 - ${{ parameters.runtimeName }}
 
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
