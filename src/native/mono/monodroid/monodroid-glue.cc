@@ -504,10 +504,15 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 {
 #if defined (DEBUG)
 	RuntimeOptions options{};
+	int64_t cur_time;
+
+	cur_time = time (nullptr);
 	
 	if (!parse_runtime_args (runtime_args, &options)) {
 		log_error (LOG_DEFAULT, "Failed to parse runtime args: '{}'", optional_string (runtime_args.get ()));
-	} else if (options.debug) {
+	} else if (options.debug && cur_time > options.timeout_time) {
+		log_warn (LOG_DEBUGGER, "Not starting the debugger as the timeout value has been reached; current-time: {}; timeout: {}", cur_time, options.timeout_time);
+	} else if (options.debug && cur_time <= options.timeout_time) {
 		EmbeddedAssemblies::set_register_debug_symbols (true);
 
 		int loglevel;
