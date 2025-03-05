@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.InteropServices;
 using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Tasks;
@@ -14,7 +15,7 @@ static class UtilityExtensions
 				return System.IO.Compression.CompressionLevel.NoCompression;
 			case CompressionMethod.Default:
 			case CompressionMethod.Deflate:
-				return System.IO.Compression.CompressionLevel.Optimal;
+				return RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework") ? CompressionLevel.Optimal : (CompressionLevel) 3 /* SmallestSize */;
 			default:
 				throw new ArgumentOutOfRangeException (nameof (method), method, null);
 		}
@@ -25,6 +26,7 @@ static class UtilityExtensions
 		switch (level) {
 			case System.IO.Compression.CompressionLevel.NoCompression:
 				return CompressionMethod.Store;
+			case (System.IO.Compression.CompressionLevel)3: /* SmallestSize */
 			case System.IO.Compression.CompressionLevel.Optimal:
 				return CompressionMethod.Deflate;
 			default:
