@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -19,6 +20,7 @@ namespace Java.InteropTests {
 #endif  // !__ANDROID__
 	public abstract class JniRuntimeJniValueManagerContract : JavaVMFixture {
 
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
 		protected abstract Type ValueManagerType {
 			get;
 		}
@@ -296,8 +298,12 @@ namespace Java.InteropTests {
 		// Adding an instance already added in a previous scope?
 	}
 
-	public abstract class JniRuntimeJniValueManagerContract<T> : JniRuntimeJniValueManagerContract {
-
+	public abstract class JniRuntimeJniValueManagerContract<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+			T
+		> : JniRuntimeJniValueManagerContract
+	{
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
 		protected override Type ValueManagerType => typeof (T);
 	}
 
@@ -313,8 +319,10 @@ namespace Java.InteropTests {
 
 	[TestFixture]
 	public class JniRuntimeJniValueManagerContract_NoGCIntegration : JniRuntimeJniValueManagerContract {
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
 		static Type ManagedValueManagerType = Type.GetType ("Java.Interop.ManagedValueManager, Java.Runtime.Environment", throwOnError:true)!;
 
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
 		protected override Type ValueManagerType => ManagedValueManagerType;
 	}
 #endif  // !__ANDROID__

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -13,7 +14,11 @@ using NUnit.Framework;
 
 namespace Java.InteropTests {
 
-	public abstract class JniValueMarshalerContractTests<T> : JavaVMFixture {
+	public abstract class JniValueMarshalerContractTests<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			T
+		> : JavaVMFixture
+	{
 
 		protected   abstract    T       Value           {get;}
 
@@ -211,6 +216,8 @@ namespace Java.InteropTests {
 		}
 
 		[Test]
+		[RequiresUnreferencedCode ("CreateReturnValueFromManagedExpression")]
+		[RequiresDynamicCode ("CreateReturnValueFromManagedExpression")]
 		public void CreateReturnValueFromManagedExpression ()
 		{
 			var runtime = Expression.Variable (typeof (JniRuntime), "__jvm");
@@ -335,7 +342,11 @@ namespace Java.InteropTests {
 		}
 	}
 
-	public abstract class JniValueMarshaler_BuiltinType_ContractTests<T> : JniValueMarshalerContractTests<T> {
+	public abstract class JniValueMarshaler_BuiltinType_ContractTests<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			T
+		> : JniValueMarshalerContractTests<T>
+	{
 		protected   override    bool    IsJniValueType  {get {return true;}}
 
 		protected override string GetExpectedReturnValueFromManagedExpression (string jvm, string value, Expression ret)
@@ -442,8 +453,11 @@ namespace Java.InteropTests {
 		protected   override    double? Value           {get {return 8D;}}
 	}
 
-	public abstract class JniInt32ArrayValueMarshalerContractTests<T> : JniValueMarshalerContractTests<T>
-		where T : IEnumerable<int>
+	public abstract class JniInt32ArrayValueMarshalerContractTests<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			T
+		> : JniValueMarshalerContractTests<T>
+			where T : IEnumerable<int>
 	{
 		protected   abstract    T       CreateArray (int[] values);
 		protected   abstract    string  ValueMarshalerSourceType    {get;}
@@ -647,7 +661,11 @@ namespace Java.InteropTests {
 			Int32Marshaler  = JniRuntime.CurrentRuntime.ValueManager.GetValueMarshaler<int> ();
 		}
 
-		public override DemoValueType CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override DemoValueType CreateGenericValue (
+			ref JniObjectReference reference,
+			JniObjectReferenceOptions options,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type targetType)
 		{
 			var v   = Int32Marshaler.CreateGenericValue (ref reference, options, typeof (int));
 			return new DemoValueType (v);

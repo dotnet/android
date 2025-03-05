@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 using Java.Interop;
@@ -88,9 +89,10 @@ namespace Java.InteropTests
 			}
 		}
 
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.All)]
 		static readonly Type NativeMethods_type =
-			typeof (JniEnvironment).Assembly.GetType ("Java.Interop.NativeMethods", throwOnError: false) ??
-			typeof (JniEnvironment).Assembly.GetType ("Java.Interop.JIPinvokes.NativeMethods", throwOnError: false);
+			Type.GetType ("Java.Interop.NativeMethods, Java.Interop", throwOnError: false) ??
+			Type.GetType ("Java.Interop.JIPinvokes.NativeMethods, Java.Interop", throwOnError: false);
 
 		static Func<IntPtr, IntPtr, IntPtr> GetNewRefFunc (string method)
 		{

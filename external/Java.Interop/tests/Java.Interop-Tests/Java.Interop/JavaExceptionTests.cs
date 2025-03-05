@@ -102,9 +102,7 @@ namespace Java.InteropTests
 
 		static JavaException CreateJavaProxyThrowable (Exception value)
 		{
-			var JavaProxyThrowable_type = typeof(JavaObject)
-				.Assembly
-				.GetType ("Java.Interop.JavaProxyThrowable", throwOnError :true);
+			var JavaProxyThrowable_type = Type.GetType ("Java.Interop.JavaProxyThrowable, Java.Interop", throwOnError :true);
 			var proxy   = (JavaException) Activator.CreateInstance (JavaProxyThrowable_type, value);
 			return proxy;
 		}
