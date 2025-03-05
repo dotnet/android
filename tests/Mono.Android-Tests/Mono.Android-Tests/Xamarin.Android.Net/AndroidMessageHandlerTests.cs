@@ -231,8 +231,9 @@ namespace Xamarin.Android.NetTests
 			var client = new HttpClient (handler);
 			var result = await client.GetAsync ("https://httpbin.org/redirect-to?url=https://www.microsoft.com/");
 
+			EnsureSuccessStatusCode (result);
+
 			Assert.AreEqual (2, callbackCounter);
-			Assert.IsTrue (result.IsSuccessStatusCode);
 		}
 
 		[Test]
@@ -245,7 +246,8 @@ namespace Xamarin.Android.NetTests
 			var client = new HttpClient (handler);
 			var result = await client.GetAsync ("https://httpbin.org/redirect-to?url=https://www.microsoft.com/&status_code=308");
 
-			Assert.IsTrue (result.IsSuccessStatusCode);
+			EnsureSuccessStatusCode (result);
+
 			Assert.AreEqual ("https://www.microsoft.com/", result.RequestMessage.RequestUri.ToString ());
 		}
 
