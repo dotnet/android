@@ -55,6 +55,10 @@ Start-Sleep -Seconds 2
 
 # Get process info and extract the PID
 $APP_PROCESS_INFO = adb shell ps | Select-String "net.dot.hellonativeaot"
+if (-not $APP_PROCESS_INFO) {
+    Write-Error "Error: Could not find a running process for net.dot.hellonativeaot"
+    exit 1
+}
 Write-Host "Process info: $APP_PROCESS_INFO"
 $APP_PID = [regex]::Match($APP_PROCESS_INFO, "\s+(\d+)\s+").Groups[1].Value
 
@@ -70,10 +74,10 @@ adb forward --remove tcp:8700 2>$null
 adb forward tcp:8700 jdwp:$APP_PID
 
 # Connect with JDB and send quit command
-$null = New-Item -ItemType File -Path "$env:TEMP\jdb_commands.txt" -Value "quit" -Force
-Get-Content "$env:TEMP\jdb_commands.txt" | jdb -attach localhost:8700
+#$null = New-Item -ItemType File -Path "$env:TEMP\jdb_commands.txt" -Value "quit" -Force
+#Get-Content "$env:TEMP\jdb_commands.txt" | jdb -attach localhost:8700
 
 # Clean up
-Remove-Item "$env:TEMP\jdb_commands.txt" -ErrorAction SilentlyContinue
-Stop-Job -Job $job
-Remove-Job -Job $job
+#Remove-Item "$env:TEMP\jdb_commands.txt" -ErrorAction SilentlyContinue
+#Stop-Job -Job $job
+#Remove-Job -Job $job
