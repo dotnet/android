@@ -23,7 +23,7 @@ namespace SystemTests
 			},
 		};
 
-		[Test]
+		[Test, Category ("RuntimeConfig")]
 		[TestCaseSource (nameof (GetDataSource))]
 		public void GetData (string name, string expected)
 		{
@@ -43,7 +43,7 @@ namespace SystemTests
 			},
 		};
 
-		[Test]
+		[Test, Category ("Mono"), Category ("RuntimeConfig")]
 		[TestCaseSource (nameof (TestPrivateSwitchesSource))]
 		public void TestPrivateSwitches (
 				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.All)]
