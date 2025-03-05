@@ -1,5 +1,5 @@
 <Project>
-  <Target Name="_Debug" AfterTargets="Install" DependsOnTargets="_GetAndroidPackageName">
+  <Target Name="_DebugNativeAOT" DependsOnTargets="_GetAndroidPackageName">
     <PropertyGroup>
         <_Adb>$(ANDROID_SDK_ROOT)/platform-tools/adb</_Adb>
     </PropertyGroup>
