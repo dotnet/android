@@ -5,6 +5,7 @@ namespace Xamarin.ProjectTools;
 public class TargetRuntimeHelper
 {
 	static readonly bool useMonoRuntime;
+	static readonly string[] coreClrSupportedAbis = new []{ "arm64-v8a" };
 
 	static TargetRuntimeHelper ()
 	{
@@ -18,4 +19,5 @@ public class TargetRuntimeHelper
 
 	public static bool UseMonoRuntime => useMonoRuntime;
 	public static bool UseCoreCLR => !useMonoRuntime;
+	public static string[] CoreClrSupportedAbis => coreClrSupportedAbis;
 }
