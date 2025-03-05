@@ -1016,6 +1016,11 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
     <value>Las bibliotecas de compatibilidad con Android no se admiten en .NET 9 y versiones posteriores. Migre a AndroidX. Consulte https://aka.ms/net-android/androidx para más información.</value>
     <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
   </data>
+  <data name="XA1040" xml:space="preserve">
+    <value>The {0} runtime on Android is an experimental feature and not yet suitable for production use. File issues at: https://github.com/dotnet/android/issues</value>
+    <comment>The following are literal names and should not be translated: .NET.
+{0} - The name of the .NET runtime, such as CoreCLR or NativeAOT.</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>No se cumple la dependencia de Java "{0}".</value>
     <comment>The following are literal names and should not be translated: Java.
