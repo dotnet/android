@@ -225,11 +225,12 @@ public class TypeMappingStep : BaseStep
 
 		TypeDefinition GetArrayType (TypeDefinition type, int size)
 		{
-			var arrayType = type.NestedTypes.FirstOrDefault (td => td.Name == "HashesArray");
+			var hashesArrayName = $"HashesArray_{size}";
+			var arrayType = type.NestedTypes.FirstOrDefault (td => td.Name == hashesArrayName);
 			if (arrayType is null) {
 				arrayType = new TypeDefinition (
 					"",
-					$"HashesArray_{size}",
+					hashesArrayName,
 					TypeAttributes.NestedPrivate | TypeAttributes.ExplicitLayout,
 					module.ImportReference (typeof (ValueType)))
 				{
