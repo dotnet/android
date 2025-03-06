@@ -825,6 +825,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA1040" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The {0} runtime on Android is an experimental feature and not yet suitable for production use. File issues at: https://github.com/dotnet/android/issues]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Среда выполнения {0} на Android представляет собой экспериментальную функцию и пока не подходит для использования в производственной среде. Регистрируйте проблемы по адресу: https://github.com/dotnet/android/issues]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA2000" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET for Android once .NET 6 is released.]]></Val>
