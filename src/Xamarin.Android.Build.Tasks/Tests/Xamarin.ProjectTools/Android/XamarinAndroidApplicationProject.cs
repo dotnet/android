@@ -187,6 +187,11 @@ namespace Xamarin.ProjectTools
 			PublishAot = value;
 			SetProperty ("AndroidNdkDirectory", androidNdkPath);
 
+			// CoreCLR tests won't work with PublishAot == true
+			if (value) {
+				RemoveProperty ("UseMonoRuntime");
+			}
+
 			// NuGet feed needed as Microsoft.Android.Runtime.NativeAOT packs not installed in workload by default
 			var source = Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned");
 			if (value) {
