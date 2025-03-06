@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -165,24 +166,48 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsNotNull (method, $"{linkedMonoAndroidAssembly} should contain {typeName}.{methodName}");
 			}
 
-			var typemap = new Dictionary<string, TypeReference> ();
+			var javaClassNames = new List<string> ();
+			var types = new List<TypeReference> ();
+
+			int[] typeIndexToJavaClassNameIndexRemapping;
+			int[] javaClassNameIndexToTypeIndexRemapping;
+
 			var linkedRuntimeAssembly = Path.Combine (intermediate, "android-arm64", "linked", "Microsoft.Android.Runtime.NativeAOT.dll");
 			FileAssert.Exists (linkedRuntimeAssembly);
 			using (var assembly = AssemblyDefinition.ReadAssembly (linkedRuntimeAssembly)) {
-				var type = assembly.MainModule.Types.FirstOrDefault (t => t.Name == "NativeAotTypeManager");
-				Assert.IsNotNull (type, $"{linkedRuntimeAssembly} should contain NativeAotTypeManager");
-				var method = type.Methods.FirstOrDefault (m => m.Name == "InitializeTypeMappings");
-				Assert.IsNotNull (method, "NativeAotTypeManager should contain InitializeTypeMappings");
+				var type = assembly.MainModule.Types.FirstOrDefault (t => t.Name == "TypeMapping");
+				Assert.IsNotNull (type, $"{linkedRuntimeAssembly} should contain TypeMapping");
+
+				var method = type.Methods.FirstOrDefault (m => m.Name == "GetJavaClassNameByIndex");
+				Assert.IsNotNull (method, "TypeMapping should contain GetJavaClassNameByIndex");
 
 				foreach (var i in method.Body.Instructions) {
 					if (i.OpCode != Mono.Cecil.Cil.OpCodes.Ldstr)
 						continue;
 					if (i.Operand is not string javaName)
 						continue;
-					if (i.Next.Operand is not TypeReference t)
+					if (i.Next.OpCode != Mono.Cecil.Cil.OpCodes.Ret)
 						continue;
-					typemap.Add (javaName, t);
+					javaClassNames.Add (javaName);
 				}
+
+				method = type.Methods.FirstOrDefault (m => m.Name == "GetTypeByIndex");
+				Assert.IsNotNull (method, "TypeMapping should contain GetTypeByIndex");
+
+				foreach (var i in method.Body.Instructions) {
+					if (i.OpCode != Mono.Cecil.Cil.OpCodes.Ldtoken)
+						continue;
+					if (i.Operand is not TypeReference typeReference)
+						continue;
+					if (i.Next?.OpCode != Mono.Cecil.Cil.OpCodes.Call)
+						continue;
+					if (i.Next.Next?.OpCode != Mono.Cecil.Cil.OpCodes.Ret)
+						continue;
+					types.Add (typeReference);
+				}
+
+				typeIndexToJavaClassNameIndexRemapping = MemoryMarshal.Cast<byte, int> (type.Fields.First (f => f.Name == "s_get_TypeIndexToJavaClassNameIndex_data").InitialValue).ToArray ();
+				javaClassNameIndexToTypeIndexRemapping = MemoryMarshal.Cast<byte, int> (type.Fields.First (f => f.Name == "s_get_JavaClassNameIndexToTypeIndex_data").InitialValue).ToArray ();
 
 				// Basic types
 				AssertTypeMap ("java/lang/Object", "Java.Lang.Object");
@@ -224,10 +249,17 @@ namespace Xamarin.Android.Build.Tests
 
 			void AssertTypeMap(string javaName, string managedName)
 			{
-				if (typemap.TryGetValue (javaName, out var reference)) {
-					Assert.AreEqual (managedName, reference.ToString ());
-				} else {
-					Assert.Fail ($"InitializeTypeMappings should contain Ldstr \"{javaName}\"!");
+				var javaNameIndex = javaClassNames.FindIndex (name => name == javaName);
+				var typeIndex = types.FindIndex (td => td.ToString() == managedName);
+
+				if (javaNameIndex < 0) {
+					Assert.Fail ($"TypeMapping should contain \"{javaName}\"!");
+				} else if (typeIndex < 0) {
+					Assert.Fail ($"TypeMapping should contain \"{managedName}\"!");
+				} else if (typeIndexToJavaClassNameIndexRemapping[typeIndex] != javaNameIndex) {
+					Assert.Fail ($"TypeMapping should contain \"{javaName}\" <-> \"{managedName}\"");
+				} else if (javaClassNameIndexToTypeIndexRemapping[javaNameIndex] != typeIndex) {
+					Assert.Fail ($"TypeMapping should contain \"{javaName}\" <-> \"{managedName}\"");
 				}
 			}
 		}
@@ -465,7 +497,7 @@ namespace Xamarin.Android.Build.Tests
 			XamarinAndroidProject proj = isBindingProject ? new XamarinAndroidBindingProject () : new XamarinAndroidApplicationProject ();
 			proj.IsRelease = isRelease;
 			proj.SetProperty (property, value);
-			
+
 			using (ProjectBuilder b = isBindingProject ? CreateDllBuilder (Path.Combine ("temp", TestName)) : CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, $"The '{property}' MSBuild property is deprecated and will be removed"),
