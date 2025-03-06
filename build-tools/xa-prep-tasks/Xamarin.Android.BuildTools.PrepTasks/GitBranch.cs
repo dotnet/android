@@ -65,11 +65,17 @@ done:
 			}
 
 			// Trim darc/Maestro branch names that are too long
-			if (Branch.StartsWith ("darc-") && Branch.Length > maxBranchLength) {
+			// These will have a Guid in the branch name
+			if (IsTrimmedBranch () && Branch.Length > maxBranchLength) {
 				Log.LogMessage ($"Trimming to {maxBranchLength} characters from the branch name: {Branch}");
 				Branch = Branch.Substring (0, maxBranchLength);
 			}
 		}
+
+		bool IsTrimmedBranch () => 
+			TrimmedBranchPrefixes.Any (prefix => Branch.StartsWith (prefix, StringComparison.Ordinal));
+
+		static readonly string[] TrimmedBranchPrefixes = [ "darc-", "juno/" ];
 
 		protected override string GenerateCommandLineCommands ()
 		{
