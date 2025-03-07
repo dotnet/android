@@ -100,6 +100,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var builder = CreateApkBuilder ();
+			builder.Verbosity = LoggerVerbosity.Detailed;
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
 			builder.AssertHasNoWarnings ();
 
@@ -179,6 +180,14 @@ namespace Xamarin.Android.Build.Tests
 					helper.AssertContainsEntry ($"lib/{abi}/libaot-{proj.ProjectName}.dll.so");
 					helper.AssertContainsEntry ($"lib/{abi}/libaot-Mono.Android.dll.so");
 				}
+			}
+
+			if (isRelease) {
+				builder.Output.AssertTargetIsNotSkipped ("ILLink");
+				builder.Output.AssertTargetIsSkipped ("_LinkAssembliesNoShrink");
+			} else {
+				builder.Output.AssertTargetIsSkipped ("ILLink");
+				builder.Output.AssertTargetIsNotSkipped ("_LinkAssembliesNoShrink");
 			}
 		}
 
