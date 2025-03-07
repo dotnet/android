@@ -38,13 +38,7 @@ namespace Hello
 				  v => reportTiming = v != null },
 				{ "v|verbosity:",
 				  $"Set console log verbosity to {{LEVEL}}.  Default is 0.",
-				  (int? v) => {
-				    verbosity = v.HasValue ? v.Value : verbosity + 1;
-				    if (verbosity > 0) {
-				      logger    = CreateConsoleLogger ();
-					}
-				  }
-				},
+				  (int? v) => verbosity = v.HasValue ? v.Value : verbosity + 1 },
 				{ "h|help",
 				  "Show this message and exit.",
 				  v => showHelp = v != null },
@@ -53,6 +47,9 @@ namespace Hello
 			if (showHelp) {
 				options.WriteOptionDescriptions (Console.Out);
 				return;
+			}
+			if (verbosity > 0) {
+				logger = CreateConsoleLogger ();
 			}
 			var builder = new JreRuntimeOptions () {
 				JniAddNativeMethodRegistrationAttributePresent  = true,
@@ -79,6 +76,11 @@ namespace Hello
 			}
 
 			CreateJLO ();
+
+			GC.Collect ();
+			GC.Collect ();
+			GC.WaitForPendingFinalizers ();
+			GC.WaitForPendingFinalizers ();
 		}
 
 		static Action<TraceLevel, string> CreateConsoleLogger ()
