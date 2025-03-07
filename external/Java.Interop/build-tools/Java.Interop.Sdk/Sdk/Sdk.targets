@@ -10,7 +10,7 @@
   </ItemDefinitionGroup>
 
   <PropertyGroup>
-    <JavaOutputJar Condition=" '$(JavaOutputJar)' == '' ">$(OutputPath)$(AssemblyName).jar</JavaOutputJar>
+    <JavaOutputJarName Condition=" '$(JavaOutputJarName)' == '' ">$(AssemblyName).jar</JavaOutputJarName>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -32,7 +32,7 @@
   </Target>
 
   <Target Name="JavaCreateOutputJar"
-      AfterTargets="Build"
+      AfterTargets="CoreCompile"
       DependsOnTargets="$(JavaCreateOutputJarDependsOn)">
   </Target>
 
@@ -43,7 +43,15 @@
     <_JavaManagedBindingDir>$(_JavaIntermediateDir)mcw\</_JavaManagedBindingDir>
     <_JavaJcwClassesDir>$(_JavaIntermediateDir)classes\</_JavaJcwClassesDir>
     <_JavaJcwSourcesDir>$(_JavaIntermediateDir)java\</_JavaJcwSourcesDir>
+    <_JavaOutputJarPath>$(_JavaIntermediateDir)$(JavaOutputJarName)</_JavaOutputJarPath>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="$(_JavaOutputJarPath)"
+        CopyToOutputDirectory="PreserveNewest"
+        TargetPath="$(JavaOutputJarName)"
+    />
+  </ItemGroup>
 
   <Target Name="_CollectJavaCompileForManagedBindingInputs">
     <ItemGroup>
@@ -169,8 +177,8 @@
   <Target Name="_CleanupManagedBinding" />
 
   <Target Name="_JavaCreateJcws"
-      Condition=" '$(TargetPath)' != '' And Exists($(TargetPath))"
-      Inputs="$(TargetPath)"
+      Condition=" '@(IntermediateAssembly)' != '' And Exists(@(IntermediateAssembly))"
+      Inputs="@(IntermediateAssembly)"
       Outputs="$(_JavaJcwSourcesDir).stamp">
     <RemoveDir Directories="$(_JavaJcwSourcesDir)" />
     <MakeDir Directories="$(_JavaJcwSourcesDir)" />
@@ -184,7 +192,7 @@
       <_Output>-o "$(_JavaJcwSourcesDir)."</_Output>
       <_Libpath>@(_RefAsmDirs->'-L "%(Identity)"', ' ')</_Libpath>
     </PropertyGroup>
-    <Exec Command="$(DotnetToolPath) $(_JcwGen) -v &quot;$(TargetPath)&quot; $(_Target) $(_Output) $(_Libpath)" />
+    <Exec Command="$(DotnetToolPath) $(_JcwGen) -v @(IntermediateAssembly->'&quot;%(Identity)&quot;', ' ') $(_Target) $(_Output) $(_Libpath)" />
     <Touch Files="$(_JavaJcwSourcesDir).stamp" AlwaysCreate="True" />
   </Target>
 
@@ -197,7 +205,7 @@
   <Target Name="_JavaCreateOutputJar"
       DependsOnTargets="_JavaCollectGeneratdJcwSource;_JavaCollectJavacRefs"
       Inputs="@(_JavaGeneratedJcwSource)"
-      Outputs="$(JavaOutputJar)">
+      Outputs="$(_JavaOutputJarPath)">
     <RemoveDir Directories="$(_JavaJcwClassesDir)" />
     <MakeDir Directories="$(_JavaJcwClassesDir)" />
     <PropertyGroup>
@@ -215,7 +223,11 @@
     />
     <Exec Command="&quot;$(JavaCPath)&quot; $(_JavacSourceOptions) -d &quot;$(_JavaJcwClassesDir).&quot; -classpath &quot;$(_Classpath)&quot; &quot;@$(_JavaIntermediateDir)_java_sources.txt&quot;" />
     <Delete Files="$(_JavaIntermediateDir)_java_sources.txt" />
-    <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(JavaOutputJar)&quot; -C &quot;$(_JavaJcwClassesDir).&quot; ." />
+    <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(_JavaOutputJarPath)&quot; -C &quot;$(_JavaJcwClassesDir).&quot; ." />
+
+    <ItemGroup>
+      <FileWrites Include="$(_JavaOutputJarPath)" />
+    </ItemGroup>
   </Target>
 
 </Project>

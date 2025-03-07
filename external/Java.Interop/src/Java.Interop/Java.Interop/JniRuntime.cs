@@ -445,8 +445,9 @@ namespace Java.Interop
 		public virtual void OnUserUnhandledException (ref JniTransition transition, Exception e)
 		{
 			transition.SetPendingException (e);
-
+#if NET9_0_OR_GREATER
 			Debugger.BreakForUserUnhandledException (e);
+#endif  // NET9_0_OR_GREATER
 		}
 
 		public virtual void RaisePendingException (Exception pendingException)

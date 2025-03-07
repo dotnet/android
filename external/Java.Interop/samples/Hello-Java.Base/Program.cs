@@ -17,16 +17,18 @@ namespace Hello
 
 		public static void Main (string[] args)
 		{
-			string? jvmPath             = global::Java.InteropTests.TestJVM.GetJvmLibraryPath ();
+			var     logger              = (Action<TraceLevel, string>?) null;
+			string? jvmPath             = null;
 			bool    createMultipleVMs   = false;
 			bool    reportTiming        = false;
 			bool    showHelp            = false;
+			int     verbosity           = 0;
 			var options = new OptionSet () {
 				"Using the JVM from C#!",
 				"",
 				"Options:",
 				{ "jvm=",
-				  $"{{PATH}} to JVM to use.  Default is:\n  {jvmPath}",
+				  $"{{PATH}} to JVM to use.  Default is:\n{Java.InteropTests.TestJVM.GetJvmLibraryPath (logger)}",
 				  v => jvmPath = v },
 				{ "m",
 				  "Create multiple Java VMs.  This will likely crash.",
@@ -34,6 +36,15 @@ namespace Hello
 				{ "t",
 				  $"Timing; invoke Object.hashCode() {N} times, print average.",
 				  v => reportTiming = v != null },
+				{ "v|verbosity:",
+				  $"Set console log verbosity to {{LEVEL}}.  Default is 0.",
+				  (int? v) => {
+				    verbosity = v.HasValue ? v.Value : verbosity + 1;
+				    if (verbosity > 0) {
+				      logger    = CreateConsoleLogger ();
+					}
+				  }
+				},
 				{ "h|help",
 				  "Show this message and exit.",
 				  v => showHelp = v != null },
@@ -45,7 +56,7 @@ namespace Hello
 			}
 			var builder = new JreRuntimeOptions () {
 				JniAddNativeMethodRegistrationAttributePresent  = true,
-				JvmLibraryPath                                  = jvmPath,
+				JvmLibraryPath                                  = jvmPath ?? global::Java.InteropTests.TestJVM.GetJvmLibraryPath (logger),
 				ClassPath   = {
 					Path.Combine (Path.GetDirectoryName (typeof (App).Assembly.Location)!, "Hello-Java.Base.jar"),
 				},
@@ -68,6 +79,13 @@ namespace Hello
 			}
 
 			CreateJLO ();
+		}
+
+		static Action<TraceLevel, string> CreateConsoleLogger ()
+		{
+			return (level, message) => {
+				Console.WriteLine ($"# {level}: {message}");
+			};
 		}
 
 		static void CreateJLO ()

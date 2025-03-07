@@ -13,7 +13,7 @@
 
   <PropertyGroup>
     <OutputPath>$(TestOutputFullPath)</OutputPath>
-    <JavaOutputJar>$(OutputPath)java.base-tests.jar</JavaOutputJar>
+    <JavaOutputJarName>java.base-tests.jar</JavaOutputJarName>
   </PropertyGroup>
 
   <ItemGroup>

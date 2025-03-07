@@ -79,39 +79,28 @@ namespace Java.InteropTests
 			return new StreamWriter (path, append: false, encoding: new UTF8Encoding (encoderShouldEmitUTF8Identifier: false));
 		}
 
-		public static string? GetJvmLibraryPath () => GetJdkInfo ().JdkJvmPath;
+		public static string? GetJvmLibraryPath (Action<TraceLevel, string>? logger = null) => GetJdkInfo (logger).JdkJvmPath;
 
-		static (JdkInfo? JdkInfo, string? JdkJvmPath) GetJdkInfo ()
+		static (JdkInfo? JdkInfo, string? JdkJvmPath) GetJdkInfo (Action<TraceLevel, string>? logger = null)
 		{
-			var info    = ReadJavaSdkDirectoryFromJdkInfoProps ();
+			var info    = ReadJavaSdkDirectoryFromJdkInfoProps (logger);
 			if (info.JdkJvmPath != null) {
 				return (JdkInfo: info.JavaSdkDirectory == null ? null : new JdkInfo (info.JavaSdkDirectory), JdkJvmPath: info.JdkJvmPath);
 			}
-			var jdk = JdkInfo.GetKnownSystemJdkInfos ()
+			var jdk = JdkInfo.GetKnownSystemJdkInfos (logger)
 				.FirstOrDefault ();
 			return (jdk, jdk?.JdkJvmPath);
 		}
 
-		static (string? JavaSdkDirectory, string? JdkJvmPath) ReadJavaSdkDirectoryFromJdkInfoProps ()
+		static (string? JavaSdkDirectory, string? JdkJvmPath) ReadJavaSdkDirectoryFromJdkInfoProps (Action<TraceLevel, string>? logger)
 		{
-			var location    = typeof (TestJVM).Assembly.Location;
-			var binDir      = Path.GetDirectoryName (Path.GetDirectoryName (location)) ?? Environment.CurrentDirectory;
-			var testDir     = Path.GetFileName (Path.GetDirectoryName (location));
-			if (testDir == null) {
-				return (null, null);
-			}
-			if (!testDir.StartsWith ("Test", StringComparison.OrdinalIgnoreCase)) {
-				return (null, null);
-			}
-			var buildName   = testDir.Replace ("Test", "Build");
-			if (buildName.Contains ('-')) {
-				buildName   = buildName.Substring (0, buildName.IndexOf ('-'));
-			}
-			var jdkPropFile = Path.Combine (binDir, buildName, "JdkInfo.props");
+			var jdkPropFile = TryProbeForJdkInfoProps (logger);
+			logger?.Invoke (TraceLevel.Verbose, $"TestJVM: jdkPropFile? {jdkPropFile}");
 			if (!File.Exists (jdkPropFile)) {
 				return (null, null);
 			}
 
+			logger?.Invoke (TraceLevel.Verbose, $"TestJVM: Extracting $(JdkJvmPath) from: {jdkPropFile}");
 			var msbuild     = XNamespace.Get ("http://schemas.microsoft.com/developer/msbuild/2003");
 
 			var jdkProps    = XDocument.Load (jdkPropFile);
@@ -129,7 +118,45 @@ namespace Java.InteropTests
 				.Elements (msbuild + "JavaSdkDirectory")
 				.FirstOrDefault ();
 
+			logger?.Invoke (TraceLevel.Verbose, $"TestJVM: $(JavaSdkDirectory)={jdkPath?.Value}; $(JdkJvmPath)={jdkJvmPath.Value}");
 			return (JavaSdkDirectory: jdkPath?.Value, JdkJvmPath: jdkJvmPath.Value);
+		}
+
+		static string? TryProbeForJdkInfoProps (Action<TraceLevel, string>? logger)
+		{
+			for (var probing = Path.GetDirectoryName (typeof (TestJVM).Assembly.Location); probing != null; probing = Path.GetDirectoryName (probing)) {
+				logger?.Invoke (TraceLevel.Verbose, $"TestJVM: probing for JdkInfo.props around {probing}");
+				if (File.Exists (Path.Combine (probing, "Java.Interop.sln"))) {
+					// we've hit the root of the repo checkout
+					return ProbeFromRootDir (probing);
+				}
+
+				var dirName = Path.GetFileName (probing);
+				if (dirName.StartsWith ("Test", StringComparison.OrdinalIgnoreCase)) {
+					var buildName   = dirName.Replace ("Test", "Build");
+					if (buildName.Contains ('-')) {
+						buildName   = buildName.Substring (0, buildName.IndexOf ('-'));
+					}
+					return Path.Combine (Path.GetDirectoryName (probing)!, buildName, "JdkInfo.props");
+				}
+			}
+			return null;
+
+			string ProbeFromRootDir (string location)
+			{
+				var buildDebug      = Path.Combine (location, "bin", "BuildDebug");
+				var buildRelease    = Path.Combine (location, "bin", "BuildRelease");
+				if (Directory.Exists (buildDebug) && !Directory.Exists (buildRelease)) {
+					return Path.Combine (buildDebug, "JdkInfo.props");
+				}
+				if (Directory.Exists (buildRelease) && !Directory.Exists (buildDebug)) {
+					return Path.Combine (buildRelease, "JdkInfo.props");
+				}
+				var dir = Directory.GetLastWriteTime (buildDebug) > Directory.GetLastWriteTime (buildRelease)
+					? buildDebug
+					: buildRelease;
+				return Path.Combine (dir, "JdkInfo.props");
+			}
 		}
 
 		public TestJVM (string[]? jars = null, Dictionary<string, Type>? typeMappings = null)

@@ -3,7 +3,6 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
 #include <inttypes.h>
 
 #include "java-interop.h"
@@ -12,6 +11,7 @@
 #include "java-interop-util.h"
 
 #ifdef _WINDOWS
+#include <windows.h>
 #include <fileapi.h>
 #endif
 
@@ -530,13 +530,21 @@ get_object_ref_type (JNIEnv *env, jobject handle)
 static int
 gref_inc (JavaInteropGCBridge *bridge)
 {
+#if _WINDOWS
+	return InterlockedIncrement ((LONG volatile*) &bridge->gc_gref_count);
+#else   // !_WINDOWS
 	return __sync_add_and_fetch (&bridge->gc_gref_count, 1);
+#endif  // _!WINDOWS
 }
 
 static int
 gref_dec (JavaInteropGCBridge *bridge)
 {
+#if _WINDOWS
+	return InterlockedDecrement ((LONG volatile*) &bridge->gc_gref_count);
+#else   // !_WINDOWS
 	return __sync_sub_and_fetch (&bridge->gc_gref_count, 1);
+#endif  // _!WINDOWS
 }
 
 #if defined (ANDROID)

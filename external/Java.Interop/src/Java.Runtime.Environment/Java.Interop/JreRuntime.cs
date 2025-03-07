@@ -91,8 +91,9 @@ namespace Java.Interop {
 			builder.TypeManager     ??= new JreTypeManager (builder.typeMappings);
 #endif  // NET
 
-			bool onMono = Type.GetType ("Mono.Runtime", throwOnError: false) != null;
+			bool onMono = Type.GetType ("Mono.RuntimeStructs", throwOnError: false) != null;
 			if (onMono) {
+				Console.WriteLine ($"MonoVM support enabled");
 				builder.ValueManager            = builder.ValueManager              ?? new MonoRuntimeValueManager ();
 				builder.ObjectReferenceManager  = builder.ObjectReferenceManager    ?? new MonoRuntimeObjectReferenceManager ();
 			}

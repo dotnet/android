@@ -4,6 +4,7 @@
 #include "java-interop.h"
 
 #include <mono/metadata/assembly.h>
+#include <mono/metadata/appdomain.h>
 #include <mono/metadata/class.h>
 #include <mono/metadata/object.h>
 #include <mono/metadata/sgen-bridge.h>

@@ -1,4 +1,4 @@
-set(CMAKE_OSX_ARCHITECTURES x86_64 arm64)
+cmake_minimum_required(VERSION 3.10.2)
 
 project(
     java-interop
@@ -14,8 +14,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
 option(ENABLE_MONO_INTEGRATION "Require Mono runtime" OFF)
+option(ENABLE_OSX_ARCHITECTURES "macOS architectures" "")
 
-cmake_minimum_required(VERSION 3.10.2)
+set(CMAKE_OSX_ARCHITECTURES ${ENABLE_OSX_ARCHITECTURES})
 
 set(JAVA_INTEROP_CORE_SOURCES
     java-interop-dlfcn.cc
@@ -44,7 +45,6 @@ if(ENABLE_MONO_INTEGRATION)
     include_directories(${dir})
   endforeach()
   list(APPEND LINK_FLAGS ${MONO_LINK_FLAGS})
-  list(APPEND LINK_FLAGS "-Wl,-undefined -Wl,suppress -Wl,-flat_namespace")
   set(JAVA_INTEROP_SOURCES ${JAVA_INTEROP_CORE_SOURCES} ${JAVA_INTEROP_MONO_SOURCES})
 else()
   set(JAVA_INTEROP_SOURCES ${JAVA_INTEROP_CORE_SOURCES})

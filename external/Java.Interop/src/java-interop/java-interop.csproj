@@ -28,7 +28,18 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj" ReferenceOutputAssembly="false" />
-  </ItemGroup>  
+  </ItemGroup>
+
+  <PropertyGroup>
+    <DotNetRuntimePacksVersion>8.0.13</DotNetRuntimePacksVersion>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(UseMonoRuntime)' != 'true' ">
+    <PackageDownload
+        Include="Microsoft.NETCore.App.Runtime.Mono.$(NETCoreSdkRuntimeIdentifier)"
+        Version="[$(DotNetRuntimePacksVersion)]"
+    />
+  </ItemGroup>
 
   <Import Project="java-interop.targets" />
 

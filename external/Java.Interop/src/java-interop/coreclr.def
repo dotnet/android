@@ -1,0 +1,20 @@
+LIBRARY CORECLR
+
+EXPORTS
+   mono_class_from_mono_type
+   mono_class_get_field_from_name
+   mono_class_get_name
+   mono_class_get_namespace
+   mono_class_is_subclass_of
+   mono_class_vtable
+   mono_domain_get
+   mono_field_get_value
+   mono_field_set_value
+   mono_field_static_set_value
+   mono_gc_register_bridge_callbacks
+   mono_gc_wait_for_bridge_processing
+   mono_object_get_class
+   mono_thread_attach
+   mono_thread_current
+   mono_thread_get_managed_id
+   mono_thread_get_name_utf8
