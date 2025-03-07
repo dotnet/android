@@ -1017,7 +1017,7 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
   </data>
   <data name="XA1040" xml:space="preserve">
-    <value>The {0} runtime on Android is an experimental feature and not yet suitable for production use. File issues at: https://github.com/dotnet/android/issues</value>
+    <value>Android 上的 {0} 執行階段是一項實驗性功能，尚不適合用於生產環境。請在以下位置舉報問題： https://github.com/dotnet/android/issues</value>
     <comment>The following are literal names and should not be translated: .NET.
 {0} - The name of the .NET runtime, such as CoreCLR or NativeAOT.</comment>
   </data>
