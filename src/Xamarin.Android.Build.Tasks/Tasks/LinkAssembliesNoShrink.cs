@@ -1,30 +1,38 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.JavaCallableWrappers;
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using Mono.Linker.Steps;
 using MonoDroid.Tuner;
-using Xamarin.Android.Tasks.Utilities;
 using Xamarin.Android.Tools;
 using PackageNamingPolicyEnum = Java.Interop.Tools.TypeNameMappings.PackageNamingPolicy;
 
 namespace Xamarin.Android.Tasks
 {
 	/// <summary>
-	/// This task is for Debug builds where LinkMode=None, LinkAssemblies is for Release builds
+	/// This task is called for both Debug and Release builds. However, in Release builds
+	/// several steps that already ran as part of ILLink are skipped, such as the FixAbstractMethodsStep
+	/// and AddKeepAlivesStep. One key difference is in Debug mode the assemblies have a different
+	/// destination path they need to be copied to, whereas in Release mode the assemblies
+	/// are not expected to be changed or copied.
 	/// </summary>
 	public class LinkAssembliesNoShrink : AndroidTask
 	{
+		// Names of assemblies which don't have Mono.Android.dll references, or are framework assemblies, but which must
+		// be scanned for Java types.
+		static readonly HashSet<string> SpecialAssemblies = new HashSet<string> (StringComparer.OrdinalIgnoreCase) {
+			"Java.Interop.dll",
+			"Mono.Android.dll",
+			"Mono.Android.Runtime.dll",
+		};
+
 		JavaPeerStyle codeGenerationTarget;
 
 		sealed class RunState
@@ -84,15 +92,10 @@ namespace Xamarin.Android.Tasks
 
 		public bool AlreadyLinked { get; set; }
 
-		[Output]
-		public ITaskItem [] ScannedFiles { get; set; } = Array.Empty<ITaskItem> ();
-
-
 		public override bool RunTask ()
 		{
 			codeGenerationTarget = MonoAndroidHelper.ParseCodeGenerationTarget (CodeGenerationTarget);
-			PackageNamingPolicy pnp;
-			JavaNativeTypeManager.PackageNamingPolicy = Enum.TryParse (PackageNamingPolicy, out pnp) ? pnp : PackageNamingPolicyEnum.LowercaseCrc64;
+			JavaNativeTypeManager.PackageNamingPolicy = Enum.TryParse (PackageNamingPolicy, out PackageNamingPolicyEnum pnp) ? pnp : PackageNamingPolicyEnum.LowercaseCrc64;
 
 			if (SourceFiles.Length != DestinationFiles.Length)
 				throw new ArgumentException ("source and destination count mismatch");
@@ -106,7 +109,6 @@ namespace Xamarin.Android.Tasks
 
 			Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> perArchAssemblies = MonoAndroidHelper.GetPerArchAssemblies (ResolvedAssemblies, Array.Empty<string> (), validate: false);
 			var runState = new RunState ();
-
 			AndroidTargetArch currentArch = AndroidTargetArch.None;
 
 			for (int i = 0; i < SourceFiles.Length; i++) {
@@ -149,14 +151,10 @@ namespace Xamarin.Android.Tasks
 					fixLegacyResourceDesignerStep.Initialize (context);
 					runState.fixLegacyResourceDesignerStep = fixLegacyResourceDesignerStep;
 
-					var findJavaObjectsStep = new FindJavaObjectsStep {
+					var findJavaObjectsStep = new FindJavaObjectsStep (Log) {
 						ApplicationJavaClass = ApplicationJavaClass,
-						CodeGenerationTarget = codeGenerationTarget,
 						ErrorOnCustomJavaObject = ErrorOnCustomJavaObject,
-						UserAssemblies = ResolvedUserAssemblies.Select (a => Path.GetFileNameWithoutExtension (a.ItemSpec)).ToList (),
 						UseMarshalMethods = EnableMarshalMethods,
-						Debug = Debug,
-						Log = Log,
 					};
 
 					findJavaObjectsStep.Initialize (context);
@@ -166,8 +164,6 @@ namespace Xamarin.Android.Tasks
 				DoRunTask (source, destination, runState, writerParameters);
 			}
 			runState.resolver?.Dispose ();
-
-			Log.LogDebugMessage ($"LinkAssembliesNoShrink: total JavaObject time: {total_jlo_ms}ms");
 
 			return !Log.HasLoggedErrors;
 
@@ -182,13 +178,11 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		long total_jlo_ms = 0;
-
 		void DoRunTask (ITaskItem source, ITaskItem destination, RunState runState, WriterParameters writerParameters)
 		{
 			Directory.CreateDirectory (Path.GetDirectoryName (destination.ItemSpec));
 
-			// Skip this step if the assembly has already gone though ILLink
+			// Skip these steps if the assembly has already gone though ILLink
 			if (!AlreadyLinked) {
 				if (!TryModifyAssembly (source, destination, runState, writerParameters)) {
 					// If we didn't write a modified file, copy the original to the destination
@@ -202,65 +196,6 @@ namespace Xamarin.Android.Tasks
 				// If we didn't scan for Java objects, write an empty .xml file to facilitate incremental builds
 				FindJavaObjectsStep.WriteEmptyXmlFile (destinationJLOXml);
 			}
-
-			return;
-
-			var assemblyName = Path.GetFileNameWithoutExtension (source.ItemSpec);
-			// In .NET 6+, we can skip the main assembly
-			//if (!AddKeepAlives && assemblyName == TargetName) {
-			//	FindJavaObjectsStep.WriteEmptyXmlFile (destinationJLOXml);
-			//	CopyIfChanged (source, destination);
-			//	return;
-			//}
-			//if (MonoAndroidHelper.IsFrameworkAssembly (source)) {
-			//	CopyIfChanged (source, destination);
-			//	FindJavaObjectsStep.WriteEmptyXmlFile (destinationJLOXml);
-			//	return;
-			//}
-
-			// Only run the step on "MonoAndroid" assemblies
-			if (ShouldScanAssembly (source)) {
-				AssemblyDefinition assemblyDefinition = runState.resolver!.GetAssembly (source.ItemSpec);
-				var sw = Stopwatch.StartNew ();
-				var resolve_ms = sw.ElapsedMilliseconds;
-				long fixAbstractMethods_ms = 0;
-				long fixLegacyResourceDesigner_ms = 0;
-				long addKeepAlives_ms = 0;
-				sw.Restart ();
-				var save = false;
-
-				if (!AlreadyLinked) {
-					save = runState.fixAbstractMethodsStep!.FixAbstractMethods (assemblyDefinition);
-					fixAbstractMethods_ms = sw.ElapsedMilliseconds;
-					sw.Restart ();
-					if (UseDesignerAssembly)
-						save |= runState.fixLegacyResourceDesignerStep!.ProcessAssemblyDesigner (assemblyDefinition);
-					fixLegacyResourceDesigner_ms = sw.ElapsedMilliseconds;
-					sw.Restart ();
-					if (AddKeepAlives)
-						save |= runState.addKeepAliveStep!.AddKeepAlives (assemblyDefinition);
-					addKeepAlives_ms = sw.ElapsedMilliseconds;
-					sw.Restart ();
-				}
-				var scanned = runState.findJavaObjectsStep!.ProcessAssembly (assemblyDefinition, destinationJLOXml, MonoAndroidHelper.IsMonoAndroidAssembly (source));
-				if (scanned)
-					ScannedFiles = ScannedFiles.Append (new TaskItem (destination)).ToArray ();
-				var findJavaObjects_ms = sw.ElapsedMilliseconds;
-				total_jlo_ms += (int) findJavaObjects_ms;
-				Log.LogDebugMessage ($"LinkAssembliesNoShrink: {assemblyName} -> {save} (Resolve: {resolve_ms}ms, FixAbstract: {fixAbstractMethods_ms}ms, Designer: {fixLegacyResourceDesigner_ms}, KeepAlives: {addKeepAlives_ms}ms, JavaObjects: {findJavaObjects_ms}ms)");
-				if (save) {
-					Log.LogDebugMessage ($"Saving modified assembly: {destination.ItemSpec}");
-					Directory.CreateDirectory (Path.GetDirectoryName (destination.ItemSpec));
-					writerParameters.WriteSymbols = assemblyDefinition.MainModule.HasSymbols;
-					assemblyDefinition.Write (destination.ItemSpec, writerParameters);
-					return;
-				}
-			} else {
-
-				FindJavaObjectsStep.WriteEmptyXmlFile (destinationJLOXml);
-			}
-
-			CopyIfChanged (source, destination);
 		}
 
 		bool TryModifyAssembly (ITaskItem source, ITaskItem destination, RunState runState, WriterParameters writerParameters)
@@ -268,14 +203,13 @@ namespace Xamarin.Android.Tasks
 			var assemblyName = Path.GetFileNameWithoutExtension (source.ItemSpec);
 
 			// In .NET 6+, we can skip the main assembly
-			if (!AddKeepAlives && assemblyName == TargetName) {
+			if (!AddKeepAlives && assemblyName == TargetName)
 				return false;
-			}
-			if (MonoAndroidHelper.IsFrameworkAssembly (source)) {
-				return false;
-			}
 
-			// Only run the step on "MonoAndroid" assemblies
+			if (MonoAndroidHelper.IsFrameworkAssembly (source))
+				return false;
+
+			// Only run steps on "MonoAndroid" assemblies
 			if (MonoAndroidHelper.IsMonoAndroidAssembly (source)) {
 				AssemblyDefinition assemblyDefinition = runState.resolver!.GetAssembly (source.ItemSpec);
 
@@ -304,10 +238,7 @@ namespace Xamarin.Android.Tasks
 			var destinationJLOXml = Path.ChangeExtension (destination.ItemSpec, ".jlo.xml");
 			var assemblyDefinition = runState.resolver!.GetAssembly (source.ItemSpec);
 
-			var scanned = runState.findJavaObjectsStep!.ProcessAssembly (assemblyDefinition, destinationJLOXml, MonoAndroidHelper.IsMonoAndroidAssembly (source));
-
-			if (scanned)
-				ScannedFiles = ScannedFiles.Append (new TaskItem (destination)).ToArray ();
+			var scanned = runState.findJavaObjectsStep!.ProcessAssembly (assemblyDefinition, destinationJLOXml);
 
 			return scanned;
 		}
@@ -323,9 +254,7 @@ namespace Xamarin.Android.Tasks
 			// When marshal methods or non-JavaPeerStyle.XAJavaInterop1 are in use we do not want to skip non-user assemblies (such as Mono.Android) - we need to generate JCWs for them during
 			// application build, unlike in Debug configuration or when marshal methods are disabled, in which case we use JCWs generated during Xamarin.Android
 			// build and stored in a jar file.
-			bool useMarshalMethods = !Debug && EnableMarshalMethods;
-
-			//var shouldSkipNonUserAssemblies = Debug && !EnableMarshalMethods && codeGenerationTarget == JavaPeerStyle.XAJavaInterop1;
+			var useMarshalMethods = !Debug && EnableMarshalMethods;
 			var shouldSkipNonUserAssemblies = !useMarshalMethods && codeGenerationTarget == JavaPeerStyle.XAJavaInterop1;
 
 			if (shouldSkipNonUserAssemblies && !ResolvedUserAssemblies.Any (a => a.ItemSpec == source.ItemSpec)) {
@@ -335,15 +264,6 @@ namespace Xamarin.Android.Tasks
 
 			return true;
 		}
-
-		// Names of assemblies which don't have Mono.Android.dll references, or are framework assemblies, but which must
-		// be scanned for Java types.
-		static readonly HashSet<string> SpecialAssemblies = new HashSet<string> (StringComparer.OrdinalIgnoreCase) {
-			"Java.Interop.dll",
-			"Mono.Android.dll",
-			"Mono.Android.Runtime.dll",
-		};
-
 
 		bool IsAndroidAssembly (ITaskItem source)
 		{
