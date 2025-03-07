@@ -38,7 +38,6 @@ stages:
       parameters:
         installTestSlicer: true
         installApkDiff: false
-        installLegacyXamarinAndroid: true
         updateMono: true
         xaSourcePath: ${{ parameters.xaSourcePath }}
         repositoryAlias: ${{ parameters.repositoryAlias }}
