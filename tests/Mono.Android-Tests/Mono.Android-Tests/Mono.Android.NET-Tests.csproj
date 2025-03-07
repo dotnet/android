@@ -206,6 +206,13 @@
     <AndroidNativeLibrary Include="..\libs\x86_64\libreuse-threads.so" />
   </ItemGroup>
 
+  <!-- Used by AppContextTests.cs -->
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="test_bool"    Value="true" />
+    <RuntimeHostConfigurationOption Include="test_integer" Value="42" />
+    <RuntimeHostConfigurationOption Include="test_string"  Value="foo" />
+  </ItemGroup>
+
   <ItemGroup Condition=" '$(AndroidPackageFormat)' != 'aab' ">
     <TestApk Include="$(OutputPath)$(_MonoAndroidTestPackage)-Signed.apk">
       <Package>$(_MonoAndroidTestPackage)</Package>
