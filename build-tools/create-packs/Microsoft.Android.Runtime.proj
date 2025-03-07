@@ -44,6 +44,11 @@ projects that use the Microsoft.Android framework in .NET 6+.
           Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\Microsoft.Android.Runtime.NativeAOT.dll"
           Condition=" '$(AndroidRuntime)' == 'NativeAOT' "
       />
+      <_AndroidRuntimePackAssemblies
+          Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\System.IO.Hashing.dll"
+          Condition=" '$(AndroidRuntime)' == 'NativeAOT' "
+          NoSymbols="true"
+      />
       <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\Mono.Android.Export.dll" />
     </ItemGroup>
 
@@ -77,7 +82,7 @@ projects that use the Microsoft.Android framework in .NET 6+.
 
     <ItemGroup>
       <_PackageFiles Include="@(_AndroidRuntimePackAssemblies)" PackagePath="$(_AndroidRuntimePackAssemblyPath)" TargetPath="$(_AndroidRuntimePackAssemblyPath)" />
-      <_PackageFiles Include="@(_AndroidRuntimePackAssemblies->'%(RelativeDir)%(Filename).pdb')" PackagePath="$(_AndroidRuntimePackAssemblyPath)" />
+      <_PackageFiles Include="@(_AndroidRuntimePackAssemblies->'%(RelativeDir)%(Filename).pdb')" PackagePath="$(_AndroidRuntimePackAssemblyPath)" Condition=" '%(_AndroidRuntimePackAssemblies.NoSymbols)' != 'true' " />
       <_PackageFiles Include="@(_AndroidRuntimePackAssets)" PackagePath="$(_AndroidRuntimePackNativePath)" TargetPath="$(_AndroidRuntimePackNativePath)" IsNative="true" />
     </ItemGroup>
   </Target>

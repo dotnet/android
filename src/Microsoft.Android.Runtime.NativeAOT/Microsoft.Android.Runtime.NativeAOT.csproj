@@ -21,6 +21,10 @@
     <ProjectReference Include="..\Mono.Android\Mono.Android.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
+  </ItemGroup>
+
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 
   <!-- Copy runtime assemblies to bin/$(Configuration)/dotnet/packs folder -->
@@ -34,6 +38,7 @@
   <Target Name="_CopyToPackDirs">
     <ItemGroup>
       <_RuntimePackFiles Include="$(OutputPath)Microsoft.Android.Runtime.NativeAOT.dll" AndroidRID="%(AndroidAbiAndRuntimeFlavor.AndroidRID)" AndroidRuntime="%(AndroidAbiAndRuntimeFlavor.AndroidRuntime)" />
+      <_RuntimePackFiles Include="$(OutputPath)System.IO.Hashing.dll" AndroidRID="%(AndroidAbiAndRuntimeFlavor.AndroidRID)" AndroidRuntime="%(AndroidAbiAndRuntimeFlavor.AndroidRuntime)" />
     </ItemGroup>
     <Message Importance="high" Text="$(TargetPath) %(AndroidAbiAndRuntimeFlavor.AndroidRID)" />
     <Copy

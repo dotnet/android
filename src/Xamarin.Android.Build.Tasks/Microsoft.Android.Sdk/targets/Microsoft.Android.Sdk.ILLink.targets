@@ -23,6 +23,7 @@ This file contains the .NET 5-specific targets to customize ILLink
         -->
       <_TrimmerDumpDependencies Condition=" '$(LinkerDumpDependencies)' == 'true' ">true</_TrimmerDumpDependencies>
       <_AndroidLinkerCustomStepAssembly>$(MSBuildThisFileDirectory)..\tools\Microsoft.Android.Sdk.ILLink.dll</_AndroidLinkerCustomStepAssembly>
+      <_SystemIOHashingAssemblyPath>$(MSBuildThisFileDirectory)..\tools\System.IO.Hashing.dll</_SystemIOHashingAssemblyPath>
       <_ProguardProjectConfiguration Condition=" '$(AndroidLinkTool)' != '' ">$(IntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
     </PropertyGroup>
     <ItemGroup>
@@ -37,6 +38,7 @@ This file contains the .NET 5-specific targets to customize ILLink
           Include="ProguardConfiguration"
           Value="$(_ProguardProjectConfiguration)"
       />
+      <_TrimmerCustomData Include="SystemIOHashingAssemblyPath" Value="$(_SystemIOHashingAssemblyPath)" />
 
       <!--
         Used for the <ILLink CustomSteps="@(_TrimmerCustomSteps)" /> value:

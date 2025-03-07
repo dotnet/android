@@ -1,9 +1,14 @@
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Runtime.Loader;
+using System.Text;
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.TypeNameMappings;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 using Mono.Linker;
 using Mono.Linker.Steps;
 
@@ -15,9 +20,18 @@ namespace Microsoft.Android.Sdk.ILLink;
 public class TypeMappingStep : BaseStep
 {
 	const string AssemblyName = "Microsoft.Android.Runtime.NativeAOT";
-	const string TypeName = "Microsoft.Android.Runtime.NativeAotTypeManager";
+	const string TypeName = "Microsoft.Android.Runtime.TypeMapping";
+	const string SystemIOHashingAssemblyPathCustomData = "SystemIOHashingAssemblyPath";
 	readonly IDictionary<string, List<TypeDefinition>> TypeMappings = new Dictionary<string, List<TypeDefinition>> (StringComparer.Ordinal);
 	AssemblyDefinition? MicrosoftAndroidRuntimeNativeAot;
+
+	delegate ulong HashMethod (ReadOnlySpan<byte> data, long seed = 0);
+	HashMethod? _hashMethod;
+
+	protected override void Process ()
+	{
+		_hashMethod = LoadHashMethod ();
+	}
 
 	protected override void ProcessAssembly (AssemblyDefinition assembly)
 	{
@@ -35,55 +49,200 @@ public class TypeMappingStep : BaseStep
 
 	protected override void EndProcess ()
 	{
+		Context.LogMessage ($"Writing {TypeMappings.Count} typemap entries");
+
 		if (MicrosoftAndroidRuntimeNativeAot is null) {
-			Context.LogMessage ($"Unable to find {AssemblyName} assembly");
-			return;
+			throw new InvalidOperationException ($"Unable to find {AssemblyName} assembly");
 		}
 
 		var module = MicrosoftAndroidRuntimeNativeAot.MainModule;
 		var type = module.GetType (TypeName);
 		if (type is null) {
-			Context.LogMessage ($"Unable to find {TypeName} type");
-			return;
+			throw new InvalidOperationException ($"Unable to find {TypeName} type");
 		}
 
-		var method = type.Methods.FirstOrDefault (m => m.Name == "InitializeTypeMappings");
-		if (method is null) {
-			Context.LogMessage ($"Unable to find {TypeName}.InitializeTypeMappings() method");
-			return;
+		// Java -> .NET mapping
+		KeyValuePair<string, List<TypeDefinition>>[] orderedJavaToDotnetMapping = TypeMappings.OrderBy (kvp => Hash (kvp.Key)).ToArray ();
+
+		var javaClassNameHashes = orderedJavaToDotnetMapping.Select (kvp => Hash (kvp.Key)).ToArray ();
+		GenerateHashes (javaClassNameHashes, methodName: "get_JavaClassNameHashes");
+
+		var types = orderedJavaToDotnetMapping.Select (kvp => SelectTypeDefinition (kvp.Key, kvp.Value));
+		GenerateGetTypeByIndex (types);
+
+		// .NET -> Java mapping
+		KeyValuePair<string, List<TypeDefinition>>[] orderedManagedToJavaMapping = TypeMappings.OrderBy (kvp => Hash (SelectTypeDefinition(kvp.Key, kvp.Value).FullName)).ToArray ();
+
+		var dotnetTypeNameHashes = orderedManagedToJavaMapping.Select (kvp => Hash (SelectTypeDefinition(kvp.Key, kvp.Value).FullName)).ToArray ();
+		GenerateHashes (dotnetTypeNameHashes, methodName: "get_TypeNameHashes");
+
+		string[] javaClassNames = orderedManagedToJavaMapping.Select (kvp => kvp.Key).ToArray ();
+		GenerateGetJavaClassNameByIndex (javaClassNames);
+
+		// Generate remap arrays
+		var typeIndexKeys = orderedJavaToDotnetMapping.Select (kvp => kvp.Key).ToArray ();
+		var javaClassNameIndexKeys = orderedManagedToJavaMapping.Select (kvp => kvp.Key).ToArray ();
+		GenerateIndexRemapping (typeIndexKeys, javaClassNameIndexKeys);
+
+		void GenerateGetTypeByIndex (IEnumerable<TypeDefinition> types)
+		{
+			var method = type.Methods.FirstOrDefault (m => m.Name == "GetTypeByIndex");
+			if (method is null) {
+				throw new InvalidOperationException ($"Unable to find {TypeName}.GetTypeByIndex() method");
+			}
+
+			var getTypeFromHandle = module.ImportReference (typeof (Type).GetMethod ("GetTypeFromHandle"));
+			if (getTypeFromHandle is null) {
+				throw new InvalidOperationException ($"Unable to find Type.GetTypeFromHandle() method");
+			}
+
+			// Clear IL in method body
+			method.Body.Instructions.Clear ();
+
+			var il = method.Body.GetILProcessor ();
+
+			var targets = new List<Instruction> ();
+			foreach (var target in types) {
+				targets.Add (il.Create (OpCodes.Ldtoken, module.ImportReference (target)));
+			}
+
+			il.Emit (OpCodes.Ldarg_0);
+			il.Emit (OpCodes.Switch, targets.ToArray ());
+
+			var defaultTarget = il.Create (OpCodes.Ldnull);
+			il.Emit (OpCodes.Br, defaultTarget);
+
+			foreach (var target in targets) {
+				il.Append (target);
+				il.Emit (OpCodes.Call, getTypeFromHandle);
+				il.Emit (OpCodes.Ret);
+			}
+
+			il.Append (defaultTarget);
+			il.Emit (OpCodes.Ret);
 		}
 
-		var field = type.Fields.FirstOrDefault (f => f.Name == "TypeMappings");
-		if (field is null) {
-			Context.LogMessage ($"Unable to find {TypeName}.TypeMappings field");
-			return;
+		void GenerateGetJavaClassNameByIndex (string[] javaClassNames)
+		{
+			var method = type.Methods.FirstOrDefault (m => m.Name == "GetJavaClassNameByIndex");
+			if (method is null) {
+				throw new InvalidOperationException ($"Unable to find {TypeName}.GetJavaClassNameByIndex() method");
+			}
+
+			// Clear IL in method body
+			method.Body.Instructions.Clear ();
+
+			var il = method.Body.GetILProcessor ();
+
+			var targets = new List<Instruction> ();
+			foreach (var name in javaClassNames) {
+				targets.Add (il.Create (OpCodes.Ldstr, name));
+			}
+
+			il.Emit (OpCodes.Ldarg_0);
+			il.Emit (OpCodes.Switch, targets.ToArray ());
+
+			var defaultTarget = il.Create (OpCodes.Ldnull);
+			il.Emit (OpCodes.Br, defaultTarget);
+
+			foreach (var target in targets) {
+				il.Append (target);
+				il.Emit (OpCodes.Ret);
+			}
+
+			il.Append (defaultTarget);
+			il.Emit (OpCodes.Ret);
 		}
 
-		// Clear IL in method body
-		method.Body.Instructions.Clear ();
+		void GenerateHashes (ulong[] hashes, string methodName)
+		{
+			// Sanity check: hashes must be unique and sorted
+			if (hashes.Length > 0) {
+				ulong previous = hashes[0];
+				for (int i = 1; i < hashes.Length; ++i) {
+					if (hashes[i] == previous) {
+						throw new InvalidOperationException ($"Duplicate hashes");
+					} else if (hashes[i] < previous) {
+						throw new InvalidOperationException ($"Hashes are not in ascending order");
+					}
 
-		Context.LogMessage ($"Writing {TypeMappings.Count} typemap entries");
-		var il = method.Body.GetILProcessor ();
-		var addMethod = module.ImportReference (typeof (IDictionary<string, Type>).GetMethod ("Add"));
-		var getTypeFromHandle = module.ImportReference (typeof (Type).GetMethod ("GetTypeFromHandle"));
-		foreach (var (javaName, list) in TypeMappings) {
-			/*
-			 * IL_0000: ldarg.0
-			 * IL_0001: ldfld class [System.Runtime]System.Collections.Generic.IDictionary`2<string, class [System.Runtime]System.Type> Microsoft.Android.Runtime.NativeAotTypeManager::TypeMappings
-			 * IL_0006: ldstr "java/lang/Object"
-			 * IL_000b: ldtoken [Mono.Android]Java.Lang.Object
-			 * IL_0010: call class [System.Runtime]System.Type [System.Runtime]System.Type::GetTypeFromHandle(valuetype [System.Runtime]System.RuntimeTypeHandle)
-			 * IL_0015: callvirt instance void class [System.Runtime]System.Collections.Generic.IDictionary`2<string, class [System.Runtime]System.Type>::Add(!0, !1)
-			 */
-			il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_0);
-			il.Emit (Mono.Cecil.Cil.OpCodes.Ldfld, field);
-			il.Emit (Mono.Cecil.Cil.OpCodes.Ldstr, javaName);
-			il.Emit (Mono.Cecil.Cil.OpCodes.Ldtoken, module.ImportReference (SelectTypeDefinition (javaName, list)));
-			il.Emit (Mono.Cecil.Cil.OpCodes.Call, getTypeFromHandle);
-			il.Emit (Mono.Cecil.Cil.OpCodes.Callvirt, addMethod);
+					previous = hashes[i];
+				}
+			}
+
+			GenerateReadOnlySpanGetter<ulong> (type, methodName, hashes, sizeof (ulong), BitConverter.GetBytes);
 		}
 
-		il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
+		void GenerateIndexRemapping (string[] typeIndexKeys, string[] javaClassNameIndexKeys)
+		{
+			System.Diagnostics.Debug.Assert(typeIndexKeys.Length == javaClassNameIndexKeys.Length);
+			int length = typeIndexKeys.Length;
+
+			var javaClassNameIndexToTypeIndex = new int[length];
+			var typeIndexToJavaClassNameIndex = new int[length];
+
+			for (int i = 0; i < length; i++) {
+				for (int j = 0; j < length; j++) {
+					if (typeIndexKeys[i] == javaClassNameIndexKeys[j]) {
+						typeIndexToJavaClassNameIndex[i] = j;
+						javaClassNameIndexToTypeIndex[j] = i;
+						break;
+					}
+				}
+			}
+
+			GenerateReadOnlySpanGetter (type, "get_JavaClassNameIndexToTypeIndex", javaClassNameIndexToTypeIndex, sizeof (int), BitConverter.GetBytes);
+			GenerateReadOnlySpanGetter (type, "get_TypeIndexToJavaClassNameIndex", typeIndexToJavaClassNameIndex, sizeof (int), BitConverter.GetBytes);
+		}
+
+		void GenerateReadOnlySpanGetter<T> (TypeDefinition type, string name, T[] data, int sizeOfT, Func<T, byte[]> getBytes)
+			where T : struct
+		{
+			// Create static array struct for `byte[#data * sizeof(T)]`
+			var arrayType = GetArrayType (type, data.Length * sizeOfT);
+
+			// Create static field to store the raw bytes
+			var bytesField = new FieldDefinition ($"s_{name}_data", FieldAttributes.Private | FieldAttributes.Static | FieldAttributes.InitOnly, arrayType);
+			bytesField.InitialValue = data.SelectMany (getBytes).ToArray ();
+			if (!bytesField.Attributes.HasFlag (FieldAttributes.HasFieldRVA)) {
+				throw new InvalidOperationException ($"Field {bytesField.Name} does not have RVA");
+			}
+
+			type.Fields.Add (bytesField);
+
+			// Generate the Hashes getter
+			var getHashes = type.Methods.FirstOrDefault (f => f.Name == name) ?? throw new InvalidOperationException ($"Unable to find {TypeName}.{name} field");
+
+			getHashes.Body.Instructions.Clear ();
+			var il = getHashes.Body.GetILProcessor ();
+
+			il.Emit (OpCodes.Ldsflda, bytesField);
+			il.Emit (OpCodes.Ldc_I4, data.Length);
+			il.Emit (OpCodes.Newobj, module.ImportReference (typeof (ReadOnlySpan<T>).GetConstructor (new[] { typeof(void*), typeof(int) })));
+
+			il.Emit (OpCodes.Ret);
+		}
+
+		TypeDefinition GetArrayType (TypeDefinition type, int size)
+		{
+			var hashesArrayName = $"HashesArray_{size}";
+			var arrayType = type.NestedTypes.FirstOrDefault (td => td.Name == hashesArrayName);
+			if (arrayType is null) {
+				arrayType = new TypeDefinition (
+					"",
+					hashesArrayName,
+					TypeAttributes.NestedPrivate | TypeAttributes.ExplicitLayout,
+					module.ImportReference (typeof (ValueType)))
+				{
+					PackingSize = 1,
+					ClassSize = size,
+				};
+
+				type.NestedTypes.Add (arrayType);
+			}
+
+			return arrayType;
+		}
 	}
 
 	TypeDefinition SelectTypeDefinition (string javaName, List<TypeDefinition> list)
@@ -101,8 +260,8 @@ public class TypeMappingStep : BaseStep
 				best = type;
 				continue;
 			}
-			// We found the `Invoker` type *before* the declared type 
- 			// Fix things up so the abstract type is first, and the `Invoker` is considered a duplicate. 
+			// We found the `Invoker` type *before* the declared type
+ 			// Fix things up so the abstract type is first, and the `Invoker` is considered a duplicate.
 			if ((type.IsAbstract || type.IsInterface) &&
 					!best.IsAbstract &&
 					!best.IsInterface &&
@@ -134,5 +293,39 @@ public class TypeMappingStep : BaseStep
 
 		foreach (TypeDefinition nested in type.NestedTypes)
 			ProcessType (assembly, nested);
+	}
+
+	ulong Hash (string value)
+	{
+		ReadOnlySpan<byte> bytes = MemoryMarshal.AsBytes(value.AsSpan ());
+		ulong hash = _hashMethod!(bytes);
+
+		if (!BitConverter.IsLittleEndian) {
+			hash = BinaryPrimitives.ReverseEndianness (hash);
+		}
+
+		return hash;
+	}
+
+	HashMethod LoadHashMethod ()
+	{
+		if (!Context.TryGetCustomData (SystemIOHashingAssemblyPathCustomData, out var assemblyPath)) {
+			throw new InvalidOperationException ($"The {nameof (TypeMappingStep)} step requires setting the '{SystemIOHashingAssemblyPathCustomData}' custom data");
+		} else if (!System.IO.File.Exists (assemblyPath)) {
+			throw new InvalidOperationException ($"The '{SystemIOHashingAssemblyPathCustomData}' custom data must point to a valid assembly path ('{assemblyPath}' does not exist)");
+		}
+
+		System.Reflection.MethodInfo? hashToUInt64MethodInfo;
+		try {
+			hashToUInt64MethodInfo = System.Reflection.Assembly.LoadFile (assemblyPath).GetType ("System.IO.Hashing.XxHash3")?.GetMethod ("HashToUInt64");
+		} catch (Exception ex) {
+			throw new InvalidOperationException ($"The '{SystemIOHashingAssemblyPathCustomData}' custom data must point to a valid assembly path ('{assemblyPath}' could not be loaded)", ex);
+		}
+
+		if (hashToUInt64MethodInfo is null) {
+			throw new InvalidOperationException ($"Unable to find System.IO.Hashing.XxHash3.HashToUInt64 method, {nameof(TypeMappingStep)} cannot proceed");
+		}
+
+		return (HashMethod)Delegate.CreateDelegate (typeof (HashMethod), hashToUInt64MethodInfo, throwOnBindFailure: true);
 	}
 }

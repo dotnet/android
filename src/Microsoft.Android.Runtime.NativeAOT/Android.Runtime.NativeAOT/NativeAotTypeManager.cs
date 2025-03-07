@@ -11,20 +11,8 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 	internal const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 	internal const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
 
-	readonly IDictionary<string, Type> TypeMappings = new Dictionary<string, Type> (StringComparer.Ordinal);
-
 	public NativeAotTypeManager ()
 	{
-		var startTicks  = global::System.Environment.TickCount;
-		InitializeTypeMappings ();
-		var endTicks    = global::System.Environment.TickCount;
-		AndroidLog.Print (AndroidLogLevel.Info, "NativeAotTypeManager", $"InitializeTypeMappings() took {endTicks - startTicks}ms");
-	}
-
-	void InitializeTypeMappings ()
-	{
-		// Should be replaced by src/Microsoft.Android.Sdk.ILLink/TypeMappingStep.cs
-		throw new InvalidOperationException ("TypeMappings should be replaced during trimming!");
 	}
 
 	[return: DynamicallyAccessedMembers (Constructors)]
@@ -139,7 +127,7 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 
 	protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 	{
-		if (TypeMappings.TryGetValue (jniSimpleReference, out var target)) {
+		if (TypeMapping.TryGetType (jniSimpleReference, out var target)) {
 			yield return target;
 		}
 		foreach (var t in base.GetTypesForSimpleReference (jniSimpleReference)) {
@@ -149,15 +137,12 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 
 	protected override IEnumerable<string> GetSimpleReferences (Type type)
 	{
-		return base.GetSimpleReferences (type)
-			.Concat (CreateSimpleReferencesEnumerator (type));
-	}
+		foreach (var r in base.GetSimpleReferences (type)) {
+			yield return r;
+		}
 
-	IEnumerable<string> CreateSimpleReferencesEnumerator (Type type)
-	{
-		foreach (var e in TypeMappings) {
-			if (e.Value == type)
-				yield return e.Key;
+		if (TypeMapping.TryGetJavaClassName (type, out var javaClassName)) {
+			yield return javaClassName;
 		}
 	}
 
