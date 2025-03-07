@@ -14,7 +14,7 @@ variables:
 - name: WindowsToolchainPdbArtifactName
   value: windows-toolchain-pdb
 - name: ApkDiffToolVersion
-  value: 0.0.15
+  value: 0.0.17
 - name: TestSlicerToolVersion
   value: 0.1.0-alpha7
 - name: BootsToolVersion
