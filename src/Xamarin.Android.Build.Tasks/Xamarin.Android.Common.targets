@@ -1485,9 +1485,9 @@ because xbuild doesn't support framework reference assemblies.
       UseDesignerAssembly="$(AndroidUseDesignerAssembly)"
       Deterministic="$(Deterministic)"
       ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)">
-    <Output TaskParameter="ScannedFiles" ItemName="_JLOScannedFiles" />
   </LinkAssembliesNoShrink>
-    <ItemGroup>
+  
+  <ItemGroup>
     <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)**" />
   </ItemGroup>
 </Target>
@@ -1515,7 +1515,6 @@ because xbuild doesn't support framework reference assemblies.
       UseDesignerAssembly="$(AndroidUseDesignerAssembly)"
       Deterministic="$(Deterministic)"
       ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)">
-    <Output TaskParameter="ScannedFiles" ItemName="_JLOScannedFiles" />
   </LinkAssembliesNoShrink>
 </Target>
 
@@ -1567,44 +1566,37 @@ because xbuild doesn't support framework reference assemblies.
     <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' != '' ">True</_HaveMultipleRIDs>
     <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' == '' ">False</_HaveMultipleRIDs>
     <_AndroidGenerateNativeAssembly Condition=" '$(_AndroidGenerateNativeAssembly)' == '' ">True</_AndroidGenerateNativeAssembly>
-    <_ShouldUseNewJCWGenerator>true</_ShouldUseNewJCWGenerator>
-    <!--<_ShouldUseNewJCWGenerator Condition=" '$(_AndroidUseMarshalMethods)' == 'true' And '$(AndroidIncludeDebugSymbols)' == 'false' ">false</_ShouldUseNewJCWGenerator>
-    <_ShouldUseNewJCWGenerator Condition=" '$(PublishTrimmed)' == 'true' ">false</_ShouldUseNewJCWGenerator>
-    <_ShouldUseNewJCWGenerator Condition=" '$(AndroidLinkMode)' != 'None' ">false</_ShouldUseNewJCWGenerator>-->
   </PropertyGroup>
   <ItemGroup>
     <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
   </ItemGroup>
 
+  <GenerateJavaCallableWrappers
+      CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
+      OutputDirectory="$(IntermediateOutputPath)android\src"
+      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
+      SupportedAbis="@(_BuildTargetAbis)">
+    <Output TaskParameter="GeneratedJavaFilesOutput" ItemName="_GeneratedJavaFiles" />
+  </GenerateJavaCallableWrappers>
+
   <GenerateJavaStubs
-      AndroidLinkMode="$(AndroidLinkMode)"
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       ResolvedAssemblies="@(_ResolvedAssemblies)"
       ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
+      RunCheckedBuild="$(_AndroidJLOCheckedBuild)"
+      GeneratedJavaFiles="@(_GeneratedJavaFiles)"
       ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
       Debug="$(AndroidIncludeDebugSymbols)"
-      PublishTrimmed="$(PublishTrimmed)"
       AndroidSdkPlatform="$(_AndroidApiLevel)"
       OutputDirectory="$(IntermediateOutputPath)android"
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
-      ShouldUseNewJCWGenerator="$(_ShouldUseNewJCWGenerator)"
       SupportedAbis="@(_BuildTargetAbis)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       IntermediateOutputDirectory="$(IntermediateOutputPath)">
-    <Output TaskParameter="GeneratedJavaFilesOutput" ItemName="_GeneratedJavaFiles" />
   </GenerateJavaStubs>
-
-  <GenerateJavaCallableWrappers
-      Condition="'$(_ShouldUseNewJCWGenerator)' == 'true' "
-      CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
-      LegacyGeneratedJavaFiles="@(_GeneratedJavaFiles)"
-      OutputDirectory="$(IntermediateOutputPath)android\src"
-      ResolvedAssemblies="@(_ResolvedAssemblies)"
-      PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
-      SupportedAbis="@(_BuildTargetAbis)">
-  </GenerateJavaCallableWrappers>
 
   <RewriteMarshalMethods
       Condition=" '$(_AndroidUseMarshalMethods)' == 'true' And '$(AndroidIncludeDebugSymbols)' == 'false' "

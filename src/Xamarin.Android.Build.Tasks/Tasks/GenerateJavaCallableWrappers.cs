@@ -10,6 +10,7 @@ using Java.Interop.Tools.JavaCallableWrappers.CallableWrapperMembers;
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using PackageNamingPolicyEnum = Java.Interop.Tools.TypeNameMappings.PackageNamingPolicy;
 
 namespace Xamarin.Android.Tasks;
@@ -36,10 +37,8 @@ public class GenerateJavaCallableWrappers : AndroidTask
 	[Required]
 	public string [] SupportedAbis { get; set; } = [];
 
-	[Required]
-	public ITaskItem [] LegacyGeneratedJavaFiles { get; set; } = [];
-
-	List<string> GeneratedJavaFiles = [];
+	[Output]
+	public ITaskItem [] GeneratedJavaFilesOutput { get; set; } = [];
 
 	public override bool RunTask ()
 	{
@@ -52,8 +51,6 @@ public class GenerateJavaCallableWrappers : AndroidTask
 
 		GenerateWrappers (singleArchAssemblies);
 
-		//EnsureSameFilesWritten ();
-
 		return !Log.HasLoggedErrors;
 	}
 
@@ -61,9 +58,9 @@ public class GenerateJavaCallableWrappers : AndroidTask
 	{
 		Directory.CreateDirectory (OutputDirectory);
 
-		var sw = Stopwatch.StartNew ();
-		// Deserialize JavaCallableWrappers
+		// Deserialize JavaCallableWrappers XML files
 		var wrappers = new List<CallableWrapperType> ();
+		var sw = Stopwatch.StartNew ();
 
 		foreach (var assembly in assemblies) {
 			var assemblyPath = assembly.ItemSpec;
@@ -77,12 +74,16 @@ public class GenerateJavaCallableWrappers : AndroidTask
 
 			wrappers.AddRange (XmlImporter.Import (wrappersPath, out var _));
 		}
-		Log.LogDebugMessage ($"Deserialized Java callable wrappers in: '{sw.ElapsedMilliseconds}ms'");
 
+		Log.LogDebugMessage ($"Deserialized {wrappers.Count} Java callable wrappers in {sw.ElapsedMilliseconds}ms");
 		sw.Restart ();
+
+		// Write JavaCallableWrappers to Java files
 		var writer_options = new CallableWrapperWriterOptions {
 			CodeGenerationTarget = MonoAndroidHelper.ParseCodeGenerationTarget (CodeGenerationTarget)
 		};
+
+		var generated_files = new List<ITaskItem> ();
 
 		foreach (var generator in wrappers) {
 			using var writer = MemoryStreamPool.Shared.CreateStreamWriter ();
@@ -90,43 +91,15 @@ public class GenerateJavaCallableWrappers : AndroidTask
 			generator.Generate (writer, writer_options);
 			writer.Flush ();
 
-
 			var path = generator.GetDestinationPath (OutputDirectory);
-
-			//if (Files.HasStreamChanged (writer.BaseStream, path)) {
-			//	Files.CopyIfStreamChanged (writer.BaseStream, path.Replace (@"\src\", @"\src2\"));
-			//	Log.LogError ($"Java callable wrapper code changed: '{path}'");
-			//	continue;
-			//}
 
 			var changed = Files.CopyIfStreamChanged (writer.BaseStream, path);
 			Log.LogDebugMessage ($"*NEW* Generated Java callable wrapper code: '{path}' (changed: {changed})");
 
-			//if (changed)
-			//	Log.LogError ($"Java callable wrapper code changed: '{path}'");
-
-			GeneratedJavaFiles.Add (path);
+			generated_files.Add (new TaskItem (path));
 		}
-		Log.LogDebugMessage ($"Wrote Java callable wrappers in: '{sw.ElapsedMilliseconds}ms'");
-	}
 
-	void EnsureSameFilesWritten ()
-	{
-		var new_generated_java_files = GeneratedJavaFiles.Select (f => f.Replace ("src2", "src")).ToList ();
-		var old_generated_java_files = LegacyGeneratedJavaFiles.Select (f => f.ItemSpec).ToList ();
-
-		var extra_new_files = new_generated_java_files.Except (old_generated_java_files).ToList ();
-
-		if (extra_new_files.Count > 0)
-			Log.LogWarning ($"The following Java files were generated but not previously generated: {string.Join (", ", extra_new_files)}");
-
-		var missing_old_files = old_generated_java_files.Except (new_generated_java_files).ToList ();
-
-		if (missing_old_files.Count > 0)
-			Log.LogWarning ($"The following Java files were previously generated but not generated this time: {string.Join (", ", missing_old_files)}");
-
-		if (extra_new_files.Count > 0 || missing_old_files.Count > 0) {
-			Log.LogError ($"New JCW gen ({new_generated_java_files.Count}) mismatch with old JCW gen ({old_generated_java_files.Count})");
-		}
+		Log.LogDebugMessage ($"Generated {generated_files.Count} Java callable wrapper files in {sw.ElapsedMilliseconds}ms");
+		GeneratedJavaFilesOutput = generated_files.ToArray ();
 	}
 }

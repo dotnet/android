@@ -143,7 +143,12 @@ class JCWGenerator
 
 			string path = generator.GetDestinationPath (outputPath);
 			var changed = Files.CopyIfStreamChanged (writer.BaseStream, path);
-			log.LogDebugMessage ($"Generated Java callable wrapper code: '{path}' (changed: {changed})");
+
+			if (changed) {
+				log.LogError ($"Generated Java callable wrapper code changed: '{path}' ");
+			} else {
+				log.LogMessage ($"Java callable wrapper code already up to date: '{path}'");
+			}
 			GeneratedJavaFiles.Add (path);
 			if (generator.HasExport && !hasExportReference) {
 				Diagnostic.Error (4210, Properties.Resources.XA4210);

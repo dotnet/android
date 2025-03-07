@@ -3,16 +3,13 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Xml.Serialization;
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.Diagnostics;
 using Java.Interop.Tools.JavaCallableWrappers;
 using Java.Interop.Tools.JavaCallableWrappers.Adapters;
-using Java.Interop.Tools.JavaCallableWrappers.CallableWrapperMembers;
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -58,22 +55,18 @@ namespace Xamarin.Android.Tasks
 
 		public string CodeGenerationTarget { get; set; } = "";
 
-		public string AndroidLinkMode { get; set; }
+		// These two properties are temporary and are used to ensure we still generate the
+		// same files as before using the new _LinkAssembliesNoShrink JLO scanning. They will be removed in the future.
+		public bool RunCheckedBuild { get; set; }
 
-		public bool PublishTrimmed { get; set; }
-
-		public bool ShouldUseNewJCWGenerator { get; set; }
+		public ITaskItem [] GeneratedJavaFiles { get; set; } = [];
 
 		JavaPeerStyle codeGenerationTarget;
 
-		[Output]
-		public ITaskItem [] GeneratedJavaFilesOutput { get; set; }
-
-		public List<ITaskItem> ScannedJLOAssemblies { get; set; } = [];
+		//[Output]
+		//public ITaskItem [] GeneratedJavaFilesOutput { get; set; }
 
 		internal const string AndroidSkipJavaStubGeneration = "AndroidSkipJavaStubGeneration";
-
-		public bool ShouldGenerateNewJavaCallableWrappers => false;// !PublishTrimmed && string.Compare (AndroidLinkMode, "None", true) == 0 && !(!Debug && EnableMarshalMethods);
 
 		public override bool RunTask ()
 		{
@@ -164,13 +157,6 @@ namespace Xamarin.Android.Tasks
 			var firstArch = allAssembliesPerArch.First ().Key;
 			var generateSucceeded = true;
 
-			//if (ShouldGenerateNewJavaCallableWrappers) {
-				var sw = Stopwatch.StartNew ();
-				//GenerateJavaCallableWrappers (allAssembliesPerArch.First ().Value.Values.ToList ());
-				GenerateJavaCallableWrappers (ResolvedAssemblies.ToList ());
-				Log.LogDebugMessage ($"Generated NEW Java callable wrappers in: '{sw.ElapsedMilliseconds}ms'");
-			//}
-
 			// Generate Java sources in parallel
 			Parallel.ForEach (allAssembliesPerArch, (kvp) => {
 				AndroidTargetArch arch = kvp.Key;
@@ -194,8 +180,6 @@ namespace Xamarin.Android.Tasks
 				nativeCodeGenStates.TryAdd (arch, state);
 			});
 
-			CompareScannedAssemblies ();
-
 			// If we hit an error generating the Java code, we should bail out now
 			if (!generateSucceeded)
 				return;
@@ -205,66 +189,12 @@ namespace Xamarin.Android.Tasks
 			}
 			JCWGenerator.EnsureAllArchitecturesAreIdentical (Log, nativeCodeGenStates);
 
+			if (RunCheckedBuild)
+				CompareScannedAssemblies ();
+
 			// Save NativeCodeGenState for later tasks
 			Log.LogDebugMessage ($"Saving {nameof (NativeCodeGenState)} to {nameof (NativeCodeGenStateRegisterTaskKey)}");
 			BuildEngine4.RegisterTaskObjectAssemblyLocal (MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (NativeCodeGenStateRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory), nativeCodeGenStates, RegisteredTaskObjectLifetime.Build);
-		}
-
-		public List<string> GeneratedJavaFiles { get; } = new List<string> ();
-
-		bool GenerateJavaCallableWrappers (List<ITaskItem> assemblies)
-		{
-			Directory.CreateDirectory (Path.Combine (OutputDirectory, "src"));
-
-			var sw = Stopwatch.StartNew ();
-			// Deserialize JavaCallableWrappers
-			var wrappers = new List<CallableWrapperType> ();
-
-			foreach (var assembly in assemblies) {
-				var assemblyPath = assembly.ItemSpec;
-				var assemblyName = Path.GetFileNameWithoutExtension (assemblyPath);
-				var wrappersPath = Path.Combine (Path.GetDirectoryName (assemblyPath), $"{assemblyName}.jlo.xml");
-
-				if (!File.Exists (wrappersPath)) {
-					Log.LogError ($"'{wrappersPath}' not found.");
-					return false;
-				}
-
-				wrappers.AddRange (XmlImporter.Import (wrappersPath, out var wasScanned));
-
-				if (wasScanned) {
-					Log.LogDebugMessage ($"Adding scanned assembly '{assemblyPath}' for Java callable wrappers");
-					ScannedJLOAssemblies.Add (assembly);
-				}
-			}
-			Log.LogDebugMessage ($"Deserialized Java callable wrappers in: '{sw.ElapsedMilliseconds}ms'");
-
-			return true;
-
-			sw.Restart ();
-			foreach (var generator in wrappers) {
-				using var writer = MemoryStreamPool.Shared.CreateStreamWriter ();
-
-				var writer_options = new CallableWrapperWriterOptions {
-					CodeGenerationTarget = codeGenerationTarget
-				};
-
-				generator.Generate (writer, writer_options);
-				writer.Flush ();
-
-
-				var path = generator.GetDestinationPath (Path.Combine (OutputDirectory, "src"));
-				var changed = Files.CopyIfStreamChanged (writer.BaseStream, path);
-				Log.LogDebugMessage ($"*NEW* Generated Java callable wrapper code: '{path}' (changed: {changed})");
-
-				//if (changed)
-				//	Log.LogError ($"Java callable wrapper code changed: '{path}'");
-
-				GeneratedJavaFiles.Add (path);
-			}
-			Log.LogDebugMessage ($"Wrote Java callable wrappers in: '{sw.ElapsedMilliseconds}ms'");
-
-			return true;
 		}
 
 		internal static Dictionary<string, ITaskItem> MaybeGetArchAssemblies (Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> dict, AndroidTargetArch arch)
@@ -287,29 +217,10 @@ namespace Xamarin.Android.Tasks
 			};
 			bool success;
 
-			if (generateJavaCode) {
+			if (generateJavaCode && RunCheckedBuild) {
 				success = jcwGenerator.GenerateAndClassify (AndroidSdkPlatform, outputPath: Path.Combine (OutputDirectory, "src"), ApplicationJavaClass);
 
-				GeneratedJavaFilesOutput = jcwGenerator.GeneratedJavaFiles.Select (f => new TaskItem (f)).ToArray ();
-				//if (ShouldGenerateNewJavaCallableWrappers) {
-				//	var new_generated_java_files = GeneratedJavaFiles.Select (f => f.Replace ("src2", "src")).ToList ();
-				//	var old_generated_java_files = jcwGenerator.GeneratedJavaFiles;
-
-				//	var extra_new_files = new_generated_java_files.Except (old_generated_java_files).ToList ();
-
-				//	if (extra_new_files.Count > 0)
-				//		Log.LogWarning ($"The following Java files were generated but not previously generated: {string.Join (", ", extra_new_files)}");
-
-				//	var missing_old_files = old_generated_java_files.Except (new_generated_java_files).ToList ();
-
-				//	if (missing_old_files.Count > 0)
-				//		Log.LogWarning ($"The following Java files were previously generated but not generated this time: {string.Join (", ", missing_old_files)}");
-
-				//	if (extra_new_files.Count > 0 || missing_old_files.Count > 0) {
-				//		Log.LogError ($"New JCW gen ({new_generated_java_files.Count}) mismatch with old JCW gen ({old_generated_java_files.Count})");
-				//		return (false, null);
-				//	}
-				//}
+				generatedJavaFiles = jcwGenerator.GeneratedJavaFiles;
 			} else {
 				success = jcwGenerator.Classify (AndroidSdkPlatform);
 			}
@@ -320,8 +231,6 @@ namespace Xamarin.Android.Tasks
 
 			return (true, new NativeCodeGenState (arch, tdCache, resolver, allJavaTypes, javaTypesForJCW, jcwGenerator.Classifier));
 		}
-
-		ConcurrentDictionary<string, ITaskItem> scannedAssemblies = new ();
 
 		(List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW) ScanForJavaTypes (XAAssemblyResolver res, TypeDefinitionCache cache, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods)
 		{
@@ -356,33 +265,77 @@ namespace Xamarin.Android.Tasks
 			return (allJavaTypes, javaTypesForJCW);
 		}
 
+		ConcurrentDictionary<string, ITaskItem> scannedAssemblies = new ();
+		List<string> generatedJavaFiles = new ();
+
 		void CompareScannedAssemblies ()
 		{
-			var old_scanned_assemblies = scannedAssemblies.Values.Select (a => a.ItemSpec).ToList ();
-			var new_scanned_assemblies = ScannedJLOAssemblies.Select (a => a.ItemSpec).ToList ();
+			// First we want to ensure that we scanned the same set of assemblies, as it can
+			// be tricky to ensure we found all the assemblies we need to scan
+			var linker_scanned_assemblies = new List<string> ();
 
-			if (old_scanned_assemblies.Count != new_scanned_assemblies.Count)
-				Log.LogError ($"Number of assemblies scanned for Java types changed from {old_scanned_assemblies.Count} to {new_scanned_assemblies.Count}");
+			// Find every assembly that was scanned by the linker by looking at the .jlo.xml files
+			foreach (var assembly in ResolvedAssemblies) {
+				var assemblyPath = assembly.ItemSpec;
+				var assemblyName = Path.GetFileNameWithoutExtension (assemblyPath);
+				var wrappersPath = Path.Combine (Path.GetDirectoryName (assemblyPath), $"{assemblyName}.jlo.xml");
 
-			// Log warnings for assemblies that were scanned but not found in the new set
-			var missingAssemblies = old_scanned_assemblies.Except (new_scanned_assemblies).ToList ();
+				if (!File.Exists (wrappersPath))
+					Log.LogError ($"'{wrappersPath}' not found.");
+
+				XmlImporter.Import (wrappersPath, out var wasScanned);
+
+				if (wasScanned) {
+					Log.LogDebugMessage ($"CompareScannedAssemblies: Found scanned assembly .jlo.xml '{assemblyPath}'");
+					linker_scanned_assemblies.Add (assembly.ItemSpec);
+				}
+			}
+
+			// These are the assemblies that were scanned by this task (GenerateJavaStubs)
+			var legacy_scanned_assemblies = scannedAssemblies.Values.Select (a => a.ItemSpec).ToList ();
+
+			CompareLists ("Scanned assemblies", legacy_scanned_assemblies, linker_scanned_assemblies);
+
+			// Next we want to ensure that we generated the same .java files
+			var linker_generated_files = GeneratedJavaFiles.Select (a => a.ItemSpec).ToList ();
+			var legacy_generated_files = generatedJavaFiles;
+
+			CompareLists ("Generated Java files", legacy_generated_files, linker_generated_files);
+		}
+
+		void CompareLists (string name, List<string> list1, List<string> list2)
+		{
+			var had_differences = false;
+
+			Log.LogDebugMessage ($"Comparing {name} lists");
+
+			if (list1.Count != list2.Count) {
+				had_differences = true;
+				Log.LogError ($"Number of assemblies scanned for Java types changed from {list1.Count} to {list2.Count}");
+			}
+
+			var missingAssemblies = list1.Except (list2).ToList ();
+
 			if (missingAssemblies.Count > 0) {
+				had_differences = true;
 				Log.LogDebugMessage ($"The following assemblies are missing from the new set:");
 
-				foreach (var assembly in missingAssemblies) {
+				foreach (var assembly in missingAssemblies)
 					Log.LogDebugMessage ($"  {assembly}");
-				}
 			}
 
-			// Log warnings for assemblies that were found in the new set but not in the old set
-			var extraAssemblies = new_scanned_assemblies.Except (old_scanned_assemblies).ToList ();
+			var extraAssemblies = list2.Except (list1).ToList ();
 
 			if (extraAssemblies.Count > 0) {
+				had_differences = true;
 				Log.LogDebugMessage ($"The following assemblies were found in the new set but not in the old set:");
-				foreach (var assembly in extraAssemblies) {
+
+				foreach (var assembly in extraAssemblies)
 					Log.LogDebugMessage ($"  {assembly}");
-				}
 			}
+
+			if (!had_differences)
+				Log.LogDebugMessage ($"No differences");
 		}
 	}
 }
