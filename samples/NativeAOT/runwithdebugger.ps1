@@ -73,6 +73,8 @@ Write-Host "Found process ID: $APP_PID"
 adb forward --remove tcp:8700 2>$null
 adb forward tcp:8700 jdwp:$APP_PID
 
+$null = New-Item -ItemType File -Path "$SCRIPT_DIR\obj\Debug\lldbattach" -Value "process attach --pid $APP_PID" -Force
+
 # Connect with JDB and send quit command
 #$null = New-Item -ItemType File -Path "$env:TEMP\jdb_commands.txt" -Value "quit" -Force
 #Get-Content "$env:TEMP\jdb_commands.txt" | jdb -attach localhost:8700
