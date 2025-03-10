@@ -77,6 +77,7 @@ const std::vector<std::string> internal_pinvoke_names = {
 	"recv_uninterrupted",
 	"send_uninterrupted",
 	"set_world_accessable",
+	"xamarin_app_init",
 };
 
 const std::vector<std::string> dotnet_pinvoke_names = {

@@ -11,7 +11,7 @@
 namespace {
 #if INTPTR_MAX == INT64_MAX
 	//64-bit internal p/invoke table
-	std::array<PinvokeEntry, 45> internal_pinvokes {{
+	std::array<PinvokeEntry, 46> internal_pinvokes {{
 		{0xa50ce5de13bf8b5, "_monodroid_timezone_get_default_id", reinterpret_cast<void*>(&_monodroid_timezone_get_default_id)},
 		{0x19055d65edfd668e, "_monodroid_get_network_interface_up_state", reinterpret_cast<void*>(&_monodroid_get_network_interface_up_state)},
 		{0x2b3b0ca1d14076da, "monodroid_get_dylib", reinterpret_cast<void*>(&monodroid_get_dylib)},
@@ -35,6 +35,7 @@ namespace {
 		{0xae3df96dda0143bd, "_monodroid_gref_log", reinterpret_cast<void*>(&_monodroid_gref_log)},
 		{0xb6222d90af401865, "_monodroid_weak_gref_get", reinterpret_cast<void*>(&_monodroid_weak_gref_get)},
 		{0xb8306f71b963cd3d, "monodroid_log", reinterpret_cast<void*>(&monodroid_log)},
+		{0xb9bae9c43fb05089, "xamarin_app_init", reinterpret_cast<void*>(&xamarin_app_init)},
 		{0xbc90bafd5ff9c99e, "_monodroid_get_dns_servers", reinterpret_cast<void*>(&_monodroid_get_dns_servers)},
 		{0xbe5a300beec69c35, "monodroid_get_system_property", reinterpret_cast<void*>(&monodroid_get_system_property)},
 		{0xbfbb924fbe190616, "monodroid_dylib_mono_free", reinterpret_cast<void*>(&monodroid_dylib_mono_free)},
@@ -549,7 +550,7 @@ constexpr hash_t system_security_cryptography_native_android_library_hash = 0x18
 constexpr hash_t system_globalization_native_library_hash = 0x28b5c8fca080abd5;
 #else
 	//32-bit internal p/invoke table
-	std::array<PinvokeEntry, 45> internal_pinvokes {{
+	std::array<PinvokeEntry, 46> internal_pinvokes {{
 		{0xb7a486a, "monodroid_TypeManager_get_java_class_name", reinterpret_cast<void*>(&monodroid_TypeManager_get_java_class_name)},
 		{0xf562bd9, "monodroid_embedded_assemblies_set_assemblies_prefix", reinterpret_cast<void*>(&monodroid_embedded_assemblies_set_assemblies_prefix)},
 		{0x227a2636, "monodroid_get_namespaced_system_property", reinterpret_cast<void*>(&monodroid_get_namespaced_system_property)},
@@ -588,6 +589,7 @@ constexpr hash_t system_globalization_native_library_hash = 0x28b5c8fca080abd5;
 		{0xe4c3ee19, "monodroid_log_traces", reinterpret_cast<void*>(&monodroid_log_traces)},
 		{0xe7e77ca5, "_monodroid_gref_log", reinterpret_cast<void*>(&_monodroid_gref_log)},
 		{0xea2184e3, "_monodroid_gc_wait_for_bridge_processing", reinterpret_cast<void*>(&_monodroid_gc_wait_for_bridge_processing)},
+		{0xeac7f6e3, "xamarin_app_init", reinterpret_cast<void*>(&xamarin_app_init)},
 		{0xf4079b4a, "monodroid_dylib_mono_new", reinterpret_cast<void*>(&monodroid_dylib_mono_new)},
 		{0xf5a0ac55, "set_world_accessable", reinterpret_cast<void*>(&set_world_accessable)},
 		{0xf61941c3, "recv_uninterrupted", reinterpret_cast<void*>(&recv_uninterrupted)},
@@ -1087,6 +1089,6 @@ constexpr hash_t system_security_cryptography_native_android_library_hash = 0x93
 constexpr hash_t system_globalization_native_library_hash = 0xa66f1e5a;
 #endif
 
-constexpr size_t internal_pinvokes_count = 45;
+constexpr size_t internal_pinvokes_count = 46;
 constexpr size_t dotnet_pinvokes_count = 477;
 } // end of anonymous namespace

@@ -134,7 +134,7 @@ namespace Android.Runtime
 			SetSynchronizationContext ();
 		}
 
-		[DllImport ("xamarin-app")]
+		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		static extern unsafe void xamarin_app_init (IntPtr env, delegate* unmanaged <int, int, int, IntPtr*, void> get_function_pointer);
 
 		static void SetSynchronizationContext () =>

@@ -5,6 +5,10 @@
 
 using namespace xamarin::android;
 
+#if defined (DEBUG)
+void xamarin_app_init ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] get_function_pointer_fn fn) noexcept {}
+#endif
+
 #include "pinvoke-tables.include"
 
 [[gnu::flatten]]
