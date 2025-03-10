@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Java.Interop.Tools.Cecil;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
@@ -79,6 +81,12 @@ namespace Xamarin.Android.Tasks
 					string fullNativeCallbackName = method.NativeCallback.FullName;
 					if (processedMethods.TryGetValue (fullNativeCallbackName, out MethodDefinition nativeCallbackWrapper)) {
 						method.NativeCallbackWrapper = nativeCallbackWrapper;
+						continue;
+					}
+
+					if (method.NativeCallback.GetCustomAttributes ("System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute").Any (ca => ca != null)) {
+						log.LogDebugMessage ($"[{targetArch}] Method '{method.NativeCallback.FullName}' does not need a wrapper, it already has UnmanagedCallersOnlyAttribute");
+						method.NativeCallbackWrapper = method.NativeCallback;
 						continue;
 					}
 
