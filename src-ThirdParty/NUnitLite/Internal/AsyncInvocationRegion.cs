@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace NUnit.Framework.Internal
 {
@@ -99,17 +100,14 @@ at wrapping a non-async method invocation in an async region was done");
 
         private class AsyncTaskInvocationRegion : AsyncInvocationRegion
         {
-            private const string TaskWaitMethod = "Wait";
-            private const string TaskResultProperty = "Result";
-            private const string SystemAggregateException = "System.AggregateException";
-            private const string InnerExceptionsProperty = "InnerExceptions";
-            private const BindingFlags TaskResultPropertyBindingFlags = BindingFlags.GetProperty | BindingFlags.Instance | BindingFlags.Public;
-
             public override object WaitForPendingOperationsToComplete(object invocationResult)
             {
                 try
                 {
-                    invocationResult.GetType().GetMethod(TaskWaitMethod, new Type[0]).Invoke(invocationResult, null);
+                    if (invocationResult is Task task)
+                    {
+                        task.Wait();
+                    }
                 }
                 catch (TargetInvocationException e)
                 {
@@ -118,18 +116,14 @@ at wrapping a non-async method invocation in an async region was done");
                     PreserveStackTrace(innerExceptions[0]);
                     throw innerExceptions[0];
                 }
-
-                PropertyInfo taskResultProperty = invocationResult.GetType().GetProperty(TaskResultProperty, TaskResultPropertyBindingFlags);
-
-                return taskResultProperty != null ? taskResultProperty.GetValue(invocationResult, null) : invocationResult;
+                return invocationResult;
             }
 
             private static IList<Exception> GetAllExceptions(Exception exception)
             {
-                if (SystemAggregateException.Equals(exception.GetType().FullName))
-                    return (IList<Exception>)exception.GetType().GetProperty(InnerExceptionsProperty).GetValue(exception, null);
-
-                return new Exception[] { exception };
+                if (exception is AggregateException ae)
+                    return ae.InnerExceptions;
+                return [ exception ];
             }
         }
     }
