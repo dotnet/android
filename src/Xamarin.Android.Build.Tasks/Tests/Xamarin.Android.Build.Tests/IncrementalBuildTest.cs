@@ -311,7 +311,7 @@ public class TestMe {
 				IsRelease = true,
 				ProjectGuid = Guid.NewGuid ().ToString (),
 				OtherBuildItems = {
-					new BuildItem (AndroidBuildActions.EmbeddedNativeLibrary, "libs/armeabi-v7a/libfoo.so") {
+					new BuildItem (AndroidBuildActions.EmbeddedNativeLibrary, "libs/arm64-v8a/libfoo.so") {
 						TextContent = () => string.Empty,
 						Encoding = Encoding.ASCII,
 					}
@@ -332,14 +332,14 @@ namespace Lib
 					},
 				},
 			};
-			var so = lib.OtherBuildItems.First (x => x.Include () == "libs/armeabi-v7a/libfoo.so");
+			var so = lib.OtherBuildItems.First (x => x.Include () == "libs/arm64-v8a/libfoo.so");
 
 			var lib2 = new XamarinAndroidLibraryProject () {
 				ProjectName = "Lib2",
 				ProjectGuid = Guid.NewGuid ().ToString (),
 				IsRelease = true,
 				OtherBuildItems = {
-					new BuildItem (AndroidBuildActions.EmbeddedNativeLibrary, "libs/armeabi-v7a/libfoo2.so") {
+					new BuildItem (AndroidBuildActions.EmbeddedNativeLibrary, "libs/arm64-v8a/libfoo2.so") {
 						TextContent = () => string.Empty,
 						Encoding = Encoding.ASCII,
 					},
@@ -378,12 +378,12 @@ namespace Lib2
 							new BuildItem.ProjectReference (@"..\Lib2\Lib2.csproj", "Lib2", lib2.ProjectGuid),
 						}
 					};
-					app.SetAndroidSupportedAbis ("armeabi-v7a");
+					app.SetAndroidSupportedAbis ("arm64-v8a");
 					using (var builder = CreateApkBuilder (Path.Combine (path, "App"))) {
 						Assert.IsTrue (builder.Build (app), "app 1st. build failed");
 
 						var libfoo = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + "-Signed.apk"),
-							"lib/armeabi-v7a/libfoo.so");
+							"lib/arm64-v8a/libfoo.so");
 						Assert.IsNotNull (libfoo, "libfoo.so should exist in the .apk");
 
 						so.TextContent = () => "newValue";
@@ -395,10 +395,10 @@ namespace Lib2
 						Assert.IsNotNull (libfoo, "libfoo.so should exist in the .apk");
 
 						libfoo = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + "-Signed.apk"),
-							"lib/armeabi-v7a/libfoo.so");
+							"lib/arm64-v8a/libfoo.so");
 						Assert.AreEqual (so.TextContent ().Length, libfoo.Length, "compressed size mismatch");
 						var libfoo2 = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + "-Signed.apk"),
-							"lib/armeabi-v7a/libfoo2.so");
+							"lib/arm64-v8a/libfoo2.so");
 						Assert.IsNotNull (libfoo2, "libfoo2.so should exist in the .apk");
 						Directory.Delete (path, recursive: true);
 					}
