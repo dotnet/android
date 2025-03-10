@@ -46,4 +46,22 @@
       <AndroidRID>android-x64</AndroidRID>
     </AndroidSupportedTargetJitAbi>
   </ItemGroup>
+
+  <ItemGroup>
+    <AndroidSupportedOtherRuntimeTargetJitAbi
+        Include="arm64-v8a"
+        Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':arm64-v8a:')) ">
+      <ApiLevel>$(AndroidNdkApiLevel_ArmV8a)</ApiLevel>
+      <ApiLevelNET>$(AndroidNdkApiLevel_Arm64)</ApiLevelNET>
+      <AndroidRID>android-arm64</AndroidRID>
+    </AndroidSupportedOtherRuntimeTargetJitAbi>
+
+    <AndroidSupportedOtherRuntimeTargetJitAbi
+        Include="x86_64"
+        Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86_64:')) ">
+      <ApiLevel>$(AndroidNdkApiLevel_X86_64)</ApiLevel>
+      <ApiLevelNET>$(AndroidNdkApiLevel_X64)</ApiLevelNET>
+      <AndroidRID>android-x64</AndroidRID>
+    </AndroidSupportedOtherRuntimeTargetJitAbi>
+  </ItemGroup>
 </Project>
