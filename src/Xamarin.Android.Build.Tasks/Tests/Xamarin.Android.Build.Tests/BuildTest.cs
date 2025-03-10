@@ -28,6 +28,10 @@ namespace Xamarin.Android.Build.Tests
 		[NonParallelizable] // On MacOS, parallel /restore causes issues
 		public void DotNetBuild (string runtimeIdentifiers, bool isRelease, bool aot, bool usesAssemblyStore)
 		{
+			if (TargetRuntimeHelper.UseCoreCLR && !TargetRuntimeHelper.CoreClrSupportsAllRIDs (runtimeIdentifiers)) {
+				Assert.Ignore ($"One or more RIDs aren't supported by CoreCLR: '{runtimeIdentifiers}'");
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
@@ -225,6 +229,10 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (MonoComponentMaskChecks))]
 		public void CheckMonoComponentsMask (bool enableProfiler, bool useInterpreter, bool debugBuild, uint expectedMask)
 		{
+			if (TargetRuntimeHelper.UseCoreCLR) {
+				Assert.Ignore ("CoreCLR does not support MonoVM components");
+			}
+
 			var proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = !debugBuild,
 			};
@@ -267,13 +275,17 @@ namespace Xamarin.Android.Build.Tests
 		[NonParallelizable]
 		public void CheckAssemblyCounts (bool isRelease, bool aot)
 		{
+			if (aot && TargetRuntimeHelper.UseCoreCLR) {
+				Assert.Ignore ("CoreCLR doesn't support MonoVM-style AOT");
+			}
+
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 				EmbedAssembliesIntoApk = true,
 				AotAssemblies = aot,
 			};
 
-			var abis = new [] { "armeabi-v7a", "x86" };
+			var abis = new [] { "arm64-v8a", "x86_64" };
 			proj.SetRuntimeIdentifiers (abis);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidUseAssemblyStore", "True");
 
@@ -1269,7 +1281,7 @@ namespace UnnamedProject
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("UseInterpreter", "true");
 			proj.SetProperty ("AndroidPackageNamingPolicy", packageNamingPolicy);
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+			proj.SetAndroidSupportedAbis ("arm64-v8a", "x86_64");
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var environment = b.Output.GetIntermediaryPath (Path.Combine ("__environment__.txt"));

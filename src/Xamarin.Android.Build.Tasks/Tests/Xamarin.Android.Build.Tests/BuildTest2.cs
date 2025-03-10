@@ -109,9 +109,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void BasicApplicationOtherRuntime ([Values (true, false)] bool isRelease)
 		{
-			// This test would fail, as it requires **our** updated runtime pack, which isn't currently created
-			// It is created in `src/native/native-clr.csproj` which isn't built atm.
-			Assert.Ignore ("CoreCLR support isn't fully enabled yet. This test will be enabled in a follow-up PR.");
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				// Add locally downloaded CoreCLR packs
@@ -440,6 +437,13 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
+			if (totalWarnings != null && TargetRuntimeHelper.UseCoreCLR && TargetRuntimeHelper.CoreClrIsExperimental) {
+				// Experimental runtimes will issue warning XA1040
+				totalWarnings++;
+				var newCodes = new List<string> (codes);
+				newCodes.Add ("XA1040");
+				codes = newCodes.ToArray ();
+			}
 			proj.SetRuntimeIdentifier ("arm64-v8a");
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("//${FIELDS}", "Type type = typeof (List<>);")

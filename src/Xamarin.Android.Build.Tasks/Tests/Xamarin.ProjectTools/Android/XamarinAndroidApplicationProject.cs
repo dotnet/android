@@ -69,6 +69,12 @@ namespace Xamarin.ProjectTools
 			AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\Strings.xml") { TextContent = () => StringsXml.Replace ("${PROJECT_NAME}", ProjectName) });
 
 			Sources.Add (new BuildItem.Source (() => "MainActivity" + Language.DefaultExtension) { TextContent = () => ProcessSourceTemplate (MainActivity ?? DefaultMainActivity) });
+
+			// This is a quick hack to get all the tests executing in the CoreCLR context to work only for the, currently limited,
+			// subset of ABIs supported by CoreCLR without having to modify each test individually. Eventually it shouldn't be necessary.
+			if (TargetRuntimeHelper.UseCoreCLR) {
+				this.SetRuntimeIdentifiers (TargetRuntimeHelper.CoreClrSupportedAbis);
+			}
 		}
 
 		// it is exposed as public because we may want to slightly modify this.
@@ -178,6 +184,11 @@ namespace Xamarin.ProjectTools
 			IsRelease = value;
 			PublishAot = value;
 			SetProperty ("AndroidNdkDirectory", androidNdkPath);
+
+			// CoreCLR tests won't work with PublishAot == true
+			if (value) {
+				RemoveProperty ("UseMonoRuntime");
+			}
 
 			// NuGet feed needed as Microsoft.Android.Runtime.NativeAOT packs not installed in workload by default
 			var source = Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned");

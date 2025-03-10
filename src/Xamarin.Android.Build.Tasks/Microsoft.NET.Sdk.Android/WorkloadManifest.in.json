@@ -11,6 +11,8 @@
         "Microsoft.Android.Runtime.Mono.35.android-arm64",
         "Microsoft.Android.Runtime.Mono.35.android-x86",
         "Microsoft.Android.Runtime.Mono.35.android-x64",
+        "Microsoft.Android.Runtime.CoreCLR.35.android-arm64",
+        "Microsoft.Android.Runtime.CoreCLR.35.android-x64",
         "Microsoft.Android.Templates"
       ],
       "platforms": [ "win-x64", "win-arm64", "linux-x64", "linux-arm64", "osx-x64", "osx-arm64" ],
@@ -38,7 +40,9 @@
         "Microsoft.Android.Runtime.Mono.36.android-arm",
         "Microsoft.Android.Runtime.Mono.36.android-arm64",
         "Microsoft.Android.Runtime.Mono.36.android-x86",
-        "Microsoft.Android.Runtime.Mono.36.android-x64"
+        "Microsoft.Android.Runtime.Mono.36.android-x64",
+        "Microsoft.Android.Runtime.CoreCLR.36.android-arm64",
+        "Microsoft.Android.Runtime.CoreCLR.36.android-x64"
       ],
       "platforms": [ "win-x64", "win-arm64", "linux-x64", "linux-arm64", "osx-x64", "osx-arm64" ],
       "extends" : [ "android" ]
@@ -104,15 +108,7 @@
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.Runtime.CoreCLR.35.android-arm": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
     "Microsoft.Android.Runtime.CoreCLR.35.android-arm64": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.CoreCLR.35.android-x86": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
@@ -156,15 +152,7 @@
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.Runtime.CoreCLR.36.android-arm": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
     "Microsoft.Android.Runtime.CoreCLR.36.android-arm64": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.CoreCLR.36.android-x86": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
