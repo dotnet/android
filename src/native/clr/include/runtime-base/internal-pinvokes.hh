@@ -3,6 +3,7 @@
 #include <jni.h>
 
 #include "logger.hh"
+#include "xamarin-app.hh"
 
 int _monodroid_gref_get () noexcept;
 void _monodroid_gref_log (const char *message) noexcept;
