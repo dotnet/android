@@ -96,6 +96,7 @@ _ResolveAssemblies MSBuild target.
         ;ResolveAssemblyReferencesFindRelatedSatellites=false
         ;SkipCompilerExecution=true
         ;_OuterIntermediateAssembly=@(IntermediateAssembly)
+        ;_OuterIntermediateSatelliteAssembliesWithTargetPath=@(IntermediateSatelliteAssembliesWithTargetPath)
         ;_OuterOutputPath=$(OutputPath)
         ;_OuterIntermediateOutputPath=$(IntermediateOutputPath)
         ;_OuterCustomViewMapFile=$(_CustomViewMapFile)
