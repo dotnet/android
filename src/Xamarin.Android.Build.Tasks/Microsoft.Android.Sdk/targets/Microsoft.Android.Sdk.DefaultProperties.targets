@@ -45,6 +45,9 @@
 
     <!-- Mono components -->
     <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == ''">false</AndroidEnableProfiler>
+
+    <!-- External property overrides -->
+    <_AndroidJdkDownloadVersion Condition=" '$(_AndroidJdkDownloadVersion)' == '' ">17.0.14</_AndroidJdkDownloadVersion>
   </PropertyGroup>
 
   <!--  User-facing configuration-specific defaults -->
