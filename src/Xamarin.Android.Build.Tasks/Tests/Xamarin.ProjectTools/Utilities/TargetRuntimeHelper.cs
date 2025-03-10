@@ -33,14 +33,30 @@ public class TargetRuntimeHelper
 	public static bool CoreClrSupportsAbi (string abiName) => coreClrAbis.Contains (abiName);
 
 	/// <summary>
-	/// <param ref="runtimeIdentifiers" /> contains a list of semicolon-separated RIDs (a single RID without
-	/// semicolons is also fine) which will be checked against the list of RIDs supported by CoreCLR. If even
+	/// <paramref name="runtimeIdentifiers" /> contains a list of semicolon-separated RIDs (a single RID without
+	/// semicolon is also fine) which will be checked against the list of RIDs supported by CoreCLR. If even
 	/// a single RID isn't supported, `false` is returned.
 	/// </summary>
 	public static bool CoreClrSupportsAllRIDs (string runtimeIdentifiers)
 	{
 		foreach (string rid in runtimeIdentifiers.Split (';', StringSplitOptions.RemoveEmptyEntries)) {
 			if (!CoreClrSupportsAbi (MonoAndroidHelper.RidToAbi (rid))) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/// <summary>
+	/// <paramref name="abis" /> contains a list of semicolon-separated ABIs (a single ABI without
+	/// semicolon is also fine) which will be checked against the list of ABIs supported by CoreCLR. If even
+	/// a single ABI isn't supported, `false` is returned.
+	/// </summary>
+	public static bool CoreClrSupportsAllABIs (string abis)
+	{
+		foreach (string abi in abis.Split (';', StringSplitOptions.RemoveEmptyEntries)) {
+			if (!CoreClrSupportsAbi (abi)) {
 				return false;
 			}
 		}

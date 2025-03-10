@@ -475,6 +475,10 @@ namespace Bug12935
 		[TestCaseSource(nameof (VersionCodeTestSource))]
 		public void VersionCodeTests (bool seperateApk, string abis, string versionCode, bool useLegacy, string versionCodePattern, string versionCodeProperties, bool shouldBuild, string expectedVersionCode)
 		{
+			if (TargetRuntimeHelper.UseCoreCLR && !TargetRuntimeHelper.CoreClrSupportsAllABIs (abis)) {
+				Assert.Ignore ($"One or more ABIs aren't supported by CoreCLR: '{abis}'");
+			}
+
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				MinSdkVersion = "21",
