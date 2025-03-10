@@ -414,10 +414,14 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyPass", Uri.EscapeDataString (pass));
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningStorePass", Uri.EscapeDataString (pass));
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, perAbiApk);
-			if (perAbiApk) {
+
+			bool thirtyTwoBitAbisSupported =
+				!TargetRuntimeHelper.UseCoreCLR ||
+				(TargetRuntimeHelper.CoreClrSupportsAbi ("armeabi-v7a") && TargetRuntimeHelper.CoreClrSupportsAbi ("x86"));
+			if (perAbiApk && thirtyTwoBitAbisSupported) { // CoreCLR doesn't support 32-bit ABIs
 				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "arm64-v8a", "x86_64");
 			} else {
-				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+				proj.SetAndroidSupportedAbis ("arm64-v8a", "x86_64");
 			}
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName, "App"))) {
 				var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
@@ -437,9 +441,21 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 					int x86ManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "x86", "AndroidManifest.xml"));
 					int arm64ManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "arm64-v8a", "AndroidManifest.xml"));
 					int x86_64ManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "x86_64", "AndroidManifest.xml"));
-					var versionList = new List<int> { armManifestCode, x86ManifestCode, arm64ManifestCode, x86_64ManifestCode };
-					Assert.True (versionList.Distinct ().Count () == versionList.Count,
-						$"APK version codes were not unique - armeabi-v7a: {armManifestCode}, x86: {x86ManifestCode}, arm64-v8a: {arm64ManifestCode}, x86_64: {x86_64ManifestCode}");
+					List<int> versionList;
+					if (thirtyTwoBitAbisSupported) {
+						versionList = new List<int> { armManifestCode, x86ManifestCode, arm64ManifestCode, x86_64ManifestCode };
+					} else {
+						versionList = new List<int> { arm64ManifestCode, x86_64ManifestCode };
+					}
+
+					string errorMessage;
+					if (thirtyTwoBitAbisSupported) {
+						errorMessage = $"APK version codes were not unique - armeabi-v7a: {armManifestCode}, x86: {x86ManifestCode}, arm64-v8a: {arm64ManifestCode}, x86_64: {x86_64ManifestCode}";
+					} else {
+						errorMessage = $"APK version codes were not unique - arm64-v8a: {arm64ManifestCode}, x86_64: {x86_64ManifestCode}";
+					}
+
+					Assert.True (versionList.Distinct ().Count () == versionList.Count, errorMessage);
 				}
 
 				var item = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Strings.xml");
