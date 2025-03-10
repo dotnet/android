@@ -14,6 +14,7 @@ namespace Xamarin.Android.NetTests {
 	// in the Mono.Android.NET-Tests.csproj file.
 	[TestFixture]
 	[Category ("InetAccess")]
+	[Ignore ("TODO crashes on NativeAOT")]
 	public sealed class AndroidMessageHandlerNegotiateAuthenticationTests
 	{
 		// Negotiate authentication is available for Android since .NET 7
