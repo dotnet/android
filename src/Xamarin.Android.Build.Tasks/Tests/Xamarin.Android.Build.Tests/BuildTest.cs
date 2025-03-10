@@ -28,6 +28,10 @@ namespace Xamarin.Android.Build.Tests
 		[NonParallelizable] // On MacOS, parallel /restore causes issues
 		public void DotNetBuild (string runtimeIdentifiers, bool isRelease, bool aot, bool usesAssemblyStore)
 		{
+			if (TargetRuntimeHelper.UseCoreCLR && !TargetRuntimeHelper.CoreClrSupportsAllRIDs (runtimeIdentifiers)) {
+				Assert.Ignore ($"One or more RIDs aren't supported by CoreCLR: '{runtimeIdentifiers}'");
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				ProjectName = "Test Me",

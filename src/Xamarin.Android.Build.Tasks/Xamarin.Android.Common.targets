@@ -568,6 +568,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       FormatArguments="AndroidFastDeploymentType;9"
       Condition=" '$(AndroidFastDeploymentType)' != '' "
   />
+
+  <!-- When CoreCLR is no longer experimental, please also change
+       src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Utilities/TargetRuntimeHelper.cs
+       accordingly (the `CoreClrIsExperimental`) specifically
+  -->
   <AndroidWarning Code="XA1040"
       ResourceName="XA1040"
       FormatArguments="$(_AndroidRuntime)"
