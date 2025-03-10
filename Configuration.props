@@ -222,13 +222,16 @@
   </ItemGroup>
 
   <!-- Whenever there's a need to use a locally built CoreCLR, both .NET for Android and the
-       application(s) must be built with the same runtime. This property should point to the CoreCLR
+       application(s) must be built with the same runtime. CLRLocalRuntimePath must point to the CoreCLR
        artifact directory in its repository checkout:
 
-          {PATH_TO_DOTNET_RUNTIME_REPO}/artifacts/bin/microsoft.netcore.app.runtime.android-{ARCH}/{CONFIG}
+          {PATH_TO_DOTNET_RUNTIME_REPO}/artifacts/bin
+
+      CLRLocalRuntimeConfig may be set to either Release or Debug, with Release being the default value.
 
       <PropertyGroup>
          <CLRLocalRuntimePath></CLRLocalRuntimePath>
+         <CLRLocalRuntimeConfig></CLRLocalRuntimeConfig>
       </PropertyGroup>
   -->
 </Project>

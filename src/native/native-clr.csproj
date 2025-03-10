@@ -8,8 +8,8 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 
     <!-- HACK HACK: until CoreCLR exists for all the targets, work only with arm64 -->
-    <AndroidSupportedTargetAotAbis>arm64</AndroidSupportedTargetAotAbis>
-    <AndroidSupportedTargetJitAbis>arm64-v8a</AndroidSupportedTargetJitAbis>
+    <AndroidSupportedTargetAotAbis>arm64:x86_64</AndroidSupportedTargetAotAbis>
+    <AndroidSupportedTargetJitAbis>arm64-v8a:x86_64</AndroidSupportedTargetJitAbis>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
