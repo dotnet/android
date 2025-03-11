@@ -38,7 +38,12 @@ internal static class TypeMapping
 
 	internal static bool TryGetJavaClassName (Type type, [NotNullWhen (true)] out string? className)
 	{
-		string name = $"{type.FullName}, {type.Assembly.GetName ().Name}";
+		string? name = type.AssemblyQualifiedName;
+		if (name is null) {
+			className = null;
+			return false;
+		}
+
 		ulong hash = Hash (name);
 
 		// the hashes array is sorted and all the hashes are unique
