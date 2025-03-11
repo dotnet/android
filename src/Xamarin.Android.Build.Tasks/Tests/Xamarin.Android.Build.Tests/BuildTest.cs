@@ -359,6 +359,11 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		[TestCaseSource (nameof (RuntimeChecks))]
 		public void CheckWhichRuntimeIsIncluded (string supportedAbi, bool debugSymbols, bool? optimize, bool? embedAssemblies, string expectedRuntime) {
+
+			if (TargetRuntimeHelper.UseCoreCLR && !TargetRuntimeHelper.CoreClrSupportsAllABIs (supportedAbi)) {
+				Assert.Ignore ($"ABI '{supportedAbi}' not supported on CoreCLR");
+			}
+
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetAndroidSupportedAbis (supportedAbi);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugSymbols", debugSymbols);

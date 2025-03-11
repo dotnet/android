@@ -983,6 +983,7 @@ namespace Lib2
 		}
 
 		[Test]
+		[Category ("CoreCLR")]
 		public void GenerateJavaStubsAndAssembly ([Values (true, false)] bool isRelease)
 		{
 			var targets = new [] {
@@ -992,7 +993,7 @@ namespace Lib2
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a");
+			proj.SetAndroidSupportedAbis ("arm64-v8a");
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidEnvironment ("Foo.txt") {
 				TextContent = () => "Foo=Bar",
 			});
@@ -1024,11 +1025,11 @@ namespace Lib2
 		}
 
 		readonly string [] ExpectedAssemblyFiles = new [] {
-			Path.Combine ("android", "environment.armeabi-v7a.o"),
-			Path.Combine ("android", "environment.armeabi-v7a.ll"),
-			Path.Combine ("android", "typemaps.armeabi-v7a.o"),
-			Path.Combine ("android", "typemaps.armeabi-v7a.ll"),
-			Path.Combine ("app_shared_libraries", "armeabi-v7a", "libxamarin-app.so")
+			Path.Combine ("android", "environment.arm64-v8a.o"),
+			Path.Combine ("android", "environment.arm64-v8a.ll"),
+			Path.Combine ("android", "typemaps.arm64-v8a.o"),
+			Path.Combine ("android", "typemaps.arm64-v8a.ll"),
+			Path.Combine ("app_shared_libraries", "arm64-v8a", "libxamarin-app.so")
 		};
 
 		void AssertAssemblyFilesInFileWrites (XamarinAndroidApplicationProject proj, ProjectBuilder b)
