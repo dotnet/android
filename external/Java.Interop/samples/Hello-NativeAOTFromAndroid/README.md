@@ -6,6 +6,46 @@ by a Java Virtual Machine (JVM).
 
 Extend this idea for Android!
 
+## Prerequisites
+
+In order to build this sample, the Android SDK and Android NDK must be present.
+*An* easy way to provision these is to build dotnet/android:
+
+  * [Windows build instructions](https://github.com/dotnet/android/blob/155709f9917666ca046c79a4e9769924ff4ab9bb/Documentation/building/windows/instructions.md)
+  * [Linux and macOS build instructions](https://github.com/dotnet/android/blob/main/Documentation/building/unix/instructions.md)
+
+Once you've run `make prepar` or `dotnet  msbuild Xamarin.Android.sln -t:Prepare`,
+then an `android-toolchain` directory will exist in your home directory.
+
+A `.android/debug.keystore` file must also exist within your home directory.
+This file can be created by using
+[`keytool -genkeypair`](https://docs.oracle.com/en/java/javase/11/tools/keytool.html).
+
+  * On **Windows**, run the following command within a `CMD.EXE` window:
+
+    ```cmd
+    %HOMEDRIVE%%HOMEPATH%\android-toolchain\jdk-17\bin\keytool.exe -genkeypair ^
+      -keyalg RSA -validity 10950 -dname "CN=Android Debug,O=Android,C=US" ^
+      -keystore %HOMEDRIVE%%HOMEPATH%\.android\debug.keystore ^
+      -alias androiddebugkey -storepass android -keypass android
+    ```
+
+  * On **Linux** and **macOS**, run:
+
+    ```sh
+    $HOME/android-toolchain/jdk-17/bin/keytool -genkeypair \
+      -keyalg RSA -validity 10950 -dname "CN=Android Debug,O=Android,C=US" \
+      -keystore $HOME/.android/debug.keystore \
+      -alias androiddebugkey -storepass android -keypass android
+    ```
+
+The NativeAOT toolchain on Windows also requires that the NDK "prebuilt"
+directory be located within `%PATH%`
+
+```cmd
+set PATH=%HOMEDRIVE%%HOMEPATH%\android-toolchain\ndk\toolchains\llvm\prebuilt\windows-x86_64\bin;%PATH%
+```
+
 ## Building
 
 Building a native library with NativeAOT requires a Release configuration build.

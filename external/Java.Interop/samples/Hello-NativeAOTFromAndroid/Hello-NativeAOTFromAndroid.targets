@@ -15,19 +15,28 @@
     <_NdkClangPrefix Condition=" '$(RuntimeIdentifier)' == 'linux-bionic-arm64' ">aarch64-linux-android21-</_NdkClangPrefix>
     <_NdkSysrootAbi Condition=" '$(RuntimeIdentifier)' == 'linux-bionic-x64' ">x86_64-linux-android</_NdkSysrootAbi>
     <_NdkClangPrefix Condition=" '$(RuntimeIdentifier)' == 'linux-bionic-x64' ">x86_64-linux-android21-</_NdkClangPrefix>
-    <_NdkPrebuiltAbi Condition=" '$(NETCoreSdkRuntimeIdentifier)' == 'osx-x64' ">darwin-x86_64</_NdkPrebuiltAbi>
+    <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('osx')) ">darwin-x86_64</_NdkPrebuiltAbi>
+    <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('linux')) ">linux-x86_64</_NdkPrebuiltAbi>
+    <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('windows')) ">windows-x86_64</_NdkPrebuiltAbi>
     <_NdkSysrootLibDir>$(AndroidNdkDirectory)/toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/sysroot/usr/lib/$(_NdkSysrootAbi)</_NdkSysrootLibDir>
     <_NdkBinDir>$(AndroidNdkDirectory)/toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/bin</_NdkBinDir>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(RuntimeIdentifier.StartsWith('linux-bionic'))">
-    <CppCompilerAndLinker>$(_NdkBinDir)/$(_NdkClangPrefix)clang</CppCompilerAndLinker>
-    <ObjCopyName>$(_NdkBinDir)/llvm-objcopy</ObjCopyName>
+    <CppCompilerAndLinker Condition=" '$(OS)' == 'Windows_NT' ">$(_NdkClangPrefix)clang.cmd</CppCompilerAndLinker>
+    <CppCompilerAndLinker Condition=" '$(OS)' != 'Windows_NT' ">$(_NdkBinDir)/$(_NdkClangPrefix)clang</CppCompilerAndLinker>
+    <ObjCopyName Condition=" '$(OS)' == 'Windows_NT' ">llvm-objcopy.exe</ObjCopyName>
+    <ObjCopyName Condition=" '$(OS)' != 'Windows_NT' ">$(_NdkBinDir)/llvm-objcopy</ObjCopyName>
   </PropertyGroup>
 
   <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('linux-bionic'))">
     <LinkerArg Include="-Wl,--undefined-version" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <_HomeDir Condition=" '$(OS)' != 'Windows_NT' ">$(HOME)/</_HomeDir>
+    <_HomeDir Condition=" '$(OS)' == 'Windows_NT' ">$(HOMEDRIVE)$(HOMEPATH)\</_HomeDir>
+  </PropertyGroup>
 
   <Target Name="_ValidateEnvironment"
       BeforeTargets="Build">
@@ -43,6 +52,20 @@
         Condition=" '$(AndroidSdkDirectory)' == '' Or !Exists($(AndroidSdkDirectory)) "
         Text="Set the %24(AndroidSdkDirectory) MSBuild property or the %24ANDROID_HOME environment variable to the path of the Android SDK."
      />
+    <PropertyGroup>
+      <_DebugKeystorePath>$(_HomeDir).android/debug.keystore</_DebugKeystorePath>
+    </PropertyGroup>
+    <Error
+        Condition=" !Exists($(_DebugKeystorePath)) "
+        Text="Keystore file `$(_DebugKeystorePath)` does not exist.  This is needed to sign .apk files.  See README.md for details."
+    />
+    <PropertyGroup>
+      <_WinNdkBinDir>$(_NdkBinDir.Replace('/', '%5c'))</_WinNdkBinDir>
+    </PropertyGroup>
+    <Error
+        Condition=" '$(OS)' == 'Windows_NT' And !$(PATH.Contains($(_WinNdkBinDir))) "
+        Text="The %PATH% environment variable must contain: $(_WinNdkBinDir)"
+    />
   </Target>
 
   <ItemGroup>

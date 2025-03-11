@@ -17,6 +17,8 @@
     <RuntimeIdentifier Condition=" '$(RuntimeIdentifier)' == '' ">linux-bionic-arm64</RuntimeIdentifier>
     <!-- Needed for cross-compilation, e.g. build linux-bionic-arm64 from osx-x64 -->
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <!-- Needed so that we can use NativeAOT to cross-compile for Android (linux) from Windows -->
+    <DisableUnsupportedError Condition=" '$(OS)' == 'Windows_NT' ">true</DisableUnsupportedError>
   </PropertyGroup>
 
   <ItemGroup>
