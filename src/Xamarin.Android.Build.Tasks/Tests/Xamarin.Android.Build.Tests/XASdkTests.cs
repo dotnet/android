@@ -205,6 +205,8 @@ public class JavaSourceTest {
 		[Test]
 		public void DotNetPublish ([Values (false, true)] bool isRelease, [ValueSource(nameof(DotNetTargetFrameworks))] object[] data, [Values ("Mono", "CoreCLR")] string runtime)
 		{
+			TargetRuntimeHelper.IgnoreOnIncompatibleRuntime (runtime);
+
 			var dotnetVersion = (string)data[0];
 			var platform = (string)data[1];
 			var apiLevel = (int)data[2];
