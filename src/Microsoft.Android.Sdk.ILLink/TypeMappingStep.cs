@@ -247,7 +247,7 @@ public class TypeMappingStep : BaseStep
 		string GetTypeName (TypeDefinition type)
 		{
 			var fullName = type.FullName.Replace ('/', '.').Replace ('+', '.');
-			var assemblyName = type.Module.Assembly.Name.Name;
+			var assemblyName = type.Module.Assembly.FullName;
 			return $"{fullName}, {assemblyName}";
 		}
 	}
