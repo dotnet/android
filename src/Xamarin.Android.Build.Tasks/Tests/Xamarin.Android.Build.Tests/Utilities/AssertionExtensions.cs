@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using NUnit.Framework;
@@ -125,16 +126,33 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		static void AllowCoreCLRWarning (IEnumerable<string> lastBuildOutput, string logFile)
+		{
+			// With CoreCLR being experimental, we allow a single warning (XA1040)
+			Assert.IsTrue (StringAssertEx.ContainsText (lastBuildOutput, " 1 Warning(s)"), $"{logFile} should have at most 1 MSBuild warning.");
+			Assert.True (StringAssertEx.ContainsText (lastBuildOutput, "XA1040"), "Should receive XA1040 warning");
+		}
+
 		[DebuggerHidden]
 		public static void AssertHasNoWarnings (this ProjectBuilder builder)
 		{
-			Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, " 0 Warning(s)"), $"{builder.BuildLogFile} should have no MSBuild warnings.");
+			if (!TargetRuntimeHelper.UseCoreCLR || !TargetRuntimeHelper.CoreClrIsExperimental) {
+				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, " 0 Warning(s)"), $"{builder.BuildLogFile} should have no MSBuild warnings.");
+				return;
+			}
+
+			AllowCoreCLRWarning (builder.LastBuildOutput, builder.BuildLogFile);
 		}
 
 		[DebuggerHidden]
 		public static void AssertHasNoWarnings (this DotNetCLI dotnet)
 		{
-			Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, " 0 Warning(s)"), $"{dotnet.BuildLogFile} should have no MSBuild warnings.");
+			if (!TargetRuntimeHelper.UseCoreCLR || !TargetRuntimeHelper.CoreClrIsExperimental) {
+				Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, " 0 Warning(s)"), $"{dotnet.BuildLogFile} should have no MSBuild warnings.");
+				return;
+			}
+
+			AllowCoreCLRWarning (dotnet.LastBuildOutput, dotnet.BuildLogFile);
 		}
 	}
 }

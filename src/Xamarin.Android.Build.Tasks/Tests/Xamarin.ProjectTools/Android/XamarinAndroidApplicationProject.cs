@@ -70,10 +70,13 @@ namespace Xamarin.ProjectTools
 
 			Sources.Add (new BuildItem.Source (() => "MainActivity" + Language.DefaultExtension) { TextContent = () => ProcessSourceTemplate (MainActivity ?? DefaultMainActivity) });
 
-			// This is a quick hack to get all the tests executing in the CoreCLR context to work only for the, currently limited,
-			// subset of ABIs supported by CoreCLR without having to modify each test individually. Eventually it shouldn't be necessary.
 			if (TargetRuntimeHelper.UseCoreCLR) {
+				// This is a quick hack to get all the tests executing in the CoreCLR context to work only for the, currently limited,
+				// subset of ABIs supported by CoreCLR without having to modify each test individually. Eventually it shouldn't be necessary.
 				this.SetRuntimeIdentifiers (TargetRuntimeHelper.CoreClrSupportedAbis);
+
+				// NuGet feed needed as Microsoft.Android.Runtime.CoreCLR packs not installed in workload by default
+				AddOrRemoveLocalNugetFeedPath (add: true);
 			}
 		}
 
@@ -176,6 +179,18 @@ namespace Xamarin.ProjectTools
 			set { SetProperty (KnownProperties.PublishAot, value.ToString ()); }
 		}
 
+		void AddOrRemoveLocalNugetFeedPath (bool add)
+		{
+			var source = Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned");
+			if (add) {
+				if (!ExtraNuGetConfigSources.Contains (source)) {
+					ExtraNuGetConfigSources.Add (source);
+				}
+			} else {
+				ExtraNuGetConfigSources.Remove (source);
+			}
+		}
+
 		/// <summary>
 		/// Sets properties required for $(PublishAot)=true
 		/// </summary>
@@ -193,13 +208,7 @@ namespace Xamarin.ProjectTools
 			}
 
 			// NuGet feed needed as Microsoft.Android.Runtime.NativeAOT packs not installed in workload by default
-			var source = Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned");
-			if (value) {
-				if (!ExtraNuGetConfigSources.Contains (source))
-					ExtraNuGetConfigSources.Add (source);
-			} else {
-				ExtraNuGetConfigSources.Remove (source);
-			}
+			AddOrRemoveLocalNugetFeedPath (add: value);
 		}
 
 		public string AndroidManifest { get; set; }
