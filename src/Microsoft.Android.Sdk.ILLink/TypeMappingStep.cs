@@ -71,12 +71,12 @@ public class TypeMappingStep : BaseStep
 		GenerateGetTypeByIndex (types);
 
 		// .NET -> Java mapping
-		KeyValuePair<string, List<TypeDefinition>>[] orderedManagedToJavaMapping = TypeMappings.OrderBy (kvp => Hash (SelectTypeDefinition(kvp.Key, kvp.Value).FullName)).ToArray ();
+		var orderedManagedToJavaMapping = TypeMappings.OrderBy (kvp => Hash (GetTypeName (SelectTypeDefinition (kvp.Key, kvp.Value)))).ToArray ();
 
-		var dotnetTypeNameHashes = orderedManagedToJavaMapping.Select (kvp => Hash (SelectTypeDefinition(kvp.Key, kvp.Value).FullName)).ToArray ();
+		var dotnetTypeNameHashes = orderedManagedToJavaMapping.Select (kvp => Hash (GetTypeName (SelectTypeDefinition (kvp.Key, kvp.Value)))).ToArray ();
 		GenerateHashes (dotnetTypeNameHashes, methodName: "get_TypeNameHashes");
 
-		string[] javaClassNames = orderedManagedToJavaMapping.Select (kvp => kvp.Key).ToArray ();
+		var javaClassNames = orderedManagedToJavaMapping.Select (kvp => kvp.Key).ToArray ();
 		GenerateGetJavaClassNameByIndex (javaClassNames);
 
 		// Generate remap arrays
@@ -242,6 +242,13 @@ public class TypeMappingStep : BaseStep
 			}
 
 			return arrayType;
+		}
+
+		string GetTypeName (TypeDefinition type)
+		{
+			var fullName = type.FullName.Replace ('/', '.').Replace ('+', '.');
+			var assemblyName = type.Module.Assembly.Name.Name;
+			return $"{fullName}, {assemblyName}";
 		}
 	}
 
