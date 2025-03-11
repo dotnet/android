@@ -38,13 +38,8 @@ internal static class TypeMapping
 
 	internal static bool TryGetJavaClassName (Type type, [NotNullWhen (true)] out string? className)
 	{
-		string? fullName = type.FullName;
-		if (fullName is null) {
-			className = null;
-			return false;
-		}
-
-		ulong hash = Hash (fullName);
+		string name = $"{type.FullName}, {type.Assembly.GetName ().Name}";
+		ulong hash = Hash (name);
 
 		// the hashes array is sorted and all the hashes are unique
 		int javaClassNameIndex = MemoryExtensions.BinarySearch (TypeNameHashes, hash);
@@ -60,7 +55,7 @@ internal static class TypeMapping
 
 		// ensure this is not a hash collision
 		var resolvedType = GetTypeByIndex (JavaClassNameIndexToTypeIndex [javaClassNameIndex]);
-		if (resolvedType?.FullName != type.FullName) {
+		if (resolvedType?.AssemblyQualifiedName != type.AssemblyQualifiedName) {
 			className = null;
 			return false;
 		}
@@ -68,9 +63,9 @@ internal static class TypeMapping
 		return true;
 	}
 
-	private static ulong Hash (string javaClassName)
+	private static ulong Hash (string value)
 	{
-		ReadOnlySpan<byte> bytes = MemoryMarshal.AsBytes (javaClassName.AsSpan ());
+		ReadOnlySpan<byte> bytes = MemoryMarshal.AsBytes (value.AsSpan ());
 		ulong hash = XxHash3.HashToUInt64 (bytes);
 
 		// The bytes in the hashes array are stored as little endian. If the target platform is big endian,
