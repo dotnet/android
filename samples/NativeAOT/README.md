@@ -45,6 +45,8 @@ lldb
 > platform connect connect://localhost:5039 
 > settings set target.process.thread.step-in-avoid-nodebug true
 > settings set target.process.thread.step-out-avoid-nodebug true
+> command script import samples/NativeAOT/lldb_commands.py,
+> command script add -f lldb_commands.clearjdb clearjdb
 > target create samples/NativeAOT/bin/Debug/net10.0-android/android-arm64/native/NativeAOT.so
 > target select 0
 > process attach --pid <processid>
@@ -60,7 +62,7 @@ Next you need to attach the java debugger to clear the dialog which is currently
 launching the activity.
 
 you can do this via the `lldb` terminal by using the `clearjdb` function which is an
-extension function we have. 
+extension function we have.
 
 or use the following from the command line.
 
