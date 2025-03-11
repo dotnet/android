@@ -527,7 +527,6 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
-				ProjectName = "MyApp",
 				OtherBuildItems = {
 					new BuildItem ("EmbeddedResource", "Foo.resx") {
 						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
@@ -540,7 +539,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			proj.SetPublishAot (publishAot, AndroidNdkPath);
 
 			using (var b = CreateApkBuilder ()) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
+				b.Verbosity = LoggerVerbosity.Diagnostic; // Needed for --satellite switch to appear in the log
 				b.Target = "Build";
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				b.Target = "SignAndroidPackage";
