@@ -534,8 +534,17 @@ namespace Xamarin.Android.Build.Tests
 				symbols.Add (symbolName);
 			}
 
-			foreach (string symbol in requiredSharedLibrarySymbols) {
-				Assert.IsTrue (symbols.Contains (symbol), $"Symbol '{symbol}' is missing from '{dsoPath}'");
+			if (TargetRuntimeHelper.UseMonoRuntime) {
+				EnsureSymbols (requiredSharedLibrarySymbols);
+			} else if (TargetRuntimeHelper.UseCoreCLR) {
+				EnsureSymbols (requiredSharedLibrarySymbolsCLR);
+			}
+
+			void EnsureSymbols (IEnumerable<string> requiredSymbols)
+			{
+				foreach (string symbol in requiredSymbols) {
+					Assert.IsTrue (symbols.Contains (symbol), $"Symbol '{symbol}' is missing from '{dsoPath}'");
+				}
 			}
 		}
 
