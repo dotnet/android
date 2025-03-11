@@ -59,6 +59,15 @@ if your symbols are in a separate `.dbg` file, you can use the following.
 Next you need to attach the java debugger to clear the dialog which is currently blocking the application execution. You can skip this step if you omitted the `-D` when
 launching the activity.
 
+you can do this via the `lldb` terminal by using the `clearjdb` function which is an
+extension function we have. 
+
+or use the following from the command line.
+
+`python3 samples/NativeAOT/lldb_commands.py`
+
+you can also clear it manually via
+
 ```dotnetcli
 adb forward --remove tcp:8700
 adb forward tcp:8700 jdwp:<pid>
