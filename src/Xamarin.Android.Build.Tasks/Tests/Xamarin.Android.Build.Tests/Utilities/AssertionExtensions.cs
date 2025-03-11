@@ -129,8 +129,14 @@ namespace Xamarin.Android.Build.Tests
 		static void AllowCoreCLRWarning (IEnumerable<string> lastBuildOutput, string logFile)
 		{
 			// With CoreCLR being experimental, we allow a single warning (XA1040)
-			Assert.IsTrue (StringAssertEx.ContainsText (lastBuildOutput, " 1 Warning(s)"), $"{logFile} should have at most 1 MSBuild warning.");
-			Assert.True (StringAssertEx.ContainsText (lastBuildOutput, "XA1040"), "Should receive XA1040 warning");
+			// Library builds won't have warnings, though, so we must account for that too.
+			bool hasNoWarnings = StringAssertEx.ContainsText (lastBuildOutput, " 0 Warning(s)");
+			bool hasOneWarning = StringAssertEx.ContainsText (lastBuildOutput, " 1 Warning(s)");
+
+			Assert.IsTrue (hasNoWarnings || hasOneWarning, $"{logFile} should have at most 1 MSBuild warning.");
+			if (hasOneWarning) {
+				Assert.True (StringAssertEx.ContainsText (lastBuildOutput, "XA1040"), "Should receive XA1040 warning");
+			}
 		}
 
 		[DebuggerHidden]
