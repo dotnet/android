@@ -216,9 +216,15 @@
 
   <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\Ndk.targets" />
   <ItemGroup>
-    <AndroidAbiAndRuntimeFlavor Include="@(AndroidSupportedTargetJitAbi)" AndroidRuntime="Mono" />
-    <AndroidAbiAndRuntimeFlavor Include="@(AndroidSupportedOtherRuntimeTargetJitAbi)" AndroidRuntime="NativeAOT" />
-    <AndroidAbiAndRuntimeFlavor Include="@(AndroidSupportedOtherRuntimeTargetJitAbi)" AndroidRuntime="CoreCLR" />
+    <AndroidAbiAndRuntimeFlavor
+        Include="@(AndroidSupportedTargetJitAbi->WithMetadataValue('SupportMonoVM', 'True'))"
+        AndroidRuntime="Mono" />
+    <AndroidAbiAndRuntimeFlavor
+        Include="@(AndroidSupportedTargetJitAbi->WithMetadataValue('SupportNativeAOT', 'True'))"
+        AndroidRuntime="NativeAOT" />
+    <AndroidAbiAndRuntimeFlavor
+        Include="@(AndroidSupportedTargetJitAbi->WithMetadataValue('SupportCoreCLR', 'True'))"
+        AndroidRuntime="CoreCLR" />
   </ItemGroup>
 
   <!-- Whenever there's a need to use a locally built CoreCLR, both .NET for Android and the
