@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 
+using NUnit.Framework;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.ProjectTools;
@@ -13,6 +14,8 @@ public class TargetRuntimeHelper
 
 	static TargetRuntimeHelper ()
 	{
+		// TODO: this detection should probably depend on something more than an envvar. We can detect Mono
+		// by looking for one of the Mono-specific types, can we do something similar to detect NativeAOT?
 		string? envvar = Environment.GetEnvironmentVariable ("USE_MONO_RUNTIME");
 		if (envvar == null || envvar.Length == 0 || String.Compare ("true", envvar, StringComparison.OrdinalIgnoreCase) == 0) {
 			useMonoRuntime = true;
@@ -62,5 +65,16 @@ public class TargetRuntimeHelper
 		}
 
 		return true;
+	}
+
+	public static void IgnoreOnIncompatibleRuntime (string runtime)
+	{
+		if (UseCoreCLR && String.Compare (runtime, "CoreCLR", StringComparison.OrdinalIgnoreCase) != 0) {
+			Assert.Ignore ($"{runtime} tests not supported under CoreCLR");
+		}
+
+		if (UseMonoRuntime && String.Compare (runtime, "Mono", StringComparison.OrdinalIgnoreCase) != 0) {
+			Assert.Ignore ($"{runtime} tests not supported under MonoVM");
+		}
 	}
 }

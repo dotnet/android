@@ -275,6 +275,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		[TestCaseSource (nameof (CheckAssemblyCountsSource))]
 		[NonParallelizable]
+		[Category ("CoreCLR")]
 		public void CheckAssemblyCounts (bool isRelease, bool aot)
 		{
 			if (aot && TargetRuntimeHelper.UseCoreCLR) {
@@ -296,8 +297,17 @@ namespace Xamarin.Android.Build.Tests
 				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 
 				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (objPath, String.Join (";", abis), true);
-				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
-				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
+				uint number_of_assemblies_in_apk;
+
+				if (TargetRuntimeHelper.UseMonoRuntime) {
+					EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
+					Assert.That (app_config, Is.Not.Null, "(MonoVM) application_config must be present in the environment files");
+					number_of_assemblies_in_apk = app_config.number_of_assemblies_in_apk;
+				} else {
+					EnvironmentHelper.ApplicationConfigCLR app_config = EnvironmentHelper.ReadApplicationConfigCLR (envFiles);
+					Assert.That (app_config, Is.Not.Null, "(CoreCLR) application_config must be present in the environment files");
+					number_of_assemblies_in_apk = app_config.number_of_assemblies_in_apk;
+				}
 
 				if (aot) {
 					foreach (var env in envFiles) {
@@ -311,7 +321,7 @@ namespace Xamarin.Android.Build.Tests
 				foreach (string abi in abis) {
 					AndroidTargetArch arch = MonoAndroidHelper.AbiToTargetArch (abi);
 					Assert.AreEqual (
-						app_config.number_of_assemblies_in_apk,
+						number_of_assemblies_in_apk,
 						helper.GetNumberOfAssemblies (arch: arch),
 						$"Assembly count must be equal between ApplicationConfig and the archive contents for architecture {arch} (ABI: {abi})"
 					);

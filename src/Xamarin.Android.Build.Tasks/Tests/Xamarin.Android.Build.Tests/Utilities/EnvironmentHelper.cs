@@ -14,7 +14,7 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	class EnvironmentHelper
+	partial class EnvironmentHelper
 	{
 		public sealed class EnvironmentFile
 		{
@@ -36,7 +36,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		// This must be identical to the like-named structure in src/native/xamarin-app-stub/xamarin-app.hh
+		// This must be identical to the like-named structure in src/native/mono/xamarin-app-stub/xamarin-app.hh
 		public sealed class ApplicationConfig
 		{
 			public bool   uses_mono_llvm;
@@ -183,7 +183,7 @@ namespace Xamarin.Android.Build.Tests
 			return app_config;
 		}
 
-		static ApplicationConfig ReadApplicationConfig (EnvironmentFile envFile)
+		static (NativeAssemblyParser parser, NativeAssemblyParser.AssemblerSymbol appConfigSymbol) GetAssemblyParserAndValidateConfig (EnvironmentFile envFile)
 		{
 			NativeAssemblyParser parser = CreateAssemblyParser (envFile);
 
@@ -193,6 +193,19 @@ namespace Xamarin.Android.Build.Tests
 
 			Assert.IsTrue (appConfigSymbol.Size != 0, $"{ApplicationConfigSymbolName} size as specified in the '.size' directive must not be 0");
 
+			return (parser, appConfigSymbol);
+		}
+
+		static bool CanIgnoreAssemblerField (string field)
+		{
+			// padding, we can safely ignore it
+			return String.Compare (".zero", field, StringComparison.Ordinal) == 0;
+		}
+
+		static ApplicationConfig ReadApplicationConfig (EnvironmentFile envFile)
+		{
+			(NativeAssemblyParser parser, NativeAssemblyParser.AssemblerSymbol appConfigSymbol) = GetAssemblyParserAndValidateConfig (envFile);
+
 			var pointers = new List <string> ();
 			var ret = new ApplicationConfig ();
 			uint fieldCount = 0;
@@ -201,8 +214,8 @@ namespace Xamarin.Android.Build.Tests
 			foreach (NativeAssemblyParser.AssemblerSymbolItem item in appConfigSymbol.Contents) {
 				field = GetField (envFile.Path, parser.SourceFilePath, item.Contents, item.LineNumber);
 
-				if (String.Compare (".zero", field[0], StringComparison.Ordinal) == 0) {
-					continue; // padding, we can safely ignore it
+				if (CanIgnoreAssemblerField (field[0])) {
+					continue;
 				}
 
 				switch (fieldCount) {
