@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
@@ -84,7 +83,7 @@ namespace Xamarin.Android.Tasks
 						continue;
 					}
 
-					if (method.NativeCallback.GetCustomAttributes ("System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute").Any (ca => ca != null)) {
+					if (HasUnmanagedCallersOnlyAttribute (method.NativeCallback)) {
 						log.LogDebugMessage ($"[{targetArch}] Method '{method.NativeCallback.FullName}' does not need a wrapper, it already has UnmanagedCallersOnlyAttribute");
 						method.NativeCallbackWrapper = method.NativeCallback;
 						continue;
@@ -193,6 +192,17 @@ namespace Xamarin.Android.Tasks
 					log.LogWarning ($"[{targetArch}] Unable to delete source file '{path}'");
 					log.LogDebugMessage ($"[{targetArch}] {ex.ToString ()}");
 				}
+			}
+
+			static bool HasUnmanagedCallersOnlyAttribute (MethodDefinition method)
+			{
+				foreach (CustomAttribute ca in method.CustomAttributes) {
+					if (ca.Constructor.DeclaringType.FullName == "System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute") {
+						return true;
+					}
+				}
+
+				return false;
 			}
 		}
 
