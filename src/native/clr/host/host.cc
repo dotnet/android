@@ -254,6 +254,8 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	init.jniRemappingInUse                              = application_config.jni_remapping_replacement_type_count > 0 || application_config.jni_remapping_replacement_method_index_entry_count > 0;
 	init.marshalMethodsEnabled                          = application_config.marshal_methods_enabled;
 	init.managedMarshalMethodsLookupEnabled             = application_config.managed_marshal_methods_lookup_enabled;
+	abort_unless (!init.marshalMethodsEnabled || init.managedMarshalMethodsLookupEnabled,
+		"Managed marshal methods lookup must be enabled if marshal methods are enabled");
 
 	// GC threshold is 90% of the max GREF count
 	init.grefGcThreshold                                = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());

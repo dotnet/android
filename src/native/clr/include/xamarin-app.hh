@@ -215,7 +215,7 @@ struct AssemblyStoreSingleAssemblyRuntimeData final
 };
 
 // Keep in strict sync with:
-//   src/Xamarin.Android.Build.Tasks/Utilities/ApplicationConfig.cs
+//   src/Xamarin.Android.Build.Tasks/Utilities/ApplicationConfigCLR.cs
 //   src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Utilities/EnvironmentHelper.cs
 struct ApplicationConfig
 {
