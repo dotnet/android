@@ -21,7 +21,7 @@ chmod +x "${DOTNET_LOCAL}"
 # This script is used to run the NativeAOT sample with the debugger attached.
 # It is used by the CI system to verify that the debugger works with NativeAOT.
 adb shell run-as net.dot.hellonativeaot killall -9 lldb-server > /dev/null 2>&1 || true
-adb push $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/18/lib/linux/aarch64/lldb-server /data/local/tmp/lldb-server
+adb push $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/lib/linux/aarch64/lldb-server /data/local/tmp/lldb-server
 adb shell run-as net.dot.hellonativeaot cp /data/local/tmp/lldb-server .
 adb forward tcp:5039 tcp:5039
 
