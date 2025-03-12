@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Java.Interop;
@@ -5,13 +7,13 @@ using Java.Interop.Tools.TypeNameMappings;
 
 namespace Microsoft.Android.Runtime;
 
-partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
+class ManagedTypeManager : JniRuntime.JniTypeManager {
 
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	internal const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 	internal const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
 
-	public NativeAotTypeManager ()
+	public ManagedTypeManager ()
 	{
 	}
 
@@ -127,7 +129,7 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 
 	protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 	{
-		if (TypeMapping.TryGetType (jniSimpleReference, out var target)) {
+		if (ManagedTypeMapping.TryGetType (jniSimpleReference, out var target)) {
 			yield return target;
 		}
 		foreach (var t in base.GetTypesForSimpleReference (jniSimpleReference)) {
@@ -141,7 +143,7 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 			yield return r;
 		}
 
-		if (TypeMapping.TryGetJniName (type, out var jniName)) {
+		if (ManagedTypeMapping.TryGetJniName (type, out var jniName)) {
 			yield return jniName;
 		}
 	}

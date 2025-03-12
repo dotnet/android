@@ -19,11 +19,11 @@ namespace Microsoft.Android.Sdk.ILLink;
 /// </summary>
 public class TypeMappingStep : BaseStep
 {
-	const string AssemblyName = "Microsoft.Android.Runtime.NativeAOT";
-	const string TypeName = "Microsoft.Android.Runtime.TypeMapping";
+	const string AssemblyName = "Mono.Android";
+	const string TypeName = "Microsoft.Android.Runtime.ManagedTypeMapping";
 	const string SystemIOHashingAssemblyPathCustomData = "SystemIOHashingAssemblyPath";
 	readonly IDictionary<string, List<TypeDefinition>> TypeMappings = new Dictionary<string, List<TypeDefinition>> (StringComparer.Ordinal);
-	AssemblyDefinition? MicrosoftAndroidRuntimeNativeAot;
+	AssemblyDefinition? MonoAndroidAssembly;
 
 	delegate ulong HashMethod (ReadOnlySpan<byte> data, long seed = 0);
 	HashMethod? _hashMethod;
@@ -36,8 +36,7 @@ public class TypeMappingStep : BaseStep
 	protected override void ProcessAssembly (AssemblyDefinition assembly)
 	{
 		if (assembly.Name.Name == AssemblyName) {
-			MicrosoftAndroidRuntimeNativeAot = assembly;
-			return;
+			MonoAndroidAssembly = assembly;
 		}
 		if (Annotations?.GetAction (assembly) == AssemblyAction.Delete)
 			return;
@@ -51,11 +50,11 @@ public class TypeMappingStep : BaseStep
 	{
 		Context.LogMessage ($"Writing {TypeMappings.Count} typemap entries");
 
-		if (MicrosoftAndroidRuntimeNativeAot is null) {
+		if (MonoAndroidAssembly is null) {
 			throw new InvalidOperationException ($"Unable to find {AssemblyName} assembly");
 		}
 
-		var module = MicrosoftAndroidRuntimeNativeAot.MainModule;
+		var module = MonoAndroidAssembly.MainModule;
 		var type = module.GetType (TypeName);
 		if (type is null) {
 			throw new InvalidOperationException ($"Unable to find {TypeName} type");
