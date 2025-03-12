@@ -79,7 +79,7 @@ namespace Android.Runtime
 			JniType.GetCachedJniType (ref jniType, className);
 
 			ReadOnlySpan<char> methods = new ReadOnlySpan<char> ((void*) methods_ptr, methods_len);
-			((AndroidTypeManager)androidRuntime!.TypeManager).RegisterNativeMembers (jniType, type, methods);
+			androidRuntime!.TypeManager.RegisterNativeMembers (jniType, type, methods);
 		}
 
 		// NOTE: should have different name than `Initialize` to avoid:

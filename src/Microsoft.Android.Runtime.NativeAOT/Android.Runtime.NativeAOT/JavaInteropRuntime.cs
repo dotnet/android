@@ -37,7 +37,7 @@ static partial class JavaInteropRuntime
 			var settings    = new DiagnosticSettings ();
 			settings.AddDebugDotnetLog ();
 
-			var typeManager = new NativeAotTypeManager ();
+			var typeManager = new ManagedTypeManager ();
 			var options = new NativeAotRuntimeOptions {
 				EnvironmentPointer          = jnienv,
 				TypeManager                 = typeManager,

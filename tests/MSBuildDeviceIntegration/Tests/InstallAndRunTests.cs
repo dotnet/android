@@ -30,11 +30,17 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DotNetRun ([Values (true, false)] bool isRelease)
+		[TestCase (true, "llvm-ir")]
+		[TestCase (false, "llvm-ir")]
+		[TestCase (true, "managed")]
+		// NOTE: TypeMappingStep is not yet setup for Debug mode
+		//[TestCase (false, "managed")]
+		public void DotNetRun (bool isRelease, string typemapImplementation)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease
 			};
+			proj.SetProperty ("_AndroidTypeMapImplementation", typemapImplementation);
 			using var builder = CreateApkBuilder ();
 			builder.Save (proj);
 

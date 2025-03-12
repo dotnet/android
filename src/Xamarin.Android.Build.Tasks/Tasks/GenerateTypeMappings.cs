@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.Diagnostics;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -33,6 +34,8 @@ public class GenerateTypeMappings : AndroidTask
 
 	[Output]
 	public ITaskItem [] GeneratedBinaryTypeMaps { get; set; } = [];
+
+	public string TypemapImplementation { get; set; } = "llvm-ir";
 
 	AndroidRuntime androidRuntime;
 
@@ -75,9 +78,16 @@ public class GenerateTypeMappings : AndroidTask
 	{
 		if (androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
 			// NativeAOT typemaps are generated in `Microsoft.Android.Sdk.ILLink.TypeMappingStep`
+			Log.LogDebugMessage ("Skipping type maps for NativeAOT.");
 			return;
 		}
 		Log.LogDebugMessage ($"Generating type maps for architecture '{state.TargetArch}'");
+
+		if (TypemapImplementation != "llvm-ir") {
+			Log.LogDebugMessage ($"TypemapImplementation='{TypemapImplementation}' will write an empty native typemap.");
+			state = new NativeCodeGenState (state.TargetArch, new TypeDefinitionCache (), state.Resolver, [], [], state.Classifier);
+		}
+
 		var tmg = new TypeMapGenerator (Log, state, androidRuntime);
 		if (!tmg.Generate (Debug, SkipJniAddNativeMethodRegistrationAttributeScan, TypemapOutputDirectory, GenerateNativeAssembly)) {
 			throw new XamarinAndroidException (4308, Properties.Resources.XA4308);
