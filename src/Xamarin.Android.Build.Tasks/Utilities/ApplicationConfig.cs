@@ -3,7 +3,7 @@ using System;
 namespace Xamarin.Android.Tasks
 {
 	// Declaration order of fields and their types must correspond *exactly* to that in
-	// src/native/xamarin-app-stub/xamarin-app.hh ApplicationConfig structure
+	// src/native/mono/xamarin-app-stub/xamarin-app.hh ApplicationConfig structure
 	//
 	// Type mappings:
 	//

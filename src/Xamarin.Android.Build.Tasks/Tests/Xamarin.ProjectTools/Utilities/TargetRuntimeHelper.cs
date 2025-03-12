@@ -32,6 +32,7 @@ public class TargetRuntimeHelper
 	public static bool UseMonoRuntime => useMonoRuntime;
 	public static bool UseCoreCLR => !useMonoRuntime;
 	public static string[] CoreClrSupportedAbis => coreClrSupportedAbis;
+	public string RuntimeName => UseMonoRuntime ? "MonoVM" : "CoreCLR";
 
 	public static bool CoreClrSupportsAbi (string abiName) => coreClrAbis.Contains (abiName);
 

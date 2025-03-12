@@ -422,12 +422,14 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
-			if (totalWarnings != null && TargetRuntimeHelper.UseCoreCLR && TargetRuntimeHelper.CoreClrIsExperimental) {
+			if (TargetRuntimeHelper.UseCoreCLR && TargetRuntimeHelper.CoreClrIsExperimental) {
 				// Experimental runtimes will issue warning XA1040
-				totalWarnings++;
 				var newCodes = new List<string> (codes);
 				newCodes.Add ("XA1040");
 				codes = newCodes.ToArray ();
+				if (totalWarnings != null) {
+					totalWarnings++;
+				}
 			}
 			proj.SetRuntimeIdentifier ("arm64-v8a");
 			proj.MainActivity = proj.DefaultMainActivity
