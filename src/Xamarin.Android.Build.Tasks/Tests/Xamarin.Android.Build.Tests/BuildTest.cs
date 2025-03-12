@@ -101,6 +101,10 @@ namespace Xamarin.Android.Build.Tests
 			});
 			if (!runtimeIdentifiers.Contains (";")) {
 				proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifiers);
+
+				// When targeting CoreCLR, XamarinAndroidApplicationProject sets `RuntimeIdentifiers` to make sure that only 64-bit
+				// targets are built. It interferes with this test when `RuntimeIdentifier` is set.
+				proj.RemoveProperty (KnownProperties.RuntimeIdentifiers);
 			} else {
 				proj.SetProperty (KnownProperties.RuntimeIdentifiers, runtimeIdentifiers);
 			}
@@ -1703,7 +1707,7 @@ public class ToolbarEx {
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
-				AotAssemblies = publishTrimmed,
+				AotAssemblies = publishTrimmed && !TargetRuntimeHelper.UseCoreCLR,
 				PackageReferences = {
 					new Package { Id = "Xamarin.AndroidX.CustomView", Version = "1.1.0.17" },
 					new Package { Id = "Xamarin.AndroidX.CustomView.PoolingContainer", Version = "1.0.0.4" },

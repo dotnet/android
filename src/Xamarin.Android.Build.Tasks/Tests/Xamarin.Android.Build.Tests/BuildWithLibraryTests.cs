@@ -456,7 +456,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
-			proj.SetAndroidSupportedAbis ("arm64-v8a", "x64");
+			proj.SetAndroidSupportedAbis ("arm64-v8a", "x86_64");
 
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				builder.ThrowOnBuildFailure = false;

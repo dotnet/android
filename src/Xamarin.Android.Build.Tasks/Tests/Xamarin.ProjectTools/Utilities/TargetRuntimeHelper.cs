@@ -78,4 +78,11 @@ public class TargetRuntimeHelper
 			Assert.Ignore ($"{runtime} tests not supported under MonoVM");
 		}
 	}
+
+	public static void IgnoreIfIncompatibleWithMonoAOT (bool aot)
+	{
+		if (aot && UseCoreCLR) {
+			Assert.Ignore ("CoreCLR runtime doesn't support MonoVM-style AOT");
+		}
+	}
 }

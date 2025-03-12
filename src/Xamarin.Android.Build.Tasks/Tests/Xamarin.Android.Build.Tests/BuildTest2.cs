@@ -580,6 +580,8 @@ class MemTest {
 		[NonParallelizable] // parallel NuGet restore causes failures
 		public void BuildBasicApplicationFSharp (bool isRelease, bool aot)
 		{
+			TargetRuntimeHelper.IgnoreIfIncompatibleWithMonoAOT (aot);
+
 			var proj = new XamarinAndroidApplicationProject {
 				Language = XamarinAndroidProjectLanguage.FSharp,
 				IsRelease = isRelease,
