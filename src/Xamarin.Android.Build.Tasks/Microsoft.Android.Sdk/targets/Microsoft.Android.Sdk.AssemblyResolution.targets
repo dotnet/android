@@ -198,7 +198,7 @@ _ResolveAssemblies MSBuild target.
       _ResolveSatellitePaths;
       _CreatePackageWorkspace;
       _LinkAssemblies;
-      _LinkAssembliesAdditionalSteps;
+      _AfterILLinkAdditionalSteps;
     </_PrepareAssembliesDependsOnTargets>
   </PropertyGroup>
 

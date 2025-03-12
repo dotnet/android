@@ -27,6 +27,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidZipAlign" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidApkSigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AppendCustomMetadataToItemGroup" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.AssemblyModifierPipeline" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidPackageName" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aot" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CilStrip" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -927,6 +928,7 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidApkPerAbiFlagFile>$(IntermediateOutputPath)android\bin\apk_per_abi.flag</_AndroidApkPerAbiFlagFile>
 	<_AndroidDebugKeyStoreFlag>$(IntermediateOutputPath)android_debug_keystore.flag</_AndroidDebugKeyStoreFlag>
 	<_RemoveRegisterFlag>$(MonoAndroidIntermediateAssemblyDir)shrunk\shrunk.flag</_RemoveRegisterFlag>
+	<_AdditionalPostLinkerStepsFlag>$(_AndroidStampDirectory)_AdditionalPostLinkerSteps.stamp</_AdditionalPostLinkerStepsFlag>
 	<_AcwMapFile>$(IntermediateOutputPath)acw-map.txt</_AcwMapFile>
 	<_CustomViewMapFile>$(IntermediateOutputPath)customview-map.txt</_CustomViewMapFile>
 	<AndroidResgenNamespace Condition="'$(AndroidResgenNamespace)'==''" >$(RootNamespace)</AndroidResgenNamespace>
@@ -1467,9 +1469,8 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="_LinkAssembliesNoShrinkInputs"
     Condition="'$(PublishTrimmed)' != 'true'"
     Inputs="@(ResolvedAssemblies);$(_AndroidBuildPropertiesCache)"
-    Outputs="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)');@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).jlo.xml')">
+    Outputs="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')">
   <LinkAssembliesNoShrink
-      AlreadyLinked="false"
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       CodeGenerationTarget="$(AndroidCodegenTarget)"
       Debug="$(AndroidIncludeDebugSymbols)"
@@ -1493,29 +1494,27 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <!-- Runs additional steps after ILLink runs (_LinkAssemblies) -->
-<Target Name="_LinkAssembliesAdditionalSteps"
+<Target Name="_AfterILLinkAdditionalSteps"
     DependsOnTargets="_LinkAssembliesNoShrinkInputs"
-    Condition="'$(AndroidLinkMode)' != 'None' OR '$(PublishTrimmed)' == 'true'"
-    Inputs="@(ResolvedAssemblies);$(_AndroidBuildPropertiesCache)"
-    Outputs="@(ResolvedAssemblies->'%(RelativeDir)%(Filename).jlo.xml')">
-  <LinkAssembliesNoShrink
-      AlreadyLinked="true"
+    Condition="'$(PublishTrimmed)' == 'true'"
+    Inputs="$(_AndroidLinkFlag)"
+    Outputs="$(_AdditionalPostLinkerStepsFlag)">
+  <AssemblyModifierPipeline
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       Debug="$(AndroidIncludeDebugSymbols)"
+      DestinationFiles="@(ResolvedAssemblies)"
+      Deterministic="$(Deterministic)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
+      ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)"
       ResolvedAssemblies="@(_AllResolvedAssemblies)"
       ResolvedUserAssemblies="@(ResolvedUserAssemblies)"
-      SourceFiles="@(ResolvedAssemblies)"
-      DestinationFiles="@(ResolvedAssemblies)"
-      TargetName="$(TargetName)"
-      AddKeepAlives="$(AndroidAddKeepAlives)"
-      UseDesignerAssembly="$(AndroidUseDesignerAssembly)"
-      Deterministic="$(Deterministic)"
-      ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)">
-  </LinkAssembliesNoShrink>
+      SourceFiles="@(ResolvedAssemblies)">
+  </AssemblyModifierPipeline>
+
+  <Touch Files="$(_AdditionalPostLinkerStepsFlag)" AlwaysCreate="true" />
 </Target>
 
 <!-- _PrepareAssemblies lives in Microsoft.Android.Sdk.AssemblyResolution.targets -->

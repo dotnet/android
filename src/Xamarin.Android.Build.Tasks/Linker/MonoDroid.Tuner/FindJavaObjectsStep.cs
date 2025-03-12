@@ -45,7 +45,11 @@ public class FindJavaObjectsStep : BaseStep
 		Log.LogDebugMessage ($"{assembly.Name.Name} - Found {initial_count} Java types, filtered to {types.Count}");
 
 		var wrappers = ConvertToCallableWrappers (types);
-		XmlExporter.Export (destinationJLOXml, wrappers, true);
+
+		using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
+			XmlExporter.Export (sw, wrappers, true);
+			Files.CopyIfStreamChanged (sw.BaseStream, destinationJLOXml);
+		}
 
 		return true;
 	}

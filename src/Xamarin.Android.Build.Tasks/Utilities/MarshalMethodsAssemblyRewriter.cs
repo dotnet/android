@@ -147,13 +147,6 @@ namespace Xamarin.Android.Tasks
 				CopyFile (output, path);
 				RemoveFile (output);
 
-				// Assemblies are modified in-place, which updates the modified time. We need
-				// to touch the .jlo.xml file so that we will not re-run the JLO scanner on
-				// the next incremental build.
-				// TODO: This task should probably create copies of the assemblies instead of modifying them in place.
-				var jlo_xml_file = Path.ChangeExtension (path, ".jlo.xml");
-				File.SetLastWriteTimeUtc (jlo_xml_file, DateTime.UtcNow);
-
 				if (havePdb) {
 					string outputPdb = Path.ChangeExtension (output, ".pdb");
 					if (File.Exists (outputPdb)) {
