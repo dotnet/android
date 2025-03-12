@@ -2,7 +2,6 @@
   
   <PropertyGroup>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
-    <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
   

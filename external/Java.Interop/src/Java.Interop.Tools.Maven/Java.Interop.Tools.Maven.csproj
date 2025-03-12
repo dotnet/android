@@ -2,8 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <LangVersion>11.0</LangVersion>
-    <Nullable>enable</Nullable>
     <Nullable>enable</Nullable>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>

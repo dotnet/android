@@ -10,6 +10,11 @@
     <DefineConstants>$(DefineConstants);INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
   </PropertyGroup>
 
+  <!-- Automatically support the latest C# for netstandard2.0 projects -->
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <LangVersion>13.0</LangVersion>
+  </PropertyGroup>
+
   <!-- Add Roslyn analyzers NuGet to all projects -->
   <ItemGroup Condition=" '$(DisableRoslynAnalyzers)' != 'True' ">
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.0">
