@@ -11,13 +11,6 @@
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <!-- Only property required to opt into NativeAOT -->
     <PublishAot>true</PublishAot>
-    <TrimmerSingleWarn>false</TrimmerSingleWarn> <!-- Disable warning for single-file publish -->
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <DebugType>portable</DebugType>
-    <DebugSymbols>true</DebugSymbols>
-    <Optimize>false</Optimize>
   </PropertyGroup>
 
   <!-- Settings for CI -->
