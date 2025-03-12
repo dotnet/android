@@ -85,6 +85,10 @@ namespace Xamarin.Android.Build.Tests
 		[NonParallelizable] // Commonly fails NuGet restore
 		public void CheckIncludedAssemblies ([Values (false, true)] bool usesAssemblyStores)
 		{
+			if (!usesAssemblyStores && TargetRuntimeHelper.UseCoreCLR) {
+				Assert.Ignore ("CoreCLR supports only assembly stores");
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true
 			};
