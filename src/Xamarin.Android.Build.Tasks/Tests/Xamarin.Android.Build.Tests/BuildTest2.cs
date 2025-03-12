@@ -160,6 +160,11 @@ namespace Xamarin.Android.Build.Tests
 
 			var linkedMonoAndroidAssembly = Path.Combine (intermediate, "android-arm64", "linked", "Mono.Android.dll");
 			FileAssert.Exists (linkedMonoAndroidAssembly);
+			var javaClassNames = new List<string> ();
+			var types = new List<TypeReference> ();
+
+			int[] typeIndexToJavaClassNameIndexRemapping;
+			int[] javaClassNameIndexToTypeIndexRemapping;
 			using (var assembly = AssemblyDefinition.ReadAssembly (linkedMonoAndroidAssembly)) {
 				var typeName = "Android.App.Activity";
 				var methodName = "GetOnCreate_Landroid_os_Bundle_Handler";
@@ -167,21 +172,11 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsNotNull (type, $"{linkedMonoAndroidAssembly} should contain {typeName}");
 				var method = type.Methods.FirstOrDefault (m => m.Name == methodName);
 				Assert.IsNotNull (method, $"{linkedMonoAndroidAssembly} should contain {typeName}.{methodName}");
-			}
 
-			var javaClassNames = new List<string> ();
-			var types = new List<TypeReference> ();
+				var typeMapping = assembly.MainModule.Types.FirstOrDefault (t => t.Name == "ManagedTypeMapping");
+				Assert.IsNotNull (typeMapping, $"{linkedMonoAndroidAssembly} should contain ManagedTypeMapping");
 
-			int[] typeIndexToJavaClassNameIndexRemapping;
-			int[] javaClassNameIndexToTypeIndexRemapping;
-
-			var linkedRuntimeAssembly = Path.Combine (intermediate, "android-arm64", "linked", "Microsoft.Android.Runtime.NativeAOT.dll");
-			FileAssert.Exists (linkedRuntimeAssembly);
-			using (var assembly = AssemblyDefinition.ReadAssembly (linkedRuntimeAssembly)) {
-				var type = assembly.MainModule.Types.FirstOrDefault (t => t.Name == "TypeMapping");
-				Assert.IsNotNull (type, $"{linkedRuntimeAssembly} should contain TypeMapping");
-
-				var method = type.Methods.FirstOrDefault (m => m.Name == "GetJavaClassNameByIndex");
+				method = type.Methods.FirstOrDefault (m => m.Name == "GetJavaClassNameByIndex");
 				Assert.IsNotNull (method, "TypeMapping should contain GetJavaClassNameByIndex");
 
 				foreach (var i in method.Body.Instructions) {

@@ -11,19 +11,18 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Android.Runtime;
 using Java.Interop;
 
-namespace Microsoft.Android.Runtime;
+namespace Android.Runtime;
 
-class NativeAotValueManager : JniRuntime.JniValueManager
+internal class ManagedValueManager : JniRuntime.JniValueManager
 {
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
 	readonly JniRuntime.JniTypeManager TypeManager;
 	Dictionary<int, List<IJavaPeerable>>?   RegisteredInstances = new Dictionary<int, List<IJavaPeerable>>();
 
-	public NativeAotValueManager(JniRuntime.JniTypeManager typeManager) =>
+	public ManagedValueManager(JniRuntime.JniTypeManager typeManager) =>
 		TypeManager = typeManager;
 
 	public override void WaitForGCBridgeProcessing ()
@@ -33,7 +32,7 @@ class NativeAotValueManager : JniRuntime.JniValueManager
 	public override void CollectPeers ()
 	{
 		if (RegisteredInstances == null)
-			throw new ObjectDisposedException (nameof (NativeAotValueManager));
+			throw new ObjectDisposedException (nameof (ManagedValueManager));
 
 		var peers = new List<IJavaPeerable> ();
 
@@ -62,7 +61,7 @@ class NativeAotValueManager : JniRuntime.JniValueManager
 	public override void AddPeer (IJavaPeerable value)
 	{
 		if (RegisteredInstances == null)
-			throw new ObjectDisposedException (nameof (NativeAotValueManager));
+			throw new ObjectDisposedException (nameof (ManagedValueManager));
 
 		var r = value.PeerReference;
 		if (!r.IsValid)
@@ -127,7 +126,7 @@ class NativeAotValueManager : JniRuntime.JniValueManager
 	public override IJavaPeerable? PeekPeer (JniObjectReference reference)
 	{
 		if (RegisteredInstances == null)
-			throw new ObjectDisposedException (nameof (NativeAotValueManager));
+			throw new ObjectDisposedException (nameof (ManagedValueManager));
 
 		if (!reference.IsValid)
 			return null;
@@ -153,7 +152,7 @@ class NativeAotValueManager : JniRuntime.JniValueManager
 	public override void RemovePeer (IJavaPeerable value)
 	{
 		if (RegisteredInstances == null)
-			throw new ObjectDisposedException (nameof (NativeAotValueManager));
+			throw new ObjectDisposedException (nameof (ManagedValueManager));
 
 		if (value == null)
 			throw new ArgumentNullException (nameof (value));
@@ -243,7 +242,7 @@ class NativeAotValueManager : JniRuntime.JniValueManager
 	public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 	{
 		if (RegisteredInstances == null)
-			throw new ObjectDisposedException (nameof (NativeAotValueManager));
+			throw new ObjectDisposedException (nameof (ManagedValueManager));
 
 		lock (RegisteredInstances) {
 			var peers = new List<JniSurfacedPeerInfo> (RegisteredInstances.Count);

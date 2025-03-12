@@ -30,11 +30,12 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DotNetRun ([Values (true, false)] bool isRelease)
+		public void DotNetRun ([Values (true, false)] bool isRelease, [Values ("llvm-ir", "managed")] string typemapImplementation)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease
 			};
+			proj.SetProperty ("_AndroidTypeMapImplementation", typemapImplementation);
 			using var builder = CreateApkBuilder ();
 			builder.Save (proj);
 
