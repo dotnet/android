@@ -98,6 +98,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <ResolvedFileToPublish Include="@(IlcCompileInput);@(_AndroidILLinkAssemblies)" RuntimeIdentifier="$(_OriginalRuntimeIdentifier)" />
       <!-- Include libc++ -->
       <ResolvedFileToPublish Include="$(_NdkSysrootDir)libc++_shared.so" RuntimeIdentifier="$(_OriginalRuntimeIdentifier)" />
+      <!-- Satellite assemblies -->
+      <IlcSatelliteAssembly Include="$(_OuterIntermediateSatelliteAssembliesWithTargetPath)" />
     </ItemGroup>
   </Target>
 
