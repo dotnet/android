@@ -26,13 +26,6 @@ internal static class TypeMapping
 			throw new InvalidOperationException ($"Type with hash {hash} not found.");
 		}
 
-		// ensure this is not a hash collision
-		var resolvedJavaClassName = GetJavaClassNameByIndex (TypeIndexToJavaClassNameIndex [typeIndex]);
-		if (resolvedJavaClassName != javaClassName) {
-			type = null;
-			return false;
-		}
-
 		return true;
 	}
 
@@ -58,13 +51,6 @@ internal static class TypeMapping
 			throw new InvalidOperationException ($"Java class name with hash {hash} not found.");
 		}
 
-		// ensure this is not a hash collision
-		var resolvedType = GetTypeByIndex (JavaClassNameIndexToTypeIndex [javaClassNameIndex]);
-		if (resolvedType?.AssemblyQualifiedName != type.AssemblyQualifiedName) {
-			className = null;
-			return false;
-		}
-
 		return true;
 	}
 
@@ -85,8 +71,6 @@ internal static class TypeMapping
 	// Replaced by src/Microsoft.Android.Sdk.ILLink/TypeMappingStep.cs
 	private static ReadOnlySpan<ulong> JavaClassNameHashes => throw new NotImplementedException ();
 	private static ReadOnlySpan<ulong> TypeNameHashes => throw new NotImplementedException ();
-	private static ReadOnlySpan<int> JavaClassNameIndexToTypeIndex => throw new NotImplementedException ();
-	private static ReadOnlySpan<int> TypeIndexToJavaClassNameIndex => throw new NotImplementedException ();
 	private static Type? GetTypeByIndex (int index) => throw new NotImplementedException ();
 	private static string? GetJavaClassNameByIndex (int index) => throw new NotImplementedException ();
 }
