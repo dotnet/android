@@ -71,9 +71,9 @@ public class TypeMappingStep : BaseStep
 		GenerateGetTypeByIndex (types);
 
 		// .NET -> Java mapping
-		var orderedManagedToJavaMapping = TypeMappings.SelectMany(kvp => kvp.Value.Select (type => new KeyValuePair<string, TypeDefinition>(kvp.Key, type))).OrderBy (kvp => Hash (GetTypeName (kvp.Value))).ToArray ();
+		var orderedManagedToJavaMapping = TypeMappings.SelectMany(kvp => kvp.Value.Select (type => new KeyValuePair<string, TypeDefinition>(kvp.Key, type))).OrderBy (kvp => Hash (GetAssemblyQualifiedTypeName (kvp.Value))).ToArray ();
 
-		var dotnetTypeNameHashes = orderedManagedToJavaMapping.Select (kvp => Hash (GetTypeName (kvp.Value))).ToArray ();
+		var dotnetTypeNameHashes = orderedManagedToJavaMapping.Select (kvp => Hash (GetAssemblyQualifiedTypeName (kvp.Value))).ToArray ();
 		GenerateHashes (dotnetTypeNameHashes, methodName: "get_TypeNameHashes");
 
 		var javaClassNames = orderedManagedToJavaMapping.Select (kvp => kvp.Key).ToArray ();
@@ -217,7 +217,7 @@ public class TypeMappingStep : BaseStep
 			return arrayType;
 		}
 
-		string GetTypeName (TypeDefinition type)
+		string GetAssemblyQualifiedTypeName (TypeDefinition type)
 		{
 			var fullName = type.FullName.Replace ('/', '.').Replace ('+', '.');
 			var assemblyName = type.Module.Assembly.FullName;
