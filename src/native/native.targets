@@ -12,7 +12,9 @@
           DependsOnTargets="_PrepareCommonProperties;_ConfigureAndBuildArchiveDSOStub;_ConfigureRuntimes;_BuildAndroidRuntimes;_BuildAndroidAnalyzerRuntimes;_CopyToPackDirs">
   </Target>
 
-  <Target Name="_TestPinvokeTables" Condition=" '$(HostOS)' == 'Linux' And '$(RunningOnCI)' == 'true' ">
+  <!-- The runtime check makes the target run only once, when building the CoreCLR runtime. Otherwise, when building in parallel, we will get
+       the "Text file busy" error on Ci, as both of the runtimes will attempt to compile and run the same binaries a the same time -->
+  <Target Name="_TestPinvokeTables" Condition=" '$(HostOS)' == 'Linux' And '$(RunningOnCI)' == 'true' And '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
     <Exec
         Command="..\..\build-tools\scripts\generate-pinvoke-tables.sh --test-only --ci"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
@@ -113,7 +115,8 @@
       <_NoInline Condition=" '$(DoNotInlineMonodroid)' == 'true' ">-DDONT_INLINE=ON</_NoInline>
       <_NoStrip Condition=" '$(DoNotStripMonodroid)' == 'true' ">-DSTRIP_DEBUG=OFF</_NoStrip>
       <_LocalDotNetRuntimePath Condition=" '$(CLRLocalRuntimePath)' != '' And '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">-DLOCAL_CORECLR_PATH="$(CLRLocalRuntimePath)"</_LocalDotNetRuntimePath>
-      <_CmakeAndroidFlags>-DOUTPUT_PATH="$(OutputPath.TrimEnd('\'))" -DRUNTIME_FLAVOR="$(CMakeRuntimeFlavor)" $(_NoInline) $(_NoStrip) $(_LocalDotNetRuntimePath) "$(MSBuildThisFileDirectory)"</_CmakeAndroidFlags>
+      <_LocalDotNetRuntimeConfig Condition=" '$(CLRLocalRuntimeConfig)' != '' And '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">-DLOCAL_CORECLR_CONFIG="$(CLRLocalRuntimeConfig)"</_LocalDotNetRuntimeConfig>
+      <_CmakeAndroidFlags>-DOUTPUT_PATH="$(OutputPath.TrimEnd('\'))" -DRUNTIME_FLAVOR="$(CMakeRuntimeFlavor)" $(_NoInline) $(_NoStrip) $(_LocalDotNetRuntimePath) $(_LocaLDotNetRuntimeConfig) "$(MSBuildThisFileDirectory)"</_CmakeAndroidFlags>
     </PropertyGroup>
 
     <ItemGroup>
