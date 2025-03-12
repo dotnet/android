@@ -3,7 +3,7 @@ using System;
 namespace Xamarin.Android.Tasks;
 
 // Declaration order of fields and their types must correspond *exactly* to that in
-// src/native/clr/xamarin-app-stub/xamarin-app.hh ApplicationConfig structure
+// src/native/clr/include/xamarin-app.hh ApplicationConfig structure
 //
 // Type mappings:
 //
@@ -49,4 +49,5 @@ sealed class ApplicationConfigCLR
 	public uint   jni_remapping_replacement_type_count;
 	public uint   jni_remapping_replacement_method_index_entry_count;
 	public string android_package_name = String.Empty;
+	public bool   managed_marshal_methods_lookup_enabled;
 }

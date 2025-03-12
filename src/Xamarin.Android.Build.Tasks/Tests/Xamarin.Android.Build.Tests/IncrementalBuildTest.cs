@@ -1307,10 +1307,15 @@ namespace Lib2
 				libBuilder.ThrowOnBuildFailure =
 					appBuilder.ThrowOnBuildFailure = false;
 
+				int expectedWarnings = 1;
+				if (TargetRuntimeHelper.UseCoreCLR && TargetRuntimeHelper.CoreClrIsExperimental) {
+					expectedWarnings++; // Warning XA1040 will be issued
+				}
+
 				// Build app before library is built
 				Assert.IsFalse (appBuilder.Build (app), "app build should have failed.");
 				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, "warning MSB9008"), "Should receive MSB9008");
-				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, " 1 Warning(s)"), "Should receive 1 Warning");
+				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, $" {expectedWarnings} Warning(s)"), $"Should receive {expectedWarnings} Warning(s)");
 				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, "error CS0246"), "Should receive CS0246");
 				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, " 1 Error(s)"), "Should receive 1 Error");
 
@@ -1435,10 +1440,10 @@ namespace Lib2
 		public void ChangeSupportedAbis ()
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
-			proj.SetAndroidSupportedAbis ("armeabi-v7a");
+			proj.SetAndroidSupportedAbis ("arm64-v8a");
 			using (var b = CreateApkBuilder ()) {
 				b.Build (proj);
-				b.Build (proj, parameters: new [] { $"{KnownProperties.RuntimeIdentifier}=android-x86" }, doNotCleanupOnUpdate: true);
+				b.Build (proj, parameters: new [] { $"{KnownProperties.RuntimeIdentifier}=android-x64" }, doNotCleanupOnUpdate: true);
 			}
 		}
 
