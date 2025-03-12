@@ -70,7 +70,7 @@ $APP_PID = [regex]::Match($APP_PROCESS_INFO, "\s+(\d+)\s+").Groups[1].Value
 
 # Verify we got a valid PID
 if (-not $APP_PID) {
-    Write-Error "Error: Could not find process ID for net.dot.hellonativeaot"
+    Write-Error "Error: Could not find process ID for net.dot.hellonativeaot output was not correct"
     exit 1
 }
 Write-Host "Found process ID: $APP_PID"
@@ -82,6 +82,7 @@ if ($FORWARDS -match "tcp:8700") {
 
 # Set up JDWP forwarding using the extracted PID
 $null = & $ADB forward tcp:8700 jdwp:$APP_PID
+
 
 # Connect with JDB and send quit command
 #$null = New-Item -ItemType File -Path "$env:TEMP\jdb_commands.txt" -Value "quit" -Force
