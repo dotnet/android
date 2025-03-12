@@ -71,18 +71,13 @@ public class TypeMappingStep : BaseStep
 		GenerateGetTypeByIndex (types);
 
 		// .NET -> Java mapping
-		var orderedManagedToJavaMapping = TypeMappings.OrderBy (kvp => Hash (GetTypeName (SelectTypeDefinition (kvp.Key, kvp.Value)))).ToArray ();
+		var orderedManagedToJavaMapping = TypeMappings.SelectMany(kvp => kvp.Value.Select (type => new KeyValuePair<string, TypeDefinition>(kvp.Key, type))).OrderBy (kvp => Hash (GetTypeName (kvp.Value))).ToArray ();
 
-		var dotnetTypeNameHashes = orderedManagedToJavaMapping.Select (kvp => Hash (GetTypeName (SelectTypeDefinition (kvp.Key, kvp.Value)))).ToArray ();
+		var dotnetTypeNameHashes = orderedManagedToJavaMapping.Select (kvp => Hash (GetTypeName (kvp.Value))).ToArray ();
 		GenerateHashes (dotnetTypeNameHashes, methodName: "get_TypeNameHashes");
 
 		var javaClassNames = orderedManagedToJavaMapping.Select (kvp => kvp.Key).ToArray ();
 		GenerateGetJavaClassNameByIndex (javaClassNames);
-
-		// Generate remap arrays
-		var typeIndexKeys = orderedJavaToDotnetMapping.Select (kvp => kvp.Key).ToArray ();
-		var javaClassNameIndexKeys = orderedManagedToJavaMapping.Select (kvp => kvp.Key).ToArray ();
-		GenerateIndexRemapping (typeIndexKeys, javaClassNameIndexKeys);
 
 		void GenerateGetTypeByIndex (IEnumerable<TypeDefinition> types)
 		{
@@ -173,28 +168,6 @@ public class TypeMappingStep : BaseStep
 			GenerateReadOnlySpanGetter<ulong> (type, methodName, hashes, sizeof (ulong), BitConverter.GetBytes);
 		}
 
-		void GenerateIndexRemapping (string[] typeIndexKeys, string[] javaClassNameIndexKeys)
-		{
-			System.Diagnostics.Debug.Assert(typeIndexKeys.Length == javaClassNameIndexKeys.Length);
-			int length = typeIndexKeys.Length;
-
-			var javaClassNameIndexToTypeIndex = new int[length];
-			var typeIndexToJavaClassNameIndex = new int[length];
-
-			for (int i = 0; i < length; i++) {
-				for (int j = 0; j < length; j++) {
-					if (typeIndexKeys[i] == javaClassNameIndexKeys[j]) {
-						typeIndexToJavaClassNameIndex[i] = j;
-						javaClassNameIndexToTypeIndex[j] = i;
-						break;
-					}
-				}
-			}
-
-			GenerateReadOnlySpanGetter (type, "get_JavaClassNameIndexToTypeIndex", javaClassNameIndexToTypeIndex, sizeof (int), BitConverter.GetBytes);
-			GenerateReadOnlySpanGetter (type, "get_TypeIndexToJavaClassNameIndex", typeIndexToJavaClassNameIndex, sizeof (int), BitConverter.GetBytes);
-		}
-
 		void GenerateReadOnlySpanGetter<T> (TypeDefinition type, string name, T[] data, int sizeOfT, Func<T, byte[]> getBytes)
 			where T : struct
 		{
@@ -272,6 +245,14 @@ public class TypeMappingStep : BaseStep
 			if ((type.IsAbstract || type.IsInterface) &&
 					!best.IsAbstract &&
 					!best.IsInterface &&
+					type.IsAssignableFrom (best, Context)) {
+				best = type;
+				continue;
+			}
+
+			// we found a generic subclass of a non-generic type
+			if (type.IsGenericInstance &&
+					!best.IsGenericInstance &&
 					type.IsAssignableFrom (best, Context)) {
 				best = type;
 				continue;
