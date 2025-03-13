@@ -2,6 +2,7 @@
 
 parameters:
   runtimeName: ''
+  testFilter: ''          # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
   stageName: msbuild_dotnet
   stageCondition: succeeded()
   dependsOn: mac_build
@@ -22,6 +23,7 @@ stages:
     parameters:
       testOS: macOS
       runtimeName: ${{ parameters.runtimeName }}
+      testFilter: ${{ parameters.testFilter }}
       jobName: mac_msbuild_tests
       jobDisplayName: macOS > Tests > MSBuild
       agentCount: 10
@@ -35,6 +37,7 @@ stages:
     parameters:
       testOS: Windows
       runtimeName: ${{ parameters.runtimeName }}
+      testFilter: ${{ parameters.testFilter }}
       jobName: win_msbuild_tests
       jobDisplayName: Windows > Tests > MSBuild
       agentCount: 8
