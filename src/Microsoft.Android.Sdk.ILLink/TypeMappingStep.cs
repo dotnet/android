@@ -71,14 +71,13 @@ public class TypeMappingStep : BaseStep
 		GenerateStringSwitchMethod (type, "GetJavaClassNameByTypeIndex", orderedJavaToDotnetMapping.Select (kvp => kvp.Key).ToArray ());
 
 		// .NET -> Java mapping
-		var orderedManagedToJavaMapping = TypeMappings.SelectMany(kvp => kvp.Value.Select (type => new KeyValuePair<string, string>(kvp.Key, GetAssemblyQualifiedTypeName (type)))).OrderBy (kvp => Hash (kvp.Value)).ToArray ();
-		var assemblyQualifiedTypeNames = orderedManagedToJavaMapping.Select (kvp => kvp.Value).ToArray ();
-		var assemblyQualifiedTypeNameHashes = assemblyQualifiedTypeNames.Select (Hash).ToArray ();
+		var orderedManagedToJavaMapping = TypeMappings.SelectMany(kvp => kvp.Value.Select (type => new KeyValuePair<string, Guid>(kvp.Key, GetOrGenerateGuid (type)))).OrderBy (kvp => kvp.Value).ToArray ();
+		var guids = orderedManagedToJavaMapping.Select (kvp => kvp.Value).ToArray ();
 		var javaClassNames = orderedManagedToJavaMapping.Select (kvp => kvp.Key).ToArray ();
 
-		GenerateHashes (assemblyQualifiedTypeNameHashes, methodName: "get_TypeNameHashes");
+		byte[] guidBytes = guids.SelectMany (guid => guid.ToByteArray ()).ToArray ();
+		GenerateReadOnlySpanGetter<Guid> (type, "get_TypeGuids", guidBytes, guids.Length, sizeOfT: 16);
 		GenerateStringSwitchMethod (type, "GetJavaClassNameByIndex", javaClassNames);
-		GenerateStringSwitchMethod (type, "GetAssemblyQualifiedTypeNameByJavaClassNameIndex", assemblyQualifiedTypeNames);
 
 		void GenerateGetTypeByIndex (IEnumerable<TypeDefinition> types)
 		{
@@ -154,44 +153,45 @@ public class TypeMappingStep : BaseStep
 		{
 			// Sanity check: hashes must be unique and sorted
 			if (hashes.Length > 0) {
-				ulong previous = hashes[0];
+				ulong previous = hashes [0];
 				for (int i = 1; i < hashes.Length; ++i) {
-					if (hashes[i] == previous) {
+					if (hashes [i] == previous) {
 						throw new InvalidOperationException ($"Duplicate hashes");
-					} else if (hashes[i] < previous) {
+					} else if (hashes [i] < previous) {
 						throw new InvalidOperationException ($"Hashes are not in ascending order");
 					}
 
-					previous = hashes[i];
+					previous = hashes [i];
 				}
 			}
 
-			GenerateReadOnlySpanGetter<ulong> (type, methodName, hashes, sizeof (ulong), BitConverter.GetBytes);
+			var data = hashes.SelectMany (BitConverter.GetBytes).ToArray ();
+			GenerateReadOnlySpanGetter<ulong> (type, methodName, data, hashes.Length, sizeof (ulong));
 		}
 
-		void GenerateReadOnlySpanGetter<T> (TypeDefinition type, string name, T[] data, int sizeOfT, Func<T, byte[]> getBytes)
+		void GenerateReadOnlySpanGetter<T> (TypeDefinition type, string name, byte[] data, int count, int sizeOfT)
 			where T : struct
 		{
-			// Create static array struct for `byte[#data * sizeof(T)]`
-			var arrayType = GetArrayType (type, data.Length * sizeOfT);
+			// Create static array struct for `byte[#data]`
+			var arrayType = GetArrayType (type, data.Length);
 
 			// Create static field to store the raw bytes
 			var bytesField = new FieldDefinition ($"s_{name}_data", FieldAttributes.Private | FieldAttributes.Static | FieldAttributes.InitOnly, arrayType);
-			bytesField.InitialValue = data.SelectMany (getBytes).ToArray ();
+			bytesField.InitialValue = data;
 			if (!bytesField.Attributes.HasFlag (FieldAttributes.HasFieldRVA)) {
 				throw new InvalidOperationException ($"Field {bytesField.Name} does not have RVA");
 			}
 
 			type.Fields.Add (bytesField);
 
-			// Generate the Hashes getter
-			var getHashes = type.Methods.FirstOrDefault (f => f.Name == name) ?? throw new InvalidOperationException ($"Unable to find {TypeName}.{name} field");
+			// Generate the getter
+			var getter = type.Methods.FirstOrDefault (f => f.Name == name) ?? throw new InvalidOperationException ($"Unable to find {type.FullName}.{name} method");
 
-			getHashes.Body.Instructions.Clear ();
-			var il = getHashes.Body.GetILProcessor ();
+			getter.Body.Instructions.Clear ();
+			var il = getter.Body.GetILProcessor ();
 
 			il.Emit (OpCodes.Ldsflda, bytesField);
-			il.Emit (OpCodes.Ldc_I4, data.Length);
+			il.Emit (OpCodes.Ldc_I4, count);
 			il.Emit (OpCodes.Newobj, module.ImportReference (typeof (ReadOnlySpan<T>).GetConstructor (new[] { typeof(void*), typeof(int) })));
 
 			il.Emit (OpCodes.Ret);
@@ -199,7 +199,7 @@ public class TypeMappingStep : BaseStep
 
 		TypeDefinition GetArrayType (TypeDefinition type, int size)
 		{
-			var hashesArrayName = $"HashesArray_{size}";
+			var hashesArrayName = $"RawBytes_{size}";
 			var arrayType = type.NestedTypes.FirstOrDefault (td => td.Name == hashesArrayName);
 			if (arrayType is null) {
 				arrayType = new TypeDefinition (
@@ -216,13 +216,6 @@ public class TypeMappingStep : BaseStep
 			}
 
 			return arrayType;
-		}
-
-		string GetAssemblyQualifiedTypeName (TypeDefinition type)
-		{
-			var fullName = type.FullName.Replace ('/', '.').Replace ('+', '.');
-			var assemblyName = type.Module.Assembly.FullName;
-			return $"{fullName}, {assemblyName}";
 		}
 	}
 
@@ -294,6 +287,25 @@ public class TypeMappingStep : BaseStep
 		}
 
 		return hash;
+	}
+
+	Guid GetOrGenerateGuid (TypeDefinition type)
+	{
+		if (type.HasCustomAttributes) {
+			foreach (var ca in type.CustomAttributes) {
+				if (ca.AttributeType.FullName == "System.Runtime.InteropServices.GuidAttribute") {
+					if (ca.ConstructorArguments.Count == 1 && ca.ConstructorArguments[0].Value is string guidString) {
+						return new Guid (guidString);
+					}
+				}
+			}
+		}
+
+		var guid = Guid.NewGuid ();
+		var guidAttribute = new CustomAttribute (type.Module.ImportReference (typeof (System.Runtime.InteropServices.GuidAttribute).GetConstructor ([ typeof (string) ])));
+		guidAttribute.ConstructorArguments.Add (new CustomAttributeArgument (type.Module.ImportReference (typeof (string)), guid.ToString ("D")));
+		type.CustomAttributes.Add (guidAttribute);
+		return guid;
 	}
 
 	HashMethod LoadHashMethod ()
