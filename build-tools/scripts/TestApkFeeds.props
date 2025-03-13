@@ -1,0 +1,8 @@
+<!-- Needed for projects using CoreCLR/NativeAOT runtime packs that are not in the workload -->
+<Project>
+  <PropertyGroup Condition=" '$(RunningOnCI)' == 'true' ">
+    <_NuGetFolderOnCI>$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\nuget-unsigned</_NuGetFolderOnCI>
+    <RestoreAdditionalProjectSources Condition="Exists('$(_NuGetFolderOnCI)')">$(_NuGetFolderOnCI)</RestoreAdditionalProjectSources>
+    <_FastDeploymentDiagnosticLogging>true</_FastDeploymentDiagnosticLogging>
+  </PropertyGroup>
+</Project>

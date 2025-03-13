@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk" >
 
   <Import Project="..\..\..\Configuration.props" />
+  <Import Project="..\..\..\build-tools\scripts\TestApkFeeds.props" />
 
   <PropertyGroup>
     <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
@@ -22,6 +23,8 @@
     <WarningsAsErrors>IL2037</WarningsAsErrors>
     <AndroidUseNegotiateAuthentication>true</AndroidUseNegotiateAuthentication>
     <AndroidNdkDirectory></AndroidNdkDirectory>
+    <DefineConstants Condition=" '$(UseMonoRuntime)' == 'false' ">$(DefineConstants);CORECLR</DefineConstants>
+    <DefineConstants Condition=" '$(PublishAot)' == 'true' ">$(DefineConstants);NATIVEAOT</DefineConstants>
     <!--
       TODO: Fix excluded tests
       For $(EnableLLVM)
