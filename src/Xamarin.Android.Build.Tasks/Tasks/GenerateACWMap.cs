@@ -1,8 +1,11 @@
 #nullable enable
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
+using Xamarin.Android.Tasks.Utilities;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks;
@@ -17,29 +20,70 @@ public class GenerateACWMap : AndroidTask
 	[Required]
 	public string IntermediateOutputDirectory { get; set; } = "";
 
+	[Required]
+	public ITaskItem [] ResolvedAssemblies { get; set; } = [];
+
+	// This property is temporary and is used to ensure that the new "linker step"
+	// JLO scanning produces the same results as the old process. It will be removed
+	// once the process is complete.
+	public bool RunCheckedBuild { get; set; }
+
+	[Required]
+	public string [] SupportedAbis { get; set; } = [];
+
 	public override bool RunTask ()
 	{
-		// Retrieve the stored NativeCodeGenState
-		var nativeCodeGenStates = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ConcurrentDictionary<AndroidTargetArch, NativeCodeGenState>> (
-			MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory),
-			RegisteredTaskObjectLifetime.Build
-		);
+		// Temporarily used to ensure we still generate the same as the old code
+		if (RunCheckedBuild) {
+			// Retrieve the stored NativeCodeGenState
+			var nativeCodeGenStates = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ConcurrentDictionary<AndroidTargetArch, NativeCodeGenState>> (
+				MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory),
+				RegisteredTaskObjectLifetime.Build
+			);
 
-		// We only need the first architecture, since this task is architecture-agnostic
-		var templateCodeGenState = nativeCodeGenStates.First ().Value;
+			// We only need the first architecture, since this task is architecture-agnostic
+			var templateCodeGenState = nativeCodeGenStates.First ().Value;
+
+			var acwMapGen = new ACWMapGenerator (Log);
+
+			if (!acwMapGen.Generate (templateCodeGenState, AcwMapFile)) {
+				Log.LogDebugMessage ("ACW map generation failed");
+			}
+
+			return !Log.HasLoggedErrors;
+		}
+
+		GenerateMap ();
+
+		return !Log.HasLoggedErrors;
+	}
+
+	void GenerateMap ()
+	{
+		// Get the set of assemblies for the "first" ABI. The ACW map is
+		// not ABI-specific, so we can use any ABI to generate the wrappers.
+		var allAssembliesPerArch = MonoAndroidHelper.GetPerArchAssemblies (ResolvedAssemblies, SupportedAbis, validate: true);
+		var singleArchAssemblies = allAssembliesPerArch.First ().Value.Values.ToList ();
+
+		var entries = new List<ACWMapEntry> ();
+
+		foreach (var assembly in singleArchAssemblies) {
+			var assemblyPath = assembly.ItemSpec;
+			var assemblyName = Path.GetFileNameWithoutExtension (assemblyPath);
+			var wrappersPath = Path.Combine (Path.GetDirectoryName (assemblyPath), $"{assemblyName}.jlo.xml");
+
+			if (!File.Exists (wrappersPath)) {
+				Log.LogError ($"'{wrappersPath}' not found.");
+				return;
+			}
+
+			var xml = JavaObjectsXmlFile.Import (wrappersPath, JavaObjectsXmlFileReadType.ACW);
+
+			entries.AddRange (xml.ACWMapEntries);
+		}
 
 		var acwMapGen = new ACWMapGenerator (Log);
 
-		if (!acwMapGen.Generate (templateCodeGenState, AcwMapFile)) {
-			Log.LogDebugMessage ("ACW map generation failed");
-		}
-
-		if (Log.HasLoggedErrors) {
-			// Ensure that on a rebuild, we don't *skip* the `_GenerateJavaStubs` target,
-			// by ensuring that the target outputs have been deleted.
-			Files.DeleteFile (AcwMapFile, Log);
-		}
-
-		return !Log.HasLoggedErrors;
+		acwMapGen.Generate (entries, AcwMapFile);
 	}
 }

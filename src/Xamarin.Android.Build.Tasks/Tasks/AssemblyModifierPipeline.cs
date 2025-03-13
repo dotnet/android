@@ -10,6 +10,7 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Mono.Cecil;
 using MonoDroid.Tuner;
+using Xamarin.Android.Tasks.Utilities;
 using Xamarin.Android.Tools;
 using PackageNamingPolicyEnum = Java.Interop.Tools.TypeNameMappings.PackageNamingPolicy;
 
@@ -151,7 +152,7 @@ public class AssemblyModifierPipeline : AndroidTask
 
 		if (!TryScanForJavaObjects (source, destination, runState, writerParameters)) {
 			// Even if we didn't scan for Java objects, we still write an empty .xml file for later steps
-			FindJavaObjectsStep.WriteEmptyXmlFile (destinationJLOXml);
+			JavaObjectsXmlFile.WriteEmptyFile (destinationJLOXml, Log);
 		}
 	}
 

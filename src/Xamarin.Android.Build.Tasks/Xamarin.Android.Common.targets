@@ -1565,6 +1565,7 @@ because xbuild doesn't support framework reference assemblies.
     <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' != '' ">True</_HaveMultipleRIDs>
     <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' == '' ">False</_HaveMultipleRIDs>
     <_AndroidGenerateNativeAssembly Condition=" '$(_AndroidGenerateNativeAssembly)' == '' ">True</_AndroidGenerateNativeAssembly>
+    <_AndroidJLOCheckedBuild>true</_AndroidJLOCheckedBuild>
   </PropertyGroup>
   <ItemGroup>
     <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
@@ -1578,6 +1579,13 @@ because xbuild doesn't support framework reference assemblies.
       SupportedAbis="@(_BuildTargetAbis)">
     <Output TaskParameter="GeneratedJavaFilesOutput" ItemName="_GeneratedJavaFiles" />
   </GenerateJavaCallableWrappers>
+
+  <GenerateACWMap
+      AcwMapFile="$(_AcwMapFile)"
+      IntermediateOutputDirectory="$(IntermediateOutputPath)"
+      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      SupportedAbis="@(_BuildTargetAbis)">
+  </GenerateACWMap>
 
   <GenerateJavaStubs
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
@@ -1614,8 +1622,12 @@ because xbuild doesn't support framework reference assemblies.
   </GenerateTypeMappings>
 
   <GenerateACWMap
+      Condition=" '$(_AndroidJLOCheckedBuild)' == 'true' "
       AcwMapFile="$(_AcwMapFile)"
-      IntermediateOutputDirectory="$(IntermediateOutputPath)">
+      RunCheckedBuild="true"
+      IntermediateOutputDirectory="$(IntermediateOutputPath)"
+      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      SupportedAbis="@(_BuildTargetAbis)">
   </GenerateACWMap>
 
   <GenerateMainAndroidManifest

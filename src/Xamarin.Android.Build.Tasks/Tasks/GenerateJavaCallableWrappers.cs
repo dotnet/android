@@ -4,6 +4,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
+using System.Text;
+using System.Xml;
+using System.Xml.Linq;
 using Java.Interop.Tools.JavaCallableWrappers;
 using Java.Interop.Tools.JavaCallableWrappers.Adapters;
 using Java.Interop.Tools.JavaCallableWrappers.CallableWrapperMembers;
@@ -11,6 +15,7 @@ using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Xamarin.Android.Tasks.Utilities;
 using PackageNamingPolicyEnum = Java.Interop.Tools.TypeNameMappings.PackageNamingPolicy;
 
 namespace Xamarin.Android.Tasks;
@@ -72,7 +77,14 @@ public class GenerateJavaCallableWrappers : AndroidTask
 				return;
 			}
 
-			wrappers.AddRange (XmlImporter.Import (wrappersPath, out var _));
+			var xml = JavaObjectsXmlFile.Import (wrappersPath, JavaObjectsXmlFileReadType.JCW);
+
+			if (xml.JavaCallableWrappers.Count == 0) {
+				Log.LogDebugMessage ($"'{wrappersPath}' is empty, skipping.");
+				continue;
+			}
+
+			wrappers.AddRange (xml.JavaCallableWrappers);
 		}
 
 		Log.LogDebugMessage ($"Deserialized {wrappers.Count} Java callable wrappers in {sw.ElapsedMilliseconds}ms");

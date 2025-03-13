@@ -15,6 +15,7 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
+using Xamarin.Android.Tasks.Utilities;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
@@ -283,9 +284,9 @@ namespace Xamarin.Android.Tasks
 				if (!File.Exists (wrappersPath))
 					Log.LogError ($"'{wrappersPath}' not found.");
 
-				XmlImporter.Import (wrappersPath, out var wasScanned);
+				var xml = JavaObjectsXmlFile.Import (wrappersPath, JavaObjectsXmlFileReadType.None);
 
-				if (wasScanned) {
+				if (xml.WasScanned) {
 					Log.LogDebugMessage ($"CompareScannedAssemblies: Found scanned assembly .jlo.xml '{assemblyPath}'");
 					linker_scanned_assemblies.Add (assembly.ItemSpec);
 				}
