@@ -477,7 +477,10 @@ namespace Android.Runtime {
 			if (type == null)
 				throw new ArgumentNullException ("type");
 
-			var sig  = JNIEnvInit.androidRuntime?.TypeManager.GetTypeSignature (type) ?? default;
+			JniTypeSignature sig = default;
+			if (!type.ContainsGenericParameters)
+				sig = JNIEnvInit.androidRuntime?.TypeManager.GetTypeSignature (type) ?? default;
+
 			return sig == null
 				? JavaNativeTypeManager.ToJniName (type)
 				: sig.Name;
