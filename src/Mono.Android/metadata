@@ -1955,8 +1955,6 @@
 
   <!-- Rename Namespaces -->
   <attr api-since="36" path="/api/package[@name='android.app.appfunctions']" name="managedName">Android.App.AppFunctions</attr>
-  <attr api-since="36" path="/api/package[@name='android.app.appsearch.functions']" name="managedName">Android.App.AppSearch.Functions</attr>
-  <attr api-since="36" path="/api/package[@name='android.configinfrastructure.aconfig']" name="managedName">Android.ConfigInfrastructure.Aconfig</attr>
   <attr api-since="36" path="/api/package[@name='android.widget.photopicker']" name="managedName">Android.Widget.PhotoPicker</attr>
   <attr api-since="36" path="/api/package[@name='android.os.vibrator']" name="managedName">Android.OS.Vibrators</attr>
   <attr api-since="36" path="/api/package[@name='android.media.tv.ad']" name="managedName">Android.Media.TV.Ads</attr>
@@ -1971,6 +1969,13 @@
 
   <!-- Adding new DIM to interface changes existing EventArgs name, revert to old name. -->
   <attr api-since="36" path="/api/package[@name='android.net.wifi.p2p']/interface[@name='WifiP2pManager.ServiceResponseListener']/method[@name='onServiceAvailable' and count(parameter)=3 and parameter[1][@type='int'] and parameter[2][@type='byte[]'] and parameter[3][@type='android.net.wifi.p2p.WifiP2pDevice']]" name="argsType">ServiceResponseEventArgs</attr>
+
+  <!-- Enumify new overloads without affecting existing methods. -->
+  <attr api-since="36" path="/api/package[@name='android.hardware.camera2.params']/class[@name='OutputConfiguration']/method[@name='setMirrorMode' and count(parameter)=2 and parameter[1][@type='android.view.Surface'] and parameter[2][@type='int']]/parameter[2]" name="enumType">Android.Hardware.Camera2.Params.MirrorMode</attr>
+  <attr api-since="36" path="/api/package[@name='android.hardware.camera2']/class[@name='MultiResolutionImageReader']/constructor[@name='MultiResolutionImageReader' and count(parameter)=4 and parameter[1][@type='java.util.Collection&lt;android.hardware.camera2.params.MultiResolutionStreamInfo&gt;'] and parameter[2][@type='int'] and parameter[3][@type='int'] and parameter[4][@type='long']]/parameter[2]" name="enumType">Android.Graphics.ImageFormatType</attr>
+  <attr api-since="36" path="/api/package[@name='android.view.accessibility']/class[@name='AccessibilityNodeInfo']/method[@name='setChecked' and count(parameter)=1 and parameter[1][@type='int']]/parameter[1]" name="enumType">Android.Views.Accessibility.CheckedState</attr>
+  <attr api-since="36" path="/api/package[@name='android.hardware.camera2.params']/class[@name='OutputConfiguration']/method[@name='getMirrorMode' and count(parameter)=1 and parameter[1][@type='android.view.Surface']]" name="managedReturn">Android.Hardware.Camera2.Params.MirrorMode</attr>
+  <attr api-since="36" path="/api/package[@name='android.hardware.camera2.params']/class[@name='OutputConfiguration']/method[@name='getMirrorMode' and count(parameter)=1 and parameter[1][@type='android.view.Surface']]" name="enumReturn">true</attr>
 
   <!--
     ***********************************************************************
