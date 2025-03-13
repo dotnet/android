@@ -397,4 +397,4 @@ struct MarshalMethodName
 #endif // def RELEASE
 
 using get_function_pointer_fn = void(*)(uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr);
-extern "C" [[gnu::visibility("default")]] extern void xamarin_app_init (JNIEnv *env, get_function_pointer_fn fn) noexcept;
+extern "C" [[gnu::visibility("default")]] void xamarin_app_init (JNIEnv *env, get_function_pointer_fn fn) noexcept;
