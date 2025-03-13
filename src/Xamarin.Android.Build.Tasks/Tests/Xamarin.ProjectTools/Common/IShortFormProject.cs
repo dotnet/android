@@ -18,5 +18,6 @@ namespace Xamarin.ProjectTools
 		IList<IList<BuildItem>> ItemGroupList { get; }
 		IList<Import> Imports { get; }
 		void SetProperty (string name, string value, string condition = null);
+		bool RemoveProperty (string name);
 	}
 }

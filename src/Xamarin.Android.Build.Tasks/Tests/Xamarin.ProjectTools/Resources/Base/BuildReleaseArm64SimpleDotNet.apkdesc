@@ -5,52 +5,76 @@
       "Size": 3036
     },
     "classes.dex": {
-      "Size": 22484
+      "Size": 22268
     },
     "lib/arm64-v8a/lib__Microsoft.Android.Resource.Designer.dll.so": {
       "Size": 18288
     },
     "lib/arm64-v8a/lib_Java.Interop.dll.so": {
-      "Size": 86688
+      "Size": 91792
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
-      "Size": 117712
+      "Size": 119960
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 22384
+      "Size": 23240
+    },
+    "lib/arm64-v8a/lib_System.Collections.Immutable.dll.so": {
+      "Size": 26432
     },
     "lib/arm64-v8a/lib_System.Console.dll.so": {
-      "Size": 24392
+      "Size": 24416
+    },
+    "lib/arm64-v8a/lib_System.Diagnostics.StackTrace.dll.so": {
+      "Size": 22544
+    },
+    "lib/arm64-v8a/lib_System.IO.Compression.dll.so": {
+      "Size": 30624
+    },
+    "lib/arm64-v8a/lib_System.IO.MemoryMappedFiles.dll.so": {
+      "Size": 32664
     },
     "lib/arm64-v8a/lib_System.Linq.dll.so": {
-      "Size": 25336
+      "Size": 25464
     },
     "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
-      "Size": 628216
+      "Size": 827080
+    },
+    "lib/arm64-v8a/lib_System.Reflection.Metadata.dll.so": {
+      "Size": 65952
     },
     "lib/arm64-v8a/lib_System.Runtime.dll.so": {
-      "Size": 20056
+      "Size": 20088
     },
     "lib/arm64-v8a/lib_System.Runtime.InteropServices.dll.so": {
-      "Size": 21480
+      "Size": 21496
     },
     "lib/arm64-v8a/lib_UnnamedProject.dll.so": {
       "Size": 20024
     },
-    "lib/arm64-v8a/libarc.bin.so": {
-      "Size": 18872
+    "lib/arm64-v8a/libclrgc.so": {
+      "Size": 972344
     },
-    "lib/arm64-v8a/libmono-component-marshal-ilgen.so": {
-      "Size": 36440
+    "lib/arm64-v8a/libclrgcexp.so": {
+      "Size": 1025664
+    },
+    "lib/arm64-v8a/libclrjit.so": {
+      "Size": 3088992
+    },
+    "lib/arm64-v8a/libcoreclr.so": {
+      "Size": 6649000
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 1524752
+      "Size": 1216032
     },
-    "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3101112
+    "lib/arm64-v8a/libmscordaccore.so": {
+      "Size": 2708168
+    },
+    "lib/arm64-v8a/libmscordbi.so": {
+      "Size": 1946872
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
-      "Size": 71976
+      "Size": 71952
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
       "Size": 758896
@@ -62,16 +86,16 @@
       "Size": 165000
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 19536
+      "Size": 30560
     },
     "META-INF/BNDLTOOL.RSA": {
       "Size": 1221
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 3266
+      "Size": 4157
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 3139
+      "Size": 4030
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 2178
@@ -98,5 +122,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 3078677
+  "PackageSize": 8490176
 }

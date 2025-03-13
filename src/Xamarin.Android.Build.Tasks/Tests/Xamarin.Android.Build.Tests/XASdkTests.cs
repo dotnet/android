@@ -226,7 +226,7 @@ public class JavaSourceTest {
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
 			};
-			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
+			proj.SetRuntimeIdentifier (runtimeIdentifier);
 
 			var preview = IsPreviewFrameworkVersion (targetFramework);
 			if (preview) {

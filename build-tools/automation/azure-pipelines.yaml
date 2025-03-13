@@ -121,6 +121,7 @@ extends:
     - template: /build-tools/automation/yaml-templates/stage-msbuild-tests.yaml@self
       parameters:
         runtimeName: "CoreCLR"
+        testFilter: $(CoreCLRExcludedNunitCategories)
 
     - template: /build-tools/automation/yaml-templates/stage-msbuild-emulator-tests.yaml@self
       parameters:

@@ -102,6 +102,20 @@ partial class MonoAndroidHelper
 		return rid;
 	}
 
+	/// <summary>
+	/// Return RID corresponding to the <param name="abiOrRid"/> parameter. If `abiOrRid` is already a
+	/// valid RID, it is returned without changes. Otherwise an attempt is made to convert its value from
+	/// Android ABI name to .NET RID.
+	/// </summary>
+	public static string AbiToRidMaybe (string abiOrRid)
+	{
+		if (RidToAbiMap.ContainsKey (abiOrRid)) {
+			return abiOrRid;
+		}
+
+		return AbiToRid (abiOrRid);
+	}
+
 	public static string RidToAbi (string rid)
 	{
 		if (!RidToAbiMap.TryGetValue (rid, out string abi)) {

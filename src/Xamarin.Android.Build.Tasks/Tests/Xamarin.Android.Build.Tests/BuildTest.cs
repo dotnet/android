@@ -101,10 +101,6 @@ namespace Xamarin.Android.Build.Tests
 			});
 			if (!runtimeIdentifiers.Contains (";")) {
 				proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifiers);
-
-				// When targeting CoreCLR, XamarinAndroidApplicationProject sets `RuntimeIdentifiers` to make sure that only 64-bit
-				// targets are built. It interferes with this test when `RuntimeIdentifier` is set.
-				proj.RemoveProperty (KnownProperties.RuntimeIdentifiers);
 			} else {
 				proj.SetProperty (KnownProperties.RuntimeIdentifiers, runtimeIdentifiers);
 			}
@@ -180,7 +176,13 @@ namespace Xamarin.Android.Build.Tests
 			helper.AssertContainsEntry ($"assemblies/de-DE/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
 			foreach (var abi in rids.Select (AndroidRidAbiHelper.RuntimeIdentifierToAbi)) {
 				helper.AssertContainsEntry ($"lib/{abi}/libmonodroid.so");
-				helper.AssertContainsEntry ($"lib/{abi}/libmonosgen-2.0.so");
+
+				if (TargetRuntimeHelper.UseCoreCLR) {
+					helper.AssertContainsEntry ($"lib/{abi}/libcoreclr.so");
+				} else {
+					helper.AssertContainsEntry ($"lib/{abi}/libmonosgen-2.0.so");
+				}
+
 				if (rids.Length > 1) {
 					helper.AssertContainsEntry ($"assemblies/{abi}/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
 				} else {
