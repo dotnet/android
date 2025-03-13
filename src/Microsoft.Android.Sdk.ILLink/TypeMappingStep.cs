@@ -62,22 +62,23 @@ public class TypeMappingStep : BaseStep
 		}
 
 		// Java -> .NET mapping
-		KeyValuePair<string, List<TypeDefinition>>[] orderedJavaToDotnetMapping = TypeMappings.OrderBy (kvp => Hash (kvp.Key)).ToArray ();
-
+		var orderedJavaToDotnetMapping = TypeMappings.OrderBy (kvp => Hash (kvp.Key)).ToArray ();
 		var javaClassNameHashes = orderedJavaToDotnetMapping.Select (kvp => Hash (kvp.Key)).ToArray ();
-		GenerateHashes (javaClassNameHashes, methodName: "get_JavaClassNameHashes");
-
 		var types = orderedJavaToDotnetMapping.Select (kvp => SelectTypeDefinition (kvp.Key, kvp.Value));
+
+		GenerateHashes (javaClassNameHashes, methodName: "get_JavaClassNameHashes");
 		GenerateGetTypeByIndex (types);
+		GenerateStringSwitchMethod (type, "GetJavaClassNameByTypeIndex", orderedJavaToDotnetMapping.Select (kvp => kvp.Key).ToArray ());
 
 		// .NET -> Java mapping
-		var orderedManagedToJavaMapping = TypeMappings.SelectMany(kvp => kvp.Value.Select (type => new KeyValuePair<string, TypeDefinition>(kvp.Key, type))).OrderBy (kvp => Hash (GetAssemblyQualifiedTypeName (kvp.Value))).ToArray ();
-
-		var dotnetTypeNameHashes = orderedManagedToJavaMapping.Select (kvp => Hash (GetAssemblyQualifiedTypeName (kvp.Value))).ToArray ();
-		GenerateHashes (dotnetTypeNameHashes, methodName: "get_TypeNameHashes");
-
+		var orderedManagedToJavaMapping = TypeMappings.SelectMany(kvp => kvp.Value.Select (type => new KeyValuePair<string, string>(kvp.Key, GetAssemblyQualifiedTypeName (type)))).OrderBy (kvp => Hash (kvp.Value)).ToArray ();
+		var assemblyQualifiedTypeNames = orderedManagedToJavaMapping.Select (kvp => kvp.Value).ToArray ();
+		var assemblyQualifiedTypeNameHashes = assemblyQualifiedTypeNames.Select (Hash).ToArray ();
 		var javaClassNames = orderedManagedToJavaMapping.Select (kvp => kvp.Key).ToArray ();
-		GenerateGetJavaClassNameByIndex (javaClassNames);
+
+		GenerateHashes (assemblyQualifiedTypeNameHashes, methodName: "get_TypeNameHashes");
+		GenerateStringSwitchMethod (type, "GetJavaClassNameByIndex", javaClassNames);
+		GenerateStringSwitchMethod (type, "GetAssemblyQualifiedTypeNameByJavaClassNameIndex", assemblyQualifiedTypeNames);
 
 		void GenerateGetTypeByIndex (IEnumerable<TypeDefinition> types)
 		{
@@ -117,11 +118,11 @@ public class TypeMappingStep : BaseStep
 			il.Emit (OpCodes.Ret);
 		}
 
-		void GenerateGetJavaClassNameByIndex (string[] javaClassNames)
+		void GenerateStringSwitchMethod (TypeDefinition type, string methodName, string[] values)
 		{
-			var method = type.Methods.FirstOrDefault (m => m.Name == "GetJavaClassNameByIndex");
+			var method = type.Methods.FirstOrDefault (m => m.Name == methodName);
 			if (method is null) {
-				throw new InvalidOperationException ($"Unable to find {TypeName}.GetJavaClassNameByIndex() method");
+				throw new InvalidOperationException ($"Unable to find {type.FullName}.{methodName} method");
 			}
 
 			// Clear IL in method body
@@ -130,8 +131,8 @@ public class TypeMappingStep : BaseStep
 			var il = method.Body.GetILProcessor ();
 
 			var targets = new List<Instruction> ();
-			foreach (var name in javaClassNames) {
-				targets.Add (il.Create (OpCodes.Ldstr, name));
+			foreach (var value in values) {
+				targets.Add (il.Create (OpCodes.Ldstr, value));
 			}
 
 			il.Emit (OpCodes.Ldarg_0);

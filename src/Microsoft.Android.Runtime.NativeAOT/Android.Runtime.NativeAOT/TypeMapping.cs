@@ -12,12 +12,17 @@ internal static class TypeMapping
 {
 	internal static bool TryGetType (string javaClassName, [NotNullWhen (true)] out Type? type)
 	{
-		ulong hash = Hash (javaClassName);
+		type = null;
 
 		// the hashes array is sorted and all the hashes are unique
+		ulong hash = Hash (javaClassName);
 		int typeIndex = MemoryExtensions.BinarySearch (JavaClassNameHashes, hash);
 		if (typeIndex < 0) {
-			type = null;
+			return false;
+		}
+
+		// we need to make sure if this is the right match or if it is a hash collision
+		if (javaClassName != GetJavaClassNameByTypeIndex (typeIndex)) {
 			return false;
 		}
 
@@ -31,18 +36,23 @@ internal static class TypeMapping
 
 	internal static bool TryGetJavaClassName (Type type, [NotNullWhen (true)] out string? className)
 	{
+		className = null;
+
 		string? name = type.AssemblyQualifiedName;
 		if (name is null) {
 			className = null;
 			return false;
 		}
 
-		ulong hash = Hash (name);
-
 		// the hashes array is sorted and all the hashes are unique
+		ulong hash = Hash (name);
 		int javaClassNameIndex = MemoryExtensions.BinarySearch (TypeNameHashes, hash);
 		if (javaClassNameIndex < 0) {
-			className = null;
+			return false;
+		}
+
+		// we need to make sure if this is the match or if it is a hash collision
+		if (name != GetAssemblyQualifiedTypeNameByJavaClassNameIndex (javaClassNameIndex)) {
 			return false;
 		}
 
@@ -69,8 +79,11 @@ internal static class TypeMapping
 	}
 
 	// Replaced by src/Microsoft.Android.Sdk.ILLink/TypeMappingStep.cs
-	private static ReadOnlySpan<ulong> JavaClassNameHashes => throw new NotImplementedException ();
 	private static ReadOnlySpan<ulong> TypeNameHashes => throw new NotImplementedException ();
 	private static Type? GetTypeByIndex (int index) => throw new NotImplementedException ();
+	private static string? GetJavaClassNameByTypeIndex (int index) => throw new NotImplementedException ();
+
+	private static ReadOnlySpan<ulong> JavaClassNameHashes => throw new NotImplementedException ();
 	private static string? GetJavaClassNameByIndex (int index) => throw new NotImplementedException ();
+	private static string? GetAssemblyQualifiedTypeNameByJavaClassNameIndex (int index) => throw new NotImplementedException ();
 }
