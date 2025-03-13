@@ -173,11 +173,12 @@ namespace Xamarin.Android.Build.Tests
 				var method = type.Methods.FirstOrDefault (m => m.Name == methodName);
 				Assert.IsNotNull (method, $"{linkedMonoAndroidAssembly} should contain {typeName}.{methodName}");
 
-				var typeMapping = assembly.MainModule.Types.FirstOrDefault (t => t.Name == "ManagedTypeMapping");
-				Assert.IsNotNull (typeMapping, $"{linkedMonoAndroidAssembly} should contain ManagedTypeMapping");
-
-				method = type.Methods.FirstOrDefault (m => m.Name == "GetJavaClassNameByIndex");
-				Assert.IsNotNull (method, "TypeMapping should contain GetJavaClassNameByIndex");
+				typeName = "Android.Runtime.ManagedTypeMapping";
+				methodName = "GetJavaClassNameByIndex";
+				type = assembly.MainModule.GetType (typeName);
+				Assert.IsNotNull (type, $"{linkedMonoAndroidAssembly} should contain {typeName}");
+				method = type.Methods.FirstOrDefault (m => m.Name == methodName);
+				Assert.IsNotNull (method, $"{linkedMonoAndroidAssembly} should contain {typeName}.{methodName}");
 
 				foreach (var i in method.Body.Instructions) {
 					if (i.OpCode != Mono.Cecil.Cil.OpCodes.Ldstr)
