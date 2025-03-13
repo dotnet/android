@@ -37,7 +37,6 @@ public class TypeMappingStep : BaseStep
 	{
 		if (assembly.Name.Name == AssemblyName) {
 			MonoAndroidAssembly = assembly;
-			return;
 		}
 		if (Annotations?.GetAction (assembly) == AssemblyAction.Delete)
 			return;
