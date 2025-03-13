@@ -481,7 +481,7 @@ namespace Android.Runtime {
 			if (!type.ContainsGenericParameters)
 				sig = JNIEnvInit.androidRuntime?.TypeManager.GetTypeSignature (type) ?? default;
 
-			return sig == null
+			return sig.SimpleReference == null
 				? JavaNativeTypeManager.ToJniName (type)
 				: sig.Name;
 		}
