@@ -71,10 +71,6 @@ namespace Xamarin.ProjectTools
 			Sources.Add (new BuildItem.Source (() => "MainActivity" + Language.DefaultExtension) { TextContent = () => ProcessSourceTemplate (MainActivity ?? DefaultMainActivity) });
 
 			if (TargetRuntimeHelper.UseCoreCLR) {
-				// This is a quick hack to get all the tests executing in the CoreCLR context to work only for the, currently limited,
-				// subset of ABIs supported by CoreCLR without having to modify each test individually. Eventually it shouldn't be necessary.
-				this.SetRuntimeIdentifiers (TargetRuntimeHelper.CoreClrSupportedAbis);
-
 				// NuGet feed needed as Microsoft.Android.Runtime.CoreCLR packs not installed in workload by default
 				AddOrRemoveLocalNugetFeedPath (add: true);
 			}
