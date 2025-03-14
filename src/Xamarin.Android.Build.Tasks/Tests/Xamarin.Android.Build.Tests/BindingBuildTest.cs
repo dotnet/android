@@ -164,6 +164,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		[TestCaseSource (nameof (ClassParseOptions))]
 		public void BuildAarBindingLibraryStandalone (string classParser)
 		{
