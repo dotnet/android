@@ -6,6 +6,7 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Java.Interop.Tools.Cecil;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
@@ -79,6 +80,12 @@ namespace Xamarin.Android.Tasks
 					string fullNativeCallbackName = method.NativeCallback.FullName;
 					if (processedMethods.TryGetValue (fullNativeCallbackName, out MethodDefinition nativeCallbackWrapper)) {
 						method.NativeCallbackWrapper = nativeCallbackWrapper;
+						continue;
+					}
+
+					if (HasUnmanagedCallersOnlyAttribute (method.NativeCallback)) {
+						log.LogDebugMessage ($"[{targetArch}] Method '{method.NativeCallback.FullName}' does not need a wrapper, it already has UnmanagedCallersOnlyAttribute");
+						method.NativeCallbackWrapper = method.NativeCallback;
 						continue;
 					}
 
@@ -185,6 +192,17 @@ namespace Xamarin.Android.Tasks
 					log.LogWarning ($"[{targetArch}] Unable to delete source file '{path}'");
 					log.LogDebugMessage ($"[{targetArch}] {ex.ToString ()}");
 				}
+			}
+
+			static bool HasUnmanagedCallersOnlyAttribute (MethodDefinition method)
+			{
+				foreach (CustomAttribute ca in method.CustomAttributes) {
+					if (ca.Constructor.DeclaringType.FullName == "System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute") {
+						return true;
+					}
+				}
+
+				return false;
 			}
 		}
 

@@ -342,6 +342,7 @@ namespace Xamarin.Android.Tasks
 					JniRemappingReplacementTypeCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementTypeCount,
 					JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
 					MarshalMethodsEnabled = EnableMarshalMethods,
+					ManagedMarshalMethodsLookupEnabled = EnableManagedMarshalMethodsLookup,
 					IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
 				};
 			} else {

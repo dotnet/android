@@ -216,11 +216,12 @@ const MarshalMethodName mm_method_names[] = {
 	},
 };
 
+#endif // def RELEASE
+
 void xamarin_app_init ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] get_function_pointer_fn fn) noexcept
 {
 	// Dummy
 }
-#endif // def RELEASE
 
 static const JniRemappingIndexMethodEntry some_java_type_one_methods[] = {
 	{

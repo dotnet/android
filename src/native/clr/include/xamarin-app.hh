@@ -215,7 +215,7 @@ struct AssemblyStoreSingleAssemblyRuntimeData final
 };
 
 // Keep in strict sync with:
-//   src/Xamarin.Android.Build.Tasks/Utilities/ApplicationConfig.cs
+//   src/Xamarin.Android.Build.Tasks/Utilities/ApplicationConfigCLR.cs
 //   src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Utilities/EnvironmentHelper.cs
 struct ApplicationConfig
 {
@@ -394,8 +394,7 @@ struct MarshalMethodName
 
 [[gnu::visibility("default")]] extern const char* const mm_class_names[];
 [[gnu::visibility("default")]] extern const MarshalMethodName mm_method_names[];
+#endif // def RELEASE
 
 using get_function_pointer_fn = void(*)(uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr);
-
-[[gnu::visibility("default")]] extern void xamarin_app_init (JNIEnv *env, get_function_pointer_fn fn) noexcept;
-#endif // def RELEASE
+extern "C" [[gnu::visibility("default")]] void xamarin_app_init (JNIEnv *env, get_function_pointer_fn fn) noexcept;
