@@ -61,24 +61,42 @@ public class TypeMappingStep : BaseStep
 			throw new InvalidOperationException ($"Unable to find {TypeName} type");
 		}
 
-		// Java -> .NET mapping
-		var orderedJavaToDotnetMapping = TypeMappings.OrderBy (kvp => Hash (kvp.Key)).ToArray ();
-		var javaClassNameHashes = orderedJavaToDotnetMapping.Select (kvp => Hash (kvp.Key)).ToArray ();
-		var types = orderedJavaToDotnetMapping.Select (kvp => SelectTypeDefinition (kvp.Key, kvp.Value));
+		var typeMappingRecords = TypeMappings
+			.Select (kvp =>
+				new TypeMapRecord {
+					JavaClassName = kvp.Key,
+					Types = kvp.Value.ToArray (),
+					Context = Context,
+				})
+			.ToArray ();
 
-		GenerateHashes (javaClassNameHashes, methodName: "get_JavaClassNameHashes");
-		GenerateGetTypeByIndex (types);
-		GenerateStringSwitchMethod (type, "GetJavaClassNameByTypeIndex", orderedJavaToDotnetMapping.Select (kvp => kvp.Key).ToArray ());
+		// Java -> .NET mapping
+		{
+			var orderedJavaToDotnetMapping = typeMappingRecords.OrderBy (record => Hash (record.JavaClassName)).ToArray ();
+			var javaClassNames = orderedJavaToDotnetMapping.Select (record => record.JavaClassName).ToArray ();
+			var javaClassNameHashes = javaClassNames.Select (Hash).ToArray ();
+			var types = orderedJavaToDotnetMapping.Select (record => record.SelectTypeDefinition ());
+
+			GenerateHashes (javaClassNameHashes, methodName: "get_JavaClassNameHashes");
+			GenerateGetTypeByIndex (types);
+			GenerateStringSwitchMethod (type, "GetJavaClassNameByTypeIndex", javaClassNames);
+		}
 
 		// .NET -> Java mapping
-		var orderedManagedToJavaMapping = TypeMappings.SelectMany(kvp => kvp.Value.Select (type => new KeyValuePair<string, string>(kvp.Key, GetAssemblyQualifiedTypeName (type)))).OrderBy (kvp => Hash (kvp.Value)).ToArray ();
-		var assemblyQualifiedTypeNames = orderedManagedToJavaMapping.Select (kvp => kvp.Value).ToArray ();
-		var assemblyQualifiedTypeNameHashes = assemblyQualifiedTypeNames.Select (Hash).ToArray ();
-		var javaClassNames = orderedManagedToJavaMapping.Select (kvp => kvp.Key).ToArray ();
+		{
+			var orderedManagedToJavaMapping = typeMappingRecords
+				.SelectMany (record => record.Flatten ())
+				.OrderBy (record => Hash (record.AssemblyQualifiedTypeName))
+				.ToArray ();
 
-		GenerateHashes (assemblyQualifiedTypeNameHashes, methodName: "get_TypeNameHashes");
-		GenerateStringSwitchMethod (type, "GetJavaClassNameByIndex", javaClassNames);
-		GenerateStringSwitchMethod (type, "GetAssemblyQualifiedTypeNameByJavaClassNameIndex", assemblyQualifiedTypeNames);
+			var assemblyQualifiedTypeNames = orderedManagedToJavaMapping.Select (record => record.AssemblyQualifiedTypeName).ToArray ();
+			var assemblyQualifiedTypeNameHashes = assemblyQualifiedTypeNames.Select (Hash).ToArray ();
+			var javaClassNames = orderedManagedToJavaMapping.Select (record => record.JavaClassName).ToArray ();
+
+			GenerateHashes (assemblyQualifiedTypeNameHashes, methodName: "get_TypeNameHashes");
+			GenerateStringSwitchMethod (type, "GetJavaClassNameByIndex", javaClassNames);
+			GenerateStringSwitchMethod (type, "GetAssemblyQualifiedTypeNameByJavaClassNameIndex", assemblyQualifiedTypeNames);
+		}
 
 		void GenerateGetTypeByIndex (IEnumerable<TypeDefinition> types)
 		{
@@ -217,54 +235,64 @@ public class TypeMappingStep : BaseStep
 
 			return arrayType;
 		}
-
-		string GetAssemblyQualifiedTypeName (TypeDefinition type)
-		{
-			var fullName = type.FullName.Replace ('/', '.').Replace ('+', '.');
-			var assemblyName = type.Module.Assembly.FullName;
-			return $"{fullName}, {assemblyName}";
-		}
 	}
 
-	TypeDefinition SelectTypeDefinition (string javaName, List<TypeDefinition> list)
+	class TypeMapRecord
 	{
-		if (list.Count == 1)
-			return list[0];
+		public required string JavaClassName { get; init; }
+		public required TypeDefinition[] Types { get; init; }
+		public required LinkContext Context { get; init; }
 
-		var best = list[0];
-		foreach (var type in list) {
-			if (type == best)
-				continue;
-			// Types in Mono.Android assembly should be first in the list
-			if (best.Module.Assembly.Name.Name != "Mono.Android" &&
-					type.Module.Assembly.Name.Name == "Mono.Android") {
-				best = type;
-				continue;
-			}
-			// We found the `Invoker` type *before* the declared type
- 			// Fix things up so the abstract type is first, and the `Invoker` is considered a duplicate.
-			if ((type.IsAbstract || type.IsInterface) &&
-					!best.IsAbstract &&
-					!best.IsInterface &&
-					type.IsAssignableFrom (best, Context)) {
-				best = type;
-				continue;
-			}
+		public string AssemblyQualifiedTypeName => TypeDefinitionRocks.GetAssemblyQualifiedName (SelectTypeDefinition (), Context);
 
-			// we found a generic subclass of a non-generic type
-			if (type.IsGenericInstance &&
-					!best.IsGenericInstance &&
-					type.IsAssignableFrom (best, Context)) {
-				best = type;
-				continue;
+		public TypeDefinition SelectTypeDefinition ()
+		{
+			if (Types.Length == 1)
+				return Types[0];
+
+			var best = Types[0];
+			foreach (var type in Types) {
+				if (type == best)
+					continue;
+				// Types in Mono.Android assembly should be first in the list
+				if (best.Module.Assembly.Name.Name != "Mono.Android" &&
+						type.Module.Assembly.Name.Name == "Mono.Android") {
+					best = type;
+					continue;
+				}
+				// We found the `Invoker` type *before* the declared type
+				// Fix things up so the abstract type is first, and the `Invoker` is considered a duplicate.
+				if ((type.IsAbstract || type.IsInterface) &&
+						!best.IsAbstract &&
+						!best.IsInterface &&
+						type.IsAssignableFrom (best, Context)) {
+					best = type;
+					continue;
+				}
+
+				// we found a generic subclass of a non-generic type
+				if (type.IsGenericInstance &&
+						!best.IsGenericInstance &&
+						type.IsAssignableFrom (best, Context)) {
+					best = type;
+					continue;
+				}
 			}
+			foreach (var type in Types) {
+				if (type == best)
+					continue;
+				Context.LogMessage ($"Duplicate typemap entry for {JavaClassName} => {type.FullName}");
+			}
+			return best;
 		}
-		foreach (var type in list) {
-			if (type == best)
-				continue;
-			Context.LogMessage ($"Duplicate typemap entry for {javaName} => {type.FullName}");
-		}
-		return best;
+
+		public IEnumerable<TypeMapRecord> Flatten () =>
+			Types.Select (type =>
+				new TypeMapRecord {
+					JavaClassName = JavaClassName,
+					Types = new[] { type },
+					Context = Context,
+				});
 	}
 
 	void ProcessType (AssemblyDefinition assembly, TypeDefinition type)
