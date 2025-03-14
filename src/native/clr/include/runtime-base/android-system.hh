@@ -70,6 +70,11 @@ namespace xamarin::android {
 			primary_override_dir = determine_primary_override_dir (home);
 		}
 
+		static auto get_native_libraries_dir () noexcept -> std::string const&
+		{
+			return native_libraries_dir;
+		}
+
 		static void create_update_dir (std::string const& override_dir) noexcept
 		{
 			if constexpr (Constants::is_release_build) {
@@ -141,6 +146,7 @@ namespace xamarin::android {
 		static inline bool running_in_emulator = false;
 		static inline bool embedded_dso_mode_enabled = false;
 		static inline std::string primary_override_dir;
+		static inline std::string native_libraries_dir;
 
 #if defined (DEBUG)
 		static inline std::unordered_map<std::string, std::string> bundled_properties;
