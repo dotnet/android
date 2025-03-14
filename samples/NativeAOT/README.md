@@ -7,10 +7,17 @@ This is the sample for using NativeAOT with .net Android
 In order to debug we need to use `lldb`. First install the application
 
 ```dotnetcli
-./dotnet-local.sh build samples/NativeAOT/NativeAOT.csproj -c Debug -t:Install
+./dotnet-local.sh build samples/NativeAOT/NativeAOT.csproj -c Release -p:DebugSymbols=true -t:Install
 ```
 
-Then user the following commands to install the `lldb-server` for the application.
+You can then use the `runwithdebugger.sh/ps1` scripts to run all the steps you need to setup the debugger.
+What follows is an explanation of what that script does.
+
+## How it works
+
+In order to lldb debugging to work we need to make sure we install the `lldb-server` on the device.
+The following steps, install the `lldb-server`, stop any existing lldb-server process and they launches
+it. It also sets up the required port forwarding so we can connect to the server from the local machine.
 
 ```dotnetcli
 adb push $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/18/lib/linux/aarch64/lldb-server /data/local/tmp/lldb-server
@@ -31,13 +38,17 @@ adb shell am start -S --user "0" -a "android.intent.action.MAIN" -c "android.int
 The `-D` is important as it stops the app from running until the java debugger is attached. This can be useful if your app is crashing on startup.
 If you do not want to the app to pause on startup, you can omit the `-D` argument.
 
-Now that the app is running we need to get the process id.
+Now that the app is running we need to get the process id. We do that using `adb shell ps`. 
+The `grep` is used to filter the results to only our app.
 
 ```dotnetcli
 adb shell ps | grep net.dot.hellonativeaot
 ```
 
-Grab the process id, then using lldb from the command line use the following
+Grab the process id, then using lldb from the command line use the following commands.
+These setup `lldb` and loads the symbols, then attaches to the process. It also sets up
+a `clearjdb` command which you can use from within the `lldb` REPL to clear the Java
+Debugger dialog you get when you launch your app.
 
 ```dotnetcli
 lldb
