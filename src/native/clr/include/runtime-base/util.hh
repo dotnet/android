@@ -8,6 +8,7 @@
 #include <cerrno>
 #include <concepts>
 #include <cstdio>
+#include <optional>
 #include <string_view>
 
 #include "../constants.hh"
@@ -86,6 +87,17 @@ namespace xamarin::android {
 			}
 
 			return file_exists (file.get ());
+		}
+
+		static auto get_file_size_at (int dirfd, const char *file_name) noexcept -> std::optional<size_t>
+		{
+			struct stat sbuf;
+			if (fstatat (dirfd, file_name, &sbuf, 0) == -1) {
+				log_warn (LOG_ASSEMBLY, "Failed to stat file '{}': {}", file_name, std::strerror (errno));
+				return std::nullopt;
+			}
+
+			return static_cast<size_t>(sbuf.st_size);
 		}
 
 		static void set_environment_variable (std::string_view const& name, jstring_wrapper& value) noexcept

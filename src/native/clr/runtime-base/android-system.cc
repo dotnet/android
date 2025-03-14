@@ -277,6 +277,7 @@ AndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcep
 	} else {
 		log_debug (LOG_ASSEMBLY, "Native libs extracted to {}, assuming application/android:extractNativeLibs == true", appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
 		set_embedded_dso_mode_enabled (false);
+		native_libraries_dir.assign (appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
 	}
 }
 
