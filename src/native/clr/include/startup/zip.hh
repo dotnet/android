@@ -59,23 +59,12 @@ namespace xamarin::android {
 		// .data() must be used otherwise string_view length will include the trailing \0 in the array
 		static constexpr std::string_view lib_prefix { lib_prefix_array.data () };
 
-		static constexpr std::string_view dso_suffix { ".so" };
-
-        static constexpr std::string_view assembly_store_prefix { "libassemblies." };
-        static constexpr std::string_view assembly_store_extension { ".blob" };
-
-        static constexpr size_t assembly_store_file_name_size = calc_size (assembly_store_prefix, Constants::android_lib_abi, assembly_store_extension, dso_suffix);
-        static constexpr auto assembly_store_file_name_array = concat_string_views<assembly_store_file_name_size> (assembly_store_prefix, Constants::android_lib_abi, assembly_store_extension, dso_suffix);
-
-        // .data() must be used otherwise string_view length will include the trailing \0 in the array
-        static constexpr std::string_view assembly_store_file_name { assembly_store_file_name_array.data () };
-
-        static constexpr size_t assembly_store_file_path_size = calc_size(lib_prefix, assembly_store_file_name);
-        static constexpr auto assembly_store_file_path_array = concat_string_views<assembly_store_file_path_size> (lib_prefix, assembly_store_file_name);
+		static constexpr size_t assembly_store_file_path_size = calc_size(lib_prefix, Constants::assembly_store_file_name);
+		static constexpr auto assembly_store_file_path_array = concat_string_views<assembly_store_file_path_size> (lib_prefix, Constants::assembly_store_file_name);
 
 	public:
-        // .data() must be used otherwise string_view length will include the trailing \0 in the array
-        static constexpr std::string_view assembly_store_file_path { assembly_store_file_path_array.data () };
+		// .data() must be used otherwise string_view length will include the trailing \0 in the array
+		static constexpr std::string_view assembly_store_file_path { assembly_store_file_path_array.data () };
 
 	public:
 		// Scans the ZIP archive for any entries matching the `lib/{ARCH}/` prefix and calls `entry_cb`

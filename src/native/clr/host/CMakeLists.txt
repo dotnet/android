@@ -33,6 +33,7 @@ set(XAMARIN_MONODROID_SOURCES
   host-jni.cc
   host-util.cc
   internal-pinvokes.cc
+  jni-remapping.cc
   os-bridge.cc
   pinvoke-override.cc
   typemap.cc

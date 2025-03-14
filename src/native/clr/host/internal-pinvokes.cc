@@ -2,6 +2,7 @@
 #include <host/os-bridge.hh>
 #include <host/typemap.hh>
 #include <runtime-base/internal-pinvokes.hh>
+#include <runtime-base/jni-remapping.hh>
 
 using namespace xamarin::android;
 
@@ -74,4 +75,16 @@ char* monodroid_TypeManager_get_java_class_name (jclass klass) noexcept
 void monodroid_free (void *ptr) noexcept
 {
 	free (ptr);
+}
+
+const char*
+_monodroid_lookup_replacement_type (const char *jniSimpleReference)
+{
+	return JniRemapping::lookup_replacement_type (jniSimpleReference);
+}
+
+const JniRemappingReplacementMethod*
+_monodroid_lookup_replacement_method_info (const char *jniSourceType, const char *jniMethodName, const char *jniMethodSignature)
+{
+	return JniRemapping::lookup_replacement_method_info (jniSourceType, jniMethodName, jniMethodSignature);
 }

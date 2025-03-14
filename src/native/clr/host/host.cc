@@ -1,4 +1,9 @@
+#include <sys/types.h>
+#include <dirent.h>
+
+#include <cerrno>
 #include <cstdio>
+#include <cstring>
 
 #include <coreclrhost.h>
 
@@ -62,10 +67,98 @@ auto Host::zip_scan_callback (std::string_view const& apk_path, int apk_fd, dyna
 	return false;
 }
 
+[[gnu::always_inline]]
+void Host::scan_filesystem_for_assemblies_and_libraries () noexcept
+{
+	std::string const& native_lib_dir = AndroidSystem::get_native_libraries_dir ();
+	log_debug (LOG_ASSEMBLY, "Looking for assemblies in '{}'", native_lib_dir);
+
+	DIR *lib_dir = opendir (native_lib_dir.c_str ());
+	if (lib_dir == nullptr) [[unlikely]] {
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			std::format (
+				"Unable to open native library directory '{}'. {}",
+				native_lib_dir,
+				std::strerror (errno)
+			)
+		);
+	}
+
+	int dir_fd = dirfd (lib_dir);
+	if (dir_fd < 0) [[unlikely]] {
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			std::format (
+				"Unable to obtain file descriptor for opened directory '{}'. {}",
+				native_lib_dir,
+				std::strerror (errno)
+			)
+		);
+	}
+
+	do {
+		errno = 0;
+		dirent *cur = readdir (lib_dir);
+		if (cur == nullptr) {
+			if (errno != 0) {
+				log_warn (LOG_ASSEMBLY, "Failed to open a directory entry from '{}': {}", native_lib_dir, std::strerror (errno));
+				continue; // No harm, keep going
+			}
+			break; // we're done
+		}
+
+		// We can ignore the obvious entries
+		if (cur->d_name[0] == '.') {
+			continue;
+		}
+
+		if (!found_assembly_store) {
+			found_assembly_store = Constants::assembly_store_file_name.compare (cur->d_name) == 0;
+			if (!found_assembly_store) {
+				continue;
+			}
+
+			log_debug (LOG_ASSEMBLY, "Found assembly store in '{}/{}'", native_lib_dir, Constants::assembly_store_file_name);
+			int store_fd = openat (dir_fd, cur->d_name, O_RDONLY);
+			if (store_fd < 0) {
+				Helpers::abort_application (
+					LOG_ASSEMBLY,
+					std::format (
+						"Unable to open assembly store '{}/{}' for reading. {}",
+						native_lib_dir,
+						Constants::assembly_store_file_name,
+						std::strerror (errno)
+					)
+				);
+			}
+
+			auto file_size = Util::get_file_size_at (dir_fd, cur->d_name);
+			if (!file_size) {
+				// get_file_size_at logged errno for us
+				Helpers::abort_application (
+					LOG_ASSEMBLY,
+					std::format (
+						"Unable to map assembly store '{}/{}'",
+						native_lib_dir,
+						Constants::assembly_store_file_name
+					)
+				);
+			}
+
+			AssemblyStore::map (store_fd, cur->d_name, 0, static_cast<uint32_t>(file_size.value ()));
+			close (store_fd);
+			break; // we've found all we need
+		}
+	} while (true);
+	closedir (lib_dir);
+}
+
 void Host::gather_assemblies_and_libraries (jstring_array_wrapper& runtimeApks, bool have_split_apks)
 {
 	if (!AndroidSystem::is_embedded_dso_mode_enabled ()) {
-		Helpers::abort_application ("Filesystem mode not supported yet.");
+		scan_filesystem_for_assemblies_and_libraries ();
+		return;
 	}
 
 	int64_t apk_count = static_cast<int64_t>(runtimeApks.get_length ());
