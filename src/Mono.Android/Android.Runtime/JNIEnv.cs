@@ -477,10 +477,13 @@ namespace Android.Runtime {
 			if (type == null)
 				throw new ArgumentNullException ("type");
 
-			string? java = TypemapManagedToJava (type);
-			return java == null
+			JniTypeSignature sig = default;
+			if (!type.ContainsGenericParameters)
+				sig = JNIEnvInit.androidRuntime?.TypeManager.GetTypeSignature (type) ?? default;
+
+			return sig.SimpleReference == null
 				? JavaNativeTypeManager.ToJniName (type)
-				: java;
+				: sig.Name;
 		}
 
 		public static IntPtr ToJniHandle (IJavaObject? value)
