@@ -58,6 +58,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void CheckAssetsAreIncludedInAPK ()
 		{
 			var projectPath = Path.Combine ("temp", TestName);
@@ -108,6 +109,17 @@ namespace Xamarin.Android.Build.Tests
 			proj.References.Add (new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"));
 			using (var libb = CreateDllBuilder (Path.Combine (projectPath, libproj.ProjectName))) {
 				Assert.IsTrue (libb.Build (libproj), "{0} should have built successfully.", libproj.ProjectName);
+				// Check the library project has valid paths in its aar
+				using (var apk = ZipHelper.OpenZip (Path.Combine (Root, libb.ProjectDirectory, libproj.OutputPath, $"{libproj.ProjectName}.aar"))) {
+					foreach (var a in libproj.OtherBuildItems.Where (x => x is AndroidItem.AndroidAsset)) {
+						var item = a.Include ().ToLower ().Replace ("\\", "/");
+						if (item.EndsWith ("/", StringComparison.Ordinal))
+							continue;
+						var data = ZipHelper.ReadFileFromZip (apk, item);
+						Assert.IsNotNull (data, "{0} should be in the apk.", item);
+						Assert.AreEqual (a.TextContent (), Encoding.ASCII.GetString (data), "The Contents of {0} should be \"{1}\"", item, a.TextContent ());
+					}
+				}
 				using (var b = CreateApkBuilder (Path.Combine (projectPath, proj.ProjectName))) {
 					Assert.IsTrue (b.Build (proj), "{0} should have built successfully.", proj.ProjectName);
 					using (var apk = ZipHelper.OpenZip (Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk"))) {
