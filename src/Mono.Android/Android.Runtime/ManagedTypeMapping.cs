@@ -1,14 +1,14 @@
+using System;
 using System.Buffers.Binary;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO.Hashing;
 using System.Runtime.InteropServices;
 using System.Text;
-using Android.Runtime;
 
-namespace Microsoft.Android.Runtime;
+namespace Android.Runtime;
 
-internal static class TypeMapping
+internal static class ManagedTypeMapping
 {
 	internal static bool TryGetType (string javaClassName, [NotNullWhen (true)] out Type? type)
 	{
