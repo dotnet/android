@@ -61,28 +61,42 @@ public class TypeMappingStep : BaseStep
 			throw new InvalidOperationException ($"Unable to find {TypeName} type");
 		}
 
+		var typeMappingRecords = TypeMappings
+			.Select (kvp =>
+				new TypeMapRecord {
+					JavaClassName = kvp.Key,
+					Types = kvp.Value.ToArray (),
+					Context = Context,
+				})
+			.ToArray ();
+
 		// Java -> .NET mapping
-		KeyValuePair<string, List<TypeDefinition>>[] orderedJavaToDotnetMapping = TypeMappings.OrderBy (kvp => Hash (kvp.Key)).ToArray ();
+		{
+			var orderedJavaToDotnetMapping = typeMappingRecords.OrderBy (record => Hash (record.JavaClassName)).ToArray ();
+			var javaClassNames = orderedJavaToDotnetMapping.Select (record => record.JavaClassName).ToArray ();
+			var javaClassNameHashes = javaClassNames.Select (Hash).ToArray ();
+			var types = orderedJavaToDotnetMapping.Select (record => record.SelectTypeDefinition ());
 
-		var javaClassNameHashes = orderedJavaToDotnetMapping.Select (kvp => Hash (kvp.Key)).ToArray ();
-		GenerateHashes (javaClassNameHashes, methodName: "get_JavaClassNameHashes");
-
-		var types = orderedJavaToDotnetMapping.Select (kvp => SelectTypeDefinition (kvp.Key, kvp.Value));
-		GenerateGetTypeByIndex (types);
+			GenerateHashes (javaClassNameHashes, methodName: "get_JavaClassNameHashes");
+			GenerateGetTypeByIndex (types);
+			GenerateStringSwitchMethod (type, "GetJavaClassNameByTypeIndex", javaClassNames);
+		}
 
 		// .NET -> Java mapping
-		KeyValuePair<string, List<TypeDefinition>>[] orderedManagedToJavaMapping = TypeMappings.OrderBy (kvp => Hash (SelectTypeDefinition(kvp.Key, kvp.Value).FullName)).ToArray ();
+		{
+			var orderedManagedToJavaMapping = typeMappingRecords
+				.SelectMany (record => record.Flatten ())
+				.OrderBy (record => Hash (record.AssemblyQualifiedTypeName))
+				.ToArray ();
 
-		var dotnetTypeNameHashes = orderedManagedToJavaMapping.Select (kvp => Hash (SelectTypeDefinition(kvp.Key, kvp.Value).FullName)).ToArray ();
-		GenerateHashes (dotnetTypeNameHashes, methodName: "get_TypeNameHashes");
+			var assemblyQualifiedTypeNames = orderedManagedToJavaMapping.Select (record => record.AssemblyQualifiedTypeName).ToArray ();
+			var assemblyQualifiedTypeNameHashes = assemblyQualifiedTypeNames.Select (Hash).ToArray ();
+			var javaClassNames = orderedManagedToJavaMapping.Select (record => record.JavaClassName).ToArray ();
 
-		string[] javaClassNames = orderedManagedToJavaMapping.Select (kvp => kvp.Key).ToArray ();
-		GenerateGetJavaClassNameByIndex (javaClassNames);
-
-		// Generate remap arrays
-		var typeIndexKeys = orderedJavaToDotnetMapping.Select (kvp => kvp.Key).ToArray ();
-		var javaClassNameIndexKeys = orderedManagedToJavaMapping.Select (kvp => kvp.Key).ToArray ();
-		GenerateIndexRemapping (typeIndexKeys, javaClassNameIndexKeys);
+			GenerateHashes (assemblyQualifiedTypeNameHashes, methodName: "get_TypeNameHashes");
+			GenerateStringSwitchMethod (type, "GetJavaClassNameByIndex", javaClassNames);
+			GenerateStringSwitchMethod (type, "GetAssemblyQualifiedTypeNameByJavaClassNameIndex", assemblyQualifiedTypeNames);
+		}
 
 		void GenerateGetTypeByIndex (IEnumerable<TypeDefinition> types)
 		{
@@ -122,11 +136,11 @@ public class TypeMappingStep : BaseStep
 			il.Emit (OpCodes.Ret);
 		}
 
-		void GenerateGetJavaClassNameByIndex (string[] javaClassNames)
+		void GenerateStringSwitchMethod (TypeDefinition type, string methodName, string[] values)
 		{
-			var method = type.Methods.FirstOrDefault (m => m.Name == "GetJavaClassNameByIndex");
+			var method = type.Methods.FirstOrDefault (m => m.Name == methodName);
 			if (method is null) {
-				throw new InvalidOperationException ($"Unable to find {TypeName}.GetJavaClassNameByIndex() method");
+				throw new InvalidOperationException ($"Unable to find {type.FullName}.{methodName} method");
 			}
 
 			// Clear IL in method body
@@ -135,8 +149,8 @@ public class TypeMappingStep : BaseStep
 			var il = method.Body.GetILProcessor ();
 
 			var targets = new List<Instruction> ();
-			foreach (var name in javaClassNames) {
-				targets.Add (il.Create (OpCodes.Ldstr, name));
+			foreach (var value in values) {
+				targets.Add (il.Create (OpCodes.Ldstr, value));
 			}
 
 			il.Emit (OpCodes.Ldarg_0);
@@ -171,28 +185,6 @@ public class TypeMappingStep : BaseStep
 			}
 
 			GenerateReadOnlySpanGetter<ulong> (type, methodName, hashes, sizeof (ulong), BitConverter.GetBytes);
-		}
-
-		void GenerateIndexRemapping (string[] typeIndexKeys, string[] javaClassNameIndexKeys)
-		{
-			System.Diagnostics.Debug.Assert(typeIndexKeys.Length == javaClassNameIndexKeys.Length);
-			int length = typeIndexKeys.Length;
-
-			var javaClassNameIndexToTypeIndex = new int[length];
-			var typeIndexToJavaClassNameIndex = new int[length];
-
-			for (int i = 0; i < length; i++) {
-				for (int j = 0; j < length; j++) {
-					if (typeIndexKeys[i] == javaClassNameIndexKeys[j]) {
-						typeIndexToJavaClassNameIndex[i] = j;
-						javaClassNameIndexToTypeIndex[j] = i;
-						break;
-					}
-				}
-			}
-
-			GenerateReadOnlySpanGetter (type, "get_JavaClassNameIndexToTypeIndex", javaClassNameIndexToTypeIndex, sizeof (int), BitConverter.GetBytes);
-			GenerateReadOnlySpanGetter (type, "get_TypeIndexToJavaClassNameIndex", typeIndexToJavaClassNameIndex, sizeof (int), BitConverter.GetBytes);
 		}
 
 		void GenerateReadOnlySpanGetter<T> (TypeDefinition type, string name, T[] data, int sizeOfT, Func<T, byte[]> getBytes)
@@ -245,37 +237,62 @@ public class TypeMappingStep : BaseStep
 		}
 	}
 
-	TypeDefinition SelectTypeDefinition (string javaName, List<TypeDefinition> list)
+	class TypeMapRecord
 	{
-		if (list.Count == 1)
-			return list[0];
+		public required string JavaClassName { get; init; }
+		public required TypeDefinition[] Types { get; init; }
+		public required LinkContext Context { get; init; }
 
-		var best = list[0];
-		foreach (var type in list) {
-			if (type == best)
-				continue;
-			// Types in Mono.Android assembly should be first in the list
-			if (best.Module.Assembly.Name.Name != "Mono.Android" &&
-					type.Module.Assembly.Name.Name == "Mono.Android") {
-				best = type;
-				continue;
+		public string AssemblyQualifiedTypeName => TypeDefinitionRocks.GetAssemblyQualifiedName (SelectTypeDefinition (), Context);
+
+		public TypeDefinition SelectTypeDefinition ()
+		{
+			if (Types.Length == 1)
+				return Types[0];
+
+			var best = Types[0];
+			foreach (var type in Types) {
+				if (type == best)
+					continue;
+				// Types in Mono.Android assembly should be first in the list
+				if (best.Module.Assembly.Name.Name != "Mono.Android" &&
+						type.Module.Assembly.Name.Name == "Mono.Android") {
+					best = type;
+					continue;
+				}
+				// We found the `Invoker` type *before* the declared type
+				// Fix things up so the abstract type is first, and the `Invoker` is considered a duplicate.
+				if ((type.IsAbstract || type.IsInterface) &&
+						!best.IsAbstract &&
+						!best.IsInterface &&
+						type.IsAssignableFrom (best, Context)) {
+					best = type;
+					continue;
+				}
+
+				// we found a generic subclass of a non-generic type
+				if (type.IsGenericInstance &&
+						!best.IsGenericInstance &&
+						type.IsAssignableFrom (best, Context)) {
+					best = type;
+					continue;
+				}
 			}
-			// We found the `Invoker` type *before* the declared type
- 			// Fix things up so the abstract type is first, and the `Invoker` is considered a duplicate.
-			if ((type.IsAbstract || type.IsInterface) &&
-					!best.IsAbstract &&
-					!best.IsInterface &&
-					type.IsAssignableFrom (best, Context)) {
-				best = type;
-				continue;
+			foreach (var type in Types) {
+				if (type == best)
+					continue;
+				Context.LogMessage ($"Duplicate typemap entry for {JavaClassName} => {type.FullName}");
 			}
+			return best;
 		}
-		foreach (var type in list) {
-			if (type == best)
-				continue;
-			Context.LogMessage ($"Duplicate typemap entry for {javaName} => {type.FullName}");
-		}
-		return best;
+
+		public IEnumerable<TypeMapRecord> Flatten () =>
+			Types.Select (type =>
+				new TypeMapRecord {
+					JavaClassName = JavaClassName,
+					Types = new[] { type },
+					Context = Context,
+				});
 	}
 
 	void ProcessType (AssemblyDefinition assembly, TypeDefinition type)

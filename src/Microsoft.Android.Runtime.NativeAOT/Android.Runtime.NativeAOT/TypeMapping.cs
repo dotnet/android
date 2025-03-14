@@ -12,12 +12,17 @@ internal static class TypeMapping
 {
 	internal static bool TryGetType (string javaClassName, [NotNullWhen (true)] out Type? type)
 	{
-		ulong hash = Hash (javaClassName);
+		type = null;
 
 		// the hashes array is sorted and all the hashes are unique
+		ulong hash = Hash (javaClassName);
 		int typeIndex = MemoryExtensions.BinarySearch (JavaClassNameHashes, hash);
 		if (typeIndex < 0) {
-			type = null;
+			return false;
+		}
+
+		// we need to make sure if this is the right match or if it is a hash collision
+		if (javaClassName != GetJavaClassNameByTypeIndex (typeIndex)) {
 			return false;
 		}
 
@@ -26,30 +31,28 @@ internal static class TypeMapping
 			throw new InvalidOperationException ($"Type with hash {hash} not found.");
 		}
 
-		// ensure this is not a hash collision
-		var resolvedJavaClassName = GetJavaClassNameByIndex (TypeIndexToJavaClassNameIndex [typeIndex]);
-		if (resolvedJavaClassName != javaClassName) {
-			type = null;
-			return false;
-		}
-
 		return true;
 	}
 
 	internal static bool TryGetJavaClassName (Type type, [NotNullWhen (true)] out string? className)
 	{
-		string? fullName = type.FullName;
-		if (fullName is null) {
+		className = null;
+
+		string? name = type.AssemblyQualifiedName;
+		if (name is null) {
 			className = null;
 			return false;
 		}
 
-		ulong hash = Hash (fullName);
-
 		// the hashes array is sorted and all the hashes are unique
+		ulong hash = Hash (name);
 		int javaClassNameIndex = MemoryExtensions.BinarySearch (TypeNameHashes, hash);
 		if (javaClassNameIndex < 0) {
-			className = null;
+			return false;
+		}
+
+		// we need to make sure if this is the match or if it is a hash collision
+		if (name != GetAssemblyQualifiedTypeNameByJavaClassNameIndex (javaClassNameIndex)) {
 			return false;
 		}
 
@@ -58,19 +61,12 @@ internal static class TypeMapping
 			throw new InvalidOperationException ($"Java class name with hash {hash} not found.");
 		}
 
-		// ensure this is not a hash collision
-		var resolvedType = GetTypeByIndex (JavaClassNameIndexToTypeIndex [javaClassNameIndex]);
-		if (resolvedType?.FullName != type.FullName) {
-			className = null;
-			return false;
-		}
-
 		return true;
 	}
 
-	private static ulong Hash (string javaClassName)
+	private static ulong Hash (string value)
 	{
-		ReadOnlySpan<byte> bytes = MemoryMarshal.AsBytes (javaClassName.AsSpan ());
+		ReadOnlySpan<byte> bytes = MemoryMarshal.AsBytes (value.AsSpan ());
 		ulong hash = XxHash3.HashToUInt64 (bytes);
 
 		// The bytes in the hashes array are stored as little endian. If the target platform is big endian,
@@ -83,10 +79,11 @@ internal static class TypeMapping
 	}
 
 	// Replaced by src/Microsoft.Android.Sdk.ILLink/TypeMappingStep.cs
-	private static ReadOnlySpan<ulong> JavaClassNameHashes => throw new NotImplementedException ();
 	private static ReadOnlySpan<ulong> TypeNameHashes => throw new NotImplementedException ();
-	private static ReadOnlySpan<int> JavaClassNameIndexToTypeIndex => throw new NotImplementedException ();
-	private static ReadOnlySpan<int> TypeIndexToJavaClassNameIndex => throw new NotImplementedException ();
 	private static Type? GetTypeByIndex (int index) => throw new NotImplementedException ();
+	private static string? GetJavaClassNameByTypeIndex (int index) => throw new NotImplementedException ();
+
+	private static ReadOnlySpan<ulong> JavaClassNameHashes => throw new NotImplementedException ();
 	private static string? GetJavaClassNameByIndex (int index) => throw new NotImplementedException ();
+	private static string? GetAssemblyQualifiedTypeNameByJavaClassNameIndex (int index) => throw new NotImplementedException ();
 }

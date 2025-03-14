@@ -172,9 +172,6 @@ namespace Xamarin.Android.Build.Tests
 			var javaClassNames = new List<string> ();
 			var types = new List<TypeReference> ();
 
-			int[] typeIndexToJavaClassNameIndexRemapping;
-			int[] javaClassNameIndexToTypeIndexRemapping;
-
 			var linkedRuntimeAssembly = Path.Combine (intermediate, "android-arm64", "linked", "Microsoft.Android.Runtime.NativeAOT.dll");
 			FileAssert.Exists (linkedRuntimeAssembly);
 			using (var assembly = AssemblyDefinition.ReadAssembly (linkedRuntimeAssembly)) {
@@ -208,9 +205,6 @@ namespace Xamarin.Android.Build.Tests
 						continue;
 					types.Add (typeReference);
 				}
-
-				typeIndexToJavaClassNameIndexRemapping = MemoryMarshal.Cast<byte, int> (type.Fields.First (f => f.Name == "s_get_TypeIndexToJavaClassNameIndex_data").InitialValue).ToArray ();
-				javaClassNameIndexToTypeIndexRemapping = MemoryMarshal.Cast<byte, int> (type.Fields.First (f => f.Name == "s_get_JavaClassNameIndexToTypeIndex_data").InitialValue).ToArray ();
 
 				// Basic types
 				AssertTypeMap ("java/lang/Object", "Java.Lang.Object");
@@ -259,10 +253,6 @@ namespace Xamarin.Android.Build.Tests
 					Assert.Fail ($"TypeMapping should contain \"{javaName}\"!");
 				} else if (typeIndex < 0) {
 					Assert.Fail ($"TypeMapping should contain \"{managedName}\"!");
-				} else if (typeIndexToJavaClassNameIndexRemapping[typeIndex] != javaNameIndex) {
-					Assert.Fail ($"TypeMapping should contain \"{javaName}\" <-> \"{managedName}\"");
-				} else if (javaClassNameIndexToTypeIndexRemapping[javaNameIndex] != typeIndex) {
-					Assert.Fail ($"TypeMapping should contain \"{javaName}\" <-> \"{managedName}\"");
 				}
 			}
 		}
