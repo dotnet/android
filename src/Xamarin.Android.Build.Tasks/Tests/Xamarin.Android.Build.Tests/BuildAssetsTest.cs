@@ -58,6 +58,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void CheckAssetsAreIncludedInAPK ()
 		{
 			var projectPath = Path.Combine ("temp", TestName);
@@ -139,7 +140,6 @@ namespace Xamarin.Android.Build.Tests
 							Assert.AreEqual (a.TextContent (), Encoding.ASCII.GetString (data), "The Contents of {0} should be \"{1}\"", item, a.TextContent ());
 						}
 					}
-					Assert.Fail ();
 					Directory.Delete (Path.Combine (Root, projectPath), recursive: true);
 				}
 			}
