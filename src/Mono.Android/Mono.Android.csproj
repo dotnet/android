@@ -34,8 +34,7 @@
     <RunAnalyzers Condition=" '$(DisableApiCompatibilityCheck)' == 'True' ">false</RunAnalyzers>
 
     <!-- PublicApiAnalyzers warnings should be errors, but building in VS throws incorrect extra warnings -->
-    <!-- Temporarily ignore unstable version warnings until VS can build .NET 10 projects -->
-    <WarningsAsErrors Condition=" '$(BuildingInsideVisualStudio)' != 'True' AND '$(IsUnstableVersion)' != 'True' ">$(WarningsAsErrors);RS0016,RS0017</WarningsAsErrors>
+    <WarningsAsErrors Condition=" '$(BuildingInsideVisualStudio)' != 'True' ">$(WarningsAsErrors);RS0016,RS0017</WarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(IncludeAndroidJavadoc)' == 'True' ">
