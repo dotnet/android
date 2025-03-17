@@ -42,7 +42,7 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (MarshalMethodsDefaultStatusSource))]
 		public void MarshalMethodsDefaultEnabledStatus (bool isRelease, bool marshalMethodsEnabled)
 		{
-			var abis = new [] { "armeabi-v7a", "x86" };
+			var abis = new [] { "am64-v8a", "x86_64" };
 			AndroidTargetArch[] supportedArches = new [] {
 				AndroidTargetArch.Arm,
 				AndroidTargetArch.X86,
