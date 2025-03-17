@@ -68,10 +68,20 @@ namespace Xamarin.Android.Build.Tests
 					String.Join (";", supportedArches.Select (arch => MonoAndroidHelper.ArchToAbi (arch))),
 					true
 				);
-				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
 
-				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
-				Assert.AreEqual (app_config.marshal_methods_enabled, shouldMarshalMethodsBeEnabled, $"Marshal methods enabled status should be '{shouldMarshalMethodsBeEnabled}', but it was '{app_config.marshal_methods_enabled}'");
+				bool marshal_methods_enabled;
+				if (TargetRuntimeHelper.UseMonoRuntime) {
+					EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
+
+					Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
+					marshal_methods_enabled = app_config.marshal_methods_enabled;
+				} else {
+					EnvironmentHelper.ApplicationConfigCLR app_config = EnvironmentHelper.ReadApplicationConfigCLR (envFiles);
+
+					Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
+					marshal_methods_enabled = app_config.marshal_methods_enabled;
+				}
+				Assert.AreEqual (marshal_methods_enabled, shouldMarshalMethodsBeEnabled, $"Marshal methods enabled status should be '{shouldMarshalMethodsBeEnabled}', but it was '{marshal_methods_enabled}'");
 			}
 		}
 
