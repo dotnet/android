@@ -124,14 +124,23 @@ namespace Xamarin.ProjectTools
 				IsWindows ? "Microsoft.Android.Sdk.Windows" :
 				"Microsoft.Android.Sdk.Linux";
 
+			Console.WriteLine ($"GetDotNetAndroidSdkDir (\"{packsDirectory}\")");
 			var sdkDir = Path.Combine (packsDirectory, sdkName);
-			if (!Directory.Exists (sdkDir))
+			Console.WriteLine ($"  sdkDir == '{sdkDir}'");
+			if (!Directory.Exists (sdkDir)) {
+				Console.WriteLine ("     doesn't exist, returning String.Empty");
 				return string.Empty;
+			}
 
 			var dirs = from d in Directory.GetDirectories (sdkDir)
 				   let version = ParseVersion (d)
 				   orderby version descending
 				   select d;
+
+			Console.WriteLine ("  Got dirs:");
+			foreach (string dir in dirs) {
+				Console.WriteLine ($"    {dir}");
+			}
 
 			return dirs.FirstOrDefault ();
 		}
