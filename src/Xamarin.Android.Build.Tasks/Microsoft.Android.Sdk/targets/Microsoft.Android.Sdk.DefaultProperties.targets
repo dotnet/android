@@ -125,7 +125,7 @@
     <JsonSerializerIsReflectionEnabledByDefault Condition="'$(JsonSerializerIsReflectionEnabledByDefault)' == '' and '$(TrimMode)' == 'partial'">true</JsonSerializerIsReflectionEnabledByDefault>
     <!-- Set to disable throwing behavior, see: https://github.com/dotnet/runtime/issues/109724 -->
     <_DefaultValueAttributeSupport Condition="'$(_DefaultValueAttributeSupport)' == '' and '$(TrimMode)' == 'partial'">true</_DefaultValueAttributeSupport>
-    <MetricsSupport Condition="'$(MetricsSupport)' == ''">false</MetricsSupport>
+    <MetricsSupport Condition="'$(MetricsSupport)' == '' and '$(Configuration)' == 'Release'">false</MetricsSupport>
     <AndroidAvoidEmitForPerformance Condition="'$(AndroidAvoidEmitForPerformance)' == ''">$(AvoidEmitForPerformance)</AndroidAvoidEmitForPerformance>
     <AndroidAvoidEmitForPerformance Condition="'$(AndroidAvoidEmitForPerformance)' == ''">true</AndroidAvoidEmitForPerformance>
     <!-- Verify DI trimmability at development-time, but turn the validation off for production/trimmed builds. -->
