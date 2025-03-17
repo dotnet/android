@@ -94,7 +94,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			AndroidTargetArch[] supportedArches = new[] {
-				AndroidTargetArch.Arm,
+				AndroidTargetArch.Arm64,
 			};
 
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
@@ -133,8 +133,11 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				"System.Collections.dll",
 				"System.Collections.Concurrent.dll",
 				"System.Text.RegularExpressions.dll",
-				"libarc.bin.so",
 			};
+
+			if (!TargetRuntimeHelper.UseCoreCLR) {
+				expectedFiles.Add ("libarc.bin.so");
+			}
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
