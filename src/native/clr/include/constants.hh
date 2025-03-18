@@ -31,6 +31,7 @@ namespace xamarin::android {
 		static constexpr bool is_debug_build = true;
 #endif
 		static constexpr std::string_view MANGLED_ASSEMBLY_NAME_EXT { ".so" };
+		static constexpr std::string_view dso_suffix { ".so" };
 
 	private:
 		static constexpr std::string_view RUNTIME_CONFIG_BLOB_BASE_NAME       { "libarc.bin" };
@@ -94,7 +95,15 @@ namespace xamarin::android {
 	private:
 		static constexpr size_t split_config_abi_apk_name_size = calc_size (split_config_prefix, android_abi, split_config_extension);
 
+		static constexpr std::string_view assembly_store_prefix { "libassemblies." };
+		static constexpr std::string_view assembly_store_extension { ".blob" };
+		static constexpr size_t assembly_store_file_name_size = calc_size (assembly_store_prefix, android_lib_abi, assembly_store_extension, dso_suffix);
+		static constexpr auto assembly_store_file_name_array = concat_string_views<assembly_store_file_name_size> (assembly_store_prefix, android_lib_abi, assembly_store_extension, dso_suffix);
+
 	public:
+		// .data() must be used otherwise string_view length will include the trailing \0 in the array
+		static constexpr std::string_view assembly_store_file_name { assembly_store_file_name_array.data () };
+
 		static constexpr auto split_config_abi_apk_name = concat_string_views<split_config_abi_apk_name_size> (split_config_prefix, android_abi, split_config_extension);
 
 		//
