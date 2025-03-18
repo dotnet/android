@@ -70,9 +70,23 @@ steps:
       custom: build-server
       arguments: shutdown
 
+  - pwsh: |
+      $filePath = "${{ parameters.testAssembly }}.runsettings"
+      $stringToFind = "dotnet-slicer-dummy-test-name"
+      if (Select-String -Path $filePath -Pattern $stringToFind) {
+          Write-Host "No tests to rerun"
+          Write-Host "##vso[task.setvariable variable=ShouldRetryTests]false"
+      } else {
+          Write-Host "Need to rerun failed tests"
+          Write-Host "##vso[task.setvariable variable=ShouldRetryTests]true"
+      }
+    displayName: Determine if we need to rerun failed tests
+    workingDirectory: ${{ parameters.xaSourcePath }}  
+  
   - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
     parameters:
       testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase) (Auto-Retry)
       testAssembly: ${{ parameters.testAssembly }}
       dotNetTestExtraArgs: --settings "${{ parameters.testAssembly }}.runsettings"
       xaSourcePath: ${{ parameters.xaSourcePath }}
+      condition: and(succeeded(), eq(variables['ShouldRetryTests'], 'true'))
