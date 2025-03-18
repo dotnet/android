@@ -178,8 +178,8 @@ namespace Xamarin.Android.Build.Tests
 				var type = assembly.MainModule.Types.FirstOrDefault (t => t.Name == "TypeMapping");
 				Assert.IsNotNull (type, $"{linkedRuntimeAssembly} should contain TypeMapping");
 
-				var method = type.Methods.FirstOrDefault (m => m.Name == "GetJavaClassNameByIndex");
-				Assert.IsNotNull (method, "TypeMapping should contain GetJavaClassNameByIndex");
+				var method = type.Methods.FirstOrDefault (m => m.Name == "GetJniNameByTypeNameHashIndex");
+				Assert.IsNotNull (method, "TypeMapping should contain GetJniNameByTypeNameHashIndex");
 
 				foreach (var i in method.Body.Instructions) {
 					if (i.OpCode != Mono.Cecil.Cil.OpCodes.Ldstr)
@@ -191,8 +191,8 @@ namespace Xamarin.Android.Build.Tests
 					javaClassNames.Add (javaName);
 				}
 
-				method = type.Methods.FirstOrDefault (m => m.Name == "GetTypeByIndex");
-				Assert.IsNotNull (method, "TypeMapping should contain GetTypeByIndex");
+				method = type.Methods.FirstOrDefault (m => m.Name == "GetTypeByJniNameHashIndex");
+				Assert.IsNotNull (method, "TypeMapping should contain GetTypeByJniNameHashIndex");
 
 				foreach (var i in method.Body.Instructions) {
 					if (i.OpCode != Mono.Cecil.Cil.OpCodes.Ldtoken)
