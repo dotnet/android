@@ -1421,7 +1421,7 @@ namespace UnnamedProject
 				/* enableProguard */             null,
 				/* androidEnableProguard */      "true",
 				/* expectedBuildResult */        false,
-				/* expectedWarning */            TargetRuntimeHelper.UseCoreCLR && TargetRuntimeHelper.CoreClrIsExperimental ? "1 Warning(s)" : "0 Warning(s)",
+				/* expectedWarning */            "0 Warning(s)",
 			},
 			new object [] {
 				/* linkTool */                   null,
