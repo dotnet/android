@@ -141,8 +141,8 @@ partial class NativeAotTypeManager : JniRuntime.JniTypeManager {
 			yield return r;
 		}
 
-		if (TypeMapping.TryGetJavaClassName (type, out var javaClassName)) {
-			yield return javaClassName;
+		if (TypeMapping.TryGetJniName (type, out var jniName)) {
+			yield return jniName;
 		}
 	}
 

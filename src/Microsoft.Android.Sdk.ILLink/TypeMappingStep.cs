@@ -64,7 +64,7 @@ public class TypeMappingStep : BaseStep
 		var typeMappingRecords = TypeMappings
 			.Select (kvp =>
 				new TypeMapRecord {
-					JavaClassName = kvp.Key,
+					JniName = kvp.Key,
 					Types = kvp.Value.ToArray (),
 					Context = Context,
 				})
@@ -72,101 +72,101 @@ public class TypeMappingStep : BaseStep
 
 		// Java -> .NET mapping
 		{
-			var orderedJavaToDotnetMapping = typeMappingRecords.OrderBy (record => Hash (record.JavaClassName))
+			var orderedJavaToDotnetMapping = typeMappingRecords.OrderBy (record => Hash (record.JniName))
 				.ToArray ();
-			var javaClassNames = orderedJavaToDotnetMapping.Select (record => record.JavaClassName)
+			var jniNames = orderedJavaToDotnetMapping.Select (record => record.JniName)
 				.ToArray ();
-			var javaClassNameHashes = javaClassNames.Select (Hash)
+			var jniNameHashes = jniNames.Select (Hash)
 				.ToArray ();
 			var types = orderedJavaToDotnetMapping.Select (record => record.SelectTypeDefinition ())
 				.ToArray ();
 
 			Context.LogMessage ("JNI -> .NET mappings");
-			Context.LogMessage ($"Generated field {type.FullName}.s_get_JavaClassNameHashes_data contains {javaClassNameHashes.Length} hashes:");
-			for (int i = 0; i < javaClassNameHashes.Length; ++i ) {
-				var java = javaClassNames [i];
-				var hash = javaClassNameHashes [i];
+			Context.LogMessage ($"Generated field {type.FullName}.s_get_JniNameHashes_data contains {jniNameHashes.Length} hashes:");
+			for (int i = 0; i < jniNameHashes.Length; ++i ) {
+				var java = jniNames [i];
+				var hash = jniNameHashes [i];
 				Context.LogMessage ($"\t0x{hash.ToString ("x", System.Globalization.CultureInfo.InvariantCulture), -16} // {i,4}: {java}");
 			}
-			Context.LogMessage ($"Generated method {type.FullName}.GetTypeByIndex contains {types.Length} mappings:");
+			Context.LogMessage ($"Generated method {type.FullName}.GetTypeByJniNameHashIndex contains {types.Length} mappings:");
 			var maxAqtnLength = types.Max (t => TypeDefinitionRocks.GetAssemblyQualifiedName (t, Context).Length)+2;
 			for (int i = 0; i < types.Length; ++i ) {
 				var aqtn = TypeDefinitionRocks.GetAssemblyQualifiedName (types [i], Context);
-				var java = javaClassNames [i];
-				var hash = javaClassNameHashes [i];
+				var java = jniNames [i];
+				var hash = jniNameHashes [i];
 				Context.LogMessage (
 						string.Format (System.Globalization.CultureInfo.InvariantCulture,
 							"\tindex {0,4} => Type.GetType({1,-" + maxAqtnLength + "}), // `{2}` hash=0x{3:x16}", i, $"\"{aqtn}\"", java, hash));
 			}
-			Context.LogMessage ($"Generated method {type.FullName}.GetJavaClassNameByTypeIndex contains {javaClassNames.Length} mappings:");
-			var maxJavaLength = javaClassNames.Max (s => s.Length)+2;
-			for (int i = 0; i < javaClassNames.Length; ++i ) {
-				var java = javaClassNames [i];
+			Context.LogMessage ($"Generated method {type.FullName}.GetJniNameByJniNameHashIndex contains {jniNames.Length} mappings:");
+			var maxJavaLength = jniNames.Max (s => s.Length)+2;
+			for (int i = 0; i < jniNames.Length; ++i ) {
+				var java = jniNames [i];
 				var aqtn = TypeDefinitionRocks.GetAssemblyQualifiedName (types [i], Context);
-				var hash = javaClassNameHashes [i];
+				var hash = jniNameHashes [i];
 				Context.LogMessage (
 						string.Format (System.Globalization.CultureInfo.InvariantCulture,
 							"\tindex {0,4} => {1,-" + maxJavaLength + "}, // `{2}` hash=0x{3:x16}", i, $"\"{java}\"", aqtn, hash));
 			}
 
-			GenerateHashes (javaClassNameHashes, methodName: "get_JavaClassNameHashes");
-			GenerateGetTypeByIndex (types);
-			GenerateStringSwitchMethod (type, "GetJavaClassNameByTypeIndex", javaClassNames);
+			GenerateHashes (jniNameHashes, methodName: "get_JniNameHashes");
+			GenerateGetTypeByJniNameHashIndex (types);
+			GenerateStringSwitchMethod (type, "GetJniNameByJniNameHashIndex", jniNames);
 		}
 
 		// .NET -> Java mapping
 		{
 			var orderedManagedToJavaMapping = typeMappingRecords
 				.SelectMany (record => record.Flatten ())
-				.OrderBy (record => Hash (record.AssemblyQualifiedTypeName))
+				.OrderBy (record => Hash (record.TypeName))
 				.ToArray ();
 
-			var assemblyQualifiedTypeNames = orderedManagedToJavaMapping
-				.Select (record => record.AssemblyQualifiedTypeName)
+			var typeNames = orderedManagedToJavaMapping
+				.Select (record => record.TypeName)
 				.ToArray ();
-			var assemblyQualifiedTypeNameHashes = assemblyQualifiedTypeNames.Select (Hash)
+			var typeNameHashes = typeNames.Select (Hash)
 				.ToArray ();
-			var javaClassNames = orderedManagedToJavaMapping.Select (record => record.JavaClassName)
+			var jniNames = orderedManagedToJavaMapping.Select (record => record.JniName)
 				.ToArray ();
 
 			Context.LogMessage (".NET -> JNI mappings");
-			Context.LogMessage ($"Generated field {type.FullName}.s_get_TypeNameHashes_data contains {assemblyQualifiedTypeNameHashes.Length} hashes:");
-			for (int i = 0; i < assemblyQualifiedTypeNameHashes.Length; ++i ) {
-				var aqtn = assemblyQualifiedTypeNames [i];
-				var hash = assemblyQualifiedTypeNameHashes [i];
+			Context.LogMessage ($"Generated field {type.FullName}.s_get_TypeNameHashes_data contains {typeNameHashes.Length} hashes:");
+			for (int i = 0; i < typeNameHashes.Length; ++i ) {
+				var aqtn = typeNames [i];
+				var hash = typeNameHashes [i];
 				Context.LogMessage ($"\t0x{hash.ToString ("x", System.Globalization.CultureInfo.InvariantCulture), -16} // {i,4}: {aqtn}");
 			}
-			var maxJavaLength = javaClassNames.Max (s => s.Length) + 2;
-			Context.LogMessage ($"Generated method {type.FullName}.GetJavaClassNameByIndex contains {javaClassNames.Length} mappings:");
-			for (int i = 0; i < javaClassNames.Length; ++i ) {
-				var java = javaClassNames [i];
-				var aqtn = assemblyQualifiedTypeNames [i];
-				var hash = assemblyQualifiedTypeNameHashes [i];
+			var maxJavaLength = jniNames.Max (s => s.Length) + 2;
+			Context.LogMessage ($"Generated method {type.FullName}.GetJniNameByTypeNameHashIndex contains {jniNames.Length} mappings:");
+			for (int i = 0; i < jniNames.Length; ++i ) {
+				var java = jniNames [i];
+				var aqtn = typeNames [i];
+				var hash = typeNameHashes [i];
 				Context.LogMessage (
 						string.Format (System.Globalization.CultureInfo.InvariantCulture,
 							"\tindex {0,4} => {1,-" + maxJavaLength + "}, // `{2}` hash=0x{3:x16}", i, $"\"{java}\"", aqtn, hash));
 			}
-			Context.LogMessage ($"Generated method {type.FullName}.GetAssemblyQualifiedTypeNameByJavaClassNameIndex contains {assemblyQualifiedTypeNames.Length} mappings:");
-			var maxAqtnLength = assemblyQualifiedTypeNames.Max (s => s.Length) + 2;
-			for (int i = 0; i < assemblyQualifiedTypeNames.Length; ++i ) {
-				var java = javaClassNames [i];
-				var aqtn = assemblyQualifiedTypeNames [i];
-				var hash = assemblyQualifiedTypeNameHashes [i];
+			Context.LogMessage ($"Generated method {type.FullName}.GetTypeNameByTypeNameHashIndex contains {typeNames.Length} mappings:");
+			var maxAqtnLength = typeNames.Max (s => s.Length) + 2;
+			for (int i = 0; i < typeNames.Length; ++i ) {
+				var java = jniNames [i];
+				var aqtn = typeNames [i];
+				var hash = typeNameHashes [i];
 				Context.LogMessage (
 						string.Format (System.Globalization.CultureInfo.InvariantCulture,
 							"\tindex {0,4} => {1,-" + maxAqtnLength + "}, // `{2}` hash=0x{3:x16}", i, $"\"{aqtn}\"", java, hash));
 			}
 
-			GenerateHashes (assemblyQualifiedTypeNameHashes, methodName: "get_TypeNameHashes");
-			GenerateStringSwitchMethod (type, "GetJavaClassNameByIndex", javaClassNames);
-			GenerateStringSwitchMethod (type, "GetAssemblyQualifiedTypeNameByJavaClassNameIndex", assemblyQualifiedTypeNames);
+			GenerateHashes (typeNameHashes, methodName: "get_TypeNameHashes");
+			GenerateStringSwitchMethod (type, "GetJniNameByTypeNameHashIndex", jniNames);
+			GenerateStringSwitchMethod (type, "GetTypeNameByTypeNameHashIndex", typeNames);
 		}
 
-		void GenerateGetTypeByIndex (IEnumerable<TypeDefinition> types)
+		void GenerateGetTypeByJniNameHashIndex (IEnumerable<TypeDefinition> types)
 		{
-			var method = type.Methods.FirstOrDefault (m => m.Name == "GetTypeByIndex");
+			var method = type.Methods.FirstOrDefault (m => m.Name == "GetTypeByJniNameHashIndex");
 			if (method is null) {
-				throw new InvalidOperationException ($"Unable to find {TypeName}.GetTypeByIndex() method");
+				throw new InvalidOperationException ($"Unable to find {TypeName}.GetTypeByJniNameHashIndex() method");
 			}
 
 			var getTypeFromHandle = module.ImportReference (typeof (Type).GetMethod ("GetTypeFromHandle"));
@@ -303,11 +303,11 @@ public class TypeMappingStep : BaseStep
 
 	class TypeMapRecord
 	{
-		public required string JavaClassName { get; init; }
+		public required string JniName { get; init; }
 		public required TypeDefinition[] Types { get; init; }
 		public required LinkContext Context { get; init; }
 
-		public string AssemblyQualifiedTypeName => TypeDefinitionRocks.GetAssemblyQualifiedName (SelectTypeDefinition (), Context);
+		public string TypeName => TypeDefinitionRocks.GetAssemblyQualifiedName (SelectTypeDefinition (), Context);
 
 		public TypeDefinition SelectTypeDefinition ()
 		{
@@ -345,7 +345,7 @@ public class TypeMappingStep : BaseStep
 			foreach (var type in Types) {
 				if (type == best)
 					continue;
-				Context.LogMessage ($"Duplicate typemap entry for {JavaClassName} => {type.FullName}");
+				Context.LogMessage ($"Duplicate typemap entry for {JniName} => {type.FullName}");
 			}
 			return best;
 		}
@@ -353,7 +353,7 @@ public class TypeMappingStep : BaseStep
 		public IEnumerable<TypeMapRecord> Flatten () =>
 			Types.Select (type =>
 				new TypeMapRecord {
-					JavaClassName = JavaClassName,
+					JniName = JniName,
 					Types = new[] { type },
 					Context = Context,
 				});

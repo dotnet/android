@@ -10,55 +10,55 @@ namespace Microsoft.Android.Runtime;
 
 internal static class TypeMapping
 {
-	internal static bool TryGetType (string javaClassName, [NotNullWhen (true)] out Type? type)
+	internal static bool TryGetType (string jniName, [NotNullWhen (true)] out Type? type)
 	{
 		type = null;
 
 		// the hashes array is sorted and all the hashes are unique
-		ulong hash = Hash (javaClassName);
-		int typeIndex = MemoryExtensions.BinarySearch (JavaClassNameHashes, hash);
-		if (typeIndex < 0) {
+		ulong jniNameHash = Hash (jniName);
+		int jniNameHashIndex = MemoryExtensions.BinarySearch (JniNameHashes, jniNameHash);
+		if (jniNameHashIndex < 0) {
 			return false;
 		}
 
 		// we need to make sure if this is the right match or if it is a hash collision
-		if (javaClassName != GetJavaClassNameByTypeIndex (typeIndex)) {
+		if (jniName != GetJniNameByJniNameHashIndex (jniNameHashIndex)) {
 			return false;
 		}
 
-		type = GetTypeByIndex (typeIndex);
+		type = GetTypeByJniNameHashIndex (jniNameHashIndex);
 		if (type is null) {
-			throw new InvalidOperationException ($"Type with hash {hash} not found.");
+			throw new InvalidOperationException ($"Type for {jniName} (hash: {jniNameHash}, index: {jniNameHashIndex}) not found.");
 		}
 
 		return true;
 	}
 
-	internal static bool TryGetJavaClassName (Type type, [NotNullWhen (true)] out string? className)
+	internal static bool TryGetJniName (Type type, [NotNullWhen (true)] out string? jniName)
 	{
-		className = null;
+		jniName = null;
 
-		string? name = type.AssemblyQualifiedName;
-		if (name is null) {
-			className = null;
+		string? typeName = type.AssemblyQualifiedName;
+		if (typeName is null) {
+			jniName = null;
 			return false;
 		}
 
 		// the hashes array is sorted and all the hashes are unique
-		ulong hash = Hash (name);
-		int javaClassNameIndex = MemoryExtensions.BinarySearch (TypeNameHashes, hash);
-		if (javaClassNameIndex < 0) {
+		ulong typeNameHash = Hash (typeName);
+		int typeNameHashIndex = MemoryExtensions.BinarySearch (TypeNameHashes, typeNameHash);
+		if (typeNameHashIndex < 0) {
 			return false;
 		}
 
 		// we need to make sure if this is the match or if it is a hash collision
-		if (name != GetAssemblyQualifiedTypeNameByJavaClassNameIndex (javaClassNameIndex)) {
+		if (typeName != GetTypeNameByTypeNameHashIndex (typeNameHashIndex)) {
 			return false;
 		}
 
-		className = GetJavaClassNameByIndex (javaClassNameIndex);
-		if (className is null) {
-			throw new InvalidOperationException ($"Java class name with hash {hash} not found.");
+		jniName = GetJniNameByTypeNameHashIndex (typeNameHashIndex);
+		if (jniName is null) {
+			throw new InvalidOperationException ($"JNI name for {typeName} (hash: {typeNameHash}, index: {typeNameHashIndex}) not found.");
 		}
 
 		return true;
@@ -80,10 +80,10 @@ internal static class TypeMapping
 
 	// Replaced by src/Microsoft.Android.Sdk.ILLink/TypeMappingStep.cs
 	private static ReadOnlySpan<ulong> TypeNameHashes => throw new NotImplementedException ();
-	private static Type? GetTypeByIndex (int index) => throw new NotImplementedException ();
-	private static string? GetJavaClassNameByTypeIndex (int index) => throw new NotImplementedException ();
+	private static Type? GetTypeByJniNameHashIndex (int jniNameHashIndex) => throw new NotImplementedException ();
+	private static string? GetJniNameByJniNameHashIndex (int jniNameHashIndex) => throw new NotImplementedException ();
 
-	private static ReadOnlySpan<ulong> JavaClassNameHashes => throw new NotImplementedException ();
-	private static string? GetJavaClassNameByIndex (int index) => throw new NotImplementedException ();
-	private static string? GetAssemblyQualifiedTypeNameByJavaClassNameIndex (int index) => throw new NotImplementedException ();
+	private static ReadOnlySpan<ulong> JniNameHashes => throw new NotImplementedException ();
+	private static string? GetJniNameByTypeNameHashIndex (int typeNameHashIndex) => throw new NotImplementedException ();
+	private static string? GetTypeNameByTypeNameHashIndex (int typeNameHashIndex) => throw new NotImplementedException ();
 }
