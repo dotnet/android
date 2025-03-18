@@ -96,7 +96,7 @@ public class TypeMappingStep : BaseStep
 				var hash = javaClassNameHashes [i];
 				Context.LogMessage (
 						string.Format (System.Globalization.CultureInfo.InvariantCulture,
-							"\tindex {0,4} => {1,-" + maxAqtnLength + "}, // `{2}` hash=0x{3:x16}", i, $"\"{aqtn}\"", java, hash));
+							"\tindex {0,4} => Type.GetType({1,-" + maxAqtnLength + "}), // `{2}` hash=0x{3:x16}", i, $"\"{aqtn}\"", java, hash));
 			}
 			Context.LogMessage ($"Generated method {type.FullName}.GetJavaClassNameByTypeIndex contains {javaClassNames.Length} mappings:");
 			var maxJavaLength = javaClassNames.Max (s => s.Length)+2;
