@@ -307,7 +307,20 @@ public class TypeMappingStep : BaseStep
 		public required TypeDefinition[] Types { get; init; }
 		public required LinkContext Context { get; init; }
 
-		public string TypeName => TypeDefinitionRocks.GetAssemblyQualifiedName (SelectTypeDefinition (), Context);
+		public string TypeName
+		{
+			get
+			{
+				// We need to drop the version, culture, and public key information from the AQN.
+				var type = SelectTypeDefinition ();
+				var assemblyQualifiedName = TypeDefinitionRocks.GetAssemblyQualifiedName (type, Context);
+				var commaIndex = assemblyQualifiedName.IndexOf(',');
+				var secondCommaIndex = assemblyQualifiedName.IndexOf(',', startIndex: commaIndex + 1);
+				return  secondCommaIndex < 0
+					? assemblyQualifiedName
+					: assemblyQualifiedName.Substring (0, secondCommaIndex);
+			}
+		}
 
 		public TypeDefinition SelectTypeDefinition ()
 		{

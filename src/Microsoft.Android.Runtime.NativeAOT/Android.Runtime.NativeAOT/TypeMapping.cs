@@ -38,11 +38,13 @@ internal static class TypeMapping
 	{
 		jniName = null;
 
-		string? typeName = type.AssemblyQualifiedName;
-		if (typeName is null) {
+		string? assemblyQualifiedName = type.AssemblyQualifiedName;
+		if (assemblyQualifiedName is null) {
 			jniName = null;
 			return false;
 		}
+
+		ReadOnlySpan<char> typeName = GetSimplifiedAssemblyQualifiedTypeName (assemblyQualifiedName);
 
 		// the hashes array is sorted and all the hashes are unique
 		ulong typeNameHash = Hash (typeName);
@@ -52,7 +54,7 @@ internal static class TypeMapping
 		}
 
 		// we need to make sure if this is the match or if it is a hash collision
-		if (typeName != GetTypeNameByTypeNameHashIndex (typeNameHashIndex)) {
+		if (!typeName.SequenceEqual (GetTypeNameByTypeNameHashIndex (typeNameHashIndex))) {
 			return false;
 		}
 
@@ -64,9 +66,9 @@ internal static class TypeMapping
 		return true;
 	}
 
-	private static ulong Hash (string value)
+	private static ulong Hash (ReadOnlySpan<char> value)
 	{
-		ReadOnlySpan<byte> bytes = MemoryMarshal.AsBytes (value.AsSpan ());
+		ReadOnlySpan<byte> bytes = MemoryMarshal.AsBytes (value);
 		ulong hash = XxHash3.HashToUInt64 (bytes);
 
 		// The bytes in the hashes array are stored as little endian. If the target platform is big endian,
@@ -76,6 +78,20 @@ internal static class TypeMapping
 		}
 
 		return hash;
+	}
+
+	// This method keeps only the full type name and the simple assembly name.
+	// It drops the version, culture, and public key information.
+	//
+	// For example: "System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e"
+	//     becomes: "System.Int32, System.Private.CoreLib"
+	private static ReadOnlySpan<char> GetSimplifiedAssemblyQualifiedTypeName(string assemblyQualifiedName)
+	{
+		var commaIndex = assemblyQualifiedName.IndexOf(',');
+		var secondCommaIndex = assemblyQualifiedName.IndexOf(',', startIndex: commaIndex + 1);
+		return secondCommaIndex < 0
+			? assemblyQualifiedName
+			: assemblyQualifiedName.AsSpan(0, secondCommaIndex);
 	}
 
 	// Replaced by src/Microsoft.Android.Sdk.ILLink/TypeMappingStep.cs
