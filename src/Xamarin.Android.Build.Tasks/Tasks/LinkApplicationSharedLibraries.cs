@@ -78,6 +78,66 @@ namespace Xamarin.Android.Tasks
 					ZipAlignmentPages = ZipAlignmentPages,
 				};
 
+			string stripSymbolsArg = DebugBuild ? String.Empty : " -s";
+
+			string ld = Path.Combine (AndroidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (AndroidBinUtilsDirectory, "ld"));
+			var targetLinkerArgs = new List<string> ();
+			foreach (var kvp in abis) {
+				string abi = kvp.Key;
+				InputFiles inputs = kvp.Value;
+
+				targetLinkerArgs.Clear ();
+				string elf_arch;
+				uint maxPageSize;
+				switch (abi) {
+					case "armeabi-v7a":
+						targetLinkerArgs.Add ("-X");
+						elf_arch = "armelf_linux_eabi";
+						maxPageSize = MonoAndroidHelper.ZipAlignmentToPageSize (AndroidZipAlign.ZipAlignment32Bit);
+						break;
+
+					case "arm64":
+					case "arm64-v8a":
+					case "aarch64":
+						targetLinkerArgs.Add ("--fix-cortex-a53-843419");
+						elf_arch = "aarch64linux";
+						maxPageSize = MonoAndroidHelper.ZipAlignmentToPageSize (ZipAlignmentPages);
+						break;
+
+					case "x86":
+						elf_arch = "elf_i386";
+						maxPageSize = MonoAndroidHelper.ZipAlignmentToPageSize (AndroidZipAlign.ZipAlignment32Bit);
+						break;
+
+					case "x86_64":
+						elf_arch = "elf_x86_64";
+						maxPageSize = MonoAndroidHelper.ZipAlignmentToPageSize (ZipAlignmentPages);
+						break;
+
+					default:
+						throw new NotSupportedException ($"Unsupported Android target architecture ABI: {abi}");
+				}
+
+				targetLinkerArgs.Add ("-m");
+				targetLinkerArgs.Add (elf_arch);
+
+				foreach (string file in inputs.ObjectFiles) {
+					targetLinkerArgs.Add (MonoAndroidHelper.QuoteFileNameArgument (file));
+				}
+
+				targetLinkerArgs.Add ("-o");
+				targetLinkerArgs.Add (MonoAndroidHelper.QuoteFileNameArgument (inputs.OutputSharedLibrary));
+
+				if (inputs.ExtraLibraries != null) {
+					foreach (string lib in inputs.ExtraLibraries) {
+						targetLinkerArgs.Add (lib);
+					}
+				}
+
+				targetLinkerArgs.Add ("-z");
+				targetLinkerArgs.Add ($"max-page-size={maxPageSize}");
+
+				string targetArgs = String.Join (" ", targetLinkerArgs);
 				yield return new Config {
 					Linker = linker,
 					LinkItems = GatherFilesForABI (item, abi, ObjectFiles),
@@ -105,6 +165,18 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return ret;
+		}
+
+		void OnOutputData (string linkerName, object sender, DataReceivedEventArgs e)
+		{
+			if (e.Data != null)
+				LogMessage ($"[{linkerName} stdout] {e.Data}");
+		}
+
+		void OnErrorData (string linkerName, object sender, DataReceivedEventArgs e)
+		{
+			if (e.Data != null)
+				LogMessage ($"[{linkerName} stderr] {e.Data}");
 		}
 	}
 }
