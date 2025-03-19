@@ -231,6 +231,12 @@ namespace Xamarin.Android.NetTests
 			var client = new HttpClient (handler);
 			var result = await client.GetAsync ("https://httpbin.org/redirect-to?url=https://www.microsoft.com/");
 
+			// Our dated NUnit test runner doesn't handle Assert.Ignore in an async context, so just exit
+			if (ShouldIgnoreSuccessStatusCode (result.StatusCode)) {
+				Console.WriteLine ($"Ignoring {result.StatusCode} status code");
+				return;
+			}
+
 			EnsureSuccessStatusCode (result);
 
 			Assert.AreEqual (2, callbackCounter);
@@ -245,6 +251,12 @@ namespace Xamarin.Android.NetTests
 
 			var client = new HttpClient (handler);
 			var result = await client.GetAsync ("https://httpbin.org/redirect-to?url=https://www.microsoft.com/&status_code=308");
+
+			// Our dated NUnit test runner doesn't handle Assert.Ignore in an async context, so just exit
+			if (ShouldIgnoreSuccessStatusCode (result.StatusCode)) {
+				Console.WriteLine ($"Ignoring {result.StatusCode} status code");
+				return;
+			}
 
 			EnsureSuccessStatusCode (result);
 
