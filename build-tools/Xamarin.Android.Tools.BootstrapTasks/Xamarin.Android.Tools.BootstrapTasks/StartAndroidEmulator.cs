@@ -148,7 +148,6 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					}
 					return;
 				}
-				p.WaitForExit ();
 			} finally {
 				p.CancelOutputRead ();
 				p.CancelErrorRead ();
