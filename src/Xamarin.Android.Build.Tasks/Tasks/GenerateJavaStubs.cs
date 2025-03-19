@@ -277,15 +277,14 @@ namespace Xamarin.Android.Tasks
 			// Find every assembly that was scanned by the linker by looking at the .jlo.xml files
 			foreach (var assembly in ResolvedAssemblies) {
 				var assemblyPath = assembly.ItemSpec;
-				var assemblyName = Path.GetFileNameWithoutExtension (assemblyPath);
-				var wrappersPath = Path.Combine (Path.GetDirectoryName (assemblyPath), $"{assemblyName}.jlo.xml");
+				var wrappersPath = JavaObjectsXmlFile.GetJavaObjectsXmlFilePath (assembly.ItemSpec);
 
 				if (!File.Exists (wrappersPath))
 					Log.LogError ($"'{wrappersPath}' not found.");
 
-				XmlImporter.Import (wrappersPath, out var wasScanned);
+				var xml = JavaObjectsXmlFile.Import (wrappersPath, JavaObjectsXmlFileReadType.None);
 
-				if (wasScanned) {
+				if (xml.WasScanned) {
 					Log.LogDebugMessage ($"CompareScannedAssemblies: Found scanned assembly .jlo.xml '{assemblyPath}'");
 					linker_scanned_assemblies.Add (assembly.ItemSpec);
 				}

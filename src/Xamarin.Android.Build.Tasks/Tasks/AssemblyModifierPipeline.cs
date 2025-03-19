@@ -147,11 +147,11 @@ public class AssemblyModifierPipeline : AndroidTask
 
 	protected virtual void RunPipeline (ITaskItem source, ITaskItem destination, RunState runState, WriterParameters writerParameters)
 	{
-		var destinationJLOXml = Path.ChangeExtension (destination.ItemSpec, ".jlo.xml");
+		var destinationJLOXml = JavaObjectsXmlFile.GetJavaObjectsXmlFilePath (destination.ItemSpec);
 
 		if (!TryScanForJavaObjects (source, destination, runState, writerParameters)) {
 			// Even if we didn't scan for Java objects, we still write an empty .xml file for later steps
-			FindJavaObjectsStep.WriteEmptyXmlFile (destinationJLOXml);
+			JavaObjectsXmlFile.WriteEmptyFile (destinationJLOXml, Log);
 		}
 	}
 
@@ -160,7 +160,7 @@ public class AssemblyModifierPipeline : AndroidTask
 		if (!ShouldScanAssembly (source))
 			return false;
 
-		var destinationJLOXml = Path.ChangeExtension (destination.ItemSpec, ".jlo.xml");
+		var destinationJLOXml = JavaObjectsXmlFile.GetJavaObjectsXmlFilePath (destination.ItemSpec);
 		var assemblyDefinition = runState.resolver!.GetAssembly (source.ItemSpec);
 
 		var scanned = runState.findJavaObjectsStep!.ProcessAssembly (assemblyDefinition, destinationJLOXml);
