@@ -339,7 +339,7 @@ namespace xamarin::android
 			// domain
 			ret = mono_get_root_domain ();
 			if (attach_thread_if_needed) {
-				mono_thread_attach (ret);
+				mono_jit_thread_attach (ret);
 			}
 
 			return ret;

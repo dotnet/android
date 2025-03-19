@@ -1010,7 +1010,7 @@ OSBridge::ensure_jnienv (void)
 	JNIEnv *env;
 	jvm->GetEnv ((void**)&env, JNI_VERSION_1_6);
 	if (env == nullptr) {
-		mono_thread_attach (Util::get_current_domain (/* attach_thread_if_needed */ false));
+		mono_jit_thread_attach (Util::get_current_domain (/* attach_thread_if_needed */ false));
 		jvm->GetEnv ((void**)&env, JNI_VERSION_1_6);
 	}
 	return env;
