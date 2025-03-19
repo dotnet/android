@@ -82,7 +82,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			};
 
 			Log.LogMessage (MessageImportance.Low, $"Environment variables being passed to the tool:");
-			var p = new Process () {
+			using var p = new Process () {
 				StartInfo = psi,
 			};
 			psi.EnvironmentVariables ["ANDROID_HOME"]       = AndroidSdkDirectory;
@@ -136,40 +136,28 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			p.OutputDataReceived  += output;
 			p.ErrorDataReceived   += error;
 
-			p.Start ();
-			p.BeginOutputReadLine ();
-			p.BeginErrorReadLine ();
+			try {
+				p.Start ();
+				p.BeginOutputReadLine ();
+				p.BeginErrorReadLine ();
 
-			const int Timeout = 20*1000;
-			int i = WaitHandle.WaitAny (new[]{sawError}, millisecondsTimeout: Timeout);
-			if (i == 0 || Log.HasLoggedErrors) {
-				p.Kill ();
-				return;
+				const int Timeout = 20*1000;
+				if (WaitHandle.WaitAny(new[] { sawError }, Timeout) == 0 || Log.HasLoggedErrors) {
+					if (!p.HasExited) {
+						p.Kill ();
+					}
+					return;
+				}
+				p.WaitForExit ();
+			} finally {
+				p.CancelOutputRead ();
+				p.CancelErrorRead ();
+				p.OutputDataReceived  -= output;
+				p.ErrorDataReceived   -= error;
 			}
-
-			p.CancelOutputRead ();
-			p.CancelErrorRead ();
-
-			p.OutputDataReceived  -= output;
-			p.ErrorDataReceived   -= error;
-
-			p.OutputDataReceived  += WriteProcessOutputMessage;
-			p.ErrorDataReceived   += WriteProcessErrorMessage;
-
-			p.BeginOutputReadLine ();
-			p.BeginErrorReadLine ();
 
 			EmulatorProcessId = p.Id;
 		}
 
-		static void WriteProcessOutputMessage (object sender, DataReceivedEventArgs e)
-		{
-			Console.WriteLine (e.Data);
-		}
-
-		static void WriteProcessErrorMessage (object sender, DataReceivedEventArgs e)
-		{
-			Console.Error.WriteLine (e.Data);
-		}
 	}
 }
