@@ -31,3 +31,9 @@ Novell
 *.patch
 *.keystore
 /omnisharp.json
+src/native/CMakePresets.json
+src/native/clr/host/generate-pinvoke-tables
+src/native/clr/host/pinvoke-tables.include.generated
+src/native/mono/pinvoke-override/generate-pinvoke-tables
+src/native/mono/pinvoke-override/pinvoke-tables.include.generated
+dotnet-install.ps1
