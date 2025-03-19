@@ -178,7 +178,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			// TODO: cache results here
 			// IDictionary<string, string> is a special case for name:value string arrays which we use for some constructs.
-			return (t.ImplementsInterface (typeof(ICollection<>)) && t.ImplementsInterface (typeof(ICollection))) ||
+			return (t.ImplementsInterface (typeof(ICollection<>)) || t.ImplementsInterface (typeof(ICollection))) ||
 				t.ImplementsInterface (typeof(IDictionary<string, string>));
 		}
 	}
