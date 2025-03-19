@@ -154,6 +154,13 @@ namespace Xamarin.Android.Prepare
 				{ "x86_64",      "android-x64" },
 			};
 
+			public static readonly Dictionary<string, string> AbiToClangArch = new (StringComparer.Ordinal) {
+				{ "armeabi-v7a", "arm" },
+				{ "arm64-v8a",   "aarch64" },
+				{ "x86",         "i686" },
+				{ "x86_64",      "x86_64" },
+			};
+
 			public static readonly List <NDKTool> NDKTools = new List<NDKTool> {
 				// Tools prefixed with architecture triple
 				new NDKTool (name: "as", prefixed: true),
@@ -233,6 +240,7 @@ namespace Xamarin.Android.Prepare
 			// Other
 			public static string AndroidNdkDirectory                 => ctx.Properties.GetRequiredValue (KnownProperties.AndroidNdkDirectory);
 			public static string AndroidToolchainRootDirectory       => GetCachedPath (ref androidToolchainRootDirectory,       () => Path.Combine (AndroidNdkDirectory, "toolchains", "llvm", "prebuilt", NdkToolchainOSTag));
+			public static string AndroidClangRootDirectory           => GetCachedPath (ref androidClangRootDirectory,           () => Path.Combine (AndroidToolchainRootDirectory, "lib", "clang"));
 			public static string AndroidToolchainBinDirectory        => GetCachedPath (ref androidToolchainBinDirectory,        () => Path.Combine (AndroidToolchainRootDirectory, "bin"));
 			public static string AndroidToolchainSysrootLibDirectory => GetCachedPath (ref androidToolchainSysrootLibDirectory, () => Path.Combine (AndroidToolchainRootDirectory, "sysroot", "usr", "lib"));
 			public static string WindowsBinutilsInstallDir           => GetCachedPath (ref windowsBinutilsInstallDir,           () => Path.Combine (InstallMSBuildDir, "binutils"));
@@ -288,6 +296,7 @@ namespace Xamarin.Android.Prepare
 			static string? buildBinDir;
 			static string? binDir;
 			static string? androidToolchainRootDirectory;
+			static string? androidClangRootDirectory;
 			static string? androidToolchainBinDirectory;
 			static string? androidToolchainSysrootLibDirectory;
 			static string? installMSBuildDir;
