@@ -3,7 +3,7 @@
 include(CheckIncludeFile)
 include(CheckCXXSymbolExists)
 
-set(BUILD_STATIC_LIBRARY OFF)
+set(BUILD_STATIC_LIBRARY ON)
 
 if(DEBUG_BUILD)
   # Convince NDK to really optimize our Debug builds. Without this, NDK's cmake toolchain definition
@@ -12,8 +12,6 @@ if(DEBUG_BUILD)
   set(XA_COMPILER_FLAGS_DEBUG "-fno-limit-debug-info -O2")
   set(CMAKE_C_FLAGS_DEBUG ${XA_COMPILER_FLAGS_DEBUG})
   set(CMAKE_CXX_FLAGS_DEBUG ${XA_COMPILER_FLAGS_DEBUG})
-elseif(NOT ANALYZERS_ENABLED)
-  set(BUILD_STATIC_LIBRARY OFF) # Turn off for now, until we implement dynamic runtime linking at app build time
 endif()
 
 # Library directories
