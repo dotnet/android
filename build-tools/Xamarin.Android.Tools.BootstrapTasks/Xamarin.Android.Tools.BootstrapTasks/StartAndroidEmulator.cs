@@ -133,28 +133,23 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				}
 			};
 
-			p.OutputDataReceived  += output;
-			p.ErrorDataReceived   += error;
+			p.Start ();
+			p.BeginOutputReadLine ();
+			p.BeginErrorReadLine ();
 
-			try {
-				p.Start ();
-				p.BeginOutputReadLine ();
-				p.BeginErrorReadLine ();
-
-				const int Timeout = 20*1000;
-				if (WaitHandle.WaitAny(new[] { sawError }, Timeout) == 0 || Log.HasLoggedErrors) {
-					if (!p.HasExited) {
-						p.Kill ();
-					}
-					return;
-				}
-			} finally {
-				p.CancelOutputRead ();
-				p.CancelErrorRead ();
-				p.OutputDataReceived  -= output;
-				p.ErrorDataReceived   -= error;
+			const int Timeout = 20*1000;
+			int i = WaitHandle.WaitAny (new[]{sawError}, millisecondsTimeout: Timeout);
+			if (i == 0 || Log.HasLoggedErrors) {
+				p.Kill ();
+				return;
 			}
 
+			p.CancelOutputRead ();
+			p.CancelErrorRead ();
+
+			p.OutputDataReceived  -= output;
+			p.ErrorDataReceived   -= error;
+			p.Kill ();
 			EmulatorProcessId = p.Id;
 		}
 
