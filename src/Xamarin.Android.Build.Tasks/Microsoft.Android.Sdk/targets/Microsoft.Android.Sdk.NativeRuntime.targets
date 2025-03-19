@@ -1,0 +1,63 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Sdk.NativeRuntime.targets
+
+Contains code to build and link the native runtime at application build time.
+
+***********************************************************************************************
+-->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask TaskName="Xamarin.Android.Tasks.GetNativeRuntimeComponents" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.LinkNativeRuntime" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+
+  <Target Name="_PrepareUnifiedNativeRuntimeItems"
+          Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' ">
+    <ItemGroup>
+      <_UnifiedNativeRuntime Include="$(_AndroidApplicationSharedLibraryPath)%(_BuildTargetAbis.Identity)\libnetdroid-unified.so">
+        <abi>%(_BuildTargetAbis.Identity)</abi>
+        <ArchiveFileName>libmonodroid.so</ArchiveFileName>
+      </_UnifiedNativeRuntime>
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ResolvedNativeArchive Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.a' " />
+      <_ResolvedNativeObjectFile Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.o' " />
+      <_ApplicationSharedLibrary Include="@(_UnifiedNativeRuntime)" />
+    </ItemGroup>
+
+    <GetNativeRuntimeComponents
+        MonoComponents="@(_MonoComponent)"
+        ResolvedNativeObjectFiles="@(_ResolvedNativeObjectFile)"
+        ResolvedNativeArchives="@(_ResolvedNativeArchive)">
+      <Output TaskParameter="NativeArchives" ItemName="_SelectedNativeArchive" />
+      <Output TaskParameter="RequiredLibraries" ItemName="_RequiredLinkLibraries" />
+      <Output TaskParameter="LinkStartFiles" ItemName="_NativeLinkStartFiles" />
+      <Output TaskParameter="LinkEndFiles" ItemName="_NativeLinkEndFiles" />
+      <Output TaskParameter="NativeSymbolsToExport" ItemName="_NativeSymbolsToExport" />
+    </GetNativeRuntimeComponents>
+  </Target>
+
+  <Target Name="_LinkNativeRuntime"
+          DependsOnTargets="_PrepareMonoComponentItems;_CompileNativeAssemblySources;_PrepareUnifiedNativeRuntimeItems"
+          Inputs="@(_NativeAssemblyTarget);@(_SelectedNativeArchive)"
+          Outputs="@(_UnifiedNativeRuntime)"
+          Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' ">
+    <LinkNativeRuntime
+        MonoComponents="@(_MonoComponent)"
+        AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+        IntermediateOutputPath="$(IntermediateOutputPath)"
+        NativeArchives="@(_SelectedNativeArchive)"
+        NativeObjectFiles="@(_NativeAssemblyTarget)"
+        NativeLinkStartFiles="@(_NativeLinkStartFiles)"
+        NativeLinkEndFiles="@(_NativeLinkEndFiles)"
+        NativeSymbolsToExport="@(_NativeSymbolsToExport)"
+        LinkLibraries="@(_RequiredLinkLibraries)"
+        OutputRuntimes="@(_UnifiedNativeRuntime)"
+        SupportedAbis="@(_BuildTargetAbis)"
+        SaveDebugSymbols="true" />
+
+    <ItemGroup>
+      <FileWrites Include="@(_UnifiedNativeRuntime)" />
+    </ItemGroup>
+  </Target>
+</Project>

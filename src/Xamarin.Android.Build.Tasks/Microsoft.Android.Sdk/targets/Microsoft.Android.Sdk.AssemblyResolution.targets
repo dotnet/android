@@ -258,6 +258,7 @@ _ResolveAssemblies MSBuild target.
     </ItemGroup>
 
     <ProcessNativeLibraries
+        NativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)"
         InputLibraries="@(_ResolvedNativeLibraries)"
         ExcludedLibraries="@(_ExcludedNativeLibraries)"
         Components="@(_MonoComponent->Distinct())"
