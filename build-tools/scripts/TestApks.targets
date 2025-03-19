@@ -26,7 +26,7 @@
     <TestAvdForceCreation Condition=" '$(TestAvdForceCreation)' == '' ">true</TestAvdForceCreation>
     <TestAvdShowWindow Condition=" '$(TestAvdShowWindow)' == '' and '$(RunningOnCI)' == 'true' ">false</TestAvdShowWindow>
     <TestAvdExtraBootArgs Condition=" '$(TestAvdShowWindow)' == 'false' ">-no-window -no-boot-anim $(TestAvdExtraBootArgs)</TestAvdExtraBootArgs>
-    <TestDeviceName Condition=" '$(TestDeviceName)' == '' ">pixel_7</TestDeviceName>
+    <TestDeviceName Condition=" '$(TestDeviceName)' == '' ">pixel_4</TestDeviceName>
     <SdkManagerImageName Condition=" '$(SdkManagerImageName)' == '' ">system-images;android-$(TestAvdApiLevel);$(TestAvdType);$(TestAvdAbi)</SdkManagerImageName>
     <TestAvdName>XamarinAndroidTestRunner$(TestAvdApiLevel)-$(TestAvdAbi)</TestAvdName>
     <_AdbEmulatorPort>5570</_AdbEmulatorPort>
@@ -105,7 +105,7 @@
         Timeout="$(AvdLaunchTimeoutMS)"
         WriteOutputAsMessage="True"
     />
-    <Xamarin.Android.Tools.BootstrapTasks.Adb
+    <!--Xamarin.Android.Tools.BootstrapTasks.Adb
         Arguments="$(_AdbTarget) shell setprop debug.mono.log default,assembly,timing=bare"
         IgnoreExitCode="True"
         ToolExe="$(AdbToolExe)"
@@ -125,7 +125,7 @@
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
         Timeout="60000"
-    />
+    /-->
     <Message
         Condition=" '$(_EmuTarget)' != '' "
         Text="Launched Android emulator; `adb` target: '$(_AdbTarget)'"
