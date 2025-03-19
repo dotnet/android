@@ -171,7 +171,7 @@ class LlvmIrFunctionBody
 		previousLabel = implicitStartBlock = new LlvmIrFunctionImplicitStartLabel (functionState.StartingBlockNumber);
 	}
 
-	public void Add (LlvmIrFunctionLabelItem label)
+	public void Add (LlvmIrFunctionLabelItem label, string? comment = null)
 	{
 		label.WillAddToBody (this, functionState);
 		if (definedLabels.Contains (label.Name)) {
@@ -189,13 +189,16 @@ class LlvmIrFunctionBody
 		precedingBlock1 = previousLabel;
 		previousLabel = label;
 
-		var comment = new StringBuilder (" preds = %");
-		comment.Append (precedingBlock1.Name);
-		if (precedingBlock2 != null) {
-			comment.Append (", %");
-			comment.Append (precedingBlock2.Name);
+		if (comment == null) {
+			var sb = new StringBuilder (" preds = %");
+			sb.Append (precedingBlock1.Name);
+			if (precedingBlock2 != null) {
+				sb.Append (", %");
+				sb.Append (precedingBlock2.Name);
+			}
+			comment = sb.ToString ();
 		}
-		label.Comment = comment.ToString ();
+		label.Comment = comment;
 	}
 
 	public void Add (LlvmIrFunctionBodyItem item)

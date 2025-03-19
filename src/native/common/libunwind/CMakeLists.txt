@@ -322,6 +322,7 @@ add_library(
   STATIC
   ${LIBUNWIND_XAMARIN_SOURCES}
 )
+set_static_library_suffix(${LIB_NAME})
 
 add_library(${LIB_ALIAS} ALIAS ${LIB_NAME})
 
