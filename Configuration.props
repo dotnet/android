@@ -228,9 +228,13 @@
         AndroidRuntime="CoreCLR" />
   </ItemGroup>
 
+  <!-- These properties serve the purpose of not duplicating the strings between xaprepare and
+       package creation tools -->
   <PropertyGroup>
-    <_RuntimeRedistDirName>redist</_RuntimeRedistDirName>
+    <_MonoRuntimeFlavorDirName>mono</_MonoRuntimeFlavorDirName>
+    <_CLRRuntimeFlavorDirName>clr</_CLRRuntimeFlavorDirName>
   </PropertyGroup>
+
 
   <!-- Whenever there's a need to use a locally built CoreCLR, both .NET for Android and the
        application(s) must be built with the same runtime. CLRLocalRuntimePath must point to the CoreCLR
