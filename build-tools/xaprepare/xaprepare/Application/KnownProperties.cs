@@ -18,6 +18,7 @@ namespace Xamarin.Android.Prepare
 		public const string AndroidToolchainDirectory           = "AndroidToolchainDirectory";
 		public const string AutoProvision                       = "AutoProvision";
 		public const string AutoProvisionUsesSudo               = "AutoProvisionUsesSudo";
+		public const string CLRRuntimeFlavorDirName             = "_CLRRuntimeFlavorDirName";
 		public const string CMakePath                           = "CmakePath";
 		public const string Configuration                       = "Configuration";
 		public const string CommandLineToolsVersion             = nameof (CommandLineToolsVersion);
@@ -45,7 +46,9 @@ namespace Xamarin.Android.Prepare
 		public const string MonoDarwinPackageUrl                = "MonoDarwinPackageUrl";
 		public const string MonoRequiredMinimumVersion          = "MonoRequiredMinimumVersion";
 		public const string MonoRequiredMaximumVersion          = "MonoRequiredMaximumVersion";
+		public const string MonoRuntimeFlavorDirName            = "_MonoRuntimeFlavorDirName";
 		public const string MonoSourceFullPath                  = "MonoSourceFullPath";
+		public const string NativeRuntimeOutputRootDir          = "NativeRuntimeOutputRootDir";
 		public const string NinjaPath                           = "NinjaPath";
 		public const string Pkg7Zip_CommandLine                 = "Pkg7-Zip_CommandLine";
 		public const string PkgXamarin_LibZipSharp              = "PkgXamarin_LibZipSharp";
