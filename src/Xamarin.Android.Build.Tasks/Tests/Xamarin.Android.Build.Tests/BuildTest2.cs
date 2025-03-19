@@ -42,10 +42,10 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (MarshalMethodsDefaultStatusSource))]
 		public void MarshalMethodsDefaultEnabledStatus (bool isRelease, bool marshalMethodsEnabled)
 		{
-			var abis = new [] { "armeabi-v7a", "x86" };
+			var abis = new [] { "arm64-v8a", "x86_64" };
 			AndroidTargetArch[] supportedArches = new [] {
-				AndroidTargetArch.Arm,
-				AndroidTargetArch.X86,
+				AndroidTargetArch.Arm64,
+				AndroidTargetArch.X86_64,
 			};
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease
@@ -68,10 +68,20 @@ namespace Xamarin.Android.Build.Tests
 					String.Join (";", supportedArches.Select (arch => MonoAndroidHelper.ArchToAbi (arch))),
 					true
 				);
-				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
 
-				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
-				Assert.AreEqual (app_config.marshal_methods_enabled, shouldMarshalMethodsBeEnabled, $"Marshal methods enabled status should be '{shouldMarshalMethodsBeEnabled}', but it was '{app_config.marshal_methods_enabled}'");
+				bool marshal_methods_enabled;
+				if (TargetRuntimeHelper.UseMonoRuntime) {
+					EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
+
+					Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
+					marshal_methods_enabled = app_config.marshal_methods_enabled;
+				} else {
+					EnvironmentHelper.ApplicationConfigCLR app_config = EnvironmentHelper.ReadApplicationConfigCLR (envFiles);
+
+					Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
+					marshal_methods_enabled = app_config.marshal_methods_enabled;
+				}
+				Assert.AreEqual (marshal_methods_enabled, shouldMarshalMethodsBeEnabled, $"Marshal methods enabled status should be '{shouldMarshalMethodsBeEnabled}', but it was '{marshal_methods_enabled}'");
 			}
 		}
 
@@ -109,9 +119,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void BasicApplicationOtherRuntime ([Values (true, false)] bool isRelease)
 		{
-			// This test would fail, as it requires **our** updated runtime pack, which isn't currently created
-			// It is created in `src/native/native-clr.csproj` which isn't built atm.
-			Assert.Ignore ("CoreCLR support isn't fully enabled yet. This test will be enabled in a follow-up PR.");
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				// Add locally downloaded CoreCLR packs
@@ -430,6 +437,15 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
+			if (TargetRuntimeHelper.UseCoreCLR && TargetRuntimeHelper.CoreClrIsExperimental) {
+				// Experimental runtimes will issue warning XA1040
+				var newCodes = new List<string> (codes);
+				newCodes.Add ("XA1040");
+				codes = newCodes.ToArray ();
+				if (totalWarnings != null) {
+					totalWarnings++;
+				}
+			}
 			proj.SetRuntimeIdentifier ("arm64-v8a");
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("//${FIELDS}", "Type type = typeof (List<>);")
@@ -579,6 +595,8 @@ class MemTest {
 		[NonParallelizable] // parallel NuGet restore causes failures
 		public void BuildBasicApplicationFSharp (bool isRelease, bool aot)
 		{
+			TargetRuntimeHelper.IgnoreIfIncompatibleWithMonoAOT (aot);
+
 			var proj = new XamarinAndroidApplicationProject {
 				Language = XamarinAndroidProjectLanguage.FSharp,
 				IsRelease = isRelease,
