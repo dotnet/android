@@ -45,8 +45,9 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
       DependsOnTargets="_GetLicense;_GetDefaultPackageVersion"
       BeforeTargets="GetFilesToPackage" >
     <PropertyGroup>
-      <_RuntimeFlavorDirName Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">clr</_RuntimeFlavorDirName>
-      <_RuntimeFlavorDirName Condition=" '$(AndroidRuntime)' == 'Mono' Or '$(AndroidRuntime)' == '' ">mono</_RuntimeFlavorDirName>
+      <FrameworkListFile Condition="'$(FrameworkListFile)' == ''">$(IntermediateOutputPath)$(AndroidRID)\RuntimeList.xml</FrameworkListFile>
+      <_RuntimeFlavorDirName Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">$(_CLRRuntimeFlavorDirName)</_RuntimeFlavorDirName>
+      <_RuntimeFlavorDirName Condition=" '$(AndroidRuntime)' == 'Mono' Or '$(AndroidRuntime)' == '' ">$(_MonoRuntimeFlavorDirName)</_RuntimeFlavorDirName>
     </PropertyGroup>
 
     <ItemGroup Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">
@@ -63,6 +64,11 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
       <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxamarin-startup-debug.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxamarin-startup-debug.a" />
       <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxa-shared-bits-release.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxa-shared-bits-release.a" />
       <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxa-shared-bits-debug.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxa-shared-bits-debug.a" />
+
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\crtbegin_so.o') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\crtbegin_so.o" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\crtend_so.o') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\crtend_so.o" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libclang_rt.builtins-aarch64-android.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libclang_rt.builtins-aarch64-android.a" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libclang_rt.builtins-x86_64-android.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libclang_rt.builtins-x86_64-android.a" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(AndroidRuntime)' == 'Mono' ">

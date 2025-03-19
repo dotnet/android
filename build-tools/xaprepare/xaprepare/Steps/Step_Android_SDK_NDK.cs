@@ -189,14 +189,34 @@ namespace Xamarin.Android.Prepare
 				throw new InvalidOperationException ($"Unknown LLVM version format for '{lines[0]}'");
 			}
 
+			string clangLibPath = Path.Combine (
+				Configurables.Paths.AndroidClangRootDirectory,
+				llvmVersion[0],
+				"lib",
+				"linux"
+			);
+
 			foreach (var kvp in Configurables.Defaults.AndroidToolchainPrefixes) {
 				string abi = kvp.Key;
-				string abiDir = Path.Combine (Configurables.Paths.AndroidToolchainSysrootLibDirectory, kvp.Value);
-				string crtFilesPath = Path.Combine (abiDir, BuildAndroidPlatforms.NdkMinimumAPI.ToString (CultureInfo.InvariantCulture));
 
-				foreach (string file in CRTFiles) {
-					CopyFile (abi, crtFilesPath, file);
+				string crtFilesPath = Path.Combine (
+					Configurables.Paths.AndroidToolchainSysrootLibDirectory,
+					kvp.Value,
+					BuildAndroidPlatforms.NdkMinimumAPI.ToString (CultureInfo.InvariantCulture)
+				);
+
+				string clangArch = Configurables.Defaults.AbiToClangArch[abi];
+				CopyFile (abi, crtFilesPath, "crtbegin_so.o");
+				CopyFile (abi, crtFilesPath, "crtend_so.o");
+				CopyFile (abi, clangLibPath, $"libclang_rt.builtins-{clangArch}-android.a");
+
+				// Yay, consistency
+				if (String.Compare (clangArch, "i686", StringComparison.Ordinal) == 0) {
+					clangArch = "i386";
 				}
+
+				// Remove once https://github.com/dotnet/runtime/pull/107615 is merged and released
+				CopyFile (abi, Path.Combine (clangLibPath, clangArch), "libunwind.a");
 			}
 
 			return true;
@@ -207,7 +227,7 @@ namespace Xamarin.Android.Prepare
 				string rid = Configurables.Defaults.AbiToRID [abi];
 				string outputDir = Path.Combine (
 					context.Properties.GetRequiredValue (KnownProperties.NativeRuntimeOutputRootDir),
-					context.Properties.GetRequiredValue (KnownProperties.RuntimeRedistDirName),
+					context.Properties.GetRequiredValue (KnownProperties.CLRRuntimeFlavorDirName),
 					rid
 				);
 
