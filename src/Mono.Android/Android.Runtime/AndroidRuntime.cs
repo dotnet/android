@@ -101,8 +101,13 @@ namespace Android.Runtime {
 			ClassLoader_LoadClass_id= classLoader_loadClass;
 			InvocationPointer       = vm;
 			ObjectReferenceManager  = new AndroidObjectReferenceManager ();
-			TypeManager             = new AndroidTypeManager (jniAddNativeMethodRegistrationAttributePresent);
-			ValueManager            = new AndroidValueManager ();
+			if (RuntimeFeature.ManagedTypeMap) {
+				TypeManager             = new ManagedTypeManager ();
+				ValueManager            = new ManagedValueManager (TypeManager);
+			} else {
+				TypeManager             = new AndroidTypeManager (jniAddNativeMethodRegistrationAttributePresent);
+				ValueManager            = new AndroidValueManager ();
+			}
 			UseMarshalMemberBuilder = false;
 			JniAddNativeMethodRegistrationAttributePresent = jniAddNativeMethodRegistrationAttributePresent;
 		}
