@@ -1,5 +1,7 @@
+#define PINVOKE_OVERRIDE_INLINE [[gnu::always_inline]]
+
 #include <host/host.hh>
-#include <host/pinvoke-override.hh>
+#include <host/pinvoke-override-impl.hh>
 #include <runtime-base/internal-pinvokes.hh>
 
 using namespace xamarin::android;
@@ -98,8 +100,9 @@ auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, cons
 
 const void* Host::clr_pinvoke_override (const char *library_name, const char *entry_point_name) noexcept
 {
-	log_debug (LOG_ASSEMBLY, "clr_pinvoke_override (\"{}\", \"{}\")"sv, library_name, entry_point_name);
+	log_debug (LOG_ASSEMBLY, "[precompiled] clr_pinvoke_override (\"{}\", \"{}\")", library_name, entry_point_name);
 	void *ret = PinvokeOverride::monodroid_pinvoke_override (library_name, entry_point_name);
-	log_debug (LOG_DEFAULT, "p/invoke {}found"sv, ret == nullptr ? "not"sv : ""sv);
+	log_debug (LOG_DEFAULT, "[precompiled] p/invoke {}found", ret == nullptr ? "not"sv : ""sv);
 	return ret;
 }
+
