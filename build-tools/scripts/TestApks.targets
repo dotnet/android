@@ -105,7 +105,7 @@
         Timeout="$(AvdLaunchTimeoutMS)"
         WriteOutputAsMessage="True"
     />
-    <!--Xamarin.Android.Tools.BootstrapTasks.Adb
+    <Xamarin.Android.Tools.BootstrapTasks.Adb
         Arguments="$(_AdbTarget) shell setprop debug.mono.log default,assembly,timing=bare"
         IgnoreExitCode="True"
         ToolExe="$(AdbToolExe)"
@@ -125,7 +125,7 @@
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
         Timeout="60000"
-    /-->
+    />
     <Message
         Condition=" '$(_EmuTarget)' != '' "
         Text="Launched Android emulator; `adb` target: '$(_AdbTarget)'"
