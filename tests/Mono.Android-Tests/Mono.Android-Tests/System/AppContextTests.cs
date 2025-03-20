@@ -39,7 +39,11 @@ namespace SystemTests
 			new object [] {
 				/* className */    "System.Diagnostics.Metrics.Meter, System.Diagnostics.DiagnosticSource",
 				/* propertyName */ "<IsSupported>k__BackingField",
+#if DEBUG
+				/* expected */     true,
+#else   // !DEBUG
 				/* expected */     false,
+#endif  // !DEBUG
 			},
 		};
 
