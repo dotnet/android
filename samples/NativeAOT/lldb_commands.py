@@ -3,6 +3,7 @@ import sys
 import time
 import select
 import os
+import lldb
 
 def clearjdb(debugger, command, result, internal_dict):
     run_jdb_quit()
@@ -35,6 +36,29 @@ def run_jdb_quit():
         process.kill()
     except Exception as e:
         print(f"Error running jdb: {e}")
+
+def System_String_Summary(valobj, internal_dict):
+    try:
+        data_ptr = valobj.GetChildMemberWithName("_firstChar")
+        length = valobj.GetChildMemberWithName("_stringLength").GetValueAsUnsigned()
+        if data_ptr and length:
+            process = valobj.GetProcess()
+            error = lldb.SBError()
+            address = data_ptr.GetLoadAddress()
+            if address == lldb.LLDB_INVALID_ADDRESS:
+                return "<invalid address>"
+            string_data = process.ReadMemory(address, length * 2, error)  # UTF-16 encoding uses 2 bytes per character
+            if error.Success():
+                return string_data.decode("utf-16")
+            else:
+                return f"<error reading memory: {error}>"
+    except Exception as e:
+        return f"<error reading string: {e}>"
+    return "<empty>"
+
+def __lldb_init_module(debugger, internal_dict):
+    debugger.HandleCommand('type summary add --python-function lldb_commands.System_String_Summary "String"')
+    print('The "formatter" command has been installed!')
 
 # Allow direct execution of this script
 if __name__ == "__main__":
