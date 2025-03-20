@@ -59,6 +59,7 @@ namespace Java.Interop
 			public  IntPtr                      EnvironmentPointer          {get; set;}
 
 			public  JniObjectReference          ClassLoader                 {get; set;}
+			[Obsolete ("No longer supported; Class.forName() is now used instead")]
 			public  IntPtr                      ClassLoader_LoadClass_id    {get; set;}
 
 			public  JniObjectReferenceManager?  ObjectReferenceManager      {get; set;}
@@ -152,7 +153,6 @@ namespace Java.Interop
 		bool                                            DestroyRuntimeOnDispose;
 
 		internal    JniObjectReference                  ClassLoader;
-		internal    JniMethodInfo?                      ClassLoader_LoadClass;
 
 		public  IntPtr                                  InvocationPointer   {get; private set;}
 
@@ -206,25 +206,14 @@ namespace Java.Interop
 			JniEnvironment.SetEnvironmentInfo (env);
 
 			ClassLoader = options.ClassLoader;
-			if (options.ClassLoader_LoadClass_id != IntPtr.Zero) {
-				ClassLoader_LoadClass   = new JniMethodInfo (options.ClassLoader_LoadClass_id, isStatic: false);
-			}
-
 			if (ClassLoader.IsValid) {
 				ClassLoader = ClassLoader.NewGlobalRef ();
-			}
-
-			if (!ClassLoader.IsValid || ClassLoader_LoadClass == null) {
+			} else {
 				using (var t = new JniType ("java/lang/ClassLoader")) {
-					if (!ClassLoader.IsValid) {
-						var m       = t.GetStaticMethod ("getSystemClassLoader", "()Ljava/lang/ClassLoader;");
-						var loader  = JniEnvironment.StaticMethods.CallStaticObjectMethod (t.PeerReference, m);
-						ClassLoader = loader.NewGlobalRef ();
-						JniObjectReference.Dispose (ref loader);
-					}
-					if (ClassLoader_LoadClass == null) {
-						ClassLoader_LoadClass   = t.GetInstanceMethod ("loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
-					}
+					var m       = t.GetStaticMethod ("getSystemClassLoader", "()Ljava/lang/ClassLoader;");
+					var loader  = JniEnvironment.StaticMethods.CallStaticObjectMethod (t.PeerReference, m);
+					ClassLoader = loader.NewGlobalRef ();
+					JniObjectReference.Dispose (ref loader);
 				}
 			}
 

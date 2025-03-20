@@ -24,11 +24,15 @@ namespace Java.Interop
 			};
 
 			static  readonly    JniMethodInfo           Class_getName;
+			static  readonly    JniMethodInfo           Class_forName;
+			static  readonly    JniObjectReference      Class_reference;
 
 			static Types ()
 			{
 				using (var t = new JniType ("java/lang/Class")) {
+					Class_reference = t.PeerReference.NewGlobalRef ();
 					Class_getName   = t.GetInstanceMethod ("getName", "()Ljava/lang/String;");
+					Class_forName   = t.GetStaticMethod ("forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;");
 				}
 			}
 
@@ -57,12 +61,14 @@ namespace Java.Interop
 				LogCreateLocalRef (findClassThrown);
 				var pendingException    = info.Runtime.GetExceptionForThrowable (ref findClassThrown, JniObjectReferenceOptions.CopyAndDispose);
 
-				if (info.Runtime.ClassLoader_LoadClass != null) {
+				if (Class_forName.IsValid) {
 					var java    = info.ToJavaName (classname);
-					var __args  = stackalloc JniArgumentValue [1];
+					var __args  = stackalloc JniArgumentValue [3];
 					__args [0]  = new JniArgumentValue (java);
+					__args [1]  = new JniArgumentValue (true);  // initialize the class
+					__args [2]  = new JniArgumentValue (info.Runtime.ClassLoader);
 
-					c = RawCallObjectMethodA (info.EnvironmentPointer, out thrown, info.Runtime.ClassLoader.Handle, info.Runtime.ClassLoader_LoadClass.ID, (IntPtr) __args);
+					c = RawCallStaticObjectMethodA (info.EnvironmentPointer, out thrown, Class_reference.Handle, Class_forName.ID, (IntPtr) __args);
 					JniObjectReference.Dispose (ref java);
 					if (thrown == IntPtr.Zero) {
 						(pendingException as IJavaPeerable)?.Dispose ();
@@ -169,12 +175,12 @@ namespace Java.Interop
 #endif  // FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 			}
 
-			static IntPtr RawCallObjectMethodA (IntPtr env, out IntPtr thrown, IntPtr instance, IntPtr jmethodID, IntPtr args)
+			static IntPtr RawCallStaticObjectMethodA (IntPtr env, out IntPtr thrown, IntPtr clazz, IntPtr jmethodID, IntPtr args)
 			{
 #if FEATURE_JNIENVIRONMENT_JI_PINVOKES
-				return NativeMethods.java_interop_jnienv_call_object_method_a (env, out thrown, instance, jmethodID, args);
+				return NativeMethods.java_interop_jnienv_call_static_object_method_a (env, out thrown, clazz, instance, jmethodID, args);
 #elif FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
-				var r   = JniNativeMethods.CallObjectMethodA (env, instance, jmethodID, args);
+				var r   = JniNativeMethods.CallStaticObjectMethodA (env, clazz, jmethodID, args);
 				thrown  = JniNativeMethods.ExceptionOccurred (env);
 				return r;
 #else   // FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
