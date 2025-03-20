@@ -27,18 +27,6 @@ class NativeRuntimeComponents
 		}
 	}
 
-	internal class MonoComponentArchive : Archive
-	{
-		public readonly string ComponentName;
-
-		public MonoComponentArchive (string name, string componentName, Func<Archive, bool> include)
-			: base (name, include)
-		{
-			ComponentName = componentName;
-			DontExportSymbols = true;
-		}
-	}
-
 	sealed class ClangBuiltinsArchive : Archive
 	{
 		public ClangBuiltinsArchive (string clangAbi)
@@ -73,17 +61,7 @@ class NativeRuntimeComponents
 	{
 		this.monoComponents = monoComponents;
 		KnownArchives = new () {
-			// Mono components
-			new MonoComponentArchive ("libmono-component-debugger-static.a",                 "debugger",            IncludeIfMonoComponentPresent),
-			new MonoComponentArchive ("libmono-component-debugger-stub-static.a",            "debugger",            IncludeIfMonoComponentAbsent),
-			new MonoComponentArchive ("libmono-component-diagnostics_tracing-static.a",      "diagnostics_tracing", IncludeIfMonoComponentPresent),
-			new MonoComponentArchive ("libmono-component-diagnostics_tracing-stub-static.a", "diagnostics_tracing", IncludeIfMonoComponentAbsent),
-			new MonoComponentArchive ("libmono-component-hot_reload-static.a",               "hot_reload",          IncludeIfMonoComponentPresent),
-			new MonoComponentArchive ("libmono-component-hot_reload-stub-static.a",          "hot_reload",          IncludeIfMonoComponentAbsent),
-			new MonoComponentArchive ("libmono-component-marshal-ilgen-static.a",            "marshal-ilgen",       IncludeIfMonoComponentPresent),
-			new MonoComponentArchive ("libmono-component-marshal-ilgen-stub-static.a",       "marshal-ilgen",       IncludeIfMonoComponentAbsent),
-
-			// MonoVM runtime + BCL
+			// CoreCLR runtime + BCL
 			new Archive ("libmonosgen-2.0.a") {
 				DontExportSymbols = true,
 			},
@@ -150,35 +128,5 @@ class NativeRuntimeComponents
 		LinkEndFiles = new () {
 			"crtend_so.o",
 		};
-	}
-
-	bool MonoComponentExists (Archive archive)
-	{
-		if (monoComponents.Length == 0) {
-			return false;
-		}
-
-		var mcArchive = archive as MonoComponentArchive;
-		if (mcArchive == null) {
-			throw new ArgumentException (nameof (archive), "Must be an instance of MonoComponentArchive");
-		}
-
-		foreach (ITaskItem item in monoComponents) {
-			if (String.Compare (item.ItemSpec, mcArchive.ComponentName, StringComparison.OrdinalIgnoreCase) == 0) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	bool IncludeIfMonoComponentAbsent (Archive archive)
-	{
-		return !MonoComponentExists (archive);
-	}
-
-	bool IncludeIfMonoComponentPresent (Archive archive)
-	{
-		return MonoComponentExists (archive);
 	}
 }
