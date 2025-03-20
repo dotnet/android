@@ -38,7 +38,7 @@ Contains code to build and link the native runtime at application build time.
   </Target>
 
   <Target Name="_LinkNativeRuntime"
-          DependsOnTargets="_PrepareMonoComponentItems;_CompileNativeAssemblySources;_PrepareUnifiedNativeRuntimeItems"
+          DependsOnTargets="_CompileNativeAssemblySources;_PrepareUnifiedNativeRuntimeItems"
           Inputs="@(_NativeAssemblyTarget);@(_SelectedNativeArchive)"
           Outputs="@(_UnifiedNativeRuntime)"
           Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' ">
