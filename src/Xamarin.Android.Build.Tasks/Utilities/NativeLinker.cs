@@ -46,7 +46,7 @@ class NativeLinker
 	public bool SaveDebugSymbols  { get; set; }
 
 	public NativeLinker (TaskLoggingHelper log, string abi, string soname, string binutilsDir, string intermediateDir,
-	                     CancellationToken? cancellationToken = null, Action? cancelTask = null)
+	                     IEnumerable<ITaskItem> runtimePackLibDirs, CancellationToken? cancellationToken = null, Action? cancelTask = null)
 	{
 		this.log = log;
 		this.abi = abi;
@@ -89,14 +89,8 @@ class NativeLinker
 			extraArgs.Add ($"-m {elfArch}");
 		}
 
-		string runtimeNativeLibsDir = MonoAndroidHelper.GetNativeLibsRootDirectoryPath (binutilsDir);
-		string runtimeNativeLibStubsDir = MonoAndroidHelper.GetLibstubsRootDirectoryPath (binutilsDir);
-		string RID = MonoAndroidHelper.AbiToRid (abi);
-		string libStubsPath = Path.Combine (runtimeNativeLibStubsDir, RID);
-		string runtimeLibsDir = Path.Combine (runtimeNativeLibsDir, RID);
-
-		extraArgs.Add ($"-L {MonoAndroidHelper.QuoteFileNameArgument (libStubsPath)}");
-		extraArgs.Add ($"-L {MonoAndroidHelper.QuoteFileNameArgument (runtimeLibsDir)}");
+		string nativeLibsDir = MonoAndroidHelper.GetRuntimePackNativeLibDir (MonoAndroidHelper.AbiToTargetArch (abi), runtimePackLibDirs);
+		extraArgs.Add ($"-L {MonoAndroidHelper.QuoteFileNameArgument (nativeLibsDir)}");
 	}
 
 	public bool Link (ITaskItem outputLibraryPath, List<ITaskItem> objectFiles, List<ITaskItem> archives, List<ITaskItem> libraries,
