@@ -33,7 +33,6 @@ set(XAMARIN_MONODROID_SOURCES
   internal-pinvokes.cc
   jni-remapping.cc
   os-bridge.cc
-  pinvoke-override.cc
   typemap.cc
 )
 
@@ -143,7 +142,7 @@ macro(lib_target_options TARGET_NAME)
     xa::xamarin-startup
     xa::runtime-base
     xa::java-interop
-#    xa::pinvoke-override-precompiled
+    xa::pinvoke-override-precompiled
     xa::lz4
     -llog
     -lcoreclr
