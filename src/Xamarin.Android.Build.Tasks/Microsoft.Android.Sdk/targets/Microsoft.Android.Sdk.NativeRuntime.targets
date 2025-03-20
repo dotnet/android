@@ -54,7 +54,8 @@ Contains code to build and link the native runtime at application build time.
         LinkLibraries="@(_RequiredLinkLibraries)"
         OutputRuntimes="@(_UnifiedNativeRuntime)"
         SupportedAbis="@(_BuildTargetAbis)"
-        SaveDebugSymbols="true" />
+        SaveDebugSymbols="true"
+        RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)" />
 
     <ItemGroup>
       <FileWrites Include="@(_UnifiedNativeRuntime)" />
