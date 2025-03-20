@@ -10,67 +10,65 @@ namespace Microsoft.Android.Runtime;
 
 internal static class TypeMapping
 {
-	internal static bool TryGetType (string javaClassName, [NotNullWhen (true)] out Type? type)
+	internal static bool TryGetType (string jniName, [NotNullWhen (true)] out Type? type)
 	{
-		ulong hash = Hash (javaClassName);
+		type = null;
 
 		// the hashes array is sorted and all the hashes are unique
-		int typeIndex = MemoryExtensions.BinarySearch (JavaClassNameHashes, hash);
-		if (typeIndex < 0) {
-			type = null;
+		ulong jniNameHash = Hash (jniName);
+		int jniNameHashIndex = MemoryExtensions.BinarySearch (JniNameHashes, jniNameHash);
+		if (jniNameHashIndex < 0) {
 			return false;
 		}
 
-		type = GetTypeByIndex (typeIndex);
+		// we need to make sure if this is the right match or if it is a hash collision
+		if (jniName != GetJniNameByJniNameHashIndex (jniNameHashIndex)) {
+			return false;
+		}
+
+		type = GetTypeByJniNameHashIndex (jniNameHashIndex);
 		if (type is null) {
-			throw new InvalidOperationException ($"Type with hash {hash} not found.");
-		}
-
-		// ensure this is not a hash collision
-		var resolvedJavaClassName = GetJavaClassNameByIndex (TypeIndexToJavaClassNameIndex [typeIndex]);
-		if (resolvedJavaClassName != javaClassName) {
-			type = null;
-			return false;
+			throw new InvalidOperationException ($"Type for {jniName} (hash: {jniNameHash}, index: {jniNameHashIndex}) not found.");
 		}
 
 		return true;
 	}
 
-	internal static bool TryGetJavaClassName (Type type, [NotNullWhen (true)] out string? className)
+	internal static bool TryGetJniName (Type type, [NotNullWhen (true)] out string? jniName)
 	{
-		string? fullName = type.FullName;
-		if (fullName is null) {
-			className = null;
+		jniName = null;
+
+		string? assemblyQualifiedName = type.AssemblyQualifiedName;
+		if (assemblyQualifiedName is null) {
+			jniName = null;
 			return false;
 		}
 
-		ulong hash = Hash (fullName);
+		ReadOnlySpan<char> typeName = GetSimplifiedAssemblyQualifiedTypeName (assemblyQualifiedName);
 
 		// the hashes array is sorted and all the hashes are unique
-		int javaClassNameIndex = MemoryExtensions.BinarySearch (TypeNameHashes, hash);
-		if (javaClassNameIndex < 0) {
-			className = null;
+		ulong typeNameHash = Hash (typeName);
+		int typeNameHashIndex = MemoryExtensions.BinarySearch (TypeNameHashes, typeNameHash);
+		if (typeNameHashIndex < 0) {
 			return false;
 		}
 
-		className = GetJavaClassNameByIndex (javaClassNameIndex);
-		if (className is null) {
-			throw new InvalidOperationException ($"Java class name with hash {hash} not found.");
+		// we need to make sure if this is the match or if it is a hash collision
+		if (!typeName.SequenceEqual (GetTypeNameByTypeNameHashIndex (typeNameHashIndex))) {
+			return false;
 		}
 
-		// ensure this is not a hash collision
-		var resolvedType = GetTypeByIndex (JavaClassNameIndexToTypeIndex [javaClassNameIndex]);
-		if (resolvedType?.FullName != type.FullName) {
-			className = null;
-			return false;
+		jniName = GetJniNameByTypeNameHashIndex (typeNameHashIndex);
+		if (jniName is null) {
+			throw new InvalidOperationException ($"JNI name for {typeName} (hash: {typeNameHash}, index: {typeNameHashIndex}) not found.");
 		}
 
 		return true;
 	}
 
-	private static ulong Hash (string javaClassName)
+	private static ulong Hash (ReadOnlySpan<char> value)
 	{
-		ReadOnlySpan<byte> bytes = MemoryMarshal.AsBytes (javaClassName.AsSpan ());
+		ReadOnlySpan<byte> bytes = MemoryMarshal.AsBytes (value);
 		ulong hash = XxHash3.HashToUInt64 (bytes);
 
 		// The bytes in the hashes array are stored as little endian. If the target platform is big endian,
@@ -82,11 +80,26 @@ internal static class TypeMapping
 		return hash;
 	}
 
+	// This method keeps only the full type name and the simple assembly name.
+	// It drops the version, culture, and public key information.
+	//
+	// For example: "System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e"
+	//     becomes: "System.Int32, System.Private.CoreLib"
+	private static ReadOnlySpan<char> GetSimplifiedAssemblyQualifiedTypeName(string assemblyQualifiedName)
+	{
+		var commaIndex = assemblyQualifiedName.IndexOf(',');
+		var secondCommaIndex = assemblyQualifiedName.IndexOf(',', startIndex: commaIndex + 1);
+		return secondCommaIndex < 0
+			? assemblyQualifiedName
+			: assemblyQualifiedName.AsSpan(0, secondCommaIndex);
+	}
+
 	// Replaced by src/Microsoft.Android.Sdk.ILLink/TypeMappingStep.cs
-	private static ReadOnlySpan<ulong> JavaClassNameHashes => throw new NotImplementedException ();
 	private static ReadOnlySpan<ulong> TypeNameHashes => throw new NotImplementedException ();
-	private static ReadOnlySpan<int> JavaClassNameIndexToTypeIndex => throw new NotImplementedException ();
-	private static ReadOnlySpan<int> TypeIndexToJavaClassNameIndex => throw new NotImplementedException ();
-	private static Type? GetTypeByIndex (int index) => throw new NotImplementedException ();
-	private static string? GetJavaClassNameByIndex (int index) => throw new NotImplementedException ();
+	private static Type? GetTypeByJniNameHashIndex (int jniNameHashIndex) => throw new NotImplementedException ();
+	private static string? GetJniNameByJniNameHashIndex (int jniNameHashIndex) => throw new NotImplementedException ();
+
+	private static ReadOnlySpan<ulong> JniNameHashes => throw new NotImplementedException ();
+	private static string? GetJniNameByTypeNameHashIndex (int typeNameHashIndex) => throw new NotImplementedException ();
+	private static string? GetTypeNameByTypeNameHashIndex (int typeNameHashIndex) => throw new NotImplementedException ();
 }

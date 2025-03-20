@@ -7,7 +7,7 @@ using Mono.Linker;
 
 namespace Xamarin.Android.Tasks;
 
-class MSBuildLinkContext : LinkContext
+public class MSBuildLinkContext : LinkContext
 {
     public DirectoryAssemblyResolver Resolver { get; private set; }
     readonly TaskLoggingHelper logger;

@@ -26,6 +26,7 @@
   <type name="action" ignore="true" />
   <type name="activity-alias" ignore="true" />
   <type name="additional-certificate" ignore="true" />
+  <type name="adopt-permissions" ignore="true" />
   <type name="allow-permission" ignore="true" />
   <type name="apex-system-service" ignore="true" />
   <type name="attribution" ignore="true" />
@@ -136,6 +137,7 @@
   <element path="activity.attributionTags" visible="false" />
   <element path="activity.forceQueryable" visible="false" />
   <element path="activity.inheritShowWhenLocked" visible="false" />
+  <element path="activity.intentMatchingFlags" visible="false" />
   <element path="activity.knownActivityEmbeddingCerts" visible="false" />
   <element path="activity.minAspectRatio" visible="false" />
   <element path="activity.playHomeTransitionSound" visible="false" />
@@ -174,6 +176,7 @@
   <element path="application.manageSpaceActivity" type="Type?" manualMap="true" />
   <element path="application.name" manualMap="true" />
   <element path="application.networkSecurityConfig" visible="true" />
+  <element path="application.pageSizeCompat" visible="true" />
   <element path="application.permission" visible="true" />
   <element path="application.persistent" type="bool" />
   <element path="application.process" visible="true" />
@@ -195,6 +198,8 @@
   <element path="application.allowAudioPlaybackCapture" visible="false" />
   <element path="application.allowAutoRevokePermissionsExemption" visible="false" />
   <element path="application.allowClearUserDataOnFailedRestore" visible="false" />
+  <element path="application.alternateLauncherIcons" visible="false" />
+  <element path="application.alternateLauncherLabels" visible="false" />
   <element path="application.appCategory" type="Android.Content.PM.ApplicationCategories" />
   <element path="application.appComponentFactory" visible="false" />
   <element path="application.attributionsAreUserVisible" visible="false" />
@@ -205,6 +210,7 @@
   <element path="application.defaultToDeviceProtectedStorage" visible="false" />
   <element path="application.enableOnBackInvokedCallback" visible="false" />
   <element path="application.forceQueryable" visible="false" />
+  <element path="application.intentMatchingFlags" visible="false" />
   <element path="application.knownActivityEmbeddingCerts" visible="false" />
   <element path="application.localeConfig" visible="false" />
   <element path="application.maxAspectRatio" visible="false" />
@@ -354,6 +360,7 @@
   <element path="provider.banner" visible="false" />
   <element path="provider.description" visible="false" />
   <element path="provider.forceUriPermissions" visible="false" />
+  <element path="provider.intentMatchingFlags" visible="false" />
   <element path="provider.logo" visible="false" />
   <element path="provider.singleUser" visible="false" />
   <element path="provider.splitName" visible="false" />
@@ -375,6 +382,7 @@
   <!-- Undocumented attributes -->
   <element path="receiver.attributionTags" visible="false" />
   <element path="receiver.banner" visible="false" />
+  <element path="receiver.intentMatchingFlags" visible="false" />
   <element path="receiver.logo" visible="false" />
   <element path="receiver.singleUser" visible="false" />
 
@@ -397,6 +405,7 @@
   <element path="service.banner" visible="false" />
   <element path="service.description" visible="true" />
   <element path="service.externalService" visible="false" />
+  <element path="service.intentMatchingFlags" visible="false" />
   <element path="service.logo" visible="false" />
   <element path="service.singleUser" visible="false" />
   <element path="service.splitName" visible="false" />

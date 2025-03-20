@@ -1,45 +1,22 @@
 #nullable enable
-using System.Collections.Generic;
-
-using Java.Interop.Tools.Cecil;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using Mono.Cecil;
-using Mono.Linker.Steps;
-using MonoDroid.Tuner;
 using System;
 using System.IO;
 using Microsoft.Android.Build.Tasks;
-using Xamarin.Android.Tools;
+using Microsoft.Build.Framework;
+using Mono.Cecil;
+using Mono.Linker.Steps;
+using MonoDroid.Tuner;
 
 namespace Xamarin.Android.Tasks
 {
 	/// <summary>
-	/// This task is for Debug builds where LinkMode=None, LinkAssemblies is for Release builds
+	/// This task is called for builds that did not use ILLink. It runs "linker steps" that
+	/// should be run on assemblies even in non-linked builds.
 	/// </summary>
-	public class LinkAssembliesNoShrink : AndroidTask
+	public class LinkAssembliesNoShrink : AssemblyModifierPipeline
 	{
-		sealed class RunState
-		{
-			public DirectoryAssemblyResolver? resolver = null;
-			public FixAbstractMethodsStep? fixAbstractMethodsStep = null;
-			public AddKeepAlivesStep? addKeepAliveStep = null;
-			public FixLegacyResourceDesignerStep? fixLegacyResourceDesignerStep = null;
-		}
-
+		// Names of assemblies which don't have Mono.Android.dll references, or are framework assemblies, but which must
 		public override string TaskPrefix => "LNS";
-
-		/// <summary>
-		/// These are used so we have the full list of SearchDirectories
-		/// </summary>
-		[Required]
-		public ITaskItem [] ResolvedAssemblies { get; set; } = Array.Empty<ITaskItem> ();
-
-		[Required]
-		public ITaskItem [] SourceFiles { get; set; } = Array.Empty<ITaskItem> ();
-
-		[Required]
-		public ITaskItem [] DestinationFiles { get; set; } = Array.Empty<ITaskItem> ();
 
 		/// <summary>
 		/// $(TargetName) would be "AndroidApp1" with no extension
@@ -51,119 +28,66 @@ namespace Xamarin.Android.Tasks
 
 		public bool UseDesignerAssembly { get; set; }
 
-		public bool Deterministic { get; set; }
-
-		/// <summary>
-		/// Defaults to false, enables Mono.Cecil to load symbols
-		/// </summary>
-		public bool ReadSymbols { get; set; }
-
-		public override bool RunTask ()
+		protected override void CreateRunState (RunState runState, MSBuildLinkContext context)
 		{
-			if (SourceFiles.Length != DestinationFiles.Length)
-				throw new ArgumentException ("source and destination count mismatch");
+			// Create the additional steps that we want to run since ILLink won't be run
+			var fixAbstractMethodsStep = new FixAbstractMethodsStep ();
+			fixAbstractMethodsStep.Initialize (context, new EmptyMarkContext ());
+			runState.fixAbstractMethodsStep = fixAbstractMethodsStep;
 
-			var readerParameters = new ReaderParameters {
-				ReadSymbols = ReadSymbols,
-			};
-			var writerParameters = new WriterParameters {
-				DeterministicMvid = Deterministic,
-			};
+			var addKeepAliveStep = new AddKeepAlivesStep ();
+			addKeepAliveStep.Initialize (context);
+			runState.addKeepAliveStep = addKeepAliveStep;
 
-			Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> perArchAssemblies = MonoAndroidHelper.GetPerArchAssemblies (ResolvedAssemblies, Array.Empty<string> (), validate: false);
-			var runState = new RunState ();
-			AndroidTargetArch currentArch = AndroidTargetArch.None;
+			var fixLegacyResourceDesignerStep = new FixLegacyResourceDesignerStep ();
+			fixLegacyResourceDesignerStep.Initialize (context);
+			runState.fixLegacyResourceDesignerStep = fixLegacyResourceDesignerStep;
 
-			for (int i = 0; i < SourceFiles.Length; i++) {
-				ITaskItem source = SourceFiles [i];
-				AndroidTargetArch sourceArch = GetValidArchitecture (source);
-				ITaskItem destination = DestinationFiles [i];
-				AndroidTargetArch destinationArch = GetValidArchitecture (destination);
-
-				if (sourceArch != destinationArch) {
-					throw new InvalidOperationException ($"Internal error: assembly '{sourceArch}' targets architecture '{sourceArch}', while destination assembly '{destination}' targets '{destinationArch}' instead");
-				}
-
-				// Each architecture must have a different set of context classes, or otherwise only the first instance of the assembly may be rewritten.
-				if (currentArch != sourceArch) {
-					currentArch = sourceArch;
-					runState.resolver?.Dispose ();
-					runState.resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: ReadSymbols, loadReaderParameters: readerParameters);
-
-					// Add SearchDirectories for the current architecture's ResolvedAssemblies
-					foreach (var kvp in perArchAssemblies[sourceArch]) {
-						ITaskItem assembly = kvp.Value;
-						var path = Path.GetFullPath (Path.GetDirectoryName (assembly.ItemSpec));
-						if (!runState.resolver.SearchDirectories.Contains (path)) {
-							runState.resolver.SearchDirectories.Add (path);
-						}
-					}
-
-					// Set up the FixAbstractMethodsStep and AddKeepAlivesStep
-					var context = new MSBuildLinkContext (runState.resolver, Log);
-
-					var fixAbstractMethodsStep = new FixAbstractMethodsStep ();
-					fixAbstractMethodsStep.Initialize (context, new EmptyMarkContext ());
-					runState.fixAbstractMethodsStep = fixAbstractMethodsStep;
-
-					var addKeepAliveStep = new AddKeepAlivesStep ();
-					addKeepAliveStep.Initialize (context);
-					runState.addKeepAliveStep = addKeepAliveStep;
-
-					var fixLegacyResourceDesignerStep = new FixLegacyResourceDesignerStep ();
-					fixLegacyResourceDesignerStep.Initialize (context);
-					runState.fixLegacyResourceDesignerStep = fixLegacyResourceDesignerStep;
-				}
-
-				DoRunTask (source, destination, runState, writerParameters);
-			}
-			runState.resolver?.Dispose ();
-			return !Log.HasLoggedErrors;
-
-			AndroidTargetArch GetValidArchitecture (ITaskItem item)
-			{
-				AndroidTargetArch ret = MonoAndroidHelper.GetTargetArch (item);
-				if (ret == AndroidTargetArch.None) {
-					throw new InvalidOperationException ($"Internal error: assembly '{item}' doesn't target any architecture.");
-				}
-
-				return ret;
-			}
+			// base must be called to initialize AssemblyModifierPipeline steps
+			base.CreateRunState (runState, context);
 		}
 
-		void DoRunTask (ITaskItem source, ITaskItem destination, RunState runState, WriterParameters writerParameters)
+		protected override void RunPipeline (ITaskItem source, ITaskItem destination, RunState runState, WriterParameters writerParameters)
+		{
+			if (!TryModifyAssembly (source, destination, runState, writerParameters)) {
+				// If we didn't write a modified file, copy the original to the destination
+				CopyIfChanged (source, destination);
+			}
+
+			// base must be called to run AssemblyModifierPipeline steps
+			base.RunPipeline (source, destination, runState, writerParameters);
+		}
+
+		bool TryModifyAssembly (ITaskItem source, ITaskItem destination, RunState runState, WriterParameters writerParameters)
 		{
 			var assemblyName = Path.GetFileNameWithoutExtension (source.ItemSpec);
 
 			// In .NET 6+, we can skip the main assembly
-			if (!AddKeepAlives && assemblyName == TargetName) {
-				CopyIfChanged (source, destination);
-				return;
-			}
-			if (MonoAndroidHelper.IsFrameworkAssembly (source)) {
-				CopyIfChanged (source, destination);
-				return;
-			}
+			if (!AddKeepAlives && assemblyName == TargetName)
+				return false;
 
-			// Only run the step on "MonoAndroid" assemblies
+			if (MonoAndroidHelper.IsFrameworkAssembly (source))
+				return false;
+
+			// Only run steps on "MonoAndroid" assemblies
 			if (MonoAndroidHelper.IsMonoAndroidAssembly (source)) {
 				AssemblyDefinition assemblyDefinition = runState.resolver!.GetAssembly (source.ItemSpec);
 
 				bool save = runState.fixAbstractMethodsStep!.FixAbstractMethods (assemblyDefinition);
 				if (UseDesignerAssembly)
-				save |= runState.fixLegacyResourceDesignerStep!.ProcessAssemblyDesigner (assemblyDefinition);
+					save |= runState.fixLegacyResourceDesignerStep!.ProcessAssemblyDesigner (assemblyDefinition);
 				if (AddKeepAlives)
-				save |= runState.addKeepAliveStep!.AddKeepAlives (assemblyDefinition);
+					save |= runState.addKeepAliveStep!.AddKeepAlives (assemblyDefinition);
 				if (save) {
 					Log.LogDebugMessage ($"Saving modified assembly: {destination.ItemSpec}");
 					Directory.CreateDirectory (Path.GetDirectoryName (destination.ItemSpec));
 					writerParameters.WriteSymbols = assemblyDefinition.MainModule.HasSymbols;
 					assemblyDefinition.Write (destination.ItemSpec, writerParameters);
-					return;
+					return true;
 				}
 			}
 
-			CopyIfChanged (source, destination);
+			return false;
 		}
 
 		void CopyIfChanged (ITaskItem source, ITaskItem destination)

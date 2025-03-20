@@ -69,8 +69,6 @@ namespace Xamarin.Android.Prepare
 				filesToCopyPreserveRelative.AddRange (Directory.GetFiles (javaInteropBuildConfigDir, "*.props"));
 			}
 
-			filesToCopyPreserveRelative.AddRange (Directory.GetFiles (Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "src", "native", "monodroid"), "*.include.*"));
-
 			var buildConfigDir = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "bin", $"Build{context.Configuration}");
 			if (Directory.Exists (buildConfigDir)) {
 				foreach (var fileMatch in buildConfigFiles) {

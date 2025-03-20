@@ -78,6 +78,8 @@ public sealed partial class ApplicationAttribute : Attribute, Java.Interop.IJniN
 
 	public string? NetworkSecurityConfig { get; set; }
 
+	public string? PageSizeCompat { get; set; }
+
 	public string? Permission { get; set; }
 
 	public bool Persistent { get; set; }
@@ -270,6 +272,12 @@ public sealed partial class ApplicationAttribute : Attribute, Java.Interop.IJniN
 			attributeName: "networkSecurityConfig",
 			getter: self => self.NetworkSecurityConfig,
 			setter: (self, value) => self.NetworkSecurityConfig = (string?) value
+		);
+		mapping.Add (
+			member: "PageSizeCompat",
+			attributeName: "pageSizeCompat",
+			getter: self => self.PageSizeCompat,
+			setter: (self, value) => self.PageSizeCompat = (string?) value
 		);
 		mapping.Add (
 			member: "Permission",
