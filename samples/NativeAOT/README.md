@@ -10,7 +10,9 @@ In order to debug we need to use `lldb`. First install the application
 ./dotnet-local.sh build samples/NativeAOT/NativeAOT.csproj -c Release -p:DebugSymbols=true -t:Install
 ```
 
-You can then use the `runwithdebugger.sh/ps1` scripts to run all the steps you need to setup the debugger.
+If you are using VSCode from the android repo, you can go to the debugging tab, and select "Debug NativeAOT". This will let you debug the NativeAOT sample. Fire up your emulator, click the play button next to "Debug NativeAOT" and it will launch the app. If the Java debugger dialog is not cleared automatically, got to the "Debug Console" which should be showing the lldb REPL, and type "clearjdb". Your app should then continue.
+
+Alternatively you can then use the runwithdebugger.sh/ps1 scripts to run all the steps you need to setup the debugger manaully.
 What follows is an explanation of what that script does.
 
 ## How it works
