@@ -101,8 +101,8 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 
 		Log.LogDebugMessage ("  Looking for enabled native components");
 		var componentNames = new HashSet<string> (StringComparer.Ordinal);
-		var jniOnLoadNames = new HashSet<string> (StringComparer.Ordinal);
-		var symbolsToExplicitlyPreserve = new HashSet<LlvmIrGlobalVariableReference> ();
+		var componentLoadHandlers = new Dictionary<string, string> (StringComparer.Ordinal);
+		var componentPreservedSymbols = new Dictionary<string, HashSet<LlvmIrGlobalVariableReference>> (StringComparer.Ordinal);
 		var nativeComponents = new NativeRuntimeComponents (monoComponents);
 		foreach (NativeRuntimeComponents.Archive archiveItem in nativeComponents.KnownArchives) {
 			if (!archiveItem.Include) {
@@ -112,33 +112,24 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 			Log.LogDebugMessage ($"    {archiveItem.Name}");
 			componentNames.Add (archiveItem.Name);
 			if (!String.IsNullOrEmpty (archiveItem.JniOnLoadName)) {
-				jniOnLoadNames.Add (archiveItem.JniOnLoadName);
+				componentLoadHandlers.Add (archiveItem.Name, archiveItem.JniOnLoadName);
 			}
 
 			if (archiveItem.SymbolsToPreserve == null || archiveItem.SymbolsToPreserve.Count == 0) {
 				continue;
 			}
 
+			var preservedSymbols = new HashSet<LlvmIrGlobalVariableReference> ();
 			foreach (string symbolName in archiveItem.SymbolsToPreserve) {
-				symbolsToExplicitlyPreserve.Add (new LlvmIrGlobalVariableReference (symbolName));
-				DeclareDummyFunction (module, symbolName);
+				preservedSymbols.Add (new LlvmIrGlobalVariableReference (symbolName));
 			}
+			componentPreservedSymbols.Add (archiveItem.Name, preservedSymbols);
 		}
 
 		if (componentNames.Count == 0) {
 			Log.LogDebugMessage ("No native framework components are included in the build, not scanning for p/invoke usage");
 			return;
 		}
-
-		module.AddGlobalVariable ("__jni_on_load_handler_count", (uint)jniOnLoadNames.Count, LlvmIrVariableOptions.GlobalConstant);
-		var jniOnLoadPointers = new List<LlvmIrVariableReference> ();
-		foreach (string name in jniOnLoadNames) {
-			jniOnLoadPointers.Add (new LlvmIrGlobalVariableReference (name));
-			DeclareDummyFunction (module, name);
-		}
-		module.AddGlobalVariable ("__jni_on_load_handlers", jniOnLoadPointers, LlvmIrVariableOptions.GlobalConstant);
-		module.AddGlobalVariable ("__jni_on_load_handler_names", jniOnLoadNames, LlvmIrVariableOptions.GlobalConstant);
-		module.AddGlobalVariable ("__explicitly_preserved_symbols", symbolsToExplicitlyPreserve, LlvmIrVariableOptions.GlobalConstant);
 
 		bool is64Bit = state.TargetArch switch {
 			AndroidTargetArch.Arm64  => true,
@@ -151,6 +142,11 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 		Log.LogDebugMessage ("  Checking discovered p/invokes against the list of components");
 		var preservedPerComponent = new Dictionary<string, Component> (StringComparer.OrdinalIgnoreCase);
 		var processedCache = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+		var jniOnLoadNames = new HashSet<string> (StringComparer.Ordinal);
+		bool haveLoadHandlers = componentLoadHandlers.Count > 0;
+		bool havePreservedSymbols = componentPreservedSymbols.Count > 0;
+
+		var symbolsToExplicitlyPreserve = new HashSet<LlvmIrGlobalVariableReference> ();
 
 		foreach (PinvokeScanner.PinvokeEntryInfo pinfo in pinvokeInfos) {
 			Log.LogDebugMessage ($"    p/invoke: {pinfo.EntryName} in {pinfo.LibraryName}");
@@ -161,11 +157,28 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 			}
 
 			processedCache.Add (key);
-			if (!MustPreserve (pinfo, componentNames)) {
+			(bool preserve, string? componentName) = MustPreserve (pinfo, componentNames);
+			if (!preserve) {
 				Log.LogDebugMessage ("      no need to preserve");
 				continue;
 			}
 			Log.LogDebugMessage ("      must be preserved");
+
+			if (!String.IsNullOrEmpty (componentName)) {
+				if (haveLoadHandlers  && componentLoadHandlers.TryGetValue (componentName, out string jniOnLoadName)) {
+					if (jniOnLoadNames.Add (jniOnLoadName)) {
+						Log.LogDebugMessage ($"      component '{componentName}' registers a load handler '{jniOnLoadName}'");
+					}
+				}
+
+				if (havePreservedSymbols && componentPreservedSymbols.TryGetValue (componentName, out HashSet<LlvmIrGlobalVariableReference> preservedSymbols)) {
+					foreach (LlvmIrGlobalVariableReference vref in preservedSymbols) {
+						DeclareDummyFunction (module, vref);
+						symbolsToExplicitlyPreserve.Add (vref);
+					}
+					componentPreservedSymbols.Remove (componentName);
+				}
+			}
 
 			if (!preservedPerComponent.TryGetValue (pinfo.LibraryName, out Component? component)) {
 				component = new Component (pinfo.LibraryName, is64Bit);
@@ -173,6 +186,17 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 			}
 			component.Add (module, pinfo);
 		}
+
+		module.AddGlobalVariable ("__jni_on_load_handler_count", (uint)jniOnLoadNames.Count, LlvmIrVariableOptions.GlobalConstant);
+		var jniOnLoadPointers = new List<LlvmIrVariableReference> ();
+		foreach (string name in jniOnLoadNames) {
+			var symref = new LlvmIrGlobalVariableReference (name);
+			jniOnLoadPointers.Add (symref);
+			DeclareDummyFunction (module, symref);
+		}
+		module.AddGlobalVariable ("__jni_on_load_handlers", jniOnLoadPointers, LlvmIrVariableOptions.GlobalConstant);
+		module.AddGlobalVariable ("__jni_on_load_handler_names", jniOnLoadNames, LlvmIrVariableOptions.GlobalConstant);
+		module.AddGlobalVariable ("__explicitly_preserved_symbols", symbolsToExplicitlyPreserve, LlvmIrVariableOptions.GlobalConstant);
 
 		var components = new List<Component> (preservedPerComponent.Values);
 		if (is64Bit) {
@@ -328,40 +352,40 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 	// Returns `true` for all p/invokes that we know are part of our set of components, otherwise returns `false`.
 	// Returning `false` merely means that the p/invoke isn't in any of BCL or our code and therefore we shouldn't
 	// care.  It doesn't mean the p/invoke will be removed in any way.
-	bool MustPreserve (PinvokeScanner.PinvokeEntryInfo pinfo, ICollection<string> components)
+	(bool preserve, string? componentName) MustPreserve (PinvokeScanner.PinvokeEntryInfo pinfo, ICollection<string> components)
 	{
 		if (String.Compare ("xa-internal-api", pinfo.LibraryName, StringComparison.Ordinal) == 0) {
-			return true;
+			return (true, null);
 		}
 
 		foreach (string component in components) {
 			// The most common pattern for the BCL - file name without extension
 			string componentName = Path.GetFileNameWithoutExtension (component);
 			if (Matches (pinfo.LibraryName, componentName)) {
-				return true;
+				return (true, componentName);
 			}
 
 			// If it starts with `lib`, drop the prefix
 			if (componentName.StartsWith ("lib", StringComparison.Ordinal)) {
 				if (Matches (pinfo.LibraryName, componentName.Substring (3))) {
-					return true;
+					return (true, componentName);
 				}
 			}
 
 			// Might require mapping of component name to a canonical one
 			if (libraryNameMap.TryGetValue (componentName, out string? mappedComponentName) && !String.IsNullOrEmpty (mappedComponentName)) {
 				if (Matches (pinfo.LibraryName, mappedComponentName)) {
-					return true;
+					return (true, componentName);
 				}
 			}
 
 			// Try full file name, as the last resort
 			if (Matches (pinfo.LibraryName, Path.GetFileName (component))) {
-				return true;
+				return (true, componentName);
 			}
 		}
 
-		return false;
+		return (false, null);
 
 		bool Matches (string libraryName, string componentName)
 		{
@@ -369,10 +393,10 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 		}
 	}
 
-	static void DeclareDummyFunction (LlvmIrModule module, string name)
+	static void DeclareDummyFunction (LlvmIrModule module, LlvmIrGlobalVariableReference symref)
 	{
 		// Just a dummy declaration, we don't care about the arguments
-		var funcSig = new LlvmIrFunctionSignature (name, returnType: typeof(void));
+		var funcSig = new LlvmIrFunctionSignature (symref.Name, returnType: typeof(void));
 		var _ = module.DeclareExternalFunction (funcSig);
 	}
 }
