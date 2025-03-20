@@ -63,7 +63,7 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
       parameters:
-        taskTimeoutInMinutes: 7
+        taskTimeoutInMinutes: 10
         startContinueOnError: true
 
     - pwsh: >

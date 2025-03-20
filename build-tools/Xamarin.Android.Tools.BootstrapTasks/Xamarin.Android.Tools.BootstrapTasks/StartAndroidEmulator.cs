@@ -153,7 +153,6 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				p.CancelErrorRead ();
 				p.OutputDataReceived  -= output;
 				p.ErrorDataReceived   -= error;
-				p.Dispose();
 			}
 			return true;
 		}
