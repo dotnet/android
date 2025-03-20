@@ -96,6 +96,10 @@
         <a name='knownActivityEmbeddingCerts' api-level='33' />
         <a name='enableOnBackInvokedCallback' format='boolean' api-level='33' />
         <a name='allowCrossUidActivitySwitchFromBelow' format='boolean' api-level='35' />
+        <a name='pageSizeCompat' api-level='36' />
+        <a name='intentMatchingFlags' api-level='36' />
+        <a name='alternateLauncherIcons' format='reference' api-level='36' />
+        <a name='alternateLauncherLabels' format='reference' api-level='36' />
     </e>
     <e name='permission' api-level='10'>
         <parent>manifest</parent>
@@ -168,6 +172,7 @@
         <a name='minSdkVersion' format='integer|string' />
         <a name='targetSdkVersion' format='integer|string' />
         <a name='maxSdkVersion' format='integer' />
+        <a name='minSdkVersionFull' format='string' api-level='36' />
     </e>
     <e name='uses-library' api-level='10'>
         <parent>application</parent>
@@ -221,6 +226,7 @@
         <a name='forceUriPermissions' api-level='29' />
         <a name='attributionTags' api-level='31' />
         <a name='systemUserOnly' format='boolean' api-level='35' />
+        <a name='intentMatchingFlags' api-level='36' />
     </e>
     <e name='grant-uri-permission' api-level='10'>
         <parent>provider</parent>
@@ -266,6 +272,7 @@
         <a name='attributionTags' api-level='31' />
         <a name='allowSharedIsolatedProcess' format='boolean' api-level='34' />
         <a name='systemUserOnly' format='boolean' api-level='35' />
+        <a name='intentMatchingFlags' api-level='36' />
     </e>
     <e name='receiver' api-level='10'>
         <parent>application</parent>
@@ -283,6 +290,7 @@
         <a name='directBootAware' api-level='24' />
         <a name='roundIcon' api-level='25' />
         <a name='attributionTags' api-level='31' />
+        <a name='intentMatchingFlags' api-level='36' />
     </e>
     <e name='activity' api-level='10'>
         <parent>application</parent>
@@ -354,6 +362,7 @@
         <a name='requiredDisplayCategory' format='string' api-level='34' />
         <a name='enableOnBackInvokedCallback' format='boolean' api-level='34' />
         <a name='requireContentUriPermissionFromCaller' format='string' api-level='35' />
+        <a name='intentMatchingFlags' api-level='36' />
     </e>
     <e name='activity-alias' api-level='10'>
         <parent>application</parent>
@@ -372,6 +381,7 @@
         <a name='attributionTags' api-level='31' />
         <a name='allowUntrustedActivityEmbedding' api-level='33' />
         <a name='knownActivityEmbeddingCerts' api-level='33' />
+        <a name='intentMatchingFlags' api-level='36' />
     </e>
     <e name='meta-data' api-level='10'>
         <parent>application</parent>
@@ -655,5 +665,9 @@
     <e name='uri-relative-filter-group' api-level='35'>
         <parent>intent-filter</parent>
         <a name='allow' format='boolean' api-level='35' />
+    </e>
+    <e name='adopt-permissions' api-level='36'>
+        <parent>manifest</parent>
+        <a name='name' api-level='36' />
     </e>
 </m>
