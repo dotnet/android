@@ -290,16 +290,27 @@ namespace Xamarin.Android.NetTests {
 		{
 			// These status codes all indicate a temporary network/server failure,
 			// so just ignore the test if we hit them.
-			switch (response.StatusCode) {
+			if (ShouldIgnoreSuccessStatusCode (response.StatusCode)) {
+				Assert.Ignore ($"Ignoring network/server failure: {response.StatusCode}");
+				return;
+			}
+
+			response.EnsureSuccessStatusCode ();
+		}
+
+		public bool ShouldIgnoreSuccessStatusCode (HttpStatusCode code)
+		{
+			// These status codes all indicate a temporary network/server failure,
+			// so just ignore the test if we hit them.
+			switch (code) {
 				case HttpStatusCode.InternalServerError:
 				case HttpStatusCode.BadGateway:
 				case HttpStatusCode.ServiceUnavailable:
 				case HttpStatusCode.GatewayTimeout:
-					Assert.Ignore ($"Ignoring network/server failure: {response.StatusCode}");
-					return;
+					return true;
 			}
 
-			response.EnsureSuccessStatusCode ();
+			return false;
 		}
 	}
 
