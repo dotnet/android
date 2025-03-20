@@ -12,12 +12,12 @@ parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory) # working directory
 
 steps:
-  - pwsh: >-
-      dotnet build -v:d -c $(XA.Build.Configuration) -t:AcquireAndroidTarget
-      ${{ parameters.xaSourcePath }}/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Emulator.csproj
-      ${{ parameters.emulatorMSBuildArgs }} -p:AvdLaunchTimeoutMinutes=${{ parameters.launchTimeoutMin }}
-      -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
-    displayName: Start emulator
+- pwsh: >-
+    dotnet build -v:d -c $(XA.Build.Configuration) -t:AcquireAndroidTarget
+    ${{ parameters.xaSourcePath }}/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Emulator.csproj
+    ${{ parameters.emulatorMSBuildArgs }} -p:AvdLaunchTimeoutMinutes=${{ parameters.launchTimeoutMin }}
+    -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
+  displayName: Start emulator
 # - ${{ if eq(parameters.command, 'start') }}:
 #   - task: DotNetCoreCLI@2
 #     displayName: Start emulator
