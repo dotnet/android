@@ -133,6 +133,9 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				}
 			};
 
+			p.OutputDataReceived  += output;
+			p.ErrorDataReceived   += error;
+
 			p.Start ();
 			p.BeginOutputReadLine ();
 			p.BeginErrorReadLine ();
@@ -149,7 +152,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 			p.OutputDataReceived  -= output;
 			p.ErrorDataReceived   -= error;
-			p.Kill ();
+
 			EmulatorProcessId = p.Id;
 		}
 

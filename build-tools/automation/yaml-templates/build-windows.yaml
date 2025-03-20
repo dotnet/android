@@ -62,6 +62,13 @@ stages:
       displayName: emulator -accel-check
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
+      parameters:
+        taskTimeoutInMinutes: 7
+        startContinueOnError: true
+
+    - pwsh: >
+        & "C:\Android\android-sdk\platform-tools\adb.exe" shell getprop
+      displayName: adb shell getprop
 
     # # Build Xamarin.Android and configure local workloads to test improved local build loop
     # - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
