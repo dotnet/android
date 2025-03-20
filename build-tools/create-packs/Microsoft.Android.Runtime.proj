@@ -75,11 +75,11 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
     </ItemGroup>
 
     <ItemGroup Condition=" '$(AndroidRuntime)' == 'Mono' ">
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libmono-android.debug.so" />
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libmono-android.release.so" />
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxamarin-debug-app-helper.so" />
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxamarin-native-tracing.so" />
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libunwind_xamarin.a" />
+      <_AndroidRuntimePackAssets Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libmono-android.debug.so" />
+      <_AndroidRuntimePackAssets Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libmono-android.release.so" />
+      <_AndroidRuntimePackAssets Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxamarin-debug-app-helper.so" />
+      <_AndroidRuntimePackAssets Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxamarin-native-tracing.so" />
+      <_AndroidRuntimePackAssets Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libunwind_xamarin-release.a" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(AndroidRuntime)' != 'NativeAOT' ">
