@@ -44,8 +44,11 @@ public class GetNativeRuntimeComponents : AndroidTask
 		var archives = new List<ITaskItem> ();
 		var symbolsToExport = new List<ITaskItem> ();
 
+		Log.LogDebugMessage ($"Generating list of native files for linking");
 		foreach (NativeRuntimeComponents.Archive archiveItem in components.KnownArchives) {
+			Log.LogDebugMessage ($"  archive '{archiveItem.Name}'");
 			if (!archiveItem.Include) {
+				Log.LogDebugMessage ("    will not be included");
 				continue;
 			}
 			MakeArchiveItem (archiveItem, archives, uniqueAbis);
@@ -108,6 +111,7 @@ public class GetNativeRuntimeComponents : AndroidTask
 				continue;
 			}
 
+			Log.LogDebugMessage ($"  creating msbuild item for archive '{archive.Name}'");
 			ITaskItem newItem = DoMakeItem ("_ResolvedNativeArchive", resolvedArchive, uniqueAbis);
 			newItem.SetMetadata (KnownMetadata.NativeLinkWholeArchive, archive.WholeArchive.ToString ());
 			if (archive.DontExportSymbols) {
