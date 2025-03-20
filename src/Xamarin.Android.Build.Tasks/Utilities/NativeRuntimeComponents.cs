@@ -36,8 +36,8 @@ class NativeRuntimeComponents
 
 	class AndroidArchive : Archive
 	{
-		public AndroidArchive (string name)
-			: base (name, wholeArchive: false)
+		public AndroidArchive (string name, bool wholeArchive = false)
+			: base (name, wholeArchive: wholeArchive)
 		{}
 	}
 
@@ -87,12 +87,13 @@ class NativeRuntimeComponents
 			},
 
 			// .NET for Android
-			new AndroidArchive ("libpinvoke-override-dynamic-release.a"),
+			new AndroidArchive ("libnet-android.release-static-release.a", wholeArchive: true),
+			new AndroidArchive ("libpinvoke-override-dynamic-release.a", wholeArchive: true),
 			new AndroidArchive ("libruntime-base-release.a"),
 			new AndroidArchive ("libxa-java-interop-release.a"),
 			new AndroidArchive ("libxa-lz4-release.a"),
 			new AndroidArchive ("libxa-shared-bits-release.a"),
-			new AndroidArchive ("libmono-android.release-static-release.a"),
+			new AndroidArchive ("libxamarin-startup-release.a"),
 
 			// LLVM clang built-ins archives
 			new ClangBuiltinsArchive ("aarch64"),
