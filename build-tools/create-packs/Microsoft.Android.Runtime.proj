@@ -31,8 +31,8 @@ projects that use the Microsoft.Android framework in .NET 6+.
       DependsOnTargets="_GetLicense">
     <PropertyGroup>
       <FrameworkListFile Condition="'$(FrameworkListFile)' == ''">$(IntermediateOutputPath)$(AndroidRID)\RuntimeList.xml</FrameworkListFile>
-      <_RuntimeFlavorDirName Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">clr</_RuntimeFlavorDirName>
-      <_RuntimeFlavorDirName Condition=" '$(AndroidRuntime)' == 'Mono' Or '$(AndroidRuntime)' == '' ">mono</_RuntimeFlavorDirName>
+      <_RuntimeFlavorDirName Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">$(_CLRRuntimeFlavorDirName)</_RuntimeFlavorDirName>
+      <_RuntimeFlavorDirName Condition=" '$(AndroidRuntime)' == 'Mono' Or '$(AndroidRuntime)' == '' ">$(_MonoRuntimeFlavorDirName)</_RuntimeFlavorDirName>
     </PropertyGroup>
 
     <ItemGroup>
@@ -53,8 +53,31 @@ projects that use the Microsoft.Android framework in .NET 6+.
     </ItemGroup>
 
     <ItemGroup Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.debug-static-debug.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.debug-static-debug.a" />
       <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.debug.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.debug.so" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.release-static-release.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.release-static-release.a" />
       <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.release.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.release.so" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libpinvoke-override-dynamic-debug.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libpinvoke-override-dynamic-debug.a" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libpinvoke-override-dynamic-release.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libpinvoke-override-dynamic-release.a" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libruntime-base-debug.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libruntime-base-debug.a" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libruntime-base-release.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libruntime-base-release.a" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libunwind_xamarin-debug.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libunwind_xamarin-debug.a" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libunwind_xamarin-release.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libunwind_xamarin-release.a" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxa-java-interop-debug.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxa-java-interop-debug.a" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxa-java-interop-release.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxa-java-interop-release.a" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxa-lz4-debug.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxa-lz4-debug.a" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxa-lz4-release.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxa-lz4-release.a" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxa-shared-bits-debug.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxa-shared-bits-debug.a" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxa-shared-bits-release.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxa-shared-bits-release.a" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxamarin-startup-debug.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxamarin-startup-debug.a" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxamarin-startup-release.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxamarin-startup-release.a" />
+
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\crtbegin_so.o') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\crtbegin_so.o" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\crtend_so.o') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\crtend_so.o" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libc++_static.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libc++_static.a" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libc++abi.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libc++abi.a" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libclang_rt.builtins-aarch64-android.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libclang_rt.builtins-aarch64-android.a" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libclang_rt.builtins-x86_64-android.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libclang_rt.builtins-x86_64-android.a" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(AndroidRuntime)' == 'Mono' ">
@@ -62,7 +85,7 @@ projects that use the Microsoft.Android framework in .NET 6+.
       <_AndroidRuntimePackAssets Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libmono-android.release.so" />
       <_AndroidRuntimePackAssets Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxamarin-debug-app-helper.so" />
       <_AndroidRuntimePackAssets Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxamarin-native-tracing.so" />
-      <_AndroidRuntimePackAssets Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libunwind_xamarin.a" />
+      <_AndroidRuntimePackAssets Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libunwind_xamarin-release.a" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(AndroidRuntime)' != 'NativeAOT' ">
