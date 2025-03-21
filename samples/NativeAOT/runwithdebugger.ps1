@@ -23,7 +23,7 @@ $null = & $ADB devices
 
 
 # Build and install
-# & $DOTNET_LOCAL build $SCRIPT_DIR\NativeAOT.csproj -c Debug -t:Install -tl:off
+& $DOTNET_LOCAL build $SCRIPT_DIR\NativeAOT.csproj -c Debug -t:Install -tl:off
 
 # This script is used to run the NativeAOT sample with the debugger attached.
 # It is used by the CI system to verify that the debugger works with NativeAOT.
