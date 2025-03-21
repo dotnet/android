@@ -15,15 +15,17 @@ class NativeRuntimeComponents
 		public readonly bool WholeArchive;
 		public bool DontExportSymbols { get; set; }
 		public HashSet<string>? SymbolsToPreserve { get; set; }
+		public readonly bool NeedsClrHack;
 
 		Func<Archive, bool> shouldInclude;
 
-		public Archive (string name, Func<Archive, bool>? include = null, bool wholeArchive = false, string? jniOnLoadName = null)
+		public Archive (string name, Func<Archive, bool>? include = null, bool wholeArchive = false, string? jniOnLoadName = null, bool needsClrHack = false)
 		{
 			Name = name;
 			shouldInclude = include == null ? ((Archive arch) => true) : include;
 			WholeArchive = wholeArchive;
 			JniOnLoadName = jniOnLoadName;
+			NeedsClrHack = needsClrHack;
 		}
 	}
 
@@ -44,7 +46,7 @@ class NativeRuntimeComponents
 	sealed class BclArchive : Archive
 	{
 		public BclArchive (string name, bool wholeArchive = false, string? jniOnLoadName = null)
-			: base (name, wholeArchive: wholeArchive, jniOnLoadName: jniOnLoadName)
+			: base (name, wholeArchive: wholeArchive, jniOnLoadName: jniOnLoadName, needsClrHack: true)
 		{
 			DontExportSymbols = true;
 		}
@@ -57,16 +59,40 @@ class NativeRuntimeComponents
 	public readonly List<string> LinkStartFiles;
 	public readonly List<string> LinkEndFiles;
 
+	// LINK_LIBRARIES = pal/src/eventprovider/dummyprovider/libeventprovider.a  -llog  nativeresources/libnativeresourcestring.a  shared_minipal/libminipal.a  -ldl  -latomic -lm
 	public NativeRuntimeComponents (ITaskItem[] monoComponents)
 	{
 		this.monoComponents = monoComponents;
 		KnownArchives = new () {
 			// CoreCLR runtime + BCL
-			new Archive ("libmonosgen-2.0.a") {
+			new Archive ("libcoreclr.a", needsClrHack: true) {
 				DontExportSymbols = true,
 			},
+			new Archive ("libcoreclrminipal.a", needsClrHack: true) {
+				DontExportSymbols = true,
+			},
+			new Archive ("libgc_pal.a", needsClrHack: true) {
+				DontExportSymbols = true,
+			},
+			new Archive ("libcoreclrpal.a", wholeArchive: true, needsClrHack: true) {
+				DontExportSymbols = true,
+			},
+			new Archive ("libeventprovider.a", needsClrHack: true) {
+				DontExportSymbols = true,
+			},
+			new Archive ("libnativeresourcestring.a", needsClrHack: true) {
+				DontExportSymbols = true,
+			},
+			new Archive ("libminipal.a", needsClrHack: true) {
+				DontExportSymbols = true,
+			},
+			new Archive ("libbrotlicommon.a", needsClrHack: true),
+			new Archive ("libbrotlidec.a", needsClrHack: true),
+			new Archive ("libbrotlienc.a", needsClrHack: true),
+
 			new BclArchive ("libSystem.Globalization.Native.a"),
 			new BclArchive ("libSystem.IO.Compression.Native.a"),
+			new BclArchive ("libSystem.IO.Ports.Native.a"),
 			new BclArchive ("libSystem.Native.a"),
 			new BclArchive ("libSystem.Security.Cryptography.Native.Android.a", jniOnLoadName: "AndroidCryptoNative_InitLibraryOnLoad") {
 				SymbolsToPreserve = new (StringComparer.Ordinal) {
@@ -100,6 +126,14 @@ class NativeRuntimeComponents
 			new ClangBuiltinsArchive ("arm"),
 			new ClangBuiltinsArchive ("i686"),
 			new ClangBuiltinsArchive ("x86_64"),
+
+			// C++ standard library
+			new Archive ("libc++_static.a") {
+				DontExportSymbols = true,
+			},
+			new Archive ("libc++abi.a") {
+				DontExportSymbols = true,
+			},
 
 			// Remove once https://github.com/dotnet/runtime/pull/107615 is merged and released
 			new Archive ("libunwind.a") {
