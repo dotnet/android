@@ -23,7 +23,7 @@ stages:
   - job: ${{ parameters.jobName }}
     displayName: ${{ parameters.jobDisplayName }}
     pool:
-      name: Android-1ESPT
+      name: MAUI-1ESPT
       image: $(WindowsPoolImage1ESPT)
       os: windows
     timeoutInMinutes: 240
@@ -48,27 +48,11 @@ stages:
       parameters:
         remove_dotnet: true
 
-    - script: systeminfo
-      displayName: Display system information
-
     - task: DotNetCoreCLI@2
       displayName: Prepare Solution
       inputs:
         projects: Xamarin.Android.sln
         arguments: '-c $(XA.Build.Configuration) -t:Prepare --no-restore -p:AutoProvision=true -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare.binlog'
-
-    - pwsh: >
-        & "C:\Android\android-sdk\emulator\emulator.exe" -accel-check
-      displayName: emulator -accel-check
-
-    - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
-      parameters:
-        taskTimeoutInMinutes: 10
-        startContinueOnError: true
-
-    - pwsh: >
-        & "C:\Android\android-sdk\platform-tools\adb.exe" shell getprop
-      displayName: adb shell getprop
 
     # Build Xamarin.Android and configure local workloads to test improved local build loop
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
@@ -93,17 +77,6 @@ stages:
       parameters:
         toolName: apkdiff
         version: $(ApkDiffToolVersion)
-
-    - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml
-      parameters:
-        toolName: dotnet-test-slicer
-        version: $(TestSlicerToolVersion)
-
-    - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
-      parameters:
-        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\MSBuildDeviceIntegration\$(DotNetStableTargetFramework)\MSBuildDeviceIntegration.dll
-        testFilter: name == DebuggingTest
-        testRunTitle: debugger tests
 
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:

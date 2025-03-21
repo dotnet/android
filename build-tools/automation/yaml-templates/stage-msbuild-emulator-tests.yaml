@@ -154,3 +154,56 @@ stages:
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
       parameters:
         condition: ${{ parameters.shouldFailOnIssue }}
+
+  - job: debug_windows_tests
+    displayName: Windows > Tests > Debugging
+    timeoutInMinutes: 180
+    pool:
+      name: Android-1ESPT
+      image: $(WindowsPoolImage1ESPT)
+      os: windows
+    workspace:
+      clean: all
+    steps:
+    - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
+      parameters:
+        installTestSlicer: true
+        installApkDiff: false
+        xaSourcePath: ${{ parameters.xaSourcePath }}
+        repositoryAlias: ${{ parameters.repositoryAlias }}
+        commit: ${{ parameters.commit }}
+        xaprepareScenario: EmulatorTestDependencies
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
+
+    - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
+      parameters:
+        xaSourcePath: ${{ parameters.xaSourcePath }}
+        startContinueOnError: ${{ parameters.emulatorStartContinueOnError }}
+
+    - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
+      parameters:
+        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\MSBuildDeviceIntegration\$(DotNetStableTargetFramework)\MSBuildDeviceIntegration.dll
+        testFilter: name == DebuggingTest
+        testRunTitle: debugger tests
+
+    - ${{ if ne(parameters.usesCleanImages, true) }}:
+      - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
+        parameters:
+        parameters:
+          command: stop
+          xaSourcePath: ${{ parameters.xaSourcePath }}
+
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
+        artifactName: Test Results - Emulator Debugging - Windows-$(System.JobPositionInPhase)
+        xaSourcePath: ${{ parameters.xaSourcePath }}
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
+
+    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
+      parameters:
+        condition: ${{ parameters.shouldFailOnIssue }}
