@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
@@ -70,7 +71,7 @@ namespace Xamarin.Android.Build.Tests
 		[DebuggerHidden]
 		public static void AssertContainsEntry (this ZipArchive zip, string zipPath, string archivePath)
 		{
-			Assert.IsTrue (zip.ContainsEntry (archivePath), $"{zipPath} should contain {archivePath}");
+			Assert.IsTrue (zip.ContainsEntry (archivePath), $"{zipPath} should contain {archivePath}:\n{string.Join (",\n", zip.Select (e => e.FullName))}");
 		}
 
 		[DebuggerHidden]
@@ -114,6 +115,7 @@ namespace Xamarin.Android.Build.Tests
 		[DebuggerHidden]
 		public static void AssertEntryContents (this ZipArchive zip, string zipPath, string archivePath, string contents)
 		{
+			zip.AssertContainsEntry (zipPath, archivePath);
 			var entry = zip.ReadEntry (archivePath);
 			Assert.IsNotNull (entry, $"{zipPath} should contain {archivePath}");
 			using (var stream = new MemoryStream ())

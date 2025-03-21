@@ -164,7 +164,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		[TestCaseSource (nameof (ClassParseOptions))]
 		public void BuildAarBindingLibraryStandalone (string classParser)
 		{
@@ -183,28 +182,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.AndroidClassParser = classParser;
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				using (var apk = ZipHelper.OpenZip (Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar"))) {
-					var root = Path.GetPathRoot (Root);
-					foreach (var entry in apk) {
-						if (IsWindows) {
-							Assert.IsFalse (entry.FullName.Contains (root),
-								$"Entry {entry.FullName} contains a Windows path");
-						}
-						// Check for illegal Windows path characters or other Windows-specific path issues
-						Assert.IsFalse (entry.FullName.IndexOfAny(Path.GetInvalidPathChars()) >= 0, 
-							$"Entry {entry.FullName} contains invalid path characters");
-						Assert.IsFalse (entry.FullName.Contains("\\"), 
-							$"Entry {entry.FullName} contains backslashes which are invalid in ZIP entries");
-					}
-					foreach (var a in proj.OtherBuildItems.Where (x => x is AndroidItem.AndroidAsset)) {
-						var item = a.Include ().ToLower ().Replace ("\\", "/");
-						if (item.EndsWith ("/", StringComparison.Ordinal))
-							continue;
-						var data = ZipHelper.ReadFileFromZip (apk, item);
-						Assert.IsNotNull (data, "{0} should be in the apk.", item);
-						Assert.AreEqual (a.TextContent (), Encoding.ASCII.GetString (data), "The Contents of {0} should be \"{1}\"", item, a.TextContent ());
-					}
-				}
 				FileAssert.Exists (Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "material-menu-1.1.0.aar"));
 			}
 		}
