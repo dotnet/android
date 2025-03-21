@@ -193,7 +193,6 @@ stages:
     - ${{ if ne(parameters.usesCleanImages, true) }}:
       - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
         parameters:
-        parameters:
           command: stop
           xaSourcePath: ${{ parameters.xaSourcePath }}
 
