@@ -37,13 +37,13 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		public override bool Execute ()
 		{
-			Run (GetEmulatorPath ());
+			var ranSuccessfully = Run (GetEmulatorPath ());
 
 			if (!string.IsNullOrEmpty (Port)) {
 				AdbTarget   = $"-s emulator-{Port}";
 			}
 
-			return !Log.HasLoggedErrors;
+			return ranSuccessfully && !Log.HasLoggedErrors;
 		}
 
 		string GetEmulatorPath ()
@@ -63,10 +63,10 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			return path;
 		}
 
-		void Run (string emulator)
+		bool Run (string emulator)
 		{
 			if (emulator == null)
-				return;
+				return false;
 
 			var port = string.IsNullOrEmpty (Port) ? "" : $"-port {Port}";
 			var arguments = $"{Arguments ?? string.Empty} -verbose -detect-image-hang -logcat-output \"{LogcatFile}\" -no-audio -no-snapshot -cache-size 512 -change-locale en-US -timezone \"Etc/UTC\" {port} -avd {ImageName}";
@@ -136,40 +136,26 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			p.OutputDataReceived  += output;
 			p.ErrorDataReceived   += error;
 
-			p.Start ();
-			p.BeginOutputReadLine ();
-			p.BeginErrorReadLine ();
+			try {
+				p.Start ();
+				EmulatorProcessId = p.Id;
+				p.BeginOutputReadLine ();
+				p.BeginErrorReadLine ();
 
-			const int Timeout = 20*1000;
-			int i = WaitHandle.WaitAny (new[]{sawError}, millisecondsTimeout: Timeout);
-			if (i == 0 || Log.HasLoggedErrors) {
-				p.Kill ();
-				return;
+				const int Timeout = 20*1000;
+				int i = WaitHandle.WaitAny (new[]{sawError}, millisecondsTimeout: Timeout);
+				if (i == 0 || Log.HasLoggedErrors) {
+					p.Kill ();
+					return false;
+				}
+			} finally {
+				p.CancelOutputRead ();
+				p.CancelErrorRead ();
+				p.OutputDataReceived  -= output;
+				p.ErrorDataReceived   -= error;
 			}
-
-			p.CancelOutputRead ();
-			p.CancelErrorRead ();
-
-			p.OutputDataReceived  -= output;
-			p.ErrorDataReceived   -= error;
-
-			p.OutputDataReceived  += WriteProcessOutputMessage;
-			p.ErrorDataReceived   += WriteProcessErrorMessage;
-
-			p.BeginOutputReadLine ();
-			p.BeginErrorReadLine ();
-
-			EmulatorProcessId = p.Id;
+			return true;
 		}
 
-		static void WriteProcessOutputMessage (object sender, DataReceivedEventArgs e)
-		{
-			Console.WriteLine (e.Data);
-		}
-
-		static void WriteProcessErrorMessage (object sender, DataReceivedEventArgs e)
-		{
-			Console.Error.WriteLine (e.Data);
-		}
 	}
 }

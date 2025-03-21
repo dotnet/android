@@ -9,6 +9,7 @@ parameters:
   condition: succeeded()
   continueOnError: true
   retryCountOnTaskFailure: 0
+  taskTimeoutInMinutes: 0
 
 steps:
 - powershell: |
@@ -31,3 +32,4 @@ steps:
   condition: ${{ parameters.condition }}
   continueOnError: ${{ parameters.continueOnError }}
   retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
+  timeoutInMinutes: ${{ parameters.taskTimeoutInMinutes }}

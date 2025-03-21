@@ -79,7 +79,7 @@
         AvdManagerHome="$(AvdManagerHome)"
         Arguments="$(TestAvdExtraBootArgs)"
         ImageName="$(TestAvdName)"
-        LogcatFile="$(_LogcatFilenameBase)-full.txt"
+        LogcatFile="$(_LogcatFilenameBase)-start-emu.txt"
         Port="$(_AdbEmulatorPort)"
         ToolExe="$(EmulatorToolExe)"
         ToolPath="$(EmulatorToolPath)">
