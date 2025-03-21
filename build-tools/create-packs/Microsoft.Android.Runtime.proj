@@ -72,6 +72,8 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
 
       <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\crtbegin_so.o') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\crtbegin_so.o" />
       <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\crtend_so.o') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\crtend_so.o" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libc++_static.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libc++_static.a" />
+      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libc++abi.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libc++abi.a" />
       <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libclang_rt.builtins-aarch64-android.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libclang_rt.builtins-aarch64-android.a" />
       <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libclang_rt.builtins-x86_64-android.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libclang_rt.builtins-x86_64-android.a" />
     </ItemGroup>
