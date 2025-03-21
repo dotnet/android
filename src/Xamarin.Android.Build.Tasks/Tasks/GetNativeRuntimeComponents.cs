@@ -20,6 +20,9 @@ public class GetNativeRuntimeComponents : AndroidTask
 	[Required]
 	public ITaskItem[] ResolvedNativeObjectFiles { get; set; }
 
+	[Required]
+	public string HackLocalClrRepoPath { get; set; }
+
 	[Output]
 	public ITaskItem[] NativeArchives { get; set; }
 
@@ -60,6 +63,28 @@ public class GetNativeRuntimeComponents : AndroidTask
 				MakeLibItem (symbolName, symbolsToExport, uniqueAbis);
 			}
 		}
+
+		// HACK! START: until CoreCLR runtime pack has the necessary .a archives
+		var discoveredItemNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+		foreach (ITaskItem item in archives) {
+			discoveredItemNames.Add (Path.GetFileName (item.ItemSpec));
+		}
+
+		Log.LogWarning ("[HACK] Looking for native archives which require CoreCLR hack");
+		foreach (NativeRuntimeComponents.Archive archiveItem in components.KnownArchives) {
+			if (!archiveItem.Include || !archiveItem.NeedsClrHack) {
+				continue;
+			}
+
+			Log.LogDebugMessage ($"  [HACK] archive {archiveItem.Name}");
+			if (discoveredItemNames.Contains (archiveItem.Name)) {
+				Log.LogDebugMessage ("    [HACK] already found elsewhere");
+				continue;
+			}
+			HackMakeArchiveItem (archiveItem, archives, uniqueAbis);
+		}
+		// HACK! END
+
 		NativeArchives = archives.ToArray ();
 		NativeSymbolsToExport = symbolsToExport.ToArray ();
 
@@ -131,5 +156,71 @@ public class GetNativeRuntimeComponents : AndroidTask
 		ret.SetMetadata (KnownMetadata.RuntimeIdentifier, rid);
 
 		return ret;
+	}
+
+	void HackMakeArchiveItem (NativeRuntimeComponents.Archive archive, List<ITaskItem> archives, HashSet<string> uniqueAbis)
+	{
+		var relativeArtifactPaths = new List<(string path, string abi)> ();
+		string archiveName = Path.GetFileName (archive.Name);
+		string commonClrObjDir = Path.Combine ("artifacts", "obj", "coreclr");
+
+		if (IsArchive ("libcoreclr.a")) {
+			archiveName = "libcoreclr_static.a";
+			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.Release", "dlls", "mscoree", "coreclr"));
+		} else if (IsArchive ("libcoreclrpal.a")) {
+			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.Release", "pal", "src"));
+		} else if (IsArchive ("libminipal.a")) {
+			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.Release", "shared_minipal"));
+		} else if (IsArchive ("libcoreclrminipal.a")) {
+			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.Release", "minipal", "Unix"));
+		} else if (IsArchive ("libgc_pal.a")) {
+			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.Release", "gc", "unix"));
+		} else if (IsArchive ("libeventprovider.a")) {
+			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.Release", "pal", "src", "eventprovider", "dummyprovider"));
+		} else if (IsArchive ("libnativeresourcestring.a")) {
+			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.Release", "pal", "nativeresources"));
+		} else {
+			foreach (string abi in uniqueAbis) {
+				string clrArch = GetClrArch (abi);
+				relativeArtifactPaths.Add ((Path.Combine ("artifacts", "bin", $"microsoft.netcore.app.runtime.android-{clrArch}", "Release", "runtimes", $"android-{clrArch}", "native"), abi));
+			}
+		}
+
+		foreach ((string relPath, string abi) in relativeArtifactPaths) {
+			string filePath = Path.Combine (HackLocalClrRepoPath, relPath, archiveName);
+			if (!File.Exists (filePath)) {
+				Log.LogWarning ($"    [HACK] file {filePath} not found");
+				continue;
+			}
+			Log.LogWarning ($"   [HACK] adding runtime component '{filePath}'");
+			var tempItem = new TaskItem (filePath);
+			tempItem.SetMetadata (KnownMetadata.Abi, abi);
+			tempItem.SetMetadata (KnownMetadata.RuntimeIdentifier, MonoAndroidHelper.AbiToRid (abi));
+			ITaskItem newItem = DoMakeItem ("_ResolvedNativeArchive", tempItem, uniqueAbis);
+			newItem.SetMetadata (KnownMetadata.NativeLinkWholeArchive, archive.WholeArchive.ToString ());
+			if (archive.DontExportSymbols) {
+				newItem.SetMetadata (KnownMetadata.NativeDontExportSymbols, "true");
+			}
+			archives.Add (newItem);
+		}
+
+		string GetClrArch (string abi)
+		{
+			return abi switch {
+				"arm64-v8a" => "arm64",
+				"x86_64"    => "x64",
+				_ => throw new NotSupportedException ($"ABI {abi} is not supported for CoreCLR")
+			};
+		}
+
+		void MakeRelativeArtifactPaths (Func<string, string> create)
+		{
+			foreach (string abi in uniqueAbis) {
+				string clrArch = GetClrArch (abi);
+				relativeArtifactPaths.Add ((create (clrArch), abi));
+			}
+		}
+
+		bool IsArchive (string name) => String.Compare (name, archiveName, StringComparison.OrdinalIgnoreCase) == 0;
 	}
 }
