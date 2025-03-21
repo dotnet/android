@@ -11,6 +11,7 @@ namespace Xamarin.Android.Tools
 	{
 		public readonly static bool IsWindows;
 		public readonly static bool IsMac;
+		public readonly static bool IsLinux;
 
 		internal readonly static string? ProgramFilesX86;
 
@@ -20,6 +21,7 @@ namespace Xamarin.Android.Tools
 		{
 			IsWindows = Path.DirectorySeparatorChar == '\\';
 			IsMac = !IsWindows && IsRunningOnMac ();
+			IsLinux = !IsWindows && !IsMac;
 
 			if (IsWindows) {
 				ProgramFilesX86 = GetProgramFilesX86 ();
@@ -29,7 +31,7 @@ namespace Xamarin.Android.Tools
 				NativeLibraryFormat = "{0}.dll";
 			if (IsMac)
 				NativeLibraryFormat = "lib{0}.dylib";
-			if (!IsWindows && !IsMac)
+			if (IsLinux)
 				NativeLibraryFormat = "lib{0}.so";
 		}
 

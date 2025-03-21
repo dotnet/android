@@ -383,6 +383,10 @@ namespace Xamarin.Android.Tools
 
 		static IEnumerable<string> GetLibexecJdkPaths (Action<TraceLevel, string> logger)
 		{
+			if (!OS.IsMac) {
+				yield break;
+			}
+
 			var java_home	= Path.GetFullPath ("/usr/libexec/java_home");
 			if (!File.Exists (java_home)) {
 				yield break;
@@ -429,6 +433,10 @@ namespace Xamarin.Android.Tools
 
 		static IEnumerable<string> GetJavaAlternativesJdkPaths ()
 		{
+			if (!OS.IsLinux) {
+				return Enumerable.Empty<string> ();
+			}
+
 			var alternatives  = Path.GetFullPath ("/usr/sbin/update-java-alternatives");
 			if (!File.Exists (alternatives))
 				return Enumerable.Empty<string> ();
@@ -464,6 +472,10 @@ namespace Xamarin.Android.Tools
 
 		static IEnumerable<string> GetLibJvmJdkPaths ()
 		{
+			if (!OS.IsLinux) {
+				yield break;
+			}
+
 			var jvm = "/usr/lib/jvm";
 			if (!Directory.Exists (jvm))
 				yield break;

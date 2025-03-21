@@ -18,6 +18,10 @@ namespace Xamarin.Android.Tools {
 
 		static IEnumerable<string> GetMacOSMicrosoftDistJdkPaths ()
 		{
+			if (!OS.IsMac) {
+				return Array.Empty<string> ();
+			}
+
 			var jdks    = AppDomain.CurrentDomain.GetData ($"GetMacOSMicrosoftJdkPaths jdks override! {typeof (JdkInfo).AssemblyQualifiedName}")
 				?.ToString ();
 			if (jdks == null) {
