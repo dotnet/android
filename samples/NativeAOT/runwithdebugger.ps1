@@ -1,4 +1,3 @@
-
 # Set error handling
 $ErrorActionPreference = "Stop"
 
@@ -83,6 +82,10 @@ if ($FORWARDS -match "tcp:8700") {
 # Set up JDWP forwarding using the extracted PID
 $null = & $ADB forward tcp:8700 jdwp:$APP_PID
 
+# Create the lldbattach file with the process attach command
+$lldbattachPath = Join-Path -Path $SCRIPT_DIR -ChildPath "obj/Debug/lldbattach"
+$attachCommand = "process attach --pid $APP_PID"
+Set-Content -Path $lldbattachPath -Value $attachCommand
 
 # Connect with JDB and send quit command
 #$null = New-Item -ItemType File -Path "$env:TEMP\jdb_commands.txt" -Value "quit" -Force
