@@ -198,14 +198,10 @@ namespace Xamarin.Android.Prepare
 
 			foreach (var kvp in Configurables.Defaults.AndroidToolchainPrefixes) {
 				string abi = kvp.Key;
-
-				string crtFilesPath = Path.Combine (
-					Configurables.Paths.AndroidToolchainSysrootLibDirectory,
-					kvp.Value,
-					BuildAndroidPlatforms.NdkMinimumAPI.ToString (CultureInfo.InvariantCulture)
-				);
-
+				string abiDir = Path.Combine (Configurables.Paths.AndroidToolchainSysrootLibDirectory, kvp.Value);
+				string crtFilesPath = Path.Combine (abiDir, BuildAndroidPlatforms.NdkMinimumAPI.ToString (CultureInfo.InvariantCulture));
 				string clangArch = Configurables.Defaults.AbiToClangArch[abi];
+
 				CopyFile (abi, crtFilesPath, "crtbegin_so.o");
 				CopyFile (abi, crtFilesPath, "crtend_so.o");
 				CopyFile (abi, clangLibPath, $"libclang_rt.builtins-{clangArch}-android.a");
@@ -214,6 +210,9 @@ namespace Xamarin.Android.Prepare
 				if (String.Compare (clangArch, "i686", StringComparison.Ordinal) == 0) {
 					clangArch = "i386";
 				}
+
+				CopyFile (abi, abiDir, "libc++_static.a");
+				CopyFile (abi, abiDir, "libc++abi.a");
 
 				// Remove once https://github.com/dotnet/runtime/pull/107615 is merged and released
 				CopyFile (abi, Path.Combine (clangLibPath, clangArch), "libunwind.a");
