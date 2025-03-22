@@ -6,6 +6,7 @@ using System.Linq;
 using Microsoft.Build.Framework;
 using System.Text;
 using System.Xml.Linq;
+using System.Collections.Generic;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -176,6 +177,43 @@ namespace Xamarin.Android.Build.Tests
 				}
 				FileAssert.DoesNotExist (libraryProjectImports);
 			}
+		}
+
+		[Test]
+		[Category ("SmokeTests")]
+		public void FullAssetPathRaisesError()
+		{
+			var proj = new XamarinAndroidLibraryProject {
+				OtherBuildItems = {
+					new AndroidItem.AndroidAsset ("Assets\\asset1.txt") {
+						TextContent = () => "bar",
+					},
+				},
+			};
+			var app = new XamarinAndroidApplicationProject {
+				References = {
+					new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"),
+				},
+				OtherBuildItems = {
+					new AndroidItem.AndroidAsset ("Assets\\asset2.txt") {
+						TextContent = () => "foo",
+					},
+				},
+			};
+			var envar = new Dictionary<string, string> {
+				{ "MONOANDROIDASSETSPREFIX", Path.GetFullPath (Path.Combine (Root, "temp", TestName, "App")) },
+			};
+			using var appb = CreateApkBuilder (Path.Combine ("temp", TestName, "App"));
+			appb.Save (app);
+			using var b = CreateDllBuilder (Path.Combine ("temp", TestName, "Library"));
+			Directory.CreateDirectory (Path.Combine (Root, "temp", TestName, "App"));
+			Assert.IsTrue (b.Build (proj, environmentVariables: envar), "Build should have succeeded.");
+			var aarPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
+			FileAssert.Exists (aarPath);
+			using (var aar = ZipHelper.OpenZip (aarPath)) {
+				aar.AssertEntryContents (aarPath, "assets/asset1.txt", contents: "bar");
+			}
+			Assert.Fail ();
 		}
 	}
 }
