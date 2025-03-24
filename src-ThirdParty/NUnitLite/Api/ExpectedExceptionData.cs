@@ -22,6 +22,7 @@
 // ***********************************************************************
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace NUnit.Framework.Api
@@ -123,7 +124,9 @@ namespace NUnit.Framework.Api
         /// </summary>
         /// <param name="fixtureType">The Type of the fixture.</param>
         /// <returns>A MethodInfo.</returns>
-        public MethodInfo GetExceptionHandler(Type fixtureType)
+        public MethodInfo GetExceptionHandler (
+            [DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)]
+            Type fixtureType)
         {
             if (exceptionHandler == null && handlerName != null)
             {
