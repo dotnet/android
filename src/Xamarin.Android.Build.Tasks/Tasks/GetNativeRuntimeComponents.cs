@@ -178,7 +178,7 @@ public class GetNativeRuntimeComponents : AndroidTask
 		} else if (IsArchive ("libeventprovider.a")) {
 			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.Release", "pal", "src", "eventprovider", "dummyprovider"));
 		} else if (IsArchive ("libnativeresourcestring.a")) {
-			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.Release", "pal", "nativeresources"));
+			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.Release", "nativeresources"));
 		} else {
 			foreach (string abi in uniqueAbis) {
 				string clrArch = GetClrArch (abi);
