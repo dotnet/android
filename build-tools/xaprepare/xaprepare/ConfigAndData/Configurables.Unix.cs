@@ -19,7 +19,7 @@ namespace Xamarin.Android.Prepare
 			// AuthenticationException: The remote certificate is invalid because of errors in the certificate chain: RevocationStatusUnknown
 			// For now we'll grab it directly from GitHub
 			// public static readonly Uri DotNetInstallScript = new Uri ("https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh");
-			public static readonly Uri DotNetInstallScript = new Uri ("https://raw.githubusercontent.com/dotnet/install-scripts/refs/heads/main/src/dotnet-install.sh");
+			public static readonly Uri DotNetInstallScript = new Uri ("https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh");
 		}
 	}
 }
