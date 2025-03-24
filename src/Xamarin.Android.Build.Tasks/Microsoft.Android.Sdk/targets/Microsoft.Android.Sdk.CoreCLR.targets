@@ -1,0 +1,28 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Sdk.CoreCLR.targets
+
+This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
+***********************************************************************************************
+-->
+<Project>
+
+  <!-- Default property values for CoreCLR -->
+  <PropertyGroup>
+    <_AndroidRuntimePackRuntime>CoreCLR</_AndroidRuntimePackRuntime>
+  </PropertyGroup>
+
+  <Target Name="_CLRUseLocalRuntimePacks" AfterTargets="ResolveFrameworkReferences"
+          Condition=" '$(_CLRLocalRuntimePath)' != '' And '$(_AndroidRuntime)' == 'CoreCLR' ">
+    <PropertyGroup>
+      <_DotNetRuntimeRepo>$(_CLRLocalRuntimePath)</_DotNetRuntimeRepo>
+      <_DotNetRuntimeConfiguration Condition=" '$(_DotNetRuntimeConfiguration)' == '' ">Release</_DotNetRuntimeConfiguration>
+    </PropertyGroup>
+    <ItemGroup>
+      <!-- update runtime pack to local build -->
+      <ResolvedRuntimePack
+          PackageDirectory="$(_DotnetRuntimeRepo)/artifacts/bin/microsoft.netcore.app.runtime.$(RuntimeIdentifier)/$(_DotNetRuntimeConfiguration)"
+          Condition=" '%(ResolvedRuntimePack.FrameworkName)' == 'Microsoft.NETCore.App' And Exists('$(_DotnetRuntimeRepo)/artifacts/bin/microsoft.netcore.app.runtime.$(RuntimeIdentifier)/$(_DotNetRuntimeConfiguration)') " />
+    </ItemGroup>
+  </Target>
+</Project>

@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using Xamarin.Android.Tools;
 using Xamarin.Tools.Zip;
+using Java.Interop.Tools.JavaCallableWrappers;
 
 #if MSBUILD
 using Microsoft.Android.Build.Tasks;
@@ -176,54 +177,6 @@ namespace Xamarin.Android.Tasks
 		{
 			var toolsDir = Path.GetFullPath (Path.GetDirectoryName (typeof (MonoAndroidHelper).Assembly.Location));
 			return Path.Combine (toolsDir, "lib", $"host-{uname.Value}");
-		}
-
-#if MSBUILD
-		public static void RefreshAndroidSdk (string sdkPath, string ndkPath, string javaPath, TaskLoggingHelper logHelper = null)
-		{
-			Action<TraceLevel, string> logger = (level, value) => {
-				var log = logHelper;
-				switch (level) {
-				case TraceLevel.Error:
-					if (log == null)
-						Console.Error.Write (value);
-					else
-						log.LogCodedError ("XA5300", "{0}", value);
-					break;
-				case TraceLevel.Warning:
-					if (log == null)
-						Console.WriteLine (value);
-					else
-						log.LogCodedWarning ("XA5300", "{0}", value);
-					break;
-				default:
-					if (log == null)
-						Console.WriteLine (value);
-					else
-						log.LogDebugMessage ("{0}", value);
-					break;
-				}
-			};
-			AndroidSdk  = new AndroidSdkInfo (logger, sdkPath, ndkPath, javaPath);
-		}
-
-		public static void RefreshSupportedVersions (string[] referenceAssemblyPaths)
-		{
-			SupportedVersions   = new AndroidVersions (referenceAssemblyPaths);
-		}
-#endif  // MSBUILD
-
-		public static JdkInfo GetJdkInfo (Action<TraceLevel, string> logger, string javaSdkPath, Version minSupportedVersion, Version maxSupportedVersion)
-		{
-			JdkInfo info = null;
-			try {
-				info = new JdkInfo (javaSdkPath, logger:logger);
-			} catch {
-				info = JdkInfo.GetKnownSystemJdkInfos (logger)
-					.Where (jdk => jdk.Version >= minSupportedVersion && jdk.Version <= maxSupportedVersion)
-					.FirstOrDefault ();
-			}
-			return info;
 		}
 
 		class SizeAndContentFileComparer : IEqualityComparer<FileInfo>
@@ -511,29 +464,6 @@ namespace Xamarin.Android.Tasks
 				new string [] { proguardHomeVariable, "JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8" };
 		}
 
-		public static string GetExecutablePath (string dir, string exe)
-		{
-			if (string.IsNullOrEmpty (dir))
-				return exe;
-			foreach (var e in Executables (exe))
-				if (File.Exists (Path.Combine (dir, e)))
-					return e;
-			return exe;
-		}
-
-		public static IEnumerable<string> Executables (string executable)
-		{
-			var pathExt = Environment.GetEnvironmentVariable ("PATHEXT");
-			var pathExts = pathExt?.Split (new char [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
-
-			if (pathExts != null) {
-				foreach (var ext in pathExts)
-					yield return Path.ChangeExtension (executable, ext);
-			}
-			yield return executable;
-		}
-
-
 #if MSBUILD
 		public static string TryGetAndroidJarPath (TaskLoggingHelper log, string platform, bool designTimeBuild = false, bool buildingInsideVisualStudio = false, string targetFramework = "", string androidSdkDirectory = "")
 		{
@@ -639,28 +569,24 @@ namespace Xamarin.Android.Tasks
 			return relPath;
 		}
 
-		public static string GetLibstubsArchDirectoryPath (string androidBinUtilsDirectory, AndroidTargetArch arch)
+#if MSBUILD
+		public static string? GetRuntimePackNativeLibDir (AndroidTargetArch arch, IEnumerable<ITaskItem> runtimePackLibDirs)
 		{
-			return Path.Combine (GetLibstubsRootDirectoryPath (androidBinUtilsDirectory), ArchToRid (arch));
-		}
+			foreach (ITaskItem item in runtimePackLibDirs) {
+				string? rid = item.GetMetadata ("RuntimeIdentifier");
+				if (String.IsNullOrEmpty (rid)) {
+					continue;
+				}
 
-		public static string GetLibstubsRootDirectoryPath (string androidBinUtilsDirectory)
-		{
-			string relPath = GetToolsRootDirectoryRelativePath (androidBinUtilsDirectory);
-			return Path.GetFullPath (Path.Combine (androidBinUtilsDirectory, relPath, "libstubs"));
-		}
+				AndroidTargetArch itemArch = RidToArch (rid);
+				if (itemArch == arch) {
+					return item.ItemSpec;
+				}
+			}
 
-		public static string GetDSOStubsRootDirectoryPath (string androidBinUtilsDirectory)
-		{
-			string relPath = GetToolsRootDirectoryRelativePath (androidBinUtilsDirectory);
-			return Path.GetFullPath (Path.Combine (androidBinUtilsDirectory, relPath, "dsostubs"));
+			return null;
 		}
-
-		public static string GetNativeLibsRootDirectoryPath (string androidBinUtilsDirectory)
-		{
-			string relPath = GetToolsRootDirectoryRelativePath (androidBinUtilsDirectory);
-			return Path.GetFullPath (Path.Combine (androidBinUtilsDirectory, relPath, "lib"));
-		}
+#endif // MSBUILD
 
 		public static string? GetAssemblyCulture (ITaskItem assembly)
 		{
@@ -830,5 +756,16 @@ namespace Xamarin.Android.Tasks
 			// Default runtime is MonoVM
 			return AndroidRuntime.MonoVM;
 		}
+
+		public static JavaPeerStyle ParseCodeGenerationTarget (string codeGenerationTarget)
+		{
+			if (Enum.TryParse (codeGenerationTarget, ignoreCase: true, out JavaPeerStyle style))
+				return style;
+
+			// Default is XAJavaInterop1
+			return JavaPeerStyle.XAJavaInterop1;
+		}
+
+		public static object GetProjectBuildSpecificTaskObjectKey (object key, string workingDirectory, string intermediateOutputPath) => (key, workingDirectory, intermediateOutputPath);
 	}
 }

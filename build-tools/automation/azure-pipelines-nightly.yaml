@@ -144,7 +144,7 @@ stages:
       parameters:
         configuration: $(XA.Build.Configuration)
         testName: Mono.Android.NET_Tests-$(XA.Build.Configuration)-$(avdApiLevel)
-        project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
+        project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)$(avdApiLevel).xml
         extraBuildArgs: -p:TestsFlavor=$(avdApiLevel) -p:TestAvdApiLevel=$(avdApiLevel) -p:TestAvdAbi=$(avdAbi) -p:TestAvdType=$(avdType)
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab

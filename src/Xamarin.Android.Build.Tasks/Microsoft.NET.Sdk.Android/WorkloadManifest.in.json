@@ -6,32 +6,30 @@
       "packs": [
         "Microsoft.Android.Sdk.net10",
         "Microsoft.Android.Sdk.net9",
-        "Microsoft.Android.Ref.35",
-        "Microsoft.Android.Runtime.Mono.35.android-arm",
-        "Microsoft.Android.Runtime.Mono.35.android-arm64",
-        "Microsoft.Android.Runtime.Mono.35.android-x86",
-        "Microsoft.Android.Runtime.Mono.35.android-x64",
+        "Microsoft.Android.Ref.36",
+        "Microsoft.Android.Runtime.Mono.36.android-arm",
+        "Microsoft.Android.Runtime.Mono.36.android-arm64",
+        "Microsoft.Android.Runtime.Mono.36.android-x86",
+        "Microsoft.Android.Runtime.Mono.36.android-x64",
         "Microsoft.Android.Templates"
       ],
       "platforms": [ "win-x64", "win-arm64", "linux-x64", "linux-arm64", "osx-x64", "osx-arm64" ],
-      "extends" : [ 
+      "extends" : [
         "microsoft-net-runtime-android-net9",
         "microsoft-net-runtime-android-aot-net9",
         "microsoft-net-runtime-android",
         "microsoft-net-runtime-android-aot"
       ]
     },
-    "android-36": {
-      "description": "Preview support for Android API-36.",
-      "packs": [
-        "Microsoft.Android.Ref.36",
-        "Microsoft.Android.Runtime.Mono.36.android-arm",
-        "Microsoft.Android.Runtime.Mono.36.android-arm64",
-        "Microsoft.Android.Runtime.Mono.36.android-x86",
-        "Microsoft.Android.Runtime.Mono.36.android-x64"
-      ],
+    "android-net8": {
+      "description": ".NET SDK Workload for building .NET 8 Android applications.",
+      "packs": [ "Microsoft.Android.Sdk.net8" ],
       "platforms": [ "win-x64", "win-arm64", "linux-x64", "linux-arm64", "osx-x64", "osx-arm64" ],
-      "extends" : [ "android" ]
+      "extends" : [
+        "android",
+        "microsoft-net-runtime-android-net8",
+        "microsoft-net-runtime-android-aot-net8"
+      ]
     }
   },
   "packs": {
@@ -61,41 +59,18 @@
         "linux-arm64": "Microsoft.Android.Sdk.Linux"
       }
     },
-    "Microsoft.Android.Ref.35": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.Mono.35.android-arm": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.Mono.35.android-arm64": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.Mono.35.android-x86": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.Mono.35.android-x64": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.NativeAOT.35.android-arm": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.NativeAOT.35.android-arm64": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.NativeAOT.35.android-x86": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.NativeAOT.35.android-x64": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
+    "Microsoft.Android.Sdk.net8": {
+      "kind": "sdk",
+      "version": "@NET8_PREVIOUS_VERSION@",
+      "alias-to": {
+        "osx-x64": "Microsoft.Android.Sdk.Darwin",
+        "osx-arm64": "Microsoft.Android.Sdk.Darwin",
+        "win-x86": "Microsoft.Android.Sdk.Windows",
+        "win-x64": "Microsoft.Android.Sdk.Windows",
+        "win-arm64": "Microsoft.Android.Sdk.Windows",
+        "linux-x64": "Microsoft.Android.Sdk.Linux",
+        "linux-arm64": "Microsoft.Android.Sdk.Linux"
+      }
     },
     "Microsoft.Android.Ref.36": {
       "kind": "framework",
@@ -117,15 +92,15 @@
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
-    "Microsoft.Android.Runtime.NativeAOT.36.android-arm": {
+    "Microsoft.Android.Runtime.CoreCLR.36.android-arm64": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "Microsoft.Android.Runtime.CoreCLR.36.android-x64": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
     "Microsoft.Android.Runtime.NativeAOT.36.android-arm64": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.NativeAOT.36.android-x86": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },

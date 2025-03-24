@@ -77,6 +77,11 @@ namespace Android.Runtime {
 			return wrap;
 		}
 
+		static void MonoDroidUnhandledException (Exception ex)
+		{
+			RuntimeNativeMethods.monodroid_unhandled_exception (ex);
+		}
+
 		internal static void PropagateUncaughtException (IntPtr env, IntPtr javaThreadPtr, IntPtr javaExceptionPtr)
 		{
 			if (!JNIEnvInit.PropagateExceptions)
@@ -95,7 +100,17 @@ namespace Android.Runtime {
 				Logger.Log (LogLevel.Info, "MonoDroid", "UNHANDLED EXCEPTION:");
 				Logger.Log (LogLevel.Info, "MonoDroid", javaException.ToString ());
 
-				RuntimeNativeMethods.monodroid_unhandled_exception (innerException ?? javaException);
+				switch (JNIEnvInit.RuntimeType) {
+					case DotNetRuntimeType.MonoVM:
+						MonoDroidUnhandledException (innerException ?? javaException);
+						break;
+					case DotNetRuntimeType.CoreCLR:
+						// TODO: what to do here?
+						break;
+
+					default:
+						throw new NotSupportedException ($"Internal error: runtime type {JNIEnvInit.RuntimeType} not supported");
+				}
 			} catch (Exception e) {
 				Logger.Log (LogLevel.Error, "monodroid", "Exception thrown while raising AppDomain.UnhandledException event: " + e.ToString ());
 			}
@@ -190,7 +205,7 @@ namespace Android.Runtime {
 				IntPtr ctor = JNIEnv.GetMethodID (lrefClass, "<init>", jniCtorSignature);
 				if (ctor == IntPtr.Zero)
 					throw new ArgumentException (FormattableString.Invariant (
-						$"Could not find constructor JNI signature '{jniCtorSignature}' on type '{Java.Interop.TypeManager.GetClassName (lrefClass)}'."));
+						$"Could not find constructor JNI signature '{jniCtorSignature}' on type '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (lrefClass))}'."));
 				CallNonvirtualVoidMethod (instance, lrefClass, ctor, constructorParameters);
 			} finally {
 				DeleteLocalRef (lrefClass);
@@ -208,7 +223,7 @@ namespace Android.Runtime {
 			IntPtr ctor = JNIEnv.GetMethodID (jniClass, "<init>", signature);
 			if (ctor == IntPtr.Zero)
 				throw new ArgumentException (FormattableString.Invariant (
-					$"Could not find constructor JNI signature '{signature}' on type '{Java.Interop.TypeManager.GetClassName (jniClass)}'."));
+					$"Could not find constructor JNI signature '{signature}' on type '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (jniClass))}'."));
 			return JNIEnv.NewObject (jniClass, ctor, constructorParameters);
 		}
 
@@ -256,7 +271,16 @@ namespace Android.Runtime {
 		{
 			int rank = JavaNativeTypeManager.GetArrayInfo (type, out type);
 			try {
-				return FindClass (JavaNativeTypeManager.ToJniName (GetJniName (type), rank));
+				var sig  = JNIEnvInit.androidRuntime?.TypeManager.GetTypeSignature (type) ?? default;
+				if (!sig.IsValid || sig.SimpleReference == null) {
+					sig = new JniTypeSignature ("java/lang/Object");
+				}
+				sig = sig.AddArrayRank (rank);
+
+				JniObjectReference local_ref = JniEnvironment.Types.FindClass (sig.Name);
+				IntPtr global_ref = local_ref.NewGlobalRef ().Handle;
+				JniObjectReference.Dispose (ref local_ref);
+				return global_ref;
 			} catch (Java.Lang.Throwable e) {
 				if (!((e is Java.Lang.NoClassDefFoundError) || (e is Java.Lang.ClassNotFoundException)))
 					throw;
@@ -280,52 +304,9 @@ namespace Android.Runtime {
 			}
 		}
 
-		const int nameBufferLength = 1024;
-		[ThreadStatic] static char[]? nameBuffer;
-
-		static unsafe IntPtr BinaryName (string classname)
+		public static IntPtr FindClass (string classname)
 		{
-			int index = classname.IndexOf ('/');
-
-			if (index == -1)
-				return NewString (classname);
-
-			int length = classname.Length;
-			if (length > nameBufferLength)
-				return NewString (classname.Replace ('/', '.'));
-
-			if (nameBuffer == null)
-				nameBuffer = new char[nameBufferLength];
-
-			fixed (char* src = classname, dst = nameBuffer) {
-				char* src_ptr = src;
-				char* dst_ptr = dst;
-				char* end_ptr = src + length;
-				while (src_ptr < end_ptr) {
-					*dst_ptr = (*src_ptr == '/') ? '.' : *src_ptr;
-					src_ptr++;
-					dst_ptr++;
-				}
-			}
-			return NewString (nameBuffer, length);
-		}
-
-		public unsafe static IntPtr FindClass (string classname)
-		{
-			JniObjectReference local_ref;
-
-			IntPtr native_str = BinaryName (classname);
-			try {
-				JniArgumentValue* parameters = stackalloc JniArgumentValue [3] {
-					new JniArgumentValue (native_str),
-					new JniArgumentValue (true),
-					new JniArgumentValue (JNIEnvInit.java_class_loader),
-				};
-				local_ref = JniEnvironment.StaticMethods.CallStaticObjectMethod (Java.Lang.Class.Members.JniPeerType.PeerReference, JNIEnvInit.mid_Class_forName!, parameters);
-			} finally {
-				DeleteLocalRef (native_str);
-			}
-
+			JniObjectReference local_ref = JniEnvironment.Types.FindClass (classname);
 			IntPtr global_ref = NewGlobalRef (local_ref.Handle);
 			JniObjectReference.Dispose (ref local_ref);
 			return global_ref;
@@ -430,12 +411,7 @@ namespace Android.Runtime {
 
 		public static string GetClassNameFromInstance (IntPtr jobject)
 		{
-			IntPtr jclass = GetObjectClass (jobject);
-			try {
-				return Java.Interop.TypeManager.GetClassName (jclass);
-			} finally {
-				DeleteLocalRef (jclass);
-			}
+			return JniEnvironment.Types.GetJniTypeNameFromInstance (new JniObjectReference (jobject));
 		}
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
@@ -451,6 +427,14 @@ namespace Android.Runtime {
 			foreach (string line in trace!.Split ('\n')) {
 				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Assembly, line);
 			}
+		}
+
+		// We need this proxy method because if `TypeManagedToJava` contained the call to `monodroid_typemap_managed_to_java`
+		// (which is an icall, or ecall in CoreCLR parlance), CoreCLR JIT would throw an exception, refusing to compile the
+		// method.  The exception would be thrown even if the icall weren't called (e.g. hidden behind a runtime type check)
+		static unsafe IntPtr monovm_typemap_managed_to_java (Type type, byte* mvidptr)
+		{
+			return monodroid_typemap_managed_to_java (type, mvidptr);
 		}
 
 		internal static unsafe string? TypemapManagedToJava (Type type)
@@ -469,7 +453,11 @@ namespace Android.Runtime {
 
 			IntPtr ret;
 			fixed (byte* mvidptr = mvid_data) {
-				ret = monodroid_typemap_managed_to_java (type, mvidptr);
+				ret = JNIEnvInit.RuntimeType switch {
+					DotNetRuntimeType.MonoVM  => monovm_typemap_managed_to_java (type, mvidptr),
+					DotNetRuntimeType.CoreCLR => RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, (IntPtr)mvidptr),
+					_                         => throw new NotSupportedException ($"Internal error: runtime type {JNIEnvInit.RuntimeType} not supported")
+				};
 			}
 
 			if (ret == IntPtr.Zero) {
@@ -489,10 +477,13 @@ namespace Android.Runtime {
 			if (type == null)
 				throw new ArgumentNullException ("type");
 
-			string? java = TypemapManagedToJava (type);
-			return java == null
+			JniTypeSignature sig = default;
+			if (!type.ContainsGenericParameters)
+				sig = JNIEnvInit.androidRuntime?.TypeManager.GetTypeSignature (type) ?? default;
+
+			return sig.SimpleReference == null
 				? JavaNativeTypeManager.ToJniName (type)
-				: java;
+				: sig.Name;
 		}
 
 		public static IntPtr ToJniHandle (IJavaObject? value)
@@ -555,7 +546,7 @@ namespace Android.Runtime {
 			try {
 				if (!IsAssignableFrom (grefSource, lrefDest)) {
 					throw new InvalidCastException (FormattableString.Invariant (
-						$"Unable to cast from '{Java.Interop.TypeManager.GetClassName (grefSource)}' to '{Java.Interop.TypeManager.GetClassName (lrefDest)}'."));
+						$"Unable to cast from '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (grefSource))}' to '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (lrefDest))}'."));
 				}
 			} finally {
 				DeleteGlobalRef (grefSource);
@@ -570,7 +561,7 @@ namespace Android.Runtime {
 			try {
 				if (!IsAssignableFrom (lrefSource, grefDest)) {
 					throw new InvalidCastException (FormattableString.Invariant (
-						$"Unable to cast from '{Java.Interop.TypeManager.GetClassName (lrefSource)}' to '{Java.Interop.TypeManager.GetClassName (grefDest)}'."));
+						$"Unable to cast from '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (lrefSource))}' to '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (grefDest))}'."));
 				}
 			} finally {
 				DeleteGlobalRef (grefDest);
@@ -662,7 +653,13 @@ namespace Android.Runtime {
 					AssertIsJavaObject (type);
 
 					IntPtr elem = GetObjectArrayElement (source, index);
-					return Java.Lang.Object.GetObject (elem, JniHandleOwnership.TransferLocalRef, type);
+					return GetObject (elem, type);
+
+					// FIXME: Since a Dictionary<Type, Func> is used here, the trimmer will not be able to properly analyze `Type t`
+					// error IL2111: Method 'lambda expression' with parameters or return value with `DynamicallyAccessedMembersAttribute` is accessed via reflection. Trimmer can't guarantee availability of the requirements of the method.
+					[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "FIXME: https://github.com/xamarin/xamarin-android/issues/8724")]
+					static object? GetObject (IntPtr e, Type t) =>
+						Java.Lang.Object.GetObject (e, JniHandleOwnership.TransferLocalRef, t);
 				} },
 				{ typeof (Array), (type, source, index) => {
 					IntPtr  elem      = GetObjectArrayElement (source, index);
@@ -1173,7 +1170,7 @@ namespace Android.Runtime {
 				return IntPtr.Zero;
 
 			IntPtr grefArrayElementClass = GetArrayElementClass (values);
-			if (Java.Interop.TypeManager.GetClassName (grefArrayElementClass) == "mono/android/runtime/JavaObject") {
+			if (JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (grefArrayElementClass)) == "mono/android/runtime/JavaObject") {
 				DeleteGlobalRef (grefArrayElementClass);
 				grefArrayElementClass = NewGlobalRef (Java.Lang.Class.Object);
 			}

@@ -1,7 +1,0 @@
-{
-    "configProperties": {
-        "test_bool": true,
-        "test_integer": 42,
-        "test_string": "foo"
-    }
-}

@@ -13,14 +13,13 @@ namespace Android.Runtime
 	static internal class JNIEnvInit
 	{
 #pragma warning disable 0649
-		// NOTE: Keep this in sync with the native side in src/native/monodroid/monodroid-glue-internal.hh
+		// NOTE: Keep this in sync with the native side in src/native/common/include/managed-interface.hh
 		internal struct JnienvInitializeArgs {
 			public IntPtr          javaVm;
 			public IntPtr          env;
 			public IntPtr          grefLoader;
 			public IntPtr          Loader_loadClass;
 			public IntPtr          grefClass; // TODO: remove, not needed anymore
-			public IntPtr          Class_forName;
 			public uint            logCategories;
 			public int             version; // TODO: remove, not needed anymore
 			public int             grefGcThreshold;
@@ -33,6 +32,8 @@ namespace Android.Runtime
 			public bool            jniRemappingInUse;
 			public bool            marshalMethodsEnabled;
 			public IntPtr          grefGCUserPeerable;
+			public uint            runtimeType;
+			public bool            managedMarshalMethodsLookupEnabled;
 		}
 #pragma warning restore 0649
 
@@ -46,9 +47,10 @@ namespace Android.Runtime
 		internal static IntPtr grefIGCUserPeer_class;
 		internal static IntPtr grefGCUserPeerable_class;
 		internal static IntPtr java_class_loader;
-		internal static JniMethodInfo? mid_Class_forName;
 
 		internal static JniRuntime? androidRuntime;
+
+		public static DotNetRuntimeType RuntimeType { get; private set; } = DotNetRuntimeType.Unknown;
 
 		[UnmanagedCallersOnly]
 		static unsafe void RegisterJniNatives (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
@@ -84,11 +86,16 @@ namespace Android.Runtime
 		{
 			androidRuntime = runtime;
 			ValueManager = runtime.ValueManager;
+			SetSynchronizationContext ();
 		}
 
 		[UnmanagedCallersOnly]
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
+			// This looks weird, see comments in RuntimeTypeInternal.cs
+			RuntimeType = DotNetRuntimeTypeConverter.Convert (args->runtimeType);
+			InternalRuntimeTypeHolder.SetRuntimeType (args->runtimeType);
+
 			IntPtr total_timing_sequence = IntPtr.Zero;
 			IntPtr partial_timing_sequence = IntPtr.Zero;
 
@@ -99,8 +106,6 @@ namespace Android.Runtime
 			jniRemappingInUse = args->jniRemappingInUse;
 			MarshalMethodsEnabled = args->marshalMethodsEnabled;
 			java_class_loader = args->grefLoader;
-
-			mid_Class_forName = new JniMethodInfo (args->Class_forName, isStatic: true);
 
 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
 			androidRuntime = new AndroidRuntime (args->env, args->javaVm, args->grefLoader, args->Loader_loadClass, args->jniAddNativeMethodRegistrationAttributePresent != 0);
@@ -121,11 +126,17 @@ namespace Android.Runtime
 				}
 			}
 
+			if (args->managedMarshalMethodsLookupEnabled) {
+				delegate* unmanaged <int, int, int, IntPtr*, void> getFunctionPointer = &ManagedMarshalMethodsLookupTable.GetFunctionPointer;
+				xamarin_app_init (args->env, getFunctionPointer);
+			}
+
 			SetSynchronizationContext ();
 		}
 
-		// NOTE: prevents Android.App.Application static ctor from running
-		[MethodImpl (MethodImplOptions.NoInlining)]
+		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
+		static extern unsafe void xamarin_app_init (IntPtr env, delegate* unmanaged <int, int, int, IntPtr*, void> get_function_pointer);
+
 		static void SetSynchronizationContext () =>
 			SynchronizationContext.SetSynchronizationContext (Android.App.Application.SynchronizationContext);
 	}

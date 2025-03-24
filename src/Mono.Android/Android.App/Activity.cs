@@ -6,8 +6,6 @@ namespace Android.App {
 
 	partial class Activity {
 
-		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-
 		public T? FindViewById<
 				[DynamicallyAccessedMembers (Constructors)]
 				T

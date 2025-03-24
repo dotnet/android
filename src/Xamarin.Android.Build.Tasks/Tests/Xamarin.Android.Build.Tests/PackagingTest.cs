@@ -523,7 +523,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 		}
 
 		[Test]
-		public void MissingSatelliteAssemblyInApp ()
+		public void MissingSatelliteAssemblyInApp ([Values (false, true)] bool publishAot)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
@@ -536,18 +536,26 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 					}
 				}
 			};
+			proj.SetPublishAot (publishAot, AndroidNdkPath);
 
 			using (var b = CreateApkBuilder ()) {
+				b.Verbosity = LoggerVerbosity.Diagnostic; // Needed for --satellite switch to appear in the log
 				b.Target = "Build";
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				b.Target = "SignAndroidPackage";
 				Assert.IsTrue (b.Build (proj), "SignAndroidPackage should have succeeded.");
 
-				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				var helper = new ArchiveAssemblyHelper (apk);
-				foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
-					Assert.IsTrue (helper.Exists ($"assemblies/{abi}/es/{proj.ProjectName}.resources.dll"), "Apk should contain satellite assemblies!");
+				if (publishAot) {
+					// Best idea thus far is to assert ILC's --satellite switch
+					var regex = $"--satellite:.+{proj.ProjectName}.resources.dll";
+					StringAssertEx.ContainsRegex (regex, b.LastBuildOutput, $"Build log should contain the pattern: {regex}");
+				} else {
+					var apk = Path.Combine (Root, b.ProjectDirectory,
+						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+					var helper = new ArchiveAssemblyHelper (apk);
+					foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
+						Assert.IsTrue (helper.Exists ($"assemblies/{abi}/es/{proj.ProjectName}.resources.dll"), "Apk should contain satellite assemblies!");
+					}
 				}
 			}
 		}

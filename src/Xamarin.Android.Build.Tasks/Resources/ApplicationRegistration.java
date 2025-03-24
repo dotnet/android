@@ -1,6 +1,8 @@
-﻿package mono.android.app;
+﻿package net.dot.android;
 
 public class ApplicationRegistration {
+
+	public static android.content.Context Context;
 
 	public static void registerApplications ()
 	{

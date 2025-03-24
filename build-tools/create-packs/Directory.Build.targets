@@ -56,7 +56,7 @@
 
   <Target Name="_CreateItemGroups">
     <ItemGroup>
-      <_AndroidRuntimeNames Include="Mono;NativeAOT" />
+      <_AndroidRuntimeNames Include="@(AndroidAbiAndRuntimeFlavor->'%(AndroidRuntime)'->Distinct())" />
       <_AndroidRIDs Include="android-arm;android-arm64;android-x86;android-x64" Runtime="%(_AndroidRuntimeNames.Identity)" />
     </ItemGroup>
   </Target>
@@ -124,6 +124,7 @@
       <_NuGetSources Include="$(OutputPath.TrimEnd('\'))" />
       <_PreviewPacks Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidLatestUnstableApiLevel)' " Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.Android.Ref.$(AndroidLatestUnstableApiLevel).*.nupkg" />
       <_InstallArguments Include="android" />
+      <_InstallArguments Include="android-net8" />
       <_InstallArguments Include="android-$(AndroidLatestUnstableApiLevel)" Condition=" '@(_PreviewPacks->Count())' != '0' " />
       <_InstallArguments Include="--skip-manifest-update" />
       <_InstallArguments Include="--skip-sign-check" />
@@ -175,6 +176,8 @@
 
     <ItemGroup>
       <ItemsToPush Include="$(OutputPath)*.nupkg" />
+      <WorkloadArtifacts Include="$(OutputPath)*.zip" />
+      <ItemsToPush Include="@(WorkloadArtifacts)" PublishFlatContainer="true" RelativeBlobPath="android/$(AndroidPackVersionLong)/%(Filename)%(Extension)" />
     </ItemGroup>
 
     <Error Condition="'@(ItemsToPush)' == ''" Text="No packages to push." />

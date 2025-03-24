@@ -269,7 +269,7 @@ namespace Android.Runtime {
 	[Register ("java/util/HashSet", DoNotGenerateAcw=true)]
 	// java.util.HashSet allows null
 	public class JavaSet<
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			[DynamicallyAccessedMembers (Constructors)]
 			T
 	> : JavaSet, ICollection<T> {
 

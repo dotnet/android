@@ -6,6 +6,7 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Java.Interop.Tools.Cecil;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
@@ -25,13 +26,15 @@ namespace Xamarin.Android.Tasks
 		readonly MarshalMethodsClassifier classifier;
 		readonly XAAssemblyResolver resolver;
 		readonly AndroidTargetArch targetArch;
+		readonly ManagedMarshalMethodsLookupInfo? managedMarshalMethodsLookupInfo;
 
-		public MarshalMethodsAssemblyRewriter (TaskLoggingHelper log, AndroidTargetArch targetArch, MarshalMethodsClassifier classifier, XAAssemblyResolver resolver)
+		public MarshalMethodsAssemblyRewriter (TaskLoggingHelper log, AndroidTargetArch targetArch, MarshalMethodsClassifier classifier, XAAssemblyResolver resolver, ManagedMarshalMethodsLookupInfo? managedMarshalMethodsLookupInfo)
 		{
 			this.log = log ?? throw new ArgumentNullException (nameof (log));
 			this.targetArch = targetArch;
 			this.classifier = classifier ?? throw new ArgumentNullException (nameof (classifier));;
 			this.resolver = resolver ?? throw new ArgumentNullException (nameof (resolver));;
+			this.managedMarshalMethodsLookupInfo = managedMarshalMethodsLookupInfo;
 		}
 
 		// TODO: do away with broken exception transitions, there's no point in supporting them
@@ -80,6 +83,12 @@ namespace Xamarin.Android.Tasks
 						continue;
 					}
 
+					if (HasUnmanagedCallersOnlyAttribute (method.NativeCallback)) {
+						log.LogDebugMessage ($"[{targetArch}] Method '{method.NativeCallback.FullName}' does not need a wrapper, it already has UnmanagedCallersOnlyAttribute");
+						method.NativeCallbackWrapper = method.NativeCallback;
+						continue;
+					}
+
 					method.NativeCallbackWrapper = GenerateWrapper (method, assemblyImports, brokenExceptionTransitions);
 					if (method.Connector != null) {
 						if (method.Connector.IsStatic && method.Connector.IsPrivate) {
@@ -101,6 +110,15 @@ namespace Xamarin.Android.Tasks
 
 					processedMethods.Add (fullNativeCallbackName, method.NativeCallback);
 				}
+			}
+
+			if (managedMarshalMethodsLookupInfo is not null) {
+				// TODO the code should probably go to different assemblies than Mono.Android (to avoid recursive dependencies)
+				var rootAssembly = resolver.Resolve ("Mono.Android") ?? throw new InvalidOperationException ($"[{targetArch}] Internal error: unable to load the Mono.Android assembly");
+				var managedMarshalMethodsLookupTableType = FindType (rootAssembly, "Java.Interop.ManagedMarshalMethodsLookupTable", required: true);
+
+				var managedMarshalMethodLookupGenerator = new ManagedMarshalMethodsLookupGenerator (log, targetArch, managedMarshalMethodsLookupInfo, managedMarshalMethodsLookupTableType);
+				managedMarshalMethodLookupGenerator.Generate (classifier.MarshalMethods.Values);
 			}
 
 			foreach (AssemblyDefinition asm in classifier.Assemblies) {
@@ -174,6 +192,17 @@ namespace Xamarin.Android.Tasks
 					log.LogWarning ($"[{targetArch}] Unable to delete source file '{path}'");
 					log.LogDebugMessage ($"[{targetArch}] {ex.ToString ()}");
 				}
+			}
+
+			static bool HasUnmanagedCallersOnlyAttribute (MethodDefinition method)
+			{
+				foreach (CustomAttribute ca in method.CustomAttributes) {
+					if (ca.Constructor.DeclaringType.FullName == "System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute") {
+						return true;
+					}
+				}
+
+				return false;
 			}
 		}
 

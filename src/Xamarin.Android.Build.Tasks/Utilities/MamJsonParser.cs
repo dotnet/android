@@ -11,9 +11,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Globalization;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 using ReplacementTypesDict      = System.Collections.Generic.Dictionary<string, string>;
 using ReplacementMethodsDict    = System.Collections.Generic.Dictionary<
@@ -57,17 +57,21 @@ namespace Xamarin.Android.Tasks
 				GetReplacementMethods ());
 		}
 
-		static JObject ReadJson (string path)
+		static JsonNode ReadJson (string path)
 		{
-			using (var f = File.OpenText (path))
-			using (var r = new JsonTextReader (f))
-				return (JObject) JToken.ReadFrom (r);
+			using (var fs = File.OpenRead (path)) {
+				using JsonDocument doc = JsonDocument.Parse (fs, new JsonDocumentOptions { AllowTrailingCommas = true });
+				return doc.RootElement.ToNode () ?? JsonNode.Parse ("{}")!;
+			}
 		}
 
-		void ReadClassRewrites (JToken classRewrites)
+		void ReadClassRewrites (JsonNode classRewrites)
 		{
-			foreach (var classRewrite in classRewrites) {
-				if (!TryReadClassFromTo (classRewrite, out var from, out var to)) {
+			foreach (var classRewrite in classRewrites.AsArray ()) {
+				if (classRewrite == null) {
+					continue;
+				}
+				if (!TryReadClassFromTo (classRewrite!, out var from, out var to)) {
 					Logger (TraceLevel.Verbose, $"No from or to! {classRewrite}");
 					continue;
 				}
@@ -76,11 +80,14 @@ namespace Xamarin.Android.Tasks
 				if (methods == null) {
 					continue;
 				}
-				foreach (var method in methods) {
-					var makeStatic = (bool?) method["MakeStatic"] ?? false;
-					var oldName = (string?) method["OriginalName"];
-					var newName = (string?) method["NewName"];
-					var oldSig  = ReadSignature (method["OriginalParams"]);
+				foreach (var method in methods.AsArray ()) {
+					if (method == null) {
+						continue;
+					}
+					var makeStatic = (bool?) method ["MakeStatic"] ?? false;
+					var oldName = (string?) method ["OriginalName"];
+					var newName = (string?) method ["NewName"];
+					var oldSig  = ReadSignature (method ["OriginalParams"]);
 					if (oldName == null || newName == null) {
 						continue;
 					}
@@ -89,10 +96,10 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		bool TryReadClassFromTo (JToken token, [NotNullWhen(true)] out string? from, [NotNullWhen(true)] out string? to)
+		bool TryReadClassFromTo (JsonNode token, [NotNullWhen(true)] out string? from, [NotNullWhen(true)] out string? to)
 		{
-			from    = (string?) token["Class"]?["From"];
-			to      = (string?) token["Class"]?["To"];
+			from    = (string?) token ["Class"]? ["From"];
+			to      = (string?) token ["Class"]? ["To"];
 			if (from == null || to == null) {
 				return false;
 			}
@@ -101,12 +108,12 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
-		string? ReadSignature (JToken? token)
+		string? ReadSignature (JsonNode? token)
 		{
 			if (token == null)
 				return null;
 			var types = new List<string> ();
-			foreach (var type in token) {
+			foreach (var type in token.AsArray()) {
 				if (type == null) {
 					continue;
 				}
@@ -168,9 +175,12 @@ namespace Xamarin.Android.Tasks
 			return jniType.ToString ();
 		}
 
-		void ReadGlobalMethodCalls (JToken globalMethodCalls)
+		void ReadGlobalMethodCalls (JsonNode globalMethodCalls)
 		{
-			foreach (var globalMethodCall in globalMethodCalls) {
+			foreach (var globalMethodCall in globalMethodCalls.AsArray ()) {
+				if (globalMethodCall == null) {
+					continue;
+				}
 				if (!TryReadClassFromTo (globalMethodCall, out var from, out var to)) {
 					Logger (TraceLevel.Info, $"No from or to! {globalMethodCall}");
 					continue;
@@ -179,10 +189,13 @@ namespace Xamarin.Android.Tasks
 				if (methods == null) {
 					continue;
 				}
-				foreach (var method in methods) {
-					var makeStatic = (bool?) method["MakeStatic"] ?? false;
-					var oldName = (string?) method["OriginalName"];
-					var oldSig  = ReadSignature (method["OriginalParams"]);
+				foreach (var method in methods.AsArray ()) {
+					if (method == null) {
+						continue;
+					}
+					var makeStatic = (bool?) method ["MakeStatic"] ?? false;
+					var oldName = (string?) method ["OriginalName"];
+					var oldSig  = ReadSignature (method ["OriginalParams"]);
 					if (oldSig != null) {
 						throw new Exception ("huh?");
 					}
@@ -218,7 +231,7 @@ namespace Xamarin.Android.Tasks
 						CreateAttribute ("target-type", v.TargetType),
 						CreateAttribute ("target-method-name", v.TargetName),
 						CreateAttribute ("target-method-signature", v.TargetSignature),
-						CreateAttribute ("target-method-parameter-count", v.ParamCount.HasValue ? v.ParamCount.Value.ToString () : null),
+						CreateAttribute ("target-method-parameter-count", v.ParamCount.HasValue ? v.ParamCount.Value.ToString (CultureInfo.InvariantCulture) : null),
 						CreateAttribute ("target-method-instance-to-static", v.IsStatic ? "true" : "false"));
 			}
 		}

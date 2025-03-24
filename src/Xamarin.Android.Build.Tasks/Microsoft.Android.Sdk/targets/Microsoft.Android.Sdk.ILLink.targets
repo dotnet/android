@@ -23,6 +23,7 @@ This file contains the .NET 5-specific targets to customize ILLink
         -->
       <_TrimmerDumpDependencies Condition=" '$(LinkerDumpDependencies)' == 'true' ">true</_TrimmerDumpDependencies>
       <_AndroidLinkerCustomStepAssembly>$(MSBuildThisFileDirectory)..\tools\Microsoft.Android.Sdk.ILLink.dll</_AndroidLinkerCustomStepAssembly>
+      <_SystemIOHashingAssemblyPath>$(MSBuildThisFileDirectory)..\tools\System.IO.Hashing.dll</_SystemIOHashingAssemblyPath>
       <_ProguardProjectConfiguration Condition=" '$(AndroidLinkTool)' != '' ">$(IntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
     </PropertyGroup>
     <ItemGroup>
@@ -37,6 +38,7 @@ This file contains the .NET 5-specific targets to customize ILLink
           Include="ProguardConfiguration"
           Value="$(_ProguardProjectConfiguration)"
       />
+      <_TrimmerCustomData Include="SystemIOHashingAssemblyPath" Value="$(_SystemIOHashingAssemblyPath)" />
 
       <!--
         Used for the <ILLink CustomSteps="@(_TrimmerCustomSteps)" /> value:
@@ -84,11 +86,15 @@ This file contains the .NET 5-specific targets to customize ILLink
           BeforeStep="MarkStep"
           Type="MonoDroid.Tuner.FixLegacyResourceDesignerStep"
       />
-      <_PreserveLists Include="$(MSBuildThisFileDirectory)..\PreserveLists\*.xml" />
-      <TrimmerRootDescriptor
-          Condition=" '@(ResolvedFileToPublish->Count())' != '0' and '%(Filename)' != '' "
-          Include="@(_PreserveLists)" />
+      <_TrimmerCustomSteps
+          Condition=" '$(_AndroidRuntime)' == 'NativeAOT' "
+          Include="$(_AndroidLinkerCustomStepAssembly)"
+          AfterStep="CleanStep"
+          Type="Microsoft.Android.Sdk.ILLink.TypeMappingStep"
+      />
+      <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)..\PreserveLists\*.xml" />
       <TrimmerRootDescriptor Include="@(LinkDescription)" />
+      <TrimmerRootAssembly Include="Microsoft.Android.Runtime.NativeAOT" Condition=" '$(_AndroidRuntime)' == 'NativeAOT' " RootMode="All" />
     </ItemGroup>
   </Target>
 

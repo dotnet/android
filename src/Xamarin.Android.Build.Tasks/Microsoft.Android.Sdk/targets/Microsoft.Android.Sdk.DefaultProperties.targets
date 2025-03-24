@@ -29,6 +29,7 @@
     <_AndroidRuntime Condition=" '$(PublishAot)' == 'true' and '$(UseMonoRuntime)' != 'true' ">NativeAOT</_AndroidRuntime>
     <_AndroidRuntime Condition=" '$(PublishAot)' != 'true' and '$(UseMonoRuntime)' != 'true' ">CoreCLR</_AndroidRuntime>
     <_AndroidRuntime Condition=" '$(_AndroidRuntime)' == '' ">MonoVM</_AndroidRuntime>
+    <PublishAotUsingRuntimePack Condition=" '$(PublishAotUsingRuntimePack)' == '' and '$(_AndroidRuntime)' == 'NativeAOT' ">true</PublishAotUsingRuntimePack>
     <!-- HACK: make dotnet restore include Microsoft.NETCore.App.Runtime.NativeAOT.linux-bionic-arm64 -->
     <_IsPublishing Condition=" '$(_IsPublishing)' == '' and '$(_AndroidRuntime)' == 'NativeAOT' ">true</_IsPublishing>
 
@@ -40,8 +41,8 @@
     <!-- Bindings properties -->
     <!-- jar2xml is not supported -->
     <AndroidClassParser>class-parse</AndroidClassParser>
-    <!-- Anything other than XAJavaInterop1 is not supported -->
-    <AndroidCodegenTarget>XAJavaInterop1</AndroidCodegenTarget>
+    <AndroidCodegenTarget Condition=" '$(AndroidCodegenTarget)' == '' ">XAJavaInterop1</AndroidCodegenTarget>
+    <_AndroidJcwCodegenTarget Condition=" '$(_AndroidJcwCodegenTarget)' == '' and '$(_AndroidRuntime)' != 'NativeAOT' ">XAJavaInterop1</_AndroidJcwCodegenTarget>
     <AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods Condition=" '$(AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods)' == '' ">true</AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods>
     <AndroidBoundInterfacesContainTypes Condition=" '$(AndroidBoundInterfacesContainTypes)' == '' ">true</AndroidBoundInterfacesContainTypes>
     <AndroidBoundInterfacesContainConstants Condition=" '$(AndroidBoundInterfacesContainConstants)' == '' ">true</AndroidBoundInterfacesContainConstants>
@@ -114,16 +115,17 @@
     <EnableUnsafeBinaryFormatterSerialization Condition="'$(EnableUnsafeBinaryFormatterSerialization)' == ''">false</EnableUnsafeBinaryFormatterSerialization>
     <EventSourceSupport Condition="'$(EventSourceSupport)' == ''">false</EventSourceSupport>
     <UseSystemResourceKeys Condition="'$(UseSystemResourceKeys)' == '' and '$(PublishTrimmed)' == 'true'">true</UseSystemResourceKeys>
-    <HttpActivityPropagationSupport Condition="'$(HttpActivityPropagationSupport)' == ''">false</HttpActivityPropagationSupport>
+    <HttpActivityPropagationSupport Condition="'$(HttpActivityPropagationSupport)' == '' and '$(Optimize)' == 'true'">false</HttpActivityPropagationSupport>
     <InvariantGlobalization Condition="'$(InvariantGlobalization)' == ''">false</InvariantGlobalization>
     <StartupHookSupport Condition="'$(StartupHookSupport)' == ''">false</StartupHookSupport>
+    <UseSizeOptimizedLinq Condition="'$(UseSizeOptimizedLinq)' == ''">true</UseSizeOptimizedLinq>
     <UseNativeHttpHandler Condition=" $(AndroidHttpClientHandlerType.Contains ('System.Net.Http.SocketsHttpHandler')) And '$(UseNativeHttpHandler)' == '' ">false</UseNativeHttpHandler>
     <UseNativeHttpHandler Condition="'$(UseNativeHttpHandler)' == ''">true</UseNativeHttpHandler>
     <BuiltInComInteropSupport Condition="'$(BuiltInComInteropSupport)' == ''">false</BuiltInComInteropSupport>
     <JsonSerializerIsReflectionEnabledByDefault Condition="'$(JsonSerializerIsReflectionEnabledByDefault)' == '' and '$(TrimMode)' == 'partial'">true</JsonSerializerIsReflectionEnabledByDefault>
     <!-- Set to disable throwing behavior, see: https://github.com/dotnet/runtime/issues/109724 -->
     <_DefaultValueAttributeSupport Condition="'$(_DefaultValueAttributeSupport)' == '' and '$(TrimMode)' == 'partial'">true</_DefaultValueAttributeSupport>
-    <MetricsSupport Condition="'$(MetricsSupport)' == ''">false</MetricsSupport>
+    <MetricsSupport Condition="'$(MetricsSupport)' == '' and '$(Optimize)' == 'true'">false</MetricsSupport>
     <AndroidAvoidEmitForPerformance Condition="'$(AndroidAvoidEmitForPerformance)' == ''">$(AvoidEmitForPerformance)</AndroidAvoidEmitForPerformance>
     <AndroidAvoidEmitForPerformance Condition="'$(AndroidAvoidEmitForPerformance)' == ''">true</AndroidAvoidEmitForPerformance>
     <!-- Verify DI trimmability at development-time, but turn the validation off for production/trimmed builds. -->
@@ -137,6 +139,9 @@
 
     <!-- profiler won't work without internet permission, we must thus force it -->
     <AndroidNeedsInternetPermission Condition=" '$(AndroidEnableProfiler)' == 'true' ">True</AndroidNeedsInternetPermission>
+
+    <!-- FIXME: error ANDZA0000: 01-30 21:38:27.669 38611 159726 W zip     : WARNING: header mismatch -->
+    <_AndroidUseLibZipSharp Condition=" '$(_AndroidUseLibZipSharp)' == '' ">true</_AndroidUseLibZipSharp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' and '$(GenerateApplicationManifest)' == 'true' ">
     <!-- Default to 1, if blank -->

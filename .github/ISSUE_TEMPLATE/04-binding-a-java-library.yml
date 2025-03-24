@@ -18,6 +18,7 @@ body:
       options:
       - net8.0-android
       - net9.0-android
+      - net10.0-android (Preview)
       - Other
     validations:
       required: true

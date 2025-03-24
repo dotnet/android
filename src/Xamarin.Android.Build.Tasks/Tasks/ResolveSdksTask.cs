@@ -1,3 +1,4 @@
+#nullable enable
 //
 // ResolveSdksTask.cs
 //
@@ -46,39 +47,39 @@ namespace Xamarin.Android.Tasks
 		/// In Xamarin.Android, this is the path to ReferenceAssemblies\Microsoft\Framework\MonoAndroid\v*.*\ that contains Mono.Android.dll
 		/// In .NET 6, this is dotnet\packs\Microsoft.Android.Sdk.Windows|Darwin\*\data\net6.0-android*\. Only contains AndroidApiInfo.xml
 		/// </summary>
-		public string [] ReferenceAssemblyPaths { get; set; }
+		public string []? ReferenceAssemblyPaths { get; set; }
 
-		public string CommandLineToolsVersion { get; set; }
-
-		[Required]
-		public string MinimumSupportedJavaVersion   { get; set; }
+		public string? CommandLineToolsVersion { get; set; }
 
 		[Required]
-		public string LatestSupportedJavaVersion    { get; set; }
+		public string MinimumSupportedJavaVersion   { get; set; } = "";
+
+		[Required]
+		public string LatestSupportedJavaVersion    { get; set; } = "";
 
 		[Output]
-		public string CommandLineToolsPath { get; set; }
+		public string? CommandLineToolsPath { get; set; }
 
 		[Output]
-		public string AndroidNdkPath { get; set; }
+		public string? AndroidNdkPath { get; set; }
 
 		[Output]
-		public string AndroidSdkPath { get; set; }
+		public string? AndroidSdkPath { get; set; }
 
 		[Output]
-		public string JavaSdkPath { get; set; }
+		public string? JavaSdkPath { get; set; }
 
 		[Output]
-		public string MonoAndroidToolsPath { get; set; }
+		public string? MonoAndroidToolsPath { get; set; }
 
 		[Output]
-		public string MonoAndroidBinPath { get; set; }
+		public string? MonoAndroidBinPath { get; set; }
 
 		[Output]
-		public string MonoAndroidLibPath { get; set; }
+		public string? MonoAndroidLibPath { get; set; }
 
 		[Output]
-		public string AndroidBinUtilsPath { get; set; }
+		public string? AndroidBinUtilsPath { get; set; }
 
 		public override bool RunTask ()
 		{
@@ -115,7 +116,7 @@ namespace Xamarin.Android.Tasks
 			AndroidSdkPath = MonoAndroidHelper.AndroidSdk.AndroidSdkPath;
 			JavaSdkPath    = MonoAndroidHelper.AndroidSdk.JavaSdkPath;
 
-			CommandLineToolsPath    = MonoAndroidHelper.AndroidSdk.GetCommandLineToolsPaths (CommandLineToolsVersion)
+			CommandLineToolsPath    = MonoAndroidHelper.AndroidSdk.GetCommandLineToolsPaths (CommandLineToolsVersion ?? "")
 				.FirstOrDefault () ??
 				Path.Combine (AndroidSdkPath, "tools");
 

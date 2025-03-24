@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +20,22 @@ namespace Xamarin.Android.Tasks
 
 		public static bool IsFrameworkAssembly (string assembly) =>
 			KnownAssemblyNames.Contains (Path.GetFileNameWithoutExtension (assembly));
+
+		// Is this assembly a .NET for Android assembly?
+		public static bool IsDotNetAndroidAssembly (AssemblyDefinition assembly)
+		{
+			foreach (var attribute in assembly.CustomAttributes.Where (a => a.AttributeType.FullName == "System.Runtime.Versioning.TargetPlatformAttribute")) {
+				foreach (var p in attribute.ConstructorArguments) {
+					// Of the form "android30"
+					var value = p.Value?.ToString ();
+
+					if (value is not null && value.StartsWith ("android", StringComparison.OrdinalIgnoreCase))
+						return true;
+				}
+			}
+
+			return false;
+		}
 
 		static readonly char [] CustomViewMapSeparator = [';'];
 

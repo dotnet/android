@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Xamarin.Tools.Zip;
@@ -32,6 +33,8 @@ public class BuildArchive : AndroidTask
 
 	public string? UncompressedFileExtensions { get; set; }
 
+	public bool UseLibZipSharp { get; set; }
+
 	public string? ZipFlushFilesLimit { get; set; }
 
 	public string? ZipFlushSizeLimit { get; set; }
@@ -43,8 +46,10 @@ public class BuildArchive : AndroidTask
 
 	public override bool RunTask ()
 	{
+		var is_aab = string.Compare (AndroidPackageFormat, "aab", true) == 0;
+
 		// Nothing needs to be compressed with app bundles. BundleConfig.json specifies the final compression mode.
-		if (string.Compare (AndroidPackageFormat, "aab", true) == 0)
+		if (is_aab)
 			uncompressedMethod = CompressionMethod.Default;
 
 		var refresh = true;
@@ -57,7 +62,7 @@ public class BuildArchive : AndroidTask
 			refresh = false;
 		}
 
-		using var apk = new ZipArchiveEx (ApkOutputPath, FileMode.Open);
+		using var apk = ZipArchiveDotNet.Create (Log, ApkOutputPath, System.IO.Compression.ZipArchiveMode.Update, ShouldFallbackToLibZipSharp ());
 
 		// Set up AutoFlush
 		if (int.TryParse (ZipFlushFilesLimit, out int flushFilesLimit)) {
@@ -73,10 +78,9 @@ public class BuildArchive : AndroidTask
 		var existingEntries = new List<string> ();
 
 		if (refresh) {
-			for (var i = 0; i < apk.Archive.EntryCount; i++) {
-				var entry = apk.Archive.ReadEntry ((ulong) i);
-				Log.LogDebugMessage ($"Registering item {entry.FullName}");
-				existingEntries.Add (entry.FullName);
+			foreach (var entry in apk.GetAllEntryNames ()) {
+				Log.LogDebugMessage ($"Registering item {entry}");
+				existingEntries.Add (entry);
 			}
 		}
 
@@ -98,6 +102,11 @@ public class BuildArchive : AndroidTask
 						Log.LogDebugMessage ($"Fixing up malformed entry `{entry.FullName}` -> `{entryName}`");
 					}
 
+					if (entryName == "AndroidManifest.xml" && is_aab) {
+						Log.LogDebugMessage ("Renaming AndroidManifest.xml to manifest/AndroidManifest.xml");
+						entryName = "manifest/AndroidManifest.xml";
+					}
+
 					Log.LogDebugMessage ($"Deregistering item {entryName}");
 					existingEntries.Remove (entryName);
 
@@ -106,24 +115,28 @@ public class BuildArchive : AndroidTask
 						continue;
 					}
 
-					if (apk.Archive.ContainsEntry (entryName)) {
-						ZipEntry e = apk.Archive.ReadEntry (entryName);
+					if (apk.ContainsEntry (entryName)) {
+						var e = apk.GetEntry (entryName);
 						// check the CRC values as the ModifiedDate is always 01/01/1980 in the aapt generated file.
 						if (entry.CRC == e.CRC && entry.CompressedSize == e.CompressedSize) {
 							Log.LogDebugMessage ($"Skipping {entryName} from {ApkInputPath} as its up to date.");
 							continue;
 						}
+
+						// Delete the existing entry so we can replace it with the new one.
+						apk.DeleteEntry (entryName);
 					}
 
 					var ms = new MemoryStream ();
 					entry.Extract (ms);
+					ms.Position = 0;
 					Log.LogDebugMessage ($"Refreshing {entryName} from {ApkInputPath}");
-					apk.Archive.AddStream (ms, entryName, compressionMethod: entry.CompressionMethod);
+					apk.AddEntry (ms, entryName, entry.CompressionMethod.ToCompressionLevel ());
 				}
 			}
 		}
 
-		apk.FixupWindowsPathSeparators ((a, b) => Log.LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`"));
+		apk.FixupWindowsPathSeparators (Log);
 
 		// Add the files to the apk
 		foreach (var file in FilesToAddToArchive) {
@@ -135,6 +148,8 @@ public class BuildArchive : AndroidTask
 				return !Log.HasLoggedErrors;
 			}
 
+			apk_path = apk_path.Replace ('\\', '/');
+
 			// This is a temporary hack for adding files directly from inside a .jar/.aar
 			// into the APK. Eventually another task should be writing them to disk and just
 			// passing us a filename like everything else.
@@ -145,7 +160,7 @@ public class BuildArchive : AndroidTask
 				// eg: "obj/myjar.jar#myfile.txt"
 				var jar_file_path = disk_path.Substring (0, disk_path.Length - (jar_entry_name.Length + 1));
 
-				if (apk.Archive.Any (ze => ze.FullName == apk_path)) {
+				if (apk.ContainsEntry (apk_path)) {
 					Log.LogDebugMessage ("Failed to add jar entry {0} from {1}: the same file already exists in the apk", jar_entry_name, Path.GetFileName (jar_file_path));
 					continue;
 				}
@@ -165,7 +180,7 @@ public class BuildArchive : AndroidTask
 					}
 
 					Log.LogDebugMessage ($"Adding {jar_entry_name} from {jar_file_path} as the archive file is out of date.");
-					apk.AddEntryAndFlush (data, apk_path);
+					apk.AddEntry (data, apk_path);
 				}
 
 				continue;
@@ -180,30 +195,71 @@ public class BuildArchive : AndroidTask
 			if (string.Compare (Path.GetFileName (entry), "AndroidManifest.xml", StringComparison.OrdinalIgnoreCase) == 0)
 				continue;
 
-			Log.LogDebugMessage ($"Removing {entry} as it is not longer required.");
-			apk.Archive.DeleteEntry (entry);
+			Log.LogDebugMessage ($"Removing {entry} as it is no longer required.");
+			apk.DeleteEntry (entry);
 		}
 
-		if (string.Compare (AndroidPackageFormat, "aab", true) == 0)
+		if (is_aab)
 			FixupArchive (apk);
 
 		return !Log.HasLoggedErrors;
 	}
 
-	bool AddFileToArchiveIfNewer (ZipArchiveEx apk, string file, string inArchivePath, ITaskItem item, List<string> existingEntries)
+	// .NET Framework has a bug where it doesn't handle uncompressed files correctly.
+	// It writes them as "compressed" (DEFLATE) but with a compression level of 0. This causes
+	// issues with Android, which expect uncompressed files to be stored correctly.
+	// We can work around this by using LibZipSharp, which doesn't have this bug.
+	// This is only necessary if we're on .NET Framework (MSBuild in VSWin) and we have uncompressed files.
+	bool ShouldFallbackToLibZipSharp ()
 	{
-		var compressionMethod = GetCompressionMethod (item);
-		existingEntries.Remove (inArchivePath.Replace (Path.DirectorySeparatorChar, '/'));
+		// Explicitly requested via MSBuild property.
+		if (UseLibZipSharp) {
+			Log.LogDebugMessage ("Falling back to LibZipSharp because '$(_AndroidUseLibZipSharp)' is 'true'.");
+			return true;
+		}
 
-		if (apk.SkipExistingFile (file, inArchivePath, compressionMethod)) {
-			Log.LogDebugMessage ($"Skipping {file} as the archive file is up to date.");
+		// .NET 6+ handles uncompressed files correctly, so we don't need to fallback.
+		if (RuntimeInformation.FrameworkDescription == ".NET") {
+			Log.LogDebugMessage ("Using System.IO.Compression because we're running on .NET 6+.");
 			return false;
 		}
 
-		Log.LogDebugMessage ($"Adding {file} as the archive file is out of date.");
-		apk.AddFileAndFlush (file, inArchivePath, compressionMethod);
+		// Nothing is going to get written uncompressed, so we don't need to fallback.
+		if (uncompressedMethod != CompressionMethod.Store) {
+			Log.LogDebugMessage ("Using System.IO.Compression because uncompressedMethod isn't 'Store'.");
+			return false;
+		}
 
-		return true;
+		// No uncompressed file extensions were specified, so we don't need to fallback.
+		if (UncompressedFileExtensionsSet.Count == 0) {
+			Log.LogDebugMessage ("Using System.IO.Compression because no uncompressed file extensions were specified.");
+			return false;
+		}
+
+		// See if any of the files to be added need to be uncompressed.
+		foreach (var file in FilesToAddToArchive) {
+			var file_path = file.ItemSpec;
+
+			// Handle files from inside a .jar/.aar
+			if (file.GetMetadataOrDefault ("JavaArchiveEntry", (string?)null) is string jar_entry_name)
+				file_path = jar_entry_name;
+
+			if (UncompressedFileExtensionsSet.Contains (Path.GetExtension (file_path))) {
+				Log.LogDebugMessage ($"Falling back to LibZipSharp because '{file_path}' needs to be stored uncompressed.");
+				return true;
+			}
+		}
+
+		Log.LogDebugMessage ("Using System.IO.Compression because no files need to be stored uncompressed.");
+		return false;
+	}
+
+	bool AddFileToArchiveIfNewer (IZipArchive apk, string file, string inArchivePath, ITaskItem item, List<string> existingEntries)
+	{
+		var compressionMethod = GetCompressionLevel (item);
+		existingEntries.Remove (inArchivePath.Replace (Path.DirectorySeparatorChar, '/'));
+
+		return apk.AddFileIfChanged (Log, file, inArchivePath, compressionMethod);
 	}
 
 	/// <summary>
@@ -211,32 +267,24 @@ public class BuildArchive : AndroidTask
 	/// I see no way to change this behavior, so we can move the file for now:
 	/// https://github.com/aosp-mirror/platform_frameworks_base/blob/e80b45506501815061b079dcb10bf87443bd385d/tools/aapt2/LoadedApk.h#L34
 	/// </summary>
-	void FixupArchive (ZipArchiveEx zip)
+	void FixupArchive (IZipArchive zip)
 	{
-		if (!zip.Archive.ContainsEntry ("AndroidManifest.xml")) {
+		if (!zip.ContainsEntry ("AndroidManifest.xml")) {
 			Log.LogDebugMessage ($"No AndroidManifest.xml. Skipping Fixup");
 			return;
 		}
 
-		var entry = zip.Archive.ReadEntry ("AndroidManifest.xml");
 		Log.LogDebugMessage ($"Fixing up AndroidManifest.xml to be manifest/AndroidManifest.xml.");
 
-		if (zip.Archive.ContainsEntry ("manifest/AndroidManifest.xml"))
-			zip.Archive.DeleteEntry (zip.Archive.ReadEntry ("manifest/AndroidManifest.xml"));
+		if (zip.ContainsEntry ("manifest/AndroidManifest.xml"))
+			zip.DeleteEntry ("manifest/AndroidManifest.xml");
 
-		entry.Rename ("manifest/AndroidManifest.xml");
+		zip.MoveEntry ("AndroidManifest.xml", "manifest/AndroidManifest.xml");
 	}
 
-	CompressionMethod GetCompressionMethod (ITaskItem item)
+	System.IO.Compression.CompressionLevel GetCompressionLevel (ITaskItem item)
 	{
-		var compression = item.GetMetadataOrDefault ("Compression", "");
-
-		if (compression.HasValue ()) {
-			if (Enum.TryParse (compression, out CompressionMethod result))
-				return result;
-		}
-
-		return UncompressedFileExtensionsSet.Contains (Path.GetExtension (item.ItemSpec)) ? uncompressedMethod : CompressionMethod.Default;
+		return (UncompressedFileExtensionsSet.Contains (Path.GetExtension (item.ItemSpec)) ? uncompressedMethod : CompressionMethod.Default).ToCompressionLevel ();
 	}
 
 	HashSet<string> ParseUncompressedFileExtensions ()

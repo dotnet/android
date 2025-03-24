@@ -41,7 +41,6 @@ namespace Xamarin.Android.Build.Tests
 					new Package { Id = "Microsoft.AspNetCore.Components.WebView", Version = "8.0.*" },
 					new Package { Id = "Microsoft.Extensions.FileProviders.Embedded", Version = "8.0.*" },
 					new Package { Id = "Microsoft.JSInterop", Version = "8.0.*" },
-					new Package { Id = "System.Text.Json", Version = "8.0.*" },
 				},
 				Sources = {
 					new BuildItem ("EmbeddedResource", "Resource.resx") {
@@ -101,6 +100,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var builder = CreateApkBuilder ();
+			builder.Verbosity = LoggerVerbosity.Detailed;
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
 			builder.AssertHasNoWarnings ();
 
@@ -180,6 +180,14 @@ namespace Xamarin.Android.Build.Tests
 					helper.AssertContainsEntry ($"lib/{abi}/libaot-{proj.ProjectName}.dll.so");
 					helper.AssertContainsEntry ($"lib/{abi}/libaot-Mono.Android.dll.so");
 				}
+			}
+
+			if (isRelease) {
+				builder.Output.AssertTargetIsNotSkipped ("ILLink");
+				builder.Output.AssertTargetIsSkipped ("_LinkAssembliesNoShrink");
+			} else {
+				builder.Output.AssertTargetIsSkipped ("ILLink");
+				builder.Output.AssertTargetIsNotSkipped ("_LinkAssembliesNoShrink");
 			}
 		}
 
@@ -651,8 +659,7 @@ public class Test
 		[NonParallelizable]
 		public void BuildApplicationWithSpacesInPath ([Values (true, false)] bool enableMultiDex, [Values ("", "r8")] string linkTool)
 		{
-			// FIXME: https://github.com/dotnet/msbuild/issues/11237, removed `(` and `)` characters
-			var folderName = $"BuildReleaseApp AndÜmläüts{enableMultiDex}{linkTool}";
+			var folderName = $"BuildReleaseApp AndÜmläüts({enableMultiDex}{linkTool})";
 			var lib = new XamarinAndroidLibraryProject {
 				IsRelease = true,
 				ProjectName = "Library1"
@@ -661,7 +668,7 @@ public class Test
 				IsRelease = true,
 				AotAssemblies = true,
 				LinkTool = linkTool,
-				References = { new BuildItem ("ProjectReference", $"..\\{folderName}Library1\\Library1.csproj") }
+				References = { new BuildItem ("ProjectReference", $"..\\{folderName}Library1\\Library1.csproj") },
 			};
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "Hello (World).jar") { BinaryContent = () => Convert.FromBase64String (@"
 UEsDBBQACAgIAMl8lUsAAAAAAAAAAAAAAAAJAAQATUVUQS1JTkYv/soAAAMAUEsHCAAAAAACAAAAA
@@ -1093,12 +1100,12 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 				};
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				var oldMonoPackageManager = Path.Combine (intermediate, "android", "src", "mono", "MonoPackageManager.java");
-				var notifyTimeZoneChanges = Path.Combine (intermediate, "android", "src", "mono", "android", "app", "NotifyTimeZoneChanges.java");
+				var notifyTimeZoneChanges = Path.Combine (intermediate, "android", "src", "net", "dot", "android", "NotifyTimeZoneChanges.java");
 				Directory.CreateDirectory (Path.GetDirectoryName (notifyTimeZoneChanges));
 				File.WriteAllText (oldMonoPackageManager, @"package mono;
 public class MonoPackageManager { }
 class MonoPackageManager_Resources { }");
-				File.WriteAllText (notifyTimeZoneChanges, @"package mono.android.app;
+				File.WriteAllText (notifyTimeZoneChanges, @"package net.dot.android;
 public class ApplicationRegistration { }");
 				var oldMonoPackageManagerClass = Path.Combine (intermediate, "android", "bin", "classes" , "mono", "MonoPackageManager.class");
 				File.WriteAllText (oldMonoPackageManagerClass, "");

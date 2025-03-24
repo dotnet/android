@@ -10,7 +10,6 @@ namespace Android.Runtime {
 	// java.util.ArrayList allows null values
 	public partial class JavaList : Java.Lang.Object, System.Collections.IList {
 
-		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 		internal static readonly JniPeerMembers list_members = new XAPeerMembers ("java/util/List", typeof (JavaList), isInterface: true);
 
 		//
@@ -547,14 +546,13 @@ namespace Android.Runtime {
 		//	
 		public virtual bool Add (Java.Lang.Object? item)
 		{
-			return Add (0, item);
+			Add ((object?) item);
+			return true;
 		}
 
 		public virtual bool Add (int index, Java.Lang.Object? item)
 		{
-			if (Contains (item))
-				return false;
-			Add ((object?) item);
+			Insert (index, (object?) item);
 			return true;
 		}
 

@@ -18,13 +18,12 @@ import android.util.Log;
 import mono.android.Runtime;
 import mono.android.DebugRuntime;
 import mono.android.BuildConfig;
+import net.dot.android.ApplicationRegistration;
 
 public class MonoPackageManager {
 
 	static Object lock = new Object ();
 	static boolean initialized;
-
-	static android.content.Context Context;
 
 	public static void LoadApplication (Context context)
 	{
@@ -41,7 +40,7 @@ public class MonoPackageManager {
 			}
 
 			if (context instanceof android.app.Application) {
-				Context = context;
+				ApplicationRegistration.Context = context;
 			}
 			if (!initialized) {
 				android.content.IntentFilter timezoneChangedFilter  = new android.content.IntentFilter (
@@ -66,7 +65,8 @@ public class MonoPackageManager {
 				}
 
 				//
-				// Should the order change here, src/monodroid/jni/SharedConstants.hh must be updated accordingly
+				// Should the order change here, src/mono/native/runtime-base/shared-constants.hh and
+				// src/native/clr/include/constants.hh must be updated accordingly
 				//
 				String[] appDirs = new String[] {filesDir, cacheDir, dataDir};
 				boolean haveSplitApks = runtimePackage.splitSourceDirs != null && runtimePackage.splitSourceDirs.length > 0;
@@ -129,7 +129,7 @@ public class MonoPackageManager {
 						haveSplitApks
 					);
 
-				mono.android.app.ApplicationRegistration.registerApplications ();
+				ApplicationRegistration.registerApplications ();
 
 				initialized = true;
 			}

@@ -54,6 +54,8 @@ class JCWGenerator
 		this.context = context;
 	}
 
+	public List<string> GeneratedJavaFiles { get; } = [];
+
 	/// <summary>
 	/// Performs marshal method classification, if marshal methods are used, but does not generate any code.
 	/// If marshal methods are used, this method will set the <see cref="Classifier"/> property to a valid
@@ -122,7 +124,7 @@ class JCWGenerator
 		return ok;
 	}
 
-	bool GenerateCode (CallableWrapperType generator, TypeDefinition type, string outputPath, bool hasExportReference, MarshalMethodsClassifier? classifier)
+	public bool GenerateCode (CallableWrapperType generator, TypeDefinition type, string outputPath, bool hasExportReference, MarshalMethodsClassifier? classifier)
 	{
 		bool ok = true;
 		using var writer = MemoryStreamPool.Shared.CreateStreamWriter ();
@@ -140,7 +142,14 @@ class JCWGenerator
 			writer.Flush ();
 
 			string path = generator.GetDestinationPath (outputPath);
-			Files.CopyIfStreamChanged (writer.BaseStream, path);
+			var changed = Files.CopyIfStreamChanged (writer.BaseStream, path);
+
+			if (changed) {
+				log.LogError ($"Generated Java callable wrapper code changed: '{path}' ");
+			} else {
+				log.LogMessage ($"Java callable wrapper code already up to date: '{path}'");
+			}
+			GeneratedJavaFiles.Add (path);
 			if (generator.HasExport && !hasExportReference) {
 				Diagnostic.Error (4210, Properties.Resources.XA4210);
 			}

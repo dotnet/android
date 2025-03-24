@@ -411,12 +411,12 @@ These tests are generally found in:
 These tests are run by using the `RunTestApp` target on the appropriate project
 file, which includes:
 
-  * `tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj`
+  * `tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj`
 
 For example:
 
 ```zsh
-./dotnet-local.sh build -t:RunTestApp tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
+./dotnet-local.sh build -t:RunTestApp tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
 ```
 
 After running the tests, a `TestResult*.xml` file will be created in the

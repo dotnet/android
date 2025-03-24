@@ -6,7 +6,6 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Xamarin.Android.UnitTests.NUnit</RootNamespace>
     <AssemblyName>TestRunner.NUnit.NET</AssemblyName>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <ItemGroup>

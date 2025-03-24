@@ -59,11 +59,16 @@ namespace Xamarin.Android.Tasks
 					}
 					continue;
 				}
-				// Both libmono-android.debug.so and libmono-android.release.so are in InputLibraries.
+				// Both lib{mono,net}-android.debug.so and lib{mono,net}-android.release.so are in InputLibraries.
 				// Use IncludeDebugSymbols to determine which one to include.
-				// We may eventually have files such as `libmono-android-checked+asan.release.so` as well.
+				// We may eventually have files such as `lib{mono,net}-android-checked+asan.release.so` as well.
 				var fileName = Path.GetFileNameWithoutExtension (library.ItemSpec);
-				if (fileName.StartsWith ("libmono-android", StringComparison.Ordinal)) {
+				if (ExcludedLibraries != null && ExcludedLibraries.Contains (fileName, StringComparer.OrdinalIgnoreCase)) {
+					Log.LogDebugMessage ($"Excluding '{library.ItemSpec}'");
+					continue;
+				}
+
+				if (fileName.StartsWith ("libmono-android", StringComparison.Ordinal) || fileName.StartsWith ("libnet-android", StringComparison.Ordinal)) {
 					if (fileName.EndsWith (".debug", StringComparison.Ordinal)) {
 						if (!IncludeDebugSymbols)
 							continue;
@@ -73,6 +78,7 @@ namespace Xamarin.Android.Tasks
 							continue;
 						library.SetMetadata ("ArchiveFileName", "libmonodroid.so");
 					}
+					Log.LogDebugMessage ($"Including runtime: {library}");
 				} else if (DebugNativeLibraries.Contains (fileName)) {
 					if (!IncludeDebugSymbols) {
 						Log.LogDebugMessage ($"Excluding '{library.ItemSpec}' for release builds.");
@@ -82,9 +88,6 @@ namespace Xamarin.Android.Tasks
 					if (!wantedComponents.Contains (fileName)) {
 						continue;
 					}
-				} else if (ExcludedLibraries != null && ExcludedLibraries.Contains (fileName, StringComparer.OrdinalIgnoreCase)) {
-					Log.LogDebugMessage ($"Excluding '{library.ItemSpec}'");
-					continue;
 				}
 
 				output.Add (library);

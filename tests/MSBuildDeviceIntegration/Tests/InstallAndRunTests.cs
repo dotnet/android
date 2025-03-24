@@ -897,10 +897,12 @@ namespace UnnamedProject
 
 		[Test]
 		[Category ("WearOS")]
-		public void DotNetInstallAndRunPreviousSdk ([Values (false, true)] bool isRelease)
+		public void DotNetInstallAndRunPreviousSdk (
+				[Values (false, true)] bool isRelease,
+				[Values ("net8.0-android", "net9.0-android")] string targetFramework)
 		{
 			var proj = new XamarinFormsAndroidApplicationProject () {
-				TargetFramework = "net9.0-android",
+				TargetFramework = targetFramework,
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
 			};
@@ -1329,6 +1331,25 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				}
 				throw;
 			}
+		}
+
+		[Test]
+		public void AppStartsWithManagedMarshalMethodsLookupEnabled ()
+		{
+			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
+			proj.SetProperty ("AndroidUseMarshalMethods", "true");
+			proj.SetProperty ("_AndroidUseManagedMarshalMethodsLookup", "true");
+
+			using var builder = CreateApkBuilder ();
+			builder.Save (proj);
+
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+			Assert.IsTrue (dotnet.Run (), "`dotnet run --no-build` should succeed");
+
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+			Assert.IsTrue (didLaunch, "Activity should have started.");
 		}
 	}
 }

@@ -34,13 +34,4 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
   <Import Project="Xamarin.Android.Common.targets" />
-    <!--
-    *******************************************
-      Extensibility hook that allows VS to
-      provide extra behavior without modifying 
-      the core targets.
-    *******************************************
-    -->
-    <Import Project="$(MSBuildThisFileDirectory)$(MSBuildThisFileName).After.targets" 
-            Condition="Exists('$(MSBuildThisFileDirectory)$(MSBuildThisFileName).After.targets')"/>    
 </Project>

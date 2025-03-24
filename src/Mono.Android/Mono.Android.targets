@@ -225,6 +225,7 @@
         TargetImplementationPath="$(OutputPath)"
         ApiCompatibilityPath="$(ApiCompatibilityDir)"
         TargetFramework="$(TargetFramework)"
+        LinesToAdd="$(MSBuildThisFileDirectory)ApiCompatLinesToAdd.txt"
     />
     <Touch
         Files="$(IntermediateOutputPath)CheckApiCompatibility.stamp"

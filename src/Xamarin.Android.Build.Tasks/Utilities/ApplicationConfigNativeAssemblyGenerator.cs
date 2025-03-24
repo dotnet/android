@@ -39,6 +39,11 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		// Disable "Field 'X' is never assigned to, and will always have its default value Y"
+		// Classes below are used in native code generation, thus all the fields must be present
+		// but they aren't always assigned values (which is fine).
+		#pragma warning disable CS0649
+
 		// Order of fields and their type must correspond *exactly* (with exception of the
 		// ignored managed members) to that in
 		// src/monodroid/jni/xamarin-app.hh DSOCacheEntry structure
@@ -147,6 +152,7 @@ namespace Xamarin.Android.Tasks
 			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToPreAllocatedBuffer = true)]
 			public string name;
 		}
+		#pragma warning restore CS0649
 
 		// Keep in sync with FORMAT_TAG in src/monodroid/jni/xamarin-app.hh
 		const ulong FORMAT_TAG = 0x00025E6972616D58; // 'Xmari^XY' where XY is the format version
@@ -187,6 +193,7 @@ namespace Xamarin.Android.Tasks
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
 		public List<ITaskItem> NativeLibraries { get; set; }
 		public bool MarshalMethodsEnabled { get; set; }
+		public bool ManagedMarshalMethodsLookupEnabled { get; set; }
 		public bool IgnoreSplitConfigs { get; set; }
 
 		public ApplicationConfigNativeAssemblyGenerator (IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties, TaskLoggingHelper log)
@@ -203,6 +210,8 @@ namespace Xamarin.Android.Tasks
 
 		protected override void Construct (LlvmIrModule module)
 		{
+			module.DefaultStringGroup = "env";
+
 			MapStructures (module);
 
 			module.AddGlobalVariable ("format_tag", FORMAT_TAG, comment: $" 0x{FORMAT_TAG:x}");
@@ -211,7 +220,7 @@ namespace Xamarin.Android.Tasks
 			var envVars = new LlvmIrGlobalVariable (environmentVariables, "app_environment_variables") {
 				Comment = " Application environment variables array, name:value",
 			};
-			module.Add (envVars, stringGroupName: "env", stringGroupComment: " Application environment variables name:value pairs");
+			module.Add (envVars, stringGroupName: "env.var", stringGroupComment: " Application environment variables name:value pairs");
 
 			var sysProps = new LlvmIrGlobalVariable (systemProperties, "app_system_properties") {
 				Comment = " System properties defined by the application",
@@ -229,6 +238,7 @@ namespace Xamarin.Android.Tasks
 				have_runtime_config_blob = HaveRuntimeConfigBlob,
 				have_assemblies_blob = HaveAssemblyStore,
 				marshal_methods_enabled = MarshalMethodsEnabled,
+				managed_marshal_methods_lookup_enabled = ManagedMarshalMethodsLookupEnabled,
 				ignore_split_configs = IgnoreSplitConfigs,
 				bound_stream_io_exception_type = (byte)BoundExceptionType,
 				package_naming_policy = (uint)PackageNamingPolicy,

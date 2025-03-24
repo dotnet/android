@@ -7,7 +7,7 @@ namespace Android.Views {
 	partial class Window {
 
 		public T? FindViewById<
-				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				[DynamicallyAccessedMembers (Constructors)]
 				T
 		> (int id)
 			where T : Android.Views.View

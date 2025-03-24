@@ -1,0 +1,17 @@
+#pragma once
+
+#include <cstdint>
+
+namespace xamarin::android {
+	struct ArchiveDSOStubConfig
+	{
+		static inline constexpr size_t PayloadSectionAlignment = @ARCHIVE_DSO_STUB_PAYLOAD_SECTION_ALIGNMENT@uz;
+		static inline constexpr size_t SectionHeaderEntrySize = @SECTION_HEADER_ENTRY_SIZE@uz;
+		static inline constexpr size_t SectionHeaderEntryCount = @SECTION_HEADER_ENTRY_COUNT@uz;
+		static inline constexpr uint32_t PayloadSectionOffset = @PAYLOAD_SECTION_OFFSET@uz;
+
+		// We know that payload section is the last one in the binary, this is an index into
+		// the section header table.
+		static inline constexpr size_t PayloadSectionIndex = SectionHeaderEntryCount - 1uz;
+	};
+}

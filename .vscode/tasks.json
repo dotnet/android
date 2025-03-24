@@ -126,9 +126,9 @@
         {
           "label": "prepare-sample-under-dotnet",
           "type": "shell",
-          "windows": { "command": "dotnet-local.cmd build --no-restore tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj -c ${input:configuration} -t:GenerateNuGetConfig -p:AndroidNETTestConfigOutputDir=${workspaceRoot}/samples", },
-          "linux": { "command": "./dotnet-local.sh build --no-restore tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj -c ${input:configuration} -t:GenerateNuGetConfig -p:AndroidNETTestConfigOutputDir=${workspaceRoot}/samples",},
-          "osx": { "command": "./dotnet-local.sh build --no-restore tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj -c ${input:configuration} -t:GenerateNuGetConfig -p:AndroidNETTestConfigOutputDir=${workspaceRoot}/samples",},
+          "windows": { "command": "dotnet-local.cmd build --no-restore tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj -c ${input:configuration} -t:GenerateNuGetConfig -p:AndroidNETTestConfigOutputDir=${workspaceRoot}/samples", },
+          "linux": { "command": "./dotnet-local.sh build --no-restore tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj -c ${input:configuration} -t:GenerateNuGetConfig -p:AndroidNETTestConfigOutputDir=${workspaceRoot}/samples",},
+          "osx": { "command": "./dotnet-local.sh build --no-restore tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj -c ${input:configuration} -t:GenerateNuGetConfig -p:AndroidNETTestConfigOutputDir=${workspaceRoot}/samples",},
           "group": {
               "kind": "build",
               "isDefault": true

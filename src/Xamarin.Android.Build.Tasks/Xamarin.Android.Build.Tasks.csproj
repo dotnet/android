@@ -28,8 +28,7 @@
   <ItemGroup>
     <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" GeneratePathProperty="true" />
     <PackageReference Include="Irony" />
-    <PackageReference Include="NuGet.ProjectModel" Version="6.12.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonPackageVersion)" />
+    <PackageReference Include="NuGet.ProjectModel" Version="6.13.1" />
     <PackageReference Include="System.CodeDom" />
     <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
     <PackageReference Include="System.Reflection.Metadata" Version="8.0.0" />
@@ -48,9 +47,10 @@
 
     <!-- Include only the linker sources required for LinkAssembliesNoShrink - AddKeepAlivesStep, FixAbstractMethodsStep, FixLegacyResourceDesignerStep -->
     <Compile Remove="Linker\**" />
+    <Compile Include="Linker\MonoDroid.Tuner\FindJavaObjectsStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\AddKeepAlivesStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\AndroidLinkConfiguration.cs" />
-    <Compile Include="Linker\MonoDroid.Tuner\Extensions.cs"/>
+    <Compile Include="Linker\MonoDroid.Tuner\Extensions.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\FixAbstractMethodsStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\FixLegacyResourceDesignerStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\LinkDesignerBase.cs" />
@@ -58,21 +58,17 @@
     <Compile Include="Linker\External\Linker\Annotations.cs" />
     <Compile Include="Linker\External\Linker\AssemblyAction.cs" />
     <Compile Include="Linker\External\Linker\AssemblyResolver.cs" />
+    <Compile Include="Linker\External\Linker\BaseMarkHandler.cs" />
     <Compile Include="Linker\External\Linker\LinkContext.cs" />
     <Compile Include="Linker\External\Linker\MethodAction.cs" />
     <Compile Include="Linker\External\Linker\OverrideInformation.cs" />
-    <Compile Include="Linker\External\Linker\Pipeline.cs" />
     <Compile Include="Linker\External\Linker\TypePreserve.cs" />
     <Compile Include="Linker\External\Linker.Steps\BaseStep.cs" />
+    <Compile Include="Linker\External\Linker.Steps\IMarkHandler.cs" />
     <Compile Include="Linker\External\Linker.Steps\IStep.cs" />
+    <Compile Include="Linker\External\Linker.Steps\MarkContext.cs" />
     <Compile Include="Linker\External\Linker\IDependencyRecorder.cs" />
-    <Compile Include="Linker\External\Linker\IReflectionPatternRecorder.cs" />
-    <Compile Include="Linker\External\Linker\LoggingReflectionPatternRecorder.cs" />
-    <Compile Include="Linker\External\Linker\ConsoleLogger.cs" />
-    <Compile Include="Linker\External\Linker\ILogger.cs" />
     <Compile Include="Linker\External\Linker\Tracer.cs" />
-    <Compile Include="Linker\External\Linker\MarkingHelpers.cs" />
-    <Compile Include="Linker\External\Linker\KnownMembers.cs" />
     <Compile Include="Linker\External\Mono.Tuner\CecilRocks.cs" />
     <Compile Include="Linker\External\Mono.Tuner\Extensions.cs" />
 
@@ -208,26 +204,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Resources\machine.config">
-      <LogicalName>machine.config</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\MonoRuntimeProvider.Bundled.java">
-      <LogicalName>MonoRuntimeProvider.Bundled.java</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\proguard_xamarin.cfg">
-      <LogicalName>proguard_xamarin.cfg</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\ApplicationRegistration.java">
-      <LogicalName>ApplicationRegistration.java</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\net.android.init.gradle.kts">
-      <LogicalName>net.android.init.gradle.kts</LogicalName>
-    </EmbeddedResource>
     <EmbeddedResource Include="..\Mono.Android\java\mono\android\TypeManager.java">
       <LogicalName>JavaInteropTypeManager.java</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Resource.Designer.snk">
-      <LogicalName>Resource.Designer.snk</LogicalName>
+    <EmbeddedResource Include="Resources\*" Exclude="Resources\LayoutBinding.cs">
+      <LogicalName>%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
 

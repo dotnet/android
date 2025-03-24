@@ -54,6 +54,9 @@ public class CollectNativeFilesForArchive : AndroidTask
 	public string AndroidBinUtilsDirectory { get; set; } = "";
 
 	[Required]
+	public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = Array.Empty<ITaskItem> ();
+
+	[Required]
 	public string IntermediateOutputPath { get; set; } = "";
 
 	[Output]
@@ -68,7 +71,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 	public override bool RunTask ()
 	{
 		var apk = new PackageFileListBuilder ();
-		var dsoWrapperConfig = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, IntermediateOutputPath);
+		var dsoWrapperConfig = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, RuntimePackLibraryDirectories, IntermediateOutputPath);
 
 		var outputFiles = new List<string> {
 			ApkOutputPath

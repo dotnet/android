@@ -25,13 +25,13 @@
     <!-- The min API level supported by Microsoft.Android.Sdk -->
     <AndroidMinimumDotNetApiLevel Condition="'$(AndroidMinimumDotNetApiLevel)' == ''">21</AndroidMinimumDotNetApiLevel>
     <!-- *Latest* *stable* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
-    <AndroidLatestStableApiLevel Condition="'$(AndroidLatestStableApiLevel)' == ''">35</AndroidLatestStableApiLevel>
+    <AndroidLatestStableApiLevel Condition="'$(AndroidLatestStableApiLevel)' == ''">36</AndroidLatestStableApiLevel>
     <AndroidLatestStablePlatformId Condition="'$(AndroidLatestStablePlatformId)' == ''">$(AndroidLatestStableApiLevel)</AndroidLatestStablePlatformId>
-    <AndroidLatestStableFrameworkVersion Condition="'$(AndroidLatestStableFrameworkVersion)'==''">v15.0</AndroidLatestStableFrameworkVersion>
+    <AndroidLatestStableFrameworkVersion Condition="'$(AndroidLatestStableFrameworkVersion)'==''">v16.0</AndroidLatestStableFrameworkVersion>
     <!-- *Latest* *unstable* API level binding that we support; this can be the same as *stable* -->
-    <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">36</AndroidLatestUnstableApiLevel>
-    <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">Baklava</AndroidLatestUnstablePlatformId>
-    <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">v15.0.99</AndroidLatestUnstableFrameworkVersion>
+    <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">$(AndroidLatestStableApiLevel)</AndroidLatestUnstableApiLevel>
+    <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">$(AndroidLatestStablePlatformId)</AndroidLatestUnstablePlatformId>
+    <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">$(AndroidLatestStableFrameworkVersion)</AndroidLatestUnstableFrameworkVersion>
     <!-- The default API level used for $(TargetPlatformVersion) -->
     <AndroidDefaultTargetDotnetApiLevel Condition=" '$(AndroidDefaultTargetDotnetApiLevel)' == '' ">$(AndroidLatestStableApiLevel)</AndroidDefaultTargetDotnetApiLevel>
     <!-- The API level and TargetFrameworkVersion for the default Mono.Android.dll build -->
@@ -56,16 +56,18 @@
     <MicrosoftAndroidSdkPackName Condition="$([MSBuild]::IsOSPlatform('osx'))">Microsoft.Android.Sdk.Darwin</MicrosoftAndroidSdkPackName>
   </PropertyGroup>
   <PropertyGroup>
+    <MicrosoftAndroidPacksRootDir>$(BuildOutputDirectory)lib\packs\</MicrosoftAndroidPacksRootDir>
     <AutoProvision Condition=" '$(AutoProvision)' == '' ">False</AutoProvision>
     <AutoProvisionUsesSudo Condition=" '$(AutoProvisionUsesSudo)' == '' ">False</AutoProvisionUsesSudo>
     <_XABinRelativeInstallPrefix>lib\xamarin.android</_XABinRelativeInstallPrefix>
     <XAInstallPrefix Condition=" '$(XAInstallPrefix)' == '' ">$(MSBuildThisFileDirectory)bin\$(Configuration)\$(_XABinRelativeInstallPrefix)\</XAInstallPrefix>
     <_MonoAndroidNETOutputRoot>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\</_MonoAndroidNETOutputRoot>
     <_MonoAndroidNETDefaultOutDir>$(_MonoAndroidNETOutputRoot)$(AndroidApiLevel)\</_MonoAndroidNETDefaultOutDir>
-    <MicrosoftAndroidRefPackDir>$(BuildOutputDirectory)lib\packs\Microsoft.Android.Ref.$(AndroidApiLevel)\$(AndroidPackVersion)\ref\$(DotNetTargetFramework)\</MicrosoftAndroidRefPackDir>
-    <MicrosoftAndroidSdkPackDir>$(BuildOutputDirectory)lib\packs\$(MicrosoftAndroidSdkPackName)\$(AndroidPackVersion)\</MicrosoftAndroidSdkPackDir>
+    <NativeRuntimeOutputRootDir>$(BuildOutputDirectory)lib\runtimes\</NativeRuntimeOutputRootDir>
+    <MicrosoftAndroidRefPackDir>$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Ref.$(AndroidApiLevel)\$(AndroidPackVersion)\ref\$(DotNetTargetFramework)\</MicrosoftAndroidRefPackDir>
+    <MicrosoftAndroidSdkPackDir>$(MicrosoftAndroidPacksRootDir)$(MicrosoftAndroidSdkPackName)\$(AndroidPackVersion)\</MicrosoftAndroidSdkPackDir>
     <MicrosoftAndroidSdkOutDir>$(MicrosoftAndroidSdkPackDir)\tools\</MicrosoftAndroidSdkOutDir>
-    <MicrosoftAndroidSdkAnalysisOutDir>$(BuildOutputDirectory)lib\packs\Microsoft.Android.Ref.$(AndroidLatestStableApiLevel)\$(AndroidPackVersion)\analyzers\dotnet\cs\</MicrosoftAndroidSdkAnalysisOutDir>
+    <MicrosoftAndroidSdkAnalysisOutDir>$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Ref.$(AndroidLatestStableApiLevel)\$(AndroidPackVersion)\analyzers\dotnet\cs\</MicrosoftAndroidSdkAnalysisOutDir>
     <MakeConcurrency Condition=" '$(MakeConcurrency)' == '' And '$(HostCpuCount)' != '' ">-j$(HostCpuCount)</MakeConcurrency>
     <ManagedRuntime Condition=" '$(ManagedRuntime)' == '' And '$(OS)' != 'Windows_NT' ">mono</ManagedRuntime>
     <ManagedRuntimeArgs Condition=" '$(ManagedRuntimeArgs)' == '' And '$(ManagedRuntime)' == 'mono' ">--debug=casts</ManagedRuntimeArgs>
@@ -142,7 +144,7 @@
     <LibUnwindSourceFullPath>$([System.IO.Path]::GetFullPath ('$(LibUnwindSourceDirectory)'))</LibUnwindSourceFullPath>
     <LibUnwindGeneratedHeadersFullPath>$([System.IO.Path]::GetFullPath ('$(LibUnwindGeneratedHeadersDirectory)'))</LibUnwindGeneratedHeadersFullPath>
     <LZ4SourceFullPath>$([System.IO.Path]::GetFullPath ('$(LZ4SourceDirectory)'))</LZ4SourceFullPath>
-    <JavaInteropTargetFrameworkVersion>net8.0</JavaInteropTargetFrameworkVersion>
+    <JavaInteropTargetFrameworkVersion>net9.0</JavaInteropTargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup>
     <AdbToolPath Condition=" '$(AdbToolPath)' == '' ">$(AndroidSdkFullPath)\platform-tools\</AdbToolPath>
@@ -214,7 +216,28 @@
 
   <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\Ndk.targets" />
   <ItemGroup>
-    <AndroidAbiAndRuntimeFlavor Include="@(AndroidSupportedTargetJitAbi)" AndroidRuntime="Mono" />
-    <AndroidAbiAndRuntimeFlavor Include="@(AndroidSupportedTargetJitAbi)" AndroidRuntime="NativeAOT" />
+    <AndroidAbiAndRuntimeFlavor
+        Include="@(AndroidSupportedTargetJitAbi->WithMetadataValue('SupportMonoVM', 'True'))"
+        AndroidRuntime="Mono" />
+    <AndroidAbiAndRuntimeFlavor
+        Include="@(AndroidSupportedTargetJitAbi->WithMetadataValue('SupportNativeAOT', 'True'))"
+        AndroidRuntime="NativeAOT" />
+    <AndroidAbiAndRuntimeFlavor
+        Include="@(AndroidSupportedTargetJitAbi->WithMetadataValue('SupportCoreCLR', 'True'))"
+        AndroidRuntime="CoreCLR" />
   </ItemGroup>
+
+  <!-- Whenever there's a need to use a locally built CoreCLR, both .NET for Android and the
+       application(s) must be built with the same runtime. CLRLocalRuntimePath must point to the CoreCLR
+       artifact directory in its repository checkout:
+
+          {PATH_TO_DOTNET_RUNTIME_REPO}/artifacts/bin
+
+      CLRLocalRuntimeConfig may be set to either Release or Debug, with Release being the default value.
+
+      <PropertyGroup>
+         <CLRLocalRuntimePath></CLRLocalRuntimePath>
+         <CLRLocalRuntimeConfig></CLRLocalRuntimeConfig>
+      </PropertyGroup>
+  -->
 </Project>

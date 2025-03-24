@@ -20,6 +20,9 @@
       <ApiLevel>$(AndroidNdkApiLevel_ArmV7a)</ApiLevel>
       <ApiLevelNET>$(AndroidNdkApiLevel_Arm)</ApiLevelNET>
       <AndroidRID>android-arm</AndroidRID>
+      <SupportMonoVM>True</SupportMonoVM>
+      <SupportCoreCLR>False</SupportCoreCLR>
+      <SupportNativeAOT>False</SupportNativeAOT>
     </AndroidSupportedTargetJitAbi>
 
     <AndroidSupportedTargetJitAbi
@@ -28,6 +31,9 @@
       <ApiLevel>$(AndroidNdkApiLevel_ArmV8a)</ApiLevel>
       <ApiLevelNET>$(AndroidNdkApiLevel_Arm64)</ApiLevelNET>
       <AndroidRID>android-arm64</AndroidRID>
+      <SupportMonoVM>True</SupportMonoVM>
+      <SupportCoreCLR>True</SupportCoreCLR>
+      <SupportNativeAOT>True</SupportNativeAOT>
     </AndroidSupportedTargetJitAbi>
 
     <AndroidSupportedTargetJitAbi
@@ -36,6 +42,9 @@
       <ApiLevel>$(AndroidNdkApiLevel_X86_Legacy)</ApiLevel>
       <ApiLevelNET>$(AndroidNdkApiLevel_X86)</ApiLevelNET>
       <AndroidRID>android-x86</AndroidRID>
+      <SupportMonoVM>True</SupportMonoVM>
+      <SupportCoreCLR>False</SupportCoreCLR>
+      <SupportNativeAOT>False</SupportNativeAOT>
     </AndroidSupportedTargetJitAbi>
 
     <AndroidSupportedTargetJitAbi
@@ -44,6 +53,9 @@
       <ApiLevel>$(AndroidNdkApiLevel_X86_64)</ApiLevel>
       <ApiLevelNET>$(AndroidNdkApiLevel_X64)</ApiLevelNET>
       <AndroidRID>android-x64</AndroidRID>
+      <SupportMonoVM>True</SupportMonoVM>
+      <SupportCoreCLR>True</SupportCoreCLR>
+      <SupportNativeAOT>True</SupportNativeAOT>
     </AndroidSupportedTargetJitAbi>
   </ItemGroup>
 </Project>

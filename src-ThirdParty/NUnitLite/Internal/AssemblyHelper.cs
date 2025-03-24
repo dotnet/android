@@ -52,11 +52,6 @@ namespace NUnit.Framework.Internal
         /// <returns>The path.</returns>
         public static string GetAssemblyPath(Assembly assembly)
         {
-            string codeBase = assembly.CodeBase;
-
-            if (IsFileUri(codeBase))
-                return GetAssemblyPathFromCodeBase(codeBase);
-
             return assembly.Location;
         }
 #endif
@@ -94,41 +89,6 @@ namespace NUnit.Framework.Internal
             return assembly.GetName();
 #endif
         }
-
-        #endregion
-
-        #region Helper Methods
-
-#if !NETCF
-        private static bool IsFileUri(string uri)
-        {
-            return uri.ToLower().StartsWith(Uri.UriSchemeFile);
-        }
-
-        // Public for testing purposes
-        public static string GetAssemblyPathFromCodeBase(string codeBase)
-        {
-            // Skip over the file:// part
-            int start = Uri.UriSchemeFile.Length + Uri.SchemeDelimiter.Length;
-
-            bool isWindows = System.IO.Path.DirectorySeparatorChar == '\\';
-
-            if (codeBase[start] == '/') // third slash means a local path
-            {
-                // Handle Windows Drive specifications
-                if (isWindows && codeBase[start + 2] == ':')
-                    ++start;
-                // else leave the last slash so path is absolute
-            }
-            else // It's either a Windows Drive spec or a share
-            {
-                if (!isWindows || codeBase[start + 1] != ':')
-                    start -= 2; // Back up to include two slashes
-            }
-
-            return codeBase.Substring(start);
-        }
-#endif
 
         #endregion
     }

@@ -8,13 +8,17 @@ namespace Android.App {
 
 	partial class Application {
 
+		static Application () {
+			// NOTE: do not remove, removes the beforefieldinit flag for JNIEnvInit.SetSynchronizationContext()
+		}
+
 		static Context? _context;
 		public static Context Context {
 			get {
 				if (_context != null)
 					return _context;
 
-				IntPtr klass = JNIEnv.FindClass ("mono/MonoPackageManager");
+				IntPtr klass = JNIEnv.FindClass ("net/dot/android/ApplicationRegistration");
 				try {
 					IntPtr field  = JNIEnv.GetStaticFieldID (klass, "Context", "Landroid/content/Context;");
 					IntPtr lref   = JNIEnv.GetStaticObjectField (klass, field);

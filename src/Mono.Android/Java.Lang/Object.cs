@@ -16,6 +16,8 @@ namespace Java.Lang {
 	[Serializable]
 	public partial class Object : global::Java.Interop.JavaObject, IJavaObject, IJavaObjectEx
 	{
+		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
 		IntPtr IJavaObjectEx.ToLocalJniHandle ()
 		{
 			lock (this) {
@@ -130,20 +132,29 @@ namespace Java.Lang {
 			return (T?)PeekObject (handle, typeof (T));
 		}
 
-		public static T? GetObject<T> (IntPtr jnienv, IntPtr handle, JniHandleOwnership transfer)
+		public static T? GetObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		> (IntPtr jnienv, IntPtr handle, JniHandleOwnership transfer)
 			where T : class, IJavaObject
 		{
 			JNIEnv.CheckHandle (jnienv);
 			return GetObject<T> (handle, transfer);
 		}
 
-		public static T? GetObject<T> (IntPtr handle, JniHandleOwnership transfer)
+		public static T? GetObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		> (IntPtr handle, JniHandleOwnership transfer)
 			where T : class, IJavaObject
 		{
 			return _GetObject<T>(handle, transfer);
 		}
 
-		internal static T? _GetObject<T> (IntPtr handle, JniHandleOwnership transfer)
+		internal static T? _GetObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		> (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return default (T);
@@ -151,18 +162,18 @@ namespace Java.Lang {
 			return (T?) GetObject (handle, transfer, typeof (T));
 		}
 
-		internal static IJavaPeerable? GetObject (IntPtr handle, JniHandleOwnership transfer, Type? type = null)
+		internal static IJavaPeerable? GetObject (
+				IntPtr handle,
+				JniHandleOwnership transfer,
+				[DynamicallyAccessedMembers (Constructors)]
+				Type? type = null)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			var r = PeekObject (handle, type);
-			if (r != null) {
-				JNIEnv.DeleteRef (handle, transfer);
-				return r;
-			}
-
-			return Java.Interop.TypeManager.CreateInstance (handle, transfer, type);
+			var r = JNIEnvInit.ValueManager!.GetPeer (new JniObjectReference (handle), type);
+			JNIEnv.DeleteRef (handle, transfer);
+			return r;
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]

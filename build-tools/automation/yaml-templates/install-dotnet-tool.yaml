@@ -23,5 +23,3 @@ steps:
       --version ${{ parameters.version }}
       --add-source "https://api.nuget.org/v3/index.json"
 
-- script: echo "##vso[task.prependpath]$(Agent.ToolsDirectory)"
-  displayName: add $(Agent.ToolsDirectory) to path

@@ -26,7 +26,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <DefineConstants Condition=" '$(AndroidApiLevel)' &gt; '$(AndroidLatestStableApiLevel)' ">$(DefineConstants);ANDROID_UNSTABLE</DefineConstants>
+    <IsUnstableVersion Condition=" '$(AndroidApiLevel)' &gt; '$(AndroidLatestStableApiLevel)' ">true</IsUnstableVersion>
+    <DefineConstants Condition=" '$(IsUnstableVersion)' == 'True' ">$(DefineConstants);ANDROID_UNSTABLE</DefineConstants>
     <OutputPath>$(_MonoAndroidNETDefaultOutDir)</OutputPath>
 
     <!-- Allow PublicApiAnalyzers to be turned off -->
@@ -94,6 +95,7 @@
     <Compile Include="Android.Icu\DateIntervalFormat.cs" />
     <Compile Include="Android.Net.Wifi.P2p\WifiP2pManager.cs" />
     <Compile Include="Android.Runtime\DynamicMethodNameCounter.cs" />
+    <Compile Include="Android.Runtime\ExtraDelegates.cs" />
     <Compile Include="Android.Runtime\IJavaObjectValueMarshaler.cs" />
     <Compile Include="Android.Telecom\InCallService.cs" />
     <Compile Include="Android.Telephony.Mbms\StreamingService.cs" />
@@ -218,6 +220,7 @@
     <Compile Include="Android.Runtime\BoundExceptionType.cs" />
     <Compile Include="Android.Runtime\CharSequence.cs" />
     <Compile Include="Android.Runtime\CPUArchitecture.cs" />
+    <Compile Include="Android.Runtime\DotNetRuntimeType.cs" />
     <Compile Include="Android.Runtime\Extensions.cs" />
     <Compile Include="Android.Runtime\GeneratedEnumAttribute.cs" />
     <Compile Include="Android.Runtime\IJavaObject.cs" />
@@ -309,6 +312,7 @@
     <Compile Include="Java.Interop\JavaLocationException.cs" />
     <Compile Include="Java.Interop\JavaObjectExtensions.cs" />
     <Compile Include="Java.Interop\JavaTypeParametersAttribute.cs" />
+    <Compile Include="Java.Interop\ManagedMarshalMethodsLookupTable.cs" />
     <Compile Include="Java.Interop\Runtime.cs" />
     <Compile Include="Java.Interop\TypeManager.cs" />
     <Compile Include="Java.Lang\Boolean.cs" />

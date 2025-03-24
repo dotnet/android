@@ -1,3 +1,5 @@
+#nullable enable
+
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
@@ -20,54 +22,54 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "RAT";
 
-		public string TargetPlatformVersion { get; set; }
+		public string? TargetPlatformVersion { get; set; }
 
-		public string AndroidSdkPath { get; set; }
+		public string? AndroidSdkPath { get; set; }
 
-		public string AndroidSdkBuildToolsVersion { get; set; }
+		public string? AndroidSdkBuildToolsVersion { get; set; }
 
-		public string CommandLineToolsVersion { get; set; }
+		public string? CommandLineToolsVersion { get; set; }
 
-		public string ProjectFilePath { get; set; }
+		public string? ProjectFilePath { get; set; }
 
-		public string SequencePointsMode { get; set; }
+		public string? SequencePointsMode { get; set; }
 
 		public bool AotAssemblies { get; set; }
 
 		public bool AndroidApplication { get; set; } = true;
 
 		[Output]
-		public string AndroidApiLevel { get; set; }
+		public string? AndroidApiLevel { get; set; }
 
 		[Output]
-		public string AndroidApiLevelName { get; set; }
+		public string? AndroidApiLevelName { get; set; }
 
 		[Output]
-		public string AndroidSdkBuildToolsPath { get; set; }
+		public string? AndroidSdkBuildToolsPath { get; set; }
 
 		[Output]
-		public string AndroidSdkBuildToolsBinPath { get; set; }
+		public string? AndroidSdkBuildToolsBinPath { get; set; }
 
 		[Output]
-		public string ZipAlignPath { get; set; }
+		public string? ZipAlignPath { get; set; }
 
 		[Output]
-		public string AndroidSequencePointsMode { get; set; }
+		public string? AndroidSequencePointsMode { get; set; }
 
 		[Output]
-		public string LintToolPath { get; set; }
+		public string? LintToolPath { get; set; }
 
 		[Output]
-		public string ApkSignerJar { get; set; }
+		public string? ApkSignerJar { get; set; }
 
 		[Output]
 		public bool AndroidUseApkSigner { get; set; }
 
 		[Output]
-		public string Aapt2Version { get; set; }
+		public string? Aapt2Version { get; set; }
 
 		[Output]
-		public string Aapt2ToolPath { get; set; }
+		public string? Aapt2ToolPath { get; set; }
 
 		protected static readonly bool IsWindows = Path.DirectorySeparatorChar == '\\';
 		protected static readonly string ZipAlign = IsWindows ? "zipalign.exe" : "zipalign";
@@ -88,7 +90,7 @@ namespace Xamarin.Android.Tasks
 			string toolsZipAlignPath = Path.Combine (AndroidSdkPath, "tools", ZipAlign);
 			bool findZipAlign = (string.IsNullOrEmpty (ZipAlignPath) || !Directory.Exists (ZipAlignPath)) && !File.Exists (toolsZipAlignPath);
 
-			var lintPaths = MonoAndroidHelper.AndroidSdk.GetCommandLineToolsPaths (CommandLineToolsVersion)
+			var lintPaths = MonoAndroidHelper.AndroidSdk.GetCommandLineToolsPaths (CommandLineToolsVersion ?? "")
 				.SelectMany (p => new[]{
 					p,
 					Path.Combine (p, "bin"),
@@ -102,7 +104,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			foreach (var dir in MonoAndroidHelper.AndroidSdk.GetBuildToolsPaths (AndroidSdkBuildToolsVersion)) {
+			foreach (var dir in MonoAndroidHelper.AndroidSdk.GetBuildToolsPaths (AndroidSdkBuildToolsVersion ?? "")) {
 				Log.LogDebugMessage ("Trying build-tools path: {0}", dir);
 				if (dir == null || !Directory.Exists (dir))
 					continue;
@@ -222,7 +224,7 @@ namespace Xamarin.Android.Tasks
 			// because the path to aapt2 is in the key and the value is a string.
 			var key = ($"{nameof (ResolveAndroidTooling)}.{nameof (Aapt2Version)}", aapt2Tool);
 			var cached = BuildEngine4.GetRegisteredTaskObject (key, RegisteredTaskObjectLifetime.AppDomain) as string;
-			if (!string.IsNullOrEmpty (cached)) {
+			if (cached is { Length: > 0 }) {
 				Log.LogDebugMessage ($"Using cached value for {nameof (Aapt2Version)}: {cached}");
 				Aapt2Version = cached;
 				return true;
@@ -254,7 +256,10 @@ namespace Xamarin.Android.Tasks
 
 		protected int GetMaxStableApiLevel ()
 		{
-			return MonoAndroidHelper.SupportedVersions.MaxStableVersion.ApiLevel;
+			var stableVersion = MonoAndroidHelper.SupportedVersions.MaxStableVersion;
+			if (stableVersion is null)
+				throw new ArgumentNullException ("MaxStableVersion");
+			return stableVersion.ApiLevel;
 		}
 	}
 }

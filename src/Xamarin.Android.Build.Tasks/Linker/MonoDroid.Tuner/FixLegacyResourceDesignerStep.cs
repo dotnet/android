@@ -25,10 +25,6 @@ namespace MonoDroid.Tuner
 		internal const string DesignerAssemblyName = "_Microsoft.Android.Resource.Designer";
 		internal const string DesignerAssemblyNamespace = "_Microsoft.Android.Resource.Designer";
 
-#if !ILLINK
-		public FixLegacyResourceDesignerStep (IMetadataResolver cache) : base (cache) { }
-#endif
-
 		bool designerLoaded = false;
 		AssemblyDefinition designerAssembly = null;
 		TypeDefinition designerType = null;

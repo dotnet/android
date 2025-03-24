@@ -1,0 +1,3970 @@
+{
+    "ClassRewrites": [
+      {
+        "Class": {
+          "From": "android.app.Activity",
+          "To": "com.microsoft.intune.mam.client.app.MAMActivity"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreate",
+            "NewName": "onMAMCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onResume",
+            "NewName": "onMAMResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPause",
+            "NewName": "onMAMPause",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroy",
+            "NewName": "onMAMDestroy",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPostCreate",
+            "NewName": "onMAMPostCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPostResume",
+            "NewName": "onMAMPostResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSaveInstanceState",
+            "NewName": "onMAMSaveInstanceState",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onActivityResult",
+            "NewName": "onMAMActivityResult",
+            "OriginalParams": [
+              "int",
+              "int",
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onNewIntent",
+            "NewName": "onMAMNewIntent",
+            "OriginalParams": [
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onProvideAssistContent",
+            "NewName": "onMAMProvideAssistContent",
+            "OriginalParams": [
+              "android.app.assist.AssistContent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSearchRequested",
+            "NewName": "onMAMSearchRequested",
+            "OriginalParams": [
+              "android.view.SearchEvent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onProvideReferrer",
+            "NewName": "onMAMProvideReferrer",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStateNotSaved",
+            "NewName": "onMAMStateNotSaved",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPrepareOptionsMenu",
+            "NewName": "onMAMPrepareOptionsMenu",
+            "OriginalParams": [
+              "android.view.Menu"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.app.NativeActivity",
+          "To": "com.microsoft.intune.mam.client.app.MAMNativeActivity"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreate",
+            "NewName": "onMAMCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onResume",
+            "NewName": "onMAMResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPause",
+            "NewName": "onMAMPause",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroy",
+            "NewName": "onMAMDestroy",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPostCreate",
+            "NewName": "onMAMPostCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPostResume",
+            "NewName": "onMAMPostResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSaveInstanceState",
+            "NewName": "onMAMSaveInstanceState",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onActivityResult",
+            "NewName": "onMAMActivityResult",
+            "OriginalParams": [
+              "int",
+              "int",
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onNewIntent",
+            "NewName": "onMAMNewIntent",
+            "OriginalParams": [
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onProvideAssistContent",
+            "NewName": "onMAMProvideAssistContent",
+            "OriginalParams": [
+              "android.app.assist.AssistContent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSearchRequested",
+            "NewName": "onMAMSearchRequested",
+            "OriginalParams": [
+              "android.view.SearchEvent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onProvideReferrer",
+            "NewName": "onMAMProvideReferrer",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStateNotSaved",
+            "NewName": "onMAMStateNotSaved",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPrepareOptionsMenu",
+            "NewName": "onMAMPrepareOptionsMenu",
+            "OriginalParams": [
+              "android.view.Menu"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.app.ActivityGroup",
+          "To": "com.microsoft.intune.mam.client.app.MAMActivityGroup"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreate",
+            "NewName": "onMAMCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onResume",
+            "NewName": "onMAMResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPause",
+            "NewName": "onMAMPause",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroy",
+            "NewName": "onMAMDestroy",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPostCreate",
+            "NewName": "onMAMPostCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPostResume",
+            "NewName": "onMAMPostResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSaveInstanceState",
+            "NewName": "onMAMSaveInstanceState",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onActivityResult",
+            "NewName": "onMAMActivityResult",
+            "OriginalParams": [
+              "int",
+              "int",
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onNewIntent",
+            "NewName": "onMAMNewIntent",
+            "OriginalParams": [
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onProvideAssistContent",
+            "NewName": "onMAMProvideAssistContent",
+            "OriginalParams": [
+              "android.app.assist.AssistContent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSearchRequested",
+            "NewName": "onMAMSearchRequested",
+            "OriginalParams": [
+              "android.view.SearchEvent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onProvideReferrer",
+            "NewName": "onMAMProvideReferrer",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStateNotSaved",
+            "NewName": "onMAMStateNotSaved",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPrepareOptionsMenu",
+            "NewName": "onMAMPrepareOptionsMenu",
+            "OriginalParams": [
+              "android.view.Menu"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.app.AliasActivity",
+          "To": "com.microsoft.intune.mam.client.app.MAMAliasActivity"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreate",
+            "NewName": "onMAMCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onResume",
+            "NewName": "onMAMResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPause",
+            "NewName": "onMAMPause",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroy",
+            "NewName": "onMAMDestroy",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPostCreate",
+            "NewName": "onMAMPostCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPostResume",
+            "NewName": "onMAMPostResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSaveInstanceState",
+            "NewName": "onMAMSaveInstanceState",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onActivityResult",
+            "NewName": "onMAMActivityResult",
+            "OriginalParams": [
+              "int",
+              "int",
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onNewIntent",
+            "NewName": "onMAMNewIntent",
+            "OriginalParams": [
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onProvideAssistContent",
+            "NewName": "onMAMProvideAssistContent",
+            "OriginalParams": [
+              "android.app.assist.AssistContent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSearchRequested",
+            "NewName": "onMAMSearchRequested",
+            "OriginalParams": [
+              "android.view.SearchEvent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onProvideReferrer",
+            "NewName": "onMAMProvideReferrer",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStateNotSaved",
+            "NewName": "onMAMStateNotSaved",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPrepareOptionsMenu",
+            "NewName": "onMAMPrepareOptionsMenu",
+            "OriginalParams": [
+              "android.view.Menu"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.app.ExpandableListActivity",
+          "To": "com.microsoft.intune.mam.client.app.MAMExpandableListActivity"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreate",
+            "NewName": "onMAMCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onResume",
+            "NewName": "onMAMResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPause",
+            "NewName": "onMAMPause",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroy",
+            "NewName": "onMAMDestroy",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPostCreate",
+            "NewName": "onMAMPostCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPostResume",
+            "NewName": "onMAMPostResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSaveInstanceState",
+            "NewName": "onMAMSaveInstanceState",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onActivityResult",
+            "NewName": "onMAMActivityResult",
+            "OriginalParams": [
+              "int",
+              "int",
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onNewIntent",
+            "NewName": "onMAMNewIntent",
+            "OriginalParams": [
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onProvideAssistContent",
+            "NewName": "onMAMProvideAssistContent",
+            "OriginalParams": [
+              "android.app.assist.AssistContent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSearchRequested",
+            "NewName": "onMAMSearchRequested",
+            "OriginalParams": [
+              "android.view.SearchEvent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onProvideReferrer",
+            "NewName": "onMAMProvideReferrer",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStateNotSaved",
+            "NewName": "onMAMStateNotSaved",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPrepareOptionsMenu",
+            "NewName": "onMAMPrepareOptionsMenu",
+            "OriginalParams": [
+              "android.view.Menu"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.app.ListActivity",
+          "To": "com.microsoft.intune.mam.client.app.MAMListActivity"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreate",
+            "NewName": "onMAMCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onResume",
+            "NewName": "onMAMResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPause",
+            "NewName": "onMAMPause",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroy",
+            "NewName": "onMAMDestroy",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPostCreate",
+            "NewName": "onMAMPostCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPostResume",
+            "NewName": "onMAMPostResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSaveInstanceState",
+            "NewName": "onMAMSaveInstanceState",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onActivityResult",
+            "NewName": "onMAMActivityResult",
+            "OriginalParams": [
+              "int",
+              "int",
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onNewIntent",
+            "NewName": "onMAMNewIntent",
+            "OriginalParams": [
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onProvideAssistContent",
+            "NewName": "onMAMProvideAssistContent",
+            "OriginalParams": [
+              "android.app.assist.AssistContent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSearchRequested",
+            "NewName": "onMAMSearchRequested",
+            "OriginalParams": [
+              "android.view.SearchEvent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onProvideReferrer",
+            "NewName": "onMAMProvideReferrer",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStateNotSaved",
+            "NewName": "onMAMStateNotSaved",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPrepareOptionsMenu",
+            "NewName": "onMAMPrepareOptionsMenu",
+            "OriginalParams": [
+              "android.view.Menu"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.app.LauncherActivity",
+          "To": "com.microsoft.intune.mam.client.app.MAMLauncherActivity"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreate",
+            "NewName": "onMAMCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onResume",
+            "NewName": "onMAMResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPause",
+            "NewName": "onMAMPause",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroy",
+            "NewName": "onMAMDestroy",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPostCreate",
+            "NewName": "onMAMPostCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPostResume",
+            "NewName": "onMAMPostResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSaveInstanceState",
+            "NewName": "onMAMSaveInstanceState",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onActivityResult",
+            "NewName": "onMAMActivityResult",
+            "OriginalParams": [
+              "int",
+              "int",
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onNewIntent",
+            "NewName": "onMAMNewIntent",
+            "OriginalParams": [
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onProvideAssistContent",
+            "NewName": "onMAMProvideAssistContent",
+            "OriginalParams": [
+              "android.app.assist.AssistContent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSearchRequested",
+            "NewName": "onMAMSearchRequested",
+            "OriginalParams": [
+              "android.view.SearchEvent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onProvideReferrer",
+            "NewName": "onMAMProvideReferrer",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStateNotSaved",
+            "NewName": "onMAMStateNotSaved",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPrepareOptionsMenu",
+            "NewName": "onMAMPrepareOptionsMenu",
+            "OriginalParams": [
+              "android.view.Menu"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.app.TabActivity",
+          "To": "com.microsoft.intune.mam.client.app.MAMTabActivity"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreate",
+            "NewName": "onMAMCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onResume",
+            "NewName": "onMAMResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPause",
+            "NewName": "onMAMPause",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroy",
+            "NewName": "onMAMDestroy",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPostCreate",
+            "NewName": "onMAMPostCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPostResume",
+            "NewName": "onMAMPostResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSaveInstanceState",
+            "NewName": "onMAMSaveInstanceState",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onActivityResult",
+            "NewName": "onMAMActivityResult",
+            "OriginalParams": [
+              "int",
+              "int",
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onNewIntent",
+            "NewName": "onMAMNewIntent",
+            "OriginalParams": [
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onProvideAssistContent",
+            "NewName": "onMAMProvideAssistContent",
+            "OriginalParams": [
+              "android.app.assist.AssistContent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSearchRequested",
+            "NewName": "onMAMSearchRequested",
+            "OriginalParams": [
+              "android.view.SearchEvent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onProvideReferrer",
+            "NewName": "onMAMProvideReferrer",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStateNotSaved",
+            "NewName": "onMAMStateNotSaved",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPrepareOptionsMenu",
+            "NewName": "onMAMPrepareOptionsMenu",
+            "OriginalParams": [
+              "android.view.Menu"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.preference.PreferenceActivity",
+          "To": "com.microsoft.intune.mam.client.preference.MAMPreferenceActivity"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreate",
+            "NewName": "onMAMCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onResume",
+            "NewName": "onMAMResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPause",
+            "NewName": "onMAMPause",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroy",
+            "NewName": "onMAMDestroy",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPostCreate",
+            "NewName": "onMAMPostCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPostResume",
+            "NewName": "onMAMPostResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSaveInstanceState",
+            "NewName": "onMAMSaveInstanceState",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onActivityResult",
+            "NewName": "onMAMActivityResult",
+            "OriginalParams": [
+              "int",
+              "int",
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onNewIntent",
+            "NewName": "onMAMNewIntent",
+            "OriginalParams": [
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onProvideAssistContent",
+            "NewName": "onMAMProvideAssistContent",
+            "OriginalParams": [
+              "android.app.assist.AssistContent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSearchRequested",
+            "NewName": "onMAMSearchRequested",
+            "OriginalParams": [
+              "android.view.SearchEvent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onProvideReferrer",
+            "NewName": "onMAMProvideReferrer",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStateNotSaved",
+            "NewName": "onMAMStateNotSaved",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPrepareOptionsMenu",
+            "NewName": "onMAMPrepareOptionsMenu",
+            "OriginalParams": [
+              "android.view.Menu"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.app.Fragment",
+          "To": "com.microsoft.intune.mam.client.app.MAMFragment"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onActivityCreated",
+            "NewName": "onMAMActivityCreated",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onActivityResult",
+            "NewName": "onMAMActivityResult",
+            "OriginalParams": [
+              "int",
+              "int",
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onAttach",
+            "NewName": "onMAMAttach",
+            "OriginalParams": [
+              "android.app.Activity"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onAttach",
+            "NewName": "onMAMAttach",
+            "OriginalParams": [
+              "android.content.Context"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreate",
+            "NewName": "onMAMCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateAnimator",
+            "NewName": "onMAMCreateAnimator",
+            "OriginalParams": [
+              "int",
+              "boolean",
+              "int"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateContextMenu",
+            "NewName": "onMAMCreateContextMenu",
+            "OriginalParams": [
+              "android.view.ContextMenu",
+              "android.view.View",
+              "android.view.ContextMenu$ContextMenuInfo"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateOptionsMenu",
+            "NewName": "onMAMCreateOptionsMenu",
+            "OriginalParams": [
+              "android.view.Menu",
+              "android.view.MenuInflater"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateView",
+            "NewName": "onMAMCreateView",
+            "OriginalParams": [
+              "android.view.LayoutInflater",
+              "android.view.ViewGroup",
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroy",
+            "NewName": "onMAMDestroy",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroyOptionsMenu",
+            "NewName": "onMAMDestroyOptionsMenu",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroyView",
+            "NewName": "onMAMDestroyView",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDetach",
+            "NewName": "onMAMDetach",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPause",
+            "NewName": "onMAMPause",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onResume",
+            "NewName": "onMAMResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSaveInstanceState",
+            "NewName": "onMAMSaveInstanceState",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStart",
+            "NewName": "onMAMStart",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStop",
+            "NewName": "onMAMStop",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onViewCreated",
+            "NewName": "onMAMViewCreated",
+            "OriginalParams": [
+              "android.view.View",
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onViewStateRestored",
+            "NewName": "onMAMViewStateRestored",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.app.ListFragment",
+          "To": "com.microsoft.intune.mam.client.app.MAMListFragment"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onActivityCreated",
+            "NewName": "onMAMActivityCreated",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onActivityResult",
+            "NewName": "onMAMActivityResult",
+            "OriginalParams": [
+              "int",
+              "int",
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onAttach",
+            "NewName": "onMAMAttach",
+            "OriginalParams": [
+              "android.app.Activity"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onAttach",
+            "NewName": "onMAMAttach",
+            "OriginalParams": [
+              "android.content.Context"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreate",
+            "NewName": "onMAMCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateAnimator",
+            "NewName": "onMAMCreateAnimator",
+            "OriginalParams": [
+              "int",
+              "boolean",
+              "int"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateContextMenu",
+            "NewName": "onMAMCreateContextMenu",
+            "OriginalParams": [
+              "android.view.ContextMenu",
+              "android.view.View",
+              "android.view.ContextMenu$ContextMenuInfo"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateOptionsMenu",
+            "NewName": "onMAMCreateOptionsMenu",
+            "OriginalParams": [
+              "android.view.Menu",
+              "android.view.MenuInflater"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateView",
+            "NewName": "onMAMCreateView",
+            "OriginalParams": [
+              "android.view.LayoutInflater",
+              "android.view.ViewGroup",
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroy",
+            "NewName": "onMAMDestroy",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroyOptionsMenu",
+            "NewName": "onMAMDestroyOptionsMenu",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroyView",
+            "NewName": "onMAMDestroyView",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDetach",
+            "NewName": "onMAMDetach",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPause",
+            "NewName": "onMAMPause",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onResume",
+            "NewName": "onMAMResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSaveInstanceState",
+            "NewName": "onMAMSaveInstanceState",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStart",
+            "NewName": "onMAMStart",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStop",
+            "NewName": "onMAMStop",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onViewCreated",
+            "NewName": "onMAMViewCreated",
+            "OriginalParams": [
+              "android.view.View",
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onViewStateRestored",
+            "NewName": "onMAMViewStateRestored",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.app.DialogFragment",
+          "To": "com.microsoft.intune.mam.client.app.MAMDialogFragment"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onActivityCreated",
+            "NewName": "onMAMActivityCreated",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onActivityResult",
+            "NewName": "onMAMActivityResult",
+            "OriginalParams": [
+              "int",
+              "int",
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onAttach",
+            "NewName": "onMAMAttach",
+            "OriginalParams": [
+              "android.app.Activity"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onAttach",
+            "NewName": "onMAMAttach",
+            "OriginalParams": [
+              "android.content.Context"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreate",
+            "NewName": "onMAMCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateAnimator",
+            "NewName": "onMAMCreateAnimator",
+            "OriginalParams": [
+              "int",
+              "boolean",
+              "int"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateContextMenu",
+            "NewName": "onMAMCreateContextMenu",
+            "OriginalParams": [
+              "android.view.ContextMenu",
+              "android.view.View",
+              "android.view.ContextMenu$ContextMenuInfo"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateOptionsMenu",
+            "NewName": "onMAMCreateOptionsMenu",
+            "OriginalParams": [
+              "android.view.Menu",
+              "android.view.MenuInflater"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateView",
+            "NewName": "onMAMCreateView",
+            "OriginalParams": [
+              "android.view.LayoutInflater",
+              "android.view.ViewGroup",
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroy",
+            "NewName": "onMAMDestroy",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroyOptionsMenu",
+            "NewName": "onMAMDestroyOptionsMenu",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroyView",
+            "NewName": "onMAMDestroyView",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDetach",
+            "NewName": "onMAMDetach",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPause",
+            "NewName": "onMAMPause",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onResume",
+            "NewName": "onMAMResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSaveInstanceState",
+            "NewName": "onMAMSaveInstanceState",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStart",
+            "NewName": "onMAMStart",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStop",
+            "NewName": "onMAMStop",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onViewCreated",
+            "NewName": "onMAMViewCreated",
+            "OriginalParams": [
+              "android.view.View",
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onViewStateRestored",
+            "NewName": "onMAMViewStateRestored",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateDialog",
+            "NewName": "onMAMCreateDialog",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.app.Application",
+          "To": "com.microsoft.intune.mam.client.app.MAMApplication"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreate",
+            "NewName": "onMAMCreate",
+            "OriginalParams": []
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.app.Dialog",
+          "To": "com.microsoft.intune.mam.client.app.MAMDialog"
+        },
+        "Methods": []
+      },
+      {
+        "Class": {
+          "From": "android.app.AlertDialog$Builder",
+          "To": "com.microsoft.intune.mam.client.app.MAMAlertDialogBuilder"
+        },
+        "Methods": []
+      },
+      {
+        "Class": {
+          "From": "android.app.Service",
+          "To": "com.microsoft.intune.mam.client.app.MAMService"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onBind",
+            "NewName": "onMAMBind",
+            "OriginalParams": [
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStart",
+            "NewName": "onMAMStart",
+            "OriginalParams": [
+              "android.content.Intent",
+              "int"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStartCommand",
+            "NewName": "onMAMStartCommand",
+            "OriginalParams": [
+              "android.content.Intent",
+              "int",
+              "int"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.app.IntentService",
+          "To": "com.microsoft.intune.mam.client.app.MAMIntentService"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onBind",
+            "NewName": "onMAMBind",
+            "OriginalParams": [
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStart",
+            "NewName": "onMAMStart",
+            "OriginalParams": [
+              "android.content.Intent",
+              "int"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStartCommand",
+            "NewName": "onMAMStartCommand",
+            "OriginalParams": [
+              "android.content.Intent",
+              "int",
+              "int"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.content.BroadcastReceiver",
+          "To": "com.microsoft.intune.mam.client.content.MAMBroadcastReceiver"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onReceive",
+            "NewName": "onMAMReceive",
+            "OriginalParams": [
+              "android.content.Context",
+              "android.content.Intent"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.content.ContentProvider",
+          "To": "com.microsoft.intune.mam.client.content.MAMContentProvider"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "attachInfo",
+            "NewName": "attachInfoMAM",
+            "OriginalParams": [
+              "android.content.Context",
+              "android.content.pm.ProviderInfo"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "applyBatch",
+            "NewName": "applyBatchMAM",
+            "OriginalParams": [
+              "java.util.ArrayList"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "bulkInsert",
+            "NewName": "bulkInsertMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "android.content.ContentValues[]"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "call",
+            "NewName": "callMAM",
+            "OriginalParams": [
+              "java.lang.String",
+              "java.lang.String",
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "delete",
+            "NewName": "deleteMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String",
+              "java.lang.String[]"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "insert",
+            "NewName": "insertMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "android.content.ContentValues"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "openAssetFile",
+            "NewName": "openAssetFileMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "openAssetFile",
+            "NewName": "openAssetFileMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String",
+              "android.os.CancellationSignal"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "openFile",
+            "NewName": "openFileMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "openFile",
+            "NewName": "openFileMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String",
+              "android.os.CancellationSignal"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "openTypedAssetFile",
+            "NewName": "openTypedAssetFileMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String",
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "openTypedAssetFile",
+            "NewName": "openTypedAssetFileMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String",
+              "android.os.Bundle",
+              "android.os.CancellationSignal"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "query",
+            "NewName": "queryMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String[]",
+              "java.lang.String",
+              "java.lang.String[]",
+              "java.lang.String"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "query",
+            "NewName": "queryMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String[]",
+              "java.lang.String",
+              "java.lang.String[]",
+              "java.lang.String",
+              "android.os.CancellationSignal"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "query",
+            "NewName": "queryMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String[]",
+              "android.os.Bundle",
+              "android.os.CancellationSignal"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "update",
+            "NewName": "updateMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "android.content.ContentValues",
+              "java.lang.String",
+              "java.lang.String[]"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.provider.DocumentsProvider",
+          "To": "com.microsoft.intune.mam.client.content.MAMDocumentsProvider"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "attachInfo",
+            "NewName": "attachInfoMAM",
+            "OriginalParams": [
+              "android.content.Context",
+              "android.content.pm.ProviderInfo"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "applyBatch",
+            "NewName": "applyBatchMAM",
+            "OriginalParams": [
+              "java.util.ArrayList"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "bulkInsert",
+            "NewName": "bulkInsertMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "android.content.ContentValues[]"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "call",
+            "NewName": "callMAM",
+            "OriginalParams": [
+              "java.lang.String",
+              "java.lang.String",
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "delete",
+            "NewName": "deleteMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String",
+              "java.lang.String[]"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "insert",
+            "NewName": "insertMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "android.content.ContentValues"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "openAssetFile",
+            "NewName": "openAssetFileMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "openAssetFile",
+            "NewName": "openAssetFileMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String",
+              "android.os.CancellationSignal"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "openFile",
+            "NewName": "openFileMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "openFile",
+            "NewName": "openFileMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String",
+              "android.os.CancellationSignal"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "openTypedAssetFile",
+            "NewName": "openTypedAssetFileMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String",
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "openTypedAssetFile",
+            "NewName": "openTypedAssetFileMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String",
+              "android.os.Bundle",
+              "android.os.CancellationSignal"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "query",
+            "NewName": "queryMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String[]",
+              "java.lang.String",
+              "java.lang.String[]",
+              "java.lang.String"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "query",
+            "NewName": "queryMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String[]",
+              "java.lang.String",
+              "java.lang.String[]",
+              "java.lang.String",
+              "android.os.CancellationSignal"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "query",
+            "NewName": "queryMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String[]",
+              "android.os.Bundle",
+              "android.os.CancellationSignal"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "update",
+            "NewName": "updateMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "android.content.ContentValues",
+              "java.lang.String",
+              "java.lang.String[]"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "createDocument",
+            "NewName": "createDocumentMAM",
+            "OriginalParams": [
+              "java.lang.String",
+              "java.lang.String",
+              "java.lang.String"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "createWebLinkIntent",
+            "NewName": "createWebLinkIntentMAM",
+            "OriginalParams": [
+              "java.lang.String",
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "deleteDocument",
+            "NewName": "deleteDocumentMAM",
+            "OriginalParams": [
+              "java.lang.String"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "ejectRoot",
+            "NewName": "ejectRootMAM",
+            "OriginalParams": [
+              "java.lang.String"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "findDocumentPath",
+            "NewName": "findDocumentPathMAM",
+            "OriginalParams": [
+              "java.lang.String",
+              "java.lang.String"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "openDocument",
+            "NewName": "openDocumentMAM",
+            "OriginalParams": [
+              "java.lang.String",
+              "java.lang.String",
+              "android.os.CancellationSignal"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "openDocumentThumbnail",
+            "NewName": "openDocumentThumbnailMAM",
+            "OriginalParams": [
+              "java.lang.String",
+              "android.graphics.Point",
+              "android.os.CancellationSignal"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "openTypedAssetFile",
+            "NewName": "openTypedAssetFileMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String",
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "queryChildDocuments",
+            "NewName": "queryChildDocumentsMAM",
+            "OriginalParams": [
+              "java.lang.String",
+              "java.lang.String[]",
+              "java.lang.String"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "queryChildDocuments",
+            "NewName": "queryChildDocumentsMAM",
+            "OriginalParams": [
+              "java.lang.String",
+              "java.lang.String[]",
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "queryDocument",
+            "NewName": "queryDocumentMAM",
+            "OriginalParams": [
+              "java.lang.String",
+              "java.lang.String[]"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "queryRecentDocuments",
+            "NewName": "queryRecentDocumentsMAM",
+            "OriginalParams": [
+              "java.lang.String",
+              "java.lang.String[]"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "queryRoots",
+            "NewName": "queryRootsMAM",
+            "OriginalParams": [
+              "java.lang.String[]"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "querySearchDocuments",
+            "NewName": "querySearchDocumentsMAM",
+            "OriginalParams": [
+              "java.lang.String",
+              "java.lang.String",
+              "java.lang.String[]"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "copyDocument",
+            "NewName": "copyDocumentMAM",
+            "OriginalParams": [
+              "java.lang.String",
+              "java.lang.String"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "removeDocument",
+            "NewName": "removeDocumentMAM",
+            "OriginalParams": [
+              "java.lang.String",
+              "java.lang.String"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "moveDocument",
+            "NewName": "moveDocumentMAM",
+            "OriginalParams": [
+              "java.lang.String",
+              "java.lang.String",
+              "java.lang.String"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "openTypedDocument",
+            "NewName": "openTypedDocumentMAM",
+            "OriginalParams": [
+              "java.lang.String",
+              "java.lang.String",
+              "android.os.Bundle",
+              "android.os.CancellationSignal"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.app.backup.BackupAgent",
+          "To": "com.microsoft.intune.mam.client.app.backup.MAMBackupAgent"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onBackup",
+            "NewName": "onMAMBackup",
+            "OriginalParams": [
+              "android.os.ParcelFileDescriptor",
+              "android.app.backup.BackupDataOutput",
+              "android.os.ParcelFileDescriptor"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreate",
+            "NewName": "onMAMCreate",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onFullBackup",
+            "NewName": "onMAMFullBackup",
+            "OriginalParams": [
+              "android.app.backup.FullBackupDataOutput"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onRestore",
+            "NewName": "onMAMRestore",
+            "OriginalParams": [
+              "android.app.backup.BackupDataInput",
+              "int",
+              "android.os.ParcelFileDescriptor"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onRestore",
+            "NewName": "onMAMRestore",
+            "OriginalParams": [
+              "android.app.backup.BackupDataInput",
+              "long",
+              "android.os.ParcelFileDescriptor"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onRestoreFile",
+            "NewName": "onMAMRestoreFile",
+            "OriginalParams": [
+              "android.os.ParcelFileDescriptor",
+              "long",
+              "java.io.File",
+              "int",
+              "long",
+              "long"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onRestoreFinished",
+            "NewName": "onMAMRestoreFinished",
+            "OriginalParams": []
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.app.backup.BackupAgentHelper",
+          "To": "com.microsoft.intune.mam.client.app.backup.MAMBackupAgentHelper"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "addHelper",
+            "NewName": "addMAMHelper",
+            "OriginalParams": [
+              "java.lang.String",
+              "android.app.backup.BackupHelper"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onBackup",
+            "NewName": "onMAMBackup",
+            "OriginalParams": [
+              "android.os.ParcelFileDescriptor",
+              "android.app.backup.BackupDataOutput",
+              "android.os.ParcelFileDescriptor"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreate",
+            "NewName": "onMAMCreate",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onRestore",
+            "NewName": "onMAMRestore",
+            "OriginalParams": [
+              "android.app.backup.BackupDataInput",
+              "int",
+              "android.os.ParcelFileDescriptor"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.os.Binder",
+          "To": "com.microsoft.intune.mam.client.os.MAMBinder"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onTransact",
+            "NewName": "onMAMTransact",
+            "OriginalParams": [
+              "int",
+              "android.os.Parcel",
+              "android.os.Parcel",
+              "int"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.media.MediaPlayer",
+          "To": "com.microsoft.intune.mam.client.media.MAMMediaPlayer"
+        },
+        "Methods": []
+      },
+      {
+        "Class": {
+          "From": "android.media.MediaMetadataRetriever",
+          "To": "com.microsoft.intune.mam.client.media.MAMMediaMetadataRetriever"
+        },
+        "Methods": []
+      },
+      {
+        "Class": {
+          "From": "android.widget.TextView",
+          "To": "com.microsoft.intune.mam.client.widget.MAMTextView"
+        },
+        "Methods": []
+      },
+      {
+        "Class": {
+          "From": "android.widget.AutoCompleteTextView",
+          "To": "com.microsoft.intune.mam.client.widget.MAMAutoCompleteTextView"
+        },
+        "Methods": []
+      },
+      {
+        "Class": {
+          "From": "android.widget.CheckedTextView",
+          "To": "com.microsoft.intune.mam.client.widget.MAMCheckedTextView"
+        },
+        "Methods": []
+      },
+      {
+        "Class": {
+          "From": "android.widget.EditText",
+          "To": "com.microsoft.intune.mam.client.widget.MAMEditText"
+        },
+        "Methods": []
+      },
+      {
+        "Class": {
+          "From": "android.inputmethodservice.ExtractEditText",
+          "To": "com.microsoft.intune.mam.client.widget.MAMExtractEditText"
+        },
+        "Methods": []
+      },
+      {
+        "Class": {
+          "From": "android.widget.MultiAutoCompleteTextView",
+          "To": "com.microsoft.intune.mam.client.widget.MAMMultiAutoCompleteTextView"
+        },
+        "Methods": []
+      },
+      {
+        "Class": {
+          "From": "android.webkit.WebView",
+          "To": "com.microsoft.intune.mam.client.widget.MAMWebView"
+        },
+        "Methods": []
+      },
+      {
+        "Class": {
+          "From": "android.support.multidex.MultiDexApplication",
+          "To": "com.microsoft.intune.mam.client.app.MAMMultiDexApplication"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreate",
+            "NewName": "onMAMCreate",
+            "OriginalParams": []
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.support.v4.app.FragmentActivity",
+          "To": "com.microsoft.intune.mam.client.support.v4.app.MAMFragmentActivity"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreate",
+            "NewName": "onMAMCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onResume",
+            "NewName": "onMAMResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPause",
+            "NewName": "onMAMPause",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroy",
+            "NewName": "onMAMDestroy",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPostCreate",
+            "NewName": "onMAMPostCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPostResume",
+            "NewName": "onMAMPostResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSaveInstanceState",
+            "NewName": "onMAMSaveInstanceState",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onActivityResult",
+            "NewName": "onMAMActivityResult",
+            "OriginalParams": [
+              "int",
+              "int",
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onNewIntent",
+            "NewName": "onMAMNewIntent",
+            "OriginalParams": [
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onProvideAssistContent",
+            "NewName": "onMAMProvideAssistContent",
+            "OriginalParams": [
+              "android.app.assist.AssistContent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSearchRequested",
+            "NewName": "onMAMSearchRequested",
+            "OriginalParams": [
+              "android.view.SearchEvent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onProvideReferrer",
+            "NewName": "onMAMProvideReferrer",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStateNotSaved",
+            "NewName": "onMAMStateNotSaved",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPrepareOptionsMenu",
+            "NewName": "onMAMPrepareOptionsMenu",
+            "OriginalParams": [
+              "android.view.Menu"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.support.v7.app.AppCompatActivity",
+          "To": "com.microsoft.intune.mam.client.support.v7.app.MAMAppCompatActivity"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreate",
+            "NewName": "onMAMCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onResume",
+            "NewName": "onMAMResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPause",
+            "NewName": "onMAMPause",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroy",
+            "NewName": "onMAMDestroy",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPostCreate",
+            "NewName": "onMAMPostCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPostResume",
+            "NewName": "onMAMPostResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSaveInstanceState",
+            "NewName": "onMAMSaveInstanceState",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onActivityResult",
+            "NewName": "onMAMActivityResult",
+            "OriginalParams": [
+              "int",
+              "int",
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onNewIntent",
+            "NewName": "onMAMNewIntent",
+            "OriginalParams": [
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onProvideAssistContent",
+            "NewName": "onMAMProvideAssistContent",
+            "OriginalParams": [
+              "android.app.assist.AssistContent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSearchRequested",
+            "NewName": "onMAMSearchRequested",
+            "OriginalParams": [
+              "android.view.SearchEvent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onProvideReferrer",
+            "NewName": "onMAMProvideReferrer",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStateNotSaved",
+            "NewName": "onMAMStateNotSaved",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPrepareOptionsMenu",
+            "NewName": "onMAMPrepareOptionsMenu",
+            "OriginalParams": [
+              "android.view.Menu"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.support.v4.app.Fragment",
+          "To": "com.microsoft.intune.mam.client.support.v4.app.MAMFragment"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onActivityCreated",
+            "NewName": "onMAMActivityCreated",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onActivityResult",
+            "NewName": "onMAMActivityResult",
+            "OriginalParams": [
+              "int",
+              "int",
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onAttach",
+            "NewName": "onMAMAttach",
+            "OriginalParams": [
+              "android.app.Activity"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onAttach",
+            "NewName": "onMAMAttach",
+            "OriginalParams": [
+              "android.content.Context"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreate",
+            "NewName": "onMAMCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateAnimator",
+            "NewName": "onMAMCreateAnimator",
+            "OriginalParams": [
+              "int",
+              "boolean",
+              "int"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateContextMenu",
+            "NewName": "onMAMCreateContextMenu",
+            "OriginalParams": [
+              "android.view.ContextMenu",
+              "android.view.View",
+              "android.view.ContextMenu$ContextMenuInfo"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateOptionsMenu",
+            "NewName": "onMAMCreateOptionsMenu",
+            "OriginalParams": [
+              "android.view.Menu",
+              "android.view.MenuInflater"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateView",
+            "NewName": "onMAMCreateView",
+            "OriginalParams": [
+              "android.view.LayoutInflater",
+              "android.view.ViewGroup",
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroy",
+            "NewName": "onMAMDestroy",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroyOptionsMenu",
+            "NewName": "onMAMDestroyOptionsMenu",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroyView",
+            "NewName": "onMAMDestroyView",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDetach",
+            "NewName": "onMAMDetach",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPause",
+            "NewName": "onMAMPause",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onResume",
+            "NewName": "onMAMResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSaveInstanceState",
+            "NewName": "onMAMSaveInstanceState",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStart",
+            "NewName": "onMAMStart",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStop",
+            "NewName": "onMAMStop",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onViewCreated",
+            "NewName": "onMAMViewCreated",
+            "OriginalParams": [
+              "android.view.View",
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onViewStateRestored",
+            "NewName": "onMAMViewStateRestored",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.support.v4.app.ListFragment",
+          "To": "com.microsoft.intune.mam.client.support.v4.app.MAMListFragment"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onActivityCreated",
+            "NewName": "onMAMActivityCreated",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onActivityResult",
+            "NewName": "onMAMActivityResult",
+            "OriginalParams": [
+              "int",
+              "int",
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onAttach",
+            "NewName": "onMAMAttach",
+            "OriginalParams": [
+              "android.app.Activity"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onAttach",
+            "NewName": "onMAMAttach",
+            "OriginalParams": [
+              "android.content.Context"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreate",
+            "NewName": "onMAMCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateAnimator",
+            "NewName": "onMAMCreateAnimator",
+            "OriginalParams": [
+              "int",
+              "boolean",
+              "int"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateContextMenu",
+            "NewName": "onMAMCreateContextMenu",
+            "OriginalParams": [
+              "android.view.ContextMenu",
+              "android.view.View",
+              "android.view.ContextMenu$ContextMenuInfo"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateOptionsMenu",
+            "NewName": "onMAMCreateOptionsMenu",
+            "OriginalParams": [
+              "android.view.Menu",
+              "android.view.MenuInflater"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateView",
+            "NewName": "onMAMCreateView",
+            "OriginalParams": [
+              "android.view.LayoutInflater",
+              "android.view.ViewGroup",
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroy",
+            "NewName": "onMAMDestroy",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroyOptionsMenu",
+            "NewName": "onMAMDestroyOptionsMenu",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroyView",
+            "NewName": "onMAMDestroyView",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDetach",
+            "NewName": "onMAMDetach",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPause",
+            "NewName": "onMAMPause",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onResume",
+            "NewName": "onMAMResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSaveInstanceState",
+            "NewName": "onMAMSaveInstanceState",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStart",
+            "NewName": "onMAMStart",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStop",
+            "NewName": "onMAMStop",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onViewCreated",
+            "NewName": "onMAMViewCreated",
+            "OriginalParams": [
+              "android.view.View",
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onViewStateRestored",
+            "NewName": "onMAMViewStateRestored",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.support.v4.app.DialogFragment",
+          "To": "com.microsoft.intune.mam.client.support.v4.app.MAMDialogFragment"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onActivityCreated",
+            "NewName": "onMAMActivityCreated",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onActivityResult",
+            "NewName": "onMAMActivityResult",
+            "OriginalParams": [
+              "int",
+              "int",
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onAttach",
+            "NewName": "onMAMAttach",
+            "OriginalParams": [
+              "android.app.Activity"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onAttach",
+            "NewName": "onMAMAttach",
+            "OriginalParams": [
+              "android.content.Context"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreate",
+            "NewName": "onMAMCreate",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateAnimator",
+            "NewName": "onMAMCreateAnimator",
+            "OriginalParams": [
+              "int",
+              "boolean",
+              "int"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateContextMenu",
+            "NewName": "onMAMCreateContextMenu",
+            "OriginalParams": [
+              "android.view.ContextMenu",
+              "android.view.View",
+              "android.view.ContextMenu$ContextMenuInfo"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateOptionsMenu",
+            "NewName": "onMAMCreateOptionsMenu",
+            "OriginalParams": [
+              "android.view.Menu",
+              "android.view.MenuInflater"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateView",
+            "NewName": "onMAMCreateView",
+            "OriginalParams": [
+              "android.view.LayoutInflater",
+              "android.view.ViewGroup",
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroy",
+            "NewName": "onMAMDestroy",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroyOptionsMenu",
+            "NewName": "onMAMDestroyOptionsMenu",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDestroyView",
+            "NewName": "onMAMDestroyView",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onDetach",
+            "NewName": "onMAMDetach",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onPause",
+            "NewName": "onMAMPause",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onResume",
+            "NewName": "onMAMResume",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onSaveInstanceState",
+            "NewName": "onMAMSaveInstanceState",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStart",
+            "NewName": "onMAMStart",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStop",
+            "NewName": "onMAMStop",
+            "OriginalParams": []
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onViewCreated",
+            "NewName": "onMAMViewCreated",
+            "OriginalParams": [
+              "android.view.View",
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onViewStateRestored",
+            "NewName": "onMAMViewStateRestored",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onCreateDialog",
+            "NewName": "onMAMCreateDialog",
+            "OriginalParams": [
+              "android.os.Bundle"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.support.v7.app.AlertDialog$Builder",
+          "To": "com.microsoft.intune.mam.client.support.v7.app.MAMAlertDialogBuilder"
+        },
+        "Methods": []
+      },
+      {
+        "Class": {
+          "From": "android.support.v4.app.JobIntentService",
+          "To": "com.microsoft.intune.mam.client.support.v4.app.MAMJobIntentService"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onHandleWork",
+            "NewName": "onMAMHandleWork",
+            "OriginalParams": [
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onBind",
+            "NewName": "onMAMBind",
+            "OriginalParams": [
+              "android.content.Intent"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStart",
+            "NewName": "onMAMStart",
+            "OriginalParams": [
+              "android.content.Intent",
+              "int"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "onStartCommand",
+            "NewName": "onMAMStartCommand",
+            "OriginalParams": [
+              "android.content.Intent",
+              "int",
+              "int"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.support.v4.content.WakefulBroadcastReceiver",
+          "To": "com.microsoft.intune.mam.client.support.v4.content.MAMWakefulBroadcastReceiver"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "onReceive",
+            "NewName": "onMAMReceive",
+            "OriginalParams": [
+              "android.content.Context",
+              "android.content.Intent"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.support.v4.content.FileProvider",
+          "To": "com.microsoft.intune.mam.client.support.v4.content.MAMFileProvider"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "attachInfo",
+            "NewName": "attachInfoMAM",
+            "OriginalParams": [
+              "android.content.Context",
+              "android.content.pm.ProviderInfo"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "applyBatch",
+            "NewName": "applyBatchMAM",
+            "OriginalParams": [
+              "java.util.ArrayList"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "bulkInsert",
+            "NewName": "bulkInsertMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "android.content.ContentValues[]"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "call",
+            "NewName": "callMAM",
+            "OriginalParams": [
+              "java.lang.String",
+              "java.lang.String",
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "delete",
+            "NewName": "deleteMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String",
+              "java.lang.String[]"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "insert",
+            "NewName": "insertMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "android.content.ContentValues"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "openAssetFile",
+            "NewName": "openAssetFileMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "openAssetFile",
+            "NewName": "openAssetFileMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String",
+              "android.os.CancellationSignal"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "openFile",
+            "NewName": "openFileMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "openFile",
+            "NewName": "openFileMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String",
+              "android.os.CancellationSignal"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "openTypedAssetFile",
+            "NewName": "openTypedAssetFileMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String",
+              "android.os.Bundle"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "openTypedAssetFile",
+            "NewName": "openTypedAssetFileMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String",
+              "android.os.Bundle",
+              "android.os.CancellationSignal"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "query",
+            "NewName": "queryMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String[]",
+              "java.lang.String",
+              "java.lang.String[]",
+              "java.lang.String"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "query",
+            "NewName": "queryMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String[]",
+              "java.lang.String",
+              "java.lang.String[]",
+              "java.lang.String",
+              "android.os.CancellationSignal"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "query",
+            "NewName": "queryMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "java.lang.String[]",
+              "android.os.Bundle",
+              "android.os.CancellationSignal"
+            ]
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "update",
+            "NewName": "updateMAM",
+            "OriginalParams": [
+              "android.net.Uri",
+              "android.content.ContentValues",
+              "java.lang.String",
+              "java.lang.String[]"
+            ]
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.support.v7.widget.AppCompatAutoCompleteTextView",
+          "To": "com.microsoft.intune.mam.client.widget.MAMAppCompatAutoCompleteTextView"
+        },
+        "Methods": []
+      },
+      {
+        "Class": {
+          "From": "android.support.v7.widget.AppCompatCheckedTextView",
+          "To": "com.microsoft.intune.mam.client.widget.MAMAppCompatCheckedTextView"
+        },
+        "Methods": []
+      },
+      {
+        "Class": {
+          "From": "android.support.v7.widget.AppCompatEditText",
+          "To": "com.microsoft.intune.mam.client.widget.MAMAppCompatEditText"
+        },
+        "Methods": []
+      },
+      {
+        "Class": {
+          "From": "android.support.v7.widget.AppCompatMultiAutoCompleteTextView",
+          "To": "com.microsoft.intune.mam.client.widget.MAMAppCompatMultiAutoCompleteTextView"
+        },
+        "Methods": []
+      },
+      {
+        "Class": {
+          "From": "android.support.v7.widget.AppCompatTextView",
+          "To": "com.microsoft.intune.mam.client.widget.MAMAppCompatTextView"
+        },
+        "Methods": []
+      },
+      {
+        "Class": {
+          "From": "android.support.text.emoji.widget.EmojiAppCompatEditText",
+          "To": "com.microsoft.intune.mam.client.widget.MAMEmojiAppCompatEditText"
+        },
+        "Methods": []
+      },
+      {
+        "Class": {
+          "From": "android.support.text.emoji.widget.EmojiAppCompatTextView",
+          "To": "com.microsoft.intune.mam.client.widget.MAMEmojiAppCompatTextView"
+        },
+        "Methods": []
+      },
+      {
+        "Class": {
+          "From": "android.support.text.emoji.widget.EmojiEditText",
+          "To": "com.microsoft.intune.mam.client.widget.MAMEmojiEditText"
+        },
+        "Methods": []
+      },
+      {
+        "Class": {
+          "From": "android.support.text.emoji.widget.EmojiTextView",
+          "To": "com.microsoft.intune.mam.client.widget.MAMEmojiTextView"
+        },
+        "Methods": []
+      },
+      {
+        "Class": {
+          "From": "android.support.v17.leanback.widget.SearchEditText",
+          "To": "com.microsoft.intune.mam.client.widget.MAMSearchEditText"
+        },
+        "Methods": []
+      }
+    ],
+    "GlobalMethodCalls": [
+      {
+        "Class": {
+          "From": "android.app.backup.BackupDataInput",
+          "To": "com.microsoft.intune.mam.client.app.backup.MAMBackupDataInputHelper"
+        },
+        "Methods": [
+          {
+            "MakeStatic": true,
+            "OriginalName": "readNextHeader"
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.app.PendingIntent",
+          "To": "com.microsoft.intune.mam.client.app.MAMPendingIntent"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "getActivities"
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "getActivity"
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "getBroadcast"
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "getService"
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "getForegroundService"
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.media.MediaPlayer",
+          "To": "com.microsoft.intune.mam.client.media.MAMMediaPlayer"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "create"
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.app.TaskStackBuilder",
+          "To": "com.microsoft.intune.mam.client.app.MAMTaskStackBuilder"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "create",
+            "NewName": "createTaskStackBuilder"
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "from",
+            "NewName": "createTaskStackBuilder"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getPendingIntent",
+            "NewName": "getPendingIntent"
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.content.ClipboardManager",
+          "To": "com.microsoft.intune.mam.client.content.MAMClipboard"
+        },
+        "Methods": [
+          {
+            "MakeStatic": true,
+            "OriginalName": "getPrimaryClip"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getPrimaryClipDescription"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getText"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "hasPrimaryClip"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "hasText"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "setPrimaryClip"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "setText"
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.content.pm.PackageManager",
+          "To": "com.microsoft.intune.mam.client.content.pm.MAMPackageManagement"
+        },
+        "Methods": [
+          {
+            "MakeStatic": true,
+            "OriginalName": "checkPermission"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "checkSignatures"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "checkSignatures"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getActivityIcon"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getActivityIcon"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getActivityInfo"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getActivityLogo"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getActivityLogo"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getApplicationEnabledSetting"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getApplicationIcon"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getApplicationIcon"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getApplicationInfo"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getApplicationLabel"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getApplicationLogo"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getApplicationLogo"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getComponentEnabledSetting"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getDrawable"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getInstalledApplications"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getInstalledPackages"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getInstallerPackageName"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getLaunchIntentForPackage"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getNameForUid"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getPackageGids"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getPackageGids"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getPackageUid"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getPackageInfo"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getPackagesForUid"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getPackagesHoldingPermissions"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getPreferredPackages"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getProviderInfo"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getReceiverInfo"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getResourcesForActivity"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getResourcesForApplication"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getResourcesForApplication"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getServiceInfo"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getText"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getXml"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "queryBroadcastReceivers"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "queryContentProviders"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "queryInstrumentation"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "queryIntentActivities"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "queryIntentActivityOptions"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "queryIntentContentProviders"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "queryIntentServices"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "resolveActivity"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "resolveContentProvider"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "resolveService"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "setApplicationEnabledSetting"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "setComponentEnabledSetting"
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.app.DownloadManager",
+          "To": "com.microsoft.intune.mam.client.app.MAMDownloadManagement"
+        },
+        "Methods": [
+          {
+            "MakeStatic": true,
+            "OriginalName": "enqueue"
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.print.PrintManager",
+          "To": "com.microsoft.intune.mam.client.print.MAMPrintManagement"
+        },
+        "Methods": [
+          {
+            "MakeStatic": true,
+            "OriginalName": "print"
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.content.ContentResolver",
+          "To": "com.microsoft.intune.mam.client.content.MAMContentResolverManagement"
+        },
+        "Methods": [
+          {
+            "MakeStatic": true,
+            "OriginalName": "acquireContentProviderClient"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "acquireUnstableContentProviderClient"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "applyBatch"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "bulkInsert"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "call"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "delete"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getStreamTypes"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getType"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "insert"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "openAssetFileDescriptor"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "openFileDescriptor"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "openInputStream"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "openOutputStream"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "openTypedAssetFileDescriptor"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "query"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "refresh"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "update"
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.content.ContentProviderClient",
+          "To": "com.microsoft.intune.mam.client.content.MAMContentProviderClientManagement"
+        },
+        "Methods": [
+          {
+            "MakeStatic": true,
+            "OriginalName": "applyBatch"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "bulkInsert"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "call"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "delete"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getStreamTypes"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getType"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "insert"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "openAssetFile"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "openFile"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "openTypedAssetFileDescriptor"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "query"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "refresh"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "update"
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.view.View",
+          "To": "com.microsoft.intune.mam.client.view.MAMViewManagement"
+        },
+        "Methods": [
+          {
+            "MakeStatic": true,
+            "OriginalName": "startDragAndDrop"
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.view.DragEvent",
+          "To": "com.microsoft.intune.mam.client.view.MAMDragEventManagement"
+        },
+        "Methods": [
+          {
+            "MakeStatic": true,
+            "OriginalName": "getClipData"
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.support.v4.app.TaskStackBuilder",
+          "To": "com.microsoft.intune.mam.client.support.v4.app.MAMTaskStackBuilder"
+        },
+        "Methods": [
+          {
+            "MakeStatic": false,
+            "OriginalName": "create",
+            "NewName": "createTaskStackBuilder"
+          },
+          {
+            "MakeStatic": false,
+            "OriginalName": "from",
+            "NewName": "createTaskStackBuilder"
+          },
+          {
+            "MakeStatic": true,
+            "OriginalName": "getPendingIntent",
+            "NewName": "getPendingIntent"
+          }
+        ]
+      },
+      {
+        "Class": {
+          "From": "android.support.v4.print.PrintHelper",
+          "To": "com.microsoft.intune.mam.client.support.v4.print.MAMPrintHelperManagement"
+        },
+        "Methods": [
+          {
+            "MakeStatic": true,
+            "OriginalName": "printBitmap"
+          }
+        ]
+      }
+    ],
+    "InitializerRewrites": [
+      {
+        "From": "android.app.backup.FileBackupHelper",
+        "To": "com.microsoft.intune.mam.client.app.backup.MAMFileBackupHelper"
+      },
+      {
+        "From": "android.app.backup.SharedPreferencesBackupHelper",
+        "To": "com.microsoft.intune.mam.client.app.backup.MAMSharedPreferencesBackupHelper"
+      },
+      {
+        "From": "android.app.AlertDialog$Builder",
+        "To": "com.microsoft.intune.mam.client.app.MAMAlertDialogBuilder"
+      },
+      {
+        "From": "android.media.MediaPlayer",
+        "To": "com.microsoft.intune.mam.client.media.MAMMediaPlayer"
+      },
+      {
+        "From": "android.media.MediaMetadataRetriever",
+        "To": "com.microsoft.intune.mam.client.media.MAMMediaMetadataRetriever"
+      },
+      {
+        "From": "android.widget.TextView",
+        "To": "com.microsoft.intune.mam.client.widget.MAMTextView"
+      },
+      {
+        "From": "android.widget.AutoCompleteTextView",
+        "To": "com.microsoft.intune.mam.client.widget.MAMAutoCompleteTextView"
+      },
+      {
+        "From": "android.widget.CheckedTextView",
+        "To": "com.microsoft.intune.mam.client.widget.MAMCheckedTextView"
+      },
+      {
+        "From": "android.widget.EditText",
+        "To": "com.microsoft.intune.mam.client.widget.MAMEditText"
+      },
+      {
+        "From": "android.inputmethodservice.ExtractEditText",
+        "To": "com.microsoft.intune.mam.client.widget.MAMExtractEditText"
+      },
+      {
+        "From": "android.widget.MultiAutoCompleteTextView",
+        "To": "com.microsoft.intune.mam.client.widget.MAMMultiAutoCompleteTextView"
+      },
+      {
+        "From": "android.webkit.WebView",
+        "To": "com.microsoft.intune.mam.client.widget.MAMWebView"
+      },
+      {
+        "From": "android.support.v7.app.AlertDialog$Builder",
+        "To": "com.microsoft.intune.mam.client.support.v7.app.MAMAlertDialogBuilder"
+      },
+      {
+        "From": "android.support.v7.widget.AppCompatAutoCompleteTextView",
+        "To": "com.microsoft.intune.mam.client.widget.MAMAppCompatAutoCompleteTextView"
+      },
+      {
+        "From": "android.support.v7.widget.AppCompatCheckedTextView",
+        "To": "com.microsoft.intune.mam.client.widget.MAMAppCompatCheckedTextView"
+      },
+      {
+        "From": "android.support.v7.widget.AppCompatEditText",
+        "To": "com.microsoft.intune.mam.client.widget.MAMAppCompatEditText"
+      },
+      {
+        "From": "android.support.v7.widget.AppCompatMultiAutoCompleteTextView",
+        "To": "com.microsoft.intune.mam.client.widget.MAMAppCompatMultiAutoCompleteTextView"
+      },
+      {
+        "From": "android.support.v7.widget.AppCompatTextView",
+        "To": "com.microsoft.intune.mam.client.widget.MAMAppCompatTextView"
+      },
+      {
+        "From": "android.support.text.emoji.widget.EmojiAppCompatEditText",
+        "To": "com.microsoft.intune.mam.client.widget.MAMEmojiAppCompatEditText"
+      },
+      {
+        "From": "android.support.text.emoji.widget.EmojiAppCompatTextView",
+        "To": "com.microsoft.intune.mam.client.widget.MAMEmojiAppCompatTextView"
+      },
+      {
+        "From": "android.support.text.emoji.widget.EmojiEditText",
+        "To": "com.microsoft.intune.mam.client.widget.MAMEmojiEditText"
+      },
+      {
+        "From": "android.support.text.emoji.widget.EmojiTextView",
+        "To": "com.microsoft.intune.mam.client.widget.MAMEmojiTextView"
+      },
+      {
+        "From": "android.support.v17.leanback.widget.SearchEditText",
+        "To": "com.microsoft.intune.mam.client.widget.MAMSearchEditText"
+      }
+    ]
+  }

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -106,26 +107,35 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void NativeAOT ()
+		public void BasicApplicationOtherRuntime ([Values (true, false)] bool isRelease)
 		{
-			if (IsWindows) {
-				// Microsoft.NETCore.Native.Publish.targets(61,5): Cross-OS native compilation is not supported.
-				// Set $(DisableUnsupportedError)=true, Microsoft.NETCore.Native.Unix.targets(296,5): error : Platform linker ('C:\Android\android-sdk\ndk\26.3.11579264\toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android21-clang++' or 'gcc') not found in PATH. Ensure you have all the required prerequisites documented at https://aka.ms/nativeaot-prerequisites.
-				Assert.Ignore ("This test is not valid on Windows.");
-			}
-
+			// This test would fail, as it requires **our** updated runtime pack, which isn't currently created
+			// It is created in `src/native/native-clr.csproj` which isn't built atm.
+			Assert.Ignore ("CoreCLR support isn't fully enabled yet. This test will be enabled in a follow-up PR.");
 			var proj = new XamarinAndroidApplicationProject {
-				ProjectName = "Hello",
-				IsRelease = true,
-				RuntimeIdentifier = "android-arm64",
-				// Add locally downloaded NativeAOT packs
+				IsRelease = isRelease,
+				// Add locally downloaded CoreCLR packs
 				ExtraNuGetConfigSources = {
 					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
 				}
 			};
-			proj.SetProperty ("PublishAot", "true");
-			proj.SetProperty ("PublishAotUsingRuntimePack", "true");
-			proj.SetProperty ("AndroidNdkDirectory", AndroidNdkPath);
+			proj.SetProperty ("UseMonoRuntime", "false"); // Enables CoreCLR
+			var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+		}
+
+		[Test]
+		public void NativeAOT ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = "Hello",
+			};
+			proj.SetPublishAot (true, AndroidNdkPath);
+			proj.SetProperty ("_ExtraTrimmerArgs", "--verbose");
+
+			// Required for java/util/ArrayList assertion below
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${AFTER_ONCREATE}", "new Android.Runtime.JavaList (); new Android.Runtime.JavaList<int> ();");
 
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -136,16 +146,19 @@ namespace Xamarin.Android.Build.Tests
 			];
 			string[] mono_files = [
 				"lib/arm64-v8a/libmonosgen-2.0.so",
+				"lib/x86_64/libmonosgen-2.0.so",
 			];
 			string [] nativeaot_files = [
 				$"lib/arm64-v8a/lib{proj.ProjectName}.so",
 				"lib/arm64-v8a/libc++_shared.so",
+				$"lib/x86_64/lib{proj.ProjectName}.so",
+				"lib/x86_64/libc++_shared.so",
 			];
 
-			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, proj.RuntimeIdentifier);
-			var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, proj.RuntimeIdentifier);
+			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+			var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
 
-			var linkedMonoAndroidAssembly = Path.Combine (intermediate, "linked", "Mono.Android.dll");
+			var linkedMonoAndroidAssembly = Path.Combine (intermediate, "android-arm64", "linked", "Mono.Android.dll");
 			FileAssert.Exists (linkedMonoAndroidAssembly);
 			using (var assembly = AssemblyDefinition.ReadAssembly (linkedMonoAndroidAssembly)) {
 				var typeName = "Android.App.Activity";
@@ -155,6 +168,65 @@ namespace Xamarin.Android.Build.Tests
 				var method = type.Methods.FirstOrDefault (m => m.Name == methodName);
 				Assert.IsNotNull (method, $"{linkedMonoAndroidAssembly} should contain {typeName}.{methodName}");
 			}
+
+			var javaClassNames = new List<string> ();
+			var types = new List<TypeReference> ();
+
+			var linkedRuntimeAssembly = Path.Combine (intermediate, "android-arm64", "linked", "Microsoft.Android.Runtime.NativeAOT.dll");
+			FileAssert.Exists (linkedRuntimeAssembly);
+			using (var assembly = AssemblyDefinition.ReadAssembly (linkedRuntimeAssembly)) {
+				var type = assembly.MainModule.Types.FirstOrDefault (t => t.Name == "TypeMapping");
+				Assert.IsNotNull (type, $"{linkedRuntimeAssembly} should contain TypeMapping");
+
+				var method = type.Methods.FirstOrDefault (m => m.Name == "GetJniNameByTypeNameHashIndex");
+				Assert.IsNotNull (method, "TypeMapping should contain GetJniNameByTypeNameHashIndex");
+
+				foreach (var i in method.Body.Instructions) {
+					if (i.OpCode != Mono.Cecil.Cil.OpCodes.Ldstr)
+						continue;
+					if (i.Operand is not string javaName)
+						continue;
+					if (i.Next.OpCode != Mono.Cecil.Cil.OpCodes.Ret)
+						continue;
+					javaClassNames.Add (javaName);
+				}
+
+				method = type.Methods.FirstOrDefault (m => m.Name == "GetTypeByJniNameHashIndex");
+				Assert.IsNotNull (method, "TypeMapping should contain GetTypeByJniNameHashIndex");
+
+				foreach (var i in method.Body.Instructions) {
+					if (i.OpCode != Mono.Cecil.Cil.OpCodes.Ldtoken)
+						continue;
+					if (i.Operand is not TypeReference typeReference)
+						continue;
+					if (i.Next?.OpCode != Mono.Cecil.Cil.OpCodes.Call)
+						continue;
+					if (i.Next.Next?.OpCode != Mono.Cecil.Cil.OpCodes.Ret)
+						continue;
+					types.Add (typeReference);
+				}
+
+				// Basic types
+				AssertTypeMap ("java/lang/Object", "Java.Lang.Object");
+				AssertTypeMap ("java/lang/String", "Java.Lang.String");
+				AssertTypeMap ("[Ljava/lang/Object;", "Java.Interop.JavaArray`1");
+				AssertTypeMap ("java/util/ArrayList", "Android.Runtime.JavaList");
+				AssertTypeMap ("android/app/Activity", "Android.App.Activity");
+				AssertTypeMap ("android/widget/Button", "Android.Widget.Button");
+				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput,
+					"Duplicate typemap entry for java/util/ArrayList => Android.Runtime.JavaList`1"),
+					"Should get log message about duplicate Android.Runtime.JavaList`1!");
+
+				// Special *Invoker case
+				AssertTypeMap ("android/view/View$OnClickListener", "Android.Views.View/IOnClickListener");
+				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput,
+					"Duplicate typemap entry for android/view/View$OnClickListener => Android.Views.View/IOnClickListenerInvoker"),
+					"Should get log message about duplicate IOnClickListenerInvoker!");
+			}
+
+			// Verify that Java stubs for Mono.Android.dll were generated, instead of using mono.android.jar/dex
+			var onLayoutChangeListenerImplementor = Path.Combine (intermediate, "android", "src", "mono", "android", "view", "View_OnClickListenerImplementor.java");
+			FileAssert.Exists (onLayoutChangeListenerImplementor);
 
 			var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
 			FileAssert.Exists (dexFile);
@@ -170,6 +242,18 @@ namespace Xamarin.Android.Build.Tests
 			}
 			foreach (var nativeaot_file in nativeaot_files) {
 				Assert.IsTrue (zip.ContainsEntry (nativeaot_file, caseSensitive: true), $"APK must contain `{nativeaot_file}`.");
+			}
+
+			void AssertTypeMap(string javaName, string managedName)
+			{
+				var javaNameIndex = javaClassNames.FindIndex (name => name == javaName);
+				var typeIndex = types.FindIndex (td => td.ToString() == managedName);
+
+				if (javaNameIndex < 0) {
+					Assert.Fail ($"TypeMapping should contain \"{javaName}\"!");
+				} else if (typeIndex < 0) {
+					Assert.Fail ($"TypeMapping should contain \"{managedName}\"!");
+				}
 			}
 		}
 
@@ -406,7 +490,7 @@ namespace Xamarin.Android.Build.Tests
 			XamarinAndroidProject proj = isBindingProject ? new XamarinAndroidBindingProject () : new XamarinAndroidApplicationProject ();
 			proj.IsRelease = isRelease;
 			proj.SetProperty (property, value);
-			
+
 			using (ProjectBuilder b = isBindingProject ? CreateDllBuilder (Path.Combine ("temp", TestName)) : CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, $"The '{property}' MSBuild property is deprecated and will be removed"),
@@ -506,9 +590,11 @@ class MemTest {
 
 		[Test]
 		[NonParallelizable]
-		public void BuildBasicApplicationAppCompat ()
+		public void BuildBasicApplicationAppCompat ([Values (true, false)] bool publishAot)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetPublishAot (true, AndroidNdkPath);
+
 			var packages = proj.PackageReferences;
 			packages.Add (KnownPackages.AndroidXAppCompat);
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : AndroidX.AppCompat.App.AppCompatActivity");
@@ -1124,8 +1210,7 @@ namespace UnamedProject
 			if (!string.IsNullOrEmpty (rid)) {
 				proj.SetProperty ("RuntimeIdentifier", rid);
 			}
-			// FIXME: https://github.com/dotnet/msbuild/issues/11237, removed `(` and `)` characters
-			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildProguard Enabled1{rid}"))) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildProguard Enabled(1){rid}"))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				// warning XA4304: ProGuard configuration file 'XYZ' was not found.
 				StringAssertEx.DoesNotContain ("XA4304", b.LastBuildOutput, "Output should *not* contain XA4304 warnings");

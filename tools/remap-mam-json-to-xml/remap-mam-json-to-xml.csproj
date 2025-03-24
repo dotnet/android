@@ -7,9 +7,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <OutputPath>..\..\bin\Test$(Configuration)</OutputPath>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Program.cs" />
     <Compile Include="MamXmlParser.cs" />
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\MamJsonParser.cs" />
   </ItemGroup>
@@ -20,10 +22,6 @@
         Version="0.1.4635.1"
         IncludeAssets="none"
         ReferenceOutputAssembly="False"
-    />
-    <PackageReference
-        Include="Newtonsoft.Json"
-        Version="$(NewtonsoftJsonPackageVersion)"
     />
   </ItemGroup>
 </Project>

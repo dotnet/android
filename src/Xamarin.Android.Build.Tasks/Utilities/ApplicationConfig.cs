@@ -58,5 +58,6 @@ namespace Xamarin.Android.Tasks
 		[NativeAssembler (NumberFormat = LLVMIR.LlvmIrVariableNumberFormat.Hexadecimal)]
 		public uint   mono_components_mask;
 		public string android_package_name = String.Empty;
+		public bool   managed_marshal_methods_lookup_enabled;
 	}
 }

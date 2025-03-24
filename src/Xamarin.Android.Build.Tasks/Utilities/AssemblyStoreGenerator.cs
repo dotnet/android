@@ -115,6 +115,7 @@ partial class AssemblyStoreGenerator
 		// We'll start writing to the stream after we seek to the position just after the header, index, descriptors and name data.
 		ulong curPos = assemblyDataStart;
 
+		Directory.CreateDirectory (Path.GetDirectoryName (storePath));
 		using var fs = File.Open (storePath, FileMode.Create, FileAccess.Write, FileShare.Read);
 		fs.Seek ((long)curPos, SeekOrigin.Begin);
 
