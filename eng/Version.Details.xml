@@ -25,9 +25,9 @@
       <Sha>aa3ae0d49da3cfb31a383f16303a3f2f0c3f1a19</Sha>
     </Dependency>
     <!-- Previous .NET Android version -->
-    <Dependency Name="Microsoft.Android.Sdk.Windows" Version="34.0.153">
+    <Dependency Name="Microsoft.Android.Sdk.Windows" Version="34.0.154">
       <Uri>https://github.com/dotnet/android</Uri>
-      <Sha>fea9dcd5824c760485e39138b38999c303da8b56</Sha>
+      <Sha>82d8938cf80f6d5fa6c28529ddfbdb753d805ab4</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
