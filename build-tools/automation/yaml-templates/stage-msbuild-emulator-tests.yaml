@@ -188,7 +188,7 @@ stages:
       parameters:
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\MSBuildDeviceIntegration\$(DotNetStableTargetFramework)\MSBuildDeviceIntegration.dll
         testFilter: name == DebuggingTest
-        testRunTitle: debugger tests
+        testRunTitle: DebuggingTest tests on Windows
 
     - ${{ if ne(parameters.usesCleanImages, true) }}:
       - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
