@@ -23,9 +23,14 @@ namespace xamarin::android {
 
 		static auto get_java_class_name_for_TypeManager (jclass klass) noexcept -> char*;
 
-		static auto get_timing () -> Timing*
+		static auto get_timing () -> std::shared_ptr<Timing>
 		{
-			return _timing.get ();
+			return _timing;
+		}
+
+		static auto get_java_class_TimeZone () noexcept -> jclass
+		{
+			return java_TimeZone;
 		}
 
 	private:
@@ -47,12 +52,13 @@ namespace xamarin::android {
 	private:
 		static inline void *clr_host = nullptr;
 		static inline unsigned int domain_id = 0;
-		static inline std::unique_ptr<Timing> _timing{};
+		static inline std::shared_ptr<Timing> _timing{};
 		static inline bool found_assembly_store = false;
 		static inline jnienv_register_jni_natives_fn jnienv_register_jni_natives = nullptr;
 
 		static inline JavaVM *jvm = nullptr;
 		static inline jmethodID Class_getName = nullptr;
+		static inline jclass java_TimeZone = nullptr;
 
 		static inline host_runtime_contract runtime_contract{
 			.size = sizeof(host_runtime_contract),

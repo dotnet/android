@@ -209,3 +209,198 @@ void OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char
 
 	fflush (Logger::gref_log ());
 }
+
+void OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable)
+{
+	++gc_weak_gref_count;
+	if ((log_categories & LOG_GREF) == 0) {
+		return;
+	}
+
+	log_info (LOG_GREF,
+			  "+w+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})",
+			  gc_gref_count,
+			  gc_weak_gref_count,
+			  reinterpret_cast<void*>(curHandle),
+			  curType,
+			  reinterpret_cast<void*>(newHandle),
+			  newType,
+			  optional_string (threadName),
+			  threadId
+	);
+
+	if (Logger::gref_to_logcat ()) {
+		if (from_writable) {
+			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+		} else {
+			log_info (LOG_GREF, "{}", optional_string (from));
+		}
+	}
+
+	if (!Logger::gref_log ()) {
+		return;
+	}
+
+	fprintf (
+		Logger::gref_log (),
+		"+w+ grefc %i gwrefc %i obj-handle %p/%c -> new-handle %p/%c from thread '%s'(%i)\n",
+		gc_gref_count,
+		gc_weak_gref_count,
+		curHandle,
+		curType,
+		newHandle,
+		newType,
+		optional_string (threadName),
+		threadId
+	);
+
+	if (from_writable) {
+		_write_stack_trace (Logger::gref_log (), const_cast<char*>(from));
+	} else {
+		fprintf (Logger::gref_log (), "%s\n", optional_string (from));
+	}
+
+	fflush (Logger::gref_log ());
+}
+
+void
+OSBridge::_monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
+{
+	if ((log_categories & LOG_LREF) == 0) {
+		return;
+	}
+
+	log_info (LOG_LREF,
+			  "+l+ lrefc {} handle {:p}/{} from thread '{}'({})",
+			  lrefc,
+			  reinterpret_cast<void*>(handle),
+			  type,
+			  optional_string (threadName),
+			  threadId
+	);
+
+	if (Logger::lref_to_logcat ()) {
+		if (from_writable) {
+			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+		} else {
+			log_info (LOG_GREF, "{}", optional_string (from));
+		}
+	}
+
+	if (!Logger::lref_log ()) {
+		return;
+	}
+
+	fprintf (
+		Logger::lref_log (),
+		"+l+ lrefc %i handle %p/%c from thread '%s'(%i)\n",
+		lrefc,
+		handle,
+		type,
+		optional_string (threadName),
+		threadId
+	);
+
+	if (from_writable) {
+		_write_stack_trace (Logger::lref_log (), const_cast<char*>(from));
+	} else {
+		fprintf (Logger::lref_log (), "%s\n", optional_string (from));
+	}
+
+	fflush (Logger::lref_log ());
+}
+
+void OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
+{
+	--gc_weak_gref_count;
+	if ((log_categories & LOG_GREF) == 0) {
+		return;
+	}
+
+	log_info (LOG_GREF,
+			  "-w- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})",
+			  gc_gref_count,
+			  gc_weak_gref_count,
+			  reinterpret_cast<void*>(handle),
+			  type,
+			  optional_string (threadName),
+			  threadId
+	);
+
+	if (Logger::gref_to_logcat ()) {
+		if (from_writable) {
+			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+		} else {
+			log_info (LOG_GREF, "{}", optional_string (from));
+		}
+	}
+
+	if (!Logger::gref_log ()) {
+		return;
+	}
+
+	fprintf (
+		Logger::gref_log (),
+		"-w- grefc %i gwrefc %i handle %p/%c from thread '%s'(%i)\n",
+		gc_gref_count,
+		gc_weak_gref_count,
+		handle,
+		type,
+		optional_string (threadName),
+		threadId
+	);
+
+	if (from_writable) {
+		_write_stack_trace (Logger::gref_log (), const_cast<char*>(from));
+	} else {
+		fprintf (Logger::gref_log (), "%s\n", optional_string (from));
+	}
+
+	fflush (Logger::gref_log ());
+}
+
+void OSBridge::_monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
+{
+	if ((log_categories & LOG_LREF) == 0) {
+		return;
+	}
+
+	log_info (LOG_LREF,
+			  "-l- lrefc {} handle {:p}/{} from thread '{}'({})",
+			  lrefc,
+			  reinterpret_cast<void*>(handle),
+			  type,
+			  optional_string (threadName),
+			  threadId
+	);
+
+	if (Logger::lref_to_logcat ()) {
+		if (from_writable) {
+			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+		} else {
+			log_info (LOG_GREF, "{}", optional_string (from));
+		}
+	}
+
+	if (!Logger::lref_log ()) {
+		return;
+	}
+
+	fprintf (
+		Logger::lref_log (),
+		"-l- lrefc %i handle %p/%c from thread '%s'(%i)\n",
+		lrefc,
+		handle,
+		type,
+		optional_string (threadName),
+		threadId
+	);
+
+	if (from_writable) {
+		_write_stack_trace (Logger::lref_log (), const_cast<char*>(from));
+	} else {
+		fprintf (Logger::lref_log (), "%s\n", optional_string (from));
+	}
+
+	fflush (Logger::lref_log ());
+}

@@ -21,9 +21,6 @@ namespace Android.Runtime
 	internal static class RuntimeNativeMethods
 	{
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal extern static void monodroid_log_traces (TraceKind kind, string first_line);
-
-		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal extern static void monodroid_log (LogLevel level, LogCategories category, string message);
 
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]

@@ -36,7 +36,9 @@ set(XAMARIN_MONODROID_SOURCES
   jni-remapping.cc
   os-bridge.cc
   pinvoke-override.cc
+  runtime-util.cc
   typemap.cc
+  xamarin_getifaddrs.cc
 )
 
 list(APPEND LOCAL_CLANG_CHECK_SOURCES

@@ -13,6 +13,7 @@
 #include <host/host-jni.hh>
 #include <host/host-util.hh>
 #include <host/os-bridge.hh>
+#include <host/runtime-util.hh>
 #include <runtime-base/android-system.hh>
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
@@ -264,7 +265,7 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 
 	size_t total_time_index;
 	if (FastTiming::enabled ()) [[unlikely]] {
-		_timing = std::make_unique<Timing> ();
+		_timing = std::make_shared<Timing> ();
 		total_time_index = internal_timing.start_event (TimingEventKind::TotalRuntimeInit);
 	}
 
@@ -277,6 +278,8 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	Util::set_environment_variable_for_directory ("TMPDIR", applicationDirs[Constants::APP_DIRS_CACHE_DIR_INDEX]);
 	Util::set_environment_variable_for_directory ("HOME", home);
 	create_xdg_directories_and_environment (home);
+
+	java_TimeZone = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_util_TimeZone", true);
 
 	AndroidSystem::detect_embedded_dso_mode (applicationDirs);
 	AndroidSystem::set_running_in_emulator (isEmulator);

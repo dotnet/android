@@ -111,7 +111,7 @@ namespace {
 	}
 }
 
-void _monodroid_detect_cpu_and_architecture (uint16_t &built_for_cpu, uint16_t &running_on_cpu, bool &is64bit)
+void monodroid_detect_cpu_and_architecture (uint16_t &built_for_cpu, uint16_t &running_on_cpu, bool &is64bit)
 {
 	is64bit = is_64_bit ();
 	get_built_for_cpu (built_for_cpu);
