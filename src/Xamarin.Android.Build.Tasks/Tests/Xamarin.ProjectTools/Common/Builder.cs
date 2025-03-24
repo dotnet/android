@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml.XPath;
 using System.Xml.Linq;
+using Xamarin.Android.Tools.VSWhere;
 
 using Xamarin.Android.Tasks;
 
@@ -56,6 +57,19 @@ namespace Xamarin.ProjectTools
 		/// True if NuGet restore occurs automatically (default)
 		/// </summary>
 		public bool AutomaticNuGetRestore { get; set; } = true;
+
+		public bool UseMSBuild {get; set; } = false;
+
+		/// <summary>
+		/// Value for %MSBuildSdksPath%, points to bin\Release\dotnet\sdk\*\Sdks
+		/// </summary>
+		public string MSBuildSdksPath {
+			get {
+				var sdk = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "sdk");
+				var sdk_version = Directory.EnumerateDirectories (sdk).OrderByDescending (x => x).First ();
+				return Path.Combine (sdk_version, "Sdks");
+			}
+		}
 
 		public bool CrossCompilerAvailable (string supportedAbis)
 		{
@@ -185,13 +199,25 @@ namespace Xamarin.ProjectTools
 
 			var start = DateTime.UtcNow;
 			var args  = new StringBuilder ();
-			var psi   = new ProcessStartInfo (Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet"));
+			var psi   = new ProcessStartInfo ();
 			var responseFile = Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "project.rsp");
-			args.Append ("build ");
+			psi.FileName = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet");
+			if (UseMSBuild) {
+				psi.FileName = MSBuildLocator.QueryLatest ().MSBuildPath;
+			} else {
+				args.Append ("build ");
+			}
 
 			if (TestEnvironment.UseLocalBuildOutput) {
 				psi.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_MANIFEST_ROOTS", TestEnvironment.WorkloadManifestOverridePath);
 				psi.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_PACK_ROOTS", TestEnvironment.WorkloadPackOverridePath);
+			}
+			if (UseMSBuild) {
+				psi.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_PACK_ROOTS", Path.Combine (TestEnvironment.DotNetPreviewDirectory, "packs"));
+				psi.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_MANIFEST_ROOTS", Path.Combine (TestEnvironment.DotNetPreviewDirectory, "sdk-manifests"));
+				psi.SetEnvironmentVariable ("MSBUILDLOGALLENVIRONMENTVARIABLES", "1");
+				psi.SetEnvironmentVariable ("MSBuildSDKsPath", MSBuildSdksPath);
+				psi.SetEnvironmentVariable ("PATH", TestEnvironment.DotNetPreviewDirectory + Path.PathSeparator + Environment.GetEnvironmentVariable ("PATH"));
 			}
 
 			args.AppendFormat ("{0} /t:{1} {2}",
