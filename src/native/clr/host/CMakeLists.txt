@@ -30,7 +30,9 @@ set(XAMARIN_MONODROID_SOURCES
   host.cc
   host-jni.cc
   host-util.cc
+  internal-pinvokes.cc
   os-bridge.cc
+  runtime-util.cc
   typemap.cc
   xamarin_getifaddrs.cc
 )
