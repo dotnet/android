@@ -163,26 +163,27 @@ public class GetNativeRuntimeComponents : AndroidTask
 		var relativeArtifactPaths = new List<(string path, string abi)> ();
 		string archiveName = Path.GetFileName (archive.Name);
 		string commonClrObjDir = Path.Combine ("artifacts", "obj", "coreclr");
+		const string config = "Release"; // or Debug
 
 		if (IsArchive ("libcoreclr.a")) {
 			archiveName = "libcoreclr_static.a";
-			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.Release", "dlls", "mscoree", "coreclr"));
+			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.{config}", "dlls", "mscoree", "coreclr"));
 		} else if (IsArchive ("libcoreclrpal.a")) {
-			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.Release", "pal", "src"));
+			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.{config}", "pal", "src"));
 		} else if (IsArchive ("libminipal.a")) {
-			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.Release", "shared_minipal"));
+			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.{config}", "shared_minipal"));
 		} else if (IsArchive ("libcoreclrminipal.a")) {
-			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.Release", "minipal", "Unix"));
+			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.{config}", "minipal", "Unix"));
 		} else if (IsArchive ("libgc_pal.a")) {
-			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.Release", "gc", "unix"));
+			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.{config}", "gc", "unix"));
 		} else if (IsArchive ("libeventprovider.a")) {
-			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.Release", "pal", "src", "eventprovider", "dummyprovider"));
+			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.{config}", "pal", "src", "eventprovider", "dummyprovider"));
 		} else if (IsArchive ("libnativeresourcestring.a")) {
-			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.Release", "nativeresources"));
+			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.{config}", "nativeresources"));
 		} else {
 			foreach (string abi in uniqueAbis) {
 				string clrArch = GetClrArch (abi);
-				relativeArtifactPaths.Add ((Path.Combine ("artifacts", "bin", $"microsoft.netcore.app.runtime.android-{clrArch}", "Release", "runtimes", $"android-{clrArch}", "native"), abi));
+				relativeArtifactPaths.Add ((Path.Combine ("artifacts", "bin", $"microsoft.netcore.app.runtime.android-{clrArch}", config, "runtimes", $"android-{clrArch}", "native"), abi));
 			}
 		}
 
