@@ -15,6 +15,10 @@ if [ ! -f "${DOTNET_LOCAL}" ]; then
 fi
 chmod +x "${DOTNET_LOCAL}"
 
+_DEF_NDK_HOME=`${DOTNET_LOCAL} build -getProperty:AndroidNdkFullPath "${REPO_ROOT}/build-tools/scripts/Paths.targets"`
+ANDROID_NDK_HOME="${ANDROID_NDK_HOME:-${_DEF_NDK_HOME}}"
+export ANDROID_NDK_HOME
+
 # Build and install
 "${DOTNET_LOCAL}" build ${SCRIPT_DIR}/NativeAOT.csproj -c Debug -t:Install -tl:off
 
@@ -48,7 +52,7 @@ echo "Found process ID: $APP_PID"#
 adb forward --remove tcp:8700 || true
 adb forward tcp:8700 jdwp:$APP_PID
 
-echo "process attach --pid $APP_PID" > ${SCRIPT_DIR}/obj/Debug/lldbattach
+echo "process attach --pid $APP_PID" > "${SCRIPT_DIR}/obj/Debug/lldbattach"
 
 # Connect with JDB and send quit command
 #echo "quit" | jdb -attach localhost:8700
