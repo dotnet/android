@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -388,8 +389,29 @@ namespace Xamarin.Android.Prepare
 
 		public static HttpClient CreateHttpClient ()
 		{
-			var handler = new HttpClientHandler {
-				CheckCertificateRevocationList = true,
+			// Originally from: https://github.com/dotnet/arcade/pull/15546
+			// Configure the cert revocation check in a fail-open state to avoid intermittent failures
+			// on Mac if the endpoint is not available. This is only available on .NET Core, but has only been
+			// observed on Mac anyway.
+
+			var handler = new SocketsHttpHandler ();
+			handler.SslOptions.CertificateChainPolicy = new X509ChainPolicy {
+				// Yes, check revocation.
+				// Yes, allow it to be downloaded if needed.
+				// Online is the default, but it doesn't hurt to be explicit.
+				RevocationMode = X509RevocationMode.Online,
+				// Roots never bother with revocation.
+				// ExcludeRoot is the default, but it doesn't hurt to be explicit.
+				RevocationFlag = X509RevocationFlag.ExcludeRoot,
+				// RevocationStatusUnknown at the EndEntity/Leaf certificate will not fail the chain build.
+				// RevocationStatusUnknown for any intermediate CA will not fail the chain build.
+				// IgnoreRootRevocationUnknown could also be specified, but it won't apply given ExcludeRoot above.
+				// The default is that all status codes are bad, this is not the default.
+				VerificationFlags =
+					X509VerificationFlags.IgnoreCertificateAuthorityRevocationUnknown |
+					X509VerificationFlags.IgnoreEndRevocationUnknown,
+				// Always use the "now" when building the chain, rather than the "now" of when this policy object was constructed.
+				VerificationTimeIgnored = true,
 			};
 
 			return new HttpClient (handler);
@@ -409,6 +431,7 @@ namespace Xamarin.Android.Prepare
 						return (true, (ulong) resp.Content.Headers.ContentLength.Value, resp.StatusCode);
 					}
 				} catch (Exception ex) {
+					Log.WarningLine ($"GetDownloadSize of '{url}' failed: {ex}");
 					if (i < ExceptionRetries - 1) {
 						WaitAWhile ($"GetDownloadSize {url}", i, ref ex, ref delay);
 					}
@@ -434,6 +457,7 @@ namespace Xamarin.Android.Prepare
 					succeeded = true;
 					break;
 				} catch (Exception ex) {
+					Log.WarningLine ($"Download of '{url}' failed: {ex}");
 					if (i < ExceptionRetries - 1) {
 						WaitAWhile ($"Download {url}", i, ref ex, ref delay);
 					}
