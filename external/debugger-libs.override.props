@@ -4,6 +4,7 @@
     <DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
     <RestoreAdditionalProjectSources>
       https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-d9d0ae01/nuget/v3/index.json;
+      https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-b17f0594/nuget/v3/index.json;
     </RestoreAdditionalProjectSources>
   </PropertyGroup>
 </Project>
