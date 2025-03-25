@@ -65,11 +65,14 @@
             "attachCommands": [
               "target create samples/NativeAOT/bin/Debug/net10.0-android/android-arm64/native/NativeAOT.so",
               "target select 0",
-              "command source ${workspaceFolder}/samples/NativeAOT/obj/Debug/lldbattach",
+              "command source ${workspaceFolder}/samples/NativeAOT/obj/Debug/lldbattach"
             ],
             "preLaunchTask": "run-nativeaot-sample",
             "postDebugTask": "stop-nativeaot-lldb-server",
             "postRunCommands": [
+              "process interrupt",
+              "call (unsigned int) sleep((unsigned int)5)",
+              "c",
               "clearjdb"
             ]
         }

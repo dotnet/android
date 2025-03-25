@@ -4,7 +4,20 @@ This is the sample for using NativeAOT with .NET for Android.
 
 ## Debugging
 
-If you are using VSCode from the android repo, you can go to the "Run and Debug" Badge, and select "Debug NativeAOT" from the drop down. This will let you debug the NativeAOT sample. Fire up your emulator or connect your device, then click the play button next to "Debug NativeAOT" and it will launch the app. If the Java debugger dialog is not cleared automatically, goto the "Debug Console" which should be showing the lldb REPL, and type `clearjdb`. Your app should then continue.
+If you are using [Visual Studio Code](https://code.visualstudio.com) and have opened the
+[dotnet/android](https://github.com/dotnet/android/) repo, you can:
+
+ 1. Install the [LLDB DAP](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.lldb-dap) VSCode extension.
+ 2. Start your emulator or attach your device.
+ 3. Open the ["Run and Debug" Badge](https://code.visualstudio.com/docs/debugtest/debugging#_start-a-debugging-session).
+ 4. Select "Debug NativeAOT" from the drop down.
+ 5. Click the "Play button" ▶️  next to "Debug NativeAOT".
+ 6. Wait a bit for the debugger to attach (roughly 30 seconds).
+
+    If a "Waiting For Debugger" dialog remains present on your Android device,
+    switch to the **DEBUG CONSOLE** tab and re-enter `clearjdb` at the lldb `> ` prompt.
+
+The **DEBUG CONSOLE** tab contains the lldb REPL
 
 Note it will take some time to build and install the NativeAOT sample. VSCode will probably
 give you an option to cancel or wait, you can just ignore this dialog.
