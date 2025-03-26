@@ -163,7 +163,7 @@ public class GetNativeRuntimeComponents : AndroidTask
 		var relativeArtifactPaths = new List<(string path, string abi)> ();
 		string archiveName = Path.GetFileName (archive.Name);
 		string commonClrObjDir = Path.Combine ("artifacts", "obj", "coreclr");
-		const string config = "Release"; // or Debug
+		const string config = "Debug"; // or Release
 
 		if (IsArchive ("libcoreclr.a")) {
 			archiveName = "libcoreclr_static.a";
