@@ -212,7 +212,6 @@ auto TypeMapper::typemap_managed_to_java (const char *typeName, const uint8_t *m
 {
 	size_t total_time_index;
 	if (FastTiming::enabled ()) [[unlikely]] {
-		//timing = new Timing ();
 		total_time_index = internal_timing.start_event (TimingEventKind::ManagedToJava);
 	}
 
@@ -257,6 +256,11 @@ auto TypeMapper::find_java_to_managed_entry (hash_t name_hash) noexcept -> const
 [[gnu::flatten]]
 auto TypeMapper::typemap_java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept -> bool
 {
+	size_t total_time_index;
+	if (FastTiming::enabled ()) [[unlikely]] {
+		total_time_index = internal_timing.start_event (TimingEventKind::JavaToManaged);
+	}
+
 	if (java_type_name == nullptr || assembly_name == nullptr || managed_type_token_id == nullptr) [[unlikely]] {
 		if (java_type_name == nullptr) {
 			log_warn (
@@ -313,6 +317,10 @@ auto TypeMapper::typemap_java_to_managed (const char *java_type_name, char const
 		*managed_type_token_id,
 		optional_string (*assembly_name)
 	);
+
+	if (FastTiming::enabled ()) [[unlikely]] {
+		internal_timing.end_event (total_time_index);
+	}
 
 	return true;
 }
