@@ -8,6 +8,8 @@ using System.Threading;
 using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 
+using Microsoft.Android.Runtime;
+
 namespace Android.Runtime
 {
 	static internal class JNIEnvInit
@@ -108,7 +110,14 @@ namespace Android.Runtime
 			java_class_loader = args->grefLoader;
 
 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
-			androidRuntime = new AndroidRuntime (args->env, args->javaVm, args->grefLoader, args->Loader_loadClass, args->jniAddNativeMethodRegistrationAttributePresent != 0);
+			androidRuntime = new AndroidRuntime (
+					args->env,
+					args->javaVm,
+					args->grefLoader,
+					null,
+					RuntimeType != DotNetRuntimeType.MonoVM ? new ManagedValueManager () : null,
+					args->jniAddNativeMethodRegistrationAttributePresent != 0
+			);
 			ValueManager = androidRuntime.ValueManager;
 
 			IsRunningOnDesktop = args->isRunningOnDesktop == 1;
