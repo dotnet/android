@@ -18,6 +18,9 @@ public class LinkNativeRuntime : AsyncTask
 	[Required]
 	public string AndroidBinUtilsDirectory { get; set; }
 
+	public string? AndroidNdkDirectory { get; set; }
+	public string? AndroidApiLevel { get; set; }
+
 	[Required]
 	public string IntermediateOutputPath { get; set; }
 
@@ -48,7 +51,8 @@ public class LinkNativeRuntime : AsyncTask
 	[Required]
 	public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = Array.Empty<ITaskItem> ();
 
-	public bool SaveDebugSymbols { get; set; }
+	public bool SaveDebugSymbols { get; set; } = true;
+	public bool StripDebugSymbols { get; set; } = true;
 
 	public override System.Threading.Tasks.Task RunTaskAsync ()
 	{
@@ -66,7 +70,11 @@ public class LinkNativeRuntime : AsyncTask
 		}
 
 		var linker = new NativeLinker (Log, abi, soname, AndroidBinUtilsDirectory, IntermediateOutputPath, RuntimePackLibraryDirectories, CancellationToken, Cancel) {
+			StripDebugSymbols = StripDebugSymbols,
 			SaveDebugSymbols = SaveDebugSymbols,
+			UseNdkLibraries = true,
+			NdkRootPath = AndroidNdkDirectory,
+			NdkApiLevel = AndroidApiLevel,
 		};
 		linker.Link (
 			outputRuntime,
