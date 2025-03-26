@@ -74,24 +74,19 @@ class ManagedMarshalMethodsLookupGenerator
 			targets [methodLookup.Index] = Instruction.Create (OpCodes.Ldftn, methodLookup.NativeCallbackWrapper);
 		}
 
-		var invalidUcoTarget = Instruction.Create (OpCodes.Nop);
-
 		var il = getFunctionPointerMethod.Body.GetILProcessor ();
 		il.Emit (OpCodes.Ldarg, methodIndexParameter);
 		il.Emit (OpCodes.Switch, targets);
 
-		il.Emit (OpCodes.Br_S, invalidUcoTarget);
+		// The default target
+		il.Emit (OpCodes.Ldc_I4_M1);
+		il.Emit (OpCodes.Conv_I);
+		il.Emit (OpCodes.Ret);
 
 		for (var k = 0; k < targets.Length; k++) {
 			il.Append (targets [k]);
 			il.Emit (OpCodes.Ret);
 		}
-
-		// no hit? this shouldn't happen
-		il.Append (invalidUcoTarget);
-		il.Emit (OpCodes.Ldc_I4_M1);
-		il.Emit (OpCodes.Conv_I);
-		il.Emit (OpCodes.Ret);
 
 		// in the case of private/private protected/protected nested types, we need to generate proxy method(s) in the parent type(s)
 		// so that we can call the actual GetFunctionPointer method from our assembly-level GetFunctionPointer method
@@ -153,20 +148,16 @@ class ManagedMarshalMethodsLookupGenerator
 		il.Emit (OpCodes.Ldarg, classIndexParameter);
 		il.Emit (OpCodes.Switch, targets);
 
-		var defaultTarget = Instruction.Create (OpCodes.Nop);
-		il.Emit (OpCodes.Br, defaultTarget);
+		// "Default target"
+		il.Emit (OpCodes.Pop); // methodIndex
+		il.Emit (OpCodes.Ldc_I4_M1);
+		il.Emit (OpCodes.Conv_I);
+		il.Emit (OpCodes.Ret);
 
 		for (int i = 0; i < targets.Length; i++) {
 			il.Append (targets [i]); // call
 			il.Emit (OpCodes.Ret);
 		}
-
-		// no hit? this shouldn't happen
-		il.Append (defaultTarget);
-		il.Emit (OpCodes.Pop); // methodIndex
-		il.Emit (OpCodes.Ldc_I4_M1);
-		il.Emit (OpCodes.Conv_I);
-		il.Emit (OpCodes.Ret);
 
 		return getFunctionPointerMethod;
 	}
@@ -196,21 +187,17 @@ class ManagedMarshalMethodsLookupGenerator
 		il.Emit (OpCodes.Ldarg_0); // assemblyIndex
 		il.Emit (OpCodes.Switch, targets);
 
-		var defaultTarget = Instruction.Create (OpCodes.Nop);
-		il.Emit (OpCodes.Br_S, defaultTarget);
-
-		for (int i = 0; i < targets.Length; i++) {
-			il.Append (targets [i]); // call
-			il.Emit (OpCodes.Ret);
-		}
-
-		// no hit? this shouldn't happen
-		il.Append (defaultTarget);
+		// The default target
 		il.Emit (OpCodes.Pop); // methodIndex
 		il.Emit (OpCodes.Pop); // classIndex
 		il.Emit (OpCodes.Ldc_I4_M1);
 		il.Emit (OpCodes.Conv_I);
 		il.Emit (OpCodes.Ret);
+
+		for (int i = 0; i < targets.Length; i++) {
+			il.Append (targets [i]); // call
+			il.Emit (OpCodes.Ret);
+		}
 	}
 
 	TypeReference ImportReference (ModuleDefinition module, Type type)
