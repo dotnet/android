@@ -24,11 +24,22 @@ namespace Xamarin.Android.Prepare
 #nullable enable
 
 		static readonly string[] CRTFiles = {
+			"crtbegin_so.o",
+			"crtend_so.o",
 			"libc.so",
 			"libdl.so",
 			"liblog.so",
 			"libm.so",
 			"libz.so",
+		};
+
+		static readonly string[] CPPAbiFiles = {
+			"libc++_static.a",
+			"libc++abi.a",
+		};
+
+		static readonly string[] ClangArchFiles = {
+			"libunwind.a",
 		};
 
 		bool RefreshSdk = false;
@@ -202,20 +213,25 @@ namespace Xamarin.Android.Prepare
 				string crtFilesPath = Path.Combine (abiDir, BuildAndroidPlatforms.NdkMinimumAPI.ToString (CultureInfo.InvariantCulture));
 				string clangArch = Configurables.Defaults.AbiToClangArch[abi];
 
-				CopyFile (abi, crtFilesPath, "crtbegin_so.o");
-				CopyFile (abi, crtFilesPath, "crtend_so.o");
+				foreach (string file in CRTFiles) {
+					CopyFile (abi, crtFilesPath, file);
+				}
+
+				foreach (string file in CPPAbiFiles) {
+					CopyFile (abi, abiDir, file);
+				}
+
 				CopyFile (abi, clangLibPath, $"libclang_rt.builtins-{clangArch}-android.a");
 
 				// Yay, consistency
 				if (String.Compare (clangArch, "i686", StringComparison.Ordinal) == 0) {
 					clangArch = "i386";
 				}
+				string clangArchLibPath = Path.Combine (clangLibPath, clangArch);
 
-				CopyFile (abi, abiDir, "libc++_static.a");
-				CopyFile (abi, abiDir, "libc++abi.a");
-
-				// Remove once https://github.com/dotnet/runtime/pull/107615 is merged and released
-				CopyFile (abi, Path.Combine (clangLibPath, clangArch), "libunwind.a");
+				foreach (string file in ClangArchFiles) {
+					CopyFile (abi, clangArchLibPath, file);
+				}
 			}
 
 			return true;
@@ -226,7 +242,7 @@ namespace Xamarin.Android.Prepare
 				string rid = Configurables.Defaults.AbiToRID [abi];
 				string outputDir = Path.Combine (
 					context.Properties.GetRequiredValue (KnownProperties.NativeRuntimeOutputRootDir),
-					context.Properties.GetRequiredValue (KnownProperties.CLRRuntimeFlavorDirName),
+					context.Properties.GetRequiredValue (KnownProperties.RuntimeRedistDirName),
 					rid
 				);
 
