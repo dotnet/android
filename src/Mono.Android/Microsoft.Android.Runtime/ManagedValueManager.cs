@@ -230,7 +230,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	void ActivateViaReflection (JniObjectReference reference, ConstructorInfo cinfo, object?[]? argumentValues)
 	{
-		var declType  = cinfo.DeclaringType ?? throw new NotSupportedException ("Do not know the type to create!");
+		var declType  = GetDeclaringType (cinfo);
 
 #pragma warning disable IL2072
 		var self      = (IJavaPeerable) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject (declType);
@@ -238,6 +238,11 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		self.SetPeerReference (reference);
 
 		cinfo.Invoke (self, argumentValues);
+
+		[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "🤷‍♂️")]
+		[return: DynamicallyAccessedMembers (Constructors)]
+		Type GetDeclaringType (ConstructorInfo cinfo) =>
+			cinfo.DeclaringType ?? throw new NotSupportedException ("Do not know the type to create!");
 	}
 
 	public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
