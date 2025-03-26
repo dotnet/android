@@ -287,6 +287,8 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
 	AndroidSystem::setup_app_library_directories (runtimeApks, applicationDirs, haveSplitApks);
 
+	set_profile_options ();
+
 	gather_assemblies_and_libraries (runtimeApks, haveSplitApks);
 
 	size_t clr_init_time_index;
@@ -486,4 +488,21 @@ auto Host::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcep
 
 	AndroidSystem::init_max_gref_count ();
 	return JNI_VERSION_1_6;
+}
+
+inline void
+Host::set_profile_options () noexcept
+{
+	// We want to avoid dynamic allocation, thus let’s create a buffer that can take both the property value and a
+	// path without allocation
+	dynamic_local_string<SENSIBLE_PATH_MAX + Constants::PROPERTY_VALUE_BUFFER_LEN> value;
+	{
+		dynamic_local_string<Constants::PROPERTY_VALUE_BUFFER_LEN> prop_value;
+		if (AndroidSystem::monodroid_get_system_property (Constants::DEBUG_MONO_PROFILE_PROPERTY, prop_value) == 0)
+			return;
+
+		value.assign (prop_value);
+		log_info (LOG_DEFAULT, "Setting DOTNET_DiagnosticPorts with: {}", optional_string (value.get ()));
+		setenv ("DOTNET_DiagnosticPorts", value.get (), 1);
+	}
 }

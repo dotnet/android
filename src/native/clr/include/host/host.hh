@@ -34,6 +34,7 @@ namespace xamarin::android {
 		static auto zip_scan_callback (std::string_view const& apk_path, int apk_fd, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, uint32_t offset, uint32_t size) -> bool;
 		static void gather_assemblies_and_libraries (jstring_array_wrapper& runtimeApks, bool have_split_apks);
 		static void scan_filesystem_for_assemblies_and_libraries () noexcept;
+		static void set_profile_options () noexcept;
 
 		static size_t clr_get_runtime_property (const char *key, char *value_buffer, size_t value_buffer_size, void *contract_context) noexcept;
 		static bool clr_external_assembly_probe (const char *path, void **data_start, int64_t *size) noexcept;
