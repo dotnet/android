@@ -233,6 +233,7 @@
   <PropertyGroup>
     <_MonoRuntimeFlavorDirName>mono</_MonoRuntimeFlavorDirName>
     <_CLRRuntimeFlavorDirName>clr</_CLRRuntimeFlavorDirName>
+    <_RuntimeRedistDirName>redist</_RuntimeRedistDirName>
   </PropertyGroup>
 
 

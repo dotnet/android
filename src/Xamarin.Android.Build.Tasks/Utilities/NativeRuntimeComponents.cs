@@ -135,7 +135,6 @@ class NativeRuntimeComponents
 				DontExportSymbols = true,
 			},
 
-			// Remove once https://github.com/dotnet/runtime/pull/107615 is merged and released
 			new Archive ("libunwind.a") {
 				DontExportSymbols = true,
 			},
@@ -146,12 +145,9 @@ class NativeRuntimeComponents
 		NativeLibraries = new () {
 			"c",
 			"dl",
+			"log",
 			"m",
 			"z",
-			"log",
-
-			// Atomic is a static library in clang, need to investigate if it's really needed
-//			"atomic",
 		};
 
 		// Files that will be linked before any other object/archive/library files

@@ -43,9 +43,14 @@ Contains code to build and link the native runtime at application build time.
           Inputs="@(_NativeAssemblyTarget);@(_SelectedNativeArchive)"
           Outputs="@(_UnifiedNativeRuntime)"
           Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' ">
+
+    <!-- AndroidApiLevel must be set to the same version our runtime, MonoVM and CoreCLR are built
+         against -->
     <LinkNativeRuntime
         MonoComponents="@(_MonoComponent)"
         AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+        AndroidNdkDirectory="$(_AndroidNdkDirectory)"
+        AndroidApiLevel="$(AndroidMinimumSupportedApiLevel)"
         IntermediateOutputPath="$(IntermediateOutputPath)"
         NativeArchives="@(_SelectedNativeArchive)"
         NativeObjectFiles="@(_NativeAssemblyTarget)"
@@ -55,7 +60,8 @@ Contains code to build and link the native runtime at application build time.
         LinkLibraries="@(_RequiredLinkLibraries)"
         OutputRuntimes="@(_UnifiedNativeRuntime)"
         SupportedAbis="@(_BuildTargetAbis)"
-        SaveDebugSymbols="true"
+        SaveDebugSymbols="false"
+        StripDebugSymbols="false"
         RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)" />
 
     <ItemGroup>
