@@ -9,14 +9,14 @@ steps:
     # Run this to log the output for the user
     git status
 
-    # Run this to error the build if untracked files
-    $process= git status --porcelain --untracked-files=no
+    # Run this to error the build if modified/untracked files exist
+    $process= git status --porcelain
 
     if ($process)
     {
-        Write-Host "##vso[task.logissue type=error]git tree has modified tracked files."
+        Write-Host "##vso[task.logissue type=error]git tree has modified or untracked files."
         Write-Host "##vso[task.complete result=Failed;]"
     }
-  displayName: Ensure no modified committed files
+  displayName: Ensure no modified/untracked files
   workingDirectory: ${{ parameters.xaSourcePath }}
   condition: ${{ parameters.condition }}
