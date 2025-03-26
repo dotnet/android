@@ -58,7 +58,7 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.Pkg7Zip_CommandLine,                 StripQuotes (@"@Pkg7-Zip_CommandLine@"));
 			properties.Add (KnownProperties.PkgXamarin_LibZipSharp,              StripQuotes (@"@PkgXamarin_LibZipSharp@"));
 			properties.Add (KnownProperties.ProductVersion,                      StripQuotes ("@ProductVersion@"));
-			properties.Add (KnownProperties.RuntimeRedistDirName,                StripQuotes ("@_RuntimeRedistDirName@"));
+            properties.Add (KnownProperties.RuntimeRedistDirName,                StripQuotes ("@_RuntimeRedistDirName@"));
 			properties.Add (KnownProperties.XABuildToolsFolder,                  StripQuotes (@"@XABuildToolsFolder@"));
 			properties.Add (KnownProperties.XABuildToolsVersion,                 StripQuotes ("@XABuildToolsVersion@"));
 			properties.Add (KnownProperties.XABuildToolsPackagePrefixMacOS,      StripQuotes ("@XABuildToolsPackagePrefixMacOS@"));
