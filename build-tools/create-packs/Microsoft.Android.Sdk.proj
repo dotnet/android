@@ -20,6 +20,11 @@ core workload SDK packs imported by WorkloadManifest.targets.
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)SignList.xml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(MSBuildThisFileDirectory)SignVerifyIgnore.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <PropertyGroup>
     <BeforePack>
       _GetDefaultPackageVersion;
@@ -72,8 +77,6 @@ core workload SDK packs imported by WorkloadManifest.targets.
           TargetPath="data\$(DotNetAndroidTargetFramework)$(AndroidLatestUnstableApiLevel)"
           Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidLatestUnstableApiLevel)' and Exists('$(_MonoAndroidNETOutputRoot)$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml') "
       />
-      <None Include="$(MSBuildThisFileDirectory)SignList.xml" CopyToOutputDirectory="PreserveNewest" />
-      <None Include="$(MSBuildThisFileDirectory)SignVerifyIgnore.txt" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>
 

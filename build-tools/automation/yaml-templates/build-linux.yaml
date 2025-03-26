@@ -93,8 +93,8 @@ stages:
       inputs:
         SourceFolder: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-unsigned
         Contents: |
-          'Microsoft.Android.Sdk.Linux*.symbols.nupkg'
-          SignList.xml
+          **/Microsoft.Android.Sdk.Linux*.symbols.nupkg
+          **/SignList.xml
         TargetFolder: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux-symbols
 
     - task: DeleteFiles@1

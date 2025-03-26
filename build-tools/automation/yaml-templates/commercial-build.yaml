@@ -73,8 +73,8 @@ steps:
   inputs:
     SourceFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
     Contents: |
-      '*.symbols.nupkg'
-      SignList.xml
+      **/*.symbols.nupkg
+      **/SignList.xml
     TargetFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned-symbols
 
 - task: DeleteFiles@1
