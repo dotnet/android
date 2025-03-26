@@ -15,7 +15,6 @@ class NativeLinker
 {
 	static readonly List<string> standardArgs = new () {
 		"--shared",
-		"--allow-shlib-undefined",
 		// TODO: need to enable zstd in binutils build
 		// "--compress-debug-sections=zstd",
 		// TODO: test the commented-out flags
@@ -42,8 +41,12 @@ class NativeLinker
 	readonly CancellationToken? cancellationToken;
 	readonly Action? cancelTask;
 
-	public bool StripDebugSymbols { get; set; }
-	public bool SaveDebugSymbols  { get; set; }
+	public bool StripDebugSymbols { get; set; } = true;
+	public bool SaveDebugSymbols  { get; set; } = true;
+	public bool AllowUndefinedSymbols { get; set; } = false;
+	public bool UseNdkLibraries { get; set; } = false;
+	public string? NdkRootPath { get; set; }
+	public string? NdkApiLevel { get; set; }
 
 	public NativeLinker (TaskLoggingHelper log, string abi, string soname, string binutilsDir, string intermediateDir,
 	                     IEnumerable<ITaskItem> runtimePackLibDirs, CancellationToken? cancellationToken = null, Action? cancelTask = null)
@@ -96,6 +99,16 @@ class NativeLinker
 	public bool Link (ITaskItem outputLibraryPath, List<ITaskItem> objectFiles, List<ITaskItem> archives, List<ITaskItem> libraries,
 	                  List<ITaskItem> linkStartFiles, List<ITaskItem> linkEndFiles, ICollection<ITaskItem>? exportDynamicSymbols = null)
 	{
+		if (UseNdkLibraries) {
+			if (String.IsNullOrEmpty (NdkRootPath)) {
+				throw new InvalidOperationException ("Internal error: request to use NDK libraries, but NDK root not specified.");
+			}
+
+			if (String.IsNullOrEmpty (NdkApiLevel)) {
+				throw new InvalidOperationException ("Internal error: request to use NDK libraries, but NDK API level not specified.");
+			}
+		}
+
 		log.LogDebugMessage ($"Linking: {outputLibraryPath}");
 		EnsureCorrectAbi (outputLibraryPath);
 		EnsureCorrectAbi (objectFiles);
@@ -111,6 +124,17 @@ class NativeLinker
 		using var sw = new StreamWriter (File.Open (respFilePath, FileMode.Create, FileAccess.Write, FileShare.Read), new UTF8Encoding (false));
 		foreach (string arg in standardArgs) {
 			sw.WriteLine (arg);
+		}
+
+		if (AllowUndefinedSymbols) {
+			sw.WriteLine ("--allow-shlib-undefined");
+		} else {
+			sw.WriteLine ("--no-undefined");
+		}
+
+		// This MUST go before extra args, since the NDK library path must take precedence over the path in extra args set in the ctor
+		if (UseNdkLibraries) {
+			sw.WriteLine ($"-L {MonoAndroidHelper.QuoteFileNameArgument (GetAbiNdkRootDir ())}");
 		}
 
 		foreach (string arg in extraArgs) {
@@ -160,8 +184,7 @@ class NativeLinker
 			return ret;
 		}
 
-		ret = ExtractDebugSymbols (outputLibraryPath);
-		return ret;
+		return ExtractDebugSymbols (outputLibraryPath);
 
 		void WriteFilesToResponseFile (StreamWriter sw, List<ITaskItem> files)
 		{
@@ -200,6 +223,15 @@ class NativeLinker
 			// Purposefully not calling TryParse, let it throw and let us know if the value isn't a boolean.
 			return Boolean.Parse (value);
 		}
+	}
+
+	string GetAbiNdkRootDir ()
+	{
+		// Let it throw if invalid
+		int apiLevel = Int32.Parse (NdkApiLevel);
+		NdkTools ndk = NdkTools.Create (NdkRootPath, logErrors: true, log: log);
+
+		return ndk.GetDirectoryPath (NdkToolchainDir.PlatformLib, MonoAndroidHelper.AbiToTargetArch (abi), apiLevel);
 	}
 
 	void EnsureCorrectAbi (ITaskItem item)
@@ -243,6 +275,7 @@ class NativeLinker
 
 		stdoutLines.Clear ();
 		stderrLines.Clear ();
+
 		args.Clear ();
 		args.Add ("--strip-debug");
 		args.Add ("--strip-unneeded");
