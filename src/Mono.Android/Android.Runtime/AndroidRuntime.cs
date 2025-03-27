@@ -260,6 +260,7 @@ namespace Android.Runtime {
 
 		bool jniAddNativeMethodRegistrationAttributePresent;
 
+		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 		const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 		const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
 
@@ -390,6 +391,19 @@ namespace Android.Runtime {
 					TargetJniMethodParameterCount   = paramCount,
 					TargetJniMethodInstanceToStatic = method.is_static,
 			};
+		}
+
+		[return: DynamicallyAccessedMembers (Constructors)]
+		protected override Type? GetInvokerTypeCore (
+			[DynamicallyAccessedMembers (Constructors)]
+			Type type)
+		{
+			if (type.IsInterface || type.IsAbstract) {
+				return JavaObjectExtensions.GetInvokerType (type)
+					?? base.GetInvokerTypeCore (type);
+			}
+
+			return null;
 		}
 
 		delegate Delegate GetCallbackHandler ();
