@@ -16,15 +16,15 @@ using Java.Interop;
 
 namespace Microsoft.Android.Runtime;
 
-class NativeAotValueManager : JniRuntime.JniValueManager
+class ManagedValueManager : JniRuntime.JniValueManager
 {
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
-	readonly JniRuntime.JniTypeManager TypeManager;
 	Dictionary<int, List<IJavaPeerable>>?   RegisteredInstances = new Dictionary<int, List<IJavaPeerable>>();
 
-	public NativeAotValueManager(JniRuntime.JniTypeManager typeManager) =>
-		TypeManager = typeManager;
+	internal ManagedValueManager ()
+	{
+	}
 
 	public override void WaitForGCBridgeProcessing ()
 	{
@@ -33,7 +33,7 @@ class NativeAotValueManager : JniRuntime.JniValueManager
 	public override void CollectPeers ()
 	{
 		if (RegisteredInstances == null)
-			throw new ObjectDisposedException (nameof (NativeAotValueManager));
+			throw new ObjectDisposedException (nameof (ManagedValueManager));
 
 		var peers = new List<IJavaPeerable> ();
 
@@ -62,7 +62,7 @@ class NativeAotValueManager : JniRuntime.JniValueManager
 	public override void AddPeer (IJavaPeerable value)
 	{
 		if (RegisteredInstances == null)
-			throw new ObjectDisposedException (nameof (NativeAotValueManager));
+			throw new ObjectDisposedException (nameof (ManagedValueManager));
 
 		var r = value.PeerReference;
 		if (!r.IsValid)
@@ -127,7 +127,7 @@ class NativeAotValueManager : JniRuntime.JniValueManager
 	public override IJavaPeerable? PeekPeer (JniObjectReference reference)
 	{
 		if (RegisteredInstances == null)
-			throw new ObjectDisposedException (nameof (NativeAotValueManager));
+			throw new ObjectDisposedException (nameof (ManagedValueManager));
 
 		if (!reference.IsValid)
 			return null;
@@ -153,7 +153,7 @@ class NativeAotValueManager : JniRuntime.JniValueManager
 	public override void RemovePeer (IJavaPeerable value)
 	{
 		if (RegisteredInstances == null)
-			throw new ObjectDisposedException (nameof (NativeAotValueManager));
+			throw new ObjectDisposedException (nameof (ManagedValueManager));
 
 		if (value == null)
 			throw new ArgumentNullException (nameof (value));
@@ -230,7 +230,7 @@ class NativeAotValueManager : JniRuntime.JniValueManager
 
 	void ActivateViaReflection (JniObjectReference reference, ConstructorInfo cinfo, object?[]? argumentValues)
 	{
-		var declType  = cinfo.DeclaringType ?? throw new NotSupportedException ("Do not know the type to create!");
+		var declType  = GetDeclaringType (cinfo);
 
 #pragma warning disable IL2072
 		var self      = (IJavaPeerable) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject (declType);
@@ -238,12 +238,17 @@ class NativeAotValueManager : JniRuntime.JniValueManager
 		self.SetPeerReference (reference);
 
 		cinfo.Invoke (self, argumentValues);
+
+		[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "🤷‍♂️")]
+		[return: DynamicallyAccessedMembers (Constructors)]
+		Type GetDeclaringType (ConstructorInfo cinfo) =>
+			cinfo.DeclaringType ?? throw new NotSupportedException ("Do not know the type to create!");
 	}
 
 	public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 	{
 		if (RegisteredInstances == null)
-			throw new ObjectDisposedException (nameof (NativeAotValueManager));
+			throw new ObjectDisposedException (nameof (ManagedValueManager));
 
 		lock (RegisteredInstances) {
 			var peers = new List<JniSurfacedPeerInfo> (RegisteredInstances.Count);

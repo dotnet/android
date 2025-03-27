@@ -23,12 +23,14 @@ namespace Android.Runtime {
 		internal AndroidRuntime (IntPtr jnienv,
 				IntPtr vm,
 				IntPtr classLoader,
-				IntPtr classLoader_loadClass,
+				JniRuntime.JniTypeManager? typeManager,
+				JniRuntime.JniValueManager? valueManager,
 				bool jniAddNativeMethodRegistrationAttributePresent)
 			: base (new AndroidRuntimeOptions (jnienv,
 					vm,
 					classLoader,
-					classLoader_loadClass,
+					typeManager,
+					valueManager,
 					jniAddNativeMethodRegistrationAttributePresent))
 		{
 			// This is not ideal, but we need to set this while the runtime is initializing but we can't do it directly from the `JNIEnvInit.Initialize` method, since
@@ -93,16 +95,16 @@ namespace Android.Runtime {
 		public AndroidRuntimeOptions (IntPtr jnienv,
 				IntPtr vm,
 				IntPtr classLoader,
-				IntPtr classLoader_loadClass,
+				JniRuntime.JniTypeManager? typeManager,
+				JniRuntime.JniValueManager? valueManager,
 				bool jniAddNativeMethodRegistrationAttributePresent)
 		{
 			EnvironmentPointer      = jnienv;
 			ClassLoader             = new JniObjectReference (classLoader, JniObjectReferenceType.Global);
-			ClassLoader_LoadClass_id= classLoader_loadClass;
 			InvocationPointer       = vm;
 			ObjectReferenceManager  = new AndroidObjectReferenceManager ();
-			TypeManager             = new AndroidTypeManager (jniAddNativeMethodRegistrationAttributePresent);
-			ValueManager            = new AndroidValueManager ();
+			TypeManager             = typeManager ?? new AndroidTypeManager (jniAddNativeMethodRegistrationAttributePresent);
+			ValueManager            = valueManager ?? new AndroidValueManager ();
 			UseMarshalMemberBuilder = false;
 			JniAddNativeMethodRegistrationAttributePresent = jniAddNativeMethodRegistrationAttributePresent;
 		}
