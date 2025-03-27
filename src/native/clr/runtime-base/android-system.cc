@@ -216,7 +216,7 @@ AndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks
 
 	uint16_t built_for_cpu = 0, running_on_cpu = 0;
 	bool is64bit = false;
-	_monodroid_detect_cpu_and_architecture (built_for_cpu, running_on_cpu, is64bit);
+	monodroid_detect_cpu_and_architecture (built_for_cpu, running_on_cpu, is64bit);
 	setup_apk_directories (running_on_cpu, runtimeApks, have_split_apks);
 }
 
