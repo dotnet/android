@@ -354,15 +354,13 @@ namespace Java.Interop
 			{
 				var jniTypeName = JniEnvironment.Types.GetJniTypeNameFromClass (klass);
 
-				Type? type = null;
 				while (jniTypeName != null) {
 					JniTypeSignature sig;
 					if (!JniTypeSignature.TryParse (jniTypeName, out sig))
 						return null;
 
-					type    = Runtime.TypeManager.GetType (sig);
-
-					if (type != null && targetType.IsAssignableFrom (type)) {
+					Type? type = GetTypeAssignableTo (sig, targetType);
+					if (type != null) {
 						var peer = TryCreatePeerInstance (ref reference, transfer, type);
 
 						if (peer != null) {
@@ -382,6 +380,18 @@ namespace Java.Interop
 				JniObjectReference.Dispose (ref klass, JniObjectReferenceOptions.CopyAndDispose);
 
 				return TryCreatePeerInstance (ref reference, transfer, targetType);
+
+				[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "Types returned here should be preserved via other means.")]
+				[return: DynamicallyAccessedMembers (Constructors)]
+				Type? GetTypeAssignableTo (JniTypeSignature sig, Type targetType)
+				{
+					foreach (var t in Runtime.TypeManager.GetTypes (sig)) {
+						if (targetType.IsAssignableFrom (t)) {
+							return t;
+						}
+					}
+					return null;
+				}
 			}
 
 			IJavaPeerable? TryCreatePeerInstance (
@@ -637,7 +647,7 @@ namespace Java.Interop
 						return marshaler.Value;
 				}
 
-				
+
 				var listType    = GetListType (type);
 				if (listType != null) {
 					var elementType = listType.GenericTypeArguments [0];

@@ -108,6 +108,11 @@ namespace Java.InteropTests
 		{
 		}
 
+		// TODO: [JavaCallable ("staticActionNullableFloat", Signature="(Ljava/lang/Float;)V")]
+		public static void StaticActionNullableFloat (float? f)
+		{
+		}
+
 		[JavaCallable ("staticFuncThisMethodTakesLotsOfParameters", Signature="(ZBCSIJFDLjava/lang/Object;Ljava/lang/String;Ljava/util/ArrayList;Ljava/lang/String;Ljava/lang/Object;DFJ)Z")]
 		public static bool StaticFuncThisMethodTakesLotsOfParameters (
 				bool                a,

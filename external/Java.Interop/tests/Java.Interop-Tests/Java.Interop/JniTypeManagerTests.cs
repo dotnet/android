@@ -33,6 +33,8 @@ namespace Java.InteropTests
 			AssertGetJniTypeInfoForType (typeof (bool),     "Z",    true,   0);
 			AssertGetJniTypeInfoForType (typeof (void),     "V",    true,   0);
 
+			AssertGetJniTypeInfoForType (typeof (float?),      "java/lang/Float",   true,   0);
+
 			AssertGetJniTypeInfoForType (typeof (JavaObject),  "java/lang/Object",  false,  0);
 
 			// Enums are their underlying type
@@ -130,6 +132,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (typeof (float),    GetType ("F"));
 			Assert.AreEqual (typeof (double),   GetType ("D"));
 			Assert.AreEqual (typeof (string),   GetType ("java/lang/String"));
+			Assert.AreEqual (typeof (float?),   GetType ("java/lang/Float"));
 			Assert.AreEqual (null,              GetType ("com/example/does/not/exist"));
 			Assert.AreEqual (null,              GetType ("Lcom/example/does/not/exist;"));
 			Assert.AreEqual (null,              GetType ("[Lcom/example/does/not/exist;"));
