@@ -96,8 +96,7 @@ class NativeLinker
 		extraArgs.Add ($"-L {MonoAndroidHelper.QuoteFileNameArgument (nativeLibsDir)}");
 	}
 
-	public bool Link (ITaskItem outputLibraryPath, List<ITaskItem> objectFiles, List<ITaskItem> archives, List<ITaskItem> libraries,
-	                  List<ITaskItem> linkStartFiles, List<ITaskItem> linkEndFiles, ICollection<ITaskItem>? exportDynamicSymbols = null)
+	public bool Link (ITaskItem outputLibraryPath, List<ITaskItem> linkItems, List<ITaskItem> linkStartFiles, List<ITaskItem> linkEndFiles, ICollection<ITaskItem>? exportDynamicSymbols = null)
 	{
 		if (UseNdkLibraries) {
 			if (String.IsNullOrEmpty (NdkRootPath)) {
@@ -111,9 +110,7 @@ class NativeLinker
 
 		log.LogDebugMessage ($"Linking: {outputLibraryPath}");
 		EnsureCorrectAbi (outputLibraryPath);
-		EnsureCorrectAbi (objectFiles);
-		EnsureCorrectAbi (archives);
-		EnsureCorrectAbi (libraries);
+		EnsureCorrectAbi (linkItems);
 		EnsureCorrectAbi (linkStartFiles);
 		EnsureCorrectAbi (linkEndFiles);
 
@@ -147,8 +144,7 @@ class NativeLinker
 
 		var excludeExportsLibs = new List<string> ();
 		WriteFilesToResponseFile (sw, linkStartFiles);
-		WriteFilesToResponseFile (sw, objectFiles);
-		WriteFilesToResponseFile (sw, archives);
+		WriteFilesToResponseFile (sw, linkItems);
 
 		if (exportDynamicSymbols != null && exportDynamicSymbols.Count > 0) {
 			foreach (ITaskItem symbolItem in exportDynamicSymbols) {
@@ -159,10 +155,6 @@ class NativeLinker
 		if (excludeExportsLibs.Count > 0) {
 			string libs = String.Join (",", excludeExportsLibs);
 			sw.WriteLine ($"--exclude-libs={libs}");
-		}
-
-		foreach (ITaskItem libItem in libraries) {
-			sw.WriteLine ($"-l{libItem.ItemSpec}");
 		}
 
 		WriteFilesToResponseFile (sw, linkEndFiles);
@@ -197,7 +189,10 @@ class NativeLinker
 
 				if (wholeArchive) {
 					sw.Write ("--whole-archive ");
+				} else if (IsNativeSharedLibrary (file)) {
+					sw.Write ("-l");
 				}
+
 				sw.Write (MonoAndroidHelper.QuoteFileNameArgument (file.ItemSpec));
 				// string abi = file.GetMetadata ("Abi") ?? String.Empty;
 				// string destDir = Path.Combine ("/tmp/t", abi);
@@ -212,6 +207,7 @@ class NativeLinker
 
 		bool IncludeWholeArchive (ITaskItem item) => ParseBooleanMetadata (item, KnownMetadata.NativeLinkWholeArchive);
 		bool ExcludeFromExports (ITaskItem item) => ParseBooleanMetadata (item, KnownMetadata.NativeDontExportSymbols);
+		bool IsNativeSharedLibrary (ITaskItem item) => ParseBooleanMetadata (item, KnownMetadata.NativeSharedLibrary);
 
 		bool ParseBooleanMetadata (ITaskItem item, string metadata)
 		{
@@ -381,6 +377,8 @@ class NativeLinker
 		return true;
 	}
 
+	// TODO: collect stdout and stderr messages and log with LogError or LogMessage, depending on
+	//       process exit code.
 	void OnOutputData (string linkerName, object sender, DataReceivedEventArgs e)
 	{
 		if (e.Data != null) {
