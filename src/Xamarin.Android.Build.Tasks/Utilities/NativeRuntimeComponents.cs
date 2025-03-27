@@ -7,6 +7,14 @@ namespace Xamarin.Android.Tasks;
 
 class NativeRuntimeComponents
 {
+	public sealed class KnownSets
+	{
+		public const string BCL = "bcl";
+		public const string CoreClrRuntime = "coreclr";
+		public const string CplusPlusRuntime = "c++";
+		public const string XamarinAndroidRuntime = "xaruntime";
+	}
+
 	internal class Archive
 	{
 		public readonly string Name;
@@ -15,13 +23,16 @@ class NativeRuntimeComponents
 		public readonly bool WholeArchive;
 		public bool DontExportSymbols { get; set; }
 		public HashSet<string>? SymbolsToPreserve { get; set; }
+		public string SetName { get; }
+
 		public readonly bool NeedsClrHack;
 
 		Func<Archive, bool> shouldInclude;
 
-		public Archive (string name, Func<Archive, bool>? include = null, bool wholeArchive = false, string? jniOnLoadName = null, bool needsClrHack = false)
+		public Archive (string name, string setName, Func<Archive, bool>? include = null, bool wholeArchive = false, string? jniOnLoadName = null, bool needsClrHack = false)
 		{
 			Name = name;
+			SetName = setName;
 			shouldInclude = include == null ? ((Archive arch) => true) : include;
 			WholeArchive = wholeArchive;
 			JniOnLoadName = jniOnLoadName;
@@ -32,21 +43,39 @@ class NativeRuntimeComponents
 	sealed class ClangBuiltinsArchive : Archive
 	{
 		public ClangBuiltinsArchive (string clangAbi)
-			: base ($"libclang_rt.builtins-{clangAbi}-android.a")
+			: base ($"libclang_rt.builtins-{clangAbi}-android.a", KnownSets.CplusPlusRuntime)
 		{}
 	}
 
 	class AndroidArchive : Archive
 	{
 		public AndroidArchive (string name, bool wholeArchive = false)
-			: base (name, wholeArchive: wholeArchive)
+			: base (name, KnownSets.XamarinAndroidRuntime, wholeArchive: wholeArchive)
 		{}
 	}
 
 	sealed class BclArchive : Archive
 	{
 		public BclArchive (string name, bool wholeArchive = false, string? jniOnLoadName = null)
-			: base (name, wholeArchive: wholeArchive, jniOnLoadName: jniOnLoadName, needsClrHack: true)
+			: base (name, KnownSets.BCL, wholeArchive: wholeArchive, jniOnLoadName: jniOnLoadName, needsClrHack: true)
+		{
+			DontExportSymbols = true;
+		}
+	}
+
+	sealed class ClrArchive : Archive
+	{
+		public ClrArchive (string name, bool wholeArchive = false)
+			: base (name, KnownSets.CoreClrRuntime, wholeArchive: wholeArchive, needsClrHack: true)
+		{
+			DontExportSymbols = true;
+		}
+	}
+
+	sealed class CplusPlusArchive : Archive
+	{
+		public CplusPlusArchive (string name)
+			: base (name, KnownSets.CplusPlusRuntime)
 		{
 			DontExportSymbols = true;
 		}
@@ -59,36 +88,21 @@ class NativeRuntimeComponents
 	public readonly List<string> LinkStartFiles;
 	public readonly List<string> LinkEndFiles;
 
-	// LINK_LIBRARIES = pal/src/eventprovider/dummyprovider/libeventprovider.a  -llog  nativeresources/libnativeresourcestring.a  shared_minipal/libminipal.a  -ldl  -latomic -lm
 	public NativeRuntimeComponents (ITaskItem[] monoComponents)
 	{
 		this.monoComponents = monoComponents;
 		KnownArchives = new () {
 			// CoreCLR runtime + BCL
-			new Archive ("libcoreclr.a", needsClrHack: true) {
-				DontExportSymbols = true,
-			},
-			new Archive ("libcoreclrminipal.a", needsClrHack: true) {
-				DontExportSymbols = true,
-			},
-			new Archive ("libgc_pal.a", needsClrHack: true) {
-				DontExportSymbols = true,
-			},
-			new Archive ("libcoreclrpal.a", wholeArchive: true, needsClrHack: true) {
-				DontExportSymbols = true,
-			},
-			new Archive ("libeventprovider.a", needsClrHack: true) {
-				DontExportSymbols = true,
-			},
-			new Archive ("libnativeresourcestring.a", needsClrHack: true) {
-				DontExportSymbols = true,
-			},
-			new Archive ("libminipal.a", needsClrHack: true) {
-				DontExportSymbols = true,
-			},
-			new Archive ("libbrotlicommon.a", needsClrHack: true),
-			new Archive ("libbrotlidec.a", needsClrHack: true),
-			new Archive ("libbrotlienc.a", needsClrHack: true),
+			new ClrArchive ("libcoreclr.a"),
+			new ClrArchive ("libcoreclrminipal.a"),
+			new ClrArchive ("libgc_pal.a"),
+			new ClrArchive ("libcoreclrpal.a", wholeArchive: true),
+			new ClrArchive ("libeventprovider.a"),
+			new ClrArchive ("libnativeresourcestring.a"),
+			new ClrArchive ("libminipal.a"),
+			new ClrArchive ("libbrotlicommon.a"),
+			new ClrArchive ("libbrotlidec.a"),
+			new ClrArchive ("libbrotlienc.a"),
 
 			new BclArchive ("libSystem.Globalization.Native.a"),
 			new BclArchive ("libSystem.IO.Compression.Native.a"),
@@ -121,23 +135,17 @@ class NativeRuntimeComponents
 			new AndroidArchive ("libxa-shared-bits-release.a"),
 			new AndroidArchive ("libxamarin-startup-release.a"),
 
+			// C++ standard library
+			new CplusPlusArchive ("libc++_static.a"),
+			new CplusPlusArchive ("libc++abi.a"),
+
 			// LLVM clang built-ins archives
 			new ClangBuiltinsArchive ("aarch64"),
 			new ClangBuiltinsArchive ("arm"),
 			new ClangBuiltinsArchive ("i686"),
 			new ClangBuiltinsArchive ("x86_64"),
 
-			// C++ standard library
-			new Archive ("libc++_static.a") {
-				DontExportSymbols = true,
-			},
-			new Archive ("libc++abi.a") {
-				DontExportSymbols = true,
-			},
-
-			new Archive ("libunwind.a") {
-				DontExportSymbols = true,
-			},
+			new CplusPlusArchive ("libunwind.a"), // techically it's from clang
 		};
 
 		// Just the base names of libraries to link into the unified runtime.  Must have all the dependencies of all the static archives we
