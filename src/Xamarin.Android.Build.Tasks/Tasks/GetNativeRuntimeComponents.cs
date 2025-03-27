@@ -114,6 +114,7 @@ public class GetNativeRuntimeComponents : AndroidTask
 		foreach (string abi in uniqueAbis) {
 			var item = new TaskItem (libName);
 			item.SetMetadata (KnownMetadata.Abi, abi);
+			item.SetMetadata (KnownMetadata.NativeSharedLibrary, "true");
 			libraries.Add (item);
 		}
 	}
@@ -139,6 +140,7 @@ public class GetNativeRuntimeComponents : AndroidTask
 			Log.LogDebugMessage ($"  creating msbuild item for archive '{archive.Name}'");
 			ITaskItem newItem = DoMakeItem ("_ResolvedNativeArchive", resolvedArchive, uniqueAbis);
 			newItem.SetMetadata (KnownMetadata.NativeLinkWholeArchive, archive.WholeArchive.ToString ());
+			newItem.SetMetadata (KnownMetadata.NativeLinkItemSet, archive.SetName);
 			if (archive.DontExportSymbols) {
 				newItem.SetMetadata (KnownMetadata.NativeDontExportSymbols, "true");
 			}
@@ -163,7 +165,7 @@ public class GetNativeRuntimeComponents : AndroidTask
 		var relativeArtifactPaths = new List<(string path, string abi)> ();
 		string archiveName = Path.GetFileName (archive.Name);
 		string commonClrObjDir = Path.Combine ("artifacts", "obj", "coreclr");
-		const string config = "Debug"; // or Release
+		const string config = "Release";
 
 		if (IsArchive ("libcoreclr.a")) {
 			archiveName = "libcoreclr_static.a";
@@ -190,7 +192,7 @@ public class GetNativeRuntimeComponents : AndroidTask
 		foreach ((string relPath, string abi) in relativeArtifactPaths) {
 			string filePath = Path.Combine (HackLocalClrRepoPath, relPath, archiveName);
 			if (!File.Exists (filePath)) {
-				Log.LogWarning ($"    [HACK] file {filePath} not found");
+				Log.LogError ($"    [HACK] file {filePath} not found");
 				continue;
 			}
 			Log.LogWarning ($"   [HACK] adding runtime component '{filePath}'");
@@ -199,6 +201,7 @@ public class GetNativeRuntimeComponents : AndroidTask
 			tempItem.SetMetadata (KnownMetadata.RuntimeIdentifier, MonoAndroidHelper.AbiToRid (abi));
 			ITaskItem newItem = DoMakeItem ("_ResolvedNativeArchive", tempItem, uniqueAbis);
 			newItem.SetMetadata (KnownMetadata.NativeLinkWholeArchive, archive.WholeArchive.ToString ());
+			newItem.SetMetadata (KnownMetadata.NativeLinkItemSet, archive.SetName);
 			if (archive.DontExportSymbols) {
 				newItem.SetMetadata (KnownMetadata.NativeDontExportSymbols, "true");
 			}
