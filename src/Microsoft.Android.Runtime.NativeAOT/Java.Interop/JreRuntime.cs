@@ -61,7 +61,7 @@ namespace Java.Interop {
 			builder.TypeManager     ??= new NativeAotTypeManager ();
 #endif  // NET
 
-			builder.ValueManager            ??= new NativeAotValueManager (builder.TypeManager);
+			builder.ValueManager            ??= new ManagedValueManager ();
 			builder.ObjectReferenceManager  ??= new ManagedObjectReferenceManager (builder.JniGlobalReferenceLogWriter, builder.JniLocalReferenceLogWriter);
 
 			if (builder.InvocationPointer != IntPtr.Zero || builder.EnvironmentPointer != IntPtr.Zero)
