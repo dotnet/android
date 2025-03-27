@@ -18,7 +18,7 @@ resources:
   - repository: yaml-templates
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/main
+    ref: refs/heads/dev/pjc/sign-files-checkout
     endpoint: xamarin
   - repository: android-platform-support
     type: git
@@ -265,6 +265,7 @@ extends:
           uploadPrefix: sign-mac-win
           handleUnmappedFiles: fail
           timeoutInMinutes: 240
+          templateResourceName: yaml-templates
 
       # Check - "Xamarin.Android (Prepare .NET Release Sign Linux Archive)"
       - template: sign-artifacts/jobs/v3.yml@yaml-templates
@@ -280,6 +281,7 @@ extends:
           uploadPrefix: sign-linux
           handleUnmappedFiles: fail
           timeoutInMinutes: 120
+          templateResourceName: yaml-templates
 
       # Check - "Xamarin.Android (Prepare .NET Release Convert NuGet to MSI)"
       - template: nuget-msi-convert/job/v4.yml@yaml-templates
