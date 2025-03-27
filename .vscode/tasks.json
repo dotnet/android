@@ -168,6 +168,34 @@
             "build-sample-under-dotnet"
           ]
         },
+        {
+            "label": "run-nativeaot-sample",
+            "type": "shell",
+            "windows": { "command": "samples/NativeAOT/runwithdebugger.ps1" },
+            "linux": { "command": "samples/NativeAOT/runwithdebugger.sh" },
+            "osx": { "command": "samples/NativeAOT/runwithdebugger.sh" },
+            "group": {
+              "kind": "build",
+              "isDefault": true
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ],
+        },
+        {
+            "label": "stop-nativeaot-lldb-server",
+            "type": "shell",
+            "windows":{ "command": "adb shell run-as net.dot.hellonativeaot killall -9 lldb-server" },
+            "linux": { "command": "adb shell run-as net.dot.hellonativeaot killall -9 lldb-server" },
+            "osx": { "command": "adb shell run-as net.dot.hellonativeaot killall -9 lldb-server" },
+            "group": {
+              "kind": "build",
+              "isDefault": true
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ],
+        },
     ],
     "inputs": [
       {
