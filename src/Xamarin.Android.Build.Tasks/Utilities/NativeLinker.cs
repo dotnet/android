@@ -371,6 +371,7 @@ class NativeLinker
 			stdout_completed.WaitOne (TimeSpan.FromSeconds (30));
 		}
 
+		log.LogDebugMessage ($"[{label}] exit code == {proc.ExitCode}");
 		if (proc.ExitCode != 0) {
 			cancelTask?.Invoke ();
 			return false;
@@ -379,8 +380,6 @@ class NativeLinker
 		return true;
 	}
 
-	// TODO: collect stdout and stderr messages and log with LogError or LogMessage, depending on
-	//       process exit code.
 	void OnOutputData (string linkerName, object sender, DataReceivedEventArgs e)
 	{
 		if (e.Data != null) {
