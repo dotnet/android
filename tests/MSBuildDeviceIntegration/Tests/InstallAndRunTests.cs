@@ -41,10 +41,6 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease
 			};
 			proj.SetProperty ("_AndroidTypeMapImplementation", typemapImplementation);
-			// NOTE: not working yet with AndroidEnableMarshalMethods=true
-			if (typemapImplementation == "managed") {
-				proj.SetProperty ("AndroidEnableMarshalMethods", false.ToString ());
-			}
 			using var builder = CreateApkBuilder ();
 			builder.Save (proj);
 
