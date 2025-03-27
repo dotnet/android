@@ -79,13 +79,7 @@ namespace Android.Runtime
 			JniType.GetCachedJniType (ref jniType, className);
 
 			ReadOnlySpan<char> methods = new ReadOnlySpan<char> ((void*) methods_ptr, methods_len);
-			if (androidRuntime!.TypeManager is AndroidTypeManager typeManager) {
-				// Span-based overload
-				typeManager.RegisterNativeMembers (jniType, type, methods);
-			} else {
-				// String-based overload
-				androidRuntime!.TypeManager.RegisterNativeMembers (jniType, type, methods);
-			}
+			androidRuntime!.TypeManager.RegisterNativeMembers (jniType, type, methods);
 		}
 
 		// NOTE: should have different name than `Initialize` to avoid:
