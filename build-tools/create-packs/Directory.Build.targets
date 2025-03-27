@@ -75,7 +75,7 @@
 
   <Target Name="CreateAllPacks"
       DependsOnTargets="DeleteExtractedWorkloadPacks;_SetGlobalProperties;GetXAVersionInfo;_CleanNuGetDirectory;_CreateItemGroups;_CreatePreviewPacks;_CreateDefaultRefPack">
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:AndroidRID=%(_AndroidRIDs.Identity) -p:AndroidRuntime=%(_AndroidRIDs.Runtime) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -bl:$(XamarinAndroidSourcePath)bin/Build$(Configuration)/Microsoft.Android.Runtime.binlog -p:AndroidRID=%(_AndroidRIDs.Identity) -p:AndroidRuntime=%(_AndroidRIDs.Runtime) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:HostOS=Linux   &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' == 'Linux' " />
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:HostOS=Darwin  &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' == 'Darwin' " />
