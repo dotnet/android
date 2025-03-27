@@ -88,6 +88,8 @@ projects that use the Microsoft.Android framework in .NET 6+.
     </ItemGroup>
 
     <ItemGroup>
+      <FrameworkListFileClass Include="@(_AndroidRuntimePackAssemblies->'%(Filename)%(Extension)')" Profile="Android" />
+      <FrameworkListFileClass Include="@(NativeRuntimeAsset->'%(Filename)%(Extension)')" Profile="Android" />
       <FilesToPackage Include="@(_AndroidRuntimePackAssemblies)" />
       <FilesToPackage Include="@(_AndroidRuntimePackAssemblies->'%(RelativeDir)%(Filename).pdb')" IsSymbolFile="true" Condition=" '%(_AndroidRuntimePackAssemblies.NoSymbols)' != 'true' " />
     </ItemGroup>

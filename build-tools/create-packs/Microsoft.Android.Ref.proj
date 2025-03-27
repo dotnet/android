@@ -41,6 +41,8 @@ by projects that use the Microsoft.Android framework in .NET 6+.
     </ItemGroup>
 
     <ItemGroup>
+      <FrameworkListFileClass Include="@(_AndroidRefPackAssemblies->'%(Filename)%(Extension)')" Profile="Android" />
+      <FrameworkListFileClass Include="@(_AndroidRefPackAnalyzers->'%(Filename)%(Extension)')" Profile="Android" />
       <FilesToPackage Include="@(_AndroidRefPackAssemblies)" TargetPath="$(_AndroidRefPackAssemblyPath)" />
       <FilesToPackage Include="@(_AndroidRefPackAnalyzers)" TargetPath="$(_AndroidRefPackAnalyzersPath)" />
       <FilesToPackage Include="$(_MonoAndroidNETDefaultOutDir)Java.Interop.xml" TargetPath="$(_AndroidRefPackAssemblyPath)" />

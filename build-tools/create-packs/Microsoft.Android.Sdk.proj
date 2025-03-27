@@ -53,6 +53,7 @@ core workload SDK packs imported by WorkloadManifest.targets.
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Sdk.ILLink.pdb" TargetPath="tools" />
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)%(_LocalizationLanguages.Identity)\Microsoft.Android.Sdk.ILLink.resources.dll" TargetPath="tools\%(_LocalizationLanguages.Identity)" />
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)%(_LocalizationLanguages.Identity)\Java.Interop.Localization.resources.dll" TargetPath="tools\%(_LocalizationLanguages.Identity)" />
+      <FilesToPackage Include="@(JIUtilityFile->'$(MicrosoftAndroidSdkOutDir)%(Identity)')"  TargetPath="tools" />
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)class-parse.dll" TargetPath="tools" />
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)class-parse.pdb" TargetPath="tools" />
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)class-parse.runtimeconfig.json" TargetPath="tools" />
