@@ -1610,6 +1610,7 @@ because xbuild doesn't support framework reference assemblies.
       GenerateNativeAssembly="$(_AndroidGenerateNativeAssembly)"
       IntermediateOutputDirectory="$(IntermediateOutputPath)"
       SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)"
+      TypemapImplementation="$(_AndroidTypeMapImplementation)"
       TypemapOutputDirectory="$(_NativeAssemblySourceDir)">
   </GenerateTypeMappings>
 

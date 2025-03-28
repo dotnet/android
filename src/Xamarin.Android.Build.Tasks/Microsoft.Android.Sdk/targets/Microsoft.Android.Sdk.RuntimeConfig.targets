@@ -12,6 +12,7 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
 
   <PropertyGroup>
     <_BinaryRuntimeConfigPath>$(IntermediateOutputPath)$(ProjectRuntimeConfigFileName).bin</_BinaryRuntimeConfigPath>
+    <_AndroidUseManagedTypeMap Condition=" '$(_AndroidTypeMapImplementation)' == 'managed' ">true</_AndroidUseManagedTypeMap>
   </PropertyGroup>
 
   <ItemGroup>
@@ -44,6 +45,10 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
     <!-- https://github.com/dotnet/runtime/commit/fecf3eeffd3650566555e15292f9df0d3abcdfc6 -->
     <RuntimeHostConfigurationOption Include="Microsoft.Extensions.DependencyInjection.DisableDynamicEngine"
         Value="$(AndroidAvoidEmitForPerformance)"
+        Trim="true"
+    />
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.ManagedTypeMap"
+        Value="$([MSBuild]::ValueOrDefault('$(_AndroidUseManagedTypeMap)', 'false'))"
         Trim="true"
     />
   </ItemGroup>
