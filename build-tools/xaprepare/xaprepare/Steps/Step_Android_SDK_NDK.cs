@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,6 +22,25 @@ namespace Xamarin.Android.Prepare
 			public string DestinationDir;
 		}
 #nullable enable
+
+		static readonly string[] CRTFiles = {
+			"crtbegin_so.o",
+			"crtend_so.o",
+			"libc.so",
+			"libdl.so",
+			"liblog.so",
+			"libm.so",
+			"libz.so",
+		};
+
+		static readonly string[] CPPAbiFiles = {
+			"libc++_static.a",
+			"libc++abi.a",
+		};
+
+		static readonly string[] ClangArchFiles = {
+			"libunwind.a",
+		};
 
 		bool RefreshSdk = false;
 		bool RefreshNdk = false;
@@ -151,11 +171,84 @@ namespace Xamarin.Android.Prepare
 
 		bool GatherNDKInfo (Context context)
 		{
+			if (!CopyRedistributableFiles (context)) {
+				return false;
+			}
+
 			// Ignore NDK property setting if not installing the NDK
 			if (!DependencyTypeToInstall.HasFlag (AndroidToolchainComponentType.BuildDependency))
 				return true;
 			else
 				return context.BuildInfo.GatherNDKInfo (context);
+		}
+
+		bool CopyRedistributableFiles (Context context)
+		{
+			string androidVersionPath = Path.Combine (Configurables.Paths.AndroidToolchainRootDirectory, "AndroidVersion.txt");
+			if (!File.Exists (androidVersionPath)) {
+				throw new InvalidOperationException ($"Android version file '{androidVersionPath}' not found");
+			}
+
+			string[]? lines = File.ReadAllLines (androidVersionPath);
+			if (lines == null || lines.Length < 1) {
+				throw new InvalidOperationException ($"Unknown format of Android version file '{androidVersionPath}'");
+			}
+
+			// First line is (should be) the LLVM version, we need just the main release number
+			string[] llvmVersion = lines[0].Split ('.');
+			if (llvmVersion.Length < 3) {
+				throw new InvalidOperationException ($"Unknown LLVM version format for '{lines[0]}'");
+			}
+
+			string clangLibPath = Path.Combine (
+				Configurables.Paths.AndroidClangRootDirectory,
+				llvmVersion[0],
+				"lib",
+				"linux"
+			);
+
+			foreach (var kvp in Configurables.Defaults.AndroidToolchainPrefixes) {
+				string abi = kvp.Key;
+				string abiDir = Path.Combine (Configurables.Paths.AndroidToolchainSysrootLibDirectory, kvp.Value);
+				string crtFilesPath = Path.Combine (abiDir, BuildAndroidPlatforms.NdkMinimumAPI.ToString (CultureInfo.InvariantCulture));
+				string clangArch = Configurables.Defaults.AbiToClangArch[abi];
+
+				foreach (string file in CRTFiles) {
+					CopyFile (abi, crtFilesPath, file);
+				}
+
+				foreach (string file in CPPAbiFiles) {
+					CopyFile (abi, abiDir, file);
+				}
+
+				CopyFile (abi, clangLibPath, $"libclang_rt.builtins-{clangArch}-android.a");
+
+				// Yay, consistency
+				if (String.Compare (clangArch, "i686", StringComparison.Ordinal) == 0) {
+					clangArch = "i386";
+				}
+				string clangArchLibPath = Path.Combine (clangLibPath, clangArch);
+
+				foreach (string file in ClangArchFiles) {
+					CopyFile (abi, clangArchLibPath, file);
+				}
+			}
+
+			return true;
+
+			void CopyFile (string abi, string sourceDir, string fileName)
+			{
+				Log.StatusLine ($"  {context.Characters.Bullet} Copying NDK redistributable: ", $"{fileName} ({abi})", tailColor: ConsoleColor.White);
+				string rid = Configurables.Defaults.AbiToRID [abi];
+				string outputDir = Path.Combine (
+					context.Properties.GetRequiredValue (KnownProperties.NativeRuntimeOutputRootDir),
+					context.Properties.GetRequiredValue (KnownProperties.RuntimeRedistDirName),
+					rid
+				);
+
+				string sourceFile = Path.Combine (sourceDir, fileName);
+				Utilities.CopyFileToDir (sourceFile, outputDir);
+			}
 		}
 
 		void CheckPackageStatus (Context context, string packageCacheDir, AndroidPackage pkg, List <AndroidPackage> toDownload)
