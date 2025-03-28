@@ -25,11 +25,13 @@ class NativeLinker
 		"-z relro",
 		"-z noexecstack",
 		"-z max-page-size=16384",
+		"-z now", // we need it for security reasons (without it PLT can be overwritten)
 		"--enable-new-dtags",
 		"--build-id=sha1",
 		"--warn-shared-textrel",
 		"--fatal-warnings",
-		"--no-rosegment"
+		"--no-rosegment",
+		"--eh-frame-hdr", // CoreCLR needs it
 	};
 
 	readonly List<string> extraArgs = new ();
