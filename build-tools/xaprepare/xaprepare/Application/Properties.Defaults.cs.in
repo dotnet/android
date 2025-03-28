@@ -22,7 +22,7 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.AndroidToolchainDirectory,           StripQuotes (@"@AndroidToolchainDirectory@"));
 			properties.Add (KnownProperties.AutoProvision,                       StripQuotes ("@AutoProvision@"));
 			properties.Add (KnownProperties.AutoProvisionUsesSudo,               StripQuotes ("@AutoProvisionUsesSudo@"));
-            properties.Add (KnownProperties.CLRRuntimeFlavorDirName,             StripQuotes ("@_CLRRuntimeFlavorDirName@"));
+			properties.Add (KnownProperties.CLRRuntimeFlavorDirName,             StripQuotes ("@_CLRRuntimeFlavorDirName@"));
 			properties.Add (KnownProperties.CMakePath,                           StripQuotes (@"@CmakePath@"));
 			properties.Add (KnownProperties.Configuration,                       StripQuotes ("@Configuration@"));
 			properties.Add (KnownProperties.CommandLineToolsFolder,              StripQuotes ("@CommandLineToolsFolder@"));
@@ -49,16 +49,16 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.MicrosoftAndroidSdkOutDir,           StripQuotes (@"@MicrosoftAndroidSdkOutDir@"));
 			properties.Add (KnownProperties.MonoCecilVersion,                    StripQuotes ("@MonoCecilVersion@"));
 			properties.Add (KnownProperties.MonoDarwinPackageUrl,                StripQuotes ("@MonoDarwinPackageUrl@"));
-            properties.Add (KnownProperties.MonoRuntimeFlavorDirName,            StripQuotes ("@_MonoRuntimeFlavorDirName@"));
+			properties.Add (KnownProperties.MonoRuntimeFlavorDirName,            StripQuotes ("@_MonoRuntimeFlavorDirName@"));
 			properties.Add (KnownProperties.MonoRequiredMinimumVersion,          StripQuotes ("@MonoRequiredMinimumVersion@"));
 			properties.Add (KnownProperties.MonoRequiredMaximumVersion,          StripQuotes ("@MonoRequiredMaximumVersion@"));
 			properties.Add (KnownProperties.MonoSourceFullPath,                  StripQuotes (@"@MonoSourceFullPath@"));
-            properties.Add (KnownProperties.NativeRuntimeOutputRootDir,          StripQuotes (@"@NativeRuntimeOutputRootDir@"));
+			properties.Add (KnownProperties.NativeRuntimeOutputRootDir,          StripQuotes (@"@NativeRuntimeOutputRootDir@"));
 			properties.Add (KnownProperties.NinjaPath,                           StripQuotes (@"@NinjaPath@"));
 			properties.Add (KnownProperties.Pkg7Zip_CommandLine,                 StripQuotes (@"@Pkg7-Zip_CommandLine@"));
 			properties.Add (KnownProperties.PkgXamarin_LibZipSharp,              StripQuotes (@"@PkgXamarin_LibZipSharp@"));
 			properties.Add (KnownProperties.ProductVersion,                      StripQuotes ("@ProductVersion@"));
-            properties.Add (KnownProperties.RuntimeRedistDirName,                StripQuotes ("@_RuntimeRedistDirName@"));
+			properties.Add (KnownProperties.RuntimeRedistDirName,                StripQuotes ("@_RuntimeRedistDirName@"));
 			properties.Add (KnownProperties.XABuildToolsFolder,                  StripQuotes (@"@XABuildToolsFolder@"));
 			properties.Add (KnownProperties.XABuildToolsVersion,                 StripQuotes ("@XABuildToolsVersion@"));
 			properties.Add (KnownProperties.XABuildToolsPackagePrefixMacOS,      StripQuotes ("@XABuildToolsPackagePrefixMacOS@"));
