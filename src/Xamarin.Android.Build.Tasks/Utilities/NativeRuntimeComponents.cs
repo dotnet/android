@@ -96,7 +96,10 @@ class NativeRuntimeComponents
 			new ClrArchive ("libcoreclr.a"),
 			new ClrArchive ("libcoreclrminipal.a"),
 			new ClrArchive ("libgc_pal.a"),
-			new ClrArchive ("libcoreclrpal.a", wholeArchive: true),
+
+			// CoreCLR links this archive whole, but it appears to work fine for us when linked in a normal way.
+			// Leave the flag commented, just in case we discover something not working right.
+			new ClrArchive ("libcoreclrpal.a"/*, wholeArchive: true*/),
 			new ClrArchive ("libeventprovider.a"),
 			new ClrArchive ("libnativeresourcestring.a"),
 			new ClrArchive ("libminipal.a"),
