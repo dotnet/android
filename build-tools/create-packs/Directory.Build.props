@@ -13,8 +13,8 @@
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <!-- Ignore TargetFramework reference group related warnings, these are workload packs not functional NuGets. -->
     <NoWarn>$(NoWarn);NU5128;NU5131</NoWarn>
-    <!-- Allow NU5123 for pull requests -->
-    <NoWarn Condition=" '$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)' != '' ">$(NoWarn);NU5123</NoWarn>
+    <!-- Allow NU5123 for pull requests, which will have $SYSTEM_PULLREQUEST_ISFORK set to true or false -->
+    <NoWarn Condition=" '$(SYSTEM_PULLREQUEST_ISFORK)' != '' ">$(NoWarn);NU5123</NoWarn>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
