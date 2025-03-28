@@ -68,5 +68,3 @@ variables:
   value: 'cat != SystemApplication & cat != TimeZoneInfo & cat != Localization'
 - name: RunMAUITestJob
   value: true
-- name: MSBUILDLOGALLENVIRONMENTVARIABLES
-  value: 1
