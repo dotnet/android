@@ -33,6 +33,13 @@
     <!-- HACK: make dotnet restore include Microsoft.NETCore.App.Runtime.NativeAOT.linux-bionic-arm64 -->
     <_IsPublishing Condition=" '$(_IsPublishing)' == '' and '$(_AndroidRuntime)' == 'NativeAOT' ">true</_IsPublishing>
 
+    <!-- HACK: NativeCompilationDuringPublish is set to `true` by Microsoft.NETCore.Native.targets
+         by default, which enforces running of the SetupOSSpecificProps target which, if NDK is
+         present or its bin directory isn't in PATH, will error out not being able to find
+         llvm-objcopy or objcopy even though the current build doesn't need them because it doesn't
+         target NativeAOT. Setting it here will hopefully prevent that from happening. -->
+    <NativeCompilationDuringPublish Condition=" '$(NativeCompilationDuringPublish)' == '' And '$(_AndroidRuntime)' != 'NativeAOT' ">false</NativeCompilationDuringPublish>
+
     <!-- Use $(AndroidMinimumSupportedApiLevel) for $(SupportedOSPlatformVersion) if unset -->
     <SupportedOSPlatformVersion Condition=" '$(SupportedOSPlatformVersion)' == '' ">$(AndroidMinimumSupportedApiLevel)</SupportedOSPlatformVersion>
     <!-- $(SupportedOSPlatformVersion) must be '21.0', but we should support integer values like '21' -->

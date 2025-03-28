@@ -45,6 +45,8 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (SettingCombinationsSource))]
 		public void SettingCombinations (bool isRelease, bool useInterpreter, bool publishTrimmed, bool aot, bool expected)
 		{
+			TargetRuntimeHelper.IgnoreIfIncompatibleWithMonoAOT (aot);
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
@@ -103,6 +105,10 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void XA0119Interpreter ()
 		{
+			if (TargetRuntimeHelper.UseCoreCLR) {
+				Assert.Ignore ("Not supported by CoreCLR");
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 				AotAssemblies = true,

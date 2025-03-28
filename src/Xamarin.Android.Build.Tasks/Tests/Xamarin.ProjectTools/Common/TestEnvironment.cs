@@ -124,14 +124,23 @@ namespace Xamarin.ProjectTools
 				IsWindows ? "Microsoft.Android.Sdk.Windows" :
 				"Microsoft.Android.Sdk.Linux";
 
+			Console.WriteLine ($"GetDotNetAndroidSdkDir (\"{packsDirectory}\")");
 			var sdkDir = Path.Combine (packsDirectory, sdkName);
-			if (!Directory.Exists (sdkDir))
+			Console.WriteLine ($"  sdkDir == '{sdkDir}'");
+			if (!Directory.Exists (sdkDir)) {
+				Console.WriteLine ("     doesn't exist, returning String.Empty");
 				return string.Empty;
+			}
 
 			var dirs = from d in Directory.GetDirectories (sdkDir)
 				   let version = ParseVersion (d)
 				   orderby version descending
 				   select d;
+
+			Console.WriteLine ("  Got dirs:");
+			foreach (string dir in dirs) {
+				Console.WriteLine ($"    {dir}");
+			}
 
 			return dirs.FirstOrDefault ();
 		}
@@ -143,7 +152,10 @@ namespace Xamarin.ProjectTools
 		/// </summary>
 		public static bool UseLocalBuildOutput {
 			get {
+				Console.WriteLine ($"UseLocalBuildOutput: local sdk dir == '{LocalDotNetAndroidSdkDirectory}'");
 				var msbuildDir = Path.Combine (LocalDotNetAndroidSdkDirectory, "tools");
+				bool tasksExist = File.Exists (Path.Combine (msbuildDir, "Xamarin.Android.Build.Tasks.dll"));
+				Console.WriteLine ($"UseLocalBuildOutput: msbuild dir == '{msbuildDir}' (tasks exist? {tasksExist})");
 				return Directory.Exists (msbuildDir) && File.Exists (Path.Combine (msbuildDir, "Xamarin.Android.Build.Tasks.dll"));
 			}
 		}
@@ -176,4 +188,3 @@ namespace Xamarin.ProjectTools
 		public static bool IsUsingJdk11 => AndroidSdkResolver.GetJavaSdkVersionString ().Contains ("11.0");
 	}
 }
-
