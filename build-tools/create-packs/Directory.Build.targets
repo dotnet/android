@@ -49,7 +49,7 @@
       <_GlobalProperties Include="-p:IncludeSymbols=False" />
     </ItemGroup>
     <PropertyGroup>
-      <_BinlogPrefix>-bl:$(XamarinAndroidSourcePath)bin/Build$(Configuration)/msbuild-$([System.DateTime]::UtcNow.ToString('YYYYMMddThhmmss'))-</_BinlogPrefix>
+      <_BinlogPrefix>-bl:$(XamarinAndroidSourcePath)bin/Build$(Configuration)/msbuild-$([System.DateTime]::UtcNow.ToString('yyyyMMddThhmmss'))-</_BinlogPrefix>
     </PropertyGroup>
   </Target>
 
