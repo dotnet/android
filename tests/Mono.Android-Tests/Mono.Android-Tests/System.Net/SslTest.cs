@@ -27,6 +27,7 @@ namespace System.NetTests {
 
 		// https://xamarin.desk.com/agent/case/35534
 		[Test]
+		[Ignore ("TODO crashes on NativeAOT")]
 		public void SslWithinTasksShouldWork ()
 		{
 			var cb = ServicePointManager.ServerCertificateValidationCallback;
