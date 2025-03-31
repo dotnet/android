@@ -23,8 +23,8 @@ namespace Android.Runtime {
 		internal AndroidRuntime (IntPtr jnienv,
 				IntPtr vm,
 				IntPtr classLoader,
-				JniRuntime.JniTypeManager? typeManager,
-				JniRuntime.JniValueManager? valueManager,
+				JniRuntime.JniTypeManager typeManager,
+				JniRuntime.JniValueManager valueManager,
 				bool jniAddNativeMethodRegistrationAttributePresent)
 			: base (new AndroidRuntimeOptions (jnienv,
 					vm,
@@ -95,16 +95,16 @@ namespace Android.Runtime {
 		public AndroidRuntimeOptions (IntPtr jnienv,
 				IntPtr vm,
 				IntPtr classLoader,
-				JniRuntime.JniTypeManager? typeManager,
-				JniRuntime.JniValueManager? valueManager,
+				JniRuntime.JniTypeManager typeManager,
+				JniRuntime.JniValueManager valueManager,
 				bool jniAddNativeMethodRegistrationAttributePresent)
 		{
 			EnvironmentPointer      = jnienv;
 			ClassLoader             = new JniObjectReference (classLoader, JniObjectReferenceType.Global);
 			InvocationPointer       = vm;
 			ObjectReferenceManager  = new AndroidObjectReferenceManager ();
-			TypeManager             = typeManager ?? new AndroidTypeManager (jniAddNativeMethodRegistrationAttributePresent);
-			ValueManager            = valueManager ?? new AndroidValueManager ();
+			TypeManager             = typeManager;
+			ValueManager            = valueManager;
 			UseMarshalMemberBuilder = false;
 			JniAddNativeMethodRegistrationAttributePresent = jniAddNativeMethodRegistrationAttributePresent;
 		}
