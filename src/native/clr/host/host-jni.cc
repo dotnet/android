@@ -1,6 +1,7 @@
 #include <host/host.hh>
 #include <host/host-jni.hh>
 #include <shared/log_types.hh>
+#include <runtime-base/timing-internal.hh>
 
 using namespace xamarin::android;
 
@@ -15,11 +16,9 @@ JNI_OnLoad (JavaVM *vm, void *reserved)
 JNIEXPORT void
 JNICALL Java_mono_android_Runtime_dumpTimingData ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] jclass klass)
 {
-	// if (internal_timing == nullptr) {
-	// 	return;
-	// }
-
-	// internal_timing.dump ();
+	if (FastTiming::enabled ()) [[unlikely]] {
+		internal_timing.dump ();
+	}
 }
 
 JNIEXPORT void
