@@ -1021,6 +1021,13 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
     <comment>The following are literal names and should not be translated: .NET.
 {0} - The name of the .NET runtime, such as CoreCLR or NativeAOT.</comment>
   </data>
+  <data name="XA1041" xml:space="preserve">
+    <value>The MSBuild property '{0}' has an invalid value of '{1}'</value>
+    <comment>The following are literal names and should not be translated: .NET.
+{0} - The MSBuild property that has the incorrect value.
+{1} - The current value of the property
+</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>Java dependency '{0}' is not satisfied.</value>
     <comment>The following are literal names and should not be translated: Java.

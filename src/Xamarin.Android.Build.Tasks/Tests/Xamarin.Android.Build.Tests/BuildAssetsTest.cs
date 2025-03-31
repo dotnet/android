@@ -201,18 +201,17 @@ namespace Xamarin.Android.Build.Tests
 				},
 			};
 			var envar = new Dictionary<string, string> {
-				{ "MONOANDROIDASSETSPREFIX", Path.GetFullPath (Path.Combine (Root, "temp", TestName, "App")) },
+				{ "MonoAndroidAssetsPrefix", Path.GetFullPath (Path.Combine (Root, "temp", TestName, "App")) },
 			};
 			using var appb = CreateApkBuilder (Path.Combine ("temp", TestName, "App"));
+			appb.ThrowOnBuildFailure = false;
 			appb.Save (app);
 			using var b = CreateDllBuilder (Path.Combine ("temp", TestName, "Library"));
+			b.ThrowOnBuildFailure = false;
 			Directory.CreateDirectory (Path.Combine (Root, "temp", TestName, "App"));
 			Assert.IsTrue (b.Build (proj, environmentVariables: envar), "Build should have succeeded.");
-			var aarPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
-			FileAssert.Exists (aarPath);
-			using (var aar = ZipHelper.OpenZip (aarPath)) {
-				aar.AssertEntryContents (aarPath, "assets/asset1.txt", contents: "bar");
-			}
+			Assert.IsFalse (appb.Build (app, environmentVariables: envar), "Build should have failed.");
+			Assert.IsTrue (appb.LastBuildOutput.ContainsText ("error XA1041"), "XA1041 should have been raised.");
 		}
 	}
 }
