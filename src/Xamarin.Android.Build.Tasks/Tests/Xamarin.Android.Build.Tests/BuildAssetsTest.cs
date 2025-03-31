@@ -213,7 +213,6 @@ namespace Xamarin.Android.Build.Tests
 			using (var aar = ZipHelper.OpenZip (aarPath)) {
 				aar.AssertEntryContents (aarPath, "assets/asset1.txt", contents: "bar");
 			}
-			Assert.Fail ();
 		}
 	}
 }
