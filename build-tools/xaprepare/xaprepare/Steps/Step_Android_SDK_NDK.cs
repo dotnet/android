@@ -31,7 +31,6 @@ namespace Xamarin.Android.Prepare
 			"libz.so",
 		};
 
-
 		bool RefreshSdk = false;
 		bool RefreshNdk = false;
 		AndroidToolchainComponentType DependencyTypeToInstall = AndroidToolchainComponentType.All;
