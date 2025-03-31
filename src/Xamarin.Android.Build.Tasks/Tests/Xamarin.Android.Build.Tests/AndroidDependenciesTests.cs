@@ -107,7 +107,8 @@ namespace Xamarin.Android.Build.Tests
 			var d = XDocument.Load (r);
 
 			var platformToolsPackage    = d.Root.Elements ("remotePackage")
-				.Where (e => "platform-tools" == (string) e.Attribute("path"))
+				.Where (e => "platform-tools" == (string) e.Attribute("path") &&
+					"android-sdk-preview-license" != (string) e.Element ("uses-license")?.Attribute ("ref"))
 				.FirstOrDefault ();
 
 			var revision    = platformToolsPackage.Element ("revision");
