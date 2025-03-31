@@ -2174,6 +2174,7 @@ because xbuild doesn't support framework reference assemblies.
     Outputs="@(_ApplicationSharedLibrary)"
     Condition=" '$(_AndroidEnableNativeRuntimeLinking)' != 'true' ">
   <LinkApplicationSharedLibraries
+      IntermediateOutputPath="$(IntermediateOutputPath)"
       ObjectFiles="@(_NativeAssemblyTarget)"
       ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
       DebugBuild="$(AndroidIncludeDebugSymbols)"
