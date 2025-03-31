@@ -31,7 +31,6 @@ class NativeLinker
 		"--warn-shared-textrel",
 		"--fatal-warnings",
 		"--no-rosegment",
-		"--eh-frame-hdr", // CoreCLR needs it
 	};
 
 	readonly List<string> extraArgs = new ();
@@ -47,8 +46,10 @@ class NativeLinker
 	public bool SaveDebugSymbols  { get; set; } = true;
 	public bool AllowUndefinedSymbols { get; set; } = false;
 	public bool UseNdkLibraries { get; set; } = false;
+	public bool TargetsCLR { get; set; }
 	public string? NdkRootPath { get; set; }
 	public string? NdkApiLevel { get; set; }
+	public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment64Bit;
 
 	public NativeLinker (TaskLoggingHelper log, string abi, string soname, string binutilsDir, string intermediateDir,
 	                     IEnumerable<ITaskItem> runtimePackLibDirs, CancellationToken? cancellationToken = null, Action? cancelTask = null)
@@ -65,10 +66,12 @@ class NativeLinker
 		extraArgs.Add ($"-soname {soname}");
 
 		string? elfArch = null;
+		uint maxPageSize;
 		switch (abi) {
 			case "armeabi-v7a":
 				extraArgs.Add ("-X");
 				elfArch = "armelf_linux_eabi";
+				maxPageSize = MonoAndroidHelper.ZipAlignmentToPageSize (AndroidZipAlign.ZipAlignment32Bit);
 				break;
 
 			case "arm64":
@@ -76,14 +79,17 @@ class NativeLinker
 			case "aarch64":
 				extraArgs.Add ("--fix-cortex-a53-843419");
 				elfArch = "aarch64linux";
+				maxPageSize = MonoAndroidHelper.ZipAlignmentToPageSize (ZipAlignmentPages);
 				break;
 
 			case "x86":
 				elfArch = "elf_i386";
+				maxPageSize = MonoAndroidHelper.ZipAlignmentToPageSize (AndroidZipAlign.ZipAlignment32Bit);
 				break;
 
 			case "x86_64":
 				elfArch = "elf_x86_64";
+				maxPageSize = MonoAndroidHelper.ZipAlignmentToPageSize (ZipAlignmentPages);
 				break;
 
 			default:
@@ -94,11 +100,27 @@ class NativeLinker
 			extraArgs.Add ($"-m {elfArch}");
 		}
 
+		extraArgs.Add ($"-z max-page-size={maxPageSize}");
+
 		string nativeLibsDir = MonoAndroidHelper.GetRuntimePackNativeLibDir (MonoAndroidHelper.AbiToTargetArch (abi), runtimePackLibDirs);
 		extraArgs.Add ($"-L {MonoAndroidHelper.QuoteFileNameArgument (nativeLibsDir)}");
 	}
 
-	public bool Link (ITaskItem outputLibraryPath, List<ITaskItem> linkItems, List<ITaskItem> linkStartFiles, List<ITaskItem> linkEndFiles, ICollection<ITaskItem>? exportDynamicSymbols = null)
+	/// <summary>
+	/// A helper method to create a task item that refers to a native library, for the purpose of linking
+	/// it into another library.  `baseLibraryName` must be just the "stem" of the library name (e.g. `c` or `dl`)
+	/// without any paths, prefixes or extensions.  The returned item will then be turned by the <see cref="Link" />
+	/// method into the `-l` parameter passed to the native linker.
+	/// </summary>
+	public static ITaskItem MakeLibraryItem (string baseLibraryName, string abi)
+	{
+		ITaskItem libItem = new TaskItem (baseLibraryName);
+		libItem.SetMetadata (KnownMetadata.Abi, abi);
+		libItem.SetMetadata (KnownMetadata.NativeSharedLibrary, "true");
+		return libItem;
+	}
+
+	public bool Link (ITaskItem outputLibraryPath, List<ITaskItem> linkItems, List<ITaskItem>? linkStartFiles = null, List<ITaskItem>? linkEndFiles = null, ICollection<ITaskItem>? exportDynamicSymbols = null)
 	{
 		if (UseNdkLibraries) {
 			if (String.IsNullOrEmpty (NdkRootPath)) {
@@ -129,6 +151,10 @@ class NativeLinker
 			sw.WriteLine ("--allow-shlib-undefined");
 		} else {
 			sw.WriteLine ("--no-undefined");
+		}
+
+		if (TargetsCLR) {
+			sw.WriteLine ("--eh-frame-hdr"); // CoreCLR needs it for its exception stack unwinding
 		}
 
 		// This MUST go before extra args, since the NDK library path must take precedence over the path in extra args set in the ctor
@@ -180,8 +206,12 @@ class NativeLinker
 
 		return ExtractDebugSymbols (outputLibraryPath);
 
-		void WriteFilesToResponseFile (StreamWriter sw, List<ITaskItem> files)
+		void WriteFilesToResponseFile (StreamWriter sw, List<ITaskItem>? files)
 		{
+			if (files == null) {
+				return;
+			}
+
 			foreach (ITaskItem file in files) {
 				bool wholeArchive = IncludeWholeArchive (file);
 
@@ -243,8 +273,12 @@ class NativeLinker
 		throw new InvalidOperationException ($"Internal error: '{item}' ABI ('{itemAbi}') doesn't have the expected value '{abi}'");
 	}
 
-	void EnsureCorrectAbi (List<ITaskItem> items)
+	void EnsureCorrectAbi (List<ITaskItem>? items)
 	{
+		if (items == null) {
+			return;
+		}
+
 		foreach (ITaskItem item in items) {
 			EnsureCorrectAbi (item);
 		}
