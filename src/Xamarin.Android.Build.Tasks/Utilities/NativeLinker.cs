@@ -356,62 +356,31 @@ class NativeLinker
 
 	bool RunCommand (string label, string binaryPath, List<string> args, List<string> stdoutLines, List<string> stderrLines)
 	{
-		using var stdout_completed = new ManualResetEvent (false);
-		using var stderr_completed = new ManualResetEvent (false);
-		var psi = new ProcessStartInfo () {
-			FileName = binaryPath,
-			Arguments = String.Join (" ", args),
-			UseShellExecute = false,
-			RedirectStandardOutput = true,
-			RedirectStandardError = true,
-			CreateNoWindow = true,
-			WindowStyle = ProcessWindowStyle.Hidden,
-		};
-
 		string binaryName = Path.GetFileName (ld);
-		log.LogDebugMessage ($"[{label}] {psi.FileName} {psi.Arguments}");
-
-		using var proc = new Process ();
-		proc.OutputDataReceived += (s, e) => {
-			if (e.Data != null) {
+		return MonoAndroidHelper.RunProcess (
+			label,
+			binaryPath,
+			String.Join (" ", args),
+			log,
+			onOutput: (s, e) => {
+				if (e.Data == null) {
+					return;
+				}
 				OnOutputData (binaryName, s, e);
 				stdoutLines.Add (e.Data);
-			} else {
-				stdout_completed.Set ();
-			}
-		};
+			},
+			onError: (s, e) => {
+				if (e.Data != null) {
+					return;
+				}
 
-		proc.ErrorDataReceived += (s, e) => {
-			if (e.Data != null) {
 				OnErrorData (binaryName, s, e);
 				stderrLines.Add (e.Data);
-			} else {
-				stderr_completed.Set ();
-			}
-		};
-
-		proc.StartInfo = psi;
-		proc.Start ();
-		proc.BeginOutputReadLine ();
-		proc.BeginErrorReadLine ();
-		cancellationToken?.Register (() => { try { proc.Kill (); } catch (Exception) { } });
-		proc.WaitForExit ();
-
-		if (psi.RedirectStandardError) {
-			stderr_completed.WaitOne (TimeSpan.FromSeconds (30));
-		}
-
-		if (psi.RedirectStandardOutput) {
-			stdout_completed.WaitOne (TimeSpan.FromSeconds (30));
-		}
-
-		log.LogDebugMessage ($"[{label}] exit code == {proc.ExitCode}");
-		if (proc.ExitCode != 0) {
-			cancelTask?.Invoke ();
-			return false;
-		}
-
-		return true;
+			},
+			cancellationToken,
+			cancelTask,
+			logWarningOnFailure: false
+		) == 0;
 	}
 
 	void OnOutputData (string linkerName, object sender, DataReceivedEventArgs e)
