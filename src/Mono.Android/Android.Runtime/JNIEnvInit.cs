@@ -114,11 +114,11 @@ namespace Android.Runtime
 			JniRuntime.JniTypeManager typeManager;
 			JniRuntime.JniValueManager valueManager;
 			if (RuntimeFeature.ManagedTypeMap) {
-				typeManager = new ManagedTypeManager ();
-				valueManager = new ManagedValueManager ();
+				typeManager     = new ManagedTypeManager ();
+				valueManager    = new ManagedValueManager ();
 			} else {
-				typeManager = new AndroidTypeManager (args->jniAddNativeMethodRegistrationAttributePresent != 0);
-				valueManager = RuntimeType == DotNetRuntimeType.MonoVM ? new AndroidValueManager () : new ManagedValueManager ();
+				typeManager     = new AndroidTypeManager (args->jniAddNativeMethodRegistrationAttributePresent != 0);
+				valueManager    = RuntimeType == DotNetRuntimeType.MonoVM ? new AndroidValueManager () : new ManagedValueManager ();
 			}
 			androidRuntime = new AndroidRuntime (
 					args->env,
