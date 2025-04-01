@@ -23,8 +23,8 @@ namespace Android.Runtime {
 		internal AndroidRuntime (IntPtr jnienv,
 				IntPtr vm,
 				IntPtr classLoader,
-				JniRuntime.JniTypeManager? typeManager,
-				JniRuntime.JniValueManager? valueManager,
+				JniRuntime.JniTypeManager typeManager,
+				JniRuntime.JniValueManager valueManager,
 				bool jniAddNativeMethodRegistrationAttributePresent)
 			: base (new AndroidRuntimeOptions (jnienv,
 					vm,
@@ -95,16 +95,16 @@ namespace Android.Runtime {
 		public AndroidRuntimeOptions (IntPtr jnienv,
 				IntPtr vm,
 				IntPtr classLoader,
-				JniRuntime.JniTypeManager? typeManager,
-				JniRuntime.JniValueManager? valueManager,
+				JniRuntime.JniTypeManager typeManager,
+				JniRuntime.JniValueManager valueManager,
 				bool jniAddNativeMethodRegistrationAttributePresent)
 		{
 			EnvironmentPointer      = jnienv;
 			ClassLoader             = new JniObjectReference (classLoader, JniObjectReferenceType.Global);
 			InvocationPointer       = vm;
 			ObjectReferenceManager  = new AndroidObjectReferenceManager ();
-			TypeManager             = typeManager ?? new AndroidTypeManager (jniAddNativeMethodRegistrationAttributePresent);
-			ValueManager            = valueManager ?? new AndroidValueManager ();
+			TypeManager             = typeManager;
+			ValueManager            = valueManager;
 			UseMarshalMemberBuilder = false;
 			JniAddNativeMethodRegistrationAttributePresent = jniAddNativeMethodRegistrationAttributePresent;
 		}
@@ -512,7 +512,7 @@ namespace Android.Runtime {
 		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value parsed from parameter 'methods'.")]
 		[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
 		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
-		public void RegisterNativeMembers (
+		public override void RegisterNativeMembers (
 				JniType nativeClass,
 				[DynamicallyAccessedMembers (MethodsAndPrivateNested)] Type type,
 				ReadOnlySpan<char> methods)

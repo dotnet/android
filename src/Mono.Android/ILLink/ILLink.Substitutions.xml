@@ -4,5 +4,9 @@
       <method signature="System.Boolean get_NegotiateAuthenticationIsEnabled()" body="stub" feature="Xamarin.Android.Net.UseNegotiateAuthentication" featurevalue="false" value="false" />
       <method signature="System.Boolean get_NegotiateAuthenticationIsEnabled()" body="stub" feature="Xamarin.Android.Net.UseNegotiateAuthentication" featurevalue="true" value="true" />
     </type>
+    <type fullname="Microsoft.Android.Runtime.RuntimeFeature">
+      <method signature="System.Boolean get_ManagedTypeMap()" body="stub" feature="Microsoft.Android.Runtime.RuntimeFeature.ManagedTypeMap" featurevalue="false" value="false" />
+      <method signature="System.Boolean get_ManagedTypeMap()" body="stub" feature="Microsoft.Android.Runtime.RuntimeFeature.ManagedTypeMap" featurevalue="true" value="true" />
+    </type>
   </assembly>
 </linker>
