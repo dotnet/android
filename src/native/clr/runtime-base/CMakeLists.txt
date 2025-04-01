@@ -55,6 +55,7 @@ set(XA_RUNTIME_BASE_SOURCES
   logger.cc
   timing.cc
   timing-internal.cc
+  timing-internal-exp.cc
   util.cc
 )
 add_clang_check_sources("${XA_RUNTIME_BASE_SOURCES}")

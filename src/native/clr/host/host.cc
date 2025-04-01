@@ -18,6 +18,7 @@
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
 #include <runtime-base/timing-internal.hh>
+#include <runtime-base/timing-internal-exp.hh>
 #include <shared/log_types.hh>
 #include <startup/zip.hh>
 
@@ -262,11 +263,13 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 
 	// If fast logging is disabled, log messages immediately
 	FastTiming::initialize ((Logger::log_timing_categories() & LogTimingCategories::FastBare) != LogTimingCategories::FastBare);
+	exp::FastTiming::initialize ((Logger::log_timing_categories() & LogTimingCategories::FastBare) != LogTimingCategories::FastBare);
 
 	size_t total_time_index;
 	if (FastTiming::enabled ()) [[unlikely]] {
 		_timing = std::make_shared<Timing> ();
 		total_time_index = internal_timing.start_event (TimingEventKind::TotalRuntimeInit);
+		exp::internal_timing.start_event (exp::TimingEventKind::TotalRuntimeInit);
 	}
 
 	jstring_array_wrapper applicationDirs (env, appDirs);
@@ -412,6 +415,7 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.end_event (native_to_managed_index);
 		internal_timing.end_event (total_time_index);
+		exp::internal_timing.end_event ();
 	}
 }
 
