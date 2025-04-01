@@ -181,7 +181,9 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		public void FullAssetPathRaisesError()
+		[TestCase("MonoAndroidAssetsPrefix")]
+		[TestCase("MonoAndroidResourcePrefix")]
+		public void FullPrefixRaisesError(string prefix)
 		{
 			var proj = new XamarinAndroidLibraryProject {
 				OtherBuildItems = {
@@ -200,16 +202,14 @@ namespace Xamarin.Android.Build.Tests
 					},
 				},
 			};
-			var envar = new Dictionary<string, string> {
-				{ "MonoAndroidAssetsPrefix", Path.GetFullPath (Path.Combine (Root, "temp", TestName, "App")) },
-				{ "MonoAndroidResourcePrefix", Path.GetFullPath (Path.Combine (Root, "temp", TestName, "App")) },
-			};
+			using var b = CreateDllBuilder (Path.Combine ("temp", TestName, "Library"));
 			using var appb = CreateApkBuilder (Path.Combine ("temp", TestName, "App"));
 			appb.ThrowOnBuildFailure = false;
-			appb.Save (app);
-			using var b = CreateDllBuilder (Path.Combine ("temp", TestName, "Library"));
 			b.ThrowOnBuildFailure = false;
 			Directory.CreateDirectory (Path.Combine (Root, "temp", TestName, "App"));
+			var envar = new Dictionary<string, string> {
+				{ prefix, Path.Combine (Root, "temp", TestName, "App") },
+			};
 			Assert.IsFalse (b.Build (proj, environmentVariables: envar), "Build should have failed.");
 			Assert.IsTrue (b.LastBuildOutput.ContainsText ("error XA1041"), "XA1041 should have been raised.");
 			Assert.IsFalse (appb.Build (app, environmentVariables: envar), "Build should have failed.");
