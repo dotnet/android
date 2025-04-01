@@ -202,6 +202,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			var envar = new Dictionary<string, string> {
 				{ "MonoAndroidAssetsPrefix", Path.GetFullPath (Path.Combine (Root, "temp", TestName, "App")) },
+				{ "MonoAndroidResourcePrefix", Path.GetFullPath (Path.Combine (Root, "temp", TestName, "App")) },
 			};
 			using var appb = CreateApkBuilder (Path.Combine ("temp", TestName, "App"));
 			appb.ThrowOnBuildFailure = false;
@@ -209,7 +210,8 @@ namespace Xamarin.Android.Build.Tests
 			using var b = CreateDllBuilder (Path.Combine ("temp", TestName, "Library"));
 			b.ThrowOnBuildFailure = false;
 			Directory.CreateDirectory (Path.Combine (Root, "temp", TestName, "App"));
-			Assert.IsTrue (b.Build (proj, environmentVariables: envar), "Build should have succeeded.");
+			Assert.IsFalse (b.Build (proj, environmentVariables: envar), "Build should have failed.");
+			Assert.IsTrue (b.LastBuildOutput.ContainsText ("error XA1041"), "XA1041 should have been raised.");
 			Assert.IsFalse (appb.Build (app, environmentVariables: envar), "Build should have failed.");
 			Assert.IsTrue (appb.LastBuildOutput.ContainsText ("error XA1041"), "XA1041 should have been raised.");
 		}
