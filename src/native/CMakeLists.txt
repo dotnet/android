@@ -592,7 +592,6 @@ if(BUILD_ARCHIVE_DSO_STUB)
   add_subdirectory(common/archive-dso-stub)
 else()
   add_subdirectory(common/java-interop)
-#  add_subdirectory(common/libstub)
   add_subdirectory(common/libunwind)
   add_subdirectory(common/lz4)
 
