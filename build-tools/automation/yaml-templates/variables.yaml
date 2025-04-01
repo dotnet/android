@@ -30,7 +30,7 @@ variables:
 - name: GitHub.Token
   value: $(github--pat--vs-mobiletools-engineering-service2)
 - name: HostedMacImage
-  value: macOS-14-arm64
+  value: macOS-15-arm64
 - name: HostedMacImageWithEmulator
   value: macOS-14
 - name: SharedMacPool
