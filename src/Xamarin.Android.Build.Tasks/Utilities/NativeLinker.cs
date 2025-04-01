@@ -370,7 +370,7 @@ class NativeLinker
 				stdoutLines.Add (e.Data);
 			},
 			onError: (s, e) => {
-				if (e.Data != null) {
+				if (e.Data == null) {
 					return;
 				}
 
