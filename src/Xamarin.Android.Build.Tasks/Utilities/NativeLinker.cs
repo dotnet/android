@@ -189,7 +189,7 @@ class NativeLinker
 		sw.Flush ();
 
 		var ldArgs = new List<string> {
-			$"@{respFilePath}",
+			$"@{MonoAndroidHelper.QuoteFileNameArgument (respFilePath)}",
 			"-o",
 			MonoAndroidHelper.QuoteFileNameArgument (outputLibraryPath.ItemSpec)
 		};
