@@ -425,8 +425,6 @@ namespace ${ROOT_NAMESPACE} {
 						$"{app.ProjectName}.pdb should be deployed!");
 					StringAssertEx.ContainsRegex ($@"NotifySync CopyFile.+{lib.ProjectName}\.pdb", appBuilder.LastBuildOutput,
 						$"{lib.ProjectName}.pdb should be deployed!");
-					StringAssertEx.ContainsRegex ($@"NotifySync CopyFile.+Mono.Android\.pdb", appBuilder.LastBuildOutput,
-						$"Mono.Android.pdb should be deployed!");
 				}
 
 				int breakcountHitCount = 0;

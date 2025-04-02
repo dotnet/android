@@ -2,11 +2,16 @@
   <Import Project="..\..\Directory.Build.props" />
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <PackageType>DotnetPlatform</PackageType>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <OutputPath>$(BootstrapOutputDirectory)nuget-unsigned\</OutputPath>
+    <SharedFrameworkName>Microsoft.Android</SharedFrameworkName>
+    <SharedFrameworkFriendlyName>.NET $(DotNetTargetFrameworkVersion) - $(SharedFrameworkName)</SharedFrameworkFriendlyName>
+    <SkipInstallerBuild>true</SkipInstallerBuild>
+    <SkipValidatePackage>true</SkipValidatePackage>
+    <PermitDllAndExeFilesLackingFileVersion>true</PermitDllAndExeFilesLackingFileVersion>
     <GenerateDependencyFile>false</GenerateDependencyFile>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <!-- Remove the `<group targetFramework=".NETStandard2.0" />` entry from the .nuspec. -->

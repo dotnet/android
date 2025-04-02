@@ -1529,7 +1529,6 @@ namespace App1
 						$"{AppPdbName} must be copied to bin directory");
 
 					var fileNames = new List<(string path, bool existsInBin)> {
-						("Mono.Android.pdb", false),
 						(AppPdbName,         true),
 						(LibraryPdbName,     true),
 						(AppDllName,         true),

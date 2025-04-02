@@ -19,8 +19,12 @@
         DestinationFiles="$(IntermediateOutputPath)$(PackageLicenseFile)"
         SkipUnchangedFiles="true"
     />
+    <!-- Update the LicenseFile path defined in .nuget/packages/microsoft.dotnet.sharedframework.sdk/10.0.0-beta.24476.2/targets/sharedfx.props -->
+    <PropertyGroup>
+      <LicenseFile>$(IntermediateOutputPath)$(PackageLicenseFile)</LicenseFile>
+    </PropertyGroup>
     <ItemGroup>
-      <_PackageFiles Include="$(IntermediateOutputPath)$(PackageLicenseFile)" PackagePath="\" />
+      <_PackageFiles Include="$(IntermediateOutputPath)$(PackageLicenseFile)" PackagePath="\" Condition=" '$(PlatformPackageType)' == '' "/>
       <_PackageFiles Include="$(XAInstallPrefix)THIRD-PARTY-NOTICES.TXT" PackagePath="\" />
       <_PackageFiles Include="$(MSBuildThisFileDirectory)Icon.png" PackagePath="\" />
     </ItemGroup>

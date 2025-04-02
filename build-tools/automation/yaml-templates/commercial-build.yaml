@@ -69,12 +69,31 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: zip Windows toolchain pdb files
 
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
+    Contents: |
+      **/*.symbols.nupkg
+      **/SignList.xml
+    TargetFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned-symbols
+
+- task: DeleteFiles@1
+  inputs:
+    SourceFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
+    Contents: '*.symbols.nupkg'
+
 - ${{ if ne(parameters.use1ESTemplate, true) }}:
   - task: PublishPipelineArtifact@1
     displayName: upload nupkgs
     inputs:
       artifactName: ${{ parameters.nugetArtifactName }}
       targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
+
+  - task: PublishPipelineArtifact@1
+    displayName: upload symbols nupkgs
+    inputs:
+      artifactName: ${{ parameters.nugetArtifactName }}
+      targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned-symbols
 
   - task: PublishPipelineArtifact@1
     displayName: upload test assemblies
