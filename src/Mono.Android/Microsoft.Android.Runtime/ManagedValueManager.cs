@@ -14,7 +14,7 @@ using System.Threading;
 using Android.Runtime;
 using Java.Interop;
 
-namespace Microsoft.Android.Runtime;
+namespace _Microsoft.Android.Runtime;
 
 class ManagedValueManager : JniRuntime.JniValueManager
 {

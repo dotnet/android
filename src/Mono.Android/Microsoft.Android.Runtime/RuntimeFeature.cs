@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Microsoft.Android.Runtime;
+namespace _Microsoft.Android.Runtime;
 
 static class RuntimeFeature
 {

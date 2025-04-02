@@ -5,7 +5,7 @@ using System.Reflection;
 using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 
-namespace Microsoft.Android.Runtime;
+namespace _Microsoft.Android.Runtime;
 
 class ManagedTypeManager : JniRuntime.JniTypeManager {
 

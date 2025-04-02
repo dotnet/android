@@ -8,8 +8,8 @@ using System.Threading;
 using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 
-using Microsoft.Android.Runtime;
-using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
+using _Microsoft.Android.Runtime;
+using RuntimeFeature = _Microsoft.Android.Runtime.RuntimeFeature;
 
 namespace Android.Runtime
 {

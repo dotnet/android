@@ -2,7 +2,7 @@ using Android.Runtime;
 using Java.Interop;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.Android.Runtime;
+namespace _Microsoft.Android.Runtime;
 
 static partial class JavaInteropRuntime
 {
