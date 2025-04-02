@@ -1564,7 +1564,6 @@ because xbuild doesn't support framework reference assemblies.
     <_LinkingEnabled Condition=" '$(AndroidLinkMode)' == 'None'">False</_LinkingEnabled>
     <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' != '' ">True</_HaveMultipleRIDs>
     <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' == '' ">False</_HaveMultipleRIDs>
-    <_AndroidGenerateNativeAssembly Condition=" '$(_AndroidGenerateNativeAssembly)' == '' ">True</_AndroidGenerateNativeAssembly>
   </PropertyGroup>
   <ItemGroup>
     <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
@@ -1607,7 +1606,6 @@ because xbuild doesn't support framework reference assemblies.
   <GenerateTypeMappings
       AndroidRuntime="$(_AndroidRuntime)"
       Debug="$(AndroidIncludeDebugSymbols)"
-      GenerateNativeAssembly="$(_AndroidGenerateNativeAssembly)"
       IntermediateOutputDirectory="$(IntermediateOutputPath)"
       SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)"
       TypemapImplementation="$(_AndroidTypeMapImplementation)"
