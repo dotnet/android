@@ -69,6 +69,11 @@ namespace Xamarin.ProjectTools
 			AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\Strings.xml") { TextContent = () => StringsXml.Replace ("${PROJECT_NAME}", ProjectName) });
 
 			Sources.Add (new BuildItem.Source (() => "MainActivity" + Language.DefaultExtension) { TextContent = () => ProcessSourceTemplate (MainActivity ?? DefaultMainActivity) });
+
+			if (TargetRuntimeHelper.UseCoreCLR) {
+				// NuGet feed needed as Microsoft.Android.Runtime.CoreCLR packs not installed in workload by default
+				AddOrRemoveLocalNugetFeedPath (add: true);
+			}
 		}
 
 		// it is exposed as public because we may want to slightly modify this.
@@ -170,6 +175,18 @@ namespace Xamarin.ProjectTools
 			set { SetProperty (KnownProperties.PublishAot, value.ToString ()); }
 		}
 
+		void AddOrRemoveLocalNugetFeedPath (bool add)
+		{
+			var source = Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned");
+			if (add) {
+				if (!ExtraNuGetConfigSources.Contains (source)) {
+					ExtraNuGetConfigSources.Add (source);
+				}
+			} else {
+				ExtraNuGetConfigSources.Remove (source);
+			}
+		}
+
 		/// <summary>
 		/// Sets properties required for $(PublishAot)=true
 		/// </summary>
@@ -181,14 +198,13 @@ namespace Xamarin.ProjectTools
 			PublishAot = value;
 			SetProperty ("AndroidNdkDirectory", androidNdkPath);
 
-			// NuGet feed needed as Microsoft.Android.Runtime.NativeAOT packs not installed in workload by default
-			var source = Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned");
+			// CoreCLR tests won't work with PublishAot == true
 			if (value) {
-				if (!ExtraNuGetConfigSources.Contains (source))
-					ExtraNuGetConfigSources.Add (source);
-			} else {
-				ExtraNuGetConfigSources.Remove (source);
+				RemoveProperty ("UseMonoRuntime");
 			}
+
+			// NuGet feed needed as Microsoft.Android.Runtime.NativeAOT packs not installed in workload by default
+			AddOrRemoveLocalNugetFeedPath (add: value);
 		}
 
 		public string AndroidManifest { get; set; }

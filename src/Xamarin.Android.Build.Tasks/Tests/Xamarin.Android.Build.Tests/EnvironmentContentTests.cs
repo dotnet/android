@@ -17,7 +17,7 @@ namespace Xamarin.Android.Build.Tests
 		[NonParallelizable]
 		public void BuildApplicationWithMonoEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode)
 		{
-			const string supportedAbis = "armeabi-v7a;x86";
+			const string supportedAbis = "arm64-v8a;x86_64";
 
 			var lib = new XamarinAndroidLibraryProject {
 				ProjectName = "Library1",
@@ -77,7 +77,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void CheckMonoDebugIsAddedToEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode)
 		{
-			const string supportedAbis = "armeabi-v7a;x86";
+			const string supportedAbis = "arm64-v8a;x86_64";
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
@@ -108,6 +108,10 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void CheckConcurrentGC ()
 		{
+			if (TargetRuntimeHelper.UseCoreCLR) {
+				Assert.Ignore ("Mono GC isn't supported on CoreCLR");
+			}
+
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
@@ -160,7 +164,7 @@ namespace Xamarin.Android.Build.Tests
 			var expectedDefaultValue = "System.Net.Http.SocketsHttpHandler, System.Net.Http";
 			var expectedUpdatedValue = "Xamarin.Android.Net.AndroidMessageHandler";
 
-			var supportedAbis = "armeabi-v7a;arm64-v8a";
+			var supportedAbis = "arm64-v8a;x86_64";
 			proj.SetAndroidSupportedAbis (supportedAbis);
 			proj.PackageReferences.Add (new Package() { Id = "System.Net.Http", Version = "*" });
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "var _ = new System.Net.Http.HttpClient ();");

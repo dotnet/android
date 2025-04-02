@@ -311,7 +311,7 @@ public class TestMe {
 				IsRelease = true,
 				ProjectGuid = Guid.NewGuid ().ToString (),
 				OtherBuildItems = {
-					new BuildItem (AndroidBuildActions.EmbeddedNativeLibrary, "libs/armeabi-v7a/libfoo.so") {
+					new BuildItem (AndroidBuildActions.EmbeddedNativeLibrary, "libs/arm64-v8a/libfoo.so") {
 						TextContent = () => string.Empty,
 						Encoding = Encoding.ASCII,
 					}
@@ -332,14 +332,14 @@ namespace Lib
 					},
 				},
 			};
-			var so = lib.OtherBuildItems.First (x => x.Include () == "libs/armeabi-v7a/libfoo.so");
+			var so = lib.OtherBuildItems.First (x => x.Include () == "libs/arm64-v8a/libfoo.so");
 
 			var lib2 = new XamarinAndroidLibraryProject () {
 				ProjectName = "Lib2",
 				ProjectGuid = Guid.NewGuid ().ToString (),
 				IsRelease = true,
 				OtherBuildItems = {
-					new BuildItem (AndroidBuildActions.EmbeddedNativeLibrary, "libs/armeabi-v7a/libfoo2.so") {
+					new BuildItem (AndroidBuildActions.EmbeddedNativeLibrary, "libs/arm64-v8a/libfoo2.so") {
 						TextContent = () => string.Empty,
 						Encoding = Encoding.ASCII,
 					},
@@ -378,12 +378,12 @@ namespace Lib2
 							new BuildItem.ProjectReference (@"..\Lib2\Lib2.csproj", "Lib2", lib2.ProjectGuid),
 						}
 					};
-					app.SetAndroidSupportedAbis ("armeabi-v7a");
+					app.SetAndroidSupportedAbis ("arm64-v8a");
 					using (var builder = CreateApkBuilder (Path.Combine (path, "App"))) {
 						Assert.IsTrue (builder.Build (app), "app 1st. build failed");
 
 						var libfoo = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + "-Signed.apk"),
-							"lib/armeabi-v7a/libfoo.so");
+							"lib/arm64-v8a/libfoo.so");
 						Assert.IsNotNull (libfoo, "libfoo.so should exist in the .apk");
 
 						so.TextContent = () => "newValue";
@@ -395,10 +395,10 @@ namespace Lib2
 						Assert.IsNotNull (libfoo, "libfoo.so should exist in the .apk");
 
 						libfoo = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + "-Signed.apk"),
-							"lib/armeabi-v7a/libfoo.so");
+							"lib/arm64-v8a/libfoo.so");
 						Assert.AreEqual (so.TextContent ().Length, libfoo.Length, "compressed size mismatch");
 						var libfoo2 = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + "-Signed.apk"),
-							"lib/armeabi-v7a/libfoo2.so");
+							"lib/arm64-v8a/libfoo2.so");
 						Assert.IsNotNull (libfoo2, "libfoo2.so should exist in the .apk");
 						Directory.Delete (path, recursive: true);
 					}
@@ -983,6 +983,7 @@ namespace Lib2
 		}
 
 		[Test]
+		[Category ("CoreCLR")]
 		public void GenerateJavaStubsAndAssembly ([Values (true, false)] bool isRelease)
 		{
 			var targets = new [] {
@@ -992,7 +993,7 @@ namespace Lib2
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a");
+			proj.SetAndroidSupportedAbis ("arm64-v8a");
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidEnvironment ("Foo.txt") {
 				TextContent = () => "Foo=Bar",
 			});
@@ -1024,11 +1025,11 @@ namespace Lib2
 		}
 
 		readonly string [] ExpectedAssemblyFiles = new [] {
-			Path.Combine ("android", "environment.armeabi-v7a.o"),
-			Path.Combine ("android", "environment.armeabi-v7a.ll"),
-			Path.Combine ("android", "typemaps.armeabi-v7a.o"),
-			Path.Combine ("android", "typemaps.armeabi-v7a.ll"),
-			Path.Combine ("app_shared_libraries", "armeabi-v7a", "libxamarin-app.so")
+			Path.Combine ("android", "environment.arm64-v8a.o"),
+			Path.Combine ("android", "environment.arm64-v8a.ll"),
+			Path.Combine ("android", "typemaps.arm64-v8a.o"),
+			Path.Combine ("android", "typemaps.arm64-v8a.ll"),
+			Path.Combine ("app_shared_libraries", "arm64-v8a", "libxamarin-app.so")
 		};
 
 		void AssertAssemblyFilesInFileWrites (XamarinAndroidApplicationProject proj, ProjectBuilder b)
@@ -1306,10 +1307,15 @@ namespace Lib2
 				libBuilder.ThrowOnBuildFailure =
 					appBuilder.ThrowOnBuildFailure = false;
 
+				int expectedWarnings = 1;
+				if (TargetRuntimeHelper.UseCoreCLR && TargetRuntimeHelper.CoreClrIsExperimental) {
+					expectedWarnings++; // Warning XA1040 will be issued
+				}
+
 				// Build app before library is built
 				Assert.IsFalse (appBuilder.Build (app), "app build should have failed.");
 				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, "warning MSB9008"), "Should receive MSB9008");
-				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, " 1 Warning(s)"), "Should receive 1 Warning");
+				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, $" {expectedWarnings} Warning(s)"), $"Should receive {expectedWarnings} Warning(s)");
 				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, "error CS0246"), "Should receive CS0246");
 				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, " 1 Error(s)"), "Should receive 1 Error");
 
@@ -1434,10 +1440,10 @@ namespace Lib2
 		public void ChangeSupportedAbis ()
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
-			proj.SetAndroidSupportedAbis ("armeabi-v7a");
+			proj.SetAndroidSupportedAbis ("arm64-v8a");
 			using (var b = CreateApkBuilder ()) {
 				b.Build (proj);
-				b.Build (proj, parameters: new [] { $"{KnownProperties.RuntimeIdentifier}=android-x86" }, doNotCleanupOnUpdate: true);
+				b.Build (proj, parameters: new [] { $"{KnownProperties.RuntimeIdentifier}=android-x64" }, doNotCleanupOnUpdate: true);
 			}
 		}
 

@@ -203,8 +203,10 @@ public class JavaSourceTest {
 		}
 
 		[Test]
-		public void DotNetPublish ([Values (false, true)] bool isRelease, [ValueSource(nameof(DotNetTargetFrameworks))] object[] data)
+		public void DotNetPublish ([Values (false, true)] bool isRelease, [ValueSource(nameof(DotNetTargetFrameworks))] object[] data, [Values ("Mono", "CoreCLR")] string runtime)
 		{
+			TargetRuntimeHelper.IgnoreOnIncompatibleRuntime (runtime);
+
 			var dotnetVersion = (string)data[0];
 			var platform = (string)data[1];
 			var apiLevel = (int)data[2];
@@ -218,13 +220,13 @@ public class JavaSourceTest {
 				Assert.Ignore ($"Test for API level {apiLevel} was skipped as it matched the default or latest stable API level.");
 
 			var targetFramework = $"{dotnetVersion}-{platform}";
-			const string runtimeIdentifier = "android-arm";
+			const string runtimeIdentifier = "android-arm64";
 			var proj = new XamarinAndroidApplicationProject {
 				TargetFramework = targetFramework,
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
 			};
-			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
+			proj.SetRuntimeIdentifier (runtimeIdentifier);
 
 			var preview = IsPreviewFrameworkVersion (targetFramework);
 			if (preview) {
@@ -249,8 +251,6 @@ public class JavaSourceTest {
 				var expectedMonoAndroidRefPath = Path.Combine (refDirectory, "ref", dotnetVersion, "Mono.Android.dll");
 				Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRefPath), $"Build should be using {expectedMonoAndroidRefPath}");
 
-				// TODO: We could parameterize this later
-				const string runtime = "Mono";
 				var runtimeApiLevel = (apiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel && apiLevel < XABuildConfig.AndroidLatestStableApiLevel) ? XABuildConfig.AndroidLatestStableApiLevel : apiLevel;
 				var runtimeDirectory = Directory.GetDirectories (Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Runtime.{runtime}.{runtimeApiLevel}.{runtimeIdentifier}")).LastOrDefault ();
 				var expectedMonoAndroidRuntimePath = Path.Combine (runtimeDirectory, "runtimes", runtimeIdentifier, "lib", dotnetVersion, "Mono.Android.dll");

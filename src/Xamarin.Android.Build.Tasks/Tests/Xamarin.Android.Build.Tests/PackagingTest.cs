@@ -85,12 +85,16 @@ namespace Xamarin.Android.Build.Tests
 		[NonParallelizable] // Commonly fails NuGet restore
 		public void CheckIncludedAssemblies ([Values (false, true)] bool usesAssemblyStores)
 		{
+			if (!usesAssemblyStores && TargetRuntimeHelper.UseCoreCLR) {
+				Assert.Ignore ("CoreCLR supports only assembly stores");
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true
 			};
 
 			AndroidTargetArch[] supportedArches = new[] {
-				AndroidTargetArch.Arm,
+				AndroidTargetArch.Arm64,
 			};
 
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
@@ -129,8 +133,11 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				"System.Collections.dll",
 				"System.Collections.Concurrent.dll",
 				"System.Text.RegularExpressions.dll",
-				"libarc.bin.so",
 			};
+
+			if (!TargetRuntimeHelper.UseCoreCLR) {
+				expectedFiles.Add ("libarc.bin.so");
+			}
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
@@ -173,7 +180,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				IsRelease = true,
 			};
 			proj.PackageReferences.Add(KnownPackages.SQLitePCLRaw_Core);
-			proj.SetAndroidSupportedAbis ("x86");
+			proj.SetAndroidSupportedAbis ("x86_64");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidStoreUncompressedFileExtensions", compressNativeLibraries ? "" : "so");
 			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
@@ -183,9 +190,9 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				CompressionMethod method = compressNativeLibraries ? CompressionMethod.Deflate : CompressionMethod.Store;
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					var libFiles = zip.Where (x => x.FullName.StartsWith("lib/", StringComparison.Ordinal) && !x.FullName.Equals("lib/", StringComparison.InvariantCultureIgnoreCase));
-					var abiPaths = new string[] { "lib/x86/" };
+					var abiPaths = new string[] { "lib/x86_64/" };
 					foreach (var file in libFiles) {
-						Assert.IsTrue (abiPaths.Any (x => file.FullName.Contains (x)), $"Apk contains an unnesscary lib file: {file.FullName}");
+						Assert.IsTrue (abiPaths.Any (x => file.FullName.Contains (x)), $"Apk contains an unnecessary lib file: {file.FullName}");
 						Assert.IsTrue (file.CompressionMethod == method, $"{file.FullName} should have been CompressionMethod.{method} in the apk, but was CompressionMethod.{file.CompressionMethod}");
 					}
 				}
@@ -392,10 +399,14 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyPass", Uri.EscapeDataString (pass));
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningStorePass", Uri.EscapeDataString (pass));
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, perAbiApk);
-			if (perAbiApk) {
+
+			bool thirtyTwoBitAbisSupported =
+				!TargetRuntimeHelper.UseCoreCLR ||
+				(TargetRuntimeHelper.CoreClrSupportsAbi ("armeabi-v7a") && TargetRuntimeHelper.CoreClrSupportsAbi ("x86"));
+			if (perAbiApk && thirtyTwoBitAbisSupported) { // CoreCLR doesn't support 32-bit ABIs
 				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "arm64-v8a", "x86_64");
 			} else {
-				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+				proj.SetAndroidSupportedAbis ("arm64-v8a", "x86_64");
 			}
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName, "App"))) {
 				var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
@@ -411,13 +422,25 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 
 				// Make sure the APKs have unique version codes
 				if (perAbiApk) {
-					int armManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "armeabi-v7a", "AndroidManifest.xml"));
-					int x86ManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "x86", "AndroidManifest.xml"));
+					int armManifestCode = thirtyTwoBitAbisSupported ? GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "armeabi-v7a", "AndroidManifest.xml")) : 0;
+					int x86ManifestCode = thirtyTwoBitAbisSupported ? GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "x86", "AndroidManifest.xml")) : 0;
 					int arm64ManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "arm64-v8a", "AndroidManifest.xml"));
 					int x86_64ManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "x86_64", "AndroidManifest.xml"));
-					var versionList = new List<int> { armManifestCode, x86ManifestCode, arm64ManifestCode, x86_64ManifestCode };
-					Assert.True (versionList.Distinct ().Count () == versionList.Count,
-						$"APK version codes were not unique - armeabi-v7a: {armManifestCode}, x86: {x86ManifestCode}, arm64-v8a: {arm64ManifestCode}, x86_64: {x86_64ManifestCode}");
+					List<int> versionList;
+					if (thirtyTwoBitAbisSupported) {
+						versionList = new List<int> { armManifestCode, x86ManifestCode, arm64ManifestCode, x86_64ManifestCode };
+					} else {
+						versionList = new List<int> { arm64ManifestCode, x86_64ManifestCode };
+					}
+
+					string errorMessage;
+					if (thirtyTwoBitAbisSupported) {
+						errorMessage = $"APK version codes were not unique - armeabi-v7a: {armManifestCode}, x86: {x86ManifestCode}, arm64-v8a: {arm64ManifestCode}, x86_64: {x86_64ManifestCode}";
+					} else {
+						errorMessage = $"APK version codes were not unique - arm64-v8a: {arm64ManifestCode}, x86_64: {x86_64ManifestCode}";
+					}
+
+					Assert.True (versionList.Distinct ().Count () == versionList.Count, errorMessage);
 				}
 
 				var item = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Strings.xml");
