@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <PackageType>Template</PackageType>
     <PackageId>Microsoft.Android.Templates</PackageId>
     <Title>.NET for Android Templates</Title>
@@ -19,12 +19,12 @@
   <Import Project="..\..\build-tools\create-packs\License.targets" />
 
   <ItemGroup>
-    <Content Include="**\*" Exclude="**\bin\**;**\obj\**" />
+    <Content Include="**\*" Exclude="**\bin\**;**\obj\**;.gitignore;Directory.Build.targets;Microsoft.Android.Templates.csproj" />
     <Compile Remove="**\*" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(RunningOnCI)' != 'true' ">
-    <PackageReference Include="Microsoft.TemplateEngine.Tasks" Version="$(MicrosoftTemplateEngineTasksPackageVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
+    <PackageReference Include="Microsoft.TemplateEngine.Authoring.Tasks" Version="$(MicrosoftTemplateEngineAuthoringTasksPackageVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
   </ItemGroup>
 
 </Project>

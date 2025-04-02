@@ -50,6 +50,10 @@ stages:
           artifactName: ${{ parameters.nugetArtifactName }}
           targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
         - output: pipelineArtifact
+          displayName: upload symbols nupkgs
+          artifactName: ${{ parameters.nugetArtifactName }}-symbols
+          targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned-symbols
+        - output: pipelineArtifact
           displayName: upload Windows toolchain pdb files
           artifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
           targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb
