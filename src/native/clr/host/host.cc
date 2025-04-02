@@ -262,13 +262,10 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	Logger::init_logging_categories ();
 
 	// If fast logging is disabled, log messages immediately
-	FastTiming::initialize ((Logger::log_timing_categories() & LogTimingCategories::FastBare) != LogTimingCategories::FastBare);
 	exp::FastTiming::initialize ((Logger::log_timing_categories() & LogTimingCategories::FastBare) != LogTimingCategories::FastBare);
 
-	size_t total_time_index;
-	if (FastTiming::enabled ()) [[unlikely]] {
+	if (exp::FastTiming::enabled ()) [[unlikely]] {
 		_timing = std::make_shared<Timing> ();
-		total_time_index = internal_timing.start_event (TimingEventKind::TotalRuntimeInit);
 		exp::internal_timing.start_event (exp::TimingEventKind::TotalRuntimeInit);
 	}
 
@@ -295,9 +292,8 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 
 	gather_assemblies_and_libraries (runtimeApks, haveSplitApks);
 
-	size_t clr_init_time_index;
-	if (FastTiming::enabled ()) [[unlikely]] {
-		clr_init_time_index = internal_timing.start_event (TimingEventKind::MonoRuntimeInit);
+	if (exp::FastTiming::enabled ()) [[unlikely]] {
+		exp::internal_timing.start_event (exp::TimingEventKind::ManagedRuntimeInit);
 	}
 
 	coreclr_set_error_writer (clr_error_writer);
@@ -317,8 +313,8 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 		&domain_id
 	);
 
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.end_event (clr_init_time_index);
+	if (exp::FastTiming::enabled ()) [[unlikely]] {
+		exp::internal_timing.end_event ();
 	}
 
 	// TODO: make S_OK & friends known to us
@@ -375,9 +371,8 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 
 	OSBridge::initialize_on_runtime_init (env, runtimeClass);
 
-	size_t native_to_managed_index;
-	if (FastTiming::enabled ()) [[unlikely]] {
-		native_to_managed_index = internal_timing.start_event (TimingEventKind::NativeToManagedTransition);
+	if (exp::FastTiming::enabled ()) [[unlikely]] {
+		exp::internal_timing.start_event (exp::TimingEventKind::NativeToManagedTransition);
 	}
 
 	void *delegate = nullptr;
@@ -412,18 +407,16 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	log_debug (LOG_DEFAULT, "Calling into managed runtime init"sv);
 	initialize (&init);
 
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.end_event (native_to_managed_index);
-		internal_timing.end_event (total_time_index);
-		exp::internal_timing.end_event ();
+	if (exp::FastTiming::enabled ()) [[unlikely]] {
+		exp::internal_timing.end_event (); // native to managed
+		exp::internal_timing.end_event (); // total init time
 	}
 }
 
 void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods) noexcept
 {
-	size_t total_time_index;
-	if (FastTiming::enabled ()) [[unlikely]] {
-		total_time_index = internal_timing.start_event (TimingEventKind::RuntimeRegister);
+	if (exp::FastTiming::enabled ()) [[unlikely]] {
+		exp::internal_timing.start_event (exp::TimingEventKind::RuntimeRegister);
 	}
 
 	jsize managedType_len = env->GetStringLength (managedType);
@@ -437,15 +430,15 @@ void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType,
 	env->ReleaseStringChars (methods, methods_ptr);
 	env->ReleaseStringChars (managedType, managedType_ptr);
 
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.end_event (total_time_index, true /* uses_more_info */);
+	if (exp::FastTiming::enabled ()) [[unlikely]] {
+		exp::internal_timing.end_event (true /* uses_more_info */);
 
 		dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> type;
 		const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
 		type.assign (mt_ptr, strlen (mt_ptr));
 		env->ReleaseStringUTFChars (managedType, mt_ptr);
 
-		internal_timing.add_more_info (total_time_index, type);
+		exp::internal_timing.add_more_info (type);
 	}
 }
 

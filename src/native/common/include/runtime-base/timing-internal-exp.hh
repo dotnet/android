@@ -4,6 +4,7 @@
 #include <cerrno>
 #include <chrono>
 #include <ctime>
+#include <expected>
 #include <limits>
 #include <memory>
 #include <mutex>
@@ -43,16 +44,17 @@ namespace xamarin::android::exp {
 		TotalRuntimeInit          = 11,
 		GetTimeOverhead           = 12,
 		StartEndOverhead          = 13,
+		FunctionCall              = 14,
 
 		Unspecified               = std::numeric_limits<uint16_t>::max (),
 	};
 
 	struct TimingEvent
 	{
-		bool       before_managed;
-		time_point start;
-		time_point end;
-		TimingEventKind  kind;
+		bool                         before_managed;
+		time_point                   start;
+		time_point                   end;
+		TimingEventKind              kind;
 		std::unique_ptr<std::string> more_info;
 	};
 
@@ -145,7 +147,7 @@ namespace xamarin::android::exp {
 		// having to be kept in sync with the actual wording used for the event message.
 		//
 		template<size_t BufferSize> [[gnu::always_inline]]
-		static void format_and_log (TimingEvent const& event, time_point::duration const& interval, dynamic_local_string<BufferSize, char>& message, bool indent = false) noexcept
+		static void format_and_log (TimingEvent const& event, dynamic_local_string<BufferSize, char>& message, bool indent = false) noexcept
 		{
 			using namespace std::literals;
 
@@ -175,12 +177,13 @@ namespace xamarin::android::exp {
 			constexpr auto COLON = ":"sv;
 			constexpr auto TWO_COLONS = "::"sv;
 
+			auto interval = event.end - event.start; // nanoseconds
 			message.append ("; elapsed exp: "sv);
-			message.append (static_cast<uint64_t>(interval / 1s));
+			message.append (static_cast<uint64_t>((chrono::duration_cast<chrono::seconds>(interval).count ())));
 			message.append (COLON);
-			message.append (static_cast<uint64_t>(interval / 1ms));
+			message.append (static_cast<uint64_t>((chrono::duration_cast<chrono::milliseconds>(interval)).count ()));
 			message.append (TWO_COLONS);
-			message.append (static_cast<uint64_t>(interval / 1ns));
+			message.append (static_cast<uint64_t>((interval % 1ms).count ()));
 
 			log_write (LOG_TIMING, LogLevel::Info, message.get ());
 		}
@@ -192,16 +195,16 @@ namespace xamarin::android::exp {
 
 			auto interval = event.end - event.start;
 			total_ns = static_cast<uint64_t>(interval / 1ns);
-			format_and_log (event, interval, message, indent);
+			format_and_log (event, message, indent);
 		}
 
 		[[gnu::always_inline]]
-		static void format_and_log (TimingEvent const& event) noexcept
+		static void format_and_log (TimingEvent const& event, bool indent = false) noexcept
 		{
 			// `message` isn't used here, it is passed to `format_and_log` so that the `dump()` function can
 			// be slightly more efficient when dumping the event buffer.
 			dynamic_local_string<Constants::MAX_LOGCAT_MESSAGE_LENGTH, char> message;
-			format_and_log (event, event.end - event.start, message);
+			format_and_log (event, message, indent);
 		}
 
 		[[gnu::always_inline]]
@@ -250,30 +253,109 @@ namespace xamarin::android::exp {
 		}
 
 		// The return value is necessary only if one needs to add some extra information to the event, otherwise
-		// it can be ignored.
+		// it can be ignored. If `uses_more_info` is `true`, the caller **MUST** call `add_more_info`, since the
+		// timing sequence number will **NOT** be popped off the stack by this call!
 		[[gnu::always_inline]]
 		auto end_event (bool uses_more_info = false, bool skip_log = false) noexcept -> size_t
 		{
-			if (open_sequences.empty ()) [[unlikely]] {
+			auto index = pop_valid_sequence_index ();
+			if (!index.has_value ()) [[unlikely]] {
 				log_warn (LOG_TIMING, "FastTiming::end_event called without prior FastTiming::start_event called");
 				return 0;
+			}
+
+			events[*index].end = get_time ();
+			if (!skip_log) [[likely]] {
+				log (events[*index], uses_more_info /* skip_log_if_more_info_missing */);
+			}
+
+			return *index;
+		}
+
+		template<size_t MaxStackSize, typename TStorage, typename TChar = char>
+		[[gnu::always_inline]]
+		void add_more_info (string_base<MaxStackSize, TStorage, TChar> const& str) noexcept
+		{
+			auto index = pop_valid_sequence_index ();
+			if (!index.has_value ()) [[unlikely]] {
+				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called");
+				return;
+			}
+
+			events[*index].more_info = std::make_unique<std::string> (str.get (), str.length ());
+			log (events[*index], false /* skip_log_if_more_info_missing */);
+		}
+
+		[[gnu::always_inline]]
+		void add_more_info (const char* str) noexcept
+		{
+			auto index = pop_valid_sequence_index ();
+			if (!index.has_value ()) [[unlikely]] {
+				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called");
+				return;
+			}
+
+			events[*index].more_info = std::make_unique<std::string> (str);
+			log (events[*index], false /* skip_log_if_more_info_missing */);
+		}
+
+		[[gnu::always_inline]]
+		void add_more_info (std::string_view const& str) noexcept
+		{
+			auto index = pop_valid_sequence_index ();
+			if (!index.has_value ()) [[unlikely]] {
+				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called");
+				return;
+			}
+
+			events[*index].more_info = std::make_unique<std::string> (str);
+			log (events[*index], false /* skip_log_if_more_info_missing */);
+		}
+
+		void dump () noexcept;
+
+		// The `time_call` function declarations look definitely funky, but it all boils down to
+		// detecting whether the `F` object is a functor returning `void` or not and, depending on that,
+		// enabling one overload or another (SFINAE: https://en.wikipedia.org/wiki/Substitution_failure_is_not_an_error).
+		// The "true" portion of `std::enable_if_t` sets the return type of the wrapper to match `F`
+		template<typename F, typename... Args> [[gnu::always_inline]]
+		std::enable_if_t<!std::is_void_v<decltype(std::declval<F>()(std::declval<Args>()...))>, decltype(std::declval<F>()(std::declval<Args>()...))>
+		time_call (std::string_view const& name, F&& fn, Args... args)
+		{
+			start_event (TimingEventKind::FunctionCall);
+			auto ret = fn (std::forward<Args>(args)...);
+			end_event (true /* uses_more_info */);
+			add_more_info (name);
+			return ret;
+		}
+
+		template<typename F, typename... Args>
+		std::enable_if_t<std::is_void_v<decltype(std::declval<F>()(std::declval<Args>()...))>, void>
+		time_call (std::string_view const& name, F&& fn, Args... args)
+		{
+			start_event (TimingEventKind::FunctionCall);
+			fn (std::forward<Args>(args)...);
+			end_event (true /* uses_more_info */);
+			add_more_info (name);
+		}
+
+	private:
+		[[gnu::always_inline]]
+		auto pop_valid_sequence_index () noexcept -> std::expected<size_t, bool>
+		{
+			if (open_sequences.empty ()) [[unlikely]] {
+				return std::unexpected (false);
 			}
 
 			size_t index = open_sequences.top ();
 			open_sequences.pop ();
 
 			if (!is_valid_event_index (index)) [[unlikely]] {
-				return 0;
-			}
-
-			events[index].end = get_time ();
-			if (!skip_log) [[likely]] {
-				log (events[index], uses_more_info /* skip_log_if_more_info_missing */);
+				return std::unexpected (false);
 			}
 			return index;
 		}
 
-	private:
 		template<size_t BufferSize> [[gnu::always_inline]]
 		static void append_event_kind_description (TimingEventKind kind, dynamic_local_string<BufferSize, char>& message) noexcept
 		{
@@ -321,7 +403,7 @@ namespace xamarin::android::exp {
 				}
 
 				case TimingEventKind::ManagedRuntimeInit: {
-					constexpr auto desc = "Runtime.init: Mono runtime init"sv;
+					constexpr auto desc = "Runtime.init: Managed runtime init"sv;
 					message.append (desc);
 					return;
 				}
