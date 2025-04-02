@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Android.Runtime;
 
-namespace Microsoft.Android.Runtime;
+namespace _Microsoft.Android.Runtime;
 
 internal static class TypeMapping
 {
