@@ -8,7 +8,7 @@ using System.Threading;
 using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 
-using Microsoft.Android.Runtime;
+using _Microsoft.Android.Runtime;
 
 namespace Android.Runtime
 {

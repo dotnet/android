@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 using Java.Interop;
 
-namespace Microsoft.Android.Runtime;
+namespace _Microsoft.Android.Runtime;
 
 struct DiagnosticSettings {
 
