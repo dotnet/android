@@ -13,6 +13,8 @@
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <!-- Ignore TargetFramework reference group related warnings, these are workload packs not functional NuGets. -->
     <NoWarn>$(NoWarn);NU5128;NU5131</NoWarn>
+    <!-- Allow NU5123 for pull requests, which will run on the Xamarin.Android-PR pipeline -->
+    <NoWarn Condition=" '$(BUILD_DEFINITIONNAME)' == 'Xamarin.Android-PR' ">$(NoWarn);NU5123</NoWarn>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
