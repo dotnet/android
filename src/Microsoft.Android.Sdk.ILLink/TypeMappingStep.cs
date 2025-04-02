@@ -20,7 +20,7 @@ namespace Microsoft.Android.Sdk.ILLink;
 public class TypeMappingStep : BaseStep
 {
 	const string AssemblyName = "Microsoft.Android.Runtime.NativeAOT";
-	const string TypeName = "Microsoft.Android.Runtime.TypeMapping";
+	const string TypeName = "_Microsoft.Android.Runtime.TypeMapping";
 	const string SystemIOHashingAssemblyPathCustomData = "SystemIOHashingAssemblyPath";
 	readonly IDictionary<string, List<TypeDefinition>> TypeMappings = new Dictionary<string, List<TypeDefinition>> (StringComparer.Ordinal);
 	AssemblyDefinition? MicrosoftAndroidRuntimeNativeAot;
