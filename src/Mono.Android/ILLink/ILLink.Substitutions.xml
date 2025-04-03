@@ -8,5 +8,9 @@
       <method signature="System.Boolean get_ManagedTypeMap()" body="stub" feature="Microsoft.Android.Runtime.RuntimeFeature.ManagedTypeMap" featurevalue="false" value="false" />
       <method signature="System.Boolean get_ManagedTypeMap()" body="stub" feature="Microsoft.Android.Runtime.RuntimeFeature.ManagedTypeMap" featurevalue="true" value="true" />
     </type>
+    <type fullname="Microsoft.Android.Runtime.RuntimeFeature">
+      <method signature="System.Boolean get_XaHttpClientHandlerTypeEnvironmentVariable()" body="stub" feature="Microsoft.Android.Runtime.RuntimeFeature.XaHttpClientHandlerTypeEnvironmentVariable" featurevalue="false" value="false" />
+      <method signature="System.Boolean get_XaHttpClientHandlerTypeEnvironmentVariable()" body="stub" feature="Microsoft.Android.Runtime.RuntimeFeature.XaHttpClientHandlerTypeEnvironmentVariable" featurevalue="true" value="true" />
+    </type>
   </assembly>
 </linker>
