@@ -23,21 +23,13 @@
       DependsOnTargets="_CreateLocalRuntimeListsInputs"
       Inputs="$(MSBuildAllProjects);@(_RuntimeListInputs)"
       Outputs="@(_RuntimeListOutputs)">
-    <MSBuild
-        Projects="$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj"
-        Properties="FrameworkListFile=%(_RuntimeListOutputs.Identity);AndroidRID=%(_RuntimeListOutputs.AndroidRID);AndroidRuntime=%(_RuntimeListOutputs.AndroidRuntime)"
-        Targets="_GetRuntimePackItems;_GenerateFrameworkListFile"
-    />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build -t:_GenerateFrameworkList -p:IntermediateOutputPath=%(_RuntimeListOutputs.RelativeDir) -p:AndroidRID=%(_RuntimeListOutputs.AndroidRID) -p:AndroidRuntime=%(_RuntimeListOutputs.AndroidRuntime) -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
   </Target>
 
   <Target Name="CreateLocalFrameworkLists"
       Inputs="$(MSBuildAllProjects);@(_FrameworkListInputs)"
       Outputs="@(_FrameworkListOutputs)">
-    <MSBuild
-        Projects="$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj"
-        Properties="FrameworkListFile=%(_FrameworkListOutputs.Identity)"
-        Targets="_GetTargetingPackItems;_GenerateFrameworkListFile"
-    />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build -t:_GenerateFrameworkList -p:IntermediateOutputPath=%(_FrameworkListOutputs.RelativeDir) -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
   </Target>
 
   <Target Name="PackLocalTemplates"

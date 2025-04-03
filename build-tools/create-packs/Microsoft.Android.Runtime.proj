@@ -9,28 +9,40 @@ projects that use the Microsoft.Android framework in .NET 6+.
 -->
 <Project Sdk="Microsoft.Build.NoTargets">
 
+  <Sdk Name="Microsoft.DotNet.SharedFramework.Sdk" Version="$(MicrosoftDotNetBuildTasksFeedPackageVersion)" />
+
   <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <AndroidRID Condition=" '$(AndroidRID)' == '' ">android-arm64</AndroidRID>
+    <RuntimeIdentifier>$(AndroidRID)</RuntimeIdentifier>
     <AndroidRuntime Condition=" '$(AndroidRuntime)' == '' ">Mono</AndroidRuntime>
     <PackageId>Microsoft.Android.Runtime.$(AndroidRuntime).$(AndroidApiLevel).$(AndroidRID)</PackageId>
+    <OverridePackageId>$(PackageId)</OverridePackageId>
+    <PlatformPackageType>RuntimePack</PlatformPackageType>
     <Description>Microsoft.Android runtime components for API $(AndroidApiLevel). Please do not reference directly.</Description>
-    <_AndroidRuntimePackAssemblyPath>runtimes\$(AndroidRID)\lib\$(DotNetTargetFramework)</_AndroidRuntimePackAssemblyPath>
-    <_AndroidRuntimePackNativePath>runtimes\$(AndroidRID)\native</_AndroidRuntimePackNativePath>
+    <_AndroidRuntimePackAssemblyPath>runtimes/$(AndroidRID)/lib/$(DotNetTargetFramework)</_AndroidRuntimePackAssemblyPath>
+    <_AndroidRuntimePackNativePath>runtimes/$(AndroidRID)/native</_AndroidRuntimePackNativePath>
   </PropertyGroup>
 
   <PropertyGroup>
     <BeforePack>
-      _GetRuntimePackItems;
       _GetDefaultPackageVersion;
-      _GenerateFrameworkListFile;
       $(BeforePack);
     </BeforePack>
   </PropertyGroup>
 
-  <Target Name="_GetRuntimePackItems"
-      DependsOnTargets="_GetLicense">
+  <!-- Reset the TargetFramework after ProcessFrameworkReferences runs to avoid issues resolving non-existant linux-bionic runtime packs -->
+  <Target Name="_RemoveLinuxFrameworkReferences"
+      AfterTargets="ProcessFrameworkReferences">
     <PropertyGroup>
-      <FrameworkListFile Condition="'$(FrameworkListFile)' == ''">$(IntermediateOutputPath)$(AndroidRID)\RuntimeList.xml</FrameworkListFile>
+      <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+    </PropertyGroup>
+  </Target>
+
+ <Target Name="_GetRuntimePackItems"
+      DependsOnTargets="_GetLicense;_GetDefaultPackageVersion"
+      BeforeTargets="GetFilesToPackage" >
+    <PropertyGroup>
       <_RuntimeFlavorDirName Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">clr</_RuntimeFlavorDirName>
       <_RuntimeFlavorDirName Condition=" '$(AndroidRuntime)' == 'Mono' Or '$(AndroidRuntime)' == '' ">mono</_RuntimeFlavorDirName>
     </PropertyGroup>
@@ -52,37 +64,33 @@ projects that use the Microsoft.Android framework in .NET 6+.
     </ItemGroup>
 
     <ItemGroup Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">
-      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.debug.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.debug.so" />
-      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.release.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.release.so" />
+      <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.debug.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.debug.so" />
+      <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.release.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.release.so" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(AndroidRuntime)' == 'Mono' ">
-      <_AndroidRuntimePackAssets Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libmono-android.debug.so" />
-      <_AndroidRuntimePackAssets Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libmono-android.release.so" />
-      <_AndroidRuntimePackAssets Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxamarin-debug-app-helper.so" />
-      <_AndroidRuntimePackAssets Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxamarin-native-tracing.so" />
-      <_AndroidRuntimePackAssets Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libunwind_xamarin.a" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libmono-android.debug.so" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libmono-android.release.so" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxamarin-debug-app-helper.so" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxamarin-native-tracing.so" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libunwind_xamarin.a" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(AndroidRuntime)' != 'NativeAOT' ">
       <!-- TODO: the Exists() checks must go away once we build CoreCLR host for all the targets -->
-      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libc.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libc.so" />
-      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libdl.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libdl.so" />
-      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\liblog.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\liblog.so" />
-      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libm.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libm.so" />
-      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libz.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libz.so" />
-      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libarchive-dso-stub.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libarchive-dso-stub.so" />
+      <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libc.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libc.so" />
+      <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libdl.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libdl.so" />
+      <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\liblog.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\liblog.so" />
+      <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libm.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libm.so" />
+      <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libz.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libz.so" />
+      <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libarchive-dso-stub.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libarchive-dso-stub.so" />
     </ItemGroup>
 
     <ItemGroup>
       <FrameworkListFileClass Include="@(_AndroidRuntimePackAssemblies->'%(Filename)%(Extension)')" Profile="Android" />
-      <FrameworkListFileClass Include="@(_AndroidRuntimePackAssets->'%(Filename)%(Extension)')" Profile="Android" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <_PackageFiles Include="@(_AndroidRuntimePackAssemblies)" PackagePath="$(_AndroidRuntimePackAssemblyPath)" TargetPath="$(_AndroidRuntimePackAssemblyPath)" />
-      <_PackageFiles Include="@(_AndroidRuntimePackAssemblies->'%(RelativeDir)%(Filename).pdb')" PackagePath="$(_AndroidRuntimePackAssemblyPath)" Condition=" '%(_AndroidRuntimePackAssemblies.NoSymbols)' != 'true' " />
-      <_PackageFiles Include="@(_AndroidRuntimePackAssets)" PackagePath="$(_AndroidRuntimePackNativePath)" TargetPath="$(_AndroidRuntimePackNativePath)" IsNative="true" />
+      <FrameworkListFileClass Include="@(NativeRuntimeAsset->'%(Filename)%(Extension)')" Profile="Android" />
+      <FilesToPackage Include="@(_AndroidRuntimePackAssemblies)" />
+      <FilesToPackage Include="@(_AndroidRuntimePackAssemblies->'%(RelativeDir)%(Filename).pdb')" IsSymbolFile="true" Condition=" '%(_AndroidRuntimePackAssemblies.NoSymbols)' != 'true' " />
     </ItemGroup>
   </Target>
 

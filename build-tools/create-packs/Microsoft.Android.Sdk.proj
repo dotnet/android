@@ -8,28 +8,36 @@ core workload SDK packs imported by WorkloadManifest.targets.
 -->
 <Project Sdk="Microsoft.Build.NoTargets">
 
+  <Sdk Name="Microsoft.DotNet.SharedFramework.Sdk" Version="$(MicrosoftDotNetBuildTasksFeedPackageVersion)" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateUnixFilePermissions" />
 
   <PropertyGroup>
     <PackageId>Microsoft.Android.Sdk.$(HostOS)</PackageId>
+    <OverridePackageId>$(PackageId)</OverridePackageId>
+    <PlatformPackageType>ToolPack</PlatformPackageType>
     <Description>C# Tools and Bindings for the Android SDK.</Description>
     <Description Condition=" '$(HostOS)' == 'Linux' ">$(Description) Please note that this package is not officially supported, and has not received extensive testing.</Description>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)SignList.xml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(MSBuildThisFileDirectory)SignVerifyIgnore.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <PropertyGroup>
     <BeforePack>
       _GetDefaultPackageVersion;
-      _GenerateXASdkContent;
       $(BeforePack);
     </BeforePack>
   </PropertyGroup>
 
   <Target Name="_GenerateXASdkContent"
-      DependsOnTargets="ConstructInstallerItems;_GetLicense">
+      DependsOnTargets="ConstructInstallerItems;_GetLicense"
+      BeforeTargets="GetFilesToPackage" >
     <ItemGroup>
-      <AndroidSdkBuildTools Include="@(MSBuildItemsWin)"  PackagePath="tools\$([System.IO.Path]::GetDirectoryName('%(MSBuildItemsWin.RelativePath)'))"  Condition=" '$(HostOS)' == 'Windows' " />
-      <AndroidSdkBuildTools Include="@(MSBuildItemsUnix)" PackagePath="tools\$([System.IO.Path]::GetDirectoryName('%(MSBuildItemsUnix.RelativePath)'))" Condition=" '$(HostOS)' == 'Linux' or '$(HostOS)' == 'Darwin' " />
+      <AndroidSdkBuildTools Include="@(MSBuildItemsWin)"  TargetPath="tools\$([System.IO.Path]::GetDirectoryName('%(MSBuildItemsWin.RelativePath)'))"  Condition=" '$(HostOS)' == 'Windows' " />
+      <AndroidSdkBuildTools Include="@(MSBuildItemsUnix)" TargetPath="tools\$([System.IO.Path]::GetDirectoryName('%(MSBuildItemsUnix.RelativePath)'))" Condition=" '$(HostOS)' == 'Linux' or '$(HostOS)' == 'Darwin' " />
     </ItemGroup>
 
     <GenerateUnixFilePermissions
@@ -40,38 +48,36 @@ core workload SDK packs imported by WorkloadManifest.targets.
     />
 
     <ItemGroup>
-      <_PackageFiles Include="@(AndroidSdkBuildTools)" PackagePath="%(AndroidSdkBuildTools.PackagePath)" />
-      <_PackageFiles Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Sdk.ILLink.dll" PackagePath="tools" />
-      <_PackageFiles Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Sdk.ILLink.pdb" PackagePath="tools" />
-      <_PackageFiles Include="$(MicrosoftAndroidSdkOutDir)%(_LocalizationLanguages.Identity)\Microsoft.Android.Sdk.ILLink.resources.dll" PackagePath="tools\%(_LocalizationLanguages.Identity)" />
-      <_PackageFiles Include="$(MicrosoftAndroidSdkOutDir)%(_LocalizationLanguages.Identity)\Java.Interop.Localization.resources.dll" PackagePath="tools\%(_LocalizationLanguages.Identity)" />
-      <_PackageFiles Include="@(JIUtilityFile->'$(MicrosoftAndroidSdkOutDir)%(Identity)')"   PackagePath="tools" />
-      <_PackageFiles Include="$(MicrosoftAndroidSdkOutDir)class-parse.dll" PackagePath="tools" />
-      <_PackageFiles Include="$(MicrosoftAndroidSdkOutDir)class-parse.pdb" PackagePath="tools" />
-      <_PackageFiles Include="$(MicrosoftAndroidSdkOutDir)class-parse.runtimeconfig.json" PackagePath="tools" />
-      <_PackageFiles Include="$(MicrosoftAndroidSdkOutDir)generator.dll" PackagePath="tools" />
-      <_PackageFiles Include="$(MicrosoftAndroidSdkOutDir)generator.pdb" PackagePath="tools" />
-      <_PackageFiles Include="$(MicrosoftAndroidSdkOutDir)generator.runtimeconfig.json" PackagePath="tools" />
-      <_PackageFiles Include="@(VersionFiles)" PackagePath="tools" />
-      <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\Sdk\**" PackagePath="Sdk" />
-      <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Sdk.ILLink\PreserveLists\**" PackagePath="PreserveLists" />
-      <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\**" PackagePath="targets" />
-      <_PackageFiles Include="$(XamarinAndroidSourcePath)src\profiled-aot\dotnet.aotprofile" PackagePath="targets" />
-      <_PackageFiles Include="$(IntermediateOutputPath)UnixFilePermissions.xml" PackagePath="data" Condition=" '$(HostOS)' != 'Windows' " />
-      <_PackageFiles Include="$(MSBuildThisFileDirectory)\linux-README.md" PackagePath="\README.md" Condition=" '$(HostOS)' == 'Linux' " />
-      <_PackageFiles Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\AndroidApiInfo.xml" PackagePath="data\$(DotNetAndroidTargetFramework)$(AndroidLatestStableApiLevel)" />
-      <_PackageFiles
+      <FilesToPackage Include="@(AndroidSdkBuildTools)" TargetPath="%(AndroidSdkBuildTools.TargetPath)" />
+      <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Sdk.ILLink.dll" TargetPath="tools" />
+      <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Sdk.ILLink.pdb" TargetPath="tools" />
+      <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)%(_LocalizationLanguages.Identity)\Microsoft.Android.Sdk.ILLink.resources.dll" TargetPath="tools\%(_LocalizationLanguages.Identity)" />
+      <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)%(_LocalizationLanguages.Identity)\Java.Interop.Localization.resources.dll" TargetPath="tools\%(_LocalizationLanguages.Identity)" />
+      <FilesToPackage Include="@(JIUtilityFile->'$(MicrosoftAndroidSdkOutDir)%(Identity)')"  TargetPath="tools" />
+      <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)class-parse.dll" TargetPath="tools" />
+      <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)class-parse.pdb" TargetPath="tools" />
+      <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)class-parse.runtimeconfig.json" TargetPath="tools" />
+      <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)generator.dll" TargetPath="tools" />
+      <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)generator.pdb" TargetPath="tools" />
+      <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)generator.runtimeconfig.json" TargetPath="tools" />
+      <FilesToPackage Include="@(VersionFiles)" TargetPath="tools" />
+      <FilesToPackage Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\Sdk\**" TargetPath="Sdk" />
+      <FilesToPackage Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Sdk.ILLink\PreserveLists\**" TargetPath="PreserveLists" />
+      <FilesToPackage Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\**" TargetPath="targets" />
+      <FilesToPackage Include="$(XamarinAndroidSourcePath)src\profiled-aot\dotnet.aotprofile" TargetPath="targets" />
+      <FilesToPackage Include="$(IntermediateOutputPath)UnixFilePermissions.xml" TargetPath="data" Condition=" '$(HostOS)' != 'Windows' " />
+      <FilesToPackage Include="$(MSBuildThisFileDirectory)\linux-README.md" TargetPath="\README.md" Condition=" '$(HostOS)' == 'Linux' " />
+      <FilesToPackage Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\AndroidApiInfo.xml" TargetPath="data\$(DotNetAndroidTargetFramework)$(AndroidLatestStableApiLevel)" />
+      <FilesToPackage
           Include="$(_MonoAndroidNETOutputRoot)$(AndroidDefaultTargetDotnetApiLevel)\AndroidApiInfo.xml"
-          PackagePath="data\$(DotNetAndroidTargetFramework)$(AndroidDefaultTargetDotnetApiLevel)"
+          TargetPath="data\$(DotNetAndroidTargetFramework)$(AndroidDefaultTargetDotnetApiLevel)"
           Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidDefaultTargetDotnetApiLevel)' and Exists('$(_MonoAndroidNETOutputRoot)$(AndroidDefaultTargetDotnetApiLevel)\AndroidApiInfo.xml') "
       />
-      <_PackageFiles
+      <FilesToPackage
           Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml"
-          PackagePath="data\$(DotNetAndroidTargetFramework)$(AndroidLatestUnstableApiLevel)"
+          TargetPath="data\$(DotNetAndroidTargetFramework)$(AndroidLatestUnstableApiLevel)"
           Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidLatestUnstableApiLevel)' and Exists('$(_MonoAndroidNETOutputRoot)$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml') "
       />
-      <None Include="$(MSBuildThisFileDirectory)SignList.xml" CopyToOutputDirectory="PreserveNewest" />
-      <None Include="$(MSBuildThisFileDirectory)SignVerifyIgnore.txt" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>
 
