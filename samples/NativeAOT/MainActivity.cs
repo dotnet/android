@@ -22,5 +22,10 @@ public class MainActivity : Activity
         // An example of an Android API that uses a Java array
         var list = new ColorStateList (new int[][] { [ 0, 1 ]}, [0, 1]);
         Log.Debug ("NativeAOT", "MainActivity.OnCreate() ColorStateList: " + list);
+
+        var t = Intent?.Extras?.GetBoolean ("throw") ?? false;
+        if (t) {
+            throw new InvalidOperationException ("What happened?");
+        }
     }
 }
