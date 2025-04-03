@@ -1487,7 +1487,7 @@ because xbuild doesn't support framework reference assemblies.
       Deterministic="$(Deterministic)"
       ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)">
   </LinkAssembliesNoShrink>
-  
+
   <ItemGroup>
     <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)**" />
   </ItemGroup>
@@ -2151,6 +2151,7 @@ because xbuild doesn't support framework reference assemblies.
     Inputs="@(_NativeAssemblyTarget)"
     Outputs="@(_ApplicationSharedLibrary)">
   <LinkApplicationSharedLibraries
+      IntermediateOutputPath="$(IntermediateOutputPath)"
       ObjectFiles="@(_NativeAssemblyTarget)"
       ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
       DebugBuild="$(AndroidIncludeDebugSymbols)"
