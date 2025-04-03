@@ -1,12 +1,9 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
 using Java.Interop.Tools.Cecil;
 using Mono.Cecil;
 
-using ModuleDebugData = Xamarin.Android.Tasks.TypeMapGenerator.ModuleDebugData;
 using ModuleReleaseData = Xamarin.Android.Tasks.TypeMapGenerator.ModuleReleaseData;
 using ReleaseGenerationState = Xamarin.Android.Tasks.TypeMapGenerator.ReleaseGenerationState;
 using TypeMapDebugEntry = Xamarin.Android.Tasks.TypeMapGenerator.TypeMapDebugEntry;
@@ -17,59 +14,6 @@ namespace Xamarin.Android.Tasks;
 // Converts types from Mono.Cecil to the format used by the typemap generator.
 class TypeMapCecilAdapter
 {
-	const string TypemapExtension = ".typemap";
-
-	public static Dictionary<string, ModuleDebugData> GetDebugModules (NativeCodeGenState state, string typemapFilesOutputDirectory, Encoding outputEncoding, out int maxModuleFileNameWidth)
-	{
-		var modules = new Dictionary<string, ModuleDebugData> (StringComparer.Ordinal);
-		maxModuleFileNameWidth = 0;
-		int maxModuleNameWidth = 0;
-
-		var javaDuplicates = new Dictionary<string, List<TypeMapDebugEntry>> (StringComparer.Ordinal);
-		foreach (TypeDefinition td in state.AllJavaTypes) {
-			UpdateApplicationConfig (state, td);
-			string moduleName = td.Module.Assembly.Name.Name;
-			ModuleDebugData module;
-
-			if (!modules.TryGetValue (moduleName, out module)) {
-				string outputFileName = $"{moduleName}{TypemapExtension}";
-				module = new ModuleDebugData {
-					EntryCount = 0,
-					JavaNameWidth = 0,
-					ManagedNameWidth = 0,
-					JavaToManagedMap = new List<TypeMapDebugEntry> (),
-					ManagedToJavaMap = new List<TypeMapDebugEntry> (),
-					OutputFilePath = Path.Combine (typemapFilesOutputDirectory, outputFileName),
-					ModuleName = moduleName,
-					ModuleNameBytes = outputEncoding.GetBytes (moduleName),
-				};
-
-				if (module.ModuleNameBytes.Length > maxModuleNameWidth)
-					maxModuleNameWidth = module.ModuleNameBytes.Length;
-
-				if (outputFileName.Length > maxModuleFileNameWidth)
-					maxModuleFileNameWidth = outputFileName.Length;
-
-				modules.Add (moduleName, module);
-			}
-
-			TypeMapDebugEntry entry = GetDebugEntry (td, state.TypeCache);
-			HandleDebugDuplicates (javaDuplicates, entry, td, state.TypeCache);
-			if (entry.JavaName.Length > module.JavaNameWidth)
-				module.JavaNameWidth = (uint) entry.JavaName.Length + 1;
-
-			if (entry.ManagedName.Length > module.ManagedNameWidth)
-				module.ManagedNameWidth = (uint) entry.ManagedName.Length + 1;
-
-			module.JavaToManagedMap.Add (entry);
-			module.ManagedToJavaMap.Add (entry);
-		}
-
-		SyncDebugDuplicates (javaDuplicates);
-
-		return modules;
-	}
-
 	public static (List<TypeMapDebugEntry> javaToManaged, List<TypeMapDebugEntry> managedToJava) GetDebugNativeEntries (NativeCodeGenState state)
 	{
 		var javaToManaged = new List<TypeMapDebugEntry> ();
@@ -101,7 +45,6 @@ class TypeMapCecilAdapter
 
 		return genState;
 	}
-
 
 	static void ProcessReleaseType (NativeCodeGenState state, ReleaseGenerationState genState, TypeDefinition td)
 	{
@@ -141,7 +84,6 @@ class TypeMapCecilAdapter
 			JavaName = javaName,
 			ManagedTypeName = td.FullName,
 			Token = td.MetadataToken.ToUInt32 (),
-			AssemblyNameIndex = genState.KnownAssemblies [GetAssemblyName (td)],
 			SkipInJavaToManaged = ShouldSkipInJavaToManaged (td),
 		};
 
