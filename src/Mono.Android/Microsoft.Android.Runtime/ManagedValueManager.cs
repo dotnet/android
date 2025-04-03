@@ -67,9 +67,6 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		var r = value.PeerReference;
 		if (!r.IsValid)
 			throw new ObjectDisposedException (value.GetType ().FullName);
-		var o = PeekPeer (value.PeerReference);
-		if (o != null)
-			return;
 
 		if (r.Type != JniObjectReferenceType.Global) {
 			value.SetPeerReference (r.NewGlobalRef ());
