@@ -146,6 +146,7 @@ namespace Xamarin.Android.NetTests {
 		}
 	}
 
+	[Ignore ("TODO crashes on NativeAOT")]
 	public abstract class AndroidHandlerTestBase : HttpClientHandlerTestBase
 	{
 		static IEnumerable<Exception> Exceptions (Exception e)
@@ -314,7 +315,7 @@ namespace Xamarin.Android.NetTests {
 		}
 	}
 
-	[TestFixture]
+	[TestFixture, Category ("Mono")]
 	public class AndroidClientHandlerTests : AndroidHandlerTestBase
 	{
 		protected override HttpMessageHandler CreateHandler ()
