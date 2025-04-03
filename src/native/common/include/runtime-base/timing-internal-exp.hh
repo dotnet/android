@@ -63,6 +63,12 @@ namespace xamarin::android::exp {
 
 	class FastTiming final
 	{
+		enum class SequenceError
+		{
+			EmptyStack,
+			InvalidIndex,
+		};
+
 		// Number of TimingEvent entries in the event vector allocated at the
 		// time of class instantiation.  It's an arbitrary value, but it should
 		// be large enough to not require any dynamic reallocation of memory at
@@ -189,12 +195,12 @@ namespace xamarin::android::exp {
 		}
 
 		template<size_t BufferSize> [[gnu::always_inline]]
-		static void format_and_log (TimingEvent const& event, dynamic_local_string<BufferSize, char>& message, uint64_t& total_ns, bool indent = false) noexcept
+		static void format_and_log (TimingEvent const& event, dynamic_local_string<BufferSize, char>& message, uint64_t& event_time_ns, bool indent = false) noexcept
 		{
 			using namespace std::literals;
 
 			auto interval = event.end - event.start;
-			total_ns = static_cast<uint64_t>(interval / 1ns);
+			event_time_ns = static_cast<uint64_t>(interval.count ());
 			format_and_log (event, message, indent);
 		}
 
@@ -258,7 +264,13 @@ namespace xamarin::android::exp {
 		[[gnu::always_inline]]
 		auto end_event (bool uses_more_info = false, bool skip_log = false) noexcept -> size_t
 		{
-			auto index = pop_valid_sequence_index ();
+			std::expected<size_t, SequenceError> index;
+			if (!uses_more_info) [[likely]] {
+				index = pop_valid_sequence_index ();
+			} else {
+				index = get_valid_sequence_index ();
+			}
+
 			if (!index.has_value ()) [[unlikely]] {
 				log_warn (LOG_TIMING, "FastTiming::end_event called without prior FastTiming::start_event called");
 				return 0;
@@ -320,40 +332,64 @@ namespace xamarin::android::exp {
 		// The "true" portion of `std::enable_if_t` sets the return type of the wrapper to match `F`
 		template<typename F, typename... Args> [[gnu::always_inline]]
 		std::enable_if_t<!std::is_void_v<decltype(std::declval<F>()(std::declval<Args>()...))>, decltype(std::declval<F>()(std::declval<Args>()...))>
-		time_call (std::string_view const& name, F&& fn, Args... args)
+		static time_call (std::string_view const& name, F&& fn, Args... args) noexcept
 		{
-			start_event (TimingEventKind::FunctionCall);
+			if (!is_enabled) [[likely]] {
+				return fn (std::forward<Args>(args)...);
+			}
+
+			internal_timing.start_event (TimingEventKind::FunctionCall);
 			auto ret = fn (std::forward<Args>(args)...);
-			end_event (true /* uses_more_info */);
-			add_more_info (name);
+			internal_timing.end_event (true /* uses_more_info */);
+			internal_timing.add_more_info (name);
 			return ret;
 		}
 
-		template<typename F, typename... Args>
+		template<typename F, typename... Args> [[gnu::always_inline]]
 		std::enable_if_t<std::is_void_v<decltype(std::declval<F>()(std::declval<Args>()...))>, void>
-		time_call (std::string_view const& name, F&& fn, Args... args)
+		static time_call (std::string_view const& name, F&& fn, Args... args) noexcept
 		{
-			start_event (TimingEventKind::FunctionCall);
+			if (!is_enabled) [[likely]] {
+				fn (std::forward<Args>(args)...);
+				return;
+			}
+
+			internal_timing.start_event (TimingEventKind::FunctionCall);
 			fn (std::forward<Args>(args)...);
-			end_event (true /* uses_more_info */);
-			add_more_info (name);
+			internal_timing.end_event (true /* uses_more_info */);
+			internal_timing.add_more_info (name);
 		}
 
 	private:
 		[[gnu::always_inline]]
-		auto pop_valid_sequence_index () noexcept -> std::expected<size_t, bool>
+		auto get_valid_sequence_index () noexcept -> std::expected<size_t, SequenceError>
 		{
 			if (open_sequences.empty ()) [[unlikely]] {
-				return std::unexpected (false);
+				return std::unexpected (SequenceError::EmptyStack);
 			}
 
 			size_t index = open_sequences.top ();
-			open_sequences.pop ();
-
 			if (!is_valid_event_index (index)) [[unlikely]] {
-				return std::unexpected (false);
+				return std::unexpected (SequenceError::InvalidIndex);
 			}
+
 			return index;
+		}
+
+		[[gnu::always_inline]]
+		auto pop_valid_sequence_index () noexcept -> std::expected<size_t, SequenceError>
+		{
+			auto ret = get_valid_sequence_index ();
+			if (ret.has_value ()) [[likely]] {
+				open_sequences.pop ();
+				return ret;
+			}
+
+			if (ret.error () != SequenceError::EmptyStack) {
+				open_sequences.pop ();
+			}
+
+			return ret;
 		}
 
 		template<size_t BufferSize> [[gnu::always_inline]]
@@ -443,6 +479,12 @@ namespace xamarin::android::exp {
 					message.append (desc);
 					return;
 				}
+
+				case TimingEventKind::FunctionCall: {
+					constexpr auto desc = "function call: "sv;
+					message.append (desc);
+					return;
+				};
 
 				default: {
 					constexpr auto desc = "Unknown timing event"sv;
