@@ -66,8 +66,6 @@ namespace Java.LangTests
 		}
 
 		[Test]
-		[Category ("CoreCLRIgnore")] //TODO: https://github.com/dotnet/android/issues/10069
-		[Category ("NativeAOTIgnore")] //TODO: https://github.com/dotnet/android/issues/10079
 		public void JnienvCreateInstance_RegistersMultipleInstances ()
 		{
 			using (var adapter = new CreateInstance_OverrideAbsListView_Adapter (Application.Context)) {
