@@ -299,7 +299,22 @@
                          AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
                          AndroidRuntime="$(CMakeRuntimeFlavor)"
                          RuntimePackName="$(_RuntimePackName)" />
+      <_RuntimePackFiles Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\%(AndroidSupportedTargetJitAbi.AndroidRID)\*.so"
+                         AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
+                         AndroidRuntime="$(CMakeRuntimeFlavor)"
+                         RuntimePackName="$(_RuntimePackName)" />
       <!-- NOTE: not building native libraries for NativeAOT yet -->
+    </ItemGroup>
+
+    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
+      <_RuntimePackFiles Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\%(AndroidSupportedTargetJitAbi.AndroidRID)\*.o"
+                         AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
+                         AndroidRuntime="$(CMakeRuntimeFlavor)"
+                         RuntimePackName="$(_RuntimePackName)" />
+      <_RuntimePackFiles Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\%(AndroidSupportedTargetJitAbi.AndroidRID)\*.a"
+                         AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
+                         AndroidRuntime="$(CMakeRuntimeFlavor)"
+                         RuntimePackName="$(_RuntimePackName)" />
     </ItemGroup>
 
     <Copy
