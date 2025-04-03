@@ -56,23 +56,23 @@ void FastTiming::dump () noexcept
 	uint64_t total_assembly_load_time = 0u;
 	uint64_t total_java_to_managed_time = 0u;
 	uint64_t total_managed_to_java_time = 0u;
-	uint64_t total_ns;
+	uint64_t event_time_ns;
 
-	format_and_log (init_time, message, total_ns, true /* indent */);
+	format_and_log (init_time, message, event_time_ns, true /* indent */);
 	for (TimingEvent const& event : events) {
-		format_and_log (event, message, total_ns, true /* indent */);
+		format_and_log (event, message, event_time_ns, true /* indent */);
 
 		switch (event.kind) {
 			case TimingEventKind::AssemblyLoad:
-				total_assembly_load_time += total_ns;
+				total_assembly_load_time += event_time_ns;
 				break;
 
 			case TimingEventKind::JavaToManaged:
-				total_java_to_managed_time += total_ns;
+				total_java_to_managed_time += event_time_ns;
 				break;
 
 			case TimingEventKind::ManagedToJava:
-				total_managed_to_java_time += total_ns;
+				total_managed_to_java_time += event_time_ns;
 				break;
 
 			default:

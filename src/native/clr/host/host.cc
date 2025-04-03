@@ -303,7 +303,7 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	// The first entry in the property arrays is for the host contract pointer. Application build makes sure
 	// of that.
 	init_runtime_property_values[0] = host_contract_ptr_buffer.data ();
-	int hr = coreclr_initialize (
+	int hr = exp::FastTiming::time_call ("coreclr_initialize", coreclr_initialize,
 		application_config.android_package_name,
 		"Xamarin.Android",
 		(int)application_config.number_of_runtime_properties,
@@ -377,7 +377,7 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 
 	void *delegate = nullptr;
 	log_debug (LOG_ASSEMBLY, "Creating UCO delegate to {}.RegisterJniNatives", Constants::JNIENVINIT_FULL_TYPE_NAME);
-	delegate = create_delegate (Constants::MONO_ANDROID_ASSEMBLY_NAME, Constants::JNIENVINIT_FULL_TYPE_NAME, "RegisterJniNatives"sv);
+	delegate = exp::FastTiming::time_call ("create_delegate for RegisterJniNatives"sv, create_delegate, Constants::MONO_ANDROID_ASSEMBLY_NAME, Constants::JNIENVINIT_FULL_TYPE_NAME, "RegisterJniNatives"sv);
 	jnienv_register_jni_natives = reinterpret_cast<jnienv_register_jni_natives_fn> (delegate);
 	abort_unless (
 		jnienv_register_jni_natives != nullptr,
@@ -391,7 +391,7 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	);
 
 	log_debug (LOG_ASSEMBLY, "Creating UCO delegate to {}.Initialize", Constants::JNIENVINIT_FULL_TYPE_NAME);
-	delegate = create_delegate (Constants::MONO_ANDROID_ASSEMBLY_NAME, Constants::JNIENVINIT_FULL_TYPE_NAME, "Initialize"sv);
+	delegate = exp::FastTiming::time_call ("create_delegate for Initialize"sv, create_delegate, Constants::MONO_ANDROID_ASSEMBLY_NAME, Constants::JNIENVINIT_FULL_TYPE_NAME, "Initialize"sv);
 	auto initialize = reinterpret_cast<jnienv_initialize_fn> (delegate);
 	abort_unless (
 		initialize != nullptr,
@@ -405,7 +405,7 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	);
 
 	log_debug (LOG_DEFAULT, "Calling into managed runtime init"sv);
-	initialize (&init);
+	exp::FastTiming::time_call ("JNIEnv.Initialize UCO", initialize, &init);
 
 	if (exp::FastTiming::enabled ()) [[unlikely]] {
 		exp::internal_timing.end_event (); // native to managed
