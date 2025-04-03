@@ -43,7 +43,17 @@ bool Host::clr_external_assembly_probe (const char *path, void **data_start, int
 		return false; // TODO: abort instead?
 	}
 
+	if (exp::FastTiming::enabled ()) [[unlikely]] {
+		exp::internal_timing.start_event (exp::TimingEventKind::AssemblyLoad);
+	}
+
 	*data_start = AssemblyStore::open_assembly (path, *size);
+
+	if (exp::FastTiming::enabled ()) [[unlikely]] {
+		exp::internal_timing.end_event (true /* uses_more_info */);
+		exp::internal_timing.add_more_info (path);
+	}
+
 	log_debug (
 		LOG_ASSEMBLY,
 		"Assembly data {}mapped ({:p}, {} bytes)",

@@ -56,15 +56,21 @@ void FastTiming::dump () noexcept
 	uint64_t total_assembly_load_time = 0u;
 	uint64_t total_java_to_managed_time = 0u;
 	uint64_t total_managed_to_java_time = 0u;
+	uint64_t total_assembly_decompression_time = 0u;
 	uint64_t event_time_ns;
 
 	format_and_log (init_time, message, event_time_ns, true /* indent */);
-	for (TimingEvent const& event : events) {
+	for (size_t i = 0uz; i < entries; i++) {
+		TimingEvent const& event = events[i];
 		format_and_log (event, message, event_time_ns, true /* indent */);
 
 		switch (event.kind) {
 			case TimingEventKind::AssemblyLoad:
 				total_assembly_load_time += event_time_ns;
+				break;
+
+			case TimingEventKind::AssemblyDecompression:
+				total_assembly_decompression_time += event_time_ns;
 				break;
 
 			case TimingEventKind::JavaToManaged:
@@ -83,20 +89,28 @@ void FastTiming::dump () noexcept
 
 	log_write (LOG_TIMING, LogLevel::Info, "[2/4] Accumulated performance results"sv);
 
-	auto log_time = [] (std::string_view const& msg, size_t ns)
+	auto log_time = [] (std::string_view const& msg, uint64_t ns)
 	{
 		chrono::nanoseconds time_ns (ns);
-		log_info_nocheck (
+		// Do not change the string format after the first colon, its format is required by performance measuring
+		// utilities.
+		log_info_nocheck_fmt (
 			LOG_TIMING,
 			"  {}: {}:{}::{}",
 			msg,
-			chrono::duration_cast<chrono::seconds> (time_ns),
-			chrono::duration_cast<chrono::milliseconds> (time_ns),
-			time_ns % 1ms
+			chrono::duration_cast<chrono::seconds> (time_ns).count (),
+			chrono::duration_cast<chrono::milliseconds> (time_ns).count (),
+			(time_ns % 1ms).count ()
 		);
 	};
 
+	// Do not change the sequence numbers. If a measurement is removed, its sequence number must not be reused.
+	// The sequence numbers are used by performance measuring utilities to find the figures.
 	log_time ("[2/5] Assembly load"sv, total_assembly_load_time);
 	log_time ("[2/6] Java to Managed lookup"sv, total_java_to_managed_time);
 	log_time ("[2/7] Managed to Java lookup"sv, total_managed_to_java_time);
+	log_time ("[2/8] Assembly decompression"sv, total_assembly_decompression_time);
+	log_time ("[2/9] Event timing overhead, per call"sv, static_cast<uint64_t>((start_end_event_time.end - start_end_event_time.start).count ()));
+	log_time ("[2/10] clock_gettime overhead, per call"sv, static_cast<uint64_t>((get_time_overhead.end - get_time_overhead.start).count ()));
+	log_time ("[2/11] Timing infra init overhead, once"sv, static_cast<uint64_t>((init_time.end - init_time.start).count ()));
 }
