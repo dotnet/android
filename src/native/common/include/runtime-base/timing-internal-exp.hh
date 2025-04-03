@@ -258,11 +258,10 @@ namespace xamarin::android::exp {
 			ev.more_info = nullptr;
 		}
 
-		// The return value is necessary only if one needs to add some extra information to the event, otherwise
-		// it can be ignored. If `uses_more_info` is `true`, the caller **MUST** call `add_more_info`, since the
+		// If `uses_more_info` is `true`, the caller **MUST** call `add_more_info`, since the
 		// timing sequence number will **NOT** be popped off the stack by this call!
 		[[gnu::always_inline]]
-		auto end_event (bool uses_more_info = false, bool skip_log = false) noexcept -> size_t
+		void end_event (bool uses_more_info = false, bool skip_log = false) noexcept
 		{
 			std::expected<size_t, SequenceError> index;
 			if (!uses_more_info) [[likely]] {
@@ -273,15 +272,13 @@ namespace xamarin::android::exp {
 
 			if (!index.has_value ()) [[unlikely]] {
 				log_warn (LOG_TIMING, "FastTiming::end_event called without prior FastTiming::start_event called");
-				return 0;
+				return;
 			}
 
 			events[*index].end = get_time ();
 			if (!skip_log) [[likely]] {
 				log (events[*index], uses_more_info /* skip_log_if_more_info_missing */);
 			}
-
-			return *index;
 		}
 
 		template<size_t MaxStackSize, typename TStorage, typename TChar = char>
@@ -403,7 +400,7 @@ namespace xamarin::android::exp {
 				}
 
 				case TimingEventKind::AssemblyLoad: {
-					constexpr auto desc = "Assembly load"sv;
+					constexpr auto desc = "Assembly load for "sv;
 					message.append (desc);
 					return;
 				}
