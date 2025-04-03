@@ -70,15 +70,6 @@ namespace Java.Interop {
 			throw new NotImplementedException ();
 		}
 
-		[UnconditionalSuppressMessage ("Trimming", "IL3000", Justification = "We check for a null Assembly.Location value!")]
-		internal static string? GetAssemblyLocation (Assembly assembly)
-		{
-			var location = assembly.Location;
-			if (!string.IsNullOrEmpty (location))
-				return location;
-			return null;
-		}
-
 		internal protected JreRuntime (NativeAotRuntimeOptions builder)
 			: base (CreateJreVM (builder))
 		{
