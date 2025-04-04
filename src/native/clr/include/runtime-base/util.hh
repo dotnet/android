@@ -49,6 +49,12 @@ namespace xamarin::android {
 
 	public:
 		static int create_directory (const char *pathname, mode_t mode);
+
+		static auto create_directory (std::string_view const& dir, mode_t mode) noexcept -> int
+		{
+			return create_directory (dir.data (), mode);
+		}
+
 		static void create_public_directory (std::string_view const& dir);
 		static auto monodroid_fopen (std::string_view const& filename, std::string_view const& mode) noexcept -> FILE*;
 		static void set_world_accessable (std::string_view const& path);

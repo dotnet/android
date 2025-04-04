@@ -15,6 +15,7 @@
 #include <thread>
 #include <vector>
 
+#include <constants.hh>
 #include <runtime-base/logger.hh>
 #include <runtime-base/startup-aware-lock.hh>
 #include <runtime-base/util.hh>
@@ -74,6 +75,17 @@ namespace xamarin::android::exp {
 		// be large enough to not require any dynamic reallocation of memory at
 		// the run time.
 		static inline constexpr size_t INITIAL_EVENT_VECTOR_SIZE = 4096uz;
+
+		// defaults
+		static constexpr bool default_fast_timing_enabled = false;
+		static constexpr bool default_log_to_file = false;
+		static constexpr size_t default_duration_milliseconds = 1500;
+		static constexpr std::string_view default_timing_file_name { "timing.txt" };
+
+		// Parameters for the `debug.mono.timing` property
+		static constexpr std::string_view OPT_DURATION      { "duration=" };
+		static constexpr std::string_view OPT_FILE_NAME     { "filename=" };
+		static constexpr std::string_view OPT_TO_FILE       { "to-file" };
 
 	protected:
 		void configure_for_use () noexcept
@@ -153,13 +165,13 @@ namespace xamarin::android::exp {
 		// having to be kept in sync with the actual wording used for the event message.
 		//
 		template<size_t BufferSize> [[gnu::always_inline]]
-		static void format_and_log (TimingEvent const& event, dynamic_local_string<BufferSize, char>& message, bool indent = false) noexcept
+		static auto format_message (TimingEvent const& event, dynamic_local_string<BufferSize, char>& message, bool indent = false) noexcept -> uint64_t
 		{
 			using namespace std::literals;
 
-			constexpr auto INDENT = "  "sv;
+			constexpr auto INDENT          = "  "sv;
 			constexpr auto NATIVE_INIT_TAG = "[0/"sv;
-			constexpr auto MANAGED_TAG = "[1/"sv;
+			constexpr auto MANAGED_TAG     = "[1/"sv;
 
 			message.clear ();
 			if (indent) {
@@ -180,28 +192,15 @@ namespace xamarin::android::exp {
 				message.append (event.more_info->c_str (), event.more_info->length ());
 			}
 
-			constexpr auto COLON = ":"sv;
-			constexpr auto TWO_COLONS = "::"sv;
-
 			auto interval = event.end - event.start; // nanoseconds
 			message.append ("; elapsed exp: "sv);
 			message.append (static_cast<uint64_t>((chrono::duration_cast<chrono::seconds>(interval).count ())));
-			message.append (COLON);
+			message.append (":"sv);
 			message.append (static_cast<uint64_t>((chrono::duration_cast<chrono::milliseconds>(interval)).count ()));
-			message.append (TWO_COLONS);
+			message.append ("::"sv);
 			message.append (static_cast<uint64_t>((interval % 1ms).count ()));
 
-			log_write (LOG_TIMING, LogLevel::Info, message.get ());
-		}
-
-		template<size_t BufferSize> [[gnu::always_inline]]
-		static void format_and_log (TimingEvent const& event, dynamic_local_string<BufferSize, char>& message, uint64_t& event_time_ns, bool indent = false) noexcept
-		{
-			using namespace std::literals;
-
-			auto interval = event.end - event.start;
-			event_time_ns = static_cast<uint64_t>(interval.count ());
-			format_and_log (event, message, indent);
+			return static_cast<uint64_t>(interval.count ());
 		}
 
 		[[gnu::always_inline]]
@@ -210,7 +209,8 @@ namespace xamarin::android::exp {
 			// `message` isn't used here, it is passed to `format_and_log` so that the `dump()` function can
 			// be slightly more efficient when dumping the event buffer.
 			dynamic_local_string<Constants::MAX_LOGCAT_MESSAGE_LENGTH, char> message;
-			format_and_log (event, message, indent);
+			format_message (event, message, indent);
+			log_write (LOG_TIMING, LogLevel::Info, message.get ());
 		}
 
 		[[gnu::always_inline]]
@@ -358,6 +358,13 @@ namespace xamarin::android::exp {
 		}
 
 	private:
+		bool no_events_logged (size_t entries) noexcept;
+		void dump_to_logcat (size_t entries) noexcept;
+		void dump_to_file (size_t entries) noexcept;
+
+		template<void(line_writer)(std::string_view const& buffer)>
+		void dump (size_t entries, bool indent) noexcept;
+
 		[[gnu::always_inline]]
 		auto get_valid_sequence_index () noexcept -> std::expected<size_t, SequenceError>
 		{
@@ -492,8 +499,8 @@ namespace xamarin::android::exp {
 		}
 
 	private:
+		void parse_options (dynamic_local_string<Constants::PROPERTY_VALUE_BUFFER_LEN> const& value) noexcept;
 		static void really_initialize (bool log_immediately) noexcept;
-		static void* timing_signal_thread (void *arg) noexcept;
 
 		// We cheat a bit here, by avoiding a call to libc++ code that performs the same action.
 		// We can do it because we know our target platform.
@@ -523,10 +530,13 @@ namespace xamarin::android::exp {
 		std::atomic_size_t next_event_index = 0uz;
 		std::mutex event_vector_realloc_mutex;
 		std::vector<TimingEvent> events;
+		std::unique_ptr<std::string> output_file_name{};
 
 		static inline thread_local std::stack<size_t> open_sequences;
 		static inline bool is_enabled = false;
 		static inline bool immediate_logging = false;
+		static inline bool log_to_file = default_log_to_file;
+		static inline size_t duration_ms = default_duration_milliseconds;
 		static inline TimingEvent init_time{};
 		static inline TimingEvent start_end_event_time{};
 		static inline TimingEvent get_time_overhead{};

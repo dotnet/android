@@ -806,6 +806,12 @@ namespace xamarin::android {
 			return get_at (index);
 		}
 
+		[[gnu::always_inline]]
+		auto as_string_view () const noexcept -> std::string_view const&
+		{
+			return { buffer.get (), buffer.size () };
+		}
+
 	protected:
 		template<typename Integer> [[gnu::always_inline]]
 		void append_integer (Integer i) noexcept
