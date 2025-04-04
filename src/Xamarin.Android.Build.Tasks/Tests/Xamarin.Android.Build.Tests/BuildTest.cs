@@ -30,6 +30,8 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
+				ProjectName = "Test Me",
+				RootNamespace = "Test.Me",
 				EnableDefaultItems = true,
 				ExtraNuGetConfigSources = {
 					// Microsoft.AspNetCore.Components.WebView is not in dotnet-public
@@ -82,7 +84,7 @@ namespace Xamarin.Android.Build.Tests
 						},
 			});
 			proj.OtherBuildItems.Add (new BuildItem ("Compile", default (Func<string>)) {
-						TextContent = () => InlineData.DesignerWithContents (proj.ProjectName, "Resource", "public partial", new string[] {"CancelButton"}),
+						TextContent = () => InlineData.DesignerWithContents (proj.RootNamespace ?? proj.ProjectName, "Resource", "public partial", new string[] {"CancelButton"}),
 						Update = () =>  "Resource.designer.cs",
 						Metadata = {
 							{ "DependentUpon", "Resource.resx" },
