@@ -18,6 +18,7 @@
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
 #include <runtime-base/timing-internal.hh>
+#include <runtime-base/timing-internal-exp.hh>
 #include <shared/log_types.hh>
 #include <startup/zip.hh>
 
@@ -42,7 +43,17 @@ bool Host::clr_external_assembly_probe (const char *path, void **data_start, int
 		return false; // TODO: abort instead?
 	}
 
+	if (exp::FastTiming::enabled ()) [[unlikely]] {
+		exp::internal_timing.start_event (exp::TimingEventKind::AssemblyLoad);
+	}
+
 	*data_start = AssemblyStore::open_assembly (path, *size);
+
+	if (exp::FastTiming::enabled ()) [[unlikely]] {
+		exp::internal_timing.end_event (true /* uses_more_info */);
+		exp::internal_timing.add_more_info (path);
+	}
+
 	log_debug (
 		LOG_ASSEMBLY,
 		"Assembly data {}mapped ({:p}, {} bytes)",
@@ -261,12 +272,11 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	Logger::init_logging_categories ();
 
 	// If fast logging is disabled, log messages immediately
-	FastTiming::initialize ((Logger::log_timing_categories() & LogTimingCategories::FastBare) != LogTimingCategories::FastBare);
+	exp::FastTiming::initialize ((Logger::log_timing_categories() & LogTimingCategories::FastBare) != LogTimingCategories::FastBare);
 
-	size_t total_time_index;
-	if (FastTiming::enabled ()) [[unlikely]] {
+	if (exp::FastTiming::enabled ()) [[unlikely]] {
 		_timing = std::make_shared<Timing> ();
-		total_time_index = internal_timing.start_event (TimingEventKind::TotalRuntimeInit);
+		exp::internal_timing.start_event (exp::TimingEventKind::TotalRuntimeInit);
 	}
 
 	jstring_array_wrapper applicationDirs (env, appDirs);
@@ -292,9 +302,8 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 
 	gather_assemblies_and_libraries (runtimeApks, haveSplitApks);
 
-	size_t clr_init_time_index;
-	if (FastTiming::enabled ()) [[unlikely]] {
-		clr_init_time_index = internal_timing.start_event (TimingEventKind::MonoRuntimeInit);
+	if (exp::FastTiming::enabled ()) [[unlikely]] {
+		exp::internal_timing.start_event (exp::TimingEventKind::ManagedRuntimeInit);
 	}
 
 	coreclr_set_error_writer (clr_error_writer);
@@ -304,7 +313,7 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	// The first entry in the property arrays is for the host contract pointer. Application build makes sure
 	// of that.
 	init_runtime_property_values[0] = host_contract_ptr_buffer.data ();
-	int hr = coreclr_initialize (
+	int hr = exp::FastTiming::time_call ("coreclr_initialize", coreclr_initialize,
 		application_config.android_package_name,
 		"Xamarin.Android",
 		(int)application_config.number_of_runtime_properties,
@@ -314,8 +323,8 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 		&domain_id
 	);
 
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.end_event (clr_init_time_index);
+	if (exp::FastTiming::enabled ()) [[unlikely]] {
+		exp::internal_timing.end_event ();
 	}
 
 	// TODO: make S_OK & friends known to us
@@ -372,14 +381,13 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 
 	OSBridge::initialize_on_runtime_init (env, runtimeClass);
 
-	size_t native_to_managed_index;
-	if (FastTiming::enabled ()) [[unlikely]] {
-		native_to_managed_index = internal_timing.start_event (TimingEventKind::NativeToManagedTransition);
+	if (exp::FastTiming::enabled ()) [[unlikely]] {
+		exp::internal_timing.start_event (exp::TimingEventKind::NativeToManagedTransition);
 	}
 
 	void *delegate = nullptr;
 	log_debug (LOG_ASSEMBLY, "Creating UCO delegate to {}.RegisterJniNatives", Constants::JNIENVINIT_FULL_TYPE_NAME);
-	delegate = create_delegate (Constants::MONO_ANDROID_ASSEMBLY_NAME, Constants::JNIENVINIT_FULL_TYPE_NAME, "RegisterJniNatives"sv);
+	delegate = exp::FastTiming::time_call ("create_delegate for RegisterJniNatives"sv, create_delegate, Constants::MONO_ANDROID_ASSEMBLY_NAME, Constants::JNIENVINIT_FULL_TYPE_NAME, "RegisterJniNatives"sv);
 	jnienv_register_jni_natives = reinterpret_cast<jnienv_register_jni_natives_fn> (delegate);
 	abort_unless (
 		jnienv_register_jni_natives != nullptr,
@@ -393,7 +401,7 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	);
 
 	log_debug (LOG_ASSEMBLY, "Creating UCO delegate to {}.Initialize", Constants::JNIENVINIT_FULL_TYPE_NAME);
-	delegate = create_delegate (Constants::MONO_ANDROID_ASSEMBLY_NAME, Constants::JNIENVINIT_FULL_TYPE_NAME, "Initialize"sv);
+	delegate = exp::FastTiming::time_call ("create_delegate for Initialize"sv, create_delegate, Constants::MONO_ANDROID_ASSEMBLY_NAME, Constants::JNIENVINIT_FULL_TYPE_NAME, "Initialize"sv);
 	auto initialize = reinterpret_cast<jnienv_initialize_fn> (delegate);
 	abort_unless (
 		initialize != nullptr,
@@ -407,19 +415,18 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	);
 
 	log_debug (LOG_DEFAULT, "Calling into managed runtime init"sv);
-	initialize (&init);
+	exp::FastTiming::time_call ("JNIEnv.Initialize UCO", initialize, &init);
 
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.end_event (native_to_managed_index);
-		internal_timing.end_event (total_time_index);
+	if (exp::FastTiming::enabled ()) [[unlikely]] {
+		exp::internal_timing.end_event (); // native to managed
+		exp::internal_timing.end_event (); // total init time
 	}
 }
 
 void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods) noexcept
 {
-	size_t total_time_index;
-	if (FastTiming::enabled ()) [[unlikely]] {
-		total_time_index = internal_timing.start_event (TimingEventKind::RuntimeRegister);
+	if (exp::FastTiming::enabled ()) [[unlikely]] {
+		exp::internal_timing.start_event (exp::TimingEventKind::RuntimeRegister);
 	}
 
 	jsize managedType_len = env->GetStringLength (managedType);
@@ -433,15 +440,15 @@ void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType,
 	env->ReleaseStringChars (methods, methods_ptr);
 	env->ReleaseStringChars (managedType, managedType_ptr);
 
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.end_event (total_time_index, true /* uses_more_info */);
+	if (exp::FastTiming::enabled ()) [[unlikely]] {
+		exp::internal_timing.end_event (true /* uses_more_info */);
 
 		dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> type;
 		const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
 		type.assign (mt_ptr, strlen (mt_ptr));
 		env->ReleaseStringUTFChars (managedType, mt_ptr);
 
-		internal_timing.add_more_info (total_time_index, type);
+		exp::internal_timing.add_more_info (type);
 	}
 }
 

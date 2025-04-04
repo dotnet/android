@@ -57,6 +57,7 @@ namespace xamarin::android {
 		static inline constexpr std::string_view DEBUG_MONO_SOFT_BREAKPOINTS      { "debug.mono.soft_breakpoints" };
 		static inline constexpr std::string_view DEBUG_MONO_TRACE_PROPERTY        { "debug.mono.trace" };
 		static inline constexpr std::string_view DEBUG_MONO_WREF_PROPERTY         { "debug.mono.wref" };
+		static inline constexpr std::string_view DEBUG_MONO_TIMING                { "debug.mono.timing" };
 
 		static constexpr std::string_view LOG_CATEGORY_NAME_NONE                  { "*none*" };
 		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID             { "monodroid" };
