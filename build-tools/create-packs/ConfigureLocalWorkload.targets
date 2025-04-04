@@ -24,6 +24,7 @@
       Inputs="$(MSBuildAllProjects);@(_RuntimeListInputs)"
       Outputs="@(_RuntimeListOutputs)">
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; build -t:_GenerateFrameworkList -p:IntermediateOutputPath=%(_RuntimeListOutputs.RelativeDir) -p:AndroidRID=%(_RuntimeListOutputs.AndroidRID) -p:AndroidRuntime=%(_RuntimeListOutputs.AndroidRuntime) -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build -t:_GenerateFrameworkList -p:IntermediateOutputPath=$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.$(AndroidApiLevel).android\$(AndroidPackVersion)\data\ -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.Managed.proj&quot;" />
   </Target>
 
   <Target Name="CreateLocalFrameworkLists"

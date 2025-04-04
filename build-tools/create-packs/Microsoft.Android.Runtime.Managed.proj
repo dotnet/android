@@ -1,0 +1,73 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Runtime.Managed.proj
+
+This project file is used to create Microsoft.Android.Runtime.[API].android NuGets, which are
+runtime packs that contain RID agnostic assets required for a self-contained publish of
+projects that use the Microsoft.Android framework in .NET 6+.
+***********************************************************************************************
+-->
+<Project Sdk="Microsoft.Build.NoTargets">
+
+  <Sdk Name="Microsoft.DotNet.SharedFramework.Sdk" Version="$(MicrosoftDotNetBuildTasksFeedPackageVersion)" />
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AndroidRID>android</AndroidRID>
+    <RuntimeIdentifier>$(AndroidRID)</RuntimeIdentifier>
+    <PackageId>Microsoft.Android.Runtime.$(AndroidApiLevel).$(AndroidRID)</PackageId>
+    <OverridePackageId>$(PackageId)</OverridePackageId>
+    <PlatformPackageType>RuntimePack</PlatformPackageType>
+    <Description>Microsoft.Android managed runtime components for API $(AndroidApiLevel). Please do not reference directly.</Description>
+    <_AndroidRuntimePackAssemblyPath>runtimes/$(AndroidRID)/lib/$(DotNetTargetFramework)</_AndroidRuntimePackAssemblyPath>
+    <_AndroidRuntimePackNativePath>runtimes/$(AndroidRID)/native</_AndroidRuntimePackNativePath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <BeforePack>
+      _GetDefaultPackageVersion;
+      $(BeforePack);
+    </BeforePack>
+  </PropertyGroup>
+
+  <!-- Reset the TargetFramework after ProcessFrameworkReferences runs to avoid issues resolving non-existant linux-bionic runtime packs -->
+  <Target Name="_RemoveLinuxFrameworkReferences"
+      AfterTargets="ProcessFrameworkReferences">
+    <PropertyGroup>
+      <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+    </PropertyGroup>
+  </Target>
+
+ <Target Name="_GetRuntimePackItems"
+      DependsOnTargets="_GetLicense;_GetDefaultPackageVersion"
+      BeforeTargets="GetFilesToPackage" >
+    <PropertyGroup>
+      <_RuntimeFlavorDirName Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">clr</_RuntimeFlavorDirName>
+      <_RuntimeFlavorDirName Condition=" '$(AndroidRuntime)' == 'Mono' Or '$(AndroidRuntime)' == '' ">mono</_RuntimeFlavorDirName>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETDefaultOutDir)Java.Interop.dll" />
+      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETDefaultOutDir)Mono.Android.dll" />
+      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETDefaultOutDir)Mono.Android.Runtime.dll" />
+      <!-- Always include stable versions of the following assemblies -->
+      <_AndroidRuntimePackAssemblies
+          Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\Microsoft.Android.Runtime.NativeAOT.dll"
+          Condition=" '$(AndroidRuntime)' == 'NativeAOT' "
+      />
+      <_AndroidRuntimePackAssemblies
+          Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\System.IO.Hashing.dll"
+          NoSymbols="true"
+      />
+      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\Mono.Android.Export.dll" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <FrameworkListFileClass Include="@(_AndroidRuntimePackAssemblies->'%(Filename)%(Extension)')" Profile="Android" />
+      <FrameworkListFileClass Include="@(NativeRuntimeAsset->'%(Filename)%(Extension)')" Profile="Android" />
+      <FilesToPackage Include="@(_AndroidRuntimePackAssemblies)" />
+      <FilesToPackage Include="@(_AndroidRuntimePackAssemblies->'%(RelativeDir)%(Filename).pdb')" IsSymbolFile="true" Condition=" '%(_AndroidRuntimePackAssemblies.NoSymbols)' != 'true' " />
+    </ItemGroup>
+  </Target>
+
+</Project>

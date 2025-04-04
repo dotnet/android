@@ -30,6 +30,17 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
         LatestRuntimeFrameworkVersion="**FromWorkload**"
         TargetingPackName="Microsoft.Android.Ref.$(_AndroidTargetingPackId)"
         TargetingPackVersion="**FromWorkload**"
+        RuntimePackNamePatterns="Microsoft.Android.Runtime.$(_AndroidRuntimePackId).android"
+        RuntimePackRuntimeIdentifiers="android-arm;android-arm64;android-x86;android-x64"
+        Profile="Android"
+    />
+    <KnownFrameworkReference
+        Include="Microsoft.Android.Runtimes"
+        TargetFramework="@DOTNET_TARGET_FRAMEWORK@"
+        RuntimeFrameworkName="Microsoft.Android.Runtimes"
+        LatestRuntimeFrameworkVersion="**FromWorkload**"
+        TargetingPackName="Microsoft.Android.Ref.$(_AndroidTargetingPackId)"
+        TargetingPackVersion="**FromWorkload**"
         RuntimePackNamePatterns="Microsoft.Android.Runtime.$(_AndroidRuntimePackRuntime).$(_AndroidRuntimePackId).**RID**"
         RuntimePackRuntimeIdentifiers="android-arm;android-arm64;android-x86;android-x64"
         Profile="Android"

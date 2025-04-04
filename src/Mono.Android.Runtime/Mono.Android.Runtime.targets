@@ -34,7 +34,7 @@
     />
     <Copy
         SourceFiles="%(_RuntimePackFiles.Identity)"
-        DestinationFolder="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.%(_RuntimePackFiles.AndroidRuntime).$(AndroidApiLevel).%(_RuntimePackFiles.AndroidRID)\$(AndroidPackVersion)\runtimes\%(_RuntimePackFiles.AndroidRID)\lib\$(DotNetTargetFramework)"
+        DestinationFolder="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.$(AndroidApiLevel).android\$(AndroidPackVersion)\runtimes\android\lib\$(DotNetTargetFramework)"
         SkipUnchangedFiles="true"
     />
   </Target>
