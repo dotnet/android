@@ -4,21 +4,21 @@
       <Uri>https://github.com/dotnet/sdk</Uri>
       <Sha>8d515d2a57e0c45a81795d7b133300fd8944f3f9</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink" Version="9.0.4-servicing.25163.4">
+    <Dependency Name="Microsoft.NET.ILLink" Version="9.0.4-servicing.25202.7">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>d9d0ae01ab31513b02033317a9f716f1aeb5abab</Sha>
+      <Sha>5da49f4e834fd5ecc3bd3fac5af227a2578ee664</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="9.0.4">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>d9d0ae01ab31513b02033317a9f716f1aeb5abab</Sha>
+      <Sha>5da49f4e834fd5ecc3bd3fac5af227a2578ee664</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NETCore.App.Ref" Version="9.0.4">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>d9d0ae01ab31513b02033317a9f716f1aeb5abab</Sha>
+      <Sha>5da49f4e834fd5ecc3bd3fac5af227a2578ee664</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-9.0.100" Version="9.0.4" CoherentParentDependency="Microsoft.NETCore.App.Ref">
       <Uri>https://github.com/dotnet/emsdk</Uri>
-      <Sha>78be8cdf4f0bfd93018fd7a87f8282a41d041298</Sha>
+      <Sha>b8d8fec81291264a825ba4c803ad50577b9d2265</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-alpha.25112.2" CoherentParentDependency="Microsoft.NET.ILLink.Tasks">
       <Uri>https://github.com/dotnet/cecil</Uri>
