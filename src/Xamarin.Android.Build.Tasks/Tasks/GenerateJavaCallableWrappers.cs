@@ -69,7 +69,7 @@ public class GenerateJavaCallableWrappers : AndroidTask
 				return;
 			}
 
-			var xml = JavaObjectsXmlFile.Import (wrappersPath, JavaObjectsXmlFileReadType.JCW);
+			var xml = JavaObjectsXmlFile.Import (wrappersPath, JavaObjectsXmlFileReadType.JavaCallableWrappers);
 
 			if (xml.JavaCallableWrappers.Count == 0) {
 				Log.LogDebugMessage ($"'{wrappersPath}' is empty, skipping.");

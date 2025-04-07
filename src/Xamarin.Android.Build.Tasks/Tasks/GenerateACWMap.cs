@@ -74,7 +74,7 @@ public class GenerateACWMap : AndroidTask
 				return;
 			}
 
-			var xml = JavaObjectsXmlFile.Import (wrappersPath, JavaObjectsXmlFileReadType.ACW);
+			var xml = JavaObjectsXmlFile.Import (wrappersPath, JavaObjectsXmlFileReadType.AndroidResourceFixups);
 
 			entries.AddRange (xml.ACWMapEntries);
 		}

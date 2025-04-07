@@ -107,10 +107,10 @@ class JavaObjectsXmlFile
 		var xml = XDocument.Load (filename);
 
 		// We let callers specify which part(s) of the file they want to deserialize to save time
-		if (readType.HasFlag (JavaObjectsXmlFileReadType.JCW) && xml.Root?.Element ("jcw-types") is XElement jcw)
+		if (readType.HasFlag (JavaObjectsXmlFileReadType.JavaCallableWrappers) && xml.Root?.Element ("jcw-types") is XElement jcw)
 			file.JavaCallableWrappers.AddRange (XmlImporter.Import (jcw));
 
-		if (readType.HasFlag (JavaObjectsXmlFileReadType.ACW) && xml.Root?.Element ("acw-types") is XElement acw) {
+		if (readType.HasFlag (JavaObjectsXmlFileReadType.AndroidResourceFixups) && xml.Root?.Element ("acw-types") is XElement acw) {
 			var partialAssemblyName = acw.GetAttributeOrDefault ("partial-assembly-name", string.Empty);
 			var moduleName = acw.GetAttributeOrDefault ("module-name", string.Empty);
 
@@ -136,6 +136,6 @@ class JavaObjectsXmlFile
 enum JavaObjectsXmlFileReadType
 {
 	None = 0,
-	ACW = 1,
-	JCW = 2,
+	AndroidResourceFixups = 1,
+	JavaCallableWrappers = 2,
 }

@@ -85,8 +85,10 @@ public class FindJavaObjectsStep : BaseStep
 		if (UseMarshalMethods)
 			reader_options.MethodClassifier = new MarshalMethodsClassifier (Context, Context.Resolver, Log);
 
-		foreach (var type in types)
-			wrappers.Add (CecilImporter.CreateType (type, Context, reader_options));
+		foreach (var type in types) {
+			var wrapper = CecilImporter.CreateType (type, Context, reader_options);
+			wrappers.Add (wrapper);
+		}
 
 		return wrappers;
 	}
