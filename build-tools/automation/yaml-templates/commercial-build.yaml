@@ -1,6 +1,6 @@
 parameters:
   installerArtifactName: $(InstallerArtifactName)
-  xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
+  xaSourcePath: $(System.DefaultWorkingDirectory)/android
   makeMSBuildArgs: ''
   nugetArtifactName: $(NuGetArtifactName)
   testAssembliesArtifactName: $(TestAssembliesArtifactName)
@@ -29,7 +29,7 @@ steps:
 - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
   - checkout: android-platform-support
     submodules: recursive
-    path: s/xamarin-android/external/android-platform-support
+    path: s/android/external/android-platform-support
     persistCredentials: true
 
   - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)

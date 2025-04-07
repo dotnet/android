@@ -1,7 +1,8 @@
 parameters:
   buildResultArtifactName: Build Results - Linux
   checkoutCommit: ''
-  checkoutPath: 's/xamarin-android'
+  checkoutPath: 's/android'
+  xaSourcePath: $(System.DefaultWorkingDirectory)/android
   checkoutPersistCredentials: false
   dependsOn: ''
   dependsOnResult: ''
@@ -39,7 +40,7 @@ stages:
         - output: pipelineArtifact
           displayName: upload linux sdk
           artifactName: ${{ parameters.nugetArtifactName }}
-          targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
+          targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux
     steps:
     - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
       parameters:
@@ -65,11 +66,11 @@ stages:
       - checkout: android-platform-support
         clean: true
         submodules: recursive
-        path: s/xamarin-android/external/android-platform-support
+        path: s/android/external/android-platform-support
         persistCredentials: true
 
       - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
-        workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+        workingDirectory: ${{ parameters.xaSourcePath }}
         displayName: make prepare-external-git-dependencies
 
     - task: NuGetAuthenticate@1
@@ -78,21 +79,21 @@ stages:
         forceReinstallCredentialProvider: true
 
     - script: make jenkins PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+      workingDirectory: ${{ parameters.xaSourcePath }}
       displayName: make jenkins
 
     - script: make create-nupkgs CONFIGURATION=$(XA.Build.Configuration)
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+      workingDirectory: ${{ parameters.xaSourcePath }}
       displayName: make create-nupkgs
 
     - script: >
         df -h &&
-        mkdir -p $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux &&
-        ln $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-unsigned/Microsoft.Android.Sdk.Linux*.nupkg
-        $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux &&
-        ln $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-unsigned/SignList.xml
-        $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+        mkdir -p ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux &&
+        ln ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned/Microsoft.Android.Sdk.Linux*.nupkg
+        ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux &&
+        ln ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned/SignList.xml
+        ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux
+      workingDirectory: ${{ parameters.xaSourcePath }}
       displayName: copy linux sdk
 
     - ${{ if ne(parameters.use1ESTemplate, true) }}:
@@ -100,17 +101,17 @@ stages:
         displayName: upload linux sdk
         inputs:
           artifactName: ${{ parameters.nugetArtifactName }}
-          targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
+          targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
-        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
+        xaSourcePath: ${{ parameters.xaSourcePath }}
         artifactName: ${{ parameters.buildResultArtifactName }}
         includeBuildResults: true
         use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - template: /build-tools/automation/yaml-templates/fail-on-dirty-tree.yaml
       parameters:
-        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
+        xaSourcePath: ${{ parameters.xaSourcePath }}
 
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
