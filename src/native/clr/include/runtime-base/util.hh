@@ -58,6 +58,7 @@ namespace xamarin::android {
 		static void create_public_directory (std::string_view const& dir);
 		static auto monodroid_fopen (std::string_view const& filename, std::string_view const& mode) noexcept -> FILE*;
 		static void set_world_accessable (std::string_view const& path);
+		static auto set_world_accessible (int fd) noexcept -> bool;
 
 		// Puts higher half of the `value` byte as a hexadecimal character in `high_half` and
 		// the lower half in `low_half`

@@ -5,6 +5,7 @@
 #include <chrono>
 #include <ctime>
 #include <expected>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <mutex>
@@ -361,9 +362,7 @@ namespace xamarin::android::exp {
 		bool no_events_logged (size_t entries) noexcept;
 		void dump_to_logcat (size_t entries) noexcept;
 		void dump_to_file (size_t entries) noexcept;
-
-		template<void(line_writer)(std::string_view const& buffer)>
-		void dump (size_t entries, bool indent) noexcept;
+		void dump (size_t entries, bool indent, std::function<void(std::string_view const&)> line_writer) noexcept;
 
 		[[gnu::always_inline]]
 		auto get_valid_sequence_index () noexcept -> std::expected<size_t, SequenceError>

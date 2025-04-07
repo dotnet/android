@@ -807,9 +807,9 @@ namespace xamarin::android {
 		}
 
 		[[gnu::always_inline]]
-		auto as_string_view () const noexcept -> std::string_view const&
+		auto as_string_view () const noexcept -> std::string_view
 		{
-			return { buffer.get (), buffer.size () };
+			return { get (), length () };
 		}
 
 	protected:

@@ -11,36 +11,41 @@ using namespace xamarin::android;
 int
 Util::create_directory (const char *pathname, mode_t mode)
 {
-	// if (mode <= 0)
-	// 	mode = DEFAULT_DIRECTORY_MODE;
+	if  (pathname == nullptr || *pathname == '\0') {
+		errno = EINVAL;
+		return -1;
+	}
 
-	// if  (!pathname || *pathname == '\0') {
-	// 	errno = EINVAL;
-	// 	return -1;
-	// }
-	// mode_t oldumask = umask (022);
-	// std::unique_ptr<char> path {strdup_new (pathname)};
-	// int rv, ret = 0;
-	// for (char *d = path.get (); d != nullptr && *d; ++d) {
-	// 	if (*d != '/')
-	// 		continue;
-	// 	*d = 0;
-	// 	if (*path) {
-	// 		rv = make_directory (path.get (), mode);
-	// 		if  (rv == -1 && errno != EEXIST)  {
-	// 			ret = -1;
-	// 			break;
-	// 		}
-	// 	}
-	// 	*d = '/';
-	// }
+	if (mode <= 0) {
+	 	mode = Constants::DEFAULT_DIRECTORY_MODE;
+	}
 
-	// if (ret == 0)
-	// 	ret = make_directory (pathname, mode);
-	// umask (oldumask);
+	mode_t oldumask = umask (022);
+	dynamic_local_string<Constants::SENSIBLE_PATH_MAX> path { pathname };
+	int rv, ret = 0;
 
-	// return ret;
-	return -1;
+	for (char *d = path.get (); d != nullptr && *d != '\0'; d++) {
+		if (*d != '/') {
+			continue;
+		}
+
+		*d = '\0';
+		if (*path.get () != '\0') {
+			rv = ::mkdir (path.get (), mode);
+			if (rv == -1 && errno != EEXIST) {
+				ret = -1;
+				break;
+			}
+		}
+		*d = '/';
+	}
+
+	if (ret == 0) {
+		ret = ::mkdir (pathname, mode);
+	}
+	umask (oldumask);
+
+	return ret;
 }
 
 void
@@ -49,7 +54,12 @@ Util::create_public_directory (std::string_view const& dir)
 	mode_t m = umask (0);
 	int ret = mkdir (dir.data (), 0777);
 	if (ret < 0) {
-		log_warn (LOG_DEFAULT, "Failed to create directory '{}'. {}", dir, std::strerror (errno));
+		if (errno == EEXIST) {
+			// Try to change the mode, just in case
+			chmod (dir.data (), 0777);
+		} else {
+			log_warn (LOG_DEFAULT, "Failed to create directory '{}'. {}", dir, std::strerror (errno));
+		}
 	}
 	umask (m);
 }
@@ -79,4 +89,19 @@ void Util::set_world_accessable (std::string_view const& path)
 	if (r == -1) {
 		log_error (LOG_DEFAULT, "chmod(\"{}\", 0664) failed: {}", path, strerror (errno));
 	}
+}
+
+auto Util::set_world_accessible (int fd) noexcept -> bool
+{
+	int r;
+	do {
+		r = fchmod (fd, 0664);
+	} while (r == -1 && errno == EINTR);
+
+	if (r == -1) {
+		log_error (LOG_DEFAULT, "fchmod() failed: {}", strerror (errno));
+		return false;
+	}
+
+	return true;
 }

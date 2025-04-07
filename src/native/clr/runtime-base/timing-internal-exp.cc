@@ -1,6 +1,7 @@
 #include <chrono>
 
 #include <constants.hh>
+#include <xamarin-app.hh>
 #include <runtime-base/android-system.hh>
 #include <runtime-base/startup-aware-lock.hh>
 #include <runtime-base/strings.hh>
@@ -90,23 +91,31 @@ bool FastTiming::no_events_logged (size_t entries) noexcept
 	return true;
 }
 
-template<void(line_writer)(std::string_view const& buffer)>
-void FastTiming::dump (size_t entries, bool indent) noexcept
+void FastTiming::dump (size_t entries, bool indent, std::function<void(std::string_view const&)> line_writer) noexcept
 {
 	dynamic_local_string<Constants::MAX_LOGCAT_MESSAGE_LENGTH, char> message;
+
+	line_writer ("Startup costs:"sv);
+	auto log = [&] (TimingEvent const& event) -> uint64_t {
+		uint64_t ret = format_message (event, message, indent);
+		line_writer (message.as_string_view ());
+		return ret;
+	};
+	log (start_end_event_time);
+	log (get_time_overhead);
+	log (init_time);
+	line_writer (Constants::EMPTY);
 
 	// Values are in nanoseconds
 	uint64_t total_assembly_load_time = 0u;
 	uint64_t total_java_to_managed_time = 0u;
 	uint64_t total_managed_to_java_time = 0u;
 	uint64_t total_assembly_decompression_time = 0u;
-	uint64_t event_time_ns;
 
-	format_message (init_time, message, indent);
+	line_writer ("All logged events:"sv);
 	for (size_t i = 0uz; i < entries; i++) {
 		TimingEvent const& event = events[i];
-		event_time_ns = format_message (event, message, indent);
-		line_writer (message.as_string_view ());
+		uint64_t event_time_ns = log (event);
 
 		switch (event.kind) {
 			case TimingEventKind::AssemblyLoad:
@@ -131,9 +140,10 @@ void FastTiming::dump (size_t entries, bool indent) noexcept
 		}
 	}
 
+	line_writer (Constants::EMPTY);
 	line_writer ("[2/4] Accumulated performance results"sv);
 
-	auto log_time = [] (std::string_view const& msg, uint64_t ns)
+	auto log_time = [&line_writer] (std::string_view const& msg, uint64_t ns)
 	{
 		chrono::nanoseconds time_ns (ns);
 		// Do not change the string format after the first colon, its format is required by performance measuring
@@ -155,9 +165,6 @@ void FastTiming::dump (size_t entries, bool indent) noexcept
 	log_time ("[2/6] Java to Managed lookup"sv, total_java_to_managed_time);
 	log_time ("[2/7] Managed to Java lookup"sv, total_managed_to_java_time);
 	log_time ("[2/8] Assembly decompression"sv, total_assembly_decompression_time);
-	log_time ("[2/9] Event timing overhead, per call"sv, static_cast<uint64_t>((start_end_event_time.end - start_end_event_time.start).count ()));
-	log_time ("[2/10] clock_gettime overhead, per call"sv, static_cast<uint64_t>((get_time_overhead.end - get_time_overhead.start).count ()));
-	log_time ("[2/11] Timing infra init overhead, once"sv, static_cast<uint64_t>((init_time.end - init_time.start).count ()));
 }
 
 void FastTiming::dump_to_logcat (size_t entries) noexcept
@@ -168,9 +175,13 @@ void FastTiming::dump_to_logcat (size_t entries) noexcept
 	}
 
 	auto line_writer = [](std::string_view const& msg) {
+		// Don't add empty messages to the logcat, waste of time
+		if (msg.empty ()) {
+			return;
+		}
 		log_write (LOG_TIMING, LogLevel::Info, msg);
 	};
-	dump<line_writer> (entries, true /* indent */);
+	dump (entries, true /* indent */, line_writer);
 }
 
 void FastTiming::dump_to_file (size_t entries) noexcept
@@ -178,12 +189,38 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 	if (no_events_logged (entries)) {
 		return;
 	}
-	dynamic_local_string<SENSIBLE_PATH_MAX> timing_log_path;
-	timing_log_path.assign (AndroidSystem::get_primary_override_dir ());
-	timing_log_path.append (output_file_name == nullptr ? default_timing_file_name : *output_file_name);
-	Util::create_directory (AndroidSystem::get_primary_override_dir (), 0755);
 
-	// TODO: implement
+	dynamic_local_string<SENSIBLE_PATH_MAX> timing_log_path;
+
+	// We can count on the envvar being there, since we set it ourselves at startup
+	// Note that to access the file for a release app, the app must be made debuggable
+	timing_log_path.assign_c (getenv("TMPDIR"));
+	timing_log_path.append ("/"sv);
+	timing_log_path.append (output_file_name == nullptr ? default_timing_file_name : *output_file_name);
+
+	FILE *timing_log = Util::monodroid_fopen (timing_log_path.get (), "w");
+	if (timing_log == nullptr) {
+		log_error (LOG_TIMING, "[2/2] Unable to create the performance measurements file '{}'", timing_log_path.get ());
+		return;
+	}
+
+	if (!Util::set_world_accessible (fileno (timing_log))) {
+		log_warn (LOG_TIMING, "[2/2] Failed to make performance measurements file '{}' world-readable", timing_log_path.get ());
+		return;
+	}
+
+	log_info (LOG_TIMING, "[2/2] Performance measurement results logged to file: {}", timing_log_path.get ());
+
+	auto line_writer = [=](std::string_view const& msg) {
+		if (!msg.empty ()) {
+			fwrite (msg.data (), msg.size (), 1, timing_log);
+		}
+		fwrite (Constants::NEWLINE.data (), Constants::NEWLINE.size (), 1, timing_log);
+	};
+
+	dump (entries, true /* indent */, line_writer);
+	fflush (timing_log);
+	fclose (timing_log);
 }
 
 void FastTiming::dump () noexcept

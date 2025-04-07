@@ -39,6 +39,9 @@ namespace xamarin::android {
 		static constexpr auto RUNTIME_CONFIG_BLOB_NAME_ARRAY                  = concat_string_views<runtime_config_blob_name_size> (RUNTIME_CONFIG_BLOB_BASE_NAME, MANGLED_ASSEMBLY_NAME_EXT);
 
 	public:
+		static inline constexpr std::string_view NEWLINE { "\n" };
+		static inline constexpr std::string_view EMPTY { "" };
+
 		// .data() must be used otherwise string_view length will include the trailing \0 in the array
 		static constexpr std::string_view RUNTIME_CONFIG_BLOB_NAME            { RUNTIME_CONFIG_BLOB_NAME_ARRAY.data () };
 		static constexpr std::string_view OVERRIDE_DIRECTORY_NAME             { ".__override__" };

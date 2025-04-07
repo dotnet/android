@@ -91,8 +91,8 @@ namespace xamarin::android {
 				}
 			}
 
-			Util::create_public_directory (override_dir);
 			log_warn (LOG_DEFAULT, "Creating public update directory: `{}`", override_dir);
+			Util::create_public_directory (override_dir);
 		}
 
 		static auto is_embedded_dso_mode_enabled () noexcept -> bool
