@@ -1,8 +1,8 @@
 parameters:
   buildResultArtifactName: Build Results - macOS
   checkoutCommit: ''
-  checkoutPath: 's/xamarin-android'
-  xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
+  checkoutPath: 's/android'
+  xaSourcePath: $(System.DefaultWorkingDirectory)/android
   checkoutPersistCredentials: false
   dependsOn: ''
   dependsOnResult: ''
