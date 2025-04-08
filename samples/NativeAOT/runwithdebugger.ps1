@@ -38,20 +38,21 @@ $env:ANDROID_NDK_HOME = $_DEF_NDK_HOME
 $null = & $ADB shell "run-as net.dot.hellonativeaot killall -q -9 lldb-server" 
 
 # Get the appropriate path for Windows NDK
-$NDK_LLDB_PATH = "$env:ANDROID_NDK_HOME\toolchains\llvm\prebuilt\windows-x86_64\lib\clang\19\lib\linux\aarch64\lldb-server"
-if (-not (Test-Path $NDK_LLDB_PATH)) {
-    $NDK_LLDB_PATH = "$env:ANDROID_NDK_HOME\toolchains\llvm\prebuilt\linux-x86_64\lib\clang\19\lib\linux\aarch64\lldb-server"
-    if (-not (Test-Path $NDK_LLDB_PATH)) {
-        $NDK_LLDB_PATH = "$env:ANDROID_NDK_HOME\toolchains\llvm\prebuilt\darwin-x86_64\lib\clang\19\lib\linux\aarch64\lldb-server"
-        if (-not (Test-Path $NDK_LLDB_PATH)) {
-            Write-Error "Could not find lldb-server in any of the expected NDK locations"
+$NDK_CLANG_PATH = "$env:ANDROID_NDK_HOME\toolchains\llvm\prebuilt\windows-x86_64\bin\clang"
+if (-not (Test-Path $NDK_CLANG_PATH)) {
+    $NDK_CLANG_PATH = "$env:ANDROID_NDK_HOME\toolchains\llvm\prebuilt\linux-x86_64\bin\clang"
+    if (-not (Test-Path $NDK_CLANG_PATH)) {
+        $NDK_CLANG_PATH = "$env:ANDROID_NDK_HOME\toolchains\llvm\prebuilt\darwin-x86_64\bin\clang"
+        if (-not (Test-Path $NDK_CLANG_PATH)) {
+            Write-Error "Could not find clang in any of the expected NDK locations"
             exit 1
         }
     }
 }
 
+$NDK_LLDB_PATH= & $NDK_CLANG_PATH -print-file-name=lldb-server
 # Push lldb-server to device
-& $ADB push $NDK_LLDB_PATH /data/local/tmp/lldb-server
+& $ADB push "$NDK_LLDB_PATH" /data/local/tmp/lldb-server
 & $ADB shell run-as net.dot.hellonativeaot cp /data/local/tmp/lldb-server .
 & $ADB forward tcp:5039 tcp:5039
 
