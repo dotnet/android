@@ -29,13 +29,13 @@ namespace MonoDroid.Tuner
 		}
 
 #if !ILLINK
-		public bool ProcessAssembly (AssemblyDefinition assembly, StepContext context)
+		public void ProcessAssembly (AssemblyDefinition assembly, StepContext context)
 		{
 			// Only run this step on user Android assemblies
 			if (!context.IsAndroidUserAssembly)
-				return false;
+				return;
 
-			return AddKeepAlives (assembly);
+			context.IsAssemblyModified |= AddKeepAlives (assembly);
 		}
 #endif  // !ILLINK
 

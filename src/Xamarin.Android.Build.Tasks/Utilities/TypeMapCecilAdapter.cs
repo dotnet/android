@@ -16,15 +16,25 @@ class TypeMapCecilAdapter
 {
 	public static (List<TypeMapDebugEntry> javaToManaged, List<TypeMapDebugEntry> managedToJava) GetDebugNativeEntries (NativeCodeGenState state)
 	{
+		var (javaToManaged, managedToJava) = GetDebugNativeEntries (state.AllJavaTypes, state.TypeCache, out var foundJniNativeRegistration);
+
+		state.JniAddNativeMethodRegistrationAttributePresent = foundJniNativeRegistration;
+
+		return (javaToManaged, managedToJava);
+	}
+
+	public static (List<TypeMapDebugEntry> javaToManaged, List<TypeMapDebugEntry> managedToJava) GetDebugNativeEntries (List<TypeDefinition> types, TypeDefinitionCache cache, out bool foundJniNativeRegistration)
+	{
+		var javaDuplicates = new Dictionary<string, List<TypeMapDebugEntry>> (StringComparer.Ordinal);
 		var javaToManaged = new List<TypeMapDebugEntry> ();
 		var managedToJava = new List<TypeMapDebugEntry> ();
+		foundJniNativeRegistration = false;
 
-		var javaDuplicates = new Dictionary<string, List<TypeMapDebugEntry>> (StringComparer.Ordinal);
-		foreach (TypeDefinition td in state.AllJavaTypes) {
-			UpdateApplicationConfig (state, td);
+		foreach (var td in types) {
+			foundJniNativeRegistration = JniAddNativeMethodRegistrationAttributeFound (foundJniNativeRegistration, td);
 
-			TypeMapDebugEntry entry = GetDebugEntry (td, state.TypeCache);
-			HandleDebugDuplicates (javaDuplicates, entry, td, state.TypeCache);
+			TypeMapDebugEntry entry = GetDebugEntry (td, cache);
+			HandleDebugDuplicates (javaDuplicates, entry, td, cache);
 
 			javaToManaged.Add (entry);
 			managedToJava.Add (entry);
@@ -40,17 +50,28 @@ class TypeMapCecilAdapter
 		var genState = new ReleaseGenerationState ();
 
 		foreach (TypeDefinition td in state.AllJavaTypes) {
-			ProcessReleaseType (state, genState, td);
+			UpdateApplicationConfig (state, td);
+			ProcessReleaseType (state.TypeCache, genState, td);
 		}
 
 		return genState;
 	}
 
-	static void ProcessReleaseType (NativeCodeGenState state, ReleaseGenerationState genState, TypeDefinition td)
+	public static ReleaseGenerationState GetReleaseGenerationState (List<TypeDefinition> types, TypeDefinitionCache cache, out bool foundJniNativeRegistration)
 	{
-		UpdateApplicationConfig (state, td);
-		genState.AddKnownAssembly (GetAssemblyName (td));
+		var genState = new ReleaseGenerationState ();
+		foundJniNativeRegistration = false;
 
+		foreach (TypeDefinition td in types) {
+			foundJniNativeRegistration = JniAddNativeMethodRegistrationAttributeFound (foundJniNativeRegistration, td);
+			ProcessReleaseType (cache, genState, td);
+		}
+
+		return genState;
+	}
+
+	static void ProcessReleaseType (TypeDefinitionCache cache, ReleaseGenerationState genState, TypeDefinition td)
+	{
 		// We must NOT use Guid here! The reason is that Guid sort order is different than its corresponding
 		// byte array representation and on the runtime we need the latter in order to be able to binary search
 		// through the module array.
@@ -65,7 +86,6 @@ class TypeMapCecilAdapter
 			moduleData = new ModuleReleaseData {
 				Mvid = td.Module.Mvid,
 				MvidBytes = moduleUUID,
-				//Assembly = td.Module.Assembly,
 				AssemblyName = td.Module.Assembly.Name.Name,
 				TypesScratch = new Dictionary<string, TypeMapReleaseEntry> (StringComparer.Ordinal),
 				DuplicateTypes = new List<TypeMapReleaseEntry> (),
@@ -74,7 +94,7 @@ class TypeMapCecilAdapter
 			tempModules.Add (moduleUUID, moduleData);
 		}
 
-		string javaName = Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.ToJniName (td, state.TypeCache);
+		string javaName = Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.ToJniName (td, cache);
 		// We will ignore generic types and interfaces when generating the Java to Managed map, but we must not
 		// omit them from the table we output - we need the same number of entries in both java-to-managed and
 		// managed-to-java tables.  `SkipInJavaToManaged` set to `true` will cause the native assembly generator
@@ -97,8 +117,6 @@ class TypeMapCecilAdapter
 			moduleData.TypesScratch.Add (entry.JavaName, entry);
 		}
 	}
-
-	static string GetAssemblyName (TypeDefinition td) => td.Module.Assembly.FullName;
 
 	static TypeMapDebugEntry GetDebugEntry (TypeDefinition td, TypeDefinitionCache cache)
 	{
@@ -130,7 +148,6 @@ class TypeMapCecilAdapter
 		return $"{managedTypeName}, {td.Module.Assembly.Name.Name}";
 	}
 
-
 	static void HandleDebugDuplicates (Dictionary<string, List<TypeMapDebugEntry>> javaDuplicates, TypeMapDebugEntry entry, TypeDefinition td, TypeDefinitionCache cache)
 	{
 		List<TypeMapDebugEntry> duplicates;
@@ -147,6 +164,7 @@ class TypeMapCecilAdapter
 				// Fix things up so the abstract type is first, and the `Invoker` is considered a duplicate.
 				duplicates.Insert (0, entry);
 				oldEntry.SkipInJavaToManaged = false;
+				oldEntry.IsInvoker = true;
 			} else {
 				// ¯\_(ツ)_/¯
 				duplicates.Add (entry);
@@ -179,15 +197,20 @@ class TypeMapCecilAdapter
 
 	static void UpdateApplicationConfig (NativeCodeGenState state, TypeDefinition javaType)
 	{
-		if (state.JniAddNativeMethodRegistrationAttributePresent || !javaType.HasCustomAttributes) {
-			return;
-		}
+		state.JniAddNativeMethodRegistrationAttributePresent = JniAddNativeMethodRegistrationAttributeFound (state.JniAddNativeMethodRegistrationAttributePresent, javaType);
+	}
 
+	static bool JniAddNativeMethodRegistrationAttributeFound (bool alreadyFound, TypeDefinition javaType)
+	{
+		if (alreadyFound || !javaType.HasCustomAttributes) {
+			return alreadyFound;
+		}
+		
 		foreach (CustomAttribute ca in javaType.CustomAttributes) {
-			if (!state.JniAddNativeMethodRegistrationAttributePresent && String.Compare ("JniAddNativeMethodRegistrationAttribute", ca.AttributeType.Name, StringComparison.Ordinal) == 0) {
-				state.JniAddNativeMethodRegistrationAttributePresent = true;
-				break;
+			if (string.Equals ("JniAddNativeMethodRegistrationAttribute", ca.AttributeType.Name, StringComparison.Ordinal)) {
+				return true;
 			}
 		}
+		return false;
 	}
 }
