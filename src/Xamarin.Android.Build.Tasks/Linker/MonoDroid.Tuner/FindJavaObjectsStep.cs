@@ -40,23 +40,20 @@ public class FindJavaObjectsStep : BaseStep
 		var initial_count = types.Count;
 
 		// Filter out Java types we don't care about
-		types = types.Where (t => !t.IsInterface && !JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (t, Context)).ToList ();
+		types = types.Where (t => !JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (t, Context)).ToList ();
 
 		Log.LogDebugMessage ($"{assembly.Name.Name} - Found {initial_count} Java types, filtered to {types.Count}");
 
-		var wrappers = ConvertToCallableWrappers (types);
+		var xml = new JavaObjectsXmlFile ();
 
-		using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-			XmlExporter.Export (sw, wrappers, true);
-			Files.CopyIfStreamChanged (sw.BaseStream, destinationJLOXml);
-		}
+		xml.ACWMapEntries.AddRange (types.Select (t => ACWMapEntry.Create (t, Context)));
+		xml.JavaCallableWrappers.AddRange (ConvertToCallableWrappers (types.Where (t => !t.IsInterface).ToList ()));
+
+		xml.Export (destinationJLOXml);
+
+		Log.LogDebugMessage ($"Wrote '{destinationJLOXml}', {xml.JavaCallableWrappers.Count} JCWs, {xml.ACWMapEntries.Count} ACWs");
 
 		return true;
-	}
-
-	public static void WriteEmptyXmlFile (string destination)
-	{
-		XmlExporter.Export (destination, [], false);
 	}
 
 	List<TypeDefinition> ScanForJavaTypes (AssemblyDefinition assembly)
