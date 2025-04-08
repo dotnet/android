@@ -1953,6 +1953,30 @@
   <attr api-since="35" path="/api/package[@name='android.service.notification']/class[@name='Condition']/constructor[@name='Condition' and count(parameter)=4 and parameter[1][@type='android.net.Uri'] and parameter[2][@type='java.lang.String'] and parameter[3][@type='int'] and parameter[4][@type='int']]/parameter[4]" name="enumType">Android.Service.Notification.ConditionSource</attr>
   <attr api-since="35" path="/api/package[@name='android.service.notification']/class[@name='Condition']/constructor[@name='Condition' and count(parameter)=8 and parameter[1][@type='android.net.Uri'] and parameter[2][@type='java.lang.String'] and parameter[3][@type='java.lang.String'] and parameter[4][@type='java.lang.String'] and parameter[5][@type='int'] and parameter[6][@type='int'] and parameter[7][@type='int'] and parameter[8][@type='int']]/parameter[7]" name="enumType">Android.Service.Notification.ConditionSource</attr>
 
+  <!-- Rename Namespaces -->
+  <attr api-since="36" path="/api/package[@name='android.app.appfunctions']" name="managedName">Android.App.AppFunctions</attr>
+  <attr api-since="36" path="/api/package[@name='android.widget.photopicker']" name="managedName">Android.Widget.PhotoPicker</attr>
+  <attr api-since="36" path="/api/package[@name='android.os.vibrator']" name="managedName">Android.OS.Vibrators</attr>
+  <attr api-since="36" path="/api/package[@name='android.media.tv.ad']" name="managedName">Android.Media.TV.Ads</attr>
+  <attr api-since="36" path="/api/package[@name='android.security.advancedprotection']" name="managedName">Android.Security.AdvancedProtection</attr>
+
+  <!-- Public method cannot override protected base method -->
+  <attr api-since="36" path="/api/package[@name='android.media.tv.ad']/class[@name='TvAdView']/method[@name='onLayout' and count(parameter)=5 and parameter[1][@type='boolean'] and parameter[2][@type='int'] and parameter[3][@type='int'] and parameter[4][@type='int'] and parameter[5][@type='int']]" name="visibility">protected</attr>
+
+  <!-- We were turning 'bool isChecked' into the 'Checked' property. API-36 adds 'int getChecked' which also becomes a 'Checked' property -->
+  <attr api-since="36" path="/api/package[@name='android.view.accessibility']/class[@name='AccessibilityNodeInfo']/method[@name='getChecked' and count(parameter)=0]" name="propertyName">CheckedState</attr>
+  <attr api-since="36" path="/api/package[@name='android.view.accessibility']/class[@name='AccessibilityNodeInfo']/method[@name='setChecked' and count(parameter)=1 and parameter[1][@type='int']]" name="propertyName">CheckedState</attr>
+
+  <!-- Adding new DIM to interface changes existing EventArgs name, revert to old name. -->
+  <attr api-since="36" path="/api/package[@name='android.net.wifi.p2p']/interface[@name='WifiP2pManager.ServiceResponseListener']/method[@name='onServiceAvailable' and count(parameter)=3 and parameter[1][@type='int'] and parameter[2][@type='byte[]'] and parameter[3][@type='android.net.wifi.p2p.WifiP2pDevice']]" name="argsType">ServiceResponseEventArgs</attr>
+
+  <!-- Enumify new overloads without affecting existing methods. -->
+  <attr api-since="36" path="/api/package[@name='android.hardware.camera2.params']/class[@name='OutputConfiguration']/method[@name='setMirrorMode' and count(parameter)=2 and parameter[1][@type='android.view.Surface'] and parameter[2][@type='int']]/parameter[2]" name="enumType">Android.Hardware.Camera2.Params.MirrorMode</attr>
+  <attr api-since="36" path="/api/package[@name='android.hardware.camera2']/class[@name='MultiResolutionImageReader']/constructor[@name='MultiResolutionImageReader' and count(parameter)=4 and parameter[1][@type='java.util.Collection&lt;android.hardware.camera2.params.MultiResolutionStreamInfo&gt;'] and parameter[2][@type='int'] and parameter[3][@type='int'] and parameter[4][@type='long']]/parameter[2]" name="enumType">Android.Graphics.ImageFormatType</attr>
+  <attr api-since="36" path="/api/package[@name='android.view.accessibility']/class[@name='AccessibilityNodeInfo']/method[@name='setChecked' and count(parameter)=1 and parameter[1][@type='int']]/parameter[1]" name="enumType">Android.Views.Accessibility.CheckedState</attr>
+  <attr api-since="36" path="/api/package[@name='android.hardware.camera2.params']/class[@name='OutputConfiguration']/method[@name='getMirrorMode' and count(parameter)=1 and parameter[1][@type='android.view.Surface']]" name="managedReturn">Android.Hardware.Camera2.Params.MirrorMode</attr>
+  <attr api-since="36" path="/api/package[@name='android.hardware.camera2.params']/class[@name='OutputConfiguration']/method[@name='getMirrorMode' and count(parameter)=1 and parameter[1][@type='android.view.Surface']]" name="enumReturn">true</attr>
+
   <!--
     ***********************************************************************
     THE FOLLOWING LINES MUST BE CREATED FOR ANY NEW PLATFORM THAT IS ADDED.
@@ -1977,6 +2001,10 @@
   <attr api-since="35" path="/api/package/interface[contains(@merge.SourceFile,'api-VanillaIceCream.xml.in')]" name="no-alternatives">true</attr>
   <attr api-since="35" path="/api/package[contains(@merge.SourceFile,'api-35.xml.in')]/interface" name="no-alternatives">true</attr>
   <attr api-since="35" path="/api/package[contains(@merge.SourceFile,'api-VanillaIceCream.xml.in')]/interface" name="no-alternatives">true</attr>
+  <attr api-since="36" path="/api/package/interface[contains(@merge.SourceFile,'api-36.xml.in')]" name="no-alternatives">true</attr>
+  <attr api-since="36" path="/api/package/interface[contains(@merge.SourceFile,'api-Baklava.xml.in')]" name="no-alternatives">true</attr>
+  <attr api-since="36" path="/api/package[contains(@merge.SourceFile,'api-36.xml.in')]/interface" name="no-alternatives">true</attr>
+  <attr api-since="36" path="/api/package[contains(@merge.SourceFile,'api-Baklava.xml.in')]/interface" name="no-alternatives">true</attr>
 
   <!-- Set ApiSince based on merge sourcefile. -->
   <attr api-since="22" path="/api//*[contains(@merge.SourceFile,'api-22.xml.in')]" name="api-since">22</attr>
@@ -1999,6 +2027,8 @@
   <attr api-since="34" path="/api//*[contains(@merge.SourceFile,'api-UpsideDownCake.xml.in')]" name="api-since">34</attr>
   <attr api-since="35" path="/api//*[contains(@merge.SourceFile,'api-35.xml.in')]" name="api-since">35</attr>
   <attr api-since="35" path="/api//*[contains(@merge.SourceFile,'api-VanillaIceCream.xml.in')]" name="api-since">35</attr>
+  <attr api-since="36" path="/api//*[contains(@merge.SourceFile,'api-36.xml.in')]" name="api-since">36</attr>
+  <attr api-since="36" path="/api//*[contains(@merge.SourceFile,'api-Baklava.xml.in')]" name="api-since">36</attr>
 
   <!-- Erase some 'api-since' attributes (This has to be done after they are set above) -->
 
