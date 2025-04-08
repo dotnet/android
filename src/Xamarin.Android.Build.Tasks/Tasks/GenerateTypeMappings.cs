@@ -4,7 +4,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using Java.Interop.Tools.Cecil;
-using Java.Interop.Tools.Diagnostics;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -20,9 +19,6 @@ public class GenerateTypeMappings : AndroidTask
 	public string AndroidRuntime { get; set; } = "";
 
 	public bool Debug { get; set; }
-
-	[Required]
-	public bool GenerateNativeAssembly { get; set; }
 
 	[Required]
 	public string IntermediateOutputDirectory { get; set; } = "";
@@ -50,18 +46,10 @@ public class GenerateTypeMappings : AndroidTask
 		);
 
 		NativeCodeGenState? templateCodeGenState = null;
-		bool typemapsAreAbiAgnostic = Debug && !GenerateNativeAssembly;
-		bool first = true;
 
 		foreach (var kvp in nativeCodeGenStates) {
-			if (!first && typemapsAreAbiAgnostic) {
-				Log.LogDebugMessage ("Typemaps: it's a debug build and type maps are ABI-agnostic, not processing more ABIs");
-				break;
-			}
-
 			NativeCodeGenState state = kvp.Value;
 			templateCodeGenState = state;
-			first = false;
 			WriteTypeMappings (state);
 		}
 
@@ -89,9 +77,7 @@ public class GenerateTypeMappings : AndroidTask
 		}
 
 		var tmg = new TypeMapGenerator (Log, state, androidRuntime);
-		if (!tmg.Generate (Debug, SkipJniAddNativeMethodRegistrationAttributeScan, TypemapOutputDirectory, GenerateNativeAssembly)) {
-			throw new XamarinAndroidException (4308, Properties.Resources.XA4308);
-		}
+		tmg.Generate (Debug, SkipJniAddNativeMethodRegistrationAttributeScan, TypemapOutputDirectory);
 
 		string abi = MonoAndroidHelper.ArchToAbi (state.TargetArch);
 		var items = new List<ITaskItem> ();
