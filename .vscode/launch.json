@@ -49,6 +49,32 @@
           "type": "coreclr",
           "request": "attach",
           "processId": "${input:processid}"
+        },
+        {
+          "name": "Debug NativeAOT",
+          "type": "lldb-dap",
+            "request": "attach",
+            "initCommands": [
+                "platform select remote-android",
+                "platform connect connect://localhost:5039",
+                "settings set target.process.thread.step-in-avoid-nodebug true",
+                "settings set target.process.thread.step-out-avoid-nodebug true",
+                "command script import ${workspaceFolder}/samples/NativeAOT/lldb_commands.py",
+                "command script add -f lldb_commands.clearjdb clearjdb"
+            ],
+            "attachCommands": [
+              "target create samples/NativeAOT/bin/Debug/net10.0-android/android-arm64/native/NativeAOT.so",
+              "target select 0",
+              "command source ${workspaceFolder}/samples/NativeAOT/obj/Debug/lldbattach"
+            ],
+            "preLaunchTask": "run-nativeaot-sample",
+            "postDebugTask": "stop-nativeaot-lldb-server",
+            "postRunCommands": [
+              "process interrupt",
+              "call (unsigned int) sleep((unsigned int)5)",
+              "c",
+              "clearjdb"
+            ]
         }
     ],
     "inputs": [
@@ -64,6 +90,12 @@
         "type": "promptString",
         "default": "0",
         "description": "Enter dotnet build process id reported when setting the env var MSBUILDDEBUGONSTART=2",
+      },
+      {
+        "id": "lldbprocessid",
+        "type": "promptString",
+        "default": "0",
+        "description": "Enter process id for your native aot app",
       },
     ]
 }
