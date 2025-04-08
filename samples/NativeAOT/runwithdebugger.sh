@@ -25,7 +25,21 @@ export ANDROID_NDK_HOME
 # This script is used to run the NativeAOT sample with the debugger attached.
 # It is used by the CI system to verify that the debugger works with NativeAOT.
 adb shell run-as net.dot.hellonativeaot killall -9 lldb-server > /dev/null 2>&1 || true
-adb push $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/lib/clang/19/lib/linux/aarch64/lldb-server /data/local/tmp/lldb-server
+
+case $(uname) in
+    Linux) TOOLCHAIN_OS=linux-x86_64 ;;
+    Darwin) TOOLCHAIN_OS=darwine-x86_64 ;;
+esac
+
+if [ -n "${ANDROID_NDK_HOME}" ]; then
+    ANDROID_NDK_DIR="${ANDROID_NDK_HOME}"
+elif [ -n "${ANDROID_NDK_ROOT}" ]; then
+    ANDROID_NDK_DIR="${ANDROID_NDK_ROOT}"
+elif [ -n "${ANDROID_NDK_PATH}" ]; then
+    ANDROID_NDK_DIR="${ANDROID_NDK_PATH}"
+fi
+
+adb push "$("${ANDROID_NDK_DIR}/toolchains/llvm/prebuilt/${TOOLCHAIN_OS}/bin/clang" -print-file-name=lldb-server)" /data/local/tmp/lldb-server
 adb shell run-as net.dot.hellonativeaot cp /data/local/tmp/lldb-server .
 adb forward tcp:5039 tcp:5039
 
