@@ -41,6 +41,10 @@ stages:
           displayName: upload linux sdk
           artifactName: ${{ parameters.nugetArtifactName }}
           targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux
+        - output: pipelineArtifact
+          displayName: upload linux sdk symbols
+          artifactName: ${{ parameters.nugetArtifactName }}-symbols
+          targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux-symbols
     steps:
     - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
       parameters:
@@ -86,6 +90,19 @@ stages:
       workingDirectory: ${{ parameters.xaSourcePath }}
       displayName: make create-nupkgs
 
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
+        Contents: |
+          **/Microsoft.Android.Sdk.Linux*.symbols.nupkg
+          **/SignList.xml
+        TargetFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux-symbols
+
+    - task: DeleteFiles@1
+      inputs:
+        SourceFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
+        Contents: '*.symbols.nupkg'
+
     - script: >
         df -h &&
         mkdir -p ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux &&
@@ -102,6 +119,12 @@ stages:
         inputs:
           artifactName: ${{ parameters.nugetArtifactName }}
           targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux
+
+      - task: PublishPipelineArtifact@1
+        displayName: upload linux sdk symbols
+        inputs:
+          artifactName: ${{ parameters.nugetArtifactName }}-symbols
+          targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux-symbols
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
