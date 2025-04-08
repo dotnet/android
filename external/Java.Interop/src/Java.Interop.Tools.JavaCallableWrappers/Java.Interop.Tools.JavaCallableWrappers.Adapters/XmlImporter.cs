@@ -11,26 +11,36 @@ namespace Java.Interop.Tools.JavaCallableWrappers.Adapters;
 
 public static class XmlImporter
 {
-	public static List<CallableWrapperType> Import (string filename, out bool wasScanned)
+	public static List<CallableWrapperType> Import (string filename)
 	{
 		using (var sr = new StreamReader (filename, Encoding.UTF8))
-			return Import (sr, out wasScanned);
+			return Import (sr);
 	}
 
-	public static List<CallableWrapperType> Import (TextReader sr, out bool wasScanned)
+	public static List<CallableWrapperType> Import (TextReader sr)
 	{
 		using (var xml = XmlReader.Create (sr))
-			return Import (xml, out wasScanned);
+			return Import (xml);
 	}
 
-	public static List<CallableWrapperType> Import (XmlReader xml, out bool wasScanned)
+	public static List<CallableWrapperType> Import (XmlReader xml)
 	{
 		var doc = XDocument.Load (xml);
 
 		var types = new List<CallableWrapperType> ();
-		wasScanned = doc.Root.GetAttributeOrDefault ("was_scanned", false);
 
 		foreach (var type in doc.Root.Elements ("type"))
+			types.Add (ImportType (type));
+
+		return types;
+	}
+
+
+	public static List<CallableWrapperType> Import (XElement xml)
+	{
+		var types = new List<CallableWrapperType> ();
+
+		foreach (var type in xml.Elements ("type"))
 			types.Add (ImportType (type));
 
 		return types;
