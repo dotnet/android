@@ -20,6 +20,13 @@ if (-not (Test-Path $ADB)) {
 
 $null = & $ADB devices
 
+$_DEF_NDK_HOME= "$DOTNET_LOCAL build -getProperty:AndroidNdkFullPath ""$REPO_ROOT\build-tools\scripts\Paths.targets"""
+if (-not $_DEF_NDK_HOME) {
+    Write-Error "Error: Could not find Android NDK path"
+    exit 1
+}
+
+$env:ANDROID_NDK_HOME = $_DEF_NDK_HOME
 
 # Build and install
 & $DOTNET_LOCAL build $SCRIPT_DIR\NativeAOT.csproj -c Debug -t:Install -tl:off
