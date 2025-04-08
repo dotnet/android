@@ -78,6 +78,7 @@ public partial class MonoAndroidHelper
 			}
 		};
 		AndroidSdk  = new AndroidSdkInfo (logger, sdkPath, ndkPath, javaPath);
+		// TODO: Reimplement ResolveXamarinAndroidTools
 	}
 
 	public static void RefreshSupportedVersions (string[]? referenceAssemblyPaths)
