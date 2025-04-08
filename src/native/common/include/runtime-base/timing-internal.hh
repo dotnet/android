@@ -16,13 +16,21 @@
 #include <thread>
 #include <vector>
 
+#if defined(XA_HOST_CLR)
 #include <constants.hh>
+#else
+#include <runtime-base/shared-constants.hh>
+
+using Constants = xamarin::android::internal::SharedConstants;
+using namespace xamarin::android::internal;
+#endif
+
 #include <runtime-base/logger.hh>
 #include <runtime-base/startup-aware-lock.hh>
 #include <runtime-base/util.hh>
 #include <shared/log_types.hh>
 
-namespace xamarin::android::exp {
+namespace xamarin::android {
 	namespace chrono = std::chrono;
 
 	using time_point = chrono::time_point<chrono::steady_clock, chrono::nanoseconds>;
@@ -65,6 +73,11 @@ namespace xamarin::android::exp {
 
 	class FastTiming final
 	{
+#if defined(XA_HOST_CLR)
+		using mutex = std::mutex;
+#else
+		using mutex = xamarin::android::mutex;
+#endif
 		enum class SequenceError
 		{
 			EmptyStack,
@@ -78,15 +91,15 @@ namespace xamarin::android::exp {
 		static inline constexpr size_t INITIAL_EVENT_VECTOR_SIZE = 4096uz;
 
 		// defaults
-		static constexpr bool default_fast_timing_enabled = false;
-		static constexpr bool default_log_to_file = false;
-		static constexpr size_t default_duration_milliseconds = 1500;
-		static constexpr std::string_view default_timing_file_name { "timing.txt" };
+		static inline constexpr bool default_fast_timing_enabled = false;
+		static inline constexpr bool default_log_to_file = false;
+		static inline constexpr size_t default_duration_milliseconds = 1500;
+		static inline constexpr std::string_view default_timing_file_name { "timing.txt" };
 
 		// Parameters for the `debug.mono.timing` property
-		static constexpr std::string_view OPT_DURATION      { "duration=" };
-		static constexpr std::string_view OPT_FILE_NAME     { "filename=" };
-		static constexpr std::string_view OPT_TO_FILE       { "to-file" };
+		static inline constexpr std::string_view OPT_DURATION      { "duration=" };
+		static inline constexpr std::string_view OPT_FILE_NAME     { "filename=" };
+		static inline constexpr std::string_view OPT_TO_FILE       { "to-file" };
 
 	protected:
 		void configure_for_use () noexcept
@@ -247,7 +260,7 @@ namespace xamarin::android::exp {
 					// likely we'll run out of memory way, way, way before that happens
 					size_t old_size = events.capacity ();
 					events.reserve (old_size << 1);
-					log_warn (LOG_TIMING, "Reallocated timing event buffer from {} to {}", old_size, events.size ());
+					log_warn (LOG_TIMING, "Reallocated timing event buffer from {} to {}"sv, old_size, events.size ());
 				}
 			}
 
@@ -272,7 +285,7 @@ namespace xamarin::android::exp {
 			}
 
 			if (!index.has_value ()) [[unlikely]] {
-				log_warn (LOG_TIMING, "FastTiming::end_event called without prior FastTiming::start_event called");
+				log_warn (LOG_TIMING, "FastTiming::end_event called without prior FastTiming::start_event called"sv);
 				return;
 			}
 
@@ -288,7 +301,7 @@ namespace xamarin::android::exp {
 		{
 			auto index = pop_valid_sequence_index ();
 			if (!index.has_value ()) [[unlikely]] {
-				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called");
+				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called"sv);
 				return;
 			}
 
@@ -301,7 +314,7 @@ namespace xamarin::android::exp {
 		{
 			auto index = pop_valid_sequence_index ();
 			if (!index.has_value ()) [[unlikely]] {
-				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called");
+				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called"sv);
 				return;
 			}
 
@@ -314,7 +327,7 @@ namespace xamarin::android::exp {
 		{
 			auto index = pop_valid_sequence_index ();
 			if (!index.has_value ()) [[unlikely]] {
-				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called");
+				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called"sv);
 				return;
 			}
 
@@ -358,6 +371,19 @@ namespace xamarin::android::exp {
 			internal_timing.add_more_info (name);
 		}
 
+		// We cheat a bit here, by avoiding a call to libc++ code that performs the same action.
+		// We can do it because we know our target platform.
+		[[gnu::always_inline]]
+		static auto get_time () noexcept -> time_point
+		{
+			struct timespec t;
+			if (clock_gettime (CLOCK_MONOTONIC_RAW, &t) != 0) [[unlikely]] {
+				log_warn (LOG_TIMING, "clock_gettime failed for CLOCK_MONOTONIC_RAW: {}"sv, optional_string (strerror (errno)));
+				return {}; // Results will be nonsensical, but no point in aborting the app
+			}
+			return time_point (chrono::seconds (t.tv_sec) + chrono::nanoseconds (t.tv_nsec));
+		}
+
 	private:
 		bool no_events_logged (size_t entries) noexcept;
 		void dump_to_logcat (size_t entries) noexcept;
@@ -398,127 +424,93 @@ namespace xamarin::android::exp {
 		template<size_t BufferSize> [[gnu::always_inline]]
 		static void append_event_kind_description (TimingEventKind kind, dynamic_local_string<BufferSize, char>& message) noexcept
 		{
+			auto append_desc = [&message] (std::string_view const& desc) {
+				message.append (desc);
+			};
+
 			switch (kind) {
-				case TimingEventKind::AssemblyDecompression: {
-					constexpr auto desc = "LZ4 decompression time for "sv;
-					message.append (desc);
+				case TimingEventKind::AssemblyDecompression:
+					append_desc ("LZ4 decompression time for "sv);
 					return;
-				}
 
-				case TimingEventKind::AssemblyLoad: {
-					constexpr auto desc = "Assembly load for "sv;
-					message.append (desc);
+				case TimingEventKind::AssemblyLoad:
+					append_desc ("Assembly load for "sv);
 					return;
-				}
 
-				case TimingEventKind::AssemblyPreload: {
-					constexpr auto desc = "Finished preloading, number of loaded assemblies: "sv;
-					message.append (desc);
+				case TimingEventKind::AssemblyPreload:
+					append_desc ("Finished preloading, number of loaded assemblies: "sv);
 					return;
-				}
 
-				case TimingEventKind::DebugStart: {
-					constexpr auto desc = "Debug::start_debugging_and_profiling: end"sv;
-					message.append (desc);
+				case TimingEventKind::DebugStart:
+					append_desc ("Debug::start_debugging_and_profiling: end"sv);
 					return;
-				}
 
-				case TimingEventKind::Init: {
-					constexpr auto desc = "XATiming: init time"sv;
-					message.append (desc);
+				case TimingEventKind::Init:
+					append_desc ("XATiming: init time"sv);
 					return;
-				}
 
-				case TimingEventKind::JavaToManaged: {
-					constexpr auto desc = "Typemap.java_to_managed: end, total time"sv;
-					message.append (desc);
+				case TimingEventKind::JavaToManaged:
+					append_desc ("Typemap.java_to_managed: end, total time"sv);
 					return;
-				}
 
-				case TimingEventKind::ManagedToJava: {
-					constexpr auto desc = "Typemap.managed_to_java: end, total time"sv;
-					message.append (desc);
+				case TimingEventKind::ManagedToJava:
+					append_desc ("Typemap.managed_to_java: end, total time"sv);
 					return;
-				}
 
-				case TimingEventKind::ManagedRuntimeInit: {
-					constexpr auto desc = "Runtime.init: Managed runtime init"sv;
-					message.append (desc);
+				case TimingEventKind::ManagedRuntimeInit:
+					append_desc ("Runtime.init: Managed runtime init"sv);
 					return;
-				}
 
-				case TimingEventKind::NativeToManagedTransition: {
-					constexpr auto desc = "Runtime.init: end native-to-managed transition"sv;
-					message.append (desc);
+				case TimingEventKind::NativeToManagedTransition:
+					append_desc ("Runtime.init: end native-to-managed transition"sv);
 					return;
-				}
 
-				case TimingEventKind::RuntimeConfigBlob: {
-					constexpr auto desc = "Register runtimeconfig binary blob"sv;
-					message.append (desc);
+				case TimingEventKind::RuntimeConfigBlob:
+					append_desc ("Register runtimeconfig binary blob"sv);
 					return;
-				}
 
-				case TimingEventKind::RuntimeRegister: {
-					constexpr auto desc = "Runtime.register: end time. Registered type: "sv;
-					message.append (desc);
+				case TimingEventKind::RuntimeRegister:
+					append_desc ("Runtime.register: end time. Registered type: "sv);
 					return;
-				}
 
-				case TimingEventKind::TotalRuntimeInit: {
-					constexpr auto desc = "Runtime.init: end, total time"sv;
-					message.append (desc);
+				case TimingEventKind::TotalRuntimeInit:
+					append_desc ("Runtime.init: end, total time"sv);
 					return;
-				}
 
-				case TimingEventKind::GetTimeOverhead: {
-					constexpr auto desc = "clock_gettime overhead"sv;
-					message.append (desc);
+				case TimingEventKind::GetTimeOverhead:
+					append_desc ("clock_gettime overhead"sv);
 					return;
-				}
 
-				case TimingEventKind::StartEndOverhead: {
-					constexpr auto desc = "start+end event overhead"sv;
-					message.append (desc);
+				case TimingEventKind::StartEndOverhead:
+					append_desc ("start+end event overhead"sv);
 					return;
-				}
 
-				case TimingEventKind::FunctionCall: {
-					constexpr auto desc = "function call: "sv;
-					message.append (desc);
+				case TimingEventKind::FunctionCall:
+					append_desc ("function call: "sv);
 					return;
-				};
 
-				default: {
-					constexpr auto desc = "Unknown timing event"sv;
-					message.append (desc);
+				case TimingEventKind::Unspecified:
+					append_desc ("unspecified event type: "sv);
 					return;
-				}
 			}
+
+			log_warn (
+				LOG_TIMING,
+				"Unknown event kind '{}' logged"sv,
+				static_cast<std::underlying_type_t<decltype(kind)>>(kind)
+			);
+			append_desc ("unknown event kind"sv);
 		}
 
 	private:
-		void parse_options (dynamic_local_string<Constants::PROPERTY_VALUE_BUFFER_LEN> const& value) noexcept;
+		void parse_options (dynamic_local_property_string const& value) noexcept;
 		static void really_initialize (bool log_immediately) noexcept;
-
-		// We cheat a bit here, by avoiding a call to libc++ code that performs the same action.
-		// We can do it because we know our target platform.
-		[[gnu::always_inline]]
-		static auto get_time () noexcept -> time_point
-		{
-			struct timespec t;
-			if (clock_gettime (CLOCK_MONOTONIC_RAW, &t) != 0) [[unlikely]] {
-				log_warn (LOG_TIMING, "clock_gettime failed for CLOCK_MONOTONIC_RAW: {}", optional_string (strerror (errno)));
-				return {}; // Results will be nonsensical, but no point in aborting the app
-			}
-			return time_point (chrono::seconds (t.tv_sec) + chrono::nanoseconds (t.tv_nsec));
-		}
 
 		[[gnu::always_inline, nodiscard]]
 		auto is_valid_event_index (size_t index, std::source_location sloc = std::source_location::current ()) const noexcept -> bool
 		{
 			if (index >= events.capacity ()) [[unlikely]] {
-				log_warn (LOG_TIMING, "Invalid event index passed to method '{}'", sloc.function_name ());
+				log_warn (LOG_TIMING, "Invalid event index passed to method '{}'"sv, sloc.function_name ());
 				return false;
 			}
 
@@ -527,7 +519,7 @@ namespace xamarin::android::exp {
 
 	private:
 		std::atomic_size_t next_event_index = 0uz;
-		std::mutex event_vector_realloc_mutex;
+		mutex event_vector_realloc_mutex;
 		std::vector<TimingEvent> events;
 		std::unique_ptr<std::string> output_file_name{};
 

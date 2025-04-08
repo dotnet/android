@@ -1,18 +1,17 @@
 #include <chrono>
 
-#include <constants.hh>
-#include <xamarin-app.hh>
+//#include <xamarin-app.hh>
 #include <runtime-base/android-system.hh>
 #include <runtime-base/startup-aware-lock.hh>
 #include <runtime-base/strings.hh>
-#include <runtime-base/timing-internal-exp.hh>
+#include <runtime-base/timing-internal.hh>
 #include <runtime-base/util.hh>
 
-namespace xamarin::android::exp {
+namespace xamarin::android {
 	FastTiming internal_timing;
 }
 
-using namespace xamarin::android::exp;
+using namespace xamarin::android;
 using namespace std::literals;
 
 namespace chrono = std::chrono;
@@ -24,11 +23,11 @@ void FastTiming::really_initialize (bool log_immediately) noexcept
 	immediate_logging = log_immediately;
 
 	// TLS variables are initialized on first use, do it here so that we can have
-	// the overhead out of mind later.
+	// the overhead out of mind later, at least for the main thread.
 	open_sequences.push (0);
 	open_sequences.pop ();
 
-	dynamic_local_string<Constants::PROPERTY_VALUE_BUFFER_LEN> value;
+	dynamic_local_property_string value;
 	if (AndroidSystem::monodroid_get_system_property (Constants::DEBUG_MONO_TIMING, value) != 0) {
 		internal_timing.parse_options (value);
 	}
@@ -44,7 +43,7 @@ void FastTiming::really_initialize (bool log_immediately) noexcept
 	);
 }
 
-void FastTiming::parse_options (dynamic_local_string<Constants::PROPERTY_VALUE_BUFFER_LEN> const& value) noexcept
+void FastTiming::parse_options (dynamic_local_property_string const& value) noexcept
 {
 	if (value.length () == 0) {
 		return;
@@ -64,7 +63,7 @@ void FastTiming::parse_options (dynamic_local_string<Constants::PROPERTY_VALUE_B
 
 		if (param.starts_with (OPT_DURATION)) {
 			if (!param.to_integer (duration_ms, OPT_DURATION.length ())) {
-				log_warn (LOG_TIMING, "Failed to parse duration in milliseconds from '%s'", param.start ());
+				log_warn (LOG_TIMING, "Failed to parse duration in milliseconds from '%s'"sv, param.start ());
 				duration_ms = default_duration_milliseconds;
 			}
 			continue;
@@ -190,26 +189,27 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 		return;
 	}
 
-	dynamic_local_string<SENSIBLE_PATH_MAX> timing_log_path;
+	dynamic_local_path_string timing_log_path;
 
 	// We can count on the envvar being there, since we set it ourselves at startup
 	// Note that to access the file for a release app, the app must be made debuggable
+	// and `run-as` must be used.
 	timing_log_path.assign_c (getenv("TMPDIR"));
 	timing_log_path.append ("/"sv);
 	timing_log_path.append (output_file_name == nullptr ? default_timing_file_name : *output_file_name);
 
 	FILE *timing_log = Util::monodroid_fopen (timing_log_path.get (), "w");
 	if (timing_log == nullptr) {
-		log_error (LOG_TIMING, "[2/2] Unable to create the performance measurements file '{}'", timing_log_path.get ());
+		log_error (LOG_TIMING, "[2/2] Unable to create the performance measurements file '{}'"sv, timing_log_path.get ());
 		return;
 	}
 
 	if (!Util::set_world_accessible (fileno (timing_log))) {
-		log_warn (LOG_TIMING, "[2/2] Failed to make performance measurements file '{}' world-readable", timing_log_path.get ());
+		log_warn (LOG_TIMING, "[2/2] Failed to make performance measurements file '{}' world-readable"sv, timing_log_path.get ());
 		return;
 	}
 
-	log_info (LOG_TIMING, "[2/2] Performance measurement results logged to file: {}", timing_log_path.get ());
+	log_info (LOG_TIMING, "[2/2] Performance measurement results logged to file: {}"sv, timing_log_path.get ());
 
 	auto line_writer = [=](std::string_view const& msg) {
 		if (!msg.empty ()) {

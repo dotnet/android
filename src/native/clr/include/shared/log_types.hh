@@ -53,6 +53,12 @@ namespace xamarin::android {
 	{
 		log_write (category, level, message.data ());
 	}
+
+	template<typename ...Args> [[gnu::always_inline]]
+	static inline constexpr void log_write_fmt (LogCategories category, LogLevel level, std::format_string<Args...> fmt, Args&& ...args)
+	{
+		log_write (category, level, std::format (fmt, std::forward<Args>(args)...).c_str ());
+	}
 }
 
 template<typename ...Args> [[gnu::always_inline]]

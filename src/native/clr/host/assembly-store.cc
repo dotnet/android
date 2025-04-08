@@ -9,7 +9,7 @@
 #include <runtime-base/util.hh>
 #include <runtime-base/search.hh>
 #include <runtime-base/startup-aware-lock.hh>
-#include <runtime-base/timing-internal-exp.hh>
+#include <runtime-base/timing-internal.hh>
 
 using namespace xamarin::android;
 
@@ -31,8 +31,8 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 	if (header->magic == COMPRESSED_DATA_MAGIC) {
 		log_debug (LOG_ASSEMBLY, "Decompressing assembly '{}' from the assembly store", name);
 
-		if (exp::FastTiming::enabled ()) [[unlikely]] {
-			exp::internal_timing.start_event (exp::TimingEventKind::AssemblyDecompression);
+		if (FastTiming::enabled ()) [[unlikely]] {
+			internal_timing.start_event (TimingEventKind::AssemblyDecompression);
 		}
 
 		if (compressed_assemblies.descriptors == nullptr) [[unlikely]] {
@@ -56,13 +56,13 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 			if (cad.loaded) {
 				set_assembly_data_and_size (reinterpret_cast<uint8_t*>(cad.data), cad.uncompressed_file_size, assembly_data, assembly_data_size);
 
-				if (exp::FastTiming::enabled ()) [[unlikely]] {
-					exp::internal_timing.end_event (true /* uses_more_info */);
+				if (FastTiming::enabled ()) [[unlikely]] {
+					internal_timing.end_event (true /* uses_more_info */);
 
 					dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> msg;
 					msg.append (name);
 					msg.append (" (decompressed in another thread)"sv);
-					exp::internal_timing.add_more_info (msg);
+					internal_timing.add_more_info (msg);
 				}
 				return {assembly_data, assembly_data_size};
 			}
@@ -120,9 +120,9 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 				);
 			}
 			cad.loaded = true;
-			if (exp::FastTiming::enabled ()) [[unlikely]] {
-				exp::internal_timing.end_event (true /* uses_more_info */);
-				exp::internal_timing.add_more_info (name);
+			if (FastTiming::enabled ()) [[unlikely]] {
+				internal_timing.end_event (true /* uses_more_info */);
+				internal_timing.add_more_info (name);
 			}
 		}
 
@@ -137,20 +137,20 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 		// the assembly data to a read-write area.
 		log_debug (LOG_ASSEMBLY, "Copying assembly data to an r/w memory area");
 
-		if (exp::FastTiming::enabled ()) [[unlikely]] {
-			exp::internal_timing.start_event (exp::TimingEventKind::AssemblyLoad);
+		if (FastTiming::enabled ()) [[unlikely]] {
+			internal_timing.start_event (TimingEventKind::AssemblyLoad);
 		}
 
 		uint8_t *rw_pointer = static_cast<uint8_t*>(malloc (e.descriptor->data_size));
 		memcpy (rw_pointer, e.image_data, e.descriptor->data_size);
 
-		if (exp::FastTiming::enabled ()) [[unlikely]] {
-			exp::internal_timing.end_event (true /* uses more info */);
+		if (FastTiming::enabled ()) [[unlikely]] {
+			internal_timing.end_event (true /* uses more info */);
 
 			dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> msg;
 			msg.append (name);
 			msg.append (" (memcpy to r/w area, part of assembly load time)"sv);
-			exp::internal_timing.add_more_info (msg);
+			internal_timing.add_more_info (msg);
 		}
 
 		set_assembly_data_and_size (rw_pointer, e.descriptor->data_size, assembly_data, assembly_data_size);

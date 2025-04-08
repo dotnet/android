@@ -53,9 +53,6 @@ set(XA_RUNTIME_BASE_SOURCES
   android-system.cc
   cpu-arch-detect.cc
   logger.cc
-  timing.cc
-  timing-internal.cc
-  timing-internal-exp.cc
   util.cc
 )
 add_clang_check_sources("${XA_RUNTIME_BASE_SOURCES}")
@@ -99,6 +96,7 @@ target_include_directories(
 target_link_libraries(
   ${LIB_NAME}
   PRIVATE
+  xa::runtime-base-common
   xa::shared
   xa::xamarin-app
 )

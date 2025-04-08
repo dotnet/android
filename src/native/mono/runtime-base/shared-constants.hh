@@ -2,6 +2,7 @@
 #define __SHARED_CONSTANTS_HH
 
 #include <string_view>
+#include <sys/system_properties.h>
 #include <shared/cpp-util.hh>
 #include <shared/xxhash.hh>
 
@@ -46,6 +47,9 @@ namespace xamarin::android::internal
 		static constexpr auto RUNTIME_CONFIG_BLOB_NAME_ARRAY                  = concat_string_views<runtime_config_blob_name_size> (RUNTIME_CONFIG_BLOB_BASE_NAME, MANGLED_ASSEMBLY_NAME_EXT);
 
 	public:
+		static inline constexpr std::string_view NEWLINE { "\n" };
+		static inline constexpr std::string_view EMPTY { "" };
+
 		// .data() must be used otherwise string_view length will include the trailing \0 in the array
 		static constexpr std::string_view RUNTIME_CONFIG_BLOB_NAME            { RUNTIME_CONFIG_BLOB_NAME_ARRAY.data () };
 		static constexpr std::string_view MONO_SGEN_SO                        { "libmonosgen-2.0.so" };
@@ -66,6 +70,7 @@ namespace xamarin::android::internal
 		static inline constexpr std::string_view DEBUG_MONO_SOFT_BREAKPOINTS      { "debug.mono.soft_breakpoints" };
 		static inline constexpr std::string_view DEBUG_MONO_TRACE_PROPERTY        { "debug.mono.trace" };
 		static inline constexpr std::string_view DEBUG_MONO_WREF_PROPERTY         { "debug.mono.wref" };
+		static inline constexpr std::string_view DEBUG_MONO_TIMING                { "debug.mono.timing" };
 
 #if __arm__
 		static constexpr std::string_view android_abi        { "armeabi_v7a" };
@@ -136,6 +141,7 @@ namespace xamarin::android::internal
 #else
 		static constexpr bool debug_build = false;
 #endif
+		static inline constexpr size_t PROPERTY_VALUE_BUFFER_LEN = PROP_VALUE_MAX + 1uz;
 	};
 }
 #endif // __SHARED_CONSTANTS_HH

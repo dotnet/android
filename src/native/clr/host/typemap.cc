@@ -1,7 +1,7 @@
 #include <array>
 
 #include <host/typemap.hh>
-#include <runtime-base/timing-internal-exp.hh>
+#include <runtime-base/timing-internal.hh>
 #include <runtime-base/search.hh>
 #include <runtime-base/util.hh>
 #include <shared/xxhash.hh>
@@ -210,8 +210,8 @@ auto TypeMapper::typemap_managed_to_java_release (const char *typeName, const ui
 [[gnu::flatten]]
 auto TypeMapper::typemap_managed_to_java (const char *typeName, const uint8_t *mvid) noexcept -> const char*
 {
-	if (exp::FastTiming::enabled ()) [[unlikely]] {
-		exp::internal_timing.start_event (exp::TimingEventKind::ManagedToJava);
+	if (FastTiming::enabled ()) [[unlikely]] {
+		internal_timing.start_event (TimingEventKind::ManagedToJava);
 	}
 
 	if (typeName == nullptr) [[unlikely]] {
@@ -226,8 +226,8 @@ auto TypeMapper::typemap_managed_to_java (const char *typeName, const uint8_t *m
 	ret = typemap_managed_to_java_debug (typeName, mvid);
 #endif
 
-	if (exp::FastTiming::enabled ()) [[unlikely]] {
-		exp::internal_timing.end_event ();
+	if (FastTiming::enabled ()) [[unlikely]] {
+		internal_timing.end_event ();
 	}
 
 	return ret;
@@ -255,8 +255,8 @@ auto TypeMapper::find_java_to_managed_entry (hash_t name_hash) noexcept -> const
 [[gnu::flatten]]
 auto TypeMapper::typemap_java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept -> bool
 {
-	if (exp::FastTiming::enabled ()) [[unlikely]] {
-		exp::internal_timing.start_event (exp::TimingEventKind::JavaToManaged);
+	if (FastTiming::enabled ()) [[unlikely]] {
+		internal_timing.start_event (TimingEventKind::JavaToManaged);
 	}
 
 	if (java_type_name == nullptr || assembly_name == nullptr || managed_type_token_id == nullptr) [[unlikely]] {
@@ -316,8 +316,8 @@ auto TypeMapper::typemap_java_to_managed (const char *java_type_name, char const
 		optional_string (*assembly_name)
 	);
 
-	if (exp::FastTiming::enabled ()) [[unlikely]] {
-		exp::internal_timing.end_event ();
+	if (FastTiming::enabled ()) [[unlikely]] {
+		internal_timing.end_event ();
 	}
 
 	return true;

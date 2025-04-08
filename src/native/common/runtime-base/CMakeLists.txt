@@ -1,12 +1,8 @@
-set(LIB_NAME runtime-base)
-set(LIB_ALIAS xa::runtime-base)
+set(LIB_NAME runtime-base-common)
+set(LIB_ALIAS xa::runtime-base-common)
 
 set(XA_RUNTIME_BASE_SOURCES
-  android-system.cc
-  cpu-arch-detect.cc
-  logger.cc
-  shared-constants.cc
-  util.cc
+  timing-internal.cc
 )
 add_clang_check_sources("${XA_RUNTIME_BASE_SOURCES}")
 
@@ -36,30 +32,17 @@ target_compile_options(
 
 target_include_directories(
   ${LIB_NAME}
-  PUBLIC
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
-)
-
-target_include_directories(
-  ${LIB_NAME}
   SYSTEM PRIVATE
   ${SYSROOT_CXX_INCLUDE_DIR}
-  ${RUNTIME_INCLUDE_DIR}
 )
 
 target_link_libraries(
   ${LIB_NAME}
   PRIVATE
-  ${SHARED_LIB_NAME}
+  xa::shared
   xa::xamarin-app
+  xa::runtime-base
 )
 
-if(DEBUG_BUILD)
-  set_target_properties(
-    ${LIB_NAME}
-    PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-  )
-endif()
-
 xa_add_compile_definitions(${LIB_NAME})
+xa_add_include_directories(${LIB_NAME})

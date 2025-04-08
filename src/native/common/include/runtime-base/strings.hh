@@ -967,4 +967,8 @@ namespace xamarin::android {
 			base::append (str);
 		}
 	};
+
+	// Useful aliases
+	using dynamic_local_property_string = dynamic_local_string<Constants::PROPERTY_VALUE_BUFFER_LEN>;
+	using dynamic_local_path_string = dynamic_local_string<SENSIBLE_PATH_MAX>;
 }
