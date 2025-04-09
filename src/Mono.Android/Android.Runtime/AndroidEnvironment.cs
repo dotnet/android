@@ -338,7 +338,7 @@ namespace Android.Runtime {
 		{
 			[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Preserved by the MarkJavaObjects trimmer step.")]
 			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
-			static Type TypeGetType (string typeName) =>
+			static Type? TypeGetType (string typeName) =>
 				Type.GetType (typeName, throwOnError: false);
 
 			if (httpMessageHandlerType is null) {

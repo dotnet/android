@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
@@ -32,9 +31,9 @@ namespace Xamarin.Android.Net
 
 			IEnumerable<AuthenticationData> authenticationData = handler.RequestedAuthentication ?? Array.Empty<AuthenticationData> ();
 			foreach (var auth in authenticationData) {
-				if (TryGetSupportedAuthType (auth.Challenge, out var authType)) {
+				if (request.RequestUri is Uri requestUri && TryGetSupportedAuthType (auth.Challenge, out var authType)) {
 					var credentials = auth.UseProxyAuthentication ? handler.Proxy?.Credentials : handler.Credentials;
-					var correspondingCredential = credentials?.GetCredential (request.RequestUri, authType);
+					var correspondingCredential = credentials?.GetCredential (requestUri, authType);
 
 					if (correspondingCredential != null) {
 						requestedAuth = new RequestedNegotiateAuthenticationData {
@@ -78,8 +77,13 @@ namespace Xamarin.Android.Net
 			}
 		}
 
-		static bool TryGetSupportedAuthType (string challenge, out string authType)
+		static bool TryGetSupportedAuthType (string? challenge, out string authType)
 		{
+			if (challenge is null) {
+				authType = string.Empty;
+				return false;
+			}
+			
 			var spaceIndex = challenge.IndexOf (' ');
 			authType = spaceIndex == -1 ? challenge : challenge.Substring (0, spaceIndex);
 
