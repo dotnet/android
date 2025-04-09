@@ -63,12 +63,12 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
     </ItemGroup>
 
     <ItemGroup Condition=" '$(AndroidRuntime)' != 'NativeAOT' ">
-      <_AndroidRuntimePackAssets Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libc.so" />
-      <_AndroidRuntimePackAssets Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libdl.so" />
-      <_AndroidRuntimePackAssets Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\liblog.so" />
-      <_AndroidRuntimePackAssets Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libm.so" />
-      <_AndroidRuntimePackAssets Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libz.so" />
-      <_AndroidRuntimePackAssets Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libarchive-dso-stub.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libarchive-dso-stub.so" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libc.so" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libdl.so" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\liblog.so" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libm.so" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libz.so" />
+      <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libarchive-dso-stub.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libarchive-dso-stub.so" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(AndroidRuntime)' == 'NativeAOT' ">
