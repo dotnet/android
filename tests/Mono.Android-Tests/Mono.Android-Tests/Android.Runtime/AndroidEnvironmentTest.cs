@@ -27,43 +27,18 @@ namespace Android.RuntimeTests {
 
 		[Test]
 		[TestCase (null)]
-		[TestCase ("Xamarin.Android.Net.AndroidHttpResponseMessage")] // does not extend HttpMessageHandler
-		// instantiating AndroidClientHandler or HttpClientHandler (or any other type extending HttpClientHandler)
-		// would cause infinite recursion in the .NET build and so it is replaced with AndroidMessageHandler
-		[TestCase ("System.Net.Http.HttpClientHandler, System.Net.Http")]
+		[TestCase ("Xamarin.Android.Net.AndroidHttpResponseMessage")]
 		[TestCase ("Xamarin.Android.Net.AndroidClientHandler")]
-		public void GetHttpMessageHandler_FallbackToAndroidMessageHandler (string? typeName)
-		{
-			var handler = GetHttpMessageHandler (typeName);
-
-			Assert.IsNotNull (handler, "GetHttpMessageHandler returned null");
-			Assert.IsNotNull ("Xamarin.Android.Net.AndroidMessageHandler", handler.GetType ().FullName);
-		}
-
-		[Test]
-		[TestCase ("System.Net.Http.HttpClientHandler")] // the type name doesn't contain the name of the assembly so the type won't be found
+		[TestCase ("System.Net.Http.HttpClientHandler, System.Net.Http")]
+		[TestCase ("System.Net.Http.HttpClientHandler")]
 		[TestCase ("Some.Nonexistent.Type")]
-		public void GetHttpMessageHandler_FallbackForInaccessibleTypes (string typeName)
-		{
-			var handler = GetHttpMessageHandler (typeName);
-
-			Assert.IsNotNull (handler, "GetHttpMessageHandler returned null");
-			Assert.IsNotNull ("Xamarin.Android.Net.AndroidMessageHandler", handler.GetType ().FullName);
-		}
-
-		[Test]
-		[TestCase ("Xamarin.Android.Net.AndroidMessageHandler")]
 		[TestCase ("System.Net.Http.SocketsHttpHandler, System.Net.Http")]
-		public void GetHttpMessageHandler_OverridesDefaultValue (string typeName)
+		public void GetHttpMessageHandler_IgnoresValueOfEnvironmentVariable (string? typeName)
 		{
 			var handler = GetHttpMessageHandler (typeName);
 
 			Assert.IsNotNull (handler, "GetHttpMessageHandler returned null");
-
-			// type's FullName doesn't contain the assembly name
-			var indexOfComma = typeName.IndexOf(',');
-			var expectedTypeName = indexOfComma > 0 ? typeName.Substring(0, indexOfComma) : typeName;
-			Assert.AreEqual (expectedTypeName, handler.GetType ().FullName);
+			Assert.AreEqual ("Xamarin.Android.Net.AndroidMessageHandler", handler.GetType ().FullName);
 		}
 
 		private static object? GetHttpMessageHandler (string? typeName)
@@ -80,6 +55,8 @@ namespace Android.RuntimeTests {
 		{
 			var cacheField = typeof (AndroidEnvironment).GetField ("httpMessageHandlerType", BindingFlags.Static | BindingFlags.NonPublic)!;
 			cacheField.SetValue (null, null);
+			var isFirstGetHttpMessageHandlerCallField = typeof (AndroidEnvironment).GetField ("isFirstGetHttpMessageHandlerCall", BindingFlags.Static | BindingFlags.NonPublic)!;
+			isFirstGetHttpMessageHandlerCallField.SetValue (null, false);
 		}
 	}
 }
