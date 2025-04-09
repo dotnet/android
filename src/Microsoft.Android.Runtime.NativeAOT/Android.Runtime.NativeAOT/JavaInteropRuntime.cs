@@ -56,7 +56,6 @@ static partial class JavaInteropRuntime
 
 			var handler = Java.Lang.Thread.DefaultUncaughtExceptionHandler;
 			Java.Lang.Thread.DefaultUncaughtExceptionHandler = new UncaughtExceptionMarshaler (handler);
-			AndroidLog.Print (AndroidLogLevel.Info, "JavaInteropRuntime", $"init: Thread.DefaultUncaughtExceptionHandler={Java.Lang.Thread.DefaultUncaughtExceptionHandler}");
 		}
 		catch (Exception e) {
 			AndroidLog.Print (AndroidLogLevel.Error, "JavaInteropRuntime", $"JavaInteropRuntime.init: error: {e}");
