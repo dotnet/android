@@ -37,12 +37,22 @@ $env:ANDROID_NDK_HOME = $_DEF_NDK_HOME
 # Kill any existing lldb-server processes
 $null = & $ADB shell "run-as net.dot.hellonativeaot killall -q -9 lldb-server" 
 
+$DEVICE_ARCH = & $ADB shell uname -m
+if ( $DEVICE_ARCH -match "aarch64" ) {
+    $CLANG_PREFIX=aarch64-linux-android21
+} elseif ( $DEVICE_ARCH -match "x86_64" ) {
+    $CLANG_PREFIX=x86_64-linux-android21
+} else {
+    Write-Error "Error: unsupported device architecture $DEVICE_ARCH"
+    exit 1
+}
+
 # Get the appropriate path for Windows NDK
-$NDK_CLANG_PATH = "$env:ANDROID_NDK_HOME\toolchains\llvm\prebuilt\windows-x86_64\bin\clang"
+$NDK_CLANG_PATH = "$env:ANDROID_NDK_HOME\toolchains\llvm\prebuilt\windows-x86_64\bin\$CLANG_PREFIX-clang"
 if (-not (Test-Path $NDK_CLANG_PATH)) {
-    $NDK_CLANG_PATH = "$env:ANDROID_NDK_HOME\toolchains\llvm\prebuilt\linux-x86_64\bin\clang"
+    $NDK_CLANG_PATH = "$env:ANDROID_NDK_HOME\toolchains\llvm\prebuilt\linux-x86_64\bin\$CLANG_PREFIX-clang"
     if (-not (Test-Path $NDK_CLANG_PATH)) {
-        $NDK_CLANG_PATH = "$env:ANDROID_NDK_HOME\toolchains\llvm\prebuilt\darwin-x86_64\bin\clang"
+        $NDK_CLANG_PATH = "$env:ANDROID_NDK_HOME\toolchains\llvm\prebuilt\darwin-x86_64\bin\$CLANG_PREFIX-clang"
         if (-not (Test-Path $NDK_CLANG_PATH)) {
             Write-Error "Could not find clang in any of the expected NDK locations"
             exit 1

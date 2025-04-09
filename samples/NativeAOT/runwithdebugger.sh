@@ -29,6 +29,7 @@ adb shell run-as net.dot.hellonativeaot killall -9 lldb-server > /dev/null 2>&1 
 case $(uname) in
     Linux) TOOLCHAIN_OS=linux-x86_64 ;;
     Darwin) TOOLCHAIN_OS=darwine-x86_64 ;;
+    *) echo "Unsupported OS: $(uname)"; exit 1 ;;
 esac
 
 if [ -n "${ANDROID_NDK_HOME}" ]; then
@@ -39,7 +40,14 @@ elif [ -n "${ANDROID_NDK_PATH}" ]; then
     ANDROID_NDK_DIR="${ANDROID_NDK_PATH}"
 fi
 
-adb push "$("${ANDROID_NDK_DIR}/toolchains/llvm/prebuilt/${TOOLCHAIN_OS}/bin/clang" -print-file-name=lldb-server)" /data/local/tmp/lldb-server
+DEVICE_ARCH="$(adb shell uname -m)"
+case ${DEVICE_ARCH} in
+    aarch64) CLANG_PREFIX=aarch64-linux-android21 ;;
+    x86_64) CLANG_PREFIX=x86_64-linux-android21 ;;
+    *) echo "Unsupported device architecture ${DEVICE_ARCH}"; exit 1 ;;
+esac
+
+adb push "$("${ANDROID_NDK_DIR}/toolchains/llvm/prebuilt/${TOOLCHAIN_OS}/bin/${CLANG_PREFIX}-clang" -print-file-name=lldb-server)" /data/local/tmp/lldb-server
 adb shell run-as net.dot.hellonativeaot cp /data/local/tmp/lldb-server .
 adb forward tcp:5039 tcp:5039
 
