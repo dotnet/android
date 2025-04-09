@@ -1503,15 +1503,15 @@ because xbuild doesn't support framework reference assemblies.
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       Debug="$(AndroidIncludeDebugSymbols)"
-      DestinationFiles="@(ResolvedAssemblies)"
+      DestinationFiles="@(_ProcessedAssemblies)"
       Deterministic="$(Deterministic)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
       ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)"
-      ResolvedAssemblies="@(_AllResolvedAssemblies)"
+      ResolvedAssemblies="@(_ProcessedAssemblies)"
       ResolvedUserAssemblies="@(ResolvedUserAssemblies)"
-      SourceFiles="@(ResolvedAssemblies)">
+      SourceFiles="@(_ProcessedAssemblies)">
   </AssemblyModifierPipeline>
 
   <Touch Files="$(_AdditionalPostLinkerStepsFlag)" AlwaysCreate="true" />
