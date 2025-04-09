@@ -107,11 +107,8 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BasicApplicationOtherRuntime ([Values (true, false)] bool isRelease)
+		public void BasicApplicationBuildCoreCLR ([Values (true, false)] bool isRelease)
 		{
-			// This test would fail, as it requires **our** updated runtime pack, which isn't currently created
-			// It is created in `src/native/native-clr.csproj` which isn't built atm.
-			Assert.Ignore ("CoreCLR support isn't fully enabled yet. This test will be enabled in a follow-up PR.");
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				// Add locally downloaded CoreCLR packs
@@ -120,6 +117,49 @@ namespace Xamarin.Android.Build.Tests
 				}
 			};
 			proj.SetProperty ("UseMonoRuntime", "false"); // Enables CoreCLR
+			var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+		}
+
+		static object [] ReadyToRunConfigurationSource = new object [] {
+			new object[] {
+				/* isComposite */	true,
+				/* rid */			"android-x64"
+			},
+			new object[] {
+				/* isComposite */	false,
+				/* rid */			"android-x64"
+			},
+			new object[] {
+				/* isComposite */	true,
+				/* rid */			"android-arm64"
+			},
+			new object[] {
+				/* isComposite */	false,
+				/* rid */			"android-arm64"
+			}
+		};
+
+		[Test]
+		[TestCaseSource (nameof (ReadyToRunConfigurationSource))]
+		public void BasicApplicationPublishReadyToRun (bool isComposite, string rid)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				// Add locally downloaded CoreCLR packs
+				ExtraNuGetConfigSources = {
+					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
+				}
+			};
+
+			proj.SetProperty ("RuntimeIdentifier", rid);
+			proj.SetProperty ("UseMonoRuntime", "false"); 	// Enables CoreCLR
+			proj.SetProperty ("_IsPublishing", "true"); 	// Make "dotnet build" act as "dotnet publish"
+			proj.SetProperty ("PublishReadyToRun", "true"); // Enable R2R
+
+			if (isComposite)
+				proj.SetProperty ("PublishReadyToRunComposite", "true"); // Enable R2R composite
+
 			var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 		}
