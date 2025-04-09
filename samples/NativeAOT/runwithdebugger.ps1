@@ -39,9 +39,9 @@ $null = & $ADB shell "run-as net.dot.hellonativeaot killall -q -9 lldb-server"
 
 $DEVICE_ARCH = & $ADB shell uname -m
 if ( $DEVICE_ARCH -match "aarch64" ) {
-    $CLANG_PREFIX = aarch64-linux-android21
+    $CLANG_PREFIX = "aarch64-linux-android21"
 } elseif ( $DEVICE_ARCH -match "x86_64" ) {
-    $CLANG_PREFIX = x86_64-linux-android21
+    $CLANG_PREFIX = "x86_64-linux-android21"
 } else {
     Write-Error "Error: unsupported device architecture $DEVICE_ARCH"
     exit 1
