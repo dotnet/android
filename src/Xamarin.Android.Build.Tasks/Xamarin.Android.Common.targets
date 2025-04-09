@@ -2988,6 +2988,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_DeployAppBundle"
     Condition=" '$(AndroidPackageFormat)' == 'aab' "
     DependsOnTargets="_BuildApkSet">
+  <!-- Try to uninstall but save the cache -->
   <AndroidAdb
       Condition=" '$(EmbedAssembliesIntoApk)' == 'true' "
       ContinueOnError="True"
@@ -2999,7 +3000,20 @@ because xbuild doesn't support framework reference assemblies.
   >
     <Output TaskParameter="Result" PropertyName="_UninstallResult" />
   </AndroidAdb>
-   <AndroidAdb
+  <!-- The previous attempt failed. So yry to uninstall but save the cache using cmd package uninstall -k -->
+  <AndroidAdb
+      Condition=" '$(EmbedAssembliesIntoApk)' == 'true' And '$(_UninstallResult)' == 'false' "
+      ContinueOnError="True"
+      ToolExe="$(AdbToolExe)"
+      ToolPath="$(AdbToolPath)"
+      AdbTarget="$(AdbTarget)"
+      Command="shell cmd package uninstall -k"
+      Arguments="$(_AndroidPackage)"
+  >
+    <Output TaskParameter="Result" PropertyName="_UninstallResult" />
+  </AndroidAdb>
+  <!-- adb really can't uninstall this app with the cache intact, we need to completely uninstall it. -->
+  <AndroidAdb
       Condition=" '$(EmbedAssembliesIntoApk)' == 'true' And '$(_UninstallResult)' == 'false' "
       ContinueOnError="True"
       ToolExe="$(AdbToolExe)"
