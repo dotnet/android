@@ -143,21 +143,36 @@ public class AssemblyModifierPipeline : AndroidTask
 		findJavaObjectsStep.Initialize (context);
 
 		runState.findJavaObjectsStep = findJavaObjectsStep;
+
+		var findTypeMapObjectsStep = new FindTypeMapObjectsStep (Log) {
+			ErrorOnCustomJavaObject = ErrorOnCustomJavaObject,
+			Debug = Debug,
+		};
+
+		findTypeMapObjectsStep.Initialize (context);
+
+		runState.findTypeMapObjectsStep = findTypeMapObjectsStep;
 	}
 
 	protected virtual void RunPipeline (ITaskItem source, ITaskItem destination, RunState runState, WriterParameters writerParameters)
 	{
-		var destinationJLOXml = JavaObjectsXmlFile.GetJavaObjectsXmlFilePath (destination.ItemSpec);
 
 		if (!TryScanForJavaObjects (source, destination, runState, writerParameters)) {
 			// Even if we didn't scan for Java objects, we still write an empty .xml file for later steps
+			var destinationJLOXml = JavaObjectsXmlFile.GetJavaObjectsXmlFilePath (destination.ItemSpec);
 			JavaObjectsXmlFile.WriteEmptyFile (destinationJLOXml, Log);
+		}
+
+		if (!TryScanForTypeMapObjects (source, destination, runState, writerParameters)) {
+			// Even if we didn't scan for Java objects, we still write an empty .xml file for later steps
+			var destinationTypeMapXml = TypeMapObjectsXmlFile.GetTypeMapObjectsXmlFilePath (destination.ItemSpec);
+			TypeMapObjectsXmlFile.WriteEmptyFile (destinationTypeMapXml, Log);
 		}
 	}
 
 	bool TryScanForJavaObjects (ITaskItem source, ITaskItem destination, RunState runState, WriterParameters writerParameters)
 	{
-		if (!ShouldScanAssembly (source))
+		if (!ShouldScanAssembly (source, false))
 			return false;
 
 		var destinationJLOXml = JavaObjectsXmlFile.GetJavaObjectsXmlFilePath (destination.ItemSpec);
@@ -168,13 +183,28 @@ public class AssemblyModifierPipeline : AndroidTask
 		return scanned;
 	}
 
-	bool ShouldScanAssembly (ITaskItem source)
+	bool TryScanForTypeMapObjects (ITaskItem source, ITaskItem destination, RunState runState, WriterParameters writerParameters)
+	{
+		if (!ShouldScanAssembly (source, true))
+			return false;
+
+		var destinationTypeMapXml = TypeMapObjectsXmlFile.GetTypeMapObjectsXmlFilePath (destination.ItemSpec);
+		var assemblyDefinition = runState.resolver!.GetAssembly (source.ItemSpec);
+		var scanned = runState.findTypeMapObjectsStep!.ProcessAssembly (assemblyDefinition, destinationTypeMapXml);
+
+		return scanned;
+	}
+
+	bool ShouldScanAssembly (ITaskItem source, bool scanAllAndroidAssemblies)
 	{
 		// Skip this assembly if it is not an Android assembly
 		if (!IsAndroidAssembly (source)) {
 			Log.LogDebugMessage ($"Skipping assembly '{source.ItemSpec}' because it is not an Android assembly");
 			return false;
 		}
+
+		if (scanAllAndroidAssemblies)
+			return true;
 
 		// When marshal methods or non-JavaPeerStyle.XAJavaInterop1 are in use we do not want to skip non-user assemblies (such as Mono.Android) - we need to generate JCWs for them during
 		// application build, unlike in Debug configuration or when marshal methods are disabled, in which case we use JCWs generated during Xamarin.Android
@@ -217,6 +247,7 @@ public class AssemblyModifierPipeline : AndroidTask
 		public AddKeepAlivesStep? addKeepAliveStep = null;
 		public FixLegacyResourceDesignerStep? fixLegacyResourceDesignerStep = null;
 		public FindJavaObjectsStep? findJavaObjectsStep = null;
+		public FindTypeMapObjectsStep? findTypeMapObjectsStep = null;
 		bool disposed_value;
 
 		public RunState (DirectoryAssemblyResolver resolver)
@@ -233,6 +264,7 @@ public class AssemblyModifierPipeline : AndroidTask
 					fixLegacyResourceDesignerStep = null;
 					addKeepAliveStep = null;
 					findJavaObjectsStep = null;
+					findTypeMapObjectsStep = null;
 				}
 				disposed_value = true;
 			}

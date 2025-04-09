@@ -1585,6 +1585,17 @@ because xbuild doesn't support framework reference assemblies.
       SupportedAbis="@(_BuildTargetAbis)">
   </GenerateACWMap>
 
+  <GenerateTypeMappings
+      AndroidRuntime="$(_AndroidRuntime)"
+      Debug="$(AndroidIncludeDebugSymbols)"
+      IntermediateOutputDirectory="$(IntermediateOutputPath)"
+      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)"
+      SupportedAbis="@(_BuildTargetAbis)"
+      TypemapImplementation="$(_AndroidTypeMapImplementation)"
+      TypemapOutputDirectory="$(_NativeAssemblySourceDir)">
+  </GenerateTypeMappings>
+
   <GenerateJavaStubs
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       ResolvedAssemblies="@(_ResolvedAssemblies)"
@@ -1610,11 +1621,16 @@ because xbuild doesn't support framework reference assemblies.
       IntermediateOutputDirectory="$(IntermediateOutputPath)">
   </RewriteMarshalMethods>
 
+  <!--      Condition=" '$(_AndroidJLOCheckedBuild)' == 'true' "
+ -->
   <GenerateTypeMappings
       AndroidRuntime="$(_AndroidRuntime)"
       Debug="$(AndroidIncludeDebugSymbols)"
       IntermediateOutputDirectory="$(IntermediateOutputPath)"
+      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      RunCheckedBuild="true"
       SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)"
+      SupportedAbis="@(_BuildTargetAbis)"
       TypemapImplementation="$(_AndroidTypeMapImplementation)"
       TypemapOutputDirectory="$(_NativeAssemblySourceDir)">
   </GenerateTypeMappings>
