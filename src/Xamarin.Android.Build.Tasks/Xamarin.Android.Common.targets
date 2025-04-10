@@ -1511,7 +1511,8 @@ because xbuild doesn't support framework reference assemblies.
       ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)"
       ResolvedAssemblies="@(_AllResolvedAssemblies)"
       ResolvedUserAssemblies="@(ResolvedUserAssemblies)"
-      SourceFiles="@(ResolvedAssemblies)">
+      SourceFiles="@(ResolvedAssemblies)"
+      TargetName="$(TargetName)">
   </AssemblyModifierPipeline>
 
   <Touch Files="$(_AdditionalPostLinkerStepsFlag)" AlwaysCreate="true" />
