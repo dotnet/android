@@ -385,7 +385,7 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	}
 
 	void *delegate = nullptr;
-	log_debug (LOG_ASSEMBLY, "Creating UCO delegate to {}.RegisterJniNatives", Constants::JNIENVINIT_FULL_TYPE_NAME);
+	log_debug (LOG_ASSEMBLY, "Creating UCO delegate to {}.RegisterJniNatives"sv, Constants::JNIENVINIT_FULL_TYPE_NAME);
 	delegate = FastTiming::time_call ("create_delegate for RegisterJniNatives"sv, create_delegate, Constants::MONO_ANDROID_ASSEMBLY_NAME, Constants::JNIENVINIT_FULL_TYPE_NAME, "RegisterJniNatives"sv);
 	jnienv_register_jni_natives = reinterpret_cast<jnienv_register_jni_natives_fn> (delegate);
 	abort_unless (
@@ -399,7 +399,7 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 		}
 	);
 
-	log_debug (LOG_ASSEMBLY, "Creating UCO delegate to {}.Initialize", Constants::JNIENVINIT_FULL_TYPE_NAME);
+	log_debug (LOG_ASSEMBLY, "Creating UCO delegate to {}.Initialize"sv, Constants::JNIENVINIT_FULL_TYPE_NAME);
 	delegate = FastTiming::time_call ("create_delegate for Initialize"sv, create_delegate, Constants::MONO_ANDROID_ASSEMBLY_NAME, Constants::JNIENVINIT_FULL_TYPE_NAME, "Initialize"sv);
 	auto initialize = reinterpret_cast<jnienv_initialize_fn> (delegate);
 	abort_unless (
@@ -414,7 +414,7 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	);
 
 	log_debug (LOG_DEFAULT, "Calling into managed runtime init"sv);
-	FastTiming::time_call ("JNIEnv.Initialize UCO", initialize, &init);
+	FastTiming::time_call ("JNIEnv.Initialize UCO"sv, initialize, &init);
 
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.end_event (); // native to managed

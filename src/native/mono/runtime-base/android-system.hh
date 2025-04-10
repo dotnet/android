@@ -20,7 +20,7 @@
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/strings.hh>
 
-static inline constexpr size_t PROPERTY_VALUE_BUFFER_LEN = xamarin::android::internal::SharedConstants::PROPERTY_VALUE_BUFFER_LEN;
+static constexpr size_t PROPERTY_VALUE_BUFFER_LEN = xamarin::android::internal::SharedConstants::PROPERTY_VALUE_BUFFER_LEN;
 
 extern  FILE  *gref_log;
 extern  FILE  *lref_log;

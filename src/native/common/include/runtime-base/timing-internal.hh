@@ -88,18 +88,18 @@ namespace xamarin::android {
 		// time of class instantiation.  It's an arbitrary value, but it should
 		// be large enough to not require any dynamic reallocation of memory at
 		// the run time.
-		static inline constexpr size_t INITIAL_EVENT_VECTOR_SIZE = 4096uz;
+		static constexpr size_t INITIAL_EVENT_VECTOR_SIZE = 4096uz;
 
 		// defaults
-		static inline constexpr bool default_fast_timing_enabled = false;
-		static inline constexpr bool default_log_to_file = false;
-		static inline constexpr size_t default_duration_milliseconds = 1500;
-		static inline constexpr std::string_view default_timing_file_name { "timing.txt" };
+		static constexpr bool default_fast_timing_enabled = false;
+		static constexpr bool default_log_to_file = false;
+		static constexpr size_t default_duration_milliseconds = 1500;
+		static constexpr std::string_view default_timing_file_name { "timing.txt" };
 
 		// Parameters for the `debug.mono.timing` property
-		static inline constexpr std::string_view OPT_DURATION      { "duration=" };
-		static inline constexpr std::string_view OPT_FILE_NAME     { "filename=" };
-		static inline constexpr std::string_view OPT_TO_FILE       { "to-file" };
+		static constexpr std::string_view OPT_DURATION      { "duration=" };
+		static constexpr std::string_view OPT_FILE_NAME     { "filename=" };
+		static constexpr std::string_view OPT_TO_FILE       { "to-file" };
 
 	protected:
 		void configure_for_use () noexcept

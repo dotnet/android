@@ -58,7 +58,7 @@ Util::create_public_directory (std::string_view const& dir)
 			// Try to change the mode, just in case
 			chmod (dir.data (), 0777);
 		} else {
-			log_warn (LOG_DEFAULT, "Failed to create directory '{}'. {}", dir, std::strerror (errno));
+			log_warn (LOG_DEFAULT, "Failed to create directory '{}'. {}"sv, dir, std::strerror (errno));
 		}
 	}
 	umask (m);
@@ -99,7 +99,7 @@ auto Util::set_world_accessible (int fd) noexcept -> bool
 	} while (r == -1 && errno == EINTR);
 
 	if (r == -1) {
-		log_error (LOG_DEFAULT, "fchmod() failed: {}", strerror (errno));
+		log_error (LOG_DEFAULT, "fchmod() failed: {}"sv, strerror (errno));
 		return false;
 	}
 
