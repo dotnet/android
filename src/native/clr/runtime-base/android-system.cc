@@ -351,7 +351,7 @@ AndroidSystem::monodroid__system_property_get (std::string_view const& name, cha
 	return len;
 }
 
-auto AndroidSystem::monodroid_get_system_property (std::string_view const& name, dynamic_local_string<Constants::PROPERTY_VALUE_BUFFER_LEN> &value) noexcept -> int
+auto AndroidSystem::monodroid_get_system_property (std::string_view const& name, dynamic_local_property_string &value) noexcept -> int
 {
 	int len = monodroid__system_property_get (name, value.get (), value.size ());
 	if (len > 0) {
@@ -381,7 +381,7 @@ AndroidSystem::get_max_gref_count_from_system () noexcept -> long
 		max = 51200;
 	}
 
-	dynamic_local_string<Constants::PROPERTY_VALUE_BUFFER_LEN> override;
+	dynamic_local_property_string override;
 	if (monodroid_get_system_property (Constants::DEBUG_MONO_MAX_GREFC, override) > 0) {
 		char *e;
 		max = strtol (override.get (), &e, 10);

@@ -227,6 +227,7 @@ macro(lib_target_options TARGET_NAME)
     ${LINK_LIBS}
     xa::xamarin-app
     ${SHARED_LIB_NAME}
+    xa::runtime-base-common
     xa::runtime-base
     xa::java-interop
     xa::pinvoke-override-precompiled

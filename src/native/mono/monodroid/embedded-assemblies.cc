@@ -35,7 +35,7 @@
 #include "monodroid-glue-internal.hh"
 #include "monodroid-state.hh"
 #include "startup-aware-lock.hh"
-#include "timing-internal.hh"
+#include <runtime-base/timing-internal.hh>
 #include <runtime-base/search.hh>
 
 using namespace xamarin::android;
@@ -740,10 +740,9 @@ EmbeddedAssemblies::typemap_java_to_managed (hash_t hash, const MonoString *java
 MonoReflectionType*
 EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type) noexcept
 {
-	size_t total_time_index;
 	if (FastTiming::enabled ()) [[unlikely]] {
 		timing = new Timing ();
-		total_time_index = internal_timing->start_event (TimingEventKind::JavaToManaged);
+		internal_timing.start_event (TimingEventKind::JavaToManaged);
 	}
 
 	if (java_type == nullptr) [[unlikely]]{
@@ -764,7 +763,7 @@ EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type) noexcept
 	MonoReflectionType *ret = typemap_java_to_managed (hash, java_type);
 
 	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing->end_event (total_time_index);
+		internal_timing.end_event ();
 	}
 
 	return ret;
@@ -891,10 +890,9 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 const char*
 EmbeddedAssemblies::typemap_managed_to_java (MonoReflectionType *reflection_type, const uint8_t *mvid) noexcept
 {
-	size_t total_time_index;
 	if (FastTiming::enabled ()) [[unlikely]] {
 		timing = new Timing ();
-		total_time_index = internal_timing->start_event (TimingEventKind::ManagedToJava);
+		internal_timing.start_event (TimingEventKind::ManagedToJava);
 	}
 
 	MonoType *type = mono_reflection_type_get_type (reflection_type);
@@ -906,7 +904,7 @@ EmbeddedAssemblies::typemap_managed_to_java (MonoReflectionType *reflection_type
 	const char *ret = typemap_managed_to_java (type, mono_class_from_mono_type (type), mvid);
 
 	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing->end_event (total_time_index);
+		internal_timing.end_event ();
 	}
 
 	return ret;

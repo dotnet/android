@@ -7,7 +7,7 @@
 #include <jni.h>
 
 #include "log_types.hh"
-#include "timing.hh"
+#include <runtime-base/timing.hh>
 #include "xamarin-app.hh"
 #include "xamarin_getifaddrs.h"
 

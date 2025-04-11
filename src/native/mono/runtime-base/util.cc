@@ -202,6 +202,22 @@ Util::set_world_accessable ([[maybe_unused]] const char *path)
 	}
 }
 
+auto 
+Util::set_world_accessible (int fd) noexcept -> bool
+{
+  int r;
+  do {
+	r = fchmod (fd, 0664);
+  } while (r == -1 && errno == EINTR);
+
+  if (r == -1) {
+	log_error (LOG_DEFAULT, "fchmod() failed: {}", strerror (errno));
+	return false;
+  }
+
+  return true;
+}
+
 void
 Util::set_user_executable ([[maybe_unused]] const char *path)
 {

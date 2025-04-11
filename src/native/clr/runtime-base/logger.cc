@@ -102,7 +102,7 @@ Logger::init_logging_categories () noexcept
 {
 	_log_timing_categories = LogTimingCategories::Default;
 
-	dynamic_local_string<Constants::PROPERTY_VALUE_BUFFER_LEN> value;
+	dynamic_local_property_string value;
 	if (AndroidSystem::monodroid_get_system_property (Constants::DEBUG_MONO_LOG_PROPERTY, value) == 0) {
 		return;
 	}

@@ -39,6 +39,9 @@ namespace xamarin::android {
 		static constexpr auto RUNTIME_CONFIG_BLOB_NAME_ARRAY                  = concat_string_views<runtime_config_blob_name_size> (RUNTIME_CONFIG_BLOB_BASE_NAME, MANGLED_ASSEMBLY_NAME_EXT);
 
 	public:
+		static constexpr std::string_view NEWLINE { "\n" };
+		static constexpr std::string_view EMPTY { "" };
+
 		// .data() must be used otherwise string_view length will include the trailing \0 in the array
 		static constexpr std::string_view RUNTIME_CONFIG_BLOB_NAME            { RUNTIME_CONFIG_BLOB_NAME_ARRAY.data () };
 		static constexpr std::string_view OVERRIDE_DIRECTORY_NAME             { ".__override__" };
@@ -57,6 +60,7 @@ namespace xamarin::android {
 		static inline constexpr std::string_view DEBUG_MONO_SOFT_BREAKPOINTS      { "debug.mono.soft_breakpoints" };
 		static inline constexpr std::string_view DEBUG_MONO_TRACE_PROPERTY        { "debug.mono.trace" };
 		static inline constexpr std::string_view DEBUG_MONO_WREF_PROPERTY         { "debug.mono.wref" };
+		static constexpr std::string_view DEBUG_MONO_TIMING                       { "debug.mono.timing" };
 
 		static constexpr std::string_view LOG_CATEGORY_NAME_NONE                  { "*none*" };
 		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID             { "monodroid" };

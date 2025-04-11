@@ -254,6 +254,13 @@ if(IS_CLR_RUNTIME)
      )
   endmacro()
 else()
+  macro(xa_add_include_directories TARGET)
+     target_include_directories(
+        ${TARGET}
+        PRIVATE
+        ${RUNTIME_INCLUDE_DIR}
+     )
+  endmacro()
   include_directories(mono)
 endif()
 
@@ -589,6 +596,7 @@ else()
   add_subdirectory(common/libunwind)
   add_subdirectory(common/lz4)
 
+  add_subdirectory(common/runtime-base)
   add_subdirectory(${SOURCES_PREFIX}/runtime-base)
   add_subdirectory(${SOURCES_PREFIX}/shared)
   add_subdirectory(${SOURCES_PREFIX}/xamarin-app-stub)
