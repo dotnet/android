@@ -1471,10 +1471,13 @@ because xbuild doesn't support framework reference assemblies.
     Inputs="@(ResolvedAssemblies);$(_AndroidBuildPropertiesCache)"
     Outputs="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')">
   <LinkAssembliesNoShrink
+      AndroidSdkPlatform="$(_AndroidApiLevel)"
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       CodeGenerationTarget="$(AndroidCodegenTarget)"
       Debug="$(AndroidIncludeDebugSymbols)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
+      EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
+      Environments="@(_EnvironmentFiles)"
       ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
       ResolvedAssemblies="@(_AllResolvedAssemblies)"
@@ -1500,12 +1503,15 @@ because xbuild doesn't support framework reference assemblies.
     Inputs="$(_AndroidLinkFlag)"
     Outputs="$(_AdditionalPostLinkerStepsFlag)">
   <AssemblyModifierPipeline
+      AndroidSdkPlatform="$(_AndroidApiLevel)"
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       Debug="$(AndroidIncludeDebugSymbols)"
       DestinationFiles="@(ResolvedAssemblies)"
       Deterministic="$(Deterministic)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
+      EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
+      Environments="@(_EnvironmentFiles)"
       ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
       ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)"
@@ -1604,12 +1610,12 @@ because xbuild doesn't support framework reference assemblies.
       IntermediateOutputDirectory="$(IntermediateOutputPath)">
   </GenerateJavaStubs>
 
-  <RewriteMarshalMethods
+  <!--<RewriteMarshalMethods
       Condition=" '$(_AndroidUseMarshalMethods)' == 'true' And '$(AndroidIncludeDebugSymbols)' == 'false' "
       EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
       Environments="@(_EnvironmentFiles)"
       IntermediateOutputDirectory="$(IntermediateOutputPath)">
-  </RewriteMarshalMethods>
+  </RewriteMarshalMethods>-->
 
   <GenerateTypeMappings
       AndroidRuntime="$(_AndroidRuntime)"
@@ -1644,7 +1650,6 @@ because xbuild doesn't support framework reference assemblies.
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       Debug="$(AndroidIncludeDebugSymbols)"
       EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       IntermediateOutputDirectory="$(IntermediateOutputPath)"
       ManifestPlaceholders="$(AndroidManifestPlaceholders)"
       ManifestTemplate="$(_AndroidManifestAbs)"

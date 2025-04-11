@@ -111,6 +111,12 @@ namespace Xamarin.Android.Tasks
 		{
 			ConvertedNativeCallback = convertedNativeCallback ?? throw new ArgumentNullException (nameof (convertedNativeCallback));
 		}
+
+		public ConvertedMarshalMethodEntry (TypeDefinition declaringType, MethodDefinition nativeCallback, string jniTypeName, string jniName, string jniSignature)
+			: base (declaringType, nativeCallback, jniTypeName, jniName, jniSignature)
+		{
+			ConvertedNativeCallback = nativeCallback;
+		}
 	}
 
 	sealed class DynamicallyRegisteredMarshalMethodEntry : MethodEntry
@@ -274,6 +280,7 @@ namespace Xamarin.Android.Tasks
 			// we need to accept them as equivalent
 			static readonly (string Source, string Replacement)[] equivalent_types = [
 				(Source: "System.Boolean", Replacement: "System.SByte"),
+				(Source: "System.Boolean", Replacement: "System.Byte"),
 				(Source: "System.Char", Replacement: "System.UInt16"),
 			];
 

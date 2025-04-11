@@ -1,4 +1,3 @@
-#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -21,22 +20,22 @@ class MarshalMethodsCollection : JavaCallableMethodClassifier
 	/// Assemblies that contain convertible marshal methods. These assemblies need to
 	/// have the proper assembly references added to them.
 	/// </summary>
-	public HashSet<AssemblyDefinition> AssembliesWithMarshalMethods { get; } = [];
+	public virtual HashSet<AssemblyDefinition> AssembliesWithMarshalMethods { get; } = [];
 
 	/// <summary>
 	/// Marshal methods that have already been rewritten as LLVM marshal methods.
 	/// </summary>
-	public IDictionary<string, IList<ConvertedMarshalMethodEntry>> ConvertedMarshalMethods { get; } = new Dictionary<string, IList<ConvertedMarshalMethodEntry>> (StringComparer.Ordinal);
+	public virtual IDictionary<string, IList<ConvertedMarshalMethodEntry>> ConvertedMarshalMethods { get; } = new Dictionary<string, IList<ConvertedMarshalMethodEntry>> (StringComparer.Ordinal);
 
 	/// <summary>
 	/// Marshal methods that cannot be rewritten and must be registered dynamically.
 	/// </summary>
-	public List<DynamicallyRegisteredMarshalMethodEntry> DynamicallyRegisteredMarshalMethods { get; } = [];
+	public virtual List<DynamicallyRegisteredMarshalMethodEntry> DynamicallyRegisteredMarshalMethods { get; } = [];
 
 	/// <summary>
 	/// Marshal methods that can be rewritten as LLVM marshal methods.
 	/// </summary>
-	public IDictionary<string, IList<MarshalMethodEntry>> MarshalMethods { get; } = new Dictionary<string, IList<MarshalMethodEntry>> (StringComparer.Ordinal);
+	public virtual IDictionary<string, IList<MarshalMethodEntry>> MarshalMethods { get; } = new Dictionary<string, IList<MarshalMethodEntry>> (StringComparer.Ordinal);
 
 	readonly MarshalMethodsClassifier classifier;
 	readonly TaskLoggingHelper log;
@@ -50,11 +49,18 @@ class MarshalMethodsCollection : JavaCallableMethodClassifier
 		resolver = classifier.Resolver;
 	}
 
+	public MarshalMethodsCollection ()
+	{
+		classifier = null!;
+		log = null!;
+		resolver = null!;
+	}
+
 	/// <summary>
 	/// Adds MarshalMethodEntry for each method that won't be returned by the JavaInterop type scanner, mostly
 	/// used for hand-written methods (e.g. Java.Interop.TypeManager+JavaTypeManager::n_Activate)
 	/// </summary>
-	public void AddSpecialCaseMethods ()
+	public virtual void AddSpecialCaseMethods ()
 	{
 		AddTypeManagerSpecialCaseMethods ();
 	}
@@ -89,7 +95,26 @@ class MarshalMethodsCollection : JavaCallableMethodClassifier
 		return collection;
 	}
 
-	static void ScanTypeForMarshalMethods (TypeDefinition type, MarshalMethodsCollection collection, XAAssemblyResolver resolver, TypeDefinitionCache cache, TaskLoggingHelper log, MarshalMethodsClassifier classifier)
+	public static MarshalMethodsCollection FromAssembly (AndroidTargetArch arch, AssemblyDefinition assembly, IAssemblyResolver resolver, TaskLoggingHelper log)
+	{
+		var cache = new TypeDefinitionCache ();
+		var classifier = new MarshalMethodsClassifier (cache, resolver, log);
+		var collection = new MarshalMethodsCollection (classifier);
+		var scanner = new XAJavaTypeScanner (arch, log, cache);
+
+		var javaTypes = scanner.GetJavaTypes (assembly);
+
+		foreach (var type in javaTypes) {
+			if (type.IsInterface || JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (type, cache))
+				continue;
+
+			ScanTypeForMarshalMethods (type, collection, resolver, cache, log, classifier);
+		}
+
+		return collection;
+	}
+
+	static void ScanTypeForMarshalMethods (TypeDefinition type, MarshalMethodsCollection collection, IAssemblyResolver resolver, TypeDefinitionCache cache, TaskLoggingHelper log, MarshalMethodsClassifier classifier)
 	{
 		// Methods
 		foreach (var minfo in type.Methods.Where (m => !m.IsConstructor)) {
@@ -130,7 +155,7 @@ class MarshalMethodsCollection : JavaCallableMethodClassifier
 		return method is DynamicallyRegisteredMarshalMethodEntry;
 	}
 
-	public bool TypeHasDynamicallyRegisteredMethods (TypeDefinition type)
+	public virtual bool TypeHasDynamicallyRegisteredMethods (TypeDefinition type)
 	{
 		return typesWithDynamicallyRegisteredMarshalMethods.Contains (type);
 	}
@@ -146,18 +171,20 @@ class MarshalMethodsCollection : JavaCallableMethodClassifier
 			return dynamicMethod;
 		}
 
-		if (marshalMethod is ConvertedMarshalMethodEntry convertedMethod) {
-			var key = convertedMethod.GetStoreMethodKey (classifier.TypeDefinitionCache);
+		//if (marshalMethod is ConvertedMarshalMethodEntry convertedMethod) {
+		//	var key = convertedMethod.GetStoreMethodKey (classifier.TypeDefinitionCache);
 
-			if (!ConvertedMarshalMethods.TryGetValue (key, out var list)) {
-				list = new List<ConvertedMarshalMethodEntry> ();
-				ConvertedMarshalMethods.Add (key, list);
-			}
+		//	if (!ConvertedMarshalMethods.TryGetValue (key, out var list)) {
+		//		list = new List<ConvertedMarshalMethodEntry> ();
+		//		ConvertedMarshalMethods.Add (key, list);
+		//	}
 
-			list.Add (convertedMethod);
+		//	list.Add (convertedMethod);
 
-			return convertedMethod;
-		}
+		//	AssembliesWithMarshalMethods.Add (convertedMethod.NativeCallback.Module.Assembly);
+
+		//	return convertedMethod;
+		//}
 
 		if (marshalMethod is MarshalMethodEntry marshalMethodEntry) {
 			var key = marshalMethodEntry.GetStoreMethodKey (classifier.TypeDefinitionCache);
@@ -273,7 +300,7 @@ class MarshalMethodsCollection : JavaCallableMethodClassifier
 		}
 
 		var entry = new MarshalMethodEntry (javaTypeManager, nActivate_mm, jniTypeName!, jniMethodName!, jniSignature!);  // NRT- Guarded above
-		MarshalMethods.Add (".:!SpEcIaL:Java.Interop.TypeManager+JavaTypeManager::n_Activate_mm", new List<MarshalMethodEntry> { entry });
+		MarshalMethods.Add (".:!SpEcIaL:Java.Interop.TypeManager+JavaTypeManager::n_Activate_mm", [entry]);
 
 		[DoesNotReturn]
 		void ThrowMissingMethod (string name)

@@ -63,12 +63,12 @@ public class GenerateTypeMappings : AndroidTask
 
 		// If using marshal methods, we cannot use the .typemap.xml files currently because
 		// the type token ids were changed by the marshal method rewriter after we wrote the .xml files.
-		if (!useMarshalMethods)
+		//if (!useMarshalMethods)
 			GenerateAllTypeMappings ();
 
 		// Generate typemaps from the native code generator state (produced by the marshal method rewriter)
-		if (RunCheckedBuild || useMarshalMethods)
-			GenerateAllTypeMappingsFromNativeState (useMarshalMethods);
+		//if (RunCheckedBuild || useMarshalMethods)
+		//	GenerateAllTypeMappingsFromNativeState (useMarshalMethods);
 
 		return !Log.HasLoggedErrors;
 	}
