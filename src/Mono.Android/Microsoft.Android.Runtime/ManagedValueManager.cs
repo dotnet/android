@@ -265,7 +265,8 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
 
-	protected override IJavaPeerable? TryCreatePeer (
+	protected override bool TryConstructPeer (
+			IJavaPeerable self,
 			ref JniObjectReference reference,
 			JniObjectReferenceOptions options,
 			[DynamicallyAccessedMembers (Constructors)]
@@ -277,10 +278,10 @@ class ManagedValueManager : JniRuntime.JniValueManager
 				reference.Handle,
 				JniHandleOwnership.DoNotTransfer,
 			};
-			var p       = (IJavaPeerable) c.Invoke (args);
+			c.Invoke (self, args);
 			JniObjectReference.Dispose (ref reference, options);
-			return p;
+			return true;
 		}
-		return base.TryCreatePeer (ref reference, options, type);
+		return base.TryConstructPeer (self, ref reference, options, type);
 	}
 }
