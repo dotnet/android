@@ -28,6 +28,10 @@ namespace Xamarin.Android.Build.Tests
 		[NonParallelizable] // On MacOS, parallel /restore causes issues
 		public void DotNetBuild (string runtimeIdentifiers, bool isRelease, bool aot, bool usesAssemblyStore)
 		{
+			if (TargetRuntimeHelper.UseCoreCLR && !TargetRuntimeHelper.CoreClrSupportsAllRIDs (runtimeIdentifiers)) {
+				Assert.Ignore ($"One or more RIDs aren't supported by CoreCLR: '{runtimeIdentifiers}'");
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				ProjectName = "Test Me",
@@ -172,7 +176,13 @@ namespace Xamarin.Android.Build.Tests
 			helper.AssertContainsEntry ($"assemblies/de-DE/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
 			foreach (var abi in rids.Select (AndroidRidAbiHelper.RuntimeIdentifierToAbi)) {
 				helper.AssertContainsEntry ($"lib/{abi}/libmonodroid.so");
-				helper.AssertContainsEntry ($"lib/{abi}/libmonosgen-2.0.so");
+
+				if (TargetRuntimeHelper.UseCoreCLR) {
+					helper.AssertContainsEntry ($"lib/{abi}/libcoreclr.so");
+				} else {
+					helper.AssertContainsEntry ($"lib/{abi}/libmonosgen-2.0.so");
+				}
+
 				if (rids.Length > 1) {
 					helper.AssertContainsEntry ($"assemblies/{abi}/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
 				} else {
@@ -227,6 +237,10 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (MonoComponentMaskChecks))]
 		public void CheckMonoComponentsMask (bool enableProfiler, bool useInterpreter, bool debugBuild, uint expectedMask)
 		{
+			if (TargetRuntimeHelper.UseCoreCLR) {
+				Assert.Ignore ("CoreCLR does not support MonoVM components");
+			}
+
 			var proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = !debugBuild,
 			};
@@ -267,15 +281,20 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		[TestCaseSource (nameof (CheckAssemblyCountsSource))]
 		[NonParallelizable]
+		[Category ("CoreCLR")]
 		public void CheckAssemblyCounts (bool isRelease, bool aot)
 		{
+			if (aot && TargetRuntimeHelper.UseCoreCLR) {
+				Assert.Ignore ("CoreCLR doesn't support MonoVM-style AOT");
+			}
+
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 				EmbedAssembliesIntoApk = true,
 				AotAssemblies = aot,
 			};
 
-			var abis = new [] { "armeabi-v7a", "x86" };
+			var abis = new [] { "arm64-v8a", "x86_64" };
 			proj.SetRuntimeIdentifiers (abis);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidUseAssemblyStore", "True");
 
@@ -284,8 +303,17 @@ namespace Xamarin.Android.Build.Tests
 				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 
 				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (objPath, String.Join (";", abis), true);
-				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
-				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
+				uint number_of_assemblies_in_apk;
+
+				if (TargetRuntimeHelper.UseMonoRuntime) {
+					EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
+					Assert.That (app_config, Is.Not.Null, "(MonoVM) application_config must be present in the environment files");
+					number_of_assemblies_in_apk = app_config.number_of_assemblies_in_apk;
+				} else {
+					EnvironmentHelper.ApplicationConfigCLR app_config = EnvironmentHelper.ReadApplicationConfigCLR (envFiles);
+					Assert.That (app_config, Is.Not.Null, "(CoreCLR) application_config must be present in the environment files");
+					number_of_assemblies_in_apk = app_config.number_of_assemblies_in_apk;
+				}
 
 				if (aot) {
 					foreach (var env in envFiles) {
@@ -299,7 +327,7 @@ namespace Xamarin.Android.Build.Tests
 				foreach (string abi in abis) {
 					AndroidTargetArch arch = MonoAndroidHelper.AbiToTargetArch (abi);
 					Assert.AreEqual (
-						app_config.number_of_assemblies_in_apk,
+						number_of_assemblies_in_apk,
 						helper.GetNumberOfAssemblies (arch: arch),
 						$"Assembly count must be equal between ApplicationConfig and the archive contents for architecture {arch} (ABI: {abi})"
 					);
@@ -337,6 +365,11 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		[TestCaseSource (nameof (RuntimeChecks))]
 		public void CheckWhichRuntimeIsIncluded (string supportedAbi, bool debugSymbols, bool? optimize, bool? embedAssemblies, string expectedRuntime) {
+
+			if (TargetRuntimeHelper.UseCoreCLR && !TargetRuntimeHelper.CoreClrSupportsAllABIs (supportedAbi)) {
+				Assert.Ignore ($"ABI '{supportedAbi}' not supported on CoreCLR");
+			}
+
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetAndroidSupportedAbis (supportedAbi);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugSymbols", debugSymbols);
@@ -1271,7 +1304,7 @@ namespace UnnamedProject
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("UseInterpreter", "true");
 			proj.SetProperty ("AndroidPackageNamingPolicy", packageNamingPolicy);
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+			proj.SetAndroidSupportedAbis ("arm64-v8a", "x86_64");
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var environment = b.Output.GetIntermediaryPath (Path.Combine ("__environment__.txt"));
@@ -1381,7 +1414,7 @@ namespace UnnamedProject
 				/* enableProguard */             null,
 				/* androidEnableProguard */      "true",
 				/* expectedBuildResult */        true,
-				/* expectedWarning */            "0 Warning(s)",
+				/* expectedWarning */            TargetRuntimeHelper.UseCoreCLR && TargetRuntimeHelper.CoreClrIsExperimental ? "1 Warning(s)" : "0 Warning(s)",
 			},
 			new object [] {
 				/* linkTool */                   "proguard",
@@ -1395,7 +1428,7 @@ namespace UnnamedProject
 				/* enableProguard */             null,
 				/* androidEnableProguard */      null,
 				/* expectedBuildResult */        true,
-				/* expectedWarning */            "0 Warning(s)",
+				/* expectedWarning */            TargetRuntimeHelper.UseCoreCLR && TargetRuntimeHelper.CoreClrIsExperimental ? "1 Warning(s)" : "0 Warning(s)",
 			},
 			new object [] {
 				/* linkTool */                   null,
@@ -1676,7 +1709,7 @@ public class ToolbarEx {
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
-				AotAssemblies = publishTrimmed,
+				AotAssemblies = publishTrimmed && !TargetRuntimeHelper.UseCoreCLR,
 				PackageReferences = {
 					new Package { Id = "Xamarin.AndroidX.CustomView", Version = "1.1.0.17" },
 					new Package { Id = "Xamarin.AndroidX.CustomView.PoolingContainer", Version = "1.0.0.4" },
