@@ -222,7 +222,8 @@ namespace Xamarin.Android.Tasks
 
 				generatedJavaFiles = jcwGenerator.GeneratedJavaFiles;
 			} else {
-				success = jcwGenerator.Classify (AndroidSdkPlatform);
+				success = true;
+				//success = jcwGenerator.Classify (AndroidSdkPlatform);
 			}
 
 			if (!success) {

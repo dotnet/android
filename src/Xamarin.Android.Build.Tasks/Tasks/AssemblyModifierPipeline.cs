@@ -20,9 +20,11 @@ namespace Xamarin.Android.Tasks;
 /// are run *after* the linker has run. Additionally, this task is run by
 /// LinkAssembliesNoShrink to modify assemblies when ILLink is not used.
 /// </summary>
-public partial class AssemblyModifierPipeline : AndroidTask
+public class AssemblyModifierPipeline : AndroidTask
 {
 	public override string TaskPrefix => "AMP";
+
+	public string AndroidSdkPlatform { get; set; } = "";
 
 	public string ApplicationJavaClass { get; set; } = "";
 
@@ -37,7 +39,14 @@ public partial class AssemblyModifierPipeline : AndroidTask
 
 	public bool EnableMarshalMethods { get; set; }
 
+	public bool EnableManagedMarshalMethodsLookup { get; set; }
+
+	public ITaskItem [] Environments { get; set; } = [];
+
 	public bool ErrorOnCustomJavaObject { get; set; }
+
+	// If we're using ILLink, this process modifies the linked assemblies in place
+	protected virtual bool ModifiesAssembliesInPlace => true;
 
 	public string? PackageNamingPolicy { get; set; }
 
@@ -64,7 +73,7 @@ public partial class AssemblyModifierPipeline : AndroidTask
 	[Required]
 	public string TargetName { get; set; } = "";
 
-	protected JavaPeerStyle codeGenerationTarget;
+	JavaPeerStyle codeGenerationTarget;
 
 	public override bool RunTask ()
 	{
@@ -76,6 +85,8 @@ public partial class AssemblyModifierPipeline : AndroidTask
 
 		var readerParameters = new ReaderParameters {
 			ReadSymbols = ReadSymbols,
+			ReadWrite = ModifiesAssembliesInPlace,
+			InMemory = ModifiesAssembliesInPlace,
 		};
 
 		var writerParameters = new WriterParameters {
@@ -122,7 +133,7 @@ public partial class AssemblyModifierPipeline : AndroidTask
 
 			Directory.CreateDirectory (Path.GetDirectoryName (destination.ItemSpec));
 
-			RunPipeline (pipeline!, source, destination, writerParameters);
+			RunPipeline (pipeline!, source, destination, perArchAssemblies [sourceArch].Values.ToArray (), writerParameters);
 		}
 
 		pipeline?.Dispose ();
@@ -141,15 +152,24 @@ public partial class AssemblyModifierPipeline : AndroidTask
 
 		findJavaObjectsStep.Initialize (context);
 		pipeline.Steps.Add (findJavaObjectsStep);
+
+		// RewriteMarshalMethodsStep
+		if (EnableMarshalMethods && !Debug) {
+			var rewriteMarshalMethodsStep = new RewriteMarshalMethodsStep (Log);
+			rewriteMarshalMethodsStep.Initialize (context);
+			pipeline.Steps.Add (rewriteMarshalMethodsStep);
+		}
 	}
 
-	void RunPipeline (AssemblyPipeline pipeline, ITaskItem source, ITaskItem destination, WriterParameters writerParameters)
+	void RunPipeline (AssemblyPipeline pipeline, ITaskItem source, ITaskItem destination, ITaskItem [] archAssemblies, WriterParameters writerParameters)
 	{
 		var assembly = pipeline.Resolver.GetAssembly (source.ItemSpec);
 
-		var context = new StepContext (source, destination) {
+		var context = new StepContext (source, destination, AndroidSdkPlatform, Environments, archAssemblies) {
+			Architecture = MonoAndroidHelper.GetRequiredValidArchitecture (source),
 			CodeGenerationTarget = codeGenerationTarget,
 			EnableMarshalMethods = EnableMarshalMethods,
+			EnableManagedMarshalMethodsLookup = EnableManagedMarshalMethodsLookup,
 			IsAndroidAssembly = MonoAndroidHelper.IsAndroidAssembly (source),
 			IsDebug = Debug,
 			IsFrameworkAssembly = MonoAndroidHelper.IsFrameworkAssembly (source),
