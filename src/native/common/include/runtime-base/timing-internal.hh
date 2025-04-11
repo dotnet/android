@@ -65,7 +65,7 @@ namespace xamarin::android {
 		time_point                   start;
 		time_point                   end;
 		TimingEventKind              kind;
-		std::unique_ptr<std::string> more_info;
+		std::string                 *more_info = nullptr;
 	};
 
 	class FastTiming;
@@ -202,7 +202,7 @@ namespace xamarin::android {
 			message.append ("] "sv);
 
 			append_event_kind_description (event.kind, message);
-			if (event.more_info && !event.more_info->empty ()) {
+			if (event.more_info != nullptr && !event.more_info->empty ()) {
 				message.append (event.more_info->c_str (), event.more_info->length ());
 			}
 
@@ -234,7 +234,7 @@ namespace xamarin::android {
 				return;
 			}
 
-			if (skip_log_if_more_info_missing && (!event.more_info || event.more_info->empty ())) {
+			if (skip_log_if_more_info_missing && (event.more_info == nullptr || event.more_info->empty ())) {
 				return;
 			}
 
@@ -305,7 +305,7 @@ namespace xamarin::android {
 				return;
 			}
 
-			events[*index].more_info = std::make_unique<std::string> (str.get (), str.length ());
+			events[*index].more_info = new std::string (str.get (), str.length ());
 			log (events[*index], false /* skip_log_if_more_info_missing */);
 		}
 
@@ -318,7 +318,7 @@ namespace xamarin::android {
 				return;
 			}
 
-			events[*index].more_info = std::make_unique<std::string> (str);
+			events[*index].more_info = new std::string (str);
 			log (events[*index], false /* skip_log_if_more_info_missing */);
 		}
 
@@ -331,7 +331,7 @@ namespace xamarin::android {
 				return;
 			}
 
-			events[*index].more_info = std::make_unique<std::string> (str);
+			events[*index].more_info = new std::string (str);
 			log (events[*index], false /* skip_log_if_more_info_missing */);
 		}
 

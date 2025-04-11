@@ -1,6 +1,5 @@
 #include <chrono>
 
-//#include <xamarin-app.hh>
 #include <runtime-base/android-system.hh>
 #include <runtime-base/startup-aware-lock.hh>
 #include <runtime-base/strings.hh>
