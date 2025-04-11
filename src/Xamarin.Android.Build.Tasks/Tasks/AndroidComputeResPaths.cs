@@ -49,6 +49,8 @@ namespace Xamarin.Android.Tasks
 
 		public string Prefixes { get; set; }
 
+		public string PrefixProperty { get; set; }
+
 		public bool LowercaseFilenames { get; set; }
 
 		public string ProjectDir { get; set; }
@@ -73,6 +75,10 @@ namespace Xamarin.Android.Tasks
 			if (prefixes != null) {
 				for (int i = 0; i < prefixes.Length; i++) {
 					string p = prefixes [i];
+					if (Path.IsPathRooted (p)) {
+						Log.LogCodedError ("XA1041", message: Properties.Resources.XA1041, PrefixProperty, p);
+						continue;
+					}
 					char c = p [p.Length - 1];
 					if (c != '\\' && c != '/')
 						prefixes [i] = p + Path.DirectorySeparatorChar;

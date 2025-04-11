@@ -52,6 +52,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       IntermediateDir="$(MonoAndroidAssetsDirIntermediate)"
       AssetPackIntermediateDir="$(MonoAndroidAssetPacksDirIntermediate)"
       Prefixes="$(MonoAndroidAssetsPrefix)"
+      PrefixProperty="MonoAndroidAssetsPrefix"
       ProjectDir="$(ProjectDir)"
   >
     <Output ItemName="_AndroidAssetsDest" TaskParameter="IntermediateFiles" />
