@@ -17,7 +17,7 @@ namespace MonoDroid.Tuner;
 /// <summary>
 /// Scans an assembly for JLOs that need JCWs generated and writes them to an XML file.
 /// </summary>
-public class FindJavaObjectsStep : BaseStep
+public class FindJavaObjectsStep : BaseStep, IAssemblyModifierPipelineStep
 {
 	public string ApplicationJavaClass { get; set; } = "";
 
@@ -29,8 +29,26 @@ public class FindJavaObjectsStep : BaseStep
 
 	public FindJavaObjectsStep (TaskLoggingHelper log) => Log = log;
 
-	public bool ProcessAssembly (AssemblyDefinition assembly, string destinationJLOXml)
+	public bool ProcessAssembly (AssemblyDefinition assembly, StepContext context)
 	{
+		var destinationJLOXml = JavaObjectsXmlFile.GetJavaObjectsXmlFilePath (context.Destination.ItemSpec);
+		var scanned = ScanAssembly (assembly, context, destinationJLOXml);
+
+		if (!scanned) {
+			// We didn't scan for Java objects, so write an empty .xml file for later steps
+			JavaObjectsXmlFile.WriteEmptyFile (destinationJLOXml, Log);
+			return false;
+		}
+
+		// This step does not change the assembly
+		return false;
+	}
+
+	public bool ScanAssembly (AssemblyDefinition assembly, StepContext context, string destinationJLOXml)
+	{
+		if (!ShouldScan (context))
+			return false;
+
 		var action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
 
 		if (action == AssemblyAction.Delete)
@@ -52,6 +70,25 @@ public class FindJavaObjectsStep : BaseStep
 		xml.Export (destinationJLOXml);
 
 		Log.LogDebugMessage ($"Wrote '{destinationJLOXml}', {xml.JavaCallableWrappers.Count} JCWs, {xml.ACWMapEntries.Count} ACWs");
+
+		return true;
+	}
+
+	bool ShouldScan (StepContext context)
+	{
+		if (!context.IsAndroidAssembly)
+			return false;
+
+		// When marshal methods or non-JavaPeerStyle.XAJavaInterop1 are in use we do not want to skip non-user assemblies (such as Mono.Android) - we need to generate JCWs for them during
+		// application build, unlike in Debug configuration or when marshal methods are disabled, in which case we use JCWs generated during Xamarin.Android
+		// build and stored in a jar file.
+		var useMarshalMethods = !context.IsDebug && context.EnableMarshalMethods;
+		var shouldSkipNonUserAssemblies = !useMarshalMethods && context.CodeGenerationTarget == JavaPeerStyle.XAJavaInterop1;
+
+		if (shouldSkipNonUserAssemblies && !context.IsUserAssembly) {
+			Log.LogDebugMessage ($"Skipping assembly '{context.Source.ItemSpec}' because it is not a user assembly and we don't need JLOs from non-user assemblies");
+			return false;
+		}
 
 		return true;
 	}

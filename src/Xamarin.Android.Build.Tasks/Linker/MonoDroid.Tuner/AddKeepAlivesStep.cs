@@ -11,6 +11,9 @@ using Xamarin.Android.Tasks;
 namespace MonoDroid.Tuner
 {
 	public class AddKeepAlivesStep : BaseStep
+#if !ILLINK
+		, IAssemblyModifierPipelineStep
+#endif  // !ILLINK
 	{
 
 		protected override void ProcessAssembly (AssemblyDefinition assembly)
@@ -24,6 +27,17 @@ namespace MonoDroid.Tuner
 					Annotations.SetAction (assembly, AssemblyAction.Save);
 			}
 		}
+
+#if !ILLINK
+		public bool ProcessAssembly (AssemblyDefinition assembly, StepContext context)
+		{
+			// Only run this step on user Android assemblies
+			if (context.IsFrameworkAssembly || !context.IsAndroidAssembly)
+				return false;
+
+			return AddKeepAlives (assembly);
+		}
+#endif  // !ILLINK
 
 		internal bool AddKeepAlives (AssemblyDefinition assembly)
 		{
