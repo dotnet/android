@@ -24,11 +24,11 @@ namespace Xamarin.Android.Tasks
 
 		readonly TaskLoggingHelper log;
 		readonly MarshalMethodsClassifier classifier;
-		readonly XAAssemblyResolver resolver;
+		readonly IAssemblyResolver resolver;
 		readonly AndroidTargetArch targetArch;
 		readonly ManagedMarshalMethodsLookupInfo? managedMarshalMethodsLookupInfo;
 
-		public MarshalMethodsAssemblyRewriter (TaskLoggingHelper log, AndroidTargetArch targetArch, MarshalMethodsClassifier classifier, XAAssemblyResolver resolver, ManagedMarshalMethodsLookupInfo? managedMarshalMethodsLookupInfo)
+		public MarshalMethodsAssemblyRewriter (TaskLoggingHelper log, AndroidTargetArch targetArch, MarshalMethodsClassifier classifier, IAssemblyResolver resolver, ManagedMarshalMethodsLookupInfo? managedMarshalMethodsLookupInfo)
 		{
 			this.log = log ?? throw new ArgumentNullException (nameof (log));
 			this.targetArch = targetArch;
@@ -93,7 +93,7 @@ namespace Xamarin.Android.Tasks
 					if (method.Connector != null) {
 						if (method.Connector.IsStatic && method.Connector.IsPrivate) {
 							log.LogDebugMessage ($"[{targetArch}] Removing connector method {method.Connector.FullName}");
-							method.Connector.DeclaringType?.Methods?.Remove (method.Connector);
+							//method.Connector.DeclaringType?.Methods?.Remove (method.Connector);
 						} else {
 							log.LogWarning ($"[{targetArch}] NOT removing connector method {method.Connector.FullName} because it's either not static or not private");
 						}
@@ -102,7 +102,7 @@ namespace Xamarin.Android.Tasks
 					if (method.CallbackField != null) {
 						if (method.CallbackField.IsStatic && method.CallbackField.IsPrivate) {
 							log.LogDebugMessage ($"[{targetArch}] Removing callback delegate backing field {method.CallbackField.FullName}");
-							method.CallbackField.DeclaringType?.Fields?.Remove (method.CallbackField);
+							//method.CallbackField.DeclaringType?.Fields?.Remove (method.CallbackField);
 						} else {
 							log.LogWarning ($"[{targetArch}] NOT removing callback field {method.CallbackField.FullName} because it's either not static or not private");
 						}
@@ -121,40 +121,40 @@ namespace Xamarin.Android.Tasks
 				managedMarshalMethodLookupGenerator.Generate (classifier.MarshalMethods.Values);
 			}
 
-			foreach (AssemblyDefinition asm in classifier.Assemblies) {
-				string? path = asm.MainModule.FileName;
-				if (String.IsNullOrEmpty (path)) {
-					throw new InvalidOperationException ($"[{targetArch}] Internal error: assembly '{asm}' does not specify path to its file");
-				}
+			//foreach (AssemblyDefinition asm in classifier.Assemblies) {
+			//	string? path = asm.MainModule.FileName;
+			//	if (String.IsNullOrEmpty (path)) {
+			//		throw new InvalidOperationException ($"[{targetArch}] Internal error: assembly '{asm}' does not specify path to its file");
+			//	}
 
-				string pathPdb = Path.ChangeExtension (path, ".pdb");
-				bool havePdb = File.Exists (pathPdb);
+			//	string pathPdb = Path.ChangeExtension (path, ".pdb");
+			//	bool havePdb = File.Exists (pathPdb);
 
-				var writerParams = new WriterParameters {
-					WriteSymbols = havePdb,
-				};
+			//	var writerParams = new WriterParameters {
+			//		WriteSymbols = havePdb,
+			//	};
 
-				string directory = Path.Combine (Path.GetDirectoryName (path), "new");
-				Directory.CreateDirectory (directory);
-				string output = Path.Combine (directory, Path.GetFileName (path));
-				log.LogDebugMessage ($"[{targetArch}] Writing new version of '{path}' assembly: {output}");
+			//	string directory = Path.Combine (Path.GetDirectoryName (path), "new");
+			//	Directory.CreateDirectory (directory);
+			//	string output = Path.Combine (directory, Path.GetFileName (path));
+			//	log.LogDebugMessage ($"[{targetArch}] Writing new version of '{path}' assembly: {output}");
 
-				// TODO: this should be used eventually, but it requires that all the types are reloaded from the assemblies before typemaps are generated
-				// since Cecil doesn't update the MVID in the already loaded types
-				//asm.MainModule.Mvid = Guid.NewGuid ();
-				asm.Write (output, writerParams);
+			//	// TODO: this should be used eventually, but it requires that all the types are reloaded from the assemblies before typemaps are generated
+			//	// since Cecil doesn't update the MVID in the already loaded types
+			//	//asm.MainModule.Mvid = Guid.NewGuid ();
+			//	asm.Write (output, writerParams);
 
-				CopyFile (output, path);
-				RemoveFile (output);
+			//	CopyFile (output, path);
+			//	RemoveFile (output);
 
-				if (havePdb) {
-					string outputPdb = Path.ChangeExtension (output, ".pdb");
-					if (File.Exists (outputPdb)) {
-						CopyFile (outputPdb, pathPdb);
-					}
-					RemoveFile (outputPdb);
-				}
-			}
+			//	if (havePdb) {
+			//		string outputPdb = Path.ChangeExtension (output, ".pdb");
+			//		if (File.Exists (outputPdb)) {
+			//			CopyFile (outputPdb, pathPdb);
+			//		}
+			//		RemoveFile (outputPdb);
+			//	}
+			//}
 
 			void CopyFile (string source, string target)
 			{
