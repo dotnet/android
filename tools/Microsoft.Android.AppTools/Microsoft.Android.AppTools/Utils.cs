@@ -28,6 +28,7 @@ static class Utils
 	public const uint ELF_MAGIC = 0x464c457f;
 
 	public static readonly ArrayPool<byte> BytePool = ArrayPool<byte>.Shared;
+	public static ILogger? Log;
 
 	public static (ulong offset, ulong size, ELFPayloadError error) FindELFPayloadSectionOffsetAndSize (Stream stream)
 	{
@@ -150,4 +151,8 @@ static class Utils
 
 		return true;
 	}
+
+	public static string ToStringOrNull<T> (T? reference) => reference == null ? "<NULL>" : reference.ToString () ?? "[unknown]";
+	public static string YesNo (bool yes) => yes ? "yes" : "no";
+	public static string AreOrNot (bool are) => are ? "are" : "are not";
 }
