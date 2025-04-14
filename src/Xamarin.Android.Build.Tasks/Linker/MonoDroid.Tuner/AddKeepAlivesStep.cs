@@ -32,7 +32,7 @@ namespace MonoDroid.Tuner
 		public bool ProcessAssembly (AssemblyDefinition assembly, StepContext context)
 		{
 			// Only run this step on user Android assemblies
-			if (context.IsFrameworkAssembly || !context.IsAndroidAssembly)
+			if (!context.IsAndroidUserAssembly)
 				return false;
 
 			return AddKeepAlives (assembly);

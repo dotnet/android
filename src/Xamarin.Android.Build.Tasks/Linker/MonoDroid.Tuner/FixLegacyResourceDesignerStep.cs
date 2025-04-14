@@ -74,7 +74,7 @@ namespace MonoDroid.Tuner
 		public bool ProcessAssembly (AssemblyDefinition assembly, Xamarin.Android.Tasks.StepContext context)
 		{
 			// Only run this step on non-main user Android assemblies
-			if (context.IsMainAssembly || context.IsFrameworkAssembly || !context.IsAndroidAssembly)
+			if (context.IsMainAssembly || !context.IsAndroidUserAssembly)
 				return false;
 
 			return ProcessAssemblyDesigner (assembly);

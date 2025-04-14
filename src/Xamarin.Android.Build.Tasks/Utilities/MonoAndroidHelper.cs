@@ -278,19 +278,13 @@ namespace Xamarin.Android.Tasks
 		}
 
 #if MSBUILD
-		// Names of assemblies which don't have Mono.Android.dll references, or are framework assemblies, but which
-		// could have Java types.
-		static readonly HashSet<string> SpecialAssemblies = new HashSet<string> (StringComparer.OrdinalIgnoreCase) {
-			"Java.Interop.dll",
-			"Mono.Android.dll",
-			"Mono.Android.Runtime.dll",
-		};
-
 		public static bool IsAndroidAssembly (ITaskItem source)
 		{
-			string name = Path.GetFileName (source.ItemSpec);
+			string name = Path.GetFileNameWithoutExtension (source.ItemSpec);
 
-			if (SpecialAssemblies.Contains (name))
+			// Check for assemblies which may not be built against the Android profile (`netXX-android`)
+			// but could still contain Android binding code (like Mono.Android).
+			if (KnownAssemblyNames.Contains (name))
 				return true;
 
 			return IsMonoAndroidAssembly (source);

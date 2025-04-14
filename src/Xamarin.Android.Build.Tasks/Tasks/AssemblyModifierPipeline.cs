@@ -20,7 +20,7 @@ namespace Xamarin.Android.Tasks;
 /// are run *after* the linker has run. Additionally, this task is run by
 /// LinkAssembliesNoShrink to modify assemblies when ILLink is not used.
 /// </summary>
-public partial class AssemblyModifierPipeline : AndroidTask
+public class AssemblyModifierPipeline : AndroidTask
 {
 	public override string TaskPrefix => "AMP";
 

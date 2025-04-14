@@ -66,6 +66,8 @@ public class StepContext
 	public bool IsUserAssembly { get; set; }
 	public ITaskItem Source { get; }
 
+	public bool IsAndroidUserAssembly => IsAndroidAssembly && IsUserAssembly;
+
 	public StepContext (ITaskItem source, ITaskItem destination)
 	{
 		Source = source;
