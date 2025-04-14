@@ -131,6 +131,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Android.Runtime.N
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Android.AppTools", "tools\Microsoft.Android.AppTools\Microsoft.Android.AppTools.csproj", "{CDDB9868-704F-461A-9A9C-BAA0DFBC56D8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xapp", "tools\xapp\xapp.csproj", "{4CDD887F-AACE-44E3-B179-FB668E87D253}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AnyCPU = Debug|AnyCPU
@@ -365,6 +367,10 @@ Global
 		{CDDB9868-704F-461A-9A9C-BAA0DFBC56D8}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{CDDB9868-704F-461A-9A9C-BAA0DFBC56D8}.Release|AnyCPU.ActiveCfg = Release|Any CPU
 		{CDDB9868-704F-461A-9A9C-BAA0DFBC56D8}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{4CDD887F-AACE-44E3-B179-FB668E87D253}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{4CDD887F-AACE-44E3-B179-FB668E87D253}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{4CDD887F-AACE-44E3-B179-FB668E87D253}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{4CDD887F-AACE-44E3-B179-FB668E87D253}.Release|AnyCPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -427,6 +433,7 @@ Global
 		{5FD0133B-69E5-4474-9B67-9FD1D0150C70} = {FFCF518F-2A4A-40A2-9174-2EE13B76C723}
 		{E8831F32-11D7-D42C-E43C-711998BC357A} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{CDDB9868-704F-461A-9A9C-BAA0DFBC56D8} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
+		{4CDD887F-AACE-44E3-B179-FB668E87D253} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {53A1F287-EFB2-4D97-A4BB-4A5E145613F6}
