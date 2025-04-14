@@ -105,7 +105,7 @@ managed_timing_sequence* monodroid_timing_start (const char *message)
 	if (message != nullptr) {
 		log_write (LOG_TIMING, LogLevel::Info, message);
 	}
-	ret->period.mark_start ();
+	ret->start = FastTiming::get_time ();
 	return ret;
 }
 
@@ -121,8 +121,8 @@ void monodroid_timing_stop (managed_timing_sequence *sequence, const char *messa
 		return;
 	}
 
-	sequence->period.mark_end ();
-	Timing::info (sequence->period, message == nullptr ? DEFAULT_MESSAGE : message);
+	sequence->end = FastTiming::get_time ();
+	Timing::info (sequence, message == nullptr ? DEFAULT_MESSAGE : message);
 	timing->release_sequence (sequence);
 }
 
