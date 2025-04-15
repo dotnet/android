@@ -7,6 +7,7 @@
         "Microsoft.Android.Sdk.net10",
         "Microsoft.Android.Sdk.net9",
         "Microsoft.Android.Ref.36",
+        "Microsoft.Android.Runtime.36.android",
         "Microsoft.Android.Runtime.Mono.36.android-arm",
         "Microsoft.Android.Runtime.Mono.36.android-arm64",
         "Microsoft.Android.Runtime.Mono.36.android-x86",
@@ -73,6 +74,10 @@
       }
     },
     "Microsoft.Android.Ref.36": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "Microsoft.Android.Runtime.36.android": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
