@@ -169,6 +169,7 @@
     <ItemGroup>
       <_RuntimeSources Include="$(JavaInteropFullPath)\src\java-interop\*.cc;$(JavaInteropFullPath)\src\java-interop\*.h" />
       <_RuntimeSources Include="common\archive-dso-stub\*.cc" />
+      <_RuntimeSources Include="common\include\**\*.hh" />
       <_RuntimeSources Include="common\libstub\*.cc;common\libstub\*.hh" />
       <_RuntimeSources Include="$(LZ4SourceFullPath)\lib\lz4.c;$(LZ4SourceFullPath)\lib\lz4.h" />
     </ItemGroup>
@@ -183,8 +184,8 @@
     </ItemGroup>
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
-      <_RuntimeSources Include="clr\host\*.cc;clr\host\*.hh" />
       <_RuntimeSources Include="clr\include\**\*.hh" />
+      <_RuntimeSources Include="clr\host\*.cc;clr\host\*.hh" />
       <_RuntimeSources Include="clr\startup\*.cc;clr\startup\*.hh" />
       <_RuntimeSources Include="clr\xamarin-app-stub\*.cc;clr\xamarin-app-stub\*.hh" />
       <_RuntimeSources Include="clr\runtime-base\*.cc;clr\runtime-base\*.hh" />

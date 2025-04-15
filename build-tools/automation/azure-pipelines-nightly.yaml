@@ -12,10 +12,9 @@ pr:
 resources:
   repositories:
   - repository: yaml-templates
-    type: github
-    name: xamarin/yaml-templates
+    type: git
+    name: DevDiv/Xamarin.yaml-templates
     ref: refs/heads/main
-    endpoint: xamarin
   - repository: android-platform-support
     type: git
     name: DevDiv/android-platform-support
@@ -57,7 +56,7 @@ stages:
     steps:
     - checkout: self
       submodules: recursive
-      path: s/xamarin-android
+      path: s/android
 
     - template: /build-tools/automation/yaml-templates/commercial-build.yaml
       parameters:
@@ -66,7 +65,7 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
-        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
+        xaSourcePath: $(System.DefaultWorkingDirectory)/android
         artifactName: Build Results - Nightly macOS
         includeBuildResults: true
         use1ESTemplate: false

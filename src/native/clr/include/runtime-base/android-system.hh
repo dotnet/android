@@ -85,14 +85,14 @@ namespace xamarin::android {
 				 * However, if any logging is enabled (which should _not_ happen with
 				 * pre-loaded apps!), we need the .__override__ directory...
 				 */
-				dynamic_local_string<Constants::PROPERTY_VALUE_BUFFER_LEN> value;
+				dynamic_local_property_string value;
 				if (log_categories == 0 && monodroid_get_system_property (Constants::DEBUG_MONO_PROFILE_PROPERTY, value) == 0) [[likely]] {
 					return;
 				}
 			}
 
-			Util::create_public_directory (override_dir);
 			log_warn (LOG_DEFAULT, "Creating public update directory: `{}`", override_dir);
+			Util::create_public_directory (override_dir);
 		}
 
 		static auto is_embedded_dso_mode_enabled () noexcept -> bool
@@ -100,7 +100,7 @@ namespace xamarin::android {
 			return embedded_dso_mode_enabled;
 		}
 
-		static auto monodroid_get_system_property (std::string_view const& name, dynamic_local_string<Constants::PROPERTY_VALUE_BUFFER_LEN> &value) noexcept -> int;
+		static auto monodroid_get_system_property (std::string_view const& name, dynamic_local_property_string &value) noexcept -> int;
 		static void detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept;
 		static void setup_environment () noexcept;
 		static void setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks) noexcept;

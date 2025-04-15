@@ -1,6 +1,6 @@
 parameters:
   installerArtifactName: $(InstallerArtifactName)
-  xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
+  xaSourcePath: $(System.DefaultWorkingDirectory)/android
   makeMSBuildArgs: ''
   nugetArtifactName: $(NuGetArtifactName)
   testAssembliesArtifactName: $(TestAssembliesArtifactName)
@@ -29,7 +29,7 @@ steps:
 - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
   - checkout: android-platform-support
     submodules: recursive
-    path: s/xamarin-android/external/android-platform-support
+    path: s/android/external/android-platform-support
     persistCredentials: true
 
   - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
@@ -69,12 +69,31 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: zip Windows toolchain pdb files
 
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
+    Contents: |
+      **/*.symbols.nupkg
+      **/SignList.xml
+    TargetFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned-symbols
+
+- task: DeleteFiles@1
+  inputs:
+    SourceFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
+    Contents: '*.symbols.nupkg'
+
 - ${{ if ne(parameters.use1ESTemplate, true) }}:
   - task: PublishPipelineArtifact@1
     displayName: upload nupkgs
     inputs:
       artifactName: ${{ parameters.nugetArtifactName }}
       targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
+
+  - task: PublishPipelineArtifact@1
+    displayName: upload symbols nupkgs
+    inputs:
+      artifactName: ${{ parameters.nugetArtifactName }}
+      targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned-symbols
 
   - task: PublishPipelineArtifact@1
     displayName: upload test assemblies

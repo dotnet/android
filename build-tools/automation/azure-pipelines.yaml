@@ -16,10 +16,9 @@ resources:
     name: 1ESPipelineTemplates/1ESPipelineTemplates
     ref: refs/tags/release
   - repository: yaml-templates
-    type: github
-    name: xamarin/yaml-templates
+    type: git
+    name: DevDiv/Xamarin.yaml-templates
     ref: refs/heads/main
-    endpoint: xamarin
   - repository: android-platform-support
     type: git
     name: DevDiv/android-platform-support
@@ -357,6 +356,16 @@ extends:
         - task: DownloadPipelineArtifact@2
           inputs:
             artifactName: $(WindowsToolchainPdbArtifactName)
+            downloadPath: $(Build.StagingDirectory)\symbols
+
+        - task: DownloadPipelineArtifact@2
+          inputs:
+            artifactName: nuget-unsigned-symbols
+            downloadPath: $(Build.StagingDirectory)\symbols
+
+        - task: DownloadPipelineArtifact@2
+          inputs:
+            artifactName: nuget-linux-unsigned-symbols
             downloadPath: $(Build.StagingDirectory)\symbols
 
         - task: DownloadPipelineArtifact@2

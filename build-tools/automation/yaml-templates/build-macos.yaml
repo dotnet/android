@@ -1,8 +1,8 @@
 parameters:
   buildResultArtifactName: Build Results - macOS
   checkoutCommit: ''
-  checkoutPath: 's/xamarin-android'
-  xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
+  checkoutPath: 's/android'
+  xaSourcePath: $(System.DefaultWorkingDirectory)/android
   checkoutPersistCredentials: false
   dependsOn: ''
   dependsOnResult: ''
@@ -49,6 +49,10 @@ stages:
           displayName: upload nupkgs
           artifactName: ${{ parameters.nugetArtifactName }}
           targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
+        - output: pipelineArtifact
+          displayName: upload symbols nupkgs
+          artifactName: ${{ parameters.nugetArtifactName }}-symbols
+          targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned-symbols
         - output: pipelineArtifact
           displayName: upload Windows toolchain pdb files
           artifactName: ${{ parameters.windowsToolchainPdbArtifactName }}

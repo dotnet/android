@@ -1578,6 +1578,13 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="GeneratedJavaFilesOutput" ItemName="_GeneratedJavaFiles" />
   </GenerateJavaCallableWrappers>
 
+  <GenerateACWMap
+      AcwMapFile="$(_AcwMapFile)"
+      IntermediateOutputDirectory="$(IntermediateOutputPath)"
+      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      SupportedAbis="@(_BuildTargetAbis)">
+  </GenerateACWMap>
+
   <GenerateJavaStubs
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       ResolvedAssemblies="@(_ResolvedAssemblies)"
@@ -1613,8 +1620,12 @@ because xbuild doesn't support framework reference assemblies.
   </GenerateTypeMappings>
 
   <GenerateACWMap
+      Condition=" '$(_AndroidJLOCheckedBuild)' == 'true' "
       AcwMapFile="$(_AcwMapFile)"
-      IntermediateOutputDirectory="$(IntermediateOutputPath)">
+      RunCheckedBuild="true"
+      IntermediateOutputDirectory="$(IntermediateOutputPath)"
+      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      SupportedAbis="@(_BuildTargetAbis)">
   </GenerateACWMap>
 
   <GenerateMainAndroidManifest

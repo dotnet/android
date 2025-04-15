@@ -8,7 +8,7 @@
 #include <jni.h>
 #include "android-system.hh"
 #include "osbridge.hh"
-#include "timing.hh"
+#include <runtime-base/timing.hh>
 #include <shared/cpp-util.hh>
 #include <shared/xxhash.hh>
 #include "monodroid-dl.hh"
@@ -215,7 +215,8 @@ namespace xamarin::android::internal
 		static inline jmethodID           java_System_identityHashCode;
 		static inline jmethodID           Class_getName;
 		static inline jclass              java_TimeZone;
-		static inline timing_period       jit_time;
+		static inline time_point          jit_time_start;
+		static inline time_point          jit_time_end;
 		static inline FILE               *jit_log = nullptr;
 		static inline MonoProfilerHandle  profiler_handle;
 
