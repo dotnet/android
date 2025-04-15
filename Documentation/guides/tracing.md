@@ -71,7 +71,7 @@ separately. This simplifies the workflow significantly.
 For Android emulators:
 
 ```sh
-$ dotnet-trace collect --dsrouter android-emu
+$ dotnet-trace collect --dsrouter android-emu --format speedscope
 WARNING: dotnet-dsrouter is a development tool not intended for production environments.
 For finer control over the dotnet-dsrouter options, run it separately and connect to it using -p
 
@@ -87,7 +87,7 @@ For Android devices:
 ```sh
 # `adb reverse` is still required when using hardware devices
 $ adb reverse tcp:9000 tcp:9001
-$ dotnet-trace collect --dsrouter android
+$ dotnet-trace collect --dsrouter android --format speedscope
 WARNING: dotnet-dsrouter is a development tool not intended for production environments.
 For finer control over the dotnet-dsrouter options, run it separately and connect to it using -p
 
@@ -97,6 +97,13 @@ Provider Name                           Keywords            Level               
 Microsoft-DotNETCore-SampleProfiler     0x0000F00000000000  Informational(4)    --profile
 Microsoft-Windows-DotNETRuntime         0x00000014C14FCCBD  Informational(4)    --profile
 ```
+
+The `--format` argument is optional and it defaults to `nettrace`.
+However, `nettrace` files can be viewed only with Perfview or Visual
+Studio on Windows, while the speedscope JSON files can be viewed "on"
+Unix by uploading them to [https://speedscope.app/][speedscope].
+
+[speedscope]: https://speedscope.app/
 
 ### Running `dotnet-dsrouter` Separately
 
