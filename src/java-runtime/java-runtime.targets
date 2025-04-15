@@ -88,12 +88,12 @@
       Command="&quot;$(JarPath)&quot; cf &quot;%(_RuntimeOutput.OutputJar)&quot; -C &quot;%(_RuntimeOutput.IntermediateRuntimeOutputPath)&quot; ."
   />
 </Target>
-<Target Name="_GenerateRuntimeDex16"
+<Target Name="_GenerateRuntimeDex"
     AfterTargets="Build"
-    Inputs="@(_RuntimeOutput->'%(Identity)')"
+    Inputs="@(_RuntimeOutput->'%(Identity)');$(MSBuildThisFileFullPath)"
     Outputs="@(_RuntimeOutput->'%(OutputDex)')">
   <Exec
-      Command="&quot;$(JavaPath)&quot; -classpath &quot;$(OutputPath)r8.jar&quot; com.android.tools.r8.D8 --release --no-desugaring --output &quot;%(_RuntimeOutput.IntermediateRuntimeOutputPath)&quot; &quot;%(_RuntimeOutput.OutputJar)&quot;"
+      Command="&quot;$(JavaPath)&quot; -classpath &quot;$(OutputPath)r8.jar&quot; com.android.tools.r8.D8 --release --min-api $(AndroidMinimumDotNetApiLevel) --lib &quot;$(_AndroidJar)&quot; --output &quot;%(_RuntimeOutput.IntermediateRuntimeOutputPath)&quot; &quot;%(_RuntimeOutput.OutputJar)&quot;"
       EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
   />
   <Move
