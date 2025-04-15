@@ -22,6 +22,13 @@ together to make this happen:
 * The Mono Diagnostic component, `libmono-component-diagnostics_tracing.so`,
   is included in the application and is used to collect the trace data.
 
+> **NOTE:** You need at least version 9.0.621003 of all the diagnostic
+> tools to use the features described in this guide. Check
+> [dotnet-trace](https://www.nuget.org/packages/dotnet-trace/),
+> [dotnet-dsrouter](https://www.nuget.org/packages/dotnet-dsrouter/),
+> and [dotnet-gcdump](https://www.nuget.org/packages/dotnet-gcdump/)
+> on NuGet for the latest versions.
+
 See the [`dotnet-trace` documentation][dotnet-trace] for further details about its usage.
 
 [dotnet-trace]: https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-trace
@@ -48,14 +55,54 @@ You can also install prerelease builds from the nightly feed
 `https://aka.ms/dotnet-tools/index.json`:
 
 ```sh
-$ dotnet tool install -g dotnet-dsrouter --add-source=https://aka.ms/dotnet-tools/index.json --prerelease
-You can invoke the tool using the following command: dotnet-dsrouter
-Tool 'dotnet-dsrouter' was successfully installed.
+$ dotnet tool install -g dotnet-trace --add-source=https://aka.ms/dotnet-tools/index.json --prerelease
+You can invoke the tool using the following command: dotnet-trace
+Tool 'dotnet-trace' was successfully installed.
 ```
 
 ## Configuration & Setup
 
-### Running `dotnet-dsrouter` on the Host
+### Using `dotnet-trace` with the `--dsrouter` option
+
+Starting with version 9.0.621003, `dotnet-trace` includes a
+`--dsrouter` option that eliminates the need to run `dotnet-dsrouter`
+separately. This simplifies the workflow significantly.
+
+For Android emulators:
+
+```sh
+$ dotnet-trace collect --dsrouter android-emu
+WARNING: dotnet-dsrouter is a development tool not intended for production environments.
+For finer control over the dotnet-dsrouter options, run it separately and connect to it using -p
+
+No profile or providers specified, defaulting to trace profile 'cpu-sampling'
+
+Provider Name                           Keywords            Level               Enabled By
+Microsoft-DotNETCore-SampleProfiler     0x0000F00000000000  Informational(4)    --profile
+Microsoft-Windows-DotNETRuntime         0x00000014C14FCCBD  Informational(4)    --profile
+```
+
+For Android devices:
+
+```sh
+# `adb reverse` is still required when using hardware devices
+$ adb reverse tcp:9000 tcp:9001
+$ dotnet-trace collect --dsrouter android
+WARNING: dotnet-dsrouter is a development tool not intended for production environments.
+For finer control over the dotnet-dsrouter options, run it separately and connect to it using -p
+
+No profile or providers specified, defaulting to trace profile 'cpu-sampling'
+
+Provider Name                           Keywords            Level               Enabled By
+Microsoft-DotNETCore-SampleProfiler     0x0000F00000000000  Informational(4)    --profile
+Microsoft-Windows-DotNETRuntime         0x00000014C14FCCBD  Informational(4)    --profile
+```
+
+### Running `dotnet-dsrouter` Separately
+
+> **NOTE:** The following section describes the approach before
+> `dotnet-trace` 9.0.621003. Running `dotnet-dsrouter` separately can
+> be useful for viewing its log messages when troubleshooting.
 
 For profiling an Android application running on an Android *emulator*:
 
