@@ -358,7 +358,6 @@ namespace Java.Interop {
 			IJavaPeerable? result = null;
 
 			try {
-				Console.WriteLine ($"# jonp: TypeManager.CreateInstance: type={type.FullName} handle={handle:x} transfer={transfer}");
 				result = (IJavaPeerable) CreateProxy (type, handle, transfer);
 			} catch (MissingMethodException e) {
 				var key_handle  = JNIEnv.IdentityHash (handle);

@@ -766,10 +766,6 @@ namespace Android.Runtime {
 			if (!JniEnvironment.Types.IsSameObject (target.PeerReference, reference))
 				return false;
 
-			Console.WriteLine ($"# jonp: ShouldReplaceMapping: target={RuntimeHelpers.GetHashCode(target)} {target.JniManagedPeerState}" +
-				$"value={RuntimeHelpers.GetHashCode (value)} {value.JniManagedPeerState}");
-			Console.WriteLine (new System.Diagnostics.StackTrace (true).ToString ());
-
 			// JNIEnv.NewObject/JNIEnv.CreateInstance() compatibility.
 			// When two MCW's are created for one Java instance [0],
 			// we want the 2nd MCW to replace the 1st, as the 2nd is
