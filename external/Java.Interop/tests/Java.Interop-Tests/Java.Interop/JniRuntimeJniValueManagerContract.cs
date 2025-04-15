@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 using Java.Interop;
@@ -157,6 +158,65 @@ namespace Java.InteropTests {
 
 			Assert.IsNotNull (p);
 			Assert.AreSame (typeof (IJavaInterfaceInvoker), p!.GetType ());
+		}
+
+		[Test]
+		public void CreatePeer_CreatesNewValueUsingActivationConstructor ()
+		{
+			using var v1    = new AnotherJavaInterfaceImpl ();
+			var lref        = v1.PeerReference.NewLocalRef ();
+			try {
+				using var v2    = valueManager.CreatePeer (ref lref, JniObjectReferenceOptions.CopyAndDispose, typeof (AnotherJavaInterfaceImpl));
+				Assert.AreNotSame (v1, v2, "CreatePeer() should create new values");
+			}
+			finally {
+				JniObjectReference.Dispose (ref lref);
+			}
+		}
+
+		[Test]
+		public void CreatePeer_ThrowsIfNoActivationConstructorPresent ()
+		{
+			using var v1    = new GetThis ();
+			var lref        = v1.PeerReference.NewLocalRef ();
+			var ex = Assert.Throws<NotSupportedException> (
+					() => valueManager.CreatePeer (ref lref, JniObjectReferenceOptions.CopyAndDispose, typeof (GetThis)),
+					$"`GetThis` has no activation constructor, so attempting to use it should throw NotSupportedException.");
+			Assert.IsTrue (lref.IsValid, "lref should still be valid");
+			JniObjectReference.Dispose (ref lref);
+		}
+
+		[Test]
+		public void CreatePeer_ReplaceableDoesNotReplace ()
+		{
+			var v       = new AnotherJavaInterfaceImpl ();
+			var lref    = v.PeerReference.NewLocalRef ();
+			v.Dispose ();
+
+			try {
+				Assert.IsNull (valueManager.PeekPeer (lref), "v.Dispose() should have unregistered the peer.");
+				var peer1   = valueManager.CreatePeer (ref lref, JniObjectReferenceOptions.Copy, typeof (AnotherJavaInterfaceImpl));
+				Assert.IsTrue (
+						peer1!.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable),
+						$"Expected peer1.JniManagedPeerState to have .Replaceable, but was {peer1.JniManagedPeerState}.");
+				Assert.AreSame (peer1, valueManager.PeekPeer (lref),
+						$"Expected peer1==PeekValue(peer1.PeerReference); it's the only one that should exist!");
+
+				var peer2   = valueManager.CreatePeer (ref lref, JniObjectReferenceOptions.Copy, typeof (AnotherJavaInterfaceImpl));
+				Assert.IsTrue (
+						peer2!.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable),
+						$"Expected peer2.JniManagedPeerState to have .Replaceable, but was {peer2.JniManagedPeerState}.");
+				Assert.AreNotSame (peer1, peer2, "Expected peer1 and peer2 to be different instances.");
+
+				var peeked  = valueManager.PeekPeer (lref);
+				Assert.AreSame (peer1, peeked,
+						"Expected peer1 and peeked to be the same instance; " +
+						$"peeked={RuntimeHelpers.GetHashCode (peeked).ToString ("x")}, " +
+						$"peer1={RuntimeHelpers.GetHashCode (peer1).ToString ("x")}, " +
+						$"peer2={RuntimeHelpers.GetHashCode (peer2).ToString ("x")}");
+			} finally {
+				JniObjectReference.Dispose (ref lref);
+			}
 		}
 
 		[Test]

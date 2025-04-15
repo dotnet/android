@@ -57,9 +57,6 @@ namespace Java.Interop {
 			var r = value.PeerReference;
 			if (!r.IsValid)
 				throw new ObjectDisposedException (value.GetType ().FullName);
-			var o = PeekPeer (value.PeerReference);
-			if (o != null)
-				return;
 
 			if (r.Type != JniObjectReferenceType.Global) {
 				value.SetPeerReference (r.NewGlobalRef ());
@@ -80,7 +77,7 @@ namespace Java.Interop {
 					var p   = peers [i];
 					if (!JniEnvironment.Types.IsSameObject (p.PeerReference, value.PeerReference))
 						continue;
-					if (Replaceable (p)) {
+					if (Replaceable (p, value)) {
 						peers [i] = value;
 					} else {
 						WarnNotReplacing (key, value, p);
@@ -91,11 +88,12 @@ namespace Java.Interop {
 			}
 		}
 
-		static bool Replaceable (IJavaPeerable peer)
+		static bool Replaceable (IJavaPeerable peer, IJavaPeerable value)
 		{
 			if (peer == null)
 				return true;
-			return (peer.JniManagedPeerState & JniManagedPeerStates.Replaceable) == JniManagedPeerStates.Replaceable;
+			return peer.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable) &&
+				!value.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable);
 		}
 
 		void WarnNotReplacing (int key, IJavaPeerable ignoreValue, IJavaPeerable keepValue)

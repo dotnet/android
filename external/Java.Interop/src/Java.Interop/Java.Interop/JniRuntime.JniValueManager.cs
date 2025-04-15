@@ -401,7 +401,27 @@ namespace Java.Interop
 					Type type)
 			{
 				type    = Runtime.TypeManager.GetInvokerType (type) ?? type;
-				return TryCreatePeer (ref reference, options, type);
+
+				var self        = GetUninitializedObject (type);
+				var constructed = false;
+				try {
+					constructed = TryConstructPeer (self, ref reference, options, type);
+				} finally {
+					if (!constructed) {
+						GC.SuppressFinalize (self);
+						self    = null;
+					}
+				}
+				return self;
+
+				static IJavaPeerable GetUninitializedObject (
+						[DynamicallyAccessedMembers (Constructors)]
+						Type type)
+				{
+					var v   = (IJavaPeerable) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject (type);
+					v.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
+					return v;
+				}
 			}
 
 			const               BindingFlags    ActivationConstructorBindingFlags   = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
@@ -409,7 +429,8 @@ namespace Java.Interop
 			static  readonly    Type[]          JIConstructorSignature  = new Type [] { ByRefJniObjectReference, typeof (JniObjectReferenceOptions) };
 
 
-			protected virtual IJavaPeerable? TryCreatePeer (
+			protected virtual bool TryConstructPeer (
+					IJavaPeerable self,
 					ref JniObjectReference reference,
 					JniObjectReferenceOptions options,
 					[DynamicallyAccessedMembers (Constructors)]
@@ -421,11 +442,11 @@ namespace Java.Interop
 						reference,
 						options,
 					};
-					var p       = (IJavaPeerable) c.Invoke (args);
+					c.Invoke (self, args);
 					reference   = (JniObjectReference) args [0];
-					return p;
+					return true;
 				}
-				return null;
+				return false;
 			}
 
 			public object? CreateValue (

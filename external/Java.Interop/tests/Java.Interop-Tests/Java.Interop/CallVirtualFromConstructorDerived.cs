@@ -1,4 +1,7 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
+using System.Runtime.CompilerServices;
 
 using Java.Interop;
 
@@ -24,10 +27,22 @@ namespace Java.InteropTests
 		public  bool    InvokedConstructor;
 
 		public CallVirtualFromConstructorDerived (int value)
-			: base (value)
+			: this (value, useNewObject: false)
+		{
+		}
+
+		public CallVirtualFromConstructorDerived (int value, bool useNewObject)
+			: base (value, useNewObject)
 		{
 			InvokedConstructor = true;
-			if (value != calledValue)
+
+			if (useNewObject && calledValue != 0) {
+				// calledValue was set on a *different* instance! So it's 0 here.
+				throw new ArgumentException (
+						string.Format ("value '{0}' doesn't match expected value '{1}'.", value, 0),
+						"value");
+			}
+			if (!useNewObject && value != calledValue)
 				throw new ArgumentException (
 						string.Format ("value '{0}' doesn't match expected value '{1}'.", value, calledValue),
 						"value");
@@ -35,10 +50,15 @@ namespace Java.InteropTests
 
 		public  bool    InvokedActivationConstructor;
 
+		public  static  CallVirtualFromConstructorDerived?  Intermediate_FromCalledFromConstructor;
+		public  static  CallVirtualFromConstructorDerived?  Intermediate_FromActivationConstructor;
+
 		public CallVirtualFromConstructorDerived (ref JniObjectReference reference, JniObjectReferenceOptions options)
 			: base (ref reference, options)
 		{
 			InvokedActivationConstructor    = true;
+
+			Intermediate_FromActivationConstructor  = this;
 		}
 
 		public bool Called;
@@ -47,6 +67,8 @@ namespace Java.InteropTests
 		{
 			Called      = true;
 			calledValue = value;
+
+			Intermediate_FromCalledFromConstructor  = this;
 		}
 
 		public static unsafe CallVirtualFromConstructorDerived NewInstance (int value)
@@ -54,7 +76,7 @@ namespace Java.InteropTests
 			JniArgumentValue* args = stackalloc JniArgumentValue [1];
 			args [0]    = new JniArgumentValue (value);
 			var o       = _members.StaticMethods.InvokeObjectMethod ("newInstance.(I)Lnet/dot/jni/test/CallVirtualFromConstructorDerived;", args);
-			return JniEnvironment.Runtime.ValueManager.GetValue<CallVirtualFromConstructorDerived> (ref o, JniObjectReferenceOptions.CopyAndDispose);
+			return JniEnvironment.Runtime.ValueManager.GetValue<CallVirtualFromConstructorDerived> (ref o, JniObjectReferenceOptions.CopyAndDispose)!;
 		}
 
 		delegate void CalledFromConstructorMarshalMethod (IntPtr jnienv, IntPtr n_self, int value);
@@ -63,7 +85,7 @@ namespace Java.InteropTests
 			var envp = new JniTransition (jnienv);
 			try {
 				var r_self  = new JniObjectReference (n_self);
-				var self    = JniEnvironment.Runtime.ValueManager.GetValue<CallVirtualFromConstructorDerived>(ref r_self, JniObjectReferenceOptions.Copy);
+				var self    = JniEnvironment.Runtime.ValueManager.GetValue<CallVirtualFromConstructorDerived>(ref r_self, JniObjectReferenceOptions.Copy)!;
 				self.CalledFromConstructor (value);
 				self.DisposeUnlessReferenced ();
 			}
