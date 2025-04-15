@@ -3,12 +3,18 @@
   <PropertyGroup>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <Nullable>enable</Nullable>
+    <DefineConstants>IN_APPTOOLS;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\ApplicationConfig.cs" />
+    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\ApplicationConfigCLR.cs" />
+    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Basic.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" />
     <PackageReference Include="K4os.Compression.LZ4" Version="$(LZ4PackageVersion)" />
-    <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
+    <PackageReference Include="System.IO.Hashing" Version="10.0.0-preview.3.25171.5" />
     <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
   </ItemGroup>
 
