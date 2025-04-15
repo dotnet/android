@@ -2989,7 +2989,7 @@ because xbuild doesn't support framework reference assemblies.
   >
     <Output TaskParameter="Result" PropertyName="_UninstallResult" />
   </AndroidAdb>
-  <!-- The previous attempt failed. So yry to uninstall but save the cache using cmd package uninstall -k -->
+  <!-- The previous attempt failed. So try to uninstall but save the cache using `cmd package uninstall -k` -->
   <AndroidAdb
       Condition=" '$(EmbedAssembliesIntoApk)' == 'true' And '$(_UninstallResult)' == 'false' "
       ContinueOnError="True"
