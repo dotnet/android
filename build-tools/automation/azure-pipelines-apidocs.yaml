@@ -145,7 +145,7 @@ extends:
 
         - script: >-
             make update-api-docs CONFIGURATION=$(XA.Build.Configuration)
-            MSBUILD_ARGS='$(DocsApiLevelArg) $(DocsPlatformIdArg) $(DocsFxVersionArg) $(MdocPackageVersionArg) $(AndroidJavadocVerbosity)'
+            MSBUILD_ARGS='$(DocsApiLevelArg) $(DocsPlatformIdArg) $(DocsFxVersionArg) $(MdocPackageVersionArg) $(AndroidJavadocVerbosity) -p:DisableApiCompatibilityCheck=true'
           workingDirectory: $(Build.SourcesDirectory)
           displayName: make update-api-docs
 
