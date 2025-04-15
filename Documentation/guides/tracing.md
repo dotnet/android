@@ -101,7 +101,7 @@ Microsoft-Windows-DotNETRuntime         0x00000014C14FCCBD  Informational(4)    
 The `--format` argument is optional and it defaults to `nettrace`.
 However, `nettrace` files can be viewed only with Perfview or Visual
 Studio on Windows, while the speedscope JSON files can be viewed "on"
-Unix by uploading them to [https://speedscope.app/][speedscope].
+Unix by opening them with [https://speedscope.app/][speedscope].
 
 [speedscope]: https://speedscope.app/
 
@@ -211,9 +211,7 @@ Start an application with the following environment variable: DOTNET_DiagnosticP
 The `--format` argument is optional and it defaults to `nettrace`.
 However, `nettrace` files can be viewed only with Perfview or Visual
 Studio on Windows, while the speedscope JSON files can be viewed "on"
-Unix by uploading them to [https://speedscope.app/][speedscope].
-
-[speedscope]: https://speedscope.app/
+Unix by opening them with [https://speedscope.app/][speedscope].
 
 ### Running the .NET for Android Application
 
