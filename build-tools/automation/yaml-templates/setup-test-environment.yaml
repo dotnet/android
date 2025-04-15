@@ -75,6 +75,7 @@ steps:
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
   parameters:
     displayName: extract workload packs
+    xaSourcePath: ${{ parameters.xaSourcePath }}
     project: ${{ parameters.xaSourcePath }}/build-tools/create-packs/Microsoft.Android.Sdk.proj
     arguments: -t:ExtractWorkloadPacks -c ${{ parameters.configuration }} -v:n -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/extract-workloads.binlog
 
