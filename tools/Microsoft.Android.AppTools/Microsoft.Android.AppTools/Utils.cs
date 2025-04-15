@@ -4,6 +4,7 @@ using System.Buffers;
 
 using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
+using Xamarin.Android.Tasks;
 using Xamarin.Tools.Zip;
 
 namespace Microsoft.Android.AppTools;
@@ -21,6 +22,48 @@ static class Utils
 
 	static readonly string[] apkZipEntries = {
 		"AndroidManifest.xml",
+	};
+
+	static readonly string[] apkMonoRuntimeEntries = {
+		$"lib/{MonoAndroidHelper.AndroidAbi.Arm64}/libmonosgen-2.0.so",
+		$"lib/{MonoAndroidHelper.AndroidAbi.Arm32}/libmonosgen-2.0.so",
+		"lib/{MonoAndroidHelper.AndroidAbi.X86}/libmonosgen-2.0.so",
+		"lib/{MonoAndroidHelper.AndroidAbi.X64}/libmonosgen-2.0.so",
+	};
+
+	static readonly string[] aabMonoRuntimeEntries = {
+		$"lib/{MonoAndroidHelper.AndroidAbi.Arm64}/libmonosgen-2.0.so",
+		$"lib/{MonoAndroidHelper.AndroidAbi.Arm32}/libmonosgen-2.0.so",
+		"lib/{MonoAndroidHelper.AndroidAbi.X86}/libmonosgen-2.0.so",
+		"lib/{MonoAndroidHelper.AndroidAbi.X64}/libmonosgen-2.0.so",
+	};
+
+	static readonly string[] aabBaseMonoRuntimeEntries = {
+		$"lib/{MonoAndroidHelper.AndroidAbi.Arm64}/libmonosgen-2.0.so",
+		$"lib/{MonoAndroidHelper.AndroidAbi.Arm32}/libmonosgen-2.0.so",
+		"lib/{MonoAndroidHelper.AndroidAbi.X86}/libmonosgen-2.0.so",
+		"lib/{MonoAndroidHelper.AndroidAbi.X64}/libmonosgen-2.0.so",
+	};
+
+	static readonly string[] apkCoreCLRRuntimeEntries = {
+		$"lib/{MonoAndroidHelper.AndroidAbi.Arm64}/libcoreclr.so",
+		$"lib/{MonoAndroidHelper.AndroidAbi.Arm32}/libcoreclr.so",
+		"lib/{MonoAndroidHelper.AndroidAbi.X86}/libcoreclr.so",
+		"lib/{MonoAndroidHelper.AndroidAbi.X64}/libcoreclr.so",
+	};
+
+	static readonly string[] aabCoreCLRRuntimeEntries = {
+		$"lib/{MonoAndroidHelper.AndroidAbi.Arm64}/libcoreclr.so",
+		$"lib/{MonoAndroidHelper.AndroidAbi.Arm32}/libcoreclr.so",
+		"lib/{MonoAndroidHelper.AndroidAbi.X86}/libcoreclr.so",
+		"lib/{MonoAndroidHelper.AndroidAbi.X64}/libcoreclr.so",
+	};
+
+	static readonly string[] aabBaseCoreCLRRuntimeEntries = {
+		$"lib/{MonoAndroidHelper.AndroidAbi.Arm64}/libcoreclr.so",
+		$"lib/{MonoAndroidHelper.AndroidAbi.Arm32}/libcoreclr.so",
+		"lib/{MonoAndroidHelper.AndroidAbi.X86}/libcoreclr.so",
+		"lib/{MonoAndroidHelper.AndroidAbi.X64}/libcoreclr.so",
 	};
 
 	public const uint ZIP_MAGIC = 0x4034b50;
@@ -94,15 +137,15 @@ static class Utils
 		}
 	}
 
-	public static (FileFormat format, FileInfo? info) DetectFileFormat (ILogger log, string path)
+	public static (ApplicationRuntime runtimeKind, FileFormat format, FileInfo? info) DetectFileFormat (ILogger log, string path)
 	{
 		if (String.IsNullOrEmpty (path)) {
-			return (FileFormat.Unknown, null);
+			return (ApplicationRuntime.Unknown, FileFormat.Unknown, null);
 		}
 
 		var info = new FileInfo (path);
 		if (!info.Exists) {
-			return (FileFormat.Unknown, null);
+			return (ApplicationRuntime.Unknown, FileFormat.Unknown, null);
 		}
 
 		using var reader = new BinaryReader (info.OpenRead ());
@@ -116,29 +159,96 @@ static class Utils
 		};
 
 		if (format == FileFormat.Unknown || format != FileFormat.Zip) {
-			return (format, info);
+			return (ApplicationRuntime.Unknown, format, info);
 		}
 
-		return (DetectAndroidArchive (info, format), info);
+		(ApplicationRuntime runtimeKind, format) = DetectAndroidArchive (info, format);
+		return (runtimeKind, format, info);
 	}
 
-	static FileFormat DetectAndroidArchive (FileInfo info, FileFormat defaultFormat)
+	static (ApplicationRuntime runtimeKind, FileFormat format) DetectAndroidArchive (FileInfo info, FileFormat defaultFormat)
 	{
 		using var zip = ZipArchive.Open (info.FullName, FileMode.Open);
 
 		if (HasAllEntries (zip, aabZipEntries)) {
-			return FileFormat.Aab;
+			return DetectRuntimeKind (zip, FileFormat.Aab);
 		}
 
 		if (HasAllEntries (zip, apkZipEntries)) {
-			return FileFormat.Apk;
+			return DetectRuntimeKind (zip, FileFormat.Apk);
 		}
 
 		if (HasAllEntries (zip, aabBaseZipEntries)) {
-			return FileFormat.AabBase;
+			return DetectRuntimeKind (zip, FileFormat.AabBase);
 		}
 
-		return defaultFormat;
+		return (ApplicationRuntime.Unknown, defaultFormat);
+	}
+
+	static (ApplicationRuntime runtimeKind, FileFormat format) DetectRuntimeKind (ZipArchive zip, FileFormat format)
+	{
+		ApplicationRuntime runtimeKind = format switch {
+			FileFormat.Aab     => DetectAabRuntime (),
+			FileFormat.AabBase => DetectAabBaseRuntime (),
+			FileFormat.Apk     => DetectApkRuntime (),
+			_                  => ApplicationRuntime.Unknown
+		};
+
+		// TODO: detect statically linked libmonodroid.so
+		return (runtimeKind, format);
+
+		ApplicationRuntime DetectApkRuntime ()
+		{
+			if (HasAnyEntry (zip, apkMonoRuntimeEntries)) {
+				return ApplicationRuntime.MonoVM;
+			}
+
+			if (HasAnyEntry (zip, apkCoreCLRRuntimeEntries)) {
+				return ApplicationRuntime.MonoVM;
+			}
+
+			// TODO: NativeAOT
+			return ApplicationRuntime.Unknown;
+		}
+
+		ApplicationRuntime DetectAabRuntime ()
+		{
+			if (HasAnyEntry (zip, aabMonoRuntimeEntries)) {
+				return ApplicationRuntime.MonoVM;
+			}
+
+			if (HasAnyEntry (zip, aabCoreCLRRuntimeEntries)) {
+				return ApplicationRuntime.MonoVM;
+			}
+
+			// TODO: NativeAOT
+			return ApplicationRuntime.Unknown;
+		}
+
+		ApplicationRuntime DetectAabBaseRuntime ()
+		{
+			if (HasAnyEntry (zip, aabBaseMonoRuntimeEntries)) {
+				return ApplicationRuntime.MonoVM;
+			}
+
+			if (HasAnyEntry (zip, aabBaseCoreCLRRuntimeEntries)) {
+				return ApplicationRuntime.MonoVM;
+			}
+
+			// TODO: NativeAOT
+			return ApplicationRuntime.Unknown;
+		}
+	}
+
+	static bool HasAnyEntry (ZipArchive zip, string[] entries)
+	{
+		foreach (string entry in entries) {
+			if (zip.ContainsEntry (entry, caseSensitive: true)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	static bool HasAllEntries (ZipArchive zip, string[] entries)

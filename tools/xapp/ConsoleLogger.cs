@@ -114,16 +114,21 @@ class ConsoleLogger : ILogger
 		Status (label, val?.ToString () ?? missingText);
 	}
 
+	public void StatusLine ()
+	{
+		Log (LogLevel.Info, Environment.NewLine);
+	}
+
 	public void StatusLine (string label, string text)
 	{
 		Status (label, text);
-		Log (LogLevel.Info, Environment.NewLine);
+		StatusLine ();
 	}
 
 	public void StatusLine (string label, IFormattable? val, string missingText = "missing")
 	{
 		Status (label, val);
-		Log (LogLevel.Info, Environment.NewLine);
+		StatusLine ();
 	}
 
 	public void StatusYesNo (string label, bool yes)
@@ -134,7 +139,7 @@ class ConsoleLogger : ILogger
 	public void StatusYesNoLine (string label, bool yes)
 	{
 		StatusYesNo (label, yes);
-		Log (LogLevel.Info, Environment.NewLine);
+		StatusLine ();
 	}
 
 	static string YesNo (bool yes) => yes ? "yes" : "no";

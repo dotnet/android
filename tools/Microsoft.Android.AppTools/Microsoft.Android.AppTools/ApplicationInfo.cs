@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -21,12 +22,14 @@ public class ApplicationInfo
 	/// </summary>
 	public ArchiveKind ArchiveKind { get; private set; } = ArchiveKind.None;
 
+	public ApplicationRuntime RuntimeKind { get; private set; } = ApplicationRuntime.Unknown;
+
 	/// <summary>
-	/// If assembly store was read, either from the archive or directly from a file on the filesystem,
-	/// this property will contain instance of the <see cref="AssemblyStore" /> class describing the
-	/// store in detail.
+	/// If assembly stores were read, either from the archive or directly from a file on the filesystem,
+	/// this property will contain instances of the <see cref="AssemblyStore" /> class describing the
+	/// stores in detail. If the collection isn't `null`, it is also guaranteed not to be empty.
 	/// </summary>
-	public AssemblyStore? AssemblyStore { get; private set; }
+	public ICollection<AssemblyStore>? AssemblyStores { get; private set; }
 
 	/// <summary>
 	/// If application info was obtained from an application archive (`.apk`, `.aab` or `.zip`) or
@@ -64,11 +67,28 @@ public class ApplicationInfo
 	/// </summary>
 	public bool Read (string inputFilePath)
 	{
-		(FileFormat format, FileInfo? info) = Utils.DetectFileFormat (log, inputFilePath);
+		(ApplicationRuntime runtimeKind, FileFormat format, FileInfo? info) = Utils.DetectFileFormat (log, inputFilePath);
 		if (info == null || format == FileFormat.Unknown) {
 			return false;
 		}
 
-		return false;
+		RuntimeKind = runtimeKind;
+		ArchiveKind = format switch {
+			FileFormat.Aab => ArchiveKind.AAB,
+			FileFormat.Apk => ArchiveKind.APK,
+			FileFormat.Zip => ArchiveKind.ZIP,
+			_ => ArchiveKind.None
+		};
+
+		IList<AssemblyStoreExplorer>? explorers = AssemblyStoreExplorer.Open (log, inputFilePath, format, info);
+		if (explorers != null) {
+			var stores = new List<AssemblyStore> ();
+			foreach (AssemblyStoreExplorer exp in explorers) {
+				stores.Add (new AssemblyStore (log, exp));
+			}
+			AssemblyStores = stores;
+		}
+
+		return true;
 	}
 }

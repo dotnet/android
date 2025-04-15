@@ -5,6 +5,7 @@ using System.IO;
 using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
 using Microsoft.Android.AppTools.Native;
+using Xamarin.Android.Tasks;
 
 namespace Microsoft.Android.AppTools;
 
@@ -143,7 +144,6 @@ class DataProviderXamarinAppMonoVM : DataProvider
 		size += elf.GetPaddedSize (size, applicationConfig.aot_lazy_load);
 		size += elf.GetPaddedSize (size, applicationConfig.uses_assembly_preload);
 		size += elf.GetPaddedSize (size, applicationConfig.broken_exception_transitions);
-		size += elf.GetPaddedSize (size, applicationConfig.instant_run_enabled);
 		size += elf.GetPaddedSize (size, applicationConfig.jni_add_native_method_registration_attribute_present);
 		size += elf.GetPaddedSize (size, applicationConfig.have_runtime_config_blob);
 		size += elf.GetPaddedSize (size, applicationConfig.have_assemblies_blob);
@@ -154,7 +154,6 @@ class DataProviderXamarinAppMonoVM : DataProvider
 		size += elf.GetPaddedSize (size, applicationConfig.system_property_count);
 		size += elf.GetPaddedSize (size, applicationConfig.number_of_assemblies_in_apk);
 		size += elf.GetPaddedSize (size, applicationConfig.bundled_assembly_name_width);
-		size += elf.GetPaddedSize (size, applicationConfig.number_of_assembly_store_files);
 		size += elf.GetPaddedSize (size, applicationConfig.number_of_dso_cache_entries);
 		size += elf.GetPaddedSize (size, applicationConfig.android_runtime_jnienv_class_token);
 		size += elf.GetPaddedSize (size, applicationConfig.jnienv_initialize_method_token);

@@ -13,7 +13,7 @@ abstract class DataProviderTypemapsXamarinAppMonoVM : DataProviderXamarinAppMono
 	{
 	}
 
-	public static IDataProviderTypemaps? Create (Stream inputStream, string? inputPath, ILogger log)
+	public static IDataProviderTypemapsMonoVM? Create (Stream inputStream, string? inputPath, ILogger log)
 	{
 		// TODO: load ELF here, for detection
 		return null;
