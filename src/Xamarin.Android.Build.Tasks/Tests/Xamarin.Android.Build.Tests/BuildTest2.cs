@@ -124,19 +124,19 @@ namespace Xamarin.Android.Build.Tests
 		static object [] ReadyToRunConfigurationSource = new object [] {
 			new object[] {
 				/* isComposite */	true,
-				/* rid */			"android-x64"
+				/* rid */		"android-x64"
 			},
 			new object[] {
 				/* isComposite */	false,
-				/* rid */			"android-x64"
+				/* rid */		"android-x64"
 			},
 			new object[] {
 				/* isComposite */	true,
-				/* rid */			"android-arm64"
+				/* rid */		"android-arm64"
 			},
 			new object[] {
 				/* isComposite */	false,
-				/* rid */			"android-arm64"
+				/* rid */		"android-arm64"
 			}
 		};
 
