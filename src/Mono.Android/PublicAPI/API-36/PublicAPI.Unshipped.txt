@@ -1609,9 +1609,9 @@ Android.Ranging.Ble.CS.BleCsRangingCapabilities.DescribeContents() -> int
 Android.Ranging.Ble.CS.BleCsRangingCapabilities.InterfaceConsts
 Android.Ranging.Ble.CS.BleCsRangingCapabilities.SupportedSecurityLevels.get -> System.Collections.Generic.ICollection<Java.Lang.Integer!>!
 Android.Ranging.Ble.CS.BleCsRangingCapabilities.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
-Android.Ranging.Ble.Cs.BleCsRangingCapabilitiesCsSecurityLevel
-Android.Ranging.Ble.Cs.BleCsRangingCapabilitiesCsSecurityLevel.Four = 4 -> Android.Ranging.Ble.Cs.BleCsRangingCapabilitiesCsSecurityLevel
-Android.Ranging.Ble.Cs.BleCsRangingCapabilitiesCsSecurityLevel.One = 1 -> Android.Ranging.Ble.Cs.BleCsRangingCapabilitiesCsSecurityLevel
+Android.Ranging.Ble.CS.BleCsRangingCapabilitiesCsSecurityLevel
+Android.Ranging.Ble.CS.BleCsRangingCapabilitiesCsSecurityLevel.Four = 4 -> Android.Ranging.Ble.CS.BleCsRangingCapabilitiesCsSecurityLevel
+Android.Ranging.Ble.CS.BleCsRangingCapabilitiesCsSecurityLevel.One = 1 -> Android.Ranging.Ble.CS.BleCsRangingCapabilitiesCsSecurityLevel
 Android.Ranging.Ble.CS.BleCsRangingParams
 Android.Ranging.Ble.CS.BleCsRangingParams.Builder
 Android.Ranging.Ble.CS.BleCsRangingParams.Builder.Build() -> Android.Ranging.Ble.CS.BleCsRangingParams!
@@ -1622,20 +1622,20 @@ Android.Ranging.Ble.CS.BleCsRangingParams.Builder.SetSecurityLevel(int securityL
 Android.Ranging.Ble.CS.BleCsRangingParams.Builder.SetSightType(int sightType) -> Android.Ranging.Ble.CS.BleCsRangingParams.Builder!
 Android.Ranging.Ble.CS.BleCsRangingParams.DescribeContents() -> int
 Android.Ranging.Ble.CS.BleCsRangingParams.InterfaceConsts
-Android.Ranging.Ble.CS.BleCsRangingParams.LocationType.get -> Android.Ranging.Ble.Cs.BleCsRangingParamsLocationType
+Android.Ranging.Ble.CS.BleCsRangingParams.LocationType.get -> Android.Ranging.Ble.CS.BleCsRangingParamsLocationType
 Android.Ranging.Ble.CS.BleCsRangingParams.PeerBluetoothAddress.get -> string!
 Android.Ranging.Ble.CS.BleCsRangingParams.RangingUpdateRate.get -> Android.Ranging.Raw.RangingDeviceUpdateRate
-Android.Ranging.Ble.CS.BleCsRangingParams.SecurityLevel.get -> Android.Ranging.Ble.Cs.BleCsRangingCapabilitiesCsSecurityLevel
-Android.Ranging.Ble.CS.BleCsRangingParams.SightType.get -> Android.Ranging.Ble.Cs.BleCsRangingParamsSightType
+Android.Ranging.Ble.CS.BleCsRangingParams.SecurityLevel.get -> Android.Ranging.Ble.CS.BleCsRangingCapabilitiesCsSecurityLevel
+Android.Ranging.Ble.CS.BleCsRangingParams.SightType.get -> Android.Ranging.Ble.CS.BleCsRangingParamsSightType
 Android.Ranging.Ble.CS.BleCsRangingParams.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
-Android.Ranging.Ble.Cs.BleCsRangingParamsLocationType
-Android.Ranging.Ble.Cs.BleCsRangingParamsLocationType.Indoor = 1 -> Android.Ranging.Ble.Cs.BleCsRangingParamsLocationType
-Android.Ranging.Ble.Cs.BleCsRangingParamsLocationType.Outdoor = 2 -> Android.Ranging.Ble.Cs.BleCsRangingParamsLocationType
-Android.Ranging.Ble.Cs.BleCsRangingParamsLocationType.Unknown = 0 -> Android.Ranging.Ble.Cs.BleCsRangingParamsLocationType
-Android.Ranging.Ble.Cs.BleCsRangingParamsSightType
-Android.Ranging.Ble.Cs.BleCsRangingParamsSightType.LineOfSight = 1 -> Android.Ranging.Ble.Cs.BleCsRangingParamsSightType
-Android.Ranging.Ble.Cs.BleCsRangingParamsSightType.NonLineOfSight = 2 -> Android.Ranging.Ble.Cs.BleCsRangingParamsSightType
-Android.Ranging.Ble.Cs.BleCsRangingParamsSightType.Unknown = 0 -> Android.Ranging.Ble.Cs.BleCsRangingParamsSightType
+Android.Ranging.Ble.CS.BleCsRangingParamsLocationType
+Android.Ranging.Ble.CS.BleCsRangingParamsLocationType.Indoor = 1 -> Android.Ranging.Ble.CS.BleCsRangingParamsLocationType
+Android.Ranging.Ble.CS.BleCsRangingParamsLocationType.Outdoor = 2 -> Android.Ranging.Ble.CS.BleCsRangingParamsLocationType
+Android.Ranging.Ble.CS.BleCsRangingParamsLocationType.Unknown = 0 -> Android.Ranging.Ble.CS.BleCsRangingParamsLocationType
+Android.Ranging.Ble.CS.BleCsRangingParamsSightType
+Android.Ranging.Ble.CS.BleCsRangingParamsSightType.LineOfSight = 1 -> Android.Ranging.Ble.CS.BleCsRangingParamsSightType
+Android.Ranging.Ble.CS.BleCsRangingParamsSightType.NonLineOfSight = 2 -> Android.Ranging.Ble.CS.BleCsRangingParamsSightType
+Android.Ranging.Ble.CS.BleCsRangingParamsSightType.Unknown = 0 -> Android.Ranging.Ble.CS.BleCsRangingParamsSightType
 Android.Ranging.Ble.Rssi.BleRssiRangingParams
 Android.Ranging.Ble.Rssi.BleRssiRangingParams.Builder
 Android.Ranging.Ble.Rssi.BleRssiRangingParams.Builder.Build() -> Android.Ranging.Ble.Rssi.BleRssiRangingParams!
@@ -3194,18 +3194,18 @@ const Android.Provider.Settings.ActionFirstDayOfWeekSettings = "android.settings
 const Android.Provider.Settings.ActionMeasurementSystemSettings = "android.settings.MEASUREMENT_SYSTEM_SETTINGS" -> string!
 const Android.Provider.Settings.ActionRegionSettings = "android.settings.REGION_SETTINGS" -> string!
 const Android.Provider.Settings.ActionTemperatureUnitSettings = "android.settings.TEMPERATURE_UNIT_SETTINGS" -> string!
-const Android.Ranging.Ble.CS.BleCsRangingCapabilities.CsSecurityLevelFour = Android.Ranging.Ble.Cs.BleCsRangingCapabilitiesCsSecurityLevel.Four -> Android.Ranging.Ble.Cs.BleCsRangingCapabilitiesCsSecurityLevel
-const Android.Ranging.Ble.CS.BleCsRangingCapabilities.CsSecurityLevelOne = Android.Ranging.Ble.Cs.BleCsRangingCapabilitiesCsSecurityLevel.One -> Android.Ranging.Ble.Cs.BleCsRangingCapabilitiesCsSecurityLevel
+const Android.Ranging.Ble.CS.BleCsRangingCapabilities.CsSecurityLevelFour = Android.Ranging.Ble.CS.BleCsRangingCapabilitiesCsSecurityLevel.Four -> Android.Ranging.Ble.CS.BleCsRangingCapabilitiesCsSecurityLevel
+const Android.Ranging.Ble.CS.BleCsRangingCapabilities.CsSecurityLevelOne = Android.Ranging.Ble.CS.BleCsRangingCapabilitiesCsSecurityLevel.One -> Android.Ranging.Ble.CS.BleCsRangingCapabilitiesCsSecurityLevel
 const Android.Ranging.Ble.CS.BleCsRangingCapabilities.InterfaceConsts.ContentsFileDescriptor = 1 -> int
 const Android.Ranging.Ble.CS.BleCsRangingCapabilities.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
 const Android.Ranging.Ble.CS.BleCsRangingParams.InterfaceConsts.ContentsFileDescriptor = 1 -> int
 const Android.Ranging.Ble.CS.BleCsRangingParams.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
-const Android.Ranging.Ble.CS.BleCsRangingParams.LocationTypeIndoor = Android.Ranging.Ble.Cs.BleCsRangingParamsLocationType.Indoor -> Android.Ranging.Ble.Cs.BleCsRangingParamsLocationType
-const Android.Ranging.Ble.CS.BleCsRangingParams.LocationTypeOutdoor = Android.Ranging.Ble.Cs.BleCsRangingParamsLocationType.Outdoor -> Android.Ranging.Ble.Cs.BleCsRangingParamsLocationType
-const Android.Ranging.Ble.CS.BleCsRangingParams.LocationTypeUnknown = Android.Ranging.Ble.Cs.BleCsRangingParamsLocationType.Unknown -> Android.Ranging.Ble.Cs.BleCsRangingParamsLocationType
-const Android.Ranging.Ble.CS.BleCsRangingParams.SightTypeLineOfSight = Android.Ranging.Ble.Cs.BleCsRangingParamsSightType.LineOfSight -> Android.Ranging.Ble.Cs.BleCsRangingParamsSightType
-const Android.Ranging.Ble.CS.BleCsRangingParams.SightTypeNonLineOfSight = Android.Ranging.Ble.Cs.BleCsRangingParamsSightType.NonLineOfSight -> Android.Ranging.Ble.Cs.BleCsRangingParamsSightType
-const Android.Ranging.Ble.CS.BleCsRangingParams.SightTypeUnknown = Android.Ranging.Ble.Cs.BleCsRangingParamsSightType.Unknown -> Android.Ranging.Ble.Cs.BleCsRangingParamsSightType
+const Android.Ranging.Ble.CS.BleCsRangingParams.LocationTypeIndoor = Android.Ranging.Ble.CS.BleCsRangingParamsLocationType.Indoor -> Android.Ranging.Ble.CS.BleCsRangingParamsLocationType
+const Android.Ranging.Ble.CS.BleCsRangingParams.LocationTypeOutdoor = Android.Ranging.Ble.CS.BleCsRangingParamsLocationType.Outdoor -> Android.Ranging.Ble.CS.BleCsRangingParamsLocationType
+const Android.Ranging.Ble.CS.BleCsRangingParams.LocationTypeUnknown = Android.Ranging.Ble.CS.BleCsRangingParamsLocationType.Unknown -> Android.Ranging.Ble.CS.BleCsRangingParamsLocationType
+const Android.Ranging.Ble.CS.BleCsRangingParams.SightTypeLineOfSight = Android.Ranging.Ble.CS.BleCsRangingParamsSightType.LineOfSight -> Android.Ranging.Ble.CS.BleCsRangingParamsSightType
+const Android.Ranging.Ble.CS.BleCsRangingParams.SightTypeNonLineOfSight = Android.Ranging.Ble.CS.BleCsRangingParamsSightType.NonLineOfSight -> Android.Ranging.Ble.CS.BleCsRangingParamsSightType
+const Android.Ranging.Ble.CS.BleCsRangingParams.SightTypeUnknown = Android.Ranging.Ble.CS.BleCsRangingParamsSightType.Unknown -> Android.Ranging.Ble.CS.BleCsRangingParamsSightType
 const Android.Ranging.Ble.Rssi.BleRssiRangingParams.InterfaceConsts.ContentsFileDescriptor = 1 -> int
 const Android.Ranging.Ble.Rssi.BleRssiRangingParams.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
 const Android.Ranging.DataNotificationConfig.InterfaceConsts.ContentsFileDescriptor = 1 -> int
