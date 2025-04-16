@@ -173,11 +173,13 @@ namespace Android.Runtime {
 		public override void WriteLocalReferenceLine (string format, params object?[] args)
 		{
 			RuntimeNativeMethods._monodroid_gref_log ("[LREF] " + string.Format (CultureInfo.InvariantCulture, format, args));
+			RuntimeNativeMethods._monodroid_gref_log ("\n");
 		}
 
 		public override void WriteGlobalReferenceLine (string format, params object?[] args)
 		{
 			RuntimeNativeMethods._monodroid_gref_log (string.Format (CultureInfo.InvariantCulture, format, args));
+			RuntimeNativeMethods._monodroid_gref_log ("\n");
 		}
 
 		public override JniObjectReference CreateGlobalReference (JniObjectReference value)
