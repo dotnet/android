@@ -206,7 +206,7 @@ namespace Xamarin.Android.Prepare
 			public static string MicrosoftNETWorkloadMonoPackageDir => Path.Combine (
 				XAPackagesDir,
 				$"microsoft.net.workload.mono.toolchain.{{0}}.manifest-{ctx.Properties.GetRequiredValue (KnownProperties.DotNetMonoManifestVersionBand)}",
-				ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETCoreAppRefPackageVersion)
+				ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETWorkloadMonoToolChainPackageVersion)
 			);
 
 			public static string MicrosoftNETWorkloadMonoToolChainDir => Path.Combine (MicrosoftNETWorkloadMonoPackageDir, "data");

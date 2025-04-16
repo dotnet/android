@@ -60,7 +60,7 @@ namespace Xamarin.Android.Prepare
 				var destination = Path.Combine (sdk_manifests,
 					context.Properties.GetRequiredValue (KnownProperties.DotNetMonoManifestVersionBand),
 					$"microsoft.net.workload.mono.toolchain.{dotnet}",
-					context.Properties.GetRequiredValue (KnownProperties.MicrosoftNETCoreAppRefPackageVersion));
+					context.Properties.GetRequiredValue (KnownProperties.MicrosoftNETWorkloadMonoToolChainPackageVersion));
 				Utilities.DeleteDirectory (destination, recurse: true);
 				foreach (var file in Directory.GetFiles (string.Format (Configurables.Paths.MicrosoftNETWorkloadMonoToolChainDir, dotnet), "*")) {
 					Utilities.CopyFileToDir (file, destination);
