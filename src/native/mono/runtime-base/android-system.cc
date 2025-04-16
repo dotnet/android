@@ -315,7 +315,7 @@ AndroidSystem::load_dso (const char *path, unsigned int dl_flags, bool skip_exis
 	char *error = nullptr;
 	void *handle = java_interop_lib_load (path, dl_flags, &error);
 	if (handle == nullptr && Util::should_log (LOG_ASSEMBLY))
-		log_info_nocheck (LOG_ASSEMBLY, "Failed to load shared library '{}'. {}", path, error);
+		log_info_nocheck_fmt (LOG_ASSEMBLY, "Failed to load shared library '{}'. {}", path, error);
 	java_interop_free (error);
 	return handle;
 }
