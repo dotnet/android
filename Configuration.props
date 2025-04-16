@@ -135,8 +135,8 @@
     <TestsFlavor>$(_TestsProfiledAotName)$(_TestsAotName)</TestsFlavor>
   </PropertyGroup>
   <PropertyGroup>
-    <JavacSourceVersion>17</JavacSourceVersion>
-    <JavacTargetVersion>17</JavacTargetVersion>
+    <JavacSourceVersion>9</JavacSourceVersion>
+    <JavacTargetVersion>9</JavacTargetVersion>
   </PropertyGroup>
   <PropertyGroup>
     <AndroidNdkFullPath>$([System.IO.Path]::GetFullPath ('$(AndroidNdkDirectory)'))</AndroidNdkFullPath>
