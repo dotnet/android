@@ -115,7 +115,7 @@ stages:
           avdAbi: x86_64
           avdType: google_apis
     pool:
-      vmImage: $(HostedMacImage)
+      vmImage: $(HostedMacImageWithEmulator)
     workspace:
       clean: all
     steps:
@@ -186,7 +186,7 @@ stages:
     pool:
       name: $(SharedMacPool)
       demands:
-      - macOS.Name -equals $(SharedMacName)
+      - macOS.Name -equals Sequoia
       - macOS.Architecture -equals x64
     timeoutInMinutes: 120
     workspace:
@@ -239,7 +239,7 @@ stages:
     pool:
       name: $(SharedMacPool)
       demands:
-      - macOS.Name -equals $(SharedMacName)
+      - macOS.Name -equals Sequoia
       - macOS.Architecture -equals x64
     timeoutInMinutes: 150
     workspace:

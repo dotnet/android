@@ -21,6 +21,9 @@ using Resources = Xamarin.Android.Tasks.Properties.Resources;
 namespace MonoDroid.Tuner
 {
 	public class FixLegacyResourceDesignerStep : LinkDesignerBase
+#if !ILLINK
+		, Xamarin.Android.Tasks.IAssemblyModifierPipelineStep
+#endif  // !ILLINK
 	{
 		internal const string DesignerAssemblyName = "_Microsoft.Android.Resource.Designer";
 		internal const string DesignerAssemblyNamespace = "_Microsoft.Android.Resource.Designer";
@@ -66,6 +69,17 @@ namespace MonoDroid.Tuner
 				designerLoaded = true;
 			}
 		}
+
+#if !ILLINK
+		public bool ProcessAssembly (AssemblyDefinition assembly, Xamarin.Android.Tasks.StepContext context)
+		{
+			// Only run this step on non-main user Android assemblies
+			if (context.IsMainAssembly || !context.IsAndroidUserAssembly)
+				return false;
+
+			return ProcessAssemblyDesigner (assembly);
+		}
+#endif  // !ILLINK
 
 		internal override bool ProcessAssemblyDesigner (AssemblyDefinition assembly)
 		{

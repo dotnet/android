@@ -278,6 +278,18 @@ namespace Xamarin.Android.Tasks
 		}
 
 #if MSBUILD
+		public static bool IsAndroidAssembly (ITaskItem source)
+		{
+			string name = Path.GetFileNameWithoutExtension (source.ItemSpec);
+
+			// Check for assemblies which may not be built against the Android profile (`netXX-android`)
+			// but could still contain Android binding code (like Mono.Android).
+			if (KnownAssemblyNames.Contains (name))
+				return true;
+
+			return IsMonoAndroidAssembly (source);
+		}
+
 		public static bool IsMonoAndroidAssembly (ITaskItem assembly)
 		{
 			// NOTE: look for both MonoAndroid and Android
@@ -554,6 +566,18 @@ namespace Xamarin.Android.Tasks
 		}
 
 		public static AndroidTargetArch GetTargetArch (ITaskItem asmItem) => AbiToTargetArch (GetAssemblyAbi (asmItem));
+
+
+		public static AndroidTargetArch GetRequiredValidArchitecture (ITaskItem item)
+		{
+			AndroidTargetArch ret = GetTargetArch (item);
+
+			if (ret == AndroidTargetArch.None) {
+				throw new InvalidOperationException ($"Internal error: assembly '{item}' doesn't target any architecture.");
+			}
+
+			return ret;
+		}
 #endif // MSBUILD
 
 		static string GetToolsRootDirectoryRelativePath (string androidBinUtilsDirectory)

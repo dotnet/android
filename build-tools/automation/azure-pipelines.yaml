@@ -347,9 +347,9 @@ extends:
           submodules: recursive
 
         - task: UseDotNet@2
-          displayName: Install .NET 9.x
+          displayName: Install .NET 10.x
           inputs:
-            version: 9.x
+            version: 10.x
             includePreviewVersions: true
 
         # Download symbols to be published to the symbols artifact drop declared above

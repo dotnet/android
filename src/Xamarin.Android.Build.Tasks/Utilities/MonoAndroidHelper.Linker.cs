@@ -12,6 +12,7 @@ namespace Xamarin.Android.Tasks
 		static readonly HashSet<string> KnownAssemblyNames = new (StringComparer.OrdinalIgnoreCase) {
 			"Mono.Android",
 			"Mono.Android.Export",
+			"Mono.Android.Runtime",
 			"Java.Interop",
 		};
 

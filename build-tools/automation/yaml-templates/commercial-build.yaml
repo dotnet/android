@@ -92,7 +92,7 @@ steps:
   - task: PublishPipelineArtifact@1
     displayName: upload symbols nupkgs
     inputs:
-      artifactName: ${{ parameters.nugetArtifactName }}
+      artifactName: ${{ parameters.nugetArtifactName }}-symbols
       targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned-symbols
 
   - task: PublishPipelineArtifact@1
