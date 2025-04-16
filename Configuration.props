@@ -220,9 +220,6 @@
         Include="@(AndroidSupportedTargetJitAbi->WithMetadataValue('SupportMonoVM', 'True'))"
         AndroidRuntime="Mono" />
     <AndroidAbiAndRuntimeFlavor
-        Include="@(AndroidSupportedTargetJitAbi->WithMetadataValue('SupportNativeAOT', 'True'))"
-        AndroidRuntime="NativeAOT" />
-    <AndroidAbiAndRuntimeFlavor
         Include="@(AndroidSupportedTargetJitAbi->WithMetadataValue('SupportCoreCLR', 'True'))"
         AndroidRuntime="CoreCLR" />
   </ItemGroup>

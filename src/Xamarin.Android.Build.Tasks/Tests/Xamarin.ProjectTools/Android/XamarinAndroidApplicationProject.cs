@@ -182,13 +182,13 @@ namespace Xamarin.ProjectTools
 			SetProperty ("AndroidNdkDirectory", androidNdkPath);
 
 			// NuGet feed needed as Microsoft.Android.Runtime.NativeAOT packs not installed in workload by default
-			var source = Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned");
-			if (value) {
-				if (!ExtraNuGetConfigSources.Contains (source))
-					ExtraNuGetConfigSources.Add (source);
-			} else {
-				ExtraNuGetConfigSources.Remove (source);
-			}
+			// var source = Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned");
+			// if (value) {
+			// 	if (!ExtraNuGetConfigSources.Contains (source))
+			// 		ExtraNuGetConfigSources.Add (source);
+			// } else {
+			// 	ExtraNuGetConfigSources.Remove (source);
+			// }
 		}
 
 		public string AndroidManifest { get; set; }

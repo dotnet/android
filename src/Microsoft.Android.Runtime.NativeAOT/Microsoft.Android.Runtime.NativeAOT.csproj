@@ -36,12 +36,8 @@
   </PropertyGroup>
 
   <Target Name="_CopyToPackDirs">
-    <ItemGroup>
-      <_RuntimePackFiles Include="$(OutputPath)Microsoft.Android.Runtime.NativeAOT.dll" AndroidRID="%(AndroidAbiAndRuntimeFlavor.AndroidRID)" AndroidRuntime="%(AndroidAbiAndRuntimeFlavor.AndroidRuntime)" />
-    </ItemGroup>
-    <Message Importance="high" Text="$(TargetPath) %(AndroidAbiAndRuntimeFlavor.AndroidRID)" />
     <Copy
-        SourceFiles="%(_RuntimePackFiles.Identity)"
+        SourceFiles="$(OutputPath)Microsoft.Android.Runtime.NativeAOT.dll"
         DestinationFolder="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.$(AndroidApiLevel).android\$(AndroidPackVersion)\runtimes\android\lib\$(DotNetTargetFramework)"
         SkipUnchangedFiles="true"
     />

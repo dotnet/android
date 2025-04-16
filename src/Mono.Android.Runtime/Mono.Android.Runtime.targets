@@ -23,17 +23,13 @@
   </Target>
 
   <Target Name="_CopyToPackDirs">
-    <ItemGroup>
-      <_RuntimePackFiles Include="$(OutputPath)Mono.Android.Runtime.dll" AndroidRID="%(AndroidAbiAndRuntimeFlavor.AndroidRID)" AndroidRuntime="%(AndroidAbiAndRuntimeFlavor.AndroidRuntime)" />
-    </ItemGroup>
-
     <Copy
         SourceFiles="$(OutputPath)ref\Mono.Android.Runtime.dll"
         DestinationFolder="$(MicrosoftAndroidRefPackDir)"
         SkipUnchangedFiles="true"
     />
     <Copy
-        SourceFiles="%(_RuntimePackFiles.Identity)"
+        SourceFiles="$(OutputPath)Mono.Android.Runtime.dll"
         DestinationFolder="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.$(AndroidApiLevel).android\$(AndroidPackVersion)\runtimes\android\lib\$(DotNetTargetFramework)"
         SkipUnchangedFiles="true"
     />

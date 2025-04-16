@@ -12,6 +12,10 @@
     <AfterMicrosoftNETSdkTargets>$(AfterMicrosoftNETSdkTargets);$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.After.targets</AfterMicrosoftNETSdkTargets>
   </PropertyGroup>
 
+  <Import Project="Microsoft.Android.Sdk.SupportedPlatforms.targets" />
+  <Import Project="Microsoft.Android.Sdk.BundledVersions.targets" />
+  <Import Project="Microsoft.Android.Sdk.DefaultProperties.targets" />
+
   <!-- Default References -->
   <ItemGroup Condition=" '$(DisableImplicitFrameworkReferences)' != 'true' ">
     <FrameworkReference
@@ -20,7 +24,9 @@
         Pack="false"
         PrivateAssets="All"
     />
+    <!-- NativeAOT runtime components are included only in the Microsoft.Android.Runtime.$(AndroidApiLevel).android pack -->
     <FrameworkReference
+        Condition=" '$(_AndroidRuntimePackRuntime)' != 'NativeAOT' "
         Include="Microsoft.Android.Runtimes"
         IsImplicitlyDefined="true"
         Pack="false"
@@ -28,9 +34,6 @@
     />
   </ItemGroup>
 
-  <Import Project="Microsoft.Android.Sdk.SupportedPlatforms.targets" />
-  <Import Project="Microsoft.Android.Sdk.BundledVersions.targets" />
-  <Import Project="Microsoft.Android.Sdk.DefaultProperties.targets" />
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.Debugging.props"
       Condition="Exists('$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.Debugging.props') And '$(DesignTimeBuild)' != 'true' "/>
   <Import Project="Microsoft.Android.Sdk.CoreCLR.targets"   Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
