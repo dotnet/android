@@ -3,11 +3,11 @@
   <PropertyGroup>
     <MicrosoftNETSdkPackageVersion>9.0.105-servicing.25164.42</MicrosoftNETSdkPackageVersion>
     <MicrosoftDotnetSdkInternalPackageVersion>$(MicrosoftNETSdkPackageVersion)</MicrosoftDotnetSdkInternalPackageVersion>
-    <MicrosoftNETILLinkPackageVersion>9.0.4-servicing.25202.7</MicrosoftNETILLinkPackageVersion>
-    <MicrosoftNETCoreAppRefPackageVersion>9.0.4</MicrosoftNETCoreAppRefPackageVersion>
+    <MicrosoftNETILLinkPackageVersion>9.0.5-servicing.25211.5</MicrosoftNETILLinkPackageVersion>
+    <MicrosoftNETCoreAppRefPackageVersion>9.0.5</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
     <MicrosoftDotNetBuildTasksFeedPackageVersion>10.0.0-beta.24476.2</MicrosoftDotNetBuildTasksFeedPackageVersion>
-    <MicrosoftNETWorkloadEmscriptenCurrentManifest90100Version>9.0.4</MicrosoftNETWorkloadEmscriptenCurrentManifest90100Version>
+    <MicrosoftNETWorkloadEmscriptenCurrentManifest90100Version>9.0.5</MicrosoftNETWorkloadEmscriptenCurrentManifest90100Version>
     <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenCurrentManifest90100Version)</MicrosoftNETWorkloadEmscriptenPackageVersion>
     <MicrosoftTemplateEngineTasksPackageVersion>7.0.100-rc.1.22410.7</MicrosoftTemplateEngineTasksPackageVersion>
     <MicrosoftDotNetCecilPackageVersion>0.11.5-alpha.25112.2</MicrosoftDotNetCecilPackageVersion>
