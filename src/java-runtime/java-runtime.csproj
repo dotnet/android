@@ -3,6 +3,9 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <!-- r8: Invoke-customs are only supported starting with Android O (-min-api 26) -->
+    <JavacSourceVersion>1.8</JavacSourceVersion>
+    <JavacTargetVersion>1.8</JavacTargetVersion>
   </PropertyGroup>
   
   <Import Project="..\..\Configuration.props" />
