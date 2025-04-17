@@ -26,8 +26,10 @@
 		<BundleToolVersion Condition="'$(BundleToolVersion)' == ''">@BUNDLETOOL_VERSION@</BundleToolVersion>
 		<_XamarinAndroidMSBuildDirectory>$(MSBuildThisFileDirectory)</_XamarinAndroidMSBuildDirectory>
 
-		<JavacSourceVersion Condition=" '$(JavacSourceVersion)' == '' ">17</JavacSourceVersion>
-		<JavacTargetVersion Condition=" '$(JavacTargetVersion)' == '' ">17</JavacTargetVersion>
+		<!-- NOTE: Compile Java code for Android against 1.8 -->
+		<!-- Invoke-customs are only supported starting with Android O (-min-api 26) -->
+		<JavacSourceVersion Condition=" '$(JavacSourceVersion)' == '' ">1.8</JavacSourceVersion>
+		<JavacTargetVersion Condition=" '$(JavacTargetVersion)' == '' ">1.8</JavacTargetVersion>
 
 		<!-- Enable nuget package conflict resolution -->
 		<ResolveAssemblyConflicts>true</ResolveAssemblyConflicts>
