@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <OutputPath>../../bin/$(Configuration)/bin/xapp</OutputPath>
+    <Nullable>enable</Nullable>
+
+    <Version>$(ProductVersion)</Version>
+    <Company>Microsoft Corporation</Company>
+    <Copyright>2025 Microsoft Corporation</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mono.Options" Version="$(MonoOptionsVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.Android.AppTools\Microsoft.Android.AppTools.csproj" />
+  </ItemGroup>
+</Project>
