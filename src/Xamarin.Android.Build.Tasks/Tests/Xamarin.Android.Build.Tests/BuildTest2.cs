@@ -156,12 +156,27 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("UseMonoRuntime", "false"); 	// Enables CoreCLR
 			proj.SetProperty ("_IsPublishing", "true"); 	// Make "dotnet build" act as "dotnet publish"
 			proj.SetProperty ("PublishReadyToRun", "true"); // Enable R2R
+			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
 
 			if (isComposite)
 				proj.SetProperty ("PublishReadyToRunComposite", "true"); // Enable R2R composite
 
 			var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+			var assemblyName = proj.ProjectName;
+			var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, rid, $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apk);
+
+			var helper = new ArchiveAssemblyHelper (apk, true);
+			var abi = MonoAndroidHelper.RidToAbi (rid);
+			Assert.IsTrue (helper.Exists ($"assemblies/{abi}/{assemblyName}.dll"), $"{assemblyName}.dll should exist in apk!");
+			
+			using var stream = helper.ReadEntry ($"assemblies/{assemblyName}.dll");
+			stream.Position = 0;
+			using var peReader = new System.Reflection.PortableExecutable.PEReader (stream);
+			Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0, 
+				$"ReadyToRun image not found in {assemblyName}.dll! ManagedNativeHeaderDirectory should not be empty!");
 		}
 
 		[Test]
