@@ -86,7 +86,7 @@ namespace Xamarin.Android.Prepare
 			Log.StatusLine ("Downloading dotnet-install script...");
 
 			if (useCachedInstallScript && File.Exists (dotnetScriptPath)) {
-				Log.WarningLine ($"Using cached installation script found in '{dotnetScriptPath}'");
+				Log.StatusLine ($"Using cached installation script found in '{dotnetScriptPath}'");
 				return true;
 			}
 			Utilities.DeleteFile (dotnetScriptPath);
@@ -102,7 +102,7 @@ namespace Xamarin.Android.Prepare
 
 			if (File.Exists (dotnetScriptPath)) {
 				Log.WarningLine ($"Download of dotnet-install from '{dotnetScriptUrl}' failed");
-				Log.WarningLine ($"Using cached installation script found in '{dotnetScriptPath}'");
+				Log.StatusLine ($"Using cached installation script found in '{dotnetScriptPath}'");
 				return true;
 			} else {
 				Log.ErrorLine ($"Download of dotnet-install from '{dotnetScriptUrl}' failed");
