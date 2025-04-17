@@ -359,6 +359,9 @@ namespace Java.Interop {
 
 			try {
 				result = (IJavaPeerable) CreateProxy (type, handle, transfer);
+				if (Runtime.IsGCUserPeer (result.PeerReference.Handle)) {
+					result.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
+				}
 			} catch (MissingMethodException e) {
 				var key_handle  = JNIEnv.IdentityHash (handle);
 				JNIEnv.DeleteRef (handle, transfer);
@@ -382,31 +385,19 @@ namespace Java.Interop {
 			BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 			var c = type.GetConstructor (flags, null, XAConstructorSignature, null);
 			if (c != null) {
-				var self    = GetUninitializedObject (type);
-				c.Invoke (self, new object [] { handle, transfer });
-				return self;
+				return c.Invoke (new object [] { handle, transfer });
 			}
 			c = type.GetConstructor (flags, null, JIConstructorSignature, null);
 			if (c != null) {
-				var self                      = GetUninitializedObject (type);
 				JniObjectReference          r = new JniObjectReference (handle);
 				JniObjectReferenceOptions   o = JniObjectReferenceOptions.Copy;
-				c.Invoke (self, new object [] { r, o });
+				var peer = (IJavaPeerable) c.Invoke (new object [] { r, o });
 				JNIEnv.DeleteRef (handle, transfer);
-				return self;
+				return peer;
 			}
 			throw new MissingMethodException (
 					"No constructor found for " + type.FullName + "::.ctor(System.IntPtr, Android.Runtime.JniHandleOwnership)",
 					CreateJavaLocationException ());
-
-			static IJavaPeerable GetUninitializedObject (
-					[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-					Type type)
-			{
-				var v   = (IJavaPeerable) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject (type);
-				v.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
-				return v;
-			}
 		}
 
 		public static void RegisterType (string java_class, Type t)
