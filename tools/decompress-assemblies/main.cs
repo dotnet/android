@@ -51,7 +51,7 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 						Console.Error.WriteLine ($"  Failed to decompress LZ4 data of {fileName} (decoded: {decoded})");
 						retVal = false;
 					} else {
-						string outputDir = Path.GetDirectoryName (outputFile);
+						string? outputDir = Path.GetDirectoryName (outputFile);
 						if (!String.IsNullOrEmpty (outputDir)) {
 							Directory.CreateDirectory (outputDir);
 						}
