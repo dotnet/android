@@ -46,6 +46,13 @@
     <_DefaultValueAttributeSupport Condition="'$(TrimMode)' == 'full'">true</_DefaultValueAttributeSupport>
   </PropertyGroup>
 
+  <ItemGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <!-- trying to track:
+      JNI ERROR (app bug): accessed deleted Global 0x3056
+    -->
+    <AndroidEnvironment Include="env.txt" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\TestRunner.Core\TestRunner.Core.NET.csproj" />
     <ProjectReference Include="..\..\TestRunner.NUnit\TestRunner.NUnit.NET.csproj" />
