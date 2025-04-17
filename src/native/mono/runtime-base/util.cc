@@ -147,12 +147,10 @@ Util::path_combine (const char *path1, const char *path2)
 void
 Util::create_public_directory (const char *dir)
 {
-	mode_t m = umask (0);
-	int ret = mkdir (dir, 0777);
+	int ret = create_directory (dir, 0777);
 	if (ret < 0) {
 		log_warn (LOG_DEFAULT, "Failed to create directory '{}'. {}", dir, std::strerror (errno));
 	}
-	umask (m);
 }
 
 int
