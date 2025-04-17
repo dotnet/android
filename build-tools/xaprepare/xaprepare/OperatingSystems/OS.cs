@@ -134,7 +134,10 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		protected virtual bool InitOS ()
 		{
-			JavaHome = Context.Instance.Properties.GetValue (KnownProperties.JavaSdkDirectory)?.Trim () ?? String.Empty;
+			JavaHome = Environment.GetEnvironmentVariable ("JI_JAVA_HOME") ?? String.Empty;
+			if (string.IsNullOrEmpty (JavaHome)) {
+				JavaHome = Context.Instance.Properties.GetValue (KnownProperties.JavaSdkDirectory)?.Trim () ?? String.Empty;
+			}
 			if (String.IsNullOrEmpty (JavaHome)) {
 				var androidToolchainDirectory = Context.Instance.Properties.GetValue (KnownProperties.AndroidToolchainDirectory)?.Trim () ?? String.Empty;
 				JavaHome = Path.Combine (androidToolchainDirectory, Configurables.Defaults.JdkFolder);
