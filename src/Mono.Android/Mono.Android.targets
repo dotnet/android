@@ -162,10 +162,6 @@
       <DefineConstants>$(DefineConstants);$([System.String]::Copy('$(_GeneratedDefineConstants)').Replace ('%24(DefineConstants);', ''))</DefineConstants>
     </PropertyGroup>
   </Target>
-  <PropertyGroup>
-    <JavacSourceVersion Condition=" '$(JavacSourceVersion)' == '' And '$(AndroidApiLevel)' != '' And $(AndroidApiLevel) &gt; 23 ">1.8</JavacSourceVersion>
-    <JavacSourceVersion Condition=" '$(JavacSourceVersion)' == '' ">1.6</JavacSourceVersion>
-  </PropertyGroup>
   <ItemGroup>
     <JavaCallableWrapperSource Include="java\**\*.java" />
   </ItemGroup>
