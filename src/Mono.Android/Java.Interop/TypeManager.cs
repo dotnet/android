@@ -398,6 +398,15 @@ namespace Java.Interop {
 			throw new MissingMethodException (
 					"No constructor found for " + type.FullName + "::.ctor(System.IntPtr, Android.Runtime.JniHandleOwnership)",
 					CreateJavaLocationException ());
+
+			static IJavaPeerable GetUninitializedObject (
+					[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+					Type type)
+			{
+				var v   = (IJavaPeerable) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject (type);
+				v.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
+				return v;
+			}
 		}
 
 		public static void RegisterType (string java_class, Type t)
