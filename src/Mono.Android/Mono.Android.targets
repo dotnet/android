@@ -262,7 +262,6 @@
     <RemoveDir Directories="$(BaseIntermediateOutputPath)" />
     <ItemGroup>
       <_BuildProps Include="-p:TargetFramework=$(DotNetTargetFramework)" />
-      <_BuildProps Include="-p:DisableApiCompatibilityCheck=True" />
       <_BuildProps Include="-p:IncludeAndroidJavadoc=True" />
       <_BuildProps Include="-p:AndroidApiLevel=$(DocsApiLevel)" />
       <_BuildProps Include="-p:AndroidPlatformId=$(DocsPlatformId)" />
