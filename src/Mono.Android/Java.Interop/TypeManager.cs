@@ -382,6 +382,7 @@ namespace Java.Interop {
 		{
 			// Skip Activator.CreateInstance() as that requires public constructors,
 			// and we want to hide some constructors for sanity reasons.
+			var peer = GetUninitializedObject (type);
 			BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 			var c = type.GetConstructor (flags, null, XAConstructorSignature, null);
 			if (c != null) {
@@ -391,7 +392,7 @@ namespace Java.Interop {
 			if (c != null) {
 				JniObjectReference          r = new JniObjectReference (handle);
 				JniObjectReferenceOptions   o = JniObjectReferenceOptions.Copy;
-				var peer = (IJavaPeerable) c.Invoke (new object [] { r, o });
+				peer     = (IJavaPeerable) c.Invoke (new object [] { r, o });
 				JNIEnv.DeleteRef (handle, transfer);
 				return peer;
 			}
