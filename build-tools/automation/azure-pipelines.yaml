@@ -137,8 +137,8 @@ extends:
           parameters:
             xaSourcePath: $(Build.SourcesDirectory)/android
             androidSdkPlatforms: $(DefaultTestSdkPlatforms)
-            dotnetVersion: 9.0
-            dotnetQuality: preview
+            dotnetVersion: $(DotNetPreviewSdkVersion)
+            dotnetQuality: $(DotNetPreviewSdkQuality)
 
         - task: NuGetAuthenticate@1
           displayName: authenticate with azure artifacts
@@ -230,6 +230,7 @@ extends:
           condition: always()
           inputs:
             Contents: |
+              $(Build.SourcesDirectory)/android/bin/*$(XA.Build.Configuration)/*.*log
               $(Build.SourcesDirectory)/maui/artifacts/logs/**
             TargetFolder: $(Build.StagingDirectory)/logs
             flattenFolders: true
@@ -346,11 +347,10 @@ extends:
           clean: true
           submodules: recursive
 
-        - task: UseDotNet@2
-          displayName: Install .NET 10.x
-          inputs:
-            version: 10.x
-            includePreviewVersions: true
+        - template: /build-tools/automation/yaml-templates/use-dot-net.yaml@self
+          parameters:
+            version: $(DotNetPreviewSdkVersion)
+            quality: $(DotNetPreviewSdkQuality)
 
         # Download symbols to be published to the symbols artifact drop declared above
         - task: DownloadPipelineArtifact@2
