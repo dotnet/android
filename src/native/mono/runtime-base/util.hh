@@ -36,6 +36,7 @@ static inline constexpr int FALSE = 0;
 #include <mono/metadata/appdomain.h>
 #include <mono/metadata/threads.h>
 #include <mono/metadata/mono-private-unstable.h>
+#include <mono/jit/jit.h>
 #include <mono/utils/mono-publib.h>
 
 #include <runtime-base/jni-wrappers.hh>
@@ -340,7 +341,7 @@ namespace xamarin::android
 			// domain
 			ret = mono_get_root_domain ();
 			if (attach_thread_if_needed) {
-				mono_thread_attach (ret);
+				mono_jit_thread_attach (ret);
 			}
 
 			return ret;
