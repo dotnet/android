@@ -40,7 +40,7 @@ variables:
 - name: SharedMacPool
   value: VSEng-VSMac-Xamarin-Shared
 - name: SharedMacName
-  value: Sonoma
+  value: Sequoia
 - name: SharedMacArch
   value: arm64
 - name: HostedWinImage
