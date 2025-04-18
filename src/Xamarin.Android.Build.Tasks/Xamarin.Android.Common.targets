@@ -1614,8 +1614,12 @@ because xbuild doesn't support framework reference assemblies.
   <GenerateTypeMappings
       AndroidRuntime="$(_AndroidRuntime)"
       Debug="$(AndroidIncludeDebugSymbols)"
+      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       IntermediateOutputDirectory="$(IntermediateOutputPath)"
+      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      RunCheckedBuild="$(_AndroidJLOCheckedBuild)"
       SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)"
+      SupportedAbis="@(_BuildTargetAbis)"
       TypemapImplementation="$(_AndroidTypeMapImplementation)"
       TypemapOutputDirectory="$(_NativeAssemblySourceDir)">
   </GenerateTypeMappings>

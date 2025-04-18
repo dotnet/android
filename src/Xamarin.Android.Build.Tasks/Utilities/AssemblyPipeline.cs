@@ -20,14 +20,10 @@ public class AssemblyPipeline : IDisposable
 		Resolver = resolver;
 	}
 
-	public bool Run (AssemblyDefinition assembly, StepContext context)
+	public void Run (AssemblyDefinition assembly, StepContext context)
 	{
-		var changed = false;
-
 		foreach (var step in Steps)
-			changed |= step.ProcessAssembly (assembly, context);
-
-		return changed;
+			step.ProcessAssembly (assembly, context);
 	}
 
 	protected virtual void Dispose (bool disposing)
@@ -51,7 +47,7 @@ public class AssemblyPipeline : IDisposable
 
 public interface IAssemblyModifierPipelineStep
 {
-	bool ProcessAssembly (AssemblyDefinition assembly, StepContext context);
+	void ProcessAssembly (AssemblyDefinition assembly, StepContext context);
 }
 
 public class StepContext
@@ -60,6 +56,7 @@ public class StepContext
 	public ITaskItem Destination { get; }
 	public bool EnableMarshalMethods { get; set; }
 	public bool IsAndroidAssembly { get; set; }
+	public bool IsAssemblyModified { get; set; }
 	public bool IsDebug { get; set; }
 	public bool IsFrameworkAssembly { get; set; }
 	public bool IsMainAssembly { get; set; }
