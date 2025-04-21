@@ -16,19 +16,19 @@ class TypeMapCecilAdapter
 {
 	public static (List<TypeMapDebugEntry> javaToManaged, List<TypeMapDebugEntry> managedToJava) GetDebugNativeEntries (NativeCodeGenState state)
 	{
-		var (javaToManaged, managedToJava) = GetDebugNativeEntries (state.AllJavaTypes, state.TypeCache, out var foundJniNativeRegistration);
+		var (javaToManaged, managedToJava, foundJniNativeRegistration) = GetDebugNativeEntries (state.AllJavaTypes, state.TypeCache);
 
 		state.JniAddNativeMethodRegistrationAttributePresent = foundJniNativeRegistration;
 
 		return (javaToManaged, managedToJava);
 	}
 
-	public static (List<TypeMapDebugEntry> javaToManaged, List<TypeMapDebugEntry> managedToJava) GetDebugNativeEntries (List<TypeDefinition> types, TypeDefinitionCache cache, out bool foundJniNativeRegistration)
+	public static (List<TypeMapDebugEntry> javaToManaged, List<TypeMapDebugEntry> managedToJava, bool foundJniNativeRegistration) GetDebugNativeEntries (List<TypeDefinition> types, TypeDefinitionCache cache)
 	{
 		var javaDuplicates = new Dictionary<string, List<TypeMapDebugEntry>> (StringComparer.Ordinal);
 		var javaToManaged = new List<TypeMapDebugEntry> ();
 		var managedToJava = new List<TypeMapDebugEntry> ();
-		foundJniNativeRegistration = false;
+		var foundJniNativeRegistration = false;
 
 		foreach (var td in types) {
 			foundJniNativeRegistration = JniAddNativeMethodRegistrationAttributeFound (foundJniNativeRegistration, td);
@@ -42,7 +42,7 @@ class TypeMapCecilAdapter
 
 		SyncDebugDuplicates (javaDuplicates);
 
-		return (javaToManaged, managedToJava);
+		return (javaToManaged, managedToJava, foundJniNativeRegistration);
 	}
 
 	public static ReleaseGenerationState GetReleaseGenerationState (NativeCodeGenState state)

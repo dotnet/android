@@ -17,7 +17,7 @@ namespace Xamarin.Android.Tasks;
 
 class TypeMapObjectsXmlFile
 {
-	static XmlWriterSettings settings = new XmlWriterSettings {
+	static readonly XmlWriterSettings settings = new XmlWriterSettings {
 		Indent = true,
 		NewLineOnAttributes = false,
 		OmitXmlDeclaration = true,
@@ -35,8 +35,13 @@ class TypeMapObjectsXmlFile
 
 	public bool WasScanned { get; private set; }
 
-	public void Export (string filename)
+	public void Export (string filename, TaskLoggingHelper log)
 	{
+		if (!HasDebugEntries && ModuleReleaseData == null) {
+			WriteEmptyFile (filename, log);
+			return;
+		}
+
 		using var sw = MemoryStreamPool.Shared.CreateStreamWriter ();
 
 		using (var xml = XmlWriter.Create (sw, settings))
@@ -45,6 +50,8 @@ class TypeMapObjectsXmlFile
 		sw.Flush ();
 
 		Files.CopyIfStreamChanged (sw.BaseStream, filename);
+
+		log.LogDebugMessage ($"Wrote '{filename}', {JavaToManagedDebugEntries.Count} JavaToManagedDebugEntries, {ManagedToJavaDebugEntries.Count} ManagedToJavaDebugEntries, FoundJniNativeRegistration: {FoundJniNativeRegistration}");
 	}
 
 	void Export (XmlWriter xml)

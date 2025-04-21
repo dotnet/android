@@ -41,31 +41,17 @@ public class FindTypeMapObjectsStep : BaseStep, IAssemblyModifierPipelineStep
 		};
 
 		if (Debug) {
-			var (javaToManaged, managedToJava) = TypeMapCecilAdapter.GetDebugNativeEntries (types, Context, out var foundJniNativeRegistration);
+			var (javaToManaged, managedToJava, foundJniNativeRegistration) = TypeMapCecilAdapter.GetDebugNativeEntries (types, Context);
 
 			xml.JavaToManagedDebugEntries.AddRange (javaToManaged);
 			xml.ManagedToJavaDebugEntries.AddRange (managedToJava);
 			xml.FoundJniNativeRegistration = foundJniNativeRegistration;
-
-			if (!xml.HasDebugEntries) {
-				Log.LogDebugMessage ($"No Java types found in '{assembly.Name.Name}'");
-				TypeMapObjectsXmlFile.WriteEmptyFile (destinationTypeMapXml, Log);
-				return;
-			}
 		} else {
 			var genState = TypeMapCecilAdapter.GetReleaseGenerationState (types, Context, out var foundJniNativeRegistration);
 			xml.ModuleReleaseData = genState.TempModules.SingleOrDefault ().Value;
-
-			if (xml.ModuleReleaseData == null) {
-				Log.LogDebugMessage ($"No Java types found in '{assembly.Name.Name}'");
-				TypeMapObjectsXmlFile.WriteEmptyFile (destinationTypeMapXml, Log);
-				return;
-			}
 		}
 
-		xml.Export (destinationTypeMapXml);
-
-		Log.LogDebugMessage ($"Wrote '{destinationTypeMapXml}', {xml.JavaToManagedDebugEntries.Count} JavaToManagedDebugEntries, {xml.ManagedToJavaDebugEntries.Count} ManagedToJavaDebugEntries, FoundJniNativeRegistration: {xml.FoundJniNativeRegistration}");
+		xml.Export (destinationTypeMapXml, Log);
 	}
 
 	List<TypeDefinition> ScanForJavaTypes (AssemblyDefinition assembly)
