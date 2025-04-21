@@ -26,7 +26,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <DefineConstants Condition=" '$(AndroidApiLevel)' &gt; '$(AndroidLatestStableApiLevel)' ">$(DefineConstants);ANDROID_UNSTABLE</DefineConstants>
     <OutputPath>$(_MonoAndroidNETDefaultOutDir)</OutputPath>
 
     <!-- Allow PublicApiAnalyzers to be turned off -->

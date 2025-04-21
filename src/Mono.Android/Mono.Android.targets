@@ -238,7 +238,7 @@
 
   <PropertyGroup>
     <!-- Override these properties to generate docs against a specific API level -->
-    <DocsApiLevel Condition=" '$(DocsApiLevel)' == '' ">35</DocsApiLevel>
+    <DocsApiLevel Condition=" '$(DocsApiLevel)' == '' ">36</DocsApiLevel>
     <DocsPlatformId Condition=" '$(DocsPlatformId)' == '' ">$(DocsApiLevel)</DocsPlatformId>
     <DocsFxMoniker Condition=" '$(DocsFxMoniker)' == '' ">net-android-$(DocsApiLevel).0</DocsFxMoniker>
     <DocsExportOutput Condition=" '$(DocsExportOutput)' == '' ">$(_MonoAndroidNETDefaultOutDir)Mono.Android.xml</DocsExportOutput>
@@ -254,7 +254,7 @@
   <!-- Generate documentation using MDoc -->
   <Target Name="UpdateExternalDocumentation">
     <MSBuild Projects="$(MSBuildThisFileDirectory)Mono.Android.csproj"
-        Properties="TargetFramework=$(DotNetTargetFramework);DocsExportOutput=$(BaseIntermediateOutputPath)Mono.Android.temp.xml"
+        Properties="TargetFramework=$(DotNetTargetFramework);AndroidApiLevel=$(DocsApiLevel);AndroidPlatformId=$(DocsPlatformId);DocsExportOutput=$(BaseIntermediateOutputPath)Mono.Android.temp.xml"
         Targets="_UpdateExternalDocumentation;_RunMdoc;_ExportMsxDoc;_GenerateApiDocsDiff"
     />
   </Target>
@@ -262,6 +262,7 @@
     <RemoveDir Directories="$(BaseIntermediateOutputPath)" />
     <ItemGroup>
       <_BuildProps Include="-p:TargetFramework=$(DotNetTargetFramework)" />
+      <_BuildProps Include="-p:DisableApiCompatibilityCheck=True" />
       <_BuildProps Include="-p:IncludeAndroidJavadoc=True" />
       <_BuildProps Include="-p:AndroidApiLevel=$(DocsApiLevel)" />
       <_BuildProps Include="-p:AndroidPlatformId=$(DocsPlatformId)" />
@@ -276,6 +277,7 @@
   <!-- `mdoc fx-bootstrap` and `mdoc update` require the .NET framework version of mdoc, a mono install will be needed to run the RunMdoc target on macOS/Linux -->
   <Target Name="RunMdoc">
     <MSBuild Projects="$(MSBuildThisFileDirectory)Mono.Android.csproj"
+        Properties="AndroidApiLevel=$(DocsApiLevel);AndroidPlatformId=$(DocsPlatformId)"
         Targets="_RunMdoc"
     />
   </Target>
