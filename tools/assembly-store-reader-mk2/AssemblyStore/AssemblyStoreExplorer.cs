@@ -36,7 +36,7 @@ class AssemblyStoreExplorer
 		Is64Bit = reader.Is64Bit;
 
 		var dict = new Dictionary<string, AssemblyStoreItem> (StringComparer.Ordinal);
-		foreach (AssemblyStoreItem item in Assemblies) {
+		foreach (AssemblyStoreItem item in Assemblies ?? []) {
 			dict.Add (item.Name, item);
 		}
 		AssembliesByName = dict.AsReadOnly ();

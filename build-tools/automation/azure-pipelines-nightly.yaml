@@ -186,7 +186,7 @@ stages:
     pool:
       name: $(SharedMacPool)
       demands:
-      - macOS.Name -equals Sequoia
+      - macOS.Name -equals $(SharedMacName)
       - macOS.Architecture -equals x64
     timeoutInMinutes: 120
     workspace:
@@ -239,7 +239,7 @@ stages:
     pool:
       name: $(SharedMacPool)
       demands:
-      - macOS.Name -equals Sequoia
+      - macOS.Name -equals $(SharedMacName)
       - macOS.Architecture -equals x64
     timeoutInMinutes: 150
     workspace:
