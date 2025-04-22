@@ -32,8 +32,10 @@ class TypeMapCecilAdapter
 		var managedToJava = new List<TypeMapDebugEntry> ();
 		var foundJniNativeRegistration = false;
 
-		foreach (var td in types) {
-			foundJniNativeRegistration = JniAddNativeMethodRegistrationAttributeFound (foundJniNativeRegistration, td);
+		var javaDuplicates = new Dictionary<string, List<TypeMapDebugEntry>> (StringComparer.Ordinal);
+		var uniqueAssemblies = needUniqueAssemblies ? new Dictionary<string, TypeMapDebugAssembly> (StringComparer.OrdinalIgnoreCase) : null;
+		foreach (TypeDefinition td in state.AllJavaTypes) {
+			UpdateApplicationConfig (state, td);
 
 			TypeMapDebugEntry entry = GetDebugEntry (td, cache);
 			HandleDebugDuplicates (javaDuplicates, entry, td, cache);
@@ -60,11 +62,11 @@ class TypeMapCecilAdapter
 
 		SyncDebugDuplicates (javaDuplicates);
 
-		return (new TypeMapDebugDataSets {
+		return new TypeMapDebugDataSets {
 			JavaToManaged = javaToManaged,
 			ManagedToJava = managedToJava,
 			UniqueAssemblies = uniqueAssemblies != null ? new List<TypeMapDebugAssembly> (uniqueAssemblies.Values) : null
-		}, foundJniNativeRegistration);
+		};
 	}
 
 	public static ReleaseGenerationState GetReleaseGenerationState (NativeCodeGenState state)

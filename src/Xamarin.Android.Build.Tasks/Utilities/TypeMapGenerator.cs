@@ -153,7 +153,7 @@ namespace Xamarin.Android.Tasks
 
 		void GenerateDebugNativeAssembly (string outputDirectory)
 		{
-			TypeMapDebugDataSets dataSets = state.GetDebugNativeEntries (needUniqueAssemblies: runtime == AndroidRuntime.CoreCLR);
+			TypeMapDebugDataSets dataSets = TypeMapCecilAdapter.GetDebugNativeEntries (state, needUniqueAssemblies: runtime == AndroidRuntime.CoreCLR);
 
 			var data = new ModuleDebugData {
 				EntryCount = (uint)dataSets.JavaToManaged.Count,
