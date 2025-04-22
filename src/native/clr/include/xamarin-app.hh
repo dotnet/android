@@ -62,14 +62,21 @@ struct TypeMapEntry
 	const char *to;
 };
 
-// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGenerator.cs
+// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
 struct TypeMap
 {
 	uint32_t             entry_count;
-	char                *assembly_name;
-	uint8_t             *data;
+	uint64_t             unique_assemblies_count;
+	uint64_t             assembly_names_blob_size;
 	const TypeMapEntry  *java_to_managed;
 	const TypeMapEntry  *managed_to_java;
+};
+
+struct TypeMapAssembly
+{
+	xamarin::android::hash_t mvid_hash;
+	uint64_t name_length;
+	uint64_t name_offset; // into the assembly names blob
 };
 #else
 struct TypeMapModuleEntry
@@ -312,7 +319,9 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const uint64_t format_tag;
 
 #if defined (DEBUG)
-	[[gnu::visibility("default")]] extern const TypeMap type_map; // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGenerator.cs
+	[[gnu::visibility("default")]] extern const TypeMap type_map; // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
+	[[gnu::visibility("default")]] extern const TypeMapAssembly type_map_unique_assemblies[];
+	[[gnu::visibility("default")]] extern const char type_map_assembly_names_blob[];
 #else
 	[[gnu::visibility("default")]] extern const uint32_t managed_to_java_map_module_count;
 	[[gnu::visibility("default")]] extern const uint32_t java_type_count;

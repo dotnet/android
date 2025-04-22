@@ -163,8 +163,8 @@ namespace xamarin::android
 	class xxhash64 final
 	{
 	public:
-		[[gnu::always_inline]]
-		static auto hash (const char *p, size_t len) noexcept -> XXH64_hash_t
+		template<typename T> [[gnu::always_inline]]
+		static auto hash (const T *p, size_t len) noexcept -> XXH64_hash_t
 		{
 			return XXH3_64bits (static_cast<const void*>(p), len);
 		}

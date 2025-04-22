@@ -7,13 +7,15 @@ using ModuleReleaseData = Xamarin.Android.Tasks.TypeMapGenerator.ModuleReleaseDa
 using ReleaseGenerationState = Xamarin.Android.Tasks.TypeMapGenerator.ReleaseGenerationState;
 using TypeMapDebugEntry = Xamarin.Android.Tasks.TypeMapGenerator.TypeMapDebugEntry;
 using TypeMapReleaseEntry = Xamarin.Android.Tasks.TypeMapGenerator.TypeMapReleaseEntry;
+using TypeMapDebugDataSets = Xamarin.Android.Tasks.TypeMapGenerator.TypeMapDebugDataSets;
+using TypeMapDebugAssembly = Xamarin.Android.Tasks.TypeMapGenerator.TypeMapDebugAssembly;
 
 namespace Xamarin.Android.Tasks;
 
 // Converts types from Mono.Cecil to the format used by the typemap generator.
 class TypeMapCecilAdapter
 {
-	public static (List<TypeMapDebugEntry> javaToManaged, List<TypeMapDebugEntry> managedToJava) GetDebugNativeEntries (NativeCodeGenState state)
+	public static TypeMapDebugDataSets GetDebugNativeEntries (NativeCodeGenState state, bool needUniqueAssemblies)
 	{
 		var (javaToManaged, managedToJava, foundJniNativeRegistration) = GetDebugNativeEntries (state.AllJavaTypes, state.TypeCache);
 
@@ -29,19 +31,41 @@ class TypeMapCecilAdapter
 		var managedToJava = new List<TypeMapDebugEntry> ();
 		var foundJniNativeRegistration = false;
 
-		foreach (var td in types) {
-			foundJniNativeRegistration = JniAddNativeMethodRegistrationAttributeFound (foundJniNativeRegistration, td);
+		var javaDuplicates = new Dictionary<string, List<TypeMapDebugEntry>> (StringComparer.Ordinal);
+		var uniqueAssemblies = needUniqueAssemblies ? new Dictionary<string, TypeMapDebugAssembly> (StringComparer.OrdinalIgnoreCase) : null;
+		foreach (TypeDefinition td in state.AllJavaTypes) {
+			UpdateApplicationConfig (state, td);
 
 			TypeMapDebugEntry entry = GetDebugEntry (td, cache);
 			HandleDebugDuplicates (javaDuplicates, entry, td, cache);
 
 			javaToManaged.Add (entry);
 			managedToJava.Add (entry);
+
+			if (uniqueAssemblies == null) {
+				continue;
+			}
+
+			string? asmName = td.Module.Assembly.Name.Name;
+			if (String.IsNullOrEmpty (asmName) || uniqueAssemblies.ContainsKey (asmName)) {
+				continue;
+			}
+
+			var asmInfo = new TypeMapDebugAssembly {
+				MVID = td.Module.Mvid,
+				Name = asmName,
+			};
+			asmInfo.MVIDBytes = asmInfo.MVID.ToByteArray ();
+			uniqueAssemblies.Add (asmName, asmInfo);
 		}
 
 		SyncDebugDuplicates (javaDuplicates);
 
-		return (javaToManaged, managedToJava, foundJniNativeRegistration);
+		return new TypeMapDebugDataSets {
+			JavaToManaged = javaToManaged,
+			ManagedToJava = managedToJava,
+			UniqueAssemblies = uniqueAssemblies != null ? new List<TypeMapDebugAssembly> (uniqueAssemblies.Values) : null
+		};
 	}
 
 	public static ReleaseGenerationState GetReleaseGenerationState (NativeCodeGenState state)
