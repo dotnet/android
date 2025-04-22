@@ -1492,6 +1492,7 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
   <_GenerateJavaStubsDependsOnTargets>
     _SetLatestTargetFrameworkVersion;
+    _GetAndroidPackageName;
     _PrepareNativeAssemblySources;
     _GetGenerateJavaStubsInputs;
   </_GenerateJavaStubsDependsOnTargets>
