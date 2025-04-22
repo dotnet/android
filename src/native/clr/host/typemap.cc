@@ -65,9 +65,44 @@ namespace {
 
 #if defined(DEBUG)
 [[gnu::always_inline]]
-auto TypeMapper::typemap_managed_to_java_debug (const char *typeName, const uint8_t *mvid) noexcept -> const char*
+auto TypeMapper::typemap_type_to_type_debug (const char *typeName, const TypeMapEntry *map, std::string_view const& from_name, std::string_view const& to_name) noexcept -> const char*
 {
-	Helpers::abort_application ("TypeMap support for Debug builds not implemented yet"sv);
+	auto equal = [](TypeMapEntry const& entry, const char *key) -> bool {
+		if (entry.from == nullptr) {
+			return 1;
+		}
+
+		return strcmp (key, entry.from) == 0;
+	};
+
+	auto less_than = [](TypeMapEntry const& entry, const char *key) -> bool {
+		if (entry.from == nullptr) {
+			return 1;
+		}
+
+		return strcmp (key, entry.from);
+	};
+
+	ssize_t idx = Search::binary_search<TypeMapEntry, const char*, equal, less_than> (typeName, map, type_map.entry_count);
+	if (idx >= 0) [[likely]] {
+		log_debug (
+			LOG_ASSEMBLY,
+			"{} type '{}' maps to {} type '{}'",
+			from_name,
+			optional_string (typeName),
+			to_name,
+			optional_string (type_map.managed_to_java[idx].to)
+		);
+		return type_map.managed_to_java[idx].to;
+	}
+
+	return nullptr;
+}
+
+[[gnu::always_inline]]
+auto TypeMapper::typemap_managed_to_java_debug (const char *typeName) noexcept -> const char*
+{
+	return typemap_type_to_type_debug (typeName, type_map.managed_to_java, MANAGED, JAVA);
 }
 #endif // def DEBUG
 
@@ -208,8 +243,9 @@ auto TypeMapper::typemap_managed_to_java_release (const char *typeName, const ui
 #endif // def RELEASE
 
 [[gnu::flatten]]
-auto TypeMapper::typemap_managed_to_java (const char *typeName, const uint8_t *mvid) noexcept -> const char*
+auto TypeMapper::typemap_managed_to_java (const char *typeName, [[maybe_unused]] const uint8_t *mvid) noexcept -> const char*
 {
+	log_debug (LOG_ASSEMBLY, "typemap_managed_to_java: looking up type '{}'", optional_string (typeName));
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.start_event (TimingEventKind::ManagedToJava);
 	}
@@ -223,7 +259,7 @@ auto TypeMapper::typemap_managed_to_java (const char *typeName, const uint8_t *m
 #if defined(RELEASE)
 	ret = typemap_managed_to_java_release (typeName, mvid);
 #else
-	ret = typemap_managed_to_java_debug (typeName, mvid);
+	ret = typemap_managed_to_java_debug (typeName);
 #endif
 
 	if (FastTiming::enabled ()) [[unlikely]] {
@@ -235,9 +271,12 @@ auto TypeMapper::typemap_managed_to_java (const char *typeName, const uint8_t *m
 
 #if defined(DEBUG)
 [[gnu::flatten]]
-auto TypeMapper::typemap_java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept -> bool
+auto TypeMapper::typemap_java_to_managed_debug (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept -> bool
 {
-	Helpers::abort_application ("typemap_java_to_managed not implemented for debug builds yet");
+	// FIXME: this is currently VERY broken
+	*assembly_name = nullptr;
+	*managed_type_token_id = 0;
+	return typemap_type_to_type_debug (java_type_name, type_map.java_to_managed, JAVA, MANAGED);
 }
 #else // def DEBUG
 
@@ -253,7 +292,7 @@ auto TypeMapper::find_java_to_managed_entry (hash_t name_hash) noexcept -> const
 }
 
 [[gnu::flatten]]
-auto TypeMapper::typemap_java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept -> bool
+auto TypeMapper::typemap_java_to_managed_release (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept -> bool
 {
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.start_event (TimingEventKind::JavaToManaged);
@@ -323,3 +362,30 @@ auto TypeMapper::typemap_java_to_managed (const char *java_type_name, char const
 	return true;
 }
 #endif // ndef DEBUG
+
+[[gnu::flatten]]
+auto TypeMapper::typemap_java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept -> bool
+{
+	log_debug (LOG_ASSEMBLY, "typemap_java_to_managed: looking up type '{}'", optional_string (java_type_name));
+	if (FastTiming::enabled ()) [[unlikely]] {
+		internal_timing.start_event (TimingEventKind::JavaToManaged);
+	}
+
+	if (java_type_name == nullptr) [[unlikely]] {
+		log_warn (LOG_ASSEMBLY, "typemap: type name not specified in typemap_java_to_managed");
+		return false;
+	}
+
+	bool ret;
+#if defined(RELEASE)
+	ret = typemap_java_to_managed_release (java_type_name, assembly_name, managed_type_token_id);
+#else
+	ret = typemap_java_to_managed_debug (java_type_name, assembly_name, managed_type_token_id);
+#endif
+
+	if (FastTiming::enabled ()) [[unlikely]] {
+		internal_timing.end_event ();
+	}
+
+	return ret;
+}
