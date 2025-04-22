@@ -1489,6 +1489,26 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
+<PropertyGroup>
+  <_GenerateJavaStubsDependsOnTargets>
+    _SetLatestTargetFrameworkVersion;
+    _PrepareNativeAssemblySources;
+    _GetGenerateJavaStubsInputs;
+  </_GenerateJavaStubsDependsOnTargets>
+</PropertyGroup>
+
+<Target Name="_GetGenerateJavaStubsInputs" DependsOnTargets="_GenerateEnvironmentFiles">
+  <ItemGroup>
+    <_AndroidILLinkAssemblies Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" Abi="$(RuntimeIdentifier)" />
+    <_GenerateJavaStubsInputs Include="@(_AndroidMSBuildAllProjects)" />
+    <_GenerateJavaStubsInputs Include="$(_AndroidILLinkAssemblies)" />
+    <_GenerateJavaStubsInputs Include="$(_AndroidManifestAbs)" />
+    <_GenerateJavaStubsInputs Include="$(_AndroidBuildPropertiesCache)" />
+    <_GenerateJavaStubsInputs Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' != 'true' " />
+    <_EnvironmentFiles Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' != 'true' " />
+  </ItemGroup>
+</Target>
+
 <!-- Runs additional steps after ILLink runs (_LinkAssemblies) -->
 <Target Name="_GenerateJavaStubs"
     AfterTargets="ILLink"
@@ -1513,7 +1533,7 @@ because xbuild doesn't support framework reference assemblies.
   <GenerateJavaCallableWrappers
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       OutputDirectory="$(_OuterIntermediateOutputPath)android\src"
-      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      ResolvedAssemblies="@(_AndroidILLinkAssemblies)"
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
       SupportedAbis="@(_BuildTargetAbis)">
     <Output TaskParameter="GeneratedJavaFilesOutput" ItemName="_GeneratedJavaFiles" />
@@ -1522,14 +1542,14 @@ because xbuild doesn't support framework reference assemblies.
   <GenerateACWMap
       AcwMapFile="$(_AcwMapFile)"
       IntermediateOutputDirectory="$(_OuterIntermediateOutputPath)"
-      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      ResolvedAssemblies="@(_AndroidILLinkAssemblies)"
       SupportedAbis="@(_BuildTargetAbis)">
   </GenerateACWMap>
 
   <GenerateJavaStubs
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
-      ResolvedAssemblies="@(_ResolvedAssemblies)"
-      ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
+      ResolvedAssemblies="@(_AndroidILLinkAssemblies)"
+      ResolvedUserAssemblies="@(_AndroidILLinkAssemblies)"
       RunCheckedBuild="$(_AndroidJLOCheckedBuild)"
       GeneratedJavaFiles="@(_GeneratedJavaFiles)"
       ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
@@ -1565,7 +1585,7 @@ because xbuild doesn't support framework reference assemblies.
       AcwMapFile="$(_AcwMapFile)"
       RunCheckedBuild="true"
       IntermediateOutputDirectory="$(_OuterIntermediateOutputPath)"
-      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      ResolvedAssemblies="@(_AndroidILLinkAssemblies)"
       SupportedAbis="@(_BuildTargetAbis)">
   </GenerateACWMap>
 
@@ -1590,7 +1610,7 @@ because xbuild doesn't support framework reference assemblies.
       NeedsInternet="$(AndroidNeedsInternetPermission)"
       OutputDirectory="$(_OuterIntermediateOutputPath)android"
       PackageName="$(_AndroidPackage)"
-      ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
+      ResolvedUserAssemblies="@(_AndroidILLinkAssemblies)"
       SupportedAbis="@(_BuildTargetAbis)"
       SupportedOSPlatformVersion="$(SupportedOSPlatformVersion)"
       TargetName="$(TargetName)"
@@ -1635,26 +1655,6 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="AssemblySources" ItemName="_TypeMapAssemblySource" />
     <Output TaskParameter="AssemblyIncludes" ItemName="_TypeMapAssemblyInclude" />
   </PrepareAbiItems>
-</Target>
-
-<PropertyGroup>
-  <_GenerateJavaStubsDependsOnTargets>
-    _SetLatestTargetFrameworkVersion;
-    _PrepareNativeAssemblySources;
-    _GetGenerateJavaStubsInputs;
-  </_GenerateJavaStubsDependsOnTargets>
-</PropertyGroup>
-
-<Target Name="_GetGenerateJavaStubsInputs" DependsOnTargets="_GenerateEnvironmentFiles">
-  <ItemGroup>
-    <_GenerateJavaStubsInputs Include="@(_AndroidMSBuildAllProjects)" />
-    <_GenerateJavaStubsInputs Include="$(_ResolvedUserAssembliesHashFile)" />
-    <_GenerateJavaStubsInputs Include="@(_ResolvedUserMonoAndroidAssemblies)" />
-    <_GenerateJavaStubsInputs Include="$(_AndroidManifestAbs)" />
-    <_GenerateJavaStubsInputs Include="$(_AndroidBuildPropertiesCache)" />
-    <_GenerateJavaStubsInputs Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' != 'true' " />
-    <_EnvironmentFiles Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' != 'true' " />
-  </ItemGroup>
 </Target>
 
 <Target Name="_ManifestMerger"
