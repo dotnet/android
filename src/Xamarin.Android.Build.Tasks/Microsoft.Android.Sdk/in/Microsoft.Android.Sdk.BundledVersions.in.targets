@@ -34,9 +34,7 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
         RuntimePackRuntimeIdentifiers="android-arm;android-arm64;android-x86;android-x64"
         Profile="Android"
     />
-    <!-- NativeAOT runtime components are included only in the Microsoft.Android.Runtime.$(AndroidApiLevel).android pack -->
     <KnownFrameworkReference
-        Condition=" '$(_AndroidRuntimePackRuntime)' != 'NativeAOT' "
         Include="Microsoft.Android.Runtimes"
         TargetFramework="@DOTNET_TARGET_FRAMEWORK@"
         RuntimeFrameworkName="Microsoft.Android.Runtimes"

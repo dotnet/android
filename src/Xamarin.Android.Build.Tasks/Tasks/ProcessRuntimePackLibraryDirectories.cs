@@ -24,16 +24,10 @@ public class ProcessRuntimePackLibraryDirectories : AndroidTask
 	};
 
 	[Required]
-	public string AndroidRuntime { get; set; } = "";
-
-	[Required]
 	public ITaskItem[] ResolvedFilesToPublish { get; set; } = Array.Empty<ITaskItem> ();
 
 	[Output]
 	public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = Array.Empty<ITaskItem> ();
-
-	[Output]
-	public ITaskItem[] RuntimePackAssembliesToRemove { get; set; } = Array.Empty<ITaskItem> ();
 
 	[Output]
 	public ITaskItem[] NativeLibrariesToRemove { get; set; }  = Array.Empty<ITaskItem> ();
@@ -41,17 +35,10 @@ public class ProcessRuntimePackLibraryDirectories : AndroidTask
 	public override bool RunTask ()
 	{
 		var libDirs = new List<ITaskItem> ();
-		var assembliesToRemove = new List<ITaskItem> ();
 		var librariesToRemove = new List<ITaskItem> ();
 		var seenRIDs = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-		var androidRuntime = MonoAndroidHelper.ParseAndroidRuntime (AndroidRuntime);
 
 		foreach (ITaskItem item in ResolvedFilesToPublish) {
-			if (!IsSupportedByRuntime (item, androidRuntime)) {
-				assembliesToRemove.Add (item);
-				Log.LogDebugMessage ($"Item '{item}' will be removed from the set of assemblies to publish");
-			}
-
 			if (!IsInSupportedRuntimePack (item)) {
 				continue;
 			}
@@ -83,7 +70,6 @@ public class ProcessRuntimePackLibraryDirectories : AndroidTask
 		}
 
 		RuntimePackLibraryDirectories = libDirs.ToArray ();
-		RuntimePackAssembliesToRemove = assembliesToRemove.ToArray ();
 		NativeLibrariesToRemove = librariesToRemove.ToArray ();
 
 		return !Log.HasLoggedErrors;
@@ -111,17 +97,5 @@ public class ProcessRuntimePackLibraryDirectories : AndroidTask
 
 		return NuGetPackageId.StartsWith ("Microsoft.Android.Runtime.CoreCLR.", StringComparison.OrdinalIgnoreCase) ||
 		       NuGetPackageId.StartsWith ("Microsoft.Android.Runtime.Mono.", StringComparison.OrdinalIgnoreCase);
-	}
-
-	bool IsSupportedByRuntime (ITaskItem item, AndroidRuntime runtime)
-	{
-		string? fileName = Path.GetFileName (item.ItemSpec);
-		if (!String.IsNullOrEmpty (fileName)) {
-			if (fileName.StartsWith ("Microsoft.Android.Runtime.NativeAOT", StringComparison.OrdinalIgnoreCase) && runtime != Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
-				return false;
-			}
-		}
-
-		return true;
 	}
 }

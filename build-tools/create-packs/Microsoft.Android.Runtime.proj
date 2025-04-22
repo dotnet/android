@@ -72,8 +72,15 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
       <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libarchive-dso-stub.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libarchive-dso-stub.so" />
     </ItemGroup>
 
+    <ItemGroup Condition=" '$(AndroidRuntime)' == 'NativeAOT' ">
+      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\Microsoft.Android.Runtime.NativeAOT.dll" />
+    </ItemGroup>
+
     <ItemGroup>
+      <FrameworkListFileClass Include="@(_AndroidRuntimePackAssemblies->'%(Filename)%(Extension)')" Profile="Android" />
       <FrameworkListFileClass Include="@(NativeRuntimeAsset->'%(Filename)%(Extension)')" Profile="Android" />
+      <FilesToPackage Include="@(_AndroidRuntimePackAssemblies)" />
+      <FilesToPackage Include="@(_AndroidRuntimePackAssemblies->'%(RelativeDir)%(Filename).pdb')" IsSymbolFile="true" Condition=" '%(_AndroidRuntimePackAssemblies.NoSymbols)' != 'true' " />
     </ItemGroup>
   </Target>
 
