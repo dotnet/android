@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
     <DefineConstants>INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
@@ -16,10 +16,6 @@
     <PackageTags>Xamarin;Xamarin.Android</PackageTags>
     <AssemblyName>$(VendorPrefix)Xamarin.Android.Tools.AndroidSdk$(VendorSuffix)</AssemblyName>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Condition=" '$(TargetFramework)' != 'netstandard2.0' " Remove="NullableAttributes.cs" />
-  </ItemGroup>
 
   <PropertyGroup>
     <OutputPath>$(ToolOutputFullPath)</OutputPath>

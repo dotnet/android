@@ -5,6 +5,8 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <!-- Disables the transitive restore of packages like Microsoft.AspNetCore.App.Ref, Microsoft.WindowsDesktop.App.Ref -->
     <DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
+    <DotNetTargetFrameworkVersion>9.0</DotNetTargetFrameworkVersion>
+    <DotNetTargetFramework>net$(DotNetTargetFrameworkVersion)</DotNetTargetFramework>
   </PropertyGroup>
   <Import
       Project="$(MSBuildThisFileDirectory)Configuration.Override.props"
@@ -16,17 +18,6 @@
   />
   <PropertyGroup>
     <BaseIntermediateOutputPath Condition=" '$(BaseIntermediateOutputPath)' == '' ">obj\</BaseIntermediateOutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' != '' and '$(TargetFramework)' != 'net472' and '$(TargetFramework)' != 'netstandard2.0' ">
-    <XATBuildingForNetCoreApp>True</XATBuildingForNetCoreApp>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(XATBuildingForNetCoreApp)' == 'True' ">
-    <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(Configuration)-$(TargetFramework.ToLowerInvariant())</IntermediateOutputPath>
-    <BuildToolOutputFullPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\$(TargetFramework.ToLowerInvariant())\</BuildToolOutputFullPath>
-    <ToolOutputFullPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\$(TargetFramework.ToLowerInvariant())\</ToolOutputFullPath>
-    <TestOutputFullPath>$(MSBuildThisFileDirectory)bin\Test$(Configuration)-$(TargetFramework.ToLowerInvariant())\</TestOutputFullPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(XATBuildingForNetCoreApp)' != 'True' ">
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(Configuration)</IntermediateOutputPath>
     <BuildToolOutputFullPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</BuildToolOutputFullPath>
     <ToolOutputFullPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\</ToolOutputFullPath>

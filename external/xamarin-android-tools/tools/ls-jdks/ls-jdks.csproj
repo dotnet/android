@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net6.0</TargetFrameworks>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <RootNamespace>Xamarin.Android.Tools</RootNamespace>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>$(ToolOutputFullPath)</OutputPath>

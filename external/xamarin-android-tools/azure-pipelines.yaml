@@ -46,7 +46,7 @@ jobs:
     displayName: Run Tests
     inputs:
       command: test
-      projects: bin/TestDebug-net*/**/*-Tests.dll
+      projects: bin/TestDebug/**/*-Tests.dll
 
   - powershell: |
       $hashOfLastVersionChange = & "git" "log" "--follow" "-1" "--pretty=%H" "nuget.version"
