@@ -28,7 +28,6 @@ void FastTiming::really_initialize (bool log_immediately) noexcept
 
 	// Options in `debug.mono.timing` are relevant only when immediate logging is disabled
 	if (immediate_logging) {
-		log_warn (LOG_DEFAULT, " immediate mode, returning");
 		return;
 	}
 
