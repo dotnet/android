@@ -1511,7 +1511,7 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<!-- Runs additional steps after ILLink runs (_LinkAssemblies) -->
+<!-- Additional steps after ILLink -->
 <Target Name="_GenerateJavaStubs"
     AfterTargets="ILLink"
     BeforeTargets="CreateReadyToRunImages;ComputeIlcCompileInputs"
@@ -1702,7 +1702,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_ReadAndroidManifest"
-    DependsOnTargets="_GenerateJavaStubs;_ManifestMerger">
+    DependsOnTargets="_ManifestMerger">
   <ReadAndroidManifest
       ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
       AndroidSdkDirectory="$(_AndroidSdkDirectory)"
@@ -2087,7 +2087,7 @@ because xbuild doesn't support framework reference assemblies.
    <Touch Files="$(_AndroidApkPerAbiFlagFile)" Condition="'$(AndroidCreatePackagePerAbi)' == 'true'" AlwaysCreate="True" />
 </Target>
 
-<Target Name="_PrepareNativeAssemblyItems" DependsOnTargets="_GenerateJavaStubs">
+<Target Name="_PrepareNativeAssemblyItems">
   <ItemGroup>
     <_NativeAssemblyTarget Include="@(_TypeMapAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
       <abi>%(_TypeMapAssemblySource.abi)</abi>
