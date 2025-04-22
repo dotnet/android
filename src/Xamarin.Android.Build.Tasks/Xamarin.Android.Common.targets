@@ -1640,9 +1640,7 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
   <_GenerateJavaStubsDependsOnTargets>
     _SetLatestTargetFrameworkVersion;
-    _PrepareAssemblies;
     _PrepareNativeAssemblySources;
-    $(_AfterPrepareAssemblies);
     _GetGenerateJavaStubsInputs;
   </_GenerateJavaStubsDependsOnTargets>
 </PropertyGroup>
