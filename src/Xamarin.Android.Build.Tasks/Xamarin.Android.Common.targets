@@ -925,7 +925,6 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidApkPerAbiFlagFile>$(IntermediateOutputPath)android\bin\apk_per_abi.flag</_AndroidApkPerAbiFlagFile>
 	<_AndroidDebugKeyStoreFlag>$(IntermediateOutputPath)android_debug_keystore.flag</_AndroidDebugKeyStoreFlag>
 	<_RemoveRegisterFlag>$(MonoAndroidIntermediateAssemblyDir)shrunk\shrunk.flag</_RemoveRegisterFlag>
-	<_AdditionalPostLinkerStepsFlag>$(_AndroidStampDirectory)_AdditionalPostLinkerSteps.stamp</_AdditionalPostLinkerStepsFlag>
 	<_AcwMapFile>$(IntermediateOutputPath)acw-map.txt</_AcwMapFile>
 	<_CustomViewMapFile>$(IntermediateOutputPath)customview-map.txt</_CustomViewMapFile>
 	<AndroidResgenNamespace Condition="'$(AndroidResgenNamespace)'==''" >$(RootNamespace)</AndroidResgenNamespace>
@@ -1491,11 +1490,114 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <!-- Runs additional steps after ILLink runs (_LinkAssemblies) -->
-<Target Name="_AfterILLinkAdditionalSteps"
-    DependsOnTargets="_LinkAssembliesNoShrinkInputs"
+<Target Name="_GenerateJavaStubs"
+    AfterTargets="ILLink"
+    BeforeTargets="CreateReadyToRunImages;ComputeIlcCompileInputs"
+    DependsOnTargets="$(_GenerateJavaStubsDependsOnTargets);$(BeforeGenerateAndroidManifest);_LinkAssembliesNoShrinkInputs"
     Condition="'$(PublishTrimmed)' == 'true'"
-    Inputs="$(_AndroidLinkFlag)"
-    Outputs="$(_AdditionalPostLinkerStepsFlag)">
+    Inputs="@(_GenerateJavaStubsInputs);$(_AndroidLinkFlag)"
+    Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
+
+  <PropertyGroup>
+    <_ManifestOutput Condition=" '$(AndroidManifestMerger)' == 'legacy' ">$(_OuterIntermediateOutputPath)android\AndroidManifest.xml</_ManifestOutput>
+    <_ManifestOutput Condition=" '$(AndroidManifestMerger)' != 'legacy' ">$(_OuterIntermediateOutputPath)AndroidManifest.xml</_ManifestOutput>
+    <_LinkingEnabled Condition=" '$(AndroidLinkMode)' != 'None'">True</_LinkingEnabled>
+    <_LinkingEnabled Condition=" '$(AndroidLinkMode)' == 'None'">False</_LinkingEnabled>
+    <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' != '' ">True</_HaveMultipleRIDs>
+    <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' == '' ">False</_HaveMultipleRIDs>
+  </PropertyGroup>
+  <ItemGroup>
+    <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
+  </ItemGroup>
+
+  <GenerateJavaCallableWrappers
+      CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
+      OutputDirectory="$(_OuterIntermediateOutputPath)android\src"
+      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
+      SupportedAbis="@(_BuildTargetAbis)">
+    <Output TaskParameter="GeneratedJavaFilesOutput" ItemName="_GeneratedJavaFiles" />
+  </GenerateJavaCallableWrappers>
+
+  <GenerateACWMap
+      AcwMapFile="$(_AcwMapFile)"
+      IntermediateOutputDirectory="$(_OuterIntermediateOutputPath)"
+      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      SupportedAbis="@(_BuildTargetAbis)">
+  </GenerateACWMap>
+
+  <GenerateJavaStubs
+      CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
+      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
+      RunCheckedBuild="$(_AndroidJLOCheckedBuild)"
+      GeneratedJavaFiles="@(_GeneratedJavaFiles)"
+      ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
+      Debug="$(AndroidIncludeDebugSymbols)"
+      AndroidSdkPlatform="$(_AndroidApiLevel)"
+      OutputDirectory="$(_OuterIntermediateOutputPath)android"
+      PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
+      ApplicationJavaClass="$(AndroidApplicationJavaClass)"
+      FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
+      SupportedAbis="@(_BuildTargetAbis)"
+      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
+      IntermediateOutputDirectory="$(_OuterIntermediateOutputPath)">
+  </GenerateJavaStubs>
+
+  <RewriteMarshalMethods
+      Condition=" '$(_AndroidUseMarshalMethods)' == 'true' And '$(AndroidIncludeDebugSymbols)' == 'false' "
+      EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
+      Environments="@(_EnvironmentFiles)"
+      IntermediateOutputDirectory="$(_OuterIntermediateOutputPath)">
+  </RewriteMarshalMethods>
+
+  <GenerateTypeMappings
+      AndroidRuntime="$(_AndroidRuntime)"
+      Debug="$(AndroidIncludeDebugSymbols)"
+      IntermediateOutputDirectory="$(_OuterIntermediateOutputPath)"
+      SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)"
+      TypemapImplementation="$(_AndroidTypeMapImplementation)"
+      TypemapOutputDirectory="$(_NativeAssemblySourceDir)">
+  </GenerateTypeMappings>
+
+  <GenerateACWMap
+      Condition=" '$(_AndroidJLOCheckedBuild)' == 'true' "
+      AcwMapFile="$(_AcwMapFile)"
+      RunCheckedBuild="true"
+      IntermediateOutputDirectory="$(_OuterIntermediateOutputPath)"
+      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      SupportedAbis="@(_BuildTargetAbis)">
+  </GenerateACWMap>
+
+  <GenerateMainAndroidManifest
+      AndroidRuntime="$(_AndroidRuntime)"
+      AndroidSdkDir="$(_AndroidSdkDirectory)"
+      AndroidSdkPlatform="$(_AndroidApiLevel)"
+      ApplicationJavaClass="$(AndroidApplicationJavaClass)"
+      ApplicationLabel="$(_ApplicationLabel)"
+      BundledWearApplicationName="$(BundledWearApplicationPackageName)"
+      CheckedBuild="$(_AndroidCheckedBuild)"
+      CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
+      Debug="$(AndroidIncludeDebugSymbols)"
+      EmbedAssemblies="$(EmbedAssembliesIntoApk)"
+      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
+      IntermediateOutputDirectory="$(_OuterIntermediateOutputPath)"
+      ManifestPlaceholders="$(AndroidManifestPlaceholders)"
+      ManifestTemplate="$(_AndroidManifestAbs)"
+      MergedAndroidManifestOutput="$(_ManifestOutput)"
+      MergedManifestDocuments="@(_MergedManifestDocuments)"
+      MultiDex="$(AndroidEnableMultiDex)"
+      NeedsInternet="$(AndroidNeedsInternetPermission)"
+      OutputDirectory="$(_OuterIntermediateOutputPath)android"
+      PackageName="$(_AndroidPackage)"
+      ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
+      SupportedAbis="@(_BuildTargetAbis)"
+      SupportedOSPlatformVersion="$(SupportedOSPlatformVersion)"
+      TargetName="$(TargetName)"
+      VersionCode="$(_AndroidVersionCode)"
+      VersionName="$(_AndroidVersionName)">
+  </GenerateMainAndroidManifest>
+
   <AssemblyModifierPipeline
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
@@ -1512,7 +1614,14 @@ because xbuild doesn't support framework reference assemblies.
       TargetName="$(TargetName)">
   </AssemblyModifierPipeline>
 
-  <Touch Files="$(_AdditionalPostLinkerStepsFlag)" AlwaysCreate="true" />
+  <ItemGroup>
+    <FileWrites Include="@(_TypeMapAssemblySource)" />
+    <FileWrites Include="@(_TypeMapAssemblyInclude)" />
+    <FileWrites Include="@(_AndroidTypeMapping)" Condition=" '@(_AndroidTypeMapping->Count())' == '0' " />
+    <FileWrites Include="$(_ManifestOutput)" />
+  </ItemGroup>
+
+  <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="true" />
 </Target>
 
 <!-- _PrepareAssemblies lives in Microsoft.Android.Sdk.AssemblyResolution.targets -->
@@ -1548,121 +1657,6 @@ because xbuild doesn't support framework reference assemblies.
     <_GenerateJavaStubsInputs Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' != 'true' " />
     <_EnvironmentFiles Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' != 'true' " />
   </ItemGroup>
-</Target>
-
-<Target Name="_GenerateJavaStubs"
-    DependsOnTargets="$(_GenerateJavaStubsDependsOnTargets);$(BeforeGenerateAndroidManifest)"
-    Inputs="@(_GenerateJavaStubsInputs)"
-    Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
-
-  <PropertyGroup>
-    <_ManifestOutput Condition=" '$(AndroidManifestMerger)' == 'legacy' ">$(IntermediateOutputPath)android\AndroidManifest.xml</_ManifestOutput>
-    <_ManifestOutput Condition=" '$(AndroidManifestMerger)' != 'legacy' ">$(IntermediateOutputPath)AndroidManifest.xml</_ManifestOutput>
-    <_LinkingEnabled Condition=" '$(AndroidLinkMode)' != 'None'">True</_LinkingEnabled>
-    <_LinkingEnabled Condition=" '$(AndroidLinkMode)' == 'None'">False</_LinkingEnabled>
-    <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' != '' ">True</_HaveMultipleRIDs>
-    <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' == '' ">False</_HaveMultipleRIDs>
-  </PropertyGroup>
-  <ItemGroup>
-    <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
-  </ItemGroup>
-
-  <GenerateJavaCallableWrappers
-      CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
-      OutputDirectory="$(IntermediateOutputPath)android\src"
-      ResolvedAssemblies="@(_ResolvedAssemblies)"
-      PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
-      SupportedAbis="@(_BuildTargetAbis)">
-    <Output TaskParameter="GeneratedJavaFilesOutput" ItemName="_GeneratedJavaFiles" />
-  </GenerateJavaCallableWrappers>
-
-  <GenerateACWMap
-      AcwMapFile="$(_AcwMapFile)"
-      IntermediateOutputDirectory="$(IntermediateOutputPath)"
-      ResolvedAssemblies="@(_ResolvedAssemblies)"
-      SupportedAbis="@(_BuildTargetAbis)">
-  </GenerateACWMap>
-
-  <GenerateJavaStubs
-      CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
-      ResolvedAssemblies="@(_ResolvedAssemblies)"
-      ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
-      RunCheckedBuild="$(_AndroidJLOCheckedBuild)"
-      GeneratedJavaFiles="@(_GeneratedJavaFiles)"
-      ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
-      Debug="$(AndroidIncludeDebugSymbols)"
-      AndroidSdkPlatform="$(_AndroidApiLevel)"
-      OutputDirectory="$(IntermediateOutputPath)android"
-      PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
-      ApplicationJavaClass="$(AndroidApplicationJavaClass)"
-      FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
-      SupportedAbis="@(_BuildTargetAbis)"
-      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
-      IntermediateOutputDirectory="$(IntermediateOutputPath)">
-  </GenerateJavaStubs>
-
-  <RewriteMarshalMethods
-      Condition=" '$(_AndroidUseMarshalMethods)' == 'true' And '$(AndroidIncludeDebugSymbols)' == 'false' "
-      EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
-      Environments="@(_EnvironmentFiles)"
-      IntermediateOutputDirectory="$(IntermediateOutputPath)">
-  </RewriteMarshalMethods>
-
-  <GenerateTypeMappings
-      AndroidRuntime="$(_AndroidRuntime)"
-      Debug="$(AndroidIncludeDebugSymbols)"
-      IntermediateOutputDirectory="$(IntermediateOutputPath)"
-      SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)"
-      TypemapImplementation="$(_AndroidTypeMapImplementation)"
-      TypemapOutputDirectory="$(_NativeAssemblySourceDir)">
-  </GenerateTypeMappings>
-
-  <GenerateACWMap
-      Condition=" '$(_AndroidJLOCheckedBuild)' == 'true' "
-      AcwMapFile="$(_AcwMapFile)"
-      RunCheckedBuild="true"
-      IntermediateOutputDirectory="$(IntermediateOutputPath)"
-      ResolvedAssemblies="@(_ResolvedAssemblies)"
-      SupportedAbis="@(_BuildTargetAbis)">
-  </GenerateACWMap>
-
-  <GenerateMainAndroidManifest
-      AndroidRuntime="$(_AndroidRuntime)"
-      AndroidSdkDir="$(_AndroidSdkDirectory)"
-      AndroidSdkPlatform="$(_AndroidApiLevel)"
-      ApplicationJavaClass="$(AndroidApplicationJavaClass)"
-      ApplicationLabel="$(_ApplicationLabel)"
-      BundledWearApplicationName="$(BundledWearApplicationPackageName)"
-      CheckedBuild="$(_AndroidCheckedBuild)"
-      CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
-      Debug="$(AndroidIncludeDebugSymbols)"
-      EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
-      IntermediateOutputDirectory="$(IntermediateOutputPath)"
-      ManifestPlaceholders="$(AndroidManifestPlaceholders)"
-      ManifestTemplate="$(_AndroidManifestAbs)"
-      MergedAndroidManifestOutput="$(_ManifestOutput)"
-      MergedManifestDocuments="@(_MergedManifestDocuments)"
-      MultiDex="$(AndroidEnableMultiDex)"
-      NeedsInternet="$(AndroidNeedsInternetPermission)"
-      OutputDirectory="$(IntermediateOutputPath)android"
-      PackageName="$(_AndroidPackage)"
-      ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
-      SupportedAbis="@(_BuildTargetAbis)"
-      SupportedOSPlatformVersion="$(SupportedOSPlatformVersion)"
-      TargetName="$(TargetName)"
-      VersionCode="$(_AndroidVersionCode)"
-      VersionName="$(_AndroidVersionName)">
-  </GenerateMainAndroidManifest>
-
-  <ItemGroup>
-    <FileWrites Include="@(_TypeMapAssemblySource)" />
-    <FileWrites Include="@(_TypeMapAssemblyInclude)" />
-    <FileWrites Include="@(_AndroidTypeMapping)" Condition=" '@(_AndroidTypeMapping->Count())' == '0' " />
-    <FileWrites Include="$(_ManifestOutput)" />
-  </ItemGroup>
-
-  <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
 </Target>
 
 <Target Name="_ManifestMerger"
@@ -1824,7 +1818,6 @@ because xbuild doesn't support framework reference assemblies.
 
 <PropertyGroup>
   <_GeneratePackageManagerJavaDependsOn>
-    _GenerateJavaStubs;
     _RunAotForAllRIDs;
     _ManifestMerger;
     _ConvertCustomView;
@@ -1932,7 +1925,6 @@ because xbuild doesn't support framework reference assemblies.
 
 <PropertyGroup>
 	<_CreateBaseApkDependsOnTargets>
-		_GenerateJavaStubs;
 		_ManifestMerger;
 		_ConvertCustomView;
 		$(_AfterConvertCustomView);
@@ -1976,7 +1968,7 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<Target Name="_FindJavaStubFiles" DependsOnTargets="_GenerateJavaStubs;_ManifestMerger;_ConvertCustomView;$(_AfterConvertCustomView);_GenerateEnvironmentFiles;">
+<Target Name="_FindJavaStubFiles" DependsOnTargets="_ManifestMerger;_ConvertCustomView;$(_AfterConvertCustomView);_GenerateEnvironmentFiles;">
   <ItemGroup>
     <_JavaStubFiles Include="$(_AndroidIntermediateJavaSourceDirectory)**\*.java" />
     <FileWrites Include="@(_JavaStubFiles)" />
