@@ -13,7 +13,7 @@ namespace Xamarin.Android.Tasks
 	{
 		const string JavaToManagedSymbol = "map_java_to_managed";
 		const string ManagedToJavaSymbol = "map_managed_to_java";
-		const string TypeMapSymbol = "type_map"; // MUST match src/monodroid/xamarin-app.hh
+		const string TypeMapSymbol = "type_map"; // MUST match src/native/mono/xamarin-app-stub/xamarin-app.hh
 
 		sealed class TypeMapContextDataProvider : NativeAssemblerStructContextDataProvider
 		{
@@ -66,11 +66,11 @@ namespace Xamarin.Android.Tasks
 				var entry = EnsureType<TypeMapEntry> (data);
 
 				if (String.Compare ("from", fieldName, StringComparison.Ordinal) == 0) {
-					return $"from: entry.from";
+					return $"from: {entry.from}";
 				}
 
 				if (String.Compare ("to", fieldName, StringComparison.Ordinal) == 0) {
-					return $"to: entry.to";
+					return $"to: {entry.to}";
 				}
 
 				return String.Empty;
@@ -78,7 +78,7 @@ namespace Xamarin.Android.Tasks
 		}
 
 		// Order of fields and their type must correspond *exactly* to that in
-		// src/monodroid/jni/xamarin-app.hh TypeMapEntry structure
+		// src/native/mono/xamarin-app-stub/xamarin-app.hh TypeMapEntry structure
 		[NativeAssemblerStructContextDataProvider (typeof (TypeMapEntryContextDataProvider))]
 		sealed class TypeMapEntry
 		{
@@ -87,7 +87,7 @@ namespace Xamarin.Android.Tasks
 		};
 
 		// Order of fields and their type must correspond *exactly* to that in
-		// src/monodroid/jni/xamarin-app.hh TypeMap structure
+		// src/native/mono/xamarin-app-stub/xamarin-app.hh TypeMap structure
 		[NativeAssemblerStructContextDataProvider (typeof (TypeMapContextDataProvider))]
 		sealed class TypeMap
 		{
