@@ -475,3 +475,31 @@ auto TypeMapper::java_to_managed (const char *java_type_name, char const** assem
 
 	return ret;
 }
+#endif // ndef DEBUG
+
+[[gnu::flatten]]
+auto TypeMapper::typemap_java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept -> bool
+{
+	log_debug (LOG_ASSEMBLY, "typemap_java_to_managed: looking up type '{}'", optional_string (java_type_name));
+	if (FastTiming::enabled ()) [[unlikely]] {
+		internal_timing.start_event (TimingEventKind::JavaToManaged);
+	}
+
+	if (java_type_name == nullptr) [[unlikely]] {
+		log_warn (LOG_ASSEMBLY, "typemap: type name not specified in typemap_java_to_managed");
+		return false;
+	}
+
+	bool ret;
+#if defined(RELEASE)
+	ret = typemap_java_to_managed_release (java_type_name, assembly_name, managed_type_token_id);
+#else
+	ret = typemap_java_to_managed_debug (java_type_name, assembly_name, managed_type_token_id);
+#endif
+
+	if (FastTiming::enabled ()) [[unlikely]] {
+		internal_timing.end_event ();
+	}
+
+	return ret;
+}

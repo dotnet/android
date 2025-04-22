@@ -26,14 +26,15 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public override ulong GetBufferSize (object data, string fieldName)
 		{
 			var map_module = EnsureType<TypeMap> (data);
-			return fieldName switch {
-				"java_to_managed" => map_module.entry_count,
-				"managed_to_java" => map_module.entry_count,
-				_ => 0
-			};
+			if (String.Compare ("java_to_managed", fieldName, StringComparison.Ordinal) == 0 ||
+			    String.Compare ("managed_to_java", fieldName, StringComparison.Ordinal) == 0) {
+				    return map_module.entry_count;
+			    }
+
+			return 0;
 		}
 
-		public override string? GetPointedToSymbolName (object data, string fieldName)
+		public override string GetPointedToSymbolName (object data, string fieldName)
 		{
 			var map_module = EnsureType<TypeMap> (data);
 
@@ -108,38 +109,11 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 	[NativeAssemblerStructContextDataProvider (typeof (TypeMapEntryContextDataProvider))]
 	sealed class TypeMapEntry
 	{
-		[NativeAssembler (Ignore = true)]
-		public string From = String.Empty;
-
-		[NativeAssembler (Ignore = true)]
-		public string To = String.Empty;
+		[NativeAssembler (UsesDataProvider = true)]
+		public string from;
 
 		[NativeAssembler (UsesDataProvider = true)]
-		public uint from;
-
-		[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
-		public ulong from_hash;
-
-		[NativeAssembler (UsesDataProvider = true)]
-		public uint to;
-	};
-
-	// Order of fields and their type must correspond *exactly* to that in
-	// src/native/clr/include/xamarin-app.hh TypeMapManagedTypeInfo structure
-	[NativeAssemblerStructContextDataProvider (typeof (TypeMapManagedTypeInfoContextDataProvider))]
-	sealed class TypeMapManagedTypeInfo
-	{
-		[NativeAssembler (Ignore = true)]
-		public string AssemblyName = String.Empty;
-
-		[NativeAssembler (Ignore = true)]
-		public string ManagedTypeName = String.Empty;
-
-		[NativeAssembler (UsesDataProvider = true)]
-		public uint assembly_name_index;
-
-		[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
-		public uint managed_type_token_id;
+		public string to;
 	};
 
 	// Order of fields and their type must correspond *exactly* to that in
@@ -169,7 +143,7 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 	sealed class TypeMapAssembly
 	{
 		[NativeAssembler (Ignore = true)]
-		public string Name = String.Empty;
+		public string Name;
 
 		[NativeAssembler (Ignore = true)]
 		public Guid MVID;
@@ -183,15 +157,13 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 	}
 
 	readonly TypeMapGenerator.ModuleDebugData data;
-	StructureInfo? typeMapEntryStructureInfo;
-	StructureInfo? typeMapStructureInfo;
-	StructureInfo? typeMapAssemblyStructureInfo;
-	StructureInfo? typeMapManagedTypeInfoStructureInfo;
+	StructureInfo typeMapEntryStructureInfo;
+	StructureInfo typeMapStructureInfo;
+	StructureInfo typeMapAssemblyStructureInfo;
 	List<StructureInstance<TypeMapEntry>> javaToManagedMap;
 	List<StructureInstance<TypeMapEntry>> managedToJavaMap;
 	List<StructureInstance<TypeMapAssembly>> uniqueAssemblies;
-	List<StructureInstance<TypeMapManagedTypeInfo>> managedTypeInfos;
-	StructureInstance<TypeMap>? type_map;
+	StructureInstance<TypeMap> type_map;
 
 	public TypeMappingDebugNativeAssemblyGeneratorCLR (TaskLoggingHelper log, TypeMapGenerator.ModuleDebugData data)
 		: base (log)
@@ -211,10 +183,6 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 	protected override void Construct (LlvmIrModule module)
 	{
 		module.DefaultStringGroup = "tmd";
-
-		if (data.UniqueAssemblies == null) {
-			throw new InvalidOperationException ("Internal error: unique assemblies collection must be present");
-		}
 
 		MapStructures (module);
 
@@ -288,18 +256,7 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 			};
 			uniqueAssemblies.Add (new StructureInstance<TypeMapAssembly> (typeMapAssemblyStructureInfo, entry));
 		}
-
-		uniqueAssemblies.Sort ((StructureInstance<TypeMapAssembly> a, StructureInstance<TypeMapAssembly> b) => {
-			if (a.Instance == null) {
-				return b.Instance == null ? 0 : -1;
-			}
-
-			if (b.Instance == null) {
-				return 1;
-			}
-
-			return a.Instance.mvid_hash.CompareTo (b.Instance.mvid_hash);
-		});
+		uniqueAssemblies.Sort ((StructureInstance<TypeMapAssembly> a, StructureInstance<TypeMapAssembly> b) => a.Instance.mvid_hash.CompareTo (b.Instance.mvid_hash));
 
 		var managedTypeInfos = new List<StructureInstance<TypeMapManagedTypeInfo>> ();
 		// Java-to-managed maps don't use hashes since many mappings have multiple instances
