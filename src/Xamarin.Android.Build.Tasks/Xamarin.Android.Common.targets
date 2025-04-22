@@ -1499,7 +1499,8 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GetGenerateJavaStubsInputs" DependsOnTargets="_GenerateEnvironmentFiles">
   <ItemGroup>
-    <_AndroidILLinkAssemblies Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" Abi="$(RuntimeIdentifier)" />
+    <!-- HACK: %(Abi) is just hardcoded to get things to work at all -->
+    <_AndroidILLinkAssemblies Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')" Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" Abi="arm64-v8a" />
     <_GenerateJavaStubsInputs Include="@(_AndroidMSBuildAllProjects)" />
     <_GenerateJavaStubsInputs Include="$(_AndroidILLinkAssemblies)" />
     <_GenerateJavaStubsInputs Include="$(_AndroidManifestAbs)" />
