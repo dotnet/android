@@ -1519,6 +1519,22 @@ because xbuild doesn't support framework reference assemblies.
     Inputs="@(_GenerateJavaStubsInputs);$(_AndroidLinkFlag)"
     Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
+  <AssemblyModifierPipeline
+      ApplicationJavaClass="$(AndroidApplicationJavaClass)"
+      CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
+      Debug="$(AndroidIncludeDebugSymbols)"
+      DestinationFiles="@(_AndroidILLinkAssemblies)"
+      Deterministic="$(Deterministic)"
+      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
+      ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
+      PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
+      ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)"
+      ResolvedAssemblies="@(_AndroidILLinkAssemblies)"
+      ResolvedUserAssemblies="@(_AndroidILLinkAssemblies)"
+      SourceFiles="@(_AndroidILLinkAssemblies)"
+      TargetName="$(TargetName)">
+  </AssemblyModifierPipeline>
+
   <PropertyGroup>
     <_ManifestOutput Condition=" '$(AndroidManifestMerger)' == 'legacy' ">$(_OuterIntermediateOutputPath)android\AndroidManifest.xml</_ManifestOutput>
     <_ManifestOutput Condition=" '$(AndroidManifestMerger)' != 'legacy' ">$(_OuterIntermediateOutputPath)AndroidManifest.xml</_ManifestOutput>
@@ -1618,22 +1634,6 @@ because xbuild doesn't support framework reference assemblies.
       VersionCode="$(_AndroidVersionCode)"
       VersionName="$(_AndroidVersionName)">
   </GenerateMainAndroidManifest>
-
-  <AssemblyModifierPipeline
-      ApplicationJavaClass="$(AndroidApplicationJavaClass)"
-      CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
-      Debug="$(AndroidIncludeDebugSymbols)"
-      DestinationFiles="@(ResolvedAssemblies)"
-      Deterministic="$(Deterministic)"
-      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
-      ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
-      PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
-      ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)"
-      ResolvedAssemblies="@(_AllResolvedAssemblies)"
-      ResolvedUserAssemblies="@(ResolvedUserAssemblies)"
-      SourceFiles="@(ResolvedAssemblies)"
-      TargetName="$(TargetName)">
-  </AssemblyModifierPipeline>
 
   <ItemGroup>
     <FileWrites Include="@(_TypeMapAssemblySource)" />
