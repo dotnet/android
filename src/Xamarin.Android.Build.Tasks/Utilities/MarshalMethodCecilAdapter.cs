@@ -40,7 +40,7 @@ class MarshalMethodCecilAdapter
 			return obj;
 
 		foreach (var group in state.Classifier.MarshalMethods) {
-			var methods = new List<MarshalMethodEntryObject> ();
+			var methods = new List<MarshalMethodEntryObject> (group.Value.Count);
 
 			foreach (var method in group.Value) {
 				var entry = CreateEntry (method, state.ManagedMarshalMethodsLookupInfo);
@@ -105,7 +105,7 @@ class MarshalMethodCecilAdapter
 		if (method is null)
 			return null;
 
-		var parameters = new List<MarshalMethodEntryMethodParameterObject> ();
+		var parameters = new List<MarshalMethodEntryMethodParameterObject> (method.Parameters.Count);
 
 		foreach (var parameter in method.Parameters) {
 			parameters.Add (new MarshalMethodEntryMethodParameterObject (
