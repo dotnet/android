@@ -46,6 +46,7 @@ using Xamarin.Android.Net;
 
 namespace Xamarin.Android.NetTests {
 	[Category("InetAccess")]
+	[Category ("SSL")] // TODO: https://github.com/dotnet/android/issues/10069
 	public abstract class HttpClientHandlerTestBase
 	{
 		protected abstract HttpMessageHandler CreateHandler ();
