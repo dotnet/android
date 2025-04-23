@@ -12,7 +12,4 @@
     <!-- Only property required to opt into NativeAOT -->
     <PublishAot>true</PublishAot>
   </PropertyGroup>
-
-  <Import Project="..\..\build-tools\scripts\TestApkFeeds.props" />
-
 </Project>

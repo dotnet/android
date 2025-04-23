@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk" >
 
   <Import Project="..\..\..\Configuration.props" />
-  <Import Project="..\..\..\build-tools\scripts\TestApkFeeds.props" />
 
   <PropertyGroup>
     <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
