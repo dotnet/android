@@ -73,7 +73,7 @@ auto TypeMapper::typemap_type_to_type_debug (const char *typeName, const TypeMap
 			return 1;
 		}
 
-		return strcmp (key, entry.from) == 0;
+		return strcmp (entry.from, key) == 0;
 	};
 
 	auto less_than = [](TypeMapEntry const& entry, const char *key) -> bool {
@@ -81,7 +81,7 @@ auto TypeMapper::typemap_type_to_type_debug (const char *typeName, const TypeMap
 			return 1;
 		}
 
-		return strcmp (key, entry.from);
+		return strcmp (entry.from, key) < 0;
 	};
 
 	ssize_t idx = Search::binary_search<TypeMapEntry, const char*, equal, less_than> (typeName, map, type_map.entry_count);
@@ -103,7 +103,25 @@ auto TypeMapper::typemap_type_to_type_debug (const char *typeName, const TypeMap
 [[gnu::always_inline]]
 auto TypeMapper::typemap_managed_to_java_debug (const char *typeName, const uint8_t *mvid) noexcept -> const char*
 {
-	return typemap_type_to_type_debug (typeName, type_map.managed_to_java, MANAGED, JAVA);
+	dynamic_local_path_string full_type_name;
+	full_type_name.append (typeName);
+
+	hash_t mvid_hash = xxhash::hash (mvid, 16z); // we must hope managed land called us with valid data
+
+	auto equal = [](TypeMapAssembly const& entry, hash_t key) -> bool { return entry.mvid_hash == key; };
+	auto less_than = [](TypeMapAssembly const& entry, hash_t key) -> bool { return entry.mvid_hash < key; };
+	ssize_t idx = Search::binary_search<TypeMapAssembly, hash_t, equal, less_than> (mvid_hash, type_map_unique_assemblies, type_map.unique_assemblies_count);
+
+	if (idx >= 0) [[likely]] {
+		TypeMapAssembly const& assm = type_map_unique_assemblies[idx];
+		full_type_name.append (", "sv);
+		full_type_name.append (&type_map_assembly_names_blob[assm.name_offset], assm.name_length);
+		log_debug (LOG_ASSEMBLY, "Fixed-up type name: '{}'", full_type_name.get ());
+	} else {
+		log_warn (LOG_ASSEMBLY, "Unable to look up assembly name for type '{}', trying without it.", typeName);
+	}
+
+	return typemap_type_to_type_debug (full_type_name.get (), type_map.managed_to_java, MANAGED, JAVA);
 }
 #endif // def DEBUG
 
