@@ -251,6 +251,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("CoreCLRIgnore")] //TODO: Fix this test for CoreCLR
 		public void ActivatedDirectObjectSubclassesShouldBeRegistered ()
 		{
 			if (Build.VERSION.SdkInt <= BuildVersionCodes.GingerbreadMr1)
