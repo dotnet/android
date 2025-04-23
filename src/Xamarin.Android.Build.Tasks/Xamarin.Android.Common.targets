@@ -2125,7 +2125,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CompileNativeAssemblySources"
-    DependsOnTargets="_PrepareNativeAssemblyItems;_GenerateCompressedAssembliesNativeSourceFiles"
+    DependsOnTargets="_PrepareNativeAssemblySources;_PrepareNativeAssemblyItems;_GenerateCompressedAssembliesNativeSourceFiles"
     Inputs="@(_TypeMapAssemblySource);@(_TypeMapAssemblyInclude);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource)"
     Outputs="@(_NativeAssemblyTarget)">
   <CompileNativeAssembly
