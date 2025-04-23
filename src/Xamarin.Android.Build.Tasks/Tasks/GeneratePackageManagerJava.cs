@@ -314,10 +314,11 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			ConcurrentDictionary<AndroidTargetArch, NativeCodeGenState>? nativeCodeGenStates = null;
+			NativeCodeGenStateCollection? nativeCodeGenStates = null;
+
 			if (enableMarshalMethods) {
-				nativeCodeGenStates = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ConcurrentDictionary<AndroidTargetArch, NativeCodeGenState>> (
-					MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory),
+				nativeCodeGenStates = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<NativeCodeGenStateCollection> (
+					MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateObjectRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory),
 					RegisteredTaskObjectLifetime.Build
 				);
 			}
@@ -423,17 +424,9 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			if (nativeCodeGenStates is not null) {
-				// Dispose all XAAssemblyResolvers
-				Log.LogDebugMessage ($"Disposing all {nameof (NativeCodeGenState)}.{nameof (NativeCodeGenState.Resolver)}");
-				foreach	(var state in nativeCodeGenStates.Values) {
-					state.Resolver.Dispose ();
-				}
-			}
-
-			NativeCodeGenState EnsureCodeGenState (AndroidTargetArch targetArch)
+			NativeCodeGenStateObject EnsureCodeGenState (AndroidTargetArch targetArch)
 			{
-				if (nativeCodeGenStates == null || !nativeCodeGenStates.TryGetValue (targetArch, out NativeCodeGenState? state)) {
+				if (nativeCodeGenStates == null || !nativeCodeGenStates.States.TryGetValue (targetArch, out NativeCodeGenStateObject? state)) {
 					throw new InvalidOperationException ($"Internal error: missing native code generation state for architecture '{targetArch}'");
 				}
 
