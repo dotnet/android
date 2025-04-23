@@ -4,7 +4,7 @@ Microsoft.Android.Runtime.proj
 
 This project file is used to create Microsoft.Android.Runtime.[Mono|NativeAOT|etc.].[API].[RID] NuGets, which are
 runtime packs that contain the assets required for a self-contained publish of
-projects that use the Microsoft.Android framework in .NET 6+.
+projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
 ***********************************************************************************************
 -->
 <Project Sdk="Microsoft.Build.NoTargets">
@@ -19,6 +19,8 @@ projects that use the Microsoft.Android framework in .NET 6+.
     <PackageId>Microsoft.Android.Runtime.$(AndroidRuntime).$(AndroidApiLevel).$(AndroidRID)</PackageId>
     <OverridePackageId>$(PackageId)</OverridePackageId>
     <PlatformPackageType>RuntimePack</PlatformPackageType>
+    <SharedFrameworkName>Microsoft.Android.Runtimes</SharedFrameworkName>
+    <SharedFrameworkFriendlyName>.NET $(DotNetTargetFrameworkVersion) - $(SharedFrameworkName)</SharedFrameworkFriendlyName>
     <Description>Microsoft.Android runtime components for API $(AndroidApiLevel). Please do not reference directly.</Description>
     <_AndroidRuntimePackAssemblyPath>runtimes/$(AndroidRID)/lib/$(DotNetTargetFramework)</_AndroidRuntimePackAssemblyPath>
     <_AndroidRuntimePackNativePath>runtimes/$(AndroidRID)/native</_AndroidRuntimePackNativePath>
@@ -47,22 +49,6 @@ projects that use the Microsoft.Android framework in .NET 6+.
       <_RuntimeFlavorDirName Condition=" '$(AndroidRuntime)' == 'Mono' Or '$(AndroidRuntime)' == '' ">mono</_RuntimeFlavorDirName>
     </PropertyGroup>
 
-    <ItemGroup>
-      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETDefaultOutDir)Java.Interop.dll" />
-      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETDefaultOutDir)Mono.Android.dll" />
-      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETDefaultOutDir)Mono.Android.Runtime.dll" />
-      <!-- Always include stable versions of the following assemblies -->
-      <_AndroidRuntimePackAssemblies
-          Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\Microsoft.Android.Runtime.NativeAOT.dll"
-          Condition=" '$(AndroidRuntime)' == 'NativeAOT' "
-      />
-      <_AndroidRuntimePackAssemblies
-          Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\System.IO.Hashing.dll"
-          NoSymbols="true"
-      />
-      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\Mono.Android.Export.dll" />
-    </ItemGroup>
-
     <ItemGroup Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">
       <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.debug.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.debug.so" />
       <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.release.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.release.so" />
@@ -84,6 +70,10 @@ projects that use the Microsoft.Android framework in .NET 6+.
       <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libm.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libm.so" />
       <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libz.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libz.so" />
       <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libarchive-dso-stub.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libarchive-dso-stub.so" />
+    </ItemGroup>
+
+    <ItemGroup Condition=" '$(AndroidRuntime)' == 'NativeAOT' ">
+      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\Microsoft.Android.Runtime.NativeAOT.dll" />
     </ItemGroup>
 
     <ItemGroup>
