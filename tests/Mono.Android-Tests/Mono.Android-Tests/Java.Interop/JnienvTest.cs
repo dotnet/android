@@ -251,7 +251,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		[Category ("CoreCLRIgnore")] //TODO: Fix this test for CoreCLR
+		[Category ("CoreCLRIgnore")] //TODO: https://github.com/dotnet/android/issues/10069
 		public void ActivatedDirectObjectSubclassesShouldBeRegistered ()
 		{
 			if (Build.VERSION.SdkInt <= BuildVersionCodes.GingerbreadMr1)
