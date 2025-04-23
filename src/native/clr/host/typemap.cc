@@ -67,6 +67,7 @@ namespace {
 [[gnu::always_inline]]
 auto TypeMapper::typemap_type_to_type_debug (const char *typeName, const TypeMapEntry *map, std::string_view const& from_name, std::string_view const& to_name) noexcept -> const char*
 {
+	log_debug (LOG_ASSEMBLY, "Looking up {} type '{}'", from_name, optional_string (typeName));
 	auto equal = [](TypeMapEntry const& entry, const char *key) -> bool {
 		if (entry.from == nullptr) {
 			return 1;
@@ -100,7 +101,7 @@ auto TypeMapper::typemap_type_to_type_debug (const char *typeName, const TypeMap
 }
 
 [[gnu::always_inline]]
-auto TypeMapper::typemap_managed_to_java_debug (const char *typeName) noexcept -> const char*
+auto TypeMapper::typemap_managed_to_java_debug (const char *typeName, const uint8_t *mvid) noexcept -> const char*
 {
 	return typemap_type_to_type_debug (typeName, type_map.managed_to_java, MANAGED, JAVA);
 }
@@ -243,7 +244,7 @@ auto TypeMapper::typemap_managed_to_java_release (const char *typeName, const ui
 #endif // def RELEASE
 
 [[gnu::flatten]]
-auto TypeMapper::typemap_managed_to_java (const char *typeName, [[maybe_unused]] const uint8_t *mvid) noexcept -> const char*
+auto TypeMapper::typemap_managed_to_java (const char *typeName, const uint8_t *mvid) noexcept -> const char*
 {
 	log_debug (LOG_ASSEMBLY, "typemap_managed_to_java: looking up type '{}'", optional_string (typeName));
 	if (FastTiming::enabled ()) [[unlikely]] {
@@ -259,7 +260,7 @@ auto TypeMapper::typemap_managed_to_java (const char *typeName, [[maybe_unused]]
 #if defined(RELEASE)
 	ret = typemap_managed_to_java_release (typeName, mvid);
 #else
-	ret = typemap_managed_to_java_debug (typeName);
+	ret = typemap_managed_to_java_debug (typeName, mvid);
 #endif
 
 	if (FastTiming::enabled ()) [[unlikely]] {
