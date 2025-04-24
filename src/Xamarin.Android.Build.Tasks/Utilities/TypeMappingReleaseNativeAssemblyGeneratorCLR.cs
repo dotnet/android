@@ -219,6 +219,7 @@ namespace Xamarin.Android.Tasks
 			public List<StructureInstance<TypeMapJava>> JavaMap;
 			public List<ModuleMapData> AllModulesData;
 			public List<string> AssemblyNames;
+			public LlvmIrStringBlob AssemblyNamesBlob;
 		}
 
 		readonly NativeTypeMappingData mappingData;
@@ -299,6 +300,9 @@ namespace Xamarin.Android.Tasks
 			module.AddGlobalVariable ("java_type_names", cs.JavaNames, LlvmIrVariableOptions.GlobalConstant, " Java type names");
 			module.AddGlobalVariable ("managed_type_names", cs.ManagedTypeNames, LlvmIrVariableOptions.GlobalConstant, " Managed type names");
 			module.AddGlobalVariable ("managed_assembly_names", cs.AssemblyNames, LlvmIrVariableOptions.GlobalConstant, " Managed assembly names");
+
+			// WIP
+			module.AddGlobalVariable ("managed_assembly_names_blob", cs.AssemblyNamesBlob, LlvmIrVariableOptions.GlobalConstant, " Managed assembly names");
 		}
 
 		void SortEntriesAndUpdateJavaIndexes (LlvmIrVariable variable, LlvmIrModuleTarget target, object? callerState)
@@ -427,6 +431,7 @@ namespace Xamarin.Android.Tasks
 
 			cs.MapModules = new List<StructureInstance<TypeMapModule>> ();
 			cs.AssemblyNames = new List<string> ();
+			cs.AssemblyNamesBlob = new ();
 			foreach (TypeMapGenerator.ModuleReleaseData data in mappingData.Modules) {
 				uint assemblyNameIndex = GetEntryIndex (data.AssemblyName, seenAssemblyNames, cs.AssemblyNames);
 				string mapName = $"module{moduleCounter++}_managed_to_java";
@@ -438,6 +443,7 @@ namespace Xamarin.Android.Tasks
 					duplicateMapName = $"{mapName}_duplicates";
 				}
 
+				(int stringOffset, int stringLength) = cs.AssemblyNamesBlob.Add (data.AssemblyName);
 				var map_module = new TypeMapModule {
 					MVID = data.Mvid,
 					MapSymbolName = mapName,
