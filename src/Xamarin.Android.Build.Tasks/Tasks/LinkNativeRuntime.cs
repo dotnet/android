@@ -73,6 +73,7 @@ public class LinkNativeRuntime : AsyncTask
 			StripDebugSymbols = StripDebugSymbols,
 			SaveDebugSymbols = SaveDebugSymbols,
 			UseNdkLibraries = true,
+			UseSymbolic = true,
 			NdkRootPath = AndroidNdkDirectory,
 			NdkApiLevel = AndroidApiLevel,
 		};
