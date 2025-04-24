@@ -239,14 +239,16 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void CreateTypeWithExportedMethods ()
+		[Category ("CoreCLRIgnore")] //TODO: https://github.com/dotnet/android/issues/10069
+		public void CreateTypeWithExportedMethods()
 		{
-			using (var e = new ContainsExportedMethods ()) {
-				e.Exported ();
-				Assert.AreEqual (1, e.Count);
-				IntPtr m = JNIEnv.GetMethodID (e.Class.Handle, "Exported", "()V");
-				JNIEnv.CallVoidMethod (e.Handle, m);
-				Assert.AreEqual (2, e.Count);
+			using (var e = new ContainsExportedMethods())
+			{
+				e.Exported();
+				Assert.AreEqual(1, e.Count);
+				IntPtr m = JNIEnv.GetMethodID(e.Class.Handle, "Exported", "()V");
+				JNIEnv.CallVoidMethod(e.Handle, m);
+				Assert.AreEqual(2, e.Count);
 			}
 		}
 
