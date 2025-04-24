@@ -28,6 +28,8 @@ class MarshalMethodCecilAdapter
 			var arch = kvp.Key;
 			var state = kvp.Value;
 			var obj = CreateNativeCodeGenState (arch, state);
+			obj.PinvokeInfos = state.PinvokeInfos;
+			obj.TargetArch = state.TargetArch;
 			collection.States.Add (arch, obj);
 		}
 
@@ -156,7 +158,8 @@ class NativeCodeGenStateCollection
 class NativeCodeGenStateObject
 {
 	public Dictionary<string, IList<MarshalMethodEntryObject>> MarshalMethods { get; } = [];
-	public List<(string JniName, string AssemblyQualifiedName)> ApplicationsAndInstrumentationsToRegister { get; } = [];
+	public List<PinvokeScanner.PinvokeEntryInfo>? PinvokeInfos                { get; set; }
+	public AndroidTargetArch TargetArch                                       { get; set; } = AndroidTargetArch.None;
 }
 
 class MarshalMethodEntryObject

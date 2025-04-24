@@ -75,10 +75,10 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 		{ "mono-android.release",        String.Empty },
 	};
 
-	readonly NativeCodeGenState state;
+	readonly NativeCodeGenStateObject state;
 	readonly ITaskItem[] monoComponents;
 
-	public PreservePinvokesNativeAssemblyGenerator (TaskLoggingHelper log, NativeCodeGenState codeGenState, ITaskItem[] monoComponents)
+	public PreservePinvokesNativeAssemblyGenerator (TaskLoggingHelper log, NativeCodeGenStateObject codeGenState, ITaskItem[] monoComponents)
 		: base (log)
 	{
 		if (codeGenState.PinvokeInfos == null) {
