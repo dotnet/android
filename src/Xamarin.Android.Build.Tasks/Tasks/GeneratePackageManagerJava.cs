@@ -285,10 +285,11 @@ public class GeneratePackageManagerJava : AndroidTask
 			pkgmgr.WriteLine ("}");
 			pkgmgr.Flush ();
 
-			ConcurrentDictionary<AndroidTargetArch, NativeCodeGenState>? nativeCodeGenStates = null;
+			NativeCodeGenStateCollection? nativeCodeGenStates = null;
+
 			if (enableMarshalMethods || EnableNativeRuntimeLinking) {
-				nativeCodeGenStates = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ConcurrentDictionary<AndroidTargetArch, NativeCodeGenState>> (
-					MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory),
+				nativeCodeGenStates = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<NativeCodeGenStateCollection> (
+					MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateObjectRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory),
 					RegisteredTaskObjectLifetime.Build
 				);
 			}
