@@ -77,7 +77,7 @@ namespace Xamarin.Android.Build.Tests
 				ResolvedUserAssemblies = resolvedUserAssembliesList.ToArray (),
 			};
 
-			var configTask = new GenerateNativeApplicationConfigAssemblies {
+			var configTask = new GenerateNativeApplicationConfigSources {
 				BuildEngine = new MockBuildEngine (TestContext.Out),
 				ResolvedAssemblies = resolvedAssembliesList.ToArray (),
 				EnvironmentOutputDirectory = Path.Combine (path, "env"),
@@ -88,7 +88,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			Assert.IsTrue (packageManagerTask.Execute (), "GeneratePackageManagerJava task should have executed.");
-			Assert.IsTrue (configTask.Execute (), "GenerateNativeApplicationConfigAssemblies task should have executed.");
+			Assert.IsTrue (configTask.Execute (), "GenerateNativeApplicationConfigSources task should have executed.");
 
 			AssertFileContentsMatch (Path.Combine (XABuildPaths.TestAssemblyOutputDirectory, "Expected", "CheckPackageManagerAssemblyOrder.java"), Path.Combine(path, "src", "mono", "MonoPackageManager_Resources.java"));
 			var txt = File.ReadAllText (Path.Combine (path, "env", "environment.arm64-v8a.ll"));
@@ -97,7 +97,7 @@ namespace Xamarin.Android.Build.Tests
 			StringAssert.Contains ("YYYY", txt, "environment.x86.ll should contain 'YYYY'");
 
 			File.WriteAllText (Path.Combine (path, "myenv.txt"), @"MYENV=XXXX");
-			Assert.IsTrue (configTask.Execute (), "GenerateNativeApplicationConfigAssemblies task should have executed. (run 2)");
+			Assert.IsTrue (configTask.Execute (), "GenerateNativeApplicationConfigSources task should have executed. (run 2)");
 			txt = File.ReadAllText (Path.Combine (path, "env", "environment.arm64-v8a.ll"));
 			StringAssert.Contains ("XXXX", txt, "environment.arm64-v8a.ll should contain 'XXXX'");
 			txt = File.ReadAllText (Path.Combine (path, "env", "environment.x86.ll"));

@@ -20,7 +20,7 @@ namespace Xamarin.Android.Tasks
 	/// <summary>
 	/// Creates the native assembly containing the application config.
 	/// </summary>
-	public class GenerateNativeApplicationConfigAssemblies : AndroidTask
+	public class GenerateNativeApplicationConfigSources : AndroidTask
 	{
 		public override string TaskPrefix => "GCA";
 

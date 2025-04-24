@@ -13,7 +13,7 @@ namespace Xamarin.Android.Tasks;
 /// Creates the native assembly containing LLVM marshal methods. Note an empty file is
 /// generated if EnableMarshalMethods = false, so this must be called either way.
 /// </summary>
-public class GenerateNativeMarshalMethodAssemblies : AndroidTask
+public class GenerateNativeMarshalMethodSources : AndroidTask
 {
 	public override string TaskPrefix => "GNM";
 

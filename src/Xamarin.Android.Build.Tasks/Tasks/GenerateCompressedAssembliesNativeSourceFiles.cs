@@ -101,7 +101,7 @@ namespace Xamarin.Android.Tasks
 
 					using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 						try {
-							composer.Generate (compressedAssemblies, GenerateNativeApplicationConfigAssemblies.GetAndroidTargetArchForAbi (abi), sw, llvmIrFilePath);
+							composer.Generate (compressedAssemblies, GenerateNativeApplicationConfigSources.GetAndroidTargetArchForAbi (abi), sw, llvmIrFilePath);
 						} catch {
 							throw;
 						} finally {

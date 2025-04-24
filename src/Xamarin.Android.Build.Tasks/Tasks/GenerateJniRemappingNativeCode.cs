@@ -86,7 +86,7 @@ namespace Xamarin.Android.Tasks
 				string llFilePath  = $"{baseAsmFilePath}.ll";
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-					jniRemappingComposer.Generate (module, GenerateNativeApplicationConfigAssemblies.GetAndroidTargetArchForAbi (abi), sw, llFilePath);
+					jniRemappingComposer.Generate (module, GenerateNativeApplicationConfigSources.GetAndroidTargetArchForAbi (abi), sw, llFilePath);
 					sw.Flush ();
 					Files.CopyIfStreamChanged (sw.BaseStream, llFilePath);
 				}
