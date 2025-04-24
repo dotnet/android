@@ -433,6 +433,12 @@ void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType,
 	int methods_len = env->GetStringLength (methods);
 	const jchar *methods_ptr = env->GetStringChars (methods, nullptr);
 
+	dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> managed_type_name;
+	const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
+	managed_type_name.assign (mt_ptr, strlen (mt_ptr));
+	log_debug (LOG_ASSEMBLY, "Registering type: '{}'", managed_type_name.get ());
+	env->ReleaseStringUTFChars (managedType, mt_ptr);
+
 	// TODO: must attach thread to the runtime here
 	jnienv_register_jni_natives (managedType_ptr, managedType_len, nativeClass, methods_ptr, methods_len);
 
