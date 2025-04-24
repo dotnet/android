@@ -47,18 +47,23 @@ core workload SDK packs imported by WorkloadManifest.targets.
         Files="@(AndroidSdkBuildTools)"
     />
 
+    <!-- For symbols use a relative path one directory up to circumvent the inclusion of a root 'runtimes' folder in the target path due to:
+      https://github.com/dotnet/arcade/blob/2b1931c05dd6ceb89120131a8b39eaa81735179a/src/Microsoft.DotNet.SharedFramework.Sdk/targets/sharedfx.targets#L569
+    -->
     <ItemGroup>
-      <FilesToPackage Include="@(AndroidSdkBuildTools)" TargetPath="%(AndroidSdkBuildTools.TargetPath)" />
+      <FilesToPackage Include="@(AndroidSdkBuildTools)" Condition=" '%(Extension)' != '.pdb' " TargetPath="%(AndroidSdkBuildTools.TargetPath)" />
+      <FilesToPackage Include="@(AndroidSdkBuildTools)" Condition=" '%(Extension)' == '.pdb' " TargetPath="..\%(AndroidSdkBuildTools.TargetPath)" IsSymbolFile="true" />
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Sdk.ILLink.dll" TargetPath="tools" />
-      <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Sdk.ILLink.pdb" TargetPath="tools" />
+      <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Sdk.ILLink.pdb" TargetPath="..\tools" IsSymbolFile="true"/>
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)%(_LocalizationLanguages.Identity)\Microsoft.Android.Sdk.ILLink.resources.dll" TargetPath="tools\%(_LocalizationLanguages.Identity)" />
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)%(_LocalizationLanguages.Identity)\Java.Interop.Localization.resources.dll" TargetPath="tools\%(_LocalizationLanguages.Identity)" />
-      <FilesToPackage Include="@(JIUtilityFile->'$(MicrosoftAndroidSdkOutDir)%(Identity)')"  TargetPath="tools" />
+      <FilesToPackage Include="@(JIUtilityFile->'$(MicrosoftAndroidSdkOutDir)%(Identity)')" Condition=" '%(Extension)' != '.pdb' " TargetPath="tools" />
+      <FilesToPackage Include="@(JIUtilityFile->'$(MicrosoftAndroidSdkOutDir)%(Identity)')" Condition=" '%(Extension)' == '.pdb' " TargetPath="..\tools" IsSymbolFile="true" />
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)class-parse.dll" TargetPath="tools" />
-      <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)class-parse.pdb" TargetPath="tools" />
+      <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)class-parse.pdb" TargetPath="..\tools" IsSymbolFile="true" />
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)class-parse.runtimeconfig.json" TargetPath="tools" />
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)generator.dll" TargetPath="tools" />
-      <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)generator.pdb" TargetPath="tools" />
+      <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)generator.pdb" TargetPath="..\tools" IsSymbolFile="true" />
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)generator.runtimeconfig.json" TargetPath="tools" />
       <FilesToPackage Include="@(VersionFiles)" TargetPath="tools" />
       <FilesToPackage Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\Sdk\**" TargetPath="Sdk" />
