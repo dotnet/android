@@ -28,13 +28,11 @@ void _monodroid_gref_log_delete (jobject handle, char type, const char *threadNa
 
 const char* clr_typemap_managed_to_java (const char *typeName, const uint8_t *mvid) noexcept
 {
-	log_debug (LOG_DEFAULT, __PRETTY_FUNCTION__);
 	return TypeMapper::typemap_managed_to_java (typeName, mvid);
 }
 
 bool clr_typemap_java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept
 {
-	log_debug (LOG_DEFAULT, __PRETTY_FUNCTION__);
 	return TypeMapper::typemap_java_to_managed (java_type_name, assembly_name, managed_type_token_id);
 }
 
