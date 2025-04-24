@@ -47,6 +47,7 @@ class NativeLinker
 	public bool AllowUndefinedSymbols { get; set; } = false;
 	public bool UseNdkLibraries { get; set; } = false;
 	public bool TargetsCLR { get; set; }
+	public bool UseSymbolic { get; set; }
 	public string? NdkRootPath { get; set; }
 	public string? NdkApiLevel { get; set; }
 	public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment64Bit;
@@ -155,6 +156,10 @@ class NativeLinker
 
 		if (TargetsCLR) {
 			sw.WriteLine ("--eh-frame-hdr"); // CoreCLR needs it for its exception stack unwinding
+		}
+
+		if (UseSymbolic) {
+			sw.WriteLine ("-Bsymbolic");
 		}
 
 		// This MUST go before extra args, since the NDK library path must take precedence over the path in extra args set in the ctor
