@@ -36,35 +36,22 @@ class LlvmIrStringBlob
 		int offset;
 		if (segments.Count > 0) {
 			StringInfo lastSegment = segments[segments.Count - 1];
-			offset = lastSegment.Offset + lastSegment.Length + 1; // Include trailing NUL here
+			offset = lastSegment.Offset + lastSegment.Length;
 		} else {
 			offset = 0;
 		}
 
 		info = new StringInfo (
 			Offset: offset,
-			Length: bytes.Length,
+			Length: bytes.Length + 1, // MUST include the terminating NUL ("virtual")
 			Bytes: bytes,
 			Value: s
 		);
 		segments.Add (info);
 		cache.Add (s, info);
-		size += info.Length + 1; // Account for the trailing NUL
+		size += info.Length;
 
 		return (info.Offset, info.Length);
-	}
-
-	public int GetIndexOf (string s)
-	{
-		if (String.IsNullOrEmpty (s)) {
-			return -1;
-		}
-
-		if (!cache.TryGetValue (s, out StringInfo info)) {
-			return -1;
-		}
-
-		return info.Offset;
 	}
 
 	public IEnumerable<StringInfo> GetSegments ()
