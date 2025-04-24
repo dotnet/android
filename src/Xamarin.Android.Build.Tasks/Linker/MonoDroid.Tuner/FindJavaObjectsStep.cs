@@ -119,8 +119,10 @@ public class FindJavaObjectsStep : BaseStep, IAssemblyModifierPipelineStep
 			DefaultMonoRuntimeInitialization = "mono.MonoPackageManager.LoadApplication (context);",
 		};
 
-		if (UseMarshalMethods)
-			reader_options.MethodClassifier = new MarshalMethodsClassifier (Context, Context.Resolver, Log);
+		if (UseMarshalMethods) {
+			var classifier = new MarshalMethodsClassifier (Context, Context.Resolver, Log);
+			reader_options.MethodClassifier = new MarshalMethodsCollection (classifier);
+		}
 
 		foreach (var type in types) {
 			var wrapper = CecilImporter.CreateType (type, Context, reader_options);

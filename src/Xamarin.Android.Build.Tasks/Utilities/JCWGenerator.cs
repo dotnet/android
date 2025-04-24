@@ -21,21 +21,19 @@ namespace Xamarin.Android.Tasks;
 
 class JCWGeneratorContext
 {
-	public bool UseMarshalMethods                    { get; }
 	public AndroidTargetArch Arch                    { get; }
 	public TypeDefinitionCache TypeDefinitionCache   { get; }
 	public XAAssemblyResolver Resolver               { get; }
 	public IList<TypeDefinition> JavaTypes           { get; }
 	public ICollection<ITaskItem> ResolvedAssemblies { get; }
 
-	public JCWGeneratorContext (AndroidTargetArch arch, XAAssemblyResolver res, ICollection<ITaskItem> resolvedAssemblies, List<TypeDefinition> javaTypesForJCW, TypeDefinitionCache tdCache, bool useMarshalMethods)
+	public JCWGeneratorContext (AndroidTargetArch arch, XAAssemblyResolver res, ICollection<ITaskItem> resolvedAssemblies, List<TypeDefinition> javaTypesForJCW, TypeDefinitionCache tdCache)
 	{
 		Arch = arch;
 		Resolver = res;
 		ResolvedAssemblies = resolvedAssemblies;
 		JavaTypes = javaTypesForJCW.AsReadOnly ();
 		TypeDefinitionCache = tdCache;
-		UseMarshalMethods = useMarshalMethods;
 	}
 }
 
@@ -46,8 +44,6 @@ class JCWGenerator
 
 	public JavaPeerStyle CodeGenerationTarget { get; set; } = JavaPeerStyle.XAJavaInterop1;
 
-	public MarshalMethodsClassifier? Classifier { get; private set; }
-
 	public JCWGenerator (TaskLoggingHelper log, JCWGeneratorContext context)
 	{
 		this.log = log;
@@ -56,46 +52,17 @@ class JCWGenerator
 
 	public List<string> GeneratedJavaFiles { get; } = [];
 
-	/// <summary>
-	/// Performs marshal method classification, if marshal methods are used, but does not generate any code.
-	/// If marshal methods are used, this method will set the <see cref="Classifier"/> property to a valid
-	/// classifier instance on return.  If marshal methods are disabled, this call is a no-op but it will
-	/// return <c>true</c>.
-	/// </summary>
-	public bool Classify (string androidSdkPlatform)
+	public bool Generate (string androidSdkPlatform, string outputPath, string applicationJavaClass)
 	{
-		if (!context.UseMarshalMethods) {
-			return true;
-		}
-
-		Classifier = MakeClassifier ();
-		return ProcessTypes (
-			generateCode: false,
-			androidSdkPlatform,
-			Classifier,
-			outputPath: null,
-			applicationJavaClass: null
-		);
-	}
-
-	public bool GenerateAndClassify (string androidSdkPlatform, string outputPath, string applicationJavaClass)
-	{
-		if (context.UseMarshalMethods) {
-			Classifier = MakeClassifier ();
-		}
-
 		return ProcessTypes (
 			generateCode: true,
 			androidSdkPlatform,
-			Classifier,
 			outputPath,
 			applicationJavaClass
 		);
 	}
 
-	MarshalMethodsClassifier MakeClassifier () => new MarshalMethodsClassifier (context.Arch, context.TypeDefinitionCache, context.Resolver, log);
-
-	bool ProcessTypes (bool generateCode, string androidSdkPlatform, MarshalMethodsClassifier? classifier, string? outputPath, string? applicationJavaClass)
+	bool ProcessTypes (bool generateCode, string androidSdkPlatform, string? outputPath, string? applicationJavaClass)
 	{
 		if (generateCode && String.IsNullOrEmpty (outputPath)) {
 			throw new ArgumentException ("must not be null or empty", nameof (outputPath));
@@ -111,12 +78,12 @@ class JCWGenerator
 				continue;
 			}
 
-			CallableWrapperType generator = CreateGenerator (type, classifier, monoInit, hasExportReference, applicationJavaClass);
+			CallableWrapperType generator = CreateGenerator (type, monoInit, hasExportReference, applicationJavaClass);
 			if (!generateCode) {
 				continue;
 			}
 
-			if (!GenerateCode (generator, type, outputPath, hasExportReference, classifier)) {
+			if (!GenerateCode (generator, type, outputPath, hasExportReference)) {
 				ok = false;
 			}
 		}
@@ -124,7 +91,7 @@ class JCWGenerator
 		return ok;
 	}
 
-	public bool GenerateCode (CallableWrapperType generator, TypeDefinition type, string outputPath, bool hasExportReference, MarshalMethodsClassifier? classifier)
+	public bool GenerateCode (CallableWrapperType generator, TypeDefinition type, string outputPath, bool hasExportReference)
 	{
 		bool ok = true;
 		using var writer = MemoryStreamPool.Shared.CreateStreamWriter ();
@@ -134,11 +101,6 @@ class JCWGenerator
 
 		try {
 			generator.Generate (writer, writer_options);
-			if (context.UseMarshalMethods) {
-				if (classifier.FoundDynamicallyRegisteredMethods (type)) {
-					log.LogWarning ($"Type '{type.GetAssemblyQualifiedName (context.TypeDefinitionCache)}' will register some of its Java override methods dynamically. This may adversely affect runtime performance. See preceding warnings for names of dynamically registered methods.");
-				}
-			}
 			writer.Flush ();
 
 			string path = generator.GetDestinationPath (outputPath);
@@ -182,13 +144,12 @@ class JCWGenerator
 		return ok;
 	}
 
-	CallableWrapperType CreateGenerator (TypeDefinition type, MarshalMethodsClassifier? classifier, string monoInit, bool hasExportReference, string? applicationJavaClass)
+	CallableWrapperType CreateGenerator (TypeDefinition type, string monoInit, bool hasExportReference, string? applicationJavaClass)
 	{
 		var reader_options = new CallableWrapperReaderOptions {
 			DefaultApplicationJavaClass         = applicationJavaClass,
 			DefaultGenerateOnCreateOverrides    = false, // this was used only when targetting Android API <= 10, which is no longer supported
 			DefaultMonoRuntimeInitialization    = monoInit,
-			MethodClassifier                    = classifier,
 		};
 
 		return CecilImporter.CreateType (type, context.TypeDefinitionCache, reader_options);
@@ -246,8 +207,8 @@ class JCWGenerator
 	{
 		logger.LogDebugMessage ($"Ensuring marshal method classifier in architecture '{state.TargetArch}' matches the one in architecture '{templateState.TargetArch}'");
 
-		MarshalMethodsClassifier? templateClassifier = templateState.Classifier;
-		MarshalMethodsClassifier? classifier = state.Classifier;
+		MarshalMethodsCollection? templateClassifier = templateState.Classifier;
+		MarshalMethodsCollection? classifier = state.Classifier;
 
 		if (templateClassifier == null) {
 			if (classifier != null) {
