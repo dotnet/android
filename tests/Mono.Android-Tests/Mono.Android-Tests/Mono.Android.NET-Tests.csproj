@@ -32,7 +32,7 @@
     -->
     <ExcludeCategories>DotNetIgnore</ExcludeCategories>
     <!-- TODO: https://github.com/dotnet/android/issues/10069 -->
-    <ExcludeCategories Condition=" '$(UseMonoRuntime)' == 'false' ">$(ExcludeCategories):CoreCLRIgnore:SSL:NTLM</ExcludeCategories>
+    <ExcludeCategories Condition=" '$(UseMonoRuntime)' == 'false' ">$(ExcludeCategories):CoreCLRIgnore:SSL:NTLM:GCBridge:RuntimeConfig</ExcludeCategories>
     <!-- FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190 -->
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):LLVMIgnore</ExcludeCategories>
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):InetAccess:NetworkInterfaces</ExcludeCategories>

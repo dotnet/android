@@ -428,7 +428,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (null, m, "`JnienvTest` does *not* subclass Java.Lang.Object, it should *not* be in the typemap!");
 		}
 
-		[Test]
+		[Test, Category ("GCBridge")]
 		public void DoNotLeakWeakReferences ()
 		{
 			GC.Collect ();
