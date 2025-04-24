@@ -479,6 +479,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return;
 			}
 
+			if (type == typeof(LlvmIrStringBlob)) {
+				WriteStringBlobType (context, (LlvmIrStringBlob?)value, out typeInfo);
+				return;
+			}
+
 			irType = GetIRType (context, type, out size, out isPointer);
 			typeInfo = new LlvmTypeInfo (
 				isPointer: isPointer,
@@ -488,6 +493,21 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				maxFieldAlignment: size
 			);
 			context.Output.Write (irType);
+		}
+
+		void WriteStringBlobType (GeneratorWriteContext context, LlvmIrStringBlob? blob, out LlvmTypeInfo typeInfo)
+		{
+			long size = blob?.Size ?? 0;
+			// Blobs are always arrays of bytes
+			context.Output.Write ($"[{size} x i8]");
+
+			typeInfo = new LlvmTypeInfo (
+				isPointer: false,
+				isAggregate: true,
+				isStructure: false,
+				size: (ulong)size,
+				maxFieldAlignment: 1
+			);
 		}
 
 		void WriteArrayType (GeneratorWriteContext context, Type elementType, ulong elementCount, out LlvmTypeInfo typeInfo)
@@ -769,6 +789,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return;
 			}
 
+			if (type == typeof(LlvmIrStringBlob)) {
+				WriteStringBlobArray (context, (LlvmIrStringBlob)value);
+				return;
+			}
+
 			if (type.IsArray) {
 				if (type == typeof(byte[])) {
 					WriteInlineArray (context, (byte[])value, encodeAsASCII: true);
@@ -784,6 +809,20 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			throw new NotSupportedException ($"Internal error: value type '{type}' is unsupported");
+		}
+
+		void WriteStringBlobArray (GeneratorWriteContext context, LlvmIrStringBlob blob)
+		{
+			foreach (LlvmIrStringBlob.StringInfo si in blob.GetSegments ()) {
+				if (si.Offset > 0) {
+					context.Output.WriteLine ();
+				}
+
+				WriteCommentLine (context, $" {si.Value}");
+				// TODO: write bytes, 16 hex numbers per line
+				context.Output.WriteLine (", u0x00,"); // Terminating NUL is counted for each string, but not included in its bytes
+			}
+			throw new NotImplementedException ();
 		}
 
 		void WriteStructureValue (GeneratorWriteContext context, StructureInstance? instance)
