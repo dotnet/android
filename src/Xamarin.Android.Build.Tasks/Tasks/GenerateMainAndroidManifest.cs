@@ -75,7 +75,7 @@ public class GenerateMainAndroidManifest : AndroidTask
 		GenerateAdditionalProviderSources (templateCodeGenState, additionalProviders);
 
 
-		// If we still need the NativeCodeGenState in <GeneratePackageManagerJava/> because we're using marshal methods,
+		// If we still need the NativeCodeGenState in the <GenerateNativeMarshalMethodSources> task because we're using marshal methods,
 		// we're going to transfer it to a new object that doesn't require holding open Cecil AssemblyDefinitions.
 		if (UseMarshalMethods) {
 			var nativeCodeGenStateObject = MarshalMethodCecilAdapter.GetNativeCodeGenStateCollection (Log, nativeCodeGenStates);

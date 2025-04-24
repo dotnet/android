@@ -67,6 +67,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateLayoutBindings" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateLibraryResources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateManagedAidlProxies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeApplicationConfigSources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeMarshalMethodSources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateJavaCallableWrappers" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1852,42 +1854,53 @@ because xbuild doesn't support framework reference assemblies.
   DependsOnTargets="$(_GeneratePackageManagerJavaDependsOn)"
   Inputs="@(_GeneratePackageManagerJavaInputs)"
   Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
+  
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
-    ResolvedAssemblies="@(_ResolvedAssemblies)"
-    ResolvedUserAssemblies="@(_ResolvedUserAssemblies)"
-    SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"
-    IntermediateOutputDirectory="$(IntermediateOutputPath)"
-    NativeLibraries="@(AndroidNativeLibrary);@(EmbeddedNativeLibrary);@(FrameworkNativeLibrary)"
-    MonoComponents="@(_MonoComponent)"
-    MainAssembly="$(TargetPath)"
-    OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)mono"
-    EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
-    TargetFrameworkVersion="$(TargetFrameworkVersion)"
-    Manifest="$(IntermediateOutputPath)android\AndroidManifest.xml"
-    Environments="@(_EnvironmentFiles)"
-    AndroidAotMode="$(AndroidAotMode)"
-    AndroidAotEnableLazyLoad="$(AndroidAotEnableLazyLoad)"
-    EnableLLVM="$(EnableLLVM)"
-    HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
-    TlsProvider="$(AndroidTlsProvider)"
-    Debug="$(AndroidIncludeDebugSymbols)"
-    AndroidSequencePointsMode="$(_SequencePointsMode)"
-    EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)"
-    SupportedAbis="@(_BuildTargetAbis)"
-    AndroidPackageName="$(_AndroidPackage)"
-    EnablePreloadAssembliesDefault="$(_AndroidEnablePreloadAssembliesDefault)"
-    PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
-    BoundExceptionType="$(AndroidBoundExceptionType)"
-    RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
-    UseAssemblyStore="$(AndroidUseAssemblyStore)"
-    EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
-    EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
-    CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
-    TargetsCLR="$(_AndroidUseCLR)"
-    ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)"
-  >
+      MainAssembly="$(TargetPath)"
+      OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)mono"
+      ResolvedUserAssemblies="@(_ResolvedUserAssemblies)">
   </GeneratePackageManagerJava>
+
+  <GenerateNativeApplicationConfigSources
+      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"
+      NativeLibraries="@(AndroidNativeLibrary);@(EmbeddedNativeLibrary);@(FrameworkNativeLibrary)"
+      MonoComponents="@(_MonoComponent)"
+      EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
+      Environments="@(_EnvironmentFiles)"
+      AndroidAotMode="$(AndroidAotMode)"
+      AndroidAotEnableLazyLoad="$(AndroidAotEnableLazyLoad)"
+      EnableLLVM="$(EnableLLVM)"
+      HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
+      TlsProvider="$(AndroidTlsProvider)"
+      Debug="$(AndroidIncludeDebugSymbols)"
+      AndroidSequencePointsMode="$(_SequencePointsMode)"
+      EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)"
+      SupportedAbis="@(_BuildTargetAbis)"
+      AndroidPackageName="$(_AndroidPackage)"
+      EnablePreloadAssembliesDefault="$(_AndroidEnablePreloadAssembliesDefault)"
+      PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
+      BoundExceptionType="$(AndroidBoundExceptionType)"
+      RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
+      UseAssemblyStore="$(AndroidUseAssemblyStore)"
+      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
+      EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
+      CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
+      TargetsCLR="$(_AndroidUseCLR)"
+      ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)">
+  </GenerateNativeApplicationConfigSources>
+
+  <GenerateNativeMarshalMethodSources
+      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
+      EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
+      EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
+      IntermediateOutputDirectory="$(IntermediateOutputPath)"
+      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"
+      SupportedAbis="@(_BuildTargetAbis)">
+  </GenerateNativeMarshalMethodSources>
+      
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
   <ItemGroup>
     <FileWrites Include="@(_EnvironmentAssemblySource)" />
