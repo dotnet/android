@@ -6,6 +6,7 @@ using System.Reflection;
 namespace SystemTests
 {
 	[TestFixture]
+	[Category ("RuntimeConfig")] //TODO: https://github.com/dotnet/android/issues/10069
 	public class AppContextTests
 	{
 		static readonly object [] GetDataSource = new object [] {

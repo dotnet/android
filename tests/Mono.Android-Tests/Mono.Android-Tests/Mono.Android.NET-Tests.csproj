@@ -22,6 +22,8 @@
     <WarningsAsErrors>IL2037</WarningsAsErrors>
     <AndroidUseNegotiateAuthentication>true</AndroidUseNegotiateAuthentication>
     <AndroidNdkDirectory></AndroidNdkDirectory>
+    <DefineConstants Condition=" '$(UseMonoRuntime)' == 'false' ">$(DefineConstants);CORECLR</DefineConstants>
+    <DefineConstants Condition=" '$(PublishAot)' == 'true' ">$(DefineConstants);NATIVEAOT</DefineConstants>
     <!--
       TODO: Fix excluded tests
       For $(EnableLLVM)
@@ -29,6 +31,8 @@
         NetworkInterfaces excluded: https://github.com/dotnet/runtime/issues/75155
     -->
     <ExcludeCategories>DotNetIgnore</ExcludeCategories>
+    <!-- TODO: https://github.com/dotnet/android/issues/10069 -->
+    <ExcludeCategories Condition=" '$(UseMonoRuntime)' == 'false' ">$(ExcludeCategories):CoreCLRIgnore:SSL:NTLM:GCBridge:RuntimeConfig</ExcludeCategories>
     <!-- FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190 -->
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):LLVMIgnore</ExcludeCategories>
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):InetAccess:NetworkInterfaces</ExcludeCategories>

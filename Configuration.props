@@ -132,6 +132,7 @@
     <TestsFlavor>$(_TestsProfiledAotName)$(_TestsAotName)</TestsFlavor>
   </PropertyGroup>
   <PropertyGroup>
+    <!-- Default to Java 17 for desktop, projects targeting Android should use 1.8 -->
     <JavacSourceVersion>17</JavacSourceVersion>
     <JavacTargetVersion>17</JavacTargetVersion>
   </PropertyGroup>

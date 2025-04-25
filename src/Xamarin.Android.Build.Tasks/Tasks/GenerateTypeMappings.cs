@@ -125,7 +125,7 @@ public class GenerateTypeMappings : AndroidTask
 		if (templateCodeGenState is null)
 			throw new InvalidOperationException ($"Internal error: no native code generator state defined");
 
-		// Set for use by <GeneratePackageManagerJava/> task later
+		// Set for use by <GenerateNativeApplicationConfigSources/> task later
 		if (useMarshalMethods)
 			NativeCodeGenState.TemplateJniAddNativeMethodRegistrationAttributePresent = templateCodeGenState.JniAddNativeMethodRegistrationAttributePresent;
 	}

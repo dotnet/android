@@ -239,6 +239,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("CoreCLRIgnore")] //TODO: https://github.com/dotnet/android/issues/10069
 		public void CreateTypeWithExportedMethods ()
 		{
 			using (var e = new ContainsExportedMethods ()) {
@@ -251,6 +252,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("CoreCLRIgnore")] //TODO: https://github.com/dotnet/android/issues/10069
 		public void ActivatedDirectObjectSubclassesShouldBeRegistered ()
 		{
 			if (Build.VERSION.SdkInt <= BuildVersionCodes.GingerbreadMr1)
@@ -426,7 +428,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (null, m, "`JnienvTest` does *not* subclass Java.Lang.Object, it should *not* be in the typemap!");
 		}
 
-		[Test]
+		[Test, Category ("GCBridge")]
 		public void DoNotLeakWeakReferences ()
 		{
 			GC.Collect ();
