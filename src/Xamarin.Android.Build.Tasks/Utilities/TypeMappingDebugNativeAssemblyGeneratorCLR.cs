@@ -16,6 +16,8 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 	const string TypeMapSymbol = "type_map";
 	const string UniqueAssembliesSymbol = "type_map_unique_assemblies";
 	const string AssemblyNamesBlobSymbol = "type_map_assembly_names";
+	const string ManagedTypeNamesBlobSymbol = "type_map_managed_type_names";
+	const string JavaTypeNamesBlobSymbol = "type_map_java_type_names";
 
 	sealed class TypeMapContextDataProvider : NativeAssemblerStructContextDataProvider
 	{
@@ -53,11 +55,11 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 			var entry = EnsureType<TypeMapEntry> (data);
 
 			if (String.Compare ("from", fieldName, StringComparison.Ordinal) == 0) {
-				return $"from: {entry.from}";
+				return $"from: {entry.From}";
 			}
 
 			if (String.Compare ("to", fieldName, StringComparison.Ordinal) == 0) {
-				return $"to: {entry.to}";
+				return $"to: {entry.To}";
 			}
 
 			return String.Empty;
@@ -87,11 +89,23 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 	[NativeAssemblerStructContextDataProvider (typeof (TypeMapEntryContextDataProvider))]
 	sealed class TypeMapEntry
 	{
-		[NativeAssembler (UsesDataProvider = true)]
-		public string from;
+		[NativeAssembler (Ignore = true)]
+		public string From;
+
+		[NativeAssembler (Ignore = true)]
+		public string To;
 
 		[NativeAssembler (UsesDataProvider = true)]
-		public string to;
+		public uint from;
+
+		[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
+		public ulong from_hash;
+
+		[NativeAssembler (UsesDataProvider = true)]
+		public uint to;
+
+		[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
+		public ulong to_hash;
 	};
 
 	// Order of fields and their type must correspond *exactly* to that in
@@ -164,30 +178,45 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 		MapStructures (module);
 
-		if (data.ManagedToJavaMap != null && data.ManagedToJavaMap.Count > 0) {
-			foreach (TypeMapGenerator.TypeMapDebugEntry entry in data.ManagedToJavaMap) {
-				var m2j = new TypeMapEntry {
-					from = entry.ManagedName,
-					to = entry.JavaName,
-				};
-				managedToJavaMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo, m2j));
-			}
-		}
+		var managedTypeNames = new LlvmIrStringBlob ();
+		var javaTypeNames = new LlvmIrStringBlob ();
 
-		if (data.JavaToManagedMap != null && data.JavaToManagedMap.Count > 0) {
-			foreach (TypeMapGenerator.TypeMapDebugEntry entry in data.JavaToManagedMap) {
-				TypeMapGenerator.TypeMapDebugEntry managedEntry = entry.DuplicateForJavaToManaged != null ? entry.DuplicateForJavaToManaged : entry;
-
-				var j2m = new TypeMapEntry {
-					from = entry.JavaName,
-					to = managedEntry.SkipInJavaToManaged ? null : managedEntry.ManagedName,
-				};
-				javaToManagedMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo, j2m));
-			}
-		}
-
-		// CoreCLR supports only 64-bit targets, so we can make things simpler by hashing the MVIDs here instead of
+		// CoreCLR supports only 64-bit targets, so we can make things simpler by hashing all the things here instead of
 		// in a callback during code generation
+		foreach (TypeMapGenerator.TypeMapDebugEntry entry in data.ManagedToJavaMap) {
+			(int managedTypeNameOffset, int _) = managedTypeNames.Add (entry.ManagedName);
+			(int javaTypeNameOffset, int _) = javaTypeNames.Add (entry.JavaName);
+			var m2j = new TypeMapEntry {
+				From = entry.ManagedName,
+				To = entry.JavaName,
+
+				from = (uint)managedTypeNameOffset,
+				from_hash = MonoAndroidHelper.GetXxHash (entry.ManagedName, is64Bit: true),
+				to = (uint)javaTypeNameOffset,
+				to_hash = MonoAndroidHelper.GetXxHash (entry.JavaName, is64Bit: true),
+			};
+			managedToJavaMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo, m2j));
+		}
+		managedToJavaMap.Sort ((StructureInstance<TypeMapEntry> a, StructureInstance<TypeMapEntry> b) => a.Instance.from_hash.CompareTo (b.Instance.from_hash));
+
+		foreach (TypeMapGenerator.TypeMapDebugEntry entry in data.JavaToManagedMap) {
+			TypeMapGenerator.TypeMapDebugEntry managedEntry = entry.DuplicateForJavaToManaged != null ? entry.DuplicateForJavaToManaged : entry;
+			(int managedTypeNameOffset, int _) = managedTypeNames.Add (entry.ManagedName);
+			(int javaTypeNameOffset, int _) = javaTypeNames.Add (entry.JavaName);
+
+			var j2m = new TypeMapEntry {
+				From = entry.JavaName,
+				To = managedEntry.SkipInJavaToManaged ? String.Empty : entry.ManagedName,
+
+				from = (uint)javaTypeNameOffset,
+				from_hash = MonoAndroidHelper.GetXxHash (entry.JavaName, is64Bit: true),
+				to = managedEntry.SkipInJavaToManaged ? uint.MaxValue : (uint)managedTypeNameOffset,
+				to_hash = managedEntry.SkipInJavaToManaged ? 0 : MonoAndroidHelper.GetXxHash (entry.ManagedName, is64Bit: true),
+			};
+			javaToManagedMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo, j2m));
+		}
+		javaToManagedMap.Sort ((StructureInstance<TypeMapEntry> a, StructureInstance<TypeMapEntry> b) => a.Instance.from_hash.CompareTo (b.Instance.from_hash));
+
 		var assemblyNamesBlob = new LlvmIrStringBlob ();
 		foreach (TypeMapGenerator.TypeMapDebugAssembly asm in data.UniqueAssemblies) {
 			(int assemblyNameOffset, int assemblyNameLength) = assemblyNamesBlob.Add (asm.Name);
@@ -224,6 +253,8 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 		module.AddGlobalVariable (UniqueAssembliesSymbol, uniqueAssemblies, LlvmIrVariableOptions.GlobalConstant);
 		module.AddGlobalVariable (AssemblyNamesBlobSymbol, assemblyNamesBlob, LlvmIrVariableOptions.GlobalConstant);
+		module.AddGlobalVariable (ManagedTypeNamesBlobSymbol, managedTypeNames, LlvmIrVariableOptions.GlobalConstant);
+		module.AddGlobalVariable (JavaTypeNamesBlobSymbol, javaTypeNames, LlvmIrVariableOptions.GlobalConstant);
 	}
 
 	void MapStructures (LlvmIrModule module)
