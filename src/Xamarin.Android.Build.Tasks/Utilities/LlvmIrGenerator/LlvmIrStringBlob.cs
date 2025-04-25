@@ -36,20 +36,20 @@ class LlvmIrStringBlob
 		int offset;
 		if (segments.Count > 0) {
 			StringInfo lastSegment = segments[segments.Count - 1];
-			offset = lastSegment.Offset + lastSegment.Length;
+			offset = lastSegment.Offset + lastSegment.Length + 1; // Include trailing NUL here
 		} else {
 			offset = 0;
 		}
 
 		info = new StringInfo (
 			Offset: offset,
-			Length: bytes.Length + 1, // MUST include the terminating NUL ("virtual")
+			Length: bytes.Length,
 			Bytes: bytes,
 			Value: s
 		);
 		segments.Add (info);
 		cache.Add (s, info);
-		size += info.Length;
+		size += info.Length + 1; // Account for the trailing NUL
 
 		return (info.Offset, info.Length);
 	}
