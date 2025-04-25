@@ -29,6 +29,7 @@ public class GenerateMainAndroidManifest : AndroidTask
 	public bool Debug { get; set; }
 	public bool EmbedAssemblies { get; set; }
 	public bool EnableMarshalMethods { get; set; }
+	public bool EnableNativeRuntimeLinking { get; set; }
 	[Required]
 	public string IntermediateOutputDirectory { get; set; } = "";
 	public string []? ManifestPlaceholders { get; set; }
@@ -77,7 +78,7 @@ public class GenerateMainAndroidManifest : AndroidTask
 
 		// If we still need the NativeCodeGenState in the <GenerateNativeMarshalMethodSources> task because we're using marshal methods,
 		// we're going to transfer it to a new object that doesn't require holding open Cecil AssemblyDefinitions.
-		if (UseMarshalMethods) {
+		if (UseMarshalMethods || EnableNativeRuntimeLinking) {
 			var nativeCodeGenStateObject = MarshalMethodCecilAdapter.GetNativeCodeGenStateCollection (Log, nativeCodeGenStates);
 
 			Log.LogDebugMessage ($"Saving {nameof (NativeCodeGenStateObject)} to {nameof (GenerateJavaStubs.NativeCodeGenStateObjectRegisterTaskKey)}");
