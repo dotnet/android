@@ -1633,6 +1633,8 @@ because xbuild doesn't support framework reference assemblies.
       CheckedBuild="$(_AndroidCheckedBuild)"
       Debug="$(AndroidIncludeDebugSymbols)"
       EmbedAssemblies="$(EmbedAssembliesIntoApk)"
+      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
+      EnableNativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)"
       IntermediateOutputDirectory="$(IntermediateOutputPath)"
       ManifestPlaceholders="$(AndroidManifestPlaceholders)"
       ManifestTemplate="$(_AndroidManifestAbs)"
@@ -1897,13 +1899,15 @@ because xbuild doesn't support framework reference assemblies.
       CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
       TargetsCLR="$(_AndroidUseCLR)"
       ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)"
-      EnableNativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)">
+      >
   </GenerateNativeApplicationConfigSources>
 
   <GenerateNativeMarshalMethodSources
       AndroidRuntime="$(_AndroidRuntime)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
+      EnableNativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)"
+      MonoComponents="@(_MonoComponent)"
       EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
       IntermediateOutputDirectory="$(IntermediateOutputPath)"
       ResolvedAssemblies="@(_ResolvedAssemblies)"
@@ -2029,7 +2033,7 @@ because xbuild doesn't support framework reference assemblies.
 	<_CompileToDalvikDependsOnTargets>
 		_CompileJava;
 		_CreateApplicationSharedLibraries;
-    _LinkNativeRuntime;
+		_LinkNativeRuntime;
 		_GetMonoPlatformJarPath;
 		_GetLibraryImports;
 		_SetProguardMappingFileProperty;

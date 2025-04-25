@@ -29,6 +29,7 @@ public class GeneratePackageManagerJava : AndroidTask
 			// Write all the user assemblies
 			pkgmgr.WriteLine ("public class MonoPackageManager_Resources {");
 			pkgmgr.WriteLine ("\tpublic static String[] Assemblies = new String[]{");
+
 			pkgmgr.WriteLine ("\t\t/* We need to ensure that \"{0}\" comes first in this list. */", mainFileName);
 			pkgmgr.WriteLine ("\t\t\"" + mainFileName + "\",");
 			foreach (var assembly in ResolvedUserAssemblies) {
@@ -53,6 +54,7 @@ public class GeneratePackageManagerJava : AndroidTask
 
 			// Only copy to the real location if the contents actually changed
 			var dest = Path.GetFullPath (Path.Combine (OutputDirectory, "MonoPackageManager_Resources.java"));
+
 			Files.CopyIfStreamChanged (pkgmgr.BaseStream, dest);
 		}
 
