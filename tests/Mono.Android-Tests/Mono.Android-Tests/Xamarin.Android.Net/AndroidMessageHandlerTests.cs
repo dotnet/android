@@ -14,6 +14,7 @@ using NUnit.Framework;
 namespace Xamarin.Android.NetTests
 {
 	[TestFixture]
+	[Category ("SSL")] // TODO: https://github.com/dotnet/android/issues/10069
 	public class AndroidMessageHandlerTests : AndroidHandlerTestBase
 	{
 		protected override HttpMessageHandler CreateHandler ()

@@ -29,6 +29,7 @@ namespace Xamarin.Android.RuntimeTests {
 		}
 
 		[Test]
+		[Category ("CoreCLRIgnore")] //TODO: https://github.com/dotnet/android/issues/10069
 		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void InnerExceptionIsSet ()
 		{
