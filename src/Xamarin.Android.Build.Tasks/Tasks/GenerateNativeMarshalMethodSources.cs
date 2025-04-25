@@ -20,6 +20,10 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 
 	public bool EnableMarshalMethods { get; set; }
 
+	public bool EnableNativeRuntimeLinking { get; set; }
+
+	public ITaskItem[] MonoComponents { get; set; } = [];
+
 	[Required]
 	public string EnvironmentOutputDirectory { get; set; } = "";
 
@@ -38,7 +42,7 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 	{
 		NativeCodeGenStateCollection? nativeCodeGenStates = null;
 
-		if (EnableMarshalMethods) {
+		if (EnableMarshalMethods || EnableNativeRuntimeLinking) {
 			// Retrieve the stored NativeCodeGenStateCollection (and remove it from the cache)
 			nativeCodeGenStates = BuildEngine4.UnregisterTaskObjectAssemblyLocal<NativeCodeGenStateCollection> (
 				MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateObjectRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory),
@@ -57,7 +61,9 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 		var targetAbi = abi.ToLowerInvariant ();
 		var targetArch = MonoAndroidHelper.AbiToTargetArch (abi);
 		var marshalMethodsBaseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"marshal_methods.{targetAbi}");
+		var pinvokePreserveBaseAsmFilePath = EnableNativeRuntimeLinking ? Path.Combine (EnvironmentOutputDirectory, $"pinvoke_preserve.{targetAbi}") : null;
 		var marshalMethodsLlFilePath = $"{marshalMethodsBaseAsmFilePath}.ll";
+		var pinvokePreserveLlFilePath = pinvokePreserveBaseAsmFilePath != null ? $"{pinvokePreserveBaseAsmFilePath}.ll" : null;
 		var (assemblyCount, uniqueAssemblyNames) = GetAssemblyCountAndUniqueNames ();
 
 		MarshalMethodsNativeAssemblyGenerator marshalMethodsAsmGen;
@@ -77,6 +83,20 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 				assemblyCount,
 				uniqueAssemblyNames
 			);
+		}
+
+		if (EnableNativeRuntimeLinking) {
+			var pinvokePreserveGen = new PreservePinvokesNativeAssemblyGenerator (Log, EnsureCodeGenState (nativeCodeGenStates, targetArch), MonoComponents);
+			LLVMIR.LlvmIrModule pinvokePreserveModule = pinvokePreserveGen.Construct ();
+			using var pinvokePreserveWriter = MemoryStreamPool.Shared.CreateStreamWriter ();
+			try {
+				pinvokePreserveGen.Generate (pinvokePreserveModule, targetArch, pinvokePreserveWriter, pinvokePreserveLlFilePath!);
+			} catch {
+				throw;
+			} finally {
+				pinvokePreserveWriter.Flush ();
+				Files.CopyIfStreamChanged (pinvokePreserveWriter.BaseStream, pinvokePreserveLlFilePath!);
+			}
 		}
 
 		var marshalMethodsModule = marshalMethodsAsmGen.Construct ();
