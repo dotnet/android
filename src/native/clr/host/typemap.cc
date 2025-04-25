@@ -65,36 +65,40 @@ namespace {
 
 #if defined(DEBUG)
 [[gnu::always_inline]]
-auto TypeMapper::typemap_type_to_type_debug (const char *typeName, const TypeMapEntry *map, std::string_view const& from_name, std::string_view const& to_name) noexcept -> const char*
+auto TypeMapper::typemap_type_to_type_debug (const char *typeName, const TypeMapEntry *map, const char (&name_map)[], std::string_view const& from_name, std::string_view const& to_name) noexcept -> const char*
 {
 	log_debug (LOG_ASSEMBLY, "Looking up {} type '{}'", from_name, optional_string (typeName));
-	auto equal = [](TypeMapEntry const& entry, const char *key) -> bool {
-		if (entry.from == nullptr) {
+	auto equal = [](TypeMapEntry const& entry, hash_t key) -> bool {
+		if (entry.from == std::numeric_limits<uint32_t>::max ()) {
 			return 1;
 		}
 
-		return strcmp (entry.from, key) == 0;
+		return entry.from_hash == key;
 	};
 
-	auto less_than = [](TypeMapEntry const& entry, const char *key) -> bool {
-		if (entry.from == nullptr) {
+	auto less_than = [](TypeMapEntry const& entry, hash_t key) -> bool {
+		if (entry.from == std::numeric_limits<uint32_t>::max ()) {
 			return 1;
 		}
 
-		return strcmp (entry.from, key) < 0;
+		return entry.from_hash < key;
 	};
 
-	ssize_t idx = Search::binary_search<TypeMapEntry, const char*, equal, less_than> (typeName, map, type_map.entry_count);
+	hash_t type_name_hash = xxhash::hash (typeName, strlen (typeName));
+	ssize_t idx = Search::binary_search<TypeMapEntry, hash_t, equal, less_than> (type_name_hash, map, type_map.entry_count);
 	if (idx >= 0) [[likely]] {
+		TypeMapEntry const& entry = map[idx];
+		const char *mapped_name = &name_map[entry.to];
+
 		log_debug (
 			LOG_ASSEMBLY,
 			"{} type '{}' maps to {} type '{}'",
 			from_name,
 			optional_string (typeName),
 			to_name,
-			optional_string (type_map.managed_to_java[idx].to)
+			optional_string (mapped_name)
 		);
-		return type_map.managed_to_java[idx].to;
+		return mapped_name;
 	}
 
 	return nullptr;
@@ -126,7 +130,7 @@ auto TypeMapper::typemap_managed_to_java_debug (const char *typeName, const uint
 		log_warn (LOG_ASSEMBLY, "Unable to look up assembly name for type '{}', trying without it.", typeName);
 	}
 
-	return typemap_type_to_type_debug (full_type_name.get (), type_map.managed_to_java, MANAGED, JAVA);
+	return typemap_type_to_type_debug (full_type_name.get (), type_map.managed_to_java, type_map_java_type_names, MANAGED, JAVA);
 }
 #endif // def DEBUG
 
@@ -300,7 +304,7 @@ auto TypeMapper::typemap_java_to_managed_debug (const char *java_type_name, char
 	// FIXME: this is currently VERY broken
 	*assembly_name = nullptr;
 	*managed_type_token_id = 0;
-	return typemap_type_to_type_debug (java_type_name, type_map.java_to_managed, JAVA, MANAGED);
+	return typemap_type_to_type_debug (java_type_name, type_map.java_to_managed, type_map_managed_type_names, JAVA, MANAGED);
 }
 #else // def DEBUG
 
