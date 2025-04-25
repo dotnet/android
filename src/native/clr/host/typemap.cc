@@ -313,10 +313,6 @@ auto TypeMapper::find_java_to_managed_entry (hash_t name_hash) noexcept -> const
 [[gnu::flatten]]
 auto TypeMapper::typemap_java_to_managed_release (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept -> bool
 {
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.start_event (TimingEventKind::JavaToManaged);
-	}
-
 	if (java_type_name == nullptr || assembly_name == nullptr || managed_type_token_id == nullptr) [[unlikely]] {
 		if (java_type_name == nullptr) {
 			log_warn (
@@ -373,10 +369,6 @@ auto TypeMapper::typemap_java_to_managed_release (const char *java_type_name, ch
 		*managed_type_token_id,
 		optional_string (*assembly_name)
 	);
-
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.end_event ();
-	}
 
 	return true;
 }
