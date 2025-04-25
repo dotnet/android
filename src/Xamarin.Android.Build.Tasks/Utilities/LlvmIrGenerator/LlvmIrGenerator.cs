@@ -817,16 +817,65 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		void WriteStringBlobArray (GeneratorWriteContext context, LlvmIrStringBlob blob)
 		{
+			const uint stride = 16;
+			Type elementType = typeof(byte);
+
+			LlvmIrVariableNumberFormat oldNumberFormat = context.NumberFormat;
+			context.NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal;
+			WriteArrayValueStart (context);
 			foreach (LlvmIrStringBlob.StringInfo si in blob.GetSegments ()) {
 				if (si.Offset > 0) {
+					context.Output.Write (',');
+					context.Output.WriteLine ();
 					context.Output.WriteLine ();
 				}
 
-				WriteCommentLine (context, $" {si.Value}");
-				// TODO: write bytes, 16 hex numbers per line
-				context.Output.WriteLine (", u0x00,"); // Terminating NUL is counted for each string, but not included in its bytes
+				context.Output.Write (context.CurrentIndent);
+				WriteCommentLine (context, $" '{si.Value}' @ {si.Offset}");
+				WriteBytes (si.Bytes);
 			}
-			throw new NotImplementedException ();
+			context.Output.WriteLine ();
+			WriteArrayValueEnd (context);
+			context.NumberFormat = oldNumberFormat;
+
+			void WriteBytes (byte[] bytes)
+			{
+				ulong counter = 0;
+				bool first = true;
+				foreach (byte b in bytes) {
+					if (!first) {
+						WriteCommaWithStride (counter);
+					} else {
+						context.Output.Write (context.CurrentIndent);
+						first = false;
+					}
+
+					counter++;
+					WriteByteTypeAndValue (b);
+				}
+
+				WriteCommaWithStride (counter);
+				WriteByteTypeAndValue (0); // Terminating NUL is counted for each string, but not included in its bytes
+			}
+
+			void WriteCommaWithStride (ulong counter)
+			{
+				context.Output.Write (',');
+				if (stride == 1 || counter % stride == 0) {
+					context.Output.WriteLine ();
+					context.Output.Write (context.CurrentIndent);
+				} else {
+					context.Output.Write (' ');
+				}
+			}
+
+			void WriteByteTypeAndValue (byte v)
+			{
+				WriteType (context, elementType, v, out _);
+
+				context.Output.Write (' ');
+				WriteValue (context, elementType, v);
+			}
 		}
 
 		void WriteStructureValue (GeneratorWriteContext context, StructureInstance? instance)

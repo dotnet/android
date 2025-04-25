@@ -340,8 +340,6 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const TypeMapManagedTypeInfo type_map_managed_type_info[];
 	[[gnu::visibility("default")]] extern const TypeMapAssembly type_map_unique_assemblies[];
 	[[gnu::visibility("default")]] extern const char type_map_assembly_names[];
-	[[gnu::visibility("default")]] extern const char type_map_managed_type_names[];
-	[[gnu::visibility("default")]] extern const char type_map_java_type_names[];
 #else
 	[[gnu::visibility("default")]] extern const uint32_t managed_to_java_map_module_count;
 	[[gnu::visibility("default")]] extern const uint32_t java_type_count;
