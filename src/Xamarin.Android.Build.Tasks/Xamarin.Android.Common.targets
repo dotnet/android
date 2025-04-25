@@ -1893,40 +1893,9 @@ because xbuild doesn't support framework reference assemblies.
   
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
-    ResolvedAssemblies="@(_ResolvedAssemblies)"
-    ResolvedUserAssemblies="@(_ResolvedUserAssemblies)"
-    SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"
-    IntermediateOutputDirectory="$(IntermediateOutputPath)"
-    NativeLibraries="@(AndroidNativeLibrary);@(EmbeddedNativeLibrary);@(FrameworkNativeLibrary)"
-    MonoComponents="@(_MonoComponent)"
-    MainAssembly="$(TargetPath)"
-    OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)mono"
-    EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
-    TargetFrameworkVersion="$(TargetFrameworkVersion)"
-    Manifest="$(IntermediateOutputPath)android\AndroidManifest.xml"
-    Environments="@(_EnvironmentFiles)"
-    AndroidAotMode="$(AndroidAotMode)"
-    AndroidAotEnableLazyLoad="$(AndroidAotEnableLazyLoad)"
-    EnableLLVM="$(EnableLLVM)"
-    HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
-    TlsProvider="$(AndroidTlsProvider)"
-    Debug="$(AndroidIncludeDebugSymbols)"
-    AndroidSequencePointsMode="$(_SequencePointsMode)"
-    EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)"
-    SupportedAbis="@(_BuildTargetAbis)"
-    AndroidPackageName="$(_AndroidPackage)"
-    EnablePreloadAssembliesDefault="$(_AndroidEnablePreloadAssembliesDefault)"
-    PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
-    BoundExceptionType="$(AndroidBoundExceptionType)"
-    RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
-    UseAssemblyStore="$(AndroidUseAssemblyStore)"
-    EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
-    EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
-    CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
-    TargetsCLR="$(_AndroidUseCLR)"
-    ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)"
-    EnableNativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)"
-  >
+      MainAssembly="$(TargetPath)"
+      OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)mono"
+      ResolvedUserAssemblies="@(_ResolvedUserAssemblies)">
   </GeneratePackageManagerJava>
 
   <GenerateNativeApplicationConfigSources
@@ -1955,7 +1924,8 @@ because xbuild doesn't support framework reference assemblies.
       EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
       CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
       TargetsCLR="$(_AndroidUseCLR)"
-      ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)">
+      ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)"
+      EnableNativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)">
   </GenerateNativeApplicationConfigSources>
 
   <GenerateNativeMarshalMethodSources
