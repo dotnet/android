@@ -56,8 +56,6 @@ struct TypeMapIndexHeader
 	uint32_t module_file_name_width;
 };
 
-// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
-//
 // If any of the members is set to maximum uint32_t value it means the entry is ignored (treated
 // as equivalent to `nullptr` if the member was a pointer). The reasoning is that no string could
 // begin at this offset (well, an empty string could, but we don't have those here)
@@ -66,13 +64,7 @@ struct TypeMapEntry
 	const uint32_t from;
 	const xamarin::android::hash_t from_hash;
 	const uint32_t to;
-};
-
-// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
-struct TypeMapManagedTypeInfo
-{
-	const uint32_t assembly_name_index;
-	const uint32_t managed_type_token_id;
+	const xamarin::android::hash_t to_hash;
 };
 
 // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
@@ -340,6 +332,8 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const TypeMapManagedTypeInfo type_map_managed_type_info[];
 	[[gnu::visibility("default")]] extern const TypeMapAssembly type_map_unique_assemblies[];
 	[[gnu::visibility("default")]] extern const char type_map_assembly_names[];
+	[[gnu::visibility("default")]] extern const char type_map_managed_type_names[];
+	[[gnu::visibility("default")]] extern const char type_map_java_type_names[];
 #else
 	[[gnu::visibility("default")]] extern const uint32_t managed_to_java_map_module_count;
 	[[gnu::visibility("default")]] extern const uint32_t java_type_count;

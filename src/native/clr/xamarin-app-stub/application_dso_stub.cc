@@ -24,6 +24,8 @@ const bool typemap_use_hashes = true;
 const TypeMapManagedTypeInfo type_map_managed_type_info[] = {};
 const TypeMapAssembly type_map_unique_assemblies[] = {};
 const char type_map_assembly_names[] = {};
+const char type_map_managed_type_names[] = {};
+const char type_map_java_type_names[] = {};
 #else
 const uint32_t managed_to_java_map_module_count = 0;
 const uint32_t java_type_count = 0;
