@@ -15,7 +15,7 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 	// These names MUST match src/native/clr/include/xamarin-app.hh
 	const string TypeMapSymbol = "type_map";
 	const string UniqueAssembliesSymbol = "type_map_unique_assemblies";
-	const string AssemblyNamesBlobSymbol = "type_map_assembly_names_blob";
+	const string AssemblyNamesBlobSymbol = "type_map_assembly_names";
 
 	sealed class TypeMapContextDataProvider : NativeAssemblerStructContextDataProvider
 	{
@@ -188,20 +188,18 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 		// CoreCLR supports only 64-bit targets, so we can make things simpler by hashing the MVIDs here instead of
 		// in a callback during code generation
-		var assemblyNamesBlob = new List<byte> ();
+		var assemblyNamesBlob = new LlvmIrStringBlob ();
 		foreach (TypeMapGenerator.TypeMapDebugAssembly asm in data.UniqueAssemblies) {
-			byte[] nameBytes = MonoAndroidHelper.Utf8StringToBytes (asm.Name);
+			(int assemblyNameOffset, int assemblyNameLength) = assemblyNamesBlob.Add (asm.Name);
 			var entry = new TypeMapAssembly {
 				Name = asm.Name,
 				MVID = asm.MVID,
 
 				mvid_hash = MonoAndroidHelper.GetXxHash (asm.MVIDBytes, is64Bit: true),
-				name_length = (ulong)nameBytes.Length, // without the trailing NUL
-				name_offset = (ulong)assemblyNamesBlob.Count,
+				name_length = (ulong)assemblyNameLength, // without the trailing NUL
+				name_offset = (ulong)assemblyNameOffset,
 			};
 			uniqueAssemblies.Add (new StructureInstance<TypeMapAssembly> (typeMapAssemblyStructureInfo, entry));
-			assemblyNamesBlob.AddRange (nameBytes);
-			assemblyNamesBlob.Add (0);
 		}
 		uniqueAssemblies.Sort ((StructureInstance<TypeMapAssembly> a, StructureInstance<TypeMapAssembly> b) => a.Instance.mvid_hash.CompareTo (b.Instance.mvid_hash));
 
@@ -211,7 +209,7 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 			entry_count = data.EntryCount,
 			unique_assemblies_count = (ulong)data.UniqueAssemblies.Count,
-			assembly_names_blob_size = (ulong)assemblyNamesBlob.Count,
+			assembly_names_blob_size = (ulong)assemblyNamesBlob.Size,
 		};
 		type_map = new StructureInstance<TypeMap> (typeMapStructureInfo, map);
 		module.AddGlobalVariable (TypeMapSymbol, type_map, LlvmIrVariableOptions.GlobalConstant);

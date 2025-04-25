@@ -23,13 +23,14 @@ const TypeMap type_map = {
 };
 
 const TypeMapAssembly type_map_unique_assemblies[] = {};
-const char type_map_assembly_names_blob[] = {};
+const char type_map_assembly_names[] = {};
 #else
 const uint32_t managed_to_java_map_module_count = 0;
 const uint32_t java_type_count = 0;
-const char* const java_type_names[] = {};
-const char* const managed_type_names[] = {};
-const char* const managed_assembly_names[] = {};
+const char java_type_names[] = {};
+const uint64_t java_type_names_size = 0;
+const char managed_type_names[] = {};
+const char managed_assembly_names[] = {};
 TypeMapModule managed_to_java_map[] = {};
 const TypeMapJava java_to_managed_map[] = {};
 const xamarin::android::hash_t java_to_managed_hashes[] = {};
