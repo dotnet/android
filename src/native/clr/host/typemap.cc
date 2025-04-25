@@ -115,8 +115,13 @@ auto TypeMapper::typemap_managed_to_java_debug (const char *typeName, const uint
 	if (idx >= 0) [[likely]] {
 		TypeMapAssembly const& assm = type_map_unique_assemblies[idx];
 		full_type_name.append (", "sv);
-		full_type_name.append (&type_map_assembly_names_blob[assm.name_offset], assm.name_length);
-		log_debug (LOG_ASSEMBLY, "Fixed-up type name: '{}'", full_type_name.get ());
+
+		if (assm.name_offset < type_map.assembly_names_blob_size) [[likely]] {
+			full_type_name.append (&type_map_assembly_names[assm.name_offset], assm.name_length);
+			log_debug (LOG_ASSEMBLY, "Fixed-up type name: '{}'", full_type_name.get ());
+		} else {
+			log_warn (LOG_ASSEMBLY, "Invalid assembly name offset {}", assm.name_offset);
+		}
 	} else {
 		log_warn (LOG_ASSEMBLY, "Unable to look up assembly name for type '{}', trying without it.", typeName);
 	}
@@ -207,7 +212,7 @@ auto TypeMapper::typemap_managed_to_java_release (const char *typeName, const ui
 				optional_string (typeName),
 				name_hash,
 				MonoGuidString (mvid).c_str (),
-				optional_string (managed_assembly_names[match->assembly_name_index])
+				std::string_view (&managed_assembly_names[match->assembly_name_index], match->assembly_name_length)
 			);
 			return nullptr;
 		}
@@ -220,21 +225,21 @@ auto TypeMapper::typemap_managed_to_java_release (const char *typeName, const ui
 			optional_string (typeName),
 			name_hash,
 			MonoGuidString (mvid).c_str (),
-			optional_string (managed_assembly_names[match->assembly_name_index]),
+			std::string_view (&managed_assembly_names[match->assembly_name_index], match->assembly_name_length),
 			entry->java_map_index
 		);
 		return nullptr;
 	}
 
 	TypeMapJava const& java_entry = java_to_managed_map[entry->java_map_index];
-	if (java_entry.java_name_index >= java_type_count) [[unlikely]] {
+	if (java_entry.java_name_index >= java_type_names_size) [[unlikely]] {
 		log_warn (
 			LOG_ASSEMBLY,
 			"typemap: managed type '{}' (hash {:x}) in module [{}] ({}) points to invalid Java type at index {} (invalid type name index {})",
 			optional_string (typeName),
 			name_hash,
 			MonoGuidString (mvid).c_str (),
-			optional_string (managed_assembly_names[match->assembly_name_index]),
+			std::string_view (&managed_assembly_names[match->assembly_name_index], match->assembly_name_length),
 			entry->java_map_index,
 			java_entry.java_name_index
 		);
@@ -242,7 +247,7 @@ auto TypeMapper::typemap_managed_to_java_release (const char *typeName, const ui
 		return nullptr;
 	}
 
-	const char *ret = java_type_names[java_entry.java_name_index];
+	const char *ret = &java_type_names[java_entry.java_name_index];
 	if (ret == nullptr) [[unlikely]] {
 		log_warn (LOG_ASSEMBLY, "typemap: empty Java type name returned for entry at index {}", entry->java_map_index);
 	}
@@ -253,7 +258,7 @@ auto TypeMapper::typemap_managed_to_java_release (const char *typeName, const ui
 		optional_string (typeName),
 		name_hash,
 		MonoGuidString (mvid).c_str (),
-		optional_string (managed_assembly_names[match->assembly_name_index]),
+		std::string_view (&managed_assembly_names[match->assembly_name_index], match->assembly_name_length),
 		ret
 	);
 
@@ -358,16 +363,16 @@ auto TypeMapper::typemap_java_to_managed_release (const char *java_type_name, ch
 	}
 
 	TypeMapModule const &module = managed_to_java_map[java_entry->module_index];
-	*assembly_name = managed_assembly_names[module.assembly_name_index];
+	*assembly_name = &managed_assembly_names[module.assembly_name_index];
 	*managed_type_token_id = java_entry->managed_type_token_id;
 
 	log_debug (
 		LOG_ASSEMBLY,
 		"Java type '{}' corresponds to managed type '{}' (token 0x{:x} in assembly '{}')",
 		optional_string (java_type_name),
-		optional_string (managed_type_names[java_entry->managed_type_name_index]),
+		std::string_view (&managed_type_names[java_entry->managed_type_name_index], java_entry->managed_type_name_length),
 		*managed_type_token_id,
-		optional_string (*assembly_name)
+		std::string_view (&managed_assembly_names[module.assembly_name_index], module.assembly_name_length)
 	);
 
 	return true;
