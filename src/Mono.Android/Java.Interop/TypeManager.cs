@@ -386,13 +386,15 @@ namespace Java.Interop {
 			BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 			var c = type.GetConstructor (flags, null, XAConstructorSignature, null);
 			if (c != null) {
-				return c.Invoke (new object [] { handle, transfer });
+				Console.WriteLine ($"# jonp: CreateProxy: before invoking c={c.DeclaringType.FullName}::{c}");
+				c.Invoke (peer, new object[] { handle, transfer });
+				return peer;
 			}
 			c = type.GetConstructor (flags, null, JIConstructorSignature, null);
 			if (c != null) {
 				JniObjectReference          r = new JniObjectReference (handle);
 				JniObjectReferenceOptions   o = JniObjectReferenceOptions.Copy;
-				peer     = (IJavaPeerable) c.Invoke (new object [] { r, o });
+				c.Invoke (peer, new object [] { r, o });
 				JNIEnv.DeleteRef (handle, transfer);
 				return peer;
 			}
