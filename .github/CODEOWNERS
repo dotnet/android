@@ -30,7 +30,7 @@
 /src/OpenTK-1.0 @radekdoulik @jonpryor
 /src/Mono.Android.Export @jonpryor
 /src/r8 @jonathanpeppers @jonpryor
-/src/Xamarin.Android.Build.Tasks @dellis1972 @jonathanpeppers
+/src/Xamarin.Android.Build.Tasks @jonathanpeppers
 /src/Xamarin.Android.Build.Tasks/Linker @jonpryor
 /src/Xamarin.Android.Build.Tasks/Utilities/LlvmIrGenerator @grendello
 /src/Xamarin.Android.Build.Tasks/Utilities/TypeMap* @grendello

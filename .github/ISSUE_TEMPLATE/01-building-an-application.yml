@@ -1,7 +1,7 @@
 name: 🛠 Building an Application
 description: Issues trying to compile or package your application.
 labels: ["Area: App+Library Build", "needs-triage"]
-assignees: ["jonathanpeppers", "dellis1972"]
+assignees: ["jonathanpeppers"]
 body:
   - type: markdown
     attributes:
