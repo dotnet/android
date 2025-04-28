@@ -19,6 +19,7 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 	const string ManagedTypeNamesBlobSymbol = "type_map_managed_type_names";
 	const string JavaTypeNamesBlobSymbol = "type_map_java_type_names";
 	const string TypeMapUsesHashesSymbol = "typemap_use_hashes";
+	const string TypeMapManagedTypeInfoSymbol = "type_map_managed_type_info";
 
 	sealed class TypeMapContextDataProvider : NativeAssemblerStructContextDataProvider
 	{
@@ -85,6 +86,20 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		}
 	}
 
+	sealed class TypeMapManagedTypeInfoContextDataProvider : NativeAssemblerStructContextDataProvider
+	{
+		public override string GetComment (object data, string fieldName)
+		{
+			var entry = EnsureType<TypeMapManagedTypeInfo> (data);
+
+			if (String.Compare ("assembly_name_index", fieldName, StringComparison.Ordinal) == 0) {
+				return $" '{entry.AssemblyName}'";
+			}
+
+			return String.Empty;
+		}
+	}
+
 	// Order of fields and their type must correspond *exactly* to that in
 	// src/native/clr/include/xamarin-app.hh TypeMapEntry structure
 	[NativeAssemblerStructContextDataProvider (typeof (TypeMapEntryContextDataProvider))]
@@ -104,6 +119,21 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 		[NativeAssembler (UsesDataProvider = true)]
 		public uint to;
+	};
+
+	// Order of fields and their type must correspond *exactly* to that in
+	// src/native/clr/include/xamarin-app.hh TypeMapManagedTypeInfo structure
+	[NativeAssemblerStructContextDataProvider (typeof (TypeMapManagedTypeInfoContextDataProvider))]
+	sealed class TypeMapManagedTypeInfo
+	{
+		[NativeAssembler (Ignore = true)]
+		public string AssemblyName;
+
+		[NativeAssembler (UsesDataProvider = true)]
+		public uint assembly_name_index;
+
+		[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
+		public uint managed_type_token_id;
 	};
 
 	// Order of fields and their type must correspond *exactly* to that in
@@ -151,9 +181,11 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 	StructureInfo typeMapEntryStructureInfo;
 	StructureInfo typeMapStructureInfo;
 	StructureInfo typeMapAssemblyStructureInfo;
+	StructureInfo typeMapManagedTypeInfoStructureInfo;
 	List<StructureInstance<TypeMapEntry>> javaToManagedMap;
 	List<StructureInstance<TypeMapEntry>> managedToJavaMap;
 	List<StructureInstance<TypeMapAssembly>> uniqueAssemblies;
+	List<StructureInstance<TypeMapManagedTypeInfo>> managedTypeInfos;
 	StructureInstance<TypeMap> type_map;
 
 	public TypeMappingDebugNativeAssemblyGeneratorCLR (TaskLoggingHelper log, TypeMapGenerator.ModuleDebugData data)
@@ -218,23 +250,6 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 			Log.LogMessage ("Managed-to-java typemaps will use string-based matching.");
 		}
 
-		// Java-to-managed maps don't use hashes since many mappings have multiple instances
-		foreach (TypeMapGenerator.TypeMapDebugEntry entry in data.JavaToManagedMap) {
-			TypeMapGenerator.TypeMapDebugEntry managedEntry = entry.DuplicateForJavaToManaged != null ? entry.DuplicateForJavaToManaged : entry;
-			(int managedTypeNameOffset, int _) = managedTypeNames.Add (entry.ManagedName);
-			(int javaTypeNameOffset, int _) = javaTypeNames.Add (entry.JavaName);
-
-			var j2m = new TypeMapEntry {
-				From = entry.JavaName,
-				To = managedEntry.SkipInJavaToManaged ? String.Empty : entry.ManagedName,
-
-				from = (uint)javaTypeNameOffset,
-				from_hash = 0,
-				to = managedEntry.SkipInJavaToManaged ? uint.MaxValue : (uint)managedTypeNameOffset,
-			};
-			javaToManagedMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo, j2m));
-		}
-
 		var assemblyNamesBlob = new LlvmIrStringBlob ();
 		foreach (TypeMapGenerator.TypeMapDebugAssembly asm in data.UniqueAssemblies) {
 			(int assemblyNameOffset, int assemblyNameLength) = assemblyNamesBlob.Add (asm.Name);
@@ -250,6 +265,37 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		}
 		uniqueAssemblies.Sort ((StructureInstance<TypeMapAssembly> a, StructureInstance<TypeMapAssembly> b) => a.Instance.mvid_hash.CompareTo (b.Instance.mvid_hash));
 
+		var managedTypeInfos = new List<StructureInstance<TypeMapManagedTypeInfo>> ();
+		// Java-to-managed maps don't use hashes since many mappings have multiple instances
+		foreach (TypeMapGenerator.TypeMapDebugEntry entry in data.JavaToManagedMap) {
+			TypeMapGenerator.TypeMapDebugEntry managedEntry = entry.DuplicateForJavaToManaged != null ? entry.DuplicateForJavaToManaged : entry;
+			(int managedTypeNameOffset, int _) = managedTypeNames.Add (entry.ManagedName);
+			(int javaTypeNameOffset, int _) = javaTypeNames.Add (entry.JavaName);
+
+			var j2m = new TypeMapEntry {
+				From = entry.JavaName,
+				To = managedEntry.SkipInJavaToManaged ? String.Empty : entry.ManagedName,
+
+				from = (uint)javaTypeNameOffset,
+				from_hash = 0,
+				to = managedEntry.SkipInJavaToManaged ? uint.MaxValue : (uint)managedTypeNameOffset,
+			};
+			javaToManagedMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo, j2m));
+
+			int assemblyNameOffset = assemblyNamesBlob.GetIndexOf (entry.AssemblyName);
+			if (assemblyNameOffset < 0) {
+				throw new InvalidOperationException ($"Internal error: assembly name '{entry.AssemblyName}' not found in the assembly names blob.");
+			}
+
+			var typeInfo = new TypeMapManagedTypeInfo {
+				AssemblyName = entry.AssemblyName,
+
+				assembly_name_index = (uint)assemblyNameOffset,
+				managed_type_token_id = entry.TypeDefinition.MetadataToken.ToUInt32 (),
+			};
+			managedTypeInfos.Add (new StructureInstance<TypeMapManagedTypeInfo> (typeMapManagedTypeInfoStructureInfo, typeInfo));
+		}
+
 		var map = new TypeMap {
 			JavaToManagedCount = data.JavaToManagedMap == null ? 0 : data.JavaToManagedMap.Count,
 			ManagedToJavaCount = data.ManagedToJavaMap == null ? 0 : data.ManagedToJavaMap.Count,
@@ -260,15 +306,9 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		};
 		type_map = new StructureInstance<TypeMap> (typeMapStructureInfo, map);
 		module.AddGlobalVariable (TypeMapSymbol, type_map, LlvmIrVariableOptions.GlobalConstant);
-
-		if (managedToJavaMap.Count > 0) {
-			module.AddGlobalVariable (ManagedToJavaSymbol, managedToJavaMap, LlvmIrVariableOptions.LocalConstant);
-		}
-
-		if (javaToManagedMap.Count > 0) {
-			module.AddGlobalVariable (JavaToManagedSymbol, javaToManagedMap, LlvmIrVariableOptions.LocalConstant);
-		}
-
+		module.AddGlobalVariable (ManagedToJavaSymbol, managedToJavaMap, LlvmIrVariableOptions.LocalConstant);
+		module.AddGlobalVariable (JavaToManagedSymbol, javaToManagedMap, LlvmIrVariableOptions.LocalConstant);
+		module.AddGlobalVariable (TypeMapManagedTypeInfoSymbol, managedTypeInfos, LlvmIrVariableOptions.GlobalConstant);
 		module.AddGlobalVariable (TypeMapUsesHashesSymbol, typemap_uses_hashes, LlvmIrVariableOptions.GlobalConstant);
 		module.AddGlobalVariable (UniqueAssembliesSymbol, uniqueAssemblies, LlvmIrVariableOptions.GlobalConstant);
 		module.AddGlobalVariable (AssemblyNamesBlobSymbol, assemblyNamesBlob, LlvmIrVariableOptions.GlobalConstant);
@@ -281,5 +321,6 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		typeMapAssemblyStructureInfo = module.MapStructure<TypeMapAssembly> ();
 		typeMapEntryStructureInfo = module.MapStructure<TypeMapEntry> ();
 		typeMapStructureInfo = module.MapStructure<TypeMap> ();
+		typeMapManagedTypeInfoStructureInfo = module.MapStructure<TypeMapManagedTypeInfo> ();
 	}
 }
