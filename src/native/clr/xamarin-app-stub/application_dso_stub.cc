@@ -21,6 +21,7 @@ const TypeMap type_map = {
 	.managed_to_java = managed_to_java,
 };
 
+const bool typemap_use_hashes = true;
 const TypeMapAssembly type_map_unique_assemblies[] = {};
 const char type_map_assembly_names[] = {};
 const char type_map_managed_type_names[] = {};

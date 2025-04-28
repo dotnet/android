@@ -64,7 +64,6 @@ struct TypeMapEntry
 	const uint32_t from;
 	const xamarin::android::hash_t from_hash;
 	const uint32_t to;
-	const xamarin::android::hash_t to_hash;
 };
 
 // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
@@ -327,6 +326,7 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const uint64_t format_tag;
 
 #if defined (DEBUG)
+	[[gnu::visibility("default")]] extern const bool typemap_use_hashes;
 	[[gnu::visibility("default")]] extern const TypeMap type_map; // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
 	[[gnu::visibility("default")]] extern const TypeMapAssembly type_map_unique_assemblies[];
 	[[gnu::visibility("default")]] extern const char type_map_assembly_names[];
