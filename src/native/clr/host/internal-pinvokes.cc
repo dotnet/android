@@ -34,7 +34,7 @@ const char* clr_typemap_managed_to_java (const char *typeName, const uint8_t *mv
 bool clr_typemap_java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept
 {
 	log_debug (LOG_ASSEMBLY, __PRETTY_FUNCTION__);
-	return TypeMapper::typemap_java_to_managed (java_type_name, assembly_name, managed_type_token_id);
+	return TypeMapper::java_to_managed (java_type_name, assembly_name, managed_type_token_id);
 }
 
 void monodroid_log (LogLevel level, LogCategories category, const char *message) noexcept

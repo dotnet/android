@@ -64,7 +64,6 @@ struct TypeMapEntry
 	const uint32_t from;
 	const xamarin::android::hash_t from_hash;
 	const uint32_t to;
-	const xamarin::android::hash_t to_hash;
 };
 
 // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs

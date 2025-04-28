@@ -21,7 +21,6 @@ const TypeMap type_map = {
 };
 
 const bool typemap_use_hashes = true;
-const TypeMapManagedTypeInfo type_map_managed_type_info[] = {};
 const TypeMapAssembly type_map_unique_assemblies[] = {};
 const char type_map_assembly_names[] = {};
 const char type_map_managed_type_names[] = {};
