@@ -5,6 +5,7 @@ using System.Text;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using NUnit.Framework;
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -17,96 +18,126 @@ namespace Xamarin.Android.Build.Tests
 				/* isRelease */          false,
 				/* aot */                false,
 				/* usesAssemblyStore */  false,
+				/* runtime */            AndroidRuntime.MonoVM,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm",
 				/* isRelease */          false,
 				/* aot */                false,
 				/* usesAssemblyStore */  true,
+				/* runtime */            AndroidRuntime.MonoVM,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm64",
 				/* isRelease */          false,
 				/* aot */                false,
 				/* usesAssemblyStore */  false,
+				/* runtime */            AndroidRuntime.MonoVM,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-x86",
 				/* isRelease */          false,
 				/* aot */                false,
 				/* usesAssemblyStore */  false,
+				/* runtime */            AndroidRuntime.MonoVM,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-x64",
 				/* isRelease */          false,
 				/* aot */                false,
 				/* usesAssemblyStore */  false,
+				/* runtime */            AndroidRuntime.MonoVM,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm",
 				/* isRelease */          true,
 				/* aot */                false,
 				/* usesAssemblyStore */  false,
+				/* runtime */            AndroidRuntime.MonoVM,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm",
 				/* isRelease */          true,
 				/* aot */                false,
 				/* usesAssemblyStore */  true,
+				/* runtime */            AndroidRuntime.MonoVM,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm",
 				/* isRelease */          true,
 				/* aot */                true,
 				/* usesAssemblyStore */  false,
+				/* runtime */            AndroidRuntime.MonoVM,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm",
 				/* isRelease */          true,
 				/* aot */                true,
 				/* usesAssemblyStore */  true,
+				/* runtime */            AndroidRuntime.MonoVM,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm64",
 				/* isRelease */          true,
 				/* aot */                false,
 				/* usesAssemblyStore */  false,
+				/* runtime */            AndroidRuntime.MonoVM,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86;android-x64",
 				/* isRelease */          false,
 				/* aot */                false,
 				/* usesAssemblyStore */  false,
+				/* runtime */            AndroidRuntime.MonoVM,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86;android-x64",
 				/* isRelease */          false,
 				/* aot */                false,
 				/* usesAssemblyStore */  true,
+				/* runtime */            AndroidRuntime.MonoVM,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86",
 				/* isRelease */          true,
 				/* aot */                false,
 				/* usesAssemblyStore */  false,
+				/* runtime */            AndroidRuntime.MonoVM,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86;android-x64",
 				/* isRelease */          true,
 				/* aot */                false,
 				/* usesAssemblyStore */  false,
+				/* runtime */            AndroidRuntime.MonoVM,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86;android-x64",
 				/* isRelease */          true,
 				/* aot */                false,
 				/* usesAssemblyStore */  true,
+				/* runtime */            AndroidRuntime.MonoVM,
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86;android-x64",
 				/* isRelease */          true,
 				/* aot */                true,
 				/* usesAssemblyStore */  false,
+				/* runtime */            AndroidRuntime.MonoVM,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android-arm64",
+				/* isRelease */          true,
+				/* aot */                false,
+				/* usesAssemblyStore */  true,
+				/* runtime */            AndroidRuntime.CoreCLR,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android-arm64",
+				/* isRelease */          true,
+				/* aot */                false,
+				/* usesAssemblyStore */  false,
+				/* runtime */            AndroidRuntime.NativeAOT,
 			},
 		};
 
