@@ -153,9 +153,9 @@
     <Error Condition="Exists($(AssetManifestPath))" Text="The manifest file '$(AssetManifestPath)' already exists." />
 
     <ItemGroup>
-      <ItemsToPush Include="$(OutputPath)*.nupkg" />
+      <ItemsToPush Include="$(OutputPath)*.nupkg" Kind="Package" />
       <WorkloadArtifacts Include="$(OutputPath)*.zip" />
-      <ItemsToPush Include="@(WorkloadArtifacts)" PublishFlatContainer="true" RelativeBlobPath="android/$(AndroidPackVersionLong)/%(Filename)%(Extension)" />
+      <ItemsToPush Include="@(WorkloadArtifacts)" PublishFlatContainer="true" RelativeBlobPath="android/$(AndroidPackVersionLong)/%(Filename)%(Extension)" Kind="Blob" />
     </ItemGroup>
 
     <Error Condition="'@(ItemsToPush)' == ''" Text="No packages to push." />
