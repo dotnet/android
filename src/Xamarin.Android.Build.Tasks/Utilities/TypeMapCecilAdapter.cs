@@ -149,6 +149,7 @@ class TypeMapCecilAdapter
 			ManagedName = GetManagedTypeName (td),
 			TypeDefinition = td,
 			SkipInJavaToManaged = ShouldSkipInJavaToManaged (td),
+			AssemblyName = td.Module.Assembly.Name.Name,
 		};
 	}
 
