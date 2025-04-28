@@ -398,6 +398,15 @@ final `.apk`.
 
 This property is `False` by default.
 
+## AndroidEnableProfiler
+
+Required for using `dotnet-trace` or `dotnet-gcdump` in Android
+applications. If set to `true`, it includes the Mono diagnostic
+component in the application. This component is the
+`libmono-component-diagnostics_tracing.so` native library.
+
+This property is `False` by default.
+
 ## AndroidEnableObsoleteOverrideInheritance
 
 A boolean property that determines if bound methods automatically inherit `[Obsolete]`
@@ -1547,6 +1556,18 @@ This property is `False` by default.
 
 This property is ignored unless the
 [`$(AotAssemblies)`](#aotassemblies) MSBuild property is `True`.
+
+## EnableProfiler
+
+Synonym for the [`$(AndroidEnableProfiler)`](#androidenableprofiler)
+property.
+
+Required for using `dotnet-trace` or `dotnet-gcdump` in Android
+applications. If set to `true`, it includes the Mono diagnostic
+component in the application. This component is the
+`libmono-component-diagnostics_tracing.so` native library.
+
+This property is `False` by default.
 
 ## EnableProguard
 
