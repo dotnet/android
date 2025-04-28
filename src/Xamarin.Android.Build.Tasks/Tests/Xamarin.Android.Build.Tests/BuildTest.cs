@@ -105,7 +105,10 @@ namespace Xamarin.Android.Build.Tests
 			var builder = CreateApkBuilder ();
 			builder.Verbosity = LoggerVerbosity.Detailed;
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
-			builder.AssertHasNoWarnings ();
+			// TODO: NativeAOT has trimmer warnings: https://github.com/dotnet/android/issues/9784
+			if (runtime != AndroidRuntime.NativeAOT) {
+				builder.AssertHasNoWarnings ();
+			}
 
 			var outputPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath);
 			var intermediateOutputPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
