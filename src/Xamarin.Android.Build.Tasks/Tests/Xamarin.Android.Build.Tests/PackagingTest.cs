@@ -151,7 +151,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 
 		[Test]
 		[Category ("SmokeTests")]
-		[TestCase ("Test Me")]
+		[TestCase ("Test Me", AndroidRuntime.MonoVM)]
 		// testing characters as per https://www.compart.com/en/unicode/category/Zs
 		[TestCase ("TestUnicodeSpace0020\u0020Me", AndroidRuntime.MonoVM)]
 		[TestCase ("TestUnicodeSpace2000\u2000Me", AndroidRuntime.MonoVM)]
