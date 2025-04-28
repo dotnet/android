@@ -56,6 +56,8 @@ struct TypeMapIndexHeader
 	uint32_t module_file_name_width;
 };
 
+// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
+//
 // If any of the members is set to maximum uint32_t value it means the entry is ignored (treated
 // as equivalent to `nullptr` if the member was a pointer). The reasoning is that no string could
 // begin at this offset (well, an empty string could, but we don't have those here)
@@ -64,6 +66,13 @@ struct TypeMapEntry
 	const uint32_t from;
 	const xamarin::android::hash_t from_hash;
 	const uint32_t to;
+};
+
+// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
+struct TypeMapManagedTypeInfo
+{
+	const uint32_t assembly_name_index;
+	const uint32_t managed_type_token_id;
 };
 
 // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
