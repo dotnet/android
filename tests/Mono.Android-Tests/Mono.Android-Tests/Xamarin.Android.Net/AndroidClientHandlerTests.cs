@@ -147,6 +147,7 @@ namespace Xamarin.Android.NetTests {
 		}
 	}
 
+	[Category ("AndroidClientHandler")]
 	public abstract class AndroidHandlerTestBase : HttpClientHandlerTestBase
 	{
 		static IEnumerable<Exception> Exceptions (Exception e)
@@ -316,6 +317,7 @@ namespace Xamarin.Android.NetTests {
 	}
 
 	[TestFixture]
+	[Category ("AndroidClientHandler")]
 	public class AndroidClientHandlerTests : AndroidHandlerTestBase
 	{
 		protected override HttpMessageHandler CreateHandler ()

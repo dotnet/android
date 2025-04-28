@@ -49,6 +49,7 @@ namespace SystemTests
 		};
 
 		[Test]
+		[Category ("NativeAOTIgnore")] // These switches only exist in Mono & CoreCLR BCL assemblies
 		[TestCaseSource (nameof (TestPrivateSwitchesSource))]
 		public void TestPrivateSwitches (
 				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.All)]

@@ -238,7 +238,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[Test, Category ("Export")]
 		[Category ("CoreCLRIgnore")] //TODO: https://github.com/dotnet/android/issues/10069
 		public void CreateTypeWithExportedMethods ()
 		{
@@ -251,7 +251,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[Test, Category ("Export")]
 		[Category ("CoreCLRIgnore")] //TODO: https://github.com/dotnet/android/issues/10069
 		public void ActivatedDirectObjectSubclassesShouldBeRegistered ()
 		{
@@ -407,7 +407,7 @@ namespace Java.InteropTests
 			Assert.IsNull (ignore_t2, string.Format ("No exception should be thrown [t2]! Got: {0}", ignore_t2));
 		}
 
-		[Test]
+		[Test, Category ("NativeTypeMap")]
 		public void JavaToManagedTypeMapping ()
 		{
 			Type m = Java.Interop.TypeManager.GetJavaToManagedType ("android/content/res/Resources");
@@ -416,7 +416,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (null, m);
 		}
 
-		[Test]
+		[Test, Category ("NativeTypeMap")]
 		public void ManagedToJavaTypeMapping ()
 		{
 			Type type = typeof(Activity);
