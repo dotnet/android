@@ -54,6 +54,19 @@ class LlvmIrStringBlob
 		return (info.Offset, info.Length);
 	}
 
+	public int GetIndexOf (string s)
+	{
+		if (String.IsNullOrEmpty (s)) {
+			return -1;
+		}
+
+		if (!cache.TryGetValue (s, out StringInfo info)) {
+			return -1;
+		}
+
+		return info.Offset;
+	}
+
 	public IEnumerable<StringInfo> GetSegments ()
 	{
 		foreach (StringInfo si in segments) {

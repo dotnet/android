@@ -344,15 +344,36 @@ auto TypeMapper::managed_to_java (const char *typeName, const uint8_t *mvid) noe
 [[gnu::flatten]]
 auto TypeMapper::java_to_managed_debug (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept -> bool
 {
-	// FIXME: this is currently VERY broken
-	*assembly_name = nullptr;
-	*managed_type_token_id = 0;
+	if (assembly_name == nullptr || managed_type_token_id == nullptr) [[unlikely]] {
+		log_warn (LOG_ASSEMBLY, "Managed land called java-to-managed mapping function with invalid pointers");
+		return false;
+	}
 
 	// We need to find entry matching the Java type name, which will then...
 	ssize_t idx = find_index_by_name (java_type_name, type_map.java_to_managed, type_map_java_type_names, JAVA, MANAGED);
 
 	// ..provide us with the managed type name index
-	return index_to_name (idx, java_type_name, type_map.java_to_managed, type_map_managed_type_names, JAVA, MANAGED);
+	const char *name = index_to_name (idx, java_type_name, type_map.java_to_managed, type_map_managed_type_names, JAVA, MANAGED);
+	if (name == nullptr) {
+		*assembly_name = nullptr;
+		*managed_type_token_id = 0;
+		return false;
+	}
+
+	TypeMapManagedTypeInfo const& type_info = type_map_managed_type_info[idx];
+	*assembly_name = &type_map_assembly_names[type_info.assembly_name_index];
+	*managed_type_token_id = type_info.managed_type_token_id;
+
+	log_debug (
+		LOG_ASSEMBLY,
+		"Mapped Java type '{}' to managed type '{}' in assembly '{}' and with token '{:x}'",
+		optional_string (java_type_name),
+		name,
+		*assembly_name,
+		*managed_type_token_id
+	);
+
+	return true;
 }
 #else // def DEBUG
 
