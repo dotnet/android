@@ -159,8 +159,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 		[TestCase ("TestUnicodeSpace2002\u2002Me", AndroidRuntime.MonoVM)]
 		[TestCase ("TestUnicodeSpace2007\u2007Me", AndroidRuntime.MonoVM)]
 		[TestCase ("TestUnicodeSpace0020\u0020Me", AndroidRuntime.CoreCLR)]
-		// TODO: https://github.com/dotnet/runtime/issues/115165
-		// [TestCase ("TestUnicodeSpace0020\u0020Me", AndroidRuntime.NativeAOT)]
+		[TestCase ("TestUnicodeSpace0020\u0020Me", AndroidRuntime.NativeAOT)]
 		public void CheckProjectWithSpaceInNameWorks (string projectName, AndroidRuntime runtime)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
