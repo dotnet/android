@@ -180,7 +180,13 @@ namespace Xamarin.Android.Build.Tests
 			helper.AssertContainsEntry ($"assemblies/de-DE/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
 			foreach (var abi in rids.Select (AndroidRidAbiHelper.RuntimeIdentifierToAbi)) {
 				helper.AssertContainsEntry ($"lib/{abi}/libmonodroid.so");
-				helper.AssertContainsEntry ($"lib/{abi}/libmonosgen-2.0.so");
+				if (runtime == AndroidRuntime.MonoVM) {
+					helper.AssertContainsEntry ($"lib/{abi}/libmonosgen-2.0.so");
+				} else if (runtime == AndroidRuntime.CoreCLR) {
+					helper.AssertContainsEntry ($"lib/{abi}/libcoreclr.so");
+				} else if (runtime == AndroidRuntime.NativeAOT) {
+					helper.AssertContainsEntry ($"lib/{abi}/lib{proj.ProjectName}.so");
+				}
 				if (rids.Length > 1) {
 					helper.AssertContainsEntry ($"assemblies/{abi}/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
 				} else {
