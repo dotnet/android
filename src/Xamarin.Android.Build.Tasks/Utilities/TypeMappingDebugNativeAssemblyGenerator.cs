@@ -66,11 +66,11 @@ namespace Xamarin.Android.Tasks
 				var entry = EnsureType<TypeMapEntry> (data);
 
 				if (String.Compare ("from", fieldName, StringComparison.Ordinal) == 0) {
-					return $"from: {entry.from}";
+					return $" from: {entry.from}";
 				}
 
 				if (String.Compare ("to", fieldName, StringComparison.Ordinal) == 0) {
-					return $"to: {entry.to}";
+					return $" to: {entry.to}";
 				}
 
 				return String.Empty;
