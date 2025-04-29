@@ -62,6 +62,7 @@ namespace Xamarin.Android.Tasks
 		{
 			public string JavaName;
 			public string ManagedName;
+			public uint ManagedTypeTokenId;
 			public bool SkipInJavaToManaged;
 			public TypeMapDebugEntry DuplicateForJavaToManaged;
 			public string AssemblyName;
