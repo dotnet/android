@@ -173,45 +173,45 @@ public class AssemblyModifierPipeline : AndroidTask
 
 		pipeline.Run (assembly, context);
 	}
+}
 
-	class SaveChangedAssemblyStep : IAssemblyModifierPipelineStep
+class SaveChangedAssemblyStep : IAssemblyModifierPipelineStep
+{
+	public TaskLoggingHelper Log { get; set; }
+
+	public WriterParameters WriterParameters { get; set; }
+
+	public SaveChangedAssemblyStep (TaskLoggingHelper log, WriterParameters writerParameters)
 	{
-		public TaskLoggingHelper Log { get; set; }
+		Log = log;
+		WriterParameters = writerParameters;
+	}
 
-		public WriterParameters WriterParameters { get; set; }
-
-		public SaveChangedAssemblyStep (TaskLoggingHelper log, WriterParameters writerParameters)
-		{
-			Log = log;
-			WriterParameters = writerParameters;
+	public void ProcessAssembly (AssemblyDefinition assembly, StepContext context)
+	{
+		if (context.IsAssemblyModified) {
+			Log.LogDebugMessage ($"Saving modified assembly: {context.Destination.ItemSpec}");
+			Directory.CreateDirectory (Path.GetDirectoryName (context.Destination.ItemSpec));
+			WriterParameters.WriteSymbols = assembly.MainModule.HasSymbols;
+			assembly.Write (context.Destination.ItemSpec, WriterParameters);
+		} else {
+			// If we didn't write a modified file, copy the original to the destination
+			CopyIfChanged (context.Source, context.Destination);
 		}
 
-		public void ProcessAssembly (AssemblyDefinition assembly, StepContext context)
-		{
-			if (context.IsAssemblyModified) {
-				Log.LogDebugMessage ($"Saving modified assembly: {context.Destination.ItemSpec}");
-				Directory.CreateDirectory (Path.GetDirectoryName (context.Destination.ItemSpec));
-				WriterParameters.WriteSymbols = assembly.MainModule.HasSymbols;
-				assembly.Write (context.Destination.ItemSpec, WriterParameters);
-			} else {
-				// If we didn't write a modified file, copy the original to the destination
-				CopyIfChanged (context.Source, context.Destination);
-			}
+		// We just saved the assembly, so it is no longer modified
+		context.IsAssemblyModified = false;
+	}
 
-			// We just saved the assembly, so it is no longer modified
-			context.IsAssemblyModified = false;
-		}
+	void CopyIfChanged (ITaskItem source, ITaskItem destination)
+	{
+		if (MonoAndroidHelper.CopyAssemblyAndSymbols (source.ItemSpec, destination.ItemSpec)) {
+			Log.LogDebugMessage ($"Copied: {destination.ItemSpec}");
+		} else {
+			Log.LogDebugMessage ($"Skipped unchanged file: {destination.ItemSpec}");
 
-		void CopyIfChanged (ITaskItem source, ITaskItem destination)
-		{
-			if (MonoAndroidHelper.CopyAssemblyAndSymbols (source.ItemSpec, destination.ItemSpec)) {
-				Log.LogDebugMessage ($"Copied: {destination.ItemSpec}");
-			} else {
-				Log.LogDebugMessage ($"Skipped unchanged file: {destination.ItemSpec}");
-
-				// NOTE: We still need to update the timestamp on this file, or this target would run again
-				File.SetLastWriteTimeUtc (destination.ItemSpec, DateTime.UtcNow);
-			}
+			// NOTE: We still need to update the timestamp on this file, or this target would run again
+			File.SetLastWriteTimeUtc (destination.ItemSpec, DateTime.UtcNow);
 		}
 	}
 }
