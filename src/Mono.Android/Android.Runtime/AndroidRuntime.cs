@@ -265,11 +265,9 @@ namespace Android.Runtime {
 
 		protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 		{
-			RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"#1 GetTypesForSimpleReference (\"{jniSimpleReference}\")");
 			foreach (var ti in base.GetTypesForSimpleReference (jniSimpleReference))
 				yield return ti;
 
-			RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"#2 GetTypesForSimpleReference (\"{jniSimpleReference}\")");
 			var t = Java.Interop.TypeManager.GetJavaToManagedType (jniSimpleReference);
 			if (t != null)
 				yield return t;
