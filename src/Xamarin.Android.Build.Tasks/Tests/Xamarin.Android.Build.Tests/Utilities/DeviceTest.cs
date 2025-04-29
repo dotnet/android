@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Diagnostics;
@@ -207,10 +208,10 @@ namespace Xamarin.Android.Build.Tests
 			return RunAdbCommand ($"shell am start -S -n \"{activity}\"");
 		}
 
-		protected static void RunProjectAndAssert (XamarinAndroidApplicationProject proj, ProjectBuilder builder, string logName = "run.log", bool doNotCleanupOnUpdate = false, string [] parameters = null)
+		protected static void RunProjectAndAssert (XamarinAndroidApplicationProject proj, ProjectBuilder builder, string logName = "run.log", Dictionary<string, string> environmentVariables = null, bool doNotCleanupOnUpdate = false, string [] parameters = null)
 		{
 			builder.BuildLogFile = logName;
-			Assert.True (builder.RunTarget (proj, "Run", doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters), "Project should have run.");
+			Assert.True (builder.RunTarget (proj, "Run", doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters, environmentVariables: environmentVariables), "Project should have run.");
 		}
 
 		protected static void StartActivityAndAssert (XamarinAndroidApplicationProject proj)
