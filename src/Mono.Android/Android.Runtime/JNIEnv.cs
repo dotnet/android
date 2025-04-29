@@ -1070,7 +1070,6 @@ namespace Android.Runtime {
 				ret [i] = targetType == null || targetType.IsInstanceOfType (value)
 					? value
 					: Convert.ChangeType (value, targetType, CultureInfo.InvariantCulture);
-				GC.KeepAlive (value);
 			}
 
 			return ret;

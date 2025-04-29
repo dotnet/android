@@ -386,7 +386,6 @@ namespace Java.Interop {
 			BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 			var c = type.GetConstructor (flags, null, XAConstructorSignature, null);
 			if (c != null) {
-				Console.WriteLine ($"# jonp: CreateProxy: before invoking c={c.DeclaringType.FullName}::{c}");
 				c.Invoke (peer, new object[] { handle, transfer });
 				return peer;
 			}
@@ -398,6 +397,7 @@ namespace Java.Interop {
 				JNIEnv.DeleteRef (handle, transfer);
 				return peer;
 			}
+			GC.SuppressFinalize (peer);
 			throw new MissingMethodException (
 					"No constructor found for " + type.FullName + "::.ctor(System.IntPtr, Android.Runtime.JniHandleOwnership)",
 					CreateJavaLocationException ());
