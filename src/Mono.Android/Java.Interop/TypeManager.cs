@@ -131,7 +131,6 @@ namespace Java.Interop {
 		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value from parameter 'typename_ptr'.")]
 		static void n_Activate (IntPtr jnienv, IntPtr jclass, IntPtr typename_ptr, IntPtr signature_ptr, IntPtr jobject, IntPtr parameters_ptr)
 		{
-			RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"TypeManager.n_Activate");
 			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return;
 
@@ -254,7 +253,6 @@ namespace Java.Interop {
 
 		internal static Type? GetJavaToManagedType (string class_name)
 		{
-			RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"TypeManager.GetJavaToManagedType (\"{class_name}\")");
 			Type? type = JNIEnvInit.RuntimeType switch {
 				DotNetRuntimeType.MonoVM  => monovm_typemap_java_to_managed (class_name),
 				DotNetRuntimeType.CoreCLR => clr_typemap_java_to_managed (class_name),
@@ -283,7 +281,6 @@ namespace Java.Interop {
 		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "TypeManager.CreateProxy() does not statically know the value of the 'type' local variable.")]
 		internal static IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{
-			RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"TypeManager.CreateInstance ()");
 			Type? type = null;
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
 			string? class_name = GetClassName (class_ptr);
