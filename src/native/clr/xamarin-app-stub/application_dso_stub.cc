@@ -16,7 +16,6 @@ static TypeMapEntry managed_to_java[] = {};
 const TypeMap type_map = {
 	.entry_count = 0,
 	.unique_assemblies_count = 0,
-	.assembly_names_blob_size = 0,
 	.java_to_managed = java_to_managed,
 	.managed_to_java = managed_to_java,
 };
