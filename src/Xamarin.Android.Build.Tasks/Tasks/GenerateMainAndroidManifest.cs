@@ -56,8 +56,8 @@ public class GenerateMainAndroidManifest : AndroidTask
 
 	public override bool RunTask ()
 	{
-		// Retrieve the stored NativeCodeGenState
-		var nativeCodeGenStates = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ConcurrentDictionary<AndroidTargetArch, NativeCodeGenState>> (
+		// Retrieve the stored NativeCodeGenState (and remove it from the cache)
+		var nativeCodeGenStates = BuildEngine4.UnregisterTaskObjectAssemblyLocal<ConcurrentDictionary<AndroidTargetArch, NativeCodeGenState>> (
 			MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory),
 			RegisteredTaskObjectLifetime.Build
 		);
@@ -74,14 +74,21 @@ public class GenerateMainAndroidManifest : AndroidTask
 		var additionalProviders = MergeManifest (templateCodeGenState, GenerateJavaStubs.MaybeGetArchAssemblies (userAssembliesPerArch, templateCodeGenState.TargetArch));
 		GenerateAdditionalProviderSources (templateCodeGenState, additionalProviders);
 
-		// Marshal methods needs this data in the <GeneratePackageManagerJava/> later,
-		// but if we're not using marshal methods we need to dispose of the resolver.
-		if (!UseMarshalMethods) {
-			Log.LogDebugMessage ($"Disposing all {nameof (NativeCodeGenState)}.{nameof (NativeCodeGenState.Resolver)}");
 
-			foreach (var state in nativeCodeGenStates.Values) {
-				state.Resolver.Dispose ();
-			}
+		// If we still need the NativeCodeGenState in the <GenerateNativeMarshalMethodSources> task because we're using marshal methods,
+		// we're going to transfer it to a new object that doesn't require holding open Cecil AssemblyDefinitions.
+		if (UseMarshalMethods) {
+			var nativeCodeGenStateObject = MarshalMethodCecilAdapter.GetNativeCodeGenStateCollection (Log, nativeCodeGenStates);
+
+			Log.LogDebugMessage ($"Saving {nameof (NativeCodeGenStateObject)} to {nameof (GenerateJavaStubs.NativeCodeGenStateObjectRegisterTaskKey)}");
+			BuildEngine4.RegisterTaskObjectAssemblyLocal (MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateObjectRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory), nativeCodeGenStateObject, RegisteredTaskObjectLifetime.Build);
+		}
+
+		// Dispose the Cecil resolvers so the assemblies are closed.
+		Log.LogDebugMessage ($"Disposing all {nameof (NativeCodeGenState)}.{nameof (NativeCodeGenState.Resolver)}");
+
+		foreach (var state in nativeCodeGenStates.Values) {
+			state.Resolver.Dispose ();
 		}
 
 		if (Log.HasLoggedErrors) {

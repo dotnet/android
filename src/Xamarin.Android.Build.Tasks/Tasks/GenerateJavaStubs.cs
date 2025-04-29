@@ -24,6 +24,7 @@ namespace Xamarin.Android.Tasks
 	public class GenerateJavaStubs : AndroidTask
 	{
 		public const string NativeCodeGenStateRegisterTaskKey = ".:!MarshalMethods!:.";
+		public const string NativeCodeGenStateObjectRegisterTaskKey = ".:!MarshalMethodsObject!:.";
 
 		public override string TaskPrefix => "GJS";
 

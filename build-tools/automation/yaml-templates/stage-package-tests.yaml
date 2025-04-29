@@ -201,6 +201,26 @@ stages:
     - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
+        testName: Mono.Android.NET_Tests-CoreCLR
+        project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+        testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)CoreCLR.xml
+        extraBuildArgs: -p:TestsFlavor=CoreCLR -p:UseMonoRuntime=false -p:AndroidEnableMarshalMethods=false
+        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
+        artifactFolder: $(DotNetTargetFramework)-CoreCLR
+
+    - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
+        testName: Mono.Android.NET_Tests-NativeAOT
+        project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+        testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)NativeAOT.xml
+        extraBuildArgs: -p:TestsFlavor=NativeAOT -p:PublishAot=true
+        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
+        artifactFolder: $(DotNetTargetFramework)-NativeAOT
+
+    - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
         testName: Xamarin.Android.JcwGen_Tests
         project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
         testResultsFiles: TestResult-Xamarin.Android.JcwGen_Tests-$(XA.Build.Configuration).xml

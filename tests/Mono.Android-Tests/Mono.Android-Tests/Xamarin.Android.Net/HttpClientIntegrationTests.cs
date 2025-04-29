@@ -1062,6 +1062,7 @@ namespace Xamarin.Android.NetTests {
 	}
 
 	[TestFixture]
+	[Category ("AndroidClientHandler")]
 	public class AndroidClientHandlerIntegrationTests : HttpClientIntegrationTestBase
 	{
 		protected override AndroidHandlerSettingsAdapter CreateHandler ()
