@@ -30,7 +30,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
-				ProjectName = "Test Me",
+				ProjectName = runtime == AndroidRuntime.NativeAOT ? "Test_Me" : "Test Me", // TODO: https://github.com/dotnet/runtime/issues/115165
 				RootNamespace = "Test.Me",
 				EnableDefaultItems = true,
 				ExtraNuGetConfigSources = {
