@@ -57,11 +57,11 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 			var entry = EnsureType<TypeMapEntry> (data);
 
 			if (String.Compare ("from", fieldName, StringComparison.Ordinal) == 0) {
-				return $"from: {entry.From}";
+				return $" from: '{entry.From}'";
 			}
 
 			if (String.Compare ("to", fieldName, StringComparison.Ordinal) == 0) {
-				return $"to: {entry.To}";
+				return $" to: '{entry.To}'";
 			}
 
 			return String.Empty;
@@ -94,6 +94,10 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 			if (String.Compare ("assembly_name_index", fieldName, StringComparison.Ordinal) == 0) {
 				return $" '{entry.AssemblyName}'";
+			}
+
+			if (String.Compare ("managed_type_token_id", fieldName, StringComparison.Ordinal) == 0) {
+				return $" '{entry.ManagedTypeName}'";
 			}
 
 			return String.Empty;
@@ -129,10 +133,13 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		[NativeAssembler (Ignore = true)]
 		public string AssemblyName;
 
+		[NativeAssembler (Ignore = true)]
+		public string ManagedTypeName;
+
 		[NativeAssembler (UsesDataProvider = true)]
 		public uint assembly_name_index;
 
-		[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
+		[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 		public uint managed_type_token_id;
 	};
 
@@ -149,7 +156,6 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 		public uint   entry_count;
 		public ulong  unique_assemblies_count;
-		public ulong  assembly_names_blob_size;
 
 		[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
 		public TypeMapEntry? java_to_managed = null;
@@ -228,10 +234,14 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 				To = entry.JavaName,
 
 				from = (uint)managedTypeNameOffset,
-				from_hash = MonoAndroidHelper.GetXxHash (entry.ManagedName, is64Bit: true),
+				from_hash = typemap_uses_hashes ? MonoAndroidHelper.GetXxHash (entry.ManagedName, is64Bit: true) : 0,
 				to = (uint)javaTypeNameOffset,
 			};
 			managedToJavaMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo, m2j));
+
+			if (!typemap_uses_hashes) {
+				continue;
+			}
 
 			if (usedHashes.ContainsKey (m2j.from_hash)) {
 				typemap_uses_hashes = false;
@@ -289,9 +299,10 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 			var typeInfo = new TypeMapManagedTypeInfo {
 				AssemblyName = entry.AssemblyName,
+				ManagedTypeName = entry.ManagedName,
 
 				assembly_name_index = (uint)assemblyNameOffset,
-				managed_type_token_id = entry.TypeDefinition.MetadataToken.ToUInt32 (),
+				managed_type_token_id = entry.ManagedTypeTokenId,
 			};
 			managedTypeInfos.Add (new StructureInstance<TypeMapManagedTypeInfo> (typeMapManagedTypeInfoStructureInfo, typeInfo));
 		}
@@ -302,9 +313,9 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 			entry_count = data.EntryCount,
 			unique_assemblies_count = (ulong)data.UniqueAssemblies.Count,
-			assembly_names_blob_size = (ulong)assemblyNamesBlob.Size,
 		};
 		type_map = new StructureInstance<TypeMap> (typeMapStructureInfo, map);
+
 		module.AddGlobalVariable (TypeMapSymbol, type_map, LlvmIrVariableOptions.GlobalConstant);
 		module.AddGlobalVariable (ManagedToJavaSymbol, managedToJavaMap, LlvmIrVariableOptions.LocalConstant);
 		module.AddGlobalVariable (JavaToManagedSymbol, javaToManagedMap, LlvmIrVariableOptions.LocalConstant);

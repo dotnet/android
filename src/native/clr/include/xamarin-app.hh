@@ -80,7 +80,6 @@ struct TypeMap
 {
 	uint32_t             entry_count;
 	uint64_t             unique_assemblies_count;
-	uint64_t             assembly_names_blob_size;
 	const TypeMapEntry  *java_to_managed;
 	const TypeMapEntry  *managed_to_java;
 };
