@@ -156,12 +156,8 @@ auto TypeMapper::managed_to_java_debug (const char *typeName, const uint8_t *mvi
 		TypeMapAssembly const& assm = type_map_unique_assemblies[idx];
 		full_type_name.append (", "sv);
 
-		if (assm.name_offset < type_map.assembly_names_blob_size) [[likely]] {
-			full_type_name.append (&type_map_assembly_names[assm.name_offset], assm.name_length);
-			log_debug (LOG_ASSEMBLY, "typemap: fixed-up type name: '{}'", full_type_name.get ());
-		} else {
-			log_warn (LOG_ASSEMBLY, "typemap: fnvalid assembly name offset {}", assm.name_offset);
-		}
+		// We explicitly trust the build process here, with regards to validity of offsets
+		full_type_name.append (&type_map_assembly_names[assm.name_offset], assm.name_length);
 	} else {
 		log_warn (LOG_ASSEMBLY, "typemap: unable to look up assembly name for type '{}', trying without it.", typeName);
 	}
@@ -360,6 +356,7 @@ auto TypeMapper::java_to_managed_debug (const char *java_type_name, char const**
 		return false;
 	}
 
+	// We explicitly trust the build process here, with regards to the size of the arrays
 	TypeMapManagedTypeInfo const& type_info = type_map_managed_type_info[idx];
 	*assembly_name = &type_map_assembly_names[type_info.assembly_name_index];
 	*managed_type_token_id = type_info.managed_type_token_id;
