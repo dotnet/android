@@ -344,9 +344,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' ">true</AndroidUseAssemblyStore>
   <AndroidAotEnableLazyLoad Condition=" '$(AndroidAotEnableLazyLoad)' == '' And '$(AotAssemblies)' == 'true' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</AndroidAotEnableLazyLoad>
   <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and ('$(UsingMicrosoftNETSdkRazor)' == 'true') ">False</AndroidEnableMarshalMethods>
-  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and '$(_AndroidRuntime)' != 'NativeAOT' and '$(PublishReadyToRun)' != 'true' ">True</AndroidEnableMarshalMethods>
+  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and '$(_AndroidRuntime)' != 'NativeAOT' ">True</AndroidEnableMarshalMethods>
   <!-- NOTE: temporarily disable for NativeAOT for now, to get build passing -->
-  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and ('$(_AndroidRuntime)' == 'NativeAOT' or '$(PublishReadyToRun)' == 'true') ">False</AndroidEnableMarshalMethods>
+  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and '$(_AndroidRuntime)' == 'NativeAOT' ">False</AndroidEnableMarshalMethods>
 
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">False</_AndroidUseMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">$(AndroidEnableMarshalMethods)</_AndroidUseMarshalMethods>
@@ -927,7 +927,6 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidApkPerAbiFlagFile>$(IntermediateOutputPath)android\bin\apk_per_abi.flag</_AndroidApkPerAbiFlagFile>
 	<_AndroidDebugKeyStoreFlag>$(IntermediateOutputPath)android_debug_keystore.flag</_AndroidDebugKeyStoreFlag>
 	<_RemoveRegisterFlag>$(MonoAndroidIntermediateAssemblyDir)shrunk\shrunk.flag</_RemoveRegisterFlag>
-	<_AdditionalPostLinkerStepsFlag>$(_AndroidStampDirectory)_AdditionalPostLinkerSteps.stamp</_AdditionalPostLinkerStepsFlag>
 	<_AcwMapFile>$(IntermediateOutputPath)acw-map.txt</_AcwMapFile>
 	<_CustomViewMapFile>$(IntermediateOutputPath)customview-map.txt</_CustomViewMapFile>
 	<AndroidResgenNamespace Condition="'$(AndroidResgenNamespace)'==''" >$(RootNamespace)</AndroidResgenNamespace>
@@ -1492,59 +1491,26 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<!-- Runs additional steps after ILLink runs (_LinkAssemblies) -->
-<Target Name="_AfterILLinkAdditionalSteps"
-    DependsOnTargets="_LinkAssembliesNoShrinkInputs"
-    Condition="'$(PublishTrimmed)' == 'true'"
-    Inputs="$(_AndroidLinkFlag)"
-    Outputs="$(_AdditionalPostLinkerStepsFlag)">
-  <AssemblyModifierPipeline
-      ApplicationJavaClass="$(AndroidApplicationJavaClass)"
-      CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
-      Debug="$(AndroidIncludeDebugSymbols)"
-      DestinationFiles="@(ResolvedAssemblies)"
-      Deterministic="$(Deterministic)"
-      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
-      ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
-      PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
-      ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)"
-      ResolvedAssemblies="@(_AllResolvedAssemblies)"
-      ResolvedUserAssemblies="@(ResolvedUserAssemblies)"
-      SourceFiles="@(ResolvedAssemblies)"
-      TargetName="$(TargetName)">
-  </AssemblyModifierPipeline>
-
-  <Touch Files="$(_AdditionalPostLinkerStepsFlag)" AlwaysCreate="true" />
-</Target>
-
-<!-- _PrepareAssemblies lives in Microsoft.Android.Sdk.AssemblyResolution.targets -->
-
-<Target Name="_PrepareNativeAssemblySources" Condition=" '$(_AndroidRuntime)' != 'NativeAOT' ">
-  <PrepareAbiItems
-      BuildTargetAbis="@(_BuildTargetAbis)"
-      NativeSourcesDir="$(_NativeAssemblySourceDir)"
-      Debug="$(AndroidIncludeDebugSymbols)"
-      Mode="typemap">
-    <Output TaskParameter="AssemblySources" ItemName="_TypeMapAssemblySource" />
-    <Output TaskParameter="AssemblyIncludes" ItemName="_TypeMapAssemblyInclude" />
-  </PrepareAbiItems>
-</Target>
-
 <PropertyGroup>
   <_GenerateJavaStubsDependsOnTargets>
     _SetLatestTargetFrameworkVersion;
-    _PrepareAssemblies;
+    _GetAndroidPackageName;
     _PrepareNativeAssemblySources;
-    $(_AfterPrepareAssemblies);
     _GetGenerateJavaStubsInputs;
   </_GenerateJavaStubsDependsOnTargets>
 </PropertyGroup>
 
 <Target Name="_GetGenerateJavaStubsInputs" DependsOnTargets="_GenerateEnvironmentFiles">
   <ItemGroup>
+    <!-- HACK: %(Abi) and %(HasMonoAndroidReference) are hardcoded to get things to work at all -->
+    <_AndroidILLinkAssemblies
+        Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')"
+        Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')"
+        Abi="arm64-v8a"
+        HasMonoAndroidReference="true"
+    />
     <_GenerateJavaStubsInputs Include="@(_AndroidMSBuildAllProjects)" />
-    <_GenerateJavaStubsInputs Include="$(_ResolvedUserAssembliesHashFile)" />
-    <_GenerateJavaStubsInputs Include="@(_ResolvedUserMonoAndroidAssemblies)" />
+    <_GenerateJavaStubsInputs Include="$(_AndroidILLinkAssemblies)" />
     <_GenerateJavaStubsInputs Include="$(_AndroidManifestAbs)" />
     <_GenerateJavaStubsInputs Include="$(_AndroidBuildPropertiesCache)" />
     <_GenerateJavaStubsInputs Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' != 'true' " />
@@ -1552,14 +1518,34 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
+<!-- Additional steps after ILLink -->
 <Target Name="_GenerateJavaStubs"
-    DependsOnTargets="$(_GenerateJavaStubsDependsOnTargets);$(BeforeGenerateAndroidManifest)"
-    Inputs="@(_GenerateJavaStubsInputs)"
+    AfterTargets="ILLink"
+    BeforeTargets="CreateReadyToRunImages;ComputeIlcCompileInputs"
+    DependsOnTargets="$(_GenerateJavaStubsDependsOnTargets);$(BeforeGenerateAndroidManifest);_LinkAssembliesNoShrinkInputs"
+    Condition="'$(PublishTrimmed)' == 'true'"
+    Inputs="@(_GenerateJavaStubsInputs);$(_AndroidLinkFlag)"
     Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
+  <AssemblyModifierPipeline
+      ApplicationJavaClass="$(AndroidApplicationJavaClass)"
+      CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
+      Debug="$(AndroidIncludeDebugSymbols)"
+      DestinationFiles="@(_AndroidILLinkAssemblies)"
+      Deterministic="$(Deterministic)"
+      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
+      ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
+      PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
+      ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)"
+      ResolvedAssemblies="@(_AndroidILLinkAssemblies)"
+      ResolvedUserAssemblies="@(_AndroidILLinkAssemblies)"
+      SourceFiles="@(_AndroidILLinkAssemblies)"
+      TargetName="$(TargetName)">
+  </AssemblyModifierPipeline>
+
   <PropertyGroup>
-    <_ManifestOutput Condition=" '$(AndroidManifestMerger)' == 'legacy' ">$(IntermediateOutputPath)android\AndroidManifest.xml</_ManifestOutput>
-    <_ManifestOutput Condition=" '$(AndroidManifestMerger)' != 'legacy' ">$(IntermediateOutputPath)AndroidManifest.xml</_ManifestOutput>
+    <_ManifestOutput Condition=" '$(AndroidManifestMerger)' == 'legacy' ">$(_OuterIntermediateOutputPath)android\AndroidManifest.xml</_ManifestOutput>
+    <_ManifestOutput Condition=" '$(AndroidManifestMerger)' != 'legacy' ">$(_OuterIntermediateOutputPath)AndroidManifest.xml</_ManifestOutput>
     <_LinkingEnabled Condition=" '$(AndroidLinkMode)' != 'None'">True</_LinkingEnabled>
     <_LinkingEnabled Condition=" '$(AndroidLinkMode)' == 'None'">False</_LinkingEnabled>
     <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' != '' ">True</_HaveMultipleRIDs>
@@ -1571,8 +1557,8 @@ because xbuild doesn't support framework reference assemblies.
 
   <GenerateJavaCallableWrappers
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
-      OutputDirectory="$(IntermediateOutputPath)android\src"
-      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      OutputDirectory="$(_OuterIntermediateOutputPath)android\src"
+      ResolvedAssemblies="@(_AndroidILLinkAssemblies)"
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
       SupportedAbis="@(_BuildTargetAbis)">
     <Output TaskParameter="GeneratedJavaFilesOutput" ItemName="_GeneratedJavaFiles" />
@@ -1580,40 +1566,40 @@ because xbuild doesn't support framework reference assemblies.
 
   <GenerateACWMap
       AcwMapFile="$(_AcwMapFile)"
-      IntermediateOutputDirectory="$(IntermediateOutputPath)"
-      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      IntermediateOutputDirectory="$(_OuterIntermediateOutputPath)"
+      ResolvedAssemblies="@(_AndroidILLinkAssemblies)"
       SupportedAbis="@(_BuildTargetAbis)">
   </GenerateACWMap>
 
   <GenerateJavaStubs
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
-      ResolvedAssemblies="@(_ResolvedAssemblies)"
-      ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
+      ResolvedAssemblies="@(_AndroidILLinkAssemblies)"
+      ResolvedUserAssemblies="@(_AndroidILLinkAssemblies)"
       RunCheckedBuild="$(_AndroidJLOCheckedBuild)"
       GeneratedJavaFiles="@(_GeneratedJavaFiles)"
       ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
       Debug="$(AndroidIncludeDebugSymbols)"
       AndroidSdkPlatform="$(_AndroidApiLevel)"
-      OutputDirectory="$(IntermediateOutputPath)android"
+      OutputDirectory="$(_OuterIntermediateOutputPath)android"
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
       SupportedAbis="@(_BuildTargetAbis)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
-      IntermediateOutputDirectory="$(IntermediateOutputPath)">
+      IntermediateOutputDirectory="$(_OuterIntermediateOutputPath)">
   </GenerateJavaStubs>
 
   <RewriteMarshalMethods
       Condition=" '$(_AndroidUseMarshalMethods)' == 'true' And '$(AndroidIncludeDebugSymbols)' == 'false' "
       EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
       Environments="@(_EnvironmentFiles)"
-      IntermediateOutputDirectory="$(IntermediateOutputPath)">
+      IntermediateOutputDirectory="$(_OuterIntermediateOutputPath)">
   </RewriteMarshalMethods>
 
   <GenerateTypeMappings
       AndroidRuntime="$(_AndroidRuntime)"
       Debug="$(AndroidIncludeDebugSymbols)"
-      IntermediateOutputDirectory="$(IntermediateOutputPath)"
+      IntermediateOutputDirectory="$(_OuterIntermediateOutputPath)"
       SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)"
       TypemapImplementation="$(_AndroidTypeMapImplementation)"
       TypemapOutputDirectory="$(_NativeAssemblySourceDir)">
@@ -1623,8 +1609,8 @@ because xbuild doesn't support framework reference assemblies.
       Condition=" '$(_AndroidJLOCheckedBuild)' == 'true' "
       AcwMapFile="$(_AcwMapFile)"
       RunCheckedBuild="true"
-      IntermediateOutputDirectory="$(IntermediateOutputPath)"
-      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      IntermediateOutputDirectory="$(_OuterIntermediateOutputPath)"
+      ResolvedAssemblies="@(_AndroidILLinkAssemblies)"
       SupportedAbis="@(_BuildTargetAbis)">
   </GenerateACWMap>
 
@@ -1640,16 +1626,16 @@ because xbuild doesn't support framework reference assemblies.
       Debug="$(AndroidIncludeDebugSymbols)"
       EmbedAssemblies="$(EmbedAssembliesIntoApk)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
-      IntermediateOutputDirectory="$(IntermediateOutputPath)"
+      IntermediateOutputDirectory="$(_OuterIntermediateOutputPath)"
       ManifestPlaceholders="$(AndroidManifestPlaceholders)"
       ManifestTemplate="$(_AndroidManifestAbs)"
       MergedAndroidManifestOutput="$(_ManifestOutput)"
       MergedManifestDocuments="@(_MergedManifestDocuments)"
       MultiDex="$(AndroidEnableMultiDex)"
       NeedsInternet="$(AndroidNeedsInternetPermission)"
-      OutputDirectory="$(IntermediateOutputPath)android"
+      OutputDirectory="$(_OuterIntermediateOutputPath)android"
       PackageName="$(_AndroidPackage)"
-      ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
+      ResolvedUserAssemblies="@(_AndroidILLinkAssemblies)"
       SupportedAbis="@(_BuildTargetAbis)"
       SupportedOSPlatformVersion="$(SupportedOSPlatformVersion)"
       TargetName="$(TargetName)"
@@ -1664,7 +1650,20 @@ because xbuild doesn't support framework reference assemblies.
     <FileWrites Include="$(_ManifestOutput)" />
   </ItemGroup>
 
-  <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
+  <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="true" />
+</Target>
+
+<!-- _PrepareAssemblies lives in Microsoft.Android.Sdk.AssemblyResolution.targets -->
+
+<Target Name="_PrepareNativeAssemblySources" Condition=" '$(_AndroidRuntime)' != 'NativeAOT' ">
+  <PrepareAbiItems
+      BuildTargetAbis="@(_BuildTargetAbis)"
+      NativeSourcesDir="$(_NativeAssemblySourceDir)"
+      Debug="$(AndroidIncludeDebugSymbols)"
+      Mode="typemap">
+    <Output TaskParameter="AssemblySources" ItemName="_TypeMapAssemblySource" />
+    <Output TaskParameter="AssemblyIncludes" ItemName="_TypeMapAssemblyInclude" />
+  </PrepareAbiItems>
 </Target>
 
 <Target Name="_ManifestMerger"
@@ -1710,7 +1709,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_ReadAndroidManifest"
-    DependsOnTargets="_GenerateJavaStubs;_ManifestMerger">
+    DependsOnTargets="_ManifestMerger">
   <ReadAndroidManifest
       ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
       AndroidSdkDirectory="$(_AndroidSdkDirectory)"
@@ -1826,7 +1825,6 @@ because xbuild doesn't support framework reference assemblies.
 
 <PropertyGroup>
   <_GeneratePackageManagerJavaDependsOn>
-    _GenerateJavaStubs;
     _RunAotForAllRIDs;
     _ManifestMerger;
     _ConvertCustomView;
@@ -1845,7 +1843,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GetGeneratePackageManagerJavaInputs">
   <ItemGroup>
-    <_GeneratePackageManagerJavaInputs Include="@(_GenerateJavaStubsInputs)" />
+    <_GeneratePackageManagerJavaInputs Include="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" />
   </ItemGroup>
 </Target>
 
@@ -1945,7 +1943,6 @@ because xbuild doesn't support framework reference assemblies.
 
 <PropertyGroup>
 	<_CreateBaseApkDependsOnTargets>
-		_GenerateJavaStubs;
 		_ManifestMerger;
 		_ConvertCustomView;
 		$(_AfterConvertCustomView);
@@ -1989,7 +1986,7 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<Target Name="_FindJavaStubFiles" DependsOnTargets="_GenerateJavaStubs;_ManifestMerger;_ConvertCustomView;$(_AfterConvertCustomView);_GenerateEnvironmentFiles;">
+<Target Name="_FindJavaStubFiles" DependsOnTargets="_ManifestMerger;_ConvertCustomView;$(_AfterConvertCustomView);_GenerateEnvironmentFiles;">
   <ItemGroup>
     <_JavaStubFiles Include="$(_AndroidIntermediateJavaSourceDirectory)**\*.java" />
     <FileWrites Include="@(_JavaStubFiles)" />
@@ -2108,7 +2105,7 @@ because xbuild doesn't support framework reference assemblies.
    <Touch Files="$(_AndroidApkPerAbiFlagFile)" Condition="'$(AndroidCreatePackagePerAbi)' == 'true'" AlwaysCreate="True" />
 </Target>
 
-<Target Name="_PrepareNativeAssemblyItems" DependsOnTargets="_GenerateJavaStubs">
+<Target Name="_PrepareNativeAssemblyItems">
   <ItemGroup>
     <_NativeAssemblyTarget Include="@(_TypeMapAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
       <abi>%(_TypeMapAssemblySource.abi)</abi>
@@ -2146,7 +2143,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CompileNativeAssemblySources"
-    DependsOnTargets="_PrepareNativeAssemblyItems;_GenerateCompressedAssembliesNativeSourceFiles"
+    DependsOnTargets="_PrepareNativeAssemblySources;_PrepareNativeAssemblyItems;_GenerateCompressedAssembliesNativeSourceFiles"
     Inputs="@(_TypeMapAssemblySource);@(_TypeMapAssemblyInclude);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource)"
     Outputs="@(_NativeAssemblyTarget)">
   <CompileNativeAssembly
