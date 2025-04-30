@@ -29,7 +29,7 @@ public class FindJavaObjectsStep : BaseStep, IAssemblyModifierPipelineStep
 
 	public FindJavaObjectsStep (TaskLoggingHelper log) => Log = log;
 
-	public bool ProcessAssembly (AssemblyDefinition assembly, StepContext context)
+	public void ProcessAssembly (AssemblyDefinition assembly, StepContext context)
 	{
 		var destinationJLOXml = JavaObjectsXmlFile.GetJavaObjectsXmlFilePath (context.Destination.ItemSpec);
 		var scanned = ScanAssembly (assembly, context, destinationJLOXml);
@@ -37,11 +37,7 @@ public class FindJavaObjectsStep : BaseStep, IAssemblyModifierPipelineStep
 		if (!scanned) {
 			// We didn't scan for Java objects, so write an empty .xml file for later steps
 			JavaObjectsXmlFile.WriteEmptyFile (destinationJLOXml, Log);
-			return false;
 		}
-
-		// This step does not change the assembly
-		return false;
 	}
 
 	public bool ScanAssembly (AssemblyDefinition assembly, StepContext context, string destinationJLOXml)

@@ -8,6 +8,7 @@ using Java.Interop.Tools.JavaCallableWrappers;
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using MonoDroid.Tuner;
 using Xamarin.Android.Tools;
@@ -78,10 +79,6 @@ public class AssemblyModifierPipeline : AndroidTask
 			ReadSymbols = ReadSymbols,
 		};
 
-		var writerParameters = new WriterParameters {
-			DeterministicMvid = Deterministic,
-		};
-
 		Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> perArchAssemblies = MonoAndroidHelper.GetPerArchAssemblies (ResolvedAssemblies, Array.Empty<string> (), validate: false);
 
 		AssemblyPipeline? pipeline = null;
@@ -122,7 +119,7 @@ public class AssemblyModifierPipeline : AndroidTask
 
 			Directory.CreateDirectory (Path.GetDirectoryName (destination.ItemSpec));
 
-			RunPipeline (pipeline!, source, destination, writerParameters);
+			RunPipeline (pipeline!, source, destination);
 		}
 
 		pipeline?.Dispose ();
@@ -141,9 +138,26 @@ public class AssemblyModifierPipeline : AndroidTask
 
 		findJavaObjectsStep.Initialize (context);
 		pipeline.Steps.Add (findJavaObjectsStep);
+
+		// SaveChangedAssemblyStep
+		var writerParameters = new WriterParameters {
+			DeterministicMvid = Deterministic,
+		};
+
+		var saveChangedAssemblyStep = new SaveChangedAssemblyStep (Log, writerParameters);
+		pipeline.Steps.Add (saveChangedAssemblyStep);
+
+		// FindTypeMapObjectsStep - this must be run after the assembly has been saved, as saving changes the MVID
+		var findTypeMapObjectsStep = new FindTypeMapObjectsStep (Log) {
+			ErrorOnCustomJavaObject = ErrorOnCustomJavaObject,
+			Debug = Debug,
+		};
+
+		findTypeMapObjectsStep.Initialize (context);
+		pipeline.Steps.Add (findTypeMapObjectsStep);
 	}
 
-	void RunPipeline (AssemblyPipeline pipeline, ITaskItem source, ITaskItem destination, WriterParameters writerParameters)
+	void RunPipeline (AssemblyPipeline pipeline, ITaskItem source, ITaskItem destination)
 	{
 		var assembly = pipeline.Resolver.GetAssembly (source.ItemSpec);
 
@@ -157,17 +171,36 @@ public class AssemblyModifierPipeline : AndroidTask
 			IsUserAssembly = ResolvedUserAssemblies.Any (a => a.ItemSpec == source.ItemSpec),
 		};
 
-		var changed = pipeline.Run (assembly, context);
+		pipeline.Run (assembly, context);
+	}
+}
 
-		if (changed) {
-			Log.LogDebugMessage ($"Saving modified assembly: {destination.ItemSpec}");
-			Directory.CreateDirectory (Path.GetDirectoryName (destination.ItemSpec));
-			writerParameters.WriteSymbols = assembly.MainModule.HasSymbols;
-			assembly.Write (destination.ItemSpec, writerParameters);
+class SaveChangedAssemblyStep : IAssemblyModifierPipelineStep
+{
+	public TaskLoggingHelper Log { get; set; }
+
+	public WriterParameters WriterParameters { get; set; }
+
+	public SaveChangedAssemblyStep (TaskLoggingHelper log, WriterParameters writerParameters)
+	{
+		Log = log;
+		WriterParameters = writerParameters;
+	}
+
+	public void ProcessAssembly (AssemblyDefinition assembly, StepContext context)
+	{
+		if (context.IsAssemblyModified) {
+			Log.LogDebugMessage ($"Saving modified assembly: {context.Destination.ItemSpec}");
+			Directory.CreateDirectory (Path.GetDirectoryName (context.Destination.ItemSpec));
+			WriterParameters.WriteSymbols = assembly.MainModule.HasSymbols;
+			assembly.Write (context.Destination.ItemSpec, WriterParameters);
 		} else {
 			// If we didn't write a modified file, copy the original to the destination
-			CopyIfChanged (source, destination);
+			CopyIfChanged (context.Source, context.Destination);
 		}
+
+		// We just saved the assembly, so it is no longer modified
+		context.IsAssemblyModified = false;
 	}
 
 	void CopyIfChanged (ITaskItem source, ITaskItem destination)
