@@ -400,6 +400,8 @@ This property is `False` by default.
 
 ## AndroidEnableProfiler
 
+Synonym for the [`$(EnableProfiler)`](#enableprofiler) property.
+
 Required for using `dotnet-trace` or `dotnet-gcdump` in Android
 applications. If set to `true`, it includes the Mono diagnostic
 component in the application. This component is the
