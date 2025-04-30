@@ -101,10 +101,6 @@ namespace Xamarin.Android.Build.Tests
 			} else {
 				proj.SetProperty (KnownProperties.RuntimeIdentifiers, runtimeIdentifiers);
 			}
-			// NOTE: Ignore warning XA1040: The CoreCLR/NativeAOT runtime on Android is an experimental feature and not yet suitable for production use.
-			if (runtime == AndroidRuntime.CoreCLR || runtime == AndroidRuntime.NativeAOT) {
-				proj.SetProperty ("EnablePreviewFeatures", "true");
-			}
 
 			var builder = CreateApkBuilder ();
 			builder.Verbosity = LoggerVerbosity.Detailed;
