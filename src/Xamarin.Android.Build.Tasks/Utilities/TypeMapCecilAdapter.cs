@@ -17,24 +17,23 @@ class TypeMapCecilAdapter
 {
 	public static TypeMapDebugDataSets GetDebugNativeEntries (NativeCodeGenState state, bool needUniqueAssemblies)
 	{
-		var (javaToManaged, managedToJava, foundJniNativeRegistration) = GetDebugNativeEntries (state.AllJavaTypes, state.TypeCache);
+		var (TypeMapDebugDataSets dataSets, foundJniNativeRegistration) = GetDebugNativeEntries (state.AllJavaTypes, state.TypeCache);
 
 		state.JniAddNativeMethodRegistrationAttributePresent = foundJniNativeRegistration;
 
-		return (javaToManaged, managedToJava);
+		return dataSets;
 	}
 
-	public static (List<TypeMapDebugEntry> javaToManaged, List<TypeMapDebugEntry> managedToJava, bool foundJniNativeRegistration) GetDebugNativeEntries (List<TypeDefinition> types, TypeDefinitionCache cache)
+	public static (TypeMapDebugDataSets dataSets, bool foundJniNativeRegistration) GetDebugNativeEntries (List<TypeDefinition> types, TypeDefinitionCache cache)
 	{
 		var javaDuplicates = new Dictionary<string, List<TypeMapDebugEntry>> (StringComparer.Ordinal);
+		var uniqueAssemblies = needUniqueAssemblies ? new Dictionary<string, TypeMapDebugAssembly> (StringComparer.OrdinalIgnoreCase) : null;
 		var javaToManaged = new List<TypeMapDebugEntry> ();
 		var managedToJava = new List<TypeMapDebugEntry> ();
 		var foundJniNativeRegistration = false;
 
-		var javaDuplicates = new Dictionary<string, List<TypeMapDebugEntry>> (StringComparer.Ordinal);
-		var uniqueAssemblies = needUniqueAssemblies ? new Dictionary<string, TypeMapDebugAssembly> (StringComparer.OrdinalIgnoreCase) : null;
-		foreach (TypeDefinition td in state.AllJavaTypes) {
-			UpdateApplicationConfig (state, td);
+		foreach (var td in types) {
+			foundJniNativeRegistration = JniAddNativeMethodRegistrationAttributeFound (foundJniNativeRegistration, td);
 
 			TypeMapDebugEntry entry = GetDebugEntry (td, cache);
 			HandleDebugDuplicates (javaDuplicates, entry, td, cache);
@@ -61,11 +60,11 @@ class TypeMapCecilAdapter
 
 		SyncDebugDuplicates (javaDuplicates);
 
-		return new TypeMapDebugDataSets {
+		return (new TypeMapDebugDataSets {
 			JavaToManaged = javaToManaged,
 			ManagedToJava = managedToJava,
 			UniqueAssemblies = uniqueAssemblies != null ? new List<TypeMapDebugAssembly> (uniqueAssemblies.Values) : null
-		};
+		}, foundJniNativeRegistration);
 	}
 
 	public static ReleaseGenerationState GetReleaseGenerationState (NativeCodeGenState state)
