@@ -134,6 +134,10 @@ namespace Xamarin.Android.Build.Tests
 				$"{proj.ProjectName}.runtimeconfig.json",
 				$"{proj.ProjectName}.xml",
 			};
+			// NOTE: a native subdirectory exists for NativeAOT
+			if (runtime == AndroidRuntime.NativeAOT) {
+				expectedFiles.Add ("native");
+			}
 			if (isRelease) {
 				expectedFiles.Add ($"{proj.PackageName}.aab");
 				expectedFiles.Add ($"{proj.PackageName}-Signed.aab");
