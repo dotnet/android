@@ -17,14 +17,14 @@ class TypeMapCecilAdapter
 {
 	public static TypeMapDebugDataSets GetDebugNativeEntries (NativeCodeGenState state, bool needUniqueAssemblies)
 	{
-		var (TypeMapDebugDataSets dataSets, foundJniNativeRegistration) = GetDebugNativeEntries (state.AllJavaTypes, state.TypeCache);
+		var (dataSets, foundJniNativeRegistration) = GetDebugNativeEntries (state.AllJavaTypes, state.TypeCache, needUniqueAssemblies);
 
 		state.JniAddNativeMethodRegistrationAttributePresent = foundJniNativeRegistration;
 
 		return dataSets;
 	}
 
-	public static (TypeMapDebugDataSets dataSets, bool foundJniNativeRegistration) GetDebugNativeEntries (List<TypeDefinition> types, TypeDefinitionCache cache)
+	public static (TypeMapDebugDataSets dataSets, bool foundJniNativeRegistration) GetDebugNativeEntries (List<TypeDefinition> types, TypeDefinitionCache cache, bool needUniqueAssemblies)
 	{
 		var javaDuplicates = new Dictionary<string, List<TypeMapDebugEntry>> (StringComparer.Ordinal);
 		var uniqueAssemblies = needUniqueAssemblies ? new Dictionary<string, TypeMapDebugAssembly> (StringComparer.OrdinalIgnoreCase) : null;
@@ -227,7 +227,7 @@ class TypeMapCecilAdapter
 		if (alreadyFound || !javaType.HasCustomAttributes) {
 			return alreadyFound;
 		}
-		
+
 		foreach (CustomAttribute ca in javaType.CustomAttributes) {
 			if (string.Equals ("JniAddNativeMethodRegistrationAttribute", ca.AttributeType.Name, StringComparison.Ordinal)) {
 				return true;
