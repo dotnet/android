@@ -236,6 +236,9 @@
     <_RuntimeRedistDirName>redist</_RuntimeRedistDirName>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <_RuntimeRedistDirName>redist</_RuntimeRedistDirName>
+  </PropertyGroup>
 
   <!-- Whenever there's a need to use a locally built CoreCLR, both .NET for Android and the
        application(s) must be built with the same runtime. CLRLocalRuntimePath must point to the CoreCLR
