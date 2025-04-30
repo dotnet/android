@@ -1,4 +1,3 @@
-#nullable enable
 //
 // ResolveSdksTask.cs
 //

@@ -1,3 +1,5 @@
+#nullable disable
+
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;

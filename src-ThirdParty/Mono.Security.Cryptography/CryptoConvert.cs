@@ -29,6 +29,8 @@
 // Original source can be found at
 // https://github.com/mono/mono/blob/e2c5f4b0ad1a6b21ca0735f0b35b8611d4ad87b3/mcs/class/Mono.Security/Mono.Security.Cryptography/CryptoConvert.cs#L4
 
+#nullable disable
+
 using System;
 using System.Security.Cryptography;
 

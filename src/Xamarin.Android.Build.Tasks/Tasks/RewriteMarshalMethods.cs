@@ -1,4 +1,3 @@
-#nullable enable
 using System.Collections.Concurrent;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
