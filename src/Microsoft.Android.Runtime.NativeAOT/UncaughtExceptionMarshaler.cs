@@ -1,3 +1,5 @@
+using System.Runtime.ExceptionServices;
+
 using Java.Interop;
 
 namespace Microsoft.Android.Runtime;
@@ -12,8 +14,7 @@ class UncaughtExceptionMarshaler (Java.Lang.Thread.IUncaughtExceptionHandler? Or
 
 		AndroidLog.Print (AndroidLogLevel.Fatal, "DOTNET", $"FATAL UNHANDLED EXCEPTION: {e}");
 
-		// TODO: https://github.com/dotnet/runtime/issues/102730
-		// ExceptionHandling.RaiseUnhandledExceptionEvent(e);
+		ExceptionHandling.RaiseAppDomainUnhandledExceptionEvent(e);
 
 		OriginalHandler?.UncaughtException (thread, exception);
 	}
