@@ -1,3 +1,5 @@
+#nullable disable
+
 using System.IO;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;

@@ -1,3 +1,5 @@
+#nullable disable
+
 using Mono.Cecil;
 using Mono.Linker.Steps;
 

@@ -1,5 +1,7 @@
 // Copyright (C) 2018 Microsoft, Inc. All rights reserved.
 
+#nullable disable
+
 using System;
 using System.Diagnostics;
 using System.Collections.Generic;
