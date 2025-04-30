@@ -283,8 +283,18 @@ namespace Xamarin.Android.Tasks
 		{
 			var javaToManaged = new List<TypeMapDebugEntry> ();
 			var managedToJava = new List<TypeMapDebugEntry> ();
+			var uniqueAssemblies = new Dictionary<string, TypeMapDebugAssembly> (StringComparer.OrdinalIgnoreCase);
 
 			foreach (var xml in XmlFiles) {
+				if (!uniqueAssemblies.ContainsKey (xml.AssemblyName)) {
+					var assm = new TypeMapDebugAssembly {
+						MVID = xml.AssemblyMvid,
+						MVIDBytes = xml.AssemblyMvid.ToByteArray (),
+						Name = xml.AssemblyName,
+					};
+					uniqueAssemblies.Add (xml.AssemblyName, assm);
+				}
+
 				javaToManaged.AddRange (xml.JavaToManagedDebugEntries);
 				managedToJava.AddRange (xml.ManagedToJavaDebugEntries);
 			}
@@ -296,8 +306,8 @@ namespace Xamarin.Android.Tasks
 			return new TypeMapDebugDataSets {
 				JavaToManaged = javaToManaged,
 				ManagedToJava = managedToJava,
-				UniqueAssemblies = null,
-			}
+				UniqueAssemblies = uniqueAssemblies.Values.ToList (),
+			};
 		}
 
 		void GroupDuplicateDebugEntries (List<TypeMapDebugEntry> debugEntries)
