@@ -25,6 +25,7 @@ class TypeMapObjectsXmlFile
 	static readonly TypeMapObjectsXmlFile unscanned = new TypeMapObjectsXmlFile { WasScanned = false };
 
 	public string? AssemblyName { get; set; }
+	public Guid AssemblyMvid { get; set; } = Guid.Empty;
 	public bool FoundJniNativeRegistration { get; set; }
 	public List<TypeMapDebugEntry> JavaToManagedDebugEntries { get; } = [];
 	public List<TypeMapDebugEntry> ManagedToJavaDebugEntries { get; } = [];
@@ -58,6 +59,10 @@ class TypeMapObjectsXmlFile
 		xml.WriteStartElement ("api");
 		xml.WriteAttributeString ("type", HasDebugEntries ? "debug" : "release");
 		xml.WriteAttributeStringIfNotDefault ("assembly-name", AssemblyName);
+
+		if (AssemblyMvid != Guid.Empty) {
+			xml.WriteAttributeString ("mvid", AssemblyMvid.ToString ("N"));
+		}
 		xml.WriteAttributeStringIfNotDefault ("found-jni-native-registration", FoundJniNativeRegistration);
 
 		if (HasDebugEntries)
@@ -173,11 +178,13 @@ class TypeMapObjectsXmlFile
 
 		var type = root.GetRequiredAttribute ("type");
 		var assemblyName = root.GetAttributeOrDefault ("assembly-name", (string?)null);
+		var mvid = Guid.Parse (root.GetAttributeOrDefault ("mvid", Guid.Empty.ToString ()));
 		var foundJniNativeRegistration = root.GetAttributeOrDefault ("found-jni-native-registration", false);
 
 		var file = new TypeMapObjectsXmlFile {
 			WasScanned = true,
 			AssemblyName = assemblyName,
+			AssemblyMvid = mvid,
 			FoundJniNativeRegistration = foundJniNativeRegistration,
 		};
 
