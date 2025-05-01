@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using Microsoft.Build.Utilities;
 using System.Collections.Generic;
@@ -15,23 +13,23 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "DJL";
 
 		[Required]
-		public ITaskItem[] MonoPlatformJarPaths { get; set; }
+		public ITaskItem[]? MonoPlatformJarPaths { get; set; }
 
-		public ITaskItem[] JavaSourceFiles { get; set; }
+		public ITaskItem[]? JavaSourceFiles { get; set; }
 
-		public ITaskItem[] JavaLibraries { get; set; }
+		public ITaskItem[]? JavaLibraries { get; set; }
 
-		public ITaskItem[] ExternalJavaLibraries { get; set; }
+		public ITaskItem[]? ExternalJavaLibraries { get; set; }
 
-		public ITaskItem[] DoNotPackageJavaLibraries { get; set; }
+		public ITaskItem[]? DoNotPackageJavaLibraries { get; set; }
 
-		public ITaskItem[] LibraryProjectJars { get; set; }
-
-		[Output]
-		public ITaskItem[] JavaLibrariesToCompile { get; set; }
+		public ITaskItem[]? LibraryProjectJars { get; set; }
 
 		[Output]
-		public ITaskItem[] ReferenceJavaLibraries { get; set; }
+		public ITaskItem[]? JavaLibrariesToCompile { get; set; }
+
+		[Output]
+		public ITaskItem[]? ReferenceJavaLibraries { get; set; }
 
 		public override bool RunTask ()
 		{

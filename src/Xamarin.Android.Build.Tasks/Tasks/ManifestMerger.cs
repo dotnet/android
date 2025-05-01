@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.IO;
 using System.Linq;
@@ -18,20 +16,20 @@ namespace Xamarin.Android.Tasks
 		public override string DefaultErrorCode => $"{TaskPrefix}0000";
 
 		[Required]
-		public string ManifestMergerJarPath { get; set; }
+		public string ManifestMergerJarPath { get; set; } = "";
 
 		[Required]
-		public string AndroidManifest { get; set; }
+		public string AndroidManifest { get; set; } = "";
 
 		[Required]
-		public string OutputManifestFile { get; set; }
+		public string OutputManifestFile { get; set; } = "";
 
-		public string [] ManifestOverlayFiles { get; set; }
-		public string [] LibraryManifestFiles { get; set; }
+		public string []? ManifestOverlayFiles { get; set; }
+		public string []? LibraryManifestFiles { get; set; }
 
-		public string [] ManifestPlaceholders { get; set; }
+		public string []? ManifestPlaceholders { get; set; }
 
-		public string ExtraArgs { get; set; }
+		public string? ExtraArgs { get; set; }
 
 		/*
 		 * obj\Debug\AndroidManifest.xml:12:5-16:15 Error:
@@ -39,8 +37,8 @@ namespace Xamarin.Android.Tasks
 		 */
 		static readonly Regex manifestErrorRegEx = new Regex (@"(?<file>.+AndroidManifest\.xml):(?<line>\d+:\d+).+Error:(?<error>.+)?", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-		string tempFile;
-		string responseFile;
+		string? tempFile;
+		string? responseFile;
 
 		protected override Regex CodeErrorRegEx => manifestErrorRegEx;
 
@@ -132,7 +130,7 @@ namespace Xamarin.Android.Tasks
 						Log.LogCodedWarning ("XA1010", string.Format (Properties.Resources.XA1010, string.Join (";", ManifestPlaceholders)));
 				}
 			}
-			if (!string.IsNullOrEmpty (ExtraArgs)) {
+			if (!ExtraArgs.IsNullOrEmpty ()) {
 				foreach (var entry in ExtraArgs.Split (new char[] { ' ' })) {
 					sb.AppendLine (entry);
 				}

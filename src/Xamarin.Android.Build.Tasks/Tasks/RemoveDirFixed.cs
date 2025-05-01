@@ -25,8 +25,6 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -103,9 +101,9 @@ namespace Xamarin.Android.Tasks
 		}
 
 		[Required]
-		public ITaskItem [] Directories { get; set; }
+		public ITaskItem [] Directories { get; set; } = [];
 
 		[Output]
-		public ITaskItem [] RemovedDirectories { get; set; }
+		public ITaskItem []? RemovedDirectories { get; set; }
 	}
 }

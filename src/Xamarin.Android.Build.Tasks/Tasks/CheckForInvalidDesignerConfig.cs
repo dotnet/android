@@ -1,5 +1,3 @@
-#nullable disable
-
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -17,7 +15,7 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "CIRF";
 
-		public ITaskItem[] Assemblies { get; set; }
+		public ITaskItem[]? Assemblies { get; set; }
 
 		public override bool RunTask ()
 		{

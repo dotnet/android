@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,14 +25,14 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Assumed to be .so files only
 		/// </summary>
-		public ITaskItem [] InputLibraries { get; set; }
-		public ITaskItem [] Components { get; set; }
-		public string [] ExcludedLibraries { get; set; }
+		public ITaskItem []? InputLibraries { get; set; }
+		public ITaskItem []? Components { get; set; }
+		public string []? ExcludedLibraries { get; set; }
 
 		public bool IncludeDebugSymbols { get; set; }
 
 		[Output]
-		public ITaskItem [] OutputLibraries { get; set; }
+		public ITaskItem []? OutputLibraries { get; set; }
 
 		public override bool RunTask ()
 		{

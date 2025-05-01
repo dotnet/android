@@ -1,6 +1,4 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
-#nullable disable
-
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -23,12 +21,12 @@ namespace Xamarin.Android.Tasks {
 		List<ITaskItem> archives = new List<ITaskItem> ();
 		List<ITaskItem> files = new List<ITaskItem> ();
 
-		public string ExtraArgs { get; set; }
+		public string? ExtraArgs { get; set; }
 
-		public string FlatArchivesDirectory { get; set; }
+		public string? FlatArchivesDirectory { get; set; }
 
-		public string FlatFilesDirectory { get; set; }
-		public ITaskItem [] ResourcesToCompile { get; set; }
+		public string? FlatFilesDirectory { get; set; }
+		public ITaskItem []? ResourcesToCompile { get; set; }
 
 		[Output]
 		public ITaskItem [] CompiledResourceFlatArchives => archives.ToArray ();
@@ -127,7 +125,7 @@ namespace Xamarin.Android.Tasks {
 				cmd.Add (GetFullPath (fileOrDirectory).TrimEnd ('\\'));
 			} else
 				cmd.Add (GetFullPath (fileOrDirectory));
-			if (!string.IsNullOrEmpty (ExtraArgs))
+			if (!ExtraArgs.IsNullOrEmpty ())
 				cmd.Add (ExtraArgs);
 			if (MonoAndroidHelper.LogInternalExceptions)
 				cmd.Add ("-v");

@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,16 +15,16 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "CIL";
 
 		[Required]
-		public string AndroidAotMode { get; set; }
+		public string AndroidAotMode { get; set; } = "";
 
 		[Required]
-		public string ToolPath { get; set; }
+		public string ToolPath { get; set; } = "";
 
 		[Required]
-		public ITaskItem[] ResolvedAssemblies { get; set; }
+		public ITaskItem[] ResolvedAssemblies { get; set; } = [];
 
 		[Required]
-		public string StampFile { get; set; }
+		public string StampFile { get; set; } = "";
 
 		public CilStrip ()
 		{

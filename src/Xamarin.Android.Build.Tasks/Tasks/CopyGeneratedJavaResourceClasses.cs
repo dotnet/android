@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,14 +13,14 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "CGJ";
 
 		[Required]
-		public string SourceTopDirectory { get; set; }
-		public string DestinationTopDirectory { get; set; }
+		public string SourceTopDirectory { get; set; } = "";
+		public string? DestinationTopDirectory { get; set; }
 		[Required]
-		public string PrimaryPackageName { get; set; }
+		public string PrimaryPackageName { get; set; } = "";
 
-		public string ExtraPackages { get; set; }
+		public string? ExtraPackages { get; set; }
 		[Output]
-		public string PrimaryJavaResgenFile { get; set; }
+		public string? PrimaryJavaResgenFile { get; set; }
 
 		public override bool RunTask ()
 		{
@@ -54,7 +52,7 @@ namespace Xamarin.Android.Tasks
 		IEnumerable<string> GetPackages ()
 		{
 			yield return PrimaryPackageName.ToLowerInvariant ();
-			if (!string.IsNullOrEmpty (ExtraPackages))
+			if (!ExtraPackages.IsNullOrEmpty ())
 				foreach (var pkg in ExtraPackages.Split (':'))
 					yield return pkg;
 		}

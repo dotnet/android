@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.IO;
 using System.Collections.Generic;
@@ -22,22 +20,22 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "PAI";
 
 		[Required]
-		public string [] BuildTargetAbis { get; set; }
+		public string [] BuildTargetAbis { get; set; } = [];
 
 		[Required]
-		public string NativeSourcesDir { get; set; }
+		public string NativeSourcesDir { get; set; } = "";
 
 		[Required]
-		public string Mode { get; set; }
+		public string Mode { get; set; } = "";
 
 		[Required]
 		public bool Debug { get; set; }
 
 		[Output]
-		public ITaskItem[] AssemblySources { get; set; }
+		public ITaskItem[]? AssemblySources { get; set; }
 
 		[Output]
-		public ITaskItem[] AssemblyIncludes { get; set; }
+		public ITaskItem[]? AssemblyIncludes { get; set; }
 
 		public override bool RunTask ()
 		{

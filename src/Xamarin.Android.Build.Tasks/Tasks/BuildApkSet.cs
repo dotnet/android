@@ -1,5 +1,3 @@
-#nullable disable
-
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
@@ -18,31 +16,31 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "BAS";
 
 		[Required]
-		public string AppBundle { get; set; }
+		public string AppBundle { get; set; } = "";
 
 		[Required]
-		public string Output { get; set; }
+		public string Output { get; set; } = "";
 
 		[Required]
-		public string Aapt2ToolPath { get; set; }
+		public string Aapt2ToolPath { get; set; } = "";
 
-		public string Aapt2ToolExe { get; set; }
+		public string? Aapt2ToolExe { get; set; }
 
 		public string Aapt2ToolName => OS.IsWindows ? "aapt2.exe" : "aapt2";
 
 		[Required]
-		public string KeyStore { get; set; }
+		public string KeyStore { get; set; } = "";
 
 		[Required]
-		public string KeyAlias { get; set; }
+		public string KeyAlias { get; set; } = "";
 
 		[Required]
-		public string KeyPass { get; set; }
+		public string KeyPass { get; set; } = "";
 
 		[Required]
-		public string StorePass { get; set; }
+		public string StorePass { get; set; } = "";
 
-		public string ExtraArgs { get; set; }
+		public string? ExtraArgs { get; set; }
 
 		public bool GenerateUniversalApkSet { get; set; } = false;
 

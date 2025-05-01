@@ -1,7 +1,5 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,24 +25,24 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "GCA";
 
 		[Required]
-		public ITaskItem[] ResolvedAssemblies { get; set; }
+		public ITaskItem[] ResolvedAssemblies { get; set; } = [];
 
-		public ITaskItem[] NativeLibraries { get; set; }
+		public ITaskItem[]? NativeLibraries { get; set; }
 
-		public ITaskItem[] MonoComponents { get; set; }
+		public ITaskItem[]? MonoComponents { get; set; }
 
-		public ITaskItem[] SatelliteAssemblies { get; set; }
+		public ITaskItem[]? SatelliteAssemblies { get; set; }
 
 		public bool UseAssemblyStore { get; set; }
 
 		[Required]
-		public string EnvironmentOutputDirectory { get; set; }
+		public string EnvironmentOutputDirectory { get; set; } = "";
 
 		[Required]
-		public string [] SupportedAbis { get; set; }
+		public string [] SupportedAbis { get; set; } = [];
 
 		[Required]
-		public string AndroidPackageName { get; set; }
+		public string AndroidPackageName { get; set; } = "";
 
 		[Required]
 		public bool EnablePreloadAssembliesDefault { get; set; }
@@ -54,19 +52,19 @@ namespace Xamarin.Android.Tasks
 
 		public bool EnableMarshalMethods { get; set; }
 		public bool EnableManagedMarshalMethodsLookup { get; set; }
-		public string RuntimeConfigBinFilePath { get; set; }
+		public string? RuntimeConfigBinFilePath { get; set; }
 		public string ProjectRuntimeConfigFilePath { get; set; } = String.Empty;
-		public string BoundExceptionType { get; set; }
+		public string? BoundExceptionType { get; set; }
 
-		public string PackageNamingPolicy { get; set; }
-		public string Debug { get; set; }
-		public ITaskItem[] Environments { get; set; }
-		public string AndroidAotMode { get; set; }
+		public string? PackageNamingPolicy { get; set; }
+		public string? Debug { get; set; }
+		public ITaskItem[]? Environments { get; set; }
+		public string? AndroidAotMode { get; set; }
 		public bool AndroidAotEnableLazyLoad { get; set; }
 		public bool EnableLLVM { get; set; }
-		public string HttpClientHandlerType { get; set; }
-		public string TlsProvider { get; set; }
-		public string AndroidSequencePointsMode { get; set; }
+		public string? HttpClientHandlerType { get; set; }
+		public string? TlsProvider { get; set; }
+		public string? AndroidSequencePointsMode { get; set; }
 		public bool EnableSGenConcurrent { get; set; }
 		public string? CustomBundleConfigFile { get; set; }
 
@@ -94,7 +92,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			AotMode aotMode = AotMode.None;
-			if (!string.IsNullOrEmpty (AndroidAotMode) && Aot.GetAndroidAotMode (AndroidAotMode, out aotMode) && aotMode != AotMode.None) {
+			if (!AndroidAotMode.IsNullOrEmpty () && Aot.GetAndroidAotMode (AndroidAotMode, out aotMode) && aotMode != AotMode.None) {
 				usesMonoAOT = true;
 			}
 
@@ -161,7 +159,7 @@ namespace Xamarin.Android.Tasks
 			};
 
 			int assemblyCount = 0;
-			HashSet<string> archAssemblyNames = null;
+			HashSet<string>? archAssemblyNames = null;
 			HashSet<string> uniqueAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 			Action<ITaskItem> updateAssemblyCount = (ITaskItem assembly) => {
 				string? culture = MonoAndroidHelper.GetAssemblyCulture (assembly);
@@ -330,8 +328,8 @@ namespace Xamarin.Android.Tasks
 
 			void AddEnvironmentVariableLine (string l)
 			{
-				string line = l?.Trim ();
-				if (String.IsNullOrEmpty (line) || line [0] == '#')
+				string? line = l?.Trim ();
+				if (line.IsNullOrEmpty () || line [0] == '#')
 					return;
 
 				string[] nv = line.Split (new char[]{'='}, 2);

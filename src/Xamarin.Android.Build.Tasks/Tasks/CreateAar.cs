@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,25 +14,25 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "CAAR";
 
-		public ITaskItem [] AndroidAssets { get; set; }
+		public ITaskItem []? AndroidAssets { get; set; }
 
-		public ITaskItem [] AndroidResources { get; set; }
+		public ITaskItem []? AndroidResources { get; set; }
 
-		public ITaskItem [] AndroidEnvironment { get; set; }
+		public ITaskItem []? AndroidEnvironment { get; set; }
 
-		public ITaskItem AndroidManifest { get; set; }
+		public ITaskItem? AndroidManifest { get; set; }
 
-		public ITaskItem [] JarFiles { get; set; }
+		public ITaskItem []? JarFiles { get; set; }
 
-		public ITaskItem [] NativeLibraries { get; set; }
+		public ITaskItem []? NativeLibraries { get; set; }
 
-		public ITaskItem [] ProguardConfigurationFiles { get; set; }
-
-		[Required]
-		public string AssetDirectory { get; set; }
+		public ITaskItem []? ProguardConfigurationFiles { get; set; }
 
 		[Required]
-		public string OutputFile { get; set; }
+		public string AssetDirectory { get; set; } = "";
+
+		[Required]
+		public string OutputFile { get; set; } = "";
 
 		public override bool RunTask ()
 		{

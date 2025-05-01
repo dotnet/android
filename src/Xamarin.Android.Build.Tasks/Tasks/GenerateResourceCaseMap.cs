@@ -1,6 +1,4 @@
 // Copyright (C) 2021 Microsoft, Inc. All rights reserved.
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,20 +16,20 @@ namespace Xamarin.Android.Tasks
 	public class GenerateResourceCaseMap : AndroidTask
 	{
 		public override string TaskPrefix => "GRCM";
-		public ITaskItem[] Resources { get; set; }
+		public ITaskItem[]? Resources { get; set; }
 
 		[Required]
-		public string ResourceDirectory { get; set; }
+		public string ResourceDirectory { get; set; } = "";
 
 		[Required]
-		public string ProjectDir { get; set; }
+		public string ProjectDir { get; set; } = "";
 
-		public ITaskItem[] AdditionalResourceDirectories { get; set; }
+		public ITaskItem[] AdditionalResourceDirectories { get; set; } = [];
 
-		public string[] AarLibraries { get; set; }
+		public string[]? AarLibraries { get; set; }
 
 		[Required]
-		public ITaskItem OutputFile { get; set; }
+		public ITaskItem OutputFile { get; set; } = null!; // NRT - guarded by [Required]
 
 		private Dictionary<string, string> resource_fixup = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
 

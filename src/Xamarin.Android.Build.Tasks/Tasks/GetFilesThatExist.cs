@@ -1,7 +1,5 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
-#nullable disable
-
 using System;
 using System.IO;
 using System.Linq;
@@ -18,12 +16,12 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "GFT";
 
 		[Required]
-		public ITaskItem[] Files { get; set; }
+		public ITaskItem[] Files { get; set; } = [];
 
-		public ITaskItem [] IgnoreFiles { get; set; }
+		public ITaskItem []? IgnoreFiles { get; set; }
 
 		[Output]
-		public ITaskItem[] FilesThatExist { get; set; }
+		public ITaskItem[]? FilesThatExist { get; set; }
 
 		public override bool RunTask ()
 		{

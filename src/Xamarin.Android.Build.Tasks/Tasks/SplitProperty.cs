@@ -1,5 +1,3 @@
-#nullable disable
-
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
@@ -18,10 +16,10 @@ namespace Xamarin.Android.Tasks
 
 		static readonly char [] Delimiters = { ',', ';' };
 
-		public string Value { get; set; }
+		public string? Value { get; set; }
 
 		[Output]
-		public string [] Output { get; set; }
+		public string []? Output { get; set; }
 
 		public override bool RunTask ()
 		{

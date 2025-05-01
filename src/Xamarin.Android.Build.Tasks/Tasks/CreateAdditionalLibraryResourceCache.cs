@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,13 +16,13 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "CAL";
 
 		[Required]
-		public ITaskItem[] AdditionalAndroidResourcePaths { get; set; }
+		public ITaskItem[] AdditionalAndroidResourcePaths { get; set; } = [];
 
 		[Required]
-		public ITaskItem[] AdditionalAndroidResourceCachePaths { get; set; }
+		public ITaskItem[] AdditionalAndroidResourceCachePaths { get; set; } = [];
 
 		[Output]
-		public ITaskItem[] CopiedResources { get; set; }
+		public ITaskItem[]? CopiedResources { get; set; }
 
 
 		public override bool RunTask ()

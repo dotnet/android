@@ -1,5 +1,3 @@
-#nullable disable
-
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -13,9 +11,9 @@ namespace Xamarin.Android.Tasks {
 	{
 		public override string TaskPrefix => "AADB";
 
-		public string AdbTarget { get; set; }
-		public string Command { get; set; }
-		public string Arguments { get; set; }
+		public string? AdbTarget { get; set; }
+		public string? Command { get; set; }
+		public string? Arguments { get; set; }
 
 		public bool IgnoreErrors { get; set; } = false;
 

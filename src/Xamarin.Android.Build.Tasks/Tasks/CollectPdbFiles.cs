@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,13 +13,13 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "CPF";
 
 		[Required]
-		public ITaskItem[] ResolvedAssemblies { get; set; }
+		public ITaskItem[] ResolvedAssemblies { get; set; } = [];
 
 		[Output]
-		public ITaskItem[] PdbFiles { get; set; }
+		public ITaskItem[]? PdbFiles { get; set; }
 
 		[Output]
-		public ITaskItem[] PortablePdbFiles { get; set; }
+		public ITaskItem[]? PortablePdbFiles { get; set; }
 
 		public override bool RunTask ()
 		{
