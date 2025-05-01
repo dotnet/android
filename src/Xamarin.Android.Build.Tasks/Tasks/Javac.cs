@@ -1,7 +1,5 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
-#nullable disable
-
 using System;
 using System.Linq;
 using System.IO;
@@ -20,16 +18,16 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "JVC";
 
 		[Required]
-		public string ClassesOutputDirectory { get; set; }
+		public string ClassesOutputDirectory { get; set; } = string.Empty;
 
-		public string ClassesZip { get; set; }
+		public string? ClassesZip { get; set; }
 
-		public string JavaPlatformJarPath { get; set; }
+		public string? JavaPlatformJarPath { get; set; }
 
-		public string JavacTargetVersion { get; set; }
-		public string JavacSourceVersion { get; set; }
+		public string? JavacTargetVersion { get; set; }
+		public string? JavacSourceVersion { get; set; }
 
-		public string JdkVersion { get; set; }
+		public string? JdkVersion { get; set; }
 
 		public override string DefaultErrorCode => "JAVAC0000";
 

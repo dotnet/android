@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
@@ -14,13 +12,13 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "CMM";
 
 		[Required]
-		public string BuildId { get; set; }
+		public string BuildId { get; set; } = string.Empty;
 
 		[Required]
-		public string PackageName { get; set; }
+		public string PackageName { get; set; } = string.Empty;
 
 		[Required]
-		public string OutputDirectory { get; set; }
+		public string OutputDirectory { get; set; } = string.Empty;
 
 		public override bool RunTask ()
 		{

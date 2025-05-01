@@ -1,7 +1,5 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,15 +20,15 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "CIC";
 
 		[Required]
-		public ITaskItem[] SourceFiles { get; set; }
+		public ITaskItem[] SourceFiles { get; set; } = [];
 
 		[Required]
-		public ITaskItem[] DestinationFiles { get; set; }
+		public ITaskItem[] DestinationFiles { get; set; } = [];
 
 		public bool CompareFileLengths { get; set; } = true;
 
 		[Output]
-		public ITaskItem[] ModifiedFiles { get; set; }
+		public ITaskItem[]? ModifiedFiles { get; set; }
 
 		private List<ITaskItem> modifiedFiles = new List<ITaskItem>();
 

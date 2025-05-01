@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,13 +14,13 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "CAR";
 
 		[Required]
-		public string[] AdditionalAndroidResourcePaths { get; set; }
+		public string[] AdditionalAndroidResourcePaths { get; set; } = [];
 
 		[Required]
-		public string CacheDirectory { get; set; }
+		public string CacheDirectory { get; set; } = string.Empty;
 
 		[Output]
-		public ITaskItem[] AdditionalResourceCachePaths { get; set; }
+		public ITaskItem[]? AdditionalResourceCachePaths { get; set; }
 
 		public override bool RunTask ()
 		{

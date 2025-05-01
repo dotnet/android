@@ -1,5 +1,3 @@
-#nullable disable
-
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
@@ -24,10 +22,10 @@ namespace Xamarin.Android.Tasks
 
 		const RegisteredTaskObjectLifetime Lifetime = RegisteredTaskObjectLifetime.AppDomain;
 
-		public ITaskItem [] InputAssemblies { get; set; }
+		public ITaskItem []? InputAssemblies { get; set; }
 
 		[Output]
-		public ITaskItem [] OutputAssemblies { get; set; }
+		public ITaskItem []? OutputAssemblies { get; set; }
 
 		public override bool RunTask ()
 		{
@@ -102,11 +100,11 @@ namespace Xamarin.Android.Tasks
 				var name = reader.GetCustomAttributeFullName (attribute, Log);
 				switch (name) {
 					case "System.Runtime.Versioning.TargetFrameworkAttribute":
-						string targetFrameworkIdentifier = null;
+						string? targetFrameworkIdentifier = null;
 						foreach (var p in attribute.GetCustomAttributeArguments ().FixedArguments) {
 							// Of the form "MonoAndroid,Version=v8.1"
 							var value = p.Value?.ToString ();
-							if (!string.IsNullOrEmpty (value)) {
+							if (!value.IsNullOrEmpty ()) {
 								int commaIndex = value.IndexOf (",", StringComparison.Ordinal);
 								if (commaIndex != -1) {
 									targetFrameworkIdentifier = value.Substring (0, commaIndex);

@@ -1,7 +1,5 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
-#nullable disable
-
 using System;
 using System.IO;
 using System.Text;
@@ -19,10 +17,10 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "CRM";
 
 		[Required]
-		public string ManifestOutputFile { get; set; }
+		public string ManifestOutputFile { get; set; } = string.Empty;
 
 		[Required]
-		public string PackageName { get; set; }
+		public string PackageName { get; set; } = string.Empty;
 
 		public override bool RunTask ()
 		{
