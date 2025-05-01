@@ -1,3 +1,5 @@
+#nullable disable
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -21,6 +23,9 @@ namespace MonoDroid.Tuner
 	/// NOTE: this step is subclassed so it can be called directly from Xamarin.Android.Build.Tasks
 	/// </summary>
 	public class FixAbstractMethodsStep : BaseMarkHandler
+#if !ILLINK
+		, IAssemblyModifierPipelineStep
+#endif  // !ILLINK
 	{
 		public override void Initialize (LinkContext context, MarkContext markContext)
 		{
@@ -78,6 +83,17 @@ namespace MonoDroid.Tuner
 			}
 			return changed;
 		}
+
+#if !ILLINK
+		public void ProcessAssembly (AssemblyDefinition assembly, StepContext context)
+		{
+			// Only run this step on non-main user Android assemblies
+			if (context.IsMainAssembly || !context.IsAndroidUserAssembly)
+				return;
+
+			context.IsAssemblyModified |= FixAbstractMethods (assembly);
+		}
+#endif  // !ILLINK
 
 		readonly HashSet<string> warnedAssemblies = new (StringComparer.Ordinal);
 

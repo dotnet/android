@@ -22,6 +22,7 @@
 // ***********************************************************************
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Collections;
 
 namespace NUnit.Framework.Constraints
@@ -358,6 +359,8 @@ namespace NUnit.Framework.Constraints
         /// </summary>
         public XmlSerializableConstraint XmlSerializable
         {
+            [RequiresUnreferencedCode ("Uses XmlSerializer")]
+            [RequiresDynamicCode ("Uses XmlSerializer")]
             get { return (XmlSerializableConstraint)this.Append(new XmlSerializableConstraint()); }
         }
 #endif

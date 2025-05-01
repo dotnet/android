@@ -8,6 +8,9 @@ using System.Threading;
 using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 
+using Microsoft.Android.Runtime;
+using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
+
 namespace Android.Runtime
 {
 	static internal class JNIEnvInit
@@ -77,7 +80,7 @@ namespace Android.Runtime
 			JniType.GetCachedJniType (ref jniType, className);
 
 			ReadOnlySpan<char> methods = new ReadOnlySpan<char> ((void*) methods_ptr, methods_len);
-			((AndroidTypeManager)androidRuntime!.TypeManager).RegisterNativeMembers (jniType, type, methods);
+			androidRuntime!.TypeManager.RegisterNativeMembers (jniType, type, methods);
 		}
 
 		// NOTE: should have different name than `Initialize` to avoid:
@@ -108,7 +111,23 @@ namespace Android.Runtime
 			java_class_loader = args->grefLoader;
 
 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
-			androidRuntime = new AndroidRuntime (args->env, args->javaVm, args->grefLoader, args->Loader_loadClass, args->jniAddNativeMethodRegistrationAttributePresent != 0);
+			JniRuntime.JniTypeManager typeManager;
+			JniRuntime.JniValueManager valueManager;
+			if (RuntimeFeature.ManagedTypeMap) {
+				typeManager     = new ManagedTypeManager ();
+				valueManager    = new ManagedValueManager ();
+			} else {
+				typeManager     = new AndroidTypeManager (args->jniAddNativeMethodRegistrationAttributePresent != 0);
+				valueManager    = RuntimeType == DotNetRuntimeType.MonoVM ? new AndroidValueManager () : new ManagedValueManager ();
+			}
+			androidRuntime = new AndroidRuntime (
+					args->env,
+					args->javaVm,
+					args->grefLoader,
+					typeManager,
+					valueManager,
+					args->jniAddNativeMethodRegistrationAttributePresent != 0
+			);
 			ValueManager = androidRuntime.ValueManager;
 
 			IsRunningOnDesktop = args->isRunningOnDesktop == 1;

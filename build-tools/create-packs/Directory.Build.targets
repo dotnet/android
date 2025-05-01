@@ -1,40 +1,13 @@
 <Project>
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" Version="$(MicrosoftDotNetBuildTasksFeedPackageVersion)" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Packaging" Version="$(MicrosoftDotNetBuildTasksFeedPackageVersion)" PrivateAssets="all" />
     <PackageReference Include="Microsoft.DotNet.Arcade.Sdk" Version="$(MicrosoftDotNetBuildTasksFeedPackageVersion)" PrivateAssets="all" GeneratePathProperty="true" />
   </ItemGroup>
 
   <Import Project="License.targets" />
   <Import Project="..\..\build-tools\installers\create-installers.targets" />
-  <Import Project="Sdk.props" Sdk="Microsoft.DotNet.SharedFramework.Sdk" Version="$(MicrosoftDotNetBuildTasksFeedPackageVersion)" />
 
-  <UsingTask TaskName="CreateFrameworkListFile" AssemblyFile="$(DotNetSharedFrameworkTaskFile)"/>
   <UsingTask TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" AssemblyFile="$(PrepTasksAssembly)" />
-
-  <!-- https://github.com/dotnet/runtime/blob/0647ec314948904319da5eb15e9931f7c85ed1e2/src/installer/pkg/projects/Directory.Build.targets#L281 -->
-  <!-- TODO: Generate PlatformManifest.txt files? -->
-  <Target Name="_GenerateFrameworkListFile" >
-    <!-- Hardcode framework attributes -->
-    <ItemGroup>
-      <FrameworkListRootAttributes Include="Name" Value=".NET $(DotNetTargetFrameworkVersion) - Android" />
-      <FrameworkListRootAttributes Include="TargetFrameworkIdentifier" Value=".NETCoreApp" />
-      <FrameworkListRootAttributes Include="TargetFrameworkVersion" Value="$(DotNetTargetFrameworkVersion)" />
-      <FrameworkListRootAttributes Include="FrameworkName" Value="Microsoft.Android" />
-    </ItemGroup>
-
-    <!-- https://github.com/dotnet/arcade/blob/5824baf1c9a900ee00c167f96201c750bba6a574/src/Microsoft.DotNet.SharedFramework.Sdk/src/CreateFrameworkListFile.cs -->
-    <CreateFrameworkListFile
-        Files="@(_PackageFiles)"
-        FileClassifications="@(FrameworkListFileClass)"
-        TargetFile="$(FrameworkListFile)"
-        TargetFilePrefixes="ref;runtimes;analyzers"
-        RootAttributes="@(FrameworkListRootAttributes)"
-    />
-    <ItemGroup>
-      <_PackageFiles Include="$(FrameworkListFile)" PackagePath="data" />
-    </ItemGroup>
-  </Target>
 
   <Target Name="_GetDefaultPackageVersion"
       DependsOnTargets="GetXAVersionInfo" >
@@ -46,8 +19,10 @@
   <Target Name="_SetGlobalProperties">
     <ItemGroup>
       <_GlobalProperties Include="-p:Configuration=$(Configuration)" />
-      <_GlobalProperties Include="-p:IncludeSymbols=False" />
     </ItemGroup>
+    <PropertyGroup>
+      <_BinlogPrefix>-bl:$(XamarinAndroidSourcePath)bin/Build$(Configuration)/msbuild-$([System.DateTime]::Now.ToString('yyyyMMddThhmmss'))-</_BinlogPrefix>
+    </PropertyGroup>
   </Target>
 
   <Target Name="_CleanNuGetDirectory">
@@ -63,25 +38,28 @@
 
   <Target Name="_CreateDefaultRefPack"
       Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidDefaultTargetDotnetApiLevel)' and Exists('$(_MonoAndroidNETOutputRoot)$(AndroidDefaultTargetDotnetApiLevel)\Mono.Android.dll') ">
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidDefaultTargetDotnetApiLevel) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Ref.$(AndroidDefaultTargetDotnetApiLevel).binlog&quot; -p:AndroidApiLevel=$(AndroidDefaultTargetDotnetApiLevel) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
   </Target>
 
   <Target Name="_CreatePreviewPacks"
       DependsOnTargets="_CreateItemGroups"
       Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidLatestUnstableApiLevel)' and Exists('$(_MonoAndroidNETOutputRoot)$(AndroidLatestUnstableApiLevel)\Mono.Android.dll') ">
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidLatestUnstableApiLevel) -p:AndroidRID=%(_AndroidRIDs.Identity) -p:AndroidRuntime=%(_AndroidRIDs.Runtime) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:AndroidApiLevel=$(AndroidLatestUnstableApiLevel) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Runtime.%(_AndroidRIDs.Runtime).$(AndroidLatestUnstableApiLevel).%(_AndroidRIDs.Identity).binlog&quot; -p:AndroidApiLevel=$(AndroidLatestUnstableApiLevel) -p:AndroidRID=%(_AndroidRIDs.Identity) -p:AndroidRuntime=%(_AndroidRIDs.Runtime) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Runtime.Managed.$(AndroidLatestUnstableApiLevel).binlog&quot; -p:AndroidApiLevel=$(AndroidLatestUnstableApiLevel) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.Managed.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Ref.$(AndroidLatestUnstableApiLevel).binlog&quot; -p:AndroidApiLevel=$(AndroidLatestUnstableApiLevel) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
+
   </Target>
 
   <Target Name="CreateAllPacks"
       DependsOnTargets="DeleteExtractedWorkloadPacks;_SetGlobalProperties;GetXAVersionInfo;_CleanNuGetDirectory;_CreateItemGroups;_CreatePreviewPacks;_CreateDefaultRefPack">
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:AndroidRID=%(_AndroidRIDs.Identity) -p:AndroidRuntime=%(_AndroidRIDs.Runtime) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:HostOS=Linux   &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' == 'Linux' " />
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:HostOS=Darwin  &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' == 'Darwin' " />
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:HostOS=Windows &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' != 'Linux' " /> <!-- Windows pack should be built both Windows and macOS -->
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') &quot;$(MSBuildThisFileDirectory)Microsoft.NET.Sdk.Android.proj&quot;" />
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') &quot;$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\Microsoft.Android.Templates.csproj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Runtime.%(_AndroidRIDs.Runtime).$(AndroidLatestStableApiLevel).%(_AndroidRIDs.Identity).binlog&quot; -p:AndroidRID=%(_AndroidRIDs.Identity) -p:AndroidRuntime=%(_AndroidRIDs.Runtime) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Runtime.Managed.$(AndroidLatestUnstableApiLevel).binlog&quot; &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.Managed.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Ref.$(AndroidLatestStableApiLevel).binlog&quot; &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Sdk.Linux.binlog&quot; -p:HostOS=Linux   &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' == 'Linux' " />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Sdk.Darwin.binlog&quot; -p:HostOS=Darwin  &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' == 'Darwin' " />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Sdk.Windows.binlog&quot; -p:HostOS=Windows &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' != 'Linux' " /> <!-- Windows pack should be built both Windows and macOS -->
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.NET.Sdk.Android.binlog&quot; &quot;$(MSBuildThisFileDirectory)Microsoft.NET.Sdk.Android.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Templates.binlog&quot; &quot;$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\Microsoft.Android.Templates.csproj&quot;" />
     <ReplaceFileContents
         SourceFile="vs-workload.in.props"
         DestinationFile="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\vs-workload.props"
@@ -175,9 +153,9 @@
     <Error Condition="Exists($(AssetManifestPath))" Text="The manifest file '$(AssetManifestPath)' already exists." />
 
     <ItemGroup>
-      <ItemsToPush Include="$(OutputPath)*.nupkg" />
+      <ItemsToPush Include="$(OutputPath)*.nupkg" Kind="Package" />
       <WorkloadArtifacts Include="$(OutputPath)*.zip" />
-      <ItemsToPush Include="@(WorkloadArtifacts)" PublishFlatContainer="true" RelativeBlobPath="android/$(AndroidPackVersionLong)/%(Filename)%(Extension)" />
+      <ItemsToPush Include="@(WorkloadArtifacts)" PublishFlatContainer="true" RelativeBlobPath="android/$(AndroidPackVersionLong)/%(Filename)%(Extension)" Kind="Blob" />
     </ItemGroup>
 
     <Error Condition="'@(ItemsToPush)' == ''" Text="No packages to push." />

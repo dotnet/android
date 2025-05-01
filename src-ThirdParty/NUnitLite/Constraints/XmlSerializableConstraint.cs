@@ -23,6 +23,7 @@
 
 #if !SILVERLIGHT
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
@@ -33,6 +34,8 @@ namespace NUnit.Framework.Constraints
     /// XmlSerializableConstraint tests whether
     /// an object is serializable in XML format.
     /// </summary>
+    [RequiresUnreferencedCode ("Uses XmlSerializer")]
+    [RequiresDynamicCode ("Uses XmlSerializer")]
     public class XmlSerializableConstraint : Constraint
     {
         private XmlSerializer serializer;

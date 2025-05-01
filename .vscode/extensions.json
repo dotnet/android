@@ -7,5 +7,6 @@
       "streetsidesoftware.code-spell-checker",
       "wghats.vscode-nxunit-test-adapter",
       "derivitec-ltd.vscode-dotnet-adapter",
+      "llvm-vs-code-extensions.lldb-dap",
     ]
 }

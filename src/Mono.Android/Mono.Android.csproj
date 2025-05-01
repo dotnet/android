@@ -349,6 +349,10 @@
     <Compile Include="Java.Util.Concurrent.Atomic\AtomicInteger.cs" />
     <Compile Include="Java.Util.Concurrent.Atomic\AtomicLong.cs" />
     <Compile Include="Javax.Microedition.Khronos.Egl\EGLContext.cs" />
+    <Compile Include="Microsoft.Android.Runtime\ManagedTypeManager.cs" />
+    <Compile Include="Microsoft.Android.Runtime\ManagedTypeMapping.cs" />
+    <Compile Include="Microsoft.Android.Runtime\ManagedValueManager.cs" />
+    <Compile Include="Microsoft.Android.Runtime\RuntimeFeature.cs" />
     <Compile Include="Org.Apache.Http.Impl.Conn\DefaultClientConnection.cs" />
     <Compile Include="Org.Apache.Http.Impl.Cookie\BasicClientCookie.cs" />
     <Compile Include="System.Drawing/PointConverter.cs" />
@@ -372,6 +376,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -414,7 +419,7 @@
       <_RefExtras Include="$(OutputPath)*.*" Exclude="$(OutputPath)*.dll" />
       <_SourceFiles Include="$(OutputPath)Mono.Android.*" />
       <_SourceFiles Include="$(OutputPath)Java.Interop.*" />
-      <_RuntimePackFiles Include="@(_SourceFiles)" AndroidRID="%(AndroidAbiAndRuntimeFlavor.AndroidRID)" AndroidRuntime="%(AndroidAbiAndRuntimeFlavor.AndroidRuntime)" />
+      <_SourceFiles Include="$(OutputPath)System.IO.Hashing.dll" />
     </ItemGroup>
     <Copy
         SourceFiles="@(_RefExtras)"
@@ -427,8 +432,8 @@
         SkipUnchangedFiles="true"
     />
     <Copy
-        SourceFiles="%(_RuntimePackFiles.Identity)"
-        DestinationFolder="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.%(_RuntimePackFiles.AndroidRuntime).$(AndroidApiLevel).%(_RuntimePackFiles.AndroidRID)\$(AndroidPackVersion)\runtimes\%(_RuntimePackFiles.AndroidRID)\lib\$(DotNetTargetFramework)"
+        SourceFiles="%(_SourceFiles.Identity)"
+        DestinationFolder="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.$(AndroidApiLevel).android\$(AndroidPackVersion)\runtimes\android\lib\$(DotNetTargetFramework)"
         SkipUnchangedFiles="true"
     />
     <Copy

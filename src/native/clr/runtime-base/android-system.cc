@@ -216,7 +216,7 @@ AndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks
 
 	uint16_t built_for_cpu = 0, running_on_cpu = 0;
 	bool is64bit = false;
-	_monodroid_detect_cpu_and_architecture (built_for_cpu, running_on_cpu, is64bit);
+	monodroid_detect_cpu_and_architecture (built_for_cpu, running_on_cpu, is64bit);
 	setup_apk_directories (running_on_cpu, runtimeApks, have_split_apks);
 }
 
@@ -351,7 +351,7 @@ AndroidSystem::monodroid__system_property_get (std::string_view const& name, cha
 	return len;
 }
 
-auto AndroidSystem::monodroid_get_system_property (std::string_view const& name, dynamic_local_string<Constants::PROPERTY_VALUE_BUFFER_LEN> &value) noexcept -> int
+auto AndroidSystem::monodroid_get_system_property (std::string_view const& name, dynamic_local_property_string &value) noexcept -> int
 {
 	int len = monodroid__system_property_get (name, value.get (), value.size ());
 	if (len > 0) {
@@ -381,7 +381,7 @@ AndroidSystem::get_max_gref_count_from_system () noexcept -> long
 		max = 51200;
 	}
 
-	dynamic_local_string<Constants::PROPERTY_VALUE_BUFFER_LEN> override;
+	dynamic_local_property_string override;
 	if (monodroid_get_system_property (Constants::DEBUG_MONO_MAX_GREFC, override) > 0) {
 		char *e;
 		max = strtol (override.get (), &e, 10);
@@ -441,7 +441,7 @@ auto AndroidSystem::load_dso (const char *path, unsigned int dl_flags, bool skip
 	char *error = nullptr;
 	void *handle = java_interop_lib_load (path, dl_flags, &error);
 	if (handle == nullptr && Util::should_log (LOG_ASSEMBLY)) {
-		log_info_nocheck (LOG_ASSEMBLY, "Failed to load shared library '{}'. {}", path, error);
+		log_info_nocheck_fmt (LOG_ASSEMBLY, "Failed to load shared library '{}'. {}", path, error);
 	}
 	java_interop_free (error);
 	return handle;

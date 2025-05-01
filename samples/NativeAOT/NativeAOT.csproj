@@ -12,12 +12,4 @@
     <!-- Only property required to opt into NativeAOT -->
     <PublishAot>true</PublishAot>
   </PropertyGroup>
-
-  <!-- Settings for CI -->
-  <PropertyGroup Condition=" '$(RunningOnCI)' == 'true' ">
-    <_NuGetFolderOnCI>..\..\bin\Build$(Configuration)\nuget-unsigned</_NuGetFolderOnCI>
-    <RestoreAdditionalProjectSources Condition="Exists('$(_NuGetFolderOnCI)')">$(_NuGetFolderOnCI)</RestoreAdditionalProjectSources>
-    <_FastDeploymentDiagnosticLogging>true</_FastDeploymentDiagnosticLogging>
-  </PropertyGroup>
-
 </Project>

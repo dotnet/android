@@ -107,21 +107,68 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BasicApplicationOtherRuntime ([Values (true, false)] bool isRelease)
+		public void BasicApplicationBuildCoreCLR ([Values (true, false)] bool isRelease)
 		{
-			// This test would fail, as it requires **our** updated runtime pack, which isn't currently created
-			// It is created in `src/native/native-clr.csproj` which isn't built atm.
-			Assert.Ignore ("CoreCLR support isn't fully enabled yet. This test will be enabled in a follow-up PR.");
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
-				// Add locally downloaded CoreCLR packs
-				ExtraNuGetConfigSources = {
-					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
-				}
 			};
 			proj.SetProperty ("UseMonoRuntime", "false"); // Enables CoreCLR
 			var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+		}
+
+		static object [] ReadyToRunConfigurationSource = new object [] {
+			new object[] {
+				/* isComposite */	true,
+				/* rid */		"android-x64"
+			},
+			new object[] {
+				/* isComposite */	false,
+				/* rid */		"android-x64"
+			},
+			new object[] {
+				/* isComposite */	true,
+				/* rid */		"android-arm64"
+			},
+			new object[] {
+				/* isComposite */	false,
+				/* rid */		"android-arm64"
+			}
+		};
+
+		[Test]
+		[TestCaseSource (nameof (ReadyToRunConfigurationSource))]
+		public void BasicApplicationPublishReadyToRun (bool isComposite, string rid)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+
+			proj.SetProperty ("RuntimeIdentifier", rid);
+			proj.SetProperty ("UseMonoRuntime", "false"); 	// Enables CoreCLR
+			proj.SetProperty ("_IsPublishing", "true"); 	// Make "dotnet build" act as "dotnet publish"
+			proj.SetProperty ("PublishReadyToRun", "true"); // Enable R2R
+			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
+
+			if (isComposite)
+				proj.SetProperty ("PublishReadyToRunComposite", "true"); // Enable R2R composite
+
+			var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+			var assemblyName = proj.ProjectName;
+			var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, rid, $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apk);
+
+			var helper = new ArchiveAssemblyHelper (apk, true);
+			var abi = MonoAndroidHelper.RidToAbi (rid);
+			Assert.IsTrue (helper.Exists ($"assemblies/{abi}/{assemblyName}.dll"), $"{assemblyName}.dll should exist in apk!");
+			
+			using var stream = helper.ReadEntry ($"assemblies/{assemblyName}.dll");
+			stream.Position = 0;
+			using var peReader = new System.Reflection.PortableExecutable.PEReader (stream);
+			Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0, 
+				$"ReadyToRun image not found in {assemblyName}.dll! ManagedNativeHeaderDirectory should not be empty!");
 		}
 
 		[Test]
@@ -160,6 +207,9 @@ namespace Xamarin.Android.Build.Tests
 
 			var linkedMonoAndroidAssembly = Path.Combine (intermediate, "android-arm64", "linked", "Mono.Android.dll");
 			FileAssert.Exists (linkedMonoAndroidAssembly);
+			var javaClassNames = new List<string> ();
+			var types = new List<TypeReference> ();
+
 			using (var assembly = AssemblyDefinition.ReadAssembly (linkedMonoAndroidAssembly)) {
 				var typeName = "Android.App.Activity";
 				var methodName = "GetOnCreate_Landroid_os_Bundle_Handler";
@@ -167,19 +217,11 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsNotNull (type, $"{linkedMonoAndroidAssembly} should contain {typeName}");
 				var method = type.Methods.FirstOrDefault (m => m.Name == methodName);
 				Assert.IsNotNull (method, $"{linkedMonoAndroidAssembly} should contain {typeName}.{methodName}");
-			}
 
-			var javaClassNames = new List<string> ();
-			var types = new List<TypeReference> ();
-
-			var linkedRuntimeAssembly = Path.Combine (intermediate, "android-arm64", "linked", "Microsoft.Android.Runtime.NativeAOT.dll");
-			FileAssert.Exists (linkedRuntimeAssembly);
-			using (var assembly = AssemblyDefinition.ReadAssembly (linkedRuntimeAssembly)) {
-				var type = assembly.MainModule.Types.FirstOrDefault (t => t.Name == "TypeMapping");
-				Assert.IsNotNull (type, $"{linkedRuntimeAssembly} should contain TypeMapping");
-
-				var method = type.Methods.FirstOrDefault (m => m.Name == "GetJniNameByTypeNameHashIndex");
-				Assert.IsNotNull (method, "TypeMapping should contain GetJniNameByTypeNameHashIndex");
+				type = assembly.MainModule.Types.FirstOrDefault (t => t.Name == "ManagedTypeMapping");
+				Assert.IsNotNull (type, $"{linkedMonoAndroidAssembly} should contain ManagedTypeMapping");
+				method = type.Methods.FirstOrDefault (m => m.Name == "GetJniNameByTypeNameHashIndex");
+				Assert.IsNotNull (method, $"{type.Name} should contain GetJniNameByTypeNameHashIndex");
 
 				foreach (var i in method.Body.Instructions) {
 					if (i.OpCode != Mono.Cecil.Cil.OpCodes.Ldstr)
@@ -192,7 +234,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				method = type.Methods.FirstOrDefault (m => m.Name == "GetTypeByJniNameHashIndex");
-				Assert.IsNotNull (method, "TypeMapping should contain GetTypeByJniNameHashIndex");
+				Assert.IsNotNull (method, $"{type.Name} should contain GetTypeByJniNameHashIndex");
 
 				foreach (var i in method.Body.Instructions) {
 					if (i.OpCode != Mono.Cecil.Cil.OpCodes.Ldtoken)
@@ -1534,7 +1576,6 @@ namespace App1
 						$"{AppPdbName} must be copied to bin directory");
 
 					var fileNames = new List<(string path, bool existsInBin)> {
-						("Mono.Android.pdb", false),
 						(AppPdbName,         true),
 						(LibraryPdbName,     true),
 						(AppDllName,         true),

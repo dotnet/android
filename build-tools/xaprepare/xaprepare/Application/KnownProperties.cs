@@ -29,6 +29,7 @@ namespace Xamarin.Android.Prepare
 		public const string DotNetEmscriptenManifestVersionBand = nameof (DotNetEmscriptenManifestVersionBand);
 		public const string MicrosoftDotnetSdkInternalPackageVersion = "MicrosoftDotnetSdkInternalPackageVersion";
 		public const string MicrosoftNETCoreAppRefPackageVersion = "MicrosoftNETCoreAppRefPackageVersion";
+		public const string MicrosoftNETWorkloadMonoToolChainPackageVersion = "MicrosoftNETWorkloadMonoToolChainPackageVersion";
 		public const string MicrosoftNETWorkloadEmscriptenPackageVersion = "MicrosoftNETWorkloadEmscriptenPackageVersion";
 		public const string EmulatorVersion                     = "EmulatorVersion";
 		public const string EmulatorPkgRevision                 = "EmulatorPkgRevision";
@@ -46,10 +47,12 @@ namespace Xamarin.Android.Prepare
 		public const string MonoRequiredMinimumVersion          = "MonoRequiredMinimumVersion";
 		public const string MonoRequiredMaximumVersion          = "MonoRequiredMaximumVersion";
 		public const string MonoSourceFullPath                  = "MonoSourceFullPath";
+		public const string NativeRuntimeOutputRootDir          = "NativeRuntimeOutputRootDir";
 		public const string NinjaPath                           = "NinjaPath";
 		public const string Pkg7Zip_CommandLine                 = "Pkg7-Zip_CommandLine";
 		public const string PkgXamarin_LibZipSharp              = "PkgXamarin_LibZipSharp";
 		public const string ProductVersion                      = "ProductVersion";
+		public const string RuntimeRedistDirName                = "_RuntimeRedistDirName";
 		public const string XABuildToolsFolder                  = "XABuildToolsFolder";
 		public const string XABuildToolsVersion                 = "XABuildToolsVersion";
 		public const string XABuildToolsPackagePrefixMacOS      = "XABuildToolsPackagePrefixMacOS";

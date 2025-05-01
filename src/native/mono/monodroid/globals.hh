@@ -3,7 +3,7 @@
 #define __GLOBALS_H
 
 #include "util.hh"
-#include "timing.hh"
+#include <runtime-base/timing.hh>
 
 #include "debug.hh"
 #include "embedded-assemblies.hh"

@@ -43,6 +43,7 @@
     <AndroidClassParser>class-parse</AndroidClassParser>
     <AndroidCodegenTarget Condition=" '$(AndroidCodegenTarget)' == '' ">XAJavaInterop1</AndroidCodegenTarget>
     <_AndroidJcwCodegenTarget Condition=" '$(_AndroidJcwCodegenTarget)' == '' and '$(_AndroidRuntime)' != 'NativeAOT' ">XAJavaInterop1</_AndroidJcwCodegenTarget>
+    <_AndroidTypeMapImplementation Condition=" '$(_AndroidTypeMapImplementation)' == '' and '$(_AndroidRuntime)' != 'NativeAOT' ">llvm-ir</_AndroidTypeMapImplementation>
     <AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods Condition=" '$(AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods)' == '' ">true</AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods>
     <AndroidBoundInterfacesContainTypes Condition=" '$(AndroidBoundInterfacesContainTypes)' == '' ">true</AndroidBoundInterfacesContainTypes>
     <AndroidBoundInterfacesContainConstants Condition=" '$(AndroidBoundInterfacesContainConstants)' == '' ">true</AndroidBoundInterfacesContainConstants>
@@ -51,6 +52,7 @@
     <AndroidEnableRestrictToAttributes Condition=" '$(AndroidEnableRestrictToAttributes)' == '' ">obsolete</AndroidEnableRestrictToAttributes>
 
     <!-- Mono components -->
+    <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == ''">$(EnableProfiler)</AndroidEnableProfiler>
     <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == ''">false</AndroidEnableProfiler>
 
     <!--
@@ -139,9 +141,6 @@
 
     <!-- profiler won't work without internet permission, we must thus force it -->
     <AndroidNeedsInternetPermission Condition=" '$(AndroidEnableProfiler)' == 'true' ">True</AndroidNeedsInternetPermission>
-
-    <!-- FIXME: error ANDZA0000: 01-30 21:38:27.669 38611 159726 W zip     : WARNING: header mismatch -->
-    <_AndroidUseLibZipSharp Condition=" '$(_AndroidUseLibZipSharp)' == '' ">true</_AndroidUseLibZipSharp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' and '$(GenerateApplicationManifest)' == 'true' ">
     <!-- Default to 1, if blank -->

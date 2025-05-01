@@ -1,4 +1,6 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
+#nullable disable
+
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;

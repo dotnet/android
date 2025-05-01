@@ -1,3 +1,5 @@
+#nullable disable
+
 namespace Xamarin.Android.Tasks
 {
 	sealed class LayoutLocationInfo

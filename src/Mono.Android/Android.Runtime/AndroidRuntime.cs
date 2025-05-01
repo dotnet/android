@@ -23,12 +23,14 @@ namespace Android.Runtime {
 		internal AndroidRuntime (IntPtr jnienv,
 				IntPtr vm,
 				IntPtr classLoader,
-				IntPtr classLoader_loadClass,
+				JniRuntime.JniTypeManager typeManager,
+				JniRuntime.JniValueManager valueManager,
 				bool jniAddNativeMethodRegistrationAttributePresent)
 			: base (new AndroidRuntimeOptions (jnienv,
 					vm,
 					classLoader,
-					classLoader_loadClass,
+					typeManager,
+					valueManager,
 					jniAddNativeMethodRegistrationAttributePresent))
 		{
 			// This is not ideal, but we need to set this while the runtime is initializing but we can't do it directly from the `JNIEnvInit.Initialize` method, since
@@ -93,16 +95,16 @@ namespace Android.Runtime {
 		public AndroidRuntimeOptions (IntPtr jnienv,
 				IntPtr vm,
 				IntPtr classLoader,
-				IntPtr classLoader_loadClass,
+				JniRuntime.JniTypeManager typeManager,
+				JniRuntime.JniValueManager valueManager,
 				bool jniAddNativeMethodRegistrationAttributePresent)
 		{
 			EnvironmentPointer      = jnienv;
 			ClassLoader             = new JniObjectReference (classLoader, JniObjectReferenceType.Global);
-			ClassLoader_LoadClass_id= classLoader_loadClass;
 			InvocationPointer       = vm;
 			ObjectReferenceManager  = new AndroidObjectReferenceManager ();
-			TypeManager             = new AndroidTypeManager (jniAddNativeMethodRegistrationAttributePresent);
-			ValueManager            = new AndroidValueManager ();
+			TypeManager             = typeManager;
+			ValueManager            = valueManager;
 			UseMarshalMemberBuilder = false;
 			JniAddNativeMethodRegistrationAttributePresent = jniAddNativeMethodRegistrationAttributePresent;
 		}
@@ -171,11 +173,13 @@ namespace Android.Runtime {
 		public override void WriteLocalReferenceLine (string format, params object?[] args)
 		{
 			RuntimeNativeMethods._monodroid_gref_log ("[LREF] " + string.Format (CultureInfo.InvariantCulture, format, args));
+			RuntimeNativeMethods._monodroid_gref_log ("\n");
 		}
 
 		public override void WriteGlobalReferenceLine (string format, params object?[] args)
 		{
 			RuntimeNativeMethods._monodroid_gref_log (string.Format (CultureInfo.InvariantCulture, format, args));
+			RuntimeNativeMethods._monodroid_gref_log ("\n");
 		}
 
 		public override JniObjectReference CreateGlobalReference (JniObjectReference value)
@@ -258,6 +262,7 @@ namespace Android.Runtime {
 
 		bool jniAddNativeMethodRegistrationAttributePresent;
 
+		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 		const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 		const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
 
@@ -390,6 +395,19 @@ namespace Android.Runtime {
 			};
 		}
 
+		[return: DynamicallyAccessedMembers (Constructors)]
+		protected override Type? GetInvokerTypeCore (
+			[DynamicallyAccessedMembers (Constructors)]
+			Type type)
+		{
+			if (type.IsInterface || type.IsAbstract) {
+				return JavaObjectExtensions.GetInvokerType (type)
+					?? base.GetInvokerTypeCore (type);
+			}
+
+			return null;
+		}
+
 		delegate Delegate GetCallbackHandler ();
 
 		static MethodInfo? dynamic_callback_gen;
@@ -496,7 +514,7 @@ namespace Android.Runtime {
 		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value parsed from parameter 'methods'.")]
 		[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
 		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
-		public void RegisterNativeMembers (
+		public override void RegisterNativeMembers (
 				JniType nativeClass,
 				[DynamicallyAccessedMembers (MethodsAndPrivateNested)] Type type,
 				ReadOnlySpan<char> methods)
@@ -673,7 +691,7 @@ namespace Android.Runtime {
 				for (int i = 0; i < targets.Count; ++i) {
 					IJavaPeerable? target;
 					var wref = targets [i];
-					if (ShouldReplaceMapping (wref!, reference, out target)) {
+					if (ShouldReplaceMapping (wref!, reference, value, out target)) {
 						found = true;
 						targets [i] = IdentityHashTargets.CreateWeakReference (value);
 						break;
@@ -731,7 +749,7 @@ namespace Android.Runtime {
 			}
 		}
 
-		bool ShouldReplaceMapping (WeakReference<IJavaPeerable> current, JniObjectReference reference, out IJavaPeerable? target)
+		bool ShouldReplaceMapping (WeakReference<IJavaPeerable> current, JniObjectReference reference, IJavaPeerable value, out IJavaPeerable? target)
 		{
 			target      = null;
 
@@ -755,12 +773,17 @@ namespace Android.Runtime {
 			// we want the 2nd MCW to replace the 1st, as the 2nd is
 			// the one the dev created; the 1st is an implicit intermediary.
 			//
+			// Meanwhile, a new "replaceable" instance should *not* replace an
+			// existing "replaceable" instance; see dotnet/android#9862.
+			//
 			// [0]: If Java ctor invokes overridden virtual method, we'll
 			// transition into managed code w/o a registered instance, and
 			// thus will create an "intermediary" via
 			// (IntPtr, JniHandleOwnership) .ctor.
-			if ((target.JniManagedPeerState & JniManagedPeerStates.Replaceable) == JniManagedPeerStates.Replaceable)
+			if (target.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable) &&
+					!value.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable)) {
 				return true;
+			}
 
 			return false;
 		}

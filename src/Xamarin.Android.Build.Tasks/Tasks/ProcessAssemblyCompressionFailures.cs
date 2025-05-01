@@ -1,5 +1,3 @@
-#nullable enable
-
 using System;
 using System.Linq;
 using Microsoft.Android.Build.Tasks;

@@ -1,3 +1,5 @@
+#nullable disable
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -101,7 +103,7 @@ namespace Xamarin.Android.Tasks
 
 					using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 						try {
-							composer.Generate (compressedAssemblies, GeneratePackageManagerJava.GetAndroidTargetArchForAbi (abi), sw, llvmIrFilePath);
+							composer.Generate (compressedAssemblies, GenerateNativeApplicationConfigSources.GetAndroidTargetArchForAbi (abi), sw, llvmIrFilePath);
 						} catch {
 							throw;
 						} finally {

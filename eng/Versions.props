@@ -1,22 +1,23 @@
 <Project>
   <!--Package versions-->
   <PropertyGroup>
-    <MicrosoftNETSdkPackageVersion>10.0.100-preview.3.25162.16</MicrosoftNETSdkPackageVersion>
+    <MicrosoftNETSdkPackageVersion>10.0.100-preview.5.25227.101</MicrosoftNETSdkPackageVersion>
     <MicrosoftDotnetSdkInternalPackageVersion>$(MicrosoftNETSdkPackageVersion)</MicrosoftDotnetSdkInternalPackageVersion>
-    <MicrosoftNETILLinkTasksPackageVersion>10.0.0-preview.3.25155.15</MicrosoftNETILLinkTasksPackageVersion>
-    <MicrosoftNETCoreAppRefPackageVersion>10.0.0-preview.3.25155.15</MicrosoftNETCoreAppRefPackageVersion>
+    <MicrosoftNETILLinkTasksPackageVersion>10.0.0-preview.5.25227.101</MicrosoftNETILLinkTasksPackageVersion>
+    <MicrosoftNETCoreAppRefPackageVersion>10.0.0-preview.5.25227.101</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
-    <MicrosoftDotNetBuildTasksFeedPackageVersion>10.0.0-beta.24476.2</MicrosoftDotNetBuildTasksFeedPackageVersion>
-    <MicrosoftNETWorkloadEmscriptenCurrentManifest100100TransportVersion>10.0.0-preview.3.25155.1</MicrosoftNETWorkloadEmscriptenCurrentManifest100100TransportVersion>
-    <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenCurrentManifest100100TransportVersion)</MicrosoftNETWorkloadEmscriptenPackageVersion>
-    <MicrosoftTemplateEngineTasksPackageVersion>7.0.100-rc.1.22410.7</MicrosoftTemplateEngineTasksPackageVersion>
-    <MicrosoftDotNetCecilPackageVersion>0.11.5-alpha.25125.1</MicrosoftDotNetCecilPackageVersion>
-    <SystemIOHashingPackageVersion>$(MicrosoftNETCoreAppRefPackageVersion)</SystemIOHashingPackageVersion>
+    <MicrosoftDotNetBuildTasksFeedPackageVersion>10.0.0-beta.25227.101</MicrosoftDotNetBuildTasksFeedPackageVersion>
+    <MicrosoftNETWorkloadMonoToolChainPackageVersion>$(MicrosoftNETSdkPackageVersion)</MicrosoftNETWorkloadMonoToolChainPackageVersion>
+    <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETSdkPackageVersion)</MicrosoftNETWorkloadEmscriptenPackageVersion>
+    <MicrosoftTemplateEngineAuthoringTasksPackageVersion>10.0.100-preview.5.25227.101</MicrosoftTemplateEngineAuthoringTasksPackageVersion>
+    <MicrosoftDotNetCecilPackageVersion>0.11.5-alpha.25227.101</MicrosoftDotNetCecilPackageVersion>
+    <SystemIOHashingPackageVersion>9.0.4</SystemIOHashingPackageVersion>
     <!-- Previous .NET Android version -->
-    <MicrosoftAndroidSdkWindowsPackageVersion>35.0.50</MicrosoftAndroidSdkWindowsPackageVersion>
-    <AndroidNetPreviousVersion>$(MicrosoftAndroidSdkWindowsPackageVersion)</AndroidNetPreviousVersion>
+    <MicrosoftNETSdkAndroidManifest90100PackageVersion>35.0.61</MicrosoftNETSdkAndroidManifest90100PackageVersion>
+    <AndroidNetPreviousVersion>$(MicrosoftNETSdkAndroidManifest90100PackageVersion)</AndroidNetPreviousVersion>
     <!-- To be removed before .NET 10 GA -->
-    <AndroidNet8PreviousVersion>34.0.148</AndroidNet8PreviousVersion>
+    <MicrosoftNETSdkAndroidManifest80100PackageVersion>34.0.154</MicrosoftNETSdkAndroidManifest80100PackageVersion>
+    <AndroidNet8PreviousVersion>$(MicrosoftNETSdkAndroidManifest80100PackageVersion)</AndroidNet8PreviousVersion>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Match the first three version numbers and append 00 -->
@@ -24,7 +25,7 @@
     <VersionSuffixRegex>\-(preview|rc|alpha).\d+</VersionSuffixRegex>
     <DotNetPreviewVersionBand Condition=" '$(DotNetPreviewVersionBand)' == '' ">$(VersionBand)$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftDotnetSdkInternalPackageVersion), $(VersionSuffixRegex)))</DotNetPreviewVersionBand>
     <DotNetSdkManifestsFolder>$(DotNetPreviewVersionBand)</DotNetSdkManifestsFolder>
-    <DotNetMonoManifestVersionBand>$(VersionBand)$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftNETCoreAppRefPackageVersion), $(VersionSuffixRegex)))</DotNetMonoManifestVersionBand>
+    <DotNetMonoManifestVersionBand>$(VersionBand)$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftNETWorkloadMonoToolChainPackageVersion), $(VersionSuffixRegex)))</DotNetMonoManifestVersionBand>
     <DotNetEmscriptenManifestVersionBand>$(VersionBand)$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftNETWorkloadEmscriptenPackageVersion), $(VersionSuffixRegex)))</DotNetEmscriptenManifestVersionBand>
     <!-- NOTE: sometimes we hardcode this when transitioning to new version bands -->
     <DotNetAndroidManifestVersionBand>$(DotNetPreviewVersionBand)</DotNetAndroidManifestVersionBand>

@@ -58,25 +58,16 @@ namespace Java.Interop {
 				throw new InvalidOperationException ($"Member `{nameof (NativeAotRuntimeOptions)}.{nameof (NativeAotRuntimeOptions.JvmLibraryPath)}` must be set.");
 
 #if NET
-			builder.TypeManager     ??= new NativeAotTypeManager ();
+			builder.TypeManager     ??= new ManagedTypeManager ();
 #endif  // NET
 
-			builder.ValueManager            ??= new NativeAotValueManager (builder.TypeManager);
+			builder.ValueManager            ??= new ManagedValueManager ();
 			builder.ObjectReferenceManager  ??= new ManagedObjectReferenceManager (builder.JniGlobalReferenceLogWriter, builder.JniLocalReferenceLogWriter);
 
 			if (builder.InvocationPointer != IntPtr.Zero || builder.EnvironmentPointer != IntPtr.Zero)
 				return builder;
 
 			throw new NotImplementedException ();
-		}
-
-		[UnconditionalSuppressMessage ("Trimming", "IL3000", Justification = "We check for a null Assembly.Location value!")]
-		internal static string? GetAssemblyLocation (Assembly assembly)
-		{
-			var location = assembly.Location;
-			if (!string.IsNullOrEmpty (location))
-				return location;
-			return null;
 		}
 
 		internal protected JreRuntime (NativeAotRuntimeOptions builder)

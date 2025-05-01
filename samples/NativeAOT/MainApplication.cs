@@ -19,5 +19,12 @@ public class MainApplication : Application
         Log.Debug ("NativeAOT", "Application.OnCreate()");
 
         base.OnCreate ();
+
+        AppDomain.CurrentDomain.UnhandledException += (sender, e) => {
+            Console.WriteLine ("AppDomain.UnhandledException!");
+            Console.WriteLine ($"  sender: {sender} [{sender != null} {sender?.GetType ()}]");
+            Console.WriteLine ($"  e.IsTerminating: {e.IsTerminating}");
+            Console.WriteLine ($"  e.ExceptionObject: {e.ExceptionObject}");
+        };
     }
 }

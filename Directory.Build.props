@@ -36,7 +36,7 @@
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
     <AndroidPackVersion>36.0.0</AndroidPackVersion>
-    <AndroidPackVersionSuffix>preview.3</AndroidPackVersionSuffix>
+    <AndroidPackVersionSuffix>preview.5</AndroidPackVersionSuffix>
     <!-- Final value set by GetXAVersionInfo target -->
     <IsStableBuild>false</IsStableBuild>
   </PropertyGroup>
@@ -64,8 +64,6 @@
       
       This can be opted into locally with $(_AndroidTreatWarningsAsErrors) = true.
     -->
-    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'assembly-store-reader.csproj' ">true</_AllowProjectWarnings>
-    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'decompress-assemblies.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'jnienv-gen.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Microsoft.Android.Sdk.ILLink.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Microsoft.Android.Templates.csproj' ">true</_AllowProjectWarnings>

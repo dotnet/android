@@ -1,4 +1,3 @@
-#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +16,7 @@ namespace MonoDroid.Tuner;
 /// <summary>
 /// Scans an assembly for JLOs that need JCWs generated and writes them to an XML file.
 /// </summary>
-public class FindJavaObjectsStep : BaseStep
+public class FindJavaObjectsStep : BaseStep, IAssemblyModifierPipelineStep
 {
 	public string ApplicationJavaClass { get; set; } = "";
 
@@ -29,8 +28,22 @@ public class FindJavaObjectsStep : BaseStep
 
 	public FindJavaObjectsStep (TaskLoggingHelper log) => Log = log;
 
-	public bool ProcessAssembly (AssemblyDefinition assembly, string destinationJLOXml)
+	public void ProcessAssembly (AssemblyDefinition assembly, StepContext context)
 	{
+		var destinationJLOXml = JavaObjectsXmlFile.GetJavaObjectsXmlFilePath (context.Destination.ItemSpec);
+		var scanned = ScanAssembly (assembly, context, destinationJLOXml);
+
+		if (!scanned) {
+			// We didn't scan for Java objects, so write an empty .xml file for later steps
+			JavaObjectsXmlFile.WriteEmptyFile (destinationJLOXml, Log);
+		}
+	}
+
+	public bool ScanAssembly (AssemblyDefinition assembly, StepContext context, string destinationJLOXml)
+	{
+		if (!ShouldScan (context))
+			return false;
+
 		var action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
 
 		if (action == AssemblyAction.Delete)
@@ -40,23 +53,39 @@ public class FindJavaObjectsStep : BaseStep
 		var initial_count = types.Count;
 
 		// Filter out Java types we don't care about
-		types = types.Where (t => !t.IsInterface && !JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (t, Context)).ToList ();
+		types = types.Where (t => !JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (t, Context)).ToList ();
 
 		Log.LogDebugMessage ($"{assembly.Name.Name} - Found {initial_count} Java types, filtered to {types.Count}");
 
-		var wrappers = ConvertToCallableWrappers (types);
+		var xml = new JavaObjectsXmlFile ();
 
-		using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-			XmlExporter.Export (sw, wrappers, true);
-			Files.CopyIfStreamChanged (sw.BaseStream, destinationJLOXml);
-		}
+		xml.ACWMapEntries.AddRange (types.Select (t => ACWMapEntry.Create (t, Context)));
+		xml.JavaCallableWrappers.AddRange (ConvertToCallableWrappers (types.Where (t => !t.IsInterface).ToList ()));
+
+		xml.Export (destinationJLOXml);
+
+		Log.LogDebugMessage ($"Wrote '{destinationJLOXml}', {xml.JavaCallableWrappers.Count} JCWs, {xml.ACWMapEntries.Count} ACWs");
 
 		return true;
 	}
 
-	public static void WriteEmptyXmlFile (string destination)
+	bool ShouldScan (StepContext context)
 	{
-		XmlExporter.Export (destination, [], false);
+		if (!context.IsAndroidAssembly)
+			return false;
+
+		// When marshal methods or non-JavaPeerStyle.XAJavaInterop1 are in use we do not want to skip non-user assemblies (such as Mono.Android) - we need to generate JCWs for them during
+		// application build, unlike in Debug configuration or when marshal methods are disabled, in which case we use JCWs generated during Xamarin.Android
+		// build and stored in a jar file.
+		var useMarshalMethods = !context.IsDebug && context.EnableMarshalMethods;
+		var shouldSkipNonUserAssemblies = !useMarshalMethods && context.CodeGenerationTarget == JavaPeerStyle.XAJavaInterop1;
+
+		if (shouldSkipNonUserAssemblies && !context.IsUserAssembly) {
+			Log.LogDebugMessage ($"Skipping assembly '{context.Source.ItemSpec}' because it is not a user assembly and we don't need JLOs from non-user assemblies");
+			return false;
+		}
+
+		return true;
 	}
 
 	List<TypeDefinition> ScanForJavaTypes (AssemblyDefinition assembly)

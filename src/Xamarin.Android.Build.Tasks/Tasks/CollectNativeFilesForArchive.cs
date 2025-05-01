@@ -1,4 +1,3 @@
-#nullable enable
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
 using System;
@@ -219,7 +218,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 		}
 
 		foreach (string abi in supportedAbis) {
-			string clangAbi = MonoAndroidHelper.MapAndroidAbiToClang (abi);
+			string? clangAbi = MonoAndroidHelper.MapAndroidAbiToClang (abi);
 			if (string.IsNullOrEmpty (clangAbi)) {
 				LogSanitizerError ($"Unable to map Android ABI {abi} to clang ABI");
 				return;

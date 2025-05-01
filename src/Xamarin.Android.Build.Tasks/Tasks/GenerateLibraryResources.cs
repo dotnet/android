@@ -1,3 +1,5 @@
+#nullable disable
+
 using Microsoft.Build.Framework;
 using System;
 using System.Collections.Generic;

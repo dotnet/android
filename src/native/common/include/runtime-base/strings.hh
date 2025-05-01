@@ -806,6 +806,12 @@ namespace xamarin::android {
 			return get_at (index);
 		}
 
+		[[gnu::always_inline]]
+		auto as_string_view () const noexcept -> std::string_view
+		{
+			return { get (), length () };
+		}
+
 	protected:
 		template<typename Integer> [[gnu::always_inline]]
 		void append_integer (Integer i) noexcept
@@ -961,4 +967,8 @@ namespace xamarin::android {
 			base::append (str);
 		}
 	};
+
+	// Useful aliases
+	using dynamic_local_property_string = dynamic_local_string<Constants::PROPERTY_VALUE_BUFFER_LEN>;
+	using dynamic_local_path_string = dynamic_local_string<SENSIBLE_PATH_MAX>;
 }

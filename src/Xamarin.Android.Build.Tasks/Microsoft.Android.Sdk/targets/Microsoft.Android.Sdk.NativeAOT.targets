@@ -13,10 +13,18 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   <PropertyGroup>
     <_AndroidRuntimePackRuntime>NativeAOT</_AndroidRuntimePackRuntime>
     <_AndroidJcwCodegenTarget Condition=" '$(_AndroidJcwCodegenTarget)' == '' ">JavaInterop1</_AndroidJcwCodegenTarget>
+    <_AndroidTypeMapImplementation Condition=" '$(_AndroidTypeMapImplementation)' == '' ">managed</_AndroidTypeMapImplementation>
     <!-- .NET SDK gives: error NETSDK1191: A runtime identifier for the property 'PublishAot' couldn't be inferred. Specify a rid explicitly. -->
     <AllowPublishAotWithoutRuntimeIdentifier Condition=" '$(AllowPublishAotWithoutRuntimeIdentifier)' == '' ">true</AllowPublishAotWithoutRuntimeIdentifier>
     <!-- NativeAOT's targets currently gives an error about cross-compilation -->
     <DisableUnsupportedError Condition=" $([MSBuild]::IsOSPlatform('windows')) and '$(DisableUnsupportedError)' == '' ">true</DisableUnsupportedError>
+  </PropertyGroup>
+
+  <!-- Default property values for NativeAOT Debug configuration -->
+  <PropertyGroup Condition="'$(DebugSymbols)' == 'true'">
+    <NativeDebugSymbols>true</NativeDebugSymbols>
+    <StripSymbols>false</StripSymbols>
+    <CompressSymbols>false</CompressSymbols>
   </PropertyGroup>
 
   <!-- Make IlcCompile depend on the trimmer -->
@@ -82,7 +90,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     </PropertyGroup>
     <ItemGroup>
       <!-- Android needs a proper soname property or it will refuse to load the library -->
-      <LinkerArg Include="-Wl,-soname,lib$(TargetName)$(NativeBinaryExt)" />
+      <LinkerArg Include="&quot;-Wl,-soname,lib$(TargetName)$(NativeBinaryExt)&quot;" />
       <!-- Required for [UnmanagedCallersOnly] to work inside this assembly -->
       <UnmanagedEntryPointsAssembly Include="Microsoft.Android.Runtime.NativeAOT" />
       <!-- Give ILLink's output to ILC -->

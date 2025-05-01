@@ -72,6 +72,7 @@ namespace xamarin::android
 		static void             create_public_directory (const char *dir);
 		static int              create_directory (const char *pathname, mode_t mode);
 		static void             set_world_accessable (const char *path);
+		static auto             set_world_accessible (int fd) noexcept -> bool;
 		static void             set_user_executable (const char *path);
 		static bool             file_exists (const char *file);
 		static bool             directory_exists (const char *directory);

@@ -1,3 +1,5 @@
+#nullable disable
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -75,7 +77,7 @@ namespace Xamarin.Android.Tasks
 
 		sealed class MarshalMethodInfo
 		{
-			public MarshalMethodEntry Method                { get; }
+			public MarshalMethodEntryObject Method          { get; }
 			public string NativeSymbolName                  { get; set; }
 			public List<LlvmIrFunctionParameter> Parameters { get; }
 			public Type ReturnType                          { get; }
@@ -86,7 +88,7 @@ namespace Xamarin.Android.Tasks
 			// the outside.
 			public uint AssemblyCacheIndex                  { get; set; }
 
-			public MarshalMethodInfo (MarshalMethodEntry method, Type returnType, string nativeSymbolName, int classCacheIndex)
+			public MarshalMethodInfo (MarshalMethodEntryObject method, Type returnType, string nativeSymbolName, int classCacheIndex)
 			{
 				Method = method ?? throw new ArgumentNullException (nameof (method));
 				ReturnType = returnType ?? throw new ArgumentNullException (nameof (returnType));
@@ -194,7 +196,7 @@ namespace Xamarin.Android.Tasks
 			public override object? GetValue (LlvmIrModuleTarget target)
 			{
 				// What a monstrosity...
-				string asmName = mmi.Method.NativeCallback.DeclaringType.Module.Assembly.Name.Name;
+				string asmName = mmi.Method.NativeCallback.DeclaringType.Module.Assembly.NameName;
 				Dictionary<string, uint> asmNameToIndex = target.Is64Bit ? acs.AsmNameToIndexData64 : acs.AsmNameToIndexData32;
 				if (!asmNameToIndex.TryGetValue (asmName, out uint asmIndex)) {
 					throw new InvalidOperationException ($"Unable to translate assembly name '{asmName}' to its index");
@@ -239,7 +241,7 @@ namespace Xamarin.Android.Tasks
 		readonly bool generateEmptyCode;
 		readonly bool managedMarshalMethodsLookupEnabled;
 		readonly AndroidTargetArch targetArch;
-		readonly NativeCodeGenState? codeGenState;
+		readonly NativeCodeGenStateObject? codeGenState;
 
 		/// <summary>
 		/// Constructor to be used ONLY when marshal methods are DISABLED
@@ -257,7 +259,7 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Constructor to be used ONLY when marshal methods are ENABLED
 		/// </summary>
-		public MarshalMethodsNativeAssemblyGenerator (TaskLoggingHelper log, int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, NativeCodeGenState codeGenState, bool managedMarshalMethodsLookupEnabled)
+		public MarshalMethodsNativeAssemblyGenerator (TaskLoggingHelper log, int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, NativeCodeGenStateObject codeGenState, bool managedMarshalMethodsLookupEnabled)
 			: base (log)
 		{
 			this.numberOfAssembliesInApk = numberOfAssembliesInApk;
@@ -271,13 +273,13 @@ namespace Xamarin.Android.Tasks
 
 		void Init ()
 		{
-			if (generateEmptyCode || codeGenState.Classifier == null || codeGenState.Classifier.MarshalMethods.Count == 0) {
+			if (generateEmptyCode || codeGenState.MarshalMethods.Count == 0) {
 				return;
 			}
 
 			var seenClasses = new Dictionary<string, int> (StringComparer.Ordinal);
 			var allMethods = new List<MarshalMethodInfo> ();
-			IDictionary<string, IList<MarshalMethodEntry>> marshalMethods = codeGenState.Classifier.MarshalMethods;
+			IDictionary<string, IList<MarshalMethodEntryObject>> marshalMethods = codeGenState.MarshalMethods;
 
 			// It's possible that several otherwise different methods (from different classes, but with the same
 			// names and similar signatures) will actually share the same **short** native symbol name. In this case we must
@@ -307,9 +309,9 @@ namespace Xamarin.Android.Tasks
 			//   new native symbol name: Java_crc64e1fb321c08285b90_CellAdapter_n_1onPrepareActionMode__Landroidx_appcompat_view_ActionMode_2Landroid_view_Menu_2
 			//
 			var overloadedNativeSymbolNames = new Dictionary<string, List<MarshalMethodInfo>> (StringComparer.Ordinal);
-			foreach (IList<MarshalMethodEntry> entryList in marshalMethods.Values) {
+			foreach (IList<MarshalMethodEntryObject> entryList in marshalMethods.Values) {
 				bool useFullNativeSignature = entryList.Count > 1;
-				foreach (MarshalMethodEntry entry in entryList) {
+				foreach (MarshalMethodEntryObject entry in entryList) {
 					Log.LogDebugMessage ($"MM: processing {entry.DeclaringType.FullName} {entry.NativeCallback.FullName}");
 					ProcessAndAddMethod (allMethods, entry, useFullNativeSignature, seenClasses, overloadedNativeSymbolNames);
 				}
@@ -349,7 +351,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		string MakeNativeSymbolName (MarshalMethodEntry entry, bool useFullNativeSignature)
+		string MakeNativeSymbolName (MarshalMethodEntryObject entry, bool useFullNativeSignature)
 		{
 			var sb = new StringBuilder ("Java_");
 			sb.Append (MangleForJni (entry.JniTypeName));
@@ -386,18 +388,18 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		void ProcessAndAddMethod (List<MarshalMethodInfo> allMethods, MarshalMethodEntry entry, bool useFullNativeSignature, Dictionary<string, int> seenClasses, Dictionary<string, List<MarshalMethodInfo>> overloadedNativeSymbolNames)
+		void ProcessAndAddMethod (List<MarshalMethodInfo> allMethods, MarshalMethodEntryObject entry, bool useFullNativeSignature, Dictionary<string, int> seenClasses, Dictionary<string, List<MarshalMethodInfo>> overloadedNativeSymbolNames)
 		{
-			CecilMethodDefinition nativeCallback = entry.NativeCallback;
+			MarshalMethodEntryMethodObject nativeCallback = entry.NativeCallback;
 			string nativeSymbolName = MakeNativeSymbolName (entry, useFullNativeSignature);
-			string klass = $"{nativeCallback.DeclaringType.FullName}, {nativeCallback.Module.Assembly.FullName}";
+			string klass = $"{nativeCallback.DeclaringType.FullName}, {nativeCallback.DeclaringType.Module.Assembly.FullName}";
 
 			if (!seenClasses.TryGetValue (klass, out int classIndex)) {
 				classIndex = classes.Count;
 				seenClasses.Add (klass, classIndex);
 
 				var mc = new MarshalMethodsManagedClass {
-					token = nativeCallback.DeclaringType.MetadataToken.ToUInt32 (),
+					token = nativeCallback.DeclaringType.MetadataToken,
 					ClassName = klass,
 				};
 
@@ -458,7 +460,7 @@ namespace Xamarin.Android.Tasks
 			return sb.ToString ();
 		}
 
-		(Type returnType, List<LlvmIrFunctionParameter>? functionParams) ParseJniSignature (string signature, Mono.Cecil.MethodDefinition implementedMethod)
+		(Type returnType, List<LlvmIrFunctionParameter>? functionParams) ParseJniSignature (string signature, MarshalMethodEntryMethodObject implementedMethod)
 		{
 			Type returnType = null;
 			List<LlvmIrFunctionParameter>? parameters = null;
@@ -646,8 +648,8 @@ namespace Xamarin.Android.Tasks
 				GetFunctionPtrFunction = getFunctionPtrFunction,
 			};
 			foreach (MarshalMethodInfo mmi in methods) {
-				CecilMethodDefinition nativeCallback = mmi.Method.NativeCallback;
-				string asmName = nativeCallback.DeclaringType.Module.Assembly.Name.Name;
+				MarshalMethodEntryMethodObject nativeCallback = mmi.Method.NativeCallback;
+				string asmName = nativeCallback.DeclaringType.Module.Assembly.NameName;
 
 				if (!writeState.UniqueAssemblyId.TryGetValue (asmName, out ulong asmId)) {
 					asmId = (ulong)writeState.UniqueAssemblyId.Count;
@@ -663,8 +665,8 @@ namespace Xamarin.Android.Tasks
 		void AddMarshalMethod (LlvmIrModule module, MarshalMethodInfo method, ulong asmId, MarshalMethodsWriteState writeState)
 		{
 			Log.LogDebugMessage ($"MM: generating code for {method.Method.DeclaringType.FullName} {method.Method.NativeCallback.FullName}");
-			CecilMethodDefinition nativeCallback = method.Method.NativeCallback;
-			string backingFieldName = $"native_cb_{method.Method.JniMethodName}_{asmId}_{method.ClassCacheIndex}_{nativeCallback.MetadataToken.ToUInt32():x}";
+			MarshalMethodEntryMethodObject nativeCallback = method.Method.NativeCallback;
+			string backingFieldName = $"native_cb_{method.Method.JniMethodName}_{asmId}_{method.ClassCacheIndex}_{nativeCallback.MetadataToken:x}";
 
 			if (!writeState.UsedBackingFields.TryGetValue (backingFieldName, out LlvmIrVariable backingField)) {
 				backingField = module.AddGlobalVariable (typeof(IntPtr), backingFieldName, null, LlvmIrVariableOptions.LocalWritableInsignificantAddr);
@@ -674,7 +676,7 @@ namespace Xamarin.Android.Tasks
 			var funcComment = new StringBuilder (" Method: ");
 			funcComment.AppendLine (nativeCallback.FullName);
 			funcComment.Append (" Assembly: ");
-			funcComment.AppendLine (nativeCallback.Module.Assembly.Name.FullName);
+			funcComment.AppendLine (nativeCallback.DeclaringType.Module.Assembly.NameFullName);
 			funcComment.Append (" Registered: ");
 			funcComment.AppendLine (method.Method.RegisteredMethod?.FullName ?? "none");
 			funcComment.Append (" Implemented: ");
@@ -707,11 +709,11 @@ namespace Xamarin.Android.Tasks
 
 				List<object?> getFunctionPointerArguments;
 				if (managedMarshalMethodsLookupEnabled) {
-					(uint assemblyIndex, uint classIndex, uint methodIndex) = codeGenState.ManagedMarshalMethodsLookupInfo.GetIndex (nativeCallback);
+					(uint assemblyIndex, uint classIndex, uint methodIndex) = GetManagedMarshalMethodsLookupIndexes (nativeCallback);
 					getFunctionPointerArguments = new List<object?> { assemblyIndex, classIndex, methodIndex, backingField };
 				} else {
 					var placeholder = new MarshalMethodAssemblyIndexValuePlaceholder (method, writeState.AssemblyCacheState);
-					getFunctionPointerArguments = new List<object?> { placeholder, method.ClassCacheIndex, nativeCallback.MetadataToken.ToUInt32 (), backingField };
+					getFunctionPointerArguments = new List<object?> { placeholder, method.ClassCacheIndex, nativeCallback.MetadataToken, backingField };
 				}
 
 				LlvmIrInstructions.Call call = body.Call (writeState.GetFunctionPtrFunction, arguments: getFunctionPointerArguments, funcPointer: getFuncPtrResult);
@@ -739,6 +741,15 @@ namespace Xamarin.Android.Tasks
 				call.CallMarker = LlvmIrCallMarker.Tail;
 
 				body.Ret (nativeFunc.Signature.ReturnType, result);
+			}
+
+			(uint assemblyIndex, uint classIndex, uint methodIndex) GetManagedMarshalMethodsLookupIndexes (MarshalMethodEntryMethodObject nativeCallback)
+			{
+				var assemblyIndex = nativeCallback.AssemblyIndex ?? throw new InvalidOperationException ("ManagedMarshalMethodsLookupInfo missing");
+				var classIndex = nativeCallback.ClassIndex ?? throw new InvalidOperationException ("ManagedMarshalMethodsLookupInfo missing");
+				var methodIndex = nativeCallback.MethodIndex ?? throw new InvalidOperationException ("ManagedMarshalMethodsLookupInfo missing");
+
+				return (assemblyIndex, classIndex, methodIndex);
 			}
 		}
 
@@ -881,7 +892,7 @@ namespace Xamarin.Android.Tasks
 
 			if (!generateEmptyCode && methods != null) {
 				foreach (MarshalMethodInfo mmi in methods) {
-					string asmName = Path.GetFileName (mmi.Method.NativeCallback.Module.Assembly.MainModule.FileName);
+					string asmName = Path.GetFileName (mmi.Method.NativeCallback.DeclaringType.Module.Assembly.MainModuleFileName);
 
 					if (!acs.AsmNameToIndexData32.TryGetValue (asmName, out uint idx32)) {
 						throw new InvalidOperationException ($"Internal error: failed to match assembly name '{asmName}' to 32-bit cache array index");
@@ -891,7 +902,7 @@ namespace Xamarin.Android.Tasks
 						throw new InvalidOperationException ($"Internal error: failed to match assembly name '{asmName}' to 64-bit cache array index");
 					}
 
-					ulong methodToken = (ulong)mmi.Method.NativeCallback.MetadataToken.ToUInt32 ();
+					ulong methodToken = (ulong)mmi.Method.NativeCallback.MetadataToken;
 					ulong id32 = ((ulong)idx32 << 32) | methodToken;
 					if (uniqueMethods.ContainsKey (id32)) {
 						continue;
@@ -937,7 +948,7 @@ namespace Xamarin.Android.Tasks
 			};
 			module.Add (mm_method_names_variable);
 
-			void RenderMethodNameWithParams (CecilMethodDefinition md, StringBuilder buffer)
+			void RenderMethodNameWithParams (MarshalMethodEntryMethodObject md, StringBuilder buffer)
 			{
 				buffer.Clear ();
 				buffer.Append (md.Name);
@@ -945,14 +956,14 @@ namespace Xamarin.Android.Tasks
 
 				if (md.HasParameters) {
 					bool first = true;
-					foreach (CecilParameterDefinition pd in md.Parameters) {
+					foreach (MarshalMethodEntryMethodParameterObject pd in md.Parameters) {
 						if (!first) {
 							buffer.Append (',');
 						} else {
 							first = false;
 						}
 
-						buffer.Append (pd.ParameterType.Name);
+						buffer.Append (pd.ParameterTypeName);
 					}
 				}
 

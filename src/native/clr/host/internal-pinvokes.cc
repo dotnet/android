@@ -1,6 +1,8 @@
 #include <host/host.hh>
 #include <host/os-bridge.hh>
 #include <host/typemap.hh>
+#include <runtime-base/android-system.hh>
+#include <runtime-base/cpu-arch.hh>
 #include <runtime-base/internal-pinvokes.hh>
 #include <runtime-base/jni-remapping.hh>
 
@@ -87,4 +89,106 @@ const JniRemappingReplacementMethod*
 _monodroid_lookup_replacement_method_info (const char *jniSourceType, const char *jniMethodName, const char *jniMethodSignature)
 {
 	return JniRemapping::lookup_replacement_method_info (jniSourceType, jniMethodName, jniMethodSignature);
+}
+
+managed_timing_sequence* monodroid_timing_start (const char *message)
+{
+	// Technically a reference here is against the idea of shared pointers, but
+	// in this instance it's fine since we know we won't be storing the pointer
+	// and this way things are slightly faster.
+	std::shared_ptr<Timing> const &timing = Host::get_timing ();
+	if (!timing) {
+		return nullptr;
+	}
+
+	managed_timing_sequence *ret = timing->get_available_sequence ();
+	if (message != nullptr) {
+		log_write (LOG_TIMING, LogLevel::Info, message);
+	}
+	ret->start = FastTiming::get_time ();
+	return ret;
+}
+
+void monodroid_timing_stop (managed_timing_sequence *sequence, const char *message)
+{
+	static constexpr const char DEFAULT_MESSAGE[] = "Managed Timing";
+	if (sequence == nullptr) {
+		return;
+	}
+
+	std::shared_ptr<Timing> const &timing = Host::get_timing ();
+	if (!timing) [[unlikely]] {
+		return;
+	}
+
+	sequence->end = FastTiming::get_time ();
+	Timing::info (sequence, message == nullptr ? DEFAULT_MESSAGE : message);
+	timing->release_sequence (sequence);
+}
+
+void _monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable)
+{
+	OSBridge::_monodroid_weak_gref_new (curHandle, curType, newHandle, newType, threadName, threadId, from, from_writable);
+}
+
+int _monodroid_weak_gref_get ()
+{
+	return OSBridge::get_gc_weak_gref_count ();
+}
+
+int _monodroid_max_gref_get ()
+{
+	return static_cast<int>(AndroidSystem::get_max_gref_count ());
+}
+
+void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
+{
+	OSBridge::_monodroid_weak_gref_delete (handle, type, threadName, threadId, from, from_writable);
+}
+
+void _monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
+{
+	OSBridge::_monodroid_lref_log_new (lrefc, handle, type, threadName, threadId, from, from_writable);
+}
+
+void _monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
+{
+	OSBridge::_monodroid_lref_log_delete (lrefc, handle, type, threadName, threadId, from, from_writable);
+}
+
+void _monodroid_gc_wait_for_bridge_processing ()
+{
+	// mono_gc_wait_for_bridge_processing (); - replace with the new GC bridge call, when we have it
+}
+
+void _monodroid_detect_cpu_and_architecture (uint16_t *built_for_cpu, uint16_t *running_on_cpu, unsigned char *is64bit)
+{
+	abort_if_invalid_pointer_argument (built_for_cpu, "built_for_cpu");
+	abort_if_invalid_pointer_argument (running_on_cpu, "running_on_cpu");
+	abort_if_invalid_pointer_argument (is64bit, "is64bit");
+
+	bool _64bit;
+	monodroid_detect_cpu_and_architecture (*built_for_cpu, *running_on_cpu, _64bit);
+	*is64bit = _64bit;
+}
+
+void* _monodroid_timezone_get_default_id ()
+{
+	JNIEnv *env			 = OSBridge::ensure_jnienv ();
+	jmethodID getDefault = env->GetStaticMethodID (Host::get_java_class_TimeZone (), "getDefault", "()Ljava/util/TimeZone;");
+	jmethodID getID		 = env->GetMethodID (Host::get_java_class_TimeZone (), "getID",		 "()Ljava/lang/String;");
+	jobject d			 = env->CallStaticObjectMethod (Host::get_java_class_TimeZone (), getDefault);
+	jstring id			 = reinterpret_cast<jstring> (env->CallObjectMethod (d, getID));
+	const char *mutf8	 = env->GetStringUTFChars (id, nullptr);
+	if (mutf8 == nullptr) {
+		log_error (LOG_DEFAULT, "Failed to convert Java TimeZone ID to UTF8 (out of memory?)"sv);
+		env->DeleteLocalRef (id);
+		env->DeleteLocalRef (d);
+		return nullptr;
+	}
+	char *def_id		 = strdup (mutf8);
+	env->ReleaseStringUTFChars (id, mutf8);
+	env->DeleteLocalRef (id);
+	env->DeleteLocalRef (d);
+	return def_id;
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Buffers.Binary;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -8,7 +9,7 @@ using Android.Runtime;
 
 namespace Microsoft.Android.Runtime;
 
-internal static class TypeMapping
+internal static class ManagedTypeMapping
 {
 	internal static bool TryGetType (string jniName, [NotNullWhen (true)] out Type? type)
 	{

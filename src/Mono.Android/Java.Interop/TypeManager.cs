@@ -382,22 +382,34 @@ namespace Java.Interop {
 		{
 			// Skip Activator.CreateInstance() as that requires public constructors,
 			// and we want to hide some constructors for sanity reasons.
+			var peer = GetUninitializedObject (type);
 			BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 			var c = type.GetConstructor (flags, null, XAConstructorSignature, null);
 			if (c != null) {
-				return c.Invoke (new object [] { handle, transfer });
+				c.Invoke (peer, new object[] { handle, transfer });
+				return peer;
 			}
 			c = type.GetConstructor (flags, null, JIConstructorSignature, null);
 			if (c != null) {
 				JniObjectReference          r = new JniObjectReference (handle);
 				JniObjectReferenceOptions   o = JniObjectReferenceOptions.Copy;
-				var peer = (IJavaPeerable) c.Invoke (new object [] { r, o });
+				c.Invoke (peer, new object [] { r, o });
 				JNIEnv.DeleteRef (handle, transfer);
 				return peer;
 			}
+			GC.SuppressFinalize (peer);
 			throw new MissingMethodException (
 					"No constructor found for " + type.FullName + "::.ctor(System.IntPtr, Android.Runtime.JniHandleOwnership)",
 					CreateJavaLocationException ());
+
+			static IJavaPeerable GetUninitializedObject (
+					[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+					Type type)
+			{
+				var v   = (IJavaPeerable) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject (type);
+				v.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
+				return v;
+			}
 		}
 
 		public static void RegisterType (string java_class, Type t)
