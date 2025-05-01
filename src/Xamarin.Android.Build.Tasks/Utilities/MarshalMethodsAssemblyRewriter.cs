@@ -25,12 +25,12 @@ namespace Xamarin.Android.Tasks
 		}
 
 		readonly TaskLoggingHelper log;
-		readonly MarshalMethodsClassifier classifier;
+		readonly MarshalMethodsCollection classifier;
 		readonly XAAssemblyResolver resolver;
 		readonly AndroidTargetArch targetArch;
 		readonly ManagedMarshalMethodsLookupInfo? managedMarshalMethodsLookupInfo;
 
-		public MarshalMethodsAssemblyRewriter (TaskLoggingHelper log, AndroidTargetArch targetArch, MarshalMethodsClassifier classifier, XAAssemblyResolver resolver, ManagedMarshalMethodsLookupInfo? managedMarshalMethodsLookupInfo)
+		public MarshalMethodsAssemblyRewriter (TaskLoggingHelper log, AndroidTargetArch targetArch, MarshalMethodsCollection classifier, XAAssemblyResolver resolver, ManagedMarshalMethodsLookupInfo? managedMarshalMethodsLookupInfo)
 		{
 			this.log = log ?? throw new ArgumentNullException (nameof (log));
 			this.targetArch = targetArch;
@@ -62,7 +62,7 @@ namespace Xamarin.Android.Tasks
 			MethodDefinition unmanagedCallersOnlyAttributeCtor = GetUnmanagedCallersOnlyAttributeConstructor (resolver);
 
 			var assemblyImports = new Dictionary<AssemblyDefinition, AssemblyImports> ();
-			foreach (AssemblyDefinition asm in classifier.Assemblies) {
+			foreach (AssemblyDefinition asm in classifier.AssembliesWithMarshalMethods) {
 				var imports = new AssemblyImports {
 					MonoUnhandledExceptionMethod  = asm.MainModule.ImportReference (monoUnhandledExceptionMethod),
 					SystemException               = asm.MainModule.ImportReference (systemException),
@@ -123,7 +123,7 @@ namespace Xamarin.Android.Tasks
 				managedMarshalMethodLookupGenerator.Generate (classifier.MarshalMethods.Values);
 			}
 
-			foreach (AssemblyDefinition asm in classifier.Assemblies) {
+			foreach (AssemblyDefinition asm in classifier.AssembliesWithMarshalMethods) {
 				string? path = asm.MainModule.FileName;
 				if (String.IsNullOrEmpty (path)) {
 					throw new InvalidOperationException ($"[{targetArch}] Internal error: assembly '{asm}' does not specify path to its file");

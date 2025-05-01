@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Linq;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
@@ -50,13 +51,15 @@ public class RewriteMarshalMethods : AndroidTask
 			}
 
 			Log.LogDebugMessage ($"[{state.TargetArch}] Number of generated marshal methods: {state.Classifier.MarshalMethods.Count}");
-			if (state.Classifier.RejectedMethodCount > 0) {
-				Log.LogWarning ($"[{state.TargetArch}] Number of methods in the project that will be registered dynamically: {state.Classifier.RejectedMethodCount}");
+			if (state.Classifier.DynamicallyRegisteredMarshalMethods.Count > 0) {
+				Log.LogWarning ($"[{state.TargetArch}] Number of methods in the project that will be registered dynamically: {state.Classifier.DynamicallyRegisteredMarshalMethods.Count}");
 			}
 
-			if (state.Classifier.WrappedMethodCount > 0) {
+			var wrappedCount = state.Classifier.MarshalMethods.Sum (m => m.Value.Count (m2 => m2.NeedsBlittableWorkaround));
+
+			if (wrappedCount > 0) {
 				// TODO: change to LogWarning once the generator can output code which requires no non-blittable wrappers
-				Log.LogDebugMessage ($"[{state.TargetArch}] Number of methods in the project that need marshal method wrappers: {state.Classifier.WrappedMethodCount}");
+				Log.LogDebugMessage ($"[{state.TargetArch}] Number of methods in the project that need marshal method wrappers: {wrappedCount}");
 			}
 		}
 

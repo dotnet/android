@@ -2,10 +2,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 
 using Java.Interop.Tools.Cecil;
-using Java.Interop.Tools.JavaCallableWrappers;
 using Java.Interop.Tools.TypeNameMappings;
 
 using Microsoft.Android.Build.Tasks;
@@ -15,7 +14,17 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	sealed class MarshalMethodEntry
+	class MethodEntry
+	{
+		public TypeDefinition DeclaringType { get; }
+
+		public MethodEntry (TypeDefinition declaringType)
+		{
+			DeclaringType = declaringType ?? throw new ArgumentNullException (nameof (declaringType));
+		}
+	}
+
+	class MarshalMethodEntry : MethodEntry
 	{
 		/// <summary>
 		/// The "real" native callback, used if it doesn't contain any non-blittable types in its parameters
@@ -29,7 +38,6 @@ namespace Xamarin.Android.Tasks
 		/// a non-blittable return type or a parameter of a non-blittable type.
 		/// </summary>
 		public MethodDefinition? NativeCallbackWrapper { get; set; }
-		public TypeDefinition DeclaringType            { get; }
 		public MethodDefinition? Connector             { get; }
 		public MethodDefinition? RegisteredMethod      { get; }
 		public MethodDefinition? ImplementedMethod     { get; }
@@ -45,10 +53,10 @@ namespace Xamarin.Android.Tasks
 		public MarshalMethodEntry (TypeDefinition declaringType, MethodDefinition nativeCallback, MethodDefinition connector, MethodDefinition
 		                           registeredMethod, MethodDefinition implementedMethod, FieldDefinition callbackField, string jniTypeName,
 		                           string jniName, string jniSignature, bool needsBlittableWorkaround)
+			: base (declaringType)
 		{
-			DeclaringType = declaringType ?? throw new ArgumentNullException (nameof (declaringType));
 			nativeCallbackReal = nativeCallback ?? throw new ArgumentNullException (nameof (nativeCallback));
-			Connector = connector ?? throw new ArgumentNullException (nameof (connector));
+			Connector = connector;  // The connector will not exist for converted marshal methods
 			RegisteredMethod = registeredMethod ?? throw new ArgumentNullException (nameof (registeredMethod));
 			ImplementedMethod = implementedMethod ?? throw new ArgumentNullException (nameof (implementedMethod));
 			CallbackField = callbackField; // we don't require the callback field to exist
@@ -60,8 +68,8 @@ namespace Xamarin.Android.Tasks
 		}
 
 		public MarshalMethodEntry (TypeDefinition declaringType, MethodDefinition nativeCallback, string jniTypeName, string jniName, string jniSignature)
+			: base (declaringType)
 		{
-			DeclaringType = declaringType ?? throw new ArgumentNullException (nameof (declaringType));
 			nativeCallbackReal = nativeCallback ?? throw new ArgumentNullException (nameof (nativeCallback));
 			JniTypeName = EnsureNonEmpty (jniTypeName, nameof (jniTypeName));
 			JniMethodName = EnsureNonEmpty (jniName, nameof (jniName));
@@ -92,9 +100,37 @@ namespace Xamarin.Android.Tasks
 		}
 	}
 
-	class MarshalMethodsClassifier : JavaCallableMethodClassifier
+	sealed class ConvertedMarshalMethodEntry : MarshalMethodEntry
 	{
-		sealed class ConnectorInfo
+		public MethodDefinition ConvertedNativeCallback { get; }
+
+		public ConvertedMarshalMethodEntry (TypeDefinition declaringType, MethodDefinition nativeCallback, MethodDefinition connector, MethodDefinition
+					   registeredMethod, MethodDefinition implementedMethod, FieldDefinition callbackField, string jniTypeName,
+					   string jniName, string jniSignature, bool needsBlittableWorkaround, MethodDefinition convertedNativeCallback)
+			: base (declaringType, nativeCallback, connector, registeredMethod, implementedMethod, callbackField, jniTypeName, jniName, jniSignature, needsBlittableWorkaround)
+		{
+			ConvertedNativeCallback = convertedNativeCallback ?? throw new ArgumentNullException (nameof (convertedNativeCallback));
+		}
+	}
+
+	sealed class DynamicallyRegisteredMarshalMethodEntry : MethodEntry
+	{
+		public MethodDefinition ImplementedMethod { get; }
+		public CustomAttribute RegisterAttribute { get; }
+		public MethodDefinition RegisteredMethod { get; }
+
+		public DynamicallyRegisteredMarshalMethodEntry (TypeDefinition declaringType, MethodDefinition implementedMethod, MethodDefinition registeredMethod, CustomAttribute registerAttribute)
+			: base (declaringType)
+		{
+			ImplementedMethod = implementedMethod;
+			RegisteredMethod = registeredMethod;
+			RegisterAttribute = registerAttribute;
+		}
+	}
+
+	class MarshalMethodsClassifier
+	{
+		public sealed class ConnectorInfo
 		{
 			public string MethodName                  { get; }
 			public string TypeName                    { get; }
@@ -260,19 +296,12 @@ namespace Xamarin.Android.Tasks
 
 		TypeDefinitionCache tdCache;
 		IAssemblyResolver resolver;
-		Dictionary<string, IList<MarshalMethodEntry>> marshalMethods;
-		HashSet<AssemblyDefinition> assemblies;
 		TaskLoggingHelper log;
-		HashSet<TypeDefinition> typesWithDynamicallyRegisteredMethods;
-		ulong rejectedMethodCount = 0;
-		ulong wrappedMethodCount = 0;
 		readonly AndroidTargetArch targetArch;
 
-		public IDictionary<string, IList<MarshalMethodEntry>> MarshalMethods => marshalMethods;
-		public ICollection<AssemblyDefinition> Assemblies => assemblies;
-		public ulong RejectedMethodCount => rejectedMethodCount;
-		public ulong WrappedMethodCount => wrappedMethodCount;
 		public TypeDefinitionCache TypeDefinitionCache => tdCache;
+		public TaskLoggingHelper Log => log;
+		public IAssemblyResolver Resolver => resolver;
 
 		public MarshalMethodsClassifier (AndroidTargetArch targetArch, TypeDefinitionCache tdCache, IAssemblyResolver res, TaskLoggingHelper log)
 		{
@@ -280,9 +309,6 @@ namespace Xamarin.Android.Tasks
 			this.log = log ?? throw new ArgumentNullException (nameof (log));
 			this.tdCache = tdCache ?? throw new ArgumentNullException (nameof (tdCache));
 			resolver = res ?? throw new ArgumentNullException (nameof (tdCache));
-			marshalMethods = new Dictionary<string, IList<MarshalMethodEntry>> (StringComparer.Ordinal);
-			assemblies = new HashSet<AssemblyDefinition> ();
-			typesWithDynamicallyRegisteredMethods = new HashSet<TypeDefinition> ();
 		}
 
 		public MarshalMethodsClassifier (TypeDefinitionCache tdCache, IAssemblyResolver res, TaskLoggingHelper log)
@@ -290,164 +316,20 @@ namespace Xamarin.Android.Tasks
 			this.log = log ?? throw new ArgumentNullException (nameof (log));
 			this.tdCache = tdCache ?? throw new ArgumentNullException (nameof (tdCache));
 			resolver = res ?? throw new ArgumentNullException (nameof (tdCache));
-			marshalMethods = new Dictionary<string, IList<MarshalMethodEntry>> (StringComparer.Ordinal);
-			assemblies = new HashSet<AssemblyDefinition> ();
-			typesWithDynamicallyRegisteredMethods = new HashSet<TypeDefinition> ();
 		}
 
-		public override bool ShouldBeDynamicallyRegistered (TypeDefinition topType, MethodDefinition registeredMethod, MethodDefinition implementedMethod, CustomAttribute? registerAttribute)
+		public MethodEntry ClassifyMethod (TypeDefinition topType, MethodDefinition registeredMethod, MethodDefinition implementedMethod, CustomAttribute? registerAttribute)
 		{
-			if (registeredMethod == null) {
-				throw new ArgumentNullException (nameof (registeredMethod));
+			topType = topType ?? throw new ArgumentNullException (nameof (topType));
+			registeredMethod = registeredMethod ?? throw new ArgumentNullException (nameof (registeredMethod));
+			implementedMethod = implementedMethod ?? throw new ArgumentNullException (nameof (implementedMethod));
+			registerAttribute = registerAttribute ?? throw new ArgumentNullException (nameof (registerAttribute));
+
+			if (IsDynamicallyRegistered (topType, registeredMethod, implementedMethod, registerAttribute, out var marshalMethodEntry)) {
+				return new DynamicallyRegisteredMarshalMethodEntry (topType, implementedMethod, registeredMethod, registerAttribute);
 			}
 
-			if (implementedMethod == null) {
-				throw new ArgumentNullException (nameof (registeredMethod));
-			}
-
-			if (registerAttribute == null) {
-				throw new ArgumentNullException (nameof (registerAttribute));
-			}
-
-			if (!IsDynamicallyRegistered (topType, registeredMethod, implementedMethod, registerAttribute)) {
-				return false;
-			}
-
-			typesWithDynamicallyRegisteredMethods.Add (topType);
-			return true;
-		}
-
-		public bool FoundDynamicallyRegisteredMethods (TypeDefinition type)
-		{
-			return typesWithDynamicallyRegisteredMethods.Contains (type);
-		}
-
-		void AddTypeManagerSpecialCaseMethods ()
-		{
-			const string FullTypeName = "Java.Interop.TypeManager+JavaTypeManager, Mono.Android";
-
-			AssemblyDefinition monoAndroid = resolver.Resolve ("Mono.Android");
-			TypeDefinition? typeManager = monoAndroid?.MainModule.FindType ("Java.Interop.TypeManager");
-			TypeDefinition? javaTypeManager = typeManager?.GetNestedType ("JavaTypeManager");
-
-			if (javaTypeManager == null) {
-				throw new InvalidOperationException ($"Internal error: unable to find the {FullTypeName} type in the Mono.Android assembly");
-			}
-
-			MethodDefinition? nActivate_mm = null;
-			MethodDefinition? nActivate = null;
-
-			foreach (MethodDefinition method in javaTypeManager.Methods) {
-				if (nActivate_mm == null && IsMatchingMethod (method, "n_Activate_mm")) {
-					if (method.GetCustomAttributes ("System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute").Any (cattr => cattr != null)) {
-						nActivate_mm = method;
-					} else {
-						log.LogWarning ($"Method '{method.FullName}' isn't decorated with the UnmanagedCallersOnly attribute");
-						continue;
-					}
-				}
-
-				if (nActivate == null && IsMatchingMethod (method, "n_Activate")) {
-					nActivate = method;
-				}
-
-				if (nActivate_mm != null && nActivate != null) {
-					break;
-				}
-			}
-
-			if (nActivate_mm == null) {
-				ThrowMissingMethod ("nActivate_mm");
-			}
-
-			if (nActivate == null) {
-				ThrowMissingMethod ("nActivate");
-			}
-
-			string? jniTypeName = null;
-			foreach (CustomAttribute cattr in javaTypeManager.GetCustomAttributes ("Android.Runtime.RegisterAttribute")) {
-				if (cattr.ConstructorArguments.Count != 1) {
-					log.LogDebugMessage ($"[Register] attribute on type '{FullTypeName}' is expected to have 1 constructor argument, found {cattr.ConstructorArguments.Count}");
-					continue;
-				}
-
-				jniTypeName = (string)cattr.ConstructorArguments[0].Value;
-				if (!String.IsNullOrEmpty (jniTypeName)) {
-					break;
-				}
-			}
-
-			string? jniMethodName = null;
-			string? jniSignature = null;
-			foreach (CustomAttribute cattr in nActivate.GetCustomAttributes ("Android.Runtime.RegisterAttribute")) {
-				if (cattr.ConstructorArguments.Count != 3) {
-					log.LogDebugMessage ($"[Register] attribute on method '{nActivate.FullName}' is expected to have 3 constructor arguments, found {cattr.ConstructorArguments.Count}");
-					continue;
-				}
-
-				jniMethodName = (string)cattr.ConstructorArguments[0].Value;
-				jniSignature = (string)cattr.ConstructorArguments[1].Value;
-
-				if (!String.IsNullOrEmpty (jniMethodName) && !String.IsNullOrEmpty (jniSignature)) {
-					break;
-				}
-			}
-
-			bool missingInfo = false;
-			if (String.IsNullOrEmpty (jniTypeName)) {
-				missingInfo = true;
-				log.LogDebugMessage ($"Failed to obtain Java type name from the [Register] attribute on type '{FullTypeName}'");
-			}
-
-			if (String.IsNullOrEmpty (jniMethodName)) {
-				missingInfo = true;
-				log.LogDebugMessage ($"Failed to obtain Java method name from the [Register] attribute on method '{nActivate.FullName}'");
-			}
-
-			if (String.IsNullOrEmpty (jniSignature)) {
-				missingInfo = true;
-				log.LogDebugMessage ($"Failed to obtain Java method signature from the [Register] attribute on method '{nActivate.FullName}'");
-			}
-
-			if (missingInfo) {
-				throw new InvalidOperationException ($"Missing information while constructing marshal method for the '{nActivate_mm.FullName}' method");
-			}
-
-			var entry = new MarshalMethodEntry (javaTypeManager, nActivate_mm, jniTypeName, jniMethodName, jniSignature);
-			marshalMethods.Add (".:!SpEcIaL:Java.Interop.TypeManager+JavaTypeManager::n_Activate_mm", new List<MarshalMethodEntry> { entry });
-
-			void ThrowMissingMethod (string name)
-			{
-				throw new InvalidOperationException ($"Internal error: unable to find the '{name}' method in the '{FullTypeName}' type");
-			}
-
-			bool IsMatchingMethod (MethodDefinition method, string name)
-			{
-				if (String.Compare (name, method.Name, StringComparison.Ordinal) != 0) {
-					return false;
-				}
-
-				if (!method.IsStatic) {
-					log.LogWarning ($"Method '{method.FullName}' is not static");
-					return false;
-				}
-
-				if (!method.IsPrivate) {
-					log.LogWarning ($"Method '{method.FullName}' is not private");
-					return false;
-				}
-
-				return true;
-			}
-		}
-
-		/// <summary>
-		/// Adds MarshalMethodEntry for each method that won't be returned by the JavaInterop type scanner, mostly
-		/// used for hand-written methods (e.g. Java.Interop.TypeManager+JavaTypeManager::n_Activate)
-		/// </summary>
-		public void AddSpecialCaseMethods ()
-		{
-			AddTypeManagerSpecialCaseMethods ();
+			return marshalMethodEntry;
 		}
 
 		string GetAssemblyPathInfo (FieldDefinition? field)   => GetAssemblyPathInfo (field?.DeclaringType);
@@ -468,8 +350,9 @@ namespace Xamarin.Android.Tasks
 			return $"[Arch: {targetArch}; Assembly: {path}]";
 		}
 
-		bool IsDynamicallyRegistered (TypeDefinition topType, MethodDefinition registeredMethod, MethodDefinition implementedMethod, CustomAttribute registerAttribute)
+		bool IsDynamicallyRegistered (TypeDefinition topType, MethodDefinition registeredMethod, MethodDefinition implementedMethod, CustomAttribute registerAttribute, [NotNullWhen (false)] out MarshalMethodEntry? marshalMethodEntry)
 		{
+			marshalMethodEntry = null;
 			if (registerAttribute.ConstructorArguments.Count != 3) {
 				log.LogWarning ($"Method '{registeredMethod.FullName}' will be registered dynamically, not enough arguments to the [Register] attribute to generate marshal method.");
 				return true;
@@ -477,17 +360,18 @@ namespace Xamarin.Android.Tasks
 
 			var connector = new ConnectorInfo ((string)registerAttribute.ConstructorArguments[2].Value);
 
-			if (IsStandardHandler (topType, connector, registeredMethod, implementedMethod, jniName: (string)registerAttribute.ConstructorArguments[0].Value, jniSignature: (string)registerAttribute.ConstructorArguments[1].Value)) {
+			if (IsStandardHandler (topType, connector, registeredMethod, implementedMethod, jniName: (string)registerAttribute.ConstructorArguments[0].Value, jniSignature: (string)registerAttribute.ConstructorArguments[1].Value, out marshalMethodEntry)) {
 				return false;
 			}
 
 			log.LogWarning ($"Method '{registeredMethod.FullName}' will be registered dynamically {GetAssemblyPathInfo (registeredMethod)}");
-			rejectedMethodCount++;
 			return true;
 		}
 
-		bool IsStandardHandler (TypeDefinition topType, ConnectorInfo connector, MethodDefinition registeredMethod, MethodDefinition implementedMethod, string jniName, string jniSignature)
+		bool IsStandardHandler (TypeDefinition topType, ConnectorInfo connector, MethodDefinition registeredMethod, MethodDefinition implementedMethod, string jniName, string jniSignature, [NotNullWhen (true)] out MarshalMethodEntry? marshalMethodEntry)
 		{
+			marshalMethodEntry = null;
+
 			const string HandlerNameStart = "Get";
 			const string HandlerNameEnd = "Handler";
 
@@ -504,20 +388,10 @@ namespace Xamarin.Android.Tasks
 
 			string callbackNameCore = connectorName.Substring (HandlerNameStart.Length, connectorName.Length - HandlerNameStart.Length - HandlerNameEnd.Length);
 			string nativeCallbackName = $"n_{callbackNameCore}";
+			string nativeConvertedCallbackName = $"n_{callbackNameCore}_mm_wrapper";
 			string delegateFieldName = $"cb_{Char.ToLowerInvariant (callbackNameCore[0])}{callbackNameCore.Substring (1)}";
 
 			TypeDefinition connectorDeclaringType = connector.AssemblyName == null ? registeredMethod.DeclaringType : FindType (resolver.Resolve (connector.AssemblyName), connector.TypeName);
-
-			MethodDefinition connectorMethod = FindMethod (connectorDeclaringType, connectorName);
-			if (connectorMethod == null) {
-				log.LogWarning ($"Connector method '{connectorName}' not found in type '{connectorDeclaringType.FullName}' {GetAssemblyPathInfo (connectorDeclaringType)}");
-				return false;
-			}
-
-			if (String.Compare ("System.Delegate", connectorMethod.ReturnType.FullName, StringComparison.Ordinal) != 0) {
-				log.LogWarning ($"Connector '{connectorName}' in type '{connectorDeclaringType.FullName}' has invalid return type, expected 'System.Delegate', found '{connectorMethod.ReturnType.FullName}' {GetAssemblyPathInfo (connectorDeclaringType)}");
-				return false;
-			}
 
 			var ncbs = new NativeCallbackSignature (registeredMethod, log, tdCache);
 			MethodDefinition nativeCallbackMethod = FindMethod (connectorDeclaringType, nativeCallbackName, ncbs);
@@ -527,6 +401,21 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (!EnsureIsValidUnmanagedCallersOnlyTarget (nativeCallbackMethod, out bool needsBlittableWorkaround)) {
+				return false;
+			}
+
+			MethodDefinition? nativeConvertedCallbackMethod = FindMethod (connectorDeclaringType, nativeConvertedCallbackName, ncbs);
+
+			MethodDefinition connectorMethod = FindMethod (connectorDeclaringType, connectorName);
+
+			// If the marshal method has already been converted, the connector method will have been removed
+			if (connectorMethod == null && nativeConvertedCallbackMethod == null) {
+				log.LogWarning ($"Connector method '{connectorName}' not found in type '{connectorDeclaringType.FullName}' {GetAssemblyPathInfo (connectorDeclaringType)}");
+				return false;
+			}
+
+			if (connectorMethod != null && String.Compare ("System.Delegate", connectorMethod.ReturnType.FullName, StringComparison.Ordinal) != 0) {
+				log.LogWarning ($"Connector '{connectorName}' in type '{connectorDeclaringType.FullName}' has invalid return type, expected 'System.Delegate', found '{connectorMethod.ReturnType.FullName}' {GetAssemblyPathInfo (connectorDeclaringType)}");
 				return false;
 			}
 
@@ -570,25 +459,35 @@ namespace Xamarin.Android.Tasks
 			// 	method.CallbackField?.DeclaringType == 'null'
 			// 	method.CallbackField?.DeclaringType.Fields == 'null'
 
-			StoreMethod (
-				new MarshalMethodEntry (
-					topType,
-					nativeCallbackMethod,
-					connectorMethod,
-					registeredMethod,
-					implementedMethod,
-					delegateField,
-					JavaNativeTypeManager.ToJniName (topType, tdCache),
-					jniName,
-					jniSignature,
-					needsBlittableWorkaround
-				)
-			);
-
-			StoreAssembly (connectorMethod.Module.Assembly);
-			StoreAssembly (nativeCallbackMethod.Module.Assembly);
-			if (delegateField != null) {
-				StoreAssembly (delegateField.Module.Assembly);
+			if (nativeConvertedCallbackMethod is null) {
+				marshalMethodEntry =
+					new MarshalMethodEntry (
+						topType,
+						nativeCallbackMethod,
+						connectorMethod,
+						registeredMethod,
+						implementedMethod,
+						delegateField,
+						JavaNativeTypeManager.ToJniName (topType, tdCache),
+						jniName,
+						jniSignature,
+						needsBlittableWorkaround
+					);
+			} else {
+				marshalMethodEntry =
+					new ConvertedMarshalMethodEntry (
+						topType,
+						nativeCallbackMethod,
+						connectorMethod,
+						registeredMethod,
+						implementedMethod,
+						delegateField,
+						JavaNativeTypeManager.ToJniName (topType, tdCache),
+						jniName,
+						jniSignature,
+						needsBlittableWorkaround,
+						nativeConvertedCallbackMethod
+					);
 			}
 
 			return true;
@@ -608,13 +507,11 @@ namespace Xamarin.Android.Tasks
 			}
 
 			TypeReference type;
-			bool needsWrapper = false;
 			if (String.Compare ("System.Void", method.ReturnType.FullName, StringComparison.Ordinal) != 0) {
 				type = GetRealType (method.ReturnType);
 				if (!IsAcceptable (type)) {
 					needsBlittableWorkaround = true;
 					WarnWhy ($"has a non-blittable return type '{type.FullName}'");
-					needsWrapper = true;
 				}
 			}
 
@@ -623,7 +520,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (!method.HasParameters) {
-				return UpdateWrappedCountAndReturn (true);
+				return true;
 			}
 
 			foreach (ParameterDefinition pdef in method.Parameters) {
@@ -632,20 +529,10 @@ namespace Xamarin.Android.Tasks
 				if (!IsAcceptable (type)) {
 					needsBlittableWorkaround = true;
 					WarnWhy ($"has a parameter ({pdef.Name}) of non-blittable type '{type.FullName}'");
-					needsWrapper = true;
 				}
 			}
 
-			return UpdateWrappedCountAndReturn (true);
-
-			bool UpdateWrappedCountAndReturn (bool retval)
-			{
-				if (needsWrapper) {
-					wrappedMethodCount++;
-				}
-
-				return retval;
-			}
+			return true;
 
 			bool IsAcceptable (TypeReference type)
 			{
@@ -752,31 +639,6 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return FindField (tdCache.Resolve (type.BaseType), fieldName, lookForInherited);
-		}
-
-		void StoreMethod (MarshalMethodEntry entry)
-		{
-			string key = entry.GetStoreMethodKey (tdCache);
-
-			// Several classes can override the same method, we need to generate the marshal method only once, at the same time
-			// keeping track of overloads
-			if (!marshalMethods.TryGetValue (key, out IList<MarshalMethodEntry> list) || list == null) {
-				list = new List<MarshalMethodEntry> ();
-				marshalMethods.Add (key, list);
-			}
-
-			string registeredName = $"{entry.DeclaringType.FullName}::{entry.ImplementedMethod.Name}";
-			if (list.Count == 0 || !list.Any (me => String.Compare (registeredName, me.ImplementedMethod.FullName, StringComparison.Ordinal) == 0)) {
-				list.Add (entry);
-			}
-		}
-
-		void StoreAssembly (AssemblyDefinition asm)
-		{
-			if (assemblies.Contains (asm)) {
-				return;
-			}
-			assemblies.Add (asm);
 		}
 	}
 }

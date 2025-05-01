@@ -72,6 +72,19 @@ class XAJavaTypeScanner
 		return types;
 	}
 
+	public List<TypeDefinition> GetJavaTypes (AssemblyDefinition assembly)
+	{
+		var types = new List<TypeDefinition> ();
+
+		foreach (ModuleDefinition md in assembly.Modules) {
+			foreach (TypeDefinition td in md.Types) {
+				AddJavaType (td, types);
+			}
+		}
+
+		return types;
+	}
+
 	bool ShouldScan (ITaskItem assembly)
 	{
 		string name = Path.GetFileName (assembly.ItemSpec);

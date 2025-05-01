@@ -179,7 +179,7 @@ public class GenerateMainAndroidManifest : AndroidTask
 		regCallsWriter.WriteLine ("// Application and Instrumentation ACWs must be registered first.");
 		foreach (TypeDefinition type in codeGenState.JavaTypesForJCW) {
 			if (JavaNativeTypeManager.IsApplication (type, codeGenState.TypeCache) || JavaNativeTypeManager.IsInstrumentation (type, codeGenState.TypeCache)) {
-				if (codeGenState.Classifier != null && !codeGenState.Classifier.FoundDynamicallyRegisteredMethods (type)) {
+				if (codeGenState.Classifier != null && !codeGenState.Classifier.TypeHasDynamicallyRegisteredMethods (type)) {
 					continue;
 				}
 
