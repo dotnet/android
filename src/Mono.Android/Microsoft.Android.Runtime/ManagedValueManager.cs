@@ -284,4 +284,14 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		}
 		return base.TryConstructPeer (self, ref reference, options, type);
 	}
+
+	protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)]out object? result)
+	{
+		var proxy = value as JavaProxyThrowable;
+		if (proxy != null) {
+			result  = proxy.InnerException;
+			return true;
+		}
+		return base.TryUnboxPeerObject (value, out result);
+	}
 }
