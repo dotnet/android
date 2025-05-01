@@ -1,15 +1,22 @@
+#nullable disable
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
+using Xamarin.Android.Tools;
+using static Xamarin.Android.Tasks.TypeMapGenerator;
 
 namespace Xamarin.Android.Tasks
 {
 	class TypeMapGenerator
 	{
+		public bool RunCheckedBuild { get; set; }
+
 		internal sealed class ModuleUUIDArrayComparer : IComparer<ModuleReleaseData>
 		{
 			int Compare (byte[] left, byte[] right)
@@ -62,6 +69,14 @@ namespace Xamarin.Android.Tasks
 			// It is not used to create the typemap.
 			public TypeDefinition TypeDefinition;
 
+			// These fields are only used by the XML adapter for temp storage while reading.
+			// It is not used to create the typemap.
+			public string? DuplicateForJavaToManagedKey { get; set; }
+			public bool IsInvoker { get; set; }
+			public bool IsMonoAndroid { get; set; } // Types in Mono.Android take precedence over other assemblies
+
+			public string Key => $"{JavaName}|{ManagedName}";
+
 			public override string ToString ()
 			{
 				return $"TypeMapDebugEntry{{JavaName={JavaName}, ManagedName={ManagedName}, SkipInJavaToManaged={SkipInJavaToManaged}, DuplicateForJavaToManaged={DuplicateForJavaToManaged}}}";
@@ -78,36 +93,26 @@ namespace Xamarin.Android.Tasks
 
 		internal sealed class ReleaseGenerationState
 		{
-			int assemblyId = 0;
+			// This field is only used by the Cecil adapter for temp storage while reading.
+			// It is not used to create the typemap.
+			public readonly Dictionary<Guid, byte []> MvidCache;
 
-			public readonly Dictionary<string, int> KnownAssemblies;
-			public readonly Dictionary <Guid, byte[]> MvidCache;
-			public readonly Dictionary<byte[], ModuleReleaseData> TempModules;
+			public readonly Dictionary<byte [], ModuleReleaseData> TempModules;
 
 			public ReleaseGenerationState ()
 			{
-				KnownAssemblies = new Dictionary<string, int> (StringComparer.Ordinal);
-				MvidCache = new Dictionary<Guid, byte[]> ();
-				TempModules = new Dictionary<byte[], ModuleReleaseData> ();
-			}
-
-			public void AddKnownAssembly (string assemblyName)
-			{
-				if (KnownAssemblies.ContainsKey (assemblyName)) {
-					return;
-				}
-
-				KnownAssemblies.Add (assemblyName, ++assemblyId);
+				MvidCache = new Dictionary<Guid, byte []> ();
+				TempModules = new Dictionary<byte [], ModuleReleaseData> ();
 			}
 		}
 
 		readonly TaskLoggingHelper log;
-		readonly NativeCodeGenState state;
+		readonly ITypeMapGeneratorAdapter state;
 		readonly AndroidRuntime runtime;
 
 		public IList<string> GeneratedBinaryTypeMaps { get; } = new List<string> ();
 
-		public TypeMapGenerator (TaskLoggingHelper log, NativeCodeGenState state, AndroidRuntime runtime)
+		public TypeMapGenerator (TaskLoggingHelper log, ITypeMapGeneratorAdapter state, AndroidRuntime runtime)
 		{
 			this.log = log ?? throw new ArgumentNullException (nameof (log));
 			this.state = state ?? throw new ArgumentNullException (nameof (state));
@@ -133,7 +138,7 @@ namespace Xamarin.Android.Tasks
 
 		void GenerateDebugNativeAssembly (string outputDirectory)
 		{
-			(var javaToManaged, var managedToJava) = TypeMapCecilAdapter.GetDebugNativeEntries (state);
+			(var javaToManaged, var managedToJava) = state.GetDebugNativeEntries ();
 
 			var data = new ModuleDebugData {
 				EntryCount = (uint)javaToManaged.Count,
@@ -150,7 +155,7 @@ namespace Xamarin.Android.Tasks
 
 		void GenerateRelease (string outputDirectory)
 		{
-			var genState = TypeMapCecilAdapter.GetReleaseGenerationState (state);
+			var genState = state.GetReleaseGenerationState ();
 
 			ModuleReleaseData [] modules = genState.TempModules.Values.ToArray ();
 			Array.Sort (modules, new ModuleUUIDArrayComparer ());
@@ -188,9 +193,135 @@ namespace Xamarin.Android.Tasks
 					throw;
 				} finally {
 					sw.Flush ();
-					Files.CopyIfStreamChanged (sw.BaseStream, outputFile);
+
+					if (RunCheckedBuild) {
+						if (Files.HasStreamChanged (sw.BaseStream, outputFile)) {
+							Files.CopyIfStreamChanged (sw.BaseStream, outputFile + "2");
+							log.LogError ("Output file changed");
+						} else {
+							log.LogMessage ($"RunCheckedBuild: Output file '{outputFile}' unchanged");
+						}
+					} else {
+						Files.CopyIfStreamChanged (sw.BaseStream, outputFile);
+					}
 				}
 			}
+		}
+	}
+
+	// This abstraction is temporary to facilitate the transition from the old
+	// typemap generator to the new one.  It will be removed once the transition
+	// is complete.
+	interface ITypeMapGeneratorAdapter
+	{
+		AndroidTargetArch TargetArch { get; }
+		bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
+		(List<TypeMapDebugEntry> javaToManaged, List<TypeMapDebugEntry> managedToJava) GetDebugNativeEntries ();
+		ReleaseGenerationState GetReleaseGenerationState ();
+	}
+
+	class NativeCodeGenStateAdapter : ITypeMapGeneratorAdapter
+	{
+		readonly NativeCodeGenState state;
+
+		public NativeCodeGenStateAdapter (NativeCodeGenState state)
+		{
+			this.state = state ?? throw new ArgumentNullException (nameof (state));
+		}
+
+		public AndroidTargetArch TargetArch => state.TargetArch;
+
+		public bool JniAddNativeMethodRegistrationAttributePresent {
+			get => state.JniAddNativeMethodRegistrationAttributePresent;
+			set => state.JniAddNativeMethodRegistrationAttributePresent = value;
+		}
+
+		public (List<TypeMapDebugEntry> javaToManaged, List<TypeMapDebugEntry> managedToJava) GetDebugNativeEntries ()
+		{
+			return TypeMapCecilAdapter.GetDebugNativeEntries (state);
+		}
+
+		public ReleaseGenerationState GetReleaseGenerationState ()
+		{
+			return TypeMapCecilAdapter.GetReleaseGenerationState (state);
+		}
+	}
+
+	class TypeMapObjectsFileAdapter : ITypeMapGeneratorAdapter
+	{
+		public List<TypeMapObjectsXmlFile> XmlFiles { get; } = [];
+		public AndroidTargetArch TargetArch { get; }
+
+		public TypeMapObjectsFileAdapter (AndroidTargetArch targetArch)
+		{
+			TargetArch = targetArch;
+		}
+
+		public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
+
+		public (List<TypeMapDebugEntry> javaToManaged, List<TypeMapDebugEntry> managedToJava) GetDebugNativeEntries ()
+		{
+			var javaToManaged = new List<TypeMapDebugEntry> ();
+			var managedToJava = new List<TypeMapDebugEntry> ();
+
+			foreach (var xml in XmlFiles) {
+				javaToManaged.AddRange (xml.JavaToManagedDebugEntries);
+				managedToJava.AddRange (xml.ManagedToJavaDebugEntries);
+			}
+
+			// Handle entries with duplicate JavaNames
+			GroupDuplicateDebugEntries (javaToManaged);
+			GroupDuplicateDebugEntries (managedToJava);
+
+			return (javaToManaged, managedToJava);
+		}
+
+		void GroupDuplicateDebugEntries (List<TypeMapDebugEntry> debugEntries)
+		{
+			foreach (var group in debugEntries.GroupBy (ent => ent.JavaName).Where (g => g.Count () > 1)) {
+				// We need to sort:
+				// - Types in Mono.Android come first
+				// - Types that are not invokers come first
+				var entries = group
+					.OrderBy (e => e.IsMonoAndroid ? 0 : 1)
+					.ThenBy (e => e.IsInvoker ? 1 : 0)
+					.ToList ();
+
+				for (var i = 1; i < entries.Count; i++)
+					entries [i].DuplicateForJavaToManaged = entries [0];
+			}
+		}
+
+		public ReleaseGenerationState GetReleaseGenerationState ()
+		{
+			var state = new ReleaseGenerationState ();
+
+			foreach (var xml in XmlFiles)
+				if (xml.HasReleaseEntries)
+					state.TempModules.Add (xml.ModuleReleaseData.MvidBytes, xml.ModuleReleaseData);
+
+			return state;
+		}
+
+		public static TypeMapObjectsFileAdapter? Create (AndroidTargetArch targetArch, List<ITaskItem> assemblies, TaskLoggingHelper log)
+		{
+			var adapter = new TypeMapObjectsFileAdapter (targetArch);
+
+			foreach (var assembly in assemblies) {
+				var typeMapPath = TypeMapObjectsXmlFile.GetTypeMapObjectsXmlFilePath (assembly.ItemSpec);
+
+				if (!File.Exists (typeMapPath)) {
+					log.LogError ($"'{typeMapPath}' not found.");
+					return null;
+				}
+
+				var xml = TypeMapObjectsXmlFile.Import (typeMapPath);
+
+				if (xml.WasScanned)
+					adapter.XmlFiles.Add (xml);
+			}
+
+			return adapter;
 		}
 	}
 }

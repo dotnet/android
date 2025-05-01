@@ -173,11 +173,13 @@ namespace Android.Runtime {
 		public override void WriteLocalReferenceLine (string format, params object?[] args)
 		{
 			RuntimeNativeMethods._monodroid_gref_log ("[LREF] " + string.Format (CultureInfo.InvariantCulture, format, args));
+			RuntimeNativeMethods._monodroid_gref_log ("\n");
 		}
 
 		public override void WriteGlobalReferenceLine (string format, params object?[] args)
 		{
 			RuntimeNativeMethods._monodroid_gref_log (string.Format (CultureInfo.InvariantCulture, format, args));
+			RuntimeNativeMethods._monodroid_gref_log ("\n");
 		}
 
 		public override JniObjectReference CreateGlobalReference (JniObjectReference value)
@@ -689,7 +691,7 @@ namespace Android.Runtime {
 				for (int i = 0; i < targets.Count; ++i) {
 					IJavaPeerable? target;
 					var wref = targets [i];
-					if (ShouldReplaceMapping (wref!, reference, out target)) {
+					if (ShouldReplaceMapping (wref!, reference, value, out target)) {
 						found = true;
 						targets [i] = IdentityHashTargets.CreateWeakReference (value);
 						break;
@@ -747,7 +749,7 @@ namespace Android.Runtime {
 			}
 		}
 
-		bool ShouldReplaceMapping (WeakReference<IJavaPeerable> current, JniObjectReference reference, out IJavaPeerable? target)
+		bool ShouldReplaceMapping (WeakReference<IJavaPeerable> current, JniObjectReference reference, IJavaPeerable value, out IJavaPeerable? target)
 		{
 			target      = null;
 
@@ -771,12 +773,17 @@ namespace Android.Runtime {
 			// we want the 2nd MCW to replace the 1st, as the 2nd is
 			// the one the dev created; the 1st is an implicit intermediary.
 			//
+			// Meanwhile, a new "replaceable" instance should *not* replace an
+			// existing "replaceable" instance; see dotnet/android#9862.
+			//
 			// [0]: If Java ctor invokes overridden virtual method, we'll
 			// transition into managed code w/o a registered instance, and
 			// thus will create an "intermediary" via
 			// (IntPtr, JniHandleOwnership) .ctor.
-			if ((target.JniManagedPeerState & JniManagedPeerStates.Replaceable) == JniManagedPeerStates.Replaceable)
+			if (target.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable) &&
+					!value.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable)) {
 				return true;
+			}
 
 			return false;
 		}

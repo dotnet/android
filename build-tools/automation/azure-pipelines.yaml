@@ -16,10 +16,9 @@ resources:
     name: 1ESPipelineTemplates/1ESPipelineTemplates
     ref: refs/tags/release
   - repository: yaml-templates
-    type: github
-    name: xamarin/yaml-templates
+    type: git
+    name: DevDiv/Xamarin.yaml-templates
     ref: refs/heads/main
-    endpoint: xamarin
   - repository: android-platform-support
     type: git
     name: DevDiv/android-platform-support
@@ -138,8 +137,8 @@ extends:
           parameters:
             xaSourcePath: $(Build.SourcesDirectory)/android
             androidSdkPlatforms: $(DefaultTestSdkPlatforms)
-            dotnetVersion: 9.0
-            dotnetQuality: preview
+            dotnetVersion: $(DotNetPreviewSdkVersion)
+            dotnetQuality: $(DotNetPreviewSdkQuality)
 
         - task: NuGetAuthenticate@1
           displayName: authenticate with azure artifacts
@@ -231,6 +230,7 @@ extends:
           condition: always()
           inputs:
             Contents: |
+              $(Build.SourcesDirectory)/android/bin/*$(XA.Build.Configuration)/*.*log
               $(Build.SourcesDirectory)/maui/artifacts/logs/**
             TargetFolder: $(Build.StagingDirectory)/logs
             flattenFolders: true
@@ -347,16 +347,25 @@ extends:
           clean: true
           submodules: recursive
 
-        - task: UseDotNet@2
-          displayName: Install .NET 9.x
-          inputs:
-            version: 9.x
-            includePreviewVersions: true
+        - template: /build-tools/automation/yaml-templates/use-dot-net.yaml@self
+          parameters:
+            version: $(DotNetPreviewSdkVersion)
+            quality: $(DotNetPreviewSdkQuality)
 
         # Download symbols to be published to the symbols artifact drop declared above
         - task: DownloadPipelineArtifact@2
           inputs:
             artifactName: $(WindowsToolchainPdbArtifactName)
+            downloadPath: $(Build.StagingDirectory)\symbols
+
+        - task: DownloadPipelineArtifact@2
+          inputs:
+            artifactName: nuget-unsigned-symbols
+            downloadPath: $(Build.StagingDirectory)\symbols
+
+        - task: DownloadPipelineArtifact@2
+          inputs:
+            artifactName: nuget-linux-unsigned-symbols
             downloadPath: $(Build.StagingDirectory)\symbols
 
         - task: DownloadPipelineArtifact@2

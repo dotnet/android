@@ -33,6 +33,7 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.DotNetEmscriptenManifestVersionBand, StripQuotes (@"@DotNetEmscriptenManifestVersionBand@"));
 			properties.Add (KnownProperties.MicrosoftDotnetSdkInternalPackageVersion, StripQuotes ("@MicrosoftDotnetSdkInternalPackageVersion@"));
 			properties.Add (KnownProperties.MicrosoftNETCoreAppRefPackageVersion, StripQuotes ("@MicrosoftNETCoreAppRefPackageVersion@"));
+			properties.Add (KnownProperties.MicrosoftNETWorkloadMonoToolChainPackageVersion, StripQuotes ("@MicrosoftNETWorkloadMonoToolChainPackageVersion@"));
 			properties.Add (KnownProperties.MicrosoftNETWorkloadEmscriptenPackageVersion, StripQuotes ("@MicrosoftNETWorkloadEmscriptenPackageVersion@"));
 			properties.Add (KnownProperties.EmulatorVersion,                     StripQuotes ("@EmulatorVersion@"));
 			properties.Add (KnownProperties.EmulatorPkgRevision,                 StripQuotes ("@EmulatorPkgRevision@"));
@@ -50,10 +51,12 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.MonoRequiredMinimumVersion,          StripQuotes ("@MonoRequiredMinimumVersion@"));
 			properties.Add (KnownProperties.MonoRequiredMaximumVersion,          StripQuotes ("@MonoRequiredMaximumVersion@"));
 			properties.Add (KnownProperties.MonoSourceFullPath,                  StripQuotes (@"@MonoSourceFullPath@"));
+			properties.Add (KnownProperties.NativeRuntimeOutputRootDir,          StripQuotes (@"@NativeRuntimeOutputRootDir@"));
 			properties.Add (KnownProperties.NinjaPath,                           StripQuotes (@"@NinjaPath@"));
 			properties.Add (KnownProperties.Pkg7Zip_CommandLine,                 StripQuotes (@"@Pkg7-Zip_CommandLine@"));
 			properties.Add (KnownProperties.PkgXamarin_LibZipSharp,              StripQuotes (@"@PkgXamarin_LibZipSharp@"));
 			properties.Add (KnownProperties.ProductVersion,                      StripQuotes ("@ProductVersion@"));
+			properties.Add (KnownProperties.RuntimeRedistDirName,                StripQuotes ("@_RuntimeRedistDirName@"));
 			properties.Add (KnownProperties.XABuildToolsFolder,                  StripQuotes (@"@XABuildToolsFolder@"));
 			properties.Add (KnownProperties.XABuildToolsVersion,                 StripQuotes ("@XABuildToolsVersion@"));
 			properties.Add (KnownProperties.XABuildToolsPackagePrefixMacOS,      StripQuotes ("@XABuildToolsPackagePrefixMacOS@"));

@@ -1,11 +1,9 @@
-#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Java.Interop.Tools.JavaCallableWrappers;
-using Java.Interop.Tools.JavaCallableWrappers.Adapters;
 using Java.Interop.Tools.JavaCallableWrappers.CallableWrapperMembers;
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Build.Tasks;
@@ -63,16 +61,21 @@ public class GenerateJavaCallableWrappers : AndroidTask
 		var sw = Stopwatch.StartNew ();
 
 		foreach (var assembly in assemblies) {
-			var assemblyPath = assembly.ItemSpec;
-			var assemblyName = Path.GetFileNameWithoutExtension (assemblyPath);
-			var wrappersPath = Path.Combine (Path.GetDirectoryName (assemblyPath), $"{assemblyName}.jlo.xml");
+			var wrappersPath = JavaObjectsXmlFile.GetJavaObjectsXmlFilePath (assembly.ItemSpec);
 
 			if (!File.Exists (wrappersPath)) {
 				Log.LogError ($"'{wrappersPath}' not found.");
 				return;
 			}
 
-			wrappers.AddRange (XmlImporter.Import (wrappersPath, out var _));
+			var xml = JavaObjectsXmlFile.Import (wrappersPath, JavaObjectsXmlFileReadType.JavaCallableWrappers);
+
+			if (xml.JavaCallableWrappers.Count == 0) {
+				Log.LogDebugMessage ($"'{wrappersPath}' is empty, skipping.");
+				continue;
+			}
+
+			wrappers.AddRange (xml.JavaCallableWrappers);
 		}
 
 		Log.LogDebugMessage ($"Deserialized {wrappers.Count} Java callable wrappers in {sw.ElapsedMilliseconds}ms");

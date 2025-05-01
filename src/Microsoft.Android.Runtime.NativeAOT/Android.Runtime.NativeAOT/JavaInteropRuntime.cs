@@ -33,6 +33,7 @@ static partial class JavaInteropRuntime
 	[UnmanagedCallersOnly (EntryPoint="Java_net_dot_jni_nativeaot_JavaInteropRuntime_init")]
 	static void init (IntPtr jnienv, IntPtr klass)
 	{
+		JniTransition   transition  = default;
 		try {
 			var settings    = new DiagnosticSettings ();
 			settings.AddDebugDotnetLog ();
@@ -50,9 +51,16 @@ static partial class JavaInteropRuntime
 
 			// Entry point into Mono.Android.dll
 			JNIEnvInit.InitializeJniRuntime (runtime);
+
+			transition  = new JniTransition (jnienv);
+
+			var handler = Java.Lang.Thread.DefaultUncaughtExceptionHandler;
+			Java.Lang.Thread.DefaultUncaughtExceptionHandler = new UncaughtExceptionMarshaler (handler);
 		}
 		catch (Exception e) {
 			AndroidLog.Print (AndroidLogLevel.Error, "JavaInteropRuntime", $"JavaInteropRuntime.init: error: {e}");
+			transition.SetPendingException (e);
 		}
+		transition.Dispose ();
 	}
 }

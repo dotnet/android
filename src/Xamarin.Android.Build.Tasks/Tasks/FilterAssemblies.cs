@@ -1,3 +1,5 @@
+#nullable disable
+
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;

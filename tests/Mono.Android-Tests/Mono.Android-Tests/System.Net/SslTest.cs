@@ -9,8 +9,8 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace System.NetTests {
-
-	[TestFixture, Category ("InetAccess")]
+	// TODO: https://github.com/dotnet/android/issues/10069
+	[TestFixture, Category ("InetAccess"), Category ("SSL")]
 	public class SslTest
 	{
 		bool ShouldIgnoreException (WebException wex)

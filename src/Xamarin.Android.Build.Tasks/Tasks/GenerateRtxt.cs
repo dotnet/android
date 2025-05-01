@@ -1,4 +1,6 @@
 // Copyright (C) 2022 Microsoft Ltd, Inc. All rights reserved.
+#nullable disable
+
 using System;
 using System.IO;
 using Microsoft.Build.Framework;

@@ -26,10 +26,12 @@ namespace Xamarin.Android.Build.Tests
 		[Category ("SmokeTests")]
 		[TestCaseSource (nameof (DotNetBuildSource))]
 		[NonParallelizable] // On MacOS, parallel /restore causes issues
-		public void DotNetBuild (string runtimeIdentifiers, bool isRelease, bool aot, bool usesAssemblyStore)
+		public void DotNetBuild (string runtimeIdentifiers, bool isRelease, bool aot, bool usesAssemblyStore, AndroidRuntime runtime)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
+				ProjectName = "Test Me",
+				RootNamespace = "Test.Me",
 				EnableDefaultItems = true,
 				ExtraNuGetConfigSources = {
 					// Microsoft.AspNetCore.Components.WebView is not in dotnet-public
@@ -63,6 +65,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
+			proj.SetRuntime (runtime);
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": AndroidX.AppCompat.App.AppCompatActivity")
 				.Replace ("//${AFTER_ONCREATE}", @"button.Text = Resource.CancelButton;");
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStore.ToString ());
@@ -82,7 +85,7 @@ namespace Xamarin.Android.Build.Tests
 						},
 			});
 			proj.OtherBuildItems.Add (new BuildItem ("Compile", default (Func<string>)) {
-						TextContent = () => InlineData.DesignerWithContents (proj.ProjectName, "Resource", "public partial", new string[] {"CancelButton"}),
+						TextContent = () => InlineData.DesignerWithContents (proj.RootNamespace ?? proj.ProjectName, "Resource", "public partial", new string[] {"CancelButton"}),
 						Update = () =>  "Resource.designer.cs",
 						Metadata = {
 							{ "DependentUpon", "Resource.resx" },
@@ -102,7 +105,10 @@ namespace Xamarin.Android.Build.Tests
 			var builder = CreateApkBuilder ();
 			builder.Verbosity = LoggerVerbosity.Detailed;
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
-			builder.AssertHasNoWarnings ();
+			// TODO: NativeAOT has trimmer warnings: https://github.com/dotnet/android/issues/9784
+			if (runtime != AndroidRuntime.NativeAOT) {
+				builder.AssertHasNoWarnings ();
+			}
 
 			var outputPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath);
 			var intermediateOutputPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
@@ -124,6 +130,10 @@ namespace Xamarin.Android.Build.Tests
 				$"{proj.ProjectName}.runtimeconfig.json",
 				$"{proj.ProjectName}.xml",
 			};
+			// NOTE: a native subdirectory exists for NativeAOT
+			if (runtime == AndroidRuntime.NativeAOT) {
+				expectedFiles.Add ("native");
+			}
 			if (isRelease) {
 				expectedFiles.Add ($"{proj.PackageName}.aab");
 				expectedFiles.Add ($"{proj.PackageName}-Signed.aab");
@@ -163,14 +173,23 @@ namespace Xamarin.Android.Build.Tests
 			var apkPath = Path.Combine (outputPath, $"{proj.PackageName}-Signed.apk");
 			FileAssert.Exists (apkPath);
 			var helper = new ArchiveAssemblyHelper (apkPath, usesAssemblyStore, rids);
-			helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.dll", shouldContainEntry: expectEmbeddedAssembies);
-			helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.pdb", shouldContainEntry: !TestEnvironment.CommercialBuildAvailable && !isRelease);
-			helper.AssertContainsEntry ($"assemblies/Mono.Android.dll",        shouldContainEntry: expectEmbeddedAssembies);
-			helper.AssertContainsEntry ($"assemblies/es/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
-			helper.AssertContainsEntry ($"assemblies/de-DE/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
+			if (runtime != AndroidRuntime.NativeAOT) {
+				helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.dll", shouldContainEntry: expectEmbeddedAssembies);
+				helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.pdb", shouldContainEntry: !TestEnvironment.CommercialBuildAvailable && !isRelease);
+				helper.AssertContainsEntry ($"assemblies/Mono.Android.dll",        shouldContainEntry: expectEmbeddedAssembies);
+				helper.AssertContainsEntry ($"assemblies/es/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
+				helper.AssertContainsEntry ($"assemblies/de-DE/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
+			}
 			foreach (var abi in rids.Select (AndroidRidAbiHelper.RuntimeIdentifierToAbi)) {
+				if (runtime == AndroidRuntime.MonoVM) {
+					helper.AssertContainsEntry ($"lib/{abi}/libmonosgen-2.0.so");
+				} else if (runtime == AndroidRuntime.CoreCLR) {
+					helper.AssertContainsEntry ($"lib/{abi}/libcoreclr.so");
+				} else if (runtime == AndroidRuntime.NativeAOT) {
+					helper.AssertContainsEntry ($"lib/{abi}/lib{proj.ProjectName}.so");
+					continue; // NOTE: NativeAOT will not include the other files below
+				}
 				helper.AssertContainsEntry ($"lib/{abi}/libmonodroid.so");
-				helper.AssertContainsEntry ($"lib/{abi}/libmonosgen-2.0.so");
 				if (rids.Length > 1) {
 					helper.AssertContainsEntry ($"assemblies/{abi}/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
 				} else {
@@ -760,11 +779,17 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 
 		[Test]
 		[Category ("SmokeTests")]
-		public void BuildInDesignTimeMode ([Values(false, true)] bool useManagedParser)
+		public void BuildInDesignTimeMode (
+				[Values (false, true)]
+				bool useManagedParser,
+				[Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)]
+				AndroidRuntime runtime
+			)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
 			using (var builder = CreateApkBuilder ()) {
 				builder.Target = "UpdateAndroidResources";
@@ -1602,7 +1627,7 @@ public class ToolbarEx {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");
 				var ext = b.IsUnix ? "" : ".exe";
-				var text = $"TestMe.java(1,8): javac{ext} error JAVAC0000:  error: class, interface, enum, or record expected";
+				var text = $"TestMe.java(1,8): javac{ext} error JAVAC0000:  error: class, interface, or enum expected";
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, text), "TestMe.java(1,8) expected");
 				text = $"TestMe2.java(1,41): javac{ext} error JAVAC0000:  error: ';' expected";
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, text), "TestMe2.java(1,41) expected");

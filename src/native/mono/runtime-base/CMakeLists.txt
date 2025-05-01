@@ -6,8 +6,6 @@ set(XA_RUNTIME_BASE_SOURCES
   cpu-arch-detect.cc
   logger.cc
   shared-constants.cc
-  timing.cc
-  timing-internal.cc
   util.cc
 )
 add_clang_check_sources("${XA_RUNTIME_BASE_SOURCES}")

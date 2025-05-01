@@ -18,6 +18,7 @@ steps:
       displayName: Start emulator
       continueOnError: ${{ parameters.startContinueOnError }}
       taskTimeoutInMinutes: ${{ parameters.taskTimeoutInMinutes }}
+      xaSourcePath: ${{ parameters.xaSourcePath }}
       project: ${{ parameters.xaSourcePath }}/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Emulator.csproj
       ${{ if eq(parameters.specificImage, true) }}:
         arguments: >-
@@ -43,6 +44,7 @@ steps:
       condition: always()
       continueOnError: true
       taskTimeoutInMinutes: ${{ parameters.taskTimeoutInMinutes }}
+      xaSourcePath: ${{ parameters.xaSourcePath }}
       project: ${{ parameters.xaSourcePath }}/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Emulator.csproj
       ${{ if eq(parameters.specificImage, true) }}:
         arguments: >-

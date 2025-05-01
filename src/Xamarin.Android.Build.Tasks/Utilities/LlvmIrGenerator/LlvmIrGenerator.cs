@@ -1,9 +1,12 @@
+#nullable disable
+
 using System;
 using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Text;
 
 using Xamarin.Android.Tools;
@@ -28,12 +31,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public readonly LlvmIrModuleTarget Target;
 		public readonly LlvmIrMetadataManager MetadataManager;
 		public readonly LlvmIrTypeCache TypeCache;
+		public readonly LlvmIrGenerator Generator;
 		public string CurrentIndent { get; private set; } = String.Empty;
 		public bool InVariableGroup { get; set; }
 		public LlvmIrVariableNumberFormat NumberFormat { get; set; } = LlvmIrVariableNumberFormat.Default;
 
-		public GeneratorWriteContext (TextWriter writer, LlvmIrModule module, LlvmIrModuleTarget target, LlvmIrMetadataManager metadataManager, LlvmIrTypeCache cache)
+		public GeneratorWriteContext (LlvmIrGenerator generator, TextWriter writer, LlvmIrModule module, LlvmIrModuleTarget target, LlvmIrMetadataManager metadataManager, LlvmIrTypeCache cache)
 		{
+			Generator = generator;
 			Output = writer;
 			Module = module;
 			Target = target;
@@ -163,7 +168,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			LlvmIrMetadataManager metadataManager = module.GetMetadataManagerCopy ();
 			target.AddTargetSpecificMetadata (metadataManager);
 
-			var context = new GeneratorWriteContext (writer, module, target, metadataManager, module.TypeCache);
+			var context = new GeneratorWriteContext (this, writer, module, target, metadataManager, module.TypeCache);
 			if (!String.IsNullOrEmpty (FilePath)) {
 				WriteCommentLine (context, $" ModuleID = '{FileName}'");
 				context.Output.WriteLine ($"source_filename = \"{FileName}\"");
@@ -281,6 +286,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			WriteVariableOptions (context, options);
 		}
 
+		void WriteVariableReference (GeneratorWriteContext context, LlvmIrVariableReference variable)
+		{
+			context.Output.Write (variable.Global ? '@' : '%');
+			context.Output.Write (variable.Name);
+		}
+
 		void WriteGlobalVariableStart (GeneratorWriteContext context, LlvmIrGlobalVariable variable)
 		{
 			WriteGlobalVariableName (context, variable);
@@ -384,6 +395,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			if (type.ImplementsInterface (typeof(ICollection))) {
 				return (uint)((ICollection)value).Count;
+			}
+
+			if (type.ImplementsInterface (typeof(ICollection<>))) {
+				return (ulong)GetCollectionOfTCount (type, value);
 			}
 
 			throw new InvalidOperationException ($"Internal error: should never get here");
@@ -703,7 +718,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return $"{(basicTypeDesc.IsUnsigned ? prefixUnsigned : prefixSigned)}0x{hex}";
 		}
 
-		void WriteValue (GeneratorWriteContext context, Type type, object? value, LlvmIrStringEncoding stringEncoding = LlvmIrStringEncoding.UTF8)
+		public void WriteValue (GeneratorWriteContext context, Type type, object? value, LlvmIrStringEncoding stringEncoding = LlvmIrStringEncoding.UTF8)
 		{
 			if (value is LlvmIrVariable variableRef) {
 				context.Output.Write (variableRef.Reference);
@@ -761,6 +776,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				}
 
 				throw new NotSupportedException ($"Internal error: array of type {type} is unsupported");
+			}
+
+			if (type == typeof (LlvmIrVariableReference) || type.IsSubclassOf (typeof (LlvmIrVariableReference))) {
+				WriteVariableReference (context, (LlvmIrVariableReference)value);
+				return;
 			}
 
 			throw new NotSupportedException ($"Internal error: value type '{type}' is unsupported");
@@ -981,8 +1001,19 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					list.Add (kvp.Value);
 				}
 				entries = list;
-			} else {
+			} else if (variable.Type.ImplementsInterface (typeof (ICollection))) {
 				entries = (ICollection)variable.Value;
+			} else if (variable.Type.ImplementsInterface (typeof (ICollection<>))) {
+				// This is slow and messy, but should work for a wide range of types without us having to add
+				// any explicit support
+				Type elementType = variable.Type.GetArrayElementType ();
+				int elementCount = GetCollectionOfTCount (variable.Type, variable.Value);
+				Array array = Array.CreateInstance (elementType, elementCount);
+				MethodInfo copyTo = variable.Type.GetMethod ("CopyTo", new Type[] { array.GetType (), typeof (int) });
+				copyTo.Invoke (variable.Value, new object[] { array, (int)0 });
+				entries = array;
+			} else {
+				throw new NotSupportedException ($"Unsupported array value type '{variable.Type}'");
 			}
 
 			if (entries.Count == 0) {
@@ -1273,6 +1304,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				context.Output.Write (llvmVisibility[func.Visibility]);
 				context.Output.Write (' ');
 			}
+
+			if (func.CallingConvention != LlvmIrCallingConvention.Default) {
+				context.Output.Write (llvmCallingConvention[func.CallingConvention]);
+				context.Output.Write (' ');
+			}
 		}
 
 		void WriteFunctionDeclarationTrailingDecorations (GeneratorWriteContext context, LlvmIrFunction func)
@@ -1298,6 +1334,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		public static void WriteReturnAttributes (GeneratorWriteContext context, LlvmIrFunctionSignature.ReturnTypeAttributes returnAttrs)
 		{
+			if (AttributeIsSet (returnAttrs.InReg)) {
+				context.Output.Write ("inreg");
+			}
+
 			if (AttributeIsSet (returnAttrs.NoUndef)) {
 				context.Output.Write ("noundef ");
 			}
@@ -1394,6 +1434,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			if (AttributeIsSet (parameter.ZeroExt)) {
 				attributes.Add ("zeroext");
+			}
+
+			if (AttributeIsSet (parameter.WriteOnly)) {
+				attributes.Add ("writeonly");
 			}
 
 			if (parameter.Align.HasValue) {
@@ -1686,6 +1730,22 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			return QuoteStringNoEscape (sb.ToString ());
+		}
+
+		static int GetCollectionOfTCount (Type type, object instance)
+		{
+			if (!type.ImplementsInterface (typeof (ICollection<>))) {
+				throw new ArgumentException ("Must implement the ICollection<T> interface", nameof (type));
+			}
+
+			PropertyInfo countProperty = type.GetProperty ("Count");
+			var ret = (int)countProperty.GetValue (instance);
+
+			if (ret < 0) {
+				throw new InvalidOperationException ($"Collection count is negative: {ret}");
+			}
+
+			return ret;
 		}
 	}
 }

@@ -1,4 +1,3 @@
-#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,6 +7,7 @@ using Java.Interop.Tools.JavaCallableWrappers;
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using MonoDroid.Tuner;
 using Xamarin.Android.Tools;
@@ -22,14 +22,6 @@ namespace Xamarin.Android.Tasks;
 /// </summary>
 public class AssemblyModifierPipeline : AndroidTask
 {
-	// Names of assemblies which don't have Mono.Android.dll references, or are framework assemblies, but which must
-	// be scanned for Java types.
-	static readonly HashSet<string> SpecialAssemblies = new HashSet<string> (StringComparer.OrdinalIgnoreCase) {
-			"Java.Interop.dll",
-			"Mono.Android.dll",
-			"Mono.Android.Runtime.dll",
-		};
-
 	public override string TaskPrefix => "AMP";
 
 	public string ApplicationJavaClass { get; set; } = "";
@@ -66,6 +58,12 @@ public class AssemblyModifierPipeline : AndroidTask
 	[Required]
 	public ITaskItem [] SourceFiles { get; set; } = [];
 
+	/// <summary>
+	/// $(TargetName) would be "AndroidApp1" with no extension
+	/// </summary>
+	[Required]
+	public string TargetName { get; set; } = "";
+
 	protected JavaPeerStyle codeGenerationTarget;
 
 	public override bool RunTask ()
@@ -80,20 +78,16 @@ public class AssemblyModifierPipeline : AndroidTask
 			ReadSymbols = ReadSymbols,
 		};
 
-		var writerParameters = new WriterParameters {
-			DeterministicMvid = Deterministic,
-		};
-
 		Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> perArchAssemblies = MonoAndroidHelper.GetPerArchAssemblies (ResolvedAssemblies, Array.Empty<string> (), validate: false);
 
-		RunState? runState = null;
+		AssemblyPipeline? pipeline = null;
 		var currentArch = AndroidTargetArch.None;
 
 		for (int i = 0; i < SourceFiles.Length; i++) {
 			ITaskItem source = SourceFiles [i];
-			AndroidTargetArch sourceArch = GetValidArchitecture (source);
+			AndroidTargetArch sourceArch = MonoAndroidHelper.GetRequiredValidArchitecture (source);
 			ITaskItem destination = DestinationFiles [i];
-			AndroidTargetArch destinationArch = GetValidArchitecture (destination);
+			AndroidTargetArch destinationArch = MonoAndroidHelper.GetRequiredValidArchitecture (destination);
 
 			if (sourceArch != destinationArch) {
 				throw new InvalidOperationException ($"Internal error: assembly '{sourceArch}' targets architecture '{sourceArch}', while destination assembly '{destination}' targets '{destinationArch}' instead");
@@ -102,38 +96,39 @@ public class AssemblyModifierPipeline : AndroidTask
 			// Each architecture must have a different set of context classes, or otherwise only the first instance of the assembly may be rewritten.
 			if (currentArch != sourceArch) {
 				currentArch = sourceArch;
-				runState?.Dispose ();
+				pipeline?.Dispose ();
 
 				var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: ReadSymbols, loadReaderParameters: readerParameters);
-				runState = new RunState (resolver);
 
 				// Add SearchDirectories for the current architecture's ResolvedAssemblies
 				foreach (var kvp in perArchAssemblies [sourceArch]) {
 					ITaskItem assembly = kvp.Value;
 					var path = Path.GetFullPath (Path.GetDirectoryName (assembly.ItemSpec));
-					if (!runState.resolver.SearchDirectories.Contains (path)) {
-						runState.resolver.SearchDirectories.Add (path);
+					if (!resolver.SearchDirectories.Contains (path)) {
+						resolver.SearchDirectories.Add (path);
 					}
 				}
 
 				// Set up the FixAbstractMethodsStep and AddKeepAlivesStep
-				var context = new MSBuildLinkContext (runState.resolver, Log);
+				var context = new MSBuildLinkContext (resolver, Log);
+				pipeline = new AssemblyPipeline (resolver);
 
-				CreateRunState (runState, context);
+				BuildPipeline (pipeline, context);
 			}
 
 			Directory.CreateDirectory (Path.GetDirectoryName (destination.ItemSpec));
 
-			RunPipeline (source, destination, runState!, writerParameters);
+			RunPipeline (pipeline!, source, destination);
 		}
 
-		runState?.Dispose ();
+		pipeline?.Dispose ();
 
 		return !Log.HasLoggedErrors;
 	}
 
-	protected virtual void CreateRunState (RunState runState, MSBuildLinkContext context)
+	protected virtual void BuildPipeline (AssemblyPipeline pipeline, MSBuildLinkContext context)
 	{
+		// FindJavaObjectsStep
 		var findJavaObjectsStep = new FindJavaObjectsStep (Log) {
 			ApplicationJavaClass = ApplicationJavaClass,
 			ErrorOnCustomJavaObject = ErrorOnCustomJavaObject,
@@ -141,108 +136,81 @@ public class AssemblyModifierPipeline : AndroidTask
 		};
 
 		findJavaObjectsStep.Initialize (context);
+		pipeline.Steps.Add (findJavaObjectsStep);
 
-		runState.findJavaObjectsStep = findJavaObjectsStep;
+		// SaveChangedAssemblyStep
+		var writerParameters = new WriterParameters {
+			DeterministicMvid = Deterministic,
+		};
+
+		var saveChangedAssemblyStep = new SaveChangedAssemblyStep (Log, writerParameters);
+		pipeline.Steps.Add (saveChangedAssemblyStep);
+
+		// FindTypeMapObjectsStep - this must be run after the assembly has been saved, as saving changes the MVID
+		var findTypeMapObjectsStep = new FindTypeMapObjectsStep (Log) {
+			ErrorOnCustomJavaObject = ErrorOnCustomJavaObject,
+			Debug = Debug,
+		};
+
+		findTypeMapObjectsStep.Initialize (context);
+		pipeline.Steps.Add (findTypeMapObjectsStep);
 	}
 
-	protected virtual void RunPipeline (ITaskItem source, ITaskItem destination, RunState runState, WriterParameters writerParameters)
+	void RunPipeline (AssemblyPipeline pipeline, ITaskItem source, ITaskItem destination)
 	{
-		var destinationJLOXml = Path.ChangeExtension (destination.ItemSpec, ".jlo.xml");
+		var assembly = pipeline.Resolver.GetAssembly (source.ItemSpec);
 
-		if (!TryScanForJavaObjects (source, destination, runState, writerParameters)) {
-			// Even if we didn't scan for Java objects, we still write an empty .xml file for later steps
-			FindJavaObjectsStep.WriteEmptyXmlFile (destinationJLOXml);
-		}
+		var context = new StepContext (source, destination) {
+			CodeGenerationTarget = codeGenerationTarget,
+			EnableMarshalMethods = EnableMarshalMethods,
+			IsAndroidAssembly = MonoAndroidHelper.IsAndroidAssembly (source),
+			IsDebug = Debug,
+			IsFrameworkAssembly = MonoAndroidHelper.IsFrameworkAssembly (source),
+			IsMainAssembly = Path.GetFileNameWithoutExtension (source.ItemSpec) == TargetName,
+			IsUserAssembly = ResolvedUserAssemblies.Any (a => a.ItemSpec == source.ItemSpec),
+		};
+
+		pipeline.Run (assembly, context);
+	}
+}
+
+class SaveChangedAssemblyStep : IAssemblyModifierPipelineStep
+{
+	public TaskLoggingHelper Log { get; set; }
+
+	public WriterParameters WriterParameters { get; set; }
+
+	public SaveChangedAssemblyStep (TaskLoggingHelper log, WriterParameters writerParameters)
+	{
+		Log = log;
+		WriterParameters = writerParameters;
 	}
 
-	bool TryScanForJavaObjects (ITaskItem source, ITaskItem destination, RunState runState, WriterParameters writerParameters)
+	public void ProcessAssembly (AssemblyDefinition assembly, StepContext context)
 	{
-		if (!ShouldScanAssembly (source))
-			return false;
+		if (context.IsAssemblyModified) {
+			Log.LogDebugMessage ($"Saving modified assembly: {context.Destination.ItemSpec}");
+			Directory.CreateDirectory (Path.GetDirectoryName (context.Destination.ItemSpec));
+			WriterParameters.WriteSymbols = assembly.MainModule.HasSymbols;
+			assembly.Write (context.Destination.ItemSpec, WriterParameters);
+		} else {
+			// If we didn't write a modified file, copy the original to the destination
+			CopyIfChanged (context.Source, context.Destination);
+		}
 
-		var destinationJLOXml = Path.ChangeExtension (destination.ItemSpec, ".jlo.xml");
-		var assemblyDefinition = runState.resolver!.GetAssembly (source.ItemSpec);
-
-		var scanned = runState.findJavaObjectsStep!.ProcessAssembly (assemblyDefinition, destinationJLOXml);
-
-		return scanned;
+		// We just saved the assembly, so it is no longer modified
+		context.IsAssemblyModified = false;
 	}
 
-	bool ShouldScanAssembly (ITaskItem source)
+	void CopyIfChanged (ITaskItem source, ITaskItem destination)
 	{
-		// Skip this assembly if it is not an Android assembly
-		if (!IsAndroidAssembly (source)) {
-			Log.LogDebugMessage ($"Skipping assembly '{source.ItemSpec}' because it is not an Android assembly");
-			return false;
-		}
+		if (MonoAndroidHelper.CopyAssemblyAndSymbols (source.ItemSpec, destination.ItemSpec)) {
+			Log.LogDebugMessage ($"Copied: {destination.ItemSpec}");
+		} else {
+			Log.LogDebugMessage ($"Skipped unchanged file: {destination.ItemSpec}");
 
-		// When marshal methods or non-JavaPeerStyle.XAJavaInterop1 are in use we do not want to skip non-user assemblies (such as Mono.Android) - we need to generate JCWs for them during
-		// application build, unlike in Debug configuration or when marshal methods are disabled, in which case we use JCWs generated during Xamarin.Android
-		// build and stored in a jar file.
-		var useMarshalMethods = !Debug && EnableMarshalMethods;
-		var shouldSkipNonUserAssemblies = !useMarshalMethods && codeGenerationTarget == JavaPeerStyle.XAJavaInterop1;
-
-		if (shouldSkipNonUserAssemblies && !ResolvedUserAssemblies.Any (a => a.ItemSpec == source.ItemSpec)) {
-			Log.LogDebugMessage ($"Skipping assembly '{source.ItemSpec}' because it is not a user assembly and we don't need JLOs from non-user assemblies");
-			return false;
-		}
-
-		return true;
-	}
-
-	bool IsAndroidAssembly (ITaskItem source)
-	{
-		string name = Path.GetFileName (source.ItemSpec);
-
-		if (SpecialAssemblies.Contains (name))
-			return true;
-
-		return MonoAndroidHelper.IsMonoAndroidAssembly (source);
-	}
-
-	AndroidTargetArch GetValidArchitecture (ITaskItem item)
-	{
-		AndroidTargetArch ret = MonoAndroidHelper.GetTargetArch (item);
-		if (ret == AndroidTargetArch.None) {
-			throw new InvalidOperationException ($"Internal error: assembly '{item}' doesn't target any architecture.");
-		}
-
-		return ret;
-	}
-
-	protected sealed class RunState : IDisposable
-	{
-		public DirectoryAssemblyResolver resolver;
-		public FixAbstractMethodsStep? fixAbstractMethodsStep = null;
-		public AddKeepAlivesStep? addKeepAliveStep = null;
-		public FixLegacyResourceDesignerStep? fixLegacyResourceDesignerStep = null;
-		public FindJavaObjectsStep? findJavaObjectsStep = null;
-		bool disposed_value;
-
-		public RunState (DirectoryAssemblyResolver resolver)
-		{
-			this.resolver = resolver;
-		}
-
-		private void Dispose (bool disposing)
-		{
-			if (!disposed_value) {
-				if (disposing) {
-					resolver?.Dispose ();
-					fixAbstractMethodsStep = null;
-					fixLegacyResourceDesignerStep = null;
-					addKeepAliveStep = null;
-					findJavaObjectsStep = null;
-				}
-				disposed_value = true;
-			}
-		}
-
-		public void Dispose ()
-		{
-			// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-			Dispose (disposing: true);
-			GC.SuppressFinalize (this);
+			// NOTE: We still need to update the timestamp on this file, or this target would run again
+			File.SetLastWriteTimeUtc (destination.ItemSpec, DateTime.UtcNow);
 		}
 	}
 }

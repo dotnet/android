@@ -1,4 +1,6 @@
-﻿// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
+// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
+
+#nullable disable
 
 using System;
 using System.Linq;
@@ -70,6 +72,10 @@ namespace Xamarin.Android.Tasks
 			} else {
 				cmd.AppendSwitchIfNotNull ("-target ", JavacTargetVersion);
 				cmd.AppendSwitchIfNotNull ("-source ", JavacSourceVersion);
+				// Ignore warning when targeting older Java versions
+				// JAVAC : warning : [options] source value 8 is obsolete and will be removed in a future release
+				// JAVAC : warning : [options] target value 8 is obsolete and will be removed in a future release
+				cmd.AppendSwitchIfNotNull ("-Xlint:", "-options");
 			}
 
 			return cmd.ToString ();

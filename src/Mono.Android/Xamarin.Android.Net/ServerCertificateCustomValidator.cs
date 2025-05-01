@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Net.Security;
@@ -28,6 +27,7 @@ namespace Xamarin.Android.Net
 
 		public ITrustManager[] ReplaceX509TrustManager (ITrustManager[]? trustManagers, HttpRequestMessage requestMessage)
 		{
+			trustManagers ??= [];
 			var originalX509TrustManager = FindX509TrustManager(trustManagers, out int originalTrustManagerIndex);
 			var trustManagerWithCallback = new TrustManager (originalX509TrustManager, requestMessage, Callback);
 			return ModifyTrustManagersArray (trustManagers, originalTrustManagerIndex, trustManagerWithCallback);
@@ -55,7 +55,7 @@ namespace Xamarin.Android.Net
 
 				try {
 					var trustManagerExtensions = new X509TrustManagerExtensions (_internalTrustManager);
-					trustManagerExtensions.CheckServerTrusted (javaChain, authType, _request.RequestUri.Host);
+					trustManagerExtensions.CheckServerTrusted (javaChain, authType, _request.RequestUri?.Host);
 				} catch (JavaCertificateException) {
 					sslPolicyErrors |= SslPolicyErrors.RemoteCertificateChainErrors;
 				}
@@ -79,15 +79,20 @@ namespace Xamarin.Android.Net
 			}
 
 			public void CheckClientTrusted (JavaX509Certificate[] chain, string authType)
-				=> _internalTrustManager?.CheckClientTrusted (chain, authType);
+				=> _internalTrustManager.CheckClientTrusted (chain, authType);
 
 			public JavaX509Certificate[] GetAcceptedIssuers ()
-				=> _internalTrustManager?.GetAcceptedIssuers () ?? Array.Empty<JavaX509Certificate> ();
+				=> _internalTrustManager.GetAcceptedIssuers () ?? Array.Empty<JavaX509Certificate> ();
 
 			private bool VerifyHostname (JavaX509Certificate[] javaChain)
 			{
 				var sslSession = new FakeSSLSession (javaChain);
-				return HttpsURLConnection.DefaultHostnameVerifier.Verify(_request.RequestUri.Host, sslSession);
+				var hostnameVerifier = HttpsURLConnection.DefaultHostnameVerifier;
+				if (hostnameVerifier is null) {
+					return false;
+				}
+				
+				return hostnameVerifier.Verify(_request.RequestUri?.Host, sslSession);
 			}
 
 			private static X509Chain CreateChain (X509Certificate2[] certificates)
@@ -106,8 +111,10 @@ namespace Xamarin.Android.Net
 			private static X509Certificate2[] Convert (JavaX509Certificate[] certificates)
 			{
 				var convertedCertificates = new X509Certificate2 [certificates.Length];
-				for (int i = 0; i < certificates.Length; i++)
-					convertedCertificates [i] = new X509Certificate2 (certificates [i].GetEncoded ()!);
+				for (int i = 0; i < certificates.Length; i++) {
+					var data = certificates [i].GetEncoded () ?? throw new InvalidOperationException ("The remote certificate was not available.");
+					convertedCertificates [i] = X509CertificateLoader.LoadCertificate (data);
+				}
 
 				return convertedCertificates;
 			}

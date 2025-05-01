@@ -35,7 +35,7 @@
 #include "util.hh"
 #include "globals.hh"
 #include <shared/cpp-util.hh>
-#include "timing-internal.hh"
+#include <runtime-base/timing-internal.hh>
 
 #include "java-interop-dlfcn.h"
 
@@ -208,9 +208,8 @@ Debug::start_connection (char *options)
 void
 Debug::start_debugging_and_profiling ()
 {
-	size_t total_time_index;
 	if (FastTiming::enabled ()) [[unlikely]] {
-		total_time_index = internal_timing->start_event (TimingEventKind::DebugStart);
+		internal_timing.start_event (TimingEventKind::DebugStart);
 	}
 
 	char *connect_args = nullptr;
@@ -236,7 +235,7 @@ Debug::start_debugging_and_profiling ()
 	delete[] connect_args;
 
 	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing->end_event (total_time_index);
+		internal_timing.end_event ();
 	}
 }
 

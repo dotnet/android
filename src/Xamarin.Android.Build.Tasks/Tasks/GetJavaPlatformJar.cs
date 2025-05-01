@@ -1,5 +1,7 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
+#nullable disable
+
 using System;
 using System.IO;
 using System.Xml;

@@ -147,12 +147,10 @@ Util::path_combine (const char *path1, const char *path2)
 void
 Util::create_public_directory (const char *dir)
 {
-	mode_t m = umask (0);
-	int ret = mkdir (dir, 0777);
+	int ret = create_directory (dir, 0777);
 	if (ret < 0) {
 		log_warn (LOG_DEFAULT, "Failed to create directory '{}'. {}", dir, std::strerror (errno));
 	}
-	umask (m);
 }
 
 int
@@ -200,6 +198,22 @@ Util::set_world_accessable ([[maybe_unused]] const char *path)
 	if (r == -1) {
 		log_error (LOG_DEFAULT, "chmod(\"{}\", 0664) failed: {}", path, strerror (errno));
 	}
+}
+
+auto 
+Util::set_world_accessible (int fd) noexcept -> bool
+{
+  int r;
+  do {
+	r = fchmod (fd, 0664);
+  } while (r == -1 && errno == EINTR);
+
+  if (r == -1) {
+	log_error (LOG_DEFAULT, "fchmod() failed: {}", strerror (errno));
+	return false;
+  }
+
+  return true;
 }
 
 void

@@ -27,6 +27,8 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
+#nullable disable
+
 using System;
 
 namespace Mono.Security.Cryptography { 

@@ -150,6 +150,30 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
+		[TestCase ("Test Me", AndroidRuntime.MonoVM)]
+		// testing characters as per https://www.compart.com/en/unicode/category/Zs
+		[TestCase ("TestUnicodeSpace0020\u0020Me", AndroidRuntime.MonoVM)]
+		[TestCase ("TestUnicodeSpace2000\u2000Me", AndroidRuntime.MonoVM)]
+		[TestCase ("TestUnicodeSpace2009\u2009Me", AndroidRuntime.MonoVM)]
+		[TestCase ("TestUnicodeSpace2002\u2002Me", AndroidRuntime.MonoVM)]
+		[TestCase ("TestUnicodeSpace2007\u2007Me", AndroidRuntime.MonoVM)]
+		[TestCase ("TestUnicodeSpace0020\u0020Me", AndroidRuntime.CoreCLR)]
+		[TestCase ("TestUnicodeSpace0020\u0020Me", AndroidRuntime.NativeAOT)]
+		public void CheckProjectWithSpaceInNameWorks (string projectName, AndroidRuntime runtime)
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				ProjectName = projectName,
+				RootNamespace = "Test.Me",
+			};
+			proj.SetRuntime (runtime);
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "build failed");
+			}
+		}
+
+		[Test]
 		public void CheckClassesDexIsIncluded ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {

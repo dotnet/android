@@ -19,7 +19,7 @@
     <NoWarn>8632</NoWarn>
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <Nullable>annotations</Nullable>
+    <Nullable>enable</Nullable>
     <!-- Causes issues with linker files imported from Mono -->
     <NoWarn>$(NoWarn);CA1310;CA1305</NoWarn>
     <WarningsAsErrors>Nullable</WarningsAsErrors>
@@ -47,6 +47,7 @@
 
     <!-- Include only the linker sources required for LinkAssembliesNoShrink - AddKeepAlivesStep, FixAbstractMethodsStep, FixLegacyResourceDesignerStep -->
     <Compile Remove="Linker\**" />
+    <Compile Include="Linker\MonoDroid.Tuner\FindTypeMapObjectsStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\FindJavaObjectsStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\AddKeepAlivesStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\AndroidLinkConfiguration.cs" />
