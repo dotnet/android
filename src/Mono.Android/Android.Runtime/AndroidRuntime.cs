@@ -66,19 +66,11 @@ namespace Android.Runtime {
 				return throwable;
 			}
 			JniObjectReference.Dispose (ref reference, options);
-			var unwrapped = UnboxException (peeked!);
+			var unwrapped = JNIEnvInit.ValueManager?.PeekValue (peeked!.PeerReference) as Exception;
 			if (unwrapped != null) {
 				return unwrapped;
 			}
 			return peekedExc;
-		}
-
-		Exception? UnboxException (IJavaPeerable value)
-		{
-			if (JNIEnvInit.ValueManager is AndroidValueManager vm) {
-				return vm.UnboxException (value);
-			}
-			return null;
 		}
 
 		public override void RaisePendingException (Exception pendingException)
@@ -863,15 +855,6 @@ namespace Android.Runtime {
 				return true;
 			}
 			return base.TryUnboxPeerObject (value, out result);
-		}
-
-		internal Exception? UnboxException (IJavaPeerable value)
-		{
-			object? r;
-			if (TryUnboxPeerObject (value, out r) && r is Exception e) {
-				return e;
-			}
-			return null;
 		}
 
 		public override void CollectPeers ()
