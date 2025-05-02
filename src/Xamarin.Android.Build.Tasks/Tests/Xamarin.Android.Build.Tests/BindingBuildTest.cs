@@ -169,6 +169,12 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var proj = new XamarinAndroidBindingProject () {
 				IsRelease = true,
+				OtherBuildItems = {
+					new AndroidItem.AndroidAsset ("Assets\\asset1.txt") {
+						TextContent = () => "Asset1",
+						Encoding = Encoding.ASCII,
+					},
+				}
 			};
 			proj.Jars.Add (new AndroidItem.AndroidLibrary ("Jars\\material-menu-1.1.0.aar") {
 				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"

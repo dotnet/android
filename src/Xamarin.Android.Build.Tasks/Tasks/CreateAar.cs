@@ -36,8 +36,14 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string OutputFile { get; set; }
 
+		public string PrefixProperty { get; set; }
+
 		public override bool RunTask ()
 		{
+			if (Path.IsPathRooted (AssetDirectory)) {
+				Log.LogCodedError ("XA1041", message: Properties.Resources.XA1041, PrefixProperty, AssetDirectory);
+				return false;
+			}
 			Directory.CreateDirectory (Path.GetDirectoryName (OutputFile));
 
 			using (var stream = File.Create (OutputFile))

@@ -894,6 +894,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to The {0} .
+        /// </summary>
+        public static string XA1041 {
+            get {
+                return ResourceManager.GetString("XA1041", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET for Android once .NET 6 is released..
         /// </summary>
         public static string XA2000 {

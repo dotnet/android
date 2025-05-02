@@ -1662,6 +1662,16 @@ The default value is False.
 
 This MSBuild property is obsolete and is no longer supported.
 
+## MonoAndroidAssetPrefix
+
+Specifies a *path prefix*
+that is removed from the start of filenames with a Build action of
+`AndroidAsset`. This is to allow changing where resources are
+located.
+
+The default value is `Assets`. Change this to `assets` for the
+Java project structure.
+
 ## MonoAndroidResourcePrefix
 
 Specifies a *path prefix*

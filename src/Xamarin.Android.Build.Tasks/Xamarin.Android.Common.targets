@@ -1084,6 +1084,7 @@ because xbuild doesn't support framework reference assemblies.
 	<AndroidComputeResPaths ResourceFiles="@(AndroidResource);@(AndroidBoundLayout)"
 			IntermediateDir="$(MonoAndroidResDirIntermediate)"
 			Prefixes="$(MonoAndroidResourcePrefix)"
+			PrefixProperty="MonoAndroidResourcePrefix"
 			LowercaseFilenames="True"
 			ProjectDir="$(ProjectDir)"
 			AndroidLibraryFlatFilesDirectory="$(_AndroidLibraryFlatFilesDirectory)"
