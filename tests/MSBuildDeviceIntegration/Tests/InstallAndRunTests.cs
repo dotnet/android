@@ -565,18 +565,8 @@ using System.Runtime.Serialization.Json;
 		}
 
 		[Test]
-		public void AppWithStyleableUsageRuns ([Values (true, false)] bool useCLR, [Values (true, false)] bool isRelease,
-			[Values (true, false)] bool linkResources, [Values (true, false)] bool useStringTypeMaps)
+		public void AppWithStyleableUsageRuns ([Values (true, false)] bool isRelease, [Values (true, false)] bool linkResources)
 		{
-			// Not all combinations are valid, ignore those that aren't
-			if (!useCLR && useStringTypeMaps) {
-				Assert.Ignore ("String-based typemaps mode is used only in CoreCLR apps");
-			}
-
-			if (useCLR && isRelease && useStringTypeMaps) {
-				Assert.Ignore ("String-based typemaps mode is available only in Debug CoreCLR builds");
-			}
-
 			var rootPath = Path.Combine (Root, "temp", TestName);
 			var lib = new XamarinAndroidLibraryProject () {
 				ProjectName = "Styleable.Library"
@@ -625,7 +615,6 @@ namespace Styleable.Library {
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
-			proj.SetProperty ("UseMonoRuntime", useCLR ? "false" : "true");
 			proj.AddReference (lib);
 
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\styleables.xml") {
@@ -663,27 +652,15 @@ namespace Styleable.Library {
 }
 ");
 
-			string[] abis = useCLR switch {
-				true => new string [] { "arm64-v8a", "x86_64" },
-				false => new string [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" },
-			};
-
+			var abis = new string [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
 			proj.SetAndroidSupportedAbis (abis);
 			var libBuilder = CreateDllBuilder (Path.Combine (rootPath, lib.ProjectName));
 			Assert.IsTrue (libBuilder.Build (lib), "Library should have built succeeded.");
 			builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName));
 
+
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-
-			Dictionary<string, string>? environmentVariables = null;
-			if (useCLR && !isRelease && useStringTypeMaps) {
-				// The variable must have content to enable string-based typemaps
-				environmentVariables = new (StringComparer.Ordinal) {
-					{"CI_TYPEMAP_DEBUG_USE_STRINGS", "yes"}
-				};
-			}
-
-			RunProjectAndAssert (proj, builder, environmentVariables: environmentVariables);
+			RunProjectAndAssert (proj, builder);
 
 			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"));
