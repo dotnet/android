@@ -3007,7 +3007,7 @@ because xbuild doesn't support framework reference assemblies.
       ToolExe="$(AdbToolExe)"
       ToolPath="$(AdbToolPath)"
       AdbTarget="$(AdbTarget)"
-      Command="shell cmd package uninstall"
+      Command="shell pm uninstall"
       Arguments="$(_AndroidPackage)"
   />
   <InstallApkSet
