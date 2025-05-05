@@ -134,6 +134,13 @@ namespace Xamarin.Android.Build.Tests
 			},
 			new object [] {
 				/* runtimeIdentifiers */ "android-arm64",
+				/* isRelease */          false,
+				/* aot */                false,
+				/* usesAssemblyStore */  true,
+				/* runtime */            AndroidRuntime.CoreCLR,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android-arm64",
 				/* isRelease */          true,
 				/* aot */                false,
 				/* usesAssemblyStore */  false,

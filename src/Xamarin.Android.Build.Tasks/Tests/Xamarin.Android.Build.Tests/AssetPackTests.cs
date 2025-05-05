@@ -38,6 +38,7 @@ namespace Xamarin.Android.Build.Tests
 		[Category ("SmokeTests")]
 		[TestCase (false, AndroidRuntime.MonoVM)]
 		[TestCase (true, AndroidRuntime.MonoVM)]
+		[TestCase (false, AndroidRuntime.CoreCLR)]
 		[TestCase (true, AndroidRuntime.CoreCLR)]
 		[TestCase (true, AndroidRuntime.NativeAOT)]
 		public void BuildApplicationWithAssetPackThatHasInvalidName (bool isRelease, AndroidRuntime runtime)
@@ -67,6 +68,7 @@ namespace Xamarin.Android.Build.Tests
 		[Category ("SmokeTests")]
 		[TestCase (false, AndroidRuntime.MonoVM)]
 		[TestCase (true, AndroidRuntime.MonoVM)]
+		[TestCase (false, AndroidRuntime.CoreCLR)]
 		[TestCase (true, AndroidRuntime.CoreCLR)]
 		[TestCase (true, AndroidRuntime.NativeAOT)]
 		public void BuildApplicationWithAssetPackOutsideProjectDirectory (bool isRelease, AndroidRuntime runtime)
@@ -117,6 +119,7 @@ namespace Xamarin.Android.Build.Tests
 		[Category ("SmokeTests")]
 		[TestCase (false, AndroidRuntime.MonoVM)]
 		[TestCase (true, AndroidRuntime.MonoVM)]
+		[TestCase (false, AndroidRuntime.CoreCLR)]
 		[TestCase (true, AndroidRuntime.CoreCLR)]
 		[TestCase (true, AndroidRuntime.NativeAOT)]
 		public void BuildApplicationWithAssetPackOverrides (bool isRelease, AndroidRuntime runtime)
@@ -160,6 +163,7 @@ namespace Xamarin.Android.Build.Tests
 		[Category ("SmokeTests")]
 		[TestCase (false, AndroidRuntime.MonoVM)]
 		[TestCase (true, AndroidRuntime.MonoVM)]
+		[TestCase (false, AndroidRuntime.CoreCLR)]
 		[TestCase (true, AndroidRuntime.CoreCLR)]
 		[TestCase (true, AndroidRuntime.NativeAOT)]
 		public void BuildApplicationWithAssetPack (bool isRelease, AndroidRuntime runtime)
