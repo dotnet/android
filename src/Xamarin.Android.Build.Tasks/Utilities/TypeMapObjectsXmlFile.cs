@@ -198,19 +198,20 @@ class TypeMapObjectsXmlFile
 
 	static void ImportDebugData (XElement root, TypeMapObjectsXmlFile file)
 	{
-		var isMonoAndroid = root.GetAttributeOrDefault ("assembly-name", string.Empty) == "Mono.Android";
+		var assemblyName = root.GetAttributeOrDefault ("assembly-name", string.Empty);
+		var isMonoAndroid = assemblyName == "Mono.Android";
 		var javaToManaged = root.Element ("java-to-managed");
 
 		if (javaToManaged is not null) {
 			foreach (var entry in javaToManaged.Elements ("entry"))
-				file.JavaToManagedDebugEntries.Add (FromDebugEntryXml (entry, isMonoAndroid));
+				file.JavaToManagedDebugEntries.Add (FromDebugEntryXml (entry, assemblyName, isMonoAndroid));
 		}
 
 		var managedToJava = root.Element ("managed-to-java");
 
 		if (managedToJava is not null) {
 			foreach (var entry in managedToJava.Elements ("entry"))
-				file.ManagedToJavaDebugEntries.Add (FromDebugEntryXml (entry, isMonoAndroid));
+				file.ManagedToJavaDebugEntries.Add (FromDebugEntryXml (entry, assemblyName, isMonoAndroid));
 		}
 	}
 
@@ -251,7 +252,7 @@ class TypeMapObjectsXmlFile
 		File.Create (destination).Dispose ();
 	}
 
-	static TypeMapDebugEntry FromDebugEntryXml (XElement entry, bool isMonoAndroid)
+	static TypeMapDebugEntry FromDebugEntryXml (XElement entry, string assemblyName, bool isMonoAndroid)
 	{
 		var javaName = entry.GetAttributeOrDefault ("java-name", string.Empty);
 		var managedName = entry.GetAttributeOrDefault ("managed-name", string.Empty);
@@ -264,6 +265,7 @@ class TypeMapObjectsXmlFile
 			SkipInJavaToManaged = skipInJavaToManaged,
 			IsInvoker = isInvoker,
 			IsMonoAndroid = isMonoAndroid,
+			AssemblyName = assemblyName,
 		};
 	}
 
