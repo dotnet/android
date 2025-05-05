@@ -11,6 +11,7 @@ namespace Java.InteropTests {
 	[TestFixture]
 	public class JavaManagedGCBridgeTests : JavaVMFixture {
 
+#if !NO_GC_BRIDGE_SUPPORT
 		// https://github.com/mono/mono/blob/98d2314/mono/tests/sgen-bridge-xref.cs
 		[Test]
 		public void CrossReferences ()
@@ -33,6 +34,7 @@ namespace Java.InteropTests {
 				Assert.IsNotNull (b);
 			}
 		}
+#endif  // !NO_GC_BRIDGE_SUPPORT
 
 		static void SetupLinks (JavaObjectArray<CrossReferenceBridge> array, out WeakReference<CrossReferenceBridge> root, out WeakReference<CrossReferenceBridge> child)
 		{
