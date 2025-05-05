@@ -34,7 +34,7 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 			return 0;
 		}
 
-		public override string GetPointedToSymbolName (object data, string fieldName)
+		public override string? GetPointedToSymbolName (object data, string fieldName)
 		{
 			var map_module = EnsureType<TypeMap> (data);
 
@@ -110,10 +110,10 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 	sealed class TypeMapEntry
 	{
 		[NativeAssembler (Ignore = true)]
-		public string From;
+		public string From = String.Empty;
 
 		[NativeAssembler (Ignore = true)]
-		public string To;
+		public string To = String.Empty;
 
 		[NativeAssembler (UsesDataProvider = true)]
 		public uint from;
@@ -131,10 +131,10 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 	sealed class TypeMapManagedTypeInfo
 	{
 		[NativeAssembler (Ignore = true)]
-		public string AssemblyName;
+		public string AssemblyName = String.Empty;
 
 		[NativeAssembler (Ignore = true)]
-		public string ManagedTypeName;
+		public string ManagedTypeName = String.Empty;
 
 		[NativeAssembler (UsesDataProvider = true)]
 		public uint assembly_name_index;
@@ -170,7 +170,7 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 	sealed class TypeMapAssembly
 	{
 		[NativeAssembler (Ignore = true)]
-		public string Name;
+		public string Name = String.Empty;
 
 		[NativeAssembler (Ignore = true)]
 		public Guid MVID;
@@ -184,15 +184,15 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 	}
 
 	readonly TypeMapGenerator.ModuleDebugData data;
-	StructureInfo typeMapEntryStructureInfo;
-	StructureInfo typeMapStructureInfo;
-	StructureInfo typeMapAssemblyStructureInfo;
-	StructureInfo typeMapManagedTypeInfoStructureInfo;
+	StructureInfo? typeMapEntryStructureInfo;
+	StructureInfo? typeMapStructureInfo;
+	StructureInfo? typeMapAssemblyStructureInfo;
+	StructureInfo? typeMapManagedTypeInfoStructureInfo;
 	List<StructureInstance<TypeMapEntry>> javaToManagedMap;
 	List<StructureInstance<TypeMapEntry>> managedToJavaMap;
 	List<StructureInstance<TypeMapAssembly>> uniqueAssemblies;
 	List<StructureInstance<TypeMapManagedTypeInfo>> managedTypeInfos;
-	StructureInstance<TypeMap> type_map;
+	StructureInstance<TypeMap>? type_map;
 
 	public TypeMappingDebugNativeAssemblyGeneratorCLR (TaskLoggingHelper log, TypeMapGenerator.ModuleDebugData data)
 		: base (log)
@@ -206,11 +206,16 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		javaToManagedMap = new ();
 		managedToJavaMap = new ();
 		uniqueAssemblies = new ();
+		managedTypeInfos = new ();
 	}
 
 	protected override void Construct (LlvmIrModule module)
 	{
 		module.DefaultStringGroup = "tmd";
+
+		if (data.UniqueAssemblies == null) {
+			throw new InvalidOperationException ("Internal error: unique assemblies collection must be present");
+		}
 
 		MapStructures (module);
 
@@ -253,7 +258,17 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		}
 		// Input is sorted on name, we need to re-sort it on hashes, if used
 		if (typemap_uses_hashes) {
-			managedToJavaMap.Sort ((StructureInstance<TypeMapEntry> a, StructureInstance<TypeMapEntry> b) => a.Instance.from_hash.CompareTo (b.Instance.from_hash));
+			managedToJavaMap.Sort ((StructureInstance<TypeMapEntry> a, StructureInstance<TypeMapEntry> b) => {
+				if (a.Instance == null) {
+					return b.Instance == null ? 0 : -1;
+				}
+
+				if (b.Instance == null) {
+					return 1;
+				}
+
+				return a.Instance.from_hash.CompareTo (b.Instance.from_hash);
+			});
 		}
 
 		if (!typemap_uses_hashes) {
@@ -273,7 +288,18 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 			};
 			uniqueAssemblies.Add (new StructureInstance<TypeMapAssembly> (typeMapAssemblyStructureInfo, entry));
 		}
-		uniqueAssemblies.Sort ((StructureInstance<TypeMapAssembly> a, StructureInstance<TypeMapAssembly> b) => a.Instance.mvid_hash.CompareTo (b.Instance.mvid_hash));
+
+		uniqueAssemblies.Sort ((StructureInstance<TypeMapAssembly> a, StructureInstance<TypeMapAssembly> b) => {
+			if (a.Instance == null) {
+				return b.Instance == null ? 0 : -1;
+			}
+
+			if (b.Instance == null) {
+				return 1;
+			}
+
+			return a.Instance.mvid_hash.CompareTo (b.Instance.mvid_hash);
+		});
 
 		var managedTypeInfos = new List<StructureInstance<TypeMapManagedTypeInfo>> ();
 		// Java-to-managed maps don't use hashes since many mappings have multiple instances
