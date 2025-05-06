@@ -49,7 +49,8 @@ namespace Xamarin.Android.Tasks
 
 		public string? Prefixes { get; set; }
 
-		public string PrefixProperty { get; set; }
+		[Required]
+		public string PrefixProperty { get; set; } = "";
 
 		public bool LowercaseFilenames { get; set; }
 
