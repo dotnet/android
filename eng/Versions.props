@@ -21,8 +21,8 @@
     <VersionBand Condition=" '$(VersionBand)' == '' ">$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftDotnetSdkInternalPackageVersion), `^\d+\.\d+\.\d`))00</VersionBand>
     <VersionSuffixRegex>\-(preview|rc|alpha).\d+</VersionSuffixRegex>
     <DotNetPreviewVersionBand Condition=" '$(DotNetPreviewVersionBand)' == '' ">$(VersionBand)$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftDotnetSdkInternalPackageVersion), $(VersionSuffixRegex)))</DotNetPreviewVersionBand>
-    <DotNetSdkManifestsFolder>$(DotNetPreviewVersionBand)</DotNetSdkManifestsFolder>
     <!-- NOTE: sometimes we hardcode these when transitioning to new version bands -->
+    <DotNetSdkManifestsFolder>9.0.100</DotNetSdkManifestsFolder>
     <DotNetMonoManifestVersionBand>9.0.100</DotNetMonoManifestVersionBand>
     <DotNetEmscriptenManifestVersionBand>9.0.100</DotNetEmscriptenManifestVersionBand>
     <DotNetAndroidManifestVersionBand>9.0.100</DotNetAndroidManifestVersionBand>
