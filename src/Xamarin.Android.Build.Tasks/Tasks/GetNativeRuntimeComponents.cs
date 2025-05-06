@@ -12,33 +12,33 @@ public class GetNativeRuntimeComponents : AndroidTask
 {
 	public override string TaskPrefix => "GNRC";
 
-	public ITaskItem[] MonoComponents { get; set; }
+	public ITaskItem[]? MonoComponents { get; set; }
 
 	[Required]
-	public ITaskItem[] ResolvedNativeArchives { get; set; }
+	public ITaskItem[] ResolvedNativeArchives { get; set; } = null!;
 
 	[Required]
-	public ITaskItem[] ResolvedNativeObjectFiles { get; set; }
+	public ITaskItem[] ResolvedNativeObjectFiles { get; set; } = null!;
 
 	[Required]
-	public string HackLocalClrRepoPath { get; set; }
+	public string HackLocalClrRepoPath { get; set; } = "";
 
 	[Output]
-	public ITaskItem[] NativeArchives { get; set; }
+	public ITaskItem[] NativeArchives { get; set; } = null!;
 
 	[Output]
-	public ITaskItem[] RequiredLibraries { get; set; }
+	public ITaskItem[] RequiredLibraries { get; set; } = null!;
 
 	[Output]
-	public ITaskItem[] LinkStartFiles { get; set; }
+	public ITaskItem[] LinkStartFiles { get; set; } = null!;
 
 	[Output]
-	public ITaskItem[] LinkEndFiles { get; set; }
+	public ITaskItem[] LinkEndFiles { get; set; } = null!;
 
 	// TODO: more research, for now it seems `--export-dynamic-symbol=name` options generated from
 	//       this array don't work as expected.
 	[Output]
-	public ITaskItem[] NativeSymbolsToExport { get; set; }
+	public ITaskItem[] NativeSymbolsToExport { get; set; } = [];
 
 	public override bool RunTask ()
 	{
@@ -151,7 +151,7 @@ public class GetNativeRuntimeComponents : AndroidTask
 	ITaskItem DoMakeItem (string msbuildItemName, ITaskItem sourceItem, HashSet<string> uniqueAbis)
 	{
 		var ret = new TaskItem (sourceItem.ItemSpec);
-		string rid = sourceItem.GetRequiredMetadata (msbuildItemName, KnownMetadata.RuntimeIdentifier, Log);
+		string rid = sourceItem.GetRequiredMetadata (msbuildItemName, KnownMetadata.RuntimeIdentifier, Log) ?? String.Empty;
 		string abi = MonoAndroidHelper.RidToAbi (rid);
 		uniqueAbis.Add (abi);
 		ret.SetMetadata (KnownMetadata.Abi, abi);
