@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -19,13 +17,13 @@ namespace Xamarin.Android.Tasks {
 		List<ITaskItem> libraryResourceFiles = new List<ITaskItem> ();
 
 		[Required]
-		public ITaskItem[] Directories { get; set; }
+		public ITaskItem[] Directories { get; set; } = [];
 
 		[Required]
-		public string LibraryProjectIntermediatePath { get; set; }
+		public string LibraryProjectIntermediatePath { get; set; } = "";
 
 		[Required]
-		public string StampDirectory { get; set; }
+		public string StampDirectory { get; set; } = "";
 
 		[Output]
 		public ITaskItem[] Output => output.ToArray ();

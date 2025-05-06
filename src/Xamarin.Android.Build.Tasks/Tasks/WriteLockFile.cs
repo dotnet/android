@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.IO;
 using Microsoft.Build.Framework;
@@ -16,7 +14,7 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "WLF";
 
 		[Required]
-		public string LockFile { get; set; }
+		public string LockFile { get; set; } = "";
 
 		public override bool RunTask ()
 		{

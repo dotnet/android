@@ -1,5 +1,3 @@
-#nullable disable
-
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Collections.Generic;
@@ -22,9 +20,9 @@ namespace Xamarin.Android.Tasks
 		public override string DefaultErrorCode => "BT0000";
 
 		[Required]
-		public string ApkSet { get; set; }
+		public string ApkSet { get; set; } = "";
 
-		public string[] Modules  { get; set; }
+		public string[]? Modules  { get; set; }
 
 		internal override CommandLineBuilder GetCommandLineBuilder ()
 		{

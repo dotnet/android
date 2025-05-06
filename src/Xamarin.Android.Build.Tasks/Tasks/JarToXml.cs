@@ -1,7 +1,5 @@
 // Copyright (C) 2012 Xamarin, Inc. All rights reserved.
 
-#nullable disable
-
 using System;
 using System.Linq;
 using System.IO;
@@ -18,35 +16,35 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "JTX";
 
 		[Required]
-		public string AndroidSdkDirectory { get; set; }
-		
-		[Required]
-		public string MonoAndroidToolsDirectory { get; set; }
-		
-		[Required]
-		public string JavaSdkDirectory { get; set; }
+		public string AndroidSdkDirectory { get; set; } = "";
 
 		[Required]
-		public string AndroidApiLevel { get; set; }
+		public string MonoAndroidToolsDirectory { get; set; } = "";
 
 		[Required]
-		public string OutputFile { get; set; }
+		public string JavaSdkDirectory { get; set; } = "";
 
 		[Required]
-		public ITaskItem[] SourceJars { get; set; }
+		public string AndroidApiLevel { get; set; } = "";
 
-		public ITaskItem[] ReferenceJars { get; set; }
-		public string DroidDocPaths { get; set; }
-		public string JavaDocPaths { get; set; }
-		public string Java7DocPaths { get; set; }
-		public string Java8DocPaths { get; set; }
-		public ITaskItem[] JavaDocs { get; set; }
+		[Required]
+		public string OutputFile { get; set; } = "";
 
-		public ITaskItem[] LibraryProjectJars { get; set; }
+		[Required]
+		public ITaskItem[] SourceJars { get; set; } = [];
 
-		public string JavaOptions { get; set; }
+		public ITaskItem[]? ReferenceJars { get; set; }
+		public string? DroidDocPaths { get; set; }
+		public string? JavaDocPaths { get; set; }
+		public string? Java7DocPaths { get; set; }
+		public string? Java8DocPaths { get; set; }
+		public ITaskItem[]? JavaDocs { get; set; }
 
-		public string JavaMaximumHeapSize { get; set; }
+		public ITaskItem[]? LibraryProjectJars { get; set; }
+
+		public string? JavaOptions { get; set; }
+
+		public string? JavaMaximumHeapSize { get; set; }
 
 		public override bool RunTask ()
 		{
@@ -143,7 +141,7 @@ namespace Xamarin.Android.Tasks
 			return cmd.ToString ();
 		}
 
-		string GetJavadocOption (string file)
+		string? GetJavadocOption (string file)
 		{
 			string rawHTML = File.ReadAllText (file);
 			if (rawHTML.Length < 500)

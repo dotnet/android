@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -19,7 +17,7 @@ namespace Xamarin.Android.Tasks {
 		public override string TaskPrefix => "CFI";
 
 		[Required]
-		public ITaskItem[] Resources { get; set; }
+		public ITaskItem[] Resources { get; set; } = [];
 
 		Regex fileNameCheck = new Regex ("[^a-zA-Z0-9_.]+", RegexOptions.Compiled);
 		Regex fileNameWithHyphenCheck = new Regex ("[^a-zA-Z0-9_.-]+", RegexOptions.Compiled);

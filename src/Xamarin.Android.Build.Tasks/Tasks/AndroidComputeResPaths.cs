@@ -24,8 +24,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#nullable disable
-
 using System;
 using System.Text;
 using Microsoft.Build.Utilities;
@@ -42,38 +40,38 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "CRP";
 
 		[Required]
-		public ITaskItem[] ResourceFiles { get; set; }
+		public ITaskItem[] ResourceFiles { get; set; } = [];
 
 		[Required]
-		public string IntermediateDir { get; set; }
+		public string IntermediateDir { get; set; } = "";
 
-		public string AssetPackIntermediateDir { get; set; }
+		public string? AssetPackIntermediateDir { get; set; }
 
-		public string Prefixes { get; set; }
+		public string? Prefixes { get; set; }
 
 		public string PrefixProperty { get; set; }
 
 		public bool LowercaseFilenames { get; set; }
 
-		public string ProjectDir { get; set; }
+		public string? ProjectDir { get; set; }
 
-		public string AndroidLibraryFlatFilesDirectory { get; set; }
-
-		[Output]
-		public ITaskItem[] IntermediateFiles { get; set; }
+		public string? AndroidLibraryFlatFilesDirectory { get; set; }
 
 		[Output]
-		public ITaskItem [] ResolvedResourceFiles { get; set; }
+		public ITaskItem[]? IntermediateFiles { get; set; }
 
 		[Output]
-		public string FilesHash { get; set; }
+		public ITaskItem []? ResolvedResourceFiles { get; set; }
+
+		[Output]
+		public string? FilesHash { get; set; }
 
 		public override bool RunTask ()
 		{
 			var intermediateFiles = new List<ITaskItem> (ResourceFiles.Length);
 			var resolvedFiles = new List<ITaskItem> (ResourceFiles.Length);
 
-			string[] prefixes = Prefixes != null ? Prefixes.Split (';') : null;
+			string[]? prefixes = Prefixes != null ? Prefixes.Split (';') : null;
 			if (prefixes != null) {
 				for (int i = 0; i < prefixes.Length; i++) {
 					string p = prefixes [i];

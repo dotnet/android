@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.IO;
 using System.Linq;
@@ -13,10 +11,10 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "CDJ";
 
-		public ITaskItem [] JavaSourceFiles { get; set; }
-		public ITaskItem[] JavaLibraries { get; set; }
-		public ITaskItem[] LibraryProjectJars { get; set; }
-		public string [] ExcludedFiles { get; set; }
+		public ITaskItem []? JavaSourceFiles { get; set; }
+		public ITaskItem[]? JavaLibraries { get; set; }
+		public ITaskItem[]? LibraryProjectJars { get; set; }
+		public string []? ExcludedFiles { get; set; }
 
 		public override bool RunTask ()
 		{

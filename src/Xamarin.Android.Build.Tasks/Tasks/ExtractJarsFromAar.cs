@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,12 +16,12 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "ELPJ";
 
 		[Required]
-		public string OutputJarsDirectory { get; set; }
+		public string OutputJarsDirectory { get; set; } = "";
 
 		[Required]
-		public string OutputAnnotationsDirectory { get; set; }
+		public string OutputAnnotationsDirectory { get; set; } = "";
 
-		public string [] Libraries { get; set; }
+		public string []? Libraries { get; set; }
 
 		public override bool RunTask ()
 		{

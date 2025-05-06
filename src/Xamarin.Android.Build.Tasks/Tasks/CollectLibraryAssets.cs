@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Linq;
 using Microsoft.Build.Utilities;
@@ -12,8 +10,8 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "CLA";
 
-		public string AssetDirectory { get; set; }
-		public string [] AdditionalAssetDirectories { get; set; }
+		public string? AssetDirectory { get; set; }
+		public string []? AdditionalAssetDirectories { get; set; }
 
 		public override bool RunTask ()
 		{

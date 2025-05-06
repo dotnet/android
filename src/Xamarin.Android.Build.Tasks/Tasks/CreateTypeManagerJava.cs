@@ -1,5 +1,3 @@
-#nullable disable
-
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -15,10 +13,10 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "CTMJ";
 
 		[Required]
-		public string ResourceName { get; set; }
+		public string ResourceName { get; set; } = "";
 
 		[Required]
-		public string OutputFilePath { get; set; }
+		public string OutputFilePath { get; set; } = "";
 
 		static readonly Assembly ExecutingAssembly = Assembly.GetExecutingAssembly ();
 
@@ -26,7 +24,7 @@ namespace Xamarin.Android.Tasks
 		{
 			string? content = ReadResource (ResourceName);
 
-			if (String.IsNullOrEmpty (content)) {
+			if (content.IsNullOrEmpty ()) {
 				return false;
 			}
 

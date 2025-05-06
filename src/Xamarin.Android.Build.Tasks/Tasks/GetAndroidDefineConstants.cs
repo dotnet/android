@@ -1,7 +1,5 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -19,10 +17,10 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public int AndroidApiLevel { get; set; }
 
-		public string ProductVersion         { get; set; }
+		public string? ProductVersion         { get; set; }
 
 		[Output]
-		public  ITaskItem[]     AndroidDefineConstants      { get; set; }
+		public  ITaskItem[]?    AndroidDefineConstants      { get; set; }
 
 		public override bool RunTask ()
 		{
