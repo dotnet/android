@@ -1022,7 +1022,7 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
 {0} - The name of the .NET runtime, such as CoreCLR or NativeAOT.</comment>
   </data>
   <data name="XA1041" xml:space="preserve">
-    <value>The MSBuild property '{0}' has an invalid value of '{1}'. The value is expected to be a directory path representing the relative location of your Assets or Resources.</value>
+    <value>Il valore ‘{1}’ della proprietà MSBuild ‘{0}’ non è valido. Il valore deve essere un percorso di directory che rappresenta il percorso relativo delle risorse.</value>
     <comment>The following are literal names and should not be translated: .NET.
 {0} - The MSBuild property that has the incorrect value.
 {1} - The current value of the property
