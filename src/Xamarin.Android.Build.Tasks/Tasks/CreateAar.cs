@@ -34,7 +34,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string OutputFile { get; set; } = "";
 
-		public string PrefixProperty { get; set; }
+		[Required]
+		public string PrefixProperty { get; set; } = "";
 
 		public override bool RunTask ()
 		{
