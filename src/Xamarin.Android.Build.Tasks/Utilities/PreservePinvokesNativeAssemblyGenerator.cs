@@ -60,10 +60,10 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 
 	sealed class ConstructionState
 	{
-		public LlvmIrFunction Func;
-		public LlvmIrFunctionLabelItem ReturnLabel;
-		public LlvmIrFunctionParameter EntryPointHashParam;
-		public LlvmIrInstructions.Phi Phi;
+		public LlvmIrFunction Func = null!;
+		public LlvmIrFunctionLabelItem ReturnLabel = null!;
+		public LlvmIrFunctionParameter EntryPointHashParam = null!;
+		public LlvmIrInstructions.Phi Phi = null!;
 		public bool Is64Bit;
 	}
 
@@ -111,8 +111,8 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 
 			Log.LogDebugMessage ($"    {archiveItem.Name}");
 			componentNames.Add (archiveItem.Name);
-			if (!String.IsNullOrEmpty (archiveItem.JniOnLoadName)) {
-				componentLoadHandlers.Add (archiveItem.Name, archiveItem.JniOnLoadName);
+			if (!archiveItem.JniOnLoadName.IsNullOrEmpty ()) {
+				componentLoadHandlers.Add (archiveItem.Name, archiveItem.JniOnLoadName!);
 			}
 
 			if (archiveItem.SymbolsToPreserve == null || archiveItem.SymbolsToPreserve.Count == 0) {
@@ -164,19 +164,19 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 			}
 			Log.LogDebugMessage ("      must be preserved");
 
-			if (!String.IsNullOrEmpty (componentName)) {
-				if (haveLoadHandlers  && componentLoadHandlers.TryGetValue (componentName, out string jniOnLoadName)) {
+			if (!componentName.IsNullOrEmpty ()) {
+				if (haveLoadHandlers  && componentLoadHandlers.TryGetValue (componentName!, out string jniOnLoadName)) {
 					if (jniOnLoadNames.Add (jniOnLoadName)) {
 						Log.LogDebugMessage ($"      component '{componentName}' registers a load handler '{jniOnLoadName}'");
 					}
 				}
 
-				if (havePreservedSymbols && componentPreservedSymbols.TryGetValue (componentName, out HashSet<LlvmIrGlobalVariableReference> preservedSymbols)) {
+				if (havePreservedSymbols && componentPreservedSymbols.TryGetValue (componentName!, out HashSet<LlvmIrGlobalVariableReference> preservedSymbols)) {
 					foreach (LlvmIrGlobalVariableReference vref in preservedSymbols) {
 						DeclareDummyFunction (module, vref);
 						symbolsToExplicitlyPreserve.Add (vref);
 					}
-					componentPreservedSymbols.Remove (componentName);
+					componentPreservedSymbols.Remove (componentName!);
 				}
 			}
 
@@ -395,8 +395,12 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 
 	static void DeclareDummyFunction (LlvmIrModule module, LlvmIrGlobalVariableReference symref)
 	{
+		if (symref.Name.IsNullOrEmpty ()) {
+			throw new InvalidOperationException ("Internal error: variable reference must have a name");
+		}
+
 		// Just a dummy declaration, we don't care about the arguments
-		var funcSig = new LlvmIrFunctionSignature (symref.Name, returnType: typeof(void));
+		var funcSig = new LlvmIrFunctionSignature (symref.Name!, returnType: typeof(void));
 		var _ = module.DeclareExternalFunction (funcSig);
 	}
 }

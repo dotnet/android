@@ -13,43 +13,43 @@ public class LinkNativeRuntime : AsyncTask
 {
 	public override string TaskPrefix => "LNR";
 
-	public ITaskItem[] MonoComponents { get; set; }
+	public ITaskItem[]? MonoComponents { get; set; }
 
 	[Required]
-	public string AndroidBinUtilsDirectory { get; set; }
+	public string AndroidBinUtilsDirectory { get; set; } = "";
 
 	public string? AndroidNdkDirectory { get; set; }
 	public string? AndroidApiLevel { get; set; }
 
 	[Required]
-	public string IntermediateOutputPath { get; set; }
+	public string IntermediateOutputPath { get; set; } = "";
 
 	[Required]
-	public ITaskItem[] LinkLibraries { get; set; }
+	public ITaskItem[] LinkLibraries { get; set; } = null!;
 
 	[Required]
-	public ITaskItem[] NativeArchives { get; set; }
+	public ITaskItem[] NativeArchives { get; set; } = null!;
 
 	[Required]
-	public ITaskItem[] NativeObjectFiles { get; set; }
+	public ITaskItem[] NativeObjectFiles { get; set; } = null!;
 
 	[Required]
-	public ITaskItem[] NativeLinkStartFiles { get; set; }
+	public ITaskItem[] NativeLinkStartFiles { get; set; } = null!;
 
 	[Required]
-	public ITaskItem[] NativeLinkEndFiles { get; set; }
+	public ITaskItem[] NativeLinkEndFiles { get; set; } = null!;
 
 	[Required]
-	public ITaskItem[] NativeSymbolsToExport { get; set; }
+	public ITaskItem[] NativeSymbolsToExport { get; set; } = null!;
 
 	[Required]
-	public ITaskItem[] OutputRuntimes { get; set; }
+	public ITaskItem[] OutputRuntimes { get; set; } = null!;
 
 	[Required]
-	public ITaskItem[] SupportedAbis { get; set; }
+	public ITaskItem[] SupportedAbis { get; set; } = null!;
 
 	[Required]
-	public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = Array.Empty<ITaskItem> ();
+	public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = null!;
 
 	public bool SaveDebugSymbols { get; set; } = true;
 	public bool StripDebugSymbols { get; set; } = true;
@@ -99,7 +99,7 @@ public class LinkNativeRuntime : AsyncTask
 		// let the exception be thrown should a required (and assumed to be present) set be missing.
 		var sets = new Dictionary<string, List<ITaskItem>> (StringComparer.Ordinal);
 		foreach (ITaskItem item in GetAbiItems (NativeArchives, "_SelectedNativeArchive", abi)) {
-			string setName = item.GetRequiredMetadata ("_SelectedNativeArchive", KnownMetadata.NativeLinkItemSet, Log);
+			string setName = item.GetRequiredMetadata ("_SelectedNativeArchive", KnownMetadata.NativeLinkItemSet, Log) ?? String.Empty;
 			if (!sets.TryGetValue (setName, out List<ITaskItem>? items)) {
 				items = new List<ITaskItem> ();
 				sets.Add (setName, items);

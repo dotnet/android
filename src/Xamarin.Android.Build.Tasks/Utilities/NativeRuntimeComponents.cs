@@ -18,7 +18,7 @@ class NativeRuntimeComponents
 	internal class Archive
 	{
 		public readonly string Name;
-		public readonly string JniOnLoadName;
+		public readonly string? JniOnLoadName;
 		public bool Include => shouldInclude (this);
 		public readonly bool WholeArchive;
 		public bool DontExportSymbols { get; set; }
@@ -81,14 +81,14 @@ class NativeRuntimeComponents
 		}
 	}
 
-	readonly ITaskItem[] monoComponents;
+	readonly ITaskItem[]? monoComponents;
 
 	public readonly List<Archive> KnownArchives;
 	public readonly List<string> NativeLibraries;
 	public readonly List<string> LinkStartFiles;
 	public readonly List<string> LinkEndFiles;
 
-	public NativeRuntimeComponents (ITaskItem[] monoComponents)
+	public NativeRuntimeComponents (ITaskItem[]? monoComponents)
 	{
 		this.monoComponents = monoComponents;
 		KnownArchives = new () {
