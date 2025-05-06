@@ -58,7 +58,7 @@
   <Target Name="UpdateMauiWorkloadsProj">
     <XmlPoke
       XmlInputPath="$(MauiSourcePath)\src\DotNet\Dependencies\Workloads.csproj"
-      Value="Microsoft.NET.Sdk.Android.Manifest-$(DotNetSdkManifestsFolder)"
+      Value="Microsoft.NET.Sdk.Android.Manifest-$(DotNetAndroidManifestVersionBand)"
       Query="/Project/ItemGroup/PackageDownload[contains(@Include,'Microsoft.NET.Sdk.Android.Manifest-')]/@Include" />
     <XmlPeek
         XmlInputPath="$(_Root)NuGet.config"
