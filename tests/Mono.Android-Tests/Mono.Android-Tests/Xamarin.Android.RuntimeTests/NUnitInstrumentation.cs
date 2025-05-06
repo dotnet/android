@@ -30,7 +30,7 @@ namespace Xamarin.Android.RuntimeTests
         protected override IList<TestAssemblyInfo> GetTestAssemblies()
         {
             Assembly asm = Assembly.GetExecutingAssembly();
-            #if !NATIVEAOT && !CORECLR // TODO: Java.Interop-Tests not passing yet
+            #if !NATIVEAOT // TODO: Java.Interop-Tests not passing yet
             Assembly ji  = typeof (Java.InteropTests.JavaInterop_Tests_Reference).Assembly;
             #endif
 
@@ -38,7 +38,7 @@ namespace Xamarin.Android.RuntimeTests
             return new List<TestAssemblyInfo>()
             {
                 new TestAssemblyInfo (asm, asm.Location ?? String.Empty),
-                #if !NATIVEAOT && !CORECLR
+                #if !NATIVEAOT
                 new TestAssemblyInfo (ji, ji.Location ?? String.Empty),
                 #endif
             };
