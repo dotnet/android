@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -101,6 +102,7 @@ class TypeMapObjectsXmlFile
 		xml.WriteAttributeStringIfNotDefault ("managed-name", entry.ManagedName);
 		xml.WriteAttributeStringIfNotDefault ("skip-in-java-to-managed", entry.SkipInJavaToManaged);
 		xml.WriteAttributeStringIfNotDefault ("is-invoker", entry.IsInvoker);
+		xml.WriteAttributeString ("managed-type-token-id", entry.ManagedTypeTokenId.ToString (CultureInfo.InvariantCulture));
 		xml.WriteEndElement ();
 	}
 
@@ -258,10 +260,12 @@ class TypeMapObjectsXmlFile
 		var managedName = entry.GetAttributeOrDefault ("managed-name", string.Empty);
 		var skipInJavaToManaged = entry.GetAttributeOrDefault ("skip-in-java-to-managed", false);
 		var isInvoker = entry.GetAttributeOrDefault ("is-invoker", false);
+		var managedTokenId = entry.GetAttributeOrDefault ("managed-type-token-id", (uint)0);
 
 		return new TypeMapDebugEntry {
 			JavaName = javaName,
 			ManagedName = managedName,
+			ManagedTypeTokenId = managedTokenId,
 			SkipInJavaToManaged = skipInJavaToManaged,
 			IsInvoker = isInvoker,
 			IsMonoAndroid = isMonoAndroid,
