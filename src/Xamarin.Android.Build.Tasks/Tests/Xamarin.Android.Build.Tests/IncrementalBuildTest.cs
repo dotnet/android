@@ -12,13 +12,19 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[TestFixture (AndroidRuntime.MonoVM)]
+	[TestFixture (AndroidRuntime.NativeAOT)]
+	[TestFixture (AndroidRuntime.CoreCLR)]
 	[Parallelizable (ParallelScope.Children)]
-	public class IncrementalBuildTest : BaseTest
+	public class IncrementalBuildTest (AndroidRuntime runtime) : BaseTest
 	{
+		readonly AndroidRuntime _runtime = runtime;
+
 		[Test]
 		public void BasicApplicationRepetitiveBuild ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (_runtime);
 			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "first build failed");
@@ -45,6 +51,7 @@ namespace Xamarin.Android.Build.Tests
 		public void BasicApplicationRepetitiveReleaseBuild ()
 		{
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
+			proj.SetRuntime (_runtime);
 			using (var b = CreateApkBuilder ()) {
 				var foo = new BuildItem.Source ("Foo.cs") {
 					TextContent = () => @"using System;
@@ -79,6 +86,7 @@ namespace Xamarin.Android.Build.Tests
 				ProjectName = "App1",
 				IsRelease = true,
 			};
+			proj.SetRuntime (_runtime);
 			if (enableMultiDex)
 				proj.SetProperty ("AndroidEnableMultiDex", "True");
 			using (var b = CreateApkBuilder (path)) {
@@ -135,14 +143,15 @@ namespace Xamarin.Android.Build.Tests
 				ProjectName = "App1",
 				IsRelease = true,
 			};
+			proj.SetRuntime (_runtime);
 			using (var b = CreateApkBuilder (path, false, false)) {
-				Assert.IsTrue(b.Build (proj), "First should have succeeded");
+				Assert.IsTrue (b.Build (proj), "First should have succeeded");
 				Assert.IsFalse (
 					b.Output.IsTargetSkipped ("_GenerateAndroidResourceDir"),
 					"the _GenerateAndroidResourceDir target should not be skipped");
 				File.SetLastWriteTimeUtc (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "build.props"),
 					DateTime.UtcNow);
-				Assert.IsTrue(b.Build (proj), "Second should have succeeded");
+				Assert.IsTrue (b.Build (proj), "Second should have succeeded");
 				Assert.IsFalse (
 					b.Output.IsTargetSkipped ("_GenerateAndroidResourceDir"),
 					"the _GenerateAndroidResourceDir target should not be skipped");
@@ -157,6 +166,7 @@ namespace Xamarin.Android.Build.Tests
 				ProjectName = "App1",
 				IsRelease = true,
 			};
+			proj.SetRuntime (_runtime);
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			proj.SetProperty ("AndroidUseDesignerAssembly", "False");
 			using (var b = CreateApkBuilder (path)) {
@@ -202,6 +212,7 @@ namespace Xamarin.Android.Build.Tests
 					}
 				},
 			};
+			lib.SetRuntime (_runtime);
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (lib), "first build should have succeeded.");
 				var aarPath = Path.Combine (Root, b.ProjectDirectory, lib.OutputPath, $"{lib.ProjectName}.aar");
@@ -225,12 +236,14 @@ namespace Xamarin.Android.Build.Tests
 				PackageName = "com.companyname.App1",
 				OutputPath = Path.Combine("..","bin","Debug"),
 			};
+			app1.SetRuntime (_runtime);
 			sb.Projects.Add (app1);
 			var app2 = new XamarinAndroidApplicationProject () {
 				ProjectName = "App2",
 				PackageName = "com.companyname.App2",
 				OutputPath = Path.Combine("..","bin","Debug"),
 			};
+			app2.SetRuntime (_runtime);
 			sb.Projects.Add (app2);
 			Assert.IsTrue (sb.Build (), "Build of solution should have succeeded");
 			Assert.IsTrue (sb.ReBuild (), "ReBuild of solution should have succeeded");
@@ -252,6 +265,7 @@ namespace Xamarin.Android.Build.Tests
 					AotAssemblies = true,
 					IsRelease = true,
 				};
+				app1.SetRuntime (_runtime);
 				app1.SetProperty ("AndroidEnableMarshalMethods", "True");
 				sb.Projects.Add (app1);
 			}
@@ -280,6 +294,7 @@ public class TestMe {
 					}
 				},
 			};
+			app.SetRuntime (_runtime);
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", "JavacTaskDoesNotRunOnSecondBuild"), false, false)) {
 				Assert.IsTrue (b.Build (app), "First build should have succeeded");
@@ -332,6 +347,7 @@ namespace Lib
 					},
 				},
 			};
+			lib.SetRuntime (_runtime);
 			var so = lib.OtherBuildItems.First (x => x.Include () == "libs/armeabi-v7a/libfoo.so");
 
 			var lib2 = new XamarinAndroidLibraryProject () {
@@ -363,6 +379,7 @@ namespace Lib2
 					},
 				},
 			};
+			lib2.SetRuntime (_runtime);
 			var path = Path.Combine (Root, "temp", TestName);
 			using (var libbuilder = CreateDllBuilder (Path.Combine(path, "Lib"))) {
 
@@ -427,6 +444,7 @@ namespace Lib2
 					}
 				}
 			};
+			proj.SetRuntime (_runtime);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 				var firstBuildTime = b.LastBuildTime;
@@ -498,6 +516,7 @@ namespace Lib2
 					},
 				},
 			};
+			proj.SetRuntime (_runtime);
 			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 				foreach (var target in targets) {
@@ -528,6 +547,7 @@ namespace Lib2
 			var proj = new XamarinAndroidApplicationProject {
 				ManifestMerger = "manifestmerger.jar"
 			};
+			proj.SetRuntime (_runtime);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 				b.Output.AssertTargetIsNotSkipped ("_ManifestMerger");
@@ -557,6 +577,7 @@ namespace Lib2
 					},
 				}
 			};
+			app.SetRuntime (_runtime);
 
 			int count = 0;
 			var lib = new DotNetStandard {
@@ -607,6 +628,7 @@ namespace Lib2
 					},
 				}
 			};
+			app.SetRuntime (_runtime);
 			var lib1 = new DotNetStandard {
 				ProjectName = "Library1",
 				Sdk = "Microsoft.NET.Sdk",
@@ -664,6 +686,7 @@ namespace Lib2
 		public void LinkAssembliesNoShrink ()
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
+			proj.SetRuntime (_runtime);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 
@@ -687,6 +710,7 @@ namespace Lib2
 			AssertCommercialBuild ();
 
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (_runtime);
 			var selectedDevice = "foo";
 			var csproj_user_file = $"{proj.ProjectName}.csproj.user";
 			proj.Sources.Add (new BuildItem.NoActionResource (csproj_user_file) {
@@ -736,6 +760,7 @@ namespace Lib2
 					}
 				}
 			};
+			app.SetRuntime (_runtime);
 			// Use a custom view
 			app.LayoutMain = app.LayoutMain.Replace ("</LinearLayout>", "<MyApp.CustomTextView android:id=\"@+id/myText\" android:text=\"à请\" /></LinearLayout>");
 
@@ -812,6 +837,7 @@ namespace Lib2
 		public void ResolveLibraryProjectImports ()
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
+			proj.SetRuntime (_runtime);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
@@ -912,6 +938,7 @@ namespace Lib2
 			};
 
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (_runtime);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				var projectFile = Path.Combine (Root, b.ProjectDirectory, proj.ProjectFilePath);
 				b.ThrowOnBuildFailure = false;
@@ -919,8 +946,8 @@ namespace Lib2
 				b.Output.AssertTargetIsNotSkipped ("_GenerateAndroidResourceDir");
 				proj.OtherBuildItems.Add (xml);
 				b.Save (proj, doNotCleanupOnUpdate: true);
-				var modified = File.GetLastWriteTimeUtc (Path.Combine (Root, b.ProjectDirectory, "Resources","layout","Main.axml"));
-				File.SetLastWriteTimeUtc (Path.Combine (Root, b.ProjectDirectory, "Resources","values", "emptyvalues.xml"), modified);
+				var modified = File.GetLastWriteTimeUtc (Path.Combine (Root, b.ProjectDirectory, "Resources", "layout", "Main.axml"));
+				File.SetLastWriteTimeUtc (Path.Combine (Root, b.ProjectDirectory, "Resources", "values", "emptyvalues.xml"), modified);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				b.Output.AssertTargetIsNotSkipped ("_GenerateAndroidResourceDir");
 			}
@@ -935,6 +962,7 @@ namespace Lib2
 			};
 
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (_runtime);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				var projectFile = Path.Combine (Root, b.ProjectDirectory, proj.ProjectFilePath);
 				b.ThrowOnBuildFailure = false;
@@ -974,6 +1002,7 @@ namespace Lib2
 					},
 				}
 			};
+			proj.SetRuntime (_runtime);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				className = "fOO";
@@ -992,6 +1021,7 @@ namespace Lib2
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
+			proj.SetRuntime (_runtime);
 			proj.SetAndroidSupportedAbis ("armeabi-v7a");
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidEnvironment ("Foo.txt") {
 				TextContent = () => "Foo=Bar",
@@ -1101,6 +1131,7 @@ namespace Lib2
 					}
 				}
 			};
+			proj.SetRuntime (_runtime);
 			proj.AddReference (libB);
 			if (aotAssemblies) {
 				targets.Add ("_AndroidAot");
@@ -1170,6 +1201,7 @@ namespace Lib2
 				//NOTE: so _BuildApkEmbed runs in commercial tests
 				EmbedAssembliesIntoApk = true,
 			};
+			proj.SetRuntime (_runtime);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
@@ -1199,6 +1231,7 @@ namespace Lib2
 		public void DesignTimeBuild ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (_runtime);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", $"{nameof (IncrementalBuildTest)}{TestName}"))) {
 				b.BuildLogFile = "dtb1.log";
 				Assert.IsTrue (b.DesignTimeBuild (proj), "first dtb should have succeeded.");
@@ -1229,6 +1262,7 @@ namespace Lib2
 			var proj = new XamarinAndroidApplicationProject () {
 				EnableDefaultItems = true,
 			};
+			proj.SetRuntime (_runtime);
 			proj.SetProperty ("AndroidUseDesignerAssembly", "true");
 			var builder = CreateApkBuilder ();
 			var parameters = new [] { "BuildingInsideVisualStudio=true"};
@@ -1258,6 +1292,7 @@ namespace Lib2
 		public void ChangePackageNamingPolicy ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (_runtime);
 			proj.Sources.Add (new BuildItem.Source ("Bar.cs") {
 				TextContent = () => "namespace Foo { class Bar : Java.Lang.Object { } }"
 			});
@@ -1298,6 +1333,7 @@ namespace Lib2
 					},
 				}
 			};
+			app.SetRuntime (_runtime);
 			var reference = $"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj";
 			app.References.Add (new BuildItem.ProjectReference (reference, lib.ProjectName, lib.ProjectGuid));
 
@@ -1335,6 +1371,7 @@ namespace Lib2
 					}
 				}
 			};
+			proj.SetRuntime (_runtime);
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (proj), "Build should *not* have succeeded on the first build.");
@@ -1346,6 +1383,7 @@ namespace Lib2
 		public void AndroidResourceChange ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (_runtime);
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj), "first build should succeed");
 
@@ -1367,6 +1405,7 @@ namespace Lib2
 		{
 			var text = "Foo";
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (_runtime);
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("Assets\\Foo.txt") {
 				TextContent = () => text
 			});
@@ -1409,6 +1448,7 @@ namespace Lib2
 					},
 				}
 			};
+			proj.SetRuntime (_runtime);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 
@@ -1434,10 +1474,11 @@ namespace Lib2
 		public void ChangeSupportedAbis ()
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
-			proj.SetAndroidSupportedAbis ("armeabi-v7a");
+			proj.SetRuntime (_runtime);
+			proj.SetAndroidSupportedAbis ("arm64-v8a");
 			using (var b = CreateApkBuilder ()) {
 				b.Build (proj);
-				b.Build (proj, parameters: new [] { $"{KnownProperties.RuntimeIdentifier}=android-x86" }, doNotCleanupOnUpdate: true);
+				b.Build (proj, parameters: new [] { $"{KnownProperties.RuntimeIdentifier}=android-x64" }, doNotCleanupOnUpdate: true);
 			}
 		}
 
@@ -1456,6 +1497,7 @@ namespace Lib2
 					}
 				}
 			};
+			proj.SetRuntime (_runtime);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				var assemblyPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "UnnamedProject.dll");
