@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -66,7 +64,7 @@ class JCWGenerator
 
 	bool ProcessTypes (bool generateCode, string androidSdkPlatform, string? outputPath, string? applicationJavaClass)
 	{
-		if (generateCode && String.IsNullOrEmpty (outputPath)) {
+		if (generateCode && outputPath.IsNullOrEmpty ()) {
 			throw new ArgumentException ("must not be null or empty", nameof (outputPath));
 		}
 
@@ -85,7 +83,7 @@ class JCWGenerator
 				continue;
 			}
 
-			if (!GenerateCode (generator, type, outputPath, hasExportReference)) {
+			if (!GenerateCode (generator, type, outputPath!, hasExportReference)) {  // NRT - Guarded above by IsNullOrEmpty and generateCode checks
 				ok = false;
 			}
 		}
@@ -351,6 +349,6 @@ class JCWGenerator
 			return false;
 		}
 
-		return String.Compare (templateMethod.FullName, method.FullName, StringComparison.Ordinal) == 0;
+		return String.Compare (templateMethod.FullName, method?.FullName, StringComparison.Ordinal) == 0;
 	}
 }

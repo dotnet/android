@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.CodeDom;
 using System.CodeDom.Compiler;
@@ -15,7 +13,7 @@ namespace Xamarin.Android.Tasks
 {
 	class ResourceParser
 	{
-		public TaskLoggingHelper Log { get; set; }
+		public TaskLoggingHelper? Log { get; set; }
 
 		internal int ToInt32 (string value, int @base)
 		{

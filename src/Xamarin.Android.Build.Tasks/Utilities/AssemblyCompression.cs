@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.Buffers;
@@ -25,10 +23,10 @@ namespace Xamarin.Android.Tasks
 
 		public sealed class AssemblyData
 		{
-			public string SourcePath { get; internal set; }
+			public string? SourcePath { get; internal set; }
 			public uint DescriptorIndex { get; internal set; }
 
-			public string DestinationPath;
+			public string? DestinationPath;
 			public uint SourceSize;
 			public uint DestinationSize;
 
@@ -80,8 +78,8 @@ namespace Xamarin.Android.Tasks
 			data.SourceSize = checked((uint)fi.Length);
 
 			int bytesRead;
-			byte[] sourceBytes = null;
-			byte[] destBytes = null;
+			byte[]? sourceBytes = null;
+			byte[]? destBytes = null;
 			try {
 				int fileSize = checked((int)fi.Length);
 				sourceBytes = bytePool.Rent (fileSize);

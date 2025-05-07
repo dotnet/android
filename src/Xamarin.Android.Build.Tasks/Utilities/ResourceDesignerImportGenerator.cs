@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.CodeDom;
 using System.Collections.Generic;
@@ -79,7 +77,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		string GetResourceDesignerClass (MetadataReader reader)
+		string? GetResourceDesignerClass (MetadataReader reader)
 		{
 			// Looking for:
 			// [assembly: Android.Runtime.ResourceDesignerAttribute("MyApp.Resource", IsApplication=true)]
@@ -96,7 +94,7 @@ namespace Xamarin.Android.Tasks
 							return null;
 						}
 					}
-					return (string) values.FixedArguments.First ().Value;
+					return (string?) values.FixedArguments.First ().Value;
 				}
 			}
 			return null;

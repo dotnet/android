@@ -1,8 +1,7 @@
-#nullable disable
-
 using System;
 using System.Text.RegularExpressions;
 using System.IO;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Xamarin.Android.Tools
 {
@@ -14,7 +13,7 @@ namespace Xamarin.Android.Tools
 			Regex.Escape (Path.DirectorySeparatorChar.ToString ()) +
 			string.Format ("(?<file>[^{0}]+.resources.dll)$", Regex.Escape (Path.DirectorySeparatorChar.ToString ())));
 
-		public static bool TryGetSatelliteCultureAndFileName (string assemblyPath, out string culture, out string fileName)
+		public static bool TryGetSatelliteCultureAndFileName (string assemblyPath, [NotNullWhen (true)] out string? culture, [NotNullWhen (true)] out string? fileName)
 		{
 			culture = fileName = null;
 

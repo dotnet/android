@@ -103,7 +103,7 @@ namespace Xamarin.Android.Tasks
 				var jsonAdditionDoc = JsonSerializer.SerializeToNode (jsonAddition);
 
 				var mergedJson = json.Merge (jsonAdditionDoc);
-				var output = mergedJson.ToJsonString (new JsonSerializerOptions { WriteIndented = true });
+				var output = mergedJson?.ToJsonString (new JsonSerializerOptions { WriteIndented = true });
 
 				Log.LogDebugMessage ("BundleConfig.json: {0}", output);
 				File.WriteAllText (temp, output);
