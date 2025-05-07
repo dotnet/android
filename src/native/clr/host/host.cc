@@ -9,6 +9,7 @@
 
 #include <xamarin-app.hh>
 #include <host/assembly-store.hh>
+#include <host/fastdev-assemblies.hh>
 #include <host/host.hh>
 #include <host/host-jni.hh>
 #include <host/host-util.hh>
@@ -46,22 +47,40 @@ bool Host::clr_external_assembly_probe (const char *path, void **data_start, int
 		internal_timing.start_event (TimingEventKind::AssemblyLoad);
 	}
 
-	*data_start = AssemblyStore::open_assembly (path, *size);
+	auto log_and_return = [](const char *name, void *data_start, int64_t size) {
+		if (FastTiming::enabled ()) [[unlikely]] {
+			internal_timing.end_event (true /* uses_more_info */);
+			internal_timing.add_more_info (name);
+		}
 
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.end_event (true /* uses_more_info */);
-		internal_timing.add_more_info (path);
+		log_debug (
+			LOG_ASSEMBLY,
+			"Assembly '{}' data {}mapped ({:p}, {} bytes)",
+			optional_string (name),
+			data_start == nullptr ? "not "sv : ""sv,
+			data_start,
+			size
+		);
+
+		return data_start != nullptr && size > 0;
+	};
+
+	if constexpr (Constants::is_debug_build) {
+		*data_start = FastDevAssemblies::open_assembly (path, *size);
+		if (*data_start != nullptr && *size > 0) {
+			return log_and_return (path, *data_start, *size);
+		}
+
+		log_warn (
+			LOG_ASSEMBLY,
+			"Assembly '{}' not found in FastDev override directory. Attempting to load from assembly store",
+			optional_string (path)
+		);
 	}
 
-	log_debug (
-		LOG_ASSEMBLY,
-		"Assembly data {}mapped ({:p}, {} bytes)",
-		*data_start == nullptr ? "not "sv : ""sv,
-		*data_start,
-		*size
-	);
+	*data_start = AssemblyStore::open_assembly (path, *size);
 
-	return *data_start != nullptr && *size > 0;
+	return log_and_return (path, *data_start, *size);
 }
 
 auto Host::zip_scan_callback (std::string_view const& apk_path, int apk_fd, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, uint32_t offset, uint32_t size) -> bool
