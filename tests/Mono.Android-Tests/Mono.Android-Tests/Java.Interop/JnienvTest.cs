@@ -44,7 +44,7 @@ namespace Java.InteropTests
 		public void RegisterTypeOnNewNativeThread ()
 		{
 			Java.Lang.JavaSystem.LoadLibrary ("reuse-threads");
-			int ret = rt_register_type_on_new_thread ("from.NewThreadOne", Application.Context.ClassLoader.Handle);
+			int ret = rt_register_type_on_new_thread ("from.NewNativeThreadOne", Application.Context.ClassLoader.Handle);
 			Assert.AreEqual (0, ret, $"Java type registration on a new thread failed with code {ret}");
 		}
 
@@ -55,6 +55,23 @@ namespace Java.InteropTests
 			thread.Start ();
 			thread.Join (5000);
 			Assert.AreNotEqual (null, thread.Instance, "Failed to register instance of a class on new thread");
+		}
+
+		[Test]
+		public void RegisterTypeOnNewManagedThread ()
+		{
+			Exception? ex = null;
+			var thread = new System.Threading.Thread (() => {
+				try {
+					using var instance = new RegisterMeOnNewManagedThreadOne ();
+				}
+				catch (Exception e) {
+					ex = e;
+				}
+			});
+			thread.Start ();
+			thread.Join (5000);
+			Assert.IsNull (ex, $"Failed to register instance of a class on new thread: {ex}");
 		}
 
 		[Test]
@@ -459,8 +476,12 @@ namespace Java.InteropTests
 		}
 	}
 
-	[Register ("from/NewThreadOne")]
-	class RegisterMeOnNewThreadOne : Java.Lang.Object
+	[Register ("from/NewNativeThreadOne")]
+	class RegisterMeOnNewNativeThreadOne : Java.Lang.Object
+	{}
+
+	[Register ("from/NewManagedThreadOne")]
+	class RegisterMeOnNewManagedThreadOne : Java.Lang.Object
 	{}
 
 	[Register ("from/NewThreadTwo")]

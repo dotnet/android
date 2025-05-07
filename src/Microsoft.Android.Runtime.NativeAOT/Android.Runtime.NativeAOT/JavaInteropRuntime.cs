@@ -31,7 +31,7 @@ static partial class JavaInteropRuntime
 
 	// symbol name from `$(IntermediateOutputPath)obj/Release/osx-arm64/h-classes/net_dot_jni_hello_JavaInteropRuntime.h`
 	[UnmanagedCallersOnly (EntryPoint="Java_net_dot_jni_nativeaot_JavaInteropRuntime_init")]
-	static void init (IntPtr jnienv, IntPtr klass)
+	static void init (IntPtr jnienv, IntPtr klass, IntPtr classLoader)
 	{
 		JniTransition   transition  = default;
 		try {
@@ -41,6 +41,7 @@ static partial class JavaInteropRuntime
 			var typeManager = new ManagedTypeManager ();
 			var options = new NativeAotRuntimeOptions {
 				EnvironmentPointer          = jnienv,
+				ClassLoader                 = new JniObjectReference (classLoader),
 				TypeManager                 = typeManager,
 				ValueManager                = new ManagedValueManager (),
 				UseMarshalMemberBuilder     = false,

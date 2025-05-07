@@ -11,5 +11,5 @@ public class JavaInteropRuntime {
     private JavaInteropRuntime() {
     }
 
-    public static native void init();
+    public static native void init(ClassLoader classLoader);
 }
