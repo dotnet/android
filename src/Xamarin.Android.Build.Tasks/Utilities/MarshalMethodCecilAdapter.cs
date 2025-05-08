@@ -11,6 +11,7 @@ namespace Xamarin.Android.Tasks;
 
 class MarshalMethodCecilAdapter
 {
+	[return: NotNullIfNotNull (nameof (nativeCodeGenStates))]
 	public static NativeCodeGenStateCollection? GetNativeCodeGenStateCollection (TaskLoggingHelper log, ConcurrentDictionary<AndroidTargetArch, NativeCodeGenState>? nativeCodeGenStates)
 	{
 		if (nativeCodeGenStates is null) {
@@ -31,7 +32,7 @@ class MarshalMethodCecilAdapter
 		return collection;
 	}
 
-	static NativeCodeGenStateObject CreateNativeCodeGenState (AndroidTargetArch arch, NativeCodeGenState state)
+	public static NativeCodeGenStateObject CreateNativeCodeGenState (AndroidTargetArch arch, NativeCodeGenState state)
 	{
 		var obj = new NativeCodeGenStateObject ();
 
@@ -54,6 +55,9 @@ class MarshalMethodCecilAdapter
 
 	static MarshalMethodEntryObject CreateEntry (MarshalMethodEntry entry, ManagedMarshalMethodsLookupInfo? info)
 	{
+		var nativeCallback = entry.NativeCallback;
+		//var nativeCallback = entry is ConvertedMarshalMethodEntry cmm ? cmm.ConvertedNativeCallback : entry.NativeCallback;
+
 		var obj = new MarshalMethodEntryObject (
 			declaringType: CreateDeclaringType (entry.DeclaringType),
 			implementedMethod: CreateMethod (entry.ImplementedMethod),
@@ -61,12 +65,12 @@ class MarshalMethodCecilAdapter
 			jniTypeName: entry.JniTypeName,
 			jniMethodName: entry.JniMethodName,
 			jniMethodSignature: entry.JniMethodSignature,
-			nativeCallback: CreateMethod (entry.NativeCallback),
+			nativeCallback: CreateMethod (nativeCallback),
 			registeredMethod: CreateMethodBase (entry.RegisteredMethod)
 		);
 
 		if (info is not null) {
-			(uint assemblyIndex, uint classIndex, uint methodIndex) = info.GetIndex (entry.NativeCallback);
+			(uint assemblyIndex, uint classIndex, uint methodIndex) = info.GetIndex (nativeCallback);
 
 			obj.NativeCallback.AssemblyIndex = assemblyIndex;
 			obj.NativeCallback.ClassIndex = classIndex;
@@ -142,7 +146,7 @@ class NativeCodeGenStateObject
 	public Dictionary<string, IList<MarshalMethodEntryObject>> MarshalMethods { get; } = [];
 }
 
-class MarshalMethodEntryObject
+public class MarshalMethodEntryObject
 {
 	public MarshalMethodEntryTypeObject DeclaringType { get; }
 	public MarshalMethodEntryMethodObject? ImplementedMethod { get; }
@@ -166,7 +170,7 @@ class MarshalMethodEntryObject
 	}
 }
 
-class MarshalMethodEntryAssemblyObject
+public class MarshalMethodEntryAssemblyObject
 {
 	public string FullName { get; }
 	public string NameFullName { get; }  // Cecil's Assembly.Name.FullName
@@ -182,7 +186,7 @@ class MarshalMethodEntryAssemblyObject
 	}
 }
 
-class MarshalMethodEntryModuleObject
+public class MarshalMethodEntryModuleObject
 {
 	public MarshalMethodEntryAssemblyObject Assembly { get; }
 
@@ -192,7 +196,7 @@ class MarshalMethodEntryModuleObject
 	}
 }
 
-class MarshalMethodEntryTypeObject
+public class MarshalMethodEntryTypeObject
 {
 	public string FullName { get; }
 	public uint MetadataToken { get; }
@@ -206,7 +210,7 @@ class MarshalMethodEntryTypeObject
 	}
 }
 
-class MarshalMethodEntryMethodBaseObject
+public class MarshalMethodEntryMethodBaseObject
 {
 	public string FullName { get; }
 
@@ -216,7 +220,7 @@ class MarshalMethodEntryMethodBaseObject
 	}
 }
 
-class MarshalMethodEntryMethodObject : MarshalMethodEntryMethodBaseObject
+public class MarshalMethodEntryMethodObject : MarshalMethodEntryMethodBaseObject
 {
 	public string Name { get; }
 	public MarshalMethodEntryTypeObject DeclaringType { get; }
@@ -239,7 +243,7 @@ class MarshalMethodEntryMethodObject : MarshalMethodEntryMethodBaseObject
 	}
 }
 
-class MarshalMethodEntryMethodParameterObject
+public class MarshalMethodEntryMethodParameterObject
 {
 	public string Name { get; }
 	public string ParameterTypeName { get; }  // Cecil's ParameterDefinition.ParameterType.Name

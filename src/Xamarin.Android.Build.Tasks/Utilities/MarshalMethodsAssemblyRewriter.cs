@@ -26,11 +26,11 @@ namespace Xamarin.Android.Tasks
 
 		readonly TaskLoggingHelper log;
 		readonly MarshalMethodsCollection classifier;
-		readonly XAAssemblyResolver resolver;
+		readonly IAssemblyResolver resolver;
 		readonly AndroidTargetArch targetArch;
 		readonly ManagedMarshalMethodsLookupInfo? managedMarshalMethodsLookupInfo;
 
-		public MarshalMethodsAssemblyRewriter (TaskLoggingHelper log, AndroidTargetArch targetArch, MarshalMethodsCollection classifier, XAAssemblyResolver resolver, ManagedMarshalMethodsLookupInfo? managedMarshalMethodsLookupInfo)
+		public MarshalMethodsAssemblyRewriter (TaskLoggingHelper log, AndroidTargetArch targetArch, MarshalMethodsCollection classifier, IAssemblyResolver resolver, ManagedMarshalMethodsLookupInfo? managedMarshalMethodsLookupInfo)
 		{
 			this.log = log ?? throw new ArgumentNullException (nameof (log));
 			this.targetArch = targetArch;
@@ -123,78 +123,78 @@ namespace Xamarin.Android.Tasks
 				managedMarshalMethodLookupGenerator.Generate (classifier.MarshalMethods.Values);
 			}
 
-			foreach (AssemblyDefinition asm in classifier.AssembliesWithMarshalMethods) {
-				string? path = asm.MainModule.FileName;
-				if (String.IsNullOrEmpty (path)) {
-					throw new InvalidOperationException ($"[{targetArch}] Internal error: assembly '{asm}' does not specify path to its file");
-				}
+			//foreach (AssemblyDefinition asm in classifier.Assemblies) {
+			//	string? path = asm.MainModule.FileName;
+			//	if (String.IsNullOrEmpty (path)) {
+			//		throw new InvalidOperationException ($"[{targetArch}] Internal error: assembly '{asm}' does not specify path to its file");
+			//	}
 
-				string pathPdb = Path.ChangeExtension (path, ".pdb");
-				bool havePdb = File.Exists (pathPdb);
+			//	string pathPdb = Path.ChangeExtension (path, ".pdb");
+			//	bool havePdb = File.Exists (pathPdb);
 
-				var writerParams = new WriterParameters {
-					WriteSymbols = havePdb,
-				};
+			//	var writerParams = new WriterParameters {
+			//		WriteSymbols = havePdb,
+			//	};
 
-				string directory = Path.Combine (Path.GetDirectoryName (path), "new");
-				Directory.CreateDirectory (directory);
-				string output = Path.Combine (directory, Path.GetFileName (path));
-				log.LogDebugMessage ($"[{targetArch}] Writing new version of '{path}' assembly: {output}");
+			//	string directory = Path.Combine (Path.GetDirectoryName (path), "new");
+			//	Directory.CreateDirectory (directory);
+			//	string output = Path.Combine (directory, Path.GetFileName (path));
+			//	log.LogDebugMessage ($"[{targetArch}] Writing new version of '{path}' assembly: {output}");
 
-				// TODO: this should be used eventually, but it requires that all the types are reloaded from the assemblies before typemaps are generated
-				// since Cecil doesn't update the MVID in the already loaded types
-				//asm.MainModule.Mvid = Guid.NewGuid ();
-				asm.Write (output, writerParams);
+			//	// TODO: this should be used eventually, but it requires that all the types are reloaded from the assemblies before typemaps are generated
+			//	// since Cecil doesn't update the MVID in the already loaded types
+			//	//asm.MainModule.Mvid = Guid.NewGuid ();
+			//	asm.Write (output, writerParams);
 
-				CopyFile (output, path);
-				RemoveFile (output);
+			//	CopyFile (output, path);
+			//	RemoveFile (output);
 
-				if (havePdb) {
-					string outputPdb = Path.ChangeExtension (output, ".pdb");
-					if (File.Exists (outputPdb)) {
-						CopyFile (outputPdb, pathPdb);
-					}
-					RemoveFile (outputPdb);
-				}
-			}
+			//	if (havePdb) {
+			//		string outputPdb = Path.ChangeExtension (output, ".pdb");
+			//		if (File.Exists (outputPdb)) {
+			//			CopyFile (outputPdb, pathPdb);
+			//		}
+			//		RemoveFile (outputPdb);
+			//	}
+			//}
 
-			void CopyFile (string source, string target)
-			{
-				log.LogDebugMessage ($"[{targetArch}] Copying rewritten assembly: {source} -> {target}");
+			//void CopyFile (string source, string target)
+			//{
+			//	log.LogDebugMessage ($"[{targetArch}] Copying rewritten assembly: {source} -> {target}");
 
-				string targetBackup = $"{target}.bak";
-				if (File.Exists (target)) {
-					// Try to avoid sharing violations by first renaming the target
-					File.Move (target, targetBackup);
-				}
+			//	string targetBackup = $"{target}.bak";
+			//	if (File.Exists (target)) {
+			//		// Try to avoid sharing violations by first renaming the target
+			//		File.Move (target, targetBackup);
+			//	}
 
-				File.Copy (source, target, true);
+			//	File.Copy (source, target, true);
 
-				if (File.Exists (targetBackup)) {
-					try {
-						File.Delete (targetBackup);
-					} catch (Exception ex) {
-						// On Windows the deletion may fail, depending on lock state of the original `target` file before the move.
-						log.LogDebugMessage ($"[{targetArch}] While trying to delete '{targetBackup}', exception was thrown: {ex}");
-						log.LogDebugMessage ($"[{targetArch}] Failed to delete backup file '{targetBackup}', ignoring.");
-					}
-				}
-			}
+			//	if (File.Exists (targetBackup)) {
+			//		try {
+			//			File.Delete (targetBackup);
+			//		} catch (Exception ex) {
+			//			// On Windows the deletion may fail, depending on lock state of the original `target` file before the move.
+			//			log.LogDebugMessage ($"[{targetArch}] While trying to delete '{targetBackup}', exception was thrown: {ex}");
+			//			log.LogDebugMessage ($"[{targetArch}] Failed to delete backup file '{targetBackup}', ignoring.");
+			//		}
+			//	}
+			//}
 
-			void RemoveFile (string? path)
-			{
-				if (String.IsNullOrEmpty (path) || !File.Exists (path)) {
-					return;
-				}
+			//void RemoveFile (string? path)
+			//{
+			//	if (String.IsNullOrEmpty (path) || !File.Exists (path)) {
+			//		return;
+			//	}
 
-				try {
-					log.LogDebugMessage ($"[{targetArch}] Deleting: {path}");
-					File.Delete (path);
-				} catch (Exception ex) {
-					log.LogWarning ($"[{targetArch}] Unable to delete source file '{path}'");
-					log.LogDebugMessage ($"[{targetArch}] {ex.ToString ()}");
-				}
-			}
+			//	try {
+			//		log.LogDebugMessage ($"[{targetArch}] Deleting: {path}");
+			//		File.Delete (path);
+			//	} catch (Exception ex) {
+			//		log.LogWarning ($"[{targetArch}] Unable to delete source file '{path}'");
+			//		log.LogDebugMessage ($"[{targetArch}] {ex.ToString ()}");
+			//	}
+			//}
 
 			static bool HasUnmanagedCallersOnlyAttribute (MethodDefinition method)
 			{

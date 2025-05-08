@@ -31,13 +31,13 @@ class NativeCodeGenState
 	public List<TypeDefinition> AllJavaTypes                   { get; }
 
 	public List<TypeDefinition> JavaTypesForJCW                { get; }
-	public XAAssemblyResolver Resolver                         { get; }
+	public IAssemblyResolver Resolver                          { get; }
 	public TypeDefinitionCache TypeCache                       { get; }
 	public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
 
 	public ManagedMarshalMethodsLookupInfo? ManagedMarshalMethodsLookupInfo { get; set; }
 
-	public NativeCodeGenState (AndroidTargetArch arch, TypeDefinitionCache tdCache, XAAssemblyResolver resolver, List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW, MarshalMethodsCollection? classifier)
+	public NativeCodeGenState (AndroidTargetArch arch, TypeDefinitionCache tdCache, IAssemblyResolver resolver, List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW, MarshalMethodsCollection? classifier)
 	{
 		TargetArch = arch;
 		TypeCache = tdCache;

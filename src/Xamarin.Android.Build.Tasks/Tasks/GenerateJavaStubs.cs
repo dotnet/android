@@ -155,6 +155,7 @@ namespace Xamarin.Android.Tasks
 
 			// Now that "never" never happened, we can proceed knowing that at least the assembly sets are the same for each architecture
 			var nativeCodeGenStates = new ConcurrentDictionary<AndroidTargetArch, NativeCodeGenState> ();
+			var nativeCodeGenStateObjects = new ConcurrentDictionary<AndroidTargetArch, NativeCodeGenStateObject> ();
 			NativeCodeGenState? templateCodeGenState = null;
 
 			var firstArch = allAssembliesPerArch.First ().Key;
@@ -169,7 +170,7 @@ namespace Xamarin.Android.Tasks
 				// Pick the "first" one as the one to generate Java code for
 				var generateJavaCode = arch == firstArch;
 
-				(bool success, NativeCodeGenState? state) = GenerateJavaSourcesAndMaybeClassifyMarshalMethods (arch, archAssemblies, MaybeGetArchAssemblies (userAssembliesPerArch, arch), useMarshalMethods, generateJavaCode);
+				(bool success, NativeCodeGenState? state, NativeCodeGenStateObject? stateObject) = GenerateJavaSourcesAndMaybeClassifyMarshalMethods (arch, archAssemblies, MaybeGetArchAssemblies (userAssembliesPerArch, arch), useMarshalMethods, generateJavaCode);
 
 				if (!success) {
 					generateSucceeded = false;
@@ -181,6 +182,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				nativeCodeGenStates.TryAdd (arch, state);
+				nativeCodeGenStateObjects.TryAdd (arch, stateObject);
 			});
 
 			// If we hit an error generating the Java code, we should bail out now
@@ -198,6 +200,21 @@ namespace Xamarin.Android.Tasks
 			// Save NativeCodeGenState for later tasks
 			Log.LogDebugMessage ($"Saving {nameof (NativeCodeGenState)} to {nameof (NativeCodeGenStateRegisterTaskKey)}");
 			BuildEngine4.RegisterTaskObjectAssemblyLocal (MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (NativeCodeGenStateRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory), nativeCodeGenStates, RegisteredTaskObjectLifetime.Build);
+
+			// If we still need the NativeCodeGenState in the <GenerateNativeMarshalMethodSources> task because we're using marshal methods,
+			// we're going to transfer it to a new object that doesn't require holding open Cecil AssemblyDefinitions.
+			if (useMarshalMethods) {
+				//var nativeCodeGenStateObject = MarshalMethodCecilAdapter.GetNativeCodeGenStateCollection (Log, nativeCodeGenStates);
+				var nativeCodeGenStateCollection = new NativeCodeGenStateCollection ();
+
+				foreach (var kvp in nativeCodeGenStateObjects) {
+					nativeCodeGenStateCollection.States.Add (kvp.Key, kvp.Value);
+					Log.LogDebugMessage ($"Added NativeCodeGenStateObject for arch: {kvp.Key}, containing {kvp.Value.MarshalMethods.Count} marshal methods");
+				}
+
+				Log.LogDebugMessage ($"Saving {nameof (NativeCodeGenStateObject)} to {nameof (GenerateJavaStubs.NativeCodeGenStateObjectRegisterTaskKey)}");
+				BuildEngine4.RegisterTaskObjectAssemblyLocal (MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateObjectRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory), nativeCodeGenStateCollection, RegisteredTaskObjectLifetime.Build);
+			}
 		}
 
 		internal static Dictionary<string, ITaskItem> MaybeGetArchAssemblies (Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> dict, AndroidTargetArch arch)
@@ -209,7 +226,7 @@ namespace Xamarin.Android.Tasks
 			return archDict;
 		}
 
-		(bool success, NativeCodeGenState? stubsState) GenerateJavaSourcesAndMaybeClassifyMarshalMethods (AndroidTargetArch arch, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods, bool generateJavaCode)
+		(bool success, NativeCodeGenState? stubsState, NativeCodeGenStateObject? stateObject) GenerateJavaSourcesAndMaybeClassifyMarshalMethods (AndroidTargetArch arch, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods, bool generateJavaCode)
 		{
 			XAAssemblyResolver resolver = MakeResolver (useMarshalMethods, arch, assemblies);
 			var tdCache = new TypeDefinitionCache ();
@@ -227,15 +244,62 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (!success) {
-				return (false, null);
+				return (false, null, null);
 			}
 
 			MarshalMethodsCollection? marshalMethodsCollection = null;
+			NativeCodeGenStateObject? stateObject = null;
 
-			if (useMarshalMethods)
-				marshalMethodsCollection = MarshalMethodsCollection.FromAssemblies (arch, assemblies.Values.ToList (), resolver, Log);
+			if (useMarshalMethods) {
+				stateObject = new NativeCodeGenStateObject ();
 
-			return (true, new NativeCodeGenState (arch, tdCache, resolver, allJavaTypes, javaTypesForJCW, marshalMethodsCollection));
+				foreach (var assembly in assemblies.Values) {
+					var marshalMethodXmlFile = MarshalMethodsXmlFile.GetMarshalMethodsXmlFilePath (assembly.ItemSpec);
+
+					if (!File.Exists (marshalMethodXmlFile))
+						continue;
+
+					var xml = MarshalMethodsXmlFile.Import (marshalMethodXmlFile);
+
+					if (xml is null || xml?.Value.MarshalMethods.Count == 0) {
+						Log.LogDebugMessage ($"'{marshalMethodXmlFile}' is empty, skipping.");
+						continue;
+					}
+
+					foreach (var kvp in xml.Value.Value.MarshalMethods) {
+						if (!stateObject.MarshalMethods.TryGetValue (kvp.Key, out var methods)) {
+							methods = new List<MarshalMethodEntryObject> ();
+							stateObject.MarshalMethods.Add (kvp.Key, methods);
+						}
+
+						foreach (var method in kvp.Value) {
+							// We don't need to add the special case method multiple times
+							if (methods.Count > 0 && method.IsSpecial)
+								continue;
+							methods.Add (method);
+						}
+					}
+				}
+
+				//marshalMethodsCollection = MarshalMethodsCollection.FromAssemblies (arch, assemblies.Values.ToList (), resolver, Log);
+				//marshalMethodsCollection.AddSpecialCaseMethods ();
+
+				marshalMethodsCollection = new EmptyMarshalMethodsCollection ();
+			}
+
+			var state = new NativeCodeGenState (arch, tdCache, resolver, allJavaTypes, javaTypesForJCW, marshalMethodsCollection);
+
+			//if (useMarshalMethods) {
+			//	var info = new ManagedMarshalMethodsLookupInfo (Log);
+
+			//	foreach (var kvp in marshalMethodsCollection.MarshalMethods)
+			//		foreach (var method in kvp.Value)
+			//			info.AddNativeCallbackWrapper (method.NativeCallback);
+
+			//	state.ManagedMarshalMethodsLookupInfo = info;
+			//}
+
+			return (true, state, stateObject);
 		}
 
 		(List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW) ScanForJavaTypes (XAAssemblyResolver res, TypeDefinitionCache cache, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods)
@@ -341,6 +405,45 @@ namespace Xamarin.Android.Tasks
 
 			if (!had_differences)
 				Log.LogDebugMessage ($"No differences");
+		}
+	}
+
+	class EmptyMarshalMethodsCollection : MarshalMethodsCollection
+	{
+		public override HashSet<AssemblyDefinition> AssembliesWithMarshalMethods => throw new NotSupportedException ();
+
+		/// <summary>
+		/// Marshal methods that have already been rewritten as LLVM marshal methods.
+		/// </summary>
+		public override IDictionary<string, IList<ConvertedMarshalMethodEntry>> ConvertedMarshalMethods => throw new NotSupportedException ();
+
+		/// <summary>
+		/// Marshal methods that cannot be rewritten and must be registered dynamically.
+		/// </summary>
+		public override List<DynamicallyRegisteredMarshalMethodEntry> DynamicallyRegisteredMarshalMethods => throw new NotSupportedException ();
+
+		/// <summary>
+		/// Marshal methods that can be rewritten as LLVM marshal methods.
+		/// </summary>
+		public override IDictionary<string, IList<MarshalMethodEntry>> MarshalMethods => throw new NotSupportedException ();
+
+		public EmptyMarshalMethodsCollection ()
+		{
+		}
+
+		public override void AddSpecialCaseMethods ()
+		{
+			throw new NotImplementedException ();
+		}
+
+		public override bool ShouldBeDynamicallyRegistered (TypeDefinition topType, MethodDefinition registeredMethod, MethodDefinition implementedMethod, CustomAttribute registerAttribute)
+		{
+			throw new NotImplementedException ();
+		}
+
+		public override bool TypeHasDynamicallyRegisteredMethods (TypeDefinition type)
+		{
+			throw new NotImplementedException ();
 		}
 	}
 }

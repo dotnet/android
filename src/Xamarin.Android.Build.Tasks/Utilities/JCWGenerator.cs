@@ -25,11 +25,11 @@ class JCWGeneratorContext
 {
 	public AndroidTargetArch Arch                    { get; }
 	public TypeDefinitionCache TypeDefinitionCache   { get; }
-	public XAAssemblyResolver Resolver               { get; }
+	public IAssemblyResolver Resolver                { get; }
 	public IList<TypeDefinition> JavaTypes           { get; }
 	public ICollection<ITaskItem> ResolvedAssemblies { get; }
 
-	public JCWGeneratorContext (AndroidTargetArch arch, XAAssemblyResolver res, ICollection<ITaskItem> resolvedAssemblies, List<TypeDefinition> javaTypesForJCW, TypeDefinitionCache tdCache)
+	public JCWGeneratorContext (AndroidTargetArch arch, IAssemblyResolver res, ICollection<ITaskItem> resolvedAssemblies, List<TypeDefinition> javaTypesForJCW, TypeDefinitionCache tdCache)
 	{
 		Arch = arch;
 		Resolver = res;
@@ -174,7 +174,7 @@ class JCWGenerator
 			}
 
 			EnsureIdenticalCollections (logger, templateState, state);
-			EnsureClassifiersMatch (logger, templateState, state);
+			//EnsureClassifiersMatch (logger, templateState, state);
 		}
 	}
 

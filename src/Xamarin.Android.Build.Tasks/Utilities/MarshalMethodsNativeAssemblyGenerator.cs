@@ -342,7 +342,7 @@ namespace Xamarin.Android.Tasks
 
 			foreach (MarshalMethodInfo method in allMethods) {
 				if (seenNativeSymbols.Contains (method.NativeSymbolName)) {
-					Log.LogDebugMessage ($"Removed MM duplicate '{method.NativeSymbolName}' (implemented: {method.Method.ImplementedMethod.FullName}; registered: {method.Method.RegisteredMethod.FullName}");
+					Log.LogDebugMessage ($"Removed MM duplicate '{method.NativeSymbolName}' (implemented: {method.Method.ImplementedMethod?.FullName}; registered: {method.Method.RegisteredMethod?.FullName}");
 					continue;
 				}
 

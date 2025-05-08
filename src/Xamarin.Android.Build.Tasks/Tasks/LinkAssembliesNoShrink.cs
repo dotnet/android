@@ -14,6 +14,9 @@ namespace Xamarin.Android.Tasks
 
 		public bool AddKeepAlives { get; set; }
 
+		// If we're running instead of ILLink, this process writes copies of the assemblies to a new location
+		protected override bool ModifiesAssembliesInPlace => false;
+
 		public bool UseDesignerAssembly { get; set; }
 
 		protected override void BuildPipeline (AssemblyPipeline pipeline, MSBuildLinkContext context)

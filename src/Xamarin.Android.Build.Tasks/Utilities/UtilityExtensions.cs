@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
 using System.Xml;
@@ -54,6 +55,20 @@ static class UtilityExtensions
 			return defaultValue;
 
 		return (T) Convert.ChangeType (value, typeof (T));
+	}
+
+	[return: NotNullIfNotNull (nameof (defaultValue))]
+	public static uint? GetUIntAttributeOrDefault (this XElement xml, string name, uint? defaultValue)
+	{
+		var value = xml.Attribute (name)?.Value;
+
+		if (string.IsNullOrWhiteSpace (value))
+			return defaultValue;
+
+		if (uint.TryParse (value, out var result))
+			return result;
+
+		return defaultValue;
 	}
 
 	public static string GetRequiredAttribute (this XElement xml, string name)

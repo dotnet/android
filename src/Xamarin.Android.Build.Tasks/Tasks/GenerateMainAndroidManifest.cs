@@ -28,7 +28,6 @@ public class GenerateMainAndroidManifest : AndroidTask
 	public string CodeGenerationTarget { get; set; } = "";
 	public bool Debug { get; set; }
 	public bool EmbedAssemblies { get; set; }
-	public bool EnableMarshalMethods { get; set; }
 	[Required]
 	public string IntermediateOutputDirectory { get; set; } = "";
 	public string []? ManifestPlaceholders { get; set; }
@@ -52,8 +51,6 @@ public class GenerateMainAndroidManifest : AndroidTask
 	AndroidRuntime androidRuntime;
 	JavaPeerStyle codeGenerationTarget;
 
-	bool UseMarshalMethods => !Debug && EnableMarshalMethods;
-
 	public override bool RunTask ()
 	{
 		// Retrieve the stored NativeCodeGenState (and remove it from the cache)
@@ -73,16 +70,6 @@ public class GenerateMainAndroidManifest : AndroidTask
 		// Generate the merged manifest
 		var additionalProviders = MergeManifest (templateCodeGenState, GenerateJavaStubs.MaybeGetArchAssemblies (userAssembliesPerArch, templateCodeGenState.TargetArch));
 		GenerateAdditionalProviderSources (templateCodeGenState, additionalProviders);
-
-
-		// If we still need the NativeCodeGenState in the <GenerateNativeMarshalMethodSources> task because we're using marshal methods,
-		// we're going to transfer it to a new object that doesn't require holding open Cecil AssemblyDefinitions.
-		if (UseMarshalMethods) {
-			var nativeCodeGenStateObject = MarshalMethodCecilAdapter.GetNativeCodeGenStateCollection (Log, nativeCodeGenStates);
-
-			Log.LogDebugMessage ($"Saving {nameof (NativeCodeGenStateObject)} to {nameof (GenerateJavaStubs.NativeCodeGenStateObjectRegisterTaskKey)}");
-			BuildEngine4.RegisterTaskObjectAssemblyLocal (MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateObjectRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory), nativeCodeGenStateObject, RegisteredTaskObjectLifetime.Build);
-		}
 
 		// Dispose the Cecil resolvers so the assemblies are closed.
 		Log.LogDebugMessage ($"Disposing all {nameof (NativeCodeGenState)}.{nameof (NativeCodeGenState.Resolver)}");
