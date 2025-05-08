@@ -64,6 +64,5 @@
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
   </ItemGroup>
 
-  <Import Project="..\..\build-tools\scripts\custom-runtime.targets" />
   <Import Project="Mono.Android.Runtime.targets" />
 </Project>

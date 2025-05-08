@@ -7,20 +7,6 @@
 #include "logger.hh"
 #include <runtime-base/timing.hh>
 
-struct StronglyConnectedComponent
-{
-    size_t Count;
-    void** ContextMemory;
-};
-
-struct ComponentCrossReference
-{
-    size_t SourceGroupIndex;
-    size_t DestinationGroupIndex;
-};
-
-typedef void (*MarkCrossReferencesFtn)(size_t, StronglyConnectedComponent*, size_t, ComponentCrossReference*);
-
 extern "C" {
 	int _monodroid_gref_get () noexcept;
 	void _monodroid_gref_log (const char *message) noexcept;
@@ -28,7 +14,6 @@ extern "C" {
 	void _monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable) noexcept;
 	const char* clr_typemap_managed_to_java (const char *typeName, const uint8_t *mvid) noexcept;
 	bool clr_typemap_java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept;
-	MarkCrossReferencesFtn clr_initialize_gc_bridge (MarkCrossReferencesFtn callback) noexcept;
 	void monodroid_log (xamarin::android::LogLevel level, LogCategories category, const char *message) noexcept;
 	char* monodroid_TypeManager_get_java_class_name (jclass klass) noexcept;
 	void monodroid_free (void *ptr) noexcept;

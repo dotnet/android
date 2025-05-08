@@ -2,7 +2,6 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.Java;
 using System.Text;
 
 namespace Android.Runtime
@@ -19,7 +18,7 @@ namespace Android.Runtime
 		All     = Java | Managed | Native | Signals,
 	}
 
-	internal unsafe static class RuntimeNativeMethods
+	internal static class RuntimeNativeMethods
 	{
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal extern static void monodroid_log (LogLevel level, LogCategories category, string message);
@@ -92,17 +91,6 @@ namespace Android.Runtime
 
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern bool clr_typemap_java_to_managed (string java_type_name, out IntPtr managed_assembly_name, out uint managed_type_token_id);
-
-		/// <summary>
-		/// TODO: implement this in the native side.
-		/// Initializes the "GC Bridge" implementation for the CoreCLR runtime.
-		/// </summary>
-		/// <param name="bridge_processing_finished_callback">A function pointer to a C# callback that will be invoked when bridge processing has completed.</param>
-		/// <returns>A function pointer that should be passed to JavaMarshal.Initialize() on startup.</returns>
-		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern delegate* unmanaged<nint, StronglyConnectedComponent*, nint, ComponentCrossReference*, void> clr_initialize_gc_bridge (
-			delegate* unmanaged<nint, StronglyConnectedComponent*, nint, ComponentCrossReference*, void> bridge_processing_finished_callback
-		);
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		internal static extern void monodroid_unhandled_exception (Exception javaException);
