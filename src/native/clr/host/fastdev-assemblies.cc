@@ -24,9 +24,11 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 		return nullptr;
 	}
 
-	if (override_dir_fd == -1) [[unlikely]] {
+	// NOTE: override_dir will be kept open, we have no way of knowing when it will be no longer
+	//       needed
+	if (override_dir_fd < 0) [[unlikely]] {
 		std::lock_guard dir_lock { override_dir_lock };
-		if (override_dir_fd == -1) [[likely]] {
+		if (override_dir_fd < 0) [[likely]] {
 			override_dir = opendir (override_dir_path.c_str ());
 			if (override_dir == nullptr) [[unlikely]] {
 				log_warn (LOG_ASSEMBLY, "Failed to open override dir '{}'. {}", override_dir_path, strerror (errno));
@@ -44,27 +46,14 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 	);
 
 	if (!Util::file_exists (override_dir_fd, name)) {
-		log_warn (
-			LOG_ASSEMBLY,
-			"FastDev assembly '{}' not found.",
-			name
-		);
+		log_warn (LOG_ASSEMBLY, "FastDev assembly '{}' not found.", name);
 		return nullptr;
 	}
-
-	log_debug (
-		LOG_ASSEMBLY,
-		"Found FastDev assembly '{}'",
-		name
-	);
+	log_debug (LOG_ASSEMBLY, "Found FastDev assembly '{}'", name);
 
 	auto file_size = Util::get_file_size_at (override_dir_fd, name);
 	if (!file_size) [[unlikely]] {
-		log_warn (
-			LOG_ASSEMBLY,
-			"Unable to determine FastDev assembly '{}' file size",
-			name
-		);
+		log_warn (LOG_ASSEMBLY, "Unable to determine FastDev assembly '{}' file size", name);
 		return nullptr;
 	}
 
@@ -118,13 +107,7 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 		size = 0;
 		return nullptr;
 	}
-
-	log_debug (
-		LOG_ASSEMBLY,
-		"Read {} bytes of FastDev assembly '{}'",
-		nread,
-		name
-	);
+	log_debug (LOG_ASSEMBLY, "Read {} bytes of FastDev assembly '{}'", nread, name);
 
 	return reinterpret_cast<void*>(buffer);
 }
