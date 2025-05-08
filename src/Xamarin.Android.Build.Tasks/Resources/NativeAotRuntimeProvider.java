@@ -37,8 +37,10 @@ public class NativeAotRuntimeProvider
             Log.e(TAG, "Failed to set environment variables", e);
         }
 
+        ClassLoader loader  = context.getClassLoader ();
+
         // Initialize .NET runtime
-        JavaInteropRuntime.init();
+        JavaInteropRuntime.init(loader);
         // NOTE: only required for custom applications
         ApplicationRegistration.registerApplications();
         super.attachInfo (context, info);

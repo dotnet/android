@@ -13,10 +13,10 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "CPI";
 
 		public bool IsApplication { get; set; }
-		public ITaskItem [] EmbeddedNativeLibraries { get; set; }
-		public ITaskItem [] NativeLibraries { get; set; }
-		public ITaskItem [] JavaLibraries { get; set; }
-		public ITaskItem [] JavaSourceFiles { get; set; }
+		public ITaskItem []? EmbeddedNativeLibraries { get; set; }
+		public ITaskItem []? NativeLibraries { get; set; }
+		public ITaskItem []? JavaLibraries { get; set; }
+		public ITaskItem []? JavaSourceFiles { get; set; }
 
 		public override bool RunTask ()
 		{

@@ -1021,6 +1021,13 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
     <comment>The following are literal names and should not be translated: .NET.
 {0} - The name of the .NET runtime, such as CoreCLR or NativeAOT.</comment>
   </data>
+  <data name="XA1041" xml:space="preserve">
+    <value>La propriété MSBuild « {0} » a une valeur non valide de « {1} ». La valeur est censée être un chemin d’accès au répertoire représentant l’emplacement relatif de vos actifs ou ressources.</value>
+    <comment>The following are literal names and should not be translated: .NET.
+{0} - The MSBuild property that has the incorrect value.
+{1} - The current value of the property
+</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>La dépendance Java « {0} » n’est pas satisfaite.</value>
     <comment>The following are literal names and should not be translated: Java.

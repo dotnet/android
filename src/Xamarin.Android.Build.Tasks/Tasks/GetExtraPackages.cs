@@ -14,13 +14,13 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "GEP";
 
 		[Required]
-		public string IntermediateOutputPath { get; set; }
+		public string IntermediateOutputPath { get; set; } = "";
 
 		[Output]
-		public string ExtraPackages { get; set; }
+		public string? ExtraPackages { get; set; }
 
 		[Required]
-		public string LibraryProjectImportsDirectoryName { get; set; }
+		public string LibraryProjectImportsDirectoryName { get; set; } = "";
 
 		public override bool RunTask ()
 		{
@@ -30,7 +30,7 @@ namespace Xamarin.Android.Tasks
 				foreach (var assemblyDir in Directory.GetDirectories (libProjects)) {
 					foreach (var importBaseDir in new string [] { LibraryProjectImportsDirectoryName, "library_project_imports", }) {
 						string importsDir = Path.Combine (assemblyDir, importBaseDir);
-						string libpkg = GetPackageNameForLibrary (importsDir, Path.GetDirectoryName (assemblyDir));
+						string? libpkg = GetPackageNameForLibrary (importsDir, Path.GetDirectoryName (assemblyDir));
 						if (libpkg != null)
 							extraPackages.Add (libpkg);
 					}
@@ -43,7 +43,7 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
-		string GetPackageNameForLibrary (string path, string assemblyName)
+		string? GetPackageNameForLibrary (string path, string assemblyName)
 		{
 			// It looks for:
 			// 1) bin/AndroidManifest.xml

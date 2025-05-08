@@ -1021,6 +1021,13 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
     <comment>The following are literal names and should not be translated: .NET.
 {0} - The name of the .NET runtime, such as CoreCLR or NativeAOT.</comment>
   </data>
+  <data name="XA1041" xml:space="preserve">
+    <value>La propiedad '{0}' de MSBuild tiene un valor no válido de '{1}'. Se espera que el valor sea una ruta de acceso de directorio que represente la ubicación relativa de los activos o recursos.</value>
+    <comment>The following are literal names and should not be translated: .NET.
+{0} - The MSBuild property that has the incorrect value.
+{1} - The current value of the property
+</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>No se cumple la dependencia de Java "{0}".</value>
     <comment>The following are literal names and should not be translated: Java.

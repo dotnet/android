@@ -1,8 +1,6 @@
 // File must be "stand-alone"; it's included by
 // `tools/remap-mam-json-to-xml`
 
-#nullable enable
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

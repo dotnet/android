@@ -44,7 +44,7 @@ namespace Java.InteropTests
 		public void RegisterTypeOnNewNativeThread ()
 		{
 			Java.Lang.JavaSystem.LoadLibrary ("reuse-threads");
-			int ret = rt_register_type_on_new_thread ("from.NewThreadOne", Application.Context.ClassLoader.Handle);
+			int ret = rt_register_type_on_new_thread ("from.NewNativeThreadOne", Application.Context.ClassLoader.Handle);
 			Assert.AreEqual (0, ret, $"Java type registration on a new thread failed with code {ret}");
 		}
 
@@ -55,6 +55,23 @@ namespace Java.InteropTests
 			thread.Start ();
 			thread.Join (5000);
 			Assert.AreNotEqual (null, thread.Instance, "Failed to register instance of a class on new thread");
+		}
+
+		[Test]
+		public void RegisterTypeOnNewManagedThread ()
+		{
+			Exception? ex = null;
+			var thread = new System.Threading.Thread (() => {
+				try {
+					using var instance = new RegisterMeOnNewManagedThreadOne ();
+				}
+				catch (Exception e) {
+					ex = e;
+				}
+			});
+			thread.Start ();
+			thread.Join (5000);
+			Assert.IsNull (ex, $"Failed to register instance of a class on new thread: {ex}");
 		}
 
 		[Test]
@@ -238,7 +255,8 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[Test, Category ("Export")]
+		[Category ("CoreCLRIgnore")] //TODO: https://github.com/dotnet/android/issues/10069
 		public void CreateTypeWithExportedMethods ()
 		{
 			using (var e = new ContainsExportedMethods ()) {
@@ -250,7 +268,8 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[Test, Category ("Export")]
+		[Category ("CoreCLRIgnore")] //TODO: https://github.com/dotnet/android/issues/10069
 		public void ActivatedDirectObjectSubclassesShouldBeRegistered ()
 		{
 			if (Build.VERSION.SdkInt <= BuildVersionCodes.GingerbreadMr1)
@@ -405,7 +424,7 @@ namespace Java.InteropTests
 			Assert.IsNull (ignore_t2, string.Format ("No exception should be thrown [t2]! Got: {0}", ignore_t2));
 		}
 
-		[Test]
+		[Test, Category ("NativeTypeMap")]
 		public void JavaToManagedTypeMapping ()
 		{
 			Type m = Java.Interop.TypeManager.GetJavaToManagedType ("android/content/res/Resources");
@@ -414,7 +433,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (null, m);
 		}
 
-		[Test]
+		[Test, Category ("NativeTypeMap")]
 		public void ManagedToJavaTypeMapping ()
 		{
 			Type type = typeof(Activity);
@@ -426,7 +445,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (null, m, "`JnienvTest` does *not* subclass Java.Lang.Object, it should *not* be in the typemap!");
 		}
 
-		[Test]
+		[Test, Category ("GCBridge")]
 		public void DoNotLeakWeakReferences ()
 		{
 			GC.Collect ();
@@ -457,8 +476,12 @@ namespace Java.InteropTests
 		}
 	}
 
-	[Register ("from/NewThreadOne")]
-	class RegisterMeOnNewThreadOne : Java.Lang.Object
+	[Register ("from/NewNativeThreadOne")]
+	class RegisterMeOnNewNativeThreadOne : Java.Lang.Object
+	{}
+
+	[Register ("from/NewManagedThreadOne")]
+	class RegisterMeOnNewManagedThreadOne : Java.Lang.Object
 	{}
 
 	[Register ("from/NewThreadTwo")]

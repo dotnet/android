@@ -32,7 +32,7 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 
-		public void Parse (ITaskItem[] environments, SequencePointsMode sequencePointsMode, TaskLoggingHelper log)
+		public void Parse (ITaskItem[]? environments, SequencePointsMode sequencePointsMode, TaskLoggingHelper log)
 		{
 			foreach (ITaskItem env in environments ?? Array.Empty<ITaskItem> ()) {
 				foreach (string line in File.ReadLines (env.ItemSpec)) {

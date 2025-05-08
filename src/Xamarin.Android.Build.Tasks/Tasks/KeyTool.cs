@@ -10,22 +10,22 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "KEY";
 
-		string previousLine;
+		string? previousLine;
 
 		[Required]
-		public string KeyStore { get; set; }
+		public string KeyStore { get; set; } = "";
 
 		[Required]
-		public string KeyAlias { get; set; }
+		public string KeyAlias { get; set; } = "";
 
 		[Required]
-		public string KeyPass { get; set; }
+		public string KeyPass { get; set; } = "";
 
 		[Required]
-		public string StorePass { get; set; }
+		public string StorePass { get; set; } = "";
 
 		[Required]
-		public string Command { get; set; }
+		public string Command { get; set; } = "";
 
 		public bool Verbose { get; set; }
 

@@ -20,26 +20,26 @@ namespace Xamarin.Android.Tasks
 		internal const string AndroidSkipResourceExtraction = "AndroidSkipResourceExtraction";
 
 		[Required]
-		public string ImportsDirectory { get; set; }
+		public string ImportsDirectory { get; set; } = "";
 
 		[Required]
-		public string NativeImportsDirectory { get; set; }
+		public string NativeImportsDirectory { get; set; } = "";
 
 		[Required]
-		public string OutputDirectory { get; set; }
+		public string OutputDirectory { get; set; } = "";
 
 		[Required]
-		public string OutputImportDirectory { get; set; }
+		public string OutputImportDirectory { get; set; } = "";
 
 		[Required]
-		public ITaskItem[] Assemblies { get; set; }
+		public ITaskItem[] Assemblies { get; set; } = [];
 
-		public ITaskItem [] AarLibraries { get; set; }
+		public ITaskItem []? AarLibraries { get; set; }
 
 		[Required]
-		public string AssemblyIdentityMapFile { get; set; }
+		public string AssemblyIdentityMapFile { get; set; } = "";
 
-		public string CacheFile { get; set; }
+		public string? CacheFile { get; set; }
 
 		[Required]
 		public bool DesignTimeBuild { get; set; }
@@ -47,25 +47,25 @@ namespace Xamarin.Android.Tasks
 		public bool AndroidApplication { get; set; }
 
 		[Output]
-		public ITaskItem [] Jars { get; set; }
+		public ITaskItem []? Jars { get; set; }
 
 		[Output]
-		public ITaskItem [] ResolvedAssetDirectories { get; set; }
+		public ITaskItem []? ResolvedAssetDirectories { get; set; }
 
 		[Output]
-		public ITaskItem [] ResolvedResourceDirectories { get; set; }
+		public ITaskItem []? ResolvedResourceDirectories { get; set; }
 
 		[Output]
-		public ITaskItem [] ResolvedEnvironmentFiles { get; set; }
+		public ITaskItem []? ResolvedEnvironmentFiles { get; set; }
 
 		[Output]
-		public ITaskItem [] ResolvedResourceDirectoryStamps { get; set; }
+		public ITaskItem []? ResolvedResourceDirectoryStamps { get; set; }
 
 		[Output]
-		public ITaskItem [] ProguardConfigFiles { get; set; }
+		public ITaskItem []? ProguardConfigFiles { get; set; }
 
 		[Output]
-		public ITaskItem [] ExtractedDirectories { get; set; }
+		public ITaskItem []? ExtractedDirectories { get; set; }
 
 		internal const string OriginalFile = "OriginalFile";
 		internal const string AndroidSkipResourceProcessing = "AndroidSkipResourceProcessing";
@@ -217,7 +217,7 @@ namespace Xamarin.Android.Tasks
 				bool updated = false;
 				string assemblyHash = Files.HashFile (assemblyPath);
 				string stamp = Path.Combine (outdir, assemblyIdentName + ".stamp");
-				string stampHash = File.Exists (stamp) ? File.ReadAllText (stamp) : null;
+				string? stampHash = File.Exists (stamp) ? File.ReadAllText (stamp) : null;
 				if (assemblyHash == stampHash) {
 					Log.LogDebugMessage ("Skipped resource lookup for {0}: extracted files are up to date", assemblyPath);
 					if (Directory.Exists (importsDir)) {
@@ -399,7 +399,7 @@ namespace Xamarin.Android.Tasks
 				bool updated = false;
 				string aarHash = Files.HashFile (aarFile.ItemSpec);
 				string stamp = Path.Combine (outdir, aarIdentityName + ".stamp");
-				string stampHash = File.Exists (stamp) ? File.ReadAllText (stamp) : null;
+				string? stampHash = File.Exists (stamp) ? File.ReadAllText (stamp) : null;
 				var aarFullPath = Path.GetFullPath (aarFile.ItemSpec);
 				if (aarHash == stampHash) {
 					Log.LogDebugMessage ("Skipped {0}: extracted files are up to date", aarFile.ItemSpec);
@@ -512,16 +512,16 @@ namespace Xamarin.Android.Tasks
 			});
 		}
 
-		static void AddJar (IDictionary<string, ITaskItem> jars, string destination, string path, string originalFile = null, string nuGetPackageId = null, string nuGetPackageVersion = null)
+		static void AddJar (IDictionary<string, ITaskItem> jars, string destination, string path, string? originalFile = null, string? nuGetPackageId = null, string? nuGetPackageVersion = null)
 		{
 			var fullPath = Path.GetFullPath (Path.Combine (destination, path));
 			AddJar (jars, fullPath, originalFile: originalFile, nuGetPackageId: nuGetPackageId, nuGetPackageVersion: nuGetPackageVersion);
 		}
 
-		static void AddJar (IDictionary<string, ITaskItem> jars, string fullPath, string originalFile = null, string nuGetPackageId = null, string nuGetPackageVersion = null)
+		static void AddJar (IDictionary<string, ITaskItem> jars, string fullPath, string? originalFile = null, string? nuGetPackageId = null, string? nuGetPackageVersion = null)
 		{
 			if (!jars.ContainsKey (fullPath)) {
-				jars.Add (fullPath, new TaskItem (fullPath, new Dictionary<string, string> {
+				jars.Add (fullPath, new TaskItem (fullPath, new Dictionary<string, string?> {
 					[OriginalFile] = originalFile,
 					[NuGetPackageId] = nuGetPackageId,
 					[NuGetPackageVersion] = nuGetPackageVersion,

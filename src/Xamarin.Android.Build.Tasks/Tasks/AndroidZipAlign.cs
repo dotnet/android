@@ -14,10 +14,10 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "AZA";
 
 		[Required]
-		public ITaskItem Source { get; set; }
+		public ITaskItem Source { get; set; } = null!; // NRT - guarded by [Required]
 
 		[Required]
-		public ITaskItem DestinationDirectory { get; set; }
+		public ITaskItem DestinationDirectory { get; set; } = null!; // NRT - guarded by [Required]
 
 		int alignment = DefaultZipAlignment64Bit;
 		public int Alignment {

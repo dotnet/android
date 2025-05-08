@@ -12,11 +12,11 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "GCJ";
 
 		[Required]
-		public string Extension { get; set; }
-		public string OutputJackDirectory { get; set; }
-		public string [] JarsToConvert { get; set; }
+		public string Extension { get; set; } = "";
+		public string? OutputJackDirectory { get; set; }
+		public string []? JarsToConvert { get; set; }
 		[Output]
-		public string [] ConvertedFilesToBeGenerated { get; set; }
+		public string []? ConvertedFilesToBeGenerated { get; set; }
 
 		public override bool RunTask ()
 		{

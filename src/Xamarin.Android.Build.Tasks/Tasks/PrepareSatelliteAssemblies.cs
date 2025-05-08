@@ -23,7 +23,7 @@ public class PrepareSatelliteAssemblies : AndroidTask
 	public ITaskItem[] IntermediateSatelliteAssemblies { get; set; } = Array.Empty<ITaskItem> ();
 
 	[Output]
-	public ITaskItem[] ProcessedSatelliteAssemblies { get; set; }
+	public ITaskItem[]? ProcessedSatelliteAssemblies { get; set; }
 
 	public override bool RunTask ()
 	{

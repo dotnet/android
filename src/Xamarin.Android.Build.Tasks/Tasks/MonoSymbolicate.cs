@@ -14,10 +14,10 @@ namespace Xamarin.Android.Tasks
 		protected override string ToolName => OS.IsWindows ? "mono-symbolicate.exe" : "mono-symbolicate";
 
 		[Required]
-		public string InputDirectory { get; set; }
+		public string InputDirectory { get; set; } = "";
 
 		[Required]
-		public string OutputDirectory { get; set; }
+		public string OutputDirectory { get; set; } = "";
 
 		protected override string GenerateFullPathToTool ()
 		{

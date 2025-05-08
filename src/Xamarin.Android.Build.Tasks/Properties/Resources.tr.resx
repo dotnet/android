@@ -1021,6 +1021,13 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
     <comment>The following are literal names and should not be translated: .NET.
 {0} - The name of the .NET runtime, such as CoreCLR or NativeAOT.</comment>
   </data>
+  <data name="XA1041" xml:space="preserve">
+    <value>'{0}' MSBuild özelliği geçersiz '{1}' değerine sahip. Bu değer, Varlıklarınız veya Kaynaklarınızın göreli konumunu temsil eden bir dizin yolu olmalıdır.</value>
+    <comment>The following are literal names and should not be translated: .NET.
+{0} - The MSBuild property that has the incorrect value.
+{1} - The current value of the property
+</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>'{0}' Java bağımlılığı karşılanmadı.</value>
     <comment>The following are literal names and should not be translated: Java.

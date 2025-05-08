@@ -19,53 +19,53 @@ namespace Xamarin.Android.Tasks
 
 		public bool OnlyRunXmlAdjuster { get; set; }
 
-		public string XmlAdjusterOutput { get; set; }
+		public string? XmlAdjusterOutput { get; set; }
 
 		[Required]
-		public string OutputDirectory { get; set; }
+		public string OutputDirectory { get; set; } = "";
 
-		public string EnumDirectory { get; set; }
+		public string? EnumDirectory { get; set; }
 
-		public string EnumMetadataDirectory { get; set; }
-
-		[Required]
-		public string AndroidApiLevel { get; set; }
+		public string? EnumMetadataDirectory { get; set; }
 
 		[Required]
-		public string ApiXmlInput { get; set; }
+		public string AndroidApiLevel { get; set; } = "";
 
-		public string AssemblyName { get; set; }
+		[Required]
+		public string ApiXmlInput { get; set; } = "";
 
-		public string CodegenTarget { get; set; }
+		public string? AssemblyName { get; set; }
+
+		public string? CodegenTarget { get; set; }
 
 		public bool NoStdlib { get; set; }
 
-		public string TypeMappingReportFile { get; set; }
+		public string? TypeMappingReportFile { get; set; }
 
 		public bool UseShortFileNames { get; set; }
 
 		// apart from ReferencedManagedLibraries we need it to find mscorlib.dll.
 		[Required]
-		public string MonoAndroidFrameworkDirectories { get; set; }
+		public string MonoAndroidFrameworkDirectories { get; set; } = "";
 
-		public string LangVersion { get; set; }
+		public string? LangVersion { get; set; }
 
 		public bool EmitLegacyInterfaceInvokers { get; set; }
 
 		public bool EnableBindingStaticAndDefaultInterfaceMethods { get; set; }
 		public bool EnableBindingNestedInterfaceTypes { get; set; }
 		public bool EnableBindingInterfaceConstants { get; set; }
-		public string EnableRestrictToAttributes { get; set; }
+		public string? EnableRestrictToAttributes { get; set; }
 		public bool EnableObsoleteOverrideInheritance { get; set; }
-		public string Nullable { get; set; }
+		public string? Nullable { get; set; }
 
-		public ITaskItem[] TransformFiles { get; set; }
-		public ITaskItem[] ReferencedManagedLibraries { get; set; }
-		public ITaskItem[] AnnotationsZipFiles { get; set; }
-		public ITaskItem[] NamespaceTransforms { get; set; }
+		public ITaskItem[]? TransformFiles { get; set; }
+		public ITaskItem[]? ReferencedManagedLibraries { get; set; }
+		public ITaskItem[]? AnnotationsZipFiles { get; set; }
+		public ITaskItem[]? NamespaceTransforms { get; set; }
 
-		public ITaskItem[] JavadocXml { get; set; }
-		public string JavadocVerbosity { get; set; }
+		public ITaskItem[]? JavadocXml { get; set; }
+		public string? JavadocVerbosity { get; set; }
 
 		public bool UseJavaLegacyResolver { get; set; }
 

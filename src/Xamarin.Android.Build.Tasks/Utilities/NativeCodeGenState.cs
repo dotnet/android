@@ -23,7 +23,7 @@ class NativeCodeGenState
 	/// Classifier used when scanning for Java types in the target architecture's
 	/// assemblies.  Will be **null** if marshal methods are disabled.
 	/// </summary>
-	public MarshalMethodsClassifier? Classifier                { get; }
+	public MarshalMethodsCollection? Classifier                { get; }
 
 	/// <summary>
 	/// All the Java types discovered in the target architecture's assemblies.
@@ -37,7 +37,7 @@ class NativeCodeGenState
 
 	public ManagedMarshalMethodsLookupInfo? ManagedMarshalMethodsLookupInfo { get; set; }
 
-	public NativeCodeGenState (AndroidTargetArch arch, TypeDefinitionCache tdCache, XAAssemblyResolver resolver, List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW, MarshalMethodsClassifier? classifier)
+	public NativeCodeGenState (AndroidTargetArch arch, TypeDefinitionCache tdCache, XAAssemblyResolver resolver, List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW, MarshalMethodsCollection? classifier)
 	{
 		TargetArch = arch;
 		TypeCache = tdCache;

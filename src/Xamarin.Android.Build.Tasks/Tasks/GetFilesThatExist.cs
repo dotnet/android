@@ -16,12 +16,12 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "GFT";
 
 		[Required]
-		public ITaskItem[] Files { get; set; }
+		public ITaskItem[] Files { get; set; } = [];
 
-		public ITaskItem [] IgnoreFiles { get; set; }
+		public ITaskItem []? IgnoreFiles { get; set; }
 
 		[Output]
-		public ITaskItem[] FilesThatExist { get; set; }
+		public ITaskItem[]? FilesThatExist { get; set; }
 
 		public override bool RunTask ()
 		{

@@ -1,3 +1,5 @@
+#nullable disable
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -52,7 +54,13 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		public static int RunProcess (string command, string arguments, TaskLoggingHelper log, DataReceivedEventHandler? onOutput = null, DataReceivedEventHandler? onError = null)
+		public static int RunProcess (string command, string arguments, TaskLoggingHelper log, DataReceivedEventHandler? onOutput = null, DataReceivedEventHandler? onError = null, CancellationToken? cancellationToken = null, Action? cancelTask = null, bool logWarningOnFailure = true)
+		{
+			return RunProcess ("Running process", command, arguments, log, onOutput, onError, cancellationToken, cancelTask, logWarningOnFailure);
+		}
+
+		public static int RunProcess (string logLabel, string command, string arguments, TaskLoggingHelper log, DataReceivedEventHandler? onOutput = null, DataReceivedEventHandler? onError = null,
+			CancellationToken? cancellationToken = null, Action? cancelTask = null, bool logWarningOnFailure = true)
 		{
 			var stdout_completed = new ManualResetEvent (false);
 			var stderr_completed = new ManualResetEvent (false);
@@ -69,7 +77,7 @@ namespace Xamarin.Android.Tasks
 			var stdoutLines = new List<string> ();
 			var stderrLines = new List<string> ();
 
-			log.LogDebugMessage ($"Running process: {psi.FileName} {psi.Arguments}");
+			log.LogDebugMessage ($"{logLabel}: {psi.FileName} {psi.Arguments}");
 			using var proc = new Process ();
 			proc.OutputDataReceived += (s, e) => {
 				if (e.Data != null) {
@@ -91,6 +99,7 @@ namespace Xamarin.Android.Tasks
 			proc.Start ();
 			proc.BeginOutputReadLine ();
 			proc.BeginErrorReadLine ();
+			cancellationToken?.Register (() => { try { proc.Kill (); } catch (Exception) { } });
 			proc.WaitForExit ();
 
 			if (psi.RedirectStandardError) {
@@ -101,9 +110,13 @@ namespace Xamarin.Android.Tasks
 				stdout_completed.WaitOne (TimeSpan.FromSeconds (30));
 			}
 
+			log.LogDebugMessage ($"{logLabel}: exit code == {proc.ExitCode}");
 			if (proc.ExitCode != 0) {
-				var sb = MergeStdoutAndStderrMessages (stdoutLines, stderrLines);
-				log.LogCodedError ("XA0142", Properties.Resources.XA0142, $"{psi.FileName} {psi.Arguments}", sb.ToString ());
+				if (logWarningOnFailure) {
+					var sb = MergeStdoutAndStderrMessages (stdoutLines, stderrLines);
+					log.LogCodedError ("XA0142", Properties.Resources.XA0142, $"{psi.FileName} {psi.Arguments}", sb.ToString ());
+				}
+				cancelTask?.Invoke ();
 			}
 
 			try {

@@ -16,7 +16,7 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Path to the folder that contains dotnet / dotnet.exe.
 		/// </summary>
-		public string NetCoreRoot { get; set; }
+		public string? NetCoreRoot { get; set; }
 
 		/// <summary>
 		/// If `true`, this task should run `dotnet foo.dll` and `foo.exe` otherwise.
@@ -32,7 +32,7 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// The path to the assembly `foo.dll`. Will be `null` when NeedsDotnet and NeedsMono are `false`.
 		/// </summary>
-		protected string AssemblyPath { get; private set; }
+		protected string? AssemblyPath { get; private set; }
 
 		public override bool Execute ()
 		{

@@ -67,9 +67,6 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		var r = value.PeerReference;
 		if (!r.IsValid)
 			throw new ObjectDisposedException (value.GetType ().FullName);
-		var o = PeekPeer (value.PeerReference);
-		if (o != null)
-			return;
 
 		if (r.Type != JniObjectReferenceType.Global) {
 			value.SetPeerReference (r.NewGlobalRef ());
@@ -265,7 +262,8 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
 
-	protected override IJavaPeerable? TryCreatePeer (
+	protected override bool TryConstructPeer (
+			IJavaPeerable self,
 			ref JniObjectReference reference,
 			JniObjectReferenceOptions options,
 			[DynamicallyAccessedMembers (Constructors)]
@@ -277,10 +275,20 @@ class ManagedValueManager : JniRuntime.JniValueManager
 				reference.Handle,
 				JniHandleOwnership.DoNotTransfer,
 			};
-			var p       = (IJavaPeerable) c.Invoke (args);
+			c.Invoke (self, args);
 			JniObjectReference.Dispose (ref reference, options);
-			return p;
+			return true;
 		}
-		return base.TryCreatePeer (ref reference, options, type);
+		return base.TryConstructPeer (self, ref reference, options, type);
+	}
+
+	protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)]out object? result)
+	{
+		var proxy = value as JavaProxyThrowable;
+		if (proxy != null) {
+			result  = proxy.InnerException;
+			return true;
+		}
+		return base.TryUnboxPeerObject (value, out result);
 	}
 }

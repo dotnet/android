@@ -14,28 +14,35 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "CAAR";
 
-		public ITaskItem [] AndroidAssets { get; set; }
+		public ITaskItem []? AndroidAssets { get; set; }
 
-		public ITaskItem [] AndroidResources { get; set; }
+		public ITaskItem []? AndroidResources { get; set; }
 
-		public ITaskItem [] AndroidEnvironment { get; set; }
+		public ITaskItem []? AndroidEnvironment { get; set; }
 
-		public ITaskItem AndroidManifest { get; set; }
+		public ITaskItem? AndroidManifest { get; set; }
 
-		public ITaskItem [] JarFiles { get; set; }
+		public ITaskItem []? JarFiles { get; set; }
 
-		public ITaskItem [] NativeLibraries { get; set; }
+		public ITaskItem []? NativeLibraries { get; set; }
 
-		public ITaskItem [] ProguardConfigurationFiles { get; set; }
-
-		[Required]
-		public string AssetDirectory { get; set; }
+		public ITaskItem []? ProguardConfigurationFiles { get; set; }
 
 		[Required]
-		public string OutputFile { get; set; }
+		public string AssetDirectory { get; set; } = "";
+
+		[Required]
+		public string OutputFile { get; set; } = "";
+
+		[Required]
+		public string PrefixProperty { get; set; } = "";
 
 		public override bool RunTask ()
 		{
+			if (Path.IsPathRooted (AssetDirectory)) {
+				Log.LogCodedError ("XA1041", message: Properties.Resources.XA1041, PrefixProperty, AssetDirectory);
+				return false;
+			}
 			Directory.CreateDirectory (Path.GetDirectoryName (OutputFile));
 
 			using (var stream = File.Create (OutputFile))

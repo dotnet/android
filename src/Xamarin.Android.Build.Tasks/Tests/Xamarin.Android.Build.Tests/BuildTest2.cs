@@ -111,10 +111,6 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
-				// Add locally downloaded CoreCLR packs
-				ExtraNuGetConfigSources = {
-					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
-				}
 			};
 			proj.SetProperty ("UseMonoRuntime", "false"); // Enables CoreCLR
 			var b = CreateApkBuilder ();
@@ -146,10 +142,6 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
-				// Add locally downloaded CoreCLR packs
-				ExtraNuGetConfigSources = {
-					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
-				}
 			};
 
 			proj.SetProperty ("RuntimeIdentifier", rid);

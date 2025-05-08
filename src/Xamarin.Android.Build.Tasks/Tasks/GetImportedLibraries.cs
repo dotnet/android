@@ -20,18 +20,18 @@ namespace Xamarin.Android.Tasks
 		};
 
 		[Required]
-		public ITaskItem[] ExtractedDirectories { get; set; }
+		public ITaskItem[] ExtractedDirectories { get; set; } = [];
 
-		public string CacheFile { get; set;} 
-
-		[Output]
-		public ITaskItem [] Jars { get; set; }
+		public string? CacheFile { get; set;} 
 
 		[Output]
-		public ITaskItem [] NativeLibraries { get; set; }
+		public ITaskItem []? Jars { get; set; }
 
 		[Output]
-		public ITaskItem [] ManifestDocuments { get; set; }
+		public ITaskItem []? NativeLibraries { get; set; }
+
+		[Output]
+		public ITaskItem []? ManifestDocuments { get; set; }
 
 		public override bool RunTask ()
 		{

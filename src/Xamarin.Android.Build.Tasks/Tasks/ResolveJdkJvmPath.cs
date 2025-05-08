@@ -15,16 +15,16 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "RJJ";
 
-		public string JavaSdkPath { get; set; }
+		public string? JavaSdkPath { get; set; }
 
 		[Output]
-		public string JdkJvmPath { get; set; }
+		public string? JdkJvmPath { get; set; }
 
 		[Required]
-		public string MinimumSupportedJavaVersion   { get; set; }
+		public string MinimumSupportedJavaVersion   { get; set; } = "";
 
 		[Required]
-		public string LatestSupportedJavaVersion    { get; set; }
+		public string LatestSupportedJavaVersion    { get; set; } = "";
 
 		public override bool RunTask ()
 		{
@@ -48,11 +48,11 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		string GetJvmPath ()
+		string? GetJvmPath ()
 		{
 			// NOTE: this doesn't need to use GetRegisteredTaskObjectAssemblyLocal()
 			// because JavaSdkPath is the key and the value is a string.
-			var key = new Tuple<string, string> (nameof (ResolveJdkJvmPath), JavaSdkPath);
+			var key = new Tuple<string, string?> (nameof (ResolveJdkJvmPath), JavaSdkPath);
 			var cached = BuildEngine4.GetRegisteredTaskObject (key, RegisteredTaskObjectLifetime.AppDomain) as string;
 			if (cached != null) {
 				Log.LogDebugMessage ($"Using cached value for {nameof (JdkJvmPath)}: {cached}");
@@ -63,7 +63,7 @@ namespace Xamarin.Android.Tasks
 			var minVersion  = Version.Parse (MinimumSupportedJavaVersion);
 			var maxVersion  = Version.Parse (LatestSupportedJavaVersion);
 
-			JdkInfo info    = MonoAndroidHelper.GetJdkInfo (this.CreateTaskLogger (), JavaSdkPath, minVersion, maxVersion);
+			JdkInfo? info    = MonoAndroidHelper.GetJdkInfo (this.CreateTaskLogger (), JavaSdkPath, minVersion, maxVersion);
 
 			if (info == null)
 				return null;

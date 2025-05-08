@@ -17,10 +17,10 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "CRM";
 
 		[Required]
-		public string ManifestOutputFile { get; set; }
+		public string ManifestOutputFile { get; set; } = "";
 
 		[Required]
-		public string PackageName { get; set; }
+		public string PackageName { get; set; } = "";
 
 		public override bool RunTask ()
 		{

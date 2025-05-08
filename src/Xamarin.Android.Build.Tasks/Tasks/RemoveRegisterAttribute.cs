@@ -19,7 +19,7 @@ namespace Xamarin.Android.Tasks
 		const string RegisterAttribute = "Android.Runtime.RegisterAttribute";
 
 		[Required]
-		public ITaskItem[] ShrunkFrameworkAssemblies { get; set; }
+		public ITaskItem[] ShrunkFrameworkAssemblies { get; set; } = [];
 
 		public override bool RunTask ()
 		{
@@ -30,6 +30,11 @@ namespace Xamarin.Android.Tasks
 			resolver.SearchDirectories.Add (path);
 			
 			using (var assembly = resolver.Load (mono_android)) {
+				if (assembly is null) {
+					Log.LogError ($"Unable to load assembly '{mono_android}'");
+					return false;
+				}
+
 				// Strip out [Register] attributes
 				foreach (TypeDefinition type in assembly.MainModule.Types)
 					ProcessType (type);

@@ -11,18 +11,18 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "GR";
 
 		[Required]
-		public string RTxtFile { get; set; }
+		public string RTxtFile { get; set; } = "";
 
 		[Required]
-		public string ResourceDirectory { get; set; }
-		public string[] AdditionalResourceDirectories { get; set; }
+		public string ResourceDirectory { get; set; } = "";
+		public string[]? AdditionalResourceDirectories { get; set; }
 
-		public string[] AarLibraries { get; set; }
+		public string[]? AarLibraries { get; set; }
 
-		public string JavaPlatformJarPath { get; set; }
+		public string? JavaPlatformJarPath { get; set; }
 
-		public string ResourceFlagFile { get; set; }
-		public string CaseMapFile { get; set; }
+		public string? ResourceFlagFile { get; set; }
+		public string? CaseMapFile { get; set; }
 
 		public override bool RunTask ()
 		{

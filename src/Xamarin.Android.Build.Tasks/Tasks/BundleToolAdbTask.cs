@@ -11,11 +11,11 @@ namespace Xamarin.Android.Tasks
 		/// This is used to detect the attached device and generate an APK set specifically for it
 		/// </summary>
 		[Required]
-		public string AdbToolPath { get; set; }
+		public string AdbToolPath { get; set; } = "";
 
-		public string AdbToolExe { get; set; }
+		public string? AdbToolExe { get; set; }
 
-		public string AdbTarget { get; set; }
+		public string? AdbTarget { get; set; }
 
 		public string AdbToolName => OS.IsWindows ? "adb.exe" : "adb";
 
@@ -25,7 +25,7 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("--adb ", Path.Combine (AdbToolPath, adb));
 
 			var adbTarget = AdbTarget;
-			if (!string.IsNullOrEmpty (adbTarget)) {
+			if (!adbTarget.IsNullOrEmpty ()) {
 				// Normally of the form "-s emulator-5554"
 				int index = adbTarget.IndexOf (' ');
 				if (index != -1) {

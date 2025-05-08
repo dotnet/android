@@ -17,10 +17,10 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public int AndroidApiLevel { get; set; }
 
-		public string ProductVersion         { get; set; }
+		public string? ProductVersion         { get; set; }
 
 		[Output]
-		public  ITaskItem[]     AndroidDefineConstants      { get; set; }
+		public  ITaskItem[]?    AndroidDefineConstants      { get; set; }
 
 		public override bool RunTask ()
 		{

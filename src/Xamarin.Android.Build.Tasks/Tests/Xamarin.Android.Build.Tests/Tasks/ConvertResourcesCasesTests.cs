@@ -39,7 +39,8 @@ namespace Xamarin.Android.Build.Tests
 			var errors = new List<BuildErrorEventArgs> ();
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
 			var task = new ConvertResourcesCases {
-				BuildEngine = engine
+				BuildEngine = engine,
+				CustomViewMapFile = "",
 			};
 			task.ResourceDirectories = new ITaskItem [] {
 				new TaskItem (resPath),

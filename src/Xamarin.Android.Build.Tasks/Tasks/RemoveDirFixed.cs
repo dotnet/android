@@ -101,9 +101,9 @@ namespace Xamarin.Android.Tasks
 		}
 
 		[Required]
-		public ITaskItem [] Directories { get; set; }
+		public ITaskItem [] Directories { get; set; } = [];
 
 		[Output]
-		public ITaskItem [] RemovedDirectories { get; set; }
+		public ITaskItem []? RemovedDirectories { get; set; }
 	}
 }

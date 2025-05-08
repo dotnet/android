@@ -16,10 +16,10 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "CPR";
 
 		[Required]
-		public string ResourceName { get; set; }
+		public string ResourceName { get; set; } = "";
 
 		[Required]
-		public string OutputPath { get; set; }
+		public string OutputPath { get; set; } = "";
 
 		static readonly Assembly ExecutingAssembly = Assembly.GetExecutingAssembly ();
 

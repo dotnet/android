@@ -1,3 +1,5 @@
+#nullable disable
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -83,13 +85,13 @@ namespace MonoDroid.Tuner
 		}
 
 #if !ILLINK
-		public bool ProcessAssembly (AssemblyDefinition assembly, StepContext context)
+		public void ProcessAssembly (AssemblyDefinition assembly, StepContext context)
 		{
 			// Only run this step on non-main user Android assemblies
 			if (context.IsMainAssembly || !context.IsAndroidUserAssembly)
-				return false;
+				return;
 
-			return FixAbstractMethods (assembly);
+			context.IsAssemblyModified |= FixAbstractMethods (assembly);
 		}
 #endif  // !ILLINK
 

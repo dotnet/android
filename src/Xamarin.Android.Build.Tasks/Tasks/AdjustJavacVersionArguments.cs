@@ -13,20 +13,20 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "AJV";
 
 		[Required]
-		public string JdkVersion { get; set; }
+		public string JdkVersion { get; set; } = "";
 
 		[Required]
-		public string DefaultJdkVersion { get; set; }
+		public string DefaultJdkVersion { get; set; } = "";
 
 		public bool EnableMultiDex { get; set; }
 
 		public bool SkipJavacVersionCheck { get; set; }
 
 		[Output]
-		public string TargetVersion { get; set; }
+		public string? TargetVersion { get; set; }
 
 		[Output]
-		public string SourceVersion { get; set; }
+		public string? SourceVersion { get; set; }
 
 		public override bool RunTask ()
 		{

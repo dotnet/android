@@ -15,11 +15,11 @@ namespace Xamarin.Android.Tasks
 
 	public abstract class JavaCompileToolTask : JavaToolTask
 	{
-		public string StubSourceDirectory { get; set; }
+		public string? StubSourceDirectory { get; set; }
 
-		public ITaskItem[] JavaSourceFiles { get; set; }
+		public ITaskItem[]? JavaSourceFiles { get; set; }
 
-		public ITaskItem[] Jars { get; set; }
+		public ITaskItem[]? Jars { get; set; }
 
 		protected override string ToolName {
 			get { return OS.IsWindows ? "javac.exe" : "javac"; }
@@ -32,7 +32,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		internal string TemporarySourceListFile;
+		internal string? TemporarySourceListFile;
 
 		public override bool RunTask ()
 		{

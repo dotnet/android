@@ -1,4 +1,3 @@
-#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -111,7 +110,7 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 
-		public static bool TryGetSequencePointsMode (string value, out SequencePointsMode mode)
+		public static bool TryGetSequencePointsMode (string? value, out SequencePointsMode mode)
 		{
 			mode = SequencePointsMode.None;
 			switch ((value ?? string.Empty).ToLowerInvariant ().Trim ()) {

@@ -13,13 +13,13 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "CFR";
 
 		[Required]
-		public ITaskItem[] Files { get; set; }
+		public ITaskItem[] Files { get; set; } = [];
 
 		[Required]
-		public string Directory { get; set; }
+		public string Directory { get; set; } = "";
 
 		[Output]
-		public ITaskItem RemovedFilesFlag { get; set; }
+		public ITaskItem? RemovedFilesFlag { get; set; }
 
 		public override bool RunTask ()
 		{

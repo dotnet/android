@@ -147,6 +147,13 @@ namespace Xamarin.Android.Prepare
 				{ "x86_64",         "x86_64-linux-android" },
 			};
 
+			public static readonly Dictionary<string, string> AbiToRID = new (StringComparer.Ordinal) {
+				{ "armeabi-v7a", "android-arm" },
+				{ "arm64-v8a",   "android-arm64" },
+				{ "x86",         "android-x86" },
+				{ "x86_64",      "android-x64" },
+			};
+
 			public static readonly List <NDKTool> NDKTools = new List<NDKTool> {
 				// Tools prefixed with architecture triple
 				new NDKTool (name: "as", prefixed: true),

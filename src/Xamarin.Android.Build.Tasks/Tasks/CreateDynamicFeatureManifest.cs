@@ -22,25 +22,25 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "CDFM";
 
 		[Required]
-		public string FeatureSplitName { get; set; }
+		public string FeatureSplitName { get; set; } = "";
 
 		[Required]
-		public string FeatureDeliveryType { get; set; }
+		public string FeatureDeliveryType { get; set; } = "";
 
 		[Required]
-		public string FeatureType { get; set; }
+		public string FeatureType { get; set; } = "";
 
 		[Required]
-		public string PackageName { get; set; }
+		public string PackageName { get; set; } = "";
 
 		[Required]
-		public ITaskItem OutputFile { get; set; }
+		public ITaskItem OutputFile { get; set; } = null!; // NRT - guarded by [Required]
 
-		public string FeatureTitleResource { get; set; }
+		public string? FeatureTitleResource { get; set; }
 
-		public string MinSdkVersion { get; set; }
+		public string? MinSdkVersion { get; set; }
 
-		public string TargetSdkVersion { get; set; }
+		public string? TargetSdkVersion { get; set; }
 
 		public bool IsFeatureSplit { get; set; } = false;
 		public bool IsInstant { get; set; } = false;
@@ -63,7 +63,7 @@ namespace Xamarin.Android.Tasks
 
 		void GenerateFeatureManifest (XDocument doc)
 		{
-			XAttribute featureTitleResource = null;
+			XAttribute? featureTitleResource = null;
 			if (!string.IsNullOrEmpty (FeatureTitleResource))
 				featureTitleResource = new XAttribute (distNS + "title", FeatureTitleResource);
 			XElement usesSdk = new XElement ("uses-sdk");

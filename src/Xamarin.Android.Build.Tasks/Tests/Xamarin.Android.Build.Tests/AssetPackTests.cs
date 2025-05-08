@@ -2,6 +2,7 @@ using System;
 using NUnit.Framework;
 using System.IO;
 using System.Text;
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -35,7 +36,11 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		public void BuildApplicationWithAssetPackThatHasInvalidName ([Values (true, false)] bool isRelease)
+		[TestCase (false, AndroidRuntime.MonoVM)]
+		[TestCase (true, AndroidRuntime.MonoVM)]
+		[TestCase (true, AndroidRuntime.CoreCLR)]
+		[TestCase (true, AndroidRuntime.NativeAOT)]
+		public void BuildApplicationWithAssetPackThatHasInvalidName (bool isRelease, AndroidRuntime runtime)
 		{
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
@@ -48,6 +53,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
+			app.SetRuntime (runtime);
 			app.SetProperty ("AndroidPackageFormat", "aab");
 			using (var builder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 				builder.ThrowOnBuildFailure = false;
@@ -59,7 +65,11 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		public void BuildApplicationWithAssetPackOutsideProjectDirectory ([Values (true, false)] bool isRelease)
+		[TestCase (false, AndroidRuntime.MonoVM)]
+		[TestCase (true, AndroidRuntime.MonoVM)]
+		[TestCase (true, AndroidRuntime.CoreCLR)]
+		[TestCase (true, AndroidRuntime.NativeAOT)]
+		public void BuildApplicationWithAssetPackOutsideProjectDirectory (bool isRelease, AndroidRuntime runtime)
 		{
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
@@ -83,6 +93,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
+			app.SetRuntime (runtime);
 			app.SetProperty ("AndroidPackageFormat", "aab");
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 				Assert.IsTrue (appBuilder.Build (app), $"{app.ProjectName} should succeed");
@@ -104,7 +115,11 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		public void BuildApplicationWithAssetPackOverrides ([Values (true, false)] bool isRelease)
+		[TestCase (false, AndroidRuntime.MonoVM)]
+		[TestCase (true, AndroidRuntime.MonoVM)]
+		[TestCase (true, AndroidRuntime.CoreCLR)]
+		[TestCase (true, AndroidRuntime.NativeAOT)]
+		public void BuildApplicationWithAssetPackOverrides (bool isRelease, AndroidRuntime runtime)
 		{
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
@@ -123,6 +138,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
+			app.SetRuntime (runtime);
 			app.SetProperty ("AndroidPackageFormat", "aab");
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 				Assert.IsTrue (appBuilder.Build (app), $"{app.ProjectName} should succeed");
@@ -142,7 +158,12 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		public void BuildApplicationWithAssetPack ([Values (true, false)] bool isRelease) {
+		[TestCase (false, AndroidRuntime.MonoVM)]
+		[TestCase (true, AndroidRuntime.MonoVM)]
+		[TestCase (true, AndroidRuntime.CoreCLR)]
+		[TestCase (true, AndroidRuntime.NativeAOT)]
+		public void BuildApplicationWithAssetPack (bool isRelease, AndroidRuntime runtime)
+		{
 			var path = Path.Combine ("temp", TestName);
 			var asset3 = new AndroidItem.AndroidAsset ("Assets\\asset3.txt") {
 				TextContent = () => "Asset3",
@@ -175,6 +196,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
+			app.SetRuntime (runtime);
 			app.SetProperty ("AndroidPackageFormat", "aab");
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 				Assert.IsTrue (appBuilder.Build (app), $"{app.ProjectName} should succeed");

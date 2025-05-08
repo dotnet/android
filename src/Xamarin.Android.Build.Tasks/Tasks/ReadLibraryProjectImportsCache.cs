@@ -38,28 +38,28 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "RLC";
 
 		[Required]
-		public string CacheFile { get; set;}
+		public string CacheFile { get; set;} = "";
 
 		[Output]
-		public ITaskItem [] Jars { get; set; }
+		public ITaskItem []? Jars { get; set; }
 
 		[Output]
-		public ITaskItem [] ResolvedAssetDirectories { get; set; }
+		public ITaskItem []? ResolvedAssetDirectories { get; set; }
 
 		[Output]
-		public ITaskItem [] ResolvedResourceDirectories { get; set; }
+		public ITaskItem []? ResolvedResourceDirectories { get; set; }
 
 		[Output]
-		public ITaskItem [] ResolvedEnvironmentFiles { get; set; }
+		public ITaskItem []? ResolvedEnvironmentFiles { get; set; }
 
 		[Output]
-		public ITaskItem [] ResolvedResourceDirectoryStamps { get; set; }
+		public ITaskItem []? ResolvedResourceDirectoryStamps { get; set; }
 
 		[Output]
-		public ITaskItem [] ProguardConfigFiles { get; set; }
+		public ITaskItem []? ProguardConfigFiles { get; set; }
 
 		[Output]
-		public ITaskItem [] ExtractedDirectories { get; set; }
+		public ITaskItem []? ExtractedDirectories { get; set; }
 
 		public override bool RunTask ()
 		{

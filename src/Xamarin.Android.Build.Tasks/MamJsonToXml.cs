@@ -12,10 +12,10 @@ namespace Xamarin.Android.Tasks
 		public  override    string  TaskPrefix  => "A2C";
 
 		[Required]
-		public  ITaskItem[] MappingFiles        { get; set; }
+		public  ITaskItem[] MappingFiles        { get; set; } = [];
 
 		[Required]
-		public  ITaskItem   XmlMappingOutput    { get; set; }
+		public  ITaskItem   XmlMappingOutput    { get; set; } = null!; // NRT - guarded by [Required]
 
 		public override bool RunTask ()
 		{

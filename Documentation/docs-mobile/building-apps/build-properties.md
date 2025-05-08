@@ -398,6 +398,17 @@ final `.apk`.
 
 This property is `False` by default.
 
+## AndroidEnableProfiler
+
+Synonym for the [`$(EnableProfiler)`](#enableprofiler) property.
+
+Required for using `dotnet-trace` or `dotnet-gcdump` in Android
+applications. If set to `true`, it includes the Mono diagnostic
+component in the application. This component is the
+`libmono-component-diagnostics_tracing.so` native library.
+
+This property is `False` by default.
+
 ## AndroidEnableObsoleteOverrideInheritance
 
 A boolean property that determines if bound methods automatically inherit `[Obsolete]`
@@ -1548,6 +1559,18 @@ This property is `False` by default.
 This property is ignored unless the
 [`$(AotAssemblies)`](#aotassemblies) MSBuild property is `True`.
 
+## EnableProfiler
+
+Synonym for the [`$(AndroidEnableProfiler)`](#androidenableprofiler)
+property.
+
+Required for using `dotnet-trace` or `dotnet-gcdump` in Android
+applications. If set to `true`, it includes the Mono diagnostic
+component in the application. This component is the
+`libmono-component-diagnostics_tracing.so` native library.
+
+This property is `False` by default.
+
 ## EnableProguard
 
 A boolean property that determines
@@ -1638,6 +1661,16 @@ The default value is False.
 ## MandroidI18n
 
 This MSBuild property is obsolete and is no longer supported.
+
+## MonoAndroidAssetPrefix
+
+Specifies a *path prefix*
+that is removed from the start of filenames with a Build action of
+`AndroidAsset`. This is to allow changing where resources are
+located.
+
+The default value is `Assets`. Change this to `assets` for the
+Java project structure.
 
 ## MonoAndroidResourcePrefix
 

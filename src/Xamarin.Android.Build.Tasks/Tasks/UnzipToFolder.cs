@@ -12,9 +12,9 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "UNZ";
 
-		public ITaskItem [] Sources { get; set; }
-		public ITaskItem [] DestinationDirectories { get; set; }
-		public ITaskItem [] Files { get; set; }
+		public ITaskItem []? Sources { get; set; }
+		public ITaskItem []? DestinationDirectories { get; set; }
+		public ITaskItem []? Files { get; set; }
 
 		public override bool RunTask ()
 		{

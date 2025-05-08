@@ -1,3 +1,5 @@
+#nullable disable
+
 using System;
 
 namespace Xamarin.Android.Tasks.LLVMIR

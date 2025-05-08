@@ -11,12 +11,12 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "CLP";
 
 		[Required]
-		public string OutputFile { get; set; }
+		public string OutputFile { get; set; } = "";
 
 		[Required]
-		public ITaskItem[] SourceJars { get; set; }
+		public ITaskItem[] SourceJars { get; set; } = [];
 
-		public ITaskItem [] DocumentationPaths { get; set; }
+		public ITaskItem []? DocumentationPaths { get; set; }
 
 		protected override string GenerateCommandLineCommands ()
 		{

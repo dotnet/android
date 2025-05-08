@@ -314,9 +314,10 @@ namespace Xamarin.Android.Build.Tests
 			var task = new BuildAppBundle {
 				BaseZip = "base.zip",
 				Output = "foo.aab",
+				JarPath = "bundletool.jar",
 			};
 			string cmd = task.GetCommandLineBuilder ().ToString ();
-			Assert.AreEqual ($"build-bundle --modules base.zip --output foo.aab", cmd);
+			Assert.AreEqual ($"-jar bundletool.jar build-bundle --modules base.zip --output foo.aab", cmd);
 		}
 
 		[Test]
@@ -333,12 +334,13 @@ namespace Xamarin.Android.Build.Tests
 				Aapt2ToolExe = "aapt2",
 				AdbToolPath = Path.Combine ("adb", "with spaces"),
 				AdbToolExe = "adb",
-				AdbTarget = "-s emulator-5554"
+				AdbTarget = "-s emulator-5554",
+				JarPath = "bundletool.jar",
 			};
 			string aapt2 = Path.Combine (task.Aapt2ToolPath, task.Aapt2ToolExe);
 			string adb = Path.Combine (task.AdbToolPath, task.AdbToolExe);
 			string cmd = task.GetCommandLineBuilder ().ToString ();
-			Assert.AreEqual ($"build-apks --connected-device --mode default --adb \"{adb}\" --device-id emulator-5554 --bundle foo.aab --output foo.apks --aapt2 \"{aapt2}\" --ks foo.keystore --ks-key-alias alias --key-pass pass:keypass --ks-pass pass:storepass", cmd);
+			Assert.AreEqual ($"-jar bundletool.jar build-apks --connected-device --mode default --adb \"{adb}\" --device-id emulator-5554 --bundle foo.aab --output foo.apks --aapt2 \"{aapt2}\" --ks foo.keystore --ks-key-alias alias --key-pass pass:keypass --ks-pass pass:storepass", cmd);
 		}
 
 		[Test]
@@ -348,11 +350,12 @@ namespace Xamarin.Android.Build.Tests
 				ApkSet = "foo.apks",
 				AdbToolPath = Path.Combine ("path", "with spaces"),
 				AdbToolExe = "adb",
-				AdbTarget = "-s emulator-5554"
+				AdbTarget = "-s emulator-5554",
+				JarPath = "bundletool.jar",
 			};
 			string adb = Path.Combine (task.AdbToolPath, task.AdbToolExe);
 			string cmd = task.GetCommandLineBuilder ().ToString ();
-			Assert.AreEqual ($"install-apks --apks foo.apks --adb \"{adb}\" --device-id emulator-5554 --allow-downgrade --modules _ALL_", cmd);
+			Assert.AreEqual ($"-jar bundletool.jar install-apks --apks foo.apks --adb \"{adb}\" --device-id emulator-5554 --allow-downgrade --modules _ALL_", cmd);
 		}
 	}
 }

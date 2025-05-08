@@ -15,13 +15,13 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "RAM";
 
 		[Required]
-		public string ManifestFile { get; set; }
+		public string ManifestFile { get; set; } = "";
 
 		[Required]
-		public string AndroidSdkDirectory { get; set; }
+		public string AndroidSdkDirectory { get; set; } = "";
 
 		[Required]
-		public string AndroidApiLevel { get; set; }
+		public string AndroidApiLevel { get; set; } = "";
 
 		/// <summary>
 		/// True if //manifest/application/[@android:extractNativeLibs='false']. False otherwise.
@@ -30,7 +30,7 @@ namespace Xamarin.Android.Tasks
 		public bool EmbeddedDSOsEnabled { get; set; }
 
 		[Output]
-		public ITaskItem [] UsesLibraries { get; set; }
+		public ITaskItem []? UsesLibraries { get; set; }
 
 		[Output]
 		public bool UseEmbeddedDex { get; set; } = false;
@@ -45,7 +45,7 @@ namespace Xamarin.Android.Tasks
 			var app = manifest.Document.Element ("manifest")?.Element ("application");
 
 			if (app != null) {
-				string text = app.Attribute (androidNs + "extractNativeLibs")?.Value;
+				string? text = app.Attribute (androidNs + "extractNativeLibs")?.Value;
 				if (bool.TryParse (text, out bool value)) {
 					EmbeddedDSOsEnabled = !value;
 				}

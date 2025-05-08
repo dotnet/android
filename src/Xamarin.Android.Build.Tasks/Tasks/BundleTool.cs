@@ -1,4 +1,4 @@
-﻿using Microsoft.Build.Framework;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
 
@@ -7,7 +7,7 @@ namespace Xamarin.Android.Tasks
 	public abstract class BundleTool : JavaToolTask
 	{
 		[Required]
-		public string JarPath { get; set; }
+		public string JarPath { get; set; } = "";
 
 		protected override string GenerateCommandLineCommands ()
 		{

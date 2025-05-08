@@ -14,13 +14,13 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "CAR";
 
 		[Required]
-		public string[] AdditionalAndroidResourcePaths { get; set; }
+		public string[] AdditionalAndroidResourcePaths { get; set; } = [];
 
 		[Required]
-		public string CacheDirectory { get; set; }
+		public string CacheDirectory { get; set; } = "";
 
 		[Output]
-		public ITaskItem[] AdditionalResourceCachePaths { get; set; }
+		public ITaskItem[]? AdditionalResourceCachePaths { get; set; }
 
 		public override bool RunTask ()
 		{

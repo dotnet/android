@@ -23,32 +23,32 @@ namespace Xamarin.Android.Tasks
 
 		const string BundleSharedLibraryName = "libmonodroid_bundle_app.so";
 
-		public string AndroidNdkDirectory { get; set; }
+		public string? AndroidNdkDirectory { get; set; }
 
 		[Required]
-		public ITaskItem[] Assemblies { get; set; }
+		public ITaskItem[] Assemblies { get; set; } = [];
 
 		// Which ABIs to include native libs for
 		[Required]
-		public string [] SupportedAbis { get; set; }
+		public string [] SupportedAbis { get; set; } = [];
 
 		[Required]
-		public string TempOutputPath { get; set; }
+		public string TempOutputPath { get; set; } = "";
 
-		public string IncludePath { get; set; }
+		public string? IncludePath { get; set; }
 
 		[Required]
-		public string ToolPath { get; set; }
+		public string ToolPath { get; set; } = "";
 
 		public bool AutoDeps { get; set; }
 		public bool EmbedDebugSymbols { get; set; }
 		public bool KeepTemp { get; set; }
 
 		[Required]
-		public string BundleApiPath { get; set; }
+		public string BundleApiPath { get; set; } = "";
 
 		[Output]
-		public ITaskItem [] OutputNativeLibraries { get; set; }
+		public ITaskItem []? OutputNativeLibraries { get; set; }
 
 		public MakeBundleNativeCodeExternal ()
 		{

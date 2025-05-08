@@ -1,4 +1,3 @@
-#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,7 +28,7 @@ public class FindJavaObjectsStep : BaseStep, IAssemblyModifierPipelineStep
 
 	public FindJavaObjectsStep (TaskLoggingHelper log) => Log = log;
 
-	public bool ProcessAssembly (AssemblyDefinition assembly, StepContext context)
+	public void ProcessAssembly (AssemblyDefinition assembly, StepContext context)
 	{
 		var destinationJLOXml = JavaObjectsXmlFile.GetJavaObjectsXmlFilePath (context.Destination.ItemSpec);
 		var scanned = ScanAssembly (assembly, context, destinationJLOXml);
@@ -37,11 +36,7 @@ public class FindJavaObjectsStep : BaseStep, IAssemblyModifierPipelineStep
 		if (!scanned) {
 			// We didn't scan for Java objects, so write an empty .xml file for later steps
 			JavaObjectsXmlFile.WriteEmptyFile (destinationJLOXml, Log);
-			return false;
 		}
-
-		// This step does not change the assembly
-		return false;
 	}
 
 	public bool ScanAssembly (AssemblyDefinition assembly, StepContext context, string destinationJLOXml)
@@ -119,8 +114,10 @@ public class FindJavaObjectsStep : BaseStep, IAssemblyModifierPipelineStep
 			DefaultMonoRuntimeInitialization = "mono.MonoPackageManager.LoadApplication (context);",
 		};
 
-		if (UseMarshalMethods)
-			reader_options.MethodClassifier = new MarshalMethodsClassifier (Context, Context.Resolver, Log);
+		if (UseMarshalMethods) {
+			var classifier = new MarshalMethodsClassifier (Context, Context.Resolver, Log);
+			reader_options.MethodClassifier = new MarshalMethodsCollection (classifier);
+		}
 
 		foreach (var type in types) {
 			var wrapper = CecilImporter.CreateType (type, Context, reader_options);

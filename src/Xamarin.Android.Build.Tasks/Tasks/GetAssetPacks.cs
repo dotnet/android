@@ -19,15 +19,15 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "GAP";
 
 		[Required]
-		public ITaskItem[] Assets { get; set; }
+		public ITaskItem[] Assets { get; set; } = [];
 
 		[Required]
-		public ITaskItem IntermediateDir { get; set; }
+		public ITaskItem IntermediateDir { get; set; } = null!;  // NRT - guarded by [Required]
 
 		public string[] MetadataToCopy { get; set; } = { "DeliveryType" };
 
 		[Output]
-		public ITaskItem[] AssetPacks { get; set; }
+		public ITaskItem[]? AssetPacks { get; set; }
 
 		public override bool RunTask ()
 		{

@@ -1,3 +1,5 @@
+#nullable disable
+
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -70,21 +72,26 @@ namespace Xamarin.Android.Build.Tests
 			var resolvedUserAssembliesList = resolvedUserAssemblies.Select (x => new TaskItem (x, metadata));
 			var resolvedAssembliesList = resolvedAssemblies.Select (x => new TaskItem (x, metadata));
 
-			var task = new GeneratePackageManagerJava {
+			var packageManagerTask = new GeneratePackageManagerJava {
 				BuildEngine = new MockBuildEngine (TestContext.Out),
-				ResolvedUserAssemblies = resolvedUserAssembliesList.ToArray (),
-				ResolvedAssemblies = resolvedAssembliesList.ToArray (),
-				OutputDirectory = Path.Combine(path, "src", "mono"),
-				EnvironmentOutputDirectory = Path.Combine (path, "env"),
 				MainAssembly = "linked/HelloAndroid.dll",
-				TargetFrameworkVersion = "v6.0",
-				Manifest = Path.Combine (path, "AndroidManifest.xml"),
+				OutputDirectory = Path.Combine (path, "src", "mono"),
+				ResolvedUserAssemblies = resolvedUserAssembliesList.ToArray (),
+			};
+
+			var configTask = new GenerateNativeApplicationConfigSources {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				ResolvedAssemblies = resolvedAssembliesList.ToArray (),
+				EnvironmentOutputDirectory = Path.Combine (path, "env"),
 				SupportedAbis = new string [] { "x86" , "arm64-v8a" },
 				AndroidPackageName = "com.microsoft.net6.helloandroid",
 				EnablePreloadAssembliesDefault = false,
 				Environments = new ITaskItem [] { new TaskItem (Path.Combine (path, "myenv.txt")) },
 			};
-			Assert.IsTrue (task.Execute (), "Task should have executed.");
+
+			Assert.IsTrue (packageManagerTask.Execute (), "GeneratePackageManagerJava task should have executed.");
+			Assert.IsTrue (configTask.Execute (), "GenerateNativeApplicationConfigSources task should have executed.");
+
 			AssertFileContentsMatch (Path.Combine (XABuildPaths.TestAssemblyOutputDirectory, "Expected", "CheckPackageManagerAssemblyOrder.java"), Path.Combine(path, "src", "mono", "MonoPackageManager_Resources.java"));
 			var txt = File.ReadAllText (Path.Combine (path, "env", "environment.arm64-v8a.ll"));
 			StringAssert.Contains ("YYYY", txt, "environment.arm64-v8a.ll should contain 'YYYY'");
@@ -92,7 +99,7 @@ namespace Xamarin.Android.Build.Tests
 			StringAssert.Contains ("YYYY", txt, "environment.x86.ll should contain 'YYYY'");
 
 			File.WriteAllText (Path.Combine (path, "myenv.txt"), @"MYENV=XXXX");
-			Assert.IsTrue (task.Execute (), "Task should have executed.");
+			Assert.IsTrue (configTask.Execute (), "GenerateNativeApplicationConfigSources task should have executed. (run 2)");
 			txt = File.ReadAllText (Path.Combine (path, "env", "environment.arm64-v8a.ll"));
 			StringAssert.Contains ("XXXX", txt, "environment.arm64-v8a.ll should contain 'XXXX'");
 			txt = File.ReadAllText (Path.Combine (path, "env", "environment.x86.ll"));

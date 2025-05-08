@@ -12,13 +12,13 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "CMM";
 
 		[Required]
-		public string BuildId { get; set; }
+		public string BuildId { get; set; } = "";
 
 		[Required]
-		public string PackageName { get; set; }
+		public string PackageName { get; set; } = "";
 
 		[Required]
-		public string OutputDirectory { get; set; }
+		public string OutputDirectory { get; set; } = "";
 
 		public override bool RunTask ()
 		{

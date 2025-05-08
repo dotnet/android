@@ -1,5 +1,7 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
+#nullable disable
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -24,6 +26,7 @@ namespace Xamarin.Android.Tasks
 	public class GenerateJavaStubs : AndroidTask
 	{
 		public const string NativeCodeGenStateRegisterTaskKey = ".:!MarshalMethods!:.";
+		public const string NativeCodeGenStateObjectRegisterTaskKey = ".:!MarshalMethodsObject!:.";
 
 		public override string TaskPrefix => "GJS";
 
@@ -211,25 +214,28 @@ namespace Xamarin.Android.Tasks
 			XAAssemblyResolver resolver = MakeResolver (useMarshalMethods, arch, assemblies);
 			var tdCache = new TypeDefinitionCache ();
 			(List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW) = ScanForJavaTypes (resolver, tdCache, assemblies, userAssemblies, useMarshalMethods);
-			var jcwContext = new JCWGeneratorContext (arch, resolver, assemblies.Values, javaTypesForJCW, tdCache, useMarshalMethods);
+			var jcwContext = new JCWGeneratorContext (arch, resolver, assemblies.Values, javaTypesForJCW, tdCache);
 			var jcwGenerator = new JCWGenerator (Log, jcwContext) {
 				CodeGenerationTarget = codeGenerationTarget,
 			};
-			bool success;
+			bool success = true;
 
 			if (generateJavaCode && RunCheckedBuild) {
-				success = jcwGenerator.GenerateAndClassify (AndroidSdkPlatform, outputPath: Path.Combine (OutputDirectory, "src"), ApplicationJavaClass);
+				success = jcwGenerator.Generate (AndroidSdkPlatform, outputPath: Path.Combine (OutputDirectory, "src"), ApplicationJavaClass);
 
 				generatedJavaFiles = jcwGenerator.GeneratedJavaFiles;
-			} else {
-				success = jcwGenerator.Classify (AndroidSdkPlatform);
 			}
 
 			if (!success) {
 				return (false, null);
 			}
 
-			return (true, new NativeCodeGenState (arch, tdCache, resolver, allJavaTypes, javaTypesForJCW, jcwGenerator.Classifier));
+			MarshalMethodsCollection? marshalMethodsCollection = null;
+
+			if (useMarshalMethods)
+				marshalMethodsCollection = MarshalMethodsCollection.FromAssemblies (arch, assemblies.Values.ToList (), resolver, Log);
+
+			return (true, new NativeCodeGenState (arch, tdCache, resolver, allJavaTypes, javaTypesForJCW, marshalMethodsCollection));
 		}
 
 		(List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW) ScanForJavaTypes (XAAssemblyResolver res, TypeDefinitionCache cache, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods)

@@ -1021,6 +1021,13 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
     <comment>The following are literal names and should not be translated: .NET.
 {0} - The name of the .NET runtime, such as CoreCLR or NativeAOT.</comment>
   </data>
+  <data name="XA1041" xml:space="preserve">
+    <value>Właściwość MSBuild „{0}” ma nieprawidłową wartość, która wynosi „{1}”. Oczekuje się, że wartością będzie ścieżka katalogu reprezentująca względną lokalizację aktywów lub zasobów.</value>
+    <comment>The following are literal names and should not be translated: .NET.
+{0} - The MSBuild property that has the incorrect value.
+{1} - The current value of the property
+</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>Zależność Java „{0}” nie jest spełniona.</value>
     <comment>The following are literal names and should not be translated: Java.

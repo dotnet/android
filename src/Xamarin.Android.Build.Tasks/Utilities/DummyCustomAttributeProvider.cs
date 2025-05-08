@@ -1,4 +1,6 @@
-﻿using System.Reflection.Metadata;
+#nullable disable
+
+using System.Reflection.Metadata;
 
 namespace Xamarin.Android.Tasks
 {

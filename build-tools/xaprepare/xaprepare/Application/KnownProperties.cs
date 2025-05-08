@@ -47,10 +47,12 @@ namespace Xamarin.Android.Prepare
 		public const string MonoRequiredMinimumVersion          = "MonoRequiredMinimumVersion";
 		public const string MonoRequiredMaximumVersion          = "MonoRequiredMaximumVersion";
 		public const string MonoSourceFullPath                  = "MonoSourceFullPath";
+		public const string NativeRuntimeOutputRootDir          = "NativeRuntimeOutputRootDir";
 		public const string NinjaPath                           = "NinjaPath";
 		public const string Pkg7Zip_CommandLine                 = "Pkg7-Zip_CommandLine";
 		public const string PkgXamarin_LibZipSharp              = "PkgXamarin_LibZipSharp";
 		public const string ProductVersion                      = "ProductVersion";
+		public const string RuntimeRedistDirName                = "_RuntimeRedistDirName";
 		public const string XABuildToolsFolder                  = "XABuildToolsFolder";
 		public const string XABuildToolsVersion                 = "XABuildToolsVersion";
 		public const string XABuildToolsPackagePrefixMacOS      = "XABuildToolsPackagePrefixMacOS";

@@ -15,10 +15,10 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "CCHT";
 
 		[Required]
-		public string ClientHandlerType { get; set; }
+		public string ClientHandlerType { get; set; } = "";
 
 		[Required]
-		public ITaskItem[] ResolvedAssemblies { get; set; }
+		public ITaskItem[] ResolvedAssemblies { get; set; } = [];
 
 		public override bool RunTask ()
 		{
@@ -30,7 +30,7 @@ namespace Xamarin.Android.Tasks
 				assembly = types[1].Trim ();
 			}
 			// load the assembly.
-			ITaskItem foundAssembly = null;
+			ITaskItem? foundAssembly = null;
 			foreach (var asm in ResolvedAssemblies) {
 				string filename = Path.GetFileNameWithoutExtension (asm.ItemSpec);
 				if (string.CompareOrdinal (assembly, filename) == 0) {
@@ -56,7 +56,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				var assemblyDefinition = resolver.GetAssembly (Path.GetFullPath (foundAssembly.ItemSpec));
-				TypeDefinition handlerType = null;
+				TypeDefinition? handlerType = null;
 				foreach (var model in assemblyDefinition.Modules) {
 					handlerType = assemblyDefinition.MainModule.GetType (type);
 					if (handlerType != null)

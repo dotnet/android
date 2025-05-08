@@ -1,3 +1,5 @@
+#nullable disable
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -71,13 +73,13 @@ namespace MonoDroid.Tuner
 		}
 
 #if !ILLINK
-		public bool ProcessAssembly (AssemblyDefinition assembly, Xamarin.Android.Tasks.StepContext context)
+		public void ProcessAssembly (AssemblyDefinition assembly, Xamarin.Android.Tasks.StepContext context)
 		{
 			// Only run this step on non-main user Android assemblies
 			if (context.IsMainAssembly || !context.IsAndroidUserAssembly)
-				return false;
+				return;
 
-			return ProcessAssemblyDesigner (assembly);
+			context.IsAssemblyModified |= ProcessAssemblyDesigner (assembly);
 		}
 #endif  // !ILLINK
 

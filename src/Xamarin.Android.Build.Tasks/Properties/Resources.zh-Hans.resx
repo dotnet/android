@@ -1021,6 +1021,13 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>The following are literal names and should not be translated: .NET.
 {0} - The name of the .NET runtime, such as CoreCLR or NativeAOT.</comment>
   </data>
+  <data name="XA1041" xml:space="preserve">
+    <value>MSBuild 属性的“{0}”的“{1}”值无效。该值应为表示资产或资源的相对位置的目录路径。</value>
+    <comment>The following are literal names and should not be translated: .NET.
+{0} - The MSBuild property that has the incorrect value.
+{1} - The current value of the property
+</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>不满足 Java 依赖项“{0}”。</value>
     <comment>The following are literal names and should not be translated: Java.

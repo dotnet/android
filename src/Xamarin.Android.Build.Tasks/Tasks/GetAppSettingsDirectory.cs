@@ -14,7 +14,7 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "GAS";
 
 		[Output]
-		public string AppSettingsDirectory { get; set; }
+		public string? AppSettingsDirectory { get; set; }
 
 		public override bool RunTask ()
 		{

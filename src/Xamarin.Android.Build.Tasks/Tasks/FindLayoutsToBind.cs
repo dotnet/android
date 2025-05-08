@@ -19,15 +19,15 @@ namespace Xamarin.Android.Tasks
 
 		public bool GenerateLayoutBindings { get; set; }
 
-		public string BindingDependenciesCacheFile { get; set; }
+		public string? BindingDependenciesCacheFile { get; set; }
 
-		public ITaskItem[] BoundLayouts { get; set; }
+		public ITaskItem[]? BoundLayouts { get; set; }
 
 		[Required]
-		public ITaskItem[] ResourceFiles { get; set; }
+		public ITaskItem[] ResourceFiles { get; set; } = [];
 
 		[Output]
-		public ITaskItem[] LayoutsToBind { get; set; }
+		public ITaskItem[]? LayoutsToBind { get; set; }
 
 		public override bool RunTask ()
 		{

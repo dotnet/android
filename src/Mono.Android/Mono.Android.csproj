@@ -420,7 +420,6 @@
       <_SourceFiles Include="$(OutputPath)Mono.Android.*" />
       <_SourceFiles Include="$(OutputPath)Java.Interop.*" />
       <_SourceFiles Include="$(OutputPath)System.IO.Hashing.dll" />
-      <_RuntimePackFiles Include="@(_SourceFiles)" AndroidRID="%(AndroidAbiAndRuntimeFlavor.AndroidRID)" AndroidRuntime="%(AndroidAbiAndRuntimeFlavor.AndroidRuntime)" />
     </ItemGroup>
     <Copy
         SourceFiles="@(_RefExtras)"
@@ -433,8 +432,8 @@
         SkipUnchangedFiles="true"
     />
     <Copy
-        SourceFiles="%(_RuntimePackFiles.Identity)"
-        DestinationFolder="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.%(_RuntimePackFiles.AndroidRuntime).$(AndroidApiLevel).%(_RuntimePackFiles.AndroidRID)\$(AndroidPackVersion)\runtimes\%(_RuntimePackFiles.AndroidRID)\lib\$(DotNetTargetFramework)"
+        SourceFiles="%(_SourceFiles.Identity)"
+        DestinationFolder="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.$(AndroidApiLevel).android\$(AndroidPackVersion)\runtimes\android\lib\$(DotNetTargetFramework)"
         SkipUnchangedFiles="true"
     />
     <Copy

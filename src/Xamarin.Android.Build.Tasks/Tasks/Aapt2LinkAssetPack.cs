@@ -18,16 +18,16 @@ namespace Xamarin.Android.Tasks {
 		public override string TaskPrefix => "A2LAP";
 
 		[Required]
-		public ITaskItem Manifest { get; set; }
+		public ITaskItem Manifest { get; set; } = null!;  // NRT - guarded by [Required]
 
 		[Required]
-		public ITaskItem[] AssetDirectories { get; set; }
+		public ITaskItem[] AssetDirectories { get; set; } = [];
 
 		[Required]
-		public string PackageName { get; set; }
+		public string PackageName { get; set; } = "";
 
 		[Required]
-		public ITaskItem OutputArchive { get; set; }
+		public ITaskItem OutputArchive { get; set; } = null!;  // NRT - guarded by [Required]
 
 		protected override int GetRequiredDaemonInstances ()
 		{

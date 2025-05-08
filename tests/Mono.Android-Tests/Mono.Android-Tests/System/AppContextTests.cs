@@ -6,6 +6,7 @@ using System.Reflection;
 namespace SystemTests
 {
 	[TestFixture]
+	[Category ("RuntimeConfig")] //TODO: https://github.com/dotnet/android/issues/10069
 	public class AppContextTests
 	{
 		static readonly object [] GetDataSource = new object [] {
@@ -48,6 +49,7 @@ namespace SystemTests
 		};
 
 		[Test]
+		[Category ("NativeAOTIgnore")] // These switches only exist in Mono & CoreCLR BCL assemblies
 		[TestCaseSource (nameof (TestPrivateSwitchesSource))]
 		public void TestPrivateSwitches (
 				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.All)]

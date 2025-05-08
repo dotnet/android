@@ -15,7 +15,7 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "CIRF";
 
-		public ITaskItem[] Assemblies { get; set; }
+		public ITaskItem[]? Assemblies { get; set; }
 
 		public override bool RunTask ()
 		{

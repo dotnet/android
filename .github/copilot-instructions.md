@@ -66,10 +66,10 @@ if (!string.IsNullOrEmpty (NonRequiredProperty)) {
 }
 ```
 
-Convert this to:
+Convert this to use the extension method:
 
 ```csharp
-if (NonRequiredProperty is { Length: > 0 }) {
+if (!NonRequiredProperty.IsNullOrEmpty ()) {
     // Code here
 }
 ```
