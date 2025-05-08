@@ -22,12 +22,11 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public override ulong GetBufferSize (object data, string fieldName)
 		{
 			var map_module = EnsureType<TypeMap> (data);
-			if (String.Compare ("java_to_managed", fieldName, StringComparison.Ordinal) == 0 ||
-			    String.Compare ("managed_to_java", fieldName, StringComparison.Ordinal) == 0) {
-				    return map_module.entry_count;
-			    }
-
-			return 0;
+			return fieldName switch {
+				"java_to_managed" => map_module.entry_count,
+				"managed_to_java" => map_module.entry_count,
+				_ => 0
+			};
 		}
 
 		public override string? GetPointedToSymbolName (object data, string fieldName)
