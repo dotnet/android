@@ -10,6 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Java;
 using System.Threading;
 using Android.Runtime;
 using Java.Interop;
@@ -20,10 +21,12 @@ class ManagedValueManager : JniRuntime.JniValueManager
 {
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
-	Dictionary<int, List<IJavaPeerable>>?   RegisteredInstances = new Dictionary<int, List<IJavaPeerable>>();
+	Dictionary<int, List<GCHandle>>?   RegisteredInstances = new ();
 
-	internal ManagedValueManager ()
+	internal unsafe ManagedValueManager ()
 	{
+		var mark_cross_references_ftn = RuntimeNativeMethods.clr_initialize_gc_bridge (&BridgeProcessingFinished);
+		JavaMarshal.Initialize (mark_cross_references_ftn);
 	}
 
 	public override void WaitForGCBridgeProcessing ()
@@ -35,7 +38,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		if (RegisteredInstances == null)
 			throw new ObjectDisposedException (nameof (ManagedValueManager));
 
-		var peers = new List<IJavaPeerable> ();
+		var peers = new List<GCHandle> ();
 
 		lock (RegisteredInstances) {
 			foreach (var ps in RegisteredInstances.Values) {
@@ -48,7 +51,8 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		List<Exception>? exceptions = null;
 		foreach (var peer in peers) {
 			try {
-				peer.Dispose ();
+				if (peer.Target is IDisposable disposable)
+					disposable.Dispose ();
 			}
 			catch (Exception e) {
 				exceptions = exceptions ?? new List<Exception> ();
@@ -74,10 +78,10 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		}
 		int key = value.JniIdentityHashCode;
 		lock (RegisteredInstances) {
-			List<IJavaPeerable>? peers;
+			List<GCHandle>? peers;
 			if (!RegisteredInstances.TryGetValue (key, out peers)) {
-				peers = new List<IJavaPeerable> () {
-					value,
+				peers = new List<GCHandle> () {
+					CreateReferenceTrackingHandle (value)
 				};
 				RegisteredInstances.Add (key, peers);
 				return;
@@ -85,22 +89,24 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 			for (int i = peers.Count - 1; i >= 0; i--) {
 				var p   = peers [i];
-				if (!JniEnvironment.Types.IsSameObject (p.PeerReference, value.PeerReference))
+				if (p.Target is not IJavaPeerable peer)
+					continue;
+				if (!JniEnvironment.Types.IsSameObject (peer.PeerReference, value.PeerReference))
 					continue;
 				if (Replaceable (p)) {
-					peers [i] = value;
+					peers [i] = CreateReferenceTrackingHandle (value);
 				} else {
-					WarnNotReplacing (key, value, p);
+					WarnNotReplacing (key, value, peer);
 				}
 				return;
 			}
-			peers.Add (value);
+			peers.Add (CreateReferenceTrackingHandle (value));
 		}
 	}
 
-	static bool Replaceable (IJavaPeerable peer)
+	static bool Replaceable (GCHandle handle)
 	{
-		if (peer == null)
+		if (handle.Target is not IJavaPeerable peer)
 			return true;
 		return peer.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable);
 	}
@@ -132,14 +138,14 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		int key = GetJniIdentityHashCode (reference);
 
 		lock (RegisteredInstances) {
-			List<IJavaPeerable>? peers;
+			List<GCHandle>? peers;
 			if (!RegisteredInstances.TryGetValue (key, out peers))
 				return null;
 
 			for (int i = peers.Count - 1; i >= 0; i--) {
 				var p = peers [i];
-				if (JniEnvironment.Types.IsSameObject (reference, p.PeerReference))
-					return p;
+				if (p.Target is IJavaPeerable peer && JniEnvironment.Types.IsSameObject (reference, peer.PeerReference))
+					return peer;
 			}
 			if (peers.Count == 0)
 				RegisteredInstances.Remove (key);
@@ -157,14 +163,15 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 		int key = value.JniIdentityHashCode;
 		lock (RegisteredInstances) {
-			List<IJavaPeerable>? peers;
+			List<GCHandle>? peers;
 			if (!RegisteredInstances.TryGetValue (key, out peers))
 				return;
 
 			for (int i = peers.Count - 1; i >= 0; i--) {
 				var p   = peers [i];
-				if (object.ReferenceEquals (value, p)) {
+				if (object.ReferenceEquals (value, p.Target)) {
 					peers.RemoveAt (i);
+					FreeHandle (p);
 				}
 			}
 			if (peers.Count == 0)
@@ -251,11 +258,30 @@ class ManagedValueManager : JniRuntime.JniValueManager
 			var peers = new List<JniSurfacedPeerInfo> (RegisteredInstances.Count);
 			foreach (var e in RegisteredInstances) {
 				foreach (var p in e.Value) {
-					peers.Add (new JniSurfacedPeerInfo (e.Key, new WeakReference<IJavaPeerable> (p)));
+					if (p.Target is not IJavaPeerable peer)
+						continue;
+					peers.Add (new JniSurfacedPeerInfo (e.Key, new WeakReference<IJavaPeerable> (peer)));
 				}
 			}
 			return peers;
 		}
+	}
+
+	static GCHandle CreateReferenceTrackingHandle (IJavaPeerable value) =>
+		JavaMarshal.CreateReferenceTrackingHandle (value, value.PeerReference.Handle);
+		
+	static unsafe void FreeHandle (GCHandle handle)
+	{
+		IntPtr context = JavaMarshal.GetContext (handle);
+		NativeMemory.Free ((void*) context);
+	}
+	
+	[UnmanagedCallersOnly]
+	internal static unsafe void BridgeProcessingFinished (nint sccsLen, StronglyConnectedComponent* sccs, nint ccrsLen, ComponentCrossReference* ccrs)
+	{
+		JavaMarshal.ReleaseMarkCrossReferenceResources (
+			new Span<StronglyConnectedComponent> (sccs, (int) sccsLen),
+			new Span<ComponentCrossReference> (ccrs, (int) ccrsLen));
 	}
 
 	const   BindingFlags    ActivationConstructorBindingFlags   = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;

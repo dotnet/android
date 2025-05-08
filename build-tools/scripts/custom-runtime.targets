@@ -1,0 +1,21 @@
+<Project>
+  <!-- Use version in local packages folder -->
+  <Target Name="UpdateRuntimeVersion" BeforeTargets="ProcessFrameworkReferences">
+    <PropertyGroup>
+      <_Version>10.0.0-dev</_Version>
+    </PropertyGroup>
+    <ItemGroup>
+        <KnownFrameworkReference Update="Microsoft.NETCore.App"
+            Condition=" '%(KnownFrameworkReference.TargetFramework)' == 'net10.0' "
+            DefaultRuntimeFrameworkVersion="$(_Version)"
+            LatestRuntimeFrameworkVersion="$(_Version)"
+            TargetingPackVersion="$(_Version)"
+        />
+        <KnownRuntimePack
+            Update="Microsoft.NETCore.App"
+            Condition=" '%(KnownRuntimePack.TargetFramework)' == 'net10.0' "
+            LatestRuntimeFrameworkVersion="$(_Version)"
+        />
+    </ItemGroup>
+  </Target>
+</Project>
