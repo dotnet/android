@@ -12,7 +12,7 @@ public class GenerateAdditionalProviderSources : AndroidTask
 	public override string TaskPrefix => "GPS";
 
 	[Required]
-	public ITaskItem [] AdditionalProviderSources { get; set; } = [];
+	public string [] AdditionalProviderSources { get; set; } = [];
 
 	[Required]
 	public string AndroidRuntime { get; set; } = "";
@@ -51,8 +51,6 @@ public class GenerateAdditionalProviderSources : AndroidTask
 
 	void Generate (NativeCodeGenStateObject codeGenState)
 	{
-		var additionalProviders = AdditionalProviderSources.Select (p => p.ItemSpec).ToList ();
-
 		// Create additional runtime provider java sources.
 		bool isMonoVM = androidRuntime switch {
 			Xamarin.Android.Tasks.AndroidRuntime.MonoVM => true,
@@ -64,7 +62,7 @@ public class GenerateAdditionalProviderSources : AndroidTask
 			"NativeAotRuntimeProvider.java";
 		string providerTemplate = GetResource (providerTemplateFile);
 
-		foreach (var provider in additionalProviders) {
+		foreach (var provider in AdditionalProviderSources) {
 			var contents = providerTemplate.Replace (isMonoVM ? "MonoRuntimeProvider" : "NativeAotRuntimeProvider", provider);
 			var real_provider = isMonoVM ?
 				Path.Combine (OutputDirectory, "src", "mono", provider + ".java") :
@@ -86,7 +84,7 @@ public class GenerateAdditionalProviderSources : AndroidTask
 		StringWriter regCallsWriter = new StringWriter ();
 		regCallsWriter.WriteLine ("// Application and Instrumentation ACWs must be registered first.");
 
-		foreach ((string jniName, string assemblyQualifiedName) in codeGenState.ApplicationsAndInstrumentationsToReigster) {
+		foreach ((string jniName, string assemblyQualifiedName) in codeGenState.ApplicationsAndInstrumentationsToRegister) {
 			regCallsWriter.WriteLine (
 				codeGenerationTarget == JavaPeerStyle.XAJavaInterop1 ?
 					"\t\tmono.android.Runtime.register (\"{0}\", {1}.class, {1}.__md_methods);" :

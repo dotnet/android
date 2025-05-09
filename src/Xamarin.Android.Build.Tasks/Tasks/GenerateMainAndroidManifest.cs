@@ -14,7 +14,7 @@ public class GenerateMainAndroidManifest : AndroidTask
 	public override string TaskPrefix => "GMM";
 
 	[Output]
-	public ITaskItem []? AdditionalProviderSources { get; set; }
+	public string []? AdditionalProviderSources { get; set; }
 	[Required]
 	public string AndroidRuntime { get; set; } = "";
 	public string? AndroidSdkDir { get; set; }
@@ -62,7 +62,7 @@ public class GenerateMainAndroidManifest : AndroidTask
 		// Generate the merged manifest
 		var additionalProviders = MergeManifest (templateCodeGenState, GenerateJavaStubs.MaybeGetArchAssemblies (userAssembliesPerArch, templateCodeGenState.TargetArch));
 
-		AdditionalProviderSources = additionalProviders.Select (p => new TaskItem (p)).ToArray ();
+		AdditionalProviderSources = additionalProviders.ToArray ();
 
 		// We still need the NativeCodeGenState for later tasks, but we're going to transfer
 		// it to a new object that doesn't require holding open Cecil AssemblyDefinitions.

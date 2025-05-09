@@ -47,7 +47,7 @@ class MarshalMethodCecilAdapter
 				var jniName = JavaNativeTypeManager.ToJniName (type, state.TypeCache).Replace ('/', '.');
 				var assemblyQualifiedName = type.GetAssemblyQualifiedName (state.TypeCache);
 
-				obj.ApplicationsAndInstrumentationsToReigster.Add ((jniName, assemblyQualifiedName));
+				obj.ApplicationsAndInstrumentationsToRegister.Add ((jniName, assemblyQualifiedName));
 			}
 		}
 
@@ -156,7 +156,7 @@ class NativeCodeGenStateCollection
 class NativeCodeGenStateObject
 {
 	public Dictionary<string, IList<MarshalMethodEntryObject>> MarshalMethods { get; } = [];
-	public List<(string JniName, string AssemblyQualifiedName)> ApplicationsAndInstrumentationsToReigster { get; } = [];
+	public List<(string JniName, string AssemblyQualifiedName)> ApplicationsAndInstrumentationsToRegister { get; } = [];
 }
 
 class MarshalMethodEntryObject
