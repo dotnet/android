@@ -176,7 +176,17 @@ auto AssemblyStore::find_assembly_store_entry (hash_t hash, const AssemblyStoreI
 auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) noexcept -> void*
 {
 	hash_t name_hash = xxhash::hash (name.data (), name.length ());
-	log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: looking for bundled name: '{}' (hash {:x})", optional_string (name.data ()), name_hash);
+	log_debug (LOG_ASSEMBLY, "AssemblyStore::open_assembly: looking for bundled name: '{}' (hash {:x})", optional_string (name.data ()), name_hash);
+
+	if constexpr (Constants::is_debug_build) {
+		// TODO: implement filesystem lookup here
+
+		// In fastdev mode we might not have any assembly store.
+		if (assembly_store_hashes == nullptr) {
+			log_warn (LOG_ASSEMBLY, "Assembly store not registered. Unable to look up assembly '{}'", name);
+			return nullptr;
+		}
+	}
 
 	const AssemblyStoreIndexEntry *hash_entry = find_assembly_store_entry (name_hash, assembly_store_hashes, assembly_store.index_entry_count);
 	if (hash_entry == nullptr) {

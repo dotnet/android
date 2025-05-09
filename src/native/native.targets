@@ -38,6 +38,7 @@
       <_ConfigureRuntimesInputs  Include="common\libstub\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="common\libunwind\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="common\lz4\CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="common\runtime-base\CMakeLists.txt" />
 
       <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-Debug\CMakeCache.txt')" />
       <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-Release\CMakeCache.txt')" />
@@ -171,6 +172,7 @@
       <_RuntimeSources Include="common\archive-dso-stub\*.cc" />
       <_RuntimeSources Include="common\include\**\*.hh" />
       <_RuntimeSources Include="common\libstub\*.cc;common\libstub\*.hh" />
+      <_RuntimeSources Include="common\runtime-base\*.cc" />
       <_RuntimeSources Include="$(LZ4SourceFullPath)\lib\lz4.c;$(LZ4SourceFullPath)\lib\lz4.h" />
     </ItemGroup>
 

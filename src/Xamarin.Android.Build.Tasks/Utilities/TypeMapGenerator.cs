@@ -83,12 +83,27 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		internal sealed class TypeMapDebugAssembly
+		{
+			public Guid MVID;
+			public byte[] MVIDBytes;
+			public string Name;
+		}
+
+		internal sealed class TypeMapDebugDataSets
+		{
+			public List<TypeMapDebugEntry> JavaToManaged ;
+			public List<TypeMapDebugEntry> ManagedToJava;
+			public List<TypeMapDebugAssembly>? UniqueAssemblies;
+		}
+
 		// Widths include the terminating nul character but not the padding!
 		internal sealed class ModuleDebugData
 		{
 			public uint EntryCount;
 			public List<TypeMapDebugEntry> JavaToManagedMap;
 			public List<TypeMapDebugEntry> ManagedToJavaMap;
+			public List<TypeMapDebugAssembly>? UniqueAssemblies;
 		}
 
 		internal sealed class ReleaseGenerationState
@@ -138,18 +153,23 @@ namespace Xamarin.Android.Tasks
 
 		void GenerateDebugNativeAssembly (string outputDirectory)
 		{
-			(var javaToManaged, var managedToJava) = state.GetDebugNativeEntries ();
+			TypeMapDebugDataSets dataSets = state.GetDebugNativeEntries (needUniqueAssemblies: runtime == AndroidRuntime.CoreCLR);
 
 			var data = new ModuleDebugData {
-				EntryCount = (uint)javaToManaged.Count,
-				JavaToManagedMap = javaToManaged,
-				ManagedToJavaMap = managedToJava,
+				EntryCount = (uint)dataSets.JavaToManaged.Count,
+				JavaToManagedMap = dataSets.JavaToManaged,
+				ManagedToJavaMap = dataSets.ManagedToJava,
+				UniqueAssemblies = dataSets.UniqueAssemblies,
 			};
 
 			data.JavaToManagedMap.Sort ((TypeMapDebugEntry a, TypeMapDebugEntry b) => String.Compare (a.JavaName, b.JavaName, StringComparison.Ordinal));
 			data.ManagedToJavaMap.Sort ((TypeMapDebugEntry a, TypeMapDebugEntry b) => String.Compare (a.ManagedName, b.ManagedName, StringComparison.Ordinal));
 
-			var composer = new TypeMappingDebugNativeAssemblyGenerator (log, data);
+			LLVMIR.LlvmIrComposer composer = runtime switch {
+				AndroidRuntime.MonoVM => new TypeMappingDebugNativeAssemblyGenerator (log, data),
+				AndroidRuntime.CoreCLR => new TypeMappingDebugNativeAssemblyGeneratorCLR (log, data),
+				_ => throw new NotSupportedException ($"Internal error: unsupported runtime {runtime}")
+			};
 			GenerateNativeAssembly (composer, composer.Construct (), outputDirectory);
 		}
 
@@ -216,7 +236,7 @@ namespace Xamarin.Android.Tasks
 	{
 		AndroidTargetArch TargetArch { get; }
 		bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
-		(List<TypeMapDebugEntry> javaToManaged, List<TypeMapDebugEntry> managedToJava) GetDebugNativeEntries ();
+		TypeMapDebugDataSets GetDebugNativeEntries (bool needUniqueAssemblies);
 		ReleaseGenerationState GetReleaseGenerationState ();
 	}
 
@@ -236,9 +256,9 @@ namespace Xamarin.Android.Tasks
 			set => state.JniAddNativeMethodRegistrationAttributePresent = value;
 		}
 
-		public (List<TypeMapDebugEntry> javaToManaged, List<TypeMapDebugEntry> managedToJava) GetDebugNativeEntries ()
+		public TypeMapDebugDataSets GetDebugNativeEntries (bool needUniqueAssemblies)
 		{
-			return TypeMapCecilAdapter.GetDebugNativeEntries (state);
+			return TypeMapCecilAdapter.GetDebugNativeEntries (state, needUniqueAssemblies);
 		}
 
 		public ReleaseGenerationState GetReleaseGenerationState ()
@@ -259,12 +279,22 @@ namespace Xamarin.Android.Tasks
 
 		public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
 
-		public (List<TypeMapDebugEntry> javaToManaged, List<TypeMapDebugEntry> managedToJava) GetDebugNativeEntries ()
+		public TypeMapDebugDataSets GetDebugNativeEntries (bool needUniqueAssemblies)
 		{
 			var javaToManaged = new List<TypeMapDebugEntry> ();
 			var managedToJava = new List<TypeMapDebugEntry> ();
+			var uniqueAssemblies = new Dictionary<string, TypeMapDebugAssembly> (StringComparer.OrdinalIgnoreCase);
 
 			foreach (var xml in XmlFiles) {
+				if (!uniqueAssemblies.ContainsKey (xml.AssemblyName)) {
+					var assm = new TypeMapDebugAssembly {
+						MVID = xml.AssemblyMvid,
+						MVIDBytes = xml.AssemblyMvid.ToByteArray (),
+						Name = xml.AssemblyName,
+					};
+					uniqueAssemblies.Add (xml.AssemblyName, assm);
+				}
+
 				javaToManaged.AddRange (xml.JavaToManagedDebugEntries);
 				managedToJava.AddRange (xml.ManagedToJavaDebugEntries);
 			}
@@ -273,7 +303,11 @@ namespace Xamarin.Android.Tasks
 			GroupDuplicateDebugEntries (javaToManaged);
 			GroupDuplicateDebugEntries (managedToJava);
 
-			return (javaToManaged, managedToJava);
+			return new TypeMapDebugDataSets {
+				JavaToManaged = javaToManaged,
+				ManagedToJava = managedToJava,
+				UniqueAssemblies = uniqueAssemblies.Values.ToList (),
+			};
 		}
 
 		void GroupDuplicateDebugEntries (List<TypeMapDebugEntry> debugEntries)
