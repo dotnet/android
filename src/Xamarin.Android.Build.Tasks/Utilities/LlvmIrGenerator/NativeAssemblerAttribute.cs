@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 
 namespace Xamarin.Android.Tasks
@@ -75,7 +73,7 @@ namespace Xamarin.Android.Tasks
 
 		public NativeAssemblerStructContextDataProviderAttribute (Type type)
 		{
-			if (type != null && !type.IsSubclassOf (typeof(NativeAssemblerStructContextDataProvider))) {
+			if (!type.IsSubclassOf (typeof(NativeAssemblerStructContextDataProvider))) {
 				throw new ArgumentException (nameof (type), "Must be derived from the AssemblerStructContextDataProvider class");
 			}
 

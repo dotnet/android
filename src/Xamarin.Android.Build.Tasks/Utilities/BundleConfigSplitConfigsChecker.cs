@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -140,7 +138,7 @@ static class BundleConfigSplitConfigsChecker
 		if (!valueIsAbi.HasValue) {
 			if (reader.ValueTextEquals (strings.ValuePropertyName)) {
 				reader.Read ();
-				string v = reader.GetString ();
+				string? v = reader.GetString ();
 				valueIsAbi = String.CompareOrdinal ("ABI", v) == 0;
 				return;
 			}

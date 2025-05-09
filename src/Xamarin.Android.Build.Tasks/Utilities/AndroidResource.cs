@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,7 +13,7 @@ using Microsoft.Android.Build.Tasks;
 namespace Monodroid {
 	static class AndroidResource {
 		
-		public static bool UpdateXmlResource (string res, string filename, IEnumerable<string> additionalDirectories = null, Action<TraceLevel, string> logMessage = null, Action<string, string> registerCustomView = null)
+		public static bool UpdateXmlResource (string res, string filename, IEnumerable<string>? additionalDirectories = null, Action<TraceLevel, string>? logMessage = null, Action<string, string>? registerCustomView = null)
 		{
 			try {
 				XDocument doc = XDocument.Load (filename, LoadOptions.SetLineInfo);
@@ -50,7 +48,7 @@ namespace Monodroid {
 			UpdateXmlResource (null, e);
 		}
 
-		static void UpdateXmlResource (string resourcesBasePath, XElement e, IEnumerable<string> additionalDirectories = null, Action<string> registerCustomView = null)
+		static void UpdateXmlResource (string? resourcesBasePath, XElement e, IEnumerable<string>? additionalDirectories = null, Action<string>? registerCustomView = null)
 		{
 			foreach (var elem in GetElements (e).Prepend (e)) {
 				registerCustomView?.Invoke (elem.Name.ToString ());
@@ -87,7 +85,7 @@ namespace Monodroid {
 			}
 		}
 
-		static bool ResourceNeedsToBeLowerCased (string value, string resourceBasePath, IEnumerable<string> additionalDirectories)
+		static bool ResourceNeedsToBeLowerCased (string? value, string? resourceBasePath, IEnumerable<string>? additionalDirectories)
 		{
 			// Might be a bit of an overkill, but the data comes (indirectly) from the user since it's the
 			// path to the msbuild's intermediate output directory and that location can be changed by the
@@ -98,7 +96,7 @@ namespace Monodroid {
 
 			// Avoid resource names that are all whitespace
 			value = value?.Trim ();
-			if (string.IsNullOrEmpty (value))
+			if (value.IsNullOrEmpty ())
 				return false; // let's save some time
 			if (value.Length < 4 || value [0] != '@') // 4 is the minimum length since we need a string
 								  // that is at least of the following
@@ -155,7 +153,7 @@ namespace Monodroid {
 			}
 		}
 
-		private static void TryFixResourceAlias (XElement elem, string resourceBasePath, IEnumerable<string> additionalDirectories)
+		private static void TryFixResourceAlias (XElement elem, string? resourceBasePath, IEnumerable<string>? additionalDirectories)
 		{
 			// Looks for any resources aliases:
 			//   <item type="layout" name="">@layout/Page1</item>
@@ -170,7 +168,7 @@ namespace Monodroid {
 			}
 		}
 
-		private static void TryFixFragment (XAttribute attr, Action<string> registerCustomView = null)
+		private static void TryFixFragment (XAttribute attr, Action<string>? registerCustomView = null)
 		{
 			// Looks for any: 
 			//   <fragment class="My.DotNet.Class" 
@@ -205,7 +203,7 @@ namespace Monodroid {
 			return false;
 		}
 
-		private static void TryFixCustomClassAttribute (XAttribute attr, Action<string> registerCustomView = null)
+		private static void TryFixCustomClassAttribute (XAttribute attr, Action<string>? registerCustomView = null)
 		{
 			/* Some attributes reference a Java class name.
 			 * try to convert those like for TryFixCustomView
@@ -217,7 +215,7 @@ namespace Monodroid {
 			registerCustomView?.Invoke (attr.Value);
 		}
 
-		private static string TryLowercaseValue (string value, string resourceBasePath, IEnumerable<string> additionalDirectories)
+		private static string TryLowercaseValue (string value, string? resourceBasePath, IEnumerable<string>? additionalDirectories)
 		{
 			int s = value.LastIndexOf ('/');
 			if (s >= 0) {
