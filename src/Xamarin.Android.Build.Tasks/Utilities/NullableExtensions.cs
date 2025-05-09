@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Xamarin.Android.Tasks;
@@ -15,5 +16,16 @@ static class NullableExtensions
 	public static bool IsNullOrWhiteSpace ([NotNullWhen (false)] this string? str)
 	{
 		return string.IsNullOrWhiteSpace (str);
+	}
+
+	/// <summary>
+	/// Removes null elements from an enumerable collection.
+	/// </summary>
+	public static IEnumerable<T> WhereNotNull<T> (this IEnumerable<T?> source) where T : class
+	{
+		foreach (var item in source) {
+			if (item is not null)
+				yield return item;
+		}
 	}
 }
