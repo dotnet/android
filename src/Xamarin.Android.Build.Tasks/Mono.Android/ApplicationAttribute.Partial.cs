@@ -58,7 +58,7 @@ namespace Android.App {
 			);
 		}
 
-		public static ApplicationAttribute FromCustomAttributeProvider (ICustomAttributeProvider provider, TypeDefinitionCache cache)
+		public static ApplicationAttribute? FromCustomAttributeProvider (ICustomAttributeProvider provider, TypeDefinitionCache cache)
 		{
 			CustomAttribute attr = provider.GetCustomAttributes ("Android.App.ApplicationAttribute")
 				.SingleOrDefault ();
