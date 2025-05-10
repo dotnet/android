@@ -7,24 +7,27 @@ using ModuleReleaseData = Xamarin.Android.Tasks.TypeMapGenerator.ModuleReleaseDa
 using ReleaseGenerationState = Xamarin.Android.Tasks.TypeMapGenerator.ReleaseGenerationState;
 using TypeMapDebugEntry = Xamarin.Android.Tasks.TypeMapGenerator.TypeMapDebugEntry;
 using TypeMapReleaseEntry = Xamarin.Android.Tasks.TypeMapGenerator.TypeMapReleaseEntry;
+using TypeMapDebugDataSets = Xamarin.Android.Tasks.TypeMapGenerator.TypeMapDebugDataSets;
+using TypeMapDebugAssembly = Xamarin.Android.Tasks.TypeMapGenerator.TypeMapDebugAssembly;
 
 namespace Xamarin.Android.Tasks;
 
 // Converts types from Mono.Cecil to the format used by the typemap generator.
 class TypeMapCecilAdapter
 {
-	public static (List<TypeMapDebugEntry> javaToManaged, List<TypeMapDebugEntry> managedToJava) GetDebugNativeEntries (NativeCodeGenState state)
+	public static TypeMapDebugDataSets GetDebugNativeEntries (NativeCodeGenState state, bool needUniqueAssemblies)
 	{
-		var (javaToManaged, managedToJava, foundJniNativeRegistration) = GetDebugNativeEntries (state.AllJavaTypes, state.TypeCache);
+		var (dataSets, foundJniNativeRegistration) = GetDebugNativeEntries (state.AllJavaTypes, state.TypeCache, needUniqueAssemblies);
 
 		state.JniAddNativeMethodRegistrationAttributePresent = foundJniNativeRegistration;
 
-		return (javaToManaged, managedToJava);
+		return dataSets;
 	}
 
-	public static (List<TypeMapDebugEntry> javaToManaged, List<TypeMapDebugEntry> managedToJava, bool foundJniNativeRegistration) GetDebugNativeEntries (List<TypeDefinition> types, TypeDefinitionCache cache)
+	public static (TypeMapDebugDataSets dataSets, bool foundJniNativeRegistration) GetDebugNativeEntries (List<TypeDefinition> types, TypeDefinitionCache cache, bool needUniqueAssemblies)
 	{
 		var javaDuplicates = new Dictionary<string, List<TypeMapDebugEntry>> (StringComparer.Ordinal);
+		var uniqueAssemblies = needUniqueAssemblies ? new Dictionary<string, TypeMapDebugAssembly> (StringComparer.OrdinalIgnoreCase) : null;
 		var javaToManaged = new List<TypeMapDebugEntry> ();
 		var managedToJava = new List<TypeMapDebugEntry> ();
 		var foundJniNativeRegistration = false;
@@ -37,11 +40,31 @@ class TypeMapCecilAdapter
 
 			javaToManaged.Add (entry);
 			managedToJava.Add (entry);
+
+			if (uniqueAssemblies == null) {
+				continue;
+			}
+
+			string? asmName = td.Module.Assembly.Name.Name;
+			if (String.IsNullOrEmpty (asmName) || uniqueAssemblies.ContainsKey (asmName)) {
+				continue;
+			}
+
+			var asmInfo = new TypeMapDebugAssembly {
+				MVID = td.Module.Mvid,
+				Name = asmName,
+			};
+			asmInfo.MVIDBytes = asmInfo.MVID.ToByteArray ();
+			uniqueAssemblies.Add (asmName, asmInfo);
 		}
 
 		SyncDebugDuplicates (javaDuplicates);
 
-		return (javaToManaged, managedToJava, foundJniNativeRegistration);
+		return (new TypeMapDebugDataSets {
+			JavaToManaged = javaToManaged,
+			ManagedToJava = managedToJava,
+			UniqueAssemblies = uniqueAssemblies != null ? new List<TypeMapDebugAssembly> (uniqueAssemblies.Values) : null
+		}, foundJniNativeRegistration);
 	}
 
 	public static ReleaseGenerationState GetReleaseGenerationState (NativeCodeGenState state)
@@ -122,8 +145,10 @@ class TypeMapCecilAdapter
 		return new TypeMapDebugEntry {
 			JavaName = Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.ToJniName (td, cache),
 			ManagedName = GetManagedTypeName (td),
+			ManagedTypeTokenId = td.MetadataToken.ToUInt32 (),
 			TypeDefinition = td,
 			SkipInJavaToManaged = ShouldSkipInJavaToManaged (td),
+			AssemblyName = td.Module.Assembly.Name.Name,
 		};
 	}
 
@@ -204,7 +229,7 @@ class TypeMapCecilAdapter
 		if (alreadyFound || !javaType.HasCustomAttributes) {
 			return alreadyFound;
 		}
-		
+
 		foreach (CustomAttribute ca in javaType.CustomAttributes) {
 			if (string.Equals ("JniAddNativeMethodRegistrationAttribute", ca.AttributeType.Name, StringComparison.Ordinal)) {
 				return true;
