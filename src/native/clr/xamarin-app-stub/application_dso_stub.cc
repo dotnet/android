@@ -10,23 +10,29 @@ const uint64_t format_tag = FORMAT_TAG;
 
 #if defined (DEBUG)
 static TypeMapEntry java_to_managed[] = {};
-
 static TypeMapEntry managed_to_java[] = {};
 
 // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGenerator.cs
 const TypeMap type_map = {
-	0,
-	nullptr,
-	nullptr,
-	java_to_managed,
-	managed_to_java
+	.entry_count = 0,
+	.unique_assemblies_count = 0,
+	.java_to_managed = java_to_managed,
+	.managed_to_java = managed_to_java,
 };
+
+const bool typemap_use_hashes = true;
+const TypeMapManagedTypeInfo type_map_managed_type_info[] = {};
+const TypeMapAssembly type_map_unique_assemblies[] = {};
+const char type_map_assembly_names[] = {};
+const char type_map_managed_type_names[] = {};
+const char type_map_java_type_names[] = {};
 #else
 const uint32_t managed_to_java_map_module_count = 0;
 const uint32_t java_type_count = 0;
-const char* const java_type_names[] = {};
-const char* const managed_type_names[] = {};
-const char* const managed_assembly_names[] = {};
+const char java_type_names[] = {};
+const uint64_t java_type_names_size = 0;
+const char managed_type_names[] = {};
+const char managed_assembly_names[] = {};
 TypeMapModule managed_to_java_map[] = {};
 const TypeMapJava java_to_managed_map[] = {};
 const xamarin::android::hash_t java_to_managed_hashes[] = {};
