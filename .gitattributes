@@ -35,3 +35,5 @@ Makefile	eol=lf
 *.wixproj	eol=crlf
 *.wxs	eol=crlf
 *.rtf	eol=crlf
+
+packages/* filter=lfs diff=lfs merge=lfs -text
