@@ -103,7 +103,7 @@ class NativeLinker
 
 		extraArgs.Add ($"-z max-page-size={maxPageSize}");
 
-		string nativeLibsDir = MonoAndroidHelper.GetRuntimePackNativeLibDir (MonoAndroidHelper.AbiToTargetArch (abi), runtimePackLibDirs);
+		string? nativeLibsDir = MonoAndroidHelper.GetRuntimePackNativeLibDir (MonoAndroidHelper.AbiToTargetArch (abi), runtimePackLibDirs);
 		extraArgs.Add ($"-L {MonoAndroidHelper.QuoteFileNameArgument (nativeLibsDir)}");
 	}
 
