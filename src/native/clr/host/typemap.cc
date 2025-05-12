@@ -213,7 +213,7 @@ auto TypeMapper::find_managed_to_java_map_entry (hash_t name_hash, const TypeMap
 }
 
 [[gnu::always_inline]]
-auto TypeMapper::typemap_managed_to_java_release (const char *typeName, const uint8_t *mvid) noexcept -> const char*
+auto TypeMapper::managed_to_java_release (const char *typeName, const uint8_t *mvid) noexcept -> const char*
 {
 	const TypeMapModule *match = find_module_entry (mvid, managed_to_java_map, managed_to_java_map_module_count);
 	if (match == nullptr) {
@@ -322,7 +322,7 @@ auto TypeMapper::managed_to_java (const char *typeName, const uint8_t *mvid) noe
 
 	auto do_map = [&typeName, &mvid]() -> const char* {
 #if defined(RELEASE)
-		return typemap_managed_to_java_release (typeName, mvid);
+		return managed_to_java_release (typeName, mvid);
 #else
 		return managed_to_java_debug (typeName, mvid);
 #endif
@@ -386,7 +386,7 @@ auto TypeMapper::find_java_to_managed_entry (hash_t name_hash) noexcept -> const
 }
 
 [[gnu::flatten]]
-auto TypeMapper::typemap_java_to_managed_release (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept -> bool
+auto TypeMapper::java_to_managed_release (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept -> bool
 {
 	if (java_type_name == nullptr || assembly_name == nullptr || managed_type_token_id == nullptr) [[unlikely]] {
 		if (java_type_name == nullptr) {
@@ -464,7 +464,7 @@ auto TypeMapper::java_to_managed (const char *java_type_name, char const** assem
 
 	bool ret;
 #if defined(RELEASE)
-	ret = typemap_java_to_managed_release (java_type_name, assembly_name, managed_type_token_id);
+	ret = java_to_managed_release (java_type_name, assembly_name, managed_type_token_id);
 #else
 	ret = java_to_managed_debug (java_type_name, assembly_name, managed_type_token_id);
 #endif
