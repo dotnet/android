@@ -37,13 +37,14 @@ public class FindTypeMapObjectsStep : BaseStep, IAssemblyModifierPipelineStep
 
 		var xml = new TypeMapObjectsXmlFile {
 			AssemblyName = assembly.Name.Name,
+			AssemblyMvid = assembly.MainModule.Mvid,
 		};
 
 		if (Debug) {
-			var (javaToManaged, managedToJava, foundJniNativeRegistration) = TypeMapCecilAdapter.GetDebugNativeEntries (types, Context);
+			var (typeMapDebugSets, foundJniNativeRegistration) = TypeMapCecilAdapter.GetDebugNativeEntries (types, Context, needUniqueAssemblies: false);
 
-			xml.JavaToManagedDebugEntries.AddRange (javaToManaged);
-			xml.ManagedToJavaDebugEntries.AddRange (managedToJava);
+			xml.JavaToManagedDebugEntries.AddRange (typeMapDebugSets.JavaToManaged);
+			xml.ManagedToJavaDebugEntries.AddRange (typeMapDebugSets.ManagedToJava);
 			xml.FoundJniNativeRegistration = foundJniNativeRegistration;
 		} else {
 			var genState = TypeMapCecilAdapter.GetReleaseGenerationState (types, Context, out var foundJniNativeRegistration);
