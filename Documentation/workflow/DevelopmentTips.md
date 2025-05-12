@@ -450,13 +450,26 @@ A second (better) way is to add this MSBuild target to your Android
 `.csproj` file:
 
 ```xml
-<Target Name="UpdateMonoRuntimePacks" BeforeTargets="ProcessFrameworkReferences">
+<Target Name="UpdateRuntimeVersion" BeforeTargets="ProcessFrameworkReferences">
+  <PropertyGroup>
+    <!-- This could be a version I built myself -->
+    <_Version>10.0.0-dev</_Version>
+  </PropertyGroup>
   <ItemGroup>
-      <KnownRuntimePack
-          Update="Microsoft.NETCore.App"
-          Condition=" '%(KnownRuntimePack.TargetFramework)' == 'net6.0' "
-          LatestRuntimeFrameworkVersion="6.0.0-preview.7.21364.3"
-      />
+    <!-- For runtime packs only -->
+    <KnownRuntimePack
+        Update="Microsoft.NETCore.App"
+        Condition=" '%(KnownRuntimePack.TargetFramework)' == 'net10.0' "
+        LatestRuntimeFrameworkVersion="$(_Version)"
+    />
+    <!-- For new .NET APIs -->
+    <KnownFrameworkReference
+        Update="Microsoft.NETCore.App"
+        Condition=" '%(KnownFrameworkReference.TargetFramework)' == 'net10.0' "
+        DefaultRuntimeFrameworkVersion="$(_Version)"
+        LatestRuntimeFrameworkVersion="$(_Version)"
+        TargetingPackVersion="$(_Version)"
+    />
   </ItemGroup>
 </Target>
 ```
