@@ -64,6 +64,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.FilterAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.FindLayoutsToBind" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateACWMap" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.GenerateAdditionalProviderSources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateLayoutBindings" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateLibraryResources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateManagedAidlProxies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1641,10 +1642,8 @@ because xbuild doesn't support framework reference assemblies.
       ApplicationLabel="$(_ApplicationLabel)"
       BundledWearApplicationName="$(BundledWearApplicationPackageName)"
       CheckedBuild="$(_AndroidCheckedBuild)"
-      CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       Debug="$(AndroidIncludeDebugSymbols)"
       EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       IntermediateOutputDirectory="$(IntermediateOutputPath)"
       ManifestPlaceholders="$(AndroidManifestPlaceholders)"
       ManifestTemplate="$(_AndroidManifestAbs)"
@@ -1652,15 +1651,23 @@ because xbuild doesn't support framework reference assemblies.
       MergedManifestDocuments="@(_MergedManifestDocuments)"
       MultiDex="$(AndroidEnableMultiDex)"
       NeedsInternet="$(AndroidNeedsInternetPermission)"
-      OutputDirectory="$(IntermediateOutputPath)android"
       PackageName="$(_AndroidPackage)"
       ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
       SupportedAbis="@(_BuildTargetAbis)"
       SupportedOSPlatformVersion="$(SupportedOSPlatformVersion)"
-      TargetName="$(TargetName)"
       VersionCode="$(_AndroidVersionCode)"
       VersionName="$(_AndroidVersionName)">
+    <Output TaskParameter="AdditionalProviderSources" ItemName="_AdditionalProviderSources" />
   </GenerateMainAndroidManifest>
+
+  <GenerateAdditionalProviderSources
+      AdditionalProviderSources="@(_AdditionalProviderSources)"
+      AndroidRuntime="$(_AndroidRuntime)"
+      CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
+      IntermediateOutputDirectory="$(IntermediateOutputPath)"
+      OutputDirectory="$(IntermediateOutputPath)android"
+      TargetName="$(TargetName)">
+  </GenerateAdditionalProviderSources>
 
   <ItemGroup>
     <FileWrites Include="@(_TypeMapAssemblySource)" />

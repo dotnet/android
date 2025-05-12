@@ -2,6 +2,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Java.Interop.Tools.Cecil;
+using Java.Interop.Tools.JavaCallableWrappers;
+using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
@@ -34,6 +37,19 @@ class MarshalMethodCecilAdapter
 	static NativeCodeGenStateObject CreateNativeCodeGenState (AndroidTargetArch arch, NativeCodeGenState state)
 	{
 		var obj = new NativeCodeGenStateObject ();
+
+		foreach (var type in state.JavaTypesForJCW) {
+			if (JavaNativeTypeManager.IsApplication (type, state.TypeCache) || JavaNativeTypeManager.IsInstrumentation (type, state.TypeCache)) {
+				if (state.Classifier != null && !state.Classifier.TypeHasDynamicallyRegisteredMethods (type)) {
+					continue;
+				}
+
+				var jniName = JavaNativeTypeManager.ToJniName (type, state.TypeCache).Replace ('/', '.');
+				var assemblyQualifiedName = type.GetAssemblyQualifiedName (state.TypeCache);
+
+				obj.ApplicationsAndInstrumentationsToRegister.Add ((jniName, assemblyQualifiedName));
+			}
+		}
 
 		if (state.Classifier is null)
 			return obj;
@@ -140,6 +156,7 @@ class NativeCodeGenStateCollection
 class NativeCodeGenStateObject
 {
 	public Dictionary<string, IList<MarshalMethodEntryObject>> MarshalMethods { get; } = [];
+	public List<(string JniName, string AssemblyQualifiedName)> ApplicationsAndInstrumentationsToRegister { get; } = [];
 }
 
 class MarshalMethodEntryObject
