@@ -267,7 +267,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	}
 
 	static GCHandle CreateReferenceTrackingHandle (IJavaPeerable value) =>
-		JavaMarshal.CreateReferenceTrackingHandle (value, value.PeerReference.Handle);
+		JavaMarshal.CreateReferenceTrackingHandle (value, value.JniObjectReferenceControlBlock);
 		
 	static unsafe void FreeHandle (GCHandle handle)
 	{
