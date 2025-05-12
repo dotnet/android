@@ -22,8 +22,8 @@ namespace xamarin::android {
 		static auto compare_mvid (const uint8_t *mvid, TypeMapModule const& module) noexcept -> int;
 		static auto find_module_entry (const uint8_t *mvid, const TypeMapModule *entries, size_t entry_count) noexcept -> const TypeMapModule*;
 		static auto find_managed_to_java_map_entry (hash_t name_hash, const TypeMapModuleEntry *map, size_t entry_count) noexcept -> const TypeMapModuleEntry*;
-		static auto typemap_managed_to_java_release (const char *typeName, const uint8_t *mvid) noexcept -> const char*;
-		static auto typemap_java_to_managed_release (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept -> bool;
+		static auto managed_to_java_release (const char *typeName, const uint8_t *mvid) noexcept -> const char*;
+		static auto java_to_managed_release (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept -> bool;
 
 		static auto find_java_to_managed_entry (hash_t name_hash) noexcept -> const TypeMapJava*;
 #else
