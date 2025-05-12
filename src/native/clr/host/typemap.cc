@@ -322,7 +322,7 @@ auto TypeMapper::managed_to_java (const char *typeName, const uint8_t *mvid) noe
 
 	auto do_map = [&typeName, &mvid]() -> const char* {
 #if defined(RELEASE)
-		return typemap_managed_to_java_release (typeName, mvid);
+		return managed_to_java_release (typeName, mvid);
 #else
 		return managed_to_java_debug (typeName, mvid);
 #endif
