@@ -167,7 +167,9 @@ public class GetNativeRuntimeComponents : AndroidTask
 		string commonClrObjDir = Path.Combine ("artifacts", "obj", "coreclr");
 		const string config = "Release";
 
-		if (IsArchive ("libcoreclr.a")) {
+		if (IsArchive ("libcoreclr_static.a")) {
+			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine ("artifacts", "bin", "coreclr", $"android.{clrArch}.{config}"));
+		} else if (IsArchive ("libcoreclr.a")) {
 			archiveName = "libcoreclr_static.a";
 			MakeRelativeArtifactPaths ((string clrArch) => Path.Combine (commonClrObjDir, $"android.{clrArch}.{config}", "dlls", "mscoree", "coreclr"));
 		} else if (IsArchive ("libcoreclrpal.a")) {

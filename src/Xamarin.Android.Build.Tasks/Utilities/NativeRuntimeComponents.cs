@@ -93,17 +93,17 @@ class NativeRuntimeComponents
 		this.monoComponents = monoComponents;
 		KnownArchives = new () {
 			// CoreCLR runtime + BCL
-			new ClrArchive ("libcoreclr.a"),
-			new ClrArchive ("libcoreclrminipal.a"),
-			new ClrArchive ("libgc_pal.a"),
+			new ClrArchive ("libcoreclr_static.a"),
+			// new ClrArchive ("libcoreclrminipal.a"),
+			// new ClrArchive ("libgc_pal.a"),
 
-			new ClrArchive ("libcoreclrpal.a", wholeArchive: true),
-			new ClrArchive ("libeventprovider.a"),
-			new ClrArchive ("libnativeresourcestring.a"),
-			new ClrArchive ("libminipal.a"),
-			new ClrArchive ("libbrotlicommon.a"),
+			// new ClrArchive ("libcoreclrpal.a", wholeArchive: true),
+			// new ClrArchive ("libeventprovider.a"),
+			// new ClrArchive ("libnativeresourcestring.a"),
+			// new ClrArchive ("libminipal.a")
+			new ClrArchive ("libbrotlienc.a"),,
 			new ClrArchive ("libbrotlidec.a"),
-			new ClrArchive ("libbrotlienc.a"),
+			new ClrArchive ("libbrotlicommon.a"),
 
 			new BclArchive ("libSystem.Globalization.Native.a"),
 			new BclArchive ("libSystem.IO.Compression.Native.a"),
