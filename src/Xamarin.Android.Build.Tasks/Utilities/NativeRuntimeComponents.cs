@@ -101,7 +101,7 @@ class NativeRuntimeComponents
 			// new ClrArchive ("libeventprovider.a"),
 			// new ClrArchive ("libnativeresourcestring.a"),
 			// new ClrArchive ("libminipal.a")
-			new ClrArchive ("libbrotlienc.a"),,
+			new ClrArchive ("libbrotlienc.a"),
 			new ClrArchive ("libbrotlidec.a"),
 			new ClrArchive ("libbrotlicommon.a"),
 
