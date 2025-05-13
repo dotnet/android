@@ -277,6 +277,7 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		var assemblyNamesBlob = new LlvmIrStringBlob ();
 		foreach (TypeMapGenerator.TypeMapDebugAssembly asm in data.UniqueAssemblies) {
 			(int assemblyNameOffset, int assemblyNameLength) = assemblyNamesBlob.Add (asm.Name);
+
 			var entry = new TypeMapAssembly {
 				Name = asm.Name,
 				MVID = asm.MVID,
