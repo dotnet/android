@@ -310,7 +310,7 @@ auto TypeMapper::managed_to_java_release (const char *typeName, const uint8_t *m
 [[gnu::flatten]]
 auto TypeMapper::managed_to_java (const char *typeName, const uint8_t *mvid) noexcept -> const char*
 {
-	log_debug (LOG_ASSEMBLY, "typemap_managed_to_java: looking up type '{}'", optional_string (typeName));
+	log_debug (LOG_ASSEMBLY, "managed_to_java: looking up type '{}'", optional_string (typeName));
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.start_event (TimingEventKind::ManagedToJava);
 	}
@@ -452,7 +452,7 @@ auto TypeMapper::java_to_managed_release (const char *java_type_name, char const
 [[gnu::flatten]]
 auto TypeMapper::java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept -> bool
 {
-	log_debug (LOG_ASSEMBLY, "typemap_java_to_managed: looking up type '{}'", optional_string (java_type_name));
+	log_debug (LOG_ASSEMBLY, "java_to_managed: looking up type '{}'", optional_string (java_type_name));
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.start_event (TimingEventKind::JavaToManaged);
 	}
