@@ -160,6 +160,7 @@ class NativeCodeGenStateObject
 	public Dictionary<string, IList<MarshalMethodEntryObject>> MarshalMethods { get; } = [];
 	public List<PinvokeScanner.PinvokeEntryInfo>? PinvokeInfos                { get; set; }
 	public AndroidTargetArch TargetArch                                       { get; set; } = AndroidTargetArch.None;
+	public List<(string JniName, string AssemblyQualifiedName)> ApplicationsAndInstrumentationsToRegister { get; } = [];
 }
 
 class MarshalMethodEntryObject
