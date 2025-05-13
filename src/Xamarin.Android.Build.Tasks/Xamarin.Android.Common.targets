@@ -1660,7 +1660,6 @@ because xbuild doesn't support framework reference assemblies.
       CheckedBuild="$(_AndroidCheckedBuild)"
       Debug="$(AndroidIncludeDebugSymbols)"
       EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       EnableNativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)"
       IntermediateOutputDirectory="$(IntermediateOutputPath)"
       ManifestPlaceholders="$(AndroidManifestPlaceholders)"
