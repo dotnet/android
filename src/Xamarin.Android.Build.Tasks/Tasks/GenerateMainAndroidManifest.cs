@@ -25,7 +25,6 @@ public class GenerateMainAndroidManifest : AndroidTask
 	public string? CheckedBuild { get; set; }
 	public bool Debug { get; set; }
 	public bool EmbedAssemblies { get; set; }
-	public bool EnableMarshalMethods { get; set; }
 	public bool EnableNativeRuntimeLinking { get; set; }
 	[Required]
 	public string IntermediateOutputDirectory { get; set; } = "";
@@ -66,10 +65,9 @@ public class GenerateMainAndroidManifest : AndroidTask
 
 		AdditionalProviderSources = additionalProviders.ToArray ();
 
-		// If we still need the NativeCodeGenState in the <GenerateNativeMarshalMethodSources> task because we're using marshal methods,
-		// we're going to transfer it to a new object that doesn't require holding open Cecil AssemblyDefinitions.
-		if (UseMarshalMethods || EnableNativeRuntimeLinking) {
-			var nativeCodeGenStateObject = MarshalMethodCecilAdapter.GetNativeCodeGenStateCollection (Log, nativeCodeGenStates);
+		// We still need the NativeCodeGenState for later tasks, but we're going to transfer
+		// it to a new object that doesn't require holding open Cecil AssemblyDefinitions.
+		var nativeCodeGenStateObject = MarshalMethodCecilAdapter.GetNativeCodeGenStateCollection (Log, nativeCodeGenStates);
 
 		Log.LogDebugMessage ($"Saving {nameof (NativeCodeGenStateObject)} to {nameof (GenerateJavaStubs.NativeCodeGenStateObjectRegisterTaskKey)}");
 		BuildEngine4.RegisterTaskObjectAssemblyLocal (MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateObjectRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory), nativeCodeGenStateObject, RegisteredTaskObjectLifetime.Build);
