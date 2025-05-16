@@ -374,6 +374,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		ulong GetAggregateValueElementCount (GeneratorWriteContext context, Type type, object? value, LlvmIrGlobalVariable? globalVariable = null)
 		{
+			if (type == typeof(LlvmIrStringBlob)) {
+				return 1; // String blobs are a collection of bytes
+			}
+
 			if (!type.IsArray ()) {
 				throw new InvalidOperationException ($"Internal error: unknown type {type} when trying to determine aggregate type element count");
 			}
@@ -479,6 +483,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return;
 			}
 
+			if (type == typeof(LlvmIrStringBlob)) {
+				WriteStringBlobType (context, (LlvmIrStringBlob?)value, out typeInfo);
+				return;
+			}
+
 			irType = GetIRType (context, type, out size, out isPointer);
 			typeInfo = new LlvmTypeInfo (
 				isPointer: isPointer,
@@ -488,6 +497,21 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				maxFieldAlignment: size
 			);
 			context.Output.Write (irType);
+		}
+
+		void WriteStringBlobType (GeneratorWriteContext context, LlvmIrStringBlob? blob, out LlvmTypeInfo typeInfo)
+		{
+			long size = blob?.Size ?? 0;
+			// Blobs are always arrays of bytes
+			context.Output.Write ($"[{size} x i8]");
+
+			typeInfo = new LlvmTypeInfo (
+				isPointer: false,
+				isAggregate: true,
+				isStructure: false,
+				size: (ulong)size,
+				maxFieldAlignment: 1
+			);
 		}
 
 		void WriteArrayType (GeneratorWriteContext context, Type elementType, ulong elementCount, out LlvmTypeInfo typeInfo)
@@ -769,6 +793,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return;
 			}
 
+			if (type == typeof(LlvmIrStringBlob)) {
+				WriteStringBlobArray (context, (LlvmIrStringBlob)value);
+				return;
+			}
+
 			if (type.IsArray) {
 				if (type == typeof(byte[])) {
 					WriteInlineArray (context, (byte[])value, encodeAsASCII: true);
@@ -784,6 +813,69 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			throw new NotSupportedException ($"Internal error: value type '{type}' is unsupported");
+		}
+
+		void WriteStringBlobArray (GeneratorWriteContext context, LlvmIrStringBlob blob)
+		{
+			const uint stride = 16;
+			Type elementType = typeof(byte);
+
+			LlvmIrVariableNumberFormat oldNumberFormat = context.NumberFormat;
+			context.NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal;
+			WriteArrayValueStart (context);
+			foreach (LlvmIrStringBlob.StringInfo si in blob.GetSegments ()) {
+				if (si.Offset > 0) {
+					context.Output.Write (',');
+					context.Output.WriteLine ();
+					context.Output.WriteLine ();
+				}
+
+				context.Output.Write (context.CurrentIndent);
+				WriteCommentLine (context, $" '{si.Value}' @ {si.Offset}");
+				WriteBytes (si.Bytes);
+			}
+			context.Output.WriteLine ();
+			WriteArrayValueEnd (context);
+			context.NumberFormat = oldNumberFormat;
+
+			void WriteBytes (byte[] bytes)
+			{
+				ulong counter = 0;
+				bool first = true;
+				foreach (byte b in bytes) {
+					if (!first) {
+						WriteCommaWithStride (counter);
+					} else {
+						context.Output.Write (context.CurrentIndent);
+						first = false;
+					}
+
+					counter++;
+					WriteByteTypeAndValue (b);
+				}
+
+				WriteCommaWithStride (counter);
+				WriteByteTypeAndValue (0); // Terminating NUL is counted for each string, but not included in its bytes
+			}
+
+			void WriteCommaWithStride (ulong counter)
+			{
+				context.Output.Write (',');
+				if (stride == 1 || counter % stride == 0) {
+					context.Output.WriteLine ();
+					context.Output.Write (context.CurrentIndent);
+				} else {
+					context.Output.Write (' ');
+				}
+			}
+
+			void WriteByteTypeAndValue (byte v)
+			{
+				WriteType (context, elementType, v, out _);
+
+				context.Output.Write (' ');
+				WriteValue (context, elementType, v);
+			}
 		}
 
 		void WriteStructureValue (GeneratorWriteContext context, StructureInstance? instance)

@@ -56,10 +56,23 @@ struct TypeMapIndexHeader
 	uint32_t module_file_name_width;
 };
 
+// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
+//
+// If any of the members is set to maximum uint32_t value it means the entry is ignored (treated
+// as equivalent to `nullptr` if the member was a pointer). The reasoning is that no string could
+// begin at this offset (well, an empty string could, but we don't have those here)
 struct TypeMapEntry
 {
-	const char *from;
-	const char *to;
+	const uint32_t from;
+	const xamarin::android::hash_t from_hash;
+	const uint32_t to;
+};
+
+// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
+struct TypeMapManagedTypeInfo
+{
+	const uint32_t assembly_name_index;
+	const uint32_t managed_type_token_id;
 };
 
 // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
@@ -67,11 +80,11 @@ struct TypeMap
 {
 	uint32_t             entry_count;
 	uint64_t             unique_assemblies_count;
-	uint64_t             assembly_names_blob_size;
 	const TypeMapEntry  *java_to_managed;
 	const TypeMapEntry  *managed_to_java;
 };
 
+// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
 struct TypeMapAssembly
 {
 	xamarin::android::hash_t mvid_hash;
@@ -91,6 +104,7 @@ struct TypeMapModule
 	uint32_t                  entry_count;
 	uint32_t                  duplicate_count;
 	uint32_t                  assembly_name_index;
+	uint32_t                  assembly_name_length;
 	TypeMapModuleEntry const *map;
 	TypeMapModuleEntry const *duplicate_map;
 };
@@ -99,8 +113,10 @@ struct TypeMapJava
 {
 	uint32_t  module_index;
 	uint32_t  managed_type_name_index;
+	uint32_t  managed_type_name_length;
 	uint32_t  managed_type_token_id;
 	uint32_t  java_name_index;
+	uint32_t  java_name_length;
 };
 #endif
 
@@ -319,15 +335,20 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const uint64_t format_tag;
 
 #if defined (DEBUG)
+	[[gnu::visibility("default")]] extern const bool typemap_use_hashes;
 	[[gnu::visibility("default")]] extern const TypeMap type_map; // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
+	[[gnu::visibility("default")]] extern const TypeMapManagedTypeInfo type_map_managed_type_info[];
 	[[gnu::visibility("default")]] extern const TypeMapAssembly type_map_unique_assemblies[];
-	[[gnu::visibility("default")]] extern const char type_map_assembly_names_blob[];
+	[[gnu::visibility("default")]] extern const char type_map_assembly_names[];
+	[[gnu::visibility("default")]] extern const char type_map_managed_type_names[];
+	[[gnu::visibility("default")]] extern const char type_map_java_type_names[];
 #else
 	[[gnu::visibility("default")]] extern const uint32_t managed_to_java_map_module_count;
 	[[gnu::visibility("default")]] extern const uint32_t java_type_count;
-	[[gnu::visibility("default")]] extern const char* const java_type_names[];
-	[[gnu::visibility("default")]] extern const char* const managed_type_names[];
-	[[gnu::visibility("default")]] extern const char* const managed_assembly_names[];
+	[[gnu::visibility("default")]] extern const char java_type_names[];
+	[[gnu::visibility("default")]] extern const uint64_t java_type_names_size;
+	[[gnu::visibility("default")]] extern const char managed_type_names[];
+	[[gnu::visibility("default")]] extern const char managed_assembly_names[];
 	[[gnu::visibility("default")]] extern TypeMapModule managed_to_java_map[];
 	[[gnu::visibility("default")]] extern const TypeMapJava java_to_managed_map[];
 	[[gnu::visibility("default")]] extern const xamarin::android::hash_t java_to_managed_hashes[];

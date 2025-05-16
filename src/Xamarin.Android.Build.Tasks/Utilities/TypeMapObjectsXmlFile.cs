@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -101,6 +102,7 @@ class TypeMapObjectsXmlFile
 		xml.WriteAttributeStringIfNotDefault ("managed-name", entry.ManagedName);
 		xml.WriteAttributeStringIfNotDefault ("skip-in-java-to-managed", entry.SkipInJavaToManaged);
 		xml.WriteAttributeStringIfNotDefault ("is-invoker", entry.IsInvoker);
+		xml.WriteAttributeString ("managed-type-token-id", entry.ManagedTypeTokenId.ToString (CultureInfo.InvariantCulture));
 		xml.WriteEndElement ();
 	}
 
@@ -198,19 +200,20 @@ class TypeMapObjectsXmlFile
 
 	static void ImportDebugData (XElement root, TypeMapObjectsXmlFile file)
 	{
-		var isMonoAndroid = root.GetAttributeOrDefault ("assembly-name", string.Empty) == "Mono.Android";
+		var assemblyName = root.GetAttributeOrDefault ("assembly-name", string.Empty);
+		var isMonoAndroid = assemblyName == "Mono.Android";
 		var javaToManaged = root.Element ("java-to-managed");
 
 		if (javaToManaged is not null) {
 			foreach (var entry in javaToManaged.Elements ("entry"))
-				file.JavaToManagedDebugEntries.Add (FromDebugEntryXml (entry, isMonoAndroid));
+				file.JavaToManagedDebugEntries.Add (FromDebugEntryXml (entry, assemblyName, isMonoAndroid));
 		}
 
 		var managedToJava = root.Element ("managed-to-java");
 
 		if (managedToJava is not null) {
 			foreach (var entry in managedToJava.Elements ("entry"))
-				file.ManagedToJavaDebugEntries.Add (FromDebugEntryXml (entry, isMonoAndroid));
+				file.ManagedToJavaDebugEntries.Add (FromDebugEntryXml (entry, assemblyName, isMonoAndroid));
 		}
 	}
 
@@ -251,19 +254,22 @@ class TypeMapObjectsXmlFile
 		File.Create (destination).Dispose ();
 	}
 
-	static TypeMapDebugEntry FromDebugEntryXml (XElement entry, bool isMonoAndroid)
+	static TypeMapDebugEntry FromDebugEntryXml (XElement entry, string assemblyName, bool isMonoAndroid)
 	{
 		var javaName = entry.GetAttributeOrDefault ("java-name", string.Empty);
 		var managedName = entry.GetAttributeOrDefault ("managed-name", string.Empty);
 		var skipInJavaToManaged = entry.GetAttributeOrDefault ("skip-in-java-to-managed", false);
 		var isInvoker = entry.GetAttributeOrDefault ("is-invoker", false);
+		var managedTokenId = entry.GetAttributeOrDefault ("managed-type-token-id", (uint)0);
 
 		return new TypeMapDebugEntry {
 			JavaName = javaName,
 			ManagedName = managedName,
+			ManagedTypeTokenId = managedTokenId,
 			SkipInJavaToManaged = skipInJavaToManaged,
 			IsInvoker = isInvoker,
 			IsMonoAndroid = isMonoAndroid,
+			AssemblyName = assemblyName,
 		};
 	}
 
