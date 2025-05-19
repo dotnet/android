@@ -25,7 +25,8 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	internal unsafe ManagedValueManager ()
 	{
-		JavaMarshal.Initialize (&FinishBridgeProcessing);
+		var mark_cross_references_ftn = RuntimeNativeMethods.clr_initialize_gc_bridge (&BridgeProcessingFinished);
+		JavaMarshal.Initialize (mark_cross_references_ftn);
 	}
 
 	public override void WaitForGCBridgeProcessing ()
@@ -276,10 +277,8 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	}
 	
 	[UnmanagedCallersOnly]
-	internal static unsafe void FinishBridgeProcessing (nint sccsLen, StronglyConnectedComponent* sccs, nint ccrsLen, ComponentCrossReference* ccrs)
+	internal static unsafe void BridgeProcessingFinished (nint sccsLen, StronglyConnectedComponent* sccs, nint ccrsLen, ComponentCrossReference* ccrs)
 	{
-		Java.Lang.JavaSystem.Gc ();
-
 		JavaMarshal.ReleaseMarkCrossReferenceResources (
 			new Span<StronglyConnectedComponent> (sccs, (int) sccsLen),
 			new Span<ComponentCrossReference> (ccrs, (int) ccrsLen));
