@@ -1,7 +1,6 @@
 name: ☕ Binding an Android Library
 description: Issues trying to bind an Android library using an Android Bindings project.
 labels: ["Area: Mono.Bindings", "needs-triage"]
-assignees: ["jpobst"]
 body:
   - type: markdown
     attributes:
