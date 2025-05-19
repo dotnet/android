@@ -36,13 +36,19 @@ bool clr_typemap_java_to_managed (const char *java_type_name, char const** assem
 	return TypeMapper::typemap_java_to_managed (java_type_name, assembly_name, managed_type_token_id);
 }
 
+MarkCrossReferencesFtn g_bpFinishCallback;
+
 static void clr_mark_cross_references (size_t sccsLen, StronglyConnectedComponent* sccs, size_t ccrsLen, ComponentCrossReference* ccrs)
 {
 	// TODO: implement this
+
+	// Call back into managed code
+	g_bpFinishCallback (sccsLen, sccs, ccrsLen, ccrs);
 }
 
 MarkCrossReferencesFtn clr_initialize_gc_bridge (MarkCrossReferencesFtn callback) noexcept
 {
+	g_bpFinishCallback = callback;
 	return clr_mark_cross_references;
 }
 
