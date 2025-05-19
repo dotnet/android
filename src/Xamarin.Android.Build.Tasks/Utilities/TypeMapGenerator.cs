@@ -62,8 +62,10 @@ namespace Xamarin.Android.Tasks
 		{
 			public string JavaName;
 			public string ManagedName;
+			public uint ManagedTypeTokenId;
 			public bool SkipInJavaToManaged;
 			public TypeMapDebugEntry DuplicateForJavaToManaged;
+			public string AssemblyName;
 
 			// This field is only used by the Cecil adapter for temp storage while reading.
 			// It is not used to create the typemap.

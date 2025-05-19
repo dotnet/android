@@ -145,8 +145,10 @@ class TypeMapCecilAdapter
 		return new TypeMapDebugEntry {
 			JavaName = Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.ToJniName (td, cache),
 			ManagedName = GetManagedTypeName (td),
+			ManagedTypeTokenId = td.MetadataToken.ToUInt32 (),
 			TypeDefinition = td,
 			SkipInJavaToManaged = ShouldSkipInJavaToManaged (td),
+			AssemblyName = td.Module.Assembly.Name.Name,
 		};
 	}
 
