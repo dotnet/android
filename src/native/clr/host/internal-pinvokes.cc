@@ -36,7 +36,9 @@ bool clr_typemap_java_to_managed (const char *java_type_name, char const** assem
 	return TypeMapper::typemap_java_to_managed (java_type_name, assembly_name, managed_type_token_id);
 }
 
-MarkCrossReferencesFtn g_bpFinishCallback;
+namespace {
+    MarkCrossReferencesFtn g_bpFinishCallback = nullptr;
+}
 
 static void clr_mark_cross_references (size_t sccsLen, StronglyConnectedComponent* sccs, size_t ccrsLen, ComponentCrossReference* ccrs)
 {
