@@ -42,6 +42,9 @@ namespace {
 
 static void clr_mark_cross_references (size_t sccsLen, StronglyConnectedComponent* sccs, size_t ccrsLen, ComponentCrossReference* ccrs)
 {
+	if (g_bpFinishCallback == nullptr) [[unlikely]] {
+		return;
+	}
 	// TODO: implement this
 
 	// Call back into managed code
