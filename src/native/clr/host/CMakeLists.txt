@@ -41,6 +41,12 @@ set(XAMARIN_MONODROID_SOURCES
   xamarin_getifaddrs.cc
 )
 
+if(DEBUG_BUILD)
+  list(APPEND XAMARIN_MONODROID_SOURCES
+    fastdev-assemblies.cc
+  )
+endif()
+
 list(APPEND LOCAL_CLANG_CHECK_SOURCES
   ${XAMARIN_MONODROID_SOURCES}
 )

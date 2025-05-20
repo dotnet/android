@@ -817,6 +817,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		void WriteStringBlobArray (GeneratorWriteContext context, LlvmIrStringBlob blob)
 		{
+			// The stride determines how many elements are written on a single line before a newline is added.
 			const uint stride = 16;
 			Type elementType = typeof(byte);
 
