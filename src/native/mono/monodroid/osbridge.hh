@@ -37,11 +37,15 @@ namespace xamarin::android::internal
 		struct MonoJavaGCBridgeInfo
 		{
 			MonoClass       *klass;
-			MonoClassField  *handle;
-			MonoClassField  *handle_type;
-			MonoClassField  *refs_added;
-			MonoClassField  *key_handle;
+			MonoClassField  *jniObjectReferenceControlBlock;
 		};
+
+		typedef struct JniObjectReferenceControlBlock {
+			jobject handle;
+			int     handle_type;
+			jobject weak_handle;
+			int     refs_added;
+		} JniObjectReferenceControlBlock;
 
 		// add_reference can work with objects which are either MonoObjects with java peers, or raw jobjects
 		struct AddReferenceTarget
@@ -127,6 +131,7 @@ namespace xamarin::android::internal
 
 	private:
 		int get_gc_bridge_index (MonoClass *klass);
+		JniObjectReferenceControlBlock* get_gc_control_block_for_object (MonoObject *obj);
 		MonoJavaGCBridgeInfo* get_gc_bridge_info_for_class (MonoClass *klass);
 		MonoJavaGCBridgeInfo* get_gc_bridge_info_for_object (MonoObject *object);
 		char get_object_ref_type (JNIEnv *env, void *handle);
