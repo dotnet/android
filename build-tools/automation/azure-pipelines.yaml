@@ -345,6 +345,7 @@ extends:
         steps:
         - checkout: self
           clean: true
+          lfs: true
           submodules: recursive
 
         - template: /build-tools/automation/yaml-templates/use-dot-net.yaml@self
