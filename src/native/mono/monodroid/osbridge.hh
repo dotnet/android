@@ -40,12 +40,13 @@ namespace xamarin::android::internal
 			MonoClassField  *jniObjectReferenceControlBlock;
 		};
 
-		typedef struct JniObjectReferenceControlBlock {
+		struct JniObjectReferenceControlBlock
+		{
 			jobject handle;
 			int     handle_type;
 			jobject weak_handle;
 			int     refs_added;
-		} JniObjectReferenceControlBlock;
+		};
 
 		// add_reference can work with objects which are either MonoObjects with java peers, or raw jobjects
 		struct AddReferenceTarget

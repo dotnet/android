@@ -793,19 +793,16 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 MonodroidRuntime::lookup_bridge_info (MonoClass *klass, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info) noexcept
 {
 	info->klass             = klass;
-	info->jniObjectReferenceControlBlock    = mono_class_get_field_from_name (info->klass, const_cast<char*> ("jniObjectReferenceControlBlock"));
+	info->jniObjectReferenceControlBlock = mono_class_get_field_from_name (info->klass, const_cast<char*>("jniObjectReferenceControlBlock"));
 
 	// key_handle is optional, as Java.Interop.JavaObject doesn't currently have it
-	if (info->klass == nullptr || ((OSBridge::JniObjectReferenceControlBlock*)info->jniObjectReferenceControlBlock)->handle == nullptr || ((OSBridge::JniObjectReferenceControlBlock*)info->jniObjectReferenceControlBlock)->handle_type == 0 || ((OSBridge::JniObjectReferenceControlBlock*)info->jniObjectReferenceControlBlock)->refs_added == 0) {
+	if (info->klass == nullptr || info->jniObjectReferenceControlBlock == nullptr) {
 		Helpers::abort_application (
-			Util::monodroid_strdup_printf (
-				"The type `%s.%s` is missing required instance fields! handle=%p handle_type=%p refs_added=%p weak_handle=%p",
+			std::format (
+				"The type `{}.{} is missing required instance fields! jniObjectReferenceControlBlock={:p}",
 				type->_namespace,
 				type->_typename,
-				((OSBridge::JniObjectReferenceControlBlock*)info->jniObjectReferenceControlBlock)->handle,
-				((OSBridge::JniObjectReferenceControlBlock*)info->jniObjectReferenceControlBlock)->handle_type,
-				((OSBridge::JniObjectReferenceControlBlock*)info->jniObjectReferenceControlBlock)->refs_added,
-				((OSBridge::JniObjectReferenceControlBlock*)info->jniObjectReferenceControlBlock)->weak_handle
+				static_cast<void*>(info->jniObjectReferenceControlBlock)
 			)
 		);
 	}
