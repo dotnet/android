@@ -37,7 +37,7 @@ stages:
 
     - script: git lfs pull
       displayName: git lfs pull
-      workingDirectory: ${{ parameters.checkoutPath }}
+      workingDirectory: ${{ parameters.xaSourcePath }}
 
     - template: /build-tools/automation/yaml-templates/kill-processes.yaml
 
