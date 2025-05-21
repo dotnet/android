@@ -1,6 +1,4 @@
 variables:
-- name: system.debug
-  value: true
 - name: RunningOnCI
   value: true
 - name: XA.Build.Configuration
