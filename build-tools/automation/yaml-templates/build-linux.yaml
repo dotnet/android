@@ -59,6 +59,7 @@ stages:
 
     - script: git lfs pull
       displayName: git lfs pull
+      workingDirectory: ${{ parameters.checkoutPath }}
 
     - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml
       parameters:
