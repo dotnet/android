@@ -347,6 +347,9 @@ extends:
           clean: true
           submodules: recursive
 
+        - script: git lfs pull
+          displayName: git lfs pull
+
         - template: /build-tools/automation/yaml-templates/use-dot-net.yaml@self
           parameters:
             version: $(DotNetPreviewSdkVersion)
