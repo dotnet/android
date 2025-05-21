@@ -32,11 +32,6 @@ namespace xamarin::android {
 			bridge_processing_finish_callback = callback;
 		}
 
-		static auto get_finish_callback () noexcept -> MarkCrossReferencesFtn
-		{
-			return bridge_processing_finish_callback;
-		}
-
 	private:
 		static inline jobject    Runtime_instance = nullptr;
 		static inline jmethodID  Runtime_gc = nullptr;
