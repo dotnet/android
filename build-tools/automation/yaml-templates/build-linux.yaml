@@ -57,6 +57,9 @@ stages:
     #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
     - checkout: maui
 
+    - script: git lfs pull
+      displayName: git lfs pull
+
     - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml
       parameters:
         useAgentJdkPath: false

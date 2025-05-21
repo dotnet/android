@@ -75,6 +75,9 @@ stages:
         path: ${{ parameters.checkoutPath }}
         persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
+    - script: git lfs pull
+      displayName: git lfs pull
+
     - template: /build-tools/automation/yaml-templates/commercial-build.yaml
       parameters:
         xaSourcePath: ${{ parameters.xaSourcePath }}
