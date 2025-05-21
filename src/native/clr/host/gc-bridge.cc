@@ -31,7 +31,7 @@ void GCBridge::trigger_java_gc () noexcept
 	env->CallVoidMethod (Runtime_instance, Runtime_gc);
 }
 
-void GCBridge::mark_cross_references (size_t sccsLen, StronglyConnectedComponent* sccs, size_t ccrsLen,	ComponentCrossReference* ccrs) noexcept
+void GCBridge::mark_cross_references (MarkCrossReferences* crossRefs) noexcept
 {
 	if (bridge_processing_finish_callback == nullptr) [[unlikely]] {
 		return;
@@ -40,5 +40,5 @@ void GCBridge::mark_cross_references (size_t sccsLen, StronglyConnectedComponent
 	trigger_java_gc ();
 
 	// Call back into managed code
-	bridge_processing_finish_callback (sccsLen, sccs, ccrsLen, ccrs);
+	bridge_processing_finish_callback (crossRefs);
 }

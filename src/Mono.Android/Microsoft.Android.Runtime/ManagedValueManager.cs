@@ -277,11 +277,20 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	}
 	
 	[UnmanagedCallersOnly]
-	internal static unsafe void BridgeProcessingFinished (nint sccsLen, StronglyConnectedComponent* sccs, nint ccrsLen, ComponentCrossReference* ccrs)
+	internal static unsafe void BridgeProcessingFinished (MarkCrossReferences* mcr)
 	{
-		JavaMarshal.ReleaseMarkCrossReferenceResources (
-			new Span<StronglyConnectedComponent> (sccs, (int) sccsLen),
-			new Span<ComponentCrossReference> (ccrs, (int) ccrsLen));
+		List<GCHandle> handlesToFree = [];
+		for (int i = 0; i < mcr->ComponentsLen; i++)
+		{
+			for (int j = 0; j < mcr->Components [i].Count; j++)
+			{
+				IntPtr *pContext = (IntPtr*) mcr->Components [i].Context [j];
+				handlesToFree.Add (GCHandle.FromIntPtr (*pContext));
+				NativeMemory.Free (pContext);
+			}
+		}
+
+		JavaMarshal.FinishCrossReferenceProcessing (mcr, CollectionsMarshal.AsSpan (handlesToFree));
 	}
 
 	const   BindingFlags    ActivationConstructorBindingFlags   = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;

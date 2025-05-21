@@ -16,7 +16,15 @@ struct ComponentCrossReference
 	size_t DestinationGroupIndex;
 };
 
-using MarkCrossReferencesFtn = void (*)(size_t, StronglyConnectedComponent*, size_t, ComponentCrossReference*);
+struct MarkCrossReferences
+{
+    size_t ComponentsLen;
+    StronglyConnectedComponent* Components;
+    size_t CrossReferencesLen;
+    ComponentCrossReference* CrossReferences;
+};
+
+using MarkCrossReferencesFtn = void (*)(MarkCrossReferences*);
 
 namespace xamarin::android {
 	class GCBridge
@@ -24,7 +32,7 @@ namespace xamarin::android {
 	public:
 		static void initialize_on_load (JNIEnv *env) noexcept;
 		static void trigger_java_gc () noexcept;
-		static void mark_cross_references (size_t sccsLen, StronglyConnectedComponent* sccs, size_t ccrsLen, ComponentCrossReference* ccrs) noexcept;
+		static void mark_cross_references (MarkCrossReferences* crossRefs) noexcept;
 
 		static void set_finish_callback (MarkCrossReferencesFtn callback) noexcept
 		{
