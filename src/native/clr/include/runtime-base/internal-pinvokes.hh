@@ -3,23 +3,10 @@
 #include <jni.h>
 #include <ifaddrs.h>
 
+#include <host/gc-bridge.hh>
 #include <xamarin-app.hh>
 #include "logger.hh"
 #include <runtime-base/timing.hh>
-
-struct StronglyConnectedComponent
-{
-    size_t Count;
-    void** ContextMemory;
-};
-
-struct ComponentCrossReference
-{
-    size_t SourceGroupIndex;
-    size_t DestinationGroupIndex;
-};
-
-typedef void (*MarkCrossReferencesFtn)(size_t, StronglyConnectedComponent*, size_t, ComponentCrossReference*);
 
 extern "C" {
 	int _monodroid_gref_get () noexcept;
