@@ -1,5 +1,5 @@
-#include <host/host-util.hh>
 #include <host/os-bridge.hh>
+#include <host/runtime-util.hh>
 #include <runtime-base/logger.hh>
 #include <shared/cpp-util.hh>
 #include <shared/helpers.hh>
@@ -33,7 +33,7 @@ void OSBridge::initialize_on_onload (JavaVM *vm, JNIEnv *env) noexcept
 void OSBridge::initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass) noexcept
 {
 	abort_if_invalid_pointer_argument (env, "env");
-	GCUserPeer_class = HostUtil::get_class_from_runtime_field(env, runtimeClass, "mono_android_GCUserPeer", true);
+	GCUserPeer_class = RuntimeUtil::get_class_from_runtime_field(env, runtimeClass, "mono_android_GCUserPeer"sv, true);
 	GCUserPeer_ctor	 = env->GetMethodID (GCUserPeer_class, "<init>", "()V");
 	abort_unless (GCUserPeer_class != nullptr && GCUserPeer_ctor != nullptr, "Failed to load mono.android.GCUserPeer!");
 }
@@ -84,7 +84,7 @@ void OSBridge::_write_stack_trace (FILE *to, char *from, LogCategories category)
 		*end	= '\0';
 		if ((category == LOG_GREF && Logger::gref_to_logcat ()) ||
 			(category == LOG_LREF && Logger::lref_to_logcat ())) {
-				log_debug (category, "{}", optional_string (m));
+				log_debug (category, "{}"sv, optional_string (m));
 		}
 
 		if (to != nullptr) {
@@ -98,7 +98,7 @@ void OSBridge::_write_stack_trace (FILE *to, char *from, LogCategories category)
 void OSBridge::_monodroid_gref_log (const char *message) noexcept
 {
 	if (Logger::gref_to_logcat ()) {
-		log_debug (LOG_GREF, "{}", optional_string (message));
+		log_debug (LOG_GREF, "{}"sv, optional_string (message));
 	}
 
 	if (Logger::gref_log () == nullptr) {
@@ -117,7 +117,7 @@ auto OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject
 	}
 
 	log_info (LOG_GREF,
-			  "+g+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})",
+			  "+g+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})"sv,
 			  c,
 			  gc_weak_gref_count,
 			  reinterpret_cast<void*>(curHandle),
@@ -132,7 +132,7 @@ auto OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject
 		if (from_writable) {
 			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
 		} else {
-			log_info (LOG_GREF, "{}", optional_string (from));
+			log_info (LOG_GREF, "{}"sv, optional_string (from));
 		}
 	}
 
@@ -171,7 +171,7 @@ void OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char
 	}
 
 	log_info (LOG_GREF,
-			  "-g- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})",
+			  "-g- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})"sv,
 			  c,
 			  gc_weak_gref_count,
 			  reinterpret_cast<void*>(handle),
@@ -218,7 +218,7 @@ void OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobjec
 	}
 
 	log_info (LOG_GREF,
-			  "+w+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})",
+			  "+w+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})"sv,
 			  gc_gref_count,
 			  gc_weak_gref_count,
 			  reinterpret_cast<void*>(curHandle),
@@ -233,7 +233,7 @@ void OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobjec
 		if (from_writable) {
 			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
 		} else {
-			log_info (LOG_GREF, "{}", optional_string (from));
+			log_info (LOG_GREF, "{}"sv, optional_string (from));
 		}
 	}
 
@@ -271,7 +271,7 @@ OSBridge::_monodroid_lref_log_new (int lrefc, jobject handle, char type, const c
 	}
 
 	log_info (LOG_LREF,
-			  "+l+ lrefc {} handle {:p}/{} from thread '{}'({})",
+			  "+l+ lrefc {} handle {:p}/{} from thread '{}'({})"sv,
 			  lrefc,
 			  reinterpret_cast<void*>(handle),
 			  type,
@@ -283,7 +283,7 @@ OSBridge::_monodroid_lref_log_new (int lrefc, jobject handle, char type, const c
 		if (from_writable) {
 			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
 		} else {
-			log_info (LOG_GREF, "{}", optional_string (from));
+			log_info (LOG_GREF, "{}"sv, optional_string (from));
 		}
 	}
 
@@ -318,7 +318,7 @@ void OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const cha
 	}
 
 	log_info (LOG_GREF,
-			  "-w- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})",
+			  "-w- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})"sv,
 			  gc_gref_count,
 			  gc_weak_gref_count,
 			  reinterpret_cast<void*>(handle),
@@ -331,7 +331,7 @@ void OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const cha
 		if (from_writable) {
 			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
 		} else {
-			log_info (LOG_GREF, "{}", optional_string (from));
+			log_info (LOG_GREF, "{}"sv, optional_string (from));
 		}
 	}
 
@@ -366,7 +366,7 @@ void OSBridge::_monodroid_lref_log_delete (int lrefc, jobject handle, char type,
 	}
 
 	log_info (LOG_LREF,
-			  "-l- lrefc {} handle {:p}/{} from thread '{}'({})",
+			  "-l- lrefc {} handle {:p}/{} from thread '{}'({})"sv,
 			  lrefc,
 			  reinterpret_cast<void*>(handle),
 			  type,
@@ -378,7 +378,7 @@ void OSBridge::_monodroid_lref_log_delete (int lrefc, jobject handle, char type,
 		if (from_writable) {
 			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
 		} else {
-			log_info (LOG_GREF, "{}", optional_string (from));
+			log_info (LOG_GREF, "{}"sv, optional_string (from));
 		}
 	}
 

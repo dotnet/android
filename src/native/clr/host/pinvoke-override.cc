@@ -20,17 +20,17 @@ auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, cons
 		PinvokeEntry *entry = find_pinvoke_address (entrypoint_hash, internal_pinvokes.data (), internal_pinvokes_count);
 
 		if (entry == nullptr) [[unlikely]] {
-			log_fatal (LOG_ASSEMBLY, "Internal p/invoke symbol '{} @ {}' (hash: {:x}) not found in compile-time map.",
+			log_fatal (LOG_ASSEMBLY, "Internal p/invoke symbol '{} @ {}' (hash: {:x}) not found in compile-time map."sv,
 									 optional_string (library_name), optional_string (entrypoint_name), entrypoint_hash);
 			log_fatal (LOG_ASSEMBLY, "compile-time map contents:"sv);
 			for (size_t i = 0uz; i < internal_pinvokes_count; i++) {
 				PinvokeEntry const& e = internal_pinvokes[i];
-				log_fatal (LOG_ASSEMBLY, "\t'{}'={:p} (hash: {:x})", optional_string (e.name), e.func, e.hash);
+				log_fatal (LOG_ASSEMBLY, "\t'{}'={:p} (hash: {:x})"sv, optional_string (e.name), e.func, e.hash);
 			}
 			Helpers::abort_application (
 				LOG_ASSEMBLY,
 				std::format (
-					"Failure handling a p/invoke request for '{}'@'{}'",
+					"Failure handling a p/invoke request for '{}'@'{}'"sv,
 					optional_string (entrypoint_name),
 					optional_string (library_name)
 				)
@@ -66,7 +66,7 @@ auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, cons
 
 			load_library_entry (library_name, entrypoint_name, *entry, dotnet_dso_handle);
 			if (entry->func == nullptr) {
-				log_fatal (LOG_ASSEMBLY, "Failed to load symbol '{}' from shared library '{}'",
+				log_fatal (LOG_ASSEMBLY, "Failed to load symbol '{}' from shared library '{}'"sv,
 										 optional_string (entrypoint_name), optional_string (library_name));
 				return nullptr; // let Mono deal with the fallout
 			}
@@ -77,7 +77,7 @@ auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, cons
 		// It's possible we don't have an entry for some `dotnet` p/invoke, fall back to the slow path below
 		log_debug (
 			LOG_ASSEMBLY,
-			"Symbol '{}' in library '{}' not found in the generated tables, falling back to slow path",
+			"Symbol '{}' in library '{}' not found in the generated tables, falling back to slow path"sv,
 			optional_string (entrypoint_name),
 			optional_string (library_name)
 		);
@@ -86,7 +86,7 @@ auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, cons
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			std::format (
-				"Missing pinvoke {}@{}",
+				"Missing pinvoke {}@{}"sv,
 				optional_string (entrypoint_name),
 				optional_string (library_name)
 			)
@@ -98,8 +98,8 @@ auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, cons
 
 const void* Host::clr_pinvoke_override (const char *library_name, const char *entry_point_name) noexcept
 {
-	log_debug (LOG_ASSEMBLY, "clr_pinvoke_override (\"{}\", \"{}\")", library_name, entry_point_name);
+	log_debug (LOG_ASSEMBLY, "clr_pinvoke_override (\"{}\", \"{}\")"sv, library_name, entry_point_name);
 	void *ret = PinvokeOverride::monodroid_pinvoke_override (library_name, entry_point_name);
-	log_debug (LOG_DEFAULT, "p/invoke {}found", ret == nullptr ? "not"sv : ""sv);
+	log_debug (LOG_DEFAULT, "p/invoke {}found"sv, ret == nullptr ? "not"sv : ""sv);
 	return ret;
 }

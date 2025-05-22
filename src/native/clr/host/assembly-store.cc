@@ -29,7 +29,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 #if defined (HAVE_LZ4) && defined (RELEASE)
 	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(e.image_data);
 	if (header->magic == COMPRESSED_DATA_MAGIC) {
-		log_debug (LOG_ASSEMBLY, "Decompressing assembly '{}' from the assembly store", name);
+		log_debug (LOG_ASSEMBLY, "Decompressing assembly '{}' from the assembly store"sv, name);
 
 		if (FastTiming::enabled ()) [[unlikely]] {
 			internal_timing.start_event (TimingEventKind::AssemblyDecompression);
@@ -42,7 +42,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 			Helpers::abort_application (
 				LOG_ASSEMBLY,
 				std::format (
-					"Invalid compressed assembly descriptor index {}",
+					"Invalid compressed assembly descriptor index {}"sv,
 					header->descriptor_index
 				)
 			);
@@ -71,7 +71,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 				Helpers::abort_application (
 					LOG_ASSEMBLY,
 					std::format (
-						"Invalid compressed assembly descriptor at {}: no data",
+						"Invalid compressed assembly descriptor at {}: no data"sv,
 						header->descriptor_index
 					)
 				);
@@ -82,14 +82,14 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 					Helpers::abort_application (
 						LOG_ASSEMBLY,
 						std::format (
-							"Compressed assembly '{}' is larger than when the application was built (expected at most {}, got {}). Assemblies don't grow just like that!",
+							"Compressed assembly '{}' is larger than when the application was built (expected at most {}, got {}). Assemblies don't grow just like that!"sv,
 							name,
 							cad.uncompressed_file_size,
 							header->uncompressed_length
 						)
 					);
 				} else {
-					log_debug (LOG_ASSEMBLY, "Compressed assembly '{}' is smaller than when the application was built. Adjusting accordingly.", name);
+					log_debug (LOG_ASSEMBLY, "Compressed assembly '{}' is smaller than when the application was built. Adjusting accordingly."sv, name);
 				}
 				cad.uncompressed_file_size = header->uncompressed_length;
 			}
@@ -101,7 +101,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 				Helpers::abort_application (
 					LOG_ASSEMBLY,
 					std::format (
-						"Decompression of assembly {} failed with code {}",
+						"Decompression of assembly {} failed with code {}"sv,
 						name,
 						ret
 					)
@@ -112,7 +112,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 				Helpers::abort_application (
 					LOG_ASSEMBLY,
 					std::format (
-						"Decompression of assembly {} yielded a different size (expected {}, got {})",
+						"Decompression of assembly {} yielded a different size (expected {}, got {})"sv,
 						name,
 						cad.uncompressed_file_size,
 						static_cast<uint32_t>(ret)
@@ -130,12 +130,12 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 	} else
 #endif // def HAVE_LZ4 && def RELEASE
 	{
-		log_debug (LOG_ASSEMBLY, "Assembly '{}' is not compressed in the assembly store", name);
+		log_debug (LOG_ASSEMBLY, "Assembly '{}' is not compressed in the assembly store"sv, name);
 
 		// HACK! START
 		// Currently, MAUI crashes when we return a pointer to read-only data, so we must copy
 		// the assembly data to a read-write area.
-		log_debug (LOG_ASSEMBLY, "Copying assembly data to an r/w memory area");
+		log_debug (LOG_ASSEMBLY, "Copying assembly data to an r/w memory area"sv);
 
 		if (FastTiming::enabled ()) [[unlikely]] {
 			internal_timing.start_event (TimingEventKind::AssemblyLoad);
@@ -176,21 +176,21 @@ auto AssemblyStore::find_assembly_store_entry (hash_t hash, const AssemblyStoreI
 auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) noexcept -> void*
 {
 	hash_t name_hash = xxhash::hash (name.data (), name.length ());
-	log_debug (LOG_ASSEMBLY, "AssemblyStore::open_assembly: looking for bundled name: '{}' (hash {:x})", optional_string (name.data ()), name_hash);
+	log_debug (LOG_ASSEMBLY, "AssemblyStore::open_assembly: looking for bundled name: '{}' (hash {:x})"sv, optional_string (name.data ()), name_hash);
 
 	if constexpr (Constants::is_debug_build) {
 		// TODO: implement filesystem lookup here
 
 		// In fastdev mode we might not have any assembly store.
 		if (assembly_store_hashes == nullptr) {
-			log_warn (LOG_ASSEMBLY, "Assembly store not registered. Unable to look up assembly '{}'", name);
+			log_warn (LOG_ASSEMBLY, "Assembly store not registered. Unable to look up assembly '{}'"sv, name);
 			return nullptr;
 		}
 	}
 
 	const AssemblyStoreIndexEntry *hash_entry = find_assembly_store_entry (name_hash, assembly_store_hashes, assembly_store.index_entry_count);
 	if (hash_entry == nullptr) {
-		log_warn (LOG_ASSEMBLY, "Assembly '{}' (hash 0x{:x}) not found", optional_string (name.data ()), name_hash);
+		log_warn (LOG_ASSEMBLY, "Assembly '{}' (hash 0x{:x}) not found"sv, optional_string (name.data ()), name_hash);
 		return nullptr;
 	}
 
@@ -198,7 +198,7 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			std::format (
-				"Invalid assembly descriptor index {}, exceeds the maximum value of {}",
+				"Invalid assembly descriptor index {}, exceeds the maximum value of {}"sv,
 				hash_entry->descriptor_index,
 				assembly_store.assembly_count - 1
 			)
@@ -219,7 +219,7 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 
 		log_debug (
 			LOG_ASSEMBLY,
-			"Mapped: image_data == {:p}; debug_info_data == {:p}; config_data == {:p}; descriptor == {:p}; data size == {}; debug data size == {}; config data size == {}; name == '{}'",
+			"Mapped: image_data == {:p}; debug_info_data == {:p}; config_data == {:p}; descriptor == {:p}; data size == {}; debug data size == {}; config data size == {}; name == '{}'"sv,
 			static_cast<void*>(assembly_runtime_info.image_data),
 			static_cast<void*>(assembly_runtime_info.debug_info_data),
 			static_cast<void*>(assembly_runtime_info.config_data),
@@ -241,7 +241,7 @@ void AssemblyStore::map (int fd, std::string_view const& apk_path, std::string_v
 	detail::mmap_info assembly_store_map = Util::mmap_file (fd, offset, size, store_path);
 
 	auto [payload_start, payload_size] = Util::get_wrapper_dso_payload_pointer_and_size (assembly_store_map, store_path);
-	log_debug (LOG_ASSEMBLY, "Adjusted assembly store pointer: {:p}; size: {}", payload_start, payload_size);
+	log_debug (LOG_ASSEMBLY, "Adjusted assembly store pointer: {:p}; size: {}"sv, payload_start, payload_size);
 	auto header = static_cast<AssemblyStoreHeader*>(payload_start);
 
 	auto get_full_store_path = [&apk_path, &store_path]() -> std::string {
@@ -263,7 +263,7 @@ void AssemblyStore::map (int fd, std::string_view const& apk_path, std::string_v
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			std::format (
-				"Assembly store '{}' is not a valid .NET for Android assembly store file",
+				"Assembly store '{}' is not a valid .NET for Android assembly store file"sv,
 				get_full_store_path ()
 			)
 		);
@@ -273,7 +273,7 @@ void AssemblyStore::map (int fd, std::string_view const& apk_path, std::string_v
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			std::format (
-				"Assembly store '{}' uses format version {:x}, instead of the expected {:x}",
+				"Assembly store '{}' uses format version {:x}, instead of the expected {:x}"sv,
 				get_full_store_path (),
 				header->version,
 				ASSEMBLY_STORE_FORMAT_VERSION
@@ -289,5 +289,5 @@ void AssemblyStore::map (int fd, std::string_view const& apk_path, std::string_v
 	assembly_store.assemblies = reinterpret_cast<AssemblyStoreEntryDescriptor*>(assembly_store.data_start + header_size + header->index_size);
 	assembly_store_hashes = reinterpret_cast<AssemblyStoreIndexEntry*>(assembly_store.data_start + header_size);
 
-	log_debug (LOG_ASSEMBLY, "Mapped assembly store {}", get_full_store_path ());
+	log_debug (LOG_ASSEMBLY, "Mapped assembly store {}"sv, get_full_store_path ());
 }

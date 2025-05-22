@@ -113,7 +113,7 @@ managed_timing_sequence* monodroid_timing_start (const char *message)
 
 void monodroid_timing_stop (managed_timing_sequence *sequence, const char *message)
 {
-	static constexpr const char DEFAULT_MESSAGE[] = "Managed Timing";
+	constexpr std::string_view DEFAULT_MESSAGE { "Managed Timing" };
 	if (sequence == nullptr) {
 		return;
 	}
@@ -124,7 +124,7 @@ void monodroid_timing_stop (managed_timing_sequence *sequence, const char *messa
 	}
 
 	sequence->end = FastTiming::get_time ();
-	Timing::info (sequence, message == nullptr ? DEFAULT_MESSAGE : message);
+	Timing::info (sequence, message == nullptr ? DEFAULT_MESSAGE.data () : message);
 	timing->release_sequence (sequence);
 }
 
