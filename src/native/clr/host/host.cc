@@ -18,6 +18,7 @@
 #include <runtime-base/android-system.hh>
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
+#include <runtime-base/search.hh>
 #include <runtime-base/timing-internal.hh>
 #include <shared/log_types.hh>
 #include <startup/zip.hh>
@@ -29,10 +30,54 @@ void Host::clr_error_writer (const char *message) noexcept
 	log_error (LOG_DEFAULT, "CLR error: {}", optional_string (message));
 }
 
-size_t Host::clr_get_runtime_property (const char *key, char *value_buffer, size_t value_buffer_size, void *contract_context) noexcept
+size_t Host::clr_get_runtime_property (const char *key, char *value_buffer, size_t value_buffer_size, [[maybe_unused]] void *contract_context) noexcept
 {
-	log_debug (LOG_DEFAULT, "clr_get_runtime_property (\"{}\"...)", key);
-	return 0;
+	// NOTE: this code was tested locally, but it's **not** used by CoreCLR yet, so there's been no
+	// "live" testing.
+	log_debug (LOG_DEFAULT, "clr_get_runtime_property (\"{}\"...)", optional_string (key));
+	if (application_config.number_of_runtime_properties == 0) [[unlikely]] {
+		log_debug (LOG_DEFAULT, "No runtime properties defined");
+		return 0;
+	}
+
+	// value_buffer_size must have enough space for at least 1 character + the terminating NUL
+	if (key == nullptr || value_buffer == nullptr || value_buffer_size <= 1) [[unlikely]] {
+		log_warn (
+			LOG_DEFAULT,
+			"runtime property retrieval API called with invalid arguments. key == {:p}; value_buffer == {:p}; value_buffer_size == {}",
+			static_cast<const void*>(key),
+			static_cast<void*>(value_buffer),
+			value_buffer_size
+		);
+		return 0;
+	}
+
+	hash_t key_hash = xxhash::hash (key, strlen (key));
+
+	auto equal = [](RuntimePropertyIndexEntry const& entry, hash_t key) -> bool { return entry.key_hash == key; };
+	auto less_than = [](RuntimePropertyIndexEntry const& entry, hash_t key) -> bool { return entry.key_hash < key; };
+	ssize_t idx = Search::binary_search<RuntimePropertyIndexEntry, equal, less_than> (key_hash, runtime_property_index, application_config.number_of_runtime_properties);
+	if (idx < 0) {
+		log_debug (LOG_DEFAULT, "Runtime property '{}' not found", key);
+		return 0;
+	}
+
+	RuntimePropertyIndexEntry const& idx_entry = runtime_property_index[idx];
+	RuntimeProperty const& prop = runtime_properties[idx_entry.index];
+
+	// `value_size` includes the terminating NUL
+	if (prop.value_size > value_buffer_size) {
+		log_warn (
+			LOG_DEFAULT,
+			"Value of property '{}' is longer than available buffer space. Need {}b, available {}b",
+			key,
+			prop.value_size,
+			value_buffer_size
+		);
+	}
+
+	strncpy (value_buffer, prop.value, value_buffer_size);
+	return std::min (static_cast<size_t>(prop.value_size - 1), value_buffer_size - 1);
 }
 
 bool Host::clr_external_assembly_probe (const char *path, void **data_start, int64_t *size) noexcept
@@ -468,7 +513,7 @@ void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType,
 		internal_timing.end_event (true /* uses_more_info */);
 
 		dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> type;
-		const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
+		mt_ptr = env->GetStringUTFChars (managedType, nullptr);
 		type.assign (mt_ptr, strlen (mt_ptr));
 		env->ReleaseStringUTFChars (managedType, mt_ptr);
 
