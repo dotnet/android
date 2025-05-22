@@ -795,7 +795,6 @@ MonodroidRuntime::lookup_bridge_info (MonoClass *klass, const OSBridge::MonoJava
 	info->klass             = klass;
 	info->jniObjectReferenceControlBlock = mono_class_get_field_from_name (info->klass, const_cast<char*>("jniObjectReferenceControlBlock"));
 
-	// key_handle is optional, as Java.Interop.JavaObject doesn't currently have it
 	if (info->klass == nullptr || info->jniObjectReferenceControlBlock == nullptr) {
 		Helpers::abort_application (
 			std::format (
