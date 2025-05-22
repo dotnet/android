@@ -18,7 +18,6 @@ namespace Java.InteropTests
 			Assert.Throws<ArgumentException>(() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (typeof (int[,])));
 			Assert.Throws<ArgumentException>(() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (typeof (int[,][])));
 			Assert.Throws<ArgumentException>(() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (typeof (int[][,])));
-			Assert.Throws<NotSupportedException>(() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (typeof (Action<>)));
 			Assert.AreEqual (null, JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (typeof (JniRuntimeTest)).SimpleReference);
 
 			AssertGetJniTypeInfoForType (typeof (string),   "java/lang/String",   false,  0);
@@ -91,6 +90,11 @@ namespace Java.InteropTests
 			// Note: dotnet/android@5c23bcda updates Java.Lang.Object to inherit JavaObject; this is not enough,
 			// as `<GenerateJavaStubs/>` only processes assemblies if they reference Mono.Android.dll.
 			AssertGetJniTypeInfoForType (typeof (GenericHolder<int>),       GenericHolder<int>.JniTypeName,    false,   0);
+
+			// XAJavaInterop1 Java Callable Wrappers, as used in dotnet/android, may contain
+			// `Runtime.register("Java.InteropTests.GenericHolder`1, Mono.Android-Tests", …)`,
+			// which results in a generic type definition.  Permit this.
+			AssertGetJniTypeInfoForType (typeof (GenericHolder<>),          GenericHolder<int>.JniTypeName,    false,   0);
 #endif  // !__ANDROID__
 		}
 
@@ -214,6 +218,24 @@ namespace Java.InteropTests
 			Assert.AreEqual (typeof (double),   GetTypeForSimpleReference ("D"));
 			Assert.AreEqual (typeof (string),   GetTypeForSimpleReference ("java/lang/String"));
 			Assert.AreEqual (null,              GetTypeForSimpleReference ("com/example/does/not/exist"));
+		}
+
+		[Test]
+		public void CanCreateGenericHolder ()
+		{
+			using var holder = new GenericHolder<int> ();
+		}
+
+		[Test]
+		public unsafe void CannotCreateGenericHolderFromJava ()
+		{
+			var signature   = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (typeof (GenericHolder<>));
+			using var type  = new JniType (signature.Name);
+			var ctor        = type.GetConstructor ("()V");
+			var instance    = type.AllocObject ();
+
+			Assert.Throws<NotSupportedException>(() =>
+				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (instance, type.PeerReference, ctor));
 		}
 	}
 

@@ -64,6 +64,7 @@ namespace Java.Interop
 			Construct (ref reference, options);
 		}
 
+		[global::Java.Interop.JniConstructorSignature ("()V")]
 		public unsafe JavaObject ()
 			: this (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
