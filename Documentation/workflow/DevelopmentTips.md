@@ -465,7 +465,7 @@ A second (better) way is to add this MSBuild target to your Android
     <!-- For new .NET APIs -->
     <KnownFrameworkReference
         Update="Microsoft.NETCore.App"
-        Condition=" '%(KnownFrameworkReference.TargetFramework)' == 'net10.0' "
+        Condition=" '%(KnownFrameworkReference.TargetingPackName)' == 'Microsoft.NETCore.App.Ref' and '%(KnownFrameworkReference.TargetFramework)' == 'net10.0' "
         DefaultRuntimeFrameworkVersion="$(_Version)"
         LatestRuntimeFrameworkVersion="$(_Version)"
         TargetingPackVersion="$(_Version)"
