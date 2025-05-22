@@ -22,6 +22,12 @@ steps:
     clean: true
     submodules: recursive
 
+- script: |
+    git lfs install
+    git lfs pull
+  displayName: git lfs setup
+  workingDirectory: ${{ parameters.xaSourcePath }}
+
 - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml
   parameters:
     jdkMajorVersion: ${{ parameters.jdkMajorVersion }}
