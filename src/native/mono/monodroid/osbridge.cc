@@ -574,13 +574,22 @@ OSBridge::gc_bridge_class_kind (MonoClass *klass)
 mono_bool
 OSBridge::gc_is_bridge_object (MonoObject *object)
 {
-	void *handle;
+	if (object == nullptr) [[unlikely]] {
+		log_debug (LOG_GC, "gc_is_bridge_object was passed a NULL object pointer");
+		return FALSE;
+	}
 
 	JniObjectReferenceControlBlock *control_block = get_gc_control_block_for_object (object);
 	if (control_block == nullptr) {
-		return 0;
+		return FALSE;
 	}
 
+	if (control_block->handle == nullptr) {
+		log_warn (LOG_GC, "gc_is_bridge_object: control block's handle is NULL");
+		return FALSE;
+	}
+
+	void *handle;
 	mono_field_get_value (object, reinterpret_cast<MonoClassField*>(control_block->handle), &handle);
 	if (handle == nullptr) {
 #if DEBUG
@@ -591,10 +600,10 @@ OSBridge::gc_is_bridge_object (MonoObject *object)
 			optional_string (mono_class_get_name (mclass))
 		);
 #endif
-		return 0;
+		return FALSE;
 	}
 
-	return 1;
+	return TRUE;
 }
 
 // Add a reference from an IGCUserPeer jobject to another jobject
