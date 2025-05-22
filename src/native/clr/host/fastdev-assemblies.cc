@@ -20,7 +20,7 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 
 	std::string const& override_dir_path = AndroidSystem::get_primary_override_dir ();
 	if (!Util::dir_exists (override_dir_path)) [[unlikely]] {
-		log_debug (LOG_ASSEMBLY, "Override directory '{}' does not exist", override_dir_path);
+		log_debug (LOG_ASSEMBLY, "Override directory '{}' does not exist"sv, override_dir_path);
 		return nullptr;
 	}
 
@@ -31,7 +31,7 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 		if (override_dir_fd < 0) [[likely]] {
 			override_dir = opendir (override_dir_path.c_str ());
 			if (override_dir == nullptr) [[unlikely]] {
-				log_warn (LOG_ASSEMBLY, "Failed to open override dir '{}'. {}", override_dir_path, strerror (errno));
+				log_warn (LOG_ASSEMBLY, "Failed to open override dir '{}'. {}"sv, override_dir_path, strerror (errno));
 				return nullptr;
 			}
 			override_dir_fd = dirfd (override_dir);
@@ -40,20 +40,20 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 
 	log_debug (
 		LOG_ASSEMBLY,
-		"Attempting to load FastDev assembly '{}' from override directory '{}'",
+		"Attempting to load FastDev assembly '{}' from override directory '{}'"sv,
 		name,
 		override_dir_path
 	);
 
 	if (!Util::file_exists (override_dir_fd, name)) {
-		log_warn (LOG_ASSEMBLY, "FastDev assembly '{}' not found.", name);
+		log_warn (LOG_ASSEMBLY, "FastDev assembly '{}' not found."sv, name);
 		return nullptr;
 	}
-	log_debug (LOG_ASSEMBLY, "Found FastDev assembly '{}'", name);
+	log_debug (LOG_ASSEMBLY, "Found FastDev assembly '{}'"sv, name);
 
 	auto file_size = Util::get_file_size_at (override_dir_fd, name);
 	if (!file_size) [[unlikely]] {
-		log_warn (LOG_ASSEMBLY, "Unable to determine FastDev assembly '{}' file size", name);
+		log_warn (LOG_ASSEMBLY, "Unable to determine FastDev assembly '{}' file size"sv, name);
 		return nullptr;
 	}
 
@@ -62,7 +62,7 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			std::format (
-				"FastDev assembly '{}' size exceeds the maximum supported value of {}",
+				"FastDev assembly '{}' size exceeds the maximum supported value of {}"sv,
 				name,
 				MAX_SIZE
 			)
@@ -74,7 +74,7 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 	if (asm_fd < 0) {
 		log_warn (
 			LOG_ASSEMBLY,
-			"Failed to open FastDev assembly '{}' for reading. {}",
+			"Failed to open FastDev assembly '{}' for reading. {}"sv,
 			name,
 			strerror (errno)
 		);
@@ -99,7 +99,7 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 
 		log_warn (
 			LOG_ASSEMBLY,
-			"Failed to read FastDev assembly '{}' data. {}",
+			"Failed to read FastDev assembly '{}' data. {}"sv,
 			name,
 			strerror (errno)
 		);
@@ -107,7 +107,7 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 		size = 0;
 		return nullptr;
 	}
-	log_debug (LOG_ASSEMBLY, "Read {} bytes of FastDev assembly '{}'", nread, name);
+	log_debug (LOG_ASSEMBLY, "Read {} bytes of FastDev assembly '{}'"sv, nread, name);
 
 	return reinterpret_cast<void*>(buffer);
 }
