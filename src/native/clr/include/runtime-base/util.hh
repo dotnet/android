@@ -153,7 +153,7 @@ namespace xamarin::android {
 			set_environment_variable (name, value);
 		}
 
-		static void set_environment_variable_for_directory (const char *name, jstring_wrapper &value) noexcept
+		static void set_environment_variable_for_directory (std::string_view const& name, jstring_wrapper &value) noexcept
 		{
 			set_environment_variable_for_directory (name, value, true, Constants::DEFAULT_DIRECTORY_MODE);
 		}
