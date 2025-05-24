@@ -24,11 +24,22 @@ namespace Xamarin.Android.Prepare
 #nullable enable
 
 		static readonly string[] CRTFiles = {
+			"crtbegin_so.o",
+			"crtend_so.o",
 			"libc.so",
 			"libdl.so",
 			"liblog.so",
 			"libm.so",
 			"libz.so",
+		};
+
+		static readonly string[] CPPAbiFiles = {
+			"libc++_static.a",
+			"libc++abi.a",
+		};
+
+		static readonly string[] ClangArchFiles = {
+			"libunwind.a",
 		};
 
 		bool RefreshSdk = false;
@@ -189,13 +200,37 @@ namespace Xamarin.Android.Prepare
 				throw new InvalidOperationException ($"Unknown LLVM version format for '{lines[0]}'");
 			}
 
+			string clangLibPath = Path.Combine (
+				Configurables.Paths.AndroidClangRootDirectory,
+				llvmVersion[0],
+				"lib",
+				"linux"
+			);
+
 			foreach (var kvp in Configurables.Defaults.AndroidToolchainPrefixes) {
 				string abi = kvp.Key;
 				string abiDir = Path.Combine (Configurables.Paths.AndroidToolchainSysrootLibDirectory, kvp.Value);
 				string crtFilesPath = Path.Combine (abiDir, BuildAndroidPlatforms.NdkMinimumAPI.ToString (CultureInfo.InvariantCulture));
+				string clangArch = Configurables.Defaults.AbiToClangArch[abi];
 
 				foreach (string file in CRTFiles) {
 					CopyFile (abi, crtFilesPath, file);
+				}
+
+				foreach (string file in CPPAbiFiles) {
+					CopyFile (abi, abiDir, file);
+				}
+
+				CopyFile (abi, clangLibPath, $"libclang_rt.builtins-{clangArch}-android.a");
+
+				// Yay, consistency
+				if (String.Compare (clangArch, "i686", StringComparison.Ordinal) == 0) {
+					clangArch = "i386";
+				}
+				string clangArchLibPath = Path.Combine (clangLibPath, clangArch);
+
+				foreach (string file in ClangArchFiles) {
+					CopyFile (abi, clangArchLibPath, file);
 				}
 			}
 
