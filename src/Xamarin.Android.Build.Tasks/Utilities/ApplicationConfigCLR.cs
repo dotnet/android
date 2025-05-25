@@ -38,13 +38,19 @@ sealed class ApplicationConfigCLR
 	public uint   number_of_aot_cache_entries;
 	public uint   number_of_shared_libraries;
 
+#if !IN_APPTOOLS
 	[NativeAssembler (NumberFormat = LLVMIR.LlvmIrVariableNumberFormat.Hexadecimal)]
+#endif
 	public uint   android_runtime_jnienv_class_token;
 
+#if !IN_APPTOOLS
 	[NativeAssembler (NumberFormat = LLVMIR.LlvmIrVariableNumberFormat.Hexadecimal)]
+#endif
 	public uint   jnienv_initialize_method_token;
 
+#if !IN_APPTOOLS
 	[NativeAssembler (NumberFormat = LLVMIR.LlvmIrVariableNumberFormat.Hexadecimal)]
+#endif
 	public uint   jnienv_registerjninatives_method_token;
 	public uint   jni_remapping_replacement_type_count;
 	public uint   jni_remapping_replacement_method_index_entry_count;
