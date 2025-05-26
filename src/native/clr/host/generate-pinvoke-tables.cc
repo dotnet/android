@@ -256,6 +256,7 @@ const std::vector<std::string> dotnet_pinvoke_names = {
 	"SystemNative_GetIPv6MulticastOption",
 	"SystemNative_GetLingerOption",
 	"SystemNative_GetLoadLibraryError",
+	"SystemNative_GetLowResolutionTimestamp",
 	"SystemNative_GetMaximumAddressSize",
 	"SystemNative_GetNameInfo",
 	"SystemNative_GetNativeIPInterfaceStatistics",
