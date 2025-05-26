@@ -3,11 +3,11 @@
 
 using namespace xamarin::android;
 
-auto RuntimeUtil::get_class_from_runtime_field (JNIEnv *env, jclass runtime, const char *name, bool make_gref) noexcept -> jclass
+auto RuntimeUtil::get_class_from_runtime_field (JNIEnv *env, jclass runtime, std::string_view const& name, bool make_gref) noexcept -> jclass
 {
-	static constexpr char java_lang_class_sig[] = "Ljava/lang/Class;";
+	constexpr char java_lang_class_sig[] = "Ljava/lang/Class;";
 
-	jfieldID fieldID = env->GetStaticFieldID (runtime, name, java_lang_class_sig);
+	jfieldID fieldID = env->GetStaticFieldID (runtime, name.data (), java_lang_class_sig);
 	if (fieldID == nullptr)
 		return nullptr;
 

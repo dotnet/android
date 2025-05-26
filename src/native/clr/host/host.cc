@@ -18,6 +18,7 @@
 #include <runtime-base/android-system.hh>
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
+#include <runtime-base/search.hh>
 #include <runtime-base/timing-internal.hh>
 #include <shared/log_types.hh>
 #include <startup/zip.hh>
@@ -29,16 +30,60 @@ void Host::clr_error_writer (const char *message) noexcept
 	log_error (LOG_DEFAULT, "CLR error: {}", optional_string (message));
 }
 
-size_t Host::clr_get_runtime_property (const char *key, char *value_buffer, size_t value_buffer_size, void *contract_context) noexcept
+size_t Host::clr_get_runtime_property (const char *key, char *value_buffer, size_t value_buffer_size, [[maybe_unused]] void *contract_context) noexcept
 {
-	log_debug (LOG_DEFAULT, "clr_get_runtime_property (\"{}\"...)", key);
-	return 0;
+	// NOTE: this code was tested locally, but it's **not** used by CoreCLR yet, so there's been no
+	// "live" testing.
+	log_debug (LOG_DEFAULT, "clr_get_runtime_property (\"{}\"...)"sv, optional_string (key));
+	if (application_config.number_of_runtime_properties == 0) [[unlikely]] {
+		log_debug (LOG_DEFAULT, "No runtime properties defined"sv);
+		return 0;
+	}
+
+	// value_buffer_size must have enough space for at least 1 character + the terminating NUL
+	if (key == nullptr || value_buffer == nullptr || value_buffer_size <= 1) [[unlikely]] {
+		log_warn (
+			LOG_DEFAULT,
+			"runtime property retrieval API called with invalid arguments. key == {:p}; value_buffer == {:p}; value_buffer_size == {}"sv,
+			static_cast<const void*>(key),
+			static_cast<void*>(value_buffer),
+			value_buffer_size
+		);
+		return 0;
+	}
+
+	hash_t key_hash = xxhash::hash (key, strlen (key));
+
+	auto equal = [](RuntimePropertyIndexEntry const& entry, hash_t key) -> bool { return entry.key_hash == key; };
+	auto less_than = [](RuntimePropertyIndexEntry const& entry, hash_t key) -> bool { return entry.key_hash < key; };
+	ssize_t idx = Search::binary_search<RuntimePropertyIndexEntry, equal, less_than> (key_hash, runtime_property_index, application_config.number_of_runtime_properties);
+	if (idx < 0) {
+		log_debug (LOG_DEFAULT, "Runtime property '{}' not found"sv, key);
+		return 0;
+	}
+
+	RuntimePropertyIndexEntry const& idx_entry = runtime_property_index[idx];
+	RuntimeProperty const& prop = runtime_properties[idx_entry.index];
+
+	// `value_size` includes the terminating NUL
+	if (prop.value_size > value_buffer_size) {
+		log_warn (
+			LOG_DEFAULT,
+			"Value of property '{}' is longer than available buffer space. Need {}b, available {}b"sv,
+			key,
+			prop.value_size,
+			value_buffer_size
+		);
+	}
+
+	strncpy (value_buffer, prop.value, value_buffer_size);
+	return std::min (static_cast<size_t>(prop.value_size - 1), value_buffer_size - 1);
 }
 
 bool Host::clr_external_assembly_probe (const char *path, void **data_start, int64_t *size) noexcept
 {
 	// TODO: `path` might be a full path, make sure it isn't
-	log_debug (LOG_DEFAULT, "clr_external_assembly_probe (\"{}\"...)", path);
+	log_debug (LOG_DEFAULT, "clr_external_assembly_probe (\"{}\"...)"sv, path);
 	if (data_start == nullptr || size == nullptr) {
 		return false; // TODO: abort instead?
 	}
@@ -73,7 +118,7 @@ bool Host::clr_external_assembly_probe (const char *path, void **data_start, int
 
 		log_warn (
 			LOG_ASSEMBLY,
-			"Assembly '{}' not found in FastDev override directory. Attempting to load from assembly store",
+			"Assembly '{}' not found in FastDev override directory. Attempting to load from assembly store"sv,
 			optional_string (path)
 		);
 	}
@@ -85,11 +130,11 @@ bool Host::clr_external_assembly_probe (const char *path, void **data_start, int
 
 auto Host::zip_scan_callback (std::string_view const& apk_path, int apk_fd, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, uint32_t offset, uint32_t size) -> bool
 {
-	log_debug (LOG_ASSEMBLY, "zip entry: {}", entry_name.get ());
+	log_debug (LOG_ASSEMBLY, "zip entry: {}"sv, entry_name.get ());
 	if (!found_assembly_store) {
 		found_assembly_store = Zip::assembly_store_file_path.compare (0, entry_name.length (), entry_name.get ()) == 0;
 		if (found_assembly_store) {
-			log_debug (LOG_ASSEMBLY, "Found assembly store in '{}': {}", apk_path, Zip::assembly_store_file_path);
+			log_debug (LOG_ASSEMBLY, "Found assembly store in '{}': {}"sv, apk_path, Zip::assembly_store_file_path);
 			AssemblyStore::map (apk_fd, apk_path, Zip::assembly_store_file_path, offset, size);
 			return false; // This will make the scanner keep the APK open
 		}
@@ -101,14 +146,14 @@ auto Host::zip_scan_callback (std::string_view const& apk_path, int apk_fd, dyna
 void Host::scan_filesystem_for_assemblies_and_libraries () noexcept
 {
 	std::string const& native_lib_dir = AndroidSystem::get_native_libraries_dir ();
-	log_debug (LOG_ASSEMBLY, "Looking for assemblies in '{}'", native_lib_dir);
+	log_debug (LOG_ASSEMBLY, "Looking for assemblies in '{}'"sv, native_lib_dir);
 
 	DIR *lib_dir = opendir (native_lib_dir.c_str ());
 	if (lib_dir == nullptr) [[unlikely]] {
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			std::format (
-				"Unable to open native library directory '{}'. {}",
+				"Unable to open native library directory '{}'. {}"sv,
 				native_lib_dir,
 				std::strerror (errno)
 			)
@@ -120,7 +165,7 @@ void Host::scan_filesystem_for_assemblies_and_libraries () noexcept
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			std::format (
-				"Unable to obtain file descriptor for opened directory '{}'. {}",
+				"Unable to obtain file descriptor for opened directory '{}'. {}"sv,
 				native_lib_dir,
 				std::strerror (errno)
 			)
@@ -132,7 +177,7 @@ void Host::scan_filesystem_for_assemblies_and_libraries () noexcept
 		dirent *cur = readdir (lib_dir);
 		if (cur == nullptr) {
 			if (errno != 0) {
-				log_warn (LOG_ASSEMBLY, "Failed to open a directory entry from '{}': {}", native_lib_dir, std::strerror (errno));
+				log_warn (LOG_ASSEMBLY, "Failed to open a directory entry from '{}': {}"sv, native_lib_dir, std::strerror (errno));
 				continue; // No harm, keep going
 			}
 			break; // we're done
@@ -149,13 +194,13 @@ void Host::scan_filesystem_for_assemblies_and_libraries () noexcept
 				continue;
 			}
 
-			log_debug (LOG_ASSEMBLY, "Found assembly store in '{}/{}'", native_lib_dir, Constants::assembly_store_file_name);
+			log_debug (LOG_ASSEMBLY, "Found assembly store in '{}/{}'"sv, native_lib_dir, Constants::assembly_store_file_name);
 			int store_fd = openat (dir_fd, cur->d_name, O_RDONLY);
 			if (store_fd < 0) {
 				Helpers::abort_application (
 					LOG_ASSEMBLY,
 					std::format (
-						"Unable to open assembly store '{}/{}' for reading. {}",
+						"Unable to open assembly store '{}/{}' for reading. {}"sv,
 						native_lib_dir,
 						Constants::assembly_store_file_name,
 						std::strerror (errno)
@@ -169,7 +214,7 @@ void Host::scan_filesystem_for_assemblies_and_libraries () noexcept
 				Helpers::abort_application (
 					LOG_ASSEMBLY,
 					std::format (
-						"Unable to map assembly store '{}/{}'",
+						"Unable to map assembly store '{}/{}'"sv,
 						native_lib_dir,
 						Constants::assembly_store_file_name
 					)
@@ -220,10 +265,10 @@ void Host::create_xdg_directory (jstring_wrapper& home, size_t home_len, std::st
 	static_local_string<SENSIBLE_PATH_MAX> dir (home_len + relative_path.length ());
 	Util::path_combine (dir, home.get_string_view (), relative_path);
 
-	log_debug (LOG_DEFAULT, "Creating XDG directory: {}", optional_string (dir.get ()));
+	log_debug (LOG_DEFAULT, "Creating XDG directory: {}"sv, optional_string (dir.get ()));
 	int rv = Util::create_directory (dir.get (), Constants::DEFAULT_DIRECTORY_MODE);
 	if (rv < 0 && errno != EEXIST) {
-		log_warn (LOG_DEFAULT, "Failed to create XDG directory {}. {}", optional_string (dir.get ()), strerror (errno));
+		log_warn (LOG_DEFAULT, "Failed to create XDG directory {}. {}"sv, optional_string (dir.get ()), strerror (errno));
 	}
 
 	if (!environment_variable_name.empty ()) {
@@ -259,7 +304,7 @@ auto Host::create_delegate (
 		&delegate
 	);
 	log_debug (LOG_ASSEMBLY,
-			   "{}@{}.{} delegate creation result == {:x}; delegate == {:p}",
+			   "{}@{}.{} delegate creation result == {:x}; delegate == {:p}"sv,
 			   assembly_name,
 			   type_name,
 			   method_name,
@@ -272,7 +317,7 @@ auto Host::create_delegate (
 		Helpers::abort_application (
 			LOG_DEFAULT,
 			std::format (
-				"Failed to create delegate for {}.{}.{} (result == {:x})",
+				"Failed to create delegate for {}.{}.{} (result == {:x})"sv,
 				assembly_name,
 				type_name,
 				method_name,
@@ -283,9 +328,21 @@ auto Host::create_delegate (
 	return delegate;
 }
 
-void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeClass, jstring lang, jobjectArray runtimeApksJava,
-	jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset, jobject loader,
-	jobjectArray assembliesJava, jboolean isEmulator, jboolean haveSplitApks) noexcept
+void Host::Java_mono_android_Runtime_initInternal (
+	JNIEnv *env, jclass runtimeClass, jstring lang, jobjectArray runtimeApksJava,
+
+	// TODO: MonoVM used this to load the profiler, probably won't be needed anymore
+	[[maybe_unused]] jstring runtimeNativeLibDir,
+	jobjectArray appDirs,
+
+	// TODO: MonoVM used this to improve performance of System.DateTime + friends, might not be needed anymore
+	[[maybe_unused]] jint localDateTimeOffset,
+	jobject loader,
+
+	// TODO: was used in the past to pre-load assemblies (some versions of Xamarin.Forms needed that).
+	// Might not be needed anymore.
+	[[maybe_unused]] jobjectArray assembliesJava,
+	jboolean isEmulator, jboolean haveSplitApks) noexcept
 {
 	Logger::init_logging_categories ();
 
@@ -300,14 +357,14 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	jstring_array_wrapper applicationDirs (env, appDirs);
 
 	jstring_wrapper jstr (env, lang);
-	Util::set_environment_variable ("LANG", jstr);
+	Util::set_environment_variable ("LANG"sv, jstr);
 
 	jstring_wrapper &home = applicationDirs[Constants::APP_DIRS_FILES_DIR_INDEX];
-	Util::set_environment_variable_for_directory ("TMPDIR", applicationDirs[Constants::APP_DIRS_CACHE_DIR_INDEX]);
-	Util::set_environment_variable_for_directory ("HOME", home);
+	Util::set_environment_variable_for_directory ("TMPDIR"sv, applicationDirs[Constants::APP_DIRS_CACHE_DIR_INDEX]);
+	Util::set_environment_variable_for_directory ("HOME"sv, home);
 	create_xdg_directories_and_environment (home);
 
-	java_TimeZone = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_util_TimeZone", true);
+	java_TimeZone = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_util_TimeZone"sv, true);
 
 	AndroidSystem::detect_embedded_dso_mode (applicationDirs);
 	AndroidSystem::set_running_in_emulator (isEmulator);
@@ -331,7 +388,7 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	// The first entry in the property arrays is for the host contract pointer. Application build makes sure
 	// of that.
 	init_runtime_property_values[0] = host_contract_ptr_buffer.data ();
-	int hr = FastTiming::time_call ("coreclr_initialize", coreclr_initialize,
+	int hr = FastTiming::time_call ("coreclr_initialize"sv, coreclr_initialize,
 		application_config.android_package_name,
 		"Xamarin.Android",
 		(int)application_config.number_of_runtime_properties,
@@ -350,7 +407,7 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 		Helpers::abort_application (
 			LOG_DEFAULT,
 			std::format (
-				"Failed to initialize CoreCLR. Error code: {:x}",
+				"Failed to initialize CoreCLR. Error code: {:x}"sv,
 				static_cast<unsigned int>(hr)
 			)
 		);
@@ -382,7 +439,7 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 
 	// GC threshold is 90% of the max GREF count
 	init.grefGcThreshold                                = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
-	init.grefClass                                      = HostUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_Class", true);
+	init.grefClass                                      = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_Class"sv, true);
 	Class_getName                                       = env->GetMethodID (init.grefClass, "getName", "()Ljava/lang/String;");
 
 	jclass lrefLoaderClass                              = env->GetObjectClass (loader);
@@ -390,10 +447,10 @@ void Host::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass runtimeCl
 	env->DeleteLocalRef (lrefLoaderClass);
 
 	init.grefLoader                                     = env->NewGlobalRef (loader);
-	init.grefIGCUserPeer                                = HostUtil::get_class_from_runtime_field (env, runtimeClass, "mono_android_IGCUserPeer", true);
-	init.grefGCUserPeerable                             = HostUtil::get_class_from_runtime_field (env, runtimeClass, "net_dot_jni_GCUserPeerable", true);
+	init.grefIGCUserPeer                                = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_android_IGCUserPeer"sv, true);
+	init.grefGCUserPeerable                             = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "net_dot_jni_GCUserPeerable"sv, true);
 
-	log_info (LOG_GC, "GREF GC Threshold: {}", init.grefGcThreshold);
+	log_info (LOG_GC, "GREF GC Threshold: {}"sv, init.grefGcThreshold);
 
 	// TODO: GC bridge to initialize here
 
@@ -455,7 +512,7 @@ void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType,
 	dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> managed_type_name;
 	const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
 	managed_type_name.assign (mt_ptr, strlen (mt_ptr));
-	log_debug (LOG_ASSEMBLY, "Registering type: '{}'", managed_type_name.get ());
+	log_debug (LOG_ASSEMBLY, "Registering type: '{}'"sv, managed_type_name.get ());
 	env->ReleaseStringUTFChars (managedType, mt_ptr);
 
 	// TODO: must attach thread to the runtime here
@@ -468,7 +525,7 @@ void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType,
 		internal_timing.end_event (true /* uses_more_info */);
 
 		dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> type;
-		const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
+		mt_ptr = env->GetStringUTFChars (managedType, nullptr);
 		type.assign (mt_ptr, strlen (mt_ptr));
 		env->ReleaseStringUTFChars (managedType, mt_ptr);
 
