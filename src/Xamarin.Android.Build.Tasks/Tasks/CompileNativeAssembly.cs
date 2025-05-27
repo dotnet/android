@@ -12,6 +12,13 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "CNA";
 
+		sealed class Config
+		{
+			public string? AssemblerPath;
+			public string? AssemblerOptions;
+			public string? InputSource;
+		}
+
 		[Required]
 		public ITaskItem[] Sources { get; set; } = [];
 

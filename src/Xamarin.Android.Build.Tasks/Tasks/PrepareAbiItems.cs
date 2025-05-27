@@ -22,6 +22,9 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem[]? AssemblySources { get; set; }
 
+		[Output]
+		public ITaskItem[]? AssemblyIncludes { get; set; }
+
 		public override bool RunTask ()
 		{
 			var sources = new List<ITaskItem> ();

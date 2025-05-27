@@ -729,7 +729,6 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 	gather_bundled_assemblies (runtimeApks, &user_assemblies_count, have_split_apks);
 
 	if (embedded_runtime_config_size > 0) {
-		size_t blob_time_index;
 		if (FastTiming::enabled ()) [[unlikely]] {
 			internal_timing.start_event (TimingEventKind::RuntimeConfigBlob);
 		}
@@ -737,6 +736,7 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 		runtime_config_args.kind = 1;
 		runtime_config_args.runtimeconfig.data.data = reinterpret_cast<const char*>(embedded_runtime_config);
 		runtime_config_args.runtimeconfig.data.data_len = static_cast<uint32_t>(embedded_runtime_config_size);
+
 		monovm_runtimeconfig_initialize (&runtime_config_args, cleanup_runtime_config, nullptr);
 
 		if (FastTiming::enabled ()) [[unlikely]] {
@@ -1157,8 +1157,9 @@ MonodroidRuntime::set_profile_options () noexcept
 			.append (OUTPUT_ARG)
 			.append (output_path.get (), output_path.length ());
 	}
+
 	if (Util::create_directory (AndroidSystem::override_dirs[0], 0777, 000) < 0) {
-		log_warn (LOG_DEFAULT, "Failed to create directory '%s'. %s", AndroidSystem::override_dirs[0], std::strerror (errno));
+		log_warn (LOG_DEFAULT, "Failed to create directory '{}'. {}", optional_string (AndroidSystem::override_dirs[0]), std::strerror (errno));
 	}
 
 	log_warn (LOG_DEFAULT, "Initializing profiler with options: {}", optional_string (value.get ()));

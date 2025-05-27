@@ -579,6 +579,18 @@ namespace Xamarin.Android.Tasks
 		}
 
 		public static AndroidTargetArch GetTargetArch (ITaskItem asmItem) => AbiToTargetArch (GetItemAbi (asmItem));
+
+
+		public static AndroidTargetArch GetRequiredValidArchitecture (ITaskItem item)
+		{
+			AndroidTargetArch ret = GetTargetArch (item);
+
+			if (ret == AndroidTargetArch.None) {
+				throw new InvalidOperationException ($"Internal error: assembly '{item}' doesn't target any architecture.");
+			}
+
+			return ret;
+		}
 #endif // MSBUILD
 
 		static string GetToolsRootDirectoryRelativePath (string androidBinUtilsDirectory)
@@ -779,5 +791,27 @@ namespace Xamarin.Android.Tasks
 		{
 			return Path.Combine (androidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (androidBinUtilsDirectory, toolName));
 		}
+
+		public static AndroidRuntime ParseAndroidRuntime (string androidRuntime)
+		{
+			if (string.Equals (androidRuntime, "CoreCLR", StringComparison.OrdinalIgnoreCase))
+				return AndroidRuntime.CoreCLR;
+			if (string.Equals (androidRuntime, "NativeAOT", StringComparison.OrdinalIgnoreCase))
+				return AndroidRuntime.NativeAOT;
+
+			// Default runtime is MonoVM
+			return AndroidRuntime.MonoVM;
+		}
+
+		public static JavaPeerStyle ParseCodeGenerationTarget (string codeGenerationTarget)
+		{
+			if (Enum.TryParse (codeGenerationTarget, ignoreCase: true, out JavaPeerStyle style))
+				return style;
+
+			// Default is XAJavaInterop1
+			return JavaPeerStyle.XAJavaInterop1;
+		}
+
+		public static object GetProjectBuildSpecificTaskObjectKey (object key, string workingDirectory, string intermediateOutputPath) => (key, workingDirectory, intermediateOutputPath);
 	}
 }

@@ -15,7 +15,7 @@
 
 using namespace xamarin::android::internal;
 
-force_inline bool
+[[gnu::always_inline]] bool
 EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::span<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX> &entry_name, ZipEntryLoadState &state) noexcept
 {
 	entry_name.clear ();
@@ -142,7 +142,7 @@ EmbeddedAssemblies::store_individual_assembly_data (dynamic_local_string<SENSIBL
 	have_and_want_debug_symbols = register_debug_symbols && bundled_debug_data != nullptr;
 }
 
-force_inline void
+[[gnu::always_inline]] void
 EmbeddedAssemblies::zip_load_individual_assembly_entries (std::span<uint8_t> const& buf, uint32_t num_entries, [[maybe_unused]] monodroid_should_register should_register, ZipEntryLoadState &state) noexcept
 {
 	// TODO: do away with all the string manipulation here. Replace it with generating xxhash for the entry name
@@ -256,7 +256,7 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 	verify_assembly_store_and_set_info (payload_start, entry_name.get ());
 }
 
-force_inline void
+[[gnu::always_inline]] void
 EmbeddedAssemblies::zip_load_assembly_store_entries (std::span<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept
 {
 	if (all_required_zip_entries_found ()) {
@@ -272,6 +272,7 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::span<uint8_t> const& b
 		log_debug (LOG_ASSEMBLY, "Looking for assembly store ('%s') and DSOs in APK", assembly_store_file_path.data ());
 	}
 
+	log_debug (LOG_ASSEMBLY, "Looking for assembly stores in APK ('{}')", assembly_store_file_path.data ());
 	for (size_t i = 0uz; i < num_entries; i++) {
 		if (all_required_zip_entries_found ()) {
 			need_to_scan_more_apks = false;
@@ -345,12 +346,12 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 	if (retval < 0) [[unlikely]] {
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
-			Util::monodroid_strdup_printf (
-				"Failed to seek to central directory position in APK: %s. retval=%d errno=%d, File=%s",
+			std::format (
+				"Failed to seek to central directory position in APK: {}. retval={} errno={}, File={}",
 				std::strerror (errno),
 				retval,
 				errno,
-				apk_name
+				optional_string (apk_name)
 			)
 		);
 	}
@@ -653,7 +654,7 @@ EmbeddedAssemblies::zip_read_field (T const& buf, size_t index, size_t count, dy
 }
 
 bool
-EmbeddedAssemblies::zip_read_entry_info (std::span<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name, ZipEntryLoadState &state)
+EmbeddedAssemblies::zip_read_entry_info (std::span<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name, ZipEntryLoadState &state) noexcept
 {
 	constexpr size_t CD_COMPRESSION_METHOD_OFFSET = 10uz;
 	constexpr size_t CD_UNCOMPRESSED_SIZE_OFFSET  = 24uz;

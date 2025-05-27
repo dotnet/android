@@ -149,7 +149,7 @@ Util::create_public_directory (const char *dir)
 {
 	int ret = create_directory (dir, 0777, 0);
 	if (ret < 0) {
-		log_warn (LOG_DEFAULT, "Failed to create public directory '%s'. %s", dir, std::strerror (errno));
+		log_warn (LOG_DEFAULT, "Failed to create directory '{}'. {}", dir, std::strerror (errno));
 	}
 }
 

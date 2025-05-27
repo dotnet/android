@@ -27,7 +27,7 @@
 #include <shared/cpp-util.hh>
 #include "cppcompat.hh"
 #include "shared-constants.hh"
-#include "xxhash.hh"
+#include <shared/xxhash.hh>
 #include "util.hh"
 
 #include <concepts>
@@ -305,12 +305,12 @@ namespace xamarin::android::internal {
 		static void get_assembly_data (XamarinAndroidBundledAssembly const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept;
 		static void get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept;
 
-		void zip_load_entries (int fd, const char *apk_name, monodroid_should_register should_register);
-		void zip_load_individual_assembly_entries (std::span<uint8_t> const& buf, uint32_t num_entries, monodroid_should_register should_register, ZipEntryLoadState &state) noexcept;
-		void zip_load_assembly_store_entries (std::span<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept;
-		bool zip_load_entry_common (size_t entry_index, std::span<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX> &entry_name, ZipEntryLoadState &state) noexcept;
-		bool zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries);
-		bool zip_adjust_data_offset (int fd, ZipEntryLoadState &state);
+		static void zip_load_entries (int fd, const char *apk_name, monodroid_should_register should_register);
+		static void zip_load_individual_assembly_entries (std::span<uint8_t> const& buf, uint32_t num_entries, monodroid_should_register should_register, ZipEntryLoadState &state) noexcept;
+		static void zip_load_assembly_store_entries (std::span<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept;
+		static bool zip_load_entry_common (size_t entry_index, std::span<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX> &entry_name, ZipEntryLoadState &state) noexcept;
+		static bool zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries);
+		static bool zip_adjust_data_offset (int fd, ZipEntryLoadState &state);
 
 		template<size_t BufSize>
 		static bool zip_extract_cd_info (std::array<uint8_t, BufSize> const& buf, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries) noexcept;
@@ -330,7 +330,7 @@ namespace xamarin::android::internal {
 		template<ByteArrayContainer T>
 		static bool zip_read_field (T const& buf, size_t index, size_t count, dynamic_local_string<SENSIBLE_PATH_MAX>& characters) noexcept;
 
-		bool zip_read_entry_info (std::span<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name, ZipEntryLoadState &state);
+		static bool zip_read_entry_info (std::span<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name, ZipEntryLoadState &state);
 
 		[[gnu::always_inline]]
 		static std::tuple<void*, size_t> get_wrapper_dso_payload_pointer_and_size (md_mmap_info const& map_info, const  char *file_name) noexcept
@@ -412,20 +412,20 @@ namespace xamarin::android::internal {
 		static const TypeMapModuleEntry* binary_search (uint32_t key, const TypeMapModuleEntry *arr, uint32_t n) noexcept;
 #endif
 		template<bool NeedsNameAlloc>
-		void set_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
-		void set_assembly_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
-		void set_debug_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
+		static void set_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
+		static void set_assembly_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
+		static void set_debug_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
 
-		void verify_assembly_store_and_set_info (void *data_start, const char *name) noexcept;
+		static void verify_assembly_store_and_set_info (void *data_start, const char *name) noexcept;
 
-		void load_embedded_assembly_store () noexcept
+		static void load_embedded_assembly_store () noexcept
 		{
 			verify_assembly_store_and_set_info (embedded_assembly_store, "embedded");
 		}
 
-		void map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState &state) noexcept;
-		const AssemblyStoreIndexEntry* find_assembly_store_entry (hash_t hash, const AssemblyStoreIndexEntry *entries, size_t entry_count) noexcept;
-		void store_individual_assembly_data (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState const& state, monodroid_should_register should_register) noexcept;
+		static void map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState &state) noexcept;
+		static const AssemblyStoreIndexEntry* find_assembly_store_entry (hash_t hash, const AssemblyStoreIndexEntry *entries, size_t entry_count) noexcept;
+		static void store_individual_assembly_data (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState const& state, monodroid_should_register should_register) noexcept;
 
 		constexpr static size_t get_mangled_name_max_size_overhead ()
 		{
@@ -503,14 +503,13 @@ namespace xamarin::android::internal {
 		size_t                 type_map_count;
 #endif // DEBUG
 		static inline const char   *assemblies_prefix_override = nullptr;
-
-		md_mmap_info           runtime_config_blob_mmap{};
-		void                  *runtime_config_data = nullptr;
-		size_t                 runtime_config_data_size = 0uz;
-		bool                   runtime_config_blob_found = embedded_runtime_config_size > 0u;
-		uint32_t               number_of_mapped_assembly_stores = 0u;
-		uint32_t               number_of_zip_dso_entries = 0u;
-		bool                   need_to_scan_more_apks = true;
+		static inline md_mmap_info  runtime_config_blob_mmap{};
+		static inline void         *runtime_config_data = nullptr;
+		static inline size_t        runtime_config_data_size = 0uz;
+		static inline bool          runtime_config_blob_found = embedded_runtime_config_size > 0u;
+		static inline uint32_t      number_of_mapped_assembly_stores = 0u;
+		static inline uint32_t      number_of_zip_dso_entries = 0u;
+		static inline bool          need_to_scan_more_apks = true;
 
 		static inline AssemblyStoreIndexEntry *assembly_store_hashes = nullptr;
 		static inline xamarin::android::mutex  assembly_decompress_mutex {};

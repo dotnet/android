@@ -106,6 +106,7 @@ partial class AssemblyStoreGenerator
 		uint infoCount = (uint)infos.Count;
 		string storeDirectory = Path.Combine (baseOutputDirectory, androidAbi);
 		string storePath = Path.Combine (storeDirectory, $"assemblies.{androidAbi}.blob.so");
+
 		var index = new List<AssemblyStoreIndexEntry> ();
 		var descriptors = new List<AssemblyStoreEntryDescriptor> ();
 		ulong namesSize = 0;
@@ -120,6 +121,7 @@ partial class AssemblyStoreGenerator
 		ulong curPos = assemblyDataStart;
 
 		Directory.CreateDirectory (storeDirectory);
+
 		using var fs = File.Open (storePath, FileMode.Create, FileAccess.Write, FileShare.Read);
 		fs.Seek ((long)curPos, SeekOrigin.Begin);
 

@@ -5,46 +5,49 @@
       "Size": 3036
     },
     "classes.dex": {
-      "Size": 389676
+      "Size": 22484
     },
     "lib/arm64-v8a/lib__Microsoft.Android.Resource.Designer.dll.so": {
-      "Size": 18296
+      "Size": 18288
     },
     "lib/arm64-v8a/lib_Java.Interop.dll.so": {
       "Size": 86688
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
-      "Size": 116080
+      "Size": 117712
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 22408
+      "Size": 22384
     },
     "lib/arm64-v8a/lib_System.Console.dll.so": {
-      "Size": 24376
+      "Size": 24392
     },
     "lib/arm64-v8a/lib_System.Linq.dll.so": {
       "Size": 25336
     },
     "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
-      "Size": 634344
+      "Size": 628216
     },
     "lib/arm64-v8a/lib_System.Runtime.dll.so": {
-      "Size": 20040
+      "Size": 20056
     },
     "lib/arm64-v8a/lib_System.Runtime.InteropServices.dll.so": {
-      "Size": 21584
+      "Size": 21480
     },
     "lib/arm64-v8a/lib_UnnamedProject.dll.so": {
       "Size": 20024
+    },
+    "lib/arm64-v8a/libarc.bin.so": {
+      "Size": 18872
     },
     "lib/arm64-v8a/libmono-component-marshal-ilgen.so": {
       "Size": 36440
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 493384
+      "Size": 1524752
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3196512
+      "Size": 3101112
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 71976
@@ -59,16 +62,16 @@
       "Size": 165000
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 15144
+      "Size": 19536
     },
     "META-INF/BNDLTOOL.RSA": {
       "Size": 1221
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 3167
+      "Size": 3266
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 3040
+      "Size": 3139
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 2178
@@ -95,5 +98,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2865612
+  "PackageSize": 3078677
 }
