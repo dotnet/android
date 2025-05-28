@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -14,37 +15,28 @@ public class CreateEmbeddedAssemblyStore : AndroidTask
 	public override string TaskPrefix => "CEAS";
 
 	[Required]
-	public string AndroidBinUtilsDirectory { get; set; }
+	public string AndroidBinUtilsDirectory { get; set; } = "";
 
 	[Required]
-	public string AppSharedLibrariesDir { get; set; }
+	public string AppSharedLibrariesDir { get; set; } = "";
 
 	[Required]
-	public string AssemblySourcesDir { get; set; }
-
-	[Required]
-	public string CompressedAssembliesDir { get; set; }
+	public string AssemblySourcesDir { get; set; } = "";
 
 	[Required]
 	public bool AssemblyStoreEmbeddedInRuntime { get; set; }
 
 	[Required]
-	public bool Debug { get; set; }
+	public bool IncludeDebugSymbols { get; set; }
 
 	[Required]
-	public bool EnableCompression { get; set; }
+	public ITaskItem[] ResolvedUserAssemblies { get; set; } = [];
 
 	[Required]
-	public string ProjectFullPath { get; set; }
+	public ITaskItem[] ResolvedFrameworkAssemblies { get; set; } = [];
 
 	[Required]
-	public ITaskItem[] ResolvedUserAssemblies { get; set; }
-
-	[Required]
-	public ITaskItem[] ResolvedFrameworkAssemblies { get; set; }
-
-	[Required]
-	public string [] SupportedAbis { get; set; }
+	public string [] SupportedAbis { get; set; } = [];
 
 	public override bool RunTask ()
 	{
@@ -70,27 +62,14 @@ public class CreateEmbeddedAssemblyStore : AndroidTask
 
 	bool EmbedAssemblyStore ()
 	{
-		bool compress = !Debug && EnableCompression;
-		IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>? compressedAssembliesInfo = null;
+		var assemblies = ResolvedFrameworkAssemblies.Concat (ResolvedUserAssemblies).Where (asm => !(AssemblyPackagingHelper.ShouldSkipAssembly (Log, asm)));
+		var assemblyStorePaths = AssemblyPackagingHelper.CreateAssemblyStore (
+			Log, assemblies,
+			Path.Combine (AppSharedLibrariesDir, "embedded"),
+			SupportedAbis,
+			IncludeDebugSymbols
+		);
 
-		if (compress) {
-			string key = CompressedAssemblyInfo.GetKey (ProjectFullPath);
-			Log.LogDebugMessage ($"[{TaskPrefix}] Retrieving assembly compression info with key '{key}'");
-			compressedAssembliesInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>> (key, RegisteredTaskObjectLifetime.Build);
-			if (compressedAssembliesInfo == null) {
-				throw new InvalidOperationException ($"Assembly compression info not found for key '{key}'. Compression will not be performed.");
-			}
-		}
-
-		var storeBuilder = new AssemblyStoreBuilder (Log);
-
-		// Add user assemblies
-		AssemblyPackagingHelper.AddAssembliesFromCollection (Log, SupportedAbis, ResolvedUserAssemblies, DoAddAssembliesFromArchCollection);
-
-		// Add framework assemblies
-		AssemblyPackagingHelper.AddAssembliesFromCollection (Log, SupportedAbis, ResolvedFrameworkAssemblies, DoAddAssembliesFromArchCollection);
-
-		Dictionary<AndroidTargetArch, string> assemblyStorePaths = storeBuilder.Generate (Path.Combine (AppSharedLibrariesDir, "embedded"));
 		foreach (var kvp in assemblyStorePaths) {
 			string abi = MonoAndroidHelper.ArchToAbi (kvp.Key);
 			string inputFile = kvp.Value;
@@ -107,21 +86,5 @@ public class CreateEmbeddedAssemblyStore : AndroidTask
 		}
 
 		return !Log.HasLoggedErrors;
-
-		void DoAddAssembliesFromArchCollection (TaskLoggingHelper log, AndroidTargetArch arch, ITaskItem assembly)
-		{
-			string sourcePath = CompressAssembly (assembly);
-			storeBuilder.AddAssembly (sourcePath, assembly, includeDebugSymbols: Debug);
-			return;
-		}
-
-		string CompressAssembly (ITaskItem assembly)
-		{
-			if (!compress) {
-				return assembly.ItemSpec;
-			}
-
-			return AssemblyCompression.Compress (Log, assembly, compressedAssembliesInfo, CompressedAssembliesDir);
-		}
 	}
 }

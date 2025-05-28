@@ -108,13 +108,17 @@ class ELFEmbeddingHelper
 			var fi = new FileInfo (inputFile);
 			if (fi.Exists) {
 				inputFileSize = fi.Length;
-				sanitizedInputFilePath = inputFile.Replace ("\\", "\\\\");
+				sanitizedInputFilePath = inputFile!.Replace ("\\", "\\\\");
 			} else if (!missingContentOK) {
 				throw new InvalidOperationException ($"Internal error: input file '{inputFile}' does not exist");
 			}
 		}
 
-		string asmSourceFile = NativeAssemblerItemsHelper.GetSourcePath (log, item.NativeAssemblerMode, outputDirectory, arch);
+		string? asmSourceFile = NativeAssemblerItemsHelper.GetSourcePath (log, item.NativeAssemblerMode, outputDirectory, arch);
+		if (String.IsNullOrEmpty (asmSourceFile)) {
+			log.LogError ("Unable to embed a binary file in native assembly, no assembly source path given.");
+			return;
+		}
 
 		Directory.CreateDirectory (Path.GetDirectoryName (asmSourceFile));
 		using var fs = File.Open (asmSourceFile, FileMode.Create, FileAccess.Write, FileShare.Read);
