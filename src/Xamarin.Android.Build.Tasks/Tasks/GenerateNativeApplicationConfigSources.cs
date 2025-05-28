@@ -50,6 +50,9 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool TargetsCLR { get; set; }
 
+		[Required]
+		public string AndroidBinUtilsDirectory { get; set; } = "";
+
 		public bool EnableMarshalMethods { get; set; }
 		public bool EnableManagedMarshalMethodsLookup { get; set; }
 		public string? RuntimeConfigBinFilePath { get; set; }
@@ -248,7 +251,6 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
 			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (ProjectSpecificTaskObjectKey (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey), RegisteredTaskObjectLifetime.Build);
 			LLVMIR.LlvmIrComposer appConfigAsmGen;
 
@@ -272,6 +274,17 @@ namespace Xamarin.Android.Tasks
 					IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
 				};
 			} else {
+				bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
+				ELFEmbeddingHelper.EmbedBinary (
+					Log,
+					SupportedAbis,
+					AndroidBinUtilsDirectory,
+					RuntimeConfigBinFilePath,
+					ELFEmbeddingHelper.KnownEmbedItems.RuntimeConfig,
+					EnvironmentOutputDirectory,
+					missingContentOK: !haveRuntimeConfigBlob
+				);
+
 				appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {
 					UsesMonoAOT = usesMonoAOT,
 					UsesMonoLLVM = EnableLLVM,

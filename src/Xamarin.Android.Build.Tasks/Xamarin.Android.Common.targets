@@ -344,6 +344,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' and ('$(EmbedAssembliesIntoApk)' != 'true' or '$(AndroidIncludeDebugSymbols)' == 'true') ">false</AndroidUseAssemblyStore>
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' ">true</AndroidUseAssemblyStore>
   <_AndroidUseAssemblyStore>$(AndroidUseAssemblyStore)</_AndroidUseAssemblyStore>
+
+  <_EmbedAssemblyStoreInRuntime Condition=" '$(_AndroidUseAssemblyStore)' == 'True' And '$(_AndroidEmbedAssemblyStoreInRuntime)' == 'True' ">true</_EmbedAssemblyStoreInRuntime>
+  <_EmbedAssemblyStoreInRuntime Condition=" '$(_EmbedAssemblyStoreInRuntime)' != 'true' ">false</_EmbedAssemblyStoreInRuntime>
 </PropertyGroup>
 
 <!-- For CoreCLR assembly stores are always on, individual assembly entries in the APK aren't supported.
@@ -1881,7 +1884,7 @@ because xbuild doesn't support framework reference assemblies.
   DependsOnTargets="$(_GeneratePackageManagerJavaDependsOn)"
   Inputs="@(_GeneratePackageManagerJavaInputs)"
   Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
-  
+
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
       MainAssembly="$(TargetPath)"
@@ -1915,7 +1918,8 @@ because xbuild doesn't support framework reference assemblies.
       EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
       CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
       TargetsCLR="$(_AndroidUseCLR)"
-      ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)">
+      ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)"
+      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)">
   </GenerateNativeApplicationConfigSources>
 
   <GenerateNativeMarshalMethodSources
@@ -1927,7 +1931,7 @@ because xbuild doesn't support framework reference assemblies.
       SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"
       SupportedAbis="@(_BuildTargetAbis)">
   </GenerateNativeMarshalMethodSources>
-      
+
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
   <ItemGroup>
     <FileWrites Include="@(_EnvironmentAssemblySource)" />
@@ -2336,7 +2340,7 @@ because xbuild doesn't support framework reference assemblies.
     in monodroid.
   -->
   <CreateAssemblyStore
-      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
+      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' And '$(_EmbedAssemblyStoreInRuntime)' != 'True' "
       AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
       ResolvedFrameworkAssemblies="@(_BuildApkResolvedFrameworkAssemblies)"
@@ -2347,7 +2351,7 @@ because xbuild doesn't support framework reference assemblies.
   </CreateAssemblyStore>
 
   <WrapAssembliesAsSharedLibraries
-      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
+      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' And '$(_EmbedAssemblyStoreInRuntime)' != 'True' "
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
       IntermediateOutputPath="$(IntermediateOutputPath)"
@@ -2373,17 +2377,6 @@ because xbuild doesn't support framework reference assemblies.
       LibraryProjectJars="@(ExtractedJarImports)">
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectJarContentFilesForArchive>
-
-  <!-- CoreCLR builds embed runtime config in libxamarin-app.so -->
-  <CollectRuntimeConfigFilesForArchive
-      Condition=" '$(_AndroidRuntime)' == 'MonoVM' "
-      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-      IntermediateOutputPath="$(IntermediateOutputPath)"
-      RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
-      SupportedAbis="@(_BuildTargetAbis)"
-      RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">
-    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
-  </CollectRuntimeConfigFilesForArchive>
 
   <CollectNativeFilesForArchive
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"

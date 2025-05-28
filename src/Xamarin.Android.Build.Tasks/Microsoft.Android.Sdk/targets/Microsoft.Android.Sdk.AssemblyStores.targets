@@ -21,11 +21,6 @@
           DependsOnTargets="_PrepareCreateEmbeddedAssemblyStoreOutputItems"
           Inputs="@(_CreateEmbeddedAssemblyStoreAssembly)"
           Outputs="@(_EmbeddedAssemblyStoreSourceFiles)">
-    <PropertyGroup>
-      <_EmbedAssemblyStoreInRuntime Condition=" '$(_AndroidUseAssemblyStore)' And '$(_AndroidEmbedAssemblyStoreInRuntime)' ">true</_EmbedAssemblyStoreInRuntime>
-      <_EmbedAssemblyStoreInRuntime Condition=" '$(_EmbedAssemblyStoreInRuntime)' != 'true' ">false</_EmbedAssemblyStoreInRuntime>
-    </PropertyGroup>
-
     <CreateEmbeddedAssemblyStore
         AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
         AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
