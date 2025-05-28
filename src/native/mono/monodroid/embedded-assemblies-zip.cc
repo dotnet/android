@@ -184,9 +184,9 @@ EmbeddedAssemblies::verify_assembly_store_and_set_info (void *data_start, const 
 	if (header->magic != ASSEMBLY_STORE_MAGIC) {
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
-			Util::monodroid_strdup_printf (
-				"Assembly store '%s' is not a valid .NET for Android assembly store file",
-				name
+			std::format (
+				"Assembly store '{}' is not a valid .NET for Android assembly store file",
+				optional_string (name)
 			)
 		);
 	}
@@ -194,9 +194,9 @@ EmbeddedAssemblies::verify_assembly_store_and_set_info (void *data_start, const 
 	if (header->version != ASSEMBLY_STORE_FORMAT_VERSION) {
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
-			Util::monodroid_strdup_printf (
-				"Assembly store '%s' uses format version 0x%x, instead of the expected 0x%x",
-				name,
+			std::format (
+				"Assembly store '{}' uses format version 0x{:x}, instead of the expected 0x{:x}",
+				optional_string (name),
 				header->version,
 				ASSEMBLY_STORE_FORMAT_VERSION
 			)
@@ -269,10 +269,9 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::span<uint8_t> const& b
 		load_embedded_assembly_store ();
 		log_debug (LOG_ASSEMBLY, "Looking for DSOs in APK");
 	} else {
-		log_debug (LOG_ASSEMBLY, "Looking for assembly store ('%s') and DSOs in APK", assembly_store_file_path.data ());
+		log_debug (LOG_ASSEMBLY, "Looking for assembly store ('{}') and DSOs in APK", assembly_store_file_path);
 	}
 
-	log_debug (LOG_ASSEMBLY, "Looking for assembly stores in APK ('{}')", assembly_store_file_path.data ());
 	for (size_t i = 0uz; i < num_entries; i++) {
 		if (all_required_zip_entries_found ()) {
 			need_to_scan_more_apks = false;
@@ -338,9 +337,9 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		);
 	}
 
-	log_debug (LOG_ASSEMBLY, "Central directory offset: %u", cd_offset);
-	log_debug (LOG_ASSEMBLY, "Central directory size: %u", cd_size);
-	log_debug (LOG_ASSEMBLY, "Central directory entries: %u", cd_entries);
+	log_debug (LOG_ASSEMBLY, "Central directory offset: {}", cd_offset);
+	log_debug (LOG_ASSEMBLY, "Central directory size: {}", cd_size);
+	log_debug (LOG_ASSEMBLY, "Central directory entries: {}", cd_entries);
 
 	off_t retval = ::lseek (fd, static_cast<off_t>(cd_offset), SEEK_SET);
 	if (retval < 0) [[unlikely]] {

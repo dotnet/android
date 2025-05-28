@@ -428,6 +428,7 @@ namespace xamarin::android::internal {
 
 		static void load_embedded_assembly_store () noexcept
 		{
+			log_debug (LOG_ASSEMBLY, "Loading embedded assembly store");
 			verify_assembly_store_and_set_info (embedded_assembly_store, "embedded");
 		}
 
