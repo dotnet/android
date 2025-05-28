@@ -8,6 +8,7 @@ using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Text;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 using Java.Interop.Tools.TypeNameMappings;
 using Xamarin.Android.Tools;
@@ -237,6 +238,10 @@ namespace Xamarin.Android.Tasks
 			}
 
 			var uniqueNativeLibraries = new List<ITaskItem> ();
+
+			// Number of DSOs that will be packaged, it may be different to the number of items in the above
+			// `uniqueNativeLibraries` list.
+			uint packagedNativeLibrariesCount = 0;
 			var seenNativeLibraryNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 			if (NativeLibraries != null) {
 				foreach (ITaskItem item in NativeLibraries) {
@@ -246,8 +251,18 @@ namespace Xamarin.Android.Tasks
 						continue;
 					}
 
+					if (!ELFHelper.IsEmptyAOTLibrary (Log, item.ItemSpec)) {
+						packagedNativeLibrariesCount++;
+					}
+
 					seenNativeLibraryNames.Add (name);
 					uniqueNativeLibraries.Add (item);
+				}
+
+				// libxamarin-app.so is not in NativeLibraries, but we must count it
+				if (!seenNativeLibraryNames.Contains ("libxamarin-app.so")) {
+					uniqueNativeLibraries.Add (new TaskItem ("libxamarin-app.so"));
+					packagedNativeLibrariesCount++;
 				}
 			}
 
@@ -264,6 +279,7 @@ namespace Xamarin.Android.Tasks
 					NumberOfAssembliesInApk = assemblyCount,
 					BundledAssemblyNameWidth = assemblyNameWidth,
 					NativeLibraries = uniqueNativeLibraries,
+					PackagedNativeLibrariesCount = packagedNativeLibrariesCount,
 					AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
 					JNIEnvInitializeToken = jnienv_initialize_method_token,
 					JNIEnvRegisterJniNativesToken = jnienv_registerjninatives_method_token,
@@ -301,6 +317,7 @@ namespace Xamarin.Android.Tasks
 					BundledAssemblyNameWidth = assemblyNameWidth,
 					MonoComponents = (MonoComponent)monoComponents,
 					NativeLibraries = uniqueNativeLibraries,
+					PackagedNativeLibrariesCount = packagedNativeLibrariesCount,
 					HaveAssemblyStore = UseAssemblyStore,
 					AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
 					JNIEnvInitializeToken = jnienv_initialize_method_token,
