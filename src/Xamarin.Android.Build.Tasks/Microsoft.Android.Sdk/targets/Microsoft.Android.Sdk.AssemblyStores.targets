@@ -21,15 +21,17 @@
           DependsOnTargets="_PrepareCreateEmbeddedAssemblyStoreOutputItems"
           Inputs="@(_CreateEmbeddedAssemblyStoreAssembly)"
           Outputs="@(_EmbeddedAssemblyStoreSourceFiles)">
+    <PropertyGroup>
+      <_EmbedAssemblyStoreInRuntime Condition=" '$(_AndroidUseAssemblyStore)' And '$(_AndroidEmbedAssemblyStoreInRuntime)' ">true</_EmbedAssemblyStoreInRuntime>
+      <_EmbedAssemblyStoreInRuntime Condition=" '$(_EmbedAssemblyStoreInRuntime)' != 'true' ">false</_EmbedAssemblyStoreInRuntime>
+    </PropertyGroup>
+
     <CreateEmbeddedAssemblyStore
         AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
         AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
         AssemblySourcesDir="$(IntermediateOutputPath)android"
-        AssemblyStoreEmbeddedInRuntime="$(_AndroidEmbedAssemblyStoreInRuntime)"
-        CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)\test\"
-        Debug="$(AndroidIncludeDebugSymbols)"
-        EnableCompression="$(AndroidEnableAssemblyCompression)"
-        ProjectFullPath="$(MSBuildProjectFullPath)"
+        AssemblyStoreEmbeddedInRuntime="$(_EmbedAssemblyStoreInRuntime)"
+        IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
         ResolvedUserAssemblies="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths)"
         ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
         SupportedAbis="@(_BuildTargetAbis)" />
