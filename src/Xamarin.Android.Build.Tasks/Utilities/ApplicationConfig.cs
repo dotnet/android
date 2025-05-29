@@ -30,7 +30,6 @@ namespace Xamarin.Android.Tasks
 		public bool   uses_assembly_preload;
 		public bool   broken_exception_transitions;
 		public bool   jni_add_native_method_registration_attribute_present;
-		public bool   have_runtime_config_blob;
 		public bool   have_assemblies_blob;
 		public bool   marshal_methods_enabled;
 		public bool   ignore_split_configs;

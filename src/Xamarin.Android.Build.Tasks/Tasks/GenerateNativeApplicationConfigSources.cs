@@ -312,7 +312,6 @@ namespace Xamarin.Android.Tasks
 					PackageNamingPolicy = pnp,
 					BoundExceptionType = boundExceptionType,
 					JniAddNativeMethodRegistrationAttributePresent = NativeCodeGenState.TemplateJniAddNativeMethodRegistrationAttributePresent,
-					HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
 					NumberOfAssembliesInApk = assemblyCount,
 					BundledAssemblyNameWidth = assemblyNameWidth,
 					MonoComponents = (MonoComponent)monoComponents,

@@ -182,7 +182,6 @@ namespace Xamarin.Android.Tasks
 		public bool BrokenExceptionTransitions { get; set; }
 		public global::Android.Runtime.BoundExceptionType BoundExceptionType { get; set; }
 		public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
-		public bool HaveRuntimeConfigBlob { get; set; }
 		public bool HaveAssemblyStore { get; set; }
 		public int NumberOfAssembliesInApk { get; set; }
 		public int BundledAssemblyNameWidth { get; set; } // including the trailing NUL
@@ -238,7 +237,6 @@ namespace Xamarin.Android.Tasks
 				uses_assembly_preload = UsesAssemblyPreload,
 				broken_exception_transitions = BrokenExceptionTransitions,
 				jni_add_native_method_registration_attribute_present = JniAddNativeMethodRegistrationAttributePresent,
-				have_runtime_config_blob = HaveRuntimeConfigBlob,
 				have_assemblies_blob = HaveAssemblyStore,
 				marshal_methods_enabled = MarshalMethodsEnabled,
 				managed_marshal_methods_lookup_enabled = ManagedMarshalMethodsLookupEnabled,
