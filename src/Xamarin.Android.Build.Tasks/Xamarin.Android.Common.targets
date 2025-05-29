@@ -47,7 +47,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNativeFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNonEmptyDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectPdbFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CollectRuntimeConfigFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectTypeMapFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CompressAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ComputeHash" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -2490,17 +2489,6 @@ because xbuild doesn't support framework reference assemblies.
       LibraryProjectJars="@(ExtractedJarImports)">
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectJarContentFilesForArchive>
-
-  <!-- CoreCLR builds embed runtime config in libxamarin-app.so -->
-  <CollectRuntimeConfigFilesForArchive
-      Condition=" '$(_AndroidRuntime)' == 'MonoVM' "
-      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-      IntermediateOutputPath="$(IntermediateOutputPath)"
-      RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
-      SupportedAbis="@(_BuildTargetAbis)"
-      RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">
-    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
-  </CollectRuntimeConfigFilesForArchive>
 
   <CollectNativeFilesForArchive
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"
