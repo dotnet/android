@@ -14,6 +14,8 @@ namespace xamarin::android {
 	public:
 		static auto open_assembly (std::string_view const& name, int64_t &size) noexcept -> void*;
 
+		// Maps the embedded assembly store.
+		static void map () noexcept;
 		static void map (int fd, std::string_view const& apk_path, std::string_view const& store_path, uint32_t offset, uint32_t size) noexcept;
 
 		static void map (int fd, std::string_view const& file_path, uint32_t offset, uint32_t size) noexcept
@@ -23,6 +25,7 @@ namespace xamarin::android {
 
 	private:
 		static void set_assembly_data_and_size (uint8_t* source_assembly_data, uint32_t source_assembly_data_size, uint8_t*& dest_assembly_data, uint32_t& dest_assembly_data_size) noexcept;
+		static void verify_assembly_store_and_set_info (void *data_start, std::string_view const& name) noexcept;
 
 		// Returns a tuple of <assembly_data_pointer, data_size>
 		static auto get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData const& e, std::string_view const& name) noexcept -> std::tuple<uint8_t*, uint32_t>;

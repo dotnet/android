@@ -344,9 +344,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' and ('$(EmbedAssembliesIntoApk)' != 'true' or '$(AndroidIncludeDebugSymbols)' == 'true') ">false</AndroidUseAssemblyStore>
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' ">true</AndroidUseAssemblyStore>
   <_AndroidUseAssemblyStore>$(AndroidUseAssemblyStore)</_AndroidUseAssemblyStore>
-
-  <_EmbedAssemblyStoreInRuntime Condition=" '$(_AndroidUseAssemblyStore)' == 'True' And '$(_AndroidEmbedAssemblyStoreInRuntime)' == 'True' ">true</_EmbedAssemblyStoreInRuntime>
-  <_EmbedAssemblyStoreInRuntime Condition=" '$(_EmbedAssemblyStoreInRuntime)' != 'true' ">false</_EmbedAssemblyStoreInRuntime>
 </PropertyGroup>
 
 <!-- For CoreCLR assembly stores are always on, individual assembly entries in the APK aren't supported.
@@ -357,6 +354,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </PropertyGroup>
 
 <PropertyGroup>
+  <_EmbedAssemblyStoreInRuntime Condition=" '$(_AndroidUseAssemblyStore)' == 'True' And '$(_AndroidEmbedAssemblyStoreInRuntime)' == 'True' ">true</_EmbedAssemblyStoreInRuntime>
+  <_EmbedAssemblyStoreInRuntime Condition=" '$(_EmbedAssemblyStoreInRuntime)' != 'true' ">false</_EmbedAssemblyStoreInRuntime>
+
   <_AndroidAotStripLibraries Condition=" '$(_AndroidAotStripLibraries)' == '' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</_AndroidAotStripLibraries>
   <AndroidAotEnableLazyLoad Condition=" '$(AndroidAotEnableLazyLoad)' == '' And '$(AotAssemblies)' == 'true' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</AndroidAotEnableLazyLoad>
   <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and ('$(UsingMicrosoftNETSdkRazor)' == 'true') ">False</AndroidEnableMarshalMethods>
@@ -1774,6 +1774,7 @@ because xbuild doesn't support framework reference assemblies.
       <Output TaskParameter="AssemblySources" ItemName="_MarshalMethodsAssemblySource" />
   </PrepareAbiItems>
   <PrepareAbiItems
+    Condition=" '$(_AndroidRuntime)' == 'MonoVM' "
     BuildTargetAbis="@(_BuildTargetAbis)"
     NativeSourcesDir="$(_NativeAssemblySourceDir)"
     Mode="EmbeddedRuntimeConfig">

@@ -231,8 +231,20 @@ void Host::scan_filesystem_for_assemblies_and_libraries () noexcept
 
 void Host::gather_assemblies_and_libraries (jstring_array_wrapper& runtimeApks, bool have_split_apks)
 {
+	// Embedded assembly takes priority over the one found on the filesystem.
+	if (found_assembly_store) {
+		// We have an embedded store, map it
+		AssemblyStore::map ();
+	}
+
 	if (!AndroidSystem::is_embedded_dso_mode_enabled ()) {
 		scan_filesystem_for_assemblies_and_libraries ();
+		return;
+	}
+
+	if (found_assembly_store) {
+		// In CoreCLR we only look in the APK for the assembly store. Since we have
+		// an embedded one, though, there's no need to waste time scanning the ZIP.
 		return;
 	}
 
