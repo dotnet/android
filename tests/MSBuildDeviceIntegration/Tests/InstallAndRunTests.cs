@@ -1380,5 +1380,26 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
 			Assert.IsTrue (didLaunch, "Activity should have started.");
 		}
+
+		[Test]
+		[TestCase (false)]
+		[TestCase (true)]
+		public void AppStartsWithEmbeddedAssemblyStore (bool useCLR)
+		{
+			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
+			proj.SetProperty ("_AndroidEmbedAssemblyStoreInRuntime", "true");
+			proj.SetProperty ("UseMonoRuntime", useCLR ? "false" : "true");
+
+			using var builder = CreateApkBuilder ();
+			builder.Save (proj);
+
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+			Assert.IsTrue (dotnet.Run (), "`dotnet run --no-build` should succeed");
+
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+			Assert.IsTrue (didLaunch, "Activity should have started.");
+		}
 	}
 }

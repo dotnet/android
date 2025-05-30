@@ -796,5 +796,46 @@ public class Test
 			}
 		}
 
+		[Test]
+		[TestCase (false)]
+		[TestCase (true)]
+		public void CheckEmbeddedAssemblyStorePackaging (bool useCLR)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true
+			};
+
+			AndroidTargetArch[] supportedArches = new[] {
+				AndroidTargetArch.Arm64,
+				AndroidTargetArch.X86_64,
+			};
+
+			proj.SetRuntimeIdentifiers (supportedArches);
+			proj.SetProperty ("AndroidUseAssemblyStore", "true");
+			proj.SetProperty ("_AndroidEmbedAssemblyStoreInRuntime", "true");
+			proj.SetProperty ("UseMonoRuntime", useCLR ? "false" : "true");
+
+			using var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj), "build should have succeeded.");
+			string apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+
+			var knownAssemblyStoreFiles = new HashSet<string> (StringComparer.Ordinal);
+			foreach (AndroidTargetArch arch in supportedArches) {
+				string archName = MonoAndroidHelper.ArchToAbi (arch);
+				knownAssemblyStoreFiles.Add ($"lib/{archName}/libassemblies.{archName}.blob.so");
+			}
+
+			var foundAssemblyStoreFiles = new HashSet<string> (StringComparer.Ordinal);
+			using var zip = ZipHelper.OpenZip (apk);
+
+			foreach (var entry in zip) {
+				if (knownAssemblyStoreFiles.Contains (entry.FullName)) {
+					foundAssemblyStoreFiles.Add (entry.FullName);
+				}
+			}
+
+			Assert.IsFalse (foundAssemblyStoreFiles.Count != 0, $"APK should not contain any of the files: {FoundFiles ()}");
+			string FoundFiles () => String.Join (", ", foundAssemblyStoreFiles);
+		}
 	}
 }
