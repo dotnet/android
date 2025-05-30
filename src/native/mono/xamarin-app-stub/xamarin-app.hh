@@ -238,7 +238,6 @@ struct ApplicationConfig
 	bool uses_assembly_preload;
 	bool broken_exception_transitions;
 	bool jni_add_native_method_registration_attribute_present;
-	bool have_runtime_config_blob;
 	bool have_assembly_store;
 	bool marshal_methods_enabled;
 	bool ignore_split_configs;
@@ -393,6 +392,12 @@ MONO_API MONO_API_EXPORT const char* const mm_class_names[];
 MONO_API MONO_API_EXPORT const MarshalMethodName mm_method_names[];
 
 #endif // def RELEASE
+
+MONO_API MONO_API_EXPORT size_t embedded_runtime_config_size;
+MONO_API MONO_API_EXPORT uint8_t embedded_runtime_config[];
+
+MONO_API MONO_API_EXPORT size_t embedded_assembly_store_size;
+MONO_API MONO_API_EXPORT uint8_t embedded_assembly_store[];
 
 using get_function_pointer_fn = void(*)(uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr);
 MONO_API MONO_API_EXPORT void xamarin_app_init (JNIEnv *env, get_function_pointer_fn fn) noexcept;

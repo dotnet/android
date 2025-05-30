@@ -102,7 +102,7 @@ class DSOWrapperGenerator
 		File.Copy (stubPath, outputFile, overwrite: true);
 
 		string quotedOutputFile = MonoAndroidHelper.QuoteFileNameArgument (outputFile);
-		string objcopy = Path.Combine (config.AndroidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (config.AndroidBinUtilsDirectory, "llvm-objcopy"));
+		string objcopy = MonoAndroidHelper.GetLlvmObjcopyPath (config.AndroidBinUtilsDirectory);;
 		var args = new List<string> {
 			"--add-section",
 			$"payload={MonoAndroidHelper.QuoteFileNameArgument (payloadFilePath)}",

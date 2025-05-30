@@ -355,3 +355,6 @@ const char *init_runtime_property_names[] = {
 char *init_runtime_property_values[] {
 	nullptr,
 };
+
+size_t embedded_assembly_store_size = 0;
+uint8_t embedded_assembly_store[0];
