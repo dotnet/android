@@ -107,7 +107,6 @@ class NativeRuntimeComponents
 
 			new BclArchive ("libSystem.Globalization.Native.a"),
 			new BclArchive ("libSystem.IO.Compression.Native.a"),
-			new BclArchive ("libSystem.IO.Ports.Native.a"),
 			new BclArchive ("libSystem.Native.a"),
 			new BclArchive ("libSystem.Security.Cryptography.Native.Android.a", jniOnLoadName: "AndroidCryptoNative_InitLibraryOnLoad") {
 				SymbolsToPreserve = new (StringComparer.Ordinal) {
