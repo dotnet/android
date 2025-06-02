@@ -37,10 +37,12 @@ bool clr_typemap_java_to_managed (const char *java_type_name, char const** assem
 	return TypeMapper::typemap_java_to_managed (java_type_name, assembly_name, managed_type_token_id);
 }
 
-MarkCrossReferencesFtn clr_initialize_gc_bridge (MarkCrossReferencesFtn callback) noexcept
+BridgeProcessingFtn clr_initialize_gc_bridge (
+	BridgeProcessingStartedFtn bridge_processing_started_callback,
+	CollectGCHandlesFtn collect_gchandles_callback,
+	BridgeProcessingFinishedFtn bridge_processing_finished_callback) noexcept
 {
-	GCBridge::set_finish_callback (callback);
-	return GCBridge::mark_cross_references;
+	return GCBridge::initialize_callback (bridge_processing_started_callback, collect_gchandles_callback, bridge_processing_finished_callback);
 }
 
 void monodroid_log (LogLevel level, LogCategories category, const char *message) noexcept
@@ -165,7 +167,7 @@ void _monodroid_lref_log_delete (int lrefc, jobject handle, char type, const cha
 
 void _monodroid_gc_wait_for_bridge_processing ()
 {
-	// mono_gc_wait_for_bridge_processing (); - replace with the new GC bridge call, when we have it
+	GCBridge::wait_for_bridge_processing ();
 }
 
 void _monodroid_detect_cpu_and_architecture (uint16_t *built_for_cpu, uint16_t *running_on_cpu, unsigned char *is64bit)

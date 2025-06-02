@@ -38,8 +38,11 @@ namespace xamarin::android {
 			JNIEnv *env = nullptr;
 			jvm->GetEnv ((void**)&env, JNI_VERSION_1_6);
 			if (env == nullptr) {
-				// TODO: attach to the runtime thread here
-				jvm->GetEnv ((void**)&env, JNI_VERSION_1_6);
+				JavaVMAttachArgs args;
+				args.version = JNI_VERSION_1_6;
+				args.name = nullptr;
+				args.group = nullptr;
+				jvm->AttachCurrentThread(&env, &args);
 				abort_unless (env != nullptr, "Unable to get a valid pointer to JNIEnv");
 			}
 

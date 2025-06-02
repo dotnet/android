@@ -101,7 +101,9 @@ namespace Android.Runtime
 		/// <returns>A function pointer that should be passed to JavaMarshal.Initialize() on startup.</returns>
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern delegate* unmanaged<MarkCrossReferences*, void> clr_initialize_gc_bridge (
-			delegate* unmanaged<MarkCrossReferences*, void> bridge_processing_finished_callback
+			delegate* unmanaged<void> bridge_processing_started_callback,
+			delegate* unmanaged<MarkCrossReferences*, IntPtr> collect_gchandles,
+			delegate* unmanaged<MarkCrossReferences*, IntPtr, void> bridge_processing_finished_callback
 		);
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
