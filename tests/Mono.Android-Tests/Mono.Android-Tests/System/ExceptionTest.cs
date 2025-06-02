@@ -29,7 +29,6 @@ namespace Xamarin.Android.RuntimeTests {
 		}
 
 		[Test]
-		[Category ("CoreCLRIgnore")] //TODO: https://github.com/dotnet/android/issues/10069
 		[Category ("NativeAOTIgnore")] // NativeAOT has very limited stack traces
 		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void InnerExceptionIsSet ()
