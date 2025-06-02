@@ -38,12 +38,11 @@ static partial class JavaInteropRuntime
 			var settings    = new DiagnosticSettings ();
 			settings.AddDebugDotnetLog ();
 
-			var typeManager = new ManagedTypeManager ();
 			var options = new NativeAotRuntimeOptions {
 				EnvironmentPointer          = jnienv,
 				ClassLoader                 = new JniObjectReference (classLoader),
-				TypeManager                 = typeManager,
-				ValueManager                = new ManagedValueManager (),
+				TypeManager                 = new ManagedTypeManager (),
+				ValueManager                = ManagedValueManager.Instance, // TODO this will likely blow up in AOT at runtime currently
 				UseMarshalMemberBuilder     = false,
 				JniGlobalReferenceLogWriter = settings.GrefLog,
 				JniLocalReferenceLogWriter  = settings.LrefLog,

@@ -39,10 +39,9 @@ bool clr_typemap_java_to_managed (const char *java_type_name, char const** assem
 
 BridgeProcessingFtn clr_initialize_gc_bridge (
 	BridgeProcessingStartedFtn bridge_processing_started_callback,
-	CollectGCHandlesFtn collect_gchandles_callback,
 	BridgeProcessingFinishedFtn bridge_processing_finished_callback) noexcept
 {
-	return GCBridge::initialize_callback (bridge_processing_started_callback, collect_gchandles_callback, bridge_processing_finished_callback);
+	return GCBridge::initialize_callback (bridge_processing_started_callback, bridge_processing_finished_callback);
 }
 
 void monodroid_log (LogLevel level, LogCategories category, const char *message) noexcept

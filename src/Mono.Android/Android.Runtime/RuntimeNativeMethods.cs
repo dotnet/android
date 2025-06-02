@@ -100,10 +100,9 @@ namespace Android.Runtime
 		/// <param name="bridge_processing_finished_callback">A function pointer to a C# callback that will be invoked when bridge processing has completed.</param>
 		/// <returns>A function pointer that should be passed to JavaMarshal.Initialize() on startup.</returns>
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern delegate* unmanaged<MarkCrossReferences*, void> clr_initialize_gc_bridge (
+		internal static extern delegate* unmanaged<MarkCrossReferencesArgs*, void> clr_initialize_gc_bridge (
 			delegate* unmanaged<void> bridge_processing_started_callback,
-			delegate* unmanaged<MarkCrossReferences*, IntPtr> collect_gchandles,
-			delegate* unmanaged<MarkCrossReferences*, IntPtr, void> bridge_processing_finished_callback
+			delegate* unmanaged<MarkCrossReferencesArgs*, void> bridge_processing_finished_callback
 		);
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]

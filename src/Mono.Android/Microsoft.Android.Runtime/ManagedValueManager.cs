@@ -23,18 +23,21 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	Dictionary<int, List<GCHandle>>?   RegisteredInstances = new ();
 
-	internal unsafe ManagedValueManager ()
+	private static Lazy<ManagedValueManager> s_instance = new (() => new ManagedValueManager ());
+	public static ManagedValueManager Instance => s_instance.Value;
+
+	private unsafe ManagedValueManager ()
 	{
+		// There can only be one instance of ManagedValueManager because we can call JavaMarshal.Initialize only once.
 		var mark_cross_references_ftn = RuntimeNativeMethods.clr_initialize_gc_bridge (
 			&BridgeProcessingStarted,
-			&CollectGCHandles,
 			&BridgeProcessingFinished);
 		JavaMarshal.Initialize (mark_cross_references_ftn);
 	}
 
-	public override void WaitForGCBridgeProcessing()
+	public override void WaitForGCBridgeProcessing ()
 	{
-		// AndroidRuntimeInternal.WaitForGCBridgeProcessing(); // TODO
+		AndroidRuntimeInternal.WaitForBridgeProcessing ();
 	}
 
 	public override void CollectPeers ()
@@ -55,7 +58,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		List<Exception>? exceptions = null;
 		foreach (var peer in peers) {
 			try {
-				if (peer.Target is IDisposable disposable)
+				if (TryGetTarget (peer, out IDisposable? disposable))
 					disposable.Dispose ();
 			}
 			catch (Exception e) {
@@ -65,12 +68,16 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		}
 		if (exceptions != null)
 			throw new AggregateException ("Exceptions while collecting peers.", exceptions);
+
+		GC.Collect ();
 	}
 
 	public override void AddPeer (IJavaPeerable value)
 	{
 		if (RegisteredInstances == null)
 			throw new ObjectDisposedException (nameof (ManagedValueManager));
+
+		WaitForGCBridgeProcessing ();
 
 		var r = value.PeerReference;
 		if (!r.IsValid)
@@ -84,6 +91,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		lock (RegisteredInstances) {
 			List<GCHandle>? peers;
 			if (!RegisteredInstances.TryGetValue (key, out peers)) {
+				// Console.WriteLine ($"Adding new peer list for key {key} with PeerReference={value.PeerReference} in {GetType ().AssemblyQualifiedName}");
 				peers = new List<GCHandle> () {
 					CreateReferenceTrackingHandle (value)
 				};
@@ -93,24 +101,82 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 			for (int i = peers.Count - 1; i >= 0; i--) {
 				var p   = peers [i];
-				if (p.Target is not IJavaPeerable peer)
+				if (!TryGetTarget (p, out IJavaPeerable? peer))
 					continue;
 				if (!JniEnvironment.Types.IsSameObject (peer.PeerReference, value.PeerReference))
 					continue;
 				if (Replaceable (p)) {
+					FreeReferenceTrackingHandle (p);
 					peers [i] = CreateReferenceTrackingHandle (value);
 				} else {
 					WarnNotReplacing (key, value, peer);
 				}
 				return;
 			}
+
 			peers.Add (CreateReferenceTrackingHandle (value));
 		}
 	}
 
+	public override void DisposePeer (IJavaPeerable value)
+	{
+		if (value == null)
+			throw new ArgumentNullException (nameof (value));
+
+		if (RegisteredInstances == null)
+			throw new ObjectDisposedException (nameof (ManagedValueManager));
+
+		WaitForGCBridgeProcessing ();
+
+		int key = value.JniIdentityHashCode;
+
+		lock (RegisteredInstances) {
+			List<GCHandle>? peers;
+			if (!RegisteredInstances.TryGetValue (key, out peers))
+				return;
+
+			for (int i = peers.Count - 1; i >= 0; i--) {
+				var p = peers [i];
+
+				if (TryGetTarget (p, out IJavaPeerable? peer)
+					&& ReferenceEquals (value, peer)) {
+					FreeReferenceTrackingHandle (p);
+					peers.RemoveAt (i);
+					GC.KeepAlive (peer);
+				}
+			}
+			if (peers.Count == 0)
+				RegisteredInstances.Remove (key);
+		}
+
+		base.DisposePeer (value);
+	}
+
+	public override void DisposePeerUnlessReferenced (IJavaPeerable value)
+	{
+		if (RegisteredInstances == null)
+			throw new ObjectDisposedException (GetType ().Name);
+
+		if (value == null)
+			throw new ArgumentNullException (nameof (value));
+
+		var h = value.PeerReference;
+		if (!h.IsValid)
+			return;
+
+		var o = PeekPeer (h);
+		if (o != null && object.ReferenceEquals (o, value))
+			return;
+
+		// This is the only difference from base.DisposePeerUnlessReferenced:
+		// - we're calling the virtual `DisposePeer` instead of the private
+		//   one in the base class
+		DisposePeer (value);
+	}
+
 	static bool Replaceable (GCHandle handle)
 	{
-		if (handle.Target is not IJavaPeerable peer)
+		if (!TryGetTarget (handle, out IJavaPeerable? peer))
 			return true;
 		return peer.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable);
 	}
@@ -139,6 +205,8 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		if (!reference.IsValid)
 			return null;
 
+		WaitForGCBridgeProcessing ();
+
 		int key = GetJniIdentityHashCode (reference);
 
 		lock (RegisteredInstances) {
@@ -148,39 +216,13 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 			for (int i = peers.Count - 1; i >= 0; i--) {
 				var p = peers [i];
-				if (p.Target is IJavaPeerable peer && JniEnvironment.Types.IsSameObject (reference, peer.PeerReference))
+				if (TryGetTarget (p, out IJavaPeerable? peer) && JniEnvironment.Types.IsSameObject (reference, peer.PeerReference))
 					return peer;
 			}
 			if (peers.Count == 0)
 				RegisteredInstances.Remove (key);
 		}
 		return null;
-	}
-
-	private GCHandle PeekPeerHandle (JniObjectReference reference)
-	{
-		if (RegisteredInstances == null)
-			throw new ObjectDisposedException (nameof (ManagedValueManager));
-
-		if (!reference.IsValid)
-			return default;
-
-		int key = GetJniIdentityHashCode (reference);
-
-		lock (RegisteredInstances) {
-			List<GCHandle>? peers;
-			if (!RegisteredInstances.TryGetValue (key, out peers))
-				return default;
-
-			for (int i = peers.Count - 1; i >= 0; i--) {
-				var p = peers [i];
-				if (p.Target is IJavaPeerable peer && JniEnvironment.Types.IsSameObject (reference, peer.PeerReference))
-					return p;
-			}
-			if (peers.Count == 0)
-				RegisteredInstances.Remove (key);
-		}
-		return default;
 	}
 
 	public override void RemovePeer (IJavaPeerable value)
@@ -191,7 +233,17 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		if (value == null)
 			throw new ArgumentNullException (nameof (value));
 
-		int key = value.JniIdentityHashCode;
+		WaitForGCBridgeProcessing ();
+
+		RemoveRegisteredInstance (value, freeHandle: true);
+	}
+
+	private void RemoveRegisteredInstance (IJavaPeerable target, bool freeHandle)
+	{
+		if (RegisteredInstances == null)
+			throw new ObjectDisposedException (nameof (ManagedValueManager));
+
+		int key = target.JniIdentityHashCode;
 		lock (RegisteredInstances) {
 			List<GCHandle>? peers;
 			if (!RegisteredInstances.TryGetValue (key, out peers))
@@ -199,9 +251,10 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 			for (int i = peers.Count - 1; i >= 0; i--) {
 				var p   = peers [i];
-				if (object.ReferenceEquals (value, p.Target)) {
+				if (TryGetTarget (p, out IJavaPeerable? peer) && ReferenceEquals (target, peer)) {
 					peers.RemoveAt (i);
-					FreeHandle (p);
+					if (freeHandle)
+						FreeReferenceTrackingHandle (p);
 				}
 			}
 			if (peers.Count == 0)
@@ -209,8 +262,40 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		}
 	}
 
+	private GCHandle PeekPeerHandle (JniObjectReference reference)
+	{
+		if (RegisteredInstances == null)
+			throw new ObjectDisposedException (nameof (ManagedValueManager));
+
+		if (!reference.IsValid)
+			return default;
+
+		WaitForGCBridgeProcessing ();
+
+		int key = GetJniIdentityHashCode (reference);
+
+		lock (RegisteredInstances) {
+			List<GCHandle>? peers;
+			if (!RegisteredInstances.TryGetValue (key, out peers))
+				return default;
+
+			for (int i = peers.Count - 1; i >= 0; i--) {
+				var p = peers[i];
+				if (TryGetTarget (p, out IJavaPeerable? peer)
+					&& JniEnvironment.Types.IsSameObject (reference, peer.PeerReference)) {
+					return p;
+				}
+			}
+			if (peers.Count == 0)
+				RegisteredInstances.Remove (key);
+		}
+		return default;
+	}
+
 	public override void FinalizePeer (IJavaPeerable value)
 	{
+		WaitForGCBridgeProcessing ();
+
 		var h = value.PeerReference;
 		var o = Runtime.ObjectReferenceManager;
 		// MUST NOT use SafeHandle.ReferenceType: local refs are tied to a JniEnvironment
@@ -224,6 +309,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 						value.JniIdentityHashCode.ToString ("x", CultureInfo.InvariantCulture),
 						RuntimeHelpers.GetHashCode (value).ToString ("x", CultureInfo.InvariantCulture),
 						value.GetType ().ToString ());
+
 			}
 			RemovePeer (value);
 			value.SetPeerReference (new JniObjectReference ());
@@ -246,6 +332,8 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	public override void ActivatePeer (IJavaPeerable? self, JniObjectReference reference, ConstructorInfo cinfo, object?[]? argumentValues)
 	{
+		WaitForGCBridgeProcessing ();
+
 		try {
 			ActivateViaReflection (reference, cinfo, argumentValues);
 		} catch (Exception e) {
@@ -284,11 +372,13 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		if (RegisteredInstances == null)
 			throw new ObjectDisposedException (nameof (ManagedValueManager));
 
+		WaitForGCBridgeProcessing ();
+
 		lock (RegisteredInstances) {
 			var peers = new List<JniSurfacedPeerInfo> (RegisteredInstances.Count);
 			foreach (var e in RegisteredInstances) {
 				foreach (var p in e.Value) {
-					if (p.Target is not IJavaPeerable peer)
+					if (!TryGetTarget (p, out IJavaPeerable? peer))
 						continue;
 					peers.Add (new JniSurfacedPeerInfo (e.Key, new WeakReference<IJavaPeerable> (peer)));
 				}
@@ -297,136 +387,102 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		}
 	}
 
-	// private unsafe struct HandleContext
-	// {
-	// 	public IntPtr ControlBlock;
-	// 	public IntPtr Handle;
-
-	// 	public static HandleContext* Alloc(IntPtr controlBlock)
-	// 	{
-	// 		var size = (uint)Marshal.SizeOf<HandleContext>();
-	// 		var ctx = (HandleContext*)NativeMemory.AllocZeroed(1, size);
-	// 		ctx->ControlBlock = controlBlock;
-	// 		return ctx;
-	// 	}
-
-	// 	public static void Free(HandleContext* ctx)
-	// 	{
-	// 		if (ctx->ControlBlock != IntPtr.Zero) {
-	// 			NativeMemory.Free((void*)ctx->ControlBlock);
-	// 		}
-
-	// 		NativeMemory.Free((void*)ctx);
-	// 	}
-	// }
-
-	static unsafe GCHandle CreateReferenceTrackingHandle(IJavaPeerable value)
+	[StructLayout (LayoutKind.Sequential)]
+	unsafe struct HandleContext
 	{
-		// JniObjectReferenceControlBlock* controlBlock = (JniObjectReferenceControlBlock*)value.JniObjectReferenceControlBlock;
-		// Console.WriteLine($"Creating reference tracking handle for {value.GetType().FullName} with JniObjectReferenceControlBlock: {controlBlock->handle}, type: {controlBlock->handle_type}, weak_handle: {controlBlock->weak_handle}, refs_added: {controlBlock->refs_added}");
+		public IntPtr GCHandle;
+		public bool IsCollected;
+		public IntPtr ControlBlock;
 
-		return JavaMarshal.CreateReferenceTrackingHandle(value, value.JniObjectReferenceControlBlock);
-	}
+		static readonly nuint Size = (nuint) Marshal.SizeOf<HandleContext> ();
 
-	static unsafe void FreeHandle(GCHandle handle)
-	{
-		Console.WriteLine($"Freeing handle");
-		IntPtr context = JavaMarshal.GetContext(handle);
-		if (context != IntPtr.Zero)
+		public static HandleContext* AllocZeroed ()
 		{
-			var ctx = (JniObjectReferenceControlBlock*)context;
-			Console.WriteLine($"Freeing handle with JniObjectReferenceControlBlock: {ctx->handle}, type: {ctx->handle_type}, weak_handle: {ctx->weak_handle}, refs_added: {ctx->refs_added}");
-			NativeMemory.Free((void*)context);
+			return (HandleContext*)NativeMemory.AllocZeroed (1, Size);
+		}
+
+		public static void Free (ref HandleContext* ctx)
+		{
+			if (ctx == null)
+				return;
+
+			NativeMemory.Free (ctx);
+			ctx = null;
 		}
 	}
 
+	static unsafe void FreeReferenceTrackingHandle (GCHandle handle)
+	{
+		var context = (HandleContext*) JavaMarshal.GetContext (handle);
+		handle.Free ();
+		HandleContext.Free (ref context);
+	}
+
+	static unsafe GCHandle CreateReferenceTrackingHandle (IJavaPeerable value)
+	{
+		var ctx = HandleContext.AllocZeroed ();
+		var handle = JavaMarshal.CreateReferenceTrackingHandle (value, ctx);
+
+		ctx->GCHandle = GCHandle.ToIntPtr (handle);
+		ctx->IsCollected = false;
+		ctx->ControlBlock = value.JniObjectReferenceControlBlock;
+
+		return handle;
+	}
+
+	// TODO: The main reason this method is necessary is that there is a SIGSEGV when we access
+	// handle.Target of a reference tracking handle when its context is null
+	static unsafe bool TryGetTarget<T> (GCHandle handle, [NotNullWhen (true)] out T? target)
+		where T : class
+	{
+		target = null;
+
+		if (handle.IsAllocated && JavaMarshal.GetContext (handle) != null) {
+			target = handle.Target as T;
+		}
+
+		return target is not null;
+	}
+
 	[UnmanagedCallersOnly]
-	internal static void BridgeProcessingStarted()
+	internal static void BridgeProcessingStarted ()
 	{
 		AndroidRuntimeInternal.BridgeProcessing = true;
 	}
 
 	[UnmanagedCallersOnly]
-	internal static unsafe IntPtr CollectGCHandles(MarkCrossReferences* mcr)
+	internal static unsafe void BridgeProcessingFinished (MarkCrossReferencesArgs* mcr)
 	{
-		Console.WriteLine($"CollectGCHandles (mcr.ComponentsLen={mcr->ComponentsLen})");
-
-		List<GCHandle> handles = [];
-		for (int i = 0; i < mcr->ComponentsLen; i++)
-		{
-			for (int j = 0; j < mcr->Components[i].Count; j++)
-			{
-				Console.WriteLine($"CollectGCHandles i={i} j={j}");
-
-				var ctx = mcr->Components[i].Context[j];
-				if (ctx == IntPtr.Zero)
-				{
-					Console.WriteLine($"CollectGCHandles: controlBlock->handle is zero, skipping");
-					handles.Add(default);
-				}
-				else
-				{
-					var controlBlock = (JniObjectReferenceControlBlock*)ctx;
-					var reference = new JniObjectReference(controlBlock->handle, (JniObjectReferenceType)controlBlock->handle_type);
-					Console.WriteLine($"CollectGCHandles: controlBlock->handle={controlBlock->handle}, type={controlBlock->handle_type}, weak_handle={controlBlock->weak_handle}, refs_added={controlBlock->refs_added}, reference={reference}");
-					GCHandle handle = ((ManagedValueManager)AndroidRuntime.CurrentRuntime.ValueManager).PeekPeerHandle(reference);
-					Console.WriteLine($"CollectGCHandles: PeekPeerHandle returned {handle.IsAllocated} for reference {reference}");
-					handles.Add(handle);
-				}
-
-			}
-		}
-
-		Console.WriteLine($"CollectGCHandles: collected {handles.Count} handles");
-
-		return GCHandle.ToIntPtr(GCHandle.Alloc(handles));
-	}
-
-	[UnmanagedCallersOnly]
-	internal static unsafe void BridgeProcessingFinished(MarkCrossReferences* mcr, IntPtr handles)
-	{
-		Console.WriteLine($"BridgeProcessingFinished (mcr.ComponentsLen={mcr->ComponentsLen})");
-		List<GCHandle>? originalHandles = GCHandle.FromIntPtr(handles).Target as List<GCHandle>;
-		if (originalHandles is null)
-		{
-			Console.WriteLine($"BridgeProcessingFinished: invalid handles {handles}, target={GCHandle.FromIntPtr(handles).Target}");
-			throw new InvalidOperationException($"Invalid GCHandles collection");
-		}
-
 		List<GCHandle> handlesToFree = [];
 
-		for (int i = 0; i < mcr->ComponentsLen; i++)
-		{
-			for (int j = 0; j < mcr->Components[i].Count; j++)
-			{
-				Console.WriteLine($"BridgeProcessingFinished i={i} j={j}");
+		for (int i = 0; (nuint)i < mcr->ComponentCount; i++) {
+			for (int j = 0; (nuint)j < mcr->Components [i].Count; j++) {
+				var context = (HandleContext*) mcr->Components [i].Contexts [j];
+				if (context->IsCollected) {
+					var handle = GCHandle.FromIntPtr (context->GCHandle);
 
-				var controlBlock = (JniObjectReferenceControlBlock*)mcr->Components[i].Context[j];
-				if (controlBlock->handle == IntPtr.Zero)
-				{
-					Console.WriteLine($"BridgeProcessingFinished: controlBlock->handle is zero, skipping");
+					// Only free handles that haven't been freed yet
+					if (handle.IsAllocated && JavaMarshal.GetContext (handle) != null) {
+						handlesToFree.Add (handle);
+					}
 
-					// TODO figure out how to get the GCHandle here
-					// GCHandle handle = PeekGCHandle(new JniObjectReference(controlBlock->handle, controlBlock->handle_type));
-					// if (handle.IsAllocated && handle.Target is IJavaPeerable peer)
-					// {
-					// 	Console.WriteLine($"BridgeProcessingFinished: handle for {peer.GetType().FullName} will be freed");
-					// 	handlesToFree.Add(handle);
-					// 	JniObjectReferenceControlBlock.Free(ref controlBlock);
-					// }
+					// Cleanup: Remove the handle from RegisteredInstances
+					if (TryGetTarget (handle, out IJavaPeerable? target)) {
+						Instance.RemoveRegisteredInstance (target, freeHandle: false);
+					}
+
+					HandleContext.Free (ref context);
 				}
 			}
 		}
 
-		Console.WriteLine($"BridgeProcessingFinished: freeing {handlesToFree.Count} handles");
-
-		JavaMarshal.FinishCrossReferenceProcessing(mcr, CollectionsMarshal.AsSpan(handlesToFree));
+		JavaMarshal.FinishCrossReferenceProcessing (mcr, CollectionsMarshal.AsSpan (handlesToFree));
 		AndroidRuntimeInternal.BridgeProcessing = false;
 	}
 
 	const BindingFlags ActivationConstructorBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
-	static readonly Type[] XAConstructorSignature = new Type[] { typeof(IntPtr), typeof(JniHandleOwnership) };
+	static readonly Type[] XAConstructorSignature = new Type[] { typeof (IntPtr), typeof (JniHandleOwnership) };
 
 	protected override bool TryConstructPeer (
 			IJavaPeerable self,
@@ -435,6 +491,8 @@ class ManagedValueManager : JniRuntime.JniValueManager
 			[DynamicallyAccessedMembers (Constructors)]
 			Type type)
 	{
+		WaitForGCBridgeProcessing ();
+
 		var c = type.GetConstructor (ActivationConstructorBindingFlags, null, XAConstructorSignature, null);
 		if (c != null) {
 			var args = new object[] {
@@ -450,6 +508,8 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)]out object? result)
 	{
+		WaitForGCBridgeProcessing ();
+
 		var proxy = value as JavaProxyThrowable;
 		if (proxy != null) {
 			result  = proxy.InnerException;

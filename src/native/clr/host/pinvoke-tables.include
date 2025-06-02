@@ -42,7 +42,7 @@ namespace {
 	}};
 
 	//64-bit DotNet p/invoke table
-	std::array<PinvokeEntry, 477> dotnet_pinvokes {{
+	std::array<PinvokeEntry, 478> dotnet_pinvokes {{
 		{0x99f2ee02463000, "CompressionNative_Crc32", nullptr},
 		{0xb38afc8bfe830b, "SystemNative_Bind", nullptr},
 		{0x190fe65d8736dcb, "SystemNative_TryGetIPPacketInformation", nullptr},
@@ -132,6 +132,7 @@ namespace {
 		{0x27944922cd8283ca, "CryptoNative_EvpSha384", nullptr},
 		{0x2795a01c2c64aea1, "CryptoNative_HmacReset", nullptr},
 		{0x27f3d9266af2b315, "SystemNative_GetIPv4Address", nullptr},
+		{0x287bb84178e256e0, "SystemNative_GetLowResolutionTimestamp", nullptr},
 		{0x2925953889c48cab, "SystemNative_CreateNetworkChangeListenerSocket", nullptr},
 		{0x2a49948ae20571cb, "SystemNative_SchedGetAffinity", nullptr},
 		{0x2b45d7cdf6e8e0c7, "AndroidCryptoNative_X509StoreDeleteEntry", nullptr},
@@ -563,7 +564,7 @@ constexpr hash_t system_globalization_native_library_hash = 0x28b5c8fca080abd5;
 	}};
 
 	//32-bit DotNet p/invoke table
-	std::array<PinvokeEntry, 477> dotnet_pinvokes {{
+	std::array<PinvokeEntry, 478> dotnet_pinvokes {{
 		{0xaf6b1c, "AndroidCryptoNative_RsaPrivateDecrypt", nullptr},
 		{0x1733089, "SystemNative_SetTerminalInvalidationHandler", nullptr},
 		{0x1dd1f00, "AndroidCryptoNative_Aes192Cfb8", nullptr},
@@ -934,6 +935,7 @@ constexpr hash_t system_globalization_native_library_hash = 0x28b5c8fca080abd5;
 		{0xc5a83c28, "AndroidCryptoNative_SSLStreamCreateWithKeyStorePrivateKeyEntry", nullptr},
 		{0xc6d5929c, "SystemNative_LowLevelMonitor_TimedWait", nullptr},
 		{0xc6f2fb9e, "AndroidCryptoNative_X509ChainSetCustomTrustStore", nullptr},
+		{0xc6fc0368, "SystemNative_GetLowResolutionTimestamp", nullptr},
 		{0xc717b16e, "CryptoNative_EvpMdCtxDestroy", nullptr},
 		{0xc746b70c, "AndroidCryptoNative_DsaSign", nullptr},
 		{0xc83527e0, "CryptoNative_HmacReset", nullptr},
@@ -1054,5 +1056,5 @@ constexpr hash_t system_globalization_native_library_hash = 0xa66f1e5a;
 #endif
 
 constexpr size_t internal_pinvokes_count = 27;
-constexpr size_t dotnet_pinvokes_count = 477;
+constexpr size_t dotnet_pinvokes_count = 478;
 } // end of anonymous namespace

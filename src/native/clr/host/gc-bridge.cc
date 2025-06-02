@@ -6,16 +6,14 @@ using namespace xamarin::android;
 
 void GCBridge::wait_for_bridge_processing () noexcept
 {
-	log_write (LOG_DEFAULT, LogLevel::Info, "GCBridge: wait_for_bridge_processing...");
+	// log_write (LOG_DEFAULT, LogLevel::Info, "GCBridge: wait_for_bridge_processing - waiting to acquire processing mutex");
 	std::shared_lock<std::shared_mutex> lock (processing_mutex);
-	log_write (LOG_DEFAULT, LogLevel::Info, "GCBridge: wait_for_bridge_processing done");
+	// log_write (LOG_DEFAULT, LogLevel::Info, "GCBridge: wait_for_bridge_processing - acquired processing mutex");
 }
 
 void GCBridge::initialize_on_load (JNIEnv *env) noexcept
 {
-	// abort_if_invalid_pointer_argument ("env", env);
-
-	log_write (LOG_DEFAULT, LogLevel::Info, "Initializing GC bridge");
+	abort_if_invalid_pointer_argument (env, "env");
 
 	jclass lref = env->FindClass ("java/lang/Runtime");
 	jmethodID Runtime_getRuntime = env->GetStaticMethodID (lref, "getRuntime", "()Ljava/lang/Runtime;");
@@ -27,29 +25,25 @@ void GCBridge::initialize_on_load (JNIEnv *env) noexcept
 		Runtime_gc != nullptr && Runtime_instance != nullptr,
 		"Failed to look up Java GC runtime API."
 	);
-
-	log_write (LOG_DEFAULT, LogLevel::Info, "Initialized GC bridge");
 }
 
 void GCBridge::trigger_java_gc () noexcept
 {
-	log_write (LOG_DEFAULT, LogLevel::Info, "Triggering Java GC");
-
 	env->CallVoidMethod (Runtime_instance, Runtime_gc);
-
 	if (env->ExceptionCheck ()) [[unlikely]] {
 		env->ExceptionDescribe ();
 		env->ExceptionClear ();
 		log_error (LOG_DEFAULT, "Java GC failed");
-	} else {
-		log_write (LOG_DEFAULT, LogLevel::Info, "Java GC triggered");
 	}
 }
 
-bool GCBridge::add_reference (JniObjectReferenceControlBlock *from, jobject to) noexcept
+bool GCBridge::add_reference (HandleContext *from, jobject to) noexcept
 {
-	if (add_direct_reference (from->handle, to)) {
-		from->refs_added++;
+	abort_if_invalid_pointer_argument (from, "from");
+	abort_if_invalid_pointer_argument (to, "to");
+
+	if (add_direct_reference (from->control_block->handle, to)) {
+		from->control_block->refs_added++;
 		return true;
 	} else {
 		return false;
@@ -58,6 +52,9 @@ bool GCBridge::add_reference (JniObjectReferenceControlBlock *from, jobject to) 
 
 bool GCBridge::add_direct_reference (jobject from, jobject to) noexcept
 {
+	abort_if_invalid_pointer_argument (from, "from");
+	abort_if_invalid_pointer_argument (to, "to");
+
 	jclass java_class = env->GetObjectClass (from);
 	jmethodID add_method_id = env->GetMethodID (java_class, "monodroidAddReference", "(Ljava/lang/Object;)V");
 
@@ -91,12 +88,19 @@ bool GCBridge::is_bridgeless_scc (StronglyConnectedComponent *scc) noexcept
 	return scc->Count < 0; // If Count is negative, it's a bridgeless SCC
 }
 
+static bool is_valid_gref (JniObjectReferenceControlBlock *control_block) noexcept
+{
+	return control_block != nullptr
+		&& control_block->handle != nullptr
+		&& control_block->handle_type == JNIGlobalRefType;
+}
+
 jobject GCBridge::get_scc_representative (StronglyConnectedComponent *scc, jobject temporary_peers) noexcept
 {
 	abort_if_invalid_pointer_argument (scc, "scc");
 
 	if (scc->Count > 0) {
-		return scc->ContextMemory [0]->handle; // Return the first context's handle
+		return scc->Contexts [0]->control_block->handle; // Return the first valid global reference
 	} else {
 		abort_unless (temporary_peers != nullptr, "Temporary peers must not be null for bridgeless SCCs");
 
@@ -108,17 +112,14 @@ jobject GCBridge::get_scc_representative (StronglyConnectedComponent *scc, jobje
 void GCBridge::maybe_release_scc_representative (StronglyConnectedComponent *scc, jobject handle) noexcept
 {
 	abort_if_invalid_pointer_argument (scc, "scc");
-	abort_if_invalid_pointer_argument (handle, "handle");
 
 	if (scc->Count < 0) {
 		env->DeleteLocalRef (handle); // Release the local ref for bridgeless SCCs returned from get_scc_representative
 	}
 }
 
-void GCBridge::prepare_for_java_collection (MarkCrossReferences* cross_refs) noexcept
+void GCBridge::prepare_for_java_collection (MarkCrossReferencesArgs* cross_refs) noexcept
 {
-	log_write_fmt (LOG_DEFAULT, LogLevel::Info, "GCBridge::prepare_for_java_collection called: {} components", cross_refs->ComponentsLen);
-
 	// Some SCCs might have no IGCUserPeers associated with them, so we must create one
 	jobject temporary_peers = nullptr; // This is an ArrayList
 	int temporary_peer_count = 0;      // Number of items in temporary_peers
@@ -130,26 +131,20 @@ void GCBridge::prepare_for_java_collection (MarkCrossReferences* cross_refs) noe
 	{
 		StronglyConnectedComponent *scc = &cross_refs->Components [i];
 
-		log_write_fmt (LOG_DEFAULT, LogLevel::Info,
-			"Processing SCC at index {} with {} objects", i, scc->Count);
-
 		// Count > 1 case: The SCC contains many objects which must be collected as one.
 		// Solution: Make all objects within the SCC directly or indirectly reference each other
 		if (scc->Count > 1) {
-			JniObjectReferenceControlBlock *first = scc->ContextMemory [0];
-			JniObjectReferenceControlBlock *prev = first;
+			HandleContext *first = scc->Contexts [0];
+			HandleContext *prev = first;
 
 			for (int j = 1; j < scc->Count; j++) {
-				JniObjectReferenceControlBlock *current = scc->ContextMemory [j];
+				HandleContext *current = scc->Contexts [j];
 
-				// TODO are those handles correct? in the mono GC bridge, there is a more complex logic that gets the handles
-				// from the context block data... maybe in that case the handles are GCHandles?
-				add_reference (prev, current->handle);
+				add_reference (prev, current->control_block->handle);
 				prev = current;
 			}
 
-			// ref the first from the final
-			add_reference (prev, first->handle);
+			add_reference (prev, first->control_block->handle);
 		} else if (scc->Count == 0) {
 			log_write_fmt (LOG_DEFAULT, LogLevel::Info,
 				"Creating temporary peer for SCC at index {} with no bridge objects", i);
@@ -202,13 +197,10 @@ void GCBridge::prepare_for_java_collection (MarkCrossReferences* cross_refs) noe
 			maybe_release_scc_representative (from_scc, from_handle);
 			maybe_release_scc_representative (to_scc, to_handle);
 		} else {
-			JniObjectReferenceControlBlock *from_cb = from_scc->ContextMemory [0];
+			HandleContext *from = from_scc->Contexts [0];
 			jobject to_handle = get_scc_representative (to_scc, temporary_peers);
 
-			// log_write_fmt (LOG_DEFAULT, LogLevel::Info,
-			// 	"Adding cross-reference from SCC {} to SCC {}: {} -> {}",
-			// 	xref->SourceGroupIndex, xref->DestinationGroupIndex, from_handle, to_handle);
-			add_reference (from_cb, to_handle);
+			add_reference (from, to_handle);
 
 			maybe_release_scc_representative (to_scc, to_handle);
 		}
@@ -227,26 +219,27 @@ void GCBridge::prepare_for_java_collection (MarkCrossReferences* cross_refs) noe
 		}
 
 		for (int j = 0; j < scc->Count; j++) {
-			JniObjectReferenceControlBlock *context = scc->ContextMemory [j];
+			HandleContext *context = scc->Contexts [j];
 
-			log_write_fmt (LOG_DEFAULT, LogLevel::Info,
-				"Creating weak global ref for: handle {}, type {}, weak handle {}, refs {}",
-					(intptr_t)context->handle,
-					context->handle_type,
-					(intptr_t)context->weak_handle,
-					context->refs_added);
-
-			jobject handle = context->handle;
+			jobject handle = context->control_block->handle;
+			
+			// log_write_fmt (LOG_DEFAULT, LogLevel::Info,
+			// 	"Switching global reference to weak for context {:x}, gchandle: {}, handle {:x}, refs added {}",
+			// 	(intptr_t)context, (intptr_t)context->gc_handle, (intptr_t)handle, context->control_block->refs_added);
+			
 			jobject weak = env->NewWeakGlobalRef (handle);
 
 			// log_write_fmt (LOG_DEFAULT, LogLevel::Info,
-			// 	"Creating weak global ref for handle {:p} in context {:p}: weak {:p}",
-			// 	handle, context, weak);
+			// 	"Creating weak global ref for: gc_handle {}, handle {:x}, weak handle {:x}, refs {}",
+			// 		(intptr_t)context->gc_handle,
+			// 		(intptr_t)handle,
+			// 		(intptr_t)weak,
+			// 		context->control_block->refs_added);
 
-			env->DeleteGlobalRef (handle); // Delete the strong reference after creating the weak one
+			env->DeleteGlobalRef (handle); // Delete the strong reference now that we have a weak one
 
-			context->handle = weak;
-			context->handle_type = JNIWeakGlobalRefType;
+			context->control_block->handle = weak;
+			context->control_block->handle_type = JNIWeakGlobalRefType;
 		}
 	}
 }
@@ -266,7 +259,7 @@ void GCBridge::clear_references (jobject handle) noexcept
 	env->DeleteLocalRef (java_class); // Clean up the local reference to the class
 }
 
-void GCBridge::cleanup_after_java_collection (MarkCrossReferences* cross_refs) noexcept
+void GCBridge::cleanup_after_java_collection (MarkCrossReferencesArgs* cross_refs) noexcept
 {
 	// try to switch back to global refs to analyze what stayed alive
 	for (int i = 0; i < cross_refs->ComponentsLen; i++)
@@ -274,96 +267,94 @@ void GCBridge::cleanup_after_java_collection (MarkCrossReferences* cross_refs) n
 		StronglyConnectedComponent *scc = &cross_refs->Components [i];
 
 		for (int j = 0; j < scc->Count; j++) {
-			JniObjectReferenceControlBlock *context = scc->ContextMemory [j];
+			HandleContext *context = scc->Contexts [j];
 
-			jobject weak = context->handle;
+			jobject weak = context->control_block->handle;
+
+			// TODO remove this log
+			if (context->control_block->handle_type != JNIWeakGlobalRefType) {
+				log_write_fmt (LOG_DEFAULT, LogLevel::Info, "Skipping non-weak global ref: {:x} ({}), gchandle: {} 0x{:x}", (intptr_t)weak, context->control_block->handle_type, (intptr_t)context->gc_handle, (intptr_t)context->gc_handle);
+			}
+
+			abort_unless (context->control_block->handle_type == JNIWeakGlobalRefType,
+				"Expected weak global reference type for handle");
 			jobject global = env->NewGlobalRef (weak);
 
 			if (global) {
-				// Object survived Java GC, so we need to update the handle
-				// log_write_fmt (LOG_DEFAULT, LogLevel::Info,
-				// 	"Object survived Java GC: handle {:p}, weak {:p}, global {:p}",
-				// 	context->handle, weak, global);
+				// log_write_fmt (LOG_DEFAULT, LogLevel::Info, "Object survived Java GC: weak {:x} -> gref {:x}", (intptr_t)weak, (intptr_t)global);
+				env->DeleteWeakGlobalRef (weak);
 
-				context->handle = global;
-				context->handle_type = JNIGlobalRefType;
+				context->control_block->handle = global;
+				context->control_block->handle_type = JNIGlobalRefType;
 
-				if (context->refs_added > 0) {
+				if (context->control_block->refs_added > 0) {
 					// Clear references
-					clear_references (context->handle);
+					clear_references (context->control_block->handle);
 
 					// Reset refs_added
-					context->refs_added = 0;
+					context->control_block->refs_added = 0;
 				}
 			} else {
 				// Object was collected by Java GC
+				context->is_collected = 1;
+
 				// log_write_fmt (LOG_DEFAULT, LogLevel::Info,
-				// 	"Object was collected by Java GC: weak {:p}, handle {:p}",
-				// 	weak, context->handle);
-
-				context->handle = nullptr;
-				context->handle_type = JNIInvalidRefType;
+				// 	"Object was collected by Java GC: weak {:x}, gchandle: {}, control block {:x}, handle type {}",
+				// 	(intptr_t)weak, (intptr_t)context->gc_handle, (intptr_t)context->control_block, context->control_block->handle_type);
 			}
-
-			env->DeleteWeakGlobalRef (weak);
 		}
 	}
 }
 
 void GCBridge::bridge_processing () noexcept
 {
+	abort_unless (bridge_processing_started_callback != nullptr, "GC bridge processing started callback is not set");
+	abort_unless (bridge_processing_finished_callback != nullptr, "GC bridge processing finished callback is not set");
+
 	env = OSBridge::ensure_jnienv ();
 
 	while (true)
 	{
-		log_write (LOG_DEFAULT, LogLevel::Info, "GCBridge: waiting for semaphore...");
 		bridge_processing_semaphore.acquire ();
-		log_write (LOG_DEFAULT, LogLevel::Info, "GCBridge: processing started");
-		bridge_processing_started_callback ();
-		log_write (LOG_DEFAULT, LogLevel::Info, "GCBridge: taking unique lock...");
 		std::unique_lock<std::shared_mutex> lock (processing_mutex);
-		log_write (LOG_DEFAULT, LogLevel::Info, "GCBridge: got unique lock");
-		MarkCrossReferences cross_refs = GCBridge::shared_cross_refs;
 
-		intptr_t gchandles = collect_gchandles_callback (&cross_refs);
-
-		log_write (LOG_DEFAULT, LogLevel::Info, "GCBridge: prepare_for_java_collection");
-		prepare_for_java_collection (&cross_refs);
-		log_write (LOG_DEFAULT, LogLevel::Info, "GCBridge: trigger_java_gc");
+		bridge_processing_started_callback ();
+		prepare_for_java_collection (&GCBridge::shared_cross_refs);
 		trigger_java_gc ();
-		log_write (LOG_DEFAULT, LogLevel::Info, "GCBridge: cleanup_after_java_collection");
-		cleanup_after_java_collection (&cross_refs);
-		log_write (LOG_DEFAULT, LogLevel::Info, "GCBridge: bridge_processing_finished_callback");
-		bridge_processing_finished_callback (&cross_refs, gchandles);
-		log_write (LOG_DEFAULT, LogLevel::Info, "GCBridge: done processing");
+		cleanup_after_java_collection (&GCBridge::shared_cross_refs);
+		bridge_processing_finished_callback (&GCBridge::shared_cross_refs);
 	}
 }
 
-void GCBridge::mark_cross_references (MarkCrossReferences* cross_refs) noexcept
+static void assert_valid_handles (MarkCrossReferencesArgs* cross_refs) noexcept
 {
-	log_write (LOG_DEFAULT, LogLevel::Info, "GCBridge: mark cross references");
-
 	for (int i = 0; i < cross_refs->ComponentsLen; i++)
 	{
 		StronglyConnectedComponent *scc = &cross_refs->Components [i];
-		log_write_fmt (LOG_DEFAULT, LogLevel::Info,
-			"Processing SCC at index {} with {} objects", i, scc->Count);
-
 		for (int j = 0; j < scc->Count; j++) {
-			JniObjectReferenceControlBlock *context = scc->ContextMemory [j];
-			log_write_fmt (LOG_DEFAULT, LogLevel::Info,
-				"Context at index {}: handle {}, type {}, weak handle {}, refs {}",
-					j, (intptr_t)context->handle, context->handle_type,
-					(intptr_t)context->weak_handle, context->refs_added);
+			HandleContext *context = scc->Contexts [j];
+			if (!is_valid_gref (context->control_block)) {
+				log_error_fmt (LOG_DEFAULT, "Invalid global reference in SCC context {:x}, gchandle: {}, control block {}, handle {}, handle type {}",
+					(intptr_t)context, context->gc_handle, (intptr_t)context->control_block, (intptr_t)context->control_block->handle, context->control_block->handle_type);
+			}
+			abort_unless (is_valid_gref (context->control_block), "Invalid global reference in SCC");
 		}
 	}
+}
 
-	GCBridge::shared_cross_refs.ComponentsLen = cross_refs->ComponentsLen;
-	GCBridge::shared_cross_refs.Components = cross_refs->Components;
-	GCBridge::shared_cross_refs.CrossReferencesLen = cross_refs->CrossReferencesLen;
-	GCBridge::shared_cross_refs.CrossReferences = cross_refs->CrossReferences;
+void GCBridge::mark_cross_references (MarkCrossReferencesArgs* cross_refs) noexcept
+{
+	// TODO get rid of this
+	assert_valid_handles (cross_refs);
 
-	log_write (LOG_DEFAULT, LogLevel::Info, "GCBridge: set semaphore");
+	{
+		std::unique_lock<std::shared_mutex> lock (processing_mutex);
+
+		GCBridge::shared_cross_refs.ComponentsLen = cross_refs->ComponentsLen;
+		GCBridge::shared_cross_refs.Components = cross_refs->Components;
+		GCBridge::shared_cross_refs.CrossReferencesLen = cross_refs->CrossReferencesLen;
+		GCBridge::shared_cross_refs.CrossReferences = cross_refs->CrossReferences;
+	}
+
 	bridge_processing_semaphore.release ();
-	log_write (LOG_DEFAULT, LogLevel::Info, "GCBridge: exitting mark_cross_references");
 }

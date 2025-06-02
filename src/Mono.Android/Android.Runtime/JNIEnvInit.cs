@@ -40,7 +40,6 @@ namespace Android.Runtime
 		}
 #pragma warning restore 0649
 
-		internal static JniRuntime.JniValueManager? ValueManager;
 		internal static bool IsRunningOnDesktop;
 		internal static bool jniRemappingInUse;
 		internal static bool MarshalMethodsEnabled;
@@ -88,7 +87,6 @@ namespace Android.Runtime
 		internal static void InitializeJniRuntime (JniRuntime runtime)
 		{
 			androidRuntime = runtime;
-			ValueManager = runtime.ValueManager;
 			SetSynchronizationContext ();
 		}
 
@@ -115,11 +113,12 @@ namespace Android.Runtime
 			JniRuntime.JniValueManager valueManager;
 			if (RuntimeFeature.ManagedTypeMap) {
 				typeManager     = new ManagedTypeManager ();
-				valueManager    = new ManagedValueManager ();
 			} else {
 				typeManager     = new AndroidTypeManager (args->jniAddNativeMethodRegistrationAttributePresent != 0);
-				valueManager    = RuntimeType == DotNetRuntimeType.MonoVM ? new AndroidValueManager () : new ManagedValueManager ();
 			}
+			// TODO is there any reason why the ManagedTypeMap would need ManagedValueManager?
+			// ManagedValueManager is specifically tied to the CoreCLR JavaMarshal APIs and it does not work with MonoVM.
+			valueManager = RuntimeType == DotNetRuntimeType.MonoVM ? new AndroidValueManager () : ManagedValueManager.Instance;
 			androidRuntime = new AndroidRuntime (
 					args->env,
 					args->javaVm,
@@ -128,7 +127,6 @@ namespace Android.Runtime
 					valueManager,
 					args->jniAddNativeMethodRegistrationAttributePresent != 0
 			);
-			ValueManager = androidRuntime.ValueManager;
 
 			IsRunningOnDesktop = args->isRunningOnDesktop == 1;
 
