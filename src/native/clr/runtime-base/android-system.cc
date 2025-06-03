@@ -437,7 +437,7 @@ auto AndroidSystem::get_full_dso_path (std::string const& base_dir, std::string_
 
 auto AndroidSystem::load_dso (std::string_view const& path, unsigned int dl_flags, bool skip_exists_check) noexcept -> void*
 {
-	if (path.empty ()) [[unlikely]] {
+	if (path.empty ()) {
 		return nullptr;
 	}
 
