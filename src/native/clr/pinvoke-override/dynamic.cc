@@ -24,7 +24,6 @@ extern "C" {
 [[gnu::flatten]]
 auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name) noexcept -> void*
 {
-	log_debug (LOG_ASSEMBLY, __PRETTY_FUNCTION__);
 	log_debug (LOG_ASSEMBLY, "library_name == '{}'; entrypoint_name == '{}'"sv, optional_string (library_name), optional_string (entrypoint_name));
 
 	if (library_name == nullptr || entrypoint_name == nullptr) [[unlikely]] {
@@ -70,7 +69,7 @@ auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, cons
 	}
 
 	log_debug (LOG_ASSEMBLY, "p/invoke not from a known library, slow path taken."sv);
-	pinvoke_ptr = handle_other_pinvoke_request (library_name, library_name_hash, entrypoint_name, entrypoint_hash);;
+	pinvoke_ptr = handle_other_pinvoke_request (library_name, library_name_hash, entrypoint_name, entrypoint_hash);
 	log_debug (LOG_ASSEMBLY, "foreign library pinvoke_ptr == {:p}"sv, pinvoke_ptr);
 	return pinvoke_ptr;
 }
@@ -99,6 +98,6 @@ const void* Host::clr_pinvoke_override (const char *library_name, const char *en
 {
 	log_debug (LOG_ASSEMBLY, "[dynamic] clr_pinvoke_override (\"{}\", \"{}\")"sv, optional_string (library_name), optional_string (entry_point_name));
 	void *ret = PinvokeOverride::monodroid_pinvoke_override (library_name, entry_point_name);
-	log_debug (LOG_DEFAULT, "[dynamic] p/invoke {}found", ret == nullptr ? "not"sv : ""sv);
+	log_debug (LOG_DEFAULT, "[dynamic] p/invoke {}found", ret == nullptr ? "not "sv : ""sv);
 	return ret;
 }

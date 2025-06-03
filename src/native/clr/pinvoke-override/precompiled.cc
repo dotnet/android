@@ -105,4 +105,3 @@ const void* Host::clr_pinvoke_override (const char *library_name, const char *en
 	log_debug (LOG_DEFAULT, "[precompiled] p/invoke {}found"sv, ret == nullptr ? "not"sv : ""sv);
 	return ret;
 }
-

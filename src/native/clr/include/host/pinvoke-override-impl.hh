@@ -14,7 +14,7 @@
 
 namespace xamarin::android {
 	PINVOKE_OVERRIDE_INLINE
-	auto PinvokeOverride::load_library_symbol (const char *library_name, const char *symbol_name, void **dso_handle) noexcept -> void*
+	auto PinvokeOverride::load_library_symbol (std::string_view const& library_name, std::string_view const& symbol_name, void **dso_handle) noexcept -> void*
 	{
 		void *lib_handle = dso_handle == nullptr ? nullptr : *dso_handle;
 
@@ -23,21 +23,21 @@ namespace xamarin::android {
 			constexpr bool PREFER_AOT_CACHE = false;
 			lib_handle = MonodroidDl::monodroid_dlopen (library_name, microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_LOCALLY, PREFER_AOT_CACHE);
 			if (lib_handle == nullptr) {
-				log_warn (LOG_ASSEMBLY, "Shared library '{}' not loaded, p/invoke '{}' may fail", optional_string (library_name), optional_string (symbol_name));
+				log_warn (LOG_ASSEMBLY, "Shared library '{}' not loaded, p/invoke '{}' may fail", library_name, symbol_name);
 				return nullptr;
 			}
 
 			if (dso_handle != nullptr) {
 				void *expected_null = nullptr;
 				if (!__atomic_compare_exchange (dso_handle, &expected_null, &lib_handle, false /* weak */, __ATOMIC_ACQUIRE /* success_memorder */, __ATOMIC_RELAXED /* xxxfailure_memorder */)) {
-					log_debug (LOG_ASSEMBLY, "Library '{}' handle already cached by another thread", optional_string (library_name));
+					log_debug (LOG_ASSEMBLY, "Library '{}' handle already cached by another thread", library_name);
 				}
 			}
 		}
 
 		void *entry_handle = MonodroidDl::monodroid_dlsym (lib_handle, symbol_name);
 		if (entry_handle == nullptr) {
-			log_warn (LOG_ASSEMBLY, "Symbol '{}' not found in shared library '{}', p/invoke may fail", optional_string (library_name), optional_string (symbol_name));
+			log_warn (LOG_ASSEMBLY, "Symbol '{}' not found in shared library '{}', p/invoke may fail", library_name, symbol_name);
 			return nullptr;
 		}
 
@@ -65,7 +65,7 @@ namespace xamarin::android {
 	}
 
 	PINVOKE_OVERRIDE_INLINE
-	void PinvokeOverride::load_library_entry (const char *library_name, const char *entrypoint_name, PinvokeEntry &entry, void **dso_handle) noexcept
+	void PinvokeOverride::load_library_entry (std::string_view const& library_name, std::string_view const& entrypoint_name, PinvokeEntry &entry, void **dso_handle) noexcept
 	{
 		void *entry_handle = load_library_symbol (library_name, entrypoint_name, dso_handle);
 		void *expected_null = nullptr;
@@ -122,7 +122,7 @@ namespace xamarin::android {
 	}
 
 	PINVOKE_OVERRIDE_INLINE
-	auto PinvokeOverride::handle_other_pinvoke_request (const char *library_name, hash_t library_name_hash, const char *entrypoint_name, hash_t entrypoint_name_hash) noexcept -> void*
+	auto PinvokeOverride::handle_other_pinvoke_request (std::string_view const& library_name, hash_t library_name_hash, std::string_view const& entrypoint_name, hash_t entrypoint_name_hash) noexcept -> void*
 	{
 		std::string lib_name {library_name};
 		std::string entry_name {entrypoint_name};
@@ -145,7 +145,7 @@ namespace xamarin::android {
 			handle = fetch_or_create_pinvoke_map_entry (lib_name, entry_name, entrypoint_name_hash, lib_map, /* need_lock */ false);
 		} else {
 			if (iter->second == nullptr) [[unlikely]] {
-				log_warn (LOG_ASSEMBLY, "Internal error: null entry in p/invoke map for key '{}'", optional_string (library_name));
+				log_warn (LOG_ASSEMBLY, "Internal error: null entry in p/invoke map for key '{}'", library_name);
 				return nullptr; // fall back to `monodroid_dlopen`
 			}
 

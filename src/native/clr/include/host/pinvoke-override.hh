@@ -2,6 +2,7 @@
 
 #include <mutex>
 #include <string>
+#include <string_view>
 
 #include <jni.h>
 
@@ -73,12 +74,12 @@ namespace xamarin::android {
 		static inline constexpr pinvoke_library_map::size_type LIBRARY_MAP_INITIAL_BUCKET_COUNT = 1uz;
 
 	public:
-		static auto load_library_symbol (const char *library_name, const char *symbol_name, void **dso_handle = nullptr) noexcept -> void*;
+		static auto load_library_symbol (std::string_view const& library_name, std::string_view const& symbol_name, void **dso_handle = nullptr) noexcept -> void*;
 		static auto load_library_entry (std::string const& library_name, std::string const& entrypoint_name, pinvoke_api_map_ptr api_map) noexcept -> void*;
-		static void load_library_entry (const char *library_name, const char *entrypoint_name, PinvokeEntry &entry, void **dso_handle) noexcept;
+		static void load_library_entry (std::string_view const& library_name, std::string_view const& entrypoint_name, PinvokeEntry &entry, void **dso_handle) noexcept;
 		static auto fetch_or_create_pinvoke_map_entry (std::string const& library_name, std::string const& entrypoint_name, hash_t entrypoint_name_hash, pinvoke_api_map_ptr api_map, bool need_lock) noexcept -> void*;
 		static auto find_pinvoke_address (hash_t hash, const PinvokeEntry *entries, size_t entry_count) noexcept -> PinvokeEntry*;
-		static auto handle_other_pinvoke_request (const char *library_name, hash_t library_name_hash, const char *entrypoint_name, hash_t entrypoint_name_hash) noexcept -> void*;
+		static auto handle_other_pinvoke_request (std::string_view const& library_name, hash_t library_name_hash, std::string_view const& entrypoint_name, hash_t entrypoint_name_hash) noexcept -> void*;
 
 		static void handle_jni_on_load (JavaVM *vm, void *reserved) noexcept;
 		static auto monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name) noexcept -> void*;
