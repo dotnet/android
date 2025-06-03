@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mutex>
+#include <string_view>
 
 #include <dlfcn.h>
 #include <android/dlext.h>
@@ -71,7 +72,7 @@ namespace xamarin::android
 			return find_dso_cache_entry_common<CacheKind::DSO> (hash);
 		}
 
-		static auto monodroid_dlopen_log_and_return (void *handle, const char *full_name) -> void*
+		static auto monodroid_dlopen_log_and_return (void *handle, std::string_view const& full_name) -> void*
 		{
 			if (handle == nullptr) {
 				const char *load_error = dlerror ();
@@ -89,7 +90,7 @@ namespace xamarin::android
 			return handle;
 		}
 
-		static auto monodroid_dlopen_ignore_component_or_load (const char *name, int flags) noexcept -> void*
+		static auto monodroid_dlopen_ignore_component_or_load (std::string_view const& name, int flags) noexcept -> void*
 		{
 			unsigned int dl_flags = static_cast<unsigned int>(flags);
 			void * handle = AndroidSystem::load_dso_from_any_directories (name, dl_flags);
@@ -103,14 +104,14 @@ namespace xamarin::android
 
 	public:
 		[[gnu::flatten]]
-		static auto monodroid_dlopen (const char *name, int flags, bool prefer_aot_cache) noexcept -> void*
+		static auto monodroid_dlopen (std::string_view const& name, int flags, bool prefer_aot_cache) noexcept -> void*
 		{
-			if (name == nullptr) {
+			if (name.empty ()) [[unlikely]] {
 				log_warn (LOG_ASSEMBLY, "monodroid_dlopen got a null name. This is not supported in NET+"sv);
 				return nullptr;
 			}
 
-			hash_t name_hash = xxhash::hash (name, strlen (name));
+			hash_t name_hash = xxhash::hash (name.data (), name.size ());
 			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash for name '{}' is {:x}", name, name_hash);
 
 			DSOCacheEntry *dso = nullptr;
@@ -186,16 +187,16 @@ namespace xamarin::android
 		}
 
 		[[gnu::flatten]]
-		static auto monodroid_dlsym (void *handle, const char *name) -> void*
+		static auto monodroid_dlsym (void *handle, std::string_view const& name) -> void*
 		{
 			char *e = nullptr;
-			void *s = microsoft::java_interop::java_interop_lib_symbol (handle, name, &e);
+			void *s = microsoft::java_interop::java_interop_lib_symbol (handle, name.data (), &e);
 
 			if (s == nullptr) {
 				log_error (
 					LOG_ASSEMBLY,
 					"Could not find symbol '{}': {}",
-					optional_string (name),
+					name,
 					optional_string (e)
 				);
 			}
