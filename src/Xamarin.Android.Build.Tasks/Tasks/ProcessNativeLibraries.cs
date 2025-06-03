@@ -22,15 +22,10 @@ namespace Xamarin.Android.Tasks
 			"libxamarin-debug-app-helper",
 		};
 
-		// Please keep the list sorted.  Any new runtime libraries that are added upstream need to be mentioned here.
-		static readonly HashSet<string> KnownRuntimeNativeLibrariesCLR = new (StringComparer.OrdinalIgnoreCase) {
-			"libSystem.Globalization.Native.so",
-			"libSystem.IO.Compression.Native.so",
-			"libSystem.Native.so",
-			"libSystem.Security.Cryptography.Native.Android.so",
-			"libclrjit.so",
-			"libcorclr.so",
-		};
+		static readonly HashSet<string> RuntimeNativeLibraryNames = new (StringComparer.OrdinalIgnoreCase);
+
+		[Required]
+		public ITaskItem[] KnownRuntimeNativeLibraries { get; set; } = [];
 
 		/// <summary>
 		/// Assumed to be .so files only
@@ -55,6 +50,10 @@ namespace Xamarin.Android.Tasks
 				foreach (ITaskItem item in Components) { ;
 					wantedComponents.Add ($"{MonoComponentPrefix}{item.ItemSpec}");
 				}
+			}
+
+			foreach (ITaskItem lib in KnownRuntimeNativeLibraries) {
+				RuntimeNativeLibraryNames.Add (Path.GetFileName (lib.ItemSpec));
 			}
 
 			var output = new List<ITaskItem> (InputLibraries.Length);
@@ -124,14 +123,12 @@ namespace Xamarin.Android.Tasks
 
 			// We ignore all the shared libraries coming from the runtime packages, as they are all linked into our runtime and
 			// need not be packaged.
-			string packageId = libItem.GetMetadata ("NuGetPackageId");
-			if (packageId.StartsWith ("Microsoft.NETCore.App.Runtime.Mono.android-", StringComparison.OrdinalIgnoreCase) ||
-			    packageId.StartsWith ("Microsoft.NETCore.App.Runtime.CoreCLR.android-", StringComparison.OrdinalIgnoreCase)) {
+			if (MonoAndroidHelper.IsFromAKnownRuntimePack (libItem)) {
 				return true;
 			}
 
 			// Should `NuGetPackageId` be empty, we check the libs by name, as the last resort.
-			return KnownRuntimeNativeLibrariesCLR.Contains (Path.GetFileName (libItem.ItemSpec));
+			return RuntimeNativeLibraryNames.Contains (Path.GetFileName (libItem.ItemSpec));
 		}
 	}
 }
