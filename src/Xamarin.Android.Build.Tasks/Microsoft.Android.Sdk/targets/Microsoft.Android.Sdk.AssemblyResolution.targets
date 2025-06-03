@@ -257,12 +257,25 @@ _ResolveAssemblies MSBuild target.
       <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " Include="libmono-android.release" />
     </ItemGroup>
 
+    <!-- Let's keep the item group close to the task that uses them, the list is irrelevant for
+         anything else. The group MUST contain only shared libraries from the runtime pack.
+         DO NOT modify the group unless you're absolutely sure what you're doing -->
+    <ItemGroup Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " >
+      <_KnownRuntimeNativeLibrary Include="libSystem.Globalization.Native.so" />
+			<_KnownRuntimeNativeLibrary Include="libSystem.IO.Compression.Native.so" />
+			<_KnownRuntimeNativeLibrary Include="libSystem.Native.so" />
+			<_KnownRuntimeNativeLibrary Include="libSystem.Security.Cryptography.Native.Android.so" />
+			<_KnownRuntimeNativeLibrary Include="libclrjit.so" />
+			<_KnownRuntimeNativeLibrary Include="libcorclr.so" />
+    </ItemGroup>
+
     <ProcessNativeLibraries
         NativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)"
         InputLibraries="@(_ResolvedNativeLibraries)"
         ExcludedLibraries="@(_ExcludedNativeLibraries)"
         Components="@(_MonoComponent->Distinct())"
-        IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)">
+        IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
+        KnownRuntimeNativeLibraries="@(_KnownRuntimeNativeLibrary)">
       <Output TaskParameter="OutputLibraries" ItemName="FrameworkNativeLibrary" />
     </ProcessNativeLibraries>
   </Target>
