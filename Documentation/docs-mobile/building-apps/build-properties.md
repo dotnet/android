@@ -397,7 +397,7 @@ This property is `False` by default.
 
 ## AndroidEnableProfiler
 
-Synonym for the [`$(EnableProfiler)`](#enableprofiler) property.
+Synonym for the [`$(EnableDiagnostics)`](#enablediagnostics) property.
 
 Required for using `dotnet-trace` or `dotnet-gcdump` in Android
 applications. If set to `true`, it includes the Mono diagnostic
@@ -1551,6 +1551,18 @@ MSBuild property also controls what
 will be embedded into the `.apk`, which can impact deployment and
 rebuild times.
 
+## EnableDiagnostics
+
+Synonym for the [`$(AndroidEnableProfiler)`](#androidenableprofiler)
+property.
+
+Required for using `dotnet-trace` or `dotnet-gcdump` in Android
+applications. If set to `true`, it includes the Mono diagnostic
+component in the application. This component is the
+`libmono-component-diagnostics_tracing.so` native library.
+
+This property is `False` by default.
+
 ## EnableLLVM
 
 A boolean property that determines whether
@@ -1564,18 +1576,6 @@ This property is `False` by default.
 
 This property is ignored unless the
 [`$(AotAssemblies)`](#aotassemblies) MSBuild property is `True`.
-
-## EnableProfiler
-
-Synonym for the [`$(AndroidEnableProfiler)`](#androidenableprofiler)
-property.
-
-Required for using `dotnet-trace` or `dotnet-gcdump` in Android
-applications. If set to `true`, it includes the Mono diagnostic
-component in the application. This component is the
-`libmono-component-diagnostics_tracing.so` native library.
-
-This property is `False` by default.
 
 ## EnableProguard
 
