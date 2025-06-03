@@ -87,6 +87,20 @@
     <Move SourceFiles="@(_WLExtractedFiles)" DestinationFolder="$(_SdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\" />
     <RemoveDir Directories="$(_SdkManifestsFolder)temp\" />
 
+    <!-- Patch 8.0.17 runtime -->
+    <PropertyGroup>
+      <_MonoManifestFolder>$(_SdkManifestsFolder)microsoft.net.workload.mono.toolchain.net8\$(MicrosoftNETSdkPackageVersion)\</_MonoManifestFolder>
+    </PropertyGroup>
+    <ReplaceFileContents
+        SourceFile="$(_MonoManifestFolder)WorkloadManifest.json"
+        DestinationFile="$(_MonoManifestFolder)WorkloadManifest.new.json"
+        Replacements="8.0.17=8.0.16"
+    />
+    <Copy
+        SourceFiles="$(_MonoManifestFolder)WorkloadManifest.new.json"
+        DestinationFiles="$(_MonoManifestFolder)WorkloadManifest.json"
+    />
+
     <!-- Parse NuGet.config -->
     <XmlPeek
         XmlInputPath="$(XamarinAndroidSourcePath)NuGet.config"
