@@ -391,6 +391,17 @@ $@"<Project>
 					doc.Save (projNugetConfig);
 				}
 			}
+
+			// Copy packages folder
+			var repoPackages = Path.Combine (XABuildPaths.TopDirectory, "packages");
+			var projPackages = Path.Combine (Root, relativeDirectory, "packages");
+			if (Directory.Exists (repoPackages)) {
+				Directory.CreateDirectory (projPackages);
+				foreach (var package in Directory.GetFiles (repoPackages, "*.nupkg")) {
+					var destination = Path.Combine (projPackages, Path.GetFileName (package));
+					File.Copy (package, destination, overwrite: true);
+				}
+			}
 		}
 
 		/// <summary>

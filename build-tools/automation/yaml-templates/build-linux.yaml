@@ -53,6 +53,12 @@ stages:
         path: ${{ parameters.checkoutPath }}
         persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
+    - script: |
+        git lfs install
+        git lfs pull
+      displayName: git lfs setup
+      workingDirectory: ${{ parameters.xaSourcePath }}
+
     # Always checkout a second resource to ensure we are using multi-repo checkout behavior
     #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
     - checkout: maui

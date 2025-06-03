@@ -1,3 +1,4 @@
+#include <host/gc-bridge.hh>
 #include <host/host.hh>
 #include <host/os-bridge.hh>
 #include <host/typemap.hh>
@@ -51,6 +52,12 @@ const char* clr_typemap_managed_to_java (const char *typeName, const uint8_t *mv
 bool clr_typemap_java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept
 {
 	return TypeMapper::java_to_managed (java_type_name, assembly_name, managed_type_token_id);
+}
+
+MarkCrossReferencesFtn clr_initialize_gc_bridge (MarkCrossReferencesFtn callback) noexcept
+{
+	GCBridge::set_finish_callback (callback);
+	return GCBridge::mark_cross_references;
 }
 
 void monodroid_log (LogLevel level, LogCategories category, const char *message) noexcept
