@@ -416,8 +416,10 @@ auto AndroidSystem::get_full_dso_path (std::string const& base_dir, std::string_
 		return false;
 	}
 
-	if (base_dir.empty () || Util::is_path_rooted (dso_path))
-		return const_cast<char*>(dso_path.data ()); // Absolute path or no base path, can't do much with it
+	if (base_dir.empty () || Util::is_path_rooted (dso_path)) {
+		path.assign (dso_path);
+		return true; // Absolute path or no base path, can't do much with it
+	}
 
 	path.assign (base_dir)
 		.append ("/"sv)
