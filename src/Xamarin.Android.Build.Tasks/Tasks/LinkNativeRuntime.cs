@@ -18,9 +18,6 @@ public class LinkNativeRuntime : AsyncTask
 	[Required]
 	public string AndroidBinUtilsDirectory { get; set; } = "";
 
-	public string? AndroidNdkDirectory { get; set; }
-	public string? AndroidApiLevel { get; set; }
-
 	[Required]
 	public string IntermediateOutputPath { get; set; } = "";
 
@@ -72,10 +69,8 @@ public class LinkNativeRuntime : AsyncTask
 		var linker = new NativeLinker (Log, abi, soname, AndroidBinUtilsDirectory, IntermediateOutputPath, RuntimePackLibraryDirectories, CancellationToken, Cancel) {
 			StripDebugSymbols = StripDebugSymbols,
 			SaveDebugSymbols = SaveDebugSymbols,
-			UseNdkLibraries = true,
+			UseNdkLibraries = false,
 			UseSymbolic = true,
-			NdkRootPath = AndroidNdkDirectory,
-			NdkApiLevel = AndroidApiLevel,
 		};
 
 		List<ITaskItem> items = OrganizeCommandLineItemsCLR (abi);

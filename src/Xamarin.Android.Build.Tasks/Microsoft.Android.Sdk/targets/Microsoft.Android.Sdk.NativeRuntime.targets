@@ -49,8 +49,6 @@ Contains code to build and link the native runtime at application build time.
     <LinkNativeRuntime
         MonoComponents="@(_MonoComponent)"
         AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-        AndroidNdkDirectory="$(_AndroidNdkDirectory)"
-        AndroidApiLevel="$(AndroidMinimumSupportedApiLevel)"
         IntermediateOutputPath="$(IntermediateOutputPath)"
         NativeArchives="@(_SelectedNativeArchive)"
         NativeObjectFiles="@(_NativeAssemblyTarget)"
