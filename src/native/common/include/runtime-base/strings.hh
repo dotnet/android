@@ -744,6 +744,16 @@ namespace xamarin::android {
 		}
 
 		[[gnu::always_inline]]
+		auto ends_with (std::string_view const& s) noexcept -> bool
+		{
+			if (empty () || s.length () > buffer.size ()) {
+				return false;
+			}
+
+			return memcmp (buffer.get () + (length () - s.length ()), s.data (), s.length ()) == 0;
+		}
+
+		[[gnu::always_inline]]
 		void set_length_after_direct_write (size_t new_length) noexcept
 		{
 			set_length (new_length);
