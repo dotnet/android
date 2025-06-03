@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Text;
 using System.Globalization;
@@ -102,7 +100,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return CompareTo (attr);
 		}
 
-		public int CompareTo (LlvmIrFunctionAttribute other)
+		public int CompareTo (LlvmIrFunctionAttribute? other)
 		{
 			return Name.CompareTo (other?.Name);
 		}
@@ -497,15 +495,15 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			bool haveSomething = false;
 
 			if (Default.HasValue) {
-				AppendParam (GetAccessKindString (Default));
+				AppendParam (GetAccessKindString (Default.Value));
 			}
 
 			if (Argmem.HasValue) {
-				AppendParam ($"argmem: {GetAccessKindString (Argmem)}");
+				AppendParam ($"argmem: {GetAccessKindString (Argmem.Value)}");
 			}
 
 			if (InaccessibleMem.HasValue) {
-				AppendParam ($"inaccessiblemem: {GetAccessKindString (InaccessibleMem)}");
+				AppendParam ($"inaccessiblemem: {GetAccessKindString (InaccessibleMem.Value)}");
 			}
 
 			void AppendParam (string text)
@@ -518,9 +516,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 		}
 
-		string GetAccessKindString (MemoryAttributeAccessKind? kind)
+		string GetAccessKindString (MemoryAttributeAccessKind kind)
 		{
-			return kind.Value switch {
+			return kind switch {
 				MemoryAttributeAccessKind.None      => "none",
 				MemoryAttributeAccessKind.Read      => "read",
 				MemoryAttributeAccessKind.Write     => "write",

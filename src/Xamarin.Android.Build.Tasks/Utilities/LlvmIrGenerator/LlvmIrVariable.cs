@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections;
 using System.Globalization;
@@ -42,7 +40,7 @@ abstract class LlvmIrVariableReference
                         return $"{NamePrefix}{Name}";
                 }
         }
-        protected LlvmIrVariableReference (string name)
+        protected LlvmIrVariableReference (string? name)
         {
                 Name = name;
         }

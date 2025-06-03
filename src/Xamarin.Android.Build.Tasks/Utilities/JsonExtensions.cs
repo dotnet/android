@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
@@ -7,7 +5,7 @@ using System.Text.Json.Nodes;
 
 public static class JsonExtensions
 {
-    public static JsonNode Merge (this JsonNode jsonBase, JsonNode jsonMerge)
+    public static JsonNode? Merge (this JsonNode? jsonBase, JsonNode? jsonMerge)
     {
         if (jsonBase == null || jsonMerge == null)
             return jsonBase;

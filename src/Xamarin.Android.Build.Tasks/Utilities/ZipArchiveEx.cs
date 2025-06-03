@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -47,7 +45,7 @@ namespace Xamarin.Android.Tasks
 			if (zip != null) {
 				zip.Close ();
 				zip.Dispose ();
-				zip = null;
+				zip = null!;
 			}
 			zip = ZipArchive.Open (archive, FileMode.Open);
 			filesWrittenTotalSize = 0;
@@ -236,7 +234,7 @@ namespace Xamarin.Android.Tasks
 				if (zip != null) {
 					zip.Close ();
 					zip.Dispose ();
-					zip = null;
+					zip = null!;
 				}
 			}
 		}

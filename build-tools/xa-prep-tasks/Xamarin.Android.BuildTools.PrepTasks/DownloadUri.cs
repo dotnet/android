@@ -56,7 +56,9 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 			using (var client = new HttpClient (handler)) {
 				client.Timeout = TimeSpan.FromHours (3);
 				for (int i = 0; i < SourceUris.Length; ++i) {
+					#pragma warning disable CA2025 // Ensure tasks using 'IDisposable' instances complete before the instances are disposed
 					tasks [i] = DownloadFile (client, source, SourceUris [i], DestinationFiles [i]);
+					#pragma warning restore CA2025
 				}
 				TTask.WaitAll (tasks, source.Token);
 			}

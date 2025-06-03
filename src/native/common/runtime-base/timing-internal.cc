@@ -26,13 +26,14 @@ void FastTiming::really_initialize (bool log_immediately) noexcept
 	open_sequences.push (0);
 	open_sequences.pop ();
 
+	// Options in `debug.mono.timing` are relevant only when immediate logging is disabled
+	if (immediate_logging) {
+		return;
+	}
+
 	dynamic_local_property_string value;
 	if (AndroidSystem::monodroid_get_system_property (Constants::DEBUG_MONO_TIMING, value) != 0) {
 		internal_timing.parse_options (value);
-	}
-
-	if (immediate_logging) {
-		return;
 	}
 
 	log_write (

@@ -253,7 +253,7 @@ namespace Xamarin.Android.Tasks
 				executablePath = toolPath;
 			}
 
-			if (mustExist && String.IsNullOrEmpty (executablePath)) {
+			if (mustExist && executablePath.IsNullOrEmpty ()) {
 				throw new InvalidOperationException ($"Required tool '{toolPath}' not found");
 			}
 

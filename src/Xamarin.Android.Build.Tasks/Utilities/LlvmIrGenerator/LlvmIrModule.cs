@@ -1,7 +1,6 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 using Microsoft.Build.Utilities;
@@ -406,6 +405,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			globalVariables.Add (variable);
 		}
 
+		[MemberNotNull (nameof (stringManager))]
 		void EnsureStringManager ()
 		{
 			if (stringManager == null) {
@@ -492,7 +492,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					Register (kvp.Value);
 				}
 			} else if (typeof(ICollection<string>).IsAssignableFrom (variable.Type)) {
-				foreach (string s in (ICollection<string?>)variable.Value) {
+				foreach (string? s in (ICollection<string?>)variable.Value) {
 					Register (s);
 				}
 			}  else {
@@ -611,7 +611,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			string? variableName = bufferManager.GetBufferVariableName (structure, smi);
-			if (String.IsNullOrEmpty (variableName)) {
+			if (variableName.IsNullOrEmpty ()) {
 				throw new InvalidOperationException ($"Internal error: buffer for member '{smi.Info.Name}' of structure '{structure.Info.Name}' (index {structure.IndexInArray}) not found");
 			}
 

@@ -41,6 +41,7 @@ namespace xamarin::android {
 	public:
 		static constexpr std::string_view NEWLINE { "\n" };
 		static constexpr std::string_view EMPTY { "" };
+		static constexpr std::string_view DIR_SEP { "/" };
 
 		// .data() must be used otherwise string_view length will include the trailing \0 in the array
 		static constexpr std::string_view RUNTIME_CONFIG_BLOB_NAME            { RUNTIME_CONFIG_BLOB_NAME_ARRAY.data () };

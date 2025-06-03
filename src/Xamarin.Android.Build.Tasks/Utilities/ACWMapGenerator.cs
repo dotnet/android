@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -207,29 +205,40 @@ class ACWMapEntry
 	public string PartialAssemblyName { get; set; }
 	public string PartialAssemblyQualifiedName { get; set; }
 
+	public ACWMapEntry (string assemblyQualifiedName, string compatJniName, string javaKey, string managedKey, string moduleName, string partialAssemblyName, string partialAssemblyQualifiedName)
+	{
+		AssemblyQualifiedName = assemblyQualifiedName;
+		CompatJniName = compatJniName;
+		JavaKey = javaKey;
+		ManagedKey = managedKey;
+		ModuleName = moduleName;
+		PartialAssemblyName = partialAssemblyName;
+		PartialAssemblyQualifiedName = partialAssemblyQualifiedName;
+	}
+
 	public static ACWMapEntry Create (TypeDefinition type, TypeDefinitionCache cache)
 	{
-		return new ACWMapEntry {
-			AssemblyQualifiedName = type.GetAssemblyQualifiedName (cache),
-			CompatJniName = JavaNativeTypeManager.ToCompatJniName (type, cache).Replace ('/', '.'),
-			JavaKey = JavaNativeTypeManager.ToJniName (type, cache).Replace ('/', '.'),
-			ManagedKey = type.FullName.Replace ('/', '.'),
-			ModuleName = type.Module.Name,
-			PartialAssemblyName = type.GetPartialAssemblyName (cache),
-			PartialAssemblyQualifiedName = type.GetPartialAssemblyQualifiedName (cache),
-		};
+		return new ACWMapEntry (
+			assemblyQualifiedName: type.GetAssemblyQualifiedName (cache),
+			compatJniName: JavaNativeTypeManager.ToCompatJniName (type, cache).Replace ('/', '.'),
+			javaKey: JavaNativeTypeManager.ToJniName (type, cache).Replace ('/', '.'),
+			managedKey: type.FullName.Replace ('/', '.'),
+			moduleName: type.Module.Name,
+			partialAssemblyName: type.GetPartialAssemblyName (cache),
+			partialAssemblyQualifiedName: type.GetPartialAssemblyQualifiedName (cache)
+		);
 	}
 
 	public static ACWMapEntry Create (XElement type, string partialAssemblyName, string moduleName)
 	{
-		return new ACWMapEntry {
-			AssemblyQualifiedName = type.GetAttributeOrDefault ("assembly-qualified-name", string.Empty),
-			CompatJniName = type.GetAttributeOrDefault ("compat-jni-name", string.Empty),
-			JavaKey = type.GetAttributeOrDefault ("java-key", string.Empty),
-			ManagedKey = type.GetAttributeOrDefault ("managed-key", string.Empty),
-			ModuleName = moduleName,
-			PartialAssemblyName = partialAssemblyName,
-			PartialAssemblyQualifiedName = type.GetAttributeOrDefault ("partial-assembly-qualified-name", string.Empty),
-		};
+		return new ACWMapEntry (
+			assemblyQualifiedName: type.GetAttributeOrDefault ("assembly-qualified-name", string.Empty),
+			compatJniName: type.GetAttributeOrDefault ("compat-jni-name", string.Empty),
+			javaKey: type.GetAttributeOrDefault ("java-key", string.Empty),
+			managedKey: type.GetAttributeOrDefault ("managed-key", string.Empty),
+			moduleName: moduleName,
+			partialAssemblyName: partialAssemblyName,
+			partialAssemblyQualifiedName: type.GetAttributeOrDefault ("partial-assembly-qualified-name", string.Empty)
+		);
 	}
 }

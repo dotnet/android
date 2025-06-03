@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -68,7 +66,7 @@ namespace Xamarin.Android.Tasks
 		long jobsRunning = 0;
 		long jobId = 0;
 		int maxInstances = 0;
-		Action<string> logger = null;
+		Action<string>? logger = null;
 
 		public CancellationToken Token => tcs.Token;
 

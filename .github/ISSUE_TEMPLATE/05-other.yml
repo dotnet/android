@@ -1,7 +1,6 @@
 name: 🐛 Other
 description: Not sure where your issue fits? We'll direct it the right place!
 labels: ["needs-triage"]
-assignees: ["jpobst"]
 body:
   - type: markdown
     attributes:

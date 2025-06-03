@@ -346,7 +346,7 @@ namespace Xamarin.Android.Tasks
 
 		bool ShouldIgnoreSplitConfigs ()
 		{
-			if (String.IsNullOrEmpty (CustomBundleConfigFile)) {
+			if (CustomBundleConfigFile.IsNullOrEmpty ()) {
 				return false;
 			}
 

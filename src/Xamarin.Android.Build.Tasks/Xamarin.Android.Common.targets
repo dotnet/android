@@ -64,6 +64,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.FilterAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.FindLayoutsToBind" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateACWMap" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.GenerateAdditionalProviderSources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateLayoutBindings" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateLibraryResources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateManagedAidlProxies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -338,10 +339,21 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</Otherwise>
 </Choose>
 
-<PropertyGroup>
-  <_AndroidAotStripLibraries Condition=" '$(_AndroidAotStripLibraries)' == '' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</_AndroidAotStripLibraries>
+<PropertyGroup Condition=" '$(_AndroidRuntime)' != 'CoreCLR' ">
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' and ('$(EmbedAssembliesIntoApk)' != 'true' or '$(AndroidIncludeDebugSymbols)' == 'true') ">false</AndroidUseAssemblyStore>
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' ">true</AndroidUseAssemblyStore>
+  <_AndroidUseAssemblyStore>$(AndroidUseAssemblyStore)</_AndroidUseAssemblyStore>
+</PropertyGroup>
+
+<!-- For CoreCLR assembly stores are always on, individual assembly entries in the APK aren't supported.
+     The store, however, will NOT be built for Fastdev! -->
+<PropertyGroup Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">
+  <_AndroidUseAssemblyStore Condition="'$(EmbedAssembliesIntoApk)' == 'true' ">true</_AndroidUseAssemblyStore>
+  <_AndroidUseAssemblyStore Condition="'$(EmbedAssembliesIntoApk)' != 'true' ">false</_AndroidUseAssemblyStore>
+</PropertyGroup>
+
+<PropertyGroup>
+  <_AndroidAotStripLibraries Condition=" '$(_AndroidAotStripLibraries)' == '' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</_AndroidAotStripLibraries>
   <AndroidAotEnableLazyLoad Condition=" '$(AndroidAotEnableLazyLoad)' == '' And '$(AotAssemblies)' == 'true' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</AndroidAotEnableLazyLoad>
   <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and ('$(UsingMicrosoftNETSdkRazor)' == 'true') ">False</AndroidEnableMarshalMethods>
   <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and '$(_AndroidRuntime)' != 'NativeAOT' and '$(PublishReadyToRun)' != 'true' ">True</AndroidEnableMarshalMethods>
@@ -1641,10 +1653,8 @@ because xbuild doesn't support framework reference assemblies.
       ApplicationLabel="$(_ApplicationLabel)"
       BundledWearApplicationName="$(BundledWearApplicationPackageName)"
       CheckedBuild="$(_AndroidCheckedBuild)"
-      CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       Debug="$(AndroidIncludeDebugSymbols)"
       EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       IntermediateOutputDirectory="$(IntermediateOutputPath)"
       ManifestPlaceholders="$(AndroidManifestPlaceholders)"
       ManifestTemplate="$(_AndroidManifestAbs)"
@@ -1652,15 +1662,23 @@ because xbuild doesn't support framework reference assemblies.
       MergedManifestDocuments="@(_MergedManifestDocuments)"
       MultiDex="$(AndroidEnableMultiDex)"
       NeedsInternet="$(AndroidNeedsInternetPermission)"
-      OutputDirectory="$(IntermediateOutputPath)android"
       PackageName="$(_AndroidPackage)"
       ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
       SupportedAbis="@(_BuildTargetAbis)"
       SupportedOSPlatformVersion="$(SupportedOSPlatformVersion)"
-      TargetName="$(TargetName)"
       VersionCode="$(_AndroidVersionCode)"
       VersionName="$(_AndroidVersionName)">
+    <Output TaskParameter="AdditionalProviderSources" ItemName="_AdditionalProviderSources" />
   </GenerateMainAndroidManifest>
+
+  <GenerateAdditionalProviderSources
+      AdditionalProviderSources="@(_AdditionalProviderSources)"
+      AndroidRuntime="$(_AndroidRuntime)"
+      CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
+      IntermediateOutputDirectory="$(IntermediateOutputPath)"
+      OutputDirectory="$(IntermediateOutputPath)android"
+      TargetName="$(TargetName)">
+  </GenerateAdditionalProviderSources>
 
   <ItemGroup>
     <FileWrites Include="@(_TypeMapAssemblySource)" />
@@ -1728,7 +1746,7 @@ because xbuild doesn't support framework reference assemblies.
   <PropertyGroup>
     <AndroidStoreUncompressedFileExtensions Condition=" '$(_EmbeddedDSOsEnabled)' == 'True' ">.so;$(AndroidStoreUncompressedFileExtensions)</AndroidStoreUncompressedFileExtensions>
     <AndroidStoreUncompressedFileExtensions Condition=" '$(_UseEmbeddedDex)' == 'True' ">.dex;$(AndroidStoreUncompressedFileExtensions)</AndroidStoreUncompressedFileExtensions>
-    <AndroidStoreUncompressedFileExtensions Condition=" '$(AndroidUseAssemblyStore)' == 'True' ">.blob;$(AndroidStoreUncompressedFileExtensions)</AndroidStoreUncompressedFileExtensions>
+    <AndroidStoreUncompressedFileExtensions Condition=" '$(_AndroidUseAssemblyStore)' == 'True' ">.blob;$(AndroidStoreUncompressedFileExtensions)</AndroidStoreUncompressedFileExtensions>
   </PropertyGroup>
 </Target>
 
@@ -1888,7 +1906,7 @@ because xbuild doesn't support framework reference assemblies.
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
       BoundExceptionType="$(AndroidBoundExceptionType)"
       RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
-      UseAssemblyStore="$(AndroidUseAssemblyStore)"
+      UseAssemblyStore="$(_AndroidUseAssemblyStore)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
       CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
@@ -2302,7 +2320,7 @@ because xbuild doesn't support framework reference assemblies.
       ResolvedFrameworkAssemblies="@(_BuildApkResolvedFrameworkAssemblies)"
       ResolvedUserAssemblies="@(_BuildApkResolvedUserAssemblies)"
       SupportedAbis="@(_BuildTargetAbis)"
-      UseAssemblyStore="$(AndroidUseAssemblyStore)">
+      UseAssemblyStore="$(_AndroidUseAssemblyStore)">
     <Output TaskParameter="AssembliesToAddToArchive" ItemName="_BuildApkAssembliesToAddToArchive" />
   </CreateAssemblyStore>
 
@@ -2313,7 +2331,7 @@ because xbuild doesn't support framework reference assemblies.
       IntermediateOutputPath="$(IntermediateOutputPath)"
       ResolvedAssemblies="@(_BuildApkAssembliesToAddToArchive)"
       SupportedAbis="@(_BuildTargetAbis)"
-      UseAssemblyStore="$(AndroidUseAssemblyStore)"
+      UseAssemblyStore="$(_AndroidUseAssemblyStore)"
       RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">
     <Output TaskParameter="WrappedAssemblies" ItemName="FilesToAddToArchive" />
   </WrapAssembliesAsSharedLibraries>

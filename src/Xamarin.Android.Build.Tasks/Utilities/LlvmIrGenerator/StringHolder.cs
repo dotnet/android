@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 
 namespace Xamarin.Android.Tasks.LLVMIR;
@@ -21,7 +19,7 @@ class StringHolder : IComparable, IComparable<StringHolder>, IEquatable<StringHo
 	public static StringHolder AsHolder (object? value, LlvmIrStringEncoding encoding = LlvmIrStringEncoding.UTF8, StringComparison comparison = StringComparison.Ordinal)
 	{
 		if (value == null) {
-			return new StringHolder ((string)value);
+			return new StringHolder ((string?)value);
 		}
 
 		StringHolder holder;

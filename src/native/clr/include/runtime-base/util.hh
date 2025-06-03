@@ -73,17 +73,36 @@ namespace xamarin::android {
 			return (log_categories & category) != 0;
 		}
 
+	private:
+		static auto fs_entry_is_mode (struct stat const& s, mode_t mode) noexcept -> bool
+		{
+			return (s.st_mode & S_IFMT) == mode;
+		}
+
+		static auto exists_and_is_mode (std::string_view const& path, mode_t mode) noexcept -> bool
+		{
+			struct stat s;
+
+			if (::stat (path.data (), &s) == 0 && fs_entry_is_mode (s, mode)) {
+				return true;
+			}
+
+			return false;
+		}
+
+	public:
+		static auto dir_exists (std::string_view const& dir_path) noexcept -> bool
+		{
+			return exists_and_is_mode (dir_path, S_IFDIR);
+		}
+
 		static auto file_exists (const char *file) noexcept -> bool
 		{
 			if (file == nullptr) {
 				return false;
 			}
 
-			struct stat s;
-			if (::stat (file, &s) == 0 && (s.st_mode & S_IFMT) == S_IFREG) {
-				return true;
-			}
-			return false;
+			return exists_and_is_mode (file, S_IFREG);
 		}
 
 		template<size_t MaxStackSize>
@@ -96,6 +115,12 @@ namespace xamarin::android {
 			return file_exists (file.get ());
 		}
 
+		static auto file_exists (int dirfd, std::string_view const& file) noexcept -> bool
+		{
+			struct stat sbuf;
+			return fstatat (dirfd, file.data (), &sbuf, 0) == 0 && fs_entry_is_mode (sbuf, S_IFREG);
+		}
+
 		static auto get_file_size_at (int dirfd, const char *file_name) noexcept -> std::optional<size_t>
 		{
 			struct stat sbuf;
@@ -105,6 +130,11 @@ namespace xamarin::android {
 			}
 
 			return static_cast<size_t>(sbuf.st_size);
+		}
+
+		static auto get_file_size_at (int dirfd, std::string_view const& file_name) noexcept -> std::optional<size_t>
+		{
+			return get_file_size_at (dirfd, file_name.data ());
 		}
 
 		static void set_environment_variable (std::string_view const& name, jstring_wrapper& value) noexcept
@@ -123,7 +153,7 @@ namespace xamarin::android {
 			set_environment_variable (name, value);
 		}
 
-		static void set_environment_variable_for_directory (const char *name, jstring_wrapper &value) noexcept
+		static void set_environment_variable_for_directory (std::string_view const& name, jstring_wrapper &value) noexcept
 		{
 			set_environment_variable_for_directory (name, value, true, Constants::DEFAULT_DIRECTORY_MODE);
 		}
