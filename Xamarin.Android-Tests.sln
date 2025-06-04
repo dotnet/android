@@ -1,4 +1,4 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29411.108
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -85,16 +85,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop-Tests", "tests\Mono.Android-Tests\Java.Interop-Tests\Java.Interop-Tests.csproj", "{6CB00820-A66B-43E5-8785-ED456C6E9F39}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop", "external\Java.Interop\src\Java.Interop\Java.Interop.csproj", "{94BD81F7-B06F-4295-9636-F8A3B6BDC762}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "external", "external", "{DF42BE3B-9A66-4B6F-8096-83CC55F958D5}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "xamarin-android-tools", "xamarin-android-tools", "{C9DD49BE-6AAC-46DB-9F90-BD9156099689}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{4FA2AF25-E0D3-493C-86F1-AC1B709D2AE1}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.AndroidSdk-Tests", "external\xamarin-android-tools\tests\Xamarin.Android.Tools.AndroidSdk-Tests\Xamarin.Android.Tools.AndroidSdk-Tests.csproj", "{E3D83D80-EE15-493A-8FC6-3F2D03562247}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Android.Build.BaseTasks-Tests", "external\xamarin-android-tools\tests\Microsoft.Android.Build.BaseTasks-Tests\Microsoft.Android.Build.BaseTasks-Tests.csproj", "{E14825AD-4849-4079-AF1E-43090FB44AC6}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -243,14 +233,6 @@ Global
 		{94BD81F7-B06F-4295-9636-F8A3B6BDC762}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{94BD81F7-B06F-4295-9636-F8A3B6BDC762}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{94BD81F7-B06F-4295-9636-F8A3B6BDC762}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E3D83D80-EE15-493A-8FC6-3F2D03562247}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E3D83D80-EE15-493A-8FC6-3F2D03562247}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E3D83D80-EE15-493A-8FC6-3F2D03562247}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E3D83D80-EE15-493A-8FC6-3F2D03562247}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E14825AD-4849-4079-AF1E-43090FB44AC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E14825AD-4849-4079-AF1E-43090FB44AC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E14825AD-4849-4079-AF1E-43090FB44AC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E14825AD-4849-4079-AF1E-43090FB44AC6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -287,10 +269,6 @@ Global
 		{D1243BAB-23CA-4566-A2A3-3ADA2C2DC3AF} = {EFBC4DC0-DBFF-4DAA-B0B8-6D0CB02A25F5}
 		{6CB00820-A66B-43E5-8785-ED456C6E9F39} = {EFBC4DC0-DBFF-4DAA-B0B8-6D0CB02A25F5}
 		{94BD81F7-B06F-4295-9636-F8A3B6BDC762} = {EFBC4DC0-DBFF-4DAA-B0B8-6D0CB02A25F5}
-		{C9DD49BE-6AAC-46DB-9F90-BD9156099689} = {DF42BE3B-9A66-4B6F-8096-83CC55F958D5}
-		{4FA2AF25-E0D3-493C-86F1-AC1B709D2AE1} = {C9DD49BE-6AAC-46DB-9F90-BD9156099689}
-		{E3D83D80-EE15-493A-8FC6-3F2D03562247} = {4FA2AF25-E0D3-493C-86F1-AC1B709D2AE1}
-		{E14825AD-4849-4079-AF1E-43090FB44AC6} = {4FA2AF25-E0D3-493C-86F1-AC1B709D2AE1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8643CD20-B195-4919-8135-27549488237E}

@@ -129,12 +129,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "proguard-android", "src\pro
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Android.Runtime.NativeAOT", "src\Microsoft.Android.Runtime.NativeAOT\Microsoft.Android.Runtime.NativeAOT.csproj", "{E8831F32-11D7-D42C-E43C-711998BC357A}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "xamarin-android-tools", "xamarin-android-tools", "{422882EC-39A9-4CF2-ADD2-291BFF3C1C8C}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{75D8EE21-C4CC-4AF4-97C2-A108096CFD22}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Android.Build.BaseTasks-Tests", "external\xamarin-android-tools\tests\Microsoft.Android.Build.BaseTasks-Tests\Microsoft.Android.Build.BaseTasks-Tests.csproj", "{6540F673-73F9-4487-BDC0-72EF54299248}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AnyCPU = Debug|AnyCPU
@@ -365,10 +359,6 @@ Global
 		{E8831F32-11D7-D42C-E43C-711998BC357A}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{E8831F32-11D7-D42C-E43C-711998BC357A}.Release|AnyCPU.ActiveCfg = Release|Any CPU
 		{E8831F32-11D7-D42C-E43C-711998BC357A}.Release|AnyCPU.Build.0 = Release|Any CPU
-		{6540F673-73F9-4487-BDC0-72EF54299248}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
-		{6540F673-73F9-4487-BDC0-72EF54299248}.Debug|AnyCPU.Build.0 = Debug|Any CPU
-		{6540F673-73F9-4487-BDC0-72EF54299248}.Release|AnyCPU.ActiveCfg = Release|Any CPU
-		{6540F673-73F9-4487-BDC0-72EF54299248}.Release|AnyCPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -430,9 +420,6 @@ Global
 		{5E806C9F-1B67-4B6B-A6AB-258834250DBB} = {FFCF518F-2A4A-40A2-9174-2EE13B76C723}
 		{5FD0133B-69E5-4474-9B67-9FD1D0150C70} = {FFCF518F-2A4A-40A2-9174-2EE13B76C723}
 		{E8831F32-11D7-D42C-E43C-711998BC357A} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
-		{422882EC-39A9-4CF2-ADD2-291BFF3C1C8C} = {05C3B1D6-A4CE-4534-A9E4-E9117591ADF7}
-		{75D8EE21-C4CC-4AF4-97C2-A108096CFD22} = {422882EC-39A9-4CF2-ADD2-291BFF3C1C8C}
-		{6540F673-73F9-4487-BDC0-72EF54299248} = {75D8EE21-C4CC-4AF4-97C2-A108096CFD22}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {53A1F287-EFB2-4D97-A4BB-4A5E145613F6}

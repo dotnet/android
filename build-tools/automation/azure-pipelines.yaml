@@ -103,6 +103,8 @@ extends:
 
     - template: /build-tools/automation/yaml-templates/stage-linux-tests.yaml@self
 
+    - template: /build-tools/automation/yaml-templates/stage-macos-tests.yaml@self
+
     - template: /build-tools/automation/yaml-templates/stage-msbuild-tests.yaml@self
 
     - template: /build-tools/automation/yaml-templates/stage-msbuild-emulator-tests.yaml@self
