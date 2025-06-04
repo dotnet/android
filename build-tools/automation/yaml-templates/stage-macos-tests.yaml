@@ -1,19 +1,24 @@
-# Runs smoke tests on Linux packages.
+# Runs smoke tests on macOS packages.
 
 stages:
-- stage: linux_tests
-  displayName: Linux Tests
+- stage: macos_tests
+  displayName: macOS Tests
   dependsOn:
   - mac_build
-  - linux_build
   jobs:
-  # Check - "Xamarin.Android (Linux Tests Linux > Tests > MSBuild)"
-  - job: linux_tests_smoke_1
-    displayName: Linux > Tests > MSBuild 1
+  # Check - "Xamarin.Android (macOS Tests macOS > Tests > MSBuild)"
+  - job: macos_tests_smoke_1
+    displayName: macOS > Tests > MSBuild 1
     pool:
-      name: MAUI-1ESPT
-      image: $(LinuxPoolImage1ESPT)
-      os: linux
+      ${{ if or(eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR'), eq(variables['Build.DefinitionName'], 'Xamarin.Android Nightly')) }}:
+        name: $(SharedMacPool)
+        demands:
+        - macOS.Name -equals $(SharedMacName)
+        - Agent.OSArchitecture -equals $(SharedMacArch)
+      ${{ else }}:
+        name: Azure Pipelines
+        vmImage: $(HostedMacImage)
+      os: macOS
     timeoutInMinutes: 180
     workspace:
       clean: all
@@ -27,23 +32,29 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
-        testRunTitle: Xamarin.Android.Build.Tests - Linux BuildTest
+        testRunTitle: Xamarin.Android.Build.Tests - macOS BuildTest
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "Name = BuildTest"
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
-        artifactName: Test Results - MSBuild - Linux 1
+        artifactName: Test Results - MSBuild - macOS 1
 
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
 
-  - job: linux_tests_smoke_2
-    displayName: Linux > Tests > MSBuild 2
+  - job: macos_tests_smoke_2
+    displayName: macOS > Tests > MSBuild 2
     pool:
-      name: MAUI-1ESPT
-      image: $(LinuxPoolImage1ESPT)
-      os: linux
+      ${{ if or(eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR'), eq(variables['Build.DefinitionName'], 'Xamarin.Android Nightly')) }}:
+        name: $(SharedMacPool)
+        demands:
+        - macOS.Name -equals $(SharedMacName)
+        - Agent.OSArchitecture -equals $(SharedMacArch)
+      ${{ else }}:
+        name: Azure Pipelines
+        vmImage: $(HostedMacImage)
+      os: macOS
     timeoutInMinutes: 180
     workspace:
       clean: all
@@ -57,19 +68,19 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
-        testRunTitle: Xamarin.Android.Build.Tests - Linux PackagingTest
+        testRunTitle: Xamarin.Android.Build.Tests - macOS PackagingTest
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "Name = PackagingTest"
 
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
-        testRunTitle: Xamarin.Android.Build.Tests - Linux XASdkTests
+        testRunTitle: Xamarin.Android.Build.Tests - macOS XASdkTests
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "Name = XASdkTests & Name != XamarinLegacySdk"
 
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
-        testRunTitle: Xamarin.Android.Build.Tests - Linux AndroidDependenciesTests
+        testRunTitle: Xamarin.Android.Build.Tests - macOS AndroidDependenciesTests
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "Name = AndroidDependenciesTests"
 
@@ -82,16 +93,22 @@ stages:
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
-        artifactName: Test Results - MSBuild - Linux 2
+        artifactName: Test Results - MSBuild - macOS 2
 
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
 
-  - job: linux_tests_android_tools
-    displayName: Linux > Tests > Android Tools
+  - job: macos_tests_android_tools
+    displayName: macOS > Tests > Android Tools
     pool:
-      name: MAUI-1ESPT
-      image: $(LinuxPoolImage1ESPT)
-      os: linux
+      ${{ if or(eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR'), eq(variables['Build.DefinitionName'], 'Xamarin.Android Nightly')) }}:
+        name: $(SharedMacPool)
+        demands:
+        - macOS.Name -equals $(SharedMacName)
+        - Agent.OSArchitecture -equals $(SharedMacArch)
+      ${{ else }}:
+        name: Azure Pipelines
+        vmImage: $(HostedMacImage)
+      os: macOS
     timeoutInMinutes: 180
     workspace:
       clean: all
@@ -105,17 +122,17 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
-        testRunTitle: Xamarin.Android.Tools.AndroidSdk-Tests - Linux
+        testRunTitle: Xamarin.Android.Tools.AndroidSdk-Tests - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Tools.AndroidSdk-Tests.dll
 
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
-        testRunTitle: Microsoft.Android.Build.BaseTasks-Tests - Linux
+        testRunTitle: Microsoft.Android.Build.BaseTasks-Tests - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Microsoft.Android.Build.BaseTasks-Tests.dll
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
-        artifactName: Test Results - Android Tools - Linux
+        artifactName: Test Results - Android Tools - macOS
 
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml

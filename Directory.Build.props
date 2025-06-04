@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <DirectoryBuildPropsImported>true</DirectoryBuildPropsImported>
+    <IsXamarinAndroidBuild>true</IsXamarinAndroidBuild>
     <DotNetTargetFrameworkVersion>10.0</DotNetTargetFrameworkVersion>
     <DotNetTargetFramework>net$(DotNetTargetFrameworkVersion)</DotNetTargetFramework>
     <DotNetAndroidTargetFramework>$(DotNetTargetFramework)-android</DotNetAndroidTargetFramework>
