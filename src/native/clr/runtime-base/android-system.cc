@@ -410,25 +410,27 @@ AndroidSystem::get_max_gref_count_from_system () noexcept -> long
 	return max;
 }
 
-auto AndroidSystem::get_full_dso_path (std::string const& base_dir, const char *dso_path, dynamic_local_string<SENSIBLE_PATH_MAX>& path) noexcept -> bool
+auto AndroidSystem::get_full_dso_path (std::string const& base_dir, std::string_view const& dso_path, dynamic_local_string<SENSIBLE_PATH_MAX>& path) noexcept -> bool
 {
-	if (dso_path == nullptr) {
+	if (dso_path.empty ()) {
 		return false;
 	}
 
-	if (base_dir.empty () || Util::is_path_rooted (dso_path))
-		return const_cast<char*>(dso_path); // Absolute path or no base path, can't do much with it
+	if (base_dir.empty () || Util::is_path_rooted (dso_path)) {
+		path.assign (dso_path);
+		return true; // Absolute path or no base path, can't do much with it
+	}
 
 	path.assign (base_dir)
 		.append ("/"sv)
-		.append_c (dso_path);
+		.append (dso_path);
 
 	return true;
 }
 
-auto AndroidSystem::load_dso (const char *path, unsigned int dl_flags, bool skip_exists_check) noexcept -> void*
+auto AndroidSystem::load_dso (std::string_view const& path, unsigned int dl_flags, bool skip_exists_check) noexcept -> void*
 {
-	if (path == nullptr || *path == '\0') {
+	if (path.empty ()) [[unlikely]] {
 		return nullptr;
 	}
 
@@ -439,18 +441,19 @@ auto AndroidSystem::load_dso (const char *path, unsigned int dl_flags, bool skip
 	}
 
 	char *error = nullptr;
-	void *handle = java_interop_lib_load (path, dl_flags, &error);
+	void *handle = java_interop_lib_load (path.data (), dl_flags, &error);
 	if (handle == nullptr && Util::should_log (LOG_ASSEMBLY)) {
 		log_info_nocheck_fmt (LOG_ASSEMBLY, "Failed to load shared library '{}'. {}", path, error);
 	}
 	java_interop_free (error);
+
 	return handle;
 }
 
 template<class TContainer> [[gnu::always_inline]] // TODO: replace with a concept
-auto AndroidSystem::load_dso_from_specified_dirs (TContainer directories, const char *dso_name, unsigned int dl_flags) noexcept -> void*
+auto AndroidSystem::load_dso_from_specified_dirs (TContainer directories, std::string_view const& dso_name, unsigned int dl_flags) noexcept -> void*
 {
-	if (dso_name == nullptr) {
+	if (dso_name.empty ()) {
 		return nullptr;
 	}
 
@@ -469,12 +472,12 @@ auto AndroidSystem::load_dso_from_specified_dirs (TContainer directories, const 
 	return nullptr;
 }
 
-auto AndroidSystem::load_dso_from_app_lib_dirs (const char *name, unsigned int dl_flags) noexcept -> void*
+auto AndroidSystem::load_dso_from_app_lib_dirs (std::string_view const& name, unsigned int dl_flags) noexcept -> void*
 {
 	return load_dso_from_specified_dirs (app_lib_directories, name, dl_flags);
 }
 
-auto AndroidSystem::load_dso_from_override_dirs (const char *name, unsigned int dl_flags) noexcept -> void*
+auto AndroidSystem::load_dso_from_override_dirs (std::string_view const& name, unsigned int dl_flags) noexcept -> void*
 {
 	if constexpr (Constants::is_release_build) {
 		return nullptr;
@@ -484,7 +487,7 @@ auto AndroidSystem::load_dso_from_override_dirs (const char *name, unsigned int 
 }
 
 [[gnu::flatten]]
-auto AndroidSystem::load_dso_from_any_directories (const char *name, unsigned int dl_flags) noexcept -> void*
+auto AndroidSystem::load_dso_from_any_directories (std::string_view const& name, unsigned int dl_flags) noexcept -> void*
 {
 	void *handle = load_dso_from_override_dirs (name, dl_flags);
 	if (handle == nullptr) {
