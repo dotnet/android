@@ -8,5 +8,7 @@
     </RestoreAdditionalProjectSources>
     <!-- Override test output path to redirect to main repo's test output directory -->
     <TestOutputFullPath Condition=" '$(IsXamarinAndroidBuild)' == 'true' ">$(MSBuildThisFileDirectory)..\bin\Test$(Configuration)\</TestOutputFullPath>
+    <!-- Use stable target framework for test projects when building as part of main build -->
+    <DotNetTargetFramework Condition=" '$(IsXamarinAndroidBuild)' == 'true' ">$(DotNetStableTargetFramework)</DotNetTargetFramework>
   </PropertyGroup>
 </Project>
