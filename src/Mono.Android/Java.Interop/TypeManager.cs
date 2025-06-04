@@ -258,11 +258,9 @@ namespace Java.Interop {
 			}
 		}
 
-		private static Type? GetJavaToManagedTypeCore (string class_name)
+		static Type? GetJavaToManagedTypeCore (string class_name)
 		{
-			Type? type = null;
-
-			if (TypeManagerMapDictionaries.JniToManaged.TryGetValue (class_name, out type)) {
+			if (TypeManagerMapDictionaries.JniToManaged.TryGetValue (class_name, out Type? type)) {
 				return type;
 			}
 
