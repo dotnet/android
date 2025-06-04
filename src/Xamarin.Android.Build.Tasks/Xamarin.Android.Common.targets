@@ -47,7 +47,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNativeFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNonEmptyDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectPdbFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CollectRuntimeConfigFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectTypeMapFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CompressAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ComputeHash" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -312,6 +311,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' And '$(EmbedAssembliesIntoApk)' == 'False' ">True</_AndroidFastDeployEnvironmentFiles>
 	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' ">False</_AndroidFastDeployEnvironmentFiles>
 
+  <_AndroidCompressedAssembliesDir>$(IntermediateOutputPath)android\lz4</_AndroidCompressedAssembliesDir>
   <_AndroidUseCLR Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">True</_AndroidUseCLR>
   <_AndroidUseCLR Condition=" '$(_AndroidRuntime)' != 'CoreCLR' ">False</_AndroidUseCLR>
 </PropertyGroup>
@@ -353,6 +353,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </PropertyGroup>
 
 <PropertyGroup>
+  <_EmbedAssemblyStoreInRuntime Condition=" '$(_AndroidUseAssemblyStore)' == 'True' And '$(_AndroidEmbedAssemblyStoreInRuntime)' == 'True' ">true</_EmbedAssemblyStoreInRuntime>
+  <_EmbedAssemblyStoreInRuntime Condition=" '$(_EmbedAssemblyStoreInRuntime)' != 'true' ">false</_EmbedAssemblyStoreInRuntime>
+
   <_AndroidAotStripLibraries Condition=" '$(_AndroidAotStripLibraries)' == '' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</_AndroidAotStripLibraries>
   <AndroidAotEnableLazyLoad Condition=" '$(AndroidAotEnableLazyLoad)' == '' And '$(AotAssemblies)' == 'true' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</AndroidAotEnableLazyLoad>
   <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and ('$(UsingMicrosoftNETSdkRazor)' == 'true') ">False</AndroidEnableMarshalMethods>
@@ -362,6 +365,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">False</_AndroidUseMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">$(AndroidEnableMarshalMethods)</_AndroidUseMarshalMethods>
+
+  <_AndroidEmbedAssemblyStoreInRuntime Condition=" '$(AndroidUseAssemblyStore)' == 'True' And '$(EmbedAssembliesIntoApk)' == 'true' And '$(_AndroidEmbedAssemblyStoreInRuntime)' == '' ">True</_AndroidEmbedAssemblyStoreInRuntime>
+  <_AndroidEmbedAssemblyStoreInRuntime Condition="'$(_AndroidEmbedAssemblyStoreInRuntime)' == '' ">False</_AndroidEmbedAssemblyStoreInRuntime>
 
   <_AndroidUseManagedMarshalMethodsLookup Condition=" '$(_AndroidUseManagedMarshalMethodsLookup)' == '' and '$(_AndroidUseMarshalMethods)' == 'True' and '$(_AndroidRuntime)' != 'MonoVM' ">True</_AndroidUseManagedMarshalMethodsLookup>
   <_AndroidUseManagedMarshalMethodsLookup Condition=" '$(_AndroidUseManagedMarshalMethodsLookup)' == '' ">False</_AndroidUseManagedMarshalMethodsLookup>
@@ -1536,10 +1542,8 @@ because xbuild doesn't support framework reference assemblies.
   <PrepareAbiItems
       BuildTargetAbis="@(_BuildTargetAbis)"
       NativeSourcesDir="$(_NativeAssemblySourceDir)"
-      Debug="$(AndroidIncludeDebugSymbols)"
-      Mode="typemap">
+      Mode="TypeMap">
     <Output TaskParameter="AssemblySources" ItemName="_TypeMapAssemblySource" />
-    <Output TaskParameter="AssemblyIncludes" ItemName="_TypeMapAssemblyInclude" />
   </PrepareAbiItems>
 </Target>
 
@@ -1682,7 +1686,6 @@ because xbuild doesn't support framework reference assemblies.
 
   <ItemGroup>
     <FileWrites Include="@(_TypeMapAssemblySource)" />
-    <FileWrites Include="@(_TypeMapAssemblyInclude)" />
     <FileWrites Include="@(_AndroidTypeMapping)" Condition=" '@(_AndroidTypeMapping->Count())' == '0' " />
     <FileWrites Include="$(_ManifestOutput)" />
   </ItemGroup>
@@ -1754,23 +1757,27 @@ because xbuild doesn't support framework reference assemblies.
   <PrepareAbiItems
     BuildTargetAbis="@(_BuildTargetAbis)"
     NativeSourcesDir="$(_NativeAssemblySourceDir)"
-    Debug="$(AndroidIncludeDebugSymbols)"
-    Mode="environment">
+    Mode="Environment">
       <Output TaskParameter="AssemblySources" ItemName="_EnvironmentAssemblySource" />
   </PrepareAbiItems>
   <PrepareAbiItems
     BuildTargetAbis="@(_BuildTargetAbis)"
     NativeSourcesDir="$(_NativeAssemblySourceDir)"
-    Debug="$(AndroidIncludeDebugSymbols)"
-    Mode="compressed">
+    Mode="CompressedAssemblies">
       <Output TaskParameter="AssemblySources" ItemName="_CompressedAssembliesAssemblySource" />
   </PrepareAbiItems>
   <PrepareAbiItems
     BuildTargetAbis="@(_BuildTargetAbis)"
     NativeSourcesDir="$(_NativeAssemblySourceDir)"
-    Debug="$(AndroidIncludeDebugSymbols)"
-    Mode="marshal_methods">
+    Mode="MarshalMethods">
       <Output TaskParameter="AssemblySources" ItemName="_MarshalMethodsAssemblySource" />
+  </PrepareAbiItems>
+  <PrepareAbiItems
+    Condition=" '$(_AndroidRuntime)' == 'MonoVM' "
+    BuildTargetAbis="@(_BuildTargetAbis)"
+    NativeSourcesDir="$(_NativeAssemblySourceDir)"
+    Mode="EmbeddedRuntimeConfig">
+      <Output TaskParameter="AssemblySources" ItemName="_EmbeddedRuntimeConfigAssemblySource" />
   </PrepareAbiItems>
 </Target>
 
@@ -1796,8 +1803,7 @@ because xbuild doesn't support framework reference assemblies.
   <PrepareAbiItems
       BuildTargetAbis="@(_BuildTargetAbis)"
       NativeSourcesDir="$(_NativeAssemblySourceDir)"
-      Debug="$(AndroidIncludeDebugSymbols)"
-      Mode="jniremap">
+      Mode="JNIRemap">
     <Output TaskParameter="AssemblySources" ItemName="_AndroidRemapAssemblySource" />
   </PrepareAbiItems>
 </Target>
@@ -1869,6 +1875,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_GetGeneratePackageManagerJavaInputs">
   <ItemGroup>
     <_GeneratePackageManagerJavaInputs Include="@(_GenerateJavaStubsInputs)" />
+    <_GeneratePackageManagerJavaInputs Include="$(_BinaryRuntimeConfigPath)" />
   </ItemGroup>
 </Target>
 
@@ -1877,7 +1884,7 @@ because xbuild doesn't support framework reference assemblies.
   DependsOnTargets="$(_GeneratePackageManagerJavaDependsOn)"
   Inputs="@(_GeneratePackageManagerJavaInputs)"
   Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
-  
+
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
       MainAssembly="$(TargetPath)"
@@ -1911,7 +1918,8 @@ because xbuild doesn't support framework reference assemblies.
       EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
       CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
       TargetsCLR="$(_AndroidUseCLR)"
-      ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)">
+      ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)"
+      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)">
   </GenerateNativeApplicationConfigSources>
 
   <GenerateNativeMarshalMethodSources
@@ -1923,10 +1931,11 @@ because xbuild doesn't support framework reference assemblies.
       SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"
       SupportedAbis="@(_BuildTargetAbis)">
   </GenerateNativeMarshalMethodSources>
-      
+
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
   <ItemGroup>
     <FileWrites Include="@(_EnvironmentAssemblySource)" />
+    <FileWrites Include="@(_EmbeddedRuntimeConfigAssemblySource)" />
   </ItemGroup>
 </Target>
 
@@ -2039,6 +2048,7 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
 	<_CompileToDalvikDependsOnTargets>
 		_CompileJava;
+		_RemoveRegisterAttribute;
 		_CreateApplicationSharedLibraries;
 		_GetMonoPlatformJarPath;
 		_GetLibraryImports;
@@ -2131,7 +2141,7 @@ because xbuild doesn't support framework reference assemblies.
    <Touch Files="$(_AndroidApkPerAbiFlagFile)" Condition="'$(AndroidCreatePackagePerAbi)' == 'true'" AlwaysCreate="True" />
 </Target>
 
-<Target Name="_PrepareNativeAssemblyItems" DependsOnTargets="_GenerateJavaStubs">
+<Target Name="_PrepareNativeAssemblyItems" DependsOnTargets="_GenerateJavaStubs;_PrepareCreateEmbeddedAssemblyStoreOutputItems">
   <ItemGroup>
     <_NativeAssemblyTarget Include="@(_TypeMapAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
       <abi>%(_TypeMapAssemblySource.abi)</abi>
@@ -2151,6 +2161,22 @@ because xbuild doesn't support framework reference assemblies.
     <_NativeAssemblyTarget Include="@(_AndroidRemapAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
       <abi>%(_AndroidRemapAssemblySource.abi)</abi>
     </_NativeAssemblyTarget>
+    <_NativeAssemblyTarget Include="@(_EmbeddedAssemblyStoreSourceFiles->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
+      <abi>%(_EmbeddedAssemblyStoreSourceFiles.abi)</abi>
+    </_NativeAssemblyTarget>
+    <_NativeAssemblyTarget Include="@(_EmbeddedRuntimeConfigAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
+      <abi>%(_EmbeddedRuntimeConfigAssemblySource.abi)</abi>
+    </_NativeAssemblyTarget>
+  </ItemGroup>
+
+  <ItemGroup>
+    <_NativeAssemblySource Include="@(_AndroidRemapAssemblySource)" />
+    <_NativeAssemblySource Include="@(_CompressedAssembliesAssemblySource)" />
+    <_NativeAssemblySource Include="@(_EmbeddedAssemblyStoreSourceFiles)" />
+    <_NativeAssemblySource Include="@(_EmbeddedRuntimeConfigAssemblySource)" />
+    <_NativeAssemblySource Include="@(_EnvironmentAssemblySource)" />
+    <_NativeAssemblySource Include="@(_MarshalMethodsAssemblySource)" />
+    <_NativeAssemblySource Include="@(_TypeMapAssemblySource)" />
   </ItemGroup>
 </Target>
 
@@ -2169,11 +2195,11 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CompileNativeAssemblySources"
-    DependsOnTargets="_PrepareNativeAssemblyItems;_GenerateCompressedAssembliesNativeSourceFiles"
-    Inputs="@(_TypeMapAssemblySource);@(_TypeMapAssemblyInclude);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource)"
+    DependsOnTargets="_PrepareNativeAssemblyItems;_GenerateCompressedAssembliesNativeSourceFiles;_CreateEmbeddedAssemblyStore;"
+    Inputs="@(_NativeAssemblySource)"
     Outputs="@(_NativeAssemblyTarget)">
   <CompileNativeAssembly
-      Sources="@(_TypeMapAssemblySource);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource)"
+      Sources="@(_NativeAssemblySource)"
       DebugBuild="$(AndroidIncludeDebugSymbols)"
       WorkingDirectory="$(_NativeAssemblySourceDir)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
@@ -2314,7 +2340,7 @@ because xbuild doesn't support framework reference assemblies.
     in monodroid.
   -->
   <CreateAssemblyStore
-      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
+      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' And '$(_EmbedAssemblyStoreInRuntime)' != 'True' "
       AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
       ResolvedFrameworkAssemblies="@(_BuildApkResolvedFrameworkAssemblies)"
@@ -2325,7 +2351,7 @@ because xbuild doesn't support framework reference assemblies.
   </CreateAssemblyStore>
 
   <WrapAssembliesAsSharedLibraries
-      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
+      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' And '$(_EmbedAssemblyStoreInRuntime)' != 'True' "
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
       IntermediateOutputPath="$(IntermediateOutputPath)"
@@ -2351,17 +2377,6 @@ because xbuild doesn't support framework reference assemblies.
       LibraryProjectJars="@(ExtractedJarImports)">
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectJarContentFilesForArchive>
-
-  <!-- CoreCLR builds embed runtime config in libxamarin-app.so -->
-  <CollectRuntimeConfigFilesForArchive
-      Condition=" '$(_AndroidRuntime)' == 'MonoVM' "
-      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-      IntermediateOutputPath="$(IntermediateOutputPath)"
-      RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
-      SupportedAbis="@(_BuildTargetAbis)"
-      RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">
-    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
-  </CollectRuntimeConfigFilesForArchive>
 
   <CollectNativeFilesForArchive
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"
@@ -2474,17 +2489,6 @@ because xbuild doesn't support framework reference assemblies.
       LibraryProjectJars="@(ExtractedJarImports)">
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectJarContentFilesForArchive>
-
-  <!-- CoreCLR builds embed runtime config in libxamarin-app.so -->
-  <CollectRuntimeConfigFilesForArchive
-      Condition=" '$(_AndroidRuntime)' == 'MonoVM' "
-      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-      IntermediateOutputPath="$(IntermediateOutputPath)"
-      RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
-      SupportedAbis="@(_BuildTargetAbis)"
-      RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">
-    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
-  </CollectRuntimeConfigFilesForArchive>
 
   <CollectNativeFilesForArchive
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"

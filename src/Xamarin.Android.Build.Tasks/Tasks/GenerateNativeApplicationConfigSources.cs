@@ -8,6 +8,7 @@ using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Text;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 using Java.Interop.Tools.TypeNameMappings;
 using Xamarin.Android.Tools;
@@ -49,6 +50,9 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public bool TargetsCLR { get; set; }
+
+		[Required]
+		public string AndroidBinUtilsDirectory { get; set; } = "";
 
 		public bool EnableMarshalMethods { get; set; }
 		public bool EnableManagedMarshalMethodsLookup { get; set; }
@@ -234,6 +238,10 @@ namespace Xamarin.Android.Tasks
 			}
 
 			var uniqueNativeLibraries = new List<ITaskItem> ();
+
+			// Number of DSOs that will be packaged, it may be different to the number of items in the above
+			// `uniqueNativeLibraries` list.
+			uint packagedNativeLibrariesCount = 0;
 			var seenNativeLibraryNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 			if (NativeLibraries != null) {
 				foreach (ITaskItem item in NativeLibraries) {
@@ -243,12 +251,21 @@ namespace Xamarin.Android.Tasks
 						continue;
 					}
 
+					if (!ELFHelper.IsEmptyAOTLibrary (Log, item.ItemSpec)) {
+						packagedNativeLibrariesCount++;
+					}
+
 					seenNativeLibraryNames.Add (name);
 					uniqueNativeLibraries.Add (item);
 				}
+
+				// libxamarin-app.so is not in NativeLibraries, but we must count it
+				if (!seenNativeLibraryNames.Contains ("libxamarin-app.so")) {
+					uniqueNativeLibraries.Add (new TaskItem ("libxamarin-app.so"));
+					packagedNativeLibrariesCount++;
+				}
 			}
 
-			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
 			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (ProjectSpecificTaskObjectKey (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey), RegisteredTaskObjectLifetime.Build);
 			LLVMIR.LlvmIrComposer appConfigAsmGen;
 
@@ -262,6 +279,7 @@ namespace Xamarin.Android.Tasks
 					NumberOfAssembliesInApk = assemblyCount,
 					BundledAssemblyNameWidth = assemblyNameWidth,
 					NativeLibraries = uniqueNativeLibraries,
+					PackagedNativeLibrariesCount = packagedNativeLibrariesCount,
 					AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
 					JNIEnvInitializeToken = jnienv_initialize_method_token,
 					JNIEnvRegisterJniNativesToken = jnienv_registerjninatives_method_token,
@@ -272,6 +290,17 @@ namespace Xamarin.Android.Tasks
 					IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
 				};
 			} else {
+				bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
+				ELFEmbeddingHelper.EmbedBinary (
+					Log,
+					SupportedAbis,
+					AndroidBinUtilsDirectory,
+					RuntimeConfigBinFilePath,
+					ELFEmbeddingHelper.KnownEmbedItems.RuntimeConfig,
+					EnvironmentOutputDirectory,
+					missingContentOK: !haveRuntimeConfigBlob
+				);
+
 				appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {
 					UsesMonoAOT = usesMonoAOT,
 					UsesMonoLLVM = EnableLLVM,
@@ -283,11 +312,11 @@ namespace Xamarin.Android.Tasks
 					PackageNamingPolicy = pnp,
 					BoundExceptionType = boundExceptionType,
 					JniAddNativeMethodRegistrationAttributePresent = NativeCodeGenState.TemplateJniAddNativeMethodRegistrationAttributePresent,
-					HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
 					NumberOfAssembliesInApk = assemblyCount,
 					BundledAssemblyNameWidth = assemblyNameWidth,
 					MonoComponents = (MonoComponent)monoComponents,
 					NativeLibraries = uniqueNativeLibraries,
+					PackagedNativeLibrariesCount = packagedNativeLibrariesCount,
 					HaveAssemblyStore = UseAssemblyStore,
 					AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
 					JNIEnvInitializeToken = jnienv_initialize_method_token,

@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Basic.cs" />
+    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\ELFHelper.Basic.cs" />
   </ItemGroup>
 
   <ItemGroup>

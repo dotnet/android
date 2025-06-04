@@ -4,6 +4,7 @@ using System.Buffers;
 
 using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
+using Xamarin.Android.Tasks;
 using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.AssemblyStore;
@@ -29,31 +30,28 @@ static class Utils
 
 	public static readonly ArrayPool<byte> BytePool = ArrayPool<byte>.Shared;
 
-	public static (ulong offset, ulong size, ELFPayloadError error) FindELFPayloadSectionOffsetAndSize (Stream stream)
+	static (bool is64, IELF? elf, ELFPayloadError error) TryOpenELF (Stream stream)
 	{
+		bool is64 = false;
 		stream.Seek (0, SeekOrigin.Begin);
 		Class elfClass = ELFReader.CheckELFType (stream);
 		if (elfClass == Class.NotELF) {
-			return ReturnError (null, ELFPayloadError.NotELF);
+			return ReturnError (is64, null, ELFPayloadError.NotELF);
 		}
 
 		if (!ELFReader.TryLoad (stream, shouldOwnStream: false, out IELF? elf)) {
-			return ReturnError (elf, ELFPayloadError.LoadFailed);
+			return ReturnError (is64, elf, ELFPayloadError.LoadFailed);
 		}
 
 		if (elf.Type != FileType.SharedObject) {
-			return ReturnError (elf, ELFPayloadError.NotSharedLibrary);
+			return ReturnError (is64, elf, ELFPayloadError.NotSharedLibrary);
 		}
 
 		if (elf.Endianess != ELFSharp.Endianess.LittleEndian) {
-			return ReturnError (elf, ELFPayloadError.NotLittleEndian);
+			return ReturnError (is64, elf, ELFPayloadError.NotLittleEndian);
 		}
 
-		if (!elf.TryGetSection ("payload", out ISection? payloadSection)) {
-			return ReturnError (elf, ELFPayloadError.NoPayloadSection);
-		}
-
-		bool is64 = elf.Machine switch {
+		is64 = elf.Machine switch {
 			Machine.ARM      => false,
 			Machine.Intel386 => false,
 
@@ -62,6 +60,51 @@ static class Utils
 
 			_                => throw new NotSupportedException ($"Unsupported ELF architecture '{elf.Machine}'")
 		};
+
+		return (is64, elf, ELFPayloadError.None);
+
+		(bool is64, IELF? elf, ELFPayloadError error) ReturnError (bool is64, IELF? elf, ELFPayloadError error)
+		{
+			elf?.Dispose ();
+
+			return (is64, null, error);
+		}
+	}
+
+	public static (ulong offset, ulong size, ELFPayloadError error) FindEmbeddedStoreOffsetAndSize (Stream stream)
+	{
+		(bool is64, IELF? elf, ELFPayloadError error) = TryOpenELF (stream);
+		if (elf == null || error != ELFPayloadError.None) {
+			return ReturnError (elf, error);
+		}
+
+		const string SymbolName = "embedded_assembly_store";
+		ISymbolTable? dynsym = ELFHelper.GetSymbolTable (elf, ".dynsym");
+		if (is64) {
+			SymbolEntry<ulong>? symbol = ELFHelper.FindSymbol<ulong> (dynsym, SymbolName);
+			if (symbol != null) {
+				return (symbol.Value, symbol.Size, ELFPayloadError.None);
+			}
+		} else {
+			SymbolEntry<uint>? symbol = ELFHelper.FindSymbol<uint> (dynsym, SymbolName);
+			if (symbol != null) {
+				return ((ulong)symbol.Value, (ulong)symbol.Size, ELFPayloadError.None);
+			}
+		}
+
+		return (0, 0, ELFPayloadError.NoEmbeddedStore);
+	}
+
+	public static (ulong offset, ulong size, ELFPayloadError error) FindELFPayloadSectionOffsetAndSize (Stream stream)
+	{
+		(bool is64, IELF? elf, ELFPayloadError error) = TryOpenELF (stream);
+		if (elf == null || error != ELFPayloadError.None) {
+			return ReturnError (elf, error);
+		}
+
+		if (!elf.TryGetSection ("payload", out ISection? payloadSection)) {
+			return ReturnError (elf, ELFPayloadError.NoPayloadSection);
+		}
 
 		ulong offset;
 		ulong size;
@@ -84,13 +127,13 @@ static class Utils
 		{
 			return ((ulong)payload.Offset, (ulong)payload.Size);
 		}
+	}
 
-		(ulong offset, ulong size, ELFPayloadError error) ReturnError (IELF? elf, ELFPayloadError error)
-		{
-			elf?.Dispose ();
+	static (ulong offset, ulong size, ELFPayloadError error) ReturnError (IELF? elf, ELFPayloadError error)
+	{
+		elf?.Dispose ();
 
-			return (0, 0, error);
-		}
+		return (0, 0, error);
 	}
 
 	public static (FileFormat format, FileInfo? info) DetectFileFormat (string path)
