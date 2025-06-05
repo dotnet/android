@@ -253,14 +253,27 @@ namespace Java.Interop {
 
 		internal static Type? GetJavaToManagedType (string class_name)
 		{
-			Type? type = JNIEnvInit.RuntimeType switch {
+			lock (TypeManagerMapDictionaries.AccessLock) {
+				return GetJavaToManagedTypeCore (class_name);
+			}
+		}
+
+		static Type? GetJavaToManagedTypeCore (string class_name)
+		{
+			if (TypeManagerMapDictionaries.JniToManaged.TryGetValue (class_name, out Type? type)) {
+				return type;
+			}
+
+			type = JNIEnvInit.RuntimeType switch {
 				DotNetRuntimeType.MonoVM  => monovm_typemap_java_to_managed (class_name),
 				DotNetRuntimeType.CoreCLR => clr_typemap_java_to_managed (class_name),
 				_                         => throw new NotSupportedException ($"Internal error: runtime type {JNIEnvInit.RuntimeType} not supported")
 			};
 
-			if (type != null)
+			if (type != null) {
+				TypeManagerMapDictionaries.JniToManaged.Add (class_name, type);
 				return type;
+			}
 
 			if (!JNIEnvInit.IsRunningOnDesktop) {
 				// Miss message is logged in the native runtime
@@ -285,11 +298,9 @@ namespace Java.Interop {
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
 			string? class_name = GetClassName (class_ptr);
 			lock (TypeManagerMapDictionaries.AccessLock) {
-				while (class_ptr != IntPtr.Zero && !TypeManagerMapDictionaries.JniToManaged.TryGetValue (class_name, out type)) {
-
-					type = GetJavaToManagedType (class_name);
+				while (class_ptr != IntPtr.Zero) {
+					type = GetJavaToManagedTypeCore (class_name);
 					if (type != null) {
-						TypeManagerMapDictionaries.JniToManaged.Add (class_name, type);
 						break;
 					}
 
