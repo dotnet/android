@@ -92,19 +92,22 @@ namespace xamarin::android
 
 		static auto monodroid_dlopen_ignore_component_or_load (std::string_view const& name, int flags) noexcept -> void*
 		{
+			// We first try to load the DSO using the passed name, it will cause `dlopen` to search our APK (or
+			// on-filesystem location), if necessary, so it's more efficient than trying to load from any specific
+			// directories first.
 			unsigned int dl_flags = static_cast<unsigned int>(flags);
-			void * handle = AndroidSystem::load_dso_from_any_directories (name, dl_flags);
+			void *handle = AndroidSystem::load_dso (name, dl_flags, false /* skip_existing_check */);
 			if (handle != nullptr) {
 				return monodroid_dlopen_log_and_return (handle, name);
 			}
 
-			handle = AndroidSystem::load_dso (name, dl_flags, false /* skip_existing_check */);
+			handle = AndroidSystem::load_dso_from_any_directories (name, dl_flags);
 			return monodroid_dlopen_log_and_return (handle, name);
 		}
 
 	public:
-		[[gnu::flatten]]
-		static auto monodroid_dlopen (std::string_view const& name, int flags, bool prefer_aot_cache) noexcept -> void*
+		template<bool PREFER_AOT_CACHE> [[gnu::flatten]]
+		static auto monodroid_dlopen (std::string_view const& name, int flags) noexcept -> void*
 		{
 			if (name.empty ()) [[unlikely]] {
 				log_warn (LOG_ASSEMBLY, "monodroid_dlopen got a null name. This is not supported in NET+"sv);
@@ -115,7 +118,10 @@ namespace xamarin::android
 			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash for name '{}' is {:x}", name, name_hash);
 
 			DSOCacheEntry *dso = nullptr;
-			if (prefer_aot_cache) {
+			if constexpr (PREFER_AOT_CACHE) {
+				// This code isn't currently used by CoreCLR, but it's possible that in the future we will have separate
+				// .so files for AOT-d assemblies, similar to MonoVM, so let's keep it.
+				//
 				// If we're asked to look in the AOT DSO cache, do it first.  This is because we're likely called from the
 				// MonoVM's dlopen fallback handler and it will not be a request to resolved a p/invoke, but most likely to
 				// find and load an AOT image for a managed assembly.  Since there might be naming/hash conflicts in this
@@ -183,7 +189,7 @@ namespace xamarin::android
 			// We're called by MonoVM via a callback, we might need to return an AOT DSO.
 			// See: https://github.com/dotnet/android/issues/9081
 			constexpr bool PREFER_AOT_CACHE = true;
-			return monodroid_dlopen (name, flags, PREFER_AOT_CACHE);
+			return monodroid_dlopen<PREFER_AOT_CACHE> (name, flags);
 		}
 
 		[[gnu::flatten]]

@@ -416,14 +416,27 @@ auto AndroidSystem::get_full_dso_path (std::string const& base_dir, std::string_
 		return false;
 	}
 
+	dynamic_local_path_string lib_path { dso_path };
+	bool have_so_extension = lib_path.ends_with (Constants::dso_suffix);
 	if (base_dir.empty () || Util::is_path_rooted (dso_path)) {
+		// Absolute path or no base path, can't do much with it
 		path.assign (dso_path);
-		return true; // Absolute path or no base path, can't do much with it
+		if (!have_so_extension) {
+			path.append (Constants::dso_suffix);
+		}
+
+		return true;
 	}
 
-	path.assign (base_dir)
-		.append ("/"sv)
-		.append (dso_path);
+	path.assign (base_dir).append (Constants::DIR_SEP);
+
+	if (!Util::path_has_directory_components (dso_path) && !lib_path.starts_with (Constants::DSO_PREFIX)) {
+		path.append (Constants::DSO_PREFIX);
+	}
+	path.append (dso_path);
+	if (!have_so_extension) {
+		path.append (Constants::dso_suffix);
+	}
 
 	return true;
 }
@@ -450,7 +463,7 @@ auto AndroidSystem::load_dso (std::string_view const& path, unsigned int dl_flag
 	return handle;
 }
 
-template<class TContainer> [[gnu::always_inline]] // TODO: replace with a concept
+template<class TContainer> [[gnu::always_inline]]
 auto AndroidSystem::load_dso_from_specified_dirs (TContainer directories, std::string_view const& dso_name, unsigned int dl_flags) noexcept -> void*
 {
 	if (dso_name.empty ()) {

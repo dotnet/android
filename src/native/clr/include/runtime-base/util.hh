@@ -267,6 +267,12 @@ namespace xamarin::android {
 			return path[0] == '/';
 		}
 
+		[[gnu::flatten, gnu::always_inline]]
+		static auto path_has_directory_components (std::string_view const& path) noexcept -> bool
+		{
+			return !path.empty () && path.contains ('/');
+		}
+
 	private:
 		// TODO: needs some work to accept mixed params of different accepted types
 		template<size_t MaxStackSpace, detail::PathBuffer<MaxStackSpace> TBuffer, detail::PathComponentString ...TPart>
