@@ -414,8 +414,8 @@ namespace Android.Runtime {
 			return JniEnvironment.Types.GetJniTypeNameFromInstance (new JniObjectReference (jobject));
 		}
 
-		[MethodImplAttribute(MethodImplOptions.InternalCall)]
-		static extern unsafe IntPtr monodroid_typemap_managed_to_java (Type type, byte* mvid);
+//		[MethodImplAttribute(MethodImplOptions.InternalCall)]
+//		static extern unsafe IntPtr monodroid_typemap_managed_to_java (Type type, byte* mvid);
 
 		internal static void LogTypemapTrace (StackTrace st)
 		{
@@ -432,10 +432,10 @@ namespace Android.Runtime {
 		// We need this proxy method because if `TypeManagedToJava` contained the call to `monodroid_typemap_managed_to_java`
 		// (which is an icall, or ecall in CoreCLR parlance), CoreCLR JIT would throw an exception, refusing to compile the
 		// method.  The exception would be thrown even if the icall weren't called (e.g. hidden behind a runtime type check)
-		static unsafe IntPtr monovm_typemap_managed_to_java (Type type, byte* mvidptr)
-		{
-			return monodroid_typemap_managed_to_java (type, mvidptr);
-		}
+//		static unsafe IntPtr monovm_typemap_managed_to_java (Type type, byte* mvidptr)
+//		{
+//			return monodroid_typemap_managed_to_java (type, mvidptr);
+//		}
 
 		internal static unsafe string? TypemapManagedToJava (Type type)
 		{
@@ -454,7 +454,7 @@ namespace Android.Runtime {
 			IntPtr ret;
 			fixed (byte* mvidptr = mvid_data) {
 				ret = JNIEnvInit.RuntimeType switch {
-					DotNetRuntimeType.MonoVM  => monovm_typemap_managed_to_java (type, mvidptr),
+//					DotNetRuntimeType.MonoVM  => monovm_typemap_managed_to_java (type, mvidptr),
 					DotNetRuntimeType.CoreCLR => RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, (IntPtr)mvidptr),
 					_                         => throw new NotSupportedException ($"Internal error: runtime type {JNIEnvInit.RuntimeType} not supported")
 				};
