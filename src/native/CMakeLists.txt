@@ -619,6 +619,7 @@ else()
   endif()
 
   if (IS_CLR_RUNTIME)
+    add_subdirectory(clr/pinvoke-override)
     add_subdirectory(clr/host)
     add_subdirectory(clr/startup)
   endif()
