@@ -70,6 +70,15 @@ namespace xamarin::android {
 			return mark_cross_references;
 		}
 
+		struct CrossReferenceComponent
+		{
+			bool is_bridgeless_scc;
+			union {
+				jobject target;
+				HandleContext* handle_context;
+			};
+		};
+
 	private:
 		static inline BridgeProcessingStartedFtn bridge_processing_started_callback = nullptr;
 		static inline BridgeProcessingFinishedFtn bridge_processing_finished_callback = nullptr;
@@ -86,8 +95,9 @@ namespace xamarin::android {
 		static void mark_cross_references (MarkCrossReferencesArgs* cross_refs) noexcept;
 
 		static bool is_bridgeless_scc (StronglyConnectedComponent *scc) noexcept;
-		static void add_reference (HandleContext *from, jobject to) noexcept;
-		static void add_direct_reference (jobject from, jobject to) noexcept; // TODO naming
+		static void add_inner_reference (HandleContext *from, HandleContext *to) noexcept;
+		static void add_cross_reference (GCBridge::CrossReferenceComponent from, GCBridge::CrossReferenceComponent to) noexcept;
+		static bool add_reference (jobject from, jobject to) noexcept;
 		static void clear_references (jobject handle) noexcept;
 		static int scc_get_stashed_temporary_peer_index (StronglyConnectedComponent *scc) noexcept;
 		static void scc_set_stashed_temporary_peer_index (StronglyConnectedComponent *scc, ssize_t index) noexcept;
@@ -101,10 +111,14 @@ namespace xamarin::android {
 
 		static inline jclass GCUserPeer_class = nullptr;
 		static inline jmethodID GCUserPeer_ctor = nullptr;
-		
+
+		static void ensure_array_list () noexcept;
 		static inline jclass ArrayList_class = nullptr;
 		static inline jmethodID ArrayList_ctor = nullptr;
 		static inline jmethodID ArrayList_get = nullptr;
 		static inline jmethodID ArrayList_add = nullptr;
+
+		static GCBridge::CrossReferenceComponent get_target (StronglyConnectedComponent *scc, jobject temporary_peers) noexcept;
+		static void release_target (GCBridge::CrossReferenceComponent target) noexcept;
 	};
 }
