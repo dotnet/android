@@ -127,11 +127,11 @@ GCBridge::CrossReferenceComponent GCBridge::get_target (StronglyConnectedCompone
 	}
 }
 
-void GCBridge::release_target (GCBridge::CrossReferenceComponent target) noexcept
+void GCBridge::release_target (GCBridge::CrossReferenceComponent component) noexcept
 {
-	if (target.is_bridgeless_scc) {
-		// Release the local ref for bridgeless SCCs returned from get_scc_representative
-		env->DeleteLocalRef (target.target);
+	if (component.is_bridgeless_scc) {
+		// Release the local ref for bridgeless SCCs
+		env->DeleteLocalRef (component.target);
 	}
 }
 
@@ -165,6 +165,7 @@ void GCBridge::prepare_for_java_collection (MarkCrossReferencesArgs* cross_refs)
 
 			add_inner_reference (prev, first);
 		} else if (scc->Count == 0) {
+			// Once per process boot, look up JNI metadata we need to make temporary objects
 			ensure_array_list ();
 			
 			// Once per prepare_for_java_collection call, create a list to hold the temporary
@@ -201,38 +202,76 @@ void GCBridge::prepare_for_java_collection (MarkCrossReferencesArgs* cross_refs)
 	env->DeleteLocalRef (temporary_peers);
 
 	// Switch global to weak references
-	for (size_t i = 0; i < cross_refs->ComponentCount; i++)
-	{
+	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
 		StronglyConnectedComponent *scc = &cross_refs->Components [i];
 
-		if (scc->Count < 0) {
-			scc->Count = 0; // Reset any temporary peer index stored in Count
-		}
+		// Reset any temporary peer index stored in Count
+		if (scc->Count < 0)
+			scc->Count = 0;
 
 		for (ssize_t j = 0; j < scc->Count; j++) {
-			HandleContext *context = scc->Contexts [j];
-
-			jobject handle = context->control_block->handle;
-			
-			// log_write_fmt (LOG_DEFAULT, LogLevel::Info,
-			// 	"Switching global reference to weak for context {:x}, gchandle: {}, handle {:x}, refs added {}",
-			// 	(intptr_t)context, (intptr_t)context->gc_handle, (intptr_t)handle, context->control_block->refs_added);
-			
-			jobject weak = env->NewWeakGlobalRef (handle);
-
-			// log_write_fmt (LOG_DEFAULT, LogLevel::Info,
-			// 	"Creating weak global ref for: gc_handle {}, handle {:x}, weak handle {:x}, refs {}",
-			// 		(intptr_t)context->gc_handle,
-			// 		(intptr_t)handle,
-			// 		(intptr_t)weak,
-			// 		context->control_block->refs_added);
-
-			env->DeleteGlobalRef (handle); // Delete the strong reference now that we have a weak one
-
-			context->control_block->handle = weak;
-			context->control_block->handle_type = JNIWeakGlobalRefType;
+			take_weak_global_ref (scc->Contexts [j]);
 		}
 	}
+}
+
+void GCBridge::take_global_ref (HandleContext *context) noexcept
+{
+	abort_unless (context->control_block->handle_type == JNIWeakGlobalRefType, "Expected weak global reference type for handle");
+	jobject weak = context->control_block->handle;
+
+	jobject handle = env->NewGlobalRef (weak);
+	// if (gref_log) {
+	// 	fprintf (gref_log, "*try_take_global obj=%p -> wref=%p handle=%p\n", obj, weak, handle);
+	// 	fflush (gref_log);
+	// }
+
+	if (handle != nullptr) {
+		context->is_collected = 0;
+		// _monodroid_gref_log_new (weak, get_object_ref_type (env, weak),
+		// 		handle, get_object_ref_type (env, handle),
+		// 		"finalizer", gettid (),
+		// 		"   at [[gc:take_global_ref_jni]]", 0);
+	} else {
+		context->is_collected = 1;
+		// MonoClass *klass = mono_object_get_class (obj);
+		// char *message = Util::monodroid_strdup_printf (
+		// 		"handle %p/W; key_handle %p; MCW type: `%s.%s`: was collected by a Java GC",
+		// 		weak,
+		// 		nullptr, // ??
+		// 		mono_class_get_namespace (klass),
+		// 		mono_class_get_name (klass));
+		// _monodroid_gref_log (message);
+		// free (message);
+	}
+
+	context->control_block->handle = handle;
+	context->control_block->handle_type = JNIGlobalRefType;
+
+	// _monodroid_weak_gref_delete (weak, get_object_ref_type (env, weak),
+	// 		"finalizer", gettid (), "   at [[gc:take_global_ref_jni]]", 0);
+	env->DeleteWeakGlobalRef (weak);
+}
+
+void GCBridge::take_weak_global_ref (HandleContext *context) noexcept
+{
+	jobject handle = context->control_block->handle;
+	// if (gref_log) {
+	// 	fprintf (gref_log, "*take_weak obj=%p; handle=%p\n", obj, handle);
+	// 	fflush (gref_log);
+	// }
+
+	jobject weak = env->NewWeakGlobalRef (handle);
+	// _monodroid_weak_gref_new (handle, get_object_ref_type (env, handle),
+	// 		weak, get_object_ref_type (env, weak),
+	// 		"finalizer", gettid (), "   at [[gc:take_weak_global_ref_jni]]", 0);
+
+	context->control_block->handle = weak;
+	context->control_block->handle_type = JNIWeakGlobalRefType;
+
+	// _monodroid_gref_log_delete (handle, get_object_ref_type (env, handle),
+	// 		"finalizer", gettid (), "   at [[gc:take_weak_global_ref_jni]]", 0);
+	env->DeleteGlobalRef (handle);
 }
 
 void GCBridge::clear_references (jobject handle) noexcept
@@ -240,61 +279,82 @@ void GCBridge::clear_references (jobject handle) noexcept
 	// Clear references from the object
 	jclass java_class = env->GetObjectClass (handle);
 	jmethodID clear_method_id = env->GetMethodID (java_class, "monodroidClearReferences", "()V");
+	env->DeleteLocalRef (java_class); // Clean up the local reference to the class
 
 	if (clear_method_id) {
 		env->CallVoidMethod (handle, clear_method_id);
 	} else {
 		log_error (LOG_DEFAULT, "Failed to find monodroidClearReferences method");
+		env->ExceptionClear ();
+#if DEBUG
+		// if (Logger::gc_spew_enabled ()) {
+		// 	klass = mono_object_get_class (obj);
+		// 	log_error (LOG_GC,
+		// 		"Missing monodroidClearReferences method for object of class {}.{}",
+		// 		optional_string (mono_class_get_namespace (klass)),
+		// 		optional_string (mono_class_get_name (klass))
+		// 	);
+		// }
+#endif
 	}
-
-	env->DeleteLocalRef (java_class); // Clean up the local reference to the class
 }
 
 void GCBridge::cleanup_after_java_collection (MarkCrossReferencesArgs* cross_refs) noexcept
 {
-	// try to switch back to global refs to analyze what stayed alive
-	for (size_t i = 0; i < cross_refs->ComponentCount; i++)
-	{
+#if DEBUG
+int total = 0;
+int alive = 0;
+#endif
+
+// try to switch back to global refs to analyze what stayed alive
+for (size_t i = 0; i < cross_refs->ComponentCount; i++)
+{
+	StronglyConnectedComponent *scc = &cross_refs->Components [i];
+	for (ssize_t j = 0; j < scc->Count; j++) {
+#if DEBUG
+			total++;
+#endif
+			take_global_ref (scc->Contexts [j]);
+		}
+	}
+
+	// clear the cross references on any remaining items
+	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
 		StronglyConnectedComponent *scc = &cross_refs->Components [i];
+		bool is_alive = false;
 
 		for (ssize_t j = 0; j < scc->Count; j++) {
 			HandleContext *context = scc->Contexts [j];
+			jobject handle = context->control_block->handle;
 
-			jobject weak = context->control_block->handle;
+			if (handle) {
+#if DEBUG
+				alive++;
+#endif
+				if (j > 0) {
+					abort_unless (
+						is_alive,
+						[&i] { return detail::_format_message ("Bridge SCC at index %d must be alive", i); }
+					);
+				}
 
-			// TODO remove this log
-			if (context->control_block->handle_type != JNIWeakGlobalRefType) {
-				log_write_fmt (LOG_DEFAULT, LogLevel::Info, "Skipping non-weak global ref: {:x} ({}), gchandle: {} 0x{:x}", (intptr_t)weak, context->control_block->handle_type, (intptr_t)context->gc_handle, (intptr_t)context->gc_handle);
-			}
-
-			abort_unless (context->control_block->handle_type == JNIWeakGlobalRefType,
-				"Expected weak global reference type for handle");
-			jobject global = env->NewGlobalRef (weak);
-
-			if (global) {
-				// log_write_fmt (LOG_DEFAULT, LogLevel::Info, "Object survived Java GC: weak {:x} -> gref {:x}", (intptr_t)weak, (intptr_t)global);
-				env->DeleteWeakGlobalRef (weak);
-
-				context->control_block->handle = global;
-				context->control_block->handle_type = JNIGlobalRefType;
-
+				is_alive = true;
 				if (context->control_block->refs_added > 0) {
-					// Clear references
-					clear_references (context->control_block->handle);
-
-					// Reset refs_added
+					clear_references (handle);
 					context->control_block->refs_added = 0;
 				}
 			} else {
-				// Object was collected by Java GC
-				context->is_collected = 1;
-
-				// log_write_fmt (LOG_DEFAULT, LogLevel::Info,
-				// 	"Object was collected by Java GC: weak {:x}, gchandle: {}, control block {:x}, handle type {}",
-				// 	(intptr_t)weak, (intptr_t)context->gc_handle, (intptr_t)context->control_block, context->control_block->handle_type);
+				abort_unless (
+					!is_alive,
+					[&i] { return detail::_format_message ("Bridge SCC at index %d must NOT be alive", i); }
+				);
 			}
 		}
 	}
+
+#if DEBUG
+	log_info (LOG_GC, "GC cleanup summary: {} objects tested - resurrecting {}.", total, alive);
+#endif
 }
 
 void GCBridge::bridge_processing () noexcept
@@ -308,6 +368,42 @@ void GCBridge::bridge_processing () noexcept
 	{
 		bridge_processing_semaphore.acquire ();
 		std::unique_lock<std::shared_mutex> lock (processing_mutex);
+
+		// if (Logger::gc_spew_enabled ()) {
+		// 	int i, j;
+		// 	log_info (LOG_GC, "cross references callback invoked with {} sccs and {} xrefs.", num_sccs, num_xrefs);
+
+		// 	for (i = 0; i < num_sccs; ++i) {
+		// 		log_info (LOG_GC, "group {} with {} objects", i, sccs [i]->num_objs);
+		// 		for (j = 0; j < sccs [i]->num_objs; ++j) {
+		// 			MonoObject *obj = sccs [i]->objs [j];
+
+		// 			JniObjectReferenceControlBlock *control_block = get_gc_control_block_for_object (obj);
+		// 			jobject handle      = 0;
+		// 			void   *key_handle  = nullptr;
+		// 			if (control_block != nullptr) {
+		// 				mono_field_get_value (obj, reinterpret_cast<MonoClassField*>(control_block->handle), &handle);
+		// 				if (control_block->weak_handle != nullptr) {
+		// 					mono_field_get_value (obj, reinterpret_cast<MonoClassField*>(control_block->weak_handle), &key_handle);
+		// 				}
+		// 			}
+		// 			MonoClass *klass = mono_object_get_class (obj);
+		// 			log_info (LOG_GC,
+		// 				"\tobj {:p} [{}::{}] handle {:p} key_handle {:p}",
+		// 				reinterpret_cast<void*>(obj),
+		// 				optional_string (mono_class_get_namespace (klass)),
+		// 				optional_string (mono_class_get_name (klass)),
+		// 				reinterpret_cast<void*>(handle),
+		// 				key_handle
+		// 			);
+		// 		}
+		// 	}
+
+		// 	if (Util::should_log (LOG_GC)) {
+		// 		for (i = 0; i < num_xrefs; ++i)
+		// 			log_info_nocheck_fmt (LOG_GC, "xref [{}] {} -> {}", i, xrefs [i].src_scc_index, xrefs [i].dst_scc_index);
+		// 	}
+		// }
 
 		bridge_processing_started_callback ();
 		prepare_for_java_collection (&GCBridge::shared_cross_refs);
