@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 using Java.Interop;
 
@@ -73,7 +74,7 @@ namespace Java.InteropTests
 
 #if !NO_GC_BRIDGE_SUPPORT
 		[Test]
-		public void UnreferencedInstanceIsCollected ()
+		public async Task UnreferencedInstanceIsCollected ()
 		{
 			JniObjectReference  oldHandle = new JniObjectReference ();
 			WeakReference r = null;
@@ -83,8 +84,7 @@ namespace Java.InteropTests
 					r         = new WeakReference (v);
 			});
 			JniEnvironment.Runtime.ValueManager.CollectPeers ();
-			GC.WaitForPendingFinalizers ();
-			GC.WaitForPendingFinalizers ();
+			await WaitForGC ();
 			Assert.IsFalse (r.IsAlive);
 			Assert.IsNull (r.Target);
 			Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (oldHandle));
@@ -105,7 +105,7 @@ namespace Java.InteropTests
 
 #if !NO_GC_BRIDGE_SUPPORT
 		[Test]
-		public void Dispose_Finalized ()
+		public async Task Dispose_Finalized ()
 		{
 			var d = false;
 			var f = false;
@@ -117,11 +117,21 @@ namespace Java.InteropTests
 				JniEnvironment.Runtime.ValueManager.CollectPeers ();
 			});
 			JniEnvironment.Runtime.ValueManager.CollectPeers ();
-			GC.WaitForPendingFinalizers ();
+			await WaitForGC ();
 			Assert.IsFalse (d);
 			Assert.IsTrue (f);
 		}
 #endif  // !NO_GC_BRIDGE_SUPPORT
+
+		static async Task WaitForGC ()
+		{
+			for (int i = 0; i < 3; i++) {
+				GC.Collect (generation: 2, mode: GCCollectionMode.Forced, blocking: true);
+				GC.WaitForPendingFinalizers ();
+				await Task.Yield ();
+				JniEnvironment.Runtime.ValueManager.WaitForGCBridgeProcessing ();
+			}
+		}
 
 		[Test]
 		public void ObjectDisposed ()
