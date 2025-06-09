@@ -43,9 +43,6 @@ OSBridge::MonoJavaGCBridgeInfo OSBridge::mono_java_gc_bridge_info [NUM_GC_BRIDGE
 
 OSBridge::MonoJavaGCBridgeInfo OSBridge::empty_bridge_info = {
 	nullptr,
-	nullptr,
-	nullptr,
-	nullptr,
 	nullptr
 };
 
@@ -76,9 +73,13 @@ OSBridge::clear_mono_java_gc_bridge_info ()
 	for (uint32_t c = 0; c < NUM_GC_BRIDGE_TYPES; c++) {
 		MonoJavaGCBridgeInfo *info = &mono_java_gc_bridge_info [c];
 		info->klass = nullptr;
-		info->handle = nullptr;
-		info->handle_type = nullptr;
-		info->refs_added = nullptr;
+		auto control_block = reinterpret_cast<JniObjectReferenceControlBlock*>(info->jniObjectReferenceControlBlock);
+		if (control_block == nullptr) [[unlikely]] {
+			continue;
+		}
+		control_block->handle = nullptr;
+		control_block->handle_type = 0;
+		control_block->refs_added = 0;
 	}
 }
 
@@ -100,6 +101,19 @@ OSBridge::get_gc_bridge_index (MonoClass *klass)
 	return f == NUM_GC_BRIDGE_TYPES
 		? static_cast<int>(-NUM_GC_BRIDGE_TYPES)
 		: -1;
+}
+
+OSBridge::JniObjectReferenceControlBlock*
+OSBridge::get_gc_control_block_for_object (MonoObject *obj)
+{
+	MonoJavaGCBridgeInfo *bridge_info = get_gc_bridge_info_for_object (obj);
+	if (bridge_info == nullptr) {
+		return nullptr;
+	}
+
+	JniObjectReferenceControlBlock *control_block = nullptr;
+	mono_field_get_value (obj, bridge_info->jniObjectReferenceControlBlock, &control_block);
+	return control_block;
 }
 
 OSBridge::MonoJavaGCBridgeInfo *
@@ -459,11 +473,12 @@ OSBridge::take_global_ref_jni (JNIEnv *env, MonoObject *obj)
 	jobject handle, weak;
 	int type = JNIGlobalRefType;
 
-	MonoJavaGCBridgeInfo    *bridge_info    = get_gc_bridge_info_for_object (obj);
-	if (bridge_info == nullptr)
+	JniObjectReferenceControlBlock *control_block = get_gc_control_block_for_object (obj);
+	if (control_block == nullptr) {
 		return 0;
+	}
 
-	mono_field_get_value (obj, bridge_info->handle, &weak);
+	mono_field_get_value (obj, reinterpret_cast<MonoClassField*>(control_block->handle), &weak);
 	handle = env->NewGlobalRef (weak);
 	if (gref_log) {
 		fprintf (gref_log, "*try_take_global obj=%p -> wref=%p handle=%p\n", obj, weak, handle);
@@ -476,8 +491,8 @@ OSBridge::take_global_ref_jni (JNIEnv *env, MonoObject *obj)
 				"   at [[gc:take_global_ref_jni]]", 0);
 	} else if (Logger::gc_spew_enabled ()) [[unlikely]] {
 		void   *key_handle  = nullptr;
-		if (bridge_info->key_handle) {
-			mono_field_get_value (obj, bridge_info->key_handle, &key_handle);
+		if (control_block->weak_handle) {
+			mono_field_get_value (obj, reinterpret_cast<MonoClassField*>(control_block->weak_handle), &key_handle);
 		}
 
 		MonoClass *klass = mono_object_get_class (obj);
@@ -491,8 +506,8 @@ OSBridge::take_global_ref_jni (JNIEnv *env, MonoObject *obj)
 		free (message);
 	}
 
-	mono_field_set_value (obj, bridge_info->handle, &handle);
-	mono_field_set_value (obj, bridge_info->handle_type, &type);
+	mono_field_set_value (obj, reinterpret_cast<MonoClassField*>(control_block->handle), &handle);
+	mono_field_set_value (obj, reinterpret_cast<MonoClassField*>(control_block->handle_type), &type);
 
 	_monodroid_weak_gref_delete (weak, get_object_ref_type (env, weak),
 			"finalizer", gettid (), "   at [[gc:take_global_ref_jni]]", 0);
@@ -507,11 +522,12 @@ OSBridge::take_weak_global_ref_jni (JNIEnv *env, MonoObject *obj)
 	jobject handle, weak;
 	int type = JNIWeakGlobalRefType;
 
-	MonoJavaGCBridgeInfo    *bridge_info    = get_gc_bridge_info_for_object (obj);
-	if (bridge_info == nullptr)
+	JniObjectReferenceControlBlock *control_block = get_gc_control_block_for_object (obj);
+	if (control_block == nullptr) {
 		return 0;
+	}
 
-	mono_field_get_value (obj, bridge_info->handle, &handle);
+	mono_field_get_value (obj, reinterpret_cast<MonoClassField*>(control_block->handle), &handle);
 	if (gref_log) {
 		fprintf (gref_log, "*take_weak obj=%p; handle=%p\n", obj, handle);
 		fflush (gref_log);
@@ -522,8 +538,8 @@ OSBridge::take_weak_global_ref_jni (JNIEnv *env, MonoObject *obj)
 			weak, get_object_ref_type (env, weak),
 			"finalizer", gettid (), "   at [[gc:take_weak_global_ref_jni]]", 0);
 
-	mono_field_set_value (obj, bridge_info->handle, &weak);
-	mono_field_set_value (obj, bridge_info->handle_type, &type);
+	mono_field_set_value (obj, reinterpret_cast<MonoClassField*>(control_block->handle), &weak);
+	mono_field_set_value (obj, reinterpret_cast<MonoClassField*>(control_block->handle_type), &type);
 
 	_monodroid_gref_log_delete (handle, get_object_ref_type (env, handle),
 			"finalizer", gettid (), "   at [[gc:take_weak_global_ref_jni]]", 0);
@@ -558,13 +574,23 @@ OSBridge::gc_bridge_class_kind (MonoClass *klass)
 mono_bool
 OSBridge::gc_is_bridge_object (MonoObject *object)
 {
+	if (object == nullptr) [[unlikely]] {
+		log_debug (LOG_GC, "gc_is_bridge_object was passed a NULL object pointer");
+		return FALSE;
+	}
+
+	JniObjectReferenceControlBlock *control_block = get_gc_control_block_for_object (object);
+	if (control_block == nullptr) {
+		return FALSE;
+	}
+
+	if (control_block->handle == nullptr) {
+		log_warn (LOG_GC, "gc_is_bridge_object: control block's handle is NULL");
+		return FALSE;
+	}
+
 	void *handle;
-
-	MonoJavaGCBridgeInfo    *bridge_info    = get_gc_bridge_info_for_object (object);
-	if (bridge_info == nullptr)
-		return 0;
-
-	mono_field_get_value (object, bridge_info->handle, &handle);
+	mono_field_get_value (object, reinterpret_cast<MonoClassField*>(control_block->handle), &handle);
 	if (handle == nullptr) {
 #if DEBUG
 		MonoClass *mclass = mono_object_get_class (object);
@@ -574,10 +600,10 @@ OSBridge::gc_is_bridge_object (MonoObject *object)
 			optional_string (mono_class_get_name (mclass))
 		);
 #endif
-		return 0;
+		return FALSE;
 	}
 
-	return 1;
+	return TRUE;
 }
 
 // Add a reference from an IGCUserPeer jobject to another jobject
@@ -604,10 +630,11 @@ mono_bool
 OSBridge::load_reference_target (OSBridge::AddReferenceTarget target, OSBridge::MonoJavaGCBridgeInfo** bridge_info, jobject *handle)
 {
 	if (target.is_mono_object) {
-		*bridge_info = get_gc_bridge_info_for_object (target.obj);
-		if (!*bridge_info)
+		JniObjectReferenceControlBlock *control_block = get_gc_control_block_for_object (target.obj);
+		if (control_block == nullptr) {
 			return FALSE;
-		mono_field_get_value (target.obj, (*bridge_info)->handle, handle);
+		}
+		mono_field_get_value (target.obj, reinterpret_cast<MonoClassField*>(control_block->handle), handle);
 	} else {
 		*handle = target.jobj;
 	}
@@ -649,7 +676,11 @@ OSBridge::add_reference (JNIEnv *env, OSBridge::AddReferenceTarget target, OSBri
 	// Java temporaries do not need this because the entire GCUserPeer is discarded.
 	if (success && target.is_mono_object) {
 		int ref_val = 1;
-		mono_field_set_value (target.obj, bridge_info->refs_added, &ref_val);
+		JniObjectReferenceControlBlock *control_block = get_gc_control_block_for_object (target.obj);
+		if (control_block == nullptr) {
+			return FALSE;
+		}
+		mono_field_set_value (target.obj, reinterpret_cast<MonoClassField*>(control_block->refs_added), &ref_val);
 	}
 
 #if DEBUG
@@ -867,14 +898,13 @@ OSBridge::gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBri
 		sccs [i]->is_alive = 0;
 
 		for (j = 0; j < sccs [i]->num_objs; j++) {
-			MonoJavaGCBridgeInfo    *bridge_info;
-
 			obj = sccs [i]->objs [j];
 
-			bridge_info = get_gc_bridge_info_for_object (obj);
-			if (bridge_info == nullptr)
+			JniObjectReferenceControlBlock *control_block = get_gc_control_block_for_object (obj);
+			if (control_block == nullptr) {
 				continue;
-			mono_field_get_value (obj, bridge_info->handle, &jref);
+			}
+			mono_field_get_value (obj, reinterpret_cast<MonoClassField*>(control_block->handle), &jref);
 			if (jref) {
 				alive++;
 				if (j > 0) {
@@ -884,7 +914,7 @@ OSBridge::gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBri
 					);
 				}
 				sccs [i]->is_alive = 1;
-				mono_field_get_value (obj, bridge_info->refs_added, &refs_added);
+				mono_field_get_value (obj, (MonoClassField*) control_block->refs_added, &refs_added);
 				if (refs_added) {
 					jclass java_class = env->GetObjectClass (jref);
 					clear_method_id = env->GetMethodID (java_class, "monodroidClearReferences", "()V");
@@ -951,13 +981,13 @@ OSBridge::gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xre
 			for (j = 0; j < sccs [i]->num_objs; ++j) {
 				MonoObject *obj = sccs [i]->objs [j];
 
-				MonoJavaGCBridgeInfo    *bridge_info    = get_gc_bridge_info_for_object (obj);
+				JniObjectReferenceControlBlock *control_block = get_gc_control_block_for_object (obj);
 				jobject handle      = 0;
 				void   *key_handle  = nullptr;
-				if (bridge_info != nullptr) {
-					mono_field_get_value (obj, bridge_info->handle, &handle);
-					if (bridge_info->key_handle != nullptr) {
-						mono_field_get_value (obj, bridge_info->key_handle, &key_handle);
+				if (control_block != nullptr) {
+					mono_field_get_value (obj, reinterpret_cast<MonoClassField*>(control_block->handle), &handle);
+					if (control_block->weak_handle != nullptr) {
+						mono_field_get_value (obj, reinterpret_cast<MonoClassField*>(control_block->weak_handle), &key_handle);
 					}
 				}
 				MonoClass *klass = mono_object_get_class (obj);
