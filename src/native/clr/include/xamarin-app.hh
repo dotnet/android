@@ -386,23 +386,6 @@ struct MarshalMethodsManagedClass
 	void            *klass;
 };
 
-// Number of assembly name forms for which we generate hashes (essentially file name mutations. For instance
-// `HelloWorld.dll`, `HelloWorld`, `en-US/HelloWorld` etc). This is multiplied by the number of assemblies in the apk to
-// obtain number of entries in the `assembly_image_cache_hashes` and `assembly_image_cache_indices` entries
-constexpr uint32_t number_of_assembly_name_forms_in_image_cache = 3;
-
-// These 3 arrays constitute the cache used to store pointers to loaded managed assemblies.
-// Three arrays are used so that we can have multiple hashes pointing to the same MonoImage*.
-//
-// This is done by the `assembly_image_cache_hashes` containing hashes for all mutations of some
-// assembly's name (e.g. with culture prefix, without extension etc) and position of that hash in
-// `assembly_image_cache_hashes` is an index into `assembly_image_cache_indices` which, in turn,
-// stores final index into the `assembly_image_cache` array.
-//
-[[gnu::visibility("default")]] extern void* assembly_image_cache[];
-[[gnu::visibility("default")]] extern const uint32_t assembly_image_cache_indices[];
-[[gnu::visibility("default")]] extern const xamarin::android::hash_t assembly_image_cache_hashes[];
-
 // Number of unique classes which contain native callbacks we bind
 [[gnu::visibility("default")]] extern uint32_t marshal_methods_number_of_classes;
 [[gnu::visibility("default")]] extern MarshalMethodsManagedClass marshal_methods_class_cache[];
