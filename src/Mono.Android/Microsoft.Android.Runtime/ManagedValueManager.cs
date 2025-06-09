@@ -29,9 +29,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	private unsafe ManagedValueManager ()
 	{
 		// There can only be one instance of ManagedValueManager because we can call JavaMarshal.Initialize only once.
-		var mark_cross_references_ftn = RuntimeNativeMethods.clr_initialize_gc_bridge (
-			&BridgeProcessingStarted,
-			&BridgeProcessingFinished);
+		var mark_cross_references_ftn = RuntimeNativeMethods.clr_initialize_gc_bridge (&BridgeProcessingStarted, &BridgeProcessingFinished);
 		JavaMarshal.Initialize (mark_cross_references_ftn);
 	}
 
@@ -56,10 +54,10 @@ class ManagedValueManager : JniRuntime.JniValueManager
 			RegisteredInstances.Clear ();
 		}
 		List<Exception>? exceptions = null;
-		foreach (var peer in peers) {
+		foreach (var handle in peers) {
 			try {
-				if (TryGetTarget (peer, out IDisposable? disposable))
-					disposable.Dispose ();
+				if (handle.IsAllocated)
+					(handle.Target as IDisposable)?.Dispose ();
 			}
 			catch (Exception e) {
 				exceptions = exceptions ?? new List<Exception> ();
@@ -101,7 +99,9 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 			for (int i = peers.Count - 1; i >= 0; i--) {
 				var p   = peers [i];
-				if (!TryGetTarget (p, out IJavaPeerable? peer))
+				if (!p.IsAllocated)
+					continue;
+				if (p.Target is not IJavaPeerable peer)
 					continue;
 				if (!JniEnvironment.Types.IsSameObject (peer.PeerReference, value.PeerReference))
 					continue;
@@ -128,7 +128,9 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 		WaitForGCBridgeProcessing ();
 
+		// start by collecting peers that need to be removed later
 		int key = value.JniIdentityHashCode;
+		List<int> indexesToRemove = [];
 
 		lock (RegisteredInstances) {
 			List<GCHandle>? peers;
@@ -137,19 +139,29 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 			for (int i = peers.Count - 1; i >= 0; i--) {
 				var p = peers [i];
-
-				if (TryGetTarget (p, out IJavaPeerable? peer)
-					&& ReferenceEquals (value, peer)) {
-					FreeReferenceTrackingHandle (p);
-					peers.RemoveAt (i);
-					GC.KeepAlive (peer);
+				if (p.IsAllocated && ReferenceEquals (value, p.Target))
+				{
+					indexesToRemove.Add (i);
 				}
 			}
-			if (peers.Count == 0)
-				RegisteredInstances.Remove (key);
 		}
 
-		base.DisposePeer (value);
+		// dispose the peer
+		base.DisposePeer(value);
+
+		// and then clean up the registered instances
+		lock (RegisteredInstances) {
+			List<GCHandle>? peers;
+			if (!RegisteredInstances.TryGetValue(key, out peers))
+				return;
+
+			foreach (int i in indexesToRemove) {
+				// Remove the peer from the list
+				var p = peers[i];
+				FreeReferenceTrackingHandle(p);
+				peers.RemoveAt(i);
+			}
+		}
 	}
 
 	public override void DisposePeerUnlessReferenced (IJavaPeerable value)
@@ -175,11 +187,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	}
 
 	static bool Replaceable (GCHandle handle)
-	{
-		if (!TryGetTarget (handle, out IJavaPeerable? peer))
-			return true;
-		return peer.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable);
-	}
+		=> handle.IsAllocated && (handle.Target as IJavaPeerable)?.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable) ?? false;
 
 	void WarnNotReplacing (int key, IJavaPeerable ignoreValue, IJavaPeerable keepValue)
 	{
@@ -216,8 +224,12 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 			for (int i = peers.Count - 1; i >= 0; i--) {
 				var p = peers [i];
-				if (TryGetTarget (p, out IJavaPeerable? peer) && JniEnvironment.Types.IsSameObject (reference, peer.PeerReference))
+				if (p.IsAllocated
+					&& p.Target is IJavaPeerable peer
+					&& JniEnvironment.Types.IsSameObject (reference, peer.PeerReference))
+				{
 					return peer;
+				}
 			}
 			if (peers.Count == 0)
 				RegisteredInstances.Remove (key);
@@ -250,8 +262,8 @@ class ManagedValueManager : JniRuntime.JniValueManager
 				return;
 
 			for (int i = peers.Count - 1; i >= 0; i--) {
-				var p   = peers [i];
-				if (TryGetTarget (p, out IJavaPeerable? peer) && ReferenceEquals (target, peer)) {
+				var p = peers [i];
+				if (p.IsAllocated && ReferenceEquals (target, p.Target)) {
 					peers.RemoveAt (i);
 					if (freeHandle)
 						FreeReferenceTrackingHandle (p);
@@ -281,8 +293,10 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 			for (int i = peers.Count - 1; i >= 0; i--) {
 				var p = peers[i];
-				if (TryGetTarget (p, out IJavaPeerable? peer)
-					&& JniEnvironment.Types.IsSameObject (reference, peer.PeerReference)) {
+				if (p.IsAllocated
+					&& p.Target is IJavaPeerable peer
+					&& JniEnvironment.Types.IsSameObject(reference, peer.PeerReference))
+				{
 					return p;
 				}
 			}
@@ -378,9 +392,9 @@ class ManagedValueManager : JniRuntime.JniValueManager
 			var peers = new List<JniSurfacedPeerInfo> (RegisteredInstances.Count);
 			foreach (var e in RegisteredInstances) {
 				foreach (var p in e.Value) {
-					if (!TryGetTarget (p, out IJavaPeerable? peer))
-						continue;
-					peers.Add (new JniSurfacedPeerInfo (e.Key, new WeakReference<IJavaPeerable> (peer)));
+					if (p.IsAllocated && p.Target is IJavaPeerable peer) {
+						peers.Add (new JniSurfacedPeerInfo (e.Key, new WeakReference<IJavaPeerable> (peer)));
+					}
 				}
 			}
 			return peers;
@@ -430,20 +444,6 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		return handle;
 	}
 
-	// TODO: The main reason this method is necessary is that there is a SIGSEGV when we access
-	// handle.Target of a reference tracking handle when its context is null
-	static unsafe bool TryGetTarget<T> (GCHandle handle, [NotNullWhen (true)] out T? target)
-		where T : class
-	{
-		target = null;
-
-		if (handle.IsAllocated && JavaMarshal.GetContext (handle) != null) {
-			target = handle.Target as T;
-		}
-
-		return target is not null;
-	}
-
 	[UnmanagedCallersOnly]
 	internal static void BridgeProcessingStarted ()
 	{
@@ -467,7 +467,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 					}
 
 					// Cleanup: Remove the handle from RegisteredInstances
-					if (TryGetTarget (handle, out IJavaPeerable? target)) {
+					if (handle.IsAllocated && handle.Target is IJavaPeerable target) {
 						Instance.RemoveRegisteredInstance (target, freeHandle: false);
 					}
 
