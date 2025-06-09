@@ -326,27 +326,8 @@ void GCBridge::bridge_processing () noexcept
 	}
 }
 
-static void assert_valid_handles (MarkCrossReferencesArgs* cross_refs) noexcept
-{
-	for (int i = 0; i < cross_refs->ComponentsLen; i++)
-	{
-		StronglyConnectedComponent *scc = &cross_refs->Components [i];
-		for (int j = 0; j < scc->Count; j++) {
-			HandleContext *context = scc->Contexts [j];
-			if (!is_valid_gref (context->control_block)) {
-				log_error_fmt (LOG_DEFAULT, "Invalid global reference in SCC context {:x}, gchandle: {}, control block {}, handle {}, handle type {}",
-					(intptr_t)context, context->gc_handle, (intptr_t)context->control_block, (intptr_t)context->control_block->handle, context->control_block->handle_type);
-			}
-			abort_unless (is_valid_gref (context->control_block), "Invalid global reference in SCC");
-		}
-	}
-}
-
 void GCBridge::mark_cross_references (MarkCrossReferencesArgs* cross_refs) noexcept
 {
-	// TODO get rid of this
-	assert_valid_handles (cross_refs);
-
 	{
 		std::unique_lock<std::shared_mutex> lock (processing_mutex);
 
