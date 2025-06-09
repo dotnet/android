@@ -171,19 +171,6 @@ DSOApkEntry dso_apk_entries[2] {};
 //
 #if defined (RELEASE)
 
-uint32_t marshal_methods_number_of_classes = 2;
-MarshalMethodsManagedClass marshal_methods_class_cache[] = {
-	{
-		.token = 0,
-		.klass = nullptr,
-	},
-
-	{
-		.token = 0,
-		.klass = nullptr,
-	},
-};
-
 const char* const mm_class_names[2] = {
 	"one",
 	"two",

@@ -119,7 +119,7 @@ namespace Xamarin.Android.Tasks
 		}
 
 		[NativeAssemblerStructContextDataProvider (typeof(MarshalMethodsManagedClassDataProvider))]
-		sealed class MarshalMethodsManagedClass
+		protected sealed class MarshalMethodsManagedClass
 		{
 			[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 			public uint       token;
@@ -234,7 +234,7 @@ namespace Xamarin.Android.Tasks
 		StructureInfo marshalMethodNameStructureInfo;
 
 		List<MarshalMethodInfo> methods;
-		List<StructureInstance<MarshalMethodsManagedClass>> classes = new List<StructureInstance<MarshalMethodsManagedClass>> ();
+		protected List<StructureInstance<MarshalMethodsManagedClass>> classes = new List<StructureInstance<MarshalMethodsManagedClass>> ();
 
 		readonly LlvmIrCallMarker defaultCallMarker;
 		readonly bool generateEmptyCode;
@@ -600,17 +600,8 @@ namespace Xamarin.Android.Tasks
 			Init ();
 			AssemblyCacheState acs = CreateAssemblyCache ();
 			AddAssemblyImageCache (module, acs);
-
-			// class cache
-			module.AddGlobalVariable ("marshal_methods_number_of_classes", (uint)classes.Count, LlvmIrVariableOptions.GlobalConstant);
-			module.AddGlobalVariable ("marshal_methods_class_cache", classes, LlvmIrVariableOptions.GlobalWritable);
-
-			// Marshal methods class names
-			var mm_class_names = new List<string> ();
-			foreach (StructureInstance<MarshalMethodsManagedClass> klass in classes) {
-				mm_class_names.Add (klass.Instance.ClassName);
-			}
-			module.AddGlobalVariable ("mm_class_names", mm_class_names, LlvmIrVariableOptions.GlobalConstant, comment: " Names of classes in which marshal methods reside");
+			AddClassCache (module);
+			AddClassNames (module);
 
 			AddMarshalMethodNames (module, acs);
 			(LlvmIrVariable getFunctionPtrVariable, LlvmIrFunction getFunctionPtrFunction) = AddXamarinAppInitFunction (module);
@@ -618,11 +609,17 @@ namespace Xamarin.Android.Tasks
 			AddMarshalMethods (module, acs, getFunctionPtrVariable, getFunctionPtrFunction);
 		}
 
-		void MapStructures (LlvmIrModule module)
+		protected virtual void MapStructures (LlvmIrModule module)
 		{
 			marshalMethodsManagedClassStructureInfo = module.MapStructure<MarshalMethodsManagedClass> ();
 			marshalMethodNameStructureInfo = module.MapStructure<MarshalMethodName> ();
 		}
+
+		protected virtual void AddClassNames (LlvmIrModule module)
+		{}
+
+		protected virtual void AddClassCache (LlvmIrModule module)
+		{}
 
 		void AddMarshalMethods (LlvmIrModule module, AssemblyCacheState acs, LlvmIrVariable getFunctionPtrVariable, LlvmIrFunction getFunctionPtrFunction)
 		{
@@ -884,7 +881,7 @@ namespace Xamarin.Android.Tasks
 			return module.AddAttributeSet (attrSet);
 		}
 
-		void AddMarshalMethodNames (LlvmIrModule module, AssemblyCacheState acs)
+		protected virtual void AddMarshalMethodNames (LlvmIrModule module, AssemblyCacheState acs)
 		{
 			var uniqueMethods = new Dictionary<ulong, (MarshalMethodInfo mmi, ulong id32, ulong id64)> ();
 

@@ -25,6 +25,26 @@ class MarshalMethodsNativeAssemblyGeneratorMonoVM : MarshalMethodsNativeAssembly
 		this.numberOfAssembliesInApk = numberOfAssembliesInApk;
 	}
 
+	protected override void AddClassNames (LlvmIrModule module)
+	{
+		// Marshal methods class names
+		var mm_class_names = new List<string> ();
+		foreach (StructureInstance<MarshalMethodsManagedClass> klass in classes) {
+			if (klass.Instance == null) {
+				throw new InvalidOperationException ("Internal error: null class instance found");
+			}
+
+			mm_class_names.Add (klass.Instance.ClassName);
+		}
+		module.AddGlobalVariable ("mm_class_names", mm_class_names, LlvmIrVariableOptions.GlobalConstant, comment: " Names of classes in which marshal methods reside");
+	}
+
+	protected override void AddClassCache (LlvmIrModule module)
+	{
+		module.AddGlobalVariable ("marshal_methods_number_of_classes", (uint)classes.Count, LlvmIrVariableOptions.GlobalConstant);
+		module.AddGlobalVariable ("marshal_methods_class_cache", classes, LlvmIrVariableOptions.GlobalWritable);
+	}
+
 	protected override void AddAssemblyImageCache (LlvmIrModule module, AssemblyCacheState acs)
 	{
 		var assembly_image_cache = new LlvmIrGlobalVariable (typeof(List<IntPtr>), "assembly_image_cache", LlvmIrVariableOptions.GlobalWritable) {

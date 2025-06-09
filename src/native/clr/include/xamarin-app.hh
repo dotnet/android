@@ -386,10 +386,6 @@ struct MarshalMethodsManagedClass
 	void            *klass;
 };
 
-// Number of unique classes which contain native callbacks we bind
-[[gnu::visibility("default")]] extern uint32_t marshal_methods_number_of_classes;
-[[gnu::visibility("default")]] extern MarshalMethodsManagedClass marshal_methods_class_cache[];
-
 //
 // These tables store names of classes and managed callback methods used in the generated marshal methods
 // code. They are used just for error reporting.
