@@ -187,7 +187,16 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	}
 
 	static bool Replaceable (GCHandle handle)
-		=> handle.IsAllocated && (handle.Target as IJavaPeerable)?.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable) ?? false;
+	{
+		if (!handle.IsAllocated)
+			return false;
+
+		var target = handle.Target as IJavaPeerable;
+		if (target is null)
+			return false;
+
+		return target.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable);
+	}
 
 	void WarnNotReplacing (int key, IJavaPeerable ignoreValue, IJavaPeerable keepValue)
 	{

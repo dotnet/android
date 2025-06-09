@@ -24,7 +24,7 @@ struct HandleContext
 
 struct StronglyConnectedComponent
 {
-	size_t Count;
+	ssize_t Count; // We need to use ssize_t instead of size_t to allow negative values for bridgeless SCCs
 	HandleContext** Contexts;
 };
 
@@ -36,9 +36,9 @@ struct ComponentCrossReference
 
 struct MarkCrossReferencesArgs
 {
-    size_t ComponentsLen;
+    size_t ComponentCount;
     StronglyConnectedComponent* Components;
-    size_t CrossReferencesLen;
+    size_t CrossReferenceCount;
     ComponentCrossReference* CrossReferences;
 };
 
@@ -53,16 +53,16 @@ namespace xamarin::android {
 		static void wait_for_bridge_processing () noexcept;
 		static void initialize_on_load (JNIEnv *env) noexcept;
 		static BridgeProcessingFtn initialize_callback (
-			BridgeProcessingStartedFtn bridge_processing_started_callback,
-			BridgeProcessingFinishedFtn bridge_processing_finished_callback) noexcept
+			BridgeProcessingStartedFtn bridge_processing_started,
+			BridgeProcessingFinishedFtn bridge_processing_finished) noexcept
 		{
-			abort_if_invalid_pointer_argument (bridge_processing_started_callback, "bridge_processing_started_callback");
-			abort_if_invalid_pointer_argument (bridge_processing_finished_callback, "bridge_processing_finished_callback");
+			abort_if_invalid_pointer_argument (bridge_processing_started, "bridge_processing_started");
+			abort_if_invalid_pointer_argument (bridge_processing_finished, "bridge_processing_finished");
 			abort_unless (GCBridge::bridge_processing_started_callback == nullptr, "GC bridge processing started callback is already set");
 			abort_unless (GCBridge::bridge_processing_finished_callback == nullptr, "GC bridge processing finished callback is already set");
 
-			GCBridge::bridge_processing_started_callback = bridge_processing_started_callback;
-			GCBridge::bridge_processing_finished_callback = bridge_processing_finished_callback;
+			GCBridge::bridge_processing_started_callback = bridge_processing_started;
+			GCBridge::bridge_processing_finished_callback = bridge_processing_finished;
 
 			bridge_processing_thread = new std::thread(GCBridge::bridge_processing);
 			bridge_processing_thread->detach ();
@@ -86,11 +86,11 @@ namespace xamarin::android {
 		static void mark_cross_references (MarkCrossReferencesArgs* cross_refs) noexcept;
 
 		static bool is_bridgeless_scc (StronglyConnectedComponent *scc) noexcept;
-		static bool add_reference (HandleContext *from, jobject to) noexcept;
-		static bool add_direct_reference (jobject from, jobject to) noexcept; // TODO naming
+		static void add_reference (HandleContext *from, jobject to) noexcept;
+		static void add_direct_reference (jobject from, jobject to) noexcept; // TODO naming
 		static void clear_references (jobject handle) noexcept;
 		static int scc_get_stashed_temporary_peer_index (StronglyConnectedComponent *scc) noexcept;
-		static void scc_set_stashed_temporary_peer_index (StronglyConnectedComponent *scc, int index) noexcept;
+		static void scc_set_stashed_temporary_peer_index (StronglyConnectedComponent *scc, ssize_t index) noexcept;
 		static jobject get_scc_representative (StronglyConnectedComponent *scc, jobject temporary_peers) noexcept;
 		static void maybe_release_scc_representative (StronglyConnectedComponent *scc, jobject handle) noexcept;
 		static void prepare_for_java_collection (MarkCrossReferencesArgs* cross_refs) noexcept;
@@ -101,7 +101,7 @@ namespace xamarin::android {
 
 		static inline jclass GCUserPeer_class = nullptr;
 		static inline jmethodID GCUserPeer_ctor = nullptr;
-
+		
 		static inline jclass ArrayList_class = nullptr;
 		static inline jmethodID ArrayList_ctor = nullptr;
 		static inline jmethodID ArrayList_get = nullptr;
