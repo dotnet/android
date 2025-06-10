@@ -414,7 +414,6 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	unsafe struct HandleContext
 	{
 		public IntPtr GCHandle;
-		public bool IsCollected;
 		public IntPtr ControlBlock;
 
 		static readonly nuint Size = (nuint) Marshal.SizeOf<HandleContext> ();
@@ -447,7 +446,6 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		var handle = JavaMarshal.CreateReferenceTrackingHandle (value, ctx);
 
 		ctx->GCHandle = GCHandle.ToIntPtr (handle);
-		ctx->IsCollected = false;
 		ctx->ControlBlock = value.JniObjectReferenceControlBlock;
 
 		return handle;
@@ -467,7 +465,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		for (int i = 0; (nuint)i < mcr->ComponentCount; i++) {
 			for (int j = 0; (nuint)j < mcr->Components [i].Count; j++) {
 				var context = (HandleContext*) mcr->Components [i].Contexts [j];
-				if (context->IsCollected) {
+				if (context->ControlBlock == IntPtr.Zero) {
 					var handle = GCHandle.FromIntPtr (context->GCHandle);
 
 					// Only free handles that haven't been freed yet

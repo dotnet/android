@@ -38,31 +38,20 @@ void GCBridge::trigger_java_gc () noexcept
 
 void GCBridge::add_inner_reference (HandleContext *from, HandleContext *to) noexcept
 {
-	abort_if_invalid_pointer_argument (from, "from");
-	abort_if_invalid_pointer_argument (to, "to");
+	jobject from_object = from->control_block->handle;
+	jobject to_object = to->control_block->handle;
 
-	if (add_reference (from->control_block->handle, to->control_block->handle)) {
+	if (add_reference (from_object, to_object)) {
 		from->control_block->refs_added++;
 	}
 }
 
 void GCBridge::add_cross_reference (GCBridge::CrossReferenceComponent from, GCBridge::CrossReferenceComponent to) noexcept
 {
-	jobject from_object;
-	if (from.is_bridgeless_scc) {
-		from_object = from.target;
-	} else {
-		from_object = from.handle_context->control_block->handle;
-	}
+	jobject from_object = from.is_bridgeless_component ? from.temporary_peer : from.handle_context->control_block->handle;
+	jobject to_object = to.is_bridgeless_component ? to.temporary_peer : to.handle_context->control_block->handle;
 
-	jobject to_object;
-	if (to.is_bridgeless_scc) {
-		to_object = to.target;
-	} else {
-		to_object = to.handle_context->control_block->handle;
-	}
-
-	if (add_reference (from_object, to_object) && !from.is_bridgeless_scc) {
+	if (add_reference (from_object, to_object) && !from.is_bridgeless_component) {
 		from.handle_context->control_block->refs_added++;
 	}
 }
@@ -82,16 +71,15 @@ bool GCBridge::add_reference (jobject from, jobject to) noexcept
 	}
 }
 
-int GCBridge::scc_get_stashed_temporary_peer_index (StronglyConnectedComponent *scc) noexcept
+ssize_t GCBridge::get_stashed_temporary_peer_index (StronglyConnectedComponent *scc) noexcept
 {
 	abort_if_invalid_pointer_argument (scc, "scc");
 	abort_unless (scc->Count < 0, "Attempted to load stashed index from an object which does not contain one.");
-	abort_unless (scc->Count >= static_cast<ssize_t> (std::numeric_limits<int>::min ()), "Count cannot fit in an int.");
 
-	return static_cast<int> (-scc->Count - 1);
+	return -scc->Count - 1;
 }
 
-void GCBridge::scc_set_stashed_temporary_peer_index (StronglyConnectedComponent *scc, ssize_t index) noexcept
+void GCBridge::set_stashed_temporary_peer_index (StronglyConnectedComponent *scc, ssize_t index) noexcept
 {
 	abort_if_invalid_pointer_argument (scc, "scc");
 	abort_unless (index >= 0, "Index must be non-negative");
@@ -99,39 +87,40 @@ void GCBridge::scc_set_stashed_temporary_peer_index (StronglyConnectedComponent 
 	scc->Count = -index - 1;
 }
 
-bool GCBridge::is_bridgeless_scc (StronglyConnectedComponent *scc) noexcept
+bool GCBridge::is_bridgeless_component (StronglyConnectedComponent *scc) noexcept
 {
 	abort_if_invalid_pointer_argument (scc, "scc");
-	return scc->Count < 0; // If Count is negative, it's a bridgeless SCC
+
+	// if we stashed a temporary peer index in Count (negative number), then this is a bridgeless SCC
+	return scc->Count < 0;
 }
 
 GCBridge::CrossReferenceComponent GCBridge::get_target (StronglyConnectedComponent *scc, jobject temporary_peers) noexcept
 {
 	abort_if_invalid_pointer_argument (scc, "scc");
 
-	if (is_bridgeless_scc (scc)) {
+	if (is_bridgeless_component (scc)) {
 		abort_unless (temporary_peers != nullptr, "Temporary peers must not be null for bridgeless SCCs");
 
-		int index = scc_get_stashed_temporary_peer_index (scc);
-		jobject target = env->CallObjectMethod (temporary_peers, ArrayList_get, index);
+		ssize_t index = get_stashed_temporary_peer_index (scc);
+		abort_unless (index <= static_cast<ssize_t> (std::numeric_limits<int>::max ()), "Count cannot fit temporary peer index in an int.");
 
-		return GCBridge::CrossReferenceComponent {
-			.is_bridgeless_scc = true,
-			.target = target,
-		};
+		int index_int = static_cast<int>(index);
+		jobject target = env->CallObjectMethod (temporary_peers, ArrayList_get, index_int);
+
+		return { .is_bridgeless_component = true, .temporary_peer = target };
 	} else {
-		return GCBridge::CrossReferenceComponent {
-			.is_bridgeless_scc = false,
-			.handle_context = scc->Contexts [0],
-		};
+		abort_unless (scc->Count > 0, "SCC must have at least one context for non-bridgeless SCCs");
+
+		return { .is_bridgeless_component = false, .handle_context = scc->Contexts [0] };
 	}
 }
 
 void GCBridge::release_target (GCBridge::CrossReferenceComponent component) noexcept
 {
-	if (component.is_bridgeless_scc) {
+	if (component.is_bridgeless_component) {
 		// Release the local ref for bridgeless SCCs
-		env->DeleteLocalRef (component.target);
+		env->DeleteLocalRef (component.temporary_peer);
 	}
 }
 
@@ -179,7 +168,7 @@ void GCBridge::prepare_for_java_collection (MarkCrossReferencesArgs* cross_refs)
 			env->CallBooleanMethod (temporary_peers, ArrayList_add, peer);
 			env->DeleteLocalRef (peer);
 
-			scc_set_stashed_temporary_peer_index (scc, temporary_peer_count);
+			set_stashed_temporary_peer_index (scc, temporary_peer_count);
 			temporary_peer_count++;
 		}
 	}
@@ -227,13 +216,16 @@ void GCBridge::take_global_ref (HandleContext *context) noexcept
 	// }
 
 	if (handle != nullptr) {
-		context->is_collected = 0;
+		context->control_block->handle = handle;
+		context->control_block->handle_type = JNIGlobalRefType;
+
 		// _monodroid_gref_log_new (weak, get_object_ref_type (env, weak),
 		// 		handle, get_object_ref_type (env, handle),
 		// 		"finalizer", gettid (),
 		// 		"   at [[gc:take_global_ref_jni]]", 0);
 	} else {
-		context->is_collected = 1;
+		context->control_block = nullptr;
+
 		// MonoClass *klass = mono_object_get_class (obj);
 		// char *message = Util::monodroid_strdup_printf (
 		// 		"handle %p/W; key_handle %p; MCW type: `%s.%s`: was collected by a Java GC",
@@ -245,8 +237,6 @@ void GCBridge::take_global_ref (HandleContext *context) noexcept
 		// free (message);
 	}
 
-	context->control_block->handle = handle;
-	context->control_block->handle_type = JNIGlobalRefType;
 
 	// _monodroid_weak_gref_delete (weak, get_object_ref_type (env, weak),
 	// 		"finalizer", gettid (), "   at [[gc:take_global_ref_jni]]", 0);

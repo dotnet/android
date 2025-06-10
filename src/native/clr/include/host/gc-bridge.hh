@@ -18,7 +18,6 @@ struct JniObjectReferenceControlBlock
 struct HandleContext
 {
 	intptr_t gc_handle;
-	int32_t is_collected;
 	JniObjectReferenceControlBlock* control_block;
 };
 
@@ -72,9 +71,9 @@ namespace xamarin::android {
 
 		struct CrossReferenceComponent
 		{
-			bool is_bridgeless_scc;
+			bool is_bridgeless_component;
 			union {
-				jobject target;
+				jobject temporary_peer;
 				HandleContext* handle_context;
 			};
 		};
@@ -93,16 +92,17 @@ namespace xamarin::android {
 		static void bridge_processing () noexcept;
 		static void mark_cross_references (MarkCrossReferencesArgs* cross_refs) noexcept;
 		
-		static bool is_bridgeless_scc (StronglyConnectedComponent *scc) noexcept;
+		static bool is_bridgeless_component (StronglyConnectedComponent *scc) noexcept;
 		static void add_inner_reference (HandleContext *from, HandleContext *to) noexcept;
 		static void add_cross_reference (GCBridge::CrossReferenceComponent from, GCBridge::CrossReferenceComponent to) noexcept;
 		static bool add_reference (jobject from, jobject to) noexcept;
 		static void clear_references (jobject handle) noexcept;
+
 		static GCBridge::CrossReferenceComponent get_target (StronglyConnectedComponent *scc, jobject temporary_peers) noexcept;
 		static void release_target (GCBridge::CrossReferenceComponent target) noexcept;
 		
-		static int scc_get_stashed_temporary_peer_index (StronglyConnectedComponent *scc) noexcept;
-		static void scc_set_stashed_temporary_peer_index (StronglyConnectedComponent *scc, ssize_t index) noexcept;
+		static ssize_t get_stashed_temporary_peer_index (StronglyConnectedComponent *scc) noexcept;
+		static void set_stashed_temporary_peer_index (StronglyConnectedComponent *scc, ssize_t index) noexcept;
 		
 		static void prepare_for_java_collection (MarkCrossReferencesArgs* cross_refs) noexcept;
 		static void cleanup_after_java_collection (MarkCrossReferencesArgs* cross_refs) noexcept;
