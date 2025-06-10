@@ -118,7 +118,7 @@ namespace Android.Runtime
 			}
 			// TODO is there any reason why the ManagedTypeMap would need ManagedValueManager?
 			// ManagedValueManager is specifically tied to the CoreCLR JavaMarshal APIs and it does not work with MonoVM.
-			valueManager = RuntimeType == DotNetRuntimeType.MonoVM ? new AndroidValueManager () : ManagedValueManager.Instance;
+			valueManager = RuntimeType == DotNetRuntimeType.MonoVM ? new AndroidValueManager () : ManagedValueManager.GetOrCreateInstance ();
 			androidRuntime = new AndroidRuntime (
 					args->env,
 					args->javaVm,

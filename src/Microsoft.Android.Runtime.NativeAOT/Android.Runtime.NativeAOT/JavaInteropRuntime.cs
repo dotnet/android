@@ -42,7 +42,7 @@ static partial class JavaInteropRuntime
 				EnvironmentPointer          = jnienv,
 				ClassLoader                 = new JniObjectReference (classLoader),
 				TypeManager                 = new ManagedTypeManager (),
-				ValueManager                = ManagedValueManager.Instance, // TODO this will likely blow up in AOT at runtime currently
+				ValueManager                = ManagedValueManager.GetOrCreateInstance (), // TODO this will likely blow up in AOT at runtime currently
 				UseMarshalMemberBuilder     = false,
 				JniGlobalReferenceLogWriter = settings.GrefLog,
 				JniLocalReferenceLogWriter  = settings.LrefLog,

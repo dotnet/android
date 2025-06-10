@@ -24,7 +24,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	Dictionary<int, List<GCHandle>>?   RegisteredInstances = new ();
 
 	private static Lazy<ManagedValueManager> s_instance = new (() => new ManagedValueManager ());
-	public static ManagedValueManager Instance => s_instance.Value;
+	public static ManagedValueManager GetOrCreateInstance () => s_instance.Value;
 
 	private unsafe ManagedValueManager ()
 	{
@@ -458,6 +458,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	internal static unsafe void BridgeProcessingFinished (MarkCrossReferencesArgs* mcr)
 	{
 		List<GCHandle> handlesToFree = [];
+		ManagedValueManager instance = GetOrCreateInstance ();
 
 		for (int i = 0; (nuint)i < mcr->ComponentCount; i++) {
 			for (int j = 0; (nuint)j < mcr->Components [i].Count; j++) {
@@ -472,7 +473,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 					// Cleanup: Remove the handle from RegisteredInstances
 					if (handle.IsAllocated && handle.Target is IJavaPeerable target) {
-						Instance.RemoveRegisteredInstance (target, freeHandle: false);
+						instance.RemoveRegisteredInstance (target, freeHandle: false);
 					}
 
 					HandleContext.Free (ref context);
