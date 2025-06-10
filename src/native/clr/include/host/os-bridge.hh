@@ -13,6 +13,7 @@ namespace xamarin::android {
 		static void initialize_on_onload (JavaVM *vm, JNIEnv *env) noexcept;
 		static void initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass) noexcept;
 		static auto lref_to_gref (JNIEnv *env, jobject lref) noexcept -> jobject;
+		static auto get_object_ref_type (JNIEnv *env, void *handle) noexcept -> char;
 
 		static auto get_gc_gref_count () noexcept -> int
 		{
@@ -29,6 +30,7 @@ namespace xamarin::android {
 		static void _monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable) noexcept;
 		static void _monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable);
 		static void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable);
+		static void _monodroid_weak_gref_collected (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable) noexcept;
 
 		static void _monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable);
 		static void _monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable);

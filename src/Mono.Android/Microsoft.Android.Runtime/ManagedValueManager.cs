@@ -89,10 +89,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		lock (RegisteredInstances) {
 			List<GCHandle>? peers;
 			if (!RegisteredInstances.TryGetValue (key, out peers)) {
-				// Console.WriteLine ($"Adding new peer list for key {key} with PeerReference={value.PeerReference} in {GetType ().AssemblyQualifiedName}");
-				peers = new List<GCHandle> () {
-					CreateReferenceTrackingHandle (value)
-				};
+				peers = [CreateReferenceTrackingHandle (value)];
 				RegisteredInstances.Add (key, peers);
 				return;
 			}

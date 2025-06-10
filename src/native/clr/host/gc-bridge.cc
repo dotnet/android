@@ -1,5 +1,6 @@
 #include <host/gc-bridge.hh>
 #include <host/os-bridge.hh>
+#include <runtime-base/util.hh>
 #include <shared/helpers.hh>
 #include <limits>
 
@@ -207,60 +208,61 @@ void GCBridge::prepare_for_java_collection (MarkCrossReferencesArgs* cross_refs)
 void GCBridge::take_global_ref (HandleContext *context) noexcept
 {
 	abort_unless (context->control_block->handle_type == JNIWeakGlobalRefType, "Expected weak global reference type for handle");
-	jobject weak = context->control_block->handle;
 
+	
+	jobject weak = context->control_block->handle;
 	jobject handle = env->NewGlobalRef (weak);
-	// if (gref_log) {
-	// 	fprintf (gref_log, "*try_take_global obj=%p -> wref=%p handle=%p\n", obj, weak, handle);
-	// 	fflush (gref_log);
-	// }
+	
+	if (Logger::gref_log ()) [[unlikely]] {
+		char *message = Util::monodroid_strdup_printf ("*try_take_global gchandle=%p -> wref=%p handle=%p\n", context->gc_handle, weak, handle);
+		OSBridge::_monodroid_gref_log (message);
+		free (message);
+	}
 
 	if (handle != nullptr) {
 		context->control_block->handle = handle;
 		context->control_block->handle_type = JNIGlobalRefType;
 
-		// _monodroid_gref_log_new (weak, get_object_ref_type (env, weak),
-		// 		handle, get_object_ref_type (env, handle),
-		// 		"finalizer", gettid (),
-		// 		"   at [[gc:take_global_ref_jni]]", 0);
+		OSBridge::_monodroid_gref_log_new (weak, OSBridge::get_object_ref_type (env, weak),
+				handle, OSBridge::get_object_ref_type (env, handle),
+				"finalizer", gettid (),
+				"   at [[clr-gc:take_global_ref]]", 0);
+
+		OSBridge::_monodroid_weak_gref_delete (weak, OSBridge::get_object_ref_type (env, weak),
+			"finalizer", gettid (), "   at [[clr-gc:take_global_ref]]", 0);
+		env->DeleteWeakGlobalRef (weak);
 	} else {
 		context->control_block = nullptr;
 
-		// MonoClass *klass = mono_object_get_class (obj);
-		// char *message = Util::monodroid_strdup_printf (
-		// 		"handle %p/W; key_handle %p; MCW type: `%s.%s`: was collected by a Java GC",
-		// 		weak,
-		// 		nullptr, // ??
-		// 		mono_class_get_namespace (klass),
-		// 		mono_class_get_name (klass));
-		// _monodroid_gref_log (message);
-		// free (message);
+		if (Logger::gc_spew_enabled ()) [[unlikely]] {
+			char *message = Util::monodroid_strdup_printf ("handle %p/W; was collected by a Java GC", weak);
+			OSBridge::_monodroid_gref_log (message);
+			free (message);
+		}
+
+		// The weak reference will be deleted by JniObjectReferenceManager.DeleteWeakGlobalReference later
 	}
-
-
-	// _monodroid_weak_gref_delete (weak, get_object_ref_type (env, weak),
-	// 		"finalizer", gettid (), "   at [[gc:take_global_ref_jni]]", 0);
-	env->DeleteWeakGlobalRef (weak);
 }
 
 void GCBridge::take_weak_global_ref (HandleContext *context) noexcept
 {
 	jobject handle = context->control_block->handle;
-	// if (gref_log) {
-	// 	fprintf (gref_log, "*take_weak obj=%p; handle=%p\n", obj, handle);
-	// 	fflush (gref_log);
-	// }
+	if (Logger::gref_log ()) [[unlikely]] {
+		char *message = Util::monodroid_strdup_printf ("*take_weak gchandle=%p; handle=%p\n", context->gc_handle, handle);
+		OSBridge::_monodroid_gref_log (message);
+		free (message);
+	}
 
 	jobject weak = env->NewWeakGlobalRef (handle);
-	// _monodroid_weak_gref_new (handle, get_object_ref_type (env, handle),
-	// 		weak, get_object_ref_type (env, weak),
-	// 		"finalizer", gettid (), "   at [[gc:take_weak_global_ref_jni]]", 0);
+	OSBridge::_monodroid_weak_gref_new (handle, OSBridge::get_object_ref_type (env, handle),
+			weak, OSBridge::get_object_ref_type (env, weak),
+			"finalizer", gettid (), "   at [[clr-gc:take_weak_global_ref]]", 0);
 
 	context->control_block->handle = weak;
 	context->control_block->handle_type = JNIWeakGlobalRefType;
 
-	// _monodroid_gref_log_delete (handle, get_object_ref_type (env, handle),
-	// 		"finalizer", gettid (), "   at [[gc:take_weak_global_ref_jni]]", 0);
+	OSBridge::_monodroid_gref_log_delete (handle, OSBridge::get_object_ref_type (env, handle),
+			"finalizer", gettid (), "   at [[clr-gc:take_weak_global_ref]]", 0);
 	env->DeleteGlobalRef (handle);
 }
 
@@ -278,12 +280,9 @@ void GCBridge::clear_references (jobject handle) noexcept
 		env->ExceptionClear ();
 #if DEBUG
 		// if (Logger::gc_spew_enabled ()) {
-		// 	klass = mono_object_get_class (obj);
-		// 	log_error (LOG_GC,
-		// 		"Missing monodroidClearReferences method for object of class {}.{}",
-		// 		optional_string (mono_class_get_namespace (klass)),
-		// 		optional_string (mono_class_get_name (klass))
-		// 	);
+		// 	char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
+		// 	log_error (LOG_GC, "Missing monodroidClearReferences method for object of class {}", class_name);
+		// 	free (class_name);
 		// }
 #endif
 	}
@@ -314,30 +313,23 @@ for (size_t i = 0; i < cross_refs->ComponentCount; i++)
 		bool is_alive = false;
 
 		for (ssize_t j = 0; j < scc->Count; j++) {
-			HandleContext *context = scc->Contexts [j];
-			jobject handle = context->control_block->handle;
+			JniObjectReferenceControlBlock *control_block = scc->Contexts [j]->control_block;
 
-			if (handle) {
+			if (control_block != nullptr) {
 #if DEBUG
 				alive++;
 #endif
 				if (j > 0) {
-					abort_unless (
-						is_alive,
-						[&i] { return detail::_format_message ("Bridge SCC at index %d must be alive", i); }
-					);
+					abort_unless (is_alive, [&i] { return detail::_format_message ("Bridge SCC at index %d must be alive", i); });
 				}
 
 				is_alive = true;
-				if (context->control_block->refs_added > 0) {
-					clear_references (handle);
-					context->control_block->refs_added = 0;
+				if (control_block->refs_added > 0) {
+					clear_references (control_block->handle);
+					control_block->refs_added = 0;
 				}
 			} else {
-				abort_unless (
-					!is_alive,
-					[&i] { return detail::_format_message ("Bridge SCC at index %d must NOT be alive", i); }
-				);
+				abort_unless (!is_alive, [&i] { return detail::_format_message ("Bridge SCC at index %d must NOT be alive", i); });
 			}
 		}
 	}
