@@ -280,38 +280,6 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		}
 	}
 
-	private GCHandle PeekPeerHandle (JniObjectReference reference)
-	{
-		if (RegisteredInstances == null)
-			throw new ObjectDisposedException (nameof (ManagedValueManager));
-
-		if (!reference.IsValid)
-			return default;
-
-		WaitForGCBridgeProcessing ();
-
-		int key = GetJniIdentityHashCode (reference);
-
-		lock (RegisteredInstances) {
-			List<GCHandle>? peers;
-			if (!RegisteredInstances.TryGetValue (key, out peers))
-				return default;
-
-			for (int i = peers.Count - 1; i >= 0; i--) {
-				var handle = peers[i];
-				if (handle.IsAllocated
-					&& handle.Target is IJavaPeerable peer
-					&& JniEnvironment.Types.IsSameObject (reference, peer.PeerReference))
-				{
-					return handle;
-				}
-			}
-			if (peers.Count == 0)
-				RegisteredInstances.Remove (key);
-		}
-		return default;
-	}
-
 	public override void FinalizePeer (IJavaPeerable value)
 	{
 		WaitForGCBridgeProcessing ();
