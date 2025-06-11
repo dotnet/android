@@ -135,8 +135,8 @@ class ManagedValueManager : JniRuntime.JniValueManager
 				return;
 
 			for (int i = peers.Count - 1; i >= 0; i--) {
-				var p = peers [i];
-				if (p.IsAllocated && ReferenceEquals (value, p.Target))
+				var handle = peers [i];
+				if (handle.IsAllocated && ReferenceEquals (value, handle.Target))
 				{
 					indexesToRemove.Add (i);
 				}
@@ -144,19 +144,19 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		}
 
 		// dispose the peer
-		base.DisposePeer(value);
+		base.DisposePeer (value);
 
 		// and then clean up the registered instances
 		lock (RegisteredInstances) {
 			List<GCHandle>? peers;
-			if (!RegisteredInstances.TryGetValue(key, out peers))
+			if (!RegisteredInstances.TryGetValue (key, out peers))
 				return;
 
 			foreach (int i in indexesToRemove) {
 				// Remove the peer from the list
-				var p = peers[i];
-				FreeReferenceTrackingHandle(p);
-				peers.RemoveAt(i);
+				var handle = peers[i];
+				FreeReferenceTrackingHandle (handle);
+				peers.RemoveAt (i);
 			}
 		}
 	}
@@ -229,9 +229,9 @@ class ManagedValueManager : JniRuntime.JniValueManager
 				return null;
 
 			for (int i = peers.Count - 1; i >= 0; i--) {
-				var p = peers [i];
-				if (p.IsAllocated
-					&& p.Target is IJavaPeerable peer
+				var handle = peers [i];
+				if (handle.IsAllocated
+					&& handle.Target is IJavaPeerable peer
 					&& JniEnvironment.Types.IsSameObject (reference, peer.PeerReference))
 				{
 					return peer;
@@ -268,11 +268,11 @@ class ManagedValueManager : JniRuntime.JniValueManager
 				return;
 
 			for (int i = peers.Count - 1; i >= 0; i--) {
-				var p = peers [i];
-				if (p.IsAllocated && ReferenceEquals (target, p.Target)) {
+				var handle = peers [i];
+				if (handle.IsAllocated && ReferenceEquals (target, handle.Target)) {
 					peers.RemoveAt (i);
 					if (freeHandle)
-						FreeReferenceTrackingHandle (p);
+						FreeReferenceTrackingHandle (handle);
 				}
 			}
 			if (peers.Count == 0)
@@ -298,12 +298,12 @@ class ManagedValueManager : JniRuntime.JniValueManager
 				return default;
 
 			for (int i = peers.Count - 1; i >= 0; i--) {
-				var p = peers[i];
-				if (p.IsAllocated
-					&& p.Target is IJavaPeerable peer
-					&& JniEnvironment.Types.IsSameObject(reference, peer.PeerReference))
+				var handle = peers[i];
+				if (handle.IsAllocated
+					&& handle.Target is IJavaPeerable peer
+					&& JniEnvironment.Types.IsSameObject (reference, peer.PeerReference))
 				{
-					return p;
+					return handle;
 				}
 			}
 			if (peers.Count == 0)

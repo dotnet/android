@@ -23,7 +23,7 @@ struct HandleContext
 
 struct StronglyConnectedComponent
 {
-	ssize_t Count; // We need to use ssize_t instead of size_t to allow negative values for bridgeless SCCs
+	size_t Count;
 	HandleContext** Contexts;
 };
 
@@ -69,15 +69,6 @@ namespace xamarin::android {
 			return mark_cross_references;
 		}
 
-		struct CrossReferenceComponent
-		{
-			bool is_bridgeless_component;
-			union {
-				jobject temporary_peer;
-				HandleContext* handle_context;
-			};
-		};
-
 	private:
 		static inline BridgeProcessingStartedFtn bridge_processing_started_callback = nullptr;
 		static inline BridgeProcessingFinishedFtn bridge_processing_finished_callback = nullptr;
@@ -91,38 +82,23 @@ namespace xamarin::android {
 
 		static void bridge_processing () noexcept;
 		static void mark_cross_references (MarkCrossReferencesArgs* cross_refs) noexcept;
-		
-		static bool is_bridgeless_component (StronglyConnectedComponent *scc) noexcept;
-		static void add_inner_reference (HandleContext *from, HandleContext *to) noexcept;
-		static void add_cross_reference (GCBridge::CrossReferenceComponent from, GCBridge::CrossReferenceComponent to) noexcept;
+
+		static void add_references (StronglyConnectedComponent *scc) noexcept;
 		static bool add_reference (jobject from, jobject to) noexcept;
 		static void clear_references (jobject handle) noexcept;
 
-		static GCBridge::CrossReferenceComponent get_target (StronglyConnectedComponent *scc, jobject temporary_peers) noexcept;
-		static void release_target (GCBridge::CrossReferenceComponent target) noexcept;
-		
-		static ssize_t get_stashed_temporary_peer_index (StronglyConnectedComponent *scc) noexcept;
-		static void set_stashed_temporary_peer_index (StronglyConnectedComponent *scc, ssize_t index) noexcept;
-		
 		static void prepare_for_java_collection (MarkCrossReferencesArgs* cross_refs) noexcept;
 		static void cleanup_after_java_collection (MarkCrossReferencesArgs* cross_refs) noexcept;
 
-		static void add_inner_references (StronglyConnectedComponent *scc) noexcept;
-		static void add_temporary_peer (StronglyConnectedComponent *scc, jobject temporary_peers, int &temporary_peer_count) noexcept;
 		static void take_weak_global_ref (HandleContext *context) noexcept;
 		static void take_global_ref (HandleContext *context) noexcept;
 		
 		static void trigger_java_gc () noexcept;
+
 		static inline jobject Runtime_instance = nullptr;
 		static inline jmethodID Runtime_gc = nullptr;
 
 		static inline jclass GCUserPeer_class = nullptr;
 		static inline jmethodID GCUserPeer_ctor = nullptr;
-
-		static void ensure_array_list () noexcept;
-		static inline jclass ArrayList_class = nullptr;
-		static inline jmethodID ArrayList_ctor = nullptr;
-		static inline jmethodID ArrayList_get = nullptr;
-		static inline jmethodID ArrayList_add = nullptr;
 	};
 }

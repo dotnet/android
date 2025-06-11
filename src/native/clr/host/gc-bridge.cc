@@ -4,6 +4,7 @@
 #include <runtime-base/util.hh>
 #include <shared/helpers.hh>
 #include <limits>
+#include <unordered_map>
 
 using namespace xamarin::android;
 
@@ -41,26 +42,6 @@ void GCBridge::trigger_java_gc () noexcept
 	}
 }
 
-void GCBridge::add_inner_reference (HandleContext *from, HandleContext *to) noexcept
-{
-	jobject from_object = from->control_block->handle;
-	jobject to_object = to->control_block->handle;
-
-	if (add_reference (from_object, to_object)) {
-		from->control_block->refs_added++;
-	}
-}
-
-void GCBridge::add_cross_reference (GCBridge::CrossReferenceComponent from, GCBridge::CrossReferenceComponent to) noexcept
-{
-	jobject from_object = from.is_bridgeless_component ? from.temporary_peer : from.handle_context->control_block->handle;
-	jobject to_object = to.is_bridgeless_component ? to.temporary_peer : to.handle_context->control_block->handle;
-
-	if (add_reference (from_object, to_object) && !from.is_bridgeless_component) {
-		from.handle_context->control_block->refs_added++;
-	}
-}
-
 bool GCBridge::add_reference (jobject from, jobject to) noexcept
 {
 	jclass java_class = env->GetObjectClass (from);
@@ -76,64 +57,10 @@ bool GCBridge::add_reference (jobject from, jobject to) noexcept
 	}
 }
 
-ssize_t GCBridge::get_stashed_temporary_peer_index (StronglyConnectedComponent *scc) noexcept
-{
-	abort_if_invalid_pointer_argument (scc, "scc");
-	abort_unless (scc->Count < 0, "Attempted to load stashed index from an object which does not contain one.");
-
-	return -scc->Count - 1;
-}
-
-void GCBridge::set_stashed_temporary_peer_index (StronglyConnectedComponent *scc, ssize_t index) noexcept
-{
-	abort_if_invalid_pointer_argument (scc, "scc");
-	abort_unless (index >= 0, "Index must be non-negative");
-
-	scc->Count = -index - 1;
-}
-
-bool GCBridge::is_bridgeless_component (StronglyConnectedComponent *scc) noexcept
-{
-	abort_if_invalid_pointer_argument (scc, "scc");
-
-	// if we stashed a temporary peer index in Count (negative number), then this is a bridgeless SCC
-	return scc->Count < 0;
-}
-
-GCBridge::CrossReferenceComponent GCBridge::get_target (StronglyConnectedComponent *scc, jobject temporary_peers) noexcept
-{
-	abort_if_invalid_pointer_argument (scc, "scc");
-
-	if (is_bridgeless_component (scc)) {
-		abort_unless (temporary_peers != nullptr, "Temporary peers must not be null for bridgeless SCCs");
-
-		ssize_t index = get_stashed_temporary_peer_index (scc);
-		abort_unless (index <= static_cast<ssize_t> (std::numeric_limits<int>::max ()), "Count cannot fit temporary peer index in an int.");
-
-		int index_int = static_cast<int>(index);
-		jobject target = env->CallObjectMethod (temporary_peers, ArrayList_get, index_int);
-
-		return { .is_bridgeless_component = true, .temporary_peer = target };
-	} else {
-		abort_unless (scc->Count > 0, "SCC must have at least one context for non-bridgeless SCCs");
-
-		return { .is_bridgeless_component = false, .handle_context = scc->Contexts [0] };
-	}
-}
-
-void GCBridge::release_target (GCBridge::CrossReferenceComponent component) noexcept
-{
-	if (component.is_bridgeless_component) {
-		// Release the local ref for bridgeless SCCs
-		env->DeleteLocalRef (component.temporary_peer);
-	}
-}
-
 void GCBridge::prepare_for_java_collection (MarkCrossReferencesArgs* cross_refs) noexcept
 {
 	// Some SCCs might have no IGCUserPeers associated with them, so we must create one
-	jobject temporary_peers = nullptr; // This is an ArrayList
-	int temporary_peer_count = 0;      // Number of items in temporary_peers
+	std::unordered_map<StronglyConnectedComponent*, jobject> temporary_peers;
 
 	// Before looking at xrefs, scan the SCCs. During collection, an SCC has to behave like a
 	// single object. If the number of objects in the SCC is anything other than 1, the SCC
@@ -141,80 +68,57 @@ void GCBridge::prepare_for_java_collection (MarkCrossReferencesArgs* cross_refs)
 	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
 		StronglyConnectedComponent *scc = &cross_refs->Components [i];
 
-		abort_unless (scc->Count >= 0,
-			"Attempted to prepare for GC bridge processing where the number of strongly connected components is negative (likely due to overflow of ssize_t).");
-
 		// Count > 1 case: The SCC contains many objects which must be collected as one.
 		// Solution: Make all objects within the SCC directly or indirectly reference each other
 		if (scc->Count > 1) {
-			add_inner_references (scc);
+			add_references (scc);
 		} else if (scc->Count == 0) {
-			if (!temporary_peers) {
-				// Once per prepare_for_java_collection call, create a list to hold the temporary
-				// objects we create. This will protect them from collection while we build the list.
-				ensure_array_list ();
-				temporary_peers = env->NewObject (ArrayList_class, ArrayList_ctor);
-			}
-
-			add_temporary_peer (scc, temporary_peers, temporary_peer_count);
+			temporary_peers [scc] = env->NewObject (GCUserPeer_class, GCUserPeer_ctor);
 		}
 	}
 
 	// Add the cross scc refs
 	for (size_t i = 0; i < cross_refs->CrossReferenceCount; i++) {
 		ComponentCrossReference *xref = &cross_refs->CrossReferences [i];
+
+		StronglyConnectedComponent *source = &cross_refs->Components [xref->SourceGroupIndex];
+		jobject from = source->Count > 0 ? source->Contexts [0]->control_block->handle : temporary_peers [source];
 		
-		GCBridge::CrossReferenceComponent from = get_target (&cross_refs->Components [xref->SourceGroupIndex], temporary_peers);
-		GCBridge::CrossReferenceComponent to = get_target (&cross_refs->Components [xref->DestinationGroupIndex], temporary_peers);
+		StronglyConnectedComponent *destination = &cross_refs->Components [xref->DestinationGroupIndex];
+		jobject to = destination->Count > 0 ? destination->Contexts [0]->control_block->handle : temporary_peers [destination];
 
-		add_cross_reference (from, to);
-
-		release_target (from);
-		release_target (to);
+		add_reference (from, to);
 	}
 
-	// With xrefs processed, the temporary peer list can be released
-	env->DeleteLocalRef (temporary_peers);
+	// With cross references processed, the temporary peer list can be released
+	for (const auto& [scc, temporary_peer] : temporary_peers) {
+		env->DeleteLocalRef (temporary_peer);
+	}
 
 	// Switch global to weak references
 	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
 		StronglyConnectedComponent *scc = &cross_refs->Components [i];
-
-		// Reset any temporary peer index stored in Count
-		if (scc->Count < 0)
-			scc->Count = 0;
-
-		for (ssize_t j = 0; j < scc->Count; j++) {
+		for (size_t j = 0; j < scc->Count; j++) {
 			take_weak_global_ref (scc->Contexts [j]);
 		}
 	}
 }
 
-void GCBridge::add_inner_references (StronglyConnectedComponent *scc) noexcept
+void GCBridge::add_references (StronglyConnectedComponent *scc) noexcept
 {
 	abort_if_invalid_pointer_argument (scc, "scc");
+	abort_unless (scc->Count > 1, "SCC must have at least two items to add inner references");
 
-	HandleContext *first = scc->Contexts [0];
-	HandleContext *prev = first;
+	JniObjectReferenceControlBlock *prev = scc->Contexts [scc->Count - 1]->control_block;
 
-	for (ssize_t j = 1; j < scc->Count; j++) {
-		HandleContext *current = scc->Contexts [j];
-		add_inner_reference (prev, current);
+	for (size_t j = 1; j < scc->Count; j++) {
+		JniObjectReferenceControlBlock *current = scc->Contexts [j]->control_block;
+		if (add_reference (prev->handle, current->handle)) {
+			prev->refs_added++;
+		}
+
 		prev = current;
 	}
-
-	add_inner_reference (prev, first);
-}
-
-void GCBridge::add_temporary_peer (StronglyConnectedComponent *scc, jobject temporary_peers, int &temporary_peer_count) noexcept
-{
-	// Create this SCC's temporary object
-	jobject peer = env->NewObject (GCUserPeer_class, GCUserPeer_ctor);
-	env->CallBooleanMethod (temporary_peers, ArrayList_add, peer);
-	env->DeleteLocalRef (peer);
-
-	set_stashed_temporary_peer_index (scc, temporary_peer_count);
-	temporary_peer_count++;
 }
 
 void GCBridge::take_global_ref (HandleContext *context) noexcept
@@ -308,7 +212,7 @@ void GCBridge::cleanup_after_java_collection (MarkCrossReferencesArgs* cross_ref
 	// try to switch back to global refs to analyze what stayed alive
 	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
 		StronglyConnectedComponent *scc = &cross_refs->Components [i];
-		for (ssize_t j = 0; j < scc->Count; j++) {
+		for (size_t j = 0; j < scc->Count; j++) {
 #if DEBUG
 				total++;
 #endif
@@ -321,7 +225,7 @@ void GCBridge::cleanup_after_java_collection (MarkCrossReferencesArgs* cross_ref
 		StronglyConnectedComponent *scc = &cross_refs->Components [i];
 		bool is_alive = false;
 
-		for (ssize_t j = 0; j < scc->Count; j++) {
+		for (size_t j = 0; j < scc->Count; j++) {
 			JniObjectReferenceControlBlock *control_block = scc->Contexts [j]->control_block;
 
 			if (control_block != nullptr) {
@@ -366,7 +270,7 @@ void GCBridge::bridge_processing () noexcept
 
 			for (size_t i = 0; i < args->ComponentCount; ++i) {
 				log_info (LOG_GC, "group {} with {} objects", i, args->Components [i].Count);
-				for (ssize_t j = 0; j < args->Components [i].Count; ++j) {
+				for (size_t j = 0; j < args->Components [i].Count; ++j) {
 					HandleContext *ctx = args->Components [i].Contexts [j];
 					jobject handle = ctx->control_block->handle;
 					jclass java_class = env->GetObjectClass (handle);
@@ -403,23 +307,4 @@ void GCBridge::mark_cross_references (MarkCrossReferencesArgs* cross_refs) noexc
 	GCBridge::shared_cross_refs.CrossReferences = cross_refs->CrossReferences;
 
 	bridge_processing_semaphore.release ();
-}
-
-[[gnu::always_inline]]
-void GCBridge::ensure_array_list () noexcept
-{
-	// Once per process boot, look up JNI metadata we need to make temporary objects
-	if (ArrayList_class == nullptr) [[unlikely]] {
-		ArrayList_class = env->FindClass ("java/util/ArrayList");
-		abort_unless (ArrayList_class != nullptr, "Failed to find java/util/ArrayList class");
-
-		ArrayList_ctor = env->GetMethodID (ArrayList_class, "<init>", "()V");
-		abort_unless (ArrayList_ctor != nullptr, "Failed to find ArrayList constructor");
-		
-		ArrayList_get = env->GetMethodID (ArrayList_class, "get", "(I)Ljava/lang/Object;");
-		abort_unless (ArrayList_get != nullptr, "Failed to find ArrayList get method");
-		
-		ArrayList_add = env->GetMethodID (ArrayList_class, "add", "(Ljava/lang/Object;)Z");
-		abort_unless (ArrayList_add != nullptr, "Failed to find ArrayList add method");
-	}
 }
