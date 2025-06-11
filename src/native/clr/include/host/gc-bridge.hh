@@ -81,14 +81,14 @@ namespace xamarin::android {
 		static inline std::thread* bridge_processing_thread = nullptr;
 
 		static void bridge_processing () noexcept;
-		static void mark_cross_references (MarkCrossReferencesArgs* cross_refs) noexcept;
+		static void mark_cross_references (MarkCrossReferencesArgs *cross_refs) noexcept;
 
 		static void add_references (StronglyConnectedComponent *scc) noexcept;
 		static bool add_reference (jobject from, jobject to) noexcept;
 		static void clear_references (jobject handle) noexcept;
 
-		static void prepare_for_java_collection (MarkCrossReferencesArgs* cross_refs) noexcept;
-		static void cleanup_after_java_collection (MarkCrossReferencesArgs* cross_refs) noexcept;
+		static void prepare_for_java_collection (MarkCrossReferencesArgs *cross_refs) noexcept;
+		static void cleanup_after_java_collection (MarkCrossReferencesArgs *cross_refs) noexcept;
 
 		static void take_weak_global_ref (HandleContext *context) noexcept;
 		static void take_global_ref (HandleContext *context) noexcept;
@@ -100,5 +100,7 @@ namespace xamarin::android {
 
 		static inline jclass GCUserPeer_class = nullptr;
 		static inline jmethodID GCUserPeer_ctor = nullptr;
+
+		static void log_mark_cross_references_args_if_enabled (MarkCrossReferencesArgs *cross_refs) noexcept;
 	};
 }

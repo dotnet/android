@@ -8,11 +8,6 @@
 
 using namespace xamarin::android;
 
-void GCBridge::wait_for_bridge_processing () noexcept
-{
-	std::shared_lock<std::shared_mutex> lock (processing_mutex);
-}
-
 void GCBridge::initialize_on_load (JNIEnv *jniEnv) noexcept
 {
 	abort_if_invalid_pointer_argument (jniEnv, "jniEnv");
@@ -39,21 +34,6 @@ void GCBridge::trigger_java_gc () noexcept
 		env->ExceptionDescribe ();
 		env->ExceptionClear ();
 		log_error (LOG_DEFAULT, "Java GC failed");
-	}
-}
-
-bool GCBridge::add_reference (jobject from, jobject to) noexcept
-{
-	jclass java_class = env->GetObjectClass (from);
-	jmethodID add_method_id = env->GetMethodID (java_class, "monodroidAddReference", "(Ljava/lang/Object;)V");
-	env->DeleteLocalRef (java_class);
-
-	if (add_method_id) {
-		env->CallVoidMethod (from, add_method_id, to);
-		return true;
-	} else {
-		env->ExceptionClear ();
-		return false;
 	}
 }
 
@@ -121,6 +101,43 @@ void GCBridge::add_references (StronglyConnectedComponent *scc) noexcept
 	}
 }
 
+bool GCBridge::add_reference (jobject from, jobject to) noexcept
+{
+	jclass java_class = env->GetObjectClass (from);
+	jmethodID add_method_id = env->GetMethodID (java_class, "monodroidAddReference", "(Ljava/lang/Object;)V");
+	env->DeleteLocalRef (java_class);
+
+	if (add_method_id) {
+		env->CallVoidMethod (from, add_method_id, to);
+		return true;
+	} else {
+		env->ExceptionClear ();
+		return false;
+	}
+}
+
+void GCBridge::clear_references (jobject handle) noexcept
+{
+	// Clear references from the object
+	jclass java_class = env->GetObjectClass (handle);
+	jmethodID clear_method_id = env->GetMethodID (java_class, "monodroidClearReferences", "()V");
+	env->DeleteLocalRef (java_class); // Clean up the local reference to the class
+
+	if (clear_method_id) {
+		env->CallVoidMethod (handle, clear_method_id);
+	} else {
+		log_error (LOG_DEFAULT, "Failed to find monodroidClearReferences method");
+		env->ExceptionClear ();
+#if DEBUG
+		if (Logger::gc_spew_enabled ()) {
+			char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
+			log_error (LOG_GC, "Missing monodroidClearReferences method for object of class {}", class_name);
+			free (class_name);
+		}
+#endif
+	}
+}
+
 void GCBridge::take_global_ref (HandleContext *context) noexcept
 {
 	abort_unless (context->control_block->handle_type == JNIWeakGlobalRefType, "Expected weak global reference type for handle");
@@ -129,7 +146,7 @@ void GCBridge::take_global_ref (HandleContext *context) noexcept
 	jobject handle = env->NewGlobalRef (weak);
 	
 	if (Logger::gref_log ()) [[unlikely]] {
-		char *message = Util::monodroid_strdup_printf ("*try_take_global gchandle=%p -> wref=%p handle=%p\n", context->gc_handle, weak, handle);
+		char *message = Util::monodroid_strdup_printf ("take_global_ref gchandle=%p -> wref=%p handle=%p\n", context->gc_handle, weak, handle);
 		OSBridge::_monodroid_gref_log (message);
 		free (message);
 	}
@@ -162,7 +179,7 @@ void GCBridge::take_weak_global_ref (HandleContext *context) noexcept
 {
 	jobject handle = context->control_block->handle;
 	if (Logger::gref_log ()) [[unlikely]] {
-		char *message = Util::monodroid_strdup_printf ("*take_weak gchandle=%p; handle=%p\n", context->gc_handle, handle);
+		char *message = Util::monodroid_strdup_printf ("take_weak_global_ref gchandle=%p; handle=%p\n", context->gc_handle, handle);
 		OSBridge::_monodroid_gref_log (message);
 		free (message);
 	}
@@ -178,28 +195,6 @@ void GCBridge::take_weak_global_ref (HandleContext *context) noexcept
 	OSBridge::_monodroid_gref_log_delete (handle, OSBridge::get_object_ref_type (env, handle),
 			"finalizer", gettid (), "   at [[clr-gc:take_weak_global_ref]]", 0);
 	env->DeleteGlobalRef (handle);
-}
-
-void GCBridge::clear_references (jobject handle) noexcept
-{
-	// Clear references from the object
-	jclass java_class = env->GetObjectClass (handle);
-	jmethodID clear_method_id = env->GetMethodID (java_class, "monodroidClearReferences", "()V");
-	env->DeleteLocalRef (java_class); // Clean up the local reference to the class
-
-	if (clear_method_id) {
-		env->CallVoidMethod (handle, clear_method_id);
-	} else {
-		log_error (LOG_DEFAULT, "Failed to find monodroidClearReferences method");
-		env->ExceptionClear ();
-#if DEBUG
-		if (Logger::gc_spew_enabled ()) {
-			char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
-			log_error (LOG_GC, "Missing monodroidClearReferences method for object of class {}", class_name);
-			free (class_name);
-		}
-#endif
-	}
 }
 
 void GCBridge::cleanup_after_java_collection (MarkCrossReferencesArgs* cross_refs) noexcept
@@ -264,30 +259,7 @@ void GCBridge::bridge_processing () noexcept
 		std::unique_lock<std::shared_mutex> lock (processing_mutex);
 
 		MarkCrossReferencesArgs* args = &GCBridge::shared_cross_refs;
-
-		if (Logger::gc_spew_enabled ()) {
-			log_info (LOG_GC, "cross references callback invoked with {} sccs and {} xrefs.", args->ComponentCount, args->CrossReferenceCount);
-
-			for (size_t i = 0; i < args->ComponentCount; ++i) {
-				log_info (LOG_GC, "group {} with {} objects", i, args->Components [i].Count);
-				for (size_t j = 0; j < args->Components [i].Count; ++j) {
-					HandleContext *ctx = args->Components [i].Contexts [j];
-					jobject handle = ctx->control_block->handle;
-					jclass java_class = env->GetObjectClass (handle);
-					char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
-					log_info (LOG_GC, "\tgchandle {:p} gref {:p} [{}]", reinterpret_cast<void*> (ctx->gc_handle), reinterpret_cast<void*> (handle), class_name);
-					free (class_name);
-				}
-			}
-
-			if (Util::should_log (LOG_GC)) {
-				for (size_t i = 0; i < args->CrossReferenceCount; ++i) {
-					size_t source_index = args->CrossReferences [i].SourceGroupIndex;
-					size_t dest_index = args->CrossReferences [i].DestinationGroupIndex;
-					log_info_nocheck_fmt (LOG_GC, "xref [{}] {} -> {}", i, source_index, dest_index);
-				}
-			}
-		}
+		log_mark_cross_references_args_if_enabled (args);
 
 		bridge_processing_started_callback ();
 		prepare_for_java_collection (args);
@@ -307,4 +279,37 @@ void GCBridge::mark_cross_references (MarkCrossReferencesArgs* cross_refs) noexc
 	GCBridge::shared_cross_refs.CrossReferences = cross_refs->CrossReferences;
 
 	bridge_processing_semaphore.release ();
+}
+
+void GCBridge::wait_for_bridge_processing () noexcept
+{
+	std::shared_lock<std::shared_mutex> lock (processing_mutex);
+}
+
+[[gnu::always_inline]]
+void GCBridge::log_mark_cross_references_args_if_enabled (MarkCrossReferencesArgs* args) noexcept
+{
+	if (Logger::gc_spew_enabled ()) [[unlikely]] {
+		log_info (LOG_GC, "cross references callback invoked with {} sccs and {} xrefs.", args->ComponentCount, args->CrossReferenceCount);
+
+		for (size_t i = 0; i < args->ComponentCount; ++i) {
+			log_info (LOG_GC, "group {} with {} objects", i, args->Components [i].Count);
+			for (size_t j = 0; j < args->Components [i].Count; ++j) {
+				HandleContext *ctx = args->Components [i].Contexts [j];
+				jobject handle = ctx->control_block->handle;
+				jclass java_class = env->GetObjectClass (handle);
+				char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
+				log_info (LOG_GC, "\tgchandle {:p} gref {:p} [{}]", reinterpret_cast<void*> (ctx->gc_handle), reinterpret_cast<void*> (handle), class_name);
+				free (class_name);
+			}
+		}
+
+		if (Util::should_log (LOG_GC)) {
+			for (size_t i = 0; i < args->CrossReferenceCount; ++i) {
+				size_t source_index = args->CrossReferences [i].SourceGroupIndex;
+				size_t dest_index = args->CrossReferences [i].DestinationGroupIndex;
+				log_info_nocheck_fmt (LOG_GC, "xref [{}] {} -> {}", i, source_index, dest_index);
+			}
+		}
+	}
 }
