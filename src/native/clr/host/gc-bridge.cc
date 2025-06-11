@@ -1,5 +1,6 @@
 #include <host/gc-bridge.hh>
 #include <host/os-bridge.hh>
+#include <host/host.hh>
 #include <runtime-base/util.hh>
 #include <shared/helpers.hh>
 #include <limits>
@@ -16,15 +17,18 @@ void GCBridge::initialize_on_load (JNIEnv *jniEnv) noexcept
 	abort_if_invalid_pointer_argument (jniEnv, "jniEnv");
 
 	jclass lref = jniEnv->FindClass ("java/lang/Runtime");
-	jmethodID Runtime_getRuntime = jniEnv->GetStaticMethodID (lref, "getRuntime", "()Ljava/lang/Runtime;");
-	Runtime_gc = jniEnv->GetMethodID (lref, "gc", "()V");
-	Runtime_instance = OSBridge::lref_to_gref (jniEnv, jniEnv->CallStaticObjectMethod (lref, Runtime_getRuntime));
-	jniEnv->DeleteLocalRef (lref);
+	abort_unless (lref != nullptr, "Failed to look up java/lang/Runtime class.");
 
-	abort_unless (
-		Runtime_gc != nullptr && Runtime_instance != nullptr,
-		"Failed to look up Java GC runtime API."
-	);
+	jmethodID Runtime_getRuntime = jniEnv->GetStaticMethodID (lref, "getRuntime", "()Ljava/lang/Runtime;");
+	abort_unless (Runtime_getRuntime != nullptr, "Failed to look up the Runtime.getRuntime() method.");
+
+	Runtime_gc = jniEnv->GetMethodID (lref, "gc", "()V");
+	abort_unless (Runtime_gc != nullptr, "Failed to look up the Runtime.gc() method.");
+
+	Runtime_instance = OSBridge::lref_to_gref (jniEnv, jniEnv->CallStaticObjectMethod (lref, Runtime_getRuntime));
+	abort_unless (Runtime_instance != nullptr, "Failed to obtain Runtime instance.");
+
+	jniEnv->DeleteLocalRef (lref);
 }
 
 void GCBridge::trigger_java_gc () noexcept
@@ -134,8 +138,7 @@ void GCBridge::prepare_for_java_collection (MarkCrossReferencesArgs* cross_refs)
 	// Before looking at xrefs, scan the SCCs. During collection, an SCC has to behave like a
 	// single object. If the number of objects in the SCC is anything other than 1, the SCC
 	// must be doctored to mimic that one-object nature.
-	for (size_t i = 0; i < cross_refs->ComponentCount; i++)
-	{
+	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
 		StronglyConnectedComponent *scc = &cross_refs->Components [i];
 
 		abort_unless (scc->Count >= 0,
@@ -175,8 +178,7 @@ void GCBridge::prepare_for_java_collection (MarkCrossReferencesArgs* cross_refs)
 	}
 
 	// Add the cross scc refs
-	for (size_t i = 0; i < cross_refs->CrossReferenceCount; i++)
-	{
+	for (size_t i = 0; i < cross_refs->CrossReferenceCount; i++) {
 		ComponentCrossReference *xref = &cross_refs->CrossReferences [i];
 		
 		GCBridge::CrossReferenceComponent from = get_target (&cross_refs->Components [xref->SourceGroupIndex], temporary_peers);
@@ -232,6 +234,7 @@ void GCBridge::take_global_ref (HandleContext *context) noexcept
 			"finalizer", gettid (), "   at [[clr-gc:take_global_ref]]", 0);
 		env->DeleteWeakGlobalRef (weak);
 	} else {
+		// The native memory of the control block will be freed in managed code as well as the weak global ref
 		context->control_block = nullptr;
 
 		if (Logger::gc_spew_enabled ()) [[unlikely]] {
@@ -239,8 +242,6 @@ void GCBridge::take_global_ref (HandleContext *context) noexcept
 			OSBridge::_monodroid_gref_log (message);
 			free (message);
 		}
-
-		// The weak reference will be deleted by JniObjectReferenceManager.DeleteWeakGlobalReference later
 	}
 }
 
@@ -279,11 +280,11 @@ void GCBridge::clear_references (jobject handle) noexcept
 		log_error (LOG_DEFAULT, "Failed to find monodroidClearReferences method");
 		env->ExceptionClear ();
 #if DEBUG
-		// if (Logger::gc_spew_enabled ()) {
-		// 	char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
-		// 	log_error (LOG_GC, "Missing monodroidClearReferences method for object of class {}", class_name);
-		// 	free (class_name);
-		// }
+		if (Logger::gc_spew_enabled ()) {
+			char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
+			log_error (LOG_GC, "Missing monodroidClearReferences method for object of class {}", class_name);
+			free (class_name);
+		}
 #endif
 	}
 }
@@ -291,20 +292,19 @@ void GCBridge::clear_references (jobject handle) noexcept
 void GCBridge::cleanup_after_java_collection (MarkCrossReferencesArgs* cross_refs) noexcept
 {
 #if DEBUG
-int total = 0;
-int alive = 0;
+	int total = 0;
+	int alive = 0;
 #endif
 
-// try to switch back to global refs to analyze what stayed alive
-for (size_t i = 0; i < cross_refs->ComponentCount; i++)
-{
-	StronglyConnectedComponent *scc = &cross_refs->Components [i];
-	for (ssize_t j = 0; j < scc->Count; j++) {
+	// try to switch back to global refs to analyze what stayed alive
+	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
+		StronglyConnectedComponent *scc = &cross_refs->Components [i];
+		for (ssize_t j = 0; j < scc->Count; j++) {
 #if DEBUG
-			total++;
+				total++;
 #endif
-			take_global_ref (scc->Contexts [j]);
-		}
+				take_global_ref (scc->Contexts [j]);
+			}
 	}
 
 	// clear the cross references on any remaining items
@@ -346,52 +346,41 @@ void GCBridge::bridge_processing () noexcept
 
 	env = OSBridge::ensure_jnienv ();
 
-	while (true)
-	{
+	while (true) {
 		bridge_processing_semaphore.acquire ();
 		std::unique_lock<std::shared_mutex> lock (processing_mutex);
 
-		// if (Logger::gc_spew_enabled ()) {
-		// 	int i, j;
-		// 	log_info (LOG_GC, "cross references callback invoked with {} sccs and {} xrefs.", num_sccs, num_xrefs);
+		MarkCrossReferencesArgs* args = &GCBridge::shared_cross_refs;
 
-		// 	for (i = 0; i < num_sccs; ++i) {
-		// 		log_info (LOG_GC, "group {} with {} objects", i, sccs [i]->num_objs);
-		// 		for (j = 0; j < sccs [i]->num_objs; ++j) {
-		// 			MonoObject *obj = sccs [i]->objs [j];
+		if (Logger::gc_spew_enabled ()) {
+			log_info (LOG_GC, "cross references callback invoked with {} sccs and {} xrefs.", args->ComponentCount, args->CrossReferenceCount);
 
-		// 			JniObjectReferenceControlBlock *control_block = get_gc_control_block_for_object (obj);
-		// 			jobject handle      = 0;
-		// 			void   *key_handle  = nullptr;
-		// 			if (control_block != nullptr) {
-		// 				mono_field_get_value (obj, reinterpret_cast<MonoClassField*>(control_block->handle), &handle);
-		// 				if (control_block->weak_handle != nullptr) {
-		// 					mono_field_get_value (obj, reinterpret_cast<MonoClassField*>(control_block->weak_handle), &key_handle);
-		// 				}
-		// 			}
-		// 			MonoClass *klass = mono_object_get_class (obj);
-		// 			log_info (LOG_GC,
-		// 				"\tobj {:p} [{}::{}] handle {:p} key_handle {:p}",
-		// 				reinterpret_cast<void*>(obj),
-		// 				optional_string (mono_class_get_namespace (klass)),
-		// 				optional_string (mono_class_get_name (klass)),
-		// 				reinterpret_cast<void*>(handle),
-		// 				key_handle
-		// 			);
-		// 		}
-		// 	}
+			for (size_t i = 0; i < args->ComponentCount; ++i) {
+				log_info (LOG_GC, "group {} with {} objects", i, args->Components [i].Count);
+				for (ssize_t j = 0; j < args->Components [i].Count; ++j) {
+					HandleContext *ctx = args->Components [i].Contexts [j];
+					jobject handle = ctx->control_block->handle;
+					jclass java_class = env->GetObjectClass (handle);
+					char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
+					log_info (LOG_GC, "\tgchandle {:p} gref {:p} [{}]", reinterpret_cast<void*> (ctx->gc_handle), reinterpret_cast<void*> (handle), class_name);
+					free (class_name);
+				}
+			}
 
-		// 	if (Util::should_log (LOG_GC)) {
-		// 		for (i = 0; i < num_xrefs; ++i)
-		// 			log_info_nocheck_fmt (LOG_GC, "xref [{}] {} -> {}", i, xrefs [i].src_scc_index, xrefs [i].dst_scc_index);
-		// 	}
-		// }
+			if (Util::should_log (LOG_GC)) {
+				for (size_t i = 0; i < args->CrossReferenceCount; ++i) {
+					size_t source_index = args->CrossReferences [i].SourceGroupIndex;
+					size_t dest_index = args->CrossReferences [i].DestinationGroupIndex;
+					log_info_nocheck_fmt (LOG_GC, "xref [{}] {} -> {}", i, source_index, dest_index);
+				}
+			}
+		}
 
 		bridge_processing_started_callback ();
-		prepare_for_java_collection (&GCBridge::shared_cross_refs);
+		prepare_for_java_collection (args);
 		trigger_java_gc ();
-		cleanup_after_java_collection (&GCBridge::shared_cross_refs);
-		bridge_processing_finished_callback (&GCBridge::shared_cross_refs);
+		cleanup_after_java_collection (args);
+		bridge_processing_finished_callback (args);
 	}
 }
 
