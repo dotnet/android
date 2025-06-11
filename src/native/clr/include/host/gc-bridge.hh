@@ -106,7 +106,9 @@ namespace xamarin::android {
 		
 		static void prepare_for_java_collection (MarkCrossReferencesArgs* cross_refs) noexcept;
 		static void cleanup_after_java_collection (MarkCrossReferencesArgs* cross_refs) noexcept;
-		
+
+		static void add_inner_references (StronglyConnectedComponent *scc) noexcept;
+		static void add_temporary_peer (StronglyConnectedComponent *scc, jobject temporary_peers, int &temporary_peer_count) noexcept;
 		static void take_weak_global_ref (HandleContext *context) noexcept;
 		static void take_global_ref (HandleContext *context) noexcept;
 		

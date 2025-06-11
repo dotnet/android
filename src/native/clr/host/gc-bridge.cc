@@ -147,33 +147,16 @@ void GCBridge::prepare_for_java_collection (MarkCrossReferencesArgs* cross_refs)
 		// Count > 1 case: The SCC contains many objects which must be collected as one.
 		// Solution: Make all objects within the SCC directly or indirectly reference each other
 		if (scc->Count > 1) {
-			HandleContext *first = scc->Contexts [0];
-			HandleContext *prev = first;
-
-			for (ssize_t j = 1; j < scc->Count; j++) {
-				HandleContext *current = scc->Contexts [j];
-				add_inner_reference (prev, current);
-				prev = current;
-			}
-
-			add_inner_reference (prev, first);
+			add_inner_references (scc);
 		} else if (scc->Count == 0) {
-			// Once per process boot, look up JNI metadata we need to make temporary objects
-			ensure_array_list ();
-			
-			// Once per prepare_for_java_collection call, create a list to hold the temporary
-			// objects we create. This will protect them from collection while we build the list.
 			if (!temporary_peers) {
+				// Once per prepare_for_java_collection call, create a list to hold the temporary
+				// objects we create. This will protect them from collection while we build the list.
+				ensure_array_list ();
 				temporary_peers = env->NewObject (ArrayList_class, ArrayList_ctor);
 			}
 
-			// Create this SCC's temporary object
-			jobject peer = env->NewObject (GCUserPeer_class, GCUserPeer_ctor);
-			env->CallBooleanMethod (temporary_peers, ArrayList_add, peer);
-			env->DeleteLocalRef (peer);
-
-			set_stashed_temporary_peer_index (scc, temporary_peer_count);
-			temporary_peer_count++;
+			add_temporary_peer (scc, temporary_peers, temporary_peer_count);
 		}
 	}
 
@@ -207,11 +190,37 @@ void GCBridge::prepare_for_java_collection (MarkCrossReferencesArgs* cross_refs)
 	}
 }
 
+void GCBridge::add_inner_references (StronglyConnectedComponent *scc) noexcept
+{
+	abort_if_invalid_pointer_argument (scc, "scc");
+
+	HandleContext *first = scc->Contexts [0];
+	HandleContext *prev = first;
+
+	for (ssize_t j = 1; j < scc->Count; j++) {
+		HandleContext *current = scc->Contexts [j];
+		add_inner_reference (prev, current);
+		prev = current;
+	}
+
+	add_inner_reference (prev, first);
+}
+
+void GCBridge::add_temporary_peer (StronglyConnectedComponent *scc, jobject temporary_peers, int &temporary_peer_count) noexcept
+{
+	// Create this SCC's temporary object
+	jobject peer = env->NewObject (GCUserPeer_class, GCUserPeer_ctor);
+	env->CallBooleanMethod (temporary_peers, ArrayList_add, peer);
+	env->DeleteLocalRef (peer);
+
+	set_stashed_temporary_peer_index (scc, temporary_peer_count);
+	temporary_peer_count++;
+}
+
 void GCBridge::take_global_ref (HandleContext *context) noexcept
 {
 	abort_unless (context->control_block->handle_type == JNIWeakGlobalRefType, "Expected weak global reference type for handle");
 
-	
 	jobject weak = context->control_block->handle;
 	jobject handle = env->NewGlobalRef (weak);
 	
@@ -399,6 +408,7 @@ void GCBridge::mark_cross_references (MarkCrossReferencesArgs* cross_refs) noexc
 [[gnu::always_inline]]
 void GCBridge::ensure_array_list () noexcept
 {
+	// Once per process boot, look up JNI metadata we need to make temporary objects
 	if (ArrayList_class == nullptr) [[unlikely]] {
 		ArrayList_class = env->FindClass ("java/util/ArrayList");
 		abort_unless (ArrayList_class != nullptr, "Failed to find java/util/ArrayList class");
