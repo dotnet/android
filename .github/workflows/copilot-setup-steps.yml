@@ -5,6 +5,7 @@ on: workflow_dispatch
 jobs:
   copilot-setup-steps:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     
     steps:
     - name: Checkout repository
@@ -18,7 +19,10 @@ jobs:
         dotnet-version: '10.0.100-preview.6.25304.106'
 
     - name: Verify .NET installation
-      run: dotnet --version
+      run: |
+        dotnet --version
+        echo "Checking .NET runtimes:"
+        dotnet --list-runtimes
 
     - name: Install basic dependencies
       run: |
@@ -31,13 +35,22 @@ jobs:
         echo "DOTNET_CLI_TELEMETRY_OPTOUT=true" >> $GITHUB_ENV
 
     - name: Prepare external git dependencies
-      run: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=Debug
+      run: |
+        echo "=== Preparing external git dependencies ==="
+        make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=Debug
+      timeout-minutes: 30
 
     - name: Run jenkins build
-      run: make jenkins PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=Debug
+      run: |
+        echo "=== Running jenkins build (this may take a while) ==="
+        make jenkins PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=Debug
+      timeout-minutes: 60
 
     - name: Create NuGet packages
-      run: make create-nupkgs CONFIGURATION=Debug
+      run: |
+        echo "=== Creating NuGet packages ==="
+        make create-nupkgs CONFIGURATION=Debug
+      timeout-minutes: 20
 
     - name: Verify local workload setup
       run: |

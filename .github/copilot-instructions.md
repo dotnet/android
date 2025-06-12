@@ -274,6 +274,22 @@ Bump to [Dependency Name] [Dependency Version]
 
 ## Contributing Guidelines
 
+### Copilot Development Environment Setup
+
+For GitHub Copilot development, use the automated setup workflow:
+
+- Run `.github/workflows/copilot-setup-steps.yml` via GitHub Actions workflow dispatch
+- This builds the repository from source and creates a local Android workload
+- Sets up .NET 10 Preview with all dependencies required for development
+- Verifies the setup by building sample projects
+- Provides a complete development environment for AI-assisted coding
+
+The workflow runs the essential build steps:
+1. `make prepare-external-git-dependencies` - Sets up external dependencies
+2. `make jenkins` - Builds the complete project with autoprovision
+3. `make create-nupkgs` - Creates installable packages
+4. Verifies the local workload setup works correctly
+
 ### Updating AI Instructions
 - Always update `copilot-instructions.md` when making changes that would affect how AI assistants should work with the codebase
 - This includes new patterns, conventions, build processes, or significant structural changes
