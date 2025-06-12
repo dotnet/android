@@ -240,7 +240,7 @@ Bump to [Dependency Name] [Dependency Version]
 
 ### Native Development
 - Use appropriate CMake patterns from existing code
-- Handle different Android ABIs (arm64-v8a, x86_64)
+- Handle different Android ABIs (arm64-v8a, armeabi-v7a, x86_64, x86)
 - Note: Native CoreCLR components in `src/native/clr` only target 64-bit platforms (arm64-v8a, x86_64)
 - Follow Android NDK security best practices
 - Test on multiple Android API levels when relevant
