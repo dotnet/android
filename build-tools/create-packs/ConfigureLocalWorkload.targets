@@ -47,34 +47,6 @@
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_PackProps, ' ') &quot;$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\Microsoft.Android.Templates.csproj&quot;" />
   </Target>
 
-  <UsingTask TaskName="GetAndroidWorkloadExtends" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
-    <ParameterGroup>
-      <JsonFilePath ParameterType="System.String" Required="true" />
-      <ExtendsElement Output="true" ParameterType="System.String" />
-    </ParameterGroup>
-    <Task>
-      <Using Namespace="System" />
-      <Using Namespace="System.IO" />
-      <Code Type="Fragment" Language="cs">
-        <![CDATA[
-        var jsonContent = File.ReadAllText(JsonFilePath);
-        var startElement = "\"extends\" : [";
-        var startIndex = jsonContent.IndexOf(startElement);
-        var endIndex = jsonContent.IndexOf("]");
-        if (startIndex != -1) {
-            startIndex += startElement.Length;
-            endIndex = jsonContent.IndexOf("]", startIndex);
-            if (endIndex != -1) {
-                ExtendsElement = jsonContent.Substring(startIndex, endIndex - startIndex)?.Trim();
-            }
-        }
-        if (startIndex == -1 || endIndex == -1 || string.IsNullOrEmpty(ExtendsElement))
-            Log.LogError($"Failed to find extends element in workload json '{JsonFilePath}'");
-        ]]>
-      </Code>
-    </Task>
-  </UsingTask>
-
   <Target Name="InstallManifestAndDependencies"
       DependsOnTargets="_GetDefaultPackageVersion">
     <PropertyGroup>
@@ -90,20 +62,15 @@
         Targets="_GenerateXAWorkloadContent"
     />
 
-    <GetAndroidWorkloadExtends JsonFilePath="$(_LocalAndroidManifestFolder)WorkloadManifest.json">
-      <Output TaskParameter="ExtendsElement" PropertyName="AndroidWorkloadExtendsElement" />
-    </GetAndroidWorkloadExtends>
-
     <PropertyGroup>
       <_EmptyWorkloadJsonContent>
 <![CDATA[
-{"version": "0.0.1", "workloads": { "android-deps": { "extends" : [ $(AndroidWorkloadExtendsElement) ] } } }
+{"version": "0.0.1", "workloads": { "android-deps": { "extends" : [ "microsoft-net-runtime-android" ] } } }
 ]]>
       </_EmptyWorkloadJsonContent>
     </PropertyGroup>
 
     <!-- Create empty workload to install dotnet/runtime dependencies, and then clean up the workload and metadata files from install -->
-    <Error Condition=" '$(AndroidWorkloadExtendsElement)' == '' " Text="Failed to find extends element in workload json" />
     <MakeDir Directories="$(_EmptyWorkloadDir)" />
     <WriteLinesToFile
         File="$(_EmptyWorkloadDir)WorkloadManifest.json"
