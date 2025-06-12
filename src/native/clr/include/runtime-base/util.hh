@@ -90,10 +90,21 @@ namespace xamarin::android {
 			return false;
 		}
 
+		static auto file_exists_no_null_check (const char *file) noexcept -> bool
+		{
+			return exists_and_is_mode (file, S_IFREG);
+		}
+
 	public:
 		static auto dir_exists (std::string_view const& dir_path) noexcept -> bool
 		{
 			return exists_and_is_mode (dir_path, S_IFDIR);
+		}
+
+		[[gnu::flatten]]
+		static auto file_exists (std::string_view const& file) noexcept -> bool
+		{
+			return file_exists_no_null_check (file.data ());
 		}
 
 		static auto file_exists (const char *file) noexcept -> bool
@@ -102,7 +113,7 @@ namespace xamarin::android {
 				return false;
 			}
 
-			return exists_and_is_mode (file, S_IFREG);
+			return file_exists_no_null_check (file);
 		}
 
 		template<size_t MaxStackSize>
@@ -112,7 +123,7 @@ namespace xamarin::android {
 				return false;
 			}
 
-			return file_exists (file.get ());
+			return file_exists_no_null_check (file.get ());
 		}
 
 		static auto file_exists (int dirfd, std::string_view const& file) noexcept -> bool
@@ -245,6 +256,21 @@ namespace xamarin::android {
 			}
 
 			return path [0] == '/';
+		}
+
+		static auto is_path_rooted (std::string_view const& path) noexcept -> bool
+		{
+			if (path.empty ()) {
+				return false;
+			}
+
+			return path[0] == '/';
+		}
+
+		[[gnu::flatten, gnu::always_inline]]
+		static auto path_has_directory_components (std::string_view const& path) noexcept -> bool
+		{
+			return !path.empty () && path.contains ('/');
 		}
 
 	private:

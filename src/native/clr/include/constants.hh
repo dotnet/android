@@ -32,6 +32,7 @@ namespace xamarin::android {
 #endif
 		static constexpr std::string_view MANGLED_ASSEMBLY_NAME_EXT { ".so" };
 		static constexpr std::string_view dso_suffix { ".so" };
+		static constexpr std::string_view DSO_PREFIX { "lib" };
 
 	private:
 		static constexpr std::string_view RUNTIME_CONFIG_BLOB_BASE_NAME       { "libarc.bin" };

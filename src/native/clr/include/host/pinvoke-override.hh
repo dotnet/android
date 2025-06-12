@@ -79,7 +79,7 @@ namespace xamarin::android {
 			if (lib_handle == nullptr) {
 				// We're being called as part of the p/invoke mechanism, we don't need to look in the AOT cache
 				constexpr bool PREFER_AOT_CACHE = false;
-				lib_handle = MonodroidDl::monodroid_dlopen (library_name, microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_LOCALLY, PREFER_AOT_CACHE);
+				lib_handle = MonodroidDl::monodroid_dlopen<PREFER_AOT_CACHE> (library_name, microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_LOCALLY);
 				if (lib_handle == nullptr) {
 					log_warn (LOG_ASSEMBLY, "Shared library '{}' not loaded, p/invoke '{}' may fail", optional_string (library_name), optional_string (symbol_name));
 					return nullptr;
