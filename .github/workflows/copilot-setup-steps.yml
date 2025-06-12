@@ -22,3 +22,13 @@ jobs:
       run: |
         make jenkins PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=Debug
       timeout-minutes: 60
+
+    - name: Upload logs
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: copilot-artifacts
+        path: |
+          bin/**/*.log
+          bin/**/*.binlog
+        retention-days: 30
