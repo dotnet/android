@@ -25,7 +25,7 @@ This is the main branch targeting **.NET 10**.
 ### Project Types in this Repository
 - **Android API Bindings**: C# wrappers for Android Java APIs
 - **MSBuild Tasks**: Build logic for .NET Android projects
-- **Native Libraries**: C/C++ runtime components using CMake
+- **Native Libraries**: C++ runtime components using CMake
 - **Java Support Code**: Java runtime classes
 - **Build Tools**: Custom tools for build process
 - **Tests**: NUnit tests, integration tests, and device tests
@@ -35,7 +35,7 @@ This is the main branch targeting **.NET 10**.
 This repository uses:
 - **MSBuild** as the primary build system with extensive `.targets` and `.props` files
 - **[.NET Arcade SDK](https://github.com/dotnet/arcade)** for consistent .NET build infrastructure  
-- **CMake** for native C/C++ components
+- **CMake** for native C++ components
 - **Gradle** for some Android-specific build tasks
 
 Common build commands:
@@ -58,7 +58,7 @@ Common build commands:
 - Follow patterns in [`Documentation/guides/MSBuildBestPractices.md`](Documentation/guides/MSBuildBestPractices.md)
 
 ### Native Code
-- C/C++ code uses CMake build system
+- C++ code uses CMake build system
 - Native libraries are in `src/native/`
 - Follow Android NDK patterns and conventions
 - Use proper JNI patterns for Java interop
@@ -240,7 +240,8 @@ Bump to [Dependency Name] [Dependency Version]
 
 ### Native Development
 - Use appropriate CMake patterns from existing code
-- Handle different Android ABIs (arm64-v8a, armeabi-v7a, x86_64, x86)
+- Handle different Android ABIs (arm64-v8a, x86_64)
+- Note: Native CoreCLR components in `src/native/clr` only target 64-bit platforms (arm64-v8a, x86_64)
 - Follow Android NDK security best practices
 - Test on multiple Android API levels when relevant
 
