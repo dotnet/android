@@ -34,13 +34,13 @@ This is the main branch targeting **.NET 10**.
 
 This repository uses:
 - **MSBuild** as the primary build system with extensive `.targets` and `.props` files
-- **.NET Arcade SDK** for consistent .NET build infrastructure  
+- **[.NET Arcade SDK](https://github.com/dotnet/arcade)** for consistent .NET build infrastructure  
 - **CMake** for native C/C++ components
 - **Gradle** for some Android-specific build tasks
 
 Common build commands:
 - `./build.sh` or `build.cmd` - Main build
-- `./dotnet-local.sh` - Use locally built .NET tools
+- `./dotnet-local.sh` or `dotnet-local.cmd` - Use locally built .NET tools
 - `make` - Various make targets for specific components
 
 ## Android Development Patterns
@@ -49,13 +49,13 @@ Common build commands:
 - Android Java APIs are bound to C# in `src/Mono.Android/`
 - Follow existing patterns for Android namespaces (e.g., `Android.App`, `Android.Content`)
 - Use `[Register]` attributes for Java type registration
-- Handle Java-to-.NET type mappings carefully
 
 ### MSBuild Integration
 - Build tasks extend `Microsoft.Build.Utilities.Task` or related base classes
 - Place custom MSBuild logic in `src/Xamarin.Android.Build.Tasks/Tasks/`
 - Follow existing error code patterns (e.g., `XA####` for errors, `XA####` for warnings)
 - Support incremental builds where possible
+- Follow patterns in [`Documentation/guides/MSBuildBestPractices.md`](Documentation/guides/MSBuildBestPractices.md)
 
 ### Native Code
 - C/C++ code uses CMake build system
@@ -184,6 +184,7 @@ try {
 
 ### Logging
 - Use MSBuild logging (`Log.LogError`, `Log.LogWarning`, `Log.LogMessage`)
+- Every `LogCodedWarning` and `LogCodedError` needs an error/warning code
 - Include relevant context (file paths, line numbers when available)
 - Make error messages helpful for developers
 
@@ -229,7 +230,6 @@ Bump to [Dependency Name] [Dependency Version]
 ### Build Issues
 - Clean `bin/` and `obj/` directories
 - Ensure Android SDK/NDK are properly configured
-- Check `global.json` for required .NET SDK version
 - Use `make clean` for complete rebuild
 
 ### MSBuild Task Development
@@ -243,3 +243,9 @@ Bump to [Dependency Name] [Dependency Version]
 - Handle different Android ABIs (arm64-v8a, armeabi-v7a, x86_64, x86)
 - Follow Android NDK security best practices
 - Test on multiple Android API levels when relevant
+
+## Contributing Guidelines
+
+### Updating AI Instructions
+- Always update `copilot-instructions.md` when making changes that would affect how AI assistants should work with the codebase
+- This includes new patterns, conventions, build processes, or significant structural changes
