@@ -376,34 +376,5 @@ extern "C" {
 	[[gnu::visibility("default")]] extern char *init_runtime_property_values[];
 }
 
-//
-// Support for marshal methods
-//
-#if defined (RELEASE)
-struct MarshalMethodsManagedClass
-{
-	const uint32_t   token;
-	void            *klass;
-};
-
-//
-// These tables store names of classes and managed callback methods used in the generated marshal methods
-// code. They are used just for error reporting.
-//
-// Class names are found at the same indexes as their corresponding entries in the `marshal_methods_class_cache` array
-// above. Method names are stored as token:name pairs and the array must end with an "invalid" terminator entry (token
-// == 0; name == nullptr)
-//
-struct MarshalMethodName
-{
-	// combination of assembly index (high 32 bits) and method token (low 32 bits)
-	const uint64_t  id;
-	const char     *name;
-};
-
-[[gnu::visibility("default")]] extern const char* const mm_class_names[];
-[[gnu::visibility("default")]] extern const MarshalMethodName mm_method_names[];
-#endif // def RELEASE
-
 using get_function_pointer_fn = void(*)(uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr);
 extern "C" [[gnu::visibility("default")]] void xamarin_app_init (JNIEnv *env, get_function_pointer_fn fn) noexcept;

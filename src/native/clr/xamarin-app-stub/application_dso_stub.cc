@@ -169,27 +169,6 @@ DSOApkEntry dso_apk_entries[2] {};
 //
 // Support for marshal methods
 //
-#if defined (RELEASE)
-
-const char* const mm_class_names[2] = {
-	"one",
-	"two",
-};
-
-const MarshalMethodName mm_method_names[] = {
-	{
-		.id = 1,
-		.name = "one",
-	},
-
-	{
-		.id = 2,
-		.name = "two",
-	},
-};
-
-#endif // def RELEASE
-
 void xamarin_app_init ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] get_function_pointer_fn fn) noexcept
 {
 	// Dummy

@@ -12,9 +12,6 @@ using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks.LLVMIR;
 using Xamarin.Android.Tools;
 
-using CecilMethodDefinition = global::Mono.Cecil.MethodDefinition;
-using CecilParameterDefinition = global::Mono.Cecil.ParameterDefinition;
-
 namespace Xamarin.Android.Tasks
 {
 	abstract partial class MarshalMethodsNativeAssemblyGenerator : LlvmIrComposer
@@ -75,7 +72,7 @@ namespace Xamarin.Android.Tasks
 		sealed class _jdoubleArray : _jarray
 		{}
 
-		sealed class MarshalMethodInfo
+		protected sealed class MarshalMethodInfo
 		{
 			public MarshalMethodEntryObject Method          { get; }
 			public string NativeSymbolName                  { get; set; }
@@ -131,45 +128,17 @@ namespace Xamarin.Android.Tasks
 			public string ClassName;
 		};
 
-		sealed class MarshalMethodNameDataProvider : NativeAssemblerStructContextDataProvider
-		{
-			public override string GetComment (object data, string fieldName)
-			{
-				var methodName = EnsureType<MarshalMethodName> (data);
-
-				if (String.Compare ("id", fieldName, StringComparison.Ordinal) == 0) {
-					return $" name: {methodName.name}";
-				}
-
-				return String.Empty;
-			}
-		}
-
-		[NativeAssemblerStructContextDataProvider (typeof(MarshalMethodNameDataProvider))]
-		sealed class MarshalMethodName
-		{
-			[NativeAssembler (Ignore = true)]
-			public ulong Id32;
-
-			[NativeAssembler (Ignore = true)]
-			public ulong Id64;
-
-			[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
-			public ulong  id;
-			public string name;
-		}
-
 		protected sealed class AssemblyCacheState
 		{
-			public Dictionary<string, uint>? AsmNameToIndexData32;
-			public Dictionary<uint, (string name, uint index)> Hashes32;
-			public List<uint> Keys32;
-			public List<uint> Indices32;
+			public Dictionary<string, uint> AsmNameToIndexData32 = new (StringComparer.Ordinal);
+			public Dictionary<uint, (string name, uint index)> Hashes32 = new ();
+			public List<uint> Keys32 = [];
+			public List<uint> Indices32 = new ();
 
-			public Dictionary<string, uint>? AsmNameToIndexData64;
-			public Dictionary<ulong, (string name, uint index)> Hashes64;
-			public List<ulong> Keys64;
-			public List<uint> Indices64;
+			public Dictionary<string, uint> AsmNameToIndexData64 = new (StringComparer.Ordinal);
+			public Dictionary<ulong, (string name, uint index)> Hashes64 = new ();
+			public List<ulong> Keys64 = [];
+			public List<uint> Indices64 = new ();
 		}
 
 		sealed class MarshalMethodsWriteState
@@ -231,7 +200,6 @@ namespace Xamarin.Android.Tasks
 		readonly ICollection<string> uniqueAssemblyNames;
 
 		StructureInfo marshalMethodsManagedClassStructureInfo;
-		StructureInfo marshalMethodNameStructureInfo;
 
 		List<MarshalMethodInfo> methods;
 		protected List<StructureInstance<MarshalMethodsManagedClass>> classes = new List<StructureInstance<MarshalMethodsManagedClass>> ();
@@ -241,6 +209,9 @@ namespace Xamarin.Android.Tasks
 		readonly bool managedMarshalMethodsLookupEnabled;
 		readonly AndroidTargetArch targetArch;
 		readonly NativeCodeGenStateObject? codeGenState;
+
+		protected bool GenerateEmptyCode => generateEmptyCode;
+		protected List<MarshalMethodInfo> Methods => methods;
 
 		/// <summary>
 		/// Constructor to be used ONLY when marshal methods are DISABLED
@@ -612,7 +583,6 @@ namespace Xamarin.Android.Tasks
 		protected virtual void MapStructures (LlvmIrModule module)
 		{
 			marshalMethodsManagedClassStructureInfo = module.MapStructure<MarshalMethodsManagedClass> ();
-			marshalMethodNameStructureInfo = module.MapStructure<MarshalMethodName> ();
 		}
 
 		protected virtual void AddClassNames (LlvmIrModule module)
@@ -882,112 +852,11 @@ namespace Xamarin.Android.Tasks
 		}
 
 		protected virtual void AddMarshalMethodNames (LlvmIrModule module, AssemblyCacheState acs)
-		{
-			var uniqueMethods = new Dictionary<ulong, (MarshalMethodInfo mmi, ulong id32, ulong id64)> ();
-
-			if (!generateEmptyCode && methods != null) {
-				foreach (MarshalMethodInfo mmi in methods) {
-					string asmName = Path.GetFileName (mmi.Method.NativeCallback.DeclaringType.Module.Assembly.MainModuleFileName);
-
-					if (!acs.AsmNameToIndexData32.TryGetValue (asmName, out uint idx32)) {
-						throw new InvalidOperationException ($"Internal error: failed to match assembly name '{asmName}' to 32-bit cache array index");
-					}
-
-					if (!acs.AsmNameToIndexData64.TryGetValue (asmName, out uint idx64)) {
-						throw new InvalidOperationException ($"Internal error: failed to match assembly name '{asmName}' to 64-bit cache array index");
-					}
-
-					ulong methodToken = (ulong)mmi.Method.NativeCallback.MetadataToken;
-					ulong id32 = ((ulong)idx32 << 32) | methodToken;
-					if (uniqueMethods.ContainsKey (id32)) {
-						continue;
-					}
-
-					ulong id64 = ((ulong)idx64 << 32) | methodToken;
-					uniqueMethods.Add (id32, (mmi, id32, id64));
-				}
-			}
-
-			MarshalMethodName name;
-			var methodName = new StringBuilder ();
-			var mm_method_names = new List<StructureInstance<MarshalMethodName>> ();
-			foreach (var kvp in uniqueMethods) {
-				ulong id = kvp.Key;
-				(MarshalMethodInfo mmi, ulong id32, ulong id64) = kvp.Value;
-
-				RenderMethodNameWithParams (mmi.Method.NativeCallback, methodName);
-				name = new MarshalMethodName {
-					Id32 = id32,
-					Id64 = id64,
-
-					// Tokens are unique per assembly
-					id = 0,
-					name = methodName.ToString (),
-				};
-				mm_method_names.Add (new StructureInstance<MarshalMethodName> (marshalMethodNameStructureInfo, name));
-			}
-
-			// Must terminate with an "invalid" entry
-			name = new MarshalMethodName {
-				Id32 = 0,
-				Id64 = 0,
-
-				id = 0,
-				name = String.Empty,
-			};
-			mm_method_names.Add (new StructureInstance<MarshalMethodName> (marshalMethodNameStructureInfo, name));
-
-			var mm_method_names_variable = new LlvmIrGlobalVariable (mm_method_names, "mm_method_names", LlvmIrVariableOptions.GlobalConstant) {
-				BeforeWriteCallback = UpdateMarshalMethodNameIds,
-				BeforeWriteCallbackCallerState = acs,
-			};
-			module.Add (mm_method_names_variable);
-
-			void RenderMethodNameWithParams (MarshalMethodEntryMethodObject md, StringBuilder buffer)
-			{
-				buffer.Clear ();
-				buffer.Append (md.Name);
-				buffer.Append ('(');
-
-				if (md.HasParameters) {
-					bool first = true;
-					foreach (MarshalMethodEntryMethodParameterObject pd in md.Parameters) {
-						if (!first) {
-							buffer.Append (',');
-						} else {
-							first = false;
-						}
-
-						buffer.Append (pd.ParameterTypeName);
-					}
-				}
-
-				buffer.Append (')');
-			}
-		}
-
-		void UpdateMarshalMethodNameIds (LlvmIrVariable variable, LlvmIrModuleTarget target, object? callerState)
-		{
-			var mm_method_names = (List<StructureInstance<MarshalMethodName>>)variable.Value;
-			bool is64Bit = target.Is64Bit;
-
-			foreach (StructureInstance<MarshalMethodName> mmn in mm_method_names) {
-				mmn.Instance.id = is64Bit ? mmn.Instance.Id64 : mmn.Instance.Id32;
-			}
-		}
+		{}
 
 		AssemblyCacheState CreateAssemblyCache ()
 		{
-			var acs = new AssemblyCacheState {
-				AsmNameToIndexData32 = new Dictionary<string, uint> (StringComparer.Ordinal),
-				Indices32 = new List<uint> (),
-
-				AsmNameToIndexData64 = new Dictionary<string, uint> (StringComparer.Ordinal),
-				Indices64 = new List<uint> (),
-			};
-
-			acs.Hashes32 = new Dictionary<uint, (string name, uint index)> ();
-			acs.Hashes64 = new Dictionary<ulong, (string name, uint index)> ();
+			var acs = new AssemblyCacheState ();
 			uint index = 0;
 
 			foreach (string name in uniqueAssemblyNames) {
