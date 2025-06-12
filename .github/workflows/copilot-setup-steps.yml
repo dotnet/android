@@ -16,72 +16,9 @@ jobs:
     - name: Setup .NET 10 Preview
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '10.0.100-preview.6.25304.106'
-
-    - name: Verify .NET installation
-      run: |
-        dotnet --version
-        echo "Checking .NET runtimes:"
-        dotnet --list-runtimes
-
-    - name: Install basic dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y curl wget git build-essential
-
-    - name: Set environment variables
-      run: |
-        echo "DOTNET_NOLOGO=true" >> $GITHUB_ENV
-        echo "DOTNET_CLI_TELEMETRY_OPTOUT=true" >> $GITHUB_ENV
-
-    - name: Prepare external git dependencies
-      run: |
-        echo "=== Preparing external git dependencies ==="
-        make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=Debug
-      timeout-minutes: 30
+        dotnet-version: '9.x'
 
     - name: Run jenkins build
       run: |
-        echo "=== Running jenkins build (this may take a while) ==="
         make jenkins PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=Debug
       timeout-minutes: 60
-
-    - name: Create NuGet packages
-      run: |
-        echo "=== Creating NuGet packages ==="
-        make create-nupkgs CONFIGURATION=Debug
-      timeout-minutes: 20
-
-    - name: Verify local workload setup
-      run: |
-        if [ -f "./dotnet-local.sh" ]; then
-          ./dotnet-local.sh --version
-          ./dotnet-local.sh workload list
-        else
-          echo "dotnet-local.sh not found, checking for dotnet in bin/"
-          find bin/ -name "dotnet" -type f || echo "No local dotnet found"
-        fi
-
-    - name: Test building sample project
-      run: |
-        if [ -f "./dotnet-local.sh" ]; then
-          echo "=== Building HelloWorld sample ==="
-          cd samples/HelloWorld/HelloLibrary
-          ../../../dotnet-local.sh restore HelloLibrary.DotNet.csproj
-          ../../../dotnet-local.sh build HelloLibrary.DotNet.csproj --no-restore
-          echo "=== HelloLibrary build completed successfully ==="
-        else
-          echo "Skipping sample build - dotnet-local.sh not available"
-        fi
-
-    - name: Display disk usage
-      run: df -h
-
-    - name: Show build artifacts
-      run: |
-        echo "=== Checking bin/ directory ==="
-        ls -la bin/ || echo "bin/ directory not found"
-        echo "=== Checking for packs ==="
-        find bin/ -name "*packs*" -type d || echo "No packs directories found"
-        echo "=== Checking for Android workload ==="
-        find bin/ -name "*Android*" -type d || echo "No Android directories found"
