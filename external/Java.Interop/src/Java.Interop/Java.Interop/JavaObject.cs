@@ -8,7 +8,7 @@ namespace Java.Interop
 {
 	[JniTypeSignature ("java/lang/Object", GenerateJavaPeer=false)]
 	[Serializable]
-	unsafe public class JavaObject : IJavaPeerable
+	unsafe public partial class JavaObject : IJavaPeerable
 	{
 		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
@@ -25,13 +25,7 @@ namespace Java.Interop
 		[NonSerialized] JniObjectReference  reference;
 #endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 #if FEATURE_JNIOBJECTREFERENCE_INTPTRS
-		[NonSerialized] IntPtr                  handle;
-		[NonSerialized] JniObjectReferenceType  handle_type;
-	#pragma warning disable 0169
-		// Used by JavaInteropGCBridge
-		[NonSerialized] IntPtr                  weak_handle;
-		[NonSerialized] int                     refs_added;
-	#pragma warning restore 0169
+		[NonSerialized] unsafe  JniObjectReferenceControlBlock* jniObjectReferenceControlBlock;
 #endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 
 		protected   static  readonly    JniObjectReference*     InvalidJniObjectReference  = null;
@@ -41,13 +35,17 @@ namespace Java.Interop
 			JniEnvironment.Runtime.ValueManager.FinalizePeer (this);
 		}
 
-		public          JniObjectReference          PeerReference {
+		public  unsafe  JniObjectReference          PeerReference {
 			get {
 #if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 				return reference;
 #endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 #if FEATURE_JNIOBJECTREFERENCE_INTPTRS
-				return new JniObjectReference (handle, handle_type);
+				var c = jniObjectReferenceControlBlock;
+				if (c == null) {
+					return default;
+				}
+				return new JniObjectReference (c->handle, (JniObjectReferenceType) c->handle_type);
 #endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 			}
 		}
@@ -92,8 +90,14 @@ namespace Java.Interop
 			this.reference      = reference;
 #endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 #if FEATURE_JNIOBJECTREFERENCE_INTPTRS
-			this.handle         = reference.Handle;
-			this.handle_type    = reference.Type;
+			var c   = jniObjectReferenceControlBlock;
+			if (c == null) {
+				c   = jniObjectReferenceControlBlock    =
+					Java.Interop.JniObjectReferenceControlBlock.Alloc (reference);
+			} else {
+				c->handle       = reference.Handle;
+				c->handle_type  = (int) reference.Type;
+			}
 #endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 
 			JniObjectReference.Dispose (ref reference, options);
@@ -148,11 +152,13 @@ namespace Java.Interop
 
 		void IJavaPeerable.Disposed ()
 		{
+			managedPeerState    |= Disposed;
 			Dispose (disposing: true);
 		}
 
 		void IJavaPeerable.Finalized ()
 		{
+			managedPeerState    |= Disposed;
 			Dispose (disposing: false);
 		}
 
@@ -169,7 +175,16 @@ namespace Java.Interop
 		void IJavaPeerable.SetPeerReference (JniObjectReference reference)
 		{
 			SetPeerReference (ref reference, JniObjectReferenceOptions.Copy);
+
+#if FEATURE_JNIOBJECTREFERENCE_INTPTRS
+			if (!reference.IsValid && managedPeerState.HasFlag (Disposed)) {
+				Java.Interop.JniObjectReferenceControlBlock.Free (ref jniObjectReferenceControlBlock);
+			}
+#endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 		}
+
+		IntPtr IJavaPeerable.JniObjectReferenceControlBlock =>
+			(IntPtr) jniObjectReferenceControlBlock;
 	}
 }
 

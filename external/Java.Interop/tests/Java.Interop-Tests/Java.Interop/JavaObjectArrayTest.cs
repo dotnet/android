@@ -39,6 +39,30 @@ namespace Java.InteropTests
 		{
 			return JniMarshal.RecursiveEquals (a, b);
 		}
+
+		int beforeTestGrefCount;
+
+		[SetUp]
+		public void LogBeginCurrentTestGrefCount ()
+		{
+			beforeTestGrefCount = JniEnvironment.Runtime.GlobalReferenceCount;
+			JniEnvironment.Runtime.ObjectReferenceManager.WriteGlobalReferenceLine(
+					"{0}",
+					$"Begin {TestContext.CurrentContext.Test.FullName}; " +
+					$"GREFs={beforeTestGrefCount}; "
+			);
+		}
+
+		[TearDown]
+		public void LogEndCurrentTestToGrefCount ()
+		{
+			int afterTestGrefCount  = JniEnvironment.Runtime.GlobalReferenceCount;
+			JniEnvironment.Runtime.ObjectReferenceManager.WriteGlobalReferenceLine(
+					"{0}",
+					$"End {TestContext.CurrentContext.Test.FullName}; " +
+					$"GREFs={afterTestGrefCount}; diff={afterTestGrefCount - beforeTestGrefCount}"
+			);
+		}
 	}
 
 	[TestFixture]

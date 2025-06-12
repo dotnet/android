@@ -11,3 +11,4 @@ Java.Interop.JniRuntime.JniTypeManager.GetInvokerType(System.Type! type) -> Syst
 Java.Interop.JniRuntime.JniValueManager.GetPeer(Java.Interop.JniObjectReference reference, System.Type? targetType = null) -> Java.Interop.IJavaPeerable?
 Java.Interop.JniTypeSignatureAttribute.InvokerType.get -> System.Type?
 Java.Interop.JniTypeSignatureAttribute.InvokerType.set -> void
+Java.Interop.IJavaPeerable.JniObjectReferenceControlBlock.get -> nint

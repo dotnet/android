@@ -51,12 +51,12 @@ namespace Java.InteropTests
 			using (o = new JavaObject ()) {
 				l   = o.PeerReference.NewLocalRef ();
 				Assert.AreEqual (JniObjectReferenceType.Global, o.PeerReference.Type);
-				Assert.AreEqual (registeredCount+1, JniRuntime.CurrentRuntime.ValueManager.GetSurfacedPeers ().Count);
+				Assert.AreEqual (registeredCount+1, JniRuntime.CurrentRuntime.ValueManager.GetSurfacedPeers ().Count, "registeredCount+1 should match!");
 				Assert.IsNotNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
 				Assert.AreNotSame (l, o.PeerReference);
 				Assert.AreSame (o, JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
 			}
-			Assert.AreEqual (registeredCount, JniRuntime.CurrentRuntime.ValueManager.GetSurfacedPeers ().Count);
+			Assert.AreEqual (registeredCount, JniRuntime.CurrentRuntime.ValueManager.GetSurfacedPeers ().Count, "registeredCount should match!");
 			Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
 			JniObjectReference.Dispose (ref l);
 			Assert.Throws<ObjectDisposedException> (() => o.UnregisterFromRuntime ());

@@ -19,6 +19,26 @@ struct JavaInterop_System_RuntimeTypeHandle {
 	void   *value;
 };
 
+typedef struct Srij_ComponentCrossReference {
+	void *SourceGroupIndex;
+	void *DestinationGroupIndex;
+} Srij_ComponentCrossReference;
+
+typedef struct Srij_StronglyConnectedComponent {
+	int IsAlive;
+	void *Count;
+	void **Context;
+} Srij_StronglyConnectedComponent;
+
+typedef struct Srij_MarkCrossReferences {
+	void *ComponentsLen;
+	Srij_StronglyConnectedComponent *Components;
+	void* CrossReferencesLen;
+	Srij_ComponentCrossReference *CrossReferences;
+} Srij_MarkCrossReferences;
+
+typedef void (*JavaInteropMarkCrossReferencesCallback) (Srij_MarkCrossReferences *crossReferences);
+
 JAVA_INTEROP_API    JavaInteropGCBridge    *java_interop_gc_bridge_get_current                  (void);
 JAVA_INTEROP_API    int                     java_interop_gc_bridge_set_current_once             (JavaInteropGCBridge *bridge);
 
@@ -32,6 +52,10 @@ JAVA_INTEROP_API    int                     java_interop_gc_bridge_add_current_a
 JAVA_INTEROP_API    int                     java_interop_gc_bridge_remove_current_app_domain    (JavaInteropGCBridge *bridge);
 
 JAVA_INTEROP_API    int                     java_interop_gc_bridge_set_bridge_processing_field  (JavaInteropGCBridge *bridge,   struct JavaInterop_System_RuntimeTypeHandle type_handle,    char *field_name);
+
+JAVA_INTEROP_API    int                     java_interop_gc_bridge_set_mark_cross_references    (JavaInteropGCBridge *bridge,   JavaInteropMarkCrossReferencesCallback markCrossReferences);
+JAVA_INTEROP_API    int                     java_interop_gc_bridge_release_mark_cross_references_resources (JavaInteropGCBridge *bridge, Srij_MarkCrossReferences *crossReferences);
+
 JAVA_INTEROP_API    int                     java_interop_gc_bridge_register_bridgeable_type     (JavaInteropGCBridge *bridge,   struct JavaInterop_System_RuntimeTypeHandle type_handle);
 JAVA_INTEROP_API    int                     java_interop_gc_bridge_enable                       (JavaInteropGCBridge *bridge,   int enable);
 

@@ -37,6 +37,8 @@ namespace Java.Interop
 		void    Disposed ();
 		/// <include file="../Documentation/Java.Interop/IJavaPeerable.xml" path="/docs/member[@name='M:Finalized']/*" />
 		void    Finalized ();
+
+		IntPtr  JniObjectReferenceControlBlock  => IntPtr.Zero;
 	}
 }
 
