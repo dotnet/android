@@ -29,14 +29,20 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 	[Required]
 	public ITaskItem [] ResolvedAssemblies { get; set; } = [];
 
+	[Required]
+        public string AndroidRuntime { get; set; } = "";
+
 	public ITaskItem [] SatelliteAssemblies { get; set; } = [];
 
 	[Required]
 	public string [] SupportedAbis { get; set; } = [];
 
+	AndroidRuntime androidRuntime;
+
 	public override bool RunTask ()
 	{
 		NativeCodeGenStateCollection? nativeCodeGenStates = null;
+		androidRuntime = MonoAndroidHelper.ParseAndroidRuntime (AndroidRuntime);
 
 		if (EnableMarshalMethods) {
 			// Retrieve the stored NativeCodeGenStateCollection (and remove it from the cache)
@@ -60,24 +66,11 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 		var marshalMethodsLlFilePath = $"{marshalMethodsBaseAsmFilePath}.ll";
 		var (assemblyCount, uniqueAssemblyNames) = GetAssemblyCountAndUniqueNames ();
 
-		MarshalMethodsNativeAssemblyGenerator marshalMethodsAsmGen;
-
-		if (EnableMarshalMethods) {
-			marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator (
-				Log,
-				assemblyCount,
-				uniqueAssemblyNames,
-				EnsureCodeGenState (nativeCodeGenStates, targetArch),
-				EnableManagedMarshalMethodsLookup
-			);
-		} else {
-			marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator (
-				Log,
-				targetArch,
-				assemblyCount,
-				uniqueAssemblyNames
-			);
-		}
+		MarshalMethodsNativeAssemblyGenerator marshalMethodsAsmGen = androidRuntime switch {
+			Tasks.AndroidRuntime.MonoVM => MakeMonoGenerator (),
+			Tasks.AndroidRuntime.CoreCLR => MakeCoreCLRGenerator (),
+			_ => throw new NotSupportedException ($"Internal error: unsupported runtime type '{androidRuntime}'")
+		};
 
 		var marshalMethodsModule = marshalMethodsAsmGen.Construct ();
 		using var marshalMethodsWriter = MemoryStreamPool.Shared.CreateStreamWriter ();
@@ -87,6 +80,44 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 		} finally {
 			marshalMethodsWriter.Flush ();
 			Files.CopyIfStreamChanged (marshalMethodsWriter.BaseStream, marshalMethodsLlFilePath);
+		}
+
+		MarshalMethodsNativeAssemblyGenerator MakeMonoGenerator ()
+		{
+			if (EnableMarshalMethods) {
+				return new MarshalMethodsNativeAssemblyGeneratorMonoVM (
+					Log,
+					assemblyCount,
+					uniqueAssemblyNames,
+					EnsureCodeGenState (nativeCodeGenStates, targetArch),
+					EnableManagedMarshalMethodsLookup
+				);
+			}
+
+			return new MarshalMethodsNativeAssemblyGeneratorMonoVM (
+				Log,
+				targetArch,
+				assemblyCount,
+				uniqueAssemblyNames
+			);
+		}
+
+		MarshalMethodsNativeAssemblyGenerator MakeCoreCLRGenerator ()
+		{
+			if (EnableMarshalMethods) {
+				return new MarshalMethodsNativeAssemblyGeneratorCoreCLR (
+					Log,
+					uniqueAssemblyNames,
+					EnsureCodeGenState (nativeCodeGenStates, targetArch),
+					EnableManagedMarshalMethodsLookup
+				);
+			}
+
+			return new MarshalMethodsNativeAssemblyGeneratorCoreCLR (
+				Log,
+				targetArch,
+				uniqueAssemblyNames
+			);
 		}
 	}
 

@@ -1877,7 +1877,7 @@ because xbuild doesn't support framework reference assemblies.
   DependsOnTargets="$(_GeneratePackageManagerJavaDependsOn)"
   Inputs="@(_GeneratePackageManagerJavaInputs)"
   Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
-  
+
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
       MainAssembly="$(TargetPath)"
@@ -1915,6 +1915,7 @@ because xbuild doesn't support framework reference assemblies.
   </GenerateNativeApplicationConfigSources>
 
   <GenerateNativeMarshalMethodSources
+      AndroidRuntime="$(_AndroidRuntime)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
       EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
@@ -1923,7 +1924,7 @@ because xbuild doesn't support framework reference assemblies.
       SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"
       SupportedAbis="@(_BuildTargetAbis)">
   </GenerateNativeMarshalMethodSources>
-      
+
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
   <ItemGroup>
     <FileWrites Include="@(_EnvironmentAssemblySource)" />

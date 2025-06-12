@@ -207,7 +207,7 @@ namespace xamarin::android {
 			}
 
 			auto interval = event.end - event.start; // nanoseconds
-			message.append ("; elapsed exp: "sv);
+			message.append ("; elapsed: "sv);
 			message.append (static_cast<uint64_t>((chrono::duration_cast<chrono::seconds>(interval).count ())));
 			message.append (":"sv);
 			message.append (static_cast<uint64_t>((chrono::duration_cast<chrono::milliseconds>(interval)).count ()));
