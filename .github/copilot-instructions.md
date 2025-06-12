@@ -68,6 +68,14 @@ Common build commands:
 - Device integration tests in `tests/MSBuildDeviceIntegration/`
 - Use NUnit for C# tests
 - Mock Android APIs appropriately for unit testing
+- Follow patterns in [`Documentation/workflow/UnitTests.md`](Documentation/workflow/UnitTests.md) for comprehensive testing guidance
+
+### Development and Debugging
+- Use `MSBUILDDEBUGONSTART=2` environment variable to debug MSBuild tasks
+- Follow patterns in [`Documentation/workflow/DevelopmentTips.md`](Documentation/workflow/DevelopmentTips.md)
+- Use update directories for rapid testing of Debug builds on devices
+- Utilize `dotnet test --filter` for running specific unit tests
+- Reference [`Documentation/workflow/MSBuildBestPractices.md`](Documentation/workflow/MSBuildBestPractices.md) for MSBuild debugging techniques
 
 ## Nullable Reference Types
 
@@ -194,7 +202,9 @@ try {
 - Use XML documentation comments for public APIs
 - Document Android API level requirements where relevant
 - Include `<example>` tags for complex APIs
-- Reference official Android documentation where helpful
+- Reference official Android documentation where helpful:
+  - [Android Developer Guide](https://developer.android.com/develop)
+  - [Android API Reference](https://developer.android.com/reference)
 
 ### Project Documentation
 - Update relevant `.md` files in `Documentation/` when making significant changes
@@ -237,6 +247,18 @@ Bump to [Dependency Name] [Dependency Version]
 - Handle incremental build scenarios
 - Consider cross-platform compatibility (Windows/macOS/Linux)
 - Validate inputs and provide clear error messages
+- Use `MSBUILDDEBUGONSTART=2` for debugging MSBuild tasks
+
+### Device Testing
+- Use `tests/MSBuildDeviceIntegration/` for comprehensive device tests
+- Leverage update directories for rapid iteration on Debug builds
+- Use `dotnet test --filter` to run specific tests
+- Ensure proper Android emulator/device setup for testing
+
+### Performance and Diagnostics
+- Use profiling capabilities documented in [`Documentation/guides/profiling.md`](Documentation/guides/profiling.md)
+- Leverage tracing features documented in [`Documentation/guides/tracing.md`](Documentation/guides/tracing.md)
+- Monitor build performance and optimize accordingly
 
 ### Native Development
 - Use appropriate CMake patterns from existing code
@@ -244,6 +266,11 @@ Bump to [Dependency Name] [Dependency Version]
 - Note: Native CoreCLR components in `src/native/clr` only target 64-bit platforms (arm64-v8a, x86_64)
 - Follow Android NDK security best practices
 - Test on multiple Android API levels when relevant
+
+### Android API Management
+- Follow [`Documentation/workflow/HowToAddNewApiLevel.md`](Documentation/workflow/HowToAddNewApiLevel.md) for adding new Android API levels
+- Use existing patterns for Java-to-C# API bindings
+- Understand Android backward/forward compatibility requirements
 
 ## Contributing Guidelines
 
