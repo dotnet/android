@@ -13,7 +13,7 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Setup .NET 10 Preview
+    - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '9.x'
