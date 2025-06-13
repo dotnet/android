@@ -32,6 +32,13 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 			base.Execute ();
 
+			// fatal: bad revision '^cfa4209..HEAD'
+			if (ExitCode == 128) {
+				Log.LogMessage (MessageImportance.Normal, $"git exited with code 128. Setting {nameof (CommitCount)} to 0.");
+				CommitCount = 0;
+				return true;
+			}
+
 			Log.LogMessage (MessageImportance.Low, $"  [Output] {nameof (CommitCount)}: {CommitCount}");
 
 			return !Log.HasLoggedErrors;
