@@ -98,9 +98,10 @@ namespace Xamarin.Android.Tasks {
 
 				resourceSymbolsTextFileTemp = GetTempFile ();
 
-				// Compute min SDK version once if AndroidManifestFile is specified
-				if (AndroidManifestFile is { ItemSpec.Length: > 0 }) {
-					var doc = AndroidAppManifest.Load (AndroidManifestFile.ItemSpec, MonoAndroidHelper.SupportedVersions);
+				// Compute min SDK version once from AndroidManifestFile or first ManifestFiles item
+				ITaskItem manifestFile = AndroidManifestFile ?? (ManifestFiles?.Length > 0 ? ManifestFiles [0] : null);
+				if (manifestFile is { ItemSpec.Length: > 0 }) {
+					var doc = AndroidAppManifest.Load (manifestFile.ItemSpec, MonoAndroidHelper.SupportedVersions);
 					minSdkVersion = doc.MinSdkVersion;
 				}
 
