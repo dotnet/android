@@ -84,7 +84,6 @@ namespace Xamarin.Android.Tasks {
 		SortedSet<string> rulesFiles = new SortedSet<string> ();
 		Dictionary<string, long> apks = new Dictionary<string, long> ();
 		string resourceSymbolsTextFileTemp;
-		int? minSdkVersion;
 
 		protected override int GetRequiredDaemonInstances ()
 		{
@@ -97,13 +96,6 @@ namespace Xamarin.Android.Tasks {
 				assemblyMap.Load (Path.Combine (WorkingDirectory, AssemblyIdentityMapFile));
 
 				resourceSymbolsTextFileTemp = GetTempFile ();
-
-				// Compute min SDK version once from AndroidManifestFile or first ManifestFiles item
-				ITaskItem manifestFile = AndroidManifestFile ?? (ManifestFiles?.Length > 0 ? ManifestFiles [0] : null);
-				if (manifestFile is { ItemSpec.Length: > 0 }) {
-					var doc = AndroidAppManifest.Load (manifestFile.ItemSpec, MonoAndroidHelper.SupportedVersions);
-					minSdkVersion = doc.MinSdkVersion;
-				}
 
 				await this.WhenAll (ManifestFiles, ProcessManifest);
 
@@ -186,13 +178,6 @@ namespace Xamarin.Android.Tasks {
 				cmd.Add ("-v");
 			cmd.Add ($"--manifest");
 			cmd.Add (GetFullPath (manifestFile));
-
-			//NOTE: if this is blank, we can omit --min-sdk-version in this call
-			if (minSdkVersion.HasValue) {
-				cmd.Add ("--min-sdk-version");
-				cmd.Add (minSdkVersion.Value.ToString ());
-			}
-
 			if (!string.IsNullOrEmpty (JavaDesignerOutputDirectory)) {
 				var designerDirectory = Path.IsPathRooted (JavaDesignerOutputDirectory) ? JavaDesignerOutputDirectory : Path.Combine (WorkingDirectory, JavaDesignerOutputDirectory);
 				Directory.CreateDirectory (designerDirectory);
@@ -334,6 +319,15 @@ namespace Xamarin.Android.Tasks {
 			}
 			cmd.Add ("-o");
 			cmd.Add (GetFullPath (currentResourceOutputFile));
+
+			// Add min SDK version from AndroidManifestFile if available
+			if (AndroidManifestFile is { ItemSpec.Length: > 0 }) {
+				var doc = AndroidAppManifest.Load (AndroidManifestFile.ItemSpec, MonoAndroidHelper.SupportedVersions);
+				if (doc.MinSdkVersion.HasValue) {
+					cmd.Add ("--min-sdk-version");
+					cmd.Add (doc.MinSdkVersion.Value.ToString ());
+				}
+			}
 
 			return cmd.ToArray ();
 		}
