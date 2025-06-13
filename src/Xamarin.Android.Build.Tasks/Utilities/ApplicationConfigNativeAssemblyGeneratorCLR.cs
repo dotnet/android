@@ -134,6 +134,42 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public uint index;
 	}
 
+	sealed class AppEnvironmentVariableContextDataProvider : NativeAssemblerStructContextDataProvider
+	{
+		public override string GetComment (object data, string fieldName)
+		{
+			var envVar = EnsureType<AppEnvironmentVariable> (data);
+
+			if (String.Compare ("name_index", fieldName, StringComparison.Ordinal) == 0) {
+				return $" '{envVar.Name}'";
+			}
+
+			if (String.Compare ("value_index", fieldName, StringComparison.Ordinal) == 0) {
+				return $" '{envVar.Value}'";
+			}
+
+			return String.Empty;
+		}
+	}
+
+	// Order of fields and their type must correspond *exactly* to that in
+	// src/native/clr/include/xamarin-app.hh AppEnvironmentVariable structure
+	[NativeAssemblerStructContextDataProvider (typeof (AppEnvironmentVariableContextDataProvider))]
+	sealed class AppEnvironmentVariable
+	{
+		[NativeAssembler (Ignore = true)]
+		public string Name;
+
+		[NativeAssembler (Ignore = true)]
+		public string Value;
+
+		[NativeAssembler (UsesDataProvider = true)]
+		public uint name_index;
+
+		[NativeAssembler (UsesDataProvider = true)]
+		public uint value_index;
+	}
+
 	sealed class XamarinAndroidBundledAssemblyContextDataProvider : NativeAssemblerStructContextDataProvider
 	{
 		public override ulong GetBufferSize (object data, string fieldName)
@@ -195,6 +231,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	StructureInfo? runtimePropertyIndexEntryStructureInfo;
 	StructureInfo? hostConfigurationPropertyStructureInfo;
 	StructureInfo? hostConfigurationPropertiesStructureInfo;
+	StructureInfo? appEnvironmentVariableStructureInfo;
 
 	public bool UsesAssemblyPreload { get; set; }
 	public string AndroidPackageName { get; set; }
@@ -244,10 +281,32 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 		module.AddGlobalVariable ("format_tag", FORMAT_TAG, comment: $" 0x{FORMAT_TAG:x}");
 
-		var envVars = new LlvmIrGlobalVariable (environmentVariables, "app_environment_variables") {
+		var envVarsBlob = new LlvmIrStringBlob ();
+		var appEnvVars = new List<StructureInstance<AppEnvironmentVariable>> ();
+
+		if (environmentVariables != null) {
+			// TODO: skip variables with no name
+			foreach (var kvp in environmentVariables) {
+				(int nameOffset, int _) = envVarsBlob.Add (kvp.Key);
+				(int valueOffset, int _) = envVarsBlob.Add (kvp.Value);
+
+				var appEnvVar = new AppEnvironmentVariable {
+					Name = kvp.Key,
+					Value = kvp.Value,
+
+					name_index = (uint)nameOffset,
+					value_index = (uint)valueOffset,
+				};
+				appEnvVars.Add (new StructureInstance<AppEnvironmentVariable> (appEnvironmentVariableStructureInfo, appEnvVar));
+			}
+		}
+
+		var envVars = new LlvmIrGlobalVariable (appEnvVars, "app_environment_variables") {
 			Comment = " Application environment variables array, name:value",
+			Options = LlvmIrVariableOptions.GlobalConstant,
 		};
-		module.Add (envVars, stringGroupName: "env", stringGroupComment: " Application environment variables name:value pairs");
+		module.Add (envVars);
+		module.AddGlobalVariable ("app_environment_variable_contents", envVarsBlob, LlvmIrVariableOptions.GlobalConstant);
 
 		var sysProps = new LlvmIrGlobalVariable (systemProperties, "app_system_properties") {
 			Comment = " System properties defined by the application",
@@ -263,7 +322,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			ignore_split_configs = IgnoreSplitConfigs,
 			number_of_runtime_properties = (uint)(runtimeProperties == null ? 0 : runtimeProperties.Count),
 			package_naming_policy = (uint)PackageNamingPolicy,
-			environment_variable_count = (uint)(environmentVariables == null ? 0 : environmentVariables.Count * 2),
+			environment_variable_count = (uint)(environmentVariables == null ? 0 : environmentVariables.Count),
 			system_property_count = (uint)(systemProperties == null ? 0 : systemProperties.Count * 2),
 			number_of_assemblies_in_apk = (uint)NumberOfAssembliesInApk,
 			number_of_shared_libraries = (uint)NativeLibraries.Count,
@@ -541,5 +600,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		dsoApkEntryStructureInfo = module.MapStructure<DSOApkEntry> ();
 		runtimePropertyStructureInfo = module.MapStructure<RuntimeProperty> ();
 		runtimePropertyIndexEntryStructureInfo = module.MapStructure<RuntimePropertyIndexEntry> ();
+		appEnvironmentVariableStructureInfo = module.MapStructure<AppEnvironmentVariable> ();
 	}
 }
