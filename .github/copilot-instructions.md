@@ -207,7 +207,7 @@ try {
 - Reference official Android documentation where helpful:
   - [Android Developer Guide](https://developer.android.com/develop)
   - [Android API Reference](https://developer.android.com/reference)
-  - [Android aapt2 tools](https://developer.android.com/tools/aapt2)
+  - [Android `aapt2` Documentation](https://developer.android.com/tools/aapt2)
 
 ### Project Documentation
 - Update relevant `.md` files in `Documentation/` when making significant changes
