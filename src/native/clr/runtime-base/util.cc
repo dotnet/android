@@ -105,3 +105,24 @@ auto Util::set_world_accessible (int fd) noexcept -> bool
 
 	return true;
 }
+
+char *
+Util::monodroid_strdup_printf (std::string_view const& format, ...)
+{
+        va_list args;
+
+        va_start (args, format);
+        char *ret = monodroid_strdup_vprintf (format, args);
+        va_end (args);
+
+        return ret;
+}
+
+char*
+Util::monodroid_strdup_vprintf (std::string_view const& format, va_list vargs)
+{
+	char *ret = nullptr;
+	int n = vasprintf (&ret, format.data (), vargs);
+
+	return n == -1 ? nullptr : ret;
+}
