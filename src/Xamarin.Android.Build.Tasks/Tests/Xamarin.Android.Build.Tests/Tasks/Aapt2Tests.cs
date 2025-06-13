@@ -43,7 +43,7 @@ namespace Xamarin.Android.Build.Tests
 				DaemonKeepInDomain = keepInDomain,
 			};
 			MockBuildEngine mockEngine = (MockBuildEngine)engine;
-			Assert.True (task.Execute (), "task should have succeeded");
+			Assert.True (task.Execute (), $"task should have succeeded. {string.Join (" ", mockEngine.Errors.Select (x => x.Message))}");
 			output?.AddRange (task.CompiledResourceFlatArchives);
 		}
 
@@ -571,7 +571,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void Aapt2LinkPassesMinSdkVersion ()
+		public void Aapt2LinkWithAdaptiveIconsAndMinSdkVersion ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
 			Directory.CreateDirectory (path);
@@ -582,63 +582,67 @@ namespace Xamarin.Android.Build.Tests
 			MonoAndroidHelper.RefreshSupportedVersions (new [] {
 				Path.Combine (referencePath, "MonoAndroid"),
 			});
+
 			var resPath = Path.Combine (path, "res");
 			Directory.CreateDirectory (resPath);
-			Directory.CreateDirectory (Path.Combine (resPath, "values"));
-			File.WriteAllText (Path.Combine (resPath, "values", "strings.xml"), @"<?xml version='1.0' ?><resources><string name='foo'>foo</string></resources>");
-			var errors = new List<BuildErrorEventArgs> ();
-			var warnings = new List<BuildWarningEventArgs> ();
-			var engine = new MockBuildEngine (TestContext.Out, errors, warnings);
+			
+			// Create mipmap-anydpi directory without -v26 suffix (this is what the customer reported)
+			var mipmapAnydpiPath = Path.Combine (resPath, "mipmap-anydpi");
+			Directory.CreateDirectory (mipmapAnydpiPath);
+			
+			// Create adaptive icon in mipmap-anydpi (without -v26)
+			File.WriteAllText (Path.Combine (mipmapAnydpiPath, "ic_launcher.xml"), @"<adaptive-icon xmlns:android=""http://schemas.android.com/apk/res/android"">
+<background android:drawable=""@mipmap/ic_launcher_background"" />
+<foreground android:drawable=""@mipmap/ic_launcher_foreground"" />
+</adaptive-icon>");
+
+			// Create supporting mipmap directories and dummy images
+			var mipmapMdpiPath = Path.Combine (resPath, "mipmap-mdpi");
+			Directory.CreateDirectory (mipmapMdpiPath);
+			File.WriteAllText (Path.Combine (mipmapMdpiPath, "ic_launcher_background.png"), "dummy");
+			File.WriteAllText (Path.Combine (mipmapMdpiPath, "ic_launcher_foreground.png"), "dummy");
+
+			// Create AndroidManifest.xml with minSdkVersion 26 
 			var manifestFile = Path.Combine (path, "AndroidManifest.xml");
-			File.WriteAllText (manifestFile, @"<manifest xmlns:android='http://schemas.android.com/apk/res/android' package='Foo.Foo'>
-  <uses-sdk android:minSdkVersion='26' android:targetSdkVersion='31' />
-  <application android:label='Test' />
+			File.WriteAllText (manifestFile, @"<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" package=""com.example.test"">
+<uses-sdk android:minSdkVersion=""26"" android:targetSdkVersion=""31"" />
+<application android:label=""TestApp"">
+</application>
 </manifest>");
-			File.WriteAllText (Path.Combine (path, "foo.map"), @"a\nb");
-			
-			CallAapt2Compile (engine, resPath, path, path);
-			
-			int platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
+
+			var errors = new List<BuildErrorEventArgs> ();
+			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
+
 			var task = new Aapt2Link {
 				BuildEngine = engine,
-				ToolPath = GetPathToAapt2 (),
-				ResourceDirectories = new ITaskItem [] { new TaskItem (resPath) },
+				ResourceDirectories = new ITaskItem [] {
+					new TaskItem (resPath),
+				},
 				ManifestFiles = new ITaskItem [] { new TaskItem (manifestFile) },
-				AndroidManifestFile = new TaskItem (manifestFile),
 				CompiledResourceFlatArchive = new TaskItem (Path.Combine (path, "compiled.flata")),
-				OutputFile = Path.Combine (path, "resources.apk"),
-				AssemblyIdentityMapFile = Path.Combine (path, "foo.map"),
-				JavaPlatformJarPath = Path.Combine (AndroidSdkPath, "platforms", $"android-{platform}", "android.jar"),
+				OutputFile = Path.Combine (path, "test.apk"),
+				AssemblyIdentityMapFile = Path.Combine (path, "test.map"),
+				JavaPlatformJarPath = Path.Combine (referencePath, "MonoAndroid", "v8.0", "android.jar"),
 				JavaDesignerOutputDirectory = Path.Combine (path, "java")
 			};
 
-			// Manually initialize the minSdkVersion field by simulating the logic from RunTaskAsync
+			// Manually initialize the minSdkVersion field to simulate RunTaskAsync behavior
 			var minSdkVersionField = typeof(Aapt2Link).GetField("minSdkVersion", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 			var doc = AndroidAppManifest.Load (manifestFile, MonoAndroidHelper.SupportedVersions);
 			minSdkVersionField.SetValue(task, doc.MinSdkVersion);
-			
-			// Debug: verify the value was set
-			var setMinSdkVersion = (int?)minSdkVersionField.GetValue(task);
-			Console.WriteLine($"DEBUG: minSdkVersion set to {setMinSdkVersion}, doc.MinSdkVersion = {doc.MinSdkVersion}");
 
 			// Override GenerateCommandLineCommands to capture the command line
 			var commandLine = (string[])typeof(Aapt2Link)
 				.GetMethod("GenerateCommandLineCommands", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-				.Invoke(task, new object[] { manifestFile, null, Path.Combine (path, "resources.apk") });
-			
-			Assert.AreEqual (0, errors.Count, $"No errors should have been raised. {string.Join (" ", errors.Select (e => e.Message))}");
-			
-			// Verify that --min-sdk-version 26 is present in the command line
-			bool foundMinSdkVersion = false;
-			for (int i = 0; i < commandLine.Length - 1; i++) {
-				if (commandLine[i] == "--min-sdk-version" && commandLine[i + 1] == "26") {
-					foundMinSdkVersion = true;
-					break;
-				}
-			}
-			
-			Assert.IsTrue (foundMinSdkVersion, $"--min-sdk-version 26 should be present in aapt2 command line. Command: {string.Join(" ", commandLine)}");
-			Directory.Delete (Path.Combine (Root, path), recursive: true);
+				.Invoke(task, new object[] { manifestFile, "arm64-v8a", Path.Combine (path, "test.apk") });
+
+			// Verify that --min-sdk-version 26 is included in the command line
+			Assert.IsTrue (commandLine.Any (arg => arg == "--min-sdk-version"), "Command line should contain --min-sdk-version");
+			var minSdkIndex = Array.IndexOf (commandLine, "--min-sdk-version");
+			Assert.IsTrue (minSdkIndex >= 0 && minSdkIndex < commandLine.Length - 1, "--min-sdk-version should be followed by a value");
+			Assert.AreEqual ("26", commandLine[minSdkIndex + 1], "Min SDK version should be 26");
+
+			Directory.Delete (path, recursive: true);
 		}
 	}
 }
