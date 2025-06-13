@@ -131,13 +131,7 @@ struct CompressedAssemblyDescriptor
 {
 	uint32_t   uncompressed_file_size;
 	bool       loaded;
-	uint8_t   *data;
-};
-
-struct CompressedAssemblies
-{
-	uint32_t                      count;
-	CompressedAssemblyDescriptor *descriptors;
+	uint32_t   buffer_offset;
 };
 
 struct XamarinAndroidBundledAssembly
@@ -328,6 +322,12 @@ struct JniRemappingTypeReplacementEntry
 	const char      *replacement;
 };
 
+struct AppEnvironmentVariable
+{
+	const uint32_t name_index;
+	const uint32_t value_index;
+};
+
 extern "C" {
 	[[gnu::visibility("default")]] extern const JniRemappingIndexTypeEntry jni_remapping_method_replacement_index[];
 	[[gnu::visibility("default")]] extern const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[];
@@ -354,9 +354,13 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const xamarin::android::hash_t java_to_managed_hashes[];
 #endif
 
-	[[gnu::visibility("default")]] extern CompressedAssemblies compressed_assemblies;
+	[[gnu::visibility("default")]] extern uint32_t compressed_assembly_count;
+	[[gnu::visibility("default")]] extern CompressedAssemblyDescriptor compressed_assembly_descriptors[];
+	[[gnu::visibility("default")]] extern uint32_t uncompressed_assemblies_data_size;
+	[[gnu::visibility("default")]] extern uint8_t uncompressed_assemblies_data_buffer[];
 	[[gnu::visibility("default")]] extern const ApplicationConfig application_config;
-	[[gnu::visibility("default")]] extern const char* const app_environment_variables[];
+	[[gnu::visibility("default")]] extern const AppEnvironmentVariable app_environment_variables[];
+	[[gnu::visibility("default")]] extern const char app_environment_variable_contents[];
 	[[gnu::visibility("default")]] extern const char* const app_system_properties[];
 
 	[[gnu::visibility("default")]] extern const char* const mono_aot_mode_name;
