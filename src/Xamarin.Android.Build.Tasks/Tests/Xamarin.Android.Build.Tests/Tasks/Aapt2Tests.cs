@@ -575,6 +575,13 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var path = Path.Combine (Root, "temp", TestName);
 			Directory.CreateDirectory (path);
+			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new [] {
+				new ApiInfo { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0",  Stable = true },
+				new ApiInfo { Id = "31", Level = 31, Name = "Twelve", FrameworkVersion = "v12.0",  Stable = true },
+			});
+			MonoAndroidHelper.RefreshSupportedVersions (new [] {
+				Path.Combine (referencePath, "MonoAndroid"),
+			});
 			var resPath = Path.Combine (path, "res");
 			Directory.CreateDirectory (resPath);
 			Directory.CreateDirectory (Path.Combine (resPath, "values"));
@@ -604,6 +611,15 @@ namespace Xamarin.Android.Build.Tests
 				JavaPlatformJarPath = Path.Combine (AndroidSdkPath, "platforms", $"android-{platform}", "android.jar"),
 				JavaDesignerOutputDirectory = Path.Combine (path, "java")
 			};
+
+			// Manually initialize the minSdkVersion field by simulating the logic from RunTaskAsync
+			var minSdkVersionField = typeof(Aapt2Link).GetField("minSdkVersion", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+			var doc = AndroidAppManifest.Load (manifestFile, MonoAndroidHelper.SupportedVersions);
+			minSdkVersionField.SetValue(task, doc.MinSdkVersion);
+			
+			// Debug: verify the value was set
+			var setMinSdkVersion = (int?)minSdkVersionField.GetValue(task);
+			Console.WriteLine($"DEBUG: minSdkVersion set to {setMinSdkVersion}, doc.MinSdkVersion = {doc.MinSdkVersion}");
 
 			// Override GenerateCommandLineCommands to capture the command line
 			var commandLine = (string[])typeof(Aapt2Link)
