@@ -1,0 +1,8 @@
+<Project>
+
+  <PropertyGroup>
+    <XamarinAndroidToolsDirectory>$(MSBuildThisFileDirectory)xamarin-android-tools</XamarinAndroidToolsDirectory>
+    <XamarinAndroidToolsFullPath>$([System.IO.Path]::GetFullPath ('$(XamarinAndroidToolsDirectory)'))\</XamarinAndroidToolsFullPath>
+  </PropertyGroup>
+
+</Project>

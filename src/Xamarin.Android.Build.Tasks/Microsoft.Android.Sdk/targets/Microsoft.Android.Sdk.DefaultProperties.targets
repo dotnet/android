@@ -43,7 +43,7 @@
     <AndroidEnableRestrictToAttributes Condition=" '$(AndroidEnableRestrictToAttributes)' == '' ">obsolete</AndroidEnableRestrictToAttributes>
 
     <!-- Mono components -->
-    <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == ''">$(EnableProfiler)</AndroidEnableProfiler>
+    <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == ''">$(EnableDiagnostics)</AndroidEnableProfiler>
     <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == ''">false</AndroidEnableProfiler>
 
     <!--
