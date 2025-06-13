@@ -569,5 +569,53 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (manifestFile, errors [0].File, $"Error File should have been {manifestFile}");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
+
+		[Test]
+		public void Aapt2LinkPassesMinSdkVersion ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (path);
+			var resPath = Path.Combine (path, "res");
+			Directory.CreateDirectory (resPath);
+			var engine = new MockBuildEngine (TestContext.Out);
+			var manifestFile = Path.Combine (path, "AndroidManifest.xml");
+			File.WriteAllText (manifestFile, @"<manifest xmlns:android='http://schemas.android.com/apk/res/android' package='Foo.Foo'>
+  <uses-sdk android:minSdkVersion='26' android:targetSdkVersion='31' />
+  <application android:label='Test' />
+</manifest>");
+			
+			CallAapt2Compile (engine, resPath, path, path);
+			
+			int platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
+			var task = new Aapt2Link {
+				BuildEngine = engine,
+				ToolPath = GetPathToAapt2 (),
+				ResourceDirectories = new ITaskItem [] { new TaskItem (resPath) },
+				ManifestFiles = new ITaskItem [] { new TaskItem (manifestFile) },
+				AndroidManifestFile = new TaskItem (manifestFile),
+				CompiledResourceFlatArchive = new TaskItem (Path.Combine (path, "compiled.flata")),
+				OutputFile = Path.Combine (path, "resources.apk"),
+				AssemblyIdentityMapFile = Path.Combine (path, "foo.map"),
+				JavaPlatformJarPath = Path.Combine (AndroidSdkPath, "platforms", $"android-{platform}", "android.jar"),
+				JavaDesignerOutputDirectory = Path.Combine (path, "java")
+			};
+
+			// Override GenerateCommandLineCommands to capture the command line
+			var commandLine = (string[])typeof(Aapt2Link)
+				.GetMethod("GenerateCommandLineCommands", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+				.Invoke(task, new object[] { manifestFile, null, Path.Combine (path, "resources.apk") });
+			
+			// Verify that --min-sdk-version 26 is present in the command line
+			bool foundMinSdkVersion = false;
+			for (int i = 0; i < commandLine.Length - 1; i++) {
+				if (commandLine[i] == "--min-sdk-version" && commandLine[i + 1] == "26") {
+					foundMinSdkVersion = true;
+					break;
+				}
+			}
+			
+			Assert.IsTrue (foundMinSdkVersion, $"--min-sdk-version 26 should be present in aapt2 command line. Command: {string.Join(" ", commandLine)}");
+			Directory.Delete (Path.Combine (Root, path), recursive: true);
+		}
 	}
 }

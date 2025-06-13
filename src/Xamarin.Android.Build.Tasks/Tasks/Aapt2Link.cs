@@ -178,6 +178,16 @@ namespace Xamarin.Android.Tasks {
 				cmd.Add ("-v");
 			cmd.Add ($"--manifest");
 			cmd.Add (GetFullPath (manifestFile));
+
+			//NOTE: if this is blank, we can omit --min-sdk-version in this call
+			if (AndroidManifestFile is { ItemSpec.Length: > 0 }) {
+				var doc = AndroidAppManifest.Load (AndroidManifestFile.ItemSpec, MonoAndroidHelper.SupportedVersions);
+				if (doc.MinSdkVersion.HasValue) {
+					cmd.Add ("--min-sdk-version");
+					cmd.Add (doc.MinSdkVersion.Value.ToString ());
+				}
+			}
+
 			if (!string.IsNullOrEmpty (JavaDesignerOutputDirectory)) {
 				var designerDirectory = Path.IsPathRooted (JavaDesignerOutputDirectory) ? JavaDesignerOutputDirectory : Path.Combine (WorkingDirectory, JavaDesignerOutputDirectory);
 				Directory.CreateDirectory (designerDirectory);
