@@ -43,7 +43,7 @@ namespace Xamarin.Android.Build.Tests
 				DaemonKeepInDomain = keepInDomain,
 			};
 			MockBuildEngine mockEngine = (MockBuildEngine)engine;
-			Assert.True (task.Execute (), $"task should have succeeded. {string.Join (" ", mockEngine.Errors.Select (x => x.Message))}");
+			Assert.True (task.Execute (), "task should have succeeded");
 			output?.AddRange (task.CompiledResourceFlatArchives);
 		}
 
@@ -577,12 +577,17 @@ namespace Xamarin.Android.Build.Tests
 			Directory.CreateDirectory (path);
 			var resPath = Path.Combine (path, "res");
 			Directory.CreateDirectory (resPath);
-			var engine = new MockBuildEngine (TestContext.Out);
+			Directory.CreateDirectory (Path.Combine (resPath, "values"));
+			File.WriteAllText (Path.Combine (resPath, "values", "strings.xml"), @"<?xml version='1.0' ?><resources><string name='foo'>foo</string></resources>");
+			var errors = new List<BuildErrorEventArgs> ();
+			var warnings = new List<BuildWarningEventArgs> ();
+			var engine = new MockBuildEngine (TestContext.Out, errors, warnings);
 			var manifestFile = Path.Combine (path, "AndroidManifest.xml");
 			File.WriteAllText (manifestFile, @"<manifest xmlns:android='http://schemas.android.com/apk/res/android' package='Foo.Foo'>
   <uses-sdk android:minSdkVersion='26' android:targetSdkVersion='31' />
   <application android:label='Test' />
 </manifest>");
+			File.WriteAllText (Path.Combine (path, "foo.map"), @"a\nb");
 			
 			CallAapt2Compile (engine, resPath, path, path);
 			
@@ -604,6 +609,8 @@ namespace Xamarin.Android.Build.Tests
 			var commandLine = (string[])typeof(Aapt2Link)
 				.GetMethod("GenerateCommandLineCommands", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
 				.Invoke(task, new object[] { manifestFile, null, Path.Combine (path, "resources.apk") });
+			
+			Assert.AreEqual (0, errors.Count, $"No errors should have been raised. {string.Join (" ", errors.Select (e => e.Message))}");
 			
 			// Verify that --min-sdk-version 26 is present in the command line
 			bool foundMinSdkVersion = false;

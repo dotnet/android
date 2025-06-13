@@ -84,6 +84,7 @@ namespace Xamarin.Android.Tasks {
 		SortedSet<string> rulesFiles = new SortedSet<string> ();
 		Dictionary<string, long> apks = new Dictionary<string, long> ();
 		string resourceSymbolsTextFileTemp;
+		int? minSdkVersion;
 
 		protected override int GetRequiredDaemonInstances ()
 		{
@@ -96,6 +97,12 @@ namespace Xamarin.Android.Tasks {
 				assemblyMap.Load (Path.Combine (WorkingDirectory, AssemblyIdentityMapFile));
 
 				resourceSymbolsTextFileTemp = GetTempFile ();
+
+				// Compute min SDK version once if AndroidManifestFile is specified
+				if (AndroidManifestFile is { ItemSpec.Length: > 0 }) {
+					var doc = AndroidAppManifest.Load (AndroidManifestFile.ItemSpec, MonoAndroidHelper.SupportedVersions);
+					minSdkVersion = doc.MinSdkVersion;
+				}
 
 				await this.WhenAll (ManifestFiles, ProcessManifest);
 
@@ -180,12 +187,9 @@ namespace Xamarin.Android.Tasks {
 			cmd.Add (GetFullPath (manifestFile));
 
 			//NOTE: if this is blank, we can omit --min-sdk-version in this call
-			if (AndroidManifestFile is { ItemSpec.Length: > 0 }) {
-				var doc = AndroidAppManifest.Load (AndroidManifestFile.ItemSpec, MonoAndroidHelper.SupportedVersions);
-				if (doc.MinSdkVersion.HasValue) {
-					cmd.Add ("--min-sdk-version");
-					cmd.Add (doc.MinSdkVersion.Value.ToString ());
-				}
+			if (minSdkVersion.HasValue) {
+				cmd.Add ("--min-sdk-version");
+				cmd.Add (minSdkVersion.Value.ToString ());
 			}
 
 			if (!string.IsNullOrEmpty (JavaDesignerOutputDirectory)) {
