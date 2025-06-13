@@ -72,7 +72,8 @@ const ApplicationConfig application_config = {
 };
 
 // TODO: migrate to std::string_view for these two
-const char* const app_environment_variables[] = {};
+const AppEnvironmentVariable app_environment_variables[] = {};
+const char app_environment_variable_contents[] = {};
 const char* const app_system_properties[] = {};
 
 static constexpr size_t AssemblyNameWidth = 128uz;
