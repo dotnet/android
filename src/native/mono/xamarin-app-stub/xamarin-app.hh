@@ -113,6 +113,7 @@ struct CompressedAssemblyDescriptor
 {
 	uint32_t   uncompressed_file_size;
 	bool       loaded;
+	uint32_t   buffer_offset;
 	uint8_t   *data;
 };
 

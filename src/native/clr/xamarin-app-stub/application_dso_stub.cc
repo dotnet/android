@@ -38,10 +38,10 @@ const TypeMapJava java_to_managed_map[] = {};
 const xamarin::android::hash_t java_to_managed_hashes[] = {};
 #endif
 
-CompressedAssemblies compressed_assemblies = {
-	.count = 0,
-	.descriptors = nullptr,
-};
+uint32_t compressed_assembly_count = 0;
+CompressedAssemblyDescriptor compressed_assembly_descriptors[] = {};
+uint32_t uncompressed_assemblies_data_size = 0;
+uint8_t uncompressed_assemblies_data_buffer[] = {};
 
 //
 // Config settings below **must** be valid for Desktop builds as the default `libxamarin-app.{dll,dylib,so}` is used by
