@@ -118,7 +118,7 @@ namespace Android.Runtime {
 
 		public static void WaitForBridgeProcessing ()
 		{
-			JNIEnvInit.ValueManager?.WaitForGCBridgeProcessing ();
+			JniEnvironment.Runtime.ValueManager.WaitForGCBridgeProcessing ();
 		}
 
 		public static IntPtr AllocObject (string jniClassName)

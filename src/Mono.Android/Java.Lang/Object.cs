@@ -111,7 +111,7 @@ namespace Java.Lang {
 		{
 			var reference = new JniObjectReference (value);
 			var options   = FromJniHandleOwnership (transfer);
-			JNIEnvInit.ValueManager?.ConstructPeer (
+			JniEnvironment.Runtime.ValueManager.ConstructPeer (
 					this,
 					ref reference,
 					value == IntPtr.Zero ? JniObjectReferenceOptions.None : options);
@@ -128,7 +128,7 @@ namespace Java.Lang {
 
 		internal static IJavaPeerable? PeekObject (IntPtr handle, Type? requiredType = null)
 		{
-			var peeked  = JNIEnvInit.ValueManager?.PeekPeer (new JniObjectReference (handle));
+			var peeked  = JniEnvironment.Runtime.ValueManager.PeekPeer (new JniObjectReference (handle));
 			if (peeked == null)
 				return null;
 			if (requiredType != null && !requiredType.IsAssignableFrom (peeked.GetType ()))
@@ -180,7 +180,7 @@ namespace Java.Lang {
 			if (handle == IntPtr.Zero)
 				return null;
 
-			var r = JNIEnvInit.ValueManager!.GetPeer (new JniObjectReference (handle), type);
+			var r = JniEnvironment.Runtime.ValueManager.GetPeer (new JniObjectReference (handle), type);
 			JNIEnv.DeleteRef (handle, transfer);
 			return r;
 		}

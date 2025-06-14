@@ -72,6 +72,7 @@ const std::vector<std::string> internal_pinvoke_names = {
 	"monodroid_TypeManager_get_java_class_name",
 	"clr_typemap_managed_to_java",
 	"clr_typemap_java_to_managed",
+	"clr_initialize_gc_bridge",
 	"_monodroid_weak_gref_delete",
 	"_monodroid_weak_gref_get",
 	"_monodroid_weak_gref_new",

@@ -268,7 +268,7 @@ foreach (var info in delegateTypes) {
 #>
 		internal static <#= info.Return #> Wrap<#= info.Type #> (this <#= info.Type #> callback, <#= info.Signature #>)
 		{
-			JNIEnvInit.ValueManager?.WaitForGCBridgeProcessing ();
+			Java.Interop.JniEnvironment.Runtime.ValueManager.WaitForGCBridgeProcessing ();
 			try {
 				<#= info.Return != "void" ? "return " : "" #>callback (<#= info.Invoke #>);
 			} catch (Exception e) when (_unhandled_exception (e)) {
