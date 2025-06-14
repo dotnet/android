@@ -48,7 +48,6 @@ const ApplicationConfig application_config = {
 	.uses_assembly_preload = false,
 	.broken_exception_transitions = false,
 	.jni_add_native_method_registration_attribute_present = false,
-	.have_runtime_config_blob = false,
 	.have_assembly_store = false,
 	.marshal_methods_enabled = false,
 	.ignore_split_configs = false,
@@ -305,3 +304,9 @@ const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[] = {
 		.replacement = "another/replacement/java/type",
 	},
 };
+
+size_t embedded_runtime_config_size = 0;
+uint8_t embedded_runtime_config[0];
+
+size_t embedded_assembly_store_size = 0;
+uint8_t embedded_assembly_store[0];

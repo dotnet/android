@@ -8,8 +8,9 @@
 
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/timing.hh>
-#include "../shared/log_types.hh"
+#include <shared/log_types.hh>
 #include "managed-interface.hh"
+#include <xamarin-app.hh>
 
 namespace xamarin::android {
 	class Host
@@ -53,7 +54,7 @@ namespace xamarin::android {
 		static inline void *clr_host = nullptr;
 		static inline unsigned int domain_id = 0;
 		static inline std::shared_ptr<Timing> _timing{};
-		static inline bool found_assembly_store = false;
+		static inline bool found_assembly_store = embedded_assembly_store_size > 0;
 		static inline jnienv_register_jni_natives_fn jnienv_register_jni_natives = nullptr;
 
 		static inline JavaVM *jvm = nullptr;

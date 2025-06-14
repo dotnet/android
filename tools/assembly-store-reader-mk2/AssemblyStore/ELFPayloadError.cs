@@ -8,4 +8,5 @@ enum ELFPayloadError
 	NotSharedLibrary,
 	NotLittleEndian,
 	NoPayloadSection,
+	NoEmbeddedStore,
 }
