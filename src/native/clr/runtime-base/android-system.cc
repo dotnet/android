@@ -230,16 +230,10 @@ AndroidSystem::setup_environment () noexcept
 
 	const char *var_name;
 	const char *var_value;
-	for (size_t i = 0uz; i < application_config.environment_variable_count; i += 2) {
-		var_name = app_environment_variables [i];
-		if (var_name == nullptr || *var_name == '\0') {
-			continue;
-		}
-
-		var_value = app_environment_variables [i + 1uz];
-		if (var_value == nullptr) {
-			var_value = "";
-		}
+	for (size_t i = 0uz; i < application_config.environment_variable_count; i++) {
+		AppEnvironmentVariable const& env_var = app_environment_variables [i];
+		var_name = &app_environment_variable_contents[env_var.name_index];
+		var_value = &app_environment_variable_contents[env_var.value_index];
 
 		if constexpr (Constants::is_debug_build) {
 			log_info (LOG_DEFAULT, "Setting environment variable '{}' to '{}'", var_name, var_value);
