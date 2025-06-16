@@ -134,7 +134,7 @@ DSOCacheEntry dso_cache[] = {
 		.hash = xamarin::android::xxhash::hash (fake_dso_name, sizeof(fake_dso_name) - 1),
 		.real_name_hash = xamarin::android::xxhash::hash (fake_dso_name, sizeof(fake_dso_name) - 1),
 		.ignore = true,
-		.name = fake_dso_name,
+		.name_index = 1,
 		.handle = nullptr,
 	},
 
@@ -142,7 +142,7 @@ DSOCacheEntry dso_cache[] = {
 		.hash = xamarin::android::xxhash::hash (fake_dso_name2, sizeof(fake_dso_name2) - 1),
 		.real_name_hash = xamarin::android::xxhash::hash (fake_dso_name2, sizeof(fake_dso_name2) - 1),
 		.ignore = true,
-		.name = fake_dso_name2,
+		.name_index = 2,
 		.handle = nullptr,
 	},
 };
@@ -152,7 +152,7 @@ DSOCacheEntry aot_dso_cache[] = {
 		.hash = xamarin::android::xxhash::hash (fake_dso_name, sizeof(fake_dso_name) - 1),
 		.real_name_hash = xamarin::android::xxhash::hash (fake_dso_name, sizeof(fake_dso_name) - 1),
 		.ignore = true,
-		.name = fake_dso_name,
+		.name_index = 3,
 		.handle = nullptr,
 	},
 
@@ -160,10 +160,12 @@ DSOCacheEntry aot_dso_cache[] = {
 		.hash = xamarin::android::xxhash::hash (fake_dso_name2, sizeof(fake_dso_name2) - 1),
 		.real_name_hash = xamarin::android::xxhash::hash (fake_dso_name2, sizeof(fake_dso_name2) - 1),
 		.ignore = true,
-		.name = fake_dso_name2,
+		.name_index = 4,
 		.handle = nullptr,
 	},
 };
+
+const char dso_names_data[] = {};
 
 DSOApkEntry dso_apk_entries[2] {};
 

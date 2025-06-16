@@ -280,11 +280,11 @@ struct DSOApkEntry
 
 struct DSOCacheEntry
 {
-	uint64_t       hash;
-	uint64_t       real_name_hash;
-	bool           ignore;
-	const char    *name;
-	void          *handle;
+	const uint64_t  hash;
+	const uint64_t  real_name_hash;
+	const bool      ignore;
+	const uint32_t  name_index;
+	void           *handle;
 };
 
 struct JniRemappingString
@@ -371,6 +371,7 @@ extern "C" {
 
 	[[gnu::visibility("default")]] extern DSOCacheEntry dso_cache[];
 	[[gnu::visibility("default")]] extern DSOCacheEntry aot_dso_cache[];
+	[[gnu::visibility("default")]] extern const char dso_names_data[];
 	[[gnu::visibility("default")]] extern DSOApkEntry dso_apk_entries[];
 
 	[[gnu::visibility("default")]] extern const RuntimeProperty runtime_properties[];

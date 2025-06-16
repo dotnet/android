@@ -28,8 +28,8 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 				return $" from name: {dso_entry.HashedName}";
 			}
 
-			if (String.Compare ("name", fieldName, StringComparison.Ordinal) == 0) {
-				return $" name: {dso_entry.name}";
+			if (String.Compare ("name_index", fieldName, StringComparison.Ordinal) == 0) {
+				return $" name: {dso_entry.RealName}";
 			}
 
 			return String.Empty;
@@ -50,6 +50,9 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		[NativeAssembler (Ignore = true)]
 		public string HashedName;
 
+		[NativeAssembler (Ignore = true)]
+		public string RealName;
+
 		[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 		public ulong hash;
 
@@ -58,7 +61,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public bool ignore;
 
 		[NativeAssembler (UsesDataProvider = true)]
-		public string name;
+		public uint name_index;
 		public IntPtr handle = IntPtr.Zero;
 	}
 
@@ -340,7 +343,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		};
 		module.Add (sysProps, stringGroupName: "sysprop", stringGroupComment: " System properties name:value pairs");
 
-		(dsoCache, aotDsoCache) = InitDSOCache ();
+		(dsoCache, aotDsoCache, LlvmIrStringBlob dsoNamesBlob) = InitDSOCache ();
 		var app_cfg = new ApplicationConfigCLR {
 			uses_assembly_preload = UsesAssemblyPreload,
 			jni_add_native_method_registration_attribute_present = JniAddNativeMethodRegistrationAttributePresent,
@@ -377,6 +380,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			BeforeWriteCallback = HashAndSortDSOCache,
 		};
 		module.Add (aot_dso_cache);
+		module.AddGlobalVariable ("dso_names_data", dsoNamesBlob, LlvmIrVariableOptions.GlobalConstant);
 
 		var dso_apk_entries = new LlvmIrGlobalVariable (typeof(List<StructureInstance<DSOApkEntry>>), "dso_apk_entries") {
 			ArrayItemCount = (ulong)NativeLibraries.Count,
@@ -547,13 +551,14 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			}
 
 			entry.hash = MonoAndroidHelper.GetXxHash (entry.HashedName, is64Bit);
-			entry.real_name_hash = MonoAndroidHelper.GetXxHash (entry.name, is64Bit);
+			entry.real_name_hash = MonoAndroidHelper.GetXxHash (entry.RealName, is64Bit);
 		}
 
 		cache.Sort ((StructureInstance<DSOCacheEntry> a, StructureInstance<DSOCacheEntry> b) => a.Instance.hash.CompareTo (b.Instance.hash));
 	}
 
-	(List<StructureInstance<DSOCacheEntry>> dsoCache, List<StructureInstance<DSOCacheEntry>> aotDsoCache) InitDSOCache ()
+	(List<StructureInstance<DSOCacheEntry>> dsoCache, List<StructureInstance<DSOCacheEntry>> aotDsoCache, LlvmIrStringBlob namesBlob)
+	InitDSOCache ()
 	{
 		var dsos = new List<(string name, string nameLabel, bool ignore)> ();
 		var nameCache = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
@@ -575,18 +580,23 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		var dsoCache = new List<StructureInstance<DSOCacheEntry>> ();
 		var aotDsoCache = new List<StructureInstance<DSOCacheEntry>> ();
 		var nameMutations = new List<string> ();
+		var dsoNamesBlob = new LlvmIrStringBlob ();
 
 		for (int i = 0; i < dsos.Count; i++) {
 			string name = dsos[i].name;
+			(int nameOffset, _) = dsoNamesBlob.Add (name);
+
 			nameMutations.Clear();
 			AddNameMutations (name);
 			// All mutations point to the actual library name, but have hash of the mutated one
 			foreach (string entryName in nameMutations) {
 				var entry = new DSOCacheEntry {
 					HashedName = entryName,
+					RealName = name,
+
 					hash = 0, // Hash is arch-specific, we compute it before writing
 					ignore = dsos[i].ignore,
-					name = name,
+					name_index = (uint)nameOffset,
 				};
 
 				var item = new StructureInstance<DSOCacheEntry> (dsoCacheEntryStructureInfo, entry);
@@ -598,7 +608,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			}
 		}
 
-		return (dsoCache, aotDsoCache);
+		return (dsoCache, aotDsoCache, dsoNamesBlob);
 
 		void AddNameMutations (string name)
 		{
