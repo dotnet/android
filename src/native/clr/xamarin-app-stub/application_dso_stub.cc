@@ -259,23 +259,26 @@ constexpr char prop_test_boolean_key[] = "test_boolean";
 
 const RuntimeProperty runtime_properties[] = {
 	{
-		.key = prop_test_string_key,
-		.value = "test",
-		.value_size = sizeof("test"),
+		.key_index = 0,
+		.value_index = 10,
+		.value_size = 10,
 	},
 
 	{
-		.key = prop_test_integer_key,
-		.value = "42",
-		.value_size = sizeof("42"),
+		.key_index = 20,
+		.value_index = 25,
+		.value_size = 5,
 	},
 
 	{
-		.key = prop_test_boolean_key,
-		.value = "true",
-		.value_size = sizeof("true"),
+		.key_index = 30,
+		.value_index = 33,
+		.value_size = 7,
 	},
 };
+
+
+const char runtime_properties_data[] = {};
 
 const RuntimePropertyIndexEntry runtime_property_index[] = {
 	{

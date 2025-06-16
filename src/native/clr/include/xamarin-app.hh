@@ -260,9 +260,9 @@ struct ApplicationConfig
 
 struct RuntimeProperty
 {
-	const char *key;
-	const char *value;
-	uint32_t value_size; // including the terminating NUL
+	const uint32_t key_index;
+	const uint32_t value_index;
+	const uint32_t value_size; // including the terminating NUL
 };
 
 struct RuntimePropertyIndexEntry
@@ -374,6 +374,7 @@ extern "C" {
 	[[gnu::visibility("default")]] extern DSOApkEntry dso_apk_entries[];
 
 	[[gnu::visibility("default")]] extern const RuntimeProperty runtime_properties[];
+	[[gnu::visibility("default")]] extern const char runtime_properties_data[];
 	[[gnu::visibility("default")]] extern const RuntimePropertyIndexEntry runtime_property_index[];
 
 	[[gnu::visibility("default")]] extern const char *init_runtime_property_names[];

@@ -76,7 +76,7 @@ size_t Host::clr_get_runtime_property (const char *key, char *value_buffer, size
 		);
 	}
 
-	strncpy (value_buffer, prop.value, value_buffer_size);
+	strncpy (value_buffer, &runtime_properties_data[prop.value_index], value_buffer_size);
 	return std::min (static_cast<size_t>(prop.value_size - 1), value_buffer_size - 1);
 }
 

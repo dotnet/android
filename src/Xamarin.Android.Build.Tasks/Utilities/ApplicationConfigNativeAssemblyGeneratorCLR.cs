@@ -113,12 +113,39 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public AssemblyStoreAssemblyDescriptor assemblies;
 	}
 
+	sealed class RuntimePropertyContextDataProvider : NativeAssemblerStructContextDataProvider
+	{
+		public override string GetComment (object data, string fieldName)
+		{
+			var runtimeProp = EnsureType<RuntimeProperty> (data);
+			if (String.Compare ("key_index", fieldName, StringComparison.Ordinal) == 0) {
+				return $" '{runtimeProp.Key}'";
+			}
+
+			if (String.Compare ("value_index", fieldName, StringComparison.Ordinal) == 0) {
+				return $" '{runtimeProp.Value}'";
+			}
+
+			return String.Empty;
+		}
+	}
+
 	// Order of fields and their types must correspond *exactly* to that in
 	// src/native/clr/include/xamarin-app.hh RuntimeProperty structure
+	[NativeAssemblerStructContextDataProvider (typeof (RuntimePropertyContextDataProvider))]
 	sealed class RuntimeProperty
 	{
-		public string key;
-		public string value;
+		[NativeAssembler (Ignore = true)]
+		public string Key;
+
+		[NativeAssembler (Ignore = true)]
+		public string Value;
+
+		[NativeAssembler (UsesDataProvider = true)]
+		public uint key_index;
+
+		[NativeAssembler (UsesDataProvider = true)]
+		public uint value_index;
 		public uint value_size;
 	}
 
@@ -365,11 +392,16 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		};
 		module.Add (bundled_assemblies);
 
-		(runtimePropertiesData, runtimePropertyIndex) = InitRuntimeProperties ();
+		(runtimePropertiesData, runtimePropertyIndex, LlvmIrStringBlob runtimePropsBlob) = InitRuntimeProperties ();
 		var runtime_properties = new LlvmIrGlobalVariable (runtimePropertiesData, "runtime_properties", LlvmIrVariableOptions.GlobalConstant) {
 			Comment = "Runtime config properties",
 		};
 		module.Add (runtime_properties);
+
+		var runtime_properties_data = new LlvmIrGlobalVariable (runtimePropsBlob, "runtime_properties_data", LlvmIrVariableOptions.GlobalConstant) {
+			Comment = "Runtime config properties data",
+		};
+		module.Add (runtime_properties_data);
 
 		var runtime_property_index = new LlvmIrGlobalVariable (runtimePropertyIndex, "runtime_property_index", LlvmIrVariableOptions.GlobalConstant) {
 			Comment = "Runtime config property index, sorted on property key hash",
@@ -434,37 +466,44 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 	(
 		List<StructureInstance<RuntimeProperty>> runtimeProps,
-		List<StructureInstance<RuntimePropertyIndexEntry>> runtimePropsIndex
+		List<StructureInstance<RuntimePropertyIndexEntry>> runtimePropsIndex,
+		LlvmIrStringBlob
 	) InitRuntimeProperties ()
 	{
 		var runtimeProps = new List<StructureInstance<RuntimeProperty>> ();
 		var runtimePropsIndex = new List<StructureInstance<RuntimePropertyIndexEntry>> ();
+		var propsBlob = new LlvmIrStringBlob ();
 
 		if (runtimeProperties == null || runtimeProperties.Count == 0) {
-			return (runtimeProps, runtimePropsIndex);
+			return (runtimeProps, runtimePropsIndex, propsBlob);
 		}
 
 		foreach (var kvp in runtimeProperties) {
 			string name = kvp.Key;
 			string value = kvp.Value;
+			(int name_index, _) = propsBlob.Add (name);
+			(int value_index, int value_size) = propsBlob.Add (value);
 
 			var prop = new RuntimeProperty {
-				key = name,
-				value = value,
+				Key = name,
+				Value = value,
+
+				key_index = (uint)name_index,
+				value_index = (uint)value_index,
 
 				// Includes the terminating NUL
-				value_size = (uint)(MonoAndroidHelper.Utf8StringToBytes (value).Length + 1),
+				value_size = (uint)value_size,
 			};
 			runtimeProps.Add (new StructureInstance<RuntimeProperty> (runtimePropertyStructureInfo, prop));
 
 			var indexEntry = new RuntimePropertyIndexEntry {
-				HashedKey = prop.key,
+				HashedKey = prop.Key,
 				index = (uint)(runtimeProps.Count - 1),
 			};
 			runtimePropsIndex.Add (new StructureInstance<RuntimePropertyIndexEntry> (runtimePropertyIndexEntryStructureInfo, indexEntry));
 		}
 
-		return (runtimeProps, runtimePropsIndex);
+		return (runtimeProps, runtimePropsIndex, propsBlob);
 	}
 
 	void AddAssemblyStores (LlvmIrModule module)
