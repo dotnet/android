@@ -45,6 +45,9 @@ elif [ "$(echo $BRANCH_FULL | cut -c 1-4)" == "HEAD" ]; then
     else
         BRANCH=unknown
     fi
+elif [ "$(echo $BRANCH_FULL | cut -c 1-7)" == "grafted" ]; then
+    echo "Warning: Grafted repository detected, unable to determine branch name from: $BRANCH_FULL" >&2
+    BRANCH=unknown
 else
     die Unable to parse branch name from: $BRANCH_FULL
 fi
