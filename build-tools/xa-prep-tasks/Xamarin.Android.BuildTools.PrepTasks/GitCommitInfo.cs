@@ -87,6 +87,10 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 					Log.LogWarning ($"Unable to determine branch name from detached head state in directory {WorkingDirectory}");
 					branch = "unknown";
 				}
+			} else if (branchFull.StartsWith ("grafted", StringComparison.Ordinal)) {
+				Log.LogMessage (MessageImportance.Low, "  Grafted repository detected");
+				Log.LogWarning ($"Grafted repository detected, unable to determine branch name from: {branchFull}");
+				branch = "unknown";
 			} else {
 				Log.LogError ($"Unable to parse branch name from: {branchFull}");
 				branch = null;
