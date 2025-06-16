@@ -1609,10 +1609,6 @@ namespace Xamarin.Android.Tasks.Properties {
             }
         }
 
-
-
-
-
         /// <summary>
         ///   Looks up a localized string similar to Could not locate the Android NDK. Please make sure the Android NDK is installed in the Android SDK Manager, or if using a custom NDK path, please ensure the $(AndroidNdkDirectory) MSBuild property is set to the custom path..
         /// </summary>
@@ -1630,8 +1626,6 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA5105", resourceCulture);
             }
         }
-
-
 
         /// <summary>
         ///   Looks up a localized string similar to Cannot find `{0}`. Please install the Android SDK Build-Tools package with the `{1}{2}tools{2}{3}` program..

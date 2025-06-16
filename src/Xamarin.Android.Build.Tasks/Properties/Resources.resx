@@ -842,8 +842,6 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
     <value>Toolchain directory for target {0} was not found.</value>
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64</comment>
   </data>
-
-
   <data name="XA5104" xml:space="preserve">
     <value>Could not locate the Android NDK. Please make sure the Android NDK is installed in the Android SDK Manager, or if using a custom NDK path, please ensure the $(AndroidNdkDirectory) MSBuild property is set to the custom path.</value>
     <comment>The following are literal names and should not be translated: $(AndroidNdkDirectory)</comment>
@@ -854,7 +852,6 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
 {1} - The target architecture, such as Arm, Arm64, or X86_64
 {2} - The path of the directory that was searched</comment>
   </data>
-
   <data name="XA5205" xml:space="preserve">
     <value>Cannot find `{0}`. Please install the Android SDK Build-Tools package with the `{1}{2}tools{2}{3}` program.</value>
     <comment>The following are literal names and should not be translated: Android SDK Build-Tools, {1}{2}tools{2}{3}
