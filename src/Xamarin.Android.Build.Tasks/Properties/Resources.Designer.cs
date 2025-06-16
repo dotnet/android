@@ -992,7 +992,6 @@ namespace Xamarin.Android.Tasks.Properties {
             }
         }
 
-
         /// <summary>
         ///   Looks up a localized string similar to Android NDK r10d is buggy and provides an incompatible x86_64 libm.so. See https://code.google.com/p/android/issues/detail?id=161422..
         /// </summary>

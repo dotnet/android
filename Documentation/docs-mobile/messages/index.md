@@ -277,7 +277,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `CGJ` - `CopyGeneratedJavaResourceClasses`
 * `CGS` - `CheckGoogleSdkRequirements`
 * `CIC` - `CopyIfChanged`
-* `CIL` - `CilStrip`
 * `CLA` - `CollectLibraryAssets`
 * `CLC` - `CalculateLayoutCodeBehind`
 * `CLP` - `ClassParse`
