@@ -309,30 +309,53 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	}
 
 	[UnmanagedCallersOnly]
-	internal static unsafe void BridgeProcessingFinished (MarkCrossReferencesArgs* mcr)
+	internal static unsafe void BridgeProcessingFinished(MarkCrossReferencesArgs* mcr)
 	{
-		List<GCHandle> handlesToFree = [];
-		ManagedValueManager instance = GetOrCreateInstance ();
+		Trace.Assert (mcr != null, "Bridge processing was not started before finishing it.");
 
+		ManagedValueManager instance = GetOrCreateInstance();
+		IEnumerable<IntPtr> collectedContexts = GetCollectedContexts (mcr);
+
+		List<GCHandle> handlesToFree;
 		lock (instance.RegisteredInstances) {
-			for (int i = 0; (nuint)i < mcr->ComponentCount; i++) {
-				for (int j = 0; (nuint)j < mcr->Components [i].Count; j++) {
-					var context = (HandleContext*) mcr->Components [i].Contexts [j];
-					if (context->ControlBlock == IntPtr.Zero) {
-						var handle = GCHandle.FromIntPtr (context->Handle);
-
-						// Clean up the RegisteredInstances dictionary + free the control block native memory associated with the handle
-						instance.RemoveRegisteredInstance ((IJavaPeerable)handle.Target, out WeakPeerReference? removedPeer);
-						removedPeer?.FreeContext ();
-
-						handlesToFree.Add (handle);
-					}
-				}
-			}
+			handlesToFree = ProcessCollectedContexts (instance, collectedContexts);
 		}
 
 		JavaMarshal.FinishCrossReferenceProcessing (mcr, CollectionsMarshal.AsSpan (handlesToFree));
 		AndroidRuntimeInternal.BridgeProcessing = false;
+	}
+
+	static unsafe List<IntPtr> GetCollectedContexts (MarkCrossReferencesArgs* mcr)
+	{
+		List<IntPtr> contexts = [];
+
+		for (int i = 0; (nuint)i < mcr->ComponentCount; i++) {
+			for (int j = 0; (nuint)j < mcr->Components [i].Count; j++) {
+				var context = (HandleContext*)mcr->Components [i].Contexts [j];
+				if (context->ControlBlock == IntPtr.Zero) {
+					contexts.Add ((IntPtr)context);
+				}
+			}
+		}
+
+		return contexts;
+	}
+
+	static unsafe List<GCHandle> ProcessCollectedContexts (ManagedValueManager instance, IEnumerable<IntPtr> collectedContexts)
+	{
+		List<GCHandle> handlesToFree = [];
+
+		foreach (HandleContext* context in collectedContexts) {
+			var handle = GCHandle.FromIntPtr (context->Handle);
+
+			// Clean up the RegisteredInstances dictionary + free the control block native memory associated with the handle
+			instance.RemoveRegisteredInstance ((IJavaPeerable)handle.Target, out WeakPeerReference? removedPeer);
+			removedPeer?.FreeContext ();
+
+			handlesToFree.Add (handle);
+		}
+
+		return handlesToFree;
 	}
 
 	const BindingFlags ActivationConstructorBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
