@@ -842,16 +842,6 @@ Remover a referência '{0}' de seu projeto e adicionar o pacote NuGet '{1}' em v
     <value>O diretório de cadeia ferramentas do {0} de destino não foi encontrado.</value>
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64</comment>
   </data>
-  <data name="XA5102" xml:space="preserve">
-    <value>Falha na conversão de assembly em código nativo. Código de saída {0}</value>
-    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces.)
-{0} - The exit code number</comment>
-  </data>
-  <data name="XA5103" xml:space="preserve">
-    <value>O compilador NDK C foi encerrado com um erro. Código de saída {0}</value>
-    <comment>The following are literal names and should not be translated: NDK, C
-{0} - The exit code number</comment>
-  </data>
   <data name="XA5104" xml:space="preserve">
     <value>Não foi possível localizar o Android NDK. Verifique se o Android NDK está instalado no Gerenciador de SDK Android ou, se estiver usando um caminho personalizado do NDK, verifique se a propriedade $(AndroidNdkDirectory) do MSBuild está definida para o caminho personalizado.</value>
     <comment>The following are literal names and should not be translated: $(AndroidNdkDirectory)</comment>
@@ -861,11 +851,6 @@ Remover a referência '{0}' de seu projeto e adicionar o pacote NuGet '{1}' em v
     <comment>{0} - The missing utility name, such as gcc or clang
 {1} - The target architecture, such as Arm, Arm64, or X86_64
 {2} - The path of the directory that was searched</comment>
-  </data>
-  <data name="XA5201" xml:space="preserve">
-    <value>O vinculador NDK C foi encerrado com um erro. Código de saída {0}</value>
-    <comment>The following are literal names and should not be translated: NDK
-{0} - The exit code number</comment>
   </data>
   <data name="XA5205" xml:space="preserve">
     <value>Não é possível localizar `{0}`. Instale o pacote Build-Tools do SDK do Android com o programa `{1}{2}tools{2}{3}`.</value>

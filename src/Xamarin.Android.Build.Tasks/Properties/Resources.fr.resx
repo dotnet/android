@@ -842,16 +842,6 @@ Supprimez la référence de '{0}' de votre projet et ajoutez plutôt le '{1}'.pa
     <value>Le répertoire de chaîne d'outils pour la cible {0} est introuvable.</value>
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64</comment>
   </data>
-  <data name="XA5102" xml:space="preserve">
-    <value>Échec de la conversion de l'assembly en code natif. Code de sortie : {0}</value>
-    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces.)
-{0} - The exit code number</comment>
-  </data>
-  <data name="XA5103" xml:space="preserve">
-    <value>Arrêt du compilateur NDK C à la suite d'une erreur. Code de sortie : {0}</value>
-    <comment>The following are literal names and should not be translated: NDK, C
-{0} - The exit code number</comment>
-  </data>
   <data name="XA5104" xml:space="preserve">
     <value>Impossible de localiser le kit Android NDK. Vérifiez que le kit Android NDK est installé dans le Gestionnaire SDK Android, ou si vous utilisez un chemin de kit NDK personnalisé, vérifiez que la propriété MSBuild $(AndroidNdkDirectory) a la valeur du chemin personnalisé.</value>
     <comment>The following are literal names and should not be translated: $(AndroidNdkDirectory)</comment>
@@ -861,11 +851,6 @@ Supprimez la référence de '{0}' de votre projet et ajoutez plutôt le '{1}'.pa
     <comment>{0} - The missing utility name, such as gcc or clang
 {1} - The target architecture, such as Arm, Arm64, or X86_64
 {2} - The path of the directory that was searched</comment>
-  </data>
-  <data name="XA5201" xml:space="preserve">
-    <value>Arrêt de l'éditeur de liens NDK C à la suite d'une erreur. Code de sortie : {0}</value>
-    <comment>The following are literal names and should not be translated: NDK
-{0} - The exit code number</comment>
   </data>
   <data name="XA5205" xml:space="preserve">
     <value>'{0}' est introuvable. Installez le package Android SDK Build-Tools avec le programme '{1}{2}Tools{2}{3}'.</value>
