@@ -572,10 +572,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>AOT 模式无效: {0}</value>
     <comment>The abbreviation "AOT" should not be translated.</comment>
   </data>
-  <data name="XA3003" xml:space="preserve">
-    <value>无法提取程序集的 IL: {0}</value>
-    <comment>The abbreviation "IL" should not be translated.</comment>
-  </data>
   <data name="XA3004" xml:space="preserve">
     <value>Android NDK r10d 有 bug，且提供了不兼容的 x86_64 libm.so。请参阅 https://code.google.com/p/android/issues/detail?id=161422。</value>
     <comment>The following are literal names and should not be translated: NDK, r10d, x86_64, libm.so
