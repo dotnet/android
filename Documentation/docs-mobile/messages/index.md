@@ -267,19 +267,15 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `BBA` - `BuildBaseAppBundle`
 * `BGN` - `BindingsGenerator`
 * `BLD` - `BuildApk`
-* `CAL` - `CreateAdditionalLibraryResourceCache`
-* `CAR` - `CalculateAdditionalResourceCacheDirectories`
 * `CCR` - `CopyAndConvertResources`
 * `CCV` - `ConvertCustomView`
 * `CDF` - `ConvertDebuggingFiles`
 * `CDJ` - `CheckDuplicateJavaLibraries`
 * `CFI` - `CheckForInvalidResourceFileNames`
-* `CFR` - `CheckForRemovedItems`
 * `CGJ` - `CopyGeneratedJavaResourceClasses`
 * `CGS` - `CheckGoogleSdkRequirements`
 * `CIC` - `CopyIfChanged`
 * `CIL` - `CilStrip`
-* `CLA` - `CollectLibraryAssets`
 * `CLC` - `CalculateLayoutCodeBehind`
 * `CLP` - `ClassParse`
 * `CLR` - `CreateLibraryResourceArchive`
@@ -290,7 +286,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `CNE` - `CollectNonEmptyDirectories`
 * `CNL` - `CreateNativeLibraryArchive`
 * `CPD` - `CalculateProjectDependencies`
-* `CPF` - `CollectPdbFiles`
 * `CPI` - `CheckProjectItems`
 * `CPR` - `CopyResource`
 * `CPT` - `ComputeHash`
@@ -311,7 +306,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `GAR` - `GetAdditionalResourcesFromAssemblies`
 * `GAS` - `GetAppSettingsDirectory`
 * `GCB` - `GenerateCodeBehindForLayout`
-* `GCJ` - `GetConvertedJavaLibraries`
 * `GEP` - `GetExtraPackages`
 * `GFT` - `GetFilesThatExist`
 * `GIL` - `GetImportedLibraries`
