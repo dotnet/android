@@ -2,6 +2,7 @@ using System;
 using System.Net;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Net.Http;
 using System.Net.Security;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
@@ -334,7 +335,7 @@ namespace Android.Runtime {
 		// System.Net.Http.dll!System.Net.Http.HttpClient.cctor
 		// DO NOT REMOVE
 		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof (Xamarin.Android.Net.AndroidMessageHandler))]
-		static object GetHttpMessageHandler ()
+		static HttpMessageHandler GetHttpMessageHandler ()
 		{
 			[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Preserved by the MarkJavaObjects trimmer step.")]
 			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
@@ -355,7 +356,7 @@ namespace Android.Runtime {
 				httpMessageHandlerType = handlerType;
 			}
 
-			return Activator.CreateInstance (httpMessageHandlerType)
+			return (HttpMessageHandler) Activator.CreateInstance (httpMessageHandlerType)
 				?? throw new InvalidOperationException ($"Could not create an instance of HTTP message handler type {httpMessageHandlerType.AssemblyQualifiedName}");
 		}
 
