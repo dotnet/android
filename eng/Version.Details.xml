@@ -25,9 +25,9 @@
       <Sha>6aaf3af113593a4c993854bff4141bbc73061ea5</Sha>
     </Dependency>
     <!-- Previous .NET version -->
-    <Dependency Name="Microsoft.NET.Workload.Mono.ToolChain.Current.Manifest-8.0.100" Version="8.0.16">
+    <Dependency Name="Microsoft.NET.Workload.Mono.ToolChain.Current.Manifest-8.0.100" Version="8.0.18">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>6cd8ef87e1e5b8e89ae28d3f6e61ce77d469d9ea</Sha>
+      <Sha>c0390586e2707334a571b9293803b5b6a4916f6e</Sha>
     </Dependency>
     <!-- Previous .NET Android version -->
     <Dependency Name="Microsoft.Android.Sdk.Windows" Version="34.0.154">
