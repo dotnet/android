@@ -572,10 +572,6 @@ Zmień wartość w pliku AndroidManifest.xml, aby odpowiadała wartości $(Suppo
     <value>Nieprawidłowy tryb AOT: {0}</value>
     <comment>The abbreviation "AOT" should not be translated.</comment>
   </data>
-  <data name="XA3003" xml:space="preserve">
-    <value>Nie można usunąć kodu IL zestawu: {0}</value>
-    <comment>The abbreviation "IL" should not be translated.</comment>
-  </data>
   <data name="XA3004" xml:space="preserve">
     <value>Zestaw Android NDK r10d zawiera wiele usterek i dostarcza niezgodną bibliotekę libm.so dla architektury x86_64. Zobacz https://code.google.com/p/android/issues/detail?id=161422.</value>
     <comment>The following are literal names and should not be translated: NDK, r10d, x86_64, libm.so

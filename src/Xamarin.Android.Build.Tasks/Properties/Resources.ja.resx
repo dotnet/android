@@ -573,10 +573,6 @@ $(SupportedOSPlatformVersion) 値に一致するように AndroidManifest.xml �
     <value>無効な AOT モード: {0}</value>
     <comment>The abbreviation "AOT" should not be translated.</comment>
   </data>
-  <data name="XA3003" xml:space="preserve">
-    <value>アセンブリの IL を削除できませんでした: {0}</value>
-    <comment>The abbreviation "IL" should not be translated.</comment>
-  </data>
   <data name="XA3004" xml:space="preserve">
     <value>Android NDK r10d にはバグがあるため、互換性のない x86_64 libm.so が提供されます。https://code.google.com/p/android/issues/detail?id=161422 をご覧ください。</value>
     <comment>The following are literal names and should not be translated: NDK, r10d, x86_64, libm.so

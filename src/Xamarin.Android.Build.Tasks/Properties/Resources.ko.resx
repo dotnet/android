@@ -572,10 +572,6 @@ AndroidManifest.xml의 값을 $(SupportedOSPlatformVersion) 값에 맞도록 변
     <value>잘못된 AOT 모드: {0}</value>
     <comment>The abbreviation "AOT" should not be translated.</comment>
   </data>
-  <data name="XA3003" xml:space="preserve">
-    <value>어셈블리의 IL을 제거할 수 없음: {0}</value>
-    <comment>The abbreviation "IL" should not be translated.</comment>
-  </data>
   <data name="XA3004" xml:space="preserve">
     <value>Android NDK r10d는 버그가 있으며 호환되지 않는 x86_64 libm.so를 제공합니다. https://code.google.com/p/android/issues/detail?id=161422를 참조하세요.</value>
     <comment>The following are literal names and should not be translated: NDK, r10d, x86_64, libm.so

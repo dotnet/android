@@ -572,10 +572,6 @@ Modifiez la valeur dans AndroidManifest.xml pour qu’elle corresponde à la val
     <value>Mode de compilation AOT non valide : {0}</value>
     <comment>The abbreviation "AOT" should not be translated.</comment>
   </data>
-  <data name="XA3003" xml:space="preserve">
-    <value>Impossible de supprimer l'IL de l'assembly : {0}</value>
-    <comment>The abbreviation "IL" should not be translated.</comment>
-  </data>
   <data name="XA3004" xml:space="preserve">
     <value>Android NDK r10d ne fonctionne pas correctement, et fournit une bibliothèque libm.so x86_64 incompatible. Consultez https://code.google.com/p/android/issues/detail?id=161422.</value>
     <comment>The following are literal names and should not be translated: NDK, r10d, x86_64, libm.so

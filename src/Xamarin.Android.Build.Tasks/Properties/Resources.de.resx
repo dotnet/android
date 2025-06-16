@@ -572,10 +572,6 @@ Bitte ändern Sie den Wert in einen Assembly-basierten Typnamen, der von "System
     <value>Ungültiger AOT-Modus: {0}</value>
     <comment>The abbreviation "AOT" should not be translated.</comment>
   </data>
-  <data name="XA3003" xml:space="preserve">
-    <value>IL für Assembly konnte nicht entfernt werden: {0}</value>
-    <comment>The abbreviation "IL" should not be translated.</comment>
-  </data>
   <data name="XA3004" xml:space="preserve">
     <value>Android NDK r10d ist fehlerhaft und stellt eine inkompatible x86_64-Bibliothek "libm.so" bereit. Siehe https://code.google.com/p/android/issues/detail?id=161422.</value>
     <comment>The following are literal names and should not be translated: NDK, r10d, x86_64, libm.so
