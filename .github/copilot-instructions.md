@@ -163,6 +163,8 @@ C# code uses tabs (not spaces) and the Mono code-formatting style defined in `.e
 
 * Use `[]` for empty arrays and *not* `Array.Empty<T>()`
 
+* Do *NOT* leave random empty lines when removing code.
+
 Examples of properly formatted code:
 
 ```csharp

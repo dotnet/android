@@ -842,16 +842,6 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <value>找不到目标 {0} 的工具链目录。</value>
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64</comment>
   </data>
-  <data name="XA5102" xml:space="preserve">
-    <value>从程序集到本机代码转换失败。退出代码 {0}</value>
-    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces.)
-{0} - The exit code number</comment>
-  </data>
-  <data name="XA5103" xml:space="preserve">
-    <value>NDK C 编译器已退出，但出现错误。退出代码 {0}</value>
-    <comment>The following are literal names and should not be translated: NDK, C
-{0} - The exit code number</comment>
-  </data>
   <data name="XA5104" xml:space="preserve">
     <value>找不到 Android NDK。请确保在 Android SDK 管理器中安装 Android NDK，或者如果使用自定义 NDK 路径，请确保将 $(AndroidNdkDirectory) MSBuild 属性设置为自定义路径。</value>
     <comment>The following are literal names and should not be translated: $(AndroidNdkDirectory)</comment>
@@ -861,11 +851,6 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>{0} - The missing utility name, such as gcc or clang
 {1} - The target architecture, such as Arm, Arm64, or X86_64
 {2} - The path of the directory that was searched</comment>
-  </data>
-  <data name="XA5201" xml:space="preserve">
-    <value>NDK 链接器已退出，但出现错误。退出代码 {0}</value>
-    <comment>The following are literal names and should not be translated: NDK
-{0} - The exit code number</comment>
   </data>
   <data name="XA5205" xml:space="preserve">
     <value>找不到“{0}”。请使用 `{1}{2}tools{2}{3}` 程序安装 Android SDK 生成工具包。</value>

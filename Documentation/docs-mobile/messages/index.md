@@ -329,7 +329,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `LNS` - `LinkAssembliesNoShrink`
 * `LNT` - `Lint`
 * `LWF` - `LogWarningsForFiles`
-* `MBN` - `MakeBundleNativeCodeExternal`
 * `MDC` - `MDoc`
 * `PAI` - `PrepareAbiItems`
 * `PAW` - `ParseAndroidWearProjectAndManifest`

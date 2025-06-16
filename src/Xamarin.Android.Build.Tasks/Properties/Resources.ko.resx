@@ -842,16 +842,6 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <value>대상 {0}용 도구 체인 디렉터리를 찾을 수 없습니다.</value>
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64</comment>
   </data>
-  <data name="XA5102" xml:space="preserve">
-    <value>어셈블리에서 네이티브 코드로 변환하지 못했습니다. 종료 코드 {0}</value>
-    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces.)
-{0} - The exit code number</comment>
-  </data>
-  <data name="XA5103" xml:space="preserve">
-    <value>NDK C 컴파일러가 오류로 인해 종료되었습니다. 종료 코드 {0}</value>
-    <comment>The following are literal names and should not be translated: NDK, C
-{0} - The exit code number</comment>
-  </data>
   <data name="XA5104" xml:space="preserve">
     <value>Android NDK를 찾을 수 없습니다. Android SDK 관리자에 Android NDK가 설치되어 있는지 확인하거나, 사용자 지정 NDK 경로를 사용하는 경우 $(AndroidNdkDirectory) MSBuild 속성이 사용자 지정 경로로 설정되어 있는지 확인하세요.</value>
     <comment>The following are literal names and should not be translated: $(AndroidNdkDirectory)</comment>
@@ -861,11 +851,6 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>{0} - The missing utility name, such as gcc or clang
 {1} - The target architecture, such as Arm, Arm64, or X86_64
 {2} - The path of the directory that was searched</comment>
-  </data>
-  <data name="XA5201" xml:space="preserve">
-    <value>NDK 링커가 오류로 인해 종료되었습니다. 종료 코드 {0}</value>
-    <comment>The following are literal names and should not be translated: NDK
-{0} - The exit code number</comment>
   </data>
   <data name="XA5205" xml:space="preserve">
     <value>'{0}'을(를) 찾을 수 없습니다. '{1}{2}tools{2}{3}' 프로그램을 사용하여 Android SDK Build-Tools 패키지를 설치하세요.</value>

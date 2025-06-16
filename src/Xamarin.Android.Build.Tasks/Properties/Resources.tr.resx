@@ -842,16 +842,6 @@ Projenizden '{0}' başvurusunu kaldırın ve yerine '{1}' NuGet paketini ekleyin
     <value>{0} hedefi için araç zinciri dizini bulunamadı.</value>
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64</comment>
   </data>
-  <data name="XA5102" xml:space="preserve">
-    <value>Bütünleştirilmiş koddan yerel koda dönüştürülemedi. Çıkış kodu {0}</value>
-    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces.)
-{0} - The exit code number</comment>
-  </data>
-  <data name="XA5103" xml:space="preserve">
-    <value>NDK C derleyicisi bir hatayla çıkış yaptı. Çıkış kodu {0}</value>
-    <comment>The following are literal names and should not be translated: NDK, C
-{0} - The exit code number</comment>
-  </data>
   <data name="XA5104" xml:space="preserve">
     <value>Android NDK bulunamadı. Lütfen Android NDK'nin Android SDK Yöneticisi'nde yüklü olduğundan veya özel bir NDK yolu kullandığından emin olun. Lütfen $(AndroidNdkDirectory) MSBuild özelliğinin özel yola ayarlandığından emin olun.</value>
     <comment>The following are literal names and should not be translated: $(AndroidNdkDirectory)</comment>
@@ -861,11 +851,6 @@ Projenizden '{0}' başvurusunu kaldırın ve yerine '{1}' NuGet paketini ekleyin
     <comment>{0} - The missing utility name, such as gcc or clang
 {1} - The target architecture, such as Arm, Arm64, or X86_64
 {2} - The path of the directory that was searched</comment>
-  </data>
-  <data name="XA5201" xml:space="preserve">
-    <value>NDK bağlayıcısı bir hatayla çıkış yaptı. Çıkış kodu {0}</value>
-    <comment>The following are literal names and should not be translated: NDK
-{0} - The exit code number</comment>
   </data>
   <data name="XA5205" xml:space="preserve">
     <value>`{0}` bulunamıyor. Lütfen `{1}{2}tools{2}{3}` programıyla Android SDK Build-Tools paketini yükleyin.</value>

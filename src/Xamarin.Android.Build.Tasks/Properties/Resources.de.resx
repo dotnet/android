@@ -842,16 +842,6 @@ Entfernen Sie den '{0}' Verweis aus Ihrem Projekt, und fügen Sie stattdessen da
     <value>Das Toolkettenverzeichnis für das Ziel "{0}" wurde nicht gefunden.</value>
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64</comment>
   </data>
-  <data name="XA5102" xml:space="preserve">
-    <value>Fehler beim Konvertieren der Assembly in nativen Code. Exitcode: {0}</value>
-    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces.)
-{0} - The exit code number</comment>
-  </data>
-  <data name="XA5103" xml:space="preserve">
-    <value>Der NDK C-Compiler wurde mit einem Fehler beendet. Exitcode: {0}</value>
-    <comment>The following are literal names and should not be translated: NDK, C
-{0} - The exit code number</comment>
-  </data>
   <data name="XA5104" xml:space="preserve">
     <value>Das Android NDK wurde nicht gefunden. Stellen Sie sicher, dass das Android NDK im Android SDK Manager installiert ist, oder stellen Sie bei Verwendung eines benutzerdefinierten NDK-Pfads sicher, dass die MSBuild-Eigenschaft "$(AndroidNdkDirectory)" auf den benutzerdefinierten Pfad festgelegt ist.</value>
     <comment>The following are literal names and should not be translated: $(AndroidNdkDirectory)</comment>
@@ -861,11 +851,6 @@ Entfernen Sie den '{0}' Verweis aus Ihrem Projekt, und fügen Sie stattdessen da
     <comment>{0} - The missing utility name, such as gcc or clang
 {1} - The target architecture, such as Arm, Arm64, or X86_64
 {2} - The path of the directory that was searched</comment>
-  </data>
-  <data name="XA5201" xml:space="preserve">
-    <value>Der NDK-Linker wurde mit einem Fehler beendet. Exitcode: {0}</value>
-    <comment>The following are literal names and should not be translated: NDK
-{0} - The exit code number</comment>
   </data>
   <data name="XA5205" xml:space="preserve">
     <value>"{0}" wurde nicht gefunden. Installieren Sie das Paket mit den Android SDK-Buildtools mit dem Programm "{1}{2}tools{2}{3}".</value>

@@ -842,16 +842,6 @@ Rimuovere il riferimento '{0}' dal progetto e aggiungere invece il pacchetto NuG
     <value>La directory della toolchain per la destinazione {0} non è stata trovata.</value>
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64</comment>
   </data>
-  <data name="XA5102" xml:space="preserve">
-    <value>La conversione da assembly a codice nativo non è riuscita. Codice di uscita: {0}</value>
-    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces.)
-{0} - The exit code number</comment>
-  </data>
-  <data name="XA5103" xml:space="preserve">
-    <value>Il compilatore C di NDK è stato terminato con un errore. Codice di uscita: {0}</value>
-    <comment>The following are literal names and should not be translated: NDK, C
-{0} - The exit code number</comment>
-  </data>
   <data name="XA5104" xml:space="preserve">
     <value>Non è stato possibile trovare Android NDK. Assicurarsi che Android NDK sia installato in Gestione Android SDK, oppure se si usa un percorso NDK personalizzato, assicurarsi che la proprietà $(AndroidNdkDirectory) di MSBuild sia impostata sul percorso personalizzato.</value>
     <comment>The following are literal names and should not be translated: $(AndroidNdkDirectory)</comment>
@@ -861,11 +851,6 @@ Rimuovere il riferimento '{0}' dal progetto e aggiungere invece il pacchetto NuG
     <comment>{0} - The missing utility name, such as gcc or clang
 {1} - The target architecture, such as Arm, Arm64, or X86_64
 {2} - The path of the directory that was searched</comment>
-  </data>
-  <data name="XA5201" xml:space="preserve">
-    <value>Il linker di NDK è stato terminato con un errore. Codice di uscita: {0}</value>
-    <comment>The following are literal names and should not be translated: NDK
-{0} - The exit code number</comment>
   </data>
   <data name="XA5205" xml:space="preserve">
     <value>Non è possibile trovare `{0}`. Installare il pacchetto Android SDK Build-Tools con il programma `{1}{2}tools{2}{3}`.</value>
