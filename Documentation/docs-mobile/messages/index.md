@@ -279,7 +279,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `CLR` - `CreateLibraryResourceArchive`
 * `CMD` - `CreateMultiDexMainDexClassList`
 * `CML` - `CreateManagedLibraryResourceArchive`
-* `CMM` - `CreateMsymManifest`
 * `CNA` - `CompileNativeAssembly`
 * `CNE` - `CollectNonEmptyDirectories`
 * `CNL` - `CreateNativeLibraryArchive`
