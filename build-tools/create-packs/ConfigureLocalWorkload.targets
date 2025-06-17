@@ -90,11 +90,13 @@
         Targets="_GenerateXAWorkloadContent"
     />
 
-    <GetAndroidWorkloadExtends JsonFilePath="$(_LocalAndroidManifestFolder)WorkloadManifest.json">
+    <GetAndroidWorkloadExtends Condition="'$(GITHUB_ACTIONS)' != 'true'" JsonFilePath="$(_LocalAndroidManifestFolder)WorkloadManifest.json">
       <Output TaskParameter="ExtendsElement" PropertyName="AndroidWorkloadExtendsElement" />
     </GetAndroidWorkloadExtends>
 
     <PropertyGroup>
+      <!-- Copilot on Linux can fail to install "microsoft-net-runtime-android-aot" and Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.android-x86 -->
+      <AndroidWorkloadExtendsElement Condition="'$(GITHUB_ACTIONS)' == 'true'">&quot;microsoft-net-runtime-android&quot;</AndroidWorkloadExtendsElement>
       <_EmptyWorkloadJsonContent>
 <![CDATA[
 {"version": "0.0.1", "workloads": { "android-deps": { "extends" : [ $(AndroidWorkloadExtendsElement) ] } } }
