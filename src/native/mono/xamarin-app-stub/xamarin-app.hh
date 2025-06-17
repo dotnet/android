@@ -111,16 +111,9 @@ struct CompressedAssemblyHeader
 
 struct CompressedAssemblyDescriptor
 {
-	uint32_t   uncompressed_file_size;
-	bool       loaded;
-	uint32_t   buffer_offset;
-	uint8_t   *data;
-};
-
-struct CompressedAssemblies
-{
-	uint32_t                      count;
-	CompressedAssemblyDescriptor *descriptors;
+    uint32_t   uncompressed_file_size;
+    bool       loaded;
+    uint32_t   buffer_offset;
 };
 
 struct XamarinAndroidBundledAssembly
@@ -329,7 +322,11 @@ MONO_API MONO_API_EXPORT const TypeMapJava map_java[];
 MONO_API MONO_API_EXPORT const xamarin::android::hash_t map_java_hashes[];
 #endif
 
-MONO_API MONO_API_EXPORT CompressedAssemblies compressed_assemblies;
+MONO_API MONO_API_EXPORT uint32_t compressed_assembly_count;
+MONO_API MONO_API_EXPORT CompressedAssemblyDescriptor compressed_assembly_descriptors[];
+MONO_API MONO_API_EXPORT uint32_t uncompressed_assemblies_data_size;
+MONO_API MONO_API_EXPORT uint8_t uncompressed_assemblies_data_buffer[];
+
 MONO_API MONO_API_EXPORT const ApplicationConfig application_config;
 MONO_API MONO_API_EXPORT const char* const app_environment_variables[];
 MONO_API MONO_API_EXPORT const char* const app_system_properties[];

@@ -145,7 +145,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 			}
 		}
 
-		set_assembly_data_and_size (reinterpret_cast<uint8_t*>(data_buffer), cad.uncompressed_file_size, assembly_data, assembly_data_size);
+		set_assembly_data_and_size (data_buffer, cad.uncompressed_file_size, assembly_data, assembly_data_size);
 	} else
 #endif // def HAVE_LZ4 && def RELEASE
 	{
