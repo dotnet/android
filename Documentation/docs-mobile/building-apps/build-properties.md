@@ -1682,21 +1682,6 @@ located.
 The default value is `Resources`. Change this to `res` for the
 Java project structure.
 
-## MonoSymbolArchive
-
-A boolean property that controls
-whether `.mSYM` artifacts are created for later use with
-`mono-symbolicate`, to extract &ldquo;real&rdquo; filename and line
-number information from Release stack traces.
-
-This is True by default for &ldquo;Release&rdquo; apps which have
-debugging symbols enabled:
-[`$(EmbedAssembliesIntoApk)`](#embedassembliesintoapk) is True,
-[`$(DebugSymbols)`](#debugsymbols)
- is True, and
-[`$(Optimize)`](/visualstudio/msbuild/common-msbuild-project-properties)
-is True.
-
 ## RunAOTCompilation
 
 A boolean property that determines whether or not assemblies will be
