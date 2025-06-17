@@ -52,6 +52,8 @@ namespace xamarin::android {
 	public:
 		static void wait_for_bridge_processing () noexcept;
 		static void initialize_on_load (JNIEnv *env) noexcept;
+		static void initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass) noexcept;
+
 		static BridgeProcessingFtn initialize_callback (
 			BridgeProcessingStartedFtn bridge_processing_started,
 			BridgeProcessingFinishedFtn bridge_processing_finished) noexcept
@@ -70,44 +72,24 @@ namespace xamarin::android {
 			return mark_cross_references;
 		}
 
+		static void trigger_java_gc (JNIEnv *env) noexcept;
+
 	private:
 		static inline std::binary_semaphore bridge_processing_semaphore{0};
 		static inline std::shared_mutex processing_mutex;
 		static inline std::thread* bridge_processing_thread = nullptr;
+		
+		static inline MarkCrossReferencesArgs shared_cross_refs;
 
-		static inline JNIEnv* env = nullptr;
 		static inline jobject Runtime_instance = nullptr;
 		static inline jmethodID Runtime_gc = nullptr;
-		static inline jclass GCUserPeer_class = nullptr;
-		static inline jmethodID GCUserPeer_ctor = nullptr;
-
-		static inline MarkCrossReferencesArgs cross_refs;
 
 		static inline BridgeProcessingStartedFtn bridge_processing_started_callback = nullptr;
 		static inline BridgeProcessingFinishedFtn bridge_processing_finished_callback = nullptr;
 
 		static void bridge_processing () noexcept;
 		static void mark_cross_references (MarkCrossReferencesArgs *cross_refs) noexcept;
-
-		static void prepare_for_java_collection () noexcept;
-		static void trigger_java_gc () noexcept;
-		static void cleanup_after_java_collection () noexcept;
-		static bool cleanup_strongly_connected_component (size_t i, const StronglyConnectedComponent &scc) noexcept;
-
-		static void take_weak_global_ref (HandleContext *context) noexcept;
-		static void take_global_ref (HandleContext *context) noexcept;
-
-		static bool add_reference (jobject from, jobject to) noexcept;
-		static void clear_references (jobject handle) noexcept;
-		static void add_references (const StronglyConnectedComponent &scc) noexcept;
-		static void add_cross_reference (
-			size_t xref_index,
-			const std::unordered_map<size_t, jobject> &temporary_peers) noexcept;
-		static jobject pick_representative (
-			size_t scc_index,
-			const StronglyConnectedComponent &scc,
-			const std::unordered_map<size_t, jobject> &temporary_peers) noexcept;
-
-		static void log_mark_cross_references_args_if_enabled () noexcept;
+		
+		static void log_mark_cross_references_args_if_enabled (MarkCrossReferencesArgs *args) noexcept;
 	};
 }

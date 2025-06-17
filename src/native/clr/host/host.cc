@@ -453,9 +453,8 @@ void Host::Java_mono_android_Runtime_initInternal (
 
 	log_info (LOG_GC, "GREF GC Threshold: {}"sv, init.grefGcThreshold);
 
-	// TODO: GC bridge to initialize here
-
 	OSBridge::initialize_on_runtime_init (env, runtimeClass);
+	GCBridge::initialize_on_runtime_init (env, runtimeClass);
 
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.start_event (TimingEventKind::NativeToManagedTransition);
