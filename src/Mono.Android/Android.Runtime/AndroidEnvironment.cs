@@ -348,7 +348,6 @@ namespace Android.Runtime {
 				if (!String.IsNullOrEmpty (handlerTypeName))
 					handlerType = TypeGetType (handlerTypeName);
 
-				// We don't do any type checking or casting here to avoid dependency on System.Net.Http in Mono.Android.dll
 				if (handlerType is null || !IsAcceptableHttpMessageHandlerType (handlerType)) {
 					handlerType = GetFallbackHttpMessageHandlerType ();
 				}
