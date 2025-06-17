@@ -18,7 +18,6 @@ struct JniObjectReferenceControlBlock
 
 struct HandleContext
 {
-	intptr_t gc_handle;
 	JniObjectReferenceControlBlock* control_block;
 };
 

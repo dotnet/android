@@ -11,19 +11,19 @@ void GCBridge::initialize_on_load (JNIEnv *env) noexcept
 {
 	abort_if_invalid_pointer_argument (env, "env");
 
-	jclass lref = env->FindClass ("java/lang/Runtime");
-	abort_unless (lref != nullptr, "Failed to look up java/lang/Runtime class.");
+	jclass Runtime_class = env->FindClass ("java/lang/Runtime");
+	abort_unless (Runtime_class != nullptr, "Failed to look up java/lang/Runtime class.");
 
-	jmethodID Runtime_getRuntime = env->GetStaticMethodID (lref, "getRuntime", "()Ljava/lang/Runtime;");
+	jmethodID Runtime_getRuntime = env->GetStaticMethodID (Runtime_class, "getRuntime", "()Ljava/lang/Runtime;");
 	abort_unless (Runtime_getRuntime != nullptr, "Failed to look up the Runtime.getRuntime() method.");
 
-	Runtime_gc = env->GetMethodID (lref, "gc", "()V");
+	Runtime_gc = env->GetMethodID (Runtime_class, "gc", "()V");
 	abort_unless (Runtime_gc != nullptr, "Failed to look up the Runtime.gc() method.");
 
-	Runtime_instance = OSBridge::lref_to_gref (env, env->CallStaticObjectMethod (lref, Runtime_getRuntime));
+	Runtime_instance = OSBridge::lref_to_gref (env, env->CallStaticObjectMethod (Runtime_class, Runtime_getRuntime));
 	abort_unless (Runtime_instance != nullptr, "Failed to obtain Runtime instance.");
 
-	env->DeleteLocalRef (lref);
+	env->DeleteLocalRef (Runtime_class);
 }
 
 void GCBridge::initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass) noexcept
@@ -109,10 +109,10 @@ void GCBridge::log_mark_cross_references_args_if_enabled (MarkCrossReferencesArg
 			jclass java_class = env->GetObjectClass (handle);
 			if (java_class != nullptr) {
 				char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
-				log_info (LOG_GC, "\tgchandle {:#x} gref {:#x} [{}]", reinterpret_cast<intptr_t> (ctx->gc_handle), reinterpret_cast<intptr_t> (handle), class_name);
+				log_info (LOG_GC, "gref {:#x} [{}]", reinterpret_cast<intptr_t> (handle), class_name);
 				free (class_name);
 			} else {
-				log_info (LOG_GC, "\tgchandle {:#x} gref {:#x} [unknown class]", reinterpret_cast<intptr_t> (ctx->gc_handle), reinterpret_cast<intptr_t> (handle));
+				log_info (LOG_GC, "gref {:#x} [unknown class]", reinterpret_cast<intptr_t> (handle));
 			}
 		}
 	}

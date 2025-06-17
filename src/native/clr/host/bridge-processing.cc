@@ -182,13 +182,12 @@ void BridgeProcessing::take_global_ref (HandleContext *context) noexcept
 	jobject weak = context->control_block->handle;
 	jobject handle = env->NewGlobalRef (weak);
 	
-	// if (Logger::gref_log ()) [[unlikely]] {
-	// 	OSBridge::_monodroid_gref_log (
-	// 		std::format ("take_global_ref gchandle={:#x} -> wref={:#x} handle={:#x}\n"sv,
-	// 			reinterpret_cast<intptr_t> (context->gc_handle),
-	// 			reinterpret_cast<intptr_t> (weak),
-	// 			reinterpret_cast<intptr_t> (handle)).data ());
-	// }
+	if (Logger::gref_log ()) [[unlikely]] {
+		OSBridge::_monodroid_gref_log (
+			std::format ("take_global_ref wref={:#x} -> handle={:#x}\n"sv,
+				reinterpret_cast<intptr_t> (weak),
+				reinterpret_cast<intptr_t> (handle)).data ());
+	}
 
 	if (handle != nullptr) {
 		context->control_block->handle = handle;
@@ -206,10 +205,10 @@ void BridgeProcessing::take_global_ref (HandleContext *context) noexcept
 		// The native memory of the control block will be freed in managed code as well as the weak global ref
 		context->control_block = nullptr;
 
-		// if (Logger::gc_spew_enabled ()) [[unlikely]] {
-		// 	OSBridge::_monodroid_gref_log (
-		// 		std::format ("handle {:#x}/W; was collected by a Java GC"sv, reinterpret_cast<intptr_t> (weak)).data ());
-		// }
+		if (Logger::gc_spew_enabled ()) [[unlikely]] {
+			OSBridge::_monodroid_gref_log (
+				std::format ("handle {:#x}/W; was collected by a Java GC"sv, reinterpret_cast<intptr_t> (weak)).data ());
+		}
 	}
 }
 
@@ -221,10 +220,7 @@ void BridgeProcessing::take_weak_global_ref (HandleContext *context) noexcept
 
 	jobject handle = context->control_block->handle;
 	if (Logger::gref_log ()) [[unlikely]] {
-		OSBridge::_monodroid_gref_log (
-			std::format ("take_weak_global_ref gchandle={:#x}; handle={:#x}\n"sv,
-				reinterpret_cast<intptr_t> (context->gc_handle),
-				reinterpret_cast<intptr_t> (handle)).data ());
+		OSBridge::_monodroid_gref_log (std::format ("take_weak_global_ref handle={:#x}\n"sv, reinterpret_cast<intptr_t> (handle)).data ());
 	}
 
 	jobject weak = env->NewWeakGlobalRef (handle);
@@ -234,12 +230,6 @@ void BridgeProcessing::take_weak_global_ref (HandleContext *context) noexcept
 
 	context->control_block->handle = weak;
 	context->control_block->handle_type = JNIWeakGlobalRefType;
-
-	log_error_fmt (LOG_GC, "take_weak_global_ref: gchandle={:#x} -> wref={:#x} handle={:#x} -> new type {}",
-		reinterpret_cast<intptr_t> (context->gc_handle),
-		reinterpret_cast<intptr_t> (weak),
-		reinterpret_cast<intptr_t> (handle),
-		context->control_block->handle_type);
 
 	OSBridge::_monodroid_gref_log_delete (handle, OSBridge::get_object_ref_type (env, handle),
 			"finalizer", gettid (), "   at [[clr-gc:take_weak_global_ref]]", 0);
