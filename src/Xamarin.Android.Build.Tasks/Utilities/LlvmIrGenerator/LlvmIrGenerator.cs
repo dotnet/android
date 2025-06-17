@@ -855,7 +855,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					WriteByteTypeAndValue (b);
 				}
 
-				WriteCommaWithStride (counter);
+				if (bytes.Length > 0) {
+					WriteCommaWithStride (counter);
+				} else {
+					context.Output.Write (context.CurrentIndent);
+				}
 				WriteByteTypeAndValue (0); // Terminating NUL is counted for each string, but not included in its bytes
 			}
 
