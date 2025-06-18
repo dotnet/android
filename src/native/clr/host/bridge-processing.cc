@@ -70,6 +70,7 @@ void BridgeProcessing::prepare_for_java_collection () noexcept
 		const StronglyConnectedComponent &scc = cross_refs->Components [i];
 		for (size_t j = 0; j < scc.Count; j++) {
 			HandleContext *context = scc.Contexts [j];
+			abort_unless (context != nullptr, "Context must not be null");
 			take_weak_global_ref (context);
 		}
 	}
@@ -159,14 +160,15 @@ bool BridgeProcessing::add_reference (jobject from, jobject to) noexcept
 
 	jclass java_class = env->GetObjectClass (from);
 	jmethodID add_method_id = env->GetMethodID (java_class, "monodroidAddReference", "(Ljava/lang/Object;)V");
-	env->DeleteLocalRef (java_class);
 
 	if (add_method_id == nullptr) [[unlikely]] {
 		env->ExceptionClear ();
 		log_missing_add_references_method (java_class);
+		env->DeleteLocalRef (java_class);
 		return false;
 	}
 
+	env->DeleteLocalRef (java_class);
 	env->CallVoidMethod (from, add_method_id, to);
 	return true;
 }
@@ -199,14 +201,15 @@ void BridgeProcessing::clear_references (jobject handle) noexcept
 
 	jclass java_class = env->GetObjectClass (handle);
 	jmethodID clear_method_id = env->GetMethodID (java_class, "monodroidClearReferences", "()V");
-	env->DeleteLocalRef (java_class);
 
 	if (clear_method_id == nullptr) [[unlikely]] {
 		env->ExceptionClear ();
 		log_missing_clear_references_method (java_class);
+		env->DeleteLocalRef (java_class);
 		return;
 	}
 
+	env->DeleteLocalRef (java_class);
 	env->CallVoidMethod (handle, clear_method_id);
 }
 
@@ -236,7 +239,7 @@ void BridgeProcessing::take_global_ref (HandleContext *context) noexcept
 
 void BridgeProcessing::take_weak_global_ref (HandleContext *context) noexcept
 {
-	abort_if_invalid_pointer_argument (context, "context");
+	// context is a valid pointer - validated at callsite
 	abort_unless (context->control_block != nullptr, "Control block must not be null");
 	abort_unless (context->control_block->handle_type == JNIGlobalRefType, "Expected global reference type for handle");
 
@@ -289,9 +292,13 @@ void BridgeProcessing::abort_unless_all_collected_or_all_alive (const StronglyCo
 
 jobject CrossReferenceTarget::get_handle () const noexcept
 {
-	return is_temporary_peer
-		? temporary_peer
-		: context->control_block->handle;
+	if (is_temporary_peer) {
+		return temporary_peer;
+	}
+
+	abort_unless (context != nullptr, "Context must not be null");
+	abort_unless (context->control_block != nullptr, "Control block must not be null");
+	return context->control_block->handle;
 }
 
 void CrossReferenceTarget::mark_refs_added_if_needed () noexcept
