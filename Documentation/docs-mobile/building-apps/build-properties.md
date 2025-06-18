@@ -1684,6 +1684,9 @@ Java project structure.
 
 ## MonoSymbolArchive
 
+> [!NOTE]
+> This was a legacy MSBuild property from Xamarin.Android. Not available in .NET 6+.
+
 A boolean property that controls
 whether `.mSYM` artifacts are created for later use with
 `mono-symbolicate`, to extract &ldquo;real&rdquo; filename and line
