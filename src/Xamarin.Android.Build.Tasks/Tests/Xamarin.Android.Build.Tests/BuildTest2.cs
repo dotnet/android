@@ -1743,5 +1743,65 @@ namespace App1
 			const string className = "Lcrc64467b05f37239e7a6/StreamMediaDataSource;";
 			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 		}
+
+		[Test]
+		public void MultiTargetedLibrary ()
+		{
+			const string targetFramework = "net10.0";
+			var path = Path.Combine ("temp", TestName);
+			var lib = new XamarinAndroidLibraryProject {
+				TargetFramework = "",
+				TargetFrameworks = $"{targetFramework};{targetFramework}-android",
+				ProjectName = "Library1",
+				Sources = {
+					new BuildItem.Source ("Class1.cs") {
+						TextContent = () => """
+							namespace Library1;
+							public class Class1 { }
+						"""
+					},
+					new BuildItem.Source ("AndroidClass.cs") {
+						TextContent = () => """
+							namespace Library1;
+							#if ANDROID
+							[Android.Runtime.Register ("com.mylibrary.AndroidClass")]
+							class AndroidClass : Java.Lang.Object { }
+							#endif
+						""",
+					},
+				},
+				AppendTargetFrameworkToOutputPath = true,
+			};
+			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = "App1",
+				Sources = {
+					new BuildItem.Source ("Class2.cs") {
+						TextContent= () => """
+							namespace App1;
+							class Class2 : Library1.Class1 { }
+						""",
+					},
+				},
+				AppendTargetFrameworkToOutputPath = true,
+			};
+			proj.AddReference (lib);
+
+			// Save the class library to disk
+			using var libb = CreateDllBuilder (Path.Combine (path, "Library1"));
+			libb.BuildingInsideVisualStudio = false;
+			libb.Save (lib);
+
+			using var b = CreateApkBuilder (Path.Combine (path, "App1"));
+			b.Target = "Build"; // default was SignAndroidPackage, which doesn't work with multi-targeted projects
+			b.BuildingInsideVisualStudio = false;
+			Assert.IsTrue (b.Build (proj), "App1 build should have succeeded.");
+
+			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, $"{targetFramework}-android");
+			var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
+			FileAssert.Exists (dexFile);
+
+			const string className = "Lcom/mylibrary/AndroidClass;";
+			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+		}
 	}
 }
