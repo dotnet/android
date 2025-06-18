@@ -2,6 +2,7 @@
 #include <host/host.hh>
 #include <host/runtime-util.hh>
 #include <runtime-base/logger.hh>
+#include <shared/helpers.hh>
 
 #include <thread>
 
@@ -22,6 +23,17 @@ BridgeProcessing::BridgeProcessing (MarkCrossReferencesArgs *args) noexcept
 	: env{ OSBridge::ensure_jnienv () },
 	  cross_refs{ args }
 {
+	if (args == nullptr) [[unlikely]] {
+		Helpers::abort_application (LOG_GC, "Cross references argument is a NULL pointer"sv);
+	}
+
+	if (args->ComponentCount > 0 && args->Components == nullptr) [[unlikely]] {
+		Helpers::abort_application (LOG_GC, "Components member of the cross references arguments structure is NULL"sv);
+	}
+
+	if (args->CrossReferenceCount > 0 && args->CrossReferences == nullptr) [[unlikely]] {
+		Helpers::abort_application (LOG_GC, "CrossReferences member of the cross references arguments structure is NULL"sv);
+	}
 }
 
 void BridgeProcessing::process () noexcept
@@ -84,27 +96,34 @@ void BridgeProcessing::prepare_scc_for_java_collection (size_t scc_index, const 
 CrossReferenceTarget BridgeProcessing::select_cross_reference_target (size_t scc_index) noexcept
 {
 	const StronglyConnectedComponent &scc = cross_refs->Components [scc_index];
-	if (scc.Count > 0) {
-		abort_unless (scc.Contexts [0] != nullptr, "SCC must have at least one context");
-		abort_unless (scc.Contexts [0]->control_block != nullptr, "SCC must have at least one context with valid control block");
-		return { .is_temporary_peer = false, .context = scc.Contexts [0] };
-	} else {
+
+	if (scc.Count == 0) {
 		const auto temporary_peer = temporary_peers.find (scc_index);
 		abort_unless (temporary_peer != temporary_peers.end(), "Temporary peer must be found in the map");
 		return { .is_temporary_peer = true, .temporary_peer = temporary_peer->second };
 	}
+
+	abort_unless (scc.Contexts [0] != nullptr, "SCC must have at least one context");
+	return { .is_temporary_peer = false, .context = scc.Contexts [0] };
 }
 
+// caller must ensure that scc.Count > 1
 void BridgeProcessing::add_circular_references (const StronglyConnectedComponent &scc) noexcept
 {
-	abort_unless (scc.Count > 1, "SCC must have at least two items to add inner references");
+	auto get_control_block = [&scc](size_t index) -> JniObjectReferenceControlBlock* {
+		abort_unless (scc.Contexts [index] != nullptr, "Context in SCC must not be null");
+		JniObjectReferenceControlBlock *control_block = scc.Contexts [index]->control_block;
+		abort_unless (control_block != nullptr, "Control block in SCC must not be null");
+		return control_block;
+	};
 
-	JniObjectReferenceControlBlock *prev = scc.Contexts [scc.Count - 1]->control_block;
+	JniObjectReferenceControlBlock *prev = get_control_block (scc.Count - 1);
 
 	for (size_t j = 1; j < scc.Count; j++) {
-		JniObjectReferenceControlBlock *next = scc.Contexts [j]->control_block;
+		JniObjectReferenceControlBlock *next = get_control_block (j);
+
 		bool reference_added = add_reference (prev->handle, next->handle);
-	
+
 		abort_unless (reference_added, [this, &prev, &next] {
 			jclass prev_java_class = env->GetObjectClass (prev->handle);
 			const char *prev_class_name = Host::get_java_class_name_for_TypeManager (prev_java_class);
@@ -135,6 +154,9 @@ void BridgeProcessing::add_cross_reference (size_t source_index, size_t dest_ind
 
 bool BridgeProcessing::add_reference (jobject from, jobject to) noexcept
 {
+	abort_if_invalid_pointer_argument (from, "from");
+	abort_if_invalid_pointer_argument (to, "to");
+
 	jclass java_class = env->GetObjectClass (from);
 	jmethodID add_method_id = env->GetMethodID (java_class, "monodroidAddReference", "(Ljava/lang/Object;)V");
 	env->DeleteLocalRef (java_class);
@@ -151,7 +173,7 @@ bool BridgeProcessing::add_reference (jobject from, jobject to) noexcept
 
 void BridgeProcessing::clear_references_if_needed (HandleContext *context) noexcept
 {
-	abort_if_invalid_pointer_argument (context, "context");
+	// context is a valid pointer - validated at callsite
 
 	if (context->is_collected ()) {
 		return;
@@ -190,7 +212,7 @@ void BridgeProcessing::clear_references (jobject handle) noexcept
 
 void BridgeProcessing::take_global_ref (HandleContext *context) noexcept
 {
-	abort_if_invalid_pointer_argument (context, "context");
+	// context is a valid pointer - validated at callsite
 	abort_unless (context->control_block != nullptr, "Control block must not be null");
 	abort_unless (context->control_block->handle_type == JNIWeakGlobalRefType, "Expected weak global reference type for handle");
 
@@ -239,6 +261,8 @@ void BridgeProcessing::cleanup_after_java_collection () noexcept
 		// try to switch back to global refs to analyze what stayed alive
 		for (size_t j = 0; j < scc.Count; j++) {
 			HandleContext *context = scc.Contexts [j];
+			abort_unless (context != nullptr, "Context must not be null");
+
 			take_global_ref (context);
 			clear_references_if_needed (context);
 		}
@@ -287,11 +311,13 @@ void BridgeProcessing::log_missing_add_references_method ([[maybe_unused]] jclas
 	log_error (LOG_DEFAULT, "Failed to find monodroidAddReferences method");
 #if DEBUG
 	abort_if_invalid_pointer_argument (java_class, "java_class");
-	if (Logger::gc_spew_enabled ()) [[unlikely]] {
-		char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
-		log_error (LOG_GC, "Missing monodroidAddReferences method for object of class {}", class_name);
-		free (class_name);
+	if (!Logger::gc_spew_enabled ()) [[likely]] {
+		return;
 	}
+
+	char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
+	log_error (LOG_GC, "Missing monodroidAddReferences method for object of class {}", optional_string (class_name));
+	free (class_name);
 #endif
 }
 
@@ -301,23 +327,27 @@ void BridgeProcessing::log_missing_clear_references_method ([[maybe_unused]] jcl
 	log_error (LOG_DEFAULT, "Failed to find monodroidClearReferences method");
 #if DEBUG
 	abort_if_invalid_pointer_argument (java_class, "java_class");
-	if (Logger::gc_spew_enabled ()) [[unlikely]] {
-		char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
-		log_error (LOG_GC, "Missing monodroidClearReferences method for object of class {}", class_name);
-		free (class_name);
+	if (!Logger::gc_spew_enabled ()) [[likely]] {
+		return;
 	}
+
+	char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
+	log_error (LOG_GC, "Missing monodroidClearReferences method for object of class {}", optional_string (class_name));
+	free (class_name);
 #endif
 }
 
 [[gnu::always_inline]]
 void BridgeProcessing::log_weak_to_gref (jobject weak, jobject handle) noexcept
 {
-	if (Logger::gref_log ()) [[unlikely]] {
-		OSBridge::_monodroid_gref_log (
-			std::format ("take_global_ref wref={:#x} -> handle={:#x}\n"sv,
-				reinterpret_cast<intptr_t> (weak),
-				reinterpret_cast<intptr_t> (handle)).data ());
+	if (!Logger::gref_log ()) [[likely]] {
+		return;
 	}
+
+	OSBridge::_monodroid_gref_log (
+		std::format ("take_global_ref wref={:#x} -> handle={:#x}\n"sv,
+			reinterpret_cast<intptr_t> (weak),
+			reinterpret_cast<intptr_t> (handle)).data ());
 }
 
 [[gnu::always_inline]]
@@ -335,18 +365,22 @@ void BridgeProcessing::log_weak_ref_survived (jobject weak, jobject handle) noex
 [[gnu::always_inline]]
 void BridgeProcessing::log_weak_ref_collected (jobject weak) noexcept
 {
-	if (Logger::gc_spew_enabled ()) [[unlikely]] {
-		OSBridge::_monodroid_gref_log (
-			std::format ("handle {:#x}/W; was collected by a Java GC"sv, reinterpret_cast<intptr_t> (weak)).data ());
+	if (Logger::gc_spew_enabled ()) [[likely]] {
+		return;
 	}
+
+	OSBridge::_monodroid_gref_log (
+		std::format ("handle {:#x}/W; was collected by a Java GC"sv, reinterpret_cast<intptr_t> (weak)).data ());
 }
 
 [[gnu::always_inline]]
 void BridgeProcessing::log_take_weak_global_ref (jobject handle) noexcept
 {
-	if (Logger::gref_log ()) [[unlikely]] {
-		OSBridge::_monodroid_gref_log (std::format ("take_weak_global_ref handle={:#x}\n"sv, reinterpret_cast<intptr_t> (handle)).data ());
+	if (!Logger::gref_log ()) [[likely]] {
+		return;
 	}
+
+	OSBridge::_monodroid_gref_log (std::format ("take_weak_global_ref handle={:#x}\n"sv, reinterpret_cast<intptr_t> (handle)).data ());
 }
 
 [[gnu::always_inline]]
@@ -367,23 +401,26 @@ void BridgeProcessing::log_gref_delete (jobject handle) noexcept
 [[gnu::always_inline]]
 void BridgeProcessing::log_gc_summary () noexcept
 {
-#if DEBUG
-	int total = 0;
-	int alive = 0;
-	
+	if (!Logger::gc_spew_enabled ()) [[likely]] {
+		return;
+	}
+
+	size_t total = 0;
+	size_t alive = 0;
+
 	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
 		const StronglyConnectedComponent &scc = cross_refs->Components [i];
 
 		for (size_t j = 0; j < scc.Count; j++) {
 			HandleContext *context = scc.Contexts [j];
+			abort_unless (context != nullptr, "Context must not be null");
 
-			total++;
+			total = Helpers::add_with_overflow_check<size_t> (total, 1);
 			if (!context->is_collected ()) {
-				alive++;
+				alive = Helpers::add_with_overflow_check<size_t> (alive, 1);
 			}
 		}
 	}
 
 	log_info (LOG_GC, "GC cleanup summary: {} objects tested - resurrecting {}.", total, alive);
-#endif // DEBUG
 }
