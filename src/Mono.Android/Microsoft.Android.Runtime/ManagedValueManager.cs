@@ -22,7 +22,10 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	Dictionary<int, List<IJavaPeerable>>?   RegisteredInstances = new Dictionary<int, List<IJavaPeerable>>();
 
-	internal ManagedValueManager ()
+	static Lazy<ManagedValueManager> s_instance = new (() => new ManagedValueManager ());
+	public static ManagedValueManager GetOrCreateInstance () => s_instance.Value;
+
+	ManagedValueManager ()
 	{
 	}
 
