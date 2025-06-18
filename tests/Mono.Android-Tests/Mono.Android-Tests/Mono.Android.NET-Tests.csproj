@@ -252,6 +252,7 @@
     </TestAab>
   </ItemGroup>
 
+  <Import Project="$(XamarinAndroidSourcePath)build-tools\scripts\custom-runtime.targets" />
   <Import Project="$(XamarinAndroidSourcePath)build-tools\scripts\TestApks.targets" />
 
 </Project>

@@ -9,6 +9,7 @@
 
 #include <xamarin-app.hh>
 #include <host/assembly-store.hh>
+#include <host/gc-bridge.hh>
 #include <host/fastdev-assemblies.hh>
 #include <host/host.hh>
 #include <host/host-jni.hh>
@@ -574,6 +575,7 @@ auto Host::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcep
 	JNIEnv *env = nullptr;
 	vm->GetEnv ((void**)&env, JNI_VERSION_1_6);
 	OSBridge::initialize_on_onload (vm, env);
+	GCBridge::initialize_on_load (env);
 
 	AndroidSystem::init_max_gref_count ();
 	return JNI_VERSION_1_6;
