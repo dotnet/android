@@ -96,21 +96,10 @@ void GCBridge::log_mark_cross_references_args_if_enabled (MarkCrossReferencesArg
 	JNIEnv *env = OSBridge::ensure_jnienv ();
 	
 	for (size_t i = 0; i < args->ComponentCount; ++i) {
-		log_info (LOG_GC, "group {} with {} objects", i, args->Components [i].Count);
-		for (size_t j = 0; j < args->Components [i].Count; ++j) {
-			HandleContext *ctx = args->Components [i].Contexts [j];
-			abort_unless (ctx != nullptr, "Context must not be null");
-			abort_unless (ctx->control_block != nullptr, "Control block must not be null");
-
-			jobject handle = ctx->control_block->handle;
-			jclass java_class = env->GetObjectClass (handle);
-			if (java_class != nullptr) {
-				char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
-				log_info (LOG_GC, "gref {:#x} [{}]", reinterpret_cast<intptr_t> (handle), class_name);
-				free (class_name);
-			} else {
-				log_info (LOG_GC, "gref {:#x} [unknown class]", reinterpret_cast<intptr_t> (handle));
-			}
+		const StronglyConnectedComponent &scc = args->Components [i];
+		log_info (LOG_GC, "group {} with {} objects", i, scc.Count);
+		for (size_t j = 0; j < scc.Count; ++j) {
+			log_handle_context (scc.Contexts [j]);
 		}
 	}
 
@@ -122,5 +111,22 @@ void GCBridge::log_mark_cross_references_args_if_enabled (MarkCrossReferencesArg
 		size_t source_index = args->CrossReferences [i].SourceGroupIndex;
 		size_t dest_index = args->CrossReferences [i].DestinationGroupIndex;
 		log_info_nocheck_fmt (LOG_GC, "xref [{}] {} -> {}", i, source_index, dest_index);
+	}
+}
+
+[[gnu::always_inline]]
+void GCBridge::log_handle_context (HandleContext *ctx) noexcept
+{
+	abort_unless (ctx != nullptr, "Context must not be null");
+	abort_unless (ctx->control_block != nullptr, "Control block must not be null");
+
+	jobject handle = ctx->control_block->handle;
+	jclass java_class = env->GetObjectClass (handle);
+	if (java_class != nullptr) {
+		char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
+		log_info (LOG_GC, "gref {:#x} [{}]", reinterpret_cast<intptr_t> (handle), class_name);
+		free (class_name);
+	} else {
+		log_info (LOG_GC, "gref {:#x} [unknown class]", reinterpret_cast<intptr_t> (handle));
 	}
 }
