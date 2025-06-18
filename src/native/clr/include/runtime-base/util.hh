@@ -59,8 +59,6 @@ namespace xamarin::android {
 		static auto monodroid_fopen (std::string_view const& filename, std::string_view const& mode) noexcept -> FILE*;
 		static void set_world_accessable (std::string_view const& path);
 		static auto set_world_accessible (int fd) noexcept -> bool;
-		static auto monodroid_strdup_printf (std::string_view const& format, ...) -> char*;
-		static auto monodroid_strdup_vprintf (std::string_view const& format, va_list vargs) -> char*;
 
 		// Puts higher half of the `value` byte as a hexadecimal character in `high_half` and
 		// the lower half in `low_half`

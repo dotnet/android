@@ -1,6 +1,5 @@
 #include <host/bridge-processing.hh>
 #include <host/host.hh>
-#include <host/runtime-util.hh>
 #include <runtime-base/logger.hh>
 
 #include <thread>
