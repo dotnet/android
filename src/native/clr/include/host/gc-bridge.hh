@@ -18,13 +18,18 @@ struct JniObjectReferenceControlBlock
 
 struct HandleContext
 {
-	JniObjectReferenceControlBlock* control_block;
+	JniObjectReferenceControlBlock *control_block;
+
+	bool is_collected () const noexcept
+	{
+		return control_block == nullptr;
+	}
 };
 
 struct StronglyConnectedComponent
 {
 	size_t Count;
-	HandleContext** Contexts;
+	HandleContext **Contexts;
 };
 
 struct ComponentCrossReference
@@ -36,9 +41,9 @@ struct ComponentCrossReference
 struct MarkCrossReferencesArgs
 {
     size_t ComponentCount;
-    StronglyConnectedComponent* Components;
+    StronglyConnectedComponent *Components;
     size_t CrossReferenceCount;
-    ComponentCrossReference* CrossReferences;
+    ComponentCrossReference *CrossReferences;
 };
 
 using BridgeProcessingStartedFtn = void (*)();
@@ -90,6 +95,6 @@ namespace xamarin::android {
 		static void mark_cross_references (MarkCrossReferencesArgs *cross_refs) noexcept;
 		
 		static void log_mark_cross_references_args_if_enabled (MarkCrossReferencesArgs *args) noexcept;
-		static void log_handle_context (HandleContext *ctx) noexcept;
+		static void log_handle_context (JNIEnv *env, HandleContext *ctx) noexcept;
 	};
 }

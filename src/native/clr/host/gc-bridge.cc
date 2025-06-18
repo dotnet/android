@@ -99,7 +99,7 @@ void GCBridge::log_mark_cross_references_args_if_enabled (MarkCrossReferencesArg
 		const StronglyConnectedComponent &scc = args->Components [i];
 		log_info (LOG_GC, "group {} with {} objects", i, scc.Count);
 		for (size_t j = 0; j < scc.Count; ++j) {
-			log_handle_context (scc.Contexts [j]);
+			log_handle_context (env, scc.Contexts [j]);
 		}
 	}
 
@@ -115,7 +115,7 @@ void GCBridge::log_mark_cross_references_args_if_enabled (MarkCrossReferencesArg
 }
 
 [[gnu::always_inline]]
-void GCBridge::log_handle_context (HandleContext *ctx) noexcept
+void GCBridge::log_handle_context (JNIEnv *env, HandleContext *ctx) noexcept
 {
 	abort_unless (ctx != nullptr, "Context must not be null");
 	abort_unless (ctx->control_block != nullptr, "Control block must not be null");

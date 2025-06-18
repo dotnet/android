@@ -29,6 +29,7 @@ void BridgeProcessing::process () noexcept
 	prepare_for_java_collection ();
 	GCBridge::trigger_java_gc (env);
 	cleanup_after_java_collection ();
+	log_gc_summary ();
 }
 
 void BridgeProcessing::prepare_for_java_collection () noexcept
@@ -64,14 +65,20 @@ void BridgeProcessing::prepare_for_java_collection () noexcept
 
 void BridgeProcessing::prepare_scc_for_java_collection (size_t scc_index, const StronglyConnectedComponent &scc) noexcept
 {
+	// Count == 0 case: Some SCCs might have no IGCUserPeers associated with them, so we must create one
+	if (scc.Count == 0) {
+		temporary_peers [scc_index] = env->NewObject (GCUserPeer_class, GCUserPeer_ctor);
+		return;
+	}
+
+	// Count == 1 case: The SCC contains a single object, there is no need to do anything special.
+	if (scc.Count == 1) {
+		return;
+	}
+
 	// Count > 1 case: The SCC contains many objects which must be collected as one.
 	// Solution: Make all objects within the SCC directly or indirectly reference each other
-	if (scc.Count > 1) {
-		add_circular_references (scc);
-	} else if (scc.Count == 0) {
-		// Some SCCs might have no IGCUserPeers associated with them, so we must create one
-		temporary_peers [scc_index] = env->NewObject (GCUserPeer_class, GCUserPeer_ctor);
-	}
+	add_circular_references (scc);
 }
 
 CrossReferenceTarget BridgeProcessing::select_cross_reference_target (size_t scc_index) noexcept
@@ -98,8 +105,6 @@ void BridgeProcessing::add_circular_references (const StronglyConnectedComponent
 		JniObjectReferenceControlBlock *next = scc.Contexts [j]->control_block;
 		bool reference_added = add_reference (prev->handle, next->handle);
 	
-		// TODO this doesn't seem to be handled in the Mono code but if we don't handle this case, then the component _might not be_ strongly connected on the Java side.
-		// What is the case when this fails though? All bridge objects should have the `monodroidAddReference` method, so this is unexpected.
 		abort_unless (reference_added, [this, &prev, &next] {
 			jclass prev_java_class = env->GetObjectClass (prev->handle);
 			const char *prev_class_name = Host::get_java_class_name_for_TypeManager (prev_java_class);
@@ -112,7 +117,7 @@ void BridgeProcessing::add_circular_references (const StronglyConnectedComponent
 				prev_class_name,
 				next_class_name);
 		});
-	
+
 		prev->refs_added = 1;
 		prev = next;
 	}
@@ -144,9 +149,17 @@ bool BridgeProcessing::add_reference (jobject from, jobject to) noexcept
 	return true;
 }
 
-void BridgeProcessing::clear_references_if_needed (JniObjectReferenceControlBlock *control_block) noexcept
+void BridgeProcessing::clear_references_if_needed (HandleContext *context) noexcept
 {
-	abort_if_invalid_pointer_argument (control_block, "control_block");
+	abort_if_invalid_pointer_argument (context, "context");
+
+	if (context->is_collected ()) {
+		return;
+	}
+
+	JniObjectReferenceControlBlock *control_block = context->control_block;
+
+	abort_unless (control_block != nullptr, "Control block must not be null");
 	abort_unless (control_block->handle != nullptr, "Control block handle must not be null");
 	abort_unless (control_block->handle_type == JNIGlobalRefType, "Control block handle type must be global reference");
 
@@ -220,55 +233,34 @@ void BridgeProcessing::take_weak_global_ref (HandleContext *context) noexcept
 
 void BridgeProcessing::cleanup_after_java_collection () noexcept
 {
-#if DEBUG
-	int total = 0;
-	int alive = 0;
-#endif
-
-	// try to switch back to global refs to analyze what stayed alive
 	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
 		const StronglyConnectedComponent &scc = cross_refs->Components [i];
+
+		// try to switch back to global refs to analyze what stayed alive
 		for (size_t j = 0; j < scc.Count; j++) {
-			take_global_ref (scc.Contexts [j]);
+			HandleContext *context = scc.Contexts [j];
+			take_global_ref (context);
+			clear_references_if_needed (context);
 		}
+
+		abort_unless_all_collected_or_all_alive (scc);
 	}
-
-	// clear the cross references on any remaining items
-	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
-		const StronglyConnectedComponent &scc = cross_refs->Components [i];
-		[[maybe_unused]] bool is_alive = cleanup_strongly_connected_component (scc);
-
-#if DEBUG
-		total += scc.Count;
-		if (is_alive) {
-			alive += scc.Count;
-		}
-#endif
-	}
-
-#if DEBUG
-	log_info (LOG_GC, "GC cleanup summary: {} objects tested - resurrecting {}.", total, alive);
-#endif
 }
 
-bool BridgeProcessing::cleanup_strongly_connected_component (const StronglyConnectedComponent &scc) noexcept
+void BridgeProcessing::abort_unless_all_collected_or_all_alive (const StronglyConnectedComponent &scc) noexcept
 {
-	// all contexts in the SCC must either be alive, or collected
-	int alive = 0;
-
-	for (size_t j = 0; j < scc.Count; j++) {
-		HandleContext *context = scc.Contexts [j];
-		abort_unless (context != nullptr, "Context must not be null");
-
-		bool is_alive = context->control_block != nullptr;
-		if (is_alive) {
-			alive++;
-			clear_references_if_needed (context->control_block);
-		}
+	if (scc.Count == 0) {
+		return;
 	}
 
-	abort_unless (alive == 0 || alive == scc.Count, "All contexts in the SCC must be either collected or alive");
-	return alive == scc.Count;
+	abort_unless (scc.Contexts [0] != nullptr, "Context must not be null");
+	bool is_collected = scc.Contexts [0]->is_collected ();
+	
+	for (size_t j = 1; j < scc.Count; j++) {
+		HandleContext *context = scc.Contexts [j];
+		abort_unless (context != nullptr, "Context must not be null");
+		abort_unless (context->is_collected () == is_collected, "Cannot have a mix of collected and alive contexts in the SCC");
+	}
 }
 
 jobject CrossReferenceTarget::get_handle () const noexcept
@@ -290,7 +282,7 @@ void CrossReferenceTarget::mark_refs_added_if_needed () noexcept
 }
 
 [[gnu::always_inline]]
-void BridgeProcessing::log_missing_add_references_method (jclass java_class) noexcept
+void BridgeProcessing::log_missing_add_references_method ([[maybe_unused]] jclass java_class) noexcept
 {
 	log_error (LOG_DEFAULT, "Failed to find monodroidAddReferences method");
 #if DEBUG
@@ -304,7 +296,7 @@ void BridgeProcessing::log_missing_add_references_method (jclass java_class) noe
 }
 
 [[gnu::always_inline]]
-void BridgeProcessing::log_missing_clear_references_method (jclass java_class) noexcept
+void BridgeProcessing::log_missing_clear_references_method ([[maybe_unused]] jclass java_class) noexcept
 {
 	log_error (LOG_DEFAULT, "Failed to find monodroidClearReferences method");
 #if DEBUG
@@ -370,4 +362,28 @@ void BridgeProcessing::log_gref_delete (jobject handle) noexcept
 {
 	OSBridge::_monodroid_gref_log_delete (handle, OSBridge::get_object_ref_type (env, handle),
 		"finalizer", gettid (), "   at [[clr-gc:take_weak_global_ref]]", 0);
+}
+
+[[gnu::always_inline]]
+void BridgeProcessing::log_gc_summary () noexcept
+{
+#if DEBUG
+	int total = 0;
+	int alive = 0;
+	
+	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
+		const StronglyConnectedComponent &scc = cross_refs->Components [i];
+
+		for (size_t j = 0; j < scc.Count; j++) {
+			HandleContext *context = scc.Contexts [j];
+
+			total++;
+			if (!context->is_collected ()) {
+				alive++;
+			}
+		}
+	}
+
+	log_info (LOG_GC, "GC cleanup summary: {} objects tested - resurrecting {}.", total, alive);
+#endif // DEBUG
 }

@@ -44,10 +44,11 @@ private:
 	bool add_reference (jobject from, jobject to) noexcept;
 
 	void cleanup_after_java_collection () noexcept;
-	bool cleanup_strongly_connected_component (const StronglyConnectedComponent &scc) noexcept;
+	void cleanup_scc_for_java_collection (const StronglyConnectedComponent &scc) noexcept;
+	void abort_unless_all_collected_or_all_alive (const StronglyConnectedComponent &scc) noexcept;
 	void take_global_ref (HandleContext *context) noexcept;
 
-	void clear_references_if_needed (JniObjectReferenceControlBlock *control_block) noexcept;
+	void clear_references_if_needed (HandleContext *context) noexcept;
 	void clear_references (jobject handle) noexcept;
 
 	void log_missing_add_references_method (jclass java_class) noexcept;
@@ -58,4 +59,5 @@ private:
 	void log_take_weak_global_ref (jobject handle) noexcept;
 	void log_weak_gref_new (jobject handle, jobject weak) noexcept;
 	void log_gref_delete (jobject handle) noexcept;
+	void log_gc_summary () noexcept;
 };
