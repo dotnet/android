@@ -23,12 +23,12 @@ struct CrossReferenceTarget
 class BridgeProcessing
 {
 public:
-	BridgeProcessing (MarkCrossReferencesArgs args) noexcept;
+	BridgeProcessing (MarkCrossReferencesArgs *args) noexcept;
 	static void initialize_on_runtime_init (JNIEnv *jniEnv, jclass runtimeClass) noexcept;
 	void process () noexcept;
 private:
 	JNIEnv* env;
-	MarkCrossReferencesArgs cross_refs;
+	MarkCrossReferencesArgs *cross_refs;
 	std::unordered_map<size_t, jobject> temporary_peers;
 
 	static inline jclass GCUserPeer_class = nullptr;

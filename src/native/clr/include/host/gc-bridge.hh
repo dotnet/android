@@ -76,9 +76,9 @@ namespace xamarin::android {
 	private:
 		static inline std::binary_semaphore bridge_processing_semaphore{0};
 		static inline std::shared_mutex processing_mutex;
-		static inline std::thread* bridge_processing_thread = nullptr;
+		static inline std::thread *bridge_processing_thread = nullptr;
 		
-		static inline MarkCrossReferencesArgs shared_cross_refs;
+		static inline MarkCrossReferencesArgs *cross_refs;
 
 		static inline jobject Runtime_instance = nullptr;
 		static inline jmethodID Runtime_gc = nullptr;

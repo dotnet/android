@@ -56,10 +56,7 @@ void GCBridge::mark_cross_references (MarkCrossReferencesArgs *args) noexcept
 
 	std::unique_lock<std::shared_mutex> lock (processing_mutex);
 
-	shared_cross_refs.ComponentCount = args->ComponentCount;
-	shared_cross_refs.Components = args->Components;
-	shared_cross_refs.CrossReferenceCount = args->CrossReferenceCount;
-	shared_cross_refs.CrossReferences = args->CrossReferences;
+	cross_refs = args;
 
 	bridge_processing_semaphore.release ();
 }
@@ -75,10 +72,10 @@ void GCBridge::bridge_processing () noexcept
 
 		bridge_processing_started_callback ();
 
-		BridgeProcessing bridge_processing {shared_cross_refs};
+		BridgeProcessing bridge_processing {cross_refs};
 		bridge_processing.process ();
 
-		bridge_processing_finished_callback (&shared_cross_refs);
+		bridge_processing_finished_callback (cross_refs);
 	}
 }
 

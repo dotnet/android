@@ -18,9 +18,9 @@ void BridgeProcessing::initialize_on_runtime_init (JNIEnv *env, jclass runtimeCl
 	abort_unless (GCUserPeer_class != nullptr && GCUserPeer_ctor != nullptr, "Failed to load mono.android.GCUserPeer!");
 }
 
-BridgeProcessing::BridgeProcessing (MarkCrossReferencesArgs args) noexcept
-	: env (OSBridge::ensure_jnienv ()),
-	  cross_refs (args)
+BridgeProcessing::BridgeProcessing (MarkCrossReferencesArgs *args) noexcept
+	: env{ OSBridge::ensure_jnienv () },
+	  cross_refs{ args }
 {
 }
 
@@ -36,8 +36,8 @@ void BridgeProcessing::prepare_for_java_collection () noexcept
 	// Before looking at xrefs, scan the SCCs. During collection, an SCC has to behave like a
 	// single object. If the number of objects in the SCC is anything other than 1, the SCC
 	// must be doctored to mimic that one-object nature.
-	for (size_t i = 0; i < cross_refs.ComponentCount; i++) {
-		const StronglyConnectedComponent &scc = cross_refs.Components [i];
+	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
+		const StronglyConnectedComponent &scc = cross_refs->Components [i];
 
 		// Count > 1 case: The SCC contains many objects which must be collected as one.
 		// Solution: Make all objects within the SCC directly or indirectly reference each other
@@ -50,8 +50,8 @@ void BridgeProcessing::prepare_for_java_collection () noexcept
 	}
 
 	// Add the cross scc refs
-	for (size_t i = 0; i < cross_refs.CrossReferenceCount; i++) {
-		const ComponentCrossReference &xref = cross_refs.CrossReferences [i];
+	for (size_t i = 0; i < cross_refs->CrossReferenceCount; i++) {
+		const ComponentCrossReference &xref = cross_refs->CrossReferences [i];
 		add_cross_reference (xref.SourceGroupIndex, xref.DestinationGroupIndex);
 	}
 
@@ -61,8 +61,8 @@ void BridgeProcessing::prepare_for_java_collection () noexcept
 	}
 
 	// Switch global to weak references
-	for (size_t i = 0; i < cross_refs.ComponentCount; i++) {
-		const StronglyConnectedComponent &scc = cross_refs.Components [i];
+	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
+		const StronglyConnectedComponent &scc = cross_refs->Components [i];
 		for (size_t j = 0; j < scc.Count; j++) {
 			take_weak_global_ref (scc.Contexts [j]);
 		}
@@ -71,7 +71,7 @@ void BridgeProcessing::prepare_for_java_collection () noexcept
 
 CrossReferenceTarget BridgeProcessing::select_cross_reference_target (size_t scc_index) noexcept
 {
-	const StronglyConnectedComponent &scc = cross_refs.Components [scc_index];
+	const StronglyConnectedComponent &scc = cross_refs->Components [scc_index];
 	if (scc.Count > 0) {
 		abort_unless (scc.Contexts [0] != nullptr, "SCC must have at least one context");
 		abort_unless (scc.Contexts [0]->control_block != nullptr, "SCC must have at least one context with valid control block");
@@ -172,7 +172,7 @@ void BridgeProcessing::clear_references_if_needed (JniObjectReferenceControlBloc
 void BridgeProcessing::take_global_ref (HandleContext *context) noexcept
 {
 	abort_if_invalid_pointer_argument (context, "context");
-	abort_unless (context->control_block != nullptr, "Control block must not be null");
+	abort_unless (context->control_block != nullptr, "Control block must not be null"); // TODO: this sometimes throws -- looks like a race condition?
 	if (context->control_block->handle_type != JNIWeakGlobalRefType) [[unlikely]] {
 		log_error (LOG_DEFAULT, "Expected weak global reference type for handle, but got {} - handle: {:#x}", context->control_block->handle_type, reinterpret_cast<intptr_t> (context->control_block->handle));
 		return;
@@ -244,16 +244,16 @@ void BridgeProcessing::cleanup_after_java_collection () noexcept
 #endif
 
 	// try to switch back to global refs to analyze what stayed alive
-	for (size_t i = 0; i < cross_refs.ComponentCount; i++) {
-		const StronglyConnectedComponent &scc = cross_refs.Components [i];
+	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
+		const StronglyConnectedComponent &scc = cross_refs->Components [i];
 		for (size_t j = 0; j < scc.Count; j++) {
 			take_global_ref (scc.Contexts [j]);
 		}
 	}
 
 	// clear the cross references on any remaining items
-	for (size_t i = 0; i < cross_refs.ComponentCount; i++) {
-		const StronglyConnectedComponent &scc = cross_refs.Components [i];
+	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
+		const StronglyConnectedComponent &scc = cross_refs->Components [i];
 		[[maybe_unused]] bool is_alive = cleanup_strongly_connected_component (i, scc);
 
 #if DEBUG
