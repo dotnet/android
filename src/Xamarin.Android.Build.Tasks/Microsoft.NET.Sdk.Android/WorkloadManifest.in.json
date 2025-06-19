@@ -25,16 +25,6 @@
         "microsoft-net-runtime-android",
         "microsoft-net-runtime-android-aot"
       ]
-    },
-    "android-net8": {
-      "description": ".NET SDK Workload for building .NET 8 Android applications.",
-      "packs": [ "Microsoft.Android.Sdk.net8" ],
-      "platforms": [ "win-x64", "win-arm64", "linux-x64", "linux-arm64", "osx-x64", "osx-arm64" ],
-      "extends" : [
-        "android",
-        "microsoft-net-runtime-android-net8",
-        "microsoft-net-runtime-android-aot-net8"
-      ]
     }
   },
   "packs": {
@@ -54,19 +44,6 @@
     "Microsoft.Android.Sdk.net9": {
       "kind": "sdk",
       "version": "@NET_PREVIOUS_VERSION@",
-      "alias-to": {
-        "osx-x64": "Microsoft.Android.Sdk.Darwin",
-        "osx-arm64": "Microsoft.Android.Sdk.Darwin",
-        "win-x86": "Microsoft.Android.Sdk.Windows",
-        "win-x64": "Microsoft.Android.Sdk.Windows",
-        "win-arm64": "Microsoft.Android.Sdk.Windows",
-        "linux-x64": "Microsoft.Android.Sdk.Linux",
-        "linux-arm64": "Microsoft.Android.Sdk.Linux"
-      }
-    },
-    "Microsoft.Android.Sdk.net8": {
-      "kind": "sdk",
-      "version": "@NET8_PREVIOUS_VERSION@",
       "alias-to": {
         "osx-x64": "Microsoft.Android.Sdk.Darwin",
         "osx-arm64": "Microsoft.Android.Sdk.Darwin",
