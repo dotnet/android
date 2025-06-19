@@ -16,6 +16,11 @@
       <Uri>https://github.com/dotnet/dotnet</Uri>
       <Sha>a4f6f6ad5675258a7641b7e5e1c4f1fbbf3ed28b</Sha>
     </Dependency>
+    <!-- Previous .NET version -->
+    <Dependency Name="Microsoft.NET.Workload.Mono.ToolChain.Current.Manifest-9.0.100" Version="9.0.7">
+      <Uri>https://github.com/dotnet/runtime</Uri>
+      <Sha>b4fb3656d44add463df161d4cfd362f3fd12a247</Sha>
+    </Dependency>
     <!-- Previous .NET Android version(s) -->
     <Dependency Name="Microsoft.NET.Sdk.Android.Manifest-9.0.100" Version="35.0.61">
       <Uri>https://github.com/dotnet/android</Uri>
