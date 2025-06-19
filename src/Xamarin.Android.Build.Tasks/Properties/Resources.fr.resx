@@ -600,7 +600,7 @@ Modifiez la valeur dans AndroidManifest.xml pour qu’elle corresponde à la val
     <comment>The following are literal names and should not be translated: Mono.Android.Export.dll, ExportAttribute, ExportFieldAttribute.</comment>
   </data>
   <data name="XA4211" xml:space="preserve">
-    <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than $(TargetPlatformVersion) '{1}'. Using API-{2} for ACW compilation.</value>
+    <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion « {0} » est inférieur à $(TargetPlatformVersion) « {1} ». Utilisation d'API-{2} pour la compilation ACW.</value>
     <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:targetSdkVersion , $(TargetPlatformVersion), API-{2}, ACW
 {0} - The target SDK version number
 {1} - The $(TargetPlatformVersion) number
