@@ -329,9 +329,10 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		static readonly nuint Size = (nuint)Marshal.SizeOf<HandleContext> ();
 		static readonly Dictionary<IntPtr, GCHandle> referenceTrackingHandles = new ();
 
-		public int PeerIdentityHashCode;
+		int identityHashCode;
 		IntPtr controlBlock;
 
+		public int PeerIdentityHashCode => identityHashCode;
 		public bool IsCollected => controlBlock == IntPtr.Zero;
 
 		public static GCHandle GetAssociatedGCHandle (HandleContext* context)
@@ -352,7 +353,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 				throw new OutOfMemoryException ("Failed to allocate memory for HandleContext.");
 			}
 
-			context->PeerIdentityHashCode = peer.JniIdentityHashCode;
+			context->identityHashCode = peer.JniIdentityHashCode;
 			context->controlBlock = peer.JniObjectReferenceControlBlock;
 
 			GCHandle handle = JavaMarshal.CreateReferenceTrackingHandle (peer, context);
@@ -381,7 +382,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	[UnmanagedCallersOnly]
 	static unsafe void BridgeProcessingFinished (MarkCrossReferencesArgs* mcr)
 	{
-		Trace.Assert (mcr != null, "Bridge processing was not started before finishing it.");
+		Trace.Assert (mcr != null, "MarkCrossReferenceArgs should never be null.");
 
 		ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (mcr);
 		JavaMarshal.FinishCrossReferenceProcessing (mcr, handlesToFree);
