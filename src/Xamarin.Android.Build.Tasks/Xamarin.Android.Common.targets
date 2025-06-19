@@ -30,7 +30,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.AssemblyModifierPipeline" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidPackageName" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aot" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CilStrip" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildAppBundle" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildApkSet" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -38,7 +37,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateAdditionalResourceCacheDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateLayoutCodeBehind" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateProjectDependencies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CheckForRemovedItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForInvalidResourceFileNames" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckClientHandlerType" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectAssemblyFilesToCompress" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -46,7 +44,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectJarContentFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNativeFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNonEmptyDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CollectPdbFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectRuntimeConfigFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectTypeMapFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CompressAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -55,9 +52,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.ConvertCustomView" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyIfChanged" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyResource" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CreateAdditionalLibraryResourceCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateAssemblyStore" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CreateMsymManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateResgenManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateTemporaryDirectory" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateTypeManagerJava" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -79,7 +74,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateTypeMappings" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidDefineConstants" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAppSettingsDirectory" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.GetConvertedJavaLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetFilesThatExist" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetMonoPlatformJar" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.KeyTool" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -87,11 +81,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.Lint" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.LogErrorsForFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.LogWarningsForFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.MakeBundleNativeCodeExternal" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.MergeRemapXml" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.MamJsonToXml" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ManifestMerger" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.MonoSymbolicate" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ProcessAssemblyCompressionFailures" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.RemoveDirFixed" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.RemoveRegisterAttribute" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -99,12 +91,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.RewriteMarshalMethods" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetExtraPackages" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyGeneratedJavaResourceClasses" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.ReadJavaStubsCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.ScanAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.SplitProperty" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckProjectItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckDuplicateJavaLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CollectLibraryAssets" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CompileNativeAssembly" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.LinkApplicationSharedLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.PrepareAbiItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -206,9 +195,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	>False</AndroidUseDebugRuntime>
 	<AndroidUseDebugRuntime Condition="'$(AndroidUseDebugRuntime)' == ''" >True</AndroidUseDebugRuntime>
 
-	<MonoSymbolArchive Condition=" '$(MonoSymbolArchive)' == '' And '$(EmbedAssembliesIntoApk)' == 'True' And '$(DebugSymbols)' == 'True' And '$(Optimize)' == 'True'" >True</MonoSymbolArchive>
-	<MonoSymbolArchive Condition=" '$(MonoSymbolArchive)' == '' ">False</MonoSymbolArchive>
-
 	<BundleAssemblies Condition="'$(BundleAssemblies)' == ''">False</BundleAssemblies>
 	<DeployExternal Condition="'$(DeployExternal)' == ''">False</DeployExternal>
 
@@ -294,8 +280,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_Android32bitArchitectures>armeabi-v7a;x86;mips</_Android32bitArchitectures>
 	<_Android64bitArchitectures>arm64-v8a;x86_64;mips64</_Android64bitArchitectures>
 
-	<_AndroidSequencePointsMode Condition=" '$(MonoSymbolArchive)' == 'True' And '$(AndroidUseDebugRuntime)' == 'False' And '$(AotAssemblies)' == 'True' And '$(DebugSymbols)' == 'True' And ('$(DebugType)' == 'PdbOnly' Or '$(DebugType)' == 'Portable')">Offline</_AndroidSequencePointsMode>
-	<_AndroidSequencePointsMode Condition=" '$(MonoSymbolArchive)' == 'True' And '$(AndroidUseDebugRuntime)' == 'False' And '$(_AndroidSequencePointsMode)' == ''">Normal</_AndroidSequencePointsMode>
 	<_AndroidSequencePointsMode Condition=" '$(_AndroidSequencePointsMode)' == ''">None</_AndroidSequencePointsMode>
 	<_AndroidBuildPropertiesCache>$(IntermediateOutputPath)build.props</_AndroidBuildPropertiesCache>
 	<_AdbPropertiesCache>$(IntermediateOutputPath)adb.props</_AdbPropertiesCache>
@@ -652,7 +636,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<ApkFileSigned>$(OutDir)$(_AndroidPackage)-Signed.apk</ApkFileSigned>
 		<_AabFile>$(OutDir)$(_AndroidPackage).aab</_AabFile>
 		<_AabFileSigned>$(OutDir)$(_AndroidPackage)-Signed.aab</_AabFileSigned>
-		<_MSYMDirectory>$(OutDir)$(_AndroidPackage).$(AndroidPackageFormat).mSYM</_MSYMDirectory>
 	</PropertyGroup>
 </Target>
 
@@ -987,7 +970,6 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="JavaSdkPath=$(_JavaSdkDirectory)" />
 		<_PropertyCacheItems Include="AndroidSequencePointsMode=$(_AndroidSequencePointsMode)" />
 		<_PropertyCacheItems Include="AndroidNETSdkVersion=$(AndroidNETSdkVersion)" />
-		<_PropertyCacheItems Include="MonoSymbolArchive=$(MonoSymbolArchive)" />
 		<_PropertyCacheItems Include="AndroidUseLatestPlatformSdk=$(AndroidUseLatestPlatformSdk)" />
 		<_PropertyCacheItems Include="TargetFrameworkVersion=$(TargetFrameworkVersion)" />
 		<_PropertyCacheItems Include="AndroidCreatePackagePerAbi=$(AndroidCreatePackagePerAbi)" />
@@ -2108,7 +2090,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <!-- Shrink Mono.Android.dll by removing attribute only needed for GenerateJavaStubs -->
   <RemoveRegisterAttribute
-    Condition="'$(AndroidLinkMode)' != 'None' and '$(AndroidIncludeDebugSymbols)' != 'true' and '$(AndroidStripILAfterAOT)' != 'true' and '$(_AndroidRuntime)' != 'NativeAOT' and '$(PublishReadyToRun)' != 'true' "
+    Condition="'$(AndroidLinkMode)' != 'None' and '$(AndroidIncludeDebugSymbols)' != 'true' and '$(_AndroidRuntime)' != 'NativeAOT' and '$(PublishReadyToRun)' != 'true' "
     ShrunkFrameworkAssemblies="@(_ShrunkAssemblies)" />
 
   <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)shrunk" />
@@ -2592,47 +2574,6 @@ because xbuild doesn't support framework reference assemblies.
 
   <Copy Condition=" '$(AndroidPackageFormat)' != 'aab' " SourceFiles="%(ApkFiles.FullPath)" DestinationFolder="$(OutDir)" />
   <Copy Condition=" '$(AndroidPackageFormat)' == 'aab' " SourceFiles="$(_AppBundleIntermediate)" DestinationFolder="$(OutDir)" />
-
-  <MakeDir Directories="$(_MSYMDirectory)" Condition=" '$(MonoSymbolArchive)' == 'True' " />
-  <MonoSymbolicate
-      Condition=" '$(MonoSymbolArchive)' == 'True' "
-      ToolPath="$(MonoAndroidBinDirectory)"
-      InputDirectory="$(IntermediateOutputPath)android\assets"
-      OutputDirectory="$(_MSYMDirectory)"
-  />
-
-  <ItemGroup>
-    <_SymbolicateFiles Include="$(_AndroidAotBinDirectory)\%(_BuildTargetAbis.Identity)\**\*.msym" />
-  </ItemGroup>
-
-  <Copy Condition=" '$(MonoSymbolArchive)' == 'True' And '%(_SymbolicateFiles.Filename)' != '' "
-    SourceFiles="%(_SymbolicateFiles.Identity)"
-    DestinationFolder="$(_MSYMDirectory)\%(_SymbolicateFiles.RecursiveDir)"
-    SkipUnchangedFiles="true"
-  />
-
-  <ReadLinesFromFile File="$(_AndroidBuildIdFile)" Condition="Exists('$(_AndroidBuildIdFile)') And '$(_XamarinBuildId)' == ''">
-    <Output TaskParameter="Lines" PropertyName="_XamarinBuildId"/>
-  </ReadLinesFromFile>
-
-  <CreateMsymManifest
-     Condition=" '$(_XamarinBuildId)' != '' And '$(MonoSymbolArchive)' == 'True' "
-     BuildId="$(_XamarinBuildId)"
-     PackageName="$(_AndroidPackage)"
-     OutputDirectory="$(_MSYMDirectory)"
-   />
-
-  <WriteLinesToFile
-    Condition=" '$(MonoSymbolArchive)' == 'True' "
-    File="$(IntermediateOutputPath)$(CleanFile)"
-    Lines="@(_SymbolicateFiles->'$(_MSYMDirectory)\%(Filename)%(Extension)')"
-    Overwrite="false"/>
-
-  <WriteLinesToFile
-    Condition=" '$(MonoSymbolArchive)' == 'True' And '%(_SymbolicateFiles.Filename)' != '' "
-    File="$(IntermediateOutputPath)$(CleanFile)"
-    Lines="$(_MSYMDirectory)\%(_SymbolicateFiles.RecursiveDir)%(_SymbolicateFiles.Filename)%(_SymbolicateFiles.Extension)"
-    Overwrite="false"/>
 
   <Delete Files="$(_UploadFlagFile)" Condition="Exists ('$(_UploadFlagFile)')" />
 </Target>

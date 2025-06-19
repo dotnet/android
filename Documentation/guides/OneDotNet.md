@@ -99,7 +99,7 @@ also be detected and used if it exists to ease migration.
 will not be supported.
 
 `$(MonoSymbolArchive)` will be `False`, since `mono-symbolicate` is
-not yet supported.
+not supported for .NET 6+.
 
 If Java binding is enabled with `@(InputJar)`, `@(EmbeddedJar)`,
 `@(LibraryProjectZip)`, etc. then `$(AllowUnsafeBlocks)` will default

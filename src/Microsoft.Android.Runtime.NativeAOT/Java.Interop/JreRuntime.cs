@@ -61,7 +61,7 @@ namespace Java.Interop {
 			builder.TypeManager     ??= new ManagedTypeManager ();
 #endif  // NET
 
-			builder.ValueManager            ??= ManagedValueManager.GetOrCreateInstance ();
+			builder.ValueManager            ??= new SimpleValueManager ();
 			builder.ObjectReferenceManager  ??= new ManagedObjectReferenceManager (builder.JniGlobalReferenceLogWriter, builder.JniLocalReferenceLogWriter);
 
 			if (builder.InvocationPointer != IntPtr.Zero || builder.EnvironmentPointer != IntPtr.Zero)

@@ -28,8 +28,8 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 				return $" from name: {dso_entry.HashedName}";
 			}
 
-			if (String.Compare ("name", fieldName, StringComparison.Ordinal) == 0) {
-				return $" name: {dso_entry.name}";
+			if (String.Compare ("name_index", fieldName, StringComparison.Ordinal) == 0) {
+				return $" name: {dso_entry.RealName}";
 			}
 
 			return String.Empty;
@@ -50,6 +50,9 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		[NativeAssembler (Ignore = true)]
 		public string HashedName;
 
+		[NativeAssembler (Ignore = true)]
+		public string RealName;
+
 		[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 		public ulong hash;
 
@@ -58,7 +61,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public bool ignore;
 
 		[NativeAssembler (UsesDataProvider = true)]
-		public string name;
+		public uint name_index;
 		public IntPtr handle = IntPtr.Zero;
 	}
 
@@ -113,12 +116,39 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public AssemblyStoreAssemblyDescriptor assemblies;
 	}
 
+	sealed class RuntimePropertyContextDataProvider : NativeAssemblerStructContextDataProvider
+	{
+		public override string GetComment (object data, string fieldName)
+		{
+			var runtimeProp = EnsureType<RuntimeProperty> (data);
+			if (String.Compare ("key_index", fieldName, StringComparison.Ordinal) == 0) {
+				return $" '{runtimeProp.Key}'";
+			}
+
+			if (String.Compare ("value_index", fieldName, StringComparison.Ordinal) == 0) {
+				return $" '{runtimeProp.Value}'";
+			}
+
+			return String.Empty;
+		}
+	}
+
 	// Order of fields and their types must correspond *exactly* to that in
 	// src/native/clr/include/xamarin-app.hh RuntimeProperty structure
+	[NativeAssemblerStructContextDataProvider (typeof (RuntimePropertyContextDataProvider))]
 	sealed class RuntimeProperty
 	{
-		public string key;
-		public string value;
+		[NativeAssembler (Ignore = true)]
+		public string Key;
+
+		[NativeAssembler (Ignore = true)]
+		public string Value;
+
+		[NativeAssembler (UsesDataProvider = true)]
+		public uint key_index;
+
+		[NativeAssembler (UsesDataProvider = true)]
+		public uint value_index;
 		public uint value_size;
 	}
 
@@ -132,6 +162,42 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 		public ulong key_hash;
 		public uint index;
+	}
+
+	sealed class AppEnvironmentVariableContextDataProvider : NativeAssemblerStructContextDataProvider
+	{
+		public override string GetComment (object data, string fieldName)
+		{
+			var envVar = EnsureType<AppEnvironmentVariable> (data);
+
+			if (String.Compare ("name_index", fieldName, StringComparison.Ordinal) == 0) {
+				return $" '{envVar.Name}'";
+			}
+
+			if (String.Compare ("value_index", fieldName, StringComparison.Ordinal) == 0) {
+				return $" '{envVar.Value}'";
+			}
+
+			return String.Empty;
+		}
+	}
+
+	// Order of fields and their type must correspond *exactly* to that in
+	// src/native/clr/include/xamarin-app.hh AppEnvironmentVariable structure
+	[NativeAssemblerStructContextDataProvider (typeof (AppEnvironmentVariableContextDataProvider))]
+	sealed class AppEnvironmentVariable
+	{
+		[NativeAssembler (Ignore = true)]
+		public string Name;
+
+		[NativeAssembler (Ignore = true)]
+		public string Value;
+
+		[NativeAssembler (UsesDataProvider = true)]
+		public uint name_index;
+
+		[NativeAssembler (UsesDataProvider = true)]
+		public uint value_index;
 	}
 
 	sealed class XamarinAndroidBundledAssemblyContextDataProvider : NativeAssemblerStructContextDataProvider
@@ -195,6 +261,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	StructureInfo? runtimePropertyIndexEntryStructureInfo;
 	StructureInfo? hostConfigurationPropertyStructureInfo;
 	StructureInfo? hostConfigurationPropertiesStructureInfo;
+	StructureInfo? appEnvironmentVariableStructureInfo;
 
 	public bool UsesAssemblyPreload { get; set; }
 	public string AndroidPackageName { get; set; }
@@ -244,17 +311,39 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 		module.AddGlobalVariable ("format_tag", FORMAT_TAG, comment: $" 0x{FORMAT_TAG:x}");
 
-		var envVars = new LlvmIrGlobalVariable (environmentVariables, "app_environment_variables") {
+		var envVarsBlob = new LlvmIrStringBlob ();
+		var appEnvVars = new List<StructureInstance<AppEnvironmentVariable>> ();
+
+		if (environmentVariables != null) {
+			// TODO: skip variables with no name
+			foreach (var kvp in environmentVariables) {
+				(int nameOffset, int _) = envVarsBlob.Add (kvp.Key);
+				(int valueOffset, int _) = envVarsBlob.Add (kvp.Value);
+
+				var appEnvVar = new AppEnvironmentVariable {
+					Name = kvp.Key,
+					Value = kvp.Value,
+
+					name_index = (uint)nameOffset,
+					value_index = (uint)valueOffset,
+				};
+				appEnvVars.Add (new StructureInstance<AppEnvironmentVariable> (appEnvironmentVariableStructureInfo, appEnvVar));
+			}
+		}
+
+		var envVars = new LlvmIrGlobalVariable (appEnvVars, "app_environment_variables") {
 			Comment = " Application environment variables array, name:value",
+			Options = LlvmIrVariableOptions.GlobalConstant,
 		};
-		module.Add (envVars, stringGroupName: "env", stringGroupComment: " Application environment variables name:value pairs");
+		module.Add (envVars);
+		module.AddGlobalVariable ("app_environment_variable_contents", envVarsBlob, LlvmIrVariableOptions.GlobalConstant);
 
 		var sysProps = new LlvmIrGlobalVariable (systemProperties, "app_system_properties") {
 			Comment = " System properties defined by the application",
 		};
 		module.Add (sysProps, stringGroupName: "sysprop", stringGroupComment: " System properties name:value pairs");
 
-		(dsoCache, aotDsoCache) = InitDSOCache ();
+		(dsoCache, aotDsoCache, LlvmIrStringBlob dsoNamesBlob) = InitDSOCache ();
 		var app_cfg = new ApplicationConfigCLR {
 			uses_assembly_preload = UsesAssemblyPreload,
 			jni_add_native_method_registration_attribute_present = JniAddNativeMethodRegistrationAttributePresent,
@@ -263,7 +352,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			ignore_split_configs = IgnoreSplitConfigs,
 			number_of_runtime_properties = (uint)(runtimeProperties == null ? 0 : runtimeProperties.Count),
 			package_naming_policy = (uint)PackageNamingPolicy,
-			environment_variable_count = (uint)(environmentVariables == null ? 0 : environmentVariables.Count * 2),
+			environment_variable_count = (uint)(environmentVariables == null ? 0 : environmentVariables.Count),
 			system_property_count = (uint)(systemProperties == null ? 0 : systemProperties.Count * 2),
 			number_of_assemblies_in_apk = (uint)NumberOfAssembliesInApk,
 			number_of_shared_libraries = (uint)NativeLibraries.Count,
@@ -291,6 +380,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			BeforeWriteCallback = HashAndSortDSOCache,
 		};
 		module.Add (aot_dso_cache);
+		module.AddGlobalVariable ("dso_names_data", dsoNamesBlob, LlvmIrVariableOptions.GlobalConstant);
 
 		var dso_apk_entries = new LlvmIrGlobalVariable (typeof(List<StructureInstance<DSOApkEntry>>), "dso_apk_entries") {
 			ArrayItemCount = (ulong)NativeLibraries.Count,
@@ -306,11 +396,16 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		};
 		module.Add (bundled_assemblies);
 
-		(runtimePropertiesData, runtimePropertyIndex) = InitRuntimeProperties ();
+		(runtimePropertiesData, runtimePropertyIndex, LlvmIrStringBlob runtimePropsBlob) = InitRuntimeProperties ();
 		var runtime_properties = new LlvmIrGlobalVariable (runtimePropertiesData, "runtime_properties", LlvmIrVariableOptions.GlobalConstant) {
 			Comment = "Runtime config properties",
 		};
 		module.Add (runtime_properties);
+
+		var runtime_properties_data = new LlvmIrGlobalVariable (runtimePropsBlob, "runtime_properties_data", LlvmIrVariableOptions.GlobalConstant) {
+			Comment = "Runtime config properties data",
+		};
+		module.Add (runtime_properties_data);
 
 		var runtime_property_index = new LlvmIrGlobalVariable (runtimePropertyIndex, "runtime_property_index", LlvmIrVariableOptions.GlobalConstant) {
 			Comment = "Runtime config property index, sorted on property key hash",
@@ -375,37 +470,44 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 	(
 		List<StructureInstance<RuntimeProperty>> runtimeProps,
-		List<StructureInstance<RuntimePropertyIndexEntry>> runtimePropsIndex
+		List<StructureInstance<RuntimePropertyIndexEntry>> runtimePropsIndex,
+		LlvmIrStringBlob
 	) InitRuntimeProperties ()
 	{
 		var runtimeProps = new List<StructureInstance<RuntimeProperty>> ();
 		var runtimePropsIndex = new List<StructureInstance<RuntimePropertyIndexEntry>> ();
+		var propsBlob = new LlvmIrStringBlob ();
 
 		if (runtimeProperties == null || runtimeProperties.Count == 0) {
-			return (runtimeProps, runtimePropsIndex);
+			return (runtimeProps, runtimePropsIndex, propsBlob);
 		}
 
 		foreach (var kvp in runtimeProperties) {
 			string name = kvp.Key;
 			string value = kvp.Value;
+			(int name_index, _) = propsBlob.Add (name);
+			(int value_index, int value_size) = propsBlob.Add (value);
 
 			var prop = new RuntimeProperty {
-				key = name,
-				value = value,
+				Key = name,
+				Value = value,
+
+				key_index = (uint)name_index,
+				value_index = (uint)value_index,
 
 				// Includes the terminating NUL
-				value_size = (uint)(MonoAndroidHelper.Utf8StringToBytes (value).Length + 1),
+				value_size = (uint)value_size,
 			};
 			runtimeProps.Add (new StructureInstance<RuntimeProperty> (runtimePropertyStructureInfo, prop));
 
 			var indexEntry = new RuntimePropertyIndexEntry {
-				HashedKey = prop.key,
+				HashedKey = prop.Key,
 				index = (uint)(runtimeProps.Count - 1),
 			};
 			runtimePropsIndex.Add (new StructureInstance<RuntimePropertyIndexEntry> (runtimePropertyIndexEntryStructureInfo, indexEntry));
 		}
 
-		return (runtimeProps, runtimePropsIndex);
+		return (runtimeProps, runtimePropsIndex, propsBlob);
 	}
 
 	void AddAssemblyStores (LlvmIrModule module)
@@ -449,13 +551,14 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			}
 
 			entry.hash = MonoAndroidHelper.GetXxHash (entry.HashedName, is64Bit);
-			entry.real_name_hash = MonoAndroidHelper.GetXxHash (entry.name, is64Bit);
+			entry.real_name_hash = MonoAndroidHelper.GetXxHash (entry.RealName, is64Bit);
 		}
 
 		cache.Sort ((StructureInstance<DSOCacheEntry> a, StructureInstance<DSOCacheEntry> b) => a.Instance.hash.CompareTo (b.Instance.hash));
 	}
 
-	(List<StructureInstance<DSOCacheEntry>> dsoCache, List<StructureInstance<DSOCacheEntry>> aotDsoCache) InitDSOCache ()
+	(List<StructureInstance<DSOCacheEntry>> dsoCache, List<StructureInstance<DSOCacheEntry>> aotDsoCache, LlvmIrStringBlob namesBlob)
+	InitDSOCache ()
 	{
 		var dsos = new List<(string name, string nameLabel, bool ignore)> ();
 		var nameCache = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
@@ -477,18 +580,23 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		var dsoCache = new List<StructureInstance<DSOCacheEntry>> ();
 		var aotDsoCache = new List<StructureInstance<DSOCacheEntry>> ();
 		var nameMutations = new List<string> ();
+		var dsoNamesBlob = new LlvmIrStringBlob ();
 
 		for (int i = 0; i < dsos.Count; i++) {
 			string name = dsos[i].name;
+			(int nameOffset, _) = dsoNamesBlob.Add (name);
+
 			nameMutations.Clear();
 			AddNameMutations (name);
 			// All mutations point to the actual library name, but have hash of the mutated one
 			foreach (string entryName in nameMutations) {
 				var entry = new DSOCacheEntry {
 					HashedName = entryName,
+					RealName = name,
+
 					hash = 0, // Hash is arch-specific, we compute it before writing
 					ignore = dsos[i].ignore,
-					name = name,
+					name_index = (uint)nameOffset,
 				};
 
 				var item = new StructureInstance<DSOCacheEntry> (dsoCacheEntryStructureInfo, entry);
@@ -500,7 +608,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			}
 		}
 
-		return (dsoCache, aotDsoCache);
+		return (dsoCache, aotDsoCache, dsoNamesBlob);
 
 		void AddNameMutations (string name)
 		{
@@ -541,5 +649,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		dsoApkEntryStructureInfo = module.MapStructure<DSOApkEntry> ();
 		runtimePropertyStructureInfo = module.MapStructure<RuntimeProperty> ();
 		runtimePropertyIndexEntryStructureInfo = module.MapStructure<RuntimePropertyIndexEntry> ();
+		appEnvironmentVariableStructureInfo = module.MapStructure<AppEnvironmentVariable> ();
 	}
 }

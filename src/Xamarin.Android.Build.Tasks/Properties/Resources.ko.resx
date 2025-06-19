@@ -572,10 +572,6 @@ AndroidManifest.xml의 값을 $(SupportedOSPlatformVersion) 값에 맞도록 변
     <value>잘못된 AOT 모드: {0}</value>
     <comment>The abbreviation "AOT" should not be translated.</comment>
   </data>
-  <data name="XA3003" xml:space="preserve">
-    <value>어셈블리의 IL을 제거할 수 없음: {0}</value>
-    <comment>The abbreviation "IL" should not be translated.</comment>
-  </data>
   <data name="XA3004" xml:space="preserve">
     <value>Android NDK r10d는 버그가 있으며 호환되지 않는 x86_64 libm.so를 제공합니다. https://code.google.com/p/android/issues/detail?id=161422를 참조하세요.</value>
     <comment>The following are literal names and should not be translated: NDK, r10d, x86_64, libm.so
@@ -604,10 +600,10 @@ AndroidManifest.xml의 값을 $(SupportedOSPlatformVersion) 값에 맞도록 변
     <comment>The following are literal names and should not be translated: Mono.Android.Export.dll, ExportAttribute, ExportFieldAttribute.</comment>
   </data>
   <data name="XA4211" xml:space="preserve">
-    <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}'이(가) $(TargetFrameworkVersion) '{1}'보다 작습니다. ACW 컴파일에 API-{2}을(를) 사용합니다.</value>
-    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:targetSdkVersion , $(TargetFrameworkVersion), API-{2}, ACW
+    <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than $(TargetPlatformVersion) '{1}'. Using API-{2} for ACW compilation.</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:targetSdkVersion , $(TargetPlatformVersion), API-{2}, ACW
 {0} - The target SDK version number
-{1} - The target framework version number
+{1} - The $(TargetPlatformVersion) number
 {2} - The API version number</comment>
   </data>
   <data name="XA4213" xml:space="preserve">
@@ -842,16 +838,6 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <value>대상 {0}용 도구 체인 디렉터리를 찾을 수 없습니다.</value>
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64</comment>
   </data>
-  <data name="XA5102" xml:space="preserve">
-    <value>어셈블리에서 네이티브 코드로 변환하지 못했습니다. 종료 코드 {0}</value>
-    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces.)
-{0} - The exit code number</comment>
-  </data>
-  <data name="XA5103" xml:space="preserve">
-    <value>NDK C 컴파일러가 오류로 인해 종료되었습니다. 종료 코드 {0}</value>
-    <comment>The following are literal names and should not be translated: NDK, C
-{0} - The exit code number</comment>
-  </data>
   <data name="XA5104" xml:space="preserve">
     <value>Android NDK를 찾을 수 없습니다. Android SDK 관리자에 Android NDK가 설치되어 있는지 확인하거나, 사용자 지정 NDK 경로를 사용하는 경우 $(AndroidNdkDirectory) MSBuild 속성이 사용자 지정 경로로 설정되어 있는지 확인하세요.</value>
     <comment>The following are literal names and should not be translated: $(AndroidNdkDirectory)</comment>
@@ -861,11 +847,6 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>{0} - The missing utility name, such as gcc or clang
 {1} - The target architecture, such as Arm, Arm64, or X86_64
 {2} - The path of the directory that was searched</comment>
-  </data>
-  <data name="XA5201" xml:space="preserve">
-    <value>NDK 링커가 오류로 인해 종료되었습니다. 종료 코드 {0}</value>
-    <comment>The following are literal names and should not be translated: NDK
-{0} - The exit code number</comment>
   </data>
   <data name="XA5205" xml:space="preserve">
     <value>'{0}'을(를) 찾을 수 없습니다. '{1}{2}tools{2}{3}' 프로그램을 사용하여 Android SDK Build-Tools 패키지를 설치하세요.</value>

@@ -1245,7 +1245,7 @@ This means that in Release configuration builds -- in which
 This can result in increased app sizes. This behavior can be overridden by explicitly setting
 `$(AndroidEnableProfiledAot)` to `true` within your project file.
 
-Support for this property was added in .NET 8.
+Experimental support for this property was added in .NET 8, removed in .NET 10.
 
 ## AndroidSupportedAbis
 
@@ -1683,6 +1683,9 @@ The default value is `Resources`. Change this to `res` for the
 Java project structure.
 
 ## MonoSymbolArchive
+
+> [!NOTE]
+> This was a legacy MSBuild property from Xamarin.Android. Not available in .NET 6+.
 
 A boolean property that controls
 whether `.mSYM` artifacts are created for later use with

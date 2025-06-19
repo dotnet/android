@@ -572,10 +572,6 @@ Zmień wartość w pliku AndroidManifest.xml, aby odpowiadała wartości $(Suppo
     <value>Nieprawidłowy tryb AOT: {0}</value>
     <comment>The abbreviation "AOT" should not be translated.</comment>
   </data>
-  <data name="XA3003" xml:space="preserve">
-    <value>Nie można usunąć kodu IL zestawu: {0}</value>
-    <comment>The abbreviation "IL" should not be translated.</comment>
-  </data>
   <data name="XA3004" xml:space="preserve">
     <value>Zestaw Android NDK r10d zawiera wiele usterek i dostarcza niezgodną bibliotekę libm.so dla architektury x86_64. Zobacz https://code.google.com/p/android/issues/detail?id=161422.</value>
     <comment>The following are literal names and should not be translated: NDK, r10d, x86_64, libm.so
@@ -604,10 +600,10 @@ Zmień wartość w pliku AndroidManifest.xml, aby odpowiadała wartości $(Suppo
     <comment>The following are literal names and should not be translated: Mono.Android.Export.dll, ExportAttribute, ExportFieldAttribute.</comment>
   </data>
   <data name="XA4211" xml:space="preserve">
-    <value>Wersja //uses-sdk/@android:targetSdkVersion w pliku AndroidManifest.xml „{0}” jest niższa niż $(TargetFrameworkVersion) „{1}”. Używanie wersji API-{2} na potrzeby kompilacji ACW.</value>
-    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:targetSdkVersion , $(TargetFrameworkVersion), API-{2}, ACW
+    <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than $(TargetPlatformVersion) '{1}'. Using API-{2} for ACW compilation.</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:targetSdkVersion , $(TargetPlatformVersion), API-{2}, ACW
 {0} - The target SDK version number
-{1} - The target framework version number
+{1} - The $(TargetPlatformVersion) number
 {2} - The API version number</comment>
   </data>
   <data name="XA4213" xml:space="preserve">
@@ -842,16 +838,6 @@ Usuń odwołanie „{0}” z projektu i zamiast niego dodaj pakiet NuGet „{1}�
     <value>Nie znaleziono katalogu łańcucha narzędzi dla docelowej architektury {0}.</value>
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64</comment>
   </data>
-  <data name="XA5102" xml:space="preserve">
-    <value>Konwersja z zestawu do kodu natywnego nie powiodła się. Kod zakończenia {0}</value>
-    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces.)
-{0} - The exit code number</comment>
-  </data>
-  <data name="XA5103" xml:space="preserve">
-    <value>Kompilator języka C zestawu NDK zakończył pracę z błędem. Kod zakończenia {0}</value>
-    <comment>The following are literal names and should not be translated: NDK, C
-{0} - The exit code number</comment>
-  </data>
   <data name="XA5104" xml:space="preserve">
     <value>Nie można było zlokalizować zestawu Android NDK. Upewnij się, że zestaw Android NDK jest zainstalowany w Menedżerze zestawów Android SDK, a jeśli używana jest niestandardowa ścieżka zestawu NDK, upewnij się, że właściwość $(AndroidNdkDirectory) narzędzia MSBuild jest ustawiona na ścieżkę niestandardową.</value>
     <comment>The following are literal names and should not be translated: $(AndroidNdkDirectory)</comment>
@@ -861,11 +847,6 @@ Usuń odwołanie „{0}” z projektu i zamiast niego dodaj pakiet NuGet „{1}�
     <comment>{0} - The missing utility name, such as gcc or clang
 {1} - The target architecture, such as Arm, Arm64, or X86_64
 {2} - The path of the directory that was searched</comment>
-  </data>
-  <data name="XA5201" xml:space="preserve">
-    <value>Konsolidator zestawu NDK zakończył pracę z błędem. Kod zakończenia {0}</value>
-    <comment>The following are literal names and should not be translated: NDK
-{0} - The exit code number</comment>
   </data>
   <data name="XA5205" xml:space="preserve">
     <value>Nie można znaleźć narzędzia „{0}”. Zainstaluj pakiet Android SDK Build-Tools za pomocą programu „{1}{2}tools{2}{3}”.</value>

@@ -35,6 +35,8 @@ namespace Xamarin.Android.Tasks
 
 		public string AndroidSdkDirectory { get; set; }
 
+		public string TargetPlatformVersion { get; set; }
+
 		[Output]
 		public string JavaPlatformJarPath { get; set; }
 
@@ -118,6 +120,9 @@ namespace Xamarin.Android.Tasks
 			string targetFrameworkVersion = MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (AndroidSdkPlatform);
 			string targetSdkVersion       = MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (target);
 
+			// For .NET 6+ projects, use TargetPlatformVersion directly
+			string targetPlatformVersionDisplay = !string.IsNullOrEmpty (TargetPlatformVersion) ? TargetPlatformVersion : "";
+
 			if (!int.TryParse (targetFrameworkVersion, out int frameworkSdk)) {
 				// AndroidSdkPlatform is likely a *preview* API level; use it.
 				Log.LogWarningForXmlNode (
@@ -127,7 +132,7 @@ namespace Xamarin.Android.Tasks
 						message:          Properties.Resources.XA4211,
 						messageArgs:      new [] {
 							targetSdkVersion,
-							MonoAndroidHelper.SupportedVersions.GetIdFromFrameworkVersion (targetFrameworkVersion),
+							targetPlatformVersionDisplay,
 							MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (targetFrameworkVersion),
 						}
 				);
@@ -142,7 +147,7 @@ namespace Xamarin.Android.Tasks
 						message:          Properties.Resources.XA4211,
 						messageArgs:      new [] {
 							targetSdkVersion,
-							MonoAndroidHelper.SupportedVersions.GetIdFromFrameworkVersion (targetFrameworkVersion),
+							targetPlatformVersionDisplay,
 							MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (targetFrameworkVersion),
 						}
 				);

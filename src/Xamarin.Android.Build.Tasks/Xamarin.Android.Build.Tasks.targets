@@ -227,7 +227,6 @@
     <_MonoScriptSourceDirectory>..\..\tools\scripts</_MonoScriptSourceDirectory>
   </PropertyGroup>
   <ItemGroup>
-    <_MonoScript Include="mono-symbolicate" />
     <_MonoScript Include="illinkanalyzer" />
     <_MonoScript Include="jit-times" />
     <_MonoScript Include="aprofutil" />

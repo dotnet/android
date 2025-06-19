@@ -353,6 +353,7 @@
     <Compile Include="Microsoft.Android.Runtime\ManagedTypeMapping.cs" />
     <Compile Include="Microsoft.Android.Runtime\ManagedValueManager.cs" />
     <Compile Include="Microsoft.Android.Runtime\RuntimeFeature.cs" />
+    <Compile Include="Microsoft.Android.Runtime\SimpleValueManager.cs" />
     <Compile Include="Org.Apache.Http.Impl.Conn\DefaultClientConnection.cs" />
     <Compile Include="Org.Apache.Http.Impl.Cookie\BasicClientCookie.cs" />
     <Compile Include="System.Drawing/PointConverter.cs" />
