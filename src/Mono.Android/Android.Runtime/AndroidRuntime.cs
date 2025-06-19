@@ -641,7 +641,9 @@ namespace Android.Runtime {
 
 		public override void WaitForGCBridgeProcessing ()
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
+			if (!AndroidRuntimeInternal.BridgeProcessing)
+				return;
+			RuntimeNativeMethods._monodroid_gc_wait_for_bridge_processing ();
 		}
 
 		public override IJavaPeerable? CreatePeer (
