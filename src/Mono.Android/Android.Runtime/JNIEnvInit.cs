@@ -27,7 +27,6 @@ namespace Android.Runtime
 			public int             version; // TODO: remove, not needed anymore
 			public int             grefGcThreshold;
 			public IntPtr          grefIGCUserPeer;
-			public int             isRunningOnDesktop;
 			public byte            brokenExceptionTransitions;
 			public int             packageNamingPolicy;
 			public byte            ioExceptionType;
@@ -40,7 +39,6 @@ namespace Android.Runtime
 		}
 #pragma warning restore 0649
 
-		internal static bool IsRunningOnDesktop;
 		internal static bool jniRemappingInUse;
 		internal static bool MarshalMethodsEnabled;
 		internal static bool PropagateExceptions;
@@ -139,6 +137,12 @@ namespace Android.Runtime
 			PropagateExceptions = args->brokenExceptionTransitions == 0;
 
 			JavaNativeTypeManager.PackageNamingPolicy = (PackageNamingPolicy)args->packageNamingPolicy;
+			if (IsRunningOnDesktop) {
+				var packageNamingPolicy = Environment.GetEnvironmentVariable ("__XA_PACKAGE_NAMING_POLICY__");
+				if (Enum.TryParse (packageNamingPolicy, out PackageNamingPolicy pnp)) {
+					JavaNativeTypeManager.PackageNamingPolicy = pnp;
+				}
+			}
 			if (IsRunningOnDesktop) {
 				var packageNamingPolicy = Environment.GetEnvironmentVariable ("__XA_PACKAGE_NAMING_POLICY__");
 				if (Enum.TryParse (packageNamingPolicy, out PackageNamingPolicy pnp)) {
