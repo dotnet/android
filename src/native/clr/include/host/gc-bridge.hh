@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <jni.h>
 #include <thread>
 #include <semaphore>
@@ -18,6 +19,7 @@ struct JniObjectReferenceControlBlock
 
 struct HandleContext
 {
+	int32_t identity_hash_code;
 	JniObjectReferenceControlBlock *control_block;
 
 	bool is_collected () const noexcept
@@ -54,7 +56,6 @@ namespace xamarin::android {
 	class GCBridge
 	{
 	public:
-		static void wait_for_bridge_processing () noexcept;
 		static void initialize_on_load (JNIEnv *env) noexcept;
 		static void initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass) noexcept;
 
@@ -70,7 +71,7 @@ namespace xamarin::android {
 			GCBridge::bridge_processing_started_callback = bridge_processing_started;
 			GCBridge::bridge_processing_finished_callback = bridge_processing_finished;
 
-			bridge_processing_thread = new std::thread(GCBridge::bridge_processing);
+			bridge_processing_thread = new std::thread { GCBridge::bridge_processing };
 			bridge_processing_thread->detach ();
 
 			return mark_cross_references;
@@ -79,11 +80,10 @@ namespace xamarin::android {
 		static void trigger_java_gc (JNIEnv *env) noexcept;
 
 	private:
-		static inline std::binary_semaphore bridge_processing_semaphore{0};
-		static inline std::shared_mutex processing_mutex;
 		static inline std::thread *bridge_processing_thread = nullptr;
-		
-		static inline MarkCrossReferencesArgs *cross_refs;
+
+		static inline std::binary_semaphore shared_args_semaphore{0};
+		static inline std::atomic<MarkCrossReferencesArgs *> shared_args;
 
 		static inline jobject Runtime_instance = nullptr;
 		static inline jmethodID Runtime_gc = nullptr;
@@ -92,7 +92,7 @@ namespace xamarin::android {
 		static inline BridgeProcessingFinishedFtn bridge_processing_finished_callback = nullptr;
 
 		static void bridge_processing () noexcept;
-		static void mark_cross_references (MarkCrossReferencesArgs *cross_refs) noexcept;
+		static void mark_cross_references (MarkCrossReferencesArgs *args) noexcept;
 		
 		static void log_mark_cross_references_args_if_enabled (MarkCrossReferencesArgs *args) noexcept;
 		static void log_handle_context (JNIEnv *env, HandleContext *ctx) noexcept;

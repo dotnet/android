@@ -64,9 +64,7 @@ namespace Android.Runtime
 
 		public static void WaitForBridgeProcessing ()
 		{
-			if (!BridgeProcessing)
-				return;
-			RuntimeNativeMethods._monodroid_gc_wait_for_bridge_processing ();
+			Java.Interop.JniEnvironment.Runtime.ValueManager.WaitForGCBridgeProcessing ();
 		}
 	}
 }

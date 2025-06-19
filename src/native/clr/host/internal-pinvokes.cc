@@ -183,7 +183,8 @@ void _monodroid_lref_log_delete (int lrefc, jobject handle, char type, const cha
 
 void _monodroid_gc_wait_for_bridge_processing ()
 {
-	GCBridge::wait_for_bridge_processing ();
+	// TODO do we need this method?
+	Helpers::abort_application (LOG_DEFAULT, "The method _monodroid_gc_wait_for_bridge_processing is not implemented. This is a stub and should not be called."sv);
 }
 
 void _monodroid_detect_cpu_and_architecture (uint16_t *built_for_cpu, uint16_t *running_on_cpu, unsigned char *is64bit)

@@ -4,8 +4,6 @@
 #include <runtime-base/logger.hh>
 #include <shared/helpers.hh>
 
-#include <thread>
-
 using namespace xamarin::android;
 
 void BridgeProcessing::initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass) noexcept

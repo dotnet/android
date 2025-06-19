@@ -36,8 +36,9 @@ void GCBridge::initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass) noe
 
 void GCBridge::trigger_java_gc (JNIEnv *env) noexcept
 {
-	env->CallVoidMethod (Runtime_instance, Runtime_gc);
+	abort_if_invalid_pointer_argument (env, "env");
 
+	env->CallVoidMethod (Runtime_instance, Runtime_gc);
 	if (!env->ExceptionCheck ()) [[likely]] {
 		return;
 	}
@@ -49,16 +50,13 @@ void GCBridge::trigger_java_gc (JNIEnv *env) noexcept
 
 void GCBridge::mark_cross_references (MarkCrossReferencesArgs *args) noexcept
 {
-	abort_if_invalid_pointer_argument (args, "cross_refs");
+	abort_if_invalid_pointer_argument (args, "args");
 	abort_unless (args->Components != nullptr || args->ComponentCount == 0, "Components must not be null if ComponentCount is greater than 0");
 	abort_unless (args->CrossReferences != nullptr || args->CrossReferenceCount == 0, "CrossReferences must not be null if CrossReferenceCount is greater than 0");
 	log_mark_cross_references_args_if_enabled (args);
 
-	std::unique_lock<std::shared_mutex> lock (processing_mutex);
-
-	cross_refs = args;
-
-	bridge_processing_semaphore.release ();
+	shared_args.store (args);
+	shared_args_semaphore.release ();
 }
 
 void GCBridge::bridge_processing () noexcept
@@ -67,21 +65,17 @@ void GCBridge::bridge_processing () noexcept
 	abort_unless (bridge_processing_finished_callback != nullptr, "GC bridge processing finished callback is not set");
 
 	while (true) {
-		bridge_processing_semaphore.acquire ();
-		std::unique_lock<std::shared_mutex> lock (processing_mutex);
+		// wait until mark cross references args are set by the GC callback
+		shared_args_semaphore.acquire ();
+		MarkCrossReferencesArgs *args = shared_args.load ();
 
 		bridge_processing_started_callback ();
 
-		BridgeProcessing bridge_processing {cross_refs};
+		BridgeProcessing bridge_processing {args};
 		bridge_processing.process ();
 
-		bridge_processing_finished_callback (cross_refs);
+		bridge_processing_finished_callback (args);
 	}
-}
-
-void GCBridge::wait_for_bridge_processing () noexcept
-{
-	std::shared_lock<std::shared_mutex> lock (processing_mutex);
 }
 
 [[gnu::always_inline]]
