@@ -1299,8 +1299,7 @@ namespace UnnamedProject
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var environment = b.Output.GetIntermediaryPath (Path.Combine ("__environment__.txt"));
 				FileAssert.Exists (environment);
-				var values = new List<string> {
-				};
+				var values = new List<string> ();
 				values.Add ("mono.enable_assembly_preload=0");
 				values.Add ("DOTNET_MODIFIABLE_ASSEMBLIES=Debug");
 				Assert.AreEqual (string.Join (Environment.NewLine, values), File.ReadAllText (environment).Trim ());

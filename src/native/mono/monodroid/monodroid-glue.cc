@@ -742,7 +742,7 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 		}
 	}
 
-	if (user_assemblies_count == 0 && AndroidSystem::count_override_assemblies () == 0 && !is_running_on_desktop) {
+	if (user_assemblies_count == 0 && AndroidSystem::count_override_assemblies () == 0) {
 #if defined (DEBUG)
 		log_fatal (LOG_DEFAULT,
 			"No assemblies found in '{}' or '{}'. Assuming this is part of Fast Deployment. Exiting...",
@@ -762,30 +762,6 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 	}
 
 	MonoDomain *domain = mono_jit_init_version (const_cast<char*> ("RootDomain"), const_cast<char*> ("mobile"));
-	if constexpr (is_running_on_desktop) {
-		if (is_root_domain) {
-			c_unique_ptr<char> corlib_error_message_guard {const_cast<char*>(mono_check_corlib_version ())};
-			char *corlib_error_message = corlib_error_message_guard.get ();
-
-			if (corlib_error_message == nullptr) {
-				if (!AndroidSystem::monodroid_get_system_property ("xamarin.studio.fakefaultycorliberrormessage", &corlib_error_message)) {
-					corlib_error_message = nullptr;
-				}
-			}
-			if (corlib_error_message != nullptr) {
-				jclass ex_klass = env->FindClass ("mono/android/MonoRuntimeException");
-				env->ThrowNew (ex_klass, corlib_error_message);
-				return nullptr;
-			}
-
-			// Load a basic environment for the RootDomain if run on desktop so that we can unload
-			// and reload most assemblies including Mono.Android itself
-			MonoAssemblyName *aname = mono_assembly_name_new ("System");
-			mono_assembly_load_full (aname, nullptr, nullptr, 0);
-			mono_assembly_name_free (aname);
-		}
-	}
-
 	return domain;
 }
 
@@ -887,13 +863,8 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 	MonoClass *runtime;
 	MonoMethod *method;
 
-	if constexpr (is_running_on_desktop) {
-		runtime = mono_class_from_name (mono_android_assembly_image, SharedConstants::ANDROID_RUNTIME_NS_NAME.data (), SharedConstants::JNIENVINIT_CLASS_NAME.data ());
-		method = mono_class_get_method_from_name (runtime, "Initialize", 1);
-	} else {
-		runtime = mono_class_get (mono_android_assembly_image, application_config.android_runtime_jnienv_class_token);
-		method = mono_get_method (mono_android_assembly_image, application_config.jnienv_initialize_method_token, runtime);
-	}
+	runtime = mono_class_get (mono_android_assembly_image, application_config.android_runtime_jnienv_class_token);
+	method = mono_get_method (mono_android_assembly_image, application_config.jnienv_initialize_method_token, runtime);
 
 	abort_unless (runtime != nullptr, "INTERNAL ERROR: unable to find the Android.Runtime.JNIEnvInit class!");
 	abort_unless (method != nullptr, "INTERNAL ERROR: Unable to find the Android.Runtime.JNIEnvInit.Initialize method!");
@@ -911,16 +882,9 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 	}
 
 	MonoError error;
-	/* If running on desktop, we may be swapping in a new Mono.Android image when calling this
-	 * so always make sure we have the freshest handle to the method.
-	 */
-	if (registerType == nullptr || is_running_on_desktop) {
-		if constexpr (is_running_on_desktop) {
-			registerType = mono_class_get_method_from_name (runtime, "RegisterJniNatives", 5);
-		} else {
-			registerType = mono_get_method (mono_android_assembly_image, application_config.jnienv_registerjninatives_method_token, runtime);
-			jnienv_register_jni_natives = reinterpret_cast<jnienv_register_jni_natives_fn>(mono_method_get_unmanaged_callers_only_ftnptr (registerType, &error));
-		}
+	if (registerType == nullptr) {
+		registerType = mono_get_method (mono_android_assembly_image, application_config.jnienv_registerjninatives_method_token, runtime);
+		jnienv_register_jni_natives = reinterpret_cast<jnienv_register_jni_natives_fn>(mono_method_get_unmanaged_callers_only_ftnptr (registerType, &error));
 	}
 	abort_unless (
 		registerType != nullptr,
@@ -1264,20 +1228,13 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 	// Asserting this on desktop apparently breaks a Designer test
 	abort_unless (domain != nullptr, "Failed to create AppDomain");
 
-	// When running on desktop, the root domain is only a dummy so don't initialize it
-	if constexpr (is_running_on_desktop) {
-		if (is_root_domain) {
-			return domain;
-		}
-	}
-
 	default_alc = mono_alc_get_default_gchandle ();
 	abort_unless (default_alc != nullptr, "Default AssemblyLoadContext not found");
 
 	EmbeddedAssemblies::install_preload_hooks_for_alc ();
 	log_debug (LOG_ASSEMBLY, "ALC hooks installed"sv);
 
-	bool preload = (AndroidSystem::is_assembly_preload_enabled () || (is_running_on_desktop && force_preload_assemblies));
+	bool preload = AndroidSystem::is_assembly_preload_enabled ();
 
 	load_assemblies (default_alc, preload, assemblies);
 	init_android_runtime (env, runtimeClass, loader);
@@ -1526,12 +1483,6 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	jstring_array_wrapper assembliesPaths (env);
 	/* the first assembly is used to initialize the AppDomain name */
 	create_and_initialize_domain (env, klass, runtimeApks, assemblies, nullptr, assembliesPaths, loader, /*is_root_domain:*/ true, /*force_preload_assemblies:*/ false, haveSplitApks);
-
-	// Install our dummy exception handler on Desktop
-	if constexpr (is_running_on_desktop) {
-		mono_add_internal_call ("System.Diagnostics.Debugger::Mono_UnhandledException_internal(System.Exception)",
-		                                 reinterpret_cast<const void*> (monodroid_Mono_UnhandledException_internal));
-	}
 
 	if (Util::should_log (LOG_DEFAULT)) [[unlikely]] {
 		log_info_nocheck_fmt (
