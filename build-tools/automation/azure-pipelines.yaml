@@ -88,6 +88,9 @@ extends:
         - repository: maui
       suppression:
         suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
+      tsa:
+        enabled: true
+        configFile: $(Build.SourcesDirectory)\.gdn\tsaoptions-v2.json
     settings:
       skipBuildTagsForGitHubPullRequests: true
     stages:
