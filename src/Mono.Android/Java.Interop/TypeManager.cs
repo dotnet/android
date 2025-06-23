@@ -275,13 +275,9 @@ namespace Java.Interop {
 				return type;
 			}
 
-			if (!JNIEnvInit.IsRunningOnDesktop) {
-				// Miss message is logged in the native runtime
-				if (Logger.LogAssembly)
-					JNIEnv.LogTypemapTrace (new System.Diagnostics.StackTrace (true));
-				return null;
-			}
-
+			// Miss message is logged in the native runtime
+			if (Logger.LogAssembly)
+				JNIEnv.LogTypemapTrace (new System.Diagnostics.StackTrace (true));
 			return null;
 		}
 
@@ -432,7 +428,7 @@ namespace Java.Interop {
 					if (String.Compare (jniFromType, java_class, StringComparison.OrdinalIgnoreCase) != 0) {
 						TypeManagerMapDictionaries.ManagedToJni.Add (t, java_class);
 					}
-				} else if (!JNIEnvInit.IsRunningOnDesktop || t != typeof (Java.Interop.TypeManager)) {
+				} else if (t != typeof (Java.Interop.TypeManager)) {
 					// skip the registration and output a warning
 					Logger.Log (LogLevel.Warn, "monodroid", FormattableString.Invariant ($"Type Registration Skipped for {java_class} to {t} "));
 				}

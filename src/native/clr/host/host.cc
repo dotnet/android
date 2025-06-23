@@ -426,7 +426,6 @@ void Host::Java_mono_android_Runtime_initInternal (
 	init.env                                            = env;
 	init.logCategories                                  = log_categories;
 	init.version                                        = env->GetVersion ();
-	init.isRunningOnDesktop                             = false;
 	init.brokenExceptionTransitions                     = 0;
 	init.packageNamingPolicy                            = static_cast<int>(application_config.package_naming_policy);
 	init.boundExceptionType                             = 0; // System
