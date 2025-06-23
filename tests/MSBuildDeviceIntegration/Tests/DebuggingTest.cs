@@ -283,70 +283,54 @@ namespace ${ROOT_NAMESPACE} {
 		static object [] DebuggerTestCases = new object [] {
 			new object[] {
 				/* embedAssemblies */    true,
-				/* allowDeltaInstall */  false,
 				/* user */		 null,
 				/* packageFormat */      "apk",
 				/* useLatestSdk */       true,
 			},
 			new object[] {
 				/* embedAssemblies */    true,
-				/* allowDeltaInstall */  false,
 				/* user */		 null,
 				/* packageFormat */      "apk",
 				/* useLatestSdk */       false,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
-				/* allowDeltaInstall */  false,
-				/* user */		 null,
-				/* packageFormat */      "apk",
-				/* useLatestSdk */       true,
-			},
-			new object[] {
-				/* embedAssemblies */    false,
-				/* allowDeltaInstall */  true,
 				/* user */		 null,
 				/* packageFormat */      "apk",
 				/* useLatestSdk */       true,
 			},
 			new object[] {
 				/* embedAssemblies */    true,
-				/* allowDeltaInstall */  false,
 				/* user */		 DeviceTest.GuestUserName,
 				/* packageFormat */      "apk",
 				/* useLatestSdk */       true,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
-				/* allowDeltaInstall */  false,
 				/* user */		 DeviceTest.GuestUserName,
 				/* packageFormat */      "apk",
 				/* useLatestSdk */       true,
 			},
 			new object[] {
 				/* embedAssemblies */    true,
-				/* allowDeltaInstall */  false,
 				/* user */		 null,
 				/* packageFormat */      "aab",
 				/* useLatestSdk */       true,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
-				/* allowDeltaInstall */  false,
 				/* user */		 null,
 				/* packageFormat */      "aab",
 				/* useLatestSdk */       true,
 			},
 			new object[] {
 				/* embedAssemblies */    true,
-				/* allowDeltaInstall */  false,
 				/* user */		 DeviceTest.GuestUserName,
 				/* packageFormat */      "aab",
 				/* useLatestSdk */       true,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
-				/* allowDeltaInstall */  false,
 				/* user */		 DeviceTest.GuestUserName,
 				/* packageFormat */      "aab",
 				/* useLatestSdk */       true,
@@ -357,7 +341,7 @@ namespace ${ROOT_NAMESPACE} {
 		[Test, Category ("Debugger"), Category ("WearOS")]
 		[TestCaseSource (nameof(DebuggerTestCases))]
 		[Retry (5)]
-		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, bool allowDeltaInstall, string username, string packageFormat, bool useLatestSdk)
+		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string username, string packageFormat, bool useLatestSdk)
 		{
 			AssertCommercialBuild ();
 			SwitchUser ();
@@ -409,7 +393,6 @@ namespace ${ROOT_NAMESPACE} {
 			app.AddReference (lib);
 			var abis = new [] { DeviceAbi };
 			app.SetRuntimeIdentifiers (abis);
-			app.SetProperty (KnownProperties._AndroidAllowDeltaInstall, allowDeltaInstall.ToString ());
 			app.SetDefaultTargetDevice ();
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
