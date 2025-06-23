@@ -427,7 +427,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	const BindingFlags ActivationConstructorBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
-	static readonly Type[] XAConstructorSignature = new Type[] { typeof (IntPtr), typeof (JniHandleOwnership) };
+	static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
 
 	protected override bool TryConstructPeer (
 			IJavaPeerable self,

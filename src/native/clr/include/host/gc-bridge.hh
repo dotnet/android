@@ -71,7 +71,7 @@ namespace xamarin::android {
 			GCBridge::bridge_processing_started_callback = bridge_processing_started;
 			GCBridge::bridge_processing_finished_callback = bridge_processing_finished;
 
-			bridge_processing_thread = new std::thread { GCBridge::bridge_processing };
+			bridge_processing_thread = std::thread { GCBridge::bridge_processing };
 			bridge_processing_thread->detach ();
 
 			return mark_cross_references;
@@ -80,10 +80,10 @@ namespace xamarin::android {
 		static void trigger_java_gc (JNIEnv *env) noexcept;
 
 	private:
-		static inline std::thread *bridge_processing_thread = nullptr;
+		static inline std::thread bridge_processing_thread {};
 
 		static inline std::binary_semaphore shared_args_semaphore{0};
-		static inline std::atomic<MarkCrossReferencesArgs *> shared_args;
+		static inline std::atomic<MarkCrossReferencesArgs*> shared_args;
 
 		static inline jobject Runtime_instance = nullptr;
 		static inline jmethodID Runtime_gc = nullptr;
