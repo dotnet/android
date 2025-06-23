@@ -72,7 +72,7 @@ namespace xamarin::android {
 			GCBridge::bridge_processing_finished_callback = bridge_processing_finished;
 
 			bridge_processing_thread = std::thread { GCBridge::bridge_processing };
-			bridge_processing_thread->detach ();
+			bridge_processing_thread.detach ();
 
 			return mark_cross_references;
 		}

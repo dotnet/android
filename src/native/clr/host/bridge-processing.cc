@@ -67,9 +67,10 @@ void BridgeProcessing::prepare_for_java_collection () noexcept
 	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
 		const StronglyConnectedComponent &scc = cross_refs->Components [i];
 		for (size_t j = 0; j < scc.Count; j++) {
-			HandleContext *context = scc.Contexts [j];
+			const HandleContext *context = scc.Contexts [j];
 			abort_unless (context != nullptr, "Context must not be null");
-			take_weak_global_ref (context);
+
+			take_weak_global_ref (*context);
 		}
 	}
 }
@@ -109,25 +110,25 @@ CrossReferenceTarget BridgeProcessing::select_cross_reference_target (size_t scc
 // caller must ensure that scc.Count > 1
 void BridgeProcessing::add_circular_references (const StronglyConnectedComponent &scc) noexcept
 {
-	auto get_control_block = [&scc](size_t index) -> JniObjectReferenceControlBlock* {
+	auto get_control_block = [&scc](size_t index) -> JniObjectReferenceControlBlock& {
 		abort_unless (scc.Contexts [index] != nullptr, "Context in SCC must not be null");
 		JniObjectReferenceControlBlock *control_block = scc.Contexts [index]->control_block;
 		abort_unless (control_block != nullptr, "Control block in SCC must not be null");
-		return control_block;
+		return *control_block;
 	};
 
-	JniObjectReferenceControlBlock *prev = get_control_block (scc.Count - 1);
+	JniObjectReferenceControlBlock &prev = get_control_block (scc.Count - 1);
 
 	for (size_t j = 1; j < scc.Count; j++) {
-		JniObjectReferenceControlBlock *next = get_control_block (j);
+		JniObjectReferenceControlBlock &next = get_control_block (j);
 
-		bool reference_added = add_reference (prev->handle, next->handle);
+		bool reference_added = add_reference (prev.handle, next.handle);
 
 		abort_unless (reference_added, [this, &prev, &next] {
-			jclass prev_java_class = env->GetObjectClass (prev->handle);
+			jclass prev_java_class = env->GetObjectClass (prev.handle);
 			const char *prev_class_name = Host::get_java_class_name_for_TypeManager (prev_java_class);
 
-			jclass next_java_class = env->GetObjectClass (next->handle);
+			jclass next_java_class = env->GetObjectClass (next.handle);
 			const char *next_class_name = Host::get_java_class_name_for_TypeManager (next_java_class);
 
 			return detail::_format_message (
@@ -136,7 +137,7 @@ void BridgeProcessing::add_circular_references (const StronglyConnectedComponent
 				next_class_name);
 		});
 
-		prev->refs_added = 1;
+		prev.refs_added = 1;
 		prev = next;
 	}
 }
@@ -171,15 +172,13 @@ bool BridgeProcessing::add_reference (jobject from, jobject to) noexcept
 	return true;
 }
 
-void BridgeProcessing::clear_references_if_needed (HandleContext *context) noexcept
+void BridgeProcessing::clear_references_if_needed (const HandleContext &context) noexcept
 {
-	// context is a valid pointer - validated at callsite
-
-	if (context->is_collected ()) {
+	if (context.is_collected ()) {
 		return;
 	}
 
-	JniObjectReferenceControlBlock *control_block = context->control_block;
+	JniObjectReferenceControlBlock *control_block = context.control_block;
 
 	abort_unless (control_block != nullptr, "Control block must not be null");
 	abort_unless (control_block->handle != nullptr, "Control block handle must not be null");
@@ -211,44 +210,42 @@ void BridgeProcessing::clear_references (jobject handle) noexcept
 	env->CallVoidMethod (handle, clear_method_id);
 }
 
-void BridgeProcessing::take_global_ref (HandleContext *context) noexcept
+void BridgeProcessing::take_global_ref (HandleContext &context) noexcept
 {
-	// context is a valid pointer - validated at callsite
-	abort_unless (context->control_block != nullptr, "Control block must not be null");
-	abort_unless (context->control_block->handle_type == JNIWeakGlobalRefType, "Expected weak global reference type for handle");
+	abort_unless (context.control_block != nullptr, "Control block must not be null");
+	abort_unless (context.control_block->handle_type == JNIWeakGlobalRefType, "Expected weak global reference type for handle");
 
-	jobject weak = context->control_block->handle;
+	jobject weak = context.control_block->handle;
 	jobject handle = env->NewGlobalRef (weak);
 	log_weak_to_gref (weak, handle);
 
 	if (handle != nullptr) {
 		log_weak_ref_survived (weak, handle);
 
-		context->control_block->handle = handle;
-		context->control_block->handle_type = JNIGlobalRefType;
+		context.control_block->handle = handle;
+		context.control_block->handle_type = JNIGlobalRefType;
 
 		env->DeleteWeakGlobalRef (weak);
 	} else {
 		// The native memory of the control block will be freed in managed code as well as the weak global ref
-		context->control_block = nullptr;
+		context.control_block = nullptr;
 		log_weak_ref_collected (weak);
 	}
 }
 
-void BridgeProcessing::take_weak_global_ref (HandleContext *context) noexcept
+void BridgeProcessing::take_weak_global_ref (const HandleContext &context) noexcept
 {
-	// context is a valid pointer - validated at callsite
-	abort_unless (context->control_block != nullptr, "Control block must not be null");
-	abort_unless (context->control_block->handle_type == JNIGlobalRefType, "Expected global reference type for handle");
+	abort_unless (context.control_block != nullptr, "Control block must not be null");
+	abort_unless (context.control_block->handle_type == JNIGlobalRefType, "Expected global reference type for handle");
 
-	jobject handle = context->control_block->handle;
+	jobject handle = context.control_block->handle;
 	log_take_weak_global_ref (handle);
 
 	jobject weak = env->NewWeakGlobalRef (handle);
 	log_weak_gref_new (handle, weak);
 
-	context->control_block->handle = weak;
-	context->control_block->handle_type = JNIWeakGlobalRefType;
+	context.control_block->handle = weak;
+	context.control_block->handle_type = JNIWeakGlobalRefType;
 
 	log_gref_delete (handle);
 	env->DeleteGlobalRef (handle);
@@ -264,8 +261,8 @@ void BridgeProcessing::cleanup_after_java_collection () noexcept
 			HandleContext *context = scc.Contexts [j];
 			abort_unless (context != nullptr, "Context must not be null");
 
-			take_global_ref (context);
-			clear_references_if_needed (context);
+			take_global_ref (*context);
+			clear_references_if_needed (*context);
 		}
 
 		abort_unless_all_collected_or_all_alive (scc);
@@ -282,7 +279,7 @@ void BridgeProcessing::abort_unless_all_collected_or_all_alive (const StronglyCo
 	bool is_collected = scc.Contexts [0]->is_collected ();
 	
 	for (size_t j = 1; j < scc.Count; j++) {
-		HandleContext *context = scc.Contexts [j];
+		const HandleContext *context = scc.Contexts [j];
 		abort_unless (context != nullptr, "Context must not be null");
 		abort_unless (context->is_collected () == is_collected, "Cannot have a mix of collected and alive contexts in the SCC");
 	}

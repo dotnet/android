@@ -22,10 +22,12 @@ class ManagedValueManager : JniRuntime.JniValueManager
 {
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
-	Dictionary<int, List<ReferenceTrackingHandle>>? RegisteredInstances = new ();
+	readonly Dictionary<int, List<ReferenceTrackingHandle>> RegisteredInstances = new ();
 	readonly ConcurrentQueue<IntPtr> CollectedContexts = new ();
 
-	static readonly SemaphoreSlim bridgeProcessingSemaphore = new (1, 1);
+	bool disposed;
+
+	static readonly SemaphoreSlim bridgeProcessingSemaphore = new(1, 1);
 
 	static Lazy<ManagedValueManager> s_instance = new (() => new ManagedValueManager ());
 	public static ManagedValueManager GetOrCreateInstance () => s_instance.Value;
@@ -37,16 +39,27 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		JavaMarshal.Initialize (mark_cross_references_ftn);
 	}
 
-	public override void WaitForGCBridgeProcessing ()
+	protected override void Dispose (bool disposing)
 	{
-		bridgeProcessingSemaphore.Wait ();
-		bridgeProcessingSemaphore.Release ();
+		disposed = true;
+		base.Dispose (disposing);
+	}
+
+	void ThrowIfDisposed ()
+	{
+		if (disposed)
+			throw new ObjectDisposedException (nameof (ManagedValueManager));
+	}
+
+	public override void WaitForGCBridgeProcessing()
+	{
+		bridgeProcessingSemaphore.Wait();
+		bridgeProcessingSemaphore.Release();
 	}
 
 	public unsafe override void CollectPeers ()
 	{
-		if (RegisteredInstances == null)
-			throw new ObjectDisposedException (nameof (ManagedValueManager));
+		ThrowIfDisposed ();
 
 		while (CollectedContexts.TryDequeue (out IntPtr contextPtr)) {
 			HandleContext* context = (HandleContext*)contextPtr;
@@ -79,8 +92,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	public override void AddPeer (IJavaPeerable value)
 	{
-		if (RegisteredInstances == null)
-			throw new ObjectDisposedException (nameof (ManagedValueManager));
+		ThrowIfDisposed ();
 
 		// Remove any collected contexts before adding a new peer.
 		CollectPeers ();
@@ -140,8 +152,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	public override IJavaPeerable? PeekPeer (JniObjectReference reference)
 	{
-		if (RegisteredInstances == null)
-			throw new ObjectDisposedException (nameof (ManagedValueManager));
+		ThrowIfDisposed ();
 
 		if (!reference.IsValid)
 			return null;
@@ -168,8 +179,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	public override void RemovePeer (IJavaPeerable value)
 	{
-		if (RegisteredInstances == null)
-			throw new ObjectDisposedException (nameof (ManagedValueManager));
+		ThrowIfDisposed ();
 
 		// Remove any collected contexts before modifying RegisteredInstances
 		CollectPeers ();
@@ -268,8 +278,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 	{
-		if (RegisteredInstances == null)
-			throw new ObjectDisposedException (nameof (ManagedValueManager));
+		ThrowIfDisposed ();
 
 		// Remove any collected contexts before iterating over all the registered instances
 		CollectPeers ();
@@ -451,8 +460,9 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)]out object? result)
 	{
-		if (value is JavaProxyThrowable proxy) {
-			result  = proxy.InnerException;
+		var proxy = value as JavaProxyThrowable;
+		if (proxy != null) {
+			result = proxy.InnerException;
 			return true;
 		}
 		return base.TryUnboxPeerObject (value, out result);

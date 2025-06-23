@@ -36,7 +36,7 @@ private:
 
 	void prepare_for_java_collection () noexcept;
 	void prepare_scc_for_java_collection (size_t scc_index, const StronglyConnectedComponent &scc) noexcept;
-	void take_weak_global_ref (HandleContext *context) noexcept;
+	void take_weak_global_ref (const HandleContext &context) noexcept;
 
 	void add_circular_references (const StronglyConnectedComponent &scc) noexcept;
 	void add_cross_reference (size_t source_index, size_t dest_index) noexcept;
@@ -46,9 +46,9 @@ private:
 	void cleanup_after_java_collection () noexcept;
 	void cleanup_scc_for_java_collection (const StronglyConnectedComponent &scc) noexcept;
 	void abort_unless_all_collected_or_all_alive (const StronglyConnectedComponent &scc) noexcept;
-	void take_global_ref (HandleContext *context) noexcept;
+	void take_global_ref (HandleContext &context) noexcept;
 
-	void clear_references_if_needed (HandleContext *context) noexcept;
+	void clear_references_if_needed (const HandleContext &context) noexcept;
 	void clear_references (jobject handle) noexcept;
 
 	void log_missing_add_references_method (jclass java_class) noexcept;
