@@ -438,6 +438,7 @@ extends:
         windowsImageOverride: $(WindowsPoolImage1ESPT)
         stageDependsOn: []
         tsaConfigFile: $(Build.SourcesDirectory)\.gdn\tsaoptions-v2.json
+        tsaUploadEnabled: true
         policheckLocScanEnabled: true
         policheckExclusionFilesFolder: $(Build.SourcesDirectory)\.gdn\policheck
         policheckGdnSuppressionFilesFolder: $(Build.SourcesDirectory)\.gdn\policheck
