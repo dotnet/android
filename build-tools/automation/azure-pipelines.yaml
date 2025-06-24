@@ -64,7 +64,10 @@ extends:
       ${{ if eq('${{ parameters.Skip1ESComplianceTasks }}', 'true') }}:
         enableAllTools: false
       binskim:
+        enabled: true
         scanOutputDirectoryOnly: true
+        # Ignore all dlls and exes inside TestRelease folder
+        targetPathExclusionPattern: '\".*[/\\\\\\\\]TestRelease[/\\\\\\\\].*.(exe|dll)\"'
       codeql:
         compiled:
           enabled: false
