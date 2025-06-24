@@ -2778,7 +2778,6 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 
-
 <!-- Callable targets -->
 <PropertyGroup>
 	<_BuildApkDependsOnTargets>
