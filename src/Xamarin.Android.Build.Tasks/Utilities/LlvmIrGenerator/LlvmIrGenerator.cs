@@ -854,13 +854,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			Type elementType = array.ContainedType;
 			WriteArrayValueStart (context);
-			bool first = true;
 			ulong globalCounter = 0;
+			int lastSectionIndex = array.Sections.Count - 1;
 
-			foreach (LlvmIrArraySectionBase section in array.Sections) {
-				if (first) {
-					first = false;
-				} else {
+			for (int i = 0; i < array.Sections.Count; i++) {
+				LlvmIrArraySectionBase section = array.Sections[i];
+
+				if (i > 0) {
 					context.Output.WriteLine ();
 				}
 
@@ -877,7 +877,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					section.Data,
 					section.DataType,
 					stride: 1,
-					writeIndices: true
+					writeIndices: true,
+					terminateWithComma: i < lastSectionIndex
 				);
 				globalCounter += (ulong)section.Data.Count;
 			}
