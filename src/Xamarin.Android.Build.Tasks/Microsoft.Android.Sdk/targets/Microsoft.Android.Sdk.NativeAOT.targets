@@ -72,10 +72,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_OriginalRuntimeIdentifier>$(RuntimeIdentifier)</_OriginalRuntimeIdentifier>
       <RuntimeIdentifier Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">linux-bionic-arm64</RuntimeIdentifier>
       <RuntimeIdentifier Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">linux-bionic-x64</RuntimeIdentifier>
-      <!-- HACK: -targetos:android results in error, so use linux -->
-      <_targetOS>linux</_targetOS>
-      <!-- HACK: prevents libSystem.Net.Security.Native.a from being added -->
-      <_linuxLibcFlavor>bionic</_linuxLibcFlavor>
       <!-- HACK: prevents: java.lang.UnsatisfiedLinkError: dlopen failed: cannot locate symbol "__start___modules" -->
       <LinkerFlavor Condition=" '$(LinkerFlavor)' == '' ">lld</LinkerFlavor>
     </PropertyGroup>
