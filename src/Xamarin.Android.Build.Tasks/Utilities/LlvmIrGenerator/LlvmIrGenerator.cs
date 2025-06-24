@@ -378,6 +378,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return 1; // String blobs are a collection of bytes
 			}
 
+			if (type.IsSubclassOf (typeof(LlvmIrSectionedArrayBase))) {
+				var sectionedArray = value as LlvmIrSectionedArrayBase;
+				if (sectionedArray == null) {
+					throw new InvalidOperationException ($"Internal error: null sectioned arrays aren't supported");
+				}
+				return sectionedArray.Count;
+			}
+
 			if (!type.IsArray ()) {
 				throw new InvalidOperationException ($"Internal error: unknown type {type} when trying to determine aggregate type element count");
 			}
@@ -474,10 +482,27 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			string irType;
 			ulong size;
 			bool isPointer;
+			bool isStandardArray = type.IsArray ();
+			bool isSectionedArray = !isStandardArray && type.IsSubclassOf (typeof(LlvmIrSectionedArrayBase));
 
-			if (type.IsArray ()) {
-				Type elementType = type.GetArrayElementType ();
-				ulong elementCount = GetAggregateValueElementCount (context, type, value, globalVariable);
+			if (isStandardArray || isSectionedArray) {
+				Type elementType;
+				ulong elementCount;
+
+				if (isStandardArray) {
+					elementType = type.GetArrayElementType ();
+					elementCount = GetAggregateValueElementCount (context, type, value, globalVariable);
+				} else if (isSectionedArray) {
+					var sectionedArray = value as LlvmIrSectionedArrayBase;
+					if (sectionedArray == null) {
+						throw new InvalidOperationException ($"Internal error: sectioned array variables must have a value");
+					}
+
+					elementType = sectionedArray.ContainedType;
+					elementCount = GetAggregateValueElementCount (context, type, value, globalVariable);
+				} else {
+					throw new InvalidOperationException ("Internal error: should never get here (forgot to add a handler for another array type?)");
+				}
 
 				WriteArrayType (context, elementType, elementCount, globalVariable, out typeInfo);
 				return;
@@ -807,12 +832,57 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				throw new NotSupportedException ($"Internal error: array of type {type} is unsupported");
 			}
 
+			if (type.IsSubclassOf (typeof(LlvmIrSectionedArrayBase))) {
+				WriteSectionedArrayValue (context, (LlvmIrSectionedArrayBase)value);
+				return;
+			}
+
 			if (type == typeof (LlvmIrVariableReference) || type.IsSubclassOf (typeof (LlvmIrVariableReference))) {
 				WriteVariableReference (context, (LlvmIrVariableReference)value);
 				return;
 			}
 
 			throw new NotSupportedException ($"Internal error: value type '{type}' is unsupported");
+		}
+
+		void WriteSectionedArrayValue (GeneratorWriteContext context, LlvmIrSectionedArrayBase? array)
+		{
+			if (array == null) {
+				context.Output.Write (" zeroinitializer");
+				return;
+			}
+
+			Type elementType = array.ContainedType;
+			WriteArrayValueStart (context);
+			bool first = true;
+			ulong globalCounter = 0;
+
+			foreach (LlvmIrArraySectionBase section in array.Sections) {
+				if (first) {
+					first = false;
+				} else {
+					context.Output.WriteLine ();
+				}
+
+				if (!String.IsNullOrEmpty (section.Header)) {
+					context.Output.Write (context.CurrentIndent);
+					WriteCommentLine (context, $" Module map index: {globalCounter}");
+					context.Output.Write (context.CurrentIndent);
+					WriteCommentLine (context, section.Header);
+				}
+
+				WriteArrayEntries (
+					context,
+					variable: null,
+					section.Data,
+					section.DataType,
+					stride: 1,
+					writeIndices: true
+				);
+				globalCounter += (ulong)section.Data.Count;
+			}
+
+			WriteArrayValueEnd (context);
 		}
 
 		void WriteStringBlobArray (GeneratorWriteContext context, LlvmIrStringBlob blob)
@@ -962,7 +1032,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return 1;
 		}
 
-		void WriteArrayEntries (GeneratorWriteContext context, LlvmIrVariable variable, ICollection? entries, Type elementType, uint stride, bool writeIndices, bool terminateWithComma = false)
+		void WriteArrayEntries (GeneratorWriteContext context, LlvmIrVariable? variable, ICollection? entries, Type elementType, uint stride, bool writeIndices, bool terminateWithComma = false)
 		{
 			bool first = true;
 			bool ignoreComments = stride > 1;
@@ -987,7 +1057,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 					if (!ignoreComments) {
 						prevItemComment = null;
-						if (variable.GetArrayItemCommentCallback != null) {
+						if (variable != null && variable.GetArrayItemCommentCallback != null) {
 							prevItemComment = variable.GetArrayItemCommentCallback (variable, target, counter, entry, variable.GetArrayItemCommentCallbackCallerState);
 						}
 
