@@ -69,6 +69,8 @@ extends:
         compiled:
           enabled: false
           justificationForDisabling: CodeQL runs against the nightly build
+      credscan:
+        suppressionsFile: $(Build.SourcesDirectory)\.gdn\CredScanSuppressions.json
       policheck:
         enabled: false
         justification: Built in task does not support multi-language scanning
