@@ -1,21 +1,28 @@
 using System;
+using System.Collections.Generic;
 
 namespace Xamarin.Android.Tasks.LLVMIR;
 
-class LlvmIrArraySection
+abstract class LlvmIrArraySectionBase
 {
-	public Type DataType  { get; }
-	public object? Data   { get; }
-	public string? Header { get; }
+	public Type DataType     { get; }
+	public List<object> Data { get; } = [];
+	public string? Header    { get; }
 
-	public LlvmIrArraySection (Type type, object? data, string? header = null)
+	protected LlvmIrArraySectionBase (Type type, string? header = null)
 	{
 		DataType = type;
-		Data = data;
 		Header = header;
 	}
 
-	public LlvmIrArraySection (object? data, string? header = null)
-		: this ((data ?? throw new ArgumentNullException (nameof (data))).GetType (), data, header)
+	protected void Add (object data) => Data.Add (data);
+}
+
+class LlvmIrArraySection<T> : LlvmIrArraySectionBase
+{
+	public LlvmIrArraySection (string? header = null)
+		: base (typeof(T), header)
 	{}
+
+	public void Add (T data) => base.Add (data!);
 }

@@ -9,19 +9,21 @@ namespace Xamarin.Android.Tasks.LLVMIR;
 /// treated as a separate entity to other sections. The resulting output array will look as a flattened
 /// array of arrays (sections).
 /// </summary>
-class LlvmIrSectionedArray
+abstract class LlvmIrSectionedArrayBase
 {
 	readonly Type containedType;
-	readonly List<LlvmIrArraySection> sections = new ();
+	readonly List<LlvmIrArraySectionBase> sections = new ();
 
-	public List<LlvmIrArraySection> Sections => sections;
+	public List<LlvmIrArraySectionBase> Sections => sections;
+	public Type ContainedType => containedType;
+	public ulong Count => GetItemCount ();
 
-	public LlvmIrSectionedArray (Type containedType)
+	protected LlvmIrSectionedArrayBase (Type containedType)
 	{
 		this.containedType = containedType;
 	}
 
-	public void Add (LlvmIrArraySection section)
+	protected void Add (LlvmIrArraySectionBase section)
 	{
 		if (!containedType.IsAssignableFrom (section.DataType)) {
 			throw new ArgumentException ("must be of type {containedType} or derived from it", nameof (section));
@@ -29,4 +31,22 @@ class LlvmIrSectionedArray
 
 		sections.Add (section);
 	}
+
+	ulong GetItemCount ()
+	{
+		ulong ret = 0;
+		foreach (LlvmIrArraySectionBase section in sections) {
+			ret += (ulong)section.Data.Count;
+		}
+		return ret;
+	}
+}
+
+class LlvmIrSectionedArray<T> : LlvmIrSectionedArrayBase
+{
+	public LlvmIrSectionedArray ()
+		: base (typeof (T))
+	{}
+
+	public void Add (LlvmIrArraySection<T> section) => base.Add (section);
 }
