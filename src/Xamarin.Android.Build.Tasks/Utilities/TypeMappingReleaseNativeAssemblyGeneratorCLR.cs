@@ -282,11 +282,11 @@ namespace Xamarin.Android.Tasks
 			};
 			module.Add (modulesMapData);
 
-			var modulesDuplicatesData = new LlvmIrGlobalVariable (cs.AllModulesMaps, "modules_duplicates_data", LlvmIrVariableOptions.GlobalConstant) {
+			var modulesDuplicatesData = new LlvmIrGlobalVariable (cs.AllModulesDuplicates, "modules_duplicates_data", LlvmIrVariableOptions.GlobalConstant) {
 				BeforeWriteCallback = SortEntriesAndUpdateJavaIndexes,
 				BeforeWriteCallbackCallerState = cs,
 			};
-			module.Add (modulesMapData);
+			module.Add (modulesDuplicatesData);
 
 			module.AddGlobalVariable ("java_to_managed_map", cs.JavaMap, LlvmIrVariableOptions.GlobalConstant, " Java to managed map");
 			module.AddGlobalVariable ("java_type_names", cs.JavaTypeNamesBlob, LlvmIrVariableOptions.GlobalConstant, " Java type names");
@@ -497,7 +497,7 @@ namespace Xamarin.Android.Tasks
 					PrepareMapModuleData (
 						module.Data.DuplicateTypes,
 						cs.AllModulesDuplicates,
-						$"Module: {module.AssemblyName}; MVID: {module.MVID}; number of entries: {module.Data.DuplicateTypes.Count}",
+						$" Module: {module.AssemblyName}; MVID: {module.MVID}; number of entries: {module.Data.DuplicateTypes.Count}",
 						cs
 					);
 				}
