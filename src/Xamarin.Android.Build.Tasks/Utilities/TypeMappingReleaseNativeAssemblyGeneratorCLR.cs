@@ -302,19 +302,21 @@ namespace Xamarin.Android.Tasks
 			IComparer<StructureInstance<TypeMapJava>> hashComparer = target.Is64Bit ? javaNameHash64Comparer : javaNameHash32Comparer;
 
 			var array = (LlvmIrSectionedArray<StructureInstance<TypeMapModuleEntry>>)variable.Value;
-			// if (target.Is64Bit) {
-			// 	entries.Sort (
-			// 		(StructureInstance<TypeMapModuleEntry> a, StructureInstance<TypeMapModuleEntry> b) => a.Instance.managed_type_name_hash_64.CompareTo (b.Instance.managed_type_name_hash_64)
-			// 	);
-			// } else {
-			// 	entries.Sort (
-			// 		(StructureInstance<TypeMapModuleEntry> a, StructureInstance<TypeMapModuleEntry> b) => a.Instance.managed_type_name_hash_32.CompareTo (b.Instance.managed_type_name_hash_32)
-			// 	);
-			// }
+			foreach (LlvmIrArraySection<StructureInstance<TypeMapModuleEntry>> section in array.Sections) {
+				if (target.Is64Bit) {
+					section.Data.Sort (
+						(object a, object b) => ((StructureInstance<TypeMapModuleEntry>)a).Instance.managed_type_name_hash_64.CompareTo (((StructureInstance<TypeMapModuleEntry>)b).Instance.managed_type_name_hash_64)
+					);
+				} else {
+					section.Data.Sort (
+						(object a, object b) => ((StructureInstance<TypeMapModuleEntry>)a).Instance.managed_type_name_hash_32.CompareTo (((StructureInstance<TypeMapModuleEntry>)b).Instance.managed_type_name_hash_32)
+					);
+				}
 
-			// foreach (StructureInstance<TypeMapModuleEntry> entry in entries) {
-			// 	entry.Instance.java_map_index = GetJavaEntryIndex (entry.Instance.JavaTypeMapEntry);
-			// }
+				foreach (StructureInstance<TypeMapModuleEntry> entry in section.Data) {
+					entry.Instance.java_map_index = GetJavaEntryIndex (entry.Instance.JavaTypeMapEntry);
+				}
+			}
 
 			uint GetJavaEntryIndex (TypeMapJava javaEntry)
 			{
