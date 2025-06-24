@@ -15,7 +15,6 @@ This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
   <Target Name="_CLRUseLocalRuntimePacks" AfterTargets="ResolveFrameworkReferences"
           Condition=" '$(_CLRLocalRuntimePath)' != '' And '$(_AndroidRuntime)' == 'CoreCLR' ">
     <PropertyGroup>
-      <_DotNetRuntimeRepo>$(_CLRLocalRuntimePath)</_DotNetRuntimeRepo>
       <_DotNetRuntimeConfiguration Condition=" '$(_DotNetRuntimeConfiguration)' == '' ">Release</_DotNetRuntimeConfiguration>
     </PropertyGroup>
     <ItemGroup>
