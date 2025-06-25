@@ -67,7 +67,7 @@ extends:
         enabled: true
         scanOutputDirectoryOnly: true
         # Ignore all dlls and exes inside TestRelease folder
-        targetPathExclusionPattern: '\".*[/\\\\\\\\]TestRelease[/\\\\\\\\].*.(exe|dll)\"'
+        targetPathExclusionPattern: '\".*TestRelease.*\"'
       codeql:
         compiled:
           enabled: false
