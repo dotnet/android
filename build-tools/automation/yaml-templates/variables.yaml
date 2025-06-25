@@ -72,3 +72,13 @@ variables:
   value: 'cat != SystemApplication & cat != TimeZoneInfo & cat != Localization'
 - name: RunMAUITestJob
   value: true
+- name: CredScanEnabled
+  ${{ if eq(variables['Agent.OS'], 'Linux') }}:
+    value: false
+  ${{ else }}:
+    value: true
+- name: CredScanSuppressionFile
+  ${{ if eq(variables['Agent.OS'], 'Linux') }}:
+    value: ''
+  ${{ else }}:
+    value: $(System.DefaultWorkingDirectory)/.gdn/CredScanSuppressions.json

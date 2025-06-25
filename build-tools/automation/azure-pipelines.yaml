@@ -61,7 +61,7 @@ extends:
     template: v1/1ES.Unofficial.PipelineTemplate.yml@1esPipelines
   parameters:
     sdl:
-      ${{ if or(eq(variables['Agent.OS'], 'Linux'), eq('${{ parameters.Skip1ESComplianceTasks }}', 'true')) }}:
+      ${{ if eq('${{ parameters.Skip1ESComplianceTasks }}', 'true') }}:
         enableAllTools: false
       binskim:
         enabled: true
@@ -72,8 +72,8 @@ extends:
           enabled: false
           justificationForDisabling: CodeQL runs against the nightly build
       credscan:
-        enabled: true
-        suppressionsFile: $(System.DefaultWorkingDirectory)/.gdn/CredScanSuppressions.json
+        enabled: $(CredScanEnabled)
+        suppressionsFile: $(CredScanSuppressionFile)
       policheck:
         enabled: false
         justification: Built in task does not support multi-language scanning
