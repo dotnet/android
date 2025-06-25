@@ -66,8 +66,7 @@ extends:
       binskim:
         enabled: true
         scanOutputDirectoryOnly: true
-        # Ignore all dlls and exes inside TestRelease folder
-        targetPathExclusionPattern: '\".*TestRelease.*\"'
+        analyzeTargetGlob: '$(System.DefaultWorkingDirectory)\bin\$(XA.Build.Configuration)\dotnet\packs\Microsoft.Android*\**.dll;$(System.DefaultWorkingDirectory)\bin\$(XA.Build.Configuration)\dotnet\packs\Microsoft.Android*\**.exe'
       codeql:
         compiled:
           enabled: false
