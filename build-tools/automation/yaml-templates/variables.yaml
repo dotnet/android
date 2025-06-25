@@ -1,6 +1,8 @@
 variables:
 - name: RunningOnCI
   value: true
+- name: system.debug
+  value: true
 - name: XA.Build.Configuration
   value: Release
 - name: NuGetArtifactName
