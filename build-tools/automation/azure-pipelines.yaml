@@ -72,6 +72,10 @@ extends:
           enabled: false
           justificationForDisabling: CodeQL runs against the nightly build
       credscan:
+        ${{ if eq(variables['agent.os'], 'Linux') }}:
+          enabled: false
+        ${{ else }}:
+          enabled: true
         suppressionsFile: $(System.DefaultWorkingDirectory)\.gdn\CredScanSuppressions.json
       policheck:
         enabled: false
