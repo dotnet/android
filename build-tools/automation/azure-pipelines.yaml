@@ -85,8 +85,9 @@ extends:
         os: windows
       sourceRepositoriesToScan:
         exclude:
-        - repository: yaml-templates
+        - repository: android-platform-support
         - repository: maui
+        - repository: yaml-templates
       suppression:
         suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
         tsa:
