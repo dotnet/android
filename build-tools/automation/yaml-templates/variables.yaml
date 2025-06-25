@@ -72,13 +72,7 @@ variables:
   value: 'cat != SystemApplication & cat != TimeZoneInfo & cat != Localization'
 - name: RunMAUITestJob
   value: true
-${{ if eq(variables['Agent.OS'], 'Linux') }}:
-  - name: CredScanEnabled
-    value: false
-  - name: ONEES_ENFORCED_CREDSCAN_ENABLED
-    value: false
-${{ else }}:
-  - name: CredScanEnabled
-    value: true
-  - name: CredScanSuppressionFile
-    value: $(System.DefaultWorkingDirectory)/.gdn/CredScanSuppressions.json
+- name: CredScanEnabled
+  value: $[ne(variables['Agent.OS'], 'Linux')]
+- name: OneES.Enforced.CredScan.Enabled
+  value: $[ne(variables['Agent.OS'], 'Linux')]
