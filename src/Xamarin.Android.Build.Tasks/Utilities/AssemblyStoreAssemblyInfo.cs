@@ -16,8 +16,9 @@ class AssemblyStoreAssemblyInfo
 	public byte[] AssemblyNameNoExtBytes { get; }
 	public FileInfo? SymbolsFile         { get; set; }
 	public FileInfo? ConfigFile          { get; set; }
+	public bool Ignored                  { get; }
 
-	public AssemblyStoreAssemblyInfo (string sourceFilePath, ITaskItem assembly)
+	public AssemblyStoreAssemblyInfo (string sourceFilePath, ITaskItem assembly, bool assemblyIsIgnored = false)
 	{
 		Arch = MonoAndroidHelper.GetTargetArch (assembly);
 		if (Arch == AndroidTargetArch.None) {
@@ -25,6 +26,7 @@ class AssemblyStoreAssemblyInfo
 		}
 
 		SourceFile = new FileInfo (sourceFilePath);
+		Ignored = assemblyIsIgnored;
 
 		string? name = Path.GetFileName (SourceFile.Name);
 		if (name == null) {

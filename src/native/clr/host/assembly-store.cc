@@ -198,8 +198,6 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 	log_debug (LOG_ASSEMBLY, "AssemblyStore::open_assembly: looking for bundled name: '{}' (hash {:x})"sv, optional_string (name.data ()), name_hash);
 
 	if constexpr (Constants::is_debug_build) {
-		// TODO: implement filesystem lookup here
-
 		// In fastdev mode we might not have any assembly store.
 		if (assembly_store_hashes == nullptr) {
 			log_warn (LOG_ASSEMBLY, "Assembly store not registered. Unable to look up assembly '{}'"sv, name);
@@ -209,15 +207,16 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 
 	const AssemblyStoreIndexEntry *hash_entry = find_assembly_store_entry (name_hash, assembly_store_hashes, assembly_store.index_entry_count);
 	if (hash_entry == nullptr) {
-		// This message should really be `log_warn`, but since CoreCLR attempts to load `AssemblyName.ni.dll` for each
-		// `AssemblyName.dll`, it creates a lot of non-actionable noise.
-		// TODO: generate hashes for the .ni.dll names and ignore them at the top of the function. Then restore
-		// `log_warn` here.
-		log_debug (LOG_ASSEMBLY, "Assembly '{}' (hash 0x{:x}) not found"sv, optional_string (name.data ()), name_hash);
+		log_warn (LOG_ASSEMBLY, "Assembly '{}' (hash 0x{:x}) not found"sv, name, name_hash);
 		return nullptr;
 	}
 
 	if (hash_entry->descriptor_index >= assembly_store.assembly_count) {
+		if (hash_entry->descriptor_index == ASSEMBLY_STORE_IGNORED_INDEX_ENTRY) {
+			log_debug (LOG_ASSEMBLY, "Assembly '{}' ignored"sv, name);
+			return nullptr;
+		}
+
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			std::format (

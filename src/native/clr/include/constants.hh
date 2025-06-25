@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <sys/system_properties.h>
 
+#include <limits>
 #include <string_view>
 
 #include <shared/cpp-util.hh>

@@ -58,6 +58,11 @@ partial class AssemblyStoreGenerator
 	const uint ASSEMBLY_STORE_ABI_X64 = 0x00030000;
 	const uint ASSEMBLY_STORE_ABI_X86 = 0x00040000;
 
+	// This must be the same value as the native AssemblyStore::ASSEMBLY_STORE_IGNORED_INDEX_ENTRY constant,
+	// found in src/native/clr/include/host/assembly-store.hh
+	//
+	const uint ASSEMBLY_STORE_IGNORED_INDEX_ENTRY = UInt32.MaxValue;
+
 	readonly TaskLoggingHelper log;
 	readonly Dictionary<AndroidTargetArch, List<AssemblyStoreAssemblyInfo>> assemblies;
 
@@ -123,6 +128,12 @@ partial class AssemblyStoreGenerator
 		fs.Seek ((long)curPos, SeekOrigin.Begin);
 
 		foreach (AssemblyStoreAssemblyInfo info in infos) {
+			if (info.Ignored) {
+				AddToIndex (info, ASSEMBLY_STORE_IGNORED_INDEX_ENTRY);
+				descriptors.Add (new AssemblyStoreEntryDescriptor ());
+				continue;
+			}
+
 			(AssemblyStoreEntryDescriptor desc, curPos) = MakeDescriptor (info, curPos);
 			desc.mapping_index = (uint)descriptors.Count;
 			descriptors.Add (desc);
@@ -131,10 +142,7 @@ partial class AssemblyStoreGenerator
 				throw new InvalidOperationException ($"Internal error: corrupted store '{storePath}' stream");
 			}
 
-			ulong name_with_ext_hash = MonoAndroidHelper.GetXxHash (info.AssemblyNameBytes, is64Bit);
-			ulong name_no_ext_hash = MonoAndroidHelper.GetXxHash (info.AssemblyNameNoExtBytes, is64Bit);
-			index.Add (new AssemblyStoreIndexEntry (info.AssemblyName, name_with_ext_hash, desc.mapping_index));
-			index.Add (new AssemblyStoreIndexEntry (info.AssemblyNameNoExt, name_no_ext_hash, desc.mapping_index));
+			AddToIndex (info, desc.mapping_index);
 
 			CopyData (info.SourceFile, fs, storePath);
 			CopyData (info.SymbolsFile, fs, storePath);
@@ -166,6 +174,14 @@ partial class AssemblyStoreGenerator
 		}
 
 		return storePath;
+
+		void AddToIndex (AssemblyStoreAssemblyInfo info, uint offset)
+		{
+			ulong name_with_ext_hash = MonoAndroidHelper.GetXxHash (info.AssemblyNameBytes, is64Bit);
+			ulong name_no_ext_hash = MonoAndroidHelper.GetXxHash (info.AssemblyNameNoExtBytes, is64Bit);
+			index.Add (new AssemblyStoreIndexEntry (info.AssemblyName, name_with_ext_hash, offset));
+			index.Add (new AssemblyStoreIndexEntry (info.AssemblyNameNoExt, name_no_ext_hash, offset));
+		}
 
 		uint IndexEntrySize () => is64Bit ? AssemblyStoreIndexEntry.NativeSize64 : AssemblyStoreIndexEntry.NativeSize32;
 	}
@@ -252,16 +268,20 @@ partial class AssemblyStoreGenerator
 				manifestWriter.Write ($"0x{(uint)entry.name_hash:x}");
 			}
 			writer.Write (entry.descriptor_index);
-			manifestWriter.Write ($" di:{entry.descriptor_index}");
 
-			AssemblyStoreEntryDescriptor desc = descriptors[(int)entry.descriptor_index];
-			manifestWriter.Write ($" mi:{desc.mapping_index}");
-			manifestWriter.Write ($" do:{desc.data_offset}");
-			manifestWriter.Write ($" ds:{desc.data_size}");
-			manifestWriter.Write ($" ddo:{desc.debug_data_offset}");
-			manifestWriter.Write ($" dds:{desc.debug_data_size}");
-			manifestWriter.Write ($" cdo:{desc.config_data_offset}");
-			manifestWriter.Write ($" cds:{desc.config_data_size}");
+			if (entry.descriptor_index == ASSEMBLY_STORE_IGNORED_INDEX_ENTRY) {
+				manifestWriter.Write (" <IGNORED>");
+			} else {
+				manifestWriter.Write ($" di:{entry.descriptor_index}");
+				AssemblyStoreEntryDescriptor desc = descriptors[(int)entry.descriptor_index];
+				manifestWriter.Write ($" mi:{desc.mapping_index}");
+				manifestWriter.Write ($" do:{desc.data_offset}");
+				manifestWriter.Write ($" ds:{desc.data_size}");
+				manifestWriter.Write ($" ddo:{desc.debug_data_offset}");
+				manifestWriter.Write ($" dds:{desc.debug_data_size}");
+				manifestWriter.Write ($" cdo:{desc.config_data_offset}");
+				manifestWriter.Write ($" cds:{desc.config_data_size}");
+			}
 			manifestWriter.WriteLine ($" {entry.name}");
 		}
 	}
