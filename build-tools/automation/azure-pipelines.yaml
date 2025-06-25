@@ -84,19 +84,13 @@ extends:
         image: $(WindowsPoolImage1ESPT)
         os: windows
       sourceRepositoriesToScan:
-        include:
-        - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
-          - repository: android-platform-support
         exclude:
         - repository: yaml-templates
         - repository: maui
       suppression:
         suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
         tsa:
-          ${{ if eq(variables['agent.os'], 'Linux') }}:
-            enabled: false
-          ${{ else }}:
-            enabled: true
+          enabled: true
           configFile: $(Build.SourcesDirectory)\.gdn\tsaoptions-v2.json
     settings:
       skipBuildTagsForGitHubPullRequests: true
