@@ -72,7 +72,7 @@ extends:
           enabled: false
           justificationForDisabling: CodeQL runs against the nightly build
       credscan:
-        ${{ if eq(variables['Agent.OS'], 'Linux') }}:
+        ${{ if eq(runner.os, 'Linux') }}:
           enabled: false
         ${{ else }}:
           enabled: true
@@ -95,7 +95,7 @@ extends:
       suppression:
         suppressionFile: $(Build.SourcesDirectory)/.gdn/.gdnsuppress
       tsa:
-        ${{ if eq(variables['Agent.OS'], 'Linux') }}:
+        ${{ if eq(runner.os, 'Linux') }}:
           enabled: false
         ${{ else }}:
           enabled: true
