@@ -76,7 +76,7 @@ extends:
           enabled: false
         ${{ else }}:
           enabled: true
-          suppressionsFile: $(System.DefaultWorkingDirectory)\.gdn\CredScanSuppressions.json
+          suppressionsFile: $(System.DefaultWorkingDirectory)/.gdn/CredScanSuppressions.json
       policheck:
         enabled: false
         justification: Built in task does not support multi-language scanning
@@ -93,13 +93,13 @@ extends:
         - repository: maui
         - repository: yaml-templates
       suppression:
-        suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
+        suppressionFile: $(Build.SourcesDirectory)/.gdn/.gdnsuppress
       tsa:
         ${{ if eq(variables['agent.os'], 'Linux') }}:
           enabled: false
         ${{ else }}:
           enabled: true
-          configFile: $(Build.SourcesDirectory)\.gdn\tsaoptions-v2.json
+          configFile: $(Build.SourcesDirectory)/.gdn/tsaoptions-v2.json
     settings:
       skipBuildTagsForGitHubPullRequests: true
     stages:
