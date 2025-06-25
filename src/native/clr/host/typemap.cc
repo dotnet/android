@@ -228,14 +228,12 @@ auto TypeMapper::managed_to_java_release (const char *typeName, const uint8_t *m
 	log_debug (LOG_ASSEMBLY, "typemap: found module matching MVID [{}]"sv, MonoGuidString (mvid).c_str ());
 	hash_t name_hash = xxhash::hash (typeName, strlen (typeName));
 
-	const TypeMapModuleEntry *entry = find_managed_to_java_map_entry (name_hash, match->map, match->entry_count);
+	// We implicitly trust the build process that the indexes are correct. This is by design, the libxamarin-app.so built
+	// with the application is immutable and the build process made sure that the data in it matches the application.
+	const TypeMapModuleEntry *const map = &modules_map_data[match->map_index];
+	const TypeMapModuleEntry *entry = find_managed_to_java_map_entry (name_hash, map, match->entry_count);
 	if (entry == nullptr) [[unlikely]] {
-		if (match->map == nullptr) [[unlikely]] {
-			log_warn (LOG_ASSEMBLY, "typemap: module with MVID [{}] has no associated type map."sv, MonoGuidString (mvid).c_str ());
-			return nullptr;
-		}
-
-		if (match->duplicate_count > 0 && match->duplicate_map != nullptr) {
+		if (match->duplicate_count > 0 && match->duplicate_map_index < std::numeric_limits<decltype (match->duplicate_map_index)>::max ()) {
 			log_debug (
 				LOG_ASSEMBLY,
 				"typemap: searching module [{}] duplicate map for type '{}' (hash {:x})"sv,
@@ -243,7 +241,9 @@ auto TypeMapper::managed_to_java_release (const char *typeName, const uint8_t *m
 				optional_string (typeName),
 				name_hash
 			);
-			entry = find_managed_to_java_map_entry (name_hash, match->duplicate_map, match->duplicate_count);
+
+			const TypeMapModuleEntry *const duplicate_map = &modules_duplicates_data[match->duplicate_map_index];
+			entry = find_managed_to_java_map_entry (name_hash, duplicate_map, match->duplicate_count);
 		}
 
 		if (entry == nullptr) {
