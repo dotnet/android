@@ -91,7 +91,10 @@ extends:
       suppression:
         suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
         tsa:
-          enabled: true
+          ${{ if eq(variables['agent.os'], 'Linux') }}:
+            enabled: false
+          ${{ else }}:
+            enabled: true
           configFile: $(Build.SourcesDirectory)\.gdn\tsaoptions-v2.json
     settings:
       skipBuildTagsForGitHubPullRequests: true
