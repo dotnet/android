@@ -12,10 +12,6 @@
 namespace xamarin::android {
 	class AssemblyStore
 	{
-		using assembly_index_t = decltype(AssemblyStoreIndexEntry::descriptor_index);
-
-		static constexpr assembly_index_t ASSEMBLY_STORE_IGNORED_INDEX_ENTRY = std::numeric_limits<assembly_index_t>::max ();
-
 	public:
 		static auto open_assembly (std::string_view const& name, int64_t &size) noexcept -> void*;
 
