@@ -52,7 +52,7 @@ void
 Util::create_public_directory (std::string_view const& dir)
 {
 	mode_t m = umask (0);
-	int ret = mkdir (dir.data (), 0777);
+	int ret = create_directory (dir.data (), 0777);
 	if (ret < 0) {
 		if (errno == EEXIST) {
 			// Try to change the mode, just in case
