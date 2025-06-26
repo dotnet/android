@@ -195,7 +195,6 @@ auto AssemblyStore::find_assembly_store_entry (hash_t hash, const AssemblyStoreI
 auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) noexcept -> void*
 {
 	hash_t name_hash = xxhash::hash (name.data (), name.length ());
-	log_debug (LOG_ASSEMBLY, "AssemblyStore::open_assembly: looking for bundled name: '{}' (hash {:x})"sv, optional_string (name.data ()), name_hash);
 
 	if constexpr (Constants::is_debug_build) {
 		// In fastdev mode we might not have any assembly store.
@@ -206,17 +205,19 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 	}
 
 	const AssemblyStoreIndexEntry *hash_entry = find_assembly_store_entry (name_hash, assembly_store_hashes, assembly_store.index_entry_count);
-	if (hash_entry == nullptr) {
+	if (hash_entry == nullptr) [[unlikely]] {
+		size = 0;
 		log_warn (LOG_ASSEMBLY, "Assembly '{}' (hash 0x{:x}) not found"sv, name, name_hash);
 		return nullptr;
 	}
 
-	if (hash_entry->descriptor_index >= assembly_store.assembly_count) {
-		if (hash_entry->descriptor_index == ASSEMBLY_STORE_IGNORED_INDEX_ENTRY) {
-			log_debug (LOG_ASSEMBLY, "Assembly '{}' ignored"sv, name);
-			return nullptr;
-		}
+	if (hash_entry->ignore != 0) {
+		size = 0;
+		log_debug (LOG_ASSEMBLY, "Assembly '{}' ignored"sv, name);
+		return nullptr;
+	}
 
+	if (hash_entry->descriptor_index >= assembly_store.assembly_count) {
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			std::format (
