@@ -72,7 +72,3 @@ variables:
   value: 'cat != SystemApplication & cat != TimeZoneInfo & cat != Localization'
 - name: RunMAUITestJob
   value: true
-- name: CredScanEnabled
-  value: $[ne(variables['Agent.OS'], 'Linux')]
-- name: OneES.Enforced.CredScan.Enabled
-  value: $[ne(variables['Agent.OS'], 'Linux')]
