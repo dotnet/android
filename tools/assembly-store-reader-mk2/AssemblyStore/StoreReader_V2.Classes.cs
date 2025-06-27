@@ -32,11 +32,13 @@ partial class StoreReader_V2
 	{
 		public readonly ulong name_hash;
 		public readonly uint  descriptor_index;
+		public readonly bool  ignore;
 
-		public IndexEntry (ulong name_hash, uint descriptor_index)
+		public IndexEntry (ulong name_hash, uint descriptor_index, bool ignore)
 		{
 			this.name_hash = name_hash;
 			this.descriptor_index = descriptor_index;
+			this.ignore = ignore;
 		}
 	}
 
@@ -56,8 +58,8 @@ partial class StoreReader_V2
 
 	sealed class StoreItem_V2 : AssemblyStoreItem
 	{
-		public StoreItem_V2 (AndroidTargetArch targetArch, string name, bool is64Bit, List<IndexEntry> indexEntries, EntryDescriptor descriptor)
-			: base (name, is64Bit, IndexToHashes (indexEntries))
+		public StoreItem_V2 (AndroidTargetArch targetArch, string name, bool is64Bit, List<IndexEntry> indexEntries, EntryDescriptor descriptor, bool ignore)
+			: base (name, is64Bit, IndexToHashes (indexEntries), ignore)
 		{
 			DataOffset = descriptor.data_offset;
 			DataSize = descriptor.data_size;
@@ -84,11 +86,13 @@ partial class StoreReader_V2
 		public readonly string Name;
 		public readonly List<IndexEntry> IndexEntries = new List<IndexEntry> ();
 		public readonly EntryDescriptor Descriptor;
+		public readonly bool Ignored;
 
-		public TemporaryItem (string name, EntryDescriptor descriptor)
+		public TemporaryItem (string name, EntryDescriptor descriptor, bool ignored)
 		{
 			Name = name;
 			Descriptor = descriptor;
+			Ignored = ignored;
 		}
 	}
 }

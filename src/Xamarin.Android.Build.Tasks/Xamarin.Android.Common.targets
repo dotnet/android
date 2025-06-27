@@ -2288,6 +2288,7 @@ because xbuild doesn't support framework reference assemblies.
   -->
   <CreateAssemblyStore
       Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
+      TargetRuntime="$(_AndroidRuntime)"
       AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
       ResolvedFrameworkAssemblies="@(_BuildApkResolvedFrameworkAssemblies)"
