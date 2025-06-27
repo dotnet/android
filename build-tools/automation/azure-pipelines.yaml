@@ -28,6 +28,10 @@ resources:
     name: dotnet/maui
     ref: refs/heads/net10.0
     endpoint: xamarin
+  - repository: android-tools
+    type: github
+    name: dotnet/android-tools
+    endpoint: xamarin
 
 parameters:
 - name: pushXAPackagesToMaestro
@@ -87,6 +91,7 @@ extends:
       sourceRepositoriesToScan:
         exclude:
         - repository: android-platform-support
+        - repository: android-tools
         - repository: maui
         - repository: yaml-templates
       suppression:
