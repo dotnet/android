@@ -115,6 +115,7 @@
     <EnableUnsafeBinaryFormatterSerialization Condition="'$(EnableUnsafeBinaryFormatterSerialization)' == ''">false</EnableUnsafeBinaryFormatterSerialization>
     <EventSourceSupport Condition="'$(EventSourceSupport)' == ''">false</EventSourceSupport>
     <UseSystemResourceKeys Condition="'$(UseSystemResourceKeys)' == '' and '$(PublishTrimmed)' == 'true'">true</UseSystemResourceKeys>
+    <Http3Support Condition="'$(Http3Support)' == ''">false</Http3Support>
     <HttpActivityPropagationSupport Condition="'$(HttpActivityPropagationSupport)' == '' and '$(Optimize)' == 'true'">false</HttpActivityPropagationSupport>
     <InvariantGlobalization Condition="'$(InvariantGlobalization)' == ''">false</InvariantGlobalization>
     <StartupHookSupport Condition="'$(StartupHookSupport)' == ''">false</StartupHookSupport>
