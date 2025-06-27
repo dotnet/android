@@ -26,21 +26,21 @@ stages:
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+        downloadPath: $(System.DefaultWorkingDirectory)/android/bin/Test$(XA.Build.Configuration)
 
     # Set up dependencies to run tests in both debug and release configurations
     - task: DotNetCoreCLI@2
       displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
       inputs:
-        projects: $(System.DefaultWorkingDirectory)/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-        arguments: -c Debug -bl:$(System.DefaultWorkingDirectory)/bin/TestDebug/BootstrapTasks.binlog
+        projects: $(System.DefaultWorkingDirectory)/android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        arguments: -c Debug -bl:$(System.DefaultWorkingDirectory)/android/bin/TestDebug/BootstrapTasks.binlog
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Xamarin.Android.sln
         arguments: >-
           -t:PrepareJavaInterop -c Debug --no-restore
-          -p:DotNetPreviewTool=$(System.DefaultWorkingDirectory)/bin/$(XA.Build.Configuration)/dotnet/dotnet
+          -p:DotNetPreviewTool=$(System.DefaultWorkingDirectory)/android/bin/$(XA.Build.Configuration)/dotnet/dotnet
         displayName: prepare java.interop Debug
         continueOnError: false
 
@@ -133,21 +133,21 @@ stages:
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+        downloadPath: $(System.DefaultWorkingDirectory)/android/bin/Test$(XA.Build.Configuration)
 
     # Set up dependencies to run tests in both debug and release configurations
     - task: DotNetCoreCLI@2
       displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
       inputs:
-        projects: $(System.DefaultWorkingDirectory)/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-        arguments: -c Debug -bl:$(System.DefaultWorkingDirectory)/bin/TestDebug/BootstrapTasks.binlog
+        projects: $(System.DefaultWorkingDirectory)/android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        arguments: -c Debug -bl:$(System.DefaultWorkingDirectory)/android/bin/TestDebug/BootstrapTasks.binlog
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Xamarin.Android.sln
         arguments: >-
           -t:PrepareJavaInterop -c Debug --no-restore
-          -p:DotNetPreviewTool=$(System.DefaultWorkingDirectory)/bin/$(XA.Build.Configuration)/dotnet/dotnet
+          -p:DotNetPreviewTool=$(System.DefaultWorkingDirectory)/android/bin/$(XA.Build.Configuration)/dotnet/dotnet
         displayName: prepare java.interop Debug
         continueOnError: false
 
@@ -230,7 +230,7 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Tools.Aidl-Tests - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Tools.Aidl-Tests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/android/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Tools.Aidl-Tests.dll
 
     - task: ShellScript@2
       displayName: Test dotnet-local.sh
