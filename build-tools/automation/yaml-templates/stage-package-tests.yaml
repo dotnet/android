@@ -37,7 +37,7 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
-        project: Xamarin.Android.sln
+        project: android/Xamarin.Android.sln
         arguments: >-
           -t:PrepareJavaInterop -c Debug --no-restore
           -p:DotNetPreviewTool=$(System.DefaultWorkingDirectory)/android/bin/$(XA.Build.Configuration)/dotnet/dotnet
@@ -54,7 +54,7 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         command: test
-        project: src/Microsoft.Android.Sdk.Analysis/Tests/Microsoft.Android.Sdk.Analysis.Tests.csproj 
+        project: android/src/Microsoft.Android.Sdk.Analysis/Tests/Microsoft.Android.Sdk.Analysis.Tests.csproj 
         arguments: -c $(XA.Build.Configuration)
         displayName: Test Microsoft.Android.Sdk.Analysis $(XA.Build.Configuration)
         continueOnError: false
@@ -153,7 +153,7 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
-        project: Xamarin.Android.sln
+        project: android/Xamarin.Android.sln
         arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false
@@ -161,7 +161,7 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         command: test
-        project: src/Microsoft.Android.Sdk.Analysis/Tests/Microsoft.Android.Sdk.Analysis.Tests.csproj 
+        project: android/src/Microsoft.Android.Sdk.Analysis/Tests/Microsoft.Android.Sdk.Analysis.Tests.csproj 
         arguments: -c $(XA.Build.Configuration)
         displayName: Test Microsoft.Android.Sdk.Analysis $(XA.Build.Configuration)
         continueOnError: false
