@@ -2,7 +2,7 @@ parameters:
   displayName: run xaprepare
   name:
   configuration: $(XA.Build.Configuration)
-  xaSourcePath: $(System.DefaultWorkingDirectory)
+  xaSourcePath: $(System.DefaultWorkingDirectory)/android
   condition: succeeded()
   arguments:
 

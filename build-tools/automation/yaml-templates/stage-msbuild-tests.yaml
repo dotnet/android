@@ -5,7 +5,7 @@ parameters:
   stageCondition: succeeded()
   dependsOn: mac_build
   stagePrefix: ''
-  xaSourcePath: $(System.DefaultWorkingDirectory)
+  xaSourcePath: $(System.DefaultWorkingDirectory)/android
   repositoryAlias: 'self'
   commit: ''
   shouldFailOnIssue: true

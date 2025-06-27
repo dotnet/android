@@ -7,7 +7,7 @@ parameters:
   agent_count: 12
   stageCondition: succeeded()
   stagePrefix: ''
-  xaSourcePath: $(System.DefaultWorkingDirectory)
+  xaSourcePath: $(System.DefaultWorkingDirectory)/android
   repositoryAlias: 'self'
   commit: ''
   usesCleanImages: true

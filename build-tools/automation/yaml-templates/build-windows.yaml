@@ -55,25 +55,25 @@ stages:
     - task: DotNetCoreCLI@2
       displayName: Prepare Solution
       inputs:
-        projects: Xamarin.Android.sln
-        arguments: '-c $(XA.Build.Configuration) -t:Prepare --no-restore -p:AutoProvision=true -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare.binlog'
+        projects: android/Xamarin.Android.sln
+        arguments: '-c $(XA.Build.Configuration) -t:Prepare --no-restore -p:AutoProvision=true -bl:$(System.DefaultWorkingDirectory)\android\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare.binlog'
 
     # Build Xamarin.Android and configure local workloads to test improved local build loop
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
-        project: Xamarin.Android.sln
+        project: android/Xamarin.Android.sln
         arguments: >-
           -t:BuildDotNet -c $(XA.Build.Configuration) -v:n
-          -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build.binlog
+          -bl:$(System.DefaultWorkingDirectory)\android\bin\Build$(XA.Build.Configuration)\dotnet-build.binlog
         displayName: Build Solution
         continueOnError: false
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
-        project: build-tools/create-packs/Microsoft.Android.Sdk.proj
+        project: android/build-tools/create-packs/Microsoft.Android.Sdk.proj
         arguments: >-
           -t:ConfigureLocalWorkload -c $(XA.Build.Configuration) -v:n -p:RunningOnCI=false
-          -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\local-workload.binlog
+          -bl:$(System.DefaultWorkingDirectory)\android\bin\Build$(XA.Build.Configuration)\local-workload.binlog
         displayName: Run ConfigureLocalWorkload target
         continueOnError: false
 
@@ -85,7 +85,7 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Smoke MSBuild Tests - Windows Dotnet Build
-        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\$(DotNetStableTargetFramework)\Xamarin.Android.Build.Tests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)\android\bin\Test$(XA.Build.Configuration)\$(DotNetStableTargetFramework)\Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "TestCategory = SmokeTests"
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
@@ -111,10 +111,10 @@ stages:
     # Pack .nupkgs and extract workload packs to dotnet preview test directory
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
-        project: Xamarin.Android.sln
+        project: android/Xamarin.Android.sln
         arguments: >-
           -t:PackDotNet -c $(XA.Build.Configuration) -v:n
-          -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-pack.binlog
+          -bl:$(System.DefaultWorkingDirectory)\android\bin\Build$(XA.Build.Configuration)\dotnet-pack.binlog
         displayName: Test PackDotNet
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml

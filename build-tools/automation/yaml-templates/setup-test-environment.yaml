@@ -1,6 +1,6 @@
 parameters:
   configuration: $(XA.Build.Configuration)
-  xaSourcePath: $(System.DefaultWorkingDirectory)
+  xaSourcePath: $(System.DefaultWorkingDirectory)/android
   jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
   useAgentJdkPath: true
   remove_dotnet: false
