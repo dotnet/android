@@ -567,7 +567,6 @@ auto Host::get_java_class_name_for_TypeManager (jclass klass) noexcept -> char*
 
 auto Host::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcept -> jint
 {
-	log_write (LOG_DEFAULT, LogLevel::Info, "Host OnLoad");
 	jvm = vm;
 
 	JNIEnv *env = nullptr;

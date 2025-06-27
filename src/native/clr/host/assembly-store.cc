@@ -209,7 +209,11 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 
 	const AssemblyStoreIndexEntry *hash_entry = find_assembly_store_entry (name_hash, assembly_store_hashes, assembly_store.index_entry_count);
 	if (hash_entry == nullptr) {
-		log_warn (LOG_ASSEMBLY, "Assembly '{}' (hash 0x{:x}) not found"sv, optional_string (name.data ()), name_hash);
+		// This message should really be `log_warn`, but since CoreCLR attempts to load `AssemblyName.ni.dll` for each
+		// `AssemblyName.dll`, it creates a lot of non-actionable noise.
+		// TODO (in separate PR): generate hashes for the .ni.dll names and ignore them at the top of the function. Then restore
+		// `log_warn` here.
+		log_debug (LOG_ASSEMBLY, "Assembly '{}' (hash 0x{:x}) not found"sv, optional_string (name.data ()), name_hash);
 		return nullptr;
 	}
 
