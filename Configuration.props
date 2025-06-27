@@ -118,10 +118,10 @@
     <XABuildToolsPackagePrefixLinux></XABuildToolsPackagePrefixLinux>
     <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">$(XABuildToolsPackagePrefixMacOS)</XABuildToolsPackagePrefix>
     <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Windows' ">$(XABuildToolsPackagePrefixWindows)</XABuildToolsPackagePrefix>
-    <XABuildToolsVersion>35</XABuildToolsVersion>
-    <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">35.0.0</XABuildToolsFolder>
+    <XABuildToolsVersion>36</XABuildToolsVersion>
+    <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">36.0.0</XABuildToolsFolder>
     <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' "></XAPlatformToolsPackagePrefix>
-    <XAPlatformToolsVersion>34.0.5</XAPlatformToolsVersion>
+    <XAPlatformToolsVersion>36.0.0</XAPlatformToolsVersion>
     <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">1.17.0</XABundleToolVersion>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(NUGET_PACKAGES)' != ''">$(NUGET_PACKAGES)</XAPackagesDir>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' == 'Windows'">$(userprofile)\.nuget\packages</XAPackagesDir>
@@ -156,8 +156,8 @@
     <AvdManagerToolExe Condition=" '$(AvdManagerToolExe)' == '' and '$(HostOS)' == 'Windows' ">avdmanager.bat</AvdManagerToolExe>
     <AndroidToolPath Condition=" '$(AndroidToolPath)' == '' ">$(AndroidSdkFullPath)\tools</AndroidToolPath>
     <AndroidToolsBinPath Condition=" '$(AndroidToolsBinPath)' == '' ">$(AndroidToolPath)\bin</AndroidToolsBinPath>
-    <CommandLineToolsFolder Condition=" '$(CommandLineToolsFolder)' == '' ">12.0</CommandLineToolsFolder>
-    <CommandLineToolsVersion Condition=" '$(CommandLineToolsVersion)' == '' ">11076708_latest</CommandLineToolsVersion>
+    <CommandLineToolsFolder Condition=" '$(CommandLineToolsFolder)' == '' ">19.0</CommandLineToolsFolder>
+    <CommandLineToolsVersion Condition=" '$(CommandLineToolsVersion)' == '' ">13114758_latest</CommandLineToolsVersion>
     <CommandLineToolsBinPath Condition=" '$(CommandLineToolsBinPath)' == '' ">$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)\bin</CommandLineToolsBinPath>
     <!-- Version numbers and PkgVersion are found in https://dl-ssl.google.com/android/repository/repository2-3.xml -->
     <EmulatorVersion Condition=" '$(EmulatorVersion)' == '' ">9364964</EmulatorVersion>
