@@ -572,10 +572,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>Недопустимый режим AOT: {0}</value>
     <comment>The abbreviation "AOT" should not be translated.</comment>
   </data>
-  <data name="XA3003" xml:space="preserve">
-    <value>Не удалось удалить промежуточный язык сборки: {0}</value>
-    <comment>The abbreviation "IL" should not be translated.</comment>
-  </data>
   <data name="XA3004" xml:space="preserve">
     <value>Android NDK r10d содержит ошибки и предоставляет несовместимый пакет x86_64 libm.so. См. https://code.google.com/p/android/issues/detail?id=161422.</value>
     <comment>The following are literal names and should not be translated: NDK, r10d, x86_64, libm.so
@@ -604,7 +600,7 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The following are literal names and should not be translated: Mono.Android.Export.dll, ExportAttribute, ExportFieldAttribute.</comment>
   </data>
   <data name="XA4211" xml:space="preserve">
-    <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than $(TargetPlatformVersion) '{1}'. Using API-{2} for ACW compilation.</value>
+    <value>Версия AndroidManifest.xml //uses-sdk/@android:targetSdkVersion "{0}" ниже версии $(TargetPlatformVersion) "{1}". Использование API-{2} для компиляции ACW.</value>
     <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:targetSdkVersion , $(TargetPlatformVersion), API-{2}, ACW
 {0} - The target SDK version number
 {1} - The $(TargetPlatformVersion) number
@@ -842,16 +838,6 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <value>Каталог цепочки инструментов для целевой архитектуры {0} не найден.</value>
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64</comment>
   </data>
-  <data name="XA5102" xml:space="preserve">
-    <value>Не удалось выполнить преобразование из сборки в машинный код. Код выхода: {0}.</value>
-    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces.)
-{0} - The exit code number</comment>
-  </data>
-  <data name="XA5103" xml:space="preserve">
-    <value>Компилятор NDK C завершил работу с ошибкой. Код выхода: {0}.</value>
-    <comment>The following are literal names and should not be translated: NDK, C
-{0} - The exit code number</comment>
-  </data>
   <data name="XA5104" xml:space="preserve">
     <value>Не удалось найти Android NDK. Проверьте установку этого пакета в Диспетчере SDK Android, а если используется особый путь к NDK, этот путь должен быть задан в свойстве MSBuild $(AndroidNdkDirectory).</value>
     <comment>The following are literal names and should not be translated: $(AndroidNdkDirectory)</comment>
@@ -861,11 +847,6 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>{0} - The missing utility name, such as gcc or clang
 {1} - The target architecture, such as Arm, Arm64, or X86_64
 {2} - The path of the directory that was searched</comment>
-  </data>
-  <data name="XA5201" xml:space="preserve">
-    <value>Работа компоновщика NDK завершилась с ошибкой. Код выхода: {0}.</value>
-    <comment>The following are literal names and should not be translated: NDK
-{0} - The exit code number</comment>
   </data>
   <data name="XA5205" xml:space="preserve">
     <value>Не удается найти "{0}". Установите пакет Android SDK Build-Tools с программой "{1}{2}tools{2}{3}".</value>

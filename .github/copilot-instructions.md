@@ -43,6 +43,10 @@ Common build commands:
 - `./dotnet-local.sh` or `dotnet-local.cmd` - Use locally built .NET tools
 - `make` - Various make targets for specific components
 
+## Development Guidelines
+
+**Always search Microsoft documentation (MS Learn) when working with .NET, Windows, or Microsoft features, APIs, or integrations.** Use the `microsoft_docs_search` tool to find the most current and authoritative information about capabilities, best practices, and implementation patterns before making changes.
+
 ## Android Development Patterns
 
 ### API Bindings
@@ -162,6 +166,8 @@ C# code uses tabs (not spaces) and the Mono code-formatting style defined in `.e
 * Use `""` for empty string and *not* `string.Empty`
 
 * Use `[]` for empty arrays and *not* `Array.Empty<T>()`
+
+* Do *NOT* leave random empty lines when removing code.
 
 Examples of properly formatted code:
 

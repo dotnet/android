@@ -58,7 +58,7 @@ namespace Android.Runtime {
 		{
 			if (!reference.IsValid)
 				return null;
-			var peeked      = JNIEnvInit.ValueManager?.PeekPeer (reference);
+			var peeked      = JniEnvironment.Runtime.ValueManager.PeekPeer (reference);
 			var peekedExc   = peeked as Exception;
 			if (peekedExc == null) {
 				var throwable = Java.Lang.Object.GetObject<Java.Lang.Throwable> (reference.Handle, JniHandleOwnership.DoNotTransfer);
@@ -66,7 +66,7 @@ namespace Android.Runtime {
 				return throwable;
 			}
 			JniObjectReference.Dispose (ref reference, options);
-			var unwrapped = JNIEnvInit.ValueManager?.PeekValue (peeked!.PeerReference) as Exception;
+			var unwrapped = JniEnvironment.Runtime.ValueManager.PeekValue (peeked!.PeerReference) as Exception;
 			if (unwrapped != null) {
 				return unwrapped;
 			}
@@ -279,9 +279,6 @@ namespace Android.Runtime {
 			if (j != null) {
 				return GetReplacementTypeCore (j) ?? j;
 			}
-			if (JNIEnvInit.IsRunningOnDesktop) {
-				return JavaNativeTypeManager.ToJniName (type);
-			}
 			return null;
 		}
 
@@ -290,15 +287,6 @@ namespace Android.Runtime {
 			string? j = JNIEnv.TypemapManagedToJava (type);
 			j   = GetReplacementTypeCore (j) ?? j;
 
-			if (JNIEnvInit.IsRunningOnDesktop) {
-				string? d = JavaNativeTypeManager.ToJniName (type);
-				if (j != null && d != null) {
-					return new[]{j, d};
-				}
-				if (d != null) {
-					return new[]{d};
-				}
-			}
 			if (j != null) {
 				return new[]{j};
 			}

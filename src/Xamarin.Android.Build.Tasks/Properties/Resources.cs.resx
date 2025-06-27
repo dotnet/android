@@ -572,10 +572,6 @@ Buď změňte hodnotu v souboru AndroidManifest.xml tak, aby odpovídala hodnot�
     <value>Neplatný režim AOT: {0}</value>
     <comment>The abbreviation "AOT" should not be translated.</comment>
   </data>
-  <data name="XA3003" xml:space="preserve">
-    <value>Nepovedlo se odebrat sestavení z IL: {0}</value>
-    <comment>The abbreviation "IL" should not be translated.</comment>
-  </data>
   <data name="XA3004" xml:space="preserve">
     <value>Android NDK r10d obsahuje chyby a poskytuje nekompatibilní knihovnu libm.so pro architekturu x86_64. Viz https://code.google.com/p/android/issues/detail?id=161422.</value>
     <comment>The following are literal names and should not be translated: NDK, r10d, x86_64, libm.so
@@ -604,7 +600,7 @@ Buď změňte hodnotu v souboru AndroidManifest.xml tak, aby odpovídala hodnot�
     <comment>The following are literal names and should not be translated: Mono.Android.Export.dll, ExportAttribute, ExportFieldAttribute.</comment>
   </data>
   <data name="XA4211" xml:space="preserve">
-    <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than $(TargetPlatformVersion) '{1}'. Using API-{2} for ACW compilation.</value>
+    <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion {0} je menší než $(TargetPlatformVersion) {1}. Pro kompilaci ACW se používá API-{2}.</value>
     <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:targetSdkVersion , $(TargetPlatformVersion), API-{2}, ACW
 {0} - The target SDK version number
 {1} - The $(TargetPlatformVersion) number
@@ -842,16 +838,6 @@ Odeberte z projektu odkaz na {0} a místo toho přidejte balíček NuGet{1}.
     <value>Adresář sady nástrojů pro cíl {0} se nenašel.</value>
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64</comment>
   </data>
-  <data name="XA5102" xml:space="preserve">
-    <value>Převod ze sestavení na nativní kód se nezdařil. Ukončovací kód {0}</value>
-    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces.)
-{0} - The exit code number</comment>
-  </data>
-  <data name="XA5103" xml:space="preserve">
-    <value>Kompilátor NDK C byl ukončen s chybou. Ukončovací kód {0}</value>
-    <comment>The following are literal names and should not be translated: NDK, C
-{0} - The exit code number</comment>
-  </data>
   <data name="XA5104" xml:space="preserve">
     <value>Nepovedlo se najít sadu Android NDK. Ujistěte se prosím, že v Android SDK Manageru je nainstalovaná sada Android NDK, nebo pokud používáte vlastní cestu k sadě NDK, ujistěte se prosím, že vlastnost MSBuildu $(AndroidNdkDirectory) je nastavená na danou vlastní cestu.</value>
     <comment>The following are literal names and should not be translated: $(AndroidNdkDirectory)</comment>
@@ -861,11 +847,6 @@ Odeberte z projektu odkaz na {0} a místo toho přidejte balíček NuGet{1}.
     <comment>{0} - The missing utility name, such as gcc or clang
 {1} - The target architecture, such as Arm, Arm64, or X86_64
 {2} - The path of the directory that was searched</comment>
-  </data>
-  <data name="XA5201" xml:space="preserve">
-    <value>Linker NDK byl ukončen s chybou. Ukončovací kód {0}</value>
-    <comment>The following are literal names and should not be translated: NDK
-{0} - The exit code number</comment>
   </data>
   <data name="XA5205" xml:space="preserve">
     <value>Nepovedlo se najít {0}. Nainstalujte prosím balíček Android SDK Build-Tools pomocí programu {1}{2}tools{2}{3}.</value>

@@ -26,6 +26,11 @@ class LlvmIrStringBlob
 
 	public long Size => size;
 
+	/// <summary>
+	/// Add string <paramref name="s"/> to the blob, returning its offset in the blob
+	/// and its size (which is the string length after conversion from UTF8 to a byte array plus
+	/// 1 for the terminating NUL character)
+	/// </summary>
 	public (int offset, int length) Add (string s)
 	{
 		if (cache.TryGetValue (s, out StringInfo info)) {

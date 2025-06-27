@@ -76,7 +76,7 @@ size_t Host::clr_get_runtime_property (const char *key, char *value_buffer, size
 		);
 	}
 
-	strncpy (value_buffer, prop.value, value_buffer_size);
+	strncpy (value_buffer, &runtime_properties_data[prop.value_index], value_buffer_size);
 	return std::min (static_cast<size_t>(prop.value_size - 1), value_buffer_size - 1);
 }
 
@@ -426,7 +426,6 @@ void Host::Java_mono_android_Runtime_initInternal (
 	init.env                                            = env;
 	init.logCategories                                  = log_categories;
 	init.version                                        = env->GetVersion ();
-	init.isRunningOnDesktop                             = false;
 	init.brokenExceptionTransitions                     = 0;
 	init.packageNamingPolicy                            = static_cast<int>(application_config.package_naming_policy);
 	init.boundExceptionType                             = 0; // System
@@ -568,7 +567,6 @@ auto Host::get_java_class_name_for_TypeManager (jclass klass) noexcept -> char*
 
 auto Host::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcept -> jint
 {
-	log_write (LOG_DEFAULT, LogLevel::Info, "Host OnLoad");
 	jvm = vm;
 
 	JNIEnv *env = nullptr;

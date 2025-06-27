@@ -16,16 +16,13 @@ using Java.Interop;
 
 namespace Microsoft.Android.Runtime;
 
-class ManagedValueManager : JniRuntime.JniValueManager
+class SimpleValueManager : JniRuntime.JniValueManager
 {
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
 	Dictionary<int, List<IJavaPeerable>>?   RegisteredInstances = new Dictionary<int, List<IJavaPeerable>>();
 
-	static Lazy<ManagedValueManager> s_instance = new (() => new ManagedValueManager ());
-	public static ManagedValueManager GetOrCreateInstance () => s_instance.Value;
-
-	ManagedValueManager ()
+	internal SimpleValueManager ()
 	{
 	}
 
@@ -36,7 +33,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	public override void CollectPeers ()
 	{
 		if (RegisteredInstances == null)
-			throw new ObjectDisposedException (nameof (ManagedValueManager));
+			throw new ObjectDisposedException (nameof (SimpleValueManager));
 
 		var peers = new List<IJavaPeerable> ();
 
@@ -65,7 +62,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	public override void AddPeer (IJavaPeerable value)
 	{
 		if (RegisteredInstances == null)
-			throw new ObjectDisposedException (nameof (ManagedValueManager));
+			throw new ObjectDisposedException (nameof (SimpleValueManager));
 
 		var r = value.PeerReference;
 		if (!r.IsValid)
@@ -127,7 +124,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	public override IJavaPeerable? PeekPeer (JniObjectReference reference)
 	{
 		if (RegisteredInstances == null)
-			throw new ObjectDisposedException (nameof (ManagedValueManager));
+			throw new ObjectDisposedException (nameof (SimpleValueManager));
 
 		if (!reference.IsValid)
 			return null;
@@ -153,7 +150,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	public override void RemovePeer (IJavaPeerable value)
 	{
 		if (RegisteredInstances == null)
-			throw new ObjectDisposedException (nameof (ManagedValueManager));
+			throw new ObjectDisposedException (nameof (SimpleValueManager));
 
 		if (value == null)
 			throw new ArgumentNullException (nameof (value));
@@ -248,7 +245,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 	{
 		if (RegisteredInstances == null)
-			throw new ObjectDisposedException (nameof (ManagedValueManager));
+			throw new ObjectDisposedException (nameof (SimpleValueManager));
 
 		lock (RegisteredInstances) {
 			var peers = new List<JniSurfacedPeerInfo> (RegisteredInstances.Count);

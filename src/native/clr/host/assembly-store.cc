@@ -35,10 +35,10 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 			internal_timing.start_event (TimingEventKind::AssemblyDecompression);
 		}
 
-		if (compressed_assemblies.descriptors == nullptr) [[unlikely]] {
+		if (compressed_assembly_count == 0) [[unlikely]] {
 			Helpers::abort_application (LOG_ASSEMBLY, "Compressed assembly found but no descriptor defined"sv);
 		}
-		if (header->descriptor_index >= compressed_assemblies.count) [[unlikely]] {
+		if (header->descriptor_index >= compressed_assembly_count) [[unlikely]] {
 			Helpers::abort_application (
 				LOG_ASSEMBLY,
 				std::format (
@@ -48,13 +48,42 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 			);
 		}
 
-		CompressedAssemblyDescriptor &cad = compressed_assemblies.descriptors[header->descriptor_index];
+		CompressedAssemblyDescriptor &cad = compressed_assembly_descriptors[header->descriptor_index];
 		assembly_data_size = e.descriptor->data_size - sizeof(CompressedAssemblyHeader);
+
+		if (cad.buffer_offset >= uncompressed_assemblies_data_size) [[unlikely]] {
+			Helpers::abort_application (
+				LOG_ASSEMBLY,
+				std::format (
+					"Invalid compressed assembly buffer offset {}. Must be smaller than {}",
+					cad.buffer_offset,
+					uncompressed_assemblies_data_size
+				)
+			);
+		}
+
+		// This is not a perfect check, since we might be still within the buffer size and yet
+		// have the tail end of this assembly's data overwritten by the next assembly's data, but
+		// that will cause the app to crash when one or the the other assembly is loaded, so it's
+		// OK to accept that risk. The whole situation is very, very unlikely.
+		if (cad.uncompressed_file_size > uncompressed_assemblies_data_size - cad.buffer_offset) [[unlikely]] {
+			Helpers::abort_application (
+				LOG_ASSEMBLY,
+				std::format (
+					"Invalid compressed assembly buffer size {} at offset {}. Must not exceed {}",
+					cad.uncompressed_file_size,
+					cad.buffer_offset,
+					uncompressed_assemblies_data_size - cad.buffer_offset
+				)
+			);
+		}
+
+		uint8_t *data_buffer = uncompressed_assemblies_data_buffer + cad.buffer_offset;
 		if (!cad.loaded) {
 			StartupAwareLock decompress_lock (assembly_decompress_mutex);
 
 			if (cad.loaded) {
-				set_assembly_data_and_size (reinterpret_cast<uint8_t*>(cad.data), cad.uncompressed_file_size, assembly_data, assembly_data_size);
+				set_assembly_data_and_size (data_buffer, cad.uncompressed_file_size, assembly_data, assembly_data_size);
 
 				if (FastTiming::enabled ()) [[unlikely]] {
 					internal_timing.end_event (true /* uses_more_info */);
@@ -65,16 +94,6 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 					internal_timing.add_more_info (msg);
 				}
 				return {assembly_data, assembly_data_size};
-			}
-
-			if (cad.data == nullptr) [[unlikely]] {
-				Helpers::abort_application (
-					LOG_ASSEMBLY,
-					std::format (
-						"Invalid compressed assembly descriptor at {}: no data"sv,
-						header->descriptor_index
-					)
-				);
 			}
 
 			if (header->uncompressed_length != cad.uncompressed_file_size) {
@@ -95,7 +114,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 			}
 
 			const char *data_start = pointer_add<const char*>(e.image_data, sizeof(CompressedAssemblyHeader));
-			int ret = LZ4_decompress_safe (data_start, reinterpret_cast<char*>(cad.data), static_cast<int>(assembly_data_size), static_cast<int>(cad.uncompressed_file_size));
+			int ret = LZ4_decompress_safe (data_start, reinterpret_cast<char*>(data_buffer), static_cast<int>(assembly_data_size), static_cast<int>(cad.uncompressed_file_size));
 
 			if (ret < 0) {
 				Helpers::abort_application (
@@ -126,7 +145,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 			}
 		}
 
-		set_assembly_data_and_size (reinterpret_cast<uint8_t*>(cad.data), cad.uncompressed_file_size, assembly_data, assembly_data_size);
+		set_assembly_data_and_size (data_buffer, cad.uncompressed_file_size, assembly_data, assembly_data_size);
 	} else
 #endif // def HAVE_LZ4 && def RELEASE
 	{
@@ -190,7 +209,11 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 
 	const AssemblyStoreIndexEntry *hash_entry = find_assembly_store_entry (name_hash, assembly_store_hashes, assembly_store.index_entry_count);
 	if (hash_entry == nullptr) {
-		log_warn (LOG_ASSEMBLY, "Assembly '{}' (hash 0x{:x}) not found"sv, optional_string (name.data ()), name_hash);
+		// This message should really be `log_warn`, but since CoreCLR attempts to load `AssemblyName.ni.dll` for each
+		// `AssemblyName.dll`, it creates a lot of non-actionable noise.
+		// TODO (in separate PR): generate hashes for the .ni.dll names and ignore them at the top of the function. Then restore
+		// `log_warn` here.
+		log_debug (LOG_ASSEMBLY, "Assembly '{}' (hash 0x{:x}) not found"sv, optional_string (name.data ()), name_hash);
 		return nullptr;
 	}
 

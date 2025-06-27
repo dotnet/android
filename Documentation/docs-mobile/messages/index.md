@@ -164,7 +164,6 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 
 + XA3001: Could not AOT the assembly: {assembly}
 + XA3002: Invalid AOT mode: {mode}
-+ XA3003: Could not strip IL of assembly: {assembly}
 + XA3004: Android NDK r10d is buggy and provides an incompatible x86_64 libm.so.
 + XA3005: The detected Android NDK version is incompatible with the targeted LLVM configuration.
 + XA3006: Could not compile native assembly file: {file}
@@ -267,30 +266,23 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `BBA` - `BuildBaseAppBundle`
 * `BGN` - `BindingsGenerator`
 * `BLD` - `BuildApk`
-* `CAL` - `CreateAdditionalLibraryResourceCache`
-* `CAR` - `CalculateAdditionalResourceCacheDirectories`
 * `CCR` - `CopyAndConvertResources`
 * `CCV` - `ConvertCustomView`
 * `CDF` - `ConvertDebuggingFiles`
 * `CDJ` - `CheckDuplicateJavaLibraries`
 * `CFI` - `CheckForInvalidResourceFileNames`
-* `CFR` - `CheckForRemovedItems`
 * `CGJ` - `CopyGeneratedJavaResourceClasses`
 * `CGS` - `CheckGoogleSdkRequirements`
 * `CIC` - `CopyIfChanged`
-* `CIL` - `CilStrip`
-* `CLA` - `CollectLibraryAssets`
 * `CLC` - `CalculateLayoutCodeBehind`
 * `CLP` - `ClassParse`
 * `CLR` - `CreateLibraryResourceArchive`
 * `CMD` - `CreateMultiDexMainDexClassList`
 * `CML` - `CreateManagedLibraryResourceArchive`
-* `CMM` - `CreateMsymManifest`
 * `CNA` - `CompileNativeAssembly`
 * `CNE` - `CollectNonEmptyDirectories`
 * `CNL` - `CreateNativeLibraryArchive`
 * `CPD` - `CalculateProjectDependencies`
-* `CPF` - `CollectPdbFiles`
 * `CPI` - `CheckProjectItems`
 * `CPR` - `CopyResource`
 * `CPT` - `ComputeHash`
@@ -311,7 +303,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `GAR` - `GetAdditionalResourcesFromAssemblies`
 * `GAS` - `GetAppSettingsDirectory`
 * `GCB` - `GenerateCodeBehindForLayout`
-* `GCJ` - `GetConvertedJavaLibraries`
 * `GEP` - `GetExtraPackages`
 * `GFT` - `GetFilesThatExist`
 * `GIL` - `GetImportedLibraries`
@@ -335,7 +326,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `LNS` - `LinkAssembliesNoShrink`
 * `LNT` - `Lint`
 * `LWF` - `LogWarningsForFiles`
-* `MBN` - `MakeBundleNativeCodeExternal`
 * `MDC` - `MDoc`
 * `PAI` - `PrepareAbiItems`
 * `PAW` - `ParseAndroidWearProjectAndManifest`

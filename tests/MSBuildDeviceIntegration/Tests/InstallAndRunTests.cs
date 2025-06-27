@@ -928,7 +928,7 @@ namespace UnnamedProject
 		[Category ("WearOS")]
 		public void DotNetInstallAndRunPreviousSdk (
 				[Values (false, true)] bool isRelease,
-				[Values ("net8.0-android", "net9.0-android")] string targetFramework)
+				[Values ("net9.0-android")] string targetFramework)
 		{
 			var proj = new XamarinFormsAndroidApplicationProject () {
 				TargetFramework = targetFramework,
@@ -1085,44 +1085,6 @@ Bar34=Foo55",
 						"The Environment variable \"DOTNET_MODIFIABLE_ASSEMBLIES\" was not set."
 				);
 			}
-		}
-
-		[Test]
-		public void EnableAndroidStripILAfterAOT ([Values (false, true)] bool profiledAOT)
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				ProjectName = nameof (EnableAndroidStripILAfterAOT),
-				RootNamespace = nameof (EnableAndroidStripILAfterAOT),
-				IsRelease = true,
-				EnableDefaultItems = true,
-			};
-			proj.SetProperty("AndroidStripILAfterAOT", "true");
-			proj.SetProperty("AndroidEnableProfiledAot", profiledAOT.ToString ());
-			// So we can use Mono.Cecil to open assemblies directly
-			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
-
-			var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
-
-			var apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-			FileAssert.Exists (apk);
-			var helper = new ArchiveAssemblyHelper (apk);
-			Assert.IsTrue (helper.Exists ($"assemblies/{proj.ProjectName}.dll"), $"{proj.ProjectName}.dll should exist in apk!");
-			using (var stream = helper.ReadEntry ($"assemblies/{proj.ProjectName}.dll")) {
-				stream.Position = 0;
-				using var assembly = AssemblyDefinition.ReadAssembly (stream);
-				var type = assembly.MainModule.GetType ($"{proj.RootNamespace}.MainActivity");
-				var method = type.Methods.FirstOrDefault (p => p.Name == "OnCreate");
-				Assert.IsNotNull (method, $"{proj.RootNamespace}.MainActivity.OnCreate should exist!");
-				Assert.IsTrue (!method.HasBody || method.Body.Instructions.Count == 0, $"{proj.RootNamespace}.MainActivity.OnCreate should have no body!");
-			}
-
-			RunProjectAndAssert (proj, builder);
-
-			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
-			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
-			Assert.IsTrue(didLaunch, "Activity should have started.");
 		}
 
 		[Test]

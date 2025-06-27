@@ -572,10 +572,6 @@ Altere o valor no AndroidManifest.xml para corresponder ao valor $(SupportedOSPl
     <value>Modo de AOT inválido: {0}</value>
     <comment>The abbreviation "AOT" should not be translated.</comment>
   </data>
-  <data name="XA3003" xml:space="preserve">
-    <value>Não foi possível remover o IL do assembly: {0}</value>
-    <comment>The abbreviation "IL" should not be translated.</comment>
-  </data>
   <data name="XA3004" xml:space="preserve">
     <value>O NDK r10d apresenta um bug e fornece um libm.so do x86_64 incompatível. Confira https://code.google.com/p/android/issues/detail?id=161422.</value>
     <comment>The following are literal names and should not be translated: NDK, r10d, x86_64, libm.so
@@ -604,7 +600,7 @@ Altere o valor no AndroidManifest.xml para corresponder ao valor $(SupportedOSPl
     <comment>The following are literal names and should not be translated: Mono.Android.Export.dll, ExportAttribute, ExportFieldAttribute.</comment>
   </data>
   <data name="XA4211" xml:space="preserve">
-    <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than $(TargetPlatformVersion) '{1}'. Using API-{2} for ACW compilation.</value>
+    <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion “{0}” é menor que $(TargetPlatformVersion) “{1}”. Usando a API-{2} para compilar o ACW.</value>
     <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:targetSdkVersion , $(TargetPlatformVersion), API-{2}, ACW
 {0} - The target SDK version number
 {1} - The $(TargetPlatformVersion) number
@@ -842,16 +838,6 @@ Remover a referência '{0}' de seu projeto e adicionar o pacote NuGet '{1}' em v
     <value>O diretório de cadeia ferramentas do {0} de destino não foi encontrado.</value>
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64</comment>
   </data>
-  <data name="XA5102" xml:space="preserve">
-    <value>Falha na conversão de assembly em código nativo. Código de saída {0}</value>
-    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces.)
-{0} - The exit code number</comment>
-  </data>
-  <data name="XA5103" xml:space="preserve">
-    <value>O compilador NDK C foi encerrado com um erro. Código de saída {0}</value>
-    <comment>The following are literal names and should not be translated: NDK, C
-{0} - The exit code number</comment>
-  </data>
   <data name="XA5104" xml:space="preserve">
     <value>Não foi possível localizar o Android NDK. Verifique se o Android NDK está instalado no Gerenciador de SDK Android ou, se estiver usando um caminho personalizado do NDK, verifique se a propriedade $(AndroidNdkDirectory) do MSBuild está definida para o caminho personalizado.</value>
     <comment>The following are literal names and should not be translated: $(AndroidNdkDirectory)</comment>
@@ -861,11 +847,6 @@ Remover a referência '{0}' de seu projeto e adicionar o pacote NuGet '{1}' em v
     <comment>{0} - The missing utility name, such as gcc or clang
 {1} - The target architecture, such as Arm, Arm64, or X86_64
 {2} - The path of the directory that was searched</comment>
-  </data>
-  <data name="XA5201" xml:space="preserve">
-    <value>O vinculador NDK C foi encerrado com um erro. Código de saída {0}</value>
-    <comment>The following are literal names and should not be translated: NDK
-{0} - The exit code number</comment>
   </data>
   <data name="XA5205" xml:space="preserve">
     <value>Não é possível localizar `{0}`. Instale o pacote Build-Tools do SDK do Android com o programa `{1}{2}tools{2}{3}`.</value>

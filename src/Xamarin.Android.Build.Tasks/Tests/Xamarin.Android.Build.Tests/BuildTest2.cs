@@ -1718,5 +1718,30 @@ namespace App1
 			using var b = CreateApkBuilder (Path.Combine (path, "App1"));
 			Assert.IsTrue (b.Build (proj), "App1 Build should have succeeded.");
 		}
+
+		[Test]
+		public void Plugin_Maui_Audio ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				PackageReferences = {
+					new Package { Id = "Plugin.Maui.Audio", Version = "4.0.0" }
+				},
+			};
+			proj.SetProperty ("MauiEnablePlatformUsings", "true"); // Avoids MAUI replacing @(Using)
+			// Just use the library in some way, so the C# compiler doesn't drop the assembly reference
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${USINGS}", "using Button = Android.Widget.Button;")
+				.Replace ("//${AFTER_ONCREATE}", "Plugin.Maui.Audio.AudioManager.Current.ToString ();");
+
+			using var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+			var dexFile = Path.Combine (intermediate, "android", "bin", "classes2.dex"); // NOTE: there is so much Java code, multidex is being used
+			FileAssert.Exists (dexFile);
+
+			const string className = "Lcrc64467b05f37239e7a6/StreamMediaDataSource;";
+			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+		}
 	}
 }

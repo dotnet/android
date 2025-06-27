@@ -17,8 +17,6 @@
     <GenerateDependencyFile Condition=" '$(GenerateDependencyFile)' == '' ">false</GenerateDependencyFile>
     <CopyLocalLockFileAssemblies Condition=" '$(CopyLocalLockFileAssemblies)' == '' ">false</CopyLocalLockFileAssemblies>
     <ComputeNETCoreBuildOutputFiles Condition=" '$(ComputeNETCoreBuildOutputFiles)' == '' ">false</ComputeNETCoreBuildOutputFiles>
-    <!-- mono-symbolicate is not supported -->
-    <MonoSymbolArchive>false</MonoSymbolArchive>
     <!--
       Disable @(Content) from referenced projects
       See: https://github.com/dotnet/sdk/blob/955c0fc7b06e2fa34bacd076ed39f61e4fb61716/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Publish.targets#L16
@@ -106,7 +104,7 @@
     <_AndroidXA1029 Condition=" '$(AotAssemblies)' != '' ">true</_AndroidXA1029>
     <_AndroidXA1030 Condition=" '$(RunAOTCompilation)' == 'true' and '$(PublishTrimmed)' == 'false' ">true</_AndroidXA1030>
     <AotAssemblies>$(RunAOTCompilation)</AotAssemblies>
-    <AndroidEnableProfiledAot Condition=" '$(AndroidEnableProfiledAot)' == '' and '$(RunAOTCompilation)' == 'true' and '$(AndroidStripILAfterAOT)' != 'true' ">true</AndroidEnableProfiledAot>
+    <AndroidEnableProfiledAot Condition=" '$(AndroidEnableProfiledAot)' == '' and '$(RunAOTCompilation)' == 'true' ">true</AndroidEnableProfiledAot>
 
     <!--
       Runtime libraries feature switches defaults
@@ -117,6 +115,7 @@
     <EnableUnsafeBinaryFormatterSerialization Condition="'$(EnableUnsafeBinaryFormatterSerialization)' == ''">false</EnableUnsafeBinaryFormatterSerialization>
     <EventSourceSupport Condition="'$(EventSourceSupport)' == ''">false</EventSourceSupport>
     <UseSystemResourceKeys Condition="'$(UseSystemResourceKeys)' == '' and '$(PublishTrimmed)' == 'true'">true</UseSystemResourceKeys>
+    <Http3Support Condition="'$(Http3Support)' == ''">false</Http3Support>
     <HttpActivityPropagationSupport Condition="'$(HttpActivityPropagationSupport)' == '' and '$(Optimize)' == 'true'">false</HttpActivityPropagationSupport>
     <InvariantGlobalization Condition="'$(InvariantGlobalization)' == ''">false</InvariantGlobalization>
     <StartupHookSupport Condition="'$(StartupHookSupport)' == ''">false</StartupHookSupport>

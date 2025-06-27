@@ -38,10 +38,10 @@ const TypeMapJava java_to_managed_map[] = {};
 const xamarin::android::hash_t java_to_managed_hashes[] = {};
 #endif
 
-CompressedAssemblies compressed_assemblies = {
-	.count = 0,
-	.descriptors = nullptr,
-};
+uint32_t compressed_assembly_count = 0;
+CompressedAssemblyDescriptor compressed_assembly_descriptors[] = {};
+uint32_t uncompressed_assemblies_data_size = 0;
+uint8_t uncompressed_assemblies_data_buffer[] = {};
 
 //
 // Config settings below **must** be valid for Desktop builds as the default `libxamarin-app.{dll,dylib,so}` is used by
@@ -72,7 +72,8 @@ const ApplicationConfig application_config = {
 };
 
 // TODO: migrate to std::string_view for these two
-const char* const app_environment_variables[] = {};
+const AppEnvironmentVariable app_environment_variables[] = {};
+const char app_environment_variable_contents[] = {};
 const char* const app_system_properties[] = {};
 
 static constexpr size_t AssemblyNameWidth = 128uz;
@@ -133,7 +134,7 @@ DSOCacheEntry dso_cache[] = {
 		.hash = xamarin::android::xxhash::hash (fake_dso_name, sizeof(fake_dso_name) - 1),
 		.real_name_hash = xamarin::android::xxhash::hash (fake_dso_name, sizeof(fake_dso_name) - 1),
 		.ignore = true,
-		.name = fake_dso_name,
+		.name_index = 1,
 		.handle = nullptr,
 	},
 
@@ -141,7 +142,7 @@ DSOCacheEntry dso_cache[] = {
 		.hash = xamarin::android::xxhash::hash (fake_dso_name2, sizeof(fake_dso_name2) - 1),
 		.real_name_hash = xamarin::android::xxhash::hash (fake_dso_name2, sizeof(fake_dso_name2) - 1),
 		.ignore = true,
-		.name = fake_dso_name2,
+		.name_index = 2,
 		.handle = nullptr,
 	},
 };
@@ -151,7 +152,7 @@ DSOCacheEntry aot_dso_cache[] = {
 		.hash = xamarin::android::xxhash::hash (fake_dso_name, sizeof(fake_dso_name) - 1),
 		.real_name_hash = xamarin::android::xxhash::hash (fake_dso_name, sizeof(fake_dso_name) - 1),
 		.ignore = true,
-		.name = fake_dso_name,
+		.name_index = 3,
 		.handle = nullptr,
 	},
 
@@ -159,10 +160,12 @@ DSOCacheEntry aot_dso_cache[] = {
 		.hash = xamarin::android::xxhash::hash (fake_dso_name2, sizeof(fake_dso_name2) - 1),
 		.real_name_hash = xamarin::android::xxhash::hash (fake_dso_name2, sizeof(fake_dso_name2) - 1),
 		.ignore = true,
-		.name = fake_dso_name2,
+		.name_index = 4,
 		.handle = nullptr,
 	},
 };
+
+const char dso_names_data[] = {};
 
 DSOApkEntry dso_apk_entries[2] {};
 
@@ -258,23 +261,26 @@ constexpr char prop_test_boolean_key[] = "test_boolean";
 
 const RuntimeProperty runtime_properties[] = {
 	{
-		.key = prop_test_string_key,
-		.value = "test",
-		.value_size = sizeof("test"),
+		.key_index = 0,
+		.value_index = 10,
+		.value_size = 10,
 	},
 
 	{
-		.key = prop_test_integer_key,
-		.value = "42",
-		.value_size = sizeof("42"),
+		.key_index = 20,
+		.value_index = 25,
+		.value_size = 5,
 	},
 
 	{
-		.key = prop_test_boolean_key,
-		.value = "true",
-		.value_size = sizeof("true"),
+		.key_index = 30,
+		.value_index = 33,
+		.value_size = 7,
 	},
 };
+
+
+const char runtime_properties_data[] = {};
 
 const RuntimePropertyIndexEntry runtime_property_index[] = {
 	{

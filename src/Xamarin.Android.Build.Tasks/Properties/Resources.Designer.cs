@@ -993,15 +993,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Could not strip IL of assembly: {0}.
-        /// </summary>
-        public static string XA3003 {
-            get {
-                return ResourceManager.GetString("XA3003", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Android NDK r10d is buggy and provides an incompatible x86_64 libm.so. See https://code.google.com/p/android/issues/detail?id=161422..
         /// </summary>
         public static string XA3004 {
@@ -1610,24 +1601,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Conversion from assembly to native code failed. Exit code {0}.
-        /// </summary>
-        public static string XA5102 {
-            get {
-                return ResourceManager.GetString("XA5102", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to NDK C compiler exited with an error. Exit code {0}.
-        /// </summary>
-        public static string XA5103 {
-            get {
-                return ResourceManager.GetString("XA5103", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Could not locate the Android NDK. Please make sure the Android NDK is installed in the Android SDK Manager, or if using a custom NDK path, please ensure the $(AndroidNdkDirectory) MSBuild property is set to the custom path..
         /// </summary>
         public static string XA5104 {
@@ -1642,15 +1615,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA5105 {
             get {
                 return ResourceManager.GetString("XA5105", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to NDK linker exited with an error. Exit code {0}.
-        /// </summary>
-        public static string XA5201 {
-            get {
-                return ResourceManager.GetString("XA5201", resourceCulture);
             }
         }
 

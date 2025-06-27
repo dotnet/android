@@ -64,19 +64,9 @@
       <Link>Microsoft.Android.Sdk.Bindings.Gradle.targets</Link>
     </None>
     <None
-        Include="MSBuild\Xamarin\Android\Xamarin.Android.Common\ImportAfter\Microsoft.Cpp.Android.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>Xamarin.Android.Common\ImportAfter\Microsoft.Cpp.Android.targets</Link>
-    </None>
-    <None
         Include="MSBuild\Xamarin\Android\Xamarin.Android.AvailableItems.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Xamarin.Android.AvailableItems.targets</Link>
-    </None>
-    <None
-        Include="MSBuild\Xamarin\Android\Xamarin.Android.DefaultOutputPaths.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>Xamarin.Android.DefaultOutputPaths.targets</Link>
     </None>
     <None Include="MSBuild\Xamarin\Android\Xamarin.Android.Designer.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -227,7 +217,6 @@
     <_MonoScriptSourceDirectory>..\..\tools\scripts</_MonoScriptSourceDirectory>
   </PropertyGroup>
   <ItemGroup>
-    <_MonoScript Include="mono-symbolicate" />
     <_MonoScript Include="illinkanalyzer" />
     <_MonoScript Include="jit-times" />
     <_MonoScript Include="aprofutil" />

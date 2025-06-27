@@ -47,11 +47,6 @@ namespace Xamarin.Android.Build.Tests
 
 		static readonly object[] DotNetPackTargetFrameworks = new object[] {
 			new object[] {
-				"net8.0",
-				"android",
-				34,
-			},
-			new object[] {
 				"net9.0",
 				"android",
 				35,
@@ -150,11 +145,6 @@ public class JavaSourceTest {
 		}
 
 		static readonly object[] DotNetTargetFrameworks = new object[] {
-			new object[] {
-				"net8.0",
-				"android",
-				34,
-			},
 			new object[] {
 				"net9.0",
 				"android",

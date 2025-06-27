@@ -105,6 +105,17 @@ namespace xamarin::android
 			return monodroid_dlopen_log_and_return (handle, name);
 		}
 
+	private:
+		[[gnu::always_inline]]
+		static auto get_dso_name (const DSOCacheEntry *const dso) -> std::string_view
+		{
+			if (dso == nullptr) {
+				return "<unknown>"sv;
+			}
+
+			return &dso_names_data[dso->name_index];
+		}
+
 	public:
 		template<bool PREFER_AOT_CACHE> [[gnu::flatten]]
 		static auto monodroid_dlopen (std::string_view const& name, int flags) noexcept -> void*
@@ -135,20 +146,21 @@ namespace xamarin::android
 				dso = find_only_dso_cache_entry (name_hash);
 			}
 
-			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash match {}found, DSO name is '{}'", dso == nullptr ? "not "sv : ""sv, dso == nullptr ? "<unknown>"sv : dso->name);
+			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash match {}found, DSO name is '{}'", dso == nullptr ? "not "sv : ""sv, get_dso_name (dso));
 
 			if (dso == nullptr) {
 				// DSO not known at build time, try to load it
 				return monodroid_dlopen_ignore_component_or_load (name, flags);
 			} else if (dso->handle != nullptr) {
-				return monodroid_dlopen_log_and_return (dso->handle, dso->name);
+				return monodroid_dlopen_log_and_return (dso->handle, get_dso_name (dso));
 			}
 
 			if (dso->ignore) {
-				log_info (LOG_ASSEMBLY, "Request to load '{}' ignored, it is known not to exist", dso->name);
+				log_info (LOG_ASSEMBLY, "Request to load '{}' ignored, it is known not to exist", get_dso_name (dso));
 				return nullptr;
 			}
 
+			std::string_view dso_name = get_dso_name (dso);
 			StartupAwareLock lock (dso_handle_write_lock);
 #if defined (RELEASE)
 			if (AndroidSystem::is_embedded_dso_mode_enabled ()) {
@@ -163,20 +175,21 @@ namespace xamarin::android
 					dli.flags = ANDROID_DLEXT_USE_LIBRARY_FD | ANDROID_DLEXT_USE_LIBRARY_FD_OFFSET;
 					dli.library_fd = apk_entry->fd;
 					dli.library_fd_offset = apk_entry->offset;
-					dso->handle = android_dlopen_ext (dso->name, flags, &dli);
+
+					dso->handle = android_dlopen_ext (dso_name.data (), flags, &dli);
 
 					if (dso->handle != nullptr) {
-						return monodroid_dlopen_log_and_return (dso->handle, dso->name);
+						return monodroid_dlopen_log_and_return (dso->handle, dso_name);
 					}
 					break;
 				}
 			}
 #endif
 			unsigned int dl_flags = static_cast<unsigned int>(flags);
-			dso->handle = AndroidSystem::load_dso_from_any_directories (dso->name, dl_flags);
+			dso->handle = AndroidSystem::load_dso_from_any_directories (dso_name, dl_flags);
 
 			if (dso->handle != nullptr) {
-				return monodroid_dlopen_log_and_return (dso->handle, dso->name);
+				return monodroid_dlopen_log_and_return (dso->handle, dso_name);
 			}
 
 			dso->handle = AndroidSystem::load_dso_from_any_directories (name, dl_flags);
