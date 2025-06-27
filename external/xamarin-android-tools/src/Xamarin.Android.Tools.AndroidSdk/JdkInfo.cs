@@ -274,7 +274,8 @@ namespace Xamarin.Android.Tools
 
 			const string PropertySettings = "Property settings:";
 
-			ProcessUtils.Exec (javaProps, (o, e) => {
+			try {
+				ProcessUtils.Exec (javaProps, (o, e) => {
 					const string ContinuedValuePrefix   = "        ";
 					const string NewValuePrefix         = "    ";
 					const string NameValueDelim         = " = ";
@@ -307,7 +308,14 @@ namespace Xamarin.Android.Tools
 							props.Add (curKey, values = new List<string> ());
 						values.Add (value);
 					}
-			});
+				});
+			}
+			catch (Exception e) {
+				logger (TraceLevel.Error, $"Error retrieving Java properties by running `{javaProps.FileName} {javaProps.Arguments}`: {e.Message}");
+				logger (TraceLevel.Verbose, e.ToString ());
+				return props;
+			}
+
 			if (!foundPS) {
 				logger (TraceLevel.Warning, $"No Java properties found; did not find `{PropertySettings}` in `{java} -XshowSettings:properties -version` output: ```{output.ToString ()}```");
 			}
