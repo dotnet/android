@@ -71,10 +71,9 @@ extends:
         compiled:
           enabled: false
           justificationForDisabling: CodeQL runs against the nightly build
-      ${{ if ne(variables['Agent.OS'], 'Linux') }}:
-        credscan:
-          enabled: true
-          suppressionsFile: $(System.DefaultWorkingDirectory)/.gdn/CredScanSuppressions.json
+      credscan:
+        enabled: true
+        suppressionsFile: $(System.DefaultWorkingDirectory)/android/.gdn/CredScanSuppressions.json
       policheck:
         enabled: false
         justification: Built in task does not support multi-language scanning
@@ -91,10 +90,10 @@ extends:
         - repository: maui
         - repository: yaml-templates
       suppression:
-        suppressionFile: $(Build.SourcesDirectory)/.gdn/.gdnsuppress
+        suppressionFile: $(Build.SourcesDirectory)/android/.gdn/.gdnsuppress
       tsa:
         enabled: true
-        configFile: $(Build.SourcesDirectory)/.gdn/tsaoptions-v2.json
+        configFile: $(Build.SourcesDirectory)/android/.gdn/tsaoptions-v2.json
     settings:
       skipBuildTagsForGitHubPullRequests: true
     stages:
