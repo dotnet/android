@@ -2,7 +2,7 @@ parameters:
   testAssembly: ''        # NUnit test assembly to run
   testFilter: ''          # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
   testRunTitle: ''        # Title of the test run
-  xaSourcePath: $(System.DefaultWorkingDirectory)
+  xaSourcePath: $(System.DefaultWorkingDirectory)/android
   retryFailedTests: true  # Retry failed tests once
 
 steps:

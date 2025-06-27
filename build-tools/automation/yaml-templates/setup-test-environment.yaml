@@ -1,6 +1,6 @@
 parameters:
   configuration: $(XA.Build.Configuration)
-  xaSourcePath: $(System.DefaultWorkingDirectory)
+  xaSourcePath: $(System.DefaultWorkingDirectory)/android
   jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
   useAgentJdkPath: true
   remove_dotnet: false
@@ -21,6 +21,10 @@ steps:
     commit: ${{ parameters.commit }}
     clean: true
     submodules: recursive
+
+# Always checkout a second resource to ensure we are using multi-repo checkout behavior
+#  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
+- checkout: android-tools
 
 - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml
   parameters:

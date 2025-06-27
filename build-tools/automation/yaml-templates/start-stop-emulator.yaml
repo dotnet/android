@@ -9,7 +9,7 @@ parameters:
   launchTimeoutMin: 20    # Minutes to wait for the emulator to start
   taskTimeoutInMinutes: 30 # Minutes to wait for the task to finish
   startContinueOnError: false    # If 'true', do not mark the step as failed if starting the emulator fails
-  xaSourcePath: $(System.DefaultWorkingDirectory) # working directory
+  xaSourcePath: $(System.DefaultWorkingDirectory)/android # working directory
 
 steps:
 - ${{ if eq(parameters.command, 'start') }}:
@@ -29,13 +29,13 @@ steps:
           -p:TestAvdType=${{ parameters.avdType }}
           ${{ parameters.emulatorMSBuildArgs }}
           -p:AvdLaunchTimeoutMinutes=${{ parameters.launchTimeoutMin }}
-          -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/install-emulator-${{ parameters.avdApiLevel }}.binlog
+          -bl:${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/install-emulator-${{ parameters.avdApiLevel }}.binlog
       ${{ else }}:
         arguments: >-
           -c $(XA.Build.Configuration) -t:AcquireAndroidTarget
           ${{ parameters.emulatorMSBuildArgs }}
           -p:AvdLaunchTimeoutMinutes=${{ parameters.launchTimeoutMin }}
-          -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
+          -bl:${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
 
 - ${{ if eq(parameters.command, 'stop') }}:
   - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
@@ -54,9 +54,9 @@ steps:
           -p:TestAvdAbi=${{ parameters.avdAbi }}
           -p:TestAvdType=${{ parameters.avdType }}
           -p:AvdLaunchTimeoutMinutes=${{ parameters.launchTimeoutMin }}
-          -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
+          -bl:${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
       ${{ else }}:
         arguments: >-
           -c $(XA.Build.Configuration) -t:"AcquireAndroidTarget,ReleaseAndroidTarget"
           -p:AvdLaunchTimeoutMinutes=${{ parameters.launchTimeoutMin }}
-          -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
+          -bl:${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
