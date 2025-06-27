@@ -2,6 +2,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Java;
 using System.Text;
 
 namespace Android.Runtime
@@ -18,7 +19,7 @@ namespace Android.Runtime
 		All     = Java | Managed | Native | Signals,
 	}
 
-	internal static class RuntimeNativeMethods
+	internal unsafe static class RuntimeNativeMethods
 	{
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal extern static void monodroid_log (LogLevel level, LogCategories category, string message);
@@ -91,6 +92,11 @@ namespace Android.Runtime
 
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern bool clr_typemap_java_to_managed (string java_type_name, out IntPtr managed_assembly_name, out uint managed_type_token_id);
+
+		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern delegate* unmanaged<MarkCrossReferencesArgs*, void> clr_initialize_gc_bridge (
+			delegate* unmanaged<void> bridge_processing_started_callback,
+			delegate* unmanaged<MarkCrossReferencesArgs*, void> bridge_processing_finished_callback);
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		internal static extern void monodroid_unhandled_exception (Exception javaException);

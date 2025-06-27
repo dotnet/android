@@ -49,6 +49,21 @@ auto OSBridge::lref_to_gref (JNIEnv *env, jobject lref) noexcept -> jobject
 	return g;
 }
 
+auto OSBridge::get_object_ref_type (JNIEnv *env, void *handle) noexcept -> char
+{
+	jobjectRefType value;
+	if (handle == nullptr)
+		return 'I';
+	value = env->GetObjectRefType (reinterpret_cast<jobject> (handle));
+	switch (value) {
+		case JNIInvalidRefType:     return 'I';
+		case JNILocalRefType:       return 'L';
+		case JNIGlobalRefType:      return 'G';
+		case JNIWeakGlobalRefType:  return 'W';
+		default:                    return '*';
+	}
+}
+
 auto OSBridge::_monodroid_gref_inc () noexcept -> int
 {
 	return __sync_add_and_fetch (&gc_gref_count, 1);
