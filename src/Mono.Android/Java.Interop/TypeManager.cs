@@ -247,7 +247,10 @@ namespace Java.Interop {
 				}
 			}
 
-			Logger.Log (LogLevel.Info, "monodroid", $"Loaded type: {ret}");
+			if (Logger.LogAssembly) {
+				Logger.Log (LogLevel.Info, "monodroid", $"Loaded type: {ret}");
+			}
+
 			return ret;
 		}
 

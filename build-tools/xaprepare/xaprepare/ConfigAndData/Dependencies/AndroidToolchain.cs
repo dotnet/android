@@ -117,7 +117,7 @@ namespace Xamarin.Android.Prepare
 					buildToolName: "android-sdk-cmdline-tools",
 					buildToolVersion: $"{CommandLineToolsFolder}.{CommandLineToolsVersion}"
 				),
-				new AndroidToolchainComponent ($"{XAPlatformToolsPackagePrefix}platform-tools_r{XAPlatformToolsVersion}-{osTag}",
+				new AndroidToolchainComponent ($"{XAPlatformToolsPackagePrefix}platform-tools_r{XAPlatformToolsVersion}-{pltOsTag}",
 					destDir: "platform-tools",
 					pkgRevision: XAPlatformToolsVersion,
 					buildToolName: "android-sdk-platform-tools",
