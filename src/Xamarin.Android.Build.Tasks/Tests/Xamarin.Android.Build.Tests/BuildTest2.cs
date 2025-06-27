@@ -141,17 +141,13 @@ namespace Xamarin.Android.Build.Tests
 		public void BasicApplicationPublishReadyToRun (bool isComposite, string rid)
 		{
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+				IsRelease = true, // Enables R2R by default
 			};
 
 			proj.SetProperty ("RuntimeIdentifier", rid);
 			proj.SetProperty ("UseMonoRuntime", "false"); 	// Enables CoreCLR
-			proj.SetProperty ("_IsPublishing", "true"); 	// Make "dotnet build" act as "dotnet publish"
-			proj.SetProperty ("PublishReadyToRun", "true"); // Enable R2R
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
-
-			if (isComposite)
-				proj.SetProperty ("PublishReadyToRunComposite", "true"); // Enable R2R composite
+			proj.SetProperty ("PublishReadyToRunComposite", isComposite.ToString ());
 
 			var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");

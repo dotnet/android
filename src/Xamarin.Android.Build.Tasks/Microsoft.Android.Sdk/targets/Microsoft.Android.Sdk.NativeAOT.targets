@@ -18,6 +18,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <AllowPublishAotWithoutRuntimeIdentifier Condition=" '$(AllowPublishAotWithoutRuntimeIdentifier)' == '' ">true</AllowPublishAotWithoutRuntimeIdentifier>
     <!-- NativeAOT's targets currently gives an error about cross-compilation -->
     <DisableUnsupportedError Condition=" $([MSBuild]::IsOSPlatform('windows')) and '$(DisableUnsupportedError)' == '' ">true</DisableUnsupportedError>
+    <!-- HACK: make dotnet restore include Microsoft.NETCore.App.Runtime.NativeAOT.linux-bionic-arm64 -->
+    <_IsPublishing Condition=" '$(_IsPublishing)' == '' ">true</_IsPublishing>
   </PropertyGroup>
 
   <!-- Default property values for NativeAOT Debug configuration -->
