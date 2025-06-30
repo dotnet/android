@@ -34,8 +34,8 @@ using namespace xamarin::android;
 const std::vector<std::string> internal_pinvoke_names = {
 	"create_public_directory",
 	"java_interop_free",
-	"monodroid_clear_gdb_wait",
-	"_monodroid_counters_dump",
+
+
 	"_monodroid_detect_cpu_and_architecture",
 	"monodroid_dylib_mono_free",
 	"monodroid_dylib_mono_init",
@@ -45,26 +45,26 @@ const std::vector<std::string> internal_pinvoke_names = {
 	"monodroid_free",
 	"_monodroid_freeifaddrs",
 	"_monodroid_gc_wait_for_bridge_processing",
-	"_monodroid_get_dns_servers",
+
 	"monodroid_get_dylib",
 	"_monodroid_getifaddrs",
-	"monodroid_get_namespaced_system_property",
-	"_monodroid_get_network_interface_supports_multicast",
-	"_monodroid_get_network_interface_up_state",
+
+
+
 	"monodroid_get_system_property",
 	"_monodroid_gref_get",
 	"_monodroid_gref_log",
 	"_monodroid_gref_log_delete",
 	"_monodroid_gref_log_new",
 	"monodroid_log",
-	"monodroid_log_traces",
+
 	"_monodroid_lookup_replacement_type",
 	"_monodroid_lookup_replacement_method_info",
 	"_monodroid_lref_log_delete",
 	"_monodroid_lref_log_new",
 	"_monodroid_max_gref_get",
 	"monodroid_strdup_printf",
-	"monodroid_strfreev",
+
 	"monodroid_strsplit",
 	"_monodroid_timezone_get_default_id",
 	"monodroid_timing_start",
