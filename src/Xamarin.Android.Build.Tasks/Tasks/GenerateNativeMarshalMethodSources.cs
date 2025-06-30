@@ -84,8 +84,6 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 			using var pinvokePreserveWriter = MemoryStreamPool.Shared.CreateStreamWriter ();
 			try {
 				pinvokePreserveGen.Generate (pinvokePreserveModule, targetArch, pinvokePreserveWriter, pinvokePreserveLlFilePath!);
-			} catch {
-				throw;
 			} finally {
 				pinvokePreserveWriter.Flush ();
 				Files.CopyIfStreamChanged (pinvokePreserveWriter.BaseStream, pinvokePreserveLlFilePath!);
