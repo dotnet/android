@@ -29,14 +29,13 @@ class NativeRuntimeComponents
 
 		Func<Archive, bool> shouldInclude;
 
-		public Archive (string name, string setName, Func<Archive, bool>? include = null, bool wholeArchive = false, string? jniOnLoadName = null, bool needsClrHack = false)
+		public Archive (string name, string setName, Func<Archive, bool>? include = null, bool wholeArchive = false, string? jniOnLoadName = null)
 		{
 			Name = name;
 			SetName = setName;
 			shouldInclude = include == null ? ((Archive arch) => true) : include;
 			WholeArchive = wholeArchive;
 			JniOnLoadName = jniOnLoadName;
-			NeedsClrHack = needsClrHack;
 		}
 	}
 
@@ -57,7 +56,7 @@ class NativeRuntimeComponents
 	sealed class BclArchive : Archive
 	{
 		public BclArchive (string name, bool wholeArchive = false, string? jniOnLoadName = null)
-			: base (name, KnownSets.BCL, wholeArchive: wholeArchive, jniOnLoadName: jniOnLoadName, needsClrHack: true)
+			: base (name, KnownSets.BCL, wholeArchive: wholeArchive, jniOnLoadName: jniOnLoadName)
 		{
 			DontExportSymbols = true;
 		}
@@ -66,7 +65,7 @@ class NativeRuntimeComponents
 	sealed class ClrArchive : Archive
 	{
 		public ClrArchive (string name, bool wholeArchive = false)
-			: base (name, KnownSets.CoreClrRuntime, wholeArchive: wholeArchive, needsClrHack: true)
+			: base (name, KnownSets.CoreClrRuntime, wholeArchive: wholeArchive)
 		{
 			DontExportSymbols = true;
 		}
@@ -94,13 +93,6 @@ class NativeRuntimeComponents
 		KnownArchives = new () {
 			// CoreCLR runtime + BCL
 			new ClrArchive ("libcoreclr_static.a"),
-			// new ClrArchive ("libcoreclrminipal.a"),
-			// new ClrArchive ("libgc_pal.a"),
-
-			// new ClrArchive ("libcoreclrpal.a", wholeArchive: true),
-			// new ClrArchive ("libeventprovider.a"),
-			// new ClrArchive ("libnativeresourcestring.a"),
-			// new ClrArchive ("libminipal.a")
 			new ClrArchive ("libbrotlienc.a"),
 			new ClrArchive ("libbrotlidec.a"),
 			new ClrArchive ("libbrotlicommon.a"),
