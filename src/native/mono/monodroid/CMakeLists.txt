@@ -100,7 +100,6 @@ set(XAMARIN_MONODROID_SOURCES
   jni-remapping.cc
   mono-log-adapter.cc
   monodroid-glue.cc
-  monodroid-networkinfo.cc
   monodroid-tracing.cc
   monovm-properties.cc
   osbridge.cc
