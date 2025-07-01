@@ -105,8 +105,8 @@ struct TypeMapModule
 	uint32_t                  duplicate_count;
 	uint32_t                  assembly_name_index;
 	uint32_t                  assembly_name_length;
-	TypeMapModuleEntry const *map;
-	TypeMapModuleEntry const *duplicate_map;
+	uint32_t                  map_index;
+	uint32_t                  duplicate_map_index;
 };
 
 struct TypeMapJava
@@ -349,7 +349,9 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const uint64_t java_type_names_size;
 	[[gnu::visibility("default")]] extern const char managed_type_names[];
 	[[gnu::visibility("default")]] extern const char managed_assembly_names[];
-	[[gnu::visibility("default")]] extern TypeMapModule managed_to_java_map[];
+	[[gnu::visibility("default")]] extern const TypeMapModule managed_to_java_map[];
+	[[gnu::visibility("default")]] extern const TypeMapModuleEntry modules_map_data[];
+	[[gnu::visibility("default")]] extern const TypeMapModuleEntry modules_duplicates_data[];
 	[[gnu::visibility("default")]] extern const TypeMapJava java_to_managed_map[];
 	[[gnu::visibility("default")]] extern const xamarin::android::hash_t java_to_managed_hashes[];
 #endif
