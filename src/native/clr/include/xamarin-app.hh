@@ -116,16 +116,6 @@ struct CompressedAssemblyDescriptor
 	uint32_t   buffer_offset;
 };
 
-struct XamarinAndroidBundledAssembly
-{
-	int32_t  file_fd;
-	char    *file_name;
-	uint32_t data_offset;
-	uint32_t data_size;
-	uint8_t *data;
-	uint32_t name_length;
-	char    *name;
-};
 
 //
 // Assembly store format
@@ -352,7 +342,7 @@ extern "C" {
 
 	[[gnu::visibility("default")]] extern const char* const mono_aot_mode_name;
 
-	[[gnu::visibility("default")]] extern XamarinAndroidBundledAssembly bundled_assemblies[];
+
 	[[gnu::visibility("default")]] extern AssemblyStoreSingleAssemblyRuntimeData assembly_store_bundled_assemblies[];
 	[[gnu::visibility("default")]] extern AssemblyStoreRuntimeData assembly_store;
 
