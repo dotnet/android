@@ -16,11 +16,13 @@ abstract class AssemblyStoreItem
 	public uint ConfigOffset            { get; protected set; }
 	public uint ConfigSize              { get; protected set; }
 	public AndroidTargetArch TargetArch { get; protected set; }
+	public bool Ignore                  { get; }
 
-	protected AssemblyStoreItem (string name, bool is64Bit, List<ulong> hashes)
+	protected AssemblyStoreItem (string name, bool is64Bit, List<ulong> hashes, bool ignore)
 	{
 		Name = name;
 		Hashes = hashes.AsReadOnly ();
 		Is64Bit = is64Bit;
+		Ignore = ignore;
 	}
 }
