@@ -3,7 +3,7 @@
 
 - [Assembly Store format and purpose](#assembly-store-format-and-purpose)
     - [Rationale](#rationale)
-- [Store kinds and locations](#store-kinds-and-locations)
+- [Store locations](#store-locations)
 - [Store format](#store-format)
     - [Common header](#common-header)
     - [Assembly descriptor table](#assembly-descriptor-table)
@@ -23,11 +23,16 @@ assemblies, their debug data (optionally) and the associated config
 file (optionally).  They are placed inside the Android APK/AAB
 archives, replacing individual assemblies/pdb/config files.
 
-Assembly stores are an optional form of assembly storage in the
+Assembly stores are a form of assembly storage in the
 archive, they can be used in all build configurations **except** when
 Fast Deployment is in effect (in which case assemblies aren't placed
 in the archives at all, they are instead synchronized from the host to
-the device/emulator filesystem)
+the device/emulator filesystem).
+
+Applications using MonoVM runtime have the option to turn assembly
+stores off in favor of individual assemblies, but CoreCLR applications
+(with the exception of FastDev, as mentioned above) support only
+this form of assembly storage.
 
 ## Rationale
 
@@ -54,7 +59,7 @@ An assembly store, however, needs to be mapped only once and any
 further operations are merely pointer arithmetic, making the process
 not only faster but also reducing the algorithm complexity to O(1).
 
-# Store kinds and locations
+# Store locations
 
 There exists only one Assembly Store per architecture. Each application will contain 
 architecture-specific assembly stores, with one store per architecture supported by 
@@ -184,8 +189,7 @@ value, other fields describe optional data and can be set to `0`.
 Individual fields have the following meanings:
 
   - `mapping_index`: index into a runtime array where assembly data pointers are stored
-  - `data_offset`: offset of the assembly image data from the
-    beginning of the store file
+  - `data_offset`: offset of the assembly image data from the beginning of the store file
   - `data_size`: number of bytes of the image data
   - `debug_data_offset`: offset of the assembly's debug data from the
     beginning of the store file. A value of `0` indicates there's no
@@ -200,7 +204,8 @@ Individual fields have the following meanings:
 
 ## Index store
 
-The Assembly Store contains an index section that follows the header and precedes the assembly descriptors. The index contains entries for assembly name lookups, with each entry formatted according to the `AssemblyStoreIndexEntry` structure.
+The Assembly Store contains an index section that follows the header and precedes the assembly descriptors.
+The index contains entries for assembly name lookups, with each entry formatted according to the `AssemblyStoreIndexEntry` structure.
 
 ### Hash table format
 
@@ -209,18 +214,20 @@ the assembly culture (e.g. `en/` or `fr/`) is treated as part of the assembly
 name, thus resulting in a unique hash. The hash value is obtained using the
 [xxHash](https://cyan4973.github.io/xxHash/) algorithm and is
 calculated **without** including the `.dll` extension. This is done
-for runtime efficiency as the vast majority of Mono requests to load
-an assembly does not include the `.dll` suffix, thus saving us time of
+for runtime efficiency as the vast majority of runtime requests to load
+an assembly do not include the `.dll` suffix, thus saving us time of
 appending it in order to generate the hash for index lookup. 
 
 Each entry is represented by the following structure:
 
-    struct AssemblyStoreIndexEntry
-    {
-        xamarin::android::hash_t name_hash;
-        uint32_t descriptor_index;
-        uint8_t ignore;
-    };
+```cpp
+struct AssemblyStoreIndexEntry
+{
+    xamarin::android::hash_t name_hash;
+    uint32_t descriptor_index;
+    uint8_t ignore;
+};
+```
 
 Individual fields have the following meanings:
 
