@@ -83,6 +83,43 @@ Each target ABI/architecture has a single assembly store file, composed of the f
 Each store is a structured binary file, using little-endian byte order
 and aligned to a byte boundary.
 
+## [HEADER]
+
+The header is a fixed-size structure at the beginning of each assembly store file:
+
+- **MAGIC** (`uint32_t`) - Magic value `0x41424158` ("XABA" in little-endian)
+- **FORMAT_VERSION** (`uint32_t`) - Store format version number (includes ABI and 64-bit flags)
+- **ENTRY_COUNT** (`uint32_t`) - Number of assemblies in the store
+- **INDEX_ENTRY_COUNT** (`uint32_t`) - Number of entries in the index (typically `ENTRY_COUNT * 2`)
+- **INDEX_SIZE** (`uint32_t`) - Index size in bytes
+
+## [INDEX]
+
+Variable-size section containing hash-based lookup entries for assembly names. Contains `INDEX_ENTRY_COUNT` entries (typically `ENTRY_COUNT * 2` entries to handle assembly names both with and without file extensions):
+
+- **NAME_HASH** (`hash_t`) - xxHash of the assembly name (`uint32_t` on 32-bit platforms, `uint64_t` on 64-bit platforms)
+- **DESCRIPTOR_INDEX** (`uint32_t`) - Index into the assembly descriptor array
+- **IGNORE** (`uint8_t`) - If set to any value other than 0, the assembly should be ignored during loading
+
+## [ASSEMBLY_DESCRIPTORS]
+
+Variable-size section with `ENTRY_COUNT` entries, each describing one assembly:
+
+- **MAPPING_INDEX** (`uint32_t`) - Index into runtime array where assembly data pointers are stored
+- **DATA_OFFSET** (`uint32_t`) - Offset from store beginning to assembly data start
+- **DATA_SIZE** (`uint32_t`) - Size of the stored assembly data
+- **DEBUG_DATA_OFFSET** (`uint32_t`) - Offset to assembly PDB data start (0 if absent)
+- **DEBUG_DATA_SIZE** (`uint32_t`) - Size of assembly PDB data (0 if absent)
+- **CONFIG_DATA_OFFSET** (`uint32_t`) - Offset to assembly .config file content start (0 if absent)
+- **CONFIG_DATA_SIZE** (`uint32_t`) - Size of assembly .config file content (0 if absent)
+
+## [ASSEMBLY_NAMES]
+
+Variable-size section with `ENTRY_COUNT` entries containing assembly name strings:
+
+- **NAME_LENGTH** (`uint32_t`) - Length of assembly name in bytes
+- **NAME** (variable length) - UTF-8 encoded assembly name bytes (without NUL terminator)
+
 Assemblies are stored as adjacent byte streams:
 
  - **Image data**
