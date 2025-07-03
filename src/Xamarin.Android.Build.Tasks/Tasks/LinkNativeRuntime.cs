@@ -22,31 +22,31 @@ public class LinkNativeRuntime : AsyncTask
 	public string IntermediateOutputPath { get; set; } = "";
 
 	[Required]
-	public ITaskItem[] LinkLibraries { get; set; } = null!;
+	public ITaskItem[] LinkLibraries { get; set; } = [];
 
 	[Required]
-	public ITaskItem[] NativeArchives { get; set; } = null!;
+	public ITaskItem[] NativeArchives { get; set; } = [];
 
 	[Required]
-	public ITaskItem[] NativeObjectFiles { get; set; } = null!;
+	public ITaskItem[] NativeObjectFiles { get; set; } = [];
 
 	[Required]
-	public ITaskItem[] NativeLinkStartFiles { get; set; } = null!;
+	public ITaskItem[] NativeLinkStartFiles { get; set; } = [];
 
 	[Required]
-	public ITaskItem[] NativeLinkEndFiles { get; set; } = null!;
+	public ITaskItem[] NativeLinkEndFiles { get; set; } = [];
 
 	[Required]
-	public ITaskItem[] NativeSymbolsToExport { get; set; } = null!;
+	public ITaskItem[] NativeSymbolsToExport { get; set; } = [];
 
 	[Required]
-	public ITaskItem[] OutputRuntimes { get; set; } = null!;
+	public ITaskItem[] OutputRuntimes { get; set; } = [];
 
 	[Required]
-	public ITaskItem[] SupportedAbis { get; set; } = null!;
+	public ITaskItem[] SupportedAbis { get; set; } = [];
 
 	[Required]
-	public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = null!;
+	public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = [];
 
 	public bool SaveDebugSymbols { get; set; } = true;
 	public bool StripDebugSymbols { get; set; } = true;
