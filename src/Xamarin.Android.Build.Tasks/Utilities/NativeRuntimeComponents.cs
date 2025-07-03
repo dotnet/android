@@ -33,7 +33,7 @@ class NativeRuntimeComponents
 		{
 			Name = name;
 			SetName = setName;
-			shouldInclude = include == null ? ((Archive arch) => true) : include;
+			shouldInclude = include ?? (_ => true);
 			WholeArchive = wholeArchive;
 			JniOnLoadName = jniOnLoadName;
 		}
