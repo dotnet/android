@@ -15,22 +15,22 @@ public class GetNativeRuntimeComponents : AndroidTask
 	public ITaskItem[]? MonoComponents { get; set; }
 
 	[Required]
-	public ITaskItem[] ResolvedNativeArchives { get; set; } = null!;
+	public ITaskItem[] ResolvedNativeArchives { get; set; } = [];
 
 	[Required]
-	public ITaskItem[] ResolvedNativeObjectFiles { get; set; } = null!;
+	public ITaskItem[] ResolvedNativeObjectFiles { get; set; } = [];
 
 	[Output]
-	public ITaskItem[] NativeArchives { get; set; } = null!;
+	public ITaskItem[] NativeArchives { get; set; } = [];
 
 	[Output]
-	public ITaskItem[] RequiredLibraries { get; set; } = null!;
+	public ITaskItem[] RequiredLibraries { get; set; } = [];
 
 	[Output]
-	public ITaskItem[] LinkStartFiles { get; set; } = null!;
+	public ITaskItem[] LinkStartFiles { get; set; } = [];
 
 	[Output]
-	public ITaskItem[] LinkEndFiles { get; set; } = null!;
+	public ITaskItem[] LinkEndFiles { get; set; } = [];
 
 	// TODO: more research, for now it seems `--export-dynamic-symbol=name` options generated from
 	//       this array don't work as expected.
