@@ -38,7 +38,7 @@ auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, cons
 	}
 
 	hash_t library_name_hash = xxhash::hash (library_name, strlen (library_name));
-    hash_t entrypoint_hash = xxhash::hash (entrypoint_name, strlen (entrypoint_name));
+	hash_t entrypoint_hash = xxhash::hash (entrypoint_name, strlen (entrypoint_name));
 	log_debug (LOG_ASSEMBLY, "library_name_hash == 0x{:x}; entrypoint_hash == 0x{:x}"sv, library_name_hash, entrypoint_hash);
 
 	bool known_library = true;
