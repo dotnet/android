@@ -117,10 +117,10 @@ void BridgeProcessing::add_circular_references (const StronglyConnectedComponent
 		return *control_block;
 	};
 
-	JniObjectReferenceControlBlock &prev = get_control_block (scc.Count - 1);
-
-	for (size_t j = 1; j < scc.Count; j++) {
-		JniObjectReferenceControlBlock &next = get_control_block (j);
+	size_t prev_index = scc.Count - 1;
+	for (size_t next_index = 0; next_index < scc.Count; next_index++) {
+		JniObjectReferenceControlBlock &prev = get_control_block (prev_index);
+		const JniObjectReferenceControlBlock &next = get_control_block (next_index);
 
 		bool reference_added = add_reference (prev.handle, next.handle);
 
@@ -138,7 +138,7 @@ void BridgeProcessing::add_circular_references (const StronglyConnectedComponent
 		});
 
 		prev.refs_added = 1;
-		prev = next;
+		prev_index = next_index;
 	}
 }
 
@@ -161,6 +161,7 @@ bool BridgeProcessing::add_reference (jobject from, jobject to) noexcept
 	jmethodID add_method_id = env->GetMethodID (java_class, "monodroidAddReference", "(Ljava/lang/Object;)V");
 
 	if (add_method_id == nullptr) [[unlikely]] {
+		// TODO: is this a fatal error?
 		env->ExceptionClear ();
 		log_missing_add_references_method (java_class);
 		env->DeleteLocalRef (java_class);

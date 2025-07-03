@@ -123,10 +123,10 @@ class ManagedValueManager : JniRuntime.JniValueManager
 				if (peer.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable)) {
 					p.Dispose ();
 					peers [i] = new ReferenceTrackingHandle (value);
-					GC.KeepAlive (peer);
 				} else {
 					WarnNotReplacing (key, value, peer);
 				}
+				GC.KeepAlive (peer);
 				return;
 			}
 
@@ -198,8 +198,8 @@ class ManagedValueManager : JniRuntime.JniValueManager
 				if (object.ReferenceEquals (value, target)) {
 					peers.RemoveAt (i);
 					peer.Dispose ();
-					GC.KeepAlive (target);
 				}
+				GC.KeepAlive (target);
 			}
 			if (peers.Count == 0)
 				RegisteredInstances.Remove (key);
@@ -458,7 +458,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		return base.TryConstructPeer (self, ref reference, options, type);
 	}
 
-	protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)]out object? result)
+	protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)] out object? result)
 	{
 		var proxy = value as JavaProxyThrowable;
 		if (proxy != null) {
