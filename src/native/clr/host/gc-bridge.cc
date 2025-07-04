@@ -69,7 +69,7 @@ void GCBridge::bridge_processing () noexcept
 		shared_args_semaphore.acquire ();
 		MarkCrossReferencesArgs *args = shared_args.load ();
 
-		bridge_processing_started_callback ();
+		bridge_processing_started_callback (args);
 
 		BridgeProcessing bridge_processing {args};
 		bridge_processing.process ();

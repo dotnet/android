@@ -355,6 +355,22 @@ class ManagedValueManager : JniRuntime.JniValueManager
 			}
 		}
 
+		public static void EnsureAllContextsAreOurs (ReadOnlySpan<IntPtr> contexts)
+		{
+			lock (referenceTrackingHandles) {
+				foreach (var context in contexts) {
+					EnsureContextIsOurs (context);
+				}
+			}
+
+			static void EnsureContextIsOurs (IntPtr context)
+			{
+				if (!referenceTrackingHandles.ContainsKey (context)) {
+					throw new InvalidOperationException ("Unknown reference tracking handle.");
+				}
+			}	
+		}
+
 		public static HandleContext* Alloc (IJavaPeerable peer)
 		{
 			var context = (HandleContext*) NativeMemory.AllocZeroed (1, Size);
@@ -383,9 +399,13 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	}
 
 	[UnmanagedCallersOnly]
-	static void BridgeProcessingStarted ()
+	static unsafe void BridgeProcessingStarted (MarkCrossReferencesArgs* mcr)
 	{
 		bridgeProcessingSemaphore.Wait ();
+
+		int count = checked ((int)mcr->ComponentCount);
+		ReadOnlySpan<IntPtr> contexts = new (mcr->Components, count);
+		HandleContext.EnsureAllContextsAreOurs (contexts);
 	}
 
 	[UnmanagedCallersOnly]

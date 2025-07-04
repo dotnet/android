@@ -48,7 +48,7 @@ struct MarkCrossReferencesArgs
     ComponentCrossReference *CrossReferences;
 };
 
-using BridgeProcessingStartedFtn = void (*)();
+using BridgeProcessingStartedFtn = void (*)(MarkCrossReferencesArgs*);
 using BridgeProcessingFinishedFtn = void (*)(MarkCrossReferencesArgs*);
 using BridgeProcessingFtn = void (*)(MarkCrossReferencesArgs*);
 

@@ -95,7 +95,7 @@ namespace Android.Runtime
 
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern delegate* unmanaged<MarkCrossReferencesArgs*, void> clr_initialize_gc_bridge (
-			delegate* unmanaged<void> bridge_processing_started_callback,
+			delegate* unmanaged<MarkCrossReferencesArgs*, void> bridge_processing_started_callback,
 			delegate* unmanaged<MarkCrossReferencesArgs*, void> bridge_processing_finished_callback);
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
