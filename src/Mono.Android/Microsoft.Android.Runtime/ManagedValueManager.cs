@@ -27,7 +27,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	bool disposed;
 
-	static readonly SemaphoreSlim bridgeProcessingSemaphore = new(1, 1);
+	static readonly SemaphoreSlim bridgeProcessingSemaphore = new (1, 1);
 
 	static Lazy<ManagedValueManager> s_instance = new (() => new ManagedValueManager ());
 	public static ManagedValueManager GetOrCreateInstance () => s_instance.Value;
@@ -51,10 +51,10 @@ class ManagedValueManager : JniRuntime.JniValueManager
 			throw new ObjectDisposedException (nameof (ManagedValueManager));
 	}
 
-	public override void WaitForGCBridgeProcessing()
+	public override void WaitForGCBridgeProcessing ()
 	{
-		bridgeProcessingSemaphore.Wait();
-		bridgeProcessingSemaphore.Release();
+		bridgeProcessingSemaphore.Wait ();
+		bridgeProcessingSemaphore.Release ();
 	}
 
 	public unsafe override void CollectPeers ()
@@ -298,8 +298,8 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	unsafe struct ReferenceTrackingHandle : IDisposable
 	{
-		private WeakReference<IJavaPeerable> _weakReference;
-		private HandleContext* _context;
+		WeakReference<IJavaPeerable> _weakReference;
+		HandleContext* _context;
 
 		public bool BelongsToContext (HandleContext* context)
 			=> _context == context;
@@ -357,7 +357,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 		public static HandleContext* Alloc (IJavaPeerable peer)
 		{
-			var context = (HandleContext*)NativeMemory.AllocZeroed (1, Size);
+			var context = (HandleContext*) NativeMemory.AllocZeroed (1, Size);
 			if (context == null) {
 				throw new OutOfMemoryException ("Failed to allocate memory for HandleContext.");
 			}
@@ -367,7 +367,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 			GCHandle handle = JavaMarshal.CreateReferenceTrackingHandle (peer, context);
 			lock (referenceTrackingHandles) {
-				referenceTrackingHandles [(IntPtr)context] = handle;
+				referenceTrackingHandles [(IntPtr) context] = handle;
 			}
 
 			return context;
