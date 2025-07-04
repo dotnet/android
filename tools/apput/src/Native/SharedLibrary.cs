@@ -20,16 +20,20 @@ public class SharedLibrary : IAspect
 		this.libraryName = libraryName;
 	}
 
-	public static IAspect LoadAspect (Stream stream, string description)
+	public static IAspect LoadAspect (Stream stream, string? description)
 	{
-		if (!IsELFSharedLibrary (stream)) {
+		if (String.IsNullOrEmpty (description)) {
+			throw new ArgumentException ("Must be a shared library name", nameof (description));
+		}
+
+		if (!IsELFSharedLibrary (stream, description)) {
 			throw new InvalidOperationException ("Stream is not an ELF shared library");
 		}
 
 		return new SharedLibrary (stream, description);
 	}
 
-	public static bool ProbeAspect (Stream stream) => IsELFSharedLibrary (stream);
+	public static bool ProbeAspect (Stream stream, string? description) => IsELFSharedLibrary (stream, description);
 
 	/// <summary>
 	/// If the library has .NET for Android payload section, this
@@ -56,7 +60,7 @@ public class SharedLibrary : IAspect
 		throw new NotImplementedException ();
 	}
 
-	static bool IsELFSharedLibrary (Stream stream)
+	static bool IsELFSharedLibrary (Stream stream, string? description)
 	{
 		throw new NotImplementedException ();
 	}
