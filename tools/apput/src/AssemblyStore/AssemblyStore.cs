@@ -12,12 +12,12 @@ public class AssemblyStore : IAspect
 	public NativeArchitecture Architecture { get; private set; } = NativeArchitecture.Unknown;
 	public ulong NumberOfAssemblies => (ulong)(Assemblies?.Count ?? 0);
 
-	public static IAspect LoadAspect (Stream stream, string description)
+	public static IAspect LoadAspect (Stream stream, string? description)
 	{
 		throw new NotImplementedException ();
 	}
 
-	public static bool ProbeAspect (Stream stream)
+	public static bool ProbeAspect (Stream stream, string? description)
 	{
 		throw new NotImplementedException ();
 	}
