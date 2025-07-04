@@ -115,18 +115,18 @@ class ManagedValueManager : JniRuntime.JniValueManager
 			}
 
 			for (int i = peers.Count - 1; i >= 0; i--) {
-				var p   = peers [i];
-				if (p.Target is not IJavaPeerable peer)
+				ReferenceTrackingHandle peer = peers [i];
+				if (peer.Target is not IJavaPeerable target)
 					continue;
 				if (!JniEnvironment.Types.IsSameObject (peer.PeerReference, value.PeerReference))
 					continue;
-				if (peer.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable)) {
-					p.Dispose ();
+				if (target.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable)) {
+					peer.Dispose ();
 					peers [i] = new ReferenceTrackingHandle (value);
 				} else {
-					WarnNotReplacing (key, value, peer);
+					WarnNotReplacing (key, value, target);
 				}
-				GC.KeepAlive (peer);
+				GC.KeepAlive (target);
 				return;
 			}
 
@@ -193,9 +193,9 @@ class ManagedValueManager : JniRuntime.JniValueManager
 				return;
 
 			for (int i = peers.Count - 1; i >= 0; i--) {
-				var peer = peers [i];
-				var target = peer.Target;
-				if (object.ReferenceEquals (value, target)) {
+				ReferenceTrackingHandle peer = peers [i];
+				IJavaPeerable target = peer.Target;
+				if (ReferenceEquals (value, target)) {
 					peers.RemoveAt (i);
 					peer.Dispose ();
 				}
@@ -285,10 +285,10 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 		lock (RegisteredInstances) {
 			var peers = new List<JniSurfacedPeerInfo> (RegisteredInstances.Count);
-			foreach (var e in RegisteredInstances) {
-				foreach (var p in e.Value) {
-					if (p.Target is IJavaPeerable peer) {
-						peers.Add (new JniSurfacedPeerInfo (e.Key, new WeakReference<IJavaPeerable> (peer)));
+			foreach (var (identityHashCode, referenceTrackingHandles) in RegisteredInstances) {
+				foreach (var peer in referenceTrackingHandles) {
+					if (peer.Target is IJavaPeerable target) {
+						peers.Add (new JniSurfacedPeerInfo (identityHashCode, new WeakReference<IJavaPeerable> (target)));
 					}
 				}
 			}
