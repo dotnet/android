@@ -28,6 +28,10 @@ resources:
     name: dotnet/maui
     ref: refs/heads/net10.0
     endpoint: xamarin
+  - repository: android-tools
+    type: github
+    name: dotnet/android-tools
+    endpoint: xamarin
 
 parameters:
 - name: pushXAPackagesToMaestro
@@ -64,11 +68,16 @@ extends:
       ${{ if eq('${{ parameters.Skip1ESComplianceTasks }}', 'true') }}:
         enableAllTools: false
       binskim:
+        enabled: true
         scanOutputDirectoryOnly: true
+        analyzeTargetGlob: '$(System.DefaultWorkingDirectory)\bin\$(XA.Build.Configuration)\dotnet\packs\Microsoft.Android*\**.dll;$(System.DefaultWorkingDirectory)\bin\$(XA.Build.Configuration)\dotnet\packs\Microsoft.Android*\**.exe'
       codeql:
         compiled:
           enabled: false
           justificationForDisabling: CodeQL runs against the nightly build
+      credscan:
+        enabled: true
+        suppressionsFile: $(System.DefaultWorkingDirectory)/android/.gdn/CredScanSuppressions.json
       policheck:
         enabled: false
         justification: Built in task does not support multi-language scanning
@@ -80,14 +89,16 @@ extends:
         image: $(WindowsPoolImage1ESPT)
         os: windows
       sourceRepositoriesToScan:
-        include:
-        - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
-          - repository: android-platform-support
         exclude:
-        - repository: yaml-templates
+        - repository: android-platform-support
+        - repository: android-tools
         - repository: maui
+        - repository: yaml-templates
       suppression:
-        suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
+        suppressionFile: $(Build.SourcesDirectory)/android/.gdn/.gdnsuppress
+      tsa:
+        enabled: true
+        configFile: $(Build.SourcesDirectory)/android/.gdn/tsaoptions-v2.json
     settings:
       skipBuildTagsForGitHubPullRequests: true
     stages:

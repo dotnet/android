@@ -1,0 +1,29 @@
+{
+  "Suppressions": [
+    {
+      "Issue": "CSCAN-GENERAL0020",
+      "Justification": "test.keystore is used for testing purposes only and does not contain sensitive information.",
+      "FilePath": "src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Resources/Base/test.keystore"
+    },
+    {
+      "Issue": "CSCAN-GENERAL0060",
+      "Justification": "False positive detected in external/android-api-docs/docs/xml/Javax.Security.Auth.Callback/PasswordCallback.xml",
+      "FilePath": "external/android-api-docs/docs/xml/Javax.Security.Auth.Callback/PasswordCallback.xml"
+    },
+    {
+      "Issue": "CSCAN-GENERAL0060",
+      "Justification": "False positive detected in external/android-api-docs/docs/xml/Javax.Crypto/ISecretKey.xml",
+      "FilePath": "external/android-api-docs/docs/xml/Javax.Crypto/ISecretKey.xml"
+    },
+    {
+      "Issue": "CSCAN-GENERAL0030",
+      "Justification": "False positive detected in external/android-api-docs/docs/xml/Android.Service.Autofill/FillEventHistory+Event.xml",
+      "FilePath": "external/android-api-docs/docs/xml/Android.Service.Autofill/FillEventHistory+Event.xml"
+    },
+    {
+      "Issue": "CSCAN-GENERAL0060",
+      "Justification": "False positive detected in external/android-api-docs/docs/xml/Android.Service.Autofill/FillEventHistory+Event.xml",
+      "FilePath": "external/android-api-docs/docs/xml/Android.Service.Autofill/FillEventHistory+Event.xml"
+    }
+  ]
+}
