@@ -123,6 +123,7 @@ static class Log
 		Debug (tag: String.Empty, message);
 	}
 
+	// TODO: debug should go to file if verbose output isn't enabled
 	public static void Debug (string tag, string message)
 	{
 		if (!showDebug) {
@@ -138,6 +139,16 @@ static class Log
 		}
 
 		WriteLine (message);
+	}
+
+	public static void Debug (string message, Exception ex)
+	{
+		if (!showDebug) {
+			return;
+		}
+
+		Debug (tag: String.Empty, message);
+		Debug (tag: String.Empty, ex.ToString ());
 	}
 
 	public static void ExceptionError (string message, Exception ex)

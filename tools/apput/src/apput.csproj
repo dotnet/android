@@ -24,4 +24,12 @@
   </ItemGroup>
 
   <Import Project="$(XAPackagesDir)\Xamarin.LibZipSharp.$(LibZipSharpVersion)\build\Xamarin.LibZipSharp.targets" Condition="Exists('$(XAPackagesDir)\Xamarin.LibZipSharp.$(LibZipSharpVersion)\build\Xamarin.LibZipSharp.targets')" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\..\src\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Basic.cs" />
+  </ItemGroup>
 </Project>
