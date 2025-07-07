@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
+using Xamarin.Android.Tools;
+
 namespace ApplicationUtility;
 
 public class AssemblyStore : IAspect
@@ -9,7 +11,7 @@ public class AssemblyStore : IAspect
 	public static string AspectName { get; } = "Assembly Store";
 
 	public IDictionary<string, ApplicationAssembly> Assemblies { get; private set; } = null!;
-	public NativeArchitecture Architecture { get; private set; } = NativeArchitecture.Unknown;
+	public AndroidTargetArch Architecture { get; private set; } = AndroidTargetArch.None;
 	public ulong NumberOfAssemblies => (ulong)(Assemblies?.Count ?? 0);
 
 	public static IAspect LoadAspect (Stream stream, string? description)
