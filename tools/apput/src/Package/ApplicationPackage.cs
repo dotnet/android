@@ -165,7 +165,7 @@ public abstract class ApplicationPackage : IAspect
 	AssemblyStore? TryLoadAssemblyStore (string storePath)
 	{
 		// AssemblyStore class owns the stream, don't dispose it here
-		Stream? storeStream = TryGetEntryStream (storePath);
+		FileStream? storeStream = TryGetEntryStream (storePath);
 		if (storeStream == null) {
 			return null;
 		}
@@ -173,6 +173,7 @@ public abstract class ApplicationPackage : IAspect
 		try {
 			if (!AssemblyStore.ProbeAspect (storeStream, storePath)) {
 				Log.Debug ($"Assembly store '{storePath}' is not in a supported format");
+				storeStream.Close ();
 				return null;
 			}
 
@@ -199,7 +200,7 @@ public abstract class ApplicationPackage : IAspect
 	string GetNativeLibDir (AndroidTargetArch arch) => $"{NativeLibDirBase}/{MonoAndroidHelper.ArchToAbi (arch)}/";
 	string GetNativeLibFile (AndroidTargetArch arch, string fileName) => $"{GetNativeLibDir (arch)}{fileName}";
 
-	Stream? TryGetEntryStream (string path)
+	FileStream? TryGetEntryStream (string path)
 	{
 		try {
 			ZipArchiveEntry? entry = Zip.GetEntry (path);
@@ -208,9 +209,16 @@ public abstract class ApplicationPackage : IAspect
 				return null;
 			}
 
-			return entry.Open ();
+			string tempFile = Path.GetTempFileName ();
+			TempFileManager.RegisterFile (tempFile);
+
+			Log.Debug ($"Extracting entry '{path}' to '{tempFile}'");
+			entry.ExtractToFile (tempFile, overwrite: true);
+			return File.OpenRead (tempFile);
 		} catch (Exception ex) {
 			Log.Debug ($"Failed to load entry '{path}' from the archive.", ex);
+
+			// TODO: remove temp file (using a helper method, which doesn't exist yet)
 			return null;
 		}
 	}
