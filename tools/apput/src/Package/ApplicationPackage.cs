@@ -56,7 +56,7 @@ public abstract class ApplicationPackage : IAspect
 		Description = description;
 	}
 
-	public static IAspect LoadAspect (Stream stream, string? description)
+	public static IAspect LoadAspect (Stream stream, IAspectState state, string? description)
 	{
 		Log.Debug ($"ApplicationPackage: opening stream ('{description}') as a ZIP archive");
 		ZipArchive? zip = TryOpenAsZip (stream);
@@ -170,14 +170,16 @@ public abstract class ApplicationPackage : IAspect
 			return null;
 		}
 
+		string fullStorePath = $"{Description}@!{storePath}";
 		try {
-			if (!AssemblyStore.ProbeAspect (storeStream, storePath)) {
+			IAspectState state = AssemblyStore.ProbeAspect (storeStream, fullStorePath);
+			if (!state.Success) {
 				Log.Debug ($"Assembly store '{storePath}' is not in a supported format");
 				storeStream.Close ();
 				return null;
 			}
 
-			return (AssemblyStore)AssemblyStore.LoadAspect (storeStream, storePath);
+			return (AssemblyStore)AssemblyStore.LoadAspect (storeStream, state, fullStorePath);
 		} catch (Exception ex) {
 			Log.Debug ($"Failed to load assembly store '{storePath}'", ex);
 			return null;
@@ -223,12 +225,12 @@ public abstract class ApplicationPackage : IAspect
 		}
 	}
 
-	public static bool ProbeAspect (Stream stream, string? description)
+	public static IAspectState ProbeAspect (Stream stream, string? description)
 	{
 		Log.Debug ($"ApplicationPackage: checking if stream ('{description}') is a ZIP archive");
 		using ZipArchive? zip = TryOpenAsZip (stream);
 		if (zip == null) {
-			return false;
+			return new BasicAspectState (false);
 		}
 
 		Log.Debug ($"ApplicationPackage: checking if stream ('{description}') is a supported Android ZIP package");
@@ -241,11 +243,11 @@ public abstract class ApplicationPackage : IAspect
 		} else if (IsBase (zip)) {
 			kind = "Base";
 		} else {
-			return false;
+			return new BasicAspectState (false);
 		}
 
 		Log.Debug ($"ApplicationPackage: archive is {kind}");
-		return true;
+		return new BasicAspectState (true);
 	}
 
 	static bool IsAPK (ZipArchive zip) => HasAllEntries (zip, KnownApkEntries);
