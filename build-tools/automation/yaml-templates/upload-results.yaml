@@ -1,5 +1,5 @@
 parameters:
-  xaSourcePath: $(System.DefaultWorkingDirectory)
+  xaSourcePath: $(System.DefaultWorkingDirectory)/android
   configuration: $(XA.Build.Configuration)
   artifactName: results
   includeBuildResults: false
