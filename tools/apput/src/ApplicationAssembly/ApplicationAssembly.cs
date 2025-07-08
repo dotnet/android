@@ -13,12 +13,12 @@ public class ApplicationAssembly : IAspect
 	public ulong Size           { get; private set; }
 	public bool IgnoreOnLoad    { get; private set; }
 
-	public static IAspect LoadAspect (Stream stream, string? description)
+	public static IAspect LoadAspect (Stream stream, IAspectState state, string? description)
 	{
 		throw new NotImplementedException ();
 	}
 
-	public static bool ProbeAspect (Stream stream, string? description)
+	public static IAspectState ProbeAspect (Stream stream, string? description)
 	{
 		throw new NotImplementedException ();
 	}
