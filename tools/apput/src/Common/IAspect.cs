@@ -23,12 +23,12 @@ public interface IAspect
 	/// `false` otherwise. The <paramref name="description"/> parameter can be anything that makes
 	/// sense for the given aspect (e.g. a file name).
 	/// </summary>
-	static bool ProbeAspect (Stream stream, string? description = null) => throw new NotImplementedException ();
+	static IAspectState ProbeAspect (Stream stream, string? description = null) => throw new NotImplementedException ();
 
 	/// <summary>
 	/// Load the aspect and return instance of a class implementing support for it.
 	/// The <paramref name="description"/> parameter can be anything that makes
 	/// sense for the given aspect (e.g. a file name).
 	/// </summary>
-	static IAspect LoadAspect (Stream stream, string? description = null) => throw new NotImplementedException ();
+	static IAspect LoadAspect (Stream stream, IAspectState state, string? description = null) => throw new NotImplementedException ();
 }

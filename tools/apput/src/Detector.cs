@@ -38,23 +38,23 @@ class Detector
 
 	static IAspect? TryFindAspect (Stream stream, string? description)
 	{
-		var args = new object?[] { stream, description };
 		var flags = BindingFlags.InvokeMethod | BindingFlags.Public | BindingFlags.Static;
 
 		foreach (Type aspect in KnownTopLevelAspects) {
 			Log.Debug ($"Probing aspect: {aspect}");
 
 			object? result = aspect.InvokeMember (
-				"ProbeAspect", flags, null, null, args
+				"ProbeAspect", flags, null, null, new object?[] { stream, description }
 			);
 
-			if (result == null || (result is bool success && !success)) {
+			var state = result as IAspectState;
+			if (state == null || !state.Success) {
 				continue;
 			}
 
 			Log.Debug ($"Loading aspect: {aspect}");
 			result = aspect.InvokeMember (
-				"LoadAspect", flags, null, null, args
+				"LoadAspect", flags, null, null, new object?[] { stream, state, description }
 			);
 			if (result != null) {
 				return (IAspect)result;
