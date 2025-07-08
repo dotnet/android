@@ -1,0 +1,5 @@
+using ApplicationUtility;
+
+class AssemblyStoreIndex
+{
+}
