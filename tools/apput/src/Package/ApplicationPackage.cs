@@ -181,7 +181,7 @@ public abstract class ApplicationPackage : IAspect
 
 			return (AssemblyStore)AssemblyStore.LoadAspect (storeStream, state, fullStorePath);
 		} catch (Exception ex) {
-			Log.Debug ($"Failed to load assembly store '{storePath}'", ex);
+			Log.Debug ($"Failed to load assembly store '{storePath}'. Exception thrown:", ex);
 			return null;
 		}
 	}
