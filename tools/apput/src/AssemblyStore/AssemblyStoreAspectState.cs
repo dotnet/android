@@ -5,7 +5,7 @@ namespace ApplicationUtility;
 class AssemblyStoreAspectState : BasicAspectState
 {
 	public AssemblyStoreHeader Header { get; }
-	public AssemblyStoreIndex Index { get; }
+	public FormatBase Format { get; }
 
 	public AssemblyStoreAspectState (bool success)
 		: base (success)
