@@ -9,7 +9,7 @@ class Format_V2 : FormatBase
 		: base (storeStream, description)
 	{}
 
-	public override IAspectState Validate ()
+	protected override IAspectState ValidateInner ()
 	{
 		throw new NotImplementedException ();
 	}
