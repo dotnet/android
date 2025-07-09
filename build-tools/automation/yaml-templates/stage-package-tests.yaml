@@ -40,7 +40,7 @@ stages:
         project: Xamarin.Android.sln
         arguments: >-
           -t:PrepareJavaInterop -c Debug --no-restore
-          --property:DotNetPreviewTool=$(System.DefaultWorkingDirectory)/bin/$(XA.Build.Configuration)/dotnet/dotnet
+          -p:DotNetPreviewTool=$(System.DefaultWorkingDirectory)/bin/$(XA.Build.Configuration)/dotnet/dotnet
         displayName: prepare java.interop Debug
         continueOnError: false
 
@@ -147,7 +147,7 @@ stages:
         project: Xamarin.Android.sln
         arguments: >-
           -t:PrepareJavaInterop -c Debug --no-restore
-          --property:DotNetPreviewTool=$(System.DefaultWorkingDirectory)/bin/$(XA.Build.Configuration)/dotnet/dotnet
+          -p:DotNetPreviewTool=$(System.DefaultWorkingDirectory)/bin/$(XA.Build.Configuration)/dotnet/dotnet
         displayName: prepare java.interop Debug
         continueOnError: false
 
