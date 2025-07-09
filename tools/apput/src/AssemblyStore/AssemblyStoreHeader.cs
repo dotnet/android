@@ -13,8 +13,13 @@ namespace ApplicationUtility;
 /// </summary>
 class AssemblyStoreHeader
 {
-	public AssemblyStoreVersion Version { get; protected set; }
-	public uint? EntryCount { get; protected set; }
-	public uint? IndexEntryCount { get; protected set; }
-	public uint? IndexSize { get; protected set; }
+	public AssemblyStoreVersion Version { get; }
+	public uint? EntryCount { get; internal set; }
+	public uint? IndexEntryCount { get; internal set; }
+	public uint? IndexSize { get; internal set; }
+
+	public AssemblyStoreHeader (AssemblyStoreVersion version)
+	{
+		Version = version;
+	}
 }
