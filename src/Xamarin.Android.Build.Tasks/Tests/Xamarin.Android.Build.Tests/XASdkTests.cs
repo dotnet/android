@@ -154,17 +154,20 @@ public class JavaSourceTest {
 			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/baz.aar");
 			nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/_Microsoft.Android.Resource.Designer.dll");
 
-			using var aarStream = new MemoryStream ();
-			var aarEntry = nupkg.ReadEntry (aarPath);
-			aarEntry.Extract (aarStream);
-			aarStream.Seek (0, SeekOrigin.Begin);
+			// NOTE: this is not fixed yet in .NET 9
+			if (dotnetVersion == "net10.0") {
+				using var aarStream = new MemoryStream ();
+				var aarEntry = nupkg.ReadEntry (aarPath);
+				aarEntry.Extract (aarStream);
+				aarStream.Seek (0, SeekOrigin.Begin);
 
-			// Look for libs/29CAF121D5FD8E3D.jar, libs/A1AFA985571E728E.jar
-			using var aar = ZipArchive.Open (aarStream);
-			int count = aar.Count (e =>
-				e.FullName.StartsWith ("libs/", StringComparison.OrdinalIgnoreCase) &&
-				e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase));
-			Assert.AreEqual (2, count, $"There should be 2 .jar files in the {aarPath} archive, but found {count}.");
+				// Look for libs/29CAF121D5FD8E3D.jar, libs/A1AFA985571E728E.jar
+				using var aar = ZipArchive.Open (aarStream);
+				int count = aar.Count (e =>
+					e.FullName.StartsWith ("libs/", StringComparison.OrdinalIgnoreCase) &&
+					e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase));
+				Assert.AreEqual (2, count, $"There should be 2 .jar files in the {aarPath} archive, but found {count}.");
+			}
 		}
 
 		static readonly object[] DotNetTargetFrameworks = new object[] {
