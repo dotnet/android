@@ -67,12 +67,11 @@ public class AssemblyStore : IAspect
 		}
 
 		uint version = reader.ReadUInt32 ();
-
-		// We currently support version 3. Main store version is kept in the lower 16 bits of the version word
-		uint mainVersion = version & 0xFFFF;
+		var storeVersion = new AssemblyStoreVersion (version);
 		FormatBase? validator = null;
+		Log.Debug ($"AssemblyStore: store format version {storeVersion.MainVersion}");
 
-		switch (mainVersion) {
+		switch (storeVersion.MainVersion) {
 			case 2:
 				validator = new Format_V2 (storeStream, description);
 				break;
@@ -82,7 +81,7 @@ public class AssemblyStore : IAspect
 				break;
 
 			default:
-				Log.Debug ($"AssemblyStore: unsupported store version: {mainVersion}");
+				Log.Debug ($"AssemblyStore: unsupported store version: {storeVersion.MainVersion}");
 				return new BasicAspectState (false);
 		}
 
