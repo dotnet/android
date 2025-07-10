@@ -10,10 +10,10 @@ namespace Xamarin.Android.Build.Tests.Tasks
 		[Test]
 		public void TestStringEquals_DefaultComparison ()
 		{
-			// Test default OrdinalIgnoreCase comparison
-			Assert.IsTrue (MonoAndroidHelper.StringEquals ("Hello", "hello"));
-			Assert.IsTrue (MonoAndroidHelper.StringEquals ("WORLD", "world"));
-			Assert.IsFalse (MonoAndroidHelper.StringEquals ("Hello", "World"));
+			// Test default Ordinal comparison
+			Assert.IsTrue (MonoAndroidHelper.StringEquals ("Hello", "Hello"));
+			Assert.IsFalse (MonoAndroidHelper.StringEquals ("Hello", "hello"));
+			Assert.IsFalse (MonoAndroidHelper.StringEquals ("WORLD", "world"));
 			Assert.IsTrue (MonoAndroidHelper.StringEquals ("", ""));
 		}
 
@@ -25,6 +25,16 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.IsFalse (MonoAndroidHelper.StringEquals ("Hello", "hello", StringComparison.Ordinal));
 			Assert.IsFalse (MonoAndroidHelper.StringEquals ("WORLD", "world", StringComparison.Ordinal));
 			Assert.IsTrue (MonoAndroidHelper.StringEquals ("", "", StringComparison.Ordinal));
+		}
+
+		[Test]
+		public void TestStringEquals_OrdinalIgnoreCaseComparison ()
+		{
+			// Test explicit OrdinalIgnoreCase comparison
+			Assert.IsTrue (MonoAndroidHelper.StringEquals ("Hello", "hello", StringComparison.OrdinalIgnoreCase));
+			Assert.IsTrue (MonoAndroidHelper.StringEquals ("WORLD", "world", StringComparison.OrdinalIgnoreCase));
+			Assert.IsFalse (MonoAndroidHelper.StringEquals ("Hello", "World", StringComparison.OrdinalIgnoreCase));
+			Assert.IsTrue (MonoAndroidHelper.StringEquals ("", "", StringComparison.OrdinalIgnoreCase));
 		}
 
 		[Test]
@@ -45,11 +55,11 @@ namespace Xamarin.Android.Build.Tests.Tasks
 
 			// Replaces: String.Compare("typemap", Mode, StringComparison.OrdinalIgnoreCase) == 0
 			string mode = "TYPEMAP";
-			Assert.IsTrue (MonoAndroidHelper.StringEquals ("typemap", mode));
+			Assert.IsTrue (MonoAndroidHelper.StringEquals ("typemap", mode, StringComparison.OrdinalIgnoreCase));
 
 			// Replaces: String.Compare("environment", Mode, StringComparison.OrdinalIgnoreCase) == 0  
 			mode = "Environment";
-			Assert.IsTrue (MonoAndroidHelper.StringEquals ("environment", mode));
+			Assert.IsTrue (MonoAndroidHelper.StringEquals ("environment", mode, StringComparison.OrdinalIgnoreCase));
 
 			// Replaces: String.Compare(abi, item.GetMetadata(), StringComparison.Ordinal) != 0
 			string abi = "arm64-v8a";

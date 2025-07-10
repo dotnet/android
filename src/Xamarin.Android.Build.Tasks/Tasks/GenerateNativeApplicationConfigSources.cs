@@ -135,9 +135,9 @@ namespace Xamarin.Android.Tasks
 			}
 
 			global::Android.Runtime.BoundExceptionType boundExceptionType;
-			if (String.IsNullOrEmpty (BoundExceptionType) || MonoAndroidHelper.StringEquals (BoundExceptionType, "System")) {
+			if (String.IsNullOrEmpty (BoundExceptionType) || MonoAndroidHelper.StringEquals (BoundExceptionType, "System", StringComparison.OrdinalIgnoreCase)) {
 				boundExceptionType = global::Android.Runtime.BoundExceptionType.System;
-			} else if (MonoAndroidHelper.StringEquals (BoundExceptionType, "Java")) {
+			} else if (MonoAndroidHelper.StringEquals (BoundExceptionType, "Java", StringComparison.OrdinalIgnoreCase)) {
 				boundExceptionType = global::Android.Runtime.BoundExceptionType.Java;
 			} else {
 				throw new InvalidOperationException ($"Unsupported BoundExceptionType value '{BoundExceptionType}'");
@@ -223,11 +223,11 @@ namespace Xamarin.Android.Tasks
 			MonoComponent monoComponents = MonoComponent.None;
 			if (MonoComponents != null && MonoComponents.Length > 0) {
 				foreach (ITaskItem item in MonoComponents) {
-					if (MonoAndroidHelper.StringEquals ("diagnostics_tracing", item.ItemSpec)) {
+					if (MonoAndroidHelper.StringEquals ("diagnostics_tracing", item.ItemSpec, StringComparison.OrdinalIgnoreCase)) {
 						monoComponents |= MonoComponent.Tracing;
-					} else if (MonoAndroidHelper.StringEquals ("hot_reload", item.ItemSpec)) {
+					} else if (MonoAndroidHelper.StringEquals ("hot_reload", item.ItemSpec, StringComparison.OrdinalIgnoreCase)) {
 						monoComponents |= MonoComponent.HotReload;
-					} else if (MonoAndroidHelper.StringEquals ("debugger", item.ItemSpec)) {
+					} else if (MonoAndroidHelper.StringEquals ("debugger", item.ItemSpec, StringComparison.OrdinalIgnoreCase)) {
 						monoComponents |= MonoComponent.Debugger;
 					}
 				}

@@ -249,9 +249,9 @@ partial class MonoAndroidHelper
 	/// </summary>
 	/// <param name="value1">First string to compare</param>
 	/// <param name="value2">Second string to compare</param>
-	/// <param name="comparisonType">String comparison mode, defaults to StringComparison.OrdinalIgnoreCase</param>
+	/// <param name="comparisonType">String comparison mode, defaults to StringComparison.Ordinal</param>
 	/// <returns>True if strings are equal according to the comparison mode, false otherwise</returns>
-	public static bool StringEquals (string? value1, string? value2, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
+	public static bool StringEquals (string? value1, string? value2, StringComparison comparisonType = StringComparison.Ordinal)
 	{
 		if (value1 == null && value2 == null) {
 			return true;
