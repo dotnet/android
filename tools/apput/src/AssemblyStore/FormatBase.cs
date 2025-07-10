@@ -7,18 +7,21 @@ namespace ApplicationUtility;
 
 /// <summary>
 /// `FormatBase` class is the base class for all format-specific validators/readers. It will
-/// always implement reading the current (i.e. the `main` branch) assembly store format, with
-/// subclasses required to handle differences. Subclasses are expected to override the virtual
+/// always implement reading the current (i.e. the `main` branch) assembly store format by default,
+/// with subclasses required to handle differences. Subclasses are expected to override the virtual
 /// `Read*` methods and completely handle reading of the respective structure, without calling
 /// up to the base class.
 /// </summary>
 abstract class FormatBase
 {
+	protected abstract string LogTag { get; }
+
 	protected Stream StoreStream { get; }
 	protected string? Description { get; }
 
 	public AssemblyStoreHeader? Header { get; protected set; }
-	public List<AssemblyStoreAssemblyDescriptor>? Descriptors { get; protected set; }
+	public IList<AssemblyStoreAssemblyDescriptor>? Descriptors { get; protected set; }
+	public IList<ApplicationAssembly> Assemblies { get; protected set; } = null!;
 
 	protected FormatBase (Stream storeStream, string? description)
 	{
@@ -26,19 +29,41 @@ abstract class FormatBase
 		this.Description = description;
 	}
 
-	public void Read ()
+	public bool Read ()
 	{
+		bool success = true;
 		using var reader = new BinaryReader (StoreStream, Encoding.UTF8, leaveOpen: true);
 
 		// They can be `null` if `Validate` wasn't called for some reason.
-		if (Header == null && ReadHeader (reader, out AssemblyStoreHeader? header)) {
-			Header = header;
+		if (Header == null) {
+			if (ReadHeader (reader, out AssemblyStoreHeader? header) && header != null) {
+				Header = header;
+			} else {
+				success = false;
+				Header = new ();
+			}
 		}
 
-		if (Descriptors == null && ReadAssemblyDescriptors (reader, out List<AssemblyStoreAssemblyDescriptor>? descriptors)) {
-			Descriptors = descriptors;
+		if (Descriptors == null) {
+			if (ReadAssemblyDescriptors (reader, out IList<AssemblyStoreAssemblyDescriptor>? descriptors) && descriptors != null) {
+				Descriptors = descriptors;
+			} else {
+				success = false;
+				Descriptors = new List<AssemblyStoreAssemblyDescriptor> ().AsReadOnly ();
+			}
 		}
+
+		if (ReadAssemblies (reader, out IList<ApplicationAssembly>? assemblies) && assemblies != null) {
+			Assemblies = assemblies;
+		} else {
+			success = false;
+			Assemblies = new List<ApplicationAssembly> ().AsReadOnly ();
+		}
+
+		return success;
 	}
+
+	protected abstract bool ReadAssemblies (BinaryReader reader, out IList<ApplicationAssembly>? assemblies);
 
 	public IAspectState Validate ()
 	{
@@ -48,7 +73,7 @@ abstract class FormatBase
 			Header = header;
 		}
 
-		if (ReadAssemblyDescriptors (reader, out List<AssemblyStoreAssemblyDescriptor>? descriptors)) {
+		if (ReadAssemblyDescriptors (reader, out IList<AssemblyStoreAssemblyDescriptor>? descriptors)) {
 			Descriptors = descriptors;
 		}
 
@@ -56,6 +81,12 @@ abstract class FormatBase
 	}
 
 	protected abstract IAspectState ValidateInner ();
+
+	protected BasicAspectState ValidationFailed (string message)
+	{
+		Log.Debug (message);
+		return new BasicAspectState (false);
+	}
 
 	protected virtual bool ReadHeader (BinaryReader reader, out AssemblyStoreHeader? header)
 	{
@@ -108,7 +139,7 @@ abstract class FormatBase
 		};
 	}
 
-	protected virtual bool ReadAssemblyDescriptors (BinaryReader reader, out List<AssemblyStoreAssemblyDescriptor>? descriptors)
+	protected virtual bool ReadAssemblyDescriptors (BinaryReader reader, out IList<AssemblyStoreAssemblyDescriptor>? descriptors)
 	{
 		descriptors = null;
 		try {
@@ -121,7 +152,7 @@ abstract class FormatBase
 		return descriptors != null && descriptors.Count > 0;
 	}
 
-	List<AssemblyStoreAssemblyDescriptor>? DoReadAssemblyDescriptors (BinaryReader reader)
+	IList<AssemblyStoreAssemblyDescriptor>? DoReadAssemblyDescriptors (BinaryReader reader)
 	{
 		if (Header == null) {
 			Log.Debug ($"AssemblyStore/FormatBase: unable to read descriptors, header hasn't been read.");
@@ -165,6 +196,11 @@ abstract class FormatBase
 			descriptors.Add (desc);
 		}
 
-		return descriptors;
+		return descriptors.AsReadOnly ();
+	}
+
+	protected virtual IList<string> ReadAssemblyNames (BinaryReader reader)
+	{
+		throw new NotImplementedException ();
 	}
 }
