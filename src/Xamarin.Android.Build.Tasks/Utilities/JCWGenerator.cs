@@ -200,7 +200,7 @@ class JCWGenerator
 	static bool CheckWhetherTypesMatch (TypeDefinition templateType, TypeDefinition type)
 	{
 		// TODO: should we compare individual methods, fields, properties?
-		return String.Compare (templateType.FullName, type.FullName, StringComparison.Ordinal) == 0;
+		return MonoAndroidHelper.StringEquals (templateType.FullName, type.FullName);
 	}
 
 	static void EnsureClassifiersMatch (TaskLoggingHelper logger, NativeCodeGenState templateState, NativeCodeGenState state)
@@ -290,19 +290,19 @@ class JCWGenerator
 		}
 
 		if (!skipJniCheck) {
-			if (String.Compare (templateMethod.JniMethodName, method.JniMethodName, StringComparison.Ordinal) != 0) {
+			if (!MonoAndroidHelper.StringEquals (templateMethod.JniMethodName, method.JniMethodName)) {
 				logger.LogDebugMessage ($"Marshal method '{methodName}' for architecture '{arch}' has a different JNI method name than architecture '{templateArch}':");
 				logger.LogDebugMessage ($"  Expected: '{templateMethod.JniMethodName}', found: '{method.JniMethodName}'");
 				success = false;
 			}
 
-			if (String.Compare (templateMethod.JniMethodSignature, method.JniMethodSignature, StringComparison.Ordinal) != 0) {
+			if (!MonoAndroidHelper.StringEquals (templateMethod.JniMethodSignature, method.JniMethodSignature)) {
 				logger.LogDebugMessage ($"Marshal method '{methodName}' for architecture '{arch}' has a different JNI method signature than architecture '{templateArch}':");
 				logger.LogDebugMessage ($"  Expected: '{templateMethod.JniMethodSignature}', found: '{method.JniMethodSignature}'");
 				success = false;
 			}
 
-			if (String.Compare (templateMethod.JniTypeName, method.JniTypeName, StringComparison.Ordinal) != 0) {
+			if (!MonoAndroidHelper.StringEquals (templateMethod.JniTypeName, method.JniTypeName)) {
 				logger.LogDebugMessage ($"Marshal method '{methodName}' for architecture '{arch}' has a different JNI type name than architecture '{templateArch}':");
 				logger.LogDebugMessage ($"  Expected: '{templateMethod.JniTypeName}', found: '{method.JniTypeName}'");
 				success = false;
@@ -349,6 +349,6 @@ class JCWGenerator
 			return false;
 		}
 
-		return String.Compare (templateMethod.FullName, method?.FullName, StringComparison.Ordinal) == 0;
+		return MonoAndroidHelper.StringEquals (templateMethod.FullName, method?.FullName);
 	}
 }

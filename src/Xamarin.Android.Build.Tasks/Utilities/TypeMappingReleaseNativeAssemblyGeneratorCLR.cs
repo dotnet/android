@@ -18,11 +18,11 @@ namespace Xamarin.Android.Tasks
 			{
 				var map_module = EnsureType<TypeMapModule> (data);
 
-				if (String.Compare ("module_uuid", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("module_uuid", fieldName)) {
 					return $" module_uuid: {map_module.MVID}";
 				}
 
-				if (String.Compare ("assembly_name_index", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("assembly_name_index", fieldName)) {
 					return $" assembly_name: {map_module.AssemblyName}";
 				}
 
@@ -33,11 +33,11 @@ namespace Xamarin.Android.Tasks
 			{
 				var map_module = EnsureType<TypeMapModule> (data);
 
-				if (String.Compare ("map", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("map", fieldName)) {
 					return map_module.entry_count;
 				}
 
-				if (String.Compare ("duplicate_map", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("duplicate_map", fieldName)) {
 					return map_module.duplicate_count;
 				}
 
@@ -51,11 +51,11 @@ namespace Xamarin.Android.Tasks
 			{
 				var java_map_entry = EnsureType<TypeMapJava> (data);
 
-				if (String.Compare ("managed_type_name_index", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("managed_type_name_index", fieldName)) {
 					return $" managed type name: {java_map_entry.ManagedTypeName}";
 				}
 
-				if (String.Compare ("java_name_index", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("java_name_index", fieldName)) {
 					return $" Java type name: {java_map_entry.JavaName}";
 				}
 
@@ -69,12 +69,12 @@ namespace Xamarin.Android.Tasks
 			{
 				var module_map_entry = EnsureType<TypeMapModuleEntry> (data);
 
-				if (String.Compare ("managed_type_name_hash_32", fieldName, StringComparison.Ordinal) == 0 ||
-				    String.Compare ("managed_type_name_hash_64", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("managed_type_name_hash_32", fieldName) ||
+				    MonoAndroidHelper.StringEquals ("managed_type_name_hash_64", fieldName)) {
 					return $" managed type name: {module_map_entry.ManagedTypeName}";
 				}
 
-				if (String.Compare ("java_map_index", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("java_map_index", fieldName)) {
 					return $" Java type name: {module_map_entry.JavaTypeMapEntry.JavaName}";
 				}
 

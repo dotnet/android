@@ -237,7 +237,7 @@ namespace Xamarin.Android.Tasks
 				// there may still be a widget with the same ID). It is better to append a suffix to the
 				// property name since we're guaranteed that each property is unique.
 				StringComparison comparison = CaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-				if (String.Compare (state.ClassName, widget.Name, comparison) != 0 && !NameMatchesBindingClass (state, widget, comparison))
+				if (!MonoAndroidHelper.StringEquals (state.ClassName, widget.Name, comparison) && !NameMatchesBindingClass (state, widget, comparison))
 					return widget.Name;
 
 				string suffix = null;
@@ -273,7 +273,7 @@ namespace Xamarin.Android.Tasks
 				if (dot < 0)
 					return false;
 
-				return String.Compare (state.BindingClassName.Substring (dot + 1), widget.Name, comparison) == 0;
+				return MonoAndroidHelper.StringEquals (state.BindingClassName.Substring (dot + 1), widget.Name, comparison);
 			}
 
 			protected void WriteBindingPropertyBackingField (State state, LayoutWidget widget)
