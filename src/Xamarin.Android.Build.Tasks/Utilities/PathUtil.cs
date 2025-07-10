@@ -109,10 +109,13 @@ namespace Xamarin.Android.Tools
 			int secondRootLength = GetRootLength(second);
 
 			return firstRootLength == secondRootLength
-				&& Xamarin.Android.Tasks.MonoAndroidHelper.StringEquals (
-					first.Substring (0, firstRootLength), 
-					second.Substring (0, firstRootLength), 
-					comparisonType);
+				&& String.Compare(
+					strA: first,
+					indexA: 0,
+					strB: second,
+					indexB: 0,
+					length: firstRootLength,
+					comparisonType: comparisonType) == 0;
 		}
 
 		// Adapted from CoreFX sources
