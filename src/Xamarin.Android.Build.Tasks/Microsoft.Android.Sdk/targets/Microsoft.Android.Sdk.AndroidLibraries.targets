@@ -72,7 +72,7 @@ projects.
 
   <Target Name="_CreateAar"
       Condition=" '$(AndroidApplication)' != 'true' "
-      DependsOnTargets="_CreateAarCache"
+      DependsOnTargets="_CategorizeAndroidLibraries;_CreateAarCache"
       Inputs="@(_CreateAarInputs)"
       Outputs="$(_AarOutputPath)">
     <CreateAar
