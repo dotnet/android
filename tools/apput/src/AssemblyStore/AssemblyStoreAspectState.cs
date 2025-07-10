@@ -4,10 +4,11 @@ namespace ApplicationUtility;
 
 class AssemblyStoreAspectState : BasicAspectState
 {
-	public AssemblyStoreHeader Header { get; }
 	public FormatBase Format { get; }
 
-	public AssemblyStoreAspectState (bool success)
-		: base (success)
-	{}
+	public AssemblyStoreAspectState (FormatBase format)
+		: base (success: true)
+	{
+		Format = format;
+	}
 }
