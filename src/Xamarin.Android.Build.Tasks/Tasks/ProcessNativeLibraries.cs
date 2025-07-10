@@ -107,6 +107,8 @@ namespace Xamarin.Android.Tasks
 
 				if (!IgnoreLibraryWhenLinkingRuntime (library)) {
 					output.Add (library);
+				} else {
+					Log.LogDebugMessage ($"Ignoring '{library.ItemSpec}'");
 				}
 			}
 

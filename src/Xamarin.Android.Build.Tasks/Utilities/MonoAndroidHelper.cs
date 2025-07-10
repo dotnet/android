@@ -804,5 +804,16 @@ namespace Xamarin.Android.Tasks
 		}
 
 		public static object GetProjectBuildSpecificTaskObjectKey (object key, string workingDirectory, string intermediateOutputPath) => (key, workingDirectory, intermediateOutputPath);
+
+		public static void LogTextStreamContents (TaskLoggingHelper log, string message, Stream stream)
+		{
+			if (stream.CanSeek) {
+				stream.Seek (0, SeekOrigin.Begin);
+			}
+
+			using var reader = new StreamReader (stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, bufferSize: -1, leaveOpen: true);
+			log.LogDebugMessage (message);
+			log.LogDebugMessage (reader.ReadToEnd ());
+		}
 	}
 }
