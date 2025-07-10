@@ -83,7 +83,7 @@ class StringHolder : IComparable, IComparable<StringHolder>, IEquatable<StringHo
 			return false;
 		}
 
-		return String.Compare (Data, other.Data, comparison) == 0;
+		return MonoAndroidHelper.StringEquals (Data, other.Data, comparison);
 	}
 
 	public static bool operator > (StringHolder a, StringHolder b)

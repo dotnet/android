@@ -18,11 +18,11 @@ namespace Xamarin.Android.Tasks
 			{
 				var map_module = EnsureType<TypeMapModule> (data);
 
-				if (String.Compare ("module_uuid", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("module_uuid", fieldName, StringComparison.Ordinal)) {
 					return $" module_uuid: {map_module.MVID}";
 				}
 
-				if (String.Compare ("assembly_name", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("assembly_name", fieldName, StringComparison.Ordinal)) {
 					return $" assembly_name: {map_module.assembly_name}";
 				}
 
@@ -33,11 +33,11 @@ namespace Xamarin.Android.Tasks
 			{
 				var map_module = EnsureType<TypeMapModule> (data);
 
-				if (String.Compare ("map", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("map", fieldName, StringComparison.Ordinal)) {
 					return map_module.MapSymbolName;
 				}
 
-				if (String.Compare ("duplicate_map", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("duplicate_map", fieldName, StringComparison.Ordinal)) {
 					return map_module.DuplicateMapSymbolName;
 				}
 
@@ -48,11 +48,11 @@ namespace Xamarin.Android.Tasks
 			{
 				var map_module = EnsureType<TypeMapModule> (data);
 
-				if (String.Compare ("map", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("map", fieldName, StringComparison.Ordinal)) {
 					return map_module.entry_count;
 				}
 
-				if (String.Compare ("duplicate_map", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("duplicate_map", fieldName, StringComparison.Ordinal)) {
 					return map_module.duplicate_count;
 				}
 

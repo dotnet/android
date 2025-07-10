@@ -43,15 +43,15 @@ namespace Xamarin.Android.Tasks
 			var includes = new List<ITaskItem> ();
 			string baseName;
 
-			if (String.Compare ("typemap", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
+			if (MonoAndroidHelper.StringEquals ("typemap", Mode)) {
 				baseName = TypeMapBase;
-			} else if (String.Compare ("environment", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
+			} else if (MonoAndroidHelper.StringEquals ("environment", Mode)) {
 				baseName = EnvBase;
-			} else if (String.Compare ("compressed", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
+			} else if (MonoAndroidHelper.StringEquals ("compressed", Mode)) {
 				baseName = CompressedAssembliesBase;
-			} else if (String.Compare ("jniremap", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
+			} else if (MonoAndroidHelper.StringEquals ("jniremap", Mode)) {
 				baseName = JniRemappingBase;
-			} else if (String.Compare ("marshal_methods", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
+			} else if (MonoAndroidHelper.StringEquals ("marshal_methods", Mode)) {
 				baseName = MarshalMethodsBase;
 			} else {
 				Log.LogError ($"Unknown mode: {Mode}");

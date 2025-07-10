@@ -139,7 +139,7 @@ static class BundleConfigSplitConfigsChecker
 			if (reader.ValueTextEquals (strings.ValuePropertyName)) {
 				reader.Read ();
 				string? v = reader.GetString ();
-				valueIsAbi = String.CompareOrdinal ("ABI", v) == 0;
+				valueIsAbi = Xamarin.Android.Tasks.MonoAndroidHelper.StringEquals ("ABI", v, StringComparison.Ordinal);
 				return;
 			}
 		}
@@ -181,7 +181,7 @@ static class BundleConfigSplitConfigsChecker
 			_                                 => throw new InvalidOperationException ($"Internal error: unsupported state transition to '{need}'")
 		};
 
-		if (!String.IsNullOrEmpty (objectName) && String.CompareOrdinal (needName, objectName) == 0) {
+		if (!String.IsNullOrEmpty (objectName) && Xamarin.Android.Tasks.MonoAndroidHelper.StringEquals (needName, objectName, StringComparison.Ordinal)) {
 			state.Push (need);
 		} else {
 			state.Push (BundleConfigObject.Other);

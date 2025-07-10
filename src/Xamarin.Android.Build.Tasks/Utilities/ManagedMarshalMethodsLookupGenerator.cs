@@ -220,7 +220,7 @@ class ManagedMarshalMethodsLookupGenerator
 		log.LogDebugMessage ($"[{targetArch}] Looking for method '{methodName}' with {parametersCount} params in type {type}");
 		foreach (MethodDefinition method in type.Methods) {
 			log.LogDebugMessage ($"[{targetArch}]   method: {method.Name}");
-			if (method.Parameters.Count == parametersCount && String.Compare (methodName, method.Name, StringComparison.Ordinal) == 0) {
+			if (method.Parameters.Count == parametersCount && MonoAndroidHelper.StringEquals (methodName, method.Name, StringComparison.Ordinal)) {
 				log.LogDebugMessage ($"[{targetArch}]     match!");
 				return method;
 			}
