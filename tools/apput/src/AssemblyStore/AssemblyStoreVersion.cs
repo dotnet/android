@@ -9,6 +9,11 @@ class AssemblyStoreVersion
 	public AssemblyStoreABI ABI { get; }
 	public bool Is64Bit         { get; }
 
+	internal AssemblyStoreVersion ()
+	{
+		ABI = AssemblyStoreABI.Unknown;
+	}
+
 	internal AssemblyStoreVersion (uint rawVersion)
 	{
 		RawVersion = rawVersion;

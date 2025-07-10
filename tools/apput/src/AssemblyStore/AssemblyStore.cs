@@ -18,10 +18,41 @@ public class AssemblyStore : IAspect
 	public AndroidTargetArch Architecture { get; private set; } = AndroidTargetArch.None;
 	public ulong NumberOfAssemblies => (ulong)(Assemblies?.Count ?? 0);
 
+	AssemblyStoreAspectState storeState;
+	string? description;
+
+	AssemblyStore (AssemblyStoreAspectState state, string? description)
+	{
+		storeState = state;
+		this.description = description;
+	}
+
+	bool Read ()
+	{
+		if (!storeState.Format.Read ()) {
+			return false;
+		}
+
+		foreach (ApplicationAssembly asm in storeState.Format.Assemblies) {
+			Assemblies.Add (asm.Name, asm);
+		}
+
+		return true;
+	}
+
 	public static IAspect LoadAspect (Stream stream, IAspectState state, string? description)
 	{
 		var storeState = state as AssemblyStoreAspectState;
-		throw new NotImplementedException ();
+		if (storeState == null) {
+			throw new InvalidOperationException ("Internal error: unexpected aspect state. Was ProbeAspect unsuccessful?");
+		}
+
+		var store = new AssemblyStore (storeState, description);
+		if (store.Read ()) {
+			return store;
+		}
+
+		throw new InvalidOperationException ($"Failed to load assembly store '{description}'");
 	}
 
 	public static IAspectState ProbeAspect (Stream stream, string? description)
