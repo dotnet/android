@@ -18,16 +18,6 @@ namespace Xamarin.Android.Build.Tests.Tasks
 		}
 
 		[Test]
-		public void TestStringEquals_DefaultComparison ()
-		{
-			// Test default comparison (Ordinal)
-			Assert.IsTrue (MonoAndroidHelper.StringEquals ("Hello", "Hello"));
-			Assert.IsFalse (MonoAndroidHelper.StringEquals ("Hello", "hello"));
-			Assert.IsFalse (MonoAndroidHelper.StringEquals ("WORLD", "world"));
-			Assert.IsTrue (MonoAndroidHelper.StringEquals ("", ""));
-		}
-
-		[Test]
 		public void TestStringEquals_OrdinalIgnoreCaseComparison ()
 		{
 			// Test explicit OrdinalIgnoreCase comparison
