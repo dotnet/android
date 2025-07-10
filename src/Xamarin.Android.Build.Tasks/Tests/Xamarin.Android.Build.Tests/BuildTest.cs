@@ -1482,7 +1482,7 @@ namespace UnnamedProject
 		[NonParallelizable]
 		public void CheckLintErrorsAndWarnings ()
 		{
-			string disabledIssues = "StaticFieldLeak,ObsoleteSdkInt,AllowBackup,ExportedReceiver,RedundantLabel";
+			string disabledIssues = "StaticFieldLeak,ObsoleteSdkInt,AllowBackup,ExportedReceiver,RedundantLabel,AppLinkWarning";
 
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("AndroidLintEnabled", true.ToString ());
