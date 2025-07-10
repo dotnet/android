@@ -78,26 +78,37 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 			_ => throw new NotSupportedException ($"Internal error: unsupported runtime type '{androidRuntime}'")
 		};
 
+		bool fileFullyWritten;
 		if (EnableNativeRuntimeLinking) {
 			var pinvokePreserveGen = new PreservePinvokesNativeAssemblyGenerator (Log, EnsureCodeGenState (nativeCodeGenStates, targetArch), MonoComponents);
 			LLVMIR.LlvmIrModule pinvokePreserveModule = pinvokePreserveGen.Construct ();
 			using var pinvokePreserveWriter = MemoryStreamPool.Shared.CreateStreamWriter ();
+			fileFullyWritten = false;
 			try {
 				pinvokePreserveGen.Generate (pinvokePreserveModule, targetArch, pinvokePreserveWriter, pinvokePreserveLlFilePath!);
-			} finally {
 				pinvokePreserveWriter.Flush ();
 				Files.CopyIfStreamChanged (pinvokePreserveWriter.BaseStream, pinvokePreserveLlFilePath!);
+				fileFullyWritten = true;
+			} finally {
+				if (!fileFullyWritten) {
+					MonoAndroidHelper.LogTextStreamContents (Log, $"Partial contents of file '{pinvokePreserveLlFilePath}'", pinvokePreserveWriter.BaseStream);
+				}
 			}
 		}
 
 		var marshalMethodsModule = marshalMethodsAsmGen.Construct ();
 		using var marshalMethodsWriter = MemoryStreamPool.Shared.CreateStreamWriter ();
 
+		fileFullyWritten = false;
 		try {
 			marshalMethodsAsmGen.Generate (marshalMethodsModule, targetArch, marshalMethodsWriter, marshalMethodsLlFilePath);
-		} finally {
 			marshalMethodsWriter.Flush ();
 			Files.CopyIfStreamChanged (marshalMethodsWriter.BaseStream, marshalMethodsLlFilePath);
+			fileFullyWritten = true;
+		} finally {
+			if (!fileFullyWritten) {
+				MonoAndroidHelper.LogTextStreamContents (Log, $"Partial contents of file '{marshalMethodsLlFilePath}'", marshalMethodsWriter.BaseStream);
+			}
 		}
 
 		MarshalMethodsNativeAssemblyGenerator MakeMonoGenerator ()
