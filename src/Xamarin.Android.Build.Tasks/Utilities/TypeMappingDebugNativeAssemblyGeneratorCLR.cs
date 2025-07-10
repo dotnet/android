@@ -37,11 +37,11 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		{
 			var map_module = EnsureType<TypeMap> (data);
 
-			if (MonoAndroidHelper.StringEquals ("java_to_managed", fieldName, StringComparison.Ordinal)) {
+			if (MonoAndroidHelper.StringEquals ("java_to_managed", fieldName)) {
 				return map_module.JavaToManagedCount == 0 ? null : JavaToManagedSymbol;
 			}
 
-			if (MonoAndroidHelper.StringEquals ("managed_to_java", fieldName, StringComparison.Ordinal)) {
+			if (MonoAndroidHelper.StringEquals ("managed_to_java", fieldName)) {
 				return map_module.ManagedToJavaCount == 0 ? null : ManagedToJavaSymbol;
 			}
 
@@ -55,11 +55,11 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		{
 			var entry = EnsureType<TypeMapEntry> (data);
 
-			if (MonoAndroidHelper.StringEquals ("from", fieldName, StringComparison.Ordinal)) {
+			if (MonoAndroidHelper.StringEquals ("from", fieldName)) {
 				return $" from: '{entry.From}'";
 			}
 
-			if (MonoAndroidHelper.StringEquals ("to", fieldName, StringComparison.Ordinal)) {
+			if (MonoAndroidHelper.StringEquals ("to", fieldName)) {
 				return $" to: '{entry.To}'";
 			}
 
@@ -73,11 +73,11 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		{
 			var entry = EnsureType<TypeMapAssembly> (data);
 
-			if (MonoAndroidHelper.StringEquals ("mvid_hash", fieldName, StringComparison.Ordinal)) {
+			if (MonoAndroidHelper.StringEquals ("mvid_hash", fieldName)) {
 				return $" MVID: {entry.MVID}";
 			}
 
-			if (MonoAndroidHelper.StringEquals ("name_offset", fieldName, StringComparison.Ordinal)) {
+			if (MonoAndroidHelper.StringEquals ("name_offset", fieldName)) {
 				return $" {entry.Name}";
 			}
 
@@ -91,11 +91,11 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		{
 			var entry = EnsureType<TypeMapManagedTypeInfo> (data);
 
-			if (MonoAndroidHelper.StringEquals ("assembly_name_index", fieldName, StringComparison.Ordinal)) {
+			if (MonoAndroidHelper.StringEquals ("assembly_name_index", fieldName)) {
 				return $" '{entry.AssemblyName}'";
 			}
 
-			if (MonoAndroidHelper.StringEquals ("managed_type_token_id", fieldName, StringComparison.Ordinal)) {
+			if (MonoAndroidHelper.StringEquals ("managed_type_token_id", fieldName)) {
 				return $" '{entry.ManagedTypeName}'";
 			}
 

@@ -136,7 +136,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return false;
 			}
 
-			if (!MonoAndroidHelper.StringEquals (Name, other.Name, StringComparison.Ordinal)) {
+			if (!MonoAndroidHelper.StringEquals (Name, other.Name)) {
 				return false;
 			}
 
@@ -240,7 +240,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return false;
 			}
 
-			return MonoAndroidHelper.StringEquals (family, attr.family, StringComparison.Ordinal);
+			return MonoAndroidHelper.StringEquals (family, attr.family);
 		}
 
 		public override int GetHashCode ()
@@ -277,7 +277,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return false;
 			}
 
-			return MonoAndroidHelper.StringEquals (kind, attr.kind, StringComparison.Ordinal);
+			return MonoAndroidHelper.StringEquals (kind, attr.kind);
 		}
 
 		public override int GetHashCode ()
@@ -417,7 +417,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return false;
 			}
 
-			return MonoAndroidHelper.StringEquals (fpMode, attr.fpMode, StringComparison.Ordinal);
+			return MonoAndroidHelper.StringEquals (fpMode, attr.fpMode);
 		}
 
 		public override int GetHashCode ()
@@ -1116,7 +1116,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return false;
 			}
 
-			return MonoAndroidHelper.StringEquals (cpu, attr.cpu, StringComparison.Ordinal);
+			return MonoAndroidHelper.StringEquals (cpu, attr.cpu);
 		}
 
 		public override int GetHashCode ()
@@ -1148,7 +1148,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return false;
 			}
 
-			return MonoAndroidHelper.StringEquals (cpu, attr.cpu, StringComparison.Ordinal);
+			return MonoAndroidHelper.StringEquals (cpu, attr.cpu);
 		}
 
 		public override int GetHashCode ()
@@ -1180,7 +1180,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return false;
 			}
 
-			return MonoAndroidHelper.StringEquals (features, attr.features, StringComparison.Ordinal);
+			return MonoAndroidHelper.StringEquals (features, attr.features);
 		}
 
 		public override int GetHashCode ()

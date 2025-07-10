@@ -57,11 +57,11 @@ namespace Xamarin.Android.Tasks
 			{
 				var entry = EnsureType<JniRemappingTypeReplacementEntry>(data);
 
-				if (MonoAndroidHelper.StringEquals ("name", fieldName, StringComparison.Ordinal)) {
+				if (MonoAndroidHelper.StringEquals ("name", fieldName)) {
 					return $" name: {entry.name.str}";
 				}
 
-				if (MonoAndroidHelper.StringEquals ("replacement", fieldName, StringComparison.Ordinal)) {
+				if (MonoAndroidHelper.StringEquals ("replacement", fieldName)) {
 					return $" replacement: {entry.replacement}";
 				}
 
@@ -75,7 +75,7 @@ namespace Xamarin.Android.Tasks
 			{
 				var entry = EnsureType<JniRemappingIndexTypeEntry> (data);
 
-				if (MonoAndroidHelper.StringEquals ("name", fieldName, StringComparison.Ordinal)) {
+				if (MonoAndroidHelper.StringEquals ("name", fieldName)) {
 					return $" name: {entry.name.str}";
 				}
 
@@ -86,7 +86,7 @@ namespace Xamarin.Android.Tasks
 			{
 				var entry = EnsureType<JniRemappingIndexTypeEntry> (data);
 
-				if (MonoAndroidHelper.StringEquals ("methods", fieldName, StringComparison.Ordinal)) {
+				if (MonoAndroidHelper.StringEquals ("methods", fieldName)) {
 					return entry.MethodsArraySymbolName;
 				}
 
@@ -96,7 +96,7 @@ namespace Xamarin.Android.Tasks
 			public override ulong GetBufferSize (object data, string fieldName)
 			{
 				var entry = EnsureType<JniRemappingIndexTypeEntry> (data);
-				if (MonoAndroidHelper.StringEquals ("methods", fieldName, StringComparison.Ordinal)) {
+				if (MonoAndroidHelper.StringEquals ("methods", fieldName)) {
 					return (ulong)entry.TypeMethods.Count;
 				}
 
@@ -110,15 +110,15 @@ namespace Xamarin.Android.Tasks
 			{
 				var entry = EnsureType<JniRemappingIndexMethodEntry> (data);
 
-				if (MonoAndroidHelper.StringEquals ("name", fieldName, StringComparison.Ordinal)) {
+				if (MonoAndroidHelper.StringEquals ("name", fieldName)) {
 					return $" name: {entry.name.str}";
 				}
 
-				if (MonoAndroidHelper.StringEquals ("replacement", fieldName, StringComparison.Ordinal)) {
+				if (MonoAndroidHelper.StringEquals ("replacement", fieldName)) {
 					return $" replacement: {entry.replacement.target_type}.{entry.replacement.target_name}";
 				}
 
-				if (MonoAndroidHelper.StringEquals ("signature", fieldName, StringComparison.Ordinal)) {
+				if (MonoAndroidHelper.StringEquals ("signature", fieldName)) {
 					if (entry.signature.length == 0) {
 						return String.Empty;
 					}

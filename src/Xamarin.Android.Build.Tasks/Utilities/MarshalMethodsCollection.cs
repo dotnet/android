@@ -283,7 +283,7 @@ class MarshalMethodsCollection : JavaCallableMethodClassifier
 
 		bool IsMatchingMethod (MethodDefinition method, string name)
 		{
-			if (!MonoAndroidHelper.StringEquals (name, method.Name, StringComparison.Ordinal)) {
+			if (!MonoAndroidHelper.StringEquals (name, method.Name)) {
 				return false;
 			}
 

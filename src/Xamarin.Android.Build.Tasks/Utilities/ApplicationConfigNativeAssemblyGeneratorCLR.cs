@@ -24,11 +24,11 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public override string GetComment (object data, string fieldName)
 		{
 			var dso_entry = EnsureType<DSOCacheEntry> (data);
-			if (MonoAndroidHelper.StringEquals ("hash", fieldName, StringComparison.Ordinal)) {
+			if (MonoAndroidHelper.StringEquals ("hash", fieldName)) {
 				return $" from name: {dso_entry.HashedName}";
 			}
 
-			if (MonoAndroidHelper.StringEquals ("name_index", fieldName, StringComparison.Ordinal)) {
+			if (MonoAndroidHelper.StringEquals ("name_index", fieldName)) {
 				return $" name: {dso_entry.RealName}";
 			}
 
@@ -121,11 +121,11 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public override string GetComment (object data, string fieldName)
 		{
 			var runtimeProp = EnsureType<RuntimeProperty> (data);
-			if (MonoAndroidHelper.StringEquals ("key_index", fieldName, StringComparison.Ordinal)) {
+			if (MonoAndroidHelper.StringEquals ("key_index", fieldName)) {
 				return $" '{runtimeProp.Key}'";
 			}
 
-			if (MonoAndroidHelper.StringEquals ("value_index", fieldName, StringComparison.Ordinal)) {
+			if (MonoAndroidHelper.StringEquals ("value_index", fieldName)) {
 				return $" '{runtimeProp.Value}'";
 			}
 
@@ -170,11 +170,11 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		{
 			var envVar = EnsureType<AppEnvironmentVariable> (data);
 
-			if (MonoAndroidHelper.StringEquals ("name_index", fieldName, StringComparison.Ordinal)) {
+			if (MonoAndroidHelper.StringEquals ("name_index", fieldName)) {
 				return $" '{envVar.Name}'";
 			}
 
-			if (MonoAndroidHelper.StringEquals ("value_index", fieldName, StringComparison.Ordinal)) {
+			if (MonoAndroidHelper.StringEquals ("value_index", fieldName)) {
 				return $" '{envVar.Value}'";
 			}
 
@@ -205,11 +205,11 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public override ulong GetBufferSize (object data, string fieldName)
 		{
 			var xaba = EnsureType<XamarinAndroidBundledAssembly> (data);
-			if (MonoAndroidHelper.StringEquals ("name", fieldName, StringComparison.Ordinal)) {
+			if (MonoAndroidHelper.StringEquals ("name", fieldName)) {
 				return xaba.name_length;
 			}
 
-			if (MonoAndroidHelper.StringEquals ("file_name", fieldName, StringComparison.Ordinal)) {
+			if (MonoAndroidHelper.StringEquals ("file_name", fieldName)) {
 				return xaba.name_length + MonoAndroidHelper.GetMangledAssemblyNameSizeOverhead ();
 			}
 
@@ -424,7 +424,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		};
 
 		foreach (var kvp in runtimeProperties) {
-			if (MonoAndroidHelper.StringEquals (kvp.Key, HOST_PROPERTY_RUNTIME_CONTRACT, StringComparison.Ordinal)) {
+			if (MonoAndroidHelper.StringEquals (kvp.Key, HOST_PROPERTY_RUNTIME_CONTRACT)) {
 				continue;
 			}
 			runtime_property_names.Add (kvp.Key);

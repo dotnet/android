@@ -340,7 +340,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			if (Parameters.Count != other.Parameters.Count ||
 			    ReturnType != other.ReturnType ||
-			    !MonoAndroidHelper.StringEquals (Name, other.Name, StringComparison.Ordinal)
+			    !MonoAndroidHelper.StringEquals (Name, other.Name)
 			) {
 				return false;
 			}

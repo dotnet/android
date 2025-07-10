@@ -58,7 +58,7 @@ partial class LlvmIrModule
 
 			LlvmIrStringGroup? group;
 			string groupPrefix;
-			if (String.IsNullOrEmpty (groupName) || MonoAndroidHelper.StringEquals ("str", groupName, StringComparison.Ordinal)) {
+			if (String.IsNullOrEmpty (groupName) || MonoAndroidHelper.StringEquals ("str", groupName)) {
 				group = defaultGroup;
 				groupPrefix = $".{defaultGroupName}";
 			} else if (!stringGroupCache.TryGetValue (groupName, out group) || group == null) {

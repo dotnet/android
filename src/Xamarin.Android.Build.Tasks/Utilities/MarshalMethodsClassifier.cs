@@ -219,7 +219,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				// Android.Graphics.Color is mapped to/from a native `int`
-				if (MonoAndroidHelper.StringEquals (typeName, "Android.Graphics.Color", StringComparison.Ordinal)) {
+				if (MonoAndroidHelper.StringEquals (typeName, "Android.Graphics.Color")) {
 					return "System.Int32";
 				}
 
@@ -279,7 +279,7 @@ namespace Xamarin.Android.Tasks
 
 			static bool TypeMatches (string type, string methodType)
 			{
-				if (MonoAndroidHelper.StringEquals (type, methodType, StringComparison.Ordinal))
+				if (MonoAndroidHelper.StringEquals (type, methodType))
 					return true;
 
 				foreach (var eq in equivalent_types) {
@@ -414,7 +414,7 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			if (connectorMethod != null && !MonoAndroidHelper.StringEquals ("System.Delegate", connectorMethod.ReturnType.FullName, StringComparison.Ordinal)) {
+			if (connectorMethod != null && !MonoAndroidHelper.StringEquals ("System.Delegate", connectorMethod.ReturnType.FullName)) {
 				log.LogWarning ($"Connector '{connectorName}' in type '{connectorDeclaringType.FullName}' has invalid return type, expected 'System.Delegate', found '{connectorMethod.ReturnType.FullName}' {GetAssemblyPathInfo (connectorDeclaringType)}");
 				return false;
 			}
@@ -423,7 +423,7 @@ namespace Xamarin.Android.Tasks
 			// as the native callback.
 			FieldDefinition delegateField = FindField (nativeCallbackMethod.DeclaringType, delegateFieldName);
 			if (delegateField != null) {
-				if (!MonoAndroidHelper.StringEquals ("System.Delegate", delegateField.FieldType.FullName, StringComparison.Ordinal)) {
+				if (!MonoAndroidHelper.StringEquals ("System.Delegate", delegateField.FieldType.FullName)) {
 					log.LogWarning ($"delegate field '{delegateFieldName}' in type '{nativeCallbackMethod.DeclaringType.FullName}' has invalid type, expected 'System.Delegate', found '{delegateField.FieldType.FullName}' {GetAssemblyPathInfo (delegateField)}");
 					return false;
 				}
@@ -507,7 +507,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			TypeReference type;
-			if (!MonoAndroidHelper.StringEquals ("System.Void", method.ReturnType.FullName, StringComparison.Ordinal)) {
+			if (!MonoAndroidHelper.StringEquals ("System.Void", method.ReturnType.FullName)) {
 				type = GetRealType (method.ReturnType);
 				if (!IsAcceptable (type)) {
 					needsBlittableWorkaround = true;
@@ -583,7 +583,7 @@ namespace Xamarin.Android.Tasks
 
 			TypeDefinition GetMatchingType (TypeDefinition def)
 			{
-				if (MonoAndroidHelper.StringEquals (def.FullName, typeName, StringComparison.Ordinal)) {
+				if (MonoAndroidHelper.StringEquals (def.FullName, typeName)) {
 					return def;
 				}
 
@@ -610,7 +610,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				if (!MonoAndroidHelper.StringEquals (methodName, method.Name, StringComparison.Ordinal)) {
+				if (!MonoAndroidHelper.StringEquals (methodName, method.Name)) {
 					continue;
 				}
 
@@ -629,7 +629,7 @@ namespace Xamarin.Android.Tasks
 		FieldDefinition FindField (TypeDefinition type, string fieldName, bool lookForInherited = false)
 		{
 			foreach (FieldDefinition field in type.Fields) {
-				if (MonoAndroidHelper.StringEquals (field.Name, fieldName, StringComparison.Ordinal)) {
+				if (MonoAndroidHelper.StringEquals (field.Name, fieldName)) {
 					return field;
 				}
 			}

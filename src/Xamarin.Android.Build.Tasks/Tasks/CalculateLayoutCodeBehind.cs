@@ -218,10 +218,10 @@ namespace Xamarin.Android.Tasks
 
 				// <merge> anywhere is ignored - Android always returns 'null' if you try to find such
 				// an element. Prevents https://github.com/xamarin/xamarin-android/issues/1929
-				if (MonoAndroidHelper.StringEquals ("merge", current.LocalName, StringComparison.Ordinal))
+				if (MonoAndroidHelper.StringEquals ("merge", current.LocalName))
 					continue;
 
-				bool isInclude = MonoAndroidHelper.StringEquals ("include", current.LocalName, StringComparison.Ordinal);
+				bool isInclude = MonoAndroidHelper.StringEquals ("include", current.LocalName);
 
 				if (!GetAndParseId (current, filePath, androidNS, isInclude, out id, out parsedId, out name)  && !isInclude) {
 					errors = true;
@@ -258,7 +258,7 @@ namespace Xamarin.Android.Tasks
 
 		void CreateWidget (XPathNavigator current, string filePath, string androidNS, string xamarinNS, string id, string parsedId, string name, string partialClasses, ref IDictionary <string, LayoutWidget> widgets)
 		{
-			bool isFragment = MonoAndroidHelper.StringEquals ("fragment", current.LocalName, StringComparison.Ordinal);
+			bool isFragment = MonoAndroidHelper.StringEquals ("fragment", current.LocalName);
 			string managedType = current.GetAttribute (XamarinManagedTypeAttribute, xamarinNS);
 			string oldType = null;
 
@@ -327,7 +327,7 @@ namespace Xamarin.Android.Tasks
 			if (fresh)
 				return;
 
-			if (widget.Type != null && MonoAndroidHelper.StringEquals (widget.Type, managedType, StringComparison.Ordinal))
+			if (widget.Type != null && MonoAndroidHelper.StringEquals (widget.Type, managedType))
 				return;
 
 			widget.Type = null;

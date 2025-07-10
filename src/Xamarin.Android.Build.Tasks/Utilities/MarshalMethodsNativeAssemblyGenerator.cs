@@ -107,7 +107,7 @@ namespace Xamarin.Android.Tasks
 			{
 				var klass = EnsureType<MarshalMethodsManagedClass> (data);
 
-				if (MonoAndroidHelper.StringEquals ("token", fieldName, StringComparison.Ordinal)) {
+				if (MonoAndroidHelper.StringEquals ("token", fieldName)) {
 					return $" class name: {klass.ClassName}";
 				}
 
@@ -532,15 +532,15 @@ namespace Xamarin.Android.Tasks
 				}
 
 				string typeName = sb.ToString ();
-				if (MonoAndroidHelper.StringEquals (typeName, "java/lang/Class", StringComparison.Ordinal)) {
+				if (MonoAndroidHelper.StringEquals (typeName, "java/lang/Class")) {
 					return typeof(_jclass);
 				}
 
-				if (MonoAndroidHelper.StringEquals (typeName, "java/lang/String", StringComparison.Ordinal)) {
+				if (MonoAndroidHelper.StringEquals (typeName, "java/lang/String")) {
 					return typeof(_jstring);
 				}
 
-				if (MonoAndroidHelper.StringEquals (typeName, "java/lang/Throwable", StringComparison.Ordinal)) {
+				if (MonoAndroidHelper.StringEquals (typeName, "java/lang/Throwable")) {
 					return typeof(_jthrowable);
 				}
 

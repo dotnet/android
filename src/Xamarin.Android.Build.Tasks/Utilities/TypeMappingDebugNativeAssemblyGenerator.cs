@@ -21,11 +21,11 @@ namespace Xamarin.Android.Tasks
 			{
 				var map_module = EnsureType<TypeMap> (data);
 
-				if (MonoAndroidHelper.StringEquals ("assembly_name", fieldName, StringComparison.Ordinal)) {
+				if (MonoAndroidHelper.StringEquals ("assembly_name", fieldName)) {
 					return "assembly_name (unused in this mode)";
 				}
 
-				if (MonoAndroidHelper.StringEquals ("data", fieldName, StringComparison.Ordinal)) {
+				if (MonoAndroidHelper.StringEquals ("data", fieldName)) {
 					return "data (unused in this mode)";
 				}
 
@@ -35,8 +35,8 @@ namespace Xamarin.Android.Tasks
 			public override ulong GetBufferSize (object data, string fieldName)
 			{
 				var map_module = EnsureType<TypeMap> (data);
-				if (MonoAndroidHelper.StringEquals ("java_to_managed", fieldName, StringComparison.Ordinal) ||
-				    MonoAndroidHelper.StringEquals ("managed_to_java", fieldName, StringComparison.Ordinal)) {
+				if (MonoAndroidHelper.StringEquals ("java_to_managed", fieldName) ||
+				    MonoAndroidHelper.StringEquals ("managed_to_java", fieldName)) {
 					return map_module.entry_count;
 				}
 
@@ -47,11 +47,11 @@ namespace Xamarin.Android.Tasks
 			{
 				var map_module = EnsureType<TypeMap> (data);
 
-				if (MonoAndroidHelper.StringEquals ("java_to_managed", fieldName, StringComparison.Ordinal)) {
+				if (MonoAndroidHelper.StringEquals ("java_to_managed", fieldName)) {
 					return map_module.JavaToManagedCount == 0 ? null : JavaToManagedSymbol;
 				}
 
-				if (MonoAndroidHelper.StringEquals ("managed_to_java", fieldName, StringComparison.Ordinal)) {
+				if (MonoAndroidHelper.StringEquals ("managed_to_java", fieldName)) {
 					return map_module.ManagedToJavaCount == 0 ? null : ManagedToJavaSymbol;
 				}
 
@@ -65,11 +65,11 @@ namespace Xamarin.Android.Tasks
 			{
 				var entry = EnsureType<TypeMapEntry> (data);
 
-				if (MonoAndroidHelper.StringEquals ("from", fieldName, StringComparison.Ordinal)) {
+				if (MonoAndroidHelper.StringEquals ("from", fieldName)) {
 					return $" from: {entry.from}";
 				}
 
-				if (MonoAndroidHelper.StringEquals ("to", fieldName, StringComparison.Ordinal)) {
+				if (MonoAndroidHelper.StringEquals ("to", fieldName)) {
 					return $" to: {entry.to}";
 				}
 

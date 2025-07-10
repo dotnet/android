@@ -111,7 +111,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				haveAllAttributes = true;
-				if (MonoAndroidHelper.StringEquals ("replace-type", reader.LocalName, StringComparison.Ordinal)) {
+				if (MonoAndroidHelper.StringEquals ("replace-type", reader.LocalName)) {
 					haveAllAttributes &= GetRequiredAttribute ("from", out string from);
 					haveAllAttributes &= GetRequiredAttribute ("to", out string to);
 					if (!haveAllAttributes) {
@@ -119,7 +119,7 @@ namespace Xamarin.Android.Tasks
 					}
 
 					typeReplacements.Add (new JniRemappingTypeReplacement (from, to));
-				} else if (MonoAndroidHelper.StringEquals ("replace-method", reader.LocalName, StringComparison.Ordinal)) {
+				} else if (MonoAndroidHelper.StringEquals ("replace-method", reader.LocalName)) {
 					haveAllAttributes &= GetRequiredAttribute ("source-type", out string sourceType);
 					haveAllAttributes &= GetRequiredAttribute ("source-method-name", out string sourceMethodName);
 					haveAllAttributes &= GetRequiredAttribute ("target-type", out string targetType);

@@ -98,7 +98,7 @@ namespace Xamarin.Android.Tasks
 		{
 			var ret = new List <ITaskItem> ();
 			foreach (ITaskItem item in items) {
-				if (!MonoAndroidHelper.StringEquals (abi, item.GetMetadata (KnownMetadata.Abi), StringComparison.Ordinal)) {
+				if (!MonoAndroidHelper.StringEquals (abi, item.GetMetadata (KnownMetadata.Abi))) {
 					continue;
 				}
 				ret.Add (item);

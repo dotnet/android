@@ -391,9 +391,9 @@ namespace Xamarin.Android.Tasks
 				MethodDefinition md = reader.GetMethodDefinition (methodHandle);
 				string name = reader.GetString (md.Name);
 
-				if (jnienv_initialize_method_token == -1 && MonoAndroidHelper.StringEquals (name, "Initialize", StringComparison.Ordinal)) {
+				if (jnienv_initialize_method_token == -1 && MonoAndroidHelper.StringEquals (name, "Initialize")) {
 					jnienv_initialize_method_token = MetadataTokens.GetToken (reader, methodHandle);
-				} else if (jnienv_registerjninatives_method_token == -1 && MonoAndroidHelper.StringEquals (name, "RegisterJniNatives", StringComparison.Ordinal)) {
+				} else if (jnienv_registerjninatives_method_token == -1 && MonoAndroidHelper.StringEquals (name, "RegisterJniNatives")) {
 					jnienv_registerjninatives_method_token = MetadataTokens.GetToken (reader, methodHandle);
 				}
 
@@ -406,12 +406,12 @@ namespace Xamarin.Android.Tasks
 			bool TypeMatches (TypeDefinition td)
 			{
 				string ns = reader.GetString (td.Namespace);
-				if (!MonoAndroidHelper.StringEquals (ns, "Android.Runtime", StringComparison.Ordinal)) {
+				if (!MonoAndroidHelper.StringEquals (ns, "Android.Runtime")) {
 					return false;
 				}
 
 				string name = reader.GetString (td.Name);
-				if (!MonoAndroidHelper.StringEquals (name, "JNIEnvInit", StringComparison.Ordinal)) {
+				if (!MonoAndroidHelper.StringEquals (name, "JNIEnvInit")) {
 					return false;
 				}
 

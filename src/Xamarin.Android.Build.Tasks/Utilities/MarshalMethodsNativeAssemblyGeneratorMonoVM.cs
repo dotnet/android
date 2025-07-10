@@ -16,7 +16,7 @@ class MarshalMethodsNativeAssemblyGeneratorMonoVM : MarshalMethodsNativeAssembly
 		{
 			var methodName = EnsureType<MarshalMethodName> (data);
 
-			if (MonoAndroidHelper.StringEquals ("id", fieldName, StringComparison.Ordinal)) {
+			if (MonoAndroidHelper.StringEquals ("id", fieldName)) {
 				return $" name: {methodName.name}";
 			}
 

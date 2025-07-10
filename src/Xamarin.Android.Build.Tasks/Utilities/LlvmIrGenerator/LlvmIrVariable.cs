@@ -147,8 +147,8 @@ abstract class LlvmIrVariable : LlvmIrVariableReference, IEquatable<LlvmIrVariab
 		return
 			Global == other.Global &&
 			Type == other.Type &&
-			MonoAndroidHelper.StringEquals (NamePrefix, other.NamePrefix, StringComparison.Ordinal) &&
-			(!NameMatters || MonoAndroidHelper.StringEquals (Name, other.Name, StringComparison.Ordinal));
+			MonoAndroidHelper.StringEquals (NamePrefix, other.NamePrefix) &&
+			(!NameMatters || MonoAndroidHelper.StringEquals (Name, other.Name));
 	}
 }
 
