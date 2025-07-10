@@ -1048,14 +1048,19 @@ namespace UnnamedProject
 				OtherBuildItems = {
 					new BuildItem("AndroidEnvironment", "env.txt") {
 						TextContent = () => @"Foo=Bar
-Bar34=Foo55",
+Bar34=Foo55
+Empty=
+MONO_GC_PARAMS=bridge-implementation=new",
 					}
 				}
 			};
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
 		Console.WriteLine (""Foo="" + Environment.GetEnvironmentVariable(""Foo""));
 		Console.WriteLine (""Bar34="" + Environment.GetEnvironmentVariable(""Bar34""));
-		Console.WriteLine (""DOTNET_MODIFIABLE_ASSEMBLIES="" + Environment.GetEnvironmentVariable(""DOTNET_MODIFIABLE_ASSEMBLIES""));");
+		Console.WriteLine (""Empty="" + Environment.GetEnvironmentVariable(""Empty""));
+		Console.WriteLine (""MONO_GC_PARAMS="" + Environment.GetEnvironmentVariable(""MONO_GC_PARAMS""));
+		Console.WriteLine (""DOTNET_MODIFIABLE_ASSEMBLIES="" + Environment.GetEnvironmentVariable(""DOTNET_MODIFIABLE_ASSEMBLIES""));
+		");
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
 			RunProjectAndAssert (proj, builder);
@@ -1070,12 +1075,23 @@ Bar34=Foo55",
 			StringAssert.Contains (
 					"Foo=Bar",
 					logcatOutput,
-					"The Environment variable \"Foo\" was not set."
+					"The Environment variable \"Foo\" was not set to expected value \"Bar\"."
 			);
 			StringAssert.Contains (
 					"Bar34=Foo55",
 					logcatOutput,
-					"The Environment variable \"Bar34\" was not set."
+					"The Environment variable \"Bar34\" was not set to expected value \"Foo55\"."
+			);
+			// NOTE: `Empty=` test case is to ensure a blank value doesn't cause a build error
+			StringAssert.Contains (
+					"Empty=",
+					logcatOutput,
+					"The Environment variable \"Empty\" was not set."
+			);
+			StringAssert.Contains (
+					"MONO_GC_PARAMS=bridge-implementation=new",
+					logcatOutput,
+					"The Environment variable \"MONO_GC_PARAMS\" was not set to expected value \"bridge-implementation=new\"."
 			);
 			// NOTE: set when $(UseInterpreter) is true, default for Debug mode
 			if (!isRelease) {
