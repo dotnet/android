@@ -85,8 +85,6 @@ namespace Xamarin.Android.Tasks
 
 		public virtual string DefaultErrorCode => "JAVA0000";
 
-		public new string WorkingDirectory { get; set; }
-
 		public string AssemblyIdentityMapFile { get; set; }
 
 		public string IntermediateOutputPath { get; set; }
@@ -120,8 +118,6 @@ namespace Xamarin.Android.Tasks
 
 		protected override string GetWorkingDirectory ()
 		{
-			if (!string.IsNullOrEmpty (WorkingDirectory))
-				return WorkingDirectory;
 			return base.GetWorkingDirectory ();
 		}
 
