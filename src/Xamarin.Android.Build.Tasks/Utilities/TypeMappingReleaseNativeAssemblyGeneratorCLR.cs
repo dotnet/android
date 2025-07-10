@@ -210,7 +210,9 @@ namespace Xamarin.Android.Tasks
 		JavaNameHash32Comparer javaNameHash32Comparer;
 		JavaNameHash64Comparer javaNameHash64Comparer;
 
+#pragma warning disable CS0414 // Field is assigned but its value is never used - might be used for debugging or future functionality
 		ulong moduleCounter = 0;
+#pragma warning restore CS0414
 
 		public TypeMappingReleaseNativeAssemblyGeneratorCLR (TaskLoggingHelper log, NativeTypeMappingData mappingData)
 			: base (log)

@@ -164,7 +164,9 @@ namespace Xamarin.Android.Tasks
 			public uint                method_count;
 
 			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value - populated during native code generation
 			public JniRemappingIndexMethodEntry methods;
+#pragma warning restore CS0649
 
 			[NativeAssembler (Ignore = true)]
 			public string MethodsArraySymbolName;

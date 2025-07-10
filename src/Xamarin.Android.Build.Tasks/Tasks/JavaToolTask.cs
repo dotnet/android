@@ -85,7 +85,7 @@ namespace Xamarin.Android.Tasks
 
 		public virtual string DefaultErrorCode => "JAVA0000";
 
-		public string WorkingDirectory { get; set; }
+		public new string WorkingDirectory { get; set; }
 
 		public string AssemblyIdentityMapFile { get; set; }
 

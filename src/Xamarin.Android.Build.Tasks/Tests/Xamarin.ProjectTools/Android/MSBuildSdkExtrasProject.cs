@@ -25,7 +25,7 @@ namespace Xamarin.ProjectTools
 		/// </summary>
 		public override bool ShouldRestorePackageReferences => true;
 
-		public string TargetFrameworks {
+		public new string TargetFrameworks {
 			get => GetProperty (nameof (TargetFrameworks));
 			set => SetProperty (nameof (TargetFrameworks), value);
 		}
@@ -35,7 +35,7 @@ namespace Xamarin.ProjectTools
 			set => SetProperty (nameof (IsBindingProject), value.ToString ());
 		}
 
-		string Configuration => IsRelease ? "Release" : "Debug";
+		new string Configuration => IsRelease ? "Release" : "Debug";
 
 		public string TargetFrameworkDirectory {
 			get {

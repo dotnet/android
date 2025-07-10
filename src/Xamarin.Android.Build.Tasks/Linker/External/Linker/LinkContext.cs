@@ -44,7 +44,9 @@ namespace Mono.Linker {
 		string _outputDirectory;
 
 		DirectoryAssemblyResolver _resolver;
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value - potentially assigned by reflection or external code
 		ReaderParameters _readerParameters;
+#pragma warning restore CS0649
 		ISymbolReaderProvider _symbolReaderProvider;
 		ISymbolWriterProvider _symbolWriterProvider;
 		AnnotationStore _annotations;
