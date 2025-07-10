@@ -22,4 +22,8 @@ class AssemblyStoreHeader
 	{
 		Version = version;
 	}
+
+	internal AssemblyStoreHeader ()
+		: this (new AssemblyStoreVersion ())
+	{}
 }

@@ -77,7 +77,7 @@ public class SharedLibrary : IAspect, IDisposable
 			throw new InvalidOperationException ($"Payload offset of {payloadSize} is too large to support.");
 		}
 
-		return new SharedLibraryPayloadStream (libraryStream, (long)payloadOffset, (long)payloadSize);
+		return new SubStream (libraryStream, (long)payloadOffset, (long)payloadSize);
 	}
 
 	static bool IsSupportedELFSharedLibrary (Stream stream, string? description)
