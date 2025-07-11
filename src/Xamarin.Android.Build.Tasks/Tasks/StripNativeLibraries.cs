@@ -67,8 +67,8 @@ namespace Xamarin.Android.Tasks
 		protected override string GenerateCommandLineCommands ()
 		{
 			var cmd = new CommandLineBuilder ();
-			cmd.AppendSwitchIfNotNull ("--strip-debug ", source.ItemSpec);
-			cmd.AppendSwitchIfNotNull ("-o ", destination.ItemSpec);
+			cmd.AppendSwitchIfNotNull ("--strip-debug ", source?.ItemSpec);
+			cmd.AppendSwitchIfNotNull ("-o ", destination?.ItemSpec);
 			return cmd.ToString ();
 		}
 

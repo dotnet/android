@@ -56,6 +56,8 @@ namespace Xamarin.Android.Tasks
 
 		void RunLinker (Config config)
 		{
+			if (config.Linker == null || config.OutputSharedLibrary == null || config.LinkItems == null)
+				return;
 			config.Linker.Link (config.OutputSharedLibrary, config.LinkItems);
 		}
 
