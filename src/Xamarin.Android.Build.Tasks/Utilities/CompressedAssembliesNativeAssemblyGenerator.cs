@@ -29,11 +29,6 @@ namespace Xamarin.Android.Tasks
 			public uint Index;
 
 			[NativeAssembler (Ignore = true)]
-#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value - populated during native code generation
-			public string BufferSymbolName;
-#pragma warning restore CS0649
-
-			[NativeAssembler (Ignore = true)]
 			public string AssemblyName;
 
 			public uint   uncompressed_file_size;
