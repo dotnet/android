@@ -532,7 +532,7 @@ $(SupportedOSPlatformVersion) 値に一致するように AndroidManifest.xml �
     <value>ソース ファイル '{0}' が見つかりませんでした。</value>
   </data>
   <data name="XA2002_Framework" xml:space="preserve">
-    <value>{1} によって参照されている参照 '{0}' を解決できません。.NET for Android プロファイル内にそれが存在しないと思われます。</value>
+    <value>{1} によって参照されている参照 '{0}' を解決できません。Mono for Android プロファイル内にそれが存在しないと思われます。</value>
     <comment>{0} - The name of the missing assembly
 {1} - The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`</comment>
   </data>

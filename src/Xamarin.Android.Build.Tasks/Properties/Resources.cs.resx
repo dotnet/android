@@ -531,7 +531,7 @@ Buď změňte hodnotu v souboru AndroidManifest.xml tak, aby odpovídala hodnot�
     <value>Zdrojový soubor {0} se nenašel.</value>
   </data>
   <data name="XA2002_Framework" xml:space="preserve">
-    <value>Nelze přeložit odkaz {0}, na který odkazuje {1}. Možná neexistuje v profilu .NET for Android.</value>
+    <value>Nelze přeložit odkaz {0}, na který odkazuje {1}. Možná neexistuje v profilu Mono for Android.</value>
     <comment>{0} - The name of the missing assembly
 {1} - The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`</comment>
   </data>
