@@ -32,7 +32,7 @@ abstract class FormatBase
 	public bool Read ()
 	{
 		bool success = true;
-		using var reader = new BinaryReader (StoreStream, Encoding.UTF8, leaveOpen: true);
+		using var reader = Utilities.GetReaderAndRewindStream (StoreStream);
 
 		// They can be `null` if `Validate` wasn't called for some reason.
 		if (Header == null) {
@@ -67,7 +67,7 @@ abstract class FormatBase
 
 	public IAspectState Validate ()
 	{
-		using var reader = new BinaryReader (StoreStream, Encoding.UTF8, leaveOpen: true);
+		using var reader = Utilities.GetReaderAndRewindStream (StoreStream);
 
 		if (ReadHeader (reader, out AssemblyStoreHeader? header)) {
 			Header = header;
@@ -81,12 +81,6 @@ abstract class FormatBase
 	}
 
 	protected abstract IAspectState ValidateInner ();
-
-	protected BasicAspectState ValidationFailed (string message)
-	{
-		Log.Debug (message);
-		return new BasicAspectState (false);
-	}
 
 	protected virtual bool ReadHeader (BinaryReader reader, out AssemblyStoreHeader? header)
 	{
