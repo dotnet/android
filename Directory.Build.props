@@ -66,14 +66,11 @@
       This can be opted into locally with $(_AndroidTreatWarningsAsErrors) = true.
     -->
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'jnienv-gen.csproj' ">true</_AllowProjectWarnings>
-    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Microsoft.Android.Sdk.ILLink.csproj' ">true</_AllowProjectWarnings>
-    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Microsoft.Android.Templates.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Mono.Android.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Mono.Android.NET-Tests.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'MSBuildDeviceIntegration.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'NativeAOT.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'TestRunner.Core.NET.csproj' ">true</_AllowProjectWarnings>
-    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Android.Build.Tasks.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Android.Build.Tests.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Android.JcwGen-Tests.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Android.NUnitLite.NET.csproj' ">true</_AllowProjectWarnings>

@@ -30,7 +30,9 @@ namespace Xamarin.Android.Tasks
 		[NativeClass]
 		class _jobject
 		{
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value - likely populated by native code
 			public byte b;
+#pragma warning restore CS0649
 		}
 
 		sealed class _jclass : _jobject
@@ -204,7 +206,9 @@ namespace Xamarin.Android.Tasks
 		List<MarshalMethodInfo> methods;
 		protected List<StructureInstance<MarshalMethodsManagedClass>> classes = new List<StructureInstance<MarshalMethodsManagedClass>> ();
 
+#pragma warning disable CS0414 // Field is assigned but its value is never used - might be used for debugging or future functionality
 		readonly LlvmIrCallMarker defaultCallMarker;
+#pragma warning restore CS0414
 		readonly bool generateEmptyCode;
 		readonly bool managedMarshalMethodsLookupEnabled;
 		readonly AndroidTargetArch targetArch;
