@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.IO;
@@ -16,38 +16,38 @@ namespace Xamarin.Android.Tasks
 
 		const int DefaultMinSDKVersion = 11;
 
-		public string CommandLineToolsVersion { get; set; }
+		public string? CommandLineToolsVersion { get; set; }
 
-		public string AndroidApiLevel { get; set; }
-
-		[Required]
-		public string TargetFrameworkVersion { get; set; }
+		public string? AndroidApiLevel { get; set; }
 
 		[Required]
-		public ITaskItem ManifestFile { get; set; }
+		public string TargetFrameworkVersion { get; set; } = "";
 
 		[Required]
-		public string BuildToolsVersion { get; set; }
+		public ITaskItem ManifestFile { get; set; } = null!;
 
-		public string PlatformToolsVersion { get; set; }
+		[Required]
+		public string BuildToolsVersion { get; set; } = "";
 
-		public string NdkVersion { get; set; }
+		public string? PlatformToolsVersion { get; set; }
+
+		public string? NdkVersion { get; set; }
 
 		public bool NdkRequired { get; set; }
 
-		public string JdkVersion { get; set; }
+		public string? JdkVersion { get; set; }
 
 		public bool GetJavaDependencies { get; set; } = false;
 
 		[Output]
-		public ITaskItem [] Dependencies { get; set; }
+		public ITaskItem []? Dependencies { get; set; }
 
 		[Output]
-		public ITaskItem[] JavaDependencies { get; set; }
+		public ITaskItem[]? JavaDependencies { get; set; }
 
 		ITaskItem CreateAndroidDependency (string include, string version)
 		{
-			if (string.IsNullOrEmpty (version))
+			if (version.IsNullOrEmpty ())
 				return new TaskItem (include);
 
 			return new TaskItem (include, new Dictionary<string, string> {
@@ -59,7 +59,7 @@ namespace Xamarin.Android.Tasks
 		{
 			var dependencies = new List<ITaskItem> ();
 			var javaDependencies = new List<ITaskItem> ();
-			var targetApiLevel = string.IsNullOrEmpty (AndroidApiLevel) ?
+			var targetApiLevel = AndroidApiLevel.IsNullOrEmpty () ?
 				MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (TargetFrameworkVersion) :
 				MonoAndroidHelper.SupportedVersions.GetApiLevelFromId (AndroidApiLevel);
 			var manifestApiLevel = DefaultMinSDKVersion;
@@ -70,16 +70,16 @@ namespace Xamarin.Android.Tasks
 			var sdkVersion = Math.Max (targetApiLevel.Value, manifestApiLevel);
 			dependencies.Add (CreateAndroidDependency ($"platforms/android-{sdkVersion}", $""));
 			dependencies.Add (CreateAndroidDependency ($"build-tools/{BuildToolsVersion}", BuildToolsVersion));
-			if (!string.IsNullOrEmpty (PlatformToolsVersion)) {
+			if (!PlatformToolsVersion.IsNullOrEmpty ()) {
 				dependencies.Add (CreateAndroidDependency ("platform-tools", PlatformToolsVersion));
 			}
-			if (!string.IsNullOrEmpty (CommandLineToolsVersion)) {
+			if (!CommandLineToolsVersion.IsNullOrEmpty ()) {
 				dependencies.Add (CreateAndroidDependency ($"cmdline-tools/{CommandLineToolsVersion}", CommandLineToolsVersion));
 			}
-			if (!string.IsNullOrEmpty (NdkVersion) && NdkRequired) {
+			if (!NdkVersion.IsNullOrEmpty () && NdkRequired) {
 				dependencies.Add (CreateAndroidDependency ("ndk-bundle", NdkVersion));
 			}
-			if (!string.IsNullOrEmpty (JdkVersion) && GetJavaDependencies) {
+			if (!JdkVersion.IsNullOrEmpty () && GetJavaDependencies) {
 				javaDependencies.Add (CreateAndroidDependency ("jdk", JdkVersion));
 			}
 			Dependencies = dependencies.ToArray ();
