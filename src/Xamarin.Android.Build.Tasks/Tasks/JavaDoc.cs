@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Linq;
@@ -18,15 +18,15 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "JDC";
 
-		public string [] SourceDirectories { get; set; }
+		public string []? SourceDirectories { get; set; }
 
-		public string [] DestinationDirectories { get; set; }
+		public string []? DestinationDirectories { get; set; }
 
-		public string [] ReferenceJars { get; set; }
+		public string []? ReferenceJars { get; set; }
 
-		public string JavaPlatformJar { get; set; }
+		public string? JavaPlatformJar { get; set; }
 
-		public string [] ExtraArgs { get; set; }
+		public string []? ExtraArgs { get; set; }
 
 		protected override string ToolName {
 			get { return OS.IsWindows ? "javadoc.exe" : "javadoc"; }
