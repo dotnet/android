@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
+using Xamarin.Android.Tasks;
+
 namespace ApplicationUtility;
 
 class Format_V3 : FormatBase
@@ -25,12 +27,12 @@ class Format_V3 : FormatBase
 	{
 		retval = null;
 		if (Header == null || Header.EntryCount == null || Header.IndexEntryCount == null || Header.IndexSize == null) {
-			retval = ValidationFailed ($"{LogTag}: invalid header data in {where}.");
+			retval = Utilities.GetFailureAspectState ($"{LogTag}: invalid header data in {where}.");
 			return false;
 		}
 
 		if (Descriptors == null || Descriptors.Count == 0) {
-			retval = ValidationFailed ($"{LogTag}: no descriptors read in {where}.");
+			retval = Utilities.GetFailureAspectState ($"{LogTag}: no descriptors read in {where}.");
 			return false;
 		}
 
@@ -47,11 +49,12 @@ class Format_V3 : FormatBase
 		// Repetitive to `EnsureValidState`, but it's better than using `!` all over the place below...
 		Debug.Assert (Header != null);
 		Debug.Assert (Header.EntryCount != null);
+		Debug.Assert (Header.IndexSize != null);
 		Debug.Assert (Header.IndexEntryCount != null);
 		Debug.Assert (Descriptors != null);
 
 		ulong indexEntrySize = Header.Version.Is64Bit ? IndexEntrySize64 : IndexEntrySize32;
-		ulong indexSize = (indexEntrySize * (ulong)Header.IndexEntryCount!);
+		ulong indexSize = (ulong)Header.IndexSize; // (indexEntrySize * (ulong)Header.IndexEntryCount!);
 		ulong descriptorsSize = AssemblyDescriptorSize * (ulong)Header.EntryCount!;
 		ulong requiredStreamSize = HeaderSize + indexSize + descriptorsSize;
 
@@ -72,11 +75,11 @@ class Format_V3 : FormatBase
 		Log.Debug ($"{LogTag}: calculated the required stream size to be {requiredStreamSize}");
 
 		if (requiredStreamSize > Int64.MaxValue) {
-			return ValidationFailed ($"{LogTag}: required stream size is too long for the stream API to handle.");
+			return Utilities.GetFailureAspectState ($"{LogTag}: required stream size is too long for the stream API to handle.");
 		}
 
 		if ((long)requiredStreamSize != StoreStream.Length) {
-			return ValidationFailed ($"{LogTag}: stream has invalid size, expected {requiredStreamSize} bytes, found {StoreStream.Length} instead.");
+			return Utilities.GetFailureAspectState ($"{LogTag}: stream has invalid size, expected {requiredStreamSize} bytes, found {StoreStream.Length} instead.");
 		} else {
 			Log.Debug ($"{LogTag}: stream size is valid.");
 		}
@@ -107,6 +110,8 @@ class Format_V3 : FormatBase
 
 	protected override bool ReadAssemblies (BinaryReader reader, out IList<ApplicationAssembly>? assemblies)
 	{
+		Debug.Assert (Header != null);
+		Debug.Assert (Header.IndexEntryCount != null);
 		Debug.Assert (Descriptors != null);
 
 		assemblies = null;
@@ -115,16 +120,42 @@ class Format_V3 : FormatBase
 		}
 
 		IList<string> assemblyNames = ReadAssemblyNames (reader);
-		if (assemblyNames.Count != Descriptors.Count) {
-			Log.Debug ($"{LogTag}: assembly name count ({assemblyNames.Count}) is different to descriptor count ({Descriptors.Count})");
-			return false;
+		bool assemblyNamesUnreliable = assemblyNames.Count != Descriptors.Count;
+		if (assemblyNamesUnreliable) {
+			Log.Error ($"{LogTag}: assembly name count ({assemblyNames.Count}) is different to descriptor count ({Descriptors.Count})");
+		}
+
+		bool is64Bit = Header.Version.Is64Bit;
+		var index = new Dictionary<ulong, AssemblyStoreIndexEntryV3> ();
+		reader.BaseStream.Seek ((long)HeaderSize, SeekOrigin.Begin);
+		for (uint i = 0; i < Header.IndexEntryCount; i++) {
+			ulong hash = is64Bit ? reader.ReadUInt64 () : reader.ReadUInt32 ();
+			uint descIdx = reader.ReadUInt32 ();
+			byte ignore = reader.ReadByte ();
+
+			if (index.ContainsKey (hash)) {
+				Log.Error ($"{LogTag}: duplicate assembly name hash (0x{hash:x}) found in the '{Description}' assembly store.");
+				continue;
+			}
+			Log.Debug ($"{LogTag}: index entry {i} hash == 0x{hash:x}");
+			index.Add (hash, new AssemblyStoreIndexEntryV3 (hash, descIdx, ignore));
 		}
 
 		var ret = new List<ApplicationAssembly> ();
 		for (int i = 0; i < Descriptors.Count; i++) {
 			var desc = (AssemblyStoreAssemblyDescriptorV3)Descriptors[i];
-			string name = assemblyNames[i];
+			string name = assemblyNamesUnreliable ? "" : assemblyNames[i];
 			var assemblyStream = new SubStream (reader.BaseStream, (long)desc.DataOffset, (long)desc.DataSize);
+
+			ulong hash = NameHash (name);
+			Log.Debug ($"{LogTag}: hash for assembly '{name}' is 0x{hash:x}");
+
+			bool isIgnored = CheckIgnored (hash);
+			if (isIgnored) {
+				ret.Add ((ApplicationAssembly)ApplicationAssembly.CreateIgnoredAssembly (name, hash));
+				continue;
+			}
+
 			IAspectState assemblyState = ApplicationAssembly.ProbeAspect (assemblyStream, name);
 			if (!assemblyState.Success) {
 				assemblyStream.Dispose ();
@@ -132,10 +163,37 @@ class Format_V3 : FormatBase
 			}
 
 			var assembly = (ApplicationAssembly)ApplicationAssembly.LoadAspect (assemblyStream, assemblyState, name);
+			assembly.NameHash = hash;
 			ret.Add (assembly);
 		}
 
 		assemblies = ret.AsReadOnly ();
 		return true;
+
+		ulong NameHash (string name)
+		{
+			if (String.IsNullOrEmpty (name)) {
+				return 0;
+			}
+
+			if (name.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)) {
+				name = Path.GetFileNameWithoutExtension (name);
+			}
+			return MonoAndroidHelper.GetXxHash (name, is64Bit);
+		}
+
+		bool CheckIgnored (ulong hash)
+		{
+			if (hash == 0) {
+				return false;
+			}
+
+			if (!index.TryGetValue (hash, out AssemblyStoreIndexEntryV3? entry)) {
+				Log.Debug ($"{LogTag}: hash 0x{hash:x} not found in the index");
+				return false;
+			}
+
+			return entry.Ignore;
+		}
 	}
 }
