@@ -22,6 +22,7 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.AndroidToolchainDirectory,           StripQuotes (@"@AndroidToolchainDirectory@"));
 			properties.Add (KnownProperties.AutoProvision,                       StripQuotes ("@AutoProvision@"));
 			properties.Add (KnownProperties.AutoProvisionUsesSudo,               StripQuotes ("@AutoProvisionUsesSudo@"));
+			properties.Add (KnownProperties.CLRRuntimeFlavorDirName,             StripQuotes ("@_CLRRuntimeFlavorDirName@"));
 			properties.Add (KnownProperties.CMakePath,                           StripQuotes (@"@CmakePath@"));
 			properties.Add (KnownProperties.Configuration,                       StripQuotes ("@Configuration@"));
 			properties.Add (KnownProperties.CommandLineToolsFolder,              StripQuotes ("@CommandLineToolsFolder@"));
@@ -48,6 +49,7 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.MicrosoftAndroidSdkOutDir,           StripQuotes (@"@MicrosoftAndroidSdkOutDir@"));
 			properties.Add (KnownProperties.MonoCecilVersion,                    StripQuotes ("@MonoCecilVersion@"));
 			properties.Add (KnownProperties.MonoDarwinPackageUrl,                StripQuotes ("@MonoDarwinPackageUrl@"));
+			properties.Add (KnownProperties.MonoRuntimeFlavorDirName,            StripQuotes ("@_MonoRuntimeFlavorDirName@"));
 			properties.Add (KnownProperties.MonoRequiredMinimumVersion,          StripQuotes ("@MonoRequiredMinimumVersion@"));
 			properties.Add (KnownProperties.MonoRequiredMaximumVersion,          StripQuotes ("@MonoRequiredMaximumVersion@"));
 			properties.Add (KnownProperties.MonoSourceFullPath,                  StripQuotes (@"@MonoSourceFullPath@"));
