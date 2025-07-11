@@ -20,15 +20,15 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem []? DestinationFiles { get; set; }
 
-		string triple;
-		ITaskItem source;
-		ITaskItem destination;
+		string? triple;
+		ITaskItem? source;
+		ITaskItem? destination;
 
 		public override bool RunTask ()
 		{
-			if (SourceFiles.Length != DestinationFiles.Length)
+			if (SourceFiles == null || DestinationFiles == null || SourceFiles.Length != DestinationFiles.Length)
 				throw new ArgumentException ("source and destination count mismatch");
-			if (SourceFiles == null || SourceFiles.Length == 0)
+			if (SourceFiles.Length == 0)
 				return true;
 
 			for (int i = 0; i < SourceFiles.Length; i++) {

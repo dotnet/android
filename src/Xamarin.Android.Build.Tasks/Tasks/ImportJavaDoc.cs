@@ -37,13 +37,17 @@ namespace Xamarin.Android.Tasks
 			//	cmd.AppendSwitch (r);
 			cmd.AppendSwitch ("-v=2");
 			cmd.AppendSwitchIfNotNull ("--out=", OutputDocDirectory);
-			foreach (var j in JavaDocs)
-				cmd.AppendSwitchIfNotNull ("--doc-dir=", Path.GetDirectoryName (j));
-			foreach (var t in Transforms) {
-				if (t.EndsWith ("Metadata.xml", StringComparison.InvariantCultureIgnoreCase))
-					cmd.AppendSwitchIfNotNull ("--metadata=", t);
-				else
-					cmd.AppendSwitchIfNotNull ("--enum-map=", t);
+			if (JavaDocs != null) {
+				foreach (var j in JavaDocs)
+					cmd.AppendSwitchIfNotNull ("--doc-dir=", Path.GetDirectoryName (j));
+			}
+			if (Transforms != null) {
+				foreach (var t in Transforms) {
+					if (t.EndsWith ("Metadata.xml", StringComparison.InvariantCultureIgnoreCase))
+						cmd.AppendSwitchIfNotNull ("--metadata=", t);
+					else
+						cmd.AppendSwitchIfNotNull ("--enum-map=", t);
+				}
 			}
 			return cmd.ToString ();
 		}

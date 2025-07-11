@@ -76,7 +76,7 @@ namespace Xamarin.Android.Tasks
 		List<string> errorLines = new List<string> ();
 		StringBuilder errorText = new StringBuilder ();
 		HashSet<string> mappingText = new HashSet<string> ();
-		string file;
+		string? file;
 		int line, column;
 
 		public string? JavaOptions { get; set; }
@@ -103,7 +103,9 @@ namespace Xamarin.Android.Tasks
 		{
 			if (foundError) {
 				AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap ();
-				assemblyMap.Load (AssemblyIdentityMapFile);
+				if (!AssemblyIdentityMapFile.IsNullOrEmpty ()) {
+					assemblyMap.Load (AssemblyIdentityMapFile);
+				}
 				errorText.Clear ();
 				mappingText.Clear ();
 				foreach (var line in errorLines) {

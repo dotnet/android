@@ -21,9 +21,9 @@ namespace Xamarin.Android.Tasks
 
 		sealed class Config
 		{
-			public NativeLinker Linker;
-			public List<ITaskItem> LinkItems;
-			public ITaskItem OutputSharedLibrary;
+			public NativeLinker? Linker;
+			public List<ITaskItem>? LinkItems;
+			public ITaskItem? OutputSharedLibrary;
 		}
 
 		[Required]

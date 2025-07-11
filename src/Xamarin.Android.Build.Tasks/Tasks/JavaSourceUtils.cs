@@ -41,7 +41,7 @@ namespace Xamarin.Android.Tasks
 
 		public  ITaskItem?   OutputJavadocXml            { get; set; }
 
-		string  responseFilePath;
+		string?  responseFilePath;
 
 		public override bool RunTask ()
 		{
@@ -134,9 +134,11 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 			AppendArg (response, "--output-javadoc");
-			AppendArg (response, OutputJavadocXml.ItemSpec);
+			if (OutputJavadocXml != null) {
+				AppendArg (response, OutputJavadocXml.ItemSpec);
+			}
 
-			if (!JavadocCopyrightFile?.ItemSpec.IsNullOrEmpty ()) {
+			if (JavadocCopyrightFile?.ItemSpec != null && !JavadocCopyrightFile.ItemSpec.IsNullOrEmpty ()) {
 				AppendArg (response, "--doc-copyright");
 				AppendArg (response, Path.GetFullPath (JavadocCopyrightFile.ItemSpec));
 			}
