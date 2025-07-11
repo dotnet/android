@@ -12,7 +12,8 @@ using Microsoft.Build.Utilities;
 namespace Xamarin.Android.Build.Tests {
 	[TestFixture]
 	[Parallelizable (ParallelScope.Self)]
-	public class AndroidResourceTests : BaseTest {
+	public class AndroidResourceTests : BaseTest
+	{
 		[Test]
 		public void RTxtParserTest ()
 		{
@@ -153,6 +154,33 @@ namespace Xamarin.Android.Build.Tests {
 			var mainText = File.ReadAllText (main);
 			Assert.True (mainText.Contains ("FixedWidth"), "'FixedWidth' was converted to 'fixedwidth'");
 			Directory.Delete (path, recursive: true);
+		}
+		
+		[Test]
+		public void AdaptiveIcon ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				SupportedOSPlatformVersion = "26",
+				AndroidResources = {
+					new AndroidItem.AndroidResource ("Resources\\mipmap-anydpi-v26\\adaptiveicon.xml") {
+						TextContent = () => """
+							<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+								<background android:drawable="@mipmap/AdaptiveIcon_background" />
+								<foreground android:drawable="@mipmap/AdaptiveIcon_foreground" />
+							</adaptive-icon>
+						""",
+					},
+					new AndroidItem.AndroidResource ("Resources\\mipmap-mdpi\\AdaptiveIcon_background.png") {
+						BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi,
+					},
+					new AndroidItem.AndroidResource ("Resources\\mipmap-mdpi\\AdaptiveIcon_foreground.png") {
+						BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi,
+					},
+				}
+			};
+
+			using var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 		}
 	}
 }
