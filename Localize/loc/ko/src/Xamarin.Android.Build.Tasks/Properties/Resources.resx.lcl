@@ -875,9 +875,9 @@
       </Item>
       <Item ItemId=";XA2002_Framework" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the Mono for Android profile?]]></Val>
+          <Val><![CDATA[Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the .NET for Android profile?]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[{1}에서 참조하는 '{0}' 참조를 확인할 수 없습니다. Mono for Android 프로필에 해당 참조가 없는 것 같습니다.]]></Val>
+            <Val><![CDATA[{1}에서 참조하는 '{0}' 참조를 확인할 수 없습니다. .NET for Android 프로필에 해당 참조가 없는 것 같습니다.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

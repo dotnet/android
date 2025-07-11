@@ -531,7 +531,7 @@ AndroidManifest.xml dosyasındaki değeri $(SupportedOSPlatformVersion) değeriy
     <value>'{0}' kaynak dosyası bulunamadı.</value>
   </data>
   <data name="XA2002_Framework" xml:space="preserve">
-    <value>{1} tarafından başvurulan `{0}` başvurusu çözümlenemiyor. Mono for Android profilinde bulunmuyor olabilir.</value>
+    <value>{1} tarafından başvurulan `{0}` başvurusu çözümlenemiyor. .NET for Android profilinde bulunmuyor olabilir.</value>
     <comment>{0} - The name of the missing assembly
 {1} - The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`</comment>
   </data>
