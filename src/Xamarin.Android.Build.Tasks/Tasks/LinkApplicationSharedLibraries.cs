@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -27,22 +27,22 @@ namespace Xamarin.Android.Tasks
 		}
 
 		[Required]
-		public ITaskItem[] ObjectFiles { get; set; }
+		public ITaskItem[] ObjectFiles { get; set; } = [];
 
 		[Required]
-		public ITaskItem[] ApplicationSharedLibraries { get; set; }
+		public ITaskItem[] ApplicationSharedLibraries { get; set; } = [];
 
 		[Required]
-		public ITaskItem IntermediateOutputPath { get; set; }
+		public ITaskItem IntermediateOutputPath { get; set; } = null!;
 
 		[Required]
 		public bool DebugBuild { get; set; }
 
 		[Required]
-		public string AndroidBinUtilsDirectory { get; set; }
+		public string AndroidBinUtilsDirectory { get; set; } = "";
 
 		[Required]
-		public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = Array.Empty<ITaskItem> ();
+		public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = [];
 
 		[Required]
 		public bool TargetsCLR { get; set; }

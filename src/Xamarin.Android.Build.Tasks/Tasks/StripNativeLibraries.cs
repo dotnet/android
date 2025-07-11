@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.IO;
@@ -16,9 +16,9 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "SNL";
 
-		public ITaskItem [] SourceFiles { get; set; }
+		public ITaskItem []? SourceFiles { get; set; }
 
-		public ITaskItem [] DestinationFiles { get; set; }
+		public ITaskItem []? DestinationFiles { get; set; }
 
 		string triple;
 		ITaskItem source;
@@ -36,9 +36,9 @@ namespace Xamarin.Android.Tasks
 				destination = DestinationFiles [i];
 
 				var abi = AndroidRidAbiHelper.GetNativeLibraryAbi (source);
-				if (string.IsNullOrEmpty (abi)) {
+				if (abi.IsNullOrEmpty ()) {
 					var packageId = source.GetMetadata ("NuGetPackageId");
-					if (!string.IsNullOrEmpty (packageId)) {
+					if (!packageId.IsNullOrEmpty ()) {
 						Log.LogCodedWarning ("XA4301", source.ItemSpec, 0, Properties.Resources.XA4301_ABI_NuGet, source.ItemSpec, packageId);
 					} else {
 						Log.LogCodedWarning ("XA4301", source.ItemSpec, 0, Properties.Resources.XA4301_ABI, source.ItemSpec);
