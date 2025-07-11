@@ -1,6 +1,6 @@
 // Copyright (C) 2018 Microsoft, Inc. All rights reserved.
 
-#nullable disable
+#nullable enable
 
 using System;
 using System.Diagnostics;
@@ -18,17 +18,17 @@ namespace Xamarin.Android.Tasks {
 		public override string TaskPrefix => "CCV";
 
 		[Required]
-		public string CustomViewMapFile { get; set; }
+		public string CustomViewMapFile { get; set; } = "";
 
 		[Required]
-		public string AcwMapFile { get; set; }
+		public string AcwMapFile { get; set; } = "";
 
-		public ITaskItem [] ResourceDirectories { get; set; }
+		public ITaskItem []? ResourceDirectories { get; set; }
 
 		[Output]
-		public ITaskItem [] Processed { get; set; }
+		public ITaskItem []? Processed { get; set; }
 
-		Dictionary<string, string> _resource_name_case_map;
+		Dictionary<string, string>? _resource_name_case_map;
 		Dictionary<string, string> resource_name_case_map => _resource_name_case_map ??= MonoAndroidHelper.LoadResourceCaseMap (BuildEngine4, ProjectSpecificTaskObjectKey);
 
 		public override bool RunTask ()
@@ -53,7 +53,7 @@ namespace Xamarin.Android.Tasks {
 						bool update = false;
 						foreach (var elem in AndroidResource.GetElements (e).Prepend (e)) {
 							update |= TryFixCustomView (elem, acw_map, (level, message) => {
-								ITaskItem resdir = ResourceDirectories?.FirstOrDefault (x => file.StartsWith (x.ItemSpec, StringComparison.OrdinalIgnoreCase)) ?? null;
+								ITaskItem? resdir = ResourceDirectories?.FirstOrDefault (x => file.StartsWith (x.ItemSpec, StringComparison.OrdinalIgnoreCase));
 								switch (level) {
 								case TraceLevel.Error:
 									Log.FixupResourceFilenameAndLogCodedError ("XA1002", message, file, resdir?.ItemSpec, resource_name_case_map);
@@ -84,11 +84,11 @@ namespace Xamarin.Android.Tasks {
 			}
 			var output = new Dictionary<string, ITaskItem> (processed.Count);
 			foreach (var file in processed) {
-				ITaskItem resdir = ResourceDirectories?.FirstOrDefault (x => file.StartsWith (x.ItemSpec, StringComparison.OrdinalIgnoreCase)) ?? null;
-				var hash = resdir?.GetMetadata ("Hash") ?? null;
-				var stamp = resdir?.GetMetadata ("StampFile") ?? null;
-				var filename = !string.IsNullOrEmpty (hash) ? hash : "compiled";
-				var stampFile = !string.IsNullOrEmpty (stamp) ? stamp : $"{filename}.stamp";
+				ITaskItem? resdir = ResourceDirectories?.FirstOrDefault (x => file.StartsWith (x.ItemSpec, StringComparison.OrdinalIgnoreCase));
+				var hash = resdir?.GetMetadata ("Hash");
+				var stamp = resdir?.GetMetadata ("StampFile");
+				var filename = !hash.IsNullOrEmpty () ? hash : "compiled";
+				var stampFile = !stamp.IsNullOrEmpty () ? stamp : $"{filename}.stamp";
 				Log.LogDebugMessage ($"{filename} {stampFile}");
 				output.Add (file, new TaskItem (Path.GetFullPath (file), new Dictionary<string, string> {
 					{ "StampFile" , stampFile },
@@ -147,7 +147,7 @@ namespace Xamarin.Android.Tasks {
 			return false;
 		}
 
-		bool TryFixCustomView (XElement elem, Dictionary<string, string> acwMap, Action<TraceLevel, string> logMessage = null)
+		bool TryFixCustomView (XElement elem, Dictionary<string, string> acwMap, Action<TraceLevel, string>? logMessage = null)
 		{
 			// Looks for any <My.DotNet.Class ...
 			// and tries to change it to the ACW name

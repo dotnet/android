@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -18,10 +18,10 @@ namespace Xamarin.Android.Tasks
 	{
 		public  override    string      TaskPrefix      => "MRX";
 
-		public  ITaskItem[]     InputRemapXmlFiles  { get; set; }
+		public  ITaskItem[]?     InputRemapXmlFiles  { get; set; }
 
 		[Required]
-		public  ITaskItem       OutputFile          { get; set; }
+		public  ITaskItem       OutputFile          { get; set; } = null!;
 
 		public override bool RunTask ()
 		{
@@ -36,11 +36,13 @@ namespace Xamarin.Android.Tasks
 			using (var writer   = XmlWriter.Create (output, settings)) {
 				writer.WriteStartElement ("replacements");
 				var seen    = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-				foreach (var file in InputRemapXmlFiles) {
-					if (!seen.Add (file.ItemSpec)) {
-						continue;
+				if (InputRemapXmlFiles != null) {
+					foreach (var file in InputRemapXmlFiles) {
+						if (!seen.Add (file.ItemSpec)) {
+							continue;
+						}
+						MergeInputFile (writer, file.ItemSpec);
 					}
-					MergeInputFile (writer, file.ItemSpec);
 				}
 				writer.WriteEndElement ();
 			}
