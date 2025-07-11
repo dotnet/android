@@ -310,7 +310,7 @@ namespace Xamarin.Android.Tools.JavaDocToMdoc
 				return;
 			prop.ReplaceAll (
 					new XElement ("summary",
-						"This API supports the Mono for Android infrastructure and is not intended to be used directly from your code."),
+						"This API supports the .NET for Android infrastructure and is not intended to be used directly from your code."),
 					new XElement ("value",
 						"A ",
 						new XElement ("see", new XAttribute ("cref", "T:System.IntPtr")),
@@ -339,7 +339,7 @@ namespace Xamarin.Android.Tools.JavaDocToMdoc
 				return;
 			prop.ReplaceAll (
 					new XElement ("summary",
-						"This API supports the Mono for Android infrastructure and is not intended to be used directly from your code."),
+						"This API supports the .NET for Android infrastructure and is not intended to be used directly from your code."),
 					new XElement ("value",
 						"A ",
 						new XElement ("see", new XAttribute ("cref", "T:System.Type")),
