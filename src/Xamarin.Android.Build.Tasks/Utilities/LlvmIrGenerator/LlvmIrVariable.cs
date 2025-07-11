@@ -48,9 +48,6 @@ enum LlvmIrVariableNumberFormat
 /// <summary>
 /// Abstract base class for LLVM IR variable references.
 /// </summary>
-/// <summary>
-/// Abstract base class for LLVM IR variable references.
-/// </summary>
 abstract class LlvmIrVariableReference
 {
 	/// <summary>
@@ -122,6 +119,9 @@ abstract class LlvmIrVariable : LlvmIrVariableReference, IEquatable<LlvmIrVariab
 	/// <summary>
 	/// Gets or sets the write options that control how this variable is output in LLVM IR.
 	/// </summary>
+	/// <remarks>
+	/// Defaults to <see cref="LlvmIrVariableWriteOptions.ArrayWriteIndexComments"/>.
+	/// </remarks>
 	public LlvmIrVariableWriteOptions WriteOptions { get; set; } = LlvmIrVariableWriteOptions.ArrayWriteIndexComments;
 
 	/// <summary>
@@ -142,6 +142,9 @@ abstract class LlvmIrVariable : LlvmIrVariableReference, IEquatable<LlvmIrVariab
 	/// <summary>
 	/// Gets or sets the number format to use when writing numeric values.
 	/// </summary>
+	/// <remarks>
+	/// Defaults to <see cref="LlvmIrVariableNumberFormat.Decimal"/>.
+	/// </remarks>
 	public LlvmIrVariableNumberFormat NumberFormat { get; set; } = LlvmIrVariableNumberFormat.Decimal;
 
 	/// <summary>
@@ -354,9 +357,6 @@ abstract class LlvmIrStreamedArrayDataProvider
 /// <summary>
 /// Represents a global LLVM IR variable.
 /// </summary>
-/// <summary>
-/// Represents a global LLVM IR variable.
-/// </summary>
 class LlvmIrGlobalVariable : LlvmIrVariable
 {
 	/// <summary>
@@ -526,7 +526,6 @@ class LlvmIrStringVariable : LlvmIrGlobalVariable
 	public LlvmIrStringVariable (string name, string value, LlvmIrStringEncoding encoding, StringComparison comparison = StringComparison.Ordinal, LlvmIrVariableOptions? options = null)
 		: this (name, new StringHolder (value, encoding, comparison), options)
 	{}
-}
 }
 
 /// <summary>
