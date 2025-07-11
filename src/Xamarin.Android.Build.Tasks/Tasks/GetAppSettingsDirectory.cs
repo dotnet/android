@@ -18,10 +18,10 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			// Windows: C:\Users\Jonathan\AppData\Local\Xamarin\.NET for Android
+			// Windows: C:\Users\Jonathan\AppData\Local\Xamarin\Mono for Android
 			var appdata_local = Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData);
 
-			AppSettingsDirectory = Path.Combine (appdata_local, "Xamarin", ".NET for Android");
+			AppSettingsDirectory = Path.Combine (appdata_local, "Xamarin", "Mono for Android");
 
 			return true;
 		}

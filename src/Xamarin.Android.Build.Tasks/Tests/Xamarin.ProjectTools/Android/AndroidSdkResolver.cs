@@ -14,7 +14,7 @@ namespace Xamarin.ProjectTools
 		static string GetPathFromRegistry (string valueName)
 		{
 			if (TestEnvironment.IsWindows) {
-				return (string) Microsoft.Win32.Registry.GetValue ("HKEY_CURRENT_USER\\SOFTWARE\\Novell\\.NET for Android", valueName, null);
+				return (string) Microsoft.Win32.Registry.GetValue ("HKEY_CURRENT_USER\\SOFTWARE\\Novell\\Mono for Android", valueName, null);
 			}
 			return null;
 		}
