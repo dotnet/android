@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -106,13 +108,13 @@ namespace Xamarin.Android.Tasks
 		string FindMono ()
 		{
 			string mono = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<string> (MonoKey, Lifetime);
-			if (!string.IsNullOrEmpty (mono)) {
+			if (!mono.IsNullOrEmpty ()) {
 				Log.LogDebugMessage ($"Found cached mono via {nameof (BuildEngine4.RegisterTaskObject)}");
 				return mono;
 			}
 
 			var env = Environment.GetEnvironmentVariable ("PATH");
-			if (string.IsNullOrEmpty (env)) {
+			if (!env.IsNullOrEmpty ()) {
 				foreach (var path in env.Split (Path.PathSeparator)) {
 					if (File.Exists (mono = Path.Combine (path, "mono"))) {
 						Log.LogDebugMessage ("Found mono in $PATH");
@@ -138,7 +140,7 @@ namespace Xamarin.Android.Tasks
 		protected virtual CommandLineBuilder GetCommandLineBuilder ()
 		{
 			var cmd = new CommandLineBuilder ();
-			if (!string.IsNullOrEmpty (AssemblyPath)) {
+			if (!AssemblyPath.IsNullOrEmpty ()) {
 				cmd.AppendFileNameIfNotNull (AssemblyPath);
 			}
 			return cmd;
