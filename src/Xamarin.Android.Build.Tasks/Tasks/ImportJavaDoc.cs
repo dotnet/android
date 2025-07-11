@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -14,17 +14,17 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "IJD";
 
-		public string [] JavaDocs { get; set; }
+		public string []? JavaDocs { get; set; }
 		
-		public string [] References { get; set; }
+		public string []? References { get; set; }
 
-		public string [] Transforms { get; set; }
-
-		[Required]
-		public string TargetAssembly { get; set; }
+		public string []? Transforms { get; set; }
 
 		[Required]
-		public string OutputDocDirectory { get; set; }
+		public string TargetAssembly { get; set; } = "";
+
+		[Required]
+		public string OutputDocDirectory { get; set; } = "";
 
 		protected override string GenerateCommandLineCommands ()
 		{

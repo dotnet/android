@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -18,10 +18,10 @@ namespace Xamarin.Android.Tasks
 	{
 		public  override    string      TaskPrefix      => "MRX";
 
-		public  ITaskItem[]     InputRemapXmlFiles  { get; set; }
+		public  ITaskItem[]?     InputRemapXmlFiles  { get; set; }
 
 		[Required]
-		public  ITaskItem       OutputFile          { get; set; }
+		public  ITaskItem       OutputFile          { get; set; } = null!;
 
 		public override bool RunTask ()
 		{

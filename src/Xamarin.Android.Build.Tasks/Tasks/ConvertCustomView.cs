@@ -1,6 +1,6 @@
 // Copyright (C) 2018 Microsoft, Inc. All rights reserved.
 
-#nullable disable
+#nullable enable
 
 using System;
 using System.Diagnostics;
@@ -18,15 +18,15 @@ namespace Xamarin.Android.Tasks {
 		public override string TaskPrefix => "CCV";
 
 		[Required]
-		public string CustomViewMapFile { get; set; }
+		public string CustomViewMapFile { get; set; } = "";
 
 		[Required]
-		public string AcwMapFile { get; set; }
+		public string AcwMapFile { get; set; } = "";
 
-		public ITaskItem [] ResourceDirectories { get; set; }
+		public ITaskItem []? ResourceDirectories { get; set; }
 
 		[Output]
-		public ITaskItem [] Processed { get; set; }
+		public ITaskItem []? Processed { get; set; }
 
 		Dictionary<string, string> _resource_name_case_map;
 		Dictionary<string, string> resource_name_case_map => _resource_name_case_map ??= MonoAndroidHelper.LoadResourceCaseMap (BuildEngine4, ProjectSpecificTaskObjectKey);
@@ -87,8 +87,8 @@ namespace Xamarin.Android.Tasks {
 				ITaskItem resdir = ResourceDirectories?.FirstOrDefault (x => file.StartsWith (x.ItemSpec, StringComparison.OrdinalIgnoreCase)) ?? null;
 				var hash = resdir?.GetMetadata ("Hash") ?? null;
 				var stamp = resdir?.GetMetadata ("StampFile") ?? null;
-				var filename = !string.IsNullOrEmpty (hash) ? hash : "compiled";
-				var stampFile = !string.IsNullOrEmpty (stamp) ? stamp : $"{filename}.stamp";
+				var filename = !hash.IsNullOrEmpty () ? hash : "compiled";
+				var stampFile = !stamp.IsNullOrEmpty () ? stamp : $"{filename}.stamp";
 				Log.LogDebugMessage ($"{filename} {stampFile}");
 				output.Add (file, new TaskItem (Path.GetFullPath (file), new Dictionary<string, string> {
 					{ "StampFile" , stampFile },
