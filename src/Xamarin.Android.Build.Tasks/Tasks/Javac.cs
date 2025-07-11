@@ -1,6 +1,6 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
-#nullable disable
+#nullable enable
 
 using System;
 using System.Linq;
@@ -20,16 +20,16 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "JVC";
 
 		[Required]
-		public string ClassesOutputDirectory { get; set; }
+		public string ClassesOutputDirectory { get; set; } = "";
 
-		public string ClassesZip { get; set; }
+		public string? ClassesZip { get; set; }
 
-		public string JavaPlatformJarPath { get; set; }
+		public string? JavaPlatformJarPath { get; set; }
 
-		public string JavacTargetVersion { get; set; }
-		public string JavacSourceVersion { get; set; }
+		public string? JavacTargetVersion { get; set; }
+		public string? JavacSourceVersion { get; set; }
 
-		public string JdkVersion { get; set; }
+		public string? JdkVersion { get; set; }
 
 		public override string DefaultErrorCode => "JAVAC0000";
 
@@ -41,7 +41,7 @@ namespace Xamarin.Android.Tasks
 			if (!result)
 				return result;
 			// compress all the class files
-			if (!string.IsNullOrEmpty (ClassesZip)) {
+			if (!ClassesZip.IsNullOrEmpty ()) {
 				using (var zip = new ZipArchiveEx (ClassesZip, FileMode.OpenOrCreate)) {
 					zip.AutoFlush = false;
 					zip.AddDirectory (ClassesOutputDirectory, "", CompressionMethod.Store);
@@ -83,7 +83,7 @@ namespace Xamarin.Android.Tasks
 
 		bool JavacSupportsRelease ()
 		{
-			if (string.IsNullOrEmpty (JdkVersion)) {
+			if (JdkVersion.IsNullOrEmpty ()) {
 				return false;
 			}
 			var jdkVersion  = Version.Parse (JdkVersion);
@@ -95,7 +95,8 @@ namespace Xamarin.Android.Tasks
 			var jars = new List<string> ();
 			if (Jars != null)
 				jars.AddRange (Jars.Select (i => i.ItemSpec.Replace (@"\", @"\\")));
-			jars.Add (JavaPlatformJarPath.Replace (@"\", @"\\"));
+			if (JavaPlatformJarPath != null)
+				jars.Add (JavaPlatformJarPath.Replace (@"\", @"\\"));
 
 			sw.WriteLine ($"-d \"{ClassesOutputDirectory.Replace (@"\", @"\\")}\"");
 			sw.WriteLine ("-classpath \"{0}\"", string.Join (Path.PathSeparator.ToString (), jars));
