@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.IO;
@@ -14,21 +14,21 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "AAS";
 
 		[Required]
-		public string ApkSignerJar { get; set; }
+		public string ApkSignerJar { get; set; } = "";
 
 		[Required]
-		public string ApkToSign { get; set; }
+		public string ApkToSign { get; set; } = "";
 
 		[Required]
-		public ITaskItem ManifestFile { get; set; }
+		public ITaskItem ManifestFile { get; set; } = null!;
 
-		public string KeyStore { get; set; }
+		public string? KeyStore { get; set; }
 
-		public string KeyAlias { get; set; }
+		public string? KeyAlias { get; set; }
 
-		public string PlatformKey { get; set; }
+		public string? PlatformKey { get; set; }
 
-		public string PlatformCert { get; set; }
+		public string? PlatformCert { get; set; }
 
 		/// <summary>
 		/// The Password for the Key.
@@ -39,7 +39,7 @@ namespace Xamarin.Android.Tasks
 		///   env:<PasswordEnvironentVariable>
 		///   file:<PasswordFile>
 		/// </summary>
-		public string KeyPass { get; set; } = string.Empty;
+		public string KeyPass { get; set; } = "";
 
 		/// <summary>
 		/// The Password for the Keystore.
@@ -50,15 +50,15 @@ namespace Xamarin.Android.Tasks
 		///   env:<PasswordEnvironentVariable>
 		///   file:<PasswordFile>
 		/// </summary>
-		public string StorePass { get; set; } = string.Empty;
+		public string StorePass { get; set; } = "";
 
-		public string AdditionalArguments { get; set; }
+		public string? AdditionalArguments { get; set; }
 
 		void AddStorePass (CommandLineBuilder cmd, string cmdLineSwitch, string value)
 		{
-			string pass = value.Replace ("env:", string.Empty)
-				.Replace ("file:", string.Empty)
-				.Replace ("pass:", string.Empty);
+			string pass = value.Replace ("env:", "")
+				.Replace ("file:", "")
+				.Replace ("pass:", "");
 			if (value.StartsWith ("env:", StringComparison.Ordinal)) {
 				cmd.AppendSwitchIfNotNull ($"{cmdLineSwitch} env:", pass);
 			}
@@ -87,7 +87,7 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("-jar ", ApkSignerJar);
 			cmd.AppendSwitch ("sign");
 
-			if (!string.IsNullOrEmpty (PlatformKey) && !string.IsNullOrEmpty (PlatformCert)) {
+			if (!PlatformKey.IsNullOrEmpty () && !PlatformCert.IsNullOrEmpty ()) {
 				cmd.AppendSwitchIfNotNull ("--key ", PlatformKey);
 				cmd.AppendSwitchIfNotNull ("--cert ", PlatformCert);
 			} else {
@@ -101,7 +101,7 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("--max-sdk-version ", maxSdk.ToString ());
 
 
-			if (!string.IsNullOrEmpty (AdditionalArguments))
+			if (!AdditionalArguments.IsNullOrEmpty ())
 				cmd.AppendSwitch (AdditionalArguments);
 
 			cmd.AppendSwitchIfNotNull (" ", ApkToSign);
@@ -129,7 +129,7 @@ namespace Xamarin.Android.Tasks
 
 		protected override bool ValidateParameters ()
 		{
-			if (!string.IsNullOrEmpty (PlatformKey) && !string.IsNullOrEmpty (PlatformCert)) {
+			if (!PlatformKey.IsNullOrEmpty () && !PlatformCert.IsNullOrEmpty ()) {
 				if (!File.Exists (PlatformKey)) {
 					Log.LogCodedError ("XA4310", Properties.Resources.XA4310, "$(AndroidSigningPlatformKey)", PlatformKey);
 					return false;
@@ -139,15 +139,15 @@ namespace Xamarin.Android.Tasks
 					return false;
 				}
 			} else {
-				if (!string.IsNullOrEmpty (KeyStore) && !File.Exists (KeyStore)) {
+				if (!KeyStore.IsNullOrEmpty () && !File.Exists (KeyStore)) {
 					Log.LogCodedError ("XA4310", Properties.Resources.XA4310, "$(AndroidSigningKeyStore)", KeyStore);
 					return false;
 				}
-				if (string.IsNullOrEmpty (KeyPass)) {
+				if (KeyPass.IsNullOrEmpty ()) {
 					Log.LogCodedError ("XA4314", Properties.Resources.XA4314, "$(AndroidSigningKeyPass)");
 					return false;
 				}
-				if (string.IsNullOrEmpty (StorePass)) {
+				if (StorePass.IsNullOrEmpty ()) {
 					Log.LogCodedError ("XA4314", Properties.Resources.XA4314, "$(AndroidSigningStorePass)");
 					return false;
 				}
