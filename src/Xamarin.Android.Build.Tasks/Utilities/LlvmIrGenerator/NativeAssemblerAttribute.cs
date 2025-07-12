@@ -2,13 +2,29 @@ using System;
 
 namespace Xamarin.Android.Tasks
 {
+	/// <summary>
+	/// Specifies the target architectures for which a native assembler member is valid.
+	/// </summary>
 	enum NativeAssemblerValidTarget
 	{
+		/// <summary>
+		/// Valid for any target architecture.
+		/// </summary>
 		Any,
+		/// <summary>
+		/// Valid only for 32-bit target architectures.
+		/// </summary>
 		ThirtyTwoBit,
+		/// <summary>
+		/// Valid only for 64-bit target architectures.
+		/// </summary>
 		SixtyFourBit,
 	}
 
+	/// <summary>
+	/// Attribute that controls how fields and properties are handled during native assembler generation.
+	/// Provides fine-grained control over member inclusion, formatting, and target-specific behavior.
+	/// </summary>
 	[AttributeUsage (AttributeTargets.Field | AttributeTargets.Property, Inherited = true)]
 	class NativeAssemblerAttribute : Attribute
 	{
@@ -66,11 +82,23 @@ namespace Xamarin.Android.Tasks
 		public string? MemberName { get; set; }
 	}
 
+	/// <summary>
+	/// Attribute that specifies a context data provider for a native assembler structure.
+	/// The provider allows for dynamic data generation based on structure instances.
+	/// </summary>
 	[AttributeUsage (AttributeTargets.Class, Inherited = true)]
 	class NativeAssemblerStructContextDataProviderAttribute : Attribute
 	{
+		/// <summary>
+		/// Gets the type of the context data provider.
+		/// </summary>
 		public Type Type { get; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="NativeAssemblerStructContextDataProviderAttribute"/> class.
+		/// </summary>
+		/// <param name="type">The type of the context data provider. Must be derived from <see cref="NativeAssemblerStructContextDataProvider"/>.</param>
+		/// <exception cref="ArgumentException">Thrown when the type is not derived from <see cref="NativeAssemblerStructContextDataProvider"/>.</exception>
 		public NativeAssemblerStructContextDataProviderAttribute (Type type)
 		{
 			if (!type.IsSubclassOf (typeof(NativeAssemblerStructContextDataProvider))) {

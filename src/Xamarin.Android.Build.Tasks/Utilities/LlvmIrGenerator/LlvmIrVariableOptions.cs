@@ -1,5 +1,9 @@
 namespace Xamarin.Android.Tasks.LLVMIR
 {
+	/// <summary>
+	/// Represents options for LLVM IR variables, controlling linkage, visibility, writability, and other attributes.
+	/// Provides predefined option sets for common variable types.
+	/// </summary>
 	class LlvmIrVariableOptions
 	{
 		/// <summary>
@@ -84,12 +88,30 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			AddressSignificance = LlvmIrAddressSignificance.LocalUnnamed,
 		};
 
+		/// <summary>
+		/// Gets or sets the linkage type for the variable.
+		/// </summary>
 		public LlvmIrLinkage Linkage { get; set; } = LlvmIrLinkage.Default;
+		/// <summary>
+		/// Gets or sets the runtime preemption setting for the variable.
+		/// </summary>
 		public LlvmIrRuntimePreemption RuntimePreemption { get; set; } = LlvmIrRuntimePreemption.DSOLocal;
+		/// <summary>
+		/// Gets or sets the visibility of the variable.
+		/// </summary>
 		public LlvmIrVisibility Visibility { get; set; } = LlvmIrVisibility.Default;
+		/// <summary>
+		/// Gets or sets the address significance of the variable.
+		/// </summary>
 		public LlvmIrAddressSignificance AddressSignificance { get; set; } = LlvmIrAddressSignificance.Default;
+		/// <summary>
+		/// Gets or sets whether the variable is writable or constant.
+		/// </summary>
 		public LlvmIrWritability Writability { get; set; } = LlvmIrWritability.Writable;
 
+		/// <summary>
+		/// Gets a value indicating whether this variable has global linkage.
+		/// </summary>
 		public bool IsGlobal => Linkage == LlvmIrLinkage.Default || (Linkage != LlvmIrLinkage.Private && Linkage != LlvmIrLinkage.Internal);
 	}
 }

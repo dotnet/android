@@ -6,57 +6,122 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks.LLVMIR;
 
+/// <summary>
+/// Flags that control how variables are written in the LLVM IR output.
+/// </summary>
 [Flags]
 enum LlvmIrVariableWriteOptions
 {
+	/// <summary>
+	/// No special write options.
+	/// </summary>
 	None                    = 0x0000,
+	/// <summary>
+	/// Write index comments for array elements.
+	/// </summary>
 	ArrayWriteIndexComments = 0x0001,
+	/// <summary>
+	/// Format arrays in rows rather than one element per line.
+	/// </summary>
 	ArrayFormatInRows       = 0x0002,
 }
 
+/// <summary>
+/// Specifies the number format to use when writing numeric variables.
+/// </summary>
 enum LlvmIrVariableNumberFormat
 {
+	/// <summary>
+	/// Use the default format for the variable type.
+	/// </summary>
 	Default,
+	/// <summary>
+	/// Force hexadecimal format.
+	/// </summary>
 	Hexadecimal,
+	/// <summary>
+	/// Force decimal format.
+	/// </summary>
 	Decimal,
 }
 
+/// <summary>
+/// Abstract base class for LLVM IR variable references.
+/// </summary>
 abstract class LlvmIrVariableReference
 {
-        public abstract bool Global                    { get; }
-        public abstract string NamePrefix              { get; }
-        public string? Name                            { get; protected set; }
+	/// <summary>
+	/// Gets a value indicating whether this is a global variable reference.
+	/// </summary>
+	public abstract bool Global                    { get; }
+	/// <summary>
+	/// Gets the prefix character used when referencing this variable in LLVM IR code.
+	/// </summary>
+	public abstract string NamePrefix              { get; }
+	/// <summary>
+	/// Gets or sets the name of the variable.
+	/// </summary>
+	public string? Name                            { get; protected set; }
 
-        /// <summary>
-        /// Returns a string which constitutes a reference to a local (using the <c>%</c> prefix character) or a global
-        /// (using the <c>@</c> prefix character) variable, ready for use in the generated code wherever variables are
-        /// referenced.
-        /// </summary>
-        public virtual string Reference {
-                get {
-                        if (String.IsNullOrEmpty (Name)) {
-                                throw new InvalidOperationException ("Variable doesn't have a name, it cannot be referenced");
-                        }
-                        return $"{NamePrefix}{Name}";
-                }
-        }
-        protected LlvmIrVariableReference (string? name)
-        {
-                Name = name;
-        }
+	/// <summary>
+	/// Returns a string which constitutes a reference to a local (using the <c>%</c> prefix character) or a global
+	/// (using the <c>@</c> prefix character) variable, ready for use in the generated code wherever variables are
+	/// referenced.
+	/// </summary>
+	public virtual string Reference {
+		get {
+			if (String.IsNullOrEmpty (Name)) {
+				throw new InvalidOperationException ("Variable doesn't have a name, it cannot be referenced");
+			}
+			return $"{NamePrefix}{Name}";
+		}
+	}
+	/// <summary>
+	/// Initializes a new instance of the <see cref="LlvmIrVariableReference"/> class.
+	/// </summary>
+	/// <param name="name">The name of the variable.</param>
+	protected LlvmIrVariableReference (string? name)
+	{
+		Name = name;
+	}
 }
+/// <summary>
+/// Represents a reference to a global LLVM IR variable.
+/// </summary>
 class LlvmIrGlobalVariableReference : LlvmIrVariableReference
 {
-        public override bool Global => true;
-        public override string NamePrefix => "@";
-        public LlvmIrGlobalVariableReference (string name)
-                : base (name)
+	/// <summary>
+	/// Gets a value indicating that this is a global variable reference.
+	/// </summary>
+	public override bool Global => true;
+	/// <summary>
+	/// Gets the global variable prefix character '@'.
+	/// </summary>
+	public override string NamePrefix => "@";
+	/// <summary>
+	/// Initializes a new instance of the <see cref="LlvmIrGlobalVariableReference"/> class.
+	/// </summary>
+	/// <param name="name">The name of the global variable.</param>
+	public LlvmIrGlobalVariableReference (string name)
+		: base (name)
 	{}
 }
 
+/// <summary>
+/// Abstract base class for LLVM IR variables that can hold values and be referenced in LLVM IR code.
+/// </summary>
 abstract class LlvmIrVariable : LlvmIrVariableReference, IEquatable<LlvmIrVariable>
 {
+	/// <summary>
+	/// Gets or sets the .NET type of this variable.
+	/// </summary>
 	public Type Type                               { get; protected set; }
+	/// <summary>
+	/// Gets or sets the write options that control how this variable is output in LLVM IR.
+	/// </summary>
+	/// <remarks>
+	/// Defaults to <see cref="LlvmIrVariableWriteOptions.ArrayWriteIndexComments"/>.
+	/// </remarks>
 	public LlvmIrVariableWriteOptions WriteOptions { get; set; } = LlvmIrVariableWriteOptions.ArrayWriteIndexComments;
 
 	/// <summary>
@@ -65,15 +130,28 @@ abstract class LlvmIrVariable : LlvmIrVariableReference, IEquatable<LlvmIrVariab
 	/// the value of this property dictates how many items are to be placed in a single row.
 	/// </summary>
 	public uint ArrayStride                        { get; set; } = 8;
+	/// <summary>
+	/// Gets or sets the value stored in this variable.
+	/// </summary>
 	public object? Value                           { get; set; }
+	/// <summary>
+	/// Gets or sets a comment to be written alongside this variable in the LLVM IR output.
+	/// </summary>
 	public string? Comment                         { get; set; }
 
+	/// <summary>
+	/// Gets or sets the number format to use when writing numeric values.
+	/// </summary>
+	/// <remarks>
+	/// Defaults to <see cref="LlvmIrVariableNumberFormat.Decimal"/>.
+	/// </remarks>
 	public LlvmIrVariableNumberFormat NumberFormat { get; set; } = LlvmIrVariableNumberFormat.Decimal;
 
 	/// <summary>
 	/// Both global and local variables will want their names to matter in equality checks, but function
 	/// parameters must not take it into account, thus this property.  If set to <c>false</c>, <see cref="Equals(LlvmIrVariable)"/>
 	/// will ignore name when checking for equality.
+	/// </summary>
 	protected bool NameMatters { get; set; } = true;
 
 	/// <summary>
@@ -116,6 +194,8 @@ abstract class LlvmIrVariable : LlvmIrVariableReference, IEquatable<LlvmIrVariab
 	/// https://llvm.org/docs/LangRef.html#t-firstclass) only if it's an integral or floating point type.  In all other cases it
 	/// is treated as an opaque pointer type.
 	/// </summary>
+	/// <param name="type">The .NET type of the variable.</param>
+	/// <param name="name">The optional name of the variable.</param>
 	protected LlvmIrVariable (Type type, string? name = null)
 		: base (name)
 	{
@@ -123,11 +203,20 @@ abstract class LlvmIrVariable : LlvmIrVariableReference, IEquatable<LlvmIrVariab
 		Name = name;
 	}
 
+	/// <summary>
+	/// Returns a hash code for this variable based on its type and name.
+	/// </summary>
+	/// <returns>A hash code for the current object.</returns>
 	public override int GetHashCode ()
 	{
 		return Type.GetHashCode () ^ (Name?.GetHashCode () ?? 0);
 	}
 
+	/// <summary>
+	/// Determines whether the specified object is equal to the current variable.
+	/// </summary>
+	/// <param name="obj">The object to compare with the current variable.</param>
+	/// <returns>true if the specified object is equal to the current variable; otherwise, false.</returns>
 	public override bool Equals (object obj)
 	{
 		var irVar = obj as LlvmIrVariable;
@@ -138,6 +227,11 @@ abstract class LlvmIrVariable : LlvmIrVariableReference, IEquatable<LlvmIrVariab
 		return Equals (irVar);
 	}
 
+	/// <summary>
+	/// Determines whether the specified LLVM IR variable is equal to the current variable.
+	/// </summary>
+	/// <param name="other">The LLVM IR variable to compare with the current variable.</param>
+	/// <returns>true if the specified variable is equal to the current variable; otherwise, false.</returns>
 	public virtual bool Equals (LlvmIrVariable other)
 	{
 		if (other == null) {
@@ -152,9 +246,18 @@ abstract class LlvmIrVariable : LlvmIrVariableReference, IEquatable<LlvmIrVariab
 	}
 }
 
+/// <summary>
+/// Represents a local LLVM IR variable.
+/// </summary>
 class LlvmIrLocalVariable : LlvmIrVariable
 {
+	/// <summary>
+	/// Gets a value indicating that this is not a global variable.
+	/// </summary>
 	public override bool Global => false;
+	/// <summary>
+	/// Gets the local variable prefix character '%'.
+	/// </summary>
 	public override string NamePrefix => "%";
 
 	/// <summary>
@@ -163,24 +266,48 @@ class LlvmIrLocalVariable : LlvmIrVariable
 	/// is treated as an opaque pointer type.  <paramref name="name"/> is optional because local variables can be unnamed, in
 	/// which case they will be assigned a sequential number when function code is generated.
 	/// </summary>
+	/// <param name="type">The .NET type of the variable.</param>
+	/// <param name="name">The optional name of the variable.</param>
 	public LlvmIrLocalVariable (Type type, string? name = null)
 		: base (type, name)
 	{}
 
+	/// <summary>
+	/// Assigns a numeric name to this local variable.
+	/// </summary>
+	/// <param name="n">The number to assign as the variable name.</param>
 	public void AssignNumber (ulong n)
 	{
 		Name = n.ToString (CultureInfo.InvariantCulture);
 	}
 }
 
+/// <summary>
+/// Represents the state of a streamed array data provider.
+/// </summary>
 enum LlvmIrStreamedArrayDataProviderState
 {
+	/// <summary>
+	/// More sections are available after this one.
+	/// </summary>
 	NextSection,
+	/// <summary>
+	/// This is the last section with data.
+	/// </summary>
 	LastSection,
+	/// <summary>
+	/// More sections are available but this one has no data.
+	/// </summary>
 	NextSectionNoData,
+	/// <summary>
+	/// This is the last section and it has no data.
+	/// </summary>
 	LastSectionNoData,
 }
 
+/// <summary>
+/// Abstract base class for providing streamed array data to LLVM IR variables.
+/// </summary>
 abstract class LlvmIrStreamedArrayDataProvider
 {
 	/// <summary>
@@ -189,6 +316,10 @@ abstract class LlvmIrStreamedArrayDataProvider
 	/// </summary>
 	public Type ArrayElementType { get; }
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="LlvmIrStreamedArrayDataProvider"/> class.
+	/// </summary>
+	/// <param name="arrayElementType">The type of elements in the arrays returned by this provider.</param>
 	protected LlvmIrStreamedArrayDataProvider (Type arrayElementType)
 	{
 		ArrayElementType = arrayElementType;
@@ -199,6 +330,8 @@ abstract class LlvmIrStreamedArrayDataProvider
 	/// comment, if any, to be output before the actual data.  Returning `String.Empty` prevents the comment
 	/// from being added.
 	/// </summary>
+	/// <param name="target">The target module for which to get the comment.</param>
+	/// <returns>The section start comment or an empty string if no comment should be added.</returns>
 	public virtual string GetSectionStartComment (LlvmIrModuleTarget target) => String.Empty;
 
 	/// <summary>
@@ -208,15 +341,22 @@ abstract class LlvmIrStreamedArrayDataProvider
 	/// <paramref name="status"/> must have a value of <see cref="LlvmIrStreamedArrayDataProviderState.LastSection"/>.
 	/// Each section may be preceded by a comment, <see cref="GetSectionStartComment"/>.
 	/// </summary>
+	/// <param name="target">The target module for which to get data.</param>
+	/// <returns>A tuple containing the provider state and the data collection.</returns>
 	public abstract (LlvmIrStreamedArrayDataProviderState status, ICollection data) GetData (LlvmIrModuleTarget target);
 
 	/// <summary>
 	/// Provide the total data size for the specified target (ABI).  This needs to be used instead of <see cref="LlvmIrVariable.ArrayItemCount"/>
 	/// because a variable instance is created once and shared by all targets, while per-target data sets might have different sizes.
 	/// </summary>
+	/// <param name="target">The target module for which to get the total data size.</param>
+	/// <returns>The total size of data that will be provided for the specified target.</returns>
 	public abstract ulong GetTotalDataSize (LlvmIrModuleTarget target);
 }
 
+/// <summary>
+/// Represents a global LLVM IR variable.
+/// </summary>
 class LlvmIrGlobalVariable : LlvmIrVariable
 {
 	/// <summary>
@@ -224,7 +364,13 @@ class LlvmIrGlobalVariable : LlvmIrVariable
 	/// </summary>
 	public static readonly LlvmIrVariableOptions DefaultOptions = LlvmIrVariableOptions.GlobalConstant;
 
+	/// <summary>
+	/// Gets a value indicating that this is a global variable.
+	/// </summary>
 	public override bool Global => true;
+	/// <summary>
+	/// Gets the global variable prefix character '@'.
+	/// </summary>
 	public override string NamePrefix => "@";
 
 	/// <summary>
@@ -272,6 +418,10 @@ class LlvmIrGlobalVariable : LlvmIrVariable
 	/// https://llvm.org/docs/LangRef.html#t-firstclass) only if it's an integral or floating point type.  In all other cases it
 	/// is treated as an opaque pointer type.  <paramref name="name"/> is required because global variables must be named.
 	/// </summary>
+	/// <param name="type">The .NET type of the variable.</param>
+	/// <param name="name">The name of the global variable.</param>
+	/// <param name="options">Optional variable options.</param>
+	/// <exception cref="ArgumentException">Thrown when <paramref name="name"/> is null or empty.</exception>
 	public LlvmIrGlobalVariable (Type type, string name, LlvmIrVariableOptions? options = null)
 		: base (type, name)
 	{
@@ -284,9 +434,13 @@ class LlvmIrGlobalVariable : LlvmIrVariable
 
 	/// <summary>
 	/// Constructs a local variable and sets the <see cref="Value"/> property to <paramref name="value"/> and <see cref="Type"/>
-	/// property to its type.  For that reason, <paramref name="Value"/> **must not** be <c>null</c>.  <paramref name="name"/> is
+	/// property to its type.  For that reason, <paramref name="value"/> **must not** be <c>null</c>.  <paramref name="name"/> is
 	/// required because global variables must be named.
 	/// </summary>
+	/// <param name="value">The value to assign to the variable. Must not be null.</param>
+	/// <param name="name">The name of the global variable.</param>
+	/// <param name="options">Optional variable options.</param>
+	/// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
 	public LlvmIrGlobalVariable (object value, string name, LlvmIrVariableOptions? options = null)
 		: this ((value ?? throw new ArgumentNullException (nameof (value))).GetType (), name, options)
 	{
@@ -298,24 +452,48 @@ class LlvmIrGlobalVariable : LlvmIrVariable
 	/// generating output for a specific target (e.g. 32-bit vs 64-bit integer variables).  If the variable requires such
 	/// type changes, this should be done at generation time from within the <see cref="BeforeWriteCallback"/> method.
 	/// </summary>
+	/// <param name="newType">The new type to assign to the variable.</param>
+	/// <param name="newValue">The new value to assign to the variable.</param>
 	public void OverrideTypeAndValue (Type newType, object? newValue)
 	{
 		Type = newType;
 		Value = newValue;
 	}
 
+	/// <summary>
+	/// Overrides the name of this global variable.
+	/// </summary>
+	/// <param name="newName">The new name for the variable.</param>
 	public void OverrideName (string newName)
 	{
 		Name = newName;
 	}
 }
 
+/// <summary>
+/// Represents a string variable in LLVM IR with specific encoding and formatting options.
+/// </summary>
 class LlvmIrStringVariable : LlvmIrGlobalVariable
 {
+	/// <summary>
+	/// Gets the string encoding used for this variable.
+	/// </summary>
 	public LlvmIrStringEncoding Encoding { get; }
+	/// <summary>
+	/// Gets the LLVM IR type string for this string variable.
+	/// </summary>
 	public string IrType { get; }
+	/// <summary>
+	/// Gets a value indicating whether this string should be output as a constant string literal.
+	/// </summary>
 	public bool IsConstantStringLiteral { get; }
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="LlvmIrStringVariable"/> class.
+	/// </summary>
+	/// <param name="name">The name of the string variable.</param>
+	/// <param name="value">The string value holder containing the string data and encoding.</param>
+	/// <param name="options">Optional variable options, defaults to global constant string pointer.</param>
 	public LlvmIrStringVariable (string name, StringHolder value, LlvmIrVariableOptions? options = null)
 		: base (typeof(string), name, options ?? LlvmIrVariableOptions.GlobalConstantStringPointer)
 	{
@@ -337,6 +515,14 @@ class LlvmIrStringVariable : LlvmIrGlobalVariable
 		}
 	}
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="LlvmIrStringVariable"/> class.
+	/// </summary>
+	/// <param name="name">The name of the string variable.</param>
+	/// <param name="value">The string value.</param>
+	/// <param name="encoding">The encoding to use for the string.</param>
+	/// <param name="comparison">The string comparison method to use.</param>
+	/// <param name="options">Optional variable options.</param>
 	public LlvmIrStringVariable (string name, string value, LlvmIrStringEncoding encoding, StringComparison comparison = StringComparison.Ordinal, LlvmIrVariableOptions? options = null)
 		: this (name, new StringHolder (value, encoding, comparison), options)
 	{}

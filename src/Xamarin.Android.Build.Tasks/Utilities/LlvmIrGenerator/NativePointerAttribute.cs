@@ -2,6 +2,10 @@ using System;
 
 namespace Xamarin.Android.Tasks.LLVMIR
 {
+	/// <summary>
+	/// Attribute that marks a field or property as representing a native pointer in LLVM IR generation.
+	/// This provides control over how the pointer is handled during code generation.
+	/// </summary>
 	[AttributeUsage (AttributeTargets.Field | AttributeTargets.Property, Inherited = true)]
 	class NativePointerAttribute : Attribute
 	{
