@@ -4,30 +4,30 @@
       <Uri>https://github.com/dotnet/sdk</Uri>
       <Sha>19ce9bb2591e4c6da269401877ec0d0cba1dd2b1</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink" Version="9.0.7-servicing.25309.5">
+    <Dependency Name="Microsoft.NET.ILLink" Version="9.0.8-servicing.25359.14">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>b4fb3656d44add463df161d4cfd362f3fd12a247</Sha>
+      <Sha>89d42fdf6c5bbf09ee1c1e29462cd194b555835a</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="9.0.7">
+    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="9.0.8">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>b4fb3656d44add463df161d4cfd362f3fd12a247</Sha>
+      <Sha>89d42fdf6c5bbf09ee1c1e29462cd194b555835a</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NETCore.App.Ref" Version="9.0.7">
+    <Dependency Name="Microsoft.NETCore.App.Ref" Version="9.0.8">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>b4fb3656d44add463df161d4cfd362f3fd12a247</Sha>
+      <Sha>89d42fdf6c5bbf09ee1c1e29462cd194b555835a</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-9.0.100" Version="9.0.6" CoherentParentDependency="Microsoft.NETCore.App.Ref">
+    <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-9.0.100" Version="9.0.8" CoherentParentDependency="Microsoft.NETCore.App.Ref">
       <Uri>https://github.com/dotnet/emsdk</Uri>
-      <Sha>e3d8e8ea6df192d864698cdd76984d74135d0d13</Sha>
+      <Sha>0bcc3e67026ea44a16fb018a50e4e134c06ab3d6</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-alpha.25228.2" CoherentParentDependency="Microsoft.NET.ILLink.Tasks">
+    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-alpha.25275.2" CoherentParentDependency="Microsoft.NET.ILLink.Tasks">
       <Uri>https://github.com/dotnet/cecil</Uri>
-      <Sha>6aaf3af113593a4c993854bff4141bbc73061ea5</Sha>
+      <Sha>bbb895e8e9f2d566eae04f09977b8c5f895057d2</Sha>
     </Dependency>
     <!-- Previous .NET version -->
-    <Dependency Name="Microsoft.NET.Workload.Mono.ToolChain.Current.Manifest-8.0.100" Version="8.0.18">
+    <Dependency Name="Microsoft.NET.Workload.Mono.ToolChain.Current.Manifest-8.0.100" Version="8.0.19">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>c0390586e2707334a571b9293803b5b6a4916f6e</Sha>
+      <Sha>a6f44eeb3168c2f7e3ea8dc877c62b99406513c1</Sha>
     </Dependency>
     <!-- Previous .NET Android version -->
     <Dependency Name="Microsoft.Android.Sdk.Windows" Version="34.0.154">
