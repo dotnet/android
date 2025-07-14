@@ -41,7 +41,7 @@ class Detector
 		var flags = BindingFlags.InvokeMethod | BindingFlags.Public | BindingFlags.Static;
 
 		foreach (Type aspect in KnownTopLevelAspects) {
-			Log.Debug ($"Probing aspect: {aspect}");
+			LogBanner ($"Probing aspect: {aspect}");
 
 			object? result = aspect.InvokeMember (
 				"ProbeAspect", flags, null, null, new object?[] { stream, description }
@@ -52,7 +52,7 @@ class Detector
 				continue;
 			}
 
-			Log.Debug ($"Loading aspect: {aspect}");
+			LogBanner ($"Loading aspect: {aspect}");
 			result = aspect.InvokeMember (
 				"LoadAspect", flags, null, null, new object?[] { stream, state, description }
 			);
@@ -62,6 +62,14 @@ class Detector
 		}
 
 		return null;
+
+		void LogBanner (string what)
+		{
+			Log.Debug ();
+			Log.Debug ("##########");
+			Log.Debug (what);
+			Log.Debug ();
+		}
 	}
 
 }
