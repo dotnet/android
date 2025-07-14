@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.IO;
@@ -29,13 +29,13 @@ namespace Xamarin.Android.Tasks
 
 		public override string TaskPrefix => "GJRNC";
 
-		public ITaskItem RemappingXmlFilePath { get; set; }
+		public ITaskItem? RemappingXmlFilePath { get; set; }
 
 		[Required]
-		public string OutputDirectory { get; set; }
+		public string OutputDirectory { get; set; } = "";
 
 		[Required]
-		public string [] SupportedAbis { get; set; }
+		public string[] SupportedAbis { get; set; } = [];
 
 		public bool GenerateEmptyCode { get; set; }
 
@@ -68,7 +68,7 @@ namespace Xamarin.Android.Tasks
 				XmlResolver = null,
 			};
 
-			using (var reader = XmlReader.Create (File.OpenRead (RemappingXmlFilePath.ItemSpec), readerSettings)) {
+			using (var reader = XmlReader.Create (File.OpenRead (RemappingXmlFilePath!.ItemSpec), readerSettings)) {
 				if (reader.MoveToContent () != XmlNodeType.Element || reader.LocalName != "replacements") {
 					Log.LogError ($"Input file `{RemappingXmlFilePath.ItemSpec}` does not start with `<replacements/>`");
 				} else {
@@ -131,7 +131,7 @@ namespace Xamarin.Android.Tasks
 					}
 
 					if (!Boolean.TryParse (targetIsStatic, out bool isStatic)) {
-						Log.LogError ($"Attribute 'target-method-instance-to-static' in element '{reader.LocalName}' value '{targetIsStatic}' cannot be parsed as boolean; {RemappingXmlFilePath.ItemSpec} line {GetCurrentLineNumber ()}");
+						Log.LogError ($"Attribute 'target-method-instance-to-static' in element '{reader.LocalName}' value '{targetIsStatic}' cannot be parsed as boolean; {RemappingXmlFilePath!.ItemSpec} line {GetCurrentLineNumber ()}");
 						continue;
 					}
 
@@ -152,7 +152,7 @@ namespace Xamarin.Android.Tasks
 					return true;
 				}
 
-				Log.LogError ($"Attribute '{attributeName}' missing from element '{reader.LocalName}'; {RemappingXmlFilePath.ItemSpec} line {GetCurrentLineNumber ()}");
+				Log.LogError ($"Attribute '{attributeName}' missing from element '{reader.LocalName}'; {RemappingXmlFilePath!.ItemSpec} line {GetCurrentLineNumber ()}");
 				return false;
 			}
 
