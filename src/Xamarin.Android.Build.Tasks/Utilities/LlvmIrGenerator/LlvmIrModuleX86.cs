@@ -4,14 +4,37 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks.LLVMIR;
 
+/// <summary>
+/// LLVM IR module target implementation for the x86 (Intel/AMD 32-bit) architecture.
+/// Provides x86-specific data layout, target triple, and compilation settings.
+/// </summary>
 class LlvmIrModuleX86 : LlvmIrModuleTarget
 {
+	/// <summary>
+	/// Gets the data layout specification for the x86 architecture.
+	/// </summary>
 	public override LlvmIrDataLayout DataLayout { get; }
+	/// <summary>
+	/// Gets the LLVM target triple for x86 Android.
+	/// </summary>
 	public override string Triple => "i686-unknown-linux-android21";
+	/// <summary>
+	/// Gets the Android target architecture (x86).
+	/// </summary>
 	public override AndroidTargetArch TargetArch => AndroidTargetArch.X86;
+	/// <summary>
+	/// Gets the size of native pointers in bytes (4 for 32-bit architecture).
+	/// </summary>
 	public override uint NativePointerSize => 4;
+	/// <summary>
+	/// Gets a value indicating whether this is a 64-bit architecture.
+	/// </summary>
 	public override bool Is64Bit => false;
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="LlvmIrModuleX86"/> class.
+	/// Sets up the x86-specific data layout based on Android NDK specifications.
+	/// </summary>
 	public LlvmIrModuleX86 ()
 	{
 		//
@@ -45,6 +68,10 @@ class LlvmIrModuleX86 : LlvmIrModuleTarget
 		};
 	}
 
+	/// <summary>
+	/// Adds x86-specific attributes to the function attribute set.
+	/// </summary>
+	/// <param name="attrSet">The function attribute set to add x86-specific attributes to.</param>
 	public override void AddTargetSpecificAttributes (LlvmIrFunctionAttributeSet attrSet)
 	{
 		attrSet.Add (new TargetCpuFunctionAttribute ("i686"));
@@ -53,12 +80,20 @@ class LlvmIrModuleX86 : LlvmIrModuleTarget
 		attrSet.Add (new StackrealignFunctionAttribute ());
 	}
 
+	/// <summary>
+	/// Sets x86-specific parameter flags for function parameters.
+	/// </summary>
+	/// <param name="parameter">The function parameter to set flags on.</param>
 	public override void SetParameterFlags (LlvmIrFunctionParameter parameter)
 	{
 		base.SetParameterFlags (parameter);
 		SetIntegerParameterUpcastFlags (parameter);
 	}
 
+	/// <summary>
+	/// Adds x86-specific metadata to the metadata manager.
+	/// </summary>
+	/// <param name="manager">The metadata manager to add x86-specific metadata to.</param>
 	public override void AddTargetSpecificMetadata (LlvmIrMetadataManager manager)
 	{
 		LlvmIrMetadataItem flags = GetFlagsMetadata (manager);
