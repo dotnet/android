@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using Java.Interop.Tools.TypeNameMappings;
 
 using Android.Runtime;
+using Microsoft.Android.Runtime;
 
 namespace Java.Interop {
 
@@ -267,11 +268,13 @@ namespace Java.Interop {
 				return type;
 			}
 
-			type = JNIEnvInit.RuntimeType switch {
-				DotNetRuntimeType.MonoVM  => monovm_typemap_java_to_managed (class_name),
-				DotNetRuntimeType.CoreCLR => clr_typemap_java_to_managed (class_name),
-				_                         => throw new NotSupportedException ($"Internal error: runtime type {JNIEnvInit.RuntimeType} not supported")
-			};
+			if (RuntimeFeature.IsMonoRuntime) {
+				type = monovm_typemap_java_to_managed (class_name);
+			} else if (RuntimeFeature.IsCoreClrRuntime) {
+				type = clr_typemap_java_to_managed (class_name);
+			} else {
+				throw new NotSupportedException ("Internal error: unknown runtime not supported");
+			}
 
 			if (type != null) {
 				TypeManagerMapDictionaries.JniToManaged.Add (class_name, type);
