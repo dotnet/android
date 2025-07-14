@@ -50,6 +50,8 @@ public abstract class ApplicationPackage : IAspect
 	public List<AssemblyStore>? AssemblyStores { get; protected set; }
 	public List<AndroidTargetArch> Architectures { get; protected set; } = new ();
 
+	AndroidManifest? manifest;
+
 	protected ApplicationPackage (ZipArchive zip, string? description)
 	{
 		Zip = zip;
@@ -165,7 +167,7 @@ public abstract class ApplicationPackage : IAspect
 	AssemblyStore? TryLoadAssemblyStore (string storePath)
 	{
 		// AssemblyStore class owns the stream, don't dispose it here
-		FileStream? storeStream = TryGetEntryStream (storePath);
+		Stream? storeStream = TryGetEntryStream (storePath);
 		if (storeStream == null) {
 			return null;
 		}
@@ -195,20 +197,44 @@ public abstract class ApplicationPackage : IAspect
 		}
 
 		Log.Debug ($"Found Android manifest '{AndroidManifestPath}'");
-		using Stream? manifestStream = TryGetEntryStream (AndroidManifestPath);
-		// TODO: parse
+
+		try {
+			Stream? manifestStream = TryGetEntryStream (AndroidManifestPath, extractToMemory: true);
+			if (manifestStream == null) {
+				Log.Error ("Failed to read android manifest from the application package.");
+				return;
+			}
+			IAspectState manifestState = AndroidManifest.ProbeAspect (manifestStream, AndroidManifestPath);
+			if (!manifestState.Success) {
+				Log.Debug ($"Failed to detect '{AndroidManifestPath}' package entry as supported Android manifest data.");
+				manifestStream.Dispose ();
+				return;
+			}
+			manifest = (AndroidManifest)AndroidManifest.LoadAspect (manifestStream, manifestState, AndroidManifestPath);
+		} catch (Exception ex) {
+			Log.Debug ($"Failed to load android manifest '{AndroidManifestPath}' from the archive.", ex);
+		}
 	}
 
 	string GetNativeLibDir (AndroidTargetArch arch) => $"{NativeLibDirBase}/{MonoAndroidHelper.ArchToAbi (arch)}/";
 	string GetNativeLibFile (AndroidTargetArch arch, string fileName) => $"{GetNativeLibDir (arch)}{fileName}";
 
-	FileStream? TryGetEntryStream (string path)
+	Stream? TryGetEntryStream (string path, bool extractToMemory = false)
 	{
 		try {
 			ZipArchiveEntry? entry = Zip.GetEntry (path);
 			if (entry == null) {
 				Log.Debug ($"ZIP entry '{path}' could not be loaded.");
 				return null;
+			}
+
+			if (extractToMemory) {
+				Log.Debug ($"Extracting entry '{path}' to a memory stream");
+				using var inputStream = entry.Open ();
+				var outputStream = new MemoryStream ();
+				inputStream.CopyTo (outputStream);
+				inputStream.Flush ();
+				return outputStream;
 			}
 
 			string tempFile = Path.GetTempFileName ();
@@ -219,8 +245,6 @@ public abstract class ApplicationPackage : IAspect
 			return File.OpenRead (tempFile);
 		} catch (Exception ex) {
 			Log.Debug ($"Failed to load entry '{path}' from the archive.", ex);
-
-			// TODO: remove temp file (using a helper method, which doesn't exist yet)
 			return null;
 		}
 	}
