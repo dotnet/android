@@ -5,8 +5,17 @@ using System.Reflection;
 
 namespace Xamarin.Android.Tasks.LLVMIR
 {
+	/// <summary>
+	/// Provides utility methods for working with types in the context of LLVM IR generation.
+	/// </summary>
 	static class TypeUtilities
 	{
+		/// <summary>
+		/// Gets the short name of a type (without namespace or containing type information).
+		/// </summary>
+		/// <param name="type">The type to get the short name for.</param>
+		/// <returns>The short name of the type.</returns>
+		/// <exception cref="InvalidOperationException">Thrown when the type is unnamed or has an invalid name.</exception>
 		public static string GetShortName (this Type type)
 		{
 			string? fullName = type.FullName;
@@ -35,6 +44,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return ret;
 		}
 
+		/// <summary>
+		/// Determines whether a type represents a structure (value type that is not an enum, primitive, or array).
+		/// </summary>
+		/// <param name="type">The type to check.</param>
+		/// <returns>true if the type is a structure; otherwise, false.</returns>
 		public static bool IsStructure (this Type type)
 		{
 			return type.IsValueType &&
@@ -46,6 +60,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				type != typeof (object);
 		}
 
+		/// <summary>
+		/// Determines whether a structure member represents an LLVM IR structure.
+		/// </summary>
+		/// <param name="smi">The structure member info to check.</param>
+		/// <param name="cache">The LLVM IR type cache.</param>
+		/// <returns>true if the member represents an IR structure; otherwise, false.</returns>
 		public static bool IsIRStruct (this StructureMemberInfo smi, LlvmIrTypeCache cache)
 		{
 			Type type = smi.MemberType;
@@ -58,6 +78,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				(type.IsStructure () || type.IsClass);
 		}
 
+		/// <summary>
+		/// Gets the data provider for a type if it has a NativeAssemblerStructContextDataProviderAttribute.
+		/// </summary>
+		/// <param name="t">The type to get the data provider for.</param>
+		/// <returns>The data provider instance, or null if the type doesn't have a data provider attribute.</returns>
 		public static NativeAssemblerStructContextDataProvider? GetDataProvider (this Type t)
 		{
 			var attr = t.GetCustomAttribute<NativeAssemblerStructContextDataProviderAttribute> ();
@@ -68,12 +93,23 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return Activator.CreateInstance (attr.Type) as NativeAssemblerStructContextDataProvider;
 		}
 
+		/// <summary>
+		/// Determines whether a type is marked with the NativeClassAttribute.
+		/// </summary>
+		/// <param name="t">The type to check.</param>
+		/// <returns>true if the type has the NativeClassAttribute; otherwise, false.</returns>
 		public static bool IsNativeClass (this Type t)
 		{
 			var attr = t.GetCustomAttribute<NativeClassAttribute> ();
 			return attr != null;
 		}
 
+		/// <summary>
+		/// Determines whether a type implements a specific interface.
+		/// </summary>
+		/// <param name="type">The type to check.</param>
+		/// <param name="requiredIfaceType">The interface type to check for.</param>
+		/// <returns>true if the type implements the interface; otherwise, false.</returns>
 		public static bool ImplementsInterface (this Type type, Type requiredIfaceType)
 		{
 			if (type == null || requiredIfaceType == null) {
@@ -104,6 +140,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return false;
 		}
 
+		/// <summary>
+		/// Determines whether a type is a StructureInstance generic type and gets the structure type.
+		/// </summary>
+		/// <param name="type">The type to check.</param>
+		/// <param name="structureType">When this method returns, contains the structure type if the type is a StructureInstance; otherwise, null.</param>
+		/// <returns>true if the type is a StructureInstance; otherwise, false.</returns>
 		public static bool IsStructureInstance (this Type type, out Type? structureType)
 		{
 			structureType = null;
@@ -124,6 +166,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		/// correspond to one of the following array types: T[], ICollection&lt;T&gt; or IDictionary&lt;string, string&gt;.  The latter is
 		/// used to comfortably represent name:value arrays, which are output as single dimensional arrays in the native code.
 		/// </summary>
+		/// <param name="type">The array type to get the element type for.</param>
+		/// <returns>The element type of the array.</returns>
 		/// <exception cref="System.InvalidOperationException">
 		/// Thrown when <paramref name="type"/> is not one of the array types listed above.
 		/// </exception>
@@ -158,6 +202,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		/// a standard single-dimensional language array (i.e. <c>T[]</c>), implement ICollection&lt;T&gt; together with ICollection or,
 		/// as a special case for name:value pair collections, implement IDictionary&lt;string, string&gt;
 		/// </summary>
+		/// <param name="t">The type to check.</param>
+		/// <returns>true if the type represents an array; otherwise, false.</returns>
+		/// <exception cref="NotSupportedException">Thrown when multi-dimensional arrays are encountered.</exception>
 		public static bool IsArray (this Type t)
 		{
 			if (t.IsPrimitive) {

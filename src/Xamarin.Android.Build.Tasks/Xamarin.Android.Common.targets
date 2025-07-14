@@ -669,7 +669,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Error Text="Could not locate Android SDK. Please set via /p:AndroidSdkDirectory." Condition="'$(_AndroidSdkDirectory)'==''" />
 	<Error Text="Could not locate Java 6 or 7 SDK.  (Download from http://www.oracle.com/technetwork/java/javase/downloads.)" Condition="'$(_JavaSdkDirectory)'==''" />
 
-	<!-- AppData for Mono for Android-->
+	<!-- AppData for .NET for Android-->
 	<GetAppSettingsDirectory>
 		<Output TaskParameter="AppSettingsDirectory" PropertyName="AppSettingsDirectory" Condition="'$(AppSettingsDirectory)'==''" />
 	</GetAppSettingsDirectory>

@@ -99,20 +99,28 @@ namespace Xamarin.Android.Tasks
 			public uint    duplicate_count;
 
 			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value - populated during native code generation
 			public TypeMapModuleEntry map;
+#pragma warning restore CS0649
 
 			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value - populated during native code generation
 			public TypeMapModuleEntry duplicate_map;
+#pragma warning restore CS0649
 
 			[NativeAssembler (UsesDataProvider = true)]
 			public string assembly_name;
 
 			[NativePointer (IsNull = true)]
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value - populated during native code generation
 			public MonoImage image;
+#pragma warning restore CS0649
 			public uint   java_name_width;
 
 			[NativePointer (IsNull = true)]
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value - populated during native code generation
 			public byte java_map;
+#pragma warning restore CS0649
 		}
 
 		// Order of fields and their type must correspond *exactly* to that in

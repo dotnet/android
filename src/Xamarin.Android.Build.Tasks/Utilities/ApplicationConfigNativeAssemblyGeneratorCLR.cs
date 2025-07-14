@@ -247,7 +247,9 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	StructureInstance? application_config;
 	List<StructureInstance<DSOCacheEntry>>? dsoCache;
 	List<StructureInstance<DSOCacheEntry>>? aotDsoCache;
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value - assigned conditionally by build process
 	List<StructureInstance<XamarinAndroidBundledAssembly>>? xamarinAndroidBundledAssemblies;
+#pragma warning restore CS0649
 	List<StructureInstance<RuntimeProperty>>? runtimePropertiesData;
 	List<StructureInstance<RuntimePropertyIndexEntry>>? runtimePropertyIndex;
 
@@ -259,8 +261,12 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	StructureInfo? assemblyStoreRuntimeDataStructureInfo;
 	StructureInfo? runtimePropertyStructureInfo;
 	StructureInfo? runtimePropertyIndexEntryStructureInfo;
+#pragma warning disable CS0169 // Field is never used - might be used in future versions  
 	StructureInfo? hostConfigurationPropertyStructureInfo;
+#pragma warning restore CS0169
+#pragma warning disable CS0169 // Field is never used - might be used in future versions  
 	StructureInfo? hostConfigurationPropertiesStructureInfo;
+#pragma warning restore CS0169
 	StructureInfo? appEnvironmentVariableStructureInfo;
 
 	public bool UsesAssemblyPreload { get; set; }
