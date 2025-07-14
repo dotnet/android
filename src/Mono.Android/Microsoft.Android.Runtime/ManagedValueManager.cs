@@ -118,7 +118,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 				ReferenceTrackingHandle peer = peers [i];
 				if (peer.Target is not IJavaPeerable target)
 					continue;
-				if (!JniEnvironment.Types.IsSameObject (peer.PeerReference, value.PeerReference))
+				if (!JniEnvironment.Types.IsSameObject (target.PeerReference, value.PeerReference))
 					continue;
 				if (target.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable)) {
 					peer.Dispose ();
