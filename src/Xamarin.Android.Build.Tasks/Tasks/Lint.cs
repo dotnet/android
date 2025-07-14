@@ -114,55 +114,45 @@ namespace Xamarin.Android.Tasks
 		/// directories for the project.
 		/// </summary>
 		/// <value>An array of ITaskItems containing the resource directories.</value>
-		public ITaskItem[]? ResourceDirectories {get; set;}
+		public ITaskItem [] ResourceDirectories { get; set; } = [];
 
 		/// <summary>
 		/// Add the given folders (or paths) as a source directories
 		/// for the project.
 		/// </summary>
 		/// <value>An array of ITaskItems containing the source directories.</value>
-		public ITaskItem[]? SourceDirectories   {get; set;}
+		public ITaskItem [] SourceDirectories { get; set; } = [];
 
 		/// <summary>
 		/// Add the given folder (or path) as a class directories
 		/// for the project.
 		/// </summary>
 		/// <value>An array of ITaskItems containing class directories.</value>
-		public ITaskItem[]? ClassDirectories    {get; set;}
+		public ITaskItem [] ClassDirectories { get; set; } = [];
 
 		/// <summary>
 		/// Add the given folders (or jar files, or paths) as
 		/// class directories for the project.
 		/// </summary>
 		/// <value>An array of ITaskItems containing the class path jars.</value>
-		public ITaskItem[]? ClassPathJars       {get; set;}
+		public ITaskItem [] ClassPathJars { get; set; } = [];
 
 		/// <summary>
 		/// Add the given folders (or paths) as a
 		/// class libraries for the project.
 		/// </summary>
 		/// <value>An array of ITaskItems containing the list of directories</value>
-		public ITaskItem[]? LibraryDirectories  {get; set;}
+		public ITaskItem [] LibraryDirectories { get; set; } = [];
 
 		/// <summary>
 		/// Add the given jar files as a
 		/// class library for the project.
 		/// </summary>
 		/// <value>An array of ITaskITems containing the list of .jar files</value>
-		public ITaskItem[]? LibraryJars         {get; set;}
+		public ITaskItem [] LibraryJars { get; set; } = [];
 
 		protected override string ToolName {
 			get { return OS.IsWindows ? "lint.bat" : "lint"; }
-		}
-
-		public Lint ()
-		{
-			ResourceDirectories = [];
-			SourceDirectories = [];
-			ClassDirectories = [];
-			ClassPathJars = [];
-			LibraryDirectories = [];
-			LibraryJars = [];
 		}
 
 		static readonly Dictionary<string, Version> DisabledIssuesByVersion = new Dictionary<string, Version> () {
@@ -253,22 +243,22 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("--enable ", EnabledIssues);
 			cmd.AppendSwitchIfNotNull ("--disable ", DisabledIssues);
 			cmd.AppendSwitchIfNotNull ("--check ", CheckIssues);
-			foreach (var item in ResourceDirectories ?? []) {
+			foreach (var item in ResourceDirectories) {
 				cmd.AppendSwitchIfNotNull ("--resources ", item.ItemSpec);
 			}
-			foreach (var item in SourceDirectories ?? []) {
+			foreach (var item in SourceDirectories) {
 				cmd.AppendSwitchIfNotNull ("--sources ", item.ItemSpec);
 			}
-			foreach (var item in ClassDirectories ?? []) {
+			foreach (var item in ClassDirectories) {
 				cmd.AppendSwitchIfNotNull ("--classpath ", item.ItemSpec);
 			}
-			foreach (var item in ClassPathJars ?? []) {
+			foreach (var item in ClassPathJars) {
 				cmd.AppendSwitchIfNotNull ("--classpath ", item.ItemSpec);
 			}
-			foreach (var item in LibraryDirectories ?? []) {
+			foreach (var item in LibraryDirectories) {
 				cmd.AppendSwitchIfNotNull ("--libraries ", item.ItemSpec);
 			}
-			foreach (var item in LibraryJars ?? []) {
+			foreach (var item in LibraryJars) {
 				cmd.AppendSwitchIfNotNull ("--libraries ", item.ItemSpec);
 			}
 			cmd.AppendFileNameIfNotNull (TargetDirectory);
