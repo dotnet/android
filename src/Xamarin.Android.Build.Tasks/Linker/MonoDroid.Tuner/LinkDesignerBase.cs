@@ -21,12 +21,20 @@ namespace MonoDroid.Tuner  {
 	{
 		protected IMetadataResolver Cache => Context;
 
-		public virtual void LogMessage (string message)
+		public
+#if !ILLINK
+		override
+#endif
+		void LogMessage (string message)
 		{
 			Context.LogMessage (message);
 		}
 
-		public virtual void LogError (int code, string error)
+		public
+#if !ILLINK
+		override
+#endif
+		void LogError (int code, string error)
 		{
 #if ILLINK
 			Context.LogMessage (MessageContainer.CreateCustomErrorMessage (error, code, origin: new MessageOrigin ()));

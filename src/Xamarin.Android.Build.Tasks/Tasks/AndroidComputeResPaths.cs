@@ -148,7 +148,7 @@ namespace Xamarin.Android.Tasks
 				}
 				
 				// if the path ends up "outside" of our target intermediate directory, just use the filename
-				if (String.Compare (intermediateDirFullPath, 0, dest, 0, intermediateDirFullPath.Length, StringComparison.OrdinalIgnoreCase) != 0) {
+				if (!dest.StartsWith (intermediateDirFullPath, StringComparison.OrdinalIgnoreCase)) {
 					dest = Path.GetFullPath (Path.Combine (IntermediateDir, Path.GetFileName (baseFileName)));
 				}
 				if (!File.Exists (item.ItemSpec)) {

@@ -266,7 +266,7 @@ class NativeLinker
 	{
 		// The exception is just a precaution, since the items passed to us should have already been checked
 		string itemAbi = item.GetMetadata (KnownMetadata.Abi) ?? throw new InvalidOperationException ($"Internal error: 'Abi' metadata not found in item '{item}'");
-		if (String.Compare (abi, itemAbi, StringComparison.OrdinalIgnoreCase) == 0) {
+		if (MonoAndroidHelper.StringEquals (abi, itemAbi)) {
 			return;
 		}
 

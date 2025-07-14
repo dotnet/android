@@ -142,7 +142,7 @@ namespace Xamarin.ProjectTools
 
 		public string Root {
 			get {
-				return String.IsNullOrEmpty (root) ? Path.GetDirectoryName (new Uri (typeof (XamarinProject).Assembly.CodeBase).LocalPath) : root;
+				return String.IsNullOrEmpty (root) ? Path.GetDirectoryName (typeof (XamarinProject).Assembly.Location) : root;
 			}
 			set { root = value; }
 		}

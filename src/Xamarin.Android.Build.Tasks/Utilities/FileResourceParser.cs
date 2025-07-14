@@ -275,7 +275,6 @@ namespace Xamarin.Android.Tasks
 		{
 			Log.LogDebugMessage ($"{nameof(ProcessStyleable)}");
 			string topName = null;
-			int fieldCount = 0;
 			List<R> fields = new List<R> ();
 			List<string> attribs = new List<string> ();
 			if (reader.HasAttributes) {

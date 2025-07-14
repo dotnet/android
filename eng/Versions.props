@@ -1,23 +1,20 @@
 <Project>
   <!--Package versions-->
   <PropertyGroup>
-    <MicrosoftNETSdkPackageVersion>10.0.100-preview.6.25304.106</MicrosoftNETSdkPackageVersion>
+    <MicrosoftNETSdkPackageVersion>10.0.100-preview.7.25363.103</MicrosoftNETSdkPackageVersion>
     <MicrosoftDotnetSdkInternalPackageVersion>$(MicrosoftNETSdkPackageVersion)</MicrosoftDotnetSdkInternalPackageVersion>
-    <MicrosoftNETILLinkTasksPackageVersion>10.0.0-preview.6.25304.106</MicrosoftNETILLinkTasksPackageVersion>
-    <MicrosoftNETCoreAppRefPackageVersion>10.0.0-preview.6.25304.106</MicrosoftNETCoreAppRefPackageVersion>
+    <MicrosoftNETILLinkTasksPackageVersion>10.0.0-preview.7.25363.103</MicrosoftNETILLinkTasksPackageVersion>
+    <MicrosoftNETCoreAppRefPackageVersion>10.0.0-preview.7.25363.103</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
-    <MicrosoftDotNetBuildTasksFeedPackageVersion>10.0.0-beta.25304.106</MicrosoftDotNetBuildTasksFeedPackageVersion>
+    <MicrosoftDotNetBuildTasksFeedPackageVersion>10.0.0-beta.25363.103</MicrosoftDotNetBuildTasksFeedPackageVersion>
     <MicrosoftNETWorkloadMonoToolChainPackageVersion>$(MicrosoftNETSdkPackageVersion)</MicrosoftNETWorkloadMonoToolChainPackageVersion>
     <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETSdkPackageVersion)</MicrosoftNETWorkloadEmscriptenPackageVersion>
-    <MicrosoftTemplateEngineAuthoringTasksPackageVersion>10.0.100-preview.5.25304.106</MicrosoftTemplateEngineAuthoringTasksPackageVersion>
-    <MicrosoftDotNetCecilPackageVersion>0.11.5-alpha.25304.106</MicrosoftDotNetCecilPackageVersion>
+    <MicrosoftTemplateEngineAuthoringTasksPackageVersion>10.0.100-preview.7.25363.103</MicrosoftTemplateEngineAuthoringTasksPackageVersion>
+    <MicrosoftDotNetCecilPackageVersion>0.11.5-alpha.25363.103</MicrosoftDotNetCecilPackageVersion>
     <SystemIOHashingPackageVersion>9.0.4</SystemIOHashingPackageVersion>
     <!-- Previous .NET Android version -->
-    <MicrosoftNETSdkAndroidManifest90100PackageVersion>35.0.61</MicrosoftNETSdkAndroidManifest90100PackageVersion>
+    <MicrosoftNETSdkAndroidManifest90100PackageVersion>35.0.78</MicrosoftNETSdkAndroidManifest90100PackageVersion>
     <AndroidNetPreviousVersion>$(MicrosoftNETSdkAndroidManifest90100PackageVersion)</AndroidNetPreviousVersion>
-    <!-- To be removed before .NET 10 GA -->
-    <MicrosoftNETSdkAndroidManifest80100PackageVersion>34.0.154</MicrosoftNETSdkAndroidManifest80100PackageVersion>
-    <AndroidNet8PreviousVersion>$(MicrosoftNETSdkAndroidManifest80100PackageVersion)</AndroidNet8PreviousVersion>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Match the first three version numbers and append 00 -->

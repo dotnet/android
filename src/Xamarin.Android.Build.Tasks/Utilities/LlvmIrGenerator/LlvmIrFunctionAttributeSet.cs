@@ -13,7 +13,9 @@ class LlvmIrFunctionAttributeSet : IEnumerable<LlvmIrFunctionAttribute>, IEquata
 	public bool DoNotAddTargetSpecificAttributes { get; set; }
 
 	HashSet<LlvmIrFunctionAttribute> attributes;
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value - conditionally populated based on target architecture
 	Dictionary<AndroidTargetArch, List<LlvmIrFunctionAttribute>>? privateTargetSpecificAttributes;
+#pragma warning restore CS0649
 
 	public LlvmIrFunctionAttributeSet ()
 	{

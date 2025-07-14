@@ -10,6 +10,7 @@ using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 using Xamarin.Tools.Zip;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -47,11 +48,6 @@ namespace Xamarin.Android.Build.Tests
 
 		static readonly object[] DotNetPackTargetFrameworks = new object[] {
 			new object[] {
-				"net8.0",
-				"android",
-				34,
-			},
-			new object[] {
 				"net9.0",
 				"android",
 				35,
@@ -87,7 +83,7 @@ namespace Xamarin.Android.Build.Tests
 						TextContent = () => "public class Foo { }",
 					},
 					new AndroidItem.AndroidResource ("Resources\\raw\\bar.txt") {
-						BinaryContent = () => Array.Empty<byte> (),
+						BinaryContent = () => [],
 					},
 					new AndroidItem.AndroidLibrary ("sub\\directory\\foo.jar") {
 						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
@@ -106,17 +102,22 @@ public class JavaSourceTest {
 }",
 					},
 				},
+				PackageReferences = {
+					new Package { Id = "Xamarin.Kotlin.StdLib", Version = "2.0.10.1" },
+					new Package { Id = "Xamarin.Kotlin.StdLib.Common", Version = "2.0.10.1" },
+					new Package { Id = "Xamarin.KotlinX.Serialization.Core.Jvm", Version = "1.7.1.1" },
+				}
 			};
 			if (IsPreviewFrameworkVersion (targetFramework)) {
 				proj.SetProperty ("EnablePreviewFeatures", "true");
 			}
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("sub\\directory\\arm64-v8a\\libfoo.so") {
-				BinaryContent = () => Array.Empty<byte> (),
+				BinaryContent = () => [],
 			});
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidNativeLibrary (default (Func<string>)) {
 				Update = () => "libfoo.so",
 				MetadataValues = "Link=x86\\libfoo.so",
-				BinaryContent = () => Array.Empty<byte> (),
+				BinaryContent = () => [],
 			});
 			proj.OtherBuildItems.Add (new AndroidItem.LibraryProjectZip ("..\\baz.aar") {
 				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
@@ -127,17 +128,22 @@ public class JavaSourceTest {
 				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
 				MetadataValues = "Pack=false;Bind=false",
 			});
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidMavenLibrary ("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm") {
+				MetadataValues = "Version=1.3.3;Bind=false",
+				BinaryContent = () => [],
+			});
 
 			var projBuilder = CreateDllBuilder ();
 			projBuilder.Save (proj);
 			var dotnet = new DotNetCLI (Path.Combine (Root, projBuilder.ProjectDirectory, proj.ProjectFilePath));
-			Assert.IsTrue (dotnet.Pack (parameters: new [] { "Configuration=Release" }), "`dotnet pack` should succeed");
+			Assert.IsTrue (dotnet.Pack (parameters: ["Configuration=Release"]), "`dotnet pack` should succeed");
 
 			var nupkgPath = Path.Combine (Root, projBuilder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.1.0.0.nupkg");
 			FileAssert.Exists (nupkgPath);
 			using var nupkg = ZipHelper.OpenZip (nupkgPath);
+			string aarPath = $"lib/{dotnetVersion}-android{apiLevel}.0/{proj.ProjectName}.aar";
+			nupkg.AssertContainsEntry (nupkgPath, aarPath);
 			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{proj.ProjectName}.dll");
-			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{proj.ProjectName}.aar");
 			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/bar.aar");
 			nupkg.AssertDoesNotContainEntry (nupkgPath, "content/bar.aar");
 			nupkg.AssertDoesNotContainEntry (nupkgPath, "content/sub/directory/bar.aar");
@@ -147,14 +153,24 @@ public class JavaSourceTest {
 			nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}.0/nopack.aar");
 			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/baz.aar");
 			nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/_Microsoft.Android.Resource.Designer.dll");
+
+			// NOTE: this is not fixed yet in .NET 9
+			if (dotnetVersion == "net10.0") {
+				using var aarStream = new MemoryStream ();
+				var aarEntry = nupkg.ReadEntry (aarPath);
+				aarEntry.Extract (aarStream);
+				aarStream.Seek (0, SeekOrigin.Begin);
+
+				// Look for libs/29CAF121D5FD8E3D.jar, libs/A1AFA985571E728E.jar
+				using var aar = ZipArchive.Open (aarStream);
+				int count = aar.Count (e =>
+					e.FullName.StartsWith ("libs/", StringComparison.OrdinalIgnoreCase) &&
+					e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase));
+				Assert.AreEqual (2, count, $"There should be 2 .jar files in the {aarPath} archive, but found {count}.");
+			}
 		}
 
 		static readonly object[] DotNetTargetFrameworks = new object[] {
-			new object[] {
-				"net8.0",
-				"android",
-				34,
-			},
 			new object[] {
 				"net9.0",
 				"android",

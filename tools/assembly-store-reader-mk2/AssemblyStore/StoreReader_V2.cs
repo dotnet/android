@@ -11,8 +11,8 @@ namespace Xamarin.Android.AssemblyStore;
 partial class StoreReader_V2 : AssemblyStoreReader
 {
 	// Bit 31 is set for 64-bit platforms, cleared for the 32-bit ones
-	const uint ASSEMBLY_STORE_FORMAT_VERSION_64BIT = 0x80000002; // Must match the ASSEMBLY_STORE_FORMAT_VERSION native constant
-	const uint ASSEMBLY_STORE_FORMAT_VERSION_32BIT = 0x00000002;
+	const uint ASSEMBLY_STORE_FORMAT_VERSION_64BIT = 0x80000003; // Must match the ASSEMBLY_STORE_FORMAT_VERSION native constant
+	const uint ASSEMBLY_STORE_FORMAT_VERSION_32BIT = 0x00000003;
 	const uint ASSEMBLY_STORE_FORMAT_VERSION_MASK  = 0xF0000000;
 
 	const uint ASSEMBLY_STORE_ABI_AARCH64          = 0x00010000;
@@ -162,7 +162,8 @@ partial class StoreReader_V2 : AssemblyStoreReader
 			}
 
 			uint descriptor_index = reader.ReadUInt32 ();
-			index.Add (new IndexEntry (name_hash, descriptor_index));
+			bool ignore = reader.ReadByte () != 0;
+			index.Add (new IndexEntry (name_hash, descriptor_index, ignore));
 		}
 
 		var descriptors = new List<EntryDescriptor> ();
@@ -197,7 +198,7 @@ partial class StoreReader_V2 : AssemblyStoreReader
 		var tempItems = new Dictionary<uint, TemporaryItem> ();
 		foreach (IndexEntry ie in index) {
 			if (!tempItems.TryGetValue (ie.descriptor_index, out TemporaryItem? item)) {
-				item = new TemporaryItem (names[(int)ie.descriptor_index], descriptors[(int)ie.descriptor_index]);
+				item = new TemporaryItem (names[(int)ie.descriptor_index], descriptors[(int)ie.descriptor_index], ie.ignore);
 				tempItems.Add (ie.descriptor_index, item);
 			}
 			item.IndexEntries.Add (ie);
@@ -210,7 +211,7 @@ partial class StoreReader_V2 : AssemblyStoreReader
 		var storeItems = new List<AssemblyStoreItem> ();
 		foreach (var kvp in tempItems) {
 			TemporaryItem ti = kvp.Value;
-			var item = new StoreItem_V2 (TargetArch, ti.Name, Is64Bit, ti.IndexEntries, ti.Descriptor);
+			var item = new StoreItem_V2 (TargetArch, ti.Name, Is64Bit, ti.IndexEntries, ti.Descriptor, ti.Ignored);
 			storeItems.Add (item);
 		}
 		Assemblies = storeItems.AsReadOnly ();

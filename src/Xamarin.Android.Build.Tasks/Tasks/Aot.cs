@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -36,21 +36,21 @@ namespace Xamarin.Android.Tasks
 
 		// Which ABIs to include native libs for
 		[Required]
-		public string [] SupportedAbis { get; set; }
+		public string [] SupportedAbis { get; set; } = [];
 
 		[Required]
-		public string IntermediateAssemblyDir { get; set; }
+		public string IntermediateAssemblyDir { get; set; } = "";
 
-		public string LinkMode { get; set; }
+		public string? LinkMode { get; set; }
 
-		public ITaskItem[] AdditionalNativeLibraryReferences { get; set; }
+		public ITaskItem[]? AdditionalNativeLibraryReferences { get; set; }
 
-		public string ExtraAotOptions { get; set; }
+		public string? ExtraAotOptions { get; set; }
 
-		public string AotAdditionalArguments { get; set; }
+		public string? AotAdditionalArguments { get; set; }
 
 		[Output]
-		public string[] NativeLibrariesReferences { get; set; }
+		public string[]? NativeLibrariesReferences { get; set; }
 
 		static string QuoteFileName(string fileName)
 		{
@@ -150,10 +150,10 @@ namespace Xamarin.Android.Tasks
 					aotOptions.Add ($"outfile={outputFile}");
 					aotOptions.Add ($"llvm-path={SdkBinDirectory}");
 					aotOptions.Add ($"temp-path={tempDir}");
-					if (!string.IsNullOrEmpty (AotAdditionalArguments)) {
+					if (!AotAdditionalArguments.IsNullOrEmpty ()) {
 						aotOptions.Add (AotAdditionalArguments);
 					}
-					if (!string.IsNullOrEmpty (MsymPath)) {
+					if (!MsymPath.IsNullOrEmpty ()) {
 						aotOptions.Add ($"msym-dir={MsymPath}");
 					}
 					if (Profiles != null && Profiles.Length > 0) {
@@ -168,7 +168,7 @@ namespace Xamarin.Android.Tasks
 						}
 					}
 					// NOTE: ld-name and ld-flags MUST be last, otherwise Mono fails to parse it on Windows
-					if (!string.IsNullOrEmpty (LdName)) {
+					if (!LdName.IsNullOrEmpty ()) {
 						aotOptions.Add ($"ld-name={LdName}");
 					}
 
@@ -185,7 +185,7 @@ namespace Xamarin.Android.Tasks
 							break;
 					}
 
-					if (!string.IsNullOrEmpty (LdFlags)) {
+					if (!LdFlags.IsNullOrEmpty ()) {
 						aotOptions.Add ($"ld-flags={LdFlags}");
 					}
 
@@ -194,7 +194,7 @@ namespace Xamarin.Android.Tasks
 					// values, which wont work.
 					string aotOptionsStr = (EnableLLVM ? "--llvm " : "") + $"\"--aot={string.Join (",", aotOptions)}\"";
 
-					if (!string.IsNullOrEmpty (ExtraAotOptions)) {
+					if (!ExtraAotOptions.IsNullOrEmpty ()) {
 						aotOptionsStr += (aotOptions.Count > 0 ? " " : "") + ExtraAotOptions;
 					}
 
@@ -206,7 +206,7 @@ namespace Xamarin.Android.Tasks
 					var resolvedPath = Path.GetFullPath (assembly.ItemSpec);
 					var intermediateAssemblyPath = Path.Combine (IntermediateAssemblyDir, Path.GetFileName (assembly.ItemSpec));
 
-					if (LinkMode.ToLowerInvariant () == "none") {
+					if (LinkMode?.ToLowerInvariant () == "none") {
 						if (!resolvedPath.Contains (IntermediateAssemblyDir) && File.Exists (intermediateAssemblyPath))
 							resolvedPath = intermediateAssemblyPath;
 					}
@@ -249,7 +249,7 @@ namespace Xamarin.Android.Tasks
 			LogDebugMessage ("[AOT] MONO_PATH=\"{0}\" MONO_ENV_OPTIONS=\"{1}\" {2} {3}",
 				psi.EnvironmentVariables ["MONO_PATH"], psi.EnvironmentVariables ["MONO_ENV_OPTIONS"], psi.FileName, psi.Arguments);
 
-			if (!string.IsNullOrEmpty (responseFile))
+			if (!responseFile.IsNullOrEmpty ())
 				LogDebugMessage ("[AOT] response file {0}: {1}", responseFile, File.ReadAllText (responseFile));
 
 			using (var proc = new Process ()) {

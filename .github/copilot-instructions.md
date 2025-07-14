@@ -43,6 +43,24 @@ Common build commands:
 - `./dotnet-local.sh` or `dotnet-local.cmd` - Use locally built .NET tools
 - `make` - Various make targets for specific components
 
+## Development Guidelines
+
+**Always search Microsoft documentation (MS Learn) when working with .NET, Windows, or Microsoft features, APIs, or integrations.** Use the `microsoft_docs_search` tool to find the most current and authoritative information about capabilities, best practices, and implementation patterns before making changes.
+
+## Localization Files
+
+**DO NOT modify localization files that are automatically maintained by bots and build integrations:**
+
+- **Never modify `*.lcl` files** in the `Localize/loc/` directory - these are managed by localization automation
+- **Never modify non-English `*.resx` files** (e.g., `Resources.ja.resx`, `Resources.ko.resx`, etc.) - these are auto-generated from the main English resources
+- **Only modify the main English `*.resx` files** (e.g., `Resources.resx`) when updating user-facing strings
+- The localization bots will automatically update all translated versions based on changes to the main English resources
+
+When making changes to user-facing text:
+1. Only update the main English `*.resx` files
+2. Let the automated systems handle all translations and localized files
+3. Do not manually edit translated content as it will be overwritten
+
 ## Android Development Patterns
 
 ### API Bindings

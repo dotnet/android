@@ -33,7 +33,9 @@ const char java_type_names[] = {};
 const uint64_t java_type_names_size = 0;
 const char managed_type_names[] = {};
 const char managed_assembly_names[] = {};
-TypeMapModule managed_to_java_map[] = {};
+const TypeMapModule managed_to_java_map[] = {};
+const TypeMapModuleEntry modules_map_data[] = {};
+const TypeMapModuleEntry modules_duplicates_data[] = {};
 const TypeMapJava java_to_managed_map[] = {};
 const xamarin::android::hash_t java_to_managed_hashes[] = {};
 #endif

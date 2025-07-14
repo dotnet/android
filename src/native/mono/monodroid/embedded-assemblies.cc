@@ -418,8 +418,13 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 	log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: looking for bundled name: '{}' (hash {:x})", optional_string (name.get ()), name_hash);
 
 	const AssemblyStoreIndexEntry *hash_entry = find_assembly_store_entry (name_hash, assembly_store_hashes, assembly_store.index_entry_count);
-	if (hash_entry == nullptr) {
+	if (hash_entry == nullptr) [[unlikely]] {
 		log_warn (LOG_ASSEMBLY, "Assembly '{}' (hash {:x}) not found", optional_string (name.get ()), name_hash);
+		return nullptr;
+	}
+
+	if (hash_entry->ignore != 0) {
+		log_debug (LOG_ASSEMBLY, "Assembly '{}' ignored"sv, optional_string (name.get ()));
 		return nullptr;
 	}
 

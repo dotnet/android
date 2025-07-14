@@ -24,11 +24,11 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public override string GetComment (object data, string fieldName)
 		{
 			var dso_entry = EnsureType<DSOCacheEntry> (data);
-			if (String.Compare ("hash", fieldName, StringComparison.Ordinal) == 0) {
+			if (MonoAndroidHelper.StringEquals ("hash", fieldName)) {
 				return $" from name: {dso_entry.HashedName}";
 			}
 
-			if (String.Compare ("name_index", fieldName, StringComparison.Ordinal) == 0) {
+			if (MonoAndroidHelper.StringEquals ("name_index", fieldName)) {
 				return $" name: {dso_entry.RealName}";
 			}
 
@@ -121,11 +121,11 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public override string GetComment (object data, string fieldName)
 		{
 			var runtimeProp = EnsureType<RuntimeProperty> (data);
-			if (String.Compare ("key_index", fieldName, StringComparison.Ordinal) == 0) {
+			if (MonoAndroidHelper.StringEquals ("key_index", fieldName)) {
 				return $" '{runtimeProp.Key}'";
 			}
 
-			if (String.Compare ("value_index", fieldName, StringComparison.Ordinal) == 0) {
+			if (MonoAndroidHelper.StringEquals ("value_index", fieldName)) {
 				return $" '{runtimeProp.Value}'";
 			}
 
@@ -170,11 +170,11 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		{
 			var envVar = EnsureType<AppEnvironmentVariable> (data);
 
-			if (String.Compare ("name_index", fieldName, StringComparison.Ordinal) == 0) {
+			if (MonoAndroidHelper.StringEquals ("name_index", fieldName)) {
 				return $" '{envVar.Name}'";
 			}
 
-			if (String.Compare ("value_index", fieldName, StringComparison.Ordinal) == 0) {
+			if (MonoAndroidHelper.StringEquals ("value_index", fieldName)) {
 				return $" '{envVar.Value}'";
 			}
 
@@ -205,11 +205,11 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public override ulong GetBufferSize (object data, string fieldName)
 		{
 			var xaba = EnsureType<XamarinAndroidBundledAssembly> (data);
-			if (String.Compare ("name", fieldName, StringComparison.Ordinal) == 0) {
+			if (MonoAndroidHelper.StringEquals ("name", fieldName)) {
 				return xaba.name_length;
 			}
 
-			if (String.Compare ("file_name", fieldName, StringComparison.Ordinal) == 0) {
+			if (MonoAndroidHelper.StringEquals ("file_name", fieldName)) {
 				return xaba.name_length + MonoAndroidHelper.GetMangledAssemblyNameSizeOverhead ();
 			}
 
@@ -247,7 +247,9 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	StructureInstance? application_config;
 	List<StructureInstance<DSOCacheEntry>>? dsoCache;
 	List<StructureInstance<DSOCacheEntry>>? aotDsoCache;
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value - assigned conditionally by build process
 	List<StructureInstance<XamarinAndroidBundledAssembly>>? xamarinAndroidBundledAssemblies;
+#pragma warning restore CS0649
 	List<StructureInstance<RuntimeProperty>>? runtimePropertiesData;
 	List<StructureInstance<RuntimePropertyIndexEntry>>? runtimePropertyIndex;
 
@@ -259,8 +261,12 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	StructureInfo? assemblyStoreRuntimeDataStructureInfo;
 	StructureInfo? runtimePropertyStructureInfo;
 	StructureInfo? runtimePropertyIndexEntryStructureInfo;
+#pragma warning disable CS0169 // Field is never used - might be used in future versions  
 	StructureInfo? hostConfigurationPropertyStructureInfo;
+#pragma warning restore CS0169
+#pragma warning disable CS0169 // Field is never used - might be used in future versions  
 	StructureInfo? hostConfigurationPropertiesStructureInfo;
+#pragma warning restore CS0169
 	StructureInfo? appEnvironmentVariableStructureInfo;
 
 	public bool UsesAssemblyPreload { get; set; }
@@ -424,7 +430,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		};
 
 		foreach (var kvp in runtimeProperties) {
-			if (String.Compare (kvp.Key, HOST_PROPERTY_RUNTIME_CONTRACT, StringComparison.Ordinal) == 0) {
+			if (MonoAndroidHelper.StringEquals (kvp.Key, HOST_PROPERTY_RUNTIME_CONTRACT)) {
 				continue;
 			}
 			runtime_property_names.Add (kvp.Key);

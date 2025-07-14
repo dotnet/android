@@ -532,7 +532,7 @@ $(SupportedOSPlatformVersion) 値に一致するように AndroidManifest.xml �
     <value>ソース ファイル '{0}' が見つかりませんでした。</value>
   </data>
   <data name="XA2002_Framework" xml:space="preserve">
-    <value>{1} によって参照されている参照 '{0}' を解決できません。Mono for Android プロファイル内にそれが存在しないと思われます。</value>
+    <value>Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the .NET for Android profile?</value>
     <comment>{0} - The name of the missing assembly
 {1} - The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`</comment>
   </data>
@@ -601,7 +601,7 @@ $(SupportedOSPlatformVersion) 値に一致するように AndroidManifest.xml �
     <comment>The following are literal names and should not be translated: Mono.Android.Export.dll, ExportAttribute, ExportFieldAttribute.</comment>
   </data>
   <data name="XA4211" xml:space="preserve">
-    <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than $(TargetPlatformVersion) '{1}'. Using API-{2} for ACW compilation.</value>
+    <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' は $(TargetPlatformVersion) '{1}' 未満です。ACW のコンパイルに API-{2} を使用します。</value>
     <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:targetSdkVersion , $(TargetPlatformVersion), API-{2}, ACW
 {0} - The target SDK version number
 {1} - The $(TargetPlatformVersion) number
