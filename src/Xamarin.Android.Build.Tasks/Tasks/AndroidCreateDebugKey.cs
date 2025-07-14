@@ -1,4 +1,6 @@
-﻿using System;
+#nullable enable
+
+using System;
 using System.IO;
 using System.Resources;
 using Microsoft.Build.Framework;

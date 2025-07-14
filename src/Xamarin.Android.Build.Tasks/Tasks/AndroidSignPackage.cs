@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.IO;
 using Microsoft.Build.Framework;
@@ -152,7 +154,7 @@ namespace Xamarin.Android.Tasks
 
 		protected override bool ValidateParameters ()
 		{
-			if (!string.IsNullOrEmpty (KeyStore) && !File.Exists (KeyStore)) {
+			if (!KeyStore.IsNullOrEmpty () && !File.Exists (KeyStore)) {
 				Log.LogCodedError ("XA4310", Properties.Resources.XA4310, "$(AndroidSigningKeyStore)", KeyStore);
 				return false;
 			}

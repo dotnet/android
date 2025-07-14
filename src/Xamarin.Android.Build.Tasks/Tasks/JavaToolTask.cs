@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -76,18 +76,18 @@ namespace Xamarin.Android.Tasks
 		List<string> errorLines = new List<string> ();
 		StringBuilder errorText = new StringBuilder ();
 		HashSet<string> mappingText = new HashSet<string> ();
-		string file;
+		string? file;
 		int line, column;
 
-		public string JavaOptions { get; set; }
+		public string? JavaOptions { get; set; }
 
-		public string JavaMaximumHeapSize { get; set; }
+		public string? JavaMaximumHeapSize { get; set; }
 
 		public virtual string DefaultErrorCode => "JAVA0000";
 
-		public string AssemblyIdentityMapFile { get; set; }
+		public string? AssemblyIdentityMapFile { get; set; }
 
-		public string IntermediateOutputPath { get; set; }
+		public string? IntermediateOutputPath { get; set; }
 
 		protected override string ToolName {
 			get { return OS.IsWindows ? "java.exe" : "java"; }
@@ -101,7 +101,9 @@ namespace Xamarin.Android.Tasks
 		{
 			if (foundError) {
 				AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap ();
-				assemblyMap.Load (AssemblyIdentityMapFile);
+				if (!AssemblyIdentityMapFile.IsNullOrEmpty ()) {
+					assemblyMap.Load (AssemblyIdentityMapFile);
+				}
 				errorText.Clear ();
 				mappingText.Clear ();
 				foreach (var line in errorLines) {
@@ -114,11 +116,6 @@ namespace Xamarin.Android.Tasks
 				return !Log.HasLoggedErrors;
 			}
 			return base.HandleTaskExecutionErrors ();
-		}
-
-		protected override string GetWorkingDirectory ()
-		{
-			return base.GetWorkingDirectory ();
 		}
 
 		protected override string GenerateFullPathToTool ()
@@ -143,14 +140,14 @@ namespace Xamarin.Android.Tasks
 			foreach (Match lp in lpRegex.Matches (singleLine)) {
 				var id = lp.Groups["identifier"].Value;
 				var asmName = assemblyMap.GetAssemblyNameForImportDirectory (id);
-				if (!string.IsNullOrEmpty (asmName)) {
-					var path = Path.Combine(IntermediateOutputPath ?? string.Empty, "lp", id);
+				if (!asmName.IsNullOrEmpty ()) {
+					var path = Path.Combine(IntermediateOutputPath ?? "", "lp", id);
 					mappingText.Add (string.Format (Properties.Resources.XA_Directory_Is_From, path, asmName));
 				}
 			}
 
 			if (match.Success) {
-				if (!string.IsNullOrEmpty (file)) {
+				if (!file.IsNullOrEmpty ()) {
 					Log.LogError (ToolName, DefaultErrorCode, null, file, line - 1, column + 1, 0, 0, errorText.ToString () + String.Join (Environment.NewLine, mappingText));
 					errorText.Clear ();
 					mappingText.Clear ();
