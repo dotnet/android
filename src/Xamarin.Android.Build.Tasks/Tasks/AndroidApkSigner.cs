@@ -74,15 +74,16 @@ namespace Xamarin.Android.Tasks
 			var cmd = new CommandLineBuilder ();
 
 			var manifest = AndroidAppManifest.Load (ManifestFile.ItemSpec, MonoAndroidHelper.SupportedVersions);
-			int minSdk = MonoAndroidHelper.SupportedVersions.MinStableVersion?.ApiLevel ?? 1;
-			int maxSdk = MonoAndroidHelper.SupportedVersions.MaxStableVersion?.ApiLevel ?? 1;
+			int? minSdk = MonoAndroidHelper.SupportedVersions.MinStableVersion?.ApiLevel;
+			int? maxSdk = MonoAndroidHelper.SupportedVersions.MaxStableVersion?.ApiLevel;
 			if (manifest.MinSdkVersion.HasValue)
 				minSdk = manifest.MinSdkVersion.Value;
 
 			if (manifest.TargetSdkVersion.HasValue)
 				maxSdk = manifest.TargetSdkVersion.Value;
 
-			minSdk = Math.Min (minSdk, maxSdk);
+			if (minSdk.HasValue && maxSdk.HasValue)
+				minSdk = Math.Min (minSdk.Value, maxSdk.Value);
 
 			cmd.AppendSwitchIfNotNull ("-jar ", ApkSignerJar);
 			cmd.AppendSwitch ("sign");
@@ -97,8 +98,12 @@ namespace Xamarin.Android.Tasks
 				AddStorePass (cmd, "--key-pass", KeyPass);
 			}
 
-			cmd.AppendSwitchIfNotNull ("--min-sdk-version ", minSdk.ToString ());
-			cmd.AppendSwitchIfNotNull ("--max-sdk-version ", maxSdk.ToString ());
+			if (minSdk is not null) {
+				cmd.AppendSwitchIfNotNull ("--min-sdk-version ", minSdk.ToString ());
+			}
+			if (maxSdk is not null) {
+				cmd.AppendSwitchIfNotNull ("--max-sdk-version ", maxSdk.ToString ());
+			}
 
 
 			if (!AdditionalArguments.IsNullOrEmpty ())
