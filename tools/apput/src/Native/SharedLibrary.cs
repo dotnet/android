@@ -7,7 +7,7 @@ using ELFSharp.ELF.Sections;
 
 using ApplicationUtility;
 
-public class SharedLibrary : IAspect, IDisposable
+class SharedLibrary : IAspect, IDisposable
 {
 	const uint ELF_MAGIC = 0x464c457f;
 
@@ -24,7 +24,7 @@ public class SharedLibrary : IAspect, IDisposable
 	IELF elf;
 	bool disposed;
 
-	SharedLibrary (Stream stream, string libraryName)
+	protected SharedLibrary (Stream stream, string libraryName)
 	{
 		this.libraryStream = stream;
 		this.libraryName = libraryName;
@@ -80,7 +80,7 @@ public class SharedLibrary : IAspect, IDisposable
 		return new SubStream (libraryStream, (long)payloadOffset, (long)payloadSize);
 	}
 
-	static bool IsSupportedELFSharedLibrary (Stream stream, string? description)
+	protected static bool IsSupportedELFSharedLibrary (Stream stream, string? description)
 	{
 		if (stream.Length < 4) { // Less than that and we know there isn't room for ELF magic
 			Log.Debug ($"SharedLibrary: stream ('{description}') is too short to be an ELF image.");
