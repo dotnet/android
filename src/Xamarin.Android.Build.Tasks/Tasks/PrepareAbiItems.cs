@@ -54,7 +54,7 @@ namespace Xamarin.Android.Tasks
 				baseName = JniRemappingBase;
 			} else if (MonoAndroidHelper.StringEquals ("marshal_methods", Mode, StringComparison.OrdinalIgnoreCase)) {
 				baseName = MarshalMethodsBase;
-			} else if (String.Compare ("runtime_linking", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
+			} else if (MonoAndroidHelper.StringEquals ("runtime_linking", Mode, StringComparison.OrdinalIgnoreCase)) {
 				baseName = PinvokePreserveBase;
 			} else {
 				Log.LogError ($"Unknown mode: {Mode}");
