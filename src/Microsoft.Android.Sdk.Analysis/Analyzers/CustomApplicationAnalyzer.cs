@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 using System.Linq;
-using Microsoft.Android.Sdk.Analysis;
+using Microsoft.Android.Sdk.Analysis.Properties;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
