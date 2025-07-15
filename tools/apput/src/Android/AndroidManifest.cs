@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Xml;
 
 namespace ApplicationUtility;
 
@@ -8,6 +9,7 @@ public class AndroidManifest : IAspect
 	public string Description { get; }
 
 	AXMLParser? binaryParser;
+	XmlDocument? xmlDoc;
 
 	AndroidManifest (AXMLParser binaryParser, string? description)
 	{
@@ -35,6 +37,7 @@ public class AndroidManifest : IAspect
 
 	public static IAspectState ProbeAspect (Stream stream, string? description)
 	{
+		Log.Debug ($"Checking if '{description}' is an Android binary XML document.");
 		try {
 			stream.Seek (0, SeekOrigin.Begin);
 
@@ -44,15 +47,48 @@ public class AndroidManifest : IAspect
 			// We leave parsing of the data to `LoadAspect`, here we only detect the format
 			return new AndroidManifestAspectState (binaryParser);
 		} catch (Exception ex) {
-			Log.Debug ($"Failed to instantiate AXML binary parser for '{description}'", ex);
+			Log.Debug ($"Failed to instantiate AXML binary parser for '{description}'. Exception thrown:", ex);
 		}
 
-		// TODO: detect plain XML
-		throw new NotImplementedException ();
+		Log.Debug ($"Checking if '{description}' is an plain XML document.");
+		try {
+			return new AndroidManifestAspectState (ParsePlainXML (stream));
+		} catch (Exception ex) {
+			Log.Debug ($"Failed to parse '{description}' as XML document. Exception thrown:", ex);
+		}
+
+		// TODO: AndroidManifest.xml in AAB files is actually a protobuf data dump. Attempt to
+		//       deserialize it here.
+		return new BasicAspectState (success: false);
 	}
 
 	void Read ()
 	{
-		throw new NotImplementedException ();
+		if (binaryParser == null) {
+			throw new NotImplementedException ();
+		}
+
+		xmlDoc = binaryParser.Parse ();
+		if (xmlDoc == null || !binaryParser.IsValid) {
+			Log.Debug ($"AXML parser didn't render a valid document for '{Description}'");
+			return;
+		}
+		Log.Debug ($"'{Description}' loaded and parsed correctly.");
+	}
+
+	static XmlDocument ParsePlainXML (Stream stream)
+	{
+		stream.Seek (0, SeekOrigin.Begin);
+		var settings = new XmlReaderSettings {
+			IgnoreComments = true,
+			IgnoreProcessingInstructions = true,
+			IgnoreWhitespace = true,
+		};
+
+		using var reader = XmlReader.Create (stream, settings);
+		var doc = new XmlDocument ();
+		doc.Load (reader);
+
+		return doc;
 	}
 }
