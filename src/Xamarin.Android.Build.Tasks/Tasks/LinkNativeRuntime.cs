@@ -159,6 +159,6 @@ public class LinkNativeRuntime : AsyncTask
 
 	bool AbiMatches (string abi, ITaskItem item, string itemName)
 	{
-		return String.Compare (abi, item.GetRequiredMetadata (itemName, "Abi", Log), StringComparison.OrdinalIgnoreCase) == 0;
+		return MonoAndroidHelper.StringEquals (abi, item.GetRequiredMetadata (itemName, "Abi", Log), StringComparison.OrdinalIgnoreCase);
 	}
 }
