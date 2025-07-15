@@ -1,6 +1,4 @@
 // Copyright (C) 2012 Xamarin, Inc. All rights reserved.
-
-
 #nullable enable
 using System;
 using System.Linq;

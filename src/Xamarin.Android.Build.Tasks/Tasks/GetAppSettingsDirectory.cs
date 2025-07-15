@@ -1,7 +1,5 @@
 // Author: Jonathan Pobst <jpobst@xamarin.com>
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
-
-
 #nullable enable
 using System;
 using System.IO;

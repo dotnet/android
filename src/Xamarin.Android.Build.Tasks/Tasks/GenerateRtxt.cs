@@ -1,5 +1,4 @@
 // Copyright (C) 2022 Microsoft Ltd, Inc. All rights reserved.
-
 #nullable enable
 using System;
 using System.IO;

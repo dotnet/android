@@ -1,7 +1,5 @@
 // Copyright (C) 2011, Xamarin Inc.
 // Copyright (C) 2010, Novell Inc.
-
-
 #nullable enable
 using System;
 using System.IO;
