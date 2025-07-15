@@ -28,7 +28,7 @@ class ARSCHeader
 		}
 
 		// Data in AXML is little-endian, which is fortuitous as that's the only format BinaryReader understands.
-		using BinaryReader reader = Utilities.GetReaderAndRewindStream (data);
+		using BinaryReader reader = Utilities.GetReaderAndRewindStream (data, rewindStream: false);
 
 		// ushort: type
 		// ushort: header_size

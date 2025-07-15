@@ -49,6 +49,7 @@ public abstract class ApplicationPackage : IAspect
 	public string MainActivity { get; protected set; } = "";
 	public List<AssemblyStore>? AssemblyStores { get; protected set; }
 	public List<AndroidTargetArch> Architectures { get; protected set; } = new ();
+	public List<NativeAppInfo> NativeAppInfos { get; protected set; } = new ();
 
 	AndroidManifest? manifest;
 
@@ -85,6 +86,7 @@ public abstract class ApplicationPackage : IAspect
 		ret.TryDetectWhetherIsSigned ();
 		ret.TryLoadAssemblyStores ();
 		ret.TryLoadAndroidManifest ();
+		ret.TryLoadXamarinAppLibraries ();
 
 		return ret;
 	}
@@ -138,6 +140,41 @@ public abstract class ApplicationPackage : IAspect
 
 		// TODO: it might be statically linked CoreCLR runtime. Need to check for presence of
 		//       some public symbols to verify that.
+	}
+
+	void TryLoadXamarinAppLibraries ()
+	{
+		foreach (AndroidTargetArch arch in Architectures) {
+			string libPath = GetNativeLibFile (arch, "libxamarin-app.so");
+			LibXamarinApp? lib = TryLoadLibXamarinApp (libPath);
+			if (lib == null) {
+				continue;
+			}
+			NativeAppInfos.Add (new NativeAppInfo (lib));
+		}
+	}
+
+	LibXamarinApp? TryLoadLibXamarinApp (string libPath)
+	{
+		Stream? libStream = TryGetEntryStream (libPath);
+		if (libStream == null) {
+			return null;
+		}
+
+		string fullLibPath = $"{Description}@!{libPath}";
+		try {
+			IAspectState state = LibXamarinApp.ProbeAspect (libStream, fullLibPath);
+			if (!state.Success) {
+				Log.Debug ($"Assembly store '{libPath}' is not in a supported format");
+				libStream.Close ();
+				return null;
+			}
+
+			return (LibXamarinApp)LibXamarinApp.LoadAspect (libStream, state, fullLibPath);
+		} catch (Exception ex) {
+			Log.Debug ($"Failed to load Xamarin app library '{libPath}'. Exception thrown:", ex);
+			return null;
+		}
 	}
 
 	void TryDetectWhetherIsSigned ()
