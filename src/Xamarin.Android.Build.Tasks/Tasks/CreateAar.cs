@@ -1,3 +1,5 @@
+
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -125,7 +127,7 @@ namespace Xamarin.Android.Tasks
 				if (AndroidManifest != null && File.Exists (AndroidManifest.ItemSpec)) {
 					var manifest = File.ReadAllText (AndroidManifest.ItemSpec);
 					var doc = XDocument.Parse(manifest);
-					if (!string.IsNullOrEmpty (doc.Element ("manifest")?.Attribute ("package")?.Value ?? string.Empty)) {
+					if (!string.IsNullOrEmpty (doc.Element ("manifest")?.Attribute ("package")?.Value)) {
 						aar.AddEntry ("AndroidManifest.xml", manifest, Files.UTF8withoutBOM);
 					} else {
 						Log.LogDebugMessage ($"Skipping {AndroidManifest.ItemSpec}. The `manifest` does not have a `package` attribute.");

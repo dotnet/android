@@ -1,5 +1,7 @@
 // Copyright (C) 2012 Xamarin, Inc. All rights reserved.
 
+
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -169,18 +171,18 @@ namespace Xamarin.Android.Tasks
 
 				if (OnlyRunXmlAdjuster)
 					WriteLine (sw, "--only-xml-adjuster");
-				if (!string.IsNullOrEmpty (XmlAdjusterOutput))
+				if (!XmlAdjusterOutput.IsNullOrEmpty ())
 					WriteLine (sw, $"--xml-adjuster-output=\"{XmlAdjusterOutput}\"");
 
-				if (!string.IsNullOrEmpty (CodegenTarget))
+				if (!CodegenTarget.IsNullOrEmpty ())
 					WriteLine (sw, $"--codegen-target={CodegenTarget}");
-				if (!string.IsNullOrEmpty (OutputDirectory))
+				if (!OutputDirectory.IsNullOrEmpty ())
 					WriteLine (sw, $"--csdir=\"{OutputDirectory}\"");
-				if (!string.IsNullOrEmpty (EnumDirectory))
+				if (!EnumDirectory.IsNullOrEmpty ())
 					WriteLine (sw, $"--enumdir=\"{EnumDirectory}\"");
-				if (!string.IsNullOrEmpty (EnumMetadataDirectory))
+				if (!EnumMetadataDirectory.IsNullOrEmpty ())
 					WriteLine (sw, $"--enummetadata=\"{EnumMetadataDirectory}\"");
-				if (!string.IsNullOrEmpty (AssemblyName))
+				if (!AssemblyName.IsNullOrEmpty ())
 					WriteLine (sw, $"--assembly=\"{AssemblyName}\"");
 
 				if (!NoStdlib) {
@@ -198,10 +200,10 @@ namespace Xamarin.Android.Tasks
 				foreach (var tf in transform_files)
 					WriteLine (sw, $"\"--{tf.Item2}={tf.Item1}\"");
 
-				if (!string.IsNullOrEmpty (AndroidApiLevel))
+				if (!AndroidApiLevel.IsNullOrEmpty ())
 					WriteLine (sw, $"--api-level={AndroidApiLevel}");
 
-				if (!string.IsNullOrEmpty (TypeMappingReportFile))
+				if (!TypeMappingReportFile.IsNullOrEmpty ())
 					WriteLine (sw, $"--type-map-report=\"{TypeMappingReportFile}\"");
 
 				WriteLine (sw, "--global");
@@ -239,7 +241,7 @@ namespace Xamarin.Android.Tasks
 						WriteLine (sw, $"--lang-features={string.Join (",", features)}");
 				}
 
-				if (!string.IsNullOrEmpty (JavadocVerbosity))
+				if (!JavadocVerbosity.IsNullOrEmpty ())
 					WriteLine (sw, $"\"--doc-comment-verbosity={JavadocVerbosity}\"");
 
 				if (JavadocXml != null) {

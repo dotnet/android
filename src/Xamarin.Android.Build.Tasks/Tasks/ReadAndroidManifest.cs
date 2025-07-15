@@ -1,3 +1,5 @@
+
+#nullable enable
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Collections.Generic;
@@ -63,7 +65,7 @@ namespace Xamarin.Android.Tasks
 				var libraries = new List<ITaskItem> ();
 				foreach (var uses_library in app.Elements ("uses-library")) {
 					var attribute = uses_library.Attribute (androidNs + "name");
-					if (attribute != null && !string.IsNullOrEmpty (attribute.Value)) {
+					if (attribute != null && !attribute.Value.IsNullOrEmpty ()) {
 						var required = uses_library.Attribute (androidNs + "required")?.Value;
 						var path = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{AndroidApiLevel}", "optional", $"{attribute.Value}.jar");
 						if (File.Exists (path)) {

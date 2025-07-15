@@ -1,3 +1,5 @@
+
+#nullable enable
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -84,7 +86,7 @@ namespace Xamarin.Android.Tasks {
 		{
 			foreach (var resource in Resources) {
 				var resourceFile = resource.GetMetadata ("LogicalName").Replace ('\\', Path.DirectorySeparatorChar);
-				if (string.IsNullOrEmpty (resourceFile))
+				if (resourceFile.IsNullOrEmpty ())
 					resourceFile = resource.ItemSpec;
 				var fileName = Path.GetFileName (resourceFile);
 				var directory = Path.GetFileName (Path.GetDirectoryName (resourceFile));

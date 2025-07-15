@@ -1,3 +1,5 @@
+
+#nullable enable
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
@@ -86,7 +88,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			string toolsZipAlignPath = Path.Combine (AndroidSdkPath, "tools", ZipAlign);
-			bool findZipAlign = (string.IsNullOrEmpty (ZipAlignPath) || !Directory.Exists (ZipAlignPath)) && !File.Exists (toolsZipAlignPath);
+			bool findZipAlign = (ZipAlignPath.IsNullOrEmpty () || !Directory.Exists (ZipAlignPath)) && !File.Exists (toolsZipAlignPath);
 
 			var lintPaths = MonoAndroidHelper.AndroidSdk.GetCommandLineToolsPaths (CommandLineToolsVersion ?? "")
 				.SelectMany (p => new[]{
@@ -113,7 +115,7 @@ namespace Xamarin.Android.Tasks
 				};
 
 				string aapt = toolsPaths.FirstOrDefault (x => File.Exists (Path.Combine (x, MonoAndroidHelper.GetExecutablePath (x, Aapt2))));
-				if (string.IsNullOrEmpty (aapt)) {
+				if (aapt.IsNullOrEmpty ()) {
 					Log.LogDebugMessage ("Could not find `{0}`; tried: {1}", Aapt2,
 						string.Join (Path.PathSeparator.ToString (), toolsPaths.Select (x => Path.Combine (x, Aapt2))));
 					continue;
@@ -122,7 +124,7 @@ namespace Xamarin.Android.Tasks
 				AndroidSdkBuildToolsBinPath = Path.GetFullPath (aapt);
 
 				string zipalign = toolsPaths.FirstOrDefault (x => File.Exists (Path.Combine (x, ZipAlign)));
-				if (findZipAlign && string.IsNullOrEmpty (zipalign)) {
+				if (findZipAlign && zipalign.IsNullOrEmpty ()) {
 					Log.LogDebugMessage ("Could not find `{0}`; tried: {1}", ZipAlign,
 						string.Join (Path.PathSeparator.ToString (), toolsPaths.Select (x => Path.Combine (x, ZipAlign))));
 					continue;
@@ -130,7 +132,7 @@ namespace Xamarin.Android.Tasks
 					break;
 			}
 
-			if (string.IsNullOrEmpty (AndroidSdkBuildToolsPath)) {
+			if (AndroidSdkBuildToolsPath.IsNullOrEmpty ()) {
 				Log.LogCodedError ("XA5205", Properties.Resources.XA5205,
 						Aapt2, AndroidSdkPath, Path.DirectorySeparatorChar, Android);
 				return false;
@@ -140,7 +142,7 @@ namespace Xamarin.Android.Tasks
 			AndroidUseApkSigner = File.Exists (ApkSignerJar);
 
 			var aapt2Exe = Aapt2;
-			if (string.IsNullOrEmpty (Aapt2ToolPath)) {
+			if (Aapt2ToolPath.IsNullOrEmpty ()) {
 				var osBinPath = MonoAndroidHelper.GetOSBinPath ();
 				aapt2Exe = MonoAndroidHelper.GetExecutablePath (osBinPath, Aapt2);
 				var aapt2 = Path.Combine (osBinPath, aapt2Exe);
@@ -154,13 +156,13 @@ namespace Xamarin.Android.Tasks
 						Aapt2ToolPath = AndroidSdkBuildToolsBinPath;
 				}
 			}
-			if (string.IsNullOrEmpty (Aapt2ToolPath) || !File.Exists (Path.Combine (Aapt2ToolPath, aapt2Exe))) {
+			if (Aapt2ToolPath.IsNullOrEmpty () || !File.Exists (Path.Combine (Aapt2ToolPath, aapt2Exe))) {
 				Log.LogCodedError ("XA0112", Properties.Resources.XA0112, Aapt2ToolPath);
 			} else if (!GetAapt2Version (aapt2Exe)) {
 				Log.LogCodedError ("XA0111", Properties.Resources.XA0111, Aapt2ToolPath);
 			}
 
-			if (string.IsNullOrEmpty (ZipAlignPath) || !Directory.Exists (ZipAlignPath)) {
+			if (ZipAlignPath.IsNullOrEmpty () || !Directory.Exists (ZipAlignPath)) {
 				ZipAlignPath = new [] {
 						Path.Combine (AndroidSdkBuildToolsPath),
 						Path.Combine (AndroidSdkBuildToolsBinPath),
@@ -169,7 +171,7 @@ namespace Xamarin.Android.Tasks
 					.Where (p => File.Exists (Path.Combine (p, ZipAlign)))
 					.FirstOrDefault ();
 			}
-			if (string.IsNullOrEmpty (ZipAlignPath)) {
+			if (ZipAlignPath.IsNullOrEmpty ()) {
 				Log.LogCodedError ("XA5205", Properties.Resources.XA5205,
 						ZipAlign, AndroidSdkPath, Path.DirectorySeparatorChar, Android);
 				return false;
@@ -190,7 +192,7 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		protected virtual bool Validate () => !string.IsNullOrEmpty (AndroidApiLevel);
+		protected virtual bool Validate () => !AndroidApiLevel.IsNullOrEmpty ();
 
 		protected virtual void LogOutputs ()
 		{
@@ -230,10 +232,10 @@ namespace Xamarin.Android.Tasks
 
 			try {
 				MonoAndroidHelper.RunProcess (aapt2Tool, "version", (s, e) => {
-					if (!string.IsNullOrEmpty (e.Data))
+					if (!e.Data.IsNullOrEmpty ())
 						sb.AppendLine (e.Data);
 				}, (s, e) => {
-					if (!string.IsNullOrEmpty (e.Data))
+					if (!e.Data.IsNullOrEmpty ())
 						sb.AppendLine (e.Data);
 				}
 				);

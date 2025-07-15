@@ -1,3 +1,5 @@
+
+#nullable enable
 using System;
 using System.IO;
 using System.Text;
@@ -122,10 +124,10 @@ namespace Xamarin.Android.Tasks
 
 			var sb = new StringBuilder ();
 			MonoAndroidHelper.RunProcess (javaTool, "-version", (s, e) => {
-				if (!string.IsNullOrEmpty (e.Data))
+				if (!e.Data.IsNullOrEmpty ())
 					sb.AppendLine (e.Data);
 			}, (s, e) => {
-				if (!string.IsNullOrEmpty (e.Data))
+				if (!e.Data.IsNullOrEmpty ())
 					sb.AppendLine (e.Data);
 			});
 			var versionInfo = sb.ToString ();

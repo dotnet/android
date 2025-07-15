@@ -1,4 +1,6 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
+
+#nullable enable
 using System;
 using System.CodeDom;
 using System.CodeDom.Compiler;
@@ -45,10 +47,10 @@ namespace Xamarin.Android.Tasks
 				ParcelableHandling = ParcelableHandling.Ignore,
 			};
 
-			if (!string.IsNullOrEmpty (ParcelableHandlingOption))
+			if (!ParcelableHandlingOption.IsNullOrEmpty ())
 				opts.ParcelableHandling = ToParcelableHandling (ParcelableHandlingOption);
 
-			if (!string.IsNullOrEmpty (OutputNamespace))
+			if (!OutputNamespace.IsNullOrEmpty ())
 				opts.OutputNS = OutputNamespace;
 
 			foreach (var file in References) {

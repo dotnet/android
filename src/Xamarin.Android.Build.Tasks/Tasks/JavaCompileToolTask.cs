@@ -1,5 +1,7 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
+
+#nullable enable
 using System;
 using System.Linq;
 using System.IO;
@@ -66,7 +68,7 @@ namespace Xamarin.Android.Tasks
 					foreach (var file in JavaSourceFiles.Where (p => Path.GetExtension (p.ItemSpec) == ".java"))
 						sw.WriteLine (string.Format ("\"{0}\"", file.ItemSpec.Replace (@"\", @"\\")));
 
-				if (string.IsNullOrEmpty (StubSourceDirectory))
+				if (StubSourceDirectory.IsNullOrEmpty ())
 					return;
 
 				if (!Directory.Exists (StubSourceDirectory))

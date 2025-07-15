@@ -1,3 +1,5 @@
+
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -128,7 +130,7 @@ namespace Xamarin.Android.Tasks
 				Files.SetDirectoryWriteable (directory.ItemSpec);
 			}
 
-			if (!string.IsNullOrEmpty (CacheFile)) {
+			if (!CacheFile.IsNullOrEmpty ()) {
 				var document = new XDocument (
 					new XDeclaration ("1.0", "UTF-8", null),
 					new XElement ("Paths",
@@ -410,7 +412,7 @@ namespace Xamarin.Android.Tasks
 					}
 					if (Directory.Exists (resDir) || File.Exists (rTxt)) {
 						var skipProcessing = aarFile.GetMetadata (AndroidSkipResourceProcessing);
-						if (string.IsNullOrEmpty (skipProcessing)) {
+						if (skipProcessing.IsNullOrEmpty ()) {
 							skipProcessing = "True";
 						}
 						resolvedResourceDirectories.Add (new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
@@ -475,7 +477,7 @@ namespace Xamarin.Android.Tasks
 					if (Directory.Exists (resDir))
 						CreateResourceArchive (resDir, resDirArchive);
 					var skipProcessing = aarFile.GetMetadata (AndroidSkipResourceProcessing);
-					if (string.IsNullOrEmpty (skipProcessing)) {
+					if (skipProcessing.IsNullOrEmpty ()) {
 						skipProcessing = "True";
 					}
 					resolvedResourceDirectories.Add (new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {

@@ -1,3 +1,5 @@
+
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -64,12 +66,12 @@ namespace Xamarin.Android.Tasks
 		void GenerateFeatureManifest (XDocument doc)
 		{
 			XAttribute? featureTitleResource = null;
-			if (!string.IsNullOrEmpty (FeatureTitleResource))
+			if (!FeatureTitleResource.IsNullOrEmpty ())
 				featureTitleResource = new XAttribute (distNS + "title", FeatureTitleResource);
 			XElement usesSdk = new XElement ("uses-sdk");
-			if (!string.IsNullOrEmpty (MinSdkVersion))
+			if (!MinSdkVersion.IsNullOrEmpty ())
 				usesSdk.Add (new XAttribute (androidNS + "minSdkVersion", MinSdkVersion));
-			if (!string.IsNullOrEmpty (MinSdkVersion))
+			if (!MinSdkVersion.IsNullOrEmpty ())
 				usesSdk.Add (new XAttribute (androidNS + "targetSdkVersion", TargetSdkVersion));
 			doc.Add (new XElement ("manifest",
 					new XAttribute (XNamespace.Xmlns + "android", androidNS),

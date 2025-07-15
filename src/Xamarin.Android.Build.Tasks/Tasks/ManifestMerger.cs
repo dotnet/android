@@ -1,3 +1,5 @@
+
+#nullable enable
 using System;
 using System.IO;
 using System.Linq;
@@ -44,7 +46,7 @@ namespace Xamarin.Android.Tasks
 
 		protected override void GetLineNumber (string match, out int line, out int column)
 		{
-			if (string.IsNullOrEmpty (match)) {
+			if (match.IsNullOrEmpty ()) {
 				line = 0;
 				column = 0;
 				return;
@@ -104,7 +106,7 @@ namespace Xamarin.Android.Tasks
 		{
 			var cmd = new CommandLineBuilder ();
 
-			if (!string.IsNullOrEmpty (JavaOptions)) {
+			if (!JavaOptions.IsNullOrEmpty ()) {
 				cmd.AppendSwitch (JavaOptions);
 			}
 			cmd.AppendSwitchIfNotNull ("-Xmx", JavaMaximumHeapSize);

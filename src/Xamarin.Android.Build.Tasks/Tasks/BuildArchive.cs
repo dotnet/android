@@ -1,3 +1,5 @@
+
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -269,7 +271,7 @@ public class BuildArchive : AndroidTask
 		foreach (var extension in UncompressedFileExtensions?.Split ([';', ','], StringSplitOptions.RemoveEmptyEntries) ?? []) {
 			var ext = extension.Trim ();
 
-			if (string.IsNullOrEmpty (ext)) {
+			if (ext.IsNullOrEmpty ()) {
 				continue;
 			}
 
