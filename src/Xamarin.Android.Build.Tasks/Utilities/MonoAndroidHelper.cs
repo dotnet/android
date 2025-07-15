@@ -809,6 +809,8 @@ namespace Xamarin.Android.Tasks
 		{
 			if (stream.CanSeek) {
 				stream.Seek (0, SeekOrigin.Begin);
+			} else {
+				log.LogDebugMessage ("Output stream not seekable in MonoAndroidHelper.LogTextStreamContents");
 			}
 
 			using var reader = new StreamReader (stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, bufferSize: -1, leaveOpen: true);
