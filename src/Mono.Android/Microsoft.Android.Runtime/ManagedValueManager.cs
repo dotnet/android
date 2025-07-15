@@ -392,6 +392,10 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		public static void Free (ref HandleContext* context)
 		{
 			if (context != null) {
+				lock (referenceTrackingHandles) {
+					referenceTrackingHandles.Remove ((IntPtr)context);
+				}
+
 				NativeMemory.Free (context);
 				context = null;
 			}
