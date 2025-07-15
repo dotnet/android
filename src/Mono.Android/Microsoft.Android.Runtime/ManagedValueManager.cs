@@ -415,7 +415,9 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	[UnmanagedCallersOnly]
 	static unsafe void BridgeProcessingFinished (MarkCrossReferencesArgs* mcr)
 	{
-		Trace.Assert (mcr != null, "MarkCrossReferenceArgs should never be null.");
+		if (mcr == null) {
+			throw new ArgumentNullException (nameof (mcr), "MarkCrossReferencesArgs should never be null.");
+		}
 
 		ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (mcr);
 		JavaMarshal.FinishCrossReferenceProcessing (mcr, handlesToFree);
@@ -437,7 +439,9 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 		void ProcessContext (HandleContext* context)
 		{
-			Trace.Assert (context != null, "Context should never be null.");
+			if (context == null) {
+				throw new ArgumentNullException (nameof (context), "HandleContext should never be null.");
+			}
 
 			// Ignore contexts which were not collected
 			if (!context->IsCollected) {
