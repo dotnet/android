@@ -356,11 +356,19 @@ class ManagedValueManager : JniRuntime.JniValueManager
 			}
 		}
 
-		public static void EnsureAllContextsAreOurs (ReadOnlySpan<IntPtr> contexts)
+		public static unsafe void EnsureAllContextsAreOurs (MarkCrossReferencesArgs* mcr)
 		{
 			lock (referenceTrackingHandles) {
-				foreach (var context in contexts) {
-					EnsureContextIsOurs (context);
+				for (nuint i = 0; i < mcr->ComponentCount; i++) {
+					StronglyConnectedComponent component = mcr->Components [i];
+					EnsureAllContextsInComponentAreOurs (component);
+				}
+			}
+
+			static void EnsureAllContextsInComponentAreOurs (StronglyConnectedComponent component)
+			{
+				for (nuint i = 0; i < component.Count; i++) {
+					EnsureContextIsOurs ((IntPtr)component.Contexts [i]);
 				}
 			}
 
@@ -408,11 +416,12 @@ class ManagedValueManager : JniRuntime.JniValueManager
 	[UnmanagedCallersOnly]
 	static unsafe void BridgeProcessingStarted (MarkCrossReferencesArgs* mcr)
 	{
-		bridgeProcessingSemaphore.Wait ();
+		if (mcr == null) {
+			throw new ArgumentNullException (nameof (mcr), "MarkCrossReferencesArgs should never be null.");
+		}
 
-		int count = checked ((int)mcr->ComponentCount);
-		ReadOnlySpan<IntPtr> contexts = new (mcr->Components, count);
-		HandleContext.EnsureAllContextsAreOurs (contexts);
+		HandleContext.EnsureAllContextsAreOurs (mcr);
+		bridgeProcessingSemaphore.Wait ();
 	}
 
 	[UnmanagedCallersOnly]
