@@ -99,7 +99,7 @@ public class GetNativeRuntimeComponents : AndroidTask
 	{
 		foreach (ITaskItem item in inputItems) {
 			string name = Path.GetFileName (item.ItemSpec);
-			if (String.Compare (name, fileName, StringComparison.OrdinalIgnoreCase) == 0) {
+			if (MonoAndroidHelper.StringEquals (name, fileName, StringComparison.OrdinalIgnoreCase)) {
 				outputItems.Add (DoMakeItem (msbuildItemName, item, uniqueAbis));
 			}
 		}
