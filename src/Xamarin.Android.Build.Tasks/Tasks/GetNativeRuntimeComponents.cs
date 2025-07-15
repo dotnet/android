@@ -109,7 +109,7 @@ public class GetNativeRuntimeComponents : AndroidTask
 	{
 		foreach (ITaskItem resolvedArchive in ResolvedNativeArchives) {
 			string fileName = Path.GetFileName (resolvedArchive.ItemSpec);
-			if (String.Compare (fileName, archive.Name, StringComparison.OrdinalIgnoreCase) != 0) {
+			if (!MonoAndroidHelper.StringEquals (fileName, archive.Name, StringComparison.OrdinalIgnoreCase)) {
 				continue;
 			}
 
