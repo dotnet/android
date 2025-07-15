@@ -262,11 +262,11 @@ _ResolveAssemblies MSBuild target.
          DO NOT modify the group unless you're absolutely sure what you're doing -->
     <ItemGroup Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " >
       <_KnownRuntimeNativeLibrary Include="libSystem.Globalization.Native.so" />
-        <_KnownRuntimeNativeLibrary Include="libSystem.IO.Compression.Native.so" />
-        <_KnownRuntimeNativeLibrary Include="libSystem.Native.so" />
-        <_KnownRuntimeNativeLibrary Include="libSystem.Security.Cryptography.Native.Android.so" />
-        <_KnownRuntimeNativeLibrary Include="libclrjit.so" />
-        <_KnownRuntimeNativeLibrary Include="libcorclr.so" />
+      <_KnownRuntimeNativeLibrary Include="libSystem.IO.Compression.Native.so" />
+      <_KnownRuntimeNativeLibrary Include="libSystem.Native.so" />
+      <_KnownRuntimeNativeLibrary Include="libSystem.Security.Cryptography.Native.Android.so" />
+      <_KnownRuntimeNativeLibrary Include="libclrjit.so" />
+      <_KnownRuntimeNativeLibrary Include="libcorclr.so" />
     </ItemGroup>
 
     <ProcessNativeLibraries
