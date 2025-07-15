@@ -24,7 +24,8 @@ struct HandleContext
 
 	bool is_collected () const noexcept
 	{
-		return control_block == nullptr;
+		abort_unless (control_block != nullptr, "Control block must not be null");
+		return control_block->handle == nullptr;
 	}
 };
 

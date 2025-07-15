@@ -220,18 +220,15 @@ void BridgeProcessing::take_global_ref (HandleContext &context) noexcept
 	jobject handle = env->NewGlobalRef (weak);
 	log_weak_to_gref (weak, handle);
 
-	if (handle != nullptr) {
-		log_weak_ref_survived (weak, handle);
-
-		context.control_block->handle = handle;
-		context.control_block->handle_type = JNIGlobalRefType;
-
-		env->DeleteWeakGlobalRef (weak);
-	} else {
-		// The native memory of the control block will be freed in managed code as well as the weak global ref
-		context.control_block = nullptr;
+	if (handle == nullptr) {
 		log_weak_ref_collected (weak);
 	}
+
+	context.control_block->handle = handle; // by doing this, the weak reference won't be deleted AGAIN in managed code
+	context.control_block->handle_type = JNIGlobalRefType;
+
+	log_weak_ref_delete (weak);
+	env->DeleteWeakGlobalRef (weak);
 }
 
 void BridgeProcessing::take_weak_global_ref (const HandleContext &context) noexcept
@@ -343,6 +340,13 @@ void BridgeProcessing::log_missing_clear_references_method ([[maybe_unused]] jcl
 [[gnu::always_inline]]
 void BridgeProcessing::log_weak_to_gref (jobject weak, jobject handle) noexcept
 {
+	if (handle != nullptr) {
+		OSBridge::_monodroid_gref_log_new (weak, OSBridge::get_object_ref_type (env, weak),
+			handle, OSBridge::get_object_ref_type (env, handle),
+			"finalizer", gettid (),
+			"   at [[clr-gc:take_global_ref]]", 0);
+	}
+	
 	if (!Logger::gref_log ()) [[likely]] {
 		return;
 	}
@@ -351,18 +355,6 @@ void BridgeProcessing::log_weak_to_gref (jobject weak, jobject handle) noexcept
 		std::format ("take_global_ref wref={:#x} -> handle={:#x}\n"sv,
 			reinterpret_cast<intptr_t> (weak),
 			reinterpret_cast<intptr_t> (handle)).data ());
-}
-
-[[gnu::always_inline]]
-void BridgeProcessing::log_weak_ref_survived (jobject weak, jobject handle) noexcept
-{
-	OSBridge::_monodroid_gref_log_new (weak, OSBridge::get_object_ref_type (env, weak),
-			handle, OSBridge::get_object_ref_type (env, handle),
-			"finalizer", gettid (),
-			"   at [[clr-gc:take_global_ref]]", 0);
-
-	OSBridge::_monodroid_weak_gref_delete (weak, OSBridge::get_object_ref_type (env, weak),
-		"finalizer", gettid (), "   at [[clr-gc:take_global_ref]]", 0);
 }
 
 [[gnu::always_inline]]
@@ -399,6 +391,13 @@ void BridgeProcessing::log_gref_delete (jobject handle) noexcept
 {
 	OSBridge::_monodroid_gref_log_delete (handle, OSBridge::get_object_ref_type (env, handle),
 		"finalizer", gettid (), "   at [[clr-gc:take_weak_global_ref]]", 0);
+}
+
+[[gnu::always_inline]]
+void BridgeProcessing::log_weak_ref_delete (jobject weak) noexcept
+{
+	OSBridge::_monodroid_weak_gref_delete (weak, OSBridge::get_object_ref_type (env, weak),
+		"finalizer", gettid (), "   at [[clr-gc:take_global_ref]]", 0);
 }
 
 [[gnu::always_inline]]

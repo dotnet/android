@@ -54,10 +54,10 @@ private:
 	void log_missing_add_references_method (jclass java_class) noexcept;
 	void log_missing_clear_references_method (jclass java_class) noexcept;
 	void log_weak_to_gref (jobject weak, jobject handle) noexcept;
-	void log_weak_ref_survived (jobject weak, jobject handle) noexcept;
 	void log_weak_ref_collected (jobject weak) noexcept;
 	void log_take_weak_global_ref (jobject handle) noexcept;
 	void log_weak_gref_new (jobject handle, jobject weak) noexcept;
 	void log_gref_delete (jobject handle) noexcept;
+	void log_weak_ref_delete (jobject weak) noexcept;
 	void log_gc_summary () noexcept;
 };

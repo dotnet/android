@@ -343,18 +343,36 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		IntPtr controlBlock;
 
 		public int PeerIdentityHashCode => identityHashCode;
-		public bool IsCollected => controlBlock == IntPtr.Zero;
-
-		public static GCHandle GetAssociatedGCHandle (HandleContext* context)
+		public bool IsCollected
 		{
-			lock (referenceTrackingHandles) {
-				if (!referenceTrackingHandles.TryGetValue ((IntPtr)context, out GCHandle handle)) {
-					throw new InvalidOperationException ("Unknown reference tracking handle.");
-				}
+			get
+			{
+				if (controlBlock == IntPtr.Zero)
+					throw new InvalidOperationException ("HandleContext control block is not initialized.");
 
-				return handle;
+				return ((JniObjectReferenceControlBlock*) controlBlock)->handle == IntPtr.Zero;
 			}
 		}
+
+		// This is an internal mirror of the Java.Interop.JniObjectReferenceControlBlock
+		private struct JniObjectReferenceControlBlock
+		{
+			public IntPtr handle;
+			public int handle_type;
+			public IntPtr weak_handle;
+			public int refs_added;
+		}
+
+		public static GCHandle GetAssociatedGCHandle (HandleContext* context)
+			{
+				lock (referenceTrackingHandles) {
+					if (!referenceTrackingHandles.TryGetValue ((IntPtr) context, out GCHandle handle)) {
+						throw new InvalidOperationException ("Unknown reference tracking handle.");
+					}
+
+					return handle;
+				}
+			}
 
 		public static unsafe void EnsureAllContextsAreOurs (MarkCrossReferencesArgs* mcr)
 		{
