@@ -389,7 +389,7 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 
 		bool Matches (string libraryName, string componentName)
 		{
-			return String.Compare (libraryName, componentName, StringComparison.Ordinal) == 0;
+			return MonoAndroidHelper.StringEquals (libraryName, componentName, StringComparison.Ordinal);
 		}
 	}
 
