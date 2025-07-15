@@ -354,7 +354,7 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 	// care.  It doesn't mean the p/invoke will be removed in any way.
 	(bool preserve, string? componentName) MustPreserve (PinvokeScanner.PinvokeEntryInfo pinfo, ICollection<string> components)
 	{
-		if (String.Compare ("xa-internal-api", pinfo.LibraryName, StringComparison.Ordinal) == 0) {
+		if (MonoAndroidHelper.StringEquals ("xa-internal-api", pinfo.LibraryName, StringComparison.Ordinal)) {
 			return (true, null);
 		}
 
