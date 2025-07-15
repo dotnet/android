@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using Microsoft.Build.Framework;
 using System;
@@ -22,31 +22,33 @@ namespace Xamarin.Android.Tasks
 		/// The main R.txt for the app
 		/// </summary>
 		[Required]
-		public string ResourceSymbolsTextFile { get; set; }
+		public string ResourceSymbolsTextFile { get; set; } = "";
 
 		/// <summary>
 		/// The output directory for Java source code, such as: $(IntermediateOutputPath)android\src
 		/// </summary>
 		[Required]
-		public string OutputDirectory { get; set; }
+		public string OutputDirectory { get; set; } = "";
 
 		/// <summary>
 		/// The list of R.txt files for each library
 		/// </summary>
-		public string [] LibraryTextFiles { get; set; }
+		public string[]? LibraryTextFiles { get; set; }
 
 		/// <summary>
 		/// The accompanying manifest file for each library
 		/// </summary>
-		public string [] ManifestFiles { get; set; }
+		public string[]? ManifestFiles { get; set; }
 
-		string main_r_txt;
-		string output_directory;
-		Dictionary<string, string> r_txt_mapping;
+		string? main_r_txt;
+		string? output_directory;
+		Dictionary<string, string>? r_txt_mapping;
 
 		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
 			if (LibraryTextFiles == null || LibraryTextFiles.Length == 0)
+				return;
+			if (ManifestFiles == null)
 				return;
 
 			// Load the "main" R.txt file into a dictionary
@@ -73,7 +75,7 @@ namespace Xamarin.Android.Tasks
 
 				var manifest = AndroidAppManifest.Load (Path.GetFullPath (manifestFile), MonoAndroidHelper.SupportedVersions);
 				var packageName = manifest.PackageName;
-				if (string.IsNullOrEmpty (packageName)) {
+				if (packageName.IsNullOrEmpty ()) {
 					LogDebugMessage ($"Skipping, AndroidManifest.xml does not have a packageName: {manifestFile}");
 					continue;
 				}
@@ -100,7 +102,7 @@ namespace Xamarin.Android.Tasks
 			/// <summary>
 			/// The package name found in the AndroidManifest.xml file
 			/// </summary>
-			public string Name { get; set; }
+			public string Name { get; set; } = "";
 		}
 
 		/// <summary>
@@ -143,7 +145,7 @@ namespace Xamarin.Android.Tasks
 			if (r_txt == main_r_txt) {
 				return true;
 			}
-			if (r_txt_mapping.TryGetValue (key, out string value)) {
+			if (r_txt_mapping?.TryGetValue (key, out string? value) == true) {
 				line [Index.Value] = value;
 				return true;
 			}

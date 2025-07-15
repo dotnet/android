@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using Microsoft.Build.Framework;
@@ -43,24 +43,24 @@ namespace Xamarin.Android.Tasks
 		const string NoFileWarningOrErrorRegExString = @"(?<type>Warning|Error):(?<text>.+)";
 		Regex codeErrorRegEx = new Regex (CodeErrorRegExString, RegexOptions.Compiled);
 		Regex noFileWarningOrErrorRegEx = new Regex(NoFileWarningOrErrorRegExString, RegexOptions.Compiled);
-		Dictionary<string, string> _resource_name_case_map;
+		Dictionary<string, string>? _resource_name_case_map;
 		bool matched = false;
-		string file;
+		string? file;
 		int line;
 		int column;
-		string text;
-		string type;
+		string? text;
+		string? type;
 
 		Dictionary<string, string> resource_name_case_map => _resource_name_case_map ??= MonoAndroidHelper.LoadResourceCaseMap (BuildEngine4, ProjectSpecificTaskObjectKey);
 
 		[Required]
-		public string TargetDirectory { get; set; }
+		public string TargetDirectory { get; set; } = "";
 
 		[Required]
-		public string IntermediateOutputPath { get; set; }
+		public string IntermediateOutputPath { get; set; } = "";
 
 		[Required]
-		public string JavaSdkPath { get; set; }
+		public string JavaSdkPath { get; set; } = "";
 
 		/// <summary>
 		/// Location of an xml config files used to
@@ -81,7 +81,7 @@ namespace Xamarin.Android.Tasks
 		/// </code>
 		/// </example>
 		/// <value>The location of the config file.</value>
-		public ITaskItem[] ConfigFiles { get; set; }
+		public ITaskItem[]? ConfigFiles { get; set; }
 
 		/// <summary>
 		/// Enable the specific list of issues. This checks all
@@ -90,7 +90,7 @@ namespace Xamarin.Android.Tasks
 		/// issue id's or categories.
 		/// </summary>
 		/// <value>The list of issues to enable.</value>
-		public string EnabledIssues { get; set; }
+		public string? EnabledIssues { get; set; }
 
 		/// <summary>
 		/// Disable the list of categories or specific issue
@@ -98,7 +98,7 @@ namespace Xamarin.Android.Tasks
 		/// issue id's or categories
 		/// </summary>
 		/// <value>The issues to disable.</value>
-		public string DisabledIssues { get; set; }
+		public string? DisabledIssues { get; set; }
 
 		/// <summary>
 		/// Only check the specific list of issues. This will
@@ -107,62 +107,52 @@ namespace Xamarin.Android.Tasks
 		/// issue id's or categories.
 		/// </summary>
 		/// <value>The list of issues to check.</value>
-		public string CheckIssues { get; set; }
+		public string? CheckIssues { get; set; }
 
 		/// <summary>
 		/// Add the given folders (or paths) as a resource
 		/// directories for the project.
 		/// </summary>
 		/// <value>An array of ITaskItems containing the resource directories.</value>
-		public ITaskItem[] ResourceDirectories {get; set;}
+		public ITaskItem [] ResourceDirectories { get; set; } = [];
 
 		/// <summary>
 		/// Add the given folders (or paths) as a source directories
 		/// for the project.
 		/// </summary>
 		/// <value>An array of ITaskItems containing the source directories.</value>
-		public ITaskItem[] SourceDirectories   {get; set;}
+		public ITaskItem [] SourceDirectories { get; set; } = [];
 
 		/// <summary>
 		/// Add the given folder (or path) as a class directories
 		/// for the project.
 		/// </summary>
 		/// <value>An array of ITaskItems containing class directories.</value>
-		public ITaskItem[] ClassDirectories    {get; set;}
+		public ITaskItem [] ClassDirectories { get; set; } = [];
 
 		/// <summary>
 		/// Add the given folders (or jar files, or paths) as
 		/// class directories for the project.
 		/// </summary>
 		/// <value>An array of ITaskItems containing the class path jars.</value>
-		public ITaskItem[] ClassPathJars       {get; set;}
+		public ITaskItem [] ClassPathJars { get; set; } = [];
 
 		/// <summary>
 		/// Add the given folders (or paths) as a
 		/// class libraries for the project.
 		/// </summary>
 		/// <value>An array of ITaskItems containing the list of directories</value>
-		public ITaskItem[] LibraryDirectories  {get; set;}
+		public ITaskItem [] LibraryDirectories { get; set; } = [];
 
 		/// <summary>
 		/// Add the given jar files as a
 		/// class library for the project.
 		/// </summary>
 		/// <value>An array of ITaskITems containing the list of .jar files</value>
-		public ITaskItem[] LibraryJars         {get; set;}
+		public ITaskItem [] LibraryJars { get; set; } = [];
 
 		protected override string ToolName {
 			get { return OS.IsWindows ? "lint.bat" : "lint"; }
-		}
-
-		public Lint ()
-		{
-			ResourceDirectories = Array.Empty<ITaskItem> ();
-			SourceDirectories = Array.Empty<ITaskItem> ();
-			ClassDirectories = Array.Empty<ITaskItem> ();
-			ClassPathJars = Array.Empty<ITaskItem> ();
-			LibraryDirectories = Array.Empty<ITaskItem> ();
-			LibraryJars = Array.Empty<ITaskItem> ();
 		}
 
 		static readonly Dictionary<string, Version> DisabledIssuesByVersion = new Dictionary<string, Version> () {
@@ -197,7 +187,7 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			if (string.IsNullOrEmpty (ToolPath) || !File.Exists (GenerateFullPathToTool ())) {
+			if (ToolPath.IsNullOrEmpty () || !File.Exists (GenerateFullPathToTool ())) {
 				Log.LogCodedError ("XA5205", Properties.Resources.XA5205_Lint, ToolName);
 				return false;
 			}
@@ -208,8 +198,8 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ("  LintVersion: {0}", lintToolVersion);
 			foreach (var issue in DisabledIssuesByVersion) {
 				if (fromCmdlineTools || lintToolVersion >= issue.Value) {
-					if (string.IsNullOrEmpty (DisabledIssues) || !DisabledIssues.Contains (issue.Key))
-						DisabledIssues = issue.Key + (!string.IsNullOrEmpty (DisabledIssues) ? "," + DisabledIssues : "");
+					if (DisabledIssues.IsNullOrEmpty () || !DisabledIssues.Contains (issue.Key))
+						DisabledIssues = issue.Key + (!DisabledIssues.IsNullOrEmpty () ? "," + DisabledIssues : "");
 				}
 			}
 
@@ -227,10 +217,10 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		string CleanIssues (string issueToRemove, Version lintToolVersion, string issues, string issuePropertyName)
+		string? CleanIssues (string issueToRemove, Version lintToolVersion, string? issues, string issuePropertyName)
 		{
 			Regex issueReplaceRegex = new Regex ($"\b{issueToRemove}\b(,)?");
-			if (!string.IsNullOrEmpty (issues) && issues.Contains (issueToRemove)) {
+			if (!issues.IsNullOrEmpty () && issues.Contains (issueToRemove)) {
 				var match = issueReplaceRegex.Match (DisabledIssues);
 				if (match.Success) {
 					issues = issues.Replace (match.Value, string.Empty);
@@ -293,7 +283,7 @@ namespace Xamarin.Android.Tasks
 				}
 				matched = true;
 				file = match.Groups ["file"].Value;
-				if (!string.IsNullOrEmpty (file)) {
+				if (!file.IsNullOrEmpty ()) {
 					file = Path.Combine (TargetDirectory, file);
 					// Try to map back to the original resource file, so when the user
 					// double clicks the error, it won't take them to the obj/Debug copy
@@ -301,7 +291,7 @@ namespace Xamarin.Android.Tasks
 						foreach (var dir in ResourceDirectories) {
 							var resourceDirectory = Path.Combine (TargetDirectory, dir.ItemSpec);
 							string newfile = MonoAndroidHelper.FixUpAndroidResourcePath (file, resourceDirectory, string.Empty, resource_name_case_map);
-							if (!string.IsNullOrEmpty (newfile)) {
+							if (!newfile.IsNullOrEmpty ()) {
 								file = newfile;
 								break;
 							}
@@ -312,7 +302,7 @@ namespace Xamarin.Android.Tasks
 				int.TryParse (match.Groups ["line"].Value, out line);
 				text = match.Groups ["text"].Value.Trim ();
 				type = match.Groups ["type"].Value;
-				if (string.IsNullOrEmpty (type))
+				if (type.IsNullOrEmpty ())
 					type = text.Contains ("Error") ? "Error" : "Warning";
 				column = 0;
 			}
@@ -333,15 +323,15 @@ namespace Xamarin.Android.Tasks
 		{
 			matched = false;
 			if (type == "Warning") {
-				if (!string.IsNullOrEmpty (file))
-					Log.LogWarning ("", "XA0102", "", file, line, column, 0, 0, text.Replace ("Warning:", ""));
+				if (!file.IsNullOrEmpty ())
+					Log.LogWarning ("", "XA0102", "", file, line, column, 0, 0, text?.Replace ("Warning:", "") ?? "");
 				else
-					Log.LogCodedWarning ("XA0102", text.Replace ("Warning:", ""));
+					Log.LogCodedWarning ("XA0102", text?.Replace ("Warning:", "") ?? "");
 			} else {
-				if (!string.IsNullOrEmpty (file))
-					Log.LogError ("", "XA0103", "", file, line, column, 0, 0, text.Replace ("Error:", ""));
+				if (!file.IsNullOrEmpty ())
+					Log.LogError ("", "XA0103", "", file, line, column, 0, 0, text?.Replace ("Error:", "") ?? "");
 				else
-					Log.LogCodedError ("XA0103", text.Replace ("Error:", ""));
+					Log.LogCodedError ("XA0103", text?.Replace ("Error:", "") ?? "");
 			}
 		}
 
@@ -350,7 +340,7 @@ namespace Xamarin.Android.Tasks
 			var config = new XDocument ();
 			var lintRoot = new XElement ("lint");
 			config.Add (lintRoot);
-			foreach (var configFile in ConfigFiles) {
+			foreach (var configFile in ConfigFiles ?? []) {
 				var doc = XDocument.Load (configFile.ItemSpec);
 				var issues = doc.Element ("lint").Elements ("issue");
 				lintRoot.Add (issues);
@@ -362,10 +352,10 @@ namespace Xamarin.Android.Tasks
 		{
 			var sb = new StringBuilder ();
 			var result = MonoAndroidHelper.RunProcess (tool, "--version", (s, e) => {
-				if (!string.IsNullOrEmpty (e.Data))
+				if (!e.Data.IsNullOrEmpty ())
 					sb.AppendLine (e.Data);
 			}, (s, e) => {
-				if (!string.IsNullOrEmpty (e.Data))
+				if (!e.Data.IsNullOrEmpty ())
 					sb.AppendLine (e.Data);
 			},
 			new Dictionary<string, string> {
@@ -381,7 +371,7 @@ namespace Xamarin.Android.Tasks
 						var split = Path.GetFileName (file).Split ('-');
 						if (split.Length != 3)
 							continue;
-						if (!string.IsNullOrEmpty (split [1])) {
+						if (!split [1].IsNullOrEmpty ()) {
 							if (Version.TryParse (split [1], out v)) {
 								return v;
 							}
