@@ -62,6 +62,7 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		ThrowIfDisposed ();
 
 		while (CollectedContexts.TryDequeue (out IntPtr contextPtr)) {
+			Debug.Assert (contextPtr != IntPtr.Zero, "CollectedContexts should not contain null pointers.");
 			HandleContext* context = (HandleContext*)contextPtr;
 			
 			lock (RegisteredInstances) {
