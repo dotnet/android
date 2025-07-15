@@ -101,7 +101,7 @@ When opting C# code into nullable reference types:
 
 * Only make the following changes when asked to do so.
 
-* Add `#nullable enable` at the top of the file.
+* Add `#nullable enable` at the top of the file without any preceding blank lines.
 
 * Don't *ever* use `!` to handle `null`!
 

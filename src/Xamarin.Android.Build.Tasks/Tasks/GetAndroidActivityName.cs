@@ -1,4 +1,3 @@
-
 #nullable enable
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;

@@ -1,5 +1,3 @@
-
-#nullable enable
 #nullable enable
 
 using System;
