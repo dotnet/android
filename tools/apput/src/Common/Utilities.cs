@@ -33,9 +33,12 @@ class Utilities
 		DeleteFile (path);
 	}
 
-	public static BinaryReader GetReaderAndRewindStream (Stream stream)
+	public static BinaryReader GetReaderAndRewindStream (Stream stream, bool rewindStream = false)
 	{
-		stream.Seek (0, SeekOrigin.Begin);
+		if (rewindStream) {
+			stream.Seek (0, SeekOrigin.Begin);
+		}
+
 		return new BinaryReader (stream, Encoding.UTF8, leaveOpen: true);
 	}
 
@@ -44,4 +47,6 @@ class Utilities
 		Log.Debug (message);
 		return new BasicAspectState (false);
 	}
+
+	public static string ToStringOrNull<T> (T? reference) => reference == null ? "<NULL>" : reference.ToString () ?? "[unknown]";
 }

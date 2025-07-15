@@ -108,7 +108,7 @@ class AXMLParser
 	{
 		valid = true;
 
-		XmlDocument ret = new XmlDocument ();
+		var ret = new XmlDocument ();
 		XmlDeclaration declaration = ret.CreateXmlDeclaration ("1.0", stringPool.IsUTF8 ? "UTF-8" : "UTF-16", null);
 		ret.InsertBefore (declaration, ret.DocumentElement);
 
