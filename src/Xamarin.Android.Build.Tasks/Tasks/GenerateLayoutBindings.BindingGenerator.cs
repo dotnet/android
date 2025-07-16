@@ -67,7 +67,7 @@ namespace Xamarin.Android.Tasks
 					indent = indentBuilder.ToString ();
 				}
 
-				public void WriteLine (string text = null)
+				public void WriteLine (string? text = null)
 				{
 					if (text == null)
 						writer.WriteLine ();
@@ -75,7 +75,7 @@ namespace Xamarin.Android.Tasks
 						writer.WriteLine (text);
 				}
 
-				public void Write (string text = null)
+				public void Write (string? text = null)
 				{
 					if (text == null)
 						return;
@@ -269,7 +269,7 @@ namespace Xamarin.Android.Tasks
 
 			bool NameMatchesBindingClass (State state, LayoutWidget widget, StringComparison comparison)
 			{
-				if (string.IsNullOrEmpty (state.BindingClassName))
+				if (state.BindingClassName.IsNullOrEmpty ())
 					return false;
 
 				int dot = state.BindingClassName!.LastIndexOf ('.');
@@ -348,16 +348,17 @@ namespace Xamarin.Android.Tasks
 
 			protected string GetWidgetId (LayoutWidget widget, out bool isGlobal)
 			{
-				if (string.IsNullOrEmpty (widget?.Id)) {
+				var widgetId = widget?.Id;
+				if (widgetId.IsNullOrEmpty ()) {
 					isGlobal = false;
 					return string.Empty;
 				}
 
-				isGlobal = widget.Id!.StartsWith (CalculateLayoutCodeBehind.GlobalIdPrefix, StringComparison.Ordinal);
+				isGlobal = widgetId!.StartsWith (CalculateLayoutCodeBehind.GlobalIdPrefix, StringComparison.Ordinal);
 				if (!isGlobal)
-					return widget.Id!;
+					return widgetId!;
 
-				return widget.Id!.Substring (CalculateLayoutCodeBehind.GlobalIdPrefix.Length);
+				return widgetId!.Substring (CalculateLayoutCodeBehind.GlobalIdPrefix.Length);
 			}
 		}
 	}

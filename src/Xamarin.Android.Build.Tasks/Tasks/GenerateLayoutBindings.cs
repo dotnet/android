@@ -151,7 +151,7 @@ namespace Xamarin.Android.Tasks
 						continue;
 
 					string shortName;
-					string namespaceName;
+					string? namespaceName;
 					int idx = partialClassName.LastIndexOf ('.');
 					if (idx >= 0) {
 						shortName = partialClassName.Substring (idx + 1);

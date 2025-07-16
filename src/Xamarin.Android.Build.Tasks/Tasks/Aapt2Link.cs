@@ -103,7 +103,7 @@ namespace Xamarin.Android.Tasks {
 				// now check for
 				foreach (var kvp in apks) {
 					string currentResourceOutputFile = kvp.Key;
-					bool aaptResult = Daemon.JobSucceded (kvp.Value);
+					bool aaptResult = Daemon?.JobSucceded (kvp.Value) ?? false;
 					LogDebugMessage ($"Processing {currentResourceOutputFile} JobId: {kvp.Value} Exists: {File.Exists (currentResourceOutputFile)} JobWorked: {aaptResult}");
 					if (!currentResourceOutputFile.IsNullOrEmpty ()) {
 						var tmpfile = currentResourceOutputFile + ".bk";
@@ -243,11 +243,12 @@ namespace Xamarin.Android.Tasks {
 
 			cmd.Add ("--auto-add-overlay");
 
-			if (!string.IsNullOrWhiteSpace (UncompressedFileExtensions))
-				foreach (var ext in UncompressedFileExtensions.Split (new char [] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)) {
+			if (!string.IsNullOrWhiteSpace (UncompressedFileExtensions)) {
+				foreach (var ext in UncompressedFileExtensions!.Split (new char [] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)) {
 					cmd.Add ("-0");
 					cmd.Add (ext.StartsWith (".", StringComparison.OrdinalIgnoreCase) ? ext : $".{ext}");
 				}
+			}
 
 			if (!ExtraPackages.IsNullOrEmpty ()) {
 				cmd.Add ("--extra-packages");
@@ -259,7 +260,7 @@ namespace Xamarin.Android.Tasks {
 
 			if (!ResourceSymbolsTextFile.IsNullOrEmpty ()) {
 				cmd.Add ("--output-text-symbols");
-				cmd.Add (GetFullPath (resourceSymbolsTextFileTemp));
+				cmd.Add (GetFullPath (resourceSymbolsTextFileTemp ?? ""));
 			}
 
 			if (ProtobufFormat)
@@ -357,7 +358,7 @@ namespace Xamarin.Android.Tasks {
 				return;
 			}
 
-			var defaultAbi = new string [] { null };
+			var defaultAbi = new string? [] { null };
 			var abis = CreatePackagePerAbi && SupportedAbis?.Length > 1 ? defaultAbi.Concat (SupportedAbis) : defaultAbi;
 			var outputFile = OutputFile.IsNullOrEmpty () ? GetTempFile () : OutputFile;
 			foreach (var abi in abis) {

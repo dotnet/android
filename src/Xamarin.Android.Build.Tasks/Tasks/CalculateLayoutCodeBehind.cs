@@ -194,7 +194,7 @@ namespace Xamarin.Android.Tasks
 				nav.MoveToNext ();
 			}
 
-			string xamarinClasses = nav.GetAttribute (XamarinClassesAttribute, xamarinNS)?.Trim ();
+			string? xamarinClasses = nav.GetAttribute (XamarinClassesAttribute, xamarinNS)?.Trim ();
 
 			if (!string.IsNullOrWhiteSpace (rootWidgetIdOverride)) {
 				if (!ParseIdWithError (nav, filePath, rootWidgetIdOverride, true, out parsedId, out name))
@@ -232,7 +232,7 @@ namespace Xamarin.Android.Tasks
 
 				if (isInclude) {
 					string? layoutName = GetLayoutNameFromReference (current.GetAttribute ("layout", string.Empty))?.Trim ();
-					if (!string.IsNullOrEmpty (layoutName))
+					if (!layoutName.IsNullOrEmpty ())
 						AddToList (new LayoutInclude { Id = id, Name = layoutName }, ref includes);
 					continue;
 				}
@@ -260,25 +260,25 @@ namespace Xamarin.Android.Tasks
 
 		void CreateWidget (XPathNavigator current, string filePath, string androidNS, string xamarinNS, string? id, string? parsedId, string? name, string? partialClasses, ref IDictionary <string, LayoutWidget> widgets)
 		{
-			if (string.IsNullOrEmpty (id) || string.IsNullOrEmpty (parsedId) || string.IsNullOrEmpty (name))
+			if (id.IsNullOrEmpty () || parsedId.IsNullOrEmpty () || name.IsNullOrEmpty ())
 				return;
 				
 			bool isFragment = MonoAndroidHelper.StringEquals ("fragment", current.LocalName);
-			string managedType = current.GetAttribute (XamarinManagedTypeAttribute, xamarinNS);
+			string? managedType = current.GetAttribute (XamarinManagedTypeAttribute, xamarinNS);
 			string? oldType = null;
 
-			if (string.IsNullOrEmpty (managedType)) {
+			if (managedType.IsNullOrEmpty ()) {
 				bool mayNeedTypeFixup = true;
 				if (isFragment) {
 					managedType = current.GetAttribute ("name", androidNS)?.Trim ();
-					if (string.IsNullOrEmpty (managedType)) {
+					if (managedType.IsNullOrEmpty ()) {
 						mayNeedTypeFixup = false;
 						managedType = "global::Android.App.Fragment";
 					}
 				} else
 					managedType = current.LocalName;
 
-				if (mayNeedTypeFixup)
+				if (mayNeedTypeFixup && managedType != null)
 					mayNeedTypeFixup = !FixUpTypeName (ref managedType);
 
 				int idx = managedType?.IndexOf (',') ?? -1;
@@ -351,7 +351,7 @@ namespace Xamarin.Android.Tasks
 		string? GetLayoutNameFromReference (string? reference)
 		{
 			string? id = reference?.Trim ();
-			if (string.IsNullOrEmpty (reference))
+			if (reference.IsNullOrEmpty ())
 				return null;
 			if (id != null && id.StartsWith ("@layout/", StringComparison.Ordinal))
 			    return id.Substring (8);
@@ -468,7 +468,7 @@ namespace Xamarin.Android.Tasks
 			parsedId = null;
 			name = null;
 			id = id?.Trim ();
-			if (string.IsNullOrEmpty (id))
+			if (id.IsNullOrEmpty ())
 				return true;
 
 			string ns;
@@ -500,8 +500,8 @@ namespace Xamarin.Android.Tasks
 
 			string className = $"{BaseNamespace}.{groupName}";
 			string collectionKey = RegisterGroupWidgets (widgets);
-			string? partialClasses = widgets.FirstOrDefault (w => w != null && !string.IsNullOrEmpty (w.PartialClasses))?.PartialClasses;
-			bool havePartialClasses = !string.IsNullOrEmpty (partialClasses);
+			string? partialClasses = widgets.FirstOrDefault (w => w != null && !w.PartialClasses.IsNullOrEmpty ())?.PartialClasses;
+			bool havePartialClasses = !partialClasses.IsNullOrEmpty ();
 
 			string[]? partialClassNames = null;
 			if (havePartialClasses && partialClasses != null) {

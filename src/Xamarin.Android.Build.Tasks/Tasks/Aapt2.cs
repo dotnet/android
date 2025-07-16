@@ -24,7 +24,7 @@ namespace Xamarin.Android.Tasks {
 
 		private const int MAX_PATH = 260;
 		private static readonly int DefaultMaxAapt2Daemons = 6;
-		protected Dictionary<string, string> _resource_name_case_map;
+		protected Dictionary<string, string>? _resource_name_case_map;
 
 		Dictionary<string, string> resource_name_case_map => _resource_name_case_map ??= MonoAndroidHelper.LoadResourceCaseMap (BuildEngine4, ProjectSpecificTaskObjectKey);
 
@@ -83,9 +83,9 @@ namespace Xamarin.Android.Tasks {
 			return 1;
 		}
 
-		Aapt2Daemon daemon;
+		Aapt2Daemon? daemon;
 
-		internal Aapt2Daemon Daemon => daemon;
+		internal Aapt2Daemon? Daemon => daemon;
 		public override bool Execute ()
 		{
 			// Must register on the UI thread!
@@ -106,14 +106,14 @@ namespace Xamarin.Android.Tasks {
 		protected long RunAapt (string [] args, string outputFile)
 		{
 			LogDebugMessage ($"Executing {string.Join (" ", args)}");
-			long jobid = daemon.QueueCommand (args, outputFile, CancellationToken);
+			long jobid = daemon?.QueueCommand (args, outputFile, CancellationToken) ?? 0;
 			jobs.Add (jobid);
 			return jobid;
 		}
 
 		protected void ProcessOutput ()
 		{
-			Aapt2Daemon.Job[] completedJobs = Daemon.WaitForJobsToComplete (jobs);
+			Aapt2Daemon.Job[] completedJobs = Daemon?.WaitForJobsToComplete (jobs) ?? Array.Empty<Aapt2Daemon.Job>();
 			foreach (var job in completedJobs) {
 				foreach (var line in job.Output) {
 					if (!LogAapt2EventsFromOutput (line.Line, MessageImportance.Normal, job.Succeeded)) {
@@ -189,7 +189,7 @@ namespace Xamarin.Android.Tasks {
 				if (level.Contains ("error") || (line != 0 && !file.IsNullOrEmpty ())) {
 					var errorCode = GetErrorCodeForFile (message, file);
 					if (manifestError)
-						LogCodedError (errorCode, string.Format (Xamarin.Android.Tasks.Properties.Resources.AAPTManifestError, message.TrimEnd('.')), AndroidManifestFile.ItemSpec, 0);
+						LogCodedError (errorCode, string.Format (Xamarin.Android.Tasks.Properties.Resources.AAPTManifestError, message.TrimEnd('.')), AndroidManifestFile?.ItemSpec ?? "", 0);
 					else
 						LogCodedError (errorCode, AddAdditionalErrorText (errorCode, message), file, line);
 					return true;
