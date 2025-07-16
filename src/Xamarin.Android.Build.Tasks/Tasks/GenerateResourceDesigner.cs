@@ -125,7 +125,7 @@ namespace Xamarin.Android.Tasks
 					assembly.CopyMetadataTo (item);
 					assemblies.Add (item);
 					string aliasMetaData = assembly.GetMetadata ("Aliases");
-					if (!string.IsNullOrEmpty (aliasMetaData)) {
+					if (!aliasMetaData.IsNullOrEmpty ()) {
 						foreach (var alias in aliasMetaData.Split (new [] {','}, StringSplitOptions.RemoveEmptyEntries)) {
 							string aliasName = alias.Trim ();
 							// don't emit an `extern alias global` as it is implicitly done.
@@ -153,7 +153,7 @@ namespace Xamarin.Android.Tasks
 
 			// During a regular build, write the designtime/Resource.designer.cs file as well
 
-			if (!string.IsNullOrEmpty (DesignTimeOutputFile) && Files.CopyIfChanged (NetResgenOutputFile, DesignTimeOutputFile)) {
+			if (!DesignTimeOutputFile.IsNullOrEmpty () && Files.CopyIfChanged (NetResgenOutputFile, DesignTimeOutputFile)) {
 				Log.LogDebugMessage ($"Writing to: {DesignTimeOutputFile}");
 			}
 
@@ -186,7 +186,7 @@ namespace Xamarin.Android.Tasks
 					IndentString = "\t",
 				};
 
-				var ns = string.IsNullOrEmpty (Namespace)
+				var ns = Namespace.IsNullOrEmpty ()
 					? new CodeNamespace ()
 					: new CodeNamespace (Namespace);
 

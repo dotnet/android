@@ -531,7 +531,7 @@ Bitte ändern Sie den Wert in einen Assembly-basierten Typnamen, der von "System
     <value>Quelldatei "{0}" wurde nicht gefunden.</value>
   </data>
   <data name="XA2002_Framework" xml:space="preserve">
-    <value>Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the .NET for Android profile?</value>
+    <value>Der durch "{0}" referenzierte Verweis "{1}" kann nicht aufgelöst werden. Möglicherweise ist er im .NET für Android-Profil nicht vorhanden.</value>
     <comment>{0} - The name of the missing assembly
 {1} - The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`</comment>
   </data>

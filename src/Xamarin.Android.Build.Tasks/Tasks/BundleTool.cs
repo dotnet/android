@@ -1,3 +1,4 @@
+#nullable enable
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
@@ -18,7 +19,7 @@ namespace Xamarin.Android.Tasks
 		{
 			var cmd = new CommandLineBuilder ();
 
-			if (!string.IsNullOrEmpty (JavaOptions)) {
+			if (!JavaOptions.IsNullOrEmpty ()) {
 				cmd.AppendSwitch (JavaOptions);
 			}
 			cmd.AppendSwitchIfNotNull ("-Xmx", JavaMaximumHeapSize);

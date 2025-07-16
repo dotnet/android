@@ -75,7 +75,7 @@ namespace Xamarin.Android.Tasks {
 
 		protected string GenerateFullPathToTool ()
 		{
-			return Path.Combine (ToolPath, string.IsNullOrEmpty (ToolExe) ? ToolName : ToolExe);
+			return Path.Combine (ToolPath, ToolExe.IsNullOrEmpty () ? ToolName : ToolExe);
 		}
 
 		protected virtual int GetRequiredDaemonInstances ()
@@ -125,7 +125,7 @@ namespace Xamarin.Android.Tasks {
 
 		protected bool LogAapt2EventsFromOutput (string singleLine, MessageImportance messageImportance, bool apptResult)
 		{
-			if (string.IsNullOrEmpty (singleLine))
+			if (singleLine.IsNullOrEmpty ())
 				return true;
 
 			var match = AndroidRunToolTask.AndroidErrorRegex.Match (singleLine.Trim ());
@@ -170,7 +170,7 @@ namespace Xamarin.Android.Tasks {
 						var resourceDirectoryFullPath = ResourceDirectoryFullPath (resourceDirectory);
 
 						string newfile = MonoAndroidHelper.FixUpAndroidResourcePath (file, resourceDirectory, resourceDirectoryFullPath, resource_name_case_map);
-						if (!string.IsNullOrEmpty (newfile)) {
+						if (!newfile.IsNullOrEmpty ()) {
 							file = newfile;
 							break;
 						}
@@ -186,7 +186,7 @@ namespace Xamarin.Android.Tasks {
 				if (message.StartsWith ("error: ", StringComparison.InvariantCultureIgnoreCase))
 					message = message.Substring ("error: ".Length);
 
-				if (level.Contains ("error") || (line != 0 && !string.IsNullOrEmpty (file))) {
+				if (level.Contains ("error") || (line != 0 && !file.IsNullOrEmpty ())) {
 					var errorCode = GetErrorCodeForFile (message, file);
 					if (manifestError)
 						LogCodedError (errorCode, string.Format (Xamarin.Android.Tasks.Properties.Resources.AAPTManifestError, message.TrimEnd('.')), AndroidManifestFile.ItemSpec, 0);

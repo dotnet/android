@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -50,19 +51,19 @@ namespace Xamarin.Android.Tasks
 			var cmd = new CommandLineBuilder ();
 
 			var commandArg = Command;
-			if (!string.IsNullOrEmpty (ModuleName)) {
+			if (!ModuleName.IsNullOrEmpty ()) {
 				commandArg = $"{ModuleName}:{commandArg}";
 			}
 			cmd.AppendSwitch (commandArg);
 
 			// If an output path is specified, use init script to set the gradle projects build directory to that path
 			// See src/Xamarin.Android.Build.Tasks/Resources/net.android.init.gradle.kts
-			if (!string.IsNullOrEmpty (OutputPath) && File.Exists (BuildDirInitScriptPath)) {
+			if (!OutputPath.IsNullOrEmpty () && File.Exists (BuildDirInitScriptPath)) {
 				cmd.AppendSwitchIfNotNull ("-P", $"netAndroidBuildDirOverride={OutputPath}");
 				cmd.AppendSwitchIfNotNull ("--init-script ", BuildDirInitScriptPath);
 			}
 
-			if (!string.IsNullOrEmpty (Arguments))
+			if (!Arguments.IsNullOrEmpty ())
 				cmd.AppendSwitch (Arguments);
 
 			// Do not leave gradle daemon running
@@ -85,7 +86,7 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			if (string.IsNullOrEmpty (ToolPath) || !File.Exists (GenerateFullPathToTool ())) {
+			if (ToolPath.IsNullOrEmpty () || !File.Exists (GenerateFullPathToTool ())) {
 				Log.LogCodedError ("XAGRDL1000", Properties.Resources.XAGRDL1000, ToolPath ?? string.Empty);
 				return false;
 			}

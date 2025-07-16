@@ -23,6 +23,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+#nullable enable
 using System;
 using System.IO;
 using System.Linq;
@@ -54,7 +55,7 @@ namespace Xamarin.Android.Tasks
 				using var reader = XmlReader.Create (stream);
 				if (reader.MoveToContent () == XmlNodeType.Element) {
 					var package = reader.GetAttribute ("package");
-					if (!string.IsNullOrEmpty (package)) {
+					if (!package.IsNullOrEmpty ()) {
 						PackageName = ManifestDocument.ReplacePlaceholders (ManifestPlaceholders, package);
 					}
 				}

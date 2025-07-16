@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -179,7 +181,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			string? abi = AndroidRidAbiHelper.RuntimeIdentifierToAbi (rid);
-			if (string.IsNullOrEmpty (abi)) {
+			if (abi.IsNullOrEmpty ()) {
 				throw new InvalidOperationException ($"Unable to convert a runtime identifier '{rid}' to Android ABI for: {assembly.ItemSpec}");
 			}
 

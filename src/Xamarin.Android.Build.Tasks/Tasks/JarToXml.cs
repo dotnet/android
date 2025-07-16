@@ -1,5 +1,5 @@
 // Copyright (C) 2012 Xamarin, Inc. All rights reserved.
-
+#nullable enable
 using System;
 using System.Linq;
 using System.IO;
@@ -83,7 +83,7 @@ namespace Xamarin.Android.Tasks
 
 			// Add the JavaOptions if they are not null
 			// These could be any of the additional options
-			if (!string.IsNullOrEmpty (JavaOptions)) {
+			if (!JavaOptions.IsNullOrEmpty ()) {
 				cmd.AppendSwitch (JavaOptions);		
 			}
 

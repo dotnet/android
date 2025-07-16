@@ -102,13 +102,13 @@ namespace Xamarin.Android.Tasks
 				var logicalName = item.GetMetadata ("LogicalName").Replace ('\\', Path.DirectorySeparatorChar);
 				if (item.GetMetadata ("IsWearApplicationResource") == "True") {
 					rel = item.ItemSpec.Substring (IntermediateDir.Length);
-				} else if (!string.IsNullOrEmpty (logicalName)) {
+				} else if (!logicalName.IsNullOrEmpty ()) {
 					rel = logicalName;
 				} else {
 					rel = item.GetMetadata ("Link").Replace ('\\', Path.DirectorySeparatorChar);
-					if (string.IsNullOrEmpty (rel)) {
+					if (rel.IsNullOrEmpty ()) {
 						rel = item.GetMetadata ("Identity");
-						if (!string.IsNullOrEmpty (ProjectDir)) {
+						if (!ProjectDir.IsNullOrEmpty ()) {
 							var fullRelPath = Path.GetFullPath (rel).Normalize (NormalizationForm.FormC);
 							var fullProjectPath = Path.GetFullPath (ProjectDir).Normalize (NormalizationForm.FormC);
 							if (fullRelPath.StartsWith (fullProjectPath, StringComparison.OrdinalIgnoreCase)) {
@@ -142,9 +142,9 @@ namespace Xamarin.Android.Tasks
 				}
 				string dest = Path.GetFullPath (Path.Combine (IntermediateDir, baseFileName));
 				string intermediateDirFullPath = Path.GetFullPath (IntermediateDir);
-				if (!string.IsNullOrEmpty (assetPack) &&
+				if (!assetPack.IsNullOrEmpty () &&
 						(string.Compare (assetPack, "base", StringComparison.OrdinalIgnoreCase) != 0) &&
-						!string.IsNullOrEmpty (AssetPackIntermediateDir)) {
+						!AssetPackIntermediateDir.IsNullOrEmpty ()) {
 					dest = Path.GetFullPath (Path.Combine (AssetPackIntermediateDir, assetPack, "assets", baseFileName));
 					intermediateDirFullPath = Path.GetFullPath (AssetPackIntermediateDir);
 				}
