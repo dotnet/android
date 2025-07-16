@@ -364,15 +364,15 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		}
 
 		public static GCHandle GetAssociatedGCHandle (HandleContext* context)
-			{
-				lock (referenceTrackingHandles) {
-					if (!referenceTrackingHandles.TryGetValue ((IntPtr) context, out GCHandle handle)) {
-						throw new InvalidOperationException ("Unknown reference tracking handle.");
-					}
-
-					return handle;
+		{
+			lock (referenceTrackingHandles) {
+				if (!referenceTrackingHandles.TryGetValue ((IntPtr) context, out GCHandle handle)) {
+					throw new InvalidOperationException ("Unknown reference tracking handle.");
 				}
+
+				return handle;
 			}
+		}
 
 		public static unsafe void EnsureAllContextsAreOurs (MarkCrossReferencesArgs* mcr)
 		{
