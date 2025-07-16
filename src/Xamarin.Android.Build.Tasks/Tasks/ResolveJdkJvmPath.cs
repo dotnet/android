@@ -1,3 +1,4 @@
+#nullable enable
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
@@ -35,7 +36,7 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			if (string.IsNullOrEmpty (JdkJvmPath)) {
+			if (JdkJvmPath.IsNullOrEmpty ()) {
 				Log.LogCodedError ("XA5300", $"{nameof (JdkJvmPath)} is blank");
 				return false;
 			}
@@ -69,7 +70,7 @@ namespace Xamarin.Android.Tasks
 				return null;
 
 			var path = info.JdkJvmPath;
-			if (string.IsNullOrEmpty (path))
+			if (path.IsNullOrEmpty ())
 				return null;
 
 			BuildEngine4.RegisterTaskObject (key, path, RegisteredTaskObjectLifetime.AppDomain, allowEarlyCollection: false);

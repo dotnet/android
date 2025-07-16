@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -119,7 +120,7 @@ public class WrapAssembliesAsSharedLibraries : AndroidTask
 		// The PrepareSatelliteAssemblies task takes care of properly setting `DestinationSubDirectory`, so we can just use it here.
 		var subDirectory = assembly.GetMetadata ("DestinationSubDirectory")?.Replace ('\\', '/');
 
-		if (string.IsNullOrEmpty (subDirectory)) {
+		if (subDirectory.IsNullOrEmpty ()) {
 			throw new InvalidOperationException ($"Internal error: assembly '{assembly}' lacks the required `DestinationSubDirectory` metadata");
 		}
 

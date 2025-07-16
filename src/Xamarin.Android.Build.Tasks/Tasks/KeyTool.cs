@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.IO;
 using Microsoft.Build.Framework;
@@ -38,7 +39,7 @@ namespace Xamarin.Android.Tasks
 			// Ensure the path where are going to write the key exists
 			var store_dir = Path.GetDirectoryName (KeyStore);
 
-			if (!string.IsNullOrEmpty (store_dir) && !Directory.Exists (store_dir))
+			if (!store_dir.IsNullOrEmpty () && !Directory.Exists (store_dir))
 				Directory.CreateDirectory (store_dir);
 
 			return base.RunTask ();
@@ -50,7 +51,7 @@ namespace Xamarin.Android.Tasks
 			//NOTE: keytool tends to print "Warning:" followed by the actual warning on the next line
 			//  The goal here is to combine these two lines into a single message
 			string text = singleLine.Trim ();
-			if (!string.IsNullOrEmpty (text) && !text.EndsWith (":", StringComparison.Ordinal)) {
+			if (!text.IsNullOrEmpty () && !text.EndsWith (":", StringComparison.Ordinal)) {
 				if (previousLine != null && previousLine.EndsWith (":", StringComparison.Ordinal)) {
 					text = previousLine + " " + text;
 				}

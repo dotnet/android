@@ -1,3 +1,5 @@
+#nullable enable
+
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
@@ -71,7 +73,7 @@ namespace Xamarin.Android.Tasks
 
 		internal override CommandLineBuilder GetCommandLineBuilder ()
 		{
-			var aapt2 = string.IsNullOrEmpty (Aapt2ToolExe) ? Aapt2ToolName : Aapt2ToolExe;
+			var aapt2 = Aapt2ToolExe.IsNullOrEmpty () ? Aapt2ToolName : Aapt2ToolExe;
 			var cmd   = base.GetCommandLineBuilder ();
 			cmd.AppendSwitch ("build-apks");
 			if (GenerateUniversalApkSet) {
@@ -88,7 +90,7 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("--ks-key-alias ", KeyAlias);
 			AddStorePass (cmd, "--key-pass", KeyPass);
 			AddStorePass (cmd, "--ks-pass", StorePass);
-			if (!string.IsNullOrEmpty (ExtraArgs))
+			if (!ExtraArgs.IsNullOrEmpty ())
 				cmd.AppendSwitch (ExtraArgs);
 			return cmd;
 		}

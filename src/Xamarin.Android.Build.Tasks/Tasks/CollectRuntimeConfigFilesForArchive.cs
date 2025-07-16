@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.IO;
 using Microsoft.Android.Build.Tasks;
@@ -40,7 +41,7 @@ public class CollectRuntimeConfigFilesForArchive : AndroidTask
 		// our assembly store.  Not only that, but also we'll be able to skip scanning the `base.apk` archive when split configs are enabled (which they are in 99%
 		// of cases these days, since AAB enforces that split).  `base.apk` contains only ABI-agnostic file, while one of the split config files contains only
 		// ABI-specific data+code.
-		if (!string.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath)) {
+		if (!RuntimeConfigBinFilePath.IsNullOrEmpty () && File.Exists (RuntimeConfigBinFilePath)) {
 			foreach (var abi in SupportedAbis) {
 				// Prefix it with `a` because bundletool sorts entries alphabetically, and this will place it right next to `assemblies.*.blob.so`, which is what we
 				// like since we can finish scanning the zip central directory earlier at startup.
