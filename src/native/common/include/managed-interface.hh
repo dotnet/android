@@ -5,13 +5,6 @@
 #include <jni.h>
 
 namespace xamarin::android {
-	// Values for the JnienvInitializeArgs.runtimeType field
-	//
-	// NOTE: Keep this in sync with managed side in src/Mono.Android/Android.Runtime/DotNetRuntimeType.cs
-	static inline constexpr uint32_t RuntimeTypeMonoVM    = 0x0001;
-	static inline constexpr uint32_t RuntimeTypeCoreCLR   = 0x0002;
-	static inline constexpr uint32_t RuntimeTypeNativeAOT = 0x0004;
-
 	// Values must be identical to those in src/Mono.Android/Android.Runtime/RuntimeNativeMethods.cs
 	enum class TraceKind : uint32_t
 	{
@@ -39,7 +32,6 @@ namespace xamarin::android {
 		bool            jniRemappingInUse;
 		bool            marshalMethodsEnabled;
 		jobject         grefGCUserPeerable;
-		uint32_t        runtimeType;
 		bool            managedMarshalMethodsLookupEnabled;
 	};
 

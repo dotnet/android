@@ -20,6 +20,18 @@ This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
     <AllowReadyToRunWithoutRuntimeIdentifier Condition=" '$(PublishReadyToRun)' == 'true' and '$(RuntimeIdentifiers)' != '' ">true</AllowReadyToRunWithoutRuntimeIdentifier>
   </PropertyGroup>
 
+  <!-- Default feature switches -->
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime"
+        Value="false"
+        Trim="true"
+    />
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime"
+        Value="true"
+        Trim="true"
+    />
+  </ItemGroup>
+
   <Target Name="_CLRUseLocalRuntimePacks" AfterTargets="ResolveFrameworkReferences"
           Condition=" '$(_CLRLocalRuntimePath)' != '' And '$(_AndroidRuntime)' == 'CoreCLR' ">
     <PropertyGroup>

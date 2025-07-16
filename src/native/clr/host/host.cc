@@ -422,7 +422,6 @@ void Host::Java_mono_android_Runtime_initInternal (
 	);
 
 	struct JnienvInitializeArgs init = {};
-	init.runtimeType                                    = RuntimeTypeCoreCLR;
 	init.javaVm                                         = jvm;
 	init.env                                            = env;
 	init.logCategories                                  = log_categories;

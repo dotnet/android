@@ -1,0 +1,22 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Sdk.MonoVM.targets
+
+This file contains the MonoVM-specific MSBuild logic for .NET for Android.
+***********************************************************************************************
+-->
+<Project>
+
+  <!-- Default feature switches -->
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime"
+        Value="true"
+        Trim="true"
+    />
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime"
+        Value="false"
+        Trim="true"
+    />
+  </ItemGroup>
+
+</Project>

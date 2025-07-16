@@ -11,13 +11,13 @@
       "Size": 18288
     },
     "lib/arm64-v8a/lib_Java.Interop.dll.so": {
-      "Size": 88472
+      "Size": 88000
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
-      "Size": 124040
+      "Size": 118240
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 23424
+      "Size": 23480
     },
     "lib/arm64-v8a/lib_System.Console.dll.so": {
       "Size": 24408
@@ -26,10 +26,10 @@
       "Size": 25488
     },
     "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
-      "Size": 692528
+      "Size": 635296
     },
     "lib/arm64-v8a/lib_System.Runtime.dll.so": {
-      "Size": 20104
+      "Size": 20136
     },
     "lib/arm64-v8a/lib_System.Runtime.InteropServices.dll.so": {
       "Size": 21528
@@ -38,13 +38,13 @@
       "Size": 20024
     },
     "lib/arm64-v8a/libarc.bin.so": {
-      "Size": 18984
+      "Size": 19112
     },
     "lib/arm64-v8a/libmono-component-marshal-ilgen.so": {
       "Size": 36616
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 1508312
+      "Size": 1508296
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
       "Size": 3119744
@@ -62,10 +62,10 @@
       "Size": 165240
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 19800
+      "Size": 19808
     },
     "META-INF/BNDLTOOL.RSA": {
-      "Size": 1223
+      "Size": 1221
     },
     "META-INF/BNDLTOOL.SF": {
       "Size": 3266
@@ -98,5 +98,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 3148309
+  "PackageSize": 3090965
 }

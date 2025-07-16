@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
@@ -12,7 +13,7 @@ using System.Text;
 
 using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
-using System.Diagnostics.CodeAnalysis;
+using Microsoft.Android.Runtime;
 
 namespace Android.Runtime {
 	public static partial class JNIEnv {
@@ -100,16 +101,12 @@ namespace Android.Runtime {
 				Logger.Log (LogLevel.Info, "MonoDroid", "UNHANDLED EXCEPTION:");
 				Logger.Log (LogLevel.Info, "MonoDroid", javaException.ToString ());
 
-				switch (JNIEnvInit.RuntimeType) {
-					case DotNetRuntimeType.MonoVM:
-						MonoDroidUnhandledException (innerException ?? javaException);
-						break;
-					case DotNetRuntimeType.CoreCLR:
-						// TODO: what to do here?
-						break;
-
-					default:
-						throw new NotSupportedException ($"Internal error: runtime type {JNIEnvInit.RuntimeType} not supported");
+				if (RuntimeFeature.IsMonoRuntime) {
+					MonoDroidUnhandledException (innerException ?? javaException);
+				} else if (RuntimeFeature.IsCoreClrRuntime) {
+					// TODO: what to do here?
+				} else {
+					throw new NotSupportedException ("Internal error: unknown runtime not supported");
 				}
 			} catch (Exception e) {
 				Logger.Log (LogLevel.Error, "monodroid", "Exception thrown while raising AppDomain.UnhandledException event: " + e.ToString ());
@@ -453,11 +450,13 @@ namespace Android.Runtime {
 
 			IntPtr ret;
 			fixed (byte* mvidptr = mvid_data) {
-				ret = JNIEnvInit.RuntimeType switch {
-					DotNetRuntimeType.MonoVM  => monovm_typemap_managed_to_java (type, mvidptr),
-					DotNetRuntimeType.CoreCLR => RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, (IntPtr)mvidptr),
-					_                         => throw new NotSupportedException ($"Internal error: runtime type {JNIEnvInit.RuntimeType} not supported")
-				};
+				if (RuntimeFeature.IsMonoRuntime) {
+					ret = monovm_typemap_managed_to_java (type, mvidptr);
+				} else if (RuntimeFeature.IsCoreClrRuntime) {
+					ret = RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, (IntPtr)mvidptr);
+				} else {
+					throw new NotSupportedException ("Internal error: unknown runtime not supported");
+				}
 			}
 
 			if (ret == IntPtr.Zero) {
