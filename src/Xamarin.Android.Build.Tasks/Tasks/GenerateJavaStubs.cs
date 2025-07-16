@@ -1,6 +1,6 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Concurrent;
@@ -31,30 +31,30 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "GJS";
 
 		[Required]
-		public ITaskItem[] ResolvedAssemblies { get; set; }
+		public ITaskItem[] ResolvedAssemblies { get; set; } = [];
 
 		[Required]
-		public ITaskItem[] ResolvedUserAssemblies { get; set; }
+		public ITaskItem[] ResolvedUserAssemblies { get; set; } = [];
 
 		[Required]
-		public ITaskItem [] FrameworkDirectories { get; set; }
+		public ITaskItem [] FrameworkDirectories { get; set; } = [];
 
 		[Required]
-		public string [] SupportedAbis { get; set; }
+		public string [] SupportedAbis { get; set; } = [];
 
-		public string IntermediateOutputDirectory { get; set; }
+		public string? IntermediateOutputDirectory { get; set; }
 		public bool EnableMarshalMethods { get; set; }
 
 		public bool Debug { get; set; }
 
-		public string AndroidSdkPlatform { get; set; }
-		public string OutputDirectory { get; set; }
+		public string? AndroidSdkPlatform { get; set; }
+		public string? OutputDirectory { get; set; }
 
 		public bool ErrorOnCustomJavaObject { get; set; }
 
-		public string PackageNamingPolicy { get; set; }
+		public string? PackageNamingPolicy { get; set; }
 
-		public string ApplicationJavaClass { get; set; }
+		public string? ApplicationJavaClass { get; set; }
 
 		public string CodeGenerationTarget { get; set; } = "";
 
@@ -180,7 +180,9 @@ namespace Xamarin.Android.Tasks
 					templateCodeGenState = state;
 				}
 
-				nativeCodeGenStates.TryAdd (arch, state);
+				if (state != null) {
+					nativeCodeGenStates.TryAdd (arch, state);
+				}
 			});
 
 			// If we hit an error generating the Java code, we should bail out now
@@ -221,6 +223,18 @@ namespace Xamarin.Android.Tasks
 			bool success = true;
 
 			if (generateJavaCode && RunCheckedBuild) {
+				if (AndroidSdkPlatform == null) {
+					Log.LogCodedError ("XA1001", "AndroidSdkPlatform is required when generating Java code");
+					return (false, null);
+				}
+				if (OutputDirectory == null) {
+					Log.LogCodedError ("XA1002", "OutputDirectory is required when generating Java code");
+					return (false, null);
+				}
+				if (ApplicationJavaClass == null) {
+					Log.LogCodedError ("XA1003", "ApplicationJavaClass is required when generating Java code");
+					return (false, null);
+				}
 				success = jcwGenerator.Generate (AndroidSdkPlatform, outputPath: Path.Combine (OutputDirectory, "src"), ApplicationJavaClass);
 
 				generatedJavaFiles = jcwGenerator.GeneratedJavaFiles;
