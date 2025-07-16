@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -50,9 +51,9 @@ namespace Xamarin.Android.Tasks
 
 			foreach (var library in InputLibraries) {
 				var abi = AndroidRidAbiHelper.GetNativeLibraryAbi (library);
-				if (string.IsNullOrEmpty (abi)) {
+				if (abi.IsNullOrEmpty ()) {
 					var packageId = library.GetMetadata ("NuGetPackageId");
-					if (!string.IsNullOrEmpty (packageId)) {
+					if (!packageId.IsNullOrEmpty ()) {
 						Log.LogCodedWarning ("XA4301", library.ItemSpec, 0, Properties.Resources.XA4301_ABI_NuGet, library.ItemSpec, packageId);
 					} else {
 						Log.LogCodedWarning ("XA4301", library.ItemSpec, 0, Properties.Resources.XA4301_ABI, library.ItemSpec);

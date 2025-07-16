@@ -11,6 +11,26 @@ This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
   <PropertyGroup>
     <_AndroidRuntimePackRuntime>CoreCLR</_AndroidRuntimePackRuntime>
   </PropertyGroup>
+  <!-- Properties for $(OutputType)=Exe (Android Applications) -->
+  <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' ">
+    <!-- Default to R2R Composite for CoreCLR Release mode -->
+    <PublishReadyToRun Condition=" '$(PublishReadyToRun)' == '' and '$(Configuration)' == 'Release' ">true</PublishReadyToRun>
+    <PublishReadyToRunComposite Condition=" '$(PublishReadyToRunComposite)' == '' and '$(PublishReadyToRun)' == 'true' ">true</PublishReadyToRunComposite>
+    <_IsPublishing Condition=" '$(_IsPublishing)' == '' and '$(PublishReadyToRun)' == 'true' ">true</_IsPublishing>
+    <AllowReadyToRunWithoutRuntimeIdentifier Condition=" '$(PublishReadyToRun)' == 'true' and '$(RuntimeIdentifiers)' != '' ">true</AllowReadyToRunWithoutRuntimeIdentifier>
+  </PropertyGroup>
+
+  <!-- Default feature switches -->
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime"
+        Value="false"
+        Trim="true"
+    />
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime"
+        Value="true"
+        Trim="true"
+    />
+  </ItemGroup>
 
   <Target Name="_CLRUseLocalRuntimePacks" AfterTargets="ResolveFrameworkReferences"
           Condition=" '$(_CLRLocalRuntimePath)' != '' And '$(_AndroidRuntime)' == 'CoreCLR' ">

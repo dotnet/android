@@ -25,7 +25,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-
+#nullable enable
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
@@ -84,7 +84,7 @@ namespace Xamarin.Android.Tasks
 		{
 			// OS X:    $prefix/lib/xamarin.android/xbuild/Xamarin/Android
 			// Windows: %ProgramFiles(x86)%\MSBuild\Xamarin\Android
-			if (string.IsNullOrEmpty (MonoAndroidToolsPath)) {
+			if (MonoAndroidToolsPath.IsNullOrEmpty ()) {
 				MonoAndroidToolsPath  = Path.GetDirectoryName (typeof (ResolveSdks).Assembly.Location);
 			}
 			MonoAndroidBinPath  = MonoAndroidHelper.GetOSBinPath () + Path.DirectorySeparatorChar;
@@ -119,11 +119,11 @@ namespace Xamarin.Android.Tasks
 				.FirstOrDefault () ??
 				Path.Combine (AndroidSdkPath, "tools");
 
-			if (string.IsNullOrEmpty (AndroidSdkPath)) {
+			if (AndroidSdkPath.IsNullOrEmpty ()) {
 				Log.LogCodedError ("XA5300", Properties.Resources.XA5300_Android_SDK);
 				return false;
 			}
-			if (string.IsNullOrEmpty (JavaSdkPath)) {
+			if (JavaSdkPath.IsNullOrEmpty ()) {
 				Log.LogCodedError ("XA5300", Properties.Resources.XA5300_Java_SDK);
 				return false;
 			}

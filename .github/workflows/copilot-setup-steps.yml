@@ -18,14 +18,16 @@ jobs:
       with:
         dotnet-version: '9.x'
 
-    - name: Run jenkins build
+    - name: Run android build
+      id: android-build
+      continue-on-error: true
       run: |
         make jenkins PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=Debug
       timeout-minutes: 60
 
     - name: Upload logs
       uses: actions/upload-artifact@v4
-      if: failure()
+      if: steps.android-build.outcome == 'failure'
       with:
         name: copilot-artifacts
         path: |

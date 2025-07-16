@@ -36,16 +36,21 @@ class StorePrettyPrinter
 		foreach (AssemblyStoreItem assembly in assemblies) {
 			line.Clear ();
 			line.Append ("  ");
-			line.AppendLine (assembly.Name);
-			line.Append ("    PE image data: ");
-			FormatOffsetAndSize (line, assembly.DataOffset, assembly.DataSize);
-			line.AppendLine ();
-			line.Append ("       Debug data: ");
-			FormatOffsetAndSize (line, assembly.DebugOffset, assembly.DebugSize);
-			line.AppendLine ();
-			line.Append ("      Config data: ");
-			FormatOffsetAndSize (line, assembly.ConfigOffset, assembly.ConfigSize);
-			line.AppendLine ();
+			line.Append (assembly.Name);
+			if (assembly.Ignore) {
+				line.AppendLine (" <IGNORED>");
+			} else {
+				line.AppendLine ();
+				line.Append ("    PE image data: ");
+				FormatOffsetAndSize (line, assembly.DataOffset, assembly.DataSize);
+				line.AppendLine ();
+				line.Append ("       Debug data: ");
+				FormatOffsetAndSize (line, assembly.DebugOffset, assembly.DebugSize);
+				line.AppendLine ();
+				line.Append ("      Config data: ");
+				FormatOffsetAndSize (line, assembly.ConfigOffset, assembly.ConfigSize);
+				line.AppendLine ();
+			}
 			line.Append ("      Name hashes: ");
 			FormatHashes (line, assembly.Hashes);
 			line.AppendLine ();

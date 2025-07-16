@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -216,39 +217,16 @@ public class BuildArchive : AndroidTask
 			return true;
 		}
 
+		// Always fallback on .NET Framework
+		var frameworkDescription = RuntimeInformation.FrameworkDescription;
+		Log.LogDebugMessage ($"RuntimeInformation.FrameworkDescription: {frameworkDescription}");
+		if (frameworkDescription != ".NET") {
+			Log.LogDebugMessage ("Falling back to LibZipSharp because we are *not* running on .NET 6+.");
+			return true;
+		}
+
 		// .NET 6+ handles uncompressed files correctly, so we don't need to fallback.
-		if (RuntimeInformation.FrameworkDescription == ".NET") {
-			Log.LogDebugMessage ("Using System.IO.Compression because we're running on .NET 6+.");
-			return false;
-		}
-
-		// Nothing is going to get written uncompressed, so we don't need to fallback.
-		if (uncompressedMethod != CompressionMethod.Store) {
-			Log.LogDebugMessage ("Using System.IO.Compression because uncompressedMethod isn't 'Store'.");
-			return false;
-		}
-
-		// No uncompressed file extensions were specified, so we don't need to fallback.
-		if (UncompressedFileExtensionsSet.Count == 0) {
-			Log.LogDebugMessage ("Using System.IO.Compression because no uncompressed file extensions were specified.");
-			return false;
-		}
-
-		// See if any of the files to be added need to be uncompressed.
-		foreach (var file in FilesToAddToArchive) {
-			var file_path = file.ItemSpec;
-
-			// Handle files from inside a .jar/.aar
-			if (file.GetMetadataOrDefault ("JavaArchiveEntry", (string?)null) is string jar_entry_name)
-				file_path = jar_entry_name;
-
-			if (UncompressedFileExtensionsSet.Contains (Path.GetExtension (file_path))) {
-				Log.LogDebugMessage ($"Falling back to LibZipSharp because '{file_path}' needs to be stored uncompressed.");
-				return true;
-			}
-		}
-
-		Log.LogDebugMessage ("Using System.IO.Compression because no files need to be stored uncompressed.");
+		Log.LogDebugMessage ("Using System.IO.Compression because we're running on .NET 6+.");
 		return false;
 	}
 
@@ -292,7 +270,7 @@ public class BuildArchive : AndroidTask
 		foreach (var extension in UncompressedFileExtensions?.Split ([';', ','], StringSplitOptions.RemoveEmptyEntries) ?? []) {
 			var ext = extension.Trim ();
 
-			if (string.IsNullOrEmpty (ext)) {
+			if (ext.IsNullOrEmpty ()) {
 				continue;
 			}
 

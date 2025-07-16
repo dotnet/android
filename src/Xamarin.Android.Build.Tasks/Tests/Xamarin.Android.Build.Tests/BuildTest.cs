@@ -1299,9 +1299,7 @@ namespace UnnamedProject
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var environment = b.Output.GetIntermediaryPath (Path.Combine ("__environment__.txt"));
 				FileAssert.Exists (environment);
-				var values = new List<string> {
-					$"__XA_PACKAGE_NAMING_POLICY__={packageNamingPolicy}"
-				};
+				var values = new List<string> ();
 				values.Add ("mono.enable_assembly_preload=0");
 				values.Add ("DOTNET_MODIFIABLE_ASSEMBLIES=Debug");
 				Assert.AreEqual (string.Join (Environment.NewLine, values), File.ReadAllText (environment).Trim ());
@@ -1484,7 +1482,7 @@ namespace UnnamedProject
 		[NonParallelizable]
 		public void CheckLintErrorsAndWarnings ()
 		{
-			string disabledIssues = "StaticFieldLeak,ObsoleteSdkInt,AllowBackup,ExportedReceiver,RedundantLabel";
+			string disabledIssues = "StaticFieldLeak,ObsoleteSdkInt,AllowBackup,ExportedReceiver,RedundantLabel,AppLinkWarning";
 
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("AndroidLintEnabled", true.ToString ());

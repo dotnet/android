@@ -133,7 +133,7 @@ namespace Java.Interop
 		static void CheckReflection (MethodInfo mi, string name)
 		{
 			if (mi == null)
-				throw new InvalidOperationException ("Mono for Android bug: JNIEnv type contains incompatible method signatures : " + name);
+				throw new InvalidOperationException (".NET for Android bug: JNIEnv type contains incompatible method signatures : " + name);
 		}
 
 		public static DynamicInvokeTypeInfo Get (Type type, ExportParameterKind kind)

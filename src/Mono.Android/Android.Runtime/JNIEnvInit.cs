@@ -27,7 +27,6 @@ namespace Android.Runtime
 			public int             version; // TODO: remove, not needed anymore
 			public int             grefGcThreshold;
 			public IntPtr          grefIGCUserPeer;
-			public int             isRunningOnDesktop;
 			public byte            brokenExceptionTransitions;
 			public int             packageNamingPolicy;
 			public byte            ioExceptionType;
@@ -35,12 +34,10 @@ namespace Android.Runtime
 			public bool            jniRemappingInUse;
 			public bool            marshalMethodsEnabled;
 			public IntPtr          grefGCUserPeerable;
-			public uint            runtimeType;
 			public bool            managedMarshalMethodsLookupEnabled;
 		}
 #pragma warning restore 0649
 
-		internal static bool IsRunningOnDesktop;
 		internal static bool jniRemappingInUse;
 		internal static bool MarshalMethodsEnabled;
 		internal static bool PropagateExceptions;
@@ -51,8 +48,6 @@ namespace Android.Runtime
 		internal static IntPtr java_class_loader;
 
 		internal static JniRuntime? androidRuntime;
-
-		public static DotNetRuntimeType RuntimeType { get; private set; } = DotNetRuntimeType.Unknown;
 
 		[UnmanagedCallersOnly]
 		static unsafe void RegisterJniNatives (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
@@ -93,9 +88,10 @@ namespace Android.Runtime
 		[UnmanagedCallersOnly]
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
-			// This looks weird, see comments in RuntimeTypeInternal.cs
-			RuntimeType = DotNetRuntimeTypeConverter.Convert (args->runtimeType);
-			InternalRuntimeTypeHolder.SetRuntimeType (args->runtimeType);
+			// Should not be allowed
+			if (RuntimeFeature.IsMonoRuntime && RuntimeFeature.IsCoreClrRuntime) {
+				throw new NotSupportedException ("Internal error: both RuntimeFeature.IsMonoRuntime and RuntimeFeature.IsCoreClrRuntime are enabled");
+			}
 
 			IntPtr total_timing_sequence = IntPtr.Zero;
 			IntPtr partial_timing_sequence = IntPtr.Zero;
@@ -116,12 +112,13 @@ namespace Android.Runtime
 			} else {
 				typeManager     = new AndroidTypeManager (args->jniAddNativeMethodRegistrationAttributePresent != 0);
 			}
-			valueManager = RuntimeType switch
-			{
-				DotNetRuntimeType.MonoVM => new AndroidValueManager(),
-				DotNetRuntimeType.CoreCLR => ManagedValueManager.GetOrCreateInstance(),
-				_ => throw new NotSupportedException ($"No value manager for runtime type: {RuntimeType}"),
-			};
+			if (RuntimeFeature.IsMonoRuntime) {
+				valueManager = new AndroidValueManager ();
+			} else if (RuntimeFeature.IsCoreClrRuntime) {
+				valueManager = ManagedValueManager.GetOrCreateInstance ();
+			} else {
+				throw new NotSupportedException ("Internal error: unknown runtime not supported");
+			}
 			androidRuntime = new AndroidRuntime (
 					args->env,
 					args->javaVm,
@@ -131,20 +128,12 @@ namespace Android.Runtime
 					args->jniAddNativeMethodRegistrationAttributePresent != 0
 			);
 
-			IsRunningOnDesktop = args->isRunningOnDesktop == 1;
-
 			grefIGCUserPeer_class = args->grefIGCUserPeer;
 			grefGCUserPeerable_class = args->grefGCUserPeerable;
 
 			PropagateExceptions = args->brokenExceptionTransitions == 0;
 
 			JavaNativeTypeManager.PackageNamingPolicy = (PackageNamingPolicy)args->packageNamingPolicy;
-			if (IsRunningOnDesktop) {
-				var packageNamingPolicy = Environment.GetEnvironmentVariable ("__XA_PACKAGE_NAMING_POLICY__");
-				if (Enum.TryParse (packageNamingPolicy, out PackageNamingPolicy pnp)) {
-					JavaNativeTypeManager.PackageNamingPolicy = pnp;
-				}
-			}
 
 			if (args->managedMarshalMethodsLookupEnabled) {
 				delegate* unmanaged <int, int, int, IntPtr*, void> getFunctionPointer = &ManagedMarshalMethodsLookupTable.GetFunctionPointer;

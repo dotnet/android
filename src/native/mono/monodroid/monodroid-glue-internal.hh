@@ -71,7 +71,6 @@ namespace xamarin::android::internal
 	private:
 		static constexpr std::string_view base_apk_name { "/base.apk" };
 		static constexpr size_t SMALL_STRING_PARSE_BUFFER_LEN = 50uz;
-		static constexpr bool is_running_on_desktop = false;
 
 	public:
 		static constexpr int XA_LOG_COUNTERS = MONO_COUNTER_JIT | MONO_COUNTER_METADATA | MONO_COUNTER_GC | MONO_COUNTER_GENERICS | MONO_COUNTER_INTERP;

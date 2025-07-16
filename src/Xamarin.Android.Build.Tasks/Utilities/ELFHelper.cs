@@ -157,7 +157,7 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			return String.Compare (referencedLibraryName, stringTable[(long)index], StringComparison.Ordinal) == 0;
+			return MonoAndroidHelper.StringEquals (referencedLibraryName, stringTable[(long)index]);
 		}
 
 		static bool IsEmptyAOTLibrary (TaskLoggingHelper log, string path, IELF elf)
@@ -170,7 +170,7 @@ namespace Xamarin.Android.Tasks
 
 			bool mono_aot_file_info_found = false;
 			foreach (var entry in symtab.Entries) {
-				if (String.Compare ("mono_aot_file_info", entry.Name, StringComparison.Ordinal) == 0 && entry.Type == ELFSymbolType.Object) {
+				if (MonoAndroidHelper.StringEquals ("mono_aot_file_info", entry.Name) && entry.Type == ELFSymbolType.Object) {
 					mono_aot_file_info_found = true;
 					break;
 				}

@@ -1,4 +1,5 @@
 // Copyright (C) 2021 Microsoft, Inc. All rights reserved.
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -49,7 +50,7 @@ namespace Xamarin.Android.Tasks
 
 				var name = path.Substring (ResourceDirectory.Length).TrimStart ('/', '\\');
 				var logical_name = item.GetMetadata ("LogicalName").Replace ('\\', '/');
-				if (string.IsNullOrEmpty (logical_name))
+				if (logical_name.IsNullOrEmpty ())
 					logical_name = Path.GetFileName (path);
 
 				AddRename (name.Replace ('/', Path.DirectorySeparatorChar), logical_name.Replace ('/', Path.DirectorySeparatorChar));
@@ -64,7 +65,7 @@ namespace Xamarin.Android.Tasks
 						continue;
 				}
 				foreach (var line in File.ReadLines (file)) {
-					if (string.IsNullOrEmpty (line))
+					if (line.IsNullOrEmpty ())
 						continue;
 					string [] tok = line.Split (';');
 					AddRename (tok [1].Replace ('/', Path.DirectorySeparatorChar), tok [0].Replace ('/', Path.DirectorySeparatorChar));
@@ -95,7 +96,7 @@ namespace Xamarin.Android.Tasks
 							string line;
 							// Read each line until the end of the file
 							while ((line = reader.ReadLine()) != null) {
-								if (string.IsNullOrEmpty (line))
+								if (line.IsNullOrEmpty ())
 									continue;
 								string [] tok = line.Split (';');
 								AddRename (tok [1].Replace ('/', Path.DirectorySeparatorChar), tok [0].Replace ('/', Path.DirectorySeparatorChar));

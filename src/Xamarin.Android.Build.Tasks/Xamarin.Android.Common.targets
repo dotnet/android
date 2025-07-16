@@ -228,12 +228,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidGdbDebugServer>None</AndroidGdbDebugServer>
 
 	<_AndroidLayoutBindingsDependencyCache>$(IntermediateOutputPath)layout-binding-deps.cache</_AndroidLayoutBindingsDependencyCache>
-	<_AndroidProguardInputJarFilter>(!META-INF/MANIFEST.MF)</_AndroidProguardInputJarFilter>
 	<_AndroidAapt2VersionFile>$(IntermediateOutputPath)aapt2.version</_AndroidAapt2VersionFile>
 	<_AndroidLibraryFlatArchivesDirectory>$(IntermediateOutputPath)flata\</_AndroidLibraryFlatArchivesDirectory>
 	<_AndroidLibraryFlatFilesDirectory>$(IntermediateOutputPath)flat\</_AndroidLibraryFlatFilesDirectory>
 	<_AndroidStampDirectory>$(IntermediateOutputPath)stamp\</_AndroidStampDirectory>
-	<_AndroidBuildIdFile>$(IntermediateOutputPath)buildid.txt</_AndroidBuildIdFile>
         <_AndroidApplicationSharedLibraryPath>$(IntermediateOutputPath)app_shared_libraries\</_AndroidApplicationSharedLibraryPath>
 	<_ResolvedUserAssembliesHashFile>$(IntermediateOutputPath)resolvedassemblies.hash</_ResolvedUserAssembliesHashFile>
   <_AndroidResolvedResourcesHashFile>$(IntermediateOutputPath)_AndroidResolvedResources.hash</_AndroidResolvedResourcesHashFile>
@@ -277,9 +275,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 	<_PackagedResources>$(IntermediateOutputPath)android\bin\packaged_resources</_PackagedResources>
 
-	<_Android32bitArchitectures>armeabi-v7a;x86;mips</_Android32bitArchitectures>
-	<_Android64bitArchitectures>arm64-v8a;x86_64;mips64</_Android64bitArchitectures>
-
 	<_AndroidSequencePointsMode Condition=" '$(_AndroidSequencePointsMode)' == ''">None</_AndroidSequencePointsMode>
 	<_AndroidBuildPropertiesCache>$(IntermediateOutputPath)build.props</_AndroidBuildPropertiesCache>
 	<_AdbPropertiesCache>$(IntermediateOutputPath)adb.props</_AdbPropertiesCache>
@@ -290,7 +285,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidEnablePreloadAssembliesDefault>False</_AndroidEnablePreloadAssembliesDefault>
 	<AndroidEnablePreloadAssemblies Condition=" '$(AndroidEnablePreloadAssemblies)' == '' ">$(_AndroidEnablePreloadAssembliesDefault)</AndroidEnablePreloadAssemblies>
 	<_NativeAssemblySourceDir>$(IntermediateOutputPath)android\</_NativeAssemblySourceDir>
-	<_AndroidUseNewTypemaps>True</_AndroidUseNewTypemaps>
 	<_SkipJniAddNativeMethodRegistrationAttributeScan Condition=" '$(_SkipJniAddNativeMethodRegistrationAttributeScan)' == '' ">False</_SkipJniAddNativeMethodRegistrationAttributeScan>
 
 	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' And '$(EmbedAssembliesIntoApk)' == 'False' ">True</_AndroidFastDeployEnvironmentFiles>
@@ -675,7 +669,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Error Text="Could not locate Android SDK. Please set via /p:AndroidSdkDirectory." Condition="'$(_AndroidSdkDirectory)'==''" />
 	<Error Text="Could not locate Java 6 or 7 SDK.  (Download from http://www.oracle.com/technetwork/java/javase/downloads.)" Condition="'$(_JavaSdkDirectory)'==''" />
 
-	<!-- AppData for Mono for Android-->
+	<!-- AppData for .NET for Android-->
 	<GetAppSettingsDirectory>
 		<Output TaskParameter="AppSettingsDirectory" PropertyName="AppSettingsDirectory" Condition="'$(AppSettingsDirectory)'==''" />
 	</GetAppSettingsDirectory>
@@ -905,7 +899,6 @@ because xbuild doesn't support framework reference assemblies.
 	<MonoAndroidIntermediateAssemblyDir>$(IntermediateOutputPath)android\assets\</MonoAndroidIntermediateAssemblyDir>
 	<!-- NOTE: Kept for compatibility, prefer to use $(MonoAndroidIntermediateAssemblyDir) instead -->
 	<MonoAndroidIntermediateAssetsDir>$(MonoAndroidIntermediateAssemblyDir)</MonoAndroidIntermediateAssetsDir>
-	<_JniMarshalMethodsOutputDir>$(IntermediateOutputPath)jnisrc\</_JniMarshalMethodsOutputDir>
 	<MonoAndroidResourcePrefix Condition="'$(MonoAndroidResourcePrefix)' == ''">Resources</MonoAndroidResourcePrefix>
 	<!-- NOTE: Kept for compatibility, prefer to use $(IntermediateOutputPath) instead -->
 	<MonoAndroidIntermediate>$(IntermediateOutputPath)</MonoAndroidIntermediate>
@@ -1379,12 +1372,10 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_CollectRuntimeJarFilenames">
   <PropertyGroup Condition=" '$(_AndroidRuntime)' != 'CoreCLR' ">
     <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_net6.jar</_RuntimeJar>
-    <_RuntimeDex>$(MSBuildThisFileDirectory)\java_runtime_net6.dex</_RuntimeDex>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">
     <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_clr.jar</_RuntimeJar>
-    <_RuntimeDex>$(MSBuildThisFileDirectory)\java_runtime_clr.dex</_RuntimeDex>
   </PropertyGroup>
 </Target>
 
@@ -1758,7 +1749,6 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GenerateEnvironmentFiles">
   <ItemGroup>
-    <_GeneratedAndroidEnvironment Include="__XA_PACKAGE_NAMING_POLICY__=$(AndroidPackageNamingPolicy)" />
     <_GeneratedAndroidEnvironment Include="mono.enable_assembly_preload=0" Condition=" '$(AndroidEnablePreloadAssemblies)' != 'True' " />
     <_GeneratedAndroidEnvironment Include="DOTNET_MODIFIABLE_ASSEMBLIES=Debug" Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' and '$(AndroidUseInterpreter)' == 'true' " />
   </ItemGroup>
@@ -2298,6 +2288,7 @@ because xbuild doesn't support framework reference assemblies.
   -->
   <CreateAssemblyStore
       Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
+      TargetRuntime="$(_AndroidRuntime)"
       AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
       ResolvedFrameworkAssemblies="@(_BuildApkResolvedFrameworkAssemblies)"
@@ -2787,9 +2778,6 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="SignAndroidPackage" DependsOnTargets="$(SignAndroidPackageDependsOn)">
 </Target>
 
-<PropertyGroup>
-	<_IntermediatePdbFile>$(IntermediateOutputPath)$(TargetName).pdb</_IntermediatePdbFile>
-</PropertyGroup>
 
 <!-- Callable targets -->
 <PropertyGroup>

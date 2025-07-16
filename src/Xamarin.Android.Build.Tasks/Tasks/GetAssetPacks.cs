@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -35,7 +37,7 @@ namespace Xamarin.Android.Tasks
 			Dictionary<string, List<string>> files = new Dictionary<string, List<string>> ();
 			foreach (var asset in Assets) {
 				var assetPack = asset.GetMetadata ("AssetPack");
-				if (string.IsNullOrEmpty (assetPack) || string.Compare (assetPack, "base", StringComparison.OrdinalIgnoreCase) == 0)
+				if (assetPack.IsNullOrEmpty () || string.Compare (assetPack, "base", StringComparison.OrdinalIgnoreCase) == 0)
 					continue;
 				if (!IsAssetPackNameValid (assetPack)) {
 					Log.LogCodedError ("XA0140", $"The AssetPack value defined for {asset.ItemSpec} is invalid. '{assetPack}' should match the following Regex '[A-Za-z0-9_]'.");

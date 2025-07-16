@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using Java.Interop.Tools.TypeNameMappings;
 
 using Android.Runtime;
+using Microsoft.Android.Runtime;
 
 namespace Java.Interop {
 
@@ -247,7 +248,10 @@ namespace Java.Interop {
 				}
 			}
 
-			Logger.Log (LogLevel.Info, "monodroid", $"Loaded type: {ret}");
+			if (Logger.LogAssembly) {
+				Logger.Log (LogLevel.Info, "monodroid", $"Loaded type: {ret}");
+			}
+
 			return ret;
 		}
 
@@ -264,24 +268,22 @@ namespace Java.Interop {
 				return type;
 			}
 
-			type = JNIEnvInit.RuntimeType switch {
-				DotNetRuntimeType.MonoVM  => monovm_typemap_java_to_managed (class_name),
-				DotNetRuntimeType.CoreCLR => clr_typemap_java_to_managed (class_name),
-				_                         => throw new NotSupportedException ($"Internal error: runtime type {JNIEnvInit.RuntimeType} not supported")
-			};
+			if (RuntimeFeature.IsMonoRuntime) {
+				type = monovm_typemap_java_to_managed (class_name);
+			} else if (RuntimeFeature.IsCoreClrRuntime) {
+				type = clr_typemap_java_to_managed (class_name);
+			} else {
+				throw new NotSupportedException ("Internal error: unknown runtime not supported");
+			}
 
 			if (type != null) {
 				TypeManagerMapDictionaries.JniToManaged.Add (class_name, type);
 				return type;
 			}
 
-			if (!JNIEnvInit.IsRunningOnDesktop) {
-				// Miss message is logged in the native runtime
-				if (Logger.LogAssembly)
-					JNIEnv.LogTypemapTrace (new System.Diagnostics.StackTrace (true));
-				return null;
-			}
-
+			// Miss message is logged in the native runtime
+			if (Logger.LogAssembly)
+				JNIEnv.LogTypemapTrace (new System.Diagnostics.StackTrace (true));
 			return null;
 		}
 
@@ -432,7 +434,7 @@ namespace Java.Interop {
 					if (String.Compare (jniFromType, java_class, StringComparison.OrdinalIgnoreCase) != 0) {
 						TypeManagerMapDictionaries.ManagedToJni.Add (t, java_class);
 					}
-				} else if (!JNIEnvInit.IsRunningOnDesktop || t != typeof (Java.Interop.TypeManager)) {
+				} else if (t != typeof (Java.Interop.TypeManager)) {
 					// skip the registration and output a warning
 					Logger.Log (LogLevel.Warn, "monodroid", FormattableString.Invariant ($"Type Registration Skipped for {java_class} to {t} "));
 				}

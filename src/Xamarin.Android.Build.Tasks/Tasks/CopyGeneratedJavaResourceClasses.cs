@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -33,7 +34,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 
 				//NOTE: DestinationTopDirectory is optional, and we can just use the file in SourceTopDirectory
-				if (!string.IsNullOrEmpty (DestinationTopDirectory)) {
+				if (!DestinationTopDirectory.IsNullOrEmpty ()) {
 					string dst = Path.Combine (DestinationTopDirectory, subpath, "R.java");
 					Files.CopyIfChanged (src, dst);
 					list.Add (dst);

@@ -1,5 +1,6 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
+#nullable enable
 using System;
 using System.Diagnostics;
 using System.Collections.Generic;
@@ -69,7 +70,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			var lastUpdate = DateTime.MinValue;
-			if (!string.IsNullOrEmpty (AndroidConversionFlagFile) && File.Exists (AndroidConversionFlagFile)) {
+			if (!AndroidConversionFlagFile.IsNullOrEmpty () && File.Exists (AndroidConversionFlagFile)) {
 				lastUpdate = File.GetLastWriteTimeUtc (AndroidConversionFlagFile);
 			}
 			Log.LogDebugMessage ("  AndroidConversionFlagFile modified: {0}", lastUpdate);

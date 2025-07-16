@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -138,7 +139,7 @@ namespace Xamarin.Android.Tasks
 		int GetNdkApiLevel (NdkTools ndk, AndroidTargetArch arch)
 		{
 			AndroidAppManifest? manifest = null;
-			if (!string.IsNullOrEmpty (ManifestFile)) {
+			if (!ManifestFile.IsNullOrEmpty ()) {
 				manifest = AndroidAppManifest.Load (ManifestFile, MonoAndroidHelper.SupportedVersions);
 			}
 
@@ -174,7 +175,7 @@ namespace Xamarin.Android.Tasks
 				try {
 					ndk.GetDirectoryPath (NdkToolchainDir.PlatformLib, arch, level);
 					break;
-				} catch (InvalidOperationException ex) {
+				} catch (InvalidOperationException) {
 					// Path not found, continue searching...
 					continue;
 				}
@@ -237,7 +238,7 @@ namespace Xamarin.Android.Tasks
 			string ldName;
 			if (UseAndroidNdk) {
 				ldName = ndk.GetToolPath (NdkToolKind.Linker, arch, level);
-				if (!string.IsNullOrEmpty (ldName)) {
+				if (!ldName.IsNullOrEmpty ()) {
 					ldName = Path.GetFileName (ldName);
 					if (ldName.IndexOf ('-') >= 0) {
 						ldName = ldName.Substring (ldName.LastIndexOf ("-", StringComparison.Ordinal) + 1);
@@ -247,10 +248,10 @@ namespace Xamarin.Android.Tasks
 				ldName = "ld";
 			}
 			string ldFlags = GetLdFlags (ndk, arch, level, toolPrefix);
-			if (!string.IsNullOrEmpty (ldName)) {
+			if (!ldName.IsNullOrEmpty ()) {
 				LdName = ldName;
 			}
-			if (!string.IsNullOrEmpty (ldFlags)) {
+			if (!ldFlags.IsNullOrEmpty ()) {
 				LdFlags = ldFlags;
 			}
 		}

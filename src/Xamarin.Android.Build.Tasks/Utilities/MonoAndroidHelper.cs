@@ -263,7 +263,7 @@ namespace Xamarin.Android.Tasks
 			var files = fullPaths.Select (full => Path.GetFileName (full)).Where (f => excluded == null || !excluded.Contains (f, StringComparer.OrdinalIgnoreCase)).ToArray ();
 			for (int i = 0; i < files.Length; i++)
 				for (int j = i + 1; j < files.Length; j++)
-					if (String.Compare (files [i], files [j], StringComparison.OrdinalIgnoreCase) == 0)
+					if (MonoAndroidHelper.StringEquals (files [i], files [j]))
 						yield return files [i];
 		}
 

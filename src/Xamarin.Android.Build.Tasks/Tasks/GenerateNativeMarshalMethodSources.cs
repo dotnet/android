@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -132,7 +133,7 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 			var fileName = Path.GetFileName (assembly.ItemSpec);
 			string assemblyName;
 
-			if (string.IsNullOrEmpty (culture)) {
+			if (culture.IsNullOrEmpty ()) {
 				assemblyName = fileName;
 			} else {
 				assemblyName = $"{culture}/{fileName}";

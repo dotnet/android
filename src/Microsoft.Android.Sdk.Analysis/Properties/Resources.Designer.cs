@@ -8,10 +8,10 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Microsoft.Android.Sdk.Analysis {
+namespace Microsoft.Android.Sdk.Analysis.Properties {
     using System;
-
-
+    
+    
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -23,15 +23,15 @@ namespace Microsoft.Android.Sdk.Analysis {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
-
+        
         private static global::System.Resources.ResourceManager resourceMan;
-
+        
         private static global::System.Globalization.CultureInfo resourceCulture;
-
+        
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal Resources() {
         }
-
+        
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
@@ -45,7 +45,7 @@ namespace Microsoft.Android.Sdk.Analysis {
                 return resourceMan;
             }
         }
-
+        
         /// <summary>
         ///   Overrides the current thread's CurrentUICulture property for all
         ///   resource lookups using this strongly typed resource class.
@@ -59,26 +59,22 @@ namespace Microsoft.Android.Sdk.Analysis {
                 resourceCulture = value;
             }
         }
-
+        
         /// <summary>
-        ///   Looks up a localized string similar to {0}.
-        ///
-        ///Application class does not have an Activation Constructor..
-        /// </summary>
-        public static string DNAA0001_Title {
-            get {
-                return ResourceManager.GetString("DNAA0001_Title", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to {0}.
-        ///
-        ///Application class '{0}' does not have an Activation Constructor..
+        ///   Looks up a localized string similar to Application class &apos;{0}&apos; does not have an Activation Constructor &apos;{0}(IntPtr handle, JniHandleOwnership transfer)&apos;..
         /// </summary>
         public static string DNAA0001_MessageFormat {
             get {
                 return ResourceManager.GetString("DNAA0001_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Application class does not have an Activation Constructor.
+        /// </summary>
+        public static string DNAA0001_Title {
+            get {
+                return ResourceManager.GetString("DNAA0001_Title", resourceCulture);
             }
         }
     }

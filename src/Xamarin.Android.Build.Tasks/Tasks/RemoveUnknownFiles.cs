@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Text;
 using Microsoft.Build.Utilities;

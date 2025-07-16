@@ -106,7 +106,7 @@ namespace Xamarin.Android.Tasks
 				module.Assembly.CustomAttributes.Add (new CustomAttribute (referenceAssemblyConstructor));
 			} else {
 				// Add the InternalsVisibleToAttribute so the app can access ResourceConstant
-				if (!string.IsNullOrEmpty (AssemblyName)) {
+				if (!AssemblyName.IsNullOrEmpty ()) {
 					MethodReference internalsVisibleToAttributeConstructor = ImportCustomAttributeConstructor (cache, "System.Runtime.CompilerServices.InternalsVisibleToAttribute", module, netstandardDef.MainModule, argCount: 1);
 					var ar = new CustomAttribute (internalsVisibleToAttributeConstructor);
 					ar.ConstructorArguments.Add (new CustomAttributeArgument (module.TypeSystem.String, AssemblyName));
@@ -152,7 +152,7 @@ namespace Xamarin.Android.Tasks
 			TypeDefinition constDesigner = null;
 			if (IsApplication) {
 				// The Constant based class
-				TypeAttributes attrib = string.IsNullOrEmpty (AssemblyName) ? TypeAttributes.Public : TypeAttributes.Public;
+				TypeAttributes attrib = AssemblyName.IsNullOrEmpty () ? TypeAttributes.Public : TypeAttributes.Public;
 				constDesigner = new TypeDefinition (
 					FixLegacyResourceDesignerStep.DesignerAssemblyNamespace,
 					"ResourceConstant",
