@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -15,7 +15,7 @@ namespace Xamarin.Android.Tasks
 			public sealed class State
 			{
 				StringBuilder indentBuilder = new StringBuilder ();
-				string indent = String.Empty;
+				string indent = "";
 				StreamWriter writer;
 
 				public StreamWriter Writer => writer;
@@ -30,19 +30,18 @@ namespace Xamarin.Android.Tasks
 
 				// Name of the *binding* class with properties that access the widgets - used only when
 				// generating code for the partial Activity class
-				public string BindingClassName { get; }
+				public string? BindingClassName { get; }
 
 				public List<string> ExtraImportNamespaces { get; } = new List <string> ();
 
 				public string AndroidFragmentType { get; }
 
-				public State (StreamWriter writer, string className, bool isInNamespace, string androidFragmentType, string bindingClassName = null)
+				public State (StreamWriter writer, string className, bool isInNamespace, string androidFragmentType, string? bindingClassName = null)
 				{
-					if (writer == null)
-						throw new ArgumentNullException (nameof (writer));
-					if (String.IsNullOrWhiteSpace (className))
-						throw new ArgumentException (nameof (writer));
-					if (String.IsNullOrEmpty (androidFragmentType))
+					ArgumentNullException.ThrowIfNull (writer);
+					if (className.IsNullOrWhiteSpace ())
+						throw new ArgumentException (nameof (className));
+					if (androidFragmentType.IsNullOrEmpty ())
 						throw new ArgumentException (nameof (androidFragmentType));
 
 					this.writer = writer;

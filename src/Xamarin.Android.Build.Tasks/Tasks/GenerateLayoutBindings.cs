@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Concurrent;
@@ -25,19 +25,19 @@ namespace Xamarin.Android.Tasks
 
 		sealed class PartialClass
 		{
-			public string Name;
-			public string Namespace;
-			public string OutputFilePath;
-			public StreamWriter Writer;
-			public FileStream Stream;
-			public BindingGenerator.State State;
+			public string? Name { get; set; }
+			public string? Namespace { get; set; }
+			public string? OutputFilePath { get; set; }
+			public StreamWriter? Writer { get; set; }
+			public FileStream? Stream { get; set; }
+			public BindingGenerator.State? State { get; set; }
 		}
 
 		sealed class LayoutGroup
 		{
-			public List<ITaskItem> Items;
-			public List<PartialClass> Classes;
-			public HashSet<string> ClassNames;
+			public List<ITaskItem> Items { get; set; } = new List<ITaskItem>();
+			public List<PartialClass> Classes { get; set; } = new List<PartialClass>();
+			public HashSet<string> ClassNames { get; set; } = new HashSet<string>();
 		}
 
 		internal sealed class BindingGeneratorLanguage
@@ -48,9 +48,9 @@ namespace Xamarin.Android.Tasks
 
 			public BindingGeneratorLanguage (string name, string extension, Func<BindingGenerator> creator)
 			{
-				if (String.IsNullOrEmpty (name))
+				if (name.IsNullOrEmpty ())
 					throw new ArgumentException (nameof (name));
-				if (String.IsNullOrEmpty (extension))
+				if (extension.IsNullOrEmpty ())
 					throw new ArgumentException (nameof (extension));
 				Creator = creator ?? throw new ArgumentNullException (nameof (creator));
 				Name = name;
@@ -63,27 +63,27 @@ namespace Xamarin.Android.Tasks
 			{"C#", DefaultOutputGenerator},
 		};
 
-		public string OutputLanguage { get; set; }
+		public string? OutputLanguage { get; set; }
 
 		[Required]
-		public string MonoAndroidCodeBehindDir { get; set; }
+		public string MonoAndroidCodeBehindDir { get; set; } = "";
 
 		[Required]
-		public string AndroidFragmentType { get; set; }
+		public string AndroidFragmentType { get; set; } = "";
 
-		public string AppNamespace { get; set; }
+		public string? AppNamespace { get; set; }
 
 		[Required]
-		public ITaskItem [] ResourceFiles { get; set; }
+		public ITaskItem [] ResourceFiles { get; set; } = [];
 
-		public ITaskItem [] PartialClassFiles { get; set; }
+		public ITaskItem []? PartialClassFiles { get; set; }
 
 		[Output]
-		public ITaskItem [] GeneratedFiles { get; set; }
+		public ITaskItem []? GeneratedFiles { get; set; }
 
-		BindingGenerator GetBindingGenerator (string language)
+		BindingGenerator? GetBindingGenerator (string language)
 		{
-			BindingGeneratorLanguage gen;
+			BindingGeneratorLanguage? gen;
 			if (!KnownBindingGenerators.TryGetValue (language, out gen) || gen == null)
 				return null;
 
@@ -92,10 +92,10 @@ namespace Xamarin.Android.Tasks
 
 		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
-			if (String.IsNullOrWhiteSpace (OutputLanguage))
+			if (OutputLanguage.IsNullOrWhiteSpace ())
 				OutputLanguage = DefaultOutputGenerator.Name;
 
-			BindingGenerator generator = GetBindingGenerator (OutputLanguage);
+			BindingGenerator? generator = GetBindingGenerator (OutputLanguage);
 
 			if (generator == null) {
 				LogMessage ($"Unknown binding output language '{OutputLanguage}', will use {DefaultOutputGenerator.Name} instead");
@@ -124,9 +124,7 @@ namespace Xamarin.Android.Tasks
 					return;
 
 				if (!layoutGroups.TryGetValue (layoutGroupName, out group) || group == null) {
-					group = new LayoutGroup {
-						Items = new List<ITaskItem> ()
-					};
+					group = new LayoutGroup ();
 					layoutGroups [layoutGroupName] = group;
 				}
 				group.Items.Add (item);
@@ -148,11 +146,6 @@ namespace Xamarin.Android.Tasks
 					string outputFileName;
 					if (!GetRequiredMetadata (item, CalculateLayoutCodeBehind.LayoutPartialClassFileNameMetadata, out outputFileName))
 						return;
-
-					if (group.Classes == null)
-						group.Classes = new List<PartialClass> ();
-					if (group.ClassNames == null)
-						group.ClassNames = new HashSet<string> ();
 
 					if (group.ClassNames.Contains (partialClassName))
 						continue;
@@ -177,7 +170,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			IEnumerable<string> generatedFilePaths = null;
+			IEnumerable<string> generatedFilePaths;
 			if (ResourceFiles.Length >= CalculateLayoutCodeBehind.ParallelGenerationThreshold) {
 				// NOTE: Update the tests in $TOP_DIR/tests/CodeBehind/UnitTests/BuildTests.cs if this message
 				// is changed!
@@ -192,7 +185,7 @@ namespace Xamarin.Android.Tasks
 				generatedFilePaths = fileSet;
 			}
 
-			GeneratedFiles = generatedFilePaths.Where (gfp => !String.IsNullOrEmpty (gfp)).Select (gfp => new TaskItem (gfp)).ToArray ();
+			GeneratedFiles = generatedFilePaths.Where (gfp => !gfp.IsNullOrEmpty ()).Select (gfp => new TaskItem (gfp)).ToArray ();
 			if (GeneratedFiles.Length == 0)
 				LogCodedWarning ("XA4221", Properties.Resources.XA4221);
 			LogDebugTaskItems ("  GeneratedFiles:", GeneratedFiles);
@@ -200,11 +193,11 @@ namespace Xamarin.Android.Tasks
 
 		void GenerateSourceForLayoutGroup (BindingGenerator generator, LayoutGroup group, Action <string> pathAdder)
 		{
-			List<ITaskItem> resourceItems = group?.Items;
-			if (resourceItems == null || resourceItems.Count == 0)
+			List<ITaskItem> resourceItems = group.Items;
+			if (resourceItems.Count == 0)
 				return;
 
-			ITaskItem item = resourceItems.FirstOrDefault ();
+			ITaskItem? item = resourceItems.FirstOrDefault ();
 			if (item == null)
 				return;
 
@@ -237,13 +230,13 @@ namespace Xamarin.Android.Tasks
 			} else {
 				bool fail = false;
 				classNamespace = fullClassName.Substring (0, idx);
-				if (String.IsNullOrEmpty (classNamespace)) {
+				if (classNamespace.IsNullOrEmpty ()) {
 					LogCodedError ("XA4223", Properties.Resources.XA4223, fullClassName);
 					fail = true;
 				}
 
 				className = fullClassName.Substring (idx + 1);
-				if (String.IsNullOrEmpty (className)) {
+				if (className.IsNullOrEmpty ()) {
 					LogCodedError ("XA4224", Properties.Resources.XA4224, fullClassName);
 					fail = true;
 				}
@@ -252,7 +245,7 @@ namespace Xamarin.Android.Tasks
 					return;
 			}
 
-			if (!GenerateSource (generator, outputFilePath, widgets, classNamespace, className, group.Classes))
+			if (!GenerateSource (generator, outputFilePath, widgets!, classNamespace, className, group.Classes))
 				return;
 
 			pathAdder (outputFilePath);
@@ -268,7 +261,7 @@ namespace Xamarin.Android.Tasks
 						if (pc == null)
 							continue;
 
-						pc.Stream = File.Open (pc.OutputFilePath, FileMode.Create);
+						pc.Stream = File.Open (pc.OutputFilePath!, FileMode.Create);
 						pc.Writer = new StreamWriter (pc.Stream, Encoding.UTF8);
 					}
 				}
@@ -311,7 +304,7 @@ namespace Xamarin.Android.Tasks
 
 			if (havePartialClasses) {
 				string fullBindingClassName = $"{classNamespace}.{className}";
-				WriteToPartialClasses (pc => pc.State = generator.BeginPartialClassFile (pc.Writer, fullBindingClassName, pc.Namespace, pc.Name, AndroidFragmentType));
+				WriteToPartialClasses (pc => pc.State = generator.BeginPartialClassFile (pc.Writer!, fullBindingClassName, pc.Namespace!, pc.Name!, AndroidFragmentType));
 			}
 
 			var state = generator.BeginBindingFile (writer, $"global::{ns}Resource.Layout.{className}", classNamespace, className, AndroidFragmentType);
@@ -340,14 +333,14 @@ namespace Xamarin.Android.Tasks
 					LogCodedWarning ("XA4225", Properties.Resources.XA4225, widget.Name, className, decayedType);
 				}
 
-				if (String.IsNullOrWhiteSpace (widget.Type))
+				if (widget.Type.IsNullOrWhiteSpace ())
 					throw new InvalidOperationException ($"Widget {widget.Name} does not have a type");
 
 				generator.WriteBindingProperty (state, widget, ns);
-				WriteToPartialClasses (pc => generator.WritePartialClassProperty (pc.State, widget));
+				WriteToPartialClasses (pc => generator.WritePartialClassProperty (pc.State!, widget));
 			}
 			generator.EndBindingFile (state);
-			WriteToPartialClasses (pc => generator.EndPartialClassFile (pc.State));
+			WriteToPartialClasses (pc => generator.EndPartialClassFile (pc.State!));
 
 			return true;
 

@@ -1,5 +1,5 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
-#nullable disable
+#nullable enable
 
 using System;
 using System.Diagnostics;
@@ -34,17 +34,17 @@ namespace Xamarin.Android.Tasks {
 
 		public bool DaemonKeepInDomain { get; set; }
 
-		public ITaskItem [] ResourceDirectories { get; set; }
+		public ITaskItem []? ResourceDirectories { get; set; }
 
-		public ITaskItem AndroidManifestFile { get; set;}
+		public ITaskItem? AndroidManifestFile { get; set;}
 
-		public string ResourceSymbolsTextFile { get; set; }
+		public string? ResourceSymbolsTextFile { get; set; }
 
 		protected string ToolName { get { return OS.IsWindows ? "aapt2.exe" : "aapt2"; } }
 
-		public string ToolPath { get; set; }
+		public string? ToolPath { get; set; }
 
-		public string ToolExe { get; set; }
+		public string? ToolExe { get; set; }
 
 		/// <summary>
 		/// Returns true if a filename starts with a . character.
@@ -134,7 +134,7 @@ namespace Xamarin.Android.Tasks {
 			if (match.Success) {
 				file = match.Groups ["file"].Value;
 				int line = 0;
-				if (!string.IsNullOrEmpty (match.Groups ["line"]?.Value))
+				if (!match.Groups ["line"]?.Value.IsNullOrEmpty ())
 					line = int.Parse (match.Groups ["line"].Value.Trim ()) + 1;
 				var level = match.Groups ["level"].Value.ToLowerInvariant ();
 				var message = match.Groups ["message"].Value;

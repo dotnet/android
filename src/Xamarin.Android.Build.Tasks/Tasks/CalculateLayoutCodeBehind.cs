@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Concurrent;
@@ -23,15 +23,15 @@ namespace Xamarin.Android.Tasks
 
 		sealed class LayoutInclude
 		{
-			public string Id;
-			public string Name;
+			public string? Id;
+			public string? Name;
 		}
 
 		sealed class LayoutGroup
 		{
-			public List<ITaskItem> InputItems;
-			public List<ITaskItem> LayoutBindingItems;
-			public List<ITaskItem> LayoutPartialClassItems;
+			public List<ITaskItem>? InputItems;
+			public List<ITaskItem>? LayoutBindingItems;
+			public List<ITaskItem>? LayoutPartialClassItems;
 		}
 
 		static readonly char[] partialClassNameSplitChars = { ';' };
@@ -77,25 +77,25 @@ namespace Xamarin.Android.Tasks
 		XPathExpression widgetWithId;
 		string sourceFileExtension;
 
-		public string BindingDependenciesCacheFile { get; set; }
+		public string? BindingDependenciesCacheFile { get; set; }
 
 		[Required]
-		public string BaseNamespace { get; set; }
+		public string BaseNamespace { get; set; } = "";
 
 		[Required]
-		public string OutputFileExtension { get; set; }
+		public string OutputFileExtension { get; set; } = "";
 
 		[Required]
-		public string OutputLanguage { get; set; }
+		public string OutputLanguage { get; set; } = "";
 
 		[Required]
-		public ITaskItem [] BoundLayouts { get; set; }
+		public ITaskItem [] BoundLayouts { get; set; } = [];
 
 		[Output]
-		public ITaskItem [] LayoutBindingFiles { get; set; }
+		public ITaskItem []? LayoutBindingFiles { get; set; }
 
 		[Output]
-		public ITaskItem [] LayoutPartialClassFiles { get; set; }
+		public ITaskItem []? LayoutPartialClassFiles { get; set; }
 
 		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
