@@ -531,7 +531,7 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>未能找到源文件“{0}”。</value>
   </data>
   <data name="XA2002_Framework" xml:space="preserve">
-    <value>Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the .NET for Android profile?</value>
+    <value>无法解析 {1} 引用的引用 `{0}`。.NET for Android 配置文件中可能没有该引用?</value>
     <comment>{0} - The name of the missing assembly
 {1} - The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`</comment>
   </data>
