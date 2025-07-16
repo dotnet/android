@@ -134,7 +134,7 @@ namespace Xamarin.Android.Tasks {
 			if (match.Success) {
 				file = match.Groups ["file"].Value;
 				int line = 0;
-				if (!match.Groups ["line"]?.Value.IsNullOrEmpty ())
+				if (!match.Groups ["line"]?.Value.IsNullOrEmpty () == true)
 					line = int.Parse (match.Groups ["line"].Value.Trim ()) + 1;
 				var level = match.Groups ["level"].Value.ToLowerInvariant ();
 				var message = match.Groups ["message"].Value;

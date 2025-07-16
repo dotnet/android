@@ -38,7 +38,8 @@ namespace Xamarin.Android.Tasks
 
 				public State (StreamWriter writer, string className, bool isInNamespace, string androidFragmentType, string? bindingClassName = null)
 				{
-					ArgumentNullException.ThrowIfNull (writer);
+					if (writer == null)
+						throw new ArgumentNullException (nameof (writer));
 					if (className.IsNullOrWhiteSpace ())
 						throw new ArgumentException (nameof (className));
 					if (androidFragmentType.IsNullOrEmpty ())
@@ -183,15 +184,18 @@ namespace Xamarin.Android.Tasks
 				state.WriteLine ();
 				WriteLocationDirective (state, widget);
 
-				foreach (LayoutLocationInfo loc in widget.Locations) {
-					if (loc == null)
-						continue;
-					WriteComment (state, $" Declared in: {loc.FilePath}:({loc.Line}:{loc.Column})");
+				if (widget.Locations != null) {
+					foreach (LayoutLocationInfo loc in widget.Locations) {
+						if (loc == null)
+							continue;
+						WriteComment (state, $" Declared in: {loc.FilePath}:({loc.Line}:{loc.Column})");
+					}
 				}
 
 				if (widget.TypeFixups != null) {
 					foreach (LayoutTypeFixup tf in widget.TypeFixups) {
-						WriteComment (state, $" Type fixed up from '{tf.OldType}' to '{widget.Type}'. Element defined in {tf.Location.FilePath}:({tf.Location.Line}:{tf.Location.Column})");
+						if (tf?.Location != null)
+							WriteComment (state, $" Type fixed up from '{tf.OldType}' to '{widget.Type}'. Element defined in {tf.Location.FilePath}:({tf.Location.Line}:{tf.Location.Column})");
 					}
 				}
 
@@ -237,9 +241,9 @@ namespace Xamarin.Android.Tasks
 				// property name since we're guaranteed that each property is unique.
 				StringComparison comparison = CaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
 				if (!MonoAndroidHelper.StringEquals (state.ClassName, widget.Name, comparison) && !NameMatchesBindingClass (state, widget, comparison))
-					return widget.Name;
+					return widget.Name ?? "UnknownWidget";
 
-				string suffix = null;
+				string? suffix = null;
 				switch (widget.WidgetType) {
 					case LayoutWidgetType.View:
 						suffix = "View";
@@ -260,15 +264,15 @@ namespace Xamarin.Android.Tasks
 						throw new InvalidOperationException ($"Unsupported widget type '{widget.WidgetType}' (ID: {GetWidgetId (widget)})");
 				}
 
-				return $"{widget.Name}_{suffix}";
+				return $"{widget.Name ?? "UnknownWidget"}_{suffix}";
 			}
 
 			bool NameMatchesBindingClass (State state, LayoutWidget widget, StringComparison comparison)
 			{
-				if (String.IsNullOrEmpty (state.BindingClassName))
+				if (string.IsNullOrEmpty (state.BindingClassName))
 					return false;
 
-				int dot = state.BindingClassName.LastIndexOf ('.');
+				int dot = state.BindingClassName!.LastIndexOf ('.');
 				if (dot < 0)
 					return false;
 
@@ -344,16 +348,16 @@ namespace Xamarin.Android.Tasks
 
 			protected string GetWidgetId (LayoutWidget widget, out bool isGlobal)
 			{
-				if (String.IsNullOrEmpty (widget?.Id)) {
+				if (string.IsNullOrEmpty (widget?.Id)) {
 					isGlobal = false;
-					return String.Empty;
+					return string.Empty;
 				}
 
-				isGlobal = widget.Id.StartsWith (CalculateLayoutCodeBehind.GlobalIdPrefix, StringComparison.Ordinal);
+				isGlobal = widget.Id!.StartsWith (CalculateLayoutCodeBehind.GlobalIdPrefix, StringComparison.Ordinal);
 				if (!isGlobal)
-					return widget.Id;
+					return widget.Id!;
 
-				return widget.Id.Substring (CalculateLayoutCodeBehind.GlobalIdPrefix.Length);
+				return widget.Id!.Substring (CalculateLayoutCodeBehind.GlobalIdPrefix.Length);
 			}
 		}
 	}

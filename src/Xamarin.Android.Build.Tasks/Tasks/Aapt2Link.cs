@@ -83,7 +83,7 @@ namespace Xamarin.Android.Tasks {
 		List<string> tempFiles = new List<string> ();
 		SortedSet<string> rulesFiles = new SortedSet<string> ();
 		Dictionary<string, long> apks = new Dictionary<string, long> ();
-		string resourceSymbolsTextFileTemp;
+		string? resourceSymbolsTextFileTemp;
 
 		protected override int GetRequiredDaemonInstances ()
 		{
@@ -148,7 +148,7 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
-		string [] GenerateCommandLineCommands (string ManifestFile, string currentAbi, string currentResourceOutputFile)
+		string [] GenerateCommandLineCommands (string ManifestFile, string? currentAbi, string currentResourceOutputFile)
 		{
 			List<string> cmd = new List<string> ();
 			string manifestDir = Path.Combine (Path.GetDirectoryName (ManifestFile), currentAbi != null ? currentAbi : "manifest");

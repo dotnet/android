@@ -251,7 +251,7 @@ namespace Xamarin.Android.Tasks
 			pathAdder (outputFilePath);
 		}
 
-		bool GenerateSource (BindingGenerator generator, string outputFilePath, ICollection <LayoutWidget> widgets, string classNamespace, string className, List<PartialClass> partialClasses)
+		bool GenerateSource (BindingGenerator generator, string outputFilePath, ICollection <LayoutWidget> widgets, string classNamespace, string className, List<PartialClass>? partialClasses)
 		{
 			bool result = false;
 			var tempFile = Path.GetTempFileName ();
@@ -297,7 +297,7 @@ namespace Xamarin.Android.Tasks
 			return result;
 		}
 
-		bool GenerateSource (StreamWriter writer, BindingGenerator generator, ICollection <LayoutWidget> widgets, string classNamespace, string className, List<PartialClass> partialClasses)
+		bool GenerateSource (StreamWriter writer, BindingGenerator generator, ICollection <LayoutWidget> widgets, string classNamespace, string className, List<PartialClass>? partialClasses)
 		{
 			bool havePartialClasses = partialClasses != null && partialClasses.Count > 0;
 			string ns = AppNamespace == null ? String.Empty : $"{AppNamespace}.";
@@ -312,7 +312,7 @@ namespace Xamarin.Android.Tasks
 				DetermineWidgetType (widget, widget.Type == null);
 				if (widget.Type == null) {
 					widget.TypeFixups = null; // Not needed - we'll use decayed type
-					string decayedType = null;
+					string? decayedType = null;
 					switch (widget.WidgetType) {
 						case LayoutWidgetType.View:
 							decayedType = "global::Android.Views.View";
@@ -346,7 +346,7 @@ namespace Xamarin.Android.Tasks
 
 			void WriteToPartialClasses (Action<PartialClass> code)
 			{
-				if (!havePartialClasses)
+				if (!havePartialClasses || partialClasses == null)
 					return;
 				foreach (var pc in partialClasses) {
 					if (pc == null)
