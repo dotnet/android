@@ -57,7 +57,7 @@ namespace xamarin::android {
 	class GCBridge
 	{
 	public:
-		static void initialize_on_load (JNIEnv *env) noexcept;
+		static void initialize_on_onload (JNIEnv *env) noexcept;
 		static void initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass) noexcept;
 
 		static BridgeProcessingFtn initialize_callback (

@@ -7,7 +7,7 @@
 
 using namespace xamarin::android;
 
-void GCBridge::initialize_on_load (JNIEnv *env) noexcept
+void GCBridge::initialize_on_onload (JNIEnv *env) noexcept
 {
 	abort_if_invalid_pointer_argument (env, "env");
 
