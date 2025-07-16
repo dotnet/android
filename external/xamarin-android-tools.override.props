@@ -3,8 +3,7 @@
   <Import Project="..\Directory.Build.props" />
   <PropertyGroup>
     <RestoreAdditionalProjectSources>
-      https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-c0390586/nuget/v3/index.json;
-      https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-b4fb3656/nuget/v3/index.json;
+      https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-a6f44eeb/nuget/v3/index.json;
     </RestoreAdditionalProjectSources>
   </PropertyGroup>
 </Project>
