@@ -1,6 +1,7 @@
 <Project>
   <!-- Import $(LibZipSharpVersion) -->
   <Import Project="..\Directory.Build.props" />
+  <AndroidToolsDisableMultiTargeting>true</AndroidToolsDisableMultiTargeting>
   <PropertyGroup>
     <RestoreAdditionalProjectSources>
       https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-ef07c4f2/nuget/v3/index.json;
