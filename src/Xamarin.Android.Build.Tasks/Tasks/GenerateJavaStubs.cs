@@ -47,14 +47,17 @@ namespace Xamarin.Android.Tasks
 
 		public bool Debug { get; set; }
 
-		public string? AndroidSdkPlatform { get; set; }
-		public string? OutputDirectory { get; set; }
+		[Required]
+	public string AndroidSdkPlatform { get; set; } = "";
+		[Required]
+	public string OutputDirectory { get; set; } = "";
 
 		public bool ErrorOnCustomJavaObject { get; set; }
 
 		public string? PackageNamingPolicy { get; set; }
 
-		public string? ApplicationJavaClass { get; set; }
+		[Required]
+	public string ApplicationJavaClass { get; set; } = "";
 
 		public string CodeGenerationTarget { get; set; } = "";
 
@@ -223,18 +226,6 @@ namespace Xamarin.Android.Tasks
 			bool success = true;
 
 			if (generateJavaCode && RunCheckedBuild) {
-				if (AndroidSdkPlatform == null) {
-					Log.LogCodedError ("XA1001", "AndroidSdkPlatform is required when generating Java code");
-					return (false, null);
-				}
-				if (OutputDirectory == null) {
-					Log.LogCodedError ("XA1002", "OutputDirectory is required when generating Java code");
-					return (false, null);
-				}
-				if (ApplicationJavaClass == null) {
-					Log.LogCodedError ("XA1003", "ApplicationJavaClass is required when generating Java code");
-					return (false, null);
-				}
 				success = jcwGenerator.Generate (AndroidSdkPlatform, outputPath: Path.Combine (OutputDirectory, "src"), ApplicationJavaClass);
 
 				generatedJavaFiles = jcwGenerator.GeneratedJavaFiles;

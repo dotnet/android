@@ -103,7 +103,7 @@ namespace Xamarin.Android.Tasks {
 				// now check for
 				foreach (var kvp in apks) {
 					string currentResourceOutputFile = kvp.Key;
-					bool aaptResult = Daemon?.JobSucceded (kvp.Value) ?? false;
+					bool aaptResult = Daemon.JobSucceded (kvp.Value);
 					LogDebugMessage ($"Processing {currentResourceOutputFile} JobId: {kvp.Value} Exists: {File.Exists (currentResourceOutputFile)} JobWorked: {aaptResult}");
 					if (!currentResourceOutputFile.IsNullOrEmpty ()) {
 						var tmpfile = currentResourceOutputFile + ".bk";

@@ -35,9 +35,9 @@ namespace Xamarin.Android.Tasks
 
 		sealed class LayoutGroup
 		{
-			public List<ITaskItem> Items { get; set; } = new List<ITaskItem>();
-			public List<PartialClass> Classes { get; set; } = new List<PartialClass>();
-			public HashSet<string> ClassNames { get; set; } = new HashSet<string>();
+			public List<ITaskItem> Items { get; set; } = [];
+			public List<PartialClass> Classes { get; set; } = [];
+			public HashSet<string> ClassNames { get; set; } = new HashSet<string>(StringComparer.Ordinal);
 		}
 
 		internal sealed class BindingGeneratorLanguage
