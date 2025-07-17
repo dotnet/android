@@ -243,8 +243,8 @@ namespace Xamarin.Android.Tasks {
 
 			cmd.Add ("--auto-add-overlay");
 
-			if (!string.IsNullOrWhiteSpace (UncompressedFileExtensions)) {
-				foreach (var ext in UncompressedFileExtensions!.Split (new char [] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)) {
+			if (!UncompressedFileExtensions.IsNullOrWhiteSpace ()) {
+				foreach (var ext in UncompressedFileExtensions.Split (new char [] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)) {
 					cmd.Add ("-0");
 					cmd.Add (ext.StartsWith (".", StringComparison.OrdinalIgnoreCase) ? ext : $".{ext}");
 				}

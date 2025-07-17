@@ -48,16 +48,16 @@ namespace Xamarin.Android.Tasks
 		public bool Debug { get; set; }
 
 		[Required]
-	public string AndroidSdkPlatform { get; set; } = "";
+		public string AndroidSdkPlatform { get; set; } = "";
 		[Required]
-	public string OutputDirectory { get; set; } = "";
+		public string OutputDirectory { get; set; } = "";
 
 		public bool ErrorOnCustomJavaObject { get; set; }
 
 		public string? PackageNamingPolicy { get; set; }
 
 		[Required]
-	public string ApplicationJavaClass { get; set; } = "";
+		public string ApplicationJavaClass { get; set; } = "";
 
 		public string CodeGenerationTarget { get; set; } = "";
 
