@@ -63,6 +63,8 @@ public class CecilImporter
 		// Implemented interfaces
 		foreach (var ifaceInfo in type.Interfaces) {
 			var iface = resolver.Resolve (ifaceInfo.InterfaceType);
+			if (iface is null)
+				continue;
 
 			if (!CecilExtensions.GetTypeRegistrationAttributes (iface).Any ())
 				continue;
