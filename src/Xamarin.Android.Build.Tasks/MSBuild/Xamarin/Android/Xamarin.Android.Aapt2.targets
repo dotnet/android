@@ -166,6 +166,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       JavaPlatformJarPath="$(JavaPlatformJarPath)"
       JavaDesignerOutputDirectory="$(ResgenTemporaryDirectory)"
       CompiledResourceFlatFiles="@(_CompiledFlatFiles)"
+      AndroidManifestFile="$(_AndroidManifestAbs)"
       ManifestFiles="$(ResgenTemporaryDirectory)\AndroidManifest.xml"
       AdditionalAndroidResourcePaths="@(_LibraryResourceDirectories)"
       YieldDuringToolExecution="$(YieldDuringToolExecution)"
