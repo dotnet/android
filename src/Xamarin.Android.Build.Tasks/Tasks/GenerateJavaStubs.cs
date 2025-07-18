@@ -190,14 +190,14 @@ namespace Xamarin.Android.Tasks
 					nativeCodeGenStates.TryAdd (arch, state);
 
 					if (pinvokeScanner != null && state != null) {
-						(success, List<PinvokeScanner.PinvokeEntryInfo> pinfos) = ScanForUsedPinvokes (pinvokeScanner, arch, state.Resolver);
+						(success, List<PinvokeScanner.PinvokeEntryInfo>? pinfos) = ScanForUsedPinvokes (pinvokeScanner, arch, state.Resolver);
 						if (!success) {
 							return;
 						}
 						state.PinvokeInfos = pinfos;
-						Log.LogDebugMessage ($"Number of unique p/invokes for architecture '{arch}': {pinfos.Count}");
+						Log.LogDebugMessage ($"Number of unique p/invokes for architecture '{arch}': {pinfos?.Count}");
 					}
-        }
+				}
 			});
 
 			// If we hit an error generating the Java code, we should bail out now
