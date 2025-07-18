@@ -52,6 +52,7 @@ set(LIB_ALIAS xa::runtime-base)
 set(XA_RUNTIME_BASE_SOURCES
   android-system.cc
   cpu-arch-detect.cc
+  jni-remapping.cc
   logger.cc
   util.cc
 )

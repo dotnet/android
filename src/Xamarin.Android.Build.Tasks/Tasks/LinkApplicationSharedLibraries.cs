@@ -75,6 +75,7 @@ namespace Xamarin.Android.Tasks
 					RuntimePackLibraryDirectories,
 					CancellationToken
 				) {
+					AllowUndefinedSymbols = true,
 					StripDebugSymbols = !DebugBuild,
 					SaveDebugSymbols = !DebugBuild,
 					ZipAlignmentPages = ZipAlignmentPages,
