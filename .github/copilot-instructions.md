@@ -165,6 +165,26 @@ if (!NonRequiredProperty.IsNullOrEmpty ()) {
 }
 ```
 
+If you see a `string.IsNullOrWhiteSpace()` check:
+
+```csharp
+if (!string.IsNullOrWhiteSpace (UncompressedFileExtensions)) {
+    foreach (var ext in UncompressedFileExtensions.Split (new char [] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)) {
+        // Code here
+    }
+}
+```
+
+Convert this to use the extension method:
+
+```csharp
+if (!UncompressedFileExtensions.IsNullOrWhiteSpace ()) {
+    foreach (var ext in UncompressedFileExtensions.Split (new char [] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)) {
+        // Code here
+    }
+}
+```
+
 ## Formatting
 
 C# code uses tabs (not spaces) and the Mono code-formatting style defined in `.editorconfig`

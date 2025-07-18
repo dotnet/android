@@ -1,5 +1,5 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
-#nullable disable
+#nullable enable
 
 using System;
 using System.Diagnostics;
@@ -24,7 +24,7 @@ namespace Xamarin.Android.Tasks {
 
 		private const int MAX_PATH = 260;
 		private static readonly int DefaultMaxAapt2Daemons = 6;
-		protected Dictionary<string, string> _resource_name_case_map;
+		protected Dictionary<string, string> _resource_name_case_map = null!;
 
 		Dictionary<string, string> resource_name_case_map => _resource_name_case_map ??= MonoAndroidHelper.LoadResourceCaseMap (BuildEngine4, ProjectSpecificTaskObjectKey);
 
@@ -34,17 +34,17 @@ namespace Xamarin.Android.Tasks {
 
 		public bool DaemonKeepInDomain { get; set; }
 
-		public ITaskItem [] ResourceDirectories { get; set; }
+		public ITaskItem []? ResourceDirectories { get; set; }
 
-		public ITaskItem AndroidManifestFile { get; set;}
+		public ITaskItem? AndroidManifestFile { get; set;}
 
-		public string ResourceSymbolsTextFile { get; set; }
+		public string? ResourceSymbolsTextFile { get; set; }
 
 		protected string ToolName { get { return OS.IsWindows ? "aapt2.exe" : "aapt2"; } }
 
-		public string ToolPath { get; set; }
+		public string? ToolPath { get; set; }
 
-		public string ToolExe { get; set; }
+		public string? ToolExe { get; set; }
 
 		/// <summary>
 		/// Returns true if a filename starts with a . character.
@@ -83,7 +83,8 @@ namespace Xamarin.Android.Tasks {
 			return 1;
 		}
 
-		Aapt2Daemon daemon;
+		// This is set in Execute()
+		Aapt2Daemon daemon = null!;
 
 		internal Aapt2Daemon Daemon => daemon;
 		public override bool Execute ()
@@ -134,7 +135,7 @@ namespace Xamarin.Android.Tasks {
 			if (match.Success) {
 				file = match.Groups ["file"].Value;
 				int line = 0;
-				if (!string.IsNullOrEmpty (match.Groups ["line"]?.Value))
+				if (!match.Groups ["line"]?.Value.IsNullOrEmpty () == true)
 					line = int.Parse (match.Groups ["line"].Value.Trim ()) + 1;
 				var level = match.Groups ["level"].Value.ToLowerInvariant ();
 				var message = match.Groups ["message"].Value;
@@ -189,7 +190,7 @@ namespace Xamarin.Android.Tasks {
 				if (level.Contains ("error") || (line != 0 && !file.IsNullOrEmpty ())) {
 					var errorCode = GetErrorCodeForFile (message, file);
 					if (manifestError)
-						LogCodedError (errorCode, string.Format (Xamarin.Android.Tasks.Properties.Resources.AAPTManifestError, message.TrimEnd('.')), AndroidManifestFile.ItemSpec, 0);
+						LogCodedError (errorCode, string.Format (Xamarin.Android.Tasks.Properties.Resources.AAPTManifestError, message.TrimEnd('.')), AndroidManifestFile?.ItemSpec ?? "", 0);
 					else
 						LogCodedError (errorCode, AddAdditionalErrorText (errorCode, message), file, line);
 					return true;

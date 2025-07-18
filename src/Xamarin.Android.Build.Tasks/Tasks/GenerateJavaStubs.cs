@@ -1,6 +1,6 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Concurrent;
@@ -31,30 +31,33 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "GJS";
 
 		[Required]
-		public ITaskItem[] ResolvedAssemblies { get; set; }
+		public ITaskItem[] ResolvedAssemblies { get; set; } = [];
 
 		[Required]
-		public ITaskItem[] ResolvedUserAssemblies { get; set; }
+		public ITaskItem[] ResolvedUserAssemblies { get; set; } = [];
 
 		[Required]
-		public ITaskItem [] FrameworkDirectories { get; set; }
+		public ITaskItem [] FrameworkDirectories { get; set; } = [];
 
 		[Required]
-		public string [] SupportedAbis { get; set; }
+		public string [] SupportedAbis { get; set; } = [];
 
-		public string IntermediateOutputDirectory { get; set; }
+		public string? IntermediateOutputDirectory { get; set; }
 		public bool EnableMarshalMethods { get; set; }
 
 		public bool Debug { get; set; }
 
-		public string AndroidSdkPlatform { get; set; }
-		public string OutputDirectory { get; set; }
+		[Required]
+		public string AndroidSdkPlatform { get; set; } = "";
+		[Required]
+		public string OutputDirectory { get; set; } = "";
 
 		public bool ErrorOnCustomJavaObject { get; set; }
 
-		public string PackageNamingPolicy { get; set; }
+		public string? PackageNamingPolicy { get; set; }
 
-		public string ApplicationJavaClass { get; set; }
+		[Required]
+		public string ApplicationJavaClass { get; set; } = "";
 
 		public string CodeGenerationTarget { get; set; } = "";
 
@@ -183,15 +186,17 @@ namespace Xamarin.Android.Tasks
 					templateCodeGenState = state;
 				}
 
-				nativeCodeGenStates.TryAdd (arch, state);
+				if (state != null) {
+					nativeCodeGenStates.TryAdd (arch, state);
 
-				if (pinvokeScanner != null && state != null) {
-					(success, List<PinvokeScanner.PinvokeEntryInfo> pinfos) = ScanForUsedPinvokes (pinvokeScanner, arch, state.Resolver);
-					if (!success) {
-						return;
+					if (pinvokeScanner != null && state != null) {
+						(success, List<PinvokeScanner.PinvokeEntryInfo>? pinfos) = ScanForUsedPinvokes (pinvokeScanner, arch, state.Resolver);
+						if (!success) {
+							return;
+						}
+						state.PinvokeInfos = pinfos;
+						Log.LogDebugMessage ($"Number of unique p/invokes for architecture '{arch}': {pinfos?.Count}");
 					}
-					state.PinvokeInfos = pinfos;
-					Log.LogDebugMessage ($"Number of unique p/invokes for architecture '{arch}': {pinfos.Count}");
 				}
 			});
 

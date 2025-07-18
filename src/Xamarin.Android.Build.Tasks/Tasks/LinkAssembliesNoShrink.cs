@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using Mono.Linker.Steps;
 using MonoDroid.Tuner;

@@ -1,5 +1,5 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
-#nullable disable
+#nullable enable
 
 using System;
 using System.CodeDom;
@@ -18,31 +18,31 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "GRD";
 
 		[Required]
-		public string NetResgenOutputFile { get; set; }
+		public string NetResgenOutputFile { get; set; } = "";
 
-		public string DesignTimeOutputFile { get; set; }
+		public string? DesignTimeOutputFile { get; set; }
 
-		public string JavaResgenInputFile { get; set; }
+		public string? JavaResgenInputFile { get; set; }
 
-		public string RTxtFile { get; set; }
+		public string? RTxtFile { get; set; }
 
-		public string Namespace { get; set; }
-
-		[Required]
-		public string ProjectDir { get; set; }
+		public string? Namespace { get; set; }
 
 		[Required]
-		public ITaskItem[] Resources { get; set; }
+		public string ProjectDir { get; set; } = "";
 
 		[Required]
-		public string ResourceDirectory { get; set; }
+		public ITaskItem[] Resources { get; set; } = [];
 
-		public ITaskItem[] AdditionalResourceDirectories { get; set; }
+		[Required]
+		public string ResourceDirectory { get; set; } = "";
+
+		public ITaskItem[]? AdditionalResourceDirectories { get; set; }
 
 		[Required]
 		public bool IsApplication { get; set; }
 
-		public ITaskItem[] References { get; set; }
+		public ITaskItem[]? References { get; set; }
 
 		[Required]
 		public bool UseManagedResourceGenerator { get; set; }
@@ -51,11 +51,11 @@ namespace Xamarin.Android.Tasks
 		public bool DesignTimeBuild { get; set; }
 
 		[Required]
-		public string JavaPlatformJarPath { get; set; }
+		public string JavaPlatformJarPath { get; set; } = "";
 
-		public string ResourceFlagFile { get; set; }
+		public string? ResourceFlagFile { get; set; }
 
-		public string CaseMapFile { get; set; }
+		public string? CaseMapFile { get; set; }
 
 		private Dictionary<string, string> resource_fixup = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
 
@@ -66,7 +66,8 @@ namespace Xamarin.Android.Tasks
 			// placed into the "Application" namespace. VS just munges the project
 			// name to be a valid C# identifier.
 			// Use "Application" as the default namespace name to work with XS.
-			Namespace = Namespace ?? "Application";
+			Namespace ??= "Application";
+			string namespaceName = Namespace; // Local variable for null-safety
 
 			if (!File.Exists (JavaResgenInputFile) && !UseManagedResourceGenerator)
 				return true;
@@ -138,7 +139,7 @@ namespace Xamarin.Android.Tasks
 					}
 					Log.LogDebugMessage ("Scan assembly {0} for resource generator", fileName);
 				}
-				new ResourceDesignerImportGenerator (Namespace, resources, Log)
+				new ResourceDesignerImportGenerator (namespaceName, resources, Log)
 					.CreateImportMethods (assemblies);
 			}
 
@@ -149,7 +150,7 @@ namespace Xamarin.Android.Tasks
 
 			// Write out our Resources.Designer.cs file
 
-			WriteFile (NetResgenOutputFile, resources, language, isCSharp, aliases);
+			WriteFile (NetResgenOutputFile, resources, language, isCSharp, aliases, namespaceName);
 
 			// During a regular build, write the designtime/Resource.designer.cs file as well
 
@@ -176,7 +177,7 @@ namespace Xamarin.Android.Tasks
 			type.Members.Add (staticCtor);
 		}
 
-		private void WriteFile (string file, CodeTypeDeclaration resources, string language, bool isCSharp, IEnumerable<string> aliases)
+		private void WriteFile (string file, CodeTypeDeclaration resources, string language, bool isCSharp, IEnumerable<string> aliases, string namespaceName)
 		{
 			CodeDomProvider provider = CodeDomProvider.CreateProvider (language);
 
@@ -186,9 +187,9 @@ namespace Xamarin.Android.Tasks
 					IndentString = "\t",
 				};
 
-				var ns = Namespace.IsNullOrEmpty ()
+				var ns = namespaceName.IsNullOrEmpty ()
 					? new CodeNamespace ()
-					: new CodeNamespace (Namespace);
+					: new CodeNamespace (namespaceName);
 
 				if (resources != null)
 					ns.Types.Add (resources);
@@ -197,7 +198,7 @@ namespace Xamarin.Android.Tasks
 				unit.Namespaces.Add (ns);
 
 				var resgenatt = new CodeAttributeDeclaration (new CodeTypeReference ("Android.Runtime.ResourceDesignerAttribute", CodeTypeReferenceOptions.GlobalReference));
-				resgenatt.Arguments.Add (new CodeAttributeArgument (new CodePrimitiveExpression (Namespace.Length > 0 ? Namespace + ".Resource" : "Resource")));
+				resgenatt.Arguments.Add (new CodeAttributeArgument (new CodePrimitiveExpression (namespaceName.Length > 0 ? namespaceName + ".Resource" : "Resource")));
 				resgenatt.Arguments.Add (new CodeAttributeArgument ("IsApplication", new CodePrimitiveExpression (IsApplication)));
 				unit.AssemblyCustomAttributes.Add (resgenatt);
 

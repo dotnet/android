@@ -1,5 +1,5 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -24,9 +24,9 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "GRDA";
 
 		[Required]
-		public ITaskItem RTxtFile { get; set; }
+		public ITaskItem RTxtFile { get; set; } = null!; // NRT - guarded by [Required]
 
-		public ITaskItem ResourceMap { get; set; }
+		public ITaskItem? ResourceMap { get; set; }
 
 		[Required]
 		public bool IsApplication { get; set; }
@@ -35,30 +35,30 @@ namespace Xamarin.Android.Tasks
 		public bool DesignTimeBuild { get; set; }
 
 		[Required]
-		public ITaskItem OutputFile { get; set; }
+		public ITaskItem OutputFile { get; set; } = null!; // NRT - guarded by [Required]
 
 		[Required]
-		public string TargetFrameworkVersion { get; set; }
+		public string TargetFrameworkVersion { get; set; } = "";
 
 		[Required]
-		public string TargetFrameworkIdentifier { get; set; }
+		public string TargetFrameworkIdentifier { get; set; } = "";
 
 		[Required]
-		public string ProjectDir { get; set; }
+		public string ProjectDir { get; set; } = "";
 
 		[Required]
-		public ITaskItem[] Resources { get; set; }
+		public ITaskItem[] Resources { get; set; } = [];
 
 		[Required]
-		public string ResourceDirectory { get; set; }
-		public string CaseMapFile { get; set; }
-		public ITaskItem[] AdditionalResourceDirectories { get; set; }
-		public ITaskItem[] FrameworkDirectories { get; set; }
+		public string ResourceDirectory { get; set; } = "";
+		public string? CaseMapFile { get; set; }
+		public ITaskItem[]? AdditionalResourceDirectories { get; set; }
+		public ITaskItem[]? FrameworkDirectories { get; set; }
 		public bool Deterministic { get; set; }
-		public string AssemblyName { get; set; }
-		TypeReference intArray;
-		TypeReference intRef;
-		TypeReference objectRef;
+		public string? AssemblyName { get; set; }
+		TypeReference? intArray;
+		TypeReference? intRef;
+		TypeReference? objectRef;
 		Dictionary<string, string> resource_fixup = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
 
 		public override bool RunTask ()
@@ -73,7 +73,7 @@ namespace Xamarin.Android.Tasks
 		{
 			var cache = new TypeDefinitionCache ();
 
-			foreach (var dir in FrameworkDirectories) {
+			foreach (var dir in FrameworkDirectories ?? []) {
 				if (Directory.Exists (dir.ItemSpec))
 					res.SearchDirectories.Add (dir.ItemSpec);
 			}
@@ -149,7 +149,7 @@ namespace Xamarin.Android.Tasks
 			resourceDesigner.CustomAttributes.Add (editorBrowserAttr);
 			resourceDesigner.CustomAttributes.Add (generatedCodeAttr);
 			module.Types.Add (resourceDesigner);
-			TypeDefinition constDesigner = null;
+			TypeDefinition? constDesigner = null;
 			if (IsApplication) {
 				// The Constant based class
 				TypeAttributes attrib = AssemblyName.IsNullOrEmpty () ? TypeAttributes.Public : TypeAttributes.Public;
@@ -180,12 +180,12 @@ namespace Xamarin.Android.Tasks
 					switch (r.Type) {
 						case RType.Integer:
 						case RType.Integer_Styleable:
-							if (IsApplication)
+							if (IsApplication && constDesigner != null)
 								CreateIntField (cache, r.ResourceTypeName, r.Identifier, r.Id, constDesigner, module);
 							CreateIntProperty (cache, r.ResourceTypeName, r.Identifier, r.Id, resourceDesigner, module);
 							break;
 						case RType.Array:
-							if (IsApplication)
+							if (IsApplication && constDesigner != null)
 								CreateIntArrayField (cache, r.ResourceTypeName, r.Identifier, r.Ids, constDesigner, module);
 							CreateIntArrayProperty (cache, r.ResourceTypeName, r.Identifier, r.Ids, resourceDesigner, module);
 							break;
@@ -216,14 +216,16 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		MethodReference ImportCustomAttributeConstructor (TypeDefinitionCache cache, string type, ModuleDefinition module, ModuleDefinition sourceModule = null, int argCount = 0)
+		MethodReference ImportCustomAttributeConstructor (TypeDefinitionCache cache, string type, ModuleDefinition module, ModuleDefinition? sourceModule = null, int argCount = 0)
 		{
 			var tr = module.ImportReference ((sourceModule ?? module).ExportedTypes.First(x => x.FullName == type).Resolve ());
 			var tv = cache.Resolve (tr);
+			if (tv == null)
+				throw new InvalidOperationException ($"Could not resolve type {type}");
 			return module.ImportReference (tv.Methods.First(x => x.IsConstructor && (x.Parameters?.Count ?? 0) == argCount));
 		}
 
-		TypeReference ImportType (string type, ModuleDefinition module, ModuleDefinition sourceModule = null)
+		TypeReference ImportType (string type, ModuleDefinition module, ModuleDefinition? sourceModule = null)
 		{
 			return module.ImportReference ((sourceModule ?? module).ExportedTypes.First(x => x.FullName == type).Resolve ());
 		}
@@ -283,6 +285,8 @@ namespace Xamarin.Android.Tasks
 			var ctoril = ctor.Body.GetILProcessor ();
 			ctoril.Emit (OpCodes.Ldarg_0);
 			var o = cache.Resolve (module.TypeSystem.Object);
+			if (o == null)
+				throw new InvalidOperationException ("Could not resolve System.Object type");
 			ctoril.Emit (OpCodes.Call, module.ImportReference (o.Methods.First (x => x.IsConstructor)));
 			ctoril.Emit (OpCodes.Ret);
 			type.Methods.Add (ctor);

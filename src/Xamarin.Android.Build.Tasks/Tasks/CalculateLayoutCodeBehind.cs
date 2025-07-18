@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Concurrent;
@@ -23,15 +23,15 @@ namespace Xamarin.Android.Tasks
 
 		sealed class LayoutInclude
 		{
-			public string Id;
-			public string Name;
+			public string? Id;
+			public string? Name;
 		}
 
 		sealed class LayoutGroup
 		{
-			public List<ITaskItem> InputItems;
-			public List<ITaskItem> LayoutBindingItems;
-			public List<ITaskItem> LayoutPartialClassItems;
+			public List<ITaskItem>? InputItems;
+			public List<ITaskItem>? LayoutBindingItems;
+			public List<ITaskItem>? LayoutPartialClassItems;
 		}
 
 		static readonly char[] partialClassNameSplitChars = { ';' };
@@ -74,28 +74,28 @@ namespace Xamarin.Android.Tasks
 			"com.google.",
 		};
 
-		XPathExpression widgetWithId;
-		string sourceFileExtension;
+		XPathExpression? widgetWithId;
+		string? sourceFileExtension;
 
-		public string BindingDependenciesCacheFile { get; set; }
-
-		[Required]
-		public string BaseNamespace { get; set; }
+		public string? BindingDependenciesCacheFile { get; set; }
 
 		[Required]
-		public string OutputFileExtension { get; set; }
+		public string BaseNamespace { get; set; } = "";
 
 		[Required]
-		public string OutputLanguage { get; set; }
+		public string OutputFileExtension { get; set; } = "";
 
 		[Required]
-		public ITaskItem [] BoundLayouts { get; set; }
+		public string OutputLanguage { get; set; } = "";
+
+		[Required]
+		public ITaskItem [] BoundLayouts { get; set; } = [];
 
 		[Output]
-		public ITaskItem [] LayoutBindingFiles { get; set; }
+		public ITaskItem []? LayoutBindingFiles { get; set; }
 
 		[Output]
-		public ITaskItem [] LayoutPartialClassFiles { get; set; }
+		public ITaskItem []? LayoutPartialClassFiles { get; set; }
 
 		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
@@ -142,17 +142,19 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			LayoutBindingFiles = layoutBindingFiles.ToArray ();
+			LayoutBindingFiles = layoutBindingFiles?.ToArray () ?? [];
 			if (LayoutBindingFiles.Length == 0)
 				LogDebugMessage ("  No layout file qualifies for code-behind generation");
-			LayoutPartialClassFiles = layoutPartialClassFiles.ToArray ();
+			LayoutPartialClassFiles = layoutPartialClassFiles?.ToArray () ?? [];
 
 			LogDebugTaskItems ("  LayoutBindingFiles:", LayoutBindingFiles);
 			LogDebugTaskItems ("  LayoutPartialClassFiles:", LayoutPartialClassFiles);
 		}
 
-		void ParseAndLoadGroup (Dictionary <string, LayoutGroup> groupIndex, string groupName, List<ITaskItem> items, ref List<ITaskItem> layoutBindingFiles, ref List<ITaskItem> layoutPartialClassFiles)
+		void ParseAndLoadGroup (Dictionary <string, LayoutGroup> groupIndex, string groupName, List<ITaskItem>? items, ref List<ITaskItem>? layoutBindingFiles, ref List<ITaskItem>? layoutPartialClassFiles)
 		{
+			if (items == null)
+				return;
 			IDictionary<string, LayoutWidget> widgets = new Dictionary <string, LayoutWidget> (StringComparer.Ordinal);
 			if (!LoadLayoutGroup (groupIndex, items, ref widgets))
 				return;
@@ -160,7 +162,7 @@ namespace Xamarin.Android.Tasks
 			CreateCodeBehindTaskItems (groupName, items, widgets.Values, ref layoutBindingFiles, ref layoutPartialClassFiles);
 		}
 
-		bool LoadLayoutGroup (Dictionary <string, LayoutGroup> groupIndex, List<ITaskItem> items, ref IDictionary<string, LayoutWidget> widgets, string rootWidgetIdOverride = null)
+		bool LoadLayoutGroup (Dictionary <string, LayoutGroup> groupIndex, List<ITaskItem> items, ref IDictionary<string, LayoutWidget> widgets, string? rootWidgetIdOverride = null)
 		{
 			bool ret = true;
 			foreach (ITaskItem item in items) {
@@ -171,7 +173,7 @@ namespace Xamarin.Android.Tasks
 			return ret;
 		}
 
-		bool LoadLayout (string filePath, Dictionary <string, LayoutGroup> groupIndex, ref IDictionary <string, LayoutWidget> widgets, string rootWidgetIdOverride = null)
+		bool LoadLayout (string filePath, Dictionary <string, LayoutGroup> groupIndex, ref IDictionary <string, LayoutWidget> widgets, string? rootWidgetIdOverride = null)
 		{
 			var doc = new XPathDocument (filePath);
 			var nav = doc.CreateNavigator ();
@@ -179,9 +181,9 @@ namespace Xamarin.Android.Tasks
 			var nsmgr = new XmlNamespaceManager (nav.NameTable);
 			string androidNS = SetNamespace (nav, nsmgr, AndroidNamespace, DefaultAndroidNamespace);
 			string xamarinNS = SetNamespace (nav, nsmgr, XamarinNamespace, DefaultXamarinNamespace);
-			string id;
-			string parsedId;
-			string name;
+			string? id;
+			string? parsedId;
+			string? name;
 			bool skipFirst = false;
 
 			nav.MoveToFirstChild ();
@@ -192,9 +194,9 @@ namespace Xamarin.Android.Tasks
 				nav.MoveToNext ();
 			}
 
-			string xamarinClasses = nav.GetAttribute (XamarinClassesAttribute, xamarinNS)?.Trim ();
+			string? xamarinClasses = nav.GetAttribute (XamarinClassesAttribute, xamarinNS)?.Trim ();
 
-			if (!String.IsNullOrWhiteSpace (rootWidgetIdOverride)) {
+			if (!string.IsNullOrWhiteSpace (rootWidgetIdOverride)) {
 				if (!ParseIdWithError (nav, filePath, rootWidgetIdOverride, true, out parsedId, out name))
 					LogCodedError ("XA1012", Properties.Resources.XA1012, rootWidgetIdOverride);
 				else {
@@ -203,9 +205,9 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			widgetWithId.SetContext (nsmgr);
-			XPathNodeIterator nodes = nav.Select (widgetWithId);
-			List<LayoutInclude> includes = null;
+			widgetWithId?.SetContext (nsmgr);
+			XPathNodeIterator? nodes = nav.Select (widgetWithId!);
+			List<LayoutInclude>? includes = null;
 			if (nodes.Count == 0)
 				return true;
 
@@ -229,8 +231,8 @@ namespace Xamarin.Android.Tasks
 				}
 
 				if (isInclude) {
-					string layoutName = GetLayoutNameFromReference (current.GetAttribute ("layout", String.Empty))?.Trim ();
-					if (!String.IsNullOrEmpty (layoutName))
+					string? layoutName = GetLayoutNameFromReference (current.GetAttribute ("layout", string.Empty))?.Trim ();
+					if (!layoutName.IsNullOrEmpty ())
 						AddToList (new LayoutInclude { Id = id, Name = layoutName }, ref includes);
 					continue;
 				}
@@ -245,8 +247,8 @@ namespace Xamarin.Android.Tasks
 				if (include == null)
 					continue;
 
-				LayoutGroup includedGroup;
-				if (!groupIndex.TryGetValue (include.Name, out includedGroup) || includedGroup == null || includedGroup.InputItems == null || includedGroup.InputItems.Count == 0)
+				LayoutGroup? includedGroup;
+				if (include.Name == null || !groupIndex.TryGetValue (include.Name, out includedGroup) || includedGroup == null || includedGroup.InputItems == null || includedGroup.InputItems.Count == 0)
 					continue;
 
 				if (!LoadLayoutGroup (groupIndex, includedGroup.InputItems, ref widgets, include.Id))
@@ -256,38 +258,41 @@ namespace Xamarin.Android.Tasks
 			return !errors;
 		}
 
-		void CreateWidget (XPathNavigator current, string filePath, string androidNS, string xamarinNS, string id, string parsedId, string name, string partialClasses, ref IDictionary <string, LayoutWidget> widgets)
+		void CreateWidget (XPathNavigator current, string filePath, string androidNS, string xamarinNS, string? id, string? parsedId, string? name, string? partialClasses, ref IDictionary <string, LayoutWidget> widgets)
 		{
+			if (id.IsNullOrEmpty () || parsedId.IsNullOrEmpty () || name.IsNullOrEmpty ())
+				return;
+				
 			bool isFragment = MonoAndroidHelper.StringEquals ("fragment", current.LocalName);
-			string managedType = current.GetAttribute (XamarinManagedTypeAttribute, xamarinNS);
-			string oldType = null;
+			string? managedType = current.GetAttribute (XamarinManagedTypeAttribute, xamarinNS);
+			string? oldType = null;
 
-			if (String.IsNullOrEmpty (managedType)) {
+			if (managedType.IsNullOrEmpty ()) {
 				bool mayNeedTypeFixup = true;
 				if (isFragment) {
 					managedType = current.GetAttribute ("name", androidNS)?.Trim ();
-					if (String.IsNullOrEmpty (managedType)) {
+					if (managedType.IsNullOrEmpty ()) {
 						mayNeedTypeFixup = false;
 						managedType = "global::Android.App.Fragment";
 					}
 				} else
 					managedType = current.LocalName;
 
-				if (mayNeedTypeFixup)
+				if (mayNeedTypeFixup && managedType != null)
 					mayNeedTypeFixup = !FixUpTypeName (ref managedType);
 
-				int idx = managedType.IndexOf (',');
+				int idx = managedType?.IndexOf (',') ?? -1;
 				if (idx >= 0)
-					managedType = managedType.Substring (0, idx).Trim ();
+					managedType = managedType!.Substring (0, idx).Trim ();
 
-				if (mayNeedTypeFixup && (idx = managedType.LastIndexOf ('.')) >= 0) {
+				if (mayNeedTypeFixup && managedType != null && (idx = managedType.LastIndexOf ('.')) >= 0) {
 					LogCodedWarning ("XA1005", Properties.Resources.XA1005, id, managedType);
 					LogCodedWarning ("XA1005", Properties.Resources.XA1005_Instructions);
 
 					oldType = managedType;
 					string ns = managedType.Substring (0, idx);
 					string klass = managedType.Substring (idx + 1);
-					string fixedNS = null;
+					string? fixedNS = null;
 					if (FixUpNamespace (ns, out fixedNS)) {
 						LogMessage ($"Fixed up a known namespace from '{ns}' to '{fixedNS}'");
 						managedType = $"{fixedNS}.{klass}";
@@ -299,9 +304,9 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			LayoutWidget widget;
+			LayoutWidget? widget = null;
 			bool fresh = false;
-			if (!widgets.TryGetValue (parsedId, out widget) || widget == null) {
+			if (parsedId == null || !widgets.TryGetValue (parsedId, out widget) || widget == null) {
 				fresh = true;
 				widget = new LayoutWidget {
 					Id = parsedId,
@@ -312,19 +317,20 @@ namespace Xamarin.Android.Tasks
 					Locations = new List<LayoutLocationInfo> (),
 					WidgetType = isFragment ? LayoutWidgetType.Fragment : LayoutWidgetType.View,
 				};
-				widgets [widget.Id] = widget;
+				if (parsedId != null)
+					widgets [parsedId] = widget;
 			}
 
 			LayoutLocationInfo location = GetLocationInfo (current, filePath);
-			widget.AllTypes.Add (widget.WidgetType);
-			widget.Locations.Add (location);
-			if (oldType != null) {
+			widget?.AllTypes?.Add (widget.WidgetType);
+			widget?.Locations?.Add (location);
+			if (oldType != null && widget != null) {
 				if (widget.TypeFixups == null)
 					widget.TypeFixups = new List<LayoutTypeFixup> ();
 				widget.TypeFixups.Add (new LayoutTypeFixup { OldType = oldType, Location = location });
 			}
 
-			if (fresh)
+			if (fresh || widget == null)
 				return;
 
 			if (widget.Type != null && MonoAndroidHelper.StringEquals (widget.Type, managedType))
@@ -332,22 +338,22 @@ namespace Xamarin.Android.Tasks
 
 			widget.Type = null;
 			widget.WidgetType = LayoutWidgetType.Unknown;
-			widget.AllTypes.Add (isFragment ? LayoutWidgetType.Fragment : LayoutWidgetType.View);
+			widget.AllTypes?.Add (isFragment ? LayoutWidgetType.Fragment : LayoutWidgetType.View);
 		}
 
-		void AddToList <T> (T item, ref List<T> list)
+		void AddToList <T> (T item, ref List<T>? list)
 		{
 			if (list == null)
 				list = new List<T> ();
 			list.Add (item);
 		}
 
-		string GetLayoutNameFromReference (string reference)
+		string? GetLayoutNameFromReference (string? reference)
 		{
-			string id = reference?.Trim ();
-			if (String.IsNullOrEmpty (reference))
+			string? id = reference?.Trim ();
+			if (reference.IsNullOrEmpty ())
 				return null;
-			if (id.StartsWith ("@layout/", StringComparison.Ordinal))
+			if (id != null && id.StartsWith ("@layout/", StringComparison.Ordinal))
 			    return id.Substring (8);
 			return null;
 		}
@@ -357,13 +363,13 @@ namespace Xamarin.Android.Tasks
 			return navigator.GetAttribute ("id", androidNS);
 		}
 
-		bool GetAndParseId (XPathNavigator navigator, string filePath, string androidNS, bool ignoreMissing, out string rawId, out string parsedId, out string name)
+		bool GetAndParseId (XPathNavigator navigator, string filePath, string androidNS, bool ignoreMissing, out string? rawId, out string? parsedId, out string? name)
 		{
 			rawId = GetId (navigator, androidNS);
 			return ParseIdWithError (navigator, filePath, rawId, ignoreMissing, out parsedId, out name);
 		}
 
-		bool ParseIdWithError (XPathNavigator navigator, string filePath, string rawId, bool ignoreMissing, out string parsedId, out string name)
+		bool ParseIdWithError (XPathNavigator navigator, string filePath, string? rawId, bool ignoreMissing, out string? parsedId, out string? name)
 		{
 			if (!ParseID (rawId, out parsedId, out name)) {
 				if (!ignoreMissing)
@@ -376,12 +382,12 @@ namespace Xamarin.Android.Tasks
 
 		// This should be done in a different manner. Instead of hardcoding the namespaces here we should have
 		// something that would let us pass the mappings to the task.
-		bool FixUpNamespace (string ns, out string fixedNS)
+		bool FixUpNamespace (string ns, out string? fixedNS)
 		{
 			if (knownNamespaceFixups.TryGetValue (ns, out fixedNS))
 				return true;
 
-			string newNS = null;
+			string? newNS = null;
 			foreach (string prefix in knownNamespacePrefixes) {
 				if (RemoveNSPrefix (prefix, ns, ref newNS)) {
 					fixedNS = newNS;
@@ -389,10 +395,11 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
+			fixedNS = null;
 			return false;
 		}
 
-		bool RemoveNSPrefix (string prefix, string fullNS, ref string fixedNS)
+		bool RemoveNSPrefix (string prefix, string fullNS, ref string? fixedNS)
 		{
 			if (fullNS.StartsWith (prefix, StringComparison.OrdinalIgnoreCase)) {
 				fixedNS = CapitalizeName (fullNS.Substring (prefix.Length));
@@ -402,8 +409,11 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 
-		bool FixUpTypeName (ref string typeName)
+		bool FixUpTypeName (ref string? typeName)
 		{
+			if (typeName == null)
+				return false;
+				
 			string newType;
 			if (knownTypeNameFixups.TryGetValue (typeName, out newType)) {
 				typeName = newType;
@@ -453,17 +463,17 @@ namespace Xamarin.Android.Tasks
 			return nsValue;
 		}
 
-		bool ParseID (string id, out string parsedId, out string name)
+		bool ParseID (string? id, out string? parsedId, out string? name)
 		{
 			parsedId = null;
 			name = null;
 			id = id?.Trim ();
-			if (String.IsNullOrEmpty (id))
+			if (id.IsNullOrEmpty ())
 				return true;
 
 			string ns;
 			bool capitalize = false;
-			if (id.StartsWith ("@id/", StringComparison.Ordinal) || id.StartsWith ("@+id/", StringComparison.Ordinal))
+			if (id!.StartsWith ("@id/", StringComparison.Ordinal) || id.StartsWith ("@+id/", StringComparison.Ordinal))
 				ns = "Resource.Id";
 			else if (id.StartsWith ("@android:id/", StringComparison.Ordinal)) {
 				ns = $"{GlobalIdPrefix}Android.Resource.Id";
@@ -480,7 +490,7 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
-		void CreateCodeBehindTaskItems (string groupName, List <ITaskItem> layoutItems, ICollection<LayoutWidget> widgets, ref List<ITaskItem> layoutBindingFiles, ref List<ITaskItem> layoutPartialClassFiles)
+		void CreateCodeBehindTaskItems (string groupName, List <ITaskItem> layoutItems, ICollection<LayoutWidget> widgets, ref List<ITaskItem>? layoutBindingFiles, ref List<ITaskItem>? layoutPartialClassFiles)
 		{
 			if (layoutItems == null || layoutItems.Count == 0)
 				return;
@@ -490,11 +500,11 @@ namespace Xamarin.Android.Tasks
 
 			string className = $"{BaseNamespace}.{groupName}";
 			string collectionKey = RegisterGroupWidgets (widgets);
-			string partialClasses = widgets.FirstOrDefault (w => w != null && !String.IsNullOrEmpty (w.PartialClasses))?.PartialClasses;
-			bool havePartialClasses = !String.IsNullOrEmpty (partialClasses);
+			string? partialClasses = widgets.FirstOrDefault (w => w != null && !w.PartialClasses.IsNullOrEmpty ())?.PartialClasses;
+			bool havePartialClasses = !partialClasses.IsNullOrEmpty ();
 
-			string[] partialClassNames = null;
-			if (havePartialClasses) {
+			string[]? partialClassNames = null;
+			if (havePartialClasses && partialClasses != null) {
 				if (layoutPartialClassFiles == null)
 					layoutPartialClassFiles = new List<ITaskItem> ();
 				partialClassNames = partialClasses.Split (partialClassNameSplitChars, StringSplitOptions.RemoveEmptyEntries);
@@ -502,21 +512,21 @@ namespace Xamarin.Android.Tasks
 
 			foreach (ITaskItem item in layoutItems) {
 				var layoutItem = new TaskItem (item.ItemSpec);
-				layoutItem.SetMetadata (LayoutBindingFileNameMetadata, $"{className}.g{sourceFileExtension}");
+				layoutItem.SetMetadata (LayoutBindingFileNameMetadata, $"{className}.g{sourceFileExtension ?? ".cs"}");
 				layoutItem.SetMetadata (ClassNameMetadata, className);
 				layoutItem.SetMetadata (LayoutGroupMetadata, groupName);
 				layoutItem.SetMetadata (WidgetCollectionKeyMetadata, collectionKey);
-				if (havePartialClasses) {
+				if (havePartialClasses && partialClasses != null && partialClassNames != null) {
 					layoutItem.SetMetadata (PartialClassNamesMetadata, partialClasses);
 
 					foreach (string partialClassName in partialClassNames) {
 						var partialClassItem = new TaskItem (item.ItemSpec);
-						partialClassItem.SetMetadata (LayoutPartialClassFileNameMetadata, $"{partialClassName}.{groupName}.g{sourceFileExtension}");
+						partialClassItem.SetMetadata (LayoutPartialClassFileNameMetadata, $"{partialClassName}.{groupName}.g{sourceFileExtension ?? ".cs"}");
 						partialClassItem.SetMetadata (ClassNameMetadata, className);
 						partialClassItem.SetMetadata (LayoutGroupMetadata, groupName);
 						partialClassItem.SetMetadata (PartialCodeBehindClassNameMetadata, partialClassName);
 
-						layoutPartialClassFiles.Add (partialClassItem);
+						layoutPartialClassFiles?.Add (partialClassItem);
 					}
 				}
 
@@ -555,7 +565,7 @@ namespace Xamarin.Android.Tasks
 				layoutsByName [groupName] = group;
 			}
 
-			group.InputItems.Add (item);
+			group.InputItems?.Add (item);
 		}
 	}
 }
