@@ -39,6 +39,8 @@
         Replacements="@XA_SOURCE_ROOT@=$([System.IO.Path]::GetFullPath ('$(MSBuildThisFileDirectory)..\..\..'));@XA_PREPARE_SOURCE@=$([System.IO.Path]::GetFullPath ('$(MSBuildThisFileDirectory)\.'));@XA_PRODUCT_VERSION@=$(ProductVersion)" />
 
     <ItemGroup>
+      <Replacement Include="@_CLRRuntimeFlavorDirName@=$(_CLRRuntimeFlavorDirName)" />
+      <Replacement Include="@_MonoRuntimeFlavorDirName@=$(_MonoRuntimeFlavorDirName)" />
       <Replacement Include="@AndroidLatestStableFrameworkVersion@=$(AndroidLatestStableFrameworkVersion)" />
       <Replacement Include="@AndroidCmakeUrlPrefix@=$(AndroidCmakeUrlPrefix)" />
       <Replacement Include="@AndroidCmakeVersion@=$(AndroidCmakeVersion)" />

@@ -61,6 +61,8 @@ namespace Xamarin.Android.Tasks
 
 		public string CodeGenerationTarget { get; set; } = "";
 
+		public bool EnableNativeRuntimeLinking { get; set; }
+
 		// These two properties are temporary and are used to ensure we still generate the
 		// same files as before using the new _LinkAssembliesNoShrink JLO scanning. They will be removed in the future.
 		public bool RunCheckedBuild { get; set; }
@@ -159,6 +161,7 @@ namespace Xamarin.Android.Tasks
 			// Now that "never" never happened, we can proceed knowing that at least the assembly sets are the same for each architecture
 			var nativeCodeGenStates = new ConcurrentDictionary<AndroidTargetArch, NativeCodeGenState> ();
 			NativeCodeGenState? templateCodeGenState = null;
+			PinvokeScanner? pinvokeScanner = EnableNativeRuntimeLinking ? new PinvokeScanner (Log) : null;
 
 			var firstArch = allAssembliesPerArch.First ().Key;
 			var generateSucceeded = true;
@@ -185,7 +188,16 @@ namespace Xamarin.Android.Tasks
 
 				if (state != null) {
 					nativeCodeGenStates.TryAdd (arch, state);
-				}
+
+					if (pinvokeScanner != null && state != null) {
+						(success, List<PinvokeScanner.PinvokeEntryInfo> pinfos) = ScanForUsedPinvokes (pinvokeScanner, arch, state.Resolver);
+						if (!success) {
+							return;
+						}
+						state.PinvokeInfos = pinfos;
+						Log.LogDebugMessage ($"Number of unique p/invokes for architecture '{arch}': {pinfos.Count}");
+					}
+        }
 			});
 
 			// If we hit an error generating the Java code, we should bail out now
@@ -203,6 +215,31 @@ namespace Xamarin.Android.Tasks
 			// Save NativeCodeGenState for later tasks
 			Log.LogDebugMessage ($"Saving {nameof (NativeCodeGenState)} to {nameof (NativeCodeGenStateRegisterTaskKey)}");
 			BuildEngine4.RegisterTaskObjectAssemblyLocal (MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (NativeCodeGenStateRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory), nativeCodeGenStates, RegisteredTaskObjectLifetime.Build);
+		}
+
+		(bool success, List<PinvokeScanner.PinvokeEntryInfo>? pinfos) ScanForUsedPinvokes (PinvokeScanner scanner, AndroidTargetArch arch, XAAssemblyResolver resolver)
+		{
+			if (!EnableNativeRuntimeLinking) {
+				return (true, null);
+			}
+
+			var frameworkAssemblies = new List<ITaskItem> ();
+
+			foreach (ITaskItem asm in ResolvedAssemblies) {
+				string? metadata = asm.GetMetadata ("FrameworkAssembly");
+				if (String.IsNullOrEmpty (metadata)) {
+					continue;
+				}
+
+				if (!Boolean.TryParse (metadata, out bool isFrameworkAssembly) || !isFrameworkAssembly) {
+					continue;
+				}
+
+				frameworkAssemblies.Add (asm);
+			}
+
+			var pinfos = scanner.Scan (arch, resolver, frameworkAssemblies);
+			return (true, pinfos);
 		}
 
 		internal static Dictionary<string, ITaskItem> MaybeGetArchAssemblies (Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> dict, AndroidTargetArch arch)

@@ -29,6 +29,18 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <CompressSymbols>false</CompressSymbols>
   </PropertyGroup>
 
+  <!-- Default feature switches -->
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime"
+        Value="false"
+        Trim="true"
+    />
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime"
+        Value="false"
+        Trim="true"
+    />
+  </ItemGroup>
+
   <!-- Make IlcCompile depend on the trimmer -->
   <PropertyGroup>
     <IlcCompileDependsOn>

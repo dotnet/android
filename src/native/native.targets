@@ -309,6 +309,17 @@
       <!-- NOTE: not building native libraries for NativeAOT yet -->
     </ItemGroup>
 
+    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
+      <_RuntimePackFiles Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\%(AndroidSupportedTargetJitAbi.AndroidRID)\*.o"
+                         AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
+                         AndroidRuntime="$(CMakeRuntimeFlavor)"
+                         RuntimePackName="$(_RuntimePackName)" />
+      <_RuntimePackFiles Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\%(AndroidSupportedTargetJitAbi.AndroidRID)\*.a"
+                         AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
+                         AndroidRuntime="$(CMakeRuntimeFlavor)"
+                         RuntimePackName="$(_RuntimePackName)" />
+    </ItemGroup>
+
     <Copy
         SourceFiles="%(_RuntimePackFiles.Identity)"
         DestinationFolder="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.%(_RuntimePackFiles.RuntimePackName).$(AndroidApiLevel).%(_RuntimePackFiles.AndroidRID)\$(AndroidPackVersion)\runtimes\%(_RuntimePackFiles.AndroidRID)\native"

@@ -17,6 +17,7 @@ namespace Xamarin.Android.Tasks
 		const string CompressedAssembliesBase = "compressed_assemblies";
 		const string JniRemappingBase = "jni_remap";
 		const string MarshalMethodsBase = "marshal_methods";
+		const string PinvokePreserveBase = "pinvoke_preserve";
 
 		public override string TaskPrefix => "PAI";
 
@@ -54,6 +55,8 @@ namespace Xamarin.Android.Tasks
 				baseName = JniRemappingBase;
 			} else if (MonoAndroidHelper.StringEquals ("marshal_methods", Mode, StringComparison.OrdinalIgnoreCase)) {
 				baseName = MarshalMethodsBase;
+			} else if (MonoAndroidHelper.StringEquals ("runtime_linking", Mode, StringComparison.OrdinalIgnoreCase)) {
+				baseName = PinvokePreserveBase;
 			} else {
 				Log.LogError ($"Unknown mode: {Mode}");
 				return false;

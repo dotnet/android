@@ -9,6 +9,7 @@
 
 #include <xamarin-app.hh>
 #include <host/assembly-store.hh>
+#include <host/gc-bridge.hh>
 #include <host/fastdev-assemblies.hh>
 #include <host/host.hh>
 #include <host/host-jni.hh>
@@ -421,7 +422,6 @@ void Host::Java_mono_android_Runtime_initInternal (
 	);
 
 	struct JnienvInitializeArgs init = {};
-	init.runtimeType                                    = RuntimeTypeCoreCLR;
 	init.javaVm                                         = jvm;
 	init.env                                            = env;
 	init.logCategories                                  = log_categories;
@@ -451,9 +451,8 @@ void Host::Java_mono_android_Runtime_initInternal (
 
 	log_info (LOG_GC, "GREF GC Threshold: {}"sv, init.grefGcThreshold);
 
-	// TODO: GC bridge to initialize here
-
 	OSBridge::initialize_on_runtime_init (env, runtimeClass);
+	GCBridge::initialize_on_runtime_init (env, runtimeClass);
 
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.start_event (TimingEventKind::NativeToManagedTransition);
@@ -572,6 +571,7 @@ auto Host::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcep
 	JNIEnv *env = nullptr;
 	vm->GetEnv ((void**)&env, JNI_VERSION_1_6);
 	OSBridge::initialize_on_onload (vm, env);
+	GCBridge::initialize_on_onload (env);
 
 	AndroidSystem::init_max_gref_count ();
 	return JNI_VERSION_1_6;

@@ -13,6 +13,7 @@ add_library(
   STATIC
   ${LZ4_SOURCES}
 )
+set_static_library_suffix(${LIB_NAME})
 
 add_library(${LIB_ALIAS} ALIAS ${LIB_NAME})
 
