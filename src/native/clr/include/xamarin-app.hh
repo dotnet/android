@@ -38,24 +38,6 @@ static constexpr uint32_t MODULE_INDEX_MAGIC = 0x49544158; // 'XATI', little-end
 static constexpr uint8_t  MODULE_FORMAT_VERSION = 2;       // Keep in sync with the value in src/Xamarin.Android.Build.Tasks/Utilities/TypeMapGenerator.cs
 
 #if defined (DEBUG)
-struct BinaryTypeMapHeader
-{
-	uint32_t magic;
-	uint32_t version;
-	uint32_t entry_count;
-	uint32_t java_name_width;
-	uint32_t managed_name_width;
-	uint32_t assembly_name_length;
-};
-
-struct TypeMapIndexHeader
-{
-	uint32_t magic;
-	uint32_t version;
-	uint32_t entry_count;
-	uint32_t module_file_name_width;
-};
-
 // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
 //
 // If any of the members is set to maximum uint32_t value it means the entry is ignored (treated
@@ -134,16 +116,6 @@ struct CompressedAssemblyDescriptor
 	uint32_t   buffer_offset;
 };
 
-struct XamarinAndroidBundledAssembly
-{
-	int32_t  file_fd;
-	char    *file_name;
-	uint32_t data_offset;
-	uint32_t data_size;
-	uint8_t *data;
-	uint32_t name_length;
-	char    *name;
-};
 
 //
 // Assembly store format
@@ -370,7 +342,7 @@ extern "C" {
 
 	[[gnu::visibility("default")]] extern const char* const mono_aot_mode_name;
 
-	[[gnu::visibility("default")]] extern XamarinAndroidBundledAssembly bundled_assemblies[];
+
 	[[gnu::visibility("default")]] extern AssemblyStoreSingleAssemblyRuntimeData assembly_store_bundled_assemblies[];
 	[[gnu::visibility("default")]] extern AssemblyStoreRuntimeData assembly_store;
 
