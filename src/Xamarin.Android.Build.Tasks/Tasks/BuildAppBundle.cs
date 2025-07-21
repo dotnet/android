@@ -91,7 +91,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				JsonNode? json = JsonNode.Parse ("{}");
-				if (!string.IsNullOrEmpty (CustomBuildConfigFile) && File.Exists (CustomBuildConfigFile)) {
+				if (!CustomBuildConfigFile.IsNullOrEmpty () && File.Exists (CustomBuildConfigFile)) {
 					using Stream fs = File.OpenRead (CustomBuildConfigFile);
 					using JsonDocument doc = JsonDocument.Parse (fs, new JsonDocumentOptions { AllowTrailingCommas = true });
 					json = doc.RootElement.ToNode ();

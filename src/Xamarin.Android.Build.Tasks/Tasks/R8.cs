@@ -60,7 +60,7 @@ namespace Xamarin.Android.Tasks
 					if (CustomMainDexListFiles?.Length > 0) {
 						Log.LogCodedWarning ("XA4306", Properties.Resources.XA4306);
 					}
-				} else if (string.IsNullOrEmpty (MultiDexMainDexListFile)) {
+				} else if (MultiDexMainDexListFile.IsNullOrEmpty ()) {
 					Log.LogCodedWarning ("XA4305", Properties.Resources.XA4305);
 				} else {
 					var content = new List<string> ();
@@ -84,7 +84,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (EnableShrinking) {
-				if (!string.IsNullOrEmpty (AcwMapFile)) {
+				if (!AcwMapFile.IsNullOrEmpty ()) {
 					var acwMap      = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (AcwMapFile), StringComparer.OrdinalIgnoreCase);
 					var javaTypes   = new List<string> (acwMap.Values.Count);
 					foreach (var v in acwMap.Values) {
@@ -97,13 +97,13 @@ namespace Xamarin.Android.Tasks
 						}
 					}
 				}
-				if (!string.IsNullOrWhiteSpace (ProguardCommonXamarinConfiguration)) {
+				if (!ProguardCommonXamarinConfiguration.IsNullOrWhiteSpace ()) {
 					using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
 						GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg.BaseStream);
 						if (IgnoreWarnings) {
 							xamcfg.WriteLine ("-ignorewarnings");
 						}
-						if (!string.IsNullOrEmpty (ProguardMappingFileOutput)) {
+						if (!ProguardMappingFileOutput.IsNullOrEmpty ()) {
 							xamcfg.WriteLine ("-keepattributes SourceFile");
 							xamcfg.WriteLine ("-keepattributes LineNumberTable");
 							xamcfg.WriteLine ($"-printmapping \"{Path.GetFullPath (ProguardMappingFileOutput)}\"");
@@ -124,7 +124,7 @@ namespace Xamarin.Android.Tasks
 				if (IgnoreWarnings) {
 					lines.Add ("-ignorewarnings");
 				}
-				if (!string.IsNullOrEmpty (ProguardMappingFileOutput)) {
+				if (!ProguardMappingFileOutput.IsNullOrEmpty ()) {
 					lines.Add ("-keepattributes SourceFile");
 					lines.Add ("-keepattributes LineNumberTable");
 					lines.Add ($"-printmapping \"{Path.GetFullPath (ProguardMappingFileOutput)}\"");

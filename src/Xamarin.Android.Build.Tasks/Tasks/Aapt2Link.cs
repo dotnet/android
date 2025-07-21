@@ -266,7 +266,7 @@ namespace Xamarin.Android.Tasks {
 			if (ProtobufFormat)
 				cmd.Add ("--proto-format");
 
-			if (!string.IsNullOrWhiteSpace (ExtraArgs)) {
+			if (!ExtraArgs.IsNullOrWhiteSpace ()) {
 				foreach (Match match in exraArgSplitRegEx.Matches (ExtraArgs)) {
 					string value = match.Value.Trim (' ', '"', '\'');
 					if (!value.IsNullOrEmpty ())
@@ -294,7 +294,7 @@ namespace Xamarin.Android.Tasks {
 			if (AdditionalAndroidAssetPaths != null) {
 				for (int i = 0; i < AdditionalAndroidAssetPaths.Length; i++) {
 					var assetDir = GetFullPath (AdditionalAndroidAssetPaths [i].ItemSpec.TrimEnd ('\\'));
-					if (!string.IsNullOrWhiteSpace (assetDir)) {
+					if (!assetDir.IsNullOrWhiteSpace ()) {
 						if (Directory.Exists (assetDir)) {
 							if (OS.IsWindows && !IsPathOnlyASCII (assetDir)) {
 								hasAssetsErrors = true;

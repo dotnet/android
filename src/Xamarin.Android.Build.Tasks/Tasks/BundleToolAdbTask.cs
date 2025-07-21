@@ -23,7 +23,7 @@ namespace Xamarin.Android.Tasks
 
 		protected void AppendAdbOptions (CommandLineBuilder cmd)
 		{
-			var adb = string.IsNullOrEmpty (AdbToolExe) ? AdbToolName : AdbToolExe;
+			var adb = AdbToolExe.IsNullOrEmpty () ? AdbToolName : AdbToolExe;
 			cmd.AppendSwitchIfNotNull ("--adb ", Path.Combine (AdbToolPath, adb));
 
 			var adbTarget = AdbTarget;

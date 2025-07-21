@@ -187,7 +187,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 
 		AddNativeLibraries (files, supportedAbis, libs);
 
-		if (string.IsNullOrWhiteSpace (CheckedBuild))
+		if (CheckedBuild.IsNullOrWhiteSpace ())
 			return;
 
 		string mode = CheckedBuild;
@@ -245,7 +245,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 		// If Abi is explicitly specified, simply return it.
 		var lib_abi = AndroidRidAbiHelper.GetNativeLibraryAbi (lib);
 
-		if (string.IsNullOrWhiteSpace (lib_abi)) {
+		if (lib_abi.IsNullOrWhiteSpace ()) {
 			Log.LogCodedError ("XA4301", lib.ItemSpec, 0, Properties.Resources.XA4301_ABI, lib.ItemSpec);
 			return null;
 		}

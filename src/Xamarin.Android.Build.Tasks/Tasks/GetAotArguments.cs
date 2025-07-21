@@ -80,7 +80,7 @@ namespace Xamarin.Android.Tasks
 		protected AotMode AotMode;
 		protected SequencePointsMode SequencePointsMode;
 		protected string SdkBinDirectory = "";
-		protected bool UseAndroidNdk => !string.IsNullOrWhiteSpace (AndroidNdkDirectory);
+		protected bool UseAndroidNdk => !AndroidNdkDirectory.IsNullOrWhiteSpace ();
 
 		public static bool GetAndroidAotMode(string androidAotMode, out AotMode aotMode)
 		{
