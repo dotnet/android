@@ -196,7 +196,7 @@ namespace Xamarin.Android.Tasks
 
 			string? xamarinClasses = nav.GetAttribute (XamarinClassesAttribute, xamarinNS)?.Trim ();
 
-			if (!string.IsNullOrWhiteSpace (rootWidgetIdOverride)) {
+			if (!rootWidgetIdOverride.IsNullOrWhiteSpace ()) {
 				if (!ParseIdWithError (nav, filePath, rootWidgetIdOverride, true, out parsedId, out name))
 					LogCodedError ("XA1012", Properties.Resources.XA1012, rootWidgetIdOverride);
 				else {

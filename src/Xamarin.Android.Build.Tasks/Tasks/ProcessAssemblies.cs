@@ -151,7 +151,7 @@ namespace Xamarin.Android.Tasks
 		static ITaskItem? GetOrCreateSymbolItem (Dictionary<string, ITaskItem> symbols, ITaskItem assembly)
 		{
 			var symbolPath = Path.ChangeExtension (assembly.ItemSpec, ".pdb");
-			if (!symbols.TryGetValue (symbolPath, out var symbol) || !string.IsNullOrEmpty (symbol.GetMetadata ("DestinationSubDirectory"))) {
+			if (!symbols.TryGetValue (symbolPath, out var symbol) || !symbol.GetMetadata ("DestinationSubDirectory").IsNullOrEmpty ()) {
 				// Sometimes .pdb files are not included in @(ResolvedFileToPublish), so add them if they exist
 				if (File.Exists (symbolPath)) {
 					symbols [symbolPath] = symbol = new TaskItem (symbolPath);

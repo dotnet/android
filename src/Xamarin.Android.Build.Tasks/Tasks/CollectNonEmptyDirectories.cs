@@ -91,12 +91,12 @@ namespace Xamarin.Android.Tasks {
 					});
 					directory.CopyMetadataTo (taskItem);
 
-					if (string.IsNullOrEmpty (directory.GetMetadata ("StampFile"))) {
+					if (directory.GetMetadata ("StampFile").IsNullOrEmpty ()) {
 						taskItem.SetMetadata ("StampFile", stampFile);
 					} else {
 						Log.LogDebugMessage ($"%(StampFile) already set: {stampFile}");
 					}
-					if (string.IsNullOrEmpty (directory.GetMetadata ("FilesCache"))) {
+					if (directory.GetMetadata ("FilesCache").IsNullOrEmpty ()) {
 						taskItem.SetMetadata ("FilesCache", filesCache);
 					} else {
 						Log.LogDebugMessage ($"%(FilesCache) already set: {filesCache}");

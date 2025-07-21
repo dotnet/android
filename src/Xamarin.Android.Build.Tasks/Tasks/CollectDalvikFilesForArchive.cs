@@ -29,7 +29,7 @@ public class CollectDalvikFilesForArchive : AndroidTask
 
 		foreach (var dex in DalvikClasses) {
 			var apkName = dex.GetMetadata ("ApkName");
-			var dexPath = string.IsNullOrWhiteSpace (apkName) ? Path.GetFileName (dex.ItemSpec) : apkName;
+			var dexPath = apkName.IsNullOrWhiteSpace () ? Path.GetFileName (dex.ItemSpec) : apkName;
 
 			files.AddItem (dex.ItemSpec, dalvikPath + dexPath);
 		}
