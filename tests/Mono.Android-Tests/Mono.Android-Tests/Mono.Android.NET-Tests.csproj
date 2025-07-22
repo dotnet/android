@@ -111,6 +111,7 @@
     <Compile Include="System.Net\SslTest.cs" />
     <Compile Include="System.Net\NetworkInterfaces.cs" />
     <Compile Include="System.Net\WebSocketTests.cs" />
+    <Compile Include="System.Net.NetworkInformation\NetworkChangeTest.cs" />
     <Compile Include="System.Runtime.InteropServices\DllImportTest.cs" />
     <Compile Include="System.Text\EncodingTests.cs" />
     <Compile Include="System.Text.Json\JsonSerializerTest.cs" />
