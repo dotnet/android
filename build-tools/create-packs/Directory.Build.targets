@@ -153,7 +153,8 @@
     <Error Condition="Exists($(AssetManifestPath))" Text="The manifest file '$(AssetManifestPath)' already exists." />
 
     <ItemGroup>
-      <ItemsToPush Include="$(OutputPath)*.nupkg" Kind="Package" />
+      <ItemsToPush Include="$(OutputPath)*.nupkg" Kind="Package" Exclude="$(OutputPath)Xamarin.Android.Tools.AndroidSdk.*.nupkg" />
+      <ItemsToPush Include="$(OutputPath)Xamarin.Android.Tools.AndroidSdk.*.nupkg" Kind="Package" IsShipping="false" ManifestArtifactData="Nonshipping=true" />
       <WorkloadArtifacts Include="$(OutputPath)*.zip" />
       <ItemsToPush Include="@(WorkloadArtifacts)" PublishFlatContainer="true" RelativeBlobPath="android/$(AndroidPackVersionLong)/%(Filename)%(Extension)" Kind="Blob" />
     </ItemGroup>
