@@ -137,10 +137,6 @@ namespace Xamarin.Android.Prepare
 					testAreas.Add ("MSBuildDevice");
 				}
 
-				if (file.Contains ("tests/BCL-Tests")) {
-					testAreas.Add ("BCL");
-				}
-
 				if (file.Contains ("tests/MSBuildDeviceIntegration")) {
 					testAreas.Add ("MSBuildDevice");
 				}
