@@ -887,12 +887,11 @@ namespace Xamarin.Android.NetTests {
 		}
 
 		[Test]
-		[Category ("MobileNotWorking")] // Missing encoding
 		public void GetString_Many ()
 		{
 			var client = new HttpClient (CreateHandler ());
-			var t1 = client.GetStringAsync ("http://example.org");
-			var t2 = client.GetStringAsync ("http://example.org");
+			var t1 = client.GetStringAsync ("https://google.com");
+			var t2 = client.GetStringAsync ("https://google.com");
 			Assert.IsTrue (Task.WaitAll (new [] { t1, t2 }, WaitTimeout));
 		}
 
