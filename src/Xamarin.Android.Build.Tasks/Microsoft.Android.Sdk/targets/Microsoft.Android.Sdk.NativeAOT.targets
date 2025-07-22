@@ -18,7 +18,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <AllowPublishAotWithoutRuntimeIdentifier Condition=" '$(AllowPublishAotWithoutRuntimeIdentifier)' == '' ">true</AllowPublishAotWithoutRuntimeIdentifier>
     <!-- NativeAOT's targets currently gives an error about cross-compilation -->
     <DisableUnsupportedError Condition=" $([MSBuild]::IsOSPlatform('windows')) and '$(DisableUnsupportedError)' == '' ">true</DisableUnsupportedError>
-    <!-- HACK: make dotnet restore include Microsoft.NETCore.App.Runtime.NativeAOT.linux-bionic-arm64 -->
+    <!-- HACK: make dotnet restore include Microsoft.NETCore.App.Runtime.NativeAOT.android-arm64 -->
     <_IsPublishing Condition=" '$(_IsPublishing)' == '' ">true</_IsPublishing>
   </PropertyGroup>
 
@@ -80,18 +80,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
       <!-- Ensure ILLink respects the value of SuppressTrimAnalysisWarnings -->
       <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --notrimwarn</_ExtraTrimmerArgs>
-
-      <!-- The list of hacks below should go away when we have NativeAOT.android-* packs -->
-      <!-- HACK: we are android-arm64, so this is required for the right path(s) to be found -->
-      <_OriginalRuntimeIdentifier>$(RuntimeIdentifier)</_OriginalRuntimeIdentifier>
-      <RuntimeIdentifier Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">linux-bionic-arm64</RuntimeIdentifier>
-      <RuntimeIdentifier Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">linux-bionic-x64</RuntimeIdentifier>
-      <!-- HACK: -targetos:android results in error, so use linux -->
-      <_targetOS>linux</_targetOS>
-      <!-- HACK: prevents libSystem.Net.Security.Native.a from being added -->
-      <_linuxLibcFlavor>bionic</_linuxLibcFlavor>
-      <!-- HACK: prevents: java.lang.UnsatisfiedLinkError: dlopen failed: cannot locate symbol "__start___modules" -->
-      <LinkerFlavor Condition=" '$(LinkerFlavor)' == '' ">lld</LinkerFlavor>
     </PropertyGroup>
 
     <SetNdkPathForIlc NdkBinDirectory="$(_NdkBinDir)" />
@@ -123,13 +111,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <!-- Satellite assemblies -->
       <IlcSatelliteAssembly Include="$(_OuterIntermediateSatelliteAssembliesWithTargetPath)" />
     </ItemGroup>
-  </Target>
-
-  <Target Name="_AndroidAfterLinkNative" AfterTargets="LinkNative">
-    <PropertyGroup>
-      <!-- Turn $(RuntimeIdentifier) back to original value -->
-      <RuntimeIdentifier>$(_OriginalRuntimeIdentifier)</RuntimeIdentifier>
-    </PropertyGroup>
   </Target>
 
   <Target Name="_AndroidFixNativeLibraryFileName" AfterTargets="ComputeFilesToPublish">
