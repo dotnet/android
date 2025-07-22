@@ -44,7 +44,7 @@ namespace xamarin::android {
 				args.version = JNI_VERSION_1_6;
 				args.name = nullptr;
 				args.group = nullptr;
-				jvm->AttachCurrentThread (&env, &args);
+				jvm->AttachCurrentThreadAsDaemon (&env, &args);
 				abort_unless (env != nullptr, "Unable to get a valid pointer to JNIEnv");
 
 				(void) pthread_once (&thread_local_env_init_key, make_key);
