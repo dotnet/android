@@ -53,7 +53,6 @@ void GCBridge::mark_cross_references (MarkCrossReferencesArgs *args) noexcept
 	abort_if_invalid_pointer_argument (args, "args");
 	abort_unless (args->Components != nullptr || args->ComponentCount == 0, "Components must not be null if ComponentCount is greater than 0");
 	abort_unless (args->CrossReferences != nullptr || args->CrossReferenceCount == 0, "CrossReferences must not be null if CrossReferenceCount is greater than 0");
-	log_mark_cross_references_args_if_enabled (args);
 
 	shared_args.store (args);
 	shared_args_semaphore.release ();
@@ -64,14 +63,17 @@ void GCBridge::bridge_processing () noexcept
 	abort_unless (bridge_processing_started_callback != nullptr, "GC bridge processing started callback is not set");
 	abort_unless (bridge_processing_finished_callback != nullptr, "GC bridge processing finished callback is not set");
 
+	JNIEnv *env = OSBridge::ensure_jnienv ();
+
 	while (true) {
 		// wait until mark cross references args are set by the GC callback
 		shared_args_semaphore.acquire ();
 		MarkCrossReferencesArgs *args = shared_args.load ();
+		log_mark_cross_references_args_if_enabled (env, args);
 
 		bridge_processing_started_callback (args);
 
-		BridgeProcessing bridge_processing {args};
+		BridgeProcessing bridge_processing {env, args};
 		bridge_processing.process ();
 
 		bridge_processing_finished_callback (args);
@@ -79,7 +81,7 @@ void GCBridge::bridge_processing () noexcept
 }
 
 [[gnu::always_inline]]
-void GCBridge::log_mark_cross_references_args_if_enabled (MarkCrossReferencesArgs *args) noexcept
+void GCBridge::log_mark_cross_references_args_if_enabled (JNIEnv *env, MarkCrossReferencesArgs *args) noexcept
 {
 	if (!Logger::gc_spew_enabled ()) [[likely]] {
 		return;
@@ -87,8 +89,6 @@ void GCBridge::log_mark_cross_references_args_if_enabled (MarkCrossReferencesArg
 
 	log_info (LOG_GC, "cross references callback invoked with {} sccs and {} xrefs.", args->ComponentCount, args->CrossReferenceCount);
 
-	JNIEnv *env = OSBridge::ensure_jnienv ();
-	
 	for (size_t i = 0; i < args->ComponentCount; ++i) {
 		const StronglyConnectedComponent &scc = args->Components [i];
 		log_info (LOG_GC, "group {} with {} objects", i, scc.Count);

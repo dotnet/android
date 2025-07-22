@@ -17,8 +17,8 @@ void BridgeProcessing::initialize_on_runtime_init (JNIEnv *env, jclass runtimeCl
 	abort_unless (GCUserPeer_class != nullptr && GCUserPeer_ctor != nullptr, "Failed to load mono.android.GCUserPeer!");
 }
 
-BridgeProcessing::BridgeProcessing (MarkCrossReferencesArgs *args) noexcept
-	: env{ OSBridge::ensure_jnienv () },
+BridgeProcessing::BridgeProcessing (JNIEnv *jniEnv, MarkCrossReferencesArgs *args) noexcept
+	: env{ jniEnv },
 	  cross_refs{ args }
 {
 	if (args == nullptr) [[unlikely]] {
