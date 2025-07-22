@@ -60,6 +60,7 @@
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Sdk.Windows.binlog&quot; -p:HostOS=Windows &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' != 'Linux' " /> <!-- Windows pack should be built both Windows and macOS -->
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.NET.Sdk.Android.binlog&quot; &quot;$(MSBuildThisFileDirectory)Microsoft.NET.Sdk.Android.proj&quot;" />
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Templates.binlog&quot; &quot;$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\Microsoft.Android.Templates.csproj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Xamarin.Android.Tools.AndroidSdk.binlog&quot; &quot;$(XamarinAndroidSourcePath)external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj&quot;" />
     <ReplaceFileContents
         SourceFile="vs-workload.in.props"
         DestinationFile="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\vs-workload.props"
