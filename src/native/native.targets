@@ -335,6 +335,14 @@
                          AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
                          AndroidRuntime="$(CMakeRuntimeFlavor)"
                          RuntimePackName="$(_RuntimePackName)" />
+      <_RuntimePackFiles Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\%(AndroidSupportedTargetJitAbi.AndroidRID)\*.o"
+                         AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
+                         AndroidRuntime="$(CMakeRuntimeFlavor)"
+                         RuntimePackName="NativeAOT" />
+      <_RuntimePackFiles Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\%(AndroidSupportedTargetJitAbi.AndroidRID)\*.a"
+                         AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
+                         AndroidRuntime="$(CMakeRuntimeFlavor)"
+                         RuntimePackName="NativeAOT" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">

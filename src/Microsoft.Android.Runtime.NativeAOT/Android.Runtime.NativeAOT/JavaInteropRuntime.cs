@@ -17,8 +17,8 @@ static partial class JavaInteropRuntime
 		try {
 			AndroidLog.Print (AndroidLogLevel.Info, "JavaInteropRuntime", "JNI_OnLoad()");
 			XA_Host_NativeAOT_JNI_OnLoad (vm, reserved);
-			LogcatTextWriter.Init ();
-			return (int) JniVersion.v1_6;
+			AndroidCryptoNative_InitLibraryOnLoad(vm, reserved);
+			return (int)JniVersion.v1_6;
 		}
 		catch (Exception e) {
 			AndroidLog.Print (AndroidLogLevel.Error, "JavaInteropRuntime", $"JNI_OnLoad() failed: {e}");
@@ -26,7 +26,10 @@ static partial class JavaInteropRuntime
 		}
 	}
 
-	[UnmanagedCallersOnly (EntryPoint="JNI_OnUnload")]
+	[DllImport("*")]
+	static extern int AndroidCryptoNative_InitLibraryOnLoad (IntPtr vm, IntPtr reserved);
+
+	[UnmanagedCallersOnly(EntryPoint = "JNI_OnUnload")]
 	static void JNI_OnUnload (IntPtr vm, IntPtr reserved)
 	{
 		AndroidLog.Print(AndroidLogLevel.Info, "JavaInteropRuntime", "JNI_OnUnload");
@@ -42,17 +45,12 @@ static partial class JavaInteropRuntime
 	{
 		JniTransition   transition  = default;
 		try {
-			var settings    = new DiagnosticSettings ();
-			settings.AddDebugDotnetLog ();
-
 			var options = new NativeAotRuntimeOptions {
 				EnvironmentPointer          = jnienv,
 				ClassLoader                 = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
 				TypeManager                 = new ManagedTypeManager (),
 				ValueManager                = ManagedValueManager.GetOrCreateInstance (),
 				UseMarshalMemberBuilder     = false,
-				JniGlobalReferenceLogWriter = settings.GrefLog,
-				JniLocalReferenceLogWriter  = settings.LrefLog,
 			};
 			runtime = options.CreateJreVM ();
 

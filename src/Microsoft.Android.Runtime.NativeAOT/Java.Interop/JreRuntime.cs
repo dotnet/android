@@ -28,9 +28,6 @@ namespace Java.Interop {
 
 		public  bool        IgnoreUnrecognizedOptions   {get; set;}
 
-		public  TextWriter? JniGlobalReferenceLogWriter {get; set;}
-		public  TextWriter? JniLocalReferenceLogWriter  {get; set;}
-
 		public NativeAotRuntimeOptions ()
 		{
 			JniVersion  = JniVersion.v1_2;
