@@ -47,7 +47,6 @@ namespace UnitTestRunner
 				"AndroidNotWorking",
 				"CAS",
 				"InetAccess",
-				"MobileNotWorking",
 				"NotWorking",
 			};
 
