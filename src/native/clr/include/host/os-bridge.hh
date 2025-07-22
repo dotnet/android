@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdio>
+#include <pthread.h>
 
 #include <jni.h>
 
@@ -45,9 +46,26 @@ namespace xamarin::android {
 				args.group = nullptr;
 				jvm->AttachCurrentThread (&env, &args);
 				abort_unless (env != nullptr, "Unable to get a valid pointer to JNIEnv");
+
+				(void) pthread_once (&thread_local_env_init_key, make_key);
+				pthread_setspecific (thread_local_env_key, env);
 			}
 
 			return env;
+		}
+
+	private:
+		static inline pthread_key_t thread_local_env_key = {};
+		static inline pthread_once_t thread_local_env_init_key = PTHREAD_ONCE_INIT;
+
+		static void make_key () noexcept
+		{
+			pthread_key_create (&thread_local_env_key, &detach_thread_from_jni);
+		}
+
+		static void detach_thread_from_jni ([[maybe_unused]] void* unused) noexcept
+		{
+			jvm->DetachCurrentThread ();
 		}
 
 	private:
