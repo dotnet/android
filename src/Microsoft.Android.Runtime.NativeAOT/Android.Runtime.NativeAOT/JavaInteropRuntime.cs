@@ -13,7 +13,6 @@ static partial class JavaInteropRuntime
 	{
 		try {
 			AndroidLog.Print (AndroidLogLevel.Info, "JavaInteropRuntime", "JNI_OnLoad()");
-			LogcatTextWriter.Init ();
 			AndroidCryptoNative_InitLibraryOnLoad(vm, reserved);
 			return (int) JniVersion.v1_6;
 		}
