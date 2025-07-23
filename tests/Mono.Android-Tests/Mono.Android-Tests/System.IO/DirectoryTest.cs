@@ -20,6 +20,6 @@ public class DirectoryTest
         // Verify that GetFiles returns the file
         string [] files = Directory.GetFiles (directory);
         Assert.IsNotNull (files, "GetFiles returned null for directory: " + directory);
-        Assert.IsNotEmpty (files, "No files found in directory: " + directory);
+        Assert.IsTrue (files.Length > 0, "No files found in directory: " + directory);
     }
 }
