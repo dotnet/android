@@ -41,15 +41,12 @@ static partial class JavaInteropRuntime
 			var settings    = new DiagnosticSettings ();
 			settings.AddDebugDotnetLog ();
 
-			var typeManager = new ManagedTypeManager ();
 			var options = new NativeAotRuntimeOptions {
 				EnvironmentPointer          = jnienv,
-				ClassLoader                 = new JniObjectReference (classLoader),
-				TypeManager                 = typeManager,
-				ValueManager                = new SimpleValueManager (),
+				ClassLoader                 = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
+				TypeManager                 = new ManagedTypeManager (),
+				ValueManager                = ManagedValueManager.GetOrCreateInstance (),
 				UseMarshalMemberBuilder     = false,
-				JniGlobalReferenceLogWriter = settings.GrefLog,
-				JniLocalReferenceLogWriter  = settings.LrefLog,
 			};
 			runtime = options.CreateJreVM ();
 

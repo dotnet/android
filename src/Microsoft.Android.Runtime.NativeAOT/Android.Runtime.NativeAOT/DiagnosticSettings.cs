@@ -14,43 +14,6 @@ struct DiagnosticSettings {
 	public  bool    LogJniGlobalReferences;
 	private string? GrefPath;
 
-	private TextWriter?     GrefLrefLog;
-
-
-	public  TextWriter? GrefLog {
-		get {
-			if (!LogJniGlobalReferences) {
-				return null;
-			}
-			return ((LrefPath != null && LrefPath == GrefPath)
-					? GrefLrefLog ??= CreateWriter (LrefPath)
-					: null)
-				??
-				((GrefPath != null)
-					? CreateWriter (GrefPath)
-					: null)
-				??
-				new LogcatTextWriter (AndroidLogLevel.Debug, "NativeAot:GREF");
-		}
-	}
-
-	public  TextWriter? LrefLog {
-		get {
-			if (!LogJniLocalReferences) {
-				return null;
-			}
-			return ((LrefPath != null && LrefPath == GrefPath)
-					? GrefLrefLog ??= CreateWriter (LrefPath)
-					: null)
-				??
-				((LrefPath != null)
-					? CreateWriter (LrefPath)
-					: null)
-				??
-				new LogcatTextWriter (AndroidLogLevel.Debug, "NativeAot:LREF");
-		}
-	}
-
 	TextWriter? CreateWriter (string path)
 	{
 		try {

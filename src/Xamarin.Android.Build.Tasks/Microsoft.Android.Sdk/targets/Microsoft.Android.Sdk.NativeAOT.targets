@@ -110,6 +110,10 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <ResolvedFileToPublish Include="$(_NdkSysrootDir)libc++_shared.so" RuntimeIdentifier="$(_OriginalRuntimeIdentifier)" />
       <!-- Satellite assemblies -->
       <IlcSatelliteAssembly Include="$(_OuterIntermediateSatelliteAssembliesWithTargetPath)" />
+      <!-- Native support libraries -->
+      <NativeLibrary Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnet-android-nativeaot.$(Configuration.ToLower())'))" />
+      <NativeLibrary Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libxa-shared-bits.$(Configuration.ToLower())'))" />
+      <DirectPInvoke Include="xa-internal-api" />
     </ItemGroup>
   </Target>
 
