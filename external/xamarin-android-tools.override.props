@@ -1,6 +1,8 @@
 <Project>
   <!-- Import $(LibZipSharpVersion) -->
   <Import Project="..\Directory.Build.props" />
+  <Import Project="..\Configuration.props" />
+  <Import Project="..\build-tools\scripts\XAVersionInfo.targets" />
   <PropertyGroup>
     <AndroidToolsDisableMultiTargeting>true</AndroidToolsDisableMultiTargeting>
     <PackageOutputPath>$(MSBuildThisFileDirectory)..\bin\Build$(Configuration)\nuget-unsigned\</PackageOutputPath>
@@ -9,4 +11,9 @@
       https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-061c8b71/nuget/v3/index.json;
     </RestoreAdditionalProjectSources>
   </PropertyGroup>
+  <Target Name="_GetXAVersionInfo" BeforeTargets="SetVersion" DependsOnTargets="GetXAVersionInfo">
+    <PropertyGroup>
+      <PackageVersionSuffix>-preview.$(PackVersionCommitCount)</PackageVersionSuffix>
+    </PropertyGroup>
+  </Target>
 </Project>
