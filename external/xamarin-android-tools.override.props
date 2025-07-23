@@ -12,7 +12,7 @@
     </RestoreAdditionalProjectSources>
   </PropertyGroup>
   <Target Name="_GetXAVersionInfo"
-      Condition="Exists('$(PrepTasksAssembly)')"
+      Condition=" '$(IsPacking)' == 'true' "
       BeforeTargets="SetVersion"
       DependsOnTargets="GetXAVersionInfo">
     <PropertyGroup>
