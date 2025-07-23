@@ -15,13 +15,13 @@ public class PrepareSatelliteAssemblies : AndroidTask
 	public override string TaskPrefix => "PSA";
 
 	[Required]
-	public string[] BuildTargetAbis                    { get; set; } = Array.Empty<string> ();
+	public string[] BuildTargetAbis                    { get; set; } = [];
 
 	[Required]
-	public ITaskItem[] ReferenceSatellitePaths         { get; set; } = Array.Empty<ITaskItem> ();
+	public ITaskItem[] ReferenceSatellitePaths         { get; set; } = [];
 
 	[Required]
-	public ITaskItem[] IntermediateSatelliteAssemblies { get; set; } = Array.Empty<ITaskItem> ();
+	public ITaskItem[] IntermediateSatelliteAssemblies { get; set; } = [];
 
 	[Output]
 	public ITaskItem[]? ProcessedSatelliteAssemblies { get; set; }

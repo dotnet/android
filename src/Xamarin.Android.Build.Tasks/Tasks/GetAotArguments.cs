@@ -33,7 +33,7 @@ namespace Xamarin.Android.Tasks
 		public string TargetName { get; set; } = "";
 
 		[Required]
-		public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = Array.Empty<ITaskItem> ();
+		public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = [];
 
 		/// <summary>
 		/// Will be blank in .NET 6+
@@ -55,12 +55,12 @@ namespace Xamarin.Android.Tasks
 
 		public string AndroidSequencePointsMode { get; set; } = "";
 
-		public ITaskItem [] Profiles { get; set; } = Array.Empty<ITaskItem> ();
+		public ITaskItem [] Profiles { get; set; } = [];
 
 		public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment64Bit;
 
 		[Required, Output]
-		public ITaskItem [] ResolvedAssemblies { get; set; } = Array.Empty<ITaskItem> ();
+		public ITaskItem [] ResolvedAssemblies { get; set; } = [];
 
 		[Output]
 		public string? Triple { get; set; }
@@ -262,7 +262,7 @@ namespace Xamarin.Android.Tasks
 			var ldFlags = new StringBuilder ();
 			var libs = new List<string> ();
 			if (UseAndroidNdk && EnableLLVM) {
-				string androidLibPath = string.Empty;
+				string androidLibPath = "";
 				try {
 					androidLibPath = ndk.GetDirectoryPath (NdkToolchainDir.PlatformLib, arch, level);
 				} catch (InvalidOperationException ex) {

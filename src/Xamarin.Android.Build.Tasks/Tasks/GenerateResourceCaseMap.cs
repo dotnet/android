@@ -41,7 +41,7 @@ namespace Xamarin.Android.Tasks
 			ResourceDirectory = Path.GetFullPath (ResourceDirectory);
 
 			// Create our capitalization maps so we can support mixed case resources
-			foreach (var item in Resources ?? Array.Empty<ITaskItem>()) {
+			foreach (var item in Resources ?? []) {
 				var path = Path.GetFullPath (item.ItemSpec);
 				if (!path.StartsWith (ResourceDirectory, StringComparison.OrdinalIgnoreCase)) {
 					Log.LogDebugMessage ($"Skipping {item}. Path is not include the '{ResourceDirectory}'");
@@ -55,7 +55,7 @@ namespace Xamarin.Android.Tasks
 
 				AddRename (name.Replace ('/', Path.DirectorySeparatorChar), logical_name.Replace ('/', Path.DirectorySeparatorChar));
 			}
-			foreach (var additionalDir in AdditionalResourceDirectories ?? Array.Empty<ITaskItem>()) {
+			foreach (var additionalDir in AdditionalResourceDirectories ?? []) {
 				var dir = Path.Combine (ProjectDir, Path.GetDirectoryName (additionalDir.ItemSpec));
 				var file = Path.Combine (dir, "__res_name_case_map.txt");
 				if (!File.Exists (file)) {
@@ -72,7 +72,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 			var resmap = ".net/__res_name_case_map.txt";
-			foreach (var aar in AarLibraries ??  Array.Empty<string>()) {
+			foreach (var aar in AarLibraries ??  []) {
 				Log.LogDebugMessage ($"Processing Aar file {aar}");
 				if (!File.Exists (aar)) {
 					Log.LogDebugMessage ($"Skipping non-existent aar: {aar}");

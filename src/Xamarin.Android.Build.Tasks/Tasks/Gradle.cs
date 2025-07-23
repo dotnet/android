@@ -19,19 +19,19 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "GRDL";
 
 		[Required]
-		public string Command { get; set; } = string.Empty;
+		public string Command { get; set; } = "";
 
-		public string Arguments { get; set; } = string.Empty;
+		public string Arguments { get; set; } = "";
 
-		public string ModuleName { get; set; } = string.Empty;
+		public string ModuleName { get; set; } = "";
 
-		public string OutputPath { get; set; } = string.Empty;
+		public string OutputPath { get; set; } = "";
 
-		public string BuildDirInitScriptPath { get; set; } = string.Empty;
+		public string BuildDirInitScriptPath { get; set; } = "";
 
-		public string AndroidSdkDirectory { get; set; } = string.Empty;
+		public string AndroidSdkDirectory { get; set; } = "";
 
-		public string JavaSdkDirectory { get; set; } = string.Empty;
+		public string JavaSdkDirectory { get; set; } = "";
 
 
 		protected override string ToolName => OS.IsWindows ? "gradlew.bat" : "gradlew";
