@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Globalization;
@@ -20,7 +20,7 @@ namespace Xamarin.Android.Tasks.Legacy
 		public bool UseLatestAndroidPlatformSdk { get; set; }
 
 		[Output]
-		public string TargetFrameworkVersion { get; set; }
+		public string? TargetFrameworkVersion { get; set; }
 
 		protected override bool Validate ()
 		{
@@ -80,7 +80,7 @@ namespace Xamarin.Android.Tasks.Legacy
 			// Otherwise, if $(TargetFrameworkVersion) is set, use it and set $(AndroidApiLevel).
 
 			UseLatestAndroidPlatformSdk = UseLatestAndroidPlatformSdk ||
-				(string.IsNullOrWhiteSpace (AndroidApiLevel) && string.IsNullOrWhiteSpace (TargetFrameworkVersion));
+				(AndroidApiLevel.IsNullOrWhiteSpace () && TargetFrameworkVersion.IsNullOrWhiteSpace ());
 
 			if (UseLatestAndroidPlatformSdk) {
 				int maxInstalled = GetMaxInstalledApiLevel ();
@@ -90,7 +90,7 @@ namespace Xamarin.Android.Tasks.Legacy
 					Log.LogDebugMessage ($"API Level {maxInstalled} is greater than the maximum supported API level of {maxSupported}. " +
 						"Support for this API will be added in a future release.");
 				}
-				if (!string.IsNullOrWhiteSpace (TargetFrameworkVersion)) {
+				if (!TargetFrameworkVersion.IsNullOrWhiteSpace ()) {
 					var userSelected = MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (TargetFrameworkVersion);
 					// overwrite using user version only if it is 
 					// above the maxStableApi and a valid apiLevel.
@@ -101,8 +101,14 @@ namespace Xamarin.Android.Tasks.Legacy
 					}
 				}
 
-				for (int apiLevel = maxSupported; apiLevel >= MonoAndroidHelper.SupportedVersions.MinStableVersion.ApiLevel; apiLevel--) {
+				var minStableVersion = MonoAndroidHelper.SupportedVersions.MinStableVersion;
+				if (minStableVersion == null)
+					return false;
+				
+				for (int apiLevel = maxSupported; apiLevel >= minStableVersion.ApiLevel; apiLevel--) {
 					var id = MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (apiLevel);
+					if (id == null)
+						continue;
 					var apiPlatformDir = MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (id, MonoAndroidHelper.SupportedVersions);
 					if (apiPlatformDir != null && Directory.Exists (apiPlatformDir)) {
 						var targetFramework = MonoAndroidHelper.SupportedVersions.GetFrameworkVersionFromId (id);
@@ -116,9 +122,9 @@ namespace Xamarin.Android.Tasks.Legacy
 				return TargetFrameworkVersion != null;
 			}
 
-			if (!string.IsNullOrWhiteSpace (TargetFrameworkVersion)) {
+			if (!TargetFrameworkVersion.IsNullOrWhiteSpace ()) {
 				TargetFrameworkVersion = TargetFrameworkVersion.Trim ();
-				string id = MonoAndroidHelper.SupportedVersions.GetIdFromFrameworkVersion (TargetFrameworkVersion);
+				string? id = MonoAndroidHelper.SupportedVersions.GetIdFromFrameworkVersion (TargetFrameworkVersion);
 				if (id == null) {
 					Log.LogCodedError ("XA0000", Properties.Resources.XA0000_API_for_TargetFrameworkVersion, TargetFrameworkVersion);
 					return false;
@@ -127,7 +133,7 @@ namespace Xamarin.Android.Tasks.Legacy
 				return true;
 			}
 
-			if (!string.IsNullOrWhiteSpace (AndroidApiLevel)) {
+			if (!AndroidApiLevel.IsNullOrWhiteSpace ()) {
 				AndroidApiLevel = AndroidApiLevel.Trim ();
 				TargetFrameworkVersion = GetTargetFrameworkVersionFromApiLevel ();
 				return TargetFrameworkVersion != null;
@@ -147,8 +153,11 @@ namespace Xamarin.Android.Tasks.Legacy
 					.Select (platformDir => Path.GetFileName (platformDir))
 					.Where (dir => dir.StartsWith ("android-", StringComparison.OrdinalIgnoreCase))
 					.Select (dir => dir.Substring ("android-".Length))
-					.Select (apiName => MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (apiName));
+					.Select (apiName => MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (apiName))
+					.Where (id => id != null);
 				foreach (var id in apiIds) {
+					if (id == null)
+						continue;
 					int? v = MonoAndroidHelper.SupportedVersions.GetApiLevelFromId (id);
 					if (!v.HasValue)
 						continue;
@@ -161,9 +170,11 @@ namespace Xamarin.Android.Tasks.Legacy
 			return maxApiLevel;
 		}
 
-		string GetTargetFrameworkVersionFromApiLevel ()
+		string? GetTargetFrameworkVersionFromApiLevel ()
 		{
-			string targetFramework = MonoAndroidHelper.SupportedVersions.GetFrameworkVersionFromId (AndroidApiLevel);
+			if (AndroidApiLevel == null)
+				return null;
+			string? targetFramework = MonoAndroidHelper.SupportedVersions.GetFrameworkVersionFromId (AndroidApiLevel);
 			if (targetFramework != null)
 				return targetFramework;
 			Log.LogCodedError ("XA0000", Properties.Resources.XA0000_TargetFrameworkVersion_for_API, AndroidApiLevel);
