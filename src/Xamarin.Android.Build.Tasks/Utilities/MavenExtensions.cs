@@ -27,7 +27,7 @@ static class MavenExtensions
 	// Helps to 'foreach' into a possibly null array
 	public static T [] OrEmpty<T> (this T []? value)
 	{
-		return value ?? Array.Empty<T> ();
+		return value ?? [];
 	}
 
 	// Removes AggregateException wrapping around an exception

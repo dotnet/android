@@ -65,7 +65,7 @@ namespace Xamarin.Android.Tasks
 					ProcessResourceFile (file, resources);
 				}
 			}
-			foreach (var dir in additionalResourceDirectories ?? Array.Empty<string>()) {
+			foreach (var dir in additionalResourceDirectories ?? []) {
 				Log.LogDebugMessage ($"Processing Directory {dir}");
 				if (Directory.Exists (dir)) {
 					foreach (var file in Directory.EnumerateFiles (dir, "*.*", SearchOption.AllDirectories)) {
@@ -75,7 +75,7 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ($"Skipping non-existent directory: {dir}");
 				}
 			}
-			foreach (var aar in aarLibraries ??  Array.Empty<string>()) {
+			foreach (var aar in aarLibraries ?? []) {
 				Log.LogDebugMessage ($"Processing Aar file {aar}");
 				if (!File.Exists (aar)) {
 					Log.LogDebugMessage ($"Skipping non-existent aar: {aar}");
