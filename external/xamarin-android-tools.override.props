@@ -11,7 +11,10 @@
       https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-061c8b71/nuget/v3/index.json;
     </RestoreAdditionalProjectSources>
   </PropertyGroup>
-  <Target Name="_GetXAVersionInfo" BeforeTargets="SetVersion" DependsOnTargets="GetXAVersionInfo">
+  <Target Name="_GetXAVersionInfo"
+      Condition="Exists('$(PrepTasksAssembly)')"
+      BeforeTargets="SetVersion"
+      DependsOnTargets="GetXAVersionInfo">
     <PropertyGroup>
       <PackageVersionSuffix>-preview.$(PackVersionCommitCount)</PackageVersionSuffix>
     </PropertyGroup>
