@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections;
@@ -181,9 +181,9 @@ namespace Xamarin.Android.Tasks
 		}
 
 		readonly NativeTypeMappingData mappingData;
-		StructureInfo typeMapJavaStructureInfo;
-		StructureInfo typeMapModuleStructureInfo;
-		StructureInfo typeMapModuleEntryStructureInfo;
+		StructureInfo? typeMapJavaStructureInfo;
+		StructureInfo? typeMapModuleStructureInfo;
+		StructureInfo? typeMapModuleEntryStructureInfo;
 		JavaNameHash32Comparer javaNameHash32Comparer;
 		JavaNameHash64Comparer javaNameHash64Comparer;
 
@@ -258,7 +258,7 @@ namespace Xamarin.Android.Tasks
 
 			uint GetJavaEntryIndex (TypeMapJava javaEntry)
 			{
-				var key = new StructureInstance<TypeMapJava> (typeMapJavaStructureInfo, javaEntry);
+				var key = new StructureInstance<TypeMapJava> (typeMapJavaStructureInfo!, javaEntry);
 				int idx = cs.JavaMap.BinarySearch (key, hashComparer);
 				if (idx < 0) {
 					throw new InvalidOperationException ($"Could not map entry '{javaEntry.JavaName}' to array index");
@@ -331,7 +331,7 @@ namespace Xamarin.Android.Tasks
 					JavaName = entry.JavaName,
 				};
 
-				cs.JavaMap.Add (new StructureInstance<TypeMapJava> (typeMapJavaStructureInfo, map_entry));
+				cs.JavaMap.Add (new StructureInstance<TypeMapJava> (typeMapJavaStructureInfo!, map_entry));
 				cs.JavaTypesByName.Add (map_entry.JavaName, map_entry);
 			}
 		}
@@ -362,7 +362,7 @@ namespace Xamarin.Android.Tasks
 					java_name_width = 0,
 				};
 
-				cs.MapModules.Add (new StructureInstance<TypeMapModule> (typeMapModuleStructureInfo, map_module));
+				cs.MapModules.Add (new StructureInstance<TypeMapModule> (typeMapModuleStructureInfo!, map_module));
 			}
 		}
 
@@ -386,7 +386,7 @@ namespace Xamarin.Android.Tasks
 					type_token_id = entry.Token,
 					java_map_index = UInt32.MaxValue, // will be set later, when the target is known
 				};
-				mapModuleEntries.Add (new StructureInstance<TypeMapModuleEntry> (typeMapModuleEntryStructureInfo, map_entry));
+				mapModuleEntries.Add (new StructureInstance<TypeMapModuleEntry> (typeMapModuleEntryStructureInfo!, map_entry));
 			}
 
 			mapModuleEntries.Sort ((StructureInstance<TypeMapModuleEntry> a, StructureInstance<TypeMapModuleEntry> b) => a.Instance.type_token_id.CompareTo (b.Instance.type_token_id));

@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections;
@@ -204,9 +204,9 @@ namespace Xamarin.Android.Tasks
 		}
 
 		readonly NativeTypeMappingData mappingData;
-		StructureInfo typeMapJavaStructureInfo;
-		StructureInfo typeMapModuleStructureInfo;
-		StructureInfo typeMapModuleEntryStructureInfo;
+		StructureInfo? typeMapJavaStructureInfo;
+		StructureInfo? typeMapModuleStructureInfo;
+		StructureInfo? typeMapModuleEntryStructureInfo;
 		JavaNameHash32Comparer javaNameHash32Comparer;
 		JavaNameHash64Comparer javaNameHash64Comparer;
 
@@ -322,7 +322,7 @@ namespace Xamarin.Android.Tasks
 
 			uint GetJavaEntryIndex (TypeMapJava javaEntry)
 			{
-				var key = new StructureInstance<TypeMapJava> (typeMapJavaStructureInfo, javaEntry);
+				var key = new StructureInstance<TypeMapJava> (typeMapJavaStructureInfo!, javaEntry);
 				int idx = cs.JavaMap.BinarySearch (key, hashComparer);
 				if (idx < 0) {
 					throw new InvalidOperationException ($"Could not map entry '{javaEntry.JavaName}' to array index");
@@ -417,7 +417,7 @@ namespace Xamarin.Android.Tasks
 					JavaName = entry.JavaName,
 				};
 
-				cs.JavaMap.Add (new StructureInstance<TypeMapJava> (typeMapJavaStructureInfo, map_entry));
+				cs.JavaMap.Add (new StructureInstance<TypeMapJava> (typeMapJavaStructureInfo!, map_entry));
 				cs.JavaTypesByName.Add (map_entry.JavaName, map_entry);
 			}
 		}
@@ -454,7 +454,7 @@ namespace Xamarin.Android.Tasks
 				map_start_index += map_module.entry_count;
 				duplicates_start_index += map_module.duplicate_count;
 
-				cs.MapModules.Add (new StructureInstance<TypeMapModule> (typeMapModuleStructureInfo, map_module));
+				cs.MapModules.Add (new StructureInstance<TypeMapModule> (typeMapModuleStructureInfo!, map_module));
 			}
 		}
 
@@ -481,7 +481,7 @@ namespace Xamarin.Android.Tasks
 					managed_type_name_hash_64 = MonoAndroidHelper.GetXxHash (entry.ManagedTypeName, is64Bit: true),
 					java_map_index = UInt32.MaxValue, // will be set later, when the target is known
 				};
-				moduleSection.Add (new StructureInstance<TypeMapModuleEntry> (typeMapModuleEntryStructureInfo, map_entry));
+				moduleSection.Add (new StructureInstance<TypeMapModuleEntry> (typeMapModuleEntryStructureInfo!, map_entry));
 			}
 			destCollection.Add (moduleSection);
 		}

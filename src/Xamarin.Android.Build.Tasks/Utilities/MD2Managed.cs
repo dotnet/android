@@ -27,7 +27,7 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-#nullable disable
+#nullable enable
 
 using System;
 
@@ -72,7 +72,7 @@ namespace Mono.Security.Cryptography {
 			166, 119, 114, 248, 235, 117, 75, 10, 49, 68, 80, 180, 143, 237,
 			31, 26, 219, 153, 141, 51, 159, 17, 131, 20 };
 
-		private byte[] Padding (int nLength)
+		private byte[]? Padding (int nLength)
 		{
 			if (nLength > 0) {
 				byte[] padding = new byte [nLength];
@@ -146,7 +146,7 @@ namespace Mono.Security.Cryptography {
 
 			// is padding needed ? required if length not a multiple of 16.
 			if (padLen > 0)
-				HashCore (Padding (padLen), 0, padLen);
+				HashCore (Padding (padLen)!, 0, padLen);
 
 			// Extend with checksum 
 			HashCore (checksum, 0, 16);

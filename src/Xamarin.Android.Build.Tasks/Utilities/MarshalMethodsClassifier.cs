@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -603,7 +603,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		MethodDefinition FindMethod (TypeDefinition type, string methodName, IMethodSignatureMatcher signatureMatcher = null)
+		MethodDefinition? FindMethod (TypeDefinition type, string methodName, IMethodSignatureMatcher? signatureMatcher = null)
 		{
 			foreach (MethodDefinition method in type.Methods) {
 				if (!method.IsManaged || method.IsConstructor) {
