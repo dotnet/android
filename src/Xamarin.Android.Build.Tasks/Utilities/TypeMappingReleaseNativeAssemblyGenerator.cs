@@ -259,7 +259,7 @@ namespace Xamarin.Android.Tasks
 			uint GetJavaEntryIndex (TypeMapJava javaEntry)
 			{
 				if (typeMapJavaStructureInfo == null)
-					throw new InvalidOperationException ("typeMapJavaStructureInfo is not initialized");
+					throw new InvalidOperationException ($"{nameof (typeMapJavaStructureInfo)} is not initialized");
 				var key = new StructureInstance<TypeMapJava> (typeMapJavaStructureInfo, javaEntry);
 				int idx = cs.JavaMap.BinarySearch (key, hashComparer);
 				if (idx < 0) {
@@ -334,8 +334,8 @@ namespace Xamarin.Android.Tasks
 				};
 
 				if (typeMapJavaStructureInfo == null)
-				throw new InvalidOperationException ("typeMapJavaStructureInfo is not initialized");
-			cs.JavaMap.Add (new StructureInstance<TypeMapJava> (typeMapJavaStructureInfo, map_entry));
+					throw new InvalidOperationException ($"{nameof (typeMapJavaStructureInfo)} is not initialized");
+				cs.JavaMap.Add (new StructureInstance<TypeMapJava> (typeMapJavaStructureInfo, map_entry));
 				cs.JavaTypesByName.Add (map_entry.JavaName, map_entry);
 			}
 		}
@@ -367,8 +367,8 @@ namespace Xamarin.Android.Tasks
 				};
 
 				if (typeMapModuleStructureInfo == null)
-				throw new InvalidOperationException ("typeMapModuleStructureInfo is not initialized");
-			cs.MapModules.Add (new StructureInstance<TypeMapModule> (typeMapModuleStructureInfo, map_module));
+					throw new InvalidOperationException ($"{nameof (typeMapModuleStructureInfo)} is not initialized");
+				cs.MapModules.Add (new StructureInstance<TypeMapModule> (typeMapModuleStructureInfo, map_module));
 			}
 		}
 
@@ -393,8 +393,8 @@ namespace Xamarin.Android.Tasks
 					java_map_index = UInt32.MaxValue, // will be set later, when the target is known
 				};
 				if (typeMapModuleEntryStructureInfo == null)
-				throw new InvalidOperationException ("typeMapModuleEntryStructureInfo is not initialized");
-			mapModuleEntries.Add (new StructureInstance<TypeMapModuleEntry> (typeMapModuleEntryStructureInfo, map_entry));
+					throw new InvalidOperationException ($"{nameof (typeMapModuleEntryStructureInfo)} is not initialized");
+				mapModuleEntries.Add (new StructureInstance<TypeMapModuleEntry> (typeMapModuleEntryStructureInfo, map_entry));
 			}
 
 			mapModuleEntries.Sort ((StructureInstance<TypeMapModuleEntry> a, StructureInstance<TypeMapModuleEntry> b) => a.Instance.type_token_id.CompareTo (b.Instance.type_token_id));
