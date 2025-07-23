@@ -499,17 +499,23 @@ namespace Xamarin.Android.Tools.Bytecode {
 		{
 			// Android ones plus the list from here:
 			// https://stackoverflow.com/questions/4963300/which-notnull-java-annotation-should-i-use
+			// https://github.com/JetBrains/kotlin/blob/03360c0108797b2a98b6608e2bddfacd5f4e87ce/core/compiler.common.jvm/src/org/jetbrains/kotlin/load/java/JvmAnnotationNames.kt#L64-L91
 			switch (annotation.Type) {
 				case "Landroid/annotation/NonNull;":
+				case "Landroid/support/annotation/NonNull;":
 				case "Landroidx/annotation/NonNull;":
 				case "Landroidx/annotation/RecentlyNonNull;":
-				case "Ljavax/validation/constraints/NotNull;":
+				case "Lcom/android/annotations/NonNull;":
 				case "Ledu/umd/cs/findbugs/annotations/NonNull;":
+				case "Ljakarta/annotation/Nonnull;":
 				case "Ljavax/annotation/Nonnull;":
-				case "Lorg/jetbrains/annotations/NotNull;":
+				case "Ljavax/validation/constraints/NotNull;":
 				case "Llombok/NonNull;":
-				case "Landroid/support/annotation/NonNull;":
+				case "Lorg/checkerframework/checker/nullness/compatqual/NonNullDecl;":
+				case "Lorg/checkerframework/checker/nullness/qual/NonNull;":
 				case "Lorg/eclipse/jdt/annotation/NonNull;":
+				case "Lorg/jetbrains/annotations/NotNull;":
+				case "Lorg/jspecify/annotations/NonNull;":
 					return true;
 			}
 
