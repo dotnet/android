@@ -141,7 +141,9 @@ namespace Xamarin.Android.Tasks
 						from = entry.ManagedName,
 						to = entry.JavaName,
 					};
-					managedToJavaMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo!, m2j));
+					if (typeMapEntryStructureInfo == null)
+					throw new InvalidOperationException ("typeMapEntryStructureInfo is not initialized");
+				managedToJavaMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo, m2j));
 				}
 			}
 
@@ -153,7 +155,9 @@ namespace Xamarin.Android.Tasks
 						from = entry.JavaName,
 						to = managedEntry.SkipInJavaToManaged ? null : managedEntry.ManagedName,
 					};
-					javaToManagedMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo!, j2m));
+					if (typeMapEntryStructureInfo == null)
+					throw new InvalidOperationException ("typeMapEntryStructureInfo is not initialized");
+				javaToManagedMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo, j2m));
 				}
 			}
 
