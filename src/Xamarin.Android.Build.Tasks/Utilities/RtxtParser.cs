@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -27,22 +27,22 @@ namespace Xamarin.Android.Tasks
 		public int Id;
 		public RType Type;
 		public ResourceType ResourceType;
-		public string Identifier;
-		public string ResourceTypeName;
-		public int [] Ids;
-		public string Key => $"{ResourceTypeName}:{Identifier}";
+		public string? Identifier;
+		public string? ResourceTypeName;
+		public int []? Ids;
+		public string Key => $"{ResourceTypeName ?? ""}:{Identifier ?? ""}";
 
 		public override string ToString ()
 		{
 			if (Type != RType.Array) {
-				return $"int {ResourceTypeName} {Identifier} { (Type == RType.Integer ? $"0x{Id.ToString ("x8")}" : $"{Id}")}";
+				return $"int {ResourceTypeName ?? ""} {Identifier ?? ""} { (Type == RType.Integer ? $"0x{Id.ToString ("x8")}" : $"{Id}")}";
 			}
-			return $"int[] {ResourceTypeName} {Identifier} {{ {String.Join (", ", Ids.Select (x => $"0x{x.ToString ("x8")}"))} }}";
+			return $"int[] {ResourceTypeName ?? ""} {Identifier ?? ""} {{ {String.Join (", ", (Ids ?? []).Select (x => $"0x{x.ToString ("x8")}"))} }}";
 		}
 
 		public string ToSortedString ()
 		{
-			return $"{ResourceTypeName}_{Identifier}";
+			return $"{ResourceTypeName ?? ""}_{Identifier ?? ""}";
 		}
 
 		public int CompareTo(R other)
@@ -55,7 +55,7 @@ namespace Xamarin.Android.Tasks
 			Id = newId;
 		}
 
-		public void UpdateIds (int [] newIds)
+		public void UpdateIds (int []? newIds)
 		{
 			Ids = newIds;
 		}
@@ -68,8 +68,8 @@ namespace Xamarin.Android.Tasks
 		static readonly char[] CommaChar = new char [] { ',' };
 		static readonly Regex ValidChars = new Regex (@"([^a-f0-9x, \{\}])+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-		TaskLoggingHelper log;
-		Dictionary<string, string> map;
+		TaskLoggingHelper? log;
+		Dictionary<string, string>? map;
 
 		public static HashSet<string> knownTypes = new HashSet<string> () {
 			"anim",
@@ -121,6 +121,9 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 				int value = items [1] != "styleable" ? Convert.ToInt32 (items [3].Trim (), 16) : -1;
+				if (map == null || log == null) {
+					throw new InvalidOperationException("Parser not initialized with logger and mapping");
+				}
 				string itemName = ResourceIdentifier.GetResourceName(ResourceParser.GetNestedTypeName (items [1]), items [2], map, log);
 				if (knownTypes.Contains (items [1])) {
 					if (items [1] != "styleable") {
