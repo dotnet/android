@@ -77,7 +77,7 @@ class ManagedMarshalMethodsLookupInfo (TaskLoggingHelper log)
 	internal sealed class AssemblyLookupInfo
 	{
 		public uint Index { get; set; } = uint.MaxValue;
-		public AssemblyDefinition Assembly { get; set; }
+		public AssemblyDefinition Assembly { get; set; } = null!;
 		public MethodDefinition? GetFunctionPointerMethod { get; set; }
 		public Dictionary<string, ClassLookupInfo> ClassLookup { get; } = new (StringComparer.Ordinal);
 	}
@@ -85,7 +85,7 @@ class ManagedMarshalMethodsLookupInfo (TaskLoggingHelper log)
 	internal sealed class ClassLookupInfo
 	{
 		public uint Index { get; set; } = uint.MaxValue;
-		public TypeDefinition DeclaringType { get; set; }
+		public TypeDefinition DeclaringType { get; set; } = null!;
 		public MethodDefinition? GetFunctionPointerMethod { get; set; }
 		public Dictionary<string, MethodLookupInfo> MethodLookup { get; } = new (StringComparer.Ordinal);
 	}
@@ -93,6 +93,6 @@ class ManagedMarshalMethodsLookupInfo (TaskLoggingHelper log)
 	internal sealed class MethodLookupInfo
 	{
 		public uint Index { get; set; } = uint.MaxValue;
-		public MethodDefinition NativeCallbackWrapper { get; set; }
+		public MethodDefinition NativeCallbackWrapper { get; set; } = null!;
 	}
 }

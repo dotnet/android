@@ -23,6 +23,7 @@ partial class LlvmIrModule
 		public LlvmIrBufferManager ()
 		{
 			counters = new Dictionary<string, ulong> (StringComparer.Ordinal);
+			bufferVariableNames = new Dictionary<object, Dictionary<string, string>> ();
 		}
 
 		/// <summary>
@@ -55,7 +56,7 @@ partial class LlvmIrModule
 		/// <returns>The buffer variable name if found; otherwise, <c>null</c>.</returns>
 		public string? GetBufferVariableName (StructureInstance structure, StructureMemberInfo smi)
 		{
-			if (bufferVariableNames == null || bufferVariableNames.Count == 0) {
+			if (bufferVariableNames == null || bufferVariableNames.Count == 0 || structure.Obj == null) {
 				return null;
 			}
 
@@ -81,6 +82,10 @@ partial class LlvmIrModule
 		{
 			if (bufferVariableNames == null) {
 				bufferVariableNames = new Dictionary<object, Dictionary<string, string>> ();
+			}
+
+			if (structure.Obj == null) {
+				throw new ArgumentException ("Structure instance object cannot be null", nameof (structure));
 			}
 
 			if (!bufferVariableNames.TryGetValue (structure.Obj, out Dictionary<string, string> members)) {

@@ -13,24 +13,24 @@ namespace Xamarin.Android.Tasks
 	/// Or better yet, used via the extension method:
 	///		CustomAttributeValue<object> decoded = attribute.GetCustomAttributeArguments ();
 	/// </summary>
-	public class DummyCustomAttributeProvider : ICustomAttributeTypeProvider<object>
+	public class DummyCustomAttributeProvider : ICustomAttributeTypeProvider<object?>
 	{
 		public static readonly DummyCustomAttributeProvider Instance = new DummyCustomAttributeProvider ();
 
-		public object GetPrimitiveType (PrimitiveTypeCode typeCode) => null;
+		public object? GetPrimitiveType (PrimitiveTypeCode typeCode) => null;
 
-		public object GetSystemType () => null;
+		public object? GetSystemType () => null;
 
-		public object GetSZArrayType (object elementType) => null;
+		public object? GetSZArrayType (object? elementType) => null;
 
-		public object GetTypeFromDefinition (MetadataReader reader, TypeDefinitionHandle handle, byte rawTypeKind) => null;
+		public object? GetTypeFromDefinition (MetadataReader reader, TypeDefinitionHandle handle, byte rawTypeKind) => null;
 
-		public object GetTypeFromReference (MetadataReader reader, TypeReferenceHandle handle, byte rawTypeKind) => null;
+		public object? GetTypeFromReference (MetadataReader reader, TypeReferenceHandle handle, byte rawTypeKind) => null;
 
-		public object GetTypeFromSerializedName (string name) => null;
+		public object? GetTypeFromSerializedName (string name) => null;
 
-		public PrimitiveTypeCode GetUnderlyingEnumType (object type) => default (PrimitiveTypeCode);
+		public PrimitiveTypeCode GetUnderlyingEnumType (object? type) => default (PrimitiveTypeCode);
 
-		public bool IsSystemType (object type) => false;
+		public bool IsSystemType (object? type) => false;
 	}
 }
