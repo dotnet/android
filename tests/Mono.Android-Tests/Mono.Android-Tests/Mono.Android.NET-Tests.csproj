@@ -104,6 +104,7 @@
     <Compile Include="System\ExceptionTest.cs" />
     <Compile Include="System\TimeZoneTest.cs" />
     <Compile Include="System.Drawing\TypeConverterTest.cs" />
+    <Compile Include="System.IO\DirectoryTest.cs" />
     <Compile Include="System.IO\DriveInfoTest.cs" />
     <Compile Include="System.IO.Compression\GZipStreamTest.cs" />
     <Compile Include="System.Linq\LinqExpressionTest.cs" />
