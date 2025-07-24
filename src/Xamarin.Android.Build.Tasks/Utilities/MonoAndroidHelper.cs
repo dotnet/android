@@ -1,4 +1,4 @@
-#nullable enable
+#nullable disable
 
 using System;
 using System.Collections.Generic;
@@ -27,8 +27,8 @@ namespace Xamarin.Android.Tasks
 
 		// Set in ResolveSdks.Execute();
 		// Requires that ResolveSdks.Execute() run before anything else
-		public static AndroidVersions?   SupportedVersions;
-		public static AndroidSdkInfo?    AndroidSdk;
+		public static AndroidVersions   SupportedVersions;
+		public static AndroidSdkInfo    AndroidSdk;
 
 		public static StringBuilder MergeStdoutAndStderrMessages (List<string> stdout, List<string> stderr)
 		{
@@ -126,7 +126,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		public static int RunProcess (string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError, Dictionary<string, string>? environmentVariables = null)
+		public static int RunProcess (string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError, Dictionary<string, string> environmentVariables = null)
 		{
 			var psi = new ProcessStartInfo (name, args) {
 				UseShellExecute = false,

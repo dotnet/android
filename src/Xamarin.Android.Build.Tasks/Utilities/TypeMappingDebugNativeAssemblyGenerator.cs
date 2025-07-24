@@ -1,4 +1,4 @@
-#nullable enable
+#nullable disable
 
 using System;
 using System.Collections.Generic;
@@ -114,7 +114,7 @@ namespace Xamarin.Android.Tasks
 
 		readonly TypeMapGenerator.ModuleDebugData data;
 
-		StructureInfo? typeMapEntryStructureInfo;
+		StructureInfo typeMapEntryStructureInfo;
 		StructureInfo typeMapStructureInfo;
 		List<StructureInstance<TypeMapEntry>> javaToManagedMap;
 		List<StructureInstance<TypeMapEntry>> managedToJavaMap;
@@ -141,8 +141,6 @@ namespace Xamarin.Android.Tasks
 						from = entry.ManagedName,
 						to = entry.JavaName,
 					};
-					if (typeMapEntryStructureInfo == null)
-						throw new InvalidOperationException ($"{nameof (typeMapEntryStructureInfo)} is not initialized");
 					managedToJavaMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo, m2j));
 				}
 			}
@@ -155,8 +153,6 @@ namespace Xamarin.Android.Tasks
 						from = entry.JavaName,
 						to = managedEntry.SkipInJavaToManaged ? null : managedEntry.ManagedName,
 					};
-					if (typeMapEntryStructureInfo == null)
-						throw new InvalidOperationException ($"{nameof (typeMapEntryStructureInfo)} is not initialized");
 					javaToManagedMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo, j2m));
 				}
 			}

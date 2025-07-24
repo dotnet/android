@@ -1,4 +1,4 @@
-#nullable enable
+#nullable disable
 
 using System;
 using System.CodeDom;
@@ -435,7 +435,7 @@ namespace Xamarin.Android.Tasks
 				"add-resource",
 			};
 
-		void CreateResourceField (string root, string fieldName, XmlReader? element = null)
+		void CreateResourceField (string root, string fieldName, XmlReader element = null)
 		{
 			var i = root.IndexOf ('-');
 			var item = i < 0 ? root : root.Substring (0, i);

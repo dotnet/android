@@ -1,4 +1,4 @@
-#nullable enable
+#nullable disable
 
 using System;
 using System.Collections.Generic;
@@ -44,7 +44,7 @@ namespace Xamarin.Android.Tasks {
 
 		XName attName;
 
-		XElement? app;
+		XElement app;
 
 		// the elements and attributes which we apply the "." -> PackageName replacement on
 		static readonly Dictionary<string, string []> ManifestAttributeFixups = new Dictionary<string, string []> {
@@ -81,24 +81,24 @@ namespace Xamarin.Android.Tasks {
 			{ "category", "android.intent.category.LAUNCHER" },
 		};
 
-		public string? PackageName { get; set; }
-		public string? ApplicationLabel { get; set; }
-		public string []? Placeholders { get; set; }
+		public string PackageName { get; set; }
+		public string ApplicationLabel { get; set; }
+		public string [] Placeholders { get; set; }
 		public List<string> Assemblies { get; set; }
-		public IAssemblyResolver? Resolver { get; set; }
-		public string? SdkDir { get; set; }
-		public string? TargetSdkVersion { get; set; }
-		public string? MinSdkVersion { get; set; }
+		public IAssemblyResolver Resolver { get; set; }
+		public string SdkDir { get; set; }
+		public string TargetSdkVersion { get; set; }
+		public string MinSdkVersion { get; set; }
 		public bool Debug { get; set; }
 		public bool MultiDex { get; set; }
 		public bool NeedsInternet { get; set; }
 		public bool ForceExtractNativeLibs { get; set; }
 		public bool ForceDebuggable { get; set; }
-		public string? VersionName { get; set; }
+		public string VersionName { get; set; }
 		public IVersionResolver VersionResolver { get; set; } = new MonoAndroidHelperVersionResolver ();
 		public AndroidRuntime AndroidRuntime { get; set; }
 
-		string? versionCode;
+		string versionCode;
 
 		/// <summary>
 		/// NOTE: this property modifies the underlying XDocument
@@ -1061,7 +1061,7 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
-		internal static string ReplacePlaceholders (string []? placeholders, string text, Action<string, string>? logCodedWarning = null)
+		internal static string ReplacePlaceholders (string [] placeholders, string text, Action<string, string> logCodedWarning = null)
 		{
 			string result = text;
 			if (placeholders == null)
