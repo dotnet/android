@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Runtime.InteropServices;
+using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Tools
 {
