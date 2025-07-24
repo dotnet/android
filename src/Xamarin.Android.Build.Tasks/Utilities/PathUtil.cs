@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.IO;
 using System.Text;
@@ -18,10 +19,10 @@ namespace Xamarin.Android.Tools
 		// Adapted from CoreFX sources
 		public static string GetRelativePath(string relativeTo, string path, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
 		{
-			if (String.IsNullOrEmpty(relativeTo))
+			if (relativeTo.IsNullOrEmpty())
 				throw new ArgumentException("must not be null or empty", nameof(relativeTo));
 
-			if (String.IsNullOrEmpty(path))
+			if (path.IsNullOrEmpty())
 				throw new ArgumentException("must not be null or empty", nameof(path));
 
 			relativeTo = Path.GetFullPath(relativeTo);
@@ -144,7 +145,7 @@ namespace Xamarin.Android.Tools
 		// Adapted from CoreFX sources
 		static unsafe int EqualStartingCharacterCount(string first, string second, bool ignoreCase)
 		{
-			if (String.IsNullOrEmpty(first) || string.IsNullOrEmpty(second))
+			if (first.IsNullOrEmpty() || second.IsNullOrEmpty())
 				return 0;
 
 			int commonChars = 0;

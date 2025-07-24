@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -176,13 +177,13 @@ partial class MonoAndroidHelper
 	public static string MakeZipArchivePath (string part1, ICollection<string>? pathParts)
 	{
 		var parts = new List<string> ();
-		if (!String.IsNullOrEmpty (part1)) {
+		if (!part1.IsNullOrEmpty ()) {
 			parts.Add (part1.TrimEnd (ZipPathTrimmedChars));
 		};
 
 		if (pathParts != null && pathParts.Count > 0) {
 			foreach (string p in pathParts) {
-				if (String.IsNullOrEmpty (p)) {
+				if (p.IsNullOrEmpty ()) {
 					continue;
 				}
 				parts.Add (p.TrimEnd (ZipPathTrimmedChars));
@@ -209,7 +210,7 @@ partial class MonoAndroidHelper
 	/// </summary>
 	public static string MakeDiscreteAssembliesEntryName (string name, string? culture = null)
 	{
-		if (!String.IsNullOrEmpty (culture)) {
+		if (!culture.IsNullOrEmpty ()) {
 			return $"{MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER}{culture}_{name}{MANGLED_ASSEMBLY_NAME_EXT}";
 		}
 

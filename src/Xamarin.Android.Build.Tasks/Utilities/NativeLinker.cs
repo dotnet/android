@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -97,7 +98,7 @@ class NativeLinker
 				throw new NotSupportedException ($"Unsupported Android target architecture ABI: {abi}");
 		}
 
-		if (!String.IsNullOrEmpty (elfArch)) {
+		if (!elfArch.IsNullOrEmpty ()) {
 			extraArgs.Add ($"-m {elfArch}");
 		}
 
@@ -124,11 +125,11 @@ class NativeLinker
 	public bool Link (ITaskItem outputLibraryPath, List<ITaskItem> linkItems, List<ITaskItem>? linkStartFiles = null, List<ITaskItem>? linkEndFiles = null, ICollection<ITaskItem>? exportDynamicSymbols = null)
 	{
 		if (UseNdkLibraries) {
-			if (String.IsNullOrEmpty (NdkRootPath)) {
+			if (NdkRootPath.IsNullOrEmpty ()) {
 				throw new InvalidOperationException ("Internal error: request to use NDK libraries, but NDK root not specified.");
 			}
 
-			if (String.IsNullOrEmpty (NdkApiLevel)) {
+			if (NdkApiLevel.IsNullOrEmpty ()) {
 				throw new InvalidOperationException ("Internal error: request to use NDK libraries, but NDK API level not specified.");
 			}
 		}
@@ -249,7 +250,7 @@ class NativeLinker
 		bool ParseBooleanMetadata (ITaskItem item, string metadata)
 		{
 			string? value = item.GetMetadata (metadata);
-			if (String.IsNullOrEmpty (value)) {
+			if (value.IsNullOrEmpty ()) {
 				return false;
 			}
 
