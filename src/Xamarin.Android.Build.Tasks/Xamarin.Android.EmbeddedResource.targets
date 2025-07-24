@@ -87,11 +87,7 @@ This file is used by all project types, including binding projects.
   </Target>
 
   <PropertyGroup>
-    <_GetLibraryImportsDependsOnTargets Condition=" '$(_AndroidIsBindingProject)' == 'true' ">
-      _ExtractLibraryProjectImports;
-      _BuildLibraryImportsCache;
-    </_GetLibraryImportsDependsOnTargets>
-    <_GetLibraryImportsDependsOnTargets Condition=" '$(_AndroidIsBindingProject)' != 'true' ">
+    <_GetLibraryImportsDependsOnTargets>
       _ExtractLibraryProjectImports;
       _AddMultiDexDependencyJars;
       _BuildLibraryImportsCache;
