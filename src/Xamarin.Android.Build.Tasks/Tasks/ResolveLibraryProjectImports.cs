@@ -206,8 +206,8 @@ namespace Xamarin.Android.Tasks
 				string resDir = Path.Combine (importsDir, "res");
 				string resDirArchive = Path.Combine (resDir, "..", "res.zip");
 				string assetsDir = Path.Combine (importsDir, "assets");
-				string nuGetPackageId = assemblyItem.GetMetadata (NuGetPackageId) ?? string.Empty;
-				string nuGetPackageVersion = assemblyItem.GetMetadata (NuGetPackageVersion) ?? string.Empty;
+				string nuGetPackageId = assemblyItem.GetMetadata (NuGetPackageId) ?? "";
+				string nuGetPackageVersion = assemblyItem.GetMetadata (NuGetPackageVersion) ?? "";
 				extractedDirectories.Add (new TaskItem (outDirForDll, new Dictionary<string, string> {
 					[OriginalFile] = assemblyPath,
 					[NuGetPackageId] = nuGetPackageId,
@@ -377,7 +377,7 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 			}
-			foreach (var aarFile in AarLibraries ?? Array.Empty<ITaskItem> ()) {
+			foreach (var aarFile in AarLibraries ?? []) {
 				if (!File.Exists (aarFile.ItemSpec))
 					continue;
 				string aarIdentityName = Path.GetFileName (aarFile.ItemSpec);
@@ -389,8 +389,8 @@ namespace Xamarin.Android.Tasks
 				string rTxt = Path.Combine (importsDir, "R.txt");
 				string assetsDir = Path.Combine (importsDir, "assets");
 				string proguardFile = Path.Combine (importsDir, "proguard.txt");
-				string nuGetPackageId = aarFile.GetMetadata (NuGetPackageId) ?? string.Empty;
-				string nuGetPackageVersion = aarFile.GetMetadata (NuGetPackageVersion) ?? string.Empty;
+				string nuGetPackageId = aarFile.GetMetadata (NuGetPackageId) ?? "";
+				string nuGetPackageVersion = aarFile.GetMetadata (NuGetPackageVersion) ?? "";
 				extractedDirectories.Add (new TaskItem (outDirForDll, new Dictionary<string, string> {
 					[OriginalFile] = aarFile.ItemSpec,
 					[NuGetPackageId] = nuGetPackageId,

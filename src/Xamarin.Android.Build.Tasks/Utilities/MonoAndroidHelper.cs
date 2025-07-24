@@ -238,7 +238,7 @@ namespace Xamarin.Android.Tasks
 #if MSBUILD
 		public static IEnumerable<string> ExpandFiles (ITaskItem[] libraryProjectJars)
 		{
-			libraryProjectJars  = libraryProjectJars ?? Array.Empty<ITaskItem> ();
+			libraryProjectJars  = libraryProjectJars ?? [];
 			return (from path in libraryProjectJars
 					let     dir     = Path.GetDirectoryName (path.ItemSpec)
 					let     pattern = Path.GetFileName (path.ItemSpec)

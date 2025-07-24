@@ -105,7 +105,7 @@ namespace Xamarin.Android.Tasks
 
 			// Let VB put this in the default namespace
 			if (isVB)
-				Namespace = string.Empty;
+				Namespace = "";
 
 			List<string> aliases = new List<string> ();
 			// Create static resource overwrite methods for each Resource class in libraries.

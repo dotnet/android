@@ -127,7 +127,7 @@ class JCWGenerator
 				endLineNumber: 0,
 				endColumnNumber: 0,
 				message: xae.MessageWithoutCode,
-				messageArgs: Array.Empty<object> ()
+				messageArgs: []
 			);
 		} catch (DirectoryNotFoundException ex) {
 			ok = false;

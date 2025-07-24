@@ -130,7 +130,7 @@ namespace Xamarin.Android.Tasks {
 				return true;
 
 			var match = AndroidRunToolTask.AndroidErrorRegex.Match (singleLine.Trim ());
-			string file = string.Empty;
+			string file = "";
 
 			if (match.Success) {
 				file = match.Groups ["file"].Value;

@@ -25,7 +25,7 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "PRAS";
 
 		[Required]
-		public string [] RuntimeIdentifiers { get; set; } = Array.Empty<string>();
+		public string [] RuntimeIdentifiers { get; set; } = [];
 
 		public bool DesignTimeBuild { get; set; }
 
@@ -33,12 +33,12 @@ namespace Xamarin.Android.Tasks
 
 		public bool PublishTrimmed { get; set; }
 
-		public ITaskItem [] InputAssemblies { get; set; } = Array.Empty<ITaskItem> ();
+		public ITaskItem [] InputAssemblies { get; set; } = [];
 
-		public ITaskItem [] InputJavaLibraries { get; set; } = Array.Empty<ITaskItem> ();
+		public ITaskItem [] InputJavaLibraries { get; set; } = [];
 
-		public string AndroidRuntime { get; set; } = String.Empty;
-		public string LocalClrDirectory { get; set; } = String.Empty;
+		public string AndroidRuntime { get; set; } = "";
+		public string LocalClrDirectory { get; set; } = "";
 
 		[Output]
 		public ITaskItem []? OutputAssemblies { get; set; }

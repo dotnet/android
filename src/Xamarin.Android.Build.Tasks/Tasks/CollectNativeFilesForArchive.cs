@@ -54,7 +54,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 	public string AndroidBinUtilsDirectory { get; set; } = "";
 
 	[Required]
-	public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = Array.Empty<ITaskItem> ();
+	public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = [];
 
 	[Required]
 	public string IntermediateOutputPath { get; set; } = "";

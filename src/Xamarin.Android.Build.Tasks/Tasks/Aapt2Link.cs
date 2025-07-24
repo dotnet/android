@@ -311,7 +311,7 @@ namespace Xamarin.Android.Tasks {
 			}
 
 			if (hasAssetsErrors) {
-				return Array.Empty<string> ();
+				return [];
 			}
 
 			if (!ProguardRuleOutput.IsNullOrEmpty ()) {

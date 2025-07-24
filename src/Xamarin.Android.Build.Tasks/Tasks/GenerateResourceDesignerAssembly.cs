@@ -177,6 +177,10 @@ namespace Xamarin.Android.Tasks
 				var parser = new RtxtParser ();
 				var resources = parser.Parse (RTxtFile.ItemSpec, Log, resource_fixup);
 				foreach (var r in resources) {
+					// Skip resources with null ResourceTypeName or Identifier
+					if (r.ResourceTypeName == null || r.Identifier == null)
+						continue;
+						
 					switch (r.Type) {
 						case RType.Integer:
 						case RType.Integer_Styleable:
@@ -185,6 +189,8 @@ namespace Xamarin.Android.Tasks
 							CreateIntProperty (cache, r.ResourceTypeName, r.Identifier, r.Id, resourceDesigner, module);
 							break;
 						case RType.Array:
+							if (r.Ids == null)
+								break;
 							if (IsApplication && constDesigner != null)
 								CreateIntArrayField (cache, r.ResourceTypeName, r.Identifier, r.Ids, constDesigner, module);
 							CreateIntArrayProperty (cache, r.ResourceTypeName, r.Identifier, r.Ids, resourceDesigner, module);
