@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -181,7 +182,7 @@ static class BundleConfigSplitConfigsChecker
 			_                                 => throw new InvalidOperationException ($"Internal error: unsupported state transition to '{need}'")
 		};
 
-		if (!String.IsNullOrEmpty (objectName) && Xamarin.Android.Tasks.MonoAndroidHelper.StringEquals (needName, objectName)) {
+		if (!objectName.IsNullOrEmpty () && Xamarin.Android.Tasks.MonoAndroidHelper.StringEquals (needName, objectName)) {
 			state.Push (need);
 		} else {
 			state.Push (BundleConfigObject.Other);

@@ -1,4 +1,5 @@
-﻿using System;
+#nullable enable
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -12,7 +13,7 @@ namespace Xamarin.Android.Tasks
 		public void Load (string mapFile)
 		{
 			map.Clear ();
-			if (string.IsNullOrWhiteSpace (mapFile) || !File.Exists (mapFile))
+			if (mapFile.IsNullOrWhiteSpace () || !File.Exists (mapFile))
 				return;
 			foreach (var s in File.ReadLines (mapFile)) {
 				if (!map.Contains (s))
