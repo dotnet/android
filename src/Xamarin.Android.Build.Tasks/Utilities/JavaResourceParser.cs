@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.CodeDom;
@@ -13,15 +13,15 @@ namespace Xamarin.Android.Tasks
 {
 	class JavaResourceParser : ResourceParser
 	{
-		public CodeTypeDeclaration Parse (string file, bool isApp, Dictionary<string, string> resourceMap)
+		public CodeTypeDeclaration? Parse (string file, bool isApp, Dictionary<string, string> resourceMap)
 		{
 			if (!File.Exists (file))
 				throw new InvalidOperationException ("Specified Java resource file was not found: " + file);
 
-			CodeTypeDeclaration resources = null;
+			CodeTypeDeclaration? resources = null;
 
 			using (var reader = File.OpenText (file)) {
-				string line;
+				string? line;
 
 				while ((line = reader.ReadLine ()) != null) {
 					var info = Parser.Select (p => new { Match = p.Key.Match (line), Handler = p.Value }).FirstOrDefault (x => x.Match.Success);

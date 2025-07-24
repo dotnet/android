@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.CodeDom;
@@ -20,14 +20,14 @@ namespace Xamarin.Android.Tasks
 {
 	class FileResourceParser : ResourceParser
 	{
-		public string JavaPlatformDirectory { get; set; }
+		public string? JavaPlatformDirectory { get; set; }
 
-		public string ResourceFlagFile { get; set; }
+		public string? ResourceFlagFile { get; set; }
 
 		Dictionary<R, R []> arrayMapping = new Dictionary<R, R []> ();
 		Dictionary<string, List<string>> foofoo = new Dictionary<string, List<string>> ();
 		List<string> custom_types = new List<string> ();
-		XDocument publicXml;
+		XDocument? publicXml;
 
 		string[] publicXmlFiles = new string[] {
 			"public.xml",
@@ -35,8 +35,8 @@ namespace Xamarin.Android.Tasks
 			"public-staging.xml",
 		};
 
-		protected XDocument LoadPublicXml () {
-			if (string.IsNullOrEmpty (JavaPlatformDirectory))
+		protected XDocument? LoadPublicXml () {
+			if (JavaPlatformDirectory.IsNullOrEmpty ())
 				return null;
 			string publicXmlPath = Path.Combine (JavaPlatformDirectory, "data", "res", "values");
 			foreach (var file in publicXmlFiles) {
@@ -214,7 +214,7 @@ namespace Xamarin.Android.Tasks
 		{
 			Log.LogDebugMessage ($"{nameof(ProcessResourceFile)} {file}");
 			var fileName = Path.GetFileNameWithoutExtension (file);
-			if (string.IsNullOrEmpty (fileName))
+			if (fileName.IsNullOrEmpty ())
 				return;
 			if (fileName.EndsWith (".9", StringComparison.OrdinalIgnoreCase))
 				fileName = Path.GetFileNameWithoutExtension (fileName);
@@ -287,7 +287,7 @@ namespace Xamarin.Android.Tasks
 				if (reader.NodeType == XmlNodeType.Whitespace || reader.NodeType == XmlNodeType.Comment)
 					continue;
 				string name = null;
-				if (string.IsNullOrEmpty (topName)) {
+				if (topName.IsNullOrEmpty ()) {
 					if (reader.HasAttributes) {
 						while (reader.MoveToNextAttribute ()) {
 							if (reader.Name.Replace ("android:", "") == "name")
@@ -375,7 +375,7 @@ namespace Xamarin.Android.Tasks
 				if (reader.IsStartElement ()) {
 					var elementName = reader.Name;
 					var elementNS = reader.NamespaceURI;
-					if (!string.IsNullOrEmpty (elementNS)) {
+					if (!elementNS.IsNullOrEmpty ()) {
 						if (elementNS != "http://schemas.android.com/apk/res/android")
 							continue;
 					}
@@ -426,14 +426,14 @@ namespace Xamarin.Android.Tasks
 							continue;
 						// Move the reader back to the element node.
 						reader.MoveToElement ();
-						if (!string.IsNullOrEmpty (name)) {
+						if (!name.IsNullOrEmpty ()) {
 							CreateResourceField (type ?? elementName, name, resources);
 						}
-						if (!string.IsNullOrEmpty (custom_id) && !resources.ContainsKey (custom_id)) {
+						if (!custom_id.IsNullOrEmpty () && !resources.ContainsKey (custom_id)) {
 							resources.Add (custom_id, new SortedSet<R> (new RComparer ()));
 							custom_types.Add (custom_id);
 						}
-						if (!string.IsNullOrEmpty (id)) {
+						if (!id.IsNullOrEmpty ()) {
 							CreateResourceField (custom_id ?? "id", id.Replace ("-", "_").Replace (".", "_"), resources);
 						}
 					}
