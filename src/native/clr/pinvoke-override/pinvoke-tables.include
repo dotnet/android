@@ -42,7 +42,7 @@ namespace {
 	}};
 
 	//64-bit DotNet p/invoke table
-	std::array<PinvokeEntry, 491> dotnet_pinvokes {{
+	std::array<PinvokeEntry, 490> dotnet_pinvokes {{
 		{0x99f2ee02463000, "CompressionNative_Crc32", nullptr},
 		{0xb38afc8bfe830b, "SystemNative_Bind", nullptr},
 		{0x190fe65d8736dcb, "SystemNative_TryGetIPPacketInformation", nullptr},
@@ -100,7 +100,6 @@ namespace {
 		{0x146cd1dc4fb2ba58, "SystemNative_LChflagsCanSetHiddenFlag", nullptr},
 		{0x14b7e3527b60e83f, "CryptoNative_ErrErrorStringN", nullptr},
 		{0x15bd710d3a9b3b0c, "CryptoNative_EvpDigestFinalEx", nullptr},
-		{0x176e22ea7c580dae, "SystemNative_ReadDirR", nullptr},
 		{0x18580a4592ed1ea6, "GlobalizationNative_GetSortKey", nullptr},
 		{0x185f5d25252c3c72, "SystemNative_FAllocate", nullptr},
 		{0x18d6b5e9fec9b0dc, "SystemNative_Connectx", nullptr},
@@ -234,7 +233,6 @@ namespace {
 		{0x5ffae3c8023a80b8, "AndroidCryptoNative_SSLStreamGetPeerCertificate", nullptr},
 		{0x600b4418896f7808, "SystemNative_Exit", nullptr},
 		{0x6089f0c8112eb3d9, "SystemNative_InitializeConsoleBeforeRead", nullptr},
-		{0x613307e537d462db, "SystemNative_GetReadDirRBufferSize", nullptr},
 		{0x61bacd7170fd8c9b, "SystemNative_SchedSetAffinity", nullptr},
 		{0x61f3ce1b18b20d6f, "SystemNative_GetNativeIPInterfaceStatistics", nullptr},
 		{0x62351df42d842942, "SystemNative_GetSignalForBreak", nullptr},
@@ -500,6 +498,7 @@ namespace {
 		{0xf0658a22dd5ede19, "SystemNative_SNPrintF_1I", nullptr},
 		{0xf0ec052da6c5fa70, "SystemNative_EnumerateGatewayAddressesForInterface", nullptr},
 		{0xf1577384f409ea85, "AndroidCryptoNative_BigNumToBinary", nullptr},
+		{0xf1c2bc01e94156af, "SystemNative_ReadDir", nullptr},
 		{0xf2c7fa39bf166188, "SystemNative_Free", nullptr},
 		{0xf2d074e0aeca51ce, "GlobalizationNative_GetLocales", nullptr},
 		{0xf3693f3cadb9b6f4, "GlobalizationNative_EnumCalendarInfo", nullptr},
@@ -577,7 +576,7 @@ constexpr hash_t system_globalization_native_library_hash = 0x28b5c8fca080abd5;
 	}};
 
 	//32-bit DotNet p/invoke table
-	std::array<PinvokeEntry, 491> dotnet_pinvokes {{
+	std::array<PinvokeEntry, 490> dotnet_pinvokes {{
 		{0xaf6b1c, "AndroidCryptoNative_RsaPrivateDecrypt", nullptr},
 		{0x1733089, "SystemNative_SetTerminalInvalidationHandler", nullptr},
 		{0x1dd1f00, "AndroidCryptoNative_Aes192Cfb8", nullptr},
@@ -624,6 +623,7 @@ constexpr hash_t system_globalization_native_library_hash = 0x28b5c8fca080abd5;
 		{0x1a302b28, "SystemNative_SchedSetAffinity", nullptr},
 		{0x1aa4105d, "GlobalizationNative_GetSortKey", nullptr},
 		{0x1ab1248e, "SystemNative_GetHostName", nullptr},
+		{0x1ad0dc45, "SystemNative_ReadDir", nullptr},
 		{0x1ae2353d, "SystemNative_MemfdCreate", nullptr},
 		{0x1bf277c4, "SystemNative_WaitForSocketEvents", nullptr},
 		{0x1c4778bf, "SystemNative_AlignedFree", nullptr},
@@ -657,7 +657,6 @@ constexpr hash_t system_globalization_native_library_hash = 0x28b5c8fca080abd5;
 		{0x2bc9ff5e, "AndroidCryptoNative_SSLStreamGetProtocol", nullptr},
 		{0x2c4415fd, "AndroidCryptoNative_AeadCipherFinalEx", nullptr},
 		{0x2c467430, "AndroidCryptoNative_GetECCurveParameters", nullptr},
-		{0x2d21ad97, "SystemNative_GetReadDirRBufferSize", nullptr},
 		{0x2d6e4a1c, "AndroidCryptoNative_X509StoreRemoveCertificate", nullptr},
 		{0x2e66f31b, "BrotliDecoderDestroyInstance", nullptr},
 		{0x2eb28fb6, "SystemNative_GetIPv4Address", nullptr},
@@ -786,7 +785,6 @@ constexpr hash_t system_globalization_native_library_hash = 0x28b5c8fca080abd5;
 		{0x68c949a0, "AndroidCryptoNative_X509GetContentType", nullptr},
 		{0x68f9f52f, "AndroidCryptoNative_CipherIsSupported", nullptr},
 		{0x6907c8eb, "BrotliEncoderSetParameter", nullptr},
-		{0x6adb646e, "SystemNative_ReadDirR", nullptr},
 		{0x6b5343a0, "SystemNative_SetErrNo", nullptr},
 		{0x6bbd3d10, "SystemNative_GetRLimit", nullptr},
 		{0x6be1e33d, "SystemNative_EnumerateInterfaceAddresses", nullptr},
@@ -1082,5 +1080,5 @@ constexpr hash_t system_globalization_native_library_hash = 0xa66f1e5a;
 #endif
 
 constexpr size_t internal_pinvokes_count = 27;
-constexpr size_t dotnet_pinvokes_count = 491;
+constexpr size_t dotnet_pinvokes_count = 490;
 } // end of anonymous namespace
