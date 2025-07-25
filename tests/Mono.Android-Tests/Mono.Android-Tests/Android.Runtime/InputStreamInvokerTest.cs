@@ -17,8 +17,41 @@ namespace Android.RuntimeTests
 		{
 			var javaInputStream = new Java.IO.ByteArrayInputStream (new byte[]{0x1, 0x2, 0x3, 0x4});
 			var invoker = new InputStreamInvoker (javaInputStream);
-			javaInputStream.Dispose ();
-			invoker.Dispose ();
+			javaInputStream.Dispose();
+			invoker.Dispose();
+		}
+
+		[Test]
+		public void Disposing_Shared_Data_Does_Not_Throw_IllegalStateException ()
+		{
+			var innerStream = new ThrowingJavaIoInputStream ();
+			var inputStreamInvoker = new InputStreamInvoker (innerStream);
+
+			// let's simulate a scenario where the inner stream is disposed somewhere else
+			innerStream.Close ();
+
+			// when we dispose the InputStreamInvoker, it should not throw an exception even if the inner
+			// stream is already closed
+			inputStreamInvoker.Dispose ();
+		}
+
+		private class ThrowingJavaIoInputStream : Java.IO.InputStream
+		{
+			bool isClosed = false;
+
+			public override void Close ()
+			{
+				if (isClosed) {
+					// this simulates the observed behavior of some IO streams used in Android's HTTP stack
+					// (based on https://github.com/dotnet/runtime/issues/69464)
+					throw new Java.Lang.IllegalStateException ("Unbalanced enter/exit");
+				}
+
+				isClosed = true;
+			}
+
+			public override int Read (byte[] buffer, int offset, int count) => throw new NotImplementedException ();
+			public override int Read () => throw new NotImplementedException ();
 		}
 
                 [Test]
