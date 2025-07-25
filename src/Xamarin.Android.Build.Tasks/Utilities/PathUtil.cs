@@ -19,10 +19,10 @@ namespace Xamarin.Android.Tools
 		// Adapted from CoreFX sources
 		public static string GetRelativePath(string relativeTo, string path, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
 		{
-			if (string.IsNullOrEmpty(relativeTo))
+			if (String.IsNullOrEmpty(relativeTo))
 				throw new ArgumentException("must not be null or empty", nameof(relativeTo));
 
-			if (string.IsNullOrEmpty(path))
+			if (String.IsNullOrEmpty(path))
 				throw new ArgumentException("must not be null or empty", nameof(path));
 
 			relativeTo = Path.GetFullPath(relativeTo);
@@ -145,7 +145,7 @@ namespace Xamarin.Android.Tools
 		// Adapted from CoreFX sources
 		static unsafe int EqualStartingCharacterCount(string first, string second, bool ignoreCase)
 		{
-			if (String.IsNullOrEmpty(first) || String.IsNullOrEmpty(second))
+			if (String.IsNullOrEmpty(first) || string.IsNullOrEmpty(second))
 				return 0;
 
 			int commonChars = 0;
