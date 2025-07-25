@@ -3,7 +3,6 @@ using System;
 using System.IO;
 using System.Text;
 using System.Runtime.InteropServices;
-using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Tools
 {
@@ -20,10 +19,10 @@ namespace Xamarin.Android.Tools
 		// Adapted from CoreFX sources
 		public static string GetRelativePath(string relativeTo, string path, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
 		{
-			if (relativeTo.IsNullOrEmpty())
+			if (String.IsNullOrEmpty(relativeTo))
 				throw new ArgumentException("must not be null or empty", nameof(relativeTo));
 
-			if (path.IsNullOrEmpty())
+			if (String.IsNullOrEmpty(path))
 				throw new ArgumentException("must not be null or empty", nameof(path));
 
 			relativeTo = Path.GetFullPath(relativeTo);
@@ -146,7 +145,7 @@ namespace Xamarin.Android.Tools
 		// Adapted from CoreFX sources
 		static unsafe int EqualStartingCharacterCount(string first, string second, bool ignoreCase)
 		{
-			if (first.IsNullOrEmpty() || second.IsNullOrEmpty())
+			if (String.IsNullOrEmpty(first) || String.IsNullOrEmpty(second))
 				return 0;
 
 			int commonChars = 0;
