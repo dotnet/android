@@ -35,15 +35,18 @@ namespace Android.Runtime
 		protected override void Dispose (bool disposing)
 		{
 			if (disposing && BaseInputStream != null) {
-				try {
-					BaseFileChannel = null;
-					if (BaseInputStream.PeerReference.IsValid) {
-						BaseInputStream.Close ();
+				BaseFileChannel = null;
+				if (BaseInputStream.PeerReference.IsValid) {
+					try {
+						BaseInputStream.Close();
+					} catch (Java.Lang.IllegalStateException ex) when (ex.Message == "Unbalanced enter/exit") {
+						// The inner stream has already been closed, ignore this exception.
+					} catch (Java.IO.IOException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new IOException (ex.Message, ex);
 					}
-					BaseInputStream.Dispose ();
-				} catch (Java.IO.IOException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new IOException (ex.Message, ex);
 				}
+
+				BaseInputStream.Dispose ();
 			}
 		}
 
