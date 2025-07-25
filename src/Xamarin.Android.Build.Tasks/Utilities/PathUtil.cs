@@ -19,10 +19,10 @@ namespace Xamarin.Android.Tools
 		// Adapted from CoreFX sources
 		public static string GetRelativePath(string relativeTo, string path, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
 		{
-			if (String.IsNullOrEmpty(relativeTo))
+			if (string.IsNullOrEmpty(relativeTo))
 				throw new ArgumentException("must not be null or empty", nameof(relativeTo));
 
-			if (String.IsNullOrEmpty(path))
+			if (string.IsNullOrEmpty(path))
 				throw new ArgumentException("must not be null or empty", nameof(path));
 
 			relativeTo = Path.GetFullPath(relativeTo);
