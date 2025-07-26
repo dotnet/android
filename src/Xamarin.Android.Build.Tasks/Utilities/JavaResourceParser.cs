@@ -36,9 +36,9 @@ namespace Xamarin.Android.Tasks
 			return resources;
 		}
 
-		static KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration, Dictionary<string, string>, CodeTypeDeclaration>> Parse (string regex, Func<Match, bool, CodeTypeDeclaration, Dictionary<string, string>, CodeTypeDeclaration> f)
+		static KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration?, Dictionary<string, string>, CodeTypeDeclaration?>> Parse (string regex, Func<Match, bool, CodeTypeDeclaration?, Dictionary<string, string>, CodeTypeDeclaration?> f)
 		{
-			return new KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration, Dictionary<string, string>, CodeTypeDeclaration>> (new Regex (regex), f);
+			return new KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration?, Dictionary<string, string>, CodeTypeDeclaration?>> (new Regex (regex), f);
 		}
 
 		// public finall class R {
@@ -49,11 +49,11 @@ namespace Xamarin.Android.Tasks
 		//     }
 		//   }
 		// }
-		List<KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration, Dictionary<string, string>, CodeTypeDeclaration>>> Parser;
+		List<KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration?, Dictionary<string, string>, CodeTypeDeclaration?>>> Parser;
 
 		public JavaResourceParser ()
 		{
-			Parser = new List<KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration, Dictionary<string, string>, CodeTypeDeclaration>>> () {
+			Parser = new List<KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration?, Dictionary<string, string>, CodeTypeDeclaration?>>> () {
 			Parse ("^public final class R {",
 					(m, app, _, map) => {
 						var decl = new CodeTypeDeclaration ("Resource") {
@@ -80,43 +80,53 @@ namespace Xamarin.Android.Tasks
 						t.Members.Add (new CodeConstructor () {
 								Attributes  = MemberAttributes.Private,
 						});
-						g.Members.Add (t);
+						g?.Members.Add (t);
 						return g;
 					}),
 			Parse (@"^        public static final int ([^ =]+)\s*=\s*([^;]+);$",
 					(m, app, g, map) => {
-						var name = ((CodeTypeDeclaration) g.Members [g.Members.Count-1]).Name;
-						var f = new CodeMemberField (typeof (int), ResourceIdentifier.GetResourceName (name, m.Groups[1].Value, map, Log)) {
+						if (g != null) {
+							var name = ((CodeTypeDeclaration) g.Members [g.Members.Count-1]).Name;
+							if (Log != null) {
+								var f = new CodeMemberField (typeof (int), ResourceIdentifier.GetResourceName (name, m.Groups[1].Value, map, Log)) {
 								Attributes      = app ? MemberAttributes.Const | MemberAttributes.Public : MemberAttributes.Static | MemberAttributes.Public,
 								InitExpression  = new CodePrimitiveExpression (ToInt32 (m.Groups [2].Value, m.Groups [2].Value.IndexOf ("0x", StringComparison.Ordinal) == 0 ? 16 : 10)),
 								Comments = {
 									new CodeCommentStatement ("aapt resource value: " + m.Groups [2].Value),
 								},
-						};
-						((CodeTypeDeclaration) g.Members [g.Members.Count-1]).Members.Add (f);
+							};
+							((CodeTypeDeclaration) g.Members [g.Members.Count-1]).Members.Add (f);
+						}
+						}
 						return g;
 					}),
 			Parse (@"^        public static final int\[\] ([^ =]+) = {",
 					(m, app, g, map) => {
-						var name = ((CodeTypeDeclaration) g.Members [g.Members.Count-1]).Name;
-						var f = new CodeMemberField (typeof (int[]), ResourceIdentifier.GetResourceName (name, m.Groups[1].Value, map, Log)) {
+						if (g != null) {
+							var name = ((CodeTypeDeclaration) g.Members [g.Members.Count-1]).Name;
+							if (Log != null) {
+								var f = new CodeMemberField (typeof (int[]), ResourceIdentifier.GetResourceName (name, m.Groups[1].Value, map, Log)) {
 								// pity I can't make the member readonly...
 								Attributes      = MemberAttributes.Public | MemberAttributes.Static,
-						};
-						((CodeTypeDeclaration) g.Members [g.Members.Count-1]).Members.Add (f);
+							};
+							((CodeTypeDeclaration) g.Members [g.Members.Count-1]).Members.Add (f);
+						}
+						}
 						return g;
 					}),
 			Parse (@"^            (0x[xa-fA-F0-9, ]+)$",
 					(m, app, g, map) => {
-						var t = (CodeTypeDeclaration) g.Members [g.Members.Count-1];
-						var f = (CodeMemberField) t.Members [t.Members.Count-1];
-						string[] values = m.Groups [1].Value.Split (new[]{','}, StringSplitOptions.RemoveEmptyEntries);
-						CodeArrayCreateExpression c = (CodeArrayCreateExpression) f.InitExpression;
-						if (c == null) {
-							f.InitExpression = c = new CodeArrayCreateExpression (typeof (int[]));
+						if (g != null) {
+							var t = (CodeTypeDeclaration) g.Members [g.Members.Count-1];
+							var f = (CodeMemberField) t.Members [t.Members.Count-1];
+							string[] values = m.Groups [1].Value.Split (new[]{','}, StringSplitOptions.RemoveEmptyEntries);
+							CodeArrayCreateExpression c = (CodeArrayCreateExpression) f.InitExpression;
+							if (c == null) {
+								f.InitExpression = c = new CodeArrayCreateExpression (typeof (int[]));
+							}
+							foreach (string value in values)
+								c.Initializers.Add (new CodePrimitiveExpression (ToInt32 (value.Trim (), 16)));
 						}
-						foreach (string value in values)
-							c.Initializers.Add (new CodePrimitiveExpression (ToInt32 (value.Trim (), 16)));
 						return g;
 					}),
 		};

@@ -81,13 +81,15 @@ namespace Xamarin.Android.Tasks
 			resource_fixup = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (CaseMapFile), StringComparer.OrdinalIgnoreCase);
 
 			// Parse out the resources from the R.java file
-			CodeTypeDeclaration resources;
+			CodeTypeDeclaration? resources = null;
 			if (UseManagedResourceGenerator) {
 				var parser = new ManagedResourceParser () { Log = Log, JavaPlatformDirectory = javaPlatformDirectory, ResourceFlagFile = ResourceFlagFile };
 				resources = parser.Parse (ResourceDirectory, RTxtFile ?? string.Empty, AdditionalResourceDirectories?.Select (x => x.ItemSpec), IsApplication, resource_fixup);
 			} else {
 				var parser = new JavaResourceParser () { Log = Log };
-				resources = parser.Parse (JavaResgenInputFile, IsApplication, resource_fixup);
+				if (JavaResgenInputFile != null) {
+					resources = parser.Parse (JavaResgenInputFile, IsApplication, resource_fixup);
+				}
 			}
 
 			var extension = Path.GetExtension (NetResgenOutputFile);
@@ -139,18 +141,24 @@ namespace Xamarin.Android.Tasks
 					}
 					Log.LogDebugMessage ("Scan assembly {0} for resource generator", fileName);
 				}
-				new ResourceDesignerImportGenerator (namespaceName, resources, Log)
-					.CreateImportMethods (assemblies);
+				if (resources != null) {
+					new ResourceDesignerImportGenerator (namespaceName, resources, Log)
+						.CreateImportMethods (assemblies);
+				}
 			}
 
-			AdjustConstructor (resources);
-			foreach (var member in resources.Members)
-				if (member is CodeTypeDeclaration)
-					AdjustConstructor ((CodeTypeDeclaration) member);
+			if (resources != null) {
+				AdjustConstructor (resources);
+				foreach (var member in resources.Members)
+					if (member is CodeTypeDeclaration)
+						AdjustConstructor ((CodeTypeDeclaration) member);
+			}
 
 			// Write out our Resources.Designer.cs file
 
-			WriteFile (NetResgenOutputFile, resources, language, isCSharp, aliases, namespaceName);
+			if (resources != null) {
+				WriteFile (NetResgenOutputFile, resources, language, isCSharp, aliases, namespaceName);
+			}
 
 			// During a regular build, write the designtime/Resource.designer.cs file as well
 

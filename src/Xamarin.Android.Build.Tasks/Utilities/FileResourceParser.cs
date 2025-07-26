@@ -162,7 +162,7 @@ namespace Xamarin.Android.Tasks
 						itemid++;
 						r.UpdateId (id);
 					} else {
-						if (foofoo.ContainsKey (r.Identifier)) {
+						if (r.Identifier != null && foofoo.ContainsKey (r.Identifier)) {
 							var items = foofoo[r.Identifier];
 							if (r.Ids != null) {
 								// do something special cos its an array we need to replace *some* its.
@@ -274,7 +274,7 @@ namespace Xamarin.Android.Tasks
 		void ProcessStyleable (XmlReader reader, Dictionary<string, ICollection<R>> resources)
 		{
 			Log.LogDebugMessage ($"{nameof(ProcessStyleable)}");
-			string topName = null;
+			string? topName = null;
 			List<R> fields = new List<R> ();
 			List<string> attribs = new List<string> ();
 			if (reader.HasAttributes) {
@@ -286,7 +286,7 @@ namespace Xamarin.Android.Tasks
 			while (reader.Read ()) {
 				if (reader.NodeType == XmlNodeType.Whitespace || reader.NodeType == XmlNodeType.Comment)
 					continue;
-				string name = null;
+				string? name = null;
 				if (topName.IsNullOrEmpty ()) {
 					if (reader.HasAttributes) {
 						while (reader.MoveToNextAttribute ()) {
@@ -305,7 +305,9 @@ namespace Xamarin.Android.Tasks
 				}
 				reader.MoveToElement ();
 				if (reader.LocalName == "attr") {
-					attribs.Add (name);
+					if (name != null) {
+						attribs.Add (name);
+					}
 				}
 			}
 			var field = new R () {
@@ -314,7 +316,9 @@ namespace Xamarin.Android.Tasks
 				Type = RType.Array,
 			};
 			if (!arrayMapping.ContainsKey (field)) {
-				foofoo.Add (field.Identifier, new List<string> ());
+				if (field.Identifier != null) {
+					foofoo.Add (field.Identifier, new List<string> ());
+				}
 				attribs.Sort (StringComparer.OrdinalIgnoreCase);
 				for (int i = 0; i < attribs.Count; i++) {
 					string name = attribs [i];
@@ -348,7 +352,9 @@ namespace Xamarin.Android.Tasks
 				resources [field.ResourceTypeName].Add (field);
 				int id = 0;
 				foreach (string r in attribs) {
-					foofoo[field.Identifier].Add (r.Replace (":", "_"));
+					if (field.Identifier != null) {
+						foofoo[field.Identifier].Add (r.Replace (":", "_"));
+					}
 					resources [field.ResourceTypeName].Add (new R () {
 						ResourceTypeName = field.ResourceTypeName,
 						Identifier = $"{field.Identifier}_{r.Replace (":", "_")}",
@@ -383,15 +389,15 @@ namespace Xamarin.Android.Tasks
 						try {
 							ProcessStyleable (reader.ReadSubtree (), resources);
 						} catch (Exception ex) {
-							Log.LogErrorFromException (ex);
+							Log?.LogErrorFromException (ex);
 						}
 						continue;
 					}
 					if (reader.HasAttributes) {
-						string name = null;
-						string type = null;
-						string id = null;
-						string custom_id = null;
+						string? name = null;
+						string? type = null;
+						string? id = null;
+						string? custom_id = null;
 						while (reader.MoveToNextAttribute ()) {
 							if (reader.LocalName == "name")
 								name = reader.Value;

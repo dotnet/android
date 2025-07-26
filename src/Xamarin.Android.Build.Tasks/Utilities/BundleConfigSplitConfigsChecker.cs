@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 
 using Microsoft.Build.Utilities;
+using Xamarin.Android.Tasks;
 
 /// <para>
 /// When bundle configuration uses standard settings for split configs, the per-ABI library
