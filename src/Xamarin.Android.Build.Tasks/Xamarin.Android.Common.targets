@@ -1313,7 +1313,7 @@ because xbuild doesn't support framework reference assemblies.
 			Resources="@(AndroidResource);@(AndroidBoundLayout)"
 			ResourceDirectory="$(MonoAndroidResourcePrefix)"
 			CaseMapFile="$(_GenerateResourceCaseMapFile)"
-			FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
+			FrameworkDirectories="$(_XATargetFrameworkDirectories)"
 			AdditionalResourceDirectories="@(LibraryResourceDirectories)"
 			AssemblyName="$(AssemblyName)"
 	>
@@ -1587,7 +1587,7 @@ because xbuild doesn't support framework reference assemblies.
       OutputDirectory="$(IntermediateOutputPath)android"
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
-      FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
+      FrameworkDirectories="$(_XATargetFrameworkDirectories)"
       SupportedAbis="@(_BuildTargetAbis)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       IntermediateOutputDirectory="$(IntermediateOutputPath)"
