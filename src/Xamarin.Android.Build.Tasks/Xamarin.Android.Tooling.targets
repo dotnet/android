@@ -37,7 +37,7 @@ projects.
   </Target>
 
   <PropertyGroup>
-    <_ResolveSdksDependsOnTargets>ResolveTargetingPackAssets</_ResolveSdksDependsOnTargets>
+    <_ResolveSdksDependsOnTargets>ProcessFrameworkReferences</_ResolveSdksDependsOnTargets>
   </PropertyGroup>
 
   <Target Name="_ResolveSdks" DependsOnTargets="$(_ResolveSdksDependsOnTargets)">
