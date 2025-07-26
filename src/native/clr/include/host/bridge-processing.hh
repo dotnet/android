@@ -23,7 +23,7 @@ struct CrossReferenceTarget
 class BridgeProcessing
 {
 public:
-	BridgeProcessing (MarkCrossReferencesArgs *args) noexcept;
+	BridgeProcessing (JNIEnv *jniEnv, MarkCrossReferencesArgs *args) noexcept;
 	static void initialize_on_runtime_init (JNIEnv *jniEnv, jclass runtimeClass) noexcept;
 	void process () noexcept;
 private:
