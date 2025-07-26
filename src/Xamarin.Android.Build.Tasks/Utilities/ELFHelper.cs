@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Concurrent;
 using System.IO;
@@ -20,7 +21,7 @@ namespace Xamarin.Android.Tasks
 	{
 		public static void AssertValidLibraryAlignment (TaskLoggingHelper log, int alignmentInPages, string path, ITaskItem? item)
 		{
-			if (String.IsNullOrEmpty (path) || !File.Exists (path)) {
+			if (path.IsNullOrEmpty () || !File.Exists (path)) {
 				return;
 			}
 
@@ -79,22 +80,22 @@ namespace Xamarin.Android.Tasks
 				}
 
 				string? metaValue = item.GetMetadata ("PathInPackage");
-				if (String.IsNullOrEmpty (metaValue)) {
+				if (metaValue.IsNullOrEmpty ()) {
 					metaValue = item.GetMetadata ("OriginalFile");
-					if (String.IsNullOrEmpty (metaValue)) {
+					if (metaValue.IsNullOrEmpty ()) {
 						metaValue = item.ItemSpec;
 					}
 				}
 				string originalFile = metaValue;
 				metaValue = item.GetMetadata ("NuGetPackageId");
-				if (String.IsNullOrEmpty (metaValue)) {
+				if (metaValue.IsNullOrEmpty ()) {
 					return (Unknown, Unknown, originalFile);
 				}
 
 				string id = metaValue;
 				string version;
 				metaValue = item.GetMetadata ("NuGetPackageVersion");
-				if (!String.IsNullOrEmpty (metaValue)) {
+				if (!metaValue.IsNullOrEmpty ()) {
 					version = metaValue;
 				} else {
 					version = Unknown;
@@ -106,7 +107,7 @@ namespace Xamarin.Android.Tasks
 
 		public static bool IsEmptyAOTLibrary (TaskLoggingHelper log, string path)
 		{
-			if (String.IsNullOrEmpty (path) || !File.Exists (path)) {
+			if (path.IsNullOrEmpty () || !File.Exists (path)) {
 				return false;
 			}
 
@@ -121,7 +122,7 @@ namespace Xamarin.Android.Tasks
 
 		public static bool ReferencesLibrary (string libraryPath, string referencedLibraryName)
 		{
-			if (String.IsNullOrEmpty (libraryPath) || !File.Exists (libraryPath)) {
+			if (libraryPath.IsNullOrEmpty () || !File.Exists (libraryPath)) {
 				return false;
 			}
 

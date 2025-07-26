@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -17,7 +18,7 @@ namespace Xamarin.Android.Tasks
 				var e = new XElement (itemName, item.ItemSpec);
 				foreach (var name in knownMetadata) {
 					var value = item.GetMetadata (name);
-					if (!string.IsNullOrEmpty (value))
+					if (!value.IsNullOrEmpty ())
 						e.SetAttributeValue (name, value);
 				}
 				yield return e;
@@ -29,7 +30,7 @@ namespace Xamarin.Android.Tasks
 		{
 			var value = item.GetMetadata (name);
 
-			if (string.IsNullOrWhiteSpace (value))
+			if (value.IsNullOrWhiteSpace ())
 				return defaultValue;
 
 			return (T?)Convert.ChangeType (value, typeof (T));
@@ -39,7 +40,7 @@ namespace Xamarin.Android.Tasks
 		{
 			var value = item.GetMetadata (name);
 
-			if (string.IsNullOrWhiteSpace (value)) {
+			if (value.IsNullOrWhiteSpace ()) {
 				log.LogCodedError ("XA4234", Properties.Resources.XA4234, itemName, item.ToString (), name);
 				return null;
 			}
@@ -51,7 +52,7 @@ namespace Xamarin.Android.Tasks
 		{
 			value = item.GetMetadata (name);
 
-			if (string.IsNullOrWhiteSpace (value)) {
+			if (value.IsNullOrWhiteSpace ()) {
 				log.LogCodedError ("XA4234", Properties.Resources.XA4234, itemName, item.ToString (), name);
 				return false;
 			}

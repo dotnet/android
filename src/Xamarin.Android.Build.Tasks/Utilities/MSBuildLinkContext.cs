@@ -1,3 +1,4 @@
+#nullable enable
 using Java.Interop.Tools.Cecil;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;

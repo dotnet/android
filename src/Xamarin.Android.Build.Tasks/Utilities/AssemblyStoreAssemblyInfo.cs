@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.IO;
 
@@ -39,7 +40,7 @@ class AssemblyStoreAssemblyInfo
 
 		string nameNoExt = Path.GetFileNameWithoutExtension (name);
 		string? culture = assembly.GetMetadata ("Culture");
-		if (!String.IsNullOrEmpty (culture)) {
+		if (!culture.IsNullOrEmpty ()) {
 			name = $"{culture}/{name}";
 			nameNoExt = $"{culture}/{nameNoExt}";
 		}

@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -61,7 +62,7 @@ class DSOWrapperGenerator
 
 		foreach (ITaskItem packLibDir in runtimePackLibraryDirs) {
 			string ?packRID = packLibDir.GetMetadata ("RuntimeIdentifier");
-			if (String.IsNullOrEmpty (packRID)) {
+			if (packRID.IsNullOrEmpty ()) {
 				continue;
 			}
 

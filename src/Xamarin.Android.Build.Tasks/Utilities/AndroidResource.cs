@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -91,7 +92,7 @@ namespace Monodroid {
 			// path to the msbuild's intermediate output directory and that location can be changed by the
 			// user. It's better to be safe than sorry.
 			resourceBasePath = resourceBasePath?.Trim ();
-			if (string.IsNullOrEmpty (resourceBasePath))
+			if (resourceBasePath.IsNullOrEmpty ())
 				return true;
 
 			// Avoid resource names that are all whitespace
@@ -159,7 +160,7 @@ namespace Monodroid {
 			//   <item type="layout" name="">@layout/Page1</item>
 			//   <item type="layout" name="">@drawable/Page1</item>
 			// and corrects the alias to be lower case.
-			if (elem.Name == "item" && !string.IsNullOrEmpty(elem.Value) ) {
+			if (elem.Name == "item" && !elem.Value.IsNullOrEmpty() ) {
 				string value = elem.Value.Trim();
 				Match m = r.Match (value);
 				if (m.Success) {

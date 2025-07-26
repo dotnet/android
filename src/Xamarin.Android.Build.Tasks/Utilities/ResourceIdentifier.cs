@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.CodeDom;
 using System.CodeDom.Compiler;
@@ -35,7 +36,7 @@ namespace Xamarin.Android.Tasks
 
 		public static string CreateValidIdentifier (string identifier)
 		{
-			if (String.IsNullOrWhiteSpace (identifier)) return string.Empty;
+			if (identifier.IsNullOrWhiteSpace ()) return "";
 
 			var normalizedIdentifier = identifier.Normalize ();
 
@@ -46,7 +47,7 @@ namespace Xamarin.Android.Tasks
 
 		internal static string GetResourceName (string type, string name, Dictionary<string, string> map, TaskLoggingHelper log)
 		{
-			string mappedValue;
+			string? mappedValue;
 			string key = string.Format ("{0}{1}{2}", type, Path.DirectorySeparatorChar, name).ToLowerInvariant ();
 
 			if (map.TryGetValue (key, out mappedValue)) {

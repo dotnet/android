@@ -34,7 +34,7 @@ namespace Xamarin.Android.Tasks
 
 			var javaPlatformDirectory = JavaPlatformJarPath.IsNullOrEmpty () ? "" : Path.GetDirectoryName (JavaPlatformJarPath);
 			var parser = new FileResourceParser () { Log = Log, JavaPlatformDirectory = javaPlatformDirectory, ResourceFlagFile = ResourceFlagFile};
-			var resources = parser.Parse (ResourceDirectory, AdditionalResourceDirectories, AarLibraries, resource_fixup);
+			var resources = parser.Parse (ResourceDirectory, AdditionalResourceDirectories ?? [], AarLibraries ?? [], resource_fixup);
 
 			// only update if it changed.
 			writer.Write (RTxtFile, resources);
