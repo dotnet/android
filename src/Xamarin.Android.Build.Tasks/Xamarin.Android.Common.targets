@@ -842,7 +842,7 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <_ContentIncludedForCheck
       Include="@(Content)"
-      Condition="'%(Content.ExcludeFromContentCheck)' != 'true'" />
+      Condition="'%(Content.ExcludeFromContentCheck)' != 'true' and '%(Content.ExcludeFromSingleFile)' != 'true'" />
   </ItemGroup>
 
   <LogWarningsForFiles
