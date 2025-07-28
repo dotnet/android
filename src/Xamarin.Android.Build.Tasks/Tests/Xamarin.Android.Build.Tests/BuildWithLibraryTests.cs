@@ -769,6 +769,55 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[Test]
+		public void ContentBuildActionForRazor ()
+		{
+			var lib = new XamarinAndroidLibraryProject {
+				Sdk = "Microsoft.NET.Sdk.Razor",
+				EnableDefaultItems = true,
+				PackageReferences = {
+					new Package { Id = "Microsoft.AspNetCore.Components.Web", Version = "9.0.0" },
+				},
+				Sources = {
+					new BuildItem.Content ("_Imports.razor") {
+						TextContent = () => """
+							@using System.Net.Http
+							@using System.Net.Http.Json
+							@using Microsoft.AspNetCore.Components.Forms
+							@using Microsoft.AspNetCore.Components.Routing
+							@using Microsoft.AspNetCore.Components.Web
+							@using static Microsoft.AspNetCore.Components.Web.RenderMode
+							@using Microsoft.AspNetCore.Components.Web.Virtualization
+							@using Microsoft.JSInterop
+						""",
+					},
+					new BuildItem.Content ("Pages/Hello.razor") {
+						TextContent = () => """
+							@page "/counter"
+							<PageTitle>Counter</PageTitle>
+							<h1>Counter</h1>
+							<p role="status">Current count: @currentCount</p>
+							<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+							@code {
+								private int currentCount = 0;
+
+								private void IncrementCount()
+								{
+									currentCount++;
+								}
+							}
+						""",
+					},
+					new BuildItem.Content ("wwwroot/favicon.png") {
+						BinaryContent = () => XamarinAndroidApplicationProject.icon_binary_mdpi,
+					}
+				}
+			};
+			using var b = CreateDllBuilder ();
+			Assert.IsTrue (b.Build (lib), "library should have built successfully");
+			b.AssertHasNoWarnings ();
+		}
+
 		// Combination of class libraries that triggered the problem:
 		// error APT2144: invalid file path 'obj/Release/net8.0-android/lp/86.stamp'.
 		[Test]
