@@ -68,7 +68,7 @@
     <DiagnosticListenMode Condition=" '$(DiagnosticListenMode)' == '' ">connect</DiagnosticListenMode>
     <DiagnosticConfiguration>$(DiagnosticAddress):$(DiagnosticPort),$(DiagnosticListenMode)</DiagnosticConfiguration>
     <DiagnosticConfiguration Condition=" '$(DiagnosticSuspend)' == 'true' ">$(DiagnosticConfiguration),suspend</DiagnosticConfiguration>
-    <DiagnosticConfiguration Condition=" '$(DiagnosticSuspend)' == 'false' ">$(DiagnosticConfiguration),nosuspend</DiagnosticConfiguration>
+    <DiagnosticConfiguration Condition=" '$(DiagnosticSuspend)' != 'true' ">$(DiagnosticConfiguration),nosuspend</DiagnosticConfiguration>
   </PropertyGroup>
 
   <!--  User-facing configuration-specific defaults -->
