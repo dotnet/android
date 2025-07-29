@@ -22,7 +22,8 @@ namespace Xamarin.Android.Tasks
 
 		public string? DesignTimeOutputFile { get; set; }
 
-		public string? JavaResgenInputFile { get; set; }
+		[Required]
+		public string JavaResgenInputFile { get; set; } = "";
 
 		public string? RTxtFile { get; set; }
 
@@ -81,15 +82,13 @@ namespace Xamarin.Android.Tasks
 			resource_fixup = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (CaseMapFile), StringComparer.OrdinalIgnoreCase);
 
 			// Parse out the resources from the R.java file
-			CodeTypeDeclaration? resources = null;
+			CodeTypeDeclaration resources;
 			if (UseManagedResourceGenerator) {
 				var parser = new ManagedResourceParser () { Log = Log, JavaPlatformDirectory = javaPlatformDirectory, ResourceFlagFile = ResourceFlagFile };
 				resources = parser.Parse (ResourceDirectory, RTxtFile ?? string.Empty, AdditionalResourceDirectories?.Select (x => x.ItemSpec), IsApplication, resource_fixup);
 			} else {
 				var parser = new JavaResourceParser () { Log = Log };
-				if (JavaResgenInputFile != null) {
-					resources = parser.Parse (JavaResgenInputFile, IsApplication, resource_fixup);
-				}
+				resources = parser.Parse (JavaResgenInputFile, IsApplication, resource_fixup);
 			}
 
 			var extension = Path.GetExtension (NetResgenOutputFile);
@@ -141,24 +140,18 @@ namespace Xamarin.Android.Tasks
 					}
 					Log.LogDebugMessage ("Scan assembly {0} for resource generator", fileName);
 				}
-				if (resources != null) {
-					new ResourceDesignerImportGenerator (namespaceName, resources, Log)
-						.CreateImportMethods (assemblies);
-				}
+				new ResourceDesignerImportGenerator (namespaceName, resources, Log)
+					.CreateImportMethods (assemblies);
 			}
 
-			if (resources != null) {
-				AdjustConstructor (resources);
-				foreach (var member in resources.Members)
-					if (member is CodeTypeDeclaration)
-						AdjustConstructor ((CodeTypeDeclaration) member);
-			}
+			AdjustConstructor (resources);
+			foreach (var member in resources.Members)
+				if (member is CodeTypeDeclaration)
+					AdjustConstructor ((CodeTypeDeclaration) member);
 
 			// Write out our Resources.Designer.cs file
 
-			if (resources != null) {
-				WriteFile (NetResgenOutputFile, resources, language, isCSharp, aliases, namespaceName);
-			}
+			WriteFile (NetResgenOutputFile, resources, language, isCSharp, aliases, namespaceName);
 
 			// During a regular build, write the designtime/Resource.designer.cs file as well
 
