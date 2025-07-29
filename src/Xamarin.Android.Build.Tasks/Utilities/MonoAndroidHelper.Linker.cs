@@ -49,7 +49,7 @@ namespace Xamarin.Android.Tasks
 				var items = s.Split (CustomViewMapSeparator, count: 2);
 				var key = items [0];
 				var value = items [1];
-				HashSet<string> set;
+				HashSet<string>? set;
 				if (!map.TryGetValue (key, out set))
 					map.Add (key, set = new HashSet<string> ());
 				set.Add (value);

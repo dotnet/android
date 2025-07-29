@@ -177,13 +177,13 @@ partial class MonoAndroidHelper
 	public static string MakeZipArchivePath (string part1, ICollection<string>? pathParts)
 	{
 		var parts = new List<string> ();
-		if (!part1.IsNullOrEmpty ()) {
+		if (!String.IsNullOrEmpty (part1)) {
 			parts.Add (part1.TrimEnd (ZipPathTrimmedChars));
 		};
 
 		if (pathParts != null && pathParts.Count > 0) {
 			foreach (string p in pathParts) {
-				if (p.IsNullOrEmpty ()) {
+				if (String.IsNullOrEmpty (p)) {
 					continue;
 				}
 				parts.Add (p.TrimEnd (ZipPathTrimmedChars));
@@ -210,7 +210,7 @@ partial class MonoAndroidHelper
 	/// </summary>
 	public static string MakeDiscreteAssembliesEntryName (string name, string? culture = null)
 	{
-		if (!culture.IsNullOrEmpty ()) {
+		if (!String.IsNullOrEmpty (culture)) {
 			return $"{MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER}{culture}_{name}{MANGLED_ASSEMBLY_NAME_EXT}";
 		}
 
