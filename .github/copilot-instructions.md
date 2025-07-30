@@ -38,10 +38,31 @@ This repository uses:
 - **CMake** for native C++ components
 - **Gradle** for some Android-specific build tasks
 
-Common build commands:
-- `./build.sh` or `build.cmd` - Main build
-- `./dotnet-local.sh` or `dotnet-local.cmd` - Use locally built .NET tools
+### Build Commands and Workflows
+- `./build.sh` or `build.cmd` - Main build script (calls Prepare then Build)
+- `dotnet-local.sh`/`dotnet-local.cmd` - Use locally built .NET tools and workloads
 - `make` - Various make targets for specific components
+
+### Key Build Concepts
+- **Bootstrap Phase**: Initial preparation using `dotnet msbuild Xamarin.Android.sln -t:Prepare`
+- **dotnet-local Scripts**: Critical for testing - they point to your locally built .NET with Android workloads
+- **Binary Logs**: Always enabled for debugging builds with `.binlog` files
+- **Multi-Architecture**: Supports arm64-v8a, armeabi-v7a, x86_64, x86 (CoreCLR only supports 64-bit)
+
+## Java.Interop Integration
+
+The `external/Java.Interop` submodule is central to the architecture:
+- **JNI Bindings**: Core Java-to-.NET interop via JniEnvironment, JniPeerMembers
+- **Code Generation**: Tools for generating Java Callable Wrappers (JCW) and Android Callable Wrappers (ACW)
+- **API Translation**: Maps Java types/methods to C# equivalents
+
+## Runtime Architecture
+
+### .NET Runtime Support
+- **MonoVM**: Traditional Mono runtime (`src/native/mono/`)
+- **CoreCLR**: Microsoft's .NET runtime (`src/native/clr/`) - 64-bit only
+- **NativeAOT**: Ahead-of-time compilation support (`src/Microsoft.Android.Runtime.NativeAOT/`)
+- Runtime selection controlled by `$(_AndroidRuntime)` property (MonoVM or CoreCLR)
 
 ## Development Guidelines
 
@@ -73,7 +94,7 @@ When making changes to user-facing text:
 - Place custom MSBuild logic in `src/Xamarin.Android.Build.Tasks/Tasks/`
 - Follow existing error code patterns (e.g., `XA####` for errors, `XA####` for warnings)
 - Support incremental builds where possible
-- Follow patterns in [`Documentation/guides/MSBuildBestPractices.md`](Documentation/guides/MSBuildBestPractices.md)
+- Follow patterns in [`Documentation/guides/MSBuildBestPractices.md`](../Documentation/guides/MSBuildBestPractices.md)
 
 ### Native Code
 - C++ code uses CMake build system
@@ -86,14 +107,14 @@ When making changes to user-facing text:
 - Device integration tests in `tests/MSBuildDeviceIntegration/`
 - Use NUnit for C# tests
 - Mock Android APIs appropriately for unit testing
-- Follow patterns in [`Documentation/workflow/UnitTests.md`](Documentation/workflow/UnitTests.md) for comprehensive testing guidance
+- Follow patterns in [`Documentation/workflow/UnitTests.md`](../Documentation/workflow/UnitTests.md) for comprehensive testing guidance
 
 ### Development and Debugging
 - Use `MSBUILDDEBUGONSTART=2` environment variable to debug MSBuild tasks
-- Follow patterns in [`Documentation/workflow/DevelopmentTips.md`](Documentation/workflow/DevelopmentTips.md)
+- Follow patterns in [`Documentation/workflow/DevelopmentTips.md`](../Documentation/workflow/DevelopmentTips.md)
 - Use update directories for rapid testing of Debug builds on devices
 - Utilize `dotnet test --filter` for running specific unit tests
-- Reference [`Documentation/workflow/MSBuildBestPractices.md`](Documentation/workflow/MSBuildBestPractices.md) for MSBuild debugging techniques
+- Reference [`Documentation/guides/MSBuildBestPractices.md`](../Documentation/guides/MSBuildBestPractices.md) for MSBuild debugging techniques
 
 ## Nullable Reference Types
 
@@ -287,7 +308,6 @@ Bump to [Dependency Name] [Dependency Version]
 - Handle incremental build scenarios
 - Consider cross-platform compatibility (Windows/macOS/Linux)
 - Validate inputs and provide clear error messages
-- Use `MSBUILDDEBUGONSTART=2` for debugging MSBuild tasks
 
 ### Device Testing
 - Use `tests/MSBuildDeviceIntegration/` for comprehensive device tests
@@ -296,8 +316,8 @@ Bump to [Dependency Name] [Dependency Version]
 - Ensure proper Android emulator/device setup for testing
 
 ### Performance and Diagnostics
-- Use profiling capabilities documented in [`Documentation/guides/profiling.md`](Documentation/guides/profiling.md)
-- Leverage tracing features documented in [`Documentation/guides/tracing.md`](Documentation/guides/tracing.md)
+- Use profiling capabilities documented in [`Documentation/guides/profiling.md`](../Documentation/guides/profiling.md)
+- Leverage tracing features documented in [`Documentation/guides/tracing.md`](../Documentation/guides/tracing.md)
 - Monitor build performance and optimize accordingly
 
 ### Native Development
@@ -308,7 +328,7 @@ Bump to [Dependency Name] [Dependency Version]
 - Test on multiple Android API levels when relevant
 
 ### Android API Management
-- Follow [`Documentation/workflow/HowToAddNewApiLevel.md`](Documentation/workflow/HowToAddNewApiLevel.md) for adding new Android API levels
+- Follow [`Documentation/workflow/HowToAddNewApiLevel.md`](../Documentation/workflow/HowToAddNewApiLevel.md) for adding new Android API levels
 - Use existing patterns for Java-to-C# API bindings
 - Understand Android backward/forward compatibility requirements
 
