@@ -31,13 +31,13 @@ namespace Xamarin.Android.Tasks {
 
 	internal class ManifestDocument
 	{
-		public static XNamespace AndroidXmlNamespace = "http://schemas.android.com/apk/res/android";
-		public static XNamespace AndroidXmlToolsNamespace = "http://schemas.android.com/tools";
+		public static readonly XNamespace AndroidXmlNamespace = "http://schemas.android.com/apk/res/android";
+		public static readonly XNamespace AndroidXmlToolsNamespace = "http://schemas.android.com/tools";
 
 		const int maxVersionCode = 2100000000;
 
-		static XNamespace androidNs = AndroidXmlNamespace;
-		static XNamespace androidToolsNs = AndroidXmlToolsNamespace;
+		static readonly XNamespace androidNs = AndroidXmlNamespace;
+		static readonly XNamespace androidToolsNs = AndroidXmlToolsNamespace;
 		static readonly XName versionCodeAttributeName = androidNs + "versionCode";
 
 		XDocument doc;
