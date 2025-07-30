@@ -30,9 +30,8 @@
         InetAccess excluded: https://github.com/dotnet/runtime/issues/73304
         NetworkInterfaces excluded: https://github.com/dotnet/runtime/issues/75155
     -->
-    <ExcludeCategories>DotNetIgnore</ExcludeCategories>
     <!-- TODO: https://github.com/dotnet/android/issues/10069 -->
-    <ExcludeCategories Condition=" '$(UseMonoRuntime)' == 'false' ">$(ExcludeCategories):CoreCLRIgnore:SSL:NTLM:GCBridge:RuntimeConfig</ExcludeCategories>
+    <ExcludeCategories Condition=" '$(UseMonoRuntime)' == 'false' ">$(ExcludeCategories):CoreCLRIgnore:SSL:NTLM:RuntimeConfig</ExcludeCategories>
     <!-- TODO: https://github.com/dotnet/android/issues/10079 -->
     <ExcludeCategories Condition=" '$(PublishAot)' == 'true' ">$(ExcludeCategories):NativeAOTIgnore:SSL:NTLM:GCBridge:AndroidClientHandler:Export:NativeTypeMap</ExcludeCategories>
     <!-- FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190 -->
