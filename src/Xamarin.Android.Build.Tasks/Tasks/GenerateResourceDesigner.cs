@@ -87,8 +87,7 @@ namespace Xamarin.Android.Tasks
 				resources = parser.Parse (ResourceDirectory, RTxtFile ?? string.Empty, AdditionalResourceDirectories?.Select (x => x.ItemSpec), IsApplication, resource_fixup);
 			} else {
 				if (JavaResgenInputFile == null) {
-					Log.LogCodedError ("XA1000", Properties.Resources.XA1000, nameof (JavaResgenInputFile));
-					return false;
+					throw new ArgumentNullException (nameof (JavaResgenInputFile));
 				}
 				var parser = new JavaResourceParser () { Log = Log };
 				resources = parser.Parse (JavaResgenInputFile, IsApplication, resource_fixup);
