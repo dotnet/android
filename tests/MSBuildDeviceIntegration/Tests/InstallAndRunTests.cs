@@ -967,12 +967,17 @@ MONO_GC_PARAMS=bridge-implementation=new",
 					}
 				}
 			};
+			proj.SetProperty ("DiagnosticAddress", "127.0.0.1");
+			proj.SetProperty ("DiagnosticPort", "9000");
+			proj.SetProperty ("DiagnosticSuspend", "false");
+			proj.SetProperty ("DiagnosticListenMode", "connect");
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
 		Console.WriteLine (""Foo="" + Environment.GetEnvironmentVariable(""Foo""));
 		Console.WriteLine (""Bar34="" + Environment.GetEnvironmentVariable(""Bar34""));
 		Console.WriteLine (""Empty="" + Environment.GetEnvironmentVariable(""Empty""));
 		Console.WriteLine (""MONO_GC_PARAMS="" + Environment.GetEnvironmentVariable(""MONO_GC_PARAMS""));
 		Console.WriteLine (""DOTNET_MODIFIABLE_ASSEMBLIES="" + Environment.GetEnvironmentVariable(""DOTNET_MODIFIABLE_ASSEMBLIES""));
+		Console.WriteLine (""DOTNET_DiagnosticPorts="" + Environment.GetEnvironmentVariable(""DOTNET_DiagnosticPorts""));
 		");
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
@@ -1005,6 +1010,11 @@ MONO_GC_PARAMS=bridge-implementation=new",
 					"MONO_GC_PARAMS=bridge-implementation=new",
 					logcatOutput,
 					"The Environment variable \"MONO_GC_PARAMS\" was not set to expected value \"bridge-implementation=new\"."
+			);
+			StringAssert.Contains (
+					"DOTNET_DiagnosticPorts=127.0.0.1:9000,connect,nosuspend",
+					logcatOutput,
+					"The Environment variable \"DOTNET_DiagnosticPorts\" was not set to expected value \"127.0.0.1:9000,connect,nosuspend\"."
 			);
 			// NOTE: set when $(UseInterpreter) is true, default for Debug mode
 			if (!isRelease) {
