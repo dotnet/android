@@ -1588,7 +1588,7 @@ or `$DOTNET_DiagnosticPorts`.
 Implicitly enables the Mono diagnostic component, meaning that
 `$(EnableDiagnostics)`/`$(AndroidEnableProfiler)` is set to `true`.
 
-Defaults to `true`.
+Defaults to `false`.
 
 ## EmbedAssembliesIntoApk
 
