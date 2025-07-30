@@ -22,8 +22,7 @@ namespace Xamarin.Android.Tasks
 
 		public string? DesignTimeOutputFile { get; set; }
 
-		[Required]
-		public string JavaResgenInputFile { get; set; } = "";
+		public string? JavaResgenInputFile { get; set; }
 
 		public string? RTxtFile { get; set; }
 
@@ -87,6 +86,10 @@ namespace Xamarin.Android.Tasks
 				var parser = new ManagedResourceParser () { Log = Log, JavaPlatformDirectory = javaPlatformDirectory, ResourceFlagFile = ResourceFlagFile };
 				resources = parser.Parse (ResourceDirectory, RTxtFile ?? string.Empty, AdditionalResourceDirectories?.Select (x => x.ItemSpec), IsApplication, resource_fixup);
 			} else {
+				if (JavaResgenInputFile == null) {
+					Log.LogCodedError ("XA1000", Properties.Resources.XA1000, nameof (JavaResgenInputFile));
+					return false;
+				}
 				var parser = new JavaResourceParser () { Log = Log };
 				resources = parser.Parse (JavaResgenInputFile, IsApplication, resource_fixup);
 			}
