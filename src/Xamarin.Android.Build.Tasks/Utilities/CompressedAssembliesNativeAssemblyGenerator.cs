@@ -29,9 +29,6 @@ namespace Xamarin.Android.Tasks
 			public uint Index;
 
 			[NativeAssembler (Ignore = true)]
-			public string BufferSymbolName;
-
-			[NativeAssembler (Ignore = true)]
 			public string AssemblyName;
 
 			public uint   uncompressed_file_size;

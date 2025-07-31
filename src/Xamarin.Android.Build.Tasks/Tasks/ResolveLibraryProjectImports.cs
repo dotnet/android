@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -128,7 +129,7 @@ namespace Xamarin.Android.Tasks
 				Files.SetDirectoryWriteable (directory.ItemSpec);
 			}
 
-			if (!string.IsNullOrEmpty (CacheFile)) {
+			if (!CacheFile.IsNullOrEmpty ()) {
 				var document = new XDocument (
 					new XDeclaration ("1.0", "UTF-8", null),
 					new XElement ("Paths",
@@ -205,8 +206,8 @@ namespace Xamarin.Android.Tasks
 				string resDir = Path.Combine (importsDir, "res");
 				string resDirArchive = Path.Combine (resDir, "..", "res.zip");
 				string assetsDir = Path.Combine (importsDir, "assets");
-				string nuGetPackageId = assemblyItem.GetMetadata (NuGetPackageId) ?? string.Empty;
-				string nuGetPackageVersion = assemblyItem.GetMetadata (NuGetPackageVersion) ?? string.Empty;
+				string nuGetPackageId = assemblyItem.GetMetadata (NuGetPackageId) ?? "";
+				string nuGetPackageVersion = assemblyItem.GetMetadata (NuGetPackageVersion) ?? "";
 				extractedDirectories.Add (new TaskItem (outDirForDll, new Dictionary<string, string> {
 					[OriginalFile] = assemblyPath,
 					[NuGetPackageId] = nuGetPackageId,
@@ -376,7 +377,7 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 			}
-			foreach (var aarFile in AarLibraries ?? Array.Empty<ITaskItem> ()) {
+			foreach (var aarFile in AarLibraries ?? []) {
 				if (!File.Exists (aarFile.ItemSpec))
 					continue;
 				string aarIdentityName = Path.GetFileName (aarFile.ItemSpec);
@@ -388,8 +389,8 @@ namespace Xamarin.Android.Tasks
 				string rTxt = Path.Combine (importsDir, "R.txt");
 				string assetsDir = Path.Combine (importsDir, "assets");
 				string proguardFile = Path.Combine (importsDir, "proguard.txt");
-				string nuGetPackageId = aarFile.GetMetadata (NuGetPackageId) ?? string.Empty;
-				string nuGetPackageVersion = aarFile.GetMetadata (NuGetPackageVersion) ?? string.Empty;
+				string nuGetPackageId = aarFile.GetMetadata (NuGetPackageId) ?? "";
+				string nuGetPackageVersion = aarFile.GetMetadata (NuGetPackageVersion) ?? "";
 				extractedDirectories.Add (new TaskItem (outDirForDll, new Dictionary<string, string> {
 					[OriginalFile] = aarFile.ItemSpec,
 					[NuGetPackageId] = nuGetPackageId,
@@ -410,7 +411,7 @@ namespace Xamarin.Android.Tasks
 					}
 					if (Directory.Exists (resDir) || File.Exists (rTxt)) {
 						var skipProcessing = aarFile.GetMetadata (AndroidSkipResourceProcessing);
-						if (string.IsNullOrEmpty (skipProcessing)) {
+						if (skipProcessing.IsNullOrEmpty ()) {
 							skipProcessing = "True";
 						}
 						resolvedResourceDirectories.Add (new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
@@ -475,7 +476,7 @@ namespace Xamarin.Android.Tasks
 					if (Directory.Exists (resDir))
 						CreateResourceArchive (resDir, resDirArchive);
 					var skipProcessing = aarFile.GetMetadata (AndroidSkipResourceProcessing);
-					if (string.IsNullOrEmpty (skipProcessing)) {
+					if (skipProcessing.IsNullOrEmpty ()) {
 						skipProcessing = "True";
 					}
 					resolvedResourceDirectories.Add (new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {

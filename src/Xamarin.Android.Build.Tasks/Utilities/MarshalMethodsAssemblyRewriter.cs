@@ -214,7 +214,7 @@ namespace Xamarin.Android.Tasks
 			AssemblyImports imports = assemblyImports [callback.Module.Assembly];
 			string wrapperName = $"{callback.Name}_mm_wrapper";
 			TypeReference retType = MapToBlittableTypeIfNecessary (callback.ReturnType, out bool returnTypeMapped);
-			bool hasReturnValue = String.Compare ("System.Void", callback.ReturnType.FullName, StringComparison.Ordinal) != 0;
+			bool hasReturnValue = !MonoAndroidHelper.StringEquals ("System.Void", callback.ReturnType.FullName);
 			var wrapperMethod = new MethodDefinition (wrapperName, callback.Attributes, retType);
 
 			callback.DeclaringType.Methods.Add (wrapperMethod);
@@ -353,8 +353,8 @@ namespace Xamarin.Android.Tasks
 
 			bool IsBooleanConversion (TypeReference sourceType, TypeReference targetType)
 			{
-				if (String.Compare ("System.Boolean", sourceType.FullName, StringComparison.Ordinal) == 0) {
-					if (String.Compare ("System.Byte", targetType.FullName, StringComparison.Ordinal) != 0) {
+				if (MonoAndroidHelper.StringEquals ("System.Boolean", sourceType.FullName)) {
+					if (!MonoAndroidHelper.StringEquals ("System.Byte", targetType.FullName)) {
 						throw new InvalidOperationException ($"[{targetArch}] Unexpected conversion from '{sourceType.FullName}' to '{targetType.FullName}'");
 					}
 
@@ -457,12 +457,12 @@ namespace Xamarin.Android.Tasks
 
 		TypeReference MapToBlittableTypeIfNecessary (TypeReference type, out bool typeMapped)
 		{
-			if (type.IsBlittable () || String.Compare ("System.Void", type.FullName, StringComparison.Ordinal) == 0) {
+			if (type.IsBlittable () || MonoAndroidHelper.StringEquals ("System.Void", type.FullName)) {
 				typeMapped = false;
 				return type;
 			}
 
-			if (String.Compare ("System.Boolean", type.FullName, StringComparison.Ordinal) == 0) {
+			if (MonoAndroidHelper.StringEquals ("System.Boolean", type.FullName)) {
 				// Maps to Java JNI's jboolean which is an unsigned 8-bit type
 				typeMapped = true;
 				return ReturnValid (typeof(byte));
@@ -491,7 +491,7 @@ namespace Xamarin.Android.Tasks
 						continue;
 					}
 
-					if (String.Compare ("System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute", et.FullName, StringComparison.Ordinal) != 0) {
+					if (!MonoAndroidHelper.StringEquals ("System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute", et.FullName)) {
 						continue;
 					}
 
@@ -525,7 +525,7 @@ namespace Xamarin.Android.Tasks
 			log.LogDebugMessage ($"[{targetArch}] Looking for method '{methodName}' in type {type}");
 			foreach (MethodDefinition method in type.Methods) {
 				log.LogDebugMessage ($"[{targetArch}]   method: {method.Name}");
-				if (String.Compare (methodName, method.Name, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals (methodName, method.Name)) {
 					log.LogDebugMessage ($"[{targetArch}]     match!");
 					return method;
 				}
@@ -543,7 +543,7 @@ namespace Xamarin.Android.Tasks
 			log.LogDebugMessage ($"[{targetArch}] Looking for type '{typeName}' in assembly '{asm}' ({GetAssemblyPathInfo (asm)})");
 			foreach (TypeDefinition t in asm.MainModule.Types) {
 				log.LogDebugMessage ($"[{targetArch}]    checking {t.FullName}");
-				if (String.Compare (typeName, t.FullName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals (typeName, t.FullName)) {
 					log.LogDebugMessage ($"[{targetArch}]     match!");
 					return t;
 				}

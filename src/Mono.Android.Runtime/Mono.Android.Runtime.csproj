@@ -52,11 +52,11 @@
   <ItemGroup>
     <Compile Include="$(IntermediateOutputPath)AssemblyInfo.cs" />
     <Compile Include="..\Mono.Android\Android.Runtime\AndroidRuntimeInternal.cs" />
-    <Compile Include="..\Mono.Android\Android.Runtime\DotNetRuntimeType.cs" />
     <Compile Include="..\Mono.Android\Android.Runtime\LogCategories.cs" />
     <Compile Include="..\Mono.Android\Android.Runtime\LogLevel.cs" />
     <Compile Include="..\Mono.Android\Android.Runtime\RuntimeConstants.cs" />
     <Compile Include="..\Mono.Android\Android.Runtime\RuntimeNativeMethods.cs" />
+    <Compile Include="..\Mono.Android\Microsoft.Android.Runtime\RuntimeFeature.cs" />
     <Compile Include="Android.Runtime\AndroidEnvironmentInternal.cs" />
   </ItemGroup>
 

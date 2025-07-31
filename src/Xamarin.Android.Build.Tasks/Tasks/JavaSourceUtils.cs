@@ -1,6 +1,6 @@
 // Copyright (C) 2012 Xamarin, Inc. All rights reserved.
 
-#nullable disable
+#nullable enable
 
 using System;
 using System.Linq;
@@ -18,30 +18,30 @@ namespace Xamarin.Android.Tasks
 		public  override    string  TaskPrefix => "JSU";
 
 		[Required]
-		public  string      JavaSourceUtilsJar          { get; set; }
+		public  string      JavaSourceUtilsJar          { get; set; } = "";
 
 		[Required]
-		public  string      JavaSdkDirectory            { get; set; }
+		public  string      JavaSdkDirectory            { get; set; } = "";
 
 		[Required]
-		public  ITaskItem[] InputFiles                  { get; set; }
+		public  ITaskItem[] InputFiles                  { get; set; } = [];
 
-		public  ITaskItem[] References                  { get; set; }
+		public  ITaskItem[]? References                  { get; set; }
 
-		public  ITaskItem[] BootClassPath               { get; set; }
+		public  ITaskItem[]? BootClassPath               { get; set; }
 
-		public  ITaskItem   JavadocCopyrightFile        { get; set; }
-		public  string      JavadocUrlPrefix            { get; set; }
-		public  string      JavadocUrlStyle             { get; set; }
-		public  string      JavadocDocRootUrl           { get; set; }
+		public  ITaskItem?   JavadocCopyrightFile        { get; set; }
+		public  string?      JavadocUrlPrefix            { get; set; }
+		public  string?      JavadocUrlStyle             { get; set; }
+		public  string?      JavadocDocRootUrl           { get; set; }
 
-		public  string      JavaOptions                 { get; set; }
+		public  string?      JavaOptions                 { get; set; }
 
-		public  string      JavaMaximumHeapSize         { get; set; }
+		public  string?      JavaMaximumHeapSize         { get; set; }
 
-		public  ITaskItem   OutputJavadocXml            { get; set; }
+		public  ITaskItem?   OutputJavadocXml            { get; set; }
 
-		string  responseFilePath;
+		string?  responseFilePath;
 
 		public override bool RunTask ()
 		{
@@ -79,11 +79,11 @@ namespace Xamarin.Android.Tasks
 
 			// Add the JavaOptions if they are not null
 			// These could be any of the additional options
-			if (!string.IsNullOrEmpty (JavaOptions)) {
+			if (!JavaOptions.IsNullOrEmpty ()) {
 				cmd.AppendSwitch (JavaOptions);
 			}
 
-			if (!string.IsNullOrEmpty (JavaMaximumHeapSize)) {
+			if (!JavaMaximumHeapSize.IsNullOrEmpty ()) {
 				cmd.AppendSwitchIfNotNull("-Xmx", JavaMaximumHeapSize);
 			}
 
@@ -134,21 +134,23 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 			AppendArg (response, "--output-javadoc");
-			AppendArg (response, OutputJavadocXml.ItemSpec);
+			if (OutputJavadocXml != null) {
+				AppendArg (response, OutputJavadocXml.ItemSpec);
+			}
 
-			if (!string.IsNullOrEmpty (JavadocCopyrightFile?.ItemSpec)) {
+			if (JavadocCopyrightFile?.ItemSpec != null && !JavadocCopyrightFile.ItemSpec.IsNullOrEmpty ()) {
 				AppendArg (response, "--doc-copyright");
 				AppendArg (response, Path.GetFullPath (JavadocCopyrightFile.ItemSpec));
 			}
-			if (!string.IsNullOrEmpty (JavadocUrlPrefix)) {
+			if (!JavadocUrlPrefix.IsNullOrEmpty ()) {
 				AppendArg (response, "--doc-url-prefix");
 				AppendArg (response, JavadocUrlPrefix);
 			}
-			if (!string.IsNullOrEmpty (JavadocUrlStyle)) {
+			if (!JavadocUrlStyle.IsNullOrEmpty ()) {
 				AppendArg (response, "--doc-url-style");
 				AppendArg (response, JavadocUrlStyle);
 			}
-			if (!string.IsNullOrEmpty (JavadocDocRootUrl)) {
+			if (!JavadocDocRootUrl.IsNullOrEmpty ()) {
 				AppendArg (response, "--doc-root-url");
 				AppendArg (response, JavadocDocRootUrl);
 			}

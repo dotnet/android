@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -21,7 +22,7 @@ namespace Xamarin.Android.Tasks
 
 		public bool AreBrokenExceptionTransitionsEnabled (ITaskItem[] environments)
 		{
-			foreach (ITaskItem env in environments ?? Array.Empty<ITaskItem> ()) {
+			foreach (ITaskItem env in environments ?? []) {
 				foreach (string line in File.ReadLines (env.ItemSpec)) {
 					if (IsBrokenExceptionTransitionsLine (line.Trim ())) {
 						return true;
@@ -34,7 +35,7 @@ namespace Xamarin.Android.Tasks
 
 		public void Parse (ITaskItem[]? environments, SequencePointsMode sequencePointsMode, TaskLoggingHelper log)
 		{
-			foreach (ITaskItem env in environments ?? Array.Empty<ITaskItem> ()) {
+			foreach (ITaskItem env in environments ?? []) {
 				foreach (string line in File.ReadLines (env.ItemSpec)) {
 					var lineToWrite = line.Trim ();
 					if (lineToWrite.StartsWith ("MONO_LOG_LEVEL=", StringComparison.Ordinal))

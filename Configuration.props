@@ -228,7 +228,11 @@
         AndroidRuntime="CoreCLR" />
   </ItemGroup>
 
+  <!-- These properties serve the purpose of not duplicating the strings between xaprepare and
+       package creation tools -->
   <PropertyGroup>
+    <_MonoRuntimeFlavorDirName>mono</_MonoRuntimeFlavorDirName>
+    <_CLRRuntimeFlavorDirName>clr</_CLRRuntimeFlavorDirName>
     <_RuntimeRedistDirName>redist</_RuntimeRedistDirName>
   </PropertyGroup>
 

@@ -12,7 +12,7 @@ namespace Android.App
 {
 	partial class SupportsGLTextureAttribute
 	{
-		static ManifestDocumentElement<SupportsGLTextureAttribute> mapping = new ManifestDocumentElement<SupportsGLTextureAttribute> ("supports-gl-texture") {
+		static readonly ManifestDocumentElement<SupportsGLTextureAttribute> mapping = new ManifestDocumentElement<SupportsGLTextureAttribute> ("supports-gl-texture") {
 			{
 			  "Name",
 			  "name",

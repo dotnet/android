@@ -72,3 +72,5 @@ variables:
   value: 'cat != SystemApplication & cat != TimeZoneInfo & cat != Localization'
 - name: RunMAUITestJob
   value: true
+- name: DOTNET_SYSTEM_NET_SECURITY_NOREVOCATIONCHECKBYDEFAULT
+  value: true

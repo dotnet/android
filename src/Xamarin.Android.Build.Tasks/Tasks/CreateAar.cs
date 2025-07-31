@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -106,7 +108,7 @@ namespace Xamarin.Android.Tasks
 				if (NativeLibraries != null) {
 					foreach (var lib in NativeLibraries) {
 						var abi = AndroidRidAbiHelper.GetNativeLibraryAbi (lib);
-						if (string.IsNullOrWhiteSpace (abi)) {
+						if (abi.IsNullOrWhiteSpace ()) {
 							Log.LogCodedError ("XA4301", lib.ItemSpec, 0, Properties.Resources.XA4301_ABI, lib.ItemSpec);
 							continue;
 						}
@@ -125,7 +127,7 @@ namespace Xamarin.Android.Tasks
 				if (AndroidManifest != null && File.Exists (AndroidManifest.ItemSpec)) {
 					var manifest = File.ReadAllText (AndroidManifest.ItemSpec);
 					var doc = XDocument.Parse(manifest);
-					if (!string.IsNullOrEmpty (doc.Element ("manifest")?.Attribute ("package")?.Value ?? string.Empty)) {
+					if (!(doc.Element ("manifest")?.Attribute ("package")?.Value).IsNullOrEmpty ()) {
 						aar.AddEntry ("AndroidManifest.xml", manifest, Files.UTF8withoutBOM);
 					} else {
 						Log.LogDebugMessage ($"Skipping {AndroidManifest.ItemSpec}. The `manifest` does not have a `package` attribute.");

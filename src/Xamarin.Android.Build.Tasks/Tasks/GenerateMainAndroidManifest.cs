@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -25,6 +26,7 @@ public class GenerateMainAndroidManifest : AndroidTask
 	public string? CheckedBuild { get; set; }
 	public bool Debug { get; set; }
 	public bool EmbedAssemblies { get; set; }
+	public bool EnableNativeRuntimeLinking { get; set; }
 	[Required]
 	public string IntermediateOutputDirectory { get; set; } = "";
 	public string []? ManifestPlaceholders { get; set; }
@@ -106,7 +108,7 @@ public class GenerateMainAndroidManifest : AndroidTask
 		// Only set manifest.VersionCode if there is no existing value in AndroidManifest.xml.
 		if (manifest.HasVersionCode) {
 			Log.LogDebugMessage ($"Using existing versionCode in: {ManifestTemplate}");
-		} else if (!string.IsNullOrEmpty (VersionCode)) {
+		} else if (!VersionCode.IsNullOrEmpty ()) {
 			manifest.VersionCode = VersionCode;
 		}
 		manifest.Assemblies.AddRange (userAssemblies.Values.Select (item => item.ItemSpec));

@@ -1289,19 +1289,29 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void PackageNamingPolicy ([Values ("LowercaseMD5", "LowercaseCrc64")] string packageNamingPolicy)
+		[TestCase (true, "LowercaseMD5", "")]
+		[TestCase (true, "LowercaseCrc64", "")]
+		[TestCase (false, "", "127.0.0.1:9000,suspend,connect")]
+		public void EnvironmentVariables (bool useInterpreter, string packageNamingPolicy, string diagnosticConfiguration)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetProperty ("UseInterpreter", "true");
-			proj.SetProperty ("AndroidPackageNamingPolicy", packageNamingPolicy);
+			proj.SetProperty ("UseInterpreter", useInterpreter.ToString ());
+			if (!string.IsNullOrEmpty (packageNamingPolicy))
+				proj.SetProperty ("AndroidPackageNamingPolicy", packageNamingPolicy);
+			if (!string.IsNullOrEmpty (diagnosticConfiguration))
+				proj.SetProperty ("DiagnosticConfiguration", diagnosticConfiguration);
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var environment = b.Output.GetIntermediaryPath (Path.Combine ("__environment__.txt"));
 				FileAssert.Exists (environment);
-				var values = new List<string> ();
-				values.Add ("mono.enable_assembly_preload=0");
-				values.Add ("DOTNET_MODIFIABLE_ASSEMBLIES=Debug");
+				var values = new List<string> {
+					"mono.enable_assembly_preload=0",
+				};
+				if (useInterpreter)
+					values.Add ("DOTNET_MODIFIABLE_ASSEMBLIES=Debug");
+				if (!string.IsNullOrEmpty (diagnosticConfiguration))
+					values.Add ($"DOTNET_DiagnosticPorts={diagnosticConfiguration}");
 				Assert.AreEqual (string.Join (Environment.NewLine, values), File.ReadAllText (environment).Trim ());
 			}
 		}
@@ -1482,7 +1492,7 @@ namespace UnnamedProject
 		[NonParallelizable]
 		public void CheckLintErrorsAndWarnings ()
 		{
-			string disabledIssues = "StaticFieldLeak,ObsoleteSdkInt,AllowBackup,ExportedReceiver,RedundantLabel";
+			string disabledIssues = "StaticFieldLeak,ObsoleteSdkInt,AllowBackup,ExportedReceiver,RedundantLabel,AppLinkWarning";
 
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("AndroidLintEnabled", true.ToString ());

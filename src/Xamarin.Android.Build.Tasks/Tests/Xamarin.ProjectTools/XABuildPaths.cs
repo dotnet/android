@@ -12,7 +12,7 @@ namespace Xamarin.ProjectTools
 		#endif
 
 		public static string TopDirectory = GetTopDirRecursive (Path.GetFullPath (
-			Path.GetDirectoryName (new Uri (typeof (XamarinProject).Assembly.CodeBase).LocalPath)));
+			Path.GetDirectoryName (typeof (XamarinProject).Assembly.Location)));
 
 		public static readonly string PrefixDirectory = Path.Combine (TopDirectory, "bin", Configuration);
 		public static readonly string BinDirectory = Path.Combine (PrefixDirectory, "bin");

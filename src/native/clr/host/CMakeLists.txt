@@ -3,7 +3,7 @@
 include(CheckIncludeFile)
 include(CheckCXXSymbolExists)
 
-set(BUILD_STATIC_LIBRARY OFF)
+set(BUILD_STATIC_LIBRARY ON)
 
 if(DEBUG_BUILD)
   # Convince NDK to really optimize our Debug builds. Without this, NDK's cmake toolchain definition
@@ -12,8 +12,6 @@ if(DEBUG_BUILD)
   set(XA_COMPILER_FLAGS_DEBUG "-fno-limit-debug-info -O2")
   set(CMAKE_C_FLAGS_DEBUG ${XA_COMPILER_FLAGS_DEBUG})
   set(CMAKE_CXX_FLAGS_DEBUG ${XA_COMPILER_FLAGS_DEBUG})
-elseif(NOT ANALYZERS_ENABLED)
-  set(BUILD_STATIC_LIBRARY OFF) # Turn off for now, until we implement dynamic runtime linking at app build time
 endif()
 
 # Library directories
@@ -29,13 +27,13 @@ set(XAMARIN_NET_ANDROID_STATIC_LIB "${XAMARIN_NET_ANDROID_LIB}-static")
 
 set(XAMARIN_MONODROID_SOURCES
   assembly-store.cc
+  bridge-processing.cc
+  gc-bridge.cc
   host.cc
   host-jni.cc
   host-util.cc
   internal-pinvokes.cc
-  jni-remapping.cc
   os-bridge.cc
-  pinvoke-override.cc
   runtime-util.cc
   typemap.cc
   xamarin_getifaddrs.cc
@@ -66,6 +64,11 @@ if(BUILD_STATIC_LIBRARY)
     ${XAMARIN_MONODROID_SOURCES}
   )
   set_static_library_suffix(${XAMARIN_NET_ANDROID_STATIC_LIB})
+  target_compile_definitions(
+    ${XAMARIN_NET_ANDROID_STATIC_LIB}
+    PRIVATE
+    DYNAMIC_RUNTIME_LINKING
+  )
 endif()
 
 macro(lib_target_options TARGET_NAME)
@@ -148,7 +151,7 @@ macro(lib_target_options TARGET_NAME)
     xa::xamarin-startup
     xa::runtime-base
     xa::java-interop
-#    xa::pinvoke-override-precompiled
+    xa::pinvoke-override-precompiled
     xa::lz4
     -llog
     -lcoreclr

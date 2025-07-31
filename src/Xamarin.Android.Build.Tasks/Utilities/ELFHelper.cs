@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Concurrent;
 using System.IO;
@@ -20,7 +21,7 @@ namespace Xamarin.Android.Tasks
 	{
 		public static void AssertValidLibraryAlignment (TaskLoggingHelper log, int alignmentInPages, string path, ITaskItem? item)
 		{
-			if (String.IsNullOrEmpty (path) || !File.Exists (path)) {
+			if (path.IsNullOrEmpty () || !File.Exists (path)) {
 				return;
 			}
 
@@ -79,22 +80,22 @@ namespace Xamarin.Android.Tasks
 				}
 
 				string? metaValue = item.GetMetadata ("PathInPackage");
-				if (String.IsNullOrEmpty (metaValue)) {
+				if (metaValue.IsNullOrEmpty ()) {
 					metaValue = item.GetMetadata ("OriginalFile");
-					if (String.IsNullOrEmpty (metaValue)) {
+					if (metaValue.IsNullOrEmpty ()) {
 						metaValue = item.ItemSpec;
 					}
 				}
 				string originalFile = metaValue;
 				metaValue = item.GetMetadata ("NuGetPackageId");
-				if (String.IsNullOrEmpty (metaValue)) {
+				if (metaValue.IsNullOrEmpty ()) {
 					return (Unknown, Unknown, originalFile);
 				}
 
 				string id = metaValue;
 				string version;
 				metaValue = item.GetMetadata ("NuGetPackageVersion");
-				if (!String.IsNullOrEmpty (metaValue)) {
+				if (!metaValue.IsNullOrEmpty ()) {
 					version = metaValue;
 				} else {
 					version = Unknown;
@@ -106,7 +107,7 @@ namespace Xamarin.Android.Tasks
 
 		public static bool IsEmptyAOTLibrary (TaskLoggingHelper log, string path)
 		{
-			if (String.IsNullOrEmpty (path) || !File.Exists (path)) {
+			if (path.IsNullOrEmpty () || !File.Exists (path)) {
 				return false;
 			}
 
@@ -121,7 +122,7 @@ namespace Xamarin.Android.Tasks
 
 		public static bool ReferencesLibrary (string libraryPath, string referencedLibraryName)
 		{
-			if (String.IsNullOrEmpty (libraryPath) || !File.Exists (libraryPath)) {
+			if (libraryPath.IsNullOrEmpty () || !File.Exists (libraryPath)) {
 				return false;
 			}
 
@@ -157,7 +158,7 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			return String.Compare (referencedLibraryName, stringTable[(long)index], StringComparison.Ordinal) == 0;
+			return MonoAndroidHelper.StringEquals (referencedLibraryName, stringTable[(long)index]);
 		}
 
 		static bool IsEmptyAOTLibrary (TaskLoggingHelper log, string path, IELF elf)
@@ -170,7 +171,7 @@ namespace Xamarin.Android.Tasks
 
 			bool mono_aot_file_info_found = false;
 			foreach (var entry in symtab.Entries) {
-				if (String.Compare ("mono_aot_file_info", entry.Name, StringComparison.Ordinal) == 0 && entry.Type == ELFSymbolType.Object) {
+				if (MonoAndroidHelper.StringEquals ("mono_aot_file_info", entry.Name) && entry.Type == ELFSymbolType.Object) {
 					mono_aot_file_info_found = true;
 					break;
 				}

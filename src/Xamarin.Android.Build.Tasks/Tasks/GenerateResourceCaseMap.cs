@@ -1,4 +1,5 @@
 // Copyright (C) 2021 Microsoft, Inc. All rights reserved.
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -40,7 +41,7 @@ namespace Xamarin.Android.Tasks
 			ResourceDirectory = Path.GetFullPath (ResourceDirectory);
 
 			// Create our capitalization maps so we can support mixed case resources
-			foreach (var item in Resources ?? Array.Empty<ITaskItem>()) {
+			foreach (var item in Resources ?? []) {
 				var path = Path.GetFullPath (item.ItemSpec);
 				if (!path.StartsWith (ResourceDirectory, StringComparison.OrdinalIgnoreCase)) {
 					Log.LogDebugMessage ($"Skipping {item}. Path is not include the '{ResourceDirectory}'");
@@ -49,12 +50,12 @@ namespace Xamarin.Android.Tasks
 
 				var name = path.Substring (ResourceDirectory.Length).TrimStart ('/', '\\');
 				var logical_name = item.GetMetadata ("LogicalName").Replace ('\\', '/');
-				if (string.IsNullOrEmpty (logical_name))
+				if (logical_name.IsNullOrEmpty ())
 					logical_name = Path.GetFileName (path);
 
 				AddRename (name.Replace ('/', Path.DirectorySeparatorChar), logical_name.Replace ('/', Path.DirectorySeparatorChar));
 			}
-			foreach (var additionalDir in AdditionalResourceDirectories ?? Array.Empty<ITaskItem>()) {
+			foreach (var additionalDir in AdditionalResourceDirectories ?? []) {
 				var dir = Path.Combine (ProjectDir, Path.GetDirectoryName (additionalDir.ItemSpec));
 				var file = Path.Combine (dir, "__res_name_case_map.txt");
 				if (!File.Exists (file)) {
@@ -64,14 +65,14 @@ namespace Xamarin.Android.Tasks
 						continue;
 				}
 				foreach (var line in File.ReadLines (file)) {
-					if (string.IsNullOrEmpty (line))
+					if (line.IsNullOrEmpty ())
 						continue;
 					string [] tok = line.Split (';');
 					AddRename (tok [1].Replace ('/', Path.DirectorySeparatorChar), tok [0].Replace ('/', Path.DirectorySeparatorChar));
 				}
 			}
 			var resmap = ".net/__res_name_case_map.txt";
-			foreach (var aar in AarLibraries ??  Array.Empty<string>()) {
+			foreach (var aar in AarLibraries ??  []) {
 				Log.LogDebugMessage ($"Processing Aar file {aar}");
 				if (!File.Exists (aar)) {
 					Log.LogDebugMessage ($"Skipping non-existent aar: {aar}");
@@ -95,7 +96,7 @@ namespace Xamarin.Android.Tasks
 							string line;
 							// Read each line until the end of the file
 							while ((line = reader.ReadLine()) != null) {
-								if (string.IsNullOrEmpty (line))
+								if (line.IsNullOrEmpty ())
 									continue;
 								string [] tok = line.Split (';');
 								AddRename (tok [1].Replace ('/', Path.DirectorySeparatorChar), tok [0].Replace ('/', Path.DirectorySeparatorChar));

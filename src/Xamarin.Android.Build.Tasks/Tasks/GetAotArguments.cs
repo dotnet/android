@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -32,7 +33,7 @@ namespace Xamarin.Android.Tasks
 		public string TargetName { get; set; } = "";
 
 		[Required]
-		public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = Array.Empty<ITaskItem> ();
+		public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = [];
 
 		/// <summary>
 		/// Will be blank in .NET 6+
@@ -54,12 +55,12 @@ namespace Xamarin.Android.Tasks
 
 		public string AndroidSequencePointsMode { get; set; } = "";
 
-		public ITaskItem [] Profiles { get; set; } = Array.Empty<ITaskItem> ();
+		public ITaskItem [] Profiles { get; set; } = [];
 
 		public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment64Bit;
 
 		[Required, Output]
-		public ITaskItem [] ResolvedAssemblies { get; set; } = Array.Empty<ITaskItem> ();
+		public ITaskItem [] ResolvedAssemblies { get; set; } = [];
 
 		[Output]
 		public string? Triple { get; set; }
@@ -79,7 +80,7 @@ namespace Xamarin.Android.Tasks
 		protected AotMode AotMode;
 		protected SequencePointsMode SequencePointsMode;
 		protected string SdkBinDirectory = "";
-		protected bool UseAndroidNdk => !string.IsNullOrWhiteSpace (AndroidNdkDirectory);
+		protected bool UseAndroidNdk => !AndroidNdkDirectory.IsNullOrWhiteSpace ();
 
 		public static bool GetAndroidAotMode(string androidAotMode, out AotMode aotMode)
 		{
@@ -138,7 +139,7 @@ namespace Xamarin.Android.Tasks
 		int GetNdkApiLevel (NdkTools ndk, AndroidTargetArch arch)
 		{
 			AndroidAppManifest? manifest = null;
-			if (!string.IsNullOrEmpty (ManifestFile)) {
+			if (!ManifestFile.IsNullOrEmpty ()) {
 				manifest = AndroidAppManifest.Load (ManifestFile, MonoAndroidHelper.SupportedVersions);
 			}
 
@@ -174,7 +175,7 @@ namespace Xamarin.Android.Tasks
 				try {
 					ndk.GetDirectoryPath (NdkToolchainDir.PlatformLib, arch, level);
 					break;
-				} catch (InvalidOperationException ex) {
+				} catch (InvalidOperationException) {
 					// Path not found, continue searching...
 					continue;
 				}
@@ -237,7 +238,7 @@ namespace Xamarin.Android.Tasks
 			string ldName;
 			if (UseAndroidNdk) {
 				ldName = ndk.GetToolPath (NdkToolKind.Linker, arch, level);
-				if (!string.IsNullOrEmpty (ldName)) {
+				if (!ldName.IsNullOrEmpty ()) {
 					ldName = Path.GetFileName (ldName);
 					if (ldName.IndexOf ('-') >= 0) {
 						ldName = ldName.Substring (ldName.LastIndexOf ("-", StringComparison.Ordinal) + 1);
@@ -247,10 +248,10 @@ namespace Xamarin.Android.Tasks
 				ldName = "ld";
 			}
 			string ldFlags = GetLdFlags (ndk, arch, level, toolPrefix);
-			if (!string.IsNullOrEmpty (ldName)) {
+			if (!ldName.IsNullOrEmpty ()) {
 				LdName = ldName;
 			}
-			if (!string.IsNullOrEmpty (ldFlags)) {
+			if (!ldFlags.IsNullOrEmpty ()) {
 				LdFlags = ldFlags;
 			}
 		}
@@ -261,7 +262,7 @@ namespace Xamarin.Android.Tasks
 			var ldFlags = new StringBuilder ();
 			var libs = new List<string> ();
 			if (UseAndroidNdk && EnableLLVM) {
-				string androidLibPath = string.Empty;
+				string androidLibPath = "";
 				try {
 					androidLibPath = ndk.GetDirectoryPath (NdkToolchainDir.PlatformLib, arch, level);
 				} catch (InvalidOperationException ex) {

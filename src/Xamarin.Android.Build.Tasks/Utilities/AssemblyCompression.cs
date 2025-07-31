@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Buffers;
@@ -37,7 +38,7 @@ namespace Xamarin.Android.Tasks
 
 			public void SetData (string sourcePath, uint descriptorIndex)
 			{
-				if (String.IsNullOrEmpty (sourcePath))
+				if (sourcePath.IsNullOrEmpty ())
 					throw new ArgumentException ("must not be null or empty", nameof (sourcePath));
 				SourcePath = sourcePath;
 				DescriptorIndex = descriptorIndex;
@@ -62,7 +63,7 @@ namespace Xamarin.Android.Tasks
 
 			var outputDirectory = Path.GetDirectoryName (outputFilePath);
 
-			if (String.IsNullOrEmpty (outputDirectory))
+			if (outputDirectory.IsNullOrEmpty ())
 				throw new ArgumentException ("must not be null or empty", nameof (outputDirectory));
 
 			Directory.CreateDirectory (outputDirectory);
@@ -172,7 +173,7 @@ namespace Xamarin.Android.Tasks
 			string subDirectory = assembly.GetMetadata ("DestinationSubDirectory");
 			string abi = MonoAndroidHelper.GetAssemblyAbi (assembly);
 
-			if (!string.IsNullOrEmpty (subDirectory) && !(subDirectory.EndsWith ($"{abi}/", StringComparison.Ordinal) || subDirectory.EndsWith ($"{abi}\\", StringComparison.Ordinal))) {
+			if (!subDirectory.IsNullOrEmpty () && !(subDirectory.EndsWith ($"{abi}/", StringComparison.Ordinal) || subDirectory.EndsWith ($"{abi}\\", StringComparison.Ordinal))) {
 				assemblyOutputDir = Path.Combine (compressedOutputDir, abi, subDirectory);
 			} else {
 				assemblyOutputDir = Path.Combine (compressedOutputDir, abi);

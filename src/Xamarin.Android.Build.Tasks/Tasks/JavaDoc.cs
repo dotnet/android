@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Linq;
@@ -18,15 +18,15 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "JDC";
 
-		public string [] SourceDirectories { get; set; }
+		public string []? SourceDirectories { get; set; }
 
-		public string [] DestinationDirectories { get; set; }
+		public string []? DestinationDirectories { get; set; }
 
-		public string [] ReferenceJars { get; set; }
+		public string []? ReferenceJars { get; set; }
 
-		public string JavaPlatformJar { get; set; }
+		public string? JavaPlatformJar { get; set; }
 
-		public string [] ExtraArgs { get; set; }
+		public string []? ExtraArgs { get; set; }
 
 		protected override string ToolName {
 			get { return OS.IsWindows ? "javadoc.exe" : "javadoc"; }
@@ -34,21 +34,25 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			foreach (var dir in DestinationDirectories)
-				if (!Directory.Exists (dir))
-					Directory.CreateDirectory (dir);
+			if (DestinationDirectories != null) {
+				foreach (var dir in DestinationDirectories)
+					if (!Directory.Exists (dir))
+						Directory.CreateDirectory (dir);
+			}
 
 			// Basically, javadoc will return non-zero return code with those expected errors. We have to ignore them.
-			foreach (var pair in SourceDirectories.Zip (DestinationDirectories, (src, dst) => new { Source = src, Destination = dst })) {
-				context_src = pair.Source;
-				context_dst = pair.Destination;
-				base.RunTask ();
+			if (SourceDirectories != null && DestinationDirectories != null) {
+				foreach (var pair in SourceDirectories.Zip (DestinationDirectories, (src, dst) => new { Source = src, Destination = dst })) {
+					context_src = pair.Source;
+					context_dst = pair.Destination;
+					base.RunTask ();
+				}
 			}
 			return true;
 		}
 
-		string context_src;
-		string context_dst;
+		string? context_src;
+		string? context_dst;
 
 		protected override string GenerateCommandLineCommands ()
 		{

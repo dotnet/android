@@ -1,3 +1,5 @@
+#nullable enable
+
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;

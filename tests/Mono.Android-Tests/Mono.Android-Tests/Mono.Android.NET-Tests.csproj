@@ -30,9 +30,8 @@
         InetAccess excluded: https://github.com/dotnet/runtime/issues/73304
         NetworkInterfaces excluded: https://github.com/dotnet/runtime/issues/75155
     -->
-    <ExcludeCategories>DotNetIgnore</ExcludeCategories>
     <!-- TODO: https://github.com/dotnet/android/issues/10069 -->
-    <ExcludeCategories Condition=" '$(UseMonoRuntime)' == 'false' ">$(ExcludeCategories):CoreCLRIgnore:SSL:NTLM:GCBridge:RuntimeConfig</ExcludeCategories>
+    <ExcludeCategories Condition=" '$(UseMonoRuntime)' == 'false' ">$(ExcludeCategories):CoreCLRIgnore:SSL:NTLM:RuntimeConfig</ExcludeCategories>
     <!-- TODO: https://github.com/dotnet/android/issues/10079 -->
     <ExcludeCategories Condition=" '$(PublishAot)' == 'true' ">$(ExcludeCategories):NativeAOTIgnore:SSL:NTLM:GCBridge:AndroidClientHandler:Export:NativeTypeMap</ExcludeCategories>
     <!-- FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190 -->
@@ -104,6 +103,7 @@
     <Compile Include="System\ExceptionTest.cs" />
     <Compile Include="System\TimeZoneTest.cs" />
     <Compile Include="System.Drawing\TypeConverterTest.cs" />
+    <Compile Include="System.IO\DirectoryTest.cs" />
     <Compile Include="System.IO\DriveInfoTest.cs" />
     <Compile Include="System.IO.Compression\GZipStreamTest.cs" />
     <Compile Include="System.Linq\LinqExpressionTest.cs" />
@@ -111,6 +111,7 @@
     <Compile Include="System.Net\SslTest.cs" />
     <Compile Include="System.Net\NetworkInterfaces.cs" />
     <Compile Include="System.Net\WebSocketTests.cs" />
+    <Compile Include="System.Net.NetworkInformation\NetworkChangeTest.cs" />
     <Compile Include="System.Runtime.InteropServices\DllImportTest.cs" />
     <Compile Include="System.Text\EncodingTests.cs" />
     <Compile Include="System.Text.Json\JsonSerializerTest.cs" />

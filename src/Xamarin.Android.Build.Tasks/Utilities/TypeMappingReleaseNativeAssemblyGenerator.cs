@@ -18,11 +18,11 @@ namespace Xamarin.Android.Tasks
 			{
 				var map_module = EnsureType<TypeMapModule> (data);
 
-				if (String.Compare ("module_uuid", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("module_uuid", fieldName)) {
 					return $" module_uuid: {map_module.MVID}";
 				}
 
-				if (String.Compare ("assembly_name", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("assembly_name", fieldName)) {
 					return $" assembly_name: {map_module.assembly_name}";
 				}
 
@@ -33,11 +33,11 @@ namespace Xamarin.Android.Tasks
 			{
 				var map_module = EnsureType<TypeMapModule> (data);
 
-				if (String.Compare ("map", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("map", fieldName)) {
 					return map_module.MapSymbolName;
 				}
 
-				if (String.Compare ("duplicate_map", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("duplicate_map", fieldName)) {
 					return map_module.DuplicateMapSymbolName;
 				}
 
@@ -48,11 +48,11 @@ namespace Xamarin.Android.Tasks
 			{
 				var map_module = EnsureType<TypeMapModule> (data);
 
-				if (String.Compare ("map", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("map", fieldName)) {
 					return map_module.entry_count;
 				}
 
-				if (String.Compare ("duplicate_map", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("duplicate_map", fieldName)) {
 					return map_module.duplicate_count;
 				}
 
@@ -99,20 +99,28 @@ namespace Xamarin.Android.Tasks
 			public uint    duplicate_count;
 
 			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value - populated during native code generation
 			public TypeMapModuleEntry map;
+#pragma warning restore CS0649
 
 			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value - populated during native code generation
 			public TypeMapModuleEntry duplicate_map;
+#pragma warning restore CS0649
 
 			[NativeAssembler (UsesDataProvider = true)]
 			public string assembly_name;
 
 			[NativePointer (IsNull = true)]
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value - populated during native code generation
 			public MonoImage image;
+#pragma warning restore CS0649
 			public uint   java_name_width;
 
 			[NativePointer (IsNull = true)]
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value - populated during native code generation
 			public byte java_map;
+#pragma warning restore CS0649
 		}
 
 		// Order of fields and their type must correspond *exactly* to that in

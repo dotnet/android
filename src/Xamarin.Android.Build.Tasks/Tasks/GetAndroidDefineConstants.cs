@@ -1,5 +1,5 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
-
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -26,7 +26,7 @@ namespace Xamarin.Android.Tasks
 		{
 			var constants = new List<ITaskItem> ();
 
-			if (!string.IsNullOrEmpty (ProductVersion)) {
+			if (!ProductVersion.IsNullOrEmpty ()) {
 				var version = Regex.Replace (ProductVersion, "[^A-Za-z0-9]", "_");
 				constants.Add (new TaskItem ($"__XAMARIN_ANDROID_{version}__"));
 			}

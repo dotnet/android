@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -5,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 
 using Microsoft.Build.Utilities;
+using Xamarin.Android.Tasks;
 
 /// <para>
 /// When bundle configuration uses standard settings for split configs, the per-ABI library
@@ -139,7 +141,7 @@ static class BundleConfigSplitConfigsChecker
 			if (reader.ValueTextEquals (strings.ValuePropertyName)) {
 				reader.Read ();
 				string? v = reader.GetString ();
-				valueIsAbi = String.CompareOrdinal ("ABI", v) == 0;
+				valueIsAbi = Xamarin.Android.Tasks.MonoAndroidHelper.StringEquals ("ABI", v);
 				return;
 			}
 		}
@@ -181,7 +183,7 @@ static class BundleConfigSplitConfigsChecker
 			_                                 => throw new InvalidOperationException ($"Internal error: unsupported state transition to '{need}'")
 		};
 
-		if (!String.IsNullOrEmpty (objectName) && String.CompareOrdinal (needName, objectName) == 0) {
+		if (!objectName.IsNullOrEmpty () && Xamarin.Android.Tasks.MonoAndroidHelper.StringEquals (needName, objectName)) {
 			state.Push (need);
 		} else {
 			state.Push (BundleConfigObject.Other);

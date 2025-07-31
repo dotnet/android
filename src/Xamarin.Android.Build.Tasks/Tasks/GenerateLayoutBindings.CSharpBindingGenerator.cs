@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.IO;
 using System.Linq;
@@ -12,7 +14,7 @@ namespace Xamarin.Android.Tasks
 		{
 			const string BindingPartialClassBackingFieldName = "__layout_binding";
 
-			string codebehindDir = string.Empty;
+			string codebehindDir = "";
 			protected override string LineCommentString => "//";
 			protected override string DocCommentString => "///";
 			public override string LanguageName => "C#";

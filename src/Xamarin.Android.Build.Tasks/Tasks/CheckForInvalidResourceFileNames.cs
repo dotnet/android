@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -23,7 +24,7 @@ namespace Xamarin.Android.Tasks {
 		Regex fileNameWithHyphenCheck = new Regex ("[^a-zA-Z0-9_.-]+", RegexOptions.Compiled);
 
 		// Source https://docs.oracle.com/javase/tutorial/java/nutsandbolts/_keywords.html
-		static string [] javaKeywords = {
+		static readonly string [] javaKeywords = {
 			"abstract",
 			"assert",
 			"boolean",
@@ -84,7 +85,7 @@ namespace Xamarin.Android.Tasks {
 		{
 			foreach (var resource in Resources) {
 				var resourceFile = resource.GetMetadata ("LogicalName").Replace ('\\', Path.DirectorySeparatorChar);
-				if (string.IsNullOrEmpty (resourceFile))
+				if (resourceFile.IsNullOrEmpty ())
 					resourceFile = resource.ItemSpec;
 				var fileName = Path.GetFileName (resourceFile);
 				var directory = Path.GetFileName (Path.GetDirectoryName (resourceFile));

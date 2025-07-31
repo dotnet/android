@@ -1,5 +1,6 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -53,7 +54,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 	public string AndroidBinUtilsDirectory { get; set; } = "";
 
 	[Required]
-	public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = Array.Empty<ITaskItem> ();
+	public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = [];
 
 	[Required]
 	public string IntermediateOutputPath { get; set; } = "";
@@ -110,7 +111,11 @@ public class CollectNativeFilesForArchive : AndroidTask
 			foreach (ITaskItem item in ApplicationSharedLibraries) {
 				if (string.Compare (abi, item.GetMetadata ("abi"), StringComparison.Ordinal) != 0)
 					continue;
-				AddNativeLibraryToArchive (apk, abi, item.ItemSpec, Path.GetFileName (item.ItemSpec), item);
+				string? inArchiveFileName = item.GetMetadata ("ArchiveFileName");
+				if (String.IsNullOrEmpty (inArchiveFileName)) {
+					inArchiveFileName = Path.GetFileName (item.ItemSpec);
+				}
+				AddNativeLibraryToArchive (apk, abi, item.ItemSpec, inArchiveFileName, item);
 			}
 		}
 	}
@@ -125,7 +130,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 			return true;
 		}
 
-		if (string.IsNullOrEmpty (link)) {
+		if (link.IsNullOrEmpty ()) {
 			return false;
 		}
 
@@ -147,7 +152,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 	string? GetArchiveFileName (ITaskItem item)
 	{
 		string archiveFileName = item.GetMetadata ("ArchiveFileName");
-		if (!string.IsNullOrEmpty (archiveFileName))
+		if (!archiveFileName.IsNullOrEmpty ())
 			return archiveFileName;
 
 		if (!IsWrapperScript (item.ItemSpec, item.GetMetadata ("Link"))) {
@@ -182,7 +187,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 
 		AddNativeLibraries (files, supportedAbis, libs);
 
-		if (string.IsNullOrWhiteSpace (CheckedBuild))
+		if (CheckedBuild.IsNullOrWhiteSpace ())
 			return;
 
 		string mode = CheckedBuild;
@@ -212,14 +217,14 @@ public class CollectNativeFilesForArchive : AndroidTask
 		}
 
 		string clangDir = ndk.GetClangDeviceLibraryPath ();
-		if (string.IsNullOrEmpty (clangDir)) {
+		if (clangDir.IsNullOrEmpty ()) {
 			LogSanitizerError ($"Unable to find the clang compiler directory. Is NDK installed?");
 			return;
 		}
 
 		foreach (string abi in supportedAbis) {
 			string? clangAbi = MonoAndroidHelper.MapAndroidAbiToClang (abi);
-			if (string.IsNullOrEmpty (clangAbi)) {
+			if (clangAbi.IsNullOrEmpty ()) {
 				LogSanitizerError ($"Unable to map Android ABI {abi} to clang ABI");
 				return;
 			}
@@ -240,7 +245,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 		// If Abi is explicitly specified, simply return it.
 		var lib_abi = AndroidRidAbiHelper.GetNativeLibraryAbi (lib);
 
-		if (string.IsNullOrWhiteSpace (lib_abi)) {
+		if (lib_abi.IsNullOrWhiteSpace ()) {
 			Log.LogCodedError ("XA4301", lib.ItemSpec, 0, Properties.Resources.XA4301_ABI, lib.ItemSpec);
 			return null;
 		}
@@ -281,7 +286,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 
 	void AddNativeLibrary (ArchiveFileList files, string path, string abi, string? archiveFileName, ITaskItem? taskItem = null)
 	{
-		string fileName = string.IsNullOrEmpty (archiveFileName) ? Path.GetFileName (path) : archiveFileName!;
+		string fileName = archiveFileName.IsNullOrEmpty () ? Path.GetFileName (path) : archiveFileName!;
 		var item = (filePath: path, archivePath: MakeArchiveLibPath (abi, fileName));
 		if (files.Any (x => x.archivePath == item.archivePath)) {
 			Log.LogCodedWarning ("XA4301", path, 0, Properties.Resources.XA4301, item.archivePath);

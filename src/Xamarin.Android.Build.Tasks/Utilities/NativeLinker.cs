@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -47,6 +48,7 @@ class NativeLinker
 	public bool AllowUndefinedSymbols { get; set; } = false;
 	public bool UseNdkLibraries { get; set; } = false;
 	public bool TargetsCLR { get; set; }
+	public bool UseSymbolic { get; set; }
 	public string? NdkRootPath { get; set; }
 	public string? NdkApiLevel { get; set; }
 	public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment64Bit;
@@ -96,7 +98,7 @@ class NativeLinker
 				throw new NotSupportedException ($"Unsupported Android target architecture ABI: {abi}");
 		}
 
-		if (!String.IsNullOrEmpty (elfArch)) {
+		if (!elfArch.IsNullOrEmpty ()) {
 			extraArgs.Add ($"-m {elfArch}");
 		}
 
@@ -123,11 +125,11 @@ class NativeLinker
 	public bool Link (ITaskItem outputLibraryPath, List<ITaskItem> linkItems, List<ITaskItem>? linkStartFiles = null, List<ITaskItem>? linkEndFiles = null, ICollection<ITaskItem>? exportDynamicSymbols = null)
 	{
 		if (UseNdkLibraries) {
-			if (String.IsNullOrEmpty (NdkRootPath)) {
+			if (NdkRootPath.IsNullOrEmpty ()) {
 				throw new InvalidOperationException ("Internal error: request to use NDK libraries, but NDK root not specified.");
 			}
 
-			if (String.IsNullOrEmpty (NdkApiLevel)) {
+			if (NdkApiLevel.IsNullOrEmpty ()) {
 				throw new InvalidOperationException ("Internal error: request to use NDK libraries, but NDK API level not specified.");
 			}
 		}
@@ -155,6 +157,10 @@ class NativeLinker
 
 		if (TargetsCLR) {
 			sw.WriteLine ("--eh-frame-hdr"); // CoreCLR needs it for its exception stack unwinding
+		}
+
+		if (UseSymbolic) {
+			sw.WriteLine ("-Bsymbolic");
 		}
 
 		// This MUST go before extra args, since the NDK library path must take precedence over the path in extra args set in the ctor
@@ -244,7 +250,7 @@ class NativeLinker
 		bool ParseBooleanMetadata (ITaskItem item, string metadata)
 		{
 			string? value = item.GetMetadata (metadata);
-			if (String.IsNullOrEmpty (value)) {
+			if (value.IsNullOrEmpty ()) {
 				return false;
 			}
 
@@ -266,7 +272,7 @@ class NativeLinker
 	{
 		// The exception is just a precaution, since the items passed to us should have already been checked
 		string itemAbi = item.GetMetadata (KnownMetadata.Abi) ?? throw new InvalidOperationException ($"Internal error: 'Abi' metadata not found in item '{item}'");
-		if (String.Compare (abi, itemAbi, StringComparison.OrdinalIgnoreCase) == 0) {
+		if (MonoAndroidHelper.StringEquals (abi, itemAbi)) {
 			return;
 		}
 

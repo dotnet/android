@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,7 +17,7 @@ class MarshalMethodsNativeAssemblyGeneratorMonoVM : MarshalMethodsNativeAssembly
 		{
 			var methodName = EnsureType<MarshalMethodName> (data);
 
-			if (String.Compare ("id", fieldName, StringComparison.Ordinal) == 0) {
+			if (MonoAndroidHelper.StringEquals ("id", fieldName)) {
 				return $" name: {methodName.name}";
 			}
 

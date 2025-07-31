@@ -875,10 +875,13 @@
       </Item>
       <Item ItemId=";XA2002_Framework" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the Mono for Android profile?]]></Val>
+          <Val><![CDATA[Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the .NET for Android profile?]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[无法解析 {1} 引用的引用“{0}”。Mono for Android 配置文件中可能没有该引用。]]></Val>
+            <Val><![CDATA[无法解析 {1} 引用的引用 `{0}`。.NET for Android 配置文件中可能没有该引用?]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the Mono for Android profile?]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>

@@ -29,11 +29,11 @@ namespace Xamarin.Android.Tasks
 			public override string GetComment (object data, string fieldName)
 			{
 				var dso_entry = EnsureType<DSOCacheEntry> (data);
-				if (String.Compare ("hash", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("hash", fieldName)) {
 					return $" from name: {dso_entry.HashedName}";
 				}
 
-				if (String.Compare ("name", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("name", fieldName)) {
 					return $" name: {dso_entry.name}";
 				}
 
@@ -123,11 +123,11 @@ namespace Xamarin.Android.Tasks
 			public override ulong GetBufferSize (object data, string fieldName)
 			{
 				var xaba = EnsureType<XamarinAndroidBundledAssembly> (data);
-				if (String.Compare ("name", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("name", fieldName)) {
 					return xaba.name_length;
 				}
 
-				if (String.Compare ("file_name", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("file_name", fieldName)) {
 					return xaba.name_length + MonoAndroidHelper.GetMangledAssemblyNameSizeOverhead ();
 				}
 
