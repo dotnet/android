@@ -47,31 +47,31 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ($"[{targetArch}] Internal error: unable to load the Mono.Android.Runtime assembly");
 			}
 
-			TypeDefinition runtime = FindType (monoAndroidRuntime, "Android.Runtime.AndroidRuntimeInternal", required: true);
+			TypeDefinition? runtime = FindType (monoAndroidRuntime, "Android.Runtime.AndroidRuntimeInternal", required: true);
 			if (runtime == null)
 				throw new ArgumentNullException (nameof (runtime));
-			MethodDefinition waitForBridgeProcessingMethod = FindMethod (runtime, "WaitForBridgeProcessing", required: true);
+			MethodDefinition? waitForBridgeProcessingMethod = FindMethod (runtime, "WaitForBridgeProcessing", required: true);
 			if (waitForBridgeProcessingMethod == null)
 				throw new ArgumentNullException (nameof (waitForBridgeProcessingMethod));
 
-			TypeDefinition androidEnvironment = FindType (monoAndroidRuntime, "Android.Runtime.AndroidEnvironmentInternal", required: true);
+			TypeDefinition? androidEnvironment = FindType (monoAndroidRuntime, "Android.Runtime.AndroidEnvironmentInternal", required: true);
 			if (androidEnvironment == null)
 				throw new ArgumentNullException (nameof (androidEnvironment));
-			MethodDefinition unhandledExceptionMethod = FindMethod (androidEnvironment, "UnhandledException", required: true);
+			MethodDefinition? unhandledExceptionMethod = FindMethod (androidEnvironment, "UnhandledException", required: true);
 			if (unhandledExceptionMethod == null)
 				throw new ArgumentNullException (nameof (unhandledExceptionMethod));
 
-			TypeDefinition runtimeNativeMethods = FindType (monoAndroidRuntime, "Android.Runtime.RuntimeNativeMethods", required: true);
+			TypeDefinition? runtimeNativeMethods = FindType (monoAndroidRuntime, "Android.Runtime.RuntimeNativeMethods", required: true);
 			if (runtimeNativeMethods == null)
 				throw new ArgumentNullException (nameof (runtimeNativeMethods));
-			MethodDefinition monoUnhandledExceptionMethod = FindMethod (runtimeNativeMethods, "monodroid_debugger_unhandled_exception", required: true);
+			MethodDefinition? monoUnhandledExceptionMethod = FindMethod (runtimeNativeMethods, "monodroid_debugger_unhandled_exception", required: true);
 			if (monoUnhandledExceptionMethod == null)
 				throw new ArgumentNullException (nameof (monoUnhandledExceptionMethod));
 
 			AssemblyDefinition? corlib = resolver.Resolve ("System.Private.CoreLib");
 			if (corlib == null)
 				throw new ArgumentNullException (nameof (corlib));
-			TypeDefinition systemException = FindType (corlib, "System.Exception", required: true);
+			TypeDefinition? systemException = FindType (corlib, "System.Exception", required: true);
 			if (systemException == null)
 				throw new ArgumentNullException (nameof (systemException));
 
@@ -134,6 +134,8 @@ namespace Xamarin.Android.Tasks
 				// TODO the code should probably go to different assemblies than Mono.Android (to avoid recursive dependencies)
 				var rootAssembly = resolver.Resolve ("Mono.Android") ?? throw new InvalidOperationException ($"[{targetArch}] Internal error: unable to load the Mono.Android assembly");
 				var managedMarshalMethodsLookupTableType = FindType (rootAssembly, "Java.Interop.ManagedMarshalMethodsLookupTable", required: true);
+			if (managedMarshalMethodsLookupTableType == null)
+				throw new ArgumentNullException (nameof (managedMarshalMethodsLookupTableType));
 
 				var managedMarshalMethodLookupGenerator = new ManagedMarshalMethodsLookupGenerator (log, targetArch, managedMarshalMethodsLookupInfo, managedMarshalMethodsLookupTableType);
 				managedMarshalMethodLookupGenerator.Generate (classifier.MarshalMethods.Values);
