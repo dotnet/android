@@ -39,7 +39,7 @@ When opting C# code into nullable reference types:
 
 * Add `#nullable enable` at the top of the file without any preceding blank lines.
 
-* Don't *ever* use `!` to handle `null`!
+* Don't *ever* use `!` (null-forgiving operator) to handle `null`! Always check for null explicitly and throw appropriate exceptions.
 
 * Declare variables non-nullable, and check for `null` at entry points.
 
