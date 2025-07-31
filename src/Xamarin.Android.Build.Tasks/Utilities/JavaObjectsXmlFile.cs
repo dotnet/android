@@ -14,7 +14,7 @@ namespace Xamarin.Android.Tasks;
 
 class JavaObjectsXmlFile
 {
-	static XmlWriterSettings settings = new XmlWriterSettings {
+	static readonly XmlWriterSettings settings = new XmlWriterSettings {
 		Indent = true,
 		NewLineOnAttributes = false,
 		OmitXmlDeclaration = true,

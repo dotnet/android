@@ -71,7 +71,7 @@ namespace Xamarin.Android.Tasks
 		TaskLoggingHelper? log;
 		Dictionary<string, string>? map;
 
-		public static HashSet<string> knownTypes = new HashSet<string> () {
+		public static readonly HashSet<string> knownTypes = new HashSet<string> () {
 			"anim",
 			"animator",
 			"attr",

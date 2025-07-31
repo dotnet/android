@@ -32,7 +32,7 @@ namespace Xamarin.Android.Tasks
 		private const string Identifier = IdentifierStartCharacter + "(" + IdentifierPartCharacter + ")";
 
 		// We use [^ ...] to detect any character that is NOT a match.
-		static Regex validIdentifier = new Regex ($"[^{Identifier}]", RegexOptions.Compiled);
+		static readonly Regex validIdentifier = new Regex ($"[^{Identifier}]", RegexOptions.Compiled);
 
 		public static string CreateValidIdentifier (string identifier)
 		{
