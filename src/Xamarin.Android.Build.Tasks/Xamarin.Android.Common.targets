@@ -1325,6 +1325,7 @@ because xbuild doesn't support framework reference assemblies.
 	<!-- Delete our temporary directory -->
 	<RemoveDirFixed
 			Directories="$(ResgenTemporaryDirectory)"
+			RetryAttempts="3"
 			ContinueOnError="WarnAndContinue"
 	/>
 
@@ -1996,6 +1997,7 @@ because xbuild doesn't support framework reference assemblies.
   <!-- Delete our temporary directory -->
   <RemoveDirFixed
       Directories="$(AaptTemporaryDirectory)"
+      RetryAttempts="3"
       ContinueOnError="WarnAndContinue"
   />
 
