@@ -153,7 +153,7 @@ namespace Xamarin.Android.Build.Tests
 			DirectoryAssert.DoesNotExist (tempDirectory);
 		}
 
-		[Test, Category ("SmokeTests")]
+		[Test]
 		public async TPL.Task DirectoryInUseWithCustomRetry ()
 		{
 			if (OS.IsMac) {

@@ -292,6 +292,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
   <_AndroidUseCLR Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">True</_AndroidUseCLR>
   <_AndroidUseCLR Condition=" '$(_AndroidRuntime)' != 'CoreCLR' ">False</_AndroidUseCLR>
+
+  <!-- Default retry attempts for temporary directory cleanup -->
+  <_AndroidDeleteTempRetryAttempts Condition=" '$(_AndroidDeleteTempRetryAttempts)' == '' ">3</_AndroidDeleteTempRetryAttempts>
 </PropertyGroup>
 
 <Choose>
@@ -1325,7 +1328,7 @@ because xbuild doesn't support framework reference assemblies.
 	<!-- Delete our temporary directory -->
 	<RemoveDirFixed
 			Directories="$(ResgenTemporaryDirectory)"
-			RetryAttempts="3"
+			RetryAttempts="$(_AndroidDeleteTempRetryAttempts)"
 			ContinueOnError="WarnAndContinue"
 	/>
 
@@ -1997,7 +2000,7 @@ because xbuild doesn't support framework reference assemblies.
   <!-- Delete our temporary directory -->
   <RemoveDirFixed
       Directories="$(AaptTemporaryDirectory)"
-      RetryAttempts="3"
+      RetryAttempts="$(_AndroidDeleteTempRetryAttempts)"
       ContinueOnError="WarnAndContinue"
   />
 
