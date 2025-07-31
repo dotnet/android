@@ -78,32 +78,8 @@ const AppEnvironmentVariable app_environment_variables[] = {};
 const char app_environment_variable_contents[] = {};
 const char* const app_system_properties[] = {};
 
-static constexpr size_t AssemblyNameWidth = 128uz;
 
-static char first_assembly_name[AssemblyNameWidth];
-static char second_assembly_name[AssemblyNameWidth];
 
-XamarinAndroidBundledAssembly bundled_assemblies[] = {
-	{
-		.file_fd = -1,
-		.file_name = nullptr,
-		.data_offset = 0,
-		.data_size = 0,
-		.data = nullptr,
-		.name_length = 0,
-		.name = first_assembly_name,
-	},
-
-	{
-		.file_fd = -1,
-		.file_name = nullptr,
-		.data_offset = 0,
-		.data_size = 0,
-		.data = nullptr,
-		.name_length = 0,
-		.name = second_assembly_name,
-	},
-};
 
 AssemblyStoreSingleAssemblyRuntimeData assembly_store_bundled_assemblies[] = {
 	{
