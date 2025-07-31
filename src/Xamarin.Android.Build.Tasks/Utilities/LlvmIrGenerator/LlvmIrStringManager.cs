@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -25,7 +25,7 @@ partial class LlvmIrModule
 		public LlvmIrStringManager (TaskLoggingHelper log, string? defaultStringGroup = null)
 		{
 			this.log = log;
-			if (!String.IsNullOrEmpty (defaultStringGroup)) {
+			if (!defaultStringGroup.IsNullOrEmpty ()) {
 				defaultGroupName = defaultStringGroup;
 			}
 
@@ -37,7 +37,7 @@ partial class LlvmIrModule
 		public LlvmIrStringVariable Add (LlvmIrStringVariable variable, string? groupName = null, string? groupComment = null, string? symbolSuffix = null)
 		{
 			// Let it throw if Value isn't a StringHolder, it must be.
-			return Add((StringHolder)variable.Value, groupName, groupComment, symbolSuffix);
+			return Add((StringHolder)variable.Value!, groupName, groupComment, symbolSuffix);
 		}
 
 		public LlvmIrStringVariable Add (string value, string? groupName = null, string? groupComment = null, string? symbolSuffix = null,
@@ -58,7 +58,7 @@ partial class LlvmIrModule
 
 			LlvmIrStringGroup? group;
 			string groupPrefix;
-			if (String.IsNullOrEmpty (groupName) || MonoAndroidHelper.StringEquals ("str", groupName)) {
+			if (groupName.IsNullOrEmpty () || MonoAndroidHelper.StringEquals ("str", groupName)) {
 				group = defaultGroup;
 				groupPrefix = $".{defaultGroupName}";
 			} else if (!stringGroupCache.TryGetValue (groupName, out group) || group == null) {
@@ -71,7 +71,7 @@ partial class LlvmIrModule
 			}
 
 			string symbolName = $"{groupPrefix}.{group.Count++}";
-			if (!String.IsNullOrEmpty (symbolSuffix)) {
+			if (!symbolSuffix.IsNullOrEmpty ()) {
 				symbolName = $"{symbolName}_{symbolSuffix}";
 			}
 
