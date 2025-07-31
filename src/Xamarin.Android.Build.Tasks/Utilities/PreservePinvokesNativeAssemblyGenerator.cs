@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -373,7 +374,7 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 			}
 
 			// Might require mapping of component name to a canonical one
-			if (libraryNameMap.TryGetValue (componentName, out string? mappedComponentName) && !String.IsNullOrEmpty (mappedComponentName)) {
+			if (libraryNameMap.TryGetValue (componentName, out string? mappedComponentName) && !mappedComponentName.IsNullOrEmpty ()) {
 				if (Matches (pinfo.LibraryName, mappedComponentName)) {
 					return (true, componentName);
 				}

@@ -86,6 +86,9 @@ namespace Xamarin.Android.Tasks
 				var parser = new ManagedResourceParser () { Log = Log, JavaPlatformDirectory = javaPlatformDirectory, ResourceFlagFile = ResourceFlagFile };
 				resources = parser.Parse (ResourceDirectory, RTxtFile ?? string.Empty, AdditionalResourceDirectories?.Select (x => x.ItemSpec), IsApplication, resource_fixup);
 			} else {
+				if (JavaResgenInputFile == null) {
+					throw new ArgumentNullException (nameof (JavaResgenInputFile));
+				}
 				var parser = new JavaResourceParser () { Log = Log };
 				resources = parser.Parse (JavaResgenInputFile, IsApplication, resource_fixup);
 			}
