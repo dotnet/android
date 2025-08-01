@@ -455,8 +455,7 @@ namespace Foo {
 				MetadataValues = "Bind=false",
 			});
 
-			binding.AndroidClassParser = "class-parse";
-			using (var bindingBuilder = CreateDllBuilder (Path.Combine ("temp", "AndroidLibraryPackFalse", "Binding"))) {
+			using (var bindingBuilder = CreateDllBuilder ()) {
 				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
 
 				// Check that the AAR file was created
