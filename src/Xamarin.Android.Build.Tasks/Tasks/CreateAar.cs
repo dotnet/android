@@ -100,6 +100,11 @@ namespace Xamarin.Android.Tasks
 				}
 				if (JarFiles != null) {
 					foreach (var jar in JarFiles) {
+						var pack = jar.GetMetadata ("Pack");
+						if (string.Equals (pack, "false", StringComparison.OrdinalIgnoreCase)) {
+							Log.LogDebugMessage ($"Skipping jar '{jar.ItemSpec}' because Pack='false'");
+							continue;
+						}
 						var archivePath = $"libs/{GetHashedFileName (jar)}.jar";
 						aar.AddStream (File.OpenRead (jar.ItemSpec), archivePath);
 						existingEntries.Remove (archivePath);
