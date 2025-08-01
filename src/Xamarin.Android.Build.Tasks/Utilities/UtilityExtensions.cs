@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.IO;
 using System.IO.Compression;
@@ -50,7 +51,7 @@ static class UtilityExtensions
 	{
 		var value = xml.Attribute (name)?.Value;
 
-		if (string.IsNullOrWhiteSpace (value))
+		if (value.IsNullOrWhiteSpace ())
 			return defaultValue;
 
 		return (T) Convert.ChangeType (value, typeof (T));
@@ -60,7 +61,7 @@ static class UtilityExtensions
 	{
 		var value = xml.Attribute (name)?.Value;
 
-		if (string.IsNullOrWhiteSpace (value))
+		if (value.IsNullOrWhiteSpace ())
 			throw new InvalidOperationException ($"Missing required attribute '{name}'");
 
 		return value!;  // NRT - Guarded by IsNullOrWhiteSpace check above
