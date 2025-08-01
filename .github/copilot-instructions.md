@@ -154,18 +154,6 @@ try {
 - **MSBuild Errors:** `XA####` (errors), `XA####` (warnings), `APT####` (Android tools)
 - **Logging:** Use `Log.LogError`, `Log.LogWarning` with error codes and context
 
-```
-[Component] Summary
-```
-Components: `[Mono.Android]`, `[Build.Tasks]`, `build`, `ci`, `docs`, `tests`
-
-```
-Bump to org/repo/branch@commit
-Bump to [Dependency Name] [Dependency Version]
-```
-
-Required sections: **Changes**, **Fixes** (#issue-numbers), **Context**
-
 ## Troubleshooting
 - **Build:** Clean `bin/`+`obj/`, check Android SDK/NDK, `make clean`
 - **MSBuild:** Test in isolation, validate inputs
