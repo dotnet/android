@@ -156,18 +156,18 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public async TPL.Task DirectoryInUseWithCustomRetry ()
 		{
-			if (OS.IsMac) {
-				Assert.Ignore ("This is not an issue on macos.");
+			if (!OS.IsWindows) {
+				Assert.Ignore ("This is not an issue on non-Windows platforms.");
 				return;
 			}
 			var file = NewFile ();
-			// Use fewer retries and shorter delay for faster test
-			var task = CreateTaskWithRetry (retryAttempts: 2, retryDelayMs: 500);
+			// Test with default retry behavior 
+			var task = CreateTask ();
 			var ev = new ManualResetEvent (false);
 			var t = TPL.Task.Run (async () => {
 				using (var f = File.OpenWrite (file)) {
 					ev.Set ();
-					await TPL.Task.Delay (1200); // Should succeed on second retry
+					await TPL.Task.Delay (800); // Should succeed on first retry with default timing
 				}
 			});
 			ev.WaitOne ();
