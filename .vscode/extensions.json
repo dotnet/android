@@ -1,12 +1,9 @@
 {
     "recommendations": [
-      "ms-dotnettools.csharp",
+      "ms-dotnettools.csdevkit",
+      "ms-dotnettools.dotnet-maui",
       "ms-vscode.cpptools",
-      "ms-vscode.mono-debug",
-      "visualstudioexptteam.vscodeintellicode",
-      "streetsidesoftware.code-spell-checker",
-      "wghats.vscode-nxunit-test-adapter",
-      "derivitec-ltd.vscode-dotnet-adapter",
       "llvm-vs-code-extensions.lldb-dap",
+      "streetsidesoftware.code-spell-checker"
     ]
 }
