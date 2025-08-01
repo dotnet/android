@@ -90,12 +90,7 @@ namespace Xamarin.Android.Tasks
 					throw new ArgumentNullException (nameof (JavaResgenInputFile));
 				}
 				var parser = new JavaResourceParser () { Log = Log };
-				var parsedResources = parser.Parse (JavaResgenInputFile, IsApplication, resource_fixup);
-				if (parsedResources == null) {
-					Log.LogError ("Failed to parse Java resource file: " + JavaResgenInputFile);
-					return false;
-				}
-				resources = parsedResources;
+				resources = parser.Parse (JavaResgenInputFile, IsApplication, resource_fixup);
 			}
 
 			var extension = Path.GetExtension (NetResgenOutputFile);
