@@ -1,5 +1,4 @@
-#nullable disable
-
+#nullable enable
 using System;
 using System.CodeDom;
 using System.Collections.Generic;
@@ -13,12 +12,15 @@ namespace Xamarin.Android.Tasks
 {
 	class JavaResourceParser : ResourceParser
 	{
-		public CodeTypeDeclaration Parse (string file, bool isApp, Dictionary<string, string> resourceMap)
+		public CodeTypeDeclaration? Parse (string file, bool isApp, Dictionary<string, string> resourceMap)
 		{
 			if (!File.Exists (file))
 				throw new InvalidOperationException ("Specified Java resource file was not found: " + file);
 
-			CodeTypeDeclaration resources = null;
+			if (Log == null)
+				throw new InvalidOperationException ("Log property must be set before calling Parse");
+
+			CodeTypeDeclaration? resources = null;
 
 			using (var reader = File.OpenText (file)) {
 				string line;
@@ -36,9 +38,9 @@ namespace Xamarin.Android.Tasks
 			return resources;
 		}
 
-		static KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration, Dictionary<string, string>, CodeTypeDeclaration>> Parse (string regex, Func<Match, bool, CodeTypeDeclaration, Dictionary<string, string>, CodeTypeDeclaration> f)
+		static KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration?, Dictionary<string, string>, CodeTypeDeclaration?>> Parse (string regex, Func<Match, bool, CodeTypeDeclaration?, Dictionary<string, string>, CodeTypeDeclaration?> f)
 		{
-			return new KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration, Dictionary<string, string>, CodeTypeDeclaration>> (new Regex (regex), f);
+			return new KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration?, Dictionary<string, string>, CodeTypeDeclaration?>> (new Regex (regex), f);
 		}
 
 		// public finall class R {
@@ -49,11 +51,11 @@ namespace Xamarin.Android.Tasks
 		//     }
 		//   }
 		// }
-		List<KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration, Dictionary<string, string>, CodeTypeDeclaration>>> Parser;
+		List<KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration?, Dictionary<string, string>, CodeTypeDeclaration?>>> Parser;
 
 		public JavaResourceParser ()
 		{
-			Parser = new List<KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration, Dictionary<string, string>, CodeTypeDeclaration>>> () {
+			Parser = new List<KeyValuePair<Regex, Func<Match, bool, CodeTypeDeclaration?, Dictionary<string, string>, CodeTypeDeclaration?>>> () {
 			Parse ("^public final class R {",
 					(m, app, _, map) => {
 						var decl = new CodeTypeDeclaration ("Resource") {
@@ -73,6 +75,7 @@ namespace Xamarin.Android.Tasks
 					}),
 			Parse ("^    public static final class ([^ ]+) {$",
 					(m, app, g, map) => {
+						if (g == null) return null;
 						var t = new CodeTypeDeclaration (GetNestedTypeName (m.Groups [1].Value)) {
 							IsPartial       = true,
 							TypeAttributes  = TypeAttributes.Public,
@@ -85,8 +88,9 @@ namespace Xamarin.Android.Tasks
 					}),
 			Parse (@"^        public static final int ([^ =]+)\s*=\s*([^;]+);$",
 					(m, app, g, map) => {
+						if (g == null) return null;
 						var name = ((CodeTypeDeclaration) g.Members [g.Members.Count-1]).Name;
-						var f = new CodeMemberField (typeof (int), ResourceIdentifier.GetResourceName (name, m.Groups[1].Value, map, Log)) {
+						var f = new CodeMemberField (typeof (int), ResourceIdentifier.GetResourceName (name, m.Groups[1].Value, map, Log!)) {
 								Attributes      = app ? MemberAttributes.Const | MemberAttributes.Public : MemberAttributes.Static | MemberAttributes.Public,
 								InitExpression  = new CodePrimitiveExpression (ToInt32 (m.Groups [2].Value, m.Groups [2].Value.IndexOf ("0x", StringComparison.Ordinal) == 0 ? 16 : 10)),
 								Comments = {
@@ -98,8 +102,9 @@ namespace Xamarin.Android.Tasks
 					}),
 			Parse (@"^        public static final int\[\] ([^ =]+) = {",
 					(m, app, g, map) => {
+						if (g == null) return null;
 						var name = ((CodeTypeDeclaration) g.Members [g.Members.Count-1]).Name;
-						var f = new CodeMemberField (typeof (int[]), ResourceIdentifier.GetResourceName (name, m.Groups[1].Value, map, Log)) {
+						var f = new CodeMemberField (typeof (int[]), ResourceIdentifier.GetResourceName (name, m.Groups[1].Value, map, Log!)) {
 								// pity I can't make the member readonly...
 								Attributes      = MemberAttributes.Public | MemberAttributes.Static,
 						};
@@ -108,6 +113,7 @@ namespace Xamarin.Android.Tasks
 					}),
 			Parse (@"^            (0x[xa-fA-F0-9, ]+)$",
 					(m, app, g, map) => {
+						if (g == null) return null;
 						var t = (CodeTypeDeclaration) g.Members [g.Members.Count-1];
 						var f = (CodeMemberField) t.Members [t.Members.Count-1];
 						string[] values = m.Groups [1].Value.Split (new[]{','}, StringSplitOptions.RemoveEmptyEntries);
