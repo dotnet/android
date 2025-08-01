@@ -10,7 +10,7 @@ This item group populates the Build Action drop-down in IDEs.
 <Project>
 
   <!-- Not legacy binding projects -->
-  <ItemGroup Condition=" '$(_AndroidIsBindingProject)' != 'true' ">
+  <ItemGroup>
     <AvailableItemName Include="AndroidAotProfile" />
     <AvailableItemName Include="AndroidAsset" />
     <AvailableItemName Include="AndroidEnvironment" />

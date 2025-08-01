@@ -50,7 +50,7 @@ namespace Xamarin.Android.Tasks
 					assetPacks[assetPack] = item;
 				}
 				foreach (var metadata in MetadataToCopy) {
-					if (string.IsNullOrEmpty (item.GetMetadata (metadata)))
+					if (item.GetMetadata (metadata).IsNullOrEmpty ())
 						item.SetMetadata (metadata, asset.GetMetadata (metadata));
 				}
 				if (!files.ContainsKey (assetPack)) {

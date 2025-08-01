@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.IO;
 using Microsoft.Build.Framework;
@@ -25,7 +26,7 @@ namespace Xamarin.Android.Tasks
 
 		public static string GetKey (string projectFullPath)
 		{
-			if (String.IsNullOrEmpty (projectFullPath))
+			if (projectFullPath.IsNullOrEmpty ())
 				throw new ArgumentException ("must be a non-empty string", nameof (projectFullPath));
 
 			return $"{CompressedAssembliesInfoKey}:{projectFullPath}";
@@ -35,7 +36,7 @@ namespace Xamarin.Android.Tasks
 		{
 			// Prefer %(DestinationSubPath) if set
 			var path = assembly.GetMetadata ("DestinationSubPath");
-			if (!string.IsNullOrEmpty (path)) {
+			if (!path.IsNullOrEmpty ()) {
 				return path;
 			}
 			// MSBuild sometimes only sets %(DestinationSubDirectory)

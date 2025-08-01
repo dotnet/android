@@ -17,11 +17,7 @@ projects.
   <UsingTask TaskName="Xamarin.Android.Tasks.ResolveJdkJvmPath" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
   <PropertyGroup>
-    <_SetLatestTargetFrameworkVersionDependsOnTargets Condition=" '$(_AndroidIsBindingProject)' == 'True'">
-      _ResolveSdks;
-      _ResolveAndroidTooling;
-    </_SetLatestTargetFrameworkVersionDependsOnTargets>
-    <_SetLatestTargetFrameworkVersionDependsOnTargets Condition=" '$(_AndroidIsBindingProject)' != 'True'">
+    <_SetLatestTargetFrameworkVersionDependsOnTargets>
       _ResolveSdks;
       _ResolveAndroidTooling;
       _InjectAaptDependencies;
@@ -83,7 +79,7 @@ projects.
         JavaSdkPath="$(_JavaSdkDirectory)"
         MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)"
         LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
-        Condition=" '$(DesignTimeBuild)' != 'True' And '$(_AndroidIsBindingProject)' != 'True' And '$(AndroidGenerateJniMarshalMethods)' == 'True' And '$(JdkJvmPath)' == '' ">
+        Condition=" '$(DesignTimeBuild)' != 'True' And '$(AndroidGenerateJniMarshalMethods)' == 'True' And '$(JdkJvmPath)' == '' ">
       <Output TaskParameter="JdkJvmPath"                PropertyName="JdkJvmPath" />
     </ResolveJdkJvmPath>
   </Target>

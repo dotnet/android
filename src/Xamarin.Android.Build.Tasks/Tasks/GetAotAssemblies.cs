@@ -1,3 +1,5 @@
+#nullable enable
+
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -36,7 +38,7 @@ namespace Xamarin.Android.Tasks
 			SdkBinDirectory = MonoAndroidHelper.GetOSBinPath ();
 
 			var abi = AndroidRidAbiHelper.RuntimeIdentifierToAbi (RuntimeIdentifier);
-			if (string.IsNullOrEmpty (abi)) {
+			if (abi.IsNullOrEmpty ()) {
 				Log.LogCodedError ("XA0035", Properties.Resources.XA0035, RuntimeIdentifier);
 				return Task.CompletedTask;
 			}

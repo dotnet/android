@@ -24,7 +24,7 @@ public class WrapAssembliesAsSharedLibraries : AndroidTask
 	public string AndroidBinUtilsDirectory { get; set; } = "";
 
 	[Required]
-	public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = Array.Empty<ITaskItem> ();
+	public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = [];
 
 	public bool IncludeDebugSymbols { get; set; }
 

@@ -80,8 +80,6 @@
   <ItemGroup>
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\Mono.Android.Export.dll" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\Mono.Android.Export.pdb" />
-    <_FrameworkFiles Include="@(MonoFacadeAssembly->'$(FrameworkSrcDir)\$(BclFrameworkVersion)\Facades\%(Identity)')" />
-    <_FrameworkFiles Include="@(MonoFacadeAssemblySymbol->'$(FrameworkSrcDir)\$(BclFrameworkVersion)\Facades\%(Identity)')" />
     <_FrameworkFiles Include="@(MonoProfileAssembly->'$(FrameworkSrcDir)\$(BclFrameworkVersion)\%(Identity)')" />
     <_FrameworkFiles Include="@(MonoProfileAssemblySymbol->'$(FrameworkSrcDir)\$(BclFrameworkVersion)\%(Identity)')" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Java.Interop.dll" />

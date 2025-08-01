@@ -25,7 +25,7 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "PRAS";
 
 		[Required]
-		public string [] RuntimeIdentifiers { get; set; } = Array.Empty<string>();
+		public string [] RuntimeIdentifiers { get; set; } = [];
 
 		public bool DesignTimeBuild { get; set; }
 
@@ -33,12 +33,12 @@ namespace Xamarin.Android.Tasks
 
 		public bool PublishTrimmed { get; set; }
 
-		public ITaskItem [] InputAssemblies { get; set; } = Array.Empty<ITaskItem> ();
+		public ITaskItem [] InputAssemblies { get; set; } = [];
 
-		public ITaskItem [] InputJavaLibraries { get; set; } = Array.Empty<ITaskItem> ();
+		public ITaskItem [] InputJavaLibraries { get; set; } = [];
 
-		public string AndroidRuntime { get; set; } = String.Empty;
-		public string LocalClrDirectory { get; set; } = String.Empty;
+		public string AndroidRuntime { get; set; } = "";
+		public string LocalClrDirectory { get; set; } = "";
 
 		[Output]
 		public ITaskItem []? OutputAssemblies { get; set; }
@@ -151,7 +151,7 @@ namespace Xamarin.Android.Tasks
 		static ITaskItem? GetOrCreateSymbolItem (Dictionary<string, ITaskItem> symbols, ITaskItem assembly)
 		{
 			var symbolPath = Path.ChangeExtension (assembly.ItemSpec, ".pdb");
-			if (!symbols.TryGetValue (symbolPath, out var symbol) || !string.IsNullOrEmpty (symbol.GetMetadata ("DestinationSubDirectory"))) {
+			if (!symbols.TryGetValue (symbolPath, out var symbol) || !symbol.GetMetadata ("DestinationSubDirectory").IsNullOrEmpty ()) {
 				// Sometimes .pdb files are not included in @(ResolvedFileToPublish), so add them if they exist
 				if (File.Exists (symbolPath)) {
 					symbols [symbolPath] = symbol = new TaskItem (symbolPath);

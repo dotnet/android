@@ -80,7 +80,7 @@ public class AssemblyModifierPipeline : AndroidTask
 			ReadSymbols = ReadSymbols,
 		};
 
-		Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> perArchAssemblies = MonoAndroidHelper.GetPerArchAssemblies (ResolvedAssemblies, Array.Empty<string> (), validate: false);
+		Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> perArchAssemblies = MonoAndroidHelper.GetPerArchAssemblies (ResolvedAssemblies, [], validate: false);
 
 		AssemblyPipeline? pipeline = null;
 		var currentArch = AndroidTargetArch.None;

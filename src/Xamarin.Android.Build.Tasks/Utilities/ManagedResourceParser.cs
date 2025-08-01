@@ -35,7 +35,7 @@ namespace Xamarin.Android.Tasks
 		List<CodeTypeDeclaration> typeIds = new List<CodeTypeDeclaration> ();
 		Dictionary<CodeMemberField, CodeMemberField []> arrayMapping = new Dictionary<CodeMemberField, CodeMemberField []> ();
 		const string itemPackageId = "0x7f";
-		static CompareTuple compareTuple = new CompareTuple ();
+		static readonly CompareTuple compareTuple = new CompareTuple ();
 
 		XDocument publicXml;
 

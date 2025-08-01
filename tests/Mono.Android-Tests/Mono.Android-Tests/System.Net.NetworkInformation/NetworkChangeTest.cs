@@ -4,7 +4,7 @@ using System.Net.NetworkInformation;
 
 using NUnit.Framework;
 
-namespace BclTests {
+namespace System.NetTests {
 
 	[TestFixture]
 	public class NetworkChangeTest
@@ -20,4 +20,3 @@ namespace BclTests {
 		}
 	}
 }
-

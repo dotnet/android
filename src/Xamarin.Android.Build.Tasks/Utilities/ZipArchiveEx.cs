@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -54,11 +55,11 @@ namespace Xamarin.Android.Tasks
 
 		string ArchiveNameForFile (string filename, string directoryPathInZip)
 		{
-			if (string.IsNullOrEmpty (filename)) {
+			if (filename.IsNullOrEmpty ()) {
 				throw new ArgumentNullException (nameof (filename));
 			}
 			string pathName;
-			if (string.IsNullOrEmpty (directoryPathInZip)) {
+			if (directoryPathInZip.IsNullOrEmpty ()) {
 				pathName = Path.GetFileName (filename);
 			}
 			else {
@@ -145,7 +146,7 @@ namespace Xamarin.Android.Tasks
 
 		public void AddDirectory (string folder, string folderInArchive, CompressionMethod method = CompressionMethod.Default)
 		{
-			if (!string.IsNullOrEmpty (folder)) {
+			if (!folder.IsNullOrEmpty ()) {
 				folder = folder.Replace ('/', Path.DirectorySeparatorChar).Replace ('\\', Path.DirectorySeparatorChar);
 				folder = Path.GetFullPath (folder);
 				if (folder [folder.Length - 1] == Path.DirectorySeparatorChar) {

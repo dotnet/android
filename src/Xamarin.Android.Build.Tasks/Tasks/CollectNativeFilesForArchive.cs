@@ -54,7 +54,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 	public string AndroidBinUtilsDirectory { get; set; } = "";
 
 	[Required]
-	public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = Array.Empty<ITaskItem> ();
+	public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = [];
 
 	[Required]
 	public string IntermediateOutputPath { get; set; } = "";
@@ -111,7 +111,11 @@ public class CollectNativeFilesForArchive : AndroidTask
 			foreach (ITaskItem item in ApplicationSharedLibraries) {
 				if (string.Compare (abi, item.GetMetadata ("abi"), StringComparison.Ordinal) != 0)
 					continue;
-				AddNativeLibraryToArchive (apk, abi, item.ItemSpec, Path.GetFileName (item.ItemSpec), item);
+				string? inArchiveFileName = item.GetMetadata ("ArchiveFileName");
+				if (String.IsNullOrEmpty (inArchiveFileName)) {
+					inArchiveFileName = Path.GetFileName (item.ItemSpec);
+				}
+				AddNativeLibraryToArchive (apk, abi, item.ItemSpec, inArchiveFileName, item);
 			}
 		}
 	}
@@ -183,7 +187,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 
 		AddNativeLibraries (files, supportedAbis, libs);
 
-		if (string.IsNullOrWhiteSpace (CheckedBuild))
+		if (CheckedBuild.IsNullOrWhiteSpace ())
 			return;
 
 		string mode = CheckedBuild;
@@ -241,7 +245,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 		// If Abi is explicitly specified, simply return it.
 		var lib_abi = AndroidRidAbiHelper.GetNativeLibraryAbi (lib);
 
-		if (string.IsNullOrWhiteSpace (lib_abi)) {
+		if (lib_abi.IsNullOrWhiteSpace ()) {
 			Log.LogCodedError ("XA4301", lib.ItemSpec, 0, Properties.Resources.XA4301_ABI, lib.ItemSpec);
 			return null;
 		}

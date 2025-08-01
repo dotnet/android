@@ -26,6 +26,7 @@ public class GenerateMainAndroidManifest : AndroidTask
 	public string? CheckedBuild { get; set; }
 	public bool Debug { get; set; }
 	public bool EmbedAssemblies { get; set; }
+	public bool EnableNativeRuntimeLinking { get; set; }
 	[Required]
 	public string IntermediateOutputDirectory { get; set; } = "";
 	public string []? ManifestPlaceholders { get; set; }

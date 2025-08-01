@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -17,11 +17,11 @@ namespace Xamarin.Android.Tasks
 	{
 		sealed class AssemblyImports
 		{
-			public MethodReference MonoUnhandledExceptionMethod;
-			public TypeReference   SystemException;
-			public MethodReference UnhandledExceptionMethod;
-			public CustomAttribute UnmanagedCallersOnlyAttribute;
-			public MethodReference WaitForBridgeProcessingMethod;
+			public MethodReference? MonoUnhandledExceptionMethod;
+			public TypeReference? SystemException;
+			public MethodReference? UnhandledExceptionMethod;
+			public CustomAttribute? UnmanagedCallersOnlyAttribute;
+			public MethodReference? WaitForBridgeProcessingMethod;
 		}
 
 		readonly TaskLoggingHelper log;
@@ -47,17 +47,33 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ($"[{targetArch}] Internal error: unable to load the Mono.Android.Runtime assembly");
 			}
 
-			TypeDefinition runtime = FindType (monoAndroidRuntime, "Android.Runtime.AndroidRuntimeInternal", required: true)!;
-			MethodDefinition waitForBridgeProcessingMethod = FindMethod (runtime, "WaitForBridgeProcessing", required: true)!;
+			TypeDefinition? runtime = FindType (monoAndroidRuntime, "Android.Runtime.AndroidRuntimeInternal", required: true);
+			if (runtime == null)
+				throw new ArgumentNullException (nameof (runtime));
+			MethodDefinition? waitForBridgeProcessingMethod = FindMethod (runtime, "WaitForBridgeProcessing", required: true);
+			if (waitForBridgeProcessingMethod == null)
+				throw new ArgumentNullException (nameof (waitForBridgeProcessingMethod));
 
-			TypeDefinition androidEnvironment = FindType (monoAndroidRuntime, "Android.Runtime.AndroidEnvironmentInternal", required: true)!;
-			MethodDefinition unhandledExceptionMethod = FindMethod (androidEnvironment, "UnhandledException", required: true)!;
+			TypeDefinition? androidEnvironment = FindType (monoAndroidRuntime, "Android.Runtime.AndroidEnvironmentInternal", required: true);
+			if (androidEnvironment == null)
+				throw new ArgumentNullException (nameof (androidEnvironment));
+			MethodDefinition? unhandledExceptionMethod = FindMethod (androidEnvironment, "UnhandledException", required: true);
+			if (unhandledExceptionMethod == null)
+				throw new ArgumentNullException (nameof (unhandledExceptionMethod));
 
-			TypeDefinition runtimeNativeMethods = FindType (monoAndroidRuntime, "Android.Runtime.RuntimeNativeMethods", required: true);
-			MethodDefinition monoUnhandledExceptionMethod = FindMethod (runtimeNativeMethods, "monodroid_debugger_unhandled_exception", required: true);
+			TypeDefinition? runtimeNativeMethods = FindType (monoAndroidRuntime, "Android.Runtime.RuntimeNativeMethods", required: true);
+			if (runtimeNativeMethods == null)
+				throw new ArgumentNullException (nameof (runtimeNativeMethods));
+			MethodDefinition? monoUnhandledExceptionMethod = FindMethod (runtimeNativeMethods, "monodroid_debugger_unhandled_exception", required: true);
+			if (monoUnhandledExceptionMethod == null)
+				throw new ArgumentNullException (nameof (monoUnhandledExceptionMethod));
 
-			AssemblyDefinition corlib = resolver.Resolve ("System.Private.CoreLib");
-			TypeDefinition systemException = FindType (corlib, "System.Exception", required: true);
+			AssemblyDefinition? corlib = resolver.Resolve ("System.Private.CoreLib");
+			if (corlib == null)
+				throw new ArgumentNullException (nameof (corlib));
+			TypeDefinition? systemException = FindType (corlib, "System.Exception", required: true);
+			if (systemException == null)
+				throw new ArgumentNullException (nameof (systemException));
 
 			MethodDefinition unmanagedCallersOnlyAttributeCtor = GetUnmanagedCallersOnlyAttributeConstructor (resolver);
 
@@ -118,6 +134,8 @@ namespace Xamarin.Android.Tasks
 				// TODO the code should probably go to different assemblies than Mono.Android (to avoid recursive dependencies)
 				var rootAssembly = resolver.Resolve ("Mono.Android") ?? throw new InvalidOperationException ($"[{targetArch}] Internal error: unable to load the Mono.Android assembly");
 				var managedMarshalMethodsLookupTableType = FindType (rootAssembly, "Java.Interop.ManagedMarshalMethodsLookupTable", required: true);
+			if (managedMarshalMethodsLookupTableType == null)
+				throw new ArgumentNullException (nameof (managedMarshalMethodsLookupTableType));
 
 				var managedMarshalMethodLookupGenerator = new ManagedMarshalMethodsLookupGenerator (log, targetArch, managedMarshalMethodsLookupInfo, managedMarshalMethodsLookupTableType);
 				managedMarshalMethodLookupGenerator.Generate (classifier.MarshalMethods.Values);
@@ -305,7 +323,7 @@ namespace Xamarin.Android.Tasks
 				body.Instructions.Add (Instruction.Create (OpCodes.Call, imports.UnhandledExceptionMethod));
 
 				if (hasReturnValue) {
-					AddSetDefaultValueInstructions (body, retType, retval);
+					AddSetDefaultValueInstructions (body, retType, retval!);
 				}
 			}
 
@@ -483,8 +501,11 @@ namespace Xamarin.Android.Tasks
 
 		MethodDefinition GetUnmanagedCallersOnlyAttributeConstructor (IAssemblyResolver resolver)
 		{
-			AssemblyDefinition asm = resolver.Resolve ("System.Runtime.InteropServices");
-			TypeDefinition unmanagedCallersOnlyAttribute = null;
+			AssemblyDefinition? asm = resolver.Resolve ("System.Runtime.InteropServices");
+			if (asm == null)
+				throw new ArgumentNullException (nameof (asm));
+			
+			TypeDefinition? unmanagedCallersOnlyAttribute = null;
 			foreach (ModuleDefinition md in asm.Modules) {
 				foreach (ExportedType et in md.ExportedTypes) {
 					if (!et.IsForwarder) {

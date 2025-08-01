@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -127,7 +128,7 @@ class JCWGenerator
 				endLineNumber: 0,
 				endColumnNumber: 0,
 				message: xae.MessageWithoutCode,
-				messageArgs: Array.Empty<object> ()
+				messageArgs: []
 			);
 		} catch (DirectoryNotFoundException ex) {
 			ok = false;
