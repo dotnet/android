@@ -45,6 +45,13 @@ namespace Xamarin.Android.Build.Tests
 			Directories = new [] { new TaskItem (tempDirectory) },
 		};
 
+		RemoveDirFixed CreateTaskWithRetry (int retryAttempts, int retryDelayMs) => new RemoveDirFixed {
+			BuildEngine = new MockBuildEngine (TestContext.Out, messages: messages),
+			Directories = new [] { new TaskItem (tempDirectory) },
+			RetryAttempts = retryAttempts,
+			RetryDelayMs = retryDelayMs,
+		};
+
 		[Test]
 		public void NormalDelete ()
 		{
@@ -116,6 +123,51 @@ namespace Xamarin.Android.Build.Tests
 				using (var f = File.OpenWrite (file)) {
 					ev.Set ();
 					await TPL.Task.Delay (2500);
+				}
+			});
+			ev.WaitOne ();
+			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+			Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
+			DirectoryAssert.DoesNotExist (tempDirectory);
+			await t;
+		}
+
+		[Test]
+		public void CustomRetryAttempts ()
+		{
+			NewFile ();
+			var task = CreateTaskWithRetry (retryAttempts: 3, retryDelayMs: 100);
+			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+			Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
+			DirectoryAssert.DoesNotExist (tempDirectory);
+		}
+
+		[Test]
+		public void DefaultRetryBehavior ()
+		{
+			NewFile ();
+			var task = CreateTask ();
+			// Verify default behavior still works
+			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+			Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
+			DirectoryAssert.DoesNotExist (tempDirectory);
+		}
+
+		[Test]
+		public async TPL.Task DirectoryInUseWithCustomRetry ()
+		{
+			if (!OS.IsWindows) {
+				Assert.Ignore ("This is not an issue on non-Windows platforms.");
+				return;
+			}
+			var file = NewFile ();
+			// Test with default retry behavior 
+			var task = CreateTask ();
+			var ev = new ManualResetEvent (false);
+			var t = TPL.Task.Run (async () => {
+				using (var f = File.OpenWrite (file)) {
+					ev.Set ();
+					await TPL.Task.Delay (800); // Should succeed on first retry with default timing
 				}
 			});
 			ev.WaitOne ();

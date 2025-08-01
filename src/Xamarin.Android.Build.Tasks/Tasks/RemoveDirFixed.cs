@@ -56,8 +56,8 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 				int retryCount = 0;
-				int attempts = Files.GetFileWriteRetryAttempts ();
-				int delay = Files.GetFileWriteRetryDelay ();
+				int attempts = RetryAttempts >= 0 ? RetryAttempts : Files.GetFileWriteRetryAttempts ();
+				int delay = RetryDelayMs >= 0 ? RetryDelayMs : Files.GetFileWriteRetryDelay ();
 				try {
 					while (retryCount <= attempts) {
 						try {
@@ -104,6 +104,18 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public ITaskItem [] Directories { get; set; } = [];
+
+		/// <summary>
+		/// Number of retry attempts when directory deletion fails.
+		/// Defaults to Files.GetFileWriteRetryAttempts() if not specified.
+		/// </summary>
+		public int RetryAttempts { get; set; } = -1;
+
+		/// <summary>
+		/// Delay in milliseconds between retry attempts.
+		/// Defaults to Files.GetFileWriteRetryDelay() if not specified.
+		/// </summary>
+		public int RetryDelayMs { get; set; } = -1;
 
 		[Output]
 		public ITaskItem []? RemovedDirectories { get; set; }
