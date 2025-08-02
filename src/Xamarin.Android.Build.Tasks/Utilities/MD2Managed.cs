@@ -27,7 +27,7 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-#nullable disable
+#nullable enable
 
 using System;
 
@@ -80,7 +80,7 @@ namespace Mono.Security.Cryptography {
 					padding[i] = (byte) nLength;
 				return padding;
 			}
-			return null;
+			throw new ArgumentException ("Length must be greater than 0", nameof (nLength));
 		}
 
 		//--- constructor -----------------------------------------------------------
