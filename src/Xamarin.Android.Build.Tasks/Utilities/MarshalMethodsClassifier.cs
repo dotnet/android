@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -39,8 +39,8 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		public MethodDefinition? NativeCallbackWrapper { get; set; }
 		public MethodDefinition? Connector             { get; }
-		public MethodDefinition? RegisteredMethod      { get; }
-		public MethodDefinition? ImplementedMethod     { get; }
+		public MethodDefinition RegisteredMethod      { get; }
+		public MethodDefinition ImplementedMethod     { get; }
 		public FieldDefinition? CallbackField          { get; }
 		public string JniTypeName                      { get; }
 		public string JniMethodName                    { get; }
@@ -50,8 +50,8 @@ namespace Xamarin.Android.Tasks
 		public MethodDefinition NativeCallback         => NativeCallbackWrapper ?? nativeCallbackReal;
 		public bool IsSpecial                          { get; }
 
-		public MarshalMethodEntry (TypeDefinition declaringType, MethodDefinition nativeCallback, MethodDefinition connector, MethodDefinition
-		                           registeredMethod, MethodDefinition implementedMethod, FieldDefinition callbackField, string jniTypeName,
+		public MarshalMethodEntry (TypeDefinition declaringType, MethodDefinition nativeCallback, MethodDefinition? connector, MethodDefinition
+		                           registeredMethod, MethodDefinition implementedMethod, FieldDefinition? callbackField, string jniTypeName,
 		                           string jniName, string jniSignature, bool needsBlittableWorkaround)
 			: base (declaringType)
 		{
@@ -85,7 +85,7 @@ namespace Xamarin.Android.Tasks
 
 		string EnsureNonEmpty (string s, string argName)
 		{
-			if (String.IsNullOrEmpty (s)) {
+			if (s.IsNullOrEmpty ()) {
 				throw new ArgumentException ("must not be null or empty", argName);
 			}
 
@@ -104,8 +104,8 @@ namespace Xamarin.Android.Tasks
 	{
 		public MethodDefinition ConvertedNativeCallback { get; }
 
-		public ConvertedMarshalMethodEntry (TypeDefinition declaringType, MethodDefinition nativeCallback, MethodDefinition connector, MethodDefinition
-					   registeredMethod, MethodDefinition implementedMethod, FieldDefinition callbackField, string jniTypeName,
+		public ConvertedMarshalMethodEntry (TypeDefinition declaringType, MethodDefinition nativeCallback, MethodDefinition? connector, MethodDefinition
+					   registeredMethod, MethodDefinition implementedMethod, FieldDefinition? callbackField, string jniTypeName,
 					   string jniName, string jniSignature, bool needsBlittableWorkaround, MethodDefinition convertedNativeCallback)
 			: base (declaringType, nativeCallback, connector, registeredMethod, implementedMethod, callbackField, jniTypeName, jniName, jniSignature, needsBlittableWorkaround)
 		{
@@ -133,8 +133,8 @@ namespace Xamarin.Android.Tasks
 		public sealed class ConnectorInfo
 		{
 			public string MethodName                  { get; }
-			public string TypeName                    { get; }
-			public AssemblyNameReference AssemblyName { get; }
+			public string? TypeName                    { get; }
+			public AssemblyNameReference? AssemblyName { get; }
 
 			public ConnectorInfo (string spec)
 			{
@@ -200,7 +200,7 @@ namespace Xamarin.Android.Tasks
 			{
 				string? typeName = null;
 				if (!typeRef.IsGenericParameter && !typeRef.IsArray) {
-					TypeDefinition typeDef = cache.Resolve (typeRef);
+					TypeDefinition? typeDef = cache.Resolve (typeRef);
 					if (typeDef == null) {
 						throw new InvalidOperationException ($"Unable to resolve type '{typeRef.FullName}'");
 					}
@@ -210,7 +210,7 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 
-				if (String.IsNullOrEmpty (typeName)) {
+				if (typeName.IsNullOrEmpty ()) {
 					typeName = typeRef.FullName;
 				}
 
@@ -343,7 +343,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			string? path = asmdef.MainModule.FileName;
-			if (String.IsNullOrEmpty (path)) {
+			if (path.IsNullOrEmpty ()) {
 				path = "unknown";
 			}
 
@@ -391,12 +391,12 @@ namespace Xamarin.Android.Tasks
 			string nativeConvertedCallbackName = $"n_{callbackNameCore}_mm_wrapper";
 			string delegateFieldName = $"cb_{Char.ToLowerInvariant (callbackNameCore[0])}{callbackNameCore.Substring (1)}";
 
-			TypeDefinition connectorDeclaringType = connector.AssemblyName == null ? registeredMethod.DeclaringType : FindType (resolver.Resolve (connector.AssemblyName), connector.TypeName);
+			TypeDefinition? connectorDeclaringType = connector.AssemblyName == null ? registeredMethod.DeclaringType : FindType (resolver.Resolve (connector.AssemblyName), connector.TypeName!);
 
 			var ncbs = new NativeCallbackSignature (registeredMethod, log, tdCache);
-			MethodDefinition nativeCallbackMethod = FindMethod (connectorDeclaringType, nativeCallbackName, ncbs);
+			MethodDefinition? nativeCallbackMethod = FindMethod (connectorDeclaringType, nativeCallbackName, ncbs);
 			if (nativeCallbackMethod == null) {
-				log.LogWarning ($"Unable to find native callback method '{nativeCallbackName}' in type '{connectorDeclaringType.FullName}', matching the '{registeredMethod.FullName}' signature (jniName: '{jniName}') {GetAssemblyPathInfo (connectorDeclaringType)}");
+				log.LogWarning ($"Unable to find native callback method '{nativeCallbackName}' in type '{connectorDeclaringType?.FullName}', matching the '{registeredMethod.FullName}' signature (jniName: '{jniName}') {GetAssemblyPathInfo (connectorDeclaringType)}");
 				return false;
 			}
 
@@ -406,22 +406,22 @@ namespace Xamarin.Android.Tasks
 
 			MethodDefinition? nativeConvertedCallbackMethod = FindMethod (connectorDeclaringType, nativeConvertedCallbackName, ncbs);
 
-			MethodDefinition connectorMethod = FindMethod (connectorDeclaringType, connectorName);
+			MethodDefinition? connectorMethod = FindMethod (connectorDeclaringType, connectorName);
 
 			// If the marshal method has already been converted, the connector method will have been removed
 			if (connectorMethod == null && nativeConvertedCallbackMethod == null) {
-				log.LogWarning ($"Connector method '{connectorName}' not found in type '{connectorDeclaringType.FullName}' {GetAssemblyPathInfo (connectorDeclaringType)}");
+				log.LogWarning ($"Connector method '{connectorName}' not found in type '{connectorDeclaringType?.FullName}' {GetAssemblyPathInfo (connectorDeclaringType)}");
 				return false;
 			}
 
 			if (connectorMethod != null && !MonoAndroidHelper.StringEquals ("System.Delegate", connectorMethod.ReturnType.FullName)) {
-				log.LogWarning ($"Connector '{connectorName}' in type '{connectorDeclaringType.FullName}' has invalid return type, expected 'System.Delegate', found '{connectorMethod.ReturnType.FullName}' {GetAssemblyPathInfo (connectorDeclaringType)}");
+				log.LogWarning ($"Connector '{connectorName}' in type '{connectorDeclaringType?.FullName}' has invalid return type, expected 'System.Delegate', found '{connectorMethod.ReturnType.FullName}' {GetAssemblyPathInfo (connectorDeclaringType)}");
 				return false;
 			}
 
 			// In the standard handler "pattern", the native callback backing field is private, static and thus in the same type
 			// as the native callback.
-			FieldDefinition delegateField = FindField (nativeCallbackMethod.DeclaringType, delegateFieldName);
+			FieldDefinition? delegateField = FindField (nativeCallbackMethod.DeclaringType, delegateFieldName);
 			if (delegateField != null) {
 				if (!MonoAndroidHelper.StringEquals ("System.Delegate", delegateField.FieldType.FullName)) {
 					log.LogWarning ($"delegate field '{delegateFieldName}' in type '{nativeCallbackMethod.DeclaringType.FullName}' has invalid type, expected 'System.Delegate', found '{delegateField.FieldType.FullName}' {GetAssemblyPathInfo (delegateField)}");
@@ -568,11 +568,11 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		TypeDefinition FindType (AssemblyDefinition asm, string typeName)
+		TypeDefinition? FindType (AssemblyDefinition asm, string typeName)
 		{
 			foreach (ModuleDefinition md in asm.Modules) {
 				foreach (TypeDefinition td in md.Types) {
-					TypeDefinition match = GetMatchingType (td);
+					TypeDefinition? match = GetMatchingType (td);
 					if (match != null) {
 						return match;
 					}
@@ -581,7 +581,7 @@ namespace Xamarin.Android.Tasks
 
 			return null;
 
-			TypeDefinition GetMatchingType (TypeDefinition def)
+			TypeDefinition? GetMatchingType (TypeDefinition def)
 			{
 				if (MonoAndroidHelper.StringEquals (def.FullName, typeName)) {
 					return def;
@@ -591,7 +591,7 @@ namespace Xamarin.Android.Tasks
 					return null;
 				}
 
-				TypeDefinition ret;
+				TypeDefinition? ret;
 				foreach (TypeDefinition nested in def.NestedTypes) {
 					ret = GetMatchingType (nested);
 					if (ret != null) {
@@ -603,8 +603,12 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		MethodDefinition FindMethod (TypeDefinition type, string methodName, IMethodSignatureMatcher signatureMatcher = null)
+		MethodDefinition? FindMethod (TypeDefinition? type, string methodName, IMethodSignatureMatcher? signatureMatcher = null)
 		{
+			if (type == null) {
+				return null;
+			}
+
 			foreach (MethodDefinition method in type.Methods) {
 				if (!method.IsManaged || method.IsConstructor) {
 					continue;
@@ -626,8 +630,12 @@ namespace Xamarin.Android.Tasks
 			return FindMethod (tdCache.Resolve (type.BaseType), methodName, signatureMatcher);
 		}
 
-		FieldDefinition FindField (TypeDefinition type, string fieldName, bool lookForInherited = false)
+		FieldDefinition? FindField (TypeDefinition? type, string fieldName, bool lookForInherited = false)
 		{
+			if (type == null) {
+				return null;
+			}
+
 			foreach (FieldDefinition field in type.Fields) {
 				if (MonoAndroidHelper.StringEquals (field.Name, fieldName)) {
 					return field;
