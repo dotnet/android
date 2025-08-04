@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -40,8 +40,8 @@ namespace Xamarin.Android.Tasks
 
 		internal sealed class TypeMapReleaseEntry
 		{
-			public string JavaName;
-			public string ManagedTypeName;
+			public string JavaName = "";
+			public string ManagedTypeName = "";
 			public uint Token;
 			public int ModuleIndex = -1;
 			public bool SkipInJavaToManaged;
@@ -50,26 +50,26 @@ namespace Xamarin.Android.Tasks
 		internal sealed class ModuleReleaseData
 		{
 			public Guid Mvid;
-			public byte[] MvidBytes;
-			public TypeMapReleaseEntry[] Types;
-			public List<TypeMapReleaseEntry> DuplicateTypes;
-			public string AssemblyName;
+			public byte[] MvidBytes = [];
+			public TypeMapReleaseEntry[] Types = [];
+			public List<TypeMapReleaseEntry> DuplicateTypes = [];
+			public string AssemblyName = "";
 
-			public Dictionary<string, TypeMapReleaseEntry> TypesScratch;
+			public Dictionary<string, TypeMapReleaseEntry> TypesScratch = [];
 		}
 
 		internal sealed class TypeMapDebugEntry
 		{
-			public string JavaName;
-			public string ManagedName;
+			public string JavaName = "";
+			public string ManagedName = "";
 			public uint ManagedTypeTokenId;
 			public bool SkipInJavaToManaged;
-			public TypeMapDebugEntry DuplicateForJavaToManaged;
-			public string AssemblyName;
+			public TypeMapDebugEntry? DuplicateForJavaToManaged;
+			public string AssemblyName = "";
 
 			// This field is only used by the Cecil adapter for temp storage while reading.
 			// It is not used to create the typemap.
-			public TypeDefinition TypeDefinition;
+			public TypeDefinition? TypeDefinition;
 
 			// These fields are only used by the XML adapter for temp storage while reading.
 			// It is not used to create the typemap.
@@ -88,14 +88,14 @@ namespace Xamarin.Android.Tasks
 		internal sealed class TypeMapDebugAssembly
 		{
 			public Guid MVID;
-			public byte[] MVIDBytes;
-			public string Name;
+			public byte[] MVIDBytes = [];
+			public string Name = "";
 		}
 
 		internal sealed class TypeMapDebugDataSets
 		{
-			public List<TypeMapDebugEntry> JavaToManaged ;
-			public List<TypeMapDebugEntry> ManagedToJava;
+			public List<TypeMapDebugEntry> JavaToManaged = [];
+			public List<TypeMapDebugEntry> ManagedToJava = [];
 			public List<TypeMapDebugAssembly>? UniqueAssemblies;
 		}
 
@@ -103,8 +103,8 @@ namespace Xamarin.Android.Tasks
 		internal sealed class ModuleDebugData
 		{
 			public uint EntryCount;
-			public List<TypeMapDebugEntry> JavaToManagedMap;
-			public List<TypeMapDebugEntry> ManagedToJavaMap;
+			public List<TypeMapDebugEntry> JavaToManagedMap = [];
+			public List<TypeMapDebugEntry> ManagedToJavaMap = [];
 			public List<TypeMapDebugAssembly>? UniqueAssemblies;
 		}
 
@@ -138,7 +138,7 @@ namespace Xamarin.Android.Tasks
 
 		public void Generate (bool debugBuild, bool skipJniAddNativeMethodRegistrationAttributeScan, string outputDirectory)
 		{
-			if (String.IsNullOrEmpty (outputDirectory)) {
+			if (outputDirectory.IsNullOrEmpty ()) {
 				throw new ArgumentException ("must not be null or empty", nameof (outputDirectory));
 			}
 			Directory.CreateDirectory (outputDirectory);
