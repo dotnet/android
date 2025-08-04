@@ -49,7 +49,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("_AndroidNdkDirectory", "ndk");
 			proj.SetProperty ("_AndroidApiLevel", "29");
 
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				b.Target = "_ResolveMonoAndroidSdks";
 				Assert.IsTrue (b.Build (proj, parameters: parameters), "Build should have succeeded.");
 
@@ -72,7 +72,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("_AndroidNdkDirectory", "");
 			proj.SetProperty ("_AndroidApiLevel", "29");
 
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				b.Target = "_ResolveMonoAndroidSdks";
 				Assert.IsTrue (b.Build (proj, parameters: parameters), "Build should have succeeded.");
 
@@ -95,7 +95,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("_AndroidNdkDirectory", $"ndk{Path.DirectorySeparatorChar}");
 			proj.SetProperty ("_AndroidApiLevel", "29");
 
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				b.Target = "_ResolveMonoAndroidSdks";
 				Assert.IsTrue (b.Build (proj, parameters: parameters), "Build should have succeeded.");
 

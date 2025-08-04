@@ -196,7 +196,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\Image (1).png") {
 				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi
 			});
-			using (var b = CreateApkBuilder ($"temp/{TestName}")) {
+			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");
 				StringAssertEx.Contains ("APT0003", b.LastBuildOutput, "An error message with a blank \"level\", should be reported as an error!");

@@ -96,7 +96,7 @@ namespace UnnamedProject
 			proj.SetAndroidSupportedAbis (DeviceAbi);
 			proj.SetProperty ("EmbedAssembliesIntoApk", embedAssemblies.ToString ());
 			proj.SetDefaultTargetDevice ();
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				b.LatestTargetFrameworkVersion (out string apiLevel);
 				proj.SupportedOSPlatformVersion = "24.0";
 				proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>

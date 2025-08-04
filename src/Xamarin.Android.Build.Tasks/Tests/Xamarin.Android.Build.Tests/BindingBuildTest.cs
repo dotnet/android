@@ -147,7 +147,7 @@ namespace Xamarin.Android.Build.Tests
 				WebContent = "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/svg-android/svg-android.jar"
 			});
 			proj.AndroidClassParser = classParser;
-			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				b.BuildLogFile = "clean.log";
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded");
@@ -243,7 +243,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.Jars.Add (new AndroidItem.EmbeddedJar ("Jars\\svg-android.jar") {
 				WebContentFileNameFromAzure = "javaBindingIssue.jar"
 			});
-			using (var b = CreateDllBuilder ("temp/BindByteArrayInMethodParameter")) {
+			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}

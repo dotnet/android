@@ -13,7 +13,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidWearApplicationProject {
 				IsRelease = isRelease,
 			};
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
