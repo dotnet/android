@@ -321,6 +321,15 @@ namespace Xamarin.Android.Tasks {
 			cmd.Add ("-o");
 			cmd.Add (GetFullPath (currentResourceOutputFile));
 
+			// Add min SDK version from AndroidManifestFile if available
+			if (AndroidManifestFile is { ItemSpec.Length: > 0 }) {
+				var doc = AndroidAppManifest.Load (AndroidManifestFile.ItemSpec, MonoAndroidHelper.SupportedVersions);
+				if (doc.MinSdkVersion.HasValue) {
+					cmd.Add ("--min-sdk-version");
+					cmd.Add (doc.MinSdkVersion.Value.ToString ());
+				}
+			}
+
 			return cmd.ToArray ();
 		}
 

@@ -19,6 +19,11 @@
 
 ## Critical Rules
 
+Reference official Android documentation where helpful:
+* [Android Developer Guide](https://developer.android.com/develop)
+* [Android API Reference](https://developer.android.com/reference)
+* [Android `aapt2` Documentation](https://developer.android.com/tools/aapt2)
+
 **Only modify the main English `*.resx` files** (e.g., `Resources.resx`)
 
 **Never modify non-English localization files:** `*.lcl` files in `Localize/loc/` or non-English `*.resx` files are auto-generated.
@@ -148,19 +153,6 @@ try {
 ## Error Patterns
 - **MSBuild Errors:** `XA####` (errors), `XA####` (warnings), `APT####` (Android tools)
 - **Logging:** Use `Log.LogError`, `Log.LogWarning` with error codes and context
-
-## Commit Format
-```
-[Component] Summary
-```
-Components: `[Mono.Android]`, `[Build.Tasks]`, `build`, `ci`, `docs`, `tests`
-
-```
-Bump to org/repo/branch@commit
-Bump to [Dependency Name] [Dependency Version]
-```
-
-Required sections: **Changes**, **Fixes** (#issue-numbers), **Context**
 
 ## Troubleshooting
 - **Build:** Clean `bin/`+`obj/`, check Android SDK/NDK, `make clean`
