@@ -78,7 +78,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("_XASupportsFastDev", "True");
 			proj.SetProperty (proj.DebugProperties, "AndroidLinkMode", "Full");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				b.Target = "Build"; // SignAndroidPackage would fail for OSS builds
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "XA0119"), "Output should contain XA0119 warnings");

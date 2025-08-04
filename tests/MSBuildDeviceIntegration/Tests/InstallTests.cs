@@ -220,7 +220,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetAndroidSupportedAbis (abi);
 
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
 				if (!builder.Install (proj)) {
 					Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, "ADB0020"), "Should receive ADB0020 error code.");
@@ -247,7 +247,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 			};
 
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, DeviceAbi);
 				StringAssert.Contains ($"{proj.ProjectName}.dll", directorylist, $"{proj.ProjectName}.dll should exist in the .__override__ directory.");
@@ -347,7 +347,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetProperty (proj.DebugProperties, "EmbedAssembliesIntoApk", false);
 
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				b.Build (proj, parameters: new [] { $"AdbTarget=\"-e {serial}\"" });
 				// Build again, no $(AdbTarget)
 				b.Build (proj);

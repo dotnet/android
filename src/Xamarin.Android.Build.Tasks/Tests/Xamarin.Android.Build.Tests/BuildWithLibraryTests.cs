@@ -458,7 +458,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
 				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"error XA4301: Cannot determine ABI of native library 'not-a-real-abi{Path.DirectorySeparatorChar}libtest.so'. Move this file to a directory with a valid Android ABI name such as 'libs/armeabi-v7a/'."),
@@ -615,7 +615,7 @@ namespace Xamarin.Android.Build.Tests
 
 			const string target = "_GetPrimaryCpuAbi";
 			var proj = new XamarinAndroidLibraryProject ();
-			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (b.Output.IsTargetSkipped (target, defaultIfNotUsed: true), $"`{target}` should be skipped!");
 			}

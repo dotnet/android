@@ -98,7 +98,7 @@ public class MainActivity : Activity
 		proj.MainActivity = MarshalMethodsAppRuns_MainActivity;
 		proj.SetDefaultTargetDevice ();
 
-		using var apkBuilder = CreateApkBuilder (Path.Combine ("temp", TestName));
+		using var apkBuilder = CreateApkBuilder ();
 		Assert.True (apkBuilder.Install (proj), "Project should have installed.");
 		RunProjectAndAssert (proj, apkBuilder);
 

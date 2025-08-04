@@ -18,7 +18,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinFormsAndroidApplicationProject {
 			};
-			var b = CreateApkBuilder (Path.Combine ("temp", TestName));
+			var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
@@ -122,7 +122,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject {
 			};
 			proj.SetDefaultTargetDevice ();
-			var b = CreateApkBuilder (Path.Combine ("temp", TestName));
+			var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Install (proj), "install should have succeeded.");
 			Assert.IsTrue (b.Uninstall (proj), "uninstall should have succeeded.");
 			b.Dispose ();
@@ -138,7 +138,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetDefaultTargetDevice ();
 			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": AndroidX.AppCompat.App.AppCompatActivity");
-			var b = CreateApkBuilder (Path.Combine ("temp", TestName));
+			var b = CreateApkBuilder ();
 			b.Verbosity = LoggerVerbosity.Detailed;
 			Assert.IsTrue (b.Install (proj), "install should have succeeded.");
 			File.WriteAllLines (Path.Combine (Root, b.ProjectDirectory, b.BuildLogFile + ".bak"), b.LastBuildOutput);
@@ -210,7 +210,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject () {
 			};
 			proj.SetDefaultTargetDevice ();
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				b.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (b.Install (proj), "install should have succeeded. 0");
 				var logLines = b.LastBuildOutput;
@@ -242,7 +242,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetDefaultTargetDevice ();
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", $"<application android:useEmbeddedDex=\"{useEmbeddedDex.ToString ().ToLowerInvariant ()}\" ");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				b.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (b.Install (proj), "packaging should have succeeded. 0");
 				var logLines = b.LastBuildOutput;

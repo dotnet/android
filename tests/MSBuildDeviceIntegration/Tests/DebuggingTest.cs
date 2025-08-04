@@ -67,7 +67,7 @@ namespace Xamarin.Android.Build.Tests
 				// bundle tool does NOT support embeddedDex files it seems.
 				useEmbeddedDex = false;
 			}
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				SetTargetFrameworkAndManifest (proj, b, null);
 				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", $"<application android:extractNativeLibs=\"{extractNativeLibs.ToString ().ToLowerInvariant ()}\" android:useEmbeddedDex=\"{useEmbeddedDex.ToString ().ToLowerInvariant ()}\" ");
 				Assert.True (b.Install (proj), "Project should have installed.");

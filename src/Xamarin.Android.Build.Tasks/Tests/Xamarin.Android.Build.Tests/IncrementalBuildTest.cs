@@ -427,7 +427,7 @@ namespace Lib2
 					}
 				}
 			};
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 				var firstBuildTime = b.LastBuildTime;
 				foreach (var target in targets) {
@@ -498,7 +498,7 @@ namespace Lib2
 					},
 				},
 			};
-			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 				foreach (var target in targets) {
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
@@ -664,7 +664,7 @@ namespace Lib2
 		public void LinkAssembliesNoShrink ()
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 
 				// Touch an assembly to a timestamp older than build.props
@@ -812,7 +812,7 @@ namespace Lib2
 		public void ResolveLibraryProjectImports ()
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				var cacheFile = Path.Combine (intermediate, "libraryprojectimports.cache");
@@ -912,7 +912,7 @@ namespace Lib2
 			};
 
 			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				var projectFile = Path.Combine (Root, b.ProjectDirectory, proj.ProjectFilePath);
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -935,7 +935,7 @@ namespace Lib2
 			};
 
 			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				var projectFile = Path.Combine (Root, b.ProjectDirectory, proj.ProjectFilePath);
 				b.ThrowOnBuildFailure = false;
 				proj.OtherBuildItems.Add (invalidXml);
@@ -974,7 +974,7 @@ namespace Lib2
 					},
 				}
 			};
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				className = "fOO";
 				proj.Touch ("Foo.cs");
@@ -997,7 +997,7 @@ namespace Lib2
 				TextContent = () => "Foo=Bar",
 			});
 			proj.MainActivity = proj.DefaultMainActivity;
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				foreach (var target in targets) {
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
@@ -1456,7 +1456,7 @@ namespace Lib2
 					}
 				}
 			};
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				var assemblyPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "UnnamedProject.dll");
 				var apkPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
