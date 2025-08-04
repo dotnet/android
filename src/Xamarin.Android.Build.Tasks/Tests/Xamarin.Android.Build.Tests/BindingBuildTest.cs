@@ -113,7 +113,7 @@ namespace Xamarin.Android.Build.Tests
 
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");
 				foreach (var target in targets) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped on second build!");
+					Assert.IsTrue (b.Output.IsTargetSkipped (target, defaultIfNotUsed: true), $"`{target}` should be skipped on second build!");
 				}
 
 				Assert.IsTrue (b.DesignTimeBuild (proj, target: "UpdateGeneratedFiles"), "DTB should have succeeded.");

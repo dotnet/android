@@ -203,9 +203,9 @@ namespace Xamarin.Android.Build.Tests
 
 			if (isRelease) {
 				builder.Output.AssertTargetIsNotSkipped ("ILLink");
-				builder.Output.AssertTargetIsSkipped ("_LinkAssembliesNoShrink");
+				builder.Output.AssertTargetIsSkipped ("_LinkAssembliesNoShrink", defaultIfNotUsed: true);
 			} else {
-				builder.Output.AssertTargetIsSkipped ("ILLink");
+				builder.Output.AssertTargetIsSkipped ("ILLink", defaultIfNotUsed: true);
 				builder.Output.AssertTargetIsNotSkipped ("_LinkAssembliesNoShrink");
 			}
 		}
