@@ -71,10 +71,6 @@ namespace Xamarin.Android.Tasks
 			: base (declaringType)
 		{
 			nativeCallbackReal = nativeCallback ?? throw new ArgumentNullException (nameof (nativeCallback));
-			Connector = null;
-			RegisteredMethod = null;
-			ImplementedMethod = null;
-			CallbackField = null;
 			JniTypeName = EnsureNonEmpty (jniTypeName, nameof (jniTypeName));
 			JniMethodName = EnsureNonEmpty (jniName, nameof (jniName));
 			JniMethodSignature = EnsureNonEmpty (jniSignature, nameof (jniSignature));
