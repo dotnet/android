@@ -392,6 +392,10 @@ namespace Xamarin.Android.Tasks
 			string delegateFieldName = $"cb_{Char.ToLowerInvariant (callbackNameCore[0])}{callbackNameCore.Substring (1)}";
 
 			TypeDefinition? connectorDeclaringType = connector.AssemblyName == null ? registeredMethod.DeclaringType : FindType (resolver.Resolve (connector.AssemblyName), connector.TypeName!);
+			if (connectorDeclaringType == null) {
+				log.LogWarning ($"Unable to find connector declaring type '{connector.TypeName}' in assembly '{connector.AssemblyName}'");
+				return false;
+			}
 
 			var ncbs = new NativeCallbackSignature (registeredMethod, log, tdCache);
 			MethodDefinition? nativeCallbackMethod = FindMethod (connectorDeclaringType, nativeCallbackName, ncbs);
@@ -603,11 +607,8 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		MethodDefinition? FindMethod (TypeDefinition? type, string methodName, IMethodSignatureMatcher? signatureMatcher = null)
+		MethodDefinition? FindMethod (TypeDefinition type, string methodName, IMethodSignatureMatcher? signatureMatcher = null)
 		{
-			if (type == null) {
-				return null;
-			}
 
 			foreach (MethodDefinition method in type.Methods) {
 				if (!method.IsManaged || method.IsConstructor) {
@@ -627,14 +628,16 @@ namespace Xamarin.Android.Tasks
 				return null;
 			}
 
-			return FindMethod (tdCache.Resolve (type.BaseType), methodName, signatureMatcher);
-		}
-
-		FieldDefinition? FindField (TypeDefinition? type, string fieldName, bool lookForInherited = false)
-		{
-			if (type == null) {
+			TypeDefinition? baseType = tdCache.Resolve (type.BaseType);
+			if (baseType == null) {
 				return null;
 			}
+
+			return FindMethod (baseType, methodName, signatureMatcher);
+		}
+
+		FieldDefinition? FindField (TypeDefinition type, string fieldName, bool lookForInherited = false)
+		{
 
 			foreach (FieldDefinition field in type.Fields) {
 				if (MonoAndroidHelper.StringEquals (field.Name, fieldName)) {
@@ -646,7 +649,12 @@ namespace Xamarin.Android.Tasks
 				return null;
 			}
 
-			return FindField (tdCache.Resolve (type.BaseType), fieldName, lookForInherited);
+			TypeDefinition? baseType = tdCache.Resolve (type.BaseType);
+			if (baseType == null) {
+				return null;
+			}
+
+			return FindField (baseType, fieldName, lookForInherited);
 		}
 	}
 }
