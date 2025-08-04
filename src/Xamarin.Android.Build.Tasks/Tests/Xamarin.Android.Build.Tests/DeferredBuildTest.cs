@@ -29,7 +29,7 @@ namespace Xamarin.Android.Build.Tests
 					"ProvideCommandLineArgs=true",
 				}), "first app build should have succeeded.");
 
-				Assert.IsTrue (appBuilder.Output.IsTargetSkipped ("UpdateAndroidResources"), $"`UpdateAndroidResources` should be skipped for DTB when deferred build is supported!");
+				Assert.IsTrue (appBuilder.Output.IsTargetSkipped ("UpdateAndroidResources", defaultIfNotUsed: true), $"`UpdateAndroidResources` should be skipped for DTB when deferred build is supported!");
 
 				// The background build would run our UpdateAndroidResources in its DeferredBuildDependsOn
 				Assert.IsTrue (appBuilder.RunTarget (app, "UpdateAndroidResources", parameters: new string[]{
@@ -42,7 +42,7 @@ namespace Xamarin.Android.Build.Tests
 					"ProvideCommandLineArgs=true",
 				}), "background build should have succeeded.");
 
-				Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("UpdateAndroidResources"), $"`UpdateAndroidResources` should *not* be skipped in the deferred build!");
+				Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("UpdateAndroidResources", defaultIfNotUsed: true), $"`UpdateAndroidResources` should *not* be skipped in the deferred build!");
 
 				// Run the real build now
 				Assert.IsTrue (appBuilder.Build(app, parameters: new string[]{

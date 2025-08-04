@@ -31,7 +31,7 @@ namespace Xamarin.Android.Build.Tests
 				b.Verbosity = LoggerVerbosity.Detailed;
 				b.Build (proj);
 				intermediatePath = Path.Combine (path,proj.IntermediateOutputPath);
-				targetSkipped = b.Output.IsTargetSkipped ("_CheckAndroidHttpClientHandlerType");
+				targetSkipped = b.Output.IsTargetSkipped ("_CheckAndroidHttpClientHandlerType", defaultIfNotUsed: true);
 			}
 
 			if (handler.Contains ("Xamarin.Android.Net.AndroidMessageHandler"))
