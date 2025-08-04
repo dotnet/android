@@ -39,8 +39,8 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		public MethodDefinition? NativeCallbackWrapper { get; set; }
 		public MethodDefinition? Connector             { get; }
-		public MethodDefinition RegisteredMethod      { get; }
-		public MethodDefinition ImplementedMethod     { get; }
+		public MethodDefinition? RegisteredMethod      { get; }
+		public MethodDefinition? ImplementedMethod     { get; }
 		public FieldDefinition? CallbackField          { get; }
 		public string JniTypeName                      { get; }
 		public string JniMethodName                    { get; }
@@ -71,6 +71,10 @@ namespace Xamarin.Android.Tasks
 			: base (declaringType)
 		{
 			nativeCallbackReal = nativeCallback ?? throw new ArgumentNullException (nameof (nativeCallback));
+			Connector = null;
+			RegisteredMethod = null;
+			ImplementedMethod = null;
+			CallbackField = null;
 			JniTypeName = EnsureNonEmpty (jniTypeName, nameof (jniTypeName));
 			JniMethodName = EnsureNonEmpty (jniName, nameof (jniName));
 			JniMethodSignature = EnsureNonEmpty (jniSignature, nameof (jniSignature));
@@ -78,8 +82,8 @@ namespace Xamarin.Android.Tasks
 		}
 
 		public MarshalMethodEntry (MarshalMethodEntry other, MethodDefinition nativeCallback)
-			: this (other.DeclaringType, nativeCallback, other.Connector, other.RegisteredMethod,
-			        other.ImplementedMethod, other.CallbackField, other.JniTypeName, other.JniMethodName,
+			: this (other.DeclaringType, nativeCallback, other.Connector, other.RegisteredMethod ?? throw new ArgumentException("Cannot copy from special MarshalMethodEntry"),
+			        other.ImplementedMethod ?? throw new ArgumentException("Cannot copy from special MarshalMethodEntry"), other.CallbackField, other.JniTypeName, other.JniMethodName,
 			        other.JniMethodSignature, other.NeedsBlittableWorkaround)
 		{}
 
@@ -94,6 +98,9 @@ namespace Xamarin.Android.Tasks
 
 		public string GetStoreMethodKey (TypeDefinitionCache tdCache)
 		{
+			if (RegisteredMethod == null)
+				throw new InvalidOperationException ("RegisteredMethod is null");
+			
 			MethodDefinition registeredMethod = RegisteredMethod;
 			string typeName = registeredMethod.DeclaringType.FullName.Replace ('/', '+');
 			return $"{typeName}, {registeredMethod.DeclaringType.GetPartialAssemblyName (tdCache)}\t{registeredMethod.Name}";

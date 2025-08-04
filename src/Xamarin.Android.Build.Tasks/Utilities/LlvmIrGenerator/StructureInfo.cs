@@ -37,7 +37,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		public string? GetCommentFromProvider (StructureMemberInfo smi, StructureInstance instance)
 		{
-			if (DataProvider == null || !smi.Info.UsesDataProvider (cache)) {
+			if (DataProvider == null || !smi.Info.UsesDataProvider (cache) || instance.Obj == null) {
 				return null;
 			}
 
@@ -51,7 +51,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		public ulong GetBufferSizeFromProvider (StructureMemberInfo smi, StructureInstance instance)
 		{
-			if (DataProvider == null) {
+			if (DataProvider == null || instance.Obj == null) {
 				return 0;
 			}
 

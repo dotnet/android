@@ -78,23 +78,23 @@ namespace Xamarin.Android.Manifest {
 		public readonly string Element;
 
 		class MappingInfo {
-			public string             AttributeName;
-			public Func<T, object?>    Getter;
+			public string             AttributeName = "";
+			public Func<T, object?>    Getter = _ => null;
 			public Action<T, object>?  Setter;
-			public Type               MemberType;
-			public Func<T, string>    AttributeValue;
-			public Func<T, ICustomAttributeProvider, IAssemblyResolver, TypeDefinitionCache, string>    AttributeValue2;
+			public Type               MemberType = typeof(object);
+			public Func<T, string>?    AttributeValue;
+			public Func<T, ICustomAttributeProvider, IAssemblyResolver, TypeDefinitionCache, string>?    AttributeValue2;
 		}
 
 		readonly IDictionary<string, MappingInfo>   Mappings = new Dictionary<string, MappingInfo> ();
 
-		public void Add (string member, string attributeName, Func<T, object?> getter, Action<T, object>? setter, Type memberType = null)
+		public void Add (string member, string attributeName, Func<T, object?> getter, Action<T, object>? setter, Type? memberType = null)
 		{
 			Mappings.Add (member, new MappingInfo {
 					AttributeName   = attributeName,
 					Getter          = getter,
 					Setter          = setter,
-					MemberType      = memberType,
+					MemberType      = memberType ?? typeof(object),
 			});
 		}
 
@@ -153,7 +153,7 @@ namespace Xamarin.Android.Manifest {
 			if (m.AttributeName == null)
 				return null;
 
-			string v = ToAttributeValue (name, value, provider, resolver, cache, targetSdkVersion);
+			string? v = ToAttributeValue (name, value, provider, resolver, cache, targetSdkVersion);
 			if (v == null)
 				return null;
 			v = v.Replace ("@PACKAGE_NAME@", packageName);
@@ -165,7 +165,7 @@ namespace Xamarin.Android.Manifest {
 			var m = Mappings [name];
 			if (m.AttributeValue != null)
 				return m.AttributeValue (value);
-			if (m.AttributeValue2 != null)
+			if (m.AttributeValue2 != null && provider != null && resolver != null)
 				return m.AttributeValue2 (value, provider, resolver, cache);
 
 			if (m.Getter == null)
