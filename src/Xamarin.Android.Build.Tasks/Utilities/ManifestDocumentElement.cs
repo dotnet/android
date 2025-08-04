@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections;
@@ -47,10 +47,10 @@ namespace Xamarin.Android.Manifest {
 			int c = type.IndexOf (',');
 			string typeName = c < 0 ? type  : type.Substring (0, c);
 
-			string assmName = c < 0 ? null  : type.Substring (c+1);
+			string? assmName = c < 0 ? null  : type.Substring (c+1);
 
-			var assmNameRef = AssemblyNameReference.Parse (assmName);
-			var assembly    = assmName == null ? null : resolver.Resolve (assmNameRef);
+			var assmNameRef = assmName != null ? AssemblyNameReference.Parse (assmName) : null;
+			var assembly    = assmName == null ? null : resolver.Resolve (assmNameRef!);
 			if (assembly == null) {
 				assembly = provider as AssemblyDefinition;
 				if (assembly == null) {
@@ -116,7 +116,7 @@ namespace Xamarin.Android.Manifest {
 			});
 		}
 
-		public ICollection<string> Load (T value, CustomAttribute attribute, TypeDefinitionCache cache)
+		public ICollection<string>? Load (T value, CustomAttribute? attribute, TypeDefinitionCache cache)
 		{
 			if (attribute == null)
 				return null;
@@ -134,7 +134,7 @@ namespace Xamarin.Android.Manifest {
 		}
 
 		public XElement ToElement (T value, ICollection<string> specified, string packageName, TypeDefinitionCache cache,
-			ICustomAttributeProvider provider = null, IAssemblyResolver resolver = null, int targetSdkVersion = 0)
+			ICustomAttributeProvider? provider = null, IAssemblyResolver? resolver = null, int targetSdkVersion = 0)
 		{
 			var r = new XElement (Element,
 					specified.OrderBy (e => e)
@@ -144,8 +144,8 @@ namespace Xamarin.Android.Manifest {
 			return r;
 		}
 
-		XAttribute ToAttribute (string name, T value, string packageName,
-			ICustomAttributeProvider provider, IAssemblyResolver resolver, TypeDefinitionCache cache, int targetSdkVersion = 0)
+		XAttribute? ToAttribute (string name, T value, string packageName,
+			ICustomAttributeProvider? provider, IAssemblyResolver? resolver, TypeDefinitionCache cache, int targetSdkVersion = 0)
 		{
 			if (!Mappings.ContainsKey (name))
 				throw new ArgumentException ("Invalid attribute name: " + name);
@@ -160,7 +160,7 @@ namespace Xamarin.Android.Manifest {
 			return new XAttribute (ManifestDocument.AndroidXmlNamespace + m.AttributeName, v);
 		}
 
-		string ToAttributeValue (string name, T value, ICustomAttributeProvider provider, IAssemblyResolver resolver, TypeDefinitionCache cache, int targetSdkVersion = 0)
+		string? ToAttributeValue (string name, T value, ICustomAttributeProvider? provider, IAssemblyResolver? resolver, TypeDefinitionCache cache, int targetSdkVersion = 0)
 		{
 			var m = Mappings [name];
 			if (m.AttributeValue != null)
@@ -180,7 +180,7 @@ namespace Xamarin.Android.Manifest {
 			return c (v, provider, resolver, targetSdkVersion, cache);
 		}
 
-		static readonly Dictionary<Type, Func<object, ICustomAttributeProvider, IAssemblyResolver, int, TypeDefinitionCache, string>> ValueConverters = new () {
+		static readonly Dictionary<Type, Func<object, ICustomAttributeProvider?, IAssemblyResolver?, int, TypeDefinitionCache, string>> ValueConverters = new () {
 			{ typeof (bool),                (value, p, r, v, c) => ToString ((bool) value) },
 			{ typeof (int),                 (value, p, r, v, c) => value.ToString () },
 			{ typeof (float),               (value, p, r, v, c) => value.ToString () },
@@ -366,9 +366,9 @@ namespace Xamarin.Android.Manifest {
 			}
 		}
 
-		static string ToString (string value, ICustomAttributeProvider provider, IAssemblyResolver resolver, TypeDefinitionCache cache)
+		static string ToString (string value, ICustomAttributeProvider? provider, IAssemblyResolver? resolver, TypeDefinitionCache cache)
 		{
-			var typeDef = ResolveType (value, provider, resolver);
+			var typeDef = ResolveType (value, provider!, resolver!);
 			return ToString (typeDef, cache);
 		}
 
