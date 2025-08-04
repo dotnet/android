@@ -288,7 +288,7 @@ namespace Xamarin.Android.Tasks
 			var uniqueAssemblies = new Dictionary<string, TypeMapDebugAssembly> (StringComparer.OrdinalIgnoreCase);
 
 			foreach (var xml in XmlFiles) {
-				if (!uniqueAssemblies.ContainsKey (xml.AssemblyName)) {
+				if (xml.AssemblyName != null && !uniqueAssemblies.ContainsKey (xml.AssemblyName)) {
 					var assm = new TypeMapDebugAssembly {
 						MVID = xml.AssemblyMvid,
 						MVIDBytes = xml.AssemblyMvid.ToByteArray (),
@@ -333,7 +333,7 @@ namespace Xamarin.Android.Tasks
 			var state = new ReleaseGenerationState ();
 
 			foreach (var xml in XmlFiles)
-				if (xml.HasReleaseEntries)
+				if (xml.HasReleaseEntries && xml.ModuleReleaseData != null)
 					state.TempModules.Add (xml.ModuleReleaseData.MvidBytes, xml.ModuleReleaseData);
 
 			return state;

@@ -100,7 +100,7 @@ class MarshalMethodsNativeAssemblyGeneratorMonoVM : MarshalMethodsNativeAssembly
 				id = 0,
 				name = methodName.ToString (),
 			};
-			mm_method_names.Add (new StructureInstance<MarshalMethodName> (marshalMethodNameStructureInfo, name));
+			mm_method_names.Add (new StructureInstance<MarshalMethodName> (marshalMethodNameStructureInfo!, name));
 		}
 
 		// Must terminate with an "invalid" entry
@@ -111,7 +111,7 @@ class MarshalMethodsNativeAssemblyGeneratorMonoVM : MarshalMethodsNativeAssembly
 			id = 0,
 			name = String.Empty,
 		};
-		mm_method_names.Add (new StructureInstance<MarshalMethodName> (marshalMethodNameStructureInfo, name));
+		mm_method_names.Add (new StructureInstance<MarshalMethodName> (marshalMethodNameStructureInfo!, name));
 
 		var mm_method_names_variable = new LlvmIrGlobalVariable (mm_method_names, "mm_method_names", LlvmIrVariableOptions.GlobalConstant) {
 			BeforeWriteCallback = UpdateMarshalMethodNameIds,

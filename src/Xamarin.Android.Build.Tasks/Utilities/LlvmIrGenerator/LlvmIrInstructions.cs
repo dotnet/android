@@ -723,18 +723,20 @@ sealed class LlvmIrInstructions
 			context.Output.Write (defaultDest.Name);
 			context.Output.WriteLine (" [");
 			context.IncreaseIndent ();
-			foreach ((T constant, LlvmIrFunctionLabelItem label, string? comment) in items) {
-				context.Output.Write (context.CurrentIndent);
-				context.Output.Write (irType);
-				context.Output.Write (' ');
-				context.Generator.WriteValue (context, value.Type, constant);
-				context.Output.Write (", label %");
-				context.Output.Write (label.Name);
-				if (!comment.IsNullOrEmpty ()) {
+			if (items != null) {
+				foreach ((T constant, LlvmIrFunctionLabelItem label, string? comment) in items) {
+					context.Output.Write (context.CurrentIndent);
+					context.Output.Write (irType);
 					context.Output.Write (' ');
-					context.Generator.WriteCommentLine (context, comment);
-				} else {
-					context.Output.WriteLine ();
+					context.Generator.WriteValue (context, value.Type, constant);
+					context.Output.Write (", label %");
+					context.Output.Write (label.Name);
+					if (!comment.IsNullOrEmpty ()) {
+						context.Output.Write (' ');
+						context.Generator.WriteCommentLine (context, comment);
+					} else {
+						context.Output.WriteLine ();
+					}
 				}
 			}
 			context.DecreaseIndent ();

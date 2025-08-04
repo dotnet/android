@@ -83,10 +83,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 	/// <summary>
 	sealed class StructureInstance<T> : StructureInstance
 	{
-		public T? Instance => (T)Obj;
+		public T? Instance => Obj is T t ? t : default(T);
 
 		public StructureInstance (StructureInfo info, T instance, string? comment = null)
-			: base (info, instance, comment)
+			: base (info, instance!, comment)
 		{}
 
 		public StructureInstance (StructureInfo info, string? comment = null)

@@ -132,8 +132,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return fi.GetValue (instance);
 			}
 
-			var pi = Info as PropertyInfo;
-			return pi.GetValue (instance);
+			if (Info is PropertyInfo pi) {
+				return pi.GetValue (instance);
+			}
+			
+			return null;
 		}
 
 		int GetArraySizeFromProvider (NativeAssemblerStructContextDataProvider? provider, string fieldName)
@@ -142,7 +145,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return -1;
 			}
 
-			return (int)provider.GetMaxInlineWidth (null, fieldName);
+			return (int)provider.GetMaxInlineWidth (this, fieldName);
 		}
 	}
 }

@@ -241,7 +241,7 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 				from_hash = typemap_uses_hashes ? MonoAndroidHelper.GetXxHash (entry.ManagedName, is64Bit: true) : 0,
 				to = (uint)javaTypeNameOffset,
 			};
-			managedToJavaMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo, m2j));
+			managedToJavaMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo!, m2j));
 
 			if (!typemap_uses_hashes) {
 				continue;
@@ -286,7 +286,7 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 				name_length = (ulong)assemblyNameLength, // without the trailing NUL
 				name_offset = (ulong)assemblyNameOffset,
 			};
-			uniqueAssemblies.Add (new StructureInstance<TypeMapAssembly> (typeMapAssemblyStructureInfo, entry));
+			uniqueAssemblies.Add (new StructureInstance<TypeMapAssembly> (typeMapAssemblyStructureInfo!, entry));
 		}
 
 		uniqueAssemblies.Sort ((StructureInstance<TypeMapAssembly> a, StructureInstance<TypeMapAssembly> b) => {
@@ -316,7 +316,7 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 				from_hash = 0,
 				to = managedEntry.SkipInJavaToManaged ? uint.MaxValue : (uint)managedTypeNameOffset,
 			};
-			javaToManagedMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo, j2m));
+			javaToManagedMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo!, j2m));
 
 			int assemblyNameOffset = assemblyNamesBlob.GetIndexOf (entry.AssemblyName);
 			if (assemblyNameOffset < 0) {
@@ -330,7 +330,7 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 				assembly_name_index = (uint)assemblyNameOffset,
 				managed_type_token_id = entry.ManagedTypeTokenId,
 			};
-			managedTypeInfos.Add (new StructureInstance<TypeMapManagedTypeInfo> (typeMapManagedTypeInfoStructureInfo, typeInfo));
+			managedTypeInfos.Add (new StructureInstance<TypeMapManagedTypeInfo> (typeMapManagedTypeInfoStructureInfo!, typeInfo));
 		}
 
 		var map = new TypeMap {
@@ -340,7 +340,7 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 			entry_count = data.EntryCount,
 			unique_assemblies_count = (ulong)data.UniqueAssemblies.Count,
 		};
-		type_map = new StructureInstance<TypeMap> (typeMapStructureInfo, map);
+		type_map = new StructureInstance<TypeMap> (typeMapStructureInfo!, map);
 
 		module.AddGlobalVariable (TypeMapSymbol, type_map, LlvmIrVariableOptions.GlobalConstant);
 		module.AddGlobalVariable (ManagedToJavaSymbol, managedToJavaMap, LlvmIrVariableOptions.LocalConstant);

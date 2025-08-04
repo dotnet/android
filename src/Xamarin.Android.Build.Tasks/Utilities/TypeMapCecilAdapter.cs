@@ -180,7 +180,8 @@ class TypeMapCecilAdapter
 			javaDuplicates.Add (entry.JavaName, new List<TypeMapDebugEntry> { entry });
 		} else {
 			TypeMapDebugEntry oldEntry = duplicates [0];
-			if ((td.IsAbstract || td.IsInterface) &&
+			if (oldEntry.TypeDefinition != null &&
+					(td.IsAbstract || td.IsInterface) &&
 					!oldEntry.TypeDefinition.IsAbstract &&
 					!oldEntry.TypeDefinition.IsInterface &&
 					td.IsAssignableFrom (oldEntry.TypeDefinition, cache)) {
