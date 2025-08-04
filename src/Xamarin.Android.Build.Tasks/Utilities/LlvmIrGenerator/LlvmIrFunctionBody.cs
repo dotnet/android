@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -24,7 +24,7 @@ abstract class LlvmIrFunctionBodyItem
 	public void Write (GeneratorWriteContext context, LlvmIrGenerator generator)
 	{
 		DoWrite (context, generator);
-		if (!String.IsNullOrEmpty (Comment)) {
+		if (!Comment.IsNullOrEmpty ()) {
 			context.Output.Write (' ');
 			generator.WriteComment (context, Comment);
 		}
@@ -44,14 +44,14 @@ abstract class LlvmIrFunctionLocalItem : LlvmIrFunctionBodyItem
 
 	public string Name {
 		get {
-			if (String.IsNullOrEmpty (name)) {
+			if (name.IsNullOrEmpty ()) {
 				throw new InvalidOperationException ("Internal error: name hasn't been set yet");
 			}
 			return name;
 		}
 
 		protected set {
-			if (String.IsNullOrEmpty (value)) {
+			if (value.IsNullOrEmpty ()) {
 				throw new InvalidOperationException ("Internal error: value must not be null or empty");
 			}
 			name = value;
@@ -84,7 +84,7 @@ abstract class LlvmIrFunctionLocalItem : LlvmIrFunctionBodyItem
 		Name = num.ToString (CultureInfo.InvariantCulture);
 	}
 
-	protected bool NameIsSet () => !String.IsNullOrEmpty (name);
+	protected bool NameIsSet () => !name.IsNullOrEmpty ();
 }
 
 class LlvmIrFunctionLabelItem : LlvmIrFunctionLocalItem
