@@ -9,6 +9,7 @@ using System.Xml.Linq;
 using Xamarin.ProjectTools;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
+using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -433,6 +434,43 @@ namespace Foo {
 				};
 				using (var b = CreateApkBuilder (Path.Combine ("temp", "BindingDoNotPackage", "App"))) {
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				}
+			}
+		}
+
+		[Test]
+		public void AndroidLibraryPackFalseExcludesJarFromAar ()
+		{
+			var binding = new XamarinAndroidBindingProject () {
+				IsRelease = true,
+			};
+			// Add a jar with Pack='false' - should not be included in AAR
+			binding.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("Jars\\test-pack-false.jar") {
+				BinaryContent = () => ResourceData.JavaSourceJarTestJar,
+				MetadataValues = "Pack=false;Bind=false",
+			});
+			// Add a jar with Pack='true' (default) - should be included in AAR
+			binding.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("Jars\\test-pack-true.jar") {
+				BinaryContent = () => ResourceData.JavaSourceJarTestJar,
+				MetadataValues = "Bind=false",
+			});
+
+			using (var bindingBuilder = CreateDllBuilder ()) {
+				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
+
+				// Check that the AAR file was created
+				var aarPath = Path.Combine (Root, bindingBuilder.ProjectDirectory, binding.OutputPath, "UnnamedProject.aar");
+				FileAssert.Exists (aarPath);
+
+				// Extract and examine AAR contents
+				using (var aar = ZipArchive.Open (aarPath, FileMode.Open)) {
+					// test-pack-false.jar should NOT be in the AAR because Pack='false'
+					var packFalseEntry = aar.Where (e => e.FullName.Contains ("test-pack-false")).FirstOrDefault ();
+					Assert.IsNull (packFalseEntry, "Jar with Pack='false' should not be included in AAR");
+
+					// test-pack-true.jar should be in the AAR (default Pack='true')
+					var packTrueEntry = aar.Where (e => e.FullName.Contains ("test-pack-true") || e.FullName.StartsWith ("libs/")).FirstOrDefault ();
+					Assert.IsNotNull (packTrueEntry, "Jar with Pack='true' (default) should be included in AAR");
 				}
 			}
 		}
