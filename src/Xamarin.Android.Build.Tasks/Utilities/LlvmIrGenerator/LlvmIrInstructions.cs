@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -19,7 +19,7 @@ abstract class LlvmIrInstruction : LlvmIrFunctionBodyItem
 
 	protected LlvmIrInstruction (string mnemonic)
 	{
-		if (String.IsNullOrEmpty (mnemonic)) {
+		if (mnemonic.IsNullOrEmpty ()) {
 			throw new ArgumentException ("must not be null or empty", nameof (mnemonic));
 		}
 
@@ -262,7 +262,7 @@ sealed class LlvmIrInstructions
 				_ => throw new InvalidOperationException ($"Internal error: call marker '{CallMarker}' not supported"),
 			};
 
-			if (!String.IsNullOrEmpty (callMarker)) {
+			if (!callMarker.IsNullOrEmpty ()) {
 				context.Output.Write (callMarker);
 				context.Output.Write (' ');
 			}
@@ -708,7 +708,7 @@ sealed class LlvmIrInstructions
 			this.value = value;
 			this.defaultDest = defaultDest;
 			this.automaticLabelPrefix = automaticLabelPrefix;
-			if (!String.IsNullOrEmpty (automaticLabelPrefix)) {
+			if (!automaticLabelPrefix.IsNullOrEmpty ()) {
 				items = new ();
 			}
 		}
@@ -730,7 +730,7 @@ sealed class LlvmIrInstructions
 				context.Generator.WriteValue (context, value.Type, constant);
 				context.Output.Write (", label %");
 				context.Output.Write (label.Name);
-				if (!String.IsNullOrEmpty (comment)) {
+				if (!comment.IsNullOrEmpty ()) {
 					context.Output.Write (' ');
 					context.Generator.WriteCommentLine (context, comment);
 				} else {
@@ -752,7 +752,7 @@ sealed class LlvmIrInstructions
 			if (dest != null) {
 				return;
 			}
-			if (String.IsNullOrEmpty (automaticLabelPrefix)) {
+			if (automaticLabelPrefix.IsNullOrEmpty ()) {
 				throw new InvalidOperationException ($"Internal error: automatic label management requested, but prefix not defined");
 			}
 		}

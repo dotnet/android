@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Reflection;
@@ -38,7 +38,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public string MappedName {
 			get {
 				string? name = Info.GetOverriddenName (typeCache);
-				return String.IsNullOrEmpty (name) ? Info.Name : name;
+				return name.IsNullOrEmpty () ? Info.Name : name;
 			}
 		}
 
