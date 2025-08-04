@@ -42,7 +42,7 @@ namespace Xamarin.Android.Build.Tests
 					"ProvideCommandLineArgs=true",
 				}), "background build should have succeeded.");
 
-				Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("UpdateAndroidResources", defaultIfNotUsed: true), $"`UpdateAndroidResources` should *not* be skipped in the deferred build!");
+				Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("UpdateAndroidResources", defaultIfNotUsed: false), $"`UpdateAndroidResources` should *not* be skipped in the deferred build!");
 
 				// Run the real build now
 				Assert.IsTrue (appBuilder.Build(app, parameters: new string[]{

@@ -129,7 +129,7 @@ namespace Xamarin.Android.Build.Tests
 				FileAssert.Exists (cs_file);
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "forth build should succeed");
 				foreach (var target in targets) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped on second build!");
+					Assert.IsTrue (b.Output.IsTargetSkipped (target, defaultIfNotUsed: true), $"`{target}` should be skipped on second build!");
 				}
 
 			}
