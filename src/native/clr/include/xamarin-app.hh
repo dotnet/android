@@ -258,6 +258,7 @@ struct DSOCacheEntry
 	const uint64_t  hash;
 	const uint64_t  real_name_hash;
 	const bool      ignore;
+	const bool      is_jni_library;
 	const uint32_t  name_index;
 	void           *handle;
 };
