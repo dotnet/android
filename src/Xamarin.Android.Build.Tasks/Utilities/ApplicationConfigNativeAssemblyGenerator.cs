@@ -61,6 +61,7 @@ namespace Xamarin.Android.Tasks
 			[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 			public ulong real_name_hash;
 			public bool ignore;
+			public bool is_jni_library;
 
 			[NativeAssembler (UsesDataProvider = true)]
 			public string? name;
@@ -360,7 +361,7 @@ namespace Xamarin.Android.Tasks
 
 		(List<StructureInstance<DSOCacheEntry>> dsoCache, List<StructureInstance<DSOCacheEntry>> aotDsoCache) InitDSOCache ()
 		{
-			var dsos = new List<(string name, string nameLabel, bool ignore)> ();
+			var dsos = new List<(string name, string nameLabel, bool ignore, ITaskItem item)> ();
 			var nameCache = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
 			foreach (ITaskItem item in NativeLibraries) {
@@ -374,7 +375,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				dsos.Add ((name, $"dsoName{dsos.Count.ToString (CultureInfo.InvariantCulture)}", ELFHelper.IsEmptyAOTLibrary (Log, item.ItemSpec)));
+				dsos.Add ((name, $"dsoName{dsos.Count.ToString (CultureInfo.InvariantCulture)}", ELFHelper.IsEmptyAOTLibrary (Log, item.ItemSpec), item));
 			}
 
 			var dsoCache = new List<StructureInstance<DSOCacheEntry>> ();
@@ -391,6 +392,7 @@ namespace Xamarin.Android.Tasks
 						HashedName = entryName,
 						hash = 0, // Hash is arch-specific, we compute it before writing
 						ignore = dsos[i].ignore,
+						is_jni_library = ELFHelper.IsJniLibrary (Log, dsos[i].item.ItemSpec),
 						name = name,
 					};
 

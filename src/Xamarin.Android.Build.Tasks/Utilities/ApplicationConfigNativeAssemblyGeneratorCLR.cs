@@ -59,6 +59,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 		public ulong real_name_hash;
 		public bool ignore;
+		public bool is_jni_library;
 
 		[NativeAssembler (UsesDataProvider = true)]
 		public uint name_index;
@@ -261,10 +262,10 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	StructureInfo? assemblyStoreRuntimeDataStructureInfo;
 	StructureInfo? runtimePropertyStructureInfo;
 	StructureInfo? runtimePropertyIndexEntryStructureInfo;
-#pragma warning disable CS0169 // Field is never used - might be used in future versions  
+#pragma warning disable CS0169 // Field is never used - might be used in future versions
 	StructureInfo? hostConfigurationPropertyStructureInfo;
 #pragma warning restore CS0169
-#pragma warning disable CS0169 // Field is never used - might be used in future versions  
+#pragma warning disable CS0169 // Field is never used - might be used in future versions
 	StructureInfo? hostConfigurationPropertiesStructureInfo;
 #pragma warning restore CS0169
 	StructureInfo? appEnvironmentVariableStructureInfo;
@@ -574,7 +575,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	(List<StructureInstance<DSOCacheEntry>> dsoCache, List<StructureInstance<DSOCacheEntry>> aotDsoCache, LlvmIrStringBlob namesBlob)
 	InitDSOCache ()
 	{
-		var dsos = new List<(string name, string nameLabel, bool ignore)> ();
+		var dsos = new List<(string name, string nameLabel, bool ignore, ITaskItem item)> ();
 		var nameCache = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
 		foreach (ITaskItem item in NativeLibraries) {
@@ -588,7 +589,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 				continue;
 			}
 
-			dsos.Add ((name, $"dsoName{dsos.Count.ToString (CultureInfo.InvariantCulture)}", ELFHelper.IsEmptyAOTLibrary (Log, item.ItemSpec)));
+			dsos.Add ((name, $"dsoName{dsos.Count.ToString (CultureInfo.InvariantCulture)}", ELFHelper.IsEmptyAOTLibrary (Log, item.ItemSpec), item));
 		}
 
 		var dsoCache = new List<StructureInstance<DSOCacheEntry>> ();
@@ -610,6 +611,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 					hash = 0, // Hash is arch-specific, we compute it before writing
 					ignore = dsos[i].ignore,
+					is_jni_library = ELFHelper.IsJniLibrary (Log, dsos[i].item.ItemSpec),
 					name_index = (uint)nameOffset,
 				};
 
