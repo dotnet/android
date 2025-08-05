@@ -126,8 +126,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			};
 		}
 
-		public object? GetValue (object instance)
+		public object? GetValue (object? instance)
 		{
+			if (instance == null) {
+				return null;
+			}
+
 			if (Info is FieldInfo fi) {
 				return fi.GetValue (instance);
 			}

@@ -199,8 +199,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			foreach (LlvmIrStringGroup group in context.Module.Strings) {
 				context.Output.WriteLine ();
 
-				if (!String.IsNullOrEmpty (group.Comment)) {
-					WriteCommentLine (context, group.Comment);
+				if (!group.Comment.IsNullOrEmpty ()) {
+					WriteCommentLine (context, group.Comment!);
 				}
 
 				foreach (LlvmIrStringVariable info in group.Strings) {
@@ -237,10 +237,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				context.NumberFormat = gv.NumberFormat;
 
 				if (gv is LlvmIrGroupDelimiterVariable groupDelimiter) {
-					if (!context.InVariableGroup && !String.IsNullOrEmpty (groupDelimiter.Comment)) {
+					if (!context.InVariableGroup && !groupDelimiter.Comment.IsNullOrEmpty ()) {
 						context.Output.WriteLine ();
 						context.Output.Write (context.CurrentIndent);
-						WriteComment (context, groupDelimiter.Comment);
+						WriteComment (context, groupDelimiter.Comment!);
 					}
 
 					context.InVariableGroup = !context.InVariableGroup;
@@ -263,8 +263,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		void WriteGlobalVariableName (GeneratorWriteContext context, LlvmIrGlobalVariable variable)
 		{
-			if (!String.IsNullOrEmpty (variable.Comment)) {
-				WriteCommentLine (context, variable.Comment);
+			if (!variable.Comment.IsNullOrEmpty ()) {
+				WriteCommentLine (context, variable.Comment!);
 			}
 			context.Output.Write ('@');
 			context.Output.Write (variable.Name);
@@ -864,11 +864,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					context.Output.WriteLine ();
 				}
 
-				if (!String.IsNullOrEmpty (section.Header)) {
+				if (!section.Header.IsNullOrEmpty ()) {
 					context.Output.Write (context.CurrentIndent);
 					WriteCommentLine (context, $" Module map index: {globalCounter}");
 					context.Output.Write (context.CurrentIndent);
-					WriteCommentLine (context, section.Header);
+					WriteCommentLine (context, section.Header!);
 				}
 
 				WriteArrayEntries (
@@ -997,14 +997,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				}
 
 				string? comment = info.GetCommentFromProvider (smi, instance);
-				if (String.IsNullOrEmpty (comment)) {
+				if (comment.IsNullOrEmpty ()) {
 					var sb = new StringBuilder (" ");
 					sb.Append (MapManagedTypeToNative (context, smi));
 					sb.Append (' ');
 					sb.Append (smi.MappedName);
 					comment = sb.ToString ();
 				}
-				WriteCommentLine (context, comment);
+				WriteCommentLine (context, comment!);
 			}
 
 			context.DecreaseIndent ();
@@ -1092,9 +1092,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			void WritePrevItemCommentOrNewline ()
 			{
-				if (!ignoreComments && !String.IsNullOrEmpty (prevItemComment)) {
+				if (!ignoreComments && !prevItemComment.IsNullOrEmpty ()) {
 					context.Output.Write (' ');
-					WriteCommentLine (context, prevItemComment);
+					WriteCommentLine (context, prevItemComment!);
 				} else {
 					context.Output.WriteLine ();
 				}
@@ -1161,6 +1161,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		void WriteArrayValue (GeneratorWriteContext context, LlvmIrVariable variable)
 		{
+			if (variable.Value == null) {
+				context.Output.Write ("zeroinitializer");
+				return;
+			}
+
 			ICollection entries;
 			if (variable.Type.ImplementsInterface (typeof(IDictionary<string, string>))) {
 				var list = new List<string> ();
@@ -1374,11 +1379,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		void WriteFunctionComment (GeneratorWriteContext context, LlvmIrFunction function)
 		{
-			if (String.IsNullOrEmpty (function.Comment)) {
+			if (function.Comment.IsNullOrEmpty ()) {
 				return;
 			}
 
-			foreach (string commentLine in function.Comment.Split ('\n')) {
+			foreach (string commentLine in function.Comment!.Split ('\n')) {
 				context.Output.Write (context.CurrentIndent);
 				WriteCommentLine (context, commentLine);
 			}
@@ -1625,7 +1630,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			uint ValueOrPointerSize (uint? value)
 			{
-				if (value.Value == 0) {
+				if (!value.HasValue || value.Value == 0) {
 					return context.Target.NativePointerSize;
 				}
 
@@ -1822,7 +1827,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public static string QuoteString (LlvmIrStringVariable variable, out ulong stringSize, bool nullTerminated = true)
 		{
 			if (variable.Encoding == LlvmIrStringEncoding.UTF8) {
-				var value = (StringHolder)variable.Value;
+				if (variable.Value is not StringHolder value) {
+					throw new InvalidOperationException ("Internal error: string variable must have StringHolder value.");
+				}
 				if (value.Data == null) {
 					throw new InvalidOperationException ("Internal error: null strings not supported here, they should be handled elsewhere.");
 				}
@@ -1847,7 +1854,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		static string QuoteUnicodeString (LlvmIrStringVariable variable, out ulong stringSize, bool nullTerminated = true)
 		{
-			var value = (StringHolder)variable.Value;
+			if (variable.Value is not StringHolder value) {
+				throw new InvalidOperationException ("Internal error: string variable must have StringHolder value.");
+			}
 			if (value.Data == null) {
 				throw new InvalidOperationException ("Internal error: null strings not supported here, they should be handled elsewhere.");
 			}
