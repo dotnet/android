@@ -259,7 +259,7 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
-		public IList<string> Merge (TaskLoggingHelper log, TypeDefinitionCache cache, List<TypeDefinition> subclasses, string applicationClass, bool embed, string bundledWearApplicationName, IEnumerable<string> mergedManifestDocuments)
+		public IList<string> Merge (TaskLoggingHelper log, TypeDefinitionCache cache, List<TypeDefinition> subclasses, string? applicationClass, bool embed, string? bundledWearApplicationName, IEnumerable<string> mergedManifestDocuments)
 		{
 			var manifest = doc.Root;
 
@@ -274,7 +274,7 @@ namespace Xamarin.Android.Tasks {
 			} else {
 				PackageName = manifest_package;
 			}
-			if (PackageName.Contains ("${")) {
+			if (PackageName != null && PackageName.Contains ("${")) {
 				// placeholder detected
 				if (Placeholders != null)
 					PackageName = ReplacePlaceholders (Placeholders, PackageName);
@@ -326,7 +326,7 @@ namespace Xamarin.Android.Tasks {
 			if (tsv != null)
 				targetSdkVersion = tsv.Value;
 			else {
-				targetSdkVersion = TargetSdkVersionName;
+				targetSdkVersion = TargetSdkVersionName ?? "1";
 				uses.AddBeforeSelf (new XComment ("suppress UsesMinSdkAttributes"));
 			}
 
@@ -350,7 +350,7 @@ namespace Xamarin.Android.Tasks {
 					continue;
 				}
 
-				Func<TypeDefinition, string, TypeDefinitionCache, int, XElement> generator = GetGenerator (t, cache);
+				Func<TypeDefinition, string, TypeDefinitionCache, int, XElement?>? generator = GetGenerator (t, cache);
 				if (generator == null)
 					continue;
 
@@ -358,13 +358,13 @@ namespace Xamarin.Android.Tasks {
 					(string name, string compatName) = GetNames (t, cache);
 					// activity not present: create a launcher for it IFF it has attribute
 					if (!existingTypes.Contains (name) && !existingTypes.Contains (compatName)) {
-						XElement fromCode = generator (t, name, cache, targetSdkVersionValue);
+						XElement? fromCode = generator (t, name, cache, targetSdkVersionValue);
 						if (fromCode == null)
 							continue;
 
 						IEnumerable <MethodDefinition> constructors = t.Methods.Where (m => m.IsConstructor).Cast<MethodDefinition> ();
 						if (!constructors.Any (c => !c.HasParameters && c.IsPublic)) {
-							SequencePoint sourceLocation = FindSource (constructors);
+							SequencePoint? sourceLocation = FindSource (constructors);
 
 							if (sourceLocation != null && sourceLocation.Document?.Url != null) {
 								log.LogError (
@@ -402,12 +402,16 @@ namespace Xamarin.Android.Tasks {
 				}
 			}
 
-			PackageName = AndroidAppManifest.CanonicalizePackageName (PackageName);
+			if (PackageName != null) {
+				PackageName = AndroidAppManifest.CanonicalizePackageName (PackageName);
 
-			if (!PackageName.Contains ('.'))
-				throw new InvalidOperationException ("/manifest/@package attribute MUST contain a period ('.').");
+				if (!PackageName.Contains ('.'))
+					throw new InvalidOperationException ("/manifest/@package attribute MUST contain a period ('.').");
 
-			manifest.SetAttributeValue ("package", PackageName);
+				manifest.SetAttributeValue ("package", PackageName);
+			} else {
+				throw new InvalidOperationException ("PackageName is required.");
+			}
 
 			if (MultiDex)
 				app.Add (CreateMonoRuntimeProvider ("mono.android.MultiDexLoader", null, initOrder: --AppInitOrder));
@@ -468,12 +472,12 @@ namespace Xamarin.Android.Tasks {
 
 			return providerNames;
 
-			SequencePoint FindSource (IEnumerable<MethodDefinition> methods)
+			SequencePoint? FindSource (IEnumerable<MethodDefinition> methods)
 			{
 				if (methods == null)
 					return null;
 
-				SequencePoint ret = null;
+				SequencePoint? ret = null;
 				foreach (MethodDefinition method in methods.Where (m => m != null && m.HasBody && m.DebugInformation != null)) {
 					foreach (Instruction ins in method.Body.Instructions) {
 						SequencePoint seq = method.DebugInformation.GetSequencePoint (ins);
@@ -549,7 +553,7 @@ namespace Xamarin.Android.Tasks {
 
 		IEnumerable<XNode> FixupNameElements(string packageName, IEnumerable<XNode> nodes)
 		{
-			foreach (var element in nodes.Select ( x => x as XElement).Where (x => x != null && ManifestAttributeFixups.ContainsKey (x.Name.LocalName))) {
+			foreach (var element in nodes.OfType<XElement>().Where (x => ManifestAttributeFixups.ContainsKey (x.Name.LocalName))) {
 				var attributes = ManifestAttributeFixups [element.Name.LocalName];
 				foreach (var attr in element.Attributes ().Where (x => attributes.Contains (x.Name.LocalName))) {
 					var typeName = attr.Value;
@@ -559,7 +563,7 @@ namespace Xamarin.Android.Tasks {
 			return nodes;
 		}
 
-		Func<TypeDefinition, string, TypeDefinitionCache, int, XElement> GetGenerator (TypeDefinition type, TypeDefinitionCache cache)
+		Func<TypeDefinition, string, TypeDefinitionCache, int, XElement?>? GetGenerator (TypeDefinition type, TypeDefinitionCache cache)
 		{
 			if (type.IsSubclassOf ("Android.App.Activity", cache))
 				return ActivityFromTypeDefinition;
@@ -572,7 +576,7 @@ namespace Xamarin.Android.Tasks {
 			return null;
 		}
 
-		XElement CreateApplicationElement (XElement manifest, string applicationClass, List<TypeDefinition> subclasses, TypeDefinitionCache cache)
+		XElement CreateApplicationElement (XElement manifest, string? applicationClass, List<TypeDefinition> subclasses, TypeDefinitionCache cache)
 		{
 			var application = manifest.Descendants ("application").FirstOrDefault ();
 
@@ -581,8 +585,9 @@ namespace Xamarin.Android.Tasks {
 			List<PropertyAttribute> properties = [];
 			List<UsesLibraryAttribute> usesLibraryAttr = [];
 			List<UsesConfigurationAttribute> usesConfigurationAttr = [];
-			foreach (var assemblyPath in Assemblies) {
-				var assembly = Resolver.GetAssembly (assemblyPath);
+			foreach (var assemblyPath in Assemblies ?? []) {
+				var assembly = Resolver?.GetAssembly (assemblyPath);
+				if (assembly == null) continue;
 				if (ApplicationAttribute.FromCustomAttributeProvider (assembly, cache) is ApplicationAttribute a) {
 					assemblyAttr.Add (a);
 				}
@@ -720,7 +725,7 @@ namespace Xamarin.Android.Tasks {
 
 		int AppInitOrder = 2000000000;
 
-		XElement CreateMonoRuntimeProvider (string name, string processName, int initOrder)
+		XElement CreateMonoRuntimeProvider (string name, string? processName, int initOrder)
 		{
 			var directBootAware = DirectBootAware ();
 			return new XElement ("provider",
@@ -761,7 +766,7 @@ namespace Xamarin.Android.Tasks {
 			return false;
 		}
 
-		XElement ActivityFromTypeDefinition (TypeDefinition type, string name, TypeDefinitionCache cache, int targetSdkVersion)
+		XElement? ActivityFromTypeDefinition (TypeDefinition type, string name, TypeDefinitionCache cache, int targetSdkVersion)
 		{
 			if (name.StartsWith ("_", StringComparison.Ordinal))
 				throw new InvalidActivityNameException (string.Format ("Activity name '{0}' is invalid, because activity namespaces may not begin with an underscore.", type.FullName));
@@ -779,7 +784,7 @@ namespace Xamarin.Android.Tasks {
 					cache);
 		}
 
-		XElement InstrumentationFromTypeDefinition (TypeDefinition type, string name, TypeDefinitionCache cache)
+		XElement? InstrumentationFromTypeDefinition (TypeDefinition type, string name, TypeDefinitionCache cache)
 		{
 			return ToElement (type, name,
 					(t, c) => InstrumentationAttribute.FromCustomAttributeProvider (t, c).FirstOrDefault (),
@@ -791,13 +796,13 @@ namespace Xamarin.Android.Tasks {
 					cache);
 		}
 
-		XElement ToElement<TAttribute> (TypeDefinition type, string name, Func<TypeDefinition, TypeDefinitionCache, TAttribute> parser, Func<TAttribute, XElement> toElement, TypeDefinitionCache cache)
+		XElement? ToElement<TAttribute> (TypeDefinition type, string name, Func<TypeDefinition, TypeDefinitionCache, TAttribute> parser, Func<TAttribute, XElement> toElement, TypeDefinitionCache cache)
 			where TAttribute : class
 		{
 			return ToElement (type, name, parser, toElement, update: null, cache);
 		}
 
-		XElement ToElement<TAttribute> (TypeDefinition type, string name, Func<TypeDefinition, TypeDefinitionCache, TAttribute> parser, Func<TAttribute, XElement> toElement, Action<TAttribute, XElement> update, TypeDefinitionCache cache)
+		XElement? ToElement<TAttribute> (TypeDefinition type, string name, Func<TypeDefinition, TypeDefinitionCache, TAttribute> parser, Func<TAttribute, XElement> toElement, Action<TAttribute, XElement>? update, TypeDefinitionCache cache)
 			where TAttribute : class
 		{
 			TAttribute attr = parser (type, cache);
@@ -821,7 +826,7 @@ namespace Xamarin.Android.Tasks {
 			return element;
 		}
 
-		XElement ToProviderElement (TypeDefinition type, string name, TypeDefinitionCache cache)
+		XElement? ToProviderElement (TypeDefinition type, string name, TypeDefinitionCache cache)
 		{
 			var attr = ContentProviderAttribute.FromTypeDefinition (type, cache);
 			if (attr == null)
@@ -869,12 +874,14 @@ namespace Xamarin.Android.Tasks {
 		public void AddInternetPermissionForDebugger ()
 		{
 			const string permInternet ="android.permission.INTERNET";
-			if (!doc.Root.Descendants ("uses-permission").Any (x => (string)x.Attribute (attName) == permInternet))
+			if (app != null && (!doc.Root?.Descendants ("uses-permission").Any (x => (string)x.Attribute (attName) == permInternet) ?? false))
 				app.AddBeforeSelf (new XElement ("uses-permission", new XAttribute (attName, permInternet)));
 		}
 
 		void AddPermissions (XElement application, TypeDefinitionCache cache)
 		{
+			if (Assemblies == null || Resolver == null || PackageName == null) return;
+			
 			var assemblyAttrs =
 				Assemblies.SelectMany (path => PermissionAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path), cache));
 			// Add unique permissions to the manifest
@@ -885,6 +892,8 @@ namespace Xamarin.Android.Tasks {
 
 		void AddPermissionGroups (XElement application, TypeDefinitionCache cache)
 		{
+			if (Assemblies == null || Resolver == null || PackageName == null) return;
+			
 			var assemblyAttrs =
 				Assemblies.SelectMany (path => PermissionGroupAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path), cache));
 
@@ -896,6 +905,8 @@ namespace Xamarin.Android.Tasks {
 
 		void AddPermissionTrees (XElement application, TypeDefinitionCache cache)
 		{
+			if (Assemblies == null || Resolver == null || PackageName == null) return;
+			
 			var assemblyAttrs =
 				Assemblies.SelectMany (path => PermissionTreeAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path), cache));
 
@@ -1067,7 +1078,7 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
-		internal static string ReplacePlaceholders (string [] placeholders, string text, Action<string, string>? logCodedWarning = null)
+		internal static string ReplacePlaceholders (string[]? placeholders, string text, Action<string, string>? logCodedWarning = null)
 		{
 			string result = text;
 			if (placeholders == null)
@@ -1112,7 +1123,7 @@ namespace Xamarin.Android.Tasks {
 			return true;
 		}
 
-		public void CalculateVersionCode (string currentAbi, string versionCodePattern, string versionCodeProperties)
+		public void CalculateVersionCode (string? currentAbi, string versionCodePattern, string? versionCodeProperties)
 		{
 			var regex = new Regex ("\\{(?<key>([A-Za-z]+)):?[D0-9]*[\\}]");
 			var kvp = new Dictionary<string, int> ();
@@ -1152,7 +1163,7 @@ namespace Xamarin.Android.Tasks {
 	public interface IVersionResolver
 	{
 		string? GetIdFromApiLevel (string apiLevel);
-		int? GetApiLevelFromId (string id);
+		int? GetApiLevelFromId (string? id);
 	}
 
 	class MonoAndroidHelperVersionResolver : IVersionResolver
@@ -1160,7 +1171,7 @@ namespace Xamarin.Android.Tasks {
 		public string? GetIdFromApiLevel (string apiLevel)
 			=> MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (apiLevel);
 
-		public int? GetApiLevelFromId (string id)
-			=> MonoAndroidHelper.SupportedVersions.GetApiLevelFromId (id);
+		public int? GetApiLevelFromId (string? id)
+			=> id == null ? null : MonoAndroidHelper.SupportedVersions.GetApiLevelFromId (id);
 	}
 }

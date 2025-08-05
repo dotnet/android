@@ -31,8 +31,12 @@ namespace Android.App {
 
 				self.specified = mapping.Load (self, attr, cache);
 
-				foreach (var e in extra)
+				foreach (var e in extra) {
+					if (self.specified == null) {
+						self.specified = new HashSet<string> ();
+					}
 					self.specified.Add (e);
+				}
 
 				yield return self;
 			}

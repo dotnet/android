@@ -111,7 +111,9 @@ public class GenerateMainAndroidManifest : AndroidTask
 		} else if (!VersionCode.IsNullOrEmpty ()) {
 			manifest.VersionCode = VersionCode;
 		}
-		manifest.Assemblies.AddRange (userAssemblies.Values.Select (item => item.ItemSpec));
+		if (manifest.Assemblies != null) {
+			manifest.Assemblies.AddRange (userAssemblies?.Values?.Where (item => item?.ItemSpec != null).Select (item => item.ItemSpec) ?? []);
+		}
 
 		if (!String.IsNullOrWhiteSpace (CheckedBuild)) {
 			// We don't validate CheckedBuild value here, this will be done in BuildApk. We just know that if it's
@@ -120,10 +122,10 @@ public class GenerateMainAndroidManifest : AndroidTask
 			manifest.ForceExtractNativeLibs = true;
 		}
 
-		IList<string> additionalProviders = manifest.Merge (Log, codeGenState.TypeCache, codeGenState.AllJavaTypes, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments);
+		IList<string> additionalProviders = manifest.Merge (Log, codeGenState.TypeCache, codeGenState.AllJavaTypes, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments ?? []);
 
 		// Only write the new manifest if it actually changed
-		if (manifest.SaveIfChanged (Log, MergedAndroidManifestOutput)) {
+		if (!MergedAndroidManifestOutput.IsNullOrEmpty () && manifest.SaveIfChanged (Log, MergedAndroidManifestOutput)) {
 			Log.LogDebugMessage ($"Saving: {MergedAndroidManifestOutput}");
 		}
 

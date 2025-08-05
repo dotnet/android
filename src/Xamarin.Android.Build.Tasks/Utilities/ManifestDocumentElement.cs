@@ -133,9 +133,13 @@ namespace Xamarin.Android.Manifest {
 			return specified;
 		}
 
-		public XElement ToElement (T value, ICollection<string> specified, string packageName, TypeDefinitionCache cache,
+		public XElement ToElement (T value, ICollection<string>? specified, string packageName, TypeDefinitionCache cache,
 			ICustomAttributeProvider? provider = null, IAssemblyResolver? resolver = null, int targetSdkVersion = 0)
 		{
+			if (specified == null) {
+				specified = new HashSet<string> ();
+			}
+			
 			var r = new XElement (Element,
 					specified.OrderBy (e => e)
 					.Select (e => ToAttribute (e, value, packageName, provider, resolver, cache, targetSdkVersion))
