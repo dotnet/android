@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 
 namespace Xamarin.Android.Tasks.LLVMIR;
 
@@ -190,6 +191,9 @@ sealed class LlvmIrInstructions
 			context.Output.Write (", label %");
 			context.Output.Write (ifTrue.Name);
 			context.Output.Write (", label %");
+			if (ifFalse == null) {
+				throw new InvalidOperationException ("Internal error: ifFalse cannot be null when cond is not null");
+			}
 			context.Output.Write (ifFalse.Name);
 		}
 	}
@@ -238,7 +242,7 @@ sealed class LlvmIrInstructions
 					throw new ArgumentException ($"Internal error: function '{function.Signature.Name}' requires {argCount} arguments, but {arguments.Count} were provided", nameof (arguments));
 				}
 
-				this.arguments = new List<object> (arguments).AsReadOnly ();
+				this.arguments = arguments.ToList ().AsReadOnly ();
 			}
 		}
 
@@ -326,6 +330,9 @@ sealed class LlvmIrInstructions
 
 		void WriteArgument (GeneratorWriteContext context, LlvmIrFunctionParameter? parameter, int index, bool isVararg)
 		{
+			if (arguments == null) {
+				throw new InvalidOperationException ("Internal error: arguments cannot be null");
+			}
 			object? value = arguments[index];
 			if (value is LlvmIrInstructionArgumentValuePlaceholder placeholder) {
 				value = placeholder.GetValue (context.Target);
@@ -333,6 +340,9 @@ sealed class LlvmIrInstructions
 
 			string irType;
 			if (!isVararg) {
+				if (parameter == null) {
+					throw new InvalidOperationException ($"Internal error: parameter cannot be null for non-vararg argument {index}");
+				}
 				irType = LlvmIrGenerator.MapToIRType (parameter.Type, context.TypeCache);
 			} else if (value is LlvmIrVariable v1) {
 				irType = LlvmIrGenerator.MapToIRType (v1.Type, context.TypeCache);
@@ -353,7 +363,7 @@ sealed class LlvmIrInstructions
 			context.Output.Write (' ');
 
 			if (value == null) {
-				if (!parameter.Type.IsNativePointer (context.TypeCache)) {
+				if (parameter != null && !parameter.Type.IsNativePointer (context.TypeCache)) {
 					throw new InvalidOperationException ($"Internal error: value for argument {index} to function '{function.Signature.Name}' must not be null");
 				}
 
@@ -746,6 +756,9 @@ sealed class LlvmIrInstructions
 		public LlvmIrFunctionLabelItem Add (T val, LlvmIrFunctionLabelItem? dest = null, string? comment = null)
 		{
 			var label = MakeLabel (dest);
+			if (items == null) {
+				throw new InvalidOperationException ("Cannot add switch items when automatic label prefix is null or empty");
+			}
 			items.Add ((val, label, comment));
 			return label;
 		}

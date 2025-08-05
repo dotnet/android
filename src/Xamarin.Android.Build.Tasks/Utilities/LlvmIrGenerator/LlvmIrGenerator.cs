@@ -442,7 +442,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			if (memberInfo.IsIRStruct (context.TypeCache)) {
-				var sim = new GeneratorStructureInstance (context.Module.GetStructureInfo (memberInfo.MemberType), memberInfo.GetValue (si.Obj));
+				object? value = memberInfo.GetValue (si.Obj);
+				if (value == null) {
+					throw new InvalidOperationException ($"Structure member {memberInfo.Info.Name} in structure {si.Info.Name} cannot have null value");
+				}
+				var sim = new GeneratorStructureInstance (context.Module.GetStructureInfo (memberInfo.MemberType), value);
 				WriteStructureType (context, sim, out typeInfo);
 				return;
 			}
@@ -552,6 +556,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			bool isPointer;
 
 			if (elementType.IsStructureInstance (out Type? structureType)) {
+				if (structureType == null) {
+					throw new InvalidOperationException ($"Structure type cannot be null for element type {elementType}");
+				}
 				StructureInfo si = context.Module.GetStructureInfo (structureType);
 
 				irType = $"%{si.NativeTypeDesignator}.{si.Name}";
@@ -685,11 +692,15 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			if (smi.IsInlineArray) {
-				Array a = (Array)value;
+				if (value is not Array a) {
+					throw new InvalidOperationException ($"Expected array value for inline array field {smi.Info.Name} in structure {structInstance.Info.Name}");
+				}
 				ulong length = smi.ArrayElements == 0 ? (ulong)a.Length : smi.ArrayElements;
 
 				if (smi.MemberType == typeof(byte[])) {
-					var bytes = (byte[])value;
+					if (value is not byte[] bytes) {
+						throw new InvalidOperationException ($"Expected byte array value for byte array field {smi.Info.Name} in structure {structInstance.Info.Name}");
+					}
 
 					// Byte arrays are represented in the same way as strings, without the explicit NUL termination byte
 					AssertArraySize (structInstance, smi, length, smi.ArrayElements);
@@ -702,6 +713,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			if (smi.IsIRStruct (context.TypeCache)) {
 				StructureInfo si = context.Module.GetStructureInfo (smi.MemberType);
+				if (value == null) {
+					throw new InvalidOperationException ($"Structure field {smi.Info.Name} in structure {structInstance.Info.Name} cannot be null");
+				}
 				WriteValue (context, typeof(GeneratorStructureInstance), new GeneratorStructureInstance (si, value));
 				return;
 			}
@@ -725,6 +739,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				if (String.IsNullOrEmpty (symbolName) && smi.Info.UsesDataProvider (context.TypeCache)) {
 					if (si.Info.DataProvider == null) {
 						throw new InvalidOperationException ($"Field '{smi.Info.Name}' of structure '{si.Info.Name}' points to a symbol, but symbol name wasn't provided and there's no configured data context provider");
+					}
+					if (si.Obj == null) {
+						throw new InvalidOperationException ($"Field '{smi.Info.Name}' of structure '{si.Info.Name}' points to a symbol, but structure instance object is null");
 					}
 					symbolName = si.Info.DataProvider.GetPointedToSymbolName (si.Obj, smi.Info.Name);
 				}
@@ -750,6 +767,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			const char prefixSigned = 's';
 			const char prefixUnsigned = 'u';
+
+			if (value == null) {
+				throw new ArgumentNullException (nameof (value), "Value cannot be null for hexadecimal conversion");
+			}
 
 			string hex;
 			if (type == typeof(byte)) {
@@ -791,6 +812,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				}
 
 				if (type == typeof(bool)) {
+					if (value == null) {
+						throw new ArgumentNullException (nameof (value), "Value cannot be null for bool conversion");
+					}
 					context.Output.Write ((bool)value ? "true" : "false");
 					return;
 				}
@@ -819,13 +843,19 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			if (type == typeof(LlvmIrStringBlob)) {
-				WriteStringBlobArray (context, (LlvmIrStringBlob)value);
+				if (value is not LlvmIrStringBlob blob) {
+					throw new ArgumentNullException (nameof (value), "Value cannot be null for LlvmIrStringBlob");
+				}
+				WriteStringBlobArray (context, blob);
 				return;
 			}
 
 			if (type.IsArray) {
 				if (type == typeof(byte[])) {
-					WriteInlineArray (context, (byte[])value, encodeAsASCII: true);
+					if (value is not byte[] bytes) {
+						throw new ArgumentNullException (nameof (value), "Value cannot be null for byte array");
+					}
+					WriteInlineArray (context, bytes, encodeAsASCII: true);
 					return;
 				}
 
@@ -833,12 +863,18 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			if (type.IsSubclassOf (typeof(LlvmIrSectionedArrayBase))) {
-				WriteSectionedArrayValue (context, (LlvmIrSectionedArrayBase)value);
+				if (value is not LlvmIrSectionedArrayBase array) {
+					throw new ArgumentNullException (nameof (value), "Value cannot be null for LlvmIrSectionedArrayBase");
+				}
+				WriteSectionedArrayValue (context, array);
 				return;
 			}
 
 			if (type == typeof (LlvmIrVariableReference) || type.IsSubclassOf (typeof (LlvmIrVariableReference))) {
-				WriteVariableReference (context, (LlvmIrVariableReference)value);
+				if (value is not LlvmIrVariableReference variable) {
+					throw new ArgumentNullException (nameof (value), "Value cannot be null for LlvmIrVariableReference");
+				}
+				WriteVariableReference (context, variable);
 				return;
 			}
 

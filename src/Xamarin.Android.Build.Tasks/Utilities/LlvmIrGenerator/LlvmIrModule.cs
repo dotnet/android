@@ -143,6 +143,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			EnsurePuts ();
 			RegisterString (text);
+			if (puts == null) {
+				throw new InvalidOperationException ("Internal error: puts function not initialized");
+			}
 			return new LlvmIrInstructions.Call (puts, result, new List<object?> { text });
 		}
 
@@ -153,6 +156,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			EnsurePuts ();
 			RegisterString (text);
+			if (puts == null) {
+				throw new InvalidOperationException ("Internal error: puts function not initialized");
+			}
 			return function.Body.Call (puts, result, new List<object?> { text });
 		}
 
@@ -190,12 +196,18 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public LlvmIrInstructions.Call CreateAbort ()
 		{
 			EnsureAbort ();
+			if (abort == null) {
+				throw new InvalidOperationException ("Internal error: abort function not initialized");
+			}
 			return new LlvmIrInstructions.Call (abort);
 		}
 
 		public LlvmIrInstructions.Call AddAbort (LlvmIrFunction function)
 		{
 			EnsureAbort ();
+			if (abort == null) {
+				throw new InvalidOperationException ("Internal error: abort function not initialized");
+			}
 			LlvmIrInstructions.Call ret = function.Body.Call (abort);
 			function.Body.Unreachable ();
 
@@ -238,6 +250,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			AddInstructions (codeIfThen);
 
 			if (codeIfElse != null) {
+				if (labelIfElse == null) {
+					throw new InvalidOperationException ("Internal error: labelIfElse should not be null when codeIfElse is not null");
+				}
 				function.Body.Add (labelIfElse);
 				AddInstructions (codeIfElse);
 			}

@@ -192,11 +192,14 @@ class LlvmIrFunctionBody
 		previousLabel = label;
 
 		if (comment == null) {
-			var sb = new StringBuilder (" preds = %");
-			sb.Append (precedingBlock1.Name);
-			if (precedingBlock2 != null) {
-				sb.Append (", %");
-				sb.Append (precedingBlock2.Name);
+			var sb = new StringBuilder (" preds = ");
+			if (precedingBlock1 != null) {
+				sb.Append ('%');
+				sb.Append (precedingBlock1.Name);
+				if (precedingBlock2 != null) {
+					sb.Append (", %");
+					sb.Append (precedingBlock2.Name);
+				}
 			}
 			comment = sb.ToString ();
 		}
