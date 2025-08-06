@@ -12,6 +12,7 @@
 #include "../xamarin-app.hh"
 
 #include "android-system.hh"
+#include <runtime-base/dso-loader.hh>
 #include <runtime-base/search.hh>
 #include "startup-aware-lock.hh"
 
@@ -72,39 +73,6 @@ namespace xamarin::android
 			return find_dso_cache_entry_common<CacheKind::DSO> (hash);
 		}
 
-		static auto monodroid_dlopen_log_and_return (void *handle, std::string_view const& full_name) -> void*
-		{
-			if (handle == nullptr) {
-				const char *load_error = dlerror ();
-				if (load_error == nullptr) {
-					load_error = "Unknown error";
-				}
-				log_error (
-					LOG_ASSEMBLY,
-					"Could not load library '{}'. {}",
-					full_name,
-					load_error
-				);
-			}
-
-			return handle;
-		}
-
-		static auto monodroid_dlopen_ignore_component_or_load (std::string_view const& name, int flags) noexcept -> void*
-		{
-			// We first try to load the DSO using the passed name, it will cause `dlopen` to search our APK (or
-			// on-filesystem location), if necessary, so it's more efficient than trying to load from any specific
-			// directories first.
-			unsigned int dl_flags = static_cast<unsigned int>(flags);
-			void *handle = AndroidSystem::load_dso (name, dl_flags, false /* skip_existing_check */);
-			if (handle != nullptr) {
-				return monodroid_dlopen_log_and_return (handle, name);
-			}
-
-			handle = AndroidSystem::load_dso_from_any_directories (name, dl_flags);
-			return monodroid_dlopen_log_and_return (handle, name);
-		}
-
 	private:
 		[[gnu::always_inline]]
 		static auto get_dso_name (const DSOCacheEntry *const dso) -> std::string_view
@@ -149,10 +117,11 @@ namespace xamarin::android
 			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash match {}found, DSO name is '{}'", dso == nullptr ? "not "sv : ""sv, get_dso_name (dso));
 
 			if (dso == nullptr) {
-				// DSO not known at build time, try to load it
-				return monodroid_dlopen_ignore_component_or_load (name, flags);
+				// DSO not known at build time, try to load it. Since we don't know whether or not the library extends
+				// JNI, we're going to assume it is and thus use System.loadLibrary eventually.
+				return DsoLoader::load (name, flags, true /* is_jni */);
 			} else if (dso->handle != nullptr) {
-				return monodroid_dlopen_log_and_return (dso->handle, get_dso_name (dso));
+				return dso->handle;
 			}
 
 			if (dso->ignore) {
@@ -179,21 +148,20 @@ namespace xamarin::android
 					dso->handle = android_dlopen_ext (dso_name.data (), flags, &dli);
 
 					if (dso->handle != nullptr) {
-						return monodroid_dlopen_log_and_return (dso->handle, dso_name);
+						return dso->handle;
 					}
 					break;
 				}
 			}
 #endif
-			unsigned int dl_flags = static_cast<unsigned int>(flags);
-			dso->handle = AndroidSystem::load_dso_from_any_directories (dso_name, dl_flags);
+			dso->handle = AndroidSystem::load_dso_from_any_directories (dso_name, flags, dso->is_jni_library);
 
 			if (dso->handle != nullptr) {
-				return monodroid_dlopen_log_and_return (dso->handle, dso_name);
+				return dso->handle;
 			}
 
-			dso->handle = AndroidSystem::load_dso_from_any_directories (name, dl_flags);
-			return monodroid_dlopen_log_and_return (dso->handle, name);
+			dso->handle = AndroidSystem::load_dso_from_any_directories (name, flags, dso->is_jni_library);
+			return dso->handle;
 		}
 
 		[[gnu::flatten]]
