@@ -111,9 +111,7 @@ public class GenerateMainAndroidManifest : AndroidTask
 		} else if (!VersionCode.IsNullOrEmpty ()) {
 			manifest.VersionCode = VersionCode;
 		}
-		if (manifest.Assemblies != null) {
-			manifest.Assemblies.AddRange (userAssemblies?.Values?.Where (item => item?.ItemSpec != null).Select (item => item.ItemSpec) ?? []);
-		}
+		manifest.Assemblies?.AddRange (userAssemblies?.Values?.Where (item => item?.ItemSpec != null).Select (item => item.ItemSpec) ?? []);
 
 		if (!String.IsNullOrWhiteSpace (CheckedBuild)) {
 			// We don't validate CheckedBuild value here, this will be done in BuildApk. We just know that if it's
