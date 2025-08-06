@@ -20,16 +20,6 @@ namespace Xamarin.ProjectTools
 	/// for different project types. This class handles project file generation, property management,
 	/// and file system operations for test projects.
 	/// </remarks>
-	/// <summary>
-	/// Base class for creating and managing test project files used in Xamarin.Android.Build.Tasks tests.
-	/// This class provides a framework for generating MSBuild project files, managing build items,
-	/// properties, and references for testing build scenarios.
-	/// </summary>
-	/// <remarks>
-	/// Derived classes like <see cref="XamarinAndroidProject"/> provide specific implementations
-	/// for different project types. This class handles project file generation, property management,
-	/// and file system operations for test projects.
-	/// </remarks>
 	public abstract class XamarinProject 
 	{
 		string debugConfigurationName;
@@ -224,12 +214,6 @@ $@"<Project>
 			set { SetProperty ("TargetFrameworks", value); }
 		}
 
-		/// <summary>
-		/// Gets the value of a property from the common properties collection.
-		/// </summary>
-		/// <param name="name">The name of the property to retrieve.</param>
-		/// <returns>The property value, or null if not found.</returns>
-		/// <seealso cref="SetProperty(string, string, string)"/>
 		/// <summary>
 		/// Gets the value of a property from the common properties collection.
 		/// </summary>
