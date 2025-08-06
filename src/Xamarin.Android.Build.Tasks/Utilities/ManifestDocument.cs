@@ -918,6 +918,11 @@ namespace Xamarin.Android.Tasks {
 
 		void AddUsesPermissions (XElement application, TypeDefinitionCache cache)
 		{
+			if (Resolver == null)
+				throw new ArgumentNullException (nameof (Resolver));
+			if (PackageName == null)
+				throw new ArgumentNullException (nameof (PackageName));
+
 			var assemblyAttrs =
 				Assemblies.SelectMany (path => UsesPermissionAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path), cache));
 
@@ -942,6 +947,11 @@ namespace Xamarin.Android.Tasks {
 
 		void AddUsesFeatures (XElement application, TypeDefinitionCache cache)
 		{
+			if (Resolver == null)
+				throw new ArgumentNullException (nameof (Resolver));
+			if (PackageName == null)
+				throw new ArgumentNullException (nameof (PackageName));
+
 			var assemblyAttrs =
 				Assemblies.SelectMany (path => UsesFeatureAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path), cache));
 
@@ -963,6 +973,11 @@ namespace Xamarin.Android.Tasks {
 
 		void AddSupportsGLTextures (XElement application, TypeDefinitionCache cache)
 		{
+			if (Resolver == null)
+				throw new ArgumentNullException (nameof (Resolver));
+			if (PackageName == null)
+				throw new ArgumentNullException (nameof (PackageName));
+
 			var assemblyAttrs =
 				Assemblies.SelectMany (path => SupportsGLTextureAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path), cache));
 
@@ -976,6 +991,11 @@ namespace Xamarin.Android.Tasks {
 
 		void AddInstrumentations (XElement manifest, IList<TypeDefinition> subclasses, int targetSdkVersion, TypeDefinitionCache cache)
 		{
+			if (Resolver == null)
+				throw new ArgumentNullException (nameof (Resolver));
+			if (PackageName == null)
+				throw new ArgumentNullException (nameof (PackageName));
+
 			var assemblyAttrs =
 				Assemblies.SelectMany (path => InstrumentationAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path), cache));
 
