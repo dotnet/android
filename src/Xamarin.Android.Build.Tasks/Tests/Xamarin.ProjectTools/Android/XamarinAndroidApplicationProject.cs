@@ -10,6 +10,23 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.ProjectTools
 {
+	/// <summary>
+	/// Represents a Xamarin.Android application project for testing purposes.
+	/// This class provides a concrete implementation of an Android application project
+	/// with default templates, resources, and configuration suitable for test scenarios.
+	/// </summary>
+	/// <remarks>
+	/// This class extends <see cref="XamarinAndroidCommonProject"/> to provide a complete
+	/// Android application project setup including:
+	/// - Default MainActivity template
+	/// - Default layout resources
+	/// - Android manifest configuration
+	/// - Application-specific MSBuild properties
+	/// Used for testing build scenarios, deployment, and application-level functionality.
+	/// </remarks>
+	/// <seealso cref="XamarinAndroidCommonProject"/>
+	/// <seealso cref="XamarinAndroidLibraryProject"/>
+	/// <seealso cref="XamarinAndroidBindingProject"/>
 	public class XamarinAndroidApplicationProject : XamarinAndroidCommonProject
 	{
 		const string default_strings_xml = @"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -36,6 +53,17 @@ namespace Xamarin.ProjectTools
 
 		}
 
+		/// <summary>
+		/// Initializes a new instance of the XamarinAndroidApplicationProject class.
+		/// Creates a complete Android application project with default templates and configuration.
+		/// </summary>
+		/// <param name="debugConfigurationName">The name for the debug configuration (default: "Debug").</param>
+		/// <param name="releaseConfigurationName">The name for the release configuration (default: "Release").</param>
+		/// <param name="packageName">The Android package name for the application. If empty, uses the caller's method name.</param>
+		/// <remarks>
+		/// Sets up the project as an executable (OutputType = "Exe") with nullable reference types enabled,
+		/// default Android support properties, and includes standard application templates.
+		/// </remarks>
 		public XamarinAndroidApplicationProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release", [CallerMemberName] string packageName = "")
 			: base (debugConfigurationName, releaseConfigurationName)
 		{
