@@ -17,6 +17,7 @@
 #include <host/os-bridge.hh>
 #include <host/runtime-util.hh>
 #include <runtime-base/android-system.hh>
+#include <runtime-base/dso-loader.hh>
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
 #include <runtime-base/search.hh>
@@ -420,6 +421,8 @@ void Host::Java_mono_android_Runtime_initInternal (
 			return detail::_format_message ("Failure to initialize CoreCLR host instance. Returned result 0x%x", static_cast<unsigned int>(hr));
 		}
 	);
+
+	DsoLoader::init (env, RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_System", true));
 
 	struct JnienvInitializeArgs init = {};
 	init.javaVm                                         = jvm;
