@@ -14,6 +14,18 @@ using Xamarin.Android.Tasks;
 
 namespace Xamarin.ProjectTools
 {
+	/// <summary>
+	/// Base class for MSBuild-based builders that provides common functionality for building projects.
+	/// Handles MSBuild execution, logging, build output analysis, and cross-platform build operations.
+	/// </summary>
+	/// <remarks>
+	/// This class provides the foundation for building .NET and Xamarin projects in test scenarios.
+	/// It manages MSBuild process execution, captures build output for analysis, handles timeouts,
+	/// and provides utilities for cross-platform and cross-compiler scenarios.
+	/// Derived classes like <see cref="ProjectBuilder"/> extend this for specific project types.
+	/// </remarks>
+	/// <seealso cref="ProjectBuilder"/>
+	/// <seealso cref="SolutionBuilder"/>
 	public class Builder : IDisposable
 	{
 		const string SigSegvError = "Got a SIGSEGV while executing native code";
@@ -24,16 +36,36 @@ namespace Xamarin.ProjectTools
 		string buildLogFullPath;
 		IEnumerable<string>? lastBuildOutput;
 
+		/// <summary>
+		/// Gets or sets a value indicating whether the current platform is Unix-based (Linux/macOS).
+		/// </summary>
+		/// <seealso cref="TestEnvironment"/>
 		public bool IsUnix { get; set; }
+		
 		/// <summary>
 		/// This passes /p:BuildingInsideVisualStudio=True, command-line to MSBuild
 		/// </summary>
 		public bool BuildingInsideVisualStudio { get; set; } = true;
+		
 		/// <summary>
 		/// Passes /m:N to MSBuild, defaults to null to omit the /m parameter completely.
 		/// </summary>
 		public int? MaxCpuCount { get; set; }
+		
+		/// <summary>
+		/// Gets or sets the MSBuild logger verbosity level.
+		/// </summary>
 		public LoggerVerbosity Verbosity { get; set; } = LoggerVerbosity.Normal;
+		
+		/// <summary>
+		/// Gets the output lines from the last build operation.
+		/// </summary>
+		/// <remarks>
+		/// Provides access to the complete build log for analysis. The output is lazily loaded
+		/// from the build log file when first accessed.
+		/// </remarks>
+		/// <seealso cref="BuildLogFile"/>
+		/// <seealso cref="LastBuildTime"/>
 		public IEnumerable<string> LastBuildOutput {
 			get {
 				if (lastBuildOutput != null) {
@@ -49,14 +81,35 @@ namespace Xamarin.ProjectTools
 				return lastBuildOutput;
 			}
 		}
+		
+		/// <summary>
+		/// Gets the duration of the last build operation.
+		/// </summary>
+		/// <seealso cref="LastBuildOutput"/>
 		public TimeSpan LastBuildTime { get; protected set; }
+		
+		/// <summary>
+		/// Gets or sets the filename for the build log file.
+		/// </summary>
+		/// <seealso cref="LastBuildOutput"/>
 		public string BuildLogFile { get; set; }
+		
+		/// <summary>
+		/// Gets or sets a value indicating whether to throw an exception when builds fail.
+		/// </summary>
 		public bool ThrowOnBuildFailure { get; set; }
+		
 		/// <summary>
 		/// True if NuGet restore occurs automatically (default)
 		/// </summary>
 		public bool AutomaticNuGetRestore { get; set; } = true;
 
+		/// <summary>
+		/// Checks whether cross-compilers are available for the specified Android ABIs.
+		/// </summary>
+		/// <param name="supportedAbis">Semicolon-separated list of Android ABIs to check (e.g., "armeabi-v7a;arm64-v8a").</param>
+		/// <returns>True if all required cross-compilers are available; otherwise, false.</returns>
+		/// <seealso cref="TestEnvironment"/>
 		public bool CrossCompilerAvailable (string supportedAbis)
 		{
 			var crossCompilerLookup = new Dictionary<string, string> {
@@ -73,6 +126,11 @@ namespace Xamarin.ProjectTools
 			return result;
 		}
 
+		/// <summary>
+		/// Gets the first target framework version from the available target framework range.
+		/// </summary>
+		/// <returns>The first available target framework version.</returns>
+		/// <seealso cref="GetTargetFrameworkVersionRange"/>
 		public string FirstTargetFrameworkVersion ()
 		{
 			GetTargetFrameworkVersionRange (out string _, out string firstFrameworkVersion, out string _, out string _, out string[] _);

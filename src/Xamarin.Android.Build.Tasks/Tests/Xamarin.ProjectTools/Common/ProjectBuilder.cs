@@ -9,8 +9,24 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.ProjectTools
 {
+	/// <summary>
+	/// Provides functionality for building Xamarin test projects using MSBuild.
+	/// This class manages the project directory, handles project file generation,
+	/// and orchestrates the build process for testing scenarios.
+	/// </summary>
+	/// <remarks>
+	/// ProjectBuilder extends <see cref="Builder"/> to provide project-specific build capabilities.
+	/// It handles project file creation, NuGet package restoration, and incremental builds.
+	/// </remarks>
+	/// <seealso cref="Builder"/>
+	/// <seealso cref="XamarinProject"/>
+	/// <seealso cref="BuildOutput"/>
 	public class ProjectBuilder : Builder
 	{
+		/// <summary>
+		/// Initializes a new instance of the ProjectBuilder class for the specified project directory.
+		/// </summary>
+		/// <param name="projectDirectory">The directory where the project will be created and built.</param>
 		public ProjectBuilder (string projectDirectory)
 		{
 			ProjectDirectory = projectDirectory;
@@ -19,13 +35,38 @@ namespace Xamarin.ProjectTools
 			BuildLogFile = "build.log";
 		}
 
+		/// <summary>
+		/// Gets or sets a value indicating whether the project directory should be cleaned up when the builder is disposed.
+		/// </summary>
 		public bool CleanupOnDispose { get; set; }
+		
+		/// <summary>
+		/// Gets or sets a value indicating whether the project directory should be cleaned up after a successful build.
+		/// </summary>
 		public bool CleanupAfterSuccessfulBuild { get; set; }
+		
+		/// <summary>
+		/// Gets or sets the directory where the project files are located.
+		/// </summary>
 		public string ProjectDirectory { get; set; }
+		
+		/// <summary>
+		/// Gets or sets the MSBuild target to execute (default: "Build").
+		/// </summary>
 		public string Target { get; set; }
 
+		/// <summary>
+		/// Gets or sets the logger for build operations.
+		/// </summary>
+		/// <summary>
+		/// Gets or sets the logger for build operations.
+		/// </summary>
 		public ILogger Logger { get; set; }
 
+		/// <summary>
+		/// Disposes of the ProjectBuilder and optionally cleans up the project directory.
+		/// </summary>
+		/// <param name="disposing">True if disposing managed resources.</param>
 		protected override void Dispose (bool disposing)
 		{
 			if (disposing)
@@ -36,8 +77,22 @@ namespace Xamarin.ProjectTools
 		bool built_before;
 		bool last_build_result;
 
+		/// <summary>
+		/// Gets the build output from the last build operation.
+		/// </summary>
+		/// <seealso cref="BuildOutput"/>
 		public BuildOutput Output { get; private set; }
 
+		/// <summary>
+		/// Saves the project files to the project directory.
+		/// On the first call, populates a new directory; on subsequent calls, updates existing files.
+		/// </summary>
+		/// <param name="project">The project to save.</param>
+		/// <param name="doNotCleanupOnUpdate">If true, existing files not in the project will not be deleted during updates.</param>
+		/// <param name="saveProject">If true, the project file itself will be saved.</param>
+		/// <seealso cref="XamarinProject.Save(bool)"/>
+		/// <seealso cref="XamarinProject.Populate(string, IEnumerable{ProjectResource})"/>
+		/// <seealso cref="XamarinProject.UpdateProjectFiles(string, IEnumerable{ProjectResource}, bool)"/>
 		public void Save (XamarinProject project, bool doNotCleanupOnUpdate = false, bool saveProject = true)
 		{
 			var files = project.Save (saveProject);
@@ -57,6 +112,17 @@ namespace Xamarin.ProjectTools
 				project.UpdateProjectFiles (ProjectDirectory, files, doNotCleanupOnUpdate);
 		}
 
+		/// <summary>
+		/// Builds the specified project using MSBuild.
+		/// </summary>
+		/// <param name="project">The project to build.</param>
+		/// <param name="doNotCleanupOnUpdate">If true, existing files not in the project will not be deleted during updates.</param>
+		/// <param name="parameters">Optional MSBuild parameters to pass to the build.</param>
+		/// <param name="saveProject">If true, the project file itself will be saved before building.</param>
+		/// <param name="environmentVariables">Optional environment variables to set during the build.</param>
+		/// <returns>True if the build succeeded; otherwise, false.</returns>
+		/// <seealso cref="Save(XamarinProject, bool, bool)"/>
+		/// <seealso cref="Output"/>
 		public bool Build (XamarinProject project, bool doNotCleanupOnUpdate = false, string [] parameters = null, bool saveProject = true, Dictionary<string, string> environmentVariables = null)
 		{
 			Save (project, doNotCleanupOnUpdate, saveProject);

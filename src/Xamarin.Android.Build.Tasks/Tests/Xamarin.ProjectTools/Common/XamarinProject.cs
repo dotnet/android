@@ -10,33 +10,119 @@ using System.Xml.Linq;
 
 namespace Xamarin.ProjectTools
 {
+	/// <summary>
+	/// Base class for creating and managing test project files used in Xamarin.Android.Build.Tasks tests.
+	/// This class provides a framework for generating MSBuild project files, managing build items,
+	/// properties, and references for testing build scenarios.
+	/// </summary>
+	/// <remarks>
+	/// Derived classes like <see cref="XamarinAndroidProject"/> provide specific implementations
+	/// for different project types. This class handles project file generation, property management,
+	/// and file system operations for test projects.
+	/// </remarks>
 	public abstract class XamarinProject 
 	{
 		string debugConfigurationName;
 		string releaseConfigurationName;
 
+		/// <summary>
+		/// Gets or sets the programming language for the project (C#, F#, etc.).
+		/// </summary>
+		/// <seealso cref="ProjectLanguage"/>
 		public virtual ProjectLanguage Language { get; set; }
 
+		/// <summary>
+		/// Gets or sets the name of the project, which is used as the assembly name by default.
+		/// </summary>
 		public string ProjectName { get; set; }
+		
+		/// <summary>
+		/// Gets or sets the unique GUID identifier for the project.
+		/// </summary>
 		public string ProjectGuid { get; set; }
+		
+		/// <summary>
+		/// Gets or sets the assembly name for the compiled output.
+		/// </summary>
 		public string AssemblyName { get; set; }
+		
+		/// <summary>
+		/// Gets the MSBuild project type GUID that identifies the project type.
+		/// Must be implemented by derived classes to specify the appropriate project type.
+		/// </summary>
 		public abstract string ProjectTypeGuid { get; }
 
+		/// <summary>
+		/// Gets the list of properties that apply only to Debug builds.
+		/// </summary>
+		/// <seealso cref="ReleaseProperties"/>
+		/// <seealso cref="CommonProperties"/>
 		public IList<Property> DebugProperties { get; private set; }
+		
+		/// <summary>
+		/// Gets the list of properties that apply only to Release builds.
+		/// </summary>
+		/// <seealso cref="DebugProperties"/>
+		/// <seealso cref="CommonProperties"/>
 		public IList<Property> ReleaseProperties { get; private set; }
+		
+		/// <summary>
+		/// Gets the list of properties that apply to all build configurations.
+		/// </summary>
+		/// <seealso cref="DebugProperties"/>
+		/// <seealso cref="ReleaseProperties"/>
 		public IList<Property> CommonProperties { get; private set; }
+		
+		/// <summary>
+		/// Gets the collection of item groups containing build items like source files, resources, etc.
+		/// </summary>
+		/// <seealso cref="BuildItem"/>
 		public IList<IList<BuildItem>> ItemGroupList { get; private set; }
+		
+		/// <summary>
+		/// Gets the collection of property groups that define MSBuild properties with conditions.
+		/// </summary>
+		/// <seealso cref="PropertyGroup"/>
 		public IList<PropertyGroup> PropertyGroups { get; private set; }
+		
+		/// <summary>
+		/// Gets the collection of assembly references for the project.
+		/// </summary>
+		/// <seealso cref="PackageReferences"/>
 		public IList<BuildItem> References { get; private set; }
+		
+		/// <summary>
+		/// Gets the collection of NuGet package references for the project.
+		/// </summary>
+		/// <seealso cref="References"/>
+		/// <seealso cref="Package"/>
 		public IList<Package> PackageReferences { get; private set; }
+		
+		/// <summary>
+		/// Gets or sets the global packages folder path for NuGet packages.
+		/// Defaults to the system's NuGet global packages folder.
+		/// </summary>
 		public string GlobalPackagesFolder { get; set; } = FileSystemUtils.FindNugetGlobalPackageFolder ();
+		
+		/// <summary>
+		/// Gets or sets additional NuGet package source URLs to include in NuGet.config.
+		/// </summary>
 		public IList<string> ExtraNuGetConfigSources { get; set; } = new List<string> ();
 
+		/// <summary>
+		/// Gets a value indicating whether NuGet package restore should be performed.
+		/// Returns true if the project has any package references.
+		/// </summary>
 		public virtual bool ShouldRestorePackageReferences => PackageReferences?.Count > 0;
 		/// <summary>
 		/// If true, the ProjectDirectory will be deleted and populated on the first build
 		/// </summary>
 		public virtual bool ShouldPopulate { get; set; } = true;
+		
+		/// <summary>
+		/// Gets the collection of MSBuild import statements for the project.
+		/// </summary>
+		/// <seealso cref="Import"/>
 		public IList<Import> Imports { get; private set; }
 		PropertyGroup common, debug, release;
 		bool isRelease;
@@ -54,8 +140,16 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
+		/// <summary>
+		/// Gets the current build configuration name (Debug or Release).
+		/// </summary>
 		public string Configuration => IsRelease ? releaseConfigurationName : debugConfigurationName;
 
+		/// <summary>
+		/// Initializes a new instance of the XamarinProject class with the specified configuration names.
+		/// </summary>
+		/// <param name="debugConfigurationName">The name for the debug configuration (default: "Debug").</param>
+		/// <param name="releaseConfigurationName">The name for the release configuration (default: "Release").</param>
 		public XamarinProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
 		{
 			this.debugConfigurationName = debugConfigurationName;
@@ -91,6 +185,9 @@ $@"<Project>
 		/// <summary>
 		/// Adds a reference to another project. The optional include path uses a relative path and ProjectName if omitted.
 		/// </summary>
+		/// <param name="other">The project to reference.</param>
+		/// <param name="include">Optional relative path to the project file. If null, defaults to "../{ProjectName}/{ProjectName}.csproj".</param>
+		/// <seealso cref="References"/>
 		public void AddReference (XamarinProject other, string include = null)
 		{
 			if (string.IsNullOrEmpty (include)) {
@@ -99,47 +196,104 @@ $@"<Project>
 			References.Add (new BuildItem.ProjectReference (include, other.ProjectName, other.ProjectGuid));
 		}
 
+		/// <summary>
+		/// Gets or sets the target framework for the project (e.g., "net9.0-android").
+		/// </summary>
+		/// <seealso cref="TargetFrameworks"/>
 		public string TargetFramework {
 			get { return GetProperty ("TargetFramework"); }
 			set { SetProperty ("TargetFramework", value); }
 		}
 
+		/// <summary>
+		/// Gets or sets multiple target frameworks for the project, separated by semicolons.
+		/// </summary>
+		/// <seealso cref="TargetFramework"/>
 		public string TargetFrameworks {
 			get { return GetProperty ("TargetFrameworks"); }
 			set { SetProperty ("TargetFrameworks", value); }
 		}
 
+		/// <summary>
+		/// Gets the value of a property from the common properties collection.
+		/// </summary>
+		/// <param name="name">The name of the property to retrieve.</param>
+		/// <returns>The property value, or null if not found.</returns>
+		/// <seealso cref="SetProperty(string, string, string)"/>
 		public string GetProperty (string name)
 		{
 			return GetProperty (CommonProperties, name);
 		}
 
+		/// <summary>
+		/// Gets the value of a property from the specified property group.
+		/// </summary>
+		/// <param name="group">The property group to search in.</param>
+		/// <param name="name">The name of the property to retrieve.</param>
+		/// <returns>The property value, or null if not found.</returns>
+		/// <seealso cref="CommonProperties"/>
+		/// <seealso cref="DebugProperties"/>
+		/// <seealso cref="ReleaseProperties"/>
 		public string GetProperty (IList<Property> group, string name)
 		{
 			var prop = group.FirstOrDefault (p => p.Name.Equals (name, StringComparison.OrdinalIgnoreCase));
 			return prop != null ? prop.Value () : null;
 		}
 
+		/// <summary>
+		/// Sets a property value in the common properties collection.
+		/// </summary>
+		/// <param name="name">The name of the property to set.</param>
+		/// <param name="value">The value to assign to the property.</param>
+		/// <param name="condition">Optional MSBuild condition for the property.</param>
+		/// <seealso cref="GetProperty(string)"/>
+		/// <seealso cref="RemoveProperty(string)"/>
 		public void SetProperty (string name, string value, string condition = null)
 		{
 			SetProperty (name, () => value, condition);
 		}
 
+		/// <summary>
+		/// Sets a boolean property value in the specified property group.
+		/// </summary>
+		/// <param name="group">The property group to add the property to.</param>
+		/// <param name="name">The name of the property to set.</param>
+		/// <param name="value">The boolean value to assign to the property.</param>
+		/// <param name="condition">Optional MSBuild condition for the property.</param>
 		public void SetProperty (IList<Property> group, string name, bool value, string condition = null)
 		{
 			SetProperty (group, name, () => value.ToString (), condition);
 		}
 
+		/// <summary>
+		/// Sets a property value in the specified property group.
+		/// </summary>
+		/// <param name="group">The property group to add the property to.</param>
+		/// <param name="name">The name of the property to set.</param>
+		/// <param name="value">The value to assign to the property.</param>
+		/// <param name="condition">Optional MSBuild condition for the property.</param>
 		public void SetProperty (IList<Property> group, string name, string value, string condition = null)
 		{
 			SetProperty (group, name, () => value, condition);
 		}
 
+		/// <summary>
+		/// Removes a property from the common properties collection.
+		/// </summary>
+		/// <param name="name">The name of the property to remove.</param>
+		/// <returns>True if the property was found and removed; otherwise, false.</returns>
+		/// <seealso cref="SetProperty(string, string, string)"/>
 		public bool RemoveProperty (string name)
 		{
 			return RemoveProperty (CommonProperties, name);
 		}
 
+		/// <summary>
+		/// Removes a property from the specified property group.
+		/// </summary>
+		/// <param name="group">The property group to remove the property from.</param>
+		/// <param name="name">The name of the property to remove.</param>
+		/// <returns>True if the property was found and removed; otherwise, false.</returns>
 		public bool RemoveProperty (IList<Property> group, string name)
 		{
 			var prop = group.FirstOrDefault (p => p.Name.Equals (name, StringComparison.OrdinalIgnoreCase));
@@ -149,11 +303,24 @@ $@"<Project>
 			return true;
 		}
 
+		/// <summary>
+		/// Sets a property value with a function that provides the value in the common properties collection.
+		/// </summary>
+		/// <param name="name">The name of the property to set.</param>
+		/// <param name="value">A function that returns the property value.</param>
+		/// <param name="condition">Optional MSBuild condition for the property.</param>
 		public void SetProperty (string name, Func<string> value, string condition = null)
 		{
 			SetProperty (CommonProperties, name, value);
 		}
 
+		/// <summary>
+		/// Sets a property value with a function that provides the value in the specified property group.
+		/// </summary>
+		/// <param name="group">The property group to add the property to.</param>
+		/// <param name="name">The name of the property to set.</param>
+		/// <param name="value">A function that returns the property value.</param>
+		/// <param name="condition">Optional MSBuild condition for the property.</param>
 		public void SetProperty (IList<Property> group, string name, Func<string> value, string condition = null)
 		{
 			var prop = group.FirstOrDefault (p => p.Name.Equals (name, StringComparison.OrdinalIgnoreCase));
@@ -165,16 +332,35 @@ $@"<Project>
 			}
 		}
 
+		/// <summary>
+		/// Gets a build item with the specified include path.
+		/// </summary>
+		/// <param name="include">The include path of the build item to find.</param>
+		/// <returns>The build item if found; otherwise, null.</returns>
+		/// <seealso cref="BuildItem"/>
+		/// <seealso cref="ItemGroupList"/>
 		public BuildItem GetItem (string include)
 		{
 			return ItemGroupList.SelectMany (g => g).FirstOrDefault (i => i.Include ().Equals (include, StringComparison.OrdinalIgnoreCase));
 		}
 
+		/// <summary>
+		/// Gets an import with the specified project path.
+		/// </summary>
+		/// <param name="include">The project path of the import to find.</param>
+		/// <returns>The import if found; otherwise, null.</returns>
+		/// <seealso cref="Import"/>
+		/// <seealso cref="Imports"/>
 		public Import GetImport (string include)
 		{
 			return Imports.FirstOrDefault (i => i.Project ().Equals (include, StringComparison.OrdinalIgnoreCase));
 		}
 
+		/// <summary>
+		/// Updates the timestamp of the specified build items or imports to trigger rebuild.
+		/// </summary>
+		/// <param name="itemPaths">The paths of items or imports to touch.</param>
+		/// <exception cref="InvalidOperationException">Thrown if any path is not found in the project.</exception>
 		public void Touch (params string [] itemPaths)
 		{
 			foreach (var item in itemPaths) {
@@ -193,19 +379,45 @@ $@"<Project>
 		}
 
 		string project_file_path;
+		
+		/// <summary>
+		/// Gets or sets the file path for the project file.
+		/// If not set, defaults to ProjectName + Language.DefaultProjectExtension.
+		/// </summary>
+		/// <seealso cref="ProjectName"/>
+		/// <seealso cref="Language"/>
 		public string ProjectFilePath {
 			get { return project_file_path ?? ProjectName + Language.DefaultProjectExtension; }
 			set { project_file_path = value; }
 		}
 
+		/// <summary>
+		/// Gets or sets the AssemblyInfo.cs content for the project.
+		/// </summary>
 		public string AssemblyInfo { get; set; }
+		
+		/// <summary>
+		/// Gets or sets the root namespace for the project.
+		/// </summary>
 		public string RootNamespace { get; set; }
 
+		/// <summary>
+		/// Generates the MSBuild project file content.
+		/// Must be implemented by derived classes to provide the appropriate project file format.
+		/// </summary>
+		/// <returns>The project file content as a string.</returns>
 		public virtual string SaveProject ()
 		{
 			return string.Empty;
 		}
 
+		/// <summary>
+		/// Creates a build output object for this project with the specified builder.
+		/// </summary>
+		/// <param name="builder">The project builder that built this project.</param>
+		/// <returns>A new <see cref="BuildOutput"/> instance.</returns>
+		/// <seealso cref="BuildOutput"/>
+		/// <seealso cref="ProjectBuilder"/>
 		public virtual BuildOutput CreateBuildOutput (ProjectBuilder builder)
 		{
 			return new BuildOutput (this) { Builder = builder };
@@ -213,6 +425,13 @@ $@"<Project>
 
 		ProjectResource project;
 
+		/// <summary>
+		/// Saves the project and all its associated files to a list of project resources.
+		/// </summary>
+		/// <param name="saveProject">Whether to include the project file itself in the results.</param>
+		/// <returns>A list of <see cref="ProjectResource"/> objects representing all project files.</returns>
+		/// <seealso cref="ProjectResource"/>
+		/// <seealso cref="Populate(string)"/>
 		public virtual List<ProjectResource> Save (bool saveProject = true)
 		{
 			var list = new List<ProjectResource> ();
@@ -254,17 +473,34 @@ $@"<Project>
 			return list;
 		}
 
+		/// <summary>
+		/// Populates the specified directory with the project files.
+		/// </summary>
+		/// <param name="directory">The target directory to populate.</param>
+		/// <seealso cref="Save(bool)"/>
+		/// <seealso cref="UpdateProjectFiles(string, IEnumerable{ProjectResource}, bool)"/>
 		public void Populate (string directory)
 		{
 			Populate (directory, Save ());
 		}
 
+		/// <summary>
+		/// Gets the root directory for test projects.
+		/// </summary>
+		/// <seealso cref="XABuildPaths"/>
 		public string Root {
 			get {
 				return XABuildPaths.TestOutputDirectory;
 			}
 		}
 
+		/// <summary>
+		/// Populates the specified directory with the provided project files.
+		/// </summary>
+		/// <param name="directory">The target directory to populate.</param>
+		/// <param name="projectFiles">The project files to write to the directory.</param>
+		/// <exception cref="InvalidOperationException">Thrown if the target path already exists.</exception>
+		/// <seealso cref="UpdateProjectFiles(string, IEnumerable{ProjectResource}, bool)"/>
 		public void Populate (string directory, IEnumerable<ProjectResource> projectFiles)
 		{
 			directory = directory.Replace ('\\', '/').Replace ('/', Path.DirectorySeparatorChar);
@@ -277,6 +513,14 @@ $@"<Project>
 			UpdateProjectFiles (directory, projectFiles);
 		}
 
+		/// <summary>
+		/// Updates project files in an existing directory, creating, updating, or deleting files as needed.
+		/// </summary>
+		/// <param name="directory">The target directory containing the project.</param>
+		/// <param name="projectFiles">The project files to synchronize.</param>
+		/// <param name="doNotCleanup">If true, existing files not in projectFiles will not be deleted.</param>
+		/// <exception cref="InvalidOperationException">Thrown if the target directory does not exist.</exception>
+		/// <seealso cref="Populate(string, IEnumerable{ProjectResource})"/>
 		public virtual void UpdateProjectFiles (string directory, IEnumerable<ProjectResource> projectFiles, bool doNotCleanup = false)
 		{
 			directory = Path.Combine (Root, directory.Replace ('\\', '/').Replace ('/', Path.DirectorySeparatorChar));
@@ -352,11 +596,26 @@ $@"<Project>
 
 		}
 
+		/// <summary>
+		/// Processes source template content by replacing placeholders with project-specific values.
+		/// </summary>
+		/// <param name="source">The source template content.</param>
+		/// <returns>The processed content with placeholders replaced.</returns>
+		/// <remarks>
+		/// Replaces ${ROOT_NAMESPACE} with <see cref="RootNamespace"/> or <see cref="ProjectName"/>,
+		/// and ${PROJECT_NAME} with <see cref="ProjectName"/>.
+		/// </remarks>
 		public virtual string ProcessSourceTemplate (string source)
 		{
 			return source.Replace ("${ROOT_NAMESPACE}", RootNamespace ?? ProjectName).Replace ("${PROJECT_NAME}", ProjectName);
 		}
 
+		/// <summary>
+		/// Copies the repository's NuGet.config file to the project directory and configures it.
+		/// </summary>
+		/// <param name="relativeDirectory">The relative directory path for the project.</param>
+		/// <seealso cref="GlobalPackagesFolder"/>
+		/// <seealso cref="ExtraNuGetConfigSources"/>
 		public void CopyNuGetConfig (string relativeDirectory)
 		{
 			// Copy our solution's NuGet.config
@@ -396,6 +655,9 @@ $@"<Project>
 		/// <summary>
 		/// Updates a NuGet.config based on sources in ExtraNuGetConfigSources
 		/// </summary>
+		/// <param name="nugetConfigPath">The path to the NuGet.config file to update.</param>
+		/// <seealso cref="ExtraNuGetConfigSources"/>
+		/// <seealso cref="CopyNuGetConfig(string)"/>
 		protected void AddNuGetConfigSources (string nugetConfigPath)
 		{
 			XDocument doc;

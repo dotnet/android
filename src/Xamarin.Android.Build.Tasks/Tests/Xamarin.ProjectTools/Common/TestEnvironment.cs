@@ -7,6 +7,17 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.ProjectTools
 {
+	/// <summary>
+	/// Provides utility methods and properties for detecting the test environment
+	/// and locating build tools, directories, and platform-specific settings.
+	/// </summary>
+	/// <remarks>
+	/// This class centralizes environment detection logic used throughout the test
+	/// framework to adapt behavior based on the operating system, locate build tools,
+	/// and configure platform-specific paths and settings.
+	/// </remarks>
+	/// <seealso cref="XABuildPaths"/>
+	/// <seealso cref="FileSystemUtils"/>
 	public static class TestEnvironment
 	{
 		[DllImport ("libc")]
@@ -29,18 +40,27 @@ namespace Xamarin.ProjectTools
 			return false;
 		}
 
+		/// <summary>
+		/// Gets a value indicating whether the current platform is Windows.
+		/// </summary>
 		public static bool IsWindows {
 			get {
 				return Environment.OSVersion.Platform == PlatformID.Win32NT;
 			}
 		}
 
+		/// <summary>
+		/// Gets a value indicating whether the current platform is macOS.
+		/// </summary>
 		public static bool IsMacOS {
 			get {
 				return IsDarwin ();
 			}
 		}
 
+		/// <summary>
+		/// Gets a value indicating whether the current platform is Linux.
+		/// </summary>
 		public static bool IsLinux {
 			get {
 				return !IsWindows && !IsMacOS;
