@@ -180,7 +180,10 @@ namespace Xamarin.Android.Manifest {
 				return null;
 
 			var t = m.MemberType ?? v.GetType ();
-			var c = ValueConverters [t];
+			if (!ValueConverters.TryGetValue (t, out var c)) {
+				// Fallback for unknown types: use ToString()
+				return v.ToString ();
+			}
 			return c (v, provider, resolver, targetSdkVersion, cache);
 		}
 
