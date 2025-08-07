@@ -22,6 +22,7 @@ namespace Xamarin.Android.Build.Tests
 			string path = Path.Combine (Root, "temp", TestName);
 			Directory.CreateDirectory (path);
 			string intermediatePath;
+			bool shouldSkip = handler.Contains ("Xamarin.Android.Net.AndroidMessageHandler");
 			bool targetSkipped;
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,
@@ -31,10 +32,10 @@ namespace Xamarin.Android.Build.Tests
 				b.Verbosity = LoggerVerbosity.Detailed;
 				b.Build (proj);
 				intermediatePath = Path.Combine (path,proj.IntermediateOutputPath);
-				targetSkipped = b.Output.IsTargetSkipped ("_CheckAndroidHttpClientHandlerType");
+				targetSkipped = b.Output.IsTargetSkipped ("_CheckAndroidHttpClientHandlerType", defaultIfNotUsed: shouldSkip);
 			}
 
-			if (handler.Contains ("Xamarin.Android.Net.AndroidMessageHandler"))
+			if (shouldSkip)
 				Assert.IsTrue (targetSkipped, "_CheckAndroidHttpClientHandlerType should not have run.");
 			else
 				Assert.IsFalse (targetSkipped, "_CheckAndroidHttpClientHandlerType should have run.");
