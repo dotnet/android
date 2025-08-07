@@ -88,7 +88,7 @@ namespace xamarin::android {
 
 		static auto load_jni (std::string_view const& name, bool name_is_path) -> void*
 		{
-			log_debug (LOG_ASSEMBLY, "Loading JNI library {} with System.loadLibrary", name);
+			log_debug (LOG_ASSEMBLY, "Trying to load loading shared JNI library {} with System.loadLibrary", name);
 
 			if (jni_env == nullptr || systemKlass == nullptr) [[unlikely]] {
 				Helpers::abort_application ("DSO loader class not initialized properly."sv);
@@ -130,6 +130,8 @@ namespace xamarin::android {
 				return name;
 			};
 
+			// std::string is needed because we must pass a NUL-terminated string to Java, otherwise
+			// strange things happen (and std::string_view is not necessarily such a string)
 			const std::string undecorated_lib_name { get_undecorated_name (name, name_is_path) };
 			log_debug (LOG_ASSEMBLY, "Undecorated library name: {}", undecorated_lib_name);
 
@@ -142,6 +144,8 @@ namespace xamarin::android {
 
 			// This is unfortunate, but since `System.loadLibrary` doesn't return the class handle, we must get it this
 			// way :(
+			// We must use full name of the library, because dlopen won't accept an undecorated one without kicking up
+			// a fuss.
 			log_debug (LOG_ASSEMBLY, "Attempting to get library {} handle after System.loadLibrary", name);
 			return log_and_return (dlopen (name.data (), RTLD_NOLOAD), name);
 		}

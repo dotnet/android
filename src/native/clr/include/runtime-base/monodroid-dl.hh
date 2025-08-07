@@ -121,6 +121,7 @@ namespace xamarin::android
 				// JNI, we're going to assume it is and thus use System.loadLibrary eventually.
 				return DsoLoader::load (name, flags, true /* is_jni */);
 			} else if (dso->handle != nullptr) {
+				log_debug (LOG_ASSEMBLY, "monodroid_dlopen: library {} already loaded, returning handle {:p}", name, dso->handle);
 				return dso->handle;
 			}
 
@@ -140,13 +141,7 @@ namespace xamarin::android
 						continue;
 					}
 
-					android_dlextinfo dli;
-					dli.flags = ANDROID_DLEXT_USE_LIBRARY_FD | ANDROID_DLEXT_USE_LIBRARY_FD_OFFSET;
-					dli.library_fd = apk_entry->fd;
-					dli.library_fd_offset = apk_entry->offset;
-
-					dso->handle = android_dlopen_ext (dso_name.data (), flags, &dli);
-
+					dso->handle = DsoLoader::load (apk_entry->fd, apk_entry->offset, dso_name, flags, dso->is_jni_library);
 					if (dso->handle != nullptr) {
 						return dso->handle;
 					}
