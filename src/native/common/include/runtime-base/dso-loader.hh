@@ -19,7 +19,7 @@ namespace xamarin::android {
 		{
 			jni_env = env;
 			systemKlass = systemClass;
-			System_loadLibrary = env->GetMethodID (systemClass, "loadLibrary", "(Ljava/lang/String;)V");
+			System_loadLibrary = env->GetStaticMethodID (systemClass, "loadLibrary", "(Ljava/lang/String;)V");
 			if (System_loadLibrary == nullptr) [[unlikely]] {
 				Helpers::abort_application ("Failed to look up the Java System.loadLibrary method.");
 			}
@@ -34,7 +34,7 @@ namespace xamarin::android {
 				return load_jni (path, true /* name_is_path */);
 			}
 
-			log_info (LOG_ASSEMBLY, "Trying to load shared library '{}'", path);
+			log_info (LOG_ASSEMBLY, "[filesystem] Trying to load shared library '{}'", path);
 			if constexpr (!SkipExistsCheck) {
 				if (!AndroidSystem::is_embedded_dso_mode_enabled () && !Util::file_exists (path)) {
 					log_info (LOG_ASSEMBLY, "Shared library '{}' not found", path);
@@ -53,6 +53,8 @@ namespace xamarin::android {
 				return load_jni (name, true /* name_is_path */);
 			}
 
+			log_info (LOG_ASSEMBLY, "[apk] Trying to load shared library '{}', offset in the apk == {}", name, offset);
+
 			android_dlextinfo dli;
 			dli.flags = ANDROID_DLEXT_USE_LIBRARY_FD | ANDROID_DLEXT_USE_LIBRARY_FD_OFFSET;
 			dli.library_fd = fd;
@@ -66,6 +68,7 @@ namespace xamarin::android {
 		static auto log_and_return (void *handle, std::string_view const& full_name) -> void*
 		{
 			if (handle != nullptr) [[likely]] {
+				log_debug (LOG_ASSEMBLY, "Shared library {} loaded (handle {:p})", full_name, handle);
 				return handle;
 			}
 
@@ -85,6 +88,8 @@ namespace xamarin::android {
 
 		static auto load_jni (std::string_view const& name, bool name_is_path) -> void*
 		{
+			log_debug (LOG_ASSEMBLY, "Loading JNI library {} with System.loadLibrary", name);
+
 			if (jni_env == nullptr || systemKlass == nullptr) [[unlikely]] {
 				Helpers::abort_application ("DSO loader class not initialized properly."sv);
 			}
@@ -98,34 +103,46 @@ namespace xamarin::android {
 				if (!is_path) {
 					name = full_name;
 				} else {
-					name = full_name; // TODO: cut the path
+					name = full_name;
+					size_t last_slash = name.find_last_of ('/');
+					if (last_slash != std::string_view::npos) [[likely]] {
+						last_slash++;
+						if (last_slash <= name.length ()) {
+							name.remove_prefix (last_slash);
+						}
+					}
 				}
 
-				size_t name_start = 0;
-				size_t name_end = full_name.length ();
-
-				if (name.starts_with ("lib"sv) && name.length () > 3) {
-					name_start = 3;
+				constexpr std::string_view lib_prefix { "lib" };
+				if (name.starts_with (lib_prefix) && name.length () > 3) {
+					if (lib_prefix.length () <= name.length ()) {
+						name.remove_prefix (lib_prefix.length ());
+					}
 				}
 
-				if (name.ends_with (".so"sv) && name.length () > 3) {
-					name_end -= 3;
+				constexpr std::string_view lib_ext { ".so" };
+				if (name.ends_with (lib_ext) && name.length () > 3) {
+					if (lib_ext.length () <= name.length ()) {
+						name.remove_suffix (lib_ext.length ());
+					}
 				}
 
-				if (name_start >= name_end) [[unlikely]] {
-					return name;
-				}
-
-				return std::move (name.substr (name_start, name.length () - name_end));
+				return name;
 			};
 
-			const std::string_view undecorated_lib_name = get_undecorated_name (name, name_is_path);
+			const std::string undecorated_lib_name { get_undecorated_name (name, name_is_path) };
+			log_debug (LOG_ASSEMBLY, "Undecorated library name: {}", undecorated_lib_name);
 
-			jstring lib_name = jni_env->NewStringUTF (undecorated_lib_name.data ());
+			jstring lib_name = jni_env->NewStringUTF (undecorated_lib_name.c_str ());
+			if (lib_name == nullptr) [[unlikely]] {
+				// It's an OOM, there's nothing better we can do
+				Helpers::abort_application ("Java string allocation failed while loading a shared library.");
+			}
 			jni_env->CallStaticVoidMethod (systemKlass, System_loadLibrary, lib_name);
 
 			// This is unfortunate, but since `System.loadLibrary` doesn't return the class handle, we must get it this
 			// way :(
+			log_debug (LOG_ASSEMBLY, "Attempting to get library {} handle after System.loadLibrary", name);
 			return log_and_return (dlopen (name.data (), RTLD_NOLOAD), name);
 		}
 
