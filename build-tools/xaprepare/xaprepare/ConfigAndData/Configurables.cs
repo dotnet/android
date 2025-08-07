@@ -17,9 +17,9 @@ namespace Xamarin.Android.Prepare
 	{
 		const string BinutilsVersion                = "L_18.1.6-8.0.0-1";
 
-		const string MicrosoftOpenJDKVersion        = "21.0.5";
-		const string MicrosoftOpenJDKRelease        = "21.0.5";
-		const string MicrosoftOpenJDKRootDirName    = "jdk-21.0.5+11";
+		const string MicrosoftOpenJDKVersion        = "21.0.8";
+		const string MicrosoftOpenJDKRelease        = "21.0.8";
+		const string MicrosoftOpenJDKRootDirName    = "jdk-21.0.8+9";
 
 		static Context ctx => Context.Instance;
 
