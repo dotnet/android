@@ -33,7 +33,7 @@ namespace Android.App {
 
 		internal XElement ToElement (string packageName, TypeDefinitionCache cache)
 		{
-			return mapping.ToElement (this, specified, packageName, cache);
+			return mapping.ToElement (this, specified ?? new HashSet<string> (), packageName, cache);
 		}
 
 		internal class PermissionAttributeComparer : IEqualityComparer<PermissionAttribute>

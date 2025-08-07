@@ -76,7 +76,7 @@ namespace Android.App {
 
 		internal XElement ToElement (IAssemblyResolver resolver, string packageName, TypeDefinitionCache cache)
 		{
-			return mapping.ToElement (this, specified, packageName, cache, provider, resolver);
+			return mapping.ToElement (this, specified ?? new HashSet<string> (), packageName, cache, provider, resolver);
 		}
 
 		static string ToNameAttribute (ApplicationAttribute self, ICustomAttributeProvider provider, IAssemblyResolver resolver, TypeDefinitionCache cache)

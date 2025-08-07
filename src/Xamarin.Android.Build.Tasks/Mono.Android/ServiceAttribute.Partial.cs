@@ -31,7 +31,7 @@ namespace Android.App {
 
 		public XElement ToElement (string packageName, TypeDefinitionCache cache)
 		{
-			return mapping.ToElement (this, specified, packageName, cache);
+			return mapping.ToElement (this, specified ?? new HashSet<string> (), packageName, cache);
 		}
 	}
 }

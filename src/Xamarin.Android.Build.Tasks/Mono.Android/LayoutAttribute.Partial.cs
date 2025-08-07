@@ -37,7 +37,7 @@ namespace Android.App
 
 		internal XElement ToElement (IAssemblyResolver resolver, string packageName, TypeDefinitionCache cache)
 		{
-			return mapping.ToElement (this, specified, packageName, cache, type, resolver);
+			return mapping.ToElement (this, specified ?? new HashSet<string> (), packageName, cache, type, resolver);
 		}
 	}
 }
