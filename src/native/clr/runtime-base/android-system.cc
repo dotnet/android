@@ -223,11 +223,6 @@ AndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks
 void
 AndroidSystem::setup_environment () noexcept
 {
-	if (application_config.environment_variable_count % 2 != 0) {
-		log_warn (LOG_DEFAULT, "Corrupted environment variable array: does not contain an even number of entries ({})", application_config.environment_variable_count);
-		return;
-	}
-
 	const char *var_name;
 	const char *var_value;
 	for (size_t i = 0uz; i < application_config.environment_variable_count; i++) {
