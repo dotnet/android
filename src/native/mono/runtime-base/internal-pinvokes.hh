@@ -10,8 +10,6 @@
 #include <runtime-base/timing.hh>
 #include "xamarin-app.hh"
 
-
-
 int monodroid_get_system_property (const char *name, char **value);
 int monodroid_embedded_assemblies_set_assemblies_prefix (const char *prefix);
 void monodroid_log (xamarin::android::LogLevel level, LogCategories category, const char *message);

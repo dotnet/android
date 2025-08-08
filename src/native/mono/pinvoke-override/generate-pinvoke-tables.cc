@@ -56,7 +56,6 @@ const std::vector<std::string> internal_pinvoke_names = {
 	"_monodroid_max_gref_get",
 	"monodroid_strdup_printf",
 	"monodroid_strsplit",
-
 	"monodroid_timing_start",
 	"monodroid_timing_stop",
 	"monodroid_TypeManager_get_java_class_name",
