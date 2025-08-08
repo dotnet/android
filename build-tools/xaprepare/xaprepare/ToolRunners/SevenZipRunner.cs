@@ -14,6 +14,12 @@ namespace Xamarin.Android.Prepare
 		// Just an educated guess.  The official download page had versions 19 and then 23+ available
 		// and the 19 one didn't support the `-snld` switch
 		static readonly Version snldMinVersion = new Version (20, 0);
+
+		// New switch was added in v25.01 
+		//   https://sourceforge.net/p/sevenzip/discussion/45797/thread/da14cd780b/
+		//   https://github.com/ip7z/7zip/releases/tag/25.01
+		static readonly Version snld20MinVersion = new Version (25, 1);
+
 		Version version;
 
 		protected override string DefaultToolExecutableName => "7za";
@@ -126,8 +132,15 @@ namespace Xamarin.Android.Prepare
 			//
 			//   https://sourceforge.net/p/sevenzip/discussion/45798/thread/187ce54fb0/
 			//
-			if (version >= snldMinVersion) {
-				Log.DebugLine ("Adding option to ignore dangerous symlinks");
+			// A new switch was added in version 25.01:
+			//
+			//   https://sourceforge.net/p/sevenzip/discussion/45797/thread/da14cd780b/
+			//   https://github.com/ip7z/7zip/releases/tag/25.01
+			if (version >= snld20MinVersion) {
+				Log.DebugLine ("Adding -snld20 option to ignore dangerous symlinks");
+				runner.AddArgument ("-snld20");
+			} else if (version >= snldMinVersion) {
+				Log.DebugLine ("Adding -snld option to ignore dangerous symlinks");
 				runner.AddArgument ("-snld");
 			}
 
