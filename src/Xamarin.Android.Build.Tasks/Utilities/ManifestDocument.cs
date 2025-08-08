@@ -31,13 +31,13 @@ namespace Xamarin.Android.Tasks {
 
 	internal class ManifestDocument
 	{
-		public static XNamespace AndroidXmlNamespace = "http://schemas.android.com/apk/res/android";
-		public static XNamespace AndroidXmlToolsNamespace = "http://schemas.android.com/tools";
+		public static readonly XNamespace AndroidXmlNamespace = "http://schemas.android.com/apk/res/android";
+		public static readonly XNamespace AndroidXmlToolsNamespace = "http://schemas.android.com/tools";
 
 		const int maxVersionCode = 2100000000;
 
-		static XNamespace androidNs = AndroidXmlNamespace;
-		static XNamespace androidToolsNs = AndroidXmlToolsNamespace;
+		static readonly XNamespace androidNs = AndroidXmlNamespace;
+		static readonly XNamespace androidToolsNs = AndroidXmlToolsNamespace;
 		static readonly XName versionCodeAttributeName = androidNs + "versionCode";
 
 		XDocument doc;
@@ -1092,7 +1092,7 @@ namespace Xamarin.Android.Tasks {
 		public bool ValidateVersionCode (out string error, out string errorCode)
 		{
 			int code;
-			error = errorCode = string.Empty;
+			error = errorCode = "";
 			if (!int.TryParse (VersionCode, out code)) {
 				error = string.Format (Properties.Resources.XA0003, VersionCode);
 				errorCode = "XA0003";
@@ -1110,7 +1110,7 @@ namespace Xamarin.Android.Tasks {
 		{
 			var regex = new Regex ("\\{(?<key>([A-Za-z]+)):?[D0-9]*[\\}]");
 			var kvp = new Dictionary<string, int> ();
-			foreach (var item in versionCodeProperties?.Split (new char [] { ';', ':' }) ?? Array.Empty<string> ()) {
+			foreach (var item in versionCodeProperties?.Split (new char [] { ';', ':' }) ?? []) {
 				var keyValue = item.Split (new char [] { '=' });
 				int val;
 				if (!int.TryParse (keyValue [1], out val))

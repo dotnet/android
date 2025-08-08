@@ -220,7 +220,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetAndroidSupportedAbis (abi);
 
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
 				if (!builder.Install (proj)) {
 					Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, "ADB0020"), "Should receive ADB0020 error code.");
@@ -247,7 +247,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 			};
 
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, DeviceAbi);
 				StringAssert.Contains ($"{proj.ProjectName}.dll", directorylist, $"{proj.ProjectName}.dll should exist in the .__override__ directory.");
@@ -347,7 +347,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetProperty (proj.DebugProperties, "EmbedAssembliesIntoApk", false);
 
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				b.Build (proj, parameters: new [] { $"AdbTarget=\"-e {serial}\"" });
 				// Build again, no $(AdbTarget)
 				b.Build (proj);
@@ -703,7 +703,7 @@ public class TestJavaClass {
 				FileAssert.Exists (generatedCode, $"'{generatedCode}' should have not be deleted on second build.");
 				FileAssert.DoesNotExist (generatedCode2, $"'{generatedCode2}' should have be deleted on second build.");
 				Assert.IsFalse (b.Output.IsTargetSkipped ("_CompileBindingJava"), $"`_CompileBindingJava` should run on second build!");
-				Assert.IsTrue (b.Output.IsTargetSkipped ("_ClearGeneratedManagedBindings"), $"`_ClearGeneratedManagedBindings` should be skipped on second build!");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_ClearGeneratedManagedBindings", defaultIfNotUsed: true), $"`_ClearGeneratedManagedBindings` should be skipped on second build!");
 				// Call Install directly so Build does not get called automatically
 				Assert.IsTrue (b.RunTarget (proj, "Install", doNotCleanupOnUpdate: true, saveProject: false), "Install build should have succeeded.");
 				FileAssert.Exists (generatedCode, $"'{generatedCode}' should have not be deleted on Install build.");

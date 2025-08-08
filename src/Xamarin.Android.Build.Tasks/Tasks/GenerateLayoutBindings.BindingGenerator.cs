@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -15,7 +15,7 @@ namespace Xamarin.Android.Tasks
 			public sealed class State
 			{
 				StringBuilder indentBuilder = new StringBuilder ();
-				string indent = String.Empty;
+				string indent = "";
 				StreamWriter writer;
 
 				public StreamWriter Writer => writer;
@@ -30,19 +30,19 @@ namespace Xamarin.Android.Tasks
 
 				// Name of the *binding* class with properties that access the widgets - used only when
 				// generating code for the partial Activity class
-				public string BindingClassName { get; }
+				public string? BindingClassName { get; }
 
 				public List<string> ExtraImportNamespaces { get; } = new List <string> ();
 
 				public string AndroidFragmentType { get; }
 
-				public State (StreamWriter writer, string className, bool isInNamespace, string androidFragmentType, string bindingClassName = null)
+				public State (StreamWriter writer, string className, bool isInNamespace, string androidFragmentType, string? bindingClassName = null)
 				{
 					if (writer == null)
 						throw new ArgumentNullException (nameof (writer));
-					if (String.IsNullOrWhiteSpace (className))
-						throw new ArgumentException (nameof (writer));
-					if (String.IsNullOrEmpty (androidFragmentType))
+					if (className.IsNullOrWhiteSpace ())
+						throw new ArgumentException (nameof (className));
+					if (androidFragmentType.IsNullOrEmpty ())
 						throw new ArgumentException (nameof (androidFragmentType));
 
 					this.writer = writer;
@@ -67,7 +67,7 @@ namespace Xamarin.Android.Tasks
 					indent = indentBuilder.ToString ();
 				}
 
-				public void WriteLine (string text = null)
+				public void WriteLine (string? text = null)
 				{
 					if (text == null)
 						writer.WriteLine ();
@@ -75,7 +75,7 @@ namespace Xamarin.Android.Tasks
 						writer.WriteLine (text);
 				}
 
-				public void Write (string text = null)
+				public void Write (string? text = null)
 				{
 					if (text == null)
 						return;
@@ -184,15 +184,18 @@ namespace Xamarin.Android.Tasks
 				state.WriteLine ();
 				WriteLocationDirective (state, widget);
 
-				foreach (LayoutLocationInfo loc in widget.Locations) {
-					if (loc == null)
-						continue;
-					WriteComment (state, $" Declared in: {loc.FilePath}:({loc.Line}:{loc.Column})");
+				if (widget.Locations != null) {
+					foreach (LayoutLocationInfo loc in widget.Locations) {
+						if (loc == null)
+							continue;
+						WriteComment (state, $" Declared in: {loc.FilePath}:({loc.Line}:{loc.Column})");
+					}
 				}
 
 				if (widget.TypeFixups != null) {
 					foreach (LayoutTypeFixup tf in widget.TypeFixups) {
-						WriteComment (state, $" Type fixed up from '{tf.OldType}' to '{widget.Type}'. Element defined in {tf.Location.FilePath}:({tf.Location.Line}:{tf.Location.Column})");
+						if (tf?.Location != null)
+							WriteComment (state, $" Type fixed up from '{tf.OldType}' to '{widget.Type}'. Element defined in {tf.Location.FilePath}:({tf.Location.Line}:{tf.Location.Column})");
 					}
 				}
 
@@ -237,10 +240,10 @@ namespace Xamarin.Android.Tasks
 				// there may still be a widget with the same ID). It is better to append a suffix to the
 				// property name since we're guaranteed that each property is unique.
 				StringComparison comparison = CaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-				if (String.Compare (state.ClassName, widget.Name, comparison) != 0 && !NameMatchesBindingClass (state, widget, comparison))
-					return widget.Name;
+				if (!MonoAndroidHelper.StringEquals (state.ClassName, widget.Name, comparison) && !NameMatchesBindingClass (state, widget, comparison))
+					return widget.Name ?? "UnknownWidget";
 
-				string suffix = null;
+				string? suffix = null;
 				switch (widget.WidgetType) {
 					case LayoutWidgetType.View:
 						suffix = "View";
@@ -261,19 +264,19 @@ namespace Xamarin.Android.Tasks
 						throw new InvalidOperationException ($"Unsupported widget type '{widget.WidgetType}' (ID: {GetWidgetId (widget)})");
 				}
 
-				return $"{widget.Name}_{suffix}";
+				return $"{widget.Name ?? "UnknownWidget"}_{suffix}";
 			}
 
 			bool NameMatchesBindingClass (State state, LayoutWidget widget, StringComparison comparison)
 			{
-				if (String.IsNullOrEmpty (state.BindingClassName))
+				if (state.BindingClassName.IsNullOrEmpty ())
 					return false;
 
-				int dot = state.BindingClassName.LastIndexOf ('.');
+				int dot = state.BindingClassName!.LastIndexOf ('.');
 				if (dot < 0)
 					return false;
 
-				return String.Compare (state.BindingClassName.Substring (dot + 1), widget.Name, comparison) == 0;
+				return MonoAndroidHelper.StringEquals (state.BindingClassName.Substring (dot + 1), widget.Name, comparison);
 			}
 
 			protected void WriteBindingPropertyBackingField (State state, LayoutWidget widget)
@@ -345,16 +348,17 @@ namespace Xamarin.Android.Tasks
 
 			protected string GetWidgetId (LayoutWidget widget, out bool isGlobal)
 			{
-				if (String.IsNullOrEmpty (widget?.Id)) {
+				var widgetId = widget?.Id;
+				if (widgetId.IsNullOrEmpty ()) {
 					isGlobal = false;
-					return String.Empty;
+					return string.Empty;
 				}
 
-				isGlobal = widget.Id.StartsWith (CalculateLayoutCodeBehind.GlobalIdPrefix, StringComparison.Ordinal);
+				isGlobal = widgetId!.StartsWith (CalculateLayoutCodeBehind.GlobalIdPrefix, StringComparison.Ordinal);
 				if (!isGlobal)
-					return widget.Id;
+					return widgetId!;
 
-				return widget.Id.Substring (CalculateLayoutCodeBehind.GlobalIdPrefix.Length);
+				return widgetId!.Substring (CalculateLayoutCodeBehind.GlobalIdPrefix.Length);
 			}
 		}
 	}

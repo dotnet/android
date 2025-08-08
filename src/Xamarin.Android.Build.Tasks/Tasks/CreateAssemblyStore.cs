@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,13 +30,20 @@ public class CreateAssemblyStore : AndroidTask
 	[Required]
 	public string [] SupportedAbis { get; set; } = [];
 
+	[Required]
+	public string TargetRuntime { get; set; } = "";
+
 	public bool UseAssemblyStore { get; set; }
 
 	[Output]
 	public ITaskItem [] AssembliesToAddToArchive { get; set; } = [];
 
+	AndroidRuntime targetRuntime;
+
 	public override bool RunTask ()
 	{
+		targetRuntime = MonoAndroidHelper.ParseAndroidRuntime (TargetRuntime);
+
 		// Get all the user and framework assemblies we may need to package
 		var assemblies = ResolvedFrameworkAssemblies.Concat (ResolvedUserAssemblies).Where (asm => !(ShouldSkipAssembly (asm))).ToArray ();
 
@@ -43,7 +52,7 @@ public class CreateAssemblyStore : AndroidTask
 			return !Log.HasLoggedErrors;
 		}
 
-		var store_builder = new AssemblyStoreBuilder (Log);
+		var store_builder = new AssemblyStoreBuilder (Log, targetRuntime);
 		var per_arch_assemblies = MonoAndroidHelper.GetPerArchAssemblies (assemblies, SupportedAbis, true);
 
 		foreach (var kvp in per_arch_assemblies) {

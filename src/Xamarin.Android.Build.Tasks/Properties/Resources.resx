@@ -531,7 +531,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
     <value>Source file '{0}' could not be found.</value>
   </data>
   <data name="XA2002_Framework" xml:space="preserve">
-    <value>Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the Mono for Android profile?</value>
+    <value>Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the .NET for Android profile?</value>
     <comment>{0} - The name of the missing assembly
 {1} - The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`</comment>
   </data>

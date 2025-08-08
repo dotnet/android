@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,10 +14,12 @@ class AssemblyStoreBuilder
 {
 	readonly TaskLoggingHelper log;
 	readonly AssemblyStoreGenerator storeGenerator;
+	readonly AndroidRuntime targetRuntime;
 
-	public AssemblyStoreBuilder (TaskLoggingHelper log)
+	public AssemblyStoreBuilder (TaskLoggingHelper log, AndroidRuntime targetRuntime)
 	{
 		this.log = log;
+		this.targetRuntime = targetRuntime;
 		storeGenerator = new (log);
 	}
 
@@ -38,6 +41,24 @@ class AssemblyStoreBuilder
 			}
 		}
 
+		storeGenerator.Add (storeAssemblyInfo);
+
+		ClrAddIgnoredNativeImageAssembly (assemblyItem);
+	}
+
+	// When CoreCLR tries to load an assembly (say `AssemblyName.dll`) it will always first try to load
+	// a "native image" assembly from `AssemblyName.ni.dll` which will **never** exist. The native image
+	// assemblies were once supported only on Windows and were never (nor will ever be) supported on
+	// Unix. In order to speed up load times, we add an empty entry for each `*.ni.dll` to the assembly
+	// store index.
+	void ClrAddIgnoredNativeImageAssembly (ITaskItem assemblyItem)
+	{
+		if (targetRuntime != AndroidRuntime.CoreCLR) {
+			return;
+		}
+
+		string ignoredName = Path.GetFileName (Path.ChangeExtension (assemblyItem.ItemSpec, ".ni.dll"));
+		var storeAssemblyInfo = new AssemblyStoreAssemblyInfo (ignoredName, assemblyItem, assemblyIsIgnored: true);
 		storeGenerator.Add (storeAssemblyInfo);
 	}
 

@@ -34,7 +34,6 @@ namespace Android.Runtime
 			public bool            jniRemappingInUse;
 			public bool            marshalMethodsEnabled;
 			public IntPtr          grefGCUserPeerable;
-			public uint            runtimeType;
 			public bool            managedMarshalMethodsLookupEnabled;
 		}
 #pragma warning restore 0649
@@ -49,8 +48,6 @@ namespace Android.Runtime
 		internal static IntPtr java_class_loader;
 
 		internal static JniRuntime? androidRuntime;
-
-		public static DotNetRuntimeType RuntimeType { get; private set; } = DotNetRuntimeType.Unknown;
 
 		[UnmanagedCallersOnly]
 		static unsafe void RegisterJniNatives (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
@@ -91,9 +88,10 @@ namespace Android.Runtime
 		[UnmanagedCallersOnly]
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
-			// This looks weird, see comments in RuntimeTypeInternal.cs
-			RuntimeType = DotNetRuntimeTypeConverter.Convert (args->runtimeType);
-			InternalRuntimeTypeHolder.SetRuntimeType (args->runtimeType);
+			// Should not be allowed
+			if (RuntimeFeature.IsMonoRuntime && RuntimeFeature.IsCoreClrRuntime) {
+				throw new NotSupportedException ("Internal error: both RuntimeFeature.IsMonoRuntime and RuntimeFeature.IsCoreClrRuntime are enabled");
+			}
 
 			IntPtr total_timing_sequence = IntPtr.Zero;
 			IntPtr partial_timing_sequence = IntPtr.Zero;
@@ -114,12 +112,13 @@ namespace Android.Runtime
 			} else {
 				typeManager     = new AndroidTypeManager (args->jniAddNativeMethodRegistrationAttributePresent != 0);
 			}
-			valueManager = RuntimeType switch
-			{
-				DotNetRuntimeType.MonoVM => new AndroidValueManager(),
-				DotNetRuntimeType.CoreCLR => ManagedValueManager.GetOrCreateInstance(),
-				_ => throw new NotSupportedException ($"No value manager for runtime type: {RuntimeType}"),
-			};
+			if (RuntimeFeature.IsMonoRuntime) {
+				valueManager = new AndroidValueManager ();
+			} else if (RuntimeFeature.IsCoreClrRuntime) {
+				valueManager = ManagedValueManager.GetOrCreateInstance ();
+			} else {
+				throw new NotSupportedException ("Internal error: unknown runtime not supported");
+			}
 			androidRuntime = new AndroidRuntime (
 					args->env,
 					args->javaVm,

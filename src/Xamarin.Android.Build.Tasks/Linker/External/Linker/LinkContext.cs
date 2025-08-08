@@ -93,6 +93,7 @@ namespace Mono.Linker {
 		public LinkContext (DirectoryAssemblyResolver resolver, ReaderParameters readerParameters)
 		{
 			_resolver = resolver;
+			_readerParameters = readerParameters;
 			_actions = new Dictionary<string, AssemblyAction> ();
 			SymbolReaderProvider = new DefaultSymbolReaderProvider (false);
 			_annotations = new AnnotationStore (this);

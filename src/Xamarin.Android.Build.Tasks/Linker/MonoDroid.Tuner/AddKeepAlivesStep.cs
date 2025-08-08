@@ -145,7 +145,11 @@ namespace MonoDroid.Tuner
 			return Extensions.GetMethod (gcType, "KeepAlive", new string [] { "System.Object" });
 		}
 
-		public virtual void LogMessage (string message)
+		public
+#if !ILLINK
+		override
+#endif
+		void LogMessage (string message)
 		{
 			Context.LogMessage (message);
 		}

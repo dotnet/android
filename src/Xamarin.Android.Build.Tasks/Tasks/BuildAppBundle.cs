@@ -1,3 +1,5 @@
+#nullable enable
+
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Text.Json;
@@ -89,7 +91,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				JsonNode? json = JsonNode.Parse ("{}");
-				if (!string.IsNullOrEmpty (CustomBuildConfigFile) && File.Exists (CustomBuildConfigFile)) {
+				if (!CustomBuildConfigFile.IsNullOrEmpty () && File.Exists (CustomBuildConfigFile)) {
 					using Stream fs = File.OpenRead (CustomBuildConfigFile);
 					using JsonDocument doc = JsonDocument.Parse (fs, new JsonDocumentOptions { AllowTrailingCommas = true });
 					json = doc.RootElement.ToNode ();
@@ -131,7 +133,7 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("--modules ", string.Join (",", modules));
 			cmd.AppendSwitchIfNotNull ("--output ", Output);
 			cmd.AppendSwitchIfNotNull ("--config ", temp);
-			foreach (var file in MetaDataFiles ?? Array.Empty<ITaskItem> ()) {
+			foreach (var file in MetaDataFiles ?? []) {
 				cmd.AppendSwitch ($"--metadata-file={file.ItemSpec}");
 			}
 			return cmd;

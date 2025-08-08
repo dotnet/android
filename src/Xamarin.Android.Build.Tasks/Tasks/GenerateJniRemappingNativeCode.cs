@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.IO;
@@ -29,13 +29,13 @@ namespace Xamarin.Android.Tasks
 
 		public override string TaskPrefix => "GJRNC";
 
-		public ITaskItem RemappingXmlFilePath { get; set; }
+		public ITaskItem? RemappingXmlFilePath { get; set; }
 
 		[Required]
-		public string OutputDirectory { get; set; }
+		public string OutputDirectory { get; set; } = "";
 
 		[Required]
-		public string [] SupportedAbis { get; set; }
+		public string [] SupportedAbis { get; set; } = [];
 
 		public bool GenerateEmptyCode { get; set; }
 
@@ -46,7 +46,7 @@ namespace Xamarin.Android.Tasks
 					throw new InvalidOperationException ("RemappingXmlFilePath parameter is required");
 				}
 
-				Generate ();
+				Generate (RemappingXmlFilePath.ItemSpec);
 			} else {
 				GenerateEmpty ();
 			}
@@ -59,7 +59,7 @@ namespace Xamarin.Android.Tasks
 			Generate (new JniRemappingAssemblyGenerator (Log), typeReplacementsCount: 0);
 		}
 
-		void Generate ()
+		void Generate (string remappingXmlFilePath)
 		{
 			var typeReplacements = new List<JniRemappingTypeReplacement> ();
 			var methodReplacements = new List<JniRemappingMethodReplacement> ();
@@ -68,11 +68,11 @@ namespace Xamarin.Android.Tasks
 				XmlResolver = null,
 			};
 
-			using (var reader = XmlReader.Create (File.OpenRead (RemappingXmlFilePath.ItemSpec), readerSettings)) {
+			using (var reader = XmlReader.Create (File.OpenRead (remappingXmlFilePath), readerSettings)) {
 				if (reader.MoveToContent () != XmlNodeType.Element || reader.LocalName != "replacements") {
-					Log.LogError ($"Input file `{RemappingXmlFilePath.ItemSpec}` does not start with `<replacements/>`");
+					Log.LogError ($"Input file `{remappingXmlFilePath}` does not start with `<replacements/>`");
 				} else {
-					ReadXml (reader, typeReplacements, methodReplacements);
+					ReadXml (reader, typeReplacements, methodReplacements, remappingXmlFilePath);
 				}
 			}
 
@@ -101,7 +101,7 @@ namespace Xamarin.Android.Tasks
 			);
 		}
 
-		void ReadXml (XmlReader reader, List<JniRemappingTypeReplacement> typeReplacements, List<JniRemappingMethodReplacement> methodReplacements)
+		void ReadXml (XmlReader reader, List<JniRemappingTypeReplacement> typeReplacements, List<JniRemappingMethodReplacement> methodReplacements, string remappingXmlFilePath)
 		{
 			bool haveAllAttributes;
 
@@ -111,7 +111,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				haveAllAttributes = true;
-				if (String.Compare ("replace-type", reader.LocalName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("replace-type", reader.LocalName)) {
 					haveAllAttributes &= GetRequiredAttribute ("from", out string from);
 					haveAllAttributes &= GetRequiredAttribute ("to", out string to);
 					if (!haveAllAttributes) {
@@ -119,7 +119,7 @@ namespace Xamarin.Android.Tasks
 					}
 
 					typeReplacements.Add (new JniRemappingTypeReplacement (from, to));
-				} else if (String.Compare ("replace-method", reader.LocalName, StringComparison.Ordinal) == 0) {
+				} else if (MonoAndroidHelper.StringEquals ("replace-method", reader.LocalName)) {
 					haveAllAttributes &= GetRequiredAttribute ("source-type", out string sourceType);
 					haveAllAttributes &= GetRequiredAttribute ("source-method-name", out string sourceMethodName);
 					haveAllAttributes &= GetRequiredAttribute ("target-type", out string targetType);
@@ -131,7 +131,7 @@ namespace Xamarin.Android.Tasks
 					}
 
 					if (!Boolean.TryParse (targetIsStatic, out bool isStatic)) {
-						Log.LogError ($"Attribute 'target-method-instance-to-static' in element '{reader.LocalName}' value '{targetIsStatic}' cannot be parsed as boolean; {RemappingXmlFilePath.ItemSpec} line {GetCurrentLineNumber ()}");
+						Log.LogError ($"Attribute 'target-method-instance-to-static' in element '{reader.LocalName}' value '{targetIsStatic}' cannot be parsed as boolean; {remappingXmlFilePath} line {GetCurrentLineNumber ()}");
 						continue;
 					}
 
@@ -152,7 +152,7 @@ namespace Xamarin.Android.Tasks
 					return true;
 				}
 
-				Log.LogError ($"Attribute '{attributeName}' missing from element '{reader.LocalName}'; {RemappingXmlFilePath.ItemSpec} line {GetCurrentLineNumber ()}");
+				Log.LogError ($"Attribute '{attributeName}' missing from element '{reader.LocalName}'; {remappingXmlFilePath} line {GetCurrentLineNumber ()}");
 				return false;
 			}
 

@@ -128,12 +128,6 @@ _monodroid_gc_wait_for_bridge_processing ()
     mono_gc_wait_for_bridge_processing ();
 }
 
-void
-monodroid_clear_gdb_wait ()
-{
-    MonodroidRuntime::set_monodroid_gdb_wait (false);
-}
-
 void*
 _monodroid_timezone_get_default_id ()
 {
@@ -158,14 +152,6 @@ _monodroid_timezone_get_default_id ()
 	env->DeleteLocalRef (d);
 
 	return def_id;
-}
-
-void
-_monodroid_counters_dump ([[maybe_unused]] const char *format, [[maybe_unused]] va_list args)
-{
-#if !defined (NET)
-	MonodroidRuntime::dump_counters_v (format, args);
-#endif // ndef NET
 }
 
 managed_timing_sequence*
@@ -202,12 +188,6 @@ monodroid_strsplit (const char *str, const char *delimiter, size_t max_tokens)
 	return Util::monodroid_strsplit (str, delimiter, max_tokens);
 }
 
-void
-monodroid_strfreev (char **str_array)
-{
-	Util::monodroid_strfreev (str_array);
-}
-
 char*
 monodroid_strdup_printf (const char *format, ...)
 {
@@ -224,12 +204,6 @@ char*
 monodroid_TypeManager_get_java_class_name (jclass klass)
 {
 	return MonodroidRuntime::get_java_class_name_for_TypeManager (klass);
-}
-
-int
-monodroid_get_namespaced_system_property (const char *name, char **value)
-{
-	return static_cast<int>(AndroidSystem::monodroid_get_system_property (name, value));
 }
 
 FILE*
@@ -316,11 +290,4 @@ _monodroid_lookup_replacement_method_info (const char *jniSourceType, const char
 	return JniRemapping::lookup_replacement_method_info (jniSourceType, jniMethodName, jniMethodSignature);
 }
 
-void
-monodroid_log_traces (uint32_t kind, const char *first_line)
-{
-	JNIEnv *env = osBridge.ensure_jnienv ();
-	auto tk = static_cast<TraceKind>(kind);
 
-	MonodroidRuntime::log_traces (env, tk, first_line);
-}

@@ -35,7 +35,7 @@ namespace Xamarin.Android.Build.Tests
 
 
 			proj.SetDefaultTargetDevice ();
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				proj.SetProperty ("AndroidSigningPlatformKey", Path.Combine (Root, b.ProjectDirectory, "platform.pk8"));
 				proj.SetProperty ("AndroidSigningPlatformCert", Path.Combine (Root, b.ProjectDirectory, "platform.x509.pem"));
 				Assert.True (b.Install (proj), "Project should have installed.");

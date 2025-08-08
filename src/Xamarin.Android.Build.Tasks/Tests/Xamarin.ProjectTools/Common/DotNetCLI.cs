@@ -132,7 +132,7 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
-		public bool IsTargetSkipped (string target) => BuildOutput.IsTargetSkipped (LastBuildOutput, target);
+		public bool IsTargetSkipped (string target, bool defaultIfNotUsed = false) => BuildOutput.IsTargetSkipped (LastBuildOutput, target, defaultIfNotUsed);
 
 		List<string> GetDefaultCommandLineArgs (string verb, string target = null, string runtimeIdentifier = null, string [] parameters = null)
 		{

@@ -50,7 +50,7 @@ This file is used by all project types, including binding projects.
       <_AndroidResgenFlagFile Condition=" '$(DesignTimeBuild)' == 'true' And !Exists('$(_AndroidResgenFlagFile)') ">$(_AndroidIntermediateDesignTimeBuildDirectory)R.cs.flag</_AndroidResgenFlagFile>
     </PropertyGroup>
     <MakeDir
-        Condition=" '$(_AndroidIsBindingProject)' != 'true' And !Exists ('$(_AndroidIntermediateDesignTimeBuildDirectory)') "
+        Condition=" !Exists ('$(_AndroidIntermediateDesignTimeBuildDirectory)') "
         Directories="$(_AndroidIntermediateDesignTimeBuildDirectory)"
     />
     <MakeDir

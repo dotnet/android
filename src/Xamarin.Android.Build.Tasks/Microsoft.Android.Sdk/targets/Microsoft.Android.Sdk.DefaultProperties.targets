@@ -28,8 +28,6 @@
     <_AndroidRuntime Condition=" '$(PublishAot)' != 'true' and '$(UseMonoRuntime)' != 'true' ">CoreCLR</_AndroidRuntime>
     <_AndroidRuntime Condition=" '$(_AndroidRuntime)' == '' ">MonoVM</_AndroidRuntime>
     <PublishAotUsingRuntimePack Condition=" '$(PublishAotUsingRuntimePack)' == '' and '$(_AndroidRuntime)' == 'NativeAOT' ">true</PublishAotUsingRuntimePack>
-    <!-- HACK: make dotnet restore include Microsoft.NETCore.App.Runtime.NativeAOT.linux-bionic-arm64 -->
-    <_IsPublishing Condition=" '$(_IsPublishing)' == '' and '$(_AndroidRuntime)' == 'NativeAOT' ">true</_IsPublishing>
 
     <!-- Use $(AndroidMinimumSupportedApiLevel) for $(SupportedOSPlatformVersion) if unset -->
     <SupportedOSPlatformVersion Condition=" '$(SupportedOSPlatformVersion)' == '' ">$(AndroidMinimumSupportedApiLevel)</SupportedOSPlatformVersion>
@@ -50,8 +48,9 @@
     <AndroidEnableRestrictToAttributes Condition=" '$(AndroidEnableRestrictToAttributes)' == '' ">obsolete</AndroidEnableRestrictToAttributes>
 
     <!-- Mono components -->
-    <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == ''">$(EnableDiagnostics)</AndroidEnableProfiler>
-    <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == ''">false</AndroidEnableProfiler>
+    <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == '' ">$(EnableDiagnostics)</AndroidEnableProfiler>
+    <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == '' and ('$(DiagnosticConfiguration)' != '' or '$(DiagnosticAddress)' != '' or '$(DiagnosticPort)' != '' or '$(DiagnosticSuspend)' != '' or '$(DiagnosticListenMode)' != '') ">true</AndroidEnableProfiler>
+    <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == '' ">false</AndroidEnableProfiler>
 
     <!--
         Android package (apt/aab) alignment, expressed as the page size in kilobytes.  Two values are supported: 4 and 16.
@@ -60,6 +59,16 @@
         When changing this default, change the value of `DefaultZipAlignment` in `src/Xamarin.Android.Build.Tasks/Tasks/AndroidZipAlign.cs` as well
     -->
     <AndroidZipAlignment Condition=" '$(AndroidZipAlignment)' == '' ">16</AndroidZipAlignment>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(AndroidEnableProfiler)' == 'true' and '$(DiagnosticConfiguration)' == '' ">
+    <DiagnosticAddress Condition=" '$(DiagnosticAddress)' == '' ">127.0.0.1</DiagnosticAddress>
+    <DiagnosticPort Condition=" '$(DiagnosticPort)' == '' ">9000</DiagnosticPort>
+    <DiagnosticSuspend Condition=" '$(DiagnosticSuspend)' == '' ">false</DiagnosticSuspend>
+    <DiagnosticListenMode Condition=" '$(DiagnosticListenMode)' == '' ">connect</DiagnosticListenMode>
+    <DiagnosticConfiguration>$(DiagnosticAddress):$(DiagnosticPort),$(DiagnosticListenMode)</DiagnosticConfiguration>
+    <DiagnosticConfiguration Condition=" '$(DiagnosticSuspend)' == 'true' ">$(DiagnosticConfiguration),suspend</DiagnosticConfiguration>
+    <DiagnosticConfiguration Condition=" '$(DiagnosticSuspend)' != 'true' ">$(DiagnosticConfiguration),nosuspend</DiagnosticConfiguration>
   </PropertyGroup>
 
   <!--  User-facing configuration-specific defaults -->
@@ -115,6 +124,7 @@
     <EnableUnsafeBinaryFormatterSerialization Condition="'$(EnableUnsafeBinaryFormatterSerialization)' == ''">false</EnableUnsafeBinaryFormatterSerialization>
     <EventSourceSupport Condition="'$(EventSourceSupport)' == ''">false</EventSourceSupport>
     <UseSystemResourceKeys Condition="'$(UseSystemResourceKeys)' == '' and '$(PublishTrimmed)' == 'true'">true</UseSystemResourceKeys>
+    <Http3Support Condition="'$(Http3Support)' == ''">false</Http3Support>
     <HttpActivityPropagationSupport Condition="'$(HttpActivityPropagationSupport)' == '' and '$(Optimize)' == 'true'">false</HttpActivityPropagationSupport>
     <InvariantGlobalization Condition="'$(InvariantGlobalization)' == ''">false</InvariantGlobalization>
     <StartupHookSupport Condition="'$(StartupHookSupport)' == ''">false</StartupHookSupport>

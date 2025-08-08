@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,6 +20,10 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 	public bool EnableManagedMarshalMethodsLookup { get; set; }
 
 	public bool EnableMarshalMethods { get; set; }
+
+	public bool EnableNativeRuntimeLinking { get; set; }
+
+	public ITaskItem[] MonoComponents { get; set; } = [];
 
 	[Required]
 	public string EnvironmentOutputDirectory { get; set; } = "";
@@ -44,7 +49,7 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 		NativeCodeGenStateCollection? nativeCodeGenStates = null;
 		androidRuntime = MonoAndroidHelper.ParseAndroidRuntime (AndroidRuntime);
 
-		if (EnableMarshalMethods) {
+		if (EnableMarshalMethods || EnableNativeRuntimeLinking) {
 			// Retrieve the stored NativeCodeGenStateCollection (and remove it from the cache)
 			nativeCodeGenStates = BuildEngine4.UnregisterTaskObjectAssemblyLocal<NativeCodeGenStateCollection> (
 				MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateObjectRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory),
@@ -63,7 +68,9 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 		var targetAbi = abi.ToLowerInvariant ();
 		var targetArch = MonoAndroidHelper.AbiToTargetArch (abi);
 		var marshalMethodsBaseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"marshal_methods.{targetAbi}");
+		var pinvokePreserveBaseAsmFilePath = EnableNativeRuntimeLinking ? Path.Combine (EnvironmentOutputDirectory, $"pinvoke_preserve.{targetAbi}") : null;
 		var marshalMethodsLlFilePath = $"{marshalMethodsBaseAsmFilePath}.ll";
+		var pinvokePreserveLlFilePath = pinvokePreserveBaseAsmFilePath != null ? $"{pinvokePreserveBaseAsmFilePath}.ll" : null;
 		var (assemblyCount, uniqueAssemblyNames) = GetAssemblyCountAndUniqueNames ();
 
 		MarshalMethodsNativeAssemblyGenerator marshalMethodsAsmGen = androidRuntime switch {
@@ -72,14 +79,37 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 			_ => throw new NotSupportedException ($"Internal error: unsupported runtime type '{androidRuntime}'")
 		};
 
+		bool fileFullyWritten;
+		if (EnableNativeRuntimeLinking) {
+			var pinvokePreserveGen = new PreservePinvokesNativeAssemblyGenerator (Log, EnsureCodeGenState (nativeCodeGenStates, targetArch), MonoComponents);
+			LLVMIR.LlvmIrModule pinvokePreserveModule = pinvokePreserveGen.Construct ();
+			using var pinvokePreserveWriter = MemoryStreamPool.Shared.CreateStreamWriter ();
+			fileFullyWritten = false;
+			try {
+				pinvokePreserveGen.Generate (pinvokePreserveModule, targetArch, pinvokePreserveWriter, pinvokePreserveLlFilePath!);
+				pinvokePreserveWriter.Flush ();
+				Files.CopyIfStreamChanged (pinvokePreserveWriter.BaseStream, pinvokePreserveLlFilePath!);
+				fileFullyWritten = true;
+			} finally {
+				if (!fileFullyWritten) {
+					MonoAndroidHelper.LogTextStreamContents (Log, $"Partial contents of file '{pinvokePreserveLlFilePath}'", pinvokePreserveWriter.BaseStream);
+				}
+			}
+		}
+
 		var marshalMethodsModule = marshalMethodsAsmGen.Construct ();
 		using var marshalMethodsWriter = MemoryStreamPool.Shared.CreateStreamWriter ();
 
+		fileFullyWritten = false;
 		try {
 			marshalMethodsAsmGen.Generate (marshalMethodsModule, targetArch, marshalMethodsWriter, marshalMethodsLlFilePath);
-		} finally {
 			marshalMethodsWriter.Flush ();
 			Files.CopyIfStreamChanged (marshalMethodsWriter.BaseStream, marshalMethodsLlFilePath);
+			fileFullyWritten = true;
+		} finally {
+			if (!fileFullyWritten) {
+				MonoAndroidHelper.LogTextStreamContents (Log, $"Partial contents of file '{marshalMethodsLlFilePath}'", marshalMethodsWriter.BaseStream);
+			}
 		}
 
 		MarshalMethodsNativeAssemblyGenerator MakeMonoGenerator ()
@@ -132,7 +162,7 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 			var fileName = Path.GetFileName (assembly.ItemSpec);
 			string assemblyName;
 
-			if (string.IsNullOrEmpty (culture)) {
+			if (culture.IsNullOrEmpty ()) {
 				assemblyName = fileName;
 			} else {
 				assemblyName = $"{culture}/{fileName}";

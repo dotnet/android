@@ -7,45 +7,111 @@ using Xamarin.Tools.Zip;
 
 namespace Xamarin.ProjectTools
 {
+	/// <summary>
+	/// Represents the output and intermediate files from a build operation.
+	/// Provides methods to access build artifacts, examine build outputs,
+	/// and analyze the results of a project build for testing purposes.
+	/// </summary>
+	/// <remarks>
+	/// This class is created by <see cref="XamarinProject.CreateBuildOutput(ProjectBuilder)"/>
+	/// and provides convenient access to build outputs, intermediate files, and
+	/// build analysis functionality for test validation.
+	/// </remarks>
+	/// <seealso cref="ProjectBuilder"/>
+	/// <seealso cref="XamarinProject"/>
 	public class BuildOutput
 	{
+		/// <summary>
+		/// Initializes a new instance of the BuildOutput class for the specified project.
+		/// </summary>
+		/// <param name="project">The project that was built.</param>
 		internal BuildOutput (XamarinProject project)
 		{
 			Project = project;
 		}
 
+		/// <summary>
+		/// Gets or sets the project builder that performed the build operation.
+		/// </summary>
+		/// <seealso cref="ProjectBuilder"/>
 		public ProjectBuilder Builder { get; set; }
 
+		/// <summary>
+		/// Gets the project that was built.
+		/// </summary>
+		/// <seealso cref="XamarinProject"/>
 		public XamarinProject Project { get; private set; }
 
+		/// <summary>
+		/// Gets the value of a property from the applicable configuration (Debug or Release),
+		/// falling back to common properties if not found in the configuration-specific properties.
+		/// </summary>
+		/// <param name="name">The name of the property to retrieve.</param>
+		/// <returns>The property value, or null if not found.</returns>
+		/// <seealso cref="XamarinProject.IsRelease"/>
+		/// <seealso cref="XamarinProject.DebugProperties"/>
+		/// <seealso cref="XamarinProject.ReleaseProperties"/>
 		public string GetPropertyInApplicableConfiguration (string name)
 		{
 			return Project.GetProperty (Project.IsRelease ? Project.ReleaseProperties : Project.DebugProperties, name) ?? Project.GetProperty (name);
 		}
 
+		/// <summary>
+		/// Gets the output path for build artifacts (e.g., "bin/Debug/").
+		/// </summary>
+		/// <seealso cref="KnownProperties.OutputPath"/>
+		/// <seealso cref="IntermediateOutputPath"/>
 		public string OutputPath {
 			get { return GetPropertyInApplicableConfiguration (KnownProperties.OutputPath); }
 		}
 
+		/// <summary>
+		/// Gets the intermediate output path for temporary build files (e.g., "obj/Debug/").
+		/// </summary>
+		/// <seealso cref="KnownProperties.IntermediateOutputPath"/>
+		/// <seealso cref="OutputPath"/>
 		public string IntermediateOutputPath {
 			get { return GetPropertyInApplicableConfiguration (KnownProperties.IntermediateOutputPath) ?? "obj" + OutputPath.Substring (3); } // obj/{Config}
 		}
 
+		/// <summary>
+		/// Gets the full path to an intermediate build file.
+		/// </summary>
+		/// <param name="file">The relative path to the intermediate file.</param>
+		/// <returns>The full path to the intermediate file.</returns>
+		/// <seealso cref="IntermediateOutputPath"/>
 		public string GetIntermediaryPath (string file)
 		{
 			return Path.Combine (Project.Root, Builder.ProjectDirectory, IntermediateOutputPath, file.Replace ('/', Path.DirectorySeparatorChar));
 		}
 
+		/// <summary>
+		/// Reads the text content of an intermediate build file.
+		/// </summary>
+		/// <param name="root">Unused parameter (kept for compatibility).</param>
+		/// <param name="file">The relative path to the intermediate file.</param>
+		/// <returns>The text content of the file.</returns>
+		/// <seealso cref="GetIntermediaryPath(string)"/>
 		public string GetIntermediaryAsText (string root, string file)
 		{
 			return File.ReadAllText (GetIntermediaryPath (file));
 		}
 
+		/// <summary>
+		/// Reads the text content of an intermediate build file.
+		/// </summary>
+		/// <param name="file">The relative path to the intermediate file.</param>
+		/// <returns>The text content of the file.</returns>
+		/// <seealso cref="GetIntermediaryPath(string)"/>
 		public string GetIntermediaryAsText (string file)
 		{
 			return File.ReadAllText (GetIntermediaryPath (file));
 		}
 
+		/// <summary>
+		/// Gets the assembly map cache entries from the build output.
+		/// </summary>
+		/// <returns>A list of assembly map cache entries.</returns>
 		public List<string> GetAssemblyMapCache ()
 		{
 			var path = GetIntermediaryPath (Path.Combine ("lp", "map.cache"));

@@ -6,14 +6,43 @@ namespace Xamarin.Android.Tasks.LLVMIR
 {
 	// Not all attributes are currently used throughout the code, but we define them call for potential future use.
 	// Documentation can be found here: https://llvm.org/docs/LangRef.html#function-attributes
+	/// <summary>
+	/// Abstract base class for LLVM IR function attributes. Function attributes specify properties
+	/// and optimizations that apply to functions in LLVM IR.
+	/// See: https://llvm.org/docs/LangRef.html#function-attributes
+	/// </summary>
 	abstract class LlvmIrFunctionAttribute : IComparable, IComparable<LlvmIrFunctionAttribute>, IEquatable<LlvmIrFunctionAttribute>
 	{
+		/// <summary>
+		/// Gets the name of the function attribute.
+		/// </summary>
 		public string Name { get; }
+		/// <summary>
+		/// Gets a value indicating whether the attribute name should be quoted in output.
+		/// </summary>
 		public bool Quoted { get; }
+		/// <summary>
+		/// Gets a value indicating whether this attribute supports parameters.
+		/// </summary>
 		public bool SupportsParams { get; }
+		/// <summary>
+		/// Gets a value indicating whether parameters are optional for this attribute.
+		/// </summary>
 		public bool ParamsAreOptional { get; }
+		/// <summary>
+		/// Gets a value indicating whether this attribute has a value assignment.
+		/// </summary>
 		public bool HasValueAsignment { get; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="LlvmIrFunctionAttribute"/> class.
+		/// </summary>
+		/// <param name="name">The name of the function attribute.</param>
+		/// <param name="quoted">Whether the attribute name should be quoted in output.</param>
+		/// <param name="supportsParams">Whether this attribute supports parameters.</param>
+		/// <param name="optionalParams">Whether parameters are optional for this attribute.</param>
+		/// <param name="hasValueAssignment">Whether this attribute has a value assignment.</param>
+		/// <exception cref="InvalidOperationException">Thrown when both parameters and value assignment are specified.</exception>
 		protected LlvmIrFunctionAttribute (string name, bool quoted, bool supportsParams, bool optionalParams, bool hasValueAssignment)
 		{
 			Name = EnsureNonEmptyParameter (nameof (name), name);
@@ -28,6 +57,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			Quoted = quoted;
 		}
 
+		/// <summary>
+		/// Renders this function attribute to its string representation.
+		/// </summary>
+		/// <returns>The string representation of the function attribute.</returns>
 		public string Render ()
 		{
 			var sb = new StringBuilder ();
@@ -70,17 +103,36 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return sb.ToString ();
 		}
 
+		/// <summary>
+		/// When overridden in a derived class, renders the parameters for this function attribute.
+		/// </summary>
+		/// <param name="sb">The string builder to render parameters to.</param>
 		protected virtual void RenderParams (StringBuilder sb)
 		{}
 
+		/// <summary>
+		/// When overridden in a derived class, renders the assigned value for this function attribute.
+		/// </summary>
+		/// <param name="sb">The string builder to render the assigned value to.</param>
 		protected virtual void RenderAssignedValue (StringBuilder sb)
 		{}
 
+		/// <summary>
+		/// When overridden in a derived class, determines whether this attribute has optional parameters.
+		/// </summary>
+		/// <returns>true if the attribute has optional parameters; otherwise, false.</returns>
 		protected virtual bool HasOptionalParams ()
 		{
 			return false;
 		}
 
+		/// <summary>
+		/// Ensures that a parameter value is not null or empty.
+		/// </summary>
+		/// <param name="name">The name of the parameter.</param>
+		/// <param name="value">The value of the parameter.</param>
+		/// <returns>The validated parameter value.</returns>
+		/// <exception cref="ArgumentException">Thrown when the parameter name is null or empty.</exception>
 		protected string EnsureNonEmptyParameter (string name, string value)
 		{
 			if (String.IsNullOrEmpty (name)) {
@@ -136,7 +188,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return false;
 			}
 
-			if (String.Compare (Name, other.Name, StringComparison.Ordinal) != 0) {
+			if (!MonoAndroidHelper.StringEquals (Name, other.Name)) {
 				return false;
 			}
 
@@ -240,7 +292,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return false;
 			}
 
-			return String.Compare (family, attr.family, StringComparison.Ordinal) == 0;
+			return MonoAndroidHelper.StringEquals (family, attr.family);
 		}
 
 		public override int GetHashCode ()
@@ -277,7 +329,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return false;
 			}
 
-			return String.Compare (kind, attr.kind, StringComparison.Ordinal) == 0;
+			return MonoAndroidHelper.StringEquals (kind, attr.kind);
 		}
 
 		public override int GetHashCode ()
@@ -417,7 +469,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return false;
 			}
 
-			return String.Compare (fpMode, attr.fpMode, StringComparison.Ordinal) == 0;
+			return MonoAndroidHelper.StringEquals (fpMode, attr.fpMode);
 		}
 
 		public override int GetHashCode ()
@@ -1116,7 +1168,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return false;
 			}
 
-			return String.Compare (cpu, attr.cpu, StringComparison.Ordinal) == 0;
+			return MonoAndroidHelper.StringEquals (cpu, attr.cpu);
 		}
 
 		public override int GetHashCode ()
@@ -1148,7 +1200,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return false;
 			}
 
-			return String.Compare (cpu, attr.cpu, StringComparison.Ordinal) == 0;
+			return MonoAndroidHelper.StringEquals (cpu, attr.cpu);
 		}
 
 		public override int GetHashCode ()
@@ -1180,7 +1232,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return false;
 			}
 
-			return String.Compare (features, attr.features, StringComparison.Ordinal) == 0;
+			return MonoAndroidHelper.StringEquals (features, attr.features);
 		}
 
 		public override int GetHashCode ()

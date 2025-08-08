@@ -141,17 +141,13 @@ namespace Xamarin.Android.Build.Tests
 		public void BasicApplicationPublishReadyToRun (bool isComposite, string rid)
 		{
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+				IsRelease = true, // Enables R2R by default
 			};
 
 			proj.SetProperty ("RuntimeIdentifier", rid);
 			proj.SetProperty ("UseMonoRuntime", "false"); 	// Enables CoreCLR
-			proj.SetProperty ("_IsPublishing", "true"); 	// Make "dotnet build" act as "dotnet publish"
-			proj.SetProperty ("PublishReadyToRun", "true"); // Enable R2R
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
-
-			if (isComposite)
-				proj.SetProperty ("PublishReadyToRunComposite", "true"); // Enable R2R composite
+			proj.SetProperty ("PublishReadyToRunComposite", isComposite.ToString ());
 
 			var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -449,7 +445,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True"); // Disables API 29 warning in Xamarin.Build.Download
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			proj.SetProperty ("TrimmerSingleWarn", "false");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				b.AssertHasNoWarnings ();
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Warning: end of file not at end of a line"),
@@ -487,7 +483,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 
-			using var b = CreateApkBuilder (Path.Combine ("temp", TestName));
+			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 			if (codes.Length == 0) {
@@ -533,7 +529,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.IsRelease = isRelease;
 			proj.SetProperty (property, value);
 
-			using (ProjectBuilder b = isBindingProject ? CreateDllBuilder (Path.Combine ("temp", TestName)) : CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (ProjectBuilder b = isBindingProject ? CreateDllBuilder () : CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, $"The '{property}' MSBuild property is deprecated and will be removed"),
 					$"Should not get a warning about the {property} property");
@@ -640,7 +636,7 @@ class MemTest {
 			var packages = proj.PackageReferences;
 			packages.Add (KnownPackages.AndroidXAppCompat);
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : AndroidX.AppCompat.App.AppCompatActivity");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
@@ -708,7 +704,7 @@ class MemTest {
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidAarLibrary", "Jars\\material-menu-1.1.0.aar") {
 				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
 			});
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				b.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should not be skipped.");
@@ -774,7 +770,7 @@ class MemTest {
 			var proj = new XamarinFormsAndroidApplicationProject ();
 
 
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				//We don't want these things stepping on each other
 				b.BuildLogFile = null;
 				b.Save (proj, saveProject: true);
@@ -857,7 +853,7 @@ namespace Xamarin.Android.Tests
 }}
 ",
 			});
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				b.Target = "Compile";
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
@@ -900,7 +896,7 @@ namespace UnamedProject
 }"
 			});
 
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first *regular* build should have succeeded.");
 				var build_props = b.Output.GetIntermediaryPath ("build.props");
 				var designtime_build_props = b.Output.GetIntermediaryPath (Path.Combine ("designtime", "build.props"));
@@ -983,7 +979,7 @@ namespace UnamedProject
 			var proj = new XamarinAndroidApplicationProject {
 			};
 
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
@@ -1003,7 +999,7 @@ namespace UnamedProject
 
 			};
 
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				//To be sure we are at a clean state
 				var projectDir = Path.Combine (Root, b.ProjectDirectory);
 				if (Directory.Exists (projectDir))
@@ -1324,7 +1320,7 @@ namespace UnamedProject
 		{
 			var proj = CreateMultiDexRequiredApplication ();
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
+			using (var b = CreateApkBuilder ()) {
 				string intermediateDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, intermediateDir, "android/bin/classes.dex")),
@@ -1416,7 +1412,7 @@ namespace UnnamedProject {
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
 			proj.IsRelease = true;
 			proj.LinkTool = "r8";
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				var className = "Landroid/support/multidex/MultiDexApplication;";
@@ -1666,7 +1662,7 @@ namespace App1
 			try {
 				Environment.SetEnvironmentVariable ("JAVA_TOOL_OPTIONS",
 						"-Dcom.sun.jndi.ldap.object.trustURLCodebase=false -Dcom.sun.jndi.rmi.object.trustURLCodebase=false -Dcom.sun.jndi.cosnaming.object.trustURLCodebase=false -Dlog4j2.formatMsgNoLookups=true");
-				using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				using (var b = CreateApkBuilder ()) {
 					b.Target = "Build";
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 					b.AssertHasNoWarnings ();

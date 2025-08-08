@@ -531,7 +531,7 @@ Altere o valor no AndroidManifest.xml para corresponder ao valor $(SupportedOSPl
     <value>Arquivo de origem "{0}" não pode ser encontrado.</value>
   </data>
   <data name="XA2002_Framework" xml:space="preserve">
-    <value>Não é possível resolver a referência: `{0}`, referenciada por {1}. É possível que ela não exista no perfil do Mono para Android?</value>
+    <value>Não é possível resolver a referência: `{0}`, referenciada por {1}. Talvez não exista no perfil do .NET para Android?</value>
     <comment>{0} - The name of the missing assembly
 {1} - The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`</comment>
   </data>

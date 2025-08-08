@@ -1,3 +1,4 @@
+#nullable enable
 using System.Collections.Generic;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tools;

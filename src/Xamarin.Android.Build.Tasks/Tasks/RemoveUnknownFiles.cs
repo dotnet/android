@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Text;
 using Microsoft.Build.Utilities;
@@ -13,7 +14,7 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "RUF";
 
-		static bool IsWindows = Path.DirectorySeparatorChar == '\\';
+		static readonly bool IsWindows = Path.DirectorySeparatorChar == '\\';
 
 		[Required]
 		public ITaskItem[] Files { get; set; } = [];

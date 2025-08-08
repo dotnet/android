@@ -1,3 +1,4 @@
+#include <host/gc-bridge.hh>
 #include <host/host.hh>
 #include <host/os-bridge.hh>
 #include <host/typemap.hh>
@@ -25,22 +26,7 @@ int _monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle,
 
 void _monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable) noexcept
 {
-	// NOTE: disabled until GC bridge is in
-	// It currently causes a crash in Mono.Android_Tests:
-	//
-	//  FATAL EXCEPTION: Instr: xamarin.android.runtimetests.NUnitInstrumentation
-	//  Process: Mono.Android.NET_Tests, PID: 16194
-	//  android.runtime.JavaProxyThrowable: [System.ObjectDisposedException]: Cannot access disposed object with JniIdentityHashCode=166175665.
-	//  Object name: 'Xamarin.Android.RuntimeTests.NUnitInstrumentation'.
-	//         at Java.Interop.JniPeerMembers.AssertSelf + 0x2f(Unknown Source)
-	//         at Java.Interop.JniPeerMembers+JniInstanceMethods.InvokeVirtualVoidMethod + 0x1(Unknown Source)
-	//         at Android.App.Instrumentation.Finish + 0x46(Unknown Source)
-	//         at Xamarin.Android.UnitTests.TestInstrumentation`1.OnStart + 0x6d(Unknown Source)
-	//         at Android.App.Instrumentation.n_OnStart + 0x1f(Unknown Source)
-	//         at crc643df67da7b13bb6b1.TestInstrumentation_1.n_onStart(Native Method)
-	//         at crc643df67da7b13bb6b1.TestInstrumentation_1.onStart(TestInstrumentation_1.java:32)
-	//         at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2606)
-	// OSBridge::_monodroid_gref_log_delete (handle, type, threadName, threadId, from, from_writable);
+	OSBridge::_monodroid_gref_log_delete (handle, type, threadName, threadId, from, from_writable);
 }
 
 const char* clr_typemap_managed_to_java (const char *typeName, const uint8_t *mvid) noexcept
@@ -51,6 +37,13 @@ const char* clr_typemap_managed_to_java (const char *typeName, const uint8_t *mv
 bool clr_typemap_java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept
 {
 	return TypeMapper::java_to_managed (java_type_name, assembly_name, managed_type_token_id);
+}
+
+BridgeProcessingFtn clr_initialize_gc_bridge (
+	BridgeProcessingStartedFtn bridge_processing_started_callback,
+	BridgeProcessingFinishedFtn bridge_processing_finished_callback) noexcept
+{
+	return GCBridge::initialize_callback (bridge_processing_started_callback, bridge_processing_finished_callback);
 }
 
 void monodroid_log (LogLevel level, LogCategories category, const char *message) noexcept
@@ -175,7 +168,8 @@ void _monodroid_lref_log_delete (int lrefc, jobject handle, char type, const cha
 
 void _monodroid_gc_wait_for_bridge_processing ()
 {
-	// mono_gc_wait_for_bridge_processing (); - replace with the new GC bridge call, when we have it
+	// TODO do we need this method?
+	Helpers::abort_application (LOG_DEFAULT, "The method _monodroid_gc_wait_for_bridge_processing is not implemented. This is a stub and should not be called."sv);
 }
 
 void _monodroid_detect_cpu_and_architecture (uint16_t *built_for_cpu, uint16_t *running_on_cpu, unsigned char *is64bit)

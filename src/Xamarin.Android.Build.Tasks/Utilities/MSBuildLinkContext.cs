@@ -1,3 +1,4 @@
+#nullable enable
 using Java.Interop.Tools.Cecil;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -9,7 +10,7 @@ namespace Xamarin.Android.Tasks;
 
 public class MSBuildLinkContext : LinkContext
 {
-    public DirectoryAssemblyResolver Resolver { get; private set; }
+    public new DirectoryAssemblyResolver Resolver { get; private set; }
     readonly TaskLoggingHelper logger;
 
     public MSBuildLinkContext (DirectoryAssemblyResolver resolver, TaskLoggingHelper logger)

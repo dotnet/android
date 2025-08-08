@@ -15,7 +15,8 @@
     <BootstrapTasksAssembly>$(BootstrapOutputDirectory)$(TargetFrameworkNETStandard)\Xamarin.Android.Tools.BootstrapTasks.dll</BootstrapTasksAssembly>
     <PrepTasksAssembly>$(BootstrapOutputDirectory)$(TargetFrameworkNETStandard)\xa-prep-tasks.dll</PrepTasksAssembly>
     <DotNetPreviewPath Condition=" '$(DotNetPreviewPath)' == '' ">$(BuildOutputDirectory)dotnet\</DotNetPreviewPath>
-    <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' ">$(DotNetPreviewPath)dotnet</DotNetPreviewTool>
+    <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' and Exists('$(DotNetPreviewPath)') ">$(DotNetPreviewPath)dotnet</DotNetPreviewTool>
+    <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' ">dotnet</DotNetPreviewTool>
     <!-- Copy PackageReference content to OutputDir for our build tasks, tests, and installer creation logic. This no longer happens by default in short-form projects. -->
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <!-- Ensure reference assemblies copied to bin -->
@@ -29,14 +30,14 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <ProductVersion>13.2.99</ProductVersion>
+    <ProductVersion>16.0.0</ProductVersion>
     <!-- NuGet package version numbers. See Documentation/guides/OneDotNet.md.
          Rules:
          * Major/Minor match Android stable API level, such as 30.0 for API 30.
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
     <AndroidPackVersion>36.0.0</AndroidPackVersion>
-    <AndroidPackVersionSuffix>preview.7</AndroidPackVersionSuffix>
+    <AndroidPackVersionSuffix>rc.1</AndroidPackVersionSuffix>
     <!-- Final value set by GetXAVersionInfo target -->
     <IsStableBuild>false</IsStableBuild>
   </PropertyGroup>
@@ -65,14 +66,11 @@
       This can be opted into locally with $(_AndroidTreatWarningsAsErrors) = true.
     -->
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'jnienv-gen.csproj' ">true</_AllowProjectWarnings>
-    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Microsoft.Android.Sdk.ILLink.csproj' ">true</_AllowProjectWarnings>
-    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Microsoft.Android.Templates.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Mono.Android.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Mono.Android.NET-Tests.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'MSBuildDeviceIntegration.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'NativeAOT.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'TestRunner.Core.NET.csproj' ">true</_AllowProjectWarnings>
-    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Android.Build.Tasks.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Android.Build.Tests.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Android.JcwGen-Tests.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Android.NUnitLite.NET.csproj' ">true</_AllowProjectWarnings>

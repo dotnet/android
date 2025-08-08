@@ -37,10 +37,8 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
-        project: android/Xamarin.Android.sln
-        arguments: >-
-          -t:PrepareJavaInterop -c Debug --no-restore
-          -p:DotNetPreviewTool=$(System.DefaultWorkingDirectory)/android/bin/$(XA.Build.Configuration)/dotnet/dotnet
+        project: Xamarin.Android.sln
+        arguments: -t:PrepareJavaInterop -c Debug --no-restore
         displayName: prepare java.interop Debug
         continueOnError: false
 
@@ -145,9 +143,7 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Xamarin.Android.sln
-        arguments: >-
-          -t:PrepareJavaInterop -c Debug --no-restore
-          -p:DotNetPreviewTool=$(System.DefaultWorkingDirectory)/android/bin/$(XA.Build.Configuration)/dotnet/dotnet
+        arguments: -t:PrepareJavaInterop -c Debug --no-restore
         displayName: prepare java.interop Debug
         continueOnError: false
 

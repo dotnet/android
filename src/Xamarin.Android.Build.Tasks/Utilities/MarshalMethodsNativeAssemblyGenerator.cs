@@ -30,7 +30,9 @@ namespace Xamarin.Android.Tasks
 		[NativeClass]
 		class _jobject
 		{
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value - likely populated by native code
 			public byte b;
+#pragma warning restore CS0649
 		}
 
 		sealed class _jclass : _jobject
@@ -107,7 +109,7 @@ namespace Xamarin.Android.Tasks
 			{
 				var klass = EnsureType<MarshalMethodsManagedClass> (data);
 
-				if (String.Compare ("token", fieldName, StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals ("token", fieldName)) {
 					return $" class name: {klass.ClassName}";
 				}
 
@@ -204,7 +206,9 @@ namespace Xamarin.Android.Tasks
 		List<MarshalMethodInfo> methods;
 		protected List<StructureInstance<MarshalMethodsManagedClass>> classes = new List<StructureInstance<MarshalMethodsManagedClass>> ();
 
+#pragma warning disable CS0414 // Field is assigned but its value is never used - might be used for debugging or future functionality
 		readonly LlvmIrCallMarker defaultCallMarker;
+#pragma warning restore CS0414
 		readonly bool generateEmptyCode;
 		readonly bool managedMarshalMethodsLookupEnabled;
 		readonly AndroidTargetArch targetArch;
@@ -532,15 +536,15 @@ namespace Xamarin.Android.Tasks
 				}
 
 				string typeName = sb.ToString ();
-				if (String.Compare (typeName, "java/lang/Class", StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals (typeName, "java/lang/Class")) {
 					return typeof(_jclass);
 				}
 
-				if (String.Compare (typeName, "java/lang/String", StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals (typeName, "java/lang/String")) {
 					return typeof(_jstring);
 				}
 
-				if (String.Compare (typeName, "java/lang/Throwable", StringComparison.Ordinal) == 0) {
+				if (MonoAndroidHelper.StringEquals (typeName, "java/lang/Throwable")) {
 					return typeof(_jthrowable);
 				}
 

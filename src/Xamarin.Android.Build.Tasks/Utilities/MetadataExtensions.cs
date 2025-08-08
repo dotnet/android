@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Diagnostics;
@@ -12,7 +12,7 @@ namespace Xamarin.Android.Tasks
 {
 	public static class MetadataExtensions
 	{
-		public static string GetCustomAttributeFullName (this MetadataReader reader, CustomAttribute attribute, TaskLoggingHelper log)
+		public static string? GetCustomAttributeFullName (this MetadataReader reader, CustomAttribute attribute, TaskLoggingHelper log)
 		{
 			if (attribute.Constructor.Kind == HandleKind.MemberReference) {
 				var ctor = reader.GetMemberReference ((MemberReferenceHandle)attribute.Constructor);
@@ -44,7 +44,7 @@ namespace Xamarin.Android.Tasks
 			return null;
 		}
 
-		public static CustomAttributeValue<object> GetCustomAttributeArguments (this CustomAttribute attribute)
+		public static CustomAttributeValue<object?> GetCustomAttributeArguments (this CustomAttribute attribute)
 		{
 			return attribute.DecodeValue (DummyCustomAttributeProvider.Instance);
 		}
@@ -70,7 +70,7 @@ namespace Xamarin.Android.Tasks
 
 				// Locate offset to resources within PE image.
 				int offsetToResources;
-				if (!peReader.PEHeaders.TryGetDirectoryOffset (peReader.PEHeaders.CorHeader.ResourcesDirectory, out offsetToResources)) {
+				if (!peReader.PEHeaders.TryGetDirectoryOffset (peReader.PEHeaders.CorHeader?.ResourcesDirectory ?? default, out offsetToResources)) {
 					throw new BadImageFormatException ("Failed to get offset to resources in PE file.");
 				}
 				Debug.Assert (offsetToResources > 0);

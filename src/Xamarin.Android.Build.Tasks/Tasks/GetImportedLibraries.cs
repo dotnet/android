@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -71,7 +73,7 @@ namespace Xamarin.Android.Tasks
 						if (IgnoredManifestDirectories.Contains (directory))
 							continue;
 						var doc = XDocument.Load(file);
-						if (string.IsNullOrEmpty (doc.Element ("manifest")?.Attribute ("package")?.Value ?? string.Empty)) {
+						if ((doc.Element ("manifest")?.Attribute ("package")?.Value).IsNullOrEmpty ()) {
 							Log.LogCodedWarning ("XA4315", file, 0, Properties.Resources.XA4315, file);
 							continue;
 						}
@@ -88,7 +90,7 @@ namespace Xamarin.Android.Tasks
 			NativeLibraries = nativeLibraries.ToArray ();
 			Jars = jarFiles.ToArray ();
 
-			if (!string.IsNullOrEmpty (CacheFile)) {
+			if (!CacheFile.IsNullOrEmpty ()) {
 				var document = new XDocument (
 							new XDeclaration ("1.0", "UTF-8", null),
 							new XElement ("Paths",

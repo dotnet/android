@@ -1,5 +1,5 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
-
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -135,9 +135,9 @@ namespace Xamarin.Android.Tasks
 			}
 
 			global::Android.Runtime.BoundExceptionType boundExceptionType;
-			if (String.IsNullOrEmpty (BoundExceptionType) || String.Compare (BoundExceptionType, "System", StringComparison.OrdinalIgnoreCase) == 0) {
+			if (String.IsNullOrEmpty (BoundExceptionType) || MonoAndroidHelper.StringEquals (BoundExceptionType, "System", StringComparison.OrdinalIgnoreCase)) {
 				boundExceptionType = global::Android.Runtime.BoundExceptionType.System;
-			} else if (String.Compare (BoundExceptionType, "Java", StringComparison.OrdinalIgnoreCase) == 0) {
+			} else if (MonoAndroidHelper.StringEquals (BoundExceptionType, "Java", StringComparison.OrdinalIgnoreCase)) {
 				boundExceptionType = global::Android.Runtime.BoundExceptionType.Java;
 			} else {
 				throw new InvalidOperationException ($"Unsupported BoundExceptionType value '{BoundExceptionType}'");
@@ -223,11 +223,11 @@ namespace Xamarin.Android.Tasks
 			MonoComponent monoComponents = MonoComponent.None;
 			if (MonoComponents != null && MonoComponents.Length > 0) {
 				foreach (ITaskItem item in MonoComponents) {
-					if (String.Compare ("diagnostics_tracing", item.ItemSpec, StringComparison.OrdinalIgnoreCase) == 0) {
+					if (MonoAndroidHelper.StringEquals ("diagnostics_tracing", item.ItemSpec, StringComparison.OrdinalIgnoreCase)) {
 						monoComponents |= MonoComponent.Tracing;
-					} else if (String.Compare ("hot_reload", item.ItemSpec, StringComparison.OrdinalIgnoreCase) == 0) {
+					} else if (MonoAndroidHelper.StringEquals ("hot_reload", item.ItemSpec, StringComparison.OrdinalIgnoreCase)) {
 						monoComponents |= MonoComponent.HotReload;
-					} else if (String.Compare ("debugger", item.ItemSpec, StringComparison.OrdinalIgnoreCase) == 0) {
+					} else if (MonoAndroidHelper.StringEquals ("debugger", item.ItemSpec, StringComparison.OrdinalIgnoreCase)) {
 						monoComponents |= MonoComponent.Debugger;
 					}
 				}
@@ -391,9 +391,9 @@ namespace Xamarin.Android.Tasks
 				MethodDefinition md = reader.GetMethodDefinition (methodHandle);
 				string name = reader.GetString (md.Name);
 
-				if (jnienv_initialize_method_token == -1 && String.Compare (name, "Initialize", StringComparison.Ordinal) == 0) {
+				if (jnienv_initialize_method_token == -1 && MonoAndroidHelper.StringEquals (name, "Initialize")) {
 					jnienv_initialize_method_token = MetadataTokens.GetToken (reader, methodHandle);
-				} else if (jnienv_registerjninatives_method_token == -1 && String.Compare (name, "RegisterJniNatives", StringComparison.Ordinal) == 0) {
+				} else if (jnienv_registerjninatives_method_token == -1 && MonoAndroidHelper.StringEquals (name, "RegisterJniNatives")) {
 					jnienv_registerjninatives_method_token = MetadataTokens.GetToken (reader, methodHandle);
 				}
 
@@ -406,12 +406,12 @@ namespace Xamarin.Android.Tasks
 			bool TypeMatches (TypeDefinition td)
 			{
 				string ns = reader.GetString (td.Namespace);
-				if (String.Compare (ns, "Android.Runtime", StringComparison.Ordinal) != 0) {
+				if (!MonoAndroidHelper.StringEquals (ns, "Android.Runtime")) {
 					return false;
 				}
 
 				string name = reader.GetString (td.Name);
-				if (String.Compare (name, "JNIEnvInit", StringComparison.Ordinal) != 0) {
+				if (!MonoAndroidHelper.StringEquals (name, "JNIEnvInit")) {
 					return false;
 				}
 

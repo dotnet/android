@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.IO;
 using System.Collections.Generic;
@@ -16,6 +17,7 @@ namespace Xamarin.Android.Tasks
 		const string CompressedAssembliesBase = "compressed_assemblies";
 		const string JniRemappingBase = "jni_remap";
 		const string MarshalMethodsBase = "marshal_methods";
+		const string PinvokePreserveBase = "pinvoke_preserve";
 
 		public override string TaskPrefix => "PAI";
 
@@ -43,16 +45,18 @@ namespace Xamarin.Android.Tasks
 			var includes = new List<ITaskItem> ();
 			string baseName;
 
-			if (String.Compare ("typemap", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
+			if (MonoAndroidHelper.StringEquals ("typemap", Mode, StringComparison.OrdinalIgnoreCase)) {
 				baseName = TypeMapBase;
-			} else if (String.Compare ("environment", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
+			} else if (MonoAndroidHelper.StringEquals ("environment", Mode, StringComparison.OrdinalIgnoreCase)) {
 				baseName = EnvBase;
-			} else if (String.Compare ("compressed", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
+			} else if (MonoAndroidHelper.StringEquals ("compressed", Mode, StringComparison.OrdinalIgnoreCase)) {
 				baseName = CompressedAssembliesBase;
-			} else if (String.Compare ("jniremap", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
+			} else if (MonoAndroidHelper.StringEquals ("jniremap", Mode, StringComparison.OrdinalIgnoreCase)) {
 				baseName = JniRemappingBase;
-			} else if (String.Compare ("marshal_methods", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
+			} else if (MonoAndroidHelper.StringEquals ("marshal_methods", Mode, StringComparison.OrdinalIgnoreCase)) {
 				baseName = MarshalMethodsBase;
+			} else if (MonoAndroidHelper.StringEquals ("runtime_linking", Mode, StringComparison.OrdinalIgnoreCase)) {
+				baseName = PinvokePreserveBase;
 			} else {
 				Log.LogError ($"Unknown mode: {Mode}");
 				return false;

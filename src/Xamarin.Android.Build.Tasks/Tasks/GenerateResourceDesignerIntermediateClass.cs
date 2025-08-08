@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.IO;
@@ -46,10 +46,11 @@ namespace %NAMESPACE%
 type %MODIFIER% Resource = %BASECLASS%
 ";
 
-		public string Namespace { get; set; }
+		public string? Namespace { get; set; }
 		public string Modifier { get; set; } = "public";
 		public bool IsApplication { get; set; } = false;
-		public ITaskItem OutputFile { get; set; }
+		[Required]
+		public ITaskItem OutputFile { get; set; } = null!;
 		public override bool RunTask ()
 		{
 			string baseClass = IsApplication ? ResourceDesignerConstants : ResourceDesigner;

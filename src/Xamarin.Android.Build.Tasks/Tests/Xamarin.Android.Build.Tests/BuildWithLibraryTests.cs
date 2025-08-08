@@ -458,7 +458,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
 				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"error XA4301: Cannot determine ABI of native library 'not-a-real-abi{Path.DirectorySeparatorChar}libtest.so'. Move this file to a directory with a valid Android ABI name such as 'libs/armeabi-v7a/'."),
@@ -615,7 +615,7 @@ namespace Xamarin.Android.Build.Tests
 
 			const string target = "_GetPrimaryCpuAbi";
 			var proj = new XamarinAndroidLibraryProject ();
-			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (b.Output.IsTargetSkipped (target, defaultIfNotUsed: true), $"`{target}` should be skipped!");
 			}
@@ -767,6 +767,55 @@ namespace Xamarin.Android.Build.Tests
 				StringAssertEx.DoesNotContain ("TestContent2.txt : warning XA0101", libBuilder.LastBuildOutput,
 					"Build Output contains 'TestContent2.txt : warning XA0101'.");
 			}
+		}
+
+		[Test]
+		public void ContentBuildActionForRazor ()
+		{
+			var lib = new XamarinAndroidLibraryProject {
+				Sdk = "Microsoft.NET.Sdk.Razor",
+				EnableDefaultItems = true,
+				PackageReferences = {
+					new Package { Id = "Microsoft.AspNetCore.Components.Web", Version = "9.0.0" },
+				},
+				Sources = {
+					new BuildItem.Content ("_Imports.razor") {
+						TextContent = () => """
+							@using System.Net.Http
+							@using System.Net.Http.Json
+							@using Microsoft.AspNetCore.Components.Forms
+							@using Microsoft.AspNetCore.Components.Routing
+							@using Microsoft.AspNetCore.Components.Web
+							@using static Microsoft.AspNetCore.Components.Web.RenderMode
+							@using Microsoft.AspNetCore.Components.Web.Virtualization
+							@using Microsoft.JSInterop
+						""",
+					},
+					new BuildItem.Content ("Pages/Hello.razor") {
+						TextContent = () => """
+							@page "/counter"
+							<PageTitle>Counter</PageTitle>
+							<h1>Counter</h1>
+							<p role="status">Current count: @currentCount</p>
+							<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+							@code {
+								private int currentCount = 0;
+
+								private void IncrementCount()
+								{
+									currentCount++;
+								}
+							}
+						""",
+					},
+					new BuildItem.Content ("wwwroot/favicon.png") {
+						BinaryContent = () => XamarinAndroidApplicationProject.icon_binary_mdpi,
+					}
+				}
+			};
+			using var b = CreateDllBuilder ();
+			Assert.IsTrue (b.Build (lib), "library should have built successfully");
+			b.AssertHasNoWarnings ();
 		}
 
 		// Combination of class libraries that triggered the problem:

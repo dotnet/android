@@ -1,4 +1,5 @@
 // Copyright (C) 2022 Microsoft Ltd, Inc. All rights reserved.
+#nullable enable
 using System;
 using System.IO;
 using Microsoft.Build.Framework;
@@ -31,9 +32,9 @@ namespace Xamarin.Android.Tasks
 
 			var resource_fixup = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (CaseMapFile), StringComparer.OrdinalIgnoreCase);
 
-			var javaPlatformDirectory = string.IsNullOrEmpty (JavaPlatformJarPath) ? "" : Path.GetDirectoryName (JavaPlatformJarPath);
+			var javaPlatformDirectory = JavaPlatformJarPath.IsNullOrEmpty () ? "" : Path.GetDirectoryName (JavaPlatformJarPath);
 			var parser = new FileResourceParser () { Log = Log, JavaPlatformDirectory = javaPlatformDirectory, ResourceFlagFile = ResourceFlagFile};
-			var resources = parser.Parse (ResourceDirectory, AdditionalResourceDirectories, AarLibraries, resource_fixup);
+			var resources = parser.Parse (ResourceDirectory, AdditionalResourceDirectories ?? [], AarLibraries ?? [], resource_fixup);
 
 			// only update if it changed.
 			writer.Write (RTxtFile, resources);

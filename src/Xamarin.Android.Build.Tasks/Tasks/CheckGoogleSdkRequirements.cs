@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -20,7 +20,7 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// This will be blank for .NET 5 builds
 		/// </summary>
-		public string TargetFrameworkVersion { get; set; }
+		public string? TargetFrameworkVersion { get; set; }
 
 		/// <summary>
 		/// This is used instead of TargetFrameworkVersion for .NET 5 builds
@@ -28,13 +28,13 @@ namespace Xamarin.Android.Tasks
 		public int ApiLevel { get; set; }
 
 		[Required]
-		public string ManifestFile { get; set; }
+		public string ManifestFile { get; set; } = "";
 
 		public override bool RunTask ()
 		{
 			ManifestDocument manifest = new ManifestDocument (ManifestFile);
 
-			var compileSdk = string.IsNullOrEmpty (TargetFrameworkVersion) ?
+			var compileSdk = TargetFrameworkVersion.IsNullOrEmpty () ?
 				ApiLevel :
 				MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (TargetFrameworkVersion);
 
@@ -42,16 +42,16 @@ namespace Xamarin.Android.Tasks
 				minSdk = 1;
 			}
 			if (!int.TryParse (manifest.GetTargetSdk (), out int targetSdk)) {
-				targetSdk = compileSdk.Value;
+				targetSdk = compileSdk ?? ApiLevel;
 			}
 
 			//We should throw a warning if the targetSdkVersion is lower than compileSdkVersion(TargetFrameworkVersion).
-			if (targetSdk < compileSdk) {
-				Log.LogCodedWarning ("XA1006", Properties.Resources.XA1006, compileSdk, targetSdk);
+			if (compileSdk.HasValue && targetSdk < compileSdk) {
+				Log.LogCodedWarning ("XA1006", Properties.Resources.XA1006, compileSdk.Value, targetSdk);
 			}
 			//We should throw an warning if the compileSdkVersion(TargetFrameworkVersion) is lower than targetSdkVersion.
-			if (compileSdk < targetSdk) {
-				Log.LogCodedWarning ("XA1008", Properties.Resources.XA1008, compileSdk, targetSdk);
+			if (compileSdk.HasValue && compileSdk < targetSdk) {
+				Log.LogCodedWarning ("XA1008", Properties.Resources.XA1008, compileSdk.Value, targetSdk);
 			}
 			//We should throw an warning if the minSdkVersion is greater than targetSdkVers1ion.
 			if (minSdk > targetSdk) {

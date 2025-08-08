@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.IO;
 using System.Text;
@@ -14,7 +15,7 @@ namespace Xamarin.Android.Tools
 
 		internal const char VolumeSeparatorChar = ':';
 
-		static bool IsWindows = Path.DirectorySeparatorChar == '\\';
+		static readonly bool IsWindows = Path.DirectorySeparatorChar == '\\';
 		// Adapted from CoreFX sources
 		public static string GetRelativePath(string relativeTo, string path, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
 		{

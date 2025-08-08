@@ -496,7 +496,7 @@ namespace Bug12935
 			if (useLegacy)
 				proj.SetProperty (proj.ReleaseProperties, "AndroidUseLegacyVersionCode", true);
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("android:versionCode=\"1\"", $"android:versionCode=\"{versionCode}\"");
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
+			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.AreEqual (shouldBuild, builder.Build (proj), shouldBuild ? "Build should have succeeded." : "Build should have failed.");
 				if (!shouldBuild)
@@ -578,7 +578,7 @@ namespace Bug12935
 	</activity>
 </application>");
 			proj.AndroidManifest = s;
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
 				var messages = builder.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal));
@@ -621,7 +621,7 @@ namespace Bug12935
 			Assert.AreNotEqual (proj.AndroidManifest, s, "#0");
 			proj.SetProperty ("AndroidManifestPlaceholders", "FOOBARNAME=AAAAAAAA");
 			proj.AndroidManifest = s;
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
+			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 				var manifest = builder.Output.GetIntermediaryAsText (Root, "android/AndroidManifest.xml");
 				Assert.IsTrue (manifest.Contains ("AAAAAAAA"), "#1");
@@ -710,7 +710,7 @@ namespace Bug12935
 					},
 				},
 			};
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				var manifest = builder.Output.GetIntermediaryAsText (Root, Path.Combine ("android", "AndroidManifest.xml"));
 				Assert.IsTrue (manifest.Contains ("READ_CONTACTS"), $"Manifest should contain the READ_CONTACTS");
@@ -904,7 +904,7 @@ using Android.Views;
 class TestActivity : Activity { }"
 			});
 
-			using (ProjectBuilder builder = CreateDllBuilder (Path.Combine ("temp", TestName))) {
+			using (ProjectBuilder builder = CreateDllBuilder ()) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 
 				string manifest = builder.Output.GetIntermediaryAsText (Path.Combine ("android", "AndroidManifest.xml"));
@@ -933,7 +933,7 @@ class TestActivity : Activity { }"
  [Service (ForegroundServiceType      = {serviceType})]
  class TestService : Service {{ public override Android.OS.IBinder OnBind (Android.Content.Intent intent) {{ return null; }} }}"
  			});
-			using (ProjectBuilder builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (ProjectBuilder builder = CreateApkBuilder ()) {
  				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				string manifest = builder.Output.GetIntermediaryAsText (Path.Combine ("android", "AndroidManifest.xml"));
  				var doc = XDocument.Parse (manifest);
@@ -974,7 +974,7 @@ class TestActivity : Activity { }"
  class TestService : Service { public override Android.OS.IBinder OnBind (Android.Content.Intent intent) { return null; } }"
  			});
 
- 			using (ProjectBuilder builder = CreateDllBuilder (Path.Combine ("temp", TestName))) {
+ 			using (ProjectBuilder builder = CreateDllBuilder ()) {
  				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 
  				string manifest = builder.Output.GetIntermediaryAsText (Path.Combine ("android", "AndroidManifest.xml"));

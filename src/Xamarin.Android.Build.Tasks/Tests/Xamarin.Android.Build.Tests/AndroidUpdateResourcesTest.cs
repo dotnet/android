@@ -196,7 +196,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\Image (1).png") {
 				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi
 			});
-			using (var b = CreateApkBuilder ($"temp/{TestName}")) {
+			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");
 				StringAssertEx.Contains ("APT0003", b.LastBuildOutput, "An error message with a blank \"level\", should be reported as an error!");
@@ -961,11 +961,11 @@ namespace Lib1 {
 				appBuilder.BuildLogFile = "build.log";
 				Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true),
 					"Normal Application Build should have succeeded.");
-				Assert.IsTrue (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
+				Assert.IsTrue (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen", defaultIfNotUsed: true),
 					"Target '_ManagedUpdateAndroidResgen' should not have run.");
 				appBuilder.BuildLogFile = "designtimebuild.log";
 				Assert.IsTrue (appBuilder.DesignTimeBuild (appProj, doNotCleanupOnUpdate: true), "DesignTime Application Build should have succeeded.");
-				Assert.IsTrue (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
+				Assert.IsTrue (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen", defaultIfNotUsed: true),
 					"Target '_ManagedUpdateAndroidResgen' should not have run.");
 
 				Assert.IsTrue (appBuilder.Clean (appProj), "Clean should have succeeded");
@@ -1027,11 +1027,11 @@ namespace Lib1 {
 					appBuilder.ThrowOnBuildFailure = false;
 					Assert.IsTrue (libBuilder.DesignTimeBuild (libProj), "Library project should have built");
 					Assert.LessOrEqual (libBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
-					Assert.IsFalse (libProj.CreateBuildOutput (libBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
+					Assert.IsFalse (libProj.CreateBuildOutput (libBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen", defaultIfNotUsed: true),
 						"Target '_ManagedUpdateAndroidResgen' should have run.");
 					Assert.IsTrue (appBuilder.DesignTimeBuild (appProj), "Application project should have built");
 					Assert.LessOrEqual (appBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
-					Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
+					Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen", defaultIfNotUsed: true),
 						"Target '_ManagedUpdateAndroidResgen' should have run.");
 					var designerFile = Path.Combine (Root, path, appProj.ProjectName, appProj.IntermediateOutputPath, "designtime", "Resource.designer.cs");
 					FileAssert.Exists (designerFile, $"'{designerFile}' should have been created.");
@@ -1046,11 +1046,11 @@ namespace Lib1 {
 					StringAssert.DoesNotContain ("main_text_item_size", designerContents, $"{designerFile} should not contain Resources.Dimension.main_text_item_size");
 					StringAssert.DoesNotContain ("theme_devicedefault_background", designerContents, $"{designerFile} should not contain Resources.Color.theme_devicedefault_background");
 					Assert.IsTrue (libBuilder.Build (libProj), "Library project should have built");
-					Assert.IsTrue (libProj.CreateBuildOutput (libBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
+					Assert.IsTrue (libProj.CreateBuildOutput (libBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen", defaultIfNotUsed: true),
 						"Target '_ManagedUpdateAndroidResgen' should not have run.");
 					Assert.IsTrue (appBuilder.DesignTimeBuild (appProj), "App project should have built");
 					Assert.LessOrEqual (appBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
-					Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
+					Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen", defaultIfNotUsed: true),
 					"Target '_ManagedUpdateAndroidResgen' should have run.");
 					FileAssert.Exists (designerFile, $"'{designerFile}' should have been created.");
 
@@ -1212,7 +1212,7 @@ namespace UnnamedProject
 					b.Output.IsTargetPartiallyBuilt ("_CompileResources"),
 					"The target _CompileResources should have been partially built");
 				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_FixupCustomViewsForAapt2"),
+					b.Output.IsTargetSkipped ("_FixupCustomViewsForAapt2", defaultIfNotUsed: true),
 					"The target _FixupCustomViewsForAapt2 should have been skipped");
 
 				var r_java = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", proj.PackageNameJavaIntermediatePath, "R.java");

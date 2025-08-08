@@ -6,8 +6,22 @@ using System.Threading;
 
 namespace Xamarin.ProjectTools
 {
+	/// <summary>
+	/// Provides utility methods for file system operations commonly needed in test scenarios.
+	/// This class contains helper methods for managing file permissions, finding NuGet directories,
+	/// and other file system tasks used by the test framework.
+	/// </summary>
 	public static class FileSystemUtils
 	{
+		/// <summary>
+		/// Recursively sets a directory and all its contents to be writable by removing read-only attributes.
+		/// </summary>
+		/// <param name="directory">The directory path to make writable.</param>
+		/// <remarks>
+		/// This method is useful for cleaning up test directories that may have read-only files,
+		/// allowing them to be deleted during test cleanup.
+		/// </remarks>
+		/// <seealso cref="SetFileWriteable(string)"/>
 		public static void SetDirectoryWriteable (string directory)
 		{
 			if (!Directory.Exists (directory))
@@ -26,6 +40,11 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
+		/// <summary>
+		/// Sets a single file to be writable by removing the read-only attribute if present.
+		/// </summary>
+		/// <param name="source">The file path to make writable.</param>
+		/// <seealso cref="SetDirectoryWriteable(string)"/>
 		public static void SetFileWriteable (string source)
 		{
 			if (!File.Exists (source))
@@ -38,6 +57,16 @@ namespace Xamarin.ProjectTools
 
 		static readonly char[] NugetFieldSeparator = new char[]{ ':' };
 
+		/// <summary>
+		/// Finds the NuGet global packages folder by checking environment variables and using dotnet CLI.
+		/// </summary>
+		/// <returns>The path to the NuGet global packages folder, or null if not found.</returns>
+		/// <remarks>
+		/// First checks the NUGET_PACKAGES environment variable, then uses 'dotnet nuget locals' 
+		/// command to determine the global packages location. This is used for configuring
+		/// test projects with the correct package restore location.
+		/// </remarks>
+		/// <seealso cref="TestEnvironment"/>
 		public static string FindNugetGlobalPackageFolder ()
 		{
 			string packagesPath = Environment.GetEnvironmentVariable ("NUGET_PACKAGES");

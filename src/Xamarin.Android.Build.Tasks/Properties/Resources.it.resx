@@ -531,7 +531,7 @@ Modificare il valore in AndroidManifest.xml in modo che corrisponda al valore $(
     <value>Il file di origine '{0}' non è stato trovato.</value>
   </data>
   <data name="XA2002_Framework" xml:space="preserve">
-    <value>Non è possibile risolvere il riferimento `{0}`, a cui fa riferimento {1}. Forse non esiste nel profilo Mono per Android?</value>
+    <value>Non è possibile risolvere il riferimento "{0}", a cui fa riferimento {1}. Forse non esiste nel profilo .NET per Android?</value>
     <comment>{0} - The name of the missing assembly
 {1} - The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`</comment>
   </data>

@@ -31,31 +31,13 @@ static constexpr uint32_t ASSEMBLY_STORE_ABI = 0x00040000;
 #endif
 
 // Increase whenever an incompatible change is made to the assembly store format
-static constexpr uint32_t ASSEMBLY_STORE_FORMAT_VERSION = 2 | ASSEMBLY_STORE_64BIT_FLAG | ASSEMBLY_STORE_ABI;
+static constexpr uint32_t ASSEMBLY_STORE_FORMAT_VERSION = 3 | ASSEMBLY_STORE_64BIT_FLAG | ASSEMBLY_STORE_ABI;
 
 static constexpr uint32_t MODULE_MAGIC_NAMES = 0x53544158; // 'XATS', little-endian
 static constexpr uint32_t MODULE_INDEX_MAGIC = 0x49544158; // 'XATI', little-endian
 static constexpr uint8_t  MODULE_FORMAT_VERSION = 2;       // Keep in sync with the value in src/Xamarin.Android.Build.Tasks/Utilities/TypeMapGenerator.cs
 
 #if defined (DEBUG)
-struct BinaryTypeMapHeader
-{
-	uint32_t magic;
-	uint32_t version;
-	uint32_t entry_count;
-	uint32_t java_name_width;
-	uint32_t managed_name_width;
-	uint32_t assembly_name_length;
-};
-
-struct TypeMapIndexHeader
-{
-	uint32_t magic;
-	uint32_t version;
-	uint32_t entry_count;
-	uint32_t module_file_name_width;
-};
-
 // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
 //
 // If any of the members is set to maximum uint32_t value it means the entry is ignored (treated
@@ -105,8 +87,8 @@ struct TypeMapModule
 	uint32_t                  duplicate_count;
 	uint32_t                  assembly_name_index;
 	uint32_t                  assembly_name_length;
-	TypeMapModuleEntry const *map;
-	TypeMapModuleEntry const *duplicate_map;
+	uint32_t                  map_index;
+	uint32_t                  duplicate_map_index;
 };
 
 struct TypeMapJava
@@ -134,16 +116,6 @@ struct CompressedAssemblyDescriptor
 	uint32_t   buffer_offset;
 };
 
-struct XamarinAndroidBundledAssembly
-{
-	int32_t  file_fd;
-	char    *file_name;
-	uint32_t data_offset;
-	uint32_t data_size;
-	uint8_t *data;
-	uint32_t name_length;
-	char    *name;
-};
 
 //
 // Assembly store format
@@ -153,6 +125,7 @@ struct XamarinAndroidBundledAssembly
 // [HEADER]
 // [INDEX]
 // [ASSEMBLY_DESCRIPTORS]
+// [ASSEMBLY_NAMES]
 // [ASSEMBLY DATA]
 //
 // Formats of the sections above are as follows:
@@ -167,6 +140,7 @@ struct XamarinAndroidBundledAssembly
 // INDEX (variable size, HEADER.ENTRY_COUNT*2 entries, for assembly names with and without the extension)
 //  [NAME_HASH]          uint on 32-bit platforms, ulong on 64-bit platforms; xxhash of the assembly name
 //  [DESCRIPTOR_INDEX]   uint; index into in-store assembly descriptor array
+//  [IGNORE]             byte; if set to anything other than 0, the assembly is to be ignored when loading
 //
 // ASSEMBLY_DESCRIPTORS (variable size, HEADER.ENTRY_COUNT entries), each entry formatted as follows:
 //  [MAPPING_INDEX]      uint; index into a runtime array where assembly data pointers are stored
@@ -199,6 +173,7 @@ struct [[gnu::packed]] AssemblyStoreIndexEntry final
 {
 	xamarin::android::hash_t name_hash;
 	uint32_t descriptor_index;
+	uint8_t ignore; // Assembly should be ignored when loading, its data isn't actually there
 };
 
 struct [[gnu::packed]] AssemblyStoreEntryDescriptor final
@@ -349,7 +324,9 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const uint64_t java_type_names_size;
 	[[gnu::visibility("default")]] extern const char managed_type_names[];
 	[[gnu::visibility("default")]] extern const char managed_assembly_names[];
-	[[gnu::visibility("default")]] extern TypeMapModule managed_to_java_map[];
+	[[gnu::visibility("default")]] extern const TypeMapModule managed_to_java_map[];
+	[[gnu::visibility("default")]] extern const TypeMapModuleEntry modules_map_data[];
+	[[gnu::visibility("default")]] extern const TypeMapModuleEntry modules_duplicates_data[];
 	[[gnu::visibility("default")]] extern const TypeMapJava java_to_managed_map[];
 	[[gnu::visibility("default")]] extern const xamarin::android::hash_t java_to_managed_hashes[];
 #endif
@@ -365,7 +342,7 @@ extern "C" {
 
 	[[gnu::visibility("default")]] extern const char* const mono_aot_mode_name;
 
-	[[gnu::visibility("default")]] extern XamarinAndroidBundledAssembly bundled_assemblies[];
+
 	[[gnu::visibility("default")]] extern AssemblyStoreSingleAssemblyRuntimeData assembly_store_bundled_assemblies[];
 	[[gnu::visibility("default")]] extern AssemblyStoreRuntimeData assembly_store;
 

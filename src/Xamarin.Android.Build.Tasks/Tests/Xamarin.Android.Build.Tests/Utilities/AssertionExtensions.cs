@@ -11,39 +11,39 @@ namespace Xamarin.Android.Build.Tests
 	public static class AssertionExtensions
 	{
 		[DebuggerHidden]
-		public static void AssertTargetIsSkipped (this BuildOutput output, string target, int? occurrence = null)
+		public static void AssertTargetIsSkipped (this BuildOutput output, string target, int? occurrence = null, bool defaultIfNotUsed = false)
 		{
 			if (occurrence != null)
-				Assert.IsTrue (output.IsTargetSkipped (target), $"The target {target} should have been skipped. ({occurrence})");
+				Assert.IsTrue (output.IsTargetSkipped (target, defaultIfNotUsed), $"The target {target} should have been skipped. ({occurrence})");
 			else
-				Assert.IsTrue (output.IsTargetSkipped (target), $"The target {target} should have been skipped.");
+				Assert.IsTrue (output.IsTargetSkipped (target, defaultIfNotUsed), $"The target {target} should have been skipped.");
 		}
 
 		[DebuggerHidden]
-		public static void AssertTargetIsNotSkipped (this BuildOutput output, string target, int? occurrence = null)
+		public static void AssertTargetIsNotSkipped (this BuildOutput output, string target, int? occurrence = null, bool defaultIfNotUsed = false)
 		{
 			if (occurrence != null)
-				Assert.IsFalse (output.IsTargetSkipped (target), $"The target {target} should have *not* been skipped. ({occurrence})");
+				Assert.IsFalse (output.IsTargetSkipped (target, defaultIfNotUsed), $"The target {target} should have *not* been skipped. ({occurrence})");
 			else
-				Assert.IsFalse (output.IsTargetSkipped (target), $"The target {target} should have *not* been skipped.");
+				Assert.IsFalse (output.IsTargetSkipped (target, defaultIfNotUsed), $"The target {target} should have *not* been skipped.");
 		}
 
 		[DebuggerHidden]
-		public static void AssertTargetIsSkipped (this DotNetCLI dotnet, string target, int? occurrence = null)
+		public static void AssertTargetIsSkipped (this DotNetCLI dotnet, string target, int? occurrence = null, bool defaultIfNotUsed = false)
 		{
 			if (occurrence != null)
-				Assert.IsTrue (dotnet.IsTargetSkipped (target), $"The target {target} should have been skipped. ({occurrence})");
+				Assert.IsTrue (dotnet.IsTargetSkipped (target, defaultIfNotUsed), $"The target {target} should have been skipped. ({occurrence})");
 			else
-				Assert.IsTrue (dotnet.IsTargetSkipped (target), $"The target {target} should have been skipped.");
+				Assert.IsTrue (dotnet.IsTargetSkipped (target, defaultIfNotUsed), $"The target {target} should have been skipped.");
 		}
 
 		[DebuggerHidden]
-		public static void AssertTargetIsNotSkipped (this DotNetCLI dotnet, string target, int? occurrence = null)
+		public static void AssertTargetIsNotSkipped (this DotNetCLI dotnet, string target, int? occurrence = null, bool defaultIfNotUsed = false)
 		{
 			if (occurrence != null)
-				Assert.IsFalse (dotnet.IsTargetSkipped (target), $"The target {target} should have *not* been skipped. ({occurrence})");
+				Assert.IsFalse (dotnet.IsTargetSkipped (target, defaultIfNotUsed), $"The target {target} should have *not* been skipped. ({occurrence})");
 			else
-				Assert.IsFalse (dotnet.IsTargetSkipped (target), $"The target {target} should have *not* been skipped.");
+				Assert.IsFalse (dotnet.IsTargetSkipped (target, defaultIfNotUsed), $"The target {target} should have *not* been skipped.");
 		}
 
 		[DebuggerHidden]

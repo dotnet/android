@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -21,13 +22,13 @@ public class GenerateJavaCallableWrappers : AndroidTask
 	public override string TaskPrefix => "JCW";
 
 	[Required]
-	public string CodeGenerationTarget { get; set; } = string.Empty;
+	public string CodeGenerationTarget { get; set; } = "";
 
 	[Required]
-	public string OutputDirectory { get; set; } = string.Empty;
+	public string OutputDirectory { get; set; } = "";
 
 	[Required]
-	public string PackageNamingPolicy { get; set; } = string.Empty;
+	public string PackageNamingPolicy { get; set; } = "";
 
 	[Required]
 	public ITaskItem [] ResolvedAssemblies { get; set; } = [];

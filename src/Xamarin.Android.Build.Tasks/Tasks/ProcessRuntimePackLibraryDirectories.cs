@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,13 +23,13 @@ public class ProcessRuntimePackLibraryDirectories : AndroidTask
 	};
 
 	[Required]
-	public ITaskItem[] ResolvedFilesToPublish { get; set; } = Array.Empty<ITaskItem> ();
+	public ITaskItem[] ResolvedFilesToPublish { get; set; } = [];
 
 	[Output]
-	public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = Array.Empty<ITaskItem> ();
+	public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = [];
 
 	[Output]
-	public ITaskItem[] NativeLibrariesToRemove { get; set; }  = Array.Empty<ITaskItem> ();
+	public ITaskItem[] NativeLibrariesToRemove { get; set; }  = [];
 
 	public override bool RunTask ()
 	{

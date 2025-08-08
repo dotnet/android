@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.CodeDom;
@@ -20,14 +20,14 @@ namespace Xamarin.Android.Tasks
 {
 	class FileResourceParser : ResourceParser
 	{
-		public string JavaPlatformDirectory { get; set; }
+		public string? JavaPlatformDirectory { get; set; }
 
-		public string ResourceFlagFile { get; set; }
+		public string? ResourceFlagFile { get; set; }
 
 		Dictionary<R, R []> arrayMapping = new Dictionary<R, R []> ();
 		Dictionary<string, List<string>> foofoo = new Dictionary<string, List<string>> ();
 		List<string> custom_types = new List<string> ();
-		XDocument publicXml;
+		XDocument? publicXml;
 
 		string[] publicXmlFiles = new string[] {
 			"public.xml",
@@ -35,8 +35,8 @@ namespace Xamarin.Android.Tasks
 			"public-staging.xml",
 		};
 
-		protected XDocument LoadPublicXml () {
-			if (string.IsNullOrEmpty (JavaPlatformDirectory))
+		protected XDocument? LoadPublicXml () {
+			if (JavaPlatformDirectory.IsNullOrEmpty ())
 				return null;
 			string publicXmlPath = Path.Combine (JavaPlatformDirectory, "data", "res", "values");
 			foreach (var file in publicXmlFiles) {
@@ -65,7 +65,7 @@ namespace Xamarin.Android.Tasks
 					ProcessResourceFile (file, resources);
 				}
 			}
-			foreach (var dir in additionalResourceDirectories ?? Array.Empty<string>()) {
+			foreach (var dir in additionalResourceDirectories ?? []) {
 				Log.LogDebugMessage ($"Processing Directory {dir}");
 				if (Directory.Exists (dir)) {
 					foreach (var file in Directory.EnumerateFiles (dir, "*.*", SearchOption.AllDirectories)) {
@@ -75,7 +75,7 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ($"Skipping non-existent directory: {dir}");
 				}
 			}
-			foreach (var aar in aarLibraries ??  Array.Empty<string>()) {
+			foreach (var aar in aarLibraries ?? []) {
 				Log.LogDebugMessage ($"Processing Aar file {aar}");
 				if (!File.Exists (aar)) {
 					Log.LogDebugMessage ($"Skipping non-existent aar: {aar}");
@@ -162,7 +162,7 @@ namespace Xamarin.Android.Tasks
 						itemid++;
 						r.UpdateId (id);
 					} else {
-						if (foofoo.ContainsKey (r.Identifier)) {
+						if (r.Identifier != null && foofoo.ContainsKey (r.Identifier)) {
 							var items = foofoo[r.Identifier];
 							if (r.Ids != null) {
 								// do something special cos its an array we need to replace *some* its.
@@ -214,7 +214,7 @@ namespace Xamarin.Android.Tasks
 		{
 			Log.LogDebugMessage ($"{nameof(ProcessResourceFile)} {file}");
 			var fileName = Path.GetFileNameWithoutExtension (file);
-			if (string.IsNullOrEmpty (fileName))
+			if (fileName.IsNullOrEmpty ())
 				return;
 			if (fileName.EndsWith (".9", StringComparison.OrdinalIgnoreCase))
 				fileName = Path.GetFileNameWithoutExtension (fileName);
@@ -274,8 +274,7 @@ namespace Xamarin.Android.Tasks
 		void ProcessStyleable (XmlReader reader, Dictionary<string, ICollection<R>> resources)
 		{
 			Log.LogDebugMessage ($"{nameof(ProcessStyleable)}");
-			string topName = null;
-			int fieldCount = 0;
+			string? topName = null;
 			List<R> fields = new List<R> ();
 			List<string> attribs = new List<string> ();
 			if (reader.HasAttributes) {
@@ -287,8 +286,8 @@ namespace Xamarin.Android.Tasks
 			while (reader.Read ()) {
 				if (reader.NodeType == XmlNodeType.Whitespace || reader.NodeType == XmlNodeType.Comment)
 					continue;
-				string name = null;
-				if (string.IsNullOrEmpty (topName)) {
+				string? name = null;
+				if (topName.IsNullOrEmpty ()) {
 					if (reader.HasAttributes) {
 						while (reader.MoveToNextAttribute ()) {
 							if (reader.Name.Replace ("android:", "") == "name")
@@ -306,7 +305,9 @@ namespace Xamarin.Android.Tasks
 				}
 				reader.MoveToElement ();
 				if (reader.LocalName == "attr") {
-					attribs.Add (name);
+					if (name != null) {
+						attribs.Add (name);
+					}
 				}
 			}
 			var field = new R () {
@@ -315,7 +316,9 @@ namespace Xamarin.Android.Tasks
 				Type = RType.Array,
 			};
 			if (!arrayMapping.ContainsKey (field)) {
-				foofoo.Add (field.Identifier, new List<string> ());
+				if (field.Identifier != null) {
+					foofoo.Add (field.Identifier, new List<string> ());
+				}
 				attribs.Sort (StringComparer.OrdinalIgnoreCase);
 				for (int i = 0; i < attribs.Count; i++) {
 					string name = attribs [i];
@@ -349,7 +352,9 @@ namespace Xamarin.Android.Tasks
 				resources [field.ResourceTypeName].Add (field);
 				int id = 0;
 				foreach (string r in attribs) {
-					foofoo[field.Identifier].Add (r.Replace (":", "_"));
+					if (field.Identifier != null) {
+						foofoo[field.Identifier].Add (r.Replace (":", "_"));
+					}
 					resources [field.ResourceTypeName].Add (new R () {
 						ResourceTypeName = field.ResourceTypeName,
 						Identifier = $"{field.Identifier}_{r.Replace (":", "_")}",
@@ -376,7 +381,7 @@ namespace Xamarin.Android.Tasks
 				if (reader.IsStartElement ()) {
 					var elementName = reader.Name;
 					var elementNS = reader.NamespaceURI;
-					if (!string.IsNullOrEmpty (elementNS)) {
+					if (!elementNS.IsNullOrEmpty ()) {
 						if (elementNS != "http://schemas.android.com/apk/res/android")
 							continue;
 					}
@@ -384,15 +389,15 @@ namespace Xamarin.Android.Tasks
 						try {
 							ProcessStyleable (reader.ReadSubtree (), resources);
 						} catch (Exception ex) {
-							Log.LogErrorFromException (ex);
+							Log?.LogErrorFromException (ex);
 						}
 						continue;
 					}
 					if (reader.HasAttributes) {
-						string name = null;
-						string type = null;
-						string id = null;
-						string custom_id = null;
+						string? name = null;
+						string? type = null;
+						string? id = null;
+						string? custom_id = null;
 						while (reader.MoveToNextAttribute ()) {
 							if (reader.LocalName == "name")
 								name = reader.Value;
@@ -427,14 +432,14 @@ namespace Xamarin.Android.Tasks
 							continue;
 						// Move the reader back to the element node.
 						reader.MoveToElement ();
-						if (!string.IsNullOrEmpty (name)) {
+						if (!name.IsNullOrEmpty ()) {
 							CreateResourceField (type ?? elementName, name, resources);
 						}
-						if (!string.IsNullOrEmpty (custom_id) && !resources.ContainsKey (custom_id)) {
+						if (!custom_id.IsNullOrEmpty () && !resources.ContainsKey (custom_id)) {
 							resources.Add (custom_id, new SortedSet<R> (new RComparer ()));
 							custom_types.Add (custom_id);
 						}
-						if (!string.IsNullOrEmpty (id)) {
+						if (!id.IsNullOrEmpty ()) {
 							CreateResourceField (custom_id ?? "id", id.Replace ("-", "_").Replace (".", "_"), resources);
 						}
 					}

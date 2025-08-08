@@ -1529,6 +1529,67 @@ If `DebugType` is not set or is the empty string, then the
 `DebugSymbols` property controls whether or not the Application is
 debuggable.
 
+## DiagnosticAddress
+
+A value provided by `dotnet-dsrouter` such as `127.0.0.1`, the IP
+address component of `$(DiagnosticConfiguration)` or `$DOTNET_DiagnosticPorts`.
+
+Implicitly enables the Mono diagnostic component, meaning that
+`$(EnableDiagnostics)`/`$(AndroidEnableProfiler)` is set to `true`.
+
+Defaults to `127.0.0.1`.
+
+## DiagnosticConfiguration
+
+A value provided by `dotnet-dsrouter` for `$DOTNET_DiagnosticPorts` such as:
+
+* `127.0.0.1:9000,suspend,connect`
+* `127.0.0.1:9000,nosuspend,connect`
+
+Note that the `,` character will need to be escaped with `%2c` if
+passed in command-line to `dotnet build`:
+
+```dotnetcli
+dotnet build -c Release -p:DiagnosticConfiguration=127.0.0.1:9000%2csuspend%2cconnect
+```
+
+This will automatically set the `$DOTNET_DiagnosticPorts` environment
+variable packaged inside the application.
+
+Implicitly enables the Mono diagnostic component, meaning that
+`$(EnableDiagnostics)`/`$(AndroidEnableProfiler)` is set to `true`.
+
+## DiagnosticListenMode
+
+A value provided by `dotnet-dsrouter` such as `connect`, the listening
+mode component of `$(DiagnosticConfiguration)` or `$DOTNET_DiagnosticPorts`.
+
+Implicitly enables the Mono diagnostic component, meaning that
+`$(EnableDiagnostics)`/`$(AndroidEnableProfiler)` is set to `true`.
+
+Defaults to `connect`.
+
+## DiagnosticPort
+
+A value provided by `dotnet-dsrouter` such as `9000`, the port
+component of `$(DiagnosticConfiguration)` or `$DOTNET_DiagnosticPorts`.
+
+Implicitly enables the Mono diagnostic component, meaning that
+`$(EnableDiagnostics)`/`$(AndroidEnableProfiler)` is set to `true`.
+
+Defaults to `9000`.
+
+## DiagnosticSuspend
+
+A boolean value provided by `dotnet-dsrouter` such as `true/suspend`
+or `false/nosuspend`, a component of `$(DiagnosticConfiguration)`
+or `$DOTNET_DiagnosticPorts`.
+
+Implicitly enables the Mono diagnostic component, meaning that
+`$(EnableDiagnostics)`/`$(AndroidEnableProfiler)` is set to `true`.
+
+Defaults to `false`.
+
 ## EmbedAssembliesIntoApk
 
 A boolean property that

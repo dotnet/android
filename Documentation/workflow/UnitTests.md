@@ -63,21 +63,18 @@ To run ALL the [MSBuild Integration Tests](#msbuild-integration-tests) *and*
 all the [MSBuild Task Unit Tests](#msbuild-task-tests), run:
 
 ```sh
-./dotnet-local.sh test bin/TestDebug/net7.0/Xamarin.Android.Build.Tests.dll --filter=Category!=DotNetIgnore
+./dotnet-local.sh test bin/TestDebug/net7.0/Xamarin.Android.Build.Tests.dll
 ```
 
 To run ALL the supported [Device Integration Tests](#devive-integration-tests), run:
 
 ```sh
-./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/net7.0/MSBuildDeviceIntegration.dll --filter=Category!=DotNetIgnore
+./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/net7.0/MSBuildDeviceIntegration.dll
 ```
 
 If no Android device is attached, then the emulator will be created.
 The `ADB_TARGET` environment variable can be used to explicitly specify which
 Android device should be used when running Device Integration Tests.
-
-NOTE: Not all tests work under .NET for Android yet. So we need to filter
-them on the `DotNetIgnore` category.
 
 To run a specific test you can use the `Name=Value` argument for `--filter`,
 
@@ -106,21 +103,18 @@ To run ALL the [MSBuild Integration Tests](#msbuild-integration-tests) *and*
 all the [MSBuild Task Unit Tests](#msbuild-task-tests), run:
 
 ```cmd
-dotnet-local.cmd test bin\TestDebug\net7.0\Xamarin.Android.Build.Tests.dll --filter=Category!=DotNetIgnore
+dotnet-local.cmd test bin\TestDebug\net7.0\Xamarin.Android.Build.Tests.dll
 ```
 
 To run ALL the supported [Device Integration Tests](#devive-integration-tests), runs:
 
 ```cmd
-dotnet-local.cmd test bin\TestDebug\MSBuildDeviceIntegration\net7.0\MSBuildDeviceIntegration.dll --filter=Category!=DotNetIgnore
+dotnet-local.cmd test bin\TestDebug\MSBuildDeviceIntegration\net7.0\MSBuildDeviceIntegration.dll
 ```
 
 If no Android device is attached, then the emulator will be created.
 The `ADB_TARGET` environment variable can be used to explicitly specify which
 Android device should be used when running Device Integration Tests.
-
-NOTE: Not all tests work under .NET for Android yet. So we need to filter
-them on the `DotNetIgnore` category.
 
 To run a specific test you can use the `Name=Value` argument for the `--filter`,
 

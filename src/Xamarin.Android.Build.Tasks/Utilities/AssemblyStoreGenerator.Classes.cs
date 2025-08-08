@@ -1,3 +1,4 @@
+#nullable enable
 namespace Xamarin.Android.Tasks;
 
 partial class AssemblyStoreGenerator
@@ -32,18 +33,21 @@ partial class AssemblyStoreGenerator
 
 	sealed class AssemblyStoreIndexEntry
 	{
-		public const uint NativeSize32 = 2 * sizeof (uint);
-		public const uint NativeSize64 = sizeof (ulong) + sizeof (uint);
+		// We treat `bool` as `byte` here, since that's what gets written to the binary
+		public const uint NativeSize32 = 2 * sizeof (uint) + sizeof (byte);
+		public const uint NativeSize64 = sizeof (ulong) + sizeof (uint) + sizeof (byte);
 
 		public readonly string name;
 		public readonly ulong name_hash;
 		public readonly uint  descriptor_index;
+		public readonly bool ignore;
 
-		public AssemblyStoreIndexEntry (string name, ulong name_hash, uint descriptor_index)
+		public AssemblyStoreIndexEntry (string name, ulong name_hash, uint descriptor_index, bool ignore)
 		{
 			this.name = name;
 			this.name_hash = name_hash;
 			this.descriptor_index = descriptor_index;
+			this.ignore = ignore;
 		}
 	}
 

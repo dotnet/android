@@ -184,7 +184,7 @@ namespace Xamarin.Android.Tasks
 
 			foreach (ModuleReleaseData module in modules) {
 				if (module.TypesScratch.Count == 0) {
-					module.Types = Array.Empty<TypeMapReleaseEntry> ();
+					module.Types = [];
 					continue;
 				}
 

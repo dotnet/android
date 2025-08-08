@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -14,17 +14,17 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "IJD";
 
-		public string [] JavaDocs { get; set; }
+		public string []? JavaDocs { get; set; }
 		
-		public string [] References { get; set; }
+		public string []? References { get; set; }
 
-		public string [] Transforms { get; set; }
-
-		[Required]
-		public string TargetAssembly { get; set; }
+		public string []? Transforms { get; set; }
 
 		[Required]
-		public string OutputDocDirectory { get; set; }
+		public string TargetAssembly { get; set; } = "";
+
+		[Required]
+		public string OutputDocDirectory { get; set; } = "";
 
 		protected override string GenerateCommandLineCommands ()
 		{
@@ -37,13 +37,17 @@ namespace Xamarin.Android.Tasks
 			//	cmd.AppendSwitch (r);
 			cmd.AppendSwitch ("-v=2");
 			cmd.AppendSwitchIfNotNull ("--out=", OutputDocDirectory);
-			foreach (var j in JavaDocs)
-				cmd.AppendSwitchIfNotNull ("--doc-dir=", Path.GetDirectoryName (j));
-			foreach (var t in Transforms) {
-				if (t.EndsWith ("Metadata.xml", StringComparison.InvariantCultureIgnoreCase))
-					cmd.AppendSwitchIfNotNull ("--metadata=", t);
-				else
-					cmd.AppendSwitchIfNotNull ("--enum-map=", t);
+			if (JavaDocs != null) {
+				foreach (var j in JavaDocs)
+					cmd.AppendSwitchIfNotNull ("--doc-dir=", Path.GetDirectoryName (j));
+			}
+			if (Transforms != null) {
+				foreach (var t in Transforms) {
+					if (t.EndsWith ("Metadata.xml", StringComparison.InvariantCultureIgnoreCase))
+						cmd.AppendSwitchIfNotNull ("--metadata=", t);
+					else
+						cmd.AppendSwitchIfNotNull ("--enum-map=", t);
+				}
 			}
 			return cmd.ToString ();
 		}

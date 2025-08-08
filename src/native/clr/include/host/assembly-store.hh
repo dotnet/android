@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <limits>
 #include <mutex>
 #include <string_view>
 #include <tuple>
