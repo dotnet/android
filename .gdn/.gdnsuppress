@@ -9,7 +9,7 @@
     "default": {
       "name": "default",
       "createdDate": "2024-02-21 20:58:02Z",
-      "lastUpdatedDate": "2024-02-22 21:40:38Z"
+      "lastUpdatedDate": "2025-01-22 00:00:00Z"
     }
   },
   "results": {
@@ -120,6 +120,15 @@
       ],
       "justification": "False positive in linker-dependencies.xml file.",
       "createdDate": "2024-06-14 18:52:00Z"
+    },
+    "650586d5e7851e9a2d6ed6f324227d7da625626165af8aef394785573ee3ab55": {
+      "signature": "650586d5e7851e9a2d6ed6f324227d7da625626165af8aef394785573ee3ab55",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "BA2008 EnableControlFlowGuard suppression for aapt2.exe at bin/Release/dotnet/packs/Microsoft.Android.Sdk.Windows/35.0.78/tools/aapt2.exe. Third-party binary from Google Android SDK that may not have CFG enabled.",
+      "createdDate": "2025-01-22 00:00:00Z"
     }
   }
 }
