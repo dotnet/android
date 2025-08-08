@@ -333,5 +333,18 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 				builder.AssertHasNoWarnings ();
 			}
 		}
+		
+		[Test]
+		public void GetAndroidDependencies()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			using var builder = CreateApkBuilder ();
+			builder.Save (proj);
+
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
+
+			// `dotnet build -t:GetAndroidDependencies --no-restore` should succeed
+			Assert.IsTrue (dotnet.Build (target: "GetAndroidDependencies", norestore: true), $"{proj.ProjectName} should succeed");
+		}
 	}
 }
