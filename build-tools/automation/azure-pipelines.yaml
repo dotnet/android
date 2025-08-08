@@ -77,7 +77,7 @@ extends:
           justificationForDisabling: CodeQL runs against the nightly build
       credscan:
         enabled: true
-        suppressionsFile: $(System.DefaultWorkingDirectory)/android/.gdn/CredScanSuppressions.json
+        suppressionsFile: .gdn/CredScanSuppressions.json
       policheck:
         enabled: false
         justification: Built in task does not support multi-language scanning
