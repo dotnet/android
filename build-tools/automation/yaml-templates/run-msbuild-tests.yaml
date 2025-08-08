@@ -4,7 +4,7 @@ parameters:
   jobDisplayName: ''      # Display name of the job
   agentCount: 1           # Number of build agents to run in parallel
   testFilter: ''          # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
-  xaSourcePath: $(System.DefaultWorkingDirectory)
+  xaSourcePath: $(System.DefaultWorkingDirectory)/android
   repositoryAlias: 'self'
   commit: ''
   shouldFailOnIssue: true
