@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -29,7 +29,7 @@ namespace Xamarin.Android.Tasks
 			public uint Index;
 
 			[NativeAssembler (Ignore = true)]
-			public string AssemblyName;
+			public string? AssemblyName;
 
 			public uint   uncompressed_file_size;
 			public bool   loaded;
@@ -37,7 +37,7 @@ namespace Xamarin.Android.Tasks
 		};
 
 		IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>? archAssemblies;
-		StructureInfo compressedAssemblyDescriptorStructureInfo;
+		StructureInfo? compressedAssemblyDescriptorStructureInfo;
 		Dictionary<AndroidTargetArch, List<StructureInstance<CompressedAssemblyDescriptor>>> archData = new Dictionary<AndroidTargetArch, List<StructureInstance<CompressedAssemblyDescriptor>>> ();
 
 		public CompressedAssembliesNativeAssemblyGenerator (TaskLoggingHelper log, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>? archAssemblies)
@@ -99,7 +99,10 @@ namespace Xamarin.Android.Tasks
 			compressedAssemblyDescriptors = new List<LlvmIrGlobalVariable> ();
 			foreach (var kvp in archData) {
 				List<StructureInstance<CompressedAssemblyDescriptor>> descriptors = kvp.Value;
-				descriptors.Sort ((StructureInstance<CompressedAssemblyDescriptor> a, StructureInstance<CompressedAssemblyDescriptor> b) => a.Instance.Index.CompareTo (b.Instance.Index));
+				descriptors.Sort ((StructureInstance<CompressedAssemblyDescriptor> a, StructureInstance<CompressedAssemblyDescriptor> b) => {
+					if (a.Instance == null || b.Instance == null) return 0;
+					return a.Instance.Index.CompareTo (b.Instance.Index);
+				});
 
 				var variable = new LlvmIrGlobalVariable (typeof(uint), CompressedAssemblyCountSymbolName) {
 					Options = LlvmIrVariableOptions.GlobalConstant,
@@ -139,9 +142,15 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
-			module.Add (compressedAssemblies);
-			module.Add (compressedAssemblyDescriptors);
-			module.Add (buffers);
+			if (compressedAssemblies != null) {
+				module.Add (compressedAssemblies);
+			}
+			if (compressedAssemblyDescriptors != null) {
+				module.Add (compressedAssemblyDescriptors);
+			}
+			if (buffers != null) {
+				module.Add (buffers);
+			}
 		}
 
 		string? GetCompressedAssemblyDescriptorsItemComment (LlvmIrVariable v, LlvmIrModuleTarget target, ulong index, object? value, object? callerState)
@@ -152,7 +161,7 @@ namespace Xamarin.Android.Tasks
 			}
 			StructureInstance<CompressedAssemblyDescriptor> desc = descriptors[(int)index];
 
-			return $" {index}: {desc.Instance.AssemblyName}";
+			return $" {index}: {desc.Instance?.AssemblyName ?? ""}";
 		}
 
 		List<StructureInstance<CompressedAssemblyDescriptor>> GetArchDescriptors (LlvmIrModuleTarget target)
