@@ -127,7 +127,7 @@
       "memberOf": [
         "default"
       ],
-      "justification": "BA2008 EnableControlFlowGuard suppression for aapt2.exe at bin/Release/dotnet/packs/Microsoft.Android.Sdk.Windows/*/Tools/aapt2.exe. Third-party binary from Google Android SDK - EnableControlFlowGuard cannot be enabled as this is provided by Google and does not support control flow guard flags.",
+      "justification": "BA2008 EnableControlFlowGuard suppression for aapt2.exe at bin/Release/dotnet/packs/Microsoft.Android.Sdk.Windows/*/tools/aapt2.exe. Third-party binary from Google Android SDK - EnableControlFlowGuard cannot be enabled as this is provided by Google and does not support control flow guard flags.",
       "createdDate": "2025-01-22 00:00:00Z"
     }
   }
