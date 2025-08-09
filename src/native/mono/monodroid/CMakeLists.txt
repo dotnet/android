@@ -105,7 +105,6 @@ set(XAMARIN_MONODROID_SOURCES
   osbridge.cc
   runtime-util.cc
   timezones.cc
-  xamarin_getifaddrs.cc
 )
 
 list(APPEND LOCAL_CLANG_CHECK_SOURCES

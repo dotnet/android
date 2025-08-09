@@ -45,14 +45,6 @@ namespace Android.Runtime
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern IntPtr _monodroid_lookup_replacement_method_info (string jniSourceType, string jniMethodName, string jniMethodSignature);
 
-		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr _monodroid_timezone_get_default_id ();
-
-		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int _monodroid_getifaddrs (out IntPtr ifap);
-
-		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void _monodroid_freeifaddrs (IntPtr ifap);
 
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void _monodroid_detect_cpu_and_architecture (ref ushort built_for_cpu, ref ushort running_on_cpu, ref byte is64bit);

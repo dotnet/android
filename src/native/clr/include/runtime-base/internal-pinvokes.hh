@@ -34,9 +34,5 @@ extern "C" {
 	void _monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable);
 	void _monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char  *from, int from_writable);
 	void _monodroid_gc_wait_for_bridge_processing ();
-	void* _monodroid_timezone_get_default_id ();
 	void _monodroid_detect_cpu_and_architecture (unsigned short *built_for_cpu, unsigned short *running_on_cpu, unsigned char *is64bit);
-
-	int  _monodroid_getifaddrs (struct ifaddrs **ifap);
-	void _monodroid_freeifaddrs (struct ifaddrs *ifa);
 }
