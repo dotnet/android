@@ -99,24 +99,33 @@ namespace xamarin::android {
 				Helpers::abort_application ("DSO loader class not initialized properly."sv);
 			}
 
-			JNIEnv *jni_env = get_jnienv ();
+			auto get_file_name = [](std::string_view const& full_name, bool is_path) -> std::string_view {
+				if (!is_path) {
+					return full_name;
+				}
+
+				std::string_view name = full_name;
+				size_t last_slash = name.find_last_of ('/');
+				if (last_slash != std::string_view::npos) [[likely]] {
+					last_slash++;
+					if (last_slash <= name.length ()) {
+						name.remove_prefix (last_slash);
+					}
+				}
+
+				return name;
+			};
+
 			// System.loadLibrary call is going to be slow anyway, so we can spend some more time generating an
 			// undecorated library name here instead of at build time. This saves us a little bit of space in
 			// `libxamarin-app.so` and makes the build code less complicated.
-			auto get_undecorated_name = [](std::string_view const& full_name, bool is_path) -> std::string_view {
+			auto get_undecorated_name = [&get_file_name](std::string_view const& full_name, bool is_path) -> std::string_view {
 				std::string_view name;
 
 				if (!is_path) {
 					name = full_name;
 				} else {
-					name = full_name;
-					size_t last_slash = name.find_last_of ('/');
-					if (last_slash != std::string_view::npos) [[likely]] {
-						last_slash++;
-						if (last_slash <= name.length ()) {
-							name.remove_prefix (last_slash);
-						}
-					}
+					name = get_file_name (full_name, is_path);
 				}
 
 				constexpr std::string_view lib_prefix { "lib" };
@@ -141,6 +150,7 @@ namespace xamarin::android {
 			const std::string undecorated_lib_name { get_undecorated_name (name, name_is_path) };
 			log_debug (LOG_ASSEMBLY, "Undecorated library name: {}", undecorated_lib_name);
 
+			JNIEnv *jni_env = get_jnienv ();
 			jstring lib_name = jni_env->NewStringUTF (undecorated_lib_name.c_str ());
 			if (lib_name == nullptr) [[unlikely]] {
 				// It's an OOM, there's nothing better we can do
@@ -152,13 +162,16 @@ namespace xamarin::android {
 				jni_env->ExceptionDescribe ();
 				jni_env->ExceptionClear ();
 				log_debug (LOG_ASSEMBLY, "Java exception cleared");
+				// TODO: should we abort? Return `nullptr`? `dlopen` still has a chance to succeed, even if loadLibrary
+				//       failed but it won't call `JNI_OnLoad` etc, so the result might be less than perfect.
 			}
+
 			// This is unfortunate, but since `System.loadLibrary` doesn't return the class handle, we must get it this
 			// way :(
 			// We must use full name of the library, because dlopen won't accept an undecorated one without kicking up
 			// a fuss.
-			log_debug (LOG_ASSEMBLY, "Attempting to get library {} handle after System.loadLibrary", name);
-			return log_and_return (dlopen (name.data (), RTLD_NOLOAD), name);
+			log_debug (LOG_ASSEMBLY, "Attempting to get library {} handle after System.loadLibrary. Will try to load using '{}'", name, get_file_name (name, name_is_path));
+			return log_and_return (dlopen (get_file_name (name, name_is_path).data (), RTLD_NOLOAD), name);
 		}
 
 	private:
