@@ -10,6 +10,10 @@
 #include <runtime-base/util.hh>
 #include <shared/helpers.hh>
 
+#if defined(XA_HOST_MONOVM)
+using AndroidSystem = xamarin::android::internal::AndroidSystem;
+#endif
+
 namespace xamarin::android {
 	class DsoLoader
 	{

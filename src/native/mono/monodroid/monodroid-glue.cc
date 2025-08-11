@@ -62,6 +62,7 @@
 #include "monodroid-state.hh"
 #include "pinvoke-override-api.hh"
 #include <shared/cpp-util.hh>
+#include <runtime-base/dso-loader.hh>
 #include <runtime-base/strings.hh>
 
 using namespace microsoft::java_interop;
@@ -834,7 +835,6 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 	init.marshalMethodsEnabled  = application_config.marshal_methods_enabled;
 	init.managedMarshalMethodsLookupEnabled = application_config.managed_marshal_methods_lookup_enabled;
 
-	java_System = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_System", true);
 	java_System_identityHashCode = env->GetStaticMethodID (java_System, "identityHashCode", "(Ljava/lang/Object;)I");
 
 	// GC threshold is 90% of the max GREF count
@@ -1388,6 +1388,9 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 
 	AndroidSystem::detect_embedded_dso_mode (applicationDirs);
 	AndroidSystem::set_running_in_emulator (isEmulator);
+
+	java_System = RuntimeUtil::get_class_from_runtime_field (env, klass, "java_lang_System", true);
+	DsoLoader::init (env, java_System);
 
 	java_TimeZone = RuntimeUtil::get_class_from_runtime_field (env, klass, "java_util_TimeZone", true);
 
