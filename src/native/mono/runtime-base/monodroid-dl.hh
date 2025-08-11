@@ -10,6 +10,7 @@
 
 #include "android-system.hh"
 #include "monodroid-state.hh"
+#include <runtime-base/dso-loader.hh>
 #include <runtime-base/search.hh>
 #include "shared-constants.hh"
 #include "startup-aware-lock.hh"
@@ -30,12 +31,9 @@ namespace xamarin::android::internal
 
 		static inline xamarin::android::mutex   dso_handle_write_lock;
 
-		static unsigned int convert_dl_flags (int flags) noexcept
+		constexpr static int convert_dl_flags (int flags) noexcept
 		{
-			unsigned int lflags = (flags & static_cast<int> (MONO_DL_LOCAL))
-								  ? microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_LOCALLY
-								  : microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_GLOBALLY;
-			return lflags;
+			return (flags & static_cast<int> (MONO_DL_LOCAL)) ? RTLD_LOCAL : RTLD_GLOBAL;
 		}
 
 		template<CacheKind WhichCache>
@@ -130,13 +128,16 @@ namespace xamarin::android::internal
 				}
 			}
 
-			unsigned int dl_flags = convert_dl_flags (flags);
-			void * handle = AndroidSystem::load_dso_from_any_directories (name, dl_flags);
+			int dl_flags = convert_dl_flags (flags);
+			constexpr bool IsJniLib = false; // Mono components won't be using JNI
+			void *handle = AndroidSystem::load_dso_from_any_directories (name, dl_flags, IsJniLib);
 			if (handle != nullptr) {
 				return monodroid_dlopen_log_and_return (handle, err, name, false /* name_needs_free */);
 			}
 
-			handle = AndroidSystem::load_dso (name, dl_flags, false /* skip_existing_check */);
+			constexpr bool SkipExistingCheck = false;
+			handle = DsoLoader::load<SkipExistingCheck> (name, dl_flags, IsJniLib);
+
 			return monodroid_dlopen_log_and_return (handle, err, name, false /* name_needs_free */);
 		}
 
@@ -181,6 +182,7 @@ namespace xamarin::android::internal
 				return nullptr;
 			}
 
+			int dl_flags = convert_dl_flags (flags);
 			StartupAwareLock lock (dso_handle_write_lock);
 #if defined (RELEASE)
 			if (AndroidSystem::is_embedded_dso_mode_enabled ()) {
@@ -191,12 +193,7 @@ namespace xamarin::android::internal
 						continue;
 					}
 
-					android_dlextinfo dli;
-					dli.flags = ANDROID_DLEXT_USE_LIBRARY_FD | ANDROID_DLEXT_USE_LIBRARY_FD_OFFSET;
-					dli.library_fd = apk_entry->fd;
-					dli.library_fd_offset = apk_entry->offset;
-					dso->handle = android_dlopen_ext (dso->name, flags, &dli);
-
+					dso->handle = DsoLoader::load (apk_entry->fd, apk_entry->offset, name, dl_flags, dso->is_jni_library);
 					if (dso->handle != nullptr) {
 						return monodroid_dlopen_log_and_return (dso->handle, err, dso->name, false /* name_needs_free */);
 					}
@@ -204,14 +201,13 @@ namespace xamarin::android::internal
 				}
 			}
 #endif
-			unsigned int dl_flags = convert_dl_flags (flags);
-			dso->handle = AndroidSystem::load_dso_from_any_directories (dso->name, dl_flags);
+			dso->handle = AndroidSystem::load_dso_from_any_directories (dso->name, dl_flags, dso->is_jni_library);
 
 			if (dso->handle != nullptr) {
 				return monodroid_dlopen_log_and_return (dso->handle, err, dso->name, false /* name_needs_free */);
 			}
 
-			dso->handle = AndroidSystem::load_dso_from_any_directories (name, dl_flags);
+			dso->handle = AndroidSystem::load_dso_from_any_directories (name, dl_flags, dso->is_jni_library);
 			return monodroid_dlopen_log_and_return (dso->handle, err, name, false /* name_needs_free */);
 		}
 
