@@ -147,7 +147,12 @@ namespace xamarin::android {
 				Helpers::abort_application ("Java string allocation failed while loading a shared library.");
 			}
 			jni_env->CallStaticVoidMethod (systemKlass, System_loadLibrary, lib_name);
-
+			if (jni_env->ExceptionCheck ()) {
+				log_debug (LOG_ASSEMBLY, "System.loadLibrary threw a Java exception. Will attempt to log it.");
+				jni_env->ExceptionDescribe ();
+				jni_env->ExceptionClear ();
+				log_debug (LOG_ASSEMBLY, "Java exception cleared");
+			}
 			// This is unfortunate, but since `System.loadLibrary` doesn't return the class handle, we must get it this
 			// way :(
 			// We must use full name of the library, because dlopen won't accept an undecorated one without kicking up
