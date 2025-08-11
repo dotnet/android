@@ -7,7 +7,7 @@
     <EnableAotAnalyzer>true</EnableAotAnalyzer>
     <!-- Enable analyzers for transitive references: https://github.com/dotnet/runtime/pull/118180 -->
     <VerifyReferenceTrimCompatibility>true</VerifyReferenceTrimCompatibility>
-    <VerifyReferenceAotCompatibility>true</VerifyReferenceAotCompatibility>
+    <VerifyReferenceAotCompatibility Condition=" '$(IsAotCompatible)' == 'true' ">true</VerifyReferenceAotCompatibility>
     <!-- In app projects, tells ILLink to emit warnings as errors -->
     <ILLinkTreatWarningsAsErrors>true</ILLinkTreatWarningsAsErrors>
     <!--
