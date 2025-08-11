@@ -21,7 +21,6 @@ namespace xamarin::android {
 		[[gnu::flatten]]
 		static void init (JNIEnv *env, jclass systemClass)
 		{
-			jni_env = env;
 			systemKlass = systemClass;
 			System_loadLibrary = env->GetStaticMethodID (systemClass, "loadLibrary", "(Ljava/lang/String;)V");
 			if (System_loadLibrary == nullptr) [[unlikely]] {
@@ -68,6 +67,8 @@ namespace xamarin::android {
 		}
 
 	private:
+		static auto get_jnienv () noexcept -> JNIEnv*;
+
 		[[gnu::always_inline]]
 		static auto log_and_return (void *handle, std::string_view const& full_name) -> void*
 		{
@@ -94,10 +95,11 @@ namespace xamarin::android {
 		{
 			log_debug (LOG_ASSEMBLY, "Trying to load loading shared JNI library {} with System.loadLibrary", name);
 
-			if (jni_env == nullptr || systemKlass == nullptr) [[unlikely]] {
+			if (systemKlass == nullptr) [[unlikely]] {
 				Helpers::abort_application ("DSO loader class not initialized properly."sv);
 			}
 
+			JNIEnv *jni_env = get_jnienv ();
 			// System.loadLibrary call is going to be slow anyway, so we can spend some more time generating an
 			// undecorated library name here instead of at build time. This saves us a little bit of space in
 			// `libxamarin-app.so` and makes the build code less complicated.
@@ -157,6 +159,5 @@ namespace xamarin::android {
 	private:
 		static inline jmethodID System_loadLibrary = nullptr;
 		static inline jclass systemKlass = nullptr;
-		static inline JNIEnv *jni_env = nullptr;
 	};
 }
