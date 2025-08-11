@@ -11,7 +11,7 @@
     <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETSdkPackageVersion)</MicrosoftNETWorkloadEmscriptenPackageVersion>
     <MicrosoftTemplateEngineAuthoringTasksPackageVersion>10.0.100-rc.1.25409.103</MicrosoftTemplateEngineAuthoringTasksPackageVersion>
     <MicrosoftDotNetCecilPackageVersion>0.11.5-alpha.25409.103</MicrosoftDotNetCecilPackageVersion>
-    <SystemIOHashingPackageVersion>9.0.4</SystemIOHashingPackageVersion>
+    <SystemIOHashingPackageVersion>9.0.8</SystemIOHashingPackageVersion>
     <!-- Previous .NET Android version -->
     <MicrosoftNETSdkAndroidManifest90100PackageVersion>35.0.92</MicrosoftNETSdkAndroidManifest90100PackageVersion>
     <AndroidNetPreviousVersion>$(MicrosoftNETSdkAndroidManifest90100PackageVersion)</AndroidNetPreviousVersion>
