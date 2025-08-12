@@ -10,7 +10,7 @@
 	  		<field deprecated="not deprecated" final="true" name="Value" static="false" transient="false" type="int" type-generic-aware="int" visibility="public" volatile="false">
 	        </field>
 	    <field deprecated="not deprecated" final="false" name="BooleanValue" static="false" transient="false" type="boolean" type-generic-aware="int" visibility="public" volatile="false" />
-	    <field deprecated="not deprecated" final="false" name="CharValue" static="false" transient="false" type="boolean" type-generic-aware="int" visibility="public" volatile="false" />
+	    <field deprecated="not deprecated" final="false" name="CharValue" static="false" transient="false" type="char" type-generic-aware="int" visibility="public" volatile="false" />
 	    </class>
 	</package>
 </api>

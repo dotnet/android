@@ -61,15 +61,15 @@ namespace Xamarin.Test {
 
 		// Metadata.xml XPath field reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/field[@name='CharValue']"
 		[Register ("CharValue")]
-		public bool CharValue {
+		public char CharValue {
 			get {
-				const string __id = "CharValue.Z";
+				const string __id = "CharValue.C";
 
-				var __v = _members.InstanceFields.GetBooleanValue (__id, this);
+				var __v = _members.InstanceFields.GetCharValue (__id, this);
 				return __v;
 			}
 			set {
-				const string __id = "CharValue.Z";
+				const string __id = "CharValue.C";
 
 				try {
 					_members.InstanceFields.SetValue (__id, this, value);
