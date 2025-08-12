@@ -20,8 +20,8 @@ namespace Android.App {
 
 				IntPtr klass = JNIEnv.FindClass ("net/dot/android/ApplicationRegistration");
 				try {
-					IntPtr field  = JNIEnv.GetStaticFieldID (klass, "Context", "Landroid/content/Context;");
-					IntPtr lref   = JNIEnv.GetStaticObjectField (klass, field);
+					IntPtr @field  = JNIEnv.GetStaticFieldID (klass, "Context", "Landroid/content/Context;");
+					IntPtr lref   = JNIEnv.GetStaticObjectField (klass, @field);
 					return _context = Java.Lang.Object.GetObject<Context> (lref, JniHandleOwnership.TransferLocalRef)!;
 				} finally {
 					JNIEnv.DeleteGlobalRef (klass);
