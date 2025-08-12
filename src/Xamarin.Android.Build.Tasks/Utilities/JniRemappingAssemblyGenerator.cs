@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -12,8 +12,8 @@ namespace Xamarin.Android.Tasks
 {
 	sealed class JniRemappingTypeReplacement
 	{
-		public string From { get; }
-		public string To   { get; }
+		public string From { get; } = "";
+		public string To   { get; } = "";
 
 		public JniRemappingTypeReplacement (string from, string to)
 		{
@@ -24,12 +24,12 @@ namespace Xamarin.Android.Tasks
 
 	sealed class JniRemappingMethodReplacement
 	{
-		public string SourceType { get; }
-		public string SourceMethod { get; }
-		public string SourceMethodSignature { get; }
+		public string SourceType { get; } = "";
+		public string SourceMethod { get; } = "";
+		public string SourceMethodSignature { get; } = "";
 
-		public string TargetType { get; }
-		public string TargetMethod { get; }
+		public string TargetType { get; } = "";
+		public string TargetMethod { get; } = "";
 
 		public bool TargetIsStatic { get; }
 
@@ -133,13 +133,13 @@ namespace Xamarin.Android.Tasks
 		sealed class JniRemappingString
 		{
 			public uint   length;
-			public string str;
+			public string str = "";
 		};
 
 		sealed class JniRemappingReplacementMethod
 		{
-			public string  target_type;
-			public string  target_name;
+			public string  target_type = "";
+			public string  target_name = "";
 			public bool    is_static;
 		};
 
@@ -169,10 +169,10 @@ namespace Xamarin.Android.Tasks
 #pragma warning restore CS0649
 
 			[NativeAssembler (Ignore = true)]
-			public string MethodsArraySymbolName;
+			public string MethodsArraySymbolName = "";
 
 			[NativeAssembler (Ignore = true)]
-			public List<StructureInstance<JniRemappingIndexMethodEntry>> TypeMethods;
+			public List<StructureInstance<JniRemappingIndexMethodEntry>> TypeMethods = [];
 		};
 
 		[NativeAssemblerStructContextDataProvider (typeof(JniRemappingTypeReplacementEntryContextDataProvider))]
@@ -182,17 +182,17 @@ namespace Xamarin.Android.Tasks
 			public JniRemappingString name;
 
 			[NativeAssembler (UsesDataProvider = true)]
-			public string    replacement;
+			public string    replacement = "";
 		};
 
-		List<JniRemappingTypeReplacement> typeReplacementsInput;
-		List<JniRemappingMethodReplacement> methodReplacementsInput;
+		List<JniRemappingTypeReplacement>? typeReplacementsInput;
+		List<JniRemappingMethodReplacement>? methodReplacementsInput;
 
-		StructureInfo jniRemappingStringStructureInfo;
-		StructureInfo jniRemappingReplacementMethodStructureInfo;
-		StructureInfo jniRemappingIndexMethodEntryStructureInfo;
-		StructureInfo jniRemappingIndexTypeEntryStructureInfo;
-		StructureInfo jniRemappingTypeReplacementEntryStructureInfo;
+		StructureInfo? jniRemappingStringStructureInfo;
+		StructureInfo? jniRemappingReplacementMethodStructureInfo;
+		StructureInfo? jniRemappingIndexMethodEntryStructureInfo;
+		StructureInfo? jniRemappingIndexTypeEntryStructureInfo;
+		StructureInfo? jniRemappingTypeReplacementEntryStructureInfo;
 
 		public int ReplacementMethodIndexEntryCount { get; private set; } = 0;
 
@@ -203,8 +203,10 @@ namespace Xamarin.Android.Tasks
 		public JniRemappingAssemblyGenerator (TaskLoggingHelper log, List<JniRemappingTypeReplacement> typeReplacements, List<JniRemappingMethodReplacement> methodReplacements)
 			: base (log)
 		{
-			this.typeReplacementsInput = typeReplacements ?? throw new ArgumentNullException (nameof (typeReplacements));
-			this.methodReplacementsInput = methodReplacements ?? throw new ArgumentNullException (nameof (methodReplacements));
+			ArgumentNullException.ThrowIfNull (typeReplacements);
+			ArgumentNullException.ThrowIfNull (methodReplacements);
+			this.typeReplacementsInput = typeReplacements;
+			this.methodReplacementsInput = methodReplacements;
 		}
 
 		(List<StructureInstance<JniRemappingTypeReplacementEntry>>? typeReplacements, List<StructureInstance<JniRemappingIndexTypeEntry>>? methodIndexTypes) Init ()
