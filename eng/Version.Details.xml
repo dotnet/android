@@ -1,8 +1,8 @@
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.NET.Sdk" Version="9.0.304-servicing.25365.6">
+    <Dependency Name="Microsoft.NET.Sdk" Version="9.0.305-servicing.25408.10">
       <Uri>https://github.com/dotnet/sdk</Uri>
-      <Sha>5f2d07cb37b0735ba729db1d57e04ebc5c894a95</Sha>
+      <Sha>fffbe68733493aaae97f2d903dba633ba2903c6b</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.ILLink" Version="9.0.8-servicing.25365.10">
       <Uri>https://github.com/dotnet/runtime</Uri>
@@ -25,9 +25,9 @@
       <Sha>862b4c8bf05585cc44ceb32dc0fd060ceed06cd2</Sha>
     </Dependency>
     <!-- Previous .NET version -->
-    <Dependency Name="Microsoft.NET.Workload.Mono.ToolChain.Current.Manifest-8.0.100" Version="8.0.19">
+    <Dependency Name="Microsoft.NET.Workload.Mono.ToolChain.Current.Manifest-8.0.100" Version="8.0.20">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>a6f44eeb3168c2f7e3ea8dc877c62b99406513c1</Sha>
+      <Sha>b5fb2bea11d743944dd9d6f6d99a532a9ea4f78a</Sha>
     </Dependency>
     <!-- Previous .NET Android version -->
     <Dependency Name="Microsoft.Android.Sdk.Windows" Version="34.0.154">
