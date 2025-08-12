@@ -1390,7 +1390,12 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	AndroidSystem::set_running_in_emulator (isEmulator);
 
 	java_System = RuntimeUtil::get_class_from_runtime_field (env, klass, "java_lang_System", true);
-	DsoLoader::init (env, java_System);
+	DsoLoader::init (
+		env,
+		RuntimeUtil::get_class_from_runtime_field (env, klass, "java_lang_System", true),
+		ALooper_forThread (), // main thread looper
+		gettid ()
+	);
 
 	java_TimeZone = RuntimeUtil::get_class_from_runtime_field (env, klass, "java_util_TimeZone", true);
 

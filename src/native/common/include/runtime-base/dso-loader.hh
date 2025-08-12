@@ -2,11 +2,16 @@
 
 #include <jni.h>
 #include <dlfcn.h>
+#include <unistd.h>
+
 #include <android/dlext.h>
+#include <android/looper.h>
 
 #include <string_view>
 
 #include <runtime-base/android-system.hh>
+#include <runtime-base/mainthread-dso-loader.hh>
+#include <runtime-base/system-loadlibrary-wrapper.hh>
 #include <runtime-base/util.hh>
 #include <shared/helpers.hh>
 
@@ -19,13 +24,11 @@ namespace xamarin::android {
 	{
 	public:
 		[[gnu::flatten]]
-		static void init (JNIEnv *env, jclass systemClass)
+		static void init (JNIEnv *env, jclass systemClass, ALooper *main_looper, pid_t _main_thread_id) noexcept
 		{
-			systemKlass = systemClass;
-			System_loadLibrary = env->GetStaticMethodID (systemClass, "loadLibrary", "(Ljava/lang/String;)V");
-			if (System_loadLibrary == nullptr) [[unlikely]] {
-				Helpers::abort_application ("Failed to look up the Java System.loadLibrary method.");
-			}
+			SystemLoadLibraryWrapper::init (env, systemClass);
+			MainThreadDsoLoader::init (main_looper);
+			main_thread_id = _main_thread_id;
 		}
 
 		// Overload used to load libraries from the file system.
@@ -68,6 +71,7 @@ namespace xamarin::android {
 
 	private:
 		static auto get_jnienv () noexcept -> JNIEnv*;
+		static auto load_jni_on_main_thread (std::string_view const& full_name, std::string const& undecorated_name) noexcept -> void*;
 
 		[[gnu::always_inline]]
 		static auto log_and_return (void *handle, std::string_view const& full_name) -> void*
@@ -145,25 +149,29 @@ namespace xamarin::android {
 				return name;
 			};
 
-			// std::string is needed because we must pass a NUL-terminated string to Java, otherwise
-			// strange things happen (and std::string_view is not necessarily such a string)
-			const std::string undecorated_lib_name { get_undecorated_name (name, name_is_path) };
-			log_debug (LOG_ASSEMBLY, "Undecorated library name: {}", undecorated_lib_name);
+			// So, we have a rather nasty problem here. If we're on a thread other than the main one (or, to be more
+			// precise - one not created by Java), we will NOT have the special class loader Android uses in JVM and
+			// which knows about the special application-specific .so paths (like the one inside the APK itself). For
+			// that reason, `System.loadLibrary` will not be able to find the requested .so and we can't pass it a full
+			// path to it, since it accepts only the undecorated library name.
+			// We have to call `System.loadLibrary` on the main thread, so that the special class loader is available to
+			// it. At the same time, we have to do it synchronously, because we must be able to get the library handle
+			// **here**. We could call to a Java function here, but then synchronization might be an issue. So, instead,
+			// we use a wrapper around System.loadLibrary that uses the ALooper native Android interface. It's a bit
+			// clunky (as it requires using a fake pipe(2) to force the looper to call us on the main thread) but it
+			// should work across all the Android versions.
 
-			JNIEnv *jni_env = get_jnienv ();
-			jstring lib_name = jni_env->NewStringUTF (undecorated_lib_name.c_str ());
-			if (lib_name == nullptr) [[unlikely]] {
-				// It's an OOM, there's nothing better we can do
-				Helpers::abort_application ("Java string allocation failed while loading a shared library.");
-			}
-			jni_env->CallStaticVoidMethod (systemKlass, System_loadLibrary, lib_name);
-			if (jni_env->ExceptionCheck ()) {
-				log_debug (LOG_ASSEMBLY, "System.loadLibrary threw a Java exception. Will attempt to log it.");
-				jni_env->ExceptionDescribe ();
-				jni_env->ExceptionClear ();
-				log_debug (LOG_ASSEMBLY, "Java exception cleared");
-				// TODO: should we abort? Return `nullptr`? `dlopen` still has a chance to succeed, even if loadLibrary
-				//       failed but it won't call `JNI_OnLoad` etc, so the result might be less than perfect.
+			// TODO: implement the above
+			if (gettid () == main_thread_id) {
+				if (!SystemLoadLibraryWrapper::load (get_jnienv (), get_undecorated_name (name, name_is_path))) {
+					// We could abort, but let's let the managed land react to this library missing. We cannot continue
+					// with `dlopen` below, because without `JNI_OnLoad` etc invoked, we might have nasty crashes in the
+					// library code if e.g. it assumes that `JNI_OnLoad` initialized all the Java class, method etc
+					// pointers.
+					return nullptr;
+				}
+			} else {
+				Helpers::abort_application ("Loading DSO on the main thread not implemented yet"sv);
 			}
 
 			// This is unfortunate, but since `System.loadLibrary` doesn't return the class handle, we must get it this
@@ -177,5 +185,6 @@ namespace xamarin::android {
 	private:
 		static inline jmethodID System_loadLibrary = nullptr;
 		static inline jclass systemKlass = nullptr;
+		static inline pid_t main_thread_id = 0;
 	};
 }

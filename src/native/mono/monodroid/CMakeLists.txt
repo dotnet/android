@@ -233,6 +233,7 @@ macro(lib_target_options TARGET_NAME)
     xa::pinvoke-override-precompiled
     xa::lz4
     -lmonosgen-2.0
+    -landroid
     -llog
   )
 endmacro ()
