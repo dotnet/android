@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -23,14 +23,14 @@ namespace Xamarin.Android.Tasks
 {
 	public partial class MonoAndroidHelper
 	{
-		static Lazy<string> uname = new Lazy<string> (GetOSBinDirName, System.Threading.LazyThreadSafetyMode.PublicationOnly);
+		static Lazy<string?> uname = new Lazy<string?> (GetOSBinDirName, System.Threading.LazyThreadSafetyMode.PublicationOnly);
 
 		// Set in ResolveSdks.Execute();
 		// Requires that ResolveSdks.Execute() run before anything else
-		public static AndroidVersions   SupportedVersions;
-		public static AndroidSdkInfo    AndroidSdk;
+		public static AndroidVersions?  SupportedVersions;
+		public static AndroidSdkInfo?   AndroidSdk;
 
-		public static StringBuilder MergeStdoutAndStderrMessages (List<string> stdout, List<string> stderr)
+		public static StringBuilder MergeStdoutAndStderrMessages (List<string>? stdout, List<string>? stderr)
 		{
 			var sb = new StringBuilder ();
 
@@ -42,7 +42,7 @@ namespace Xamarin.Android.Tasks
 
 			return sb;
 
-			void AppendLines (string prefix, List<string> lines, StringBuilder sb)
+			void AppendLines (string prefix, List<string>? lines, StringBuilder sb)
 			{
 				if (lines == null || lines.Count == 0) {
 					return;
@@ -156,13 +156,13 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		static string GetOSBinDirName ()
+		static string? GetOSBinDirName ()
 		{
 			if (OS.IsWindows)
 				return "";
-			string os = null;
+			string? os = null;
 			DataReceivedEventHandler output = (o, e) => {
-				if (string.IsNullOrWhiteSpace (e.Data))
+				if (e.Data.IsNullOrWhiteSpace ())
 					return;
 				os = e.Data.Trim ();
 			};
@@ -490,7 +490,7 @@ namespace Xamarin.Android.Tasks
 		}
 
 #if MSBUILD
-		public static string TryGetAndroidJarPath (TaskLoggingHelper log, string platform, bool designTimeBuild = false, bool buildingInsideVisualStudio = false, string targetFramework = "", string androidSdkDirectory = "")
+		public static string? TryGetAndroidJarPath (TaskLoggingHelper log, string platform, bool designTimeBuild = false, bool buildingInsideVisualStudio = false, string targetFramework = "", string androidSdkDirectory = "")
 		{
 			var platformPath = MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (platform, MonoAndroidHelper.SupportedVersions);
 			if (platformPath == null) {
@@ -515,16 +515,16 @@ namespace Xamarin.Android.Tasks
 		public static Dictionary<string, string> LoadResourceCaseMap (IBuildEngine4 engine, Func<object, object> keyCallback) =>
 			engine.GetRegisteredTaskObjectAssemblyLocal<Dictionary<string, string>> (keyCallback (ResourceCaseMapKey), RegisteredTaskObjectLifetime.Build) ?? new Dictionary<string, string> (0);
 #endif // MSBUILD
-		public static string FixUpAndroidResourcePath (string file, string resourceDirectory, string resourceDirectoryFullPath, Dictionary<string, string> resource_name_case_map)
+		public static string FixUpAndroidResourcePath (string file, string resourceDirectory, string? resourceDirectoryFullPath, Dictionary<string, string> resource_name_case_map)
 		{
-			string newfile = null;
+			string? newfile = null;
 			if (file.StartsWith (resourceDirectory, StringComparison.InvariantCultureIgnoreCase)) {
 				newfile = file.Substring (resourceDirectory.Length).TrimStart (Path.DirectorySeparatorChar);
 			}
-			if (!string.IsNullOrEmpty (resourceDirectoryFullPath) && file.StartsWith (resourceDirectoryFullPath, StringComparison.InvariantCultureIgnoreCase)) {
+			if (!resourceDirectoryFullPath.IsNullOrEmpty () && file.StartsWith (resourceDirectoryFullPath, StringComparison.InvariantCultureIgnoreCase)) {
 				newfile = file.Substring (resourceDirectoryFullPath.Length).TrimStart (Path.DirectorySeparatorChar);
 			}
-			if (!string.IsNullOrEmpty (newfile)) {
+			if (!newfile.IsNullOrEmpty ()) {
 				if (resource_name_case_map.TryGetValue (newfile, out string value))
 					newfile = value;
 				newfile = Path.Combine ("Resources", newfile);
@@ -541,7 +541,7 @@ namespace Xamarin.Android.Tasks
 		public static string GetRelativePathForAndroidAsset (string assetsDirectory, ITaskItem androidAsset)
 		{
 			var path = androidAsset.GetMetadata ("Link");
-			path = !string.IsNullOrWhiteSpace (path) ? path : androidAsset.ItemSpec;
+			path = !path.IsNullOrWhiteSpace () ? path : androidAsset.ItemSpec;
 			var head = string.Join ("\\", path.Split (DirectorySeparators).TakeWhile (s => !s.Equals (assetsDirectory, StringComparison.OrdinalIgnoreCase)));
 			path = head.Length == path.Length ? path : path.Substring ((head.Length == 0 ? 0 : head.Length + 1) + assetsDirectory.Length).TrimStart (DirectorySeparators);
 			return path;
@@ -649,7 +649,7 @@ namespace Xamarin.Android.Tasks
 
 			string? TrimSlashes (string? s)
 			{
-				if (String.IsNullOrEmpty (s)) {
+				if (s.IsNullOrEmpty ()) {
 					return null;
 				}
 
