@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.CodeDom;
@@ -26,9 +26,9 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		CodeTypeDeclaration resources;
-		CodeTypeDeclaration layout, ids, drawable, strings, colors, dimension, raw, animator, animation, attrib, boolean, font, ints, interpolators, menu, mipmaps, plurals, styleable, style, arrays, xml, transition;
-		Dictionary<string, string> map;
+		CodeTypeDeclaration? resources;
+		CodeTypeDeclaration? layout, ids, drawable, strings, colors, dimension, raw, animator, animation, attrib, boolean, font, ints, interpolators, menu, mipmaps, plurals, styleable, style, arrays, xml, transition;
+		Dictionary<string, string>? map;
 		bool app;
 		SortedDictionary<string, CodeTypeDeclaration> custom_types = new SortedDictionary<string, CodeTypeDeclaration> ();
 		List<CodeTypeDeclaration> declarationIds = new List<CodeTypeDeclaration> ();
@@ -37,7 +37,7 @@ namespace Xamarin.Android.Tasks
 		const string itemPackageId = "0x7f";
 		static readonly CompareTuple compareTuple = new CompareTuple ();
 
-		XDocument publicXml;
+		XDocument? publicXml;
 
 		void SortMembers (CodeTypeDeclaration decl, StringComparison stringComparison = StringComparison.OrdinalIgnoreCase)
 		{
@@ -53,7 +53,7 @@ namespace Xamarin.Android.Tasks
 			return decl.Members.Cast<CodeTypeMember> ().OrderBy (x => x.Name, comparer);
 		}
 
-		public CodeTypeDeclaration Parse (string resourceDirectory, string rTxtFile, IEnumerable<string> additionalResourceDirectories, bool isApp, Dictionary<string, string> resourceMap)
+		public CodeTypeDeclaration Parse (string resourceDirectory, string rTxtFile, IEnumerable<string> additionalResourceDirectories, bool isApp, Dictionary<string, string>? resourceMap)
 		{
 			app = isApp;
 			if (!Directory.Exists (resourceDirectory))
@@ -87,7 +87,7 @@ namespace Xamarin.Android.Tasks
 
 			publicXml = LoadPublicXml ();
 
-			var resModifiedDate = !string.IsNullOrEmpty (ResourceFlagFile) && File.Exists (ResourceFlagFile)
+			var resModifiedDate = !ResourceFlagFile.IsNullOrEmpty () && File.Exists (ResourceFlagFile)
 				? File.GetLastWriteTimeUtc (ResourceFlagFile)
 				: DateTime.MinValue;
 			// This top most R.txt will contain EVERYTHING we need. including library resources since it represents
@@ -310,7 +310,7 @@ namespace Xamarin.Android.Tasks
 		void ProcessResourceFile (string file)
 		{
 			var fileName = Path.GetFileNameWithoutExtension (file);
-			if (string.IsNullOrEmpty (fileName))
+			if (fileName.IsNullOrEmpty ())
 				return;
 			if (fileName.EndsWith (".9", StringComparison.OrdinalIgnoreCase))
 				fileName = Path.GetFileNameWithoutExtension (fileName);
@@ -435,7 +435,7 @@ namespace Xamarin.Android.Tasks
 				"add-resource",
 			};
 
-		void CreateResourceField (string root, string fieldName, XmlReader element = null)
+		void CreateResourceField (string root, string fieldName, XmlReader? element = null)
 		{
 			var i = root.IndexOf ('-');
 			var item = i < 0 ? root : root.Substring (0, i);
@@ -523,14 +523,14 @@ namespace Xamarin.Android.Tasks
 
 		void ProcessStyleable (XmlReader reader)
 		{
-			string topName = null;
+			string? topName = null;
 			List<CodeMemberField> fields = new List<CodeMemberField> ();
 			List<string> attribs = new List<string> ();
 			while (reader.Read ()) {
 				if (reader.NodeType == XmlNodeType.Whitespace || reader.NodeType == XmlNodeType.Comment)
 					continue;
-				string name = null;
-				if (string.IsNullOrEmpty (topName)) {
+				string? name = null;
+				if (topName.IsNullOrEmpty ()) {
 					if (reader.HasAttributes) {
 						while (reader.MoveToNextAttribute ()) {
 							if (reader.Name.Replace ("android:", "") == "name")
@@ -585,16 +585,16 @@ namespace Xamarin.Android.Tasks
 					if (reader.IsStartElement ()) {
 						var elementName = reader.Name;
 						var elementNS = reader.NamespaceURI;
-						if (!string.IsNullOrEmpty (elementNS)) {
+						if (!elementNS.IsNullOrEmpty ()) {
 							if (elementNS != "http://schemas.android.com/apk/res/android")
 								continue;
 						}
 						if (reader.HasAttributes) {
-							CodeTypeDeclaration customClass = null;
-							string name = null;
-							string type = null;
-							string id = null;
-							string custom_id = null;
+							CodeTypeDeclaration? customClass = null;
+							string? name = null;
+							string? type = null;
+							string? id = null;
+							string? custom_id = null;
 							while (reader.MoveToNextAttribute ()) {
 								if (reader.LocalName == "name")
 									name = reader.Value;
@@ -623,13 +623,13 @@ namespace Xamarin.Android.Tasks
 								continue;
 							// Move the reader back to the element node.
 							reader.MoveToElement ();
-							if (!string.IsNullOrEmpty (name))
+							if (!name.IsNullOrEmpty ())
 								CreateResourceField (type ?? elementName, name, reader.ReadSubtree ());
-							if (!string.IsNullOrEmpty (custom_id) && !custom_types.TryGetValue (custom_id, out customClass)) {
+							if (!custom_id.IsNullOrEmpty () && !custom_types.TryGetValue (custom_id, out customClass)) {
 								customClass = CreateClass (custom_id);
 								custom_types.Add (custom_id, customClass);
 							}
-							if (!string.IsNullOrEmpty (id)) {
+							if (!id.IsNullOrEmpty ()) {
 								CreateIntField (customClass ?? ids, id);
 							}
 						}
