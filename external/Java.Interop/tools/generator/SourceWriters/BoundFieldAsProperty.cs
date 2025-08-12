@@ -139,7 +139,10 @@ namespace generator.SourceWriters
 					writer.WriteLine (prep);
 				}
 
-				arg = field.SetParameters [0].ToNative (opt);
+				var param = field.SetParameters [0];
+				arg = param.Symbol.OnlyFormatOnMarshal
+					? opt.GetSafeIdentifier (param.Name)
+					: param.ToNative (opt);
 
 				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 &&
 						field.SetParameters.HasCleanup &&

@@ -36,6 +36,44 @@ namespace Xamarin.Test {
 			}
 		}
 
+
+		// Metadata.xml XPath field reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/field[@name='BooleanValue']"
+		public bool BooleanValue {
+			get {
+				const string __id = "BooleanValue.Z";
+
+				var __v = _members.InstanceFields.GetBooleanValue (__id, this);
+				return __v;
+			}
+			set {
+				const string __id = "BooleanValue.Z";
+
+				try {
+					_members.InstanceFields.SetValue (__id, this, value);
+				} finally {
+				}
+			}
+		}
+
+
+		// Metadata.xml XPath field reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/field[@name='CharValue']"
+		public bool CharValue {
+			get {
+				const string __id = "CharValue.Z";
+
+				var __v = _members.InstanceFields.GetBooleanValue (__id, this);
+				return __v;
+			}
+			set {
+				const string __id = "CharValue.Z";
+
+				try {
+					_members.InstanceFields.SetValue (__id, this, value);
+				} finally {
+				}
+			}
+		}
+
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/SomeObject", typeof (SomeObject));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
