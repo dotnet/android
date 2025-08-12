@@ -18,6 +18,7 @@ using System.Runtime.Versioning;
 // FIXME: Probably need to add Copyright 2009-2011 Novell Inc.
 // [assembly: AssemblyCopyright ("Copyright 2011-2014 Xamarin Inc.")]
 [assembly: AssemblyCompany ("Microsoft Corporation")]
+[assembly: AssemblyMetadata ("IsTrimmable", "True")]
 #if ANDROID_UNSTABLE
 [assembly: RequiresPreviewFeatures("This is an unstable Android API level. Opt into preview features by adding <EnablePreviewFeatures>True</EnablePreviewFeatures> to your project file.")]
 #endif
