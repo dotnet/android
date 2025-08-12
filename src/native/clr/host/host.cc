@@ -4,6 +4,9 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
+#include <unistd.h>
+
+#include <android/looper.h>
 
 #include <coreclrhost.h>
 
@@ -422,7 +425,12 @@ void Host::Java_mono_android_Runtime_initInternal (
 		}
 	);
 
-	DsoLoader::init (env, RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_System", true));
+	DsoLoader::init (
+		env,
+		RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_System", true),
+		ALooper_forThread (), // main thread looper
+		gettid ()
+	);
 
 	struct JnienvInitializeArgs init = {};
 	init.javaVm                                         = jvm;
