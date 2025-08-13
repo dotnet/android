@@ -77,7 +77,7 @@ extends:
           justificationForDisabling: CodeQL runs against the nightly build
       credscan:
         enabled: true
-        ${{ if startsWith(variables['System.JobName'], 'SDL Sources Analysis') }}:
+        ${{ if startsWith(variables['System.JobName'], 'SDLSources') }}:
           suppressionsFile: .gdn/CredScanSuppressions.json
         ${{ else }}:
           suppressionsFile: $(System.SourcesDirectory)/android/.gdn/CredScanSuppressions.json
@@ -98,13 +98,13 @@ extends:
         - repository: maui
         - repository: yaml-templates
       suppression:
-        ${{ if startsWith(variables['System.JobName'], 'SDL Sources Analysis') }}:
+        ${{ if startsWith(variables['System.JobName'], 'SDLSources') }}:
           suppressionFile: .gdn/.gdnsuppress
         ${{ else }}:
           suppressionFile: $(Build.SourcesDirectory)/android/.gdn/.gdnsuppress
       tsa:
         enabled: true
-        ${{ if startsWith(variables['System.JobName'], 'SDL Sources Analysis') }}:
+        ${{ if startsWith(variables['System.JobName'], 'SDLSources') }}:
           configFile: .gdn/tsaoptions-v2.json
         ${{ else }}:
           configFile: $(Build.SourcesDirectory)/android/.gdn/tsaoptions-v2.json
