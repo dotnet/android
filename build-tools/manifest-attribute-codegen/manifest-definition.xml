@@ -1,389 +1,495 @@
 <m>
-    <e name='manifest' api-level='10'>
-        <a name='versionCode' />
-        <a name='versionName' />
-        <a name='sharedUserId' />
-        <a name='sharedUserLabel' />
-        <a name='installLocation' />
-        <a name='revisionCode' api-level='22' />
-        <a name='isolatedSplits' api-level='26' />
-        <a name='isFeatureSplit' api-level='26' />
-        <a name='targetSandboxVersion' api-level='26' />
-        <a name='versionCodeMajor' api-level='28' />
-        <a name='compileSdkVersion' api-level='28' />
-        <a name='compileSdkVersionCodename' api-level='28' />
-        <a name='isSplitRequired' api-level='29' />
-        <a name='sharedUserMaxSdkVersion' api-level='33' />
-        <a name='requiredSplitTypes' api-level='33' />
-        <a name='splitTypes' api-level='33' />
+    <e name='manifest' api-level='33-ext4'>
+        <a name='versionCode' api-level='33-ext4' />
+        <a name='versionCodeMajor' api-level='33-ext4' />
+        <a name='versionName' api-level='33-ext4' />
+        <a name='revisionCode' api-level='33-ext4' />
+        <a name='sharedUserId' api-level='33-ext4' />
+        <a name='sharedUserLabel' api-level='33-ext4' />
+        <a name='sharedUserMaxSdkVersion' api-level='33-ext4' />
+        <a name='installLocation' api-level='33-ext4' />
+        <a name='isolatedSplits' api-level='33-ext4' />
+        <a name='isFeatureSplit' api-level='33-ext4' />
+        <a name='targetSandboxVersion' api-level='33-ext4' />
+        <a name='compileSdkVersion' api-level='33-ext4' />
+        <a name='compileSdkVersionCodename' api-level='33-ext4' />
+        <a name='isSplitRequired' api-level='33-ext4' />
+        <a name='requiredSplitTypes' api-level='33-ext4' />
+        <a name='splitTypes' api-level='33-ext4' />
     </e>
-    <e name='application' api-level='10'>
+    <e name='application' api-level='33-ext4'>
         <parent>manifest</parent>
-        <a name='name' />
-        <a name='theme' />
-        <a name='label' />
-        <a name='icon' />
-        <a name='description' />
-        <a name='permission' />
-        <a name='process' />
-        <a name='taskAffinity' />
-        <a name='allowTaskReparenting' />
-        <a name='hasCode' format='boolean' />
-        <a name='persistent' />
-        <a name='enabled' />
-        <a name='debuggable' />
-        <a name='vmSafeMode' />
-        <a name='manageSpaceActivity' />
-        <a name='allowClearUserData' />
-        <a name='testOnly' />
-        <a name='backupAgent' />
-        <a name='allowBackup' />
-        <a name='killAfterRestore' />
-        <a name='restoreNeedsApplication' />
-        <a name='restoreAnyVersion' />
-        <a name='neverEncrypt' />
-        <a name='cantSaveState' format='boolean' />
-        <a name='logo' api-level='15' />
-        <a name='hardwareAccelerated' api-level='15' />
-        <a name='largeHeap' format='boolean' api-level='15' />
-        <a name='uiOptions' api-level='15' />
-        <a name='supportsRtl' format='boolean' api-level='16' />
-        <a name='requiredForAllUsers' api-level='18' />
-        <a name='restrictedAccountType' format='string' api-level='18' />
-        <a name='requiredAccountType' format='string' api-level='18' />
-        <a name='banner' api-level='20' />
-        <a name='isGame' api-level='20' />
-        <a name='fullBackupOnly' api-level='21' />
-        <a name='multiArch' api-level='21' />
-        <a name='fullBackupContent' api-level='23' />
-        <a name='usesCleartextTraffic' api-level='23' />
-        <a name='extractNativeLibs' api-level='23' />
-        <a name='backupInForeground' api-level='24' />
-        <a name='defaultToDeviceProtectedStorage' format='boolean' api-level='24' />
-        <a name='directBootAware' api-level='24' />
-        <a name='resizeableActivity' api-level='24' />
-        <a name='networkSecurityConfig' api-level='24' />
-        <a name='roundIcon' api-level='25' />
-        <a name='persistentWhenFeatureAvailable' api-level='26' />
-        <a name='maxAspectRatio' api-level='26' />
-        <a name='appCategory' api-level='26' />
-        <a name='classLoader' api-level='27' />
-        <a name='appComponentFactory' api-level='28' />
-        <a name='useEmbeddedDex' api-level='29' />
-        <a name='minAspectRatio' api-level='29' />
-        <a name='usesNonSdkApi' api-level='29' />
-        <a name='hasFragileUserData' format='boolean' api-level='29' />
-        <a name='zygotePreloadName' api-level='29' />
-        <a name='allowClearUserDataOnFailedRestore' format='boolean' api-level='29' />
-        <a name='allowAudioPlaybackCapture' format='boolean' api-level='29' />
-        <a name='requestLegacyExternalStorage' format='boolean' api-level='29' />
-        <a name='preserveLegacyExternalStorage' format='boolean' api-level='30' />
-        <a name='forceQueryable' format='boolean' api-level='30' />
-        <a name='crossProfile' format='boolean' api-level='30' />
-        <a name='allowNativeHeapPointerTagging' format='boolean' api-level='30' />
-        <a name='gwpAsanMode' api-level='30' />
-        <a name='allowAutoRevokePermissionsExemption' format='boolean' api-level='30' />
-        <a name='autoRevokePermissions' api-level='30' />
-        <a name='requestRawExternalStorageAccess' format='boolean' api-level='31' />
-        <a name='memtagMode' api-level='31' />
-        <a name='nativeHeapZeroInitialized' format='boolean' api-level='31' />
-        <a name='rollbackDataPolicy' api-level='31' />
-        <a name='dataExtractionRules' format='reference' api-level='31' />
-        <a name='requestForegroundServiceExemption' format='boolean' api-level='31' />
-        <a name='attributionsAreUserVisible' format='boolean' api-level='31' />
-        <a name='localeConfig' api-level='33' />
-        <a name='resetEnabledSettingsOnAppDataCleared' format='boolean' api-level='33' />
-        <a name='knownActivityEmbeddingCerts' api-level='33' />
-        <a name='enableOnBackInvokedCallback' format='boolean' api-level='33' />
-        <a name='allowCrossUidActivitySwitchFromBelow' format='boolean' api-level='35' />
-        <a name='pageSizeCompat' api-level='36' />
-        <a name='intentMatchingFlags' api-level='36' />
-        <a name='alternateLauncherIcons' format='reference' api-level='36' />
-        <a name='alternateLauncherLabels' format='reference' api-level='36' />
+        <a name='name' api-level='33-ext4' />
+        <a name='theme' api-level='33-ext4' />
+        <a name='label' api-level='33-ext4' />
+        <a name='icon' api-level='33-ext4' />
+        <a name='roundIcon' api-level='33-ext4' />
+        <a name='banner' api-level='33-ext4' />
+        <a name='logo' api-level='33-ext4' />
+        <a name='description' api-level='33-ext4' />
+        <a name='permission' api-level='33-ext4' />
+        <a name='process' api-level='33-ext4' />
+        <a name='taskAffinity' api-level='33-ext4' />
+        <a name='allowTaskReparenting' api-level='33-ext4' />
+        <a name='hasCode' format='boolean' api-level='33-ext4' />
+        <a name='persistent' api-level='33-ext4' />
+        <a name='persistentWhenFeatureAvailable' api-level='33-ext4' />
+        <a name='requiredForAllUsers' api-level='33-ext4' />
+        <a name='enabled' api-level='33-ext4' />
+        <a name='debuggable' api-level='33-ext4' />
+        <a name='vmSafeMode' api-level='33-ext4' />
+        <a name='hardwareAccelerated' api-level='33-ext4' />
+        <a name='manageSpaceActivity' api-level='33-ext4' />
+        <a name='allowClearUserData' api-level='33-ext4' />
+        <a name='testOnly' api-level='33-ext4' />
+        <a name='backupAgent' api-level='33-ext4' />
+        <a name='allowBackup' api-level='33-ext4' />
+        <a name='fullBackupOnly' api-level='33-ext4' />
+        <a name='fullBackupContent' api-level='33-ext4' />
+        <a name='killAfterRestore' api-level='33-ext4' />
+        <a name='restoreNeedsApplication' api-level='33-ext4' />
+        <a name='restoreAnyVersion' api-level='33-ext4' />
+        <a name='backupInForeground' api-level='33-ext4' />
+        <a name='largeHeap' format='boolean' api-level='33-ext4' />
+        <a name='cantSaveState' format='boolean' api-level='33-ext4' />
+        <a name='uiOptions' api-level='33-ext4' />
+        <a name='supportsRtl' format='boolean' api-level='33-ext4' />
+        <a name='restrictedAccountType' format='string' api-level='33-ext4' />
+        <a name='requiredAccountType' format='string' api-level='33-ext4' />
+        <a name='isGame' api-level='33-ext4' />
+        <a name='usesCleartextTraffic' api-level='33-ext4' />
+        <a name='multiArch' api-level='33-ext4' />
+        <a name='useEmbeddedDex' api-level='33-ext4' />
+        <a name='extractNativeLibs' api-level='33-ext4' />
+        <a name='defaultToDeviceProtectedStorage' format='boolean' api-level='33-ext4' />
+        <a name='directBootAware' api-level='33-ext4' />
+        <a name='resizeableActivity' api-level='33-ext4' />
+        <a name='maxAspectRatio' api-level='33-ext4' />
+        <a name='minAspectRatio' api-level='33-ext4' />
+        <a name='networkSecurityConfig' api-level='33-ext4' />
+        <a name='localeConfig' api-level='33-ext4' />
+        <a name='appCategory' api-level='33-ext4' />
+        <a name='classLoader' api-level='33-ext4' />
+        <a name='appComponentFactory' api-level='33-ext4' />
+        <a name='usesNonSdkApi' api-level='33-ext4' />
+        <a name='hasFragileUserData' format='boolean' api-level='33-ext4' />
+        <a name='zygotePreloadName' api-level='33-ext4' />
+        <a name='allowClearUserDataOnFailedRestore' format='boolean' api-level='33-ext4' />
+        <a name='allowAudioPlaybackCapture' format='boolean' api-level='33-ext4' />
+        <a name='requestLegacyExternalStorage' format='boolean' api-level='33-ext4' />
+        <a name='preserveLegacyExternalStorage' format='boolean' api-level='33-ext4' />
+        <a name='requestRawExternalStorageAccess' format='boolean' api-level='33-ext4' />
+        <a name='forceQueryable' format='boolean' api-level='33-ext4' />
+        <a name='crossProfile' format='boolean' api-level='33-ext4' />
+        <a name='allowNativeHeapPointerTagging' format='boolean' api-level='33-ext4' />
+        <a name='gwpAsanMode' api-level='33-ext4' />
+        <a name='memtagMode' api-level='33-ext4' />
+        <a name='nativeHeapZeroInitialized' format='boolean' api-level='33-ext4' />
+        <a name='allowAutoRevokePermissionsExemption' format='boolean' api-level='33-ext4' />
+        <a name='autoRevokePermissions' api-level='33-ext4' />
+        <a name='rollbackDataPolicy' api-level='33-ext4' />
+        <a name='dataExtractionRules' format='reference' api-level='33-ext4' />
+        <a name='requestForegroundServiceExemption' format='boolean' api-level='33-ext4' />
+        <a name='attributionsAreUserVisible' format='boolean' api-level='33-ext4' />
+        <a name='resetEnabledSettingsOnAppDataCleared' format='boolean' api-level='33-ext4' />
+        <a name='knownActivityEmbeddingCerts' api-level='33-ext4' />
+        <a name='enableOnBackInvokedCallback' format='boolean' api-level='33-ext4' />
+        <a name='allowCrossUidActivitySwitchFromBelow' format='boolean' api-level='35-ext14' />
+        <a name='pageSizeCompat' api-level='36-ext18' />
+        <a name='intentMatchingFlags' api-level='36-ext18' />
+        <a name='alternateLauncherIcons' format='reference' api-level='36-ext18' />
+        <a name='alternateLauncherLabels' format='reference' api-level='36-ext18' />
     </e>
-    <e name='permission' api-level='10'>
+    <e name='attribution' api-level='33-ext4'>
         <parent>manifest</parent>
-        <a name='name' />
-        <a name='label' />
-        <a name='icon' />
-        <a name='permissionGroup' />
-        <a name='description' />
-        <a name='protectionLevel' />
-        <a name='logo' api-level='15' />
-        <a name='permissionFlags' api-level='17' />
-        <a name='banner' api-level='20' />
-        <a name='roundIcon' api-level='25' />
-        <a name='request' api-level='28' />
-        <a name='backgroundPermission' format='string' api-level='29' />
-        <a name='knownCerts' api-level='31' />
-        <a name='maxSdkVersion' api-level='34' />
+        <a name='tag' format='string' api-level='33-ext4' />
+        <a name='label' format='string' api-level='33-ext4' />
     </e>
-    <e name='permission-group' api-level='10'>
+    <e name='attribution-inherit-from' api-level='33-ext4'>
+        <parent>attribution</parent>
+        <a name='tag' format='string' api-level='33-ext4' />
+    </e>
+    <e name='permission' api-level='33-ext4'>
         <parent>manifest</parent>
-        <a name='name' />
-        <a name='label' />
-        <a name='icon' />
-        <a name='description' />
-        <a name='logo' api-level='15' />
-        <a name='priority' api-level='16' />
-        <a name='permissionGroupFlags' api-level='17' />
-        <a name='banner' api-level='20' />
-        <a name='roundIcon' api-level='25' />
-        <a name='request' api-level='28' />
-        <a name='requestDetail' format='string' api-level='29' />
-        <a name='backgroundRequest' format='string' api-level='29' />
-        <a name='backgroundRequestDetail' format='string' api-level='29' />
+        <a name='name' api-level='33-ext4' />
+        <a name='label' api-level='33-ext4' />
+        <a name='icon' api-level='33-ext4' />
+        <a name='roundIcon' api-level='33-ext4' />
+        <a name='banner' api-level='33-ext4' />
+        <a name='logo' api-level='33-ext4' />
+        <a name='permissionGroup' api-level='33-ext4' />
+        <a name='backgroundPermission' format='string' api-level='33-ext4' />
+        <a name='description' api-level='33-ext4' />
+        <a name='request' api-level='33-ext4' />
+        <a name='protectionLevel' api-level='33-ext4' />
+        <a name='permissionFlags' api-level='33-ext4' />
+        <a name='knownCerts' api-level='33-ext4' />
+        <a name='maxSdkVersion' api-level='34-ext10' />
     </e>
-    <e name='permission-tree' api-level='10'>
+    <e name='permission-group' api-level='33-ext4'>
         <parent>manifest</parent>
-        <a name='name' />
-        <a name='label' />
-        <a name='icon' />
-        <a name='logo' api-level='15' />
-        <a name='banner' api-level='20' />
-        <a name='roundIcon' api-level='25' />
+        <a name='name' api-level='33-ext4' />
+        <a name='label' api-level='33-ext4' />
+        <a name='icon' api-level='33-ext4' />
+        <a name='roundIcon' api-level='33-ext4' />
+        <a name='banner' api-level='33-ext4' />
+        <a name='logo' api-level='33-ext4' />
+        <a name='description' api-level='33-ext4' />
+        <a name='request' format='string' api-level='33-ext4' />
+        <a name='requestDetail' format='string' api-level='33-ext4' />
+        <a name='backgroundRequest' format='string' api-level='33-ext4' />
+        <a name='backgroundRequestDetail' format='string' api-level='33-ext4' />
+        <a name='permissionGroupFlags' api-level='33-ext4' />
+        <a name='priority' api-level='33-ext4' />
     </e>
-    <e name='uses-permission' api-level='10'>
+    <e name='permission-tree' api-level='33-ext4'>
         <parent>manifest</parent>
-        <a name='name' />
-        <a name='maxSdkVersion' format='integer' api-level='19' />
-        <a name='requiredFeature' format='string' api-level='26' />
-        <a name='requiredNotFeature' format='string' api-level='26' />
-        <a name='usesPermissionFlags' api-level='31' />
-        <a name='minSdkVersion' format='integer|string' api-level='34' />
+        <a name='name' api-level='33-ext4' />
+        <a name='label' api-level='33-ext4' />
+        <a name='icon' api-level='33-ext4' />
+        <a name='roundIcon' api-level='33-ext4' />
+        <a name='banner' api-level='33-ext4' />
+        <a name='logo' api-level='33-ext4' />
     </e>
-    <e name='uses-configuration' api-level='10'>
+    <e name='uses-permission' api-level='33-ext4'>
         <parent>manifest</parent>
-        <a name='reqTouchScreen' />
-        <a name='reqKeyboardType' />
-        <a name='reqHardKeyboard' />
-        <a name='reqNavigation' />
-        <a name='reqFiveWayNav' />
+        <a name='name' api-level='33-ext4' />
+        <a name='maxSdkVersion' format='integer' api-level='33-ext4' />
+        <a name='requiredFeature' format='string' api-level='33-ext4' />
+        <a name='requiredNotFeature' format='string' api-level='33-ext4' />
+        <a name='usesPermissionFlags' api-level='33-ext4' />
+        <a name='minSdkVersion' format='integer|string' api-level='34-ext10' />
     </e>
-    <e name='uses-feature' api-level='10'>
+    <e name='required-feature' api-level='33-ext4'>
+        <a name='name' api-level='33-ext4' />
+    </e>
+    <e name='required-not-feature' api-level='33-ext4'>
+        <a name='name' api-level='33-ext4' />
+    </e>
+    <e name='uses-configuration' api-level='33-ext4'>
         <parent>manifest</parent>
-        <a name='glEsVersion' format='integer' />
-        <a name='name' />
-        <a name='required' format='boolean' />
-        <a name='version' format='integer' api-level='24' />
+        <a name='reqTouchScreen' api-level='33-ext4' />
+        <a name='reqKeyboardType' api-level='33-ext4' />
+        <a name='reqHardKeyboard' api-level='33-ext4' />
+        <a name='reqNavigation' api-level='33-ext4' />
+        <a name='reqFiveWayNav' api-level='33-ext4' />
     </e>
-    <e name='uses-sdk' api-level='10'>
+    <e name='uses-feature' api-level='33-ext4'>
         <parent>manifest</parent>
-        <a name='minSdkVersion' format='integer|string' />
-        <a name='targetSdkVersion' format='integer|string' />
-        <a name='maxSdkVersion' format='integer' />
-        <a name='minSdkVersionFull' format='string' api-level='36' />
+        <a name='name' api-level='33-ext4' />
+        <a name='version' format='integer' api-level='33-ext4' />
+        <a name='glEsVersion' format='integer' api-level='33-ext4' />
+        <a name='required' format='boolean' api-level='33-ext4' />
     </e>
-    <e name='uses-library' api-level='10'>
+    <e name='feature-group' api-level='33-ext4'>
+        <a name='label' api-level='33-ext4' />
+    </e>
+    <e name='uses-sdk' api-level='33-ext4'>
+        <parent>manifest</parent>
+        <a name='minSdkVersion' format='integer|string' api-level='33-ext4' />
+        <a name='targetSdkVersion' format='integer|string' api-level='33-ext4' />
+        <a name='maxSdkVersion' api-level='33-ext4' />
+    </e>
+    <e name='extension-sdk' api-level='33-ext4'>
+        <a name='sdkVersion' format='integer' api-level='33-ext4' />
+        <a name='minExtensionVersion' format='integer' api-level='33-ext4' />
+    </e>
+    <e name='library' api-level='33-ext4'>
+        <parent>manifest</parent>
+        <a name='name' api-level='33-ext4' />
+    </e>
+    <e name='queries' api-level='33-ext4'>
+        <parent>manifest</parent>
+    </e>
+    <e name='queries-package' api-level='33-ext4'>
+        <parent>queries</parent>
+        <a name='name' api-level='33-ext4' />
+    </e>
+    <e name='queries-intent' api-level='33-ext4'>
+        <parent>queries</parent>
+    </e>
+    <e name='queries-provider' api-level='33-ext4'>
+        <parent>queries</parent>
+        <a name='authorities' api-level='33-ext4' />
+    </e>
+    <e name='sdk-library' api-level='33-ext4'>
         <parent>application</parent>
-        <a name='name' />
-        <a name='required' />
+        <a name='name' api-level='33-ext4' />
+        <a name='versionMajor' format='integer' api-level='33-ext4' />
     </e>
-    <e name='supports-screens' api-level='10'>
-        <parent>manifest</parent>
-        <a name='smallScreens' format='boolean' />
-        <a name='normalScreens' format='boolean' />
-        <a name='largeScreens' format='boolean' />
-        <a name='xlargeScreens' format='boolean' />
-        <a name='resizeable' format='boolean' />
-        <a name='anyDensity' format='boolean' />
-        <a name='requiresSmallestWidthDp' format='integer' api-level='15' />
-        <a name='compatibleWidthLimitDp' format='integer' api-level='15' />
-        <a name='largestWidthLimitDp' format='integer' api-level='15' />
-    </e>
-    <e name='protected-broadcast' api-level='10'>
-        <parent>manifest</parent>
-        <a name='name' />
-    </e>
-    <e name='original-package' api-level='10'>
-        <parent>manifest</parent>
-        <a name='name' />
-    </e>
-    <e name='provider' api-level='10'>
+    <e name='uses-sdk-library' api-level='33-ext4'>
         <parent>application</parent>
-        <a name='name' />
-        <a name='label' />
-        <a name='description' />
-        <a name='icon' />
-        <a name='process' />
-        <a name='authorities' />
-        <a name='syncable' />
-        <a name='readPermission' />
-        <a name='writePermission' />
-        <a name='grantUriPermissions' />
-        <a name='permission' />
-        <a name='multiprocess' />
-        <a name='initOrder' />
-        <a name='enabled' />
-        <a name='exported' />
-        <a name='logo' api-level='15' />
-        <a name='singleUser' api-level='17' />
-        <a name='banner' api-level='20' />
-        <a name='directBootAware' api-level='24' />
-        <a name='roundIcon' api-level='25' />
-        <a name='visibleToInstantApps' api-level='26' />
-        <a name='splitName' api-level='26' />
-        <a name='forceUriPermissions' api-level='29' />
-        <a name='attributionTags' api-level='31' />
-        <a name='systemUserOnly' format='boolean' api-level='35' />
-        <a name='intentMatchingFlags' api-level='36' />
+        <a name='name' api-level='33-ext4' />
+        <a name='versionMajor' format='integer' api-level='33-ext4' />
+        <a name='certDigest' format='string' api-level='33-ext4' />
+        <a name='optional' format='boolean' api-level='35-ext14' />
     </e>
-    <e name='grant-uri-permission' api-level='10'>
+    <e name='static-library' api-level='33-ext4'>
+        <parent>application</parent>
+        <a name='name' api-level='33-ext4' />
+        <a name='version' api-level='33-ext4' />
+        <a name='versionMajor' format='integer' api-level='33-ext4' />
+    </e>
+    <e name='uses-library' api-level='33-ext4'>
+        <parent>application</parent>
+        <a name='name' api-level='33-ext4' />
+        <a name='required' api-level='33-ext4' />
+    </e>
+    <e name='uses-native-library' api-level='33-ext4'>
+        <parent>application</parent>
+        <a name='name' api-level='33-ext4' />
+        <a name='required' api-level='33-ext4' />
+    </e>
+    <e name='uses-static-library' api-level='33-ext4'>
+        <parent>application</parent>
+        <a name='name' api-level='33-ext4' />
+        <a name='version' api-level='33-ext4' />
+        <a name='certDigest' format='string' api-level='33-ext4' />
+    </e>
+    <e name='additional-certificate' api-level='33-ext4'>
+        <parent>uses-static-library</parent>
+        <a name='certDigest' api-level='33-ext4' />
+    </e>
+    <e name='uses-package' api-level='33-ext4'>
+        <parent>application</parent>
+        <a name='packageType' format='string' api-level='33-ext4' />
+        <a name='name' api-level='33-ext4' />
+        <a name='version' api-level='33-ext4' />
+        <a name='versionMajor' format='integer' api-level='33-ext4' />
+        <a name='certDigest' format='string' api-level='33-ext4' />
+    </e>
+    <e name='supports-screens' api-level='33-ext4'>
+        <parent>manifest</parent>
+        <a name='requiresSmallestWidthDp' format='integer' api-level='33-ext4' />
+        <a name='compatibleWidthLimitDp' format='integer' api-level='33-ext4' />
+        <a name='largestWidthLimitDp' format='integer' api-level='33-ext4' />
+        <a name='smallScreens' format='boolean' api-level='33-ext4' />
+        <a name='normalScreens' format='boolean' api-level='33-ext4' />
+        <a name='largeScreens' format='boolean' api-level='33-ext4' />
+        <a name='xlargeScreens' format='boolean' api-level='33-ext4' />
+        <a name='resizeable' format='boolean' api-level='33-ext4' />
+        <a name='anyDensity' format='boolean' api-level='33-ext4' />
+    </e>
+    <e name='protected-broadcast' api-level='33-ext4'>
+        <parent>manifest</parent>
+        <a name='name' api-level='33-ext4' />
+    </e>
+    <e name='original-package' api-level='33-ext4'>
+        <parent>manifest</parent>
+        <a name='name' api-level='33-ext4' />
+    </e>
+    <e name='processes' api-level='33-ext4'>
+        <parent>application</parent>
+    </e>
+    <e name='process' api-level='33-ext4'>
+        <parent>processes</parent>
+        <a name='process' api-level='33-ext4' />
+        <a name='name' api-level='33-ext4' />
+        <a name='gwpAsanMode' api-level='33-ext4' />
+        <a name='memtagMode' api-level='33-ext4' />
+        <a name='nativeHeapZeroInitialized' api-level='33-ext4' />
+        <a name='useEmbeddedDex' api-level='35-ext14' />
+    </e>
+    <e name='deny-permission' api-level='33-ext4'>
+        <parent>processes</parent>
+        <a name='name' api-level='33-ext4' />
+    </e>
+    <e name='allow-permission' api-level='33-ext4'>
+        <parent>processes</parent>
+        <a name='name' api-level='33-ext4' />
+    </e>
+    <e name='provider' api-level='33-ext4'>
+        <parent>application</parent>
+        <a name='name' api-level='33-ext4' />
+        <a name='label' api-level='33-ext4' />
+        <a name='description' api-level='33-ext4' />
+        <a name='icon' api-level='33-ext4' />
+        <a name='roundIcon' api-level='33-ext4' />
+        <a name='banner' api-level='33-ext4' />
+        <a name='logo' api-level='33-ext4' />
+        <a name='process' api-level='33-ext4' />
+        <a name='authorities' api-level='33-ext4' />
+        <a name='syncable' api-level='33-ext4' />
+        <a name='readPermission' api-level='33-ext4' />
+        <a name='writePermission' api-level='33-ext4' />
+        <a name='grantUriPermissions' api-level='33-ext4' />
+        <a name='forceUriPermissions' api-level='33-ext4' />
+        <a name='permission' api-level='33-ext4' />
+        <a name='multiprocess' api-level='33-ext4' />
+        <a name='initOrder' api-level='33-ext4' />
+        <a name='enabled' api-level='33-ext4' />
+        <a name='exported' api-level='33-ext4' />
+        <a name='singleUser' api-level='33-ext4' />
+        <a name='directBootAware' api-level='33-ext4' />
+        <a name='visibleToInstantApps' api-level='33-ext4' />
+        <a name='splitName' api-level='33-ext4' />
+        <a name='attributionTags' api-level='33-ext4' />
+        <a name='systemUserOnly' format='boolean' api-level='35-ext14' />
+        <a name='intentMatchingFlags' api-level='36-ext18' />
+    </e>
+    <e name='grant-uri-permission' api-level='33-ext4'>
         <parent>provider</parent>
-        <a name='path' format='string' />
-        <a name='pathPrefix' format='string' />
-        <a name='pathPattern' format='string' />
-        <a name='pathAdvancedPattern' format='string' api-level='31' />
-        <a name='pathSuffix' format='string' api-level='31' />
+        <a name='path' format='string' api-level='33-ext4' />
+        <a name='pathPrefix' format='string' api-level='33-ext4' />
+        <a name='pathPattern' format='string' api-level='33-ext4' />
+        <a name='pathAdvancedPattern' format='string' api-level='33-ext4' />
+        <a name='pathSuffix' format='string' api-level='33-ext4' />
     </e>
-    <e name='path-permission' api-level='10'>
+    <e name='path-permission' api-level='33-ext4'>
         <parent>provider</parent>
-        <a name='path' />
-        <a name='pathPrefix' />
-        <a name='pathPattern' />
-        <a name='permission' />
-        <a name='readPermission' />
-        <a name='writePermission' />
-        <a name='pathAdvancedPattern' api-level='26' />
-        <a name='pathSuffix' api-level='31' />
+        <a name='path' api-level='33-ext4' />
+        <a name='pathPrefix' api-level='33-ext4' />
+        <a name='pathPattern' api-level='33-ext4' />
+        <a name='pathAdvancedPattern' format='string' api-level='33-ext4' />
+        <a name='pathSuffix' api-level='33-ext4' />
+        <a name='permission' api-level='33-ext4' />
+        <a name='readPermission' api-level='33-ext4' />
+        <a name='writePermission' api-level='33-ext4' />
     </e>
-    <e name='service' api-level='10'>
+    <e name='service' api-level='33-ext4'>
         <parent>application</parent>
-        <a name='name' />
-        <a name='label' />
-        <a name='description' />
-        <a name='icon' />
-        <a name='permission' />
-        <a name='process' />
-        <a name='enabled' />
-        <a name='exported' />
-        <a name='logo' api-level='15' />
-        <a name='stopWithTask' format='boolean' api-level='15' />
-        <a name='isolatedProcess' format='boolean' api-level='16' />
-        <a name='singleUser' api-level='17' />
-        <a name='banner' api-level='20' />
-        <a name='directBootAware' api-level='24' />
-        <a name='externalService' format='boolean' api-level='24' />
-        <a name='roundIcon' api-level='25' />
-        <a name='visibleToInstantApps' api-level='26' />
-        <a name='splitName' api-level='26' />
-        <a name='useAppZygote' format='boolean' api-level='29' />
-        <a name='foregroundServiceType' api-level='29' />
-        <a name='attributionTags' api-level='31' />
-        <a name='allowSharedIsolatedProcess' format='boolean' api-level='34' />
-        <a name='systemUserOnly' format='boolean' api-level='35' />
-        <a name='intentMatchingFlags' api-level='36' />
+        <a name='name' api-level='33-ext4' />
+        <a name='label' api-level='33-ext4' />
+        <a name='description' api-level='33-ext4' />
+        <a name='icon' api-level='33-ext4' />
+        <a name='roundIcon' api-level='33-ext4' />
+        <a name='banner' api-level='33-ext4' />
+        <a name='logo' api-level='33-ext4' />
+        <a name='permission' api-level='33-ext4' />
+        <a name='process' api-level='33-ext4' />
+        <a name='enabled' api-level='33-ext4' />
+        <a name='exported' api-level='33-ext4' />
+        <a name='stopWithTask' format='boolean' api-level='33-ext4' />
+        <a name='isolatedProcess' format='boolean' api-level='33-ext4' />
+        <a name='singleUser' api-level='33-ext4' />
+        <a name='directBootAware' api-level='33-ext4' />
+        <a name='externalService' format='boolean' api-level='33-ext4' />
+        <a name='visibleToInstantApps' api-level='33-ext4' />
+        <a name='splitName' api-level='33-ext4' />
+        <a name='useAppZygote' format='boolean' api-level='33-ext4' />
+        <a name='foregroundServiceType' api-level='33-ext4' />
+        <a name='attributionTags' api-level='33-ext4' />
+        <a name='allowSharedIsolatedProcess' format='boolean' api-level='34-ext10' />
+        <a name='systemUserOnly' format='boolean' api-level='35-ext14' />
+        <a name='intentMatchingFlags' api-level='36-ext18' />
     </e>
-    <e name='receiver' api-level='10'>
+    <e name='apex-system-service' api-level='33-ext4'>
         <parent>application</parent>
-        <a name='name' />
-        <a name='label' />
-        <a name='description' />
-        <a name='icon' />
-        <a name='permission' />
-        <a name='process' />
-        <a name='enabled' />
-        <a name='exported' />
-        <a name='logo' api-level='15' />
-        <a name='singleUser' api-level='17' />
-        <a name='banner' api-level='20' />
-        <a name='directBootAware' api-level='24' />
-        <a name='roundIcon' api-level='25' />
-        <a name='attributionTags' api-level='31' />
-        <a name='intentMatchingFlags' api-level='36' />
+        <a name='name' api-level='33-ext4' />
+        <a name='path' api-level='33-ext4' />
+        <a name='minSdkVersion' api-level='33-ext4' />
+        <a name='maxSdkVersion' api-level='33-ext4' />
+        <a name='initOrder' format='integer' api-level='33-ext4' />
     </e>
-    <e name='activity' api-level='10'>
+    <e name='receiver' api-level='33-ext4'>
         <parent>application</parent>
-        <a name='name' />
-        <a name='theme' />
-        <a name='label' />
-        <a name='description' />
-        <a name='icon' />
-        <a name='launchMode' />
-        <a name='screenOrientation' />
-        <a name='configChanges' />
-        <a name='permission' />
-        <a name='multiprocess' />
-        <a name='process' />
-        <a name='taskAffinity' />
-        <a name='allowTaskReparenting' />
-        <a name='finishOnTaskLaunch' />
-        <a name='finishOnCloseSystemDialogs' />
-        <a name='clearTaskOnLaunch' />
-        <a name='noHistory' />
-        <a name='alwaysRetainTaskState' />
-        <a name='stateNotNeeded' />
-        <a name='excludeFromRecents' />
-        <a name='enabled' />
-        <a name='exported' />
-        <a name='windowSoftInputMode' />
-        <a name='logo' api-level='15' />
-        <a name='immersive' api-level='15' />
-        <a name='hardwareAccelerated' api-level='15' />
-        <a name='uiOptions' api-level='15' />
-        <a name='parentActivityName' api-level='16' />
-        <a name='showOnLockScreen' api-level='17' />
-        <a name='singleUser' api-level='17' />
-        <a name='primaryUserOnly' format='boolean' api-level='17' />
-        <a name='banner' api-level='20' />
-        <a name='allowEmbedded' api-level='20' />
-        <a name='persistableMode' api-level='21' />
-        <a name='documentLaunchMode' api-level='21' />
-        <a name='maxRecents' api-level='21' />
-        <a name='autoRemoveFromRecents' api-level='21' />
-        <a name='relinquishTaskIdentity' api-level='21' />
-        <a name='resumeWhilePausing' api-level='21' />
-        <a name='resizeableActivity' api-level='23' />
-        <a name='lockTaskMode' api-level='23' />
-        <a name='showForAllUsers' api-level='23' />
-        <a name='systemUserOnly' format='boolean' api-level='24' />
-        <a name='supportsPictureInPicture' api-level='24' />
-        <a name='directBootAware' api-level='24' />
-        <a name='alwaysFocusable' format='boolean' api-level='24' />
-        <a name='enableVrMode' api-level='24' />
-        <a name='roundIcon' api-level='25' />
-        <a name='recreateOnConfigChanges' api-level='26' />
-        <a name='maxAspectRatio' api-level='26' />
-        <a name='rotationAnimation' api-level='26' />
-        <a name='visibleToInstantApps' api-level='26' />
-        <a name='splitName' api-level='26' />
-        <a name='colorMode' api-level='26' />
-        <a name='showWhenLocked' api-level='27' />
-        <a name='turnScreenOn' api-level='27' />
-        <a name='minAspectRatio' api-level='29' />
-        <a name='inheritShowWhenLocked' api-level='29' />
-        <a name='forceQueryable' format='boolean' api-level='30' />
-        <a name='preferMinimalPostProcessing' format='boolean' api-level='30' />
-        <a name='attributionTags' api-level='31' />
-        <a name='playHomeTransitionSound' format='boolean' api-level='31' />
-        <a name='canDisplayOnRemoteDevices' format='boolean' api-level='33' />
-        <a name='allowUntrustedActivityEmbedding' api-level='33' />
-        <a name='knownActivityEmbeddingCerts' api-level='33' />
-        <a name='requiredDisplayCategory' format='string' api-level='34' />
-        <a name='enableOnBackInvokedCallback' format='boolean' api-level='34' />
-        <a name='requireContentUriPermissionFromCaller' format='string' api-level='35' />
-        <a name='intentMatchingFlags' api-level='36' />
+        <a name='name' api-level='33-ext4' />
+        <a name='label' api-level='33-ext4' />
+        <a name='description' api-level='33-ext4' />
+        <a name='icon' api-level='33-ext4' />
+        <a name='roundIcon' api-level='33-ext4' />
+        <a name='banner' api-level='33-ext4' />
+        <a name='logo' api-level='33-ext4' />
+        <a name='permission' api-level='33-ext4' />
+        <a name='process' api-level='33-ext4' />
+        <a name='enabled' api-level='33-ext4' />
+        <a name='exported' api-level='33-ext4' />
+        <a name='singleUser' api-level='33-ext4' />
+        <a name='directBootAware' api-level='33-ext4' />
+        <a name='attributionTags' api-level='33-ext4' />
+        <a name='intentMatchingFlags' api-level='36-ext18' />
     </e>
-    <e name='activity-alias' api-level='10'>
+    <e name='activity' api-level='33-ext4'>
         <parent>application</parent>
-        <a name='name' />
-        <a name='targetActivity' format='string' />
-        <a name='label' />
-        <a name='description' />
-        <a name='icon' />
-        <a name='permission' />
-        <a name='enabled' />
-        <a name='exported' />
-        <a name='logo' api-level='15' />
-        <a name='parentActivityName' api-level='16' />
-        <a name='banner' api-level='20' />
-        <a name='roundIcon' api-level='25' />
-        <a name='attributionTags' api-level='31' />
-        <a name='allowUntrustedActivityEmbedding' api-level='33' />
-        <a name='knownActivityEmbeddingCerts' api-level='33' />
-        <a name='intentMatchingFlags' api-level='36' />
+        <a name='name' api-level='33-ext4' />
+        <a name='theme' api-level='33-ext4' />
+        <a name='label' api-level='33-ext4' />
+        <a name='description' api-level='33-ext4' />
+        <a name='icon' api-level='33-ext4' />
+        <a name='roundIcon' api-level='33-ext4' />
+        <a name='banner' api-level='33-ext4' />
+        <a name='logo' api-level='33-ext4' />
+        <a name='launchMode' api-level='33-ext4' />
+        <a name='screenOrientation' api-level='33-ext4' />
+        <a name='configChanges' api-level='33-ext4' />
+        <a name='recreateOnConfigChanges' api-level='33-ext4' />
+        <a name='permission' api-level='33-ext4' />
+        <a name='multiprocess' api-level='33-ext4' />
+        <a name='process' api-level='33-ext4' />
+        <a name='taskAffinity' api-level='33-ext4' />
+        <a name='allowTaskReparenting' api-level='33-ext4' />
+        <a name='finishOnTaskLaunch' api-level='33-ext4' />
+        <a name='finishOnCloseSystemDialogs' api-level='33-ext4' />
+        <a name='clearTaskOnLaunch' api-level='33-ext4' />
+        <a name='noHistory' api-level='33-ext4' />
+        <a name='alwaysRetainTaskState' api-level='33-ext4' />
+        <a name='stateNotNeeded' api-level='33-ext4' />
+        <a name='excludeFromRecents' api-level='33-ext4' />
+        <a name='showOnLockScreen' api-level='33-ext4' />
+        <a name='enabled' api-level='33-ext4' />
+        <a name='exported' api-level='33-ext4' />
+        <a name='windowSoftInputMode' api-level='33-ext4' />
+        <a name='immersive' api-level='33-ext4' />
+        <a name='hardwareAccelerated' api-level='33-ext4' />
+        <a name='uiOptions' api-level='33-ext4' />
+        <a name='parentActivityName' api-level='33-ext4' />
+        <a name='singleUser' api-level='33-ext4' />
+        <a name='systemUserOnly' format='boolean' api-level='33-ext4' />
+        <a name='persistableMode' api-level='33-ext4' />
+        <a name='allowEmbedded' api-level='33-ext4' />
+        <a name='documentLaunchMode' api-level='33-ext4' />
+        <a name='maxRecents' api-level='33-ext4' />
+        <a name='autoRemoveFromRecents' api-level='33-ext4' />
+        <a name='relinquishTaskIdentity' api-level='33-ext4' />
+        <a name='resumeWhilePausing' api-level='33-ext4' />
+        <a name='resizeableActivity' api-level='33-ext4' />
+        <a name='supportsPictureInPicture' api-level='33-ext4' />
+        <a name='maxAspectRatio' api-level='33-ext4' />
+        <a name='minAspectRatio' api-level='33-ext4' />
+        <a name='lockTaskMode' api-level='33-ext4' />
+        <a name='showForAllUsers' api-level='33-ext4' />
+        <a name='showWhenLocked' api-level='33-ext4' />
+        <a name='inheritShowWhenLocked' api-level='33-ext4' />
+        <a name='turnScreenOn' api-level='33-ext4' />
+        <a name='directBootAware' api-level='33-ext4' />
+        <a name='alwaysFocusable' format='boolean' api-level='33-ext4' />
+        <a name='enableVrMode' api-level='33-ext4' />
+        <a name='rotationAnimation' api-level='33-ext4' />
+        <a name='visibleToInstantApps' api-level='33-ext4' />
+        <a name='splitName' api-level='33-ext4' />
+        <a name='colorMode' api-level='33-ext4' />
+        <a name='forceQueryable' format='boolean' api-level='33-ext4' />
+        <a name='preferMinimalPostProcessing' format='boolean' api-level='33-ext4' />
+        <a name='attributionTags' api-level='33-ext4' />
+        <a name='playHomeTransitionSound' format='boolean' api-level='33-ext4' />
+        <a name='canDisplayOnRemoteDevices' format='boolean' api-level='33-ext4' />
+        <a name='allowUntrustedActivityEmbedding' api-level='33-ext4' />
+        <a name='knownActivityEmbeddingCerts' api-level='33-ext4' />
+        <a name='requiredDisplayCategory' format='string' api-level='34-ext10' />
+        <a name='enableOnBackInvokedCallback' format='boolean' api-level='34-ext10' />
+        <a name='requireContentUriPermissionFromCaller' format='string' api-level='35-ext14' />
+        <a name='intentMatchingFlags' api-level='36-ext18' />
     </e>
-    <e name='meta-data' api-level='10'>
+    <e name='activity-alias' api-level='33-ext4'>
+        <parent>application</parent>
+        <a name='name' api-level='33-ext4' />
+        <a name='targetActivity' format='string' api-level='33-ext4' />
+        <a name='label' api-level='33-ext4' />
+        <a name='description' api-level='33-ext4' />
+        <a name='icon' api-level='33-ext4' />
+        <a name='roundIcon' api-level='33-ext4' />
+        <a name='banner' api-level='33-ext4' />
+        <a name='logo' api-level='33-ext4' />
+        <a name='permission' api-level='33-ext4' />
+        <a name='enabled' api-level='33-ext4' />
+        <a name='exported' api-level='33-ext4' />
+        <a name='parentActivityName' api-level='33-ext4' />
+        <a name='attributionTags' api-level='33-ext4' />
+        <a name='allowUntrustedActivityEmbedding' api-level='33-ext4' />
+        <a name='knownActivityEmbeddingCerts' api-level='33-ext4' />
+        <a name='intentMatchingFlags' api-level='36-ext18' />
+    </e>
+    <e name='meta-data' api-level='33-ext4'>
         <parent>application</parent>
         <parent>activity</parent>
         <parent>receiver</parent>
@@ -392,282 +498,170 @@
         <parent>permission</parent>
         <parent>permission-group</parent>
         <parent>instrumentation</parent>
-        <a name='name' />
-        <a name='value' format='string|integer|color|float|boolean' />
-        <a name='resource' format='reference' />
+        <a name='name' api-level='33-ext4' />
+        <a name='value' format='string|integer|color|float|boolean' api-level='33-ext4' />
+        <a name='resource' format='reference' api-level='33-ext4' />
     </e>
-    <e name='intent-filter' api-level='10'>
-        <parent>activity</parent>
-        <parent>receiver</parent>
-        <parent>service</parent>
-        <a name='label' />
-        <a name='icon' />
-        <a name='priority' />
-        <a name='logo' api-level='15' />
-        <a name='banner' api-level='20' />
-        <a name='autoVerify' api-level='23' />
-        <a name='roundIcon' api-level='25' />
-        <a name='order' api-level='28' />
-    </e>
-    <e name='action' api-level='10'>
-        <parent>intent-filter</parent>
-        <a name='name' />
-    </e>
-    <e name='data' api-level='10'>
-        <parent>intent-filter</parent>
-        <a name='mimeType' format='string' />
-        <a name='scheme' format='string' />
-        <a name='host' format='string' />
-        <a name='port' format='string' />
-        <a name='path' />
-        <a name='pathPrefix' />
-        <a name='pathPattern' />
-        <a name='ssp' format='string' api-level='19' />
-        <a name='sspPrefix' format='string' api-level='19' />
-        <a name='sspPattern' format='string' api-level='19' />
-        <a name='pathAdvancedPattern' api-level='26' />
-        <a name='mimeGroup' format='string' api-level='30' />
-        <a name='sspAdvancedPattern' format='string' api-level='31' />
-        <a name='sspSuffix' format='string' api-level='31' />
-        <a name='pathSuffix' api-level='31' />
-        <a name='query' format='string' api-level='35' />
-        <a name='queryPrefix' format='string' api-level='35' />
-        <a name='queryPattern' format='string' api-level='35' />
-        <a name='queryAdvancedPattern' format='string' api-level='35' />
-        <a name='querySuffix' format='string' api-level='35' />
-        <a name='fragment' format='string' api-level='35' />
-        <a name='fragmentPrefix' format='string' api-level='35' />
-        <a name='fragmentPattern' format='string' api-level='35' />
-        <a name='fragmentAdvancedPattern' format='string' api-level='35' />
-        <a name='fragmentSuffix' format='string' api-level='35' />
-    </e>
-    <e name='category' api-level='10'>
-        <parent>intent-filter</parent>
-        <a name='name' />
-    </e>
-    <e name='instrumentation' api-level='10'>
-        <parent>manifest</parent>
-        <a name='name' />
-        <a name='targetPackage' />
-        <a name='label' />
-        <a name='icon' />
-        <a name='handleProfiling' />
-        <a name='functionalTest' />
-        <a name='logo' api-level='15' />
-        <a name='banner' api-level='20' />
-        <a name='roundIcon' api-level='25' />
-        <a name='targetProcesses' api-level='26' />
-    </e>
-    <e name='compatible-screens-screen' api-level='10'>
-        <parent>compatible-screens</parent>
-        <a name='screenSize' />
-        <a name='screenDensity' format='integer' />
-    </e>
-    <e name='intent' api-level='10'>
-        <a name='action' format='string' />
-        <a name='data' format='string' />
-        <a name='mimeType' />
-        <a name='targetPackage' />
-        <a name='targetClass' format='string' />
-        <a name='identifier' format='string' api-level='29' />
-    </e>
-    <e name='intent-category' api-level='10'>
-        <parent>intent</parent>
-        <a name='name' />
-    </e>
-    <e name='extra' api-level='10'>
-        <parent>intent</parent>
-        <a name='name' />
-        <a name='value' />
-    </e>
-    <e name='package-verifier' api-level='15'>
-        <parent>manifest</parent>
-        <a name='name' api-level='15' />
-        <a name='publicKey' api-level='15' />
-    </e>
-    <e name='library' api-level='18'>
-        <parent>manifest</parent>
-        <a name='name' api-level='18' />
-    </e>
-    <e name='supports-input-input-type' api-level='19'>
-        <parent>supports-input</parent>
-        <a name='name' api-level='19' />
-    </e>
-    <e name='public-key' api-level='19'>
-        <a name='value' api-level='19' />
-        <a name='name' api-level='21' />
-    </e>
-    <e name='key-set' api-level='19'>
-        <a name='name' api-level='19' />
-    </e>
-    <e name='feature-group' api-level='21'>
-        <a name='label' api-level='21' />
-    </e>
-    <e name='resource-overlay' api-level='21'>
-        <parent>manifest</parent>
-        <a name='targetPackage' api-level='21' />
-        <a name='priority' api-level='21' />
-        <a name='isStatic' format='boolean' api-level='26' />
-        <a name='requiredSystemPropertyName' format='string' api-level='26' />
-        <a name='requiredSystemPropertyValue' format='string' api-level='26' />
-        <a name='category' format='string' api-level='28' />
-        <a name='targetName' api-level='29' />
-        <a name='resourcesMap' format='reference' api-level='30' />
-    </e>
-    <e name='upgrade-key-set' api-level='21'>
-        <parent>manifest</parent>
-        <a name='name' api-level='21' />
-    </e>
-    <e name='layout' api-level='24'>
-        <parent>activity</parent>
-        <a name='defaultWidth' format='dimension|fraction' api-level='24' />
-        <a name='defaultHeight' format='dimension|fraction' api-level='24' />
-        <a name='gravity' api-level='24' />
-        <a name='minWidth' api-level='24' />
-        <a name='minimalWidth' format='dimension' api-level='24' />
-        <a name='minHeight' api-level='24' />
-        <a name='minimalHeight' format='dimension' api-level='24' />
-        <a name='windowLayoutAffinity' format='string' api-level='31' />
-    </e>
-    <e name='restrict-update' api-level='24'>
-        <parent>manifest</parent>
-        <a name='hash' format='string' api-level='24' />
-    </e>
-    <e name='static-library' api-level='26'>
-        <parent>application</parent>
-        <a name='name' api-level='26' />
-        <a name='version' api-level='26' />
-        <a name='versionMajor' format='integer' api-level='28' />
-    </e>
-    <e name='uses-static-library' api-level='26'>
-        <parent>application</parent>
-        <a name='name' api-level='26' />
-        <a name='version' api-level='26' />
-        <a name='certDigest' format='string' api-level='26' />
-    </e>
-    <e name='uses-split' api-level='26'>
-        <parent>manifest</parent>
-        <a name='name' format='string' api-level='26' />
-    </e>
-    <e name='additional-certificate' api-level='27'>
-        <parent>uses-static-library</parent>
-        <a name='certDigest' api-level='27' />
-    </e>
-    <e name='uses-package' api-level='29'>
-        <parent>application</parent>
-        <a name='packageType' format='string' api-level='29' />
-        <a name='name' api-level='29' />
-        <a name='version' api-level='29' />
-        <a name='versionMajor' format='integer' api-level='29' />
-        <a name='certDigest' format='string' api-level='29' />
-    </e>
-    <e name='profileable' api-level='29'>
-        <parent>application</parent>
-        <a name='shell' format='boolean' api-level='29' />
-        <a name='enabled' format='boolean' api-level='31' />
-    </e>
-    <e name='attribution' api-level='30'>
-        <parent>manifest</parent>
-        <a name='featureId' format='string' api-level='30' />
-        <a name='tag' format='string' api-level='30' />
-        <a name='label' format='string' api-level='30' />
-    </e>
-    <e name='attribution-inherit-from' api-level='30'>
-        <parent>attribution</parent>
-        <a name='tag' format='string' api-level='30' />
-    </e>
-    <e name='extension-sdk' api-level='30'>
-        <a name='sdkVersion' format='integer' api-level='30' />
-        <a name='minExtensionVersion' format='integer' api-level='30' />
-    </e>
-    <e name='queries' api-level='30'>
-        <parent>manifest</parent>
-    </e>
-    <e name='queries-package' api-level='30'>
-        <parent>queries</parent>
-        <a name='name' api-level='30' />
-    </e>
-    <e name='queries-intent' api-level='30'>
-        <parent>queries</parent>
-    </e>
-    <e name='queries-provider' api-level='30'>
-        <parent>queries</parent>
-        <a name='authorities' api-level='30' />
-    </e>
-    <e name='processes' api-level='30'>
-        <parent>application</parent>
-    </e>
-    <e name='process' api-level='30'>
-        <parent>processes</parent>
-        <a name='process' api-level='30' />
-        <a name='gwpAsanMode' api-level='30' />
-        <a name='memtagMode' api-level='31' />
-        <a name='nativeHeapZeroInitialized' api-level='31' />
-        <a name='name' api-level='33' />
-        <a name='useEmbeddedDex' api-level='35' />
-    </e>
-    <e name='deny-permission' api-level='30'>
-        <parent>processes</parent>
-        <a name='name' api-level='30' />
-    </e>
-    <e name='allow-permission' api-level='30'>
-        <parent>processes</parent>
-        <a name='name' api-level='30' />
-    </e>
-    <e name='required-feature' api-level='31'>
-        <a name='name' api-level='31' />
-    </e>
-    <e name='required-not-feature' api-level='31'>
-        <a name='name' api-level='31' />
-    </e>
-    <e name='uses-native-library' api-level='31'>
-        <parent>application</parent>
-        <a name='name' api-level='31' />
-        <a name='required' api-level='31' />
-    </e>
-    <e name='property' api-level='31'>
+    <e name='property' api-level='33-ext4'>
         <parent>application</parent>
         <parent>activity</parent>
         <parent>receiver</parent>
         <parent>provider</parent>
         <parent>service</parent>
-        <a name='name' api-level='31' />
-        <a name='value' api-level='31' />
-        <a name='resource' api-level='31' />
+        <a name='name' api-level='33-ext4' />
+        <a name='value' api-level='33-ext4' />
+        <a name='resource' api-level='33-ext4' />
     </e>
-    <e name='sdk-library' api-level='33'>
-        <parent>application</parent>
-        <a name='name' api-level='33' />
-        <a name='versionMajor' format='integer' api-level='33' />
+    <e name='intent-filter' api-level='33-ext4'>
+        <parent>activity</parent>
+        <parent>receiver</parent>
+        <parent>service</parent>
+        <a name='label' api-level='33-ext4' />
+        <a name='icon' api-level='33-ext4' />
+        <a name='roundIcon' api-level='33-ext4' />
+        <a name='banner' api-level='33-ext4' />
+        <a name='logo' api-level='33-ext4' />
+        <a name='priority' api-level='33-ext4' />
+        <a name='autoVerify' api-level='33-ext4' />
+        <a name='order' api-level='33-ext4' />
     </e>
-    <e name='uses-sdk-library' api-level='33'>
-        <parent>application</parent>
-        <a name='name' api-level='33' />
-        <a name='versionMajor' format='integer' api-level='33' />
-        <a name='certDigest' format='string' api-level='33' />
-        <a name='optional' format='boolean' api-level='35' />
-    </e>
-    <e name='apex-system-service' api-level='33'>
-        <parent>application</parent>
-        <a name='name' api-level='33' />
-        <a name='path' api-level='33' />
-        <a name='minSdkVersion' api-level='33' />
-        <a name='maxSdkVersion' api-level='33' />
-        <a name='initOrder' format='integer' api-level='33' />
-    </e>
-    <e name='install-constraints' api-level='34'>
-        <parent>manifest</parent>
-    </e>
-    <e name='install-constraints-fingerprint-prefix' api-level='34'>
-        <parent>install-constraints</parent>
-        <a name='value' api-level='34' />
-    </e>
-    <e name='uri-relative-filter-group' api-level='35'>
+    <e name='action' api-level='33-ext4'>
         <parent>intent-filter</parent>
-        <a name='allow' format='boolean' api-level='35' />
+        <a name='name' api-level='33-ext4' />
     </e>
-    <e name='adopt-permissions' api-level='36'>
+    <e name='data' api-level='33-ext4'>
+        <parent>intent-filter</parent>
+        <a name='mimeType' format='string' api-level='33-ext4' />
+        <a name='mimeGroup' format='string' api-level='33-ext4' />
+        <a name='scheme' format='string' api-level='33-ext4' />
+        <a name='ssp' format='string' api-level='33-ext4' />
+        <a name='sspPrefix' format='string' api-level='33-ext4' />
+        <a name='sspPattern' format='string' api-level='33-ext4' />
+        <a name='sspAdvancedPattern' format='string' api-level='33-ext4' />
+        <a name='sspSuffix' format='string' api-level='33-ext4' />
+        <a name='host' format='string' api-level='33-ext4' />
+        <a name='port' format='string' api-level='33-ext4' />
+        <a name='path' api-level='33-ext4' />
+        <a name='pathPrefix' api-level='33-ext4' />
+        <a name='pathPattern' api-level='33-ext4' />
+        <a name='pathAdvancedPattern' api-level='33-ext4' />
+        <a name='pathSuffix' api-level='33-ext4' />
+        <a name='query' format='string' api-level='35-ext14' />
+        <a name='queryPrefix' format='string' api-level='35-ext14' />
+        <a name='queryPattern' format='string' api-level='35-ext14' />
+        <a name='queryAdvancedPattern' format='string' api-level='35-ext14' />
+        <a name='querySuffix' format='string' api-level='35-ext14' />
+        <a name='fragment' format='string' api-level='35-ext14' />
+        <a name='fragmentPrefix' format='string' api-level='35-ext14' />
+        <a name='fragmentPattern' format='string' api-level='35-ext14' />
+        <a name='fragmentAdvancedPattern' format='string' api-level='35-ext14' />
+        <a name='fragmentSuffix' format='string' api-level='35-ext14' />
+    </e>
+    <e name='category' api-level='33-ext4'>
+        <parent>intent-filter</parent>
+        <a name='name' api-level='33-ext4' />
+    </e>
+    <e name='instrumentation' api-level='33-ext4'>
         <parent>manifest</parent>
-        <a name='name' api-level='36' />
+        <a name='name' api-level='33-ext4' />
+        <a name='targetPackage' api-level='33-ext4' />
+        <a name='targetProcesses' api-level='33-ext4' />
+        <a name='label' api-level='33-ext4' />
+        <a name='icon' api-level='33-ext4' />
+        <a name='roundIcon' api-level='33-ext4' />
+        <a name='banner' api-level='33-ext4' />
+        <a name='logo' api-level='33-ext4' />
+        <a name='handleProfiling' api-level='33-ext4' />
+        <a name='functionalTest' api-level='33-ext4' />
+    </e>
+    <e name='compatible-screens-screen' api-level='33-ext4'>
+        <parent>compatible-screens</parent>
+        <a name='screenSize' api-level='33-ext4' />
+        <a name='screenDensity' format='integer' api-level='33-ext4' />
+    </e>
+    <e name='supports-input-input-type' api-level='33-ext4'>
+        <parent>supports-input</parent>
+        <a name='name' api-level='33-ext4' />
+    </e>
+    <e name='package-verifier' api-level='33-ext4'>
+        <parent>manifest</parent>
+        <a name='name' api-level='33-ext4' />
+        <a name='publicKey' api-level='33-ext4' />
+    </e>
+    <e name='resource-overlay' api-level='33-ext4'>
+        <parent>manifest</parent>
+        <a name='targetPackage' api-level='33-ext4' />
+        <a name='category' format='string' api-level='33-ext4' />
+        <a name='priority' api-level='33-ext4' />
+        <a name='isStatic' format='boolean' api-level='33-ext4' />
+        <a name='requiredSystemPropertyName' format='string' api-level='33-ext4' />
+        <a name='requiredSystemPropertyValue' format='string' api-level='33-ext4' />
+        <a name='targetName' api-level='33-ext4' />
+        <a name='resourcesMap' format='reference' api-level='33-ext4' />
+    </e>
+    <e name='intent' api-level='33-ext4'>
+        <a name='action' format='string' api-level='33-ext4' />
+        <a name='data' format='string' api-level='33-ext4' />
+        <a name='mimeType' api-level='33-ext4' />
+        <a name='identifier' format='string' api-level='33-ext4' />
+        <a name='targetPackage' api-level='33-ext4' />
+        <a name='targetClass' format='string' api-level='33-ext4' />
+    </e>
+    <e name='intent-category' api-level='33-ext4'>
+        <parent>intent</parent>
+        <a name='name' api-level='33-ext4' />
+    </e>
+    <e name='extra' api-level='33-ext4'>
+        <parent>intent</parent>
+        <a name='name' api-level='33-ext4' />
+        <a name='value' api-level='33-ext4' />
+    </e>
+    <e name='public-key' api-level='33-ext4'>
+        <a name='name' api-level='33-ext4' />
+        <a name='value' api-level='33-ext4' />
+    </e>
+    <e name='key-set' api-level='33-ext4'>
+        <a name='name' api-level='33-ext4' />
+    </e>
+    <e name='upgrade-key-set' api-level='33-ext4'>
+        <parent>manifest</parent>
+        <a name='name' api-level='33-ext4' />
+    </e>
+    <e name='layout' api-level='33-ext4'>
+        <parent>activity</parent>
+        <a name='defaultWidth' format='dimension|fraction' api-level='33-ext4' />
+        <a name='defaultHeight' format='dimension|fraction' api-level='33-ext4' />
+        <a name='gravity' api-level='33-ext4' />
+        <a name='minWidth' api-level='33-ext4' />
+        <a name='minHeight' api-level='33-ext4' />
+        <a name='windowLayoutAffinity' format='string' api-level='33-ext4' />
+    </e>
+    <e name='restrict-update' api-level='33-ext4'>
+        <parent>manifest</parent>
+        <a name='hash' format='string' api-level='33-ext4' />
+    </e>
+    <e name='uses-split' api-level='33-ext4'>
+        <parent>manifest</parent>
+        <a name='name' format='string' api-level='33-ext4' />
+    </e>
+    <e name='profileable' api-level='33-ext4'>
+        <parent>application</parent>
+        <a name='shell' format='boolean' api-level='33-ext4' />
+        <a name='enabled' format='boolean' api-level='33-ext4' />
+    </e>
+    <e name='install-constraints' api-level='34-ext10'>
+        <parent>manifest</parent>
+    </e>
+    <e name='install-constraints-fingerprint-prefix' api-level='34-ext10'>
+        <parent>install-constraints</parent>
+        <a name='value' api-level='34-ext10' />
+    </e>
+    <e name='uri-relative-filter-group' api-level='35-ext14'>
+        <parent>intent-filter</parent>
+        <a name='allow' format='boolean' api-level='35-ext14' />
+    </e>
+    <e name='adopt-permissions' api-level='36-ext18'>
+        <parent>manifest</parent>
+        <a name='name' api-level='36-ext18' />
     </e>
 </m>

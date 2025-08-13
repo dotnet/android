@@ -6,4 +6,10 @@ public sealed partial class UsesPermissionAttribute
 	{
 		Name = name;
 	}
+
+	public UsesPermissionAttribute (string name, string usesPermissionFlags)
+	{
+		Name = name;
+		UsesPermissionFlags = usesPermissionFlags;
+	}
 }
