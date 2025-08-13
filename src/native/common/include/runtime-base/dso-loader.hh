@@ -11,6 +11,7 @@
 
 #include <runtime-base/android-system.hh>
 #include <runtime-base/mainthread-dso-loader.hh>
+#include <runtime-base/runtime-environment.hh>
 #include <runtime-base/system-loadlibrary-wrapper.hh>
 #include <runtime-base/util.hh>
 #include <shared/helpers.hh>
@@ -27,7 +28,7 @@ namespace xamarin::android {
 		static void init (JNIEnv *env, jclass systemClass, ALooper *main_looper, pid_t _main_thread_id) noexcept
 		{
 			SystemLoadLibraryWrapper::init (env, systemClass);
-			MainThreadDsoLoader::init (main_looper);
+			MainThreadDsoLoader::init (env, main_looper);
 			main_thread_id = _main_thread_id;
 		}
 
@@ -70,7 +71,6 @@ namespace xamarin::android {
 		}
 
 	private:
-		static auto get_jnienv () noexcept -> JNIEnv*;
 		static auto load_jni_on_main_thread (std::string_view const& full_name, std::string const& undecorated_name) noexcept -> void*;
 
 		[[gnu::always_inline]]
@@ -98,10 +98,6 @@ namespace xamarin::android {
 		static auto load_jni (std::string_view const& name, bool name_is_path) -> void*
 		{
 			log_debug (LOG_ASSEMBLY, "Trying to load loading shared JNI library {} with System.loadLibrary", name);
-
-			if (systemKlass == nullptr) [[unlikely]] {
-				Helpers::abort_application ("DSO loader class not initialized properly."sv);
-			}
 
 			auto get_file_name = [](std::string_view const& full_name, bool is_path) -> std::string_view {
 				if (!is_path) {
@@ -163,7 +159,7 @@ namespace xamarin::android {
 
 			// TODO: implement the above
 			if (gettid () == main_thread_id) {
-				if (!SystemLoadLibraryWrapper::load (get_jnienv (), get_undecorated_name (name, name_is_path))) {
+				if (!SystemLoadLibraryWrapper::load (RuntimeEnvironment::get_jnienv (), get_undecorated_name (name, name_is_path))) {
 					// We could abort, but let's let the managed land react to this library missing. We cannot continue
 					// with `dlopen` below, because without `JNI_OnLoad` etc invoked, we might have nasty crashes in the
 					// library code if e.g. it assumes that `JNI_OnLoad` initialized all the Java class, method etc
@@ -171,7 +167,10 @@ namespace xamarin::android {
 					return nullptr;
 				}
 			} else {
-				Helpers::abort_application ("Loading DSO on the main thread not implemented yet"sv);
+				MainThreadDsoLoader loader;
+				if (!loader.load (name, get_undecorated_name (name, name_is_path))) {
+					return nullptr;
+				}
 			}
 
 			// This is unfortunate, but since `System.loadLibrary` doesn't return the class handle, we must get it this
@@ -183,8 +182,6 @@ namespace xamarin::android {
 		}
 
 	private:
-		static inline jmethodID System_loadLibrary = nullptr;
-		static inline jclass systemKlass = nullptr;
 		static inline pid_t main_thread_id = 0;
 	};
 }
