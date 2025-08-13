@@ -25,6 +25,10 @@ namespace xamarin::android {
 		[[gnu::flatten]]
 		static auto load (JNIEnv *jni_env, std::string_view const& undecorated_lib_name) noexcept -> bool
 		{
+			if (systemKlass == nullptr) [[unlikely]] {
+				Helpers::abort_application ("System.loadeLibrary wrapper class not initialized properly."sv);
+			}
+
 			// std::string is needed because we must pass a NUL-terminated string to Java, otherwise
 			// strange things happen (and std::string_view is not necessarily such a string)
 			const std::string lib_name { undecorated_lib_name };

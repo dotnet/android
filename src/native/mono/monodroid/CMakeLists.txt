@@ -93,7 +93,6 @@ set(XAMARIN_MONO_ANDROID_STATIC_LIB "${XAMARIN_MONO_ANDROID_LIB}-static")
 set(XAMARIN_MONODROID_SOURCES
   debug-constants.cc
   debug.cc
-  dso-loader.cc
   embedded-assemblies-zip.cc
   embedded-assemblies.cc
   globals.cc
@@ -104,6 +103,7 @@ set(XAMARIN_MONODROID_SOURCES
   monodroid-tracing.cc
   monovm-properties.cc
   osbridge.cc
+  runtime-environment.cc
   runtime-util.cc
   timezones.cc
   xamarin_getifaddrs.cc
