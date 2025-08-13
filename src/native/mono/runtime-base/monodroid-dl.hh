@@ -143,31 +143,8 @@ namespace xamarin::android::internal
 
 	public:
 		[[gnu::flatten]]
-		static void* monodroid_dlopen (const char *name, int flags, char **err, bool prefer_aot_cache) noexcept
+		static void* monodroid_dlopen (DSOCacheEntry *dso, hash_t name_hash, const char *name, int flags, char **err) noexcept
 		{
-			if (name == nullptr) {
-				log_warn (LOG_ASSEMBLY, "monodroid_dlopen got a null name. This is not supported in NET+"sv);
-				return nullptr;
-			}
-
-			hash_t name_hash = xxhash::hash (name, strlen (name));
-			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash for name '{}' is {:x}", name, name_hash);
-
-			DSOCacheEntry *dso = nullptr;
-			if (prefer_aot_cache) {
-				// If we're asked to look in the AOT DSO cache, do it first.  This is because we're likely called from the
-				// MonoVM's dlopen fallback handler and it will not be a request to resolved a p/invoke, but most likely to
-				// find and load an AOT image for a managed assembly.  Since there might be naming/hash conflicts in this
-				// scenario, we look at the AOT cache first.
-				//
-				// See: https://github.com/dotnet/android/issues/9081
-				dso = find_only_aot_cache_entry (name_hash);
-			}
-
-			if (dso == nullptr) {
-				dso = find_only_dso_cache_entry (name_hash);
-			}
-
 			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash match {}found, DSO name is '{}'", dso == nullptr ? "not "sv : ""sv, dso == nullptr ? "<unknown>"sv : dso->name);
 
 			if (dso == nullptr) {
@@ -209,6 +186,35 @@ namespace xamarin::android::internal
 
 			dso->handle = AndroidSystem::load_dso_from_any_directories (name, dl_flags, dso->is_jni_library);
 			return monodroid_dlopen_log_and_return (dso->handle, err, name, false /* name_needs_free */);
+		}
+
+		[[gnu::flatten]]
+		static void* monodroid_dlopen (const char *name, int flags, char **err, bool prefer_aot_cache) noexcept
+		{
+			if (name == nullptr) {
+				log_warn (LOG_ASSEMBLY, "monodroid_dlopen got a null name. This is not supported in NET+"sv);
+				return nullptr;
+			}
+
+			hash_t name_hash = xxhash::hash (name, strlen (name));
+			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash for name '{}' is {:x}", name, name_hash);
+
+			DSOCacheEntry *dso = nullptr;
+			if (prefer_aot_cache) {
+				// If we're asked to look in the AOT DSO cache, do it first.  This is because we're likely called from the
+				// MonoVM's dlopen fallback handler and it will not be a request to resolved a p/invoke, but most likely to
+				// find and load an AOT image for a managed assembly.  Since there might be naming/hash conflicts in this
+				// scenario, we look at the AOT cache first.
+				//
+				// See: https://github.com/dotnet/android/issues/9081
+				dso = find_only_aot_cache_entry (name_hash);
+			}
+
+			if (dso == nullptr) {
+				dso = find_only_dso_cache_entry (name_hash);
+			}
+
+			return monodroid_dlopen (dso, name_hash, name, flags, err);
 		}
 
 		[[gnu::flatten]]
