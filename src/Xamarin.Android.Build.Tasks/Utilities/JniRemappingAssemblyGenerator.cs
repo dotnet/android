@@ -203,8 +203,10 @@ namespace Xamarin.Android.Tasks
 		public JniRemappingAssemblyGenerator (TaskLoggingHelper log, List<JniRemappingTypeReplacement> typeReplacements, List<JniRemappingMethodReplacement> methodReplacements)
 			: base (log)
 		{
-			ArgumentNullException.ThrowIfNull (typeReplacements);
-			ArgumentNullException.ThrowIfNull (methodReplacements);
+			if (typeReplacements == null)
+				throw new ArgumentNullException (nameof (typeReplacements));
+			if (methodReplacements == null)
+				throw new ArgumentNullException (nameof (methodReplacements));
 			this.typeReplacementsInput = typeReplacements;
 			this.methodReplacementsInput = methodReplacements;
 		}

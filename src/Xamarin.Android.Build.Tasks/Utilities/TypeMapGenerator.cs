@@ -131,8 +131,10 @@ namespace Xamarin.Android.Tasks
 
 		public TypeMapGenerator (TaskLoggingHelper log, ITypeMapGeneratorAdapter state, AndroidRuntime runtime)
 		{
-			ArgumentNullException.ThrowIfNull (log);
-			ArgumentNullException.ThrowIfNull (state);
+			if (log == null)
+				throw new ArgumentNullException (nameof (log));
+			if (state == null)
+				throw new ArgumentNullException (nameof (state));
 			this.log = log;
 			this.state = state;
 			this.runtime = runtime;
