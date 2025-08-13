@@ -68,7 +68,7 @@ Alternatively, the Java Development Kit may be downloaded from the
 [openjdk]: https://openjdk.java.net
 [download-jdk]: http://www.oracle.com/technetwork/java/javase/downloads/
 
-For the JDK version that is currently used, see [`Configurables.cs`](/build-tools/xaprepare/xaprepare/ConfigAndData/Configurables.cs).
+For the JDK version that is currently used, see [`Configurables.cs`](../../../build-tools/xaprepare/xaprepare/ConfigAndData/Configurables.cs).
 
 
 <a name="autotools" />
