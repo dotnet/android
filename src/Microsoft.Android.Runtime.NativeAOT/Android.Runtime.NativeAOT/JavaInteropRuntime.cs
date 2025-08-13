@@ -14,7 +14,8 @@ static partial class JavaInteropRuntime
 		try {
 			AndroidLog.Print (AndroidLogLevel.Info, "JavaInteropRuntime", "JNI_OnLoad()");
 			AndroidCryptoNative_InitLibraryOnLoad(vm, reserved);
-			return (int) JniVersion.v1_6;
+			clr_initialize_on_onload(vm, reserved);
+			return (int)JniVersion.v1_6;
 		}
 		catch (Exception e) {
 			AndroidLog.Print (AndroidLogLevel.Error, "JavaInteropRuntime", $"JNI_OnLoad() failed: {e}");
@@ -25,7 +26,13 @@ static partial class JavaInteropRuntime
 	[DllImport("*")]
 	static extern int AndroidCryptoNative_InitLibraryOnLoad (IntPtr vm, IntPtr reserved);
 
-	[UnmanagedCallersOnly (EntryPoint="JNI_OnUnload")]
+	[DllImport("*")]
+	static extern int clr_initialize_on_onload (IntPtr vm, IntPtr reserved);
+
+	[DllImport("*")]
+	static extern int clr_initialize_on_runtime_init ();
+
+	[UnmanagedCallersOnly(EntryPoint = "JNI_OnUnload")]
 	static void JNI_OnUnload (IntPtr vm, IntPtr reserved)
 	{
 		AndroidLog.Print(AndroidLogLevel.Info, "JavaInteropRuntime", "JNI_OnUnload");
@@ -52,6 +59,8 @@ static partial class JavaInteropRuntime
 
 			// Entry point into Mono.Android.dll
 			JNIEnvInit.InitializeJniRuntime (runtime);
+
+			clr_initialize_on_runtime_init ();
 
 			transition  = new JniTransition (jnienv);
 

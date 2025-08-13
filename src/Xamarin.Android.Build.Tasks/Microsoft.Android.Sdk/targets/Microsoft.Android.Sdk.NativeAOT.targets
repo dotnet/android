@@ -55,7 +55,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   </PropertyGroup>
 
   <Target Name="_AndroidBeforeIlcCompile"
-      DependsOnTargets="_PrepareLinking"
+      DependsOnTargets="_PrepareLinking;_ResolveSdks"
       BeforeTargets="SetupProperties">
     <!-- Example settings from: https://github.com/jonathanpeppers/Android-NativeAOT/blob/ea69d122cdc7de67aa6a5db14b7e560763c63cdd/DotNet/libdotnet.targets -->
     <PropertyGroup>
@@ -68,6 +68,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_NdkSysrootDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/sysroot/usr/lib/$(_NdkSysrootAbi)/</_NdkSysrootDir>
       <_NdkBinDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/bin/</_NdkBinDir>
       <CppCompilerAndLinker>clang++</CppCompilerAndLinker>
+      <CppLinker>clang++</CppLinker>
       <ObjCopyName>llvm-objcopy</ObjCopyName>
 
       <!-- Example settings from: https://github.com/xamarin/xamarin-macios/blob/c43d4ea40bc777969e3b158cf46446df292d8449/dotnet/targets/Xamarin.Shared.Sdk.targets#L541-L550 -->
@@ -105,14 +106,15 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <!-- Root *everything* for ILC, as it's already trimmed -->
       <TrimmerRootAssembly Include="@(_AndroidILLinkAssemblies->'%(Filename)')" Exclude="System.Private.CoreLib" TrimMode="All" />
       <!-- Passes linked assemblies to outer MSBuild tasks/targets -->
-      <ResolvedFileToPublish Include="@(IlcCompileInput);@(_AndroidILLinkAssemblies)" RuntimeIdentifier="$(_OriginalRuntimeIdentifier)" />
+      <ResolvedFileToPublish Include="@(IlcCompileInput);@(_AndroidILLinkAssemblies)" RuntimeIdentifier="$(RuntimeIdentifier)" />
       <!-- Include libc++ -->
-      <ResolvedFileToPublish Include="$(_NdkSysrootDir)libc++_shared.so" RuntimeIdentifier="$(_OriginalRuntimeIdentifier)" />
+      <ResolvedFileToPublish Include="$(_NdkSysrootDir)libc++_shared.so" RuntimeIdentifier="$(RuntimeIdentifier)" />
       <!-- Satellite assemblies -->
       <IlcSatelliteAssembly Include="$(_OuterIntermediateSatelliteAssembliesWithTargetPath)" />
       <!-- Native support libraries -->
-      <NativeLibrary Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnet-android-nativeaot.$(Configuration.ToLower())'))" />
-      <NativeLibrary Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libxa-shared-bits.$(Configuration.ToLower())'))" />
+      <LinkerArg Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnet-android-nativeaot-$(Configuration.ToLower())'))" />
+      <LinkerArg Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libxa-shared-bits-$(Configuration.ToLower())'))" />
+      <LinkerArg Include="$(_NdkSysrootDir)libc++_shared.so" />
       <DirectPInvoke Include="xa-internal-api" />
     </ItemGroup>
   </Target>
