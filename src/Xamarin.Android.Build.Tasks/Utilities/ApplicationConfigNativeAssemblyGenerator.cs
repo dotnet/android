@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -53,7 +53,7 @@ namespace Xamarin.Android.Tasks
 		sealed class DSOCacheEntry
 		{
 			[NativeAssembler (Ignore = true)]
-			public string HashedName;
+			public string? HashedName;
 
 			[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 			public ulong hash;
@@ -63,7 +63,7 @@ namespace Xamarin.Android.Tasks
 			public bool ignore;
 
 			[NativeAssembler (UsesDataProvider = true)]
-			public string name;
+			public string? name;
 			public IntPtr handle = IntPtr.Zero;
 		}
 
@@ -102,7 +102,7 @@ namespace Xamarin.Android.Tasks
 			public byte config_data;
 
 			[NativePointer]
-			public AssemblyStoreAssemblyDescriptor descriptor;
+			public AssemblyStoreAssemblyDescriptor? descriptor;
 		}
 
 		// Order of fields and their type must correspond *exactly* to that in
@@ -115,7 +115,7 @@ namespace Xamarin.Android.Tasks
 			public uint index_entry_count;
 
 			[NativePointer (IsNull = true)]
-			public AssemblyStoreAssemblyDescriptor assemblies;
+			public AssemblyStoreAssemblyDescriptor? assemblies;
 		}
 
 		sealed class XamarinAndroidBundledAssemblyContextDataProvider : NativeAssemblerStructContextDataProvider
@@ -143,7 +143,7 @@ namespace Xamarin.Android.Tasks
 			public int  file_fd;
 
 			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToPreAllocatedBuffer = true)]
-			public string file_name;
+			public string? file_name;
 			public uint data_offset;
 			public uint data_size;
 
@@ -152,7 +152,7 @@ namespace Xamarin.Android.Tasks
 			public uint name_length;
 
 			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToPreAllocatedBuffer = true)]
-			public string name;
+			public string? name;
 		}
 		#pragma warning restore CS0649
 
@@ -176,9 +176,9 @@ namespace Xamarin.Android.Tasks
 		public bool UsesMonoAOT { get; set; }
 		public bool UsesMonoLLVM { get; set; }
 		public bool UsesAssemblyPreload { get; set; }
-		public string MonoAOTMode { get; set; }
+		public string MonoAOTMode { get; set; } = "";
 		public bool AotEnableLazyLoad { get; set; }
-		public string AndroidPackageName { get; set; }
+		public string AndroidPackageName { get; set; } = "";
 		public bool BrokenExceptionTransitions { get; set; }
 		public global::Android.Runtime.BoundExceptionType BoundExceptionType { get; set; }
 		public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
@@ -193,7 +193,7 @@ namespace Xamarin.Android.Tasks
 		public int JniRemappingReplacementMethodIndexEntryCount { get; set; }
 		public MonoComponent MonoComponents { get; set; }
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
-		public List<ITaskItem> NativeLibraries { get; set; }
+		public List<ITaskItem> NativeLibraries { get; set; } = [];
 		public bool MarshalMethodsEnabled { get; set; }
 		public bool ManagedMarshalMethodsLookupEnabled { get; set; }
 		public bool IgnoreSplitConfigs { get; set; }
@@ -219,12 +219,12 @@ namespace Xamarin.Android.Tasks
 			module.AddGlobalVariable ("format_tag", FORMAT_TAG, comment: $" 0x{FORMAT_TAG:x}");
 			module.AddGlobalVariable ("mono_aot_mode_name", MonoAOTMode);
 
-			var envVars = new LlvmIrGlobalVariable (environmentVariables, "app_environment_variables") {
+			var envVars = new LlvmIrGlobalVariable (environmentVariables ?? new SortedDictionary<string, string>(), "app_environment_variables") {
 				Comment = " Application environment variables array, name:value",
 			};
 			module.Add (envVars, stringGroupName: "env.var", stringGroupComment: " Application environment variables name:value pairs");
 
-			var sysProps = new LlvmIrGlobalVariable (systemProperties, "app_system_properties") {
+			var sysProps = new LlvmIrGlobalVariable (systemProperties ?? new SortedDictionary<string, string>(), "app_system_properties") {
 				Comment = " System properties defined by the application",
 			};
 			module.Add (sysProps, stringGroupName: "sysprop", stringGroupComment: " System properties name:value pairs");
@@ -348,11 +348,14 @@ namespace Xamarin.Android.Tasks
 					throw new InvalidOperationException ($"Internal error: DSO cache entry has unexpected type {instance.Obj.GetType ()}");
 				}
 
-				entry.hash = MonoAndroidHelper.GetXxHash (entry.HashedName, is64Bit);
-				entry.real_name_hash = MonoAndroidHelper.GetXxHash (entry.name, is64Bit);
+				entry.hash = MonoAndroidHelper.GetXxHash (entry.HashedName ?? "", is64Bit);
+				entry.real_name_hash = MonoAndroidHelper.GetXxHash (entry.name ?? "", is64Bit);
 			}
 
-			cache.Sort ((StructureInstance<DSOCacheEntry> a, StructureInstance<DSOCacheEntry> b) => a.Instance.hash.CompareTo (b.Instance.hash));
+			cache.Sort ((StructureInstance<DSOCacheEntry> a, StructureInstance<DSOCacheEntry> b) => {
+				if (a.Instance == null || b.Instance == null) return 0;
+				return a.Instance.hash.CompareTo (b.Instance.hash);
+			});
 		}
 
 		(List<StructureInstance<DSOCacheEntry>> dsoCache, List<StructureInstance<DSOCacheEntry>> aotDsoCache) InitDSOCache ()

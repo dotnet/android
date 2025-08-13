@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -48,10 +48,10 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	sealed class DSOCacheEntry
 	{
 		[NativeAssembler (Ignore = true)]
-		public string HashedName;
+		public string? HashedName;
 
 		[NativeAssembler (Ignore = true)]
-		public string RealName;
+		public string? RealName;
 
 		[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 		public ulong hash;
@@ -100,7 +100,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public byte config_data;
 
 		[NativePointer]
-		public AssemblyStoreAssemblyDescriptor descriptor;
+		public AssemblyStoreAssemblyDescriptor? descriptor;
 	}
 
 	// Order of fields and their type must correspond *exactly* to that in
@@ -113,7 +113,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public uint index_entry_count;
 
 		[NativePointer (IsNull = true)]
-		public AssemblyStoreAssemblyDescriptor assemblies;
+		public AssemblyStoreAssemblyDescriptor? assemblies;
 	}
 
 	sealed class RuntimePropertyContextDataProvider : NativeAssemblerStructContextDataProvider
@@ -139,10 +139,10 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	sealed class RuntimeProperty
 	{
 		[NativeAssembler (Ignore = true)]
-		public string Key;
+		public string? Key;
 
 		[NativeAssembler (Ignore = true)]
-		public string Value;
+		public string? Value;
 
 		[NativeAssembler (UsesDataProvider = true)]
 		public uint key_index;
@@ -157,7 +157,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	sealed class RuntimePropertyIndexEntry
 	{
 		[NativeAssembler (Ignore = true)]
-		public string HashedKey;
+		public string? HashedKey;
 
 		[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 		public ulong key_hash;
@@ -188,10 +188,10 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	sealed class AppEnvironmentVariable
 	{
 		[NativeAssembler (Ignore = true)]
-		public string Name;
+		public string? Name;
 
 		[NativeAssembler (Ignore = true)]
-		public string Value;
+		public string? Value;
 
 		[NativeAssembler (UsesDataProvider = true)]
 		public uint name_index;
@@ -225,7 +225,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public int  file_fd;
 
 		[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToPreAllocatedBuffer = true)]
-		public string file_name;
+		public string? file_name;
 		public uint data_offset;
 		public uint data_size;
 
@@ -234,7 +234,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public uint name_length;
 
 		[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToPreAllocatedBuffer = true)]
-		public string name;
+		public string? name;
 	}
 #pragma warning restore CS0649
 
@@ -270,7 +270,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	StructureInfo? appEnvironmentVariableStructureInfo;
 
 	public bool UsesAssemblyPreload { get; set; }
-	public string AndroidPackageName { get; set; }
+	public string AndroidPackageName { get; set; } = "";
 	public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
 	public int NumberOfAssembliesInApk { get; set; }
 	public int BundledAssemblyNameWidth { get; set; } // including the trailing NUL
@@ -280,7 +280,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	public int JniRemappingReplacementTypeCount { get; set; }
 	public int JniRemappingReplacementMethodIndexEntryCount { get; set; }
 	public PackageNamingPolicy PackageNamingPolicy { get; set; }
-	public List<ITaskItem> NativeLibraries { get; set; }
+	public List<ITaskItem> NativeLibraries { get; set; } = [];
 	public bool MarshalMethodsEnabled { get; set; }
 	public bool ManagedMarshalMethodsLookupEnabled { get; set; }
 	public bool IgnoreSplitConfigs { get; set; }
@@ -344,7 +344,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		module.Add (envVars);
 		module.AddGlobalVariable ("app_environment_variable_contents", envVarsBlob, LlvmIrVariableOptions.GlobalConstant);
 
-		var sysProps = new LlvmIrGlobalVariable (systemProperties, "app_system_properties") {
+		var sysProps = new LlvmIrGlobalVariable (systemProperties ?? new SortedDictionary<string, string>(), "app_system_properties") {
 			Comment = " System properties defined by the application",
 		};
 		module.Add (sysProps, stringGroupName: "sysprop", stringGroupComment: " System properties name:value pairs");
@@ -429,12 +429,14 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			null,
 		};
 
-		foreach (var kvp in runtimeProperties) {
-			if (MonoAndroidHelper.StringEquals (kvp.Key, HOST_PROPERTY_RUNTIME_CONTRACT)) {
-				continue;
+		if (runtimeProperties != null) {
+			foreach (var kvp in runtimeProperties) {
+				if (MonoAndroidHelper.StringEquals (kvp.Key, HOST_PROPERTY_RUNTIME_CONTRACT)) {
+					continue;
+				}
+				runtime_property_names.Add (kvp.Key);
+				runtime_property_values.Add (kvp.Value);
 			}
-			runtime_property_names.Add (kvp.Key);
-			runtime_property_values.Add (kvp.Value);
 		}
 
 		var init_runtime_property_names = new LlvmIrGlobalVariable (runtime_property_names, "init_runtime_property_names", LlvmIrVariableOptions.GlobalConstant) {
@@ -468,10 +470,13 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 				throw new InvalidOperationException ($"Internal error: runtime property index entry has unexpected type {instance.Obj.GetType ()}");
 			}
 
-			entry.key_hash = MonoAndroidHelper.GetXxHash (entry.HashedKey, is64Bit);
+			entry.key_hash = MonoAndroidHelper.GetXxHash (entry.HashedKey ?? "", is64Bit);
 		};
 
-		index.Sort ((StructureInstance<RuntimePropertyIndexEntry> a, StructureInstance<RuntimePropertyIndexEntry> b) => a.Instance.key_hash.CompareTo (b.Instance.key_hash));
+		index.Sort ((StructureInstance<RuntimePropertyIndexEntry> a, StructureInstance<RuntimePropertyIndexEntry> b) => {
+			if (a.Instance == null || b.Instance == null) return 0;
+			return a.Instance.key_hash.CompareTo (b.Instance.key_hash);
+		});
 	}
 
 	(
@@ -556,11 +561,14 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 				throw new InvalidOperationException ($"Internal error: DSO cache entry has unexpected type {instance.Obj.GetType ()}");
 			}
 
-			entry.hash = MonoAndroidHelper.GetXxHash (entry.HashedName, is64Bit);
-			entry.real_name_hash = MonoAndroidHelper.GetXxHash (entry.RealName, is64Bit);
+			entry.hash = MonoAndroidHelper.GetXxHash (entry.HashedName ?? "", is64Bit);
+			entry.real_name_hash = MonoAndroidHelper.GetXxHash (entry.RealName ?? "", is64Bit);
 		}
 
-		cache.Sort ((StructureInstance<DSOCacheEntry> a, StructureInstance<DSOCacheEntry> b) => a.Instance.hash.CompareTo (b.Instance.hash));
+		cache.Sort ((StructureInstance<DSOCacheEntry> a, StructureInstance<DSOCacheEntry> b) => {
+			if (a.Instance == null || b.Instance == null) return 0;
+			return a.Instance.hash.CompareTo (b.Instance.hash);
+		});
 	}
 
 	(List<StructureInstance<DSOCacheEntry>> dsoCache, List<StructureInstance<DSOCacheEntry>> aotDsoCache, LlvmIrStringBlob namesBlob)

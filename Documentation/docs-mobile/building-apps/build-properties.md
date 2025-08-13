@@ -1645,6 +1645,18 @@ When `True`,
 files will be used
 to control `proguard` execution.
 
+## EventSourceSupport
+
+When set to `false`, disables .NET's [EventSource][eventsource]
+support from trimmed Android applications. Disabling this feature
+would prevent .NET diagnostic tools like `dotnet-counters` from
+functioning, but at the benefit of reduced application size.
+
+Set to `false` by default in `Release` mode, unless
+`$(EnableDiagnostics)` or `$(AndroidEnableProfiler)` are enabled.
+
+[eventsource]: https://learn.microsoft.com/dotnet/core/diagnostics/eventsource
+
 ## GenerateApplicationManifest
 
 Enables or disables the following MSBuild properties that emit values
@@ -1722,6 +1734,18 @@ The default value is False.
 ## MandroidI18n
 
 This MSBuild property is obsolete and is no longer supported.
+
+## MetricsSupport
+
+When set to `false`, disables .NET's [Metrics][dotnetmetrics] support
+from trimmed Android applications. Disabling this feature would
+prevent APIs such as `System.Diagnostics.Metrics` from functioning,
+but at the benefit of reduced application size.
+
+Set to `false` by default in `Release` mode, unless
+`$(EnableDiagnostics)` or `$(AndroidEnableProfiler)` are enabled.
+
+[dotnetmetrics]: https://learn.microsoft.com/dotnet/core/diagnostics/metrics
 
 ## MonoAndroidAssetPrefix
 

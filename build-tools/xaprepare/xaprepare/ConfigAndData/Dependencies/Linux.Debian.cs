@@ -35,6 +35,7 @@ namespace Xamarin.Android.Prepare
 			{ "bookworm/sid", "12" },
 			{ "trixie", "13" },
 			{ "trixie/sid", "13" },
+			{ "forky/sid", "14" },
 		};
 
 		protected Version DebianRelease { get; private set; } = new Version (0, 0);
@@ -105,7 +106,8 @@ namespace Xamarin.Android.Prepare
 			}
 
 			return debian_version!.IndexOf ("bookworm", StringComparison.OrdinalIgnoreCase) >= 0 ||
-			       debian_version!.IndexOf ("trixie", StringComparison.OrdinalIgnoreCase) >= 0;
+			       debian_version!.IndexOf ("trixie", StringComparison.OrdinalIgnoreCase) >= 0 ||
+			       debian_version!.IndexOf ("forky", StringComparison.OrdinalIgnoreCase) >= 0;
 		}
 
 		protected override bool EnsureVersionInformation (Context context)

@@ -9,7 +9,7 @@
     "default": {
       "name": "default",
       "createdDate": "2024-02-21 20:58:02Z",
-      "lastUpdatedDate": "2025-01-22 00:00:00Z"
+      "lastUpdatedDate": "2025-01-22 01:00:00Z"
     }
   },
   "results": {
@@ -127,7 +127,7 @@
       "memberOf": [
         "default"
       ],
-      "justification": "BA2008 EnableControlFlowGuard suppression for aapt2.exe at bin/Release/dotnet/packs/Microsoft.Android.Sdk.Windows/35.0.78/tools/aapt2.exe. Third-party binary from Google Android SDK that may not have CFG enabled.",
+      "justification": "BA2008 EnableControlFlowGuard suppression for aapt2.exe at bin/Release/dotnet/packs/Microsoft.Android.Sdk.Windows/*/tools/aapt2.exe. Third-party binary from Google Android SDK - EnableControlFlowGuard cannot be enabled as this is provided by Google and does not support control flow guard flags.",
       "createdDate": "2025-01-22 00:00:00Z"
     }
   }
