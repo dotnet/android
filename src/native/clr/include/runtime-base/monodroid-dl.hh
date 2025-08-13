@@ -73,7 +73,6 @@ namespace xamarin::android
 			return find_dso_cache_entry_common<CacheKind::DSO> (hash);
 		}
 
-	private:
 		[[gnu::always_inline]]
 		static auto get_dso_name (const DSOCacheEntry *const dso) -> std::string_view
 		{
@@ -85,40 +84,14 @@ namespace xamarin::android
 		}
 
 	public:
-		template<bool PREFER_AOT_CACHE> [[gnu::flatten]]
-		static auto monodroid_dlopen (std::string_view const& name, int flags) noexcept -> void*
+		[[gnu::flatten]]
+		static auto monodroid_dlopen (DSOCacheEntry *dso, std::string_view const& name, int flags) noexcept -> void*
 		{
-			if (name.empty ()) [[unlikely]] {
-				log_warn (LOG_ASSEMBLY, "monodroid_dlopen got a null name. This is not supported in NET+"sv);
-				return nullptr;
-			}
-
-			hash_t name_hash = xxhash::hash (name.data (), name.size ());
-			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash for name '{}' is {:x}", name, name_hash);
-
-			DSOCacheEntry *dso = nullptr;
-			if constexpr (PREFER_AOT_CACHE) {
-				// This code isn't currently used by CoreCLR, but it's possible that in the future we will have separate
-				// .so files for AOT-d assemblies, similar to MonoVM, so let's keep it.
-				//
-				// If we're asked to look in the AOT DSO cache, do it first.  This is because we're likely called from the
-				// MonoVM's dlopen fallback handler and it will not be a request to resolved a p/invoke, but most likely to
-				// find and load an AOT image for a managed assembly.  Since there might be naming/hash conflicts in this
-				// scenario, we look at the AOT cache first.
-				//
-				// See: https://github.com/dotnet/android/issues/9081
-				dso = find_only_aot_cache_entry (name_hash);
-			}
-
-			if (dso == nullptr) {
-				dso = find_only_dso_cache_entry (name_hash);
-			}
-
 			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash match {}found, DSO name is '{}'", dso == nullptr ? "not "sv : ""sv, get_dso_name (dso));
 
 			if (dso == nullptr) {
-				// DSO not known at build time, try to load it. Since we don't know whether or not the library extends
-				// JNI, we're going to assume it is and thus use System.loadLibrary eventually.
+				// DSO not known at build time, try to load it. Since we don't know whether or not the library uses
+				// JNI, we're going to assume it does and thus use System.loadLibrary eventually.
 				return DsoLoader::load (name, flags, true /* is_jni */);
 			} else if (dso->handle != nullptr) {
 				log_debug (LOG_ASSEMBLY, "monodroid_dlopen: library {} already loaded, returning handle {:p}", name, dso->handle);
@@ -157,6 +130,38 @@ namespace xamarin::android
 
 			dso->handle = AndroidSystem::load_dso_from_any_directories (name, flags, dso->is_jni_library);
 			return dso->handle;
+		}
+
+		template<bool PREFER_AOT_CACHE> [[gnu::flatten]]
+		static auto monodroid_dlopen (std::string_view const& name, int flags) noexcept -> void*
+		{
+			if (name.empty ()) [[unlikely]] {
+				log_warn (LOG_ASSEMBLY, "monodroid_dlopen got a null name. This is not supported in NET+"sv);
+				return nullptr;
+			}
+
+			hash_t name_hash = xxhash::hash (name.data (), name.size ());
+			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash for name '{}' is {:x}", name, name_hash);
+
+			DSOCacheEntry *dso = nullptr;
+			if constexpr (PREFER_AOT_CACHE) {
+				// This code isn't currently used by CoreCLR, but it's possible that in the future we will have separate
+				// .so files for AOT-d assemblies, similar to MonoVM, so let's keep it.
+				//
+				// If we're asked to look in the AOT DSO cache, do it first.  This is because we're likely called from the
+				// MonoVM's dlopen fallback handler and it will not be a request to resolved a p/invoke, but most likely to
+				// find and load an AOT image for a managed assembly.  Since there might be naming/hash conflicts in this
+				// scenario, we look at the AOT cache first.
+				//
+				// See: https://github.com/dotnet/android/issues/9081
+				dso = find_only_aot_cache_entry (name_hash);
+			}
+
+			if (dso == nullptr) {
+				dso = find_only_dso_cache_entry (name_hash);
+			}
+
+			return monodroid_dlopen (dso, name, flags);
 		}
 
 		[[gnu::flatten]]
