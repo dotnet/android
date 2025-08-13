@@ -54,6 +54,19 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     </IlcCompileDependsOn>
   </PropertyGroup>
 
+  <Target Name="_AndroidBeforeProcessFrameworkReferences"
+      BeforeTargets="ProcessFrameworkReferences">
+    <!-- HACK: https://github.com/dotnet/sdk/blob/2a4195bb70f47c15ff9e6d848c59517dc873e0f4/src/Layout/redist/targets/GenerateBundledVersions.targets#L397-L403 -->
+    <!-- Add Android runtime identifiers to @(KnownILCompilerPack) -->
+    <ItemGroup>
+      <KnownILCompilerPack
+          Update="Microsoft.DotNet.ILCompiler" 
+          Condition="'%(TargetFramework)' == 'net10.0'"
+          ILCompilerRuntimeIdentifiers="%(ILCompilerRuntimeIdentifiers);android-arm64;android-x64"
+      />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_AndroidBeforeIlcCompile"
       DependsOnTargets="_PrepareLinking"
       BeforeTargets="SetupProperties">
@@ -105,9 +118,9 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <!-- Root *everything* for ILC, as it's already trimmed -->
       <TrimmerRootAssembly Include="@(_AndroidILLinkAssemblies->'%(Filename)')" Exclude="System.Private.CoreLib" TrimMode="All" />
       <!-- Passes linked assemblies to outer MSBuild tasks/targets -->
-      <ResolvedFileToPublish Include="@(IlcCompileInput);@(_AndroidILLinkAssemblies)" RuntimeIdentifier="$(_OriginalRuntimeIdentifier)" />
+      <ResolvedFileToPublish Include="@(IlcCompileInput);@(_AndroidILLinkAssemblies)" RuntimeIdentifier="$(RuntimeIdentifier)" />
       <!-- Include libc++ -->
-      <ResolvedFileToPublish Include="$(_NdkSysrootDir)libc++_shared.so" RuntimeIdentifier="$(_OriginalRuntimeIdentifier)" />
+      <ResolvedFileToPublish Include="$(_NdkSysrootDir)libc++_shared.so" RuntimeIdentifier="$(RuntimeIdentifier)" />
       <!-- Satellite assemblies -->
       <IlcSatelliteAssembly Include="$(_OuterIntermediateSatelliteAssembliesWithTargetPath)" />
       <!-- Native support libraries -->
