@@ -68,7 +68,7 @@ Alternatively, the Java Development Kit may be downloaded from the
 [openjdk]: https://openjdk.java.net
 [download-jdk]: http://www.oracle.com/technetwork/java/javase/downloads/
 
-At this time, we only support building with JDK 1.8.
+For the current JDK version and minimum requirements, see [`Configurables.cs`](/build-tools/xaprepare/xaprepare/ConfigAndData/Configurables.cs).
 
 
 <a name="autotools" />
