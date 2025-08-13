@@ -1099,9 +1099,9 @@ MONO_GC_PARAMS=bridge-implementation=new",
 					"The Environment variable \"MONO_GC_PARAMS\" was not set to expected value \"bridge-implementation=new\"."
 			);
 			StringAssert.Contains (
-					"DOTNET_DiagnosticPorts=127.0.0.1:9000,connect,nosuspend",
+					"DOTNET_DiagnosticPorts=127.0.0.1:9000,nosuspend,connect",
 					logcatOutput,
-					"The Environment variable \"DOTNET_DiagnosticPorts\" was not set to expected value \"127.0.0.1:9000,connect,nosuspend\"."
+					"The Environment variable \"DOTNET_DiagnosticPorts\" was not set to expected value \"127.0.0.1:9000,nosuspend,connect\"."
 			);
 			// NOTE: set when $(UseInterpreter) is true, default for Debug mode
 			if (!isRelease) {
