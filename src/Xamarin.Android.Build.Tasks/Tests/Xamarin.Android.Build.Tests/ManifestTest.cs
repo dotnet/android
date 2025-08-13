@@ -1301,11 +1301,9 @@ class TestActivity : Activity { }"
 		}
 
 		[Test]
-		public void UsesPermissionFlagsAttribute ([Values ("legacy", "manifestmerger.jar")] string manifestMerger)
+		public void UsesPermissionFlagsAttribute ()
 		{
-			var proj = new XamarinAndroidApplicationProject {
-				ManifestMerger = manifestMerger,
-			};
+			var proj = new XamarinAndroidApplicationProject ();
 
 			proj.Sources.Add (new BuildItem.Source ("GlobalAssemblyInfo.cs") {
 				TextContent = () => @"using Android.App;

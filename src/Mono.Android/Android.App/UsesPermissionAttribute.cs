@@ -24,8 +24,6 @@ public sealed partial class UsesPermissionAttribute : Attribute {
 
 	public string? Name { get; set; }
 
-	public string? UsesPermissionFlags { get; set; }
-
 #if XABT_MANIFEST_EXTENSIONS
 	static Xamarin.Android.Manifest.ManifestDocumentElement<UsesPermissionAttribute> mapping = new ("uses-permission");
 
@@ -42,12 +40,6 @@ public sealed partial class UsesPermissionAttribute : Attribute {
 			attributeName: "name",
 			getter: self => self.Name,
 			setter: (self, value) => self.Name = (string?) value
-		);
-		mapping.Add (
-			member: "UsesPermissionFlags",
-			attributeName: "usesPermissionFlags",
-			getter: self => self.UsesPermissionFlags,
-			setter: (self, value) => self.UsesPermissionFlags = (string?) value
 		);
 
 		AddManualMapping ();
