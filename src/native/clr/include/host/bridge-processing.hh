@@ -34,6 +34,10 @@ private:
 	static inline jclass GCUserPeer_class = nullptr;
 	static inline jmethodID GCUserPeer_ctor = nullptr;
 
+	static inline jclass GCUserPeerable_class = nullptr;
+	static inline jmethodID GCUserPeerable_jiAddManagedReference = nullptr;
+	static inline jmethodID GCUserPeerable_jiClearManagedReferences = nullptr;
+
 	void prepare_for_java_collection () noexcept;
 	void prepare_scc_for_java_collection (size_t scc_index, const StronglyConnectedComponent &scc) noexcept;
 	void take_weak_global_ref (const HandleContext &context) noexcept;
@@ -60,4 +64,6 @@ private:
 	void log_gref_delete (jobject handle) noexcept;
 	void log_weak_ref_delete (jobject weak) noexcept;
 	void log_gc_summary () noexcept;
+
+	static char* get_java_class_name (jclass klass) noexcept;
 };

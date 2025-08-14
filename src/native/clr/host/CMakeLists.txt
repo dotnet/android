@@ -25,6 +25,17 @@ string(TOLOWER ${CMAKE_BUILD_TYPE} XAMARIN_NET_ANDROID_SUFFIX)
 set(XAMARIN_NET_ANDROID_LIB "net-android${CHECKED_BUILD_INFIX}.${XAMARIN_NET_ANDROID_SUFFIX}")
 set(XAMARIN_NET_ANDROID_STATIC_LIB "${XAMARIN_NET_ANDROID_LIB}-static")
 
+set(XAMARIN_NET_ANDROID_NATIVEAOT_LIB "net-android-nativeaot${CHECKED_BUILD_INFIX}-${XAMARIN_NET_ANDROID_SUFFIX}")
+
+set(XAMARIN_NET_ANDROID_NATIVEAOT_SOURCES
+  bridge-processing.cc
+  gc-bridge.cc
+  internal-pinvokes.cc
+  os-bridge.cc
+  runtime-util.cc
+  xamarin_getifaddrs.cc
+)
+
 set(XAMARIN_MONODROID_SOURCES
   assembly-store.cc
   bridge-processing.cc
@@ -70,6 +81,16 @@ if(BUILD_STATIC_LIBRARY)
     DYNAMIC_RUNTIME_LINKING
   )
 endif()
+
+add_library(${XAMARIN_NET_ANDROID_NATIVEAOT_LIB}
+  STATIC
+  ${XAMARIN_NET_ANDROID_NATIVEAOT_SOURCES}
+)
+target_compile_definitions(
+  ${XAMARIN_NET_ANDROID_NATIVEAOT_LIB}
+  PRIVATE
+  NATIVEAOT
+)
 
 macro(lib_target_options TARGET_NAME)
   target_compile_definitions(
@@ -154,11 +175,13 @@ macro(lib_target_options TARGET_NAME)
     xa::pinvoke-override-precompiled
     xa::lz4
     -llog
-    -lcoreclr
   )
 endmacro ()
 
 lib_target_options(${XAMARIN_NET_ANDROID_LIB})
+target_link_libraries(${XAMARIN_NET_ANDROID_LIB}
+  -lcoreclr
+)
 xa_add_compile_definitions(${XAMARIN_NET_ANDROID_LIB})
 xa_add_include_directories(${XAMARIN_NET_ANDROID_LIB})
 
@@ -173,3 +196,7 @@ if(BUILD_STATIC_LIBRARY)
   xa_add_compile_definitions(${XAMARIN_NET_ANDROID_STATIC_LIB})
   xa_add_include_directories(${XAMARIN_NET_ANDROID_STATIC_LIB})
 endif()
+
+lib_target_options(${XAMARIN_NET_ANDROID_NATIVEAOT_LIB})
+xa_add_compile_definitions(${XAMARIN_NET_ANDROID_NATIVEAOT_LIB})
+xa_add_include_directories(${XAMARIN_NET_ANDROID_NATIVEAOT_LIB})
