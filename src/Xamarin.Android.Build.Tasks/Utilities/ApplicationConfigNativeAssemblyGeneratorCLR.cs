@@ -396,11 +396,12 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 		// This variable MUST be written after `dso_cache` since it relies on sorting performed by HashAndSortDSOCache
 		var dso_jni_preloads_idx = new LlvmIrGlobalVariable (new List<uint> (), "dso_jni_preloads_idx", LlvmIrVariableOptions.GlobalConstant) {
-			Comment = "Indices of DSO libraries to preload because of JNI use",
+			Comment = " Indices into dso_cache[] of DSO libraries to preload because of JNI use",
 			ArrayItemCount = (uint)dsoState.JniPreloadDSOs.Count,
 			BeforeWriteCallback = PopulatePreloadIndices,
 			BeforeWriteCallbackCallerState = dsoState,
 		};
+		module.AddGlobalVariable ("dso_jni_preloads_idx_count", dso_jni_preloads_idx.ArrayItemCount);
 		module.Add (dso_jni_preloads_idx);
 
 		var aot_dso_cache = new LlvmIrGlobalVariable (dsoState.AotDsoCache, "aot_dso_cache", LlvmIrVariableOptions.GlobalWritable) {
