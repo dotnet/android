@@ -348,6 +348,8 @@ extern "C" {
 	[[gnu::visibility("default")]] extern AssemblyStoreRuntimeData assembly_store;
 
 	[[gnu::visibility("default")]] extern DSOCacheEntry dso_cache[];
+	[[gnu::visibility("default")]] extern const uint dso_jni_preloads_idx_count;
+	[[gnu::visibility("default")]] extern const uint dso_jni_preloads_idx[];
 	[[gnu::visibility("default")]] extern DSOCacheEntry aot_dso_cache[];
 	[[gnu::visibility("default")]] extern const char dso_names_data[];
 	[[gnu::visibility("default")]] extern DSOApkEntry dso_apk_entries[];

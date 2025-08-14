@@ -71,8 +71,6 @@ namespace xamarin::android {
 		}
 
 	private:
-		static auto load_jni_on_main_thread (std::string_view const& full_name, std::string const& undecorated_name) noexcept -> void*;
-
 		[[gnu::always_inline]]
 		static auto log_and_return (void *handle, std::string_view const& full_name) -> void*
 		{

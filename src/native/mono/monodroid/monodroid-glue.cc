@@ -1224,6 +1224,15 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
                                                 bool force_preload_assemblies, bool have_split_apks) noexcept
 {
 	MonoDomain* domain = create_domain (env, runtimeApks, is_root_domain, have_split_apks);
+
+	for (size_t i = 0; i < dso_jni_preloads_idx_count; i++) {
+		DSOCacheEntry &entry = dso_cache[dso_jni_preloads_idx[i]];
+
+		log_debug (LOG_ASSEMBLY, "Preloading JNI shared library: {}", optional_string (entry.name));
+		char *err = nullptr;
+		MonodroidDl::monodroid_dlopen (&entry, entry.hash, entry.name, RTLD_NOW,  &err);
+	}
+
 	// Asserting this on desktop apparently breaks a Designer test
 	abort_unless (domain != nullptr, "Failed to create AppDomain");
 
@@ -1438,6 +1447,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		AndroidSystem::set_runtime_libdir (strdup (jstr.get_cstr ()));
 		log_debug (LOG_DEFAULT, "Using runtime path: {}", optional_string (AndroidSystem::get_runtime_libdir ()));
 	}
+
 
 	AndroidSystem::setup_process_args (runtimeApks);
 	mono_dl_fallback_register (MonodroidDl::monodroid_dlopen, MonodroidDl::monodroid_dlsym, nullptr, nullptr);

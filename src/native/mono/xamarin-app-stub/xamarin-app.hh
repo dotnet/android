@@ -341,6 +341,8 @@ MONO_API MONO_API_EXPORT AssemblyStoreSingleAssemblyRuntimeData assembly_store_b
 MONO_API MONO_API_EXPORT AssemblyStoreRuntimeData assembly_store;
 
 MONO_API MONO_API_EXPORT DSOCacheEntry dso_cache[];
+MONO_API MONO_API_EXPORT const uint dso_jni_preloads_idx_count;
+MONO_API MONO_API_EXPORT const uint dso_jni_preloads_idx[];
 MONO_API MONO_API_EXPORT DSOCacheEntry aot_dso_cache[];
 MONO_API MONO_API_EXPORT DSOApkEntry dso_apk_entries[];
 
