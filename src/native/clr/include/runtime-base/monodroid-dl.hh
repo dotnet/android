@@ -73,6 +73,7 @@ namespace xamarin::android
 			return find_dso_cache_entry_common<CacheKind::DSO> (hash);
 		}
 
+	public:
 		[[gnu::always_inline]]
 		static auto get_dso_name (const DSOCacheEntry *const dso) -> std::string_view
 		{
@@ -83,7 +84,6 @@ namespace xamarin::android
 			return &dso_names_data[dso->name_index];
 		}
 
-	public:
 		[[gnu::flatten]]
 		static auto monodroid_dlopen (DSOCacheEntry *dso, std::string_view const& name, int flags) noexcept -> void*
 		{

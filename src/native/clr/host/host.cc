@@ -23,6 +23,7 @@
 #include <runtime-base/dso-loader.hh>
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
+#include <runtime-base/monodroid-dl.hh>
 #include <runtime-base/search.hh>
 #include <runtime-base/timing-internal.hh>
 #include <shared/log_types.hh>
@@ -431,6 +432,13 @@ void Host::Java_mono_android_Runtime_initInternal (
 		ALooper_forThread (), // main thread looper
 		gettid ()
 	);
+
+	for (size_t i = 0; i < dso_jni_preloads_idx_count; i++) {
+		DSOCacheEntry &entry = dso_cache[dso_jni_preloads_idx[i]];
+		const std::string_view dso_name = MonodroidDl::get_dso_name (&entry);
+		log_debug (LOG_ASSEMBLY, "Preloading JNI shared library: {}", dso_name);
+		MonodroidDl::monodroid_dlopen (&entry, dso_name, RTLD_NOW);
+	}
 
 	struct JnienvInitializeArgs init = {};
 	init.javaVm                                         = jvm;

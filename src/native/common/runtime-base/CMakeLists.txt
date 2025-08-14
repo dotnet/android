@@ -2,7 +2,6 @@ set(LIB_NAME runtime-base-common)
 set(LIB_ALIAS xa::runtime-base-common)
 
 set(XA_RUNTIME_BASE_SOURCES
-  dso-loader.cc
   timing-internal.cc
 )
 add_clang_check_sources("${XA_RUNTIME_BASE_SOURCES}")
