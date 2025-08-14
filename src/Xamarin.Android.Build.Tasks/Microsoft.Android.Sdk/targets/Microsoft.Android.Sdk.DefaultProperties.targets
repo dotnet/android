@@ -90,6 +90,9 @@
     <OutputType Condition=" '$(OutputType)' == 'Exe' ">Library</OutputType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' ">
+    <UseAppHost>false</UseAppHost>
+    <!-- see: https://github.com/xamarin/xamarin-macios/blob/a6eb528197854c074d9dd5847328c096890337be/dotnet/targets/Xamarin.Shared.Sdk.props#L38-L52 -->
+    <_RuntimeIdentifierUsesAppHost>false</_RuntimeIdentifierUsesAppHost>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <PublishReferencesDocumentationFiles Condition=" '$(PublishReferencesDocumentationFiles)' == '' ">false</PublishReferencesDocumentationFiles>
     <UseCurrentRuntimeIdentifier>false</UseCurrentRuntimeIdentifier>
