@@ -1300,6 +1300,30 @@ class TestActivity : Activity { }"
 		{
 		}
 
+		[Test]
+		public void UsesPermissionFlagsAttribute ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+
+			proj.Sources.Add (new BuildItem.Source ("GlobalAssemblyInfo.cs") {
+				TextContent = () => @"using Android.App;
+
+[assembly: UsesPermission (Name = ""android.permission.BLUETOOTH_SCAN"", UsesPermissionFlags = ""neverForLocation"")]"
+			});
+
+			using (ProjectBuilder builder = CreateDllBuilder ()) {
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
+
+				string manifest = builder.Output.GetIntermediaryAsText (Path.Combine ("android", "AndroidManifest.xml"));
+				var doc = XDocument.Parse (manifest);
+				var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");
+				IEnumerable<XElement> usesPermissions = doc.Element ("manifest")?.Elements ("uses-permission");
+				XElement e = usesPermissions?.FirstOrDefault (x => x.Attribute (ns.GetName ("name"))?.Value == "android.permission.BLUETOOTH_SCAN");
+				Assert.IsNotNull (e, "Manifest should contain a uses-permission for android.permission.BLUETOOTH_SCAN");
+				Assert.AreEqual ("neverForLocation", e.Attribute (ns.GetName ("usesPermissionFlags"))?.Value, "uses-permission should have usesPermissionFlags='neverForLocation'");
+			}
+		}
+
 		class MockVersionResolver : IVersionResolver
 		{
 			public int? GetApiLevelFromId (string id) => 99;
