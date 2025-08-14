@@ -239,15 +239,27 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	}
 #pragma warning restore CS0649
 
+	sealed class DsoCacheState
+	{
+		public List<StructureInstance<DSOCacheEntry>> DsoCache = [];
+		public List<DSOCacheEntry> JniPreloadDSOs = [];
+		public List<StructureInstance<DSOCacheEntry>> AotDsoCache = [];
+		public LlvmIrStringBlob NamesBlob = null!;
+	}
+
 	// Keep in sync with FORMAT_TAG in src/monodroid/jni/xamarin-app.hh
 	const ulong FORMAT_TAG = 0x00025E6972616D58; // 'Xmari^XY' where XY is the format version
+
+	// List of library names to ignore when generating the list of JNI-using libraries to preload
+	internal static readonly HashSet<string> DsoCacheJniPreloadIgnore = new (StringComparer.OrdinalIgnoreCase) {
+		"libmonodroid.so",
+	};
 
 	SortedDictionary <string, string>? environmentVariables;
 	SortedDictionary <string, string>? systemProperties;
 	SortedDictionary <string, string>? runtimeProperties;
 	StructureInstance? application_config;
-	List<StructureInstance<DSOCacheEntry>>? dsoCache;
-	List<StructureInstance<DSOCacheEntry>>? aotDsoCache;
+
 #pragma warning disable CS0649 // Field is never assigned to, and will always have its default value - assigned conditionally by build process
 	List<StructureInstance<XamarinAndroidBundledAssembly>>? xamarinAndroidBundledAssemblies;
 #pragma warning restore CS0649
@@ -350,7 +362,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		};
 		module.Add (sysProps, stringGroupName: "sysprop", stringGroupComment: " System properties name:value pairs");
 
-		(dsoCache, aotDsoCache, LlvmIrStringBlob dsoNamesBlob) = InitDSOCache ();
+		DsoCacheState dsoState = InitDSOCache ();
 		var app_cfg = new ApplicationConfigCLR {
 			uses_assembly_preload = UsesAssemblyPreload,
 			jni_add_native_method_registration_attribute_present = JniAddNativeMethodRegistrationAttributePresent,
@@ -364,8 +376,8 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			number_of_assemblies_in_apk = (uint)NumberOfAssembliesInApk,
 			number_of_shared_libraries = (uint)NativeLibraries.Count,
 			bundled_assembly_name_width = (uint)BundledAssemblyNameWidth,
-			number_of_dso_cache_entries = (uint)dsoCache.Count,
-			number_of_aot_cache_entries = (uint)aotDsoCache.Count,
+			number_of_dso_cache_entries = (uint)dsoState.DsoCache.Count,
+			number_of_aot_cache_entries = (uint)dsoState.AotDsoCache.Count,
 			android_runtime_jnienv_class_token = (uint)AndroidRuntimeJNIEnvToken,
 			jnienv_initialize_method_token = (uint)JNIEnvInitializeToken,
 			jnienv_registerjninatives_method_token = (uint)JNIEnvRegisterJniNativesToken,
@@ -376,18 +388,27 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		application_config = new StructureInstance<ApplicationConfigCLR> (applicationConfigStructureInfo, app_cfg);
 		module.AddGlobalVariable ("application_config", application_config);
 
-		var dso_cache = new LlvmIrGlobalVariable (dsoCache, "dso_cache", LlvmIrVariableOptions.GlobalWritable) {
+		var dso_cache = new LlvmIrGlobalVariable (dsoState.DsoCache, "dso_cache", LlvmIrVariableOptions.GlobalWritable) {
 			Comment = " DSO cache entries",
 			BeforeWriteCallback = HashAndSortDSOCache,
 		};
 		module.Add (dso_cache);
 
-		var aot_dso_cache = new LlvmIrGlobalVariable (aotDsoCache, "aot_dso_cache", LlvmIrVariableOptions.GlobalWritable) {
+		// This variable MUST be written after `dso_cache` since it relies on sorting performed by HashAndSortDSOCache
+		var dso_jni_preloads_idx = new LlvmIrGlobalVariable (new List<uint> (), "dso_jni_preloads_idx", LlvmIrVariableOptions.GlobalConstant) {
+			Comment = "Indices of DSO libraries to preload because of JNI use",
+			ArrayItemCount = (uint)dsoState.JniPreloadDSOs.Count,
+			BeforeWriteCallback = PopulatePreloadIndices,
+			BeforeWriteCallbackCallerState = dsoState,
+		};
+		module.Add (dso_jni_preloads_idx);
+
+		var aot_dso_cache = new LlvmIrGlobalVariable (dsoState.AotDsoCache, "aot_dso_cache", LlvmIrVariableOptions.GlobalWritable) {
 			Comment = " AOT DSO cache entries",
 			BeforeWriteCallback = HashAndSortDSOCache,
 		};
 		module.Add (aot_dso_cache);
-		module.AddGlobalVariable ("dso_names_data", dsoNamesBlob, LlvmIrVariableOptions.GlobalConstant);
+		module.AddGlobalVariable ("dso_names_data", dsoState.NamesBlob, LlvmIrVariableOptions.GlobalConstant);
 
 		var dso_apk_entries = new LlvmIrGlobalVariable (typeof(List<StructureInstance<DSOApkEntry>>), "dso_apk_entries") {
 			ArrayItemCount = (ulong)NativeLibraries.Count,
@@ -544,6 +565,36 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		module.Add (assembly_store);
 	}
 
+	void PopulatePreloadIndices (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
+	{
+		var indices = variable.Value as List<uint>;
+		if (indices == null) {
+			throw new InvalidOperationException ($"Internal error: DSO preload indices list instance not present.");
+		}
+
+		var dsoState = state as DsoCacheState;
+		if (dsoState == null) {
+			throw new InvalidOperationException ($"Internal error: DSO state not present.");
+		}
+
+		foreach (DSOCacheEntry preload in dsoState.JniPreloadDSOs) {
+			int dsoIdx = dsoState.DsoCache.FindIndex (entry => {
+				if (entry.Instance == null) {
+					return false;
+				}
+
+				return entry.Instance.hash == preload.hash && entry.Instance.real_name_hash == preload.real_name_hash;
+			});
+
+			if (dsoIdx == -1) {
+				throw new InvalidOperationException ($"Internal error: DSO entry in JNI preload list not found in the DSO cache list.");
+			}
+
+			indices.Add ((uint)dsoIdx);
+		}
+		indices.Sort ();
+	}
+
 	void HashAndSortDSOCache (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
 	{
 		var cache = variable.Value as List<StructureInstance<DSOCacheEntry>>;
@@ -572,8 +623,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		});
 	}
 
-	(List<StructureInstance<DSOCacheEntry>> dsoCache, List<StructureInstance<DSOCacheEntry>> aotDsoCache, LlvmIrStringBlob namesBlob)
-	InitDSOCache ()
+	DsoCacheState InitDSOCache ()
 	{
 		var dsos = new List<(string name, string nameLabel, bool ignore, ITaskItem item)> ();
 		var nameCache = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
@@ -593,6 +643,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		}
 
 		var dsoCache = new List<StructureInstance<DSOCacheEntry>> ();
+		var jniPreloads = new List<DSOCacheEntry> ();
 		var aotDsoCache = new List<StructureInstance<DSOCacheEntry>> ();
 		var nameMutations = new List<string> ();
 		var dsoNamesBlob = new LlvmIrStringBlob ();
@@ -600,6 +651,9 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		for (int i = 0; i < dsos.Count; i++) {
 			string name = dsos[i].name;
 			(int nameOffset, _) = dsoNamesBlob.Add (name);
+
+			bool isJniLibrary = ELFHelper.IsJniLibrary (Log, dsos[i].item.ItemSpec);
+			bool ignore = dsos[i].ignore;
 
 			nameMutations.Clear();
 			AddNameMutations (name);
@@ -610,10 +664,14 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 					RealName = name,
 
 					hash = 0, // Hash is arch-specific, we compute it before writing
-					ignore = dsos[i].ignore,
-					is_jni_library = ELFHelper.IsJniLibrary (Log, dsos[i].item.ItemSpec),
+					ignore = ignore,
+					is_jni_library = isJniLibrary,
 					name_index = (uint)nameOffset,
 				};
+
+				if (entry.is_jni_library && entry.HashedName == name && !DsoCacheJniPreloadIgnore.Contains (name)) {
+					jniPreloads.Add (entry);
+				}
 
 				var item = new StructureInstance<DSOCacheEntry> (dsoCacheEntryStructureInfo, entry);
 				if (name.StartsWith ("libaot-", StringComparison.OrdinalIgnoreCase)) {
@@ -624,7 +682,12 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			}
 		}
 
-		return (dsoCache, aotDsoCache, dsoNamesBlob);
+		return new DsoCacheState {
+			DsoCache = dsoCache,
+			JniPreloadDSOs = jniPreloads,
+			AotDsoCache = aotDsoCache,
+			NamesBlob = dsoNamesBlob,
+		};
 
 		void AddNameMutations (string name)
 		{
