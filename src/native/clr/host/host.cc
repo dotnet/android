@@ -4,6 +4,9 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
+#include <unistd.h>
+
+#include <android/looper.h>
 
 #include <coreclrhost.h>
 
@@ -17,8 +20,10 @@
 #include <host/os-bridge.hh>
 #include <host/runtime-util.hh>
 #include <runtime-base/android-system.hh>
+#include <runtime-base/dso-loader.hh>
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
+#include <runtime-base/monodroid-dl.hh>
 #include <runtime-base/search.hh>
 #include <runtime-base/timing-internal.hh>
 #include <shared/log_types.hh>
@@ -420,6 +425,20 @@ void Host::Java_mono_android_Runtime_initInternal (
 			return detail::_format_message ("Failure to initialize CoreCLR host instance. Returned result 0x%x", static_cast<unsigned int>(hr));
 		}
 	);
+
+	DsoLoader::init (
+		env,
+		RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_System", true),
+		ALooper_forThread (), // main thread looper
+		gettid ()
+	);
+
+	for (size_t i = 0; i < dso_jni_preloads_idx_count; i++) {
+		DSOCacheEntry &entry = dso_cache[dso_jni_preloads_idx[i]];
+		const std::string_view dso_name = MonodroidDl::get_dso_name (&entry);
+		log_debug (LOG_ASSEMBLY, "Preloading JNI shared library: {}", dso_name);
+		MonodroidDl::monodroid_dlopen (&entry, dso_name, RTLD_NOW);
+	}
 
 	struct JnienvInitializeArgs init = {};
 	init.javaVm                                         = jvm;
