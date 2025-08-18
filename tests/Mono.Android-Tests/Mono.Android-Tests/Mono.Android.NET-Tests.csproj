@@ -31,7 +31,7 @@
         NetworkInterfaces excluded: https://github.com/dotnet/runtime/issues/75155
     -->
     <!-- TODO: https://github.com/dotnet/android/issues/10069 -->
-    <ExcludeCategories Condition=" '$(UseMonoRuntime)' == 'false' ">$(ExcludeCategories):CoreCLRIgnore:NTLM:RuntimeConfig</ExcludeCategories>
+    <ExcludeCategories Condition=" '$(UseMonoRuntime)' == 'false' ">$(ExcludeCategories):CoreCLRIgnore:SSL:NTLM:RuntimeConfig</ExcludeCategories>
     <!-- TODO: https://github.com/dotnet/android/issues/10079 -->
     <ExcludeCategories Condition=" '$(PublishAot)' == 'true' ">$(ExcludeCategories):NativeAOTIgnore:SSL:NTLM:GCBridge:AndroidClientHandler:Export:NativeTypeMap</ExcludeCategories>
     <!-- FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190 -->
@@ -131,7 +131,7 @@
     <AndroidJavaSource Include="java/net/dot/android/test/ValueProvider.java" />
     <AndroidJavaSource Include="java/net/dot/android/test/Example.java" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <AndroidResource Include="..\..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Resources\Base\Image.9.png">
       <Link>Resources\Drawable\Image.9.png</Link>
@@ -174,7 +174,7 @@
     <None Include="LinkedAssets\linked_text.txt" />
     <None Include="LinkedAssets\linked_text2.txt" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <AndroidAsset Include="LinkedAssets\hamburger.png">
       <Link>Assets\hamburger.png</Link>
@@ -203,7 +203,7 @@
       <LastGenOutput>AppResources.it-IT.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-  
+
   <ItemGroup>
     <Compile Include="AppResources.Designer.cs">
       <DependentUpon>AppResources.resx</DependentUpon>
@@ -212,7 +212,7 @@
       <DependentUpon>AppResources.it-IT.resx</DependentUpon>
     </Compile>
   </ItemGroup>
-  
+
   <ItemGroup>
     <AndroidNativeLibrary Include="..\libs\arm64-v8a\libreuse-threads.so" />
     <AndroidNativeLibrary Include="..\libs\armeabi-v7a\libreuse-threads.so" />
