@@ -104,16 +104,15 @@ namespace xamarin::android {
 		static void detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept;
 		static void setup_environment () noexcept;
 		static void setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks) noexcept;
-		static auto load_dso (std::string_view const& path, unsigned int dl_flags, bool skip_exists_check) noexcept -> void*;
-		static auto load_dso_from_any_directories (std::string_view const& name, unsigned int dl_flags) noexcept -> void*;
+		static auto load_dso_from_any_directories (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*;
 
 	private:
 		static auto get_full_dso_path (std::string const& base_dir, std::string_view const& dso_path, dynamic_local_string<SENSIBLE_PATH_MAX>& path) noexcept -> bool;
 
 		template<class TContainer> // TODO: replace with a concept
-		static auto load_dso_from_specified_dirs (TContainer directories, std::string_view const& dso_name, unsigned int dl_flags) noexcept -> void*;
-		static auto load_dso_from_app_lib_dirs (std::string_view const& name, unsigned int dl_flags) noexcept -> void*;
-		static auto load_dso_from_override_dirs (std::string_view const& name, unsigned int dl_flags) noexcept -> void*;
+		static auto load_dso_from_specified_dirs (TContainer directories, std::string_view const& dso_name, int dl_flags, bool is_jni) noexcept -> void*;
+		static auto load_dso_from_app_lib_dirs (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*;
+		static auto load_dso_from_override_dirs (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*;
 		static auto lookup_system_property (std::string_view const &name, size_t &value_len) noexcept -> const char*;
 		static auto monodroid__system_property_get (std::string_view const&, char *sp_value, size_t sp_value_len) noexcept -> int;
 		static auto get_max_gref_count_from_system () noexcept -> long;
