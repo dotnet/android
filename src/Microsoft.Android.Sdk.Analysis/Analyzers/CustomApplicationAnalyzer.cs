@@ -48,31 +48,44 @@ public class CustomApplicationAnalyzer : DiagnosticAnalyzer
 			.OfType<ConstructorDeclarationSyntax> ();
 
 		bool foundActivationConstructor = false;
-		foreach (var constructor in constructors) {
-			var parameters = constructor.ParameterList.Parameters;
-			if (parameters.Count != 2)
-				continue;
-			var type = parameters [0].Type switch {
-				IdentifierNameSyntax identifierNameSyntax => identifierNameSyntax.Identifier.Text,
-				QualifiedNameSyntax qualifiedNameSyntax => qualifiedNameSyntax.Right.Identifier.Text,
-				_ => parameters [0].Type.ToString ()
-			};
-			if (type != "IntPtr" && type != "nint")
-				continue;
-			var ns = Utilities.GetNamespaceForParameterType (parameters [1], context.SemanticModel);
-			type = parameters [1].Type switch {
-				IdentifierNameSyntax identifierNameSyntax => identifierNameSyntax.Identifier.Text,
-				QualifiedNameSyntax qualifiedNameSyntax => qualifiedNameSyntax.Right.Identifier.Text,
-				_ => parameters [1].Type.ToString ()
-			};
-			var isJniHandle = (ns == "Android.Runtime") && (type == "JniHandleOwnership");
-			if (!isJniHandle)
-				continue;
-			foundActivationConstructor = true;
+		
+		// Check for primary constructor
+		if (classDeclarationSyntax.ParameterList != null) {
+			foundActivationConstructor = CheckActivationConstructorParameters (classDeclarationSyntax.ParameterList.Parameters, context.SemanticModel);
+		}
+		
+		// Check for traditional constructors
+		if (!foundActivationConstructor) {
+			foreach (var constructor in constructors) {
+				foundActivationConstructor = CheckActivationConstructorParameters (constructor.ParameterList.Parameters, context.SemanticModel);
+				if (foundActivationConstructor)
+					break;
+			}
 		}
 		if (!foundActivationConstructor) {
 			var diagnostic = Diagnostic.Create (Rule, classDeclarationSyntax.Identifier.GetLocation (), classDeclarationSyntax.Identifier.Text);
 			context.ReportDiagnostic (diagnostic);
 		}
+	}
+
+	private static bool CheckActivationConstructorParameters (SeparatedSyntaxList<ParameterSyntax> parameters, SemanticModel semanticModel)
+	{
+		if (parameters.Count != 2)
+			return false;
+		var type = parameters [0].Type switch {
+			IdentifierNameSyntax identifierNameSyntax => identifierNameSyntax.Identifier.Text,
+			QualifiedNameSyntax qualifiedNameSyntax => qualifiedNameSyntax.Right.Identifier.Text,
+			_ => parameters [0].Type.ToString ()
+		};
+		if (type != "IntPtr" && type != "nint")
+			return false;
+		var ns = Utilities.GetNamespaceForParameterType (parameters [1], semanticModel);
+		type = parameters [1].Type switch {
+			IdentifierNameSyntax identifierNameSyntax => identifierNameSyntax.Identifier.Text,
+			QualifiedNameSyntax qualifiedNameSyntax => qualifiedNameSyntax.Right.Identifier.Text,
+			_ => parameters [1].Type.ToString ()
+		};
+		var isJniHandle = (ns == "Android.Runtime") && (type == "JniHandleOwnership");
+		return isJniHandle;
 	}
 }
