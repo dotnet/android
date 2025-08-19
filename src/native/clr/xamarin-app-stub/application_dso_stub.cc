@@ -112,6 +112,7 @@ DSOCacheEntry dso_cache[] = {
 		.hash = xamarin::android::xxhash::hash (fake_dso_name, sizeof(fake_dso_name) - 1),
 		.real_name_hash = xamarin::android::xxhash::hash (fake_dso_name, sizeof(fake_dso_name) - 1),
 		.ignore = true,
+		.is_jni_library = false,
 		.name_index = 1,
 		.handle = nullptr,
 	},
@@ -120,9 +121,15 @@ DSOCacheEntry dso_cache[] = {
 		.hash = xamarin::android::xxhash::hash (fake_dso_name2, sizeof(fake_dso_name2) - 1),
 		.real_name_hash = xamarin::android::xxhash::hash (fake_dso_name2, sizeof(fake_dso_name2) - 1),
 		.ignore = true,
+		.is_jni_library = false,
 		.name_index = 2,
 		.handle = nullptr,
 	},
+};
+
+const uint dso_jni_preloads_idx_count = 1;
+const uint dso_jni_preloads_idx[1] = {
+	0
 };
 
 DSOCacheEntry aot_dso_cache[] = {
