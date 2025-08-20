@@ -88,7 +88,7 @@ stages:
       parameters:
         command: test
         project: src/Microsoft.Android.Sdk.Analysis/Tests/Microsoft.Android.Sdk.Analysis.Tests.csproj
-        arguments: -c $(XA.Build.Configuration) --logger trx --results-directory $(Agent.TempDirectory)/analysis-tests"
+        arguments: -c $(XA.Build.Configuration) --logger trx --results-directory $(Agent.TempDirectory)/analysis-tests
         displayName: Test Microsoft.Android.Sdk.Analysis $(XA.Build.Configuration)
         continueOnError: true
 
