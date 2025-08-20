@@ -10,6 +10,8 @@ parameters:
   continueOnError: true
   retryCountOnTaskFailure: 0
   taskTimeoutInMinutes: 0
+  publishTestResults: false
+  testRunTitle: ''
 
 steps:
 - powershell: |
@@ -22,7 +24,14 @@ steps:
         $env:PATH = "${DOTNET_ROOT};$env:PATH"
         $dotnetPath = "${DOTNET_ROOT}\dotnet.exe"
     }
-    & $dotnetPath ${{ parameters.command }} ${{ parameters.project }} ${{ parameters.arguments }}
+    
+    $testArgs = "${{ parameters.arguments }}"
+    if ([System.Convert]::ToBoolean("${{ parameters.publishTestResults }}") -and "${{ parameters.command }}" -eq "test") {
+        $testResultsPath = "$(Agent.TempDirectory)\test-results-${{ parameters.testRunTitle }}.trx"
+        $testArgs = "$testArgs --logger trx --results-directory $(Agent.TempDirectory)"
+    }
+    
+    & $dotnetPath ${{ parameters.command }} ${{ parameters.project }} $testArgs
     if ([System.Convert]::ToBoolean("${{ parameters.useExitCodeForErrors }}") -and $LASTEXITCODE -ne 0) {
         Write-Host "##vso[task.logissue type=error]Test suite had $LASTEXITCODE failure(s)."
         Write-Host "##vso[task.complete result=Failed;]"
@@ -33,3 +42,12 @@ steps:
   continueOnError: ${{ parameters.continueOnError }}
   retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
   timeoutInMinutes: ${{ parameters.taskTimeoutInMinutes }}
+
+- task: PublishTestResults@2
+  displayName: publish ${{ parameters.testRunTitle }} test results
+  inputs:
+    testResultsFormat: VSTest
+    testResultsFiles: "$(Agent.TempDirectory)/*.trx"
+    testRunTitle: ${{ parameters.testRunTitle }}
+  condition: and(${{ parameters.condition }}, eq('${{ parameters.publishTestResults }}', 'true'), eq('${{ parameters.command }}', 'test'))
+  continueOnError: true
