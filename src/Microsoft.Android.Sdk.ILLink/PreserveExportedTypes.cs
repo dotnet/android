@@ -10,8 +10,7 @@ using Xamarin.Android.Tasks;
 
 namespace Mono.Tuner {
 
-	public class PreserveExportedTypes : BaseSubStep {
-
+	public class PreserveExportedTypes : MyBaseSubStep {
 		public override SubStepTargets Targets {
 			get {
 				return SubStepTargets.Field 
@@ -21,7 +20,7 @@ namespace Mono.Tuner {
 			}
 		}
 
-		public override bool IsActiveFor (AssemblyDefinition assembly)
+		public bool IsActiveFor (AssemblyDefinition assembly)
 		{
 			if (MonoAndroidHelper.IsFrameworkAssembly (assembly))
 				return false;
@@ -40,14 +39,11 @@ namespace Mono.Tuner {
 			ProcessExports (method);
 		}
 
+
 		public override void ProcessProperty (PropertyDefinition property)
 		{
 			ProcessExports (property.GetMethod);
 			ProcessExports (property.SetMethod);
-		}
-
-		public override void ProcessEvent (EventDefinition @event)
-		{
 		}
 
 		void ProcessExports (ICustomAttributeProvider provider)

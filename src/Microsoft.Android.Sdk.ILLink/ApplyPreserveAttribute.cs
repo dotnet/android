@@ -10,7 +10,7 @@ using Xamarin.Android.Tasks;
 namespace Microsoft.Android.Sdk.ILLink
 {
 
-	public class ApplyPreserveAttribute : BaseSubStep {
+	public class ApplyPreserveAttribute : MyBaseSubStep {
 
 		public override SubStepTargets Targets {
 			get {
