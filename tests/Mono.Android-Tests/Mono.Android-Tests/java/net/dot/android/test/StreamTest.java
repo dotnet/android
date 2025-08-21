@@ -6,7 +6,7 @@ import java.io.IOException;
 
 public class StreamTest
 {
-    static final String TAG = "StreamTest";
+    private static final String TAG = "StreamTest";
     public static final int BUFFER_SIZE = 1024;
 
     public static int InputStreamAdapter_Read(InputStream stream) throws IOException
@@ -21,6 +21,7 @@ public class StreamTest
         byte[] buffer = new byte[BUFFER_SIZE];
         return stream.read(buffer);
     }
+
     public static int InputStreamAdapter_Read_bytes_int_int(InputStream stream) throws IOException
     {
         Log.d(TAG, "StreamTest.InputStreamAdapter_Read_bytes_int_int, underlying stream type: " + stream.getClass().getName());
