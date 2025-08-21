@@ -44,35 +44,39 @@ public class CustomApplicationAnalyzer : DiagnosticAnalyzer
 		if (!Utilities.IsDerivedFrom (classSymbol, AndroidApplication))
 			return;
 
-		var constructors = classDeclarationSyntax.Members
-			.OfType<ConstructorDeclarationSyntax> ();
-
 		bool foundActivationConstructor = false;
-		foreach (var constructor in constructors) {
-			var parameters = constructor.ParameterList.Parameters;
-			if (parameters.Count != 2)
-				continue;
-			var type = parameters [0].Type switch {
-				IdentifierNameSyntax identifierNameSyntax => identifierNameSyntax.Identifier.Text,
-				QualifiedNameSyntax qualifiedNameSyntax => qualifiedNameSyntax.Right.Identifier.Text,
-				_ => parameters [0].Type.ToString ()
-			};
-			if (type != "IntPtr" && type != "nint")
-				continue;
-			var ns = Utilities.GetNamespaceForParameterType (parameters [1], context.SemanticModel);
-			type = parameters [1].Type switch {
-				IdentifierNameSyntax identifierNameSyntax => identifierNameSyntax.Identifier.Text,
-				QualifiedNameSyntax qualifiedNameSyntax => qualifiedNameSyntax.Right.Identifier.Text,
-				_ => parameters [1].Type.ToString ()
-			};
-			var isJniHandle = (ns == "Android.Runtime") && (type == "JniHandleOwnership");
-			if (!isJniHandle)
-				continue;
-			foundActivationConstructor = true;
+		
+		// Check all constructors (including primary constructors) using symbol information
+		foreach (var constructor in classSymbol.Constructors) {
+			if (HasActivationConstructorSignature (constructor)) {
+				foundActivationConstructor = true;
+				break;
+			}
 		}
+		
 		if (!foundActivationConstructor) {
 			var diagnostic = Diagnostic.Create (Rule, classDeclarationSyntax.Identifier.GetLocation (), classDeclarationSyntax.Identifier.Text);
 			context.ReportDiagnostic (diagnostic);
 		}
+	}
+
+	private static bool HasActivationConstructorSignature (IMethodSymbol constructor)
+	{
+		if (constructor.Parameters.Length != 2)
+			return false;
+
+		var firstParam = constructor.Parameters [0];
+		var secondParam = constructor.Parameters [1];
+
+		// Check first parameter: IntPtr or nint
+		var firstParamType = firstParam.Type.ToDisplayString ();
+		bool isValidFirstParam = firstParamType == "System.IntPtr" || firstParamType == "nint";
+
+		// Check second parameter: Android.Runtime.JniHandleOwnership
+		var secondParamType = secondParam.Type;
+		bool isValidSecondParam = secondParamType.ContainingNamespace?.ToDisplayString () == "Android.Runtime" && 
+		                         secondParamType.Name == "JniHandleOwnership";
+
+		return isValidFirstParam && isValidSecondParam;
 	}
 }
