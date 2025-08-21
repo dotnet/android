@@ -49,14 +49,6 @@ stages:
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false
 
-    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
-      parameters:
-        command: test
-        project: src/Microsoft.Android.Sdk.Analysis/Tests/Microsoft.Android.Sdk.Analysis.Tests.csproj 
-        arguments: -c $(XA.Build.Configuration)
-        displayName: Test Microsoft.Android.Sdk.Analysis $(XA.Build.Configuration)
-        continueOnError: false
-
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
 
     - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
@@ -152,14 +144,6 @@ stages:
         project: Xamarin.Android.sln
         arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
         displayName: prepare java.interop $(XA.Build.Configuration)
-        continueOnError: false
-
-    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
-      parameters:
-        command: test
-        project: src/Microsoft.Android.Sdk.Analysis/Tests/Microsoft.Android.Sdk.Analysis.Tests.csproj 
-        arguments: -c $(XA.Build.Configuration)
-        displayName: Test Microsoft.Android.Sdk.Analysis $(XA.Build.Configuration)
         continueOnError: false
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml

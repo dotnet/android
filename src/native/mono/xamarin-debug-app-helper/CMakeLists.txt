@@ -2,6 +2,7 @@ set(LIB_NAME xamarin-debug-app-helper)
 set(LIB_ALIAS xa::debug-app-helper)
 
 set(XAMARIN_DEBUG_HELPER_SOURCES
+  ../monodroid/runtime-environment.cc
   debug-app-helper.cc
 )
 add_clang_check_sources("${XAMARIN_DEBUG_HELPER_SOURCES}")
@@ -19,6 +20,7 @@ target_include_directories(
   SYSTEM PRIVATE
   ${SYSROOT_CXX_INCLUDE_DIR}
   ${RUNTIME_INCLUDE_DIR}
+  ../monodroid/
 )
 
 target_compile_definitions(
@@ -53,6 +55,7 @@ target_link_libraries(
   xa::runtime-base
   xa::java-interop
   -ldl
+  -landroid
   -llog
   -lmonosgen-2.0
 )

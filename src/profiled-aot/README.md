@@ -13,7 +13,7 @@ Build .NET for Android following our instructions to build on
 Run the `Record` target:
 
 ```bash
-$ ./bin/Release/dotnet/dotnet build src/profiled-aot/build.proj
+./dotnet-local build src/profiled-aot/build.proj
 ```
 
 You can also use `-r android-x64`, if you'd prefer an x86_64 emulator.
@@ -34,7 +34,7 @@ you get are either "the same" or slightly better than before.
 Build .NET for Android again in `Release` mode to get the updated
 profiles, or manually copy the new `dotnet.aotprofile` to:
 
-```
+```bash
 ./bin/Release/dotnet/packs/Microsoft.Android.Sdk.Windows/*/targets/dotnet.aotprofile
 ```
 

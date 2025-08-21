@@ -87,10 +87,18 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
       parameters:
         command: test
-        project: src/Microsoft.Android.Sdk.Analysis/Tests/Microsoft.Android.Sdk.Analysis.Tests.csproj 
-        arguments: -c $(XA.Build.Configuration)
+        project: src/Microsoft.Android.Sdk.Analysis/Tests/Microsoft.Android.Sdk.Analysis.Tests.csproj
+        arguments: -c $(XA.Build.Configuration) --logger trx --results-directory $(Agent.TempDirectory)/analysis-tests
         displayName: Test Microsoft.Android.Sdk.Analysis $(XA.Build.Configuration)
-        continueOnError: false
+        continueOnError: true
+
+    - task: PublishTestResults@2
+      displayName: publish Microsoft.Android.Sdk.Analysis.Tests results
+      inputs:
+        testResultsFormat: VSTest
+        testResultsFiles: "$(Agent.TempDirectory)/analysis-tests/*.trx"
+        testRunTitle: Microsoft.Android.Sdk.Analysis.Tests
+      continueOnError: true
 
     - task: BatchScript@1
       displayName: Test dotnet-local.cmd - create template

@@ -35,6 +35,7 @@
 #include "util.hh"
 #include "globals.hh"
 #include <shared/cpp-util.hh>
+#include <runtime-base/dso-loader.hh>
 #include <runtime-base/timing-internal.hh>
 
 #include "java-interop-dlfcn.h"
@@ -78,15 +79,18 @@ Debug::monodroid_profiler_load (const char *libmono_path, const char *desc, cons
 	}
 	std::unique_ptr<char> mname {mname_ptr};
 
-	unsigned int dlopen_flags = JAVA_INTEROP_LIB_LOAD_LOCALLY;
+	constexpr int dlopen_flags = RTLD_LOCAL;
+	constexpr bool IsJni = false;
 	std::unique_ptr<char> libname {Util::string_concat ("libmono-profiler-", mname.get (), ".so")};
 	bool found = false;
-	void *handle = AndroidSystem::load_dso_from_any_directories (libname.get (), dlopen_flags);
+	void *handle = AndroidSystem::load_dso_from_any_directories (libname.get (), dlopen_flags, IsJni);
 	found = load_profiler_from_handle (handle, desc, mname.get ());
 
 	if (!found && libmono_path != nullptr) {
 		std::unique_ptr<char> full_path {Util::path_combine (libmono_path, libname.get ())};
-		handle = AndroidSystem::load_dso (full_path.get (), dlopen_flags, FALSE);
+
+		constexpr bool SkipExistsCheck = false;
+		handle = DsoLoader::load<SkipExistsCheck> (full_path.get (), dlopen_flags, IsJni);
 		found = load_profiler_from_handle (handle, desc, mname.get ());
 	}
 

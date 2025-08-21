@@ -9,6 +9,7 @@
 #include <shared/cpp-util.hh>
 #include "java-interop-dlfcn.h"
 #include "java-interop.h"
+#include <runtime-base/dso-loader.hh>
 #include <runtime-base/jni-wrappers.hh>
 #include "shared-constants.hh"
 #include <runtime-base/strings.hh>
@@ -301,27 +302,7 @@ AndroidSystem::get_full_dso_path (const char *base_dir, const char *dso_path, dy
 }
 
 void*
-AndroidSystem::load_dso (const char *path, unsigned int dl_flags, bool skip_exists_check) noexcept
-{
-	if (path == nullptr || *path == '\0')
-		return nullptr;
-
-	log_info (LOG_ASSEMBLY, "Trying to load shared library '{}'", path);
-	if (!skip_exists_check && !is_embedded_dso_mode_enabled () && !Util::file_exists (path)) {
-		log_info (LOG_ASSEMBLY, "Shared library '{}' not found", path);
-		return nullptr;
-	}
-
-	char *error = nullptr;
-	void *handle = java_interop_lib_load (path, dl_flags, &error);
-	if (handle == nullptr && Util::should_log (LOG_ASSEMBLY))
-		log_info_nocheck_fmt (LOG_ASSEMBLY, "Failed to load shared library '{}'. {}", path, error);
-	java_interop_free (error);
-	return handle;
-}
-
-void*
-AndroidSystem::load_dso_from_specified_dirs (const char **directories, size_t num_entries, const char *dso_name, unsigned int dl_flags) noexcept
+AndroidSystem::load_dso_from_specified_dirs (const char **directories, size_t num_entries, const char *dso_name, int dl_flags, bool is_jni) noexcept
 {
 	abort_if_invalid_pointer_argument (directories, "directories");
 	if (dso_name == nullptr)
@@ -332,7 +313,7 @@ AndroidSystem::load_dso_from_specified_dirs (const char **directories, size_t nu
 		if (!get_full_dso_path (directories [i], dso_name, full_path)) {
 			continue;
 		}
-		void *handle = load_dso (full_path.get (), dl_flags, false);
+		void *handle = DsoLoader::load (full_path.get (), dl_flags, is_jni);
 		if (handle != nullptr)
 			return handle;
 	}
@@ -341,27 +322,27 @@ AndroidSystem::load_dso_from_specified_dirs (const char **directories, size_t nu
 }
 
 void*
-AndroidSystem::load_dso_from_app_lib_dirs (const char *name, unsigned int dl_flags) noexcept
+AndroidSystem::load_dso_from_app_lib_dirs (const char *name, int dl_flags, bool is_jni) noexcept
 {
-	return load_dso_from_specified_dirs (app_lib_directories.data (), app_lib_directories.size (), name, dl_flags);
+	return load_dso_from_specified_dirs (app_lib_directories.data (), app_lib_directories.size (), name, dl_flags, is_jni);
 }
 
 void*
-AndroidSystem::load_dso_from_override_dirs ([[maybe_unused]] const char *name, [[maybe_unused]] unsigned int dl_flags) noexcept
+AndroidSystem::load_dso_from_override_dirs ([[maybe_unused]] const char *name, [[maybe_unused]] int dl_flags, [[maybe_unused]] bool is_jni) noexcept
 {
 #ifdef RELEASE
 	return nullptr;
 #else // def RELEASE
-	return load_dso_from_specified_dirs (const_cast<const char**> (AndroidSystem::override_dirs.data ()), AndroidSystem::override_dirs.size (), name, dl_flags);
+	  return load_dso_from_specified_dirs (const_cast<const char**> (AndroidSystem::override_dirs.data ()), AndroidSystem::override_dirs.size (), name, dl_flags, is_jni);
 #endif // ndef RELEASE
 }
 
 void*
-AndroidSystem::load_dso_from_any_directories (const char *name, unsigned int dl_flags) noexcept
+AndroidSystem::load_dso_from_any_directories (const char *name, int dl_flags, bool is_jni) noexcept
 {
-	void *handle = load_dso_from_override_dirs (name, dl_flags);
+	void *handle = load_dso_from_override_dirs (name, dl_flags, is_jni);
 	if (handle == nullptr)
-		handle = load_dso_from_app_lib_dirs (name, dl_flags);
+		handle = load_dso_from_app_lib_dirs (name, dl_flags, is_jni);
 	return handle;
 }
 

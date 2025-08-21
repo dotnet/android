@@ -51,6 +51,138 @@ namespace Android.App {{
 ";
 		await VerifyCS.VerifyAnalyzerAsync (test);
 	}
+	[Test]
+	[TestCase ("IntPtr", "JniHandleOwnership")]
+	[TestCase ("nint", "Android.Runtime.JniHandleOwnership")]
+	[TestCase ("global::System.IntPtr", "global::Android.Runtime.JniHandleOwnership")]
+	[TestCase ("System.IntPtr", "AR.JniHandleOwnership")]
+	public async Task DNAA0001DoesNotShowForPrimaryConstructor (string handle, string type)
+	{
+		var test = $@"
+using System;
+using Android.App;
+using Android.Runtime;
+using AR = Android.Runtime;
+namespace ConsoleApplication1
+{{
+	public class Foo({handle} javaReference, {type} transfer) : Application(javaReference, transfer)
+	{{
+	}}
+}}
+namespace Android.Runtime {{
+	public enum JniHandleOwnership {{
+		None,
+	}};
+}}
+namespace Android.App {{
+	using Android.Runtime;
+	public class Application {{
+		public Application () {{}}
+		protected Application (IntPtr handle, JniHandleOwnership transfer) {{
+		}}
+	}}
+}}
+";
+		await VerifyCS.VerifyAnalyzerAsync (test);
+	}
+
+	[Test]
+	public async Task DNAA0001DoesNotShowForOriginalIssueExample ()
+	{
+		var test = @"
+using System;
+using Android.App;
+using Android.Runtime;
+
+namespace ConsoleApplication1
+{
+	public class MainApplication(IntPtr handle, JniHandleOwnership ownership) : Application(handle, ownership)
+	{
+	}
+}
+namespace Android.Runtime {
+	public enum JniHandleOwnership {
+		None,
+	};
+}
+namespace Android.App {
+	using Android.Runtime;
+	public class Application {
+		public Application () {}
+		protected Application (IntPtr handle, JniHandleOwnership transfer)
+		{
+		}
+	}
+}
+";
+		await VerifyCS.VerifyAnalyzerAsync (test);
+	}
+
+	[Test]
+	public async Task DNAA0001IsShownForInvalidPrimaryConstructor ()
+	{
+		var brokenCode = @"
+using System;
+using Android.App;
+using Android.Runtime;
+
+namespace ConsoleApplication1
+{
+	public class Foo(string name) : Application()
+	{   
+	}
+}
+namespace Android.Runtime {
+	public enum JniHandleOwnership {
+		None,
+	};
+}
+namespace Android.App {
+	using Android.Runtime;
+	public class Application {
+		public Application () {}
+		protected Application (IntPtr handle, JniHandleOwnership transfer)
+		{
+		}
+	}
+}
+";
+		var expected = VerifyCS.Diagnostic ().WithSpan (8, 15, 8, 18).WithArguments ("Foo");
+		await VerifyCS.VerifyAnalyzerAsync (brokenCode, expected);
+	}
+
+	[Test]
+	public async Task DNAA0001IsShownForEmptyPrimaryConstructor ()
+	{
+		var brokenCode = @"
+using System;
+using Android.App;
+using Android.Runtime;
+
+namespace ConsoleApplication1
+{
+	public class Foo() : Application()
+	{   
+	}
+}
+namespace Android.Runtime {
+	public enum JniHandleOwnership {
+		None,
+	};
+}
+namespace Android.App {
+	using Android.Runtime;
+	public class Application {
+		public Application () {}
+		protected Application (IntPtr handle, JniHandleOwnership transfer)
+		{
+		}
+	}
+}
+";
+		var expected = VerifyCS.Diagnostic ().WithSpan (8, 15, 8, 18).WithArguments ("Foo");
+		await VerifyCS.VerifyAnalyzerAsync (brokenCode, expected);
+	}
 
 	[Test]
 	public async Task DNAA0001IsShownWhenUsingFullyQualifiedType ()

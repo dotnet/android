@@ -346,9 +346,14 @@ namespace Xamarin.Android.Tasks
 				}
 
 				string sigParams = signature.Substring (1, sigEndIdx - 1);
-				if (sigParams.Length > 0) {
+				bool haveParams = sigParams.Length > 0;
+				if (useFullNativeSignature || haveParams) {
+					// We always append the underscores for overloaded methods, see https://github.com/dotnet/android/issues/10417#issuecomment-3210789627
+					// for the reason why
 					sb.Append ("__");
-					sb.Append (MangleForJni (sigParams));
+					if (haveParams) {
+						sb.Append (MangleForJni (sigParams));
+					}
 				}
 			}
 

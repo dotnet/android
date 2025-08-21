@@ -258,6 +258,7 @@ struct DSOCacheEntry
 	const uint64_t  hash;
 	const uint64_t  real_name_hash;
 	const bool      ignore;
+	const bool      is_jni_library;
 	const uint32_t  name_index;
 	void           *handle;
 };
@@ -347,6 +348,8 @@ extern "C" {
 	[[gnu::visibility("default")]] extern AssemblyStoreRuntimeData assembly_store;
 
 	[[gnu::visibility("default")]] extern DSOCacheEntry dso_cache[];
+	[[gnu::visibility("default")]] extern const uint dso_jni_preloads_idx_count;
+	[[gnu::visibility("default")]] extern const uint dso_jni_preloads_idx[];
 	[[gnu::visibility("default")]] extern DSOCacheEntry aot_dso_cache[];
 	[[gnu::visibility("default")]] extern const char dso_names_data[];
 	[[gnu::visibility("default")]] extern DSOApkEntry dso_apk_entries[];
