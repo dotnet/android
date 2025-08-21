@@ -31,8 +31,21 @@
 
   <Target Name="_CreateItemGroups">
     <ItemGroup>
-      <_AndroidRuntimeNames Include="@(AndroidAbiAndRuntimeFlavor->'%(AndroidRuntime)'->Distinct())" />
-      <_AndroidRIDs Include="android-arm;android-arm64;android-x86;android-x64" Runtime="%(_AndroidRuntimeNames.Identity)" />
+      <_AndroidRIDs
+          Include="%(AndroidSupportedTargetJitAbi.AndroidRID)"
+          Condition="'%(AndroidSupportedTargetJitAbi.SupportMonoVM)' == 'true'"
+          Runtime="Mono"
+      />
+      <_AndroidRIDs
+          Include="%(AndroidSupportedTargetJitAbi.AndroidRID)"
+          Condition="'%(AndroidSupportedTargetJitAbi.SupportNativeAOT)' == 'true'"
+          Runtime="NativeAOT"
+      />
+      <_AndroidRIDs
+          Include="%(AndroidSupportedTargetJitAbi.AndroidRID)"
+          Condition="'%(AndroidSupportedTargetJitAbi.SupportCoreCLR)' == 'true'"
+          Runtime="CoreCLR"
+      />
     </ItemGroup>
   </Target>
 
