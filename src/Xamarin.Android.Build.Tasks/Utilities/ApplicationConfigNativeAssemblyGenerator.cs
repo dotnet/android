@@ -61,7 +61,6 @@ namespace Xamarin.Android.Tasks
 			[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 			public ulong real_name_hash;
 			public bool ignore;
-			public bool is_jni_library;
 
 			[NativeAssembler (UsesDataProvider = true)]
 			public string? name;
@@ -157,19 +156,14 @@ namespace Xamarin.Android.Tasks
 		}
 		#pragma warning restore CS0649
 
-		sealed class DsoCacheState
-		{
-			public List<StructureInstance<DSOCacheEntry>> DsoCache = [];
-			public List<DSOCacheEntry> JniPreloadDSOs = [];
-			public List<StructureInstance<DSOCacheEntry>> AotDsoCache = [];
-		}
-
 		// Keep in sync with FORMAT_TAG in src/monodroid/jni/xamarin-app.hh
 		const ulong FORMAT_TAG = 0x00025E6972616D58; // 'Xmari^XY' where XY is the format version
 
 		SortedDictionary <string, string>? environmentVariables;
 		SortedDictionary <string, string>? systemProperties;
 		StructureInstance? application_config;
+		List<StructureInstance<DSOCacheEntry>>? dsoCache;
+		List<StructureInstance<DSOCacheEntry>>? aotDsoCache;
 		List<StructureInstance<XamarinAndroidBundledAssembly>>? xamarinAndroidBundledAssemblies;
 
 		StructureInfo? applicationConfigStructureInfo;
@@ -235,7 +229,7 @@ namespace Xamarin.Android.Tasks
 			};
 			module.Add (sysProps, stringGroupName: "sysprop", stringGroupComment: " System properties name:value pairs");
 
-			DsoCacheState dsoState = InitDSOCache ();
+			(dsoCache, aotDsoCache) = InitDSOCache ();
 			var app_cfg = new ApplicationConfig {
 				uses_mono_llvm = UsesMonoLLVM,
 				uses_mono_aot = UsesMonoAOT,
@@ -255,8 +249,8 @@ namespace Xamarin.Android.Tasks
 				number_of_assemblies_in_apk = (uint)NumberOfAssembliesInApk,
 				number_of_shared_libraries = (uint)NativeLibraries.Count,
 				bundled_assembly_name_width = (uint)BundledAssemblyNameWidth,
-				number_of_dso_cache_entries = (uint)dsoState.DsoCache.Count,
-				number_of_aot_cache_entries = (uint)dsoState.AotDsoCache.Count,
+				number_of_dso_cache_entries = (uint)dsoCache.Count,
+				number_of_aot_cache_entries = (uint)aotDsoCache.Count,
 				android_runtime_jnienv_class_token = (uint)AndroidRuntimeJNIEnvToken,
 				jnienv_initialize_method_token = (uint)JNIEnvInitializeToken,
 				jnienv_registerjninatives_method_token = (uint)JNIEnvRegisterJniNativesToken,
@@ -268,23 +262,13 @@ namespace Xamarin.Android.Tasks
 			application_config = new StructureInstance<ApplicationConfig> (applicationConfigStructureInfo, app_cfg);
 			module.AddGlobalVariable ("application_config", application_config);
 
-			var dso_cache = new LlvmIrGlobalVariable (dsoState.DsoCache, "dso_cache", LlvmIrVariableOptions.GlobalWritable) {
+			var dso_cache = new LlvmIrGlobalVariable (dsoCache, "dso_cache", LlvmIrVariableOptions.GlobalWritable) {
 				Comment = " DSO cache entries",
 				BeforeWriteCallback = HashAndSortDSOCache,
 			};
 			module.Add (dso_cache);
 
-			// This variable MUST be written after `dso_cache` since it relies on sorting performed by HashAndSortDSOCache
-			var dso_jni_preloads_idx = new LlvmIrGlobalVariable (new List<uint> (), "dso_jni_preloads_idx", LlvmIrVariableOptions.GlobalConstant) {
-				Comment = " Indices into dso_cache[] of DSO libraries to preload because of JNI use",
-				ArrayItemCount = (uint)dsoState.JniPreloadDSOs.Count,
-				BeforeWriteCallback = PopulatePreloadIndices,
-				BeforeWriteCallbackCallerState = dsoState,
-			};
-			module.AddGlobalVariable ("dso_jni_preloads_idx_count", dso_jni_preloads_idx.ArrayItemCount);
-			module.Add (dso_jni_preloads_idx);
-
-			var aot_dso_cache = new LlvmIrGlobalVariable (dsoState.AotDsoCache, "aot_dso_cache", LlvmIrVariableOptions.GlobalWritable) {
+			var aot_dso_cache = new LlvmIrGlobalVariable (aotDsoCache, "aot_dso_cache", LlvmIrVariableOptions.GlobalWritable) {
 				Comment = " AOT DSO cache entries",
 				BeforeWriteCallback = HashAndSortDSOCache,
 			};
@@ -346,36 +330,6 @@ namespace Xamarin.Android.Tasks
 			module.Add (assembly_store);
 		}
 
-		void PopulatePreloadIndices (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
-		{
-			var indices = variable.Value as List<uint>;
-			if (indices == null) {
-				throw new InvalidOperationException ($"Internal error: DSO preload indices list instance not present.");
-			}
-
-			var dsoState = state as DsoCacheState;
-			if (dsoState == null) {
-				throw new InvalidOperationException ($"Internal error: DSO state not present.");
-			}
-
-			foreach (DSOCacheEntry preload in dsoState.JniPreloadDSOs) {
-				int dsoIdx = dsoState.DsoCache.FindIndex (entry => {
-					if (entry.Instance == null) {
-						return false;
-					}
-
-					return entry.Instance.hash == preload.hash && entry.Instance.real_name_hash == preload.real_name_hash;
-				});
-
-				if (dsoIdx == -1) {
-					throw new InvalidOperationException ($"Internal error: DSO entry in JNI preload list not found in the DSO cache list.");
-				}
-
-				indices.Add ((uint)dsoIdx);
-			}
-			indices.Sort ();
-		}
-
 		void HashAndSortDSOCache (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
 		{
 			var cache = variable.Value as List<StructureInstance<DSOCacheEntry>>;
@@ -404,9 +358,9 @@ namespace Xamarin.Android.Tasks
 			});
 		}
 
-		DsoCacheState InitDSOCache ()
+		(List<StructureInstance<DSOCacheEntry>> dsoCache, List<StructureInstance<DSOCacheEntry>> aotDsoCache) InitDSOCache ()
 		{
-			var dsos = new List<(string name, string nameLabel, bool ignore, ITaskItem item)> ();
+			var dsos = new List<(string name, string nameLabel, bool ignore)> ();
 			var nameCache = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
 			foreach (ITaskItem item in NativeLibraries) {
@@ -420,36 +374,25 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				dsos.Add ((name, $"dsoName{dsos.Count.ToString (CultureInfo.InvariantCulture)}", ELFHelper.IsEmptyAOTLibrary (Log, item.ItemSpec), item));
+				dsos.Add ((name, $"dsoName{dsos.Count.ToString (CultureInfo.InvariantCulture)}", ELFHelper.IsEmptyAOTLibrary (Log, item.ItemSpec)));
 			}
 
 			var dsoCache = new List<StructureInstance<DSOCacheEntry>> ();
-			var jniPreloads = new List<DSOCacheEntry> ();
 			var aotDsoCache = new List<StructureInstance<DSOCacheEntry>> ();
 			var nameMutations = new List<string> ();
 
 			for (int i = 0; i < dsos.Count; i++) {
 				string name = dsos[i].name;
-
-				bool isJniLibrary = ELFHelper.IsJniLibrary (Log, dsos[i].item.ItemSpec);
-				bool ignore = dsos[i].ignore;
-
 				nameMutations.Clear();
 				AddNameMutations (name);
-
 				// All mutations point to the actual library name, but have hash of the mutated one
 				foreach (string entryName in nameMutations) {
 					var entry = new DSOCacheEntry {
 						HashedName = entryName,
 						hash = 0, // Hash is arch-specific, we compute it before writing
-						ignore = ignore,
-						is_jni_library = isJniLibrary,
+						ignore = dsos[i].ignore,
 						name = name,
 					};
-
-					if (entry.is_jni_library && entry.HashedName == name && !ApplicationConfigNativeAssemblyGeneratorCLR.DsoCacheJniPreloadIgnore.Contains (name)) {
-						jniPreloads.Add (entry);
-					}
 
 					var item = new StructureInstance<DSOCacheEntry> (dsoCacheEntryStructureInfo, entry);
 					if (name.StartsWith ("libaot-", StringComparison.OrdinalIgnoreCase)) {
@@ -460,11 +403,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			return new DsoCacheState {
-				DsoCache = dsoCache,
-				AotDsoCache = aotDsoCache,
-				JniPreloadDSOs = jniPreloads,
-			};
+			return (dsoCache, aotDsoCache);
 
 			void AddNameMutations (string name)
 			{

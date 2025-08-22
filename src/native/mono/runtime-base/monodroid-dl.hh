@@ -10,7 +10,6 @@
 
 #include "android-system.hh"
 #include "monodroid-state.hh"
-#include <runtime-base/dso-loader.hh>
 #include <runtime-base/search.hh>
 #include "shared-constants.hh"
 #include "startup-aware-lock.hh"
@@ -31,9 +30,12 @@ namespace xamarin::android::internal
 
 		static inline xamarin::android::mutex   dso_handle_write_lock;
 
-		constexpr static int convert_dl_flags (int flags) noexcept
+		static unsigned int convert_dl_flags (int flags) noexcept
 		{
-			return (flags & static_cast<int> (MONO_DL_LOCAL)) ? RTLD_LOCAL : RTLD_GLOBAL;
+			unsigned int lflags = (flags & static_cast<int> (MONO_DL_LOCAL))
+								  ? microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_LOCALLY
+								  : microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_GLOBALLY;
+			return lflags;
 		}
 
 		template<CacheKind WhichCache>
@@ -128,66 +130,17 @@ namespace xamarin::android::internal
 				}
 			}
 
-			int dl_flags = convert_dl_flags (flags);
-			constexpr bool IsJniLib = false; // Mono components won't be using JNI
-			void *handle = AndroidSystem::load_dso_from_any_directories (name, dl_flags, IsJniLib);
+			unsigned int dl_flags = convert_dl_flags (flags);
+			void * handle = AndroidSystem::load_dso_from_any_directories (name, dl_flags);
 			if (handle != nullptr) {
 				return monodroid_dlopen_log_and_return (handle, err, name, false /* name_needs_free */);
 			}
 
-			constexpr bool SkipExistingCheck = false;
-			handle = DsoLoader::load<SkipExistingCheck> (name, dl_flags, IsJniLib);
-
+			handle = AndroidSystem::load_dso (name, dl_flags, false /* skip_existing_check */);
 			return monodroid_dlopen_log_and_return (handle, err, name, false /* name_needs_free */);
 		}
 
 	public:
-		[[gnu::flatten]]
-		static void* monodroid_dlopen (DSOCacheEntry *dso, hash_t name_hash, const char *name, int flags, char **err) noexcept
-		{
-			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash match {}found, DSO name is '{}'", dso == nullptr ? "not "sv : ""sv, dso == nullptr ? "<unknown>"sv : dso->name);
-
-			if (dso == nullptr) {
-				// DSO not known at build time, try to load it
-				return monodroid_dlopen_ignore_component_or_load (name_hash, name, flags, err);
-			} else if (dso->handle != nullptr) {
-				return monodroid_dlopen_log_and_return (dso->handle, err, dso->name, false /* name_needs_free */);
-			}
-
-			if (dso->ignore) {
-				log_info (LOG_ASSEMBLY, "Request to load '{}' ignored, it is known not to exist", dso->name);
-				return nullptr;
-			}
-
-			int dl_flags = convert_dl_flags (flags);
-			StartupAwareLock lock (dso_handle_write_lock);
-#if defined (RELEASE)
-			if (AndroidSystem::is_embedded_dso_mode_enabled ()) {
-				DSOApkEntry *apk_entry = dso_apk_entries;
-				for (size_t i = 0uz; i < application_config.number_of_shared_libraries; i++) {
-					if (apk_entry->name_hash != dso->real_name_hash) {
-						apk_entry++;
-						continue;
-					}
-
-					dso->handle = DsoLoader::load (apk_entry->fd, apk_entry->offset, name, dl_flags, dso->is_jni_library);
-					if (dso->handle != nullptr) {
-						return monodroid_dlopen_log_and_return (dso->handle, err, dso->name, false /* name_needs_free */);
-					}
-					break;
-				}
-			}
-#endif
-			dso->handle = AndroidSystem::load_dso_from_any_directories (dso->name, dl_flags, dso->is_jni_library);
-
-			if (dso->handle != nullptr) {
-				return monodroid_dlopen_log_and_return (dso->handle, err, dso->name, false /* name_needs_free */);
-			}
-
-			dso->handle = AndroidSystem::load_dso_from_any_directories (name, dl_flags, dso->is_jni_library);
-			return monodroid_dlopen_log_and_return (dso->handle, err, name, false /* name_needs_free */);
-		}
-
 		[[gnu::flatten]]
 		static void* monodroid_dlopen (const char *name, int flags, char **err, bool prefer_aot_cache) noexcept
 		{
@@ -214,7 +167,52 @@ namespace xamarin::android::internal
 				dso = find_only_dso_cache_entry (name_hash);
 			}
 
-			return monodroid_dlopen (dso, name_hash, name, flags, err);
+			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash match {}found, DSO name is '{}'", dso == nullptr ? "not "sv : ""sv, dso == nullptr ? "<unknown>"sv : dso->name);
+
+			if (dso == nullptr) {
+				// DSO not known at build time, try to load it
+				return monodroid_dlopen_ignore_component_or_load (name_hash, name, flags, err);
+			} else if (dso->handle != nullptr) {
+				return monodroid_dlopen_log_and_return (dso->handle, err, dso->name, false /* name_needs_free */);
+			}
+
+			if (dso->ignore) {
+				log_info (LOG_ASSEMBLY, "Request to load '{}' ignored, it is known not to exist", dso->name);
+				return nullptr;
+			}
+
+			StartupAwareLock lock (dso_handle_write_lock);
+#if defined (RELEASE)
+			if (AndroidSystem::is_embedded_dso_mode_enabled ()) {
+				DSOApkEntry *apk_entry = dso_apk_entries;
+				for (size_t i = 0uz; i < application_config.number_of_shared_libraries; i++) {
+					if (apk_entry->name_hash != dso->real_name_hash) {
+						apk_entry++;
+						continue;
+					}
+
+					android_dlextinfo dli;
+					dli.flags = ANDROID_DLEXT_USE_LIBRARY_FD | ANDROID_DLEXT_USE_LIBRARY_FD_OFFSET;
+					dli.library_fd = apk_entry->fd;
+					dli.library_fd_offset = apk_entry->offset;
+					dso->handle = android_dlopen_ext (dso->name, flags, &dli);
+
+					if (dso->handle != nullptr) {
+						return monodroid_dlopen_log_and_return (dso->handle, err, dso->name, false /* name_needs_free */);
+					}
+					break;
+				}
+			}
+#endif
+			unsigned int dl_flags = convert_dl_flags (flags);
+			dso->handle = AndroidSystem::load_dso_from_any_directories (dso->name, dl_flags);
+
+			if (dso->handle != nullptr) {
+				return monodroid_dlopen_log_and_return (dso->handle, err, dso->name, false /* name_needs_free */);
+			}
+
+			dso->handle = AndroidSystem::load_dso_from_any_directories (name, dl_flags);
+			return monodroid_dlopen_log_and_return (dso->handle, err, name, false /* name_needs_free */);
 		}
 
 		[[gnu::flatten]]

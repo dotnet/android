@@ -88,7 +88,8 @@ namespace xamarin::android::internal {
 		static char* get_bundled_app (JNIEnv *env, jstring dir) noexcept;
 		static int count_override_assemblies () noexcept;
 		static long get_gref_gc_threshold () noexcept;
-		static void* load_dso_from_any_directories (const char *name, int dl_flags, bool is_jni) noexcept;
+		static void* load_dso (const char *path, unsigned int dl_flags, bool skip_exists_check) noexcept;
+		static void* load_dso_from_any_directories (const char *name, unsigned int dl_flags) noexcept;
 		static bool get_full_dso_path_on_disk (const char *dso_name, dynamic_local_string<SENSIBLE_PATH_MAX>& path) noexcept;
 		static void setup_environment () noexcept;
 		static void setup_process_args (jstring_array_wrapper &runtimeApks) noexcept;
@@ -207,9 +208,9 @@ namespace xamarin::android::internal {
 		static size_t  _monodroid_get_system_property_from_file (const char *path, char **value) noexcept;
 #endif
 		static bool get_full_dso_path (const char *base_dir, const char *dso_path, dynamic_local_string<SENSIBLE_PATH_MAX>& path) noexcept;
-		static void* load_dso_from_specified_dirs (const char **directories, size_t num_entries, const char *dso_name, int dl_flags, bool is_jni) noexcept;
-		static void* load_dso_from_app_lib_dirs (const char *name, int dl_flags, bool is_jni) noexcept;
-		static void* load_dso_from_override_dirs (const char *name, int dl_flags, bool is_jni) noexcept;
+		static void* load_dso_from_specified_dirs (const char **directories, size_t num_entries, const char *dso_name, unsigned int dl_flags) noexcept;
+		static void* load_dso_from_app_lib_dirs (const char *name, unsigned int dl_flags) noexcept;
+		static void* load_dso_from_override_dirs (const char *name, unsigned int dl_flags) noexcept;
 		static bool get_existing_dso_path_on_disk (const char *base_dir, const char *dso_name, dynamic_local_string<SENSIBLE_PATH_MAX>& path) noexcept;
 
 	private:

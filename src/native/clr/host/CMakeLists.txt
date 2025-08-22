@@ -34,7 +34,6 @@ set(XAMARIN_MONODROID_SOURCES
   host-util.cc
   internal-pinvokes.cc
   os-bridge.cc
-  runtime-environment.cc
   runtime-util.cc
   typemap.cc
   xamarin_getifaddrs.cc
@@ -154,7 +153,6 @@ macro(lib_target_options TARGET_NAME)
     xa::java-interop
     xa::pinvoke-override-precompiled
     xa::lz4
-    -landroid
     -llog
     -lcoreclr
   )

@@ -8,7 +8,6 @@
 #include <xamarin-app.hh>
 #include <runtime-base/android-system.hh>
 #include <runtime-base/cpu-arch.hh>
-#include <runtime-base/dso-loader.hh>
 #include <runtime-base/strings.hh>
 #include <runtime-base/util.hh>
 
@@ -431,8 +430,30 @@ auto AndroidSystem::get_full_dso_path (std::string const& base_dir, std::string_
 	return true;
 }
 
+auto AndroidSystem::load_dso (std::string_view const& path, unsigned int dl_flags, bool skip_exists_check) noexcept -> void*
+{
+	if (path.empty ()) [[unlikely]] {
+		return nullptr;
+	}
+
+	log_info (LOG_ASSEMBLY, "Trying to load shared library '{}'", path);
+	if (!skip_exists_check && !is_embedded_dso_mode_enabled () && !Util::file_exists (path)) {
+		log_info (LOG_ASSEMBLY, "Shared library '{}' not found", path);
+		return nullptr;
+	}
+
+	char *error = nullptr;
+	void *handle = java_interop_lib_load (path.data (), dl_flags, &error);
+	if (handle == nullptr && Util::should_log (LOG_ASSEMBLY)) {
+		log_info_nocheck_fmt (LOG_ASSEMBLY, "Failed to load shared library '{}'. {}", path, error);
+	}
+	java_interop_free (error);
+
+	return handle;
+}
+
 template<class TContainer> [[gnu::always_inline]]
-auto AndroidSystem::load_dso_from_specified_dirs (TContainer directories, std::string_view const& dso_name, int dl_flags, bool is_jni) noexcept -> void*
+auto AndroidSystem::load_dso_from_specified_dirs (TContainer directories, std::string_view const& dso_name, unsigned int dl_flags) noexcept -> void*
 {
 	if (dso_name.empty ()) {
 		return nullptr;
@@ -444,7 +465,7 @@ auto AndroidSystem::load_dso_from_specified_dirs (TContainer directories, std::s
 			continue;
 		}
 
-		void *handle = DsoLoader::load (full_path.get (), dl_flags, is_jni);
+		void *handle = load_dso (full_path.get (), dl_flags, false);
 		if (handle != nullptr) {
 			return handle;
 		}
@@ -453,26 +474,26 @@ auto AndroidSystem::load_dso_from_specified_dirs (TContainer directories, std::s
 	return nullptr;
 }
 
-auto AndroidSystem::load_dso_from_app_lib_dirs (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*
+auto AndroidSystem::load_dso_from_app_lib_dirs (std::string_view const& name, unsigned int dl_flags) noexcept -> void*
 {
-	return load_dso_from_specified_dirs (app_lib_directories, name, dl_flags, is_jni);
+	return load_dso_from_specified_dirs (app_lib_directories, name, dl_flags);
 }
 
-auto AndroidSystem::load_dso_from_override_dirs (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*
+auto AndroidSystem::load_dso_from_override_dirs (std::string_view const& name, unsigned int dl_flags) noexcept -> void*
 {
 	if constexpr (Constants::is_release_build) {
 		return nullptr;
 	} else {
-		return load_dso_from_specified_dirs (AndroidSystem::override_dirs, name, dl_flags, is_jni);
+		return load_dso_from_specified_dirs (AndroidSystem::override_dirs, name, dl_flags);
 	}
 }
 
 [[gnu::flatten]]
-auto AndroidSystem::load_dso_from_any_directories (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*
+auto AndroidSystem::load_dso_from_any_directories (std::string_view const& name, unsigned int dl_flags) noexcept -> void*
 {
-	void *handle = load_dso_from_override_dirs (name, dl_flags, is_jni);
+	void *handle = load_dso_from_override_dirs (name, dl_flags);
 	if (handle == nullptr) {
-		handle = load_dso_from_app_lib_dirs (name, dl_flags, is_jni);
+		handle = load_dso_from_app_lib_dirs (name, dl_flags);
 	}
 	return handle;
 }

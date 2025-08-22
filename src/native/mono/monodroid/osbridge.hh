@@ -6,8 +6,6 @@
 #include <mono/metadata/appdomain.h>
 #include <mono/metadata/sgen-bridge.h>
 
-#include "util.hh"
-
 namespace xamarin::android::internal
 {
 	class OSBridge
@@ -108,7 +106,7 @@ namespace xamarin::android::internal
 			return mono_java_gc_bridge_info [index];
 		}
 
-		static JavaVM *get_jvm () noexcept
+		JavaVM *get_jvm () const
 		{
 			return jvm;
 		}
@@ -126,18 +124,7 @@ namespace xamarin::android::internal
 		mono_bool gc_is_bridge_object (MonoObject *object);
 		void gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xrefs, MonoGCBridgeXRef *xrefs);
 		int get_gref_gc_threshold ();
-
-		static JNIEnv* ensure_jnienv () noexcept
-		{
-			JNIEnv *env;
-			jvm->GetEnv ((void**)&env, JNI_VERSION_1_6);
-			if (env == nullptr) {
-				mono_jit_thread_attach (Util::get_current_domain (/* attach_thread_if_needed */ false));
-				jvm->GetEnv ((void**)&env, JNI_VERSION_1_6);
-			}
-			return env;
-		}
-
+		JNIEnv* ensure_jnienv ();
 		void initialize_on_onload (JavaVM *vm, JNIEnv *env);
 		void initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass);
 		void add_monodroid_domain (MonoDomain *domain);
@@ -183,7 +170,7 @@ namespace xamarin::android::internal
 		MonodroidGCTakeRefFunc take_global_ref = nullptr;
 		MonodroidGCTakeRefFunc take_weak_global_ref = nullptr;
 
-		static inline JavaVM *jvm = nullptr;
+		JavaVM *jvm;
 		jclass weakrefClass;
 		jmethodID weakrefCtor;
 		jmethodID weakrefGet;

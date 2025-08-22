@@ -30,8 +30,6 @@ static inline constexpr int FALSE = 0;
 #include <dirent.h>
 #include <sys/time.h>
 
-#include <string_view>
-
 #include <jni.h>
 
 #include <mono/metadata/assembly.h>
@@ -79,11 +77,6 @@ namespace xamarin::android
 		static bool             file_exists (const char *file);
 		static bool             directory_exists (const char *directory);
 		static bool             file_copy (const char *to, const char *from);
-
-		static bool file_exists (std::string_view const& path) noexcept
-		{
-			return file_exists (path.data ());
-		}
 
 		static std::optional<size_t> get_file_size_at (int dirfd, const char *file_name) noexcept
 		{

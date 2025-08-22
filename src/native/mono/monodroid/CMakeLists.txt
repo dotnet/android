@@ -103,7 +103,6 @@ set(XAMARIN_MONODROID_SOURCES
   monodroid-tracing.cc
   monovm-properties.cc
   osbridge.cc
-  runtime-environment.cc
   runtime-util.cc
   timezones.cc
   xamarin_getifaddrs.cc
@@ -233,7 +232,6 @@ macro(lib_target_options TARGET_NAME)
     xa::pinvoke-override-precompiled
     xa::lz4
     -lmonosgen-2.0
-    -landroid
     -llog
   )
 endmacro ()

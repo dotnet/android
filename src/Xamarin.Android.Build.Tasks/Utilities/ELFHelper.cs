@@ -112,8 +112,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			try {
-				using IELF elf = ELFReader.Load (path);
-				return IsEmptyAOTLibrary (log, path, elf);
+				return IsEmptyAOTLibrary (log, path, ELFReader.Load (path));
 			} catch (Exception ex) {
 				log.LogWarning ($"Attempt to check whether '{path}' is a valid ELF file failed with exception, ignoring AOT check for the file.");
 				log.LogWarningFromException (ex, showStackTrace: true);
@@ -127,7 +126,7 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			using IELF elf = ELFReader.Load (libraryPath);
+			IELF elf = ELFReader.Load (libraryPath);
 			var dynstr = GetSection (elf, ".dynstr") as IStringTable;
 			if (dynstr == null) {
 				return false;
@@ -143,44 +142,6 @@ namespace Xamarin.Android.Tasks
 
 			return false;
 		}
-
-		public static bool LibraryHasSymbol (TaskLoggingHelper log, string elfPath, string sectionName, string symbolName, ELFSymbolType symbolType = ELFSymbolType.NotSpecified)
-		{
-			if (elfPath.IsNullOrEmpty () || !File.Exists (elfPath)) {
-				return false;
-			}
-
-			try {
-				using IELF elf = ELFReader.Load (elfPath);
-				return HasSymbol (elf, sectionName, symbolName, symbolType);
-			} catch (Exception ex) {
-				log.LogWarning ($"Attempt to check whether '{elfPath}' is a valid ELF file failed with exception, ignoring symbol '{symbolName}@{sectionName}' check for the file.");
-				log.LogWarningFromException (ex, showStackTrace: true);
-				return false;
-			}
-		}
-
-		public static bool LibraryHasPublicSymbol (TaskLoggingHelper log, string elfPath, string symbolName, ELFSymbolType symbolType = ELFSymbolType.NotSpecified) => LibraryHasSymbol (log, elfPath, ".dynsym", symbolName, symbolType);
-
-		public static bool HasSymbol (IELF elf, string sectionName, string symbolName, ELFSymbolType symbolType = ELFSymbolType.NotSpecified)
-		{
-			ISymbolTable? symtab = GetSymbolTable (elf, sectionName);
-			if (symtab == null) {
-				return false;
-			}
-
-			foreach (var entry in symtab.Entries) {
-				if (MonoAndroidHelper.StringEquals (symbolName, entry.Name) && (symbolType == ELFSymbolType.NotSpecified || entry.Type == symbolType)) {
-					return true;
-				}
-			}
-
-			return false;
-		}
-
-		public static bool HasPublicSymbol (IELF elf, string symbolName, ELFSymbolType symbolType = ELFSymbolType.NotSpecified) => HasSymbol (elf, ".dynsym", symbolName, symbolType);
-
-		public static bool IsJniLibrary (TaskLoggingHelper log, string elfPath) => LibraryHasPublicSymbol (log, elfPath, "JNI_OnLoad", ELFSymbolType.Function);
 
 		static bool IsLibraryReference (IStringTable stringTable, IDynamicEntry dynEntry, string referencedLibraryName)
 		{
@@ -202,12 +163,26 @@ namespace Xamarin.Android.Tasks
 
 		static bool IsEmptyAOTLibrary (TaskLoggingHelper log, string path, IELF elf)
 		{
-			if (!HasPublicSymbol (elf, "mono_aot_file_info", ELFSymbolType.Object)) {
+			ISymbolTable? symtab = GetSymbolTable (elf, ".dynsym");
+			if (symtab == null) {
+				// We can't be sure what the DSO is, play safe
+				return false;
+			}
+
+			bool mono_aot_file_info_found = false;
+			foreach (var entry in symtab.Entries) {
+				if (MonoAndroidHelper.StringEquals ("mono_aot_file_info", entry.Name) && entry.Type == ELFSymbolType.Object) {
+					mono_aot_file_info_found = true;
+					break;
+				}
+			}
+
+			if (!mono_aot_file_info_found) {
 				// Not a MonoVM AOT assembly
 				return false;
 			}
 
-			ISymbolTable? symtab = GetSymbolTable (elf, ".symtab");
+			symtab = GetSymbolTable (elf, ".symtab");
 			if (symtab == null) {
 				// The DSO is stripped, we can't tell if there are any functions defined (.text will be present anyway)
 				// We perhaps **can** take a look at the .text section size, but it's not a solid check...
