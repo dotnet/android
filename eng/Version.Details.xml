@@ -4,25 +4,25 @@
       <Uri>https://github.com/dotnet/sdk</Uri>
       <Sha>cf275d46ba436d8f61a33c3e236c30a9fd751bbd</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink" Version="9.0.8-servicing.25365.10">
+    <Dependency Name="Microsoft.NET.ILLink" Version="9.0.9-servicing.25419.15">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>b3e2e1b73b0d2a9687fef511c56dc02c90150bd6</Sha>
+      <Sha>3b1cfdc32ac10833176a22d2d5b9ae03595472bf</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="9.0.8">
+    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="9.0.9">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>b3e2e1b73b0d2a9687fef511c56dc02c90150bd6</Sha>
+      <Sha>3b1cfdc32ac10833176a22d2d5b9ae03595472bf</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NETCore.App.Ref" Version="9.0.8">
+    <Dependency Name="Microsoft.NETCore.App.Ref" Version="9.0.9">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>b3e2e1b73b0d2a9687fef511c56dc02c90150bd6</Sha>
+      <Sha>3b1cfdc32ac10833176a22d2d5b9ae03595472bf</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-9.0.100" Version="9.0.8" CoherentParentDependency="Microsoft.NETCore.App.Ref">
+    <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-9.0.100" Version="9.0.9" CoherentParentDependency="Microsoft.NETCore.App.Ref">
       <Uri>https://github.com/dotnet/emsdk</Uri>
-      <Sha>0bcc3e67026ea44a16fb018a50e4e134c06ab3d6</Sha>
+      <Sha>dc8e3478c4aa5f6a103329333c2bdbcd07a07741</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-alpha.25329.2" CoherentParentDependency="Microsoft.NET.ILLink.Tasks">
+    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-alpha.25370.2" CoherentParentDependency="Microsoft.NET.ILLink.Tasks">
       <Uri>https://github.com/dotnet/cecil</Uri>
-      <Sha>862b4c8bf05585cc44ceb32dc0fd060ceed06cd2</Sha>
+      <Sha>788a8a7481c01a7d235110cdea2ca5bfb34210d4</Sha>
     </Dependency>
     <!-- Previous .NET version -->
     <Dependency Name="Microsoft.NET.Workload.Mono.ToolChain.Current.Manifest-8.0.100" Version="8.0.20">
