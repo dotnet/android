@@ -145,6 +145,7 @@ DSOCacheEntry dso_cache[] = {
 	},
 };
 
+const uint dso_jni_preloads_idx_stride = 1;
 const uint dso_jni_preloads_idx_count = 1;
 const uint dso_jni_preloads_idx[1] = {
   0

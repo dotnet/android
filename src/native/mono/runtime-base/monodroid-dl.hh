@@ -60,6 +60,7 @@ namespace xamarin::android::internal
 			ssize_t idx = Search::binary_search<DSOCacheEntry, equal, less_than> (hash, arr, arr_size);
 
 			if (idx >= 0) {
+				log_debug (LOG_ASSEMBLY, "Found hash 0x{:x} entry at index {} of the cache", hash, idx);
 				return &arr[idx];
 			}
 
@@ -153,6 +154,8 @@ namespace xamarin::android::internal
 			} else if (dso->handle != nullptr) {
 				return monodroid_dlopen_log_and_return (dso->handle, err, dso->name, false /* name_needs_free */);
 			}
+			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: cache entry's real name hash == 0x{:x}; name hash == 0x{:x}",
+									 dso->real_name_hash, dso->hash);
 
 			if (dso->ignore) {
 				log_info (LOG_ASSEMBLY, "Request to load '{}' ignored, it is known not to exist", dso->name);
@@ -197,7 +200,7 @@ namespace xamarin::android::internal
 			}
 
 			hash_t name_hash = xxhash::hash (name, strlen (name));
-			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash for name '{}' is {:x}", name, name_hash);
+			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash for name '{}' is 0x{:x}", name, name_hash);
 
 			DSOCacheEntry *dso = nullptr;
 			if (prefer_aot_cache) {
