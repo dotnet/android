@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-
+using Microsoft.VisualStudio.TestPlatform.Utilities;
 using NUnit.Framework;
 
 namespace Xamarin.Android.Tools.Tests
@@ -92,6 +92,7 @@ namespace Xamarin.Android.Tools.Tests
 					"<AndroidApiInfo>",
 					"  <Id>Z</Id>",
 					"  <Level>127</Level>",
+					"  <VersionCodeFull>127.1</VersionCodeFull>",
 					"  <Name>Z</Name>",
 					"  <Version>v108.1.99</Version>",
 					"  <Stable>False</Stable>",
@@ -138,6 +139,9 @@ namespace Xamarin.Android.Tools.Tests
 				new AndroidVersion (apiLevel: 3,    osVersion: "1.2",   id: "C",    stable: true),
 				// Hides/shadows a Known Version
 				new AndroidVersion (apiLevel: 14,   osVersion: "4.0",   id: "II",   stable: false),
+				// Demonstrates new "minor" release support
+				new AndroidVersion (versionCodeFull: new Version (36, 0),   osVersion: "16.0",  id: "Baklava",  stable: true),
+				new AndroidVersion (versionCodeFull: new Version (36, 1),   osVersion: "16.1",  id: "CANARY",   stable: false),
 			});
 		}
 
@@ -157,6 +161,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual (null,  versions.GetApiLevelFromFrameworkVersion ("1.3"));
 			Assert.AreEqual (14,    versions.GetApiLevelFromFrameworkVersion ("v4.0"));
 			Assert.AreEqual (14,    versions.GetApiLevelFromFrameworkVersion ("4.0"));
+			Assert.AreEqual (36,    versions.GetApiLevelFromFrameworkVersion ("16.1"));
 
 			// via KnownVersions
 			Assert.AreEqual (4,     versions.GetApiLevelFromFrameworkVersion ("v1.6"));
@@ -177,6 +182,8 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual (3,     versions.GetApiLevelFromId ("3"));
 			Assert.AreEqual (14,    versions.GetApiLevelFromId ("14"));
 			Assert.AreEqual (14,    versions.GetApiLevelFromId ("II"));
+			Assert.AreEqual (36,    versions.GetApiLevelFromId ("36"));
+			Assert.AreEqual (36,    versions.GetApiLevelFromId ("CANARY"));
 
 			Assert.AreEqual (null,  versions.GetApiLevelFromId ("D"));
 
@@ -202,6 +209,13 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual ("II",  versions.GetIdFromApiLevel ("14"));
 			Assert.AreEqual ("II",  versions.GetIdFromApiLevel ("II"));
 
+			Assert.AreEqual ("Baklava", versions.GetIdFromApiLevel (36));
+			Assert.AreEqual ("Baklava", versions.GetIdFromApiLevel ("36"));
+			Assert.AreEqual ("Baklava", versions.GetIdFromApiLevel ("36.0"));
+			Assert.AreEqual ("Baklava", versions.GetIdFromApiLevel ("Baklava"));
+			Assert.AreEqual ("CANARY",  versions.GetIdFromApiLevel ("36.1"));
+			Assert.AreEqual ("CANARY",  versions.GetIdFromApiLevel ("CANARY"));
+
 			Assert.AreEqual ("-1",  versions.GetIdFromApiLevel (-1));
 			Assert.AreEqual ("-1",  versions.GetIdFromApiLevel ("-1"));
 			Assert.AreEqual ("D",  versions.GetIdFromApiLevel ("D"));
@@ -226,6 +240,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual ("C",   versions.GetIdFromFrameworkVersion ("1.2"));
 			Assert.AreEqual ("II",  versions.GetIdFromFrameworkVersion ("v4.0"));
 			Assert.AreEqual ("II",  versions.GetIdFromFrameworkVersion ("4.0"));
+			Assert.AreEqual ("CANARY",  versions.GetIdFromFrameworkVersion ("16.1"));
 
 			Assert.AreEqual (null,  versions.GetIdFromFrameworkVersion ("v0.99"));
 			Assert.AreEqual (null,  versions.GetIdFromFrameworkVersion ("0.99"));
@@ -245,6 +260,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual ("v1.1",    versions.GetFrameworkVersionFromApiLevel (2));
 			Assert.AreEqual ("v1.2",    versions.GetFrameworkVersionFromApiLevel (3));
 			Assert.AreEqual ("v4.0",    versions.GetFrameworkVersionFromApiLevel (14));
+			Assert.AreEqual ("v16.0",   versions.GetFrameworkVersionFromApiLevel (36));
 
 			// via KnownVersions
 			Assert.AreEqual ("v2.3",    versions.GetFrameworkVersionFromApiLevel (10));
@@ -264,6 +280,10 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual ("v1.2",    versions.GetFrameworkVersionFromId ("C"));
 			Assert.AreEqual ("v4.0",    versions.GetFrameworkVersionFromId ("14"));
 			Assert.AreEqual ("v4.0",    versions.GetFrameworkVersionFromId ("II"));
+			Assert.AreEqual ("v16.0",   versions.GetFrameworkVersionFromId ("36"));
+			Assert.AreEqual ("v16.0",   versions.GetFrameworkVersionFromId ("Baklava"));
+			Assert.AreEqual ("v16.1",   versions.GetFrameworkVersionFromId ("36.1"));
+			Assert.AreEqual ("v16.1",   versions.GetFrameworkVersionFromId ("CANARY"));
 
 			// via KnownVersions
 			Assert.AreEqual ("v3.0",    versions.GetFrameworkVersionFromId ("11"));

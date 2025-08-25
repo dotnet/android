@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
 
@@ -8,6 +9,9 @@ namespace Xamarin.Android.Tools
 	{
 		// Android API Level. *Usually* corresponds to $(AndroidSdkPath)/platforms/android-$(ApiLevel)/android.jar
 		public  int             ApiLevel                { get; private set; }
+
+		// Android API Level; includes "minor" version bumps, e.g. Android 16 QPR2 is "36.1" while ApiLevel=36
+		public  Version         VersionCodeFull         { get; private set; }
 
 		// Android API Level ID. == ApiLevel on stable versions, will be e.g. `N` for previews: $(AndroidSdkPath)/platforms/android-N/android.jar
 		public  string          Id                      { get; private set; }
@@ -27,26 +31,42 @@ namespace Xamarin.Android.Tools
 		// Is this API level stable? Should be False for non-numeric Id values.
 		public bool             Stable                  { get; private set; }
 
+		internal    HashSet<string> Ids                 { get; } = new ();
+
 		// Alternate Ids for a given API level. Allows for historical mapping, e.g. API-11 has alternate ID 'H'.
-		internal    string[]?   AlternateIds            { get; set; }
+		internal    string[]?   AlternateIds {
+			set => Ids.UnionWith (value);
+		}
 
 		public AndroidVersion (int apiLevel, string osVersion, string? codeName = null, string? id = null, bool stable = true)
+			: this (new Version (apiLevel, 0), osVersion, codeName, id, stable)
 		{
+		}
+
+		public AndroidVersion (Version versionCodeFull, string osVersion, string? codeName = null, string? id = null, bool stable = true)
+		{
+			if (versionCodeFull == null)
+				throw new ArgumentNullException (nameof (versionCodeFull));
 			if (osVersion == null)
 				throw new ArgumentNullException (nameof (osVersion));
 
-			ApiLevel                = apiLevel;
-			Id                      = id ?? ApiLevel.ToString ();
+			ApiLevel                = versionCodeFull.Major;
+			VersionCodeFull         = versionCodeFull;
+			Id                      = id ?? (versionCodeFull.Minor != 0 ? versionCodeFull.ToString () : ApiLevel.ToString ());
 			CodeName                = codeName;
 			OSVersion               = osVersion;
 			TargetFrameworkVersion  = Version.Parse (osVersion);
 			FrameworkVersion        = "v" + osVersion;
 			Stable                  = stable;
+
+			Ids.Add (ApiLevel.ToString ());
+			Ids.Add (VersionCodeFull.ToString ());
+			Ids.Add (Id);
 		}
 
 		public override string ToString ()
 		{
-			return $"(AndroidVersion: ApiLevel={ApiLevel} Id={Id} OSVersion={OSVersion} CodeName='{CodeName}' TargetFrameworkVersion={TargetFrameworkVersion} Stable={Stable})";
+			return $"(AndroidVersion: ApiLevel={ApiLevel} VersionCodeFull={VersionCodeFull} Id={Id} OSVersion={OSVersion} CodeName='{CodeName}' TargetFrameworkVersion={TargetFrameworkVersion} Stable={Stable})";
 		}
 
 		public static AndroidVersion Load (Stream stream)
@@ -76,8 +96,13 @@ namespace Xamarin.Android.Tools
 			var name    = (string?) doc.Root?.Element ("Name") ?? throw new InvalidOperationException ("Missing Name element");
 			var version = (string?) doc.Root?.Element ("Version") ?? throw new InvalidOperationException ("Missing Version element");
 			var stable  = (bool?) doc.Root?.Element ("Stable") ?? throw new InvalidOperationException ("Missing Stable element");
+			var versionCodeFull = (string?) doc.Root?.Element ("VersionCodeFull");
 
-			return new AndroidVersion (level, version.TrimStart ('v'), name, id, stable);
+			var fullLevel = string.IsNullOrWhiteSpace (versionCodeFull)
+				? new Version (level, 0)
+				: Version.Parse (versionCodeFull);
+
+			return new AndroidVersion (fullLevel, version.TrimStart ('v'), name, id, stable);
 		}
 	}
 }
