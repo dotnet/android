@@ -434,6 +434,8 @@ set(POTENTIAL_COMMON_COMPILER_ARGS
   -fno-strict-aliasing
   -fno-function-sections
   -fno-data-sections
+  -fno-cxx-exceptions
+  -fno-dwarf-exceptions
   -funswitch-loops
   -Wa,-noexecstack
   -fPIC
@@ -454,6 +456,7 @@ set(POTENTIAL_COMMON_LINKER_ARGS
   LINKER:-z,noexecstack
   LINKER:--no-undefined
   LINKER:--export-dynamic
+  LINKER:--no-eh-frame-hdr
 )
 
 # Add some options to increase security. They may mildly affect performance but they won't be big, because the features are
