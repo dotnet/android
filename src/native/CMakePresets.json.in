@@ -48,7 +48,7 @@
             "inherits": "common",
             "cacheVariables": {
                 "ANDROID_STL": "c++_static",
-                "ANDROID_CPP_FEATURES": "no-rtti exceptions"
+                "ANDROID_CPP_FEATURES": "no-rtti no-exceptions"
             }
         },
 
