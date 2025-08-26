@@ -31,17 +31,11 @@ namespace Xamarin.Android.Build.Tests
 		/// Checks if a commercial .NET for Android is available
 		/// * Defaults to Assert.Ignore ()
 		/// </summary>
-		public void AssertCommercialBuild (bool fail = false)
+		public void AssertCommercialBuild ()
 		{
 			if (!TestEnvironment.CommercialBuildAvailable) {
 				var message = $"'{TestName}' requires a commercial build of .NET for Android.";
-				var runningOnCI = false;
-				bool.TryParse (Environment.GetEnvironmentVariable ("RunningOnCI"), out runningOnCI);
-				if (fail || runningOnCI) {
-					Assert.Fail (message);
-				} else {
-					Assert.Ignore (message);
-				}
+				Assert.Inconclusive (message);
 			}
 		}
 

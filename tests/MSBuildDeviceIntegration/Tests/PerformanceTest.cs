@@ -144,6 +144,8 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (Retry)]
 		public void Build_From_Clean_DontIncludeRestore ()
 		{
+			AssertCommercialBuild (); // If <BuildApk/> runs, this test will fail without Fast Deployment
+
 			var proj = CreateApplicationProject ();
 			using (var builder = CreateBuilderWithoutLogFile ()) {
 				builder.AutomaticNuGetRestore = false;
@@ -257,6 +259,8 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (Retry)]
 		public void Build_JLO_Change ()
 		{
+			AssertCommercialBuild (); // If <BuildApk/> runs, this test will fail without Fast Deployment
+
 			var className = "Foo";
 			var proj = CreateApplicationProject ();
 			proj.Sources.Add (new BuildItem.Source ("Foo.cs") {
