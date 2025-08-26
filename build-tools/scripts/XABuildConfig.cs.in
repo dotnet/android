@@ -14,7 +14,7 @@ namespace Xamarin.Android.Tools
 		public const string AndroidSdkBuildToolsVersion = "@SDK_BUILD_TOOLS_VERSION@";
 		public const int AndroidMinimumDotNetApiLevel = @ANDROID_DEFAULT_MINIMUM_DOTNET_API_LEVEL@;
 		public const int AndroidLatestStableApiLevel = @ANDROID_LATEST_STABLE_API_LEVEL@;
-		public const int AndroidLatestUnstableApiLevel = @ANDROID_LATEST_UNSTABLE_API_LEVEL@;
+		public const double AndroidLatestUnstableApiLevel = @ANDROID_LATEST_UNSTABLE_API_LEVEL@;
 		public const int AndroidDefaultTargetDotnetApiLevel = @ANDROID_DEFAULT_TARGET_DOTNET_API_LEVEL@;
 		public static readonly Version NDKVersion = new Version (@NDK_VERSION_MAJOR@, @NDK_VERSION_MINOR@, @NDK_VERSION_MICRO@);
 
