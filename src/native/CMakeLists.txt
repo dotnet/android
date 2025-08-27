@@ -434,19 +434,25 @@ set(POTENTIAL_COMMON_COMPILER_ARGS
   -fno-strict-aliasing
   -fno-function-sections
   -fno-data-sections
-  -fno-cxx-exceptions
   -fno-dwarf-exceptions
+  -fno-asynchronous-unwind-tables
   -funswitch-loops
   -Wa,-noexecstack
   -fPIC
   -O2
+  -g0
 )
 
-if(NOT BUILD_ARCHIVE_DSO_STUB)
-  list(APPEND POTENTIAL_COMMON_COMPILER_ARGS
-    -g
-  )
-endif()
+set(POTENTIAL_COMMON_CXX_COMPILER_ARGS
+  ${POTENTIAL_COMMON_COMPILER_ARGS}
+  -fno-cxx-exceptions
+)
+
+#if(NOT BUILD_ARCHIVE_DSO_STUB)
+#  list(APPEND POTENTIAL_COMMON_COMPILER_ARGS
+#    -g
+#  )
+#endif()
 
 set(POTENTIAL_COMMON_LINKER_ARGS
   -fstack-protector-strong
@@ -521,6 +527,10 @@ set(POTENTIAL_XA_COMMON_COMPILER_ARGS
   -fstrict-flex-arrays=3
 )
 
+set(POTENTIAL_XA_CXX_COMPILER_ARGS
+  ${POTENTIAL_XA_COMMON_COMPILER_ARGS}
+)
+
 if (ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
   list(APPEND POTENTIAL_XA_COMMON_COMPILER_ARGS
     -fno-omit-frame-pointer
@@ -555,7 +565,7 @@ endif()
 message(STATUS)
 message(STATUS "Checking support for common compiler and linker args")
 message(STATUS)
-xa_check_cxx_args(COMMON_CXX_ARGS "${POTENTIAL_COMMON_COMPILER_ARGS}")
+xa_check_cxx_args(COMMON_CXX_ARGS "${POTENTIAL_COMMON_CXX_COMPILER_ARGS}")
 xa_check_c_args(COMMON_C_ARGS "${POTENTIAL_COMMON_COMPILER_ARGS}")
 xa_check_cxx_linker_args(COMMON_CXX_LINKER_ARGS "${POTENTIAL_COMMON_LINKER_ARGS}")
 xa_check_c_linker_args(COMMON_C_LINKER_ARGS "${POTENTIAL_COMMON_LINKER_ARGS}")
@@ -563,7 +573,7 @@ xa_check_c_linker_args(COMMON_C_LINKER_ARGS "${POTENTIAL_COMMON_LINKER_ARGS}")
 message(STATUS)
 message(STATUS "Checking support for XA common compiler and linker args")
 message(STATUS)
-xa_check_cxx_args(XA_COMMON_CXX_ARGS "${POTENTIAL_XA_COMMON_COMPILER_ARGS}")
+xa_check_cxx_args(XA_COMMON_CXX_ARGS "${POTENTIAL_XA_CXX_COMPILER_ARGS}")
 xa_check_c_args(XA_COMMON_C_ARGS "${POTENTIAL_XA_COMMON_COMPILER_ARGS}")
 xa_check_cxx_linker_args(XA_COMMON_CXX_LINKER_ARGS "${POTENTIAL_XA_COMMON_LINKER_ARGS}")
 xa_check_c_linker_args(XA_COMMON_C_LINKER_ARGS "${POTENTIAL_XA_COMMON_LINKER_ARGS}")

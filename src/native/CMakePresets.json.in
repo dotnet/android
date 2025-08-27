@@ -19,6 +19,7 @@
                 "ANDROID_NDK": "@AndroidNdkDirectory@",
                 "ANDROID_TOOLCHAIN": "clang",
                 "ANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES": "ON",
+                "ANDROID_USE_LEGACY_TOOLCHAIN_FILE": "OFF",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "CMAKE_MAKE_PROGRAM": "@NinjaPath@",
                 "XA_LIB_TOP_DIR": "@MicrosoftAndroidSdkOutDir@",
