@@ -19,6 +19,18 @@ namespace Xamarin.Android.Tasks
 {
 	static class ELFHelper
 	{
+		public static ELFInfo? GetInfo (TaskLoggingHelper log, string path)
+		{
+			try {
+				using IELF elf = ELFReader.Load (path);
+				return new ELFInfo (elf);
+			} catch (Exception ex) {
+				log.LogDebugMessage ($"Attempt to check whether '{path}' has debug symbols failed with exception.");
+				log.LogDebugMessage (ex.ToString ());
+				return null;
+			}
+		}
+
 		public static void AssertValidLibraryAlignment (TaskLoggingHelper log, int alignmentInPages, string path, ITaskItem? item)
 		{
 			if (path.IsNullOrEmpty () || !File.Exists (path)) {
@@ -27,7 +39,8 @@ namespace Xamarin.Android.Tasks
 
 			log.LogDebugMessage ($"Checking alignment to {alignmentInPages}k page boundary in shared library {path}");
 			try {
-				AssertValidLibraryAlignment (log, MonoAndroidHelper.ZipAlignmentToPageSize (alignmentInPages), path, ELFReader.Load (path), item);
+				using IELF elf = ELFReader.Load (path);
+				AssertValidLibraryAlignment (log, MonoAndroidHelper.ZipAlignmentToPageSize (alignmentInPages), path, elf, item);
 			} catch (Exception ex) {
 				log.LogWarning ($"Attempt to check whether '{path}' is a correctly aligned ELF file failed with exception, ignoring alignment check for the file.");
 				log.LogWarningFromException (ex, showStackTrace: true);

@@ -440,7 +440,6 @@ set(POTENTIAL_COMMON_COMPILER_ARGS
   -Wa,-noexecstack
   -fPIC
   -O2
-  -g0
 )
 
 set(POTENTIAL_COMMON_CXX_COMPILER_ARGS
@@ -448,11 +447,11 @@ set(POTENTIAL_COMMON_CXX_COMPILER_ARGS
   -fno-cxx-exceptions
 )
 
-#if(NOT BUILD_ARCHIVE_DSO_STUB)
-#  list(APPEND POTENTIAL_COMMON_COMPILER_ARGS
-#    -g
-#  )
-#endif()
+if(NOT BUILD_ARCHIVE_DSO_STUB)
+ list(APPEND POTENTIAL_COMMON_COMPILER_ARGS
+   -g
+ )
+endif()
 
 set(POTENTIAL_COMMON_LINKER_ARGS
   -fstack-protector-strong
