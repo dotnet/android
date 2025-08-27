@@ -32,7 +32,7 @@ using System;
 
 namespace Android.Runtime {
 
-	[Obsolete ("Please use [System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute]", true)]
+	[Obsolete ("Please use [System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute]")]
 	[AttributeUsage (
 		AttributeTargets.Class
 		| AttributeTargets.Struct
