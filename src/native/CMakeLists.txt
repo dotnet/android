@@ -600,6 +600,15 @@ macro(set_static_library_suffix TARGET_NAME)
   endif()
 endmacro()
 
+macro(strip_unneeded_elf_sections LIB_NAME)
+  # Strip sections used for stack unwinding when C++ exceptions are thrown. We don't use exceptions, so it's just ballast for us
+  add_custom_command(
+    TARGET ${LIB_NAME}
+    POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} --remove-section=".eh_frame" --remove-section=".gcc_except_table" "$<TARGET_FILE:${LIB_NAME}>"
+  )
+endmacro()
+
 if(BUILD_ARCHIVE_DSO_STUB)
   add_subdirectory(common/archive-dso-stub)
 else()

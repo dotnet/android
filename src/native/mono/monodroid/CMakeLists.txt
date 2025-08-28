@@ -137,13 +137,7 @@ add_library(
   ${XAMARIN_MONO_ANDROID_LIB}
   SHARED ${XAMARIN_MONODROID_SOURCES}
 )
-
-# Strip sections used for stack unwinding when C++ exceptions are thrown. We don't use exceptions, so it's just ballast for us
-add_custom_command(
-  TARGET ${XAMARIN_MONO_ANDROID_LIB}
-  POST_BUILD
-  COMMAND ${CMAKE_OBJCOPY} --remove-section=".eh_frame" --remove-section=".gcc_except_table" "$<TARGET_FILE:${XAMARIN_MONO_ANDROID_LIB}>"
-)
+strip_unneeded_elf_sections(${XAMARIN_MONO_ANDROID_LIB})
 
 if(BUILD_STATIC_LIBRARY)
   add_library(

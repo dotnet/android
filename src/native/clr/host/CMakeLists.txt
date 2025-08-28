@@ -57,6 +57,7 @@ add_library(
   ${XAMARIN_NET_ANDROID_LIB}
   SHARED ${XAMARIN_MONODROID_SOURCES}
 )
+strip_unneeded_elf_sections(${XAMARIN_NET_ANDROID_LIB})
 
 if(BUILD_STATIC_LIBRARY)
   add_library(
