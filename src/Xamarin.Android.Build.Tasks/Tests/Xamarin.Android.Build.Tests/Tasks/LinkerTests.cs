@@ -698,5 +698,26 @@ public abstract class MyRunner {
 				}
 			}
 		}
+
+		[Test]
+		public void WarnWithReferenceToPreserveAttribute ()
+		{
+			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
+			proj.AddReferences ("System.Net.Http");
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"protected override void OnCreate",
+				"[Android.Runtime.PreserveAttribute]\n\t\tprotected override void OnCreate"
+			);
+
+			using (var b = CreateApkBuilder ()) {
+				var bo = proj.CreateBuildOutput (b);
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				// Verify the trimmer logged our custom warning from WarnOnPreserveAttribute
+				var output = b.LastBuildOutput;
+				Assert.IsTrue (StringAssertEx.ContainsText (output, "obsolete attribute 'Android.Runtime.PreserveAttribute'"), "Should warn about obsolete PreserveAttribute usage");
+				Assert.IsTrue (StringAssertEx.ContainsText (output, "warning IL6001"), "Should include IL6001 warning code");
+			}
+		}
 	}
 }

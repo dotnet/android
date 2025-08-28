@@ -23,7 +23,12 @@ namespace Microsoft.Android.Sdk.ILLink
 						Namespace: "Android.Runtime",
 						Name: "PreserveAttribute",
 					}) {
-						Context.LogMessage (MessageContainer.CreateCustomWarningMessage(Context, $"Assembly '{assembly.Name.Name}' contains reference to obsolete attribute 'Android.Runtime.PreserveAttribute'. Members with this attribute may be trimmed. Please use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute instead", 6000, new MessageOrigin (), WarnVersion.Latest));
+						Context.LogMessage (MessageContainer.CreateCustomWarningMessage(
+							Context,
+							$"Assembly '{assembly.Name.Name}' contains reference to obsolete attribute 'Android.Runtime.PreserveAttribute'. Members with this attribute may be trimmed. Please use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute instead",
+							6001,
+							new MessageOrigin (),
+							WarnVersion.ILLink0));
 						return;
 					}
 				}
