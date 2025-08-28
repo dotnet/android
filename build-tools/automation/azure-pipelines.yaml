@@ -249,7 +249,7 @@ extends:
       dependsOn:
       - mac_build
       - linux_build
-      condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(dependencies.linux_build.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
+      condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(dependencies.linux_build.result, 'Succeeded'), eq(variables['Build.DefinitionName'], 'Xamarin.Android'))
       jobs:
       # Check - "Xamarin.Android (Prepare .NET Release Sign Archives)"
       - template: sign-artifacts/jobs/v4.yml@yaml-templates
@@ -392,7 +392,7 @@ extends:
             arguments: -c $(XA.Build.Configuration) -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\bootstrap.binlog
           condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 
-        - ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
+        - ${{ if eq(variables['Build.DefinitionName'], 'Xamarin.Android') }}:
           - task: AzureCLI@2
             displayName: generate and publish BAR manifest
             inputs:
