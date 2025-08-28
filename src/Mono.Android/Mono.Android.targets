@@ -177,9 +177,14 @@
          Condition=" '%(Identity)' == '$(AndroidFrameworkVersion)' "
          Include="@(AndroidApiInfo)"
      />
+     <!--
+       Note: must be parsable by AndroidVersion.Load():
+       https://github.com/dotnet/android-tools/blob/31609cace094e978ee1e2a720661346cde5cd332/src/Xamarin.Android.Tools.AndroidSdk/AndroidVersion.cs#L92-L106
+       -->
      <_Line Include="&lt;AndroidApiInfo&gt;" />
      <_Line Include="@(_ApiInfo->'  &lt;Id>%(Id)&lt;/Id>')" />
      <_Line Include="@(_ApiInfo->'  &lt;Level>%(Level)&lt;/Level>')" />
+     <_Line Include="@(_ApiInfo->'  &lt;VersionCodeFull>%(VersionCodeFull)&lt;/VersionCodeFull>')" />
      <_Line Include="@(_ApiInfo->'  &lt;Name>%(Name)&lt;/Name>')" />
      <_Line Include="@(_ApiInfo->'  &lt;Version>%(Identity)&lt;/Version>')" />
      <_Line Include="@(_ApiInfo->'  &lt;Stable>%(Stable)&lt;/Stable>')" />

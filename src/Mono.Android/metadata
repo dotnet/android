@@ -1977,6 +1977,19 @@
   <attr api-since="36" path="/api/package[@name='android.hardware.camera2.params']/class[@name='OutputConfiguration']/method[@name='getMirrorMode' and count(parameter)=1 and parameter[1][@type='android.view.Surface']]" name="managedReturn">Android.Hardware.Camera2.Params.MirrorMode</attr>
   <attr api-since="36" path="/api/package[@name='android.hardware.camera2.params']/class[@name='OutputConfiguration']/method[@name='getMirrorMode' and count(parameter)=1 and parameter[1][@type='android.view.Surface']]" name="enumReturn">true</attr>
 
+  <!-- CANARY changes -->
+
+  <attr
+      api-since="36"
+      path="/api/package[@name='java.util.stream']/interface[@name='Gatherer']/method[@name='integrator' and count(parameter)=0]"
+      name="managedName"
+  >GetIntegrator</attr>
+  <attr
+      api-since="36"
+      path="/api/package[@name='java.util.stream']/interface[@name='Gatherer']/method[@name='integrator' and count(parameter)=0]"
+      name="propertyName"
+  ></attr>
+
   <!--
     ***********************************************************************
     THE FOLLOWING LINES MUST BE CREATED FOR ANY NEW PLATFORM THAT IS ADDED.
@@ -2005,6 +2018,7 @@
   <attr api-since="36" path="/api/package/interface[contains(@merge.SourceFile,'api-Baklava.xml.in')]" name="no-alternatives">true</attr>
   <attr api-since="36" path="/api/package[contains(@merge.SourceFile,'api-36.xml.in')]/interface" name="no-alternatives">true</attr>
   <attr api-since="36" path="/api/package[contains(@merge.SourceFile,'api-Baklava.xml.in')]/interface" name="no-alternatives">true</attr>
+  <attr api-since="36" path="/api/package[contains(@merge.SourceFile,'api-CANARY.xml.in')]/interface" name="no-alternatives">true</attr>
 
   <!-- Set ApiSince based on merge sourcefile. -->
   <attr api-since="22" path="/api//*[contains(@merge.SourceFile,'api-22.xml.in')]" name="api-since">22</attr>
@@ -2029,6 +2043,7 @@
   <attr api-since="35" path="/api//*[contains(@merge.SourceFile,'api-VanillaIceCream.xml.in')]" name="api-since">35</attr>
   <attr api-since="36" path="/api//*[contains(@merge.SourceFile,'api-36.xml.in')]" name="api-since">36</attr>
   <attr api-since="36" path="/api//*[contains(@merge.SourceFile,'api-Baklava.xml.in')]" name="api-since">36</attr>
+  <attr api-since="36" path="/api//*[contains(@merge.SourceFile,'api-CANARY.xml.in')]" name="api-since">36</attr>
 
   <!-- Erase some 'api-since' attributes (This has to be done after they are set above) -->
 
