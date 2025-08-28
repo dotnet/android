@@ -13,8 +13,7 @@ resources:
   repositories:
   - repository: 1esPipelines
     type: git
-    name: 1ESPipelineTemplates/1ESPipelineTemplates
-    ref: refs/tags/release
+    name: 1ESPipelineTemplates/MicroBuildTemplate
   - repository: yaml-templates
     type: git
     name: DevDiv/Xamarin.yaml-templates
@@ -49,16 +48,16 @@ variables:
   - name: DotNetFeedCredential
     value: dnceng-dotnet9
 - name: MicroBuildSignType
-  ${{ if and(or(eq(variables['Build.DefinitionName'], 'Xamarin.Android'), eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private')), ne(variables['Build.Reason'], 'PullRequest')) }}:
+  ${{ if and(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.DefinitionName'], 'Xamarin.Android')) }}:
     value: Real
   ${{ else }}:
     value: Test
 
 extends:
   ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
-    template: v1/1ES.Official.PipelineTemplate.yml@1esPipelines
+    template: azure-pipelines/MicroBuild.1ES.Official.yml@1esPipelines
   ${{ else }}:
-    template: v1/1ES.Unofficial.PipelineTemplate.yml@1esPipelines
+    template: azure-pipelines/MicroBuild.1ES.Unofficial.yml@1esPipelines
   parameters:
     sdl:
       ${{ if eq('${{ parameters.Skip1ESComplianceTasks }}', 'true') }}:
@@ -253,7 +252,7 @@ extends:
       condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(dependencies.linux_build.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
       jobs:
       # Check - "Xamarin.Android (Prepare .NET Release Sign Archives)"
-      - template: sign-artifacts/jobs/v3.yml@yaml-templates
+      - template: sign-artifacts/jobs/v4.yml@yaml-templates
         parameters:
           name: sign_net_mac_win
           poolName: $(VSEngMicroBuildPool)
@@ -261,13 +260,12 @@ extends:
           signType: $(MicroBuildSignType)
           signedArtifactName: nuget-signed
           usePipelineArtifactTasks: true
-          use1ESTemplate: true
           uploadPrefix: sign-mac-win
           handleUnmappedFiles: fail
           timeoutInMinutes: 240
 
       # Check - "Xamarin.Android (Prepare .NET Release Sign Linux Archive)"
-      - template: sign-artifacts/jobs/v3.yml@yaml-templates
+      - template: sign-artifacts/jobs/v4.yml@yaml-templates
         parameters:
           name: sign_net_linux
           displayName: Sign Linux Archive
@@ -276,7 +274,6 @@ extends:
           signType: $(MicroBuildSignType)
           signedArtifactName: nuget-linux-signed
           usePipelineArtifactTasks: true
-          use1ESTemplate: true
           uploadPrefix: sign-linux
           handleUnmappedFiles: fail
           timeoutInMinutes: 120
