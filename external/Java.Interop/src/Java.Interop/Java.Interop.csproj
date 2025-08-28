@@ -4,7 +4,7 @@
     <XAConfigPath>..\..\bin\Build$(Configuration)\XAConfig.props</XAConfigPath>
   </PropertyGroup>
   <Import Condition="Exists ('$(XAConfigPath)')" Project="$(XAConfigPath)" />
-  <PropertyGroup Condition=" '$(XABuild)' != 'true' ">
+  <PropertyGroup>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
   </PropertyGroup>
   <PropertyGroup>
