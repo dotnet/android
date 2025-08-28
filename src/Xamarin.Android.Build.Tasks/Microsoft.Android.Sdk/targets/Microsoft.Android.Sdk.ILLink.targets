@@ -39,6 +39,10 @@ This file contains the .NET 5-specific targets to customize ILLink
           Value="$(_ProguardProjectConfiguration)"
       />
       <_TrimmerCustomData Include="SystemIOHashingAssemblyPath" Value="$(_SystemIOHashingAssemblyPath)" />
+      <_TrimmerCustomSteps
+        Include="$(_AndroidLinkerCustomStepAssembly)"
+        BeforeStep="MarkStep"
+        Type="Microsoft.Android.Sdk.ILLink.WarnOnPreserveAttribute" />
 
       <!--
         Used for the <ILLink CustomSteps="@(_TrimmerCustomSteps)" /> value:
