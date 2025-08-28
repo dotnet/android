@@ -243,8 +243,10 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	{
 		public List<StructureInstance<DSOCacheEntry>> DsoCache = [];
 		public List<DSOCacheEntry> JniPreloadDSOs = [];
+		public List<string> JniPreloadNames = [];
 		public List<StructureInstance<DSOCacheEntry>> AotDsoCache = [];
 		public LlvmIrStringBlob NamesBlob = null!;
+		public uint NameMutationsCount = 1;
 	}
 
 	// Keep in sync with FORMAT_TAG in src/monodroid/jni/xamarin-app.hh
@@ -394,10 +396,14 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		};
 		module.Add (dso_cache);
 
+		module.AddGlobalVariable ("dso_jni_preloads_idx_stride", dsoState.NameMutationsCount);
+
 		// This variable MUST be written after `dso_cache` since it relies on sorting performed by HashAndSortDSOCache
 		var dso_jni_preloads_idx = new LlvmIrGlobalVariable (new List<uint> (), "dso_jni_preloads_idx", LlvmIrVariableOptions.GlobalConstant) {
 			Comment = " Indices into dso_cache[] of DSO libraries to preload because of JNI use",
 			ArrayItemCount = (uint)dsoState.JniPreloadDSOs.Count,
+			GetArrayItemCommentCallback = GetPreloadIndicesLibraryName,
+			GetArrayItemCommentCallbackCallerState = dsoState,
 			BeforeWriteCallback = PopulatePreloadIndices,
 			BeforeWriteCallbackCallerState = dsoState,
 		};
@@ -566,6 +572,21 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		module.Add (assembly_store);
 	}
 
+	string? GetPreloadIndicesLibraryName (LlvmIrVariable v, LlvmIrModuleTarget target, ulong index, object? value, object? callerState)
+	{
+		// Instead of throwing for such a triviality like a comment, we will return error messages as comments instead
+		var dsoState = callerState as DsoCacheState;
+		if (dsoState == null) {
+			return " Internal error: DSO state not present.";
+		}
+
+		if (index >= (ulong)dsoState.JniPreloadNames.Count) {
+			return $" Invalid index {index}";
+		}
+
+		return $" {dsoState.JniPreloadNames[(int)index]}";
+	}
+
 	void PopulatePreloadIndices (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
 	{
 		var indices = variable.Value as List<uint>;
@@ -578,6 +599,9 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			throw new InvalidOperationException ($"Internal error: DSO state not present.");
 		}
 
+		var dsoNames = new List<string> ();
+
+		// Indices array MUST NOT be sorted, since it groups alias entries together with the main entry
 		foreach (DSOCacheEntry preload in dsoState.JniPreloadDSOs) {
 			int dsoIdx = dsoState.DsoCache.FindIndex (entry => {
 				if (entry.Instance == null) {
@@ -592,8 +616,9 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			}
 
 			indices.Add ((uint)dsoIdx);
+			dsoNames.Add (preload.HashedName ?? String.Empty);
 		}
-		indices.Sort ();
+		dsoState.JniPreloadNames = dsoNames;
 	}
 
 	void HashAndSortDSOCache (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
@@ -648,6 +673,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		var aotDsoCache = new List<StructureInstance<DSOCacheEntry>> ();
 		var nameMutations = new List<string> ();
 		var dsoNamesBlob = new LlvmIrStringBlob ();
+		int nameMutationsCount = -1;
 
 		for (int i = 0; i < dsos.Count; i++) {
 			string name = dsos[i].name;
@@ -655,9 +681,14 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 			bool isJniLibrary = ELFHelper.IsJniLibrary (Log, dsos[i].item.ItemSpec);
 			bool ignore = dsos[i].ignore;
+			bool ignore_for_preload = !DsoCacheJniPreloadIgnore.Contains (name);
 
 			nameMutations.Clear();
 			AddNameMutations (name);
+			if (nameMutationsCount == -1) {
+				nameMutationsCount = nameMutations.Count;
+			}
+
 			// All mutations point to the actual library name, but have hash of the mutated one
 			foreach (string entryName in nameMutations) {
 				var entry = new DSOCacheEntry {
@@ -670,16 +701,19 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 					name_index = (uint)nameOffset,
 				};
 
-				if (entry.is_jni_library && entry.HashedName == name && !DsoCacheJniPreloadIgnore.Contains (name)) {
-					jniPreloads.Add (entry);
-				}
-
 				var item = new StructureInstance<DSOCacheEntry> (dsoCacheEntryStructureInfo, entry);
 				if (name.StartsWith ("libaot-", StringComparison.OrdinalIgnoreCase)) {
 					aotDsoCache.Add (item);
-				} else {
-					dsoCache.Add (item);
+					continue;
 				}
+
+				// We must add all aliases to the preloads indices array so that all of them have their handle
+				// set when the library is preloaded.
+				if (entry.is_jni_library && ignore_for_preload) {
+					jniPreloads.Add (entry);
+				}
+
+				dsoCache.Add (item);
 			}
 		}
 
@@ -688,6 +722,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			JniPreloadDSOs = jniPreloads,
 			AotDsoCache = aotDsoCache,
 			NamesBlob = dsoNamesBlob,
+			NameMutationsCount = (uint)(nameMutationsCount <= 0 ? 1 : nameMutationsCount),
 		};
 
 		void AddNameMutations (string name)

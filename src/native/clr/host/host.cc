@@ -334,6 +334,60 @@ auto Host::create_delegate (
 	return delegate;
 }
 
+[[gnu::flatten, gnu::always_inline]]
+void Host::preload_jni_libraries () noexcept
+{
+	// NOTE: when fixing a bug here, fix also the MonoVM code in src/native/mono/monodroid-glue.cc@preload_jni_libraries
+	if (application_config.number_of_shared_libraries == 0) [[unlikely]] {
+		return;
+	}
+
+	log_debug (LOG_ASSEMBLY, "DSO jni preloads index stride == {}", dso_jni_preloads_idx_stride);
+
+	if ((dso_jni_preloads_idx_count % dso_jni_preloads_idx_stride) != 0) [[unlikely]] {
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			std::format (
+				"DSO preload index is invalid, size ({}) is not a multiple of {}"sv,
+				dso_jni_preloads_idx_count,
+				dso_jni_preloads_idx_stride
+			)
+		);
+	}
+
+	for (size_t i = 0; i < dso_jni_preloads_idx_count; i += dso_jni_preloads_idx_stride) {
+		const size_t entry_index = dso_jni_preloads_idx[i];
+		DSOCacheEntry &entry = dso_cache[entry_index];
+		const std::string_view dso_name = MonodroidDl::get_dso_name (&entry);
+
+		log_debug (
+			LOG_ASSEMBLY,
+			"Preloading JNI shared library: {} (entry's index: {}; real name hash: {:x}; name hash: {:x})",
+			dso_name,
+			entry_index,
+			entry.real_name_hash,
+			entry.hash
+		);
+
+		void *handle = MonodroidDl::monodroid_dlopen (&entry, dso_name, RTLD_NOW);
+
+		// Set handle in all the alias entries
+		for (size_t j = 1; j < dso_jni_preloads_idx_stride; j++) {
+			const size_t entry_alias_index = dso_jni_preloads_idx[i + j];
+			DSOCacheEntry &entry_alias = dso_cache[entry_alias_index];
+			const std::string_view entry_alias_name = MonodroidDl::get_dso_name (&entry);
+
+			log_debug (
+				LOG_ASSEMBLY,
+				"Putting JNI library handle in alias entry at index {}: {}",
+				entry_alias_index,
+				entry_alias_name
+			);
+			entry_alias.handle = handle;
+		}
+	}
+}
+
 void Host::Java_mono_android_Runtime_initInternal (
 	JNIEnv *env, jclass runtimeClass, jstring lang, jobjectArray runtimeApksJava,
 
@@ -433,12 +487,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 		gettid ()
 	);
 
-	for (size_t i = 0; i < dso_jni_preloads_idx_count; i++) {
-		DSOCacheEntry &entry = dso_cache[dso_jni_preloads_idx[i]];
-		const std::string_view dso_name = MonodroidDl::get_dso_name (&entry);
-		log_debug (LOG_ASSEMBLY, "Preloading JNI shared library: {}", dso_name);
-		MonodroidDl::monodroid_dlopen (&entry, dso_name, RTLD_NOW);
-	}
+	preload_jni_libraries ();
 
 	struct JnienvInitializeArgs init = {};
 	init.javaVm                                         = jvm;
