@@ -292,7 +292,7 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 		// Since it's not an assembly store, it's a shared library most likely and it is long enough for us not to have
 		// to check the length
 		if (Util::ends_with (entry_name, dso_suffix)) {
-			constexpr size_t apk_lib_prefix_len = apk_lib_prefix.size () - 1;
+			constexpr size_t apk_lib_prefix_len = apk_lib_prefix.length ();
 
 			const char *const name = entry_name.get () + apk_lib_prefix_len;
 			DSOApkEntry *apk_entry = reinterpret_cast<DSOApkEntry*>(reinterpret_cast<uint8_t*>(dso_apk_entries) + (sizeof(DSOApkEntry) * number_of_zip_dso_entries));

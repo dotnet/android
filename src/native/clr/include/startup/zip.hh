@@ -56,9 +56,11 @@ namespace xamarin::android {
 		static constexpr size_t lib_prefix_size = calc_size(apk_lib_dir_name, zip_path_separator, Constants::android_lib_abi, zip_path_separator);
 		static constexpr auto lib_prefix_array = concat_string_views<lib_prefix_size> (apk_lib_dir_name, zip_path_separator, Constants::android_lib_abi, zip_path_separator);
 
+	public:
 		// .data() must be used otherwise string_view length will include the trailing \0 in the array
 		static constexpr std::string_view lib_prefix { lib_prefix_array.data () };
 
+	private:
 		static constexpr size_t assembly_store_file_path_size = calc_size(lib_prefix, Constants::assembly_store_file_name);
 		static constexpr auto assembly_store_file_path_array = concat_string_views<assembly_store_file_path_size> (lib_prefix, Constants::assembly_store_file_name);
 

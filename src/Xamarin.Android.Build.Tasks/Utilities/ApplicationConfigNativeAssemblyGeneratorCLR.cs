@@ -43,7 +43,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 	// Order of fields and their type must correspond *exactly* (with exception of the
 	// ignored managed members) to that in
-	// src/monodroid/jni/xamarin-app.hh DSOCacheEntry structure
+	// src/native/clr/include/xamarin-app.hh DSOCacheEntry structure
 	[NativeAssemblerStructContextDataProvider (typeof (DSOCacheEntryContextDataProvider))]
 	sealed class DSOCacheEntry
 	{
@@ -66,8 +66,29 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public IntPtr handle = IntPtr.Zero;
 	}
 
+	sealed class DSOApkEntryContextDataProvider : NativeAssemblerStructContextDataProvider
+	{
+		public override string GetComment (object data, string fieldName)
+		{
+			var dso_apk_entry = EnsureType<DSOApkEntry> (data);
+			if (MonoAndroidHelper.StringEquals ("name_hash", fieldName)) {
+				return $" from name: {dso_apk_entry.Name}";
+			}
+
+			return String.Empty;
+		}
+	}
+
+	// Order of fields and their type must correspond *exactly* (with exception of the
+	// ignored managed members) to that in
+	// src/native/clr/include/xamarin-app.hh DSOApkEntry structure
+	[NativeAssemblerStructContextDataProvider (typeof (DSOApkEntryContextDataProvider))]
 	sealed class DSOApkEntry
 	{
+		[NativeAssembler (Ignore = true)]
+		public string Name = String.Empty;
+
+		[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 		public ulong name_hash;
 		public uint  offset; // offset into the APK
 		public int   fd; // apk file descriptor
@@ -417,10 +438,9 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		module.Add (aot_dso_cache);
 		module.AddGlobalVariable ("dso_names_data", dsoState.NamesBlob, LlvmIrVariableOptions.GlobalConstant);
 
-		var dso_apk_entries = new LlvmIrGlobalVariable (typeof(List<StructureInstance<DSOApkEntry>>), "dso_apk_entries") {
-			ArrayItemCount = (ulong)NativeLibraries.Count,
+		var dso_apk_entries = new LlvmIrGlobalVariable (new List<StructureInstance<DSOApkEntry>> (NativeLibraries.Count), "dso_apk_entries") {
 			Options = LlvmIrVariableOptions.GlobalWritable,
-			ZeroInitializeArray = true,
+			BeforeWriteCallback = PopulateDsoApkEntries,
 		};
 		module.Add (dso_apk_entries);
 
@@ -587,16 +607,45 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		return $" {dsoState.JniPreloadNames[(int)index]}";
 	}
 
+	void PopulateDsoApkEntries (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
+	{
+		var dso_apk_entries = variable.Value as List<StructureInstance<DSOApkEntry>>;
+		if (dso_apk_entries == null) {
+			throw new InvalidOperationException ("Internal error: DSO apk entries list not present.");
+		}
+
+		if (dso_apk_entries.Capacity != NativeLibraries.Count) {
+			throw new InvalidOperationException ($"Internal error: DSO apk entries count ({dso_apk_entries.Count}) is different to the native libraries count ({NativeLibraries.Count}).");
+		}
+
+		bool is64Bit = target.Is64Bit;
+		foreach (ITaskItem item in NativeLibraries) {
+			string name = Path.GetFileName (item.ItemSpec);
+			var entry = new DSOApkEntry {
+				Name = name,
+
+				name_hash = MonoAndroidHelper.GetXxHash (name, is64Bit),
+				offset = 0,
+				fd = -1,
+			};
+			dso_apk_entries.Add (new StructureInstance<DSOApkEntry> (dsoApkEntryStructureInfo, entry));
+		}
+
+		dso_apk_entries.Sort ((StructureInstance<DSOApkEntry> a, StructureInstance<DSOApkEntry> b) => {
+			return a.Instance!.name_hash.CompareTo (b.Instance!.name_hash);
+		});
+	}
+
 	void PopulatePreloadIndices (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
 	{
 		var indices = variable.Value as List<uint>;
 		if (indices == null) {
-			throw new InvalidOperationException ($"Internal error: DSO preload indices list instance not present.");
+			throw new InvalidOperationException ("Internal error: DSO preload indices list instance not present.");
 		}
 
 		var dsoState = state as DsoCacheState;
 		if (dsoState == null) {
-			throw new InvalidOperationException ($"Internal error: DSO state not present.");
+			throw new InvalidOperationException ("Internal error: DSO state not present.");
 		}
 
 		var dsoNames = new List<string> ();
