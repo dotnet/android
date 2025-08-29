@@ -52,7 +52,7 @@ variables:
 - name: VSEngMicroBuildPool
   value: VSEngSS-MicroBuild2022-1ES
 - name: TeamName
-  value: XamarinAndroid
+  value: .NET MAUI
 - name: DotNetTargetFramework
   value: net10.0
 - name: DotNetStableTargetFramework

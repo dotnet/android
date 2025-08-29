@@ -12,8 +12,7 @@ resources:
   repositories:
   - repository: 1esPipelines
     type: git
-    name: 1ESPipelineTemplates/1ESPipelineTemplates
-    ref: refs/tags/release
+    name: 1ESPipelineTemplates/MicroBuildTemplate
 
 parameters:
 - name: apiLevel
