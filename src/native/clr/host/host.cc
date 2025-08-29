@@ -147,7 +147,7 @@ auto Host::zip_scan_callback (std::string_view const& apk_path, int apk_fd, dyna
 		}
 	}
 
-	if (!entry_name.starts_with (Zip::lib_prefix) || !entry_name.ends_with (Constants::dso_suffix)) {
+	if (!AndroidSystem::is_embedded_dso_mode_enabled () || !entry_name.starts_with (Zip::lib_prefix) || !entry_name.ends_with (Constants::dso_suffix)) {
 		return false;
 	}
 
@@ -156,6 +156,14 @@ auto Host::zip_scan_callback (std::string_view const& apk_path, int apk_fd, dyna
 	hash_t name_hash = xxhash::hash (lib_name.data (), lib_name.length ());
 	log_debug (LOG_ASSEMBLY, "Library name is: {}; hash == 0x{:x}", lib_name, name_hash);
 
+	DSOApkEntry *apk_entry = MonodroidDl::find_dso_apk_entry (name_hash);
+	if (apk_entry == nullptr) {
+		return false;
+	}
+
+	log_debug (LOG_ASSEMBLY, "Found matching DSO APK entry");
+	apk_entry->fd = apk_fd;
+	apk_entry->offset = offset;
 	return false;
 }
 
