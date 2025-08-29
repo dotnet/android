@@ -21,8 +21,6 @@ namespace xamarin::android {
 			jobjectArray assembliesJava, jboolean isEmulator, jboolean haveSplitApks) noexcept;
 		static void Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods) noexcept;
 
-		static auto get_java_class_name_for_TypeManager (jclass klass) noexcept -> char*;
-
 		static auto get_timing () -> std::shared_ptr<Timing>
 		{
 			return _timing;
