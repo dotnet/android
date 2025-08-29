@@ -5,4 +5,8 @@
     This is so that we can cleanly import Xamarin.Installer.Common.props and
     Xamarin.Android.Common.props from WorkloadDependencies.proj.
     -->
+  <PropertyGroup>
+    <!-- Disables the transitive restore of packages like Microsoft.AspNetCore.App.Ref, Microsoft.WindowsDesktop.App.Ref -->
+    <DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
+  </PropertyGroup>
 </Project>
