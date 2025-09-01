@@ -74,6 +74,10 @@
       <_ConfigureRuntimesInputs  Include="clr\startup\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="clr\xamarin-app-stub\CMakeLists.txt" />
     </ItemGroup>
+
+    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
+      <_ConfigureRuntimesInputs  Include="nativeaot\host\CMakeLists.txt" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_ConfigureArchiveDSOInputsAndOutputs">
@@ -193,6 +197,11 @@
       <_RuntimeSources Include="clr\runtime-base\*.cc;clr\runtime-base\*.hh" />
       <_RuntimeSources Include="clr\shared\*.cc;clr\shared\*.hh" />
     </ItemGroup>
+
+    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
+      <_RuntimeSources Include="nativeaot\include\**\*.hh" />
+      <_RuntimeSources Include="nativeaot\host\*.cc" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_BuildAndroidRuntimesInputs"
@@ -202,7 +211,9 @@
       <_BuildAndroidRuntimesInputs  Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-Release\CMakeCache.txt')" />
       <_BuildAndroidRuntimesInputs  Include="@(_RuntimeSources)" />
       <_BuildAndroidRuntimesInputs  Include="..\..\build-tools\scripts\Ndk.targets" />
+    </ItemGroup>
 
+    <ItemGroup Condition= " '$(CMakeRuntimeFlavor)' != 'NativeAOT' ">
       <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\Debug\libxamarin-app.so')" />
       <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\Release\libxamarin-app.so')" />
     </ItemGroup>
@@ -215,6 +226,11 @@
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
       <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libnet-android.debug.so')" />
       <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libnet-android.release.so')" />
+    </ItemGroup>
+
+    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libnaot-android.debug.so')" />
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libnaot-android.release.so')" />
     </ItemGroup>
 
     <ItemGroup  Condition=" '$(EnableNativeAnalyzers)' == 'true' And '$(CMakeRuntimeFlavor)' == 'MonoVM' ">
@@ -295,6 +311,7 @@
     <PropertyGroup>
       <_RuntimePackName Condition=" '$(CMakeRuntimeFlavor)' == 'MonoVM' ">Mono</_RuntimePackName>
       <_RuntimePackName Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">CoreCLR</_RuntimePackName>
+      <_RuntimePackName Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">NativeAOT</_RuntimePackName>
     </PropertyGroup>
 
     <ItemGroup>
@@ -306,7 +323,6 @@
                          AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
                          AndroidRuntime="$(CMakeRuntimeFlavor)"
                          RuntimePackName="$(_RuntimePackName)" />
-      <!-- NOTE: not building native libraries for NativeAOT yet -->
     </ItemGroup>
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
