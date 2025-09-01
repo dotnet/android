@@ -27,6 +27,7 @@
 #include <runtime-base/search.hh>
 #include <runtime-base/timing-internal.hh>
 #include <shared/log_types.hh>
+#include <shared/xxhash.hh>
 #include <startup/zip.hh>
 
 using namespace xamarin::android;
@@ -145,6 +146,24 @@ auto Host::zip_scan_callback (std::string_view const& apk_path, int apk_fd, dyna
 			return false; // This will make the scanner keep the APK open
 		}
 	}
+
+	if (!AndroidSystem::is_embedded_dso_mode_enabled () || !entry_name.starts_with (Zip::lib_prefix) || !entry_name.ends_with (Constants::dso_suffix)) {
+		return false;
+	}
+
+	log_debug (LOG_ASSEMBLY, "Found shared library in '{}': {}"sv, apk_path, entry_name.get ());
+	std::string_view lib_name { entry_name.get () + Zip::lib_prefix.length () };
+	hash_t name_hash = xxhash::hash (lib_name.data (), lib_name.length ());
+	log_debug (LOG_ASSEMBLY, "Library name is: {}; hash == 0x{:x}", lib_name, name_hash);
+
+	DSOApkEntry *apk_entry = MonodroidDl::find_dso_apk_entry (name_hash);
+	if (apk_entry == nullptr) {
+		return false;
+	}
+
+	log_debug (LOG_ASSEMBLY, "Found matching DSO APK entry");
+	apk_entry->fd = apk_fd;
+	apk_entry->offset = offset;
 	return false;
 }
 
