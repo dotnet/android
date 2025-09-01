@@ -289,11 +289,6 @@ AndroidSystem::lookup_system_property (std::string_view const& name, size_t &val
 		return nullptr;
 	}
 
-	if (application_config.system_property_count % 2 != 0) {
-		log_warn (LOG_DEFAULT, "Corrupted environment variable array: does not contain an even number of entries ({})", application_config.system_property_count);
-		return nullptr;
-	}
-
 	const char *prop_name;
 	const char *prop_value;
 	for (size_t i = 0uz; i < application_config.system_property_count; i += 2uz) {
