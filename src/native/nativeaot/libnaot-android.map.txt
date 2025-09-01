@@ -1,5 +1,6 @@
 LIBNAOT_ANDROID {
   global:
+    JNI_OnLoad;
 
   local:
     *;
