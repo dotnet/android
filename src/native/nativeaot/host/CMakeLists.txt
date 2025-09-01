@@ -24,31 +24,9 @@ string(TOLOWER ${CMAKE_BUILD_TYPE} XAMARIN_NAOT_ANDROID_SUFFIX)
 set(XAMARIN_NAOT_ANDROID_LIB "naot-android${CHECKED_BUILD_INFIX}.${XAMARIN_NAOT_ANDROID_SUFFIX}")
 set(XAMARIN_NAOT_ANDROID_STATIC_LIB "${XAMARIN_NAOT_ANDROID_LIB}-static")
 
-set(CLR_SOURCES_PATH "../../clr")
-
 set(XAMARIN_MONODROID_SOURCES
-  bridge-processing.cc
   host.cc
-  host-environment.cc
   host-jni.cc
-  internal-pinvoke-stubs.cc
-
-  ../runtime-base/android-system.cc
-
-  # Sources from CoreCLR host
-  ${CLR_SOURCES_PATH}/host/bridge-processing.cc
-  ${CLR_SOURCES_PATH}/host/gc-bridge.cc
-  ${CLR_SOURCES_PATH}/host/host-shared.cc
-  ${CLR_SOURCES_PATH}/host/internal-pinvokes-shared.cc
-  ${CLR_SOURCES_PATH}/host/os-bridge.cc
-  ${CLR_SOURCES_PATH}/host/runtime-util.cc
-  ${CLR_SOURCES_PATH}/host/xamarin_getifaddrs.cc
-  ${CLR_SOURCES_PATH}/runtime-base/android-system-shared.cc
-  ${CLR_SOURCES_PATH}/runtime-base/cpu-arch-detect.cc
-  ${CLR_SOURCES_PATH}/runtime-base/logger.cc
-  ${CLR_SOURCES_PATH}/runtime-base/util.cc
-  ${CLR_SOURCES_PATH}/shared/helpers.cc
-  ${CLR_SOURCES_PATH}/shared/log_functions.cc
 )
 
 list(APPEND LOCAL_CLANG_CHECK_SOURCES
@@ -105,6 +83,7 @@ macro(lib_target_options TARGET_NAME)
   target_include_directories(
     ${TARGET_NAME} BEFORE
     PRIVATE
+    ${CMAKE_CURRENT_BINARY_DIR}/include
     ${EXTERNAL_DIR}
   )
 
@@ -113,7 +92,6 @@ macro(lib_target_options TARGET_NAME)
     SYSTEM PRIVATE
     ${SYSROOT_CXX_INCLUDE_DIR}
     ${RUNTIME_INCLUDE_DIR}
-    ${TEMP_MONO_RUNTIME_INCLUDE_DIR}
     ${LIBUNWIND_INCLUDE_DIRS}
   )
 
@@ -133,7 +111,6 @@ macro(lib_target_options TARGET_NAME)
 
   target_link_libraries(
     ${TARGET_NAME}
-    xa::java-interop
     -llog
   )
 endmacro ()

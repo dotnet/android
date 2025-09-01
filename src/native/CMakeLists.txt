@@ -268,7 +268,6 @@ if(IS_CLR_RUNTIME)
   endmacro()
 elseif(IS_NAOT_RUNTIME)
   set(XA_RUNTIME_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/nativeaot/include)
-  set(CLR_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/clr/include)
 
   macro(xa_add_include_directories TARGET)
      target_include_directories(
@@ -276,8 +275,6 @@ elseif(IS_NAOT_RUNTIME)
         PRIVATE
         ${XA_RUNTIME_INCLUDE_DIR}
         ${RUNTIME_INCLUDE_DIR}
-        ${CONSTEXPR_XXH3_DIR}
-        ${CLR_INCLUDE_DIR}
      )
   endmacro()
 else()
@@ -323,7 +320,7 @@ macro(xa_add_compile_definitions TARGET)
       ${TARGET}
       PRIVATE
       TARGET_ANDROID
-      XA_HOST_NATIVEAOT
+      XA_HOST_NAOT
     )
   else()
     target_compile_definitions(
@@ -646,9 +643,8 @@ endmacro()
 if(BUILD_ARCHIVE_DSO_STUB)
   add_subdirectory(common/archive-dso-stub)
 else()
-  add_subdirectory(common/java-interop)
-
   if (IS_MONO_RUNTIME OR IS_CLR_RUNTIME)
+    add_subdirectory(common/java-interop)
     add_subdirectory(common/libunwind)
     add_subdirectory(common/lz4)
     add_subdirectory(common/runtime-base)
