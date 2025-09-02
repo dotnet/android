@@ -114,22 +114,13 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <TrimmerRootAssembly Include="@(_AndroidILLinkAssemblies->'%(Filename)')" Exclude="System.Private.CoreLib" TrimMode="All" />
       <!-- Passes linked assemblies to outer MSBuild tasks/targets -->
       <ResolvedFileToPublish Include="@(IlcCompileInput);@(_AndroidILLinkAssemblies)" RuntimeIdentifier="$(RuntimeIdentifier)" />
-
+      <!-- Include libc++ -->
+      <ResolvedFileToPublish Include="$(_NdkSysrootDir)libc++_static.a" RuntimeIdentifier="$(RuntimeIdentifier)" />
       <!-- Satellite assemblies -->
       <IlcSatelliteAssembly Include="$(_OuterIntermediateSatelliteAssembliesWithTargetPath)" />
 
       <LinkerArg Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnaot-android.$(Configuration.ToLower())-static-$(Configuration.ToLower())'))" />
-
-      <!-- Include libc++ -->
       <LinkerArg Include="$(_NdkSysrootDir)libc++_static.a" />
-      <LinkerArg Include="$(_NdkSysrootDir)libc++abi.a" />
-
-      <!-- This library conflicts with static libc++ -->
-      <NativeLibrary Remove="$(IlcSdkPath)libstdc++compat.a" />
-      <LinkerArg Remove="$(IlcSdkPath)libstdc++compat.a" />
-
-      <!-- Every p/invoke using the `xa-internal-api` "library" will be called directly -->
-      <DirectPInvoke Include="xa-internal-api" />
     </ItemGroup>
   </Target>
 
