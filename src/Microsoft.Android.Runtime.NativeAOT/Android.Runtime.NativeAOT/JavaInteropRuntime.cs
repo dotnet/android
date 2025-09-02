@@ -8,11 +8,15 @@ static partial class JavaInteropRuntime
 {
 	static JniRuntime? runtime;
 
+	[DllImport("xa-internal-api")]
+	static extern int XA_Host_NativeAOT_JNI_OnLoad (IntPtr vm, IntPtr reserved);
+
 	[UnmanagedCallersOnly (EntryPoint="JNI_OnLoad")]
 	static int JNI_OnLoad (IntPtr vm, IntPtr reserved)
 	{
 		try {
 			AndroidLog.Print (AndroidLogLevel.Info, "JavaInteropRuntime", "JNI_OnLoad()");
+			XA_Host_NativeAOT_JNI_OnLoad (vm, reserved);
 			LogcatTextWriter.Init ();
 			return (int) JniVersion.v1_6;
 		}

@@ -91,6 +91,7 @@
   </Target>
 
   <Target Name="_ConfigureAndBuildArchiveDSOStub"
+          Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' "
           DependsOnTargets="_PrepareCommonProperties;_ConfigureArchiveDSOInputsAndOutputs"
           Inputs="@(_ArchiveDSOInput)"
           Outputs="@(_ArchiveDSOOutput)">

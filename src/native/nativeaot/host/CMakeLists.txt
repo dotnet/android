@@ -24,9 +24,17 @@ string(TOLOWER ${CMAKE_BUILD_TYPE} XAMARIN_NAOT_ANDROID_SUFFIX)
 set(XAMARIN_NAOT_ANDROID_LIB "naot-android${CHECKED_BUILD_INFIX}.${XAMARIN_NAOT_ANDROID_SUFFIX}")
 set(XAMARIN_NAOT_ANDROID_STATIC_LIB "${XAMARIN_NAOT_ANDROID_LIB}-static")
 
+set(CLR_SOURCES_PATH "../../clr")
+
 set(XAMARIN_MONODROID_SOURCES
   host.cc
   host-jni.cc
+
+  ../runtime-base/android-system.cc
+
+  # Sources from CoreCLR host
+  ${CLR_SOURCES_PATH}/runtime-base/android-system-shared.cc
+  ${CLR_SOURCES_PATH}/runtime-base/logger.cc
 )
 
 list(APPEND LOCAL_CLANG_CHECK_SOURCES
@@ -83,7 +91,6 @@ macro(lib_target_options TARGET_NAME)
   target_include_directories(
     ${TARGET_NAME} BEFORE
     PRIVATE
-    ${CMAKE_CURRENT_BINARY_DIR}/include
     ${EXTERNAL_DIR}
   )
 
@@ -92,6 +99,7 @@ macro(lib_target_options TARGET_NAME)
     SYSTEM PRIVATE
     ${SYSROOT_CXX_INCLUDE_DIR}
     ${RUNTIME_INCLUDE_DIR}
+    ${TEMP_MONO_RUNTIME_INCLUDE_DIR}
     ${LIBUNWIND_INCLUDE_DIRS}
   )
 
@@ -111,6 +119,7 @@ macro(lib_target_options TARGET_NAME)
 
   target_link_libraries(
     ${TARGET_NAME}
+    xa::java-interop
     -llog
   )
 endmacro ()
