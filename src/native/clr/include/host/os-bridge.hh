@@ -50,6 +50,8 @@ namespace xamarin::android {
 			return env;
 		}
 
+		static auto get_java_class_name_for_TypeManager (jclass klass) noexcept -> char*;
+
 	private:
 		static auto _monodroid_gref_inc () noexcept -> int;
 		static auto _monodroid_gref_dec () noexcept -> int;
@@ -60,6 +62,7 @@ namespace xamarin::android {
 		static inline JavaVM *jvm = nullptr;
 		static inline jclass GCUserPeer_class = nullptr;
 		static inline jmethodID GCUserPeer_ctor = nullptr;
+		static inline jmethodID Class_getName = nullptr;
 
 		static inline int gc_gref_count = 0;
 		static inline int gc_weak_gref_count = 0;

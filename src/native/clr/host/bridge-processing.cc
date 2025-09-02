@@ -14,6 +14,15 @@ void BridgeProcessing::initialize_on_runtime_init (JNIEnv *env, jclass runtimeCl
 	GCUserPeer_class = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_android_GCUserPeer", true);
 	GCUserPeer_ctor = env->GetMethodID (GCUserPeer_class, "<init>", "()V");
 
+	GCUserPeerable_class = env->FindClass ("net/dot/jni/GCUserPeerable");
+	if (GCUserPeerable_class != nullptr) [[likely]] {
+		GCUserPeerable_class = static_cast<jclass>(OSBridge::lref_to_gref (env, GCUserPeerable_class));
+		GCUserPeerable_jiAddManagedReference = env->GetMethodID (GCUserPeerable_class, "jiAddManagedReference", "(Ljava/lang/Object;)V");
+		GCUserPeerable_jiClearManagedReferences = env->GetMethodID (GCUserPeerable_class, "jiClearManagedReferences", "()V");
+	} else {
+		log_error (LOG_DEFAULT, "Failed to find net/dot/jni/GCUserPeerable class.");
+	}
+
 	abort_unless (GCUserPeer_class != nullptr && GCUserPeer_ctor != nullptr, "Failed to load mono.android.GCUserPeer!");
 }
 
@@ -126,10 +135,10 @@ void BridgeProcessing::add_circular_references (const StronglyConnectedComponent
 
 		abort_unless (reference_added, [this, &prev, &next] {
 			jclass prev_java_class = env->GetObjectClass (prev.handle);
-			const char *prev_class_name = Host::get_java_class_name_for_TypeManager (prev_java_class);
+			const char *prev_class_name = OSBridge::get_java_class_name_for_TypeManager (prev_java_class);
 
 			jclass next_java_class = env->GetObjectClass (next.handle);
-			const char *next_class_name = Host::get_java_class_name_for_TypeManager (next_java_class);
+			const char *next_class_name = OSBridge::get_java_class_name_for_TypeManager (next_java_class);
 
 			return detail::_format_message (
 				"Failed to add reference between objects in a strongly connected component: %s -> %s.",
@@ -156,6 +165,11 @@ bool BridgeProcessing::add_reference (jobject from, jobject to) noexcept
 {
 	abort_if_invalid_pointer_argument (from, "from");
 	abort_if_invalid_pointer_argument (to, "to");
+
+	if (GCUserPeerable_class != nullptr && env->IsInstanceOf (from, GCUserPeerable_class)) {
+		env->CallVoidMethod (from, GCUserPeerable_jiAddManagedReference, to);
+		return true;
+	}
 
 	jclass java_class = env->GetObjectClass (from);
 	jmethodID add_method_id = env->GetMethodID (java_class, "monodroidAddReference", "(Ljava/lang/Object;)V");
@@ -196,6 +210,11 @@ void BridgeProcessing::clear_references_if_needed (const HandleContext &context)
 void BridgeProcessing::clear_references (jobject handle) noexcept
 {
 	abort_if_invalid_pointer_argument (handle, "handle");
+
+	if (GCUserPeerable_class != nullptr && env->IsInstanceOf (handle, GCUserPeerable_class)) {
+		env->CallVoidMethod (handle, GCUserPeerable_jiClearManagedReferences);
+		return;
+	}
 
 	jclass java_class = env->GetObjectClass (handle);
 	jmethodID clear_method_id = env->GetMethodID (java_class, "monodroidClearReferences", "()V");
@@ -315,7 +334,7 @@ void BridgeProcessing::log_missing_add_references_method ([[maybe_unused]] jclas
 		return;
 	}
 
-	char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
+	char *class_name = OSBridge::get_java_class_name_for_TypeManager (java_class);
 	log_error (LOG_GC, "Missing monodroidAddReferences method for object of class {}", optional_string (class_name));
 	free (class_name);
 #endif
@@ -331,7 +350,7 @@ void BridgeProcessing::log_missing_clear_references_method ([[maybe_unused]] jcl
 		return;
 	}
 
-	char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
+	char *class_name = OSBridge::get_java_class_name_for_TypeManager (java_class);
 	log_error (LOG_GC, "Missing monodroidClearReferences method for object of class {}", optional_string (class_name));
 	free (class_name);
 #endif

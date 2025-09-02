@@ -13,8 +13,9 @@ static partial class JavaInteropRuntime
 	{
 		try {
 			AndroidLog.Print (AndroidLogLevel.Info, "JavaInteropRuntime", "JNI_OnLoad()");
-			LogcatTextWriter.Init ();
-			return (int) JniVersion.v1_6;
+			AndroidCryptoNative_InitLibraryOnLoad(vm, reserved);
+			clr_initialize_on_onload(vm, reserved);
+			return (int)JniVersion.v1_6;
 		}
 		catch (Exception e) {
 			AndroidLog.Print (AndroidLogLevel.Error, "JavaInteropRuntime", $"JNI_OnLoad() failed: {e}");
@@ -22,7 +23,16 @@ static partial class JavaInteropRuntime
 		}
 	}
 
-	[UnmanagedCallersOnly (EntryPoint="JNI_OnUnload")]
+	[DllImport("*")]
+	static extern int AndroidCryptoNative_InitLibraryOnLoad (IntPtr vm, IntPtr reserved);
+
+	[DllImport("*")]
+	static extern int clr_initialize_on_onload (IntPtr vm, IntPtr reserved);
+
+	[DllImport("*")]
+	static extern int clr_initialize_on_runtime_init ();
+
+	[UnmanagedCallersOnly(EntryPoint = "JNI_OnUnload")]
 	static void JNI_OnUnload (IntPtr vm, IntPtr reserved)
 	{
 		AndroidLog.Print(AndroidLogLevel.Info, "JavaInteropRuntime", "JNI_OnUnload");
@@ -38,20 +48,19 @@ static partial class JavaInteropRuntime
 			var settings    = new DiagnosticSettings ();
 			settings.AddDebugDotnetLog ();
 
-			var typeManager = new ManagedTypeManager ();
 			var options = new NativeAotRuntimeOptions {
 				EnvironmentPointer          = jnienv,
-				ClassLoader                 = new JniObjectReference (classLoader),
-				TypeManager                 = typeManager,
-				ValueManager                = new SimpleValueManager (),
+				ClassLoader                 = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
+				TypeManager                 = new ManagedTypeManager (),
+				ValueManager                = ManagedValueManager.GetOrCreateInstance (),
 				UseMarshalMemberBuilder     = false,
-				JniGlobalReferenceLogWriter = settings.GrefLog,
-				JniLocalReferenceLogWriter  = settings.LrefLog,
 			};
 			runtime = options.CreateJreVM ();
 
 			// Entry point into Mono.Android.dll
 			JNIEnvInit.InitializeJniRuntime (runtime);
+
+			clr_initialize_on_runtime_init ();
 
 			transition  = new JniTransition (jnienv);
 

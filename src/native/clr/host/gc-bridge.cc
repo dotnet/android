@@ -117,7 +117,7 @@ void GCBridge::log_handle_context (JNIEnv *env, HandleContext *ctx) noexcept
 	jobject handle = ctx->control_block->handle;
 	jclass java_class = env->GetObjectClass (handle);
 	if (java_class != nullptr) {
-		char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
+		char *class_name = OSBridge::get_java_class_name_for_TypeManager (java_class);
 		log_info (LOG_GC, "gref {:#x} [{}]", reinterpret_cast<intptr_t> (handle), class_name);
 		free (class_name);
 	} else {
