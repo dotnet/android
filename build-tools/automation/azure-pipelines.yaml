@@ -14,11 +14,10 @@ resources:
   - repository: 1esPipelines
     type: git
     name: 1ESPipelineTemplates/MicroBuildTemplate
-    ref: dev/maleib/mac-signing
   - repository: yaml-templates
     type: git
     name: DevDiv/Xamarin.yaml-templates
-    ref: refs/heads/main
+    ref: refs/heads/dev/maleib/mac-signing
   - repository: android-platform-support
     type: git
     name: DevDiv/android-platform-support

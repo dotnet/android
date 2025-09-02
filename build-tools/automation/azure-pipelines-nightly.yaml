@@ -14,7 +14,7 @@ resources:
   - repository: yaml-templates
     type: git
     name: DevDiv/Xamarin.yaml-templates
-    ref: refs/heads/main
+    ref: refs/heads/dev/maleib/mac-signing
   - repository: android-platform-support
     type: git
     name: DevDiv/android-platform-support
