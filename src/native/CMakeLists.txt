@@ -161,6 +161,14 @@ include("${XA_BUILD_DIR}/xa_build_configuration.cmake")
 #
 # Paths
 #
+macro(temp_configure_mono_runtime_dir)
+  # TEMPORARY: for now JI needs to build with MonoVM embedding APIs
+  set(TEMP_NETCORE_RUNTIME_DIR_ARM64  "${NETCORE_APP_RUNTIME_DIR_ARM64}")
+  set(TEMP_NETCORE_RUNTIME_DIR_ARM    "${NETCORE_APP_RUNTIME_DIR_ARM}")
+  set(TEMP_NETCORE_RUNTIME_DIR_X86_64 "${NETCORE_APP_RUNTIME_DIR_X86_64}")
+  set(TEMP_NETCORE_RUNTIME_DIR_X86    "${NETCORE_APP_RUNTIME_DIR_X86}")
+endmacro()
+
 if(IS_CLR_RUNTIME)
   if(LOCAL_CORECLR_PATH)
     set(CLR_PACKAGE_NAME_STEM "microsoft.netcore.app.runtime.android")
@@ -179,11 +187,9 @@ if(IS_CLR_RUNTIME)
     set(RUNTIME_DIR_X86    "${CORECLR_APP_RUNTIME_DIR_X86}")
   endif()
 
-  # TEMPORARY: for now JI needs to build with MonoVM embedding APIs
-  set(TEMP_NETCORE_RUNTIME_DIR_ARM64  "${NETCORE_APP_RUNTIME_DIR_ARM64}")
-  set(TEMP_NETCORE_RUNTIME_DIR_ARM    "${NETCORE_APP_RUNTIME_DIR_ARM}")
-  set(TEMP_NETCORE_RUNTIME_DIR_X86_64 "${NETCORE_APP_RUNTIME_DIR_X86_64}")
-  set(TEMP_NETCORE_RUNTIME_DIR_X86    "${NETCORE_APP_RUNTIME_DIR_X86}")
+  temp_configure_mono_runtime_dir()
+elseif(IS_NAOT_RUNTIME)
+  temp_configure_mono_runtime_dir()
 elseif(IS_MONO_RUNTIME)
   set(RUNTIME_DIR_ARM64  "${NETCORE_APP_RUNTIME_DIR_ARM64}")
   set(RUNTIME_DIR_ARM    "${NETCORE_APP_RUNTIME_DIR_ARM}")
@@ -262,6 +268,7 @@ if(IS_CLR_RUNTIME)
   endmacro()
 elseif(IS_NAOT_RUNTIME)
   set(XA_RUNTIME_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/nativeaot/include)
+  set(CLR_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/clr/include)
 
   macro(xa_add_include_directories TARGET)
      target_include_directories(
@@ -269,6 +276,7 @@ elseif(IS_NAOT_RUNTIME)
         PRIVATE
         ${XA_RUNTIME_INCLUDE_DIR}
         ${RUNTIME_INCLUDE_DIR}
+        ${CLR_INCLUDE_DIR}
      )
   endmacro()
 else()
@@ -314,7 +322,7 @@ macro(xa_add_compile_definitions TARGET)
       ${TARGET}
       PRIVATE
       TARGET_ANDROID
-      XA_HOST_NAOT
+      XA_HOST_NATIVEAOT
     )
   else()
     target_compile_definitions(
@@ -637,8 +645,9 @@ endmacro()
 if(BUILD_ARCHIVE_DSO_STUB)
   add_subdirectory(common/archive-dso-stub)
 else()
+  add_subdirectory(common/java-interop)
+
   if (IS_MONO_RUNTIME OR IS_CLR_RUNTIME)
-    add_subdirectory(common/java-interop)
     add_subdirectory(common/libunwind)
     add_subdirectory(common/lz4)
     add_subdirectory(common/runtime-base)
