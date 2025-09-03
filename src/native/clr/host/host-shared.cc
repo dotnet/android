@@ -3,7 +3,7 @@
 
 using namespace xamarin::android;
 
-auto HostCommon::get_java_class_name_for_TypeManager (jclass klass) noexcept -> char*
+auto Host::get_java_class_name_for_TypeManager (jclass klass) noexcept -> char*
 {
 	if (klass == nullptr || Class_getName == nullptr) {
 		return nullptr;
