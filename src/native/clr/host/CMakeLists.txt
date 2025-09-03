@@ -31,8 +31,10 @@ set(XAMARIN_MONODROID_SOURCES
   gc-bridge.cc
   host.cc
   host-jni.cc
+  host-shared.cc
   host-util.cc
-  internal-pinvokes.cc
+  internal-pinvokes-clr.cc
+  internal-pinvokes-shared.cc
   os-bridge.cc
   runtime-environment.cc
   runtime-util.cc

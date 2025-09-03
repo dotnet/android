@@ -6,6 +6,6 @@ using namespace xamarin::android;
 
 auto XA_Host_NativeAOT_JNI_OnLoad (JavaVM *vm, void *reserved) -> int
 {
-	log_debug (LOG_ASSEMBLY, "{}", __PRETTY_FUNCTION__);
+	log_warn (LOG_ASSEMBLY, "{}", __PRETTY_FUNCTION__);
 	return Host::Java_JNI_OnLoad (vm, reserved);
 }

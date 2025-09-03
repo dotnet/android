@@ -29,12 +29,23 @@ set(CLR_SOURCES_PATH "../../clr")
 set(XAMARIN_MONODROID_SOURCES
   host.cc
   host-jni.cc
+  internal-pinvoke-stubs.cc
 
   ../runtime-base/android-system.cc
 
   # Sources from CoreCLR host
+  ${CLR_SOURCES_PATH}/host/bridge-processing.cc
+  ${CLR_SOURCES_PATH}/host/gc-bridge.cc
+  ${CLR_SOURCES_PATH}/host/host-shared.cc
+  ${CLR_SOURCES_PATH}/host/internal-pinvokes-shared.cc
+  ${CLR_SOURCES_PATH}/host/os-bridge.cc
+  ${CLR_SOURCES_PATH}/host/runtime-util.cc
+  ${CLR_SOURCES_PATH}/host/xamarin_getifaddrs.cc
   ${CLR_SOURCES_PATH}/runtime-base/android-system-shared.cc
+  ${CLR_SOURCES_PATH}/runtime-base/cpu-arch-detect.cc
   ${CLR_SOURCES_PATH}/runtime-base/logger.cc
+  ${CLR_SOURCES_PATH}/shared/helpers.cc
+  ${CLR_SOURCES_PATH}/shared/log_functions.cc
 )
 
 list(APPEND LOCAL_CLANG_CHECK_SOURCES

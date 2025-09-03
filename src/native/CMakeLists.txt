@@ -276,6 +276,7 @@ elseif(IS_NAOT_RUNTIME)
         PRIVATE
         ${XA_RUNTIME_INCLUDE_DIR}
         ${RUNTIME_INCLUDE_DIR}
+        ${CONSTEXPR_XXH3_DIR}
         ${CLR_INCLUDE_DIR}
      )
   endmacro()

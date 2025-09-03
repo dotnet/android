@@ -93,6 +93,9 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <ItemGroup>
       <!-- Android needs a proper soname property or it will refuse to load the library -->
       <LinkerArg Include="&quot;-Wl,-soname,lib$(TargetName)$(NativeBinaryExt)&quot;" />
+      <LinkerArg Include="-Wl,--error-unresolved-symbols" />
+      <LinkerArg Include="-Wl,--no-undefined" />
+
       <!-- Required for [UnmanagedCallersOnly] to work inside this assembly -->
       <UnmanagedEntryPointsAssembly Include="Microsoft.Android.Runtime.NativeAOT" />
       <!-- Give ILLink's output to ILC -->
@@ -112,7 +115,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <IlcSatelliteAssembly Include="$(_OuterIntermediateSatelliteAssembliesWithTargetPath)" />
 
       <LinkerArg Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnaot-android.$(Configuration.ToLower())-static-$(Configuration.ToLower())'))" />
-      <!-- <LinkerArg Include="$(_NdkSysrootDir)libc++_static.a" /> -->
+      <LinkerArg Include="$(_NdkSysrootDir)libc++_shared.so" />
 
       <!-- Every p/invoke using the `xa-internal-api` "library" will be called directly -->
       <DirectPInvoke Include="xa-internal-api" />
