@@ -120,3 +120,4 @@ void _monodroid_detect_cpu_and_architecture (uint16_t *built_for_cpu, uint16_t *
 	monodroid_detect_cpu_and_architecture (*built_for_cpu, *running_on_cpu, _64bit);
 	*is64bit = _64bit;
 }
+
