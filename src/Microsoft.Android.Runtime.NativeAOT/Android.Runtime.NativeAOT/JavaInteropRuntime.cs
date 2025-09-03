@@ -68,6 +68,7 @@ static partial class JavaInteropRuntime
 			XA_Host_NativeAOT_OnInit ();
 
 			transition  = new JniTransition (jnienv);
+			XA_Host_NativeAOT_OnInit ();
 
 			var handler = Java.Lang.Thread.DefaultUncaughtExceptionHandler;
 			Java.Lang.Thread.DefaultUncaughtExceptionHandler = new UncaughtExceptionMarshaler (handler);
