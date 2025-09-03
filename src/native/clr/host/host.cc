@@ -618,7 +618,7 @@ void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType,
 	}
 }
 
-auto Host::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcept -> jint
+auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcept -> jint
 {
 	jvm = vm;
 
