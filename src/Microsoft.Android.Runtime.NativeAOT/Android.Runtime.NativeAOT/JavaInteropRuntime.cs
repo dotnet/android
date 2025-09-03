@@ -33,6 +33,9 @@ static partial class JavaInteropRuntime
 		runtime?.Dispose ();
 	}
 
+	[DllImport("xa-internal-api")]
+	static extern void XA_Host_NativeAOT_OnInit ();
+
 	// symbol name from `$(IntermediateOutputPath)obj/Release/osx-arm64/h-classes/net_dot_jni_hello_JavaInteropRuntime.h`
 	[UnmanagedCallersOnly (EntryPoint="Java_net_dot_jni_nativeaot_JavaInteropRuntime_init")]
 	static void init (IntPtr jnienv, IntPtr klass, IntPtr classLoader)
@@ -58,6 +61,7 @@ static partial class JavaInteropRuntime
 			JNIEnvInit.InitializeJniRuntime (runtime);
 
 			transition  = new JniTransition (jnienv);
+			XA_Host_NativeAOT_OnInit ();
 
 			var handler = Java.Lang.Thread.DefaultUncaughtExceptionHandler;
 			Java.Lang.Thread.DefaultUncaughtExceptionHandler = new UncaughtExceptionMarshaler (handler);
