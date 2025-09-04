@@ -1,3 +1,4 @@
+#include <host/bridge-processing.hh>
 #include <host/gc-bridge.hh>
 #include <host/host-nativeaot.hh>
 #include <host/os-bridge.hh>
@@ -27,4 +28,5 @@ void Host::OnInit () noexcept
 	jclass runtimeClass = env->FindClass ("mono/android/Runtime");
 	OSBridge::initialize_on_runtime_init (env, runtimeClass);
 	GCBridge::initialize_on_runtime_init (env, runtimeClass);
+	BridgeProcessing::naot_initialize_on_runtime_init (env);
 }
