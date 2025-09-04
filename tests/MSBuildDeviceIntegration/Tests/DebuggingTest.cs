@@ -389,7 +389,27 @@ namespace ${ROOT_NAMESPACE} {
 			}
 
 			app.SetProperty ("AndroidPackageFormat", packageFormat);
-			app.MainPage = app.MainPage.Replace ("InitializeComponent ();", "InitializeComponent (); new Foo ();");
+			app.MainPage = app.MainPage
+				.Replace ("InitializeComponent ();", "InitializeComponent (); new Foo ();")
+				// NOTE: can trigger deadlock/loop on startup:
+				// 08-25 09:40:36.759 32259 32293 D monodroid-assembly: monodroid_dlopen: hash match found, DSO name is 'libSystem.Security.Cryptography.Native.Android.so'
+				// 08-25 09:40:36.759 32259 32293 D monodroid-assembly: Trying to load loading shared JNI library /data/user/0/com.companyname.testgrendel/files/.__override__/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so with System.loadLibrary
+				// 08-25 09:40:36.759 32259 32293 D monodroid-assembly: Running DSO loader on thread 32293, dispatching to main thread
+				.Replace ("//${AFTER_MAINACTIVITY}", """
+					static MainActivity()
+					{
+						try
+						{
+							var text = new HttpClient().GetStringAsync("https://www.google.com").GetAwaiter().GetResult();
+							Console.WriteLine("Web request:" + text);
+						}
+						catch (Exception ex)
+						{
+							// Doesn't actually matter if succeeds
+							Console.WriteLine("Web request failed:" + ex);
+						}
+					}
+				""");
 			app.AddReference (lib);
 			var abis = new [] { DeviceAbi };
 			app.SetRuntimeIdentifiers (abis);

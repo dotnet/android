@@ -295,6 +295,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
   <!-- Default retry attempts for temporary directory cleanup -->
   <_AndroidDeleteTempRetryAttempts Condition=" '$(_AndroidDeleteTempRetryAttempts)' == '' ">3</_AndroidDeleteTempRetryAttempts>
+
+  <_AndroidStripNativeLibraries Condition=" '$(AndroidStripNativeLibraries)' != '' And '$(AndroidStripNativeLibraries)' == 'true' ">true</_AndroidStripNativeLibraries>
+  <_AndroidStripNativeLibraries Condition=" '$(_AndroidStripNativeLibraries)' != 'true' ">false</_AndroidStripNativeLibraries>
 </PropertyGroup>
 
 <Choose>
@@ -2370,6 +2373,7 @@ because xbuild doesn't support framework reference assemblies.
   <CollectNativeFilesForArchive
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"
       ApkOutputPath="$(_ApkOutputPath)"
+      StripNativeLibraries="$(_AndroidStripNativeLibraries)"
       BundleNativeLibraries="$(_BundleResultNativeLibraries)"
       FrameworkNativeLibraries="@(FrameworkNativeLibrary)"
       NativeLibraries="@(AndroidNativeLibrary)"

@@ -162,6 +162,7 @@ namespace xamarin::android::internal
 		static void monodroid_unhandled_exception (MonoObject *java_exception);
 		static MonoClass* get_android_runtime_class () noexcept;
 
+		static void preload_jni_libraries () noexcept;
 		static MonoDomain* create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain, bool have_split_apks) noexcept;
 		static MonoDomain* create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wrapper &runtimeApks,
 		                                          jstring_array_wrapper &assemblies, jobjectArray assembliesBytes, jstring_array_wrapper &assembliesPaths,

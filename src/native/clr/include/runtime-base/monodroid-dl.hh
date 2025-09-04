@@ -85,6 +85,23 @@ namespace xamarin::android
 		}
 
 		[[gnu::flatten]]
+		static auto find_dso_apk_entry (hash_t hash) -> DSOApkEntry*
+		{
+			auto equal = [](DSOApkEntry const& entry, hash_t key) -> bool { return entry.name_hash == key; };
+			auto less_than = [](DSOApkEntry const& entry, hash_t key) -> bool { return entry.name_hash < key; };
+			ssize_t idx = Search::binary_search<DSOApkEntry, equal, less_than> (
+				hash,
+				dso_apk_entries, application_config.number_of_shared_libraries
+			);
+
+			if (idx >= 0) [[likely]] {
+				return &dso_apk_entries[idx];
+			}
+
+			return nullptr;
+		}
+
+		[[gnu::flatten]]
 		static auto monodroid_dlopen (DSOCacheEntry *dso, std::string_view const& name, int flags) noexcept -> void*
 		{
 			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash match {}found, DSO name is '{}'", dso == nullptr ? "not "sv : ""sv, get_dso_name (dso));
@@ -107,18 +124,13 @@ namespace xamarin::android
 			StartupAwareLock lock (dso_handle_write_lock);
 #if defined (RELEASE)
 			if (AndroidSystem::is_embedded_dso_mode_enabled ()) {
-				DSOApkEntry *apk_entry = dso_apk_entries;
-				for (size_t i = 0uz; i < application_config.number_of_shared_libraries; i++) {
-					if (apk_entry->name_hash != dso->real_name_hash) {
-						apk_entry++;
-						continue;
-					}
-
+				DSOApkEntry *apk_entry = find_dso_apk_entry (dso->real_name_hash);
+				if (apk_entry != nullptr && apk_entry->fd != -1) {
 					dso->handle = DsoLoader::load (apk_entry->fd, apk_entry->offset, dso_name, flags, dso->is_jni_library);
-					if (dso->handle != nullptr) {
-						return dso->handle;
-					}
-					break;
+				}
+
+				if (dso->handle != nullptr) {
+					return dso->handle;
 				}
 			}
 #endif

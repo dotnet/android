@@ -434,16 +434,23 @@ set(POTENTIAL_COMMON_COMPILER_ARGS
   -fno-strict-aliasing
   -fno-function-sections
   -fno-data-sections
+  -fno-dwarf-exceptions
+  -fno-asynchronous-unwind-tables
   -funswitch-loops
   -Wa,-noexecstack
   -fPIC
   -O2
 )
 
+set(POTENTIAL_COMMON_CXX_COMPILER_ARGS
+  ${POTENTIAL_COMMON_COMPILER_ARGS}
+  -fno-cxx-exceptions
+)
+
 if(NOT BUILD_ARCHIVE_DSO_STUB)
-  list(APPEND POTENTIAL_COMMON_COMPILER_ARGS
-    -g
-  )
+ list(APPEND POTENTIAL_COMMON_COMPILER_ARGS
+   -g
+ )
 endif()
 
 set(POTENTIAL_COMMON_LINKER_ARGS
@@ -454,6 +461,7 @@ set(POTENTIAL_COMMON_LINKER_ARGS
   LINKER:-z,noexecstack
   LINKER:--no-undefined
   LINKER:--export-dynamic
+  LINKER:--no-eh-frame-hdr
 )
 
 # Add some options to increase security. They may mildly affect performance but they won't be big, because the features are
@@ -518,6 +526,10 @@ set(POTENTIAL_XA_COMMON_COMPILER_ARGS
   -fstrict-flex-arrays=3
 )
 
+set(POTENTIAL_XA_CXX_COMPILER_ARGS
+  ${POTENTIAL_XA_COMMON_COMPILER_ARGS}
+)
+
 if (ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
   list(APPEND POTENTIAL_XA_COMMON_COMPILER_ARGS
     -fno-omit-frame-pointer
@@ -552,7 +564,7 @@ endif()
 message(STATUS)
 message(STATUS "Checking support for common compiler and linker args")
 message(STATUS)
-xa_check_cxx_args(COMMON_CXX_ARGS "${POTENTIAL_COMMON_COMPILER_ARGS}")
+xa_check_cxx_args(COMMON_CXX_ARGS "${POTENTIAL_COMMON_CXX_COMPILER_ARGS}")
 xa_check_c_args(COMMON_C_ARGS "${POTENTIAL_COMMON_COMPILER_ARGS}")
 xa_check_cxx_linker_args(COMMON_CXX_LINKER_ARGS "${POTENTIAL_COMMON_LINKER_ARGS}")
 xa_check_c_linker_args(COMMON_C_LINKER_ARGS "${POTENTIAL_COMMON_LINKER_ARGS}")
@@ -560,7 +572,7 @@ xa_check_c_linker_args(COMMON_C_LINKER_ARGS "${POTENTIAL_COMMON_LINKER_ARGS}")
 message(STATUS)
 message(STATUS "Checking support for XA common compiler and linker args")
 message(STATUS)
-xa_check_cxx_args(XA_COMMON_CXX_ARGS "${POTENTIAL_XA_COMMON_COMPILER_ARGS}")
+xa_check_cxx_args(XA_COMMON_CXX_ARGS "${POTENTIAL_XA_CXX_COMPILER_ARGS}")
 xa_check_c_args(XA_COMMON_C_ARGS "${POTENTIAL_XA_COMMON_COMPILER_ARGS}")
 xa_check_cxx_linker_args(XA_COMMON_CXX_LINKER_ARGS "${POTENTIAL_XA_COMMON_LINKER_ARGS}")
 xa_check_c_linker_args(XA_COMMON_C_LINKER_ARGS "${POTENTIAL_XA_COMMON_LINKER_ARGS}")
@@ -586,6 +598,15 @@ macro(set_static_library_suffix TARGET_NAME)
       SUFFIX "${STATIC_LIB_NAME_SUFFIX}.a"
     )
   endif()
+endmacro()
+
+macro(strip_unneeded_elf_sections LIB_NAME)
+  # Strip sections used for stack unwinding when C++ exceptions are thrown. We don't use exceptions, so it's just ballast for us
+  add_custom_command(
+    TARGET ${LIB_NAME}
+    POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} --remove-section=".eh_frame" --remove-section=".gcc_except_table" "$<TARGET_FILE:${LIB_NAME}>"
+  )
 endmacro()
 
 if(BUILD_ARCHIVE_DSO_STUB)
