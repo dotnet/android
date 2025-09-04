@@ -2043,7 +2043,7 @@
   <attr api-since="35" path="/api//*[contains(@merge.SourceFile,'api-VanillaIceCream.xml.in')]" name="api-since">35</attr>
   <attr api-since="36" path="/api//*[contains(@merge.SourceFile,'api-36.xml.in')]" name="api-since">36</attr>
   <attr api-since="36" path="/api//*[contains(@merge.SourceFile,'api-Baklava.xml.in')]" name="api-since">36</attr>
-  <attr api-since="36" path="/api//*[contains(@merge.SourceFile,'api-CANARY.xml.in')]" name="api-since">36</attr>
+  <attr api-since="36.1" path="/api//*[contains(@merge.SourceFile,'api-CANARY.xml.in')]" name="api-since">36.1</attr>
 
   <!-- Erase some 'api-since' attributes (This has to be done after they are set above) -->
 
