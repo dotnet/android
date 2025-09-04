@@ -33,6 +33,7 @@ BridgeProcessingFtn clr_initialize_gc_bridge (
 	BridgeProcessingStartedFtn bridge_processing_started_callback,
 	BridgeProcessingFinishedFtn bridge_processing_finished_callback) noexcept
 {
+	log_warn (LOG_ASSEMBLY, "{}", __PRETTY_FUNCTION__);
 	return GCBridge::initialize_callback (bridge_processing_started_callback, bridge_processing_finished_callback);
 }
 
