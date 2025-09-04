@@ -102,7 +102,8 @@ namespace Android.Runtime {
 		}
 	}
 
-	class AndroidObjectReferenceManager : JniRuntime.JniObjectReferenceManager {
+	// TODO: this shouldn't be public
+	public class AndroidObjectReferenceManager : JniRuntime.JniObjectReferenceManager {
 		public override int GlobalReferenceCount {
 			get {return RuntimeNativeMethods._monodroid_gref_get ();}
 		}

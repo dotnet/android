@@ -82,6 +82,10 @@ namespace Android.Runtime
 		internal static void InitializeJniRuntime (JniRuntime runtime)
 		{
 			androidRuntime = runtime;
+			gref_gc_threshold = RuntimeNativeMethods._monodroid_max_gref_get ();
+			if (gref_gc_threshold != int.MaxValue) {
+				gref_gc_threshold = checked((gref_gc_threshold * 9) / 10);
+			}
 			SetSynchronizationContext ();
 		}
 
