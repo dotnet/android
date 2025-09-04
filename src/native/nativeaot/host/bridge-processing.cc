@@ -1,0 +1,60 @@
+#include <format>
+
+#include <host/bridge-processing.hh>
+#include <runtime-base/logger.hh>
+#include <shared/helpers.hh>
+
+using namespace xamarin::android;
+
+void BridgeProcessing::naot_initialize_on_runtime_init (JNIEnv *env) noexcept
+{
+	log_warn (LOG_ASSEMBLY, "{}", __PRETTY_FUNCTION__);
+
+	GCUserPeerable_class = env->FindClass ("net/dot/jni/GCUserPeerable");
+	if (GCUserPeerable_class == nullptr) [[unlikely]] {
+		Helpers::abort_application (
+			LOG_DEFAULT,
+			"Failed to find net/dot/jni/GCUserPeerable class while initializing GC bridge processing."sv
+		);
+	}
+
+	GCUserPeerable_class = static_cast<jclass>(OSBridge::lref_to_gref (env, GCUserPeerable_class));
+	GCUserPeerable_jiAddManagedReference = env->GetMethodID (GCUserPeerable_class, "jiAddManagedReference", "(Ljava/lang/Object;)V");
+	GCUserPeerable_jiClearManagedReferences = env->GetMethodID (GCUserPeerable_class, "jiClearManagedReferences", "()V");
+
+	if (GCUserPeerable_jiAddManagedReference == nullptr || GCUserPeerable_jiClearManagedReferences == nullptr) [[unlikely]] {
+		constexpr auto ABSENT = "absent"sv;
+		constexpr auto PRESENT = "present"sv;
+
+		Helpers::abort_application (
+			LOG_DEFAULT,
+			std::format (
+				"Failed to find GCUserPeerable method(s): jiAddManagedReference ({}); jiClearManagedReferences ({})"sv,
+				GCUserPeerable_jiAddManagedReference == nullptr ? ABSENT : PRESENT,
+				GCUserPeerable_jiClearManagedReferences == nullptr ? ABSENT : PRESENT
+			)
+		);
+	}
+}
+
+auto BridgeProcessing::maybe_call_gc_user_peerable_add_managed_reference (JNIEnv *env, jobject from, jobject to) noexcept -> bool
+{
+	log_warn (LOG_ASSEMBLY, "{}", __PRETTY_FUNCTION__);
+	if (!env->IsInstanceOf (from, GCUserPeerable_class)) {
+		return false;
+	}
+
+	env->CallVoidMethod (from, GCUserPeerable_jiAddManagedReference, to);
+	return true;
+}
+
+auto BridgeProcessing::maybe_call_gc_user_peerable_clear_managed_references (JNIEnv *env, jobject handle) noexcept -> bool
+{
+	log_warn (LOG_ASSEMBLY, "{}", __PRETTY_FUNCTION__);
+	if (!env->IsInstanceOf (handle, GCUserPeerable_class)) {
+		return false;
+	}
+
+	env->CallVoidMethod (handle, GCUserPeerable_jiClearManagedReferences);
+	return true;
+}
