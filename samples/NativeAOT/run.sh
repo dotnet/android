@@ -1,20 +1,15 @@
 #!/bin/bash -e
-CONFIG=Release
-APK="bin/${CONFIG}/net10.0-android/net.dot.hellonativeaot-Signed.apk"
+APK="bin/Debug/net10.0-android/net.dot.hellonativeaot-Signed.apk"
 PACKAGE="net.dot.hellonativeaot"
 ACTIVITY="my.MainActivity"
 
 FAILED=no
 rm -rf bin obj
-../../dotnet-local.sh build -c ${CONFIG} -bl || FAILED=yes
+../../dotnet-local.sh build -bl || FAILED=yes
 ../../dotnet-local.sh msbuild -v:diag msbuild.binlog > msbuild.txt
 if [ "${FAILED}" == "yes" ]; then
   echo Build failed
   exit 1
-fi
-
-if [ -n "${1}" ]; then
-  exit 0
 fi
 
 adb uninstall "${PACKAGE}" || true
