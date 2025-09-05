@@ -45,6 +45,7 @@ set(XAMARIN_MONODROID_SOURCES
   ${CLR_SOURCES_PATH}/runtime-base/android-system-shared.cc
   ${CLR_SOURCES_PATH}/runtime-base/cpu-arch-detect.cc
   ${CLR_SOURCES_PATH}/runtime-base/logger.cc
+  ${CLR_SOURCES_PATH}/runtime-base/util.cc
   ${CLR_SOURCES_PATH}/shared/helpers.cc
   ${CLR_SOURCES_PATH}/shared/log_functions.cc
 )
