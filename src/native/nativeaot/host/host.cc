@@ -23,6 +23,7 @@ auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) n
 void Host::OnInit () noexcept
 {
 	log_warn (LOG_ASSEMBLY, "{}", __PRETTY_FUNCTION__);
+	Logger::init_logging_categories ();
 
 	JNIEnv *env = OSBridge::ensure_jnienv ();
 	jclass runtimeClass = env->FindClass ("mono/android/Runtime");
