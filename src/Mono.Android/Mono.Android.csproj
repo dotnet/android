@@ -28,6 +28,7 @@
   <PropertyGroup>
     <IsUnstableVersion Condition=" '$(AndroidApiLevel)' &gt; '$(AndroidLatestStableApiLevel)' ">true</IsUnstableVersion>
     <DefineConstants Condition=" '$(IsUnstableVersion)' == 'True' ">$(DefineConstants);ANDROID_UNSTABLE</DefineConstants>
+    <DefineConstants Condition=" '$(IsUnstableVersion)' == 'True' ">$(DefineConstants);ANDROID_36_1</DefineConstants>
     <OutputPath>$(_MonoAndroidNETDefaultOutDir)</OutputPath>
 
     <!-- Allow PublicApiAnalyzers to be turned off -->

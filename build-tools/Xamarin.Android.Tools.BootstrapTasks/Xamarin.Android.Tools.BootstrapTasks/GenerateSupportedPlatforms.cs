@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Globalization;
 using System.Linq;
@@ -71,14 +72,14 @@ Specifies the supported Android platform versions for this SDK.
 				writer.WriteEndElement (); // </PropertyGroup>
 
 				writer.WriteStartElement ("ItemGroup");
-				foreach (int apiLevel in versions.InstalledBindingVersions
+				foreach (Version versionCode in versions.InstalledBindingVersions
 						.Where (v => v.ApiLevel >= MinimumApiLevel)
-						.Select (v => v.ApiLevel)
+						.Select (v => v.VersionCodeFull)
 						.Distinct ()
 						.OrderBy (v => v)) {
 					writer.WriteStartElement ("AndroidSdkSupportedTargetPlatformVersion");
-					writer.WriteAttributeString ("Include", apiLevel.ToString ("0.0", CultureInfo.InvariantCulture));
-					if (apiLevel < TargetApiLevel) {
+					writer.WriteAttributeString ("Include", versionCode.ToString ());
+					if (versionCode.Major < TargetApiLevel) {
 						writer.WriteAttributeString ("DefineConstantsOnly", "true");
 					}
 					writer.WriteEndElement (); // </AndroidSdkSupportedTargetPlatformVersion>
@@ -95,18 +96,19 @@ Specifies the supported Android platform versions for this SDK.
 		static AndroidVersion ToVersion (ITaskItem item)
 		{
 			/*
-			<AndroidApiInfo Include="v12.0.99">
-				<Name>Sv2</Name>
-				<Level>32</Level>
-				<Id>Sv2</Id>
+			<AndroidApiInfo Include="v16.0.99">
+				<Name>CANARY</Name>
+				<Level>36</Level>
+				<VersionCodeFull>36.1</VersionCodeFull>
+				<Id>CANARY</Id>
 				<Stable>False</Stable>
 			</AndroidApiInfo>
 			*/
 
-			int.TryParse (item.GetMetadata ("Level"), out int apiLevel);
+			Version.TryParse (item.GetMetadata ("VersionCodeFull"), out var versionCodeFull);
 			bool.TryParse (item.GetMetadata ("Stable"), out bool stable);
 
-			return new AndroidVersion (apiLevel, item.ItemSpec.TrimStart ('v'), item.GetMetadata ("Name"), item.GetMetadata ("Id"), stable);
+			return new AndroidVersion (versionCodeFull, item.ItemSpec.TrimStart ('v'), item.GetMetadata ("Name"), item.GetMetadata ("Id"), stable);
 		}
 	}
 }

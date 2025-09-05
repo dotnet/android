@@ -49,7 +49,8 @@ namespace Xamarin.Android.Prepare
 
 			sw.WriteLine ($"    <AndroidApiInfo Include=\"{androidPlatform.Include}\">");
 			sw.WriteLine ($"      <Name>{androidPlatform.ApiName}</Name>");
-			sw.WriteLine ($"      <Level>{androidPlatform.ApiLevel}</Level>");
+			sw.WriteLine ($"      <Level>{androidPlatform.ApiLevel.Major}</Level>");
+			sw.WriteLine ($"      <VersionCodeFull>{androidPlatform.ApiLevel}</VersionCodeFull>");
 			sw.WriteLine ($"      <Id>{androidPlatform.PlatformID}</Id>");
 			sw.WriteLine ($"      <Stable>{androidPlatform.Stable}</Stable>");
 			sw.WriteLine ($"    </AndroidApiInfo>");

@@ -949,6 +949,33 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		public void DotNetInstallAndRunPreviewAPILevels (
+				[Values (false, true)] bool isRelease,
+				[Values ("net10.0-android36.1")] string targetFramework)
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				TargetFramework = targetFramework,
+				IsRelease = isRelease,
+			};
+			proj.SetProperty ("EnablePreviewFeatures", "true");
+
+			// TODO: update on new minor API levels to use an introduced minor API
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
+		Console.WriteLine ($""TelecomManager.ActionCallBack={global:::Android.Telecom.TelecomManager.ActionCallBack}"");
+");
+
+			var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
+			builder.AssertHasNoWarnings ();
+			RunProjectAndAssert (proj, builder);
+
+			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+			Assert.IsTrue(didLaunch, "Activity should have started.");
+		}
+
+		[Test]
 		public void TypeAndMemberRemapping ([Values (false, true)] bool isRelease)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
