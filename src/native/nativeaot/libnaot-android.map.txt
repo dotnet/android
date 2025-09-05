@@ -1,0 +1,6 @@
+LIBNAOT_ANDROID {
+  global:
+
+  local:
+    *;
+};

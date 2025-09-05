@@ -8,11 +8,15 @@ static partial class JavaInteropRuntime
 {
 	static JniRuntime? runtime;
 
+	[DllImport("xa-internal-api")]
+	static extern int XA_Host_NativeAOT_JNI_OnLoad (IntPtr vm, IntPtr reserved);
+
 	[UnmanagedCallersOnly (EntryPoint="JNI_OnLoad")]
 	static int JNI_OnLoad (IntPtr vm, IntPtr reserved)
 	{
 		try {
 			AndroidLog.Print (AndroidLogLevel.Info, "JavaInteropRuntime", "JNI_OnLoad()");
+			XA_Host_NativeAOT_JNI_OnLoad (vm, reserved);
 			LogcatTextWriter.Init ();
 			return (int) JniVersion.v1_6;
 		}
@@ -29,6 +33,9 @@ static partial class JavaInteropRuntime
 		runtime?.Dispose ();
 	}
 
+	[DllImport("xa-internal-api")]
+	static extern void XA_Host_NativeAOT_OnInit ();
+
 	// symbol name from `$(IntermediateOutputPath)obj/Release/osx-arm64/h-classes/net_dot_jni_hello_JavaInteropRuntime.h`
 	[UnmanagedCallersOnly (EntryPoint="Java_net_dot_jni_nativeaot_JavaInteropRuntime_init")]
 	static void init (IntPtr jnienv, IntPtr klass, IntPtr classLoader)
@@ -38,12 +45,11 @@ static partial class JavaInteropRuntime
 			var settings    = new DiagnosticSettings ();
 			settings.AddDebugDotnetLog ();
 
-			var typeManager = new ManagedTypeManager ();
 			var options = new NativeAotRuntimeOptions {
 				EnvironmentPointer          = jnienv,
-				ClassLoader                 = new JniObjectReference (classLoader),
-				TypeManager                 = typeManager,
-				ValueManager                = new SimpleValueManager (),
+				ClassLoader                 = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
+				TypeManager                 = new ManagedTypeManager (),
+				ValueManager                = ManagedValueManager.GetOrCreateInstance (),
 				UseMarshalMemberBuilder     = false,
 				JniGlobalReferenceLogWriter = settings.GrefLog,
 				JniLocalReferenceLogWriter  = settings.LrefLog,
@@ -52,6 +58,7 @@ static partial class JavaInteropRuntime
 
 			// Entry point into Mono.Android.dll
 			JNIEnvInit.InitializeJniRuntime (runtime);
+			XA_Host_NativeAOT_OnInit ();
 
 			transition  = new JniTransition (jnienv);
 

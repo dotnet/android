@@ -174,7 +174,7 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 
 				if (havePreservedSymbols && componentPreservedSymbols.TryGetValue (componentName!, out HashSet<LlvmIrGlobalVariableReference> preservedSymbols)) {
 					foreach (LlvmIrGlobalVariableReference vref in preservedSymbols) {
-						DeclareDummyFunction (module, vref);
+						LlvmIrHelpers.DeclareDummyFunction (module, vref);
 						symbolsToExplicitlyPreserve.Add (vref);
 					}
 					componentPreservedSymbols.Remove (componentName!);
@@ -188,15 +188,7 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 			component.Add (module, pinfo);
 		}
 
-		module.AddGlobalVariable ("__jni_on_load_handler_count", (uint)jniOnLoadNames.Count, LlvmIrVariableOptions.GlobalConstant);
-		var jniOnLoadPointers = new List<LlvmIrVariableReference> ();
-		foreach (string name in jniOnLoadNames) {
-			var symref = new LlvmIrGlobalVariableReference (name);
-			jniOnLoadPointers.Add (symref);
-			DeclareDummyFunction (module, symref);
-		}
-		module.AddGlobalVariable ("__jni_on_load_handlers", jniOnLoadPointers, LlvmIrVariableOptions.GlobalConstant);
-		module.AddGlobalVariable ("__jni_on_load_handler_names", jniOnLoadNames, LlvmIrVariableOptions.GlobalConstant);
+		JniOnLoadNativeAssemblerHelper.GenerateJniOnLoadHandlerCode (jniOnLoadNames, module);
 		module.AddGlobalVariable ("__explicitly_preserved_symbols", symbolsToExplicitlyPreserve, LlvmIrVariableOptions.GlobalConstant);
 
 		var components = new List<Component> (preservedPerComponent.Values);
@@ -392,16 +384,5 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 		{
 			return MonoAndroidHelper.StringEquals (libraryName, componentName, StringComparison.Ordinal);
 		}
-	}
-
-	static void DeclareDummyFunction (LlvmIrModule module, LlvmIrGlobalVariableReference symref)
-	{
-		if (symref.Name.IsNullOrEmpty ()) {
-			throw new InvalidOperationException ("Internal error: variable reference must have a name");
-		}
-
-		// Just a dummy declaration, we don't care about the arguments
-		var funcSig = new LlvmIrFunctionSignature (symref.Name!, returnType: typeof(void));
-		var _ = module.DeclareExternalFunction (funcSig);
 	}
 }
