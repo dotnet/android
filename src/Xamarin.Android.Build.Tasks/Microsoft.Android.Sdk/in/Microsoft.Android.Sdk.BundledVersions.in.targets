@@ -18,8 +18,9 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
     <_AndroidTargetingPackId Condition="'$(_AndroidTargetingPackId)' == ''">$(TargetPlatformVersion)</_AndroidTargetingPackId>
     <_AndroidErrorOnTargetPlatformVersion Condition=" '$(_AndroidTargetingPackId)' != '$(_AndroidLatestStableApiLevel)' and '$(_AndroidTargetingPackId)' != '$(_AndroidLatestUnstableApiLevel)' ">$(_AndroidTargetingPackId)</_AndroidErrorOnTargetPlatformVersion>
     <_AndroidTargetingPackId Condition=" '$(_AndroidTargetingPackId)' != '$(_AndroidLatestStableApiLevel)' and '$(_AndroidTargetingPackId)' != '$(_AndroidLatestUnstableApiLevel)' ">$(_AndroidLatestStableApiLevel)</_AndroidTargetingPackId>
-    <_AndroidRuntimePackId Condition=" '$(_AndroidRuntimePackId)' == '' ">$(_AndroidTargetingPackId)</_AndroidRuntimePackId>
-    <_AndroidRuntimePackId Condition=" '$(_AndroidRuntimePackId)' != '$(_AndroidLatestStableApiLevel)' and '$(_AndroidRuntimePackId)' != '$(_AndroidLatestUnstableApiLevel)' ">$(_AndroidLatestStableApiLevel)</_AndroidRuntimePackId>
+    <_AndroidManagedRuntimePackId Condition=" '$(_AndroidManagedRuntimePackId)' == '' ">$(_AndroidTargetingPackId)</_AndroidManagedRuntimePackId>
+    <_AndroidManagedRuntimePackId Condition=" '$(_AndroidManagedRuntimePackId)' != '$(_AndroidLatestStableApiLevel)' and '$(_AndroidManagedRuntimePackId)' != '$(_AndroidLatestUnstableApiLevel)' ">$(_AndroidLatestStableApiLevel)</_AndroidManagedRuntimePackId>
+    <_AndroidRuntimePackId Condition=" '$(_AndroidRuntimePackId)' == '' ">$(_AndroidLatestStableApiLevel)</_AndroidRuntimePackId>
     <_AndroidRuntimePackRuntime Condition=" '$(_AndroidRuntimePackRuntime)' == '' ">Mono</_AndroidRuntimePackRuntime>
   </PropertyGroup>
   <ItemGroup>
@@ -30,7 +31,7 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
         LatestRuntimeFrameworkVersion="**FromWorkload**"
         TargetingPackName="Microsoft.Android.Ref.$(_AndroidTargetingPackId)"
         TargetingPackVersion="**FromWorkload**"
-        RuntimePackNamePatterns="Microsoft.Android.Runtime.$(_AndroidRuntimePackId).android"
+        RuntimePackNamePatterns="Microsoft.Android.Runtime.$(_AndroidManagedRuntimePackId).android"
         RuntimePackRuntimeIdentifiers="android-arm;android-arm64;android-x86;android-x64"
         Profile="Android"
     />
