@@ -75,6 +75,9 @@ namespace Xamarin.Android.Tools
 					MinStableVersion = version;
 				}
 			}
+			installedVersions.Sort ((x, y) => {
+				return x.VersionCodeFull.CompareTo (y.VersionCodeFull);
+			});
 		}
 
 		public int? GetApiLevelFromFrameworkVersion (string frameworkVersion)
