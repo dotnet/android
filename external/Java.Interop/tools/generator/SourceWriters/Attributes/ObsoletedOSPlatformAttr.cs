@@ -1,14 +1,16 @@
 using System;
 using Xamarin.SourceWriter;
 
+using Java.Interop.Tools.Generator;
+
 namespace generator.SourceWriters
 {
 	public class ObsoletedOSPlatformAttr : AttributeWriter
 	{
 		public string Message { get; set; }
-		public int Version { get; }
+		public AndroidSdkVersion Version { get; }
 
-		public ObsoletedOSPlatformAttr (string message, int version)
+		public ObsoletedOSPlatformAttr (string message, AndroidSdkVersion version)
 		{
 			Message = message;
 			Version = version;
@@ -16,10 +18,14 @@ namespace generator.SourceWriters
 
 		public override void WriteAttribute (CodeWriter writer)
 		{
+			var apiLevel = Version.MinorRelease == 0
+				? $"{Version.ApiLevel}.0"
+				: Version.ToString ();
+
 			if (Message.HasValue ())
-				writer.WriteLine ($"[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android{Version}.0\", @\"{Message.Replace ("\"", "\"\"")}\")]");
+				writer.WriteLine ($"[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android{apiLevel}\", @\"{Message.Replace ("\"", "\"\"")}\")]");
 			else
-				writer.WriteLine ($"[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android{Version}.0\")]");
+				writer.WriteLine ($"[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android{apiLevel}\")]");
 		}
 	}
 }

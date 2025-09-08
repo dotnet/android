@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 
+using Java.Interop.Tools.Generator;
+
 namespace MonoDroid.Generation
 {
 	public class GenBaseSupport
@@ -11,7 +13,7 @@ namespace MonoDroid.Generation
 		public bool IsAcw { get; set; }
 		public bool IsDeprecated { get; set; }
 		public string DeprecatedComment { get; set; }
-		public int? DeprecatedSince { get; set; }
+		public AndroidSdkVersion? DeprecatedSince { get; set; }
 		public bool IsGeneratable { get; set; }
 		public bool IsGeneric { get; set; }
 		public bool IsObfuscated { get; set; }

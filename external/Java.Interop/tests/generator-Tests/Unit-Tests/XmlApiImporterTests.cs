@@ -28,7 +28,7 @@ namespace generatortests
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='myclass' api-since='7' /></package>");
 			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), opt);
 
-			Assert.AreEqual (7, klass.ApiAvailableSince);
+			Assert.AreEqual (7, klass.ApiAvailableSince.ApiLevel);
 		}
 
 		[Test]
@@ -38,7 +38,7 @@ namespace generatortests
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test' api-since='7'><class name='myclass' /></package>");
 			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), opt);
 
-			Assert.AreEqual (7, klass.ApiAvailableSince);
+			Assert.AreEqual (7, klass.ApiAvailableSince.ApiLevel);
 		}
 
 		[Test]
@@ -48,7 +48,7 @@ namespace generatortests
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test' api-since='7'><class name='myclass' api-since='9' /></package>");
 			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), opt);
 
-			Assert.AreEqual (9, klass.ApiAvailableSince);
+			Assert.AreEqual (9, klass.ApiAvailableSince.ApiLevel);
 		}
 
 		[Test]
@@ -57,7 +57,7 @@ namespace generatortests
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='myclass' removed-since='7' /></package>");
 			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), opt);
 
-			Assert.AreEqual (7, klass.ApiRemovedSince);
+			Assert.AreEqual (7, klass.ApiRemovedSince.ApiLevel);
 		}
 
 		[Test]
@@ -75,7 +75,7 @@ namespace generatortests
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='test'><constructor name='ctor' api-since='7' /></class></package>");
 			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), opt);
 
-			Assert.AreEqual (7, klass.Ctors [0].ApiAvailableSince);
+			Assert.AreEqual (7, klass.Ctors [0].ApiAvailableSince.ApiLevel);
 		}
 
 		[Test]
@@ -84,7 +84,7 @@ namespace generatortests
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='test' api-since='7'><constructor name='ctor' /></class></package>");
 			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), opt);
 
-			Assert.AreEqual (7, klass.Ctors [0].ApiAvailableSince);
+			Assert.AreEqual (7, klass.Ctors [0].ApiAvailableSince.ApiLevel);
 		}
 
 		[Test]
@@ -93,7 +93,7 @@ namespace generatortests
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='test' deprecated-since='7'><constructor name='ctor' deprecated-since='17' /></class></package>");
 			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), opt);
 
-			Assert.AreEqual (7, klass.Ctors [0].DeprecatedSince);
+			Assert.AreEqual (7, klass.Ctors [0].DeprecatedSince.Value.ApiLevel);
 		}
 
 		[Test]
@@ -143,17 +143,17 @@ namespace generatortests
 			var xml = XDocument.Parse ("<field name='$3' api-since='7' />");
 			var field = XmlApiImporter.CreateField (klass, xml.Root);
 
-			Assert.AreEqual (7, field.ApiAvailableSince);
+			Assert.AreEqual (7, field.ApiAvailableSince.ApiLevel);
 		}
 
 		[Test]
 		public void CreateField_CorrectApiVersionFromClass ()
 		{
-			var klass = new TestClass ("object", "MyNamespace.MyType") { ApiAvailableSince = 7 };
+			var klass = new TestClass ("object", "MyNamespace.MyType") { ApiAvailableSince = new AndroidSdkVersion (7) };
 			var xml = XDocument.Parse ("<field name='$3' />");
 			var field = XmlApiImporter.CreateField (klass, xml.Root);
 
-			Assert.AreEqual (7, field.ApiAvailableSince);
+			Assert.AreEqual (7, field.ApiAvailableSince.ApiLevel);
 		}
 
 		[Test]
@@ -162,7 +162,7 @@ namespace generatortests
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='test' deprecated-since='7'><field name='$3' deprecated-since='17' /></class></package>");
 			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), opt);
 
-			Assert.AreEqual (7, klass.Fields [0].DeprecatedSince);
+			Assert.AreEqual (7, klass.Fields [0].DeprecatedSince.Value.ApiLevel);
 		}
 
 		[Test]
@@ -180,7 +180,7 @@ namespace generatortests
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><interface name='myclass' api-since='7' /></package>");
 			var iface = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("interface"), opt);
 
-			Assert.AreEqual (7, iface.ApiAvailableSince);
+			Assert.AreEqual (7, iface.ApiAvailableSince.ApiLevel);
 		}
 
 		[Test]
@@ -190,7 +190,7 @@ namespace generatortests
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test' api-since='7'><interface name='myclass' /></package>");
 			var iface = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("interface"), opt);
 
-			Assert.AreEqual (7, iface.ApiAvailableSince);
+			Assert.AreEqual (7, iface.ApiAvailableSince.ApiLevel);
 		}
 
 		[Test]
@@ -200,7 +200,7 @@ namespace generatortests
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test' api-since='7'><interface name='myclass' api-since='9' /></package>");
 			var iface = XmlApiImporter.CreateInterface (xml.Root, xml.Root.Element ("interface"), opt);
 
-			Assert.AreEqual (9, iface.ApiAvailableSince);
+			Assert.AreEqual (9, iface.ApiAvailableSince.ApiLevel);
 		}
 
 		[Test]
@@ -227,7 +227,7 @@ namespace generatortests
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='test'><method name='-3' api-since='7' /></class></package>");
 			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), opt);
 
-			Assert.AreEqual (7, klass.Methods [0].ApiAvailableSince);
+			Assert.AreEqual (7, klass.Methods [0].ApiAvailableSince.ApiLevel);
 		}
 
 		[Test]
@@ -236,7 +236,7 @@ namespace generatortests
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='test' api-since='7'><method name='-3' /></class></package>");
 			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), opt);
 
-			Assert.AreEqual (7, klass.Methods [0].ApiAvailableSince);
+			Assert.AreEqual (7, klass.Methods [0].ApiAvailableSince.ApiLevel);
 		}
 
 		[Test]
@@ -245,7 +245,7 @@ namespace generatortests
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='test' deprecated-since='7'><method name='-3' deprecated-since='17' /></class></package>");
 			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), opt);
 
-			Assert.AreEqual (7, klass.Methods [0].DeprecatedSince);
+			Assert.AreEqual (7, klass.Methods [0].DeprecatedSince.Value.ApiLevel);
 		}
 
 		[Test]

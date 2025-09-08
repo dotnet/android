@@ -186,9 +186,9 @@ namespace MonoDroid.Generation
 			? $"{FullName.Replace ('.', '/')}"
 			: $"{Namespace}." + $"{FullName.Substring (Namespace.Length + 1).Replace ('.', '/')}";
 
-		public int ApiAvailableSince { get; set; }
+		public AndroidSdkVersion ApiAvailableSince { get; set; }
 
-		public int ApiRemovedSince { get; set; }
+		public AndroidSdkVersion ApiRemovedSince { get; set; }
 
 		public virtual ClassGen BaseGen => null;
 
@@ -255,7 +255,7 @@ namespace MonoDroid.Generation
 
 		public string DeprecatedComment => support.DeprecatedComment;
 
-		public int? DeprecatedSince => support.DeprecatedSince;
+		public AndroidSdkVersion? DeprecatedSince => support.DeprecatedSince;
 
 		IEnumerable<GenBase> Descendants (IList<GenBase> gens)
 		{
@@ -319,14 +319,14 @@ namespace MonoDroid.Generation
 								m.Deprecated = bm.Deprecated;
 
 							// Fix issue when base method was deprecated before the overriding method, set both both to base method value
-							if (bm.DeprecatedSince.GetValueOrDefault (0) < m.DeprecatedSince.GetValueOrDefault (0))
+							if (bm.DeprecatedSince.GetValueOrDefault (default) < m.DeprecatedSince.GetValueOrDefault (default))
 								m.DeprecatedSince = bm.DeprecatedSince;
 						}
 
 						// If a "removed" method overrides a "not removed" method, the method was
 						// likely moved to a base class, so don't mark it as removed.
 						if (m.ApiRemovedSince > 0 && bm.ApiRemovedSince == 0)
-							m.ApiRemovedSince = 0;
+							m.ApiRemovedSince = default;
 
 						break;
 					}

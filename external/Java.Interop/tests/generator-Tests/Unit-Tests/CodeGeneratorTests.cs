@@ -794,12 +794,12 @@ namespace generatortests
 			// Ensure attribute was added to invoker class
 			var invoker_attribute = invoker.Attributes.OfType<ObsoletedOSPlatformAttr> ().Single ();
 			Assert.AreEqual ("This interface was deprecated in API-25", invoker_attribute.Message);
-			Assert.AreEqual (25, invoker_attribute.Version);
+			Assert.AreEqual (25, invoker_attribute.Version.ApiLevel);
 
 			// Ensure attribute was added to extensions class
 			var extensions_attribute = invoker.Attributes.OfType<ObsoletedOSPlatformAttr> ().Single ();
 			Assert.AreEqual ("This interface was deprecated in API-25", extensions_attribute.Message);
-			Assert.AreEqual (25, extensions_attribute.Version);
+			Assert.AreEqual (25, extensions_attribute.Version.ApiLevel);
 		}
 
 		[Test]
@@ -1223,7 +1223,7 @@ namespace generatortests
 			var gens = ParseApiDefinition (xml);
 
 			// Override method should match base method's 'deprecated-since'
-			Assert.AreEqual (11, gens.Single (g => g.Name == "MyClass").Methods.Single (m => m.Name == "DoStuff").DeprecatedSince);
+			Assert.AreEqual (11, gens.Single (g => g.Name == "MyClass").Methods.Single (m => m.Name == "DoStuff").DeprecatedSince?.ApiLevel ?? 0);
 		}
 
 		protected static IEnumerable<string> GetLinesThatStartWith (string source, string value)
@@ -1379,7 +1379,7 @@ namespace generatortests
 		{
 			// We do not write [SupportedOSPlatform] for JavaInterop, only XAJavaInterop
 			var klass = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
-			klass.ApiAvailableSince = 30;
+			klass.ApiAvailableSince = new AndroidSdkVersion (30);
 
 			generator.Context.ContextTypes.Push (klass);
 			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
@@ -1395,7 +1395,7 @@ namespace generatortests
 			var klass = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var field = new TestField ("java.lang.String", "bar").SetConstant ("MY_VALUE");
 
-			field.ApiAvailableSince = 30;
+			field.ApiAvailableSince = new AndroidSdkVersion (30);
 
 			klass.Fields.Add (field);
 
@@ -1410,7 +1410,7 @@ namespace generatortests
 		public void UnsupportedOSPlatform ()
 		{
 			var klass = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
-			klass.ApiRemovedSince = 30;
+			klass.ApiRemovedSince = new AndroidSdkVersion (30);
 
 			generator.Context.ContextTypes.Push (klass);
 			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
@@ -1425,7 +1425,7 @@ namespace generatortests
 			var klass = new TestClass ("java.lang.Object", "com.mypackage.foo");
 			var field = new TestField ("java.lang.String", "bar").SetConstant ("MY_VALUE");
 
-			field.ApiRemovedSince = 30;
+			field.ApiRemovedSince = new AndroidSdkVersion (30);
 
 			klass.Fields.Add (field);
 

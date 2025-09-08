@@ -5,6 +5,8 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
 
+using Java.Interop.Tools.Generator;
+
 namespace Xamarin.Android.Tools {
 
 	static class XmlExtensions {
@@ -21,14 +23,14 @@ namespace Xamarin.Android.Tools {
 			return attr != null ? attr.Trim () : null;
 		}
 
-		public static int? XGetAttributeAsIntOrNull (this XElement element, string name)
+		public static AndroidSdkVersion? XGetAttributeAsAndroidSdkVersionOrNull (this XElement element, string name)
 		{
 			var attr = element.Attribute (name);
 
 			if (attr?.Value is null)
 				return null;
 
-			if (int.TryParse (attr.Value, out var val))
+			if (AndroidSdkVersion.TryParse (attr.Value, out var val))
 				return val;
 
 			return null;

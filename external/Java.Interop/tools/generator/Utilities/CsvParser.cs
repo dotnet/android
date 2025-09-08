@@ -22,10 +22,5 @@ namespace MonoDroid.Generation
 
 			return fields [index].Trim ();
 		}
-
-		public int GetFieldAsInt (int index)
-		{
-			return int.Parse (GetField (index));
-		}
 	}
 }

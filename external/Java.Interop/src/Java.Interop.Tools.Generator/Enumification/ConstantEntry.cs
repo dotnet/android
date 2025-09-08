@@ -9,14 +9,14 @@ namespace Java.Interop.Tools.Generator.Enumification
 	public class ConstantEntry
 	{
 		public ConstantAction Action { get; set; }
-		public int ApiLevel { get; set; }
+		public AndroidSdkVersion ApiLevel { get; set; }
 		public string? JavaSignature { get; set; }
 		public string? Value { get; set; }
 		public string? EnumFullType { get; set; }
 		public string? EnumMember { get; set; }
 		public FieldAction FieldAction { get; set; }
 		public bool IsFlags { get; set; }
-		public int? DeprecatedSince { get; set; }
+		public AndroidSdkVersion? DeprecatedSince { get; set; }
 
 		public string EnumNamespace {
 			get {
@@ -100,7 +100,7 @@ namespace Java.Interop.Tools.Generator.Enumification
 		{
 			var entry = new ConstantEntry {
 				Action = ConstantAction.Enumify,
-				ApiLevel = parser.GetFieldAsInt (0),
+				ApiLevel = parser.GetFieldAsAndroidSdkVersion (0),
 				EnumFullType = parser.GetField (1),
 				EnumMember = parser.GetField (2),
 				JavaSignature = parser.GetField (3),
@@ -128,14 +128,14 @@ namespace Java.Interop.Tools.Generator.Enumification
 		{
 			var entry = new ConstantEntry {
 				Action = FromConstantActionString (parser.GetField (0)),
-				ApiLevel = parser.GetFieldAsInt (1),
+				ApiLevel = parser.GetFieldAsAndroidSdkVersion (1),
 				JavaSignature = parser.GetField (2),
 				Value = parser.GetField (3),
 				EnumFullType = parser.GetField (4),
 				EnumMember = parser.GetField (5),
 				FieldAction = FromFieldActionString (parser.GetField (6)),
 				IsFlags = parser.GetField (7).ToLowerInvariant () == "flags",
-				DeprecatedSince = parser.GetFieldAsNullableInt32 (8)
+				DeprecatedSince = parser.GetFieldAsNullableAndroidSdkVersion (8)
 			};
 
 			entry.NormalizeJavaSignature ();

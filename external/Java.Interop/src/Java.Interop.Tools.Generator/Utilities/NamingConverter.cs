@@ -9,26 +9,49 @@ namespace Java.Interop.Tools.Generator
 		/// <summary>
 		/// Converts a 'merge.SourceFile' attribute to an API level. (ex. "..\..\bin\BuildDebug\api\api-28.xml.in")
 		/// </summary>
-		public static int ParseApiLevel (string? value)
+		public static AndroidSdkVersion ParseApiLevel (string? value)
 		{
-			if (!value.HasValue ())
-				return 0;
-
-			var hyphen = value.IndexOf ('-');
-			var period = value.IndexOf ('.', hyphen);
-
-			var result = value.Substring (hyphen + 1, period - hyphen - 1);
+			var result = ExtractApiLevel (value);
+			if (!result.HasValue ())
+				return default;
 
 			return result switch {
-				"R" => 30,
-				"S" => 31,
-				_ => int.Parse (result)
+				"R" => new AndroidSdkVersion (30),
+				"S" => new AndroidSdkVersion (31),
+				_ => AndroidSdkVersion.Parse (result)
 			};
+		}
+
+		static string? ExtractApiLevel (string? value)
+		{
+			if (!value.HasValue ())
+				return null;
+
+			var hyphen  = value.IndexOf ('-');
+			if (hyphen < 0 || (hyphen+1) >= value.Length)
+				return null;
+
+			int end     = hyphen + 1;
+			if (char.IsAsciiDigit (value [end++])) {
+				for ( ; end < value.Length; ++end) {
+					var n = value [end + 1];
+					if (!char.IsAsciiDigit (n) && n != '.')
+						break;
+				}
+			} else {
+				// codename; expect ALLCAPS
+				for ( ; end < value.Length; ++end) {
+					if (!char.IsAsciiLetterUpper (value [end]))
+						break;
+				}
+			}
+
+			return value.Substring (hyphen + 1, end - hyphen - 1);
 		}
 
 		// The 'merge.SourceFile' attribute may be on the element, or only on its parent. For example,
 		// a new 'class' added will only put the attribute on the '<class>' element and not its children <method>s.
-		public static int ParseApiLevel (XElement element)
+		public static AndroidSdkVersion ParseApiLevel (XElement element)
 		{
 			var loop = element;
 
@@ -39,7 +62,7 @@ namespace Java.Interop.Tools.Generator
 				loop = loop.Parent;
 			}
 
-			return 0;
+			return default;
 		}
 
 		public static string ConvertNamespaceToCSharp (string v)

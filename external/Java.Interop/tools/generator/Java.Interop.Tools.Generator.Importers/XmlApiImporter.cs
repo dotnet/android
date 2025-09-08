@@ -162,7 +162,7 @@ namespace MonoDroid.Generation
 				ApiRemovedSince = declaringType.ApiRemovedSince,
 				CustomAttributes = elem.XGetAttribute ("customAttributes"),
 				Deprecated = elem.Deprecated (),
-				DeprecatedSince = elem.XGetAttributeAsIntOrNull ("deprecated-since"),
+				DeprecatedSince = elem.XGetAttributeAsAndroidSdkVersionOrNull ("deprecated-since"),
 				GenericArguments = elem.GenericArguments (),
 				Name = elem.XGetAttribute ("name"),
 				Visibility = elem.Visibility ()
@@ -199,7 +199,7 @@ namespace MonoDroid.Generation
 			ctor.Name = EnsureValidIdentifer (ctor.Name);
 
 			// If declaring type was deprecated earlier than member, use the type's deprecated-since
-			if (declaringType.DeprecatedSince.HasValue && declaringType.DeprecatedSince.Value < ctor.DeprecatedSince.GetValueOrDefault (0))
+			if (declaringType.DeprecatedSince.HasValue && declaringType.DeprecatedSince < ctor.DeprecatedSince.GetValueOrDefault (default))
 				ctor.DeprecatedSince = declaringType.DeprecatedSince;
 
 			FillApiSince (ctor, elem);
@@ -214,7 +214,7 @@ namespace MonoDroid.Generation
 				ApiAvailableSince = declaringType.ApiAvailableSince,
 				ApiRemovedSince = declaringType.ApiRemovedSince,
 				DeprecatedComment = elem.XGetAttribute ("deprecated"),
-				DeprecatedSince = elem.XGetAttributeAsIntOrNull ("deprecated-since"),
+				DeprecatedSince = elem.XGetAttributeAsAndroidSdkVersionOrNull ("deprecated-since"),
 				IsAcw = true,
 				IsDeprecated = elem.XGetAttribute ("deprecated") != "not deprecated",
 				IsDeprecatedError = elem.XGetAttribute ("deprecated-error") == "true",
@@ -244,7 +244,7 @@ namespace MonoDroid.Generation
 			}
 
 			// If declaring type was deprecated earlier than member, use the type's deprecated-since
-			if (declaringType.DeprecatedSince.HasValue && declaringType.DeprecatedSince.Value < field.DeprecatedSince.GetValueOrDefault (0))
+			if (declaringType.DeprecatedSince.HasValue && declaringType.DeprecatedSince < field.DeprecatedSince.GetValueOrDefault (default))
 				field.DeprecatedSince = declaringType.DeprecatedSince;
 
 			FillApiSince (field, elem);
@@ -257,7 +257,7 @@ namespace MonoDroid.Generation
 		{
 			var support = new GenBaseSupport {
 				AnnotatedVisibility = elem.XGetAttribute ("annotated-visibility"),
-				DeprecatedSince = elem.XGetAttributeAsIntOrNull ("deprecated-since"),
+				DeprecatedSince = elem.XGetAttributeAsAndroidSdkVersionOrNull ("deprecated-since"),
 				IsAcw = true,
 				IsDeprecated = elem.XGetAttribute ("deprecated") != "not deprecated",
 				IsGeneratable = true,
@@ -375,7 +375,7 @@ namespace MonoDroid.Generation
 				ArgsType = elem.Attribute ("argsType")?.Value,
 				CustomAttributes = elem.XGetAttribute ("customAttributes"),
 				Deprecated = elem.Deprecated (),
-				DeprecatedSince = elem.XGetAttributeAsIntOrNull ("deprecated-since"),
+				DeprecatedSince = elem.XGetAttributeAsAndroidSdkVersionOrNull ("deprecated-since"),
 				ExplicitInterface = elem.XGetAttribute ("explicitInterface"),
 				EventName = elem.Attribute ("eventName")?.Value,
 				GenerateAsyncWrapper = elem.Attribute ("generateAsyncWrapper") != null,
@@ -428,7 +428,7 @@ namespace MonoDroid.Generation
 			method.FillReturnType ();
 
 			// If declaring type was deprecated earlier than member, use the type's deprecated-since
-			if (declaringType.DeprecatedSince.HasValue && declaringType.DeprecatedSince.Value < method.DeprecatedSince.GetValueOrDefault (0))
+			if (declaringType.DeprecatedSince.HasValue && declaringType.DeprecatedSince < method.DeprecatedSince.GetValueOrDefault (default))
 				method.DeprecatedSince = declaringType.DeprecatedSince;
 
 			FillApiSince (method, elem);
@@ -519,9 +519,9 @@ namespace MonoDroid.Generation
 		static void FillApiSince (ApiVersionsSupport.IApiAvailability model, params XElement[] elems)
 		{
 			foreach (var elem in elems) {
-				if (int.TryParse (elem.XGetAttribute ("api-since"), out var result))
+				if (AndroidSdkVersion.TryParse (elem.XGetAttribute ("api-since"), out var result))
 					model.ApiAvailableSince = result;
-				if (int.TryParse (elem.XGetAttribute ("removed-since"), out var removed))
+				if (AndroidSdkVersion.TryParse (elem.XGetAttribute ("removed-since"), out var removed))
 					model.ApiRemovedSince = removed;
 			}
 		}

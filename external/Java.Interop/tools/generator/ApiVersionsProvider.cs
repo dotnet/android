@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Xml;
 using System.Linq;
+using Java.Interop.Tools.Generator;
 
 namespace Xamarin.AndroidTools.AnnotationSupport
 {
@@ -21,10 +22,10 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 			reader.MoveToContent (); // -> class
 			for (; reader.LocalName == "class"; reader.ReadToNextSibling ("class")) {
 
-				int tmpi;
+				AndroidSdkVersion tmpi;
 				var name = reader.GetAttribute ("name").Replace ('/', '.').Replace ('$', '.');
-				var since = int.Parse (reader.GetAttribute ("since"));
-				var deprecated = int.TryParse (reader.GetAttribute ("deprecated"), out tmpi) ? tmpi : 0;
+				var since = AndroidSdkVersion.Parse (reader.GetAttribute ("since"));
+				var deprecated = AndroidSdkVersion.TryParse (reader.GetAttribute ("deprecated"), out tmpi) ? tmpi : default;
 
 				ClassDefinition klass;
 				if (!Versions.TryGetValue (name, out klass)) {
@@ -41,15 +42,15 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 					var csince = reader.GetAttribute ("since");
 					if (csince == null)
 						continue;
-					var cdeprecated = int.TryParse (reader.GetAttribute ("deprecated"), out tmpi) ? tmpi : 0;
+					var cdeprecated = AndroidSdkVersion.TryParse (reader.GetAttribute ("deprecated"), out tmpi) ? tmpi : default;
 
 					var cname = reader.GetAttribute ("name");
 					switch (reader.LocalName) {
 					case "field":
-						klass.Fields.Add (new Definition { Name = cname, Since = int.Parse (csince), Deprecated = cdeprecated });
+						klass.Fields.Add (new Definition { Name = cname, Since = AndroidSdkVersion.Parse (csince), Deprecated = cdeprecated });
 						break;
 					case "method":
-						klass.Methods.Add (new Definition { Name = cname, Since = int.Parse (csince), Deprecated = cdeprecated });
+						klass.Methods.Add (new Definition { Name = cname, Since = AndroidSdkVersion.Parse (csince), Deprecated = cdeprecated });
 						break;
 					}
 				}
@@ -59,8 +60,8 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 		public class Definition
 		{
 			public string Name; // it is name + JNI signature for methods.
-			public int Since;
-			public int Deprecated;
+			public AndroidSdkVersion Since;
+			public AndroidSdkVersion Deprecated;
 
 			string method;
 #if !GENERATOR

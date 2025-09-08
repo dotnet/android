@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Java.Interop.Tools.Generator;
 using Java.Interop.Tools.Generator.Enumification;
 using MonoDroid.Generation;
 using NUnit.Framework;
@@ -150,7 +151,7 @@ namespace generatortests
 			options.UseObsoletedOSPlatformAttributes = true;
 
 			var enu = CreateEnum ();
-			enu.Value.Members.Single (m => m.EnumMember == "WithExcluded").DeprecatedSince = 33;
+			enu.Value.Members.Single (m => m.EnumMember == "WithExcluded").DeprecatedSince = new AndroidSdkVersion (33);
 
 			var gens = ParseApiDefinition (xml);
 
@@ -177,7 +178,7 @@ namespace generatortests
 			options.UseObsoletedOSPlatformAttributes = true;
 
 			var enu = CreateEnum ();
-			enu.Value.Members.Single (m => m.EnumMember == "WithExcluded").DeprecatedSince = -1;
+			enu.Value.Members.Single (m => m.EnumMember == "WithExcluded").DeprecatedSince = new AndroidSdkVersion (-1);
 
 			var gens = ParseApiDefinition (xml);
 
@@ -198,7 +199,7 @@ namespace generatortests
 		{
 			var enu = new EnumMappings.EnumDescription {
 				Members = new List<ConstantEntry> {
-					new ConstantEntry { EnumMember = "WithExcluded", Value = "1", JavaSignature = "android/app/ActivityManager.RECENT_IGNORE_UNAVAILABLE", ApiLevel = 30 },
+					new ConstantEntry { EnumMember = "WithExcluded", Value = "1", JavaSignature = "android/app/ActivityManager.RECENT_IGNORE_UNAVAILABLE", ApiLevel = new AndroidSdkVersion (30) },
 					new ConstantEntry { EnumMember = "IgnoreUnavailable", Value = "2", JavaSignature = "android/app/ActivityManager.RECENT_WITH_EXCLUDED" }
 				},
 				BitField = false,

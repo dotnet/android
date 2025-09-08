@@ -25,12 +25,12 @@ namespace MonoDroid.Generation {
 			public bool FieldsRemoved;
 		}
 
-		internal Dictionary<string, EnumDescription> ParseXmlFieldMappings (string csv, int filter_version, IList<KeyValuePair<string, string>> remove_nodes)
+		internal Dictionary<string, EnumDescription> ParseXmlFieldMappings (string csv, AndroidSdkVersion filter_version, IList<KeyValuePair<string, string>> remove_nodes)
 		{
 			return ParseFieldMappings (FieldXmlToCsv (csv), null, filter_version, remove_nodes);
 		}
 
-		internal Dictionary<string, EnumDescription> ParseFieldMappings (string csv, string flagsFile, int filter_version, IList<KeyValuePair<string, string>> remove_nodes)
+		internal Dictionary<string, EnumDescription> ParseFieldMappings (string csv, string flagsFile, AndroidSdkVersion filter_version, IList<KeyValuePair<string, string>> remove_nodes)
 		{
 			if (csv == null)
 				return new Dictionary<string, EnumDescription> ();
@@ -42,7 +42,7 @@ namespace MonoDroid.Generation {
 		// value: Dictionary:
 		//	key: enum element name
 		//	value: enum element value
-		internal Dictionary<string, EnumDescription> ParseFieldMappings (TextReader source, string [] enumFlags, int filter_version, IList<KeyValuePair<string, string>> remove_nodes)
+		internal Dictionary<string, EnumDescription> ParseFieldMappings (TextReader source, string [] enumFlags, AndroidSdkVersion filter_version, IList<KeyValuePair<string, string>> remove_nodes)
 		{
 			var enums = new Dictionary<string, EnumDescription> ();
 
@@ -184,12 +184,12 @@ namespace MonoDroid.Generation {
 			return new StringReader (sw.ToString ());
 		}
 
-		internal List<ApiTransform> ParseXmlMethodMappings (string file, int filter_version)
+		internal List<ApiTransform> ParseXmlMethodMappings (string file, AndroidSdkVersion filter_version)
 		{
 			return ParseMethodMappings (MethodXmlToCsv (file), filter_version);
 		}
 
-		internal List<ApiTransform> ParseMethodMappings (string file, int filter_version)
+		internal List<ApiTransform> ParseMethodMappings (string file, AndroidSdkVersion filter_version)
 		{
 			if (file == null)
 				return new List<ApiTransform> ();
@@ -197,7 +197,7 @@ namespace MonoDroid.Generation {
 				return ParseMethodMappings (sr, filter_version);
 		}
 
-		internal List<ApiTransform> ParseMethodMappings (TextReader source, int filter_version)
+		internal List<ApiTransform> ParseMethodMappings (TextReader source, AndroidSdkVersion filter_version)
 		{
 			var list = new List<ApiTransform> ();
 			if (source == null)
@@ -213,8 +213,10 @@ namespace MonoDroid.Generation {
 				if (s.Length == 0 || s.StartsWith ("//", StringComparison.Ordinal))
 					continue;
 				var items = s.Split (',');
-				int ver;
-				if (filter_version > 0 && int.TryParse (items [0], out ver) && filter_version < ver)
+				AndroidSdkVersion ver;
+				if (filter_version > 0 &&
+						AndroidSdkVersion.TryParse (items [0], out ver) &&
+						filter_version < ver)
 					continue;
 				try {
 					list.Add (new ApiTransform (preserveTypeMode, items));

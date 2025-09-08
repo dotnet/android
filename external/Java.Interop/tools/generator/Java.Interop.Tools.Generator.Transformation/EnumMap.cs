@@ -14,14 +14,14 @@ namespace MonoDroid.Generation
 		private string output_dir;
 		private string output_metadata;
 		private List<KeyValuePair<string, string>> remove_nodes;
-		private int version;
+		private AndroidSdkVersion version;
 		private bool fix_constants_instead_of_removing;
 
 		public EnumMappings (string outputDir, string outputMetadata, string version, bool fixConstantsInsteadOfRemove)
 		{
 			output_dir = outputDir;
 			output_metadata = outputMetadata;
-			this.version = version == null ? 0 : int.Parse (version);
+			this.version = version == null ? default : AndroidSdkVersion.Parse (version);
 			fix_constants_instead_of_removing = fixConstantsInsteadOfRemove;
 		}
 

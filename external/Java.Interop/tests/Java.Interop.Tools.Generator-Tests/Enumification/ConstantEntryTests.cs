@@ -13,7 +13,7 @@ namespace Java.Interop.Tools.Generator_Tests
 			var entry = ConstantEntry.FromString (csv);
 
 			Assert.AreEqual (ConstantAction.Enumify, entry.Action);
-			Assert.AreEqual (10, entry.ApiLevel);
+			Assert.AreEqual (10, entry.ApiLevel.ApiLevel);
 			Assert.AreEqual ("I:org/xmlpull/v1/XmlPullParser.CDSECT", entry.JavaSignature);
 			Assert.AreEqual ("5", entry.Value);
 			Assert.AreEqual ("Org.XmlPull.V1.XmlPullParserNode", entry.EnumFullType);
@@ -29,7 +29,7 @@ namespace Java.Interop.Tools.Generator_Tests
 			var entry = ConstantEntry.FromString (csv, true);
 
 			Assert.AreEqual (ConstantAction.Enumify, entry.Action);
-			Assert.AreEqual (10, entry.ApiLevel);
+			Assert.AreEqual (10, entry.ApiLevel.ApiLevel);
 			Assert.AreEqual ("I:org/xmlpull/v1/XmlPullParser.CDSECT", entry.JavaSignature);
 			Assert.AreEqual ("5", entry.Value);
 			Assert.AreEqual ("Org.XmlPull.V1.XmlPullParserNode", entry.EnumFullType);
@@ -45,7 +45,7 @@ namespace Java.Interop.Tools.Generator_Tests
 			var entry = ConstantEntry.FromString (csv);
 
 			Assert.AreEqual (ConstantAction.Add, entry.Action);
-			Assert.AreEqual (10, entry.ApiLevel);
+			Assert.AreEqual (10, entry.ApiLevel.ApiLevel);
 			Assert.AreEqual (string.Empty, entry.JavaSignature);
 			Assert.AreEqual ("5", entry.Value);
 			Assert.AreEqual ("Org.XmlPull.V1.XmlPullParserNode", entry.EnumFullType);
@@ -61,7 +61,7 @@ namespace Java.Interop.Tools.Generator_Tests
 			var entry = ConstantEntry.FromString (csv);
 
 			Assert.AreEqual (ConstantAction.Remove, entry.Action);
-			Assert.AreEqual (10, entry.ApiLevel);
+			Assert.AreEqual (10, entry.ApiLevel.ApiLevel);
 			Assert.AreEqual ("I:org/xmlpull/v1/XmlPullParser.CDSECT", entry.JavaSignature);
 			Assert.AreEqual ("5", entry.Value);
 			Assert.AreEqual (string.Empty, entry.EnumFullType);
@@ -77,7 +77,7 @@ namespace Java.Interop.Tools.Generator_Tests
 			var entry = ConstantEntry.FromString (csv);
 
 			Assert.AreEqual (ConstantAction.Enumify, entry.Action);
-			Assert.AreEqual (10, entry.ApiLevel);
+			Assert.AreEqual (10, entry.ApiLevel.ApiLevel);
 			Assert.AreEqual ("I:org/xmlpull/v1/XmlPullParser.CDSECT", entry.JavaSignature);
 			Assert.AreEqual ("5", entry.Value);
 			Assert.AreEqual ("Org.XmlPull.V1.XmlPullParserNode", entry.EnumFullType);
@@ -94,7 +94,7 @@ namespace Java.Interop.Tools.Generator_Tests
 			var entry = ConstantEntry.FromString (csv);
 
 			Assert.AreEqual (ConstantAction.Add, entry.Action);
-			Assert.AreEqual (10, entry.ApiLevel);
+			Assert.AreEqual (10, entry.ApiLevel.ApiLevel);
 			Assert.AreEqual (string.Empty, entry.JavaSignature);
 			Assert.AreEqual ("5", entry.Value);
 			Assert.AreEqual ("Org.XmlPull.V1.XmlPullParserNode", entry.EnumFullType);
@@ -111,14 +111,14 @@ namespace Java.Interop.Tools.Generator_Tests
 			var entry = ConstantEntry.FromString (csv);
 
 			Assert.AreEqual (ConstantAction.Remove, entry.Action);
-			Assert.AreEqual (10, entry.ApiLevel);
+			Assert.AreEqual (10, entry.ApiLevel.ApiLevel);
 			Assert.AreEqual ("I:org/xmlpull/v1/XmlPullParser.CDSECT", entry.JavaSignature);
 			Assert.AreEqual ("5", entry.Value);
 			Assert.AreEqual (string.Empty, entry.EnumFullType);
 			Assert.AreEqual (string.Empty, entry.EnumMember);
 			Assert.AreEqual (FieldAction.Remove, entry.FieldAction);
 			Assert.False (entry.IsFlags);
-			Assert.AreEqual (33, entry.DeprecatedSince.Value);
+			Assert.AreEqual (33, entry.DeprecatedSince?.ApiLevel ?? 0);
 		}
 	}
 }

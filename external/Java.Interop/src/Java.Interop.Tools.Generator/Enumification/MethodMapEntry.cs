@@ -8,7 +8,7 @@ namespace Java.Interop.Tools.Generator.Enumification
 	public class MethodMapEntry
 	{
 		public MethodAction Action { get; set; }
-		public int ApiLevel { get; set; }
+		public AndroidSdkVersion ApiLevel { get; set; }
 		public string? JavaPackage { get; set; }
 		public string? JavaType { get; set; }
 		public string? JavaName { get; set; }
@@ -66,7 +66,7 @@ namespace Java.Interop.Tools.Generator.Enumification
 		{
 			var entry = new MethodMapEntry {
 				Action = MethodAction.Enumify,
-				ApiLevel = parser.GetFieldAsInt (0),
+				ApiLevel = parser.GetFieldAsAndroidSdkVersion (0),
 				JavaPackage = parser.GetField (1),
 				JavaType = parser.GetField (2),
 				JavaName = parser.GetField (3),
@@ -86,7 +86,7 @@ namespace Java.Interop.Tools.Generator.Enumification
 		{
 			var entry = new MethodMapEntry {
 				Action = FromMethodActionString (parser.GetField (0)),
-				ApiLevel = parser.GetFieldAsInt (1),
+				ApiLevel = parser.GetFieldAsAndroidSdkVersion (1),
 				JavaPackage = parser.GetField (2),
 				JavaType = parser.GetField (3),
 				JavaName = parser.GetField (4),

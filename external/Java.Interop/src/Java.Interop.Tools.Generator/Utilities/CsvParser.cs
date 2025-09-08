@@ -19,16 +19,16 @@ namespace Java.Interop.Tools.Generator
 			return fields [index].Trim ();
 		}
 
-		public int GetFieldAsInt (int index)
+		public AndroidSdkVersion GetFieldAsAndroidSdkVersion (int index)
 		{
-			return int.Parse (GetField (index));
+			return AndroidSdkVersion.Parse (GetField (index));
 		}
 
-		public int? GetFieldAsNullableInt32 (int index)
+		public AndroidSdkVersion? GetFieldAsNullableAndroidSdkVersion (int index)
 		{
 			var value = GetField (index);
 
-			if (int.TryParse (value, out var val))
+			if (AndroidSdkVersion.TryParse (value, out var val))
 				return val;
 
 			return default;

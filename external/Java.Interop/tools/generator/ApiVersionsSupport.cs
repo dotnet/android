@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using Xamarin.AndroidTools.AnnotationSupport;
 using System.Linq;
 
+using Java.Interop.Tools.Generator;
+
 namespace MonoDroid.Generation
 {
 	static class IApiAvailabilityExtensions
 	{
 		public static string AdditionalAttributeString (this ApiVersionsSupport.IApiAvailability a)
 		{
-			return a.ApiAvailableSince == 0 ? null : ", ApiSince = " + a.ApiAvailableSince;
+			return a.ApiAvailableSince.ApiLevel == 0 ? null : ", ApiSince = " + a.ApiAvailableSince.ApiLevel;
 		}
 	}
 
@@ -17,8 +19,8 @@ namespace MonoDroid.Generation
 	{
 		public interface IApiAvailability
 		{
-			int ApiAvailableSince { get; set; }
-			int ApiRemovedSince { get; set; }
+			AndroidSdkVersion ApiAvailableSince { get; set; }
+			AndroidSdkVersion ApiRemovedSince { get; set; }
 		}
 
 		static IEnumerable<GenBase> FlattenGens (IEnumerable<GenBase> gens)

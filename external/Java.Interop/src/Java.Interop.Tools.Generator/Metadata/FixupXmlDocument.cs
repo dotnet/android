@@ -28,7 +28,7 @@ namespace Java.Interop.Tools.Generator
 		public void Apply (ApiXmlDocument apiDocument, string apiLevelString, int productVersion)
 		{
 			// Defaulting to 0 here is fine
-			int.TryParse (apiLevelString, out var apiLevel);
+			AndroidSdkVersion.TryParse (apiLevelString, out var apiLevel);
 
 			var metadataChildren = FixupDocument.XPathSelectElements ("/metadata/*");
 
@@ -193,22 +193,22 @@ namespace Java.Interop.Tools.Generator
 			return list;
 		}
 
-		bool ShouldSkip (XElement node, int apiLevel, int productVersion)
+		bool ShouldSkip (XElement node, AndroidSdkVersion apiLevel, int productVersion)
 		{
 			if (apiLevel > 0) {
-				var since = node.XGetAttributeAsInt ("api-since");
-				var until = node.XGetAttributeAsInt ("api-until");
+				var since = node.XGetAttributeAsAndroidSdkVersion ("api-since");
+				var until = node.XGetAttributeAsAndroidSdkVersion ("api-until");
 
-				if (since is int since_int && since_int > apiLevel)
+				if (since is AndroidSdkVersion since_int && since_int > apiLevel)
 					return true;
-				else if (until is int until_int && until_int < apiLevel)
+				else if (until is AndroidSdkVersion until_int && until_int < apiLevel)
 					return true;
 			}
 
 			if (productVersion > 0) {
-				var product_version = node.XGetAttributeAsInt ("product-version");
+				var product_version = node.XGetAttributeAsAndroidSdkVersion ("product-version");
 
-				if (product_version is int version && version > productVersion)
+				if (product_version is AndroidSdkVersion version && version > productVersion)
 					return true;
 
 			}

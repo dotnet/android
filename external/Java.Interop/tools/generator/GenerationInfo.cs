@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
-
+using Java.Interop.Tools.Generator;
 using Xamarin.Android.Binder;
 
 namespace MonoDroid.Generation {
@@ -71,13 +71,22 @@ namespace MonoDroid.Generation {
 		{
 			if (options.ApiLevel == null)
 				return null;
-			int level;
-			if (!int.TryParse (options.ApiLevel, out level))
+			AndroidSdkVersion level;
+			if (!AndroidSdkVersion.TryParse (options.ApiLevel, out level))
 				return null;
 			var defines = new StringBuilder ()
 				.Append ("$(DefineConstants);ANDROID_1");
-			for (int i = 2; i <= level; ++i) {
+			for (int i = 2; i <= level.ApiLevel; ++i) {
 				defines.AppendFormat (";ANDROID_{0}", i.ToString ());
+			}
+			// ASSUME one minor release per major release starting with API-36.1
+			for (int i = 36; i < level.ApiLevel; ++i) {
+				defines.Append ($";ANDROID_{i}_1");
+			}
+			if (level.MinorRelease != 0) {
+				for (int i = 1; i < level.MinorRelease + 1; ++i) {
+					defines.Append ($";ANDROID_{level.ApiLevel}_{i}");
+				}
 			}
 			return new XElement (
 				msbuild + "PropertyGroup",

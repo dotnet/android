@@ -8,6 +8,8 @@ using System.Xml.Linq;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
+using Java.Interop.Tools.Generator;
+
 namespace generatortests
 {
 	[TestFixture]
@@ -22,7 +24,7 @@ namespace generatortests
 			var sr = new StringReader (csv);
 
 			var removes = new List<KeyValuePair<string, string>> ();
-			var enums = mappings.ParseFieldMappings (sr, new string [0], 30, removes);
+			var enums = mappings.ParseFieldMappings (sr, new string [0], new AndroidSdkVersion (30), removes);
 
 			Assert.AreEqual ("[I:org/xmlpull/v1/XmlPullParser.CDSECT, ]", removes.Single ().ToString ());
 
@@ -42,7 +44,7 @@ namespace generatortests
 			var sr = new StringReader (csv);
 
 			var removes = new List<KeyValuePair<string, string>> ();
-			var enums = mappings.ParseFieldMappings (sr, new string [0], 30, removes);
+			var enums = mappings.ParseFieldMappings (sr, new string [0], new AndroidSdkVersion (30), removes);
 
 			Assert.AreEqual ("[I:org/xmlpull/v1/XmlPullParser.CDSECT, ]", removes.Single ().ToString ());
 
@@ -58,14 +60,14 @@ namespace generatortests
 			var sr = new StringReader (csv);
 
 			var removes = new List<KeyValuePair<string, string>> ();
-			var enums = mappings.ParseFieldMappings (sr, new string [0], 30, removes);
+			var enums = mappings.ParseFieldMappings (sr, new string [0], new AndroidSdkVersion (30), removes);
 
 			Assert.AreEqual (0, removes.Count);
 
 			Assert.AreEqual ("Org.XmlPull.V1.XmlPullParserNode", enums.Single ().Key);
 			Assert.AreEqual (false, enums.Single ().Value.BitField);
 			Assert.AreEqual (true, enums.Single ().Value.FieldsRemoved);
-			Assert.AreEqual ("", enums.First().Value.Members.Single ().JavaSignature);
+			Assert.AreEqual ("", enums.First ().Value.Members.Single ().JavaSignature);
 			Assert.AreEqual ("[Cdsect, 5]", enums.First ().Value.Members.Single ().ToString ());
 		}
 
@@ -78,7 +80,7 @@ namespace generatortests
 			var sr = new StringReader (csv);
 
 			var removes = new List<KeyValuePair<string, string>> ();
-			var enums = mappings.ParseFieldMappings (sr, new string [0], 30, removes);
+			var enums = mappings.ParseFieldMappings (sr, new string [0], new AndroidSdkVersion (30), removes);
 
 			Assert.AreEqual (true, enums.Single ().Value.BitField);
 		}
@@ -92,7 +94,7 @@ namespace generatortests
 			var sr = new StringReader (csv);
 
 			var removes = new List<KeyValuePair<string, string>> ();
-			var enums = mappings.ParseFieldMappings (sr, new [] { "Org.XmlPull.V1.XmlPullParserNode" }, 30, removes);
+			var enums = mappings.ParseFieldMappings (sr, new [] { "Org.XmlPull.V1.XmlPullParserNode" }, new AndroidSdkVersion (30), removes);
 
 			Assert.AreEqual (true, enums.Single ().Value.BitField);
 		}
@@ -106,7 +108,7 @@ namespace generatortests
 			var sr = new StringReader (csv);
 
 			var removes = new List<KeyValuePair<string, string>> ();
-			var enums = mappings.ParseFieldMappings (sr, new string [0], 5, removes);
+			var enums = mappings.ParseFieldMappings (sr, new string [0], new AndroidSdkVersion (5), removes);
 
 			Assert.AreEqual (0, removes.Count);
 			Assert.AreEqual (0, enums.Count);
@@ -121,14 +123,14 @@ namespace generatortests
 			var sr = new StringReader (csv);
 
 			var removes = new List<KeyValuePair<string, string>> ();
-			var enums = mappings.ParseFieldMappings (sr, new string [0], 30, removes);
+			var enums = mappings.ParseFieldMappings (sr, new string [0], new AndroidSdkVersion (30), removes);
 
 			Assert.AreEqual ("[I:org/xmlpull/v1/XmlPullParser.CDSECT, Org.XmlPull.V1.XmlPullParserNode]", removes.Single ().ToString ());
 
 			Assert.AreEqual ("Org.XmlPull.V1.XmlPullParserNode", enums.Single ().Key);
 			Assert.AreEqual (false, enums.Single ().Value.BitField);
 			Assert.AreEqual (false, enums.Single ().Value.FieldsRemoved);
-			Assert.AreEqual ("I:org/xmlpull/v1/XmlPullParser.CDSECT", enums.First().Value.Members.Single ().JavaSignature);
+			Assert.AreEqual ("I:org/xmlpull/v1/XmlPullParser.CDSECT", enums.First ().Value.Members.Single ().JavaSignature);
 			Assert.AreEqual ("[Cdsect, 5]", enums.First ().Value.Members.Single ().ToString ());
 		}
 
@@ -141,7 +143,7 @@ namespace generatortests
 			var sr = new StringReader (csv);
 
 			var removes = new List<KeyValuePair<string, string>> ();
-			var enums = mappings.ParseFieldMappings (sr, new string [0], 30, removes);
+			var enums = mappings.ParseFieldMappings (sr, new string [0], new AndroidSdkVersion (30), removes);
 
 			Assert.AreEqual ("[I:org/xmlpull/v1/XmlPullParser.CDSECT, ]", removes.Single ().ToString ());
 
@@ -157,7 +159,7 @@ namespace generatortests
 			var sr = new StringReader (csv);
 
 			var removes = new List<KeyValuePair<string, string>> ();
-			var enums = mappings.ParseFieldMappings (sr, new string [0], 30, removes);
+			var enums = mappings.ParseFieldMappings (sr, new string [0], new AndroidSdkVersion (30), removes);
 
 			Assert.AreEqual (0, removes.Count);
 
@@ -176,7 +178,7 @@ namespace generatortests
 			var sr = new StringReader (csv);
 
 			var removes = new List<KeyValuePair<string, string>> ();
-			var enums = mappings.ParseFieldMappings (sr, new string [0], 30, removes);
+			var enums = mappings.ParseFieldMappings (sr, new string [0], new AndroidSdkVersion (30), removes);
 
 			Assert.AreEqual ("[I:org/xmlpull/v1/XmlPullParser.CDSECT, ]", removes.Single ().ToString ());
 
@@ -196,7 +198,7 @@ namespace generatortests
 			var sr = new StringReader (csv);
 
 			var removes = new List<KeyValuePair<string, string>> ();
-			var enums = mappings.ParseFieldMappings (sr, new string [0], 30, removes);
+			var enums = mappings.ParseFieldMappings (sr, new string [0], new AndroidSdkVersion (30), removes);
 
 			Assert.AreEqual ("[I:org/xmlpull/v1/XmlPullParser.CDSECT, ]", removes.Single ().ToString ());
 
@@ -212,7 +214,7 @@ namespace generatortests
 			var sr = new StringReader (csv);
 
 			var removes = new List<KeyValuePair<string, string>> ();
-			var enums = mappings.ParseFieldMappings (sr, new string [0], 30, removes);
+			var enums = mappings.ParseFieldMappings (sr, new string [0], new AndroidSdkVersion (30), removes);
 
 			Assert.AreEqual (0, removes.Count);
 
@@ -232,7 +234,7 @@ namespace generatortests
 			var sr = new StringReader (csv);
 
 			var removes = new List<KeyValuePair<string, string>> ();
-			var enums = mappings.ParseFieldMappings (sr, new string [0], 30, removes);
+			var enums = mappings.ParseFieldMappings (sr, new string [0], new AndroidSdkVersion (30), removes);
 
 			Assert.AreEqual (true, enums.Single ().Value.BitField);
 		}
@@ -246,7 +248,7 @@ namespace generatortests
 			var sr = new StringReader (csv);
 
 			var removes = new List<KeyValuePair<string, string>> ();
-			var enums = mappings.ParseFieldMappings (sr, new [] { "Org.XmlPull.V1.XmlPullParserNode" }, 30, removes);
+			var enums = mappings.ParseFieldMappings (sr, new [] { "Org.XmlPull.V1.XmlPullParserNode" }, new AndroidSdkVersion (30), removes);
 
 			Assert.AreEqual (true, enums.Single ().Value.BitField);
 		}
@@ -260,7 +262,7 @@ namespace generatortests
 			var sr = new StringReader (csv);
 
 			var removes = new List<KeyValuePair<string, string>> ();
-			var enums = mappings.ParseFieldMappings (sr, new string [0], 5, removes);
+			var enums = mappings.ParseFieldMappings (sr, new string [0], new AndroidSdkVersion (5), removes);
 
 			Assert.AreEqual (0, removes.Count);
 			Assert.AreEqual (0, enums.Count);
@@ -275,7 +277,7 @@ namespace generatortests
 			var sr = new StringReader (csv);
 
 			var removes = new List<KeyValuePair<string, string>> ();
-			var enums = mappings.ParseFieldMappings (sr, new string [0], 30, removes);
+			var enums = mappings.ParseFieldMappings (sr, new string [0], new AndroidSdkVersion (30), removes);
 
 			Assert.AreEqual ("[I:org/xmlpull/v1/XmlPullParser.CDSECT, Org.XmlPull.V1.XmlPullParserNode]", removes.Single ().ToString ());
 

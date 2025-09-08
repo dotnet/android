@@ -313,7 +313,7 @@ namespace generator.SourceWriters
 			AddUnsupportedOSPlatform (attributes, member.ApiRemovedSince, opt);
 		}
 
-		public static void AddSupportedOSPlatform (List<AttributeWriter> attributes, int since, CodeGenerationOptions opt)
+		public static void AddSupportedOSPlatform (List<AttributeWriter> attributes, AndroidSdkVersion since, CodeGenerationOptions opt)
 		{
 			// There's no sense in writing say 'android15' because we do not support older APIs,
 			// so those APIs will be available in all of our versions.
@@ -321,14 +321,14 @@ namespace generator.SourceWriters
 				attributes.Add (new SupportedOSPlatformAttr (since));
 		}
 
-		public static void AddUnsupportedOSPlatform (List<AttributeWriter> attributes, int since, CodeGenerationOptions opt)
+		public static void AddUnsupportedOSPlatform (List<AttributeWriter> attributes, AndroidSdkVersion since, CodeGenerationOptions opt)
 		{
 			// Here it makes sense to still write 'android15' because it will be missing in later versions like `android35`.
 			if (since > 0 && opt.CodeGenerationTarget == CodeGenerationTarget.XAJavaInterop1)
 				attributes.Add (new UnsupportedOSPlatformAttr (since));
 		}
 
-		public static void AddObsolete (List<AttributeWriter> attributes, string message, CodeGenerationOptions opt, bool forceDeprecate = false, bool isError = false, int? deprecatedSince = null)
+		public static void AddObsolete (List<AttributeWriter> attributes, string message, CodeGenerationOptions opt, bool forceDeprecate = false, bool isError = false, AndroidSdkVersion? deprecatedSince = null)
 		{
 			// Bail if we're not obsolete
 			if ((!forceDeprecate && !message.HasValue ()) || message == "not deprecated")
@@ -342,13 +342,13 @@ namespace generator.SourceWriters
 		}
 
 		// Returns true if attribute was applied
-		static bool AddObsoletedOSPlatformAttribute (List<AttributeWriter> attributes, string message, int? deprecatedSince, CodeGenerationOptions opt)
+		static bool AddObsoletedOSPlatformAttribute (List<AttributeWriter> attributes, string message, AndroidSdkVersion? deprecatedSince, CodeGenerationOptions opt)
 		{
 			if (!opt.UseObsoletedOSPlatformAttributes)
 				return false;
 
 			// If it was obsoleted in a version earlier than we support (like 15), use a regular [Obsolete] instead
-			if (!deprecatedSince.HasValue || deprecatedSince <= MINIMUM_API_LEVEL)
+			if (!deprecatedSince.HasValue || deprecatedSince.Value <= MINIMUM_API_LEVEL)
 				return false;
 
 			// This is the default Android message, but it isn't useful so remove it
