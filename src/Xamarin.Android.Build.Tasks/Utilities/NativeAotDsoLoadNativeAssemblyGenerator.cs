@@ -12,7 +12,7 @@ class NativeAotDsoLoadNativeAssemblyGenerator : LlvmIrComposer
 	readonly List<string>? runtimeComponentsJniOnLoadHandlers;
 	readonly List<string>? customJniOnLoadHandlers;
 
-	public NativeAotDsoLoadNativeAssemblyGenerator (List<string>? runtimeComponentsJniOnLoadHandlers, List<string>? customJniOnLoadHandlers, TaskLoggingHelper log)
+	public NativeAotDsoLoadNativeAssemblyGenerator (TaskLoggingHelper log, List<string>? runtimeComponentsJniOnLoadHandlers, List<string>? customJniOnLoadHandlers)
 		: base (log)
 	{
 		this.runtimeComponentsJniOnLoadHandlers = runtimeComponentsJniOnLoadHandlers;
