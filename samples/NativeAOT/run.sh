@@ -12,6 +12,10 @@ if [ "${FAILED}" == "yes" ]; then
   exit 1
 fi
 
+if [ -n "${1}" ]; then
+  exit 0
+fi
+
 adb uninstall "${PACKAGE}" || true
 adb install -r -d --no-streaming --no-fastdeploy "${APK}"
 adb shell setprop debug.mono.log default,assembly,timing=bare

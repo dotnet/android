@@ -38,7 +38,7 @@ public class GenerateNativeAotLibraryLoadAssemblerSources : AndroidTask
 	public ITaskItem[] ResolvedAssemblies { get; set; } = [];
 
 	[Required]
-	public ITaskItem[] OutputSources { get; set; } = [];
+	public string SourcesOutputDirectory { get; set; } = "";
 
 	// Names of JNI initialization functions in 3rd party libraries. The
 	// functions are REQUIRED to use the `JNI_OnLoad(JNIEnv*, void* reserved)` signature.
@@ -53,12 +53,7 @@ public class GenerateNativeAotLibraryLoadAssemblerSources : AndroidTask
 
 		// We run in the inner build, there's going to be just a single RID
 		string rid = MonoAndroidHelper.GetAssemblyRid (ResolvedAssemblies[0]);
-		string abi = MonoAndroidHelper.RidToAbi (rid);
 		AndroidTargetArch targetArch = MonoAndroidHelper.RidToArch (rid);
-
-		// There can be only one, since we run in the inner build
-		ITaskItem outputFile = FindOutputFile (OutputSources, abi: abi, rid: rid);
-		Log.LogDebugMessage ($"JNI init funcs file to generate: {outputFile.ItemSpec}");
 
 		var assemblies = new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
 		foreach (ITaskItem item in ResolvedAssemblies) {
@@ -135,8 +130,8 @@ public class GenerateNativeAotLibraryLoadAssemblerSources : AndroidTask
 			}
 		}
 
-		string jniInitFuncsLlFilePath = outputFile.ItemSpec;
-		var generator = new NativeAotJniInitNativeAssemblyGenerator (Log, bclInitFunctions, customInitFunctions);
+		var jniInitFuncsLlFilePath = Path.Combine (SourcesOutputDirectory, $"jni_init_funcs.{MonoAndroidHelper.RidToAbi (rid)}.ll");
+		var generator = new NativeAotDsoLoadNativeAssemblyGenerator (Log, bclInitFunctions, customInitFunctions);
 		LLVMIR.LlvmIrModule jniInitFuncsModule = generator.Construct ();
 		using var jniInitFuncsWriter = MemoryStreamPool.Shared.CreateStreamWriter ();
 		bool fileFullyWritten = false;
@@ -152,18 +147,6 @@ public class GenerateNativeAotLibraryLoadAssemblerSources : AndroidTask
 			}
 		}
 		return !Log.HasLoggedErrors;
-	}
-
-	internal static ITaskItem FindOutputFile (ITaskItem[] items, string abi, string rid)
-	{
-		foreach (ITaskItem item in items) {
-			string itemAbi = MonoAndroidHelper.GetAssemblyAbi (item);
-			if (MonoAndroidHelper.StringEquals (abi, itemAbi, StringComparison.OrdinalIgnoreCase)) {
-				return item;
-			}
-		}
-
-		throw new InvalidOperationException ($"Internal error: no output file found for ABI '{abi}' (RID '{rid}')");
 	}
 
 	static string MakeCanonicalLibraryName (string libName)
