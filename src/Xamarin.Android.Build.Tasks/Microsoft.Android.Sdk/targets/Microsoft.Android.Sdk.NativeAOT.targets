@@ -8,6 +8,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 <Project>
 
   <UsingTask TaskName="Xamarin.Android.Tasks.SetNdkPathForIlc" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotLibraryLoadAssemblerSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <!-- Default property values for NativeAOT -->
   <PropertyGroup>
@@ -120,6 +121,37 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <!-- Every p/invoke using the `xa-internal-api` "library" will be called directly -->
       <DirectPInvoke Include="xa-internal-api" />
     </ItemGroup>
+  </Target>
+
+  <!-- Make sure we have a chance to generate our application-specific static library before linking
+       takes place -->
+  <PropertyGroup>
+    <!-- This should work, but unfortunately there's a bug in the current NAOT targets which
+         overwrites `LinkNativeDependsOn` property value -->
+    <LinkNativeDependsOn>
+      _GenerateNativeAotAndroidAppLibrary;
+      $(LinkNativeDependsOn)
+    </LinkNativeDependsOn>
+  </PropertyGroup>
+
+  <Target
+      Name="_GenerateNativeAotAndroidAppAssemblerSources">
+    <ItemGroup>
+      <_PrivateAndroidNaotResolvedAssemblyFiles Include="@(ResolvedFileToPublish->Distinct())" Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' " />
+    </ItemGroup>
+
+    <GenerateNativeAotLibraryLoadAssemblerSources
+        ResolvedAssemblies="@(_PrivateAndroidNaotResolvedAssemblyFiles)"
+        CustomJniInitFunctions="@(AndroidNativeAotJniInitFunction)"
+        SourcesOutputDirectory="$(IntermediateOutputPath)android" />
+
+    <!-- TODO: we need environment files here too -->
+  </Target>
+
+  <Target
+      Name="_GenerateNativeAotAndroidAppLibrary"
+      AfterTargets="IlcCompile"
+      DependsOnTargets="_GenerateNativeAotAndroidAppAssemblerSources">
   </Target>
 
   <Target Name="_AndroidFixNativeLibraryFileName" AfterTargets="ComputeFilesToPublish">
