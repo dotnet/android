@@ -9,6 +9,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
   <UsingTask TaskName="Xamarin.Android.Tasks.SetNdkPathForIlc" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotLibraryLoadAssemblerSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotEnvironmentAssemblerSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <!-- Default property values for NativeAOT -->
   <PropertyGroup>
@@ -159,7 +160,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
   <Target
       Name="_GenerateNativeAotAndroidAppAssemblerSources"
-      DependsOnTargets="_PrepareNativeAotAndroidAppInputs"
+      DependsOnTargets="_GenerateEnvironmentFiles;_PrepareNativeAotAndroidAppInputs"
       Inputs="@(_PrivateAndroidNaotResolvedAssemblyFiles)"
       Outputs="@(_JniInitFuncsAssemblySource);@(_PrivateJniInitFuncsNativeObjectFile)">
     <GenerateNativeAotLibraryLoadAssemblerSources
@@ -176,6 +177,10 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <ItemGroup>
       <LinkerArg Include="@(_PrivateJniInitFuncsNativeObjectFile)" />
     </ItemGroup>
+
+    <GenerateNativeAotEnvironmentAssemblerSources
+        EnvironmentOutputDirectory="$(IntermediateOutputPath)"
+        Environments="@(AndroidEnvironment);@(LibraryEnvironments)" />
 
     <!-- TODO: we need environment files here too -->
   </Target>
