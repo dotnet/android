@@ -67,6 +67,9 @@ android {{
     defaultConfig {{
         minSdk = {MinSdk}
     }}
+    lint {{
+        checkReleaseBuilds = false
+    }}
 }}
 dependencies {{
     implementation(""androidx.appcompat:appcompat:1.6.1"")
