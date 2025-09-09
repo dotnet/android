@@ -134,16 +134,48 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     </LinkNativeDependsOn>
   </PropertyGroup>
 
-  <Target
-      Name="_GenerateNativeAotAndroidAppAssemblerSources">
+  <Target Name="_PrepareNativeAotAndroidAppInputs">
     <ItemGroup>
-      <_PrivateAndroidNaotResolvedAssemblyFiles Include="@(ResolvedFileToPublish->Distinct())" Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' " />
+      <_PrivateBuildTargetAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm64' " Include="arm64-v8a" />
+      <_PrivateBuildTargetAbi Condition=" '$(RuntimeIdentifier)' == 'android-x64' " Include="x86_64" />
     </ItemGroup>
 
+    <PrepareAbiItems
+        BuildTargetAbis="@(_PrivateBuildTargetAbi)"
+        NativeSourcesDir="$(_NativeAssemblySourceDir)"
+        Debug="$(AndroidIncludeDebugSymbols)"
+        Mode="jni_init">
+      <Output TaskParameter="AssemblySources" ItemName="_JniInitFuncsAssemblySource" />
+    </PrepareAbiItems>
+
+    <ItemGroup>
+      <_PrivateJniInitFuncsNativeObjectFile Include="@(_JniInitFuncsAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
+        <abi>%(_JniInitFuncsAssemblySource.abi)</abi>
+      </_PrivateJniInitFuncsNativeObjectFile>
+
+      <_PrivateAndroidNaotResolvedAssemblyFiles Include="@(ResolvedFileToPublish->Distinct())" Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' " />
+    </ItemGroup>
+  </Target>
+
+  <Target
+      Name="_GenerateNativeAotAndroidAppAssemblerSources"
+      DependsOnTargets="_PrepareNativeAotAndroidAppInputs"
+      Inputs="@(_PrivateAndroidNaotResolvedAssemblyFiles)"
+      Outputs="@(_JniInitFuncsAssemblySource);@(_PrivateJniInitFuncsNativeObjectFile)">
     <GenerateNativeAotLibraryLoadAssemblerSources
         ResolvedAssemblies="@(_PrivateAndroidNaotResolvedAssemblyFiles)"
-        CustomJniInitFunctions="@(AndroidNativeAotJniInitFunction)"
-        SourcesOutputDirectory="$(IntermediateOutputPath)android" />
+        CustomJniInitFunctions="@(AndroidStaticJniInitFunction)"
+        OutputSources="@(_JniInitFuncsAssemblySource)" />
+
+    <CompileNativeAssembly
+        Sources="@(_JniInitFuncsAssemblySource)"
+        DebugBuild="$(AndroidIncludeDebugSymbols)"
+        WorkingDirectory="$(_NativeAssemblySourceDir)"
+        AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)" />
+
+    <ItemGroup>
+      <LinkerArg Include="@(_PrivateJniInitFuncsNativeObjectFile)" />
+    </ItemGroup>
 
     <!-- TODO: we need environment files here too -->
   </Target>

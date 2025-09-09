@@ -6,16 +6,41 @@
 
 using namespace xamarin::android;
 
-auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcept -> jint
+using JniOnLoadHandler = jint (*) (JavaVM *vm, void *reserved);
+
+//
+// These external functions are generated during application build (see obj/${CONFIG}/${FRAMEWORK}-android/${RID}/android/jni_init_funcs*.ll)
+//
+extern "C" {
+		extern const uint32_t __jni_on_load_handler_count;
+		extern const JniOnLoadHandler __jni_on_load_handlers[];
+		extern const char* __jni_on_load_handler_names[];
+}
+
+auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, void *reserved) noexcept -> jint
 {
+	Logger::init_logging_categories ();
+
 	log_warn (LOG_ASSEMBLY, "{}", __PRETTY_FUNCTION__);
 
 	jvm = vm;
 
 	JNIEnv *env = nullptr;
-    vm->GetEnv ((void**)&env, JNI_VERSION_1_6);
-    OSBridge::initialize_on_onload (vm, env);
-    GCBridge::initialize_on_onload (env);
+	vm->GetEnv ((void**)&env, JNI_VERSION_1_6);
+	OSBridge::initialize_on_onload (vm, env);
+	GCBridge::initialize_on_onload (env);
+
+	if (__jni_on_load_handler_count > 0) {
+		for (uint32_t i = 0; i < __jni_on_load_handler_count; i++) {
+			log_debug (
+				LOG_ASSEMBLY,
+				"Calling JNI on-load init func '{}' ({:p})",
+				optional_string (__jni_on_load_handler_names[i]),
+				reinterpret_cast<void*>(__jni_on_load_handlers[i])
+			);
+			__jni_on_load_handlers[i] (vm, reserved);
+		}
+	}
 
 	return JNI_VERSION_1_6;
 }
@@ -23,7 +48,6 @@ auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) n
 void Host::OnInit () noexcept
 {
 	log_warn (LOG_ASSEMBLY, "{}", __PRETTY_FUNCTION__);
-	Logger::init_logging_categories ();
 
 	JNIEnv *env = OSBridge::ensure_jnienv ();
 	jclass runtimeClass = env->FindClass ("mono/android/Runtime");
