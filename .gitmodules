@@ -28,8 +28,8 @@
     branch = master
 [submodule "external/xamarin-android-tools"]
     path = external/xamarin-android-tools
-    url = https://github.com/jonpryor/xamarin-android-tools
-    branch = dev/jonpryor/jonp-prefer-stable-api-levels
+    url = https://github.com/dotnet/android-tools
+    branch = main
 [submodule "external/xxHash"]
     path = external/xxHash
     url = https://github.com/Cyan4973/xxHash.git
