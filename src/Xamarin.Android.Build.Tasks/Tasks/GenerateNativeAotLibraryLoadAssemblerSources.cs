@@ -38,7 +38,7 @@ public class GenerateNativeAotLibraryLoadAssemblerSources : AndroidTask
 	public ITaskItem[] ResolvedAssemblies { get; set; } = [];
 
 	[Required]
-	public string SourcesOutputDirectory { get; set; } = "";
+	public ITaskItem[] OutputSources { get; set; } = [];
 
 	// Names of JNI initialization functions in 3rd party libraries. The
 	// functions are REQUIRED to use the `JNI_OnLoad(JNIEnv*, void* reserved)` signature.
@@ -53,7 +53,23 @@ public class GenerateNativeAotLibraryLoadAssemblerSources : AndroidTask
 
 		// We run in the inner build, there's going to be just a single RID
 		string rid = MonoAndroidHelper.GetAssemblyRid (ResolvedAssemblies[0]);
+		string abi = MonoAndroidHelper.RidToAbi (rid);
 		AndroidTargetArch targetArch = MonoAndroidHelper.RidToArch (rid);
+
+		// There can be only one, since we run in the inner build
+		ITaskItem? outputFile = null;
+		foreach (ITaskItem item in OutputSources) {
+			string itemAbi = MonoAndroidHelper.GetAssemblyAbi (item);
+			if (MonoAndroidHelper.StringEquals (abi, itemAbi, StringComparison.OrdinalIgnoreCase)) {
+				outputFile = item;
+				break;
+			}
+		}
+
+		if (outputFile == null) {
+			throw new InvalidOperationException ($"Internal error: no output file found for ABI '{abi}' (RID '{rid}')");
+		}
+		Log.LogDebugMessage ($"JNI init funcs file to generate: {outputFile.ItemSpec}");
 
 		var assemblies = new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
 		foreach (ITaskItem item in ResolvedAssemblies) {
@@ -130,7 +146,7 @@ public class GenerateNativeAotLibraryLoadAssemblerSources : AndroidTask
 			}
 		}
 
-		var jniInitFuncsLlFilePath = Path.Combine (SourcesOutputDirectory, $"jni_init_funcs.{MonoAndroidHelper.RidToAbi (rid)}.ll");
+		string jniInitFuncsLlFilePath = outputFile.ItemSpec;
 		var generator = new NativeAotDsoLoadNativeAssemblyGenerator (Log, bclInitFunctions, customInitFunctions);
 		LLVMIR.LlvmIrModule jniInitFuncsModule = generator.Construct ();
 		using var jniInitFuncsWriter = MemoryStreamPool.Shared.CreateStreamWriter ();
