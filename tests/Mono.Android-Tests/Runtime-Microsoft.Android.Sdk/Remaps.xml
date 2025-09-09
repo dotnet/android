@@ -5,6 +5,10 @@
   <replace-type
       from="net/dot/jni/test/AndroidInterface"
       to="net/dot/jni/test/DesugarAndroidInterface$_CC" />
+  <replace-type
+      from="android/view/LayoutInflater"
+      to="net/dot/android/test/MyLayoutInflater"
+  />
   <replace-method
       source-type="java/lang/Object"
       source-method-name="remappedToToString"

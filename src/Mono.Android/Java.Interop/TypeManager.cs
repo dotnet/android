@@ -39,6 +39,15 @@ namespace Java.Interop {
 	}
 
 	public static partial class TypeManager {
+
+		const bool IsAssignableFromCheckEnabledByDefault = true;
+
+		const string FeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
+
+		[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (IsAssignableFromCheck)}")]
+		internal static bool IsAssignableFromCheck { get; } =
+			AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (IsAssignableFromCheck)}", out bool isEnabled) ? isEnabled : IsAssignableFromCheckEnabledByDefault;
+
 		internal static string GetClassName (IntPtr class_ptr)
 		{
 			IntPtr ptr = RuntimeNativeMethods.monodroid_TypeManager_get_java_class_name (class_ptr);
@@ -336,7 +345,13 @@ namespace Java.Interop {
 
 				handleClass = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
 				if (!JniEnvironment.Types.IsAssignableFrom (handleClass, typeClass)) {
-					return null;
+					if (Logger.LogAssembly) {
+						var message = $"Handle 0x{handle:x} is of type '{JNIEnv.GetClassNameFromInstance (handle)}' which is not assignable to '{typeSig.SimpleReference}'";
+						Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
+					}
+					if (IsAssignableFromCheck) {
+						return null;
+					}
 				}
 			} finally {
 				JniObjectReference.Dispose (ref handleClass);
