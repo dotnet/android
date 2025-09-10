@@ -221,7 +221,7 @@ extends:
             testName: Mono.Android.NET_Tests-IsAssignableFrom
             project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
             testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)IsAssignableFrom.xml
-            extraBuildArgs: -p:TestsFlavor=IsAssignableFrom -p:_AndroidIsAssignableFromCheck=false
+            extraBuildArgs: -p:TestsFlavor=IsAssignableFrom -p:IncludeCategories=Intune -p:_AndroidIsAssignableFromCheck=false
             artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
             artifactFolder: $(DotNetTargetFramework)-IsAssignableFrom
 
