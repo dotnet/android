@@ -310,6 +310,9 @@ public class JavaSourceTest {
 			var library = new XamarinAndroidLibraryProject {
 				TargetFramework = targetFramework,
 				EnableDefaultItems = true,
+				ExtraNuGetConfigSources = {
+					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
+				}
 			};
 
 			var preview = IsPreviewFrameworkVersion (targetFramework);
