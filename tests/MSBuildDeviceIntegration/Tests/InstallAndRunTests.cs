@@ -956,6 +956,9 @@ namespace UnnamedProject
 			var proj = new XamarinAndroidApplicationProject () {
 				TargetFramework = targetFramework,
 				IsRelease = isRelease,
+				ExtraNuGetConfigSources = {
+					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
+				}
 			};
 			proj.SetProperty ("EnablePreviewFeatures", "true");
 
