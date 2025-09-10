@@ -149,13 +149,25 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
         NativeSourcesDir="$(_NativeAssemblySourceDir)"
         Debug="$(AndroidIncludeDebugSymbols)"
         Mode="jni_init">
-      <Output TaskParameter="AssemblySources" ItemName="_JniInitFuncsAssemblySource" />
+      <Output TaskParameter="AssemblySources" ItemName="_PrivateJniInitFuncsAssemblySource" />
+    </PrepareAbiItems>
+
+    <PrepareAbiItems
+        BuildTargetAbis="@(_PrivateBuildTargetAbi)"
+        NativeSourcesDir="$(_NativeAssemblySourceDir)"
+        Debug="$(AndroidIncludeDebugSymbols)"
+        Mode="environment">
+      <Output TaskParameter="AssemblySources" ItemName="_PrivateEnvironmentAssemblySource" />
     </PrepareAbiItems>
 
     <ItemGroup>
-      <_PrivateJniInitFuncsNativeObjectFile Include="@(_JniInitFuncsAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
-        <abi>%(_JniInitFuncsAssemblySource.abi)</abi>
+      <_PrivateJniInitFuncsNativeObjectFile Include="@(_PrivateJniInitFuncsAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
+        <abi>%(_PrivateJniInitFuncsAssemblySource.abi)</abi>
       </_PrivateJniInitFuncsNativeObjectFile>
+
+      <_PrivateEnvironmentNativeObjectFile Include="@(_PrivateEnvironmentAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
+        <abi>%(_PrivateEnvironmentAssemblySource.abi)</abi>
+      </_PrivateEnvironmentNativeObjectFile>
 
       <_PrivateAndroidNaotResolvedAssemblyFiles Include="@(ResolvedFileToPublish->Distinct())" Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' " />
     </ItemGroup>
@@ -164,28 +176,30 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   <Target
       Name="_GenerateNativeAotAndroidAppAssemblerSources"
       DependsOnTargets="_GenerateEnvironmentFiles;_PrepareNativeAotAndroidAppInputs"
-      Inputs="@(_PrivateAndroidNaotResolvedAssemblyFiles)"
-      Outputs="@(_JniInitFuncsAssemblySource);@(_PrivateJniInitFuncsNativeObjectFile)">
+      Inputs="@(_PrivateAndroidNaotResolvedAssemblyFiles);@(AndroidEnvironment);@(LibraryEnvironments)"
+      Outputs="@(_PrivateJniInitFuncsAssemblySource);@(_PrivateJniInitFuncsNativeObjectFile);@(_PrivateEnvironmentAssemblySource);@(_PrivateEnvironmentNativeObjectFile)">
     <GenerateNativeAotLibraryLoadAssemblerSources
         ResolvedAssemblies="@(_PrivateAndroidNaotResolvedAssemblyFiles)"
         CustomJniInitFunctions="@(AndroidStaticJniInitFunction)"
-        OutputSources="@(_JniInitFuncsAssemblySource)" />
+        OutputSources="@(_PrivateJniInitFuncsAssemblySource)" />
+
+    <GenerateNativeAotEnvironmentAssemblerSources
+        Debug="$(AndroidIncludeDebugSymbols)"
+        Environments="@(AndroidEnvironment);@(LibraryEnvironments)"
+        HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
+        OutputSources="@(_PrivateEnvironmentAssemblySource)"
+        RID="$(RuntimeIdentifier)" />
 
     <CompileNativeAssembly
-        Sources="@(_JniInitFuncsAssemblySource)"
+        Sources="@(_PrivateJniInitFuncsAssemblySource);@(_PrivateEnvironmentAssemblySource)"
         DebugBuild="$(AndroidIncludeDebugSymbols)"
         WorkingDirectory="$(_NativeAssemblySourceDir)"
         AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)" />
 
     <ItemGroup>
       <LinkerArg Include="@(_PrivateJniInitFuncsNativeObjectFile)" />
+      <LinkerArg Include="@(_PrivateEnvironmentNativeObjectFile)" />
     </ItemGroup>
-
-    <GenerateNativeAotEnvironmentAssemblerSources
-        EnvironmentOutputDirectory="$(IntermediateOutputPath)"
-        Environments="@(AndroidEnvironment);@(LibraryEnvironments)" />
-
-    <!-- TODO: we need environment files here too -->
   </Target>
 
   <Target
