@@ -12,10 +12,10 @@ namespace Xamarin.Android.Tools
 		public const string XamarinAndroidCommitHash = "@XAMARIN_ANDROID_COMMIT_HASH@";
 		public const string XamarinAndroidBranch = "@XAMARIN_ANDROID_BRANCH@";
 		public const string AndroidSdkBuildToolsVersion = "@SDK_BUILD_TOOLS_VERSION@";
-		public const int AndroidMinimumDotNetApiLevel = @ANDROID_DEFAULT_MINIMUM_DOTNET_API_LEVEL@;
-		public const int AndroidLatestStableApiLevel = @ANDROID_LATEST_STABLE_API_LEVEL@;
-		public const double AndroidLatestUnstableApiLevel = @ANDROID_LATEST_UNSTABLE_API_LEVEL@;
-		public const int AndroidDefaultTargetDotnetApiLevel = @ANDROID_DEFAULT_TARGET_DOTNET_API_LEVEL@;
+		public static readonly Version AndroidMinimumDotNetApiLevel = new Version (@ANDROID_DEFAULT_MINIMUM_DOTNET_API_LEVEL@, @ANDROID_DEFAULT_MINIMUM_DOTNET_API_LEVEL_MINOR@);
+		public static readonly Version AndroidLatestStableApiLevel = new Version (@ANDROID_LATEST_STABLE_API_LEVEL@, @ANDROID_LATEST_STABLE_API_LEVEL_MINOR@);
+		public static readonly Version AndroidLatestUnstableApiLevel = new Version (@ANDROID_LATEST_UNSTABLE_API_LEVEL@, @ANDROID_LATEST_UNSTABLE_API_LEVEL_MINOR@);
+		public static readonly Version AndroidDefaultTargetDotnetApiLevel = new Version (@ANDROID_DEFAULT_TARGET_DOTNET_API_LEVEL@, @ANDROID_DEFAULT_TARGET_DOTNET_API_LEVEL_MINOR@);
 		public static readonly Version NDKVersion = new Version (@NDK_VERSION_MAJOR@, @NDK_VERSION_MINOR@, @NDK_VERSION_MICRO@);
 
 		public static readonly Dictionary <string, int> ArchAPILevels = new Dictionary <string, int> (StringComparer.Ordinal) {

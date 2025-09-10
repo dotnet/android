@@ -161,7 +161,7 @@ namespace Xamarin.Android.Build.Tests
 					items.Add (new TaskItem (file));
 				}
 			}
-			int platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
+			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
 			var outputFile = Path.Combine (path, "resources.apk");
 			var task = new Aapt2Link {
 				BuildEngine = engine,
@@ -457,7 +457,7 @@ namespace Xamarin.Android.Build.Tests
 			var archives = new List<ITaskItem>();
 			CallAapt2Compile (engine, resPath, archivePath, flatFilePath);
 			var outputFile = Path.Combine (path, "resources.apk");
-			int platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
+			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
 			var task = new Aapt2Link {
 				BuildEngine = engine,
 				ToolPath = GetPathToAapt2 (),
@@ -497,7 +497,7 @@ namespace Xamarin.Android.Build.Tests
 			var archives = new List<ITaskItem>();
 			CallAapt2Compile (engine, resPath, archivePath, flatFilePath);
 			var outputFile = Path.Combine (path, "resources.apk");
-			int platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
+			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
 			string emitids = Path.Combine (path, "emitids.txt");
 			string Rtxt = Path.Combine (path, "R.txt");
 			var task = new Aapt2Link {

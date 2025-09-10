@@ -1522,10 +1522,11 @@ namespace UnnamedProject
 				}
 			});
 			using (var b = CreateApkBuilder ("temp/CheckLintErrorsAndWarnings", cleanupOnDispose: false)) {
-				int maxApiLevel = AndroidSdkResolver.GetMaxInstalledPlatform ();
+				var maxApiLevel = AndroidSdkResolver.GetMaxInstalledPlatform ();
 				b.LatestTargetFrameworkVersion (out string apiLevel);
-				if (int.TryParse (apiLevel, out int a) && a < maxApiLevel)
+				if (AndroidSdkResolver.TryParseAndroidSdkVersion (apiLevel, out var v) && v < maxApiLevel) {
 					disabledIssues += ",OldTargetApi";
+				}
 				proj.SetProperty ("AndroidLintDisabledIssues", disabledIssues);
 				proj.SupportedOSPlatformVersion = "24";
 				proj.TargetSdkVersion = apiLevel;

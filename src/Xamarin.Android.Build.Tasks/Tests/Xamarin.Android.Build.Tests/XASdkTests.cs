@@ -174,11 +174,17 @@ public class JavaSourceTest {
 			new object[] {
 				"net9.0",
 				"android",
-				35,
+				new Version (35, 0),
 			},
 			new object[] {
 				"net10.0",
 				"android",
+				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+			},
+
+			new object[] {
+				"net10.0",
+				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major}",
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 			},
 
@@ -190,12 +196,12 @@ public class JavaSourceTest {
 
 			new object[] {
 				"net10.0",
-				XABuildConfig.AndroidLatestStableApiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel ? null : $"android{XABuildConfig.AndroidLatestStableApiLevel}.0",
+				XABuildConfig.AndroidLatestStableApiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel ? null : $"android{XABuildConfig.AndroidLatestStableApiLevel}",
 				XABuildConfig.AndroidLatestStableApiLevel,
 			},
 			new object[] {
 				"net10.0",
-				XABuildConfig.AndroidLatestUnstableApiLevel == XABuildConfig.AndroidLatestStableApiLevel ? null : $"android{XABuildConfig.AndroidLatestUnstableApiLevel}.0",
+				XABuildConfig.AndroidLatestUnstableApiLevel == XABuildConfig.AndroidLatestStableApiLevel ? null : $"android{XABuildConfig.AndroidLatestUnstableApiLevel}",
 				XABuildConfig.AndroidLatestUnstableApiLevel,
 			},
 		};
@@ -223,7 +229,7 @@ public class JavaSourceTest {
 		{
 			var dotnetVersion = (string)data[0];
 			var platform = (string)data[1];
-			var apiLevel = (int)data[2];
+			var apiLevel = (Version)data[2];
 
 			//FIXME: will revisit this in a future PR
 			if (dotnetVersion != "net10.0") {
@@ -293,7 +299,7 @@ public class JavaSourceTest {
 
 		[Test]
 		[TestCaseSource (nameof (DotNetTargetFrameworks))]
-		public void MauiTargetFramework (string dotnetVersion, string platform, int apiLevel)
+		public void MauiTargetFramework (string dotnetVersion, string platform, Version apiLevel)
 		{
 			if (string.IsNullOrEmpty (platform))
 				Assert.Ignore ($"Test for API level {apiLevel} was skipped as it matched the default or latest stable API level.");

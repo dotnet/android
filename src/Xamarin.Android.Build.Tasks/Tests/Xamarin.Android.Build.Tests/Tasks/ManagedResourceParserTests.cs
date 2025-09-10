@@ -391,7 +391,7 @@ int xml myxml 0x7f140000
 			};
 			task.CaseMapFile = Path.Combine (Root, path, "case_map.txt");
 			task.IsApplication = true;
-			int platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
+			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
 			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform}", "android.jar");
 			return task;
 		}
@@ -490,7 +490,7 @@ int xml myxml 0x7f140000
 			task.CaseMapFile = Path.Combine (Root, path, "case_map.txt");
 			File.WriteAllText (task.ResourceFlagFile, string.Empty);
 			task.IsApplication = true;
-			int platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
+			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
 			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform}", "android.jar");
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
@@ -512,7 +512,7 @@ int xml myxml 0x7f140000
 		public void RtxtGeneratorOutput ()
 		{
 			var path = Path.Combine ("temp", TestName);
-			int platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
+			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
 			string resPath = Path.Combine (Root, path, "res");
 			string rTxt = Path.Combine (Root, path, "R.txt");
 			string expectedrTxt = Path.Combine (Root, path, "expectedR.txt");
@@ -566,7 +566,7 @@ int xml myxml 0x7f140000
 			};
 
 			Assert.IsTrue (aapt2Compile.Execute (), $"Aapt2 Compile should have succeeded. {string.Join (" ", errors.Select (x => x.Message))}");
-			int platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
+			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
 			string resPath = Path.Combine (Root, path, "res");
 			string rTxt = Path.Combine (Root, path, "R.txt");
 			var aapt2Link = new Aapt2Link {
@@ -633,7 +633,7 @@ int xml myxml 0x7f140000
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
 			TaskLoggingHelper loggingHelper = new TaskLoggingHelper (engine, nameof (ManagedResourceParser));
 			string resPath = Path.Combine (Root, path, "res");
-			int platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
+			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
 			var flagFile = Path.Combine (Root, path, "AndroidResgen.flag");
 			var lp = new string [] { Path.Combine (Root, path, "lp", "res") };
 			Stopwatch sw = new Stopwatch ();
@@ -719,7 +719,7 @@ int styleable ElevenAttributes_attr10 10";
 			task.ResourceDirectory = Path.Combine (Root, path, "res");
 			task.Resources = new TaskItem [] {};
 			task.IsApplication = true;
-			int platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
+			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
 			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform}", "android.jar");
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
