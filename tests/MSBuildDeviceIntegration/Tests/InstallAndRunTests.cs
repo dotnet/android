@@ -964,7 +964,7 @@ namespace UnnamedProject
 
 			// TODO: update on new minor API levels to use an introduced minor API
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
-		Console.WriteLine ($""TelecomManager.ActionCallBack={global:::Android.Telecom.TelecomManager.ActionCallBack}"");
+		Console.WriteLine ($""TelecomManager.ActionCallBack={global::Android.Telecom.TelecomManager.ActionCallBack}"");
 ");
 
 			var builder = CreateApkBuilder ();
