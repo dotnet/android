@@ -50,12 +50,12 @@ namespace Xamarin.Android.Build.Tests
 			new object[] {
 				"net9.0",
 				"android",
-				35,
+				new Version (35, 0),
 			},
 			new object[] {
 				"net9.0",
 				"android35",
-				35,
+				new Version (35, 0),
 			},
 			new object[] {
 				"net10.0",
@@ -71,7 +71,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (DotNetPackTargetFrameworks))]
-		public void DotNetPack (string dotnetVersion, string platform, int apiLevel)
+		public void DotNetPack (string dotnetVersion, string platform, Version apiLevel)
 		{
 			var targetFramework = $"{dotnetVersion}-{platform}";
 			var proj = new XamarinAndroidLibraryProject {
@@ -141,18 +141,18 @@ public class JavaSourceTest {
 			var nupkgPath = Path.Combine (Root, projBuilder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.1.0.0.nupkg");
 			FileAssert.Exists (nupkgPath);
 			using var nupkg = ZipHelper.OpenZip (nupkgPath);
-			string aarPath = $"lib/{dotnetVersion}-android{apiLevel}.0/{proj.ProjectName}.aar";
+			string aarPath = $"lib/{dotnetVersion}-android{apiLevel}/{proj.ProjectName}.aar";
 			nupkg.AssertContainsEntry (nupkgPath, aarPath);
-			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{proj.ProjectName}.dll");
-			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/bar.aar");
+			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}/{proj.ProjectName}.dll");
+			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}/bar.aar");
 			nupkg.AssertDoesNotContainEntry (nupkgPath, "content/bar.aar");
 			nupkg.AssertDoesNotContainEntry (nupkgPath, "content/sub/directory/bar.aar");
-			nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}.0/sub/directory/bar.aar");
-			nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/nopack.aar");
+			nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}/sub/directory/bar.aar");
+			nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}/nopack.aar");
 			nupkg.AssertDoesNotContainEntry (nupkgPath, "content/nopack.aar");
-			nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}.0/nopack.aar");
-			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/baz.aar");
-			nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/_Microsoft.Android.Resource.Designer.dll");
+			nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}/nopack.aar");
+			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}/baz.aar");
+			nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}/_Microsoft.Android.Resource.Designer.dll");
 
 			// NOTE: this is not fixed yet in .NET 9
 			if (dotnetVersion == "net10.0") {
