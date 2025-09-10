@@ -7,12 +7,12 @@ using Xamarin.Android.Tasks.LLVMIR;
 
 namespace Xamarin.Android.Build.Tasks;
 
-class NativeAotDsoLoadNativeAssemblyGenerator : LlvmIrComposer
+class NativeAotJniInitNativeAssemblyGenerator : LlvmIrComposer
 {
 	readonly List<string>? runtimeComponentsJniOnLoadHandlers;
 	readonly List<string>? customJniOnLoadHandlers;
 
-	public NativeAotDsoLoadNativeAssemblyGenerator (TaskLoggingHelper log, List<string>? runtimeComponentsJniOnLoadHandlers, List<string>? customJniOnLoadHandlers)
+	public NativeAotJniInitNativeAssemblyGenerator (TaskLoggingHelper log, List<string>? runtimeComponentsJniOnLoadHandlers, List<string>? customJniOnLoadHandlers)
 		: base (log)
 	{
 		this.runtimeComponentsJniOnLoadHandlers = runtimeComponentsJniOnLoadHandlers;

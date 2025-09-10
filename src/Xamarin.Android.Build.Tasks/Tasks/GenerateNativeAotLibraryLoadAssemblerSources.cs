@@ -57,18 +57,7 @@ public class GenerateNativeAotLibraryLoadAssemblerSources : AndroidTask
 		AndroidTargetArch targetArch = MonoAndroidHelper.RidToArch (rid);
 
 		// There can be only one, since we run in the inner build
-		ITaskItem? outputFile = null;
-		foreach (ITaskItem item in OutputSources) {
-			string itemAbi = MonoAndroidHelper.GetAssemblyAbi (item);
-			if (MonoAndroidHelper.StringEquals (abi, itemAbi, StringComparison.OrdinalIgnoreCase)) {
-				outputFile = item;
-				break;
-			}
-		}
-
-		if (outputFile == null) {
-			throw new InvalidOperationException ($"Internal error: no output file found for ABI '{abi}' (RID '{rid}')");
-		}
+		ITaskItem outputFile = FindOutputFile (OutputSources, abi: abi, rid: rid);
 		Log.LogDebugMessage ($"JNI init funcs file to generate: {outputFile.ItemSpec}");
 
 		var assemblies = new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
@@ -147,7 +136,7 @@ public class GenerateNativeAotLibraryLoadAssemblerSources : AndroidTask
 		}
 
 		string jniInitFuncsLlFilePath = outputFile.ItemSpec;
-		var generator = new NativeAotDsoLoadNativeAssemblyGenerator (Log, bclInitFunctions, customInitFunctions);
+		var generator = new NativeAotJniInitNativeAssemblyGenerator (Log, bclInitFunctions, customInitFunctions);
 		LLVMIR.LlvmIrModule jniInitFuncsModule = generator.Construct ();
 		using var jniInitFuncsWriter = MemoryStreamPool.Shared.CreateStreamWriter ();
 		bool fileFullyWritten = false;
@@ -163,6 +152,18 @@ public class GenerateNativeAotLibraryLoadAssemblerSources : AndroidTask
 			}
 		}
 		return !Log.HasLoggedErrors;
+	}
+
+	internal static ITaskItem FindOutputFile (ITaskItem[] items, string abi, string rid)
+	{
+		foreach (ITaskItem item in items) {
+			string itemAbi = MonoAndroidHelper.GetAssemblyAbi (item);
+			if (MonoAndroidHelper.StringEquals (abi, itemAbi, StringComparison.OrdinalIgnoreCase)) {
+				return item;
+			}
+		}
+
+		throw new InvalidOperationException ($"Internal error: no output file found for ABI '{abi}' (RID '{rid}')");
 	}
 
 	static string MakeCanonicalLibraryName (string libName)
