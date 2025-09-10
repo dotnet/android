@@ -29,6 +29,7 @@ set(CLR_SOURCES_PATH "../../clr")
 set(XAMARIN_MONODROID_SOURCES
   bridge-processing.cc
   host.cc
+  host-environment.cc
   host-jni.cc
   internal-pinvoke-stubs.cc
 

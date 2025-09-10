@@ -1,5 +1,6 @@
 #include <host/bridge-processing.hh>
 #include <host/gc-bridge.hh>
+#include <host/host-environment.hh>
 #include <host/host-nativeaot.hh>
 #include <host/os-bridge.hh>
 #include <runtime-base/logger.hh>
@@ -20,6 +21,7 @@ extern "C" {
 auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, void *reserved) noexcept -> jint
 {
 	Logger::init_logging_categories ();
+	HostEnvironment::init ();
 
 	log_warn (LOG_ASSEMBLY, "{}", __PRETTY_FUNCTION__);
 
