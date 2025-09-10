@@ -45,6 +45,7 @@
   <ItemGroup>
     <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" />
     <_AndroidRemapMembers Include="Remaps.xml" />
+    <_AndroidRemapMembers Include="IsAssignableFromRemaps.xml" Condition=" '$(_AndroidIsAssignableFromCheck)' == 'false' " />
   </ItemGroup>
 
   <ItemGroup>

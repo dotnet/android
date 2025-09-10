@@ -16,7 +16,7 @@ public class LayoutInflaterTest
 	{
 		Console.WriteLine ($"{nameof (LayoutInflaterTest)}: TypeManager.IsAssignableFromCheck={TypeManager.IsAssignableFromCheck}");
 
-		// See: tests\Mono.Android-Tests\Runtime-Microsoft.Android.Sdk\Remaps.xml
+		// See: tests\Mono.Android-Tests\Runtime-Microsoft.Android.Sdk\IsAssignableFromRemaps.xml
 		// Remapped to "net/dot/android/test/MyLayoutInflater"
 		var from = LayoutInflater.From (Application.Context);
 		if (!TypeManager.IsAssignableFromCheck)
