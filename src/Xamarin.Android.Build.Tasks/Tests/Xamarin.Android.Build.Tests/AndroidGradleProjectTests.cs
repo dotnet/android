@@ -397,7 +397,7 @@ plugins {{
 }}
 android {{
     namespace = ""{gradleModule.PackageName}""
-    compileSdk = {XABuildConfig.AndroidDefaultTargetDotnetApiLevel}
+    compileSdk = {XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major}
     defaultConfig {{
         minSdk = 21
     }}
