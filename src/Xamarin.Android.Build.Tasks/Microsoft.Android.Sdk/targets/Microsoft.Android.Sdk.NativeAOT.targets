@@ -124,17 +124,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     </ItemGroup>
   </Target>
 
-  <!-- Make sure we have a chance to generate our application-specific static library before linking
-       takes place -->
-  <PropertyGroup>
-    <!-- This should work, but unfortunately there's a bug in the current NAOT targets which
-         overwrites `LinkNativeDependsOn` property value -->
-    <LinkNativeDependsOn>
-      _GenerateNativeAotAndroidAppLibrary;
-      $(LinkNativeDependsOn)
-    </LinkNativeDependsOn>
-  </PropertyGroup>
-
   <Target Name="_PrepareNativeAotAndroidAppInputs">
     <ItemGroup>
       <_PrivateBuildTargetAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm64' " Include="arm64-v8a" />
@@ -199,6 +188,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     </ItemGroup>
   </Target>
 
+  <!-- Make sure we have a chance to generate our application-specific static library before linking
+       takes place. We must run after `IlcCompile`, which is a dependency of `LinkNative`  -->
   <Target
       Name="_GenerateNativeAotAndroidAppLibrary"
       AfterTargets="IlcCompile"
