@@ -75,7 +75,7 @@ specific build of .NET to `bin\$(Configuration)\dotnet`.
 Once the prepare target is complete, you can set up a local
 .NET for Android workload install with:
 
-    dotnet-local.cmd build Xamarin.Android.sln -t:PackDotNet
+    dotnet-local.cmd build Xamarin.Android.sln -t:BuildDotNet
 
 Your local `bin\$(Configuration)\lib\packs` directory will be
 populated with a local Android "workload" in
