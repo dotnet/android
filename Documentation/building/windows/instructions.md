@@ -10,7 +10,7 @@ be available within the Command-Line environment.
 
  1. Install the [build dependencies](dependencies.md).
 
- 2. Clone the xamarin-android repo:
+ 2. Clone the dotnet/android repo:
 
         git clone https://github.com/dotnet/android.git
 
@@ -126,7 +126,7 @@ be built with e.g.:
     dotnet-local.cmd build Xamarin.Android-Tests.sln /restore /p:Configuration=Debug /bl:bin\TestDebug\msbuild-build-tests.binlog
 
 Note that the `Debug` in `bin\Debug` must match the Configuration
-which was built.  If xamarin-android was built with `-c Release`, then
+which was built.  If dotnet/android was built with `-c Release`, then
 this should be `bin\Release`, not `bin\Debug`.
 
 *NOTE*: There is currently no equivalent to [`make
