@@ -245,6 +245,9 @@ public class JavaSourceTest {
 				TargetFramework = targetFramework,
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
+				ExtraNuGetConfigSources = {
+					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
+				}
 			};
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
 
