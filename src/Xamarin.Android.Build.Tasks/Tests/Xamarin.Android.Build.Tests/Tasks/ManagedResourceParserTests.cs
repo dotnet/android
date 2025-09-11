@@ -392,7 +392,7 @@ int xml myxml 0x7f140000
 			task.CaseMapFile = Path.Combine (Root, path, "case_map.txt");
 			task.IsApplication = true;
 			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
-			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform}", "android.jar");
+			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform.Major}", "android.jar");
 			return task;
 		}
 
@@ -526,7 +526,7 @@ int xml myxml 0x7f140000
 				RTxtFile = rTxt,
 				ResourceDirectory = resPath,
 				CaseMapFile = Path.Combine (Root, path, "case_map.txt"),
-				JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform}", "android.jar"),
+				JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform.Major}", "android.jar"),
 				ResourceFlagFile = Path.Combine (Root, path, "res.flag"),
 				AdditionalResourceDirectories = new string[] {
 					Path.Combine (Root, path, "lp", "res"),
@@ -578,7 +578,7 @@ int xml myxml 0x7f140000
 				CompiledResourceFlatArchive = new TaskItem (Path.Combine (Root, path, "compiled.flata")),
 				OutputFile = Path.Combine (Root, path, "foo.apk"),
 				AssemblyIdentityMapFile = Path.Combine (Root, path, "foo.map"),
-				JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform}", "android.jar"),
+				JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform.Major}", "android.jar"),
 				JavaDesignerOutputDirectory = Path.Combine (Root, path, "java"),
 				ResourceSymbolsTextFile = rTxt,
 
@@ -642,7 +642,7 @@ int xml myxml 0x7f140000
 			for (i = 0; i < 100; i++) {
 				var parser = new ManagedResourceParser () {
 					Log = loggingHelper,
-					JavaPlatformDirectory = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform}"),
+					JavaPlatformDirectory = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform.Major}"),
 					ResourceFlagFile =  flagFile,
 				};
 				sw.Start ();
