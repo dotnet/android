@@ -9,6 +9,14 @@ This file contains the .NET 5-specific targets to customize ILLink
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsAssignableFromCheck"
+        Condition="'$(_AndroidIsAssignableFromCheck)' != ''"
+        Value="$(_AndroidIsAssignableFromCheck)"
+        Trim="true"
+    />
+  </ItemGroup>
+
   <Target Name="_PrepareLinking"
       Condition=" '$(PublishTrimmed)' == 'true' "
       AfterTargets="ComputeResolvedFilesToPublishList"

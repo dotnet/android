@@ -27,6 +27,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Android.Runtime\JnienvArrayMarshaling.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.Runtime\XmlReaderPullParserTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.Runtime\XmlReaderResourceParserTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.Views\LayoutInflaterTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.Widget\AdapterTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaConvertTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaListTest.cs" />
@@ -122,8 +123,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AndroidJavaSource Include="$(MSBuildThisFileDirectory)java/net/dot/android/test/ValueProvider.java" />
-    <AndroidJavaSource Include="$(MSBuildThisFileDirectory)java/net/dot/android/test/Example.java" />
+    <AndroidJavaSource Include="$(MSBuildThisFileDirectory)java/net/dot/android/test/*.java" />
   </ItemGroup>
 
   <ItemGroup>
