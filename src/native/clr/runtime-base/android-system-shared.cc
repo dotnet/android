@@ -49,3 +49,43 @@ AndroidSystem::monodroid__system_property_get (std::string_view const& name, cha
 
 	return len;
 }
+
+auto
+AndroidSystem::get_max_gref_count_from_system () noexcept -> long
+{
+	long max;
+
+	if (running_in_emulator) {
+		max = 2000;
+	} else {
+		max = 51200;
+	}
+
+	dynamic_local_property_string override;
+	if (monodroid_get_system_property (Constants::DEBUG_MONO_MAX_GREFC, override) > 0) {
+		char *e;
+		max = strtol (override.get (), &e, 10);
+		switch (*e) {
+			case 'k':
+				e++;
+				max *= 1000;
+				break;
+			case 'm':
+				e++;
+				max *= 1000000;
+				break;
+		}
+
+		if (max < 0) {
+			max = std::numeric_limits<int>::max ();
+		}
+
+		if (*e) {
+			log_warn (LOG_GC, "Unsupported '{}' value '{}'.", Constants::DEBUG_MONO_MAX_GREFC.data (), override.get ());
+		}
+
+		log_warn (LOG_GC, "Overriding max JNI Global Reference count to {}", max);
+	}
+
+	return max;
+}

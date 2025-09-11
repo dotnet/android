@@ -3,6 +3,7 @@
 #include <host/host-environment.hh>
 #include <host/host-nativeaot.hh>
 #include <host/os-bridge.hh>
+#include <runtime-base/android-system.hh>
 #include <runtime-base/logger.hh>
 
 using namespace xamarin::android;
@@ -28,6 +29,7 @@ auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, void *reserved) noexcept -> jint
 	vm->GetEnv ((void**)&env, JNI_VERSION_1_6);
 	OSBridge::initialize_on_onload (vm, env);
 	GCBridge::initialize_on_onload (env);
+	AndroidSystem::init_max_gref_count ();
 
 	if (__jni_on_load_handler_count > 0) {
 		for (uint32_t i = 0; i < __jni_on_load_handler_count; i++) {

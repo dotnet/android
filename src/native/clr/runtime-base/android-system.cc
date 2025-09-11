@@ -301,46 +301,6 @@ AndroidSystem::lookup_system_property (std::string_view const& name, size_t &val
 	);
 }
 
-auto
-AndroidSystem::get_max_gref_count_from_system () noexcept -> long
-{
-	long max;
-
-	if (running_in_emulator) {
-		max = 2000;
-	} else {
-		max = 51200;
-	}
-
-	dynamic_local_property_string override;
-	if (monodroid_get_system_property (Constants::DEBUG_MONO_MAX_GREFC, override) > 0) {
-		char *e;
-		max = strtol (override.get (), &e, 10);
-		switch (*e) {
-			case 'k':
-				e++;
-				max *= 1000;
-				break;
-			case 'm':
-				e++;
-				max *= 1000000;
-				break;
-		}
-
-		if (max < 0) {
-			max = std::numeric_limits<int>::max ();
-		}
-
-		if (*e) {
-			log_warn (LOG_GC, "Unsupported '{}' value '{}'.", Constants::DEBUG_MONO_MAX_GREFC.data (), override.get ());
-		}
-
-		log_warn (LOG_GC, "Overriding max JNI Global Reference count to {}", max);
-	}
-
-	return max;
-}
-
 auto AndroidSystem::get_full_dso_path (std::string const& base_dir, std::string_view const& dso_path, dynamic_local_string<SENSIBLE_PATH_MAX>& path) noexcept -> bool
 {
 	if (dso_path.empty ()) {
