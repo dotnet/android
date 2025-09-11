@@ -491,7 +491,7 @@ int xml myxml 0x7f140000
 			File.WriteAllText (task.ResourceFlagFile, string.Empty);
 			task.IsApplication = true;
 			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
-			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform}", "android.jar");
+			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform.Major}", "android.jar");
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
 			var expected = Path.Combine (ExpectedOutputDir, "GenerateDesignerFileExpected.cs");
