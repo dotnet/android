@@ -8,8 +8,6 @@ using namespace xamarin::android;
 
 void BridgeProcessing::naot_initialize_on_runtime_init (JNIEnv *env) noexcept
 {
-	log_warn (LOG_ASSEMBLY, "{}", __PRETTY_FUNCTION__);
-
 	GCUserPeerable_class = env->FindClass ("net/dot/jni/GCUserPeerable");
 	if (GCUserPeerable_class == nullptr) [[unlikely]] {
 		Helpers::abort_application (
@@ -39,7 +37,6 @@ void BridgeProcessing::naot_initialize_on_runtime_init (JNIEnv *env) noexcept
 
 auto BridgeProcessing::maybe_call_gc_user_peerable_add_managed_reference (JNIEnv *env, jobject from, jobject to) noexcept -> bool
 {
-	log_warn (LOG_ASSEMBLY, "{}", __PRETTY_FUNCTION__);
 	if (!env->IsInstanceOf (from, GCUserPeerable_class)) {
 		return false;
 	}
@@ -50,7 +47,6 @@ auto BridgeProcessing::maybe_call_gc_user_peerable_add_managed_reference (JNIEnv
 
 auto BridgeProcessing::maybe_call_gc_user_peerable_clear_managed_references (JNIEnv *env, jobject handle) noexcept -> bool
 {
-	log_warn (LOG_ASSEMBLY, "{}", __PRETTY_FUNCTION__);
 	if (!env->IsInstanceOf (handle, GCUserPeerable_class)) {
 		return false;
 	}
