@@ -22,9 +22,6 @@ auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, void *reserved) noexcept -> jint
 {
 	Logger::init_logging_categories ();
 	HostEnvironment::init ();
-
-	log_warn (LOG_ASSEMBLY, "{}", __PRETTY_FUNCTION__);
-
 	jvm = vm;
 
 	JNIEnv *env = nullptr;
@@ -49,8 +46,6 @@ auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, void *reserved) noexcept -> jint
 
 void Host::OnInit () noexcept
 {
-	log_warn (LOG_ASSEMBLY, "{}", __PRETTY_FUNCTION__);
-
 	JNIEnv *env = OSBridge::ensure_jnienv ();
 	jclass runtimeClass = env->FindClass ("mono/android/Runtime");
 	OSBridge::initialize_on_runtime_init (env, runtimeClass);
