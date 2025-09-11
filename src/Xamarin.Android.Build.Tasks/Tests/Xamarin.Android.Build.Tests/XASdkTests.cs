@@ -268,8 +268,8 @@ public class JavaSourceTest {
 				dotnet.AssertHasNoWarnings ();
 			}
 
-			// Only check latest TFM, as previous will come from NuGet
-			if (dotnetVersion == "net10.0") {
+			// Only check latest TFM, as previous or preview TFMs will come from NuGet
+			if (dotnetVersion == "net10.0" && !preview) {
 				var versionString = apiLevel.Minor == 0 ? $"{apiLevel.Major}" : $"{apiLevel.Major}.{apiLevel.Minor}";
 				var refDirectory = Directory.GetDirectories (Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Ref.{versionString}")).LastOrDefault ();
 				var expectedMonoAndroidRefPath = Path.Combine (refDirectory, "ref", dotnetVersion, "Mono.Android.dll");
