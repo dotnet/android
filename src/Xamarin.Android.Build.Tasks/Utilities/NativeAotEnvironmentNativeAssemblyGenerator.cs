@@ -28,6 +28,8 @@ class NativeAotEnvironmentNativeAssemblyGenerator : LlvmIrComposer
 		SortedDictionary<string, string>? systemProperties = null;
 		if (envBuilder.SystemProperties.Count > 0) {
 			systemProperties = new (envBuilder.SystemProperties, StringComparer.Ordinal);
+		} else {
+			systemProperties = new (StringComparer.Ordinal);
 		}
 
 		var envVarsBlob = new LlvmIrStringBlob ();
@@ -47,6 +49,12 @@ class NativeAotEnvironmentNativeAssemblyGenerator : LlvmIrComposer
 		};
 		module.Add (envVars);
 		module.AddGlobalVariable ("__naot_android_app_environment_variable_contents", envVarsBlob, LlvmIrVariableOptions.GlobalConstant);
+
+		// Probably want'em to use blobs...
+		var sysProps = new LlvmIrGlobalVariable (systemProperties, "__naot_android_app_system_properties") {
+			Comment = " System properties defined by the application",
+		};
+		module.Add (sysProps, stringGroupName: "sysprop", stringGroupComment: " System properties name:value pairs");
 	}
 
 	void MapStructures (LlvmIrModule module)
