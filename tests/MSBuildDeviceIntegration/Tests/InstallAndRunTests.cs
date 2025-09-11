@@ -965,8 +965,13 @@ namespace UnnamedProject
 			// TODO: update on new minor API levels to use an introduced minor API
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("//${USINGS}", "using Android.Telecom;")
-				.Replace ("//${AFTER_ONCREATE}",
-					"Console.WriteLine ($\"TelecomManager.ActionCallBack={TelecomManager.ActionCallBack}\");");
+				.Replace ("//${AFTER_ONCREATE}", """
+					if (OperatingSystem.IsAndroidVersionAtLeast (36, 1)) {
+						Console.WriteLine ($"TelecomManager.ActionCallBack={TelecomManager.ActionCallBack}");
+					} else {
+						Console.WriteLine ("TelecomManager.ActionCallBack not available");
+					}
+				""");
 
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
