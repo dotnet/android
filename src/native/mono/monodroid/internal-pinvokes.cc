@@ -128,31 +128,6 @@ _monodroid_gc_wait_for_bridge_processing ()
     mono_gc_wait_for_bridge_processing ();
 }
 
-void*
-_monodroid_timezone_get_default_id ()
-{
-	JNIEnv *env          = osBridge.ensure_jnienv ();
-	jmethodID getDefault = env->GetStaticMethodID (MonodroidRuntime::get_java_class_TimeZone (), "getDefault", "()Ljava/util/TimeZone;");
-	jmethodID getID      = env->GetMethodID (MonodroidRuntime::get_java_class_TimeZone (), "getID",      "()Ljava/lang/String;");
-	jobject d            = env->CallStaticObjectMethod (MonodroidRuntime::get_java_class_TimeZone (), getDefault);
-	jstring id           = reinterpret_cast<jstring> (env->CallObjectMethod (d, getID));
-	const char *mutf8    = env->GetStringUTFChars (id, nullptr);
-
-	if (mutf8 == nullptr) {
-		log_error (LOG_DEFAULT, "Failed to convert Java TimeZone ID to UTF8 (out of memory?)"sv);
-		env->DeleteLocalRef (id);
-		env->DeleteLocalRef (d);
-		return nullptr;
-	}
-
-	char *def_id         = strdup (mutf8);
-
-	env->ReleaseStringUTFChars (id, mutf8);
-	env->DeleteLocalRef (id);
-	env->DeleteLocalRef (d);
-
-	return def_id;
-}
 
 managed_timing_sequence*
 monodroid_timing_start (const char *message)
