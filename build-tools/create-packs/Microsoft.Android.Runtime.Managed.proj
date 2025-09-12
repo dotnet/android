@@ -32,6 +32,14 @@ projects that use the Microsoft.Android framework in .NET 6+.
     </BeforePack>
   </PropertyGroup>
 
+  <!-- Reset the TargetFramework after ProcessFrameworkReferences runs to avoid issues resolving non-existant linux-bionic runtime packs -->
+  <Target Name="_RemoveLinuxFrameworkReferences"
+      AfterTargets="ProcessFrameworkReferences">
+    <PropertyGroup>
+      <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+    </PropertyGroup>
+  </Target>
+
  <Target Name="_GetRuntimePackItems"
       DependsOnTargets="_GetLicense;_GetDefaultPackageVersion"
       BeforeTargets="GetFilesToPackage" >
