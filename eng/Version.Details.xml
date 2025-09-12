@@ -17,9 +17,9 @@
       <Sha>7ac1ca67bb1fb8a381c1c94a9f82a97725f0ccf3</Sha>
     </Dependency>
     <!-- Previous .NET Android version(s) -->
-    <Dependency Name="Microsoft.NET.Sdk.Android.Manifest-9.0.100" Version="35.0.101">
+    <Dependency Name="Microsoft.NET.Sdk.Android.Manifest-9.0.100" Version="35.0.105">
       <Uri>https://github.com/dotnet/android</Uri>
-      <Sha>a618557d1fa38074e0256317fb17c1baee245a79</Sha>
+      <Sha>1dcfb6f8779c33b6f768c996495cb90ecd729329</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.Sdk.Android.Manifest-8.0.100" Version="34.0.154">
       <Uri>https://github.com/dotnet/android</Uri>
