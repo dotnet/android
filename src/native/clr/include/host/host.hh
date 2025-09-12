@@ -6,22 +6,20 @@
 #include <jni.h>
 #include <host_runtime_contract.h>
 
+#include "host-common.hh"
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/timing.hh>
 #include "../shared/log_types.hh"
 #include "managed-interface.hh"
 
 namespace xamarin::android {
-	class Host
+	class Host : public HostCommon
 	{
 	public:
-		static auto Java_JNI_OnLoad (JavaVM *vm, void *reserved) noexcept -> jint;
 		static void Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
 			jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset, jobject loader,
 			jobjectArray assembliesJava, jboolean isEmulator, jboolean haveSplitApks) noexcept;
 		static void Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods) noexcept;
-
-		static auto get_java_class_name_for_TypeManager (jclass klass) noexcept -> char*;
 
 		static auto get_timing () -> std::shared_ptr<Timing>
 		{
@@ -58,8 +56,6 @@ namespace xamarin::android {
 		static inline bool found_assembly_store = false;
 		static inline jnienv_register_jni_natives_fn jnienv_register_jni_natives = nullptr;
 
-		static inline JavaVM *jvm = nullptr;
-		static inline jmethodID Class_getName = nullptr;
 		static inline jclass java_TimeZone = nullptr;
 
 		static inline host_runtime_contract runtime_contract{

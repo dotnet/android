@@ -13,10 +13,13 @@
 
 #include "../constants.hh"
 #include <shared/helpers.hh>
-#include "archive-dso-stub-config.hh"
 #include <runtime-base/jni-wrappers.hh>
 #include "logger.hh"
 #include <runtime-base/strings.hh>
+
+#if !defined(XA_HOST_NATIVEAOT)
+#include "archive-dso-stub-config.hh"
+#endif
 
 namespace xamarin::android {
 	namespace detail {
@@ -218,6 +221,7 @@ namespace xamarin::android {
 			return file_info;
 		}
 
+#if !defined(XA_HOST_NATIVEAOT)
 		[[gnu::always_inline]]
 		static std::tuple<void*, size_t> get_wrapper_dso_payload_pointer_and_size (detail::mmap_info const& map_info, std::string_view const& file_name) noexcept
 		{
@@ -248,6 +252,7 @@ namespace xamarin::android {
 				payload_hdr.sh_size
 			};
 		}
+#endif // ndef XA_HOST_NATIVEAOT
 
 		static auto is_path_rooted (const char *path) noexcept -> bool
 		{
