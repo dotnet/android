@@ -24,6 +24,10 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <_IsPublishing Condition=" '$(_IsPublishing)' == '' ">true</_IsPublishing>
   </PropertyGroup>
 
+  <ItemGroup>
+    <AndroidStaticJniInitFunction Include="AndroidCryptoNative_InitLibraryOnLoad" />
+  </ItemGroup>
+
   <!-- Default property values for NativeAOT Debug configuration -->
   <PropertyGroup Condition="'$(DebugSymbols)' == 'true'">
     <NativeDebugSymbols>true</NativeDebugSymbols>

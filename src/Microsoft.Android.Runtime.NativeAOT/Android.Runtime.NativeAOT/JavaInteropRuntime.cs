@@ -17,7 +17,6 @@ static partial class JavaInteropRuntime
 		try {
 			AndroidLog.Print (AndroidLogLevel.Info, "JavaInteropRuntime", "JNI_OnLoad()");
 			XA_Host_NativeAOT_JNI_OnLoad (vm, reserved);
-			AndroidCryptoNative_InitLibraryOnLoad(vm, reserved);
 			return (int)JniVersion.v1_6;
 		}
 		catch (Exception e) {
@@ -25,9 +24,6 @@ static partial class JavaInteropRuntime
 			return 0;
 		}
 	}
-
-	[DllImport("*")]
-	static extern int AndroidCryptoNative_InitLibraryOnLoad (IntPtr vm, IntPtr reserved);
 
 	[UnmanagedCallersOnly(EntryPoint = "JNI_OnUnload")]
 	static void JNI_OnUnload (IntPtr vm, IntPtr reserved)
