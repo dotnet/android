@@ -22,6 +22,8 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
     <SharedFrameworkName>Microsoft.Android.Runtimes</SharedFrameworkName>
     <SharedFrameworkFriendlyName>.NET $(DotNetTargetFrameworkVersion) - $(SharedFrameworkName)</SharedFrameworkFriendlyName>
     <Description>Microsoft.Android runtime components for API $(AndroidApiLevel). Please do not reference directly.</Description>
+    <!-- Prevents: error NU1101: Unable to find package Microsoft.NETCore.App.Runtime.linux-bionic-arm. -->
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
     <_AndroidRuntimePackAssemblyPath>runtimes/$(AndroidRID)/lib/$(DotNetTargetFramework)</_AndroidRuntimePackAssemblyPath>
     <_AndroidRuntimePackNativePath>runtimes/$(AndroidRID)/native</_AndroidRuntimePackNativePath>
   </PropertyGroup>
