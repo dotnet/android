@@ -74,6 +74,7 @@ namespace Xamarin.Android.Prepare
 				new AndroidPlatformComponent ("platform-34-ext7_r02",   apiLevel: "34", pkgRevision: "2"),
 				new AndroidPlatformComponent ("platform-35_r02",   apiLevel: "35", pkgRevision: "2"),
 				new AndroidPlatformComponent ("platform-36_r02",   apiLevel: "36", pkgRevision: "2", isLatestStable: true),
+				new AndroidPlatformComponent ("platform-36.0-CANARY_r03",   apiLevel: "CANARY", pkgRevision: "3", isLatestStable: false, isPreview: true),
 
 				new AndroidToolchainComponent ("source-36_r01",
 					destDir: Path.Combine ("sources", "android-36"),

@@ -64,6 +64,31 @@ namespace Java.Lang {
 		public Thread (ThreadGroup group, Action runHandler, string threadName) : this (group, new RunnableImplementor (runHandler), threadName) {}
 
 		public Thread (ThreadGroup group, Action runHandler, string threadName, long stackSize) : this (group, new RunnableImplementor (runHandler), threadName, stackSize) {}
+
+#if ANDROID_36_1
+		partial interface IBuilder {
+			partial class IOfPlatformInvoker {
+				IBuilder? IBuilder.InheritInheritableThreadLocals (bool value) =>
+					InheritInheritableThreadLocals (value);
+				IBuilder? IBuilder.Name (string? name) =>
+					Name (name);
+				IBuilder? IBuilder.Name (string? name, long v) =>
+					Name (name, v);
+				IBuilder? IBuilder.UncaughtExceptionHandler (IUncaughtExceptionHandler? u) =>
+					UncaughtExceptionHandler (u);
+			}
+			partial class IOfVirtualInvoker {
+				IBuilder? IBuilder.InheritInheritableThreadLocals (bool value) =>
+					InheritInheritableThreadLocals (value);
+				IBuilder? IBuilder.Name (string? name) =>
+					Name (name);
+				IBuilder? IBuilder.Name (string? name, long v) =>
+					Name (name, v);
+				IBuilder? IBuilder.UncaughtExceptionHandler (IUncaughtExceptionHandler? u) =>
+					UncaughtExceptionHandler (u);
+			}
+		}
+#endif  // ANDROID_36_1
 	}
 }
 

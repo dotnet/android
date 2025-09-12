@@ -1120,7 +1120,7 @@ class TestActivity : Activity { }"
 			bool wasMinSdkVersionEmpty = false;
 
 			// Empty values will default to AndroidMinimumDotNetApiLevel
-			int minDotnetApiLevel = XABuildConfig.AndroidMinimumDotNetApiLevel;
+			var minDotnetApiLevel = XABuildConfig.AndroidMinimumDotNetApiLevel;
 			if (string.IsNullOrEmpty (minSdkVersion)) {
 				wasMinSdkVersionEmpty = true;
 				minSdkVersion = minDotnetApiLevel.ToString ();
@@ -1134,14 +1134,14 @@ class TestActivity : Activity { }"
 			builder.ThrowOnBuildFailure = false;
 			var buildResult = builder.Build (proj);
 
-			if (supportedOSPlatVersInt < minDotnetApiLevel) {
+			if (supportedOSPlatVersInt < minDotnetApiLevel.Major) {
 				Assert.IsFalse (buildResult, "SupportedOSPlatformVersion version too low, build should fail.");
 				StringAssertEx.Contains ("error XA4216", builder.LastBuildOutput, "Should get error XA4216.");
 				StringAssertEx.Contains ("Please increase the $(SupportedOSPlatformVersion) property value in your project file",
 					builder.LastBuildOutput, "Should get error about SupportedOSPlatformVersion being too low.");
 			}
 
-			if (minSdkVersionInt < minDotnetApiLevel ) {
+			if (minSdkVersionInt < minDotnetApiLevel.Major) {
 				Assert.IsFalse (buildResult, "minSdkVersion too low, build should fail.");
 				StringAssertEx.Contains ("error XA4216", builder.LastBuildOutput, "Should get error XA4216.");
 				StringAssertEx.Contains ("Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml",
@@ -1153,7 +1153,9 @@ class TestActivity : Activity { }"
 				StringAssertEx.Contains ("error XA1036", builder.LastBuildOutput, "Should get error about min version mismatch.");
 			}
 
-			if (minSdkVersionInt == supportedOSPlatVersInt && minSdkVersionInt >= minDotnetApiLevel && supportedOSPlatVersInt >= minDotnetApiLevel) {
+			if (minSdkVersionInt == supportedOSPlatVersInt &&
+					minSdkVersionInt >= minDotnetApiLevel.Major &&
+					supportedOSPlatVersInt >= minDotnetApiLevel.Major) {
 				Assert.IsTrue (buildResult, "compatible min versions, build should succeed");
 			}
 		}

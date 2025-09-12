@@ -836,8 +836,15 @@ printf ""%d"" x
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			var androidDefines = new List<string> ();
-			for (int i = 1; i <= XABuildConfig.AndroidDefaultTargetDotnetApiLevel; ++i) {
+			for (int i = 1; i <= XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major; ++i) {
 				androidDefines.Add ($"!__ANDROID_{i}__");
+			}
+			// TODO: We're just going to assume that there is a minor release for every major release from API-36.1 onward…
+			for (int i = 36; i < XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major; ++i) {
+				androidDefines.Add ($"!__ANDROID_{i}_1__");
+			}
+			if (XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Minor != 0) {
+				androidDefines.Add ($"!__ANDROID_{XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major}_1__");
 			}
 			proj.Sources.Add (new BuildItem ("Compile", "IsAndroidDefined.cs") {
 				TextContent = () => $@"
