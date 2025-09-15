@@ -13,6 +13,12 @@ namespace xamarin::android {
 		uint32_t value_index;
 	};
 
+	extern "C" {
+		extern const uint32_t __naot_android_app_system_property_count;
+		extern const AppEnvironmentVariable __naot_android_app_system_properties[];
+		extern const char __naot_android_app_system_property_contents[];
+	}
+
 	class HostEnvironment
 	{
 	public:
@@ -21,7 +27,7 @@ namespace xamarin::android {
 		[[gnu::flatten, gnu::always_inline]]
 		static void set_variable (const char *name, const char *value) noexcept
 		{
-			log_debug (LOG_DEFAULT, " Variable {} = '{}'", name, value);
+			log_debug (LOG_DEFAULT, " Variable {} = '{}'", optional_string (name), optional_string (value));
 			if (::setenv (name, value, 1) < 0) {
 				log_warn (LOG_DEFAULT, "Failed to set environment variable '{}': {}", name, ::strerror (errno));
 			}
@@ -36,6 +42,8 @@ namespace xamarin::android {
 		[[gnu::flatten, gnu::always_inline]]
 		static void set_system_property (const char *name, const char *value) noexcept
 		{
+			// TODO: should we **actually** try to set the system property here? Would that even work? Needs testing
+			log_debug (LOG_DEFAULT, " System property {} = '{}'", optional_string (name), optional_string (value));
 		}
 
 	private:

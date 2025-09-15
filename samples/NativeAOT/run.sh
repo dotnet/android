@@ -19,7 +19,7 @@ fi
 
 adb uninstall "${PACKAGE}" || true
 adb install -r -d --no-streaming --no-fastdeploy "${APK}"
-#adb shell setprop debug.mono.log default,assembly,timing=bare
+adb shell setprop debug.mono.log default,assembly,timing=bare
 adb logcat -G 128M
 adb logcat -c
 adb shell am start -S --user "0" -a "android.intent.action.MAIN" -c "android.intent.category.LAUNCHER" -n "${PACKAGE}/${ACTIVITY}" -W
