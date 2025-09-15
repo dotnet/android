@@ -67,7 +67,7 @@ class NativeAotEnvironmentNativeAssemblyGenerator : LlvmIrComposer
 			Options = LlvmIrVariableOptions.GlobalConstant,
 		};
 		module.Add (sysProps);
-		module.AddGlobalVariable ("__naot_android_system_property_contents", sysPropsBlob, LlvmIrVariableOptions.GlobalConstant);
+		module.AddGlobalVariable ("__naot_android_app_system_property_contents", sysPropsBlob, LlvmIrVariableOptions.GlobalConstant);
 	}
 
 	void MapStructures (LlvmIrModule module)

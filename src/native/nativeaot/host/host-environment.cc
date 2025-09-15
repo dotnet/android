@@ -9,10 +9,6 @@ extern "C" {
 	extern const uint32_t __naot_android_app_environment_variable_count;
 	extern const AppEnvironmentVariable __naot_android_app_environment_variables[];
 	extern const char __naot_android_app_environment_variable_contents[];
-
-	extern const uint32_t __naot_android_app_system_property_count;
-	extern const AppEnvironmentVariable __naot_android_app_system_properties[];
-	extern const char __naot_android_app_system_property_contents[];
 }
 
 void HostEnvironment::init () noexcept
@@ -29,13 +25,6 @@ void HostEnvironment::init () noexcept
 	if (__naot_android_app_system_property_count == 0) {
 		return;
 	}
-
-	log_debug (LOG_DEFAULT, "Setting environment variables ({})", __naot_android_app_environment_variable_count);
-	set_values<set_variable> (
-		__naot_android_app_environment_variable_count,
-		__naot_android_app_environment_variables,
-		__naot_android_app_environment_variable_contents
-	);
 
 	log_debug (LOG_DEFAULT, "Setting system properties ({})", __naot_android_app_system_property_count);
 	set_values<set_system_property> (
