@@ -28,11 +28,8 @@ class NativeAotEnvironmentNativeAssemblyGenerator : LlvmIrComposer
 		SortedDictionary<string, string>? systemProperties = null;
 		if (envBuilder.SystemProperties.Count > 0) {
 			systemProperties = new (envBuilder.SystemProperties, StringComparer.Ordinal);
-<<<<<<< HEAD
 		} else {
 			systemProperties = new (StringComparer.Ordinal);
-=======
->>>>>>> main
 		}
 
 		var envVarsBlob = new LlvmIrStringBlob ();
@@ -52,7 +49,6 @@ class NativeAotEnvironmentNativeAssemblyGenerator : LlvmIrComposer
 		};
 		module.Add (envVars);
 		module.AddGlobalVariable ("__naot_android_app_environment_variable_contents", envVarsBlob, LlvmIrVariableOptions.GlobalConstant);
-<<<<<<< HEAD
 
 		// We reuse the same structure as for environment variables, there's no point in adding a new, identical, one
 		var sysPropsBlob = new LlvmIrStringBlob ();
@@ -72,8 +68,6 @@ class NativeAotEnvironmentNativeAssemblyGenerator : LlvmIrComposer
 		};
 		module.Add (sysProps);
 		module.AddGlobalVariable ("__naot_android_system_property_contents", sysPropsBlob, LlvmIrVariableOptions.GlobalConstant);
-=======
->>>>>>> main
 	}
 
 	void MapStructures (LlvmIrModule module)

@@ -8,23 +8,17 @@
 #include <runtime-base/logger.hh>
 
 namespace xamarin::android {
-<<<<<<< HEAD
 	struct AppEnvironmentVariable {
 		uint32_t name_index;
 		uint32_t value_index;
 	};
 
-=======
->>>>>>> main
 	class HostEnvironment
 	{
 	public:
 		static void init () noexcept;
 
-<<<<<<< HEAD
 		[[gnu::flatten, gnu::always_inline]]
-=======
->>>>>>> main
 		static void set_variable (const char *name, const char *value) noexcept
 		{
 			log_debug (LOG_DEFAULT, " Variable {} = '{}'", name, value);
@@ -33,15 +27,11 @@ namespace xamarin::android {
 			}
 		}
 
-<<<<<<< HEAD
 		[[gnu::flatten, gnu::always_inline]]
-=======
->>>>>>> main
 		static void set_variable (std::string_view const& name, std::string_view const& value) noexcept
 		{
 			set_variable (name.data (), value.data ());
 		}
-<<<<<<< HEAD
 
 		[[gnu::flatten, gnu::always_inline]]
 		static void set_system_property (const char *name, const char *value) noexcept
@@ -60,7 +50,5 @@ namespace xamarin::android {
 				setter (var_name, var_value);
 			}
 		}
-=======
->>>>>>> main
 	};
 }
