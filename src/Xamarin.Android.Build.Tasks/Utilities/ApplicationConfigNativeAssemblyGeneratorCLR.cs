@@ -332,10 +332,21 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		module.Add (envVars);
 		module.AddGlobalVariable ("app_environment_variable_contents", envVarsBlob, LlvmIrVariableOptions.GlobalConstant);
 
-		var sysProps = new LlvmIrGlobalVariable (systemProperties ?? new SortedDictionary<string, string>(), "app_system_properties") {
+		// We reuse the same structure as for environment variables, there's no point in adding a new, identical, one
+		var sysPropsBlob = new LlvmIrStringBlob ();
+		List<StructureInstance<LlvmIrHelpers.AppEnvironmentVariable>> appSysProps = LlvmIrHelpers.MakeEnvironmentVariableList (
+			Log,
+			systemProperties,
+			sysPropsBlob,
+			appEnvironmentVariableStructureInfo
+		);
+
+		var sysProps = new LlvmIrGlobalVariable (appSysProps, "app_system_properties") {
 			Comment = " System properties defined by the application",
+			Options = LlvmIrVariableOptions.GlobalConstant,
 		};
-		module.Add (sysProps, stringGroupName: "sysprop", stringGroupComment: " System properties name:value pairs");
+		module.Add (sysProps);
+		module.AddGlobalVariable ("app_system_property_contents", sysPropsBlob, LlvmIrVariableOptions.GlobalConstant);
 
 		DsoCacheState dsoState = InitDSOCache ();
 		var app_cfg = new ApplicationConfigCLR {
@@ -347,7 +358,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			number_of_runtime_properties = (uint)(runtimeProperties == null ? 0 : runtimeProperties.Count),
 			package_naming_policy = (uint)PackageNamingPolicy,
 			environment_variable_count = (uint)(environmentVariables == null ? 0 : environmentVariables.Count),
-			system_property_count = (uint)(systemProperties == null ? 0 : systemProperties.Count * 2),
+			system_property_count = (uint)(appSysProps.Count),
 			number_of_assemblies_in_apk = (uint)NumberOfAssembliesInApk,
 			number_of_shared_libraries = (uint)NativeLibraries.Count,
 			bundled_assembly_name_width = (uint)BundledAssemblyNameWidth,

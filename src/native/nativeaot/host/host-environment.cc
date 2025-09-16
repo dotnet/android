@@ -1,6 +1,6 @@
 #include <cstdint>
 
-#include <host/host-environment.hh>
+#include <host/host-environment-naot.hh>
 #include <runtime-base/logger.hh>
 
 using namespace xamarin::android;
