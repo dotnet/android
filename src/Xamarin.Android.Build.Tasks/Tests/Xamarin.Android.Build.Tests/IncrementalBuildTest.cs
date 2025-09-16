@@ -251,8 +251,8 @@ namespace Xamarin.Android.Build.Tests
 					PackageName = $"com.companyname.App{i}",
 					AotAssemblies = true,
 					IsRelease = true,
+					EnableMarshalMethods = true,
 				};
-				app1.SetProperty ("AndroidEnableMarshalMethods", "True");
 				sb.Projects.Add (app1);
 			}
 			sb.BuildingInsideVisualStudio = false;
