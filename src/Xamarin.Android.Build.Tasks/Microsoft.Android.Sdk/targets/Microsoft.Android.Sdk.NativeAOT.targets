@@ -24,10 +24,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <_IsPublishing Condition=" '$(_IsPublishing)' == '' ">true</_IsPublishing>
   </PropertyGroup>
 
-  <ItemGroup>
-    <AndroidStaticJniInitFunction Include="AndroidCryptoNative_InitLibraryOnLoad" />
-  </ItemGroup>
-
   <!-- Default property values for NativeAOT Debug configuration -->
   <PropertyGroup Condition="'$(DebugSymbols)' == 'true'">
     <NativeDebugSymbols>true</NativeDebugSymbols>
@@ -74,7 +70,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_NdkSysrootDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/sysroot/usr/lib/$(_NdkSysrootAbi)/</_NdkSysrootDir>
       <_NdkBinDir>$(_AndroidNdkDirectory)toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/bin/</_NdkBinDir>
       <CppCompilerAndLinker>clang++</CppCompilerAndLinker>
-      <CppLinker>clang++</CppLinker>
       <ObjCopyName>llvm-objcopy</ObjCopyName>
 
       <!-- Example settings from: https://github.com/xamarin/xamarin-macios/blob/c43d4ea40bc777969e3b158cf46446df292d8449/dotnet/targets/Xamarin.Shared.Sdk.targets#L541-L550 -->
