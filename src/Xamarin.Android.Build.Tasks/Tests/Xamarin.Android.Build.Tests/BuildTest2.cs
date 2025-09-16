@@ -48,9 +48,9 @@ namespace Xamarin.Android.Build.Tests
 				AndroidTargetArch.X86,
 			};
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease
+				IsRelease = isRelease,
+				EnableMarshalMethods = marshalMethodsEnabled,
 			};
-			proj.SetProperty (KnownProperties.AndroidEnableMarshalMethods, marshalMethodsEnabled.ToString ());
 			proj.SetRuntimeIdentifiers (abis);
 			bool shouldMarshalMethodsBeEnabled = isRelease && marshalMethodsEnabled;
 
