@@ -655,7 +655,7 @@ public abstract class MyRunner {
 				"base.OnCreate (bundle);",
 				"base.OnCreate (bundle);\n" +
 				"if (Lib1.Library1.Is64 ()) Console.WriteLine (\"Hello World!\");");
-			proj.SetProperty ("AndroidEnableMarshalMethods", enableMarshalMethods.ToString ());
+			proj.EnableMarshalMethods = enableMarshalMethods;
 
 
 			using var lb = CreateDllBuilder (Path.Combine (path, "Lib1"));

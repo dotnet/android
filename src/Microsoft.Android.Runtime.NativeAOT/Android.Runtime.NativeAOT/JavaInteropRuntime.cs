@@ -17,7 +17,14 @@ static partial class JavaInteropRuntime
 		try {
 			AndroidLog.Print (AndroidLogLevel.Info, "JavaInteropRuntime", "JNI_OnLoad()");
 			XA_Host_NativeAOT_JNI_OnLoad (vm, reserved);
-			return (int)JniVersion.v1_6;
+			// This must be called before anything else, otherwise we'll see several spurious GC invocations and log messages
+			// similar to:
+			//
+			//  09-15 14:51:01.311 11071 11071 D monodroid-gc: 1 outstanding GREFs. Performing a full GC!
+			//
+			JNIEnvInit.NativeAotInitializeMaxGrefGet ();
+
+			return (int) JniVersion.v1_6;
 		}
 		catch (Exception e) {
 			AndroidLog.Print (AndroidLogLevel.Error, "JavaInteropRuntime", $"JNI_OnLoad() failed: {e}");

@@ -102,8 +102,7 @@ namespace Android.Runtime {
 		}
 	}
 
-	// TODO: this shouldn't be public
-	public class AndroidObjectReferenceManager : JniRuntime.JniObjectReferenceManager {
+	internal class AndroidObjectReferenceManager : JniRuntime.JniObjectReferenceManager {
 		public override int GlobalReferenceCount {
 			get {return RuntimeNativeMethods._monodroid_gref_get ();}
 		}
@@ -187,7 +186,7 @@ namespace Android.Runtime {
 			var from  = log ? new StringBuilder (new StackTrace (true).ToString ()) : null;
 			int gc 		= RuntimeNativeMethods._monodroid_gref_log_new (value.Handle, ctype, r.Handle, ntype, tname, tid, from, 1);
 			if (gc >= JNIEnvInit.gref_gc_threshold) {
-				Logger.Log (LogLevel.Debug, "monodroid-gc", gc + " outstanding GREFs. Performing a full GC!");
+				Logger.Log (LogLevel.Warn, "monodroid-gc", gc + " outstanding GREFs. Performing a full GC!");
 				System.GC.Collect ();
 			}
 
