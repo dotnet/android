@@ -72,6 +72,9 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <CppCompilerAndLinker>clang++</CppCompilerAndLinker>
       <ObjCopyName>llvm-objcopy</ObjCopyName>
 
+      <!-- We must ensure this is `false`, as it would interfere with statically linking libc++ -->
+      <LinkStandardCPlusPlusLibrary>false</LinkStandardCPlusPlusLibrary>
+
       <!-- Example settings from: https://github.com/xamarin/xamarin-macios/blob/c43d4ea40bc777969e3b158cf46446df292d8449/dotnet/targets/Xamarin.Shared.Sdk.targets#L541-L550 -->
       <RunILLink>true</RunILLink>
       <!--
@@ -112,12 +115,17 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <!-- Passes linked assemblies to outer MSBuild tasks/targets -->
       <ResolvedFileToPublish Include="@(IlcCompileInput);@(_AndroidILLinkAssemblies)" RuntimeIdentifier="$(RuntimeIdentifier)" />
       <!-- Include libc++ -->
-      <ResolvedFileToPublish Include="$(_NdkSysrootDir)libc++_shared.so" RuntimeIdentifier="$(RuntimeIdentifier)" />
+      <!-- ResolvedFileToPublish Include="$(_NdkSysrootDir)libc++_shared.so" RuntimeIdentifier="$(RuntimeIdentifier)" / -->
       <!-- Satellite assemblies -->
       <IlcSatelliteAssembly Include="$(_OuterIntermediateSatelliteAssembliesWithTargetPath)" />
 
       <LinkerArg Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnaot-android.$(Configuration.ToLower())-static-$(Configuration.ToLower())'))" />
-      <LinkerArg Include="$(_NdkSysrootDir)libc++_shared.so" />
+      <LinkerArg Include="$(_NdkSysrootDir)libc++_static.a" />
+      <LinkerArg Include="$(_NdkSysrootDir)libc++abi.a" />
+
+      <!-- This library conflicts with static libc++ -->
+      <NativeLibrary Remove="$(IlcSdkPath)libstdc++compat.a" />
+      <LinkerArg Remove="$(IlcSdkPath)libstdc++compat.a" />
 
       <!-- Every p/invoke using the `xa-internal-api` "library" will be called directly -->
       <DirectPInvoke Include="xa-internal-api" />
