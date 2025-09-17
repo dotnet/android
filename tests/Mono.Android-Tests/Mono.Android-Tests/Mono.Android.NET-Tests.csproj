@@ -22,8 +22,6 @@
     <WarningsAsErrors>IL2037</WarningsAsErrors>
     <AndroidUseNegotiateAuthentication>true</AndroidUseNegotiateAuthentication>
     <AndroidNdkDirectory></AndroidNdkDirectory>
-    <DefineConstants Condition=" '$(UseMonoRuntime)' == 'false' ">$(DefineConstants);CORECLR</DefineConstants>
-    <DefineConstants Condition=" '$(PublishAot)' == 'true' ">$(DefineConstants);NATIVEAOT</DefineConstants>
     <!--
       TODO: Fix excluded tests
       For $(EnableLLVM)
