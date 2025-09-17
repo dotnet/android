@@ -18,7 +18,6 @@ namespace Java.Interop
 {
 	abstract class CallbackCodeGenerator<TDelegateSpec>
 	{
-		public abstract TDelegateSpec GetDelegateType ();
 		public abstract void GenerateNativeCallbackDelegate ();
 	}
 	
@@ -538,7 +537,7 @@ namespace Java.Interop
 	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	class DynamicCallbackCodeGenerator : CallbackCodeGenerator<Type>
 	{
-		public static Delegate Create (MethodInfo method)
+		public static IntPtr Create (MethodInfo method)
 		{
 			return new DynamicCallbackCodeGenerator (method).GetCallback ();
 		}
@@ -560,73 +559,16 @@ namespace Java.Interop
 				lpgen.Add (DynamicInvokeTypeInfo.Get (p.ParameterType, GetExportKind (p)));
 			parameter_type_infos = lpgen;
 		}
-		
-		static Type GetActionFuncType (int count, bool func)
-		{
-			if (func) {
-				switch (count) {
-				case 1: return typeof (Func<>);
-				case 2: return typeof (Func<,>);
-				case 3: return typeof (Func<,,>);
-				case 4: return typeof (Func<,,,>);
-				case 5: return typeof (Func<,,,,>);
-				case 6: return typeof (Func<,,,,,>);
-				case 7: return typeof (Func<,,,,,,>);
-				case 8: return typeof (Func<,,,,,,,>);
-				case 9: return typeof (Func<,,,,,,,,>);
-				case 10: return typeof (Func<,,,,,,,,,>);
-				case 11: return typeof (Func<,,,,,,,,,,>);
-				case 12: return typeof (Func<,,,,,,,,,,,>);
-				case 13: return typeof (Func<,,,,,,,,,,,,>);
-				default: throw new NotSupportedException ();
-				}
-			} else {
-				switch (count) {
-				case 1: return typeof (Action<>);
-				case 2: return typeof (Action<,>);
-				case 3: return typeof (Action<,,>);
-				case 4: return typeof (Action<,,,>);
-				case 5: return typeof (Action<,,,,>);
-				case 6: return typeof (Action<,,,,,>);
-				case 7: return typeof (Action<,,,,,,>);
-				case 8: return typeof (Action<,,,,,,,>);
-				case 9: return typeof (Action<,,,,,,,,>);
-				case 10: return typeof (Action<,,,,,,,,,>);
-				case 11: return typeof (Action<,,,,,,,,,,>);
-				case 12: return typeof (Action<,,,,,,,,,,,>);
-				case 13: return typeof (Action<,,,,,,,,,,,,>);
-				default: throw new NotSupportedException ();
-				}
-			}
-		}
 
-		Type delegate_type;
-		public override Type GetDelegateType ()
-		{
-			if (delegate_type == null) {
-				var parms = new List<Type> ();
-				parms.Add (typeof (IntPtr));
-				parms.Add (typeof (IntPtr));
-				parms.AddRange (parameter_type_infos.ConvertAll<Type> (p => p.NativeType));
-				if (method.ReturnType == typeof (void))
-					delegate_type = parms.Count == 0 ? typeof (Action) : GetActionFuncType (parms.Count, false).MakeGenericType (parms.ToArray ());
-				else {
-					parms.Add (return_type_info.NativeType);
-					delegate_type = GetActionFuncType (parms.Count, true).MakeGenericType (parms.ToArray ());
-				}
-			}
-			return delegate_type;
-		}
-		
 		static int gen_count;
 		static readonly MethodInfo get_object_method = typeof (Java.Lang.Object).GetMethod ("GetObject", new[]{typeof (IntPtr), typeof (IntPtr), typeof (JniHandleOwnership)});
 		static readonly CodeLiteral do_not_transfer_literal = new CodeLiteral (JniHandleOwnership.DoNotTransfer);
 		
-		Delegate result;
+		IntPtr result;
 		
-		public Delegate GetCallback ()
+		public IntPtr GetCallback ()
 		{
-			if (result == null)
+			if (result == default)
 				GenerateNativeCallbackDelegate ();
 			return result;
 		}
@@ -643,10 +585,11 @@ namespace Java.Interop
 			paramTypes.AddRange (parameter_type_infos.ConvertAll<Type> (p => p.NativeType).ToArray ());
 			var m = GenerateNativeCallbackDelegate (name);
 			//Console.WriteLine (m.PrintCode ());
-			var dm = new DynamicMethod (name, System.Reflection.MethodAttributes.Static | System.Reflection.MethodAttributes.Public, CallingConventions.Standard,
-				return_type_info.NativeType, paramTypes.ToArray (), DynamicCallbackFactory.Module, true);
+			var tb = DynamicCallbackFactory.Module.DefineType ($"DynamicType{num}");
+			var dm = tb.DefineMethod (name, System.Reflection.MethodAttributes.Static | System.Reflection.MethodAttributes.Public, CallingConventions.Standard,
+				return_type_info.NativeType, paramTypes.ToArray ());
 			m.Generate (dm.GetILGenerator ());
-			result = dm.CreateDelegate (GetDelegateType ());
+			result = tb.CreateType ().GetMethod (name).MethodHandle.GetFunctionPointer ();
 		}
 		
 		DynamicInvokeTypeInfo return_type_info;

@@ -395,7 +395,7 @@ namespace Android.Runtime {
 		// See ExportAttribute.cs
 		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
 		[UnconditionalSuppressMessage ("Trimming", "IL2075", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
-		static Delegate CreateDynamicCallback (MethodInfo method)
+		static IntPtr CreateDynamicCallback (MethodInfo method)
 		{
 			if (dynamic_callback_gen == null) {
 				var assembly = Assembly.Load ("Mono.Android.Export");
@@ -408,7 +408,7 @@ namespace Android.Runtime {
 				if (dynamic_callback_gen == null)
 					throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. The required method was not found.");
 			}
-			return (Delegate)dynamic_callback_gen.Invoke (null, new object [] { method })!;
+			return (IntPtr)dynamic_callback_gen.Invoke (null, new object [] { method })!;
 		}
 
 		static List<JniNativeMethodRegistration> sharedRegistrations = new List<JniNativeMethodRegistration> ();
@@ -521,7 +521,6 @@ namespace Android.Runtime {
 				MethodInfo []? typeMethods = null;
 
 				ReadOnlySpan<char> methodsSpan = methods;
-				bool needToRegisterNatives = false;
 
 				while (!methodsSpan.IsEmpty) {
 					int newLineIndex = methodsSpan.IndexOf ('\n');
@@ -534,7 +533,6 @@ namespace Android.Runtime {
 							out ReadOnlySpan<char> callbackString,
 							out ReadOnlySpan<char> callbackDeclaringTypeString);
 
-						Delegate? callback = null;
 						if (callbackString.SequenceEqual ("__export__")) {
 							var mname = name.Slice (2);
 							MethodInfo? minfo = null;
@@ -547,8 +545,8 @@ namespace Android.Runtime {
 
 							if (minfo == null)
 								throw new InvalidOperationException (FormattableString.Invariant ($"Specified managed method '{mname.ToString ()}' was not found. Signature: {signature.ToString ()}"));
-							callback = CreateDynamicCallback (minfo);
-							needToRegisterNatives = true;
+							IntPtr callback = CreateDynamicCallback (minfo);
+							natives [nativesIndex++] = new JniNativeMethodRegistration (name.ToString (), signature.ToString (), callback);
 						} else {
 							Type callbackDeclaringType = type;
 							if (!callbackDeclaringTypeString.IsEmpty) {
@@ -560,11 +558,7 @@ namespace Android.Runtime {
 
 							GetCallbackHandler connector = (GetCallbackHandler) Delegate.CreateDelegate (typeof (GetCallbackHandler),
 							                                                                             callbackDeclaringType, callbackString.ToString ());
-							callback = connector ();
-						}
-
-						if (callback != null) {
-							needToRegisterNatives = true;
+							Delegate callback = connector ();
 							natives [nativesIndex++] = new JniNativeMethodRegistration (name.ToString (), signature.ToString (), callback);
 						}
 					}
@@ -572,7 +566,7 @@ namespace Android.Runtime {
 					methodsSpan = newLineIndex != -1 ? methodsSpan.Slice (newLineIndex + 1) : default;
 				}
 
-				if (needToRegisterNatives) {
+				if (nativesIndex > 0) {
 					JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, natives, nativesIndex);
 				}
 			} catch (Exception e) {
