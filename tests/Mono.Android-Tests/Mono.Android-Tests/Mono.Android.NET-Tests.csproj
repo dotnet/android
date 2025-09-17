@@ -33,7 +33,7 @@
     <!-- TODO: https://github.com/dotnet/android/issues/10069 -->
     <ExcludeCategories Condition=" '$(UseMonoRuntime)' == 'false' ">$(ExcludeCategories):CoreCLRIgnore:SSL:NTLM:RuntimeConfig</ExcludeCategories>
     <!-- TODO: https://github.com/dotnet/android/issues/10079 -->
-    <ExcludeCategories Condition=" '$(PublishAot)' == 'true' ">$(ExcludeCategories):NativeAOTIgnore:SSL:NTLM:GCBridge:AndroidClientHandler:Export:NativeTypeMap</ExcludeCategories>
+    <ExcludeCategories Condition=" '$(PublishAot)' == 'true' ">$(ExcludeCategories):NativeAOTIgnore:SSL:NTLM:AndroidClientHandler:Export:NativeTypeMap</ExcludeCategories>
     <!-- FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190 -->
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):LLVMIgnore</ExcludeCategories>
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):InetAccess:NetworkInterfaces</ExcludeCategories>
