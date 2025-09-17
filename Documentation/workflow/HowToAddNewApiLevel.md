@@ -113,7 +113,7 @@ Then update the following files:
     [`/build-tools/xaprepare/xaprepare/ConfigAndData/BuildAndroidPlatforms.cs`](../../build-tools/xaprepare/xaprepare/ConfigAndData/BuildAndroidPlatforms.cs):
 
     ```csharp
-    new AndroidPlatform (apiName: "CANARY", apiLevel: 36, platformID: "CANARY", include: "v16.0",   framework: "v16.1"),
+    new AndroidPlatform (apiName: "CANARY", apiLevel: new Version (36, 1), platformID: "CANARY", include: "v16.0",   framework: "v16.1", stable: false),
 
     ```
 
@@ -125,7 +125,7 @@ Then update the following files:
     [`/build-tools/xaprepare/xaprepare/ConfigAndData/Dependencies/AndroidToolchain.cs`](../../build-tools/xaprepare/xaprepare/ConfigAndData/Dependencies/AndroidToolchain.cs):
 
     ```csharp
-    new AndroidPlatformComponent ("platform-36.0-CANARY_r03",   apiLevel: "CANARY", pkgRevision: "3", isLatestStable: false),
+    new AndroidPlatformComponent ("platform-36.0-CANARY_r03",   apiLevel: "CANARY", pkgRevision: "3", isLatestStable: false, isPreview: true),
     ```
 
     *Note*: the first argument is *base filename* of the package to download; `xaprepare` will automatically append `.zip`.
