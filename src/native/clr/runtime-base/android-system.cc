@@ -236,7 +236,7 @@ AndroidSystem::setup_environment () noexcept
 
 	if (application_config.system_property_count > 0) {
 		log_debug (LOG_DEFAULT, "Setting system properties ({})", application_config.system_property_count);
-		HostEnvironment::set_values<HostEnvironment::set_variable> (
+		HostEnvironment::set_values<HostEnvironment::set_system_property> (
             application_config.system_property_count,
             app_system_properties,
             app_system_property_contents
