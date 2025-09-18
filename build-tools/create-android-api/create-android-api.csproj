@@ -135,7 +135,9 @@
       <_JavaSourceUtilsJar>$(MicrosoftAndroidSdkOutDir)\java-source-utils.jar</_JavaSourceUtilsJar>
       <_SourceStubZip>$(AndroidSdkDirectory)\platforms\android-$(ParamApiLevel)\android-stubs-src.jar</_SourceStubZip>
       <_ParamOutputTextFile>$(MSBuildThisFileDirectory)..\..\src\Mono.Android\Profiles\api-$(ParamApiLevel).params.txt</_ParamOutputTextFile>
-      <_ParamOutputJavadoc>$(TEMP)\api-$(ParamApiLevel).javadoc.xml</_ParamOutputJavadoc>
+      <_TmpDir Condition=" '$(TMPDIR)' != '' ">$(TMPDIR)</_TmpDir>
+      <_TmpDir Condition=" '$(_TmpDir)' == '' ">$(TEMP)</_TmpDir>
+      <_ParamOutputJavadoc>$(_TmpDir)\api-$(ParamApiLevel).javadoc.xml</_ParamOutputJavadoc>
     </PropertyGroup>
     
     <ItemGroup>
@@ -149,7 +151,8 @@
 
     <Exec
         Command="&quot;$(JavaPath)&quot; -jar &quot;$(_JavaSourceUtilsJar)&quot; @(_JsuArg->'&quot;%(Identity)&quot;', ' ')" />
-        
+
+    <Delete Files="$(_ParamOutputJavadoc)" />
   </Target>
   
   <!-- Generates 'JNIEnv.g.cs' file. We do this here because it should only run once, not per-TF.  -->
