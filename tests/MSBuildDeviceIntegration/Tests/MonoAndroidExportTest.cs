@@ -17,7 +17,6 @@ namespace Xamarin.Android.Build.Tests
 	public class MonoAndroidExportTest : DeviceTest
 	{
 		[Test]
-		[Pairwise]
 		public void MonoAndroidExportReferencedAppStarts (
 			[Values (true, false)] bool embedAssemblies,
 			[Values (false, true)] bool isRelease,
