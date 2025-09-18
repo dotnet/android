@@ -8,6 +8,7 @@ using Mono.Debugging.Client;
 using Mono.Debugging.Soft;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
+using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -15,30 +16,12 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("UsesDevice")]
 	public class MonoAndroidExportTest : DeviceTest
 	{
-#pragma warning disable 414
-		static object [] MonoAndroidExportTestCases = new object [] {
-			new object[] {
-				/* embedAssemblies */    true,
-				/* isRelease */          false,
-			},
-			new object[] {
-				/* embedAssemblies */    false,
-				/* isRelease */          false,
-			},
-			new object[] {
-				/* embedAssemblies */    true,
-				/* isRelease */          false,
-			},
-			new object[] {
-				/* embedAssemblies */    true,
-				/* isRelease */          true,
-			},
-		};
-#pragma warning restore 414
-
 		[Test]
-		[TestCaseSource (nameof (MonoAndroidExportTestCases))]
-		public void MonoAndroidExportReferencedAppStarts (bool embedAssemblies, bool isRelease)
+		[Pairwise]
+		public void MonoAndroidExportReferencedAppStarts (
+			[Values (true, false)] bool embedAssemblies,
+			[Values (false, true)] bool isRelease,
+			[Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			AssertCommercialBuild ();
 			var proj = new XamarinAndroidApplicationProject () {
@@ -47,6 +30,7 @@ namespace Xamarin.Android.Build.Tests
 					new BuildItem.Reference ("Mono.Android.Export"),
 				},
 			};
+			proj.SetRuntime (runtime);
 			proj.Sources.Add (new BuildItem.Source ("ContainsExportedMethods.cs") {
 				TextContent = () => @"using System;
 using Java.Interop;
