@@ -1,16 +1,23 @@
 #pragma once
 
+<<<<<<< HEAD
 #include <jni.h>
 
+=======
+>>>>>>> main
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
 #include <string_view>
 
+<<<<<<< HEAD
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
 #include <runtime-base/strings.hh>
 #include <runtime-base/util.hh>
+=======
+#include <runtime-base/logger.hh>
+>>>>>>> main
 
 struct AppEnvironmentVariable;
 
@@ -23,12 +30,20 @@ namespace xamarin::android {
 		[[gnu::flatten, gnu::always_inline]]
 		static void set_variable (const char *name, const char *value) noexcept
 		{
+<<<<<<< HEAD
 			Util::set_environment_variable (name, value);
+=======
+			log_debug (LOG_DEFAULT, " Variable {} = '{}'", optional_string (name), optional_string (value));
+			if (::setenv (name, value, 1) < 0) {
+				log_warn (LOG_DEFAULT, "Failed to set environment variable '{}': {}", name, ::strerror (errno));
+			}
+>>>>>>> main
 		}
 
 		[[gnu::flatten, gnu::always_inline]]
 		static void set_variable (std::string_view const& name, std::string_view const& value) noexcept
 		{
+<<<<<<< HEAD
 			Util::set_environment_variable (name.data (), value.data ());
 		}
 
@@ -36,6 +51,9 @@ namespace xamarin::android {
 		static void set_variable (std::string_view const& name, jstring_wrapper &value) noexcept
 		{
 			Util::set_environment_variable (name.data (), value);
+=======
+			set_variable (name.data (), value.data ());
+>>>>>>> main
 		}
 
 		[[gnu::flatten, gnu::always_inline]]
@@ -80,6 +98,7 @@ namespace xamarin::android {
 				setter (var_name, var_value);
 			}
 		}
+<<<<<<< HEAD
 
 	private:
 		[[gnu::flatten, gnu::always_inline]]
@@ -122,5 +141,7 @@ namespace xamarin::android {
 			Util::set_environment_variable_for_directory ("HOME"sv, files_dir);
 			create_xdg_directories_and_environment (files_dir);
 		}
+=======
+>>>>>>> main
 	};
 }
