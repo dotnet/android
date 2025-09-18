@@ -1,6 +1,6 @@
 #include <host/bridge-processing.hh>
 #include <host/gc-bridge.hh>
-#include <host/host-environment.hh>
+#include <host/host-environment-naot.hh>
 #include <host/host-nativeaot.hh>
 #include <host/os-bridge.hh>
 #include <runtime-base/android-system.hh>
