@@ -159,11 +159,11 @@ namespace Xamarin.Android.Build.Tests
 			var helper = new ArchiveAssemblyHelper (apk, true);
 			var abi = MonoAndroidHelper.RidToAbi (rid);
 			Assert.IsTrue (helper.Exists ($"assemblies/{abi}/{assemblyName}.dll"), $"{assemblyName}.dll should exist in apk!");
-			
+
 			using var stream = helper.ReadEntry ($"assemblies/{assemblyName}.dll");
 			stream.Position = 0;
 			using var peReader = new System.Reflection.PortableExecutable.PEReader (stream);
-			Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0, 
+			Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
 				$"ReadyToRun image not found in {assemblyName}.dll! ManagedNativeHeaderDirectory should not be empty!");
 		}
 
@@ -193,9 +193,7 @@ namespace Xamarin.Android.Build.Tests
 			];
 			string [] nativeaot_files = [
 				$"lib/arm64-v8a/lib{proj.ProjectName}.so",
-				"lib/arm64-v8a/libc++_shared.so",
 				$"lib/x86_64/lib{proj.ProjectName}.so",
-				"lib/x86_64/libc++_shared.so",
 			];
 
 			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
