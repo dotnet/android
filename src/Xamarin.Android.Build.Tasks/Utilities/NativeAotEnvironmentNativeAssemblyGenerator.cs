@@ -28,6 +28,8 @@ class NativeAotEnvironmentNativeAssemblyGenerator : LlvmIrComposer
 		SortedDictionary<string, string>? systemProperties = null;
 		if (envBuilder.SystemProperties.Count > 0) {
 			systemProperties = new (envBuilder.SystemProperties, StringComparer.Ordinal);
+		} else {
+			systemProperties = new (StringComparer.Ordinal);
 		}
 
 		var envVarsBlob = new LlvmIrStringBlob ();
@@ -47,6 +49,25 @@ class NativeAotEnvironmentNativeAssemblyGenerator : LlvmIrComposer
 		};
 		module.Add (envVars);
 		module.AddGlobalVariable ("__naot_android_app_environment_variable_contents", envVarsBlob, LlvmIrVariableOptions.GlobalConstant);
+
+		// We reuse the same structure as for environment variables, there's no point in adding a new, identical, one
+		var sysPropsBlob = new LlvmIrStringBlob ();
+		List<StructureInstance<LlvmIrHelpers.AppEnvironmentVariable>> appSysProps = LlvmIrHelpers.MakeEnvironmentVariableList (
+			Log,
+			systemProperties,
+			sysPropsBlob,
+			appEnvironmentVariableStructureInfo
+		);
+
+		var sysPropsCount = new LlvmIrGlobalVariable ((uint)appSysProps.Count, "__naot_android_app_system_property_count");
+		module.Add (sysPropsCount);
+
+		var sysProps = new LlvmIrGlobalVariable (appSysProps, "__naot_android_app_system_properties") {
+			Comment = " System properties defined by the application",
+			Options = LlvmIrVariableOptions.GlobalConstant,
+		};
+		module.Add (sysProps);
+		module.AddGlobalVariable ("__naot_android_app_system_property_contents", sysPropsBlob, LlvmIrVariableOptions.GlobalConstant);
 	}
 
 	void MapStructures (LlvmIrModule module)
