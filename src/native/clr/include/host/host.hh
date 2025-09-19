@@ -32,8 +32,6 @@ namespace xamarin::android {
 		}
 
 	private:
-		static void create_xdg_directory (jstring_wrapper& home, size_t home_len, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept;
-		static void create_xdg_directories_and_environment (jstring_wrapper &homeDir) noexcept;
 		static auto zip_scan_callback (std::string_view const& apk_path, int apk_fd, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, uint32_t offset, uint32_t size) -> bool;
 		static void gather_assemblies_and_libraries (jstring_array_wrapper& runtimeApks, bool have_split_apks);
 		static void scan_filesystem_for_assemblies_and_libraries () noexcept;

@@ -46,10 +46,16 @@ auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, void *reserved) noexcept -> jint
 	return JNI_VERSION_1_6;
 }
 
-void Host::OnInit () noexcept
+void Host::OnInit (jstring language, jstring filesDir, jstring cacheDir) noexcept
 {
 	JNIEnv *env = OSBridge::ensure_jnienv ();
 	jclass runtimeClass = env->FindClass ("mono/android/Runtime");
+
+	jstring_wrapper language_js (env, language);
+	jstring_wrapper files_dir (env, filesDir);
+	jstring_wrapper cache_dir (env, cacheDir);
+	HostEnvironment::setup_environment (language_js, files_dir, cache_dir);
+
 	OSBridge::initialize_on_runtime_init (env, runtimeClass);
 	GCBridge::initialize_on_runtime_init (env, runtimeClass);
 	BridgeProcessing::naot_initialize_on_runtime_init (env);
