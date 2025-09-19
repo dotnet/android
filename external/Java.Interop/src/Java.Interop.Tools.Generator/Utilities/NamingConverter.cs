@@ -27,11 +27,14 @@ namespace Java.Interop.Tools.Generator
 			if (!value.HasValue ())
 				return null;
 
-			var hyphen  = value.IndexOf ('-');
-			if (hyphen < 0 || (hyphen+1) >= value.Length)
-				return null;
+			const string ApiFilenamePrefix = "api-";
 
-			int end     = hyphen + 1;
+			var hyphen  = value.LastIndexOf (ApiFilenamePrefix);
+			if (hyphen < 0 || checked (hyphen + 1 + ApiFilenamePrefix.Length) >= value.Length)
+				return null;
+			hyphen      += ApiFilenamePrefix.Length;
+
+			int end     = hyphen;
 			if (char.IsAsciiDigit (value [end++])) {
 				for ( ; end < value.Length; ++end) {
 					var n = value [end + 1];
@@ -46,7 +49,7 @@ namespace Java.Interop.Tools.Generator
 				}
 			}
 
-			return value.Substring (hyphen + 1, end - hyphen - 1);
+			return value.Substring (hyphen, end - hyphen);
 		}
 
 		// The 'merge.SourceFile' attribute may be on the element, or only on its parent. For example,

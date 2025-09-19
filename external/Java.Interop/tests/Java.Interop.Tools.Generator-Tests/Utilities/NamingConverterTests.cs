@@ -22,6 +22,10 @@ public class NamingConverterTests
 		Assert.AreEqual (28,    v.ApiLevel);
 		Assert.AreEqual (0,     v.MinorRelease);
 
+		v = NamingConverter.ParseApiLevel (@"…\Xamarin-Work\…\bin\BuildDebug\api\api-36.1.xml.in");
+		Assert.AreEqual (36,    v.ApiLevel);
+		Assert.AreEqual (1,     v.MinorRelease);
+
 		v = NamingConverter.ParseApiLevel (@"..\..\bin\BuildDebug\api\api-36.1.xml.in");
 		Assert.AreEqual (36,    v.ApiLevel);
 		Assert.AreEqual (1,     v.MinorRelease);
