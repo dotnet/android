@@ -66,11 +66,6 @@ void monodroid_timing_stop (managed_timing_sequence *sequence, const char *messa
 	timing->release_sequence (sequence);
 }
 
-void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
-{
-	OSBridge::_monodroid_weak_gref_delete (handle, type, threadName, threadId, from, from_writable);
-}
-
 void* _monodroid_timezone_get_default_id ()
 {
 	JNIEnv *env			 = OSBridge::ensure_jnienv ();
