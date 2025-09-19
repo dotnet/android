@@ -29,6 +29,11 @@ void _monodroid_gref_log_delete (jobject handle, char type, const char *threadNa
 	OSBridge::_monodroid_gref_log_delete (handle, type, threadName, threadId, from, from_writable);
 }
 
+void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
+{
+	OSBridge::_monodroid_weak_gref_delete (handle, type, threadName, threadId, from, from_writable);
+}
+
 BridgeProcessingFtn clr_initialize_gc_bridge (
 	BridgeProcessingStartedFtn bridge_processing_started_callback,
 	BridgeProcessingFinishedFtn bridge_processing_finished_callback) noexcept

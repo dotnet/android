@@ -56,17 +56,6 @@ void monodroid_timing_stop (
 	pinvoke_unreachable ();
 }
 
-void _monodroid_weak_gref_delete (
-	[[maybe_unused]] jobject handle,
-	[[maybe_unused]] char type,
-	[[maybe_unused]] const char *threadName,
-	[[maybe_unused]] int threadId,
-	[[maybe_unused]] const char *from,
-	[[maybe_unused]] int from_writable)
-{
-	pinvoke_unreachable ();
-}
-
 void* _monodroid_timezone_get_default_id ()
 {
 	pinvoke_unreachable ();
