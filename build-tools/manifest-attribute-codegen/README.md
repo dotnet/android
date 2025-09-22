@@ -28,7 +28,7 @@ Next, from this directory, run:
 dotnet build -t:GenerateManifestAttributes
 
 # alternatively, from toplevel
-(cd build-tools/manifest-attribute-codegen && dotnet build -t:GenerateManifestAttributes)
+./dotnet-local build -t:GenerateManifestAttributes build-tools/manifest-attribute-codegen/manifest-attribute-codegen.csproj
 ```
 
 If (1) and (2) are consistent with each other, new `*Attribute.cs` files will be generated.
