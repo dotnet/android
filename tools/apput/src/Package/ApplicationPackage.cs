@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 
+using ELFSharp.ELF.Sections;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 
@@ -30,6 +31,14 @@ public abstract class ApplicationPackage : IAspect
 	readonly static HashSet<string> KnownSignatureEntries = new (StringComparer.Ordinal) {
 		"META-INF/BNDLTOOL.RSA",
 		"META-INF/ANDROIDD.RSA",
+	};
+
+	readonly static List<(string sectionName, SectionType type)> NativeAotSections = new () {
+		("__managedcode", SectionType.ProgBits),
+		(".dotnet_eh_table", SectionType.ProgBits),
+		("__unbox", SectionType.ProgBits),
+		("__modules", SectionType.ProgBits),
+		(".hydrated", SectionType.NoBits),
 	};
 
 	public static string AspectName { get; } = "Application package";
@@ -112,6 +121,19 @@ public abstract class ApplicationPackage : IAspect
 
 	void TryDetectRuntime ()
 	{
+		try {
+			Runtime = GetRuntimeMaybe ();
+		} catch (Exception ex) {
+			Log.Debug ("Exception caught while detecting runtime.", ex);
+			Runtime = ApplicationRuntime.Unknown;
+		}
+
+		Log.Debug ($"Detected runtime: {Runtime}");
+	}
+
+	ApplicationRuntime GetRuntimeMaybe ()
+	{
+		Log.Debug ("Trying to detect runtime");
 		ApplicationRuntime runtime = ApplicationRuntime.Unknown;
 		string runtimePath;
 		foreach (AndroidTargetArch arch in Architectures) {
@@ -129,17 +151,85 @@ public abstract class ApplicationPackage : IAspect
 		}
 
 		if (runtime != ApplicationRuntime.Unknown || Architectures.Count == 0) {
-			Log.Debug ($"Detected runtime: {runtime}");
-			return;
+			return runtime;
 		}
 
 		runtimePath = GetNativeLibFile (Architectures[0], "libmonodroid.so");
-		if (!HasEntry (Zip, runtimePath)) {
-			return;
+		if (HasEntry (Zip, runtimePath)) {
+			Log.Debug ("Unknown runtime. libmonodroid.so present but no CoreCLR or MonoVM libraries found.");
+			return ApplicationRuntime.Unknown;
 		}
 
-		// TODO: it might be statically linked CoreCLR runtime. Need to check for presence of
-		//       some public symbols to verify that.
+		// TODO: it might be statically linked CoreCLR runtime or a NativeAOT application.
+		// Need to check for presence of some public symbols to verify that.
+		if (TryDetectNativeAotRuntime ()) {
+			return ApplicationRuntime.NativeAOT;
+		}
+
+		return ApplicationRuntime.Unknown;
+	}
+
+	bool TryDetectNativeAotRuntime ()
+	{
+		Log.Debug ("Probing for NativeAOT runtime");
+		foreach (AndroidTargetArch arch in Architectures) {
+			string libDir = GetNativeLibDir (arch);
+
+			foreach (ZipArchiveEntry? entry in Zip.Entries) {
+				if (entry == null) {
+					continue;
+				}
+
+				// See if it's in the right directory...
+				if (!entry.FullName.StartsWith (libDir, StringComparison.Ordinal)) {
+					continue;
+				}
+
+				// ...and that it's a shared library...
+				if (!entry.FullName.EndsWith (".so", StringComparison.Ordinal)) {
+					continue;
+				}
+
+				Log.Debug ($"Considering {entry.FullName}");
+				// ...and that it has NativeAOT markers
+				if (!SharedLibraryIsNativeAOT (entry)) {
+					continue;
+				}
+
+				Log.Debug ("Found NativeAOT shared library");
+				// Yep, got it. Just one hit is enough, no need to check all the architectures
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	bool SharedLibraryIsNativeAOT (ZipArchiveEntry entry)
+	{
+		Stream? stream = TryGetEntryStream (entry.FullName);
+		if (stream == null) {
+			return false;
+		}
+
+		IAspectState aspectState = SharedLibrary.ProbeAspect (stream, entry.FullName);
+		if (!aspectState.Success) {
+			return false;
+		}
+
+		var dso = SharedLibrary.LoadAspect (stream, aspectState, entry.FullName) as SharedLibrary;
+		if (dso == null) {
+			throw new InvalidOperationException ("Internal error: unexpected SharedLibrary load result.");
+		}
+
+		// Just one match should be enough
+		foreach (var naotSection in NativeAotSections) {
+			if (dso.HasSection (naotSection.sectionName, naotSection.type)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	void TryLoadXamarinAppLibraries ()

@@ -185,6 +185,23 @@ class SharedLibrary : IAspect, IDisposable
 		}
 	}
 
+	public bool HasSection (string name, SectionType type = SectionType.Null)
+	{
+		Log.Debug ($"Checking for section '{name}' with type {type} in library '{libraryName}'");
+		if (!elf.TryGetSection (name, out ISection? section)) {
+			Log.Debug ("Section not found");
+			return false;
+		}
+
+		if (type == SectionType.Null) {
+			Log.Debug ("Section present, type check not requested");
+			return true;
+		}
+
+		Log.Debug ($"Section present, type {section.Type}");
+		return section.Type == type;
+	}
+
 	protected virtual void Dispose (bool disposing)
 	{
 		if (disposed) {
