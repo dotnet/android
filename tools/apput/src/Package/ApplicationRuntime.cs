@@ -6,4 +6,5 @@ public enum ApplicationRuntime
 	MonoVM,
 	CoreCLR,
 	StaticCoreCLR,
+	NativeAOT,
 }
