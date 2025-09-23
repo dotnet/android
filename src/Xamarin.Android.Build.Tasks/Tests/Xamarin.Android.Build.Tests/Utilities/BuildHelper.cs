@@ -55,6 +55,19 @@ namespace Xamarin.Android.Build.Tests
 			Assert.Fail (message ?? $"String did not contain '{text}'!");
 		}
 
+		[DebuggerHidden]
+		public static void Contains (string[] anyOf, IEnumerable<string> collection, string message = null)
+		{
+			foreach (var line in collection) {
+				foreach (var text in anyOf) {
+					if (line.Contains (text)) {
+						return;
+					}
+				}
+			}
+			Assert.Fail (message ?? $"String did not contain one of: {{ \"{string.Join ("\", \"", anyOf)} \" }}!");
+		}
+
 		public static bool ContainsRegex (string pattern, IEnumerable<string> collection, RegexOptions additionalOptions = 0)
 		{
 			var regex = new Regex (pattern, RegexOptions.Multiline | additionalOptions);

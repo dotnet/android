@@ -50,7 +50,7 @@ namespace Xamarin.Android.Tasks
 			XAttribute? target_sdk = null;
 
 			int supportedOsPlatformVersionAsInt = MonoAndroidHelper.ConvertSupportedOSPlatformVersionToApiLevel (SupportedOSPlatformVersion);
-			if (supportedOsPlatformVersionAsInt < XABuildConfig.AndroidMinimumDotNetApiLevel) {
+			if (supportedOsPlatformVersionAsInt < XABuildConfig.AndroidMinimumDotNetApiLevel.Major) {
 				Log.LogCodedError ("XA4216", Properties.Resources.XA4216_SupportedOSPlatformVersion, supportedOsPlatformVersionAsInt, XABuildConfig.AndroidMinimumDotNetApiLevel);
 			}
 
@@ -78,7 +78,7 @@ namespace Xamarin.Android.Tasks
 							if (min_sdk != null) {
 								var failedToParseMinSdk = !int.TryParse (min_sdk.Value, out int minSdkVersion);
 
-								if (failedToParseMinSdk || minSdkVersion < XABuildConfig.AndroidMinimumDotNetApiLevel) {
+								if (failedToParseMinSdk || minSdkVersion < XABuildConfig.AndroidMinimumDotNetApiLevel.Major) {
 									Log.LogCodedError ("XA4216", Properties.Resources.XA4216_MinSdkVersion, min_sdk?.Value, XABuildConfig.AndroidMinimumDotNetApiLevel);
 								}
 
@@ -86,7 +86,7 @@ namespace Xamarin.Android.Tasks
 									Log.LogCodedError ("XA1036", Properties.Resources.XA1036, min_sdk?.Value, SupportedOSPlatformVersion);
 								}
 							}
-							if (target_sdk != null && (!int.TryParse (target_sdk.Value, out int targetSdkVersion) || targetSdkVersion < XABuildConfig.AndroidMinimumDotNetApiLevel)) {
+							if (target_sdk != null && (!int.TryParse (target_sdk.Value, out int targetSdkVersion) || targetSdkVersion < XABuildConfig.AndroidMinimumDotNetApiLevel.Major)) {
 								Log.LogWarningForXmlNode (
 										code:             "XA4216",
 										file:             AndroidManifest,

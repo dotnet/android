@@ -2,6 +2,7 @@
   <!-- Import $(LibZipSharpVersion) -->
   <Import Project="..\Directory.Build.props" />
   <Import Project="..\Configuration.props" />
+  <Import Project="..\build-tools\scripts\LongBranchNames.props" />
   <Import Project="..\build-tools\scripts\XAVersionInfo.targets" />
   <PropertyGroup>
     <AndroidToolsDisableMultiTargeting>true</AndroidToolsDisableMultiTargeting>

@@ -1,25 +1,25 @@
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.NET.Sdk" Version="10.0.100-rc.2.25416.105">
+    <Dependency Name="Microsoft.NET.Sdk" Version="10.0.100-rc.2.25468.104">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>a01724db6d16445177cb31c6f300d38b0af06290</Sha>
+      <Sha>2dea164f01d307c409cfe0d0ee5cb8a0691e3c94</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="10.0.0-rc.2.25416.105">
+    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="10.0.0-rc.2.25468.104">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>a01724db6d16445177cb31c6f300d38b0af06290</Sha>
+      <Sha>2dea164f01d307c409cfe0d0ee5cb8a0691e3c94</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NETCore.App.Ref" Version="10.0.0-rc.2.25416.105">
+    <Dependency Name="Microsoft.NETCore.App.Ref" Version="10.0.0-rc.2.25468.104">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>a01724db6d16445177cb31c6f300d38b0af06290</Sha>
+      <Sha>2dea164f01d307c409cfe0d0ee5cb8a0691e3c94</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-alpha.25416.105">
+    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-alpha.25468.104">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>a01724db6d16445177cb31c6f300d38b0af06290</Sha>
+      <Sha>2dea164f01d307c409cfe0d0ee5cb8a0691e3c94</Sha>
     </Dependency>
     <!-- Previous .NET Android version(s) -->
-    <Dependency Name="Microsoft.NET.Sdk.Android.Manifest-9.0.100" Version="35.0.92">
+    <Dependency Name="Microsoft.NET.Sdk.Android.Manifest-9.0.100" Version="35.0.105">
       <Uri>https://github.com/dotnet/android</Uri>
-      <Sha>be1cab92326783479054e72990da08008e5be819</Sha>
+      <Sha>1dcfb6f8779c33b6f768c996495cb90ecd729329</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.Sdk.Android.Manifest-8.0.100" Version="34.0.154">
       <Uri>https://github.com/dotnet/android</Uri>
@@ -27,13 +27,13 @@
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="10.0.0-beta.25416.105">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="10.0.0-beta.25468.104">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>a01724db6d16445177cb31c6f300d38b0af06290</Sha>
+      <Sha>2dea164f01d307c409cfe0d0ee5cb8a0691e3c94</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="10.0.100-rc.2.25416.105">
+    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="10.0.100-rc.2.25468.104">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>a01724db6d16445177cb31c6f300d38b0af06290</Sha>
+      <Sha>2dea164f01d307c409cfe0d0ee5cb8a0691e3c94</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>

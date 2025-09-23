@@ -5,19 +5,19 @@
       "Size": 3036
     },
     "classes.dex": {
-      "Size": 22488
+      "Size": 22428
     },
     "lib/arm64-v8a/lib__Microsoft.Android.Resource.Designer.dll.so": {
       "Size": 18288
     },
     "lib/arm64-v8a/lib_Java.Interop.dll.so": {
-      "Size": 88000
+      "Size": 88048
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
-      "Size": 118240
+      "Size": 118224
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 23480
+      "Size": 23488
     },
     "lib/arm64-v8a/lib_System.Console.dll.so": {
       "Size": 24408
@@ -26,10 +26,10 @@
       "Size": 25488
     },
     "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
-      "Size": 635296
+      "Size": 629896
     },
     "lib/arm64-v8a/lib_System.Runtime.dll.so": {
-      "Size": 20136
+      "Size": 20144
     },
     "lib/arm64-v8a/lib_System.Runtime.InteropServices.dll.so": {
       "Size": 21528
@@ -44,10 +44,10 @@
       "Size": 36616
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 1508296
+      "Size": 1401624
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3119744
+      "Size": 3121008
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 71952
@@ -56,16 +56,16 @@
       "Size": 759304
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 104216
+      "Size": 104080
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
-      "Size": 165240
+      "Size": 165288
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 19808
+      "Size": 19952
     },
     "META-INF/BNDLTOOL.RSA": {
-      "Size": 1221
+      "Size": 1223
     },
     "META-INF/BNDLTOOL.SF": {
       "Size": 3266
@@ -98,5 +98,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 3090965
+  "PackageSize": 3045909
 }

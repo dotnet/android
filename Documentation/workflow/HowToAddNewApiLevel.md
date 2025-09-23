@@ -6,15 +6,132 @@ The first unstable preview generally ships in late February or early March.  At 
 stage for the APIs, we simply add literal bindings for them.  We do not spend resources on
 the more manual parts like enumification that will likely change as the APIs mature.
 
+### Review `repository2-3.xml`
+
+<https://dl.google.com/android/repository/repository2-3.xml> is an XML description of the Android SDK,
+containing API level information, in particular the API level name and URL for the artifact.
+
+`repository2-3.xml` is a "live" document; it changes over time.
+
+Consider this snippet:
+
+```xml
+<sdk:sdk-repository
+    xmlns:sdk="http://schemas.android.com/sdk/android/repo/repository2/03"
+    xmlns:common="http://schemas.android.com/repository/android/common/02"
+    xmlns:sdk-common="http://schemas.android.com/sdk/android/repo/common/03"
+    xmlns:generic="http://schemas.android.com/repository/android/generic/02"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <channel id="channel-0">stable</channel>
+  <channel id="channel-1">beta</channel>
+  <channel id="channel-2">dev</channel>
+  <channel id="channel-3">canary</channel>
+  <remotePackage path="platforms;android-36">
+    <type-details xsi:type="sdk:platformDetailsType">
+      <api-level>36</api-level>
+      <extension-level>17</extension-level>
+      <base-extension>true</base-extension>
+      <layoutlib api="15"/>
+    </type-details>
+    <revision>
+      <major>2</major>
+    </revision>
+    <display-name>Android SDK Platform 36</display-name>
+    <uses-license ref="android-sdk-license"/>
+    <channelRef ref="channel-0"/>
+    <archives>
+      <archive>
+        <complete>
+          <size>65878410</size>
+          <checksum type="sha1">2c1a80dd4d9f7d0e6dd336ec603d9b5c55a6f576</checksum>
+          <url>platform-36_r02.zip</url>
+        </complete>
+      </archive>
+    </archives>
+  </remotePackage>
+</sdk:sdk-repository>
+```
+
+  * **Path**: `//remotePackage/@path` is the "path" of the package, suitable for use with `sdkmanager`. For example:
+
+    ```sh
+    sdkmanager "platforms;android-36"
+    ```
+
+    will install this particular package.  Note that many paths contain `;`, and thus must be quoted when used with `sdkmanager`.
+
+  * **Channel**: `//remotePackage/channelRef/@ref` is which "channel" this package is in.  See `//channel` for the list of channels.
+    In this case, it's in `channel-0`, which is the `stable` channel.
+
+  * **Display Name**: `//remotePackage/display-name` is the name of the package, in this case `Android SDK Platform 36`.
+
+  * **Filename**: `//remotePackage/archives/archive/url` is the *file name* of the package.  Prepend this value with
+    `https://dl.google.com/android/repository` to construct the final url, e.g.
+    <https://dl.google.com/android/repository/platform-36_r02.zip>.
+
+  * **Codename**: `//remotePackage/type-details/codename` is the *codename* of the package.  This is optional.
+
+Next, keep this snippet for a preview API level in mind when reviewing the following sections:
+
+```xml
+  <remotePackage path="platforms;android-CANARY">
+    <type-details xsi:type="sdk:platformDetailsType">
+      <api-level>36.0</api-level>
+      <codename>CANARY</codename>
+      <extension-level>19</extension-level>
+      <base-extension>true</base-extension>
+      <layoutlib api="15"/>
+    </type-details>
+    <revision>
+      <major>3</major>
+    </revision>
+    <display-name>Android SDK Platform CANARY</display-name>
+    <uses-license ref="android-sdk-preview-license"/>
+    <channelRef ref="channel-2"/>
+    <archives>
+      <archive>
+        <complete>
+          <size>66275299</size>
+          <checksum type="sha1">8bf2196d77081927fdb863059b32d802d942b330</checksum>
+          <url>platform-36.0-CANARY_r03.zip</url>
+        </complete>
+      </archive>
+    </archives>
+  </remotePackage>
+```
+
 ### Add New Platform to `xaprepare`
 
-- Add new level to `/build-tools/xaprepare/xaprepare/ConfigAndData/BuildAndroidPlatforms.cs`:
-  - `new AndroidPlatform (apiName: "S", apiLevel: 31, platformID: "S", include: "v11.0.99", framework: "v11.0.99", stable: false),`
-- Add new level to `/build-tools/xaprepare/xaprepare/ConfigAndData/Dependencies/AndroidToolchain.cs`:
-  - `new AndroidPlatformComponent ("platform-S_r01", apiLevel: "S", pkgRevision: "1"),`
-  
-At this point, you can run `Xamarin.Android.sln -t:Prepare` using your usual mechanism, and
-the new platform will be downloaded to your local Android SDK.
+For the new API level, you need:
+
+  * The API level value.  For previews, this is the `//remotePackage/type-details/codename` value; `CANARY`, in this case.
+  * The *base file name* of the `//url` value.  `xaprepare` automatically appends a `.zip` suffix.
+
+Then update the following files:
+
+  - Add new `AndroidPlatform` value to
+    [`/build-tools/xaprepare/xaprepare/ConfigAndData/BuildAndroidPlatforms.cs`](../../build-tools/xaprepare/xaprepare/ConfigAndData/BuildAndroidPlatforms.cs):
+
+    ```csharp
+    new AndroidPlatform (apiName: "CANARY", apiLevel: new Version (36, 1), platformID: "CANARY", include: "v16.0",   framework: "v16.1", stable: false),
+
+    ```
+
+    TODO: what should be done for the "mid-year" updates, as is the case for API-CANARY?
+
+    What are `include` and `framework` used for?
+
+  - Add new level to
+    [`/build-tools/xaprepare/xaprepare/ConfigAndData/Dependencies/AndroidToolchain.cs`](../../build-tools/xaprepare/xaprepare/ConfigAndData/Dependencies/AndroidToolchain.cs):
+
+    ```csharp
+    new AndroidPlatformComponent ("platform-36.0-CANARY_r03",   apiLevel: "CANARY", pkgRevision: "3", isLatestStable: false, isPreview: true),
+    ```
+
+    *Note*: the first argument is *base filename* of the package to download; `xaprepare` will automatically append `.zip`.
+
+At this point, you can run `Xamarin.Android.sln -t:Prepare` using your usual mechanism.
+However, it might not download the new platform into your local Android SDK.
 
 ### Build Xamarin.Android
 
@@ -22,21 +139,58 @@ Build `Xamarin.Android.sln` using your usual mechanism. This will not use the ne
 but will build the tools like `param-name-importer` and `class-parse` that will be needed
 in the next steps.
 
+
+### Download the new API Levels
+
+If preparing the repo did not download the new API level, you may explicitly do so via
+`xaprepare --android-sdk-platforms=all`:
+
+```dotnetcli
+./dotnet-local.sh run --project build-tools/xaprepare/xaprepare/xaprepare.csproj -- --android-sdk-platforms=all
+```
+
 ### Generate `params.txt` File
 
-Build the `params.txt` file for the desired level:
+Build the `params.txt` file for the desired API level.  The `-p:ParamApiLevel=VALUE` parameter is the API level to process.
+Unstable API levels use the API level codename, while stable API levels use the integer value:
 
-- Unstable: `dotnet-local.cmd build build-tools/create-android-api -t:GenerateParamsFile -p:ParamApiLevel=VanillaIceCream`
-- Stable: `dotnet-local.cmd build build-tools/create-android-api -t:GenerateParamsFile -p:ParamApiLevel=35`
+```dotnetcli
+# unstable
+./dotnet-local.sh build build-tools/create-android-api/create-android-api.csproj -t:GenerateParamsFile -p:ParamApiLevel=CANARY
+
+# stable
+./dotnet-local.sh build build-tools/create-android-api/create-android-api.csproj -t:GenerateParamsFile -p:ParamApiLevel=36
+```
 
 This will create a `api-XX.params.txt` file in `/src/Mono.Android/Profiles/` that needs to be committed.
 
 ### Generate `api.xml` File
 
-- Run `xaprepare android-sdk-platforms=all` to download all Android SDK platforms
-- Add level to `/build-tools/api-merge/merge-configuration.xml` to create `api-S.xml.class-parse`
-- Run the following command to create a merged `api.xml`:
-  - `dotnet-local.cmd build build-tools/create-android-api -t:GenerateApiDescription`
+Add new level to
+[`/build-tools/api-merge/merge-configuration.xml`](../../build-tools/api-merge/merge-configuration.xml)
+to create `api-CANARY.xml.class-parse`:
+
+```diff
+--- a/build-tools/api-merge/merge-configuration.xml
++++ b/build-tools/api-merge/merge-configuration.xml
+@@ -25,8 +25,9 @@
+     <File Path="api-34.xml.in" Level="34" />
+     <File Path="api-35.xml.in" Level="35" />
+     <File Path="api-36.xml.in" Level="36" />
++    <File Path="api-CANARY.xml.in" Level="36.1" />
+   </Inputs>
+   <Outputs>
+-    <File Path="api-36.xml" LastLevel="36" />
++    <File Path="api-CANARY.xml" LastLevel="36.1" />
+   </Outputs>
+ </Configuration>
+```
+
+Run the following command to create a merged `api.xml`:
+
+```dotnetcli
+./dotnet-local.sh build build-tools/create-android-api/create-android-api.csproj -t:GenerateApiDescription
+```
   
 This will create a `api-XX.xml` file in `/src/Mono.Android/Profiles/` that needs to be committed.
 
@@ -45,10 +199,13 @@ This will create a `api-XX.xml` file in `/src/Mono.Android/Profiles/` that needs
 - Add level to `/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks/CheckApiCompatibility.cs`
   to enable running ApiCompat against the new level. (ex: `{ "v11.0.99", "v11.0" }`)
 - Add level to `/build-tools/api-xml-adjuster/Makefile`
+  [TODO: remove? `$(API_LEVELS)` was last touched for API-34!]
 - LOCAL ONLY: Update `Configuration.props` or `Configuration.Override.props` to specify building the new level:
   - `<AndroidApiLevel>31</AndroidApiLevel>`
   - `<AndroidPlatformId>S</AndroidPlatformId>`
   - `<AndroidFrameworkVersion>v11.0.99</AndroidFrameworkVersion>`
+
+Or specify them on the command-line for one-off local builds.
 
 ### Building the New Mono.Android
 
@@ -57,7 +214,13 @@ This will create a `api-XX.xml` file in `/src/Mono.Android/Profiles/` that needs
   copy/pasted for new API levels
 - Add required metadata fixes in `/src/Mono.Android/metadata` until `Mono.Android.csproj` builds
   - Check that new package/namespaces are properly cased
-  
+
+To build *just* `src/Mono.Android/Mono.Android.csproj`:
+
+```dotnetcli
+./dotnet-local.sh build src/Mono.Android/*.csproj -p:AndroidApiLevel=36.1 -p:AndroidPlatformId=CANARY -p:AndroidFrameworkVersion=v16.1 -p:IsUnstableVersion=true
+```
+
 ### New AndroidManifest.xml Elements
 
 - See `build-tools/manifest-attribute-codegen/README.md` for instructions on surfacing any new

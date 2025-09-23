@@ -295,6 +295,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
   <!-- Default retry attempts for temporary directory cleanup -->
   <_AndroidDeleteTempRetryAttempts Condition=" '$(_AndroidDeleteTempRetryAttempts)' == '' ">3</_AndroidDeleteTempRetryAttempts>
+
+  <_AndroidStripNativeLibraries Condition=" '$(AndroidStripNativeLibraries)' != '' And '$(AndroidStripNativeLibraries)' == 'true' ">true</_AndroidStripNativeLibraries>
+  <_AndroidStripNativeLibraries Condition=" '$(_AndroidStripNativeLibraries)' != 'true' ">false</_AndroidStripNativeLibraries>
 </PropertyGroup>
 
 <Choose>
@@ -337,9 +340,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <_AndroidAotStripLibraries Condition=" '$(_AndroidAotStripLibraries)' == '' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</_AndroidAotStripLibraries>
   <AndroidAotEnableLazyLoad Condition=" '$(AndroidAotEnableLazyLoad)' == '' And '$(AotAssemblies)' == 'true' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</AndroidAotEnableLazyLoad>
   <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and ('$(UsingMicrosoftNETSdkRazor)' == 'true') ">False</AndroidEnableMarshalMethods>
-  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and '$(_AndroidRuntime)' != 'NativeAOT' and '$(PublishReadyToRun)' != 'true' ">True</AndroidEnableMarshalMethods>
-  <!-- NOTE: temporarily disable for NativeAOT for now, to get build passing -->
-  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and ('$(_AndroidRuntime)' == 'NativeAOT' or '$(PublishReadyToRun)' == 'true') ">False</AndroidEnableMarshalMethods>
+  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and '$(_AndroidRuntime)' == 'MonoVM' and '$(PublishReadyToRun)' != 'true' ">True</AndroidEnableMarshalMethods>
+  <!-- NOTE: temporarily disable for NativeAOT and CoreCLR for now -->
+  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and ('$(_AndroidRuntime)' != 'MonoVM' or '$(PublishReadyToRun)' == 'true') ">False</AndroidEnableMarshalMethods>
 
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">False</_AndroidUseMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">$(AndroidEnableMarshalMethods)</_AndroidUseMarshalMethods>
@@ -2156,7 +2159,8 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<Target Name="_GenerateCompressedAssembliesNativeSourceFiles">
+<Target Name="_GenerateCompressedAssembliesNativeSourceFiles"
+        Condition=" '$(_AndroidRuntime)' != 'NativeAOT' ">
   <GenerateCompressedAssembliesNativeSourceFiles
       ResolvedAssemblies="@(_ResolvedUserAssemblies);@(_ResolvedFrameworkAssemblies)"
       EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
@@ -2251,7 +2255,12 @@ because xbuild doesn't support framework reference assemblies.
   DependsOnTargets="_PrepareBuildApk"
   Condition="'$(EmbedAssembliesIntoApk)' == 'True'">
 
+  <!-- Note: the NativeAOT condition goes here because of the `_PrepareBuildApk` dependency above.
+       If the condition is put on _CollectAssembliesToCompress or any targets which depend on it,
+       the APK is never built.
+       This dependency chain should be addressed in a separate PR. -->
   <CollectAssemblyFilesToCompress
+      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
       AssemblyCompressionDirectory="$(IntermediateOutputPath)android\lz4\"
       EmbedAssemblies="$(EmbedAssembliesIntoApk)"
       EnableCompression="$(AndroidEnableAssemblyCompression)"
@@ -2274,7 +2283,7 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="_CollectAssembliesToCompress"
     Inputs="@(_AssembliesToCompress);@(_AndroidMSBuildAllProjects);$(_AndroidBuildPropertiesCache)"
     Outputs="@(_AssembliesToCompress->'%(DestinationPath)')"
-    Condition="'$(EmbedAssembliesIntoApk)' == 'True'">
+    Condition="'$(EmbedAssembliesIntoApk)' == 'True' ">
 
     <CompressAssemblies
         AssembliesToCompress="@(_AssembliesToCompress)">
@@ -2370,6 +2379,7 @@ because xbuild doesn't support framework reference assemblies.
   <CollectNativeFilesForArchive
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"
       ApkOutputPath="$(_ApkOutputPath)"
+      StripNativeLibraries="$(_AndroidStripNativeLibraries)"
       BundleNativeLibraries="$(_BundleResultNativeLibraries)"
       FrameworkNativeLibraries="@(FrameworkNativeLibrary)"
       NativeLibraries="@(AndroidNativeLibrary)"

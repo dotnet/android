@@ -23,5 +23,6 @@ namespace ${ROOT_NAMESPACE}
 			//${AFTER_FORMS_INIT}
 			LoadApplication (new App ());
 		}
+		//${AFTER_ONCREATE}
 	}
 }

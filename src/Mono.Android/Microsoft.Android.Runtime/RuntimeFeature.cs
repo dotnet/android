@@ -8,6 +8,7 @@ static class RuntimeFeature
 	const bool ManagedTypeMapEnabledByDefault = false;
 	const bool IsMonoRuntimeEnabledByDefault = true;
 	const bool IsCoreClrRuntimeEnabledByDefault = false;
+	const bool IsAssignableFromCheckEnabledByDefault = true;
 
 	const string FeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
 
@@ -22,4 +23,8 @@ static class RuntimeFeature
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (IsCoreClrRuntime)}")]
 	internal static bool IsCoreClrRuntime { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (IsCoreClrRuntime)}", out bool isEnabled) ? isEnabled : IsCoreClrRuntimeEnabledByDefault;
+
+	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (IsAssignableFromCheck)}")]
+	internal static bool IsAssignableFromCheck { get; } =
+		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (IsAssignableFromCheck)}", out bool isEnabled) ? isEnabled : IsAssignableFromCheckEnabledByDefault;
 }

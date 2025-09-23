@@ -1,0 +1,6 @@
+<replacements>
+  <replace-type
+      from="android/view/LayoutInflater"
+      to="net/dot/android/test/MyLayoutInflater"
+  />
+</replacements>
