@@ -1,5 +1,6 @@
 package net.dot.jni.nativeaot;
 
+import java.util.Locale;
 import android.system.ErrnoException;
 import android.system.Os;
 import android.util.Log;
@@ -27,20 +28,14 @@ public class NativeAotRuntimeProvider
             ApplicationRegistration.Context = context;
         }
 
-        // Set environment variables
-        try {
-            String filesDir = context.getFilesDir().getAbsolutePath();
-            String cacheDir = context.getCacheDir().getAbsolutePath();
-            Os.setenv("HOME", filesDir, true);
-            Os.setenv("TMPDIR", cacheDir, true);
-        } catch (ErrnoException e) {
-            Log.e(TAG, "Failed to set environment variables", e);
-        }
-
-        ClassLoader loader  = context.getClassLoader ();
+        ClassLoader loader = context.getClassLoader ();
+        Locale locale = Locale.getDefault ();
+        String language = locale.getLanguage () + "-" + locale.getCountry ();
+        String filesDir = context.getFilesDir().getAbsolutePath();
+        String cacheDir = context.getCacheDir().getAbsolutePath();
 
         // Initialize .NET runtime
-        JavaInteropRuntime.init(loader);
+        JavaInteropRuntime.init(loader, language, filesDir, cacheDir);
         // NOTE: only required for custom applications
         ApplicationRegistration.registerApplications();
         super.attachInfo (context, info);

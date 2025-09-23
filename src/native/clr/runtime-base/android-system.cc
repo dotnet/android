@@ -6,8 +6,10 @@
 
 #include <constants.hh>
 #include <xamarin-app.hh>
+#include <host/host-environment-clr.hh>
 #include <runtime-base/android-system.hh>
 #include <runtime-base/cpu-arch.hh>
+#include <runtime-base/dso-loader.hh>
 #include <runtime-base/strings.hh>
 #include <runtime-base/util.hh>
 
@@ -223,37 +225,34 @@ AndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks
 void
 AndroidSystem::setup_environment () noexcept
 {
-	if (application_config.environment_variable_count % 2 != 0) {
-		log_warn (LOG_DEFAULT, "Corrupted environment variable array: does not contain an even number of entries ({})", application_config.environment_variable_count);
-		return;
+	if (application_config.environment_variable_count > 0) {
+		log_debug (LOG_DEFAULT, "Setting environment variables ({})", application_config.environment_variable_count);
+		HostEnvironment::set_values<HostEnvironment::set_variable> (
+            application_config.environment_variable_count,
+            app_environment_variables,
+            app_environment_variable_contents
+        );
 	}
 
-	const char *var_name;
-	const char *var_value;
-	for (size_t i = 0uz; i < application_config.environment_variable_count; i++) {
-		AppEnvironmentVariable const& env_var = app_environment_variables [i];
-		var_name = &app_environment_variable_contents[env_var.name_index];
-		var_value = &app_environment_variable_contents[env_var.value_index];
-
-		if constexpr (Constants::is_debug_build) {
-			log_info (LOG_DEFAULT, "Setting environment variable '{}' to '{}'", var_name, var_value);
-		}
-
-		if (setenv (var_name, var_value, 1) < 0) {
-			log_warn (LOG_DEFAULT, "Failed to set environment variable: {}", strerror (errno));
-		}
+	if (application_config.system_property_count > 0) {
+		log_debug (LOG_DEFAULT, "Setting system properties ({})", application_config.system_property_count);
+		HostEnvironment::set_values<HostEnvironment::set_system_property> (
+            application_config.system_property_count,
+            app_system_properties,
+            app_system_property_contents
+        );
 	}
 
 #if defined(DEBUG)
-		log_debug (LOG_DEFAULT, "Loading environment from the override directory."sv);
+	log_debug (LOG_DEFAULT, "Loading environment from the override directory."sv);
 
-		dynamic_local_string<Constants::SENSIBLE_PATH_MAX> env_override_file;
-		Util::path_combine (env_override_file, std::string_view {primary_override_dir}, Constants::OVERRIDE_ENVIRONMENT_FILE_NAME);
-		log_debug (LOG_DEFAULT, "{}", env_override_file.get ());
-		if (Util::file_exists (env_override_file)) {
-			log_debug (LOG_DEFAULT, "Loading {}"sv, env_override_file.get ());
-			setup_environment_from_override_file (env_override_file);
-		}
+	dynamic_local_string<Constants::SENSIBLE_PATH_MAX> env_override_file;
+	Util::path_combine (env_override_file, std::string_view {primary_override_dir}, Constants::OVERRIDE_ENVIRONMENT_FILE_NAME);
+	log_debug (LOG_DEFAULT, "{}", env_override_file.get ());
+	if (Util::file_exists (env_override_file)) {
+		log_debug (LOG_DEFAULT, "Loading {}"sv, env_override_file.get ());
+		setup_environment_from_override_file (env_override_file);
+	}
 #endif // def DEBUG
 }
 
@@ -293,115 +292,13 @@ AndroidSystem::lookup_system_property (std::string_view const& name, size_t &val
 		return nullptr;
 	}
 
-	if (application_config.system_property_count % 2 != 0) {
-		log_warn (LOG_DEFAULT, "Corrupted environment variable array: does not contain an even number of entries ({})", application_config.system_property_count);
-		return nullptr;
-	}
-
-	const char *prop_name;
-	const char *prop_value;
-	for (size_t i = 0uz; i < application_config.system_property_count; i += 2uz) {
-		prop_name = app_system_properties[i];
-		if (prop_name == nullptr || *prop_name == '\0') {
-			continue;
-		}
-
-		if (strcmp (prop_name, name.data ()) == 0) {
-			prop_value = app_system_properties [i + 1uz];
-			if (prop_value == nullptr || *prop_value == '\0') {
-				value_len = 0uz;
-				return "";
-			}
-
-			value_len = strlen (prop_value);
-			return prop_value;
-		}
-	}
-
-	return nullptr;
-}
-
-auto
-AndroidSystem::monodroid__system_property_get (std::string_view const& name, char *sp_value, size_t sp_value_len) noexcept -> int
-{
-	if (name.empty () || sp_value == nullptr) {
-		return -1;
-	}
-
-	char *buf = nullptr;
-	if (sp_value_len < Constants::PROPERTY_VALUE_BUFFER_LEN) {
-		size_t alloc_size = Helpers::add_with_overflow_check<size_t> (Constants::PROPERTY_VALUE_BUFFER_LEN, 1uz);
-		log_warn (LOG_DEFAULT, "Buffer to store system property may be too small, will copy only {} bytes", sp_value_len);
-		buf = new char [alloc_size];
-	}
-
-	int len = __system_property_get (name.data (), buf ? buf : sp_value);
-	if (buf != nullptr) {
-		strncpy (sp_value, buf, sp_value_len);
-		sp_value [sp_value_len] = '\0';
-		delete[] buf;
-	}
-
-	return len;
-}
-
-auto AndroidSystem::monodroid_get_system_property (std::string_view const& name, dynamic_local_property_string &value) noexcept -> int
-{
-	int len = monodroid__system_property_get (name, value.get (), value.size ());
-	if (len > 0) {
-		// Clumsy, but if we want direct writes to be fast, this is the price we pay
-		value.set_length_after_direct_write (static_cast<size_t>(len));
-		return len;
-	}
-
-	size_t plen;
-	const char *v = lookup_system_property (name, plen);
-	if (v == nullptr) {
-		return len;
-	}
-
-	value.assign (v, plen);
-	return Helpers::add_with_overflow_check<int> (plen, 0);
-}
-
-auto
-AndroidSystem::get_max_gref_count_from_system () noexcept -> long
-{
-	long max;
-
-	if (running_in_emulator) {
-		max = 2000;
-	} else {
-		max = 51200;
-	}
-
-	dynamic_local_property_string override;
-	if (monodroid_get_system_property (Constants::DEBUG_MONO_MAX_GREFC, override) > 0) {
-		char *e;
-		max = strtol (override.get (), &e, 10);
-		switch (*e) {
-			case 'k':
-				e++;
-				max *= 1000;
-				break;
-			case 'm':
-				e++;
-				max *= 1000000;
-				break;
-		}
-
-		if (max < 0) {
-			max = std::numeric_limits<int>::max ();
-		}
-
-		if (*e) {
-			log_warn (LOG_GC, "Unsupported '{}' value '{}'.", Constants::DEBUG_MONO_MAX_GREFC.data (), override.get ());
-		}
-
-		log_warn (LOG_GC, "Overriding max JNI Global Reference count to {}", max);
-	}
-
-	return max;
+	return HostEnvironment::lookup_system_property (
+		name,
+		value_len,
+		application_config.system_property_count,
+		app_system_properties,
+		app_system_property_contents
+	);
 }
 
 auto AndroidSystem::get_full_dso_path (std::string const& base_dir, std::string_view const& dso_path, dynamic_local_string<SENSIBLE_PATH_MAX>& path) noexcept -> bool
@@ -435,30 +332,8 @@ auto AndroidSystem::get_full_dso_path (std::string const& base_dir, std::string_
 	return true;
 }
 
-auto AndroidSystem::load_dso (std::string_view const& path, unsigned int dl_flags, bool skip_exists_check) noexcept -> void*
-{
-	if (path.empty ()) [[unlikely]] {
-		return nullptr;
-	}
-
-	log_info (LOG_ASSEMBLY, "Trying to load shared library '{}'", path);
-	if (!skip_exists_check && !is_embedded_dso_mode_enabled () && !Util::file_exists (path)) {
-		log_info (LOG_ASSEMBLY, "Shared library '{}' not found", path);
-		return nullptr;
-	}
-
-	char *error = nullptr;
-	void *handle = java_interop_lib_load (path.data (), dl_flags, &error);
-	if (handle == nullptr && Util::should_log (LOG_ASSEMBLY)) {
-		log_info_nocheck_fmt (LOG_ASSEMBLY, "Failed to load shared library '{}'. {}", path, error);
-	}
-	java_interop_free (error);
-
-	return handle;
-}
-
 template<class TContainer> [[gnu::always_inline]]
-auto AndroidSystem::load_dso_from_specified_dirs (TContainer directories, std::string_view const& dso_name, unsigned int dl_flags) noexcept -> void*
+auto AndroidSystem::load_dso_from_specified_dirs (TContainer directories, std::string_view const& dso_name, int dl_flags, bool is_jni) noexcept -> void*
 {
 	if (dso_name.empty ()) {
 		return nullptr;
@@ -470,7 +345,7 @@ auto AndroidSystem::load_dso_from_specified_dirs (TContainer directories, std::s
 			continue;
 		}
 
-		void *handle = load_dso (full_path.get (), dl_flags, false);
+		void *handle = DsoLoader::load (full_path.get (), dl_flags, is_jni);
 		if (handle != nullptr) {
 			return handle;
 		}
@@ -479,26 +354,26 @@ auto AndroidSystem::load_dso_from_specified_dirs (TContainer directories, std::s
 	return nullptr;
 }
 
-auto AndroidSystem::load_dso_from_app_lib_dirs (std::string_view const& name, unsigned int dl_flags) noexcept -> void*
+auto AndroidSystem::load_dso_from_app_lib_dirs (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*
 {
-	return load_dso_from_specified_dirs (app_lib_directories, name, dl_flags);
+	return load_dso_from_specified_dirs (app_lib_directories, name, dl_flags, is_jni);
 }
 
-auto AndroidSystem::load_dso_from_override_dirs (std::string_view const& name, unsigned int dl_flags) noexcept -> void*
+auto AndroidSystem::load_dso_from_override_dirs (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*
 {
 	if constexpr (Constants::is_release_build) {
 		return nullptr;
 	} else {
-		return load_dso_from_specified_dirs (AndroidSystem::override_dirs, name, dl_flags);
+		return load_dso_from_specified_dirs (AndroidSystem::override_dirs, name, dl_flags, is_jni);
 	}
 }
 
 [[gnu::flatten]]
-auto AndroidSystem::load_dso_from_any_directories (std::string_view const& name, unsigned int dl_flags) noexcept -> void*
+auto AndroidSystem::load_dso_from_any_directories (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*
 {
-	void *handle = load_dso_from_override_dirs (name, dl_flags);
+	void *handle = load_dso_from_override_dirs (name, dl_flags, is_jni);
 	if (handle == nullptr) {
-		handle = load_dso_from_app_lib_dirs (name, dl_flags);
+		handle = load_dso_from_app_lib_dirs (name, dl_flags, is_jni);
 	}
 	return handle;
 }

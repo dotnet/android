@@ -251,8 +251,8 @@ namespace Xamarin.Android.Build.Tests
 					PackageName = $"com.companyname.App{i}",
 					AotAssemblies = true,
 					IsRelease = true,
+					EnableMarshalMethods = true,
 				};
-				app1.SetProperty ("AndroidEnableMarshalMethods", "True");
 				sb.Projects.Add (app1);
 			}
 			sb.BuildingInsideVisualStudio = false;
@@ -803,7 +803,7 @@ namespace Lib2
 					"_CompileResources"
 				};
 				foreach (var target in aapt2TargetsShouldBeSkipped) {
-					Assert.IsTrue (appBuilder.Output.IsTargetSkipped (target), $"{target} should be skipped!");
+					Assert.IsTrue (appBuilder.Output.IsTargetSkipped (target, defaultIfNotUsed: true), $"{target} should be skipped!");
 				}
 			}
 		}
@@ -1243,15 +1243,15 @@ namespace Lib2
 			builder.BuildLogFile = "build1.log";
 			Assert.IsTrue (builder.RunTarget (proj, "SignAndroidPackage", parameters: parameters), $"{proj.ProjectName} should succeed");
 			builder.Output.AssertTargetIsNotSkipped ("_GenerateResourceCaseMap", occurrence: 2);
-			builder.Output.AssertTargetIsSkipped ("_GenerateRtxt", occurrence: 1);
+			builder.Output.AssertTargetIsSkipped ("_GenerateRtxt", defaultIfNotUsed: true);
 			builder.Output.AssertTargetIsNotSkipped ("_GenerateResourceDesignerIntermediateClass");
-			builder.Output.AssertTargetIsSkipped ("_GenerateResourceDesignerAssembly", occurrence: 2);
+			builder.Output.AssertTargetIsSkipped ("_GenerateResourceDesignerAssembly", defaultIfNotUsed: true);
 			builder.BuildLogFile = "build2.log";
 			Assert.IsTrue (builder.RunTarget (proj, "SignAndroidPackage", parameters: parameters), $"{proj.ProjectName} should succeed 2");
 			builder.Output.AssertTargetIsNotSkipped ("_GenerateResourceCaseMap", occurrence: 3);
-			builder.Output.AssertTargetIsSkipped ("_GenerateRtxt", occurrence: 2);
-			builder.Output.AssertTargetIsSkipped ("_GenerateResourceDesignerIntermediateClass", occurrence: 2);
-			builder.Output.AssertTargetIsSkipped ("_GenerateResourceDesignerAssembly");
+			builder.Output.AssertTargetIsSkipped ("_GenerateRtxt", defaultIfNotUsed: true);
+			builder.Output.AssertTargetIsSkipped ("_GenerateResourceDesignerIntermediateClass", defaultIfNotUsed: true);
+			builder.Output.AssertTargetIsSkipped ("_GenerateResourceDesignerAssembly", defaultIfNotUsed: true);
 		}
 
 		[Test]

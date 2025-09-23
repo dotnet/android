@@ -703,7 +703,7 @@ public class TestJavaClass {
 				FileAssert.Exists (generatedCode, $"'{generatedCode}' should have not be deleted on second build.");
 				FileAssert.DoesNotExist (generatedCode2, $"'{generatedCode2}' should have be deleted on second build.");
 				Assert.IsFalse (b.Output.IsTargetSkipped ("_CompileBindingJava"), $"`_CompileBindingJava` should run on second build!");
-				Assert.IsTrue (b.Output.IsTargetSkipped ("_ClearGeneratedManagedBindings"), $"`_ClearGeneratedManagedBindings` should be skipped on second build!");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_ClearGeneratedManagedBindings", defaultIfNotUsed: true), $"`_ClearGeneratedManagedBindings` should be skipped on second build!");
 				// Call Install directly so Build does not get called automatically
 				Assert.IsTrue (b.RunTarget (proj, "Install", doNotCleanupOnUpdate: true, saveProject: false), "Install build should have succeeded.");
 				FileAssert.Exists (generatedCode, $"'{generatedCode}' should have not be deleted on Install build.");

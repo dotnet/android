@@ -49,14 +49,6 @@ stages:
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false
 
-    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
-      parameters:
-        command: test
-        project: src/Microsoft.Android.Sdk.Analysis/Tests/Microsoft.Android.Sdk.Analysis.Tests.csproj 
-        arguments: -c $(XA.Build.Configuration)
-        displayName: Test Microsoft.Android.Sdk.Analysis $(XA.Build.Configuration)
-        continueOnError: false
-
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
 
     - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
@@ -154,14 +146,6 @@ stages:
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false
 
-    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
-      parameters:
-        command: test
-        project: src/Microsoft.Android.Sdk.Analysis/Tests/Microsoft.Android.Sdk.Analysis.Tests.csproj 
-        arguments: -c $(XA.Build.Configuration)
-        displayName: Test Microsoft.Android.Sdk.Analysis $(XA.Build.Configuration)
-        continueOnError: false
-
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
 
     - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
@@ -197,10 +181,20 @@ stages:
     - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
+        testName: Mono.Android.NET_Tests-IsAssignableFrom
+        project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+        testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)IsAssignableFrom.xml
+        extraBuildArgs: -p:TestsFlavor=IsAssignableFrom -p:IncludeCategories=Intune -p:_AndroidIsAssignableFromCheck=false
+        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
+        artifactFolder: $(DotNetTargetFramework)-IsAssignableFrom
+
+    - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
         testName: Mono.Android.NET_Tests-CoreCLR
         project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)CoreCLR.xml
-        extraBuildArgs: -p:TestsFlavor=CoreCLR -p:UseMonoRuntime=false -p:AndroidEnableMarshalMethods=false
+        extraBuildArgs: -p:TestsFlavor=CoreCLR -p:UseMonoRuntime=false
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-CoreCLR
 

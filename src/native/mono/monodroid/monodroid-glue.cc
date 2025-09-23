@@ -62,6 +62,7 @@
 #include "monodroid-state.hh"
 #include "pinvoke-override-api.hh"
 #include <shared/cpp-util.hh>
+#include <runtime-base/dso-loader.hh>
 #include <runtime-base/strings.hh>
 
 using namespace microsoft::java_interop;
@@ -834,7 +835,6 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 	init.marshalMethodsEnabled  = application_config.marshal_methods_enabled;
 	init.managedMarshalMethodsLookupEnabled = application_config.managed_marshal_methods_lookup_enabled;
 
-	java_System = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_System", true);
 	java_System_identityHashCode = env->GetStaticMethodID (java_System, "identityHashCode", "(Ljava/lang/Object;)I");
 
 	// GC threshold is 90% of the max GREF count
@@ -1217,6 +1217,60 @@ monodroid_Mono_UnhandledException_internal ([[maybe_unused]] MonoException *ex)
 	// Do nothing with it here, we let the exception naturally propagate on the managed side
 }
 
+[[gnu::flatten, gnu::always_inline]]
+void
+MonodroidRuntime::preload_jni_libraries () noexcept
+{
+	// NOTE: when fixing a bug here, fix also the CoreCLR code in src/native/clr/host/host.cc@preload_jni_libraries
+	if (application_config.number_of_shared_libraries == 0) [[unlikely]] {
+		return;
+	}
+
+	log_debug (LOG_ASSEMBLY, "DSO jni preloads index stride == {}", dso_jni_preloads_idx_stride);
+
+	if ((dso_jni_preloads_idx_count % dso_jni_preloads_idx_stride) != 0) [[unlikely]] {
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			std::format (
+				"DSO preload index is invalid, size ({}) is not a multiple of {}"sv,
+				dso_jni_preloads_idx_count,
+				dso_jni_preloads_idx_stride
+			)
+		);
+	}
+
+	for (size_t i = 0; i < dso_jni_preloads_idx_count; i += dso_jni_preloads_idx_stride) {
+		const size_t entry_index = dso_jni_preloads_idx[i];
+		DSOCacheEntry &entry = dso_cache[entry_index];
+
+		log_debug (
+			LOG_ASSEMBLY,
+			"Preloading JNI shared library: {} (entry's index: {}; real name hash: {:x}; name hash: {:x})",
+			optional_string (entry.name),
+			entry_index,
+			entry.real_name_hash,
+			entry.hash
+		);
+
+		char *err = nullptr;
+		void *handle = MonodroidDl::monodroid_dlopen (&entry, entry.hash, entry.name, RTLD_NOW,  &err);
+
+		// Set handle in all the alias entries
+		for (size_t j = 1; j < dso_jni_preloads_idx_stride; j++) {
+			const size_t entry_alias_index = dso_jni_preloads_idx[i + j];
+			DSOCacheEntry &entry_alias = dso_cache[entry_alias_index];
+
+			log_debug (
+				LOG_ASSEMBLY,
+				"Putting JNI library handle in alias entry at index {}: {}",
+				entry_alias_index,
+				entry_alias.name
+			);
+			entry_alias.handle = handle;
+		}
+	}
+}
+
 MonoDomain*
 MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wrapper &runtimeApks,
                                                 jstring_array_wrapper &assemblies, [[maybe_unused]] jobjectArray assembliesBytes,
@@ -1224,6 +1278,9 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
                                                 bool force_preload_assemblies, bool have_split_apks) noexcept
 {
 	MonoDomain* domain = create_domain (env, runtimeApks, is_root_domain, have_split_apks);
+
+	preload_jni_libraries ();
+
 	// Asserting this on desktop apparently breaks a Designer test
 	abort_unless (domain != nullptr, "Failed to create AppDomain");
 
@@ -1389,6 +1446,14 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	AndroidSystem::detect_embedded_dso_mode (applicationDirs);
 	AndroidSystem::set_running_in_emulator (isEmulator);
 
+	java_System = RuntimeUtil::get_class_from_runtime_field (env, klass, "java_lang_System", true);
+	DsoLoader::init (
+		env,
+		RuntimeUtil::get_class_from_runtime_field (env, klass, "java_lang_System", true),
+		ALooper_forThread (), // main thread looper
+		gettid ()
+	);
+
 	java_TimeZone = RuntimeUtil::get_class_from_runtime_field (env, klass, "java_util_TimeZone", true);
 
 	jstring_wrapper jstr (env, lang);
@@ -1430,6 +1495,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		AndroidSystem::set_runtime_libdir (strdup (jstr.get_cstr ()));
 		log_debug (LOG_DEFAULT, "Using runtime path: {}", optional_string (AndroidSystem::get_runtime_libdir ()));
 	}
+
 
 	AndroidSystem::setup_process_args (runtimeApks);
 	mono_dl_fallback_register (MonodroidDl::monodroid_dlopen, MonodroidDl::monodroid_dlsym, nullptr, nullptr);

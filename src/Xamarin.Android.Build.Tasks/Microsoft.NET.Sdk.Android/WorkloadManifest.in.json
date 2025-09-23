@@ -58,7 +58,15 @@
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },
+    "Microsoft.Android.Ref.36.1": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
     "Microsoft.Android.Runtime.36.android": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "Microsoft.Android.Runtime.36.1.android": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },

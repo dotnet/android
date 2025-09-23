@@ -12,6 +12,8 @@ using System.Threading;
 using Xamarin.Android.Tools;
 using Xamarin.Tools.Zip;
 using Java.Interop.Tools.JavaCallableWrappers;
+using Mono.Cecil;
+
 
 #if MSBUILD
 using Microsoft.Android.Build.Tasks;
@@ -29,6 +31,32 @@ namespace Xamarin.Android.Tasks
 		// Requires that ResolveSdks.Execute() run before anything else
 		public static AndroidVersions   SupportedVersions;
 		public static AndroidSdkInfo    AndroidSdk;
+
+		internal static XAAssemblyResolver MakeResolver (TaskLoggingHelper log, bool useMarshalMethods, AndroidTargetArch targetArch, Dictionary<string, ITaskItem> assemblies, bool loadDebugSymbols = true)
+		{
+			var readerParams = new ReaderParameters ();
+			if (useMarshalMethods) {
+				readerParams.ReadWrite = true;
+				readerParams.InMemory = true;
+			}
+
+			var res = new XAAssemblyResolver (targetArch, log, loadDebugSymbols: loadDebugSymbols, loadReaderParameters: readerParams);
+			var uniqueDirs = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+
+			log.LogDebugMessage ($"Adding search directories to new architecture {targetArch} resolver:");
+			foreach (var kvp in assemblies) {
+				string assemblyDir = Path.GetDirectoryName (kvp.Value.ItemSpec);
+				if (uniqueDirs.Contains (assemblyDir)) {
+					continue;
+				}
+
+				uniqueDirs.Add (assemblyDir);
+				res.SearchDirectories.Add (assemblyDir);
+				log.LogDebugMessage ($"  {assemblyDir}");
+			}
+
+			return res;
+		}
 
 		public static StringBuilder MergeStdoutAndStderrMessages (List<string> stdout, List<string> stderr)
 		{
@@ -578,6 +606,16 @@ namespace Xamarin.Android.Tasks
 			return abi;
 		}
 
+		public static string GetAssemblyRid (ITaskItem asmItem)
+		{
+			string? abi = asmItem.GetMetadata ("RuntimeIdentifier");
+			if (String.IsNullOrEmpty (abi)) {
+				throw new InvalidOperationException ($"Internal error: assembly '{asmItem}' lacks RuntimeIdentifier metadata");
+			}
+
+			return abi;
+		}
+
 		public static AndroidTargetArch GetTargetArch (ITaskItem asmItem) => AbiToTargetArch (GetAssemblyAbi (asmItem));
 
 
@@ -681,6 +719,16 @@ namespace Xamarin.Android.Tasks
 			);
 		}
 
+		public static string GetAssemblyNameWithCulture (ITaskItem assemblyItem)
+		{
+			string name = Path.GetFileNameWithoutExtension (assemblyItem.ItemSpec);
+			string? culture = assemblyItem.GetMetadata ("Culture");
+			if (!String.IsNullOrEmpty (culture)) {
+				return $"{culture}/{name}";
+			}
+			return name;
+		}
+
 		static Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> GetPerArchAssemblies (IEnumerable<ITaskItem> input, HashSet<AndroidTargetArch> supportedTargetArches, bool validate, Func<ITaskItem, bool>? shouldSkip = null)
 		{
 			bool filterByTargetArches = supportedTargetArches.Count > 0;
@@ -700,12 +748,7 @@ namespace Xamarin.Android.Tasks
 					assembliesPerArch.Add (arch, assemblies);
 				}
 
-				string name = Path.GetFileNameWithoutExtension (assembly.ItemSpec);
-				string? culture = assembly.GetMetadata ("Culture");
-				if (!String.IsNullOrEmpty (culture)) {
-					name = $"{culture}/{name}";
-				}
-				assemblies.Add (name, assembly);
+				assemblies.Add (GetAssemblyNameWithCulture (assembly), assembly);
 			}
 
 			// It's possible some assembly collections will be empty (e.g. `ResolvedUserAssemblies` as passed to the `GenerateJavaStubs` task), which

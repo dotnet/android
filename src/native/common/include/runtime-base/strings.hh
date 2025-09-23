@@ -12,12 +12,12 @@
 
 #include <shared/helpers.hh>
 
-#if defined(XA_HOST_CLR)
-#include <constants.hh>
-#else
+#if defined(XA_HOST_MONOVM)
 #include <runtime-base/shared-constants.hh>
 
 using Constants = xamarin::android::internal::SharedConstants;
+#else
+#include <constants.hh>
 #endif
 
 namespace xamarin::android {
@@ -722,7 +722,7 @@ namespace xamarin::android {
 		}
 
 		[[gnu::always_inline]]
-		auto starts_with_c (const char* s) noexcept -> bool
+		auto starts_with_c (const char* s) const noexcept -> bool
 		{
 			if (s == nullptr) {
 				return false;
@@ -732,19 +732,19 @@ namespace xamarin::android {
 		}
 
 		template<size_t Size> [[gnu::always_inline]]
-		auto starts_with (const char (&s)[Size]) noexcept -> bool
+		auto starts_with (const char (&s)[Size]) const noexcept -> bool
 		{
 			return starts_with (s, Size - 1);
 		}
 
 		[[gnu::always_inline]]
-		auto starts_with (std::string_view const& s) noexcept -> bool
+		auto starts_with (std::string_view const& s) const noexcept -> bool
 		{
 			return starts_with (s.data (), s.length ());
 		}
 
 		[[gnu::always_inline]]
-		auto ends_with (std::string_view const& s) noexcept -> bool
+		auto ends_with (std::string_view const& s) const noexcept -> bool
 		{
 			if (empty () || s.length () > buffer.size ()) {
 				return false;

@@ -22,6 +22,8 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
     <SharedFrameworkName>Microsoft.Android.Runtimes</SharedFrameworkName>
     <SharedFrameworkFriendlyName>.NET $(DotNetTargetFrameworkVersion) - $(SharedFrameworkName)</SharedFrameworkFriendlyName>
     <Description>Microsoft.Android runtime components for API $(AndroidApiLevel). Please do not reference directly.</Description>
+    <!-- Prevents: error NU1101: Unable to find package Microsoft.NETCore.App.Runtime.linux-bionic-arm. -->
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
     <_AndroidRuntimePackAssemblyPath>runtimes/$(AndroidRID)/lib/$(DotNetTargetFramework)</_AndroidRuntimePackAssemblyPath>
     <_AndroidRuntimePackNativePath>runtimes/$(AndroidRID)/native</_AndroidRuntimePackNativePath>
   </PropertyGroup>
@@ -46,6 +48,7 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
       BeforeTargets="GetFilesToPackage" >
     <PropertyGroup>
       <_RuntimeFlavorDirName Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">$(_CLRRuntimeFlavorDirName)</_RuntimeFlavorDirName>
+      <_RuntimeFlavorDirName Condition=" '$(AndroidRuntime)' == 'NativeAOT' ">$(_NativeAotRuntimeFlavorDirName)</_RuntimeFlavorDirName>
       <_RuntimeFlavorDirName Condition=" '$(AndroidRuntime)' == 'Mono' Or '$(AndroidRuntime)' == '' ">$(_MonoRuntimeFlavorDirName)</_RuntimeFlavorDirName>
       <_ClangArch Condition=" '$(AndroidRID)' == 'android-arm64' ">aarch64</_ClangArch>
       <_ClangArch Condition=" '$(AndroidRID)' == 'android-arm' ">arm</_ClangArch>
@@ -102,6 +105,8 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
     </ItemGroup>
 
     <ItemGroup Condition=" '$(AndroidRuntime)' == 'NativeAOT' ">
+      <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnaot-android.debug-static-debug.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnaot-android.debug-static-debug.a" />
+      <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnaot-android.release-static-release.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnaot-android.release-static-release.a" />
       <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\Microsoft.Android.Runtime.NativeAOT.dll" />
     </ItemGroup>
 

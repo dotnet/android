@@ -103,6 +103,7 @@ set(XAMARIN_MONODROID_SOURCES
   monodroid-tracing.cc
   monovm-properties.cc
   osbridge.cc
+  runtime-environment.cc
   runtime-util.cc
   timezones.cc
 )
@@ -135,6 +136,7 @@ add_library(
   ${XAMARIN_MONO_ANDROID_LIB}
   SHARED ${XAMARIN_MONODROID_SOURCES}
 )
+strip_unneeded_elf_sections(${XAMARIN_MONO_ANDROID_LIB})
 
 if(BUILD_STATIC_LIBRARY)
   add_library(
@@ -231,6 +233,7 @@ macro(lib_target_options TARGET_NAME)
     xa::pinvoke-override-precompiled
     xa::lz4
     -lmonosgen-2.0
+    -landroid
     -llog
   )
 endmacro ()

@@ -12,4 +12,8 @@
     <!-- Only property required to opt into NativeAOT -->
     <PublishAot>true</PublishAot>
   </PropertyGroup>
+
+  <ItemGroup>
+    <AndroidEnvironment Include="environment.txt" />
+  </ItemGroup>
 </Project>

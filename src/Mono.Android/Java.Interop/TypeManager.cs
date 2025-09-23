@@ -361,7 +361,13 @@ namespace Java.Interop {
 
 				handleClass = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
 				if (!JniEnvironment.Types.IsAssignableFrom (handleClass, typeClass)) {
-					return null;
+					if (Logger.LogAssembly) {
+						var message = $"Handle 0x{handle:x} is of type '{JNIEnv.GetClassNameFromInstance (handle)}' which is not assignable to '{typeSig.SimpleReference}'";
+						Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
+					}
+					if (RuntimeFeature.IsAssignableFromCheck) {
+						return null;
+					}
 				}
 			} finally {
 				JniObjectReference.Dispose (ref handleClass);

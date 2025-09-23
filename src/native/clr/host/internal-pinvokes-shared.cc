@@ -29,14 +29,9 @@ void _monodroid_gref_log_delete (jobject handle, char type, const char *threadNa
 	OSBridge::_monodroid_gref_log_delete (handle, type, threadName, threadId, from, from_writable);
 }
 
-const char* clr_typemap_managed_to_java (const char *typeName, const uint8_t *mvid) noexcept
+void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
 {
-	return TypeMapper::managed_to_java (typeName, mvid);
-}
-
-bool clr_typemap_java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept
-{
-	return TypeMapper::java_to_managed (java_type_name, assembly_name, managed_type_token_id);
+	OSBridge::_monodroid_weak_gref_delete (handle, type, threadName, threadId, from, from_writable);
 }
 
 BridgeProcessingFtn clr_initialize_gc_bridge (
@@ -89,53 +84,6 @@ void monodroid_free (void *ptr) noexcept
 	free (ptr);
 }
 
-const char*
-_monodroid_lookup_replacement_type (const char *jniSimpleReference)
-{
-	return JniRemapping::lookup_replacement_type (jniSimpleReference);
-}
-
-const JniRemappingReplacementMethod*
-_monodroid_lookup_replacement_method_info (const char *jniSourceType, const char *jniMethodName, const char *jniMethodSignature)
-{
-	return JniRemapping::lookup_replacement_method_info (jniSourceType, jniMethodName, jniMethodSignature);
-}
-
-managed_timing_sequence* monodroid_timing_start (const char *message)
-{
-	// Technically a reference here is against the idea of shared pointers, but
-	// in this instance it's fine since we know we won't be storing the pointer
-	// and this way things are slightly faster.
-	std::shared_ptr<Timing> const &timing = Host::get_timing ();
-	if (!timing) {
-		return nullptr;
-	}
-
-	managed_timing_sequence *ret = timing->get_available_sequence ();
-	if (message != nullptr) {
-		log_write (LOG_TIMING, LogLevel::Info, message);
-	}
-	ret->start = FastTiming::get_time ();
-	return ret;
-}
-
-void monodroid_timing_stop (managed_timing_sequence *sequence, const char *message)
-{
-	constexpr std::string_view DEFAULT_MESSAGE { "Managed Timing" };
-	if (sequence == nullptr) {
-		return;
-	}
-
-	std::shared_ptr<Timing> const &timing = Host::get_timing ();
-	if (!timing) [[unlikely]] {
-		return;
-	}
-
-	sequence->end = FastTiming::get_time ();
-	Timing::info (sequence, message == nullptr ? DEFAULT_MESSAGE.data () : message);
-	timing->release_sequence (sequence);
-}
-
 void _monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable)
 {
 	OSBridge::_monodroid_weak_gref_new (curHandle, curType, newHandle, newType, threadName, threadId, from, from_writable);
@@ -149,11 +97,6 @@ int _monodroid_weak_gref_get ()
 int _monodroid_max_gref_get ()
 {
 	return static_cast<int>(AndroidSystem::get_max_gref_count ());
-}
-
-void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
-{
-	OSBridge::_monodroid_weak_gref_delete (handle, type, threadName, threadId, from, from_writable);
 }
 
 void _monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
@@ -182,4 +125,3 @@ void _monodroid_detect_cpu_and_architecture (uint16_t *built_for_cpu, uint16_t *
 	monodroid_detect_cpu_and_architecture (*built_for_cpu, *running_on_cpu, _64bit);
 	*is64bit = _64bit;
 }
-

@@ -258,6 +258,7 @@ struct DSOCacheEntry
 	const uint64_t  hash;
 	const uint64_t  real_name_hash;
 	const bool      ignore;
+	const bool      is_jni_library;
 	const uint32_t  name_index;
 	void           *handle;
 };
@@ -338,7 +339,8 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const ApplicationConfig application_config;
 	[[gnu::visibility("default")]] extern const AppEnvironmentVariable app_environment_variables[];
 	[[gnu::visibility("default")]] extern const char app_environment_variable_contents[];
-	[[gnu::visibility("default")]] extern const char* const app_system_properties[];
+	[[gnu::visibility("default")]] extern const AppEnvironmentVariable app_system_properties[];
+	[[gnu::visibility("default")]] extern const char app_system_property_contents[];
 
 	[[gnu::visibility("default")]] extern const char* const mono_aot_mode_name;
 
@@ -347,6 +349,9 @@ extern "C" {
 	[[gnu::visibility("default")]] extern AssemblyStoreRuntimeData assembly_store;
 
 	[[gnu::visibility("default")]] extern DSOCacheEntry dso_cache[];
+	[[gnu::visibility("default")]] extern const uint dso_jni_preloads_idx_stride;
+	[[gnu::visibility("default")]] extern const uint dso_jni_preloads_idx_count;
+	[[gnu::visibility("default")]] extern const uint dso_jni_preloads_idx[];
 	[[gnu::visibility("default")]] extern DSOCacheEntry aot_dso_cache[];
 	[[gnu::visibility("default")]] extern const char dso_names_data[];
 	[[gnu::visibility("default")]] extern DSOApkEntry dso_apk_entries[];

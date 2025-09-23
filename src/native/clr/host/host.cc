@@ -4,6 +4,9 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
+#include <unistd.h>
+
+#include <android/looper.h>
 
 #include <coreclrhost.h>
 
@@ -12,16 +15,20 @@
 #include <host/gc-bridge.hh>
 #include <host/fastdev-assemblies.hh>
 #include <host/host.hh>
+#include <host/host-environment-clr.hh>
 #include <host/host-jni.hh>
 #include <host/host-util.hh>
 #include <host/os-bridge.hh>
 #include <host/runtime-util.hh>
 #include <runtime-base/android-system.hh>
+#include <runtime-base/dso-loader.hh>
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
+#include <runtime-base/monodroid-dl.hh>
 #include <runtime-base/search.hh>
 #include <runtime-base/timing-internal.hh>
 #include <shared/log_types.hh>
+#include <shared/xxhash.hh>
 #include <startup/zip.hh>
 
 using namespace xamarin::android;
@@ -140,6 +147,24 @@ auto Host::zip_scan_callback (std::string_view const& apk_path, int apk_fd, dyna
 			return false; // This will make the scanner keep the APK open
 		}
 	}
+
+	if (!AndroidSystem::is_embedded_dso_mode_enabled () || !entry_name.starts_with (Zip::lib_prefix) || !entry_name.ends_with (Constants::dso_suffix)) {
+		return false;
+	}
+
+	log_debug (LOG_ASSEMBLY, "Found shared library in '{}': {}"sv, apk_path, entry_name.get ());
+	std::string_view lib_name { entry_name.get () + Zip::lib_prefix.length () };
+	hash_t name_hash = xxhash::hash (lib_name.data (), lib_name.length ());
+	log_debug (LOG_ASSEMBLY, "Library name is: {}; hash == 0x{:x}", lib_name, name_hash);
+
+	DSOApkEntry *apk_entry = MonodroidDl::find_dso_apk_entry (name_hash);
+	if (apk_entry == nullptr) {
+		return false;
+	}
+
+	log_debug (LOG_ASSEMBLY, "Found matching DSO APK entry");
+	apk_entry->fd = apk_fd;
+	apk_entry->offset = offset;
 	return false;
 }
 
@@ -261,35 +286,6 @@ void Host::gather_assemblies_and_libraries (jstring_array_wrapper& runtimeApks, 
 	}
 }
 
-void Host::create_xdg_directory (jstring_wrapper& home, size_t home_len, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept
-{
-	static_local_string<SENSIBLE_PATH_MAX> dir (home_len + relative_path.length ());
-	Util::path_combine (dir, home.get_string_view (), relative_path);
-
-	log_debug (LOG_DEFAULT, "Creating XDG directory: {}"sv, optional_string (dir.get ()));
-	int rv = Util::create_directory (dir.get (), Constants::DEFAULT_DIRECTORY_MODE);
-	if (rv < 0 && errno != EEXIST) {
-		log_warn (LOG_DEFAULT, "Failed to create XDG directory {}. {}"sv, optional_string (dir.get ()), strerror (errno));
-	}
-
-	if (!environment_variable_name.empty ()) {
-		setenv (environment_variable_name.data (), dir.get (), 1);
-	}
-}
-
-void Host::create_xdg_directories_and_environment (jstring_wrapper &homeDir) noexcept
-{
-	size_t home_len = strlen (homeDir.get_cstr ());
-
-	constexpr auto XDG_DATA_HOME = "XDG_DATA_HOME"sv;
-	constexpr auto HOME_PATH = ".local/share"sv;
-	create_xdg_directory (homeDir, home_len, HOME_PATH, XDG_DATA_HOME);
-
-	constexpr auto XDG_CONFIG_HOME = "XDG_CONFIG_HOME"sv;
-	constexpr auto CONFIG_PATH = ".config"sv;
-	create_xdg_directory (homeDir, home_len, CONFIG_PATH, XDG_CONFIG_HOME);
-}
-
 [[gnu::always_inline]]
 auto Host::create_delegate (
 	std::string_view const& assembly_name, std::string_view const& type_name,
@@ -329,6 +325,60 @@ auto Host::create_delegate (
 	return delegate;
 }
 
+[[gnu::flatten, gnu::always_inline]]
+void Host::preload_jni_libraries () noexcept
+{
+	// NOTE: when fixing a bug here, fix also the MonoVM code in src/native/mono/monodroid-glue.cc@preload_jni_libraries
+	if (application_config.number_of_shared_libraries == 0) [[unlikely]] {
+		return;
+	}
+
+	log_debug (LOG_ASSEMBLY, "DSO jni preloads index stride == {}", dso_jni_preloads_idx_stride);
+
+	if ((dso_jni_preloads_idx_count % dso_jni_preloads_idx_stride) != 0) [[unlikely]] {
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			std::format (
+				"DSO preload index is invalid, size ({}) is not a multiple of {}"sv,
+				dso_jni_preloads_idx_count,
+				dso_jni_preloads_idx_stride
+			)
+		);
+	}
+
+	for (size_t i = 0; i < dso_jni_preloads_idx_count; i += dso_jni_preloads_idx_stride) {
+		const size_t entry_index = dso_jni_preloads_idx[i];
+		DSOCacheEntry &entry = dso_cache[entry_index];
+		const std::string_view dso_name = MonodroidDl::get_dso_name (&entry);
+
+		log_debug (
+			LOG_ASSEMBLY,
+			"Preloading JNI shared library: {} (entry's index: {}; real name hash: {:x}; name hash: {:x})",
+			dso_name,
+			entry_index,
+			entry.real_name_hash,
+			entry.hash
+		);
+
+		void *handle = MonodroidDl::monodroid_dlopen (&entry, dso_name, RTLD_NOW);
+
+		// Set handle in all the alias entries
+		for (size_t j = 1; j < dso_jni_preloads_idx_stride; j++) {
+			const size_t entry_alias_index = dso_jni_preloads_idx[i + j];
+			DSOCacheEntry &entry_alias = dso_cache[entry_alias_index];
+			const std::string_view entry_alias_name = MonodroidDl::get_dso_name (&entry);
+
+			log_debug (
+				LOG_ASSEMBLY,
+				"Putting JNI library handle in alias entry at index {}: {}",
+				entry_alias_index,
+				entry_alias_name
+			);
+			entry_alias.handle = handle;
+		}
+	}
+}
+
 void Host::Java_mono_android_Runtime_initInternal (
 	JNIEnv *env, jclass runtimeClass, jstring lang, jobjectArray runtimeApksJava,
 
@@ -356,20 +406,19 @@ void Host::Java_mono_android_Runtime_initInternal (
 	}
 
 	jstring_array_wrapper applicationDirs (env, appDirs);
-
-	jstring_wrapper jstr (env, lang);
-	Util::set_environment_variable ("LANG"sv, jstr);
-
-	jstring_wrapper &home = applicationDirs[Constants::APP_DIRS_FILES_DIR_INDEX];
-	Util::set_environment_variable_for_directory ("TMPDIR"sv, applicationDirs[Constants::APP_DIRS_CACHE_DIR_INDEX]);
-	Util::set_environment_variable_for_directory ("HOME"sv, home);
-	create_xdg_directories_and_environment (home);
+	jstring_wrapper language (env, lang);
+	jstring_wrapper &files_dir = applicationDirs[Constants::APP_DIRS_FILES_DIR_INDEX];
+	HostEnvironment::setup_environment (
+		language,
+		files_dir,
+		applicationDirs[Constants::APP_DIRS_CACHE_DIR_INDEX]
+	);
 
 	java_TimeZone = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_util_TimeZone"sv, true);
 
 	AndroidSystem::detect_embedded_dso_mode (applicationDirs);
 	AndroidSystem::set_running_in_emulator (isEmulator);
-	AndroidSystem::set_primary_override_dir (home);
+	AndroidSystem::set_primary_override_dir (files_dir);
 	AndroidSystem::create_update_dir (AndroidSystem::get_primary_override_dir ());
 	AndroidSystem::setup_environment ();
 
@@ -420,6 +469,15 @@ void Host::Java_mono_android_Runtime_initInternal (
 			return detail::_format_message ("Failure to initialize CoreCLR host instance. Returned result 0x%x", static_cast<unsigned int>(hr));
 		}
 	);
+
+	DsoLoader::init (
+		env,
+		RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_System", true),
+		ALooper_forThread (), // main thread looper
+		gettid ()
+	);
+
+	preload_jni_libraries ();
 
 	struct JnienvInitializeArgs init = {};
 	init.javaVm                                         = jvm;
@@ -531,40 +589,7 @@ void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType,
 	}
 }
 
-auto Host::get_java_class_name_for_TypeManager (jclass klass) noexcept -> char*
-{
-	if (klass == nullptr || Class_getName == nullptr) {
-		return nullptr;
-	}
-
-	JNIEnv *env = OSBridge::ensure_jnienv ();
-	jstring name = reinterpret_cast<jstring> (env->CallObjectMethod (klass, Class_getName));
-	if (name == nullptr) {
-		log_error (LOG_DEFAULT, "Failed to obtain Java class name for object at {:p}", reinterpret_cast<void*>(klass));
-		return nullptr;
-	}
-
-	const char *mutf8 = env->GetStringUTFChars (name, nullptr);
-	if (mutf8 == nullptr) {
-		log_error (LOG_DEFAULT, "Failed to convert Java class name to UTF8 (out of memory?)"sv);
-		env->DeleteLocalRef (name);
-		return nullptr;
-	}
-	char *ret = strdup (mutf8);
-
-	env->ReleaseStringUTFChars (name, mutf8);
-	env->DeleteLocalRef (name);
-
-	char *dot = strchr (ret, '.');
-	while (dot != nullptr) {
-		*dot = '/';
-		dot = strchr (dot + 1, '.');
-	}
-
-	return ret;
-}
-
-auto Host::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcept -> jint
+auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcept -> jint
 {
 	jvm = vm;
 

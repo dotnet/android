@@ -459,8 +459,8 @@ This property is `False` by default.
 
 An enum-style property with valid values of `obsolete` and `disable`.
 
-When set to `obsolete`, types and members that are marked with the Java annotation 
-`androidx.annotation.RestrictTo` *or* are in non-exported Java packages will 
+When set to `obsolete`, types and members that are marked with the Java annotation
+`androidx.annotation.RestrictTo` *or* are in non-exported Java packages will
 be marked with an `[Obsolete]` attribute in the C# binding.
 
 This `[Obsolete]` attribute has a descriptive message explaining that the
@@ -472,9 +472,9 @@ independently of "normal" obsolete API.
 When set to `disable`, API will be generated as normal with no additional
 attributes. (This is the same behavior as before .NET 8.)
 
-Adding `[Obsolete]` attributes instead of automatically removing the API was done to 
-preserve API compatibility with existing packages. If you would instead prefer to 
-*remove* members that have the `@RestrictTo` annotation *or* are in non-exported 
+Adding `[Obsolete]` attributes instead of automatically removing the API was done to
+preserve API compatibility with existing packages. If you would instead prefer to
+*remove* members that have the `@RestrictTo` annotation *or* are in non-exported
 Java packages, you can use [Transform files](/xamarin/android/platform/binding-java-library/customizing-bindings/java-bindings-metadata#metadataxml-transform-file) in addition to
 this property to prevent these types from being bound:
 
@@ -1247,6 +1247,12 @@ This can result in increased app sizes. This behavior can be overridden by expli
 
 Experimental support for this property was added in .NET 8, removed in .NET 10.
 
+## AndroidStripNativeLibraries
+
+A bool property which tells the packaging process to strip debug symbols from the native shared libraries (`.so` files).
+
+The default value is `false` and the debug symbols, if any, will be preserved when packaging.
+
 ## AndroidSupportedAbis
 
 A string property that contains a
@@ -1645,6 +1651,18 @@ When `True`,
 files will be used
 to control `proguard` execution.
 
+## EventSourceSupport
+
+When set to `false`, disables .NET's [EventSource][eventsource]
+support from trimmed Android applications. Disabling this feature
+would prevent .NET diagnostic tools like `dotnet-counters` from
+functioning, but at the benefit of reduced application size.
+
+Set to `false` by default in `Release` mode, unless
+`$(EnableDiagnostics)` or `$(AndroidEnableProfiler)` are enabled.
+
+[eventsource]: https://learn.microsoft.com/dotnet/core/diagnostics/eventsource
+
 ## GenerateApplicationManifest
 
 Enables or disables the following MSBuild properties that emit values
@@ -1722,6 +1740,18 @@ The default value is False.
 ## MandroidI18n
 
 This MSBuild property is obsolete and is no longer supported.
+
+## MetricsSupport
+
+When set to `false`, disables .NET's [Metrics][dotnetmetrics] support
+from trimmed Android applications. Disabling this feature would
+prevent APIs such as `System.Diagnostics.Metrics` from functioning,
+but at the benefit of reduced application size.
+
+Set to `false` by default in `Release` mode, unless
+`$(EnableDiagnostics)` or `$(AndroidEnableProfiler)` are enabled.
+
+[dotnetmetrics]: https://learn.microsoft.com/dotnet/core/diagnostics/metrics
 
 ## MonoAndroidAssetPrefix
 

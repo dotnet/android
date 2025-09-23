@@ -439,6 +439,7 @@
   <element path="uses-permission.minSdkVersion" visible="false" />
   <element path="uses-permission.requiredFeature" visible="false" />
   <element path="uses-permission.requiredNotFeature" visible="false" />
-  <element path="uses-permission.usesPermissionFlags" visible="false" />
+  <!-- usesPermissionFlags - https://developer.android.com/develop/connectivity/bluetooth/bt-permissions#assert-never-for-location -->
+  <element path="uses-permission.usesPermissionFlags" visible="true" />
 
 </metadata>

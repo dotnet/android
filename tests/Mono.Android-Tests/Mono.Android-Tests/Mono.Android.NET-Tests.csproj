@@ -33,7 +33,7 @@
     <!-- TODO: https://github.com/dotnet/android/issues/10069 -->
     <ExcludeCategories Condition=" '$(UseMonoRuntime)' == 'false' ">$(ExcludeCategories):CoreCLRIgnore:SSL:NTLM:RuntimeConfig</ExcludeCategories>
     <!-- TODO: https://github.com/dotnet/android/issues/10079 -->
-    <ExcludeCategories Condition=" '$(PublishAot)' == 'true' ">$(ExcludeCategories):NativeAOTIgnore:SSL:NTLM:GCBridge:AndroidClientHandler:Export:NativeTypeMap</ExcludeCategories>
+    <ExcludeCategories Condition=" '$(PublishAot)' == 'true' ">$(ExcludeCategories):NativeAOTIgnore:SSL:NTLM:AndroidClientHandler:Export:NativeTypeMap</ExcludeCategories>
     <!-- FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190 -->
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):LLVMIgnore</ExcludeCategories>
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):InetAccess:NetworkInterfaces</ExcludeCategories>
@@ -69,6 +69,7 @@
   <ItemGroup>
     <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" />
     <_AndroidRemapMembers Include="Remaps.xml" />
+    <_AndroidRemapMembers Include="IsAssignableFromRemaps.xml" Condition=" '$(_AndroidIsAssignableFromCheck)' == 'false' " />
     <ProguardConfiguration Include="proguard.cfg" />
   </ItemGroup>
 
@@ -88,6 +89,7 @@
     <Compile Include="Android.Runtime\JnienvArrayMarshaling.cs" />
     <Compile Include="Android.Runtime\XmlReaderPullParserTest.cs" />
     <Compile Include="Android.Runtime\XmlReaderResourceParserTest.cs" />
+    <Compile Include="Android.Views\LayoutInflaterTest.cs" />
     <Compile Include="Android.Widget\AdapterTests.cs" />
     <Compile Include="Android.Widget\CustomWidgetTests.cs" />
     <Compile Include="Java.Interop\JavaConvertTest.cs" />
@@ -105,6 +107,7 @@
     <Compile Include="System.Drawing\TypeConverterTest.cs" />
     <Compile Include="System.IO\DirectoryTest.cs" />
     <Compile Include="System.IO\DriveInfoTest.cs" />
+    <Compile Include="System.IO\StreamTest.cs" />
     <Compile Include="System.IO.Compression\GZipStreamTest.cs" />
     <Compile Include="System.Linq\LinqExpressionTest.cs" />
     <Compile Include="System.Net\ProxyTest.cs" />
@@ -128,10 +131,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AndroidJavaSource Include="java/net/dot/android/test/ValueProvider.java" />
-    <AndroidJavaSource Include="java/net/dot/android/test/Example.java" />
+    <AndroidJavaSource Include="java/net/dot/android/test/*.java" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <AndroidResource Include="..\..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Resources\Base\Image.9.png">
       <Link>Resources\Drawable\Image.9.png</Link>
@@ -174,7 +176,7 @@
     <None Include="LinkedAssets\linked_text.txt" />
     <None Include="LinkedAssets\linked_text2.txt" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <AndroidAsset Include="LinkedAssets\hamburger.png">
       <Link>Assets\hamburger.png</Link>
@@ -203,7 +205,7 @@
       <LastGenOutput>AppResources.it-IT.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-  
+
   <ItemGroup>
     <Compile Include="AppResources.Designer.cs">
       <DependentUpon>AppResources.resx</DependentUpon>
@@ -212,7 +214,7 @@
       <DependentUpon>AppResources.it-IT.resx</DependentUpon>
     </Compile>
   </ItemGroup>
-  
+
   <ItemGroup>
     <AndroidNativeLibrary Include="..\libs\arm64-v8a\libreuse-threads.so" />
     <AndroidNativeLibrary Include="..\libs\armeabi-v7a\libreuse-threads.so" />

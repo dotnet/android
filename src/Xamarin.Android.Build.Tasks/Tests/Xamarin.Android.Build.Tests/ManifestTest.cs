@@ -1120,7 +1120,7 @@ class TestActivity : Activity { }"
 			bool wasMinSdkVersionEmpty = false;
 
 			// Empty values will default to AndroidMinimumDotNetApiLevel
-			int minDotnetApiLevel = XABuildConfig.AndroidMinimumDotNetApiLevel;
+			var minDotnetApiLevel = XABuildConfig.AndroidMinimumDotNetApiLevel;
 			if (string.IsNullOrEmpty (minSdkVersion)) {
 				wasMinSdkVersionEmpty = true;
 				minSdkVersion = minDotnetApiLevel.ToString ();
@@ -1134,14 +1134,14 @@ class TestActivity : Activity { }"
 			builder.ThrowOnBuildFailure = false;
 			var buildResult = builder.Build (proj);
 
-			if (supportedOSPlatVersInt < minDotnetApiLevel) {
+			if (supportedOSPlatVersInt < minDotnetApiLevel.Major) {
 				Assert.IsFalse (buildResult, "SupportedOSPlatformVersion version too low, build should fail.");
 				StringAssertEx.Contains ("error XA4216", builder.LastBuildOutput, "Should get error XA4216.");
 				StringAssertEx.Contains ("Please increase the $(SupportedOSPlatformVersion) property value in your project file",
 					builder.LastBuildOutput, "Should get error about SupportedOSPlatformVersion being too low.");
 			}
 
-			if (minSdkVersionInt < minDotnetApiLevel ) {
+			if (minSdkVersionInt < minDotnetApiLevel.Major) {
 				Assert.IsFalse (buildResult, "minSdkVersion too low, build should fail.");
 				StringAssertEx.Contains ("error XA4216", builder.LastBuildOutput, "Should get error XA4216.");
 				StringAssertEx.Contains ("Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml",
@@ -1153,7 +1153,9 @@ class TestActivity : Activity { }"
 				StringAssertEx.Contains ("error XA1036", builder.LastBuildOutput, "Should get error about min version mismatch.");
 			}
 
-			if (minSdkVersionInt == supportedOSPlatVersInt && minSdkVersionInt >= minDotnetApiLevel && supportedOSPlatVersInt >= minDotnetApiLevel) {
+			if (minSdkVersionInt == supportedOSPlatVersInt &&
+					minSdkVersionInt >= minDotnetApiLevel.Major &&
+					supportedOSPlatVersInt >= minDotnetApiLevel.Major) {
 				Assert.IsTrue (buildResult, "compatible min versions, build should succeed");
 			}
 		}
@@ -1298,6 +1300,30 @@ class TestActivity : Activity { }"
 		[Property ("test-service-property", Value = "test-service-property-value")]
 		public class TestService : global::Android.App.Service
 		{
+		}
+
+		[Test]
+		public void UsesPermissionFlagsAttribute ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+
+			proj.Sources.Add (new BuildItem.Source ("GlobalAssemblyInfo.cs") {
+				TextContent = () => @"using Android.App;
+
+[assembly: UsesPermission (Name = ""android.permission.BLUETOOTH_SCAN"", UsesPermissionFlags = ""neverForLocation"")]"
+			});
+
+			using (ProjectBuilder builder = CreateDllBuilder ()) {
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
+
+				string manifest = builder.Output.GetIntermediaryAsText (Path.Combine ("android", "AndroidManifest.xml"));
+				var doc = XDocument.Parse (manifest);
+				var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");
+				IEnumerable<XElement> usesPermissions = doc.Element ("manifest")?.Elements ("uses-permission");
+				XElement e = usesPermissions?.FirstOrDefault (x => x.Attribute (ns.GetName ("name"))?.Value == "android.permission.BLUETOOTH_SCAN");
+				Assert.IsNotNull (e, "Manifest should contain a uses-permission for android.permission.BLUETOOTH_SCAN");
+				Assert.AreEqual ("neverForLocation", e.Attribute (ns.GetName ("usesPermissionFlags"))?.Value, "uses-permission should have usesPermissionFlags='neverForLocation'");
+			}
 		}
 
 		class MockVersionResolver : IVersionResolver

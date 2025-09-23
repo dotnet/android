@@ -104,14 +104,20 @@
       Outputs="@(_MergedXmlFiles->'%(MergedXml)')">
     
     <PropertyGroup>
-      <ApiMerge>..\..\bin\Build$(Configuration)\api-merge.dll</ApiMerge>
-      <_ConfigurationFile>..\api-merge\merge-configuration.xml</_ConfigurationFile>
-      <_ConfigurationInputBaseDirectory>..\..\bin\Build$(Configuration)\api\</_ConfigurationInputBaseDirectory>
-      <_ConfigurationOutputBaseDirectory>..\..\bin\Build$(Configuration)\api\</_ConfigurationOutputBaseDirectory>
+      <ApiMerge>$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\api-merge.dll</ApiMerge>
+      <_ConfigurationFile>$(MSBuildThisFileDirectory)..\api-merge\merge-configuration.xml</_ConfigurationFile>
+      <_ConfigurationInputBaseDirectory>$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\api\</_ConfigurationInputBaseDirectory>
+      <_ConfigurationOutputBaseDirectory>$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\api\</_ConfigurationOutputBaseDirectory>
     </PropertyGroup>
+
+    <ItemGroup>
+      <_ApiMergeArg Include="-config=$(_ConfigurationFile)" />
+      <_ApiMergeArg Include="-config-input-dir=$(_ConfigurationInputBaseDirectory)" />
+      <_ApiMergeArg Include="-config-output-dir=$(_ConfigurationOutputBaseDirectory)" />
+    </ItemGroup>
     
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; $(ApiMerge) -config=$(_ConfigurationFile) -config-input-dir=$(_ConfigurationInputBaseDirectory) -config-output-dir=$(_ConfigurationOutputBaseDirectory)" />
+        Command="&quot;$(DotNetPreviewTool)&quot; &quot;$(ApiMerge)&quot; @(_ApiMergeArg->'&quot;%(Identity)&quot;', ' ')" />
     
     <ItemGroup>
       <_GeneratedApiDescriptionFiles Include="$(_ConfigurationOutputBaseDirectory)*.xml" />
@@ -126,14 +132,27 @@
   <Target Name="GenerateParamsFile">    
     
     <PropertyGroup>
-      <_ParamNameImporter>$(MicrosoftAndroidSdkOutDir)\param-name-importer.dll</_ParamNameImporter>
+      <_JavaSourceUtilsJar>$(MicrosoftAndroidSdkOutDir)\java-source-utils.jar</_JavaSourceUtilsJar>
       <_SourceStubZip>$(AndroidSdkDirectory)\platforms\android-$(ParamApiLevel)\android-stubs-src.jar</_SourceStubZip>
-      <_ParamOutputTextFile>..\..\src\Mono.Android\Profiles\api-$(ParamApiLevel).params.txt</_ParamOutputTextFile>
+      <_ParamOutputTextFile>$(MSBuildThisFileDirectory)..\..\src\Mono.Android\Profiles\api-$(ParamApiLevel).params.txt</_ParamOutputTextFile>
+      <_TmpDir Condition=" '$(TMPDIR)' != '' ">$(TMPDIR)</_TmpDir>
+      <_TmpDir Condition=" '$(_TmpDir)' == '' ">$(TEMP)</_TmpDir>
+      <_ParamOutputJavadoc>$(_TmpDir)\api-$(ParamApiLevel).javadoc.xml</_ParamOutputJavadoc>
     </PropertyGroup>
     
+    <ItemGroup>
+      <_JsuArg Include="--output-params" />
+      <_JsuArg Include="$(_ParamOutputTextFile)" />
+      <_JsuArg Include="--output-javadoc" />
+      <_JsuArg Include="$(_ParamOutputJavadoc)" />
+      <_JsuArg Include="-v" />
+      <_JsuArg Include="$(_SourceStubZip)" />
+    </ItemGroup>
+
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; $(_ParamNameImporter) -source-stub-zip=$(_SourceStubZip) -output-text $(_ParamOutputTextFile) -verbose -framework-only" />
-        
+        Command="&quot;$(JavaPath)&quot; -jar &quot;$(_JavaSourceUtilsJar)&quot; @(_JsuArg->'&quot;%(Identity)&quot;', ' ')" />
+
+    <Delete Files="$(_ParamOutputJavadoc)" />
   </Target>
   
   <!-- Generates 'JNIEnv.g.cs' file. We do this here because it should only run once, not per-TF.  -->

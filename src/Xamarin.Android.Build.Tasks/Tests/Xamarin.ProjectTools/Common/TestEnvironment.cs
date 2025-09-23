@@ -74,7 +74,9 @@ namespace Xamarin.ProjectTools
 		/// </summary>
 		public static string MonoAndroidFrameworkDirectory {
 			get {
-				var rootRefDir = Directory.GetDirectories (Path.Combine (DotNetPreviewPacksDirectory, $"Microsoft.Android.Ref.{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}")).LastOrDefault ();
+				var targetPlatform = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
+				var versionString = targetPlatform.Minor == 0 ? $"{targetPlatform.Major}" : $"{targetPlatform.Major}.{targetPlatform.Minor}";
+				var rootRefDir = Directory.GetDirectories (Path.Combine (DotNetPreviewPacksDirectory, $"Microsoft.Android.Ref.{versionString}")).LastOrDefault ();
 				if (!Directory.Exists (rootRefDir)) {
 					throw new DirectoryNotFoundException ($"Unable to locate Microsoft.Android.Ref.");
 				}

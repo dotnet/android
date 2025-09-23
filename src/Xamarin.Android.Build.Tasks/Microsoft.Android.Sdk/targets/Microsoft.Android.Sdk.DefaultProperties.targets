@@ -90,6 +90,9 @@
     <OutputType Condition=" '$(OutputType)' == 'Exe' ">Library</OutputType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' ">
+    <UseAppHost>false</UseAppHost>
+    <!-- see: https://github.com/xamarin/xamarin-macios/blob/a6eb528197854c074d9dd5847328c096890337be/dotnet/targets/Xamarin.Shared.Sdk.props#L38-L52 -->
+    <_RuntimeIdentifierUsesAppHost>false</_RuntimeIdentifierUsesAppHost>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <PublishReferencesDocumentationFiles Condition=" '$(PublishReferencesDocumentationFiles)' == '' ">false</PublishReferencesDocumentationFiles>
     <UseCurrentRuntimeIdentifier>false</UseCurrentRuntimeIdentifier>
@@ -119,13 +122,10 @@
       Runtime libraries feature switches defaults
       Available feature switches: https://github.com/dotnet/runtime/blob/master/docs/workflow/trimming/feature-switches.md
      -->
-    <DebuggerSupport Condition="'$(DebuggerSupport)' == '' and '$(Optimize)' == 'true'">false</DebuggerSupport>
     <EnableUnsafeUTF7Encoding Condition="'$(EnableUnsafeUTF7Encoding)' == ''">false</EnableUnsafeUTF7Encoding>
     <EnableUnsafeBinaryFormatterSerialization Condition="'$(EnableUnsafeBinaryFormatterSerialization)' == ''">false</EnableUnsafeBinaryFormatterSerialization>
-    <EventSourceSupport Condition="'$(EventSourceSupport)' == ''">false</EventSourceSupport>
     <UseSystemResourceKeys Condition="'$(UseSystemResourceKeys)' == '' and '$(PublishTrimmed)' == 'true'">true</UseSystemResourceKeys>
     <Http3Support Condition="'$(Http3Support)' == ''">false</Http3Support>
-    <HttpActivityPropagationSupport Condition="'$(HttpActivityPropagationSupport)' == '' and '$(Optimize)' == 'true'">false</HttpActivityPropagationSupport>
     <InvariantGlobalization Condition="'$(InvariantGlobalization)' == ''">false</InvariantGlobalization>
     <StartupHookSupport Condition="'$(StartupHookSupport)' == ''">false</StartupHookSupport>
     <UseSizeOptimizedLinq Condition="'$(UseSizeOptimizedLinq)' == ''">true</UseSizeOptimizedLinq>
@@ -135,7 +135,6 @@
     <JsonSerializerIsReflectionEnabledByDefault Condition="'$(JsonSerializerIsReflectionEnabledByDefault)' == '' and '$(TrimMode)' == 'partial'">true</JsonSerializerIsReflectionEnabledByDefault>
     <!-- Set to disable throwing behavior, see: https://github.com/dotnet/runtime/issues/109724 -->
     <_DefaultValueAttributeSupport Condition="'$(_DefaultValueAttributeSupport)' == '' and '$(TrimMode)' == 'partial'">true</_DefaultValueAttributeSupport>
-    <MetricsSupport Condition="'$(MetricsSupport)' == '' and '$(Optimize)' == 'true'">false</MetricsSupport>
     <AndroidAvoidEmitForPerformance Condition="'$(AndroidAvoidEmitForPerformance)' == ''">$(AvoidEmitForPerformance)</AndroidAvoidEmitForPerformance>
     <AndroidAvoidEmitForPerformance Condition="'$(AndroidAvoidEmitForPerformance)' == ''">true</AndroidAvoidEmitForPerformance>
     <!-- Verify DI trimmability at development-time, but turn the validation off for production/trimmed builds. -->
@@ -149,6 +148,14 @@
 
     <!-- profiler won't work without internet permission, we must thus force it -->
     <AndroidNeedsInternetPermission Condition=" '$(AndroidEnableProfiler)' == 'true' ">True</AndroidNeedsInternetPermission>
+  </PropertyGroup>
+  <!-- Trimmer switches that default to OFF in Release mode -->
+  <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' and '$(Optimize)' == 'true' ">
+    <DebuggerSupport Condition=" '$(DebuggerSupport)' == '' ">false</DebuggerSupport>
+    <HttpActivityPropagationSupport Condition=" '$(HttpActivityPropagationSupport)' == '' ">false</HttpActivityPropagationSupport>
+    <!-- Only set if *not* using $(EnableDiagnostics) -->
+    <MetricsSupport Condition=" '$(MetricsSupport)' == '' and '$(AndroidEnableProfiler)' != 'true' ">false</MetricsSupport>
+    <EventSourceSupport Condition=" '$(EventSourceSupport)' == '' and '$(AndroidEnableProfiler)' != 'true' ">false</EventSourceSupport>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' and '$(GenerateApplicationManifest)' == 'true' ">
     <!-- Default to 1, if blank -->

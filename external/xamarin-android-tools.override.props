@@ -2,6 +2,7 @@
   <!-- Import $(LibZipSharpVersion) -->
   <Import Project="..\Directory.Build.props" />
   <Import Project="..\Configuration.props" />
+  <Import Project="..\build-tools\scripts\LongBranchNames.props" />
   <Import Project="..\build-tools\scripts\XAVersionInfo.targets" />
   <PropertyGroup>
     <AndroidToolsDisableMultiTargeting>true</AndroidToolsDisableMultiTargeting>
@@ -16,7 +17,8 @@
       BeforeTargets="SetVersion"
       DependsOnTargets="GetXAVersionInfo">
     <PropertyGroup>
-      <PackageVersionSuffix>-preview.$(PackVersionCommitCount)</PackageVersionSuffix>
+      <PackageVersionSuffix Condition="$(XAVersionBranch.StartsWith('release/'))">-preview.$(PackVersionCommitCount)</PackageVersionSuffix>
+      <PackageVersionSuffix Condition="!$(XAVersionBranch.StartsWith('release/'))">-ci.$(_AndroidPackBranch).$(PackVersionCommitCount)</PackageVersionSuffix>
     </PropertyGroup>
   </Target>
 </Project>
