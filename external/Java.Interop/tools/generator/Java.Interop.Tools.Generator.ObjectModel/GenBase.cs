@@ -307,27 +307,137 @@ namespace MonoDroid.Generation
 
 		public void FixupMethodOverrides (CodeGenerationOptions opt)
 		{
+			// Process regular methods (non-static, non-interface default methods)
 			foreach (var m in Methods.Where (m => !m.IsStatic && !m.IsInterfaceDefaultMethod)) {
 				for (var bt = GetBaseGen (opt); bt != null; bt = bt.GetBaseGen (opt)) {
-					var bm = bt.Methods.FirstOrDefault (mm => mm.Name == m.Name && mm.Visibility == m.Visibility && ParameterList.Equals (mm.Parameters, m.Parameters));
-					if (bm != null && bm.RetVal.FullName == m.RetVal.FullName) { // if return type is different, it could be still "new", not "override".
-						m.IsOverride = true;
+					var bm = bt.Methods.FirstOrDefault (mm =>
+						mm.Name == m.Name &&
+						mm.Visibility == m.Visibility &&
+						mm.RetVal.FullName == m.RetVal.FullName && // if return type is different, it could be still "new", not "override".
+						ParameterList.Equals (mm.Parameters, m.Parameters));
+					if (bm == null) {
+						continue;
+					}
 
-						if (opt.FixObsoleteOverrides) {
-							// If method overrides a deprecated method, it also needs to be marked as deprecated
-							if (bm.Deprecated.HasValue () && !m.Deprecated.HasValue ())
-								m.Deprecated = bm.Deprecated;
+					m.IsOverride = true;
+					if (opt.FixObsoleteOverrides) {
+						// If method overrides a deprecated method, it also needs to be marked as deprecated
+						if (bm.Deprecated.HasValue () && !m.Deprecated.HasValue ())
+							m.Deprecated = bm.Deprecated;
 
-							// Fix issue when base method was deprecated before the overriding method, set both both to base method value
-							if (bm.DeprecatedSince.GetValueOrDefault (default) < m.DeprecatedSince.GetValueOrDefault (default))
-								m.DeprecatedSince = bm.DeprecatedSince;
+						// Fix issue when base method was deprecated before the overriding method, set both both to base method value
+						if (bm.DeprecatedSince.GetValueOrDefault (default) < m.DeprecatedSince.GetValueOrDefault (default))
+							m.DeprecatedSince = bm.DeprecatedSince;
+					}
+
+					// If a "removed" method overrides a "not removed" method, the method was
+					// likely moved to a base class, so don't mark it as removed.
+					if (m.ApiRemovedSince > 0 && bm.ApiRemovedSince == 0) {
+						m.ApiRemovedSince = default;
+					}
+					break;
+				}
+			}
+
+			// Process property getter/setter methods for ApiRemovedSince fixup
+			foreach (var prop in Properties) {
+				for (var bt = GetBaseGen (opt); bt != null; bt = bt.GetBaseGen (opt)) {
+					var baseProp = bt.Properties.FirstOrDefault (p => p.Name == prop.Name && p.Type == prop.Type);
+					if (baseProp == null) {
+						continue;
+					}
+
+					bool shouldBreak = false;
+					if (prop.Getter != null && prop.Getter.ApiRemovedSince > 0 && baseProp.Getter != null && baseProp.Getter.ApiRemovedSince == 0) {
+						if (baseProp.Getter.Visibility == prop.Getter.Visibility &&
+							ParameterList.Equals (baseProp.Getter.Parameters, prop.Getter.Parameters) &&
+							baseProp.Getter.RetVal.FullName == prop.Getter.RetVal.FullName) {
+							// If a "removed" property getter overrides a "not removed" getter, the method was
+							// likely moved to a base class, so don't mark it as removed.
+							prop.Getter.ApiRemovedSince = default;
+							shouldBreak = true;
 						}
+					}
+					if (prop.Setter != null && prop.Setter.ApiRemovedSince > 0 && baseProp.Setter != null && baseProp.Setter.ApiRemovedSince == 0) {
+						if (baseProp.Setter.Visibility == prop.Setter.Visibility &&
+							ParameterList.Equals (baseProp.Setter.Parameters, prop.Setter.Parameters)) {
+							// If a "removed" property setter overrides a "not removed" setter, the method was
+							// likely moved to a base class, so don't mark it as removed.
+							prop.Setter.ApiRemovedSince = default;
+							shouldBreak = true;
+						}
+					}
+					if (shouldBreak) {
+						break;
+					}
+				}
+			}
 
-						// If a "removed" method overrides a "not removed" method, the method was
-						// likely moved to a base class, so don't mark it as removed.
-						if (m.ApiRemovedSince > 0 && bm.ApiRemovedSince == 0)
+			// Process interface inheritance for both regular and default interface methods
+			if (this is InterfaceGen currentInterface) {
+				// For interfaces, check all base interfaces (interfaces that this interface implements/extends)
+				var baseInterfaces = currentInterface.GetAllDerivedInterfaces ();
+
+				foreach (var m in Methods.Where (m => !m.IsStatic)) {
+					foreach (var baseIface in baseInterfaces) {
+						var bm = baseIface.Methods.FirstOrDefault (mm =>
+							mm.Name == m.Name &&
+							mm.Visibility == m.Visibility &&
+							mm.RetVal.FullName == m.RetVal.FullName &&
+							ParameterList.Equals (mm.Parameters, m.Parameters));
+						if (bm == null) {
+							continue;
+						}
+						// If a "removed" interface method overrides a "not removed" method, the method was
+						// likely moved to a base interface, so don't mark it as removed.
+						if (m.ApiRemovedSince > 0 && bm.ApiRemovedSince == 0) {
 							m.ApiRemovedSince = default;
+						}
+						break;
+					}
+				}
 
+				// Process interface property getter/setter methods for ApiRemovedSince fixup
+				foreach (var prop in Properties) {
+					foreach (var baseIface in baseInterfaces) {
+						var baseProp = baseIface.Properties.FirstOrDefault (p => p.Name == prop.Name && p.Type == prop.Type);
+						if (baseProp == null)
+							continue;
+
+						bool shouldBreak = false;
+						if (prop.Getter != null && prop.Getter.ApiRemovedSince > 0 && baseProp.Getter != null && baseProp.Getter.ApiRemovedSince == 0) {
+							if (baseProp.Getter.Visibility == prop.Getter.Visibility &&
+								ParameterList.Equals (baseProp.Getter.Parameters, prop.Getter.Parameters) &&
+								baseProp.Getter.RetVal.FullName == prop.Getter.RetVal.FullName) {
+								prop.Getter.ApiRemovedSince = default;
+								shouldBreak = true;
+							}
+						}
+						if (prop.Setter != null && prop.Setter.ApiRemovedSince > 0 && baseProp.Setter != null && baseProp.Setter.ApiRemovedSince == 0) {
+							if (baseProp.Setter.Visibility == prop.Setter.Visibility &&
+								ParameterList.Equals (baseProp.Setter.Parameters, prop.Setter.Parameters)) {
+								prop.Setter.ApiRemovedSince = default;
+								shouldBreak = true;
+							}
+						}
+						if (shouldBreak) {
+							break;
+						}
+					}
+				}
+
+				// Process interface field inheritance for ApiRemovedSince fixup
+				foreach (var field in Fields) {
+					foreach (var baseIface in baseInterfaces) {
+						var baseField = baseIface.Fields.FirstOrDefault (f => f.Name == field.Name && f.TypeName == field.TypeName && f.Visibility == field.Visibility);
+						if (baseField == null) {
+							continue;
+						}
+						// If a "removed" interface field overrides a "not removed" field, the field was
+						// likely moved to a base interface, so don't mark it as removed.
+						if (field.ApiRemovedSince > 0 && baseField.ApiRemovedSince == 0) {
+							field.ApiRemovedSince = default;
+						}
 						break;
 					}
 				}

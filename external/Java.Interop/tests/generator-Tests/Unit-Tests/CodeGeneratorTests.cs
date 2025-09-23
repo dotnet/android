@@ -1441,13 +1441,23 @@ namespace generatortests
 		public void UnsupportedOSPlatformIgnoresMethodOverrides ()
 		{
 			// Given:
+			// Class inheritance scenario:
 			// public class TextView {
 			//   public Object doThing () { ... }
 			// }
 			// public class TextView2 : TextView {
 			//   public Object doThing () { ... }   // removed-since = 30
 			// }
-			// We should not write [UnsupportedOSPlatform] on TextView2.doThing (), because the base method isn't "removed".
+			// Interface inheritance scenario:
+			// public interface IFoo {
+			//   public Object doSomething () { ... }
+			//   public static final String DATE_TAKEN = "datetaken";
+			// }
+			// public interface IBar : IFoo {
+			//   public Object doSomething () { ... }   // removed-since = 30
+			//   public static final String DATE_TAKEN = "datetaken";  // removed-since = 30
+			// }
+			// We should not write [UnsupportedOSPlatform] on overriding methods or fields, because the base methods/fields aren't "removed".
 			var xml = @$"<api>
 			  <package name='java.lang' jni-name='java/lang'>
 			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
@@ -1460,13 +1470,97 @@ namespace generatortests
 			       <method abstract='false' deprecated='not deprecated' final='false' name='doThing' bridge='false' native='false' return='java.lang.Object' static='false' synchronized='false' synthetic='false' visibility='public' removed-since='30' />
 			     </class>
 			  </package>
+			  <package name='com.example' jni-name='com/example'>
+			    <interface abstract='true' deprecated='not deprecated' final='false' name='Foo' static='false' visibility='public' jni-signature='Lcom/example/Foo;'>
+			       <method abstract='true' deprecated='not deprecated' final='false' name='doSomething' bridge='false' native='false' return='java.lang.Object' static='false' synchronized='false' synthetic='false' visibility='public' />
+			       <field deprecated='not deprecated' final='true' name='DATE_TAKEN' jni-signature='Ljava/lang/String;' static='true' transient='false' type='java.lang.String' type-generic-aware='java.lang.String' value='&quot;datetaken&quot;' visibility='public' volatile='false'></field>
+			     </interface>
+			    <interface abstract='true' deprecated='not deprecated' final='false' name='Bar' static='false' visibility='public' jni-signature='Lcom/example/Bar;'>
+			       <implements name='com.example.Foo' name-generic-aware='com.example.Foo' jni-type='Lcom/example/Foo;'></implements>
+			       <method abstract='true' deprecated='not deprecated' final='false' name='doSomething' bridge='false' native='false' return='java.lang.Object' static='false' synchronized='false' synthetic='false' visibility='public' removed-since='30' />
+			       <field deprecated='not deprecated' final='true' name='DATE_TAKEN' jni-signature='Ljava/lang/String;' static='true' transient='false' type='java.lang.String' type-generic-aware='java.lang.String' value='&quot;datetaken&quot;' visibility='public' volatile='false' removed-since='30'></field>
+			     </interface>
+			  </package>
 			</api>";
 
 			var gens = ParseApiDefinition (xml);
+			
+			// Test class inheritance scenario
 			var klass = gens.Single (g => g.Name == "TextView2");
 			var actual = GetGeneratedTypeOutput (klass);
+			StringAssert.DoesNotContain ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android30.0\")]", actual, "Should not contain UnsupportedOSPlatform on class override!");
 
-			StringAssert.DoesNotContain ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android30.0\")]", actual, "Should contain UnsupportedOSPlatform!");
+			// Test interface inheritance scenario  
+			var iface = gens.OfType<InterfaceGen> ().Single (g => g.Name == "IBar");
+			var ifaceActual = GetGeneratedTypeOutput (iface);
+			StringAssert.DoesNotContain ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android30.0\")]", ifaceActual, "Should not contain UnsupportedOSPlatform on interface override!");
+		}
+
+		[Test]
+		public void UnsupportedOSPlatformIgnoresPropertyOverrides ()
+		{
+			// Given:
+			// Class inheritance scenario:
+			// public class TextView {
+			//   public Object getThing () { ... }
+			//   public void setThing (Object value) { ... }
+			// }
+			// public class TextView2 : TextView {
+			//   public Object getThing () { ... }            // removed-since = 30
+			//   public void setThing (Object value) { ... }  // removed-since = 30
+			// }
+			// Interface inheritance scenario:
+			// public interface IPropertyProvider {
+			//   public Object getSomething () { ... }
+			//   public static final String DATE_TAKEN = "datetaken";
+			// }
+			// public interface IExtendedProvider : IPropertyProvider {
+			//   public Object getSomething () { ... }        // removed-since = 30
+			//   public static final String DATE_TAKEN = "datetaken";  // removed-since = 30
+			// }
+			// We should not write [UnsupportedOSPlatform] on overriding properties or fields, because the base methods/fields aren't "removed".
+			var xml = @$"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='android.widget' jni-name='android/widget'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' final='false' name='TextView' static='false' visibility='public'>
+			       <method abstract='false' deprecated='not deprecated' final='false' name='getThing' bridge='false' native='false' return='java.lang.Object' static='false' synchronized='false' synthetic='false' visibility='public' />
+			       <method abstract='false' deprecated='not deprecated' final='false' name='setThing' bridge='false' native='false' return='void' static='false' synchronized='false' synthetic='false' visibility='public'>
+			         <parameter name='value' type='java.lang.Object' />
+			       </method>
+			     </class>
+			    <class abstract='false' deprecated='not deprecated' extends='android.widget.TextView' extends-generic-aware='java.lang.Object' final='false' name='TextView2' static='false' visibility='public'>
+			       <method abstract='false' deprecated='not deprecated' final='false' name='getThing' bridge='false' native='false' return='java.lang.Object' static='false' synchronized='false' synthetic='false' visibility='public' removed-since='30' />
+			       <method abstract='false' deprecated='not deprecated' final='false' name='setThing' bridge='false' native='false' return='void' static='false' synchronized='false' synthetic='false' visibility='public' removed-since='30'>
+			         <parameter name='value' type='java.lang.Object' />
+			       </method>
+			     </class>
+			  </package>
+			  <package name='com.example' jni-name='com/example'>
+			    <interface abstract='true' deprecated='not deprecated' final='false' name='PropertyProvider' static='false' visibility='public' jni-signature='Lcom/example/PropertyProvider;'>
+			       <method abstract='true' deprecated='not deprecated' final='false' name='getSomething' bridge='false' native='false' return='java.lang.Object' static='false' synchronized='false' synthetic='false' visibility='public' />
+			       <field deprecated='not deprecated' final='true' name='DATE_TAKEN' jni-signature='Ljava/lang/String;' static='true' transient='false' type='java.lang.String' type-generic-aware='java.lang.String' value='&quot;datetaken&quot;' visibility='public' volatile='false'></field>
+			     </interface>
+			    <interface abstract='true' deprecated='not deprecated' final='false' name='ExtendedProvider' static='false' visibility='public' jni-signature='Lcom/example/ExtendedProvider;'>
+			       <implements name='com.example.PropertyProvider' name-generic-aware='com.example.PropertyProvider' jni-type='Lcom/example/PropertyProvider;'></implements>
+			       <method abstract='true' deprecated='not deprecated' final='false' name='getSomething' bridge='false' native='false' return='java.lang.Object' static='false' synchronized='false' synthetic='false' visibility='public' removed-since='30' />
+			       <field deprecated='not deprecated' final='true' name='DATE_TAKEN' jni-signature='Ljava/lang/String;' static='true' transient='false' type='java.lang.String' type-generic-aware='java.lang.String' value='&quot;datetaken&quot;' visibility='public' volatile='false' removed-since='30'></field>
+			     </interface>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			
+			// Test class inheritance scenario
+			var klass = gens.Single (g => g.Name == "TextView2");
+			var actual = GetGeneratedTypeOutput (klass);
+			StringAssert.DoesNotContain ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android30.0\")]", actual, "Should not contain UnsupportedOSPlatform on class property override!");
+
+			// Test interface inheritance scenario  
+			var iface = gens.OfType<InterfaceGen> ().Single (g => g.Name == "IExtendedProvider");
+			var ifaceActual = GetGeneratedTypeOutput (iface);
+			StringAssert.DoesNotContain ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android30.0\")]", ifaceActual, "Should not contain UnsupportedOSPlatform on interface property override!");
 		}
 
 		[Test]
