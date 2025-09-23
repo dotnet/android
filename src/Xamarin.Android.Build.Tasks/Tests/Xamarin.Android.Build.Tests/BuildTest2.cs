@@ -448,10 +448,10 @@ namespace Xamarin.Android.Build.Tests
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
 				"""
 					// These should not cause warnings
-					new FrameLayout(this).Foreground = null;
-					new ListView(this).Adapter = null;
-					var a = Android.Provider.MediaStore.Video.IVideoColumns.DateTaken;
-					var b = Android.Provider.MediaStore.Images.IImageColumns.DateTaken;
+					new FrameLayout (this).Foreground = null;
+					new ListView (this).Adapter = null;
+					Console.WriteLine (Android.Provider.MediaStore.Video.IVideoColumns.DateTaken);
+					Console.WriteLine (Android.Provider.MediaStore.Images.IImageColumns.DateTaken);
 				""");
 
 			using (var b = CreateApkBuilder ()) {
