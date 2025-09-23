@@ -20,6 +20,10 @@ class Program
 	static int Run (string[] args)
 	{
 		IAspect? aspect = Detector.FindAspect (args[0]);
+		if (aspect == null) {
+			return 1;
+		}
+		Reporter.Report (aspect);
 		return 0;
 	}
 }

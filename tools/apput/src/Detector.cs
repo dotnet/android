@@ -10,12 +10,15 @@ namespace ApplicationUtility;
 /// detect whether or not the thing is an application aspect
 /// we know or we can handle.
 /// </summary>
-class Detector
+public class Detector
 {
-	readonly static List<Type> KnownTopLevelAspects = new () {
+	// Aspects must be listed in the order of detection, from the biggest (the most generic) to the
+	// smallest (the least generic) aspects.
+	public readonly static List<Type> KnownTopLevelAspects = new () {
 		typeof (ApplicationPackage),
 		typeof (AssemblyStore),
 		typeof (ApplicationAssembly),
+		typeof (NativeAotSharedLibrary),
 		typeof (SharedLibrary),
 	};
 
