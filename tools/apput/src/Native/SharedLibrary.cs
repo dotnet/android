@@ -5,30 +5,36 @@ using System.Text;
 using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
 
-using ApplicationUtility;
+namespace ApplicationUtility;
 
 class SharedLibrary : IAspect, IDisposable
 {
 	const uint ELF_MAGIC = 0x464c457f;
-
-	public static string AspectName { get; } = "Native shared library";
-
-	public bool HasAndroidPayload => payloadSize > 0;
-	public string Name => libraryName;
 
 	readonly ulong payloadOffset;
 	readonly ulong payloadSize;
 	readonly string libraryName;
 	readonly bool is64Bit;
 	readonly Stream libraryStream;
+
 	IELF elf;
 	bool disposed;
+	NativeArchitecture nativeArch = NativeArchitecture.Unknown;
+
+	public static string AspectName { get; } = "Native shared library";
+
+	public bool HasAndroidPayload => payloadSize > 0;
+	public string Name => libraryName;
+	public NativeArchitecture TargetArchitecture => nativeArch;
+	public bool Is64Bit => is64Bit;
+
+	protected IELF ELF => elf;
 
 	protected SharedLibrary (Stream stream, string libraryName)
 	{
 		this.libraryStream = stream;
 		this.libraryName = libraryName;
-		(elf, is64Bit) = LoadELF (stream, libraryName);
+		(elf, is64Bit, nativeArch) = LoadELF (stream, libraryName);
 		(payloadOffset, payloadSize) = FindAndroidPayload (elf);
 	}
 
@@ -80,8 +86,10 @@ class SharedLibrary : IAspect, IDisposable
 		return new SubStream (libraryStream, (long)payloadOffset, (long)payloadSize);
 	}
 
-	protected static bool IsSupportedELFSharedLibrary (Stream stream, string? description)
+	protected static bool IsSupportedELFSharedLibrary (Stream stream, string? description, out IELF? elf)
 	{
+		elf = null;
+
 		if (stream.Length < 4) { // Less than that and we know there isn't room for ELF magic
 			Log.Debug ($"SharedLibrary: stream ('{description}') is too short to be an ELF image.");
 			return false;
@@ -102,7 +110,7 @@ class SharedLibrary : IAspect, IDisposable
 			return false;
 		}
 
-		if (!ELFReader.TryLoad (stream, shouldOwnStream: false, out IELF? elf) || elf == null) {
+		if (!ELFReader.TryLoad (stream, shouldOwnStream: false, out elf) || elf == null) {
 			Log.Debug ($"SharedLibrary: stream ('{description}') failed to load as an ELF image while checking support.");
 			return false;
 		}
@@ -128,13 +136,22 @@ class SharedLibrary : IAspect, IDisposable
 		string not = supported ? String.Empty : " not";
 		Log.Debug ($"SharedLibrary: stream ('{description}') is{not} a supported ELF architecture ('{elf.Machine}')");
 
-		elf.Dispose ();
 		return supported;
+	}
+
+	protected static bool IsSupportedELFSharedLibrary (Stream stream, string? description)
+	{
+		if (!IsSupportedELFSharedLibrary (stream, description, out IELF? elf) || elf == null) {
+			return false;
+		}
+
+		elf.Dispose ();
+		return true;
 	}
 
 	// We assume below that stream corresponds to a valid and supported by us ELF image. This should have been asserted by
 	// the `LoadAspect` method.
-	(IELF elf, bool is64bit) LoadELF (Stream stream, string? libraryName)
+	(IELF elf, bool is64bit, NativeArchitecture nativeArch) LoadELF (Stream stream, string? libraryName)
 	{
 		stream.Seek (0, SeekOrigin.Begin);
 		if (!ELFReader.TryLoad (stream, shouldOwnStream: false, out IELF? elf) || elf == null) {
@@ -142,17 +159,15 @@ class SharedLibrary : IAspect, IDisposable
 			throw new InvalidOperationException ($"Failed to load ELF library '{libraryName}'.");
 		}
 
-		bool is64 = elf.Machine switch {
-			Machine.ARM      => false,
-			Machine.Intel386 => false,
-
-			Machine.AArch64  => true,
-			Machine.AMD64    => true,
-
+		(bool is64, NativeArchitecture arch) = elf.Machine switch {
+			Machine.ARM      => (false, NativeArchitecture.Arm),
+			Machine.Intel386 => (false, NativeArchitecture.X86),
+			Machine.AArch64  => (true, NativeArchitecture.Arm64),
+			Machine.AMD64    => (true, NativeArchitecture.X64),
 			_                => throw new NotSupportedException ($"Unsupported ELF architecture '{elf.Machine}'")
 		};
 
-		return (elf, is64);
+		return (elf, is64, arch);
 	}
 
 	(ulong offset, ulong size) FindAndroidPayload (IELF elf)
@@ -187,8 +202,13 @@ class SharedLibrary : IAspect, IDisposable
 
 	public bool HasSection (string name, SectionType type = SectionType.Null)
 	{
-		Log.Debug ($"Checking for section '{name}' with type {type} in library '{libraryName}'");
-		if (!elf.TryGetSection (name, out ISection? section)) {
+		return HasSection (elf, libraryName, name, type);
+	}
+
+	protected static bool HasSection (IELF elf, string libraryName, string sectionName, SectionType type = SectionType.Null)
+	{
+		Log.Debug ($"Checking for section '{sectionName}' with type {type} in library '{libraryName}'");
+		if (!elf.TryGetSection (sectionName, out ISection? section)) {
 			Log.Debug ("Section not found");
 			return false;
 		}
