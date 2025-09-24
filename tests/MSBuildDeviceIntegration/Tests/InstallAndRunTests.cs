@@ -246,9 +246,9 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 					},
 					new BuildItem.Source ("LinkerClass.cs") {
 						TextContent = () => @"
-[System.Diagnostics.CodeAnalysis.DynamicDependency (""DynamicDependencyTargetMethod()"", typeof(Library1.LinkerClass))]
 namespace Library1 {
 	public class LinkerClass {
+		[System.Diagnostics.CodeAnalysis.DynamicDependency (""DynamicDependencyTargetMethod()"", typeof(Library1.LinkerClass))]
 		public LinkerClass () { }
 
 		public bool IsPreserved { get { return true; } }
