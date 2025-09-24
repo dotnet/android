@@ -19,6 +19,13 @@ public class Detector
 		typeof (AssemblyStore),
 		typeof (ApplicationAssembly),
 		typeof (NativeAotSharedLibrary),
+		typeof (LibXamarinApp),
+		typeof (SharedLibrary),
+	};
+
+	readonly static List<Type> KnownSharedLibraryAspects = new () {
+		typeof (NativeAotSharedLibrary),
+		typeof (LibXamarinApp),
 		typeof (SharedLibrary),
 	};
 
@@ -30,16 +37,23 @@ public class Detector
 		}
 
 		using Stream fs = File.OpenRead (path);
-		return TryFindAspect (fs, path);
+		return TryFindTopLevelAspect (fs, path);
 	}
 
 	public static IAspect? FindAspect (Stream stream, string? description = null)
 	{
 		Log.Debug ($"Looking for aspect supporting a stream ('{description}')");
-		return TryFindAspect (stream, description);
+		return TryFindTopLevelAspect (stream, description);
 	}
 
-	static IAspect? TryFindAspect (Stream stream, string? description)
+	public static SharedLibrary? FindSharedLibraryAspect (Stream stream, string? description = null)
+	{
+		Log.Debug ($"Looking for shared library aspect ('{description}')");
+		// TODO: implement
+		return null;
+	}
+
+	static IAspect? TryFindTopLevelAspect (Stream stream, string? description)
 	{
 		var flags = BindingFlags.InvokeMethod | BindingFlags.Public | BindingFlags.Static;
 
