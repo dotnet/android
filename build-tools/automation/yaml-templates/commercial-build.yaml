@@ -49,7 +49,7 @@ steps:
 
 - task: DotNetCoreCLI@2
   displayName: macOS signing - add runtime entitlements
-  condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+  condition: and(succeeded(), and(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.DefinitionName'], 'Xamarin.Android')))
   inputs:
     projects: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
     arguments: >-
