@@ -4,29 +4,45 @@ using System.Text;
 
 using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
+using ELFSharp.ELF.Segments;
 
 namespace ApplicationUtility;
 
 class SharedLibrary : IAspect, IDisposable
 {
 	const uint ELF_MAGIC = 0x464c457f;
+	const string DebugLinkSectionName = ".gnu_debuglink";
+	const string PayloadSectionName = "payload";
 
+	readonly IELF elf;
+	readonly NativeArchitecture nativeArch = NativeArchitecture.Unknown;
+	readonly Stream libraryStream;
+	readonly bool hasDebugInfo;
+	readonly bool is64Bit;
+	readonly string libraryName;
+	readonly string? androidIdent;
+	readonly string? buildId;
+	readonly string? debugLink;
+	readonly ulong libraryAlignment;
 	readonly ulong payloadOffset;
 	readonly ulong payloadSize;
-	readonly string libraryName;
-	readonly bool is64Bit;
-	readonly Stream libraryStream;
 
-	IELF elf;
 	bool disposed;
-	NativeArchitecture nativeArch = NativeArchitecture.Unknown;
 
 	public static string AspectName { get; } = "Native shared library";
 
-	public bool HasAndroidPayload => payloadSize > 0;
-	public string Name => libraryName;
 	public NativeArchitecture TargetArchitecture => nativeArch;
+	public bool HasAndroidIdent => !String.IsNullOrEmpty (androidIdent);
+	public bool HasAndroidPayload => payloadSize > 0;
+	public bool HasBuildID => !String.IsNullOrEmpty (buildId);
+	public bool HasDebugInfo => hasDebugInfo;
+	public bool HasDebugLink => !String.IsNullOrEmpty (debugLink);
 	public bool Is64Bit => is64Bit;
+	public string Name => libraryName;
+	public string? AndroidIdent => androidIdent;
+	public string? BuildID => buildId;
+	public string? DebugLink => debugLink;
+	public ulong Alignment => libraryAlignment;
 
 	protected IELF ELF => elf;
 
@@ -36,6 +52,10 @@ class SharedLibrary : IAspect, IDisposable
 		this.libraryName = libraryName;
 		(elf, is64Bit, nativeArch) = LoadELF (stream, libraryName);
 		(payloadOffset, payloadSize) = FindAndroidPayload (elf);
+		libraryAlignment = DetectAlignment (elf, is64Bit);
+		(hasDebugInfo, debugLink) = DetectDebugInfo (elf, libraryName);
+		buildId = GetBuildID (elf, is64Bit);
+		androidIdent = GetAndroidIdent (elf, is64Bit);
 	}
 
 	public static IAspect LoadAspect (Stream stream, IAspectState? state, string? description)
@@ -172,8 +192,8 @@ class SharedLibrary : IAspect, IDisposable
 
 	(ulong offset, ulong size) FindAndroidPayload (IELF elf)
 	{
-		if (!elf.TryGetSection ("payload", out ISection? payloadSection)) {
-			Log.Debug ($"SharedLibrary: shared library '{libraryName}' doesn't have the 'payload' section.");
+		if (!elf.TryGetSection (PayloadSectionName, out ISection? payloadSection)) {
+			Log.Debug ($"SharedLibrary: shared library '{libraryName}' doesn't have the '{PayloadSectionName}' section.");
 			return (0, 0);
 		}
 
@@ -198,6 +218,112 @@ class SharedLibrary : IAspect, IDisposable
 		{
 			return ((ulong)payload.Offset, (ulong)payload.Size);
 		}
+	}
+
+	static (bool hasDebugInfo, string? debugLink) DetectDebugInfo (IELF elf, string libraryName)
+	{
+		bool hasDebugInfo = HasSection (elf, libraryName, ".debug_info", SectionType.ProgBits);
+
+		if (!HasSection (elf, libraryName, DebugLinkSectionName, SectionType.ProgBits)) {
+			return (hasDebugInfo, null);
+		}
+
+		return (hasDebugInfo, ReadDebugLinkSection (elf, libraryName));
+	}
+
+	static string? ReadDebugLinkSection (IELF elf, string libraryName)
+	{
+		Log.Debug ($"Trying to load debug link section from {libraryName}");
+		if (!elf.TryGetSection (DebugLinkSectionName, out ISection? section)) {
+			Log.Debug ($"Debug link section '{DebugLinkSectionName}' could not be read");
+			return null;
+		}
+
+		// From https://sourceware.org/gdb/current/onlinedocs/gdb.html/Separate-Debug-Files.html
+		//
+		//  * A filename, with any leading directory components removed, followed by a zero byte,
+		//  * zero to three bytes of padding, as needed to reach the next four-byte boundary within the section, and
+		//  * a four-byte CRC checksum, stored in the same endianness used for the executable file itself. The checksum is computed on the debugging information file’s full
+		//    contents by the function given below, passing zero as the crc argument.
+
+		// TODO: At this point we ignore the CRC, perhaps it would be worth reading it?
+		byte[] contents = section.GetContents ();
+		if (contents.Length < 4) {
+			// there must at least be the 4-byte CRC, otherwise section content is invalid
+			return null;
+		}
+
+		int zeroIndex = 0;
+		for (int i = 0; i < contents.Length; i++) {
+			if (contents[i] != 0) {
+				continue;
+			}
+
+			zeroIndex = i;
+			break;
+		}
+
+		if (zeroIndex == 0) {
+			return null;
+		}
+
+		return Encoding.UTF8.GetString (contents, 0, zeroIndex);
+	}
+
+	static ulong DetectAlignment (IELF elf, bool is64Bit)
+	{
+		if (!elf.HasSegmentHeader) {
+			return 0;
+		}
+
+		foreach (ISegment segment in elf.Segments) {
+			if (segment.Type != SegmentType.Load) {
+				continue;
+			}
+
+			if (is64Bit) {
+				return ((Segment<ulong>)segment).Alignment;
+			}
+
+			return ((Segment<uint>)segment).Alignment;
+		}
+
+		return 0;
+	}
+
+	static string? GetBuildID (IELF elf, bool is64Bit)
+	{
+		byte[]? contents = GetNoteSectionContents (elf, is64Bit, ".note.gnu.build-id");
+		if (contents == null) {
+			return null;
+		}
+
+		// TODO: decode
+		return "decoding not implemented yet";
+	}
+
+	static string? GetAndroidIdent (IELF elf, bool is64Bit)
+	{
+		return GetNoteSectionContentsAsString (elf, is64Bit, ".note.android.ident");;
+	}
+
+	static string? GetNoteSectionContentsAsString (IELF elf, bool is64Bit, string sectionName)
+	{
+		byte[]? contents = GetNoteSectionContents (elf, is64Bit, sectionName);
+		if (contents == null) {
+			return null;
+		}
+
+		return Encoding.UTF8.GetString (contents);
+	}
+
+	static byte[]? GetNoteSectionContents (IELF elf, bool is64Bit, string sectionName)
+	{
+		if (!elf.TryGetSection (sectionName, out ISection? section) || section == null || section.Type != SectionType.Note) {
+			return null;
+		}
+
+		return ((INoteSection)section).Description;
 	}
 
 	public bool HasSection (string name, SectionType type = SectionType.Null)
