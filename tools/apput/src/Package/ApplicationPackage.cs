@@ -4,7 +4,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 
-using ELFSharp.ELF.Sections;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 
@@ -33,14 +32,6 @@ public abstract class ApplicationPackage : IAspect
 		"META-INF/ANDROIDD.RSA",
 	};
 
-	readonly static List<(string sectionName, SectionType type)> NativeAotSections = new () {
-		("__managedcode", SectionType.ProgBits),
-		(".dotnet_eh_table", SectionType.ProgBits),
-		("__unbox", SectionType.ProgBits),
-		("__modules", SectionType.ProgBits),
-		(".hydrated", SectionType.NoBits),
-	};
-
 	public static string AspectName { get; } = "Application package";
 
 	public abstract string PackageFormat { get; }
@@ -59,6 +50,7 @@ public abstract class ApplicationPackage : IAspect
 	public List<AssemblyStore>? AssemblyStores { get; protected set; }
 	public List<AndroidTargetArch> Architectures { get; protected set; } = new ();
 	public List<NativeAppInfo> NativeAppInfos { get; protected set; } = new ();
+	public List<SharedLibrary> SharedLibraries { get; protected set; } = new ();
 
 	AndroidManifest? manifest;
 
@@ -91,6 +83,7 @@ public abstract class ApplicationPackage : IAspect
 		// TODO: for all of the below, add support for detection of older XA apps (just to warn that this version doesn't support
 		//       and that people should use older tools)
 		ret.TryDetectArchitectures (); // This must be called first, some further steps depend on it
+		ret.CollectSharedLibraries (); // This must be called second, some further steps need the collection of shared libraries
 		ret.TryDetectRuntime ();
 		ret.TryDetectWhetherIsSigned ();
 		ret.TryLoadAssemblyStores ();
@@ -98,6 +91,11 @@ public abstract class ApplicationPackage : IAspect
 		ret.TryLoadXamarinAppLibraries ();
 
 		return ret;
+	}
+
+	void CollectSharedLibraries ()
+	{
+		// TODO: find and detect shared libraries
 	}
 
 	void TryDetectArchitectures ()
@@ -175,6 +173,7 @@ public abstract class ApplicationPackage : IAspect
 		foreach (AndroidTargetArch arch in Architectures) {
 			string libDir = GetNativeLibDir (arch);
 
+			// TODO: move .so search code to CollectSharedLibraries and just leave NAOT detection here
 			foreach (ZipArchiveEntry? entry in Zip.Entries) {
 				if (entry == null) {
 					continue;
@@ -212,21 +211,9 @@ public abstract class ApplicationPackage : IAspect
 			return false;
 		}
 
-		IAspectState aspectState = SharedLibrary.ProbeAspect (stream, entry.FullName);
+		IAspectState aspectState = NativeAotSharedLibrary.ProbeAspect (stream, entry.FullName);
 		if (!aspectState.Success) {
 			return false;
-		}
-
-		var dso = SharedLibrary.LoadAspect (stream, aspectState, entry.FullName) as SharedLibrary;
-		if (dso == null) {
-			throw new InvalidOperationException ("Internal error: unexpected SharedLibrary load result.");
-		}
-
-		// Just one match should be enough
-		foreach (var naotSection in NativeAotSections) {
-			if (dso.HasSection (naotSection.sectionName, naotSection.type)) {
-				return true;
-			}
 		}
 
 		return false;

@@ -21,7 +21,7 @@ class Reporter
 		}
 
 		if (knownType == null) {
-			throw new InvalidOperationException ($"Internal error: cannot generate report for type '{aspectType}'");
+			throw new InvalidOperationException ($"Internal error: cannot generate report for unsupported type '{aspectType}'");
 		}
 
 		IReporter? reporter = CreateSpecificReporter (aspectType, aspect);

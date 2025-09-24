@@ -7,8 +7,19 @@ abstract class BaseReporter : IReporter
 	protected const ConsoleColor LabelColor = ConsoleColor.White;
 	protected const ConsoleColor ValidValueColor = ConsoleColor.Green;
 	protected const ConsoleColor InvalidValueColor = ConsoleColor.Red;
+	protected const ConsoleColor BannerColor = ConsoleColor.Cyan;
 
-	public abstract void Report ();
+	protected abstract string AspectName { get; }
+	protected abstract string ShortDescription { get; }
+
+	public void Report ()
+	{
+		WriteLine (BannerColor, $"# {AspectName} ({ShortDescription})");
+		DoReport ();
+		WriteLine ();
+	}
+
+	protected abstract void DoReport ();
 
 	protected void WriteAspectDesc (string text)
 	{
@@ -54,4 +65,5 @@ abstract class BaseReporter : IReporter
 	}
 
 	protected string YesNo (bool yes) => yes ? "yes" : "no";
+	protected string ValueOrNone (string? s) => String.IsNullOrEmpty (s) ? "none" : s;
 }
