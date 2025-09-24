@@ -6,22 +6,29 @@ namespace ApplicationUtility;
 class SharedLibraryReporter : BaseReporter
 {
 	readonly SharedLibrary library;
+
+	protected override string AspectName => SharedLibrary.AspectName;
 	protected virtual string LibraryKind => "Shared library";
+	protected override string ShortDescription => library.Name;
 
 	public SharedLibraryReporter (SharedLibrary library)
 	{
 		this.library = library;
 	}
 
-	public override void Report ()
+	protected override void DoReport ()
 	{
 		WriteAspectDesc (LibraryKind);
 		WriteNativeArch (library.TargetArchitecture);
-		WriteItem ("Build ID", library.HasBuildID ? library.BuildID! : "none");
+
+		if (library.HasSoname) {
+			WriteItem ("Soname", ValueOrNone (library.Soname));
+		}
+		WriteItem ("Build ID", ValueOrNone (library.BuildID));
 		WriteDebugInfoDesc ();
 
 		if (library.HasAndroidIdent) {
-			WriteItem ("Android ident", library.AndroidIdent!);
+			WriteItem ("Android ident", ValueOrNone (library.AndroidIdent));
 		}
 	}
 
@@ -37,14 +44,13 @@ class SharedLibraryReporter : BaseReporter
 		}
 		WriteItem ("Has debug link", sb.ToString ());
 
-		bool compatibleWith16k = library.Alignment >= 0x4000 && (library.Alignment % 0x4000 == 0);
 		sb.Clear ();
 		sb.Append ($"0x{library.Alignment:x} (");
-		if (!compatibleWith16k) {
+		if (!library.AlignmentCompatibleWith16k) {
 			sb.Append ("NOT ");
 		}
-		sb.Append ("compatible with Android 16k library alignment)");
+		sb.Append ("compatible with Android 16k library alignment requirement)");
 		WriteLabel ("Alignment");
-		WriteLine (compatibleWith16k ? ValidValueColor : InvalidValueColor, sb.ToString ());
+		WriteLine (library.AlignmentCompatibleWith16k ? ValidValueColor : InvalidValueColor, sb.ToString ());
 	}
 }
