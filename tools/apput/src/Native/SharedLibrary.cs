@@ -8,41 +8,45 @@ using ELFSharp.ELF.Segments;
 
 namespace ApplicationUtility;
 
-class SharedLibrary : IAspect, IDisposable
+public class SharedLibrary : IAspect, IDisposable
 {
 	const uint ELF_MAGIC = 0x464c457f;
 	const string DebugLinkSectionName = ".gnu_debuglink";
 	const string PayloadSectionName = "payload";
 
-	readonly IELF elf;
-	readonly NativeArchitecture nativeArch = NativeArchitecture.Unknown;
-	readonly Stream libraryStream;
-	readonly bool hasDebugInfo;
-	readonly bool is64Bit;
-	readonly string libraryName;
 	readonly string? androidIdent;
 	readonly string? buildId;
 	readonly string? debugLink;
+	readonly IELF elf;
+	readonly bool hasDebugInfo;
+	readonly bool is64Bit;
 	readonly ulong libraryAlignment;
+	readonly string libraryName;
+	readonly Stream libraryStream;
+	readonly NativeArchitecture nativeArch = NativeArchitecture.Unknown;
 	readonly ulong payloadOffset;
 	readonly ulong payloadSize;
+	readonly string? soname;
 
 	bool disposed;
 
 	public static string AspectName { get; } = "Native shared library";
 
-	public NativeArchitecture TargetArchitecture => nativeArch;
+	public ulong Alignment => libraryAlignment;
+	public bool AlignmentCompatibleWith16k => libraryAlignment >= 0x4000 && (libraryAlignment % 0x4000 == 0);
+	public string? AndroidIdent => androidIdent;
+	public string? BuildID => buildId;
+	public string? DebugLink => debugLink;
 	public bool HasAndroidIdent => !String.IsNullOrEmpty (androidIdent);
 	public bool HasAndroidPayload => payloadSize > 0;
 	public bool HasBuildID => !String.IsNullOrEmpty (buildId);
 	public bool HasDebugInfo => hasDebugInfo;
 	public bool HasDebugLink => !String.IsNullOrEmpty (debugLink);
+	public bool HasSoname => !String.IsNullOrEmpty (soname);
 	public bool Is64Bit => is64Bit;
 	public string Name => libraryName;
-	public string? AndroidIdent => androidIdent;
-	public string? BuildID => buildId;
-	public string? DebugLink => debugLink;
-	public ulong Alignment => libraryAlignment;
+	public string? Soname => soname;
+	public NativeArchitecture TargetArchitecture => nativeArch;
 
 	protected IELF ELF => elf;
 
@@ -56,6 +60,7 @@ class SharedLibrary : IAspect, IDisposable
 		(hasDebugInfo, debugLink) = DetectDebugInfo (elf, libraryName);
 		buildId = GetBuildID (elf, is64Bit);
 		androidIdent = GetAndroidIdent (elf, is64Bit);
+		soname = GetSoname (elf, is64Bit);
 	}
 
 	public static IAspect LoadAspect (Stream stream, IAspectState? state, string? description)
@@ -291,15 +296,65 @@ class SharedLibrary : IAspect, IDisposable
 		return 0;
 	}
 
+	static string? GetSoname (IELF elf, bool is64Bit)
+	{
+		IDynamicEntry? sonameEntry = null;
+
+		foreach (IDynamicSection section in elf.GetSections<IDynamicSection> ()) {
+			foreach (IDynamicEntry dyne in section.Entries) {
+				if (dyne.Tag != DynamicTag.SoName) {
+					continue;
+				}
+				sonameEntry = dyne;
+				break;
+			}
+
+			if (sonameEntry != null) {
+				break;
+			}
+		}
+
+		if (sonameEntry == null) {
+			return null;
+		}
+
+		ulong stringIndex = is64Bit switch {
+			true => ((DynamicEntry<ulong>)sonameEntry).Value,
+			false => ((DynamicEntry<uint>)sonameEntry).Value
+		};
+
+		// Offset is into the .dynstr section
+		if (!elf.TryGetSection (".dynstr", out ISection? strtabSection) || strtabSection == null || strtabSection.Type != SectionType.StringTable) {
+			return null;
+		}
+
+		var strtab = (IStringTable)strtabSection;
+		try {
+			return strtab[(long)stringIndex];
+		} catch (Exception ex) {
+			Log.Debug ($"Failed to obtain soname from the string table (asked for index {stringIndex})", ex);
+			return null;
+		}
+	}
+
 	static string? GetBuildID (IELF elf, bool is64Bit)
 	{
-		byte[]? contents = GetNoteSectionContents (elf, is64Bit, ".note.gnu.build-id");
+		// From elf_common.h
+		//
+		//  #define NT_GNU_BUILD_ID     3
+		//
+		const ulong NT_GNU_BUILD_ID = 0;
+		byte[]? contents = GetNoteSectionContents (elf, is64Bit, ".note.gnu.build-id", NT_GNU_BUILD_ID);
 		if (contents == null) {
 			return null;
 		}
 
-		// TODO: decode
-		return "decoding not implemented yet";
+		var sb = new StringBuilder ();
+		foreach (byte b in contents) {
+			sb.Append ($"{b:x02}");
+		}
+
+		return sb.ToString ();
 	}
 
 	static string? GetAndroidIdent (IELF elf, bool is64Bit)
@@ -307,7 +362,7 @@ class SharedLibrary : IAspect, IDisposable
 		return GetNoteSectionContentsAsString (elf, is64Bit, ".note.android.ident");;
 	}
 
-	static string? GetNoteSectionContentsAsString (IELF elf, bool is64Bit, string sectionName)
+	static string? GetNoteSectionContentsAsString (IELF elf, bool is64Bit, string sectionName, ulong noteType = 0)
 	{
 		byte[]? contents = GetNoteSectionContents (elf, is64Bit, sectionName);
 		if (contents == null) {
@@ -317,13 +372,27 @@ class SharedLibrary : IAspect, IDisposable
 		return Encoding.UTF8.GetString (contents);
 	}
 
-	static byte[]? GetNoteSectionContents (IELF elf, bool is64Bit, string sectionName)
+	static byte[]? GetNoteSectionContents (IELF elf, bool is64Bit, string sectionName, ulong noteType = 0)
 	{
 		if (!elf.TryGetSection (sectionName, out ISection? section) || section == null || section.Type != SectionType.Note) {
 			return null;
 		}
 
-		return ((INoteSection)section).Description;
+		var note = (INoteSection)section;
+		if (noteType == 0) {
+			return note.Description;
+		}
+
+		ulong type = is64Bit switch {
+			true => ((NoteSection<ulong>)note).NoteType,
+			false => ((NoteSection<uint>)note).NoteType
+		};
+
+		if (type != noteType) {
+			return null;
+		}
+
+		return note.Description;
 	}
 
 	public bool HasSection (string name, SectionType type = SectionType.Null)

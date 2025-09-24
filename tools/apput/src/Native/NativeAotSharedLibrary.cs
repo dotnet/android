@@ -6,7 +6,7 @@ using ELFSharp.ELF.Sections;
 
 namespace ApplicationUtility;
 
-class NativeAotSharedLibrary : SharedLibrary
+public class NativeAotSharedLibrary : SharedLibrary
 {
 	readonly static List<(string sectionName, SectionType type)> NativeAotSections = new () {
 		("__managedcode", SectionType.ProgBits),
