@@ -4,8 +4,9 @@ namespace ApplicationUtility;
 
 abstract class BaseReporter : IReporter
 {
-	const ConsoleColor LabelColor = ConsoleColor.White;
-	const ConsoleColor ValueColor = ConsoleColor.Green;
+	protected const ConsoleColor LabelColor = ConsoleColor.White;
+	protected const ConsoleColor ValidValueColor = ConsoleColor.Green;
+	protected const ConsoleColor InvalidValueColor = ConsoleColor.Red;
 
 	public abstract void Report ();
 
@@ -19,10 +20,15 @@ abstract class BaseReporter : IReporter
 		WriteItem ("Native target architecture", arch.ToString ());
 	}
 
-	protected void WriteItem (string label, string value)
+	protected void WriteLabel (string label)
 	{
 		Write (LabelColor, $"{label}: ");
-		WriteLine (ValueColor, value);
+	}
+
+	protected void WriteItem (string label, string value)
+	{
+		WriteLabel (label);
+		WriteLine (ValidValueColor, value);
 	}
 
 	protected void WriteLine ()
@@ -35,6 +41,7 @@ abstract class BaseReporter : IReporter
 		Write (color, text);
 		WriteLine ();
 	}
+
 	protected void Write (ConsoleColor color, string text)
 	{
 		ConsoleColor oldFG = Console.ForegroundColor;
@@ -45,4 +52,6 @@ abstract class BaseReporter : IReporter
 			Console.ForegroundColor = oldFG;
 		}
 	}
+
+	protected string YesNo (bool yes) => yes ? "yes" : "no";
 }
