@@ -1,18 +1,20 @@
 namespace ApplicationUtility;
 
 [AspectReporter (typeof (NativeAotSharedLibrary))]
-class NativeAotSharedLibraryReporter : BaseReporter
+class NativeAotSharedLibraryReporter : SharedLibraryReporter
 {
 	readonly NativeAotSharedLibrary library;
 
+	protected override string LibraryKind => "NativeAOT shared library";
+
 	public NativeAotSharedLibraryReporter (NativeAotSharedLibrary library)
+		: base (library)
 	{
 		this.library = library;
 	}
 
 	public override void Report ()
 	{
-		WriteAspectDesc ("NativeAOT shared library");
-		WriteNativeArch (library.TargetArchitecture);
+		base.Report ();
 	}
 }

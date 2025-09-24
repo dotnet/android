@@ -18,9 +18,7 @@ class NativeAotSharedLibrary : SharedLibrary
 
 	protected NativeAotSharedLibrary (Stream stream, string libraryName)
 		: base (stream, libraryName)
-	{
-		// TODO: perhaps gather some more stats? Code size, data size, alignment, stuff like that
-	}
+	{}
 
 	public new static IAspect LoadAspect (Stream stream, IAspectState? state, string? description)
 	{
