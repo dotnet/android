@@ -312,6 +312,7 @@ public abstract class ApplicationPackage : IAspect
 				return;
 			}
 			manifest = (AndroidManifest)AndroidManifest.LoadAspect (manifestStream, manifestState, AndroidManifestPath);
+			PackageName = manifest.PackageName ?? String.Empty;
 		} catch (Exception ex) {
 			Log.Debug ($"Failed to load android manifest '{AndroidManifestPath}' from the archive.", ex);
 		}

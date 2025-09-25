@@ -17,6 +17,17 @@ class ApplicationPackageReporter : BaseReporter
 
 	protected override void DoReport ()
 	{
-		throw new System.NotImplementedException ();
+		WriteAspectDesc (package.PackageFormat);
+
+		WriteSubsectionBanner ("Generic Android application information");
+		WriteNativeArch (package.Architectures);
+		WriteItem ("Package name", ValueOrNone (package.PackageName));
+		WriteItem ("Main activity", ValueOrNone (package.MainActivity));
+		WriteYesNo ("Valid Android package", package.ValidAndroidPackage);
+		WriteYesNo ("Signed", package.Signed);
+		WriteYesNo ("Debuggable", package.Debuggable);
+
+		WriteSubsectionBanner (".NET for Android application information");
+		WriteItem ("Runtime", package.Runtime.ToString ());
 	}
 }

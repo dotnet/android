@@ -1,10 +1,17 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+
+using Xamarin.Android.Tools;
 
 namespace ApplicationUtility;
 
 abstract class BaseReporter : IReporter
 {
-	protected const ConsoleColor LabelColor = ConsoleColor.White;
+	const string NativeArchitectureLabel = "Native target architecture";
+	const string NativeArchitecturesLabel = NativeArchitectureLabel + "s";
+
+	protected const ConsoleColor LabelColor = ConsoleColor.Gray;
 	protected const ConsoleColor ValidValueColor = ConsoleColor.Green;
 	protected const ConsoleColor InvalidValueColor = ConsoleColor.Red;
 	protected const ConsoleColor BannerColor = ConsoleColor.Cyan;
@@ -21,6 +28,12 @@ abstract class BaseReporter : IReporter
 
 	protected abstract void DoReport ();
 
+	protected void WriteSubsectionBanner (string text)
+	{
+		WriteLine ();
+		WriteLine (BannerColor, $"## {text}");
+	}
+
 	protected void WriteAspectDesc (string text)
 	{
 		WriteItem ("Aspect type", text);
@@ -28,8 +41,36 @@ abstract class BaseReporter : IReporter
 
 	protected void WriteNativeArch (NativeArchitecture arch)
 	{
-		WriteItem ("Native target architecture", arch.ToString ());
+		WriteItem (NativeArchitectureLabel, arch.ToString ());
 	}
+
+	protected void WriteNativeArch (AndroidTargetArch arch)
+	{
+		WriteItem (NativeArchitectureLabel, arch.ToString ());
+	}
+
+	protected void WriteNativeArch (ICollection<AndroidTargetArch> arches)
+	{
+		if (arches.Count == 1) {
+			WriteNativeArch (arches.First ());
+			return;
+		}
+
+		WriteLabel (NativeArchitecturesLabel);
+		if (arches.Count == 0) {
+			WriteLine (InvalidValueColor, "none");
+			return;
+		}
+
+		var architectures = new List<string> ();
+		foreach (AndroidTargetArch arch in arches) {
+			architectures.Add (arch.ToString ());
+		}
+
+		WriteLine (ValidValueColor, String.Join (", ", architectures));
+	}
+
+	protected void WriteYesNo (string label, bool value) => WriteItem (label, YesNo (value));
 
 	protected void WriteLabel (string label)
 	{
