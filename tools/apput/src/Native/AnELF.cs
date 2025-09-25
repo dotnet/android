@@ -242,6 +242,7 @@ abstract class AnELF
 	public static bool TryLoad (Stream stream, string filePath, out AnELF? anElf)
 	{
 		anElf = null;
+		stream.Seek (0, SeekOrigin.Begin);
 		Class elfClass = ELFReader.CheckELFType (stream);
 		if (elfClass == Class.NotELF) {
 			Log.Warning ($"AnELF.TryLoad: {filePath} is not an ELF binary");
