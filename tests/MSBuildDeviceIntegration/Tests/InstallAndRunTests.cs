@@ -248,6 +248,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 						TextContent = () => @"
 namespace Library1 {
 	public class LinkerClass {
+		[System.Diagnostics.CodeAnalysis.DynamicDependency (""DynamicDependencyTargetMethod()"", typeof(Library1.LinkerClass))]
 		public LinkerClass () { }
 
 		public bool IsPreserved { get { return true; } }
@@ -256,8 +257,7 @@ namespace Library1 {
 
 		public void WasThisMethodPreserved (string arg1) { }
 
-		[Android.Runtime.Preserve]
-		public void PreserveAttribMethod () { }
+		public void DynamicDependencyTargetMethod () { }
 	}
 }",
 					}, new BuildItem.Source ("LinkModeFullClass.cs") {
