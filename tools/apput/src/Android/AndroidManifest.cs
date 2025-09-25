@@ -7,14 +7,18 @@ namespace ApplicationUtility;
 public class AndroidManifest : IAspect
 {
 	public string Description { get; }
+	public string? PackageName { get; }
 
-	AXMLParser? binaryParser;
 	XmlDocument? xmlDoc;
+	XmlNamespaceManager? nsmgr;
 
 	AndroidManifest (AXMLParser binaryParser, string? description)
 	{
 		Description = String.IsNullOrEmpty (description) ? "Android manifest" : description;
-		this.binaryParser = binaryParser;
+		Read (binaryParser);
+
+		nsmgr = PrepareForReading (xmlDoc);
+		PackageName = TryGetPackageName (xmlDoc, nsmgr);
 	}
 
 	public static IAspect LoadAspect (Stream stream, IAspectState state, string? description)
@@ -30,7 +34,6 @@ public class AndroidManifest : IAspect
 		} else {
 			throw new NotImplementedException ();
 		}
-		ret.Read ();
 
 		return ret;
 	}
@@ -62,7 +65,7 @@ public class AndroidManifest : IAspect
 		return new BasicAspectState (success: false);
 	}
 
-	void Read ()
+	void Read (AXMLParser? binaryParser)
 	{
 		if (binaryParser == null) {
 			throw new NotImplementedException ();
@@ -74,6 +77,131 @@ public class AndroidManifest : IAspect
 			return;
 		}
 		Log.Debug ($"'{Description}' loaded and parsed correctly.");
+	}
+
+	static XmlNamespaceManager? PrepareForReading (XmlDocument? doc)
+	{
+		if (doc == null) {
+			return null;
+		}
+
+		var nsmgr = new XmlNamespaceManager (doc.NameTable);
+		nsmgr.AddNamespace ("android", "http://schemas.android.com/apk/res/android");
+		return nsmgr;
+	}
+
+	static bool ValidXmlContext (XmlDocument? doc, XmlNamespaceManager? nsmgr, out XmlElement? root)
+	{
+		root = null;
+		if (doc == null || nsmgr == null) {
+			return false;
+		}
+
+		root = doc.DocumentElement;
+		return root != null;
+	}
+
+	static string? TryGetMainActivity (XmlDocument? doc, XmlNamespaceManager? nsmgr)
+	{
+		if (!ValidXmlContext (doc, nsmgr, out XmlElement? root)) {
+			return null;
+		}
+
+		XmlNodeList? activities = root!.SelectNodes ("//manifest/application/activity", nsmgr!);
+		if (activities == null || activities.Count == 0) {
+			return null;
+		}
+
+		foreach (XmlNode activity in activities) {
+			string? name = GetLauncherActivityName (activity);
+			if (name == null) {
+				continue;
+			}
+
+			return name;
+		}
+
+		return null;
+
+		string? GetLauncherActivityName (XmlNode activity)
+		{
+			XmlNodeList? intentFilters = activity.SelectNodes ("./intent-filter", nsmgr!);
+			if (intentFilters == null || intentFilters.Count == 0) {
+				return null;
+			}
+
+			bool isMain = false;
+			foreach (XmlNode intentFilter in intentFilters) {
+				XmlNodeList? actions = activity.SelectNodes ("./action", nsmgr!);
+				if (actions == null || actions.Count == 0) {
+					continue;
+				}
+
+				if (!HaveNodeWithNameAttribute (actions, "android.intent.action.MAIN")) {
+					continue;
+				}
+
+				XmlNodeList? categories = activity.SelectNodes ("./category", nsmgr!);
+				if (categories == null || categories.Count == 0) {
+					continue;
+				}
+
+				if (!HaveNodeWithNameAttribute (categories, "android.intent.category.LAUNCHER")) {
+					continue;
+				}
+
+				isMain = true;
+				break;
+			}
+
+			if (!isMain) {
+				return null;
+			}
+
+			var attr = activity.Attributes?.GetNamedItem ("android:name");
+			if (attr == null) {
+				return null;
+			}
+
+			return attr.Value;
+		}
+
+		bool HaveNodeWithNameAttribute (XmlNodeList list, string nameValue)
+		{
+			foreach (XmlNode? node in list) {
+				var attr = node?.Attributes?.GetNamedItem ("android:name");
+				if (attr == null || String.IsNullOrEmpty (attr.Value)) {
+					continue;
+				}
+
+				if (attr.Value == nameValue) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+	}
+
+	static string? TryGetPackageName (XmlDocument? doc, XmlNamespaceManager? nsmgr)
+	{
+		Log.Debug ("Trying to read package name");
+		if (!ValidXmlContext (doc, nsmgr, out XmlElement? root) || root == null) {
+			return null;
+		}
+
+		XmlNode? manifest = root.SelectSingleNode ("//manifest", nsmgr);
+		if (manifest == null || manifest.Attributes == null) {
+			Log.Debug ("`manifest` element not found or it has no attributes");
+			return null;
+		}
+
+		XmlNode? package = manifest.Attributes.GetNamedItem ("package");
+		if (package == null) {
+			Log.Debug ("`package` attribute in the `manifest` element not found");
+		}
+
+		return package == null ? null : package.Value;
 	}
 
 	static XmlDocument ParsePlainXML (Stream stream)
