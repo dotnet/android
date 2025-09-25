@@ -228,85 +228,6 @@ namespace Android.Runtime {
 			}
 		}
 
-		// This is invoked by
-		// System.Drawing!System.Drawing.GraphicsAndroid.FromAndroidSurface ()
-		// DO NOT REMOVE
-		//
-		// Exception audit:
-		//
-		//  Verdict
-		//     No need to wrap thrown exceptions in a BCL class
-		//
-		//  Rationale
-		//     No longer called by the indicated caller, however we keep it for backward compatibility.
-		[global::System.Runtime.Versioning.ObsoletedOSPlatform ("android31.0")]
-		static void GetDisplayDPI (out float x_dpi, out float y_dpi)
-		{
-			var wm = Application.Context.GetSystemService (Context.WindowService).JavaCast <IWindowManager> ();
-			var metrics = new DisplayMetrics ();
-#if ANDROID_17
-			wm?.DefaultDisplay?.GetRealMetrics (metrics);
-#else
-			wm.DefaultDisplay.GetMetrics (metrics);
-#endif
-			x_dpi = metrics.Xdpi;
-			y_dpi = metrics.Ydpi;
-		}
-
-		// This is invoked by
-		// System.Core!System.AndroidPlatform.GetDefaultTimeZone ()
-		// DO NOT REMOVE
-		//
-		// Exception audit:
-		//
-		//  Verdict
-		//    No need to wrap thrown exceptions in a BCL class
-		//
-		//  Rationale
-		//    Java code (invoked from our native runtime) will always return the default timezone and no
-		//    exceptions are documented for the Java API.
-		//
-		static string GetDefaultTimeZone ()
-		{
-			IntPtr id = RuntimeNativeMethods._monodroid_timezone_get_default_id ();
-			try {
-				return Marshal.PtrToStringAnsi (id)!;
-			} finally {
-				RuntimeNativeMethods.monodroid_free (id);
-			}
-		}
-
-		// This is invoked by
-		// mscorlib.dll!System.AndroidPlatform.GetDefaultSyncContext()
-		// DO NOT REMOVE
-		static SynchronizationContext? GetDefaultSyncContext ()
-		{
-			var looper = Android.OS.Looper.MainLooper;
-			try {
-				if (Android.OS.Looper.MyLooper() == looper)
-					return Android.App.Application.SynchronizationContext;
-			} catch (System.Exception ex) {
-				Logger.Log (LogLevel.Warn, "MonoAndroid", $"GetDefaultSyncContext caught a Java exception: {ex}");
-			}
-			return null;
-		}
-
-		// These are invoked by
-		// System.dll!System.AndroidPlatform.getifaddrs
-		// DO NOT REMOVE
-		static int GetInterfaceAddresses (out IntPtr ifap)
-		{
-			return RuntimeNativeMethods._monodroid_getifaddrs (out ifap);
-		}
-
-		// These are invoked by
-		// System.dll!System.AndroidPlatform.freeifaddrs
-		// DO NOT REMOVE
-		static void FreeInterfaceAddresses (IntPtr ifap)
-		{
-			RuntimeNativeMethods._monodroid_freeifaddrs (ifap);
-		}
-
 		static void DetectCPUAndArchitecture (out ushort builtForCPU, out ushort runningOnCPU, out bool is64bit)
 		{
 			ushort built_for_cpu = 0;
@@ -317,18 +238,6 @@ namespace Android.Runtime {
 			builtForCPU = built_for_cpu;
 			runningOnCPU = running_on_cpu;
 			is64bit = _is64bit != 0;
-		}
-
-		// This is invoked by
-		// System.dll!System.AndroidPlatform.GetDefaultProxy()
-		// DO NOT REMOVE
-		static IWebProxy GetDefaultProxy ()
-		{
-#if ANDROID_14
-			return new _Proxy ();
-#else
-			return null;
-#endif
 		}
 
 		// This is invoked by
@@ -395,61 +304,5 @@ namespace Android.Runtime {
 			return handlerType;
 		}
 
-		class _Proxy : IWebProxy {
-			readonly ProxySelector selector = ProxySelector.Default!;
-
-			// Exception audit:
-			//
-			//  Verdict
-			//    Exception wrapping required
-			//
-			//  Rationale
-			//    Java code may throw URISyntaxException which we map to the managed UriFormatException
-			//
-			static URI CreateJavaUri (Uri destination)
-			{
-				try {
-					return new URI (destination.Scheme, destination.UserInfo, destination.Host, destination.Port, destination.AbsolutePath, destination.Query, destination.Fragment);
-				} catch (Java.Lang.Throwable ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new UriFormatException (ex.Message, ex);
-				}
-			}
-
-			public Uri GetProxy (Uri destination)
-			{
-				IList<Java.Net.Proxy> list;
-				using (var uri = CreateJavaUri (destination))
-					list = selector.Select (uri)!;
-				if (list.Count < 1)
-					return destination;
-
-				var proxy = list [0];
-				if (proxy.Equals (Proxy.NoProxy))
-					return destination;
-
-				var address = proxy.Address () as InetSocketAddress;
-				if (address == null) // FIXME
-					return destination;
-
-				return new Uri (FormattableString.Invariant ($"http://{address.HostString}:{address.Port}/"));
-			}
-
-			public bool IsBypassed (Uri host)
-			{
-				IList<Java.Net.Proxy> list;
-				using (var uri = CreateJavaUri (host))
-					list = selector.Select (uri)!;
-
-				if (list.Count < 1)
-					return true;
-
-				return list [0].Equals (Proxy.NoProxy);
-			}
-
-			public ICredentials? Credentials {
-				get;
-				set;
-			}
-		}
 	}
 }
