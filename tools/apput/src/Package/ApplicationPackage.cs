@@ -95,7 +95,32 @@ public abstract class ApplicationPackage : IAspect
 
 	void CollectSharedLibraries ()
 	{
-		// TODO: find and detect shared libraries
+		Log.Debug ("Collecting shared libraries");
+		foreach (AndroidTargetArch arch in Architectures) {
+			string libDir = GetNativeLibDir (arch);
+
+			foreach (ZipArchiveEntry? entry in Zip.Entries) {
+				if (entry == null) {
+					continue;
+				}
+
+				// See if it's in the right directory...
+				if (!entry.FullName.StartsWith (libDir, StringComparison.Ordinal)) {
+					continue;
+				}
+
+				// ...and that it's a shared library...
+				if (!entry.FullName.EndsWith (".so", StringComparison.Ordinal)) {
+					continue;
+				}
+
+				Stream? stream = TryGetEntryStream (entry);
+				SharedLibrary? lib = Detector.FindSharedLibraryAspect (stream, entry.FullName);
+				if (lib != null) {
+					SharedLibraries.Add (lib);
+				}
+			}
+		}
 	}
 
 	void TryDetectArchitectures ()
@@ -170,50 +195,12 @@ public abstract class ApplicationPackage : IAspect
 	bool TryDetectNativeAotRuntime ()
 	{
 		Log.Debug ("Probing for NativeAOT runtime");
-		foreach (AndroidTargetArch arch in Architectures) {
-			string libDir = GetNativeLibDir (arch);
-
-			// TODO: move .so search code to CollectSharedLibraries and just leave NAOT detection here
-			foreach (ZipArchiveEntry? entry in Zip.Entries) {
-				if (entry == null) {
-					continue;
-				}
-
-				// See if it's in the right directory...
-				if (!entry.FullName.StartsWith (libDir, StringComparison.Ordinal)) {
-					continue;
-				}
-
-				// ...and that it's a shared library...
-				if (!entry.FullName.EndsWith (".so", StringComparison.Ordinal)) {
-					continue;
-				}
-
-				Log.Debug ($"Considering {entry.FullName}");
-				// ...and that it has NativeAOT markers
-				if (!SharedLibraryIsNativeAOT (entry)) {
-					continue;
-				}
-
+		foreach (SharedLibrary lib in SharedLibraries) {
+			var naotLib = lib as NativeAotSharedLibrary;
+			if (naotLib != null) {
 				Log.Debug ("Found NativeAOT shared library");
-				// Yep, got it. Just one hit is enough, no need to check all the architectures
 				return true;
 			}
-		}
-
-		return false;
-	}
-
-	bool SharedLibraryIsNativeAOT (ZipArchiveEntry entry)
-	{
-		Stream? stream = TryGetEntryStream (entry.FullName);
-		if (stream == null) {
-			return false;
-		}
-
-		IAspectState aspectState = NativeAotSharedLibrary.ProbeAspect (stream, entry.FullName);
-		if (!aspectState.Success) {
-			return false;
 		}
 
 		return false;
@@ -223,7 +210,7 @@ public abstract class ApplicationPackage : IAspect
 	{
 		foreach (AndroidTargetArch arch in Architectures) {
 			string libPath = GetNativeLibFile (arch, "libxamarin-app.so");
-			LibXamarinApp? lib = TryLoadLibXamarinApp (libPath);
+			XamarinAppSharedLibrary? lib = TryLoadLibXamarinApp (libPath);
 			if (lib == null) {
 				continue;
 			}
@@ -231,7 +218,7 @@ public abstract class ApplicationPackage : IAspect
 		}
 	}
 
-	LibXamarinApp? TryLoadLibXamarinApp (string libPath)
+	XamarinAppSharedLibrary? TryLoadLibXamarinApp (string libPath)
 	{
 		Stream? libStream = TryGetEntryStream (libPath);
 		if (libStream == null) {
@@ -240,14 +227,14 @@ public abstract class ApplicationPackage : IAspect
 
 		string fullLibPath = $"{Description}@!{libPath}";
 		try {
-			IAspectState state = LibXamarinApp.ProbeAspect (libStream, fullLibPath);
+			IAspectState state = XamarinAppSharedLibrary.ProbeAspect (libStream, fullLibPath);
 			if (!state.Success) {
 				Log.Debug ($"Assembly store '{libPath}' is not in a supported format");
 				libStream.Close ();
 				return null;
 			}
 
-			return (LibXamarinApp)LibXamarinApp.LoadAspect (libStream, state, fullLibPath);
+			return (XamarinAppSharedLibrary)XamarinAppSharedLibrary.LoadAspect (libStream, state, fullLibPath);
 		} catch (Exception ex) {
 			Log.Debug ($"Failed to load Xamarin app library '{libPath}'. Exception thrown:", ex);
 			return null;
@@ -342,8 +329,18 @@ public abstract class ApplicationPackage : IAspect
 				return null;
 			}
 
+			return TryGetEntryStream (entry, extractToMemory);
+		} catch (Exception ex) {
+			Log.Debug ($"Failed to load entry '{path}' from the archive.", ex);
+			return null;
+		}
+	}
+
+	Stream? TryGetEntryStream (ZipArchiveEntry entry, bool extractToMemory = false)
+	{
+		try {
 			if (extractToMemory) {
-				Log.Debug ($"Extracting entry '{path}' to a memory stream");
+				Log.Debug ($"Extracting entry '{entry.FullName}' to a memory stream");
 				using var inputStream = entry.Open ();
 				var outputStream = new MemoryStream ();
 				inputStream.CopyTo (outputStream);
@@ -354,11 +351,11 @@ public abstract class ApplicationPackage : IAspect
 			string tempFile = Path.GetTempFileName ();
 			TempFileManager.RegisterFile (tempFile);
 
-			Log.Debug ($"Extracting entry '{path}' to '{tempFile}'");
+			Log.Debug ($"Extracting entry '{entry.FullName}' to '{tempFile}'");
 			entry.ExtractToFile (tempFile, overwrite: true);
 			return File.OpenRead (tempFile);
 		} catch (Exception ex) {
-			Log.Debug ($"Failed to load entry '{path}' from the archive.", ex);
+			Log.Debug ($"Failed to load entry '{entry.FullName}' from the archive.", ex);
 			return null;
 		}
 	}
