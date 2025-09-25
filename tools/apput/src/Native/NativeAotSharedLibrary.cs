@@ -35,7 +35,7 @@ public class NativeAotSharedLibrary : SharedLibrary
 
 	public new static IAspectState ProbeAspect (Stream stream, string? description) => new BasicAspectState (IsNativeAotSharedLibrary (stream, description));
 
-	static bool IsNativeAotSharedLibrary (Stream stream, string description)
+	static bool IsNativeAotSharedLibrary (Stream stream, string? description)
 	{
 		if (!IsSupportedELFSharedLibrary (stream, description, out IELF? elf) || elf == null) {
 			return false;

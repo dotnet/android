@@ -15,17 +15,19 @@ public class Detector
 	// Aspects must be listed in the order of detection, from the biggest (the most generic) to the
 	// smallest (the least generic) aspects.
 	public readonly static List<Type> KnownTopLevelAspects = new () {
-		typeof (ApplicationPackage),
+		typeof (PackageAPK),
+		typeof (PackageAAB),
+		typeof (PackageBase),
 		typeof (AssemblyStore),
 		typeof (ApplicationAssembly),
 		typeof (NativeAotSharedLibrary),
-		typeof (LibXamarinApp),
+		typeof (XamarinAppSharedLibrary),
 		typeof (SharedLibrary),
 	};
 
 	readonly static List<Type> KnownSharedLibraryAspects = new () {
 		typeof (NativeAotSharedLibrary),
-		typeof (LibXamarinApp),
+		typeof (XamarinAppSharedLibrary),
 		typeof (SharedLibrary),
 	};
 
@@ -49,33 +51,44 @@ public class Detector
 	public static SharedLibrary? FindSharedLibraryAspect (Stream stream, string? description = null)
 	{
 		Log.Debug ($"Looking for shared library aspect ('{description}')");
-		// TODO: implement
+		return (SharedLibrary?)TryFindAspect (KnownSharedLibraryAspects, stream, description);
+	}
+
+	static IAspect? TryFindTopLevelAspect (Stream stream, string? description) => TryFindAspect (KnownTopLevelAspects, stream, description);
+
+	static IAspect? TryFindAspect (List<Type> aspectTypes, Stream stream, string? description)
+	{
+		foreach (Type aspectType in aspectTypes) {
+			IAspect? aspect = TryProbeAndLoadAspect (aspectType, stream, description);
+			if (aspect != null) {
+				return aspect;
+			}
+		}
+
 		return null;
 	}
 
-	static IAspect? TryFindTopLevelAspect (Stream stream, string? description)
+	static IAspect? TryProbeAndLoadAspect (Type aspect, Stream stream, string? description)
 	{
-		var flags = BindingFlags.InvokeMethod | BindingFlags.Public | BindingFlags.Static;
+		const BindingFlags flags = BindingFlags.InvokeMethod | BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy;
 
-		foreach (Type aspect in KnownTopLevelAspects) {
-			LogBanner ($"Probing aspect: {aspect}");
+		LogBanner ($"Probing aspect: {aspect}");
+		object? result = aspect.InvokeMember (
+			"ProbeAspect", flags, null, null, new object?[] { stream, description }
+		);
 
-			object? result = aspect.InvokeMember (
-				"ProbeAspect", flags, null, null, new object?[] { stream, description }
-			);
+		var state = result as IAspectState;
+		if (state == null || !state.Success) {
+			return null;
+		}
 
-			var state = result as IAspectState;
-			if (state == null || !state.Success) {
-				continue;
-			}
+		LogBanner ($"Loading aspect: {aspect}");
+		result = aspect.InvokeMember (
+			"LoadAspect", flags, null, null, new object?[] { stream, state, description }
+		);
 
-			LogBanner ($"Loading aspect: {aspect}");
-			result = aspect.InvokeMember (
-				"LoadAspect", flags, null, null, new object?[] { stream, state, description }
-			);
-			if (result != null) {
-				return (IAspect)result;
-			}
+		if (result != null) {
+			return (IAspect)result;
 		}
 
 		return null;
@@ -83,10 +96,8 @@ public class Detector
 		void LogBanner (string what)
 		{
 			Log.Debug ();
-			Log.Debug ("##########");
-			Log.Debug (what);
+			Log.Debug ($"# {what}");
 			Log.Debug ();
 		}
 	}
-
 }
