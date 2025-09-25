@@ -2,7 +2,7 @@ using System;
 
 namespace ApplicationUtility;
 
-[AttributeUsage (AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+[AttributeUsage (AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
 class AspectReporterAttribute : Attribute
 {
 	public Type AspectType { get; }

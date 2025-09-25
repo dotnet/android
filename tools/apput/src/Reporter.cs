@@ -84,11 +84,20 @@ class Reporter
 			return false;
 		}
 
-		var attr = type.GetCustomAttribute<AspectReporterAttribute> ();
-		if (attr == null || attr.AspectType != aspectType) {
+		bool found = false;
+		foreach (AspectReporterAttribute attr in type.GetCustomAttributes<AspectReporterAttribute> ()) {
+			if (attr.AspectType != aspectType) {
+				continue;
+			}
+			found = true;
+			break;
+		}
+
+		if (!found) {
 			return false;
 		}
 
+		Log.Debug ($"Found reporter '{type}' for '{aspectType}'");
 		ctor = type.GetConstructor (ctorArgs);
 		if (ctor == null) {
 			throw new InvalidOperationException ($"Internal error: type '{type}' claims to be a reporter for '{aspectType}' but lacks the correct public constructor.");
