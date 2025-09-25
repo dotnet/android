@@ -20,24 +20,24 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		/// @(AndroidApiInfo) from .\bin\Build$(Configuration)\Mono.Android.Apis.projitems
 		/// </summary>
 		[Required]
-		public ITaskItem [] AndroidApiInfo { get; set; }
+		public ITaskItem [] AndroidApiInfo { get; set; } = [];
 
 		/// <summary>
 		/// The output file to generate
 		/// </summary>
 		[Required]
-		public string OutputFile { get; set; }
+		public string OutputFile { get; set; } = "";
 
 		/// <summary>
 		/// $(AndroidMinimumDotNetApiLevel) from Configuration.props
 		/// </summary>
 		[Required]
-		public string MinimumApiLevel { get; set; }
+		public string? MinimumApiLevel { get; set; }
 
 		/// <summary>
 		/// Default value for $(TargetPlatformVersion), defaults to MaxStableVersion.ApiLevel
 		/// </summary>
-		public string TargetApiLevel { get; set; }
+		public string? TargetApiLevel { get; set; }
 
 		public override bool Execute ()
 		{
@@ -47,7 +47,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			var versions          = new AndroidVersions (AndroidApiInfo.Select (ToAndroidVersion));
 			var targetApiLevel    = targetVersion != null && targetVersion.Major > 0
 				? targetVersion
-				: versions.MaxStableVersion.VersionCodeFull;
+				: versions.MaxStableVersion!.VersionCodeFull;
 			var settings = new XmlWriterSettings {
 				OmitXmlDeclaration = true,
 				Indent = true,
@@ -76,7 +76,7 @@ Specifies the supported Android platform versions for this SDK.
 				writer.WriteEndElement (); // </TargetPlatformVersion>
 				writer.WriteStartElement ("AndroidMinimumSupportedApiLevel");
 				writer.WriteAttributeString ("Condition", " '$(AndroidMinimumSupportedApiLevel)' == '' ");
-				writer.WriteString (MinimumApiLevel.ToString ());
+				writer.WriteString (MinimumApiLevel?.ToString () ?? "");
 				writer.WriteEndElement (); // </AndroidMinimumSupportedApiLevel>
 				writer.WriteEndElement (); // </PropertyGroup>
 
@@ -102,8 +102,11 @@ Specifies the supported Android platform versions for this SDK.
 			return !Log.HasLoggedErrors;
 		}
 
-		static Version? ToVersion (string value)
+		static Version? ToVersion (string? value)
 		{
+			if (string.IsNullOrEmpty (value)) {
+				return null;
+            }
 			if (Version.TryParse (value, out var version)) {
 				return version;
 			}
