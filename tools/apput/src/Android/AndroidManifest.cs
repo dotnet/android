@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 
@@ -7,7 +8,12 @@ namespace ApplicationUtility;
 public class AndroidManifest : IAspect
 {
 	public string Description { get; }
+	public string? MainActivity { get; }
+	public string? MinSdkVersion { get; }
 	public string? PackageName { get; }
+	public string? TargetSdkVersion { get; }
+	public List<string>? Permissions { get; }
+	public XmlDocument? RawXML => xmlDoc;
 
 	XmlDocument? xmlDoc;
 	XmlNamespaceManager? nsmgr;
@@ -19,6 +25,9 @@ public class AndroidManifest : IAspect
 
 		nsmgr = PrepareForReading (xmlDoc);
 		PackageName = TryGetPackageName (xmlDoc, nsmgr);
+		MainActivity = TryGetMainActivity (xmlDoc, nsmgr);
+		(MinSdkVersion, TargetSdkVersion) = TryGetSdkVersions (xmlDoc, nsmgr);
+		Permissions = TryGetPermissions (xmlDoc, nsmgr);
 	}
 
 	public static IAspect LoadAspect (Stream stream, IAspectState state, string? description)
@@ -101,6 +110,48 @@ public class AndroidManifest : IAspect
 		return root != null;
 	}
 
+	static List<string>? TryGetPermissions (XmlDocument? doc, XmlNamespaceManager? nsmgr)
+	{
+		if (!ValidXmlContext (doc, nsmgr, out XmlElement? root)) {
+			return null;
+		}
+
+		XmlNodeList? permissions = root!.SelectNodes ("//manifest/uses-permission");
+		if (permissions == null || permissions.Count == 0) {
+			return null;
+		}
+
+		var ret = new List<string> ();
+		foreach (XmlNode permission in permissions) {
+			var name = permission.Attributes?.GetNamedItem ("android:name");
+			if (name == null || String.IsNullOrEmpty (name.Value)) {
+				continue;
+			}
+
+			ret.Add (name.Value);
+		}
+
+		ret.Sort ();
+		return ret;
+	}
+
+	static (string? minSdk, string? targetSdk) TryGetSdkVersions (XmlDocument? doc, XmlNamespaceManager? nsmgr)
+	{
+		if (!ValidXmlContext (doc, nsmgr, out XmlElement? root)) {
+			return (null, null);
+		}
+
+		XmlNode? usesSdk = root!.SelectSingleNode ("//manifest/uses-sdk");
+		if (usesSdk == null) {
+			return (null, null);
+		}
+
+		var minSdkVersionAttr = usesSdk.Attributes?.GetNamedItem ("android:minSdkVersion");
+		var targetSdkVersionAttr = usesSdk.Attributes?.GetNamedItem ("android:targetSdkVersion");
+
+		return (minSdkVersionAttr?.Value, targetSdkVersionAttr?.Value);
+	}
+
 	static string? TryGetMainActivity (XmlDocument? doc, XmlNamespaceManager? nsmgr)
 	{
 		if (!ValidXmlContext (doc, nsmgr, out XmlElement? root)) {
@@ -132,7 +183,7 @@ public class AndroidManifest : IAspect
 
 			bool isMain = false;
 			foreach (XmlNode intentFilter in intentFilters) {
-				XmlNodeList? actions = activity.SelectNodes ("./action", nsmgr!);
+				XmlNodeList? actions = intentFilter.SelectNodes ("./action", nsmgr!);
 				if (actions == null || actions.Count == 0) {
 					continue;
 				}
@@ -141,7 +192,7 @@ public class AndroidManifest : IAspect
 					continue;
 				}
 
-				XmlNodeList? categories = activity.SelectNodes ("./category", nsmgr!);
+				XmlNodeList? categories = intentFilter.SelectNodes ("./category", nsmgr!);
 				if (categories == null || categories.Count == 0) {
 					continue;
 				}

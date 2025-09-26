@@ -289,7 +289,7 @@ abstract class AnELF
 
 		ISection? sec = GetSection (elf, RodataSectionName);
 		if (sec == null) {
-			Log.Warning ("${filePath} does not contain read-only data section ('{RodataSectionName}')");
+			Log.Warning ($"{filePath} does not contain read-only data section ('{RodataSectionName}')");
 			return false;
 		}
 		ISection rodata = sec;
