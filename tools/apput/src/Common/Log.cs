@@ -91,6 +91,12 @@ static class Log
 		Warning (tag: String.Empty, message);
 	}
 
+	public static void Warning (string message, Exception ex)
+	{
+		Warning (tag: String.Empty, message);
+		Warning (tag: String.Empty, ex.ToString ());
+	}
+
 	public static void Warning (string tag, string message)
 	{
 		if (message.Length > 0) {
