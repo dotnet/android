@@ -32,27 +32,30 @@ public abstract class ApplicationPackage : IAspect
 		"META-INF/ANDROIDD.RSA",
 	};
 
+	AndroidManifest? manifest;
+
 	public static string AspectName { get; } = "Application package";
 
-	public abstract string PackageFormat { get; }
-	protected abstract string NativeLibDirBase { get; }
 	protected abstract string AndroidManifestPath { get; }
+	protected abstract string NativeLibDirBase { get; }
+	public abstract string PackageFormat { get; }
 
-	protected ZipArchive Zip { get; }
-	public string? Description { get; }
-
-	public bool Signed { get; protected set; }
-	public bool ValidAndroidPackage { get; protected set; }
-	public bool Debuggable { get; protected set; }
-	public ApplicationRuntime Runtime { get; protected set; } = ApplicationRuntime.Unknown;
-	public string PackageName { get; protected set; } = "";
-	public string MainActivity { get; protected set; } = "";
-	public List<AssemblyStore>? AssemblyStores { get; protected set; }
+	public AndroidManifest? AndroidManifest => manifest;
 	public List<AndroidTargetArch> Architectures { get; protected set; } = new ();
+	public List<AssemblyStore>? AssemblyStores { get; protected set; }
+	public bool Debuggable { get; protected set; }
+	public string? Description { get; }
+	public string? MainActivity => manifest?.MainActivity;
+	public string? MinSdkVersion => manifest?.MinSdkVersion;
 	public List<NativeAppInfo> NativeAppInfos { get; protected set; } = new ();
+	public string? PackageName => manifest?.PackageName;
+	public List<string>? Permissions => manifest?.Permissions;
+	public ApplicationRuntime Runtime { get; protected set; } = ApplicationRuntime.Unknown;
 	public List<SharedLibrary> SharedLibraries { get; protected set; } = new ();
-
-	AndroidManifest? manifest;
+	public bool Signed { get; protected set; }
+	public string? TargetSdkVersion => manifest?.TargetSdkVersion;
+	public bool ValidAndroidPackage { get; protected set; }
+	protected ZipArchive Zip { get; }
 
 	protected ApplicationPackage (ZipArchive zip, string? description)
 	{
@@ -312,7 +315,6 @@ public abstract class ApplicationPackage : IAspect
 				return;
 			}
 			manifest = (AndroidManifest)AndroidManifest.LoadAspect (manifestStream, manifestState, AndroidManifestPath);
-			PackageName = manifest.PackageName ?? String.Empty;
 		} catch (Exception ex) {
 			Log.Debug ($"Failed to load android manifest '{AndroidManifestPath}' from the archive.", ex);
 		}
