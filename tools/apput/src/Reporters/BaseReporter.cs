@@ -6,6 +6,8 @@ using Xamarin.Android.Tools;
 
 namespace ApplicationUtility;
 
+// TODO: generate Markdown
+// TODO: detect whether we can output colors
 abstract class BaseReporter : IReporter
 {
 	protected enum Countable
@@ -29,6 +31,8 @@ abstract class BaseReporter : IReporter
 
 	protected abstract string AspectName { get; }
 	protected abstract string ShortDescription { get; }
+
+	protected static readonly bool CanUseColor = !Console.IsOutputRedirected;
 
 	public void Report ()
 	{
