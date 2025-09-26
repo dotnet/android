@@ -15,7 +15,7 @@ public class AssemblyStore : IAspect
 	public static string AspectName { get; } = "Assembly Store";
 
 	public IDictionary<string, ApplicationAssembly> Assemblies { get; private set; } = new Dictionary<string, ApplicationAssembly> (StringComparer.Ordinal);
-	public AndroidTargetArch Architecture { get; private set; } = AndroidTargetArch.None;
+	public AndroidTargetArch Architecture { get; }
 	public ulong NumberOfAssemblies => (ulong)(Assemblies?.Count ?? 0);
 
 	AssemblyStoreAspectState storeState;
@@ -25,6 +25,19 @@ public class AssemblyStore : IAspect
 	{
 		storeState = state;
 		this.description = description;
+
+		AssemblyStoreHeader? header = state.Format.Header;
+		if (header == null) {
+			throw new InvalidOperationException ("Internal error: state doesn't contain a valid store header.");
+		}
+
+		Architecture = header.Version.ABI switch {
+			AssemblyStoreABI.Arm   => AndroidTargetArch.Arm,
+			AssemblyStoreABI.Arm64 => AndroidTargetArch.Arm64,
+			AssemblyStoreABI.X86   => AndroidTargetArch.X86,
+			AssemblyStoreABI.X64   => AndroidTargetArch.X86_64,
+			_                      => throw new InvalidOperationException ($"Internal error: unsupported assembly store ABI '{header.Version.ABI}'")
+		};
 	}
 
 	bool Read ()
@@ -60,12 +73,12 @@ public class AssemblyStore : IAspect
 		Stream? storeStream = null;
 
 		try {
-			IAspectState state = SharedLibrary.ProbeAspect (stream, description);
+			IAspectState state = DotNetAndroidWrapperSharedLibrary.ProbeAspect (stream, description);
 			if (!state.Success) {
 				return DoProbeAspect (stream, description);
 			}
 
-			var library = (SharedLibrary)SharedLibrary.LoadAspect (stream, state, description);
+			var library = (DotNetAndroidWrapperSharedLibrary)DotNetAndroidWrapperSharedLibrary.LoadAspect (stream, state, description);
 			if (!library.HasAndroidPayload) {
 				Log.Debug ($"AssemblyStore: stream ('{description}') is an ELF shared library, without payload");
 				return new BasicAspectState (false);
