@@ -19,6 +19,8 @@ class SharedLibraryReporter : BaseReporter
 	protected override void DoReport ()
 	{
 		WriteAspectDesc (LibraryKind);
+
+		WriteSubsectionBanner ("Generic ELF shared library info");
 		WriteNativeArch (library.TargetArchitecture);
 
 		if (library.HasSoname) {
@@ -28,6 +30,7 @@ class SharedLibraryReporter : BaseReporter
 		WriteDebugInfoDesc ();
 
 		if (library.HasAndroidIdent) {
+			WriteSubsectionBanner ("Android-specific ELF shared library info");
 			WriteItem ("Android ident", ValueOrNone (library.AndroidIdent));
 		}
 	}
