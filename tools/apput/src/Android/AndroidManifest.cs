@@ -5,6 +5,7 @@ using System.Xml;
 
 namespace ApplicationUtility;
 
+// TODO: implement support for AndroidManifest.xml in AAB packages. It's protobuf data, not binary/text XML
 public class AndroidManifest : IAspect
 {
 	public string Description { get; }

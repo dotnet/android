@@ -17,16 +17,16 @@ abstract class AnELF
 	const string SymtabSectionName  = ".symtab";
 	const string RodataSectionName  = ".rodata";
 
-	ISymbolTable dynamicSymbolsSection;
-	ISection rodataSection;
+	ISymbolTable? dynamicSymbolsSection;
+	ISection? rodataSection;
 	ISymbolTable? symbolsSection;
 	string filePath;
 	IELF elf;
 	Stream elfStream;
 
-	protected ISymbolTable DynSymSection => dynamicSymbolsSection;
+	protected ISymbolTable? DynSymSection => dynamicSymbolsSection;
 	protected ISymbolTable? SymSection => symbolsSection;
-	protected ISection RodataSection => rodataSection;
+	protected ISection? RodataSection => rodataSection;
 	public IELF AnyELF => elf;
 	protected Stream ELFStream => elfStream;
 
@@ -36,7 +36,7 @@ abstract class AnELF
 	public abstract bool Is64Bit { get; }
 	public abstract string Bitness { get; }
 
-	protected AnELF (Stream stream, string filePath, IELF elf, ISymbolTable dynsymSection, ISection rodataSection, ISymbolTable? symSection)
+	protected AnELF (Stream stream, string filePath, IELF elf, ISymbolTable? dynsymSection, ISection? rodataSection, ISymbolTable? symSection)
 	{
 		this.filePath = filePath;
 		this.elf = elf;
@@ -61,14 +61,14 @@ abstract class AnELF
 		return symbol;
 	}
 
-	protected static ISymbolEntry? GetSymbol (ISymbolTable symtab, string symbolName)
+	protected static ISymbolEntry? GetSymbol (ISymbolTable? symtab, string symbolName)
 	{
-		return symtab.Entries.Where (entry => String.Compare (entry.Name, symbolName, StringComparison.Ordinal) == 0).FirstOrDefault ();
+		return symtab?.Entries.Where (entry => String.Compare (entry.Name, symbolName, StringComparison.Ordinal) == 0).FirstOrDefault ();
 	}
 
-	protected static SymbolEntry<T>? GetSymbol<T> (SymbolTable<T> symtab, T symbolValue) where T: struct
+	protected static SymbolEntry<T>? GetSymbol<T> (SymbolTable<T>? symtab, T symbolValue) where T: struct
 	{
-		return symtab.Entries.Where (entry => entry.Value.Equals (symbolValue)).FirstOrDefault ();
+		return symtab?.Entries.Where (entry => entry.Value.Equals (symbolValue)).FirstOrDefault ();
 	}
 
 	public bool HasSymbol (string symbolName)
@@ -85,19 +85,22 @@ abstract class AnELF
 	{
 		Log.Debug ($"Looking for symbol: {symbolName}");
 		symbolEntry = GetSymbol (symbolName);
-		if (symbolEntry == null)
+		if (symbolEntry == null) {
 			return EmptyArray;
+		}
 
 		if (Is64Bit) {
 			var symbol64 = symbolEntry as SymbolEntry<ulong>;
-			if (symbol64 == null)
+			if (symbol64 == null) {
 				throw new InvalidOperationException ($"Symbol '{symbolName}' is not a valid 64-bit symbol");
+			}
 			return GetData (symbol64);
 		}
 
 		var symbol32 = symbolEntry as SymbolEntry<uint>;
-		if (symbol32 == null)
+		if (symbol32 == null) {
 			throw new InvalidOperationException ($"Symbol '{symbolName}' is not a valid 32-bit symbol");
+		}
 
 		return GetData (symbol32);
 	}
@@ -168,8 +171,9 @@ abstract class AnELF
 			return EmptyArray;
 		}
 
-		if (size == 0)
+		if (size == 0) {
 			size = (ulong)data.Length - offset;
+		}
 
 		var ret = new byte[size];
 		checked {
@@ -280,20 +284,8 @@ abstract class AnELF
 				return false;
 		}
 
-		ISymbolTable? symtab = GetSymbolTable (elf, DynsymSectionName);
-		if (symtab == null) {
-			Log.Warning ($"{filePath} does not contain dynamic symbol section '{DynsymSectionName}'");
-			return false;
-		}
-		ISymbolTable dynsym = symtab;
-
-		ISection? sec = GetSection (elf, RodataSectionName);
-		if (sec == null) {
-			Log.Warning ($"{filePath} does not contain read-only data section ('{RodataSectionName}')");
-			return false;
-		}
-		ISection rodata = sec;
-
+		ISymbolTable? dynsym = GetSymbolTable (elf, DynsymSectionName);
+		ISection? rodata = GetSection (elf, RodataSectionName);
 		ISymbolTable? sym = GetSymbolTable (elf, SymtabSectionName);
 
 		if (is64) {

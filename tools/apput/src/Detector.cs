@@ -23,6 +23,7 @@ public class Detector
 		typeof (NativeAotSharedLibrary),
 		typeof (XamarinAppSharedLibrary),
 		typeof (MonoAotSharedLibrary),
+		typeof (DotNetAndroidWrapperSharedLibrary),
 		typeof (SharedLibrary),
 	};
 
@@ -30,6 +31,7 @@ public class Detector
 		typeof (NativeAotSharedLibrary),
 		typeof (XamarinAppSharedLibrary),
 		typeof (MonoAotSharedLibrary),
+		typeof (DotNetAndroidWrapperSharedLibrary),
 		typeof (SharedLibrary),
 	};
 
@@ -61,9 +63,13 @@ public class Detector
 	static IAspect? TryFindAspect (List<Type> aspectTypes, Stream stream, string? description)
 	{
 		foreach (Type aspectType in aspectTypes) {
-			IAspect? aspect = TryProbeAndLoadAspect (aspectType, stream, description);
-			if (aspect != null) {
-				return aspect;
+			try {
+				IAspect? aspect = TryProbeAndLoadAspect (aspectType, stream, description);
+				if (aspect != null) {
+					return aspect;
+				}
+			} catch (Exception ex) {
+				Log.Warning ($"Failed to probe and load aspect '{aspectType}'", ex);
 			}
 		}
 
