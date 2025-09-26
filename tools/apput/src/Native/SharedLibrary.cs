@@ -12,7 +12,6 @@ public class SharedLibrary : IAspect, IDisposable
 {
 	const uint ELF_MAGIC = 0x464c457f;
 	const string DebugLinkSectionName = ".gnu_debuglink";
-	const string PayloadSectionName = "payload";
 
 	readonly string? androidIdent;
 	readonly string? buildId;
@@ -24,8 +23,6 @@ public class SharedLibrary : IAspect, IDisposable
 	readonly string libraryName;
 	readonly Stream libraryStream;
 	readonly NativeArchitecture nativeArch = NativeArchitecture.Unknown;
-	readonly ulong payloadOffset;
-	readonly ulong payloadSize;
 	readonly string? soname;
 
 	bool disposed;
@@ -38,12 +35,12 @@ public class SharedLibrary : IAspect, IDisposable
 	public string? BuildID => buildId;
 	public string? DebugLink => debugLink;
 	public bool HasAndroidIdent => !String.IsNullOrEmpty (androidIdent);
-	public bool HasAndroidPayload => payloadSize > 0;
 	public bool HasBuildID => !String.IsNullOrEmpty (buildId);
 	public bool HasDebugInfo => hasDebugInfo;
 	public bool HasDebugLink => !String.IsNullOrEmpty (debugLink);
 	public bool HasSoname => !String.IsNullOrEmpty (soname);
 	public bool Is64Bit => is64Bit;
+	public Stream LibraryStream => libraryStream;
 	public string Name => libraryName;
 	public string? Soname => soname;
 	public NativeArchitecture TargetArchitecture => nativeArch;
@@ -58,7 +55,6 @@ public class SharedLibrary : IAspect, IDisposable
 		this.libraryName = libraryName;
 		elf = libState.ElfImage!;
 		(is64Bit, nativeArch) = ValidateELF (libState.ElfImage!, libraryName);
-		(payloadOffset, payloadSize) = FindAndroidPayload (elf);
 		libraryAlignment = DetectAlignment (elf, is64Bit);
 		(hasDebugInfo, debugLink) = DetectDebugInfo (elf, libraryName);
 		buildId = GetBuildID (elf, is64Bit);
@@ -76,7 +72,11 @@ public class SharedLibrary : IAspect, IDisposable
 			throw new InvalidOperationException ("Internal error: ProbeAspect failed to detect a valid shared library.");
 		}
 
-		return (T)((object)libState);
+		try {
+			return (T)((object)libState);
+		} catch (Exception ex) {
+			throw new InvalidOperationException ($"Internal error: aspect should be of type '{typeof(T)}', found '{libState.GetType ()}' instead", ex);
+		}
 	}
 
 	public static IAspect LoadAspect (Stream stream, IAspectState? state, string? description)
@@ -92,38 +92,6 @@ public class SharedLibrary : IAspect, IDisposable
 
 	public static IAspectState ProbeAspect (Stream stream, string? description) => IsSupportedELFSharedLibrary (stream, description);
 
-	/// <summary>
-	/// If the library has .NET for Android payload section, this
-	/// method will read the data and write it to the <paramref name="dest"/>
-	/// stream. All the data in the output stream will be overwritten.
-	/// </summary>
-	public void CopyAndroidPayload (Stream dest)
-	{
-		using Stream payload = OpenAndroidPayload ();
-		payload.CopyTo (dest);
-	}
-
-	/// <summary>
-	/// Creates a stream referring to the Android payload data inside
-	/// the shared library. No data is read, the open stream is returned
-	/// to the user. Ownership of the stream is transferred to the caller.
-	/// </summary>
-	public Stream OpenAndroidPayload ()
-	{
-		if (!HasAndroidPayload) {
-			throw new InvalidOperationException ("Payload section not found");
-		}
-
-		if (payloadOffset > Int64.MaxValue) {
-			throw new InvalidOperationException ($"Payload offset of {payloadOffset} is too large to support.");
-		}
-
-		if (payloadSize > Int64.MaxValue) {
-			throw new InvalidOperationException ($"Payload offset of {payloadSize} is too large to support.");
-		}
-
-		return new SubStream (libraryStream, (long)payloadOffset, (long)payloadSize);
-	}
 
 	protected static bool IsSupportedELFSharedLibrary (Stream stream, string? description, out IELF? elf)
 	{
@@ -198,36 +166,6 @@ public class SharedLibrary : IAspect, IDisposable
 		};
 
 		return (is64, arch);
-	}
-
-	(ulong offset, ulong size) FindAndroidPayload (IELF elf)
-	{
-		if (!elf.TryGetSection (PayloadSectionName, out ISection? payloadSection)) {
-			Log.Debug ($"SharedLibrary: shared library '{libraryName}' doesn't have the '{PayloadSectionName}' section.");
-			return (0, 0);
-		}
-
-		ulong offset;
-		ulong size;
-
-		if (is64Bit) {
-			(offset, size) = GetOffsetAndSize64 ((Section<ulong>)payloadSection);
-		} else {
-			(offset, size) = GetOffsetAndSize32 ((Section<uint>)payloadSection);
-		}
-
-		Log.Debug ($"SharedLibrary: found payload section at offset {offset}, size of {size} bytes.");
-		return (offset, size);
-
-		(ulong offset, ulong size) GetOffsetAndSize64 (Section<ulong> payload)
-		{
-			return (payload.Offset, payload.Size);
-		}
-
-		(ulong offset, ulong size) GetOffsetAndSize32 (Section<uint> payload)
-		{
-			return ((ulong)payload.Offset, (ulong)payload.Size);
-		}
 	}
 
 	static (bool hasDebugInfo, string? debugLink) DetectDebugInfo (IELF elf, string libraryName)

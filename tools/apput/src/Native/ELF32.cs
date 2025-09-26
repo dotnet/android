@@ -11,12 +11,12 @@ class ELF32 : AnELF
 	public override bool Is64Bit => false;
 	public override string Bitness => "32";
 
-	SymbolTable<uint> DynamicSymbols => (SymbolTable<uint>)DynSymSection;
+	SymbolTable<uint>? DynamicSymbols => (SymbolTable<uint>?)DynSymSection;
 	SymbolTable<uint>? Symbols => (SymbolTable<uint>?)SymSection;
-	Section<uint> Rodata => (Section<uint>)RodataSection;
+	Section<uint>? Rodata => (Section<uint>?)RodataSection;
 	ELF<uint> ELF => (ELF<uint>)AnyELF;
 
-	public ELF32 (Stream stream, string filePath, IELF elf, ISymbolTable dynsymSection, ISection rodataSection, ISymbolTable? symSection)
+	public ELF32 (Stream stream, string filePath, IELF elf, ISymbolTable? dynsymSection, ISection? rodataSection, ISymbolTable? symSection)
 		: base (stream, filePath, elf, dynsymSection, rodataSection, symSection)
 	{}
 

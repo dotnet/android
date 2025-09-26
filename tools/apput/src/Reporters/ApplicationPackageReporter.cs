@@ -1,3 +1,5 @@
+using Xamarin.Android.Tools;
+
 namespace ApplicationUtility;
 
 [AspectReporter (typeof (PackageAPK))]
@@ -42,5 +44,30 @@ class ApplicationPackageReporter : BaseReporter
 
 		WriteSubsectionBanner (".NET for Android application information");
 		WriteItem ("Runtime", package.Runtime.ToString ());
+
+		if (package.AssemblyStores == null || package.AssemblyStores.Count == 0) {
+			WriteItem ("Assembly stores", "none");
+		} else {
+			WriteLine (LabelColor, "Assembly stores");
+
+			foreach (AssemblyStore store in package.AssemblyStores) {
+				var color = store.Architecture == AndroidTargetArch.None ? InvalidValueColor : ValidValueColor;
+
+				Write (LabelColor, "  * ");
+				WriteLine (color, $"{store.Architecture} ({store.NumberOfAssemblies} {GetCountable (Countable.Assembly, store.NumberOfAssemblies)})");
+			}
+		}
+
+		if (package.SharedLibraries == null || package.SharedLibraries.Count == 0) {
+			// Very unlikely...
+			WriteItem ("Shared libraries", "none");
+		} else {
+			WriteLine (LabelColor, "Shared libraries:");
+
+			foreach (SharedLibrary lib in package.SharedLibraries) {
+				Write (LabelColor, "  * ");
+				WriteLine (ValidValueColor, $"{lib.Name}");
+			}
+		}
 	}
 }

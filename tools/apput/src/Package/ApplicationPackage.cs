@@ -252,6 +252,7 @@ public abstract class ApplicationPackage : IAspect
 
 	void TryLoadAssemblyStores ()
 	{
+		var stores = new List<AssemblyStore> ();
 		foreach (AndroidTargetArch arch in Architectures) {
 			string storePath = GetNativeLibFile (arch, $"libassemblies.{MonoAndroidHelper.ArchToAbi (arch)}.blob.so");
 			Log.Debug ($"Trying assembly store: {storePath}");
@@ -265,6 +266,12 @@ public abstract class ApplicationPackage : IAspect
 			if (store == null) {
 				continue;
 			}
+
+			stores.Add (store);
+		}
+
+		if (stores.Count > 0) {
+			AssemblyStores = stores;
 		}
 	}
 

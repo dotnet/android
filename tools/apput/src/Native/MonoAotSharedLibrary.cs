@@ -32,6 +32,7 @@ class MonoAotSharedLibrary : SharedLibrary
 		}
 
 		if (!AnELF.TryLoad (stream, description ?? String.Empty, out AnELF? anElf) || anElf == null) {
+			Log.Debug ($"Library '{description}' failed to load");
 			return GetErrorState ();
 		}
 
