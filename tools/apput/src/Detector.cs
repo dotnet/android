@@ -22,12 +22,14 @@ public class Detector
 		typeof (ApplicationAssembly),
 		typeof (NativeAotSharedLibrary),
 		typeof (XamarinAppSharedLibrary),
+		typeof (MonoAotSharedLibrary),
 		typeof (SharedLibrary),
 	};
 
 	readonly static List<Type> KnownSharedLibraryAspects = new () {
 		typeof (NativeAotSharedLibrary),
 		typeof (XamarinAppSharedLibrary),
+		typeof (MonoAotSharedLibrary),
 		typeof (SharedLibrary),
 	};
 
