@@ -13,7 +13,7 @@ class XamarinAppSharedLibrary : SharedLibrary
 	public ulong FormatTag { get; }
 
 	XamarinAppSharedLibrary (Stream stream, string description, XamarinAppLibraryAspectState state)
-		: base (stream, description)
+		: base (stream, description, state)
 	{
 		FormatTag = state.FormatTag;
 	}
@@ -24,12 +24,10 @@ class XamarinAppSharedLibrary : SharedLibrary
 			throw new ArgumentException ("Must be a shared library name", nameof (description));
 		}
 
-		if (!IsSupportedELFSharedLibrary (stream, description)) {
-			throw new InvalidOperationException ("Stream is not a supported ELF shared library");
-		}
+		var libState = EnsureValidAspectState<XamarinAppLibraryAspectState> (state);
 
 		// TODO: this needs to be versioned
-		return new XamarinAppSharedLibrary (stream, description, (XamarinAppLibraryAspectState)state);
+		return new XamarinAppSharedLibrary (stream, description, libState);
 	}
 
 	public static new IAspectState ProbeAspect (Stream stream, string? description) => IsXamarinAppSharedLibrary (stream, description);
@@ -51,7 +49,7 @@ class XamarinAppSharedLibrary : SharedLibrary
 		ulong formatTag = anElf.GetUInt64 (FormatTagSymbol);
 
 		// TODO: check for presence of a handful of fields more
-		return GetState (success: true, formatTag);
+		return GetState (success: true, formatTag, anElf);
 
 		XamarinAppLibraryAspectState LogMissingSymbolAndReturn (string name)
 		{
@@ -59,7 +57,7 @@ class XamarinAppSharedLibrary : SharedLibrary
 			return GetErrorState ();
 		}
 
-		XamarinAppLibraryAspectState GetState (bool success, ulong formatTag) => new XamarinAppLibraryAspectState (success, formatTag);
-		XamarinAppLibraryAspectState GetErrorState () => GetState (success: false, formatTag: 0);
+		XamarinAppLibraryAspectState GetState (bool success, ulong formatTag, AnELF? elf) => new XamarinAppLibraryAspectState (success, formatTag, elf);
+		XamarinAppLibraryAspectState GetErrorState () => GetState (success: false, formatTag: 0, elf: null);
 	}
 }

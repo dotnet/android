@@ -50,11 +50,14 @@ public class SharedLibrary : IAspect, IDisposable
 
 	protected IELF ELF => elf;
 
-	protected SharedLibrary (Stream stream, string libraryName)
+	protected SharedLibrary (Stream stream, string libraryName, IAspectState state)
 	{
+		var libState = EnsureValidAspectState<SharedLibraryAspectState> (state);
+
 		this.libraryStream = stream;
 		this.libraryName = libraryName;
-		(elf, is64Bit, nativeArch) = LoadELF (stream, libraryName);
+		elf = libState.ElfImage!;
+		(is64Bit, nativeArch) = ValidateELF (libState.ElfImage!, libraryName);
 		(payloadOffset, payloadSize) = FindAndroidPayload (elf);
 		libraryAlignment = DetectAlignment (elf, is64Bit);
 		(hasDebugInfo, debugLink) = DetectDebugInfo (elf, libraryName);
@@ -63,20 +66,31 @@ public class SharedLibrary : IAspect, IDisposable
 		soname = GetSoname (elf, is64Bit);
 	}
 
+	protected static T EnsureValidAspectState<T> (IAspectState? state) where T: IAspectState
+	{
+		if (!(state is SharedLibraryAspectState libState)) {
+			throw new InvalidOperationException ("Internal error: invalid aspect state, call ProbeAspect to get one.");
+		}
+
+		if (!libState.Success || libState.ElfImage == null) {
+			throw new InvalidOperationException ("Internal error: ProbeAspect failed to detect a valid shared library.");
+		}
+
+		return (T)((object)libState);
+	}
+
 	public static IAspect LoadAspect (Stream stream, IAspectState? state, string? description)
 	{
 		if (String.IsNullOrEmpty (description)) {
 			throw new ArgumentException ("Must be a shared library name", nameof (description));
 		}
 
-		if (!IsSupportedELFSharedLibrary (stream, description)) {
-			throw new InvalidOperationException ("Stream is not a supported ELF shared library");
-		}
+		var libState = EnsureValidAspectState<SharedLibraryAspectState> (state);
 
-		return new SharedLibrary (stream, description);
+		return new SharedLibrary (stream, description, libState);
 	}
 
-	public static IAspectState ProbeAspect (Stream stream, string? description) => new BasicAspectState (IsSupportedELFSharedLibrary (stream, description));
+	public static IAspectState ProbeAspect (Stream stream, string? description) => IsSupportedELFSharedLibrary (stream, description);
 
 	/// <summary>
 	/// If the library has .NET for Android payload section, this
@@ -164,35 +178,26 @@ public class SharedLibrary : IAspect, IDisposable
 		return supported;
 	}
 
-	protected static bool IsSupportedELFSharedLibrary (Stream stream, string? description)
+	protected static IAspectState IsSupportedELFSharedLibrary (Stream stream, string? description)
 	{
 		if (!IsSupportedELFSharedLibrary (stream, description, out IELF? elf) || elf == null) {
-			return false;
+			return new SharedLibraryAspectState (false, null);
 		}
 
-		elf.Dispose ();
-		return true;
+		return new SharedLibraryAspectState (true, elf);
 	}
 
-	// We assume below that stream corresponds to a valid and supported by us ELF image. This should have been asserted by
-	// the `LoadAspect` method.
-	(IELF elf, bool is64bit, NativeArchitecture nativeArch) LoadELF (Stream stream, string? libraryName)
+	(bool is64bit, NativeArchitecture nativeArch) ValidateELF (IELF elf, string? libraryName)
 	{
-		stream.Seek (0, SeekOrigin.Begin);
-		if (!ELFReader.TryLoad (stream, shouldOwnStream: false, out IELF? elf) || elf == null) {
-			Log.Debug ($"SharedLibrary: stream ('{libraryName}') failed to load as an ELF image.");
-			throw new InvalidOperationException ($"Failed to load ELF library '{libraryName}'.");
-		}
-
 		(bool is64, NativeArchitecture arch) = elf.Machine switch {
 			Machine.ARM      => (false, NativeArchitecture.Arm),
 			Machine.Intel386 => (false, NativeArchitecture.X86),
 			Machine.AArch64  => (true, NativeArchitecture.Arm64),
 			Machine.AMD64    => (true, NativeArchitecture.X64),
-			_                => throw new NotSupportedException ($"Unsupported ELF architecture '{elf.Machine}'")
+			_                => throw new NotSupportedException ($"Unsupported ELF architecture '{elf.Machine}' for '{libraryName}'")
 		};
 
-		return (elf, is64, arch);
+		return (is64, arch);
 	}
 
 	(ulong offset, ulong size) FindAndroidPayload (IELF elf)
