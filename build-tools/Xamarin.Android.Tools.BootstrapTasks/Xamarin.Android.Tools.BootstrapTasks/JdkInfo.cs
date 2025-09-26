@@ -86,7 +86,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			}
 		}
 
-		static Action<TraceLevel, string> CreateTaskLogger (Task task)
+		internal static Action<TraceLevel, string> CreateTaskLogger (Task task)
 		{
 			Action<TraceLevel, string> logger = (level, value) => {
 				switch (level) {

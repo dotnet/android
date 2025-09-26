@@ -8,10 +8,10 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 {
 	public sealed class CodeGenDiff
 	{
-		public static List<string> GenerateMissingItems (string codeGenPath, string contractAssembly, string implementationAssembly)
+		public static List<string> GenerateMissingItems (string codeGenPath, string contractAssembly, string implementationAssembly, Action<TraceLevel, string> logger)
 		{
-			var contract = GenerateObjectDescription (codeGenPath, contractAssembly);
-			var implementation = GenerateObjectDescription (codeGenPath, implementationAssembly);
+			var contract = GenerateObjectDescription (codeGenPath, contractAssembly, logger);
+			var implementation = GenerateObjectDescription (codeGenPath, implementationAssembly, logger);
 
 			return Diff (contract, implementation);
 		}
@@ -55,7 +55,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			return missingItems;
 		}
 
-		static ObjectDescription GenerateObjectDescription (string codeGenPath, string assembly)
+		static ObjectDescription GenerateObjectDescription (string codeGenPath, string assembly, Action<TraceLevel, string> logger)
 		{
 			ObjectDescription currentObject = new ObjectDescription () { Item = "root" };
 			var objectStack = new Stack<ObjectDescription> ();
@@ -73,6 +73,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				}
 
 				genApiProcess.StartInfo.Arguments += $"\"{assembly}\"";
+
+				logger (TraceLevel.Verbose, $"Executing: `\"{genApiProcess.StartInfo.FileName}\" {genApiProcess.StartInfo.Arguments}`");
 
 				genApiProcess.StartInfo.UseShellExecute = false;
 				genApiProcess.StartInfo.CreateNoWindow = true;
@@ -110,7 +112,12 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 					if (content.StartsWith ("}", StringComparison.OrdinalIgnoreCase)) {
 						currentObject.InternalCounter--;
-						System.Diagnostics.Debug.Assert (currentObject.InternalCounter >= 0);
+						if (currentObject.InternalCounter < 0) {
+							logger (TraceLevel.Error, $"Internal Error! currentObject.InternalCounter is {currentObject.InternalCounter}; must be >= 0! " +
+								$"currentObject.Item=`{currentObject.Item}`");
+							currentObject.InternalCounter = 0;
+						}
+
 						if (currentObject.InternalCounter == 0) {
 							objectStack.Pop ();
 							if (objectStack.Count > 0) {
@@ -121,7 +128,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 						return;
 					}
 
-					if (content.StartsWith ("namespace ", StringComparison.Ordinal) || content.IndexOf (" interface ", StringComparison.Ordinal) != -1 || content.IndexOf (" class ", StringComparison.Ordinal) != -1 || content.IndexOf (" partial struct ", StringComparison.Ordinal) != -1 || content.IndexOf (" enum ", StringComparison.Ordinal) != -1) {
+					if (content.StartsWith ("namespace ", StringComparison.Ordinal) || LineBeginsType (content)) {
 						if (string.IsNullOrWhiteSpace (currentObject.Item)) {
 							currentObject.Item = content;
 						} else {
@@ -161,6 +168,17 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			}
 
 			return currentObject;
+		}
+
+		static bool LineBeginsType (string content)
+		{
+			if (content.IndexOf (" partial interface ", StringComparison.Ordinal) != -1
+					|| content.IndexOf (" partial class ", StringComparison.Ordinal) != -1
+					|| content.IndexOf (" partial struct ", StringComparison.Ordinal) != -1
+					|| content.IndexOf (" enum ", StringComparison.Ordinal) != -1) {
+				return true;
+			}
+			return false;
 		}
 
 		class ObjectDescription
