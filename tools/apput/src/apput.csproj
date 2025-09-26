@@ -7,7 +7,7 @@
     <Version>0.0.1</Version>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>../../bin/$(Configuration)/bin/apput</OutputPath>
+    <OutputPath>..\..\..\bin\$(Configuration)\bin\apput</OutputPath>
     <OutputType>Exe</OutputType>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
     <Nullable>enable</Nullable>
