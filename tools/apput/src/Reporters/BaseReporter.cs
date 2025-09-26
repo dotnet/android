@@ -8,8 +8,19 @@ namespace ApplicationUtility;
 
 abstract class BaseReporter : IReporter
 {
+	protected enum Countable
+	{
+		Assembly,
+		SharedLibrary
+	}
+
 	const string NativeArchitectureLabel = "Native target architecture";
 	const string NativeArchitecturesLabel = NativeArchitectureLabel + "s";
+
+	static readonly Dictionary<Countable, (string singular, string plural)> Countables = new () {
+		{ Countable.Assembly, ("assembly", "assemblies") },
+		{ Countable.SharedLibrary, ("library", "libraries") },
+	};
 
 	protected const ConsoleColor LabelColor = ConsoleColor.Gray;
 	protected const ConsoleColor ValidValueColor = ConsoleColor.Green;
@@ -104,6 +115,18 @@ abstract class BaseReporter : IReporter
 			Console.ForegroundColor = oldFG;
 		}
 	}
+
+	protected string GetCountable (Countable countable, ulong count)
+	{
+		if (!Countables.TryGetValue (countable, out (string singular, string plural) forms)) {
+			throw new InvalidOperationException ($"Internal error: unsupported countable {countable}");
+		}
+
+		return count == 1 ? forms.singular : forms.plural;
+	}
+
+	// Somehow I doubt we'll have more than Int64.MaxValue items of any kind... :)
+	protected string GetCountable (Countable countable, long count) => GetCountable (countable, (ulong)count);
 
 	protected string YesNo (bool yes) => yes ? "yes" : "no";
 	protected string ValueOrNone (string? s) => String.IsNullOrEmpty (s) ? "none" : s;
