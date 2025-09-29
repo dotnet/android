@@ -60,6 +60,7 @@ static partial class JavaInteropRuntime
 				UseMarshalMemberBuilder     = false,
 				JniGlobalReferenceLogWriter = settings.GrefLog,
 				JniLocalReferenceLogWriter  = settings.LrefLog,
+				JniAddNativeMethodRegistrationAttributePresent = true,
 			};
 			runtime = options.CreateJreVM ();
 
