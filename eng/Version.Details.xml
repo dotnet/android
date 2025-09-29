@@ -4,25 +4,25 @@
       <Uri>https://github.com/dotnet/sdk</Uri>
       <Sha>04a554729fb3a1a761885ca1772870d523ddadd5</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink" Version="9.0.10-servicing.25453.19">
+    <Dependency Name="Microsoft.NET.ILLink" Version="9.0.10-servicing.25475.14">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>6defb92f2151ea3f6bff4c850dd4f34f25d7f4b0</Sha>
+      <Sha>fe023f17474aab631c9ee8caeabfae03af46689b</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="9.0.10">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>6defb92f2151ea3f6bff4c850dd4f34f25d7f4b0</Sha>
+      <Sha>fe023f17474aab631c9ee8caeabfae03af46689b</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NETCore.App.Ref" Version="9.0.10">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>6defb92f2151ea3f6bff4c850dd4f34f25d7f4b0</Sha>
+      <Sha>fe023f17474aab631c9ee8caeabfae03af46689b</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-9.0.100" Version="9.0.9" CoherentParentDependency="Microsoft.NETCore.App.Ref">
+    <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-9.0.100" Version="9.0.10" CoherentParentDependency="Microsoft.NETCore.App.Ref">
       <Uri>https://github.com/dotnet/emsdk</Uri>
-      <Sha>dc8e3478c4aa5f6a103329333c2bdbcd07a07741</Sha>
+      <Sha>f70927a13648c24660c79ff19a6eb2aac100f0ab</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-alpha.25370.2" CoherentParentDependency="Microsoft.NET.ILLink.Tasks">
+    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-alpha.25464.3" CoherentParentDependency="Microsoft.NET.ILLink.Tasks">
       <Uri>https://github.com/dotnet/cecil</Uri>
-      <Sha>788a8a7481c01a7d235110cdea2ca5bfb34210d4</Sha>
+      <Sha>e5381291dd01d040b5b111f3a2ee8508ec990d78</Sha>
     </Dependency>
     <!-- Previous .NET version -->
     <Dependency Name="Microsoft.NET.Workload.Mono.ToolChain.Current.Manifest-8.0.100" Version="8.0.20">
