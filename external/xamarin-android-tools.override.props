@@ -8,8 +8,7 @@
     <AndroidToolsDisableMultiTargeting>true</AndroidToolsDisableMultiTargeting>
     <PackageOutputPath>$(MSBuildThisFileDirectory)..\bin\Build$(Configuration)\nuget-unsigned\</PackageOutputPath>
     <RestoreAdditionalProjectSources>
-      https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-ef07c4f2/nuget/v3/index.json;
-      https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-061c8b71/nuget/v3/index.json;
+      https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-fe023f17/nuget/v3/index.json;
     </RestoreAdditionalProjectSources>
   </PropertyGroup>
   <Target Name="_GetXAVersionInfo"
