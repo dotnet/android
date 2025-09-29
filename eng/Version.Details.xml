@@ -25,6 +25,11 @@
       <Uri>https://github.com/dotnet/android</Uri>
       <Sha>82d8938cf80f6d5fa6c28529ddfbdb753d805ab4</Sha>
     </Dependency>
+    <!-- Previous .NET version -->
+    <Dependency Name="Microsoft.NET.Workload.Mono.ToolChain.Current.Manifest-9.0.100" Version="9.0.10">
+      <Uri>https://github.com/dotnet/runtime</Uri>
+      <Sha>fe023f17474aab631c9ee8caeabfae03af46689b</Sha>
+    </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
     <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="10.0.0-beta.25476.108">
