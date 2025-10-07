@@ -101,6 +101,8 @@
     <Compile Include="Android.Telephony.Mbms\StreamingService.cs" />
     <Compile Include="Android.Telephony\MbmsDownloadSession.cs" />
     <Compile Include="Android.Views\WindowManagerLayoutParams.cs" />
+    <Compile Include="Java.Interop\TypeMapProxyAttribute.cs" />
+    <Compile Include="Java.Interop\TypeMapTypeManager.cs" />
     <Compile Include="Java.Lang.Invoke\MethodType.cs" />
     <Compile Include="Java.Time.Chrono\AbstractChronology.cs" />
     <Compile Include="Java.Time\ZonedDateTime.cs" />
@@ -421,26 +423,10 @@
       <_SourceFiles Include="$(OutputPath)Java.Interop.*" />
       <_SourceFiles Include="$(OutputPath)System.IO.Hashing.dll" />
     </ItemGroup>
-    <Copy
-        SourceFiles="@(_RefExtras)"
-        DestinationFolder="$(MicrosoftAndroidRefPackDir)"
-        SkipUnchangedFiles="true"
-    />
-    <Copy
-        SourceFiles="$(OutputPath)ref\Mono.Android.dll;$(JavaInteropSourceDirectory)\bin\$(Configuration)-$(JavaInteropTargetFrameworkVersion)\ref\Java.Interop.dll"
-        DestinationFolder="$(MicrosoftAndroidRefPackDir)"
-        SkipUnchangedFiles="true"
-    />
-    <Copy
-        SourceFiles="%(_SourceFiles.Identity)"
-        DestinationFolder="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.$(AndroidApiLevel).android\$(AndroidPackVersion)\runtimes\android\lib\$(DotNetTargetFramework)"
-        SkipUnchangedFiles="true"
-    />
-    <Copy
-        SourceFiles="$(OutputPath)AndroidApiInfo.xml"
-        DestinationFolder="$(MicrosoftAndroidSdkPackDir)data\$(DotNetAndroidTargetFramework)$(AndroidApiLevel)"
-        SkipUnchangedFiles="true"
-    />
+    <Copy SourceFiles="@(_RefExtras)" DestinationFolder="$(MicrosoftAndroidRefPackDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(OutputPath)ref\Mono.Android.dll;$(JavaInteropSourceDirectory)\bin\$(Configuration)-$(JavaInteropTargetFrameworkVersion)\ref\Java.Interop.dll" DestinationFolder="$(MicrosoftAndroidRefPackDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="%(_SourceFiles.Identity)" DestinationFolder="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.$(AndroidApiLevel).android\$(AndroidPackVersion)\runtimes\android\lib\$(DotNetTargetFramework)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(OutputPath)AndroidApiInfo.xml" DestinationFolder="$(MicrosoftAndroidSdkPackDir)data\$(DotNetAndroidTargetFramework)$(AndroidApiLevel)" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>
