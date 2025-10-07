@@ -21,6 +21,7 @@
     <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
     <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
     <PackageReference Include="K4os.Compression.LZ4" Version="$(LZ4PackageVersion)" />
+    <PackageReference Include="Google.Protobuf" Version="3.32.1" />
   </ItemGroup>
 
   <Import Project="$(XAPackagesDir)\Xamarin.LibZipSharp.$(LibZipSharpVersion)\build\Xamarin.LibZipSharp.targets" Condition="Exists('$(XAPackagesDir)\Xamarin.LibZipSharp.$(LibZipSharpVersion)\build\Xamarin.LibZipSharp.targets')" />
