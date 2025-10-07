@@ -39,7 +39,7 @@ namespace Java.Interop {
 		}
 	}
 
-	public static partial class TypeManager {
+	public static partial class _TypeManager {
 		internal static string GetClassName (IntPtr class_ptr)
 		{
 			IntPtr ptr = RuntimeNativeMethods.monodroid_TypeManager_get_java_class_name (class_ptr);
@@ -492,12 +492,12 @@ namespace Java.Interop {
 		}
 
 		[Register ("mono/android/TypeManager", DoNotGenerateAcw = true)]
-		internal class JavaTypeManager : Java.Lang.Object
+		internal class _JavaTypeManager : Java.Lang.Object
 		{
 			[Register ("activate", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;[Ljava/lang/Object;)V", "")]
 			static void n_Activate (IntPtr jnienv, IntPtr jclass, IntPtr typename_ptr, IntPtr signature_ptr, IntPtr jobject, IntPtr parameters_ptr)
 			{
-				TypeManager.n_Activate (jnienv, jclass, typename_ptr, signature_ptr, jobject, parameters_ptr);
+				_TypeManager.n_Activate (jnienv, jclass, typename_ptr, signature_ptr, jobject, parameters_ptr);
 			}
 
 			[UnmanagedCallersOnly]
@@ -505,7 +505,7 @@ namespace Java.Interop {
 			{
 				// TODO: need a full wrapper code here, a'la JNINativeWrapper.CreateDelegate
 				try {
-					TypeManager.n_Activate (jnienv, jclass, typename_ptr, signature_ptr, jobject, parameters_ptr);
+					_TypeManager.n_Activate (jnienv, jclass, typename_ptr, signature_ptr, jobject, parameters_ptr);
 				} catch (Exception ex) {
 					AndroidEnvironment.UnhandledException (ex);
 				}

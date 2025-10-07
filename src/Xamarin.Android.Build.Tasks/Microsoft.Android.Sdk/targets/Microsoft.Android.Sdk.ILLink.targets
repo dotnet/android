@@ -49,8 +49,12 @@ This file contains the .NET 5-specific targets to customize ILLink
         https://github.com/dotnet/sdk/blob/a5393731b5b7b225692fff121f747fbbc9e8b140/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.ILLink.targets#L131
         -->
       <!-- add our custom steps -->
+      <!-- Steps to run before MarkStep -->
+      <_TrimmerCustomSteps
+          Include="$(_AndroidLinkerCustomStepAssembly)"
+          BeforeStep="MarkStep"
+          Type="Microsoft.Android.Sdk.ILLink.PreserveSubStepDispatcher" />
       <!-- Custom MarkHandlers that run during MarkStep -->
-      <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="Microsoft.Android.Sdk.ILLink.PreserveSubStepDispatcher" />
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="MonoDroid.Tuner.MarkJavaObjects" />
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="MonoDroid.Tuner.PreserveJavaExceptions" />
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="MonoDroid.Tuner.PreserveApplications" />

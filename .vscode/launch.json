@@ -76,6 +76,24 @@
               "clearjdb"
             ]
         }
+        ,
+        {
+          "name": "Run Java.Interop Tests (.NET 9)",
+          "type": "coreclr",
+          "request": "launch",
+          "program": "C:/Program Files/dotnet/dotnet.exe",
+          "args": [
+            "exec",
+            "C:/Program Files/dotnet/sdk/10.0.100-rc.1.25419.117/vstest.console.dll",
+            "--framework:.NETCoreApp,Version=v9.0",
+            "${workspaceFolder}/external/Java.Interop/bin/Test${input:configuration}-net9.0/Java.Base-Tests.dll",
+            "--logger:Microsoft.TestPlatform.MSBuildLogger;Verbosity=minimal",
+            "--nologo",
+            "--artifactsProcessingMode-collect"
+          ],
+          "cwd": "${workspaceFolder}/external/Java.Interop",
+          "console": "integratedTerminal"
+        }
     ],
     "inputs": [
       {

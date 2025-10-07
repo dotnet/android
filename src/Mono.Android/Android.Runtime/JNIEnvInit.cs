@@ -132,6 +132,8 @@ namespace Android.Runtime
 			if (RuntimeFeature.IsMonoRuntime) {
 				valueManager = new AndroidValueManager ();
 			} else if (RuntimeFeature.IsCoreClrRuntime) {
+				// Set the entrypoint assembly to Mono.Android.dll for the InteropServices.TypeMapping logic
+				Assembly.SetEntryAssembly (Assembly.GetExecutingAssembly ());
 				valueManager = ManagedValueManager.GetOrCreateInstance ();
 			} else {
 				throw new NotSupportedException ("Internal error: unknown runtime not supported");
