@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 
+using ProtoManifest = Aapt.Pb;
+
 namespace ApplicationUtility;
 
 // TODO: implement support for AndroidManifest.xml in AAB packages. It's protobuf data, not binary/text XML
@@ -65,13 +67,21 @@ public class AndroidManifest : IAspect
 
 		Log.Debug ($"Checking if '{description}' is an plain XML document.");
 		try {
+			stream.Seek (0, SeekOrigin.Begin);
 			return new AndroidManifestAspectState (ParsePlainXML (stream));
 		} catch (Exception ex) {
-			Log.Debug ($"Failed to parse '{description}' as XML document. Exception thrown:", ex);
+			Log.Debug ($"Failed to parse '{description}' as an XML document. Exception thrown:", ex);
 		}
 
-		// TODO: AndroidManifest.xml in AAB files is actually a protobuf data dump. Attempt to
-		//       deserialize it here.
+		Log.Debug ($"Checking if '{description}' is a protobuf XML document.");
+		try {
+			stream.Seek (0, SeekOrigin.Begin);
+			ProtoManifest.XmlNode root_node = ProtoManifest.XmlNode.Parser.ParseFrom (stream);
+			// TODO: convert the PB nodes to System.Xml nodes
+		} catch (Exception ex) {
+			Log.Debug ($"Failed to parse '{description}' as a protobuf XML document. Exception thrown:", ex);
+		}
+
 		return new BasicAspectState (success: false);
 	}
 
