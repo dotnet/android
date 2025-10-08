@@ -10,21 +10,23 @@ namespace ApplicationUtility;
 // TODO: implement support for AndroidManifest.xml in AAB packages. It's protobuf data, not binary/text XML
 public class AndroidManifest : IAspect
 {
-	public string Description { get; }
-	public string? MainActivity { get; }
-	public string? MinSdkVersion { get; }
-	public string? PackageName { get; }
-	public string? TargetSdkVersion { get; }
-	public List<string>? Permissions { get; }
-	public XmlDocument? RawXML => xmlDoc;
+	public string Description           { get; }
+	public AndroidManifestFormat Format { get; } = AndroidManifestFormat.Unknown;
+	public string? MainActivity         { get; }
+	public string? MinSdkVersion        { get; }
+	public string? PackageName          { get; }
+	public List<string>? Permissions    { get; }
+	public XmlDocument? RawXML          => xmlDoc;
+	public string? TargetSdkVersion     { get; }
 
-	XmlDocument? xmlDoc;
+	readonly XmlDocument? xmlDoc;
 	XmlNamespaceManager? nsmgr;
 
-	AndroidManifest (AXMLParser binaryParser, string? description)
+	AndroidManifest (XmlDocument? doc, string? description, AndroidManifestFormat format)
 	{
+		xmlDoc = doc ?? throw new ArgumentNullException (nameof (doc));
+		Format = format;
 		Description = String.IsNullOrEmpty (description) ? "Android manifest" : description;
-		Read (binaryParser);
 
 		nsmgr = PrepareForReading (xmlDoc);
 		PackageName = TryGetPackageName (xmlDoc, nsmgr);
@@ -32,6 +34,14 @@ public class AndroidManifest : IAspect
 		(MinSdkVersion, TargetSdkVersion) = TryGetSdkVersions (xmlDoc, nsmgr);
 		Permissions = TryGetPermissions (xmlDoc, nsmgr);
 	}
+
+	AndroidManifest (AXMLParser binaryParser, string? description)
+		: this (Read (binaryParser, description), description, AndroidManifestFormat.Binary)
+	{}
+
+	AndroidManifest (ProtoManifest.XmlNode rootNode, string? description)
+		: this (Read (rootNode, description), description, AndroidManifestFormat.Protobuf)
+	{}
 
 	public static IAspect LoadAspect (Stream stream, IAspectState state, string? description)
 	{
@@ -43,6 +53,8 @@ public class AndroidManifest : IAspect
 		AndroidManifest ret;
 		if (manifestState.BinaryParser != null) {
 			ret = new AndroidManifest (manifestState.BinaryParser, description);
+		} else if (manifestState.ProtoManifestRoot != null) {
+			ret = new AndroidManifest (manifestState.ProtoManifestRoot, description);
 		} else {
 			throw new NotImplementedException ();
 		}
@@ -53,13 +65,15 @@ public class AndroidManifest : IAspect
 	public static IAspectState ProbeAspect (Stream stream, string? description)
 	{
 		Log.Debug ($"Checking if '{description}' is an Android binary XML document.");
+
+		// We leave parsing of the data to `LoadAspect`, here we only detect the format
 		try {
 			stream.Seek (0, SeekOrigin.Begin);
 
 			// The constructor will throw if it cannot recognize the format
 			var binaryParser = new AXMLParser (stream);
 
-			// We leave parsing of the data to `LoadAspect`, here we only detect the format
+			LogKind ("Android binary XML document");
 			return new AndroidManifestAspectState (binaryParser);
 		} catch (Exception ex) {
 			Log.Debug ($"Failed to instantiate AXML binary parser for '{description}'. Exception thrown:", ex);
@@ -68,7 +82,9 @@ public class AndroidManifest : IAspect
 		Log.Debug ($"Checking if '{description}' is an plain XML document.");
 		try {
 			stream.Seek (0, SeekOrigin.Begin);
-			return new AndroidManifestAspectState (ParsePlainXML (stream));
+			XmlDocument doc = ParsePlainXML (stream);
+			LogKind ("plain XML document");
+			return new AndroidManifestAspectState (doc);
 		} catch (Exception ex) {
 			Log.Debug ($"Failed to parse '{description}' as an XML document. Exception thrown:", ex);
 		}
@@ -76,27 +92,129 @@ public class AndroidManifest : IAspect
 		Log.Debug ($"Checking if '{description}' is a protobuf XML document.");
 		try {
 			stream.Seek (0, SeekOrigin.Begin);
-			ProtoManifest.XmlNode root_node = ProtoManifest.XmlNode.Parser.ParseFrom (stream);
-			// TODO: convert the PB nodes to System.Xml nodes
+			ProtoManifest.XmlNode rootNode = ProtoManifest.XmlNode.Parser.ParseFrom (stream);
+			LogKind ("protobuf XML document");
+			return new AndroidManifestAspectState (rootNode);
 		} catch (Exception ex) {
 			Log.Debug ($"Failed to parse '{description}' as a protobuf XML document. Exception thrown:", ex);
 		}
 
 		return new BasicAspectState (success: false);
+
+		void LogKind (string kind)
+		{
+			Log.Debug ($"Manifest '{description}' is: {kind}");
+		}
 	}
 
-	void Read (AXMLParser? binaryParser)
+	static XmlDocument? Read (ProtoManifest.XmlNode proot, string? description)
+	{
+		if (proot.Element == null) {
+			Log.Debug ($"Manifest '{description}' protobuf has no root element");
+			return null;
+		}
+
+		var doc = new XmlDocument ();
+		var nsmgr = new XmlNamespaceManager (doc.NameTable);
+
+		foreach (ProtoManifest.XmlNamespace ns in proot.Element.NamespaceDeclaration) {
+			nsmgr.AddNamespace (ns.Prefix, ns.Uri);
+		}
+
+		XmlNode docRoot = ToDotNetXml (doc, nsmgr, proot);
+		doc.AppendChild (docRoot);
+		AddChildren (doc, nsmgr, proot, docRoot);
+
+		return doc;
+	}
+
+	static void AddChildren (XmlDocument doc, XmlNamespaceManager nsmgr, ProtoManifest.XmlNode pnode, XmlNode parent)
+	{
+		ProtoManifest.XmlElement pelement = pnode.Element;
+		if (pelement == null || pelement.Child.Count == 0) {
+			return;
+		}
+
+		foreach (ProtoManifest.XmlNode pchild in pelement.Child) {
+			XmlNode child = ToDotNetXml (doc, nsmgr, pchild);
+			parent.AppendChild (child);
+			AddChildren (doc, nsmgr, pchild, child);
+		}
+	}
+
+	static XmlNode ToDotNetXml (XmlDocument doc, XmlNamespaceManager nsmgr, ProtoManifest.XmlNode pnode)
+	{
+		if (pnode.Element == null) {
+			return doc.CreateTextNode (pnode.Text ?? String.Empty);
+		}
+
+		XmlElement element;
+		(bool hasNamespace, bool hasPrefix) = WithNamespace (nsmgr, pnode, out string? prefix, out string? ns);
+		if (!hasNamespace) {
+			element = doc.CreateElement (pnode.Element.Name);
+		} else {
+			if (hasPrefix) {
+				element = doc.CreateElement (prefix, pnode.Element.Name, ns);
+			} else {
+				element = doc.CreateElement (pnode.Element.Name, ns);
+			}
+		}
+
+		foreach (ProtoManifest.XmlAttribute pattr in pnode.Element.Attribute) {
+			(hasNamespace, hasPrefix) = WithNamespace (nsmgr, pattr, out prefix, out ns);
+
+			XmlAttribute attr;
+			if (!hasNamespace) {
+				attr = doc.CreateAttribute (pattr.Name);
+			} else {
+				if (hasPrefix) {
+					attr = doc.CreateAttribute (prefix, pattr.Name, ns);
+				} else {
+					attr = doc.CreateAttribute (pattr.Name, ns);
+				}
+			}
+			attr.Value = pattr.Value;
+			element.SetAttributeNode (attr);
+		}
+
+		return element;
+	}
+
+	static (bool hasNamespace, bool hasPrefix) WithNamespaceMaybe (XmlNamespaceManager nsmgr, string? ns, out string? nsOut, out string? prefix)
+	{
+		prefix = null;
+		nsOut = ns;
+		if (String.IsNullOrEmpty (ns)) {
+			return (false, false);
+		}
+
+		prefix = nsmgr.LookupPrefix (ns);
+		return (true, !String.IsNullOrEmpty (prefix));
+	}
+
+	static (bool hasNamespace, bool hasPrefix) WithNamespace (XmlNamespaceManager nsmgr, ProtoManifest.XmlNode protoNode, out string? prefix, out string? ns)
+	{
+		return WithNamespaceMaybe (nsmgr, protoNode.Element.NamespaceUri, out ns, out prefix);
+	}
+
+	static (bool hasNamespace, bool hasPrefix) WithNamespace (XmlNamespaceManager nsmgr, ProtoManifest.XmlAttribute protoAttr, out string? prefix, out string? ns)
+	{
+		return WithNamespaceMaybe (nsmgr, protoAttr.NamespaceUri, out ns, out prefix);
+	}
+
+	static XmlDocument? Read (AXMLParser? binaryParser, string? description)
 	{
 		if (binaryParser == null) {
 			throw new NotImplementedException ();
 		}
 
-		xmlDoc = binaryParser.Parse ();
-		if (xmlDoc == null || !binaryParser.IsValid) {
-			Log.Debug ($"AXML parser didn't render a valid document for '{Description}'");
-			return;
+		XmlDocument? doc = binaryParser.Parse ();
+		if (doc == null || !binaryParser.IsValid) {
+			Log.Debug ($"AXML parser didn't render a valid document for '{description}'");
+			return null;
 		}
-		Log.Debug ($"'{Description}' loaded and parsed correctly.");
+		Log.Debug ($"'{description}' loaded and parsed correctly.");
+		return doc;
 	}
 
 	static XmlNamespaceManager? PrepareForReading (XmlDocument? doc)
