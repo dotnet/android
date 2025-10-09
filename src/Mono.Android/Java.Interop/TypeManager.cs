@@ -39,7 +39,7 @@ namespace Java.Interop {
 		}
 	}
 
-	public static partial class _TypeManager {
+	public static partial class TypeManager {
 		internal static string GetClassName (IntPtr class_ptr)
 		{
 			IntPtr ptr = RuntimeNativeMethods.monodroid_TypeManager_get_java_class_name (class_ptr);
@@ -216,7 +216,7 @@ namespace Java.Interop {
 			return new NotSupportedException (message.ToString (), CreateJavaLocationException ());
 		}
 
-		static Exception CreateJavaLocationException ()
+		internal static Exception CreateJavaLocationException ()
 		{
 			using (var loc = new Java.Lang.Error ("Java callstack:"))
 				return new JavaLocationException (loc.ToString ());
@@ -299,6 +299,7 @@ namespace Java.Interop {
 			Type? type = null;
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
 			string? class_name = GetClassName (class_ptr);
+			System.Diagnostics.Debug.Assert (class_name == JNIEnv.GetClassNameFromInstance (handle));
 			lock (TypeManagerMapDictionaries.AccessLock) {
 				while (class_ptr != IntPtr.Zero) {
 					type = GetJavaToManagedTypeCore (class_name);
@@ -491,7 +492,7 @@ namespace Java.Interop {
 			[Register ("activate", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;[Ljava/lang/Object;)V", "")]
 			static void n_Activate (IntPtr jnienv, IntPtr jclass, IntPtr typename_ptr, IntPtr signature_ptr, IntPtr jobject, IntPtr parameters_ptr)
 			{
-				_TypeManager.n_Activate (jnienv, jclass, typename_ptr, signature_ptr, jobject, parameters_ptr);
+				TypeManager.n_Activate (jnienv, jclass, typename_ptr, signature_ptr, jobject, parameters_ptr);
 			}
 
 			[UnmanagedCallersOnly]
@@ -499,7 +500,7 @@ namespace Java.Interop {
 			{
 				// TODO: need a full wrapper code here, a'la JNINativeWrapper.CreateDelegate
 				try {
-					_TypeManager.n_Activate (jnienv, jclass, typename_ptr, signature_ptr, jobject, parameters_ptr);
+					TypeManager.n_Activate (jnienv, jclass, typename_ptr, signature_ptr, jobject, parameters_ptr);
 				} catch (Exception ex) {
 					AndroidEnvironment.UnhandledException (ex);
 				}
