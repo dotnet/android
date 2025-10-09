@@ -125,24 +125,19 @@ namespace Android.Runtime
 			BoundExceptionType = (BoundExceptionType) args->ioExceptionType;
 			JniRuntime.JniTypeManager typeManager;
 			JniRuntime.JniValueManager valueManager;
-			if (RuntimeFeature.ManagedTypeMap) {
-				typeManager = new ManagedTypeManager ();
-			} else if (RuntimeFeature.TypeMapAttributeTypeMap) {
+			if (RuntimeFeature.IsCoreClrRuntime) {
 				typeManager = new TypeMapAttributeTypeManager (args->jniAddNativeMethodRegistrationAttributePresent != 0);
-
+			} else if (RuntimeFeature.ManagedTypeMap) {
+				typeManager = new ManagedTypeManager ();
 			} else {
 				typeManager = new AndroidTypeManager (args->jniAddNativeMethodRegistrationAttributePresent != 0);
 			}
 			if (RuntimeFeature.IsMonoRuntime) {
 				valueManager = new AndroidValueManager ();
 			} else if (RuntimeFeature.IsCoreClrRuntime) {
-				if (RuntimeFeature.TypeMapAttributeTypeMap) {
-					// Set the entrypoint assembly to Mono.Android.dll for the TypeMapAttributeTypeManager logic
-					Assembly.SetEntryAssembly (Assembly.GetExecutingAssembly ());
-					valueManager = new TypeMapAttributeValueManager();
-				} else {
-					valueManager = ManagedValueManager.GetOrCreateInstance ();
-				}
+				// Set the entrypoint assembly to Mono.Android.dll for the TypeMapAttributeTypeManager logic
+				Assembly.SetEntryAssembly (Assembly.GetExecutingAssembly ());
+				valueManager = new TypeMapAttributeValueManager ();
 			} else {
 				throw new NotSupportedException ("Internal error: unknown runtime not supported");
 			}
