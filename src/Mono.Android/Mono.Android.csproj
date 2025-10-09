@@ -101,8 +101,9 @@
     <Compile Include="Android.Telephony.Mbms\StreamingService.cs" />
     <Compile Include="Android.Telephony\MbmsDownloadSession.cs" />
     <Compile Include="Android.Views\WindowManagerLayoutParams.cs" />
+    <Compile Include="Java.Interop\TypeMapAttributeTypeManager.cs" />
+    <Compile Include="Java.Interop\TypeMapAttributeValueManager.cs" />
     <Compile Include="Java.Interop\TypeMapProxyAttribute.cs" />
-    <Compile Include="Java.Interop\TypeMapTypeManager.cs" />
     <Compile Include="Java.Lang.Invoke\MethodType.cs" />
     <Compile Include="Java.Time.Chrono\AbstractChronology.cs" />
     <Compile Include="Java.Time\ZonedDateTime.cs" />
