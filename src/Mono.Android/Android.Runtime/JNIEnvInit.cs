@@ -17,24 +17,25 @@ namespace Android.Runtime
 	{
 #pragma warning disable 0649
 		// NOTE: Keep this in sync with the native side in src/native/common/include/managed-interface.hh
-		internal struct JnienvInitializeArgs {
-			public IntPtr          javaVm;
-			public IntPtr          env;
-			public IntPtr          grefLoader;
-			public IntPtr          Loader_loadClass;
-			public IntPtr          grefClass; // TODO: remove, not needed anymore
-			public uint            logCategories;
-			public int             version; // TODO: remove, not needed anymore
-			public int             grefGcThreshold;
-			public IntPtr          grefIGCUserPeer;
-			public byte            brokenExceptionTransitions;
-			public int             packageNamingPolicy;
-			public byte            ioExceptionType;
-			public int             jniAddNativeMethodRegistrationAttributePresent;
-			public bool            jniRemappingInUse;
-			public bool            marshalMethodsEnabled;
-			public IntPtr          grefGCUserPeerable;
-			public bool            managedMarshalMethodsLookupEnabled;
+		internal struct JnienvInitializeArgs
+		{
+			public IntPtr javaVm;
+			public IntPtr env;
+			public IntPtr grefLoader;
+			public IntPtr Loader_loadClass;
+			public IntPtr grefClass; // TODO: remove, not needed anymore
+			public uint logCategories;
+			public int version; // TODO: remove, not needed anymore
+			public int grefGcThreshold;
+			public IntPtr grefIGCUserPeer;
+			public byte brokenExceptionTransitions;
+			public int packageNamingPolicy;
+			public byte ioExceptionType;
+			public int jniAddNativeMethodRegistrationAttributePresent;
+			public bool jniRemappingInUse;
+			public bool marshalMethodsEnabled;
+			public IntPtr grefGCUserPeerable;
+			public bool managedMarshalMethodsLookupEnabled;
 		}
 #pragma warning restore 0649
 
@@ -62,8 +63,8 @@ namespace Android.Runtime
 			var type = TypeGetType (typeName);
 			if (type == null) {
 				RuntimeNativeMethods.monodroid_log (LogLevel.Error,
-				               LogCategories.Default,
-				               $"Could not load type '{typeName}'. Skipping JNI registration of type '{Java.Interop.TypeManager.GetClassName (jniClass)}'.");
+							   LogCategories.Default,
+							   $"Could not load type '{typeName}'. Skipping JNI registration of type '{Java.Interop.TypeManager.GetClassName (jniClass)}'.");
 				return;
 			}
 
@@ -113,7 +114,7 @@ namespace Android.Runtime
 			IntPtr total_timing_sequence = IntPtr.Zero;
 			IntPtr partial_timing_sequence = IntPtr.Zero;
 
-			Logger.SetLogCategories ((LogCategories)args->logCategories);
+			Logger.SetLogCategories ((LogCategories) args->logCategories);
 
 			gref_gc_threshold = args->grefGcThreshold;
 
@@ -121,20 +122,27 @@ namespace Android.Runtime
 			MarshalMethodsEnabled = args->marshalMethodsEnabled;
 			java_class_loader = args->grefLoader;
 
-			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
+			BoundExceptionType = (BoundExceptionType) args->ioExceptionType;
 			JniRuntime.JniTypeManager typeManager;
 			JniRuntime.JniValueManager valueManager;
 			if (RuntimeFeature.ManagedTypeMap) {
-				typeManager     = new ManagedTypeManager ();
+				typeManager = new ManagedTypeManager ();
+			} else if (RuntimeFeature.TypeMapAttributeTypeMap) {
+				typeManager = new TypeMapAttributeTypeManager (args->jniAddNativeMethodRegistrationAttributePresent != 0);
+
 			} else {
-				typeManager     = new AndroidTypeManager (args->jniAddNativeMethodRegistrationAttributePresent != 0);
+				typeManager = new AndroidTypeManager (args->jniAddNativeMethodRegistrationAttributePresent != 0);
 			}
 			if (RuntimeFeature.IsMonoRuntime) {
 				valueManager = new AndroidValueManager ();
 			} else if (RuntimeFeature.IsCoreClrRuntime) {
-				// Set the entrypoint assembly to Mono.Android.dll for the InteropServices.TypeMapping logic
-				Assembly.SetEntryAssembly (Assembly.GetExecutingAssembly ());
-				valueManager = ManagedValueManager.GetOrCreateInstance ();
+				if (RuntimeFeature.TypeMapAttributeTypeMap) {
+					// Set the entrypoint assembly to Mono.Android.dll for the TypeMapAttributeTypeManager logic
+					Assembly.SetEntryAssembly (Assembly.GetExecutingAssembly ());
+					valueManager = new TypeMapAttributeValueManager();
+				} else {
+					valueManager = ManagedValueManager.GetOrCreateInstance ();
+				}
 			} else {
 				throw new NotSupportedException ("Internal error: unknown runtime not supported");
 			}
@@ -152,10 +160,10 @@ namespace Android.Runtime
 
 			PropagateExceptions = args->brokenExceptionTransitions == 0;
 
-			JavaNativeTypeManager.PackageNamingPolicy = (PackageNamingPolicy)args->packageNamingPolicy;
+			JavaNativeTypeManager.PackageNamingPolicy = (PackageNamingPolicy) args->packageNamingPolicy;
 
 			if (args->managedMarshalMethodsLookupEnabled) {
-				delegate* unmanaged <int, int, int, IntPtr*, void> getFunctionPointer = &ManagedMarshalMethodsLookupTable.GetFunctionPointer;
+				delegate* unmanaged<int, int, int, IntPtr*, void> getFunctionPointer = &ManagedMarshalMethodsLookupTable.GetFunctionPointer;
 				xamarin_app_init (args->env, getFunctionPointer);
 			}
 
@@ -163,7 +171,7 @@ namespace Android.Runtime
 		}
 
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		static extern unsafe void xamarin_app_init (IntPtr env, delegate* unmanaged <int, int, int, IntPtr*, void> get_function_pointer);
+		static extern unsafe void xamarin_app_init (IntPtr env, delegate* unmanaged<int, int, int, IntPtr*, void> get_function_pointer);
 
 		static void SetSynchronizationContext () =>
 			SynchronizationContext.SetSynchronizationContext (Android.App.Application.SynchronizationContext);
