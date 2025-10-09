@@ -6,7 +6,7 @@ class NativeAotSharedLibraryReporter : SharedLibraryReporter
 	protected override string AspectName => NativeAotSharedLibrary.AspectName;
 	protected override string LibraryKind => "NativeAOT shared library";
 
-	public NativeAotSharedLibraryReporter (NativeAotSharedLibrary library)
-		: base (library)
+	public NativeAotSharedLibraryReporter (NativeAotSharedLibrary library, MarkdownDocument doc)
+		: base (library, doc)
 	{}
 }
