@@ -5,7 +5,7 @@ namespace ApplicationUtility;
 
 class Reporter
 {
-	public static void Report (IAspect aspect)
+	public static void Report (IAspect aspect, bool plainTextRendering)
 	{
 		Type aspectType = aspect.GetType ();
 
@@ -24,21 +24,26 @@ class Reporter
 			throw new InvalidOperationException ($"Internal error: cannot generate report for unsupported type '{aspectType}'");
 		}
 
-		IReporter? reporter = CreateSpecificReporter (aspectType, aspect);
-		if (reporter == null) {
-			throw new InvalidOperationException ($"Internal error: failed to instantiate reporter for type '{aspectType}'");
-		}
+		var reportDoc = new MarkdownDocument ();
+		try {
+			IReporter? reporter = CreateSpecificReporter (aspectType, aspect, reportDoc);
+			if (reporter == null) {
+				throw new InvalidOperationException ($"Internal error: failed to instantiate reporter for type '{aspectType}'");
+			}
 
-		reporter.Report ();
+			reporter.Report ();
+		} finally {
+			Console.WriteLine (reportDoc.Render (renderPlainText: plainTextRendering));
+		}
 	}
 
-	static IReporter? CreateSpecificReporter (Type aspectType, IAspect aspect)
+	static IReporter? CreateSpecificReporter (Type aspectType, IAspect aspect, MarkdownDocument reportDoc)
 	{
 		Log.Debug ($"Looking for type {aspectType} reporter class");
 		Assembly asm = typeof(Reporter).Assembly;
 		Type? reporterType = null;
 		ConstructorInfo? ctor = null;
-		var ctorArgs = new Type[] { aspectType };
+		var ctorArgs = new Type[] { aspectType, typeof (MarkdownDocument) };
 
 		foreach (Type type in asm.GetTypes ()) {
 			(reporterType, ctor) = GetAspectReporterRecursively (type, aspectType, ctorArgs);
@@ -53,7 +58,7 @@ class Reporter
 		}
 
 		try {
-			return (IReporter)ctor.Invoke (new object[] { aspect });
+			return (IReporter)ctor.Invoke (new object[] { aspect, reportDoc });
 		} catch (Exception ex) {
 			throw new InvalidOperationException ($"Internal error: failed to instantiate reporter type '{reporterType}'", ex);
 		}

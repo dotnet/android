@@ -23,7 +23,7 @@ class Program
 		if (aspect == null) {
 			return 1;
 		}
-		Reporter.Report (aspect);
+		Reporter.Report (aspect, plainTextRendering: false);
 		return 0;
 	}
 }

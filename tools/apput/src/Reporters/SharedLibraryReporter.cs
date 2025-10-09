@@ -11,7 +11,8 @@ class SharedLibraryReporter : BaseReporter
 	protected virtual string LibraryKind => "Shared library";
 	protected override string ShortDescription => library.Name;
 
-	public SharedLibraryReporter (SharedLibrary library)
+	public SharedLibraryReporter (SharedLibrary library, MarkdownDocument doc)
+		: base (doc)
 	{
 		this.library = library;
 	}
@@ -28,6 +29,7 @@ class SharedLibraryReporter : BaseReporter
 		}
 		WriteItem ("Build ID", ValueOrNone (library.BuildID));
 		WriteDebugInfoDesc ();
+		WriteAlignmentInfo ();
 
 		if (library.HasAndroidIdent) {
 			WriteSubsectionBanner ("Android-specific ELF shared library info");
@@ -46,8 +48,11 @@ class SharedLibraryReporter : BaseReporter
 			sb.Append ("')");
 		}
 		WriteItem ("Has debug link", sb.ToString ());
+	}
 
-		sb.Clear ();
+	protected void WriteAlignmentInfo ()
+	{
+		var sb = new StringBuilder ();
 		sb.Append ($"0x{library.Alignment:x} (");
 		if (!library.AlignmentCompatibleWith16k) {
 			sb.Append ("NOT ");
