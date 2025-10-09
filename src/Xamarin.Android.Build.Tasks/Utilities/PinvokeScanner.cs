@@ -28,10 +28,12 @@ class PinvokeScanner
 	}
 
 	readonly TaskLoggingHelper log;
+	readonly bool debugLogging;
 
-	public PinvokeScanner (TaskLoggingHelper log)
+	public PinvokeScanner (TaskLoggingHelper log, bool debugLogging = true)
 	{
 		this.log = log;
+		this.debugLogging = debugLogging;
 	}
 
 	public List<PinvokeEntryInfo> Scan (AndroidTargetArch targetArch, XAAssemblyResolver resolver, ICollection<ITaskItem> frameworkAssemblies)
@@ -54,7 +56,10 @@ class PinvokeScanner
 
 	void Scan (AndroidTargetArch targetArch, AssemblyDefinition assembly, HashSet<string> pinvokeCache, List<PinvokeEntryInfo> pinvokes)
 	{
-		log.LogDebugMessage ($"[p/invoke][{targetArch}] Scanning assembly {assembly}");
+		if (debugLogging) {
+			log.LogDebugMessage ($"[p/invoke][{targetArch}] Scanning assembly {assembly}");
+		}
+
 		foreach (ModuleDefinition module in assembly.Modules) {
 			if (!module.HasTypes) {
 				continue;
@@ -78,7 +83,10 @@ class PinvokeScanner
 			return;
 		}
 
-		log.LogDebugMessage ($"[p/invoke][{targetArch}] Scanning type '{type}'");
+		if (debugLogging) {
+			log.LogDebugMessage ($"[p/invoke][{targetArch}] Scanning type '{type}'");
+		}
+
 		foreach (MethodDefinition method in type.Methods) {
 			if (!method.HasPInvokeInfo) {
 				continue;
@@ -90,7 +98,9 @@ class PinvokeScanner
 				continue;
 			}
 
-			log.LogDebugMessage ($"  [{targetArch}] p/invoke method: {pinfo.LibraryName}/{pinfo.EntryName}");
+			if (debugLogging) {
+				log.LogDebugMessage ($"  [{targetArch}] p/invoke method: {pinfo.LibraryName}/{pinfo.EntryName}");
+			}
 			pinvokeCache.Add (key);
 			pinvokes.Add (pinfo);
 		}

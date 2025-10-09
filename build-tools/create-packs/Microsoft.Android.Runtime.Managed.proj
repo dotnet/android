@@ -19,6 +19,8 @@ projects that use the Microsoft.Android framework in .NET 6+.
     <OverridePackageId>$(PackageId)</OverridePackageId>
     <PlatformPackageType>RuntimePack</PlatformPackageType>
     <Description>Microsoft.Android managed runtime components for API $(AndroidApiLevel). Please do not reference directly.</Description>
+    <!-- Prevents: error NU1101: Unable to find package Microsoft.NETCore.App.Runtime.linux-bionic-arm. -->
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
     <_AndroidRuntimePackAssemblyPath>runtimes/$(AndroidRID)/lib/$(DotNetTargetFramework)</_AndroidRuntimePackAssemblyPath>
     <_AndroidRuntimePackNativePath>runtimes/$(AndroidRID)/native</_AndroidRuntimePackNativePath>
   </PropertyGroup>

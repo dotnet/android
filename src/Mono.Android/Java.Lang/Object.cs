@@ -141,29 +141,20 @@ namespace Java.Lang {
 			return (T?)PeekObject (handle, typeof (T));
 		}
 
-		public static T? GetObject<
-				[DynamicallyAccessedMembers (Constructors)]
-				T
-		> (IntPtr jnienv, IntPtr handle, JniHandleOwnership transfer)
+		public static T? GetObject<T> (IntPtr jnienv, IntPtr handle, JniHandleOwnership transfer)
 			where T : class, IJavaObject
 		{
 			JNIEnv.CheckHandle (jnienv);
 			return GetObject<T> (handle, transfer);
 		}
 
-		public static T? GetObject<
-				[DynamicallyAccessedMembers (Constructors)]
-				T
-		> (IntPtr handle, JniHandleOwnership transfer)
+		public static T? GetObject<T> (IntPtr handle, JniHandleOwnership transfer)
 			where T : class, IJavaObject
 		{
 			return _GetObject<T>(handle, transfer);
 		}
 
-		internal static T? _GetObject<
-				[DynamicallyAccessedMembers (Constructors)]
-				T
-		> (IntPtr handle, JniHandleOwnership transfer)
+		internal static T? _GetObject<T> (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return default (T);
@@ -174,15 +165,19 @@ namespace Java.Lang {
 		internal static IJavaPeerable? GetObject (
 				IntPtr handle,
 				JniHandleOwnership transfer,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? type = null)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			var r = JniEnvironment.Runtime.ValueManager.GetPeer (new JniObjectReference (handle), type);
+			var r = GetPeer (handle, type);
 			JNIEnv.DeleteRef (handle, transfer);
 			return r;
+
+			// FIXME: should use [DynamicallyAccessedMembers (Constructors)] in the future
+			[UnconditionalSuppressMessage ("Trimming", "IL2067:'targetType' argument does not satisfy 'DynamicallyAccessedMemberTypes.PublicConstructors', 'DynamicallyAccessedMemberTypes.NonPublicConstructors' in call to 'Java.Interop.JniRuntime.JniValueManager.GetPeer(JniObjectReference, Type)'.", Justification = "The MarkJavaObjects step preserves ctors on Java.Lang.Object subclasses.")]
+			static IJavaPeerable? GetPeer (IntPtr handle, Type? type) =>
+				JniEnvironment.Runtime.ValueManager.GetPeer (new JniObjectReference (handle), type);
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]

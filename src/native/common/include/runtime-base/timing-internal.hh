@@ -16,13 +16,13 @@
 #include <thread>
 #include <vector>
 
-#if defined(XA_HOST_CLR)
-#include <constants.hh>
-#else
+#if defined(XA_HOST_MONOVM)
 #include <runtime-base/shared-constants.hh>
 
 using Constants = xamarin::android::internal::SharedConstants;
 using namespace xamarin::android::internal;
+#else
+#include <constants.hh>
 #endif
 
 #include <runtime-base/logger.hh>
@@ -73,10 +73,10 @@ namespace xamarin::android {
 
 	class FastTiming final
 	{
-#if defined(XA_HOST_CLR)
-		using mutex = std::mutex;
-#else
+#if defined(XA_HOST_MONOVM)
 		using mutex = xamarin::android::mutex;
+#else
+		using mutex = std::mutex;
 #endif
 		enum class SequenceError
 		{

@@ -125,7 +125,7 @@ namespace Xamarin.Android.Tasks {
 		{
 			int minSdkVersion;
 			if (!int.TryParse (MinSdkVersionName, out minSdkVersion))
-				minSdkVersion = XABuildConfig.AndroidMinimumDotNetApiLevel;
+				minSdkVersion = XABuildConfig.AndroidMinimumDotNetApiLevel.Major;
 			return minSdkVersion.ToString ();
 		}
 

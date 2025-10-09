@@ -154,12 +154,12 @@ namespace Xamarin.Android.Build.Tests
 			var nupkgPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.1.0.0.nupkg");
 			FileAssert.Exists (nupkgPath);
 			using var nupkg = ZipHelper.OpenZip (nupkgPath);
-			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{proj.ProjectName}.dll");
-			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{proj.ProjectName}.aar");
+			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}/{proj.ProjectName}.dll");
+			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}/{proj.ProjectName}.aar");
 			if (packGradleRef) {
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{moduleName}-release.aar");
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}/{moduleName}-release.aar");
 			} else {
-				nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{moduleName}-release.aar");
+				nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}/{moduleName}-release.aar");
 			}
 		}
 
@@ -397,7 +397,7 @@ plugins {{
 }}
 android {{
     namespace = ""{gradleModule.PackageName}""
-    compileSdk = {XABuildConfig.AndroidDefaultTargetDotnetApiLevel}
+    compileSdk = {XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major}
     defaultConfig {{
         minSdk = 21
     }}

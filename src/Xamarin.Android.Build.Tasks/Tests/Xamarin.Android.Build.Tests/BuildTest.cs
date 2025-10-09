@@ -166,7 +166,7 @@ namespace Xamarin.Android.Build.Tests
 			XNamespace ns = "http://schemas.android.com/apk/res/android";
 			var uses_sdk = manifest.Root.Element ("uses-sdk");
 			Assert.AreEqual ("21", uses_sdk.Attribute (ns + "minSdkVersion").Value);
-			Assert.AreEqual (XABuildConfig.AndroidDefaultTargetDotnetApiLevel.ToString(),
+			Assert.AreEqual (XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major.ToString (),
 				uses_sdk.Attribute (ns + "targetSdkVersion").Value);
 
 			bool expectEmbeddedAssembies = !(TestEnvironment.CommercialBuildAvailable && !isRelease);
@@ -1522,10 +1522,11 @@ namespace UnnamedProject
 				}
 			});
 			using (var b = CreateApkBuilder ("temp/CheckLintErrorsAndWarnings", cleanupOnDispose: false)) {
-				int maxApiLevel = AndroidSdkResolver.GetMaxInstalledPlatform ();
+				var maxApiLevel = AndroidSdkResolver.GetMaxInstalledPlatform ();
 				b.LatestTargetFrameworkVersion (out string apiLevel);
-				if (int.TryParse (apiLevel, out int a) && a < maxApiLevel)
+				if (AndroidSdkResolver.TryParseAndroidSdkVersion (apiLevel, out var v) && v < maxApiLevel) {
 					disabledIssues += ",OldTargetApi";
+				}
 				proj.SetProperty ("AndroidLintDisabledIssues", disabledIssues);
 				proj.SupportedOSPlatformVersion = "24";
 				proj.TargetSdkVersion = apiLevel;
