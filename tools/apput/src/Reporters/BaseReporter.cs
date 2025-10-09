@@ -8,6 +8,9 @@ namespace ApplicationUtility;
 
 // TODO: generate Markdown
 // TODO: detect whether we can output colors
+// TODO: reporters should be used for all items contained in the aspect being reported on. This requires
+//       changes to support different write formats depending on whether an aspect is being reported on
+//       in standalone or "embedded" mode.
 abstract class BaseReporter : IReporter
 {
 	protected enum Countable
@@ -34,6 +37,13 @@ abstract class BaseReporter : IReporter
 
 	protected static readonly bool CanUseColor = !Console.IsOutputRedirected;
 
+	protected MarkdownDocument ReportDoc { get; }
+
+	protected BaseReporter (MarkdownDocument doc)
+	{
+		ReportDoc = doc;
+	}
+
 	public void Report ()
 	{
 		WriteLine (BannerColor, $"# {AspectName} ({ShortDescription})");
@@ -42,6 +52,35 @@ abstract class BaseReporter : IReporter
 	}
 
 	protected abstract void DoReport ();
+
+	protected MarkdownHeading AddSection (string text)
+	{
+		if (!ReportDoc.IsEmpty) {
+			ReportDoc.AddNewLine ();
+		}
+		return ReportDoc.AddHeading (level: 1, text);
+	}
+
+	protected MarkdownElement CreateItemWithLabel (string label, string text, bool endWithNewline = true)
+	{
+		var item = new MarkdownTextSpan ($"{label}:") {
+			Bold = true
+		};
+		item.AddText ($" {text}");
+		if (endWithNewline) {
+			item.AddNewline ();
+		}
+
+		return item;
+	}
+
+	protected void AddAspectDesc (string text)
+	{
+		MarkdownHeading section = ReportDoc.AddHeading (1, "Generic aspect information");
+		var para = MarkdownDocument.CreateParagraph ();
+		para.AddChild (CreateItemWithLabel ("Aspect type", text, endWithNewline: false));
+		section.AddChild (para);
+	}
 
 	protected void WriteSubsectionBanner (string text)
 	{
@@ -62,6 +101,31 @@ abstract class BaseReporter : IReporter
 	protected void WriteNativeArch (AndroidTargetArch arch)
 	{
 		WriteItem (NativeArchitectureLabel, arch.ToString ());
+	}
+
+	protected void AddNativeArchDesc (MarkdownContainerElement container, AndroidTargetArch arch)
+	{
+		container.AddChild (CreateItemWithLabel (NativeArchitectureLabel, arch.ToString ()));
+	}
+
+	protected void AddNativeArchDesc (MarkdownContainerElement container, ICollection<AndroidTargetArch> arches)
+	{
+		if (arches.Count == 1) {
+			AddNativeArchDesc (container, arches.First ());
+			return;
+		}
+
+		if (arches.Count == 0) {
+			container.AddChild (MarkdownDocument.CreateText ("none", bold: true));
+			return;
+		}
+
+		var architectures = new List<string> ();
+		foreach (AndroidTargetArch arch in arches) {
+			architectures.Add (arch.ToString ());
+		}
+
+		container.AddChild (CreateItemWithLabel (NativeArchitecturesLabel, String.Join (", ", architectures)));
 	}
 
 	protected void WriteNativeArch (ICollection<AndroidTargetArch> arches)
@@ -85,11 +149,26 @@ abstract class BaseReporter : IReporter
 		WriteLine (ValidValueColor, String.Join (", ", architectures));
 	}
 
+	protected void AddYesNo (MarkdownContainerElement container, string label, bool value)
+	{
+		container.AddChild (CreateItemWithLabel (label, YesNo (value)));
+	}
+
 	protected void WriteYesNo (string label, bool value) => WriteItem (label, YesNo (value));
 
 	protected void WriteLabel (string label)
 	{
 		Write (LabelColor, $"{label}: ");
+	}
+
+	protected void AddText (MarkdownContainerElement container, string text, bool bold = false)
+	{
+		container.AddChild (MarkdownDocument.CreateText (text, bold: bold));
+	}
+
+	protected void AddItem (MarkdownContainerElement container, string label, string value)
+	{
+		container.AddChild (CreateItemWithLabel (label, value));
 	}
 
 	protected void WriteItem (string label, string value)

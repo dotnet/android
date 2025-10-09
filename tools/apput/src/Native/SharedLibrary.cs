@@ -43,6 +43,8 @@ public class SharedLibrary : IAspect, IDisposable
 	public Stream LibraryStream => libraryStream;
 	public string Name => libraryName;
 	public string? Soname => soname;
+	public long Size => libraryStream.Length;
+
 	public NativeArchitecture TargetArchitecture => nativeArch;
 
 	protected IELF ELF => elf;

@@ -8,8 +8,8 @@ class XamarinAppSharedLibraryReporter : SharedLibraryReporter
 	protected override string AspectName => XamarinAppSharedLibrary.AspectName;
 	protected override string LibraryKind => "Xamarin.Android App shared library";
 
-	public XamarinAppSharedLibraryReporter (XamarinAppSharedLibrary library)
-		: base (library)
+	public XamarinAppSharedLibraryReporter (XamarinAppSharedLibrary library, MarkdownDocument doc)
+		: base (library, doc)
 	{
 		this.library = library;
 	}
