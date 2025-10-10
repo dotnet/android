@@ -43,7 +43,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 	// Order of fields and their type must correspond *exactly* (with exception of the
 	// ignored managed members) to that in
-	// src/monodroid/jni/xamarin-app.hh DSOCacheEntry structure
+	// src/native/clr/include/xamarin-app.hh DSOCacheEntry structure
 	[NativeAssemblerStructContextDataProvider (typeof (DSOCacheEntryContextDataProvider))]
 	sealed class DSOCacheEntry
 	{
@@ -66,8 +66,29 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public IntPtr handle = IntPtr.Zero;
 	}
 
+	sealed class DSOApkEntryContextDataProvider : NativeAssemblerStructContextDataProvider
+	{
+		public override string GetComment (object data, string fieldName)
+		{
+			var dso_apk_entry = EnsureType<DSOApkEntry> (data);
+			if (MonoAndroidHelper.StringEquals ("name_hash", fieldName)) {
+				return $" from name: {dso_apk_entry.Name}";
+			}
+
+			return String.Empty;
+		}
+	}
+
+	// Order of fields and their type must correspond *exactly* (with exception of the
+	// ignored managed members) to that in
+	// src/native/clr/include/xamarin-app.hh DSOApkEntry structure
+	[NativeAssemblerStructContextDataProvider (typeof (DSOApkEntryContextDataProvider))]
 	sealed class DSOApkEntry
 	{
+		[NativeAssembler (Ignore = true)]
+		public string Name = String.Empty;
+
+		[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 		public ulong name_hash;
 		public uint  offset; // offset into the APK
 		public int   fd; // apk file descriptor
@@ -165,42 +186,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public uint index;
 	}
 
-	sealed class AppEnvironmentVariableContextDataProvider : NativeAssemblerStructContextDataProvider
-	{
-		public override string GetComment (object data, string fieldName)
-		{
-			var envVar = EnsureType<AppEnvironmentVariable> (data);
-
-			if (MonoAndroidHelper.StringEquals ("name_index", fieldName)) {
-				return $" '{envVar.Name}'";
-			}
-
-			if (MonoAndroidHelper.StringEquals ("value_index", fieldName)) {
-				return $" '{envVar.Value}'";
-			}
-
-			return String.Empty;
-		}
-	}
-
-	// Order of fields and their type must correspond *exactly* to that in
-	// src/native/clr/include/xamarin-app.hh AppEnvironmentVariable structure
-	[NativeAssemblerStructContextDataProvider (typeof (AppEnvironmentVariableContextDataProvider))]
-	sealed class AppEnvironmentVariable
-	{
-		[NativeAssembler (Ignore = true)]
-		public string? Name;
-
-		[NativeAssembler (Ignore = true)]
-		public string? Value;
-
-		[NativeAssembler (UsesDataProvider = true)]
-		public uint name_index;
-
-		[NativeAssembler (UsesDataProvider = true)]
-		public uint value_index;
-	}
-
 	sealed class XamarinAndroidBundledAssemblyContextDataProvider : NativeAssemblerStructContextDataProvider
 	{
 		public override ulong GetBufferSize (object data, string fieldName)
@@ -243,8 +228,10 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	{
 		public List<StructureInstance<DSOCacheEntry>> DsoCache = [];
 		public List<DSOCacheEntry> JniPreloadDSOs = [];
+		public List<string> JniPreloadNames = [];
 		public List<StructureInstance<DSOCacheEntry>> AotDsoCache = [];
 		public LlvmIrStringBlob NamesBlob = null!;
+		public uint NameMutationsCount = 1;
 	}
 
 	// Keep in sync with FORMAT_TAG in src/monodroid/jni/xamarin-app.hh
@@ -331,24 +318,12 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		module.AddGlobalVariable ("format_tag", FORMAT_TAG, comment: $" 0x{FORMAT_TAG:x}");
 
 		var envVarsBlob = new LlvmIrStringBlob ();
-		var appEnvVars = new List<StructureInstance<AppEnvironmentVariable>> ();
-
-		if (environmentVariables != null) {
-			// TODO: skip variables with no name
-			foreach (var kvp in environmentVariables) {
-				(int nameOffset, int _) = envVarsBlob.Add (kvp.Key);
-				(int valueOffset, int _) = envVarsBlob.Add (kvp.Value);
-
-				var appEnvVar = new AppEnvironmentVariable {
-					Name = kvp.Key,
-					Value = kvp.Value,
-
-					name_index = (uint)nameOffset,
-					value_index = (uint)valueOffset,
-				};
-				appEnvVars.Add (new StructureInstance<AppEnvironmentVariable> (appEnvironmentVariableStructureInfo, appEnvVar));
-			}
-		}
+		List<StructureInstance<LlvmIrHelpers.AppEnvironmentVariable>> appEnvVars = LlvmIrHelpers.MakeEnvironmentVariableList (
+			Log,
+			environmentVariables,
+			envVarsBlob,
+			appEnvironmentVariableStructureInfo
+		);
 
 		var envVars = new LlvmIrGlobalVariable (appEnvVars, "app_environment_variables") {
 			Comment = " Application environment variables array, name:value",
@@ -357,10 +332,21 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		module.Add (envVars);
 		module.AddGlobalVariable ("app_environment_variable_contents", envVarsBlob, LlvmIrVariableOptions.GlobalConstant);
 
-		var sysProps = new LlvmIrGlobalVariable (systemProperties ?? new SortedDictionary<string, string>(), "app_system_properties") {
+		// We reuse the same structure as for environment variables, there's no point in adding a new, identical, one
+		var sysPropsBlob = new LlvmIrStringBlob ();
+		List<StructureInstance<LlvmIrHelpers.AppEnvironmentVariable>> appSysProps = LlvmIrHelpers.MakeEnvironmentVariableList (
+			Log,
+			systemProperties,
+			sysPropsBlob,
+			appEnvironmentVariableStructureInfo
+		);
+
+		var sysProps = new LlvmIrGlobalVariable (appSysProps, "app_system_properties") {
 			Comment = " System properties defined by the application",
+			Options = LlvmIrVariableOptions.GlobalConstant,
 		};
-		module.Add (sysProps, stringGroupName: "sysprop", stringGroupComment: " System properties name:value pairs");
+		module.Add (sysProps);
+		module.AddGlobalVariable ("app_system_property_contents", sysPropsBlob, LlvmIrVariableOptions.GlobalConstant);
 
 		DsoCacheState dsoState = InitDSOCache ();
 		var app_cfg = new ApplicationConfigCLR {
@@ -372,7 +358,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			number_of_runtime_properties = (uint)(runtimeProperties == null ? 0 : runtimeProperties.Count),
 			package_naming_policy = (uint)PackageNamingPolicy,
 			environment_variable_count = (uint)(environmentVariables == null ? 0 : environmentVariables.Count),
-			system_property_count = (uint)(systemProperties == null ? 0 : systemProperties.Count * 2),
+			system_property_count = (uint)(appSysProps.Count),
 			number_of_assemblies_in_apk = (uint)NumberOfAssembliesInApk,
 			number_of_shared_libraries = (uint)NativeLibraries.Count,
 			bundled_assembly_name_width = (uint)BundledAssemblyNameWidth,
@@ -394,10 +380,14 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		};
 		module.Add (dso_cache);
 
+		module.AddGlobalVariable ("dso_jni_preloads_idx_stride", dsoState.NameMutationsCount);
+
 		// This variable MUST be written after `dso_cache` since it relies on sorting performed by HashAndSortDSOCache
 		var dso_jni_preloads_idx = new LlvmIrGlobalVariable (new List<uint> (), "dso_jni_preloads_idx", LlvmIrVariableOptions.GlobalConstant) {
 			Comment = " Indices into dso_cache[] of DSO libraries to preload because of JNI use",
 			ArrayItemCount = (uint)dsoState.JniPreloadDSOs.Count,
+			GetArrayItemCommentCallback = GetPreloadIndicesLibraryName,
+			GetArrayItemCommentCallbackCallerState = dsoState,
 			BeforeWriteCallback = PopulatePreloadIndices,
 			BeforeWriteCallbackCallerState = dsoState,
 		};
@@ -411,10 +401,9 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		module.Add (aot_dso_cache);
 		module.AddGlobalVariable ("dso_names_data", dsoState.NamesBlob, LlvmIrVariableOptions.GlobalConstant);
 
-		var dso_apk_entries = new LlvmIrGlobalVariable (typeof(List<StructureInstance<DSOApkEntry>>), "dso_apk_entries") {
-			ArrayItemCount = (ulong)NativeLibraries.Count,
+		var dso_apk_entries = new LlvmIrGlobalVariable (new List<StructureInstance<DSOApkEntry>> (NativeLibraries.Count), "dso_apk_entries") {
 			Options = LlvmIrVariableOptions.GlobalWritable,
-			ZeroInitializeArray = true,
+			BeforeWriteCallback = PopulateDsoApkEntries,
 		};
 		module.Add (dso_apk_entries);
 
@@ -566,18 +555,65 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		module.Add (assembly_store);
 	}
 
+	string? GetPreloadIndicesLibraryName (LlvmIrVariable v, LlvmIrModuleTarget target, ulong index, object? value, object? callerState)
+	{
+		// Instead of throwing for such a triviality like a comment, we will return error messages as comments instead
+		var dsoState = callerState as DsoCacheState;
+		if (dsoState == null) {
+			return " Internal error: DSO state not present.";
+		}
+
+		if (index >= (ulong)dsoState.JniPreloadNames.Count) {
+			return $" Invalid index {index}";
+		}
+
+		return $" {dsoState.JniPreloadNames[(int)index]}";
+	}
+
+	void PopulateDsoApkEntries (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
+	{
+		var dso_apk_entries = variable.Value as List<StructureInstance<DSOApkEntry>>;
+		if (dso_apk_entries == null) {
+			throw new InvalidOperationException ("Internal error: DSO apk entries list not present.");
+		}
+
+		if (dso_apk_entries.Capacity != NativeLibraries.Count) {
+			throw new InvalidOperationException ($"Internal error: DSO apk entries count ({dso_apk_entries.Count}) is different to the native libraries count ({NativeLibraries.Count}).");
+		}
+
+		bool is64Bit = target.Is64Bit;
+		foreach (ITaskItem item in NativeLibraries) {
+			string name = Path.GetFileName (item.ItemSpec);
+			var entry = new DSOApkEntry {
+				Name = name,
+
+				name_hash = MonoAndroidHelper.GetXxHash (name, is64Bit),
+				offset = 0,
+				fd = -1,
+			};
+			dso_apk_entries.Add (new StructureInstance<DSOApkEntry> (dsoApkEntryStructureInfo, entry));
+		}
+
+		dso_apk_entries.Sort ((StructureInstance<DSOApkEntry> a, StructureInstance<DSOApkEntry> b) => {
+			return a.Instance!.name_hash.CompareTo (b.Instance!.name_hash);
+		});
+	}
+
 	void PopulatePreloadIndices (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
 	{
 		var indices = variable.Value as List<uint>;
 		if (indices == null) {
-			throw new InvalidOperationException ($"Internal error: DSO preload indices list instance not present.");
+			throw new InvalidOperationException ("Internal error: DSO preload indices list instance not present.");
 		}
 
 		var dsoState = state as DsoCacheState;
 		if (dsoState == null) {
-			throw new InvalidOperationException ($"Internal error: DSO state not present.");
+			throw new InvalidOperationException ("Internal error: DSO state not present.");
 		}
 
+		var dsoNames = new List<string> ();
+
+		// Indices array MUST NOT be sorted, since it groups alias entries together with the main entry
 		foreach (DSOCacheEntry preload in dsoState.JniPreloadDSOs) {
 			int dsoIdx = dsoState.DsoCache.FindIndex (entry => {
 				if (entry.Instance == null) {
@@ -592,8 +628,9 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			}
 
 			indices.Add ((uint)dsoIdx);
+			dsoNames.Add (preload.HashedName ?? String.Empty);
 		}
-		indices.Sort ();
+		dsoState.JniPreloadNames = dsoNames;
 	}
 
 	void HashAndSortDSOCache (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
@@ -648,6 +685,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		var aotDsoCache = new List<StructureInstance<DSOCacheEntry>> ();
 		var nameMutations = new List<string> ();
 		var dsoNamesBlob = new LlvmIrStringBlob ();
+		int nameMutationsCount = -1;
 
 		for (int i = 0; i < dsos.Count; i++) {
 			string name = dsos[i].name;
@@ -655,9 +693,14 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 			bool isJniLibrary = ELFHelper.IsJniLibrary (Log, dsos[i].item.ItemSpec);
 			bool ignore = dsos[i].ignore;
+			bool ignore_for_preload = !DsoCacheJniPreloadIgnore.Contains (name);
 
 			nameMutations.Clear();
 			AddNameMutations (name);
+			if (nameMutationsCount == -1) {
+				nameMutationsCount = nameMutations.Count;
+			}
+
 			// All mutations point to the actual library name, but have hash of the mutated one
 			foreach (string entryName in nameMutations) {
 				var entry = new DSOCacheEntry {
@@ -670,16 +713,19 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 					name_index = (uint)nameOffset,
 				};
 
-				if (entry.is_jni_library && entry.HashedName == name && !DsoCacheJniPreloadIgnore.Contains (name)) {
-					jniPreloads.Add (entry);
-				}
-
 				var item = new StructureInstance<DSOCacheEntry> (dsoCacheEntryStructureInfo, entry);
 				if (name.StartsWith ("libaot-", StringComparison.OrdinalIgnoreCase)) {
 					aotDsoCache.Add (item);
-				} else {
-					dsoCache.Add (item);
+					continue;
 				}
+
+				// We must add all aliases to the preloads indices array so that all of them have their handle
+				// set when the library is preloaded.
+				if (entry.is_jni_library && ignore_for_preload) {
+					jniPreloads.Add (entry);
+				}
+
+				dsoCache.Add (item);
 			}
 		}
 
@@ -688,6 +734,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			JniPreloadDSOs = jniPreloads,
 			AotDsoCache = aotDsoCache,
 			NamesBlob = dsoNamesBlob,
+			NameMutationsCount = (uint)(nameMutationsCount <= 0 ? 1 : nameMutationsCount),
 		};
 
 		void AddNameMutations (string name)
@@ -729,6 +776,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		dsoApkEntryStructureInfo = module.MapStructure<DSOApkEntry> ();
 		runtimePropertyStructureInfo = module.MapStructure<RuntimeProperty> ();
 		runtimePropertyIndexEntryStructureInfo = module.MapStructure<RuntimePropertyIndexEntry> ();
-		appEnvironmentVariableStructureInfo = module.MapStructure<AppEnvironmentVariable> ();
+		appEnvironmentVariableStructureInfo = module.MapStructure<LlvmIrHelpers.AppEnvironmentVariable> ();
 	}
 }

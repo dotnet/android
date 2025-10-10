@@ -50,12 +50,12 @@ namespace Xamarin.Android.Build.Tests
 			new object[] {
 				"net9.0",
 				"android",
-				35,
+				new Version (35, 0),
 			},
 			new object[] {
 				"net9.0",
 				"android35",
-				35,
+				new Version (35, 0),
 			},
 			new object[] {
 				"net10.0",
@@ -71,7 +71,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (DotNetPackTargetFrameworks))]
-		public void DotNetPack (string dotnetVersion, string platform, int apiLevel)
+		public void DotNetPack (string dotnetVersion, string platform, Version apiLevel)
 		{
 			var targetFramework = $"{dotnetVersion}-{platform}";
 			var proj = new XamarinAndroidLibraryProject {
@@ -141,18 +141,18 @@ public class JavaSourceTest {
 			var nupkgPath = Path.Combine (Root, projBuilder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.1.0.0.nupkg");
 			FileAssert.Exists (nupkgPath);
 			using var nupkg = ZipHelper.OpenZip (nupkgPath);
-			string aarPath = $"lib/{dotnetVersion}-android{apiLevel}.0/{proj.ProjectName}.aar";
+			string aarPath = $"lib/{dotnetVersion}-android{apiLevel}/{proj.ProjectName}.aar";
 			nupkg.AssertContainsEntry (nupkgPath, aarPath);
-			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{proj.ProjectName}.dll");
-			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/bar.aar");
+			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}/{proj.ProjectName}.dll");
+			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}/bar.aar");
 			nupkg.AssertDoesNotContainEntry (nupkgPath, "content/bar.aar");
 			nupkg.AssertDoesNotContainEntry (nupkgPath, "content/sub/directory/bar.aar");
-			nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}.0/sub/directory/bar.aar");
-			nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/nopack.aar");
+			nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}/sub/directory/bar.aar");
+			nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}/nopack.aar");
 			nupkg.AssertDoesNotContainEntry (nupkgPath, "content/nopack.aar");
-			nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}.0/nopack.aar");
-			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/baz.aar");
-			nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/_Microsoft.Android.Resource.Designer.dll");
+			nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}/nopack.aar");
+			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}/baz.aar");
+			nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}/_Microsoft.Android.Resource.Designer.dll");
 
 			// NOTE: this is not fixed yet in .NET 9
 			if (dotnetVersion == "net10.0") {
@@ -174,11 +174,17 @@ public class JavaSourceTest {
 			new object[] {
 				"net9.0",
 				"android",
-				35,
+				new Version (35, 0),
 			},
 			new object[] {
 				"net10.0",
 				"android",
+				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+			},
+
+			new object[] {
+				"net10.0",
+				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major}",
 				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 			},
 
@@ -190,12 +196,12 @@ public class JavaSourceTest {
 
 			new object[] {
 				"net10.0",
-				XABuildConfig.AndroidLatestStableApiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel ? null : $"android{XABuildConfig.AndroidLatestStableApiLevel}.0",
+				XABuildConfig.AndroidLatestStableApiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel ? null : $"android{XABuildConfig.AndroidLatestStableApiLevel}",
 				XABuildConfig.AndroidLatestStableApiLevel,
 			},
 			new object[] {
 				"net10.0",
-				XABuildConfig.AndroidLatestUnstableApiLevel == XABuildConfig.AndroidLatestStableApiLevel ? null : $"android{XABuildConfig.AndroidLatestUnstableApiLevel}.0",
+				XABuildConfig.AndroidLatestUnstableApiLevel == XABuildConfig.AndroidLatestStableApiLevel ? null : $"android{XABuildConfig.AndroidLatestUnstableApiLevel}",
 				XABuildConfig.AndroidLatestUnstableApiLevel,
 			},
 		};
@@ -223,7 +229,7 @@ public class JavaSourceTest {
 		{
 			var dotnetVersion = (string)data[0];
 			var platform = (string)data[1];
-			var apiLevel = (int)data[2];
+			var apiLevel = (Version)data[2];
 
 			//FIXME: will revisit this in a future PR
 			if (dotnetVersion != "net10.0") {
@@ -239,6 +245,9 @@ public class JavaSourceTest {
 				TargetFramework = targetFramework,
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
+				ExtraNuGetConfigSources = {
+					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
+				}
 			};
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
 
@@ -259,16 +268,18 @@ public class JavaSourceTest {
 				dotnet.AssertHasNoWarnings ();
 			}
 
-			// Only check latest TFM, as previous will come from NuGet
-			if (dotnetVersion == "net10.0") {
-				var refDirectory = Directory.GetDirectories (Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Ref.{apiLevel}")).LastOrDefault ();
+			// Only check latest TFM, as previous or preview TFMs will come from NuGet
+			if (dotnetVersion == "net10.0" && !preview) {
+				var versionString = apiLevel.Minor == 0 ? $"{apiLevel.Major}" : $"{apiLevel.Major}.{apiLevel.Minor}";
+				var refDirectory = Directory.GetDirectories (Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Ref.{versionString}")).LastOrDefault ();
 				var expectedMonoAndroidRefPath = Path.Combine (refDirectory, "ref", dotnetVersion, "Mono.Android.dll");
 				Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRefPath), $"Build should be using {expectedMonoAndroidRefPath}");
 
 				// TODO: We could parameterize this later
 				const string runtime = "Mono";
 				var runtimeApiLevel = (apiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel && apiLevel < XABuildConfig.AndroidLatestStableApiLevel) ? XABuildConfig.AndroidLatestStableApiLevel : apiLevel;
-				var runtimeDirectory = Directory.GetDirectories (Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Runtime.{runtimeApiLevel}.android")).LastOrDefault ();
+				versionString = runtimeApiLevel.Minor == 0 ? $"{runtimeApiLevel.Major}" : $"{runtimeApiLevel.Major}.{runtimeApiLevel.Minor}";
+				var runtimeDirectory = Directory.GetDirectories (Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Runtime.{versionString}.android")).LastOrDefault ();
 				var expectedMonoAndroidRuntimePath = Path.Combine (runtimeDirectory, "runtimes", "android", "lib", dotnetVersion, "Mono.Android.dll");
 				Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRuntimePath), $"Build should be using {expectedMonoAndroidRuntimePath}");
 			}
@@ -293,7 +304,7 @@ public class JavaSourceTest {
 
 		[Test]
 		[TestCaseSource (nameof (DotNetTargetFrameworks))]
-		public void MauiTargetFramework (string dotnetVersion, string platform, int apiLevel)
+		public void MauiTargetFramework (string dotnetVersion, string platform, Version apiLevel)
 		{
 			if (string.IsNullOrEmpty (platform))
 				Assert.Ignore ($"Test for API level {apiLevel} was skipped as it matched the default or latest stable API level.");
@@ -302,6 +313,9 @@ public class JavaSourceTest {
 			var library = new XamarinAndroidLibraryProject {
 				TargetFramework = targetFramework,
 				EnableDefaultItems = true,
+				ExtraNuGetConfigSources = {
+					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
+				}
 			};
 
 			var preview = IsPreviewFrameworkVersion (targetFramework);

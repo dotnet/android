@@ -7,11 +7,7 @@
       Condition="!Exists ('$(IntermediateOutputPath)AssemblyInfo.cs')"
       Inputs="Properties\AssemblyInfo.cs.in"
       Outputs="$(IntermediateOutputPath)AssemblyInfo.cs">
-    <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
-      <_PackageVersion>$(ProductVersion)</_PackageVersion>
-      <_PackageVersionBuild>$(XAVersionCommitCount)</_PackageVersionBuild>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' ">
+    <PropertyGroup>
       <_PackageVersion>$(AndroidPackVersion)</_PackageVersion>
       <_PackageVersionBuild>$(PackVersionCommitCount)</_PackageVersionBuild>
     </PropertyGroup>

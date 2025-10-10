@@ -17,6 +17,7 @@
 
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\create-packs\License.targets" />
+  <Import Project="..\..\build-tools\scripts\LongBranchNames.props" />
 
   <ItemGroup>
     <Content Include="**\*" Exclude="**\bin\**;**\obj\**;.gitignore;Directory.Build.targets;Microsoft.Android.Templates.csproj" />

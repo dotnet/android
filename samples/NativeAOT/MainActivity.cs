@@ -3,6 +3,8 @@ using Android.Runtime;
 using Android.Util;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace NativeAOT;
 
@@ -27,5 +29,9 @@ public class MainActivity : Activity
         if (t) {
             throw new InvalidOperationException ("What happened?");
         }
+
+        // This tests loading and initializing JNI shared libraries
+        var hashData = new byte[32];
+        SHA256.HashData(Encoding.ASCII.GetBytes("Hello World"), hashData.AsSpan());
     }
 }

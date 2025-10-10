@@ -161,7 +161,7 @@ namespace Xamarin.Android.Build.Tests
 					items.Add (new TaskItem (file));
 				}
 			}
-			int platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
+			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
 			var outputFile = Path.Combine (path, "resources.apk");
 			var task = new Aapt2Link {
 				BuildEngine = engine,
@@ -173,7 +173,7 @@ namespace Xamarin.Android.Build.Tests
 				CompiledResourceFlatFiles = compilePerFile ? items.ToArray () : null,
 				OutputFile = outputFile,
 				AssemblyIdentityMapFile = Path.Combine (path, "foo.map"),
-				JavaPlatformJarPath = Path.Combine (AndroidSdkPath, "platforms", $"android-{platform}", "android.jar"),
+				JavaPlatformJarPath = Path.Combine (AndroidSdkPath, "platforms", $"android-{platform.Major}", "android.jar"),
 			};
 			Assert.True (task.Execute (), $"task should have succeeded. {string.Join (";", errors.Select (x => x.Message))}");
 			Assert.AreEqual (0, errors.Count, "There should be no errors.");
@@ -457,7 +457,7 @@ namespace Xamarin.Android.Build.Tests
 			var archives = new List<ITaskItem>();
 			CallAapt2Compile (engine, resPath, archivePath, flatFilePath);
 			var outputFile = Path.Combine (path, "resources.apk");
-			int platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
+			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
 			var task = new Aapt2Link {
 				BuildEngine = engine,
 				ToolPath = GetPathToAapt2 (),
@@ -497,7 +497,7 @@ namespace Xamarin.Android.Build.Tests
 			var archives = new List<ITaskItem>();
 			CallAapt2Compile (engine, resPath, archivePath, flatFilePath);
 			var outputFile = Path.Combine (path, "resources.apk");
-			int platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
+			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
 			string emitids = Path.Combine (path, "emitids.txt");
 			string Rtxt = Path.Combine (path, "R.txt");
 			var task = new Aapt2Link {
@@ -508,7 +508,7 @@ namespace Xamarin.Android.Build.Tests
 				CompiledResourceFlatArchive = new TaskItem (Path.Combine (archivePath, "compiled.flata")),
 				OutputFile = outputFile,
 				AssemblyIdentityMapFile = Path.Combine (path, "foo.map"),
-				JavaPlatformJarPath = Path.Combine (AndroidSdkPath, "platforms", $"android-{platform}", "android.jar"),
+				JavaPlatformJarPath = Path.Combine (AndroidSdkPath, "platforms", $"android-{platform.Major}", "android.jar"),
 				ExtraArgs = $@"--no-version-vectors -v --emit-ids ""{emitids}"" --output-text-symbols '{Rtxt}'"
 			};
 			Assert.True (task.Execute (), $"task should have succeeded. {string.Join (" ", errors.Select (e => e.Message))}");

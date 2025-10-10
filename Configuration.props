@@ -28,10 +28,11 @@
     <AndroidLatestStableApiLevel Condition="'$(AndroidLatestStableApiLevel)' == ''">36</AndroidLatestStableApiLevel>
     <AndroidLatestStablePlatformId Condition="'$(AndroidLatestStablePlatformId)' == ''">$(AndroidLatestStableApiLevel)</AndroidLatestStablePlatformId>
     <AndroidLatestStableFrameworkVersion Condition="'$(AndroidLatestStableFrameworkVersion)'==''">v16.0</AndroidLatestStableFrameworkVersion>
+    <AndroidLatestStableApiLevel2 Condition="'$(AndroidLatestStableApiLevel2)' == ''">36.1</AndroidLatestStableApiLevel2>
     <!-- *Latest* *unstable* API level binding that we support; this can be the same as *stable* -->
-    <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">$(AndroidLatestStableApiLevel)</AndroidLatestUnstableApiLevel>
-    <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">$(AndroidLatestStablePlatformId)</AndroidLatestUnstablePlatformId>
-    <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">$(AndroidLatestStableFrameworkVersion)</AndroidLatestUnstableFrameworkVersion>
+    <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">36.1</AndroidLatestUnstableApiLevel>
+    <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">$(AndroidLatestUnstableApiLevel)</AndroidLatestUnstablePlatformId>
+    <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">v16.1</AndroidLatestUnstableFrameworkVersion>
     <!-- The default API level used for $(TargetPlatformVersion) -->
     <AndroidDefaultTargetDotnetApiLevel Condition=" '$(AndroidDefaultTargetDotnetApiLevel)' == '' ">$(AndroidLatestStableApiLevel)</AndroidDefaultTargetDotnetApiLevel>
     <!-- The API level and TargetFrameworkVersion for the default Mono.Android.dll build -->
@@ -233,6 +234,7 @@
   <PropertyGroup>
     <_MonoRuntimeFlavorDirName>mono</_MonoRuntimeFlavorDirName>
     <_CLRRuntimeFlavorDirName>clr</_CLRRuntimeFlavorDirName>
+    <_NativeAotRuntimeFlavorDirName>nativeaot</_NativeAotRuntimeFlavorDirName>
     <_RuntimeRedistDirName>redist</_RuntimeRedistDirName>
   </PropertyGroup>
 

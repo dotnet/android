@@ -655,7 +655,7 @@ public abstract class MyRunner {
 				"base.OnCreate (bundle);",
 				"base.OnCreate (bundle);\n" +
 				"if (Lib1.Library1.Is64 ()) Console.WriteLine (\"Hello World!\");");
-			proj.SetProperty ("AndroidEnableMarshalMethods", enableMarshalMethods.ToString ());
+			proj.EnableMarshalMethods = enableMarshalMethods;
 
 
 			using var lb = CreateDllBuilder (Path.Combine (path, "Lib1"));
@@ -696,6 +696,27 @@ public abstract class MyRunner {
 				} else {
 					Assert.AreEqual (4, instruction.Operand, $"Expected 64-bit: {expected64}");
 				}
+			}
+		}
+
+		[Test]
+		public void WarnWithReferenceToPreserveAttribute ()
+		{
+			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
+			proj.AddReferences ("System.Net.Http");
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"protected override void OnCreate",
+				"[Android.Runtime.PreserveAttribute]\n\t\tprotected override void OnCreate"
+			);
+
+			using (var b = CreateApkBuilder ()) {
+				var bo = proj.CreateBuildOutput (b);
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				// Verify the trimmer logged our custom warning from WarnOnPreserveAttribute
+				var output = b.LastBuildOutput;
+				Assert.IsTrue (StringAssertEx.ContainsText (output, "obsolete attribute 'Android.Runtime.PreserveAttribute'"), "Should warn about obsolete PreserveAttribute usage");
+				Assert.IsTrue (StringAssertEx.ContainsText (output, "warning IL6001"), "Should include IL6001 warning code");
 			}
 		}
 	}

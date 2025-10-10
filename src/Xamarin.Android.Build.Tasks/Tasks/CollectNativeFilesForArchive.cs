@@ -41,6 +41,8 @@ public class CollectNativeFilesForArchive : AndroidTask
 
 	public ITaskItem[] BundleNativeLibraries { get; set; } = [];
 
+	public bool StripNativeLibraries { get; set; }
+
 	[Required]
 	public string [] SupportedAbis { get; set; } = [];
 
@@ -68,6 +70,8 @@ public class CollectNativeFilesForArchive : AndroidTask
 	[Output]
 	public ITaskItem [] DSODirectoriesToDelete { get; set; } = [];
 
+	string? stripPath;
+
 	public override bool RunTask ()
 	{
 		var apk = new PackageFileListBuilder ();
@@ -76,6 +80,13 @@ public class CollectNativeFilesForArchive : AndroidTask
 		var outputFiles = new List<string> {
 			ApkOutputPath
 		};
+
+		if (StripNativeLibraries) {
+			stripPath = Path.Combine (AndroidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (AndroidBinUtilsDirectory, "llvm-strip"));
+			if (String.IsNullOrEmpty (stripPath)) {
+				Log.LogDebugMessage ("Stripping of native libraries enabled but llvm-strip not found. Libraries won't be stripped.");
+			}
+		}
 
 		var files = new ArchiveFileList ();
 
@@ -97,12 +108,50 @@ public class CollectNativeFilesForArchive : AndroidTask
 		return !Log.HasLoggedErrors;
 	}
 
+	string StripNativeLibIfNecessary (string filesystemPath, string abi)
+	{
+		if (!StripNativeLibraries || String.IsNullOrEmpty (stripPath)) {
+			return filesystemPath;
+		}
+
+		if (filesystemPath.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase)) {
+			// Either AOT or wrapped assemblies, they will have no debug info here.
+			// AOT libs might have debug info, but it is stripped in the AOT builder
+			// task, so we can ignore them here.
+			return filesystemPath;
+		}
+
+		ELFInfo? info = ELFHelper.GetInfo (Log, filesystemPath);
+		if (info == null || !info.HasDebugInfo) {
+			return filesystemPath;
+		}
+
+		string outputDir = Path.Combine (IntermediateOutputPath, MonoAndroidHelper.AbiToRid (abi), "stripped");
+		Directory.CreateDirectory (outputDir);
+
+		string outputFilePath = Path.Combine (outputDir, Path.GetFileName (filesystemPath));
+		var args = new List<string> {
+			"-o",
+			MonoAndroidHelper.QuoteFileNameArgument (outputFilePath),
+			MonoAndroidHelper.QuoteFileNameArgument (filesystemPath),
+		};
+
+		Log.LogDebugMessage ($"Stripping native library: '{filesystemPath}' to '{outputFilePath}'");
+		int ret = MonoAndroidHelper.RunProcess ("llvm-strip", stripPath, String.Join (" ", args), Log);
+		if (ret != 0) {
+			Log.LogDebugMessage ($"Library '{filesystemPath}' not stripped, will package the original file.");
+			return filesystemPath;
+		}
+
+		return outputFilePath;
+	}
+
 	void AddNativeLibraryToArchive (PackageFileListBuilder apk, string abi, string filesystemPath, string inArchiveFileName, ITaskItem taskItem)
 	{
 		string archivePath = MakeArchiveLibPath (abi, inArchiveFileName);
 		Log.LogDebugMessage ($"Adding native library: {filesystemPath} (APK path: {archivePath})");
 		ELFHelper.AssertValidLibraryAlignment (Log, ZipAlignmentPages, filesystemPath, taskItem);
-		apk.AddItem (filesystemPath, archivePath);
+		apk.AddItem (StripNativeLibIfNecessary (filesystemPath, abi), archivePath);
 	}
 
 	void AddRuntimeLibraries (PackageFileListBuilder apk, string [] supportedAbis)
@@ -295,6 +344,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 
 		ELFHelper.AssertValidLibraryAlignment (Log, ZipAlignmentPages, path, taskItem);
 		if (!ELFHelper.IsEmptyAOTLibrary (Log, item.filePath)) {
+			item.filePath = StripNativeLibIfNecessary (item.filePath, abi);
 			files.Add (item);
 		} else {
 			Log.LogDebugMessage ($"{item.filePath} is an empty (no executable code) AOT assembly, not including it in the archive");
