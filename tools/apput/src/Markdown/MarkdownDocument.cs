@@ -29,82 +29,80 @@ class MarkdownDocument
 		elements.Add (CreateNewLine ());
 	}
 
-	public string Render (bool renderPlainText)
+	public MarkdownPresenter Render (bool toConsole, bool useColor, bool renderPlainText)
 	{
+		var presenter = new MarkdownPresenter (toConsole, useColor, renderPlainText);
 		if (IsEmpty) {
-			return String.Empty;
+			return presenter;
 		}
 
-		var sb = new StringBuilder ();
 		foreach (MarkdownElement element in elements) {
-			RenderSafe (sb, element, renderPlainText);
+			RenderSafe (presenter, element, renderPlainText);
 		}
 
-		return sb.ToString ();
+		return presenter;
 	}
 
-	void RenderSafe (StringBuilder sb, MarkdownElement element, bool plain)
+	void RenderSafe (MarkdownPresenter presenter, MarkdownElement element, bool plain)
 	{
 		try {
-			Render (sb, element, plain);
+			Render (presenter, element, plain);
 		} catch (Exception ex) {
 			Log.Warning ($"Failed to render element {element}.", ex);
 		}
 	}
 
-	void RenderChildren (StringBuilder sb, MarkdownContainerElement element, bool plain)
+	void RenderChildren (MarkdownPresenter presenter, MarkdownContainerElement element, bool plain)
 	{
 		if (element.Children == null || element.Children.Count == 0) {
 			return;
 		}
 
 		foreach (MarkdownElement child in element.Children) {
-			RenderSafe (sb, child, plain);
+			RenderSafe (presenter, child, plain);
 		}
 	}
 
-	void Render (StringBuilder sb, MarkdownElement element, bool plain)
+	void Render (MarkdownPresenter presenter, MarkdownElement element, bool plain)
 	{
 		if (element is MarkdownTextSpan textSpan) {
-			Render (sb, textSpan, plain);
+			Render (presenter, textSpan, plain);
 		} else if (element is MarkdownHeading section) {
-			Render (sb, section, plain);
+			Render (presenter, section, plain);
 		} else if (element is MarkdownParagraph para) {
-			Render (sb, para, plain);
+			Render (presenter, para, plain);
 		} else {
 			throw new InvalidOperationException ($"Internal error: Markdown element {element.GetType ()} not supported when rendering.");
 		}
 	}
 
-	void Render (StringBuilder sb, MarkdownParagraph para, bool plain)
+	void Render (MarkdownPresenter presenter, MarkdownParagraph para, bool plain)
 	{
-		RenderChildren (sb, para, plain);
+		RenderChildren (presenter, para, plain);
 		int newLines = para.GetNumberOfNewLinesNeeded ();
 		if (newLines > 0) {
 			for (int i = 0; i < newLines; i++) {
-				AddNewLine (sb);
+				presenter.AddNewLine ();
 			}
 		}
 	}
 
-	void Render (StringBuilder sb, MarkdownHeading section, bool plain)
+	void Render (MarkdownPresenter presenter, MarkdownHeading section, bool plain)
 	{
-		sb.Append ('#', (int)section.Level);
-		sb.Append (' ');
-		sb.Append (section.Text);
-		AddNewLine (sb);
-		AddNewLine (sb);
+		presenter.Append ('#', (int)section.Level);
+		presenter.Append (' ');
+		presenter.Append (section.Text);
+		presenter.AddNewLine ();
+		presenter.AddNewLine ();
 
-		RenderChildren (sb, section, plain);
+		RenderChildren (presenter, section, plain);
 	}
 
-	void Render (StringBuilder sb, MarkdownTextSpan textSpan, bool plain)
+	void Render (MarkdownPresenter presenter, MarkdownTextSpan textSpan, bool plain)
 	{
 		if (textSpan.IsEmpty) {
 			return;
 		}
-
-		const string Bold = "**";
 
 		RenderSpan (textSpan);
 		foreach (MarkdownTextSpan fragment in textSpan.Fragments) {
@@ -113,15 +111,12 @@ class MarkdownDocument
 
 		void RenderSpan (MarkdownTextSpan span)
 		{
-			if (!plain && span.Bold) {
-				sb.Append (Bold);
-			}
+			MarkdownTextStyle style = (!plain && span.Bold) switch {
+				true => MarkdownTextStyle.Bold,
+				false => MarkdownTextStyle.Plain
+			};
 
-			sb.Append (span.Text);
-
-			if (!plain && span.Bold) {
-				sb.Append (Bold);
-			}
+			presenter.Append (span.Text, style);
 		}
 	}
 
