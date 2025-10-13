@@ -949,7 +949,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void DotNetInstallAndRunPreviewAPILevels (
+		public void DotNetInstallAndRunMinorAPILevels (
 				[Values (false, true)] bool isRelease,
 				[Values ("net10.0-android36.1")] string targetFramework)
 		{
@@ -960,7 +960,6 @@ namespace UnnamedProject
 					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
 				}
 			};
-			proj.SetProperty ("EnablePreviewFeatures", "true");
 
 			// TODO: update on new minor API levels to use an introduced minor API
 			proj.MainActivity = proj.DefaultMainActivity
