@@ -59,10 +59,15 @@ class ApplicationPackageReporter : BaseReporter
 			AddText (para, "No permissions specified");
 			WriteItem ("Permissions", "none");
 		} else {
-			// TODO: markdown list here
+			AddText (para, $"Application requests the following permission{GetCountable (Countable.Permission, package.Permissions.Count)}:");
+			var plist = new MarkdownList ();
+			para.AddChild (plist);
+
 			WriteLine (LabelColor, "Permissions:");
 
 			foreach (string permission in package.Permissions) {
+				plist.AddChild (new MarkdownTextSpan ($"{permission}", MarkdownTextStyle.Monospace));
+
 				Write (LabelColor, "  * ");
 				WriteLine (ValidValueColor, permission);
 			}
@@ -82,10 +87,15 @@ class ApplicationPackageReporter : BaseReporter
 			WriteItem ("Assembly stores", "none");
 			AddText (para, "No assembly stores found");
 		} else {
-			// TODO: markdown list here
+			AddText (para, $"Application contains the following {GetCountable (Countable.AssemblyStore, package.AssemblyStores.Count)}:");
+			var storeList = new MarkdownList ();
+			para.AddChild (storeList);
 			WriteLine (LabelColor, "Assembly stores");
 
 			foreach (AssemblyStore store in package.AssemblyStores) {
+				var storeText = new MarkdownTextSpan ($"{store.Architecture}", MarkdownTextStyle.Monospace);
+				storeText.AddText ($" ({store.NumberOfAssemblies} {GetCountable (Countable.Assembly, store.NumberOfAssemblies)})");
+				storeList.AddChild (storeText);
 				var color = store.Architecture == AndroidTargetArch.None ? InvalidValueColor : ValidValueColor;
 
 				Write (LabelColor, "  * ");
@@ -101,10 +111,20 @@ class ApplicationPackageReporter : BaseReporter
 			WriteItem ("Shared libraries", "none");
 			AddText (para, "No shared libraries found in the package");
 		} else {
-			// TODO: markdown list (or perhaps better, table?) here
+			AddText (para, $"Application contains the following {GetCountable (Countable.SharedLibrary, package.SharedLibraries.Count)}:");
+			var libList = new MarkdownList ();
+			para.AddChild (libList);
+
 			WriteLine (LabelColor, "Shared libraries:");
 
 			foreach (SharedLibrary lib in package.SharedLibraries) {
+				libList.AddChild (new MarkdownTextSpan ($"{lib.Name}", MarkdownTextStyle.Monospace));
+				var libAttrList = new MarkdownList ();
+				libList.AddChild (libAttrList);
+				libAttrList.Add ($"Alignment: {lib.Alignment}");
+				libAttrList.Add ($"Debug info: {YesNo (lib.HasDebugInfo)}");
+				libAttrList.Add ($"Size: {lib.Size}");
+
 				Write (LabelColor, "  * ");
 				WriteLine (ValidValueColor, $"{lib.Name}");
 				WriteLine (LabelColor, $"    * Alignment: {lib.Alignment}");
