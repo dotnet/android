@@ -1,16 +1,16 @@
 <Project>
   <!--Package versions-->
   <PropertyGroup>
-    <MicrosoftNETSdkPackageVersion>10.0.100-rtm.25479.115</MicrosoftNETSdkPackageVersion>
+    <MicrosoftNETSdkPackageVersion>10.0.100-rtm.25512.102</MicrosoftNETSdkPackageVersion>
     <MicrosoftDotnetSdkInternalPackageVersion>$(MicrosoftNETSdkPackageVersion)</MicrosoftDotnetSdkInternalPackageVersion>
-    <MicrosoftNETILLinkTasksPackageVersion>10.0.0-rtm.25479.115</MicrosoftNETILLinkTasksPackageVersion>
-    <MicrosoftNETCoreAppRefPackageVersion>10.0.0-rtm.25479.115</MicrosoftNETCoreAppRefPackageVersion>
+    <MicrosoftNETILLinkTasksPackageVersion>10.0.0-rtm.25512.102</MicrosoftNETILLinkTasksPackageVersion>
+    <MicrosoftNETCoreAppRefPackageVersion>10.0.0-rtm.25512.102</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
-    <MicrosoftDotNetBuildTasksFeedPackageVersion>10.0.0-beta.25479.115</MicrosoftDotNetBuildTasksFeedPackageVersion>
+    <MicrosoftDotNetBuildTasksFeedPackageVersion>10.0.0-beta.25512.102</MicrosoftDotNetBuildTasksFeedPackageVersion>
     <MicrosoftNETWorkloadMonoToolChainPackageVersion>$(MicrosoftNETSdkPackageVersion)</MicrosoftNETWorkloadMonoToolChainPackageVersion>
     <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETSdkPackageVersion)</MicrosoftNETWorkloadEmscriptenPackageVersion>
-    <MicrosoftTemplateEngineAuthoringTasksPackageVersion>10.0.100-rtm.25479.115</MicrosoftTemplateEngineAuthoringTasksPackageVersion>
-    <MicrosoftDotNetCecilPackageVersion>0.11.5-alpha.25479.115</MicrosoftDotNetCecilPackageVersion>
+    <MicrosoftTemplateEngineAuthoringTasksPackageVersion>10.0.100-rtm.25512.102</MicrosoftTemplateEngineAuthoringTasksPackageVersion>
+    <MicrosoftDotNetCecilPackageVersion>0.11.5-alpha.25512.102</MicrosoftDotNetCecilPackageVersion>
     <SystemIOHashingPackageVersion>9.0.4</SystemIOHashingPackageVersion>
     <!-- Previous .NET Android version -->
     <MicrosoftNETSdkAndroidManifest90100PackageVersion>35.0.105</MicrosoftNETSdkAndroidManifest90100PackageVersion>
