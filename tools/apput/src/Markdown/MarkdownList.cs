@@ -8,4 +8,6 @@ class MarkdownList : MarkdownContainerElement
 	{
 		Kind = kind;
 	}
+
+	public void Add (string text) => AddChild (new MarkdownTextSpan (text) { RemoveTailWhitespace = true });
 }

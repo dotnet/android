@@ -43,6 +43,10 @@ partial class MarkdownPresenter
 
 	public MarkdownPresenter Append (string? text, MarkdownTextStyle style = MarkdownTextStyle.Plain)
 	{
+		if (String.IsNullOrEmpty (text)) {
+			return this;
+		}
+
 		object? state = AddStartMarkup (style);
 		presenter.Append (text);
 		AddEndMarkup (style, state);

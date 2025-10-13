@@ -7,7 +7,7 @@ class MarkdownParagraph : MarkdownContainerElement
 {
 	public override void AddChild (MarkdownElement element)
 	{
-		if (element is MarkdownTextSpan) {
+		if (element is MarkdownTextSpan || element is MarkdownList) {
 			base.AddChild (element);
 			return;
 		}

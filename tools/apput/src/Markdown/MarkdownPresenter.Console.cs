@@ -13,12 +13,15 @@ partial class MarkdownPresenter
 			public ConsoleColor Background;
 			public bool BoldEnabled;
 			public bool ItalicEnabled;
+			public bool MonospaceEnabled;
 		}
 
-		const ConsoleColor Bold = ConsoleColor.White;
-		const ConsoleColor Italic = ConsoleColor.Cyan;
-		const ConsoleColor BoldItalicFg = ConsoleColor.Gray;
-		const ConsoleColor BoldItalicBg = ConsoleColor.DarkRed;
+		const ConsoleColor Normal = ConsoleColor.Gray;
+		const ConsoleColor NormalBold = ConsoleColor.White;
+		const ConsoleColor Italic = ConsoleColor.DarkCyan;
+		const ConsoleColor ItalicBold = ConsoleColor.Cyan;
+		const ConsoleColor Monospace = ConsoleColor.DarkGreen;
+		const ConsoleColor MonospaceBold = ConsoleColor.Green;
 
 		readonly bool useColor;
 
@@ -27,6 +30,9 @@ partial class MarkdownPresenter
 		public ConsolePresenter (bool useColor)
 		{
 			this.useColor = useColor;
+			if (useColor) {
+				Console.ForegroundColor = Normal;
+			}
 		}
 
 		public override void Append (string? text) => Console.Write (text);
@@ -64,34 +70,25 @@ partial class MarkdownPresenter
 
 			var colors = state as ColorState;
 			if (colors == null) {
-				Console.ForegroundColor = Bold;
+				Console.ForegroundColor = NormalBold;
 				return;
 			}
 
 			colors.BoldEnabled = true;
-			if (colors.ItalicEnabled) {
-				Console.ForegroundColor = BoldItalicFg;
-				Console.BackgroundColor = BoldItalicBg;
-			} else {
-				Console.ForegroundColor = Bold;
-			}
+			UpdateColors (colors);
 		}
 
 		public override void EndBold (object? state)
 		{
 			var colors = state as ColorState;
 			if (colors == null) {
+				Console.ForegroundColor = Normal;
 				base.EndBold (state);
 				return;
 			}
 
-			if (colors.ItalicEnabled) {
-				Console.ForegroundColor = Italic;
-				Console.BackgroundColor = colors.Background;
-			} else {
-				Console.ForegroundColor = colors.Foreground;
-			}
 			colors.BoldEnabled = false;
+			UpdateColors (colors);
 		}
 
 		public override void StartItalic (object? state)
@@ -108,29 +105,59 @@ partial class MarkdownPresenter
 			}
 
 			colors.ItalicEnabled = true;
-			if (colors.BoldEnabled) {
-				Console.ForegroundColor = BoldItalicFg;
-				Console.BackgroundColor = BoldItalicBg;
-			} else {
-				Console.ForegroundColor = Italic;
-			}
+			UpdateColors (colors);
 		}
 
 		public override void EndItalic (object? state)
 		{
 			var colors = state as ColorState;
 			if (colors == null) {
-				base.EndBold (state);
+				base.EndItalic (state);
 				return;
 			}
 
-			if (colors.BoldEnabled) {
-				Console.ForegroundColor = Bold;
-				Console.BackgroundColor = colors.Background;
-			} else {
-				Console.ForegroundColor = colors.Foreground;
-			}
 			colors.ItalicEnabled = false;
+			UpdateColors (colors);
+		}
+
+		public override void StartMonospace (object? state)
+		{
+			if (!useColor) {
+				base.StartMonospace (state);
+				return;
+			}
+
+			var colors = state as ColorState;
+			if (colors == null) {
+				Console.ForegroundColor = Monospace;
+				return;
+			}
+
+			colors.MonospaceEnabled = true;
+			UpdateColors (colors);
+		}
+
+		public override void EndMonospace (object? state)
+		{
+			var colors = state as ColorState;
+			if (colors == null) {
+				base.EndMonospace (state);
+				return;
+			}
+
+			colors.MonospaceEnabled = false;
+			UpdateColors (colors);
+		}
+
+		void UpdateColors (ColorState colors)
+		{
+			if (colors.MonospaceEnabled) {
+				Console.ForegroundColor = colors.BoldEnabled ? MonospaceBold : Monospace;
+			} else if (colors.ItalicEnabled) {
+				Console.ForegroundColor = colors.BoldEnabled ? ItalicBold : Italic;
+			} else {
+				Console.ForegroundColor = colors.BoldEnabled ? NormalBold : Normal;
+			}
 		}
 	}
 }

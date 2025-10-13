@@ -52,14 +52,17 @@ class MarkdownDocument
 		}
 	}
 
-	void RenderChildren (MarkdownPresenter presenter, MarkdownContainerElement element, bool plain)
+	void RenderChildren (MarkdownPresenter presenter, MarkdownContainerElement element, bool plain,
+	                     Action<MarkdownElement>? beforeElement = null, Action<MarkdownElement>? afterElement = null)
 	{
 		if (element.Children == null || element.Children.Count == 0) {
 			return;
 		}
 
 		foreach (MarkdownElement child in element.Children) {
+			beforeElement?.Invoke (child);
 			RenderSafe (presenter, child, plain);
+			afterElement?.Invoke (child);
 		}
 	}
 
@@ -71,9 +74,30 @@ class MarkdownDocument
 			Render (presenter, section, plain);
 		} else if (element is MarkdownParagraph para) {
 			Render (presenter, para, plain);
+		} else if (element is MarkdownList list) {
+			Render (presenter, list, plain);
 		} else {
 			throw new InvalidOperationException ($"Internal error: Markdown element {element.GetType ()} not supported when rendering.");
 		}
+	}
+
+	void Render (MarkdownPresenter presenter, MarkdownList list, bool plain)
+	{
+		presenter.AddNewLine ();
+		RenderChildren (
+			presenter,
+			list,
+			plain,
+			beforeElement: (MarkdownElement element) => {
+				if (element is MarkdownList) {
+					return;
+				}
+				presenter.Append ("  * ");
+			},
+			afterElement: (MarkdownElement _) => presenter.AddNewLine ()
+		);
+		presenter.AddNewLine ();
+		presenter.AddNewLine ();
 	}
 
 	void Render (MarkdownPresenter presenter, MarkdownParagraph para, bool plain)
@@ -105,18 +129,19 @@ class MarkdownDocument
 		}
 
 		RenderSpan (textSpan);
+		if (textSpan.Fragments == null) {
+			return;
+		}
+
 		foreach (MarkdownTextSpan fragment in textSpan.Fragments) {
 			RenderSpan (fragment);
 		}
 
 		void RenderSpan (MarkdownTextSpan span)
 		{
-			MarkdownTextStyle style = (!plain && span.Bold) switch {
-				true => MarkdownTextStyle.Bold,
-				false => MarkdownTextStyle.Plain
-			};
+			string? text = span.RemoveTailWhitespace ? span.Text?.TrimEnd () : span.Text;
 
-			presenter.Append (span.Text, style);
+			presenter.Append (span.Text, span.Style);
 		}
 	}
 
