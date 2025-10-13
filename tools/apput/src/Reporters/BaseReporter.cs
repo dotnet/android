@@ -16,7 +16,9 @@ abstract class BaseReporter : IReporter
 	protected enum Countable
 	{
 		Assembly,
-		SharedLibrary
+		AssemblyStore,
+		Permission,
+		SharedLibrary,
 	}
 
 	const string NativeArchitectureLabel = "Native target architecture";
@@ -24,6 +26,8 @@ abstract class BaseReporter : IReporter
 
 	static readonly Dictionary<Countable, (string singular, string plural)> Countables = new () {
 		{ Countable.Assembly, ("assembly", "assemblies") },
+		{ Countable.AssemblyStore, ("assembly store", "assembly stores") },
+		{ Countable.Permission, ("permission", "permissions") },
 		{ Countable.SharedLibrary, ("library", "libraries") },
 	};
 
@@ -210,7 +214,6 @@ abstract class BaseReporter : IReporter
 
 	// Somehow I doubt we'll have more than Int64.MaxValue items of any kind... :)
 	protected string GetCountable (Countable countable, long count) => GetCountable (countable, (ulong)count);
-
 	protected string YesNo (bool yes) => yes ? "yes" : "no";
 	protected string ValueOrNone (string? s) => String.IsNullOrEmpty (s) ? "none" : s;
 }
