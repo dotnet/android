@@ -21,7 +21,7 @@ namespace Xamarin.Android.Tasks
 		private XNamespace androidNs = "http://schemas.android.com/apk/res/android";
 
 		[Required]
-		public string AndroidSdkPlatform { get; set; } = "";
+		public string AndroidApiLevel { get; set; } = "";
 
 		public string? AndroidManifest { get; set; }
 
@@ -45,7 +45,7 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			var platform = AndroidSdkPlatform;
+			var platform = AndroidApiLevel;
 
 			XAttribute? target_sdk = null;
 
@@ -117,14 +117,14 @@ namespace Xamarin.Android.Tasks
 
 		string GetTargetSdkVersion (string target, XAttribute? target_sdk)
 		{
-			string targetFrameworkVersion = MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (AndroidSdkPlatform) ?? "";
+			string targetFrameworkVersion = MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (AndroidApiLevel) ?? "";
 			string targetSdkVersion       = MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (target) ?? "";
 
 			// For .NET 6+ projects, use TargetPlatformVersion directly
 			string targetPlatformVersionDisplay = !TargetPlatformVersion.IsNullOrEmpty () ? TargetPlatformVersion : "";
 
 			if (!int.TryParse (targetFrameworkVersion, out int frameworkSdk)) {
-				// AndroidSdkPlatform is likely a *preview* API level; use it.
+				// AndroidApiLevel is likely a *preview* API level; use it.
 				Log.LogWarningForXmlNode (
 						code:             "XA4211",
 						file:             AndroidManifest,
