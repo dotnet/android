@@ -49,7 +49,6 @@ namespace Xamarin.Android.Build.Tests {
 		{
 			var task = new CheckGoogleSdkRequirements () {
 				BuildEngine = engine,
-				TargetFrameworkVersion = "v9.0",
 				ManifestFile = CreateManiestFile (10, 28),
 			};
 			Assert.True (task.Execute (), "Task should have succeeded.");
@@ -62,7 +61,6 @@ namespace Xamarin.Android.Build.Tests {
 		{
 			var task = new CheckGoogleSdkRequirements () {
 				BuildEngine = engine,
-				TargetFrameworkVersion = "v9.0",
 				ManifestFile = CreateManiestFile (10, 27),
 			};
 			Assert.True (task.Execute (), "Task should have succeeded.");
@@ -75,7 +73,6 @@ namespace Xamarin.Android.Build.Tests {
 		{
 			var task = new CheckGoogleSdkRequirements () {
 				BuildEngine = engine,
-				TargetFrameworkVersion = "v8.1",
 				ManifestFile = CreateManiestFile (10, 28),
 			};
 			Assert.True (task.Execute (), "Task should have succeeded.");
@@ -88,7 +85,6 @@ namespace Xamarin.Android.Build.Tests {
 		{
 			var task = new CheckGoogleSdkRequirements () {
 				BuildEngine = engine,
-				TargetFrameworkVersion = "v8.1",
 				ManifestFile = CreateManiestFile (28, 27),
 			};
 			Assert.True (task.Execute (), "Task should have succeeded.");
