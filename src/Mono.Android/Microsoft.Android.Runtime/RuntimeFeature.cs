@@ -16,6 +16,10 @@ static class RuntimeFeature
 	internal static bool ManagedTypeMap { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (ManagedTypeMap)}", out bool isEnabled) ? isEnabled : ManagedTypeMapEnabledByDefault;
 
+	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (TypeMapAttributeTypeMap)}")]
+	internal static bool TypeMapAttributeTypeMap { get; } =
+		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (TypeMapAttributeTypeMap)}", out bool isEnabled) ? isEnabled : ManagedTypeMapEnabledByDefault;
+
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (IsMonoRuntime)}")]
 	internal static bool IsMonoRuntime { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (IsMonoRuntime)}", out bool isEnabled) ? isEnabled : IsMonoRuntimeEnabledByDefault;
