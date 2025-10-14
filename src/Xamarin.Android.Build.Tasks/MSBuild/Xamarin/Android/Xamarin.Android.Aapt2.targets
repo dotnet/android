@@ -232,7 +232,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       CreatePackagePerAbi="$(AndroidCreatePackagePerAbi)"
       AssetsDirectory="$(MonoAndroidAssetsDirIntermediate)"
       AdditionalAndroidAssetPaths="@(LibraryAssetDirectories)"
-      AndroidSdkPlatform="$(_AndroidApiLevel)"
+      AndroidApiLevel="$(_AndroidApiLevel)"
       JavaDesignerOutputDirectory="$(AaptTemporaryDirectory)"
       ManifestFiles="$(IntermediateOutputPath)android\AndroidManifest.xml"
       ProtobufFormat="$(_ProtobufFormat)"
