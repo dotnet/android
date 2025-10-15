@@ -39,27 +39,27 @@ static class Log
 
 	static void Write (string message)
 	{
-		Console.Write (message);
+		WriteStderr (message);
 	}
 
 	static void Write (ConsoleColor color, string message)
 	{
 		ConsoleColor oldFG = Console.ForegroundColor;
 		Console.ForegroundColor = color;
-		Write (message);
+		WriteStderr (message);
 		Console.ForegroundColor = oldFG;
 	}
 
 	static void WriteLine (string message)
 	{
-		Console.WriteLine (message);
+		WriteLineStderr (message);
 	}
 
 	static void WriteLine (ConsoleColor color, string message)
 	{
 		ConsoleColor oldFG = Console.ForegroundColor;
 		Console.ForegroundColor = color;
-		WriteLine (message);
+		WriteLineStderr (message);
 		Console.ForegroundColor = oldFG;
 	}
 
@@ -121,7 +121,7 @@ static class Log
 			Write (InfoColor, $"{tag}: ");
 		}
 
-		WriteLine (InfoColor,message);
+		WriteLineStderr (InfoColor,message);
 	}
 
 	public static void Debug (string message = "")
@@ -144,7 +144,7 @@ static class Log
 			Write (DebugColor, $"{tag}: ");
 		}
 
-		WriteLine (message);
+		WriteLineStderr (message);
 	}
 
 	public static void Debug (string message, Exception ex)

@@ -1,13 +1,12 @@
 using System;
 using System.Reflection;
 
+using Microsoft.PowerShell.MarkdownRender;
+
 namespace ApplicationUtility;
 
 class Reporter
 {
-	// TODO: add support for specifying to the renderer whether output goes to console
-	//       add support for optionally turning off color
-	//       add support for writing report to file
 	public static void Report (IAspect aspect, bool plainTextRendering)
 	{
 		Type aspectType = aspect.GetType ();
@@ -36,12 +35,21 @@ class Reporter
 
 			reporter.Report ();
 		} finally {
-			// MarkdownPresenter presenter = reportDoc.Render (toConsole: true, useColor: true, renderPlainText: plainTextRendering);
-			// if (presenter.RendersToString) {
-			// 	Console.WriteLine (presenter.AsString ());
-			// }
-			Console.WriteLine (reportDoc.Text);
+			WriteReport (reportDoc, plainTextRendering);
 		}
+	}
+
+	static void WriteReport (MarkdownDocument reportDoc, bool plainTextRendering)
+	{
+		if (plainTextRendering || Console.IsOutputRedirected) {
+			Console.WriteLine (reportDoc.Text);
+			return;
+		}
+
+		// TODO: this probably won't work with the old `cmd` terminal on Windows. Find out how to detect it.
+		var options = new PSMarkdownOptionInfo ();
+		var info = MarkdownConverter.Convert (reportDoc.Text, MarkdownConversionType.VT100, options);
+		Console.WriteLine (info.VT100EncodedString);
 	}
 
 	static IReporter? CreateSpecificReporter (Type aspectType, IAspect aspect, MarkdownDocument reportDoc)
