@@ -58,7 +58,6 @@ namespace Xamarin.Android.Tasks {
 
 		public string? UncompressedFileExtensions { get; set; }
 
-		[Required]
 		public string AndroidApiLevel { get; set; } = "";
 
 		public string? VersionCodePattern { get; set; }
