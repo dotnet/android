@@ -118,11 +118,13 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <!-- Satellite assemblies -->
       <IlcSatelliteAssembly Include="$(_OuterIntermediateSatelliteAssembliesWithTargetPath)" />
 
-      <LinkerArg Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnaot-android.$(Configuration.ToLower())-static-$(Configuration.ToLower())'))" />
+      <_NdkLibs Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnaot-android.$(Configuration.ToLower())-static-$(Configuration.ToLower())'))" />
 
       <!-- Include libc++ -->
-      <LinkerArg Include="$(_NdkSysrootDir)libc++_static.a" />
-      <LinkerArg Include="$(_NdkSysrootDir)libc++abi.a" />
+      <_NdkLibs Include="$(_NdkSysrootDir)libc++_static.a" />
+      <_NdkLibs Include="$(_NdkSysrootDir)libc++abi.a" />
+      
+      <LinkerArg Include="&quot;%(_NdkLibs.Identity)&quot;" />
 
       <!-- This library conflicts with static libc++ -->
       <NativeLibrary Remove="$(IlcSdkPath)libstdc++compat.a" />
