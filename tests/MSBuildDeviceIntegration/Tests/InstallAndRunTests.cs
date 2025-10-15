@@ -386,7 +386,7 @@ namespace Library1 {
 			proj.SetProperty ("NoWarn", "SYSLIB0011");
 
 			if (isRelease || !TestEnvironment.CommercialBuildAvailable) {
-				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
+				proj.SetAndroidSupportedAbis (DeviceAbi);
 			}
 
 			proj.References.Add (new BuildItem.Reference ("System.Runtime.Serialization"));
@@ -553,8 +553,7 @@ using System.Runtime.Serialization.Json;
 			if (testOnly)
 				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application", "<application android:testOnly=\"true\"");
 
-			var abis = new string [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
-			proj.SetAndroidSupportedAbis (abis);
+			proj.SetAndroidSupportedAbis (DeviceAbi);
 			builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			RunProjectAndAssert (proj, builder);
