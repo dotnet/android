@@ -621,7 +621,9 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void DoNotErrorOnPerArchJavaTypeDuplicates ([Values(true, false)] bool enableMarshalMethods)
+		public void DoNotErrorOnPerArchJavaTypeDuplicates (
+			[Values(true, false)] bool enableMarshalMethods,
+			[Values(AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			var path = Path.Combine (Root, "temp", TestName);
 			var lib = new XamarinAndroidLibraryProject { IsRelease = true, ProjectName = "Lib1" };
@@ -649,7 +651,9 @@ public abstract class MyRunner {
 }"
 			});
 			var proj = new XamarinAndroidApplicationProject { IsRelease = true, ProjectName = "App1" };
-			proj.SetRuntimeIdentifiers(["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]);
+			proj.SetRuntime (runtime);
+			if (runtime == AndroidRuntime.MonoVM)
+				proj.SetRuntimeIdentifiers(["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]);
 			proj.References.Add(new BuildItem.ProjectReference (Path.Combine ("..", "Lib1", "Lib1.csproj"), "Lib1"));
 			proj.MainActivity = proj.DefaultMainActivity.Replace (
 				"base.OnCreate (bundle);",
@@ -665,9 +669,11 @@ public abstract class MyRunner {
 
 			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 			var dll = $"{lib.ProjectName}.dll";
-			Assert64Bit ("android-arm", expected64: false);
+			if (runtime == AndroidRuntime.MonoVM) {
+				Assert64Bit ("android-arm", expected64: false);
+				Assert64Bit ("android-x86", expected64: false);
+			}
 			Assert64Bit ("android-arm64", expected64: true);
-			Assert64Bit ("android-x86", expected64: false);
 			Assert64Bit ("android-x64", expected64: true);
 
 			void Assert64Bit(string rid, bool expected64)
