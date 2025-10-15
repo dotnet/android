@@ -83,9 +83,27 @@ class MarkdownDocument
 			return;
 		}
 
+		var textToAppend = new StringBuilder (text);
+		if (style != MarkdownTextStyle.Plain) {
+			if (style.HasFlag (MarkdownTextStyle.Monospace)) {
+				textToAppend.Append ('`');
+				textToAppend.Insert (0, '`');
+			}
+
+			if (style.HasFlag (MarkdownTextStyle.Italic)) {
+				textToAppend.Append ('_');
+				textToAppend.Insert (0, '_');
+			}
+
+			if (style.HasFlag (MarkdownTextStyle.Bold)) {
+				textToAppend.Append ('*');
+				textToAppend.Insert (0, '*');
+			}
+		}
+
 		// TODO: implement breaking the line at the last whitespace character before maximum line width.
 		//       Indent is included in calculations.
-		doc.Append (text);
+		doc.Append (textToAppend);
 	}
 
 	public MarkdownDocument BeginList ()
@@ -118,6 +136,14 @@ class MarkdownDocument
 	public MarkdownDocument AddListItem (string? text = null, MarkdownTextStyle style = MarkdownTextStyle.Plain, bool appendLine = true)
 	{
 		StartListItem (text, style);
+		EndListItem (appendLine);
+		return this;
+	}
+
+	public MarkdownDocument AddLabeledListItem (string label, string text, MarkdownTextStyle textStyle = MarkdownTextStyle.Plain, bool appendLine = true)
+	{
+		StartListItem ($"{label}:", MarkdownTextStyle.Bold);
+		AppendText ($" {text}", textStyle, addIndent: false);
 		EndListItem (appendLine);
 		return this;
 	}
