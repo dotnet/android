@@ -49,6 +49,8 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
 			};
+			// MonoVM-only test
+			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
 			proj.SetProperty ("UseInterpreter", useInterpreter.ToString ());
 			proj.SetProperty ("PublishTrimmed", publishTrimmed.ToString ());
 			proj.SetProperty ("RunAOTCompilation", aot.ToString ());
