@@ -115,6 +115,8 @@ namespace Xamarin.Android.Build.Tests
 			var expectedDefaultValue = "major=marksweep";
 			var expectedUpdatedValue = "major=marksweep-conc";
 			var supportedAbis = "armeabi-v7a;arm64-v8a";
+			// MonoVM-only test
+			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
 			proj.SetAndroidSupportedAbis (supportedAbis);
 
 			using (var b = CreateApkBuilder ()) {
