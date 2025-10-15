@@ -57,33 +57,26 @@ abstract class BaseReporter : IReporter
 
 	protected abstract void DoReport ();
 
-	protected MarkdownHeading AddSection (string text)
-	{
-		if (!ReportDoc.IsEmpty) {
-			ReportDoc.AddNewLine ();
-		}
-		return ReportDoc.AddHeading (level: 1, text);
-	}
+	protected MarkdownDocument AddSection (string text, uint level = 1) => ReportDoc.AddHeading (level, text).AddNewline ();
 
-	protected MarkdownElement CreateItemWithLabel (string label, string text, bool endWithNewline = true)
+	protected MarkdownDocument AddLabeledItem (string label, string text, bool appendNewline = true)
 	{
-		var item = new MarkdownTextSpan ($"{label}:") {
-			Bold = true
-		};
-		item.AddText ($" {text}");
-		if (endWithNewline) {
-			item.AddNewline ();
+		ReportDoc
+		    .AddText ($"{label}:", MarkdownTextStyle.Bold)
+		    .AddText ($" {text}");
+
+		if (appendNewline) {
+			return ReportDoc.AddNewline ();
 		}
 
-		return item;
+		return ReportDoc;
 	}
 
-	protected void AddAspectDesc (string text)
+	protected MarkdownDocument AddAspectDesc (string text)
 	{
-		MarkdownHeading section = ReportDoc.AddHeading (1, "Generic aspect information");
-		var para = MarkdownDocument.CreateParagraph ();
-		para.AddChild (CreateItemWithLabel ("Aspect type", text, endWithNewline: false));
-		section.AddChild (para);
+		ReportDoc.AddHeading (1, "Generic aspect information");
+		ReportDoc.AddNewline ();
+		return AddLabeledItem ("Aspect type", text);
 	}
 
 	protected void WriteSubsectionBanner (string text)
@@ -107,20 +100,20 @@ abstract class BaseReporter : IReporter
 		WriteItem (NativeArchitectureLabel, arch.ToString ());
 	}
 
-	protected void AddNativeArchDesc (MarkdownContainerElement container, AndroidTargetArch arch)
+	protected void AddNativeArchDesc (AndroidTargetArch arch)
 	{
-		container.AddChild (CreateItemWithLabel (NativeArchitectureLabel, arch.ToString ()));
+		AddLabeledItem (NativeArchitectureLabel, arch.ToString ());
 	}
 
-	protected void AddNativeArchDesc (MarkdownContainerElement container, ICollection<AndroidTargetArch> arches)
+	protected void AddNativeArchDesc (ICollection<AndroidTargetArch> arches)
 	{
 		if (arches.Count == 1) {
-			AddNativeArchDesc (container, arches.First ());
+			AddNativeArchDesc (arches.First ());
 			return;
 		}
 
 		if (arches.Count == 0) {
-			container.AddChild (MarkdownDocument.CreateText ("none", bold: true));
+			ReportDoc.AddText ("None", MarkdownTextStyle.Bold);
 			return;
 		}
 
@@ -129,7 +122,7 @@ abstract class BaseReporter : IReporter
 			architectures.Add (arch.ToString ());
 		}
 
-		container.AddChild (CreateItemWithLabel (NativeArchitecturesLabel, String.Join (", ", architectures)));
+		AddLabeledItem (NativeArchitecturesLabel, String.Join (", ", architectures));
 	}
 
 	protected void WriteNativeArch (ICollection<AndroidTargetArch> arches)
@@ -153,10 +146,7 @@ abstract class BaseReporter : IReporter
 		WriteLine (ValidValueColor, String.Join (", ", architectures));
 	}
 
-	protected void AddYesNo (MarkdownContainerElement container, string label, bool value)
-	{
-		container.AddChild (CreateItemWithLabel (label, YesNo (value)));
-	}
+	protected MarkdownDocument AddYesNo (string label, bool value, bool appendNewLine = true) => AddLabeledItem (label, YesNo (value), appendNewLine);
 
 	protected void WriteYesNo (string label, bool value) => WriteItem (label, YesNo (value));
 
@@ -165,14 +155,14 @@ abstract class BaseReporter : IReporter
 		Write (LabelColor, $"{label}: ");
 	}
 
-	protected void AddText (MarkdownContainerElement container, string text, bool bold = false)
+	protected MarkdownDocument AddText (string text, MarkdownTextStyle style = MarkdownTextStyle.Plain)
 	{
-		container.AddChild (MarkdownDocument.CreateText (text, bold: bold));
+		return ReportDoc.AddText (text, style);
 	}
 
-	protected void AddItem (MarkdownContainerElement container, string label, string value)
+	public MarkdownDocument AddListItemText (string text, MarkdownTextStyle style = MarkdownTextStyle.Plain)
 	{
-		container.AddChild (CreateItemWithLabel (label, value));
+		return ReportDoc.AddText (text, style, addIndent: false);
 	}
 
 	protected void WriteItem (string label, string value)

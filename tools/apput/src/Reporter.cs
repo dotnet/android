@@ -36,10 +36,11 @@ class Reporter
 
 			reporter.Report ();
 		} finally {
-			MarkdownPresenter presenter = reportDoc.Render (toConsole: true, useColor: true, renderPlainText: plainTextRendering);
-			if (presenter.RendersToString) {
-				Console.WriteLine (presenter.AsString ());
-			}
+			// MarkdownPresenter presenter = reportDoc.Render (toConsole: true, useColor: true, renderPlainText: plainTextRendering);
+			// if (presenter.RendersToString) {
+			// 	Console.WriteLine (presenter.AsString ());
+			// }
+			Console.WriteLine (reportDoc.Text);
 		}
 	}
 
