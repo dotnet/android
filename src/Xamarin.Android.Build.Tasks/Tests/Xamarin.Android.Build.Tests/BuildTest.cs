@@ -355,6 +355,8 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (RuntimeChecks))]
 		public void CheckWhichRuntimeIsIncluded (string supportedAbi, bool debugSymbols, bool? optimize, bool? embedAssemblies, string expectedRuntime) {
 			var proj = new XamarinAndroidApplicationProject ();
+			// MonoVM-only test
+			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
 			proj.SetAndroidSupportedAbis (supportedAbi);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugSymbols", debugSymbols);
 			if (optimize.HasValue)

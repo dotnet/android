@@ -351,7 +351,7 @@ namespace Bug12935
 		static object [] VersionCodeTestSource = new object [] {
 			new object[] {
 				/* seperateApk */ false,
-				/* abis */ "armeabi-v7a",
+				/* abis */ "arm64-v8a",
 				/* versionCode */ "123",
 				/* useLagacy */ true,
 				/* pattern */ null,
@@ -361,7 +361,7 @@ namespace Bug12935
 			},
 			new object[] {
 				/* seperateApk */ false,
-				/* abis */ "armeabi-v7a",
+				/* abis */ "arm64-v8a",
 				/* versionCode */ "123",
 				/* useLagacy */ false,
 				/* pattern */ null,
@@ -371,7 +371,7 @@ namespace Bug12935
 			},
 			new object[] {
 				/* seperateApk */ false,
-				/* abis */ "armeabi-v7a",
+				/* abis */ "arm64-v8a",
 				/* versionCode */ "123",
 				/* useLagacy */ false,
 				/* pattern */ "{abi}{versionCode}",
@@ -381,7 +381,7 @@ namespace Bug12935
 			},
 			new object[] {
 				/* seperateApk */ false,
-				/* abis */ "armeabi-v7a",
+				/* abis */ "arm64-v8a",
 				/* versionCode */ "1",
 				/* useLagacy */ false,
 				/* pattern */ "{abi}{versionCode}",
@@ -391,7 +391,7 @@ namespace Bug12935
 			},
 			new object[] {
 				/* seperateApk */ false,
-				/* abis */ "armeabi-v7a;x86",
+				/* abis */ "arm64-v8a;x86_64",
 				/* versionCode */ "123",
 				/* useLagacy */ false,
 				/* pattern */ "{abi}{versionCode}",
@@ -401,7 +401,7 @@ namespace Bug12935
 			},
 			new object[] {
 				/* seperateApk */ true,
-				/* abis */ "armeabi-v7a;x86",
+				/* abis */ "arm64-v8a;x86_64",
 				/* versionCode */ "123",
 				/* useLagacy */ true,
 				/* pattern */ null,
@@ -411,7 +411,7 @@ namespace Bug12935
 			},
 			new object[] {
 				/* seperateApk */ true,
-				/* abis */ "armeabi-v7a;x86",
+				/* abis */ "arm64-v8a;x86_64",
 				/* versionCode */ "123",
 				/* useLagacy */ false,
 				/* pattern */ null,
@@ -421,7 +421,7 @@ namespace Bug12935
 			},
 			new object[] {
 				/* seperateApk */ true,
-				/* abis */ "armeabi-v7a;x86",
+				/* abis */ "arm64-v8a;x86_64",
 				/* versionCode */ "123",
 				/* useLagacy */ false,
 				/* pattern */ "{abi}{versionCode}",
@@ -431,7 +431,7 @@ namespace Bug12935
 			},
 			new object[] {
 				/* seperateApk */ true,
-				/* abis */ "armeabi-v7a;x86",
+				/* abis */ "arm64-v8a;x86_64",
 				/* versionCode */ "12",
 				/* useLagacy */ false,
 				/* pattern */ "{abi}{minSDK:00}{versionCode:000}",
@@ -441,7 +441,7 @@ namespace Bug12935
 			},
 			new object[] {
 				/* seperateApk */ true,
-				/* abis */ "armeabi-v7a;x86",
+				/* abis */ "arm64-v8a;x86_64",
 				/* versionCode */ "12",
 				/* useLagacy */ false,
 				/* pattern */ "{abi}{minSDK:00}{screen}{versionCode:000}",
@@ -451,7 +451,7 @@ namespace Bug12935
 			},
 			new object[] {
 				/* seperateApk */ true,
-				/* abis */ "armeabi-v7a;x86",
+				/* abis */ "arm64-v8a;x86_64",
 				/* versionCode */ "12",
 				/* useLagacy */ false,
 				/* pattern */ "{abi}{minSDK:00}{screen}{foo:0}{versionCode:000}",
@@ -461,7 +461,7 @@ namespace Bug12935
 			},
 			new object[] {
 				/* seperateApk */ true,
-				/* abis */ "armeabi-v7a;x86",
+				/* abis */ "arm64-v8a;x86_64",
 				/* versionCode */ "12",
 				/* useLagacy */ false,
 				/* pattern */ "{abi}{minSDK:00}{screen}{foo:00}{versionCode:000}",
