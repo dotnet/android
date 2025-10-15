@@ -320,6 +320,8 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
+			// MonoVM-only test
+			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
 			// Set debuggable=true to allow run-as command usage with a release build
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
 			proj.SetAndroidSupportedAbis (DeviceAbi);
@@ -607,7 +609,6 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true
 			};
 			proj.SetProperty ("AndroidPackageFormat", "aab");
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Install (proj), "first build should have succeeded.");

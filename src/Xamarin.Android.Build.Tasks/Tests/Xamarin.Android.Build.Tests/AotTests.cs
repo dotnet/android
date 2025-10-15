@@ -127,7 +127,6 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 				AotAssemblies = aot,
 			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a",  "arm64-v8a", "x86", "x86_64");
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName))){
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 			}
