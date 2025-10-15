@@ -66,7 +66,8 @@ abstract class BaseReporter : IReporter
 		    .AddText ($" {text}");
 
 		if (appendNewline) {
-			return ReportDoc.AddNewline ();
+			// in Markdown, a forced line break is two or more spaces
+			return ReportDoc.AddText ("  ").AddNewline ();
 		}
 
 		return ReportDoc;
@@ -155,14 +156,14 @@ abstract class BaseReporter : IReporter
 		Write (LabelColor, $"{label}: ");
 	}
 
-	protected MarkdownDocument AddText (string text, MarkdownTextStyle style = MarkdownTextStyle.Plain)
+	protected MarkdownDocument AddText (string text, MarkdownTextStyle style = MarkdownTextStyle.Plain, bool addIndent = true)
 	{
-		return ReportDoc.AddText (text, style);
+		return ReportDoc.AddText (text, style, addIndent);
 	}
 
 	public MarkdownDocument AddListItemText (string text, MarkdownTextStyle style = MarkdownTextStyle.Plain)
 	{
-		return ReportDoc.AddText (text, style, addIndent: false);
+		return AddText (text, style, addIndent: false);
 	}
 
 	protected void WriteItem (string label, string value)
