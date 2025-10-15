@@ -383,6 +383,8 @@ namespace ${ROOT_NAMESPACE} {
 				IsRelease = false,
 				EmbedAssembliesIntoApk = embedAssemblies,
 			};
+			// MonoVM-only test
+			app.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
 			if (!useLatestSdk) {
 				lib.TargetFramework = "net9.0-android";
 				app.TargetFramework = "net9.0-android";

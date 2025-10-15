@@ -135,6 +135,8 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 			};
+			// TODO: update times for CoreCLR in the future
+			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
 			proj.SetAndroidSupportedAbis (DeviceAbi); // Use a single ABI
 			proj.SetProperty ("_FastDeploymentDiagnosticLogging", "False");
 			return proj;
