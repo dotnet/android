@@ -49,6 +49,7 @@ namespace Xamarin.Android.Build.Tests {
 		{
 			var task = new CheckGoogleSdkRequirements () {
 				BuildEngine = engine,
+				AndroidApiLevel = "28",
 				ManifestFile = CreateManiestFile (10, 28),
 			};
 			Assert.True (task.Execute (), "Task should have succeeded.");
@@ -61,6 +62,7 @@ namespace Xamarin.Android.Build.Tests {
 		{
 			var task = new CheckGoogleSdkRequirements () {
 				BuildEngine = engine,
+				AndroidApiLevel = "28",
 				ManifestFile = CreateManiestFile (10, 27),
 			};
 			Assert.True (task.Execute (), "Task should have succeeded.");
@@ -73,11 +75,12 @@ namespace Xamarin.Android.Build.Tests {
 		{
 			var task = new CheckGoogleSdkRequirements () {
 				BuildEngine = engine,
+				AndroidApiLevel = "27",
 				ManifestFile = CreateManiestFile (10, 28),
 			};
 			Assert.True (task.Execute (), "Task should have succeeded.");
 			Assert.AreEqual (0, errors.Count, "There should be 1 error reported.");
-			Assert.AreEqual (1, warnings.Count, "There should be 0 warnings reported.");
+			Assert.AreEqual (1, warnings.Count, "There should be 1 warning reported.");
 		}
 
 		[Test]
@@ -85,11 +88,12 @@ namespace Xamarin.Android.Build.Tests {
 		{
 			var task = new CheckGoogleSdkRequirements () {
 				BuildEngine = engine,
+				AndroidApiLevel = "27",
 				ManifestFile = CreateManiestFile (28, 27),
 			};
 			Assert.True (task.Execute (), "Task should have succeeded.");
 			Assert.AreEqual (0, errors.Count, "There should be 0 error reported.");
-			Assert.AreEqual (1, warnings.Count, "There should be 1 warnings reported.");
+			Assert.AreEqual (1, warnings.Count, "There should be 1 warning reported.");
 		}
 	}
 }
