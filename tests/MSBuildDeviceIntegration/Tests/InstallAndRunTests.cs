@@ -107,7 +107,6 @@ namespace Xamarin.Android.Build.Tests
 				EnableMarshalMethods = enableMarshalMethods,
 			};
 			proj.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
 				builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName));
@@ -341,7 +340,6 @@ namespace Library1 {
 			});
 
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("</manifest>", "<uses-permission android:name=\"android.permission.INTERNET\" /></manifest>");
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 			using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.MainActivityReplacement.cs")))
 				proj.MainActivity = sr.ReadToEnd ();
 
