@@ -13,7 +13,7 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("UsesDevice")]
 	public class BundleToolNoAbiSplitTests : DeviceTest
 	{
-		static readonly string [] Abis = new [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
+		static readonly string [] Abis = ["arm64-v8a", "x86_64"];
 
 		XamarinAndroidApplicationProject app;
 		ProjectBuilder appBuilder;

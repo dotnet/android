@@ -51,6 +51,8 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 				EnableMarshalMethods = marshalMethodsEnabled,
 			};
+			// MonoVM-only test
+			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
 			proj.SetRuntimeIdentifiers (abis);
 			bool shouldMarshalMethodsBeEnabled = isRelease && marshalMethodsEnabled;
 
