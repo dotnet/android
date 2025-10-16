@@ -595,6 +595,20 @@ namespace Xamarin.Android.Tasks
 			return apiLevel;
 		}
 
+		public static bool TryParseApiLevel (string apiLevel, out Version version)
+		{
+			if (Version.TryParse (apiLevel, out var v)) {
+				version = v;
+				return true;
+			}
+			if (int.TryParse (apiLevel, out var major)) {
+				version = new Version (major, 0);
+				return true;
+			}
+			version = null;
+			return false;
+		}
+
 #if MSBUILD
 		public static string GetAssemblyAbi (ITaskItem asmItem)
 		{
