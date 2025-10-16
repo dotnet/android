@@ -139,7 +139,7 @@ namespace Xamarin.Android.Tasks
 				return targetFrameworkVersion;
 			}
 			if (Version.TryParse (targetSdkVersion, out var targetSdk) &&
-					targetSdk < frameworkSdk) {
+					targetSdk.Major < frameworkSdk.Major) {
 				Log.LogWarningForXmlNode (
 						code:             "XA4211",
 						file:             AndroidManifest,
