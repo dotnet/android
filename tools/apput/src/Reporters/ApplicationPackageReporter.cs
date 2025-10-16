@@ -39,7 +39,7 @@ class ApplicationPackageReporter : BaseReporter
 			foreach (string permission in package.Permissions) {
 				ReportDoc.AddListItem ($"{permission}", MarkdownTextStyle.Monospace);
 			}
-			ReportDoc.EndList ();
+			ReportDoc.EndList ().AddNewline ();
 		}
 
 		AddSection ("Shared libraries", 2);
