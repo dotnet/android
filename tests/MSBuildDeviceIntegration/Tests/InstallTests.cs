@@ -218,6 +218,8 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = true,
 			};
+			// MonoVM-only test
+			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
 			proj.SetAndroidSupportedAbis (abi);
 
 			using (var builder = CreateApkBuilder ()) {
