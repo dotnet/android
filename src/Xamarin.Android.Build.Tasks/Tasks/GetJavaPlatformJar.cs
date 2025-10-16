@@ -123,7 +123,7 @@ namespace Xamarin.Android.Tasks
 			// For .NET 6+ projects, use TargetPlatformVersion directly
 			string targetPlatformVersionDisplay = !TargetPlatformVersion.IsNullOrEmpty () ? TargetPlatformVersion : "";
 
-			if (!int.TryParse (targetFrameworkVersion, out int frameworkSdk)) {
+			if (!Version.TryParse (targetFrameworkVersion, out var frameworkSdk)) {
 				// AndroidApiLevel is likely a *preview* API level; use it.
 				Log.LogWarningForXmlNode (
 						code:             "XA4211",
@@ -138,7 +138,7 @@ namespace Xamarin.Android.Tasks
 				);
 				return targetFrameworkVersion;
 			}
-			if (int.TryParse (targetSdkVersion, out int targetSdk) &&
+			if (Version.TryParse (targetSdkVersion, out var targetSdk) &&
 					targetSdk < frameworkSdk) {
 				Log.LogWarningForXmlNode (
 						code:             "XA4211",
