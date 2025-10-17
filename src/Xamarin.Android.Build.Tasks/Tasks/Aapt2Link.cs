@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using Microsoft.Build.Utilities;
@@ -323,12 +324,20 @@ namespace Xamarin.Android.Tasks {
 			cmd.Add (GetFullPath (currentResourceOutputFile));
 
 			// Add min SDK version from AndroidManifestFile if available
+			string? minSdkVersion = null;
 			if (AndroidManifestFile is { ItemSpec.Length: > 0 }) {
 				var doc = AndroidAppManifest.Load (AndroidManifestFile.ItemSpec, MonoAndroidHelper.SupportedVersions);
 				if (doc.MinSdkVersion.HasValue) {
-					cmd.Add ("--min-sdk-version");
-					cmd.Add (doc.MinSdkVersion.Value.ToString ());
+					minSdkVersion = doc.MinSdkVersion.Value.ToString (CultureInfo.InvariantCulture);
 				}
+			}
+			// Use $(SupportedOSPlatformVersion) if minSdkVersion was not found in the manifest
+			if (minSdkVersion.IsNullOrEmpty () && MonoAndroidHelper.TryParseApiLevel (SupportedOSPlatformVersion, out Version version)) {
+				minSdkVersion = version.Major.ToString (CultureInfo.InvariantCulture);
+			}
+			if (!minSdkVersion.IsNullOrEmpty ()) {
+				cmd.Add ("--min-sdk-version");
+				cmd.Add (minSdkVersion);
 			}
 
 			return cmd.ToArray ();

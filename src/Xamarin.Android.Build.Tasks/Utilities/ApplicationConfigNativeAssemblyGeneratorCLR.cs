@@ -383,7 +383,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		module.AddGlobalVariable ("dso_jni_preloads_idx_stride", dsoState.NameMutationsCount);
 
 		// This variable MUST be written after `dso_cache` since it relies on sorting performed by HashAndSortDSOCache
-		var dso_jni_preloads_idx = new LlvmIrGlobalVariable (new List<uint> (), "dso_jni_preloads_idx", LlvmIrVariableOptions.GlobalConstant) {
+		var dso_jni_preloads_idx = new LlvmIrGlobalVariable (typeof (List<uint>), "dso_jni_preloads_idx", LlvmIrVariableOptions.GlobalConstant) {
 			Comment = " Indices into dso_cache[] of DSO libraries to preload because of JNI use",
 			ArrayItemCount = (uint)dsoState.JniPreloadDSOs.Count,
 			GetArrayItemCommentCallback = GetPreloadIndicesLibraryName,
@@ -601,11 +601,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 	void PopulatePreloadIndices (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
 	{
-		var indices = variable.Value as List<uint>;
-		if (indices == null) {
-			throw new InvalidOperationException ("Internal error: DSO preload indices list instance not present.");
-		}
-
 		var dsoState = state as DsoCacheState;
 		if (dsoState == null) {
 			throw new InvalidOperationException ("Internal error: DSO state not present.");
@@ -614,6 +609,8 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		var dsoNames = new List<string> ();
 
 		// Indices array MUST NOT be sorted, since it groups alias entries together with the main entry
+		var indices = new List<uint> ();
+		variable.Value = indices;
 		foreach (DSOCacheEntry preload in dsoState.JniPreloadDSOs) {
 			int dsoIdx = dsoState.DsoCache.FindIndex (entry => {
 				if (entry.Instance == null) {
