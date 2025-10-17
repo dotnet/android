@@ -963,7 +963,7 @@ namespace UnnamedProject
 
 			// TODO: update on new minor API levels to use an introduced minor API
 			proj.MainActivity = proj.DefaultMainActivity
-				.Replace ("//${USINGS}", "using Android.Telecom;")
+				.Replace ("//${USINGS}", "using Android.Telecom;\nusing Android.Graphics.Pdf.Component;")
 				.Replace ("//${AFTER_ONCREATE}", """
 					if (OperatingSystem.IsAndroidVersionAtLeast (36, 1)) {
 						Console.WriteLine ($"TelecomManager.ActionCallBack={TelecomManager.ActionCallBack}");
