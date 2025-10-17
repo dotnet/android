@@ -355,6 +355,8 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (RuntimeChecks))]
 		public void CheckWhichRuntimeIsIncluded (string supportedAbi, bool debugSymbols, bool? optimize, bool? embedAssemblies, string expectedRuntime) {
 			var proj = new XamarinAndroidApplicationProject ();
+			// MonoVM-only test
+			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
 			proj.SetAndroidSupportedAbis (supportedAbi);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugSymbols", debugSymbols);
 			if (optimize.HasValue)
@@ -1300,7 +1302,6 @@ namespace UnnamedProject
 				proj.SetProperty ("AndroidPackageNamingPolicy", packageNamingPolicy);
 			if (!string.IsNullOrEmpty (diagnosticConfiguration))
 				proj.SetProperty ("DiagnosticConfiguration", diagnosticConfiguration);
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var environment = b.Output.GetIntermediaryPath (Path.Combine ("__environment__.txt"));

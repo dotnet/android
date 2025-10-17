@@ -107,7 +107,6 @@ namespace Xamarin.Android.Build.Tests
 				EnableMarshalMethods = enableMarshalMethods,
 			};
 			proj.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
 				builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName));
@@ -341,7 +340,6 @@ namespace Library1 {
 			});
 
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("</manifest>", "<uses-permission android:name=\"android.permission.INTERNET\" /></manifest>");
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 			using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.MainActivityReplacement.cs")))
 				proj.MainActivity = sr.ReadToEnd ();
 
@@ -386,7 +384,7 @@ namespace Library1 {
 			proj.SetProperty ("NoWarn", "SYSLIB0011");
 
 			if (isRelease || !TestEnvironment.CommercialBuildAvailable) {
-				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
+				proj.SetAndroidSupportedAbis (DeviceAbi);
 			}
 
 			proj.References.Add (new BuildItem.Reference ("System.Runtime.Serialization"));
@@ -475,6 +473,8 @@ using System.Runtime.Serialization.Json;
 				IsRelease = isRelease,
 				AotAssemblies = false, // Release defaults to Profiled AOT for .NET 6
 			};
+			// MonoVM-only test
+			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
 			var abis = new string[] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
 			proj.SetAndroidSupportedAbis (abis);
 			proj.SetProperty (proj.CommonProperties, "UseInterpreter", "True");
@@ -553,8 +553,7 @@ using System.Runtime.Serialization.Json;
 			if (testOnly)
 				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application", "<application android:testOnly=\"true\"");
 
-			var abis = new string [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
-			proj.SetAndroidSupportedAbis (abis);
+			proj.SetAndroidSupportedAbis (DeviceAbi);
 			builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			RunProjectAndAssert (proj, builder);

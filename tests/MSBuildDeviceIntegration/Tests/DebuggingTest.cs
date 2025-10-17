@@ -176,6 +176,8 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,
 			};
+			// MonoVM-only test
+			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
 			proj.SetAndroidSupportedAbis (DeviceAbi);
 			proj.SetProperty ("EmbedAssembliesIntoApk", embedAssemblies.ToString ());
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
@@ -383,6 +385,8 @@ namespace ${ROOT_NAMESPACE} {
 				IsRelease = false,
 				EmbedAssembliesIntoApk = embedAssemblies,
 			};
+			// MonoVM-only test
+			app.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
 			if (!useLatestSdk) {
 				lib.TargetFramework = "net9.0-android";
 				app.TargetFramework = "net9.0-android";
