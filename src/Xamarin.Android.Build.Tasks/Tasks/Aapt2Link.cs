@@ -12,7 +12,6 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
-using System.Globalization;
 
 namespace Xamarin.Android.Tasks {
 
@@ -153,8 +152,8 @@ namespace Xamarin.Android.Tasks {
 			Directory.CreateDirectory (manifestDir);
 			string manifestFile = Path.Combine (manifestDir, Path.GetFileName (ManifestFile));
 			string targetSdkVersion = AndroidApiLevel;
-			if (MonoAndroidHelper.TryParseApiLevel (targetSdkVersion, out Version version)) {
-				targetSdkVersion = version.Major.ToString (CultureInfo.InvariantCulture);
+			if (MonoAndroidHelper.TryParseApiLevel (targetSdkVersion, out Version v)) {
+				targetSdkVersion = v.Major.ToString (CultureInfo.InvariantCulture);
 			}
 			ManifestDocument manifest = new ManifestDocument (ManifestFile);
 			manifest.TargetSdkVersion = targetSdkVersion;
