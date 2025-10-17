@@ -1744,32 +1744,5 @@ namespace App1
 			const string className = "Lcrc64467b05f37239e7a6/StreamMediaDataSource;";
 			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 		}
-
-		[Test]
-		public void SubclassMinorApiLevels ([Values ("net10.0-android36.1")] string targetFramework)
-		{
-			var proj = new XamarinAndroidApplicationProject () {
-				TargetFramework = targetFramework,
-				ExtraNuGetConfigSources = {
-					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
-				}
-			};
-
-			// TODO: update on new minor API levels to use an introduced minor API
-			proj.MainActivity = proj.DefaultMainActivity
-				.Replace ("//${USINGS}", "using Android.Graphics.Pdf.Component;")
-				.Replace ("//${AFTER_MAINACTIVITY}", """
-					class MyTextObjectFont : PdfPageTextObjectFont
-					{
-						public MyTextObjectFont (PdfPageTextObjectFont font) : base (font)
-						{
-						}
-					}
-				""");
-
-
-			var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
-		}
 	}
 }

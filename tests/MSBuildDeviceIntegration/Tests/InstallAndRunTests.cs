@@ -970,6 +970,16 @@ namespace UnnamedProject
 					} else {
 						Console.WriteLine ("TelecomManager.ActionCallBack not available");
 					}
+				""")
+				.Replace ("//${AFTER_MAINACTIVITY}", """
+					#pragma warning disable CA1416 // Type only available on Android 36.1 and later
+					class MyTextObjectFont : PdfPageTextObjectFont
+					{
+						public MyTextObjectFont (PdfPageTextObjectFont font) : base (font)
+						{
+						}
+					}
+					#pragma warning restore CA1416 // Type only available on Android 36.1 and later
 				""");
 
 			var builder = CreateApkBuilder ();
