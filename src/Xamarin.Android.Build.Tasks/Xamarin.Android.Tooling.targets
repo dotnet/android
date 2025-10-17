@@ -86,7 +86,7 @@ projects.
 
   <Target Name="_GetJavaPlatformJar">
     <GetJavaPlatformJar
-        AndroidSdkPlatform="$(_AndroidApiLevel)"
+        AndroidApiLevel="$(_AndroidApiLevel)"
         AndroidSdkDirectory="$(AndroidSdkDirectory)"
         AndroidManifest="$(_AndroidManifestAbs)"
         DesignTimeBuild="$(DesignTimeBuild)"

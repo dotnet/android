@@ -949,7 +949,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void DotNetInstallAndRunPreviewAPILevels (
+		public void DotNetInstallAndRunMinorAPILevels (
 				[Values (false, true)] bool isRelease,
 				[Values ("net10.0-android36.1")] string targetFramework)
 		{
@@ -960,17 +960,26 @@ namespace UnnamedProject
 					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
 				}
 			};
-			proj.SetProperty ("EnablePreviewFeatures", "true");
 
 			// TODO: update on new minor API levels to use an introduced minor API
 			proj.MainActivity = proj.DefaultMainActivity
-				.Replace ("//${USINGS}", "using Android.Telecom;")
+				.Replace ("//${USINGS}", "using Android.Telecom;\nusing Android.Graphics.Pdf.Component;")
 				.Replace ("//${AFTER_ONCREATE}", """
 					if (OperatingSystem.IsAndroidVersionAtLeast (36, 1)) {
 						Console.WriteLine ($"TelecomManager.ActionCallBack={TelecomManager.ActionCallBack}");
 					} else {
 						Console.WriteLine ("TelecomManager.ActionCallBack not available");
 					}
+				""")
+				.Replace ("//${AFTER_MAINACTIVITY}", """
+					#pragma warning disable CA1416 // Type only available on Android 36.1 and later
+					class MyTextObjectFont : PdfPageTextObjectFont
+					{
+						public MyTextObjectFont (PdfPageTextObjectFont font) : base (font)
+						{
+						}
+					}
+					#pragma warning restore CA1416 // Type only available on Android 36.1 and later
 				""");
 
 			var builder = CreateApkBuilder ();

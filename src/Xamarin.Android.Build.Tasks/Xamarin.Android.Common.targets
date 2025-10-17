@@ -1590,7 +1590,6 @@ because xbuild doesn't support framework reference assemblies.
       GeneratedJavaFiles="@(_GeneratedJavaFiles)"
       ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
       Debug="$(AndroidIncludeDebugSymbols)"
-      AndroidSdkPlatform="$(_AndroidApiLevel)"
       OutputDirectory="$(IntermediateOutputPath)android"
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
@@ -1633,7 +1632,7 @@ because xbuild doesn't support framework reference assemblies.
   <GenerateMainAndroidManifest
       AndroidRuntime="$(_AndroidRuntime)"
       AndroidSdkDir="$(_AndroidSdkDirectory)"
-      AndroidSdkPlatform="$(_AndroidApiLevel)"
+      AndroidApiLevel="$(_AndroidApiLevel)"
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       ApplicationLabel="$(_ApplicationLabel)"
       BundledWearApplicationName="$(BundledWearApplicationPackageName)"

@@ -58,7 +58,7 @@ namespace Xamarin.Android.Tasks {
 
 		public string? UncompressedFileExtensions { get; set; }
 
-		public string? AndroidSdkPlatform { get; set; }
+		public string AndroidApiLevel { get; set; } = "";
 
 		public string? VersionCodePattern { get; set; }
 
@@ -151,8 +151,12 @@ namespace Xamarin.Android.Tasks {
 			string manifestDir = Path.Combine (Path.GetDirectoryName (ManifestFile), currentAbi != null ? currentAbi : "manifest");
 			Directory.CreateDirectory (manifestDir);
 			string manifestFile = Path.Combine (manifestDir, Path.GetFileName (ManifestFile));
+			string targetSdkVersion = AndroidApiLevel;
+			if (MonoAndroidHelper.TryParseApiLevel (targetSdkVersion, out Version v)) {
+				targetSdkVersion = v.Major.ToString (CultureInfo.InvariantCulture);
+			}
 			ManifestDocument manifest = new ManifestDocument (ManifestFile);
-			manifest.TargetSdkVersion = AndroidSdkPlatform;
+			manifest.TargetSdkVersion = targetSdkVersion;
 			if (!VersionCodePattern.IsNullOrEmpty ()) {
 				try {
 					manifest.CalculateVersionCode (currentAbi, VersionCodePattern, VersionCodeProperties);

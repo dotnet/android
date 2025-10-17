@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.IO;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
+using System;
+using System.Globalization;
 
 namespace Xamarin.Android.Tasks
 {
@@ -66,7 +68,17 @@ namespace Xamarin.Android.Tasks
 					var attribute = uses_library.Attribute (androidNs + "name");
 					if (attribute != null && !attribute.Value.IsNullOrEmpty ()) {
 						var required = uses_library.Attribute (androidNs + "required")?.Value;
-						var path = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{AndroidApiLevel}", "optional", $"{attribute.Value}.jar");
+						string apiLevel;
+						if (MonoAndroidHelper.TryParseApiLevel (AndroidApiLevel, out Version version)) {
+							if (version.Minor == 0) {
+								apiLevel = version.Major.ToString (CultureInfo.InvariantCulture);
+							} else {
+								apiLevel = version.ToString ();
+							}
+						} else {
+							apiLevel = AndroidApiLevel;
+						}
+						var path = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{apiLevel}", "optional", $"{attribute.Value}.jar");
 						if (File.Exists (path)) {
 							libraries.Add (new TaskItem (path));
 						} else {

@@ -148,8 +148,8 @@ namespace Xamarin.Android.Tasks
 				level       = manifest.MinSdkVersion.Value;
 			} else if (int.TryParse (MinimumSupportedApiLevel, out level)) {
 				// level already set
-			} else if (int.TryParse (AndroidApiLevel, out level)) {
-				// level already set
+			} else if (MonoAndroidHelper.TryParseApiLevel (AndroidApiLevel, out Version version)) {
+				level = version.Major;
 			} else {
 				// Probably not ideal!
 				level       = MonoAndroidHelper.SupportedVersions.MaxStableVersion?.ApiLevel ?? 21;
