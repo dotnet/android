@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -19,7 +20,8 @@ public class GenerateMainAndroidManifest : AndroidTask
 	[Required]
 	public string AndroidRuntime { get; set; } = "";
 	public string? AndroidSdkDir { get; set; }
-	public string? AndroidSdkPlatform { get; set; }
+	[Required]
+	public string AndroidApiLevel { get; set; } = "";
 	public string? ApplicationJavaClass { get; set; }
 	public string? ApplicationLabel { get; set; }
 	public string? BundledWearApplicationName { get; set; }
@@ -91,6 +93,11 @@ public class GenerateMainAndroidManifest : AndroidTask
 
 	IList<string> MergeManifest (NativeCodeGenState codeGenState, Dictionary<string, ITaskItem> userAssemblies)
 	{
+		string targetSdkVersion = AndroidApiLevel;
+		if (MonoAndroidHelper.TryParseApiLevel (targetSdkVersion, out Version version)) {
+			targetSdkVersion = version.Major.ToString (CultureInfo.InvariantCulture);
+		}
+
 		var manifest = new ManifestDocument (ManifestTemplate) {
 			PackageName = PackageName,
 			VersionName = VersionName,
@@ -98,7 +105,7 @@ public class GenerateMainAndroidManifest : AndroidTask
 			Placeholders = ManifestPlaceholders,
 			Resolver = codeGenState.Resolver,
 			SdkDir = AndroidSdkDir,
-			TargetSdkVersion = AndroidSdkPlatform,
+			TargetSdkVersion = targetSdkVersion,
 			MinSdkVersion = MonoAndroidHelper.ConvertSupportedOSPlatformVersionToApiLevel (SupportedOSPlatformVersion).ToString (),
 			Debug = Debug,
 			MultiDex = MultiDex,
