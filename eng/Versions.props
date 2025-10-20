@@ -1,7 +1,7 @@
 <Project>
   <!--Package versions-->
   <PropertyGroup>
-    <MicrosoftNETSdkPackageVersion>9.0.112-servicing.25510.7</MicrosoftNETSdkPackageVersion>
+    <MicrosoftNETSdkPackageVersion>9.0.307-servicing.25519.5</MicrosoftNETSdkPackageVersion>
     <MicrosoftDotnetSdkInternalPackageVersion>$(MicrosoftNETSdkPackageVersion)</MicrosoftDotnetSdkInternalPackageVersion>
     <MicrosoftNETILLinkPackageVersion>9.0.9-servicing.25419.15</MicrosoftNETILLinkPackageVersion>
     <MicrosoftNETCoreAppRefPackageVersion>9.0.9</MicrosoftNETCoreAppRefPackageVersion>
