@@ -266,33 +266,26 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		static object [] CheckAssemblyCountsSource = new object [] {
-			new object[] {
-				/*isRelease*/ false,
-				/*aot*/       false,
-			},
-			new object[] {
-				/*isRelease*/ true,
-				/*aot*/       false,
-			},
-			new object[] {
-				/*isRelease*/ true,
-				/*aot*/       true,
-			},
-		};
 
 		[Test]
-		[TestCaseSource (nameof (CheckAssemblyCountsSource))]
 		[NonParallelizable]
-		public void CheckAssemblyCounts (bool isRelease, bool aot)
+		// TODO: NativeAOT
+		public void CheckAssemblyCounts ([Values (true, false)] bool isRelease, [Values (true, false)] bool aot,
+				                 [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
+			if (isRelease == false && aot == true) {
+				Assert.Ignore ("Not testing AOT with Debug builds");
+				return;
+			}
+
+			bool aotAssemblies = aot && runtime == AndroidRuntime.MonoVM;
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 				EmbedAssembliesIntoApk = true,
-				AotAssemblies = aot,
+				AotAssemblies = aotAssemblies,
 			};
 
-			var abis = new [] { "armeabi-v7a", "x86" };
+			var abis = new [] { AndroidTargetArch.Arm64, AndroidTargetArch.X86_64 };
 			proj.SetRuntimeIdentifiers (abis);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidUseAssemblyStore", "True");
 
@@ -304,7 +297,7 @@ namespace Xamarin.Android.Build.Tests
 				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
 				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
 
-				if (aot) {
+				if (aotAssemblies) {
 					foreach (var env in envFiles) {
 						StringAssert.Contains ("libaot-Mono.Android.dll.so", File.ReadAllText (env.Path));
 					}
@@ -313,12 +306,11 @@ namespace Xamarin.Android.Build.Tests
 				string apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStores: true);
 
-				foreach (string abi in abis) {
-					AndroidTargetArch arch = MonoAndroidHelper.AbiToTargetArch (abi);
+				foreach (AndroidTargetArch arch in abis) {
 					Assert.AreEqual (
 						app_config.number_of_assemblies_in_apk,
 						helper.GetNumberOfAssemblies (arch: arch),
-						$"Assembly count must be equal between ApplicationConfig and the archive contents for architecture {arch} (ABI: {abi})"
+						$"Assembly count must be equal between ApplicationConfig and the archive contents for architecture {arch} (ABI: {MonoAndroidHelper.ArchToAbi (arch)})"
 					);
 				}
 			}
@@ -1735,16 +1727,23 @@ public class ToolbarEx {
 		}
 
 		[Test]
-		public void SimilarAndroidXAssemblyNames ([Values(true, false)] bool publishTrimmed)
+		[TestCase (true, AndroidRuntime.MonoVM)]
+		[TestCase (false, AndroidRuntime.MonoVM)]
+		[TestCase (true, AndroidRuntime.CoreCLR)]
+		[TestCase (false, AndroidRuntime.CoreCLR)]
+		// TODO: [TestCase (false, AndroidRuntime.NativeAOT)]
+		public void SimilarAndroidXAssemblyNames (bool publishTrimmed, AndroidRuntime runtime)
 		{
+			bool aotAssemblies = runtime == AndroidRuntime.MonoVM && publishTrimmed;
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
-				AotAssemblies = publishTrimmed,
+				AotAssemblies = aotAssemblies,
 				PackageReferences = {
 					new Package { Id = "Xamarin.AndroidX.CustomView", Version = "1.1.0.17" },
 					new Package { Id = "Xamarin.AndroidX.CustomView.PoolingContainer", Version = "1.0.0.4" },
 				}
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty (KnownProperties.PublishTrimmed, publishTrimmed.ToString());
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "AndroidX.CustomView.PoolingContainer.PoolingContainer.IsPoolingContainer (null);");
 			using var builder = CreateApkBuilder ();
