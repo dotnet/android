@@ -109,6 +109,7 @@ namespace Xamarin.Android.ToolsTests {
 			typeof (ExampleInstrumentation),
 			typeof (ExampleOuterClass),
 			typeof (ExampleOuterClass.ExampleInnerClass),
+			typeof (GlobalClass),
 			typeof (InstrumentationName),
 			typeof (NonStaticOuterClass),
 			typeof (NonStaticOuterClass.NonStaticInnerClass),
@@ -369,4 +370,9 @@ namespace Xamarin.Android.ToolsTests {
 		[JavaCallable ("example")]
 		public void Example () {}
 	}
+}
+
+[Register (nameof (GlobalClass))]
+class GlobalClass : Java.Lang.Object
+{
 }

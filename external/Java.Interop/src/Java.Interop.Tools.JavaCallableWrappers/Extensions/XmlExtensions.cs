@@ -21,7 +21,7 @@ static class XmlExtensions
 		var value = xml.Attribute (name)?.Value;
 
 		if (string.IsNullOrWhiteSpace (value))
-			throw new InvalidOperationException ($"Missing required attribute '{name}'");
+			throw new InvalidOperationException ($"Missing required attribute '{name}' within element `{xml.ToString()}`.");
 
 		return value!;  // NRT - Guarded by IsNullOrWhiteSpace check above
 	}

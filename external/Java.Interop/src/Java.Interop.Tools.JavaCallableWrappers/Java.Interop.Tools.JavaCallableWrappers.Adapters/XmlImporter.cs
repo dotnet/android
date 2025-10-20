@@ -49,10 +49,10 @@ public static class XmlImporter
 	public static CallableWrapperType ImportType (XElement xml)
 	{
 		var name = xml.GetRequiredAttribute ("name");
-		var package = xml.GetRequiredAttribute ("package");
+		var package = xml.GetAttributeOrDefault ("package", (string?) "");
 		var partial_assembly_qualified_name = xml.GetRequiredAttribute ("partial_assembly_qualified_name");
 
-		var type = new CallableWrapperType (name, package, partial_assembly_qualified_name) {
+		var type = new CallableWrapperType (name, package ?? "", partial_assembly_qualified_name) {
 			ApplicationJavaClass = xml.GetAttributeOrDefault ("application_java_class", (string?) null),
 			ExtendsType = xml.GetAttributeOrDefault ("extends_type", (string?) null),
 			GenerateOnCreateOverrides = xml.GetAttributeOrDefault ("generate_on_create_overrides", false),

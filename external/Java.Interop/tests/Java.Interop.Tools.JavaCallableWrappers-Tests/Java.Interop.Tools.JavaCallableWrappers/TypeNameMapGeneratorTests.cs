@@ -57,6 +57,7 @@ namespace Xamarin.Android.ToolsTests
 				$"entry-count={types.Count - 1}\u0000" +
 				"entry-len=" + length + "\u0000" +
 				"value-offset=" + offset + "\u0000" +
+				GetJ2MEntryLine (typeof (GlobalClass),                              "GlobalClass",                                                                                  offset, length) +
 				GetJ2MEntryLine (typeof (ActivityName),                             "activity/Name",                                                                                offset, length) +
 				GetJ2MEntryLine (typeof (ApplicationName),                          "application/Name",                                                                             offset, length) +
 				GetJ2MEntryLine (typeof (ApplicationName.ActivityLifecycleCallbacks),   "application/Name_ActivityLifecycleCallbacks",                                              offset, length) +
@@ -136,6 +137,7 @@ namespace Xamarin.Android.ToolsTests
 				$"entry-count={types.Count}\u0000" +
 				"entry-len=" + length + "\u0000" +
 				"value-offset=" + offset + "\u0000" +
+				GetM2JEntryLine (typeof (GlobalClass),                              "GlobalClass",                                                                                  offset, length) +
 				GetM2JEntryLine (typeof (AbstractClass),                            "my/AbstractClass",                                                                             offset, length) +
 				GetM2JEntryLine (typeof (AbstractClassInvoker),                     "my/AbstractClass",                                                                             offset, length) +
 				GetM2JEntryLine (typeof (ActivityName),                             "activity/Name",                                                                                offset, length) +
