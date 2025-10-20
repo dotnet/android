@@ -5,7 +5,6 @@ using Xamarin.ProjectTools;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
-using System.Text;
 using Xamarin.Android.Tasks;
 using Microsoft.Build.Utilities;
 
@@ -162,6 +161,22 @@ namespace Xamarin.Android.Build.Tests {
 			var proj = new XamarinAndroidApplicationProject {
 				SupportedOSPlatformVersion = "26",
 				AndroidResources = {
+					new AndroidItem.AndroidResource ("Resources\\values\\colors.xml") {
+						TextContent = () => """
+							<resources>
+								<color name="adaptive_icon_background">#2C3E50</color>
+								<color name="adaptive_icon_foreground">#FFFFFF</color>
+							</resources>
+						""",
+					},
+					new AndroidItem.AndroidResource ("Resources\\drawable\\ic_shortcut_add.xml") {
+						TextContent = () => """
+							<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+								<background android:drawable="@color/adaptive_icon_background"/>
+								<foreground android:drawable="@color/adaptive_icon_foreground"/>
+							</adaptive-icon>
+						""",
+					},
 					new AndroidItem.AndroidResource ("Resources\\mipmap-anydpi-v26\\adaptiveicon.xml") {
 						TextContent = () => """
 							<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">

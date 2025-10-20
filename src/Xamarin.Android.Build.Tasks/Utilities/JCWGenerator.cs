@@ -53,17 +53,16 @@ class JCWGenerator
 
 	public List<string> GeneratedJavaFiles { get; } = [];
 
-	public bool Generate (string androidSdkPlatform, string outputPath, string applicationJavaClass)
+	public bool Generate (string outputPath, string applicationJavaClass)
 	{
 		return ProcessTypes (
 			generateCode: true,
-			androidSdkPlatform,
 			outputPath,
 			applicationJavaClass
 		);
 	}
 
-	bool ProcessTypes (bool generateCode, string androidSdkPlatform, string? outputPath, string? applicationJavaClass)
+	bool ProcessTypes (bool generateCode, string? outputPath, string? applicationJavaClass)
 	{
 		if (generateCode && outputPath.IsNullOrEmpty ()) {
 			throw new ArgumentException ("must not be null or empty", nameof (outputPath));

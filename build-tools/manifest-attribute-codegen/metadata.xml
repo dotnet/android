@@ -53,6 +53,7 @@
   <type name="profileable" ignore="true" />
   <type name="protected-broadcast" ignore="true" />
   <type name="public-key" ignore="true" />
+  <type name="purpose" ignore="true" />
   <type name="queries" ignore="true" />
   <type name="queries-intent" ignore="true" />
   <type name="queries-package" ignore="true" />
@@ -73,6 +74,7 @@
   <type name="uses-sdk-library" ignore="true" />
   <type name="uses-split" ignore="true" />
   <type name="uses-static-library" ignore="true" />
+  <type name="valid-purpose" ignore="true" />
 
   <!-- <activity> - https://developer.android.com/guide/topics/manifest/activity-element -->
   <element path="activity.allowEmbedded" type="bool" />
@@ -304,6 +306,8 @@
   <element path="permission.maxSdkVersion" visible="false" />
   <element path="permission.permissionFlags" visible="false" />
   <element path="permission.request" visible="false" />
+  <element path="permission.requiresPurpose" visible="false" />
+  <element path="permission.requiresPurposeTargetSdkVersion" visible="false" />
 
   <!-- <permission-group> - https://developer.android.com/guide/topics/manifest/permission-group-element -->
   <element path="permission-group.description" visible="true" />

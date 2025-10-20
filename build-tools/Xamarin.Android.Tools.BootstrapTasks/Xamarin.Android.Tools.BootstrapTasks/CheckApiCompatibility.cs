@@ -266,7 +266,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					LogError ($"CheckApiCompatibility found nonacceptable Api breakages for ApiLevel: {ApiLevel}.{Environment.NewLine}{string.Join (Environment.NewLine, lines)}");
 					ReportMissingLines (acceptableIssuesFile.FullName, lines);
 
-					var missingItems = CodeGenDiff.GenerateMissingItems (CodeGenPath, contractAssembly.FullName, implementationAssembly.FullName);
+					var missingItems = CodeGenDiff.GenerateMissingItems (CodeGenPath, contractAssembly.FullName, implementationAssembly.FullName, JdkInfo.CreateTaskLogger (this));
 					if (missingItems.Any ()) {
 						Log.LogMessage (MessageImportance.High, $"{Environment.NewLine}*** CodeGen missing items***{Environment.NewLine}");
 						var indent = 0;
