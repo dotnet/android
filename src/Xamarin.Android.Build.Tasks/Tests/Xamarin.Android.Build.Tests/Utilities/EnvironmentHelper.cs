@@ -358,23 +358,38 @@ namespace Xamarin.Android.Build.Tests
 
 		// Reads all the environment files, makes sure they contain the same environment variables (both count
 		// and contents) and then returns a dictionary filled with the variables.
-		public static Dictionary<string, string> ReadEnvironmentVariables (List<EnvironmentFile> envFilePaths)
+		public static Dictionary<string, string> ReadEnvironmentVariables (List<EnvironmentFile> envFilePaths, AndroidRuntime runtime)
 		{
 			if (envFilePaths.Count == 0)
 				return null;
 
-			Dictionary<string, string> envvars = ReadEnvironmentVariables (envFilePaths [0]);
+			Dictionary<string, string> envvars = ReadEnvironmentVariables (envFilePaths [0], runtime);
 			if (envFilePaths.Count == 1)
 				return envvars;
 
 			for (int i = 1; i < envFilePaths.Count; i++) {
-				AssertDictionariesAreEqual (envvars, envFilePaths [0].Path, ReadEnvironmentVariables (envFilePaths[i]), envFilePaths[i].Path);
+				AssertDictionariesAreEqual (envvars, envFilePaths [0].Path, ReadEnvironmentVariables (envFilePaths[i], runtime), envFilePaths[i].Path);
 			}
 
 			return envvars;
 		}
 
-		static Dictionary<string, string> ReadEnvironmentVariables (EnvironmentFile envFile)
+		static Dictionary<string, string> ReadEnvironmentVariables (EnvironmentFile envFile, AndroidRuntime runtime)
+		{
+			return runtime switch {
+				AndroidRuntime.MonoVM => ReadEnvironmentVariables_MonoVM (envFile),
+				AndroidRuntime.CoreCLR => ReadEnvironmentVariables_CoreCLR_NativeAOT (envFile),
+				AndroidRuntime.NativeAOT => ReadEnvironmentVariables_CoreCLR_NativeAOT (envFile),
+				_ => throw new InvalidOperationException ($"Unsupported runtime '{runtime}'")
+			};
+		}
+
+		static Dictionary<string, string> ReadEnvironmentVariables_CoreCLR_NativeAOT (EnvironmentFile envFile)
+		{
+			throw new NotImplementedException ();
+		}
+
+		static Dictionary<string, string> ReadEnvironmentVariables_MonoVM (EnvironmentFile envFile)
 		{
 			NativeAssemblyParser parser = CreateAssemblyParser (envFile);
 
