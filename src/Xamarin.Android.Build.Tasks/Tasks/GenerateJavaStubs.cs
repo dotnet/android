@@ -48,8 +48,6 @@ namespace Xamarin.Android.Tasks
 		public bool Debug { get; set; }
 
 		[Required]
-		public string AndroidSdkPlatform { get; set; } = "";
-		[Required]
 		public string OutputDirectory { get; set; } = "";
 
 		public bool ErrorOnCustomJavaObject { get; set; }
@@ -237,7 +235,7 @@ namespace Xamarin.Android.Tasks
 			bool success = true;
 
 			if (generateJavaCode && RunCheckedBuild) {
-				success = jcwGenerator.Generate (AndroidSdkPlatform, outputPath: Path.Combine (OutputDirectory, "src"), ApplicationJavaClass);
+				success = jcwGenerator.Generate (outputPath: Path.Combine (OutputDirectory, "src"), ApplicationJavaClass);
 
 				generatedJavaFiles = jcwGenerator.GeneratedJavaFiles;
 			}
