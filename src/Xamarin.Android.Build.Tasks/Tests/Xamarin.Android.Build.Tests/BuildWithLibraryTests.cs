@@ -9,6 +9,7 @@ using Microsoft.Android.Build.Tasks;
 using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
+using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -47,9 +48,31 @@ namespace Xamarin.Android.Build.Tests
 			},
 		};
 
+		static IEnumerable<object> Get_DotNetBuildLibraryParams ()
+		{
+			var source = new List<object[]> ();
+			var runtimes = new List<AndroidRuntime> {
+				AndroidRuntime.MonoVM,
+				AndroidRuntime.CoreCLR,
+			};
+
+			foreach (object[] args in DotNetBuildLibrarySource) {
+				foreach (AndroidRuntime runtime in runtimes) {
+					source.Add (new object[] {
+						args[0],
+						args[1],
+						args[2],
+						runtime,
+					});
+				}
+			}
+
+			return source;
+		}
+
 		[Test]
-		[TestCaseSource (nameof (DotNetBuildLibrarySource))]
-		public void DotNetBuildLibrary (bool isRelease, bool duplicateAar, bool useDesignerAssembly)
+		[TestCaseSource (nameof (Get_DotNetBuildLibraryParams))]
+		public void DotNetBuildLibrary (bool isRelease, bool duplicateAar, bool useDesignerAssembly, AndroidRuntime runtime)
 		{
 			var path = Path.Combine ("temp", TestName);
 			var env_var = "MY_ENVIRONMENT_VAR";
@@ -73,6 +96,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
+			libC.SetRuntime (runtime);
 			libC.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("Assets\\bar\\bar.txt") {
 				BinaryContent = () => Array.Empty<byte> (),
 			});
@@ -147,6 +171,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
+			libB.SetRuntime (runtime);
 			libB.OtherBuildItems.Add (new AndroidItem.AndroidEnvironment ("env.txt") {
 				TextContent = () => $"{env_var}={env_val}",
 			});
@@ -215,6 +240,7 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 			};
+			appA.SetRuntime (runtime);
 			appA.AddReference (libB);
 			if (duplicateAar) {
 				// Test a duplicate @(AndroidLibrary) item with the same path of LibraryB.aar
@@ -259,7 +285,7 @@ namespace Xamarin.Android.Build.Tests
 			// Check environment variable
 			if (isRelease) {
 				var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediate, "x86_64", required: true);
-				var environmentVariables = EnvironmentHelper.ReadEnvironmentVariables (environmentFiles);
+				var environmentVariables = EnvironmentHelper.ReadEnvironmentVariables (environmentFiles, runtime);
 				Assert.IsTrue (environmentVariables.TryGetValue (env_var, out string actual), $"Environment should contain {env_var}");
 				Assert.AreEqual (env_val, actual, $"{env_var} should be {env_val}");
 			}
