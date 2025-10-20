@@ -471,6 +471,7 @@ namespace Bug12935
 			},
 		};
 
+		// TODO: some codes differ between MonoVM and CoreCLR. Investigate if this is correct and, if necessary, add a way to indicate which data set is valid for which runtimes
 		[Test]
 		[TestCaseSource(nameof (VersionCodeTestSource))]
 		public void VersionCodeTests (bool seperateApk, string abis, string versionCode, bool useLegacy, string versionCodePattern, string versionCodeProperties, bool shouldBuild, string expectedVersionCode)
