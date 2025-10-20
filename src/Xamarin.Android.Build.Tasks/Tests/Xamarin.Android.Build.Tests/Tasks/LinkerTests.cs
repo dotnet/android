@@ -302,8 +302,13 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void LinkDescription ([Values (true, false)] bool useAssemblyStore)
+		public void LinkDescription ([Values (true, false)] bool useAssemblyStore, [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
+			if (!useAssemblyStore && runtime == AndroidRuntime.CoreCLR) {
+				Assert.Ignore ("CoreCLR doesn't support builds without assembly stores.");
+				return;
+			}
+
 			string assembly_name = "System.Console";
 			string linker_xml = "<linker/>";
 
