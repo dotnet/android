@@ -348,139 +348,321 @@ namespace Bug12935
 			}
 		}
 
-		static object [] VersionCodeTestSource = new object [] {
-			new object[] {
-				/* seperateApk */ false,
-				/* abis */ "arm64-v8a",
-				/* versionCode */ "123",
-				/* useLagacy */ true,
-				/* pattern */ null,
-				/* props */ null,
-				/* shouldBuild */ true,
-				/* expected */ "123",
-			},
-			new object[] {
-				/* seperateApk */ false,
-				/* abis */ "arm64-v8a",
-				/* versionCode */ "123",
-				/* useLagacy */ false,
-				/* pattern */ null,
-				/* props */ null,
-				/* shouldBuild */ true,
-				/* expected */ "123",
-			},
-			new object[] {
-				/* seperateApk */ false,
-				/* abis */ "arm64-v8a",
-				/* versionCode */ "123",
-				/* useLagacy */ false,
-				/* pattern */ "{abi}{versionCode}",
-				/* props */ null,
-				/* shouldBuild */ true,
-				/* expected */ "123",
-			},
-			new object[] {
-				/* seperateApk */ false,
-				/* abis */ "arm64-v8a",
-				/* versionCode */ "1",
-				/* useLagacy */ false,
-				/* pattern */ "{abi}{versionCode}",
-				/* props */ "versionCode=123",
-				/* shouldBuild */ true,
-				/* expected */ "123",
-			},
-			new object[] {
-				/* seperateApk */ false,
-				/* abis */ "arm64-v8a;x86_64",
-				/* versionCode */ "123",
-				/* useLagacy */ false,
-				/* pattern */ "{abi}{versionCode}",
-				/* props */ null,
-				/* shouldBuild */ true,
-				/* expected */ "123",
-			},
-			new object[] {
-				/* seperateApk */ true,
-				/* abis */ "arm64-v8a;x86_64",
-				/* versionCode */ "123",
-				/* useLagacy */ true,
-				/* pattern */ null,
-				/* props */ null,
-				/* shouldBuild */ true,
-				/* expected */ "131195;196731",
-			},
-			new object[] {
-				/* seperateApk */ true,
-				/* abis */ "arm64-v8a;x86_64",
-				/* versionCode */ "123",
-				/* useLagacy */ false,
-				/* pattern */ null,
-				/* props */ null,
-				/* shouldBuild */ true,
-				/* expected */ "200123;300123",
-			},
-			new object[] {
-				/* seperateApk */ true,
-				/* abis */ "arm64-v8a;x86_64",
-				/* versionCode */ "123",
-				/* useLagacy */ false,
-				/* pattern */ "{abi}{versionCode}",
-				/* props */ null,
-				/* shouldBuild */ true,
-				/* expected */ "2123;3123",
-			},
-			new object[] {
-				/* seperateApk */ true,
-				/* abis */ "arm64-v8a;x86_64",
-				/* versionCode */ "12",
-				/* useLagacy */ false,
-				/* pattern */ "{abi}{minSDK:00}{versionCode:000}",
-				/* props */ null,
-				/* shouldBuild */ true,
-				/* expected */ "221012;321012",
-			},
-			new object[] {
-				/* seperateApk */ true,
-				/* abis */ "arm64-v8a;x86_64",
-				/* versionCode */ "12",
-				/* useLagacy */ false,
-				/* pattern */ "{abi}{minSDK:00}{screen}{versionCode:000}",
-				/* props */ "screen=24",
-				/* shouldBuild */ true,
-				/* expected */ "22124012;32124012",
-			},
-			new object[] {
-				/* seperateApk */ true,
-				/* abis */ "arm64-v8a;x86_64",
-				/* versionCode */ "12",
-				/* useLagacy */ false,
-				/* pattern */ "{abi}{minSDK:00}{screen}{foo:0}{versionCode:000}",
-				/* props */ "screen=24;foo=$(Foo)",
-				/* shouldBuild */ true,
-				/* expected */ "221241012;321241012",
-			},
-			new object[] {
-				/* seperateApk */ true,
-				/* abis */ "arm64-v8a;x86_64",
-				/* versionCode */ "12",
-				/* useLagacy */ false,
-				/* pattern */ "{abi}{minSDK:00}{screen}{foo:00}{versionCode:000}",
-				/* props */ "screen=24;foo=$(Foo)",
-				/* shouldBuild */ false,
-				/* expected */ "2212401012;3212401012",
-			},
-		};
+		sealed class VersionCodeTestData
+		{
+			public bool SeparateApk;
+			public string ABIs = String.Empty;
+			public string VersionCode = String.Empty;
+			public bool UseLegacy;
+			public string? Pattern;
+			public string? Props;
+			public bool ShouldBuild;
+			public string Expected = String.Empty;
+			public HashSet<AndroidRuntime>? ValidRuntimes;
+		}
 
-		// TODO: some codes differ between MonoVM and CoreCLR. Investigate if this is correct and, if necessary, add a way to indicate which data set is valid for which runtimes
+		static IEnumerable<object[]> Get_VersionCodeTestData ()
+		{
+			// This is the old MonoVM data, unchanged
+			var monoData = new List<VersionCodeTestData> {
+				new VersionCodeTestData {
+					SeparateApk = false,
+					ABIs = "armeabi-v7a",
+					VersionCode = "123",
+					UseLegacy = true,
+					Pattern = null,
+					Props = null,
+					ShouldBuild = true,
+					Expected = "123",
+				},
+				new VersionCodeTestData {
+					SeparateApk = false,
+					ABIs = "armeabi-v7a",
+					VersionCode = "123",
+					UseLegacy = false,
+					Pattern = null,
+					Props = null,
+					ShouldBuild = true,
+					Expected = "123",
+				},
+				new VersionCodeTestData {
+					SeparateApk = false,
+					ABIs = "armeabi-v7a",
+					VersionCode = "123",
+					UseLegacy = false,
+					Pattern = "{abi}{VersionCode}",
+					Props = null,
+					ShouldBuild = true,
+					Expected = "123",
+				},
+				new VersionCodeTestData {
+					SeparateApk = false,
+					ABIs = "armeabi-v7a",
+					VersionCode = "1",
+					UseLegacy = false,
+					Pattern = "{abi}{VersionCode}",
+					Props = "VersionCode=123",
+					ShouldBuild = true,
+					Expected = "123",
+				},
+				new VersionCodeTestData {
+					SeparateApk = false,
+					ABIs = "armeabi-v7a;x86",
+					VersionCode = "123",
+					UseLegacy = false,
+					Pattern = "{abi}{VersionCode}",
+					Props = null,
+					ShouldBuild = true,
+					Expected = "123",
+				},
+				new VersionCodeTestData {
+					SeparateApk = true,
+					ABIs = "armeabi-v7a;x86",
+					VersionCode = "123",
+					UseLegacy = true,
+					Pattern = null,
+					Props = null,
+					ShouldBuild = true,
+					Expected = "131195;196731",
+				},
+				new VersionCodeTestData {
+					SeparateApk = true,
+					ABIs = "armeabi-v7a;x86",
+					VersionCode = "123",
+					UseLegacy = false,
+					Pattern = null,
+					Props = null,
+					ShouldBuild = true,
+					Expected = "200123;300123",
+				},
+				new VersionCodeTestData {
+					SeparateApk = true,
+					ABIs = "armeabi-v7a;x86",
+					VersionCode = "123",
+					UseLegacy = false,
+					Pattern = "{abi}{VersionCode}",
+					Props = null,
+					ShouldBuild = true,
+					Expected = "2123;3123",
+				},
+				new VersionCodeTestData {
+					SeparateApk = true,
+					ABIs = "armeabi-v7a;x86",
+					VersionCode = "12",
+					UseLegacy = false,
+					Pattern = "{abi}{minSDK:00}{VersionCode:000}",
+					Props = null,
+					ShouldBuild = true,
+					Expected = "221012;321012",
+				},
+				new VersionCodeTestData {
+					SeparateApk = true,
+					ABIs = "armeabi-v7a;x86",
+					VersionCode = "12",
+					UseLegacy = false,
+					Pattern = "{abi}{minSDK:00}{screen}{VersionCode:000}",
+					Props = "screen=24",
+					ShouldBuild = true,
+					Expected = "22124012;32124012",
+				},
+				new VersionCodeTestData {
+					SeparateApk = true,
+					ABIs = "armeabi-v7a;x86",
+					VersionCode = "12",
+					UseLegacy = false,
+					Pattern = "{abi}{minSDK:00}{screen}{foo:0}{VersionCode:000}",
+					Props = "screen=24;foo=$(Foo)",
+					ShouldBuild = true,
+					Expected = "221241012;321241012",
+				},
+				new VersionCodeTestData {
+					SeparateApk = true,
+					ABIs = "armeabi-v7a;x86",
+					VersionCode = "12",
+					UseLegacy = false,
+					Pattern = "{abi}{minSDK:00}{screen}{foo:00}{VersionCode:000}",
+					Props = "screen=24;foo=$(Foo)",
+					ShouldBuild = false,
+					Expected = "2212401012;3212401012",
+				},
+			};
+			foreach (VersionCodeTestData td in monoData) {
+				td.ValidRuntimes = new () { AndroidRuntime.MonoVM };
+			}
+
+			// These should work for all the runtimes
+			var commonData = new List<VersionCodeTestData> {
+				new VersionCodeTestData {
+					SeparateApk = false,
+					ABIs = "arm64-v8a",
+					VersionCode = "123",
+					UseLegacy = true,
+					Pattern = null,
+					Props = null,
+					ShouldBuild = true,
+					Expected = "123",
+				},
+				new VersionCodeTestData {
+					SeparateApk = false,
+					ABIs = "arm64-v8a",
+					VersionCode = "123",
+					UseLegacy = false,
+					Pattern = null,
+					Props = null,
+					ShouldBuild = true,
+					Expected = "123",
+				},
+				new VersionCodeTestData {
+					SeparateApk = false,
+					ABIs = "arm64-v8a",
+					VersionCode = "123",
+					UseLegacy = false,
+					Pattern = "{abi}{VersionCode}",
+					Props = null,
+					ShouldBuild = true,
+					Expected = "123",
+				},
+				new VersionCodeTestData {
+					SeparateApk = false,
+					ABIs = "arm64-v8a",
+					VersionCode = "1",
+					UseLegacy = false,
+					Pattern = "{abi}{VersionCode}",
+					Props = "VersionCode=123",
+					ShouldBuild = true,
+					Expected = "123",
+				},
+				new VersionCodeTestData {
+					SeparateApk = false,
+					ABIs = "arm64-v8a;x86_64",
+					VersionCode = "123",
+					UseLegacy = false,
+					Pattern = "{abi}{VersionCode}",
+					Props = null,
+					ShouldBuild = true,
+					Expected = "123",
+				},
+				new VersionCodeTestData {
+					SeparateApk = true,
+					ABIs = "arm64-v8a;x86_64",
+					VersionCode = "123",
+					UseLegacy = true,
+					Pattern = null,
+					Props = null,
+					ShouldBuild = true,
+					Expected = "262267;196731",
+				},
+				new VersionCodeTestData {
+					SeparateApk = true,
+					ABIs = "arm64-v8a;x86_64",
+					VersionCode = "123",
+					UseLegacy = false,
+					Pattern = null,
+					Props = null,
+					ShouldBuild = true,
+					Expected = "200123;300123",
+				},
+				new VersionCodeTestData {
+					SeparateApk = true,
+					ABIs = "arm64-v8a;x86_64",
+					VersionCode = "123",
+					UseLegacy = false,
+					Pattern = "{abi}{VersionCode}",
+					Props = null,
+					ShouldBuild = true,
+					Expected = "2123;3123",
+				},
+				new VersionCodeTestData {
+					SeparateApk = true,
+					ABIs = "arm64-v8a;x86_64",
+					VersionCode = "12",
+					UseLegacy = false,
+					Pattern = "{abi}{minSDK:00}{VersionCode:000}",
+					Props = null,
+					ShouldBuild = true,
+					Expected = "221012;321012",
+				},
+				new VersionCodeTestData {
+					SeparateApk = true,
+					ABIs = "arm64-v8a;x86_64",
+					VersionCode = "12",
+					UseLegacy = false,
+					Pattern = "{abi}{minSDK:00}{screen}{VersionCode:000}",
+					Props = "screen=24",
+					ShouldBuild = true,
+					Expected = "22124012;32124012",
+				},
+				new VersionCodeTestData {
+					SeparateApk = true,
+					ABIs = "arm64-v8a;x86_64",
+					VersionCode = "12",
+					UseLegacy = false,
+					Pattern = "{abi}{minSDK:00}{screen}{foo:0}{VersionCode:000}",
+					Props = "screen=24;foo=$(Foo)",
+					ShouldBuild = true,
+					Expected = "221241012;321241012",
+				},
+				new VersionCodeTestData {
+					SeparateApk = true,
+					ABIs = "arm64-v8a;x86_64",
+					VersionCode = "12",
+					UseLegacy = false,
+					Pattern = "{abi}{minSDK:00}{screen}{foo:00}{VersionCode:000}",
+					Props = "screen=24;foo=$(Foo)",
+					ShouldBuild = false,
+					Expected = "2212401012;3212401012",
+				},
+			};
+
+			var ret = new List<object[]> ();
+			var runtimes = new List<AndroidRuntime> {
+				AndroidRuntime.MonoVM,
+				AndroidRuntime.CoreCLR,
+			};
+
+			foreach (VersionCodeTestData td in monoData) {
+				AddDataEntry (td);
+			}
+
+			foreach (VersionCodeTestData td in commonData) {
+				AddDataEntry (td);
+			}
+
+			return ret;
+
+			void AddDataEntry (VersionCodeTestData td)
+			{
+				foreach (AndroidRuntime runtime in runtimes) {
+					if (td.ValidRuntimes != null && !td.ValidRuntimes.Contains (runtime)) {
+						continue;
+					}
+					// Order of items **MUST** match VersionCodeTests parameters
+					ret.Add (new object[] {
+						td.SeparateApk,
+						td.ABIs,
+						td.VersionCode,
+						td.UseLegacy,
+						td.Pattern,
+						td.Props,
+						td.ShouldBuild,
+						td.Expected,
+						runtime,
+					});
+				}
+			}
+		}
+
 		[Test]
-		[TestCaseSource(nameof (VersionCodeTestSource))]
-		public void VersionCodeTests (bool seperateApk, string abis, string versionCode, bool useLegacy, string versionCodePattern, string versionCodeProperties, bool shouldBuild, string expectedVersionCode)
+		[TestCaseSource(nameof (Get_VersionCodeTestData))]
+		public void VersionCodeTests (bool seperateApk, string abis, string versionCode, bool useLegacy, string versionCodePattern, string versionCodeProperties, bool shouldBuild, string expectedVersionCode,
+		                              AndroidRuntime runtime)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				MinSdkVersion = "21",
 				SupportedOSPlatformVersion = "21.0",
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("Foo", "1");
 			proj.SetProperty ("GenerateApplicationManifest", "false"); // Disable $(AndroidVersionCode) support
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, seperateApk);
