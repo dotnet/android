@@ -320,6 +320,8 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 			};
+			proj.SetRuntime (runtime);
+
 			// So we can use Mono.Cecil to open assemblies directly
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "False");
 			proj.SetProperty ("AndroidUseAssemblyStore", useAssemblyStore.ToString ());
