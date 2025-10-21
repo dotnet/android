@@ -72,6 +72,7 @@ namespace Xamarin.Android.Build.Tests
 
 		const string ApplicationConfigSymbolName = "application_config";
 		const string AppEnvironmentVariablesSymbolName = "app_environment_variables";
+		const string AppEnvironmentVariableContentsSymbolName = "app_environment_variable_contents";
 
 		static readonly object ndkInitLock = new object ();
 		static readonly char[] readElfFieldSeparator = new [] { ' ', '\t' };
@@ -386,7 +387,80 @@ namespace Xamarin.Android.Build.Tests
 
 		static Dictionary<string, string> ReadEnvironmentVariables_CoreCLR_NativeAOT (EnvironmentFile envFile)
 		{
-			throw new NotImplementedException ();
+			NativeAssemblyParser parser = CreateAssemblyParser (envFile);
+			if (!parser.Symbols.TryGetValue (AppEnvironmentVariablesSymbolName, out NativeAssemblyParser.AssemblerSymbol appEnvvarsSymbol)) {
+				Assert.Fail ($"Symbol '{AppEnvironmentVariablesSymbolName}' not found in LLVM IR file '{envFile.Path}'");
+			}
+			Assert.IsTrue (appEnvvarsSymbol.Size != 0, $"{AppEnvironmentVariablesSymbolName} size as specified in the '.size' directive must not be 0");
+			Assert.IsTrue (appEnvvarsSymbol.Contents.Count % 2 == 0, $"{AppEnvironmentVariablesSymbolName} must contain an even number of items (contains {appEnvvarsSymbol.Contents.Count})");
+
+			if (!parser.Symbols.TryGetValue (AppEnvironmentVariableContentsSymbolName, out NativeAssemblyParser.AssemblerSymbol appEnvvarsContentsSymbol)) {
+				Assert.Fail ($"Symbol '{AppEnvironmentVariableContentsSymbolName}' not found in LLVM IR file '{envFile.Path}'");
+			}
+			Assert.IsTrue (appEnvvarsContentsSymbol.Size != 0, $"{AppEnvironmentVariableContentsSymbolName} size as specified in the '.size' directive must not be 0");
+			Assert.IsTrue (appEnvvarsContentsSymbol.Contents.Count == 1, $"{AppEnvironmentVariableContentsSymbolName} symbol must have a single value.");
+
+			NativeAssemblyParser.AssemblerSymbolItem contentsItem = appEnvvarsContentsSymbol.Contents[0];
+			string[] field = GetField (envFile.Path, parser.SourceFilePath, contentsItem.Contents, contentsItem.LineNumber);;
+			Assert.IsTrue (field[0] == ".asciz", $"{AppEnvironmentVariableContentsSymbolName} must be of '.asciz' type");
+
+
+			var sb = new StringBuilder ();
+			// We need to get rid of the '"' delimiter llc outputs..
+			sb.Append (field[1].Trim ('"'));
+
+			// ...and llc outputs NUL as the octal '\000' sequence, we need an actual NUL...
+			sb.Replace ("\\000", "\0");
+
+			// ...and since it's an .asciz variable, the string doesn't contain explicit terminating NUL, but we need one
+			sb.Append ('\0');
+			string contents = sb.ToString ();
+			var indexes = new List<(uint nameIdx, uint valueIdx)> ();
+
+			// Environment variables are pairs of indexes into the contents array
+			for (int i = 0; i < appEnvvarsSymbol.Contents.Count; i += 2) {
+				NativeAssemblyParser.AssemblerSymbolItem varName = appEnvvarsSymbol.Contents[i];
+				NativeAssemblyParser.AssemblerSymbolItem varValue = appEnvvarsSymbol.Contents[i + 1];
+
+				indexes.Add ((GetIndex (varName, "name"), GetIndex (varValue, "value")));
+			}
+
+			// Contents array is a collection of strings terminated with the NUL character
+			var ret = new Dictionary <string, string> (StringComparer.Ordinal);
+			foreach (var envvar in indexes) {
+				Assert.IsTrue (envvar.nameIdx < appEnvvarsContentsSymbol.Size, $"Environment variable name index {envvar.nameIdx} is out of range of the contents array");
+				Assert.IsTrue (envvar.valueIdx < appEnvvarsContentsSymbol.Size, $"Environment variable value index {envvar.valueIdx} is out of range of the contents array");
+
+				ret.Add (GetFromContents (envvar.nameIdx), GetFromContents (envvar.valueIdx));
+			}
+
+			return ret;
+
+			uint GetIndex (NativeAssemblyParser.AssemblerSymbolItem item, string name)
+			{
+				// If the value is invalid, let it throw. This is by design.
+
+				field = GetField (envFile.Path, parser.SourceFilePath, item.Contents, item.LineNumber);
+				Assert.IsTrue (expectedUInt32Types.Contains (field[0]), $"Environment variable {name} index field has invalid type '${field[0]}'");
+				return UInt32.Parse (field[1], CultureInfo.InvariantCulture);
+			}
+
+			string GetFromContents (uint idx)
+			{
+				var sb = new StringBuilder ();
+				bool foundNull = false;
+
+				for (int i = (int)idx; i < contents.Length; i++) {
+					if (contents[i] == '\0') {
+						foundNull = true;
+						break;
+					}
+					sb.Append (contents[i]);
+				}
+
+				Assert.IsTrue (foundNull, $"Environment variable contents string starting at index {idx} is not NUL-terminated");
+				return sb.ToString ();
+			}
 		}
 
 		static Dictionary<string, string> ReadEnvironmentVariables_MonoVM (EnvironmentFile envFile)
