@@ -9,7 +9,8 @@ using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestFixture (AndroidRuntime.MonoVM)]
+	[TestFixture (AndroidRuntime.CoreCLR)]
 	[Category ("UsesDevice")]
 	public class BundleToolNoAbiSplitTests : DeviceTest
 	{
@@ -34,6 +35,12 @@ namespace Xamarin.Android.Build.Tests
       }
     }
 }";
+		readonly AndroidRuntime runtime;
+
+		public BundleToolNoAbiSplitTests (AndroidRuntime runtime)
+		{
+			this.runtime = runtime;
+		}
 
 		AndroidItem.AndroidAsset MakeAndroidAsset (string include, string content, string? assetPack = null, string? deliveryType = null)
 		{
@@ -121,10 +128,17 @@ namespace Xamarin.Android.Build.Tests
                                 String.Join (";", Abis),
                                 true
                         );
-                        EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
+
+                        EnvironmentHelper.IApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles, runtime);
 
 			Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
-                        Assert.AreEqual (app_config.ignore_split_configs, true, $"App config should indicate that split configs must be ignored");
+
+			bool ignoreSplitConfigs = runtime switch {
+				AndroidRuntime.MonoVM  => ((EnvironmentHelper.ApplicationConfig_MonoVM)app_config).ignore_split_configs,
+				AndroidRuntime.CoreCLR => ((EnvironmentHelper.ApplicationConfig_CoreCLR)app_config).ignore_split_configs,
+				_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+			};
+                        Assert.AreEqual (ignoreSplitConfigs, true, $"App config should indicate that split configs must be ignored");
 		}
 
 		[TearDown]
