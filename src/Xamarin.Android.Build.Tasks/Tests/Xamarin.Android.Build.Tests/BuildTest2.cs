@@ -70,7 +70,7 @@ namespace Xamarin.Android.Build.Tests
 					String.Join (";", supportedArches.Select (arch => MonoAndroidHelper.ArchToAbi (arch))),
 					true
 				);
-				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
+				var app_config = (EnvironmentHelper.ApplicationConfig_MonoVM)EnvironmentHelper.ReadApplicationConfig (envFiles, Android.Tasks.AndroidRuntime.MonoVM);
 
 				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
 				Assert.AreEqual (app_config.marshal_methods_enabled, shouldMarshalMethodsBeEnabled, $"Marshal methods enabled status should be '{shouldMarshalMethodsBeEnabled}', but it was '{app_config.marshal_methods_enabled}'");

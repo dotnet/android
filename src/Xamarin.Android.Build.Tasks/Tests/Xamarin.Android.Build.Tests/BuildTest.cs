@@ -248,6 +248,8 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = !debugBuild,
 			};
 
+			// Mono-only test
+			proj.SetRuntime (AndroidRuntime.MonoVM);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidEnableProfiler", enableProfiler.ToString ());
 			proj.SetProperty (proj.ActiveConfigurationProperties, "UseInterpreter", useInterpreter.ToString ());
 
@@ -260,7 +262,7 @@ namespace Xamarin.Android.Build.Tests
 				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 
 				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (objPath, String.Join (";", abis), true);
-				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
+				var app_config = (EnvironmentHelper.ApplicationConfig_MonoVM)EnvironmentHelper.ReadApplicationConfig (envFiles, AndroidRuntime.MonoVM);
 				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
 				Assert.IsTrue (app_config.mono_components_mask == expectedMask, "Expected Mono Components mask 0x{expectedMask:x}, got 0x{app_config.mono_components_mask:x}");
 			}
@@ -269,7 +271,6 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[NonParallelizable]
-		// TODO: NativeAOT
 		public void CheckAssemblyCounts ([Values (true, false)] bool isRelease, [Values (true, false)] bool aot,
 				                 [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
@@ -284,9 +285,12 @@ namespace Xamarin.Android.Build.Tests
 				EmbedAssembliesIntoApk = true,
 				AotAssemblies = aotAssemblies,
 			};
+			proj.SetRuntime (runtime);
 
-			var abis = new [] { AndroidTargetArch.Arm64, AndroidTargetArch.X86_64 };
-			proj.SetRuntimeIdentifiers (abis);
+			var targetArches = new [] { AndroidTargetArch.Arm64, AndroidTargetArch.X86_64 };
+			var abis = targetArches.Select (arch => MonoAndroidHelper.ArchToAbi (arch));
+
+			proj.SetRuntimeIdentifiers (targetArches);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidUseAssemblyStore", "True");
 
 			using (var b = CreateApkBuilder ()) {
@@ -294,7 +298,7 @@ namespace Xamarin.Android.Build.Tests
 				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 
 				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (objPath, String.Join (";", abis), true);
-				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
+				EnvironmentHelper.IApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles, runtime);
 				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
 
 				if (aotAssemblies) {
@@ -305,10 +309,15 @@ namespace Xamarin.Android.Build.Tests
 
 				string apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStores: true);
+				uint numberOfAssembliesInApk = runtime switch {
+					AndroidRuntime.MonoVM  => ((EnvironmentHelper.ApplicationConfig_MonoVM)app_config).number_of_assemblies_in_apk,
+					AndroidRuntime.CoreCLR => ((EnvironmentHelper.ApplicationConfig_CoreCLR)app_config).number_of_assemblies_in_apk,
+					_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+				};
 
-				foreach (AndroidTargetArch arch in abis) {
+				foreach (AndroidTargetArch arch in targetArches) {
 					Assert.AreEqual (
-						app_config.number_of_assemblies_in_apk,
+						numberOfAssembliesInApk,
 						helper.GetNumberOfAssemblies (arch: arch),
 						$"Assembly count must be equal between ApplicationConfig and the archive contents for architecture {arch} (ABI: {MonoAndroidHelper.ArchToAbi (arch)})"
 					);
