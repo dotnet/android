@@ -57,14 +57,15 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckDebugModeWithTrimming ()
+		public void CheckDebugModeWithTrimming ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			bool usesAssemblyStores = false;
+			bool usesAssemblyStores = runtime == AndroidRuntime.CoreCLR;
 			var proj = new XamarinAndroidApplicationProject {
 				ProjectName = "MyApp",
 				IsRelease = false,
 				EmbedAssembliesIntoApk = true,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("PublishTrimmed", "true");
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
 
