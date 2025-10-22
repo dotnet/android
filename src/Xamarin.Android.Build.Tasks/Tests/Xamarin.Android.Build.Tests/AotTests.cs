@@ -109,24 +109,51 @@ namespace Xamarin.Android.Build.Tests
 			StringAssertEx.DoesNotContainRegex (@$"Using profile data file.*dotnet\.aotprofile", b.LastBuildOutput, "Should not use default AOT profile", RegexOptions.IgnoreCase);
 		}
 
-		[Test]
-		[TestCase ("テスト", false, false)]
-		[TestCase ("テスト", true, true)]
-		[TestCase ("テスト", true, false)]
-		[TestCase ("随机生成器", false, false)]
-		[TestCase ("随机生成器", true, true)]
-		[TestCase ("随机生成器", true, false)]
-		[TestCase ("中国", false, false)]
-		[TestCase ("中国", true, true)]
-		[TestCase ("中国", true, false)]
-		public void BuildAotApplicationWithSpecialCharactersInProject (string testName, bool isRelease, bool aot)
+		static IEnumerable<object[]> Get_BuildAotApplicationWithSpecialCharactersInProjectData ()
 		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR }) {
+				AddTestData ("テスト", false, false, runtime);
+				AddTestData ("テスト", true, true, runtime);
+				AddTestData ("テスト", true, false, runtime);
+				AddTestData ("随机生成器", false, false, runtime);
+				AddTestData ("随机生成器", true, true, runtime);
+				AddTestData ("随机生成器", true, false, runtime);
+				AddTestData ("中国", false, false, runtime);
+				AddTestData ("中国", true, true, runtime);
+				AddTestData ("中国", true, false, runtime);
+			}
+
+			return ret;
+
+			void AddTestData (string testName, bool isRelease, bool aot, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					testName,
+					isRelease,
+					aot,
+					runtime,
+				});
+			}
+		}
+
+		[Test]
+		[TestCaseSource (nameof (Get_BuildAotApplicationWithSpecialCharactersInProjectData))]
+		public void BuildAotApplicationWithSpecialCharactersInProject (string testName, bool isRelease, bool aot, AndroidRuntime runtime)
+		{
+			if (aot && runtime == AndroidRuntime.CoreCLR) {
+				Assert.Ignore ("AOT + CoreCLR == NativeAOT; Not supported yet here");
+				return;
+			}
+
 			var rootPath = Path.Combine (Root, "temp", TestName);
 			var proj = new XamarinAndroidApplicationProject () {
 				ProjectName = testName,
 				IsRelease = isRelease,
 				AotAssemblies = aot,
 			};
+			proj.SetRuntime (runtime);
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName))){
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 			}
