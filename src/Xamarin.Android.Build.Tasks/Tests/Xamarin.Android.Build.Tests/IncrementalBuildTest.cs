@@ -304,14 +304,20 @@ public class TestMe {
 		}
 
 		[Test]
-		public void ResolveNativeLibrariesInManagedReferences ()
+		public void ResolveNativeLibrariesInManagedReferences ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
+			string abi = runtime switch {
+				AndroidRuntime.MonoVM => "armeabi-v7a",
+				AndroidRuntime.CoreCLR => "arm64-v8a",
+				_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+			};
+
 			var lib = new XamarinAndroidLibraryProject () {
 				ProjectName = "Lib",
 				IsRelease = true,
 				ProjectGuid = Guid.NewGuid ().ToString (),
 				OtherBuildItems = {
-					new BuildItem (AndroidBuildActions.EmbeddedNativeLibrary, "libs/armeabi-v7a/libfoo.so") {
+					new BuildItem (AndroidBuildActions.EmbeddedNativeLibrary, $"libs/{abi}/libfoo.so") {
 						TextContent = () => string.Empty,
 						Encoding = Encoding.ASCII,
 					}
@@ -332,14 +338,15 @@ namespace Lib
 					},
 				},
 			};
-			var so = lib.OtherBuildItems.First (x => x.Include () == "libs/armeabi-v7a/libfoo.so");
+			lib.SetRuntime (runtime);
+			var so = lib.OtherBuildItems.First (x => x.Include () == $"libs/{abi}/libfoo.so");
 
 			var lib2 = new XamarinAndroidLibraryProject () {
 				ProjectName = "Lib2",
 				ProjectGuid = Guid.NewGuid ().ToString (),
 				IsRelease = true,
 				OtherBuildItems = {
-					new BuildItem (AndroidBuildActions.EmbeddedNativeLibrary, "libs/armeabi-v7a/libfoo2.so") {
+					new BuildItem (AndroidBuildActions.EmbeddedNativeLibrary, $"libs/{abi}/libfoo2.so") {
 						TextContent = () => string.Empty,
 						Encoding = Encoding.ASCII,
 					},
@@ -363,6 +370,7 @@ namespace Lib2
 					},
 				},
 			};
+			lib2.SetRuntime (runtime);
 			var path = Path.Combine (Root, "temp", TestName);
 			using (var libbuilder = CreateDllBuilder (Path.Combine(path, "Lib"))) {
 
@@ -378,12 +386,27 @@ namespace Lib2
 							new BuildItem.ProjectReference (@"..\Lib2\Lib2.csproj", "Lib2", lib2.ProjectGuid),
 						}
 					};
-					app.SetAndroidSupportedAbis ("armeabi-v7a");
+					app.SetRuntime (runtime);
+
+					if (runtime == AndroidRuntime.MonoVM) {
+						// Using `SetRuntimeIdentifier` would change the intermediate path (by adding the RID component to it) and, thus, the way this test used to work.
+						// Keep it as it was.
+						app.SetAndroidSupportedAbis (abi);
+					} else {
+						app.SetRuntimeIdentifier (abi);
+					}
+
 					using (var builder = CreateApkBuilder (Path.Combine (path, "App"))) {
 						Assert.IsTrue (builder.Build (app), "app 1st. build failed");
 
-						var libfoo = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + "-Signed.apk"),
-							"lib/armeabi-v7a/libfoo.so");
+						// TODO: appending of the RID to the output path should probably be fixed in the project class instead of here (and elsewhere)
+						string apkFile = Path.Combine (Root, builder.ProjectDirectory, app.OutputPath);
+						if (runtime == AndroidRuntime.CoreCLR) {
+							apkFile = Path.Combine (apkFile, MonoAndroidHelper.AbiToRid (abi));
+						}
+						apkFile = Path.Combine (apkFile, app.PackageName + "-Signed.apk");
+
+						var libfoo = ZipHelper.ReadFileFromZip (apkFile, $"lib/{abi}/libfoo.so");
 						Assert.IsNotNull (libfoo, "libfoo.so should exist in the .apk");
 
 						so.TextContent = () => "newValue";
@@ -394,11 +417,9 @@ namespace Lib2
 
 						Assert.IsNotNull (libfoo, "libfoo.so should exist in the .apk");
 
-						libfoo = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + "-Signed.apk"),
-							"lib/armeabi-v7a/libfoo.so");
+						libfoo = ZipHelper.ReadFileFromZip (apkFile, $"lib/{abi}/libfoo.so");
 						Assert.AreEqual (so.TextContent ().Length, libfoo.Length, "compressed size mismatch");
-						var libfoo2 = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + "-Signed.apk"),
-							"lib/armeabi-v7a/libfoo2.so");
+						var libfoo2 = ZipHelper.ReadFileFromZip (apkFile, $"lib/{abi}/libfoo2.so");
 						Assert.IsNotNull (libfoo2, "libfoo2.so should exist in the .apk");
 						Directory.Delete (path, recursive: true);
 					}
