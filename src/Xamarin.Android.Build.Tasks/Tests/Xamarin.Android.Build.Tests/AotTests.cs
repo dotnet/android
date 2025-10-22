@@ -84,6 +84,8 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 				AndroidEnableProfiledAot = true,
 			};
+			// A Mono-only test
+			proj.SetRuntime (AndroidRuntime.MonoVM);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidExtraAotOptions", "--verbose");
 
 			byte [] custom_aot_profile = XamarinAndroidCommonProject.GetResourceContents ("Xamarin.ProjectTools.Resources.Base.custom.aotprofile");
