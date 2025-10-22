@@ -983,7 +983,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void GenerateJavaStubsAndAssembly ([Values (true, false)] bool isRelease)
+		public void GenerateJavaStubsAndAssembly ([Values (true, false)] bool isRelease, [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			var targets = new [] {
 				"_GenerateJavaStubs",
@@ -992,7 +992,21 @@ namespace Lib2
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a");
+			proj.SetRuntime (runtime);
+
+			string abi = runtime switch {
+				AndroidRuntime.MonoVM => "armeabi-v7a",
+				AndroidRuntime.CoreCLR => "arm64-v8a",
+				_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+			};
+			if (runtime == AndroidRuntime.MonoVM) {
+				// Using `SetRuntimeIdentifier` would change the intermediate path (by adding the RID component to it) and, thus, the way this test used to work.
+				// Keep it as it was.
+				proj.SetAndroidSupportedAbis (abi);
+			} else {
+				proj.SetRuntimeIdentifier (abi);
+			}
+
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidEnvironment ("Foo.txt") {
 				TextContent = () => "Foo=Bar",
 			});
@@ -1002,7 +1016,7 @@ namespace Lib2
 				foreach (var target in targets) {
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
 				}
-				AssertAssemblyFilesInFileWrites (proj, b);
+				AssertAssemblyFilesInFileWrites (proj, b, abi, runtime);
 
 				// Change C# file and AndroidEvironment file
 				proj.MainActivity += Environment.NewLine + "// comment";
@@ -1012,30 +1026,35 @@ namespace Lib2
 				foreach (var target in targets) {
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
 				}
-				AssertAssemblyFilesInFileWrites (proj, b);
+				AssertAssemblyFilesInFileWrites (proj, b, abi, runtime);
 
 				// No changes
 				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
 				foreach (var target in targets) {
 					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
 				}
-				AssertAssemblyFilesInFileWrites (proj, b);
+				AssertAssemblyFilesInFileWrites (proj, b, abi, runtime);
 			}
 		}
 
 		readonly string [] ExpectedAssemblyFiles = new [] {
-			Path.Combine ("android", "environment.armeabi-v7a.o"),
-			Path.Combine ("android", "environment.armeabi-v7a.ll"),
-			Path.Combine ("android", "typemaps.armeabi-v7a.o"),
-			Path.Combine ("android", "typemaps.armeabi-v7a.ll"),
-			Path.Combine ("app_shared_libraries", "armeabi-v7a", "libxamarin-app.so")
+			Path.Combine ("android", "environment.@ABI@.o"),
+			Path.Combine ("android", "environment.@ABI@.ll"),
+			Path.Combine ("android", "typemaps.@ABI@.o"),
+			Path.Combine ("android", "typemaps.@ABI@.ll"),
+			Path.Combine ("app_shared_libraries", "@ABI@", "libxamarin-app.so")
 		};
 
-		void AssertAssemblyFilesInFileWrites (XamarinAndroidApplicationProject proj, ProjectBuilder b)
+		void AssertAssemblyFilesInFileWrites (XamarinAndroidApplicationProject proj, ProjectBuilder b, string abi, AndroidRuntime runtime)
 		{
 			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+			if (runtime == AndroidRuntime.CoreCLR) {
+				intermediate = Path.Combine (intermediate, MonoAndroidHelper.AbiToRid (abi));
+			}
+
 			var lines = File.ReadAllLines (Path.Combine (intermediate, $"{proj.ProjectName}.csproj.FileListAbsolute.txt"));
-			foreach (var file in ExpectedAssemblyFiles) {
+			foreach (var fileRaw in ExpectedAssemblyFiles) {
+				string file = fileRaw.Replace ("@ABI@", abi);
 				var path = Path.Combine (intermediate, file);
 				CollectionAssert.Contains (lines, path, $"{file} is not in FileWrites!");
 				FileAssert.Exists (path);
