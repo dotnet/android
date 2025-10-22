@@ -266,11 +266,17 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void RemoveDesigner ([Values (true, false)] bool useAssemblyStore)
+		public void RemoveDesigner ([Values (true, false)] bool useAssemblyStore, [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
+			if (!useAssemblyStore && runtime == AndroidRuntime.CoreCLR) {
+				Assert.Ignore ("CoreCLR supports only assembly stores");
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "False");
 			proj.SetProperty ("AndroidLinkResources", "True");
 			proj.SetProperty ("AndroidUseAssemblyStore", useAssemblyStore.ToString ());
