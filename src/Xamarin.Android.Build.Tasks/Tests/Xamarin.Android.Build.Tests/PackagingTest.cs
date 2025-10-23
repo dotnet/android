@@ -413,6 +413,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty (proj.ReleaseProperties, "AndroidUseApkSigner", useApkSigner);
 			proj.SetProperty (proj.ReleaseProperties, "AndroidKeyStore", "True");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyStore", keyfile);
