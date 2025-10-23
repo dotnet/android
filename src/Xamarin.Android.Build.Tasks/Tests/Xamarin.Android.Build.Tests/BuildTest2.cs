@@ -51,6 +51,8 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 				EnableMarshalMethods = marshalMethodsEnabled,
 			};
+			// MonoVM-only test
+			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
 			proj.SetRuntimeIdentifiers (abis);
 			bool shouldMarshalMethodsBeEnabled = isRelease && marshalMethodsEnabled;
 
@@ -68,19 +70,25 @@ namespace Xamarin.Android.Build.Tests
 					String.Join (";", supportedArches.Select (arch => MonoAndroidHelper.ArchToAbi (arch))),
 					true
 				);
-				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
+				var app_config = (EnvironmentHelper.ApplicationConfig_MonoVM)EnvironmentHelper.ReadApplicationConfig (envFiles, Android.Tasks.AndroidRuntime.MonoVM);
 
 				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
 				Assert.AreEqual (app_config.marshal_methods_enabled, shouldMarshalMethodsBeEnabled, $"Marshal methods enabled status should be '{shouldMarshalMethodsBeEnabled}', but it was '{app_config.marshal_methods_enabled}'");
 			}
 		}
 
+		// TODO: fix for CoreCLR
+		// Currently it fails with:
+		//
+		//   Microsoft.Android.Sdk.AssemblyResolution.targets(198,5): error MSB4096: The item "obj/Release/UnnamedProject.pdb" in item list "ResolvedSymbols" does not define a value for metadata "DestinationSubPath".  In order to use this metadata, either qualify it by specifying %(ResolvedSymbols.DestinationSubPath), or ensure that all items in this list define a value for this metadata.
 		[Test]
 		public void CompressedWithoutLinker ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true
 			};
+			// Mono-only test, at least for now
+			proj.SetRuntime (AndroidRuntime.MonoVM);
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkMode, AndroidLinkMode.None.ToString ());
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -333,18 +341,19 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildReleaseArm64 ([Values (false, true)] bool forms)
+		public void BuildReleaseArm64 ([Values (false, true)] bool forms, [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			var proj = forms ?
 				new XamarinFormsAndroidApplicationProject () :
 				new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (runtime);
 			proj.IsRelease = true;
 			proj.AotAssemblies = false; // Release defaults to Profiled AOT for .NET 6
 			proj.SetAndroidSupportedAbis ("arm64-v8a");
 			proj.SetProperty ("LinkerDumpDependencies", "True");
 			proj.SetProperty ("AndroidUseAssemblyStore", "False");
 
-			var flavor = (forms ? "XForms" : "Simple") + "DotNet";
+			var flavor = (forms ? "XForms" : "Simple") + "DotNet" + "." + runtime.ToString ();
 			var apkDescFilename = $"BuildReleaseArm64{flavor}.apkdesc";
 			var apkDescReference = "reference.apkdesc";
 			byte [] apkDescData = XamarinAndroidCommonProject.GetResourceContents ($"Xamarin.ProjectTools.Resources.Base.{apkDescFilename}");
@@ -609,17 +618,55 @@ class MemTest {
 			},
 		};
 
+		static IEnumerable<object[]> Get_BuildBasicApplicationFSharpData ()
+		{
+			var ret = new List<object[]> ();
+
+			// TODO: AndroidRuntime.NativeAOT doesn't work yet. Fails with
+			//
+			//  Microsoft.Android.Sdk.Aot.targets(123,5): error : Runtime critical type System.RuntimeMethodHandle not found
+			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR }) {
+				AddTestData (isRelease: false, aot: false, runtime);
+				AddTestData (isRelease: true,  aot: false, runtime);
+				AddTestData (isRelease: true,  aot: true,  runtime);
+			}
+
+			return ret;
+
+			void AddTestData (bool isRelease, bool aot, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					isRelease,
+					aot,
+					runtime,
+				});
+			}
+		}
+
 		[Test]
-		[TestCaseSource (nameof (BuildBasicApplicationFSharpSource))]
+		[TestCaseSource (nameof (Get_BuildBasicApplicationFSharpData))]
 		[Category ("Minor"), Category ("FSharp")]
 		[NonParallelizable] // parallel NuGet restore causes failures
-		public void BuildBasicApplicationFSharp (bool isRelease, bool aot)
+		public void BuildBasicApplicationFSharp (bool isRelease, bool aot, AndroidRuntime runtime)
 		{
+			if (runtime == AndroidRuntime.NativeAOT) {
+				if (!aot) {
+					Assert.Ignore ("NativeAOT disabled for !aot");
+					return;
+				}
+			} else if (runtime == AndroidRuntime.CoreCLR) {
+				if (aot) {
+					Assert.Ignore ("CoreCLR + AOT == NativeAOT");
+					return;
+				}
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				Language = XamarinAndroidProjectLanguage.FSharp,
 				IsRelease = isRelease,
 				AotAssemblies = aot,
 			};
+			proj.SetRuntime (runtime);
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 		}

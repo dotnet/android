@@ -1,0 +1,78 @@
+{
+  "Comment": null,
+  "Entries": {
+    "AndroidManifest.xml": {
+      "Size": 3036
+    },
+    "classes.dex": {
+      "Size": 397616
+    },
+    "lib/arm64-v8a/libassemblies.arm64-v8a.blob.so": {
+      "Size": 3031896
+    },
+    "lib/arm64-v8a/libclrjit.so": {
+      "Size": 3191312
+    },
+    "lib/arm64-v8a/libcoreclr.so": {
+      "Size": 6213712
+    },
+    "lib/arm64-v8a/libmonodroid.so": {
+      "Size": 1369248
+    },
+    "lib/arm64-v8a/libmscordaccore.so": {
+      "Size": 2632624
+    },
+    "lib/arm64-v8a/libmscordbi.so": {
+      "Size": 1942040
+    },
+    "lib/arm64-v8a/libSystem.Globalization.Native.so": {
+      "Size": 71952
+    },
+    "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
+      "Size": 759304
+    },
+    "lib/arm64-v8a/libSystem.Native.so": {
+      "Size": 104112
+    },
+    "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
+      "Size": 165568
+    },
+    "lib/arm64-v8a/libxamarin-app.so": {
+      "Size": 20088
+    },
+    "META-INF/BNDLTOOL.RSA": {
+      "Size": 1211
+    },
+    "META-INF/BNDLTOOL.SF": {
+      "Size": 2306
+    },
+    "META-INF/MANIFEST.MF": {
+      "Size": 2179
+    },
+    "res/drawable-hdpi-v4/icon.png": {
+      "Size": 2178
+    },
+    "res/drawable-mdpi-v4/icon.png": {
+      "Size": 1490
+    },
+    "res/drawable-xhdpi-v4/icon.png": {
+      "Size": 3098
+    },
+    "res/drawable-xxhdpi-v4/icon.png": {
+      "Size": 4674
+    },
+    "res/drawable-xxxhdpi-v4/icon.png": {
+      "Size": 6832
+    },
+    "res/layout/main.xml": {
+      "Size": 544
+    },
+    "res/xml/splits0.xml": {
+      "Size": 120
+    },
+    "resources.arsc": {
+      "Size": 1904
+    }
+  },
+  "PackageSize": 9107237
+}

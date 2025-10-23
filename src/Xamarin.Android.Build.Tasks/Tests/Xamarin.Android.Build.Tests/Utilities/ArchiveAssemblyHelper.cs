@@ -301,9 +301,13 @@ namespace Xamarin.Android.Build.Tests
 
 			// We must count only .dll.so entries starting with the '-' and '_' characters, as they are the actual managed assemblies.
 			// Other entries in `lib/{arch}` might be AOT shared libraries, which will also have the .dll.so extension.
+			//
+			// `.ni.dll.so` are all ignored, they're an artefact of how CoreCLR runtime works (it asks for .ni.dll for every .dll) and
+			// they are ignored on the runtime. They don't exist in the assembly store except for its index, where they are marked
+			// to be ignored.
 			var dlls = contents.Where (x => {
 				string fileName = Path.GetFileName (x);
-				if (!fileName.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase)) {
+				if (fileName.EndsWith (".ni.dll.so", StringComparison.OrdinalIgnoreCase) || !fileName.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase)) {
 					return false;
 				}
 
