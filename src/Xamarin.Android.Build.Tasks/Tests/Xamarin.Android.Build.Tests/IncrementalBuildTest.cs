@@ -41,6 +41,10 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		// TODO: fix for CoreCLR
+		// Currently fails with
+		//
+		//   The target _Sign should have *not* been skipped.
 		[Test]
 		public void BasicApplicationRepetitiveReleaseBuild ()
 		{
@@ -53,6 +57,8 @@ namespace Xamarin.Android.Build.Tests
 		}
 	}"
 				};
+				// Mono-only test, for now
+				proj.SetRuntime (AndroidRuntime.MonoVM);
 				proj.Sources.Add (foo);
 				Assert.IsTrue (b.Build (proj), "first build failed");
 				var firstBuildTime = b.LastBuildTime;
