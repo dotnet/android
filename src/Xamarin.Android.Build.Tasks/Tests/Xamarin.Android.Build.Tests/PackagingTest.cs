@@ -84,16 +84,25 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[NonParallelizable] // Commonly fails NuGet restore
-		public void CheckIncludedAssemblies ([Values (false, true)] bool usesAssemblyStores)
+		public void CheckIncludedAssemblies ([Values (false, true)] bool usesAssemblyStores, [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
+			if (!usesAssemblyStores && runtime == AndroidRuntime.CoreCLR) {
+				Assert.Ignore ("CoreCLR only supports builds with assembly stores.");
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true
 			};
 
 			AndroidTargetArch[] supportedArches = new[] {
-				AndroidTargetArch.Arm,
+				runtime switch {
+					AndroidRuntime.MonoVM => AndroidTargetArch.Arm,
+					AndroidRuntime.CoreCLR => AndroidTargetArch.Arm64,
+					_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+				}
 			};
-
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
 			proj.SetRuntimeIdentifiers (supportedArches);
 			proj.PackageReferences.Add (new Package {
@@ -130,8 +139,11 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				"System.Collections.dll",
 				"System.Collections.Concurrent.dll",
 				"System.Text.RegularExpressions.dll",
-				"libarc.bin.so",
 			};
+
+			if (runtime == AndroidRuntime.MonoVM) {
+				expectedFiles.Add ("libarc.bin.so");
+			}
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
