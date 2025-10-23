@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using System.IO;
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -109,6 +110,8 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 				AotAssemblies = true,
 			};
+			// Mono-only test
+			proj.SetRuntime (AndroidRuntime.MonoVM);
 			proj.SetProperty ("UseInterpreter", "true");
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
