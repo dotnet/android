@@ -421,6 +421,8 @@ namespace "+ libName + @" {
 				IsRelease = true,
 				AotAssemblies = true,
 			};
+			// Mono-only test
+			proj.SetRuntime (AndroidRuntime.MonoVM);
 			proj.SetAndroidSupportedAbis (supportedAbis);
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.RunTarget (proj, target: "Build"));
