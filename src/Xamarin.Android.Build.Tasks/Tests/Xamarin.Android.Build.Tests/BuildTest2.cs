@@ -335,18 +335,19 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildReleaseArm64 ([Values (false, true)] bool forms)
+		public void BuildReleaseArm64 ([Values (false, true)] bool forms, [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			var proj = forms ?
 				new XamarinFormsAndroidApplicationProject () :
 				new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (runtime);
 			proj.IsRelease = true;
 			proj.AotAssemblies = false; // Release defaults to Profiled AOT for .NET 6
 			proj.SetAndroidSupportedAbis ("arm64-v8a");
 			proj.SetProperty ("LinkerDumpDependencies", "True");
 			proj.SetProperty ("AndroidUseAssemblyStore", "False");
 
-			var flavor = (forms ? "XForms" : "Simple") + "DotNet";
+			var flavor = (forms ? "XForms" : "Simple") + "DotNet" + "." + runtime.ToString ();
 			var apkDescFilename = $"BuildReleaseArm64{flavor}.apkdesc";
 			var apkDescReference = "reference.apkdesc";
 			byte [] apkDescData = XamarinAndroidCommonProject.GetResourceContents ($"Xamarin.ProjectTools.Resources.Base.{apkDescFilename}");
