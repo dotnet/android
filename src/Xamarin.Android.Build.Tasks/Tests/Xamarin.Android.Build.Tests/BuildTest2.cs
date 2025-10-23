@@ -612,17 +612,55 @@ class MemTest {
 			},
 		};
 
+		static IEnumerable<object[]> Get_BuildBasicApplicationFSharpData ()
+		{
+			var ret = new List<object[]> ();
+
+			// TODO: AndroidRuntime.NativeAOT doesn't work yet. Fails with
+			//
+			//  Microsoft.Android.Sdk.Aot.targets(123,5): error : Runtime critical type System.RuntimeMethodHandle not found
+			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR }) {
+				AddTestData (isRelease: false, aot: false, runtime);
+				AddTestData (isRelease: true,  aot: false, runtime);
+				AddTestData (isRelease: true,  aot: true,  runtime);
+			}
+
+			return ret;
+
+			void AddTestData (bool isRelease, bool aot, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					isRelease,
+					aot,
+					runtime,
+				});
+			}
+		}
+
 		[Test]
-		[TestCaseSource (nameof (BuildBasicApplicationFSharpSource))]
+		[TestCaseSource (nameof (Get_BuildBasicApplicationFSharpData))]
 		[Category ("Minor"), Category ("FSharp")]
 		[NonParallelizable] // parallel NuGet restore causes failures
-		public void BuildBasicApplicationFSharp (bool isRelease, bool aot)
+		public void BuildBasicApplicationFSharp (bool isRelease, bool aot, AndroidRuntime runtime)
 		{
+			if (runtime == AndroidRuntime.NativeAOT) {
+				if (!aot) {
+					Assert.Ignore ("NativeAOT disabled for !aot");
+					return;
+				}
+			} else if (runtime == AndroidRuntime.CoreCLR) {
+				if (aot) {
+					Assert.Ignore ("CoreCLR + AOT == NativeAOT");
+					return;
+				}
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				Language = XamarinAndroidProjectLanguage.FSharp,
 				IsRelease = isRelease,
 				AotAssemblies = aot,
 			};
+			proj.SetRuntime (runtime);
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 		}
