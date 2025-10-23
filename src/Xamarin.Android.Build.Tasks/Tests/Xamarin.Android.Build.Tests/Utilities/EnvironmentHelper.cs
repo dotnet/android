@@ -119,16 +119,33 @@ namespace Xamarin.Android.Build.Tests
 			".long",
 		};
 
-		static readonly string[] requiredSharedLibrarySymbols = {
+		static readonly string[] requiredSharedLibrarySymbolsMonoVM = {
 			AppEnvironmentVariablesSymbolName,
 			"app_system_properties",
 			ApplicationConfigSymbolName,
+			"format_tag",
 			"map_modules",
 			"map_module_count",
 			"java_type_count",
 			"map_java_hashes",
 			"map_java",
 			"mono_aot_mode_name",
+		};
+
+		static readonly string[] requiredSharedLibrarySymbolsCoreCLR = {
+			"app_system_properties",
+			"app_system_property_contents",
+			"format_tag",
+			"java_to_managed_hashes",
+			"java_to_managed_map",
+			"java_type_count",
+			"managed_to_java_map",
+			"managed_to_java_map_module_count",
+			"runtime_properties",
+			"runtime_properties_data",
+			AppEnvironmentVariableContentsSymbolName,
+			AppEnvironmentVariablesSymbolName,
+			ApplicationConfigSymbolName,
 		};
 
 		static readonly string executableExtension;
@@ -762,7 +779,7 @@ namespace Xamarin.Android.Build.Tests
 			return environmentFiles;
 		}
 
-		public static void AssertValidEnvironmentSharedLibrary (string outputDirectoryRoot, string sdkDirectory, string ndkDirectory, string supportedAbis)
+		public static void AssertValidEnvironmentSharedLibrary (string outputDirectoryRoot, string sdkDirectory, string ndkDirectory, string supportedAbis, AndroidRuntime runtime)
 		{
 			NdkTools ndk = NdkTools.Create (ndkDirectory);
 			MonoAndroidHelper.AndroidSdk = new AndroidSdkInfo ((arg1, arg2) => {}, sdkDirectory, ndkDirectory, AndroidSdkResolver.GetJavaSdkPath ());
@@ -801,11 +818,18 @@ namespace Xamarin.Android.Build.Tests
 				if (!File.Exists (readelf)) {
 					readelf = ndk.GetToolPath ("llvm-readelf", arch, 0);
 				}
-				AssertSharedLibraryHasRequiredSymbols (envSharedLibrary, readelf);
+
+				string[] requiredSharedLibrarySymbols = runtime switch {
+					AndroidRuntime.MonoVM  => requiredSharedLibrarySymbolsMonoVM,
+					AndroidRuntime.CoreCLR => requiredSharedLibrarySymbolsCoreCLR,
+					_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+				};
+
+				AssertSharedLibraryHasRequiredSymbols (envSharedLibrary, readelf, requiredSharedLibrarySymbols);
 			}
 		}
 
-		static void AssertSharedLibraryHasRequiredSymbols (string dsoPath, string readElfPath)
+		static void AssertSharedLibraryHasRequiredSymbols (string dsoPath, string readElfPath, string[] requiredSharedLibrarySymbols)
 		{
 			(List<string> stdout_lines, List<string> _) = RunCommand (readElfPath, $"--dyn-syms \"{dsoPath}\"");
 
