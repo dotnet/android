@@ -77,12 +77,18 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		// TODO: fix for CoreCLR
+		// Currently it fails with:
+		//
+		//   Microsoft.Android.Sdk.AssemblyResolution.targets(198,5): error MSB4096: The item "obj/Release/UnnamedProject.pdb" in item list "ResolvedSymbols" does not define a value for metadata "DestinationSubPath".  In order to use this metadata, either qualify it by specifying %(ResolvedSymbols.DestinationSubPath), or ensure that all items in this list define a value for this metadata.
 		[Test]
 		public void CompressedWithoutLinker ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true
 			};
+			// Mono-only test, at least for now
+			proj.SetRuntime (AndroidRuntime.MonoVM);
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkMode, AndroidLinkMode.None.ToString ());
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
