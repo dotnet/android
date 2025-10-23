@@ -19,7 +19,11 @@ namespace Xamarin.Android.Build.Tests
 		public void BuildApplicationWithMonoEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode,
 		                                                 [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			const string supportedAbis = "armeabi-v7a;x86";
+			string supportedAbis = runtime switch {
+				AndroidRuntime.MonoVM  => "armeabi-v7a;x86",
+				AndroidRuntime.CoreCLR => "arm64-v8a;x86_64",
+				_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+			};
 
 			var lib = new XamarinAndroidLibraryProject {
 				ProjectName = "Library1",
@@ -61,7 +65,7 @@ namespace Xamarin.Android.Build.Tests
 				if (!String.IsNullOrEmpty (sequencePointsMode))
 					Assert.IsTrue (monoDebugVar.IndexOf ("gen-compact-seq-points", StringComparison.Ordinal) >= 0, "The values from Mono.env should have been merged into environment");
 
-				EnvironmentHelper.AssertValidEnvironmentSharedLibrary (intermediateOutputDir, AndroidSdkPath, AndroidNdkPath, supportedAbis);
+				EnvironmentHelper.AssertValidEnvironmentSharedLibrary (intermediateOutputDir, AndroidSdkPath, AndroidNdkPath, supportedAbis, runtime);
 
 				var assemblyDir = Path.Combine (Root, appb.ProjectDirectory, app.IntermediateOutputPath, "android", "assets");
 				var rp = new ReaderParameters { ReadSymbols = false };
@@ -108,7 +112,7 @@ namespace Xamarin.Android.Build.Tests
 					Assert.AreEqual ("gen-compact-seq-points", monoDebugVar, "environment should contain MONO_DEBUG=gen-compact-seq-points");
 				}
 
-				EnvironmentHelper.AssertValidEnvironmentSharedLibrary (intermediateOutputDir, AndroidSdkPath, AndroidNdkPath, supportedAbis);
+				EnvironmentHelper.AssertValidEnvironmentSharedLibrary (intermediateOutputDir, AndroidSdkPath, AndroidNdkPath, supportedAbis, AndroidRuntime.MonoVM);
 			}
 		}
 
