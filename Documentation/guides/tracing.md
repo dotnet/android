@@ -60,6 +60,21 @@ You can invoke the tool using the following command: dotnet-trace
 Tool 'dotnet-trace' was successfully installed.
 ```
 
+## Quickstart (Android Device)
+**Do not run the app through Visual Studio**, the app freezes on the splash screen.
+
+Run the following commands to create a memory dump of the app:
+
+1. `dotnet build -c Release -p:AndroidEnableProfiler=true .\MyApp.csproj`
+2. `adb install .\bin\Release\net9.0-android\MyApp-Signed.apk`
+3. `dotnet-dsrouter android`
+4. `adb shell setprop debug.mono.profile '127.0.0.1:9000,nosuspend'`
+5. Start the app on your device
+6. `dotnet-gcdump ps to find the PID`
+7. `dotnet-gcdump collect -p PID`
+
+This will create a `.gcdump` file wich you can open in Visual Studio.
+
 ## Configuration & Setup
 
 ### Using `dotnet-trace` with the `--dsrouter` option
