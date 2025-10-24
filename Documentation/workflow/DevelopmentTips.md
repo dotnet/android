@@ -563,11 +563,19 @@ Android workload.
 
 To simplify things, we have an MSBuild target to install .NET MAUI:
 
-    msbuild Xamarin.Android.sln -t:InstallMaui -p:MauiVersion=6.0.100-rc.1.1351
+    # or dotnet-local.cmd on Windows
+    dotnet-local.sh build Xamarin.Android.sln -t:InstallMaui -p:MauiVersion=9.0.0
 
 To find the version number of .NET MAUI you want to install, find the
 package on the [nightly Azure DevOps feed][maui-feed]. Or look for the
-`Microsoft.NET.Sdk.Maui.Manifest-6.0.100` package on NuGet.org for public
-releases.
+`Microsoft.NET.Sdk.Maui.Manifest-9.0.100` package on NuGet.org for
+public releases. Note that you may have to pass
+`-p:MauiVersionBand=9.0.100`, if the `InstallMaui` target is trying to
+download the incorrect manifest pack.
+
+Note that this will not provision the `maui-ios`, `maui-maccatalyst`,
+or `maui-windows` parts of .NET MAUI. Simply specify a single
+`<TargetFramework>net9.0-android</TargetFramework>` in MAUI projects
+to build them.
 
 [maui-feed]: https://dev.azure.com/dnceng/public/_packaging?_a=feed&feed=dotnet6%40Local
