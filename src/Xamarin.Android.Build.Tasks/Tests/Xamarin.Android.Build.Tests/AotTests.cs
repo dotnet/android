@@ -464,6 +464,8 @@ namespace "+ libName + @" {
 				EmbedAssembliesIntoApk = true,
 				AotAssemblies = true,
 			};
+			// Mono-only test
+			proj.SetRuntime (AndroidRuntime.MonoVM);
 			proj.SetProperty ("EnableLLVM", "True");
 
 			var abis = new [] { "arm64-v8a", "x86_64" };
