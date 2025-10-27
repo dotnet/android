@@ -173,7 +173,11 @@ namespace Xamarin.Android.Build.Tests
 			var expectedDefaultValue = "System.Net.Http.SocketsHttpHandler, System.Net.Http";
 			var expectedUpdatedValue = "Xamarin.Android.Net.AndroidMessageHandler";
 
-			var supportedAbis = "armeabi-v7a;arm64-v8a";
+			string supportedAbis = runtime switch {
+				AndroidRuntime.MonoVM  => "armeabi-v7a;arm64-v8a",
+				AndroidRuntime.CoreCLR => "arm64-v8a;x86_64",
+				_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+			};
 			proj.SetRuntime (runtime);
 			proj.SetAndroidSupportedAbis (supportedAbis);
 			proj.PackageReferences.Add (new Package() { Id = "System.Net.Http", Version = "*" });
