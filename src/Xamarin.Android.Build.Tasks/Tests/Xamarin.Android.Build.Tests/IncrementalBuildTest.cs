@@ -244,21 +244,30 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildSolutionWithMultipleProjectsInParallel ()
+		public void BuildSolutionWithMultipleProjectsInParallel ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			var testPath = Path.Combine ("temp", "BuildSolutionWithMultipleProjects");
+			var testPath = Path.Combine ("temp", $"BuildSolutionWithMultipleProjects{runtime}");
 			var sb = new SolutionBuilder("BuildSolutionWithMultipleProjects.sln") {
 				SolutionPath = Path.Combine (Root, testPath),
 				MaxCpuCount = 4,
 			};
+
+			bool aotAssemblies = runtime switch {
+				AndroidRuntime.MonoVM  => true,
+				AndroidRuntime.CoreCLR => false,
+				_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+			};
+
 			for (int i=1; i <= 4; i++) {
 				var app1 = new XamarinAndroidApplicationProject () {
 					ProjectName = $"App{i}",
 					PackageName = $"com.companyname.App{i}",
-					AotAssemblies = true,
+					AotAssemblies = aotAssemblies,
 					IsRelease = true,
 					EnableMarshalMethods = true,
 				};
+
+				app1.SetRuntime (runtime);
 				sb.Projects.Add (app1);
 			}
 			sb.BuildingInsideVisualStudio = false;
