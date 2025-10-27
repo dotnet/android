@@ -14,7 +14,17 @@ using Mono.Linker.Steps;
 namespace Microsoft.Android.Sdk.ILLink;
 
 /// <summary>
-/// Generate TypeMap attributes using the .NET 10 TypeMapAttribute and TypeMapAssociationAttribute
+/// Generates TypeMap attributes using the .NET 10 TypeMapAttribute and TypeMapAssociationAttribute
+/// Find the best .NET type that maps to each Java type, and create the following code:
+/// <code>
+/// [assembly: TypeMapAttribute("java/lang/JavaClas", typeof(Java.Lang.JavaClass), typeof(Java.Lang.JavaClass))]
+/// [assembly: TypeMapAssociationAttribute(typeof(Java.Lang.JavaClass), typeof(Java.Lang.JavaClassProxy))]
+///
+/// [TypeMapProxy("java/lang/JavaClass")]
+/// class JavaClassProxy {
+/// Target
+/// }
+/// </code>
 /// </summary>
 public class GenerateTypeMapAttributesStep : BaseStep
 {
@@ -40,6 +50,10 @@ public class GenerateTypeMapAttributesStep : BaseStep
 	AssemblyDefinition AssemblyToInjectTypeMap { get; set; }
 	AssemblyDefinition MonoAndroidAssembly { get; set; }
 
+	/// <summary>
+	/// Generates the MethodReference for the given TypeMap attribute constructor,
+	/// adding the necessary TypeRefs into the given assembly.
+	/// </summary>
 	void GetTypeMapAttributeReferences (
 		string attributeTypeName,
 		Func<MethodDefinition, bool> ctorSelector,
@@ -183,23 +197,6 @@ public class GenerateTypeMapAttributesStep : BaseStep
 			ProcessType (assembly, nested);
 	}
 
-	CustomAttribute GenerateTypeMapAssociationAttribute (TypeDefinition type, TypeDefinition proxyType)
-	{
-		var ca = new CustomAttribute (TypeMapAssociationAttributeCtor);
-		ca.ConstructorArguments.Add (new (SystemTypeType, AssemblyToInjectTypeMap.MainModule.ImportReference(type)));
-		ca.ConstructorArguments.Add (new (SystemTypeType, AssemblyToInjectTypeMap.MainModule.ImportReference(proxyType)));
-		return ca;
-	}
-
-	CustomAttribute GenerateTypeMapAttribute (TypeDefinition type, string javaName)
-	{
-		CustomAttribute ca = new (TypeMapAttributeCtor);
-		ca.ConstructorArguments.Add (new (SystemStringType, javaName));
-		ca.ConstructorArguments.Add (new (SystemTypeType, AssemblyToInjectTypeMap.MainModule.ImportReference(type)));
-		ca.ConstructorArguments.Add (new (SystemTypeType, AssemblyToInjectTypeMap.MainModule.ImportReference(type)));
-		return ca;
-	}
-
 	protected override void EndProcess ()
 	{
 		// HACK ALERT
@@ -235,6 +232,38 @@ public class GenerateTypeMapAttributesStep : BaseStep
 			"Mono.Android." + Random.Shared.GetHexString (4) + ".injected.dll"));
 	}
 
+	/// <summary>
+    /// Generates <code>[TypeMapAssociation(typeof(type), typeof(proxyType))]</code>
+    /// </summary>
+	CustomAttribute GenerateTypeMapAssociationAttribute (TypeDefinition type, TypeDefinition proxyType)
+	{
+		var ca = new CustomAttribute (TypeMapAssociationAttributeCtor);
+		ca.ConstructorArguments.Add (new (SystemTypeType, AssemblyToInjectTypeMap.MainModule.ImportReference(type)));
+		ca.ConstructorArguments.Add (new (SystemTypeType, AssemblyToInjectTypeMap.MainModule.ImportReference(proxyType)));
+		return ca;
+	}
+
+	/// <summary>
+	/// Generates <code>[TypeMap("javaName", typeof(type), typeof(type))]</code>
+	/// </summary>
+	CustomAttribute GenerateTypeMapAttribute (TypeDefinition type, string javaName)
+	{
+		CustomAttribute ca = new (TypeMapAttributeCtor);
+		ca.ConstructorArguments.Add (new (SystemStringType, javaName));
+		ca.ConstructorArguments.Add (new (SystemTypeType, AssemblyToInjectTypeMap.MainModule.ImportReference(type)));
+		ca.ConstructorArguments.Add (new (SystemTypeType, AssemblyToInjectTypeMap.MainModule.ImportReference(type)));
+		return ca;
+	}
+
+	/// <summary>
+    /// Generates
+	/// <code>
+	/// [TypeMapProxy("javaClassName")]
+	/// sealed class AssemblyName._.mappedTypeFullName_<androidproxy>
+	/// {
+	/// }
+	/// </code>
+    /// </summary>
 	TypeDefinition GenerateTypeMapProxyType (string javaClassName, TypeDefinition mappedType)
 	{
 		StringBuilder mappedName = new (mappedType.Name);
