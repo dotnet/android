@@ -188,6 +188,7 @@ namespace Xamarin.Android.Build.Tests
 			},
 		};
 
+		// TODO: possibly enable NativeAOT
 		[Test]
 		[TestCaseSource (nameof (AotChecks))]
 		public void BuildAotApplicationWithNdkAndBundleAndÜmläüts (string supportedAbis, bool enableLLVM, bool usesAssemblyBlobs)
@@ -203,6 +204,8 @@ namespace Xamarin.Android.Build.Tests
 				PackageName = "com.xamarin.buildaotappwithspecialchars",
 			};
 
+			// Mono-only test
+			proj.SetRuntime (AndroidRuntime.MonoVM);
 			proj.SetProperty ("AndroidNdkDirectory", AndroidNdkPath);
 			proj.SetRuntimeIdentifiers (supportedAbis.Split (';'));
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
