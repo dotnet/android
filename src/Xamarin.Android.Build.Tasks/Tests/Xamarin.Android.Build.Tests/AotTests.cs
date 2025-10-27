@@ -104,6 +104,8 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 				AndroidEnableProfiledAot = true,
 			};
+			// Mono-only test
+			proj.SetRuntime (AndroidRuntime.MonoVM);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidUseDefaultAotProfile", "false");
 			using var b = CreateApkBuilder ();
 			b.Verbosity = LoggerVerbosity.Detailed;
