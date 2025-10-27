@@ -1486,13 +1486,27 @@ namespace Lib2
 		}
 
 		[Test]
-		public void ChangeSupportedAbis ()
+		public void ChangeSupportedAbis ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
-			proj.SetAndroidSupportedAbis ("armeabi-v7a");
+			proj.SetRuntime (runtime);
+
+			string supportedAbi = runtime switch {
+				AndroidRuntime.MonoVM => "armeabi-v7a",
+				AndroidRuntime.CoreCLR => "arm64-v8a",
+				_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+			};
+
+			string alternativeRid = runtime switch {
+				AndroidRuntime.MonoVM => "x86",
+				AndroidRuntime.CoreCLR => "x64",
+				_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+			};
+
+			proj.SetAndroidSupportedAbis (supportedAbi);
 			using (var b = CreateApkBuilder ()) {
 				b.Build (proj);
-				b.Build (proj, parameters: new [] { $"{KnownProperties.RuntimeIdentifier}=android-x86" }, doNotCleanupOnUpdate: true);
+				b.Build (proj, parameters: new [] { $"{KnownProperties.RuntimeIdentifier}=android-{alternativeRid}" }, doNotCleanupOnUpdate: true);
 			}
 		}
 
