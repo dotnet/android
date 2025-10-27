@@ -69,6 +69,8 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 				AndroidEnableProfiledAot = true,
 			};
+			// Mono-only test
+			proj.SetRuntime (AndroidRuntime.MonoVM);
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidExtraAotOptions", "--verbose");
 			using var b = CreateApkBuilder ();
