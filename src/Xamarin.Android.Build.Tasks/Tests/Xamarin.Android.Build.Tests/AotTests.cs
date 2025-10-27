@@ -388,6 +388,10 @@ namespace "+ libName + @" {
 				IsRelease = true,
 				AotAssemblies = true,
 			};
+
+			// Mono-only test
+			proj.SetRuntime (AndroidRuntime.MonoVM);
+
 			var supportedAbi = "arm64-v8a";
 			proj.SetAndroidSupportedAbis (supportedAbi);
 			proj.SetProperty ("EnableLLVM", true.ToString ());
