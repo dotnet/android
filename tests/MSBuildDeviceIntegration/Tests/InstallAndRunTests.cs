@@ -8,7 +8,7 @@ using System.Xml.XPath;
 using Microsoft.VisualStudio.TestPlatform.Utilities;
 using Mono.Cecil;
 using NUnit.Framework;
-
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
@@ -81,8 +81,22 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void NativeAssemblyCacheWithSatelliteAssemblies ([Values (true, false)] bool enableMarshalMethods)
+		public void NativeAssemblyCacheWithSatelliteAssemblies ([Values (true, false)] bool enableMarshalMethods, [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
+			if (enableMarshalMethods && runtime == AndroidRuntime.CoreCLR) {
+				// This currently fails with the following exception:
+				//
+				// error XARMM7015: System.NotSupportedException: Writing mixed-mode assemblies is not supported
+				//  at Mono.Cecil.ModuleWriter.Write(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
+				//  at Mono.Cecil.ModuleWriter.WriteModule(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
+				//  at Mono.Cecil.ModuleDefinition.Write(String fileName, WriterParameters parameters)
+				//  at Mono.Cecil.AssemblyDefinition.Write(String fileName, WriterParameters parameters)
+				//  at Xamarin.Android.Tasks.MarshalMethodsAssemblyRewriter.Rewrite(Boolean brokenExceptionTransitions) in src/Xamarin.Android.Build.Tasks/Utilities/MarshalMethodsAssemblyRewriter.cs:line 165
+				//  at Xamarin.Android.Tasks.RewriteMarshalMethods.RewriteMethods(NativeCodeGenState state, Boolean brokenExceptionTransitionsEnabled) in src/Xamarin.Android.Build.Tasks/Tasks/RewriteMarshalMethods.cs:line 160
+				Assert.Ignore ("CoreCLR: fails because of a Mono.Cecil lack of support");
+				return;
+			}
+
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
 				ProjectName = "Localization",
@@ -92,6 +106,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
+			lib.SetRuntime (runtime);
 
 			var languages = new string[] {"es", "de", "fr", "he", "it", "pl", "pt", "ru", "sl" };
 			foreach (string lang in languages) {
@@ -106,6 +121,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 				EnableMarshalMethods = enableMarshalMethods,
 			};
+			proj.SetRuntime (runtime);
 			proj.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
 
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
