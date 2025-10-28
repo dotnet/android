@@ -10,15 +10,10 @@ using Xamarin.Tools.Zip;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[TestFixtureSource(nameof(FixtureArgs))]
+	[TestFixtureSource(nameof(Get_FixtureArgs))]
 	[Category ("XamarinBuildDownload")]
 	public class BundleToolTests : DeviceTest
 	{
-		static readonly object[] FixtureArgs = {
-			new object[] { false },
-			new object[] { true },
-		};
-
 		static readonly string [] Abis = ["arm64-v8a", "x86_64"];
 		XamarinAndroidLibraryProject lib;
 		XamarinAndroidApplicationProject app;
@@ -26,6 +21,7 @@ namespace Xamarin.Android.Build.Tests
 		string intermediate;
 		string bin;
 		bool usesAssemblyBlobs;
+		readonly AndroidRuntime runtime;
 
 		// Disable split by language
 		const string BuildConfig = @"{
@@ -46,9 +42,31 @@ namespace Xamarin.Android.Build.Tests
 	}
 }";
 
-		public BundleToolTests (bool usesAssemblyBlobs)
+		static IEnumerable<object[]> Get_FixtureArgs ()
+		{
+			object[] fixtureArgs = {
+				new object[] { false },
+				new object[] { true },
+			};
+			var runtimes = new [] { AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR };
+			var ret = new List<object[]> ();
+
+			foreach (object[] args in fixtureArgs) {
+				foreach (AndroidRuntime runtime in runtimes) {
+					ret.Add (new object[] {
+						args[0],
+						runtime,
+					});
+				}
+			}
+
+			return ret;
+		}
+
+		public BundleToolTests (bool usesAssemblyBlobs, AndroidRuntime runtime)
 		{
 			this.usesAssemblyBlobs = usesAssemblyBlobs;
+			this.runtime = runtime;
 		}
 
 		[OneTimeSetUp]
@@ -68,6 +86,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 			};
 
+			lib.SetRuntime (runtime);
 			lib.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 
 			var bytes = new byte [1024];
@@ -76,6 +95,7 @@ namespace Xamarin.Android.Build.Tests
 				AotAssemblies = false, // Release defaults to Profiled AOT for .NET 6
 				PackageName = "com.xamarin.bundletooltests",
 			};
+			app.SetRuntime (runtime);
 			app.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("foo.bar") {
 				BinaryContent = () => bytes,
 			});
@@ -194,6 +214,11 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void AppBundle ()
 		{
+			if (runtime == AndroidRuntime.CoreCLR && !usesAssemblyBlobs) {
+				Assert.Ignore ("CoreCLR does not support builds without assembly stores");
+				return;
+			}
+
 			var aab = Path.Combine (intermediate, "android", "bin", $"{app.PackageName}.aab");
 			FileAssert.Exists (aab);
 			var contents = ListArchiveContents (aab, usesAssemblyBlobs);
