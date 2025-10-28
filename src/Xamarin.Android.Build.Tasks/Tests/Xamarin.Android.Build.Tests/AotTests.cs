@@ -262,6 +262,9 @@ namespace Xamarin.Android.Build.Tests
 				AotAssemblies = true,
 				PackageName = "com.xamarin.buildaotappandbundlewithspecialchars",
 			};
+
+			// Mono-only test
+			proj.SetRuntime (AndroidRuntime.MonoVM);
 			proj.SetRuntimeIdentifiers (supportedAbis.Split (';'));
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
