@@ -159,7 +159,7 @@ namespace Xamarin.Android.Build.Tests
 				if (runtime == AndroidRuntime.MonoVM) {
 					proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 				} else {
-					proj.SetAndroidSupportedAbis ("arm64-v8a", "x86_64");
+					proj.SetRuntimeIdentifiers (new [] {"arm64-v8a", "x86_64"});
 				}
 			}
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
@@ -177,13 +177,25 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 60), $"Output did not contain {expectedLogcatOutput}!");
 		}
 
+		// TODO: check if AppDomain.CurrentDomain.UnhandledException even works in CoreCLR
 		[Test]
-		public void SubscribeToAppDomainUnhandledException ()
+		public void SubscribeToAppDomainUnhandledException ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
+			if (runtime == AndroidRuntime.CoreCLR) {
+				Assert.Ignore ("AppDomain.CurrentDomain.UnhandledException doesn't work in CoreCLR");
+				return;
+			}
+
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
+			proj.SetRuntime (runtime);
+			if (runtime == AndroidRuntime.MonoVM) {
+				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
+			} else {
+				proj.SetRuntimeIdentifiers (new [] {"arm64-v8a", "x86_64"});
+			}
+
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
 @"			AppDomain.CurrentDomain.UnhandledException += (sender, e) => {
 				Console.WriteLine (""# Unhandled Exception: sender={0}; e.IsTerminating={1}; e.ExceptionObject={2}"",
