@@ -70,7 +70,7 @@ Run the following commands to create a memory dump of the app:
 3. `dotnet-dsrouter android`
 4. `adb shell setprop debug.mono.profile '127.0.0.1:9000,nosuspend'`
 5. Start the app on your device
-6. `dotnet-gcdump ps to find the PID`
+6. `dotnet-gcdump ps` to find the PID
 7. `dotnet-gcdump collect -p PID`
 
 This will create a `.gcdump` file wich you can open in Visual Studio.
