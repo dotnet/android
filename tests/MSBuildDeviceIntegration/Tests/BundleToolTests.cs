@@ -158,6 +158,11 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void BaseZip ()
 		{
+			if (runtime == AndroidRuntime.CoreCLR && !usesAssemblyBlobs) {
+				Assert.Ignore ("CoreCLR does not support builds without assembly stores");
+				return;
+			}
+
 			var baseZip = Path.Combine (intermediate, "android", "bin", "base.zip");
 			var contents = ListArchiveContents (baseZip, usesAssemblyBlobs);
 			var expectedFiles = new List<string> {

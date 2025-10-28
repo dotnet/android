@@ -572,6 +572,8 @@ using System.Runtime.Serialization.Json;
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
+			// Mono-only test
+			proj.SetRuntime (AndroidRuntime.MonoVM);
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 			proj.SetProperty ("EnableLLVM", true.ToString ());
 
