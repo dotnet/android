@@ -143,7 +143,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void GlobalLayoutEvent_ShouldRegisterAndFire_OnActivityLaunch ([Values (false, true)] bool isRelease)
+		public void GlobalLayoutEvent_ShouldRegisterAndFire_OnActivityLaunch (
+		  [Values (false, true)] bool isRelease,
+		  [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			string expectedLogcatOutput = "Bug 29730: GlobalLayout event handler called!";
 
@@ -151,8 +153,14 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 				SupportedOSPlatformVersion = "23",
 			};
+			proj.SetRuntime (runtime);
+
 			if (isRelease || !TestEnvironment.CommercialBuildAvailable) {
-				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
+				if (runtime == AndroidRuntime.MonoVM) {
+					proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
+				} else {
+					proj.SetAndroidSupportedAbis ("arm64-v8a", "x86_64");
+				}
 			}
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
 $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
