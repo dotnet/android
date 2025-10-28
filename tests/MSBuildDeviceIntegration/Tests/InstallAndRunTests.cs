@@ -247,8 +247,31 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			}
 		}
 
+		// TODO: fix/review it for CoreCLR. It currently fails with the following exception:
+		//
+		// System.TypeInitializationException: TypeInitialization_Type, SQLite.SQLiteConnection
+		//  ---> System.MissingMethodException: .ctor
+		//    at System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointerInternal(IntPtr, RuntimeType)
+		//    at SQLitePCL.SQLite3Provider_dynamic_cdecl.NativeMethods.Setup(IGetFunctionPointer)
+		//    at SQLitePCL.Batteries_V2.DoDynamic_cdecl(String, Int32)
+		//    Exception_EndOfInnerExceptionStack
+		//    at SQLite.SQLiteConnection..ctor(SQLiteConnectionString)
+		//    at SQLite.SQLiteConnectionPool.Entry..ctor(SQLiteConnectionString)
+		//    at SQLite.SQLiteConnectionPool.GetConnectionAndTransactionLock(SQLiteConnectionString, Object& )
+		//    at SQLite.SQLiteAsyncConnection.<>c__DisplayClass33_0`1.<WriteAsync>b__0()
+		//    at System.Threading.Tasks.Task`1.InnerInvoke()
+		//    at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread, ExecutionContext, ContextCallback, Object)
+		// --- End of stack trace from previous location ---
+		//    at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread, ExecutionContext, ContextCallback, Object)
+		//    at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task&, Thread )
+		// --- End of stack trace from previous location ---
+		//    at LinkTestLib.Bug35195.AttemptCreateTable()
+		//
 		[Test]
-		public void CustomLinkDescriptionPreserve ([Values (AndroidLinkMode.SdkOnly, AndroidLinkMode.Full)] AndroidLinkMode linkMode)
+		public void CustomLinkDescriptionPreserve (
+		  [Values (AndroidLinkMode.SdkOnly, AndroidLinkMode.Full)] AndroidLinkMode linkMode,
+		  [Values (AndroidRuntime.MonoVM)] AndroidRuntime runtime
+		)
 		{
 			var lib1 = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library1",
@@ -285,6 +308,7 @@ namespace Library1 {
 					},
 				}
 			};
+			lib1.SetRuntime (runtime);
 
 			var lib2 = new DotNetStandard {
 				ProjectName = "LinkTestLib",
@@ -311,6 +335,7 @@ namespace Library1 {
 					},
 				},
 			};
+			lib2.SetRuntime (runtime);
 
 			proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = true,
@@ -347,6 +372,7 @@ namespace Library1 {
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
 
 			// NOTE: workaround for netcoreapp3.0 dependency being included along with monoandroid8.0
 			// See: https://www.nuget.org/packages/SQLitePCLRaw.bundle_green/2.0.3
