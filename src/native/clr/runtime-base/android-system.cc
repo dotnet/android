@@ -172,6 +172,7 @@ AndroidSystem::setup_apk_directories (unsigned short running_on_cpu, jstring_arr
 	std::string_view const& abi = android_abi_names [running_on_cpu];
 	size_t number_of_added_directories = 0uz;
 
+	std::string_view base_apk{};
 	for (size_t i = 0uz; i < runtimeApks.get_length (); ++i) {
 		jstring_wrapper &e = runtimeApks [i];
 		std::string_view apk = e.get_string_view ();
@@ -180,12 +181,22 @@ AndroidSystem::setup_apk_directories (unsigned short running_on_cpu, jstring_arr
 			if (apk.ends_with (Constants::split_config_abi_apk_name.data ())) {
 				add_apk_libdir (apk, number_of_added_directories, abi);
 				break;
+			} else if (base_apk.empty () && apk.ends_with (Constants::base_apk_name)) {
+				base_apk = apk;
 			}
 		} else {
 			add_apk_libdir (apk, number_of_added_directories, abi);
 		}
 	}
 
+	// This apparently can happen now... It seems that sometimes (when and why? No idea) when AAB format is used, bundletool
+	// won't put the native libraries in a separate split config file, but it will instead put **all** of the ABIs
+	// in base.apk
+	if (have_split_apks && number_of_added_directories == 0 && !base_apk.empty ()) {
+		add_apk_libdir (base_apk, number_of_added_directories, abi);
+	}
+
+	log_debug (LOG_DEFAULT, "Number of added dirs: {}", number_of_added_directories);
 	if (app_lib_directories.size () == number_of_added_directories) [[likely]] {
 		return;
 	}
