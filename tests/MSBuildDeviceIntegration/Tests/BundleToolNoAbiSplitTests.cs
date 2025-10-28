@@ -69,6 +69,7 @@ namespace Xamarin.Android.Build.Tests
 				AotAssemblies = false, // Release defaults to Profiled AOT for .NET 6
 				PackageName = "com.xamarin.bundletoolnoabisplittests",
 			};
+			app.SetRuntime (runtime);
 			app.OtherBuildItems.Add (
 				MakeAndroidAsset (
 					include: "Assets\\Textures\\asset1.txt",
