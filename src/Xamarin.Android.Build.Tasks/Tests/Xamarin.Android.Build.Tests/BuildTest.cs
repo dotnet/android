@@ -786,24 +786,54 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				AndroidRuntime runtime
 			)
 		{
+			var path = Path.Combine (Root, "temp", $"BuildInDesignTimeMode_{useManagedParser}_{runtime}");
+			var lib = new XamarinAndroidLibraryProject () {
+				ProjectName = "Lib1",
+				Sources = {
+					new BuildItem.Source ("Foo.cs") {
+						TextContent = () => "public class Foo { }"
+					},
+				},
+				AndroidResources = {
+					new AndroidItem.AndroidResource (() => "Resources\\drawable\\foo.png") {
+						BinaryContent = () => XamarinAndroidApplicationProject.icon_binary_mdpi,
+					},
+				},
+			};
+			lib.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
+
 			var proj = new XamarinAndroidApplicationProject () {
+				ProjectName = "App1",
 				IsRelease = true,
+				References = {
+					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", lib.ProjectName, lib.ProjectGuid),
+				},
+				Sources = {
+					new BuildItem.Source ("Bar.cs") {
+						TextContent = () => "public class Bar : Foo { }"
+					},
+				},
 			};
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
-			using (var builder = CreateApkBuilder ()) {
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
+			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
+				libBuilder.DesignTimeBuild (lib);
 				builder.Target = "UpdateAndroidResources";
 				builder.Build (proj, parameters: new string[] { "DesignTimeBuild=true" });
-				Assert.IsFalse (builder.Output.IsTargetSkipped ("_CreatePropertiesCache"), "target \"_CreatePropertiesCache\" should have been run.");
-				Assert.IsFalse (builder.Output.IsTargetSkipped ("_GenerateRtxt"), "target \"_GenerateRtxt\' should have been run.");
+				builder.Output.AssertTargetIsNotSkipped ("_CreatePropertiesCache");
+				builder.Output.AssertTargetIsNotSkipped ("_GenerateRtxt");
+				builder.Build (proj, parameters: new string [] { "DesignTimeBuild=true" });
+				builder.Output.AssertTargetIsNotSkipped ("_CreatePropertiesCache");
+				builder.Output.AssertTargetIsSkipped ("_GenerateRtxt");
 				var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 				var rTxtFile = Path.Combine (intermediate, "designtime", "R.txt");
 				Assert.IsTrue (File.Exists (rTxtFile), $"'{rTxtFile}' should exist.");
 				rTxtFile = Path.Combine (intermediate, "R.txt");
 				Assert.IsFalse (File.Exists (rTxtFile), $"'{rTxtFile}' should not exist.");
 				builder.Build (proj, parameters: new string[] { "DesignTimeBuild=true" });
-				Assert.IsFalse (builder.Output.IsTargetSkipped ("_CreatePropertiesCache"), "target \"_CreatePropertiesCache\" should have been run.");
-				Assert.IsTrue (builder.Output.IsTargetSkipped ("_GenerateRtxt"), "target \"_GenerateRtxt\' should have been skipped.");
+				builder.Output.AssertTargetIsNotSkipped ("_CreatePropertiesCache");
+				builder.Output.AssertTargetIsSkipped ("_GenerateRtxt");
 				Assert.IsTrue (builder.Clean (proj), "Clean Should have succeeded");
 				builder.Target = "_CleanDesignTimeIntermediateDir";
 				Assert.IsTrue (builder.Build (proj), "_CleanDesignTimeIntermediateDir should have succeeded");
