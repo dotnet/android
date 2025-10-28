@@ -8,6 +8,7 @@ using System.Text;
 using System.Xml.Linq;
 using System.Collections.Generic;
 using System.Globalization;
+using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -164,20 +165,25 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void InstallWithoutSharedRuntime ()
+		public void InstallWithoutSharedRuntime ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtimeType)
 		{
 			AssertCommercialBuild ();
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
+			proj.SetRuntime (runtimeType);
 			proj.SetProperty (proj.ReleaseProperties, "Optimize", false);
 			proj.SetProperty (proj.ReleaseProperties, "DebugType", "none");
 			// NOTE: in .NET 6, EmbedAssembliesIntoApk=true by default for Release builds
 			proj.SetProperty (proj.ReleaseProperties, "EmbedAssembliesIntoApk", "false");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidPackageFormat", "apk");
 
-			var abis = new [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
+			string[] abis = runtimeType switch {
+				AndroidRuntime.MonoVM => new [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" },
+				AndroidRuntime.CoreCLR => new [] { "arm64-v8a", "x86_64" },
+				_ => throw new NotSupportedException ($"Unsupported runtime {runtimeType}")
+			};
 			proj.SetRuntimeIdentifiers (abis);
 			using (var builder = CreateApkBuilder ()) {
 				if (RunAdbCommand ("shell pm list packages Mono.Android.DebugRuntime").Trim ().Length != 0)
@@ -550,7 +556,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			long lib1FirstBuildSize = new FileInfo (Path.Combine (rootPath, lib1.ProjectName, lib1.OutputPath, "Library1.dll")).Length;
-			
+
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, app.ProjectName))) {
 				builder.Verbosity = LoggerVerbosity.Detailed;
 				builder.ThrowOnBuildFailure = false;
@@ -656,7 +662,7 @@ namespace Xamarin.Android.Build.Tests
 public class TestJavaClass2 {
 
 	public String test(){
-		
+
 		return ""Java is called"";
 	}
 }",
@@ -674,7 +680,7 @@ public class TestJavaClass2 {
 public class TestJavaClass {
 
 	public String test(){
-		
+
 		return ""Java is called"";
 	}
 }",
