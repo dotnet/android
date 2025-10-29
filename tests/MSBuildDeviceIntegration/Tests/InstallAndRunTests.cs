@@ -998,6 +998,9 @@ namespace UnnamedProject
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
 			};
+			// Mono-only test
+			proj.SetRuntime (AndroidRuntime.MonoVM);
+
 			// Requires 32-bit ABIs
 			proj.SetAndroidSupportedAbis (["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]);
 
