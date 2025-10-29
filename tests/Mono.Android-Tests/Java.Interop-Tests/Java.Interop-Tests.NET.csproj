@@ -28,7 +28,9 @@
     <Compile Remove="$(JavaInteropTestDirectory)obj\Release\net7.0-android/designtime/Resource.designer.cs" />
   </ItemGroup>
 
-  <!-- Some of tests included in the files below fail on CoreCLR. They should be investigated and fixed in a separate PR. -->
+  <!-- Some of tests included in the files below fail on CoreCLR. This is PROBABLY caused by managed typemaps, which 
+       will be replaced at some point by a different implementation. Until then, these tests can remain disabled. -->
+  <!-- TODO: put these back when new typemap implementation is available -->
   <ItemGroup Condition=" '$(UseMonoRuntime)' == 'false' ">
     <Compile Remove="Java.InteropTests\AndroidValueManagerContractTests.cs" />
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniRuntime.JniValueManagerTests.cs" />
