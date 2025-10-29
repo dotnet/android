@@ -60,6 +60,10 @@ namespace Java.Interop {
 				IntPtr n_self,
 				IntPtr n_constructorSignature,
 				IntPtr n_constructorArguments);
+		[global::System.Diagnostics.CodeAnalysis.SuppressMessage (
+			"Design",
+			"CA1031:Do not catch general exception types",
+			Justification = "Exceptions cannot cross a JNI boundary.")]
 		static void Construct (
 				IntPtr jnienv,
 				IntPtr klass,
@@ -67,7 +71,10 @@ namespace Java.Interop {
 				IntPtr n_constructorSignature,
 				IntPtr n_constructorArguments)
 		{
-			var envp = new JniTransition (jnienv);
+			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var envp, out var __r)) {
+				Console.WriteLine ($"error: could not begin ManagedPeer.Construct!");
+				return;
+			}
 			try {
 				var runtime = JniEnvironment.Runtime;
 				var r_self  = new JniObjectReference (n_self);
@@ -114,11 +121,11 @@ namespace Java.Interop {
 
 				JniEnvironment.Runtime.ValueManager.ActivatePeer (self, new JniObjectReference (n_self), cinfo, pvalues);
 			}
-			catch (Exception e) when (JniEnvironment.Runtime.ExceptionShouldTransitionToJni (e)) {
-				envp.SetPendingException (e);
+			catch (Exception e) {
+				__r?.OnUserUnhandledException (ref envp, e);
 			}
 			finally {
-				envp.Dispose ();
+				JniEnvironment.EndMarshalMethod (ref envp);
 			}
 		}
 
@@ -260,13 +267,21 @@ namespace Java.Interop {
 				IntPtr klass,
 				IntPtr n_nativeClass,
 				IntPtr n_methods);
+		[global::System.Diagnostics.CodeAnalysis.SuppressMessage (
+			"Design",
+			"CA1031:Do not catch general exception types",
+			Justification = "Exceptions cannot cross a JNI boundary.")]
 		static unsafe void RegisterNativeMembers (
 				IntPtr jnienv,
 				IntPtr klass,
 				IntPtr n_nativeClass,
 				IntPtr n_methods)
 		{
-			var envp = new JniTransition (jnienv);
+			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var envp, out var __r)) {
+				Console.WriteLine ($"error: could not begin ManagedPeer.RegisterNativePeers!");
+				return;
+			}
+
 			try {
 				var r_nativeClass   = new JniObjectReference (n_nativeClass);
 #pragma warning disable CA2000
@@ -285,6 +300,11 @@ namespace Java.Interop {
 				try {
 					JniEnvironment.Runtime.TypeManager.RegisterNativeMembers (nativeClass, type, methods);
 				}
+				catch (Exception e) {
+					throw new NotSupportedException (
+							$"Unable to register native members for Java type `{nativeClass.Name}` <=> managed type `{type?.AssemblyQualifiedName}`.",
+							e);
+				}
 				finally {
 					JniEnvironment.Strings.ReleaseStringChars (methodsRef, methodsChars);
 				}
@@ -294,12 +314,11 @@ namespace Java.Interop {
 #endif  // NET
 
 			}
-			catch (Exception e) when (JniEnvironment.Runtime.ExceptionShouldTransitionToJni (e)) {
-				Debug.WriteLine ($"Exception when trying to register native methods with JNI: {e}");
-				envp.SetPendingException (e);
+			catch (Exception e) {
+				__r?.OnUserUnhandledException (ref envp, e);
 			}
 			finally {
-				envp.Dispose ();
+				JniEnvironment.EndMarshalMethod (ref envp);
 			}
 		}
 
