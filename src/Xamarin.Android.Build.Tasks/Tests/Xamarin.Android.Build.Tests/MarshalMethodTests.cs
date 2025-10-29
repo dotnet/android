@@ -24,6 +24,11 @@ public class MarshalMethodTests : BaseTest
 			ProjectName = "mmtest",
 		};
 
+		// Mono-only test.
+		// Managed typemaps have known issues in CoreCLR and will be replaced by a different
+		// implementation at some point.
+		proj.SetRuntime (AndroidRuntime.MonoVM);
+
 		proj.Sources.Add (new AndroidItem.AndroidLibrary ("javaclasses.jar") {
 			BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 		});
@@ -55,7 +60,7 @@ public class MarshalMethodTests : BaseTest
 			class MyGreeter2 : Java.Lang.Object, Com.Xamarin.Android.Test.Msbuildtest.IJavaSourceTestInterface {
 			    public virtual string? GreetWithQuestion (string? p0, Java.Util.Date? p1, string? p2) => "duplicate greetings!";
 			}
-		
+
 			// Overrides Java class method
 			class MyOverriddenGreeter : Com.Xamarin.Android.Test.Msbuildtest.JavaSourceTestExtension {
 			    public override string? GreetWithQuestion (string? p0, Java.Util.Date? p1, string? p2) => "even more greetings!";
