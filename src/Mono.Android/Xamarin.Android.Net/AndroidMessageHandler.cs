@@ -585,35 +585,35 @@ namespace Xamarin.Android.Net
 				return;
 
 			var stream = await request.Content.ReadAsStreamAsync ().ConfigureAwait (false);
-		try {
-			await stream.CopyToAsync(httpConnection.OutputStream!, 4096, cancellationToken).ConfigureAwait(false);
-		} finally {
-			//
-			// Rewind the stream to beginning in case the HttpContent implementation
-			// will be accessed again (e.g. after redirect or retry) and it keeps its stream
-			// open behind the scenes instead of recreating it on the next call to
-			// ReadAsStreamAsync. If we don't rewind it, the ReadAsStreamAsync
-			// call above will throw an exception as we'd be attempting to read an
-			// already "closed" stream (that is one whose Position is set to its
-			// end).
-			//
-			// This is not a perfect solution since the HttpContent may do weird
-			// things in its implementation, but it's better than copying the
-			// content into a buffer since we have no way of knowing how the data is
-			// read or generated and also we don't want to keep potentially large
-			// amounts of data in memory (which would happen if we read the content
-			// into a byte[] buffer and kept it cached for re-use on redirect).
-			//
-			// We use try-finally to ensure the stream is rewound even if an exception
-			// occurs during the copy operation (e.g., cancellation, timeout, or network error),
-			// allowing the HttpContent to be safely reused in retry scenarios.
-			//
-			// See https://bugzilla.xamarin.com/show_bug.cgi?id=55477
-			//
-			if (stream.CanSeek)
-				stream.Seek (0, SeekOrigin.Begin);
+			try {
+				await stream.CopyToAsync(httpConnection.OutputStream!, 4096, cancellationToken).ConfigureAwait(false);
+			} finally {
+				//
+				// Rewind the stream to beginning in case the HttpContent implementation
+				// will be accessed again (e.g. after redirect or retry) and it keeps its stream
+				// open behind the scenes instead of recreating it on the next call to
+				// ReadAsStreamAsync. If we don't rewind it, the ReadAsStreamAsync
+				// call above will throw an exception as we'd be attempting to read an
+				// already "closed" stream (that is one whose Position is set to its
+				// end).
+				//
+				// This is not a perfect solution since the HttpContent may do weird
+				// things in its implementation, but it's better than copying the
+				// content into a buffer since we have no way of knowing how the data is
+				// read or generated and also we don't want to keep potentially large
+				// amounts of data in memory (which would happen if we read the content
+				// into a byte[] buffer and kept it cached for re-use on redirect).
+				//
+				// We use try-finally to ensure the stream is rewound even if an exception
+				// occurs during the copy operation (e.g., cancellation, timeout, or network error),
+				// allowing the HttpContent to be safely reused in retry scenarios.
+				//
+				// See https://bugzilla.xamarin.com/show_bug.cgi?id=55477
+				//
+				if (stream.CanSeek)
+					stream.Seek (0, SeekOrigin.Begin);
+			}
 		}
-	}
 
 		internal Task WriteRequestContentToOutputInternal (HttpRequestMessage request, HttpURLConnection httpConnection, CancellationToken cancellationToken)
 			=> WriteRequestContentToOutput (request, httpConnection, cancellationToken);
