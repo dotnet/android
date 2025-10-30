@@ -48,8 +48,6 @@ namespace Xamarin.Android.Tasks
 		public bool Debug { get; set; }
 
 		[Required]
-		public string AndroidSdkPlatform { get; set; } = "";
-		[Required]
 		public string OutputDirectory { get; set; } = "";
 
 		public bool ErrorOnCustomJavaObject { get; set; }
@@ -89,32 +87,6 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return !Log.HasLoggedErrors;
-		}
-
-		XAAssemblyResolver MakeResolver (bool useMarshalMethods, AndroidTargetArch targetArch, Dictionary<string, ITaskItem> assemblies)
-		{
-			var readerParams = new ReaderParameters ();
-			if (useMarshalMethods) {
-				readerParams.ReadWrite = true;
-				readerParams.InMemory = true;
-			}
-
-			var res = new XAAssemblyResolver (targetArch, Log, loadDebugSymbols: true, loadReaderParameters: readerParams);
-			var uniqueDirs = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-
-			Log.LogDebugMessage ($"Adding search directories to new architecture {targetArch} resolver:");
-			foreach (var kvp in assemblies) {
-				string assemblyDir = Path.GetDirectoryName (kvp.Value.ItemSpec);
-				if (uniqueDirs.Contains (assemblyDir)) {
-					continue;
-				}
-
-				uniqueDirs.Add (assemblyDir);
-				res.SearchDirectories.Add (assemblyDir);
-				Log.LogDebugMessage ($"  {assemblyDir}");
-			}
-
-			return res;
 		}
 
 		void Run (bool useMarshalMethods)
@@ -253,7 +225,7 @@ namespace Xamarin.Android.Tasks
 
 		(bool success, NativeCodeGenState? stubsState) GenerateJavaSourcesAndMaybeClassifyMarshalMethods (AndroidTargetArch arch, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods, bool generateJavaCode)
 		{
-			XAAssemblyResolver resolver = MakeResolver (useMarshalMethods, arch, assemblies);
+			XAAssemblyResolver resolver = MonoAndroidHelper.MakeResolver (Log, useMarshalMethods, arch, assemblies);
 			var tdCache = new TypeDefinitionCache ();
 			(List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW) = ScanForJavaTypes (resolver, tdCache, assemblies, userAssemblies, useMarshalMethods);
 			var jcwContext = new JCWGeneratorContext (arch, resolver, assemblies.Values, javaTypesForJCW, tdCache);
@@ -263,7 +235,7 @@ namespace Xamarin.Android.Tasks
 			bool success = true;
 
 			if (generateJavaCode && RunCheckedBuild) {
-				success = jcwGenerator.Generate (AndroidSdkPlatform, outputPath: Path.Combine (OutputDirectory, "src"), ApplicationJavaClass);
+				success = jcwGenerator.Generate (outputPath: Path.Combine (OutputDirectory, "src"), ApplicationJavaClass);
 
 				generatedJavaFiles = jcwGenerator.GeneratedJavaFiles;
 			}

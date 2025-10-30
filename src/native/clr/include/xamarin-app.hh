@@ -339,7 +339,8 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const ApplicationConfig application_config;
 	[[gnu::visibility("default")]] extern const AppEnvironmentVariable app_environment_variables[];
 	[[gnu::visibility("default")]] extern const char app_environment_variable_contents[];
-	[[gnu::visibility("default")]] extern const char* const app_system_properties[];
+	[[gnu::visibility("default")]] extern const AppEnvironmentVariable app_system_properties[];
+	[[gnu::visibility("default")]] extern const char app_system_property_contents[];
 
 	[[gnu::visibility("default")]] extern const char* const mono_aot_mode_name;
 

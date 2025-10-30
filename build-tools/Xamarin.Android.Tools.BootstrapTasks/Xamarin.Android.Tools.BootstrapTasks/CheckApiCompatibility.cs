@@ -34,6 +34,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			{ "v14.0", "v13.0" },
 			{ "v15.0", "v14.0" },
 			{ "v16.0", "v15.0" },
+			{ "v16.1", "v16.0" },
 		};
 
 		static readonly string assemblyToValidate = "Mono.Android.dll";
@@ -265,7 +266,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					LogError ($"CheckApiCompatibility found nonacceptable Api breakages for ApiLevel: {ApiLevel}.{Environment.NewLine}{string.Join (Environment.NewLine, lines)}");
 					ReportMissingLines (acceptableIssuesFile.FullName, lines);
 
-					var missingItems = CodeGenDiff.GenerateMissingItems (CodeGenPath, contractAssembly.FullName, implementationAssembly.FullName);
+					var missingItems = CodeGenDiff.GenerateMissingItems (CodeGenPath, contractAssembly.FullName, implementationAssembly.FullName, JdkInfo.CreateTaskLogger (this));
 					if (missingItems.Any ()) {
 						Log.LogMessage (MessageImportance.High, $"{Environment.NewLine}*** CodeGen missing items***{Environment.NewLine}");
 						var indent = 0;

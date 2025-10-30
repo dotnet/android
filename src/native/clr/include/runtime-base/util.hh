@@ -13,10 +13,13 @@
 
 #include "../constants.hh"
 #include <shared/helpers.hh>
-#include "archive-dso-stub-config.hh"
 #include <runtime-base/jni-wrappers.hh>
 #include "logger.hh"
 #include <runtime-base/strings.hh>
+
+#if !defined(XA_HOST_NATIVEAOT)
+#include "archive-dso-stub-config.hh"
+#endif
 
 namespace xamarin::android {
 	namespace detail {
@@ -148,11 +151,28 @@ namespace xamarin::android {
 			return get_file_size_at (dirfd, file_name.data ());
 		}
 
-		static void set_environment_variable (std::string_view const& name, jstring_wrapper& value) noexcept
+		[[gnu::flatten, gnu::always_inline]]
+		static void set_environment_variable (const char *name, const char *value) noexcept
 		{
-			::setenv (name.data (), value.get_cstr (), 1);
+			log_debug (LOG_DEFAULT, "Setting environment variable {} = '{}'", optional_string (name), optional_string (value));
+			if (::setenv (name, value, 1) < 0) {
+				log_warn (LOG_DEFAULT, "Failed to set environment variable '{}': {}", name, ::strerror (errno));
+			}
 		}
 
+		[[gnu::flatten, gnu::always_inline]]
+		static void set_environment_variable (std::string_view const& name, jstring_wrapper& value) noexcept
+		{
+			set_environment_variable (name.data (), value.get_cstr ());
+		}
+
+		[[gnu::flatten, gnu::always_inline]]
+		static void set_environment_variable (std::string_view const& name, std::string_view const& value) noexcept
+		{
+			set_environment_variable (name.data (), value.data ());
+		}
+
+		[[gnu::flatten, gnu::always_inline]]
 		static void set_environment_variable_for_directory (std::string_view const& name, jstring_wrapper& value, bool createDirectory, mode_t mode) noexcept
 		{
 			if (createDirectory) {
@@ -164,6 +184,7 @@ namespace xamarin::android {
 			set_environment_variable (name, value);
 		}
 
+		[[gnu::flatten, gnu::always_inline]]
 		static void set_environment_variable_for_directory (std::string_view const& name, jstring_wrapper &value) noexcept
 		{
 			set_environment_variable_for_directory (name, value, true, Constants::DEFAULT_DIRECTORY_MODE);
@@ -218,6 +239,7 @@ namespace xamarin::android {
 			return file_info;
 		}
 
+#if !defined(XA_HOST_NATIVEAOT)
 		[[gnu::always_inline]]
 		static std::tuple<void*, size_t> get_wrapper_dso_payload_pointer_and_size (detail::mmap_info const& map_info, std::string_view const& file_name) noexcept
 		{
@@ -248,6 +270,7 @@ namespace xamarin::android {
 				payload_hdr.sh_size
 			};
 		}
+#endif // ndef XA_HOST_NATIVEAOT
 
 		static auto is_path_rooted (const char *path) noexcept -> bool
 		{

@@ -12,12 +12,12 @@
 
 #include <shared/helpers.hh>
 
-#if defined(XA_HOST_CLR)
-#include <constants.hh>
-#else
+#if defined(XA_HOST_MONOVM)
 #include <runtime-base/shared-constants.hh>
 
 using Constants = xamarin::android::internal::SharedConstants;
+#else
+#include <constants.hh>
 #endif
 
 namespace xamarin::android {

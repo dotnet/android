@@ -15,6 +15,7 @@
 #include <host/gc-bridge.hh>
 #include <host/fastdev-assemblies.hh>
 #include <host/host.hh>
+#include <host/host-environment-clr.hh>
 #include <host/host-jni.hh>
 #include <host/host-util.hh>
 #include <host/os-bridge.hh>
@@ -285,35 +286,6 @@ void Host::gather_assemblies_and_libraries (jstring_array_wrapper& runtimeApks, 
 	}
 }
 
-void Host::create_xdg_directory (jstring_wrapper& home, size_t home_len, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept
-{
-	static_local_string<SENSIBLE_PATH_MAX> dir (home_len + relative_path.length ());
-	Util::path_combine (dir, home.get_string_view (), relative_path);
-
-	log_debug (LOG_DEFAULT, "Creating XDG directory: {}"sv, optional_string (dir.get ()));
-	int rv = Util::create_directory (dir.get (), Constants::DEFAULT_DIRECTORY_MODE);
-	if (rv < 0 && errno != EEXIST) {
-		log_warn (LOG_DEFAULT, "Failed to create XDG directory {}. {}"sv, optional_string (dir.get ()), strerror (errno));
-	}
-
-	if (!environment_variable_name.empty ()) {
-		setenv (environment_variable_name.data (), dir.get (), 1);
-	}
-}
-
-void Host::create_xdg_directories_and_environment (jstring_wrapper &homeDir) noexcept
-{
-	size_t home_len = strlen (homeDir.get_cstr ());
-
-	constexpr auto XDG_DATA_HOME = "XDG_DATA_HOME"sv;
-	constexpr auto HOME_PATH = ".local/share"sv;
-	create_xdg_directory (homeDir, home_len, HOME_PATH, XDG_DATA_HOME);
-
-	constexpr auto XDG_CONFIG_HOME = "XDG_CONFIG_HOME"sv;
-	constexpr auto CONFIG_PATH = ".config"sv;
-	create_xdg_directory (homeDir, home_len, CONFIG_PATH, XDG_CONFIG_HOME);
-}
-
 [[gnu::always_inline]]
 auto Host::create_delegate (
 	std::string_view const& assembly_name, std::string_view const& type_name,
@@ -434,20 +406,19 @@ void Host::Java_mono_android_Runtime_initInternal (
 	}
 
 	jstring_array_wrapper applicationDirs (env, appDirs);
-
-	jstring_wrapper jstr (env, lang);
-	Util::set_environment_variable ("LANG"sv, jstr);
-
-	jstring_wrapper &home = applicationDirs[Constants::APP_DIRS_FILES_DIR_INDEX];
-	Util::set_environment_variable_for_directory ("TMPDIR"sv, applicationDirs[Constants::APP_DIRS_CACHE_DIR_INDEX]);
-	Util::set_environment_variable_for_directory ("HOME"sv, home);
-	create_xdg_directories_and_environment (home);
+	jstring_wrapper language (env, lang);
+	jstring_wrapper &files_dir = applicationDirs[Constants::APP_DIRS_FILES_DIR_INDEX];
+	HostEnvironment::setup_environment (
+		language,
+		files_dir,
+		applicationDirs[Constants::APP_DIRS_CACHE_DIR_INDEX]
+	);
 
 	java_TimeZone = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_util_TimeZone"sv, true);
 
 	AndroidSystem::detect_embedded_dso_mode (applicationDirs);
 	AndroidSystem::set_running_in_emulator (isEmulator);
-	AndroidSystem::set_primary_override_dir (home);
+	AndroidSystem::set_primary_override_dir (files_dir);
 	AndroidSystem::create_update_dir (AndroidSystem::get_primary_override_dir ());
 	AndroidSystem::setup_environment ();
 
@@ -618,40 +589,7 @@ void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType,
 	}
 }
 
-auto Host::get_java_class_name_for_TypeManager (jclass klass) noexcept -> char*
-{
-	if (klass == nullptr || Class_getName == nullptr) {
-		return nullptr;
-	}
-
-	JNIEnv *env = OSBridge::ensure_jnienv ();
-	jstring name = reinterpret_cast<jstring> (env->CallObjectMethod (klass, Class_getName));
-	if (name == nullptr) {
-		log_error (LOG_DEFAULT, "Failed to obtain Java class name for object at {:p}", reinterpret_cast<void*>(klass));
-		return nullptr;
-	}
-
-	const char *mutf8 = env->GetStringUTFChars (name, nullptr);
-	if (mutf8 == nullptr) {
-		log_error (LOG_DEFAULT, "Failed to convert Java class name to UTF8 (out of memory?)"sv);
-		env->DeleteLocalRef (name);
-		return nullptr;
-	}
-	char *ret = strdup (mutf8);
-
-	env->ReleaseStringUTFChars (name, mutf8);
-	env->DeleteLocalRef (name);
-
-	char *dot = strchr (ret, '.');
-	while (dot != nullptr) {
-		*dot = '/';
-		dot = strchr (dot + 1, '.');
-	}
-
-	return ret;
-}
-
-auto Host::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcept -> jint
+auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcept -> jint
 {
 	jvm = vm;
 

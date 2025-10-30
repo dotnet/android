@@ -248,6 +248,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 						TextContent = () => @"
 namespace Library1 {
 	public class LinkerClass {
+		[System.Diagnostics.CodeAnalysis.DynamicDependency (""DynamicDependencyTargetMethod()"", typeof(Library1.LinkerClass))]
 		public LinkerClass () { }
 
 		public bool IsPreserved { get { return true; } }
@@ -256,8 +257,7 @@ namespace Library1 {
 
 		public void WasThisMethodPreserved (string arg1) { }
 
-		[Android.Runtime.Preserve]
-		public void PreserveAttribMethod () { }
+		public void DynamicDependencyTargetMethod () { }
 	}
 }",
 					}, new BuildItem.Source ("LinkModeFullClass.cs") {
@@ -949,6 +949,51 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		public void DotNetInstallAndRunMinorAPILevels (
+				[Values (false, true)] bool isRelease,
+				[Values ("net10.0-android36.1")] string targetFramework)
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				TargetFramework = targetFramework,
+				IsRelease = isRelease,
+				ExtraNuGetConfigSources = {
+					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
+				}
+			};
+
+			// TODO: update on new minor API levels to use an introduced minor API
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${USINGS}", "using Android.Telecom;\nusing Android.Graphics.Pdf.Component;")
+				.Replace ("//${AFTER_ONCREATE}", """
+					if (OperatingSystem.IsAndroidVersionAtLeast (36, 1)) {
+						Console.WriteLine ($"TelecomManager.ActionCallBack={TelecomManager.ActionCallBack}");
+					} else {
+						Console.WriteLine ("TelecomManager.ActionCallBack not available");
+					}
+				""")
+				.Replace ("//${AFTER_MAINACTIVITY}", """
+					#pragma warning disable CA1416 // Type only available on Android 36.1 and later
+					class MyTextObjectFont : PdfPageTextObjectFont
+					{
+						public MyTextObjectFont (PdfPageTextObjectFont font) : base (font)
+						{
+						}
+					}
+					#pragma warning restore CA1416 // Type only available on Android 36.1 and later
+				""");
+
+			var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
+			builder.AssertHasNoWarnings ();
+			RunProjectAndAssert (proj, builder);
+
+			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+			Assert.IsTrue(didLaunch, "Activity should have started.");
+		}
+
+		[Test]
 		public void TypeAndMemberRemapping ([Values (false, true)] bool isRelease)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -1216,9 +1261,9 @@ plugins {{
 }}
 android {{
     namespace = ""{gradleModule.PackageName}""
-    compileSdk = {XABuildConfig.AndroidDefaultTargetDotnetApiLevel}
+    compileSdk = {XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major}
     defaultConfig {{
-        minSdk = {XABuildConfig.AndroidMinimumDotNetApiLevel}
+        minSdk = {XABuildConfig.AndroidMinimumDotNetApiLevel.Major}
     }}
 }}
 dependencies {{

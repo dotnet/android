@@ -33,7 +33,7 @@
     <!-- TODO: https://github.com/dotnet/android/issues/10069 -->
     <ExcludeCategories Condition=" '$(UseMonoRuntime)' == 'false' ">$(ExcludeCategories):CoreCLRIgnore:SSL:NTLM:RuntimeConfig</ExcludeCategories>
     <!-- TODO: https://github.com/dotnet/android/issues/10079 -->
-    <ExcludeCategories Condition=" '$(PublishAot)' == 'true' ">$(ExcludeCategories):NativeAOTIgnore:SSL:NTLM:GCBridge:AndroidClientHandler:Export:NativeTypeMap</ExcludeCategories>
+    <ExcludeCategories Condition=" '$(PublishAot)' == 'true' ">$(ExcludeCategories):NativeAOTIgnore:SSL:NTLM:AndroidClientHandler:Export:NativeTypeMap</ExcludeCategories>
     <!-- FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190 -->
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):LLVMIgnore</ExcludeCategories>
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):InetAccess:NetworkInterfaces</ExcludeCategories>
@@ -69,6 +69,7 @@
   <ItemGroup>
     <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" />
     <_AndroidRemapMembers Include="Remaps.xml" />
+    <_AndroidRemapMembers Include="IsAssignableFromRemaps.xml" Condition=" '$(_AndroidIsAssignableFromCheck)' == 'false' " />
     <ProguardConfiguration Include="proguard.cfg" />
   </ItemGroup>
 
@@ -88,6 +89,7 @@
     <Compile Include="Android.Runtime\JnienvArrayMarshaling.cs" />
     <Compile Include="Android.Runtime\XmlReaderPullParserTest.cs" />
     <Compile Include="Android.Runtime\XmlReaderResourceParserTest.cs" />
+    <Compile Include="Android.Views\LayoutInflaterTest.cs" />
     <Compile Include="Android.Widget\AdapterTests.cs" />
     <Compile Include="Android.Widget\CustomWidgetTests.cs" />
     <Compile Include="Java.Interop\JavaConvertTest.cs" />
@@ -129,8 +131,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AndroidJavaSource Include="java/net/dot/android/test/ValueProvider.java" />
-    <AndroidJavaSource Include="java/net/dot/android/test/Example.java" />
+    <AndroidJavaSource Include="java/net/dot/android/test/*.java" />
   </ItemGroup>
 
   <ItemGroup>
