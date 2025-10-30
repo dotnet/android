@@ -585,11 +585,12 @@ namespace Xamarin.Android.Net
 				return;
 
 			var stream = await request.Content.ReadAsStreamAsync ().ConfigureAwait (false);
+		try {
 			await stream.CopyToAsync(httpConnection.OutputStream!, 4096, cancellationToken).ConfigureAwait(false);
-
+		} finally {
 			//
 			// Rewind the stream to beginning in case the HttpContent implementation
-			// will be accessed again (e.g. after redirect) and it keeps its stream
+			// will be accessed again (e.g. after redirect or retry) and it keeps its stream
 			// open behind the scenes instead of recreating it on the next call to
 			// ReadAsStreamAsync. If we don't rewind it, the ReadAsStreamAsync
 			// call above will throw an exception as we'd be attempting to read an
@@ -603,11 +604,16 @@ namespace Xamarin.Android.Net
 			// amounts of data in memory (which would happen if we read the content
 			// into a byte[] buffer and kept it cached for re-use on redirect).
 			//
+			// We use try-finally to ensure the stream is rewound even if an exception
+			// occurs during the copy operation (e.g., cancellation, timeout, or network error),
+			// allowing the HttpContent to be safely reused in retry scenarios.
+			//
 			// See https://bugzilla.xamarin.com/show_bug.cgi?id=55477
 			//
 			if (stream.CanSeek)
 				stream.Seek (0, SeekOrigin.Begin);
 		}
+	}
 
 		internal Task WriteRequestContentToOutputInternal (HttpRequestMessage request, HttpURLConnection httpConnection, CancellationToken cancellationToken)
 			=> WriteRequestContentToOutput (request, httpConnection, cancellationToken);
