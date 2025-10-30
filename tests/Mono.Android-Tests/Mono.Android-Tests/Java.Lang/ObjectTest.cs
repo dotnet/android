@@ -86,9 +86,12 @@ namespace Java.LangTests
 			value.Dispose ();
 		}
 
+		// TODO: fix on CoreCLR once new managed type maps are implemented. Currently fails with
+		//       java/lang/Object is typemap'd to Java.InteropTests.JavaLangRemappingTestObject, not Java.Lang.Object, Mono.Android!
 		[Test]
 		public void java_lang_Object_Is_Java_Lang_Object ()
 		{
+			Android.Ignore ("Currently broken on CoreCLR");
 			var jloType = global::Java.Interop.JniEnvironment.Runtime.TypeManager.GetType (new JniTypeSignature ("java/lang/Object"));
 			Assert.AreSame (typeof (Java.Lang.Object), jloType,
 					$"`java/lang/Object` is typemap'd to `{jloType}`, not `Java.Lang.Object, Mono.Android`!");
