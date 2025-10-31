@@ -88,8 +88,9 @@ namespace Android.Runtime
 
 		// NOTE: should have different name than `Initialize` to avoid:
 		// * Assertion at /__w/1/s/src/mono/mono/metadata/icall.c:6258, condition `!only_unmanaged_callers_only' not met
-		internal static void InitializeJniRuntime (JniRuntime runtime)
+		internal static void InitializeJniRuntime (JniRuntime runtime, JnienvInitializeArgs args)
 		{
+			Logger.SetLogCategories ((LogCategories)args.logCategories);
 			androidRuntime = runtime;
 			SetSynchronizationContext ();
 		}

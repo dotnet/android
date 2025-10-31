@@ -11,6 +11,9 @@ static partial class JavaInteropRuntime
 	[DllImport("xa-internal-api")]
 	static extern int XA_Host_NativeAOT_JNI_OnLoad (IntPtr vm, IntPtr reserved);
 
+	[DllImport ("xa-internal-api")]
+	static extern uint XA_Host_NativeAOT_GetLoggingCategories ();
+
 	[UnmanagedCallersOnly (EntryPoint="JNI_OnLoad")]
 	static int JNI_OnLoad (IntPtr vm, IntPtr reserved)
 	{
@@ -63,8 +66,11 @@ static partial class JavaInteropRuntime
 			};
 			runtime = options.CreateJreVM ();
 
-			// Entry point into Mono.Android.dll
-			JNIEnvInit.InitializeJniRuntime (runtime);
+			// Entry point into Mono.Android.dll. Log categories are initialized in JNI_OnLoad.
+			var initArgs = new JNIEnvInit.JnienvInitializeArgs {
+				logCategories = XA_Host_NativeAOT_GetLoggingCategories (),
+			};
+			JNIEnvInit.InitializeJniRuntime (runtime, initArgs);
 			XA_Host_NativeAOT_OnInit (language, filesDir, cacheDir);
 
 			transition  = new JniTransition (jnienv);

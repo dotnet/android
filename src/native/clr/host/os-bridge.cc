@@ -77,7 +77,7 @@ auto OSBridge::_monodroid_gref_dec () noexcept -> int
 [[gnu::always_inline]]
 auto OSBridge::_get_stack_trace_line_end (char *m) noexcept -> char*
 {
-	while (*m && *m != '\n') {
+	while (m != nullptr && *m != '\0' && *m != '\n') {
 		m++;
 	}
 
@@ -87,8 +87,12 @@ auto OSBridge::_get_stack_trace_line_end (char *m) noexcept -> char*
 [[gnu::always_inline]]
 void OSBridge::_write_stack_trace (FILE *to, char *from, LogCategories category) noexcept
 {
-	char *n = const_cast<char*> (from);
+	if (from == nullptr) [[unlikely]] {
+		log_warn (LOG_GREF, "Unable to write stack trace, managed runtime passed a NULL string.");
+		return;
+	}
 
+	char *n = const_cast<char*> (from);
 	char c;
 	do {
 		char *m		= n;
