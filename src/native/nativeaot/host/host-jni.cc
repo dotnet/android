@@ -15,3 +15,8 @@ void XA_Host_NativeAOT_OnInit (jstring language, jstring filesDir, jstring cache
 {
 	Host::OnInit (language, filesDir, cacheDir);
 }
+
+uint32_t XA_Host_NativeAOT_GetLoggingCategories ()
+{
+	return log_categories;
+}
