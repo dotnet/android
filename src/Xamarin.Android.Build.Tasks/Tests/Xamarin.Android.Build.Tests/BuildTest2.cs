@@ -443,6 +443,17 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True"); // Disables API 29 warning in Xamarin.Build.Download
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			proj.SetProperty ("TrimmerSingleWarn", "false");
+			
+			// Add test code for: https://github.com/dotnet/android/issues/10509
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
+				"""
+					// These should not cause warnings
+					new FrameLayout (this).Foreground = null;
+					new ListView (this).Adapter = null;
+					Console.WriteLine (Android.Provider.MediaStore.Video.IVideoColumns.DateTaken);
+					Console.WriteLine (Android.Provider.MediaStore.Images.IImageColumns.DateTaken);
+				""");
+
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				b.AssertHasNoWarnings ();
