@@ -471,6 +471,7 @@ namespace Bug12935
 			},
 		};
 
+		// TODO: make it work on CoreCLR and NativeAOT
 		[Test]
 		[TestCaseSource(nameof (VersionCodeTestSource))]
 		public void VersionCodeTests (bool seperateApk, string abis, string versionCode, bool useLegacy, string versionCodePattern, string versionCodeProperties, bool shouldBuild, string expectedVersionCode)
@@ -480,6 +481,10 @@ namespace Bug12935
 				MinSdkVersion = "21",
 				SupportedOSPlatformVersion = "21.0",
 			};
+
+			// MonoVM-only test, for now (changing anything in the test data changes the codes, each case must be
+			// investigated and verified manually)
+			proj.SetRuntime (AndroidRuntime.MonoVM);
 			proj.SetProperty ("Foo", "1");
 			proj.SetProperty ("GenerateApplicationManifest", "false"); // Disable $(AndroidVersionCode) support
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, seperateApk);

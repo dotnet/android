@@ -5,37 +5,37 @@
       "Size": 3036
     },
     "classes.dex": {
-      "Size": 22428
+      "Size": 22400
     },
     "lib/arm64-v8a/lib__Microsoft.Android.Resource.Designer.dll.so": {
       "Size": 18288
     },
     "lib/arm64-v8a/lib_Java.Interop.dll.so": {
-      "Size": 88048
+      "Size": 88056
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
-      "Size": 118224
+      "Size": 116368
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 23488
+      "Size": 23520
     },
     "lib/arm64-v8a/lib_System.Console.dll.so": {
-      "Size": 24408
+      "Size": 24376
     },
     "lib/arm64-v8a/lib_System.Linq.dll.so": {
-      "Size": 25488
+      "Size": 25456
     },
     "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
-      "Size": 629896
+      "Size": 630336
     },
     "lib/arm64-v8a/lib_System.Runtime.dll.so": {
-      "Size": 20144
+      "Size": 20112
     },
     "lib/arm64-v8a/lib_System.Runtime.InteropServices.dll.so": {
-      "Size": 21528
+      "Size": 21496
     },
     "lib/arm64-v8a/lib_UnnamedProject.dll.so": {
-      "Size": 20024
+      "Size": 20032
     },
     "lib/arm64-v8a/libarc.bin.so": {
       "Size": 19112
@@ -44,10 +44,10 @@
       "Size": 36616
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 1401624
+      "Size": 1386272
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3121008
+      "Size": 3122432
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 71952
@@ -56,16 +56,16 @@
       "Size": 759304
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 104080
+      "Size": 104112
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
-      "Size": 165288
+      "Size": 165568
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 19952
+      "Size": 19616
     },
     "META-INF/BNDLTOOL.RSA": {
-      "Size": 1223
+      "Size": 1221
     },
     "META-INF/BNDLTOOL.SF": {
       "Size": 3266
@@ -98,5 +98,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 3045909
+  "PackageSize": 3037717
 }

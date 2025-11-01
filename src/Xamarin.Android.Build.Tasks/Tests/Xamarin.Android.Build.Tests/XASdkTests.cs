@@ -240,7 +240,7 @@ public class JavaSourceTest {
 				Assert.Ignore ($"Test for API level {apiLevel} was skipped as it matched the default or latest stable API level.");
 
 			var targetFramework = $"{dotnetVersion}-{platform}";
-			const string runtimeIdentifier = "android-arm";
+			const string runtimeIdentifier = "android-arm64";
 			var proj = new XamarinAndroidApplicationProject {
 				TargetFramework = targetFramework,
 				IsRelease = isRelease,

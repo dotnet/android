@@ -248,6 +248,8 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = !debugBuild,
 			};
 
+			// Mono-only test
+			proj.SetRuntime (AndroidRuntime.MonoVM);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidEnableProfiler", enableProfiler.ToString ());
 			proj.SetProperty (proj.ActiveConfigurationProperties, "UseInterpreter", useInterpreter.ToString ());
 
@@ -260,40 +262,35 @@ namespace Xamarin.Android.Build.Tests
 				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 
 				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (objPath, String.Join (";", abis), true);
-				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
+				var app_config = (EnvironmentHelper.ApplicationConfig_MonoVM)EnvironmentHelper.ReadApplicationConfig (envFiles, AndroidRuntime.MonoVM);
 				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
 				Assert.IsTrue (app_config.mono_components_mask == expectedMask, "Expected Mono Components mask 0x{expectedMask:x}, got 0x{app_config.mono_components_mask:x}");
 			}
 		}
 
-		static object [] CheckAssemblyCountsSource = new object [] {
-			new object[] {
-				/*isRelease*/ false,
-				/*aot*/       false,
-			},
-			new object[] {
-				/*isRelease*/ true,
-				/*aot*/       false,
-			},
-			new object[] {
-				/*isRelease*/ true,
-				/*aot*/       true,
-			},
-		};
 
 		[Test]
-		[TestCaseSource (nameof (CheckAssemblyCountsSource))]
 		[NonParallelizable]
-		public void CheckAssemblyCounts (bool isRelease, bool aot)
+		public void CheckAssemblyCounts ([Values (true, false)] bool isRelease, [Values (true, false)] bool aot,
+				                 [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
+			if (isRelease == false && aot == true) {
+				Assert.Ignore ("Not testing AOT with Debug builds");
+				return;
+			}
+
+			bool aotAssemblies = aot && runtime == AndroidRuntime.MonoVM;
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 				EmbedAssembliesIntoApk = true,
-				AotAssemblies = aot,
+				AotAssemblies = aotAssemblies,
 			};
+			proj.SetRuntime (runtime);
 
-			var abis = new [] { "armeabi-v7a", "x86" };
-			proj.SetRuntimeIdentifiers (abis);
+			var targetArches = new [] { AndroidTargetArch.Arm64, AndroidTargetArch.X86_64 };
+			var abis = targetArches.Select (arch => MonoAndroidHelper.ArchToAbi (arch));
+
+			proj.SetRuntimeIdentifiers (targetArches);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidUseAssemblyStore", "True");
 
 			using (var b = CreateApkBuilder ()) {
@@ -301,10 +298,10 @@ namespace Xamarin.Android.Build.Tests
 				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 
 				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (objPath, String.Join (";", abis), true);
-				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
+				EnvironmentHelper.IApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles, runtime);
 				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
 
-				if (aot) {
+				if (aotAssemblies) {
 					foreach (var env in envFiles) {
 						StringAssert.Contains ("libaot-Mono.Android.dll.so", File.ReadAllText (env.Path));
 					}
@@ -312,13 +309,17 @@ namespace Xamarin.Android.Build.Tests
 
 				string apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStores: true);
+				uint numberOfAssembliesInApk = runtime switch {
+					AndroidRuntime.MonoVM  => ((EnvironmentHelper.ApplicationConfig_MonoVM)app_config).number_of_assemblies_in_apk,
+					AndroidRuntime.CoreCLR => ((EnvironmentHelper.ApplicationConfig_CoreCLR)app_config).number_of_assemblies_in_apk,
+					_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+				};
 
-				foreach (string abi in abis) {
-					AndroidTargetArch arch = MonoAndroidHelper.AbiToTargetArch (abi);
+				foreach (AndroidTargetArch arch in targetArches) {
 					Assert.AreEqual (
-						app_config.number_of_assemblies_in_apk,
+						numberOfAssembliesInApk,
 						helper.GetNumberOfAssemblies (arch: arch),
-						$"Assembly count must be equal between ApplicationConfig and the archive contents for architecture {arch} (ABI: {abi})"
+						$"Assembly count must be equal between ApplicationConfig and the archive contents for architecture {arch} (ABI: {MonoAndroidHelper.ArchToAbi (arch)})"
 					);
 				}
 			}
@@ -355,6 +356,8 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (RuntimeChecks))]
 		public void CheckWhichRuntimeIsIncluded (string supportedAbi, bool debugSymbols, bool? optimize, bool? embedAssemblies, string expectedRuntime) {
 			var proj = new XamarinAndroidApplicationProject ();
+			// MonoVM-only test
+			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
 			proj.SetAndroidSupportedAbis (supportedAbi);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugSymbols", debugSymbols);
 			if (optimize.HasValue)
@@ -1330,7 +1333,6 @@ namespace UnnamedProject
 				proj.SetProperty ("AndroidPackageNamingPolicy", packageNamingPolicy);
 			if (!string.IsNullOrEmpty (diagnosticConfiguration))
 				proj.SetProperty ("DiagnosticConfiguration", diagnosticConfiguration);
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var environment = b.Output.GetIntermediaryPath (Path.Combine ("__environment__.txt"));
@@ -1734,16 +1736,38 @@ public class ToolbarEx {
 		}
 
 		[Test]
-		public void SimilarAndroidXAssemblyNames ([Values(true, false)] bool publishTrimmed)
+		[TestCase (true, AndroidRuntime.MonoVM)]
+		[TestCase (false, AndroidRuntime.MonoVM)]
+		[TestCase (true, AndroidRuntime.CoreCLR)]
+		[TestCase (false, AndroidRuntime.CoreCLR)]
+		// TODO: [TestCase (false, AndroidRuntime.NativeAOT)]
+		public void SimilarAndroidXAssemblyNames (bool publishTrimmed, AndroidRuntime runtime)
 		{
+			if (!publishTrimmed && runtime == AndroidRuntime.CoreCLR) {
+				// This currently fails with the following exception:
+				//
+				// error XALNS7015: System.NotSupportedException: Writing mixed-mode assemblies is not supported
+				//  at Mono.Cecil.ModuleWriter.Write(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
+				//  at Mono.Cecil.ModuleWriter.WriteModule(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
+				//  at Mono.Cecil.ModuleDefinition.Write(String fileName, WriterParameters parameters)
+				//  at Mono.Cecil.AssemblyDefinition.Write(String fileName, WriterParameters parameters)
+				//  at Xamarin.Android.Tasks.SaveChangedAssemblyStep.ProcessAssembly(AssemblyDefinition assembly, StepContext context) in src/Xamarin.Android.Build.Tasks/Tasks/AssemblyModifierPipeline.cs:line 197
+				//  at Xamarin.Android.Tasks.AssemblyPipeline.Run(AssemblyDefinition assembly, StepContext context) in src/Xamarin.Android.Build.Tasks/Utilities/AssemblyPipeline.cs:line 26
+				//  at Xamarin.Android.Tasks.AssemblyModifierPipeline.RunPipeline(AssemblyPipeline pipeline, ITaskItem source, ITaskItem destination) in src/Xamarin.Android.Build.Tasks/Tasks/AssemblyModifierPipeline.cs:line 175
+				Assert.Ignore ("CoreCLR: fails because of a Mono.Cecil lack of support");
+				return;
+			}
+
+			bool aotAssemblies = runtime == AndroidRuntime.MonoVM && publishTrimmed;
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
-				AotAssemblies = publishTrimmed,
+				AotAssemblies = aotAssemblies,
 				PackageReferences = {
 					new Package { Id = "Xamarin.AndroidX.CustomView", Version = "1.1.0.17" },
 					new Package { Id = "Xamarin.AndroidX.CustomView.PoolingContainer", Version = "1.0.0.4" },
 				}
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty (KnownProperties.PublishTrimmed, publishTrimmed.ToString());
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "AndroidX.CustomView.PoolingContainer.PoolingContainer.IsPoolingContainer (null);");
 			using var builder = CreateApkBuilder ();

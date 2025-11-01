@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -266,11 +267,17 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void RemoveDesigner ([Values (true, false)] bool useAssemblyStore)
+		public void RemoveDesigner ([Values (true, false)] bool useAssemblyStore, [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
+			if (!useAssemblyStore && runtime == AndroidRuntime.CoreCLR) {
+				Assert.Ignore ("CoreCLR supports only assembly stores");
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "False");
 			proj.SetProperty ("AndroidLinkResources", "True");
 			proj.SetProperty ("AndroidUseAssemblyStore", useAssemblyStore.ToString ());
@@ -302,8 +309,13 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void LinkDescription ([Values (true, false)] bool useAssemblyStore)
+		public void LinkDescription ([Values (true, false)] bool useAssemblyStore, [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
+			if (!useAssemblyStore && runtime == AndroidRuntime.CoreCLR) {
+				Assert.Ignore ("CoreCLR doesn't support builds without assembly stores.");
+				return;
+			}
+
 			string assembly_name = "System.Console";
 			string linker_xml = "<linker/>";
 
@@ -315,6 +327,8 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 			};
+			proj.SetRuntime (runtime);
+
 			// So we can use Mono.Cecil to open assemblies directly
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "False");
 			proj.SetProperty ("AndroidUseAssemblyStore", useAssemblyStore.ToString ());
@@ -398,41 +412,58 @@ $@"			var myButton = new AttributedButtonStub (this);
 			}
 		}
 
-		static readonly object [] AndroidAddKeepAlivesSource = new object [] {
-			// Debug configuration
-			new object [] {
-				/* isRelease */                  false,
-				/* AndroidAddKeepAlives=true */  false,
-				/* AndroidLinkMode=None */       false,
-				/* should add KeepAlives */      false,
-			},
-			// Debug configuration, AndroidAddKeepAlives=true
-			new object [] {
-				/* isRelease */                  false,
-				/* AndroidAddKeepAlives=true */  true,
-				/* AndroidLinkMode=None */       false,
-				/* should add KeepAlives */      true,
-			},
-			// Release configuration
-			new object [] {
-				/* isRelease */                  true,
-				/* AndroidAddKeepAlives=true */  false,
-				/* AndroidLinkMode=None */       false,
-				/* should add KeepAlives */      true,
-			},
-			// Release configuration, AndroidLinkMode=None
-			new object [] {
-				/* isRelease */                  true,
-				/* AndroidAddKeepAlives=true */  false,
-				/* AndroidLinkMode=None */       true,
-				/* should add KeepAlives */      true,
-			},
-		};
+		static IEnumerable<object[]> Get_AndroidAddKeepAlivesData ()
+		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR }) {
+				// Debug configuration
+				AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: false, setLinkModeNone: false, shouldAddKeepAlives: false, runtime);
+
+				// Debug configuration, AndroidAddKeepAlives=true
+				AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: true,  setLinkModeNone: false, shouldAddKeepAlives: true,  runtime);
+
+				// Release configuration
+				AddTestData (isRelease: true,  setAndroidAddKeepAlivesTrue: false, setLinkModeNone: false, shouldAddKeepAlives: true,  runtime);
+
+				// Release configuration, AndroidLinkMode=None
+				AddTestData (isRelease: true,  setAndroidAddKeepAlivesTrue: false, setLinkModeNone: true,  shouldAddKeepAlives: true,  runtime);
+			}
+
+			return ret;
+
+			void AddTestData (bool isRelease, bool setAndroidAddKeepAlivesTrue, bool setLinkModeNone, bool shouldAddKeepAlives, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					isRelease,
+					setAndroidAddKeepAlivesTrue,
+					setLinkModeNone,
+					shouldAddKeepAlives,
+					runtime
+				});
+			}
+		}
 
 		[Test]
-		[TestCaseSource (nameof (AndroidAddKeepAlivesSource))]
-		public void AndroidAddKeepAlives (bool isRelease, bool setAndroidAddKeepAlivesTrue, bool setLinkModeNone, bool shouldAddKeepAlives)
+		[TestCaseSource (nameof (Get_AndroidAddKeepAlivesData))]
+		public void AndroidAddKeepAlives (bool isRelease, bool setAndroidAddKeepAlivesTrue, bool setLinkModeNone, bool shouldAddKeepAlives, AndroidRuntime runtime)
 		{
+			if (runtime == AndroidRuntime.CoreCLR && isRelease && !setAndroidAddKeepAlivesTrue && setLinkModeNone && shouldAddKeepAlives) {
+				// This currently fails with the following exception:
+				//
+				// error XALNS7015: System.NotSupportedException: Writing mixed-mode assemblies is not supported
+				//  at Mono.Cecil.ModuleWriter.Write(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
+				//  at Mono.Cecil.ModuleWriter.WriteModule(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
+				//  at Mono.Cecil.ModuleDefinition.Write(String fileName, WriterParameters parameters)
+				//  at Mono.Cecil.AssemblyDefinition.Write(String fileName, WriterParameters parameters)
+				//  at Xamarin.Android.Tasks.SaveChangedAssemblyStep.ProcessAssembly(AssemblyDefinition assembly, StepContext context) in src/Xamarin.Android.Build.Tasks/Tasks/AssemblyModifierPipeline.cs:line 197
+				//  at Xamarin.Android.Tasks.AssemblyPipeline.Run(AssemblyDefinition assembly, StepContext context) in src/Xamarin.Android.Build.Tasks/Utilities/AssemblyPipeline.cs:line 26
+				//  at Xamarin.Android.Tasks.AssemblyModifierPipeline.RunPipeline(AssemblyPipeline pipeline, ITaskItem source, ITaskItem destination) in src/Xamarin.Android.Build.Tasks/Tasks/AssemblyModifierPipeline.cs:line 175
+				//  at Xamarin.Android.Tasks.AssemblyModifierPipeline.RunTask() in src/Xamarin.Android.Build.Tasks/Tasks/AssemblyModifierPipeline.cs:line 123
+				Assert.Ignore ("CoreCLR: fails because of a Mono.Cecil lack of support");
+				return;
+			};
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				OtherBuildItems = {
@@ -462,6 +493,7 @@ namespace UnnamedProject {
 				}
 			};
 
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AllowUnsafeBlocks", "True");
 
 			// We don't want `[TargetPlatform ("android35")]` to get set because we don't do AddKeepAlives on .NET for Android assemblies
@@ -620,11 +652,29 @@ namespace UnnamedProject {
 			}
 		}
 
+		// TODO: fix for (true, AndroidRuntime.CoreCLR)
 		[Test]
-		public void DoNotErrorOnPerArchJavaTypeDuplicates ([Values(true, false)] bool enableMarshalMethods)
+		public void DoNotErrorOnPerArchJavaTypeDuplicates (
+			[Values(true, false)] bool enableMarshalMethods,
+			[Values(AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
+			if (enableMarshalMethods == true && runtime == AndroidRuntime.CoreCLR) {
+				// This currently fails with the following exception:
+				//
+				// Xamarin.Android.Common.targets(1603,3): error XARMM7015: System.NotSupportedException: Writing mixed-mode assemblies is not supported
+				//  at Mono.Cecil.ModuleWriter.Write(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
+				//  at Mono.Cecil.ModuleWriter.WriteModule(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
+				//  at Mono.Cecil.ModuleDefinition.Write(String fileName, WriterParameters parameters)
+				//  at Mono.Cecil.AssemblyDefinition.Write(String fileName, WriterParameters parameters)
+				//  at Xamarin.Android.Tasks.MarshalMethodsAssemblyRewriter.Rewrite(Boolean brokenExceptionTransitions) in src/Xamarin.Android.Build.Tasks/Utilities/MarshalMethodsAssemblyRewriter.cs:line 165
+				//  at Xamarin.Android.Tasks.RewriteMarshalMethods.RewriteMethods(NativeCodeGenState state, Boolean brokenExceptionTransitionsEnabled) in src/Xamarin.Android.Build.Tasks/Tasks/RewriteMarshalMethods.cs:line 160
+				Assert.Ignore ("Fails with Mono.Cecil exception on CoreCLR");
+				return;
+			}
+
 			var path = Path.Combine (Root, "temp", TestName);
 			var lib = new XamarinAndroidLibraryProject { IsRelease = true, ProjectName = "Lib1" };
+			lib.SetRuntime (runtime);
 			lib.SetProperty ("IsTrimmable", "true");
 			lib.Sources.Add (new BuildItem.Source ("Library1.cs") {
 				TextContent = () => @"
@@ -649,7 +699,10 @@ public abstract class MyRunner {
 }"
 			});
 			var proj = new XamarinAndroidApplicationProject { IsRelease = true, ProjectName = "App1" };
-			proj.SetRuntimeIdentifiers(["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]);
+			proj.SetRuntime (runtime);
+			if (runtime == AndroidRuntime.MonoVM) {
+				proj.SetRuntimeIdentifiers(["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]);
+			}
 			proj.References.Add(new BuildItem.ProjectReference (Path.Combine ("..", "Lib1", "Lib1.csproj"), "Lib1"));
 			proj.MainActivity = proj.DefaultMainActivity.Replace (
 				"base.OnCreate (bundle);",
@@ -665,14 +718,20 @@ public abstract class MyRunner {
 
 			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 			var dll = $"{lib.ProjectName}.dll";
-			Assert64Bit ("android-arm", expected64: false);
+			if (runtime == AndroidRuntime.MonoVM) {
+				Assert64Bit ("android-arm", expected64: false);
+				Assert64Bit ("android-x86", expected64: false);
+			}
 			Assert64Bit ("android-arm64", expected64: true);
-			Assert64Bit ("android-x86", expected64: false);
 			Assert64Bit ("android-x64", expected64: true);
 
 			void Assert64Bit(string rid, bool expected64)
 			{
-				var assembly = AssemblyDefinition.ReadAssembly (Path.Combine (intermediate, rid, "linked", "shrunk", dll));
+				string libDir = Path.Combine (intermediate, rid, "linked");
+				if (runtime == AndroidRuntime.MonoVM) {
+					libDir = Path.Combine (libDir, "shrunk");
+				}
+				var assembly = AssemblyDefinition.ReadAssembly (Path.Combine (libDir, dll));
 				var type = assembly.MainModule.FindType ("Lib1.Library1");
 				Assert.NotNull (type, "Should find Lib1.Library1!");
 				var cctor = type.GetTypeConstructor ();
