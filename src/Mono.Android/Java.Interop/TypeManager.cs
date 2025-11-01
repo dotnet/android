@@ -216,7 +216,7 @@ namespace Java.Interop {
 			return new NotSupportedException (message.ToString (), CreateJavaLocationException ());
 		}
 
-		static Exception CreateJavaLocationException ()
+		internal static Exception CreateJavaLocationException ()
 		{
 			using (var loc = new Java.Lang.Error ("Java callstack:"))
 				return new JavaLocationException (loc.ToString ());
@@ -299,6 +299,7 @@ namespace Java.Interop {
 			Type? type = null;
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
 			string? class_name = GetClassName (class_ptr);
+			System.Diagnostics.Debug.Assert (class_name == JNIEnv.GetClassNameFromInstance (handle));
 			lock (TypeManagerMapDictionaries.AccessLock) {
 				while (class_ptr != IntPtr.Zero) {
 					type = GetJavaToManagedTypeCore (class_name);
@@ -492,7 +493,7 @@ namespace Java.Interop {
 		}
 
 		[Register ("mono/android/TypeManager", DoNotGenerateAcw = true)]
-		internal class JavaTypeManager : Java.Lang.Object
+		internal class _JavaTypeManager : Java.Lang.Object
 		{
 			[Register ("activate", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;[Ljava/lang/Object;)V", "")]
 			static void n_Activate (IntPtr jnienv, IntPtr jclass, IntPtr typename_ptr, IntPtr signature_ptr, IntPtr jobject, IntPtr parameters_ptr)
