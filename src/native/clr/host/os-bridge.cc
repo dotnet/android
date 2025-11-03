@@ -1,3 +1,5 @@
+#include <ranges>
+
 #include <host/os-bridge.hh>
 #include <host/runtime-util.hh>
 #include <runtime-base/logger.hh>
@@ -75,43 +77,35 @@ auto OSBridge::_monodroid_gref_dec () noexcept -> int
 }
 
 [[gnu::always_inline]]
-auto OSBridge::_get_stack_trace_line_end (char *m) noexcept -> char*
-{
-	while (m != nullptr && *m != '\0' && *m != '\n') {
-		m++;
-	}
-
-	return m;
-}
-
-[[gnu::always_inline]]
-void OSBridge::_write_stack_trace (FILE *to, char *from, LogCategories category) noexcept
+void OSBridge::_write_stack_trace (FILE *to, const char *const from, LogCategories category) noexcept
 {
 	if (from == nullptr) [[unlikely]] {
-		log_warn (LOG_GREF, "Unable to write stack trace, managed runtime passed a NULL string.");
+		log_warn (category, "Unable to write stack trace, managed runtime passed a NULL string.");
 		return;
 	}
 
-	char *n = const_cast<char*> (from);
-	char c;
-	do {
-		char *m		= n;
-		char *end	= _get_stack_trace_line_end (m);
+	const std::string_view trace { from };
+	if (trace.empty ()) [[unlikely]] {
+		log_warn (category, "Empty stack trace passed by the managed runtime.");
+		return;
+	}
 
-		n		= end + 1;
-		c		= *end;
-		*end	= '\0';
+	for (const auto segment : std::views::split (trace, '\n')) {
+		const std::string_view line { segment };
+
 		if ((category == LOG_GREF && Logger::gref_to_logcat ()) ||
 			(category == LOG_LREF && Logger::lref_to_logcat ())) {
-				log_debug (category, "{}"sv, optional_string (m));
+				log_debug (category, "{}"sv, line);
 		}
 
-		if (to != nullptr) {
-			fprintf (to, "%s\n", optional_string (m));
-			fflush (to);
+		if (to == nullptr) {
+			continue;
 		}
-		*end	= c;
-	} while (c);
+
+		fwrite (line.data (), sizeof (std::string_view::value_type), line.length (), to);
+		fputc ('\n', to);
+		fflush (to);
+	}
 }
 
 void OSBridge::_monodroid_gref_log (const char *message) noexcept
@@ -128,298 +122,145 @@ void OSBridge::_monodroid_gref_log (const char *message) noexcept
 	fflush (Logger::gref_log ());
 }
 
-auto OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable) noexcept -> int
+[[gnu::always_inline, gnu::flatten]]
+void OSBridge::log_it (LogCategories category, std::string const& line, FILE *to, const char *const from, bool logcat_enabled) noexcept
+{
+	log_write (category, LogLevel::Info, line);
+
+	// We skip logcat here when logging to file is enabled because _write_stack_trace will output to logcat as well, if enabled
+	if (to == nullptr) {
+		if (logcat_enabled) {
+			_write_stack_trace (nullptr, from, category);
+		}
+
+		return;
+	}
+
+	fwrite (line.c_str (), sizeof (std::string::value_type), line.length (), to);
+	fputc ('\n', to);
+
+	_write_stack_trace (to, from);
+	fflush (to);
+}
+
+auto OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from) noexcept -> int
 {
 	int c = _monodroid_gref_inc ();
-	if ((log_categories & LOG_GREF) == 0) {
+	if ((log_categories & LOG_GREF) == 0) [[likely]] {
 		return c;
 	}
 
-	log_info (LOG_GREF,
-			  "+g+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})"sv,
-			  c,
-			  gc_weak_gref_count,
-			  reinterpret_cast<void*>(curHandle),
-			  curType,
-			  reinterpret_cast<void*>(newHandle),
-			  newType,
-			  optional_string (threadName),
-			  threadId
-	);
-
-	if (Logger::gref_to_logcat ()) {
-		if (from_writable) {
-			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
-		} else {
-			log_info (LOG_GREF, "{}"sv, optional_string (from));
-		}
-	}
-
-	if (Logger::gref_log () == nullptr) {
-		return c;
-	}
-
-	fprintf (
-		Logger::gref_log (),
-		"+g+ grefc %i gwrefc %i obj-handle %p/%c -> new-handle %p/%c from thread '%s'(%i)\n",
+	const std::string log_line = std::format (
+		"+g+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})"sv,
 		c,
 		gc_weak_gref_count,
-		curHandle,
+		reinterpret_cast<void*>(curHandle),
 		curType,
-		newHandle,
+		reinterpret_cast<void*>(newHandle),
 		newType,
 		optional_string (threadName),
 		threadId
 	);
 
-	if (from_writable) {
-		_write_stack_trace (Logger::gref_log (), const_cast<char*>(from));
-	} else {
-		fprintf (Logger::gref_log (), "%s\n", from);
-	}
-
-	fflush (Logger::gref_log ());
+	log_it (LOG_GREF, log_line, Logger::gref_log (), from, Logger::gref_to_logcat ());
 	return c;
 }
 
-void OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable) noexcept
+void OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from) noexcept
 {
 	int c = _monodroid_gref_dec ();
-	if ((log_categories & LOG_GREF) == 0) {
+	if ((log_categories & LOG_GREF) == 0) [[likely]] {
 		return;
 	}
 
-	log_info (LOG_GREF,
-			  "-g- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})"sv,
-			  c,
-			  gc_weak_gref_count,
-			  reinterpret_cast<void*>(handle),
-			  type,
-			  optional_string (threadName),
-			  threadId
-	);
-	if (Logger::gref_to_logcat ()) {
-		if (from_writable) {
-			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
-		} else {
-			log_info (LOG_GREF, "{}", optional_string (from));
-		}
-	}
-
-	if (Logger::gref_log () == nullptr) {
-		return;
-	}
-
-	fprintf (Logger::gref_log (),
-			 "-g- grefc %i gwrefc %i handle %p/%c from thread '%s'(%i)\n",
-			 c,
-			 gc_weak_gref_count,
-			 handle,
-			 type,
-			 optional_string (threadName),
-			 threadId
+	const std::string log_line = std::format (
+		"-g- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})"sv,
+		c,
+		gc_weak_gref_count,
+		reinterpret_cast<void*>(handle),
+		type,
+		optional_string (threadName),
+		threadId
 	);
 
-	if (from_writable) {
-		_write_stack_trace (Logger::gref_log (), const_cast<char*>(from));
-	} else {
-		fprintf (Logger::gref_log(), "%s\n", optional_string (from));
-	}
-
-	fflush (Logger::gref_log ());
+	log_it (LOG_GREF, log_line, Logger::gref_log (), from, Logger::gref_to_logcat ());
 }
 
-void OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable)
+void OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from)
 {
 	++gc_weak_gref_count;
-	if ((log_categories & LOG_GREF) == 0) {
+	if ((log_categories & LOG_GREF) == 0) [[likely]] {
 		return;
 	}
 
-	log_info (LOG_GREF,
-			  "+w+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})"sv,
-			  gc_gref_count,
-			  gc_weak_gref_count,
-			  reinterpret_cast<void*>(curHandle),
-			  curType,
-			  reinterpret_cast<void*>(newHandle),
-			  newType,
-			  optional_string (threadName),
-			  threadId
-	);
-
-	if (Logger::gref_to_logcat ()) {
-		if (from_writable) {
-			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
-		} else {
-			log_info (LOG_GREF, "{}"sv, optional_string (from));
-		}
-	}
-
-	if (!Logger::gref_log ()) {
-		return;
-	}
-
-	fprintf (
-		Logger::gref_log (),
-		"+w+ grefc %i gwrefc %i obj-handle %p/%c -> new-handle %p/%c from thread '%s'(%i)\n",
+	const std::string log_line = std::format (
+		"+w+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})"sv,
 		gc_gref_count,
 		gc_weak_gref_count,
-		curHandle,
+		reinterpret_cast<void*>(curHandle),
 		curType,
-		newHandle,
+		reinterpret_cast<void*>(newHandle),
 		newType,
 		optional_string (threadName),
 		threadId
 	);
 
-	if (from_writable) {
-		_write_stack_trace (Logger::gref_log (), const_cast<char*>(from));
-	} else {
-		fprintf (Logger::gref_log (), "%s\n", optional_string (from));
-	}
-
-	fflush (Logger::gref_log ());
+	log_it (LOG_GREF, log_line, Logger::gref_log (), from, Logger::gref_to_logcat ());
 }
 
 void
-OSBridge::_monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
+OSBridge::_monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from)
 {
-	if ((log_categories & LOG_LREF) == 0) {
+	if ((log_categories & LOG_LREF) == 0) [[likely]] {
 		return;
 	}
 
-	log_info (LOG_LREF,
-			  "+l+ lrefc {} handle {:p}/{} from thread '{}'({})"sv,
-			  lrefc,
-			  reinterpret_cast<void*>(handle),
-			  type,
-			  optional_string (threadName),
-			  threadId
-	);
-
-	if (Logger::lref_to_logcat ()) {
-		if (from_writable) {
-			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
-		} else {
-			log_info (LOG_GREF, "{}"sv, optional_string (from));
-		}
-	}
-
-	if (!Logger::lref_log ()) {
-		return;
-	}
-
-	fprintf (
-		Logger::lref_log (),
-		"+l+ lrefc %i handle %p/%c from thread '%s'(%i)\n",
+	const std::string log_line = std::format (
+		"+l+ lrefc {} handle {:p}/{} from thread '{}'({})"sv,
 		lrefc,
-		handle,
+		reinterpret_cast<void*>(handle),
 		type,
 		optional_string (threadName),
 		threadId
 	);
 
-	if (from_writable) {
-		_write_stack_trace (Logger::lref_log (), const_cast<char*>(from));
-	} else {
-		fprintf (Logger::lref_log (), "%s\n", optional_string (from));
-	}
-
-	fflush (Logger::lref_log ());
+	log_it (LOG_LREF, log_line, Logger::lref_log (), from, Logger::lref_to_logcat ());
 }
 
-void OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
+void OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from)
 {
 	--gc_weak_gref_count;
-	if ((log_categories & LOG_GREF) == 0) {
+	if ((log_categories & LOG_GREF) == 0) [[likely]] {
 		return;
 	}
 
-	log_info (LOG_GREF,
-			  "-w- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})"sv,
-			  gc_gref_count,
-			  gc_weak_gref_count,
-			  reinterpret_cast<void*>(handle),
-			  type,
-			  optional_string (threadName),
-			  threadId
-	);
-
-	if (Logger::gref_to_logcat ()) {
-		if (from_writable) {
-			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
-		} else {
-			log_info (LOG_GREF, "{}"sv, optional_string (from));
-		}
-	}
-
-	if (!Logger::gref_log ()) {
-		return;
-	}
-
-	fprintf (
-		Logger::gref_log (),
-		"-w- grefc %i gwrefc %i handle %p/%c from thread '%s'(%i)\n",
+	const std::string log_line = std::format (
+		"-w- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})"sv,
 		gc_gref_count,
 		gc_weak_gref_count,
-		handle,
+		reinterpret_cast<void*>(handle),
 		type,
 		optional_string (threadName),
 		threadId
 	);
 
-	if (from_writable) {
-		_write_stack_trace (Logger::gref_log (), const_cast<char*>(from));
-	} else {
-		fprintf (Logger::gref_log (), "%s\n", optional_string (from));
-	}
-
-	fflush (Logger::gref_log ());
+	log_it (LOG_GREF, log_line, Logger::gref_log (), from, Logger::gref_to_logcat ());
 }
 
-void OSBridge::_monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
+void OSBridge::_monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from)
 {
-	if ((log_categories & LOG_LREF) == 0) {
+	if ((log_categories & LOG_LREF) == 0) [[likely]] {
 		return;
 	}
 
-	log_info (LOG_LREF,
-			  "-l- lrefc {} handle {:p}/{} from thread '{}'({})"sv,
-			  lrefc,
-			  reinterpret_cast<void*>(handle),
-			  type,
-			  optional_string (threadName),
-			  threadId
-	);
-
-	if (Logger::lref_to_logcat ()) {
-		if (from_writable) {
-			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
-		} else {
-			log_info (LOG_GREF, "{}"sv, optional_string (from));
-		}
-	}
-
-	if (!Logger::lref_log ()) {
-		return;
-	}
-
-	fprintf (
-		Logger::lref_log (),
-		"-l- lrefc %i handle %p/%c from thread '%s'(%i)\n",
+	const std::string log_line = std::format (
+		"-l- lrefc {} handle {:p}/{} from thread '{}'({})"sv,
 		lrefc,
-		handle,
+		reinterpret_cast<void*>(handle),
 		type,
 		optional_string (threadName),
 		threadId
 	);
 
-	if (from_writable) {
-		_write_stack_trace (Logger::lref_log (), const_cast<char*>(from));
-	} else {
-		fprintf (Logger::lref_log (), "%s\n", optional_string (from));
-	}
-
-	fflush (Logger::lref_log ());
+	log_it (LOG_LREF, log_line, Logger::lref_log (), from, Logger::lref_to_logcat ());
 }

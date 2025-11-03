@@ -46,6 +46,8 @@ auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, void *reserved) noexcept -> jint
 	return JNI_VERSION_1_6;
 }
 
+// Be VERY careful with what we do here - the managed runtime is not fully initialized
+// at the point this method is called.
 void Host::OnInit (jstring language, jstring filesDir, jstring cacheDir) noexcept
 {
 	JNIEnv *env = OSBridge::ensure_jnienv ();

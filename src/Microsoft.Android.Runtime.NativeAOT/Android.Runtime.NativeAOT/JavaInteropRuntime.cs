@@ -52,6 +52,7 @@ static partial class JavaInteropRuntime
 	{
 		JniTransition   transition  = default;
 		try {
+			XA_Host_NativeAOT_OnInit (language, filesDir, cacheDir);
 			var settings    = new DiagnosticSettings ();
 			settings.AddDebugDotnetLog ();
 
@@ -71,7 +72,6 @@ static partial class JavaInteropRuntime
 				logCategories = XA_Host_NativeAOT_GetLoggingCategories (),
 			};
 			JNIEnvInit.InitializeJniRuntime (runtime, initArgs);
-			XA_Host_NativeAOT_OnInit (language, filesDir, cacheDir);
 
 			transition  = new JniTransition (jnienv);
 
