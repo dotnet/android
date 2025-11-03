@@ -54,7 +54,9 @@ void Host::OnInit (jstring language, jstring filesDir, jstring cacheDir) noexcep
 	jstring_wrapper language_js (env, language);
 	jstring_wrapper files_dir (env, filesDir);
 	jstring_wrapper cache_dir (env, cacheDir);
+	AndroidSystem::set_primary_override_dir (files_dir);
 	HostEnvironment::setup_environment (language_js, files_dir, cache_dir);
+	Logger::init_reference_logging (AndroidSystem::get_primary_override_dir ());
 
 	OSBridge::initialize_on_runtime_init (env, runtimeClass);
 	GCBridge::initialize_on_runtime_init (env, runtimeClass);
