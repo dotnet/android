@@ -421,6 +421,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	AndroidSystem::set_primary_override_dir (files_dir);
 	AndroidSystem::create_update_dir (AndroidSystem::get_primary_override_dir ());
 	AndroidSystem::setup_environment ();
+	Logger::init_reference_logging (AndroidSystem::get_primary_override_dir ());
 
 	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
 	AndroidSystem::setup_app_library_directories (runtimeApks, applicationDirs, haveSplitApks);
