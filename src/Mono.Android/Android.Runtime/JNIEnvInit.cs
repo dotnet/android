@@ -86,7 +86,7 @@ namespace Android.Runtime
 			}
 		}
 
-		// This is needed to intialize e.g. logging before anything else (useful with e.g. gref
+		// This is needed to initialize e.g. logging before anything else (useful with e.g. gref
 		// logging where runtime creation causes several grefs to be created and logged without
 		// stack traces because logging categories on the managed side aren't yet set)
 		internal static void InitializeJniRuntimeEarly (JnienvInitializeArgs args)
