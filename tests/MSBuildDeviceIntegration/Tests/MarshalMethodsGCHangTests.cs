@@ -7,6 +7,7 @@ using Microsoft.Build.Framework;
 using System.Text;
 using System.Xml.Linq;
 using System.Collections.Generic;
+using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests;
 
@@ -83,7 +84,7 @@ public class MainActivity : Activity
 ";
 
 	[Test]
-	public void MarshalMethodsAppRuns ()
+	public void MarshalMethodsAppRuns ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.MonoVM)] AndroidRuntime runtime)
 	{
 		var proj = new XamarinAndroidApplicationProject (packageName: "marshal2") {
 			IsRelease = true,
@@ -92,11 +93,15 @@ public class MainActivity : Activity
 			TrimModeRelease = TrimMode.Full,
 			ProjectName = "marshal2",
 		};
-
+		proj.SetRuntime (runtime);
 		proj.SetAndroidSupportedAbis (DeviceAbi);
 		proj.AndroidManifest = String.Format (MarshalMethodsAppRuns_PermissionManifest, proj.PackageName);
 		proj.MainActivity = MarshalMethodsAppRuns_MainActivity;
 		proj.SetDefaultTargetDevice ();
+		// TODO: AndroidEnableMarshalMethods and ReadyToRun do not work together
+		if (runtime == AndroidRuntime.CoreCLR) {
+			proj.SetProperty ("PublishReadyToRun", "false");
+		}
 
 		using var apkBuilder = CreateApkBuilder ();
 		Assert.True (apkBuilder.Install (proj), "Project should have installed.");

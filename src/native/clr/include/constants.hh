@@ -112,6 +112,7 @@ namespace xamarin::android {
 		static constexpr std::string_view assembly_store_file_name { assembly_store_file_name_array.data () };
 
 		static constexpr auto split_config_abi_apk_name = concat_string_views<split_config_abi_apk_name_size> (split_config_prefix, android_abi, split_config_extension);
+		static constexpr std::string_view base_apk_name = { "/base.apk" };
 
 		//
 		// Indexes must match these of trhe `appDirs` array in src/java-runtime/mono/android/MonoPackageManager.java
