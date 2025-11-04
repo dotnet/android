@@ -139,7 +139,7 @@ void OSBridge::log_it (LogCategories category, std::string const& line, FILE *to
 	fwrite (line.c_str (), sizeof (std::string::value_type), line.length (), to);
 	fputc ('\n', to);
 
-	_write_stack_trace (to, from);
+	_write_stack_trace (to, from, category);
 	fflush (to);
 }
 

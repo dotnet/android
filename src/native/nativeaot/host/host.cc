@@ -48,8 +48,10 @@ auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, void *reserved) noexcept -> jint
 
 // Be VERY careful with what we do here - the managed runtime is not fully initialized
 // at the point this method is called.
-void Host::OnInit (jstring language, jstring filesDir, jstring cacheDir) noexcept
+void Host::OnInit (jstring language, jstring filesDir, jstring cacheDir, JnienvInitializeArgs *initArgs) noexcept
 {
+	abort_if_invalid_pointer_argument (initArgs, "initArgs");
+
 	JNIEnv *env = OSBridge::ensure_jnienv ();
 	jclass runtimeClass = env->FindClass ("mono/android/Runtime");
 
@@ -63,4 +65,8 @@ void Host::OnInit (jstring language, jstring filesDir, jstring cacheDir) noexcep
 	OSBridge::initialize_on_runtime_init (env, runtimeClass);
 	GCBridge::initialize_on_runtime_init (env, runtimeClass);
 	BridgeProcessing::naot_initialize_on_runtime_init (env);
+
+	// We expect the struct to be initialized by the managed land the way it sees fit, we set only the
+	// fields we support.
+	initArgs->logCategories = log_categories;
 }
