@@ -11,7 +11,7 @@ auto XA_Host_NativeAOT_JNI_OnLoad (JavaVM *vm, void *reserved) -> int
 	return Host::Java_JNI_OnLoad (vm, reserved);
 }
 
-void XA_Host_NativeAOT_OnInit (jstring language, jstring filesDir, jstring cacheDir)
+void XA_Host_NativeAOT_OnInit (jstring language, jstring filesDir, jstring cacheDir, JnienvInitializeArgs *initArgs)
 {
-	Host::OnInit (language, filesDir, cacheDir);
+	Host::OnInit (language, filesDir, cacheDir, initArgs);
 }
