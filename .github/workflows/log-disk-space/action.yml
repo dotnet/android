@@ -19,6 +19,14 @@ runs:
       echo ""
       echo "=== Disk Usage Summary ==="
       df -h / | tail -1 | awk '{print "Used: " $3 " / " $2 " (" $5 " full)"}'
+      echo ""
+      echo "=== /mnt disk info ==="
+      echo "Permissions:"
+      ls -la / | grep mnt
+      echo "Contents:"
+      ls -la /mnt 2>/dev/null || echo "/mnt is empty or not accessible"
+      echo "Disk usage:"
+      df -h /mnt
 
       # Detailed analysis if requested
       if [ "${{ inputs.detailed }}" = "true" ]; then
