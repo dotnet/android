@@ -29,12 +29,13 @@ jobs:
         sudo mkdir -p /mnt/bin
         sudo chown $USER:$USER /mnt/android-archives /mnt/android-toolchain /mnt/bin
         
-        # Create symlink for bin to use the secondary disk
+        # Remove bin directory if it exists and create symlink to use the secondary disk
+        rm -rf ./bin
         ln -s /mnt/bin ./bin
         
         echo "Android toolchain directories configured:"
         ls -la /mnt
-        ls -la | grep bin
+        ls -lah bin
         df -h /mnt
 
     - name: Setup .NET
