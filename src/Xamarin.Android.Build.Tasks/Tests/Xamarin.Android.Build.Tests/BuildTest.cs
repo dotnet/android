@@ -491,11 +491,16 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ApplicationJavaClassProperties ()
+		public void ApplicationJavaClassProperties ([Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidApplicationJavaClass", "android.test.mock.MockApplication");
-			var builder = CreateApkBuilder ("temp/ApplicationJavaClassProperties");
+			var builder = CreateApkBuilder ();
 			builder.Build (proj);
 			var appsrc = File.ReadAllText (Path.Combine (Root, builder.ProjectDirectory, "obj", "Debug", "android", "AndroidManifest.xml"));
 			Assert.IsTrue (appsrc.Contains ("android.test.mock.MockApplication"), "app class");
