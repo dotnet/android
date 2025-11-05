@@ -600,6 +600,7 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (GeneratorValidateEventNameArgs))]
 		public void GeneratorValidateEventName (bool failureExpected, bool warningExpected, string metadataFixup, string methodArgs)
 		{
+			// This test uses the default runtime. It checks generator output, independent on the runtime, so there's no need to repeat it across all the runtimes
 			string java = @"
 package com.xamarin.testing;
 
@@ -670,6 +671,7 @@ public class Test
 		[TestCaseSource (nameof (GeneratorValidateMultiMethodEventNameArgs))]
 		public void GeneratorValidateMultiMethodEventName (bool failureExpected, string expectedWarning, string metadataFixup, string methodArgs)
 		{
+			// This test uses the default runtime. It checks generator output, independent on the runtime, so there's no need to repeat it across all the runtimes
 			string java = @"
 package com.xamarin.testing;
 
@@ -722,19 +724,28 @@ public class Test
 		[Test]
 		[Category ("AOT")]
 		[NonParallelizable]
-		public void BuildApplicationWithSpacesInPath ([Values (true, false)] bool enableMultiDex, [Values ("", "r8")] string linkTool)
+		public void BuildApplicationWithSpacesInPath ([Values (true, false)] bool enableMultiDex, [Values ("", "r8")] string linkTool, [Values] AndroidRuntime runtime)
 		{
-			var folderName = $"BuildReleaseApp AndÜmläüts({enableMultiDex}{linkTool})";
+			const bool isRelease = true;
+			bool aotAssemblies = runtime == AndroidRuntime.MonoVM;
+			if (IgnoreUnsupportedConfiguration (runtime, aot: aotAssemblies, release: isRelease)) {
+				return;
+			}
+
+			var folderName = Path.Combine (Root, "temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
 				IsRelease = true,
 				ProjectName = "Library1"
 			};
+			lib.SetRuntime (runtime);
+
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-				AotAssemblies = true,
+				IsRelease = isRelease,
+				AotAssemblies = aotAssemblies,
 				LinkTool = linkTool,
 				References = { new BuildItem ("ProjectReference", $"..\\{folderName}Library1\\Library1.csproj") },
 			};
+			proj.SetRuntime (runtime);
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "Hello (World).jar") { BinaryContent = () => Convert.FromBase64String (@"
 UEsDBBQACAgIAMl8lUsAAAAAAAAAAAAAAAAJAAQATUVUQS1JTkYv/soAAAMAUEsHCAAAAAACAAAAA
 AAAAFBLAwQUAAgICADJfJVLAAAAAAAAAAAAAAAAFAAAAE1FVEEtSU5GL01BTklGRVNULk1G803My0
@@ -769,7 +780,10 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
 
-				var className = "Lmono/MonoRuntimeProvider;";
+				var className = runtime switch {
+					AndroidRuntime.NativeAOT => "Lnet/dot/jni/nativeaot/NativeAotRuntimeProvider",
+					_ => "Lmono/MonoRuntimeProvider;"
+				};
 				var dexFile = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
 				FileAssert.Exists (dexFile);
 				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
