@@ -850,7 +850,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		public void BuildInDesignTimeMode (
 				[Values (false, true)]
 				bool useManagedParser,
-				[Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)]
+				[Values]
 				AndroidRuntime runtime
 			)
 		{
@@ -868,6 +868,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 					},
 				},
 			};
+			lib.SetRuntime (runtime);
 			lib.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
 
 			var proj = new XamarinAndroidApplicationProject () {
@@ -913,6 +914,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		[Test]
 		public void IfAndroidJarDoesNotExistThrowXA5207 ([Values(true, false)] bool buildingInsideVisualStudio)
 		{
+			// This test runs on the default runtime, it's testing a runtime-agnostic feature.
 			var path = Path.Combine ("temp", TestName);
 			var AndroidSdkDirectory = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "24.0.1", new ApiInfo [] { new ApiInfo { Id = "30" } });
 			var proj = new XamarinAndroidApplicationProject () {
@@ -942,6 +944,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		[Test]
 		public void InvalidTargetPlatformVersion ([Values ("android33", "android99.0")] string platformVersion)
 		{
+			// This test runs on the default runtime, it's testing a runtime-agnostic feature.
 			const string targetFramework = "net9.0";
 			var project = new XamarinAndroidApplicationProject {
 				TargetFramework = $"{targetFramework}-{platformVersion}",
@@ -954,10 +957,17 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
-		public void XA4212 ()
+		public void XA4212 ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.Sources.Add (new BuildItem ("Compile", "MyBadJavaObject.cs") { TextContent = () => @"
 using System;
 using Android.Runtime;
