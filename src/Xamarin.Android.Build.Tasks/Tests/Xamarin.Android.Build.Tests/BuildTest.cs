@@ -508,11 +508,16 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ApplicationIdPlaceholder ()
+		public void ApplicationIdPlaceholder ([Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (runtime);
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("</application>", "<provider android:name='${applicationId}' android:authorities='example' /></application>");
-			using (var builder = CreateApkBuilder ("temp/ApplicationIdPlaceholder")) {
+			using (var builder = CreateApkBuilder ()) {
 				builder.Build (proj);
 				var manifest = XDocument.Load (Path.Combine (Root, builder.ProjectDirectory, "obj", "Debug", "android", "AndroidManifest.xml"));
 				var namespaceResolver = new XmlNamespaceManager (new NameTable ());
