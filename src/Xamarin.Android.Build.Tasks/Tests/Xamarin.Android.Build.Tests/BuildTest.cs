@@ -1160,14 +1160,21 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 
 		//NOTE: Referencing only Microsoft.Extensions.Http, surfaced a bug in <ResolveAssemblies/>
 		[Test]
-		public void MicrosoftExtensionsHttp ()
+		public void MicrosoftExtensionsHttp ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			// The goal is to create a project with only this <PackageReference/>
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				PackageReferences = {
 					KnownPackages.Microsoft_Extensions_Http,
 				}
 			};
+			proj.SetRuntime (runtime);
 			proj.References.Clear ();
 			proj.Sources.Clear ();
 			// We have to add a custom Target to remove Java.Interop and System.Runtime
