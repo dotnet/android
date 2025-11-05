@@ -440,8 +440,12 @@ namespace Xamarin.Android.Build.Tests
 
 		// Context https://bugzilla.xamarin.com/show_bug.cgi?id=29706
 		[Test]
-		public void CheckLogicalNamePathSeperators ([Values (false, true)] bool isRelease, [Values (false, true)] bool useDesignerAssembly)
+		public void CheckLogicalNamePathSeperators ([Values (false, true)] bool isRelease, [Values (false, true)] bool useDesignerAssembly, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var illegalSeperator = IsWindows ? "/" : @"\";
 			var dll = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library1",
@@ -453,6 +457,8 @@ namespace Xamarin.Android.Build.Tests
 					},
 				},
 			};
+			dll.SetRuntime (runtime);
+
 			var proj = new XamarinAndroidApplicationProject () {
 				ProjectName = "Application1",
 				IsRelease = isRelease,
@@ -466,6 +472,8 @@ namespace Xamarin.Android.Build.Tests
 					new BuildItem ("ProjectReference","..\\Library1\\Library1.csproj"),
 				},
 			};
+			proj.SetRuntime (runtime);
+
 			if (!useDesignerAssembly)
 				dll.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
 			proj.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
