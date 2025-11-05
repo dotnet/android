@@ -994,13 +994,18 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void Desugar ([Values (true, false)] bool isRelease, [Values ("", "r8")] string linkTool)
+		public void Desugar ([Values (true, false)] bool isRelease, [Values ("", "r8")] string linkTool, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 				// desugar is on by default with r8
 				LinkTool = linkTool,
 			};
+			proj.SetRuntime (runtime);
 
 			//Add a BroadcastReceiver
 			proj.Sources.Add (new BuildItem.Source ("MyReceiver.cs") {
@@ -1085,11 +1090,17 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				Assert.IsFalse (builder.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
 
-				var className = "Lmono/MonoRuntimeProvider;";
+				var className = runtime switch {
+					AndroidRuntime.NativeAOT => "Lnet/dot/jni/nativeaot/NativeAotRuntimeProvider",
+					_ => "Lmono/MonoRuntimeProvider;"
+				};
 				var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
 				FileAssert.Exists (dexFile);
 				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
-				className = "Lmono/MonoRuntimeProvider_1;";
+				className = runtime switch {
+					AndroidRuntime.NativeAOT => "Lnet/dot/jni/nativeaot/NativeAotRuntimeProvider_1",
+					_ => "Lmono/MonoRuntimeProvider_1;"
+				};
 				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 			}
 		}
