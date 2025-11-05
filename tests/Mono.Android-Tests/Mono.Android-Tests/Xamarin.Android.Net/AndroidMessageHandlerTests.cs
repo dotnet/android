@@ -418,4 +418,5 @@ namespace Xamarin.Android.NetTests
 
 			listener.Close ();
 		}
+	}
 }
