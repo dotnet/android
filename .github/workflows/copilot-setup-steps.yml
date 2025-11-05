@@ -6,12 +6,33 @@ jobs:
   copilot-setup-steps:
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    env:
+      AndroidToolchainCacheDirectory: /mnt/android-archives
+      AndroidToolchainDirectory: /mnt/android-toolchain
     
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         submodules: recursive
+
+    - name: Log disk space (after checkout)
+      uses: ./.github/workflows/log-disk-space
+
+    - name: Setup build directories on secondary disk
+      run: |
+        echo "Setting up Android toolchain on /mnt (secondary disk with 66G+ free)"
+        mkdir -p /mnt/android-archives
+        mkdir -p /mnt/android-toolchain
+        mkdir -p /mnt/bin
+        
+        # Create symlink for bin to use the secondary disk
+        ln -s /mnt/bin ./bin
+        
+        echo "Android toolchain directories configured:"
+        ls -la /mnt
+        ls -la | grep bin
+        df -h /mnt
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -24,6 +45,11 @@ jobs:
       run: |
         make jenkins PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=Debug
       timeout-minutes: 60
+
+    - name: Log disk space (after android build)
+      uses: ./.github/workflows/log-disk-space
+      with:
+        detailed: 'true'
 
     - name: Upload logs
       uses: actions/upload-artifact@v4
