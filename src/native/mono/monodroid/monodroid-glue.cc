@@ -259,8 +259,8 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 			// configuration blob are in `lib/{ARCH}`, which in turn lives in the split config APK
 			if (!got_split_config_abi_apk && Util::ends_with (apk_file.get_cstr (), SharedConstants::split_config_abi_apk_name)) {
 				got_split_config_abi_apk = scan_apk = true;
-			} else if (!application_config.have_assembly_store && !got_base_apk && Util::ends_with (apk_file.get_cstr (), base_apk_name)) {
-				got_base_apk = scan_apk = true;
+			} else if (!got_base_apk && Util::ends_with (apk_file.get_cstr (), base_apk_name)) {
+				scan_apk = got_base_apk = true;
 			}
 
 			if (!scan_apk) {

@@ -41,7 +41,7 @@ static partial class JavaInteropRuntime
 	}
 
 	[DllImport("xa-internal-api")]
-	static extern void XA_Host_NativeAOT_OnInit (IntPtr language, IntPtr filesDir, IntPtr cacheDir);
+	static extern void XA_Host_NativeAOT_OnInit (IntPtr language, IntPtr filesDir, IntPtr cacheDir, ref JNIEnvInit.JnienvInitializeArgs initArgs);
 
 	// symbol name from `$(IntermediateOutputPath)obj/Release/osx-arm64/h-classes/net_dot_jni_hello_JavaInteropRuntime.h`
 	[UnmanagedCallersOnly (EntryPoint="Java_net_dot_jni_nativeaot_JavaInteropRuntime_init")]
@@ -49,6 +49,12 @@ static partial class JavaInteropRuntime
 	{
 		JniTransition   transition  = default;
 		try {
+			var initArgs = new JNIEnvInit.JnienvInitializeArgs ();
+
+			// This needs to be called first, since it sets up locations, environment variables, logging etc
+			XA_Host_NativeAOT_OnInit (language, filesDir, cacheDir, ref initArgs);
+			JNIEnvInit.InitializeJniRuntimeEarly (initArgs);
+
 			var settings    = new DiagnosticSettings ();
 			settings.AddDebugDotnetLog ();
 
@@ -63,9 +69,8 @@ static partial class JavaInteropRuntime
 			};
 			runtime = options.CreateJreVM ();
 
-			// Entry point into Mono.Android.dll
-			JNIEnvInit.InitializeJniRuntime (runtime);
-			XA_Host_NativeAOT_OnInit (language, filesDir, cacheDir);
+			// Entry point into Mono.Android.dll. Log categories are initialized in JNI_OnLoad.
+			JNIEnvInit.InitializeJniRuntime (runtime, initArgs);
 
 			transition  = new JniTransition (jnienv);
 

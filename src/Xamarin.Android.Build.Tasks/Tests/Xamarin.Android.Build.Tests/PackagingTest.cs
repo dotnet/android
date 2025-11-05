@@ -57,14 +57,15 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckDebugModeWithTrimming ()
+		public void CheckDebugModeWithTrimming ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			bool usesAssemblyStores = false;
+			bool usesAssemblyStores = runtime == AndroidRuntime.CoreCLR;
 			var proj = new XamarinAndroidApplicationProject {
 				ProjectName = "MyApp",
 				IsRelease = false,
 				EmbedAssembliesIntoApk = true,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("PublishTrimmed", "true");
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
 
@@ -83,16 +84,25 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[NonParallelizable] // Commonly fails NuGet restore
-		public void CheckIncludedAssemblies ([Values (false, true)] bool usesAssemblyStores)
+		public void CheckIncludedAssemblies ([Values (false, true)] bool usesAssemblyStores, [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
+			if (!usesAssemblyStores && runtime == AndroidRuntime.CoreCLR) {
+				Assert.Ignore ("CoreCLR only supports builds with assembly stores.");
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true
 			};
 
 			AndroidTargetArch[] supportedArches = new[] {
-				AndroidTargetArch.Arm,
+				runtime switch {
+					AndroidRuntime.MonoVM => AndroidTargetArch.Arm,
+					AndroidRuntime.CoreCLR => AndroidTargetArch.Arm64,
+					_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+				}
 			};
-
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
 			proj.SetRuntimeIdentifiers (supportedArches);
 			proj.PackageReferences.Add (new Package {
@@ -129,8 +139,11 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				"System.Collections.dll",
 				"System.Collections.Concurrent.dll",
 				"System.Text.RegularExpressions.dll",
-				"libarc.bin.so",
 			};
+
+			if (runtime == AndroidRuntime.MonoVM) {
+				expectedFiles.Add ("libarc.bin.so");
+			}
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
@@ -191,13 +204,15 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 
 		[Test]
 		[Parallelizable (ParallelScope.Self)]
-		public void CheckIncludedNativeLibraries ([Values (true, false)] bool compressNativeLibraries)
+		public void CheckIncludedNativeLibraries ([Values (true, false)] bool compressNativeLibraries,
+		                                          [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
+			proj.SetRuntime (runtime);
 			proj.PackageReferences.Add(KnownPackages.SQLitePCLRaw_Core);
-			proj.SetAndroidSupportedAbis ("x86");
+			proj.SetAndroidSupportedAbis ("x86_64");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidStoreUncompressedFileExtensions", compressNativeLibraries ? "" : "so");
 			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
@@ -207,7 +222,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				CompressionMethod method = compressNativeLibraries ? CompressionMethod.Deflate : CompressionMethod.Store;
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					var libFiles = zip.Where (x => x.FullName.StartsWith("lib/", StringComparison.Ordinal) && !x.FullName.Equals("lib/", StringComparison.InvariantCultureIgnoreCase));
-					var abiPaths = new string[] { "lib/x86/" };
+					var abiPaths = new string[] { "lib/x86_64/" };
 					foreach (var file in libFiles) {
 						Assert.IsTrue (abiPaths.Any (x => file.FullName.Contains (x)), $"Apk contains an unnesscary lib file: {file.FullName}");
 						Assert.IsTrue (file.CompressionMethod == method, $"{file.FullName} should have been CompressionMethod.{method} in the apk, but was CompressionMethod.{file.CompressionMethod}");
@@ -379,7 +394,8 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 		}
 
 		[Test]
-		public void CheckSignApk ([Values(true, false)] bool useApkSigner, [Values(true, false)] bool perAbiApk)
+		public void CheckSignApk ([Values(true, false)] bool useApkSigner, [Values(true, false)] bool perAbiApk,
+		                          [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".bat" : "";
 			var foundApkSigner = Directory.EnumerateDirectories (Path.Combine (AndroidSdkPath, "build-tools")).Any (dir => Directory.EnumerateFiles (dir, "apksigner"+ ext).Any ());
@@ -409,6 +425,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty (proj.ReleaseProperties, "AndroidUseApkSigner", useApkSigner);
 			proj.SetProperty (proj.ReleaseProperties, "AndroidKeyStore", "True");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyStore", keyfile);
@@ -417,9 +434,13 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningStorePass", Uri.EscapeDataString (pass));
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, perAbiApk);
 			if (perAbiApk) {
-				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "arm64-v8a", "x86_64");
+				if (runtime == AndroidRuntime.MonoVM) {
+					proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "arm64-v8a", "x86_64");
+				} else {
+					proj.SetRuntimeIdentifiers (AndroidTargetArch.Arm64, AndroidTargetArch.X86_64);
+				}
 			} else {
-				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+				proj.SetRuntimeIdentifiers (AndroidTargetArch.Arm64, AndroidTargetArch.X86_64);
 			}
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName, "App"))) {
 				var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
@@ -435,11 +456,20 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 
 				// Make sure the APKs have unique version codes
 				if (perAbiApk) {
-					int armManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "armeabi-v7a", "AndroidManifest.xml"));
-					int x86ManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "x86", "AndroidManifest.xml"));
+					var versionList = new List<int> ();
+					int armManifestCode = Int32.MinValue;
+					int x86ManifestCode = Int32.MinValue;
+					if (runtime == AndroidRuntime.MonoVM) {
+						armManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "armeabi-v7a", "AndroidManifest.xml"));
+						x86ManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "x86", "AndroidManifest.xml"));
+						versionList.Add (armManifestCode);
+						versionList.Add (x86ManifestCode);
+					}
+
 					int arm64ManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "arm64-v8a", "AndroidManifest.xml"));
 					int x86_64ManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "x86_64", "AndroidManifest.xml"));
-					var versionList = new List<int> { armManifestCode, x86ManifestCode, arm64ManifestCode, x86_64ManifestCode };
+					versionList.Add (arm64ManifestCode);
+					versionList.Add (x86_64ManifestCode);
 					Assert.True (versionList.Distinct ().Count () == versionList.Count,
 						$"APK version codes were not unique - armeabi-v7a: {armManifestCode}, x86: {x86ManifestCode}, arm64-v8a: {arm64ManifestCode}, x86_64: {x86_64ManifestCode}");
 				}

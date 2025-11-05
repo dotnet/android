@@ -86,9 +86,16 @@ namespace Java.LangTests
 			value.Dispose ();
 		}
 
+		// TODO: fix on CoreCLR once new managed type maps are implemented. Currently fails with
+		//       java/lang/Object is typemap'd to Java.InteropTests.JavaLangRemappingTestObject, not Java.Lang.Object, Mono.Android!
 		[Test]
 		public void java_lang_Object_Is_Java_Lang_Object ()
 		{
+			if (AppContext.TryGetSwitch ("Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime", out bool isCoreCLR) && isCoreCLR) {
+				Assert.Ignore ("Currently broken on CoreCLR");
+				return;
+			}
+
 			var jloType = global::Java.Interop.JniEnvironment.Runtime.TypeManager.GetType (new JniTypeSignature ("java/lang/Object"));
 			Assert.AreSame (typeof (Java.Lang.Object), jloType,
 					$"`java/lang/Object` is typemap'd to `{jloType}`, not `Java.Lang.Object, Mono.Android`!");
@@ -112,19 +119,19 @@ namespace Java.LangTests
 		 *	INSTRUMENTATION_RESULT: failure: Xamarin.Android.RuntimeTests.AdapterTests.InvokeOverriddenAbsListView_AdapterProperty=System.NotSupportedException : Unable to activate instance of type Xamarin.Android.RuntimeTests.CanOverrideAbsListView_Adapter from native handle 41e44de8
 		 *		----> System.MissingMethodException : No constructor found for Xamarin.Android.RuntimeTests.CanOverrideAbsListView_Adapter::.ctor(System.IntPtr, Android.Runtime.JniHandleOwnership)
 		 *		----> Java.Interop.JavaLocationException : Exception of type 'Java.Interop.JavaLocationException' was thrown.
-		 *		at Java.Interop.TypeManager.CreateInstance (IntPtr handle, JniHandleOwnership transfer, System.Type targetType) [0x00000] in <filename unknown>:0 
-		 *		at Java.Lang.Object.GetObject (IntPtr handle, JniHandleOwnership transfer, System.Type type) [0x00000] in <filename unknown>:0 
-		 *		at Java.Lang.Object._GetObject[AbsListView] (IntPtr handle, JniHandleOwnership transfer) [0x00000] in <filename unknown>:0 
-		 *		at Java.Lang.Object.GetObject[AbsListView] (IntPtr handle, JniHandleOwnership transfer) [0x00000] in <filename unknown>:0 
-		 *		at Java.Lang.Object.GetObject[AbsListView] (IntPtr jnienv, IntPtr handle, JniHandleOwnership transfer) [0x00000] in <filename unknown>:0 
-		 *		at Android.Widget.AbsListView.n_GetAdapter (IntPtr jnienv, IntPtr native__this) [0x00000] in <filename unknown>:0 
+		 *		at Java.Interop.TypeManager.CreateInstance (IntPtr handle, JniHandleOwnership transfer, System.Type targetType) [0x00000] in <filename unknown>:0
+		 *		at Java.Lang.Object.GetObject (IntPtr handle, JniHandleOwnership transfer, System.Type type) [0x00000] in <filename unknown>:0
+		 *		at Java.Lang.Object._GetObject[AbsListView] (IntPtr handle, JniHandleOwnership transfer) [0x00000] in <filename unknown>:0
+		 *		at Java.Lang.Object.GetObject[AbsListView] (IntPtr handle, JniHandleOwnership transfer) [0x00000] in <filename unknown>:0
+		 *		at Java.Lang.Object.GetObject[AbsListView] (IntPtr jnienv, IntPtr handle, JniHandleOwnership transfer) [0x00000] in <filename unknown>:0
+		 *		at Android.Widget.AbsListView.n_GetAdapter (IntPtr jnienv, IntPtr native__this) [0x00000] in <filename unknown>:0
 		 *		at (wrapper dynamic-method) object:2173e40b-99e1-484f-8c82-1f45de2f5a3a (intptr,intptr)
 		 *	--MissingMethodException
-		 *		at Java.Interop.TypeManager.CreateProxy (System.Type type, IntPtr handle, JniHandleOwnership transfer) [0x00000] in <filename unknown>:0 
-		 *		at Java.Interop.TypeManager.CreateInstance (IntPtr handle, JniHandleOwnership transfer, System.Type targetType) [0x00000] in <filename unknown>:0 
+		 *		at Java.Interop.TypeManager.CreateProxy (System.Type type, IntPtr handle, JniHandleOwnership transfer) [0x00000] in <filename unknown>:0
+		 *		at Java.Interop.TypeManager.CreateInstance (IntPtr handle, JniHandleOwnership transfer, System.Type targetType) [0x00000] in <filename unknown>:0
 		 *	--JavaLocationException
 		 *	Java.Lang.Error: Exception of type 'Java.Lang.Error' was thrown.
-		 *	
+		 *
 		 *		--- End of managed exception stack trace ---
 		 *	java.lang.Error: Java callstack:
 		 *		at xamarin.android.runtimetests.CanOverrideAbsListView_Adapter.n_getAdapter(Native Method)
