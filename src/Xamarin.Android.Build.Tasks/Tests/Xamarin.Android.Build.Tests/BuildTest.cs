@@ -528,13 +528,19 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void AarContentExtraction ()
+		public void AarContentExtraction ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var aar = new AndroidItem.AndroidAarLibrary ("Jars\\android-crop-1.0.1.aar") {
 				// https://mvnrepository.com/artifact/com.soundcloud.android/android-crop/1.0.1
 				WebContent = "https://repo1.maven.org/maven2/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
 			};
 			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
 				OtherBuildItems = {
 					aar,
 					new AndroidItem.AndroidAarLibrary ("fragment-1.2.2.aar") {
@@ -542,6 +548,8 @@ namespace Xamarin.Android.Build.Tests
 					}
 				},
 			};
+			proj.SetRuntime (runtime);
+
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				var cache = builder.Output.GetIntermediaryPath ("libraryprojectimports.cache");
