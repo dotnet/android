@@ -330,8 +330,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void SmokeTestBuildWithSpecialCharacters ([Values (false, true)] bool forms, [Values (false, true)] bool aot, [Values] AndroidRuntime runtime)
 		{
-			if (aot && runtime == AndroidRuntime.CoreCLR) {
-				Assert.Ignore ("CoreCLR doesn't support AOT");
+			if (IgnoreUnsupportedConfiguration (runtime, aot: aot, release: true)) {
 				return;
 			} else if (!aot && runtime == AndroidRuntime.NativeAOT) {
 				// Just saving time, aot && !aot would be indentical tests with NativeAOT runtime
@@ -397,8 +396,12 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckItemMetadata ([Values (true, false)] bool isRelease)
+		public void CheckItemMetadata ([Values (true, false)] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 				Imports = {
@@ -422,11 +425,12 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
+			proj.SetRuntime (runtime);
 
 			var mainAxml = proj.AndroidResources.First (x => x.Include () == "Resources\\layout\\Main.axml");
 			mainAxml.MetadataValues = "CustomData=ResourceMetaDataOK";
 
-			using (var builder = CreateApkBuilder (string.Format ("temp/CheckItemMetadata_{0}", isRelease))) {
+			using (var builder = CreateApkBuilder ()) {
 				builder.Verbosity = LoggerVerbosity.Detailed;
 				builder.Build (proj);
 				StringAssertEx.Contains ("AssetMetaDataOK", builder.LastBuildOutput, "Metadata was not copied for AndroidAsset");
