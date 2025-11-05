@@ -1107,15 +1107,22 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 
 		//See: https://developer.android.com/about/versions/marshmallow/android-6.0-changes#behavior-apache-http-client
 		[Test]
-		public void MissingOrgApacheHttpClient ()
+		public void MissingOrgApacheHttpClient ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				Sources = {
 					new BuildItem.Source ("ApacheHttpClient.cs") {
 						BinaryContent = () => ResourceData.ApacheHttpClient_cs,
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("</application>",
 				"<uses-library android:name=\"org.apache.http.legacy\" android:required=\"false\" /></application>");
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
