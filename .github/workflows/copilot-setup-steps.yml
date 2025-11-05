@@ -22,9 +22,12 @@ jobs:
     - name: Setup build directories on secondary disk
       run: |
         echo "Setting up Android toolchain on /mnt (secondary disk with 66G+ free)"
-        mkdir -p /mnt/android-archives
-        mkdir -p /mnt/android-toolchain
-        mkdir -p /mnt/bin
+        
+        # Create directories with sudo and set ownership
+        sudo mkdir -p /mnt/android-archives
+        sudo mkdir -p /mnt/android-toolchain
+        sudo mkdir -p /mnt/bin
+        sudo chown $USER:$USER /mnt/android-archives /mnt/android-toolchain /mnt/bin
         
         # Create symlink for bin to use the secondary disk
         ln -s /mnt/bin ./bin
