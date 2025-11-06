@@ -1224,10 +1224,16 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
-		public void BuildOutsideVisualStudio ()
+		public void BuildOutsideVisualStudio ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
 				ProjectName = "Library1",
 				Sources = {
 					new BuildItem.Source ("Foo.cs") {
@@ -1235,7 +1241,10 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 					}
 				},
 			};
+			lib.SetRuntime (runtime);
+
 			var proj = new XamarinFormsAndroidApplicationProject {
+				IsRelease = isRelease,
 				ProjectName = "App1",
 				References = { new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj") },
 				Sources = {
@@ -1244,6 +1253,8 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 					}
 				},
 			};
+			proj.SetRuntime (runtime);
+
 			using (var libb = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
 			using (var appb = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
 				libb.BuildingInsideVisualStudio =
