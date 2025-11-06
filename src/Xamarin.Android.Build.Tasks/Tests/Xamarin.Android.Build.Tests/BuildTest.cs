@@ -2146,9 +2146,15 @@ public class ToolbarEx {
 		}
 
 		[Test]
-		public void IncrementalBuildDifferentDevice()
+		public void IncrementalBuildDifferentDevice ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				Imports = {
 					new Import (() => "MockPrimaryCpuAbi.targets") {
 						TextContent = () =>
@@ -2167,6 +2173,7 @@ public class ToolbarEx {
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
 			using var builder = CreateApkBuilder ();
 			builder.Target = "Build";
 			builder.BuildingInsideVisualStudio = false;
