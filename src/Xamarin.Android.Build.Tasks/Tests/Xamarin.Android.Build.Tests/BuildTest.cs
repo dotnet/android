@@ -1998,9 +1998,17 @@ public class ToolbarEx {
 		}
 
 		[Test]
-		public void CheckJavaError ()
+		public void CheckJavaError ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.AndroidJavaSources.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "TestMe.java") {
 				TextContent = () => "public classo TestMe { }",
 				Encoding = Encoding.ASCII
@@ -2011,7 +2019,7 @@ public class ToolbarEx {
 					"}",
 				Encoding = Encoding.ASCII
 			});
-			using (var b = CreateApkBuilder ("temp/CheckJavaError")) {
+			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");
 				var ext = b.IsUnix ? "" : ".exe";
