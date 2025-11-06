@@ -1973,9 +1973,17 @@ public class ToolbarEx {
 		}
 
 		[Test]
-		public void BuildApplicationCheckThatAddStaticResourcesTargetDoesNotRerun ()
+		public void BuildApplicationCheckThatAddStaticResourcesTargetDoesNotRerun ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "Build should not have failed");
