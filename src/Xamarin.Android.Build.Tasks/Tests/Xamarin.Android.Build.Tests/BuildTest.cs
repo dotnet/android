@@ -1316,9 +1316,17 @@ public class ApplicationRegistration { }");
 		}
 
 		[Test]
-		public void CompilerErrorShouldNotRunLinkAssemblies ()
+		public void CompilerErrorShouldNotRunLinkAssemblies ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.Sources.Add (new BuildItem.Source ("SyntaxError.cs") {
 				TextContent = () => "class SyntaxError {"
 			});
