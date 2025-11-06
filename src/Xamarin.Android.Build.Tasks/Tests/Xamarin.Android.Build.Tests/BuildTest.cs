@@ -1376,9 +1376,17 @@ public class ApplicationRegistration { }");
 		}
 
 		[Test]
-		public void WorkManager ()
+		public void WorkManager ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinFormsAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinFormsAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.Sources.Add (new BuildItem.Source ("MyWorker.cs") {
 				TextContent = () =>
 @"using System;
