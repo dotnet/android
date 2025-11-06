@@ -1684,9 +1684,17 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void NUnitLiteNugetWorks ()
+		public void NUnitLiteNugetWorks ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.PackageReferences.Add (KnownPackages.Xamarin_Legacy_NUnitLite);
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
