@@ -1840,11 +1840,19 @@ namespace UnnamedProject
 
 		[Test]
 		[NonParallelizable]
-		public void CheckLintErrorsAndWarnings ()
+		public void CheckLintErrorsAndWarnings ([Values] AndroidRuntime runtime)
 		{
 			string disabledIssues = "StaticFieldLeak,ObsoleteSdkInt,AllowBackup,ExportedReceiver,RedundantLabel,AppLinkWarning";
 
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidLintEnabled", true.ToString ());
 			proj.SetProperty ("AndroidLintDisabledIssues", disabledIssues);
 			proj.SetProperty ("AndroidLintEnabledIssues", "");
@@ -1871,7 +1879,7 @@ namespace UnnamedProject
 </ConstraintLayout>";
 				}
 			});
-			using (var b = CreateApkBuilder ("temp/CheckLintErrorsAndWarnings", cleanupOnDispose: false)) {
+			using (var b = CreateApkBuilder ()) {
 				var maxApiLevel = AndroidSdkResolver.GetMaxInstalledPlatform ();
 				b.LatestTargetFrameworkVersion (out string apiLevel);
 				if (AndroidSdkResolver.TryParseAndroidSdkVersion (apiLevel, out var v) && v < maxApiLevel) {
