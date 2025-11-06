@@ -2036,9 +2036,17 @@ public class ToolbarEx {
 		/// Based on issue raised in
 		/// https://bugzilla.xamarin.com/show_bug.cgi?id=28721
 		/// </summary>
-		public void DuplicateValuesInResourceCaseMap ()
+		public void DuplicateValuesInResourceCaseMap ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\test.axml") {
 				TextContent = () => {
 					return "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:orientation=\"vertical\"\n    android:layout_width=\"fill_parent\"\n    android:layout_height=\"fill_parent\"\n    />";
