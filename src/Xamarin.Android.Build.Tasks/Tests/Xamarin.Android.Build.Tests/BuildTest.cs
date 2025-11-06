@@ -1665,9 +1665,17 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void OpenTKNugetWorks ()
+		public void OpenTKNugetWorks ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.PackageReferences.Add (KnownPackages.Xamarin_Legacy_OpenTK);
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
