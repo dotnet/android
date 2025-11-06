@@ -2066,9 +2066,17 @@ public class ToolbarEx {
 		}
 
 		[Test]
-		public void CheckLintResourceFileReferencesAreFixed ()
+		public void CheckLintResourceFileReferencesAreFixed ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidLintEnabled", true.ToString ());
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\test.axml") {
 				TextContent = () => {
