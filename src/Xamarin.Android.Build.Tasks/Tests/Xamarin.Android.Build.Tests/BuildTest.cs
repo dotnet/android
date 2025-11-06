@@ -1640,13 +1640,20 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void XA4313 ([Values ("OpenTK-1.0", "Xamarin.Android.NUnitLite")] string reference)
+		public void XA4313 ([Values ("OpenTK-1.0", "Xamarin.Android.NUnitLite")] string reference, [Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
 				References = {
 					new BuildItem.Reference (reference)
 				},
 			};
+			proj.SetRuntime (runtime);
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (proj), $"Build should have failed.");
