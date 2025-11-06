@@ -1574,9 +1574,17 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void KotlinServiceLoader ([Values ("apk", "aab")] string packageFormat)
+		public void KotlinServiceLoader ([Values ("apk", "aab")] string packageFormat, [Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			if (packageFormat == "aab")
 				// Disable fast deployment for aabs because it is not currently compatible and so gives an XA0119 build error.
