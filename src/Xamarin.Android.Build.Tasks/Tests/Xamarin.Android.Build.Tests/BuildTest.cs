@@ -1616,9 +1616,17 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void XA1018 ()
+		public void XA1018 ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidManifest", "DoesNotExist");
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
