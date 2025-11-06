@@ -1939,8 +1939,12 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void BuildApplicationWithJavaSourceUsingAndroidX ([Values(true, false)] bool isRelease)
+		public void BuildApplicationWithJavaSourceUsingAndroidX ([Values(true, false)] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 				AndroidJavaSources = {
@@ -1958,6 +1962,7 @@ public class ToolbarEx {
 					},
 				}
 			};
+			proj.SetRuntime (runtime);
 			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
 			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
