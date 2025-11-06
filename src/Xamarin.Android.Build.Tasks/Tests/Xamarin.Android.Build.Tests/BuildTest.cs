@@ -1341,9 +1341,16 @@ public class ApplicationRegistration { }");
 		/// This assembly weirdly has no [assembly: System.Runtime.Versioning.TargetFrameworkAttribute()], at all...
 		/// </summary>
 		[Test]
-		public void AssemblyWithMissingTargetFramework ()
+		public void AssemblyWithMissingTargetFramework ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
+			// TODO: fix the test for NativeAOT. It currently fails on the assertion that CircleImageView.java exists
+			bool isRelease = false; // runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinFormsAndroidApplicationProject {
+				IsRelease = isRelease,
 				AndroidResources = {
 					new AndroidItem.AndroidResource ("Resources\\layout\\test.axml") {
 						TextContent = () =>
@@ -1356,6 +1363,7 @@ public class ApplicationRegistration { }");
 					}
 				}
 			};
+			proj.SetRuntime (runtime);
 			proj.PackageReferences.Add (KnownPackages.CircleImageView);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
