@@ -1195,13 +1195,18 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
-		public void FastDeploymentDoesNotAddContentProvider ()
+		public void FastDeploymentDoesNotAddContentProvider ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime)) {
+				return;
+			}
+
 			AssertCommercialBuild ();
 
 			var proj = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = false,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("_XASupportsFastDev", "True");
 			using (var b = CreateApkBuilder ()) {
 				//NOTE: build will fail, due to $(_XASupportsFastDev)
