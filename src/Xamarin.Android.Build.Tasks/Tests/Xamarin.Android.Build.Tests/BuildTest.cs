@@ -1501,13 +1501,58 @@ namespace UnnamedProject
 			}
 		}
 
-		[Test]
-		[TestCase (true, "LowercaseMD5", "")]
-		[TestCase (true, "LowercaseCrc64", "")]
-		[TestCase (false, "", "127.0.0.1:9000,suspend,connect")]
-		public void EnvironmentVariables (bool useInterpreter, string packageNamingPolicy, string diagnosticConfiguration)
+		static IEnumerable<object[]> Get_EnvironmentVariablesData ()
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData (true, "LowercaseMD5", "", runtime);
+				AddTestData (true, "LowercaseCrc64", "", runtime);
+				AddTestData (false, "", "127.0.0.1:9000,suspend,connect", runtime);
+			}
+
+			return ret;
+
+			void AddTestData (bool useInterpreter, string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					useInterpreter,
+					packageNamingPolicy,
+					diagnosticConfiguration,
+					runtime
+				});
+			}
+		}
+
+		[Test]
+		[TestCaseSource (nameof (Get_EnvironmentVariablesData))]
+		public void EnvironmentVariables (bool useInterpreter, string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime)
+		{
+			// NativeAOT supports neither the interpreter nor debug builds, but what we test here is
+			// environment file creation and contents, and that's relevant to NativeAOT too
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			if (runtime == AndroidRuntime.NativeAOT) {
+				if (packageNamingPolicy == "LowercaseMD5") {
+					Assert.Ignore ("NativeAOT does not support the 'LowercaseMD5' package naming policy.");
+					return;
+				}
+
+				// TODO: investigate and fix this. For some reason, `DOTNET_MODIFIABLE_ASSEMBLIES=Debug` is not
+				// in the environment variables file
+				if (useInterpreter && packageNamingPolicy == "LowercaseCrc64" && diagnosticConfiguration == "") {
+					Assert.Ignore ("NativeAOT doesn't put the DOTNET_MODIFIABLE_ASSEMBLIES=Debug variable in the environment file.");
+					return;
+				}
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("UseInterpreter", useInterpreter.ToString ());
 			if (!string.IsNullOrEmpty (packageNamingPolicy))
 				proj.SetProperty ("AndroidPackageNamingPolicy", packageNamingPolicy);
