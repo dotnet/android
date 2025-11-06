@@ -1409,11 +1409,19 @@ public class MyWorker : Worker
 		}
 
 		[Test]
-		public void NuGetizer3000 ()
+		public void NuGetizer3000 ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.PackageReferences.Add (KnownPackages.NuGet_Build_Packaging);
-			using (var b = CreateApkBuilder (Path.Combine ("temp", nameof (NuGetizer3000)))) {
+			using (var b = CreateApkBuilder ()) {
 				b.Target = "GetPackageContents";
 				Assert.IsTrue (b.Build (proj), $"{b.Target} should have succeeded.");
 			}
