@@ -1702,52 +1702,86 @@ namespace UnnamedProject
 			}
 		}
 
-		static readonly object [] XA1027XA1028Source = new object [] {
-			new object [] {
-				/* linkTool */                   "r8",
-				/* enableProguard */             null,
-				/* androidEnableProguard */      "true",
-				/* expectedBuildResult */        true,
-				/* expectedWarning */            "0 Warning(s)",
-			},
-			new object [] {
-				/* linkTool */                   "proguard",
-				/* enableProguard */             null,
-				/* androidEnableProguard */      "true",
-				/* expectedBuildResult */        false,
-				/* expectedWarning */            "0 Warning(s)",
-			},
-			new object [] {
-				/* linkTool */                   null,
-				/* enableProguard */             null,
-				/* androidEnableProguard */      null,
-				/* expectedBuildResult */        true,
-				/* expectedWarning */            "0 Warning(s)",
-			},
-			new object [] {
-				/* linkTool */                   null,
-				/* enableProguard */             "true",
-				/* androidEnableProguard */      null,
-				/* expectedBuildResult */        false,
-				/* expectedWarning */            "warning XA1027:",
-			},
-			new object [] {
-				/* linkTool */                   null,
-				/* enableProguard */             null,
-				/* androidEnableProguard */      "true",
-				/* expectedBuildResult */        false,
-				/* expectedWarning */            "warning XA1028:",
+		static IEnumerable<object[]> Get_XA1027XA1028Data ()
+		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData (
+					linkTool: "r8",
+					enableProguard: null,
+					androidEnableProguard: "true",
+					expectedBuildResult: true,
+					expectedWarning: "0 Warning(s)",
+					runtime
+				);
+
+				AddTestData (
+					linkTool: "proguard",
+					enableProguard: null,
+					androidEnableProguard: "true",
+					expectedBuildResult: false,
+					expectedWarning: "0 Warning(s)",
+					runtime
+				);
+
+				AddTestData (
+					linkTool: null,
+					enableProguard: null,
+					androidEnableProguard: null,
+					expectedBuildResult: true,
+					expectedWarning: "0 Warning(s)",
+					runtime
+				);
+
+				AddTestData (
+					linkTool: null,
+					enableProguard: "true",
+					androidEnableProguard: null,
+					expectedBuildResult: false,
+					expectedWarning: "warning XA1027:",
+					runtime
+				);
+
+				AddTestData (
+					linkTool: null,
+					enableProguard: null,
+					androidEnableProguard: "true",
+					expectedBuildResult: false,
+					expectedWarning: "warning XA1028:",
+					runtime
+				);
 			}
-		};
+
+			return ret;
+
+			void AddTestData (string linkTool, string enableProguard, string androidEnableProguard, bool expectedBuildResult, string expectedWarning, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					linkTool,
+					enableProguard,
+					androidEnableProguard,
+					expectedBuildResult,
+					expectedWarning,
+					runtime
+				});
+			}
+		}
 
 		[Test]
-		[TestCaseSource (nameof (XA1027XA1028Source))]
-		public void XA1027XA1028 (string linkTool, string enableProguard, string androidEnableProguard, bool expectedBuildResult, string expectedWarning)
+		[TestCaseSource (nameof (Get_XA1027XA1028Data))]
+		public void XA1027XA1028 (string linkTool, string enableProguard, string androidEnableProguard, bool expectedBuildResult, string expectedWarning, AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				LinkTool = linkTool,
-				IsRelease = true
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("EnableProguard", enableProguard);
 			proj.SetProperty ("AndroidEnableProguard", androidEnableProguard);
 			using (var builder = CreateApkBuilder ()) {
