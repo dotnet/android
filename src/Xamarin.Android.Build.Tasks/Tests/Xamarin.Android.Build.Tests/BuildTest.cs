@@ -1896,9 +1896,17 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void CheckLintConfigMerging ()
+		public void CheckLintConfigMerging ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidLintEnabled", true.ToString ());
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidLintConfig ("lint1.xml") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""UTF-8""?>
@@ -1912,9 +1920,9 @@ namespace UnnamedProject
 	<issue id=""MissingApplicationIcon"" severity=""ignore"" />
 </lint>"
 			});
-			using (var b = CreateApkBuilder ("temp/CheckLintConfigMerging", false, false)) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var lintFile = Path.Combine (Root, "temp", "CheckLintConfigMerging", proj.IntermediateOutputPath, "lint.xml");
+				var lintFile = Path.Combine (Root, "temp", TestName, proj.IntermediateOutputPath, "lint.xml");
 				Assert.IsTrue (File.Exists (lintFile), "{0} should have been created.", lintFile);
 				var doc = XDocument.Load (lintFile);
 				Assert.IsNotNull (doc, "Document should have loaded successfully.");
