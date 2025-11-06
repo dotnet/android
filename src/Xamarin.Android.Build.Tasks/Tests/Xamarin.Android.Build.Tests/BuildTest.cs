@@ -1479,12 +1479,21 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void AbiNameInIntermediateOutputPath ()
+		public void AbiNameInIntermediateOutputPath ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			string config = isRelease ? "Release" : "Debug";
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.PackageReferences.Add (KnownPackages.Akavache);
-			proj.OutputPath = Path.Combine ("bin", "x86", "Debug");
-			proj.IntermediateOutputPath = Path.Combine ("obj", "x86", "Debug");
+			proj.OutputPath = Path.Combine ("bin", "x86", config);
+			proj.IntermediateOutputPath = Path.Combine ("obj", "x86", config);
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "var task = Akavache.BlobCache.LocalMachine.GetAllKeys();");
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
