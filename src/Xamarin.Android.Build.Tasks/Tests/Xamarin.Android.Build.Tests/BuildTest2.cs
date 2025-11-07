@@ -154,9 +154,10 @@ namespace Xamarin.Android.Build.Tests
 		public void NativeAOT ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
 				ProjectName = "Hello",
 			};
-			proj.SetPublishAot (true, AndroidNdkPath);
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
 			proj.SetProperty ("_ExtraTrimmerArgs", "--verbose");
 
 			// Required for java/util/ArrayList assertion below
