@@ -120,35 +120,15 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		static object [] ReadyToRunConfigurationSource = new object [] {
-			new object[] {
-				/* isComposite */	true,
-				/* rid */		"android-x64"
-			},
-			new object[] {
-				/* isComposite */	false,
-				/* rid */		"android-x64"
-			},
-			new object[] {
-				/* isComposite */	true,
-				/* rid */		"android-arm64"
-			},
-			new object[] {
-				/* isComposite */	false,
-				/* rid */		"android-arm64"
-			}
-		};
-
 		[Test]
-		[TestCaseSource (nameof (ReadyToRunConfigurationSource))]
-		public void BasicApplicationPublishReadyToRun (bool isComposite, string rid)
+		public void BasicApplicationPublishReadyToRun ([Values] bool isComposite, [Values ("android-x64", "android-arm64")] string rid)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true, // Enables R2R by default
 			};
 
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty ("RuntimeIdentifier", rid);
-			proj.SetProperty ("UseMonoRuntime", "false"); 	// Enables CoreCLR
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
 			proj.SetProperty ("PublishReadyToRunComposite", isComposite.ToString ());
 
