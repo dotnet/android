@@ -348,7 +348,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.ProjectName = testName;
 			proj.IsRelease = true;
 
-			if (runtime != AndroidRuntime.NativeAOT) {
+			if (runtime == AndroidRuntime.MonoVM) {
 				proj.AotAssemblies = aot;
 			}
 
