@@ -278,13 +278,18 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildBasicApplicationThenMoveIt ([Values (true, false)] bool isRelease)
+		public void BuildBasicApplicationThenMoveIt ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			string path = Path.Combine (Root, "temp", TestName, "App1");
 			var proj = new XamarinAndroidApplicationProject {
 				ProjectName = "App",
 				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder (path)) {
 				b.Target = "Build";
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
