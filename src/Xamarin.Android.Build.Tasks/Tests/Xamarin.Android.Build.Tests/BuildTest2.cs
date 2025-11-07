@@ -367,59 +367,95 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		static readonly object [] BuildHasNoWarningsSource = new object [] {
-			new object [] {
-				/* isRelease */     false,
-				/* xamarinForms */  false,
-				/* multidex */      false,
-				/* packageFormat */ "apk",
-			},
-			new object [] {
-				/* isRelease */     false,
-				/* xamarinForms */  true,
-				/* multidex */      false,
-				/* packageFormat */ "apk",
-			},
-			new object [] {
-				/* isRelease */     false,
-				/* xamarinForms */  true,
-				/* multidex */      true,
-				/* packageFormat */ "apk",
-			},
-			new object [] {
-				/* isRelease */     true,
-				/* xamarinForms */  false,
-				/* multidex */      false,
-				/* packageFormat */ "apk",
-			},
-			new object [] {
-				/* isRelease */     true,
-				/* xamarinForms */  true,
-				/* multidex */      false,
-				/* packageFormat */ "apk",
-			},
-			new object [] {
-				/* isRelease */     false,
-				/* xamarinForms */  false,
-				/* multidex */      false,
-				/* packageFormat */ "aab",
-			},
-			new object [] {
-				/* isRelease */     true,
-				/* xamarinForms */  false,
-				/* multidex */      false,
-				/* packageFormat */ "aab",
-			},
-		};
+		static IEnumerable<object[]> Get_BuildHasNoWarningsData ()
+		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData (
+					isRelease: false,
+					xamarinForms: false,
+					multidex: false,
+					packageFormat: "apk",
+					runtime
+				);
+
+				AddTestData (
+					isRelease: false,
+					xamarinForms: true,
+					multidex: false,
+					packageFormat: "apk",
+					runtime
+				);
+
+				AddTestData (
+					isRelease: false,
+					xamarinForms: true,
+					multidex: true,
+					packageFormat: "apk",
+					runtime
+				);
+
+				AddTestData (
+					isRelease: true,
+					xamarinForms: false,
+					multidex: false,
+					packageFormat: "apk",
+					runtime
+				);
+
+				AddTestData (
+					isRelease: true,
+					xamarinForms: true,
+					multidex: false,
+					packageFormat: "apk",
+					runtime
+				);
+
+				AddTestData (
+					isRelease: false,
+					xamarinForms: false,
+					multidex: false,
+					packageFormat: "aab",
+					runtime
+				);
+
+				AddTestData (
+					isRelease: true,
+					xamarinForms: false,
+					multidex: false,
+					packageFormat: "aab",
+					runtime
+				);
+			}
+
+			return ret;
+
+			void AddTestData (bool isRelease, bool xamarinForms, bool multidex, string packageFormat, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					isRelease,
+					xamarinForms,
+					multidex,
+					packageFormat,
+					runtime
+				});
+			}
+		}
 
 		[Test]
-		[TestCaseSource (nameof (BuildHasNoWarningsSource))]
-		public void BuildHasNoWarnings (bool isRelease, bool xamarinForms, bool multidex, string packageFormat)
+		[TestCaseSource (nameof (Get_BuildHasNoWarningsData))]
+		public void BuildHasNoWarnings (bool isRelease, bool xamarinForms, bool multidex, string packageFormat, AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = xamarinForms ?
 				new XamarinFormsAndroidApplicationProject () :
 				new XamarinAndroidApplicationProject ();
 			proj.IsRelease = isRelease;
+			proj.SetRuntime (runtime);
 			// Enable full trimming
 			if (!xamarinForms && isRelease) {
 				proj.TrimModeRelease = TrimMode.Full;
@@ -440,7 +476,40 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("TrimmerSingleWarn", "false");
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				b.AssertHasNoWarnings ();
+
+				if (runtime == AndroidRuntime.NativeAOT) {
+					int numberOfExpectedWarnings;
+					bool validateWarnings;
+					if (xamarinForms && !multidex && packageFormat == "apk") {
+						// NativeAOT goes nuts here (Nov 2025) with 120 different ILC warnings, too many to verify them here in a way that makes sense
+						numberOfExpectedWarnings = 120;
+						validateWarnings = false;
+					} else {
+						// NativeAOT currently (Nov 2025) produces 6 `ILC : AOT analysis warning IL3050` warnings for various
+						// bits of code. Even though this test expects no warnings and the above likely make the app not work
+						// correctly at run time, it is still worth running this test under NativeAOT to test for the absence
+						// of other warnings.
+						numberOfExpectedWarnings = 6;
+						validateWarnings = true;
+					}
+
+					Assert.IsTrue (
+						StringAssertEx.ContainsText (
+							b.LastBuildOutput,
+							$" {numberOfExpectedWarnings} Warning(s)"
+						),
+						$"{b.BuildLogFile} should have exactly 6 MSBuild warnings for NativeAOT."
+					);
+
+					if (validateWarnings) {
+						const string expectedWarningIL3050 = "ILC : AOT analysis warning IL3050:";
+						var warnings = b.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build succeeded.", StringComparison.Ordinal)).Where (x => x.Contains (expectedWarningIL3050, StringComparison.Ordinal));
+						Assert.IsTrue (warnings.Count () == numberOfExpectedWarnings, $"Expected {numberOfExpectedWarnings} 'IL3050' warnings, found {warnings.Count ()}");
+					}
+
+				} else {
+					b.AssertHasNoWarnings ();
+				}
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Warning: end of file not at end of a line"),
 					"Should not get a warning from the <CompileNativeAssembly/> task.");
 				var lockFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, ".__lock");
