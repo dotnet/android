@@ -498,7 +498,7 @@ namespace Xamarin.Android.Build.Tests
 							b.LastBuildOutput,
 							$" {numberOfExpectedWarnings} Warning(s)"
 						),
-						$"{b.BuildLogFile} should have exactly 6 MSBuild warnings for NativeAOT."
+						$"{b.BuildLogFile} should have exactly {numberOfExpectedWarnings} MSBuild warnings for NativeAOT."
 					);
 
 					if (validateWarnings) {
@@ -517,19 +517,46 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		[TestCase ("", new string [0], false)]
-		[TestCase ("", new string [0], true)]
-		[TestCase ("SuppressTrimAnalysisWarnings=false", new string [] { "IL2055" }, true, 2)]
-		[TestCase ("TrimMode=full", new string [] { "IL2055" }, false, 1)]
-		[TestCase ("TrimMode=full", new string [] { "IL2055" }, true, 2)]
-		[TestCase ("IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, false)]
-		[TestCase ("IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, true, 3)]
-		public void BuildHasTrimmerWarnings (string properties, string [] codes, bool isRelease, int? totalWarnings = null)
+		static IEnumerable<object[]> Get_BuildHasTrimmerWarningsData ()
 		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData (runtime, "", new string [0], false);
+				AddTestData (runtime, "", new string [0], true);
+				AddTestData (runtime, "SuppressTrimAnalysisWarnings=false", new string [] { "IL2055" }, true, 2);
+				AddTestData (runtime, "TrimMode=full", new string [] { "IL2055" }, false, 1);
+				AddTestData (runtime, "TrimMode=full", new string [] { "IL2055" }, true, 2);
+				AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, false);
+				AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, true, 3);
+			}
+
+			return ret;
+
+			void AddTestData (AndroidRuntime runtime, string properties, string [] codes, bool isRelease, int? totalWarnings = null)
+			{
+				ret.Add (new object[] {
+					runtime,
+					properties,
+					codes,
+					isRelease,
+					totalWarnings,
+				});
+			}
+		}
+
+		[Test]
+		[TestCaseSource (nameof (Get_BuildHasTrimmerWarningsData))]
+		public void BuildHasTrimmerWarnings (AndroidRuntime runtime, string properties, string [] codes, bool isRelease, int? totalWarnings = null)
+		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetRuntimeIdentifier ("arm64-v8a");
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("//${FIELDS}", "Type type = typeof (List<>);")
@@ -549,7 +576,23 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 			if (codes.Length == 0) {
-				b.AssertHasNoWarnings ();
+				if (runtime == AndroidRuntime.NativeAOT) {
+					const string expectedWarningIL3050 = "ILC : AOT analysis warning IL3050:";
+					const int numberOfExpectedWarnings = 7;
+
+					Assert.IsTrue (
+						StringAssertEx.ContainsText (
+							b.LastBuildOutput,
+							$" {numberOfExpectedWarnings} Warning(s)"
+						),
+						$"{b.BuildLogFile} should have exactly {numberOfExpectedWarnings} MSBuild warnings for NativeAOT."
+					);
+
+					var warnings = b.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build succeeded.", StringComparison.Ordinal)).Where (x => x.Contains (expectedWarningIL3050, StringComparison.Ordinal));
+					Assert.IsTrue (warnings.Count () == numberOfExpectedWarnings, $"Expected {numberOfExpectedWarnings} 'IL3050' warnings, found {warnings.Count ()}");
+				} else {
+					b.AssertHasNoWarnings ();
+				}
 			} else {
 				totalWarnings ??= codes.Length;
 				Assert.True (StringAssertEx.ContainsText (b.LastBuildOutput, $"{totalWarnings} Warning(s)"), $"Should receive {totalWarnings} warnings");
