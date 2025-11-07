@@ -38,6 +38,7 @@ namespace Xamarin.Android.Build.Tests
 			},
 		};
 
+		// TODO: at some point it should work for CoreCLR, after its managed marshal methods are fixed
 		[Test]
 		[TestCaseSource (nameof (MarshalMethodsDefaultStatusSource))]
 		public void MarshalMethodsDefaultEnabledStatus (bool isRelease, bool marshalMethodsEnabled)
@@ -96,13 +97,18 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildBasicApplication ([Values (true, false)] bool isRelease, [Values ("", "en_US.UTF-8", "sv_SE.UTF-8")] string langEnvironmentVariable)
+		public void BuildBasicApplication ([Values] bool isRelease, [Values ("", "en_US.UTF-8", "sv_SE.UTF-8")] string langEnvironmentVariable, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 
-			Dictionary<string, string> envvar = null;
+			Dictionary<string, string>? envvar = null;
 			if (!String.IsNullOrEmpty (langEnvironmentVariable)) {
 				envvar = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
 					{"LANG", langEnvironmentVariable},
