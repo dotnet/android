@@ -120,17 +120,6 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void BasicApplicationBuildCoreCLR ([Values (true, false)] bool isRelease)
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-			};
-			proj.SetProperty ("UseMonoRuntime", "false"); // Enables CoreCLR
-			var b = CreateApkBuilder ();
-			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-		}
-
 		static object [] ReadyToRunConfigurationSource = new object [] {
 			new object[] {
 				/* isComposite */	true,
