@@ -322,13 +322,18 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildReleaseArm64 ([Values (false, true)] bool forms, [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void BuildReleaseArm64 ([Values] bool forms, [Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = forms ?
 				new XamarinFormsAndroidApplicationProject () :
 				new XamarinAndroidApplicationProject ();
 			proj.SetRuntime (runtime);
-			proj.IsRelease = true;
+			proj.IsRelease = isRelease;
 			proj.AotAssemblies = false; // Release defaults to Profiled AOT for .NET 6
 			proj.SetAndroidSupportedAbis ("arm64-v8a");
 			proj.SetProperty ("LinkerDumpDependencies", "True");
