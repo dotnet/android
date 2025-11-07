@@ -821,6 +821,11 @@ because xbuild doesn't support framework reference assemblies.
 		<AndroidApplicationJavaClass Condition="'$(AndroidApplicationJavaClass)' == ''">android.app.Application</AndroidApplicationJavaClass>
 	</PropertyGroup>
 	<Message Text="Application Java class: $(AndroidApplicationJavaClass)" />
+
+	<!-- Setup $(AdbTarget) from $(Device) property for device selection support -->
+	<PropertyGroup Condition=" '$(Device)' != '' ">
+		<AdbTarget>-s &quot;$(Device)&quot;</AdbTarget>
+	</PropertyGroup>
 </Target>
 
 <Target Name="AndroidPrepareForBuild" DependsOnTargets="$(_OnResolveMonoAndroidSdks);$(AndroidPrepareForBuildDependsOn)" />
