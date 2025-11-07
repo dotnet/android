@@ -340,5 +340,83 @@ namespace Xamarin.Android.NetTests
 
 			return clientCert;
 		}
+
+		[Test]
+		public async Task HttpContentStreamIsRewoundAfterCancellation ()
+		{
+			const int testPort = 47664;
+			using var listener = new HttpListener ();
+			listener.Prefixes.Add ($"http://+:{testPort}/");
+			listener.Start ();
+			
+			// Handle the first request - simulate a slow server to allow cancellation
+			listener.BeginGetContext (ar => {
+				var ctx = listener.EndGetContext (ar);
+				// Read the request body slowly to ensure cancellation happens during upload
+				var buffer = new byte[4096];
+				try {
+					while (ctx.Request.InputStream.Read (buffer, 0, buffer.Length) > 0) {
+						System.Threading.Thread.Sleep (100); // Slow down to allow cancellation
+					}
+				} catch (Exception ex) {
+					// Expected when connection is cancelled
+					Console.WriteLine ($"Exception while reading request body: {ex}");
+				}
+				try {
+					ctx.Response.StatusCode = 200;
+					ctx.Response.Close ();
+				} catch (Exception ex) {
+					// Connection may already be closed
+					Console.WriteLine ($"Exception while closing response: {ex}");
+				}
+			}, null);
+
+			var tcs = new System.Threading.CancellationTokenSource ();
+			tcs.CancelAfter (500); // Cancel after 500ms
+			var client = new HttpClient (new AndroidMessageHandler ());
+			var byc = new ByteArrayContent (new byte[1_000_000]); // 1 MB of data
+			var request = new HttpRequestMessage (HttpMethod.Post, $"http://localhost:{testPort}/") { Content = byc };
+			
+			var stream = await byc.ReadAsStreamAsync ();
+			var positionBefore = stream.Position;
+			Assert.AreEqual (0, positionBefore, "Stream position should be 0 before first request");
+
+			bool exceptionThrown = false;
+			try {
+				await client.SendAsync (request, tcs.Token).ConfigureAwait (false);
+				// If we get here without exception, that's also OK for this test
+			} catch (Exception ex) {
+				// Expected - cancellation or connection error
+				// We catch all exceptions to ensure the test doesn't fail due to unhandled exceptions
+				Console.WriteLine ($"Exception during first request (expected): {ex}");
+				exceptionThrown = true;
+			}
+
+			// The key assertion: stream should be rewound even after an exception
+			var stream2 = await byc.ReadAsStreamAsync ();
+			var positionAfter = stream2.Position;
+			Assert.AreEqual (0, positionAfter, "Stream position should be 0 after failed request (stream should be rewound)");
+
+			// Only proceed with second request if we actually got an exception (test scenario succeeded)
+			if (exceptionThrown) {
+				var request2 = new HttpRequestMessage (HttpMethod.Post, $"http://localhost:{testPort}/") { Content = byc };
+			
+				// Set up listener for second request
+				listener.BeginGetContext (ar => {
+					var ctx = listener.EndGetContext (ar);
+					ctx.Response.StatusCode = 200;
+					ctx.Response.Close ();
+				}, null);
+
+				var response2 = await client.SendAsync (request2).ConfigureAwait (false);
+				Assert.True (response2.IsSuccessStatusCode, "Second request should succeed with reused content");
+
+				var stream3 = await byc.ReadAsStreamAsync ();
+				var positionFinal = stream3.Position;
+				Assert.AreEqual (0, positionFinal, "Stream position should be 0 after successful request");
+			}
+
+			listener.Close ();
+		}
 	}
 }
