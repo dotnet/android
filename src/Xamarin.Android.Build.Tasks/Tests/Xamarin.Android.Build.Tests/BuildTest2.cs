@@ -677,9 +677,18 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ClassLibraryHasNoWarnings ()
+		public void ClassLibraryHasNoWarnings ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidLibraryProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+
 			//NOTE: these properties should not affect class libraries at all
 			proj.SetProperty ("AndroidPackageFormat", "aab");
 			proj.SetProperty ("AotAssemblies", "true");
