@@ -1009,12 +1009,18 @@ class MemTest {
 		}
 
 		[Test]
-		public void CheckKeystoreIsCreated ()
+		public void CheckKeystoreIsCreated ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
-			using (var b = CreateApkBuilder ("temp/CheckKeystoreIsCreated", false, false)) {
+			proj.SetRuntime (runtime);
+
+			using (var b = CreateApkBuilder ()) {
 				var file = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "debug.keystore");
 				var p = new string [] {
 					$"_ApkDebugKeyStore={file}",
