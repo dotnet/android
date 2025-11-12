@@ -900,10 +900,18 @@ class MemTest {
 
 		[Test]
 		[NonParallelizable]
-		public void SkipConvertResourcesCases ()
+		public void SkipConvertResourcesCases ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var target = "ConvertResourcesCases";
-			var proj = new XamarinFormsAndroidApplicationProject ();
+			var proj = new XamarinFormsAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidAarLibrary", "Jars\\material-menu-1.1.0.aar") {
 				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
 			});
