@@ -752,21 +752,6 @@ class MemTest {
 			}
 		}
 
-		static object [] BuildBasicApplicationFSharpSource = new object [] {
-			new object[] {
-				/*isRelease*/ false,
-				/*aot*/       false,
-			},
-			new object[] {
-				/*isRelease*/ true,
-				/*aot*/       false,
-			},
-			new object[] {
-				/*isRelease*/ true,
-				/*aot*/       true,
-			},
-		};
-
 		static IEnumerable<object[]> Get_BuildBasicApplicationFSharpData ()
 		{
 			var ret = new List<object[]> ();
@@ -822,9 +807,17 @@ class MemTest {
 
 		[Test]
 		[NonParallelizable]
-		public void BuildBasicApplicationAppCompat ([Values (true, false)] bool publishAot)
+		public void BuildBasicApplicationAppCompat ([Values] bool publishAot, [Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease, aot: publishAot)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.SetPublishAot (true, AndroidNdkPath);
 
 			var packages = proj.PackageReferences;
