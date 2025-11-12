@@ -523,12 +523,22 @@ namespace Xamarin.Android.Build.Tests
 
 			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
 				AddTestData (runtime, "", new string [0], false);
-				AddTestData (runtime, "", new string [0], true);
+
+				if (runtime == AndroidRuntime.NativeAOT) {
+					AddTestData (runtime, "", new [] { "IL2055", "IL3050" }, true, 2);
+				} else {
+					AddTestData (runtime, "", new string [0], true);
+				}
 				AddTestData (runtime, "SuppressTrimAnalysisWarnings=false", new string [] { "IL2055" }, true, 2);
 				AddTestData (runtime, "TrimMode=full", new string [] { "IL2055" }, false, 1);
 				AddTestData (runtime, "TrimMode=full", new string [] { "IL2055" }, true, 2);
 				AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, false);
-				AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, true, 3);
+
+				if (runtime == AndroidRuntime.NativeAOT) {
+					AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, true, 2);
+				} else {
+					AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, true, 3);
+				}
 			}
 
 			return ret;
@@ -557,6 +567,15 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
+
+			if (runtime == AndroidRuntime.NativeAOT) {
+				// We're not interested in ILC warnings here, just the trimmer warnings before ILC runs
+				var ignoreIlcWarnings = new List<BuildItem> {
+					new ("IlcArg", "--notrimwarn"),
+					new ("IlcArg", "--noaotwarn"),
+				};
+				proj.ItemGroupList.Add (ignoreIlcWarnings);
+			}
 			proj.SetRuntimeIdentifier ("arm64-v8a");
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("//${FIELDS}", "Type type = typeof (List<>);")
@@ -576,23 +595,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 			if (codes.Length == 0) {
-				if (runtime == AndroidRuntime.NativeAOT) {
-					const string expectedWarningIL3050 = "ILC : AOT analysis warning IL3050:";
-					const int numberOfExpectedWarnings = 7;
-
-					Assert.IsTrue (
-						StringAssertEx.ContainsText (
-							b.LastBuildOutput,
-							$" {numberOfExpectedWarnings} Warning(s)"
-						),
-						$"{b.BuildLogFile} should have exactly {numberOfExpectedWarnings} MSBuild warnings for NativeAOT."
-					);
-
-					var warnings = b.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build succeeded.", StringComparison.Ordinal)).Where (x => x.Contains (expectedWarningIL3050, StringComparison.Ordinal));
-					Assert.IsTrue (warnings.Count () == numberOfExpectedWarnings, $"Expected {numberOfExpectedWarnings} 'IL3050' warnings, found {warnings.Count ()}");
-				} else {
-					b.AssertHasNoWarnings ();
-				}
+				b.AssertHasNoWarnings ();
 			} else {
 				totalWarnings ??= codes.Length;
 				Assert.True (StringAssertEx.ContainsText (b.LastBuildOutput, $"{totalWarnings} Warning(s)"), $"Should receive {totalWarnings} warnings");
