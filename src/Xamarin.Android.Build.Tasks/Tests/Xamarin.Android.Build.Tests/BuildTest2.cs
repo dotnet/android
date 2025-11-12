@@ -1238,11 +1238,17 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void TargetFrameworkMonikerAssemblyAttributesPath ()
+		public void TargetFrameworkMonikerAssemblyAttributesPath ([Values] AndroidRuntime runtime)
 		{
 			const string filePattern = ".NETCoreApp,Version=*.AssemblyAttributes.cs";
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
