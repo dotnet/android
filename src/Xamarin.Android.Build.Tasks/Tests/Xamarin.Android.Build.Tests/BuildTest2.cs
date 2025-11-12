@@ -629,18 +629,45 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		[TestCase ("AndroidFastDeploymentType", "Assemblies", true, false)]
-		[TestCase ("AndroidFastDeploymentType", "Assemblies", false, false)]
-		[TestCase ("_AndroidUseJavaLegacyResolver", "true", false, true)]
-		[TestCase ("_AndroidUseJavaLegacyResolver", "true", true, true)]
-		[TestCase ("_AndroidEmitLegacyInterfaceInvokers", "true", false, true)]
-		[TestCase ("_AndroidEmitLegacyInterfaceInvokers", "true", true, true)]
-		public void XA1037PropertyDeprecatedWarning (string property, string value, bool isRelease, bool isBindingProject)
+		static IEnumerable<object[]> Get_XA1037PropertyDeprecatedWarningData ()
 		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData ("AndroidFastDeploymentType", "Assemblies", true, false, runtime);
+				AddTestData ("AndroidFastDeploymentType", "Assemblies", false, false, runtime);
+				AddTestData ("_AndroidUseJavaLegacyResolver", "true", false, true, runtime);
+				AddTestData ("_AndroidUseJavaLegacyResolver", "true", true, true, runtime);
+				AddTestData ("_AndroidEmitLegacyInterfaceInvokers", "true", false, true, runtime);
+				AddTestData ("_AndroidEmitLegacyInterfaceInvokers", "true", true, true, runtime);
+			}
+
+			return ret;
+
+			void AddTestData (string property, string value, bool isRelease, bool isBindingProject, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					property,
+					value,
+					isRelease,
+					isBindingProject,
+					runtime,
+				});
+			}
+		}
+
+		[Test]
+		[TestCaseSource (nameof (Get_XA1037PropertyDeprecatedWarningData))]
+		public void XA1037PropertyDeprecatedWarning (string property, string value, bool isRelease, bool isBindingProject, AndroidRuntime runtime)
+		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			XamarinAndroidProject proj = isBindingProject ? new XamarinAndroidBindingProject () : new XamarinAndroidApplicationProject ();
 			proj.IsRelease = isRelease;
 			proj.SetProperty (property, value);
+			proj.SetRuntime (runtime);
 
 			using (ProjectBuilder b = isBindingProject ? CreateDllBuilder () : CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
