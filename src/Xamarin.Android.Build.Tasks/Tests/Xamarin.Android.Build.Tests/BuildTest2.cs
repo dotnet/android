@@ -971,15 +971,22 @@ class MemTest {
 		}
 
 		[Test]
-		public void BuildInParallel ()
+		public void BuildInParallel ([Values] AndroidRuntime runtime)
 		{
 			if (!IsWindows) {
 				//TODO: one day we should fix the problems here, various MSBuild tasks step on each other when built in parallel
 				Assert.Ignore ("Currently ignoring this test on non-Windows platforms.");
 			}
 
-			var proj = new XamarinFormsAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 
+			var proj = new XamarinFormsAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 
 			using (var b = CreateApkBuilder ()) {
 				//We don't want these things stepping on each other
