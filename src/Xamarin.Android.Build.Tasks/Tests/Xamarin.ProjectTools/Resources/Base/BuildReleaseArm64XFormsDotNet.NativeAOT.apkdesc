@@ -29,7 +29,7 @@
       "Size": 2396
     },
     "lib/arm64-v8a/libUnnamedProject.so": {
-      "Size": 20295664
+      "Size": 21592848
     },
     "META-INF/androidx.activity_activity.version": {
       "Size": 6
@@ -182,7 +182,7 @@
       "Size": 6
     },
     "META-INF/BNDLTOOL.RSA": {
-      "Size": 1211
+      "Size": 1223
     },
     "META-INF/BNDLTOOL.SF": {
       "Size": 89178
@@ -2252,5 +2252,5 @@
       "Size": 812848
     }
   },
-  "PackageSize": 12148809
+  "PackageSize": 12521545
 }
