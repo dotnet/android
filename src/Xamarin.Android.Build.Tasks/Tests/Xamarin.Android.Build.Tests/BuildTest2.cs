@@ -1210,9 +1210,14 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void AndroidResourceNotExist ()
+		public void AndroidResourceNotExist ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				Imports = {
 					new Import (() => "foo.projitems") {
 						TextContent = () =>
@@ -1224,10 +1229,11 @@ namespace UnamedProject
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");
-				Assert.IsTrue (b.LastBuildOutput.ContainsText ("XA2001"), "Should recieve XA2001 error.");
+				Assert.IsTrue (b.LastBuildOutput.ContainsText ("XA2001"), "Should receieve XA2001 error.");
 			}
 		}
 
