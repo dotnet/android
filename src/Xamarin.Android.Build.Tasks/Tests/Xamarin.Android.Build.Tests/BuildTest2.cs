@@ -706,9 +706,15 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildBasicApplicationWithNuGetPackageConflicts ()
+		public void BuildBasicApplicationWithNuGetPackageConflicts ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
 				PackageReferences = {
 					new Package () {
 						Id = "System.Buffers",
@@ -723,6 +729,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 			};
 
+			proj.SetRuntime (runtime);
 			proj.Sources.Add (new BuildItem ("Compile", "IsAndroidDefined.fs") {
 				TextContent = () => @"
 using System;
@@ -740,7 +747,7 @@ class MemTest {
 }"
 			});
 
-			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationWithNuGetPackageConflicts")) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
