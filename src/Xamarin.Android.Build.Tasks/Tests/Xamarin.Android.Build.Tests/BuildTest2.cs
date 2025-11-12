@@ -829,15 +829,22 @@ class MemTest {
 		}
 
 		[Test]
-		public void DuplicateRJavaOutput ()
+		public void DuplicateRJavaOutput ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				PackageReferences = {
 					new Package { Id = "Xamarin.GooglePlayServices.Base", Version = "118.2.0.5" },
 					new Package { Id = "Xamarin.GooglePlayServices.Basement", Version = "118.2.0.5" },
 					new Package { Id = "Xamarin.GooglePlayServices.Tasks", Version = "118.0.2.6" },
 				}
 			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var lines = b.LastBuildOutput.Where (l => l.Contains ("Writing:") && l.Contains ("R.java"));
