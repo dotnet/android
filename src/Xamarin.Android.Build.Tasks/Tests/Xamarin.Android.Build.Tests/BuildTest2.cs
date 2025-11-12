@@ -1033,11 +1033,17 @@ class MemTest {
 		[Test]
 		[Category ("FSharp")]
 		[NonParallelizable] // parallel NuGet restore causes failures
-		public void FSharpAppHasAndroidDefine ()
+		public void FSharpAppHasAndroidDefine ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
 				Language = XamarinAndroidProjectLanguage.FSharp,
 			};
+			proj.SetRuntime (runtime);
 			proj.Sources.Add (new BuildItem ("Compile", "IsAndroidDefined.fs") {
 				TextContent = () => @"
 module Xamarin.Android.Tests
@@ -1050,7 +1056,7 @@ let x =
 printf ""%d"" x
 ",
 			});
-			using (var b = CreateApkBuilder ("temp/" + nameof (FSharpAppHasAndroidDefine))) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
