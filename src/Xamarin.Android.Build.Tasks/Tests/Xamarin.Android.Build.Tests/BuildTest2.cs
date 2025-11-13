@@ -1646,9 +1646,12 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void BuildMultiDexApplication ()
+		public void BuildMultiDexApplication ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			var proj = CreateMultiDexRequiredApplication ();
+			proj.IsRelease = isRelease;
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
 			using (var b = CreateApkBuilder ()) {
 				string intermediateDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
