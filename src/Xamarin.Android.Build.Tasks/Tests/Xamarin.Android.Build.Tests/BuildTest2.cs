@@ -1752,11 +1752,16 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void MultiDexAndCodeShrinker ()
+		public void MultiDexAndCodeShrinker ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = CreateMultiDexRequiredApplication ();
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
-			proj.IsRelease = true;
+			proj.IsRelease = isRelease;
 			proj.LinkTool = "r8";
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
