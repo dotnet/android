@@ -1462,8 +1462,12 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void BuildIncrementingClassName ()
+		public void BuildIncrementingClassName ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			int count = 0;
 			var source = new BuildItem ("Compile", "World.cs") {
 				TextContent = () => {
@@ -1471,10 +1475,13 @@ namespace UnamedProject
 					return $"namespace Hello{current} {{ public class World{current} : Java.Lang.Object {{ }} }}";
 				}
 			};
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.Sources.Add (source);
 
-			using (var b = CreateApkBuilder ("temp/BuildIncrementingClassName")) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				var classesZipPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "classes.zip");
