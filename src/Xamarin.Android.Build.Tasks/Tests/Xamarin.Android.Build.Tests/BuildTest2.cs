@@ -1625,10 +1625,20 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void CreateMultiDexWithSpacesInConfig ()
+		public void CreateMultiDexWithSpacesInConfig ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			// TODO: NativeAOT doesn't properly quote arguments when calling `clang`
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT doesn't properly quote arguments when calling clang");
+			}
+
 			var proj = CreateMultiDexRequiredApplication (releaseConfigurationName: "Test Config");
-			proj.IsRelease = true;
+			proj.SetRuntime (runtime);
+			proj.IsRelease = isRelease;
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
