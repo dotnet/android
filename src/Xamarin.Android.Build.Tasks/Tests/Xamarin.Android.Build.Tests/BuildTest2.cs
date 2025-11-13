@@ -2013,9 +2013,16 @@ namespace App1
 		}
 
 		[Test]
-		public void BuildBasicApplicationCheckConfigFiles ()
+		public void BuildBasicApplicationCheckConfigFiles ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
 				var config = new BuildItem.NoActionResource ("UnnamedProject.dll.config") {
 					TextContent = () => {
