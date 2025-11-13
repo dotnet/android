@@ -151,6 +151,7 @@ namespace Xamarin.Android.Tasks
 			public Dictionary<string, LlvmIrVariable> UsedBackingFields;
 			public LlvmIrVariable GetFunctionPtrVariable;
 			public LlvmIrFunction GetFunctionPtrFunction;
+			public Dictionary<string, LlvmIrFunction> SharedTrampolines;
 		}
 
 		sealed class MarshalMethodAssemblyIndexValuePlaceholder : LlvmIrInstructionArgumentValuePlaceholder
@@ -636,15 +637,15 @@ namespace Xamarin.Android.Tasks
 		// Mark as internal linkage so it's not exported
 		trampoline.Linkage = LlvmIrLinkage.Internal;
 
-		WriteTrampolineBody (trampoline.Body, templateMethod, writeState);
+		WriteTrampolineBody (module, trampoline, templateMethod, writeState);
 		module.Add (trampoline);
 
 		return trampoline;
 	}
 
-	void WriteTrampolineBody (LlvmIrFunctionBody body, MarshalMethodInfo templateMethod, MarshalMethodsWriteState writeState)
+	void WriteTrampolineBody (LlvmIrModule module, LlvmIrFunction func, MarshalMethodInfo templateMethod, MarshalMethodsWriteState writeState)
 	{
-		var func = body.Owner;
+		var body = func.Body;
 		int paramCount = templateMethod.Parameters.Count;
 		var callbackGlobalParam = func.Signature.Parameters[paramCount];
 		var param1 = func.Signature.Parameters[paramCount + 1];
@@ -652,7 +653,7 @@ namespace Xamarin.Android.Tasks
 		var param3 = func.Signature.Parameters[paramCount + 3];
 
 		LlvmIrLocalVariable cb1 = func.CreateLocalVariable (typeof(IntPtr), "cb1");
-		body.Load (callbackGlobalParam, cb1, tbaa: body.Owner.Module.TbaaAnyPointer);
+		body.Load (callbackGlobalParam, cb1, tbaa: module.TbaaAnyPointer);
 
 		LlvmIrLocalVariable isNullResult = func.CreateLocalVariable (typeof(bool), "isNull");
 		body.Icmp (LlvmIrIcmpCond.Equal, cb1, null, isNullResult);
@@ -665,7 +666,7 @@ namespace Xamarin.Android.Tasks
 		body.Add (loadCallbackLabel);
 
 		LlvmIrLocalVariable getFuncPtrResult = func.CreateLocalVariable (typeof(IntPtr), "get_func_ptr");
-		body.Load (writeState.GetFunctionPtrVariable, getFuncPtrResult, tbaa: body.Owner.Module.TbaaAnyPointer);
+		body.Load (writeState.GetFunctionPtrVariable, getFuncPtrResult, tbaa: module.TbaaAnyPointer);
 
 		var getFunctionPointerArguments = new List<object?> {
 			param1,
@@ -677,7 +678,7 @@ namespace Xamarin.Android.Tasks
 		LlvmIrInstructions.Call call = body.Call (writeState.GetFunctionPtrFunction, arguments: getFunctionPointerArguments, funcPointer: getFuncPtrResult);
 
 		LlvmIrLocalVariable cb2 = func.CreateLocalVariable (typeof(IntPtr), "cb2");
-		body.Load (callbackGlobalParam, cb2, tbaa: body.Owner.Module.TbaaAnyPointer);
+		body.Load (callbackGlobalParam, cb2, tbaa: module.TbaaAnyPointer);
 		body.Br (callbackLoadedLabel);
 
 		// Callback variable has just been set or it wasn't null
@@ -687,7 +688,7 @@ namespace Xamarin.Android.Tasks
 		// Preceding blocks are ordered from the newest to the oldest, so we need to pass the variables referring to our callback in "reverse" order
 		body.Phi (fn, cb2, body.PrecedingBlock1, cb1, body.PrecedingBlock2);
 
-		var nativeFunc = new LlvmIrFunction (func.Name, templateMethod.ReturnType, templateMethod.Parameters);
+		var nativeFunc = new LlvmIrFunction (func.Signature.Name, templateMethod.ReturnType, templateMethod.Parameters);
 		nativeFunc.Signature.ReturnAttributes.NoUndef = true;
 
 		// Call the actual function with only the original parameters
@@ -750,7 +751,7 @@ namespace Xamarin.Android.Tasks
 					MarshalMethodInfo templateMethod = kvp.Value[0];
 					LlvmIrFunction trampoline = CreateSharedTrampoline (module, signatureKey, templateMethod, writeState);
 					writeState.SharedTrampolines.Add (signatureKey, trampoline);
-					Log.LogDebugMessage ($"MM: created shared trampoline '{trampoline.Name}' for signature '{signatureKey}' used by {kvp.Value.Count} methods");
+					Log.LogDebugMessage ($"MM: created shared trampoline '{trampoline.Signature.Name}' for signature '{signatureKey}' used by {kvp.Value.Count} methods");
 				}
 			}
 
