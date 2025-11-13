@@ -1824,9 +1824,18 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 
 
 		[Test]
-		public void BuildBasicApplicationCheckPdb ()
+		public void BuildBasicApplicationCheckPdb ([Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime)) {
+				return;
+			}
+
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("Test is irrelevant for NativeAOT, it doesn't support managed debug builds");
+			}
+
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
