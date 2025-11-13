@@ -600,6 +600,108 @@ namespace Xamarin.Android.Tasks
 		protected virtual void AddClassCache (LlvmIrModule module)
 		{}
 
+	string GetSignatureKey (MarshalMethodInfo method)
+	{
+		var sb = new StringBuilder ();
+		sb.Append (method.ReturnType.FullName);
+		sb.Append ('(');
+		for (int i = 0; i < method.Parameters.Count; i++) {
+			if (i > 0) {
+				sb.Append (',');
+			}
+			sb.Append (method.Parameters[i].Type.FullName);
+		}
+		sb.Append (')');
+		return sb.ToString ();
+	}
+
+	LlvmIrFunction CreateSharedTrampoline (LlvmIrModule module, string signatureKey, MarshalMethodInfo templateMethod, MarshalMethodsWriteState writeState)
+	{
+		string trampolineName = $"shared_trampoline_{signatureKey.GetHashCode():x8}";
+
+		var trampolineParams = new List<LlvmIrFunctionParameter> ();
+		// Add original JNI parameters (env, klass)
+		trampolineParams.AddRange (templateMethod.Parameters);
+
+		// Add extra parameters for the trampoline: callback_global, param1, param2, param3
+		trampolineParams.Add (new LlvmIrFunctionParameter (typeof(IntPtr), "callback_global") { NoUndef = true, NonNull = true });
+		trampolineParams.Add (new LlvmIrFunctionParameter (typeof(uint), "param1") { NoUndef = true });
+		trampolineParams.Add (new LlvmIrFunctionParameter (typeof(uint), "param2") { NoUndef = true });
+		trampolineParams.Add (new LlvmIrFunctionParameter (typeof(uint), "param3") { NoUndef = true });
+
+		var trampoline = new LlvmIrFunction (trampolineName, templateMethod.ReturnType, trampolineParams) {
+			Comment = $" Shared trampoline for signature: {signatureKey}",
+		};
+
+		// Mark as internal linkage so it's not exported
+		trampoline.Linkage = LlvmIrLinkage.Internal;
+
+		WriteTrampolineBody (trampoline.Body, templateMethod, writeState);
+		module.Add (trampoline);
+
+		return trampoline;
+	}
+
+	void WriteTrampolineBody (LlvmIrFunctionBody body, MarshalMethodInfo templateMethod, MarshalMethodsWriteState writeState)
+	{
+		var func = body.Owner;
+		int paramCount = templateMethod.Parameters.Count;
+		var callbackGlobalParam = func.Signature.Parameters[paramCount];
+		var param1 = func.Signature.Parameters[paramCount + 1];
+		var param2 = func.Signature.Parameters[paramCount + 2];
+		var param3 = func.Signature.Parameters[paramCount + 3];
+
+		LlvmIrLocalVariable cb1 = func.CreateLocalVariable (typeof(IntPtr), "cb1");
+		body.Load (new LlvmIrLocalVariable (callbackGlobalParam.Type, callbackGlobalParam.Name), cb1, tbaa: body.Owner.Module.TbaaAnyPointer);
+
+		LlvmIrLocalVariable isNullResult = func.CreateLocalVariable (typeof(bool), "isNull");
+		body.Icmp (LlvmIrIcmpCond.Equal, cb1, null, isNullResult);
+
+		var loadCallbackLabel = new LlvmIrFunctionLabelItem ("loadCallback");
+		var callbackLoadedLabel = new LlvmIrFunctionLabelItem ("callbackLoaded");
+		body.Br (isNullResult, loadCallbackLabel, callbackLoadedLabel);
+
+		// Callback variable was null
+		body.Add (loadCallbackLabel);
+
+		LlvmIrLocalVariable getFuncPtrResult = func.CreateLocalVariable (typeof(IntPtr), "get_func_ptr");
+		body.Load (writeState.GetFunctionPtrVariable, getFuncPtrResult, tbaa: body.Owner.Module.TbaaAnyPointer);
+
+		var getFunctionPointerArguments = new List<object?> {
+			new LlvmIrLocalVariable (param1.Type, param1.Name),
+			new LlvmIrLocalVariable (param2.Type, param2.Name),
+			new LlvmIrLocalVariable (param3.Type, param3.Name),
+			new LlvmIrLocalVariable (callbackGlobalParam.Type, callbackGlobalParam.Name)
+		};
+
+		LlvmIrInstructions.Call call = body.Call (writeState.GetFunctionPtrFunction, arguments: getFunctionPointerArguments, funcPointer: getFuncPtrResult);
+
+		LlvmIrLocalVariable cb2 = func.CreateLocalVariable (typeof(IntPtr), "cb2");
+		body.Load (new LlvmIrLocalVariable (callbackGlobalParam.Type, callbackGlobalParam.Name), cb2, tbaa: body.Owner.Module.TbaaAnyPointer);
+		body.Br (callbackLoadedLabel);
+
+		// Callback variable has just been set or it wasn't null
+		body.Add (callbackLoadedLabel);
+		LlvmIrLocalVariable fn = func.CreateLocalVariable (typeof(IntPtr), "fn");
+
+		// Preceding blocks are ordered from the newest to the oldest, so we need to pass the variables referring to our callback in "reverse" order
+		body.Phi (fn, cb2, body.PrecedingBlock1, cb1, body.PrecedingBlock2);
+
+		var nativeFunc = new LlvmIrFunction (func.Name, templateMethod.ReturnType, templateMethod.Parameters);
+		nativeFunc.Signature.ReturnAttributes.NoUndef = true;
+
+		// Call the actual function with only the original parameters
+		var arguments = new List<object?> ();
+		for (int i = 0; i < paramCount; i++) {
+			arguments.Add (new LlvmIrLocalVariable (func.Signature.Parameters[i].Type, func.Signature.Parameters[i].Name));
+		}
+		LlvmIrLocalVariable? result = nativeFunc.ReturnsValue ? func.CreateLocalVariable (nativeFunc.Signature.ReturnType) : null;
+		call = body.Call (nativeFunc, result, arguments, funcPointer: fn);
+		call.CallMarker = LlvmIrCallMarker.Tail;
+
+		body.Ret (nativeFunc.Signature.ReturnType, result);
+	}
+
 		void AddMarshalMethods (LlvmIrModule module, AssemblyCacheState acs, LlvmIrVariable getFunctionPtrVariable, LlvmIrFunction getFunctionPtrFunction)
 		{
 			if (generateEmptyCode || methods == null || methods.Count == 0) {
@@ -620,7 +722,40 @@ namespace Xamarin.Android.Tasks
 				UniqueAssemblyId = new Dictionary<string, ulong> (StringComparer.OrdinalIgnoreCase),
 				GetFunctionPtrVariable = getFunctionPtrVariable,
 				GetFunctionPtrFunction = getFunctionPtrFunction,
+				SharedTrampolines = new Dictionary<string, LlvmIrFunction> (StringComparer.Ordinal),
 			};
+
+			// Group methods by signature to identify candidates for shared trampolines
+			var methodsBySignature = new Dictionary<string, List<MarshalMethodInfo>> (StringComparer.Ordinal);
+			foreach (MarshalMethodInfo mmi in methods) {
+				string signatureKey = GetSignatureKey (mmi);
+				if (!methodsBySignature.TryGetValue (signatureKey, out List<MarshalMethodInfo>? methodList)) {
+					methodList = new List<MarshalMethodInfo> ();
+					methodsBySignature.Add (signatureKey, methodList);
+				}
+				methodList.Add (mmi);
+			}
+
+			// Generate shared trampolines for signatures used by multiple methods
+			module.Add (
+				new LlvmIrGroupDelimiterVariable () {
+					Comment = " Shared trampoline functions for marshal methods"
+				}
+			);
+
+			foreach (var kvp in methodsBySignature) {
+				// Only create shared trampolines for signatures used by more than one method
+				if (kvp.Value.Count > 1) {
+					string signatureKey = kvp.Key;
+					MarshalMethodInfo templateMethod = kvp.Value[0];
+					LlvmIrFunction trampoline = CreateSharedTrampoline (module, signatureKey, templateMethod, writeState);
+					writeState.SharedTrampolines.Add (signatureKey, trampoline);
+					Log.LogDebugMessage ($"MM: created shared trampoline '{trampoline.Name}' for signature '{signatureKey}' used by {kvp.Value.Count} methods");
+				}
+			}
+
+			module.Add (new LlvmIrGroupDelimiterVariable ());
+
 			foreach (MarshalMethodInfo mmi in methods) {
 				MarshalMethodEntryMethodObject nativeCallback = mmi.Method.NativeCallback;
 				string asmName = nativeCallback.DeclaringType.Module.Assembly.NameName;
@@ -660,10 +795,50 @@ namespace Xamarin.Android.Tasks
 				Comment = funcComment.ToString (),
 			};
 
-			WriteBody (func.Body);
+			// Check if we have a shared trampoline for this signature
+			string signatureKey = GetSignatureKey (method);
+			if (writeState.SharedTrampolines.TryGetValue (signatureKey, out LlvmIrFunction? sharedTrampoline)) {
+				WriteWrapperBody (func.Body, method, backingField, nativeCallback, sharedTrampoline, writeState);
+			} else {
+				WriteStandaloneBody (func.Body, method, backingField, nativeCallback, writeState);
+			}
 			module.Add (func);
 
-			void WriteBody (LlvmIrFunctionBody body)
+			void WriteWrapperBody (LlvmIrFunctionBody body, MarshalMethodInfo method, LlvmIrVariable backingField, MarshalMethodEntryMethodObject nativeCallback, LlvmIrFunction trampoline, MarshalMethodsWriteState writeState)
+			{
+				// Generate a simple wrapper that calls the shared trampoline
+				var arguments = new List<object?> ();
+
+				// Add original parameters (env, klass, etc.)
+				foreach (LlvmIrFunctionParameter parameter in func.Signature.Parameters) {
+					arguments.Add (new LlvmIrLocalVariable (parameter.Type, parameter.Name));
+				}
+
+				// Add trampoline-specific arguments
+				arguments.Add (backingField);
+
+				// Add the three parameters for get_function_pointer
+				if (managedMarshalMethodsLookupEnabled) {
+					(uint assemblyIndex, uint classIndex, uint methodIndex) = GetManagedMarshalMethodsLookupIndexes (nativeCallback);
+					arguments.Add (assemblyIndex);
+					arguments.Add (classIndex);
+					arguments.Add (methodIndex);
+				} else {
+					var placeholder = new MarshalMethodAssemblyIndexValuePlaceholder (method, writeState.AssemblyCacheState);
+					arguments.Add (placeholder);
+					arguments.Add (method.ClassCacheIndex);
+					arguments.Add (nativeCallback.MetadataToken);
+				}
+
+				LlvmIrLocalVariable? result = func.ReturnsValue ? func.CreateLocalVariable (func.Signature.ReturnType) : null;
+				var call = body.Call (trampoline, result, arguments);
+				call.CallMarker = LlvmIrCallMarker.Tail;
+
+				body.Ret (func.Signature.ReturnType, result);
+			}
+
+			void WriteStandaloneBody (LlvmIrFunctionBody body, MarshalMethodInfo method, LlvmIrVariable backingField, MarshalMethodEntryMethodObject nativeCallback, MarshalMethodsWriteState writeState)
+
 			{
 				LlvmIrLocalVariable cb1 = func.CreateLocalVariable (typeof(IntPtr), "cb1");
 				body.Load (backingField, cb1, tbaa: module.TbaaAnyPointer);
