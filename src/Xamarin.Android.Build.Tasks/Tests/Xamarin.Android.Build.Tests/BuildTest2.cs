@@ -1774,12 +1774,17 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void MultiDexR8ConfigWithNoCodeShrinking ()
+		public void MultiDexR8ConfigWithNoCodeShrinking ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true
+				IsRelease = isRelease,
 			};
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
+			proj.SetRuntime (runtime);
 			/* The source for the library is a single class:
 			*
 			abstract class ExtendsClassValue extends ClassValue<Boolean> {}
