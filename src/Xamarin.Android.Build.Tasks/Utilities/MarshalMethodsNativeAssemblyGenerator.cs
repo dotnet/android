@@ -652,7 +652,7 @@ namespace Xamarin.Android.Tasks
 		var param3 = func.Signature.Parameters[paramCount + 3];
 
 		LlvmIrLocalVariable cb1 = func.CreateLocalVariable (typeof(IntPtr), "cb1");
-		body.Load (new LlvmIrLocalVariable (callbackGlobalParam.Type, callbackGlobalParam.Name), cb1, tbaa: body.Owner.Module.TbaaAnyPointer);
+		body.Load (callbackGlobalParam, cb1, tbaa: body.Owner.Module.TbaaAnyPointer);
 
 		LlvmIrLocalVariable isNullResult = func.CreateLocalVariable (typeof(bool), "isNull");
 		body.Icmp (LlvmIrIcmpCond.Equal, cb1, null, isNullResult);
@@ -668,16 +668,16 @@ namespace Xamarin.Android.Tasks
 		body.Load (writeState.GetFunctionPtrVariable, getFuncPtrResult, tbaa: body.Owner.Module.TbaaAnyPointer);
 
 		var getFunctionPointerArguments = new List<object?> {
-			new LlvmIrLocalVariable (param1.Type, param1.Name),
-			new LlvmIrLocalVariable (param2.Type, param2.Name),
-			new LlvmIrLocalVariable (param3.Type, param3.Name),
-			new LlvmIrLocalVariable (callbackGlobalParam.Type, callbackGlobalParam.Name)
+			param1,
+			param2,
+			param3,
+			callbackGlobalParam
 		};
 
 		LlvmIrInstructions.Call call = body.Call (writeState.GetFunctionPtrFunction, arguments: getFunctionPointerArguments, funcPointer: getFuncPtrResult);
 
 		LlvmIrLocalVariable cb2 = func.CreateLocalVariable (typeof(IntPtr), "cb2");
-		body.Load (new LlvmIrLocalVariable (callbackGlobalParam.Type, callbackGlobalParam.Name), cb2, tbaa: body.Owner.Module.TbaaAnyPointer);
+		body.Load (callbackGlobalParam, cb2, tbaa: body.Owner.Module.TbaaAnyPointer);
 		body.Br (callbackLoadedLabel);
 
 		// Callback variable has just been set or it wasn't null
@@ -693,7 +693,7 @@ namespace Xamarin.Android.Tasks
 		// Call the actual function with only the original parameters
 		var arguments = new List<object?> ();
 		for (int i = 0; i < paramCount; i++) {
-			arguments.Add (new LlvmIrLocalVariable (func.Signature.Parameters[i].Type, func.Signature.Parameters[i].Name));
+			arguments.Add (func.Signature.Parameters[i]);
 		}
 		LlvmIrLocalVariable? result = nativeFunc.ReturnsValue ? func.CreateLocalVariable (nativeFunc.Signature.ReturnType) : null;
 		call = body.Call (nativeFunc, result, arguments, funcPointer: fn);
