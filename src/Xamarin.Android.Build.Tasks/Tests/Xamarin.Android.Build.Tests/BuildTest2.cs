@@ -1517,11 +1517,16 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void CSharp8Features ([Values (true, false)] bool bindingProject)
+		public void CSharp8Features ([Values] bool bindingProject, [Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			XamarinAndroidProject proj;
 			if (bindingProject) {
 				proj = new XamarinAndroidBindingProject {
+					IsRelease = isRelease,
 					AndroidClassParser = "class-parse",
 					Jars = {
 						new AndroidItem.EmbeddedJar ("Jars\\svg-android.jar") {
@@ -1530,9 +1535,11 @@ namespace UnamedProject
 					}
 				};
 			} else {
-				proj = new XamarinAndroidApplicationProject ();
+				proj = new XamarinAndroidApplicationProject {
+					IsRelease = isRelease,
+				};
 			}
-
+			proj.SetRuntime (runtime);
 			proj.Sources.Add (new BuildItem.Source ("Foo.cs") {
 				TextContent = () => "class A { void B () { using var s = new System.IO.MemoryStream (); } }",
 			});
