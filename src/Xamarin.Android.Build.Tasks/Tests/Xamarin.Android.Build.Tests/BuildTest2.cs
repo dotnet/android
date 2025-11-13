@@ -1876,8 +1876,12 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 		}
 
 		[Test]
-		public void BuildAppCheckDebugSymbols ()
+		public void BuildAppCheckDebugSymbols ([Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime)) {
+				return;
+			}
+
 			AssertCommercialBuild (); // FIXME: when Fast Deployment isn't available, we would need to use `llvm-objcopy` to extract the debug symbols
 
 			var path = Path.Combine ("temp", TestName);
@@ -1898,6 +1902,7 @@ namespace Library1 {
 					},
 				},
 			};
+			lib.SetRuntime (runtime);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,
 				ProjectName = "App1",
@@ -1919,6 +1924,7 @@ namespace App1
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty (KnownProperties.AndroidLinkMode, AndroidLinkMode.None.ToString ());
 			using (var libb = CreateDllBuilder (Path.Combine (path, "Library1"))) {
 				Assert.IsTrue (libb.Build (lib), "Library1 Build should have succeeded.");
