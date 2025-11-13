@@ -51,13 +51,8 @@ namespace Xamarin.Android.Build.Tests
 		static IEnumerable<object> Get_DotNetBuildLibraryParams ()
 		{
 			var source = new List<object[]> ();
-			var runtimes = new List<AndroidRuntime> {
-				AndroidRuntime.MonoVM,
-				AndroidRuntime.CoreCLR,
-			};
-
 			foreach (object[] args in DotNetBuildLibrarySource) {
-				foreach (AndroidRuntime runtime in runtimes) {
+				foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
 					source.Add (new object[] {
 						args[0],
 						args[1],
@@ -74,6 +69,15 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (Get_DotNetBuildLibraryParams))]
 		public void DotNetBuildLibrary (bool isRelease, bool duplicateAar, bool useDesignerAssembly, AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			if (runtime == AndroidRuntime.NativeAOT) {
+				// TODO: fix NativeAOT build to include all the environment variables
+				Assert.Ignore ("NativeAOT doesn't export the MY_ENVIRONMENT_VAR variable");
+			}
+
 			var path = Path.Combine ("temp", TestName);
 			var env_var = "MY_ENVIRONMENT_VAR";
 			var env_val = "MY_VALUE";
@@ -284,7 +288,14 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsNotNull(doc.Element ("manifest")?.Element ("queries")?.Element ("package"), $"There should be 1 package in the queries in {androidManifest}.");
 			// Check environment variable
 			if (isRelease) {
-				var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediate, "x86_64", required: true);
+				string envFilesDir;
+				if (runtime == AndroidRuntime.NativeAOT) {
+					envFilesDir = Path.Combine (intermediate, "android-x64");
+				} else {
+					envFilesDir = intermediate;
+				}
+
+				var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (envFilesDir, "x86_64", required: true);
 				var environmentVariables = EnvironmentHelper.ReadEnvironmentVariables (environmentFiles, runtime);
 				Assert.IsTrue (environmentVariables.TryGetValue (env_var, out string actual), $"Environment should contain {env_var}");
 				Assert.AreEqual (env_val, actual, $"{env_var} should be {env_val}");
