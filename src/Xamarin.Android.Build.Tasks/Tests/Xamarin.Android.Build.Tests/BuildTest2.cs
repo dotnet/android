@@ -1426,9 +1426,16 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void BuildIncrementingAssemblyVersion ()
+		public void BuildIncrementingAssemblyVersion ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("GenerateAssemblyInfo", "false");
 			proj.SetProperty ("Deterministic", "false"); // Required for AssemblyVersion wildcards
 			proj.Sources.Add (new BuildItem ("Compile", "AssemblyInfo.cs") {
