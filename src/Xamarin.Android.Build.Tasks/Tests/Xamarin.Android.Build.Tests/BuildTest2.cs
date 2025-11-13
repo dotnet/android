@@ -2069,12 +2069,16 @@ namespace App1
 		}
 
 		[Test]
-		public void LibraryWithGenericAttribute ()
+		public void LibraryWithGenericAttribute ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
 				ProjectName = "Library1",
-				IsRelease = true,
+				IsRelease = isRelease,
 				Sources = {
 					new BuildItem.Source ("Class1.cs") {
 						TextContent = () => """
@@ -2092,9 +2096,10 @@ namespace App1
 					},
 				},
 			};
+			lib.SetRuntime (runtime);
 			var proj = new XamarinAndroidApplicationProject {
 				ProjectName = "App1",
-				IsRelease = true,
+				IsRelease = isRelease,
 				Sources = {
 					new BuildItem.Source ("Class2.cs") {
 						TextContent= () => """
@@ -2104,6 +2109,7 @@ namespace App1
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
 			proj.AddReference (lib);
 			using var libb = CreateDllBuilder (Path.Combine (path, "Library1"));
 			Assert.IsTrue (libb.Build (lib), "Library1 Build should have succeeded.");
