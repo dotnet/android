@@ -2040,11 +2040,20 @@ namespace App1
 
 		[Test]
 		[NonParallelizable] // Environment variables are global!
-		public void BuildWithJavaToolOptions ()
+		public void BuildWithJavaToolOptions ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
+			if (runtime == AndroidRuntime.NativeAOT) {
+				// We aren't interested in the ILC warnings here
+				proj.SetProperty ("SuppressAotAnalysisWarnings", "true");
+			}
 			var oldEnvVar = Environment.GetEnvironmentVariable ("JAVA_TOOL_OPTIONS");
 			try {
 				Environment.SetEnvironmentVariable ("JAVA_TOOL_OPTIONS",
