@@ -1649,6 +1649,9 @@ namespace UnamedProject
 		public void BuildMultiDexApplication ([Values] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = CreateMultiDexRequiredApplication ();
 			proj.IsRelease = isRelease;
 			proj.SetRuntime (runtime);
@@ -1666,6 +1669,9 @@ namespace UnamedProject
 		public void BuildAfterMultiDexIsNotRequired ([Values] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = CreateMultiDexRequiredApplication ();
 			proj.IsRelease = isRelease;
 			proj.SetRuntime (runtime);
@@ -1705,9 +1711,13 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void CustomApplicationClassAndMultiDex ([Values (true, false)] bool isRelease)
+		public void CustomApplicationClassAndMultiDex ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = CreateMultiDexRequiredApplication ();
+			proj.SetRuntime (runtime);
 			proj.IsRelease = isRelease;
 			proj.TrimModeRelease = TrimMode.Full;
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
