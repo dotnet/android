@@ -1548,27 +1548,22 @@ namespace UnamedProject
 			}
 		}
 
-		static readonly object [] BuildProguardEnabledProjectSource = new object [] {
-			new object [] {
-				/* rid */       "",
-			},
-			new object [] {
-				/* rid */       "android-arm64",
-			},
-		};
-
 		[Test]
-		[TestCaseSource (nameof (BuildProguardEnabledProjectSource))]
-		public void BuildProguardEnabledProject (string rid)
+		public void BuildProguardEnabledProject ([Values ("", "android-arm64")] string rid, [Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinFormsAndroidApplicationProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 				LinkTool = "r8",
 			};
+			proj.SetRuntime (runtime);
 			if (!string.IsNullOrEmpty (rid)) {
 				proj.SetProperty ("RuntimeIdentifier", rid);
 			}
-			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildProguard Enabled(1){rid}"))) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildProguard Enabled(1){rid}{runtime}"))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				// warning XA4304: ProGuard configuration file 'XYZ' was not found.
 				StringAssertEx.DoesNotContain ("XA4304", b.LastBuildOutput, "Output should *not* contain XA4304 warnings");
@@ -1592,12 +1587,17 @@ namespace UnamedProject
 
 				var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
 				FileAssert.Exists (dexFile);
-				var classes = new [] {
-					"Lmono/MonoRuntimeProvider;",
+				var classes = new List<string> {
 					"Lmono/android/view/View_OnClickListenerImplementor;",
 					"Landroid/runtime/JavaProxyThrowable;",
 					$"L{toolbar_class.Replace ('.', '/')};"
 				};
+				if (runtime == AndroidRuntime.NativeAOT) {
+					classes.Add ("Lnet/dot/jni/nativeaot/NativeAotRuntimeProvider;");
+				} else {
+					classes.Add ("Lmono/MonoRuntimeProvider;");
+				}
+
 				foreach (var className in classes) {
 					Assert.IsTrue (DexUtils.ContainsClassWithMethod (className, "<init>", "()V", dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 				}
