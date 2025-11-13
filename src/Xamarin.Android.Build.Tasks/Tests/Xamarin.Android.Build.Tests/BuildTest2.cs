@@ -2118,13 +2118,25 @@ namespace App1
 		}
 
 		[Test]
-		public void Plugin_Maui_Audio ()
+		public void Plugin_Maui_Audio ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// TODO: investigate why NativeAOT doesn't contain `crc64467b05f37239e7a6/StreamMediaDataSource` (or any `StreamMediaDataSource` for that matter)
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT build doesn't contain crc64467b05f37239e7a6/StreamMediaDataSource");
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				PackageReferences = {
 					new Package { Id = "Plugin.Maui.Audio", Version = "4.0.0" }
 				},
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("MauiEnablePlatformUsings", "true"); // Avoids MAUI replacing @(Using)
 			// Just use the library in some way, so the C# compiler doesn't drop the assembly reference
 			proj.MainActivity = proj.DefaultMainActivity
