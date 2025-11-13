@@ -1663,9 +1663,12 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void BuildAfterMultiDexIsNotRequired ()
+		public void BuildAfterMultiDexIsNotRequired ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			var proj = CreateMultiDexRequiredApplication ();
+			proj.IsRelease = isRelease;
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
 
 			using (var b = CreateApkBuilder ()) {
