@@ -856,12 +856,18 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckContentBuildAction ()
+		public void CheckContentBuildAction ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var metadata = "CopyToOutputDirectory=PreserveNewest";
 			var path = Path.Combine ("temp", TestName);
 
 			var lib = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
 				ProjectName = "Library1",
 				Sources = {
 					new BuildItem.Source ("Bar.cs") {
@@ -879,8 +885,10 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 			};
+			lib.SetRuntime (runtime);
 
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				ProjectName = "App",
 				Sources = {
 					new BuildItem.Source ("Foo.cs") {
@@ -891,29 +899,30 @@ namespace Xamarin.Android.Build.Tests
 					new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"),
 				}
 			};
-			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
-			using (var appBuilder = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
-				Assert.IsTrue (libBuilder.Build (lib), "library should have built successfully");
-				StringAssertEx.Contains ("TestContent.txt : warning XA0101: @(Content) build action is not supported", libBuilder.LastBuildOutput,
-					"Build Output did not contain 'TestContent.txt : warning XA0101'.");
+			proj.SetRuntime (runtime);
 
-				proj.AndroidResources.Add (new BuildItem.Content ("TestContent.txt") {
-					TextContent = () => "Test Content",
-					MetadataValues = metadata,
-				});
-				proj.AndroidResources.Add (new BuildItem.Content ("TestContent1.txt") {
-					TextContent = () => "Test Content 1",
-					MetadataValues = metadata,
-				});
-				Assert.IsTrue (appBuilder.Build (proj), "app should have built successfully");
-				StringAssertEx.Contains ("TestContent.txt : warning XA0101: @(Content) build action is not supported", appBuilder.LastBuildOutput,
-					"Build Output did not contain 'TestContent.txt : warning XA0101'.");
-				StringAssertEx.Contains ("TestContent1.txt : warning XA0101: @(Content) build action is not supported", appBuilder.LastBuildOutput,
-					"Build Output did not contain 'TestContent1.txt : warning XA0101'.");
-				// Ensure items excluded from check do not produce warnings.
-				StringAssertEx.DoesNotContain ("TestContent2.txt : warning XA0101", libBuilder.LastBuildOutput,
-					"Build Output contains 'TestContent2.txt : warning XA0101'.");
-			}
+			using var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName));
+			using var appBuilder = CreateApkBuilder (Path.Combine (path, proj.ProjectName));
+			Assert.IsTrue (libBuilder.Build (lib), "library should have built successfully");
+			StringAssertEx.Contains ("TestContent.txt : warning XA0101: @(Content) build action is not supported", libBuilder.LastBuildOutput,
+				"Build Output did not contain 'TestContent.txt : warning XA0101'.");
+
+			proj.AndroidResources.Add (new BuildItem.Content ("TestContent.txt") {
+				TextContent = () => "Test Content",
+				MetadataValues = metadata,
+			});
+			proj.AndroidResources.Add (new BuildItem.Content ("TestContent1.txt") {
+				TextContent = () => "Test Content 1",
+				MetadataValues = metadata,
+			});
+			Assert.IsTrue (appBuilder.Build (proj), "app should have built successfully");
+			StringAssertEx.Contains ("TestContent.txt : warning XA0101: @(Content) build action is not supported", appBuilder.LastBuildOutput,
+				"Build Output did not contain 'TestContent.txt : warning XA0101'.");
+			StringAssertEx.Contains ("TestContent1.txt : warning XA0101: @(Content) build action is not supported", appBuilder.LastBuildOutput,
+				"Build Output did not contain 'TestContent1.txt : warning XA0101'.");
+			// Ensure items excluded from check do not produce warnings.
+			StringAssertEx.DoesNotContain ("TestContent2.txt : warning XA0101", libBuilder.LastBuildOutput,
+				"Build Output contains 'TestContent2.txt : warning XA0101'.");
 		}
 
 		[Test]
