@@ -614,10 +614,21 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DuplicateJCWNames ()
+		public void DuplicateJCWNames ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// TODO: NativeAOT should fail the application build
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT doesn't fail the application build");
+			}
+
 			var source = @"[Android.Runtime.Register (""examplelib.EmptyClass"")] public class EmptyClass : Java.Lang.Object { }";
 			var library1 = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
 				ProjectName = "Library1",
 				Sources = {
 					new BuildItem.Source ("EmptyClass.cs") {
@@ -625,7 +636,9 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 			};
+			library1.SetRuntime (runtime);
 			var library2 = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
 				ProjectName = "Library2",
 				Sources = {
 					new BuildItem.Source ("EmptyClass.cs") {
@@ -633,28 +646,31 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 			};
+			library2.SetRuntime (runtime);
 			var app = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				ProjectName = "App1",
 				References = {
 					new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"),
 					new BuildItem ("ProjectReference", "..\\Library2\\Library2.csproj")
 				},
 			};
+			app.SetRuntime (runtime);
 			var projectPath = Path.Combine ("temp", TestName);
-			using (var lib1b = CreateDllBuilder (Path.Combine (projectPath, library1.ProjectName), cleanupAfterSuccessfulBuild: false))
-			using (var lib2b = CreateDllBuilder (Path.Combine (projectPath, library2.ProjectName), cleanupAfterSuccessfulBuild: false)) {
-				Assert.IsTrue (lib1b.Build (library1), "Build of Library1 should have succeeded");
-				Assert.IsTrue (lib2b.Build (library2), "Build of Library2 should have succeeded");
-				using (var appb = CreateApkBuilder (Path.Combine (projectPath, app.ProjectName))) {
-					appb.ThrowOnBuildFailure = false;
-					Assert.IsFalse (appb.Build (app), "Build of App1 should have failed");
-					IEnumerable<string> errors = appb.LastBuildOutput.Where (x => x.Contains ("error XA4215"));
-					Assert.NotNull (errors, "Error should be XA4215");
-					StringAssertEx.Contains ("EmptyClass", errors, "Error should mention the conflicting type name");
-					StringAssertEx.Contains ("Library1", errors, "Error should mention all of the assemblies with conflicts");
-					StringAssertEx.Contains ("Library2", errors, "Error should mention all of the assemblies with conflicts");
-				}
-			}
+			using var lib1b = CreateDllBuilder (Path.Combine (projectPath, library1.ProjectName), cleanupAfterSuccessfulBuild: false);
+			using var lib2b = CreateDllBuilder (Path.Combine (projectPath, library2.ProjectName), cleanupAfterSuccessfulBuild: false);
+
+			Assert.IsTrue (lib1b.Build (library1), "Build of Library1 should have succeeded");
+			Assert.IsTrue (lib2b.Build (library2), "Build of Library2 should have succeeded");
+
+			using var appb = CreateApkBuilder (Path.Combine (projectPath, app.ProjectName));
+			appb.ThrowOnBuildFailure = false;
+			Assert.IsFalse (appb.Build (app), "Build of App1 should have failed");
+			IEnumerable<string> errors = appb.LastBuildOutput.Where (x => x.Contains ("error XA4215"));
+			Assert.NotNull (errors, "Error should be XA4215");
+			StringAssertEx.Contains ("EmptyClass", errors, "Error should mention the conflicting type name");
+			StringAssertEx.Contains ("Library1", errors, "Error should mention all of the assemblies with conflicts");
+			StringAssertEx.Contains ("Library2", errors, "Error should mention all of the assemblies with conflicts");
 		}
 
 		[Test]
