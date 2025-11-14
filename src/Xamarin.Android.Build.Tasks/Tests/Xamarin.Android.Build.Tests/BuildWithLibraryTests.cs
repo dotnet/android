@@ -983,11 +983,17 @@ namespace Xamarin.Android.Build.Tests
 		// Combination of class libraries that triggered the problem:
 		// error APT2144: invalid file path 'obj/Release/net8.0-android/lp/86.stamp'.
 		[Test]
-		public void ClassLibraryAarDependencies ()
+		public void ClassLibraryAarDependencies ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var path = Path.Combine ("temp", TestName);
 			var material = new Package { Id = "Xamarin.Google.Android.Material", Version = "1.9.0.1" };
 			var libraryA = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
 				ProjectName = "LibraryA",
 				Sources = {
 					new BuildItem.Source ("Bar.cs") {
@@ -996,10 +1002,13 @@ namespace Xamarin.Android.Build.Tests
 				},
 				PackageReferences = { material },
 			};
+			libraryA.SetRuntime (runtime);
+
 			using var builderA = CreateDllBuilder (Path.Combine (path, libraryA.ProjectName));
 			Assert.IsTrue (builderA.Build (libraryA), "Build should have succeeded.");
 
 			var libraryB = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
 				ProjectName = "LibraryB",
 				Sources = {
 					new BuildItem.Source ("Foo.cs") {
@@ -1008,6 +1017,7 @@ namespace Xamarin.Android.Build.Tests
 				},
 				PackageReferences = { material },
 			};
+			libraryB.SetRuntime (runtime);
 			libraryB.AddReference (libraryA);
 			using var builderB = CreateDllBuilder (Path.Combine (path, libraryB.ProjectName));
 			Assert.IsTrue (builderB.Build (libraryB), "Build should have succeeded.");
