@@ -1098,7 +1098,7 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 				FileAssert.Exists (dexFile);
 				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 				className = runtime switch {
-					AndroidRuntime.NativeAOT => "Lnet/dot/jni/nativeaot/NativeAotRuntimeProvider_1",
+					AndroidRuntime.NativeAOT => "Lnet/dot/jni/nativeaot/NativeAotRuntimeProvider_1;",
 					_ => "Lmono/MonoRuntimeProvider_1;"
 				};
 				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
