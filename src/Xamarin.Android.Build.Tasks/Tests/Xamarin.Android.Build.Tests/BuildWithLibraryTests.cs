@@ -411,8 +411,12 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[NonParallelizable]
-		public void BuildWithNativeLibraries ([Values (true, false)] bool isRelease)
+		public void BuildWithNativeLibraries ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var dll = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library1",
 				IsRelease = isRelease,
@@ -430,6 +434,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				},
 			};
+			dll.SetRuntime (runtime);
 			var dll2 = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library2",
 				IsRelease = isRelease,
@@ -447,6 +452,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				},
 			};
+			dll2.SetRuntime (runtime);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 				References = {
@@ -459,7 +465,8 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
-			var path = Path.Combine (Root, "temp", string.Format ("BuildWithNativeLibraries_{0}", isRelease));
+			proj.SetRuntime (runtime);
+			var path = Path.Combine (Root, "temp", TestName);
 			using (var b1 = CreateDllBuilder (Path.Combine (path, dll2.ProjectName))) {
 				Assert.IsTrue (b1.Build (dll2), "Build should have succeeded.");
 				using (var b = CreateDllBuilder (Path.Combine (path, dll.ProjectName))) {
@@ -482,10 +489,20 @@ namespace Xamarin.Android.Build.Tests
 							Assert.IsNotNull (data, "libtest1.so for arm64-v8a should exist in the apk.");
 							data = ZipHelper.ReadFileFromZip (zipFile, "lib/arm64-v8a/libRSSupport.so");
 							Assert.IsNotNull (data, "libRSSupport.so for arm64-v8a should exist in the apk.");
-							data = ZipHelper.ReadFileFromZip (zipFile, "lib/x86_64/libSystem.Native.so");
-							Assert.IsNotNull (data, "libSystem.Native.so for x86_64 should exist in the apk.");
-							data = ZipHelper.ReadFileFromZip (zipFile, "lib/arm64-v8a/libSystem.Native.so");
-							Assert.IsNotNull (data, "libSystem.Native.so for arm64-v8a should exist in the apk.");
+
+							if (runtime != AndroidRuntime.NativeAOT) {
+								// NativeAOT doesn't package any PAL libraries, they are linked into the application .so
+								data = ZipHelper.ReadFileFromZip (zipFile, "lib/x86_64/libSystem.Native.so");
+								Assert.IsNotNull (data, "libSystem.Native.so for x86_64 should exist in the apk.");
+								data = ZipHelper.ReadFileFromZip (zipFile, "lib/arm64-v8a/libSystem.Native.so");
+								Assert.IsNotNull (data, "libSystem.Native.so for arm64-v8a should exist in the apk.");
+							} else {
+								// Instead, with NativeAOT, we check for presence of the app .so
+								data = ZipHelper.ReadFileFromZip (zipFile, $"lib/x86_64/lib{proj.ProjectName}.so");
+								Assert.IsNotNull (data, $"lib{proj.ProjectName}.so for x86_64 should exist in the apk.");
+								data = ZipHelper.ReadFileFromZip (zipFile, $"lib/arm64-v8a/lib{proj.ProjectName}.so");
+								Assert.IsNotNull (data, $"lib{proj.ProjectName}.so for arm64-v8a should exist in the apk.");
+							}
 						}
 					}
 				}
