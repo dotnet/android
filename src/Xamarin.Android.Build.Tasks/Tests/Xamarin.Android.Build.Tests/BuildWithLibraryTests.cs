@@ -544,19 +544,27 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildWithExternalJavaLibrary ()
+		public void BuildWithExternalJavaLibrary ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var path = Path.Combine ("temp", TestName);
 			var binding = new XamarinAndroidBindingProject {
+				IsRelease = isRelease,
 				ProjectName = "BuildWithExternalJavaLibraryBinding",
 				AndroidClassParser = "class-parse",
 			};
+			binding.SetRuntime (runtime);
 			using (var bbuilder = CreateDllBuilder (Path.Combine (path, "BuildWithExternalJavaLibraryBinding"))) {
 				string multidex_jar = Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "android-support-multidex.jar");
 				binding.Jars.Add (new AndroidItem.InputJar (() => multidex_jar));
 
 				Assert.IsTrue (bbuilder.Build (binding), "Binding build should succeed.");
 				var proj = new XamarinAndroidApplicationProject {
+					IsRelease = isRelease,
 					References = { new BuildItem ("ProjectReference", "..\\BuildWithExternalJavaLibraryBinding\\BuildWithExternalJavaLibraryBinding.csproj"), },
 					OtherBuildItems = { new BuildItem ("AndroidExternalJavaLibrary", multidex_jar) },
 					Sources = {
@@ -565,6 +573,7 @@ namespace Xamarin.Android.Build.Tests
 						}
 					},
 				};
+				proj.SetRuntime (runtime);
 				using (var builder = CreateApkBuilder (Path.Combine (path, "BuildWithExternalJavaLibrary"))) {
 					Assert.IsTrue (builder.Build (proj), "App build should succeed");
 				}
