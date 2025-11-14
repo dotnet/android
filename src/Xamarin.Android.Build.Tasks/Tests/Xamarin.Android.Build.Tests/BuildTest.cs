@@ -781,7 +781,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
 
 				var className = runtime switch {
-					AndroidRuntime.NativeAOT => "Lnet/dot/jni/nativeaot/NativeAotRuntimeProvider",
+					AndroidRuntime.NativeAOT => "Lnet/dot/jni/nativeaot/NativeAotRuntimeProvider;",
 					_ => "Lmono/MonoRuntimeProvider;"
 				};
 				var dexFile = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
