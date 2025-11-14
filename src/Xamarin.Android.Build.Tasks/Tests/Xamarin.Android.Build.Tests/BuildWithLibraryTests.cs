@@ -510,9 +510,15 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildWithNativeLibraryUnknownAbi ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void BuildWithNativeLibraryUnknownAbi ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
 				OtherBuildItems = {
 					new AndroidItem.AndroidNativeLibrary ("not-a-real-abi\\libtest.so") {
 						BinaryContent = () => new byte[10],
@@ -522,9 +528,10 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntime (runtime);
 
 			var supportedAbis = runtime switch {
-				AndroidRuntime.MonoVM  => new [] {"armeabi-v7a", "x86"},
-				AndroidRuntime.CoreCLR => new [] {"arm64-v8a", "x86_64"},
-				_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+				AndroidRuntime.MonoVM    => new [] {"armeabi-v7a", "x86"},
+				AndroidRuntime.CoreCLR   => new [] {"arm64-v8a", "x86_64"},
+				AndroidRuntime.NativeAOT => new [] {"arm64-v8a", "x86_64"},
+				_                        => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 			};
 			proj.SetRuntimeIdentifiers (supportedAbis);
 
