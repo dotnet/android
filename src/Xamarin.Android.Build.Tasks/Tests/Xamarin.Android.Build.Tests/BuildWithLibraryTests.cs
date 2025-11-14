@@ -1024,11 +1024,18 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DotNetLibraryAarChanges ()
+		public void DotNetLibraryAarChanges ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
 				EnableDefaultItems = true,
 			};
+			proj.SetRuntime (runtime);
 			proj.Sources.Add (new AndroidItem.AndroidResource ("Resources\\raw\\foo.txt") {
 				TextContent = () => "foo",
 			});
