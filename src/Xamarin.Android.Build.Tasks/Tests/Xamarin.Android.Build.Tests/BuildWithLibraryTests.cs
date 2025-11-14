@@ -926,9 +926,14 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ContentBuildActionForRazor ()
+		public void ContentBuildActionForRazor ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var lib = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
 				Sdk = "Microsoft.NET.Sdk.Razor",
 				EnableDefaultItems = true,
 				PackageReferences = {
@@ -969,6 +974,7 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 			};
+			lib.SetRuntime (runtime);
 			using var b = CreateDllBuilder ();
 			Assert.IsTrue (b.Build (lib), "library should have built successfully");
 			b.AssertHasNoWarnings ();
