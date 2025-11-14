@@ -581,9 +581,16 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void AndroidLibraryProjectsZipWithOddPaths ()
+		public void AndroidLibraryProjectsZipWithOddPaths ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidLibraryProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.Imports.Add (new Import ("foo.props") {
 				TextContent = () => $@"
 					<Project>
