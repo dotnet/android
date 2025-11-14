@@ -751,12 +751,17 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void AllResourcesInClassLibrary ([Values (false, true)] bool useDesignerAssembly)
+		public void AllResourcesInClassLibrary ([Values] bool useDesignerAssembly, [Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 
 			// Create a "library" with all the application stuff in it
 			var lib = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				ProjectName = "MyLibrary",
 				Sources = {
 					new BuildItem.Source ("Bar.cs") {
@@ -764,6 +769,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
+			lib.SetRuntime (runtime);
 			lib.SetProperty ("AndroidApplication", "False");
 			lib.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
 			lib.RemoveProperty ("OutputType");
@@ -772,6 +778,7 @@ namespace Xamarin.Android.Build.Tests
 
 			// Create an "app" that is basically empty and references the library
 			var app = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
 				ProjectName = "MyApp",
 				Sources = {
 					new BuildItem.Source ("Foo.cs") {
@@ -784,24 +791,24 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
+			app.SetRuntime (runtime);
 			app.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
 			app.AndroidResources.Clear (); // No Resources
 			app.SetProperty (KnownProperties.OutputType, "Exe");
 			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
 
-			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
-			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
-				Assert.IsTrue (libBuilder.Build (lib), "library build should have succeeded.");
-				Assert.IsTrue (appBuilder.Build (app), "app build should have succeeded.");
+			using var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName));
+			using var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName));
+			Assert.IsTrue (libBuilder.Build (lib), "library build should have succeeded.");
+			Assert.IsTrue (appBuilder.Build (app), "app build should have succeeded.");
 
-				var r_txt = Path.Combine (Root, appBuilder.ProjectDirectory, app.IntermediateOutputPath, "R.txt");
-				FileAssert.Exists (r_txt);
+			var r_txt = Path.Combine (Root, appBuilder.ProjectDirectory, app.IntermediateOutputPath, "R.txt");
+			FileAssert.Exists (r_txt);
 
-				var resource_designer_cs = GetResourceDesignerPath (appBuilder, app);
-				FileAssert.Exists (resource_designer_cs);
-				var contents = GetResourceDesignerText (app, resource_designer_cs);
-				Assert.AreNotEqual ("", contents);
-			}
+			var resource_designer_cs = GetResourceDesignerPath (appBuilder, app);
+			FileAssert.Exists (resource_designer_cs);
+			var contents = GetResourceDesignerText (app, resource_designer_cs);
+			Assert.AreNotEqual ("", contents);
 		}
 
 		[Test]
