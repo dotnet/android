@@ -312,15 +312,21 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ProjectDependencies ([Values(true, false)] bool projectReference)
+		public void ProjectDependencies ([Values] bool projectReference, [Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			// Setup dependencies App A -> Lib B -> Lib C
 			var path = Path.Combine ("temp", TestName);
 
 			var libB = new XamarinAndroidLibraryProject () {
 				ProjectName = "LibraryB",
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			libB.SetRuntime (runtime);
 			libB.Sources.Clear ();
 			libB.Sources.Add (new BuildItem.Source ("Foo.cs") {
 				TextContent = () => "public class Foo : Bar { }",
@@ -328,9 +334,10 @@ namespace Xamarin.Android.Build.Tests
 
 			var libC = new XamarinAndroidLibraryProject () {
 				ProjectName = "LibraryC",
-				IsRelease = true,
+				IsRelease = isRelease,
 				AppendTargetFrameworkToOutputPath = true,
 			};
+			libC.SetRuntime (runtime);
 			libC.Sources.Clear ();
 			libC.Sources.Add (new BuildItem.Source ("Bar.cs") {
 				TextContent = () => "public class Bar : Java.Lang.Object { }",
@@ -357,7 +364,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var appA = new XamarinAndroidApplicationProject {
 				ProjectName = "AppA",
-				IsRelease = true,
+				IsRelease = isRelease,
 				Sources = {
 					new BuildItem.Source ("Baz.cs") {
 						TextContent = () => "public class Baz : Foo { }",
@@ -370,6 +377,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
+			appA.SetRuntime (runtime);
 			appA.AddReference (libB);
 			if (!projectReference) {
 				// @(ProjectReference) implicits adds this reference. For `class Baz : Foo : Bar`:
@@ -378,14 +386,16 @@ namespace Xamarin.Android.Build.Tests
 			var appBuilder = CreateApkBuilder (Path.Combine (path, appA.ProjectName));
 			Assert.IsTrue (appBuilder.Build (appA), $"{appA.ProjectName} should succeed");
 
-			var apkPath = Path.Combine (Root, appBuilder.ProjectDirectory, appA.OutputPath, $"{appA.PackageName}-Signed.apk");
-			FileAssert.Exists (apkPath);
-			var helper = new ArchiveAssemblyHelper (apkPath);
-			helper.AssertContainsEntry ($"assemblies/{appA.ProjectName}.dll");
-			helper.AssertContainsEntry ($"assemblies/{libB.ProjectName}.dll");
-			helper.AssertContainsEntry ($"assemblies/{libC.ProjectName}.dll");
-			helper.AssertContainsEntry ($"assemblies/es/{appA.ProjectName}.resources.dll");
-			helper.AssertContainsEntry ($"assemblies/es/{libC.ProjectName}.resources.dll");
+			if (runtime != AndroidRuntime.NativeAOT) { // NativeAOT doesn't package assemblies
+				var apkPath = Path.Combine (Root, appBuilder.ProjectDirectory, appA.OutputPath, $"{appA.PackageName}-Signed.apk");
+				FileAssert.Exists (apkPath);
+				var helper = new ArchiveAssemblyHelper (apkPath);
+				helper.AssertContainsEntry ($"assemblies/{appA.ProjectName}.dll");
+				helper.AssertContainsEntry ($"assemblies/{libB.ProjectName}.dll");
+				helper.AssertContainsEntry ($"assemblies/{libC.ProjectName}.dll");
+				helper.AssertContainsEntry ($"assemblies/es/{appA.ProjectName}.resources.dll");
+				helper.AssertContainsEntry ($"assemblies/es/{libC.ProjectName}.resources.dll");
+			}
 
 			var intermediate = Path.Combine (Root, appBuilder.ProjectDirectory, appA.IntermediateOutputPath);
 			var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
