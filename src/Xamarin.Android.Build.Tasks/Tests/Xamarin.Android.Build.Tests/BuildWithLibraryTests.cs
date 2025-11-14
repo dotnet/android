@@ -838,9 +838,16 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void AndroidXClassLibraryNoResources ()
+		public void AndroidXClassLibraryNoResources ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidLibraryProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.AndroidResources.Clear ();
 			proj.PackageReferences.Add (KnownPackages.AndroidXLegacySupportV4);
 			using (var b = CreateDllBuilder ()) {
