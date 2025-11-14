@@ -333,7 +333,7 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, aot: aot, release: true)) {
 				return;
 			} else if (!aot && runtime == AndroidRuntime.NativeAOT) {
-				// Just saving time, aot && !aot would be indentical tests with NativeAOT runtime
+				// Just saving time, aot && !aot would be identical tests with NativeAOT runtime
 				Assert.Ignore ("NativeAOT always uses AOT, obviously");
 				return;
 			}
