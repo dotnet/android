@@ -816,9 +816,13 @@ namespace Xamarin.Android.Build.Tests
 		/// <summary>
 		/// Reference https://bugzilla.xamarin.com/show_bug.cgi?id=29568
 		/// </summary>
-		public void BuildLibraryWhichUsesResources ([Values (false, true)] bool isRelease)
+		public void BuildLibraryWhichUsesResources ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidLibraryProject { IsRelease = isRelease };
+			proj.SetRuntime (runtime);
 			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\Styles.xml") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""UTF-8"" ?>
