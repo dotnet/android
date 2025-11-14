@@ -734,8 +734,12 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void LibraryProjectsShouldSkipGetPrimaryCpuAbi ()
+		public void LibraryProjectsShouldSkipGetPrimaryCpuAbi ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			AssertCommercialBuild ();
 
 			const string target = "_GetPrimaryCpuAbi";
