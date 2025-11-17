@@ -1037,8 +1037,13 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		[Test]
-		public void AndroidMavenLibrary_FailsDueToUnverifiedDependency ()
+		public void AndroidMavenLibrary_FailsDueToUnverifiedDependency ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			// Test that <AndroidMavenLibrary> triggers Java dependency verification
 			// <AndroidMavenLibrary Include="androidx.core:core" Version="1.9.0" Repository="Google" />
 			var item = new BuildItem ("AndroidMavenLibrary", "androidx.core:core");
@@ -1046,8 +1051,10 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			item.Metadata.Add ("Repository", "Google");
 
 			var proj = new XamarinAndroidBindingProject {
+				IsRelease = isRelease,
 				Jars = { item }
 			};
+			proj.SetRuntime (runtime);
 
 			using (var b = CreateDllBuilder ()) {
 				b.ThrowOnBuildFailure = false;
