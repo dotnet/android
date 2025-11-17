@@ -171,12 +171,17 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[TestCaseSource (nameof (ClassParseOptions))]
-		public void CleanBasicBindingLibrary (string classParser)
+		[TestCaseSource (nameof (Get_ClassParseOptions))]
+		public void CleanBasicBindingLibrary (string classParser, AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidBindingProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.Jars.Add (new AndroidItem.EmbeddedJar ("Jars\\svg-android.jar") {
 				WebContent = "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/svg-android/svg-android.jar"
 			});
