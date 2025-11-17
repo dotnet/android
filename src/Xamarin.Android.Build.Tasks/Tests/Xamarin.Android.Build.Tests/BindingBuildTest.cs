@@ -649,9 +649,14 @@ namespace Foo {
 		}
 
 		[Test]
-		public void AppWithSingleJar ()
+		public void AppWithSingleJar ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				EnableDefaultItems = true,
 				Sources = {
 					new AndroidItem.AndroidLibrary ("Jars\\javaclasses.jar") {
@@ -659,8 +664,9 @@ namespace Foo {
 					}
 				}
 			};
+			proj.SetRuntime (runtime);
 
-			var builder = CreateApkBuilder ();
+			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "first build should succeed");
 			Assert.IsTrue (builder.DesignTimeBuild (proj), "Design time build should succeed.");
 			Assert.IsFalse (builder.Output.IsTargetSkipped ("AddBindingsToCompile"), "AddBindingsToCompile should run.");
