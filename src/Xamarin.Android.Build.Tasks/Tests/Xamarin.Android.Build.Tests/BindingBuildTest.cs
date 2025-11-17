@@ -751,12 +751,17 @@ namespace Foo {
 		}
 
 		[Test]
-		[TestCaseSource (nameof (ClassParseOptions))]
-		public void BindDefaultInterfaceMethods (string classParser)
+		[TestCaseSource (nameof (Get_ClassParseOptions))]
+		public void BindDefaultInterfaceMethods (string classParser, [Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidBindingProject {
 				IsRelease = true,
 			};
+			proj.SetRuntime (runtime);
 
 			// The sources for the .jar is in the jar itself.
 			string classesJarBase64 = @"
