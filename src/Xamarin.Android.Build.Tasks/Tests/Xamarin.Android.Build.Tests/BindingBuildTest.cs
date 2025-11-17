@@ -428,12 +428,17 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BindingCheckHiddenFiles ()
+		public void BindingCheckHiddenFiles ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var binding = new XamarinAndroidBindingProject {
 				ProjectName = "Binding",
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			binding.SetRuntime (runtime);
 			binding.AndroidClassParser = "class-parse";
 			binding.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\mylibrary.aar") {
 				WebContentFileNameFromAzure = "mylibrary.aar"
@@ -445,8 +450,10 @@ namespace Xamarin.Android.Build.Tests
 			using (var bindingBuilder = CreateDllBuilder (Path.Combine (path, binding.ProjectName))) {
 				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
 				var proj = new XamarinAndroidApplicationProject {
+					IsRelease = isRelease,
 					ProjectName = "App",
 				};
+				proj.SetRuntime (runtime);
 				proj.OtherBuildItems.Add (new BuildItem ("ProjectReference", $"..\\{binding.ProjectName}\\{binding.ProjectName}.csproj"));
 				proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" xmlns:tools=""http://schemas.android.com/tools"" android:versionCode=""1"" android:versionName=""1.0"" package=""{proj.PackageName}"">
