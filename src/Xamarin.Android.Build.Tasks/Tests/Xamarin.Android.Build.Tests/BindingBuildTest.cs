@@ -212,7 +212,7 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			}
 			var proj = new XamarinAndroidBindingProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				OtherBuildItems = {
 					new AndroidItem.AndroidAsset ("Assets\\asset1.txt") {
 						TextContent = () => "Asset1",
@@ -232,12 +232,17 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[TestCaseSource (nameof (ClassParseOptions))]
-		public void BuildAarBindigLibraryWithNuGetPackageOfJar (string classParser)
+		[TestCaseSource (nameof (Get_ClassParseOptions))]
+		public void BuildAarBindigLibraryWithNuGetPackageOfJar (string classParser, AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidBindingProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\android-crop-1.0.1.aar") {
 				WebContent = "https://repo1.maven.org/maven2/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
 			});
