@@ -480,10 +480,14 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BindingDoNotPackage ()
+		public void BindingDoNotPackage ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var binding = new XamarinAndroidBindingProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				Jars = {
 					new AndroidItem.EmbeddedJar ("Jars\\svg-android.jar") {
 						WebContentFileNameFromAzure = "javaBindingIssue.jar"
@@ -494,10 +498,14 @@ using Java.Interop;
 [assembly:DoNotPackage(""svg-android.jar"")]
 			"
 			};
+			binding.SetRuntime (runtime);
 			binding.AndroidClassParser = "class-parse";
-			using (var bindingBuilder = CreateDllBuilder (Path.Combine ("temp", "BindingDoNotPackage", "Binding"))) {
+
+			string path = Path.Combine ("temp", TestName);
+			using (var bindingBuilder = CreateDllBuilder (Path.Combine (path, "Binding"))) {
 				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
 				var proj = new XamarinAndroidApplicationProject () {
+					IsRelease = isRelease,
 					ProjectName = "App1",
 					OtherBuildItems = {
 						new BuildItem ("ProjectReference", "..\\Binding\\UnnamedProject.csproj")
@@ -523,7 +531,8 @@ namespace Foo {
 						"}
 					}
 				};
-				using (var b = CreateApkBuilder (Path.Combine ("temp", "BindingDoNotPackage", "App"))) {
+				proj.SetRuntime (runtime);
+				using (var b = CreateApkBuilder (Path.Combine (path, "App"))) {
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				}
 			}
