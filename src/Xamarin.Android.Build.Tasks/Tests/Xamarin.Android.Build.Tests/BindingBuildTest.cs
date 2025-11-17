@@ -344,11 +344,15 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void AnnotationSupport ()
+		public void AnnotationSupport ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			// https://trello.com/c/a36dDVS6/37-support-for-annotations-zip
 			var binding = new XamarinAndroidBindingProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
 			binding.AndroidClassParser = "class-parse";
 			binding.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\mylibrary.aar") {
