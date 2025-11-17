@@ -701,6 +701,7 @@ namespace Foo {
 				IsRelease = isRelease,
 				AndroidClassParser = classParser
 			};
+			proj.SetRuntime (runtime);
 			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\material-menu-1.1.0.aar") {
 				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
 			});
@@ -721,10 +722,15 @@ namespace Foo {
 		}
 
 		[Test]
-		[TestCaseSource (nameof (ClassParseOptions))]
-		public void NullableReferenceTypes (string classParser)
+		[TestCaseSource (nameof (Get_ClassParseOptions))]
+		public void NullableReferenceTypes (string classParser, [Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidBindingProject {
+				IsRelease = isRelease,
 				AndroidClassParser = classParser,
 				Jars = {
 					new AndroidItem.EmbeddedJar ("foo.jar") {
@@ -732,6 +738,7 @@ namespace Foo {
 					}
 				}
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("Nullable", "enable");
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
