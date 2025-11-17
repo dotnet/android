@@ -1066,8 +1066,13 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		[Test]
-		public void AndroidMavenLibrary_IgnoreDependencyVerification ()
+		public void AndroidMavenLibrary_IgnoreDependencyVerification ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			// Test that <AndroidMavenLibrary VerifyDependencies="false"> ignores Java dependency verification
 			// <AndroidMavenLibrary Include="androidx.core:core" Version="1.9.0" Repository="Google"  VerifyDependencies="false"/>
 			var item = new BuildItem ("AndroidMavenLibrary", "androidx.core:core");
@@ -1077,8 +1082,10 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			item.Metadata.Add ("Bind", "false");
 
 			var proj = new XamarinAndroidBindingProject {
+				IsRelease = isRelease,
 				Jars = { item }
 			};
+			proj.SetRuntime (runtime);
 
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
