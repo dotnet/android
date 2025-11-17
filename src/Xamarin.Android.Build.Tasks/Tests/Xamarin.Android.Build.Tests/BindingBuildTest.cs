@@ -1093,8 +1093,13 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		[Test]
-		public void AndroidMavenLibrary_AllDependenciesAreVerified ()
+		public void AndroidMavenLibrary_AllDependenciesAreVerified ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			// Test that <AndroidMavenLibrary> triggers Java dependency verification and that
 			// all dependencies are verified via various supported mechanisms
 
@@ -1126,10 +1131,12 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			var parcelable = new BuildItem ("AndroidIgnoredJavaDependency", "androidx.versionedparcelable:versionedparcelable:1.2.0");
 
 			var proj = new XamarinAndroidBindingProject {
+				IsRelease = isRelease,
 				Jars = { item, annotations_experimental_androidlib },
 				PackageReferences = { annotations_nuget },
 				OtherBuildItems = { concurrent, lifecycle, parcelable },
 			};
+			proj.SetRuntime (runtime);
 
 			proj.AddReference (collection);
 			var collection_proj = proj.References.First ();
