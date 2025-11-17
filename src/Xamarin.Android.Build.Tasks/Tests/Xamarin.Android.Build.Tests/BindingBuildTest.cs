@@ -260,13 +260,18 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[TestCaseSource (nameof (ClassParseOptions))]
+		[TestCaseSource (nameof (Get_ClassParseOptions))]
 		[NonParallelizable]
-		public void BuildLibraryZipBindingLibraryWithAarOfJar (string classParser)
+		public void BuildLibraryZipBindingLibraryWithAarOfJar (string classParser, AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidBindingProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.AndroidClassParser = classParser;
 			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\aFileChooserBinaries.zip") {
 				WebContentFileNameFromAzure = "aFileChooserBinaries.zip"
