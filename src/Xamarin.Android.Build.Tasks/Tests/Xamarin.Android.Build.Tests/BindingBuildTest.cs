@@ -367,21 +367,27 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BindingCustomJavaApplicationClass ()
+		public void BindingCustomJavaApplicationClass ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var binding = new XamarinAndroidBindingProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				ProjectName = "Binding",
 			};
+			binding.SetRuntime (runtime);
 			binding.AndroidClassParser = "class-parse";
 
-			using (var bindingBuilder = CreateDllBuilder ("temp/BindingCustomJavaApplicationClass/MultiDexBinding")) {
+			string path = Path.Combine ("temp", TestName);
+			using (var bindingBuilder = CreateDllBuilder (Path.Combine (path, "MultiDexBinding"))) {
 				string multidexJar = Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "android-support-multidex.jar");
 				binding.Jars.Add (new AndroidItem.EmbeddedJar (() => multidexJar));
 				bindingBuilder.Build (binding);
 				var proj = new XamarinAndroidApplicationProject ();
 				proj.OtherBuildItems.Add (new BuildItem ("ProjectReference", $"..\\MultiDexBinding\\{binding.ProjectName}.csproj"));
-				using (var b = CreateApkBuilder ("temp/BindingCustomJavaApplicationClass/App")) {
+				using (var b = CreateApkBuilder (Path.Combine (path, "App"))) {
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				}
 			}
