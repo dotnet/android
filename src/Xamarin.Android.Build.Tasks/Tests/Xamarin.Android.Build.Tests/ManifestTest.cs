@@ -471,6 +471,7 @@ namespace Bug12935
 			},
 		};
 
+		// TODO: make it work on CoreCLR and NativeAOT
 		[Test]
 		[TestCaseSource(nameof (VersionCodeTestSource))]
 		public void VersionCodeTests (bool seperateApk, string abis, string versionCode, bool useLegacy, string versionCodePattern, string versionCodeProperties, bool shouldBuild, string expectedVersionCode)
@@ -480,6 +481,10 @@ namespace Bug12935
 				MinSdkVersion = "21",
 				SupportedOSPlatformVersion = "21.0",
 			};
+
+			// MonoVM-only test, for now (changing anything in the test data changes the codes, each case must be
+			// investigated and verified manually)
+			proj.SetRuntime (AndroidRuntime.MonoVM);
 			proj.SetProperty ("Foo", "1");
 			proj.SetProperty ("GenerateApplicationManifest", "false"); // Disable $(AndroidVersionCode) support
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, seperateApk);
@@ -1120,7 +1125,7 @@ class TestActivity : Activity { }"
 			bool wasMinSdkVersionEmpty = false;
 
 			// Empty values will default to AndroidMinimumDotNetApiLevel
-			int minDotnetApiLevel = XABuildConfig.AndroidMinimumDotNetApiLevel;
+			var minDotnetApiLevel = XABuildConfig.AndroidMinimumDotNetApiLevel;
 			if (string.IsNullOrEmpty (minSdkVersion)) {
 				wasMinSdkVersionEmpty = true;
 				minSdkVersion = minDotnetApiLevel.ToString ();
@@ -1134,14 +1139,14 @@ class TestActivity : Activity { }"
 			builder.ThrowOnBuildFailure = false;
 			var buildResult = builder.Build (proj);
 
-			if (supportedOSPlatVersInt < minDotnetApiLevel) {
+			if (supportedOSPlatVersInt < minDotnetApiLevel.Major) {
 				Assert.IsFalse (buildResult, "SupportedOSPlatformVersion version too low, build should fail.");
 				StringAssertEx.Contains ("error XA4216", builder.LastBuildOutput, "Should get error XA4216.");
 				StringAssertEx.Contains ("Please increase the $(SupportedOSPlatformVersion) property value in your project file",
 					builder.LastBuildOutput, "Should get error about SupportedOSPlatformVersion being too low.");
 			}
 
-			if (minSdkVersionInt < minDotnetApiLevel ) {
+			if (minSdkVersionInt < minDotnetApiLevel.Major) {
 				Assert.IsFalse (buildResult, "minSdkVersion too low, build should fail.");
 				StringAssertEx.Contains ("error XA4216", builder.LastBuildOutput, "Should get error XA4216.");
 				StringAssertEx.Contains ("Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml",
@@ -1153,7 +1158,9 @@ class TestActivity : Activity { }"
 				StringAssertEx.Contains ("error XA1036", builder.LastBuildOutput, "Should get error about min version mismatch.");
 			}
 
-			if (minSdkVersionInt == supportedOSPlatVersInt && minSdkVersionInt >= minDotnetApiLevel && supportedOSPlatVersInt >= minDotnetApiLevel) {
+			if (minSdkVersionInt == supportedOSPlatVersInt &&
+					minSdkVersionInt >= minDotnetApiLevel.Major &&
+					supportedOSPlatVersInt >= minDotnetApiLevel.Major) {
 				Assert.IsTrue (buildResult, "compatible min versions, build should succeed");
 			}
 		}

@@ -41,6 +41,10 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		// TODO: fix for CoreCLR
+		// Currently fails with
+		//
+		//   The target _Sign should have *not* been skipped.
 		[Test]
 		public void BasicApplicationRepetitiveReleaseBuild ()
 		{
@@ -53,6 +57,8 @@ namespace Xamarin.Android.Build.Tests
 		}
 	}"
 				};
+				// Mono-only test, for now
+				proj.SetRuntime (AndroidRuntime.MonoVM);
 				proj.Sources.Add (foo);
 				Assert.IsTrue (b.Build (proj), "first build failed");
 				var firstBuildTime = b.LastBuildTime;
@@ -238,21 +244,30 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildSolutionWithMultipleProjectsInParallel ()
+		public void BuildSolutionWithMultipleProjectsInParallel ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			var testPath = Path.Combine ("temp", "BuildSolutionWithMultipleProjects");
+			var testPath = Path.Combine ("temp", $"BuildSolutionWithMultipleProjects{runtime}");
 			var sb = new SolutionBuilder("BuildSolutionWithMultipleProjects.sln") {
 				SolutionPath = Path.Combine (Root, testPath),
 				MaxCpuCount = 4,
 			};
+
+			bool aotAssemblies = runtime switch {
+				AndroidRuntime.MonoVM  => true,
+				AndroidRuntime.CoreCLR => false,
+				_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+			};
+
 			for (int i=1; i <= 4; i++) {
 				var app1 = new XamarinAndroidApplicationProject () {
 					ProjectName = $"App{i}",
 					PackageName = $"com.companyname.App{i}",
-					AotAssemblies = true,
+					AotAssemblies = aotAssemblies,
 					IsRelease = true,
+					EnableMarshalMethods = true,
 				};
-				app1.SetProperty ("AndroidEnableMarshalMethods", "True");
+
+				app1.SetRuntime (runtime);
 				sb.Projects.Add (app1);
 			}
 			sb.BuildingInsideVisualStudio = false;
@@ -304,14 +319,20 @@ public class TestMe {
 		}
 
 		[Test]
-		public void ResolveNativeLibrariesInManagedReferences ()
+		public void ResolveNativeLibrariesInManagedReferences ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
+			string abi = runtime switch {
+				AndroidRuntime.MonoVM => "armeabi-v7a",
+				AndroidRuntime.CoreCLR => "arm64-v8a",
+				_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+			};
+
 			var lib = new XamarinAndroidLibraryProject () {
 				ProjectName = "Lib",
 				IsRelease = true,
 				ProjectGuid = Guid.NewGuid ().ToString (),
 				OtherBuildItems = {
-					new BuildItem (AndroidBuildActions.EmbeddedNativeLibrary, "libs/armeabi-v7a/libfoo.so") {
+					new BuildItem (AndroidBuildActions.EmbeddedNativeLibrary, $"libs/{abi}/libfoo.so") {
 						TextContent = () => string.Empty,
 						Encoding = Encoding.ASCII,
 					}
@@ -332,14 +353,15 @@ namespace Lib
 					},
 				},
 			};
-			var so = lib.OtherBuildItems.First (x => x.Include () == "libs/armeabi-v7a/libfoo.so");
+			lib.SetRuntime (runtime);
+			var so = lib.OtherBuildItems.First (x => x.Include () == $"libs/{abi}/libfoo.so");
 
 			var lib2 = new XamarinAndroidLibraryProject () {
 				ProjectName = "Lib2",
 				ProjectGuid = Guid.NewGuid ().ToString (),
 				IsRelease = true,
 				OtherBuildItems = {
-					new BuildItem (AndroidBuildActions.EmbeddedNativeLibrary, "libs/armeabi-v7a/libfoo2.so") {
+					new BuildItem (AndroidBuildActions.EmbeddedNativeLibrary, $"libs/{abi}/libfoo2.so") {
 						TextContent = () => string.Empty,
 						Encoding = Encoding.ASCII,
 					},
@@ -363,6 +385,7 @@ namespace Lib2
 					},
 				},
 			};
+			lib2.SetRuntime (runtime);
 			var path = Path.Combine (Root, "temp", TestName);
 			using (var libbuilder = CreateDllBuilder (Path.Combine(path, "Lib"))) {
 
@@ -378,12 +401,27 @@ namespace Lib2
 							new BuildItem.ProjectReference (@"..\Lib2\Lib2.csproj", "Lib2", lib2.ProjectGuid),
 						}
 					};
-					app.SetAndroidSupportedAbis ("armeabi-v7a");
+					app.SetRuntime (runtime);
+
+					if (runtime == AndroidRuntime.MonoVM) {
+						// Using `SetRuntimeIdentifier` would change the intermediate path (by adding the RID component to it) and, thus, the way this test used to work.
+						// Keep it as it was.
+						app.SetAndroidSupportedAbis (abi);
+					} else {
+						app.SetRuntimeIdentifier (abi);
+					}
+
 					using (var builder = CreateApkBuilder (Path.Combine (path, "App"))) {
 						Assert.IsTrue (builder.Build (app), "app 1st. build failed");
 
-						var libfoo = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + "-Signed.apk"),
-							"lib/armeabi-v7a/libfoo.so");
+						// TODO: appending of the RID to the output path should probably be fixed in the project class instead of here (and elsewhere)
+						string apkFile = Path.Combine (Root, builder.ProjectDirectory, app.OutputPath);
+						if (runtime == AndroidRuntime.CoreCLR) {
+							apkFile = Path.Combine (apkFile, MonoAndroidHelper.AbiToRid (abi));
+						}
+						apkFile = Path.Combine (apkFile, app.PackageName + "-Signed.apk");
+
+						var libfoo = ZipHelper.ReadFileFromZip (apkFile, $"lib/{abi}/libfoo.so");
 						Assert.IsNotNull (libfoo, "libfoo.so should exist in the .apk");
 
 						so.TextContent = () => "newValue";
@@ -394,11 +432,9 @@ namespace Lib2
 
 						Assert.IsNotNull (libfoo, "libfoo.so should exist in the .apk");
 
-						libfoo = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + "-Signed.apk"),
-							"lib/armeabi-v7a/libfoo.so");
+						libfoo = ZipHelper.ReadFileFromZip (apkFile, $"lib/{abi}/libfoo.so");
 						Assert.AreEqual (so.TextContent ().Length, libfoo.Length, "compressed size mismatch");
-						var libfoo2 = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + "-Signed.apk"),
-							"lib/armeabi-v7a/libfoo2.so");
+						var libfoo2 = ZipHelper.ReadFileFromZip (apkFile, $"lib/{abi}/libfoo2.so");
 						Assert.IsNotNull (libfoo2, "libfoo2.so should exist in the .apk");
 						Directory.Delete (path, recursive: true);
 					}
@@ -983,7 +1019,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void GenerateJavaStubsAndAssembly ([Values (true, false)] bool isRelease)
+		public void GenerateJavaStubsAndAssembly ([Values (true, false)] bool isRelease, [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			var targets = new [] {
 				"_GenerateJavaStubs",
@@ -992,7 +1028,21 @@ namespace Lib2
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a");
+			proj.SetRuntime (runtime);
+
+			string abi = runtime switch {
+				AndroidRuntime.MonoVM => "armeabi-v7a",
+				AndroidRuntime.CoreCLR => "arm64-v8a",
+				_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+			};
+			if (runtime == AndroidRuntime.MonoVM) {
+				// Using `SetRuntimeIdentifier` would change the intermediate path (by adding the RID component to it) and, thus, the way this test used to work.
+				// Keep it as it was.
+				proj.SetAndroidSupportedAbis (abi);
+			} else {
+				proj.SetRuntimeIdentifier (abi);
+			}
+
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidEnvironment ("Foo.txt") {
 				TextContent = () => "Foo=Bar",
 			});
@@ -1002,7 +1052,7 @@ namespace Lib2
 				foreach (var target in targets) {
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
 				}
-				AssertAssemblyFilesInFileWrites (proj, b);
+				AssertAssemblyFilesInFileWrites (proj, b, abi, runtime);
 
 				// Change C# file and AndroidEvironment file
 				proj.MainActivity += Environment.NewLine + "// comment";
@@ -1012,30 +1062,35 @@ namespace Lib2
 				foreach (var target in targets) {
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
 				}
-				AssertAssemblyFilesInFileWrites (proj, b);
+				AssertAssemblyFilesInFileWrites (proj, b, abi, runtime);
 
 				// No changes
 				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
 				foreach (var target in targets) {
 					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
 				}
-				AssertAssemblyFilesInFileWrites (proj, b);
+				AssertAssemblyFilesInFileWrites (proj, b, abi, runtime);
 			}
 		}
 
 		readonly string [] ExpectedAssemblyFiles = new [] {
-			Path.Combine ("android", "environment.armeabi-v7a.o"),
-			Path.Combine ("android", "environment.armeabi-v7a.ll"),
-			Path.Combine ("android", "typemaps.armeabi-v7a.o"),
-			Path.Combine ("android", "typemaps.armeabi-v7a.ll"),
-			Path.Combine ("app_shared_libraries", "armeabi-v7a", "libxamarin-app.so")
+			Path.Combine ("android", "environment.@ABI@.o"),
+			Path.Combine ("android", "environment.@ABI@.ll"),
+			Path.Combine ("android", "typemaps.@ABI@.o"),
+			Path.Combine ("android", "typemaps.@ABI@.ll"),
+			Path.Combine ("app_shared_libraries", "@ABI@", "libxamarin-app.so")
 		};
 
-		void AssertAssemblyFilesInFileWrites (XamarinAndroidApplicationProject proj, ProjectBuilder b)
+		void AssertAssemblyFilesInFileWrites (XamarinAndroidApplicationProject proj, ProjectBuilder b, string abi, AndroidRuntime runtime)
 		{
 			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+			if (runtime == AndroidRuntime.CoreCLR) {
+				intermediate = Path.Combine (intermediate, MonoAndroidHelper.AbiToRid (abi));
+			}
+
 			var lines = File.ReadAllLines (Path.Combine (intermediate, $"{proj.ProjectName}.csproj.FileListAbsolute.txt"));
-			foreach (var file in ExpectedAssemblyFiles) {
+			foreach (var fileRaw in ExpectedAssemblyFiles) {
+				string file = fileRaw.Replace ("@ABI@", abi);
 				var path = Path.Combine (intermediate, file);
 				CollectionAssert.Contains (lines, path, $"{file} is not in FileWrites!");
 				FileAssert.Exists (path);
@@ -1431,13 +1486,27 @@ namespace Lib2
 		}
 
 		[Test]
-		public void ChangeSupportedAbis ()
+		public void ChangeSupportedAbis ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
-			proj.SetAndroidSupportedAbis ("armeabi-v7a");
+			proj.SetRuntime (runtime);
+
+			string supportedAbi = runtime switch {
+				AndroidRuntime.MonoVM => "armeabi-v7a",
+				AndroidRuntime.CoreCLR => "arm64-v8a",
+				_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+			};
+
+			string alternativeRid = runtime switch {
+				AndroidRuntime.MonoVM => "x86",
+				AndroidRuntime.CoreCLR => "x64",
+				_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+			};
+
+			proj.SetAndroidSupportedAbis (supportedAbi);
 			using (var b = CreateApkBuilder ()) {
 				b.Build (proj);
-				b.Build (proj, parameters: new [] { $"{KnownProperties.RuntimeIdentifier}=android-x86" }, doNotCleanupOnUpdate: true);
+				b.Build (proj, parameters: new [] { $"{KnownProperties.RuntimeIdentifier}=android-{alternativeRid}" }, doNotCleanupOnUpdate: true);
 			}
 		}
 

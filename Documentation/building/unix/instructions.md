@@ -8,11 +8,11 @@ can also be used by setting the `$(MSBUILD)` make variable to `xbuild`.
 
  1. Install the [build dependencies](dependencies.md).
 
- 2. Clone the xamarin-android repo:
+ 2. Clone the dotnet/android repo:
 
-        git clone https://github.com/xamarin/xamarin-android.git
+        git clone https://github.com/dotnet/android.git
 
- 3. Navigate to the `xamarin-android` directory
+ 3. Navigate to the `android` directory
 
  4. (Optional) [Configure the build](../configuration.md).
 
@@ -77,7 +77,7 @@ Create a new project with `./dotnet-local.sh new android`:
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net6.0-android</TargetFramework>
+    <TargetFramework>net10.0-android</TargetFramework>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 </Project>
@@ -115,7 +115,7 @@ Commercial installers will be created by this command if the
 # Running Unit Tests
 
 
-The `xamarin-android` repo contains several unit tests:
+The `dotnet/android` repo contains several unit tests:
 
   * NUnit-based unit tests, for stand-alone assemblies and utilities.
 
@@ -215,7 +215,7 @@ custom attribute -- may be executed instead of executing *all* test fixtures.
 The `RunTestApks` target accepts a `TestFixture` MSBuild property
 to specify the test fixture class to execute.
 
-If using `Xamarin.Android.NUnitLite` for projects outside the `xamarin-android`
+If using `Xamarin.Android.NUnitLite` for projects outside the `dotnet/android`
 repository, such as NUnit tests for a custom app, the `RunTestApks` target
 will not exist. In such scenarios, the [`adb shell am`][adb-shell-am]
 `instrument` command can be used instead. It follows the format:

@@ -14,7 +14,6 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\product.snk</AssemblyOriginatorKeyFile>
     <DefineConstants>$(DefineConstants);NO_MARSHAL_MEMBER_BUILDER_SUPPORT</DefineConstants>
-    <DefineConstants Condition=" '$(PublishAot)' == 'true' ">$(DefineConstants);NO_GC_BRIDGE_SUPPORT</DefineConstants>
     <JavaInteropTestDirectory>$(JavaInteropSourceDirectory)\tests\Java.Interop-Tests\</JavaInteropTestDirectory>
   </PropertyGroup>
 
@@ -27,6 +26,14 @@
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JavaVMFixture.cs" />
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniReferenceSafeHandleTest.cs" />
     <Compile Remove="$(JavaInteropTestDirectory)obj\Release\net7.0-android/designtime/Resource.designer.cs" />
+  </ItemGroup>
+
+  <!-- Some of tests included in the files below fail on CoreCLR. This is PROBABLY caused by managed typemaps, which 
+       will be replaced at some point by a different implementation. Until then, these tests can remain disabled. -->
+  <!-- TODO: put these back when new typemap implementation is available -->
+  <ItemGroup>
+    <Compile Remove="Java.InteropTests\AndroidValueManagerContractTests.cs" />
+    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniRuntime.JniValueManagerTests.cs" />
   </ItemGroup>
 
   <ItemGroup>

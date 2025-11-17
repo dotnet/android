@@ -8,7 +8,7 @@ using System.Xml.XPath;
 using Microsoft.VisualStudio.TestPlatform.Utilities;
 using Mono.Cecil;
 using NUnit.Framework;
-
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
@@ -81,8 +81,22 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void NativeAssemblyCacheWithSatelliteAssemblies ([Values (true, false)] bool enableMarshalMethods)
+		public void NativeAssemblyCacheWithSatelliteAssemblies ([Values (true, false)] bool enableMarshalMethods, [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
+			if (enableMarshalMethods && runtime == AndroidRuntime.CoreCLR) {
+				// This currently fails with the following exception:
+				//
+				// error XARMM7015: System.NotSupportedException: Writing mixed-mode assemblies is not supported
+				//  at Mono.Cecil.ModuleWriter.Write(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
+				//  at Mono.Cecil.ModuleWriter.WriteModule(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
+				//  at Mono.Cecil.ModuleDefinition.Write(String fileName, WriterParameters parameters)
+				//  at Mono.Cecil.AssemblyDefinition.Write(String fileName, WriterParameters parameters)
+				//  at Xamarin.Android.Tasks.MarshalMethodsAssemblyRewriter.Rewrite(Boolean brokenExceptionTransitions) in src/Xamarin.Android.Build.Tasks/Utilities/MarshalMethodsAssemblyRewriter.cs:line 165
+				//  at Xamarin.Android.Tasks.RewriteMarshalMethods.RewriteMethods(NativeCodeGenState state, Boolean brokenExceptionTransitionsEnabled) in src/Xamarin.Android.Build.Tasks/Tasks/RewriteMarshalMethods.cs:line 160
+				Assert.Ignore ("CoreCLR: fails because of a Mono.Cecil lack of support");
+				return;
+			}
+
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
 				ProjectName = "Localization",
@@ -92,6 +106,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
+			lib.SetRuntime (runtime);
 
 			var languages = new string[] {"es", "de", "fr", "he", "it", "pl", "pt", "ru", "sl" };
 			foreach (string lang in languages) {
@@ -106,8 +121,8 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 				EnableMarshalMethods = enableMarshalMethods,
 			};
+			proj.SetRuntime (runtime);
 			proj.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
 				builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName));
@@ -128,7 +143,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void GlobalLayoutEvent_ShouldRegisterAndFire_OnActivityLaunch ([Values (false, true)] bool isRelease)
+		public void GlobalLayoutEvent_ShouldRegisterAndFire_OnActivityLaunch (
+		  [Values (false, true)] bool isRelease,
+		  [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			string expectedLogcatOutput = "Bug 29730: GlobalLayout event handler called!";
 
@@ -136,8 +153,14 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 				SupportedOSPlatformVersion = "23",
 			};
+			proj.SetRuntime (runtime);
+
 			if (isRelease || !TestEnvironment.CommercialBuildAvailable) {
-				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
+				if (runtime == AndroidRuntime.MonoVM) {
+					proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
+				} else {
+					proj.SetRuntimeIdentifiers (new [] {"arm64-v8a", "x86_64"});
+				}
 			}
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
 $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
@@ -154,13 +177,25 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 60), $"Output did not contain {expectedLogcatOutput}!");
 		}
 
+		// TODO: check if AppDomain.CurrentDomain.UnhandledException even works in CoreCLR
 		[Test]
-		public void SubscribeToAppDomainUnhandledException ()
+		public void SubscribeToAppDomainUnhandledException ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
+			if (runtime == AndroidRuntime.CoreCLR) {
+				Assert.Ignore ("AppDomain.CurrentDomain.UnhandledException doesn't work in CoreCLR");
+				return;
+			}
+
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
+			proj.SetRuntime (runtime);
+			if (runtime == AndroidRuntime.MonoVM) {
+				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
+			} else {
+				proj.SetRuntimeIdentifiers (new [] {"arm64-v8a", "x86_64"});
+			}
+
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
 @"			AppDomain.CurrentDomain.UnhandledException += (sender, e) => {
 				Console.WriteLine (""# Unhandled Exception: sender={0}; e.IsTerminating={1}; e.ExceptionObject={2}"",
@@ -232,8 +267,31 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			}
 		}
 
+		// TODO: fix/review it for CoreCLR. It currently fails with the following exception:
+		//
+		// System.TypeInitializationException: TypeInitialization_Type, SQLite.SQLiteConnection
+		//  ---> System.MissingMethodException: .ctor
+		//    at System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointerInternal(IntPtr, RuntimeType)
+		//    at SQLitePCL.SQLite3Provider_dynamic_cdecl.NativeMethods.Setup(IGetFunctionPointer)
+		//    at SQLitePCL.Batteries_V2.DoDynamic_cdecl(String, Int32)
+		//    Exception_EndOfInnerExceptionStack
+		//    at SQLite.SQLiteConnection..ctor(SQLiteConnectionString)
+		//    at SQLite.SQLiteConnectionPool.Entry..ctor(SQLiteConnectionString)
+		//    at SQLite.SQLiteConnectionPool.GetConnectionAndTransactionLock(SQLiteConnectionString, Object& )
+		//    at SQLite.SQLiteAsyncConnection.<>c__DisplayClass33_0`1.<WriteAsync>b__0()
+		//    at System.Threading.Tasks.Task`1.InnerInvoke()
+		//    at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread, ExecutionContext, ContextCallback, Object)
+		// --- End of stack trace from previous location ---
+		//    at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread, ExecutionContext, ContextCallback, Object)
+		//    at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task&, Thread )
+		// --- End of stack trace from previous location ---
+		//    at LinkTestLib.Bug35195.AttemptCreateTable()
+		//
 		[Test]
-		public void CustomLinkDescriptionPreserve ([Values (AndroidLinkMode.SdkOnly, AndroidLinkMode.Full)] AndroidLinkMode linkMode)
+		public void CustomLinkDescriptionPreserve (
+		  [Values (AndroidLinkMode.SdkOnly, AndroidLinkMode.Full)] AndroidLinkMode linkMode,
+		  [Values (AndroidRuntime.MonoVM)] AndroidRuntime runtime
+		)
 		{
 			var lib1 = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library1",
@@ -248,6 +306,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 						TextContent = () => @"
 namespace Library1 {
 	public class LinkerClass {
+		[System.Diagnostics.CodeAnalysis.DynamicDependency (""DynamicDependencyTargetMethod()"", typeof(Library1.LinkerClass))]
 		public LinkerClass () { }
 
 		public bool IsPreserved { get { return true; } }
@@ -256,8 +315,7 @@ namespace Library1 {
 
 		public void WasThisMethodPreserved (string arg1) { }
 
-		[Android.Runtime.Preserve]
-		public void PreserveAttribMethod () { }
+		public void DynamicDependencyTargetMethod () { }
 	}
 }",
 					}, new BuildItem.Source ("LinkModeFullClass.cs") {
@@ -270,6 +328,7 @@ namespace Library1 {
 					},
 				}
 			};
+			lib1.SetRuntime (runtime);
 
 			var lib2 = new DotNetStandard {
 				ProjectName = "LinkTestLib",
@@ -296,6 +355,7 @@ namespace Library1 {
 					},
 				},
 			};
+			lib2.SetRuntime (runtime);
 
 			proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = true,
@@ -332,6 +392,7 @@ namespace Library1 {
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
 
 			// NOTE: workaround for netcoreapp3.0 dependency being included along with monoandroid8.0
 			// See: https://www.nuget.org/packages/SQLitePCLRaw.bundle_green/2.0.3
@@ -341,7 +402,6 @@ namespace Library1 {
 			});
 
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("</manifest>", "<uses-permission android:name=\"android.permission.INTERNET\" /></manifest>");
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 			using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.MainActivityReplacement.cs")))
 				proj.MainActivity = sr.ReadToEnd ();
 
@@ -386,7 +446,7 @@ namespace Library1 {
 			proj.SetProperty ("NoWarn", "SYSLIB0011");
 
 			if (isRelease || !TestEnvironment.CommercialBuildAvailable) {
-				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
+				proj.SetAndroidSupportedAbis (DeviceAbi);
 			}
 
 			proj.References.Add (new BuildItem.Reference ("System.Runtime.Serialization"));
@@ -475,6 +535,8 @@ using System.Runtime.Serialization.Json;
 				IsRelease = isRelease,
 				AotAssemblies = false, // Release defaults to Profiled AOT for .NET 6
 			};
+			// MonoVM-only test
+			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
 			var abis = new string[] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
 			proj.SetAndroidSupportedAbis (abis);
 			proj.SetProperty (proj.CommonProperties, "UseInterpreter", "True");
@@ -510,6 +572,8 @@ using System.Runtime.Serialization.Json;
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
+			// Mono-only test
+			proj.SetRuntime (AndroidRuntime.MonoVM);
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 			proj.SetProperty ("EnableLLVM", true.ToString ());
 
@@ -553,8 +617,7 @@ using System.Runtime.Serialization.Json;
 			if (testOnly)
 				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application", "<application android:testOnly=\"true\"");
 
-			var abis = new string [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
-			proj.SetAndroidSupportedAbis (abis);
+			proj.SetAndroidSupportedAbis (DeviceAbi);
 			builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			RunProjectAndAssert (proj, builder);
@@ -935,11 +998,59 @@ namespace UnnamedProject
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
 			};
+			// Mono-only test
+			proj.SetRuntime (AndroidRuntime.MonoVM);
+
 			// Requires 32-bit ABIs
 			proj.SetAndroidSupportedAbis (["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]);
 
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
+			RunProjectAndAssert (proj, builder);
+
+			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+			Assert.IsTrue(didLaunch, "Activity should have started.");
+		}
+
+		[Test]
+		public void DotNetInstallAndRunMinorAPILevels (
+				[Values (false, true)] bool isRelease,
+				[Values ("net10.0-android36.1")] string targetFramework)
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				TargetFramework = targetFramework,
+				IsRelease = isRelease,
+				ExtraNuGetConfigSources = {
+					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
+				}
+			};
+
+			// TODO: update on new minor API levels to use an introduced minor API
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${USINGS}", "using Android.Telecom;\nusing Android.Graphics.Pdf.Component;")
+				.Replace ("//${AFTER_ONCREATE}", """
+					if (OperatingSystem.IsAndroidVersionAtLeast (36, 1)) {
+						Console.WriteLine ($"TelecomManager.ActionCallBack={TelecomManager.ActionCallBack}");
+					} else {
+						Console.WriteLine ("TelecomManager.ActionCallBack not available");
+					}
+				""")
+				.Replace ("//${AFTER_MAINACTIVITY}", """
+					#pragma warning disable CA1416 // Type only available on Android 36.1 and later
+					class MyTextObjectFont : PdfPageTextObjectFont
+					{
+						public MyTextObjectFont (PdfPageTextObjectFont font) : base (font)
+						{
+						}
+					}
+					#pragma warning restore CA1416 // Type only available on Android 36.1 and later
+				""");
+
+			var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
+			builder.AssertHasNoWarnings ();
 			RunProjectAndAssert (proj, builder);
 
 			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
@@ -1216,9 +1327,9 @@ plugins {{
 }}
 android {{
     namespace = ""{gradleModule.PackageName}""
-    compileSdk = {XABuildConfig.AndroidDefaultTargetDotnetApiLevel}
+    compileSdk = {XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major}
     defaultConfig {{
-        minSdk = {XABuildConfig.AndroidMinimumDotNetApiLevel}
+        minSdk = {XABuildConfig.AndroidMinimumDotNetApiLevel.Major}
     }}
 }}
 dependencies {{

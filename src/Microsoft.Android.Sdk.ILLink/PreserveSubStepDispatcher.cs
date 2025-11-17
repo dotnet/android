@@ -10,7 +10,6 @@ namespace Microsoft.Android.Sdk.ILLink
 	{
 		public PreserveSubStepDispatcher ()
 			: base (new ISubStep[] {
-				new ApplyPreserveAttribute (),
 				new PreserveExportedTypes ()
 			})
 		{

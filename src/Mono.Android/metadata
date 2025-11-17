@@ -386,6 +386,16 @@
 	<attr path="/api/package[@name='android.widget']/class[@name='TextView']/method[@name='getHighlightColor']" name="return" api-since="16">Android.Graphics.Color</attr>
 	<attr path="/api/package[@name='android.widget']/class[@name='TextView']/method[@name='getShadowColor']" name="return" api-since="16">Android.Graphics.Color</attr>
 
+	<attr api-since="36.1" path="/api/package[@name='android.graphics.pdf.component']/*/method[
+	    starts-with(@jni-signature='(I)') and (
+	    @name='setTextColor'
+	    or @name='setBackgroundColor'
+	    or @name='setColor'
+	    or @name='setFillColor'
+	    or @name='setStrokeColor'
+	  )]/parameter[@type='int']"
+	  name="type">Android.Graphics.Color</attr>
+
 	<!-- TODO in 5.0!
 	s/int[] colors/Color[] colors/g
 	TextView.getTextColor() should return Color
@@ -405,6 +415,12 @@
 	<attr path="/api/package[@name='android.view']/class[@name='View']/method[@name='getDrawingCacheBackgroundColor']" name="return">Android.Graphics.Color</attr>
 	<attr path="/api/package[@name='android.widget']/class[@name='AbsListView']/method[@name='getCacheColorHint']" name="return">Android.Graphics.Color</attr>
 	<attr path="/api/package[@name='android.telephony']/class[@name='SubscriptionInfo']/method[@name='getIconTint']" name="return">Android.Graphics.Color</attr>
+
+	<attr api-since="36.1" path="/api/package[@name='android.graphics.pdf.component']/*/method[@name='getTextColor']" name="return">Android.Graphics.Color</attr>
+	<attr api-since="36.1" path="/api/package[@name='android.graphics.pdf.component']/*/method[@name='getBackgroundColor']" name="return">Android.Graphics.Color</attr>
+	<attr api-since="36.1" path="/api/package[@name='android.graphics.pdf.component']/*/method[@name='getColor']" name="return">Android.Graphics.Color</attr>
+	<attr api-since="36.1" path="/api/package[@name='android.graphics.pdf.component']/*/method[@name='getFillColor']" name="return">Android.Graphics.Color</attr>
+	<attr api-since="36.1" path="/api/package[@name='android.graphics.pdf.component']/*/method[@name='getStrokeColor']" name="return">Android.Graphics.Color</attr>
 
 	<!-- For compatibility, retain property setters on these methods -->
 	<attr path="/api/package[@name='android.graphics.drawable']/class[@name='Drawable']/method[@name='setCallback']" name="generateDispatchingSetter">true</attr>
@@ -1977,6 +1993,19 @@
   <attr api-since="36" path="/api/package[@name='android.hardware.camera2.params']/class[@name='OutputConfiguration']/method[@name='getMirrorMode' and count(parameter)=1 and parameter[1][@type='android.view.Surface']]" name="managedReturn">Android.Hardware.Camera2.Params.MirrorMode</attr>
   <attr api-since="36" path="/api/package[@name='android.hardware.camera2.params']/class[@name='OutputConfiguration']/method[@name='getMirrorMode' and count(parameter)=1 and parameter[1][@type='android.view.Surface']]" name="enumReturn">true</attr>
 
+  <!-- CANARY changes -->
+
+  <attr
+      api-since="36"
+      path="/api/package[@name='java.util.stream']/interface[@name='Gatherer']/method[@name='integrator' and count(parameter)=0]"
+      name="managedName"
+  >GetIntegrator</attr>
+  <attr
+      api-since="36"
+      path="/api/package[@name='java.util.stream']/interface[@name='Gatherer']/method[@name='integrator' and count(parameter)=0]"
+      name="propertyName"
+  ></attr>
+
   <!--
     ***********************************************************************
     THE FOLLOWING LINES MUST BE CREATED FOR ANY NEW PLATFORM THAT IS ADDED.
@@ -2005,6 +2034,8 @@
   <attr api-since="36" path="/api/package/interface[contains(@merge.SourceFile,'api-Baklava.xml.in')]" name="no-alternatives">true</attr>
   <attr api-since="36" path="/api/package[contains(@merge.SourceFile,'api-36.xml.in')]/interface" name="no-alternatives">true</attr>
   <attr api-since="36" path="/api/package[contains(@merge.SourceFile,'api-Baklava.xml.in')]/interface" name="no-alternatives">true</attr>
+  <attr api-since="36.1" path="/api/package[contains(@merge.SourceFile,'api-CANARY.xml.in')]/interface" name="no-alternatives">true</attr>
+  <attr api-since="36.1" path="/api/package[contains(@merge.SourceFile,'api-36.1.xml.in')]/interface" name="no-alternatives">true</attr>
 
   <!-- Set ApiSince based on merge sourcefile. -->
   <attr api-since="22" path="/api//*[contains(@merge.SourceFile,'api-22.xml.in')]" name="api-since">22</attr>
@@ -2029,6 +2060,8 @@
   <attr api-since="35" path="/api//*[contains(@merge.SourceFile,'api-VanillaIceCream.xml.in')]" name="api-since">35</attr>
   <attr api-since="36" path="/api//*[contains(@merge.SourceFile,'api-36.xml.in')]" name="api-since">36</attr>
   <attr api-since="36" path="/api//*[contains(@merge.SourceFile,'api-Baklava.xml.in')]" name="api-since">36</attr>
+  <attr api-since="36.1" path="/api//*[contains(@merge.SourceFile,'api-CANARY.xml.in')]" name="api-since">36.1</attr>
+  <attr api-since="36.1" path="/api//*[contains(@merge.SourceFile,'api-36.1.xml.in')]" name="api-since">36.1</attr>
 
   <!-- Erase some 'api-since' attributes (This has to be done after they are set above) -->
 

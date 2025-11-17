@@ -8,11 +8,22 @@ static partial class JavaInteropRuntime
 {
 	static JniRuntime? runtime;
 
+	[DllImport("xa-internal-api")]
+	static extern int XA_Host_NativeAOT_JNI_OnLoad (IntPtr vm, IntPtr reserved);
+
 	[UnmanagedCallersOnly (EntryPoint="JNI_OnLoad")]
 	static int JNI_OnLoad (IntPtr vm, IntPtr reserved)
 	{
 		try {
 			AndroidLog.Print (AndroidLogLevel.Info, "JavaInteropRuntime", "JNI_OnLoad()");
+			XA_Host_NativeAOT_JNI_OnLoad (vm, reserved);
+			// This must be called before anything else, otherwise we'll see several spurious GC invocations and log messages
+			// similar to:
+			//
+			//  09-15 14:51:01.311 11071 11071 D monodroid-gc: 1 outstanding GREFs. Performing a full GC!
+			//
+			JNIEnvInit.NativeAotInitializeMaxGrefGet ();
+
 			LogcatTextWriter.Init ();
 			return (int) JniVersion.v1_6;
 		}
@@ -29,29 +40,37 @@ static partial class JavaInteropRuntime
 		runtime?.Dispose ();
 	}
 
+	[DllImport("xa-internal-api")]
+	static extern void XA_Host_NativeAOT_OnInit (IntPtr language, IntPtr filesDir, IntPtr cacheDir, ref JNIEnvInit.JnienvInitializeArgs initArgs);
+
 	// symbol name from `$(IntermediateOutputPath)obj/Release/osx-arm64/h-classes/net_dot_jni_hello_JavaInteropRuntime.h`
 	[UnmanagedCallersOnly (EntryPoint="Java_net_dot_jni_nativeaot_JavaInteropRuntime_init")]
-	static void init (IntPtr jnienv, IntPtr klass, IntPtr classLoader)
+	static void init (IntPtr jnienv, IntPtr klass, IntPtr classLoader, IntPtr language, IntPtr filesDir, IntPtr cacheDir)
 	{
 		JniTransition   transition  = default;
 		try {
+			var initArgs = new JNIEnvInit.JnienvInitializeArgs ();
+
+			// This needs to be called first, since it sets up locations, environment variables, logging etc
+			XA_Host_NativeAOT_OnInit (language, filesDir, cacheDir, ref initArgs);
+			JNIEnvInit.InitializeJniRuntimeEarly (initArgs);
+
 			var settings    = new DiagnosticSettings ();
 			settings.AddDebugDotnetLog ();
 
-			var typeManager = new ManagedTypeManager ();
 			var options = new NativeAotRuntimeOptions {
 				EnvironmentPointer          = jnienv,
-				ClassLoader                 = new JniObjectReference (classLoader),
-				TypeManager                 = typeManager,
-				ValueManager                = new SimpleValueManager (),
+				ClassLoader                 = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
+				TypeManager                 = new ManagedTypeManager (),
+				ValueManager                = ManagedValueManager.GetOrCreateInstance (),
 				UseMarshalMemberBuilder     = false,
 				JniGlobalReferenceLogWriter = settings.GrefLog,
 				JniLocalReferenceLogWriter  = settings.LrefLog,
 			};
 			runtime = options.CreateJreVM ();
 
-			// Entry point into Mono.Android.dll
-			JNIEnvInit.InitializeJniRuntime (runtime);
+			// Entry point into Mono.Android.dll. Log categories are initialized in JNI_OnLoad.
+			JNIEnvInit.InitializeJniRuntime (runtime, initArgs);
 
 			transition  = new JniTransition (jnienv);
 

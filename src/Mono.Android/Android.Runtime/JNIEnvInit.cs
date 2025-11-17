@@ -77,9 +77,26 @@ namespace Android.Runtime
 			androidRuntime!.TypeManager.RegisterNativeMembers (jniType, type, methods);
 		}
 
+		// This must be called by NativeAOT before InitializeJniRuntime, as early as possible
+		internal static void NativeAotInitializeMaxGrefGet ()
+		{
+			gref_gc_threshold = RuntimeNativeMethods._monodroid_max_gref_get ();
+			if (gref_gc_threshold != int.MaxValue) {
+				gref_gc_threshold = checked((gref_gc_threshold * 9) / 10);
+			}
+		}
+
+		// This is needed to initialize e.g. logging before anything else (useful with e.g. gref
+		// logging where runtime creation causes several grefs to be created and logged without
+		// stack traces because logging categories on the managed side aren't yet set)
+		internal static void InitializeJniRuntimeEarly (JnienvInitializeArgs args)
+		{
+			Logger.SetLogCategories ((LogCategories)args.logCategories);
+		}
+
 		// NOTE: should have different name than `Initialize` to avoid:
 		// * Assertion at /__w/1/s/src/mono/mono/metadata/icall.c:6258, condition `!only_unmanaged_callers_only' not met
-		internal static void InitializeJniRuntime (JniRuntime runtime)
+		internal static void InitializeJniRuntime (JniRuntime runtime, JnienvInitializeArgs args)
 		{
 			androidRuntime = runtime;
 			SetSynchronizationContext ();

@@ -15,9 +15,9 @@ namespace Xamarin.ProjectTools
 
 		public string ModuleDirectory { get; private set; } = string.Empty;
 
-		public int CompileSdk { get; set; } = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
+		public int CompileSdk { get; set; } = XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major;
 
-		public int MinSdk { get; set; } = XABuildConfig.AndroidMinimumDotNetApiLevel;
+		public int MinSdk { get; set; } = XABuildConfig.AndroidMinimumDotNetApiLevel.Major;
 
 		public bool IsApplication { get; set; } = false;
 
@@ -66,6 +66,9 @@ android {{
     compileSdk = {CompileSdk}
     defaultConfig {{
         minSdk = {MinSdk}
+    }}
+    lint {{
+        checkReleaseBuilds = false
     }}
 }}
 dependencies {{

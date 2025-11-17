@@ -9,6 +9,7 @@ using Microsoft.Android.Build.Tasks;
 using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
+using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -47,9 +48,31 @@ namespace Xamarin.Android.Build.Tests
 			},
 		};
 
+		static IEnumerable<object> Get_DotNetBuildLibraryParams ()
+		{
+			var source = new List<object[]> ();
+			var runtimes = new List<AndroidRuntime> {
+				AndroidRuntime.MonoVM,
+				AndroidRuntime.CoreCLR,
+			};
+
+			foreach (object[] args in DotNetBuildLibrarySource) {
+				foreach (AndroidRuntime runtime in runtimes) {
+					source.Add (new object[] {
+						args[0],
+						args[1],
+						args[2],
+						runtime,
+					});
+				}
+			}
+
+			return source;
+		}
+
 		[Test]
-		[TestCaseSource (nameof (DotNetBuildLibrarySource))]
-		public void DotNetBuildLibrary (bool isRelease, bool duplicateAar, bool useDesignerAssembly)
+		[TestCaseSource (nameof (Get_DotNetBuildLibraryParams))]
+		public void DotNetBuildLibrary (bool isRelease, bool duplicateAar, bool useDesignerAssembly, AndroidRuntime runtime)
 		{
 			var path = Path.Combine ("temp", TestName);
 			var env_var = "MY_ENVIRONMENT_VAR";
@@ -73,6 +96,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
+			libC.SetRuntime (runtime);
 			libC.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("Assets\\bar\\bar.txt") {
 				BinaryContent = () => Array.Empty<byte> (),
 			});
@@ -147,6 +171,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
+			libB.SetRuntime (runtime);
 			libB.OtherBuildItems.Add (new AndroidItem.AndroidEnvironment ("env.txt") {
 				TextContent = () => $"{env_var}={env_val}",
 			});
@@ -215,6 +240,7 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 			};
+			appA.SetRuntime (runtime);
 			appA.AddReference (libB);
 			if (duplicateAar) {
 				// Test a duplicate @(AndroidLibrary) item with the same path of LibraryB.aar
@@ -259,7 +285,7 @@ namespace Xamarin.Android.Build.Tests
 			// Check environment variable
 			if (isRelease) {
 				var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediate, "x86_64", required: true);
-				var environmentVariables = EnvironmentHelper.ReadEnvironmentVariables (environmentFiles);
+				var environmentVariables = EnvironmentHelper.ReadEnvironmentVariables (environmentFiles, runtime);
 				Assert.IsTrue (environmentVariables.TryGetValue (env_var, out string actual), $"Environment should contain {env_var}");
 				Assert.AreEqual (env_val, actual, $"{env_var} should be {env_val}");
 			}
@@ -370,15 +396,15 @@ namespace Xamarin.Android.Build.Tests
 				ProjectName = "Library1",
 				IsRelease = isRelease,
 				OtherBuildItems = {
-					new AndroidItem.EmbeddedNativeLibrary ("foo\\armeabi-v7a\\libtest.so") {
+					new AndroidItem.EmbeddedNativeLibrary ("foo\\arm64-v8a\\libtest.so") {
 						BinaryContent = () => new byte[10],
-						MetadataValues = "Link=libs\\armeabi-v7a\\libtest.so",
+						MetadataValues = "Link=libs\\arm64-v8a\\libtest.so",
 					},
-					new AndroidItem.EmbeddedNativeLibrary ("foo\\x86\\libtest.so") {
+					new AndroidItem.EmbeddedNativeLibrary ("foo\\x86_64\\libtest.so") {
 						BinaryContent = () => new byte[10],
-						MetadataValues = "Link=libs\\x86\\libtest.so",
+						MetadataValues = "Link=libs\\x86_64\\libtest.so",
 					},
-					new AndroidItem.AndroidNativeLibrary ("armeabi-v7a\\libRSSupport.so") {
+					new AndroidItem.AndroidNativeLibrary ("arm64-v8a\\libRSSupport.so") {
 						BinaryContent = () => new byte[10],
 					},
 				},
@@ -390,13 +416,13 @@ namespace Xamarin.Android.Build.Tests
 					new BuildItem ("ProjectReference","..\\Library1\\Library1.csproj"),
 				},
 				OtherBuildItems = {
-					new AndroidItem.EmbeddedNativeLibrary ("foo\\armeabi-v7a\\libtest1.so") {
+					new AndroidItem.EmbeddedNativeLibrary ("foo\\arm64-v8a\\libtest1.so") {
 						BinaryContent = () => new byte[10],
-						MetadataValues = "Link=libs\\armeabi-v7a\\libtest1.so",
+						MetadataValues = "Link=libs\\arm64-v8a\\libtest1.so",
 					},
-					new AndroidItem.EmbeddedNativeLibrary ("foo\\x86\\libtest1.so") {
+					new AndroidItem.EmbeddedNativeLibrary ("foo\\x86_64\\libtest1.so") {
 						BinaryContent = () => new byte[10],
-						MetadataValues = "Link=libs\\x86\\libtest1.so",
+						MetadataValues = "Link=libs\\x86_64\\libtest1.so",
 					},
 				},
 			};
@@ -407,12 +433,11 @@ namespace Xamarin.Android.Build.Tests
 					new BuildItem ("ProjectReference","..\\Library2\\Library2.csproj"),
 				},
 				OtherBuildItems = {
-					new AndroidItem.AndroidNativeLibrary ("armeabi-v7a\\libRSSupport.so") {
+					new AndroidItem.AndroidNativeLibrary ("arm64-v8a\\libRSSupport.so") {
 						BinaryContent = () => new byte[10],
 					},
 				}
 			};
-			proj.SetRuntimeIdentifiers (["armeabi-v7a", "x86"]);
 			var path = Path.Combine (Root, "temp", string.Format ("BuildWithNativeLibraries_{0}", isRelease));
 			using (var b1 = CreateDllBuilder (Path.Combine (path, dll2.ProjectName))) {
 				Assert.IsTrue (b1.Build (dll2), "Build should have succeeded.");
@@ -423,23 +448,23 @@ namespace Xamarin.Android.Build.Tests
 						var apk = Path.Combine (Root, builder.ProjectDirectory,
 							proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 						FileAssert.Exists (apk);
-						Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, "warning XA4301: APK already contains the item lib/armeabi-v7a/libRSSupport.so; ignoring."),
+						Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, "warning XA4301: APK already contains the item lib/arm64-v8a/libRSSupport.so; ignoring."),
 							"warning about skipping libRSSupport.so should have been raised");
 						using (var zipFile = ZipHelper.OpenZip (apk)) {
-							var data = ZipHelper.ReadFileFromZip (zipFile, "lib/x86/libtest.so");
-							Assert.IsNotNull (data, "libtest.so for x86 should exist in the apk.");
-							data = ZipHelper.ReadFileFromZip (zipFile, "lib/armeabi-v7a/libtest.so");
-							Assert.IsNotNull (data, "libtest.so for armeabi-v7a should exist in the apk.");
-							data = ZipHelper.ReadFileFromZip (zipFile, "lib/x86/libtest1.so");
-							Assert.IsNotNull (data, "libtest1.so for x86 should exist in the apk.");
-							data = ZipHelper.ReadFileFromZip (zipFile, "lib/armeabi-v7a/libtest1.so");
-							Assert.IsNotNull (data, "libtest1.so for armeabi-v7a should exist in the apk.");
-							data = ZipHelper.ReadFileFromZip (zipFile, "lib/armeabi-v7a/libRSSupport.so");
-							Assert.IsNotNull (data, "libRSSupport.so for armeabi-v7a should exist in the apk.");
-							data = ZipHelper.ReadFileFromZip (zipFile, "lib/x86/libSystem.Native.so");
-							Assert.IsNotNull (data, "libSystem.Native.so for x86 should exist in the apk.");
-							data = ZipHelper.ReadFileFromZip (zipFile, "lib/armeabi-v7a/libSystem.Native.so");
-							Assert.IsNotNull (data, "libSystem.Native.so for armeabi-v7a should exist in the apk.");
+							var data = ZipHelper.ReadFileFromZip (zipFile, "lib/x86_64/libtest.so");
+							Assert.IsNotNull (data, "libtest.so for x86_64 should exist in the apk.");
+							data = ZipHelper.ReadFileFromZip (zipFile, "lib/arm64-v8a/libtest.so");
+							Assert.IsNotNull (data, "libtest.so for arm64-v8a should exist in the apk.");
+							data = ZipHelper.ReadFileFromZip (zipFile, "lib/x86_64/libtest1.so");
+							Assert.IsNotNull (data, "libtest1.so for x86_64 should exist in the apk.");
+							data = ZipHelper.ReadFileFromZip (zipFile, "lib/arm64-v8a/libtest1.so");
+							Assert.IsNotNull (data, "libtest1.so for arm64-v8a should exist in the apk.");
+							data = ZipHelper.ReadFileFromZip (zipFile, "lib/arm64-v8a/libRSSupport.so");
+							Assert.IsNotNull (data, "libRSSupport.so for arm64-v8a should exist in the apk.");
+							data = ZipHelper.ReadFileFromZip (zipFile, "lib/x86_64/libSystem.Native.so");
+							Assert.IsNotNull (data, "libSystem.Native.so for x86_64 should exist in the apk.");
+							data = ZipHelper.ReadFileFromZip (zipFile, "lib/arm64-v8a/libSystem.Native.so");
+							Assert.IsNotNull (data, "libSystem.Native.so for arm64-v8a should exist in the apk.");
 						}
 					}
 				}
@@ -447,7 +472,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildWithNativeLibraryUnknownAbi ()
+		public void BuildWithNativeLibraryUnknownAbi ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				OtherBuildItems = {
@@ -456,7 +481,14 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+			proj.SetRuntime (runtime);
+
+			var supportedAbis = runtime switch {
+				AndroidRuntime.MonoVM  => new [] {"armeabi-v7a", "x86"},
+				AndroidRuntime.CoreCLR => new [] {"arm64-v8a", "x86_64"},
+				_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+			};
+			proj.SetRuntimeIdentifiers (supportedAbis);
 
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;

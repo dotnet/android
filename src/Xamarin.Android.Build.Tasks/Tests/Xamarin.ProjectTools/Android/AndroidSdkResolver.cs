@@ -1,5 +1,7 @@
 using System;
+using System.Data;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using Xamarin.Android.Tools;
@@ -104,38 +106,51 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
-		static int? maxInstalled;
+		static Version? maxInstalled;
 		static object maxInstalledLock = new object ();
 
 		/// <summary>
 		/// Searches the Android SDK 'platforms' folder for the latest version that we support and consider stable.
 		/// </summary>
 		/// <returns>The latest Android platform version that we support and consider stable.</returns>
-		public static int GetMaxInstalledPlatform ()
+		public static Version GetMaxInstalledPlatform ()
 		{
 			lock (maxInstalledLock) {
 				return GetMaxInstalledPlatformInternal ();
 			}
 		}
 
-		static int GetMaxInstalledPlatformInternal ()
+		public static bool TryParseAndroidSdkVersion (string value, [NotNullWhen (true)] out Version? version)
+		{
+			if (Version.TryParse (value, out version)) {
+				return true;
+			}
+			if (int.TryParse (value, out var major)) {
+				version = new Version (major, 0);
+				return true;
+			}
+			version = null;
+			return false;
+		}
+
+		static Version GetMaxInstalledPlatformInternal ()
 		{
 			if (maxInstalled != null)
-				return maxInstalled.Value;
+				return maxInstalled;
 
 			string sdkPath = GetAndroidSdkPath ();
 			foreach (var dir in Directory.EnumerateDirectories (Path.Combine (sdkPath, "platforms"))) {
-				int version;
 				string v = Path.GetFileName (dir).Replace ("android-", "");
 				Console.WriteLine ($"GetMaxInstalledPlatform: Parsing {v}");
-				if (!int.TryParse (v, out version))
+				if (!TryParseAndroidSdkVersion (v, out var version)) {
 					continue;
+				}
 				if (version < maxInstalled || version > XABuildConfig.AndroidLatestStableApiLevel)
 					continue;
 				Console.WriteLine ($"GetMaxInstalledPlatform: Setting maxInstalled to {version}");
 				maxInstalled = version;
 			}
-			return maxInstalled ?? 0;
+			return maxInstalled ?? new Version (0, 0);
 		}
 	}
 }
