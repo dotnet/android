@@ -690,10 +690,15 @@ namespace Foo {
 		}
 
 		[Test]
-		[TestCaseSource (nameof (ClassParseOptions))]
-		public void DesignTimeBuild (string classParser)
+		[TestCaseSource (nameof (Get_ClassParseOptions))]
+		public void DesignTimeBuild (string classParser, [Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidBindingProject {
+				IsRelease = isRelease,
 				AndroidClassParser = classParser
 			};
 			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\material-menu-1.1.0.aar") {
