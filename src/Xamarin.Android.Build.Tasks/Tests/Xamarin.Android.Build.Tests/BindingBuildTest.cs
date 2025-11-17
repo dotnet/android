@@ -1010,15 +1010,22 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		[Test]
-		public void AndroidMavenLibrary ()
+		[NonParallelizable] // All tests are accessing the same .pom file
+		public void AndroidMavenLibrary ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			// Test that <AndroidMavenLibrary> downloads .jar from Maven and successfully binds it
 			var item = new BuildItem ("AndroidMavenLibrary", "com.google.auto.value:auto-value-annotations");
 			item.Metadata.Add ("Version", "1.10.4");
 
 			var proj = new XamarinAndroidBindingProject {
+				IsRelease = isRelease,
 				Jars = { item }
 			};
+			proj.SetRuntime (runtime);
 
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
