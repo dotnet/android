@@ -76,10 +76,34 @@ namespace Xamarin.Android.Build.Tests
 				},
 		};
 
-		[Test]
-		[TestCaseSource (nameof (ClassParseOptions))]
-		public void BindingLibraryIncremental (string classParser)
+		static IEnumerable<object[]> Get_ClassParseOptions ()
 		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData ("class-parse", runtime);
+			}
+
+			return ret;
+
+			void AddTestData (string classParser, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					classParser,
+					runtime,
+				});
+			}
+		}
+
+		[Test]
+		[TestCaseSource (nameof (Get_ClassParseOptions))]
+		public void BindingLibraryIncremental (string classParser, AndroidRuntime runtime)
+		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var targets = new List<string> {
 				"_ExportJarToXml",
 				"GenerateBindings",
@@ -90,8 +114,9 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			var proj = new XamarinAndroidBindingProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.Jars.Add (new AndroidItem.AndroidLibrary ("Jars\\svg-android.jar") {
 				WebContent = "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/svg-android/svg-android.jar"
 			});
