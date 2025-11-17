@@ -10,6 +10,7 @@ using Xamarin.ProjectTools;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Xamarin.Tools.Zip;
+using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -17,11 +18,19 @@ namespace Xamarin.Android.Build.Tests
 	public class BindingBuildTest : BaseTest
 	{
 		[Test]
-		public void DotNetBuildBinding ()
+		public void DotNetBuildBinding ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
 				EnableDefaultItems = true,
 			};
+			proj.SetRuntime (runtime);
+
 			// Both transform files should be applied
 			proj.Sources.Add (new AndroidItem.TransformFile ("Transforms.xml") {
 				TextContent = () =>
