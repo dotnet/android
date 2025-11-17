@@ -70,12 +70,6 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		static object [] ClassParseOptions = new object [] {
-			new object[] {
-				/* classParser */   "class-parse",
-				},
-		};
-
 		static IEnumerable<object[]> Get_ClassParseOptions ()
 		{
 			var ret = new List<object[]> ();
@@ -832,10 +826,15 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		[Test]
-		public void BindingWithAndroidJavaSource ()
+		public void BindingWithAndroidJavaSource ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidBindingProject () {
+				IsRelease = isRelease,
 				ProjectName = "BindingsProject",
 				AndroidClassParser = "class-parse",
 				Jars = {
@@ -861,10 +860,15 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 				},
 
 			};
+			lib.SetRuntime (runtime);
+
 			var app = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
 				ProjectName = "App",
 				References = { new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid) }
 			};
+			app.SetRuntime (runtime);
+
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), cleanupAfterSuccessfulBuild: false))
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 				libBuilder.Verbosity = LoggerVerbosity.Detailed;
