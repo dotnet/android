@@ -539,11 +539,16 @@ namespace Foo {
 		}
 
 		[Test]
-		public void AndroidLibraryPackFalseExcludesJarFromAar ()
+		public void AndroidLibraryPackFalseExcludesJarFromAar ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var binding = new XamarinAndroidBindingProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			binding.SetRuntime (runtime);
 			// Add a jar with Pack='false' - should not be included in AAR
 			binding.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("Jars\\test-pack-false.jar") {
 				BinaryContent = () => ResourceData.JavaSourceJarTestJar,
