@@ -204,9 +204,13 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[TestCaseSource (nameof (ClassParseOptions))]
-		public void BuildAarBindingLibraryStandalone (string classParser)
+		[TestCaseSource (nameof (Get_ClassParseOptions))]
+		public void BuildAarBindingLibraryStandalone (string classParser, AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidBindingProject () {
 				IsRelease = true,
 				OtherBuildItems = {
@@ -216,6 +220,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
+			proj.SetRuntime (runtime);
 			proj.Jars.Add (new AndroidItem.AndroidLibrary ("Jars\\material-menu-1.1.0.aar") {
 				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
 			});
