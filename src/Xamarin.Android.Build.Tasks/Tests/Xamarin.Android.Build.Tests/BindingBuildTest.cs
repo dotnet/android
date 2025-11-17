@@ -906,10 +906,15 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		[Test]
-		public void LibraryProjectZipWithLint ()
+		public void LibraryProjectZipWithLint ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidBindingProject () {
+				IsRelease = isRelease,
 				ProjectName = "BindingsProject",
 				AndroidClassParser = "class-parse",
 				Jars = {
@@ -919,21 +924,24 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 				},
 				MetadataXml = @"<metadata><remove-node path=""/api/package[@name='androidx.fragment.app']/interface[@name='FragmentManager.OpGenerator']"" /></metadata>"
 			};
+			lib.SetRuntime (runtime);
+
 			var app = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
 				ProjectName = "App",
-				IsRelease = true,
 				LinkTool = "r8",
 				References = { new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid) }
 			};
-			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), cleanupAfterSuccessfulBuild: false))
-			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
-				Assert.IsTrue (libBuilder.Build (lib), "Library build should have succeeded.");
-				Assert.IsTrue (appBuilder.Build (app), "App build should have succeeded.");
-				StringAssertEx.DoesNotContain ("warning : Missing class: com.android.tools.lint.detector.api.Detector", appBuilder.LastBuildOutput, "Build output should contain no warnings about com.android.tools.lint.detector.api.Detector");
-				var libraryProjects = Path.Combine (Root, appBuilder.ProjectDirectory, app.IntermediateOutputPath, "lp");
-				Assert.IsFalse (Directory.EnumerateFiles (libraryProjects, "lint.jar", SearchOption.AllDirectories).Any (),
-					"`lint.jar` should not be extracted!");
-			}
+			app.SetRuntime (runtime);
+
+			using var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), cleanupAfterSuccessfulBuild: false);
+			using var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName));
+			Assert.IsTrue (libBuilder.Build (lib), "Library build should have succeeded.");
+			Assert.IsTrue (appBuilder.Build (app), "App build should have succeeded.");
+			StringAssertEx.DoesNotContain ("warning : Missing class: com.android.tools.lint.detector.api.Detector", appBuilder.LastBuildOutput, "Build output should contain no warnings about com.android.tools.lint.detector.api.Detector");
+			var libraryProjects = Path.Combine (Root, appBuilder.ProjectDirectory, app.IntermediateOutputPath, "lp");
+			Assert.IsFalse (Directory.EnumerateFiles (libraryProjects, "lint.jar", SearchOption.AllDirectories).Any (),
+				"`lint.jar` should not be extracted!");
 		}
 
 		/// <summary>
