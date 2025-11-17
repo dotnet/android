@@ -610,11 +610,17 @@ namespace Foo {
 		}
 
 		[Test]
-		public void JavaSourceJar ()
+		public void JavaSourceJar ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var binding = new XamarinAndroidBindingProject () {
+				IsRelease = isRelease,
 				AndroidClassParser = "class-parse",
 			};
+			binding.SetRuntime (runtime);
 			binding.SetProperty ("DocumentationFile", "UnnamedProject.xml");
 			binding.SetProperty ("AndroidJavadocVerbosity", "full");
 			using (var bindingBuilder = CreateDllBuilder ()) {
