@@ -308,13 +308,18 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void MergeAndroidManifest ()
+		public void MergeAndroidManifest ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var binding = new XamarinAndroidBindingProject {
 				ProjectName = "AdalBinding",
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			binding.SetRuntime (runtime);
 			binding.AndroidClassParser = "class-parse";
 			binding.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\adal-1.0.7.aar") {
 				WebContentFileNameFromAzure = "adal-1.0.7.aar"
