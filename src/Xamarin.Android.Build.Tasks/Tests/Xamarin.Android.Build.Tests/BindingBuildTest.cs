@@ -385,7 +385,10 @@ namespace Xamarin.Android.Build.Tests
 				string multidexJar = Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "android-support-multidex.jar");
 				binding.Jars.Add (new AndroidItem.EmbeddedJar (() => multidexJar));
 				bindingBuilder.Build (binding);
-				var proj = new XamarinAndroidApplicationProject ();
+				var proj = new XamarinAndroidApplicationProject {
+					IsRelease = isRelease,
+				};
+				proj.SetRuntime (runtime);
 				proj.OtherBuildItems.Add (new BuildItem ("ProjectReference", $"..\\MultiDexBinding\\{binding.ProjectName}.csproj"));
 				using (var b = CreateApkBuilder (Path.Combine (path, "App"))) {
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -394,12 +397,17 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BindngFilterUnsupportedNativeAbiLibraries ()
+		public void BindngFilterUnsupportedNativeAbiLibraries ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var binding = new XamarinAndroidBindingProject () {
 				ProjectName = "Binding",
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			binding.SetRuntime (runtime);
 			binding.AndroidClassParser = "class-parse";
 			binding.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\mylibrary.aar") {
 				WebContentFileNameFromAzure = "card.io-5.3.0.aar"
@@ -408,8 +416,10 @@ namespace Xamarin.Android.Build.Tests
 			using (var bindingBuilder = CreateDllBuilder (Path.Combine (path, binding.ProjectName))) {
 				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
 				var proj = new XamarinAndroidApplicationProject {
+					IsRelease = isRelease,
 					ProjectName = "App"
 				};
+				proj.SetRuntime (runtime);
 				proj.OtherBuildItems.Add (new BuildItem ("ProjectReference", $"..\\{binding.ProjectName}\\{binding.ProjectName}.csproj"));
 				using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
