@@ -288,12 +288,17 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("Minor")]
-		public void BindByteArrayInMethodParameter ()
+		public void BindByteArrayInMethodParameter ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidBindingProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				AndroidClassParser = "class-parse",
 			};
+			proj.SetRuntime (runtime);
 			proj.Jars.Add (new AndroidItem.EmbeddedJar ("Jars\\svg-android.jar") {
 				WebContentFileNameFromAzure = "javaBindingIssue.jar"
 			});
