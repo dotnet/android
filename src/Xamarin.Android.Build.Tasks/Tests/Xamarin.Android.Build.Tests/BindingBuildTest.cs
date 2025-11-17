@@ -813,12 +813,18 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		[Test]
-		[TestCaseSource (nameof (ClassParseOptions))]
-		public void NothingToBind (string classParser)
+		[TestCaseSource (nameof (Get_ClassParseOptions))]
+		public void NothingToBind (string classParser, [Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidBindingProject {
+				IsRelease = isRelease,
 				AndroidClassParser = classParser,
 			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				b.AssertHasNoWarnings ();
