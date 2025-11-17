@@ -581,10 +581,14 @@ namespace Foo {
 		}
 
 		[Test]
-		public void RemoveEventHandlerResolution ()
+		public void RemoveEventHandlerResolution ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var binding = new XamarinAndroidBindingProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				Jars = {
 					new AndroidItem.LibraryProjectZip ("Jars\\ActionBarSherlock-4.3.1.zip") {
 						WebContent = "https://github.com/xamarin/monodroid-samples/blob/archived-xamarin/ActionBarSherlock/ActionBarSherlock/Jars/ActionBarSherlock-4.3.1.zip?raw=true"
@@ -599,7 +603,8 @@ namespace Foo {
 	<attr path=""/api/package[@name='com.actionbarsherlock.view']"" name=""managedName"">Xamarin.ActionbarSherlockBinding.Views</attr>
 </metadata>",
 			};
-			using (var bindingBuilder = CreateDllBuilder (Path.Combine ("temp", "RemoveEventHandlerResolution", "Binding"))) {
+			binding.SetRuntime (runtime);
+			using (var bindingBuilder = CreateDllBuilder (Path.Combine ("temp", TestName, "Binding"))) {
 				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
 			}
 		}
