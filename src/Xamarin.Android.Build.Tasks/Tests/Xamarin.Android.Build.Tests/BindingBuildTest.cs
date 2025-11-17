@@ -948,10 +948,16 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		/// Tests two .aar files with r-classes.jar, repackaged.jar
 		/// </summary>
 		[Test]
-		public void CheckDuplicateJavaLibraries ()
+		public void CheckDuplicateJavaLibraries ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var path = Path.Combine ("temp", TestName);
 			var lib1 = new XamarinAndroidBindingProject {
+				IsRelease = isRelease,
 				ProjectName = "Library1",
 				AndroidClassParser = "class-parse",
 				Jars = {
@@ -966,7 +972,10 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 					},
 				},
 			};
+			lib1.SetRuntime (runtime);
+
 			var lib2 = new XamarinAndroidBindingProject {
+				IsRelease = isRelease,
 				ProjectName = "Library2",
 				AndroidClassParser = "class-parse",
 				Jars = {
@@ -981,18 +990,23 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 					},
 				},
 			};
+			lib2.SetRuntime (runtime);
+
 			var app = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				SupportedOSPlatformVersion = "30", // androidx.health requires minSdkVersion="30"
 			};
+			app.SetRuntime (runtime);
 			app.AddReference (lib1);
 			app.AddReference (lib2);
-			using (var lib1Builder = CreateDllBuilder (Path.Combine (path, lib1.ProjectName)))
-			using (var lib2Builder = CreateDllBuilder (Path.Combine (path, lib2.ProjectName)))
-			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
-				Assert.IsTrue (lib1Builder.Build (lib1), "Library1 build should have succeeded.");
-				Assert.IsTrue (lib2Builder.Build (lib2), "Library2 build should have succeeded.");
-				Assert.IsTrue (appBuilder.Build (app), "App build should have succeeded.");
-			}
+
+			using var lib1Builder = CreateDllBuilder (Path.Combine (path, lib1.ProjectName));
+			using var lib2Builder = CreateDllBuilder (Path.Combine (path, lib2.ProjectName));
+			using var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName));
+
+			Assert.IsTrue (lib1Builder.Build (lib1), "Library1 build should have succeeded.");
+			Assert.IsTrue (lib2Builder.Build (lib2), "Library2 build should have succeeded.");
+			Assert.IsTrue (appBuilder.Build (app), "App build should have succeeded.");
 		}
 
 		[Test]
