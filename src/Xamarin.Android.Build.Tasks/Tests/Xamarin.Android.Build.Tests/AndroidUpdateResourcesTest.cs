@@ -378,9 +378,19 @@ namespace Xamarin.Android.Build.Tests
 		/// <summary>
 		/// Based on https://bugzilla.xamarin.com/show_bug.cgi?id=29263
 		/// </summary>
-		public void CheckXmlResourcesFilesAreProcessed ()
+		public void CheckXmlResourcesFilesAreProcessed ([Values] AndroidRuntime runtime)
 		{
-			var projectPath = "temp/CheckXmlResourcesFilesAreProcessed";
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// TODO: NativeAOT fails with: 'classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView'
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT fails here atm");
+			}
+
+			var projectPath = Path.Combine ("temp", TestName);
 
 			var layout =  @"<?xml version=""1.0"" encoding=""utf-8"" ?>
 <LinearLayout xmlns:android=""http://schemas.android.com/apk/res/android""
@@ -399,8 +409,10 @@ namespace Xamarin.Android.Build.Tests
 		android:text = ""namespace_proper"" />
 </LinearLayout>";
 			var lib = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
 				ProjectName = "Classlibrary1",
 			};
+			lib.SetRuntime (runtime);
 			lib.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\custom_text_lib.xml") {
 				TextContent = () => layout,
 			});
@@ -420,11 +432,13 @@ namespace ClassLibrary1
 			});
 
 			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
 				OtherBuildItems = {
 					new BuildItem.ProjectReference (@"..\Classlibrary1\Classlibrary1.csproj", "Classlibrary1", lib.ProjectGuid) {
 					},
 				}
 			};
+			proj.SetRuntime (runtime);
 
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\custom_text_app.xml") {
 				TextContent = () => layout,
