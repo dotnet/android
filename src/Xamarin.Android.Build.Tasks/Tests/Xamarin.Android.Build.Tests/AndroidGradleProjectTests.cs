@@ -434,14 +434,21 @@ $@"<Project>
 		}
 
 		[Test]
-		public void InvalidItemRefError ()
+		public void InvalidItemRefError ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var invalidProjectPath = Path.Combine (Root, "doesnotexist");
 			var proj = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
 				OtherBuildItems = {
 					new BuildItem (KnownProperties.AndroidGradleProject, Path.Combine (invalidProjectPath, "build.gradle.kts")),
 				},
 			};
+			proj.SetRuntime (runtime);
 
 			using var builder = CreateDllBuilder ();
 			builder.ThrowOnBuildFailure = false;
