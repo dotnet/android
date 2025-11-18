@@ -261,8 +261,13 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildCustomOutputPaths ()
+		public void BuildCustomOutputPaths ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir);
 			var moduleName = gradleProject.Modules.First ().Name;
 
@@ -271,6 +276,7 @@ namespace Xamarin.Android.Build.Tests
 			var gradleOutputPath = Path.Combine (customOutputPathsRoot, "gradleoutdir");
 
 			var proj = new XamarinAndroidLibraryProject {
+				IsRelease = true,
 				OtherBuildItems = {
 					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
 						Metadata = {
@@ -282,6 +288,7 @@ namespace Xamarin.Android.Build.Tests
 				OutputPath = Path.Combine (customOutputPathsRoot, "outdir"),
 				IntermediateOutputPath = Path.Combine (customOutputPathsRoot, "intermediatedir"),
 			};
+			proj.SetRuntime (runtime);
 
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 			FileAssert.Exists (Path.Combine (proj.OutputPath, $"{moduleName}-release.aar"));
