@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -68,36 +69,64 @@ namespace Xamarin.Android.Build.Tests
 			FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-release-unsigned.apk"));
 		}
 
-		static readonly object [] AGPMetadataTestSources = new object [] {
-			new object [] {
-				/* Bind */                       true,
-				/* Configuration */              "Release",
-				/* CreateAndroidLibrary */       true,
-			},
-			new object [] {
-				/* Bind */                       true,
-				/* Configuration */              "Debug",
-				/* CreateAndroidLibrary */       true,
-			},
-			new object [] {
-				/* Bind */                       false,
-				/* Configuration */              "Release",
-				/* CreateAndroidLibrary */       true,
-			},
-			new object [] {
-				/* Bind */                       true,
-				/* Configuration */              "Debug",
-				/* CreateAndroidLibrary */       false,
-			},
-		};
-		[Test]
-		[TestCaseSource (nameof (AGPMetadataTestSources))]
-		public void BindLibrary (bool bind, string configuration, bool refOutputs)
+		static IEnumerable<object[]> Get_AGPMetadataTestSources ()
 		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData (
+					bind: true,
+					configuration: "Release",
+					refOutputs: true,
+					runtime: runtime
+				);
+				AddTestData (
+					bind: true,
+					configuration: "Debug",
+					refOutputs: true,
+					runtime: runtime
+				);
+				AddTestData (
+					bind: false,
+					configuration: "Release",
+					refOutputs: true,
+					runtime: runtime
+				);
+				AddTestData (
+					bind: true,
+					configuration: "Debug",
+					refOutputs: false,
+					runtime: runtime
+				);
+			}
+
+			return ret;
+
+			void AddTestData (bool bind, string configuration, bool refOutputs, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					bind,
+					configuration,
+					refOutputs,
+					runtime,
+				});
+			}
+		}
+
+		[Test]
+		[TestCaseSource (nameof (Get_AGPMetadataTestSources))]
+		public void BindLibrary (bool bind, string configuration, bool refOutputs, AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir);
 			var moduleName = gradleProject.Modules.First ().Name;
 
 			var proj = new XamarinAndroidBindingProject {
+				IsRelease = isRelease,
 				Jars = {
 					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
 						Metadata = {
@@ -115,6 +144,7 @@ namespace Xamarin.Android.Build.Tests
 				},
 				MetadataXml = $@"<metadata><attr path=""/api/package[@name='{gradleProject.Modules.First ().PackageName}']"" name=""managedName"">GradleTest</attr></metadata>",
 			};
+			proj.SetRuntime (runtime);
 
 			using var builder = CreateDllBuilder ();
 			builder.Verbosity = LoggerVerbosity.Detailed;
@@ -123,7 +153,8 @@ namespace Xamarin.Android.Build.Tests
 
 			if (refOutputs && bind) {
 				Assert.IsTrue (buildResult, "Build should have succeeded.");
-				FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-{configuration}.aar"));
+				// Need to lowercase configuration name or the test will fail on case-sensitive systems
+				FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-{configuration.ToLowerInvariant ()}.aar"));
 				Assert.IsFalse (builder.Output.IsTargetSkipped ("GenerateBindings"), "The 'GenerateBindings' target should run when Bind=true");
 			} else {
 				Assert.IsFalse (buildResult, "Build should have failed.");
