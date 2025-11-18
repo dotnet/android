@@ -221,11 +221,20 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ReportAaptErrorsInOriginalFileName ()
+		public void ReportAaptErrorsInOriginalFileName ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+
 			proj.LayoutMain = @"<root/>\n" + proj.LayoutMain;
-			using (var b = CreateApkBuilder ("temp/ErroneousResource", false, false)) {
+			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				// The AndroidGenerateLayoutBindings=false property is necessary because otherwise build
 				// will fail in code-behind generator instead of in aapt
