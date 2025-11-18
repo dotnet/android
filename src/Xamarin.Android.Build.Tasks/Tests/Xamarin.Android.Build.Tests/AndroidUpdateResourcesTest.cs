@@ -8,6 +8,7 @@ using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Mono.Cecil;
 using NUnit.Framework;
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
@@ -18,17 +19,29 @@ namespace Xamarin.Android.Build.Tests
 	public class AndroidUpdateResourcesTest : BaseTest
 	{
 		[Test]
-		public void CheckMultipleLibraryProjectReferenceAlias ([Values (true, false)] bool withGlobal, [Values (true, false)] bool useDesignerAssembly)
+		public void CheckMultipleLibraryProjectReferenceAlias ([Values] bool withGlobal, [Values] bool useDesignerAssembly, [Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var path = Path.Combine (Root, "temp", TestName);
 			var library1 = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
 				ProjectName = "Library1",
 			};
+			library1.SetRuntime (runtime);
+
 			var library2 = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
 				ProjectName = "Library2",
 				RootNamespace = "Library1"
 			};
+			library2.SetRuntime (runtime);
+
 			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
 				References = {
 					new BuildItem.ProjectReference (Path.Combine("..", library1.ProjectName, Path.GetFileName (library1.ProjectFilePath)), "Library1") {
 						Metadata = { { "Aliases", withGlobal ? "global,Lib1A,Lib1B" : "Lib1A,Lib1B" } },
@@ -38,26 +51,27 @@ namespace Xamarin.Android.Build.Tests
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
+
 			library1.SetProperty ("AndroidUseDesignerAssembly", "false");
 			library2.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
 			proj.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
-			using (var builder1 = CreateDllBuilder (Path.Combine (path, library1.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
-				builder1.ThrowOnBuildFailure = false;
-				Assert.IsTrue (builder1.Build (library1), "Library should have built.");
-				using (var builder2 = CreateDllBuilder (Path.Combine (path, library2.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
-					builder2.ThrowOnBuildFailure = false;
-					Assert.IsTrue (builder2.Build (library2), "Library should have built.");
-					using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
-						b.ThrowOnBuildFailure = false;
-						Assert.IsTrue (b.Build (proj), "Project should have built.");
-						if (!useDesignerAssembly) {
-							string resource_designer_cs = GetResourceDesignerPath (b, proj);
-							string [] text = GetResourceDesignerLines (proj, resource_designer_cs);
-							Assert.IsTrue (text.Count (x => x.Contains ("Library1.Resource.String.library_name")) == 2, "library_name resource should be present exactly once for each library");
-							Assert.IsTrue (text.Count (x => x == "extern alias Lib1A;" || x == "extern alias Lib1B;") <= 1, "No more than one extern alias should be present for each library.");
-						}
-					}
-				}
+			using var builder1 = CreateDllBuilder (Path.Combine (path, library1.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false);
+			builder1.ThrowOnBuildFailure = false;
+			Assert.IsTrue (builder1.Build (library1), "Library should have built.");
+
+			using var builder2 = CreateDllBuilder (Path.Combine (path, library2.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false);
+			builder2.ThrowOnBuildFailure = false;
+			Assert.IsTrue (builder2.Build (library2), "Library should have built.");
+
+			using var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false);
+			b.ThrowOnBuildFailure = false;
+			Assert.IsTrue (b.Build (proj), "Project should have built.");
+			if (!useDesignerAssembly) {
+				string resource_designer_cs = GetResourceDesignerPath (b, proj);
+				string [] text = GetResourceDesignerLines (proj, resource_designer_cs);
+				Assert.IsTrue (text.Count (x => x.Contains ("Library1.Resource.String.library_name")) == 2, "library_name resource should be present exactly once for each library");
+				Assert.IsTrue (text.Count (x => x == "extern alias Lib1A;" || x == "extern alias Lib1B;") <= 1, "No more than one extern alias should be present for each library.");
 			}
 		}
 
