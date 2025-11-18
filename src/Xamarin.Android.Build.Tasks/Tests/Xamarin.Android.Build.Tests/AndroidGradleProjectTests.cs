@@ -208,12 +208,18 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildIncremental ()
+		public void BuildIncremental ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir);
 			var gradleModule = gradleProject.Modules.First ();
 
 			var proj = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
 				OtherBuildItems = {
 					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
 						Metadata = {
@@ -222,6 +228,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
 
 			using var builder = CreateDllBuilder ();
 			builder.Verbosity = LoggerVerbosity.Detailed;
