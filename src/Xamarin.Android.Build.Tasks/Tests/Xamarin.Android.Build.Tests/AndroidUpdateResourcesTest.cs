@@ -170,14 +170,21 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckEmbeddedAndroidXResources ()
+		public void CheckEmbeddedAndroidXResources ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				PackageReferences = {
 					KnownPackages.AndroidXAppCompat,
 				},
 			};
+			proj.SetRuntime (runtime);
+
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "First build should have succeeded.");
 				var Rdrawable = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes", "androidx", "appcompat", "R$drawable.class"));
