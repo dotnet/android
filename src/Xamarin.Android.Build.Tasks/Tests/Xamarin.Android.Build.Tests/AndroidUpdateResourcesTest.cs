@@ -324,16 +324,30 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		[Category ("XamarinBuildDownload")]
 		[NonParallelizable]
-		public void Check9PatchFilesAreProcessed ()
+		public void Check9PatchFilesAreProcessed ([Values] AndroidRuntime runtime)
 		{
-			var projectPath = Path.Combine ("temp", "Check9PatchFilesAreProcessed");
-			var libproj = new XamarinAndroidLibraryProject () { ProjectName = "Library1"};
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var projectPath = Path.Combine ("temp", TestName);
+			var libproj = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
+				ProjectName = "Library1"
+			};
+			libproj.SetRuntime (runtime);
+
 			var image_data = XamarinAndroidCommonProject.GetResourceContents ("Xamarin.ProjectTools.Resources.Base.Image.9.png");
 			var image2 = new AndroidItem.AndroidResource ("Resources\\drawable\\Image2.9.png") { BinaryContent = () => image_data };
 			libproj.AndroidResources.Add (image2);
 			using (var libb = CreateDllBuilder (Path.Combine (projectPath, "Library1"))) {
 				libb.Build (libproj);
-				var proj = new XamarinFormsMapsApplicationProject ();
+				var proj = new XamarinFormsMapsApplicationProject {
+					IsRelease = isRelease,
+				};
+				proj.SetRuntime (runtime);
+
 				var image1 = new AndroidItem.AndroidResource ("Resources\\drawable\\Image1.9.png") { BinaryContent = () => image_data };
 				proj.AndroidResources.Add (image1);
 				proj.References.Add (new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"));
