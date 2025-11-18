@@ -487,8 +487,13 @@ $@"<Project>
 		}
 
 		[Test]
-		public void BindFacebook ()
+		public void BindFacebook ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var moduleName = "Library";
 			var gradleModule = 	new AndroidGradleModule (Path.Combine (GradleTestProjectDir, moduleName));
 			gradleModule.PackageName = "com.microsoft.mauifacebook";
@@ -541,6 +546,7 @@ public class FacebookSdk {{
 			gradleProject.Create ();
 
 			var proj = new XamarinAndroidBindingProject {
+				IsRelease = isRelease,
 				Jars = {
 					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
 						Metadata = {
@@ -561,10 +567,11 @@ public class Foo {{
 				},
 				MetadataXml = $@"<metadata><attr path=""/api/package[@name='{gradleModule.PackageName}']"" name=""managedName"">Facebook</attr></metadata>",
 			};
+			proj.SetRuntime (runtime);
 
 			using var builder = CreateDllBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-			FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-Release.aar"));
+			FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-release.aar"));
 		}
 
 	}
