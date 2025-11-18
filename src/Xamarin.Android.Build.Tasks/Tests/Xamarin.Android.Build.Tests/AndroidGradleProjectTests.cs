@@ -5,7 +5,7 @@ using System.Linq;
 using Microsoft.Build.Framework;
 
 using NUnit.Framework;
-
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
@@ -40,12 +40,18 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildApp ()
+		public void BuildApp ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir, isApplication: true);
 			var moduleName = gradleProject.Modules.First ().Name;
 
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				OtherBuildItems = {
 					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
 						Metadata = {
@@ -55,6 +61,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
