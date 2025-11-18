@@ -162,15 +162,20 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BindPackLibrary ([Values (false, true)] bool packGradleRef)
+		public void BindPackLibrary ([Values] bool packGradleRef, [Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var dotnetVersion = "net10.0";
 			var apiLevel = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
 			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir);
 			var moduleName = gradleProject.Modules.First ().Name;
 
 			var proj = new XamarinAndroidLibraryProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 				EnableDefaultItems = true,
 				OtherBuildItems = {
 					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
@@ -181,13 +186,14 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
+			proj.SetRuntime (runtime);
 
 			using var builder = CreateDllBuilder ();
 			builder.Save (proj);
 
 			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
 			Assert.IsTrue (dotnet.Pack (parameters: new [] { "Configuration=Release" }), "`dotnet pack` should succeed");
-			FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-Release.aar"));
+			FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-release.aar"));
 
 			var nupkgPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.1.0.0.nupkg");
 			FileAssert.Exists (nupkgPath);
