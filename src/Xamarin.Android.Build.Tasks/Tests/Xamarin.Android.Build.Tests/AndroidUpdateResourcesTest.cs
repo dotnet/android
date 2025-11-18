@@ -193,14 +193,23 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void MoveResource ()
+		public void MoveResource ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+
 			BuildItem image = null;
 			var image_data = XamarinAndroidCommonProject.GetResourceContents ("Xamarin.ProjectTools.Resources.Base.Icon.png");
 			image = new AndroidItem.AndroidResource ("Resources\\drawable\\Image.png") { BinaryContent = () => image_data };
 			proj.AndroidResources.Add (image);
-			using (var b = CreateApkBuilder ("temp/MoveResource")) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "First build should have succeeded.");
 				var oldpath = image.Include ().Replace ('\\', Path.DirectorySeparatorChar);
 				image.Include = () => "Resources/drawable/NewImage.png";
