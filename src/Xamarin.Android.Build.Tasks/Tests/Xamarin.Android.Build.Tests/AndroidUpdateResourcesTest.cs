@@ -76,18 +76,29 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildAppWithSystemNamespace ()
+		public void BuildAppWithSystemNamespace ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var path = Path.Combine (Root, "temp", TestName);
 			var library = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
 				ProjectName = "Library1.System",
 			};
+			library.SetRuntime (runtime);
+
 			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
 				References = {
 					new BuildItem.ProjectReference (Path.Combine("..", library.ProjectName, Path.GetFileName (library.ProjectFilePath)), "Library1.System") {
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
+
 			using (var builder = CreateDllBuilder (Path.Combine (path, library.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsTrue (builder.Build (library), "Library should have built.");
