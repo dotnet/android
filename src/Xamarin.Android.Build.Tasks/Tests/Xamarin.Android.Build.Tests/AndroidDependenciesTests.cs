@@ -125,14 +125,52 @@ namespace Xamarin.Android.Build.Tests
 			return $"{revision.Element ("major")?.Value}.{revision.Element ("minor")?.Value}.{revision.Element ("micro")?.Value}";
 		}
 
-		[Test]
-		[TestCase ("AotAssemblies", false)]
-		[TestCase ("AndroidEnableProfiledAot", false)]
-		[TestCase ("EnableLLVM", true)]
-		public void GetDependencyNdkRequiredConditions (string property, bool ndkRequired)
+		static IEnumerable<object[]> Get_GetDependencyNdkRequiredConditionsData ()
 		{
-			var proj = new XamarinAndroidApplicationProject ();
-			proj.AotAssemblies = true;
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData ("AotAssemblies", false, runtime);
+				AddTestData ("AndroidEnableProfiledAot", false, runtime);
+				AddTestData ("EnableLLVM", true, runtime);
+			}
+
+			return ret;
+
+			void AddTestData (string property, bool ndkRequired, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					property,
+					ndkRequired,
+					runtime,
+				});
+			}
+		}
+
+		[Test]
+		[TestCaseSource (nameof (Get_GetDependencyNdkRequiredConditionsData))]
+		public void GetDependencyNdkRequiredConditions (string property, bool ndkRequired, AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// CoreCLR doesn't support AOT so it doesn't ever need the NDK and it doesn't support profiled AOT
+			if (runtime == AndroidRuntime.CoreCLR && (ndkRequired || property == "AndroidEnableProfiledAot")) {
+				Assert.Ignore ("CoreCLR doesn't support AOT, it doesn't ever require the NDK");
+			}
+
+			// NativeAOT doesn't support profiled AOT
+			if (runtime == AndroidRuntime.NativeAOT && property == "AndroidEnableProfiledAot") {
+				Assert.Ignore ("NativeAOT doesn't support profiled AOT");
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.AotAssemblies = runtime == AndroidRuntime.MonoVM;
 			proj.SetProperty (property, "true");
 			using (var builder = CreateApkBuilder ()) {
 				builder.Verbosity = LoggerVerbosity.Detailed;
