@@ -189,8 +189,13 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void GetDependencyWhenBuildToolsAreMissingTest ()
+		public void GetDependencyWhenBuildToolsAreMissingTest ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var apis = new ApiInfo [] {
 			};
 			var path = Path.Combine ("temp", TestName);
@@ -201,6 +206,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 				TargetSdkVersion = "26",
 			};
+			proj.SetRuntime (runtime);
 			var parameters = new string [] {
 				$"TargetFrameworkRootPath={referencesPath}",
 				$"AndroidSdkDirectory={androidSdkPath}",
