@@ -110,15 +110,20 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DesignTimeBuild ([Values(false, true)] bool isRelease, [Values (false, true)] bool useManagedParser)
+		public void DesignTimeBuild ([Values] bool isRelease, [Values] bool useManagedParser, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var regEx = new Regex (@"(?<type>([a-zA-Z_0-9])+)\slibrary_name=(?<value>([0-9A-Za-z])+);", RegexOptions.Compiled | RegexOptions.Multiline );
 
-			var path = Path.Combine (Root, "temp", $"DesignTimeBuild_{isRelease}_{useManagedParser}");
+			var path = Path.Combine (Root, "temp", TestName);
 			var lib = new XamarinAndroidLibraryProject () {
 				ProjectName = "Lib1",
 				IsRelease = isRelease,
 			};
+			lib.SetRuntime (runtime);
 			lib.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
 			lib.SetProperty ("AndroidUseDesignerAssembly", "false");
 			var proj = new XamarinAndroidApplicationProject () {
@@ -127,6 +132,8 @@ namespace Xamarin.Android.Build.Tests
 					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", lib.ProjectName, lib.ProjectGuid),
 				},
 			};
+			proj.SetRuntime (runtime);
+
 			var intermediateOutputPath = Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath);
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
 			proj.SetProperty ("AndroidUseDesignerAssembly", "false");
