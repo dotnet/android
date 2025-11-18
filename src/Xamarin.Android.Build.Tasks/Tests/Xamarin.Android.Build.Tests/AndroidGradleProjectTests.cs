@@ -458,11 +458,17 @@ $@"<Project>
 		}
 
 		[Test]
-		public void InvalidModuleNameError ()
+		public void InvalidModuleNameError ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir);
 			var invalidModuleName = "Invalid";
 			var proj = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
 				OtherBuildItems = {
 					 new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
 						Metadata = {
@@ -471,6 +477,7 @@ $@"<Project>
 					 },
 				 },
 			};
+			proj.SetRuntime (runtime);
 
 			using var builder = CreateDllBuilder ();
 			builder.ThrowOnBuildFailure = false;
