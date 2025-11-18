@@ -203,7 +203,7 @@ namespace Xamarin.Android.Build.Tests
 					null, apis);
 			var referencesPath = CreateFauxReferencesDirectory (Path.Combine (path, "xbuild-frameworks"), apis);
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				TargetSdkVersion = "26",
 			};
 			proj.SetRuntime (runtime);
@@ -229,8 +229,13 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void GetDependencyWhenSDKIsMissingTest ([Values (true, false)] bool createSdkDirectory, [Values (true, false)] bool installJavaDeps)
+		public void GetDependencyWhenSDKIsMissingTest ([Values] bool createSdkDirectory, [Values] bool installJavaDeps, [Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var apis = new ApiInfo [] {
 			};
 			var path = Path.Combine ("temp", TestName);
@@ -241,7 +246,7 @@ namespace Xamarin.Android.Build.Tests
 				Directory.Delete (androidSdkPath, recursive: true);
 			var referencesPath = CreateFauxReferencesDirectory (Path.Combine (path, "xbuild-frameworks"), apis);
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				TargetSdkVersion = "26",
 			};
 			var requestedJdkVersion = "17.0.8.1";
