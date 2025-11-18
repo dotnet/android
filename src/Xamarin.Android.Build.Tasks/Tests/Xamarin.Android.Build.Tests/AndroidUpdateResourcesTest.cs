@@ -271,9 +271,18 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void RepetiviteBuildUpdateSingleResource ()
+		public void RepetiviteBuildUpdateSingleResource ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject  {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+
 			using (var b = CreateApkBuilder ()) {
 				BuildItem image1, image2;
 				var image_data = XamarinAndroidCommonProject.GetResourceContents ("Xamarin.ProjectTools.Resources.Base.Icon.png");
@@ -289,7 +298,11 @@ namespace Xamarin.Android.Build.Tests
 				b.Output.AssertTargetIsSkipped ("_UpdateAndroidResgen");
 				b.Output.AssertTargetIsSkipped ("_GenerateAndroidResourceDir");
 				b.Output.AssertTargetIsSkipped ("_CompileJava");
-				b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesNoShrink);
+
+				if (runtime != AndroidRuntime.NativeAOT) {
+					b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesNoShrink);
+				}
+
 				b.Output.AssertTargetIsSkipped ("_CompileResources");
 				image1.Timestamp = DateTimeOffset.UtcNow;
 				var layout = proj.AndroidResources.First (x => x.Include() == "Resources\\layout\\Main.axml");
@@ -298,7 +311,11 @@ namespace Xamarin.Android.Build.Tests
 				b.Output.AssertTargetIsNotSkipped ("_UpdateAndroidResgen",           occurrence: 2);
 				b.Output.AssertTargetIsNotSkipped ("_GenerateAndroidResourceDir",    occurrence: 2);
 				b.Output.AssertTargetIsSkipped ("_CompileJava",                      occurrence: 2);
-				b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesNoShrink, occurrence: 2);
+
+				if (runtime != AndroidRuntime.NativeAOT) {
+					b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesNoShrink, occurrence: 2);
+				}
+
 				b.Output.AssertTargetIsNotSkipped ("_CreateBaseApk",                 occurrence: 2);
 				b.Output.AssertTargetIsPartiallyBuilt ("_CompileResources");
 			}
