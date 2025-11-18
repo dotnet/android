@@ -19,8 +19,13 @@ namespace Xamarin.Android.Build.Tests
 	{
 		[Test]
 		[NonParallelizable] // Do not run environment modifying tests in parallel.
-		public void InstallAndroidDependenciesTest ([Values ("GoogleV2", "Xamarin")] string manifestType)
+		public void InstallAndroidDependenciesTest ([Values ("GoogleV2", "Xamarin")] string manifestType, [Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			// Set to true when we are marking a new Android API level as stable, but it has not
 			// been added to the Xamarin manifest yet.
 			var xamarin_manifest_needs_updating = false;
@@ -39,7 +44,10 @@ namespace Xamarin.Android.Build.Tests
 					Directory.CreateDirectory (path);
 				}
 
-				var proj = new XamarinAndroidApplicationProject ();
+				var proj = new XamarinAndroidApplicationProject {
+					IsRelease = isRelease,
+				};
+				proj.SetRuntime (runtime);
 				var buildArgs = new List<string> {
 					"AcceptAndroidSDKLicenses=true",
 					$"AndroidManifestType={manifestType}",
