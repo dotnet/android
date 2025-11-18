@@ -245,11 +245,20 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ReportAaptWarningsForBlankLevel ()
+		public void ReportAaptWarningsForBlankLevel ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			//This test should get the warning `Invalid file name: must contain only [a-z0-9_.]`
 			//    However, <Aapt /> still fails due to aapt failing, Resource.designer.cs is not generated
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\Image (1).png") {
 				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi
 			});
