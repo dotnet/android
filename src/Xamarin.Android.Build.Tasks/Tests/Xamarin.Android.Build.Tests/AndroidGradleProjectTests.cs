@@ -388,8 +388,13 @@ $@"<Project>
 		}
 
 		[Test]
-		public void BuildMultipleLibraries ()
+		public void BuildMultipleLibraries ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var gradleProject = new AndroidGradleProject (Path.Combine (GradleTestProjectDir, "First")) {
 				Modules = {
 					new AndroidGradleModule (Path.Combine (GradleTestProjectDir, "First", "FirstModule")),
@@ -404,6 +409,7 @@ $@"<Project>
 			gradleProject2.Create ();
 
 			var proj = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
 				OtherBuildItems = {
 					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
 						Metadata = {
@@ -419,6 +425,7 @@ $@"<Project>
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
 
 			using var builder = CreateDllBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
