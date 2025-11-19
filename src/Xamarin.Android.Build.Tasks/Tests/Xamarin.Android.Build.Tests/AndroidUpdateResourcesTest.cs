@@ -1021,8 +1021,12 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckDontUpdateResourceIfNotNeeded ([Values (true, false)] bool useDesignerAssembly)
+		public void CheckDontUpdateResourceIfNotNeeded ([Values] bool useDesignerAssembly, [Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var target = "_CreateAar";
 			var foo = new BuildItem.Source ("Foo.cs") {
@@ -1048,7 +1052,7 @@ namespace Lib1 {
 				TextContent = () => @"Test Raw To Delete",
 			};
 			var libProj = new XamarinAndroidLibraryProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				ProjectName = "Lib1",
 				Sources = {
 					foo,
@@ -1059,15 +1063,17 @@ namespace Lib1 {
 					rawToDelete,
 				},
 			};
+			libProj.SetRuntime (runtime);
 			libProj.SetProperty ("Deterministic", "true");
 			libProj.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
 			var appProj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				ProjectName = "App1",
 				References = {
 					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", libProj.ProjectName, libProj.ProjectGuid),
 				},
 			};
+			appProj.SetRuntime (runtime);
 			appProj.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, libProj.ProjectName), false, false)) {
 				Assert.IsTrue (libBuilder.Build (libProj), "Library project should have built");
