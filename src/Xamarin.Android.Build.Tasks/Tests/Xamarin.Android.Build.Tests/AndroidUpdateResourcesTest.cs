@@ -1519,8 +1519,13 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void SolutionBuildSeveralProjects ()
+		public void SolutionBuildSeveralProjects ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			const int libraryCount = 10;
 			var path = Path.Combine ("temp", TestName);
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, path);
@@ -1531,20 +1536,25 @@ namespace UnnamedProject
 			}) {
 				var apps = new List<XamarinAndroidApplicationProject> ();
 				var app1 = new XamarinAndroidApplicationProject {
+					IsRelease = isRelease,
 					ProjectName = "App1"
 				};
+				app1.SetRuntime (runtime);
 				apps.Add (app1);
 				sb.Projects.Add (app1);
 
 				var app2 = new XamarinAndroidApplicationProject {
+					IsRelease = isRelease,
 					ProjectName = "App2"
 				};
+				app2.SetRuntime (runtime);
 				apps.Add (app2);
 				sb.Projects.Add (app2);
 
 				for (var i = 0; i < libraryCount; i++) {
 					var index = i;
 					var lib = new XamarinAndroidLibraryProject {
+						IsRelease = isRelease,
 						ProjectName = $"Lib{i}",
 						AndroidResources = {
 							new AndroidItem.AndroidResource ($"Resources\\values\\library_name{index}.xml") {
@@ -1556,6 +1566,7 @@ $@"<?xml version=""1.0"" encoding=""utf-8""?>
 							}
 						}
 					};
+					lib.SetRuntime (runtime);
 					foreach (var app in apps) {
 						app.AddReference (lib);
 					}
