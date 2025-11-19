@@ -1317,11 +1317,15 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckCodeBehindIsGenerated ()
+		public void CheckCodeBehindIsGenerated ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				LayoutMain = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <LinearLayout xmlns:android = ""http://schemas.android.com/apk/res/android""
 	xmlns:tools=""http://schemas.xamarin.com/android/tools""
@@ -1364,6 +1368,7 @@ namespace UnnamedProject
 	}
 ",
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidGenerateLayoutBindings", "True");
 			using (var builder = CreateApkBuilder (path)) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
