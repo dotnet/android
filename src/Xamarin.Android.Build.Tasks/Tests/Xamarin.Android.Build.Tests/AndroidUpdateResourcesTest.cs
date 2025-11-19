@@ -986,9 +986,14 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckFilesAreRemoved () {
-
+		public void CheckFilesAreRemoved ([Values] AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
 				AndroidResources = { new AndroidItem.AndroidResource ("Resources\\values\\Theme.xml") {
 					TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
@@ -1001,6 +1006,7 @@ namespace Lib1 {
 					}
 				},
 			};
+			proj.SetRuntime (runtime);
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 
