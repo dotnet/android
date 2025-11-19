@@ -596,17 +596,44 @@ namespace UnnamedProject
 			new object[] { true, XamarinAndroidProjectLanguage.FSharp },
 		};
 
+		static IEnumerable<object[]> Get_ReleaseLanguageData ()
+		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData (isRelease: false, language: XamarinAndroidProjectLanguage.CSharp, runtime: runtime);
+				AddTestData (isRelease: true,  language: XamarinAndroidProjectLanguage.CSharp, runtime: runtime);
+				AddTestData (isRelease: false, language: XamarinAndroidProjectLanguage.FSharp, runtime: runtime);
+				AddTestData (isRelease: true,  language: XamarinAndroidProjectLanguage.FSharp, runtime: runtime);
+			}
+
+			return ret;
+
+			void AddTestData (bool isRelease, ProjectLanguage language, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					isRelease,
+					language,
+					runtime,
+				});
+			}
+		}
+
 		[Test]
 		[Parallelizable (ParallelScope.Self)]
-		[TestCaseSource (nameof (ReleaseLanguage))]
-		public void CheckResourceDesignerIsCreated (bool isRelease, ProjectLanguage language)
+		[TestCaseSource (nameof (Get_ReleaseLanguageData))]
+		public void CheckResourceDesignerIsCreated (bool isRelease, ProjectLanguage language, AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			bool isFSharp = language == XamarinAndroidProjectLanguage.FSharp;
 
 			var proj = new XamarinAndroidApplicationProject () {
 				Language = language,
 				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
