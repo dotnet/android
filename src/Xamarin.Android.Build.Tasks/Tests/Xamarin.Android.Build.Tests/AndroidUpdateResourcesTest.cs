@@ -1379,13 +1379,18 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void CheckInvalidXmlInManagedResourceParser ()
+		public void CheckInvalidXmlInManagedResourceParser ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease       = true,
+				IsRelease       = isRelease,
 				LayoutMain      = @"",
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			using (var builder = CreateApkBuilder (path)) {
 				builder.ThrowOnBuildFailure = false;
