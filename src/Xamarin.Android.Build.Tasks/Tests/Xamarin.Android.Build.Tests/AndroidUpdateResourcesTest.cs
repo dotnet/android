@@ -841,9 +841,17 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckAaptErrorRaisedForMissingResource ()
+		public void CheckAaptErrorRaisedForMissingResource ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+
 			var main = proj.AndroidResources.First (x => x.Include () == "Resources\\layout\\Main.axml");
 			main.TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <LinearLayout xmlns:android=""http://schemas.android.com/apk/res/android""
@@ -858,8 +866,7 @@ namespace Lib1 {
 	android:text=""@string/foo""
 	/>
 </LinearLayout>";
-			var projectPath = string.Format ("temp/CheckAaptErrorRaisedForMissingResource");
-			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
+			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
 				StringAssertEx.Contains ("APT2260: ", b.LastBuildOutput);
