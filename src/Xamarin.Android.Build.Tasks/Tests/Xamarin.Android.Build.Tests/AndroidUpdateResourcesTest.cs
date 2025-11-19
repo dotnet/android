@@ -714,11 +714,15 @@ namespace UnnamedProject
 
 		// ref https://bugzilla.xamarin.com/show_bug.cgi?id=30089
 		[Test]
-		public void CheckOldResourceDesignerWithWrongCasingIsRemoved ([Values (true, false)] bool isRelease)
+		public void CheckOldResourceDesignerWithWrongCasingIsRemoved ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 			proj.SetProperty ("AndroidResgenFile", "Resources\\Resource.designer" + proj.Language.DefaultDesignerExtension);
 			using (var b = CreateApkBuilder ()) {
