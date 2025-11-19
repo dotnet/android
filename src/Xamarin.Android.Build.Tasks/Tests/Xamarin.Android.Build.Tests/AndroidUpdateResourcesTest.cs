@@ -1182,10 +1182,14 @@ namespace Lib1 {
 
 		[Test]
 		[NonParallelizable]
-		public void BuildAppWithManagedResourceParserAndLibraries ()
+		public void BuildAppWithManagedResourceParserAndLibraries ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			int maxBuildTimeMs = 10000;
-			var path = Path.Combine ("temp", "BuildAppWithMRPAL");
+			var path = Path.Combine ("temp", TestName);
 			var theme = new AndroidItem.AndroidResource ("Resources\\values\\Theme.xml") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
@@ -1200,17 +1204,18 @@ namespace Lib1 {
 </resources>",
 			};
 			var libProj = new XamarinAndroidLibraryProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				ProjectName = "Lib1",
 				AndroidResources = {
 					theme,
 					dimen,
 				},
 			};
+			libProj.SetRuntime (runtime);
 			libProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			libProj.SetProperty ("AndroidUseDesignerAssembly", "false");
 			var appProj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				ProjectName = "App1",
 				References = {
 					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", libProj.ProjectName, libProj.ProjectGuid),
@@ -1219,6 +1224,7 @@ namespace Lib1 {
 					KnownPackages.AndroidXAppCompat,
 				},
 			};
+			appProj.SetRuntime (runtime);
 			appProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			appProj.SetProperty ("AndroidUseDesignerAssembly", "false");
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, libProj.ProjectName), false, false)) {
