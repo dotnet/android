@@ -1289,16 +1289,21 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckMaxResWarningIsEmittedAsAWarning()
+		public void CheckMaxResWarningIsEmittedAsAWarning ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				OtherBuildItems = {
 					new BuildItem.Folder ("Resources\\values-v33\\") {
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values-v33\\Strings.xml") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
