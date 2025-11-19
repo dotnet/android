@@ -1136,13 +1136,18 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void BuildAppWithManagedResourceParser()
+		public void BuildAppWithManagedResourceParser ([Values] AndroidRuntime runtime)
 		{
-			var path = Path.Combine ("temp", "BuildAppWithManagedResourceParser");
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var path = Path.Combine ("temp", TestName);
 			var appProj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				ProjectName = "App1",
 			};
+			appProj.SetRuntime (runtime);
 			appProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			appProj.SetProperty ("AndroidUseDesignerAssembly", "false");
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, appProj.ProjectName))) {
