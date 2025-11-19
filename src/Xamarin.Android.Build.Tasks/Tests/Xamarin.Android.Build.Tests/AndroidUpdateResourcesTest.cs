@@ -794,8 +794,11 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void CheckThatXA1034IsRaisedForInvalidConfiguration ([Values (true, false)] bool isRelease)
+		public void CheckThatXA1034IsRaisedForInvalidConfiguration ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			string path = Path.Combine (Root, "temp", TestName);
 			var foo = new BuildItem.Source ("Foo.cs") {
 				TextContent = () => @"using System;
@@ -812,6 +815,7 @@ namespace Lib1 {
 				ProjectName = "Lib1",
 				Sources = { foo },
 			};
+			library.SetRuntime (runtime);
 			library.SetProperty ("AndroidUseDesignerAssembly", "True");
 
 			var proj = new XamarinAndroidApplicationProject () {
@@ -821,6 +825,7 @@ namespace Lib1 {
 					new BuildItem.ProjectReference ($"..\\{library.ProjectName}\\{library.ProjectName}.csproj", library.ProjectName, library.ProjectGuid),
 				},
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidUseDesignerAssembly", "False");
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "Console.WriteLine (Lib1.Foo.GetFoo ());");
 			using (var lb = CreateDllBuilder (Path.Combine (path, library.ProjectName))) {
