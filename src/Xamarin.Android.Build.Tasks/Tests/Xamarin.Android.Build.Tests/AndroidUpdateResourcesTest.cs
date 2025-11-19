@@ -1403,9 +1403,16 @@ namespace UnnamedProject
 		//NOTE: This test was failing randomly before fixing a bug in `CopyIfChanged`.
 		//      Let's set it to run 3 times, it still completes in a reasonable time ~1.5 min.
 		[Test, Repeat(3)]
-		public void LightlyModifyLayout ()
+		public void LightlyModifyLayout ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
 
