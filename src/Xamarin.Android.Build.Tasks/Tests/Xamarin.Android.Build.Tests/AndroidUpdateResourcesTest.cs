@@ -1427,9 +1427,16 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void CustomViewAddResourceId ()
+		public void CustomViewAddResourceId ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.LayoutMain = proj.LayoutMain.Replace ("</LinearLayout>", "<android.support.design.widget.BottomNavigationView android:id=\"@+id/navigation\" /></LinearLayout>");
 			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
 			using (var b = CreateApkBuilder ()) {
