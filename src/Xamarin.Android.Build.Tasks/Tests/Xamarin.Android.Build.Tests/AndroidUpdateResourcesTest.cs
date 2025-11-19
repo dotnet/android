@@ -744,9 +744,14 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void GenerateResourceDesigner_false([Values (false, true)] bool useDesignerAssembly)
+		public void GenerateResourceDesigner_false ([Values] bool useDesignerAssembly, [Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				EnableDefaultItems = true,
 				Sources = {
 					new AndroidItem.AndroidResource (() => "Resources\\drawable\\foo.png") {
@@ -754,6 +759,7 @@ namespace UnnamedProject
 					},
 				}
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty (KnownProperties.OutputType, "Library");
 
 			// Turn off Resource.designer.cs and remove usage of it
