@@ -892,9 +892,16 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckAaptErrorRaisedForInvalidFileName ()
+		public void CheckAaptErrorRaisedForInvalidFileName ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject  {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\icon-2.png") {
 				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_hdpi,
 			});
