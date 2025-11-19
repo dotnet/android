@@ -927,9 +927,16 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckAaptErrorNotRaisedForInvalidFileNameWithValidLogicalName ()
+		public void CheckAaptErrorNotRaisedForInvalidFileNameWithValidLogicalName ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\icon-2.png") {
 				Metadata = { { "LogicalName", "Resources\\drawable\\icon2.png" } },
 				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_hdpi,
