@@ -684,11 +684,15 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void CheckOldResourceDesignerIsNotUsed ([Values (true, false)] bool isRelease)
+		public void CheckOldResourceDesignerIsNotUsed ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "False");
 			using (var b = CreateApkBuilder ()) {
