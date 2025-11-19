@@ -1465,9 +1465,16 @@ namespace UnnamedProject
 
 		[Test]
 		[Parallelizable (ParallelScope.Self)]
-		public void CheckNoVersionVectors ()
+		public void CheckNoVersionVectors ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinFormsAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinFormsAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
 				b.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
