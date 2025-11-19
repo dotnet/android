@@ -1492,14 +1492,21 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void InvalidFilenames ()
+		public void InvalidFilenames ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			BuildItem CreateItem (string include) =>
 				new AndroidItem.AndroidResource (include) {
 					TextContent = () => "",
 				};
 
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.AndroidResources.Add (CreateItem ("Resources\\raw\\.foo"));
 			proj.AndroidResources.Add (CreateItem ("Resources\\raw\\.git"));
 			proj.AndroidResources.Add (CreateItem ("Resources\\raw\\.svn"));
