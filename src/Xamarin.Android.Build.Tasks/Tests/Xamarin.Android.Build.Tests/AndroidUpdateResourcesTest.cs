@@ -589,13 +589,6 @@ namespace UnnamedProject
 			}
 		}
 
-		static object[] ReleaseLanguage = new object[] {
-			new object[] { false, XamarinAndroidProjectLanguage.CSharp },
-			new object[] { true, XamarinAndroidProjectLanguage.CSharp },
-			new object[] { false, XamarinAndroidProjectLanguage.FSharp },
-			new object[] { true, XamarinAndroidProjectLanguage.FSharp },
-		};
-
 		static IEnumerable<object[]> Get_ReleaseLanguageData ()
 		{
 			var ret = new List<object[]> ();
@@ -647,14 +640,18 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		[TestCaseSource(nameof (ReleaseLanguage))]
-		public void CheckResourceDesignerIsUpdatedWhenReadOnly (bool isRelease, ProjectLanguage language)
+		[TestCaseSource(nameof (Get_ReleaseLanguageData))]
+		public void CheckResourceDesignerIsUpdatedWhenReadOnly (bool isRelease, ProjectLanguage language, AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			bool isFSharp = language == XamarinAndroidProjectLanguage.FSharp;
 			var proj = new XamarinAndroidApplicationProject () {
 				Language = language,
 				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var designerPath = GetResourceDesignerPath (b, proj);
