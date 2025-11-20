@@ -69,13 +69,11 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		[TestCase (false, AndroidRuntime.MonoVM)]
-		[TestCase (true, AndroidRuntime.MonoVM)]
-		[TestCase (false, AndroidRuntime.CoreCLR)]
-		[TestCase (true, AndroidRuntime.CoreCLR)]
-		[TestCase (true, AndroidRuntime.NativeAOT)]
-		public void BuildApplicationWithAssetPackOutsideProjectDirectory (bool isRelease, AndroidRuntime runtime)
+		public void BuildApplicationWithAssetPackOutsideProjectDirectory ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
 				ProjectName = "MyApp",
