@@ -13,8 +13,11 @@ namespace Xamarin.Android.Build.Tests
 	{
 		[Test]
 		[Category ("SmokeTests")]
-		public void BuildLibraryWithAssetPack ([Values (true, false)] bool isRelease)
+		public void BuildLibraryWithAssetPack ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
 				IsRelease = isRelease,
@@ -26,6 +29,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
+			lib.SetRuntime (runtime);
 			using (var builder = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (lib), $"{lib.ProjectName} should fail.");
