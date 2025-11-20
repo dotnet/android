@@ -162,11 +162,16 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckForInvalidHttpClientHandlerType ()
+		public void CheckForInvalidHttpClientHandlerType ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				proj.SetProperty ("AndroidHttpClientHandlerType", "Android.App.Application");
