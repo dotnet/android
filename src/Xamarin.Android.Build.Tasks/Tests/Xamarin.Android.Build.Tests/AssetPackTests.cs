@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
+using System.Collections.Generic;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -40,13 +41,11 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		[TestCase (false, AndroidRuntime.MonoVM)]
-		[TestCase (true, AndroidRuntime.MonoVM)]
-		[TestCase (false, AndroidRuntime.CoreCLR)]
-		[TestCase (true, AndroidRuntime.CoreCLR)]
-		[TestCase (true, AndroidRuntime.NativeAOT)]
-		public void BuildApplicationWithAssetPackThatHasInvalidName (bool isRelease, AndroidRuntime runtime)
+		public void BuildApplicationWithAssetPackThatHasInvalidName ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
