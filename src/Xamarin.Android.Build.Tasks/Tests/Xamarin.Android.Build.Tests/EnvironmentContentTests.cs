@@ -128,16 +128,12 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckConcurrentGC ([Values] AndroidRuntime runtime)
+		public void CheckConcurrentGC ()
 		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
+				IsRelease = true,
 			};
-			proj.SetRuntime (runtime);
+
 			var gcVarName = "MONO_GC_PARAMS";
 			var expectedDefaultValue = "major=marksweep";
 			var expectedUpdatedValue = "major=marksweep-conc";
@@ -151,14 +147,14 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				// AndroidEnableSGenConcurrent=False by default
-				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, runtime);
+				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, AndroidRuntime.MonoVM);
 				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, AndroidRuntime.MonoVM);
 				Assert.IsTrue (envvars.ContainsKey (gcVarName), $"Environment should contain '{gcVarName}'.");
 				Assert.AreEqual (expectedDefaultValue, envvars[gcVarName], $"'{gcVarName}' should have been '{expectedDefaultValue}' when concurrent GC is disabled.");
 
 				proj.SetProperty ("AndroidEnableSGenConcurrent", "True");
 				Assert.IsTrue (b.Build (proj), "Second build should have succeeded.");
-				envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, runtime);
+				envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, AndroidRuntime.MonoVM);
 				envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, AndroidRuntime.MonoVM);
 				Assert.IsTrue (envvars.ContainsKey (gcVarName), $"Environment should contain '{gcVarName}'.");
 				Assert.AreEqual (expectedUpdatedValue, envvars[gcVarName], $"'{gcVarName}' should have been '{expectedUpdatedValue}' when concurrent GC is enabled.");
