@@ -181,10 +181,14 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckHttpClientHandlerType ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void CheckHttpClientHandlerType ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
 			var httpClientHandlerVarName = "XA_HTTP_CLIENT_HANDLER_TYPE";
 			var expectedDefaultValue = "System.Net.Http.SocketsHttpHandler, System.Net.Http";
@@ -193,6 +197,7 @@ namespace Xamarin.Android.Build.Tests
 			string supportedAbis = runtime switch {
 				AndroidRuntime.MonoVM  => "armeabi-v7a;arm64-v8a",
 				AndroidRuntime.CoreCLR => "arm64-v8a;x86_64",
+				AndroidRuntime.NativeAOT => "arm64-v8a;x86_64",
 				_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 			};
 			proj.SetRuntime (runtime);
