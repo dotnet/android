@@ -160,13 +160,11 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		[TestCase (false, AndroidRuntime.MonoVM)]
-		[TestCase (true, AndroidRuntime.MonoVM)]
-		[TestCase (false, AndroidRuntime.CoreCLR)]
-		[TestCase (true, AndroidRuntime.CoreCLR)]
-		[TestCase (true, AndroidRuntime.NativeAOT)]
-		public void BuildApplicationWithAssetPack (bool isRelease, AndroidRuntime runtime)
+		public void BuildApplicationWithAssetPack ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var asset3 = new AndroidItem.AndroidAsset ("Assets\\asset3.txt") {
 				TextContent = () => "Asset3",
