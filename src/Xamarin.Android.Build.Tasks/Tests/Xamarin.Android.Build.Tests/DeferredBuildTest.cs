@@ -61,13 +61,20 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void RunUpdateAndroidResourcesIfBackgroundBuildNotSupported ()
+		public void RunUpdateAndroidResourcesIfBackgroundBuildNotSupported ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				ProjectName = "MyApp",
 			};
 
+			app.SetRuntime (runtime);
 			app.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			app.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 
