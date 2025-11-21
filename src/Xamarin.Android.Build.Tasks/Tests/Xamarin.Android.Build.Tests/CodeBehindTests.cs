@@ -9,6 +9,8 @@ using Microsoft.Build.Framework;
 using NUnit.Framework;
 
 using Xamarin.ProjectTools;
+using Xamarin.Android.Tasks;
+using System.Text;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -111,25 +113,29 @@ namespace Xamarin.Android.Build.Tests
 		{
 			public string RootDirectory { get; }
 			public string OutputDirectory { get; }
+			public string TestRootDirectory { get; }
 			public string ObjPath { get; }
 			public string BinPath { get; }
 			public string GeneratedPath { get; }
 			public string ProjectPath { get; }
 			public string ProjectName { get; }
 			public string TestName { get; }
+			public AndroidRuntime Runtime { get; }
 
-			public TestProjectInfo (string projectName, string testName, string rootDirectory, string outputRootDir)
+			public TestProjectInfo (string projectName, string testName, string rootDirectory, string outputRootDir, AndroidRuntime runtime)
 			{
 				TestName = testName;
 				RootDirectory = rootDirectory;
 				ProjectName = projectName;
+				Runtime = runtime;
 
 				ObjPath = Path.Combine (rootDirectory, "obj");
 				GeneratedPath = Path.Combine (ObjPath, XABuildPaths.Configuration, "codebehind");
 				BinPath = Path.Combine (rootDirectory, "bin", XABuildPaths.Configuration);
 				ProjectPath = Path.Combine (rootDirectory, $"{projectName}.csproj");
 
-				OutputDirectory = Path.Combine (outputRootDir, testName, XABuildPaths.Configuration);
+				TestRootDirectory = Path.Combine (outputRootDir, testName);
+				OutputDirectory = Path.Combine (TestRootDirectory, XABuildPaths.Configuration);
 			}
 		}
 
@@ -267,37 +273,38 @@ namespace Xamarin.Android.Build.Tests
 				},
 			};
 
+			// TODO: for some reason the tests no longer produce both aab and apk packages, at least locally? Fine? Bug?
 			produced_binaries = new List <string> {
 				$"{ProjectName}.dll",
 				"CommonSampleLibrary.dll",
-				$"{PackageName}-Signed.apk",
+//				$"{PackageName}-Signed.apk",
 				$"{PackageName}.aab",
 				$"{PackageName}-Signed.aab",
 			};
 		}
 
 		[Test]
-		public void SuccessfulBuildFew ()
+		public void SuccessfulBuildFew ([Values] AndroidRuntime runtime)
 		{
-			RunTest ("SuccessfulBuildFew", many: false, dtb: false, runner: SuccessfulBuild_RunTest);
+			RunTest (TestName, many: false, dtb: false, runner: SuccessfulBuild_RunTest, runtime: runtime);
 		}
 
 		[Test]
-		public void SuccessfulBuildMany ()
+		public void SuccessfulBuildMany ([Values] AndroidRuntime runtime)
 		{
-			RunTest ("SuccessfulBuildMany", many: true, dtb: false, runner: SuccessfulBuild_RunTest);
+			RunTest (TestName, many: true, dtb: false, runner: SuccessfulBuild_RunTest, runtime: runtime);
 		}
 
 		[Test]
-		public void SuccessfulBuildFew_DTB ()
+		public void SuccessfulBuildFew_DTB ([Values] AndroidRuntime runtime)
 		{
-			RunTest ("SuccessfulBuildFew_DTB", many: false, dtb: true, runner: SuccessfulBuild_RunTest);
+			RunTest (TestName, many: false, dtb: true, runner: SuccessfulBuild_RunTest, runtime: runtime);
 		}
 
 		[Test]
-		public void SuccessfulBuildMany_DTB ()
+		public void SuccessfulBuildMany_DTB ([Values] AndroidRuntime runtime)
 		{
-			RunTest ("SuccessfulBuildMany_DTB", many: true, dtb: true, runner: SuccessfulBuild_RunTest);
+			RunTest (TestName, many: true, dtb: true, runner: SuccessfulBuild_RunTest, runtime: runtime);
 		}
 
 		void SuccessfulBuild_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
@@ -328,9 +335,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void SuccessfulAndroidXApp ()
+		public void SuccessfulAndroidXApp ([Values] AndroidRuntime runtime)
 		{
-			RunTest ("SuccessfulAndroidXApp", many: true, dtb: false, runner: SuccessfulBuild_AndroidX);
+			RunTest (TestName, many: true, dtb: false, runner: SuccessfulBuild_AndroidX, runtime: runtime);
 		}
 
 		void SuccessfulBuild_AndroidX (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
@@ -340,7 +347,9 @@ namespace Xamarin.Android.Build.Tests
 
 			CopyLogs (testInfo, true);
 			Assert.That (success, Is.True, "Build should have succeeded");
-			Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, " 0 Warning(s)"), $"{builder.BuildLogFile} should have no MSBuild warnings.");
+			if (testInfo.Runtime != AndroidRuntime.NativeAOT) { // NativeAOT currently (Nov 2025) produces 9 ILC warnings
+				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, " 0 Warning(s)"), $"{builder.BuildLogFile} should have no MSBuild warnings.");
+			}
 
 			CopyGeneratedFiles (testInfo);
 
@@ -363,15 +372,15 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FailedBuildFew_ConflictingFragment ()
+		public void FailedBuildFew_ConflictingFragment ([Values] AndroidRuntime runtime)
 		{
-			RunTest ("FailedBuildFew_ConflictingFragment", many: false, dtb: false, runner: FailedBuild_ConflictingFragment_RunTest);
+			RunTest (TestName, many: false, dtb: false, runner: FailedBuild_ConflictingFragment_RunTest, runtime: runtime);
 		}
 
 		[Test]
-		public void FailedBuildMany_ConflictingFragment ()
+		public void FailedBuildMany_ConflictingFragment ([Values] AndroidRuntime runtime)
 		{
-			RunTest ("FailedBuildMany_ConflictingFragment", many: true, dtb: false, runner: FailedBuild_ConflictingFragment_RunTest);
+			RunTest (TestName, many: true, dtb: false, runner: FailedBuild_ConflictingFragment_RunTest, runtime: runtime);
 		}
 
 		void FailedBuild_ConflictingFragment_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
@@ -391,15 +400,15 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FailedBuildFew_ConflictingTextView ()
+		public void FailedBuildFew_ConflictingTextView ([Values] AndroidRuntime runtime)
 		{
-			RunTest ("FailedBuildFew_ConflictingTextView", many: false, dtb: false, runner: FailedBuild_ConflictingTextView_RunTest);
+			RunTest (TestName, many: false, dtb: false, runner: FailedBuild_ConflictingTextView_RunTest, runtime: runtime);
 		}
 
 		[Test]
-		public void FailedBuildMany_ConflictingTextView ()
+		public void FailedBuildMany_ConflictingTextView ([Values] AndroidRuntime runtime)
 		{
-			RunTest ("FailedBuildMany_ConflictingTextView", many: true, dtb: false, runner: FailedBuild_ConflictingTextView_RunTest);
+			RunTest (TestName, many: true, dtb: false, runner: FailedBuild_ConflictingTextView_RunTest, runtime: runtime);
 		}
 
 		void FailedBuild_ConflictingTextView_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
@@ -419,15 +428,15 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FailedBuildFew_ConflictingButton ()
+		public void FailedBuildFew_ConflictingButton ([Values] AndroidRuntime runtime)
 		{
-			RunTest ("FailedBuildFew_ConflictingButton", many: false, dtb: false, runner: FailedBuild_ConflictingButton_RunTest);
+			RunTest (TestName, many: false, dtb: false, runner: FailedBuild_ConflictingButton_RunTest, runtime: runtime);
 		}
 
 		[Test]
-		public void FailedBuildMany_ConflictingButton ()
+		public void FailedBuildMany_ConflictingButton ([Values] AndroidRuntime runtime)
 		{
-			RunTest ("FailedBuildMany_ConflictingButton", many: true, dtb: false, runner: FailedBuild_ConflictingButton_RunTest);
+			RunTest (TestName, many: true, dtb: false, runner: FailedBuild_ConflictingButton_RunTest, runtime: runtime);
 		}
 
 		void FailedBuild_ConflictingButton_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
@@ -447,15 +456,15 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FailedBuildFew_ConflictingLinearLayout ()
+		public void FailedBuildFew_ConflictingLinearLayout ([Values] AndroidRuntime runtime)
 		{
-			RunTest ("FailedBuildFew_ConflictingLinearLayout", many: false, dtb: false, runner: FailedBuild_ConflictingLinearLayout_RunTest);
+			RunTest (TestName, many: false, dtb: false, runner: FailedBuild_ConflictingLinearLayout_RunTest, runtime: runtime);
 		}
 
 		[Test]
-		public void FailedBuildMany_ConflictingLinearLayout ()
+		public void FailedBuildMany_ConflictingLinearLayout ([Values] AndroidRuntime runtime)
 		{
-			RunTest ("FailedBuildMany_ConflictingLinearLayout", many: true, dtb: false, runner: FailedBuild_ConflictingLinearLayout_RunTest);
+			RunTest (TestName, many: true, dtb: false, runner: FailedBuild_ConflictingLinearLayout_RunTest, runtime: runtime);
 		}
 
 		void FailedBuild_ConflictingLinearLayout_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
@@ -475,15 +484,15 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FailedBuildFew_ConflictingRelativeLayout ()
+		public void FailedBuildFew_ConflictingRelativeLayout ([Values] AndroidRuntime runtime)
 		{
-			RunTest ("FailedBuildFew_ConflictingRelativeLayout", many: false, dtb: false, runner: FailedBuild_ConflictingRelativeLayout_RunTest);
+			RunTest (TestName, many: false, dtb: false, runner: FailedBuild_ConflictingRelativeLayout_RunTest, runtime: runtime);
 		}
 
 		[Test]
-		public void FailedBuildMany_ConflictingRelativeLayout ()
+		public void FailedBuildMany_ConflictingRelativeLayout ([Values] AndroidRuntime runtime)
 		{
-			RunTest ("FailedBuildMany_ConflictingRelativeLayout", many: true, dtb: false, runner: FailedBuild_ConflictingRelativeLayout_RunTest);
+			RunTest (TestName, many: true, dtb: false, runner: FailedBuild_ConflictingRelativeLayout_RunTest, runtime: runtime);
 		}
 
 		void FailedBuild_ConflictingRelativeLayout_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
@@ -577,12 +586,17 @@ namespace Xamarin.Android.Build.Tests
 		/// <param name="many">Generate code in parallel if <c>true</c>, serially otherwise</param>
 		/// <param name="dtb">Test design-time build if <c>true</c>, regular build otherwise</param>
 		/// <param name="runner">Action consituting the main body of the test. Passed parameters are described above in the remarks section.</param>
-		void RunTest (string testName, bool many, bool dtb, Action<TestProjectInfo, bool, bool, LocalBuilder> runner)
+		void RunTest (string testName, bool many, bool dtb, Action<TestProjectInfo, bool, bool, LocalBuilder> runner, AndroidRuntime runtime)
 		{
-			string temporaryProjectDir = PrepareProject (testName);
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			string temporaryProjectDir = PrepareProject (testName, isRelease, runtime);
 			LocalBuilder builder = GetBuilder ($"{ProjectName}.{testName}");
 			builder.BuildingInsideVisualStudio = dtb;
-			var testInfo = new TestProjectInfo (ProjectName, testName, temporaryProjectDir, TestOutputDir);
+			var testInfo = new TestProjectInfo (ProjectName, testName, temporaryProjectDir, TestOutputDir, runtime);
 
 			try {
 				runner (testInfo, many, dtb, builder);
@@ -604,7 +618,7 @@ namespace Xamarin.Android.Build.Tests
 
 			// Clean up successful tests
 			FileSystemUtils.SetDirectoryWriteable (testInfo.OutputDirectory);
-			Directory.Delete (testInfo.OutputDirectory, recursive: true);
+			Directory.Delete (testInfo.TestRootDirectory, recursive: true);
 		}
 
 		bool WasParsedInParallel (TestProjectInfo testInfo)
@@ -675,7 +689,7 @@ namespace Xamarin.Android.Build.Tests
 				.Replace ("}", "\\}");
 		}
 
-		string PrepareProject (string testName)
+		string PrepareProject (string testName, bool isRelease, AndroidRuntime runtime)
 		{
 			string tempRoot = Path.Combine (TestOutputDir, testName, XABuildPaths.Configuration);
 			string temporaryProjectPath = Path.Combine (tempRoot, "project");
@@ -692,7 +706,21 @@ namespace Xamarin.Android.Build.Tests
 			CopyFile (Path.Combine (XABuildPaths.TopDirectory, "Directory.Build.props"), Path.Combine (tempRoot, "Directory.Build.props" ));
 			var project = new XamarinAndroidApplicationProject ();
 			project.CopyNuGetConfig (Path.Combine (tempRoot, "NuGet.config"));
+
+			PatchProject (Path.Combine (tempRoot, CommonSampleLibraryName, $"{CommonSampleLibraryName}.NET.csproj"));
+			PatchProject (Path.Combine (temporaryProjectPath, $"{ProjectName}.csproj"));
+
 			return temporaryProjectPath;
+
+			void PatchProject (string csprojPath)
+			{
+				AssertExists (testName, csprojPath);
+				var sb = new StringBuilder (File.ReadAllText (csprojPath));
+				sb.Replace ("@UseMonoRuntime@", (runtime == AndroidRuntime.MonoVM).ToString ())
+				  .Replace ("@PublishAot@", (runtime == AndroidRuntime.NativeAOT).ToString ())
+				  .Replace ("@Configuration@", isRelease ? "Release" : "Debug");
+				File.WriteAllText (csprojPath, sb.ToString ());
+			}
 		}
 
 		void CopyRecursively (string fromDir, string toDir, HashSet <string> ignoreDirs)

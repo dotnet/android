@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
+using System.Collections.Generic;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -13,8 +14,11 @@ namespace Xamarin.Android.Build.Tests
 	{
 		[Test]
 		[Category ("SmokeTests")]
-		public void BuildLibraryWithAssetPack ([Values (true, false)] bool isRelease)
+		public void BuildLibraryWithAssetPack ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
 				IsRelease = isRelease,
@@ -26,6 +30,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
+			lib.SetRuntime (runtime);
 			using (var builder = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (lib), $"{lib.ProjectName} should fail.");
@@ -36,13 +41,11 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		[TestCase (false, AndroidRuntime.MonoVM)]
-		[TestCase (true, AndroidRuntime.MonoVM)]
-		[TestCase (false, AndroidRuntime.CoreCLR)]
-		[TestCase (true, AndroidRuntime.CoreCLR)]
-		[TestCase (true, AndroidRuntime.NativeAOT)]
-		public void BuildApplicationWithAssetPackThatHasInvalidName (bool isRelease, AndroidRuntime runtime)
+		public void BuildApplicationWithAssetPackThatHasInvalidName ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
@@ -66,13 +69,11 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		[TestCase (false, AndroidRuntime.MonoVM)]
-		[TestCase (true, AndroidRuntime.MonoVM)]
-		[TestCase (false, AndroidRuntime.CoreCLR)]
-		[TestCase (true, AndroidRuntime.CoreCLR)]
-		[TestCase (true, AndroidRuntime.NativeAOT)]
-		public void BuildApplicationWithAssetPackOutsideProjectDirectory (bool isRelease, AndroidRuntime runtime)
+		public void BuildApplicationWithAssetPackOutsideProjectDirectory ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
 				ProjectName = "MyApp",
@@ -117,13 +118,11 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		[TestCase (false, AndroidRuntime.MonoVM)]
-		[TestCase (true, AndroidRuntime.MonoVM)]
-		[TestCase (false, AndroidRuntime.CoreCLR)]
-		[TestCase (true, AndroidRuntime.CoreCLR)]
-		[TestCase (true, AndroidRuntime.NativeAOT)]
-		public void BuildApplicationWithAssetPackOverrides (bool isRelease, AndroidRuntime runtime)
+		public void BuildApplicationWithAssetPackOverrides ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
 				ProjectName = "MyApp",
@@ -161,13 +160,11 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		[TestCase (false, AndroidRuntime.MonoVM)]
-		[TestCase (true, AndroidRuntime.MonoVM)]
-		[TestCase (false, AndroidRuntime.CoreCLR)]
-		[TestCase (true, AndroidRuntime.CoreCLR)]
-		[TestCase (true, AndroidRuntime.NativeAOT)]
-		public void BuildApplicationWithAssetPack (bool isRelease, AndroidRuntime runtime)
+		public void BuildApplicationWithAssetPack ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var asset3 = new AndroidItem.AndroidAsset ("Assets\\asset3.txt") {
 				TextContent = () => "Asset3",
