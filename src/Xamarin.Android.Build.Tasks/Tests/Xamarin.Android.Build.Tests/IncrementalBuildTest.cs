@@ -685,10 +685,22 @@ namespace Lib2
 		}
 
 		[Test]
-		public void ProduceReferenceAssembly ()
+		public void ProduceReferenceAssembly ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			if (runtime == AndroidRuntime.NativeAOT) {
+				// Fails on NativeAOT with:
+				// Microsoft.NET.Sdk.FrameworkReferenceResolution.targets(120,5): error NETSDK1207: Ahead-of-time compilation is not supported for the target framework.
+				Assert.Ignore ("NativeAOT doesn't support producing reference assemblies.");
+			}
+
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				ProjectName = "MyApp",
 				//NOTE: so _BuildApkEmbed runs in commercial tests
 				EmbedAssembliesIntoApk = true,
@@ -699,8 +711,11 @@ namespace Lib2
 				}
 			};
 
+			app.SetRuntime (runtime);
+
 			int count = 0;
 			var lib = new DotNetStandard {
+				IsRelease = isRelease,
 				ProjectName = "MyLibrary",
 				Sdk = "Microsoft.NET.Sdk",
 				TargetFramework = "netstandard2.0",
@@ -710,6 +725,7 @@ namespace Lib2
 					},
 				}
 			};
+			lib.SetRuntime (runtime);
 			lib.SetProperty ("ProduceReferenceAssembly", "True");
 			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
 
