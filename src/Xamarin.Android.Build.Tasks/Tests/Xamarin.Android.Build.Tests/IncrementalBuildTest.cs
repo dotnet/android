@@ -753,10 +753,16 @@ namespace Lib2
 		}
 
 		[Test]
-		public void TransitiveDependencyProduceReferenceAssembly ()
+		public void TransitiveDependencyProduceReferenceAssembly ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var path = Path.Combine (Root, "temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				ProjectName = "App",
 				Sources = {
 					new BuildItem.Source ("Class1.cs") {
@@ -764,7 +770,9 @@ namespace Lib2
 					},
 				}
 			};
+			app.SetRuntime (runtime);
 			var lib1 = new DotNetStandard {
+				IsRelease = isRelease,
 				ProjectName = "Library1",
 				Sdk = "Microsoft.NET.Sdk",
 				TargetFramework = "netstandard2.0",
@@ -777,8 +785,12 @@ namespace Lib2
 					}
 				}
 			};
+			if (runtime != AndroidRuntime.NativeAOT) { // NativeAOT cannot build reference assemblies
+				lib1.SetRuntime (runtime);
+			}
 			lib1.SetProperty ("ProduceReferenceAssembly", "True");
 			var lib2 = new DotNetStandard {
+				IsRelease = isRelease,
 				ProjectName = "Library2",
 				Sdk = "Microsoft.NET.Sdk",
 				TargetFramework = "netstandard2.0",
@@ -788,6 +800,9 @@ namespace Lib2
 					},
 				}
 			};
+			if (runtime != AndroidRuntime.NativeAOT) { // NativeAOT cannot build reference assemblies
+				lib2.SetRuntime (runtime);
+			}
 			lib2.SetProperty ("ProduceReferenceAssembly", "True");
 			lib1.OtherBuildItems.Add (new BuildItem.ProjectReference ($"..\\{lib2.ProjectName}\\{lib2.ProjectName}.csproj", lib2.ProjectName, lib2.ProjectGuid));
 			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib1.ProjectName}\\{lib1.ProjectName}.csproj", lib1.ProjectName, lib1.ProjectGuid));
@@ -808,11 +823,13 @@ namespace Lib2
 				appBuilder.Target = "SignAndroidPackage";
 				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), "app SignAndroidPackage build should have succeeded.");
 
-				var lib2Output = Path.Combine (path, lib2.ProjectName, "bin", "Debug", "netstandard2.0", $"{lib2.ProjectName}.dll");
+				var lib2Output = Path.Combine (path, lib2.ProjectName, "bin", isRelease ? "Release" : "Debug", "netstandard2.0", $"{lib2.ProjectName}.dll");
 
-				foreach (string abi in app.GetRuntimeIdentifiersAsAbis ()) {
-					var lib2InAppOutput = Path.Combine (path, app.ProjectName, app.IntermediateOutputPath, "android", "assets", abi, $"{lib2.ProjectName}.dll");
-					FileAssert.AreEqual (lib2Output, lib2InAppOutput, $"new Library2 should have been copied to app output directory for abi '{abi}'");
+				if (runtime != AndroidRuntime.NativeAOT) { // NativeAOT doesn't produce per-abi assets
+					foreach (string abi in app.GetRuntimeIdentifiersAsAbis ()) {
+						var lib2InAppOutput = Path.Combine (path, app.ProjectName, app.IntermediateOutputPath, "android", "assets", abi, $"{lib2.ProjectName}.dll");
+						FileAssert.AreEqual (lib2Output, lib2InAppOutput, $"new Library2 should have been copied to app output directory for abi '{abi}'");
+					}
 				}
 			}
 		}
