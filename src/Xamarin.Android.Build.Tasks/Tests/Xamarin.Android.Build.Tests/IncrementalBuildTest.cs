@@ -163,17 +163,22 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckResourceDirectoryDoesNotGetHosed ()
+		public void CheckResourceDirectoryDoesNotGetHosed ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			// do a release build
 			// change one of the properties (say AotAssemblies)
 			// do another build. it should NOT hose the resource directory.
-			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinAndroidApplicationProject () {
 				ProjectName = "App1",
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
-			using (var b = CreateApkBuilder (path, false, false)) {
+			proj.SetRuntime (runtime);
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue(b.Build (proj), "First should have succeeded");
 				Assert.IsFalse (
 					b.Output.IsTargetSkipped ("_GenerateAndroidResourceDir"),
