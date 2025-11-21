@@ -657,11 +657,18 @@ namespace Lib2
 		}
 
 		[Test]
-		public void ManifestMergerIncremental ()
+		public void ManifestMergerIncremental ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				ManifestMerger = "manifestmerger.jar"
 			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 				b.Output.AssertTargetIsNotSkipped ("_ManifestMerger");
