@@ -268,24 +268,33 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void AllProjectsHaveSameOutputDirectory()
+		public void AllProjectsHaveSameOutputDirectory ([Values] AndroidRuntime runtime)
 		{
-			var testPath = Path.Combine ("temp", "AllProjectsHaveSameOutputDirectory");
-			var sb = new SolutionBuilder("AllProjectsHaveSameOutputDirectory.sln") {
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var testPath = Path.Combine ("temp", TestName);
+			var sb = new SolutionBuilder ("AllProjectsHaveSameOutputDirectory.sln") {
 				SolutionPath = Path.Combine (Root, testPath),
 			};
 
 			var app1 = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
 				ProjectName = "App1",
 				PackageName = "com.companyname.App1",
-				OutputPath = Path.Combine("..","bin","Debug"),
+				OutputPath = Path.Combine ("..","bin","Debug"),
 			};
+			app1.SetRuntime (runtime);
 			sb.Projects.Add (app1);
 			var app2 = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
 				ProjectName = "App2",
 				PackageName = "com.companyname.App2",
-				OutputPath = Path.Combine("..","bin","Debug"),
+				OutputPath = Path.Combine ("..","bin","Debug"),
 			};
+			app2.SetRuntime (runtime);
 			sb.Projects.Add (app2);
 			Assert.IsTrue (sb.Build (), "Build of solution should have succeeded");
 			Assert.IsTrue (sb.ReBuild (), "ReBuild of solution should have succeeded");
