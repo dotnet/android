@@ -389,17 +389,23 @@ public class TestMe {
 		}
 
 		[Test]
-		public void ResolveNativeLibrariesInManagedReferences ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void ResolveNativeLibrariesInManagedReferences ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			string abi = runtime switch {
 				AndroidRuntime.MonoVM => "armeabi-v7a",
 				AndroidRuntime.CoreCLR => "arm64-v8a",
+				AndroidRuntime.NativeAOT => "arm64-v8a",
 				_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 			};
 
 			var lib = new XamarinAndroidLibraryProject () {
 				ProjectName = "Lib",
-				IsRelease = true,
+				IsRelease = isRelease,
 				ProjectGuid = Guid.NewGuid ().ToString (),
 				OtherBuildItems = {
 					new BuildItem (AndroidBuildActions.EmbeddedNativeLibrary, $"libs/{abi}/libfoo.so") {
@@ -429,7 +435,7 @@ namespace Lib
 			var lib2 = new XamarinAndroidLibraryProject () {
 				ProjectName = "Lib2",
 				ProjectGuid = Guid.NewGuid ().ToString (),
-				IsRelease = true,
+				IsRelease = isRelease,
 				OtherBuildItems = {
 					new BuildItem (AndroidBuildActions.EmbeddedNativeLibrary, $"libs/{abi}/libfoo2.so") {
 						TextContent = () => string.Empty,
@@ -457,7 +463,7 @@ namespace Lib2
 			};
 			lib2.SetRuntime (runtime);
 			var path = Path.Combine (Root, "temp", TestName);
-			using (var libbuilder = CreateDllBuilder (Path.Combine(path, "Lib"))) {
+			using (var libbuilder = CreateDllBuilder (Path.Combine (path, "Lib"))) {
 
 				Assert.IsTrue (libbuilder.Build (lib), "lib 1st. build failed");
 
@@ -466,7 +472,7 @@ namespace Lib2
 					Assert.IsTrue (libbuilder2.Build (lib2), "lib 1st. build failed");
 
 					var app = new XamarinAndroidApplicationProject () { ProjectName = "App",
-						IsRelease = true,
+						IsRelease = isRelease,
 						OtherBuildItems = {
 							new BuildItem.ProjectReference (@"..\Lib2\Lib2.csproj", "Lib2", lib2.ProjectGuid),
 						}
@@ -486,7 +492,7 @@ namespace Lib2
 
 						// TODO: appending of the RID to the output path should probably be fixed in the project class instead of here (and elsewhere)
 						string apkFile = Path.Combine (Root, builder.ProjectDirectory, app.OutputPath);
-						if (runtime == AndroidRuntime.CoreCLR) {
+						if (runtime == AndroidRuntime.CoreCLR || runtime == AndroidRuntime.NativeAOT) {
 							apkFile = Path.Combine (apkFile, MonoAndroidHelper.AbiToRid (abi));
 						}
 						apkFile = Path.Combine (apkFile, app.PackageName + "-Signed.apk");
