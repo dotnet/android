@@ -240,9 +240,15 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void LibraryIncrementalBuild ()
+		public void LibraryIncrementalBuild ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var lib = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
 				ProjectName = "Lib",
 				Sources = {
 					new BuildItem.Source ("Class1.cs") {
@@ -250,6 +256,7 @@ namespace Xamarin.Android.Build.Tests
 					}
 				},
 			};
+			lib.SetRuntime (runtime);
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (lib), "first build should have succeeded.");
 				var aarPath = Path.Combine (Root, b.ProjectDirectory, lib.OutputPath, $"{lib.ProjectName}.aar");
