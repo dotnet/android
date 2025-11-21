@@ -302,9 +302,14 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildSolutionWithMultipleProjectsInParallel ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void BuildSolutionWithMultipleProjectsInParallel ([Values] AndroidRuntime runtime)
 		{
-			var testPath = Path.Combine ("temp", $"BuildSolutionWithMultipleProjects{runtime}");
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var testPath = Path.Combine ("temp", TestName);
 			var sb = new SolutionBuilder("BuildSolutionWithMultipleProjects.sln") {
 				SolutionPath = Path.Combine (Root, testPath),
 				MaxCpuCount = 4,
@@ -313,6 +318,7 @@ namespace Xamarin.Android.Build.Tests
 			bool aotAssemblies = runtime switch {
 				AndroidRuntime.MonoVM  => true,
 				AndroidRuntime.CoreCLR => false,
+				AndroidRuntime.NativeAOT => false,
 				_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 			};
 
@@ -321,7 +327,7 @@ namespace Xamarin.Android.Build.Tests
 					ProjectName = $"App{i}",
 					PackageName = $"com.companyname.App{i}",
 					AotAssemblies = aotAssemblies,
-					IsRelease = true,
+					IsRelease = isRelease,
 					EnableMarshalMethods = true,
 				};
 
