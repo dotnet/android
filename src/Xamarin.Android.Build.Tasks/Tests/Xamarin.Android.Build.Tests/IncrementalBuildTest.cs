@@ -529,7 +529,7 @@ namespace Lib2
 			}
 
 			var targets = new List<(string target, bool ignoreOnNAOT)> {
-				("_GeneratePackageManagerJava", true),
+				("_GeneratePackageManagerJava", true), // TODO: NativeAOT doesn't skip this target on 3rd attempt, check if that's ok?
 				("_ResolveLibraryProjectImports", false),
 				("_CleanIntermediateIfNeeded", false),
 			};
@@ -599,13 +599,19 @@ namespace Lib2
 		}
 
 		[Test]
-		public void LibraryProjectTargetsDoNotBreak ()
+		public void LibraryProjectTargetsDoNotBreak ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var targets = new [] {
 				"_CreateAar",
 			};
 
 			var proj = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
 				Sources = {
 					new BuildItem.Source ("Class1.cs") {
 						TextContent= () => "public class Class1 { }"
@@ -625,6 +631,7 @@ namespace Lib2
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 				foreach (var target in targets) {
