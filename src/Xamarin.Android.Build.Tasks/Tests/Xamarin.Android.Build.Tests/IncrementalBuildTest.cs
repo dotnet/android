@@ -870,11 +870,18 @@ namespace Lib2
 		}
 
 		[Test]
-		public void CSProjUserFileChanges ()
+		public void CSProjUserFileChanges ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			AssertCommercialBuild ();
 
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			var selectedDevice = "foo";
 			var csproj_user_file = $"{proj.ProjectName}.csproj.user";
 			proj.Sources.Add (new BuildItem.NoActionResource (csproj_user_file) {
