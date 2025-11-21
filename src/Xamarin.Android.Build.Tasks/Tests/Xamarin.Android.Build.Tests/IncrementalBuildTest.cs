@@ -49,14 +49,26 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		// TODO: fix for CoreCLR
-		// Currently fails with
+		// TODO: fix for CoreCLR, currently fails with
 		//
 		//   The target _Sign should have *not* been skipped.
+		//
+		// TODO: fix for NativeAOT, currently fails with
+		//   The target _RunILLink should have been skipped.
+		//
 		[Test]
-		public void BasicApplicationRepetitiveReleaseBuild ()
+		public void BasicApplicationRepetitiveReleaseBuild ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			if (runtime != AndroidRuntime.MonoVM) { // temporarily
+				Assert.Ignore ("Runtimes other than MonoVM are currently broken here.");
+			}
+
+			var proj = new XamarinAndroidApplicationProject () { IsRelease = isRelease };
 			using (var b = CreateApkBuilder ()) {
 				var foo = new BuildItem.Source ("Foo.cs") {
 					TextContent = () => @"using System;
@@ -65,8 +77,8 @@ namespace Xamarin.Android.Build.Tests
 		}
 	}"
 				};
-				// Mono-only test, for now
-				proj.SetRuntime (AndroidRuntime.MonoVM);
+
+				proj.SetRuntime (runtime);
 				proj.Sources.Add (foo);
 				Assert.IsTrue (b.Build (proj), "first build failed");
 				var firstBuildTime = b.LastBuildTime;
