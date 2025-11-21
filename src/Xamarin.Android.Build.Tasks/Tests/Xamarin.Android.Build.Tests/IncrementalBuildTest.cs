@@ -341,10 +341,15 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void JavacTaskDoesNotRunOnSecondBuild ()
+		public void JavacTaskDoesNotRunOnSecondBuild ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var app = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				ProjectName = "App",
 				OtherBuildItems = {
 					new AndroidItem.AndroidJavaSource ("TestMe.java") {
@@ -359,8 +364,9 @@ public class TestMe {
 					}
 				},
 			};
+			app.SetRuntime (runtime);
 
-			using (var b = CreateApkBuilder (Path.Combine ("temp", "JavacTaskDoesNotRunOnSecondBuild"), false, false)) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (app), "First build should have succeeded");
 				Assert.IsFalse (
 					b.Output.IsTargetSkipped ("_CompileJava"),
