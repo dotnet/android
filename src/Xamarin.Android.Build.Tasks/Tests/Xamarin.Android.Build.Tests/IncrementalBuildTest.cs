@@ -98,13 +98,25 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckNothingIsDeletedByIncrementalClean ([Values (true, false)] bool enableMultiDex)
+		public void CheckNothingIsDeletedByIncrementalClean ([Values] bool enableMultiDex, [Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// TODO: NativeAOT fails the App1.csproj.FileListAbsolute.txt contents check. It adds some entries, needs verification
+			//       if it's a correct behavior or not.
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT fails the App1.csproj.FileListAbsolute.txt contents check");
+			}
+
 			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinFormsAndroidApplicationProject () {
 				ProjectName = "App1",
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			if (enableMultiDex)
 				proj.SetProperty ("AndroidEnableMultiDex", "True");
 			using (var b = CreateApkBuilder (path)) {
@@ -134,9 +146,9 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Second should have succeeded");
 				b.Output.AssertTargetIsNotSkipped ("_CleanMonoAndroidIntermediateDir");
 				var stampFiles = Path.Combine (intermediate, "stamp", "_ResolveLibraryProjectImports.stamp");
-				FileAssert.Exists (stampFiles, $"{stampFiles} should exists!");
+				FileAssert.Exists (stampFiles, $"{stampFiles} should exist!");
 				var libraryProjectImports = Path.Combine (intermediate, "libraryprojectimports.cache");
-				FileAssert.Exists (libraryProjectImports, $"{libraryProjectImports} should exists!");
+				FileAssert.Exists (libraryProjectImports, $"{libraryProjectImports} should exist!");
 
 				//No changes
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Third should have succeeded");
