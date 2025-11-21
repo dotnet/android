@@ -193,16 +193,21 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void IncrementalCleanDuringClean ()
+		public void IncrementalCleanDuringClean ([Values] AndroidRuntime runtime)
 		{
-			var path = Path.Combine ("temp", TestName);
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject () {
 				ProjectName = "App1",
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			proj.SetProperty ("AndroidUseDesignerAssembly", "False");
-			using (var b = CreateApkBuilder (path)) {
+			using (var b = CreateApkBuilder ()) {
 				b.Target = "Compile";
 				Assert.IsTrue(b.Build (proj), "DesignTime Build should have succeeded");
 				var designTimeDesigner = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "designtime", "Resource.designer.cs");
