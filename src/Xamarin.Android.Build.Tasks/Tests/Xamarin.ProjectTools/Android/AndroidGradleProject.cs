@@ -5,7 +5,7 @@ using System.IO;
 
 namespace Xamarin.ProjectTools
 {
-	public class AndroidGradleProject 
+	public class AndroidGradleProject
 	{
 		public string ProjectDirectory { get; private set; } = string.Empty;
 

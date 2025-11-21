@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
 using System.Text;
+using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -12,20 +13,25 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public class AidlTest : BaseTest
 	{
-		void TestAidl (string testName, string aidl)
+		void TestAidl (string testName, string aidl, AndroidRuntime runtime)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
+			proj.SetRuntime (runtime);
 			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidInterfaceDescription, "Test.aidl") { TextContent = () => aidl });
-			using (var p = CreateApkBuilder (testName)) {
+			using (var p = CreateApkBuilder (Path.Combine ("temp", testName))) {
 				Assert.IsTrue (p.Build (proj), "Build should have succeeded.");
 			}
 		}
 
 		[Test]
-		public void ListAndMap ()
+		public void ListAndMap ([Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+
 			string aidl = @"
 import android.os;
 import android.view;
@@ -36,12 +42,16 @@ interface Test {
 	void map(inout Map m);
 }
 ";
-			TestAidl ($"temp/AidlTest.{nameof (ListAndMap)}", aidl);
+			TestAidl (TestName, aidl, runtime);
 		}
 
 		[Test]
-		public void NamespaceResolution ()
+		public void NamespaceResolution ([Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+
 			string aidl = @"
 import android.os;
 import android.view;
@@ -50,12 +60,16 @@ import android.animation;
 interface Test {
 }
 ";
-			TestAidl ("temp/AidlTest.NamespaceResolution", aidl);
+			TestAidl (TestName, aidl, runtime);
 		}
 
 		[Test]
-		public void PrimitiveTypes ()
+		public void PrimitiveTypes ([Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+
 			string aidl = @"
 package com.xamarin.test;
 interface Test {
@@ -71,18 +85,18 @@ interface Test {
 	double test8 (inout double [] args);
 	String test9 (inout String [] args);
 	// thought that it's missing 'short' ? It's not supported - http://stackoverflow.com/questions/6742167/android-aidl-support-short-type
-	
+
 	void test10 (in byte [] args);
 	void test11 (out byte [] args);
 	void test12 (inout byte [] args);
-	
+
 	int [] test20 ();
 	boolean [] test21 ();
 	byte [] test22 ();
 	String [] test23 ();
 }
 ";
-			TestAidl ("temp/AidlTest.PrimitiveTypes", aidl);
+			TestAidl (TestName, aidl, runtime);
 		}
 	}
 }

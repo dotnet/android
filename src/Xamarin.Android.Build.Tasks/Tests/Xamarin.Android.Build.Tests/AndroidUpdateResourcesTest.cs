@@ -8,6 +8,7 @@ using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Mono.Cecil;
 using NUnit.Framework;
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
@@ -18,17 +19,29 @@ namespace Xamarin.Android.Build.Tests
 	public class AndroidUpdateResourcesTest : BaseTest
 	{
 		[Test]
-		public void CheckMultipleLibraryProjectReferenceAlias ([Values (true, false)] bool withGlobal, [Values (true, false)] bool useDesignerAssembly)
+		public void CheckMultipleLibraryProjectReferenceAlias ([Values] bool withGlobal, [Values] bool useDesignerAssembly, [Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var path = Path.Combine (Root, "temp", TestName);
 			var library1 = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
 				ProjectName = "Library1",
 			};
+			library1.SetRuntime (runtime);
+
 			var library2 = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
 				ProjectName = "Library2",
 				RootNamespace = "Library1"
 			};
+			library2.SetRuntime (runtime);
+
 			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
 				References = {
 					new BuildItem.ProjectReference (Path.Combine("..", library1.ProjectName, Path.GetFileName (library1.ProjectFilePath)), "Library1") {
 						Metadata = { { "Aliases", withGlobal ? "global,Lib1A,Lib1B" : "Lib1A,Lib1B" } },
@@ -38,42 +51,54 @@ namespace Xamarin.Android.Build.Tests
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
+
 			library1.SetProperty ("AndroidUseDesignerAssembly", "false");
 			library2.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
 			proj.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
-			using (var builder1 = CreateDllBuilder (Path.Combine (path, library1.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
-				builder1.ThrowOnBuildFailure = false;
-				Assert.IsTrue (builder1.Build (library1), "Library should have built.");
-				using (var builder2 = CreateDllBuilder (Path.Combine (path, library2.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
-					builder2.ThrowOnBuildFailure = false;
-					Assert.IsTrue (builder2.Build (library2), "Library should have built.");
-					using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
-						b.ThrowOnBuildFailure = false;
-						Assert.IsTrue (b.Build (proj), "Project should have built.");
-						if (!useDesignerAssembly) {
-							string resource_designer_cs = GetResourceDesignerPath (b, proj);
-							string [] text = GetResourceDesignerLines (proj, resource_designer_cs);
-							Assert.IsTrue (text.Count (x => x.Contains ("Library1.Resource.String.library_name")) == 2, "library_name resource should be present exactly once for each library");
-							Assert.IsTrue (text.Count (x => x == "extern alias Lib1A;" || x == "extern alias Lib1B;") <= 1, "No more than one extern alias should be present for each library.");
-						}
-					}
-				}
+			using var builder1 = CreateDllBuilder (Path.Combine (path, library1.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false);
+			builder1.ThrowOnBuildFailure = false;
+			Assert.IsTrue (builder1.Build (library1), "Library should have built.");
+
+			using var builder2 = CreateDllBuilder (Path.Combine (path, library2.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false);
+			builder2.ThrowOnBuildFailure = false;
+			Assert.IsTrue (builder2.Build (library2), "Library should have built.");
+
+			using var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false);
+			b.ThrowOnBuildFailure = false;
+			Assert.IsTrue (b.Build (proj), "Project should have built.");
+			if (!useDesignerAssembly) {
+				string resource_designer_cs = GetResourceDesignerPath (b, proj);
+				string [] text = GetResourceDesignerLines (proj, resource_designer_cs);
+				Assert.IsTrue (text.Count (x => x.Contains ("Library1.Resource.String.library_name")) == 2, "library_name resource should be present exactly once for each library");
+				Assert.IsTrue (text.Count (x => x == "extern alias Lib1A;" || x == "extern alias Lib1B;") <= 1, "No more than one extern alias should be present for each library.");
 			}
 		}
 
 		[Test]
-		public void BuildAppWithSystemNamespace ()
+		public void BuildAppWithSystemNamespace ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var path = Path.Combine (Root, "temp", TestName);
 			var library = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
 				ProjectName = "Library1.System",
 			};
+			library.SetRuntime (runtime);
+
 			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
 				References = {
 					new BuildItem.ProjectReference (Path.Combine("..", library.ProjectName, Path.GetFileName (library.ProjectFilePath)), "Library1.System") {
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
+
 			using (var builder = CreateDllBuilder (Path.Combine (path, library.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsTrue (builder.Build (library), "Library should have built.");
@@ -85,15 +110,20 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DesignTimeBuild ([Values(false, true)] bool isRelease, [Values (false, true)] bool useManagedParser)
+		public void DesignTimeBuild ([Values] bool isRelease, [Values] bool useManagedParser, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var regEx = new Regex (@"(?<type>([a-zA-Z_0-9])+)\slibrary_name=(?<value>([0-9A-Za-z])+);", RegexOptions.Compiled | RegexOptions.Multiline );
 
-			var path = Path.Combine (Root, "temp", $"DesignTimeBuild_{isRelease}_{useManagedParser}");
+			var path = Path.Combine (Root, "temp", TestName);
 			var lib = new XamarinAndroidLibraryProject () {
 				ProjectName = "Lib1",
 				IsRelease = isRelease,
 			};
+			lib.SetRuntime (runtime);
 			lib.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
 			lib.SetProperty ("AndroidUseDesignerAssembly", "false");
 			var proj = new XamarinAndroidApplicationProject () {
@@ -102,6 +132,8 @@ namespace Xamarin.Android.Build.Tests
 					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", lib.ProjectName, lib.ProjectGuid),
 				},
 			};
+			proj.SetRuntime (runtime);
+
 			var intermediateOutputPath = Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath);
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
 			proj.SetProperty ("AndroidUseDesignerAssembly", "false");
@@ -138,14 +170,21 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckEmbeddedAndroidXResources ()
+		public void CheckEmbeddedAndroidXResources ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				PackageReferences = {
 					KnownPackages.AndroidXAppCompat,
 				},
 			};
+			proj.SetRuntime (runtime);
+
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "First build should have succeeded.");
 				var Rdrawable = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes", "androidx", "appcompat", "R$drawable.class"));
@@ -154,14 +193,23 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void MoveResource ()
+		public void MoveResource ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+
 			BuildItem image = null;
 			var image_data = XamarinAndroidCommonProject.GetResourceContents ("Xamarin.ProjectTools.Resources.Base.Icon.png");
 			image = new AndroidItem.AndroidResource ("Resources\\drawable\\Image.png") { BinaryContent = () => image_data };
 			proj.AndroidResources.Add (image);
-			using (var b = CreateApkBuilder ("temp/MoveResource")) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "First build should have succeeded.");
 				var oldpath = image.Include ().Replace ('\\', Path.DirectorySeparatorChar);
 				image.Include = () => "Resources/drawable/NewImage.png";
@@ -173,11 +221,20 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ReportAaptErrorsInOriginalFileName ()
+		public void ReportAaptErrorsInOriginalFileName ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+
 			proj.LayoutMain = @"<root/>\n" + proj.LayoutMain;
-			using (var b = CreateApkBuilder ("temp/ErroneousResource", false, false)) {
+			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				// The AndroidGenerateLayoutBindings=false property is necessary because otherwise build
 				// will fail in code-behind generator instead of in aapt
@@ -188,11 +245,20 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ReportAaptWarningsForBlankLevel ()
+		public void ReportAaptWarningsForBlankLevel ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			//This test should get the warning `Invalid file name: must contain only [a-z0-9_.]`
 			//    However, <Aapt /> still fails due to aapt failing, Resource.designer.cs is not generated
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\Image (1).png") {
 				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi
 			});
@@ -205,9 +271,18 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void RepetiviteBuildUpdateSingleResource ()
+		public void RepetiviteBuildUpdateSingleResource ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject  {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+
 			using (var b = CreateApkBuilder ()) {
 				BuildItem image1, image2;
 				var image_data = XamarinAndroidCommonProject.GetResourceContents ("Xamarin.ProjectTools.Resources.Base.Icon.png");
@@ -223,7 +298,11 @@ namespace Xamarin.Android.Build.Tests
 				b.Output.AssertTargetIsSkipped ("_UpdateAndroidResgen");
 				b.Output.AssertTargetIsSkipped ("_GenerateAndroidResourceDir");
 				b.Output.AssertTargetIsSkipped ("_CompileJava");
-				b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesNoShrink);
+
+				if (runtime != AndroidRuntime.NativeAOT) {
+					b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesNoShrink);
+				}
+
 				b.Output.AssertTargetIsSkipped ("_CompileResources");
 				image1.Timestamp = DateTimeOffset.UtcNow;
 				var layout = proj.AndroidResources.First (x => x.Include() == "Resources\\layout\\Main.axml");
@@ -232,7 +311,11 @@ namespace Xamarin.Android.Build.Tests
 				b.Output.AssertTargetIsNotSkipped ("_UpdateAndroidResgen",           occurrence: 2);
 				b.Output.AssertTargetIsNotSkipped ("_GenerateAndroidResourceDir",    occurrence: 2);
 				b.Output.AssertTargetIsSkipped ("_CompileJava",                      occurrence: 2);
-				b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesNoShrink, occurrence: 2);
+
+				if (runtime != AndroidRuntime.NativeAOT) {
+					b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesNoShrink, occurrence: 2);
+				}
+
 				b.Output.AssertTargetIsNotSkipped ("_CreateBaseApk",                 occurrence: 2);
 				b.Output.AssertTargetIsPartiallyBuilt ("_CompileResources");
 			}
@@ -241,16 +324,30 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		[Category ("XamarinBuildDownload")]
 		[NonParallelizable]
-		public void Check9PatchFilesAreProcessed ()
+		public void Check9PatchFilesAreProcessed ([Values] AndroidRuntime runtime)
 		{
-			var projectPath = Path.Combine ("temp", "Check9PatchFilesAreProcessed");
-			var libproj = new XamarinAndroidLibraryProject () { ProjectName = "Library1"};
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var projectPath = Path.Combine ("temp", TestName);
+			var libproj = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
+				ProjectName = "Library1"
+			};
+			libproj.SetRuntime (runtime);
+
 			var image_data = XamarinAndroidCommonProject.GetResourceContents ("Xamarin.ProjectTools.Resources.Base.Image.9.png");
 			var image2 = new AndroidItem.AndroidResource ("Resources\\drawable\\Image2.9.png") { BinaryContent = () => image_data };
 			libproj.AndroidResources.Add (image2);
 			using (var libb = CreateDllBuilder (Path.Combine (projectPath, "Library1"))) {
 				libb.Build (libproj);
-				var proj = new XamarinFormsMapsApplicationProject ();
+				var proj = new XamarinFormsMapsApplicationProject {
+					IsRelease = isRelease,
+				};
+				proj.SetRuntime (runtime);
+
 				var image1 = new AndroidItem.AndroidResource ("Resources\\drawable\\Image1.9.png") { BinaryContent = () => image_data };
 				proj.AndroidResources.Add (image1);
 				proj.References.Add (new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"));
@@ -281,9 +378,19 @@ namespace Xamarin.Android.Build.Tests
 		/// <summary>
 		/// Based on https://bugzilla.xamarin.com/show_bug.cgi?id=29263
 		/// </summary>
-		public void CheckXmlResourcesFilesAreProcessed ()
+		public void CheckXmlResourcesFilesAreProcessed ([Values] AndroidRuntime runtime)
 		{
-			var projectPath = "temp/CheckXmlResourcesFilesAreProcessed";
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// TODO: NativeAOT fails with: 'classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView'
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT fails here atm");
+			}
+
+			var projectPath = Path.Combine ("temp", TestName);
 
 			var layout =  @"<?xml version=""1.0"" encoding=""utf-8"" ?>
 <LinearLayout xmlns:android=""http://schemas.android.com/apk/res/android""
@@ -302,8 +409,10 @@ namespace Xamarin.Android.Build.Tests
 		android:text = ""namespace_proper"" />
 </LinearLayout>";
 			var lib = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
 				ProjectName = "Classlibrary1",
 			};
+			lib.SetRuntime (runtime);
 			lib.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\custom_text_lib.xml") {
 				TextContent = () => layout,
 			});
@@ -323,11 +432,13 @@ namespace ClassLibrary1
 			});
 
 			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
 				OtherBuildItems = {
 					new BuildItem.ProjectReference (@"..\Classlibrary1\Classlibrary1.csproj", "Classlibrary1", lib.ProjectGuid) {
 					},
 				}
 			};
+			proj.SetRuntime (runtime);
 
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\custom_text_app.xml") {
 				TextContent = () => layout,
@@ -478,24 +589,44 @@ namespace UnnamedProject
 			}
 		}
 
-		static object[] ReleaseLanguage = new object[] {
-			new object[] { false, XamarinAndroidProjectLanguage.CSharp },
-			new object[] { true, XamarinAndroidProjectLanguage.CSharp },
-			new object[] { false, XamarinAndroidProjectLanguage.FSharp },
-			new object[] { true, XamarinAndroidProjectLanguage.FSharp },
-		};
+		static IEnumerable<object[]> Get_ReleaseLanguageData ()
+		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData (isRelease: false, language: XamarinAndroidProjectLanguage.CSharp, runtime: runtime);
+				AddTestData (isRelease: true,  language: XamarinAndroidProjectLanguage.CSharp, runtime: runtime);
+				AddTestData (isRelease: false, language: XamarinAndroidProjectLanguage.FSharp, runtime: runtime);
+				AddTestData (isRelease: true,  language: XamarinAndroidProjectLanguage.FSharp, runtime: runtime);
+			}
+
+			return ret;
+
+			void AddTestData (bool isRelease, ProjectLanguage language, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					isRelease,
+					language,
+					runtime,
+				});
+			}
+		}
 
 		[Test]
 		[Parallelizable (ParallelScope.Self)]
-		[TestCaseSource (nameof (ReleaseLanguage))]
-		public void CheckResourceDesignerIsCreated (bool isRelease, ProjectLanguage language)
+		[TestCaseSource (nameof (Get_ReleaseLanguageData))]
+		public void CheckResourceDesignerIsCreated (bool isRelease, ProjectLanguage language, AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			bool isFSharp = language == XamarinAndroidProjectLanguage.FSharp;
 
 			var proj = new XamarinAndroidApplicationProject () {
 				Language = language,
 				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -509,14 +640,18 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		[TestCaseSource(nameof (ReleaseLanguage))]
-		public void CheckResourceDesignerIsUpdatedWhenReadOnly (bool isRelease, ProjectLanguage language)
+		[TestCaseSource(nameof (Get_ReleaseLanguageData))]
+		public void CheckResourceDesignerIsUpdatedWhenReadOnly (bool isRelease, ProjectLanguage language, AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			bool isFSharp = language == XamarinAndroidProjectLanguage.FSharp;
 			var proj = new XamarinAndroidApplicationProject () {
 				Language = language,
 				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var designerPath = GetResourceDesignerPath (b, proj);
@@ -549,11 +684,15 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void CheckOldResourceDesignerIsNotUsed ([Values (true, false)] bool isRelease)
+		public void CheckOldResourceDesignerIsNotUsed ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "False");
 			using (var b = CreateApkBuilder ()) {
@@ -575,11 +714,15 @@ namespace UnnamedProject
 
 		// ref https://bugzilla.xamarin.com/show_bug.cgi?id=30089
 		[Test]
-		public void CheckOldResourceDesignerWithWrongCasingIsRemoved ([Values (true, false)] bool isRelease)
+		public void CheckOldResourceDesignerWithWrongCasingIsRemoved ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 			proj.SetProperty ("AndroidResgenFile", "Resources\\Resource.designer" + proj.Language.DefaultDesignerExtension);
 			using (var b = CreateApkBuilder ()) {
@@ -601,9 +744,14 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void GenerateResourceDesigner_false([Values (false, true)] bool useDesignerAssembly)
+		public void GenerateResourceDesigner_false ([Values] bool useDesignerAssembly, [Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				EnableDefaultItems = true,
 				Sources = {
 					new AndroidItem.AndroidResource (() => "Resources\\drawable\\foo.png") {
@@ -611,6 +759,7 @@ namespace UnnamedProject
 					},
 				}
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty (KnownProperties.OutputType, "Library");
 
 			// Turn off Resource.designer.cs and remove usage of it
@@ -645,8 +794,11 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void CheckThatXA1034IsRaisedForInvalidConfiguration ([Values (true, false)] bool isRelease)
+		public void CheckThatXA1034IsRaisedForInvalidConfiguration ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			string path = Path.Combine (Root, "temp", TestName);
 			var foo = new BuildItem.Source ("Foo.cs") {
 				TextContent = () => @"using System;
@@ -663,6 +815,7 @@ namespace Lib1 {
 				ProjectName = "Lib1",
 				Sources = { foo },
 			};
+			library.SetRuntime (runtime);
 			library.SetProperty ("AndroidUseDesignerAssembly", "True");
 
 			var proj = new XamarinAndroidApplicationProject () {
@@ -672,6 +825,7 @@ namespace Lib1 {
 					new BuildItem.ProjectReference ($"..\\{library.ProjectName}\\{library.ProjectName}.csproj", library.ProjectName, library.ProjectGuid),
 				},
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidUseDesignerAssembly", "False");
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "Console.WriteLine (Lib1.Foo.GetFoo ());");
 			using (var lb = CreateDllBuilder (Path.Combine (path, library.ProjectName))) {
@@ -687,9 +841,17 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckAaptErrorRaisedForMissingResource ()
+		public void CheckAaptErrorRaisedForMissingResource ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+
 			var main = proj.AndroidResources.First (x => x.Include () == "Resources\\layout\\Main.axml");
 			main.TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <LinearLayout xmlns:android=""http://schemas.android.com/apk/res/android""
@@ -704,8 +866,7 @@ namespace Lib1 {
 	android:text=""@string/foo""
 	/>
 </LinearLayout>";
-			var projectPath = string.Format ("temp/CheckAaptErrorRaisedForMissingResource");
-			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
+			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
 				StringAssertEx.Contains ("APT2260: ", b.LastBuildOutput);
@@ -714,9 +875,16 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckAaptErrorRaisedForInvalidDirectoryName ()
+		public void CheckAaptErrorRaisedForInvalidDirectoryName ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource("Resources\\booboo\\stuff.xml") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
@@ -731,9 +899,16 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckAaptErrorRaisedForInvalidFileName ()
+		public void CheckAaptErrorRaisedForInvalidFileName ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\icon-2.png") {
 				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_hdpi,
 			});
@@ -752,9 +927,16 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckAaptErrorNotRaisedForInvalidFileNameWithValidLogicalName ()
+		public void CheckAaptErrorNotRaisedForInvalidFileNameWithValidLogicalName ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\icon-2.png") {
 				Metadata = { { "LogicalName", "Resources\\drawable\\icon2.png" } },
 				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_hdpi,
@@ -775,9 +957,16 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckAaptErrorRaisedForDuplicateResourceinApp ()
+		public void CheckAaptErrorRaisedForDuplicateResourceinApp ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			var stringsXml = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Strings.xml");
 			stringsXml.TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
@@ -797,9 +986,14 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckFilesAreRemoved () {
-
+		public void CheckFilesAreRemoved ([Values] AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
 				AndroidResources = { new AndroidItem.AndroidResource ("Resources\\values\\Theme.xml") {
 					TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
@@ -812,6 +1006,7 @@ namespace Lib1 {
 					}
 				},
 			};
+			proj.SetRuntime (runtime);
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 
@@ -826,8 +1021,12 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckDontUpdateResourceIfNotNeeded ([Values (true, false)] bool useDesignerAssembly)
+		public void CheckDontUpdateResourceIfNotNeeded ([Values] bool useDesignerAssembly, [Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var target = "_CreateAar";
 			var foo = new BuildItem.Source ("Foo.cs") {
@@ -853,7 +1052,7 @@ namespace Lib1 {
 				TextContent = () => @"Test Raw To Delete",
 			};
 			var libProj = new XamarinAndroidLibraryProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				ProjectName = "Lib1",
 				Sources = {
 					foo,
@@ -864,15 +1063,17 @@ namespace Lib1 {
 					rawToDelete,
 				},
 			};
+			libProj.SetRuntime (runtime);
 			libProj.SetProperty ("Deterministic", "true");
 			libProj.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
 			var appProj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				ProjectName = "App1",
 				References = {
 					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", libProj.ProjectName, libProj.ProjectGuid),
 				},
 			};
+			appProj.SetRuntime (runtime);
 			appProj.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, libProj.ProjectName), false, false)) {
 				Assert.IsTrue (libBuilder.Build (libProj), "Library project should have built");
@@ -935,13 +1136,18 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void BuildAppWithManagedResourceParser()
+		public void BuildAppWithManagedResourceParser ([Values] AndroidRuntime runtime)
 		{
-			var path = Path.Combine ("temp", "BuildAppWithManagedResourceParser");
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var path = Path.Combine ("temp", TestName);
 			var appProj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				ProjectName = "App1",
 			};
+			appProj.SetRuntime (runtime);
 			appProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			appProj.SetProperty ("AndroidUseDesignerAssembly", "false");
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, appProj.ProjectName))) {
@@ -976,10 +1182,14 @@ namespace Lib1 {
 
 		[Test]
 		[NonParallelizable]
-		public void BuildAppWithManagedResourceParserAndLibraries ()
+		public void BuildAppWithManagedResourceParserAndLibraries ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			int maxBuildTimeMs = 10000;
-			var path = Path.Combine ("temp", "BuildAppWithMRPAL");
+			var path = Path.Combine ("temp", TestName);
 			var theme = new AndroidItem.AndroidResource ("Resources\\values\\Theme.xml") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
@@ -994,17 +1204,18 @@ namespace Lib1 {
 </resources>",
 			};
 			var libProj = new XamarinAndroidLibraryProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				ProjectName = "Lib1",
 				AndroidResources = {
 					theme,
 					dimen,
 				},
 			};
+			libProj.SetRuntime (runtime);
 			libProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			libProj.SetProperty ("AndroidUseDesignerAssembly", "false");
 			var appProj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				ProjectName = "App1",
 				References = {
 					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", libProj.ProjectName, libProj.ProjectGuid),
@@ -1013,6 +1224,7 @@ namespace Lib1 {
 					KnownPackages.AndroidXAppCompat,
 				},
 			};
+			appProj.SetRuntime (runtime);
 			appProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			appProj.SetProperty ("AndroidUseDesignerAssembly", "false");
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, libProj.ProjectName), false, false)) {
@@ -1077,16 +1289,21 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckMaxResWarningIsEmittedAsAWarning()
+		public void CheckMaxResWarningIsEmittedAsAWarning ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				OtherBuildItems = {
 					new BuildItem.Folder ("Resources\\values-v33\\") {
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values-v33\\Strings.xml") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
@@ -1100,11 +1317,15 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckCodeBehindIsGenerated ()
+		public void CheckCodeBehindIsGenerated ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				LayoutMain = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <LinearLayout xmlns:android = ""http://schemas.android.com/apk/res/android""
 	xmlns:tools=""http://schemas.xamarin.com/android/tools""
@@ -1147,6 +1368,7 @@ namespace UnnamedProject
 	}
 ",
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidGenerateLayoutBindings", "True");
 			using (var builder = CreateApkBuilder (path)) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
@@ -1157,13 +1379,18 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void CheckInvalidXmlInManagedResourceParser ()
+		public void CheckInvalidXmlInManagedResourceParser ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease       = true,
+				IsRelease       = isRelease,
 				LayoutMain      = @"",
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			using (var builder = CreateApkBuilder (path)) {
 				builder.ThrowOnBuildFailure = false;
@@ -1176,9 +1403,16 @@ namespace UnnamedProject
 		//NOTE: This test was failing randomly before fixing a bug in `CopyIfChanged`.
 		//      Let's set it to run 3 times, it still completes in a reasonable time ~1.5 min.
 		[Test, Repeat(3)]
-		public void LightlyModifyLayout ()
+		public void LightlyModifyLayout ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
 
@@ -1193,9 +1427,16 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void CustomViewAddResourceId ()
+		public void CustomViewAddResourceId ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.LayoutMain = proj.LayoutMain.Replace ("</LinearLayout>", "<android.support.design.widget.BottomNavigationView android:id=\"@+id/navigation\" /></LinearLayout>");
 			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
 			using (var b = CreateApkBuilder ()) {
@@ -1224,9 +1465,16 @@ namespace UnnamedProject
 
 		[Test]
 		[Parallelizable (ParallelScope.Self)]
-		public void CheckNoVersionVectors ()
+		public void CheckNoVersionVectors ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinFormsAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinFormsAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
 				b.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -1244,14 +1492,21 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void InvalidFilenames ()
+		public void InvalidFilenames ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			BuildItem CreateItem (string include) =>
 				new AndroidItem.AndroidResource (include) {
 					TextContent = () => "",
 				};
 
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.AndroidResources.Add (CreateItem ("Resources\\raw\\.foo"));
 			proj.AndroidResources.Add (CreateItem ("Resources\\raw\\.git"));
 			proj.AndroidResources.Add (CreateItem ("Resources\\raw\\.svn"));
@@ -1264,8 +1519,13 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void SolutionBuildSeveralProjects ()
+		public void SolutionBuildSeveralProjects ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			const int libraryCount = 10;
 			var path = Path.Combine ("temp", TestName);
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, path);
@@ -1276,20 +1536,25 @@ namespace UnnamedProject
 			}) {
 				var apps = new List<XamarinAndroidApplicationProject> ();
 				var app1 = new XamarinAndroidApplicationProject {
+					IsRelease = isRelease,
 					ProjectName = "App1"
 				};
+				app1.SetRuntime (runtime);
 				apps.Add (app1);
 				sb.Projects.Add (app1);
 
 				var app2 = new XamarinAndroidApplicationProject {
+					IsRelease = isRelease,
 					ProjectName = "App2"
 				};
+				app2.SetRuntime (runtime);
 				apps.Add (app2);
 				sb.Projects.Add (app2);
 
 				for (var i = 0; i < libraryCount; i++) {
 					var index = i;
 					var lib = new XamarinAndroidLibraryProject {
+						IsRelease = isRelease,
 						ProjectName = $"Lib{i}",
 						AndroidResources = {
 							new AndroidItem.AndroidResource ($"Resources\\values\\library_name{index}.xml") {
@@ -1301,6 +1566,7 @@ $@"<?xml version=""1.0"" encoding=""utf-8""?>
 							}
 						}
 					};
+					lib.SetRuntime (runtime);
 					foreach (var app in apps) {
 						app.AddReference (lib);
 					}
