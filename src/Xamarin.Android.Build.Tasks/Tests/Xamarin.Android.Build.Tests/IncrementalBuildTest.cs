@@ -800,7 +800,7 @@ namespace Lib2
 					},
 				}
 			};
-			if (runtime != AndroidRuntime.NativeAOT) { // NativeAOT cannot build reference assemblies
+			if (runtime != AndroidRuntime.NativeAOT) { // NativeAOT cannot build netstandard libraries
 				lib2.SetRuntime (runtime);
 			}
 			lib2.SetProperty ("ProduceReferenceAssembly", "True");
@@ -903,10 +903,16 @@ namespace Lib2
 
 		[Test]
 		[NonParallelizable] // /restore can fail on Mac in parallel
-		public void ConvertCustomView ()
+		public void ConvertCustomView ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				ProjectName = "MyApp",
 				//NOTE: so _BuildApkEmbed runs in commercial tests
 				EmbedAssembliesIntoApk = true,
@@ -931,11 +937,13 @@ namespace Lib2
 					}
 				}
 			};
+			app.SetRuntime (runtime);
 			// Use a custom view
 			app.LayoutMain = app.LayoutMain.Replace ("</LinearLayout>", "<MyApp.CustomTextView android:id=\"@+id/myText\" android:text=\"à请\" /></LinearLayout>");
 
 			int count = 0;
 			var lib = new DotNetStandard {
+				IsRelease = isRelease,
 				ProjectName = "MyLibrary",
 				Sdk = "Microsoft.NET.Sdk",
 				TargetFramework = "netstandard2.0",
@@ -945,6 +953,9 @@ namespace Lib2
 					},
 				}
 			};
+			if (runtime != AndroidRuntime.NativeAOT) { // netstandard doesn't support AOT
+				lib.SetRuntime (runtime);
+			}
 			//NOTE: this test is checking when $(ProduceReferenceAssembly) is False
 			lib.SetProperty ("ProduceReferenceAssembly", "False");
 			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
