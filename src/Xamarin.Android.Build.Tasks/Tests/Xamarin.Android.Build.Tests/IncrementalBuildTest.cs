@@ -835,15 +835,27 @@ namespace Lib2
 		}
 
 		[Test]
-		public void LinkAssembliesNoShrink ()
+		public void LinkAssembliesNoShrink ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinFormsAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinFormsAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 
 				// Touch an assembly to a timestamp older than build.props
 				foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
-					var formsViewGroup = b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", abi, "FormsViewGroup.dll"));
+					string formsViewGroupRelPath = runtime switch {
+						AndroidRuntime.NativeAOT => Path.Combine (MonoAndroidHelper.AbiToRid (abi), "linked"),
+						_ => Path.Combine ("android", "assets", abi)
+					};
+					var formsViewGroup = b.Output.GetIntermediaryPath (Path.Combine (formsViewGroupRelPath, "FormsViewGroup.dll"));
 					File.SetLastWriteTimeUtc (formsViewGroup, new DateTime (1970, 1, 1));
 				}
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "build should have succeeded.");
@@ -851,7 +863,9 @@ namespace Lib2
 
 				// No changes
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "build should have succeeded.");
-				b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesNoShrink);
+				if (runtime != AndroidRuntime.NativeAOT) { // TODO: review if NativeAOT should skip it
+					b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesNoShrink);
+				}
 			}
 		}
 
