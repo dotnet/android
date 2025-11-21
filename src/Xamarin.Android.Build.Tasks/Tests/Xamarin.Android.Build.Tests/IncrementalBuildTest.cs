@@ -521,15 +521,21 @@ namespace Lib2
 		//https://github.com/xamarin/xamarin-android/issues/2247
 		[Test]
 		[NonParallelizable] // Do not run timing sensitive tests in parallel
-		public void AppProjectTargetsDoNotBreak ()
+		public void AppProjectTargetsDoNotBreak ([Values] AndroidRuntime runtime)
 		{
-			var targets = new List<string> {
-				"_GeneratePackageManagerJava",
-				"_ResolveLibraryProjectImports",
-				"_CleanIntermediateIfNeeded",
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var targets = new List<(string target, bool ignoreOnNAOT)> {
+				("_GeneratePackageManagerJava", true),
+				("_ResolveLibraryProjectImports", false),
+				("_CleanIntermediateIfNeeded", false),
 			};
 
 			var proj = new XamarinFormsAndroidApplicationProject {
+				IsRelease = isRelease,
 				OtherBuildItems = {
 					new BuildItem.NoActionResource ("UnnamedProject.dll.config") {
 						TextContent = () => "<?xml version='1.0' ?><configuration/>",
@@ -539,11 +545,12 @@ namespace Lib2
 					}
 				}
 			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 				var firstBuildTime = b.LastBuildTime;
 				foreach (var target in targets) {
-					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
+					Assert.IsFalse (b.Output.IsTargetSkipped (target.target), $"`{target}` should *not* be skipped!");
 				}
 
 				var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
@@ -557,7 +564,11 @@ namespace Lib2
 				};
 
 				foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
-					filesToTouch.Add (Path.Combine (intermediate, "android", "assets", abi, $"{proj.ProjectName}.dll"));
+					if (runtime != AndroidRuntime.NativeAOT) {
+						filesToTouch.Add (Path.Combine (intermediate, "android", "assets", abi, $"{proj.ProjectName}.dll"));
+					} else {
+						filesToTouch.Add (Path.Combine (intermediate, MonoAndroidHelper.AbiToRid (abi), "linked", $"{proj.ProjectName}.dll"));
+					}
 				}
 
 				foreach (var file in filesToTouch) {
@@ -569,14 +580,18 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");
 				var secondBuildTime = b.LastBuildTime;
 				foreach (var target in targets) {
-					b.Output.AssertTargetIsNotSkipped (target);
+					b.Output.AssertTargetIsNotSkipped (target.target);
 				}
 
 				//NOTE: third build, targets should certainly *not* run! there are no changes
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "third build should succeed");
 				var thirdBuildTime = b.LastBuildTime;
 				foreach (var target in targets) {
-					b.Output.AssertTargetIsSkipped (target);
+					if (runtime == AndroidRuntime.NativeAOT && target.ignoreOnNAOT) {
+						continue;
+					}
+
+					b.Output.AssertTargetIsSkipped (target.target);
 				}
 				Assert.IsTrue (thirdBuildTime < firstBuildTime, $"Third unchanged build: '{thirdBuildTime}' should be faster than clean build: '{firstBuildTime}'.");
 				Assert.IsTrue (thirdBuildTime < secondBuildTime, $"Third unchanged build: '{thirdBuildTime}' should be faster than partially incremental second build: '{secondBuildTime}'.");
