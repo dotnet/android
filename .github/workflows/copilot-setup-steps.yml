@@ -27,15 +27,21 @@ jobs:
         sudo mkdir -p /mnt/android-archives
         sudo mkdir -p /mnt/android-toolchain
         sudo mkdir -p /mnt/bin
-        sudo chown $USER:$USER /mnt/android-archives /mnt/android-toolchain /mnt/bin
+        sudo mkdir -p /mnt/gradle
+        sudo chown $USER:$USER /mnt/android-archives /mnt/android-toolchain /mnt/bin /mnt/gradle
         
         # Remove bin directory if it exists and create symlink to use the secondary disk
         rm -rf ./bin
         ln -s /mnt/bin ./bin
         
+        # Move Gradle cache to secondary disk to prevent "No space left on device" during Gradle operations
+        mkdir -p /mnt/gradle
+        ln -s /mnt/gradle $HOME/.gradle
+        
         echo "Android toolchain directories configured:"
         ls -la /mnt
         ls -lah bin
+        ls -lah $HOME/.gradle
         df -h /mnt
 
     - name: Setup .NET
