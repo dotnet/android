@@ -70,14 +70,14 @@ namespace Xamarin.Android.Tasks
 					throw new InvalidOperationException ($"Internal error: {segment} is not Segment<ulong>");
 				}
 
-				// TODO: what happens if the library is aligned at, say, 64k while 16k is required? Should we erorr out?
-				//       We will need more info about that, have to wait till Google formally announce the requirement.
-				//       At this moment the script https://developer.android.com/guide/practices/page-sizes#test they
-				//       provide suggests it's a strict requirement, so we test for equality below.
-				if (segment64.Alignment == pageSize) {
+				// Android allows alignment higher than the page size, as long as it's a power of two. See:
+				//
+				// https://android.googlesource.com/platform//system/extras/+/3c784e9fd9f4e3f8e363a023939567c41c19d634%5E%21/#F0
+				//
+				if (segment64.Alignment >= pageSize && (segment64.Alignment % 2 == 0)) {
 					continue;
 				}
-				log.LogDebugMessage ($"    expected segment alignment of 0x{pageSize:x}, found 0x{segment64.Alignment:x}");
+				log.LogDebugMessage ($"    expected segment alignment of at least 0x{pageSize:x} and a power of two, found 0x{segment64.Alignment:x}");
 
 				(string packageId, string packageVersion, string originalFile) = GetNugetPackageInfo ();
 				log.LogCodedWarning ("XA0141", Properties.Resources.XA0141, packageId, packageVersion, originalFile, Path.GetFileName (path));
