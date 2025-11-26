@@ -1193,10 +1193,16 @@ namespace Lib2
 		}
 
 		[Test]
-		public void CasingOnJavaLangObject ()
+		public void CasingOnJavaLangObject ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var className = "Foo";
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				Sources = {
 					new BuildItem ("Compile", "Foo.cs") {
 						TextContent = () => {
@@ -1205,6 +1211,7 @@ namespace Lib2
 					},
 				}
 			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				className = "fOO";
