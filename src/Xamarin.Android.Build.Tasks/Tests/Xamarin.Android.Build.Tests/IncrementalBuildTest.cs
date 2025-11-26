@@ -1432,13 +1432,20 @@ namespace Lib2
 		}
 
 		[Test]
-		public void DeterministicBuilds ([Values (true, false)] bool deterministic)
+		public void DeterministicBuilds ([Values] bool deterministic, [Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				Deterministic = deterministic,
 				//NOTE: so _BuildApkEmbed runs in commercial tests
 				EmbedAssembliesIntoApk = true,
 			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
