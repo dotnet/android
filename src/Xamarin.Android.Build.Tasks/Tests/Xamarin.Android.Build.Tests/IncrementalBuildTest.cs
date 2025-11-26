@@ -1151,13 +1151,21 @@ namespace Lib2
 
 		[Test]
 		[NonParallelizable]
-		public void InvalidAndroidResource ()
+		public void InvalidAndroidResource ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var invalidXml = new AndroidItem.AndroidResource (@"Resources\values\ids.xml") {
 				TextContent = () => "<?xml version=\"1.0\" encoding=\"utf-8\" ?><resources><item/></resources>"
 			};
 
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
 				var projectFile = Path.Combine (Root, b.ProjectDirectory, proj.ProjectFilePath);
 				b.ThrowOnBuildFailure = false;
