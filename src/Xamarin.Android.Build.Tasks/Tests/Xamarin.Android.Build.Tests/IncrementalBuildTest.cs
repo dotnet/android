@@ -1632,15 +1632,22 @@ namespace Lib2
 		}
 
 		[Test]
-		public void AaptError ()
+		public void AaptError ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				Sources = {
 					new BuildItem.Source ("TestActivity.cs") {
 						TextContent = () => @"using Android.App; [Activity(Theme = ""@style/DoesNotExist"")] class TestActivity : Activity { }"
 					}
 				}
 			};
+			proj.SetRuntime (runtime);
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (proj), "Build should *not* have succeeded on the first build.");
