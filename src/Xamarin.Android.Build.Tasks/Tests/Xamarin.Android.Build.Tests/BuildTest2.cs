@@ -2153,5 +2153,68 @@ namespace App1
 			const string className = "Lcrc64467b05f37239e7a6/StreamMediaDataSource;";
 			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 		}
+
+		[Test]
+		public void MarshalMethodsUnhandledExceptionRuntimeFixUpWorks ([Values] AndroidRuntime runtime)
+		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			switch (runtime) {
+				case AndroidRuntime.NativeAOT:
+					Assert.Ignore ("NativeAOT does not support marshal methods");
+					break;
+
+				// TODO: CoreCLR currently breaks with
+				// System.NotSupportedException: Writing mixed-mode assemblies is not supported
+				//  at Mono.Cecil.ModuleWriter.Write(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
+				//  at Mono.Cecil.ModuleWriter.WriteModule(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
+				//  at Mono.Cecil.ModuleDefinition.Write(String fileName, WriterParameters parameters)
+				//  at Mono.Cecil.AssemblyDefinition.Write(String fileName, WriterParameters parameters)
+				//  at Xamarin.Android.Tasks.MonoAndroidRuntimeMarshalMethodsFixUp.ApplyFixUp(TaskLoggingHelper log, ITaskItem monoAndroidRuntime) in src/Xamarin.Android.Build.Tasks/Utilities/MonoAndroidRuntimeMarshalMethodsFixUp.cs:line 59
+				//  at Xamarin.Android.Tasks.MonoAndroidRuntimeMarshalMethodsFixUp.Run(TaskLoggingHelper log, List`1 items) in src/Xamarin.Android.Build.Tasks/Utilities/MonoAndroidRuntimeMarshalMethodsFixUp.cs:line 18
+				//  at Xamarin.Android.Tasks.FixUpMonoAndroidRuntime.RunTask() in src/Xamarin.Android.Build.Tasks/Tasks/FixUpMonoAndroidRuntime.cs:line 35
+				//  at Microsoft.Android.Build.Tasks.AndroidTask.Execute() in src/Microsoft.Android.Build.BaseTasks/AndroidTask.cs
+				case AndroidRuntime.CoreCLR:
+					Assert.Ignore ("CoreCLR currently doesn't work due to a bug in Mono.Cecil");
+					break;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				EnableMarshalMethods = true,
+			};
+			proj.SetRuntime (runtime);
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			string monoAndroidRuntimePath = Path.Combine (
+				Root,
+				builder.ProjectDirectory,
+				proj.IntermediateOutputPath,
+				"android-arm64",
+				"linked",
+				"Mono.Android.Runtime.dll"
+			);
+			FileAssert.Exists (monoAndroidRuntimePath);
+
+			using var asm = AssemblyDefinition.ReadAssembly (monoAndroidRuntimePath);
+			const string TypeName = "Android.Runtime.AndroidEnvironmentInternal";
+			TypeDefinition? type = null;
+
+			foreach (ModuleDefinition module in asm.Modules) {
+				foreach (TypeDefinition t in module.Types) {
+					if (t.FullName.Equals (TypeName, StringComparison.Ordinal)) {
+						type = t;
+						break;
+					}
+				}
+			}
+
+			Assert.NotNull (type, $"Failed to find the '{TypeName}' type in '{monoAndroidRuntimePath}'");
+			Assert.IsTrue (type.IsPublic, "Type '{typeName}' should be public");
+		}
 	}
 }
