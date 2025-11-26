@@ -1508,11 +1508,17 @@ namespace Lib2
 		}
 
 		[Test]
-		public void DesignTimeBuildSignAndroidPackage ()
+		public void DesignTimeBuildSignAndroidPackage ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
 				EnableDefaultItems = true,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidUseDesignerAssembly", "true");
 			var builder = CreateApkBuilder ();
 			var parameters = new [] { "BuildingInsideVisualStudio=true"};
