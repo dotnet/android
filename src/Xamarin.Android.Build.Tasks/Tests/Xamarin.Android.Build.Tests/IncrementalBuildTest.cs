@@ -1221,8 +1221,17 @@ namespace Lib2
 		}
 
 		[Test]
-		public void GenerateJavaStubsAndAssembly ([Values (true, false)] bool isRelease, [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void GenerateJavaStubsAndAssembly ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// TODO: NativeAOT build doesn't add android/environment.arm64-v8a.o to file writes
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT doesn't currently add android/environment.arm64-v8a.o to file writes");
+			}
+
 			var targets = new [] {
 				"_GenerateJavaStubs",
 				"_GeneratePackageManagerJava",
@@ -1235,6 +1244,7 @@ namespace Lib2
 			string abi = runtime switch {
 				AndroidRuntime.MonoVM => "armeabi-v7a",
 				AndroidRuntime.CoreCLR => "arm64-v8a",
+				AndroidRuntime.NativeAOT => "arm64-v8a",
 				_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 			};
 			if (runtime == AndroidRuntime.MonoVM) {
@@ -1286,7 +1296,7 @@ namespace Lib2
 		void AssertAssemblyFilesInFileWrites (XamarinAndroidApplicationProject proj, ProjectBuilder b, string abi, AndroidRuntime runtime)
 		{
 			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-			if (runtime == AndroidRuntime.CoreCLR) {
+			if (runtime == AndroidRuntime.CoreCLR || runtime == AndroidRuntime.NativeAOT) {
 				intermediate = Path.Combine (intermediate, MonoAndroidHelper.AbiToRid (abi));
 			}
 
