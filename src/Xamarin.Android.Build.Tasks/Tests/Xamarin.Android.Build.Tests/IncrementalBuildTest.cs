@@ -1575,12 +1575,17 @@ namespace Lib2
 		}
 
 		[Test]
-		public void MissingProjectReference ()
+		public void MissingProjectReference ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 
 			var bar = "public class Bar { }";
 			var lib = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
 				ProjectName = "MyLibrary",
 				Sources = {
 					new BuildItem.Source ("Bar.cs") {
@@ -1588,7 +1593,9 @@ namespace Lib2
 					},
 				}
 			};
+			lib.SetRuntime (runtime);
 			var app = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				ProjectName = "MyApp",
 				Sources = {
 					new BuildItem.Source ("Foo.cs") {
@@ -1596,6 +1603,7 @@ namespace Lib2
 					},
 				}
 			};
+			app.SetRuntime (runtime);
 			var reference = $"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj";
 			app.References.Add (new BuildItem.ProjectReference (reference, lib.ProjectName, lib.ProjectGuid));
 
