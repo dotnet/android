@@ -179,39 +179,13 @@ namespace Xamarin.Android.Tasks
 			void CopyFile (string source, string target)
 			{
 				log.LogDebugMessage ($"[{targetArch}] Copying rewritten assembly: {source} -> {target}");
-
-				string targetBackup = $"{target}.bak";
-				if (File.Exists (target)) {
-					// Try to avoid sharing violations by first renaming the target
-					File.Move (target, targetBackup);
-				}
-
-				File.Copy (source, target, true);
-
-				if (File.Exists (targetBackup)) {
-					try {
-						File.Delete (targetBackup);
-					} catch (Exception ex) {
-						// On Windows the deletion may fail, depending on lock state of the original `target` file before the move.
-						log.LogDebugMessage ($"[{targetArch}] While trying to delete '{targetBackup}', exception was thrown: {ex}");
-						log.LogDebugMessage ($"[{targetArch}] Failed to delete backup file '{targetBackup}', ignoring.");
-					}
-				}
+				MonoAndroidHelper.CopyFileAvoidSharingViolations (log, source, target);
 			}
 
 			void RemoveFile (string? path)
 			{
-				if (String.IsNullOrEmpty (path) || !File.Exists (path)) {
-					return;
-				}
-
-				try {
-					log.LogDebugMessage ($"[{targetArch}] Deleting: {path}");
-					File.Delete (path);
-				} catch (Exception ex) {
-					log.LogWarning ($"[{targetArch}] Unable to delete source file '{path}'");
-					log.LogDebugMessage ($"[{targetArch}] {ex.ToString ()}");
-				}
+				log.LogDebugMessage ($"[{targetArch}] Deleting: {path}");
+				MonoAndroidHelper.TryRemoveFile (log, path);
 			}
 
 			static bool HasUnmanagedCallersOnlyAttribute (MethodDefinition method)
@@ -504,7 +478,7 @@ namespace Xamarin.Android.Tasks
 			AssemblyDefinition? asm = resolver.Resolve ("System.Runtime.InteropServices");
 			if (asm == null)
 				throw new ArgumentNullException (nameof (asm));
-			
+
 			TypeDefinition? unmanagedCallersOnlyAttribute = null;
 			foreach (ModuleDefinition md in asm.Modules) {
 				foreach (ExportedType et in md.ExportedTypes) {
