@@ -9,6 +9,41 @@ using Xamarin.Android.Tasks;
 
 namespace MonoDroid.Tuner {
 
+	/// <summary>
+	/// Marks managed types and members that participate in Java <-> .NET interop so
+	/// they are not removed by the linker/trimmer.
+	///
+	/// Behavior overview:
+	/// - For non-framework assemblies only, proactively preserves types which implement
+	///   Java interop contracts and members that are invoked from Java but may have no
+	///   static managed references.
+	/// - Preserves a user-specified HttpMessageHandler type if provided via
+	///   LinkContext custom data key "AndroidHttpClientHandlerType", keeping its
+	///   public parameterless constructor.
+	/// - Preserves custom views referenced from Android layout XML using the map loaded
+	///   from "AndroidCustomViewMapFile" (LinkContext custom data), keeping required
+	///   constructors (Context/IAttributeSet[/Int32]) and JNI constructors
+	///   (IntPtr) and (IntPtr, JniHandleOwnership).
+	/// - For types implementing Java.Interop interfaces (IJavaObject/IJavaPeerable),
+	///   preserves interface invoker types (e.g., IFooInvoker), their constructors and
+	///   invoked methods discovered via [Register] metadata, and the Java interfaces
+	///   themselves unless DoNotGenerateAcw/GenerateJavaPeer=false is specified.
+	/// - For user types which override Java-exposed members, preserves the overridden
+	///   methods (they are callable from Java but often unreferenced in managed code).
+	/// - For generated *Implementor types (event implementors), preserves "*Handler"
+	///   methods referenced from Java callbacks.
+	/// - Honors attributes implementing Java.Interop.IJniNameProviderAttribute as a
+	///   preservation signal. Android.Runtime.RegisterAttribute is ignored for this
+	///   purpose other than reading its properties.
+	///
+	/// Inputs via LinkContext custom data:
+	/// - "AndroidHttpClientHandlerType": string assembly-qualified type name to keep.
+	/// - "AndroidCustomViewMapFile": string path to the custom view map produced at build time.
+	///
+	/// This handler registers assembly/type callbacks and marks items via
+	/// Linker Annotations, effectively seeding the mark graph so MarkStep can
+	/// retain the necessary interop surface.
+	/// </summary>
 	public class MarkJavaObjects : BaseMarkHandler
 	{
 		Dictionary<ModuleDefinition, Dictionary<string, TypeDefinition>> module_types = new Dictionary<ModuleDefinition, Dictionary<string, TypeDefinition>> ();
