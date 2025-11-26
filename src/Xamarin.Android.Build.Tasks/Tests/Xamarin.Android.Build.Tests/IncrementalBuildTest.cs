@@ -1120,13 +1120,21 @@ namespace Lib2
 
 		[Test]
 		[NonParallelizable]
-		public void AddNewAndroidResourceOnSecondBuild ()
+		public void AddNewAndroidResourceOnSecondBuild ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var xml = new AndroidItem.AndroidResource (@"Resources\values\emptyvalues.xml") {
 				TextContent = () => "<?xml version=\"1.0\" encoding=\"utf-8\" ?><resources></resources>"
 			};
 
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
 				var projectFile = Path.Combine (Root, b.ProjectDirectory, proj.ProjectFilePath);
 				b.ThrowOnBuildFailure = false;
