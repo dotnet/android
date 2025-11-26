@@ -1472,10 +1472,18 @@ namespace Lib2
 		}
 
 		[Test]
-		public void DesignTimeBuild ()
+		public void DesignTimeBuild ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder (Path.Combine ("temp", $"{nameof (IncrementalBuildTest)}{TestName}"))) {
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			using (var b = CreateApkBuilder ()) {
 				b.BuildLogFile = "dtb1.log";
 				Assert.IsTrue (b.DesignTimeBuild (proj), "first dtb should have succeeded.");
 				var target = "_GenerateResourceDesignerAssembly";
