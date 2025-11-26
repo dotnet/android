@@ -1687,10 +1687,18 @@ namespace Lib2
 		}
 
 		[Test]
-		public void AndroidAssetChange ()
+		public void AndroidAssetChange ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var text = "Foo";
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("Assets\\Foo.txt") {
 				TextContent = () => text
 			});
