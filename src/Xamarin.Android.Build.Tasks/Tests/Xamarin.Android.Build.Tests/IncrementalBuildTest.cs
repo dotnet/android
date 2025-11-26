@@ -1732,15 +1732,22 @@ namespace Lib2
 		}
 
 		[Test]
-		public void AndroidAssetMissing ()
+		public void AndroidAssetMissing ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				OtherBuildItems = {
 					new AndroidItem.AndroidAsset ("Assets\\foo\\bar.txt") {
 						TextContent = () => "bar",
 					},
 				}
 			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 
