@@ -1545,9 +1545,17 @@ namespace Lib2
 		}
 
 		[Test]
-		public void ChangePackageNamingPolicy ()
+		public void ChangePackageNamingPolicy ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.Sources.Add (new BuildItem.Source ("Bar.cs") {
 				TextContent = () => "namespace Foo { class Bar : Java.Lang.Object { } }"
 			});
