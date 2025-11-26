@@ -1656,9 +1656,16 @@ namespace Lib2
 		}
 
 		[Test]
-		public void AndroidResourceChange ()
+		public void AndroidResourceChange ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj), "first build should succeed");
 
@@ -1669,7 +1676,11 @@ namespace Lib2
 				Assert.IsTrue (builder.Build (proj), "second build should succeed");
 
 				builder.Output.AssertTargetIsSkipped ("_ResolveLibraryProjectImports");
-				builder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
+
+				// TODO: NativeAOT doesn't skip this target
+				if (runtime != AndroidRuntime.NativeAOT) {
+					builder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
+				}
 				builder.Output.AssertTargetIsSkipped ("_CompileJava");
 				builder.Output.AssertTargetIsSkipped ("_CompileToDalvik");
 			}
