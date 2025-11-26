@@ -1368,6 +1368,8 @@ namespace Lib2
 					}
 				}
 			};
+			// Mono-only test
+			proj.SetRuntime (AndroidRuntime.MonoVM);
 			proj.AddReference (libB);
 			if (aotAssemblies) {
 				targets.Add ("_AndroidAot");
