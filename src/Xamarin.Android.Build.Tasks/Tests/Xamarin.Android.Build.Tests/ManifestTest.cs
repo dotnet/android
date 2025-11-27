@@ -575,19 +575,44 @@ namespace Bug12935
 			}
 		}
 
-		[Test]
-		[TestCase ("1", false, "manifest=1")]
-		[TestCase ("1", true, "x86_64=500001;arm64-v8a=400001")]
-		[TestCase ("2", false, "manifest=2")]
-		[TestCase ("2", true, "x86_64=500002;arm64-v8a=400002")]
-		[TestCase ("999", false, "manifest=999")]
-		[TestCase ("999", true, "x86_64=500999;arm64-v8a=400999")]
-		public void ApplicationVersionTests (string applicationVersion, bool seperateApk, string expected)
+		static IEnumerable<object[]> Get_ApplicationVersionTests_Data ()
 		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData ("1", false, "manifest=1", runtime);
+				AddTestData ("1", true, "x86_64=500001;arm64-v8a=400001", runtime);
+				AddTestData ("2", false, "manifest=2", runtime);
+				AddTestData ("2", true, "x86_64=500002;arm64-v8a=400002", runtime);
+				AddTestData ("999", false, "manifest=999", runtime);
+				AddTestData ("999", true, "x86_64=500999;arm64-v8a=400999", runtime);
+			}
+
+			return ret;
+
+			void AddTestData (string applicationVersion, bool seperateApk, string expected, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					applicationVersion,
+					seperateApk,
+					expected,
+					runtime,
+				});
+			}
+		}
+		[Test]
+		[TestCaseSource (nameof (Get_ApplicationVersionTests_Data))]
+		public void ApplicationVersionTests (string applicationVersion, bool seperateApk, string expected, AndroidRuntime runtime)
+		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				MinSdkVersion = null,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty (proj.ReleaseProperties, "ApplicationVersion", applicationVersion);
 			proj.SetProperty (proj.ReleaseProperties, "ApplicationDisplayVersion", applicationVersion);
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, seperateApk);
