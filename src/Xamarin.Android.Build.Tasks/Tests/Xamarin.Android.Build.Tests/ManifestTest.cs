@@ -1040,14 +1040,40 @@ class TestActivity : Activity { }"
 			}
 		}
 
-		[Test]
-		[TestCase ("Android.Content.PM.ForegroundService.TypeSpecialUse", "specialUse")]
-		[TestCase ("Android.Content.PM.ForegroundService.TypeConnectedDevice", "connectedDevice")]
-		[TestCase ("Android.Content.PM.ForegroundService.TypeCamera|Android.Content.PM.ForegroundService.TypeMicrophone", "camera|microphone")]
-		public void AllForegroundServiceTypes (string serviceType, string expected)
+		static IEnumerable<object[]> Get_AllForegroundServiceTypes_Data ()
 		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData ("Android.Content.PM.ForegroundService.TypeSpecialUse", "specialUse", runtime);
+				AddTestData ("Android.Content.PM.ForegroundService.TypeConnectedDevice", "connectedDevice", runtime);
+				AddTestData ("Android.Content.PM.ForegroundService.TypeCamera|Android.Content.PM.ForegroundService.TypeMicrophone", "camera|microphone", runtime);
+			}
+
+			return ret;
+
+			void AddTestData (string serviceType, string expected, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					serviceType,
+					expected,
+					runtime,
+				});
+			}
+		}
+
+		[Test]
+		[TestCaseSource (nameof (Get_AllForegroundServiceTypes_Data))]
+		public void AllForegroundServiceTypes (string serviceType, string expected, AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 
  			proj.Sources.Add (new BuildItem.Source ("TestActivity.cs") {
  				TextContent = () => $@"using Android.App;
