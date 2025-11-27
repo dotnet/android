@@ -244,11 +244,16 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void IntentFilterData ()
+		public void IntentFilterData ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			string declHead = "public class MainActivity";
 			string intentFilter = @"[IntentFilter (new string [] {""action1""},
 				DataPath = ""foo"",
@@ -258,7 +263,7 @@ namespace Bug12935
 				)]
 				";
 			proj.MainActivity = proj.DefaultMainActivity.Replace (declHead, intentFilter + declHead);
-			using (var b = CreateApkBuilder ("temp/IntentFilterData", true, false)) {
+			using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: true, cleanupOnDispose: false)) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
 				var doc = XDocument.Load (manifest);
