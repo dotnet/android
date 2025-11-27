@@ -308,16 +308,21 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void IntentFilterMultipleItems ()
+		public void IntentFilterMultipleItems ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			// somehow the tests above passed but this example failed.
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.MainActivity = proj.DefaultMainActivity.Replace (
 				"public class MainActivity ",
 				@"[IntentFilter (new string []{""foo""}, DataSchemes=new string []{""http"", ""https""})] public class MainActivity ");
-			var b = CreateApkBuilder ("temp/IntentFilterMultipleItems");
+			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			var appsrc = File.ReadAllText (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml"));
 			Assert.IsTrue (appsrc.Contains ("<data android:scheme=\"http\""), "schemes:http");
