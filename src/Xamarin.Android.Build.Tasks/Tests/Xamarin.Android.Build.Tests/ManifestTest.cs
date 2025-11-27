@@ -755,12 +755,16 @@ namespace Bug12935
 		}
 
 		[Test]
-		[TestCaseSource (nameof (DebuggerAttributeCases))]
-		public void DebuggerAttribute (string debugType, bool isRelease, bool expected)
+		[TestCaseSource (nameof (Get_DebuggerAttributeCases_Data))]
+		public void DebuggerAttribute (string debugType, bool isRelease, bool expected, AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty (isRelease ? proj.ReleaseProperties : proj.DebugProperties, "DebugType", debugType);
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", $"DebuggerAttribute_{debugType}_{isRelease}_{expected}"), false, false)) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
