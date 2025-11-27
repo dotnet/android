@@ -1200,14 +1200,69 @@ class TestActivity : Activity { }"
 				/* removeUsesSdk */		false,
 			},
 		};
-		[Test]
-		[TestCaseSource(nameof (SupportedOSTestSources))]
-		public void SupportedOSPlatformVersion (string minSdkVersion, bool removeUsesSdkElement)
+
+		static IEnumerable<object[]> Get_SupportedOSTestSources_Data ()
 		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData (
+					minSdkVersion: "",
+					removeUsesSdkElement: true,
+					runtime: runtime
+				);
+
+				AddTestData (
+					minSdkVersion: "",
+					removeUsesSdkElement: false,
+					runtime: runtime
+				);
+
+				AddTestData (
+					minSdkVersion: "21.0",
+					removeUsesSdkElement: true,
+					runtime: runtime
+				);
+
+				AddTestData (
+					minSdkVersion: "31",
+					removeUsesSdkElement: false,
+					runtime: runtime
+				);
+
+				AddTestData (
+					minSdkVersion: $"{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}.0",
+					removeUsesSdkElement: false,
+					runtime: runtime
+				);
+			}
+
+			return ret;
+
+			void AddTestData (string minSdkVersion, bool removeUsesSdkElement, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					minSdkVersion,
+					removeUsesSdkElement,
+					runtime,
+				});
+			}
+		}
+
+		[Test]
+		[TestCaseSource(nameof (Get_SupportedOSTestSources_Data))]
+		public void SupportedOSPlatformVersion (string minSdkVersion, bool removeUsesSdkElement, AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				EnableDefaultItems = true,
 				SupportedOSPlatformVersion = minSdkVersion,
 			};
+			proj.SetRuntime (runtime);
 
 			// An empty SupportedOSPlatformVersion property will default to AndroidMinimumDotNetApiLevel
 			if (string.IsNullOrEmpty (minSdkVersion)) {
@@ -1226,14 +1281,19 @@ class TestActivity : Activity { }"
 			// https://developer.android.com/reference/android/view/View#getAccessibilityTraversalAfter()
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("button!.Click", "button!.AccessibilityTraversalAfter.ToString ();\nbutton!.Click");
 
-			var builder = CreateApkBuilder ();
+			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
 
 			var minSdkVersionInt = MonoAndroidHelper.ConvertSupportedOSPlatformVersionToApiLevel (minSdkVersion);
 			if (minSdkVersionInt < 22) {
 				StringAssertEx.Contains ("warning CA1416", builder.LastBuildOutput, "Should get warning about Android 22 API");
 			} else {
-				builder.AssertHasNoWarnings ();
+				if (runtime == AndroidRuntime.NativeAOT) {
+					// 2 of: warning IL3053: Assembly 'Mono.Android' produced AOT analysis warnings.
+					StringAssertEx.Contains ("2 Warning(s)", builder.LastBuildOutput, "NativeAOT should produce two IL3053 warnings");
+				} else {
+					builder.AssertHasNoWarnings ();
+				}
 			}
 
 			var manifestPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
