@@ -826,8 +826,13 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void MergeLibraryManifest ()
+		public void MergeLibraryManifest ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			byte [] classesJar = XamarinAndroidCommonProject.GetResourceContents ("Xamarin.ProjectTools.Resources.Base.classes.jar");
 			byte [] data;
 			using (var ms = new MemoryStream ()) {
@@ -855,6 +860,7 @@ namespace Bug12935
 			}
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidBindingProject () {
+				IsRelease = isRelease,
 				ProjectName = "Binding1",
 				AndroidClassParser = "class-parse",
 				Jars = {
@@ -863,7 +869,9 @@ namespace Bug12935
 					}
 				},
 			};
+			lib.SetRuntime (runtime);
 			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
 				PackageName = "com.xamarin.manifest",
 				References = {
 					new BuildItem.ProjectReference ("..\\Binding1\\Binding1.csproj", lib.ProjectGuid)
@@ -872,6 +880,7 @@ namespace Bug12935
 					KnownPackages.AndroidXAppCompat,
 				},
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidManifestMerger", "legacy");
 			proj.Sources.Add (new BuildItem.Source ("TestActivity1.cs") {
 				TextContent = () => @"using System;
