@@ -672,13 +672,18 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void ManifestPlaceholders ([Values ("legacy", "manifestmerger.jar")] string manifestMerger)
+		public void ManifestPlaceholders ([Values ("legacy", "manifestmerger.jar")] string manifestMerger, [Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				ManifestMerger = manifestMerger,
 				JavaPackageName = "com.foo.bar",
 			};
+			proj.SetRuntime (runtime);
 			proj.AndroidManifest = proj.AndroidManifest.
 				Replace ("application android:label=\"${PROJECT_NAME}\"", "application android:label=\"${ph1}\" x='${ph2}' ").
 				Replace ("package=\"${PACKAGENAME}\"", "package=\"${Package}\"");
