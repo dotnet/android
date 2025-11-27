@@ -131,11 +131,16 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void CheckElementReOrdering ()
+		public void CheckElementReOrdering ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.MainActivity = ScreenOrientationActivity;
 			using (var builder = CreateApkBuilder ()) {
 				proj.AndroidManifest = ElementOrderManifest;
