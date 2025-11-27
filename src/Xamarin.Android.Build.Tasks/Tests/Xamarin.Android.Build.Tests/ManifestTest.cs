@@ -723,11 +723,17 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void ManifestPlaceHoldersXA1010 ([Values ("legacy", "manifestmerger.jar")] string manifestMerger)
+		public void ManifestPlaceHoldersXA1010 ([Values ("legacy", "manifestmerger.jar")] string manifestMerger, [Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
-				ManifestMerger = manifestMerger
+				IsRelease = isRelease,
+				ManifestMerger = manifestMerger,
 			};
+			proj.SetRuntime (runtime);
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("application android:label=\"${PROJECT_NAME}\"", "application android:label=\"${ph1}\" x='${ph2}' ");
 			proj.SetProperty ("AndroidManifestPlaceholders", "ph2=a=b\\c;ph1");
 			using (var builder = CreateApkBuilder ()) {
