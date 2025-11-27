@@ -358,11 +358,16 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void DirectBootAwareAttribute ()
+		public void DirectBootAwareAttribute ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			string attrHead = ", Activity (";
 			string attr = @", Activity (DirectBootAware=true, ";
 			proj.MainActivity = proj.DefaultMainActivity.Replace (attrHead, attr);
@@ -372,7 +377,7 @@ namespace Bug12935
 			proj.OtherBuildItems.Add (new BuildItem (BuildActions.Compile, "MyApplication.cs") {
 				TextContent = () => "using Android.App; [Application (DirectBootAware = true)] public class MyApplication : Application {}"
 			});
-			using (var b = CreateApkBuilder ("temp/DirectBootAwareAttribute", true, false)) {
+			using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: true, cleanupOnDispose: false)) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
 				var doc = XDocument.Load (manifest);
@@ -382,7 +387,12 @@ namespace Bug12935
 				Assert.IsNotNull (le, "no activity element found");
 				Assert.IsTrue (doc.XPathSelectElements ("//activity[@android:directBootAware='true']", nsResolver).Any (),
 						   "'activity' element is not generated as expected.");
-				Assert.IsTrue (doc.XPathSelectElements ("//provider[@android:name='mono.MonoRuntimeProvider' and @android:directBootAware='true']", nsResolver).Any (),
+
+				string providerName = runtime switch {
+					AndroidRuntime.NativeAOT => "net.dot.jni.nativeaot.NativeAotRuntimeProvider",
+					_ => "mono.MonoRuntimeProvider"
+				};
+				Assert.IsTrue (doc.XPathSelectElements ($"//provider[@android:name='{providerName}' and @android:directBootAware='true']", nsResolver).Any (),
 						   "'provider' element is not generated as expected.");
 			}
 		}
