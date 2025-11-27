@@ -774,8 +774,11 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void ModifyManifest ([Values (true, false)] bool isRelease)
+		public void ModifyManifest ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 				Imports = {
@@ -814,6 +817,7 @@ namespace Bug12935
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				var manifest = builder.Output.GetIntermediaryAsText (Root, Path.Combine ("android", "AndroidManifest.xml"));
