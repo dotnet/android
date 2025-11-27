@@ -1148,11 +1148,17 @@ class TestActivity : Activity { }"
 		/// https://github.com/microsoft/dotnet-podcasts/blob/09b733b406ecb128f026645ef4c7e69c773f8a4b/src/Mobile/Platforms/Android/Services/MediaPlayerService.cs#L15-L16
 		/// </summary>
 		[Test]
-		public void ExportedErrorMessage ()
+		public void ExportedErrorMessage ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				ManifestMerger = "manifestmerger.jar"
 			};
+			proj.SetRuntime (runtime);
 
 			proj.Sources.Add (new BuildItem.Source ("TestActivity.cs") {
 				TextContent = () => $@"using Android.App;
@@ -1167,7 +1173,8 @@ class TestActivity : Activity { }"
 			b.ThrowOnBuildFailure = false;
 			Assert.IsFalse (b.Build (proj), "Build should have failed");
 			var extension = IsWindows ? ".exe" : "";
-			Assert.IsTrue (b.LastBuildOutput.ContainsText ($"AndroidManifest.xml(12,5): java{extension} error AMM0000:"), "Should recieve AMM0000 error");
+			uint errorLine = runtime == AndroidRuntime.NativeAOT ? 11u : 12u;
+			Assert.IsTrue (b.LastBuildOutput.ContainsText ($"AndroidManifest.xml({errorLine},5): java{extension} error AMM0000:"), "Should recieve AMM0000 error");
 			Assert.IsTrue (b.LastBuildOutput.ContainsText ("Apps targeting Android 12 and higher are required to specify an explicit value for `android:exported`"), "Should recieve AMM0000 error");
 		}
 
