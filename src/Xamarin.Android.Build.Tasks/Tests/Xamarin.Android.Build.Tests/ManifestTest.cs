@@ -331,15 +331,20 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void LayoutAttributeElement ()
+		public void LayoutAttributeElement ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			string declHead = "public class MainActivity";
 			string layout = @"[Layout (DefaultWidth=""500dp"", DefaultHeight=""600dp"", Gravity=""center"", MinWidth=""300dp"", MinHeight=""400dp"")]";
 			proj.MainActivity = proj.DefaultMainActivity.Replace (declHead, layout + declHead);
-			using (var b = CreateApkBuilder ("temp/LayoutAttributeElement", true, false)) {
+			using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: true, cleanupOnDispose: false)) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
 				var doc = XDocument.Load (manifest);
