@@ -214,15 +214,20 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void RemovePermissionTest ()
+		public void RemovePermissionTest ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				PackageReferences = {
 					KnownPackages.ZXing_Net_Mobile,
 				},
 				ManifestMerger = "manifestmerger.jar",
 			};
+			proj.SetRuntime (runtime);
 			proj.AndroidManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" xmlns:tools=""http://schemas.android.com/tools"" android:versionCode=""1"" android:versionName=""1.0"" package=""foo.foo"">
 	<uses-sdk android:targetSdkVersion=""29""/>
@@ -230,7 +235,7 @@ namespace Bug12935
 	<application android:label=""foo"">
 	</application>
 </manifest>";
-			using (var b = CreateApkBuilder ("temp/RemovePermissionTest", cleanupAfterSuccessfulBuild: true, cleanupOnDispose: false)) {
+			using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: true, cleanupOnDispose: false)) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var manifestFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
 				var text = File.ReadAllText (manifestFile);
