@@ -1329,15 +1329,77 @@ class TestActivity : Activity { }"
 				/* supportedOSPlatVers */		$"{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}.0",
 			},
 		};
-		[Test]
-		[TestCaseSource(nameof (SupportedOSErrorsTestSources))]
-		public void SupportedOSPlatformVersionErrors (string minSdkVersion, string supportedOSPlatVers)
+
+		static IEnumerable<object[]> Get_SupportedOSErrorsTestSources_Data ()
 		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData (
+					minSdkVersion: "",
+					supportedOSPlatVers: "",
+					runtime: runtime
+				);
+
+				AddTestData (
+					minSdkVersion: "19",
+					supportedOSPlatVers: "",
+					runtime: runtime
+				);
+
+				AddTestData (
+					minSdkVersion: $"{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
+					supportedOSPlatVers: "",
+					runtime: runtime
+				);
+
+				AddTestData (
+					minSdkVersion: "",
+					supportedOSPlatVers: "19.0",
+					runtime: runtime
+				);
+
+				AddTestData (
+					minSdkVersion: "19",
+					supportedOSPlatVers: "19",
+					runtime: runtime
+				);
+
+				AddTestData (
+					minSdkVersion: "29",
+					supportedOSPlatVers: $"{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}.0",
+					runtime: runtime
+				);
+			}
+
+			return ret;
+
+			void AddTestData (string minSdkVersion, string supportedOSPlatVers, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					minSdkVersion,
+					supportedOSPlatVers,
+					runtime,
+				});
+			}
+		}
+
+		[Test]
+		[TestCaseSource(nameof (Get_SupportedOSErrorsTestSources_Data))]
+		public void SupportedOSPlatformVersionErrors (string minSdkVersion, string supportedOSPlatVers, AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				EnableDefaultItems = true,
 				MinSdkVersion = minSdkVersion,
 				SupportedOSPlatformVersion = supportedOSPlatVers,
 			};
+			proj.SetRuntime (runtime);
 
 			// Mismatch error can only occur when minSdkVersion is set in the manifest
 			bool wasMinSdkVersionEmpty = false;
