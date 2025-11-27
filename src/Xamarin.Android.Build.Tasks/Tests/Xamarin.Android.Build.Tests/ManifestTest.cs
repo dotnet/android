@@ -182,12 +182,17 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void OverlayManifestTest ()
+		public void OverlayManifestTest ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				ManifestMerger = "manifestmerger.jar",
 			};
+			proj.SetRuntime (runtime);
 			proj.AndroidManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" xmlns:tools=""http://schemas.android.com/tools"" android:versionCode=""1"" android:versionName=""1.0"" package=""foo.foo"">
 	<application android:label=""foo"">
@@ -200,7 +205,7 @@ namespace Bug12935
 </manifest>
 "
 			});
-			using (var b = CreateApkBuilder ("temp/OverlayManifestTest", cleanupAfterSuccessfulBuild: true, cleanupOnDispose: false)) {
+			using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: true, cleanupOnDispose: false)) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var manifestFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
 				var text = File.ReadAllText (manifestFile);
