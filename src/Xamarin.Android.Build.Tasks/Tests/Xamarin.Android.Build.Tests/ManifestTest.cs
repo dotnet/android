@@ -641,11 +641,16 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void ManifestDataPathError ()
+		public void ManifestDataPathError ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			var s = proj.AndroidManifest.Replace ("</application>", @"<activity android:name=""net.openid.appauth.RedirectUriReceiverActivity"" android:exported=""true"">
 			<intent-filter>
 				<action android:name=""android.intent.action.VIEW""/>
