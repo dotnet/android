@@ -72,14 +72,18 @@ namespace Bug12935
 ";
 
 		[Test]
-		public void Bug12935 ()
+		public void Bug12935 ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.MainActivity = ScreenOrientationActivity;
-			var directory = $"temp/Bug12935";
-			using (var builder = CreateApkBuilder (directory)) {
+			using (var builder = CreateApkBuilder ()) {
 
 				proj.AndroidManifest = string.Format (TargetSdkManifest, "17");
 				Assert.IsTrue (builder.Build (proj), "Build for TargetFrameworkVersion 17 should have succeeded");
