@@ -1094,15 +1094,22 @@ class TestActivity : Activity { }"
 		}
 
 		[Test]
- 		public void AllServiceAttributeProperties ([Values ("legacy", "manifestmerger.jar")] string manifestMerger)
+ 		public void AllServiceAttributeProperties ([Values ("legacy", "manifestmerger.jar")] string manifestMerger, [Values] AndroidRuntime runtime)
  		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
  			string expectedOutput = manifestMerger == "legacy" ?
 				"android:directBootAware=\"true\" android:enabled=\"true\" android:exported=\"true\" android:foregroundServiceType=\"connectedDevice\" android:icon=\"@drawable/icon\" android:isolatedProcess=\"true\" android:label=\"TestActivity\" android:name=\"com.contoso.TestActivity\" android:permission=\"com.contoso.permission.TEST_ACTIVITY\" android:process=\"com.contoso.process.testactivity_process\" android:roundIcon=\"@drawable/icon\"" :
 				"android:name=\"com.contoso.TestActivity\" android:directBootAware=\"true\" android:enabled=\"true\" android:exported=\"true\" android:foregroundServiceType=\"connectedDevice\" android:icon=\"@drawable/icon\" android:isolatedProcess=\"true\" android:label=\"TestActivity\" android:permission=\"com.contoso.permission.TEST_ACTIVITY\" android:process=\"com.contoso.process.testactivity_process\" android:roundIcon=\"@drawable/icon\"";
 
 			var proj = new XamarinAndroidApplicationProject {
-				ManifestMerger = manifestMerger
+				IsRelease = isRelease,
+				ManifestMerger = manifestMerger,
 			};
+			proj.SetRuntime (runtime);
 
  			proj.Sources.Add (new BuildItem.Source ("TestActivity.cs") {
  				TextContent = () => @"using Android.App;
