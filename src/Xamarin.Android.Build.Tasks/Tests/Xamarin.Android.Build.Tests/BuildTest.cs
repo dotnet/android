@@ -2182,5 +2182,36 @@ public class ToolbarEx {
 			Assert.IsTrue (builder.Build (proj, parameters: [ "_SingleRID=android-x64", "_SingleABI=x86_64" ], doNotCleanupOnUpdate: true),
 				"second build should have succeeded.");
 		}
+
+		[Test]
+		public void SystemIOHashing ([Values] AndroidRuntime runtime)
+		{
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("https://github.com/dotnet/android/issues/10606");
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				PackageReferences = {
+					new Package { Id = "System.IO.Hashing", Version = "10.0.0" }
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"base.OnCreate (bundle);",
+				"""
+				base.OnCreate (bundle);
+				
+				// Use System.IO.Hashing to compute a hash
+				var crc32 = new System.IO.Hashing.Crc32 ();
+				var data = System.Text.Encoding.UTF8.GetBytes ("Hello World");
+				crc32.Append (data);
+				var hash = crc32.GetCurrentHash ();
+				Console.WriteLine ($"CRC32 Hash: {BitConverter.ToString (hash)}");
+				"""
+			);
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "build should have succeeded.");
+		}
 	}
 }
