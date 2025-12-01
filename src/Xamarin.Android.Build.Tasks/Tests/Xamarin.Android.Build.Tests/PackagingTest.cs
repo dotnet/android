@@ -589,11 +589,15 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 		}
 
 		[Test]
-		public void CheckAppBundle ([Values (true, false)] bool isRelease)
+		public void CheckAppBundle ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidPackageFormat", "aab");
 			// Disable the fast deployment because it is not currently compatible with aabs and so gives an XA0119 build error.
 			proj.EmbedAssembliesIntoApk = true;
