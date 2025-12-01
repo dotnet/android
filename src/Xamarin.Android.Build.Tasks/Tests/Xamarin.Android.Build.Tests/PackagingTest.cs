@@ -679,10 +679,21 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 		}
 
 		[Test]
-		public void MissingSatelliteAssemblyInApp ([Values (false, true)] bool publishAot)
+		public void MissingSatelliteAssemblyInApp ([Values] bool publishAot, [Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// PublishAot is NativeAOT but it doesn't support assemblies, so when `publishAot` is `true`, we run only
+			// the Mono test.
+			if (publishAot && runtime != AndroidRuntime.MonoVM) {
+				Assert.Ignore ("NativeAOT and CoreCLR don't support PublishAot with satellite assemblies");
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 				OtherBuildItems = {
 					new BuildItem ("EmbeddedResource", "Foo.resx") {
 						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
