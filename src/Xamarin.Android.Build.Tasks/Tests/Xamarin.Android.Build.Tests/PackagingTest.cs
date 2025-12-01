@@ -845,11 +845,16 @@ public class Test
 		}
 
 		[Test]
-		public void CheckIncludedFilesArePresent ()
+		public void CheckIncludedFilesArePresent ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.PackageReferences.Add (KnownPackages.Xamarin_Kotlin_Reflect);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
