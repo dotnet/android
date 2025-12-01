@@ -812,12 +812,16 @@ public class Test
 		}
 
 		[Test]
-		public void CheckExcludedFilesCanBeModified ()
+		public void CheckExcludedFilesCanBeModified ([Values] AndroidRuntime runtime)
 		{
-
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.PackageReferences.Add (KnownPackages.Xamarin_Kotlin_StdLib_Common);
 			using (var b = CreateApkBuilder ()) {
 				b.Verbosity = LoggerVerbosity.Detailed;
