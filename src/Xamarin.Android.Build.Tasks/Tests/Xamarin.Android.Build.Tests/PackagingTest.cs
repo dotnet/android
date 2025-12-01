@@ -17,11 +17,17 @@ namespace Xamarin.Android.Build.Tests
 	public class PackagingTest : BaseTest
 	{
 		[Test]
-		public void CheckProguardMappingFileExists ()
+		public void CheckProguardMappingFileExists ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, "r8");
 			// Projects must set $(AndroidCreateProguardMappingFile) to true to opt in
 			proj.SetProperty (proj.ReleaseProperties, "AndroidCreateProguardMappingFile", true);
