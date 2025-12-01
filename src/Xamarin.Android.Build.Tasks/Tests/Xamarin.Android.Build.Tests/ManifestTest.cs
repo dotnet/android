@@ -1588,9 +1588,17 @@ class TestActivity : Activity { }"
 		}
 
 		[Test]
-		public void UsesPermissionFlagsAttribute ()
+		public void UsesPermissionFlagsAttribute ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 
 			proj.Sources.Add (new BuildItem.Source ("GlobalAssemblyInfo.cs") {
 				TextContent = () => @"using Android.App;
