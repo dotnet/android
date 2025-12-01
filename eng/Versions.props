@@ -1,18 +1,18 @@
 <Project>
   <!--Package versions-->
   <PropertyGroup>
-    <MicrosoftNETSdkPackageVersion>10.0.100-rc.3.25571.109</MicrosoftNETSdkPackageVersion>
+    <MicrosoftNETSdkPackageVersion>10.0.100-rc.3.25578.104</MicrosoftNETSdkPackageVersion>
     <MicrosoftDotnetSdkInternalPackageVersion>$(MicrosoftNETSdkPackageVersion)</MicrosoftDotnetSdkInternalPackageVersion>
-    <MicrosoftNETILLinkPackageVersion>10.0.0-rc.3.25571.109</MicrosoftNETILLinkPackageVersion>
-    <MicrosoftNETCoreAppRefPackageVersion>10.0.0-rc.3.25571.109</MicrosoftNETCoreAppRefPackageVersion>
+    <MicrosoftNETILLinkPackageVersion>10.0.0-rc.3.25578.104</MicrosoftNETILLinkPackageVersion>
+    <MicrosoftNETCoreAppRefPackageVersion>10.0.0-rc.3.25578.104</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
-    <MicrosoftDotNetBuildTasksFeedPackageVersion>11.0.0-beta.25571.109</MicrosoftDotNetBuildTasksFeedPackageVersion>
+    <MicrosoftDotNetBuildTasksFeedPackageVersion>11.0.0-beta.25578.104</MicrosoftDotNetBuildTasksFeedPackageVersion>
     <MicrosoftNETWorkloadMonoToolchainCurrentManifest100100PackageVersion>10.0.101</MicrosoftNETWorkloadMonoToolchainCurrentManifest100100PackageVersion>
     <MicrosoftNETWorkloadEmscriptenCurrentManifest100100PackageVersion>10.0.101</MicrosoftNETWorkloadEmscriptenCurrentManifest100100PackageVersion>
     <MicrosoftNETWorkloadMonoToolChainPackageVersion>$(MicrosoftNETWorkloadMonoToolChainCurrentManifest100100PackageVersion)</MicrosoftNETWorkloadMonoToolChainPackageVersion>
     <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenCurrentManifest100100PackageVersion)</MicrosoftNETWorkloadEmscriptenPackageVersion>
-    <MicrosoftTemplateEngineAuthoringTasksPackageVersion>11.0.100-alpha.25571.109</MicrosoftTemplateEngineAuthoringTasksPackageVersion>
-    <MicrosoftDotNetCecilPackageVersion>0.11.5-alpha.25571.109</MicrosoftDotNetCecilPackageVersion>
+    <MicrosoftTemplateEngineAuthoringTasksPackageVersion>11.0.100-alpha.25578.104</MicrosoftTemplateEngineAuthoringTasksPackageVersion>
+    <MicrosoftDotNetCecilPackageVersion>0.11.5-alpha.25578.104</MicrosoftDotNetCecilPackageVersion>
     <SystemIOHashingPackageVersion>9.0.4</SystemIOHashingPackageVersion>
     <!-- Previous .NET Android version -->
     <MicrosoftNETSdkAndroidManifest90100PackageVersion>35.0.105</MicrosoftNETSdkAndroidManifest90100PackageVersion>
