@@ -173,21 +173,43 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 			}
 		}
 
+		static IEnumerable<object[]> Get_CheckProjectWithSpaceInNameWorks_Data ()
+		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData ("Test Me", runtime);
+
+				// testing characters as per https://www.compart.com/en/unicode/category/Zs
+				AddTestData ("TestUnicodeSpace0020\u0020Me", runtime);
+				AddTestData ("TestUnicodeSpace2000\u2000Me", runtime);
+				AddTestData ("TestUnicodeSpace2009\u2009Me", runtime);
+				AddTestData ("TestUnicodeSpace2002\u2002Me", runtime);
+				AddTestData ("TestUnicodeSpace2007\u2007Me", runtime);
+			}
+
+			return ret;
+
+			void AddTestData (string projectName, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					projectName,
+					runtime,
+				});
+			}
+		}
+
 		[Test]
 		[Category ("SmokeTests")]
-		[TestCase ("Test Me", AndroidRuntime.MonoVM)]
-		// testing characters as per https://www.compart.com/en/unicode/category/Zs
-		[TestCase ("TestUnicodeSpace0020\u0020Me", AndroidRuntime.MonoVM)]
-		[TestCase ("TestUnicodeSpace2000\u2000Me", AndroidRuntime.MonoVM)]
-		[TestCase ("TestUnicodeSpace2009\u2009Me", AndroidRuntime.MonoVM)]
-		[TestCase ("TestUnicodeSpace2002\u2002Me", AndroidRuntime.MonoVM)]
-		[TestCase ("TestUnicodeSpace2007\u2007Me", AndroidRuntime.MonoVM)]
-		[TestCase ("TestUnicodeSpace0020\u0020Me", AndroidRuntime.CoreCLR)]
-		[TestCase ("TestUnicodeSpace0020\u0020Me", AndroidRuntime.NativeAOT)]
+		[TestCaseSource (nameof (Get_CheckProjectWithSpaceInNameWorks_Data))]
 		public void CheckProjectWithSpaceInNameWorks (string projectName, AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				ProjectName = projectName,
 				RootNamespace = "Test.Me",
 			};
