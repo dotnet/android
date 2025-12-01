@@ -416,8 +416,13 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 		}
 
 		[Test]
-		public void CheckMetadataSkipItemsAreProcessedCorrectly ()
+		public void CheckMetadataSkipItemsAreProcessedCorrectly ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var packages = new List<Package> () {
 				KnownPackages.Xamarin_Jetbrains_Annotations,
 			};
@@ -428,6 +433,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 	<AndroidSkipResourceExtraction>True</AndroidSkipResourceExtraction>
 </AndroidCustomMetaDataForReferences>";
 			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
 				Imports = {
 					new Import (() => "CustomMetaData.target") {
 						TextContent = () => @"<Project xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
@@ -438,6 +444,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 					},
 				}
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty (proj.DebugProperties, "AndroidPackageNamingPolicy", "Lowercase");
 			foreach (var package in packages)
 				proj.PackageReferences.Add (package);
