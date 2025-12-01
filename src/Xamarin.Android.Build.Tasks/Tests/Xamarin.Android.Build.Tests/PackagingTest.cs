@@ -728,8 +728,13 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 		}
 
 		[Test]
-		public void IgnoreManifestFromJar ()
+		public void IgnoreManifestFromJar ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			string java = @"
 package com.xamarin.testing;
 
@@ -744,6 +749,7 @@ public class Test
 			Directory.CreateDirectory (javaDir);
 			File.WriteAllText (Path.Combine (javaDir, "..", "..", "..", "AndroidManifest.xml"), @"<?xml version='1.0' ?><maniest />");
 			var lib = new XamarinAndroidBindingProject () {
+				IsRelease = isRelease,
 				AndroidClassParser = "class-parse",
 				ProjectName = "Binding1",
 			};
@@ -757,9 +763,12 @@ public class Test
 					AdditionalFileExtensions = "*.xml",
 				}.Build
 			});
+			lib.SetRuntime (runtime);
+
 			var app = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			app.SetRuntime (runtime);
 			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
 
 			using (var builder = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
