@@ -388,9 +388,22 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 		}
 
 		[Test]
-		public void ExplicitPackageNamingPolicy ()
+		public void ExplicitPackageNamingPolicy ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// TODO: NativeAOT doesn't create obj/Release/android/src/foo/Bar.java, instead it creates obj/Release/android/src/crc64dca3aed1e0ff8a1a/Bar.java
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT doesn't follow the explicit package naming policy");
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.Sources.Add (new BuildItem.Source ("Bar.cs") {
 				TextContent = () => "namespace Foo { class Bar : Java.Lang.Object { } }"
 			});
