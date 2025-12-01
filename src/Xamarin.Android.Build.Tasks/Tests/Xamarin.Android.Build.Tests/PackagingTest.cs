@@ -621,10 +621,19 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 		}
 
 		[Test]
-		public void MissingSatelliteAssemblyInLibrary ()
+		public void MissingSatelliteAssemblyInLibrary ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT builds don't package satellite assemblies");
+			}
+
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
 				ProjectName = "Localization",
 				OtherBuildItems = {
 					new BuildItem ("EmbeddedResource", "Foo.resx") {
@@ -632,6 +641,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 					},
 				}
 			};
+			lib.SetRuntime (runtime);
 
 			var languages = new string[] {"es", "de", "fr", "he", "it", "pl", "pt", "ru", "sl" };
 			foreach (string lang in languages) {
@@ -645,6 +655,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			var app = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
+			app.SetRuntime (runtime);
 			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
 
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
