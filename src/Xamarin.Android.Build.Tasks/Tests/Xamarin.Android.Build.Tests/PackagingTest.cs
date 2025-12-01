@@ -40,11 +40,16 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckR8InfoMessagesToNotBreakTheBuild ()
+		public void CheckR8InfoMessagesToNotBreakTheBuild ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, "r8");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidCreateProguardMappingFile", true);
 			var packages = proj.PackageReferences;
