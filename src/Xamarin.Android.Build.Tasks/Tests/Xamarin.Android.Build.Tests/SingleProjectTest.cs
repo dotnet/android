@@ -151,13 +151,22 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void AndroidManifestValuesWin ()
+		public void AndroidManifestValuesWin ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var packageName = "com.xamarin.singleproject";
 			var applicationLabel = "My Sweet App";
 			var versionName = "99.0";
 			var versionCode = "99";
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+
 			proj.AndroidManifest = proj.AndroidManifest
 				.Replace ("package=\"${PACKAGENAME}\"", $"package=\"{packageName}\"")
 				.Replace ("android:label=\"${PROJECT_NAME}\"", $"android:label=\"{applicationLabel}\"")
