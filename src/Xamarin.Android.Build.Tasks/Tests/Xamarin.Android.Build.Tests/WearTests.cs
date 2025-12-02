@@ -56,10 +56,15 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void WearProjectJavaBuildFailure ()
+		public void WearProjectJavaBuildFailure ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 				EnableDefaultItems = true,
 				PackageReferences = {
 					KnownPackages.XamarinAndroidXWear,
@@ -69,6 +74,7 @@ namespace Xamarin.Android.Build.Tests
 				},
 				SupportedOSPlatformVersion = "23",
 			};
+			proj.SetRuntime (runtime);
 			var builder = CreateApkBuilder ();
 			builder.ThrowOnBuildFailure = false;
 			Assert.IsFalse (builder.Build (proj), $"{proj.ProjectName} should fail.");
