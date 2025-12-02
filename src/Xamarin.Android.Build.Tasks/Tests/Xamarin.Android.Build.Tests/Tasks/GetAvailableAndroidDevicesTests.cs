@@ -436,5 +436,125 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Device", physical.GetMetadata ("Type"));
 			Assert.AreEqual ("Online", physical.GetMetadata ("Status"));
 		}
+
+		[Test]
+		public void FormatDisplayName_ReplacesUnderscoresWithSpaces ()
+		{
+			var task = new MockGetAvailableAndroidDevices {
+				BuildEngine = engine,
+			};
+
+			var result = task.FormatDisplayName ("emulator-5554", "pixel_7_pro");
+
+			Assert.AreEqual ("Pixel 7 Pro", result, "Should replace underscores with spaces");
+		}
+
+		[Test]
+		public void FormatDisplayName_AppliesTitleCase ()
+		{
+			var task = new MockGetAvailableAndroidDevices {
+				BuildEngine = engine,
+			};
+
+			var result = task.FormatDisplayName ("emulator-5554", "pixel 7 pro");
+
+			Assert.AreEqual ("Pixel 7 Pro", result, "Should apply title case");
+		}
+
+		[Test]
+		public void FormatDisplayName_ReplacesApiWithAPIUppercase ()
+		{
+			var task = new MockGetAvailableAndroidDevices {
+				BuildEngine = engine,
+			};
+
+			var result = task.FormatDisplayName ("emulator-5554", "pixel_5_api_34");
+
+			Assert.AreEqual ("Pixel 5 API 34", result, "Should replace 'Api' with 'API'");
+		}
+
+		[Test]
+		public void FormatDisplayName_HandlesMultipleApiOccurrences ()
+		{
+			var task = new MockGetAvailableAndroidDevices {
+				BuildEngine = engine,
+			};
+
+			var result = task.FormatDisplayName ("emulator-5554", "test_api_device_api_35");
+
+			Assert.AreEqual ("Test API Device API 35", result, "Should replace all 'Api' occurrences with 'API'");
+		}
+
+		[Test]
+		public void FormatDisplayName_HandlesMixedCaseInput ()
+		{
+			var task = new MockGetAvailableAndroidDevices {
+				BuildEngine = engine,
+			};
+
+			var result = task.FormatDisplayName ("emulator-5554", "PiXeL_7_API_35");
+
+			Assert.AreEqual ("Pixel 7 API 35", result, "Should normalize mixed case input");
+		}
+
+		[Test]
+		public void FormatDisplayName_HandlesComplexNames ()
+		{
+			var task = new MockGetAvailableAndroidDevices {
+				BuildEngine = engine,
+			};
+
+			var result = task.FormatDisplayName ("emulator-5554", "pixel_9_pro_xl_api_36");
+
+			Assert.AreEqual ("Pixel 9 Pro Xl API 36", result, "Should format complex names correctly");
+		}
+
+		[Test]
+		public void FormatDisplayName_PreservesNumbersAndSpecialChars ()
+		{
+			var task = new MockGetAvailableAndroidDevices {
+				BuildEngine = engine,
+			};
+
+			var result = task.FormatDisplayName ("emulator-5554", "pixel_7-pro_api_35");
+
+			Assert.AreEqual ("Pixel 7-Pro API 35", result, "Should preserve hyphens and numbers");
+		}
+
+		[Test]
+		public void FormatDisplayName_HandlesEmptyString ()
+		{
+			var task = new MockGetAvailableAndroidDevices {
+				BuildEngine = engine,
+			};
+
+			var result = task.FormatDisplayName ("emulator-5554", "");
+
+			Assert.AreEqual ("", result, "Should handle empty string");
+		}
+
+		[Test]
+		public void FormatDisplayName_HandlesSingleWord ()
+		{
+			var task = new MockGetAvailableAndroidDevices {
+				BuildEngine = engine,
+			};
+
+			var result = task.FormatDisplayName ("emulator-5554", "pixel");
+
+			Assert.AreEqual ("Pixel", result, "Should capitalize single word");
+		}
+
+		[Test]
+		public void FormatDisplayName_DoesNotReplaceApiInsideWords ()
+		{
+			var task = new MockGetAvailableAndroidDevices {
+				BuildEngine = engine,
+			};
+
+			var result = task.FormatDisplayName ("emulator-5554", "erapidevice");
+
+			Assert.AreEqual ("Erapidevice", result, "Should not replace 'api' when it's part of a larger word");
+		}
 	}
 }

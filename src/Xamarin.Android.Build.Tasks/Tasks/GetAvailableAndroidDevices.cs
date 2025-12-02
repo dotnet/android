@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -24,6 +25,7 @@ public class GetAvailableAndroidDevices : AndroidAdb
     // Pattern to match device lines: <serial> <state> [key:value ...]
     // Example: emulator-5554          device product:sdk_gphone64_arm64 model:sdk_gphone64_arm64
     static readonly Regex AdbDevicesRegex = new(@"^([^\s]+)\s+(device|offline|unauthorized|no permissions)\s*(.*)$", RegexOptions.Compiled);
+    static readonly Regex ApiRegex = new(@"\bApi\b", RegexOptions.Compiled);
 
     readonly List<string> output = [];
 
@@ -198,8 +200,7 @@ public class GetAvailableAndroidDevices : AndroidAdb
                 var avdName = outputLines [0].Trim ();
                 // Verify it's not the "OK" response
                 if (!string.IsNullOrEmpty (avdName) && !avdName.Equals ("OK", StringComparison.OrdinalIgnoreCase)) {
-                    // Format the AVD name: replace underscores with spaces
-                    return avdName.Replace ('_', ' ');
+                    return FormatDisplayName(serial, avdName);
                 }
             }
         } catch (Exception ex) {
@@ -207,5 +208,22 @@ public class GetAvailableAndroidDevices : AndroidAdb
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Formats the AVD name into a more user-friendly display name. Replace underscores with spaces and title case.
+    /// </summary>
+    public string FormatDisplayName(string serial, string avdName)
+    {
+        Log.LogDebugMessage ($"Emulator {serial}, original AVD name: {avdName}");
+
+        // Title case and replace underscores with spaces
+        var textInfo = CultureInfo.InvariantCulture.TextInfo;
+        avdName = textInfo.ToTitleCase(avdName.Replace ('_', ' '));
+
+        // Replace "Api" with "API"
+        avdName = ApiRegex.Replace (avdName, "API");
+        Log.LogDebugMessage ($"Emulator {serial}, formatted AVD display name: {avdName}");
+        return avdName;
     }
 }
