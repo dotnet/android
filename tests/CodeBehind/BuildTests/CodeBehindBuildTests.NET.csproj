@@ -16,6 +16,12 @@
     <PublishAot>@PublishAot@</PublishAot>
     <Configuration>@Configuration@</Configuration>
   </PropertyGroup>
+
+  <!-- Disable NativeAOT/ILC warnings when running on CI, since there they are treated as errors there -->
+  <PropertyGroup Condition=" '$(RunningOnCI)' == 'true' And '$(_AndroidRuntime)' == 'NativeAOT' ">
+    <NoWarn>XA1040;IL3053</NoWarn>
+  </PropertyGroup>
+
   <PropertyGroup>
     <DefineConstants Condition=" '$(ExtraConstants)' != '' ">$(DefineConstants);$(ExtraConstants)</DefineConstants>
   </PropertyGroup>
