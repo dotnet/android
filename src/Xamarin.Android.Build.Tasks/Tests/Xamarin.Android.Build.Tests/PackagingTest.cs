@@ -137,7 +137,6 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				"Humanizer.dll",
 				"es/Humanizer.resources.dll",
 				"System.Collections.dll",
-				"System.Collections.Concurrent.dll",
 				"System.Text.RegularExpressions.dll",
 			};
 
