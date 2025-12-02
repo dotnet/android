@@ -1,5 +1,6 @@
 using System.IO;
 using NUnit.Framework;
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -8,11 +9,15 @@ namespace Xamarin.Android.Build.Tests
 	public class WearTests : BaseTest
 	{
 		[Test]
-		public void BasicProject ([Values (true, false)] bool isRelease)
+		public void BasicProject ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidWearApplicationProject {
 				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
