@@ -200,7 +200,7 @@ public class GetAvailableAndroidDevices : AndroidAdb
                 var avdName = outputLines [0].Trim ();
                 // Verify it's not the "OK" response
                 if (!string.IsNullOrEmpty (avdName) && !avdName.Equals ("OK", StringComparison.OrdinalIgnoreCase)) {
-                    return FormatDisplayName(serial, avdName);
+                    return FormatDisplayName (serial, avdName);
                 }
             }
         } catch (Exception ex) {
@@ -213,13 +213,13 @@ public class GetAvailableAndroidDevices : AndroidAdb
     /// <summary>
     /// Formats the AVD name into a more user-friendly display name. Replace underscores with spaces and title case.
     /// </summary>
-    public string FormatDisplayName(string serial, string avdName)
+    public string FormatDisplayName (string serial, string avdName)
     {
         Log.LogDebugMessage ($"Emulator {serial}, original AVD name: {avdName}");
 
         // Title case and replace underscores with spaces
         var textInfo = CultureInfo.InvariantCulture.TextInfo;
-        avdName = textInfo.ToTitleCase(avdName.Replace ('_', ' '));
+        avdName = textInfo.ToTitleCase (avdName.Replace ('_', ' '));
 
         // Replace "Api" with "API"
         avdName = ApiRegex.Replace (avdName, "API");
