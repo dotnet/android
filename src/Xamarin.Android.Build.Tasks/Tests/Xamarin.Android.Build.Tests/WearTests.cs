@@ -24,13 +24,21 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BundledWearApp ()
+		public void BundledWearApp ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				ProjectName = "MyApp",
 				EmbedAssembliesIntoApk = true,
 			};
+			app.SetRuntime (runtime);
+
 			var wear = new XamarinAndroidWearApplicationProject {
 				EmbedAssembliesIntoApk = true,
 			};
