@@ -104,6 +104,9 @@ namespace Xamarin.Android.Build.Tests
 		const string AppEnvironmentVariablesSymbolName = "app_environment_variables";
 		const string AppEnvironmentVariableContentsSymbolName = "app_environment_variable_contents";
 
+		const string AppEnvironmentVariablesNativeAOTSymbolName = "__naot_android_app_environment_variables";
+		const string AppEnvironmentVariableContentsNativeAOTSymbolName = "__naot_android_app_environment_variable_contents";
+
 		static readonly object ndkInitLock = new object ();
 		static readonly char[] readElfFieldSeparator = new [] { ' ', '\t' };
 		static readonly Regex assemblerLabelRegex = new Regex ("^[_.a-zA-Z0-9]+:", RegexOptions.Compiled);
@@ -572,30 +575,30 @@ namespace Xamarin.Android.Build.Tests
 		{
 			return runtime switch {
 				AndroidRuntime.MonoVM => ReadEnvironmentVariables_MonoVM (envFile),
-				AndroidRuntime.CoreCLR => ReadEnvironmentVariables_CoreCLR_NativeAOT (envFile),
-				AndroidRuntime.NativeAOT => ReadEnvironmentVariables_CoreCLR_NativeAOT (envFile),
+				AndroidRuntime.CoreCLR => ReadEnvironmentVariables_CoreCLR_NativeAOT (envFile, AppEnvironmentVariablesSymbolName, AppEnvironmentVariableContentsSymbolName),
+				AndroidRuntime.NativeAOT => ReadEnvironmentVariables_CoreCLR_NativeAOT (envFile, AppEnvironmentVariablesNativeAOTSymbolName, AppEnvironmentVariableContentsNativeAOTSymbolName),
 				_ => throw new InvalidOperationException ($"Unsupported runtime '{runtime}'")
 			};
 		}
 
-		static Dictionary<string, string> ReadEnvironmentVariables_CoreCLR_NativeAOT (EnvironmentFile envFile)
+		static Dictionary<string, string> ReadEnvironmentVariables_CoreCLR_NativeAOT (EnvironmentFile envFile, string envvarsSymbolName, string envvarsContentsSymbolName)
 		{
 			NativeAssemblyParser parser = CreateAssemblyParser (envFile);
-			if (!parser.Symbols.TryGetValue (AppEnvironmentVariablesSymbolName, out NativeAssemblyParser.AssemblerSymbol appEnvvarsSymbol)) {
-				Assert.Fail ($"Symbol '{AppEnvironmentVariablesSymbolName}' not found in LLVM IR file '{envFile.Path}'");
+			if (!parser.Symbols.TryGetValue (envvarsSymbolName, out NativeAssemblyParser.AssemblerSymbol appEnvvarsSymbol)) {
+				Assert.Fail ($"Symbol '{envvarsSymbolName}' not found in LLVM IR file '{envFile.Path}'");
 			}
-			Assert.IsTrue (appEnvvarsSymbol.Size != 0, $"{AppEnvironmentVariablesSymbolName} size as specified in the '.size' directive must not be 0");
-			Assert.IsTrue (appEnvvarsSymbol.Contents.Count % 2 == 0, $"{AppEnvironmentVariablesSymbolName} must contain an even number of items (contains {appEnvvarsSymbol.Contents.Count})");
+			Assert.IsTrue (appEnvvarsSymbol.Size != 0, $"{envvarsSymbolName} size as specified in the '.size' directive must not be 0");
+			Assert.IsTrue (appEnvvarsSymbol.Contents.Count % 2 == 0, $"{envvarsSymbolName} must contain an even number of items (contains {appEnvvarsSymbol.Contents.Count})");
 
-			if (!parser.Symbols.TryGetValue (AppEnvironmentVariableContentsSymbolName, out NativeAssemblyParser.AssemblerSymbol appEnvvarsContentsSymbol)) {
-				Assert.Fail ($"Symbol '{AppEnvironmentVariableContentsSymbolName}' not found in LLVM IR file '{envFile.Path}'");
+			if (!parser.Symbols.TryGetValue (envvarsContentsSymbolName, out NativeAssemblyParser.AssemblerSymbol appEnvvarsContentsSymbol)) {
+				Assert.Fail ($"Symbol '{envvarsContentsSymbolName}' not found in LLVM IR file '{envFile.Path}'");
 			}
-			Assert.IsTrue (appEnvvarsContentsSymbol.Size != 0, $"{AppEnvironmentVariableContentsSymbolName} size as specified in the '.size' directive must not be 0");
-			Assert.IsTrue (appEnvvarsContentsSymbol.Contents.Count == 1, $"{AppEnvironmentVariableContentsSymbolName} symbol must have a single value.");
+			Assert.IsTrue (appEnvvarsContentsSymbol.Size != 0, $"{envvarsContentsSymbolName} size as specified in the '.size' directive must not be 0");
+			Assert.IsTrue (appEnvvarsContentsSymbol.Contents.Count == 1, $"{envvarsContentsSymbolName} symbol must have a single value.");
 
 			NativeAssemblyParser.AssemblerSymbolItem contentsItem = appEnvvarsContentsSymbol.Contents[0];
 			string[] field = GetField (envFile.Path, parser.SourceFilePath, contentsItem.Contents, contentsItem.LineNumber);;
-			Assert.IsTrue (field[0] == ".asciz", $"{AppEnvironmentVariableContentsSymbolName} must be of '.asciz' type");
+			Assert.IsTrue (field[0] == ".asciz", $"{envvarsContentsSymbolName} must be of '.asciz' type");
 
 
 			var sb = new StringBuilder ();
