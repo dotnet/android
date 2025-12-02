@@ -46,37 +46,62 @@ namespace Xamarin.Android.Build.Tests
 			dotnet.AssertHasNoWarnings ();
 		}
 
-		static readonly object[] DotNetPackTargetFrameworks = new object[] {
-			new object[] {
-				"net9.0",
-				"android",
-				new Version (35, 0),
-			},
-			new object[] {
-				"net9.0",
-				"android35",
-				new Version (35, 0),
-			},
-			new object[] {
-				"net10.0",
-				"android",
-				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
-			},
-			new object[] {
-				"net10.0",
-				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
-				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
-			},
-		};
+		static IEnumerable<object[]> Get_DotNetPack_Data ()
+		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData (
+					dotnetVersion: "net9.0",
+					platform: "android",
+					apiLevel: new Version (35, 0),
+					runtime: runtime);
+
+				AddTestData (
+					dotnetVersion: "net9.0",
+					platform: "android35",
+					apiLevel: new Version (35, 0),
+					runtime: runtime);
+
+				AddTestData (
+					dotnetVersion: "net10.0",
+					platform: "android",
+					apiLevel: XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+					runtime: runtime);
+
+				AddTestData (
+					dotnetVersion: "net10.0",
+					platform: $"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
+					apiLevel: XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+					runtime: runtime);
+			}
+
+			return ret;
+
+			void AddTestData (string dotnetVersion, string platform, Version apiLevel, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					dotnetVersion,
+					platform,
+					apiLevel,
+					runtime,
+				});
+			}
+		}
 
 		[Test]
-		[TestCaseSource (nameof (DotNetPackTargetFrameworks))]
-		public void DotNetPack (string dotnetVersion, string platform, Version apiLevel)
+		[TestCaseSource (nameof (Get_DotNetPack_Data))]
+		public void DotNetPack (string dotnetVersion, string platform, Version apiLevel, [Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var targetFramework = $"{dotnetVersion}-{platform}";
 			var proj = new XamarinAndroidLibraryProject {
 				TargetFramework = targetFramework,
-				IsRelease = true,
+				IsRelease = isRelease,
 				EnableDefaultItems = true,
 				Sources = {
 					new BuildItem.Source ("Foo.cs") {
@@ -108,6 +133,7 @@ public class JavaSourceTest {
 					new Package { Id = "Xamarin.KotlinX.Serialization.Core.Jvm", Version = "1.7.1.1" },
 				}
 			};
+			proj.SetRuntime (runtime);
 			if (IsPreviewFrameworkVersion (targetFramework)) {
 				proj.SetProperty ("EnablePreviewFeatures", "true");
 			}
