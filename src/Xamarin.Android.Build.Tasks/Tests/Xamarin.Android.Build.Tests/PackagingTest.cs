@@ -956,8 +956,13 @@ public class Test
 		}
 
 		[Test]
-		public void DefaultItems ()
+		public void DefaultItems ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			void CreateEmptyFile (string path)
 			{
 				Directory.CreateDirectory (Path.GetDirectoryName (path));
@@ -965,8 +970,10 @@ public class Test
 			}
 
 			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
 				EnableDefaultItems = true,
 			};
+			proj.SetRuntime (runtime);
 
 			var builder = CreateApkBuilder ();
 			builder.Save (proj);
