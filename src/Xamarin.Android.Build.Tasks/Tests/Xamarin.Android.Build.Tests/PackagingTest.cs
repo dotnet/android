@@ -866,23 +866,48 @@ public class Test
 			}
 		}
 
-		[Test]
-		[TestCase (1, -1)]
-		[TestCase (5, -1)]
-		[TestCase (50, -1)]
-		[TestCase (100, -1)]
-		[TestCase (512, -1)]
-		[TestCase (1024, -1)]
-		[TestCase (-1, 1)]
-		[TestCase (-1, 5)]
-		[TestCase (-1, 10)]
-		[TestCase (-1, 100)]
-		[TestCase (-1, 200)]
-		public void BuildApkWithZipFlushLimits (int filesLimit, int sizeLimit)
+		static IEnumerable<object[]> Get_BuildApkWithZipFlushLimits_Data ()
 		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData (1, -1, runtime);
+				AddTestData (5, -1, runtime);
+				AddTestData (50, -1, runtime);
+				AddTestData (100, -1, runtime);
+				AddTestData (512, -1, runtime);
+				AddTestData (1024, -1, runtime);
+				AddTestData (-1, 1, runtime);
+				AddTestData (-1, 5, runtime);
+				AddTestData (-1, 10, runtime);
+				AddTestData (-1, 100, runtime);
+				AddTestData (-1, 200, runtime);
+			}
+
+			return ret;
+
+			void AddTestData (int filesLimit, int sizeLimit, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					filesLimit,
+					sizeLimit,
+					runtime,
+				});
+			}
+		}
+
+		[Test]
+		[TestCaseSource (nameof (Get_BuildApkWithZipFlushLimits_Data))]
+		public void BuildApkWithZipFlushLimits (int filesLimit, int sizeLimit, AndroidRuntime runtime)
+		{
+			const bool isRelease = false;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinFormsAndroidApplicationProject {
-				IsRelease = false,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("EmbedAssembliesIntoApk", "true");
 			if (filesLimit > 0)
 				proj.SetProperty ("_ZipFlushFilesLimit", filesLimit.ToString ());
