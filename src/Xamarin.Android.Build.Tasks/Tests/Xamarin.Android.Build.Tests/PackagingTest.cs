@@ -920,13 +920,21 @@ public class Test
 		}
 
 		[Test]
-		public void ExtractNativeLibsTrue ()
+		public void ExtractNativeLibsTrue ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				// This combination produces android:extractNativeLibs="false" by default
 				SupportedOSPlatformVersion = "23",
 				ManifestMerger = "manifestmerger.jar",
 			};
+			proj.SetRuntime (runtime);
+
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
