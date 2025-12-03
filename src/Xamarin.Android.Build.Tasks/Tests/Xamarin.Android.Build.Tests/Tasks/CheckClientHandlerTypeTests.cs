@@ -81,16 +81,41 @@ namespace Xamarin.Android.Build.Tests
 			Assert.True (task.Execute (), $"task should have succeeded. {string.Join (";", errors.Select (x => x.Message))}");
 		}
 
-		[Test]
-		[TestCase ("Xamarin.Android.Net.AndroidClientHandler")]
-		public void ErrorIsRaised (string handler)
+		static IEnumerable<object[]> Get_ErrorIsRaised_Data ()
 		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData ("Xamarin.Android.Net.AndroidClientHandler", runtime);
+			}
+
+			return ret;
+
+			void AddTestData (string handler, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					handler,
+					runtime,
+				});
+			}
+		}
+
+		[Test]
+		[TestCaseSource (nameof (Get_ErrorIsRaised_Data))]
+		public void ErrorIsRaised (string handler, AndroidRuntime runtime)
+		{
+			const bool isRelease = false;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var path = Path.Combine (Root, "temp", TestName);
 			Directory.CreateDirectory (path);
 			string intermediatePath;
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = false,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.PackageReferences.Add (new Package() { Id = "System.Net.Http", Version = "*" });
 			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
