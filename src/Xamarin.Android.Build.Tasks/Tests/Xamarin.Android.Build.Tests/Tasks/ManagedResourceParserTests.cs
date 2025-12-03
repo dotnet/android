@@ -299,11 +299,18 @@ int xml myxml 0x7f140000
 			File.WriteAllText (Path.Combine (Root, path, "lp", "__res_name_case_map.txt"), "menu/Options.xml;menu/options.xml");
 		}
 
-		void BuildLibraryWithResources (string path)
+		void BuildLibraryWithResources (string path, AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var library = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
 				ProjectName = "Library",
 			};
+			library.SetRuntime (runtime);
 
 			var libraryStrings = library.AndroidResources.FirstOrDefault (r => r.Include () == @"Resources\values\Strings.xml");
 
@@ -425,8 +432,15 @@ int xml myxml 0x7f140000
 		}
 
 		[Test]
-		public void GenerateDesignerFileFromRtxt ([Values (false, true)] bool withLibraryReference)
+		public void GenerateDesignerFileFromRtxt ([Values] bool withLibraryReference, [Values] AndroidRuntime runtime)
 		{
+			// TODO: fix NativeAOT, it currently fails with:
+			//
+			//  bin/TestDebug/temp/GenerateDesignerFileFromRtxtTrueNativeAOT Some Space/Resource.designer.cs and bin/TestDebug/Expected/GenerateDesignerFileWithLibraryReferenceExpected.cs do not match.
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT currently doesn't work with this test.");
+			}
+
 			var path = Path.Combine ("temp", TestName + " Some Space");
 			CreateResourceDirectory (path);
 			var mapTask = CreateCaseMapTask (path);
@@ -436,7 +450,7 @@ int xml myxml 0x7f140000
 			File.WriteAllText (task.RTxtFile, Rtxt);
 			if (withLibraryReference) {
 				var libraryPath = Path.Combine (path, "Library");
-				BuildLibraryWithResources (libraryPath);
+				BuildLibraryWithResources (libraryPath, runtime);
 				task.References = new TaskItem [] {
 					new TaskItem (Path.Combine (Root, libraryPath, "bin", "Debug", "Library.dll"))
 				};
