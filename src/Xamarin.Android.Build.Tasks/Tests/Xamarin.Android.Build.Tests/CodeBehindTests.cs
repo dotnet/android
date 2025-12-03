@@ -307,9 +307,9 @@ namespace Xamarin.Android.Build.Tests
 			RunTest (TestName, many: true, dtb: true, runner: SuccessfulBuild_RunTest, runtime: runtime);
 		}
 
-		void SuccessfulBuild_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
+		void SuccessfulBuild_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder, AndroidRuntime runtime)
 		{
-			string[] parameters = GetBuildProperties (builder, many, dtb, referenceAndroidX:false);
+			string[] parameters = GetBuildProperties (builder, runtime, many, dtb, referenceAndroidX:false);
 			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
@@ -340,9 +340,9 @@ namespace Xamarin.Android.Build.Tests
 			RunTest (TestName, many: true, dtb: false, runner: SuccessfulBuild_AndroidX, runtime: runtime);
 		}
 
-		void SuccessfulBuild_AndroidX (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
+		void SuccessfulBuild_AndroidX (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder, AndroidRuntime runtime)
 		{
-			string[] parameters = GetBuildProperties (builder, many, dtb, referenceAndroidX:true, "__HAVE_ANDROIDX__");
+			string[] parameters = GetBuildProperties (builder, runtime, many, dtb, referenceAndroidX:true, "__HAVE_ANDROIDX__");
 			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
@@ -383,9 +383,9 @@ namespace Xamarin.Android.Build.Tests
 			RunTest (TestName, many: true, dtb: false, runner: FailedBuild_ConflictingFragment_RunTest, runtime: runtime);
 		}
 
-		void FailedBuild_ConflictingFragment_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
+		void FailedBuild_ConflictingFragment_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder, AndroidRuntime runtime)
 		{
-			string[] parameters = GetBuildProperties (builder, many, dtb, referenceAndroidX:false, "NOT_CONFLICTING_FRAGMENT");
+			string[] parameters = GetBuildProperties (builder, runtime, many, dtb, referenceAndroidX:false, "NOT_CONFLICTING_FRAGMENT");
 			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
@@ -411,9 +411,9 @@ namespace Xamarin.Android.Build.Tests
 			RunTest (TestName, many: true, dtb: false, runner: FailedBuild_ConflictingTextView_RunTest, runtime: runtime);
 		}
 
-		void FailedBuild_ConflictingTextView_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
+		void FailedBuild_ConflictingTextView_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder, AndroidRuntime runtime)
 		{
-			string[] parameters = GetBuildProperties (builder, many, dtb, referenceAndroidX:false, "NOT_CONFLICTING_TEXTVIEW");
+			string[] parameters = GetBuildProperties (builder, runtime, many, dtb, referenceAndroidX:false, "NOT_CONFLICTING_TEXTVIEW");
 			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
@@ -439,9 +439,9 @@ namespace Xamarin.Android.Build.Tests
 			RunTest (TestName, many: true, dtb: false, runner: FailedBuild_ConflictingButton_RunTest, runtime: runtime);
 		}
 
-		void FailedBuild_ConflictingButton_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
+		void FailedBuild_ConflictingButton_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder, AndroidRuntime runtime)
 		{
-			string[] parameters = GetBuildProperties (builder, many, dtb, referenceAndroidX:false, "NOT_CONFLICTING_BUTTON");
+			string[] parameters = GetBuildProperties (builder, runtime, many, dtb, referenceAndroidX:false, "NOT_CONFLICTING_BUTTON");
 			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
@@ -467,9 +467,9 @@ namespace Xamarin.Android.Build.Tests
 			RunTest (TestName, many: true, dtb: false, runner: FailedBuild_ConflictingLinearLayout_RunTest, runtime: runtime);
 		}
 
-		void FailedBuild_ConflictingLinearLayout_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
+		void FailedBuild_ConflictingLinearLayout_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder, AndroidRuntime runtime)
 		{
-			string[] parameters = GetBuildProperties (builder, many, dtb, referenceAndroidX:false, "NOT_CONFLICTING_LINEARLAYOUT");
+			string[] parameters = GetBuildProperties (builder, runtime, many, dtb, referenceAndroidX:false, "NOT_CONFLICTING_LINEARLAYOUT");
 			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
@@ -495,9 +495,9 @@ namespace Xamarin.Android.Build.Tests
 			RunTest (TestName, many: true, dtb: false, runner: FailedBuild_ConflictingRelativeLayout_RunTest, runtime: runtime);
 		}
 
-		void FailedBuild_ConflictingRelativeLayout_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
+		void FailedBuild_ConflictingRelativeLayout_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder, AndroidRuntime runtime)
 		{
-			string[] parameters = GetBuildProperties (builder, many, dtb, referenceAndroidX:false, "NOT_CONFLICTING_RELATIVELAYOUT");
+			string[] parameters = GetBuildProperties (builder, runtime, many, dtb, referenceAndroidX:false, "NOT_CONFLICTING_RELATIVELAYOUT");
 			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
@@ -516,11 +516,30 @@ namespace Xamarin.Android.Build.Tests
 			return isDTB ? "Compile" : "SignAndroidPackage";
 		}
 
-		string[] GetBuildProperties (LocalBuilder builder, bool manyBuild, bool dtbBuild, bool referenceAndroidX, params string[] extraConstants)
+		string[] GetBuildProperties (LocalBuilder builder, AndroidRuntime runtime, bool manyBuild, bool dtbBuild, bool referenceAndroidX, params string[] extraConstants)
 		{
+			var noWarn = new List<string> {
+				"CA1416",
+				"CS0414",
+				"CS1591",
+				"XA1005",
+				"XA4225",
+			};
+
+			if (runtime == AndroidRuntime.NativeAOT) {
+				// We disable these only on CI, since they would cause the tests to fail there.
+				string? runningOnCI = Environment.GetEnvironmentVariable ("RunningOnCI");
+				if (runningOnCI == "true") {
+					Console.WriteLine ("CodeBehindTests: using NativeAOT and running on CI, disabling warnings.");
+					noWarn.Add ("IL2091");
+					noWarn.Add ("IL3053");
+					noWarn.Add ("XA1040");
+				}
+			}
+
 			var ret = new List <string> {
 				"AndroidGenerateLayoutBindings=true",
-				"\"NoWarn=CS0414;CA1416;CS1591;XA1005;XA4225\""
+				$"\"NoWarn={String.Join (';', noWarn)}\""
 			};
 			if (manyBuild)
 				ret.Add ("ForceParallelBuild=true");
@@ -586,7 +605,7 @@ namespace Xamarin.Android.Build.Tests
 		/// <param name="many">Generate code in parallel if <c>true</c>, serially otherwise</param>
 		/// <param name="dtb">Test design-time build if <c>true</c>, regular build otherwise</param>
 		/// <param name="runner">Action consituting the main body of the test. Passed parameters are described above in the remarks section.</param>
-		void RunTest (string testName, bool many, bool dtb, Action<TestProjectInfo, bool, bool, LocalBuilder> runner, AndroidRuntime runtime)
+		void RunTest (string testName, bool many, bool dtb, Action<TestProjectInfo, bool, bool, LocalBuilder, AndroidRuntime> runner, AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -599,7 +618,7 @@ namespace Xamarin.Android.Build.Tests
 			var testInfo = new TestProjectInfo (ProjectName, testName, temporaryProjectDir, TestOutputDir, runtime);
 
 			try {
-				runner (testInfo, many, dtb, builder);
+				runner (testInfo, many, dtb, builder, runtime);
 
 				if (many) {
 					Assert.That (WasParsedInParallel (testInfo), Is.True, "Should have been parsed in parallel");
