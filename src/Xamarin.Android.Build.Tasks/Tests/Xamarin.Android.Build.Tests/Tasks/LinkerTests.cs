@@ -236,8 +236,11 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void WarnAboutAppDomains ([Values (true, false)] bool isRelease)
+		public void WarnAboutAppDomains ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			if (isRelease) {
 				// NOTE: trimmer warnings are hidden by default in .NET 7 rc1
 				Assert.Ignore("https://github.com/dotnet/linker/issues/2982");
@@ -253,8 +256,10 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 			};
+			lib.SetRuntime (runtime);
 
 			var app = new XamarinAndroidApplicationProject { IsRelease = isRelease };
+			app.SetRuntime (runtime);
 			app.SetAndroidSupportedAbis ("arm64-v8a");
 			app.AddReference (lib);
 			using var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName));
