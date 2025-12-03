@@ -167,12 +167,17 @@ namespace Xamarin.Android.Build.Tests
 				string handlerAssembly,
 				string testProjectName,
 				string assemblyPath,
-				TrimMode trimMode)
+				TrimMode trimMode,
+				AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			testProjectName += trimMode.ToString ();
 
 			var class_library = new XamarinAndroidLibraryProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 				ProjectName = "MyClassLibrary",
 				Sources = {
 					new BuildItem.Source ("MyCustomHandler.cs") {
@@ -189,13 +194,14 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 			};
+			class_library.SetRuntime (runtime);
 			using (var libBuilder = CreateDllBuilder ($"{testProjectName}/{class_library.ProjectName}")) {
 				Assert.IsTrue (libBuilder.Build (class_library), $"Build for {class_library.ProjectName} should have succeeded.");
 			}
 
 			var proj = new XamarinAndroidApplicationProject {
 				ProjectName = "MyApp",
-				IsRelease = true,
+				IsRelease = isRelease,
 				TrimModeRelease = trimMode,
 				Sources = {
 					new BuildItem.Source ("Foo.cs") {
@@ -203,6 +209,7 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 			};
+			proj.SetRuntime (runtime);
 			proj.AddReference (class_library);
 			proj.AddReferences ("System.Net.Http");
 			string handlerTypeFullName = string.IsNullOrEmpty(handlerAssembly) ? handlerType : handlerType + ", " + handlerAssembly;
@@ -218,14 +225,14 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void PreserveCustomHttpClientHandlers ([Values (TrimMode.Partial, TrimMode.Full)] TrimMode trimMode)
+		public void PreserveCustomHttpClientHandlers ([Values (TrimMode.Partial, TrimMode.Full)] TrimMode trimMode, [Values] AndroidRuntime runtime)
 		{
 			PreserveCustomHttpClientHandler ("Xamarin.Android.Net.AndroidMessageHandler", "",
-				"temp/PreserveAndroidMessageHandler", "android-arm64/linked/Mono.Android.dll", trimMode);
+				$"temp/PreserveAndroidMessageHandler{trimMode}{runtime}", "android-arm64/linked/Mono.Android.dll", trimMode, runtime);
 			PreserveCustomHttpClientHandler ("System.Net.Http.SocketsHttpHandler", "System.Net.Http",
-				"temp/PreserveSocketsHttpHandler", "android-arm64/linked/System.Net.Http.dll", trimMode);
+				$"temp/PreserveSocketsHttpHandler{trimMode}{runtime}", "android-arm64/linked/System.Net.Http.dll", trimMode, runtime);
 			PreserveCustomHttpClientHandler ("MyCustomHandler", "MyClassLibrary",
-				"temp/MyCustomHandler", "android-arm64/linked/MyClassLibrary.dll", trimMode);
+				$"temp/MyCustomHandler{trimMode}{runtime}", "android-arm64/linked/MyClassLibrary.dll", trimMode, runtime);
 		}
 
 		[Test]
