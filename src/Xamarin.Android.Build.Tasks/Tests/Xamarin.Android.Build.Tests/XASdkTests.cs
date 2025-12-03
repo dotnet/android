@@ -196,42 +196,6 @@ public class JavaSourceTest {
 			}
 		}
 
-		static readonly object[] DotNetTargetFrameworks = new object[] {
-			new object[] {
-				"net9.0",
-				"android",
-				new Version (35, 0),
-			},
-			new object[] {
-				"net10.0",
-				"android",
-				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
-			},
-
-			new object[] {
-				"net10.0",
-				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major}",
-				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
-			},
-
-			new object[] {
-				"net10.0",
-				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
-				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
-			},
-
-			new object[] {
-				"net10.0",
-				XABuildConfig.AndroidLatestStableApiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel ? null : $"android{XABuildConfig.AndroidLatestStableApiLevel}",
-				XABuildConfig.AndroidLatestStableApiLevel,
-			},
-			new object[] {
-				"net10.0",
-				XABuildConfig.AndroidLatestUnstableApiLevel == XABuildConfig.AndroidLatestStableApiLevel ? null : $"android{XABuildConfig.AndroidLatestUnstableApiLevel}",
-				XABuildConfig.AndroidLatestUnstableApiLevel,
-			},
-		};
-
 		static IEnumerable<object[]> Get_DotNetTargetFrameworks_Data ()
 		{
 			var ret = new List<object[]> ();
@@ -413,20 +377,27 @@ public class JavaSourceTest {
 		}
 
 		[Test]
-		[TestCaseSource (nameof (DotNetTargetFrameworks))]
-		public void MauiTargetFramework (string dotnetVersion, string platform, Version apiLevel)
+		[TestCaseSource (nameof (Get_DotNetTargetFrameworks_Data))]
+		public void MauiTargetFramework (string dotnetVersion, string platform, Version apiLevel, AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			if (string.IsNullOrEmpty (platform))
 				Assert.Ignore ($"Test for API level {apiLevel} was skipped as it matched the default or latest stable API level.");
 
 			var targetFramework = $"{dotnetVersion}-{platform}";
 			var library = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
 				TargetFramework = targetFramework,
 				EnableDefaultItems = true,
 				ExtraNuGetConfigSources = {
 					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
 				}
 			};
+			library.SetRuntime (runtime);
 
 			var preview = IsPreviewFrameworkVersion (targetFramework);
 			if (preview) {
