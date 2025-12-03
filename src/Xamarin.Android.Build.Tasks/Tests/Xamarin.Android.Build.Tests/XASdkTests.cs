@@ -300,11 +300,25 @@ public class JavaSourceTest {
 		}
 
 		[Test]
-		public void DotNetPublishDefaultValues([Values (false, true)] bool isRelease)
+		public void DotNetPublishDefaultValues ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// TODO: fix NativeAOT build. It currently fails with
+			//
+			//  error MSB3030: Could not copy the file "bin/Release/native/UnnamedProject.so" because it was not found.
+			//
+			// The file exists in bin/Release/{RID}/native/UnnamedProject.so
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT publish support is broken atm");
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease
 			};
+			proj.SetRuntime (runtime);
 			var builder = CreateDllBuilder ();
 			builder.Save (proj);
 			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
