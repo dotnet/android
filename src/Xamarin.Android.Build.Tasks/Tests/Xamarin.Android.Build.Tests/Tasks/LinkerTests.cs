@@ -378,10 +378,14 @@ $@"<linker>
 		}
 
 		[Test]
-		public void LinkWithNullAttribute ()
+		public void LinkWithNullAttribute ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 				OtherBuildItems = {
 					new BuildItem ("Compile", "NullAttribute.cs") { TextContent = () => @"
 using System;
@@ -414,6 +418,7 @@ namespace UnnamedProject {
 				}
 			};
 
+			proj.SetRuntime (runtime);
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
 $@"			var myButton = new AttributedButtonStub (this);
 			myButton.Text = ""Bug #35710"";
