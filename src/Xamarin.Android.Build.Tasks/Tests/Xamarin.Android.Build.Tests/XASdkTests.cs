@@ -232,6 +232,67 @@ public class JavaSourceTest {
 			},
 		};
 
+		static IEnumerable<object[]> Get_DotNetTargetFrameworks_Data ()
+		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData (
+					dotnetVersion: "net9.0",
+					platform: "android",
+					apiLevel: new Version (35, 0),
+					runtime: runtime
+				);
+
+				AddTestData (
+					dotnetVersion: "net10.0",
+					platform: "android",
+					apiLevel: XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+					runtime: runtime
+				);
+
+				AddTestData (
+					dotnetVersion: "net10.0",
+					platform: $"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major}",
+					apiLevel: XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+					runtime: runtime
+				);
+
+				AddTestData (
+					dotnetVersion: "net10.0",
+					platform: $"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
+					apiLevel: XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+					runtime: runtime
+				);
+
+				AddTestData (
+					dotnetVersion: "net10.0",
+					platform: XABuildConfig.AndroidLatestStableApiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel ? null : $"android{XABuildConfig.AndroidLatestStableApiLevel}",
+					apiLevel: XABuildConfig.AndroidLatestStableApiLevel,
+					runtime: runtime
+				);
+
+				AddTestData (
+					dotnetVersion: "net10.0",
+					platform: XABuildConfig.AndroidLatestUnstableApiLevel == XABuildConfig.AndroidLatestStableApiLevel ? null : $"android{XABuildConfig.AndroidLatestUnstableApiLevel}",
+					apiLevel: XABuildConfig.AndroidLatestUnstableApiLevel,
+					runtime: runtime
+				);
+			}
+
+			return ret;
+
+			void AddTestData (string dotnetVersion, string platform, Version apiLevel, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					dotnetVersion,
+					platform,
+					apiLevel,
+					runtime,
+				});
+			}
+		}
+
 		static bool IsPreviewFrameworkVersion (string targetFramework)
 		{
 			return (targetFramework.Contains ($"{XABuildConfig.AndroidLatestUnstableApiLevel}")
@@ -251,11 +312,16 @@ public class JavaSourceTest {
 		}
 
 		[Test]
-		public void DotNetPublish ([Values (false, true)] bool isRelease, [ValueSource(nameof(DotNetTargetFrameworks))] object[] data)
+		public void DotNetPublish ([Values] bool isRelease, [ValueSource (nameof(Get_DotNetTargetFrameworks_Data))] object[] data)
 		{
 			var dotnetVersion = (string)data[0];
 			var platform = (string)data[1];
 			var apiLevel = (Version)data[2];
+			var runtime = (AndroidRuntime)data[3];
+
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 
 			//FIXME: will revisit this in a future PR
 			if (dotnetVersion != "net10.0") {
@@ -275,6 +341,7 @@ public class JavaSourceTest {
 					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
 				}
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
 
 			var preview = IsPreviewFrameworkVersion (targetFramework);
@@ -291,7 +358,12 @@ public class JavaSourceTest {
 
 			// NOTE: Preview API levels emit XA4211
 			if (!preview) {
-				dotnet.AssertHasNoWarnings ();
+				if (runtime != AndroidRuntime.NativeAOT) {
+					dotnet.AssertHasNoWarnings ();
+				} else {
+					// NativeAOT currently issues 1 warning
+					dotnet.AssertHasSomeWarnings (1);
+				}
 			}
 
 			// Only check latest TFM, as previous or preview TFMs will come from NuGet
@@ -301,8 +373,6 @@ public class JavaSourceTest {
 				var expectedMonoAndroidRefPath = Path.Combine (refDirectory, "ref", dotnetVersion, "Mono.Android.dll");
 				Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRefPath), $"Build should be using {expectedMonoAndroidRefPath}");
 
-				// TODO: We could parameterize this later
-				const string runtime = "Mono";
 				var runtimeApiLevel = (apiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel && apiLevel < XABuildConfig.AndroidLatestStableApiLevel) ? XABuildConfig.AndroidLatestStableApiLevel : apiLevel;
 				versionString = runtimeApiLevel.Minor == 0 ? $"{runtimeApiLevel.Major}" : $"{runtimeApiLevel.Major}.{runtimeApiLevel.Minor}";
 				var runtimeDirectory = Directory.GetDirectories (Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Runtime.{versionString}.android")).LastOrDefault ();
