@@ -14,19 +14,44 @@ namespace Xamarin.Android.Build.Tests
 {
 	public class CheckClientHandlerTypeTests : BaseTest
 	{
-		[Test]
-		[TestCase ("Xamarin.Android.Net.AndroidMessageHandler")]
-		[TestCase ("System.Net.Http.SocketsHttpHandler, System.Net.Http")]
-		public void ErrorIsNotRaised (string handler)
+		static IEnumerable<object[]> Get_ErrorIsNotRaised_Data ()
 		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData ("Xamarin.Android.Net.AndroidMessageHandler", runtime);
+				AddTestData ("System.Net.Http.SocketsHttpHandler, System.Net.Http", runtime);
+			}
+
+			return ret;
+
+			void AddTestData (string handler, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					handler,
+					runtime,
+				});
+			}
+		}
+
+		[Test]
+		[TestCaseSource (nameof (Get_ErrorIsNotRaised_Data))]
+		public void ErrorIsNotRaised (string handler, AndroidRuntime runtime)
+		{
+			const bool isRelease = false;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			string path = Path.Combine (Root, "temp", TestName);
 			Directory.CreateDirectory (path);
 			string intermediatePath;
 			bool shouldSkip = handler.Contains ("Xamarin.Android.Net.AndroidMessageHandler");
 			bool targetSkipped;
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = false,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidHttpClientHandlerType", handler);
 			using (var b = CreateApkBuilder (path)) {
 				b.Verbosity = LoggerVerbosity.Detailed;
