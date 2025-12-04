@@ -656,15 +656,21 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void PreserveServices ()
+		public void PreserveServices ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 				TrimModeRelease = TrimMode.Full,
 				PackageReferences = {
 					new Package { Id = "Plugin.Firebase.CloudMessaging", Version = "3.0.0" },
 				}
 			};
+			proj.SetRuntime (runtime);
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("//${FIELDS}",
 					"""
