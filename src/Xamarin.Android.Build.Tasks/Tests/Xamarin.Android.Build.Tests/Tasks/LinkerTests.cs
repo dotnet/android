@@ -433,7 +433,7 @@ $@"			var myButton = new AttributedButtonStub (this);
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR }) {
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
 				// Debug configuration
 				AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: false, setLinkModeNone: false, shouldAddKeepAlives: false, runtime);
 
@@ -465,6 +465,10 @@ $@"			var myButton = new AttributedButtonStub (this);
 		[TestCaseSource (nameof (Get_AndroidAddKeepAlivesData))]
 		public void AndroidAddKeepAlives (bool isRelease, bool setAndroidAddKeepAlivesTrue, bool setLinkModeNone, bool shouldAddKeepAlives, AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			if (runtime == AndroidRuntime.CoreCLR && isRelease && !setAndroidAddKeepAlivesTrue && setLinkModeNone && shouldAddKeepAlives) {
 				// This currently fails with the following exception:
 				//
@@ -529,7 +533,12 @@ namespace UnnamedProject {
 				var assemblyFile = "UnnamedProject.dll";
 				if (!isRelease || setLinkModeNone) {
 					foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
-						CheckAssembly (b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", abi, assemblyFile)), projectDir);
+						string assemblyDir = runtime switch {
+							AndroidRuntime.NativeAOT => Path.Combine (MonoAndroidHelper.AbiToRid (abi), "linked"),
+							_ => Path.Combine ("android", "assets", abi)
+						};
+
+						CheckAssembly (b.Output.GetIntermediaryPath (Path.Combine (assemblyDir, assemblyFile)), projectDir);
 					}
 				} else {
 					CheckAssembly (BuildTest.GetLinkedPath (b,  true, assemblyFile), projectDir);
