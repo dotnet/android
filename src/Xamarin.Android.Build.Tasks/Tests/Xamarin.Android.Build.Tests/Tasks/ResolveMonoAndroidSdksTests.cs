@@ -103,9 +103,16 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void HasTrailingSlash ()
+		public void HasTrailingSlash ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
 			proj.SetProperty ("MonoAndroidToolsDirectory", $"xat{Path.DirectorySeparatorChar}");
 			proj.SetProperty ("_JavaSdkDirectory", $"jdk{Path.DirectorySeparatorChar}");
 			proj.SetProperty ("_AndroidSdkDirectory", $"sdk{Path.DirectorySeparatorChar}");
