@@ -528,7 +528,14 @@ namespace Xamarin.Android.Build.Tests
 
 			if (runtime == AndroidRuntime.NativeAOT) {
 				// We disable these only on CI, since they would cause the tests to fail there.
-				string? runningOnCI = Environment.GetEnvironmentVariable ("RunningOnCI");
+				// It appears that despite us exporting `RunningOnCI` in our pipeline YAML, we actually get
+				// an all-uppercase version of the variable:
+				//
+				//   temp/CodeBehind/SuccessfulBuildFewNativeAOT/Release/Directory.Build.props(78,28): message : Property 'RUNNINGONCI' with value 'true' expanded from the environment.
+				//
+				string? runningOnCI =
+					Environment.GetEnvironmentVariable ("RunningOnCI") ??
+					Environment.GetEnvironmentVariable ("RUNNINGONCI");
 				if (runningOnCI == "true") {
 					Console.WriteLine ("CodeBehindTests: using NativeAOT and running on CI, disabling warnings.");
 					noWarn.Add ("IL2091");
