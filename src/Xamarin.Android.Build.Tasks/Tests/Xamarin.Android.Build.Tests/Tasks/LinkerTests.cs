@@ -617,9 +617,14 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void PreserveIX509TrustManagerSubclasses ([Values(true, false)] bool hasServerCertificateCustomValidationCallback)
+		public void PreserveIX509TrustManagerSubclasses ([Values] bool hasServerCertificateCustomValidationCallback, [Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease };
+			proj.SetRuntime (runtime);
 			proj.AddReferences ("System.Net.Http");
 			proj.MainActivity = proj.DefaultMainActivity.Replace (
 				"base.OnCreate (bundle);",
