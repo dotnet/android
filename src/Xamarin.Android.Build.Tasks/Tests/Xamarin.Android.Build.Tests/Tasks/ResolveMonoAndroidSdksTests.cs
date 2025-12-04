@@ -72,9 +72,17 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void MissingAndroidNDK ()
+		public void MissingAndroidNDK ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("MonoAndroidToolsDirectory", "xat");
 			proj.SetProperty ("_JavaSdkDirectory", "jdk");
 			proj.SetProperty ("_AndroidSdkDirectory", "sdk");
