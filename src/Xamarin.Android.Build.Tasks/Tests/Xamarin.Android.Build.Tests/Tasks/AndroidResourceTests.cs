@@ -154,11 +154,17 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.True (mainText.Contains ("FixedWidth"), "'FixedWidth' was converted to 'fixedwidth'");
 			Directory.Delete (path, recursive: true);
 		}
-		
+
 		[Test]
-		public void AdaptiveIcon ()
+		public void AdaptiveIcon ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				SupportedOSPlatformVersion = "26",
 				AndroidResources = {
 					new AndroidItem.AndroidResource ("Resources\\values\\colors.xml") {
@@ -193,6 +199,7 @@ namespace Xamarin.Android.Build.Tests {
 					},
 				}
 			};
+			proj.SetRuntime (runtime);
 
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
