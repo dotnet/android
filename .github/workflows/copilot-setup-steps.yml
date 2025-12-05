@@ -15,10 +15,16 @@ jobs:
       NUGET_SCRATCH: /mnt/nuget/scratch
     
     steps:
+    - name: Free up disk space
+      run: |
+        # Remove pre-installed Android SDK/NDK (~10GB) since we download our own specific versions
+        sudo rm -rf /usr/local/lib/android
+
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         submodules: recursive
+        fetch-depth: 1
 
     - name: Log disk space (after checkout)
       uses: ./.github/workflows/log-disk-space
