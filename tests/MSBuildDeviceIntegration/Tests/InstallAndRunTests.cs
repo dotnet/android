@@ -54,6 +54,31 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[TestCase (true)]
+		[TestCase (false)]
+		public void DeployToDevice (bool isRelease)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease
+			};
+			using var builder = CreateApkBuilder ();
+			builder.Save (proj);
+
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+			Assert.IsTrue (dotnet.Build ("DeployToDevice"), "`dotnet build -t:DeployToDevice` should succeed");
+
+			// Launch the app using adb
+			ClearAdbLogcat ();
+			var result = AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+			Assert.IsTrue (result.Contains ("Starting: Intent"), $"Activity should have launched. adb output:\n{result}");
+
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+			Assert.IsTrue (didLaunch, "Activity should have started.");
+		}
+
+		[Test]
 		public void ActivityAliasRuns ([Values (true, false)] bool isRelease)
 		{
 			var proj = new XamarinAndroidApplicationProject {
