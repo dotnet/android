@@ -48,11 +48,10 @@ namespace Xamarin.Android.Build.Tests
 				new object[] { false },
 				new object[] { true },
 			};
-			var runtimes = new [] { AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR };
 			var ret = new List<object[]> ();
 
 			foreach (object[] args in fixtureArgs) {
-				foreach (AndroidRuntime runtime in runtimes) {
+				foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
 					ret.Add (new object[] {
 						args[0],
 						runtime,
@@ -72,10 +71,15 @@ namespace Xamarin.Android.Build.Tests
 		[OneTimeSetUp]
 		public void OneTimeSetUp ()
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var path = Path.Combine ("temp", TestName);
 			lib = new XamarinAndroidLibraryProject {
 				ProjectName = "Localization",
-				IsRelease = true,
+				IsRelease = isRelease,
 				OtherBuildItems = {
 					new BuildItem ("EmbeddedResource", "Foo.resx") {
 						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
@@ -91,7 +95,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var bytes = new byte [1024];
 			app = new XamarinFormsMapsApplicationProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 				AotAssemblies = false, // Release defaults to Profiled AOT for .NET 6
 				PackageName = "com.xamarin.bundletooltests",
 			};
@@ -186,6 +190,11 @@ namespace Xamarin.Android.Build.Tests
 			expectedFiles.Add ("root/play-services-tasks.properties");
 
 			foreach (var abi in Abis) {
+				if (runtime == AndroidRuntime.NativeAOT) {
+					expectedFiles.Add ($"lib/{abi}/libUnnamedProject.so");
+					continue;
+				}
+
 				// All assemblies are in per-abi directories now
 				if (usesAssemblyBlobs) {
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Java.Interop.dll.so");
@@ -250,6 +259,11 @@ namespace Xamarin.Android.Build.Tests
 			expectedFiles.Add ("base/root/play-services-tasks.properties");
 
 			foreach (var abi in Abis) {
+				if (runtime == AndroidRuntime.NativeAOT) {
+					expectedFiles.Add ($"base/lib/{abi}/libUnnamedProject.so");
+					continue;
+				}
+
 				// All assemblies are in per-abi directories now
 				if (usesAssemblyBlobs) {
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Java.Interop.dll.so");
