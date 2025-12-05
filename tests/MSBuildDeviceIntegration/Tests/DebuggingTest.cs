@@ -10,6 +10,7 @@ using NUnit.Framework;
 using Xamarin.ProjectTools;
 using System.Collections.Generic;
 using Microsoft.Build.Framework;
+using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -52,13 +53,30 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ApplicationRunsWithoutDebugger ([Values (false, true)] bool isRelease, [Values (false, true)] bool extractNativeLibs, [Values (false, true)] bool useEmbeddedDex)
+		public void ApplicationRunsWithoutDebugger ([Values] bool isRelease, [Values] bool extractNativeLibs, [Values] bool useEmbeddedDex, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// TODO: NativeAOT fails with the following exception:
+			//
+			// FATAL UNHANDLED EXCEPTION: System.InvalidCastException: Unable to convert instance of type 'AndroidX.AppCompat.Widget.AppCompatImageButton' to type 'AndroidX.AppCompat.Widget.Toolbar'.
+			//    at Java.Interop.JavaObjectExtensions._JavaCast[TResult](IJavaObject) + 0x190
+			//    at Android.Runtime.Extensions.JavaCast[TResult](IJavaObject) + 0x18
+			//    at Xamarin.Forms.Platform.Android.FormsAppCompatActivity.OnCreate(Bundle, ActivationFlags) + 0x5bc
+			//    at UnnamedProject.MainActivity.OnCreate(Bundle savedInstanceState) + 0x4c
+			//    at Android.App.Activity.n_OnCreate_Landroid_os_Bundle_(IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState) + 0x7c
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT currently crashes with an exception.");
+			}
+
 			SwitchUser ();
 
 			var proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			if (isRelease || !TestEnvironment.CommercialBuildAvailable) {
 				proj.SetAndroidSupportedAbis (DeviceAbi);
 			}
