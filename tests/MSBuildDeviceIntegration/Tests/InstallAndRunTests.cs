@@ -30,17 +30,46 @@ namespace Xamarin.Android.Build.Tests
 			proj = null;
 		}
 
-		[Test]
-		[TestCase (true, "llvm-ir")]
-		[TestCase (false, "llvm-ir")]
-		[TestCase (true, "managed")]
-		// NOTE: TypeMappingStep is not yet setup for Debug mode
-		//[TestCase (false, "managed")]
-		public void DotNetRun (bool isRelease, string typemapImplementation)
+		static IEnumerable<object[]> Get_DotNetRun_Data ()
 		{
-			var proj = new XamarinAndroidApplicationProject {
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData (true, "llvm-ir", runtime);
+				AddTestData (false, "llvm-ir", runtime);
+				AddTestData (true, "managed", runtime);
+				// NOTE: TypeMappingStep is not yet setup for Debug mode
+				//AddTestData (false, "managed", runtime);
+			}
+
+			return ret;
+
+			void AddTestData (bool isRelease, string typemapImplementation, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					isRelease,
+					typemapImplementation,
+					runtime,
+				});
+			}
+		}
+
+		[Test]
+		[TestCaseSource (nameof (Get_DotNetRun_Data))]
+		public void DotNetRun (bool isRelease, string typemapImplementation, AndroidRuntime runtime)
+		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			if (runtime == AndroidRuntime.NativeAOT && typemapImplementation == "llvm-ir") {
+				Assert.Ignore ("NativeAOT doesn't work with LLVM-IR typemaps");
+			}
+
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("_AndroidTypeMapImplementation", typemapImplementation);
 			using var builder = CreateApkBuilder ();
 			builder.Save (proj);
