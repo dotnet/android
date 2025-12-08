@@ -295,8 +295,17 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void NativeAssemblyCacheWithSatelliteAssemblies ([Values (true, false)] bool enableMarshalMethods, [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void NativeAssemblyCacheWithSatelliteAssemblies ([Values] bool enableMarshalMethods, [Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT doesn't support individual assemblies");
+			}
+
 			if (enableMarshalMethods && runtime == AndroidRuntime.CoreCLR) {
 				// This currently fails with the following exception:
 				//
@@ -313,6 +322,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
 				ProjectName = "Localization",
 				OtherBuildItems = {
 					new BuildItem ("EmbeddedResource", "Foo.resx") {
@@ -331,8 +341,8 @@ namespace Xamarin.Android.Build.Tests
 				);
 			}
 
-			proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+			proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+				IsRelease = isRelease,
 				EnableMarshalMethods = enableMarshalMethods,
 			};
 			proj.SetRuntime (runtime);
