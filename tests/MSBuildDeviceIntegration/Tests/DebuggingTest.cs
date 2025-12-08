@@ -181,36 +181,69 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-#pragma warning disable 414
-		static object [] DebuggerCustomAppTestCases = new object [] {
-			new object[] {
-				/* embedAssemblies */    true,
-				/* activityStarts */     true,
-				/* packageFormat */      "apk",
-			},
-			new object[] {
-				/* embedAssemblies */    false,
-				/* activityStarts */     true,
-				/* packageFormat */      "apk",
-			},
-			new object[] {
-				/* embedAssemblies */    true,
-				/* activityStarts */     true,
-				/* packageFormat */      "aab",
-			},
-			new object[] {
-				/* embedAssemblies */    false,
-				/* activityStarts */     true,
-				/* packageFormat */      "aab",
-			},
-		};
-#pragma warning restore 414
-
-		[Test, Category ("Debugger")]
-		[TestCaseSource (nameof (DebuggerCustomAppTestCases))]
-		[Retry(5)]
-		public void CustomApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, bool activityStarts, string packageFormat)
+		static IEnumerable<object[]> Get_CustomApplicationRunsWithDebuggerAndBreaks_Data ()
 		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				// TODO: once CoreCLR debugging works, this needs to be adjusted accordingly
+				if (runtime != AndroidRuntime.MonoVM) {
+					continue;
+				}
+
+				AddTestData (
+					embedAssemblies: true,
+					activityStarts:  true,
+					packageFormat:   "apk",
+					runtime:         runtime
+				);
+
+				AddTestData (
+					embedAssemblies: false,
+					activityStarts:  true,
+					packageFormat:   "apk",
+					runtime:         runtime
+				);
+
+				AddTestData (
+					embedAssemblies: true,
+					activityStarts:  true,
+					packageFormat:   "aab",
+					runtime:         runtime
+				);
+
+				AddTestData (
+					embedAssemblies: false,
+					activityStarts:  true,
+					packageFormat:   "aab",
+					runtime:         runtime
+				);
+			}
+
+			return ret;
+
+			void AddTestData (bool embedAssemblies, bool activityStarts, string packageFormat, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					embedAssemblies,
+					activityStarts,
+					packageFormat,
+					runtime,
+				});
+			}
+		}
+
+		// MonoVM-only test for the moment.
+		[Test, Category ("Debugger")]
+		[TestCaseSource (nameof (Get_CustomApplicationRunsWithDebuggerAndBreaks_Data))]
+		[Retry(5)]
+		public void CustomApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, bool activityStarts, string packageFormat, AndroidRuntime runtime)
+		{
+			const bool isRelease = false;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			AssertCommercialBuild ();
 			SwitchUser ();
 
@@ -223,8 +256,8 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,
 			};
-			// MonoVM-only test
-			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
+
+			proj.SetRuntime (runtime);
 			proj.SetAndroidSupportedAbis (DeviceAbi);
 			proj.SetProperty ("EmbedAssembliesIntoApk", embedAssemblies.ToString ());
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
