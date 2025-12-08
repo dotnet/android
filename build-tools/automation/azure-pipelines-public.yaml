@@ -22,6 +22,15 @@ parameters:
 - name: macTestAgentsUseCleanImages   # Test agents we do not need to clean up when finished because they are not reused
   default: true
 
+# Repository resources - checkout android-tools to force multi-repo checkout behavior
+resources:
+  repositories:
+  - repository: android-tools
+    type: github
+    name: dotnet/android-tools
+    endpoint: public
+    ref: refs/heads/main
+
 # Global variables
 variables:
 - template: /build-tools/automation/yaml-templates/variables.yaml@self
@@ -54,6 +63,11 @@ stages:
       path: s/android
       persistCredentials: false
 
+    # Checkout a second repo to force multi-repo checkout behavior
+    # https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
+    - checkout: android-tools
+      path: s/android-tools
+
     - template: /build-tools/automation/yaml-templates/build-macos-steps.yaml
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/android
@@ -78,6 +92,10 @@ stages:
     steps:
     - checkout: self
       persistCredentials: false
+
+    # Checkout a second repo to force multi-repo checkout behavior
+    - checkout: android-tools
+      path: s/android-tools
 
     - template: /build-tools/automation/yaml-templates/build-windows-steps.yaml
       parameters:
@@ -104,6 +122,10 @@ stages:
     - checkout: self
       path: s/android
       persistCredentials: false
+
+    # Checkout a second repo to force multi-repo checkout behavior
+    - checkout: android-tools
+      path: s/android-tools
 
     - template: /build-tools/automation/yaml-templates/build-linux-steps.yaml
       parameters:
