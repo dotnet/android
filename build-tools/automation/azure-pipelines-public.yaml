@@ -29,19 +29,31 @@ variables:
 # Public builds don't use 1ES templates - just plain stages
 stages:
 - template: /build-tools/automation/yaml-templates/build-macos.yaml@self
+  parameters:
+    use1ESTemplate: false
 
 - template: /build-tools/automation/yaml-templates/build-windows.yaml@self
+  parameters:
+    use1ESTemplate: false
 
 - template: /build-tools/automation/yaml-templates/build-linux.yaml@self
+  parameters:
+    use1ESTemplate: false
 
 - template: /build-tools/automation/yaml-templates/stage-package-tests.yaml@self
   parameters:
     macTestAgentsUseCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
+    use1ESTemplate: false
 
 - template: /build-tools/automation/yaml-templates/stage-linux-tests.yaml@self
+  parameters:
+    use1ESTemplate: false
 
 - template: /build-tools/automation/yaml-templates/stage-msbuild-tests.yaml@self
+  parameters:
+    use1ESTemplate: false
 
 - template: /build-tools/automation/yaml-templates/stage-msbuild-emulator-tests.yaml@self
   parameters:
     usesCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
+    use1ESTemplate: false
