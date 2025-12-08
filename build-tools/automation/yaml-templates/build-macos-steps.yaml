@@ -1,0 +1,97 @@
+# Shared macOS build steps for both public and private pipelines
+# This template contains the actual build logic without references to private repos
+
+parameters:
+  xaSourcePath: $(System.DefaultWorkingDirectory)/android
+  installerArtifactName: $(InstallerArtifactName)
+  nugetArtifactName: $(NuGetArtifactName)
+  testAssembliesArtifactName: $(TestAssembliesArtifactName)
+  windowsToolchainPdbArtifactName: $(WindowsToolchainPdbArtifactName)
+  buildResultArtifactName: Build Results - macOS
+  use1ESTemplate: true
+
+steps:
+- template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml
+  parameters:
+    useAgentJdkPath: false
+    jdkMajorVersion: $(LatestJavaSdkMajorVersion)
+
+- template: /build-tools/automation/yaml-templates/use-dot-net.yaml
+  parameters:
+    remove_dotnet: true
+
+- task: NuGetAuthenticate@1
+  displayName: authenticate with azure artifacts
+  inputs:
+    forceReinstallCredentialProvider: true
+
+# Prepare and Build everything
+- script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: make jenkins
+
+- script: make create-installers CONFIGURATION=$(XA.Build.Configuration)
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: make create-installers
+
+- script: >
+    mkdir -p ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb &&
+    cd ${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/lib/packs/Microsoft.Android.Sdk.Darwin/*/tools/binutils/windows-toolchain-pdb &&
+    zip -r ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb/windows-toolchain-pdb.zip .
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: zip Windows toolchain pdb files
+
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
+    Contents: |
+      **/*.symbols.nupkg
+      **/SignList.xml
+    TargetFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned-symbols
+
+- task: DeleteFiles@1
+  inputs:
+    SourceFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
+    Contents: '*.symbols.nupkg'
+
+- ${{ if ne(parameters.use1ESTemplate, true) }}:
+  - task: PublishPipelineArtifact@1
+    displayName: upload nupkgs
+    inputs:
+      artifactName: ${{ parameters.nugetArtifactName }}
+      targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
+
+  - task: PublishPipelineArtifact@1
+    displayName: upload symbols nupkgs
+    inputs:
+      artifactName: ${{ parameters.nugetArtifactName }}-symbols
+      targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned-symbols
+
+  - task: PublishPipelineArtifact@1
+    displayName: upload test assemblies
+    inputs:
+      artifactName: ${{ parameters.testAssembliesArtifactName }}
+      targetPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
+
+  - task: PublishPipelineArtifact@1
+    displayName: upload Windows toolchain pdb files
+    inputs:
+      artifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
+      targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb
+
+  - task: PublishPipelineArtifact@1
+    displayName: upload build tools inventory
+    inputs:
+      artifactName: AndroidBuildToolsInventory
+      targetPath:  ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/buildtoolsinventory.csv
+
+- template: /build-tools/automation/yaml-templates/upload-results.yaml
+  parameters:
+    xaSourcePath: ${{ parameters.xaSourcePath }}
+    artifactName: ${{ parameters.buildResultArtifactName }}
+    includeBuildResults: true
+    use1ESTemplate: ${{ parameters.use1ESTemplate }}
+
+- template: /build-tools/automation/yaml-templates/fail-on-dirty-tree.yaml
+  parameters:
+    xaSourcePath: ${{ parameters.xaSourcePath }}

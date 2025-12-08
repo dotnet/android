@@ -1,0 +1,70 @@
+# Public version of run-msbuild-tests template - no private repo references
+# Used by the public pipeline running on dnceng-public
+
+parameters:
+  testOS: ''              # 'macOS' or 'Windows'
+  jobName: ''             # Name of the job
+  jobDisplayName: ''      # Display name of the job
+  agentCount: 1           # Number of build agents to run in parallel
+  testFilter: ''          # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
+  xaSourcePath: $(System.DefaultWorkingDirectory)
+  repositoryAlias: 'self'
+  commit: ''
+  shouldFailOnIssue: true
+  use1ESTemplate: false
+
+jobs:
+- job: ${{ parameters.jobName }}
+  strategy:
+    parallel: ${{ parameters.agentCount }}
+  displayName: ${{ parameters.jobDisplayName }}
+  ${{ if eq(parameters.testOS, 'Windows') }}:
+    pool:
+      name: Azure Pipelines
+      vmImage: $(WindowsPoolImage)
+      os: windows
+  ${{ if eq(parameters.testOS, 'macOS') }}:
+    pool:
+      name: Azure Pipelines
+      vmImage: $(HostedMacImage)
+      os: macOS
+  timeoutInMinutes: 240
+  cancelTimeoutInMinutes: 5
+  steps:
+  - ${{ if eq(parameters.testOS, 'Windows') }}:
+    - script: netsh int ipv4 set global sourceroutingbehavior=drop
+
+    - template: /build-tools/automation/yaml-templates/kill-processes.yaml
+
+    - template: /build-tools/automation/yaml-templates/clean.yaml
+
+  - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
+    parameters:
+      installTestSlicer: true
+      xaSourcePath: ${{ parameters.xaSourcePath }}
+      repositoryAlias: ${{ parameters.repositoryAlias }}
+      commit: ${{ parameters.commit }}
+      use1ESTemplate: false
+
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      artifactName: $(TestAssembliesArtifactName)
+      downloadPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
+
+  - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
+    parameters:
+      testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
+      testFilter: ${{ parameters.testFilter }}
+      testRunTitle: Xamarin.Android.Build.Tests - ${{ parameters.testOS }}
+      retryFailedTests: false
+      xaSourcePath: ${{ parameters.xaSourcePath }}
+
+  - template: /build-tools/automation/yaml-templates/upload-results.yaml
+    parameters:
+      artifactName: Test Results - MSBuild - ${{ parameters.testOS }}-$(System.JobPositionInPhase)
+      xaSourcePath: ${{ parameters.xaSourcePath }}
+      use1ESTemplate: false
+
+  - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
+    parameters:
+      condition: ${{ parameters.shouldFailOnIssue }}

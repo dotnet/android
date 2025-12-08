@@ -1,0 +1,103 @@
+# Shared Windows build steps for both public and private pipelines
+# This template contains the actual build logic without references to private repos
+
+parameters:
+  buildResultArtifactName: Build Results - Windows
+  use1ESTemplate: true
+
+steps:
+- template: /build-tools/automation/yaml-templates/kill-processes.yaml
+
+- template: /build-tools/automation/yaml-templates/clean.yaml
+
+- template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml
+  parameters:
+    useAgentJdkPath: false
+    jdkMajorVersion: $(LatestJavaSdkMajorVersion)
+
+- template: /build-tools/automation/yaml-templates/use-dot-net.yaml
+  parameters:
+    remove_dotnet: true
+
+- task: DotNetCoreCLI@2
+  displayName: Prepare Solution
+  inputs:
+    projects: Xamarin.Android.sln
+    arguments: '-c $(XA.Build.Configuration) -t:Prepare --no-restore -p:AutoProvision=true -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare.binlog'
+
+# Build Xamarin.Android and configure local workloads to test improved local build loop
+- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+  parameters:
+    project: Xamarin.Android.sln
+    arguments: >-
+      -t:BuildDotNet -c $(XA.Build.Configuration) -v:n
+      -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build.binlog
+    displayName: Build Solution
+    continueOnError: false
+
+- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+  parameters:
+    project: build-tools/create-packs/Microsoft.Android.Sdk.proj
+    arguments: >-
+      -t:ConfigureLocalWorkload -c $(XA.Build.Configuration) -v:n -p:RunningOnCI=false
+      -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\local-workload.binlog
+    displayName: Run ConfigureLocalWorkload target
+    continueOnError: false
+
+- template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml
+  parameters:
+    toolName: apkdiff
+    version: $(ApkDiffToolVersion)
+
+- template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
+  parameters:
+    testRunTitle: Smoke MSBuild Tests - Windows Dotnet Build
+    testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\$(DotNetStableTargetFramework)\Xamarin.Android.Build.Tests.dll
+    dotNetTestExtraArgs: --filter "TestCategory = SmokeTests"
+
+- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
+  parameters:
+    command: test
+    project: src/Microsoft.Android.Sdk.Analysis/Tests/Microsoft.Android.Sdk.Analysis.Tests.csproj
+    arguments: -c $(XA.Build.Configuration) --logger trx --results-directory $(Agent.TempDirectory)/analysis-tests
+    displayName: Test Microsoft.Android.Sdk.Analysis $(XA.Build.Configuration)
+    continueOnError: true
+
+- task: PublishTestResults@2
+  displayName: publish Microsoft.Android.Sdk.Analysis.Tests results
+  inputs:
+    testResultsFormat: VSTest
+    testResultsFiles: "$(Agent.TempDirectory)/analysis-tests/*.trx"
+    testRunTitle: Microsoft.Android.Sdk.Analysis.Tests
+  continueOnError: true
+
+- task: BatchScript@1
+  displayName: Test dotnet-local.cmd - create template
+  inputs:
+    filename: dotnet-local.cmd
+    arguments: new android -o $(Build.StagingDirectory)/LocalWorkloadTest
+
+- task: BatchScript@1
+  displayName: Test dotnet-local.cmd - build template
+  inputs:
+    filename: dotnet-local.cmd
+    arguments: build -v:n $(Build.StagingDirectory)/LocalWorkloadTest
+
+# Pack .nupkgs and extract workload packs to dotnet preview test directory
+- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+  parameters:
+    project: Xamarin.Android.sln
+    arguments: >-
+      -t:PackDotNet -c $(XA.Build.Configuration) -v:n
+      -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-pack.binlog
+    displayName: Test PackDotNet
+
+- template: /build-tools/automation/yaml-templates/upload-results.yaml
+  parameters:
+    artifactName: ${{ parameters.buildResultArtifactName }}
+    includeBuildResults: true
+    use1ESTemplate: ${{ parameters.use1ESTemplate }}
+
+- template: /build-tools/automation/yaml-templates/fail-on-dirty-tree.yaml
+
+- template: /build-tools/automation/yaml-templates/fail-on-issue.yaml

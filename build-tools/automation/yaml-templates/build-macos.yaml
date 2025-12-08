@@ -82,22 +82,45 @@ stages:
         path: ${{ parameters.checkoutPath }}
         persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
-    - template: /build-tools/automation/yaml-templates/commercial-build.yaml
+    # Always checkout a second resource to ensure we are using multi-repo checkout behavior
+    #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
+    - ${{ if eq(parameters.use1ESTemplate, true) }}:
+      - checkout: maui
+
+    - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
+      - checkout: android-platform-support
+        submodules: recursive
+        path: s/android/external/android-platform-support
+        persistCredentials: true
+
+      - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
+        workingDirectory: ${{ parameters.xaSourcePath }}
+        displayName: make prepare-external-git-dependencies
+
+    - task: CodeQL3000Init@0
+      displayName: CodeQL 3000 Init
+      condition: and(succeeded(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+
+    # Call the shared build steps template
+    - template: /build-tools/automation/yaml-templates/build-macos-steps.yaml
       parameters:
         xaSourcePath: ${{ parameters.xaSourcePath }}
         installerArtifactName: ${{ parameters.installerArtifactName }}
         nugetArtifactName: ${{ parameters.nugetArtifactName }}
         testAssembliesArtifactName: ${{ parameters.testAssembliesArtifactName }}
         windowsToolchainPdbArtifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
+        buildResultArtifactName: ${{ parameters.buildResultArtifactName }}
         use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
-    - template: /build-tools/automation/yaml-templates/upload-results.yaml
-      parameters:
-        xaSourcePath: ${{ parameters.xaSourcePath }}
-        artifactName: ${{ parameters.buildResultArtifactName }}
-        includeBuildResults: true
-        use1ESTemplate: ${{ parameters.use1ESTemplate }}
+    - task: CodeQL3000Finalize@0
+      displayName: CodeQL 3000 Finalize
+      condition: and(succeededOrFailed(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
-    - template: /build-tools/automation/yaml-templates/fail-on-dirty-tree.yaml
-      parameters:
-        xaSourcePath: ${{ parameters.xaSourcePath }}
+    - task: DotNetCoreCLI@2
+      displayName: macOS signing - add runtime entitlements
+      condition: and(succeeded(), and(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.DefinitionName'], 'Xamarin.Android')))
+      inputs:
+        projects: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
+        arguments: >-
+          /t:AddMachOEntitlements /p:Configuration=$(XA.Build.Configuration)
+          /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-content.binlog

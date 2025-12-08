@@ -1,0 +1,56 @@
+# Public version of build-macos stage template - no private repo references
+# Used by the public pipeline running on dnceng-public
+
+parameters:
+  buildResultArtifactName: Build Results - macOS
+  checkoutCommit: ''
+  checkoutPath: 's/android'
+  xaSourcePath: $(System.DefaultWorkingDirectory)/android
+  checkoutPersistCredentials: false
+  dependsOn: ''
+  dependsOnResult: ''
+  installerArtifactName: $(InstallerArtifactName)
+  jobName: mac_build_create_installers
+  jobDisplayName: macOS > Build
+  nugetArtifactName: $(NuGetArtifactName)
+  repositoryAlias: self
+  stageName: mac_build
+  stageDisplayName: Mac
+  testAssembliesArtifactName: $(TestAssembliesArtifactName)
+  windowsToolchainPdbArtifactName: $(WindowsToolchainPdbArtifactName)
+  use1ESTemplate: false
+
+stages:
+- stage: ${{ parameters.stageName }}
+  displayName: ${{ parameters.stageDisplayName }}
+  dependsOn: ${{ parameters.dependsOn }}
+  ${{ if and(ne(parameters.dependsOn, ''), ne(parameters.dependsOnResult, '')) }}:
+    condition: eq(dependencies.${{ parameters.dependsOn }}.result, '${{ parameters.dependsOnResult }}')
+  jobs:
+  # Check - "Xamarin.Android (Mac macOS > Build)"
+  - job: ${{ parameters.jobName }}
+    displayName: ${{ parameters.jobDisplayName }}
+    pool:
+      name: Azure Pipelines
+      vmImage: $(HostedMacImage)
+      os: macOS
+    timeoutInMinutes: 240
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+    - checkout: ${{ parameters.repositoryAlias }}
+      ${{ if ne(parameters.checkoutCommit, '') }}:
+        ref: ${{ parameters.checkoutCommit }}
+      path: ${{ parameters.checkoutPath }}
+      persistCredentials: ${{ parameters.checkoutPersistCredentials }}
+
+    - template: /build-tools/automation/yaml-templates/build-macos-steps.yaml
+      parameters:
+        xaSourcePath: ${{ parameters.xaSourcePath }}
+        installerArtifactName: ${{ parameters.installerArtifactName }}
+        nugetArtifactName: ${{ parameters.nugetArtifactName }}
+        testAssembliesArtifactName: ${{ parameters.testAssembliesArtifactName }}
+        windowsToolchainPdbArtifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
+        buildResultArtifactName: ${{ parameters.buildResultArtifactName }}
+        use1ESTemplate: false

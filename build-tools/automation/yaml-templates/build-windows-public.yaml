@@ -1,3 +1,6 @@
+# Public version of build-windows stage template - no private repo references
+# Used by the public pipeline running on dnceng-public
+
 parameters:
   buildResultArtifactName: Build Results - Windows
   checkoutCommit: ''
@@ -10,7 +13,7 @@ parameters:
   repositoryAlias: self
   stageName: win_build_test
   stageDisplayName: Windows
-  use1ESTemplate: true
+  use1ESTemplate: false
 
 # This stage ensures Windows specific build steps continue to work, and runs unit tests.
 stages:
@@ -24,26 +27,18 @@ stages:
   - job: ${{ parameters.jobName }}
     displayName: ${{ parameters.jobDisplayName }}
     pool:
-      name: MAUI-1ESPT
-      image: $(WindowsPoolImage1ESPT)
+      name: Azure Pipelines
+      vmImage: $(WindowsPoolImage)
       os: windows
     timeoutInMinutes: 240
     steps:
-    - ${{ if eq(parameters.use1ESTemplate, true) }}:
-      - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
-        parameters:
-          resource: ${{ parameters.repositoryAlias }}
-          commit: ${{ parameters.checkoutCommit }}
-          path: ${{ parameters.checkoutPath }}
-          persistCredentials: ${{ parameters.checkoutPersistCredentials }}
-    - ${{ if ne(parameters.use1ESTemplate, true) }}:
-      - checkout: ${{ parameters.repositoryAlias }}
-        ${{ if ne(parameters.checkoutCommit, '') }}:
-          ref: ${{ parameters.checkoutCommit }}
-        path: ${{ parameters.checkoutPath }}
-        persistCredentials: ${{ parameters.checkoutPersistCredentials }}
+    - checkout: ${{ parameters.repositoryAlias }}
+      ${{ if ne(parameters.checkoutCommit, '') }}:
+        ref: ${{ parameters.checkoutCommit }}
+      path: ${{ parameters.checkoutPath }}
+      persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
     - template: /build-tools/automation/yaml-templates/build-windows-steps.yaml
       parameters:
         buildResultArtifactName: ${{ parameters.buildResultArtifactName }}
-        use1ESTemplate: ${{ parameters.use1ESTemplate }}
+        use1ESTemplate: false

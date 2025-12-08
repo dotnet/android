@@ -1,0 +1,87 @@
+# Shared test environment setup steps for both public and private pipelines
+# This template contains the actual setup logic without references to private repos
+
+parameters:
+  configuration: $(XA.Build.Configuration)
+  xaSourcePath: $(System.DefaultWorkingDirectory)
+  jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
+  useAgentJdkPath: true
+  remove_dotnet: false
+  dotnetVersion: $(DotNetSdkVersion)
+  dotnetQuality: $(DotNetSdkQuality)
+  installTestSlicer: false
+  installApkDiff: true
+  updateMono: false
+  androidSdkPlatforms: $(DefaultTestSdkPlatforms)
+  xaprepareScenario: AndroidTestDependencies        # Use 'EmulatorTestDependencies' for agents that need the emulator installed
+  use1ESTemplate: true
+
+steps:
+- template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml
+  parameters:
+    jdkMajorVersion: ${{ parameters.jdkMajorVersion }}
+    useAgentJdkPath: ${{ parameters.useAgentJdkPath }}
+
+# Install latest .NET
+- template: /build-tools/automation/yaml-templates/use-dot-net.yaml
+  parameters:
+    version: ${{ parameters.dotnetVersion }}
+    quality: ${{ parameters.dotnetQuality }}
+    remove_dotnet: ${{ parameters.remove_dotnet }}
+
+- task: DotNetCoreCLI@2
+  displayName: shut down existing build daemons
+  inputs:
+    command: custom
+    custom: build-server
+    arguments: shutdown
+
+- ${{ if eq(parameters.updateMono, true) }}:
+  - template: /build-tools/automation/yaml-templates/run-xaprepare.yaml
+    parameters:
+      displayName: run xaprepare-UpdateMono
+      arguments: --s=UpdateMono --auto-provision=yes --auto-provision-uses-sudo=yes
+      condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
+      xaSourcePath: ${{ parameters.xaSourcePath }}
+
+- template: /build-tools/automation/yaml-templates/run-xaprepare.yaml
+  parameters:
+    arguments: --s=${{ parameters.xaprepareScenario }}  --android-sdk-platforms="${{ parameters.androidSdkPlatforms }}"
+    xaSourcePath: ${{ parameters.xaSourcePath }}
+
+- task: DotNetCoreCLI@2
+  displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
+  inputs:
+    projects: ${{ parameters.xaSourcePath }}/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+    arguments: -c ${{ parameters.configuration }} -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/BootstrapTasks.binlog
+
+# Download and install .NET nupkgs
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: $(NuGetArtifactName)
+    downloadPath: ${{ parameters.xaSourcePath }}/bin/Build${{ parameters.configuration }}/nuget-unsigned
+
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: $(LinuxNuGetArtifactName)
+    downloadPath: ${{ parameters.xaSourcePath }}/bin/Build${{ parameters.configuration }}/nuget-unsigned
+  condition: and(succeeded(), eq(variables['agent.os'], 'Linux'))
+
+- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+  parameters:
+    displayName: extract workload packs
+    xaSourcePath: ${{ parameters.xaSourcePath }}
+    project: ${{ parameters.xaSourcePath }}/build-tools/create-packs/Microsoft.Android.Sdk.proj
+    arguments: -t:ExtractWorkloadPacks -c ${{ parameters.configuration }} -v:n -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/extract-workloads.binlog
+
+- ${{ if eq(parameters.installApkDiff, true) }}:
+  - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml
+    parameters:
+      toolName: apkdiff
+      version: $(ApkDiffToolVersion)
+
+- ${{ if eq(parameters.installTestSlicer, true) }}:
+  - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml
+    parameters:
+      toolName: dotnet-test-slicer
+      version: $(TestSlicerToolVersion)
