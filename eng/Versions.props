@@ -7,10 +7,10 @@
     <MicrosoftNETCoreAppRefPackageVersion>11.0.0-alpha.1.25605.110</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
     <MicrosoftDotNetBuildTasksFeedPackageVersion>11.0.0-beta.25605.110</MicrosoftDotNetBuildTasksFeedPackageVersion>
-    <MicrosoftNETWorkloadMonoToolchainCurrentManifest100100PackageVersion>10.0.101</MicrosoftNETWorkloadMonoToolchainCurrentManifest100100PackageVersion>
-    <MicrosoftNETWorkloadEmscriptenCurrentManifest100100PackageVersion>10.0.101</MicrosoftNETWorkloadEmscriptenCurrentManifest100100PackageVersion>
-    <MicrosoftNETWorkloadMonoToolChainPackageVersion>$(MicrosoftNETWorkloadMonoToolChainCurrentManifest100100PackageVersion)</MicrosoftNETWorkloadMonoToolChainPackageVersion>
-    <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenCurrentManifest100100PackageVersion)</MicrosoftNETWorkloadEmscriptenPackageVersion>
+    <MicrosoftNETWorkloadMonoToolchainCurrentManifest110100PackageVersion>10.0.101</MicrosoftNETWorkloadMonoToolchainCurrentManifest110100PackageVersion>
+    <MicrosoftNETWorkloadEmscriptenCurrentManifest110100PackageVersion>10.0.101</MicrosoftNETWorkloadEmscriptenCurrentManifest110100PackageVersion>
+    <MicrosoftNETWorkloadMonoToolChainPackageVersion>$(MicrosoftNETWorkloadMonoToolChainCurrentManifest110100PackageVersion)</MicrosoftNETWorkloadMonoToolChainPackageVersion>
+    <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenCurrentManifest110100PackageVersion)</MicrosoftNETWorkloadEmscriptenPackageVersion>
     <MicrosoftTemplateEngineAuthoringTasksPackageVersion>11.0.100-alpha.25605.110</MicrosoftTemplateEngineAuthoringTasksPackageVersion>
     <MicrosoftDotNetCecilPackageVersion>0.11.5-alpha.25605.110</MicrosoftDotNetCecilPackageVersion>
     <SystemIOHashingPackageVersion>9.0.4</SystemIOHashingPackageVersion>
