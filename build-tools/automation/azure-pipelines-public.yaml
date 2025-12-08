@@ -30,6 +30,7 @@ resources:
     type: github
     name: dotnet/java-interop
     ref: refs/heads/main
+    endpoint: public
 
 # Global variables
 variables:
