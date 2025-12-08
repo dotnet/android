@@ -187,11 +187,16 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ActivityAliasRuns ([Values (true, false)] bool isRelease)
+		public void ActivityAliasRuns ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject {
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease
 			};
+			proj.SetRuntime (runtime);
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("</application>", @"
 <activity-alias
 			android:name="".MainActivityAlias""
