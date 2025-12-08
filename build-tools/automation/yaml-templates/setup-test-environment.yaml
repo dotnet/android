@@ -13,12 +13,20 @@ parameters:
   repositoryAlias: 'self'
   commit: ''
   xaprepareScenario: AndroidTestDependencies        # Use 'EmulatorTestDependencies' for agents that need the emulator installed
+  use1ESTemplate: true
 
 steps:
-- template: sdk-unified/steps/checkout/v1.yml@yaml-templates
-  parameters:
-    resource: ${{ parameters.repositoryAlias }}
-    commit: ${{ parameters.commit }}
+- ${{ if eq(parameters.use1ESTemplate, true) }}:
+  - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
+    parameters:
+      resource: ${{ parameters.repositoryAlias }}
+      commit: ${{ parameters.commit }}
+      clean: true
+      submodules: recursive
+- ${{ if ne(parameters.use1ESTemplate, true) }}:
+  - checkout: ${{ parameters.repositoryAlias }}
+    ${{ if ne(parameters.commit, '') }}:
+      ref: ${{ parameters.commit }}
     clean: true
     submodules: recursive
 
