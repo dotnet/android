@@ -291,13 +291,15 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void GlobalLayoutEvent_ShouldRegisterAndFire_OnActivityLaunch (
-		  [Values (false, true)] bool isRelease,
-		  [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void GlobalLayoutEvent_ShouldRegisterAndFire_OnActivityLaunch ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			string expectedLogcatOutput = "Bug 29730: GlobalLayout event handler called!";
 
-			proj = new XamarinAndroidApplicationProject () {
+			proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				SupportedOSPlatformVersion = "23",
 			};
