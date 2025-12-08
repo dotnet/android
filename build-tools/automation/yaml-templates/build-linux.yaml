@@ -46,19 +46,10 @@ stages:
           artifactName: ${{ parameters.nugetArtifactName }}-symbols
           targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux-symbols
     steps:
-    - ${{ if eq(parameters.use1ESTemplate, true) }}:
-      - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
-        parameters:
-          resource: ${{ parameters.repositoryAlias }}
-          commit: ${{ parameters.checkoutCommit }}
-          path: ${{ parameters.checkoutPath }}
-          persistCredentials: ${{ parameters.checkoutPersistCredentials }}
-    - ${{ if ne(parameters.use1ESTemplate, true) }}:
-      - checkout: ${{ parameters.repositoryAlias }}
-        ${{ if ne(parameters.checkoutCommit, '') }}:
-          ref: ${{ parameters.checkoutCommit }}
-        path: ${{ parameters.checkoutPath }}
-        persistCredentials: ${{ parameters.checkoutPersistCredentials }}
+    - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
+      parameters:
+        resource: ${{ parameters.repositoryAlias }}
+        commit: ${{ parameters.checkoutCommit }}
 
     # Always checkout a second resource to ensure we are using multi-repo checkout behavior
     #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
