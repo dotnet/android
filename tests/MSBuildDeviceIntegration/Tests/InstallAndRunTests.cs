@@ -838,11 +838,19 @@ using System.Runtime.Serialization.Json;
 		}
 
 		[Test]
-		public void SingleProject_ApplicationId ([Values (false, true)] bool testOnly)
+		public void SingleProject_ApplicationId ([Values] bool testOnly, [Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			AssertCommercialBuild ();
 
-			proj = new XamarinAndroidApplicationProject ();
+			proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("ApplicationId", "com.i.should.get.overridden.by.the.manifest");
 			if (testOnly)
 				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application", "<application android:testOnly=\"true\"");
