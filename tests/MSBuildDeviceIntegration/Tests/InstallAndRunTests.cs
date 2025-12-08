@@ -327,11 +327,22 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 60), $"Output did not contain {expectedLogcatOutput}!");
 		}
 
+		// TODO: check if AppDomain.CurrentDomain.UnhandledException even works in CoreCLR and NativeAOT
 		[Test]
-		public void SubscribeToAppDomainUnhandledException ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void SubscribeToAppDomainUnhandledException ([Values] AndroidRuntime runtime)
 		{
-			proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			if (runtime == AndroidRuntime.CoreCLR || runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("AppDomain.CurrentDomain.UnhandledException doesn't work in CoreCLR or NativeAOT");
+				return;
+			}
+
+			proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
 			if (runtime == AndroidRuntime.MonoVM) {
