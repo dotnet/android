@@ -28,7 +28,6 @@ resources:
   - repository: yaml-templates
     type: github
     name: xamarin/yaml-templates
-    endpoint: xamarin
     ref: refs/heads/main
 
 # Global variables
