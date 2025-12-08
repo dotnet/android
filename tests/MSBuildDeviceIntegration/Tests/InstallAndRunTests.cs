@@ -405,18 +405,56 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			}
 		}
 
+		static IEnumerable<object[]> Get_SmokeTestBuildAndRunWithSpecialCharacters_Data ()
+		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				AddTestData ("テスト", runtime);
+				AddTestData ("随机生成器", runtime);
+				AddTestData ("中国", runtime);
+			}
+
+			return ret;
+
+			void AddTestData (string testName, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					testName,
+					runtime,
+				});
+			}
+		}
+
 		[Test]
 		[Category ("UsesDevice")]
-		[TestCase ("テスト")]
-		[TestCase ("随机生成器")]
-		[TestCase ("中国")]
-		public void SmokeTestBuildAndRunWithSpecialCharacters (string testName)
+		[TestCaseSource (nameof (Get_SmokeTestBuildAndRunWithSpecialCharacters_Data))]
+		public void SmokeTestBuildAndRunWithSpecialCharacters (string testName, AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// TODO: fix NativeAOT builds. Despite the .so library being preset in the apk (and named correctly)
+			//       all the tests fail with one of:
+			//
+			//  java.lang.UnsatisfiedLinkError: dlopen failed: library "libテスト.so" not found
+			//  java.lang.UnsatisfiedLinkError: dlopen failed: library "lib中国.so" not found
+			//  java.lang.UnsatisfiedLinkError: dlopen failed: library "lib随机生成器.so" not found
+			//
+			// It might be an issue with the Android shared libary loader or name encoding in the archive. It might
+			// be a good idea to limit .so names to ASCII.
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT doesn't work well with diacritics in the application library name");
+			}
+
 			var rootPath = Path.Combine (Root, "temp", TestName);
-			var proj = new XamarinFormsAndroidApplicationProject () {
+			var proj = new XamarinFormsAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				ProjectName = testName,
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetAndroidSupportedAbis (DeviceAbi);
 			proj.SetDefaultTargetDevice ();
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName))){
