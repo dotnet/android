@@ -751,14 +751,22 @@ using System.Runtime.Serialization.Json;
 		}
 
 		[Test]
-		public void RunWithInterpreterEnabled ([Values (false, true)] bool isRelease)
+		public void RunWithInterpreterEnabled ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
-			proj = new XamarinAndroidApplicationProject () {
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// MonoVM-only test, for now (until CoreCLR has interpreter we can use)
+			if (runtime != AndroidRuntime.MonoVM) {
+				Assert.Ignore ("MonoVM-only test for the moment");
+			}
+
+			proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				AotAssemblies = false, // Release defaults to Profiled AOT for .NET 6
 			};
-			// MonoVM-only test
-			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
+			proj.SetRuntime (runtime);
 			var abis = new string[] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
 			proj.SetAndroidSupportedAbis (abis);
 			proj.SetProperty (proj.CommonProperties, "UseInterpreter", "True");
