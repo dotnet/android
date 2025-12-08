@@ -489,10 +489,28 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		[Test]
 		public void CustomLinkDescriptionPreserve (
 		  [Values (AndroidLinkMode.SdkOnly, AndroidLinkMode.Full)] AndroidLinkMode linkMode,
-		  [Values (AndroidRuntime.MonoVM)] AndroidRuntime runtime
+		  [Values] AndroidRuntime runtime
 		)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			if (runtime == AndroidRuntime.CoreCLR) {
+				Assert.Ignore ("Currently broken on CoreCLR");
+			}
+
+			// TODO: NativeAOT perhaps should work here (ignoring all the MonoAOT settings?), but for now it fails with
+			//
+			//  Microsoft.NET.Sdk.FrameworkReferenceResolution.targets(120,5): error NETSDK1207: Ahead-of-time compilation is not supported for the target framework.
+			//
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT is currently broken here");
+			}
+
 			var lib1 = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
 				ProjectName = "Library1",
 				Sources = {
 					new BuildItem.Source ("SomeClass.cs") {
@@ -530,6 +548,7 @@ namespace Library1 {
 			lib1.SetRuntime (runtime);
 
 			var lib2 = new DotNetStandard {
+				IsRelease = isRelease,
 				ProjectName = "LinkTestLib",
 				Sdk = "Microsoft.NET.Sdk",
 				TargetFramework = "netstandard2.0",
@@ -556,8 +575,8 @@ namespace Library1 {
 			};
 			lib2.SetRuntime (runtime);
 
-			proj = new XamarinFormsAndroidApplicationProject () {
-				IsRelease = true,
+			proj = new XamarinFormsAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+				IsRelease = isRelease,
 				AndroidLinkModeRelease = linkMode,
 				References = {
 					new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"),
