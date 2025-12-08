@@ -655,11 +655,15 @@ namespace Library1 {
 		}
 
 		[Test]
-		public void JsonDeserializationCreatesJavaHandle ([Values (false, true)] bool isRelease)
+		public void JsonDeserializationCreatesJavaHandle ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
-			proj = new XamarinAndroidApplicationProject () {
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			// error SYSLIB0011: 'BinaryFormatter.Serialize(Stream, object)' is obsolete: 'BinaryFormatter serialization is obsolete and should not be used. See https://aka.ms/binaryformatter for more information.'
 			proj.SetProperty ("NoWarn", "SYSLIB0011");
 
