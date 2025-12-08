@@ -22,16 +22,6 @@ parameters:
 - name: macTestAgentsUseCleanImages   # Test agents we do not need to clean up when finished because they are not reused
   default: true
 
-# Resources must be defined even if conditionally used - Azure Pipelines validates at parse time
-# Using a public dotnet repository as placeholder since yaml-templates is private
-resources:
-  repositories:
-  - repository: yaml-templates
-    type: github
-    name: dotnet/java-interop
-    ref: refs/heads/main
-    endpoint: public
-
 # Global variables
 variables:
 - template: /build-tools/automation/yaml-templates/variables.yaml@self
