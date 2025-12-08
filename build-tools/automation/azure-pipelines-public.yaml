@@ -23,11 +23,12 @@ parameters:
   default: true
 
 # Resources must be defined even if conditionally used - Azure Pipelines validates at parse time
+# Using a public dotnet repository as placeholder since yaml-templates is private
 resources:
   repositories:
   - repository: yaml-templates
     type: github
-    name: xamarin/yaml-templates
+    name: dotnet/java-interop
     ref: refs/heads/main
 
 # Global variables
