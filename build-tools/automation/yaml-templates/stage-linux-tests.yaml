@@ -1,5 +1,8 @@
 # Runs smoke tests on Linux packages.
 
+parameters:
+  use1ESTemplate: true
+
 stages:
 - stage: linux_tests
   displayName: Linux Tests
@@ -19,6 +22,8 @@ stages:
       clean: all
     steps:
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
+      parameters:
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - task: DownloadPipelineArtifact@2
       inputs:
