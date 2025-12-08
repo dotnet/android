@@ -254,7 +254,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = false,
+				IsRelease = isRelease,
 			};
 
 			proj.SetRuntime (runtime);
@@ -361,70 +361,114 @@ namespace ${ROOT_NAMESPACE} {
 			}
 		}
 
-#pragma warning disable 414
-		static object [] DebuggerTestCases = new object [] {
-			new object[] {
-				/* embedAssemblies */    true,
-				/* user */		 null,
-				/* packageFormat */      "apk",
-				/* useLatestSdk */       true,
-			},
-			new object[] {
-				/* embedAssemblies */    true,
-				/* user */		 null,
-				/* packageFormat */      "apk",
-				/* useLatestSdk */       false,
-			},
-			new object[] {
-				/* embedAssemblies */    false,
-				/* user */		 null,
-				/* packageFormat */      "apk",
-				/* useLatestSdk */       true,
-			},
-			new object[] {
-				/* embedAssemblies */    true,
-				/* user */		 DeviceTest.GuestUserName,
-				/* packageFormat */      "apk",
-				/* useLatestSdk */       true,
-			},
-			new object[] {
-				/* embedAssemblies */    false,
-				/* user */		 DeviceTest.GuestUserName,
-				/* packageFormat */      "apk",
-				/* useLatestSdk */       true,
-			},
-			new object[] {
-				/* embedAssemblies */    true,
-				/* user */		 null,
-				/* packageFormat */      "aab",
-				/* useLatestSdk */       true,
-			},
-			new object[] {
-				/* embedAssemblies */    false,
-				/* user */		 null,
-				/* packageFormat */      "aab",
-				/* useLatestSdk */       true,
-			},
-			new object[] {
-				/* embedAssemblies */    true,
-				/* user */		 DeviceTest.GuestUserName,
-				/* packageFormat */      "aab",
-				/* useLatestSdk */       true,
-			},
-			new object[] {
-				/* embedAssemblies */    false,
-				/* user */		 DeviceTest.GuestUserName,
-				/* packageFormat */      "aab",
-				/* useLatestSdk */       true,
-			},
-		};
-#pragma warning restore 414
-
-		[Test, Category ("Debugger"), Category ("WearOS")]
-		[TestCaseSource (nameof(DebuggerTestCases))]
-		[Retry (5)]
-		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string username, string packageFormat, bool useLatestSdk)
+		static IEnumerable<object[]> Get_ApplicationRunsWithDebuggerAndBreaks_Data ()
 		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				// TODO: once CoreCLR debugging works, this needs to be adjusted accordingly
+				if (runtime != AndroidRuntime.MonoVM) {
+					continue;
+				}
+
+				AddTestData (
+					embedAssemblies: true,
+					username:	 null,
+					packageFormat:   "apk",
+					useLatestSdk:    true,
+					runtime:         runtime
+				);
+
+				AddTestData (
+					embedAssemblies: true,
+					username:	 null,
+					packageFormat:   "apk",
+					useLatestSdk:    false,
+					runtime:         runtime
+				);
+
+				AddTestData (
+					embedAssemblies: false,
+					username:	 null,
+					packageFormat:   "apk",
+					useLatestSdk:    true,
+					runtime:         runtime
+				);
+
+				AddTestData (
+					embedAssemblies: true,
+					username:	 DeviceTest.GuestUserName,
+					packageFormat:   "apk",
+					useLatestSdk:    true,
+					runtime:         runtime
+				);
+
+				AddTestData (
+					embedAssemblies: false,
+					username:	 DeviceTest.GuestUserName,
+					packageFormat:   "apk",
+					useLatestSdk:    true,
+					runtime:         runtime
+				);
+
+				AddTestData (
+					embedAssemblies: true,
+					username:	 null,
+					packageFormat:   "aab",
+					useLatestSdk:    true,
+					runtime:         runtime
+				);
+
+				AddTestData (
+					embedAssemblies: false,
+					username:	 null,
+					packageFormat:   "aab",
+					useLatestSdk:    true,
+					runtime:         runtime
+				);
+
+				AddTestData (
+					embedAssemblies: true,
+					username:	 DeviceTest.GuestUserName,
+					packageFormat:   "aab",
+					useLatestSdk:    true,
+					runtime:         runtime
+				);
+
+				AddTestData (
+					embedAssemblies: false,
+					username:	 DeviceTest.GuestUserName,
+					packageFormat:   "aab",
+					useLatestSdk:    true,
+					runtime:         runtime
+				);
+			}
+
+			return ret;
+
+			void AddTestData (bool embedAssemblies, string username, string packageFormat, bool useLatestSdk, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					embedAssemblies,
+					username,
+					packageFormat,
+					useLatestSdk,
+					runtime,
+				});
+			}
+		}
+
+		// MonoVM-only test for the moment.
+		[Test, Category ("Debugger"), Category ("WearOS")]
+		[TestCaseSource (nameof(Get_ApplicationRunsWithDebuggerAndBreaks_Data))]
+		[Retry (5)]
+		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string username, string packageFormat, bool useLatestSdk, AndroidRuntime runtime)
+		{
+			const bool isRelease = false;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			AssertCommercialBuild ();
 			SwitchUser ();
 			WaitFor (5000);
@@ -446,6 +490,7 @@ namespace ${ROOT_NAMESPACE} {
 			}
 
 			var lib = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
 				ProjectName = "Library1",
 				Sources = {
 					new BuildItem.Source ("Foo.cs") {
@@ -462,11 +507,11 @@ namespace ${ROOT_NAMESPACE} {
 
 			var app = new XamarinFormsAndroidApplicationProject {
 				ProjectName = "App",
-				IsRelease = false,
+				IsRelease = isRelease,
 				EmbedAssembliesIntoApk = embedAssemblies,
 			};
-			// MonoVM-only test
-			app.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
+
+			app.SetRuntime (runtime);
 			if (!useLatestSdk) {
 				lib.TargetFramework = "net9.0-android";
 				app.TargetFramework = "net9.0-android";
