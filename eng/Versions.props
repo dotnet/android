@@ -1,18 +1,18 @@
 <Project>
   <!--Package versions-->
   <PropertyGroup>
-    <MicrosoftNETSdkPackageVersion>10.0.102-servicing.25578.106</MicrosoftNETSdkPackageVersion>
+    <MicrosoftNETSdkPackageVersion>10.0.102-servicing.25605.116</MicrosoftNETSdkPackageVersion>
     <MicrosoftDotnetSdkInternalPackageVersion>$(MicrosoftNETSdkPackageVersion)</MicrosoftDotnetSdkInternalPackageVersion>
-    <MicrosoftNETILLinkPackageVersion>10.0.2-servicing.25578.106</MicrosoftNETILLinkPackageVersion>
+    <MicrosoftNETILLinkPackageVersion>10.0.2-servicing.25605.116</MicrosoftNETILLinkPackageVersion>
     <MicrosoftNETCoreAppRefPackageVersion>10.0.2</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
-    <MicrosoftDotNetBuildTasksFeedPackageVersion>10.0.0-beta.25578.106</MicrosoftDotNetBuildTasksFeedPackageVersion>
+    <MicrosoftDotNetBuildTasksFeedPackageVersion>10.0.0-beta.25605.116</MicrosoftDotNetBuildTasksFeedPackageVersion>
     <MicrosoftNETWorkloadMonoToolchainCurrentManifest100100PackageVersion>10.0.102</MicrosoftNETWorkloadMonoToolchainCurrentManifest100100PackageVersion>
     <MicrosoftNETWorkloadEmscriptenCurrentManifest100100PackageVersion>10.0.102</MicrosoftNETWorkloadEmscriptenCurrentManifest100100PackageVersion>
     <MicrosoftNETWorkloadMonoToolChainPackageVersion>$(MicrosoftNETWorkloadMonoToolChainCurrentManifest100100PackageVersion)</MicrosoftNETWorkloadMonoToolChainPackageVersion>
     <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenCurrentManifest100100PackageVersion)</MicrosoftNETWorkloadEmscriptenPackageVersion>
     <MicrosoftTemplateEngineAuthoringTasksPackageVersion>10.0.102</MicrosoftTemplateEngineAuthoringTasksPackageVersion>
-    <MicrosoftDotNetCecilPackageVersion>0.11.5-alpha.25578.106</MicrosoftDotNetCecilPackageVersion>
+    <MicrosoftDotNetCecilPackageVersion>0.11.5-alpha.25605.116</MicrosoftDotNetCecilPackageVersion>
     <SystemIOHashingPackageVersion>9.0.4</SystemIOHashingPackageVersion>
     <!-- Previous .NET Android version -->
     <MicrosoftNETSdkAndroidManifest90100PackageVersion>35.0.105</MicrosoftNETSdkAndroidManifest90100PackageVersion>
