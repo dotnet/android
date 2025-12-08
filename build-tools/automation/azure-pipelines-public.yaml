@@ -27,29 +27,21 @@ variables:
 - template: /build-tools/automation/yaml-templates/variables.yaml@self
 
 # Public builds don't use 1ES templates - just plain stages
-# Only run stages for fork PRs or main branch CI (skip for non-fork PRs)
 stages:
 - template: /build-tools/automation/yaml-templates/build-macos.yaml@self
-  condition: or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.IsFork'], 'True'))
 
 - template: /build-tools/automation/yaml-templates/build-windows.yaml@self
-  condition: or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.IsFork'], 'True'))
 
 - template: /build-tools/automation/yaml-templates/build-linux.yaml@self
-  condition: or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.IsFork'], 'True'))
 
 - template: /build-tools/automation/yaml-templates/stage-package-tests.yaml@self
   parameters:
     macTestAgentsUseCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
-  condition: or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.IsFork'], 'True'))
 
 - template: /build-tools/automation/yaml-templates/stage-linux-tests.yaml@self
-  condition: or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.IsFork'], 'True'))
 
 - template: /build-tools/automation/yaml-templates/stage-msbuild-tests.yaml@self
-  condition: or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.IsFork'], 'True'))
 
 - template: /build-tools/automation/yaml-templates/stage-msbuild-emulator-tests.yaml@self
   parameters:
     usesCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
-  condition: or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.IsFork'], 'True'))
