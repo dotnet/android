@@ -68,10 +68,17 @@ stages:
           targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/buildtoolsinventory.csv
           sbomEnabled: false
     steps:
-    - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
-      parameters:
-        resource: ${{ parameters.repositoryAlias }}
-        commit: ${{ parameters.checkoutCommit }}
+    - ${{ if eq(parameters.use1ESTemplate, true) }}:
+      - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
+        parameters:
+          resource: ${{ parameters.repositoryAlias }}
+          commit: ${{ parameters.checkoutCommit }}
+          path: ${{ parameters.checkoutPath }}
+          persistCredentials: ${{ parameters.checkoutPersistCredentials }}
+    - ${{ if ne(parameters.use1ESTemplate, true) }}:
+      - checkout: ${{ parameters.repositoryAlias }}
+        ${{ if ne(parameters.checkoutCommit, '') }}:
+          ref: ${{ parameters.checkoutCommit }}
         path: ${{ parameters.checkoutPath }}
         persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
