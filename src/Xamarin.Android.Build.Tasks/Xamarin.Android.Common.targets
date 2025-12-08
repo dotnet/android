@@ -2800,28 +2800,10 @@ because xbuild doesn't support framework reference assemblies.
   <UnzipToFolder Sources="$(_UniversalApkSetIntermediate)" DestinationDirectories="$(OutDir)" Files="@(_FilestoExtract)" />
 </Target>
 
-<PropertyGroup>
-  <SignAndroidPackageDependsOn Condition=" '$(BuildingInsideVisualStudio)' != 'True' ">
-    Build;
-    Package;
-    _Sign;
-    _CreateUniversalApkFromBundle;
-  </SignAndroidPackageDependsOn>
-  <!-- When inside an IDE, Build has just been run. This is a minimal list of targets for SignAndroidPackage. -->
-  <SignAndroidPackageDependsOn Condition=" '$(BuildingInsideVisualStudio)' == 'True' ">
-    BuildOnlySettings;
-    _CreatePropertiesCache;
-    ResolveReferences;
-    PrepareResources;
-    CreateSatelliteAssemblies;
-    _CopyPackage;
-    _Sign;
-    _CreateUniversalApkFromBundle;
-  </SignAndroidPackageDependsOn>
-</PropertyGroup>
 <Target Name="SignAndroidPackage" DependsOnTargets="$(SignAndroidPackageDependsOn)">
 </Target>
 
+<Target Name="DeployToDevice" DependsOnTargets="$(DeployToDeviceDependsOnTargets)" />
 
 <!-- Callable targets -->
 <PropertyGroup>
@@ -2937,18 +2919,6 @@ because xbuild doesn't support framework reference assemblies.
   <WriteLinesToFile File="$(_LldbConfigFile)" Lines="PKG=$(_AndroidPackage)" Overwrite="true"/>
   <WriteLinesToFile File="$(_LldbConfigFile)" Lines="MANIFEST=$(IntermediateOutputPath)android\AndroidManifest.xml"/>
 </Target>
-
-<PropertyGroup>
-  <InstallDependsOnTargets>
-    SignAndroidPackage;
-    _DeployApk;
-    _DeployAppBundle;
-  </InstallDependsOnTargets>
-  <UninstallDependsOnTargets>
-    AndroidPrepareForBuild;
-    _Uninstall
-  </UninstallDependsOnTargets>
-</PropertyGroup>
 
 <Target Name="_DeployApk"
     Condition=" '$(AndroidPackageFormat)' != 'aab' ">
