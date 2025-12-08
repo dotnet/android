@@ -1,0 +1,55 @@
+# .NET for Android Pipeline - Public Build
+# This pipeline runs on the public dnceng instance for:
+# - PRs from forks (contributors)
+# - Main or release branch CI builds
+# Internal branches use the DevDiv pipeline (azure-pipelines.yaml)
+
+name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
+
+trigger:
+  branches:
+    include:
+    - main
+    - release/*
+
+pr:
+  branches:
+    include:
+    - main
+    - release/*
+
+parameters:
+- name: macTestAgentsUseCleanImages   # Test agents we do not need to clean up when finished because they are not reused
+  default: true
+
+# Global variables
+variables:
+- template: /build-tools/automation/yaml-templates/variables.yaml@self
+
+# Public builds don't use 1ES templates - just plain stages
+# Only run stages for fork PRs or main branch CI (skip for non-fork PRs)
+stages:
+- template: /build-tools/automation/yaml-templates/build-macos.yaml@self
+  condition: or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.IsFork'], 'True'))
+
+- template: /build-tools/automation/yaml-templates/build-windows.yaml@self
+  condition: or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.IsFork'], 'True'))
+
+- template: /build-tools/automation/yaml-templates/build-linux.yaml@self
+  condition: or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.IsFork'], 'True'))
+
+- template: /build-tools/automation/yaml-templates/stage-package-tests.yaml@self
+  parameters:
+    macTestAgentsUseCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
+  condition: or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.IsFork'], 'True'))
+
+- template: /build-tools/automation/yaml-templates/stage-linux-tests.yaml@self
+  condition: or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.IsFork'], 'True'))
+
+- template: /build-tools/automation/yaml-templates/stage-msbuild-tests.yaml@self
+  condition: or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.IsFork'], 'True'))
+
+- template: /build-tools/automation/yaml-templates/stage-msbuild-emulator-tests.yaml@self
+  parameters:
+    usesCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
+  condition: or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.IsFork'], 'True'))
