@@ -40,10 +40,14 @@ steps:
   displayName: CodeQL 3000 Init
   condition: and(succeeded(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
+- template: /build-tools/automation/yaml-templates/log-disk-space.yaml
+
 # Prepare and Build everything
 - script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins
+
+- template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 
 - task: CodeQL3000Finalize@0
   displayName: CodeQL 3000 Finalize
@@ -61,6 +65,8 @@ steps:
 - script: make create-installers CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make create-installers
+
+- template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 
 - script: >
     mkdir -p ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb &&

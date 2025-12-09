@@ -82,13 +82,19 @@ stages:
       inputs:
         forceReinstallCredentialProvider: true
 
+    - template: /build-tools/automation/yaml-templates/log-disk-space.yaml
+
     - script: make jenkins PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: ${{ parameters.xaSourcePath }}
       displayName: make jenkins
 
+    - template: /build-tools/automation/yaml-templates/log-disk-space.yaml
+
     - script: make create-nupkgs CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: ${{ parameters.xaSourcePath }}
       displayName: make create-nupkgs
+
+    - template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 
     - task: CopyFiles@2
       inputs:

@@ -48,6 +48,8 @@ stages:
       parameters:
         remove_dotnet: true
 
+    - template: /build-tools/automation/yaml-templates/log-disk-space.yaml
+
     - task: DotNetCoreCLI@2
       displayName: Prepare Solution
       inputs:
@@ -63,6 +65,8 @@ stages:
           -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build.binlog
         displayName: Build Solution
         continueOnError: false
+
+    - template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
@@ -120,6 +124,8 @@ stages:
           -t:PackDotNet -c $(XA.Build.Configuration) -v:n
           -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-pack.binlog
         displayName: Test PackDotNet
+
+    - template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
