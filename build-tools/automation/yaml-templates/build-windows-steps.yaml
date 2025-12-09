@@ -6,9 +6,13 @@ parameters:
   use1ESTemplate: true
 
 steps:
+- template: /build-tools/automation/yaml-templates/log-disk-space.yaml
+
 - template: /build-tools/automation/yaml-templates/kill-processes.yaml
 
 - template: /build-tools/automation/yaml-templates/clean.yaml
+
+- template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 
 - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml
   parameters:
@@ -34,6 +38,8 @@ steps:
       -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build.binlog
     displayName: Build Solution
     continueOnError: false
+
+- template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
   parameters:
