@@ -1370,15 +1370,25 @@ namespace UnnamedProject
 		[Test]
 		[Category ("WearOS")]
 		public void DotNetInstallAndRunPreviousSdk (
-				[Values (false, true)] bool isRelease)
+				[Values] bool isRelease,
+				[Values ("net9.0-android")] string targetFramework,
+				[Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinFormsAndroidApplicationProject () {
-				TargetFramework = $"{XABuildConfig.PreviousDotNetTargetFramework}-android",
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// Mono-only test for the moment (until net10 or later is the "previous" framework)
+			if (runtime != AndroidRuntime.MonoVM) {
+				Assert.Ignore ("Mono-only test util net9 is no longer the 'previous' SDK");
+			}
+
+			var proj = new XamarinFormsAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+				TargetFramework = targetFramework,
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
 			};
-			// Mono-only test
-			proj.SetRuntime (AndroidRuntime.MonoVM);
+			proj.SetRuntime (runtime);
 
 			// Requires 32-bit ABIs
 			proj.SetAndroidSupportedAbis (["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]);
