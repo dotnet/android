@@ -81,6 +81,7 @@ stages:
 # Windows Build Stage
 - stage: win_build_test
   displayName: Windows
+  dependsOn: []
   jobs:
   - job: win_build_test
     displayName: Windows > Build & Smoke Test
@@ -101,6 +102,7 @@ stages:
 # Linux Build Stage
 - stage: linux_build
   displayName: Linux
+  dependsOn: []
   jobs:
   - job: linux_build_create_sdk_pack
     displayName: Linux > Build
@@ -133,9 +135,7 @@ stages:
 # Linux Tests Stage
 - stage: linux_tests
   displayName: Linux Tests
-  dependsOn:
-  - mac_build
-  - linux_build
+  dependsOn: linux_build
   jobs:
   - job: linux_tests_smoke_1
     displayName: Linux > Tests > MSBuild 1
