@@ -1061,11 +1061,14 @@ namespace Styleable.Library {
 		}
 
 		[Test]
-		public void SkiaSharpCanvasBasedAppRuns ([Values (true, false)] bool isRelease, [Values (true, false)] bool addResource)
+		public void SkiaSharpCanvasBasedAppRuns ([Values] bool isRelease, [Values] bool addResource, [Values] AndroidRuntime runtime)
 		{
-			var app = new XamarinAndroidApplicationProject () {
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var app = new XamarinAndroidApplicationProject (packageName: $"SkiaSharpCanvasTest_{runtime.ToString ().ToLowerInvariant ()}") {
 				IsRelease = isRelease,
-				PackageName = "Xamarin.SkiaSharpCanvasTest",
 				PackageReferences = {
 					KnownPackages.SkiaSharp,
 					KnownPackages.SkiaSharp_Views,
@@ -1073,6 +1076,7 @@ namespace Styleable.Library {
 					KnownPackages.AndroidXAppCompatResources,
 				},
 			};
+			app.SetRuntime (runtime);
 			app.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\styles.xml") {
 				TextContent = () => @"<resources><style name='AppTheme' parent='Theme.AppCompat.Light.DarkActionBar'/></resources>",
 			});
@@ -1158,7 +1162,8 @@ namespace UnnamedProject
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName, app.ProjectName))) {
 				b.BuildLogFile = "build1.log";
 				b.ThrowOnBuildFailure = false;
-				if (!addResource) {
+				// TODO: fix for NativeAOT
+				if (!addResource && runtime != AndroidRuntime.NativeAOT) {
 					Assert.IsFalse (b.Build (app, doNotCleanupOnUpdate: true), $"Build of {app.ProjectName} should have failed.");
 					Assert.IsTrue (b.LastBuildOutput.ContainsText (isRelease ? "IL8000" : "XA8000"));
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ("@styleable/SKCanvasView"), "Expected '@styleable/SKCanvasView' in build output.");
