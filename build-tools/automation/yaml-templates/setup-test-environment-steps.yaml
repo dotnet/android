@@ -44,6 +44,15 @@ steps:
       condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
       xaSourcePath: ${{ parameters.xaSourcePath }}
 
+# Install p7zip on Linux for public agents
+- ${{ if ne(parameters.use1ESTemplate, true) }}:
+  - bash: |
+      set -e
+      sudo apt-get update
+      sudo apt-get install -y p7zip-full
+    displayName: Install p7zip on Linux
+    condition: and(succeeded(), eq(variables['agent.os'], 'Linux'))
+
 - template: /build-tools/automation/yaml-templates/run-xaprepare.yaml
   parameters:
     arguments: --s=${{ parameters.xaprepareScenario }}  --android-sdk-platforms="${{ parameters.androidSdkPlatforms }}"
