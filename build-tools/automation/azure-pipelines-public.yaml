@@ -37,10 +37,12 @@ variables:
 # Override pool images for public Microsoft-hosted agents
 - name: HostedMacImage
   value: macOS-14
-- name: WindowsPoolImage
-  value: windows-2022
 - name: LinuxPoolImage
   value: ubuntu-22.04
+- name: NetCorePublicPoolName
+  value: NetCore-Public-XL
+- name: WindowsPoolImageNetCorePublic
+  value: windows.vs2022.amd64.open
 
 # Public builds don't use 1ES templates - just plain stages
 stages:
@@ -86,9 +88,9 @@ stages:
   - job: win_build_test
     displayName: Windows > Build & Smoke Test
     pool:
-      name: Azure Pipelines
-      vmImage: $(WindowsPoolImage)
-      os: windows
+      name: $(NetCorePublicPoolName)
+      demands:
+      - ImageOverride -equals $(WindowsPoolImageNetCorePublic)
     timeoutInMinutes: 240
     steps:
     - checkout: self
@@ -270,9 +272,9 @@ stages:
       parallel: 8
     displayName: Windows > Tests > MSBuild
     pool:
-      name: Azure Pipelines
-      vmImage: $(WindowsPoolImage)
-      os: windows
+      name: $(NetCorePublicPoolName)
+      demands:
+      - ImageOverride -equals $(WindowsPoolImageNetCorePublic)
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     steps:
