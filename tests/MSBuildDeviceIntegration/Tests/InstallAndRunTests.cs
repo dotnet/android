@@ -866,22 +866,50 @@ using System.Runtime.Serialization.Json;
 		}
 
 		[Test]
-		public void AppWithStyleableUsageRuns ([Values (true, false)] bool useCLR, [Values (true, false)] bool isRelease,
-			[Values (true, false)] bool linkResources, [Values (true, false)] bool useStringTypeMaps)
+		public void AppWithStyleableUsageRuns ([Values] bool isRelease,	[Values] bool linkResources, [Values] bool useStringTypeMaps, [Values] AndroidRuntime runtime)
 		{
-			// Not all combinations are valid, ignore those that aren't
-			if (!useCLR && useStringTypeMaps) {
-				Assert.Ignore ("String-based typemaps mode is used only in CoreCLR apps");
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
 			}
 
-			if (useCLR && isRelease && useStringTypeMaps) {
+			// Not all combinations are valid, ignore those that aren't
+			if (runtime == AndroidRuntime.MonoVM && useStringTypeMaps) {
+				Assert.Ignore ("String-based typemaps mode is used only in CoreCLR and NativeAOT apps");
+			}
+
+			if (runtime != AndroidRuntime.MonoVM && isRelease && useStringTypeMaps) {
 				Assert.Ignore ("String-based typemaps mode is available only in Debug CoreCLR builds");
+			}
+
+			// TODO: fix this for NativeAOT
+			if (runtime == AndroidRuntime.NativeAOT && isRelease && !useStringTypeMaps) {
+				// This configuration currently fails with a long stack trace, the gist of it is:
+				//
+				//  AndroidRuntime: java.lang.RuntimeException: Unable to start activity ComponentInfo{com.xamarin.appwithstyleableusageruns_nativeaot/com.xamarin.appwithstyleableusageruns_nativeaot.MainActivity}
+				//  AndroidRuntime: Caused by: android.view.InflateException: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Error inflating class crc64f75eeacfa0ca1368.MyLayout
+				//  AndroidRuntime: Caused by: android.view.InflateException: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Error inflating class crc64f75eeacfa0ca1368.MyLayout
+				//  AndroidRuntime: Caused by: java.lang.reflect.InvocationTargetException
+				//  AndroidRuntime: Caused by: net.dot.jni.internal.JavaProxyThrowable: System.NotSupportedException: Could not activate { PeerReference=0x7fe9706698/I IdentityHashCode=0xd12aeee Java.Type=crc64f75eeacfa0ca1368/MyLayout } for managed type 'UnnamedProject.MyLayout'.
+				//  AndroidRuntime:  ---> System.Reflection.TargetInvocationException: Arg_TargetInvocationException
+				//  AndroidRuntime:  ---> System.IO.FileNotFoundException: IO_FileNotFound_FileName, _Microsoft.Android.Resource.Designer
+				//  AndroidRuntime: IO_FileName_Name, _Microsoft.Android.Resource.Designer
+				//  DOTNET  : FATAL UNHANDLED EXCEPTION: Java.Lang.Exception: Unable to start activity ComponentInfo{com.xamarin.appwithstyleableusageruns_nativeaot/com.xamarin.appwithstyleableusageruns_nativeaot.MainActivity}
+				//  DOTNET  :  ---> Java.Lang.Exception: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Error inflating class crc64f75eeacfa0ca1368.MyLayout
+				//  DOTNET  :  ---> Java.Lang.Exception: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Error inflating class crc64f75eeacfa0ca1368.MyLayout
+				//  DOTNET  :  ---> Java.Lang.ReflectiveOperationException: Exception_WasThrown, Java.Lang.ReflectiveOperationException
+				//  DOTNET  :  ---> System.NotSupportedException: Could not activate { PeerReference=0x7fe9706698/I IdentityHashCode=0xd12aeee Java.Type=crc64f75eeacfa0ca1368/MyLayout } for managed type 'UnnamedProject.MyLayout'.
+				//  DOTNET  :  ---> System.Reflection.TargetInvocationException: Arg_TargetInvocationException
+				//  DOTNET  :  ---> System.IO
+				//  eruns_nativeaot: No implementation found for void mono.android.Runtime.propagateUncaughtException(java.lang.Thread, java.lang.Throwable) (tried Java_mono_android_Runtime_propagateUncaughtException and Java_mono_android_Runtime_propagateUncaughtException__Ljava_lang_Thread_2Ljava_lang_Throwable_2) - is the library loaded, e.g. System.loadLibrary?
+				Assert.Ignore ("NativeAOT is broken without string-based typemaps");
 			}
 
 			var rootPath = Path.Combine (Root, "temp", TestName);
 			var lib = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
 				ProjectName = "Styleable.Library"
 			};
+			lib.SetRuntime (runtime);
 
 			lib.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\styleables.xml") {
 				TextContent = () => @"<?xml version='1.0' encoding='utf-8'?>
@@ -923,10 +951,10 @@ namespace Styleable.Library {
 }"
 			});
 
-			proj = new XamarinAndroidApplicationProject () {
+			proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 			};
-			proj.SetProperty ("UseMonoRuntime", useCLR ? "false" : "true");
+			proj.SetRuntime (runtime);
 			proj.AddReference (lib);
 
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\styleables.xml") {
@@ -964,9 +992,11 @@ namespace Styleable.Library {
 }
 ");
 
-			string[] abis = useCLR switch {
-				true => new string [] { "arm64-v8a", "x86_64" },
-				false => new string [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" },
+			string[] abis = runtime switch {
+				AndroidRuntime.CoreCLR => new string [] { "arm64-v8a", "x86_64" },
+				AndroidRuntime.NativeAOT => new string [] { "arm64-v8a", "x86_64" },
+				AndroidRuntime.MonoVM => new string [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" },
+				_ => throw new NotSupportedException ($"Unsupported runtime {runtime}")
 			};
 
 			proj.SetAndroidSupportedAbis (abis);
@@ -977,7 +1007,7 @@ namespace Styleable.Library {
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 
 			Dictionary<string, string>? environmentVariables = null;
-			if (useCLR && !isRelease && useStringTypeMaps) {
+			if (runtime == AndroidRuntime.CoreCLR && !isRelease && useStringTypeMaps) {
 				// The variable must have content to enable string-based typemaps
 				environmentVariables = new (StringComparer.Ordinal) {
 					{"CI_TYPEMAP_DEBUG_USE_STRINGS", "yes"}
