@@ -24,6 +24,11 @@ steps:
   inputs:
     forceReinstallCredentialProvider: true
 
+- script: |
+    sudo apt-get update
+    sudo apt-get install -y g++-10 gcc-10
+  displayName: install g++-10 and gcc-10
+
 - template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 
 - script: make jenkins PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
