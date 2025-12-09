@@ -93,10 +93,6 @@ stages:
     - checkout: self
       persistCredentials: false
 
-    # Checkout a second repo to force multi-repo checkout behavior
-    - checkout: android-tools
-      path: s/android-tools
-
     - template: /build-tools/automation/yaml-templates/build-windows-steps.yaml
       parameters:
         buildResultArtifactName: Build Results - Windows
