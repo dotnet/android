@@ -1067,7 +1067,7 @@ namespace Styleable.Library {
 				return;
 			}
 
-			var app = new XamarinAndroidApplicationProject (packageName: $"SkiaSharpCanvasTest_{runtime.ToString ().ToLowerInvariant ()}") {
+			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime, "SkiaSharpCanvasTest")) {
 				IsRelease = isRelease,
 				PackageReferences = {
 					KnownPackages.SkiaSharp,
@@ -1183,9 +1183,15 @@ namespace UnnamedProject
 
 
 		[Test]
-		public void CheckResouceIsOverridden ()
+		public void CheckResouceIsOverridden ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var library = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
 				ProjectName = "Library1",
 				AndroidResources = {
 					new AndroidItem.AndroidResource (() => "Resources\\values\\strings2.xml") {
@@ -1196,7 +1202,9 @@ namespace UnnamedProject
 					},
 				},
 			};
+			library.SetRuntime (runtime);
 			var library2 = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
 				ProjectName = "Library2",
 				AndroidResources = {
 					new AndroidItem.AndroidResource (() => "Resources\\values\\strings2.xml") {
@@ -1207,13 +1215,15 @@ namespace UnnamedProject
 					},
 				},
 			};
-			var app = new XamarinAndroidApplicationProject () {
-				PackageName = "Xamarin.ResourceTest",
+			library2.SetRuntime (runtime);
+			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime, "ResourceTest")) {
+				IsRelease = isRelease,
 				References = {
 					new BuildItem.ProjectReference ("..\\Library1\\Library1.csproj"),
 					new BuildItem.ProjectReference ("..\\Library2\\Library2.csproj"),
 				},
 			};
+			app.SetRuntime (runtime);
 			app.LayoutMain = app.LayoutMain.Replace ("@string/hello", "@string/hello_me");
 			using (var l1 = CreateDllBuilder (Path.Combine ("temp", TestName, library.ProjectName)))
 			using (var l2 = CreateDllBuilder (Path.Combine ("temp", TestName, library2.ProjectName)))
