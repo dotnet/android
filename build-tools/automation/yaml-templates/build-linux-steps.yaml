@@ -8,6 +8,8 @@ parameters:
   use1ESTemplate: true
 
 steps:
+- template: /build-tools/automation/yaml-templates/log-disk-space.yaml
+
 - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml
   parameters:
     useAgentJdkPath: false
@@ -22,6 +24,8 @@ steps:
   inputs:
     forceReinstallCredentialProvider: true
 
+- template: /build-tools/automation/yaml-templates/log-disk-space.yaml
+
 - script: make jenkins PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins
@@ -29,6 +33,8 @@ steps:
 - script: make create-nupkgs CONFIGURATION=$(XA.Build.Configuration)
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make create-nupkgs
+
+- template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 
 - task: CopyFiles@2
   inputs:

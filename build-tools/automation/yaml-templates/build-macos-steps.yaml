@@ -11,6 +11,8 @@ parameters:
   use1ESTemplate: true
 
 steps:
+- template: /build-tools/automation/yaml-templates/log-disk-space.yaml
+
 - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml
   parameters:
     useAgentJdkPath: false
@@ -25,6 +27,8 @@ steps:
   inputs:
     forceReinstallCredentialProvider: true
 
+- template: /build-tools/automation/yaml-templates/log-disk-space.yaml
+
 # Prepare and Build everything
 - script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
   workingDirectory: ${{ parameters.xaSourcePath }}
@@ -33,6 +37,8 @@ steps:
 - script: make create-installers CONFIGURATION=$(XA.Build.Configuration)
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make create-installers
+
+- template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 
 - script: >
     mkdir -p ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb &&

@@ -39,8 +39,6 @@ steps:
     displayName: Build Solution
     continueOnError: false
 
-- template: /build-tools/automation/yaml-templates/log-disk-space.yaml
-
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
   parameters:
     project: build-tools/create-packs/Microsoft.Android.Sdk.proj
@@ -49,6 +47,8 @@ steps:
       -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\local-workload.binlog
     displayName: Run ConfigureLocalWorkload target
     continueOnError: false
+
+- template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 
 - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml
   parameters:
