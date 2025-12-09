@@ -1022,16 +1022,33 @@ namespace Styleable.Library {
 		}
 
 		[Test]
-		public void CheckXamarinFormsAppDeploysAndAButtonWorks ()
+		public void CheckXamarinFormsAppDeploysAndAButtonWorks ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinFormsAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// TODO: fix for NativeAOT. Currently fails with:
+			//
+			//  DOTNET  : FATAL UNHANDLED EXCEPTION: System.InvalidCastException: Unable to convert instance of type 'AndroidX.AppCompat.Widget.AppCompatImageButton' to type 'AndroidX.AppCompat.Widget.Toolbar'.
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT type mapping fails");
+			}
+
+			string packageName = PackageUtils.MakePackageName (runtime);
+			var proj = new XamarinFormsAndroidApplicationProject (packageName: packageName) {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.SetAndroidSupportedAbis (DeviceAbi);
-			var builder = CreateApkBuilder ();
+			var builder = CreateApkBuilder (packageName: packageName);
 
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 			builder.BuildLogFile = "install.log";
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 
+			ClearAdbLogcat ();
 			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 			WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 15);
