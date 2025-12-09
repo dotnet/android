@@ -43,6 +43,8 @@ variables:
   value: NetCore-Public
 - name: WindowsPoolImageNetCorePublic
   value: windows.vs2022.amd64.open
+- name: LinuxPoolImageNetCorePublic
+  value: build.Ubuntu.2204.amd64.open
 
 # Public builds don't use 1ES templates - just plain stages
 stages:
@@ -109,9 +111,9 @@ stages:
   - job: linux_build_create_sdk_pack
     displayName: Linux > Build
     pool:
-      name: Azure Pipelines
-      vmImage: $(LinuxPoolImage)
-      os: linux
+      name: $(NetCorePublicPoolName)
+      demands:
+      - ImageOverride -equals $(LinuxPoolImageNetCorePublic)
     timeoutInMinutes: 240
     workspace:
       clean: all
@@ -142,9 +144,9 @@ stages:
   - job: linux_tests_smoke_1
     displayName: Linux > Tests > MSBuild 1
     pool:
-      name: Azure Pipelines
-      vmImage: $(LinuxPoolImage)
-      os: linux
+      name: $(NetCorePublicPoolName)
+      demands:
+      - ImageOverride -equals $(LinuxPoolImageNetCorePublic)
     timeoutInMinutes: 180
     workspace:
       clean: all
@@ -175,9 +177,9 @@ stages:
   - job: linux_tests_smoke_2
     displayName: Linux > Tests > MSBuild 2
     pool:
-      name: Azure Pipelines
-      vmImage: $(LinuxPoolImage)
-      os: linux
+      name: $(NetCorePublicPoolName)
+      demands:
+      - ImageOverride -equals $(LinuxPoolImageNetCorePublic)
     timeoutInMinutes: 180
     workspace:
       clean: all
