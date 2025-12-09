@@ -153,6 +153,7 @@ stages:
     steps:
     - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
       parameters:
+        useAgentJdkPath: false
         use1ESTemplate: false
 
     - task: DownloadPipelineArtifact@2
@@ -186,6 +187,7 @@ stages:
     steps:
     - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
       parameters:
+        useAgentJdkPath: false
         use1ESTemplate: false
 
     - task: DownloadPipelineArtifact@2
