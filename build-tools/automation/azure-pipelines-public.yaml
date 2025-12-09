@@ -290,6 +290,7 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
       parameters:
+        useAgentJdkPath: false
         installTestSlicer: true
         use1ESTemplate: false
 
