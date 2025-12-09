@@ -40,7 +40,7 @@ variables:
 - name: LinuxPoolImage
   value: ubuntu-22.04
 - name: NetCorePublicPoolName
-  value: NetCore-Public-XL
+  value: NetCore-Public
 - name: WindowsPoolImageNetCorePublic
   value: windows.vs2022.amd64.open
 
