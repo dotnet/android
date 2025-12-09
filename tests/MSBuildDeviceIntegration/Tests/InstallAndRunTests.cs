@@ -1325,16 +1325,22 @@ namespace UnnamedProject
 
 		[Test]
 		public void DotNetInstallAndRunMinorAPILevels (
-				[Values (false, true)] bool isRelease,
-				[Values ("net10.0-android36.1")] string targetFramework)
+				[Values] bool isRelease,
+				[Values ("net10.0-android36.1")] string targetFramework,
+				[Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject () {
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				TargetFramework = targetFramework,
 				IsRelease = isRelease,
 				ExtraNuGetConfigSources = {
 					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
 				}
 			};
+			proj.SetRuntime (runtime);
 
 			// TODO: update on new minor API levels to use an introduced minor API
 			proj.MainActivity = proj.DefaultMainActivity
