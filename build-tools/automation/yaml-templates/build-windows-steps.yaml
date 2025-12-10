@@ -89,6 +89,7 @@ steps:
     filename: dotnet-local.cmd
     arguments: >-
       build -v:n $(Build.StagingDirectory)/LocalWorkloadTest
+      -p:AndroidSdkDirectory="$(USERPROFILE)\android-toolchain\sdk"
       -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\build-template.binlog
 
 # Pack .nupkgs and extract workload packs to dotnet preview test directory
