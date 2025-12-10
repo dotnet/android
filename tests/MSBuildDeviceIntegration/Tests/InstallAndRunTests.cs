@@ -71,10 +71,10 @@ namespace Xamarin.Android.Build.Tests
 			// Verify correct targets ran based on FastDev support
 			if (TestEnvironment.CommercialBuildAvailable) {
 				dotnet.AssertTargetIsNotSkipped ("_Upload");
-				dotnet.AssertTargetIsSkipped ("_DeployApk");
-				dotnet.AssertTargetIsSkipped ("_DeployAppBundle");
+				dotnet.AssertTargetIsSkipped ("_DeployApk", defaultIfNotUsed: true);
+				dotnet.AssertTargetIsSkipped ("_DeployAppBundle", defaultIfNotUsed: true);
 			} else {
-				dotnet.AssertTargetIsSkipped ("_Upload");
+				dotnet.AssertTargetIsSkipped ("_Upload", defaultIfNotUsed: true);
 				dotnet.AssertTargetIsNotSkipped ("_DeployApk");
 				dotnet.AssertTargetIsNotSkipped ("_DeployAppBundle");
 			}
