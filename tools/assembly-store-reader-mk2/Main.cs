@@ -66,7 +66,7 @@ class App
 			"  where each BLOB_PATH can point to:",
 			"    * aab file",
 			"    * apk file",
-			"    * index store file (e.g. base_assemblies.blob or assemblies.so)",
+			"    * index store file (e.g. base_assemblies.blob or libassembly-store.so)",
 			"    * arch store file (e.g. base_assemblies.blob)",
 			"    * store manifest file (e.g. base_assemblies.manifest)",
 			"    * store base name (e.g. base or base_assemblies)",
