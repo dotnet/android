@@ -13,7 +13,90 @@ steps:
       Write-Host "  $($_.Name) = $($_.Value)"
     }
     Write-Host ""
+  displayName: log JAVA environment variables
+
+- bash: |
+    echo "=== Searching for JDK installations on Linux ==="
+    echo ""
     
+    # Find JDK 17 and 21
+    jdk17_path=""
+    jdk21_path=""
+    
+    echo "Checking common JDK locations:"
+    for dir in /usr/lib/jvm/* /usr/java/* /opt/java/* /opt/jdk*; do
+      if [ -d "$dir" ] && [ -f "$dir/bin/java" ]; then
+        echo "  Found: $dir"
+        version_output=$($dir/bin/java -version 2>&1 | head -n 1)
+        echo "    Version: $version_output"
+        
+        # Check if this is JDK 17
+        if echo "$version_output" | grep -q "version \"17\."; then
+          if [ -z "$jdk17_path" ]; then
+            jdk17_path="$dir"
+            echo "    *** This is JDK 17, will use for JAVA_HOME_17 ***"
+          fi
+        fi
+        
+        # Check if this is JDK 21
+        if echo "$version_output" | grep -q "version \"21\."; then
+          if [ -z "$jdk21_path" ]; then
+            jdk21_path="$dir"
+            echo "    *** This is JDK 21, will use for JAVA_HOME_21 ***"
+          fi
+        fi
+      fi
+    done
+    echo ""
+    
+    echo "Checking 'java' in PATH:"
+    if command -v java &> /dev/null; then
+      which java
+      version_output=$(java -version 2>&1 | head -n 1)
+      echo "$version_output"
+      java_path=$(dirname $(dirname $(readlink -f $(which java))))
+      echo "JAVA_HOME from java: $java_path"
+      
+      # If we haven't found JDK 17 or 21 yet, check if PATH java is one of them
+      if [ -z "$jdk17_path" ] && echo "$version_output" | grep -q "version \"17\."; then
+        jdk17_path="$java_path"
+        echo "  Using PATH java as JDK 17"
+      fi
+      if [ -z "$jdk21_path" ] && echo "$version_output" | grep -q "version \"21\."; then
+        jdk21_path="$java_path"
+        echo "  Using PATH java as JDK 21"
+      fi
+    else
+      echo "  'java' not found in PATH"
+    fi
+    echo ""
+    
+    echo "Checking 'update-alternatives' (Debian/Ubuntu):"
+    if command -v update-alternatives &> /dev/null; then
+      update-alternatives --list java 2>/dev/null || echo "  No alternatives configured"
+    fi
+    echo ""
+    
+    # Set environment variables for found JDKs
+    if [ -n "$jdk17_path" ]; then
+      echo "Setting JAVA_HOME_17_X64=$jdk17_path"
+      echo "##vso[task.setvariable variable=JAVA_HOME_17_X64]$jdk17_path"
+    else
+      echo "WARNING: JDK 17 not found"
+    fi
+    
+    if [ -n "$jdk21_path" ]; then
+      echo "Setting JAVA_HOME_21_X64=$jdk21_path"
+      echo "##vso[task.setvariable variable=JAVA_HOME_21_X64]$jdk21_path"
+    else
+      echo "WARNING: JDK 21 not found"
+    fi
+    
+    echo ""
+  displayName: find and set JDK paths (Linux)
+  condition: eq(variables['Agent.OS'], 'Linux')
+
+- pwsh: |
     $agentOS="$(Agent.OS)"
     $agentArch="$(Agent.OSArchitecture)" -eq "ARM64" ? "arm64" : "$(Agent.OSArchitecture)"
     $jdkMajorVersion="${{ parameters.jdkMajorVersion }}"
@@ -34,3 +117,4 @@ steps:
     Write-Host "##vso[task.setvariable variable=JAVA_HOME]$jdkHomePath"
     Write-Host "##vso[task.setvariable variable=JI_JAVA_HOME]$jdkHomePath"
   displayName: set JAVA_HOME and JI_JAVA_HOME
+
