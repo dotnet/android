@@ -83,15 +83,6 @@ steps:
     filename: dotnet-local.cmd
     arguments: new android -o $(Build.StagingDirectory)/LocalWorkloadTest
 
-- ${{ if ne(parameters.use1ESTemplate, true) }}:
-  - task: BatchScript@1
-    displayName: Test dotnet-local.cmd - install Android dependencies
-    inputs:
-      filename: dotnet-local.cmd
-      arguments: >-
-        build -v:n $(Build.StagingDirectory)/LocalWorkloadTest -t:InstallAndroidDependencies -p:AcceptAndroidSDKLicenses=true
-        -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\InstallAndroidDependencies.binlog
-
 - task: BatchScript@1
   displayName: Test dotnet-local.cmd - build template
   inputs:
