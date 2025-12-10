@@ -3,6 +3,7 @@
 
 parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)/android
+  makeMSBuildArgs: ''
   installerArtifactName: $(InstallerArtifactName)
   nugetArtifactName: $(NuGetArtifactName)
   testAssembliesArtifactName: $(TestAssembliesArtifactName)
@@ -30,11 +31,11 @@ steps:
 - template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 
 # Prepare and Build everything
-- script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
+- script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins
 
-- script: make create-installers CONFIGURATION=$(XA.Build.Configuration)
+- script: make create-installers CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make create-installers
 
