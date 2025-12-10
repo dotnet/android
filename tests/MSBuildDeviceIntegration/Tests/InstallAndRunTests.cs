@@ -1757,9 +1757,17 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		}
 
 		[Test]
-		public void AppStartsWithManagedMarshalMethodsLookupEnabled ()
+		public void AppStartsWithManagedMarshalMethodsLookupEnabled ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidUseMarshalMethods", "true");
 			proj.SetProperty ("_AndroidUseManagedMarshalMethodsLookup", "true");
 
