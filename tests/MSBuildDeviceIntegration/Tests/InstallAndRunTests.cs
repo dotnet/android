@@ -1362,9 +1362,22 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void SupportDesugaringStaticInterfaceMethods ()
+		public void SupportDesugaringStaticInterfaceMethods ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject () {
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// TODO: fix for NativeAOT, if possible. Currently fails with:
+			//
+			//  Process: com.xamarin.supportdesugaringstaticinterfacemethods_nativeaot, PID: 13888
+			//  java.lang.NoSuchMethodError: no static method "Lexample/StaticMethodsInterface;.getValue()I"
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("Currently broken on NativeAOT");
+			}
+
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = true,
 				EnableDefaultItems = true,
 				OtherBuildItems = {
@@ -1377,6 +1390,7 @@ namespace UnnamedProject
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
 
 			// Note: To properly test, Desugaring must be *enabled*, which requires that
 			// `$(SupportedOSPlatformVersion)` be *less than* 23.  21 is currently the default,
