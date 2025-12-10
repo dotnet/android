@@ -144,6 +144,12 @@ stages:
         nugetArtifactName: $(LinuxNuGetArtifactName)
         use1ESTemplate: false
 
+# Package Tests Stage
+- template: /build-tools/automation/yaml-templates/stage-package-tests.yaml
+  parameters:
+    macTestAgentsUseCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
+    use1ESTemplate: false
+
 # Linux Tests Stage
 - stage: linux_tests
   displayName: Linux Tests
