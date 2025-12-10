@@ -87,7 +87,9 @@ steps:
   displayName: Test dotnet-local.cmd - build template
   inputs:
     filename: dotnet-local.cmd
-    arguments: build -v:n $(Build.StagingDirectory)/LocalWorkloadTest
+    arguments: >-
+      build -v:n $(Build.StagingDirectory)/LocalWorkloadTest
+      -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\build-template.binlog
 
 # Pack .nupkgs and extract workload packs to dotnet preview test directory
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
