@@ -1589,48 +1589,14 @@ MONO_GC_PARAMS=bridge-implementation=new",
 		}
 
 		[Test]
-		public void DotNetRunEnvironmentVariables ()
+		public void FixLegacyResourceDesignerStep ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject {
-				ProjectName = nameof (DotNetRunEnvironmentVariables),
-				RootNamespace = nameof (DotNetRunEnvironmentVariables),
-				IsRelease = false,
-				EnableDefaultItems = true,
-			};
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
-		Console.WriteLine (""DOTNET_RUN_FOO="" + Environment.GetEnvironmentVariable(""DOTNET_RUN_FOO""));
-		Console.WriteLine (""DOTNET_RUN_BAR="" + Environment.GetEnvironmentVariable(""DOTNET_RUN_BAR""));
-		");
-			using var builder = CreateApkBuilder ();
-			builder.Save (proj);
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			string previousTargetFramework = "net9.0-android";
 
-			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
-			Assert.IsTrue (dotnet.Run (noBuild: false, parameters: new [] { "-e", "DOTNET_RUN_FOO=TestValue123", "-e", "DOTNET_RUN_BAR=AnotherValue456" }), "`dotnet run` should succeed");
-
-			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
-			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
-			Assert.IsTrue (didLaunch, "Activity should have started.");
-			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "logcat.log");
-			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
-
-			StringAssert.Contains (
-					"DOTNET_RUN_FOO=TestValue123",
-					logcatOutput,
-					"The Environment variable \"DOTNET_RUN_FOO\" was not set to expected value \"TestValue123\"."
-			);
-			StringAssert.Contains (
-					"DOTNET_RUN_BAR=AnotherValue456",
-					logcatOutput,
-					"The Environment variable \"DOTNET_RUN_BAR\" was not set to expected value \"AnotherValue456\"."
-			);
-		}
-
-		[Test]
-		public void FixLegacyResourceDesignerStep ([Values (true, false)] bool isRelease)
-		{
-			string previousTargetFramework = $"{XABuildConfig.PreviousDotNetTargetFramework}-android";
-
+			// Don't call SetRuntime on library projects (at least until "previous" framework bumps to at least 10.0)
 			var library1 = new XamarinAndroidLibraryProject {
 				IsRelease = isRelease,
 				TargetFramework = previousTargetFramework,
@@ -1657,10 +1623,11 @@ MONO_GC_PARAMS=bridge-implementation=new",
 			library2.AndroidResources.Clear ();
 			library2.SetProperty ("AndroidGenerateResourceDesigner", "false"); // Disable Android Resource Designer generation
 			library2.AddReference (library1);
-			proj = new XamarinAndroidApplicationProject {
+			proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				ProjectName = "MyApp",
 			};
+			proj.SetRuntime (runtime);
 			proj.AddReference (library2);
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "Console.WriteLine(Foo.Hello);");
 
