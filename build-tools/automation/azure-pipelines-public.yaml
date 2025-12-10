@@ -34,6 +34,9 @@ resources:
 # Global variables
 variables:
 - template: /build-tools/automation/yaml-templates/variables.yaml@self
+# Override for public pipeline
+- name: DefaultJavaSdkMajorVersion
+  value: 21
 # Override pool images for public Microsoft-hosted agents
 - name: HostedMacImage
   value: macOS-14
