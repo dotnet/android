@@ -1499,16 +1499,21 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		[TestCase (false, true)]
-		[TestCase (false, false)]
-		[TestCase (true, false)]
-		public void FastDeployEnvironmentFiles (bool isRelease, bool embedAssembliesIntoApk)
+		public void FastDeployEnvironmentFiles ([Values] bool isRelease, [Values] bool embedAssembliesIntoApk, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			if (!isRelease && !embedAssembliesIntoApk) {
+				Assert.Ignore ("Not a FastDev configuration");
+			}
+
 			if (embedAssembliesIntoApk) {
 				AssertCommercialBuild ();
 			}
 
-			var proj = new XamarinAndroidApplicationProject {
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				ProjectName = nameof (FastDeployEnvironmentFiles),
 				RootNamespace = nameof (FastDeployEnvironmentFiles),
 				IsRelease = isRelease,
@@ -1523,6 +1528,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 					}
 				}
 			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("DiagnosticAddress", "127.0.0.1");
 			proj.SetProperty ("DiagnosticPort", "9000");
 			proj.SetProperty ("DiagnosticSuspend", "false");
