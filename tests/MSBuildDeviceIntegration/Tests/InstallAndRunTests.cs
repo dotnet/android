@@ -1654,8 +1654,12 @@ MONO_GC_PARAMS=bridge-implementation=new",
 		}
 
 		[Test]
-		public void GradleFBProj ([Values (false, true)] bool isRelease)
+		public void GradleFBProj ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var moduleName = "Library";
 			var gradleTestProjectDir = Path.Combine (Root, "temp", "gradle", TestName);
 			var gradleModule = new AndroidGradleModule (Path.Combine (gradleTestProjectDir, moduleName));
@@ -1703,7 +1707,7 @@ public class FacebookSdk {{
 			};
 			gradleProject.Create ();
 
-			var proj = new XamarinAndroidApplicationProject {
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				ExtraNuGetConfigSources = {
 					"https://api.nuget.org/v3/index.json",
@@ -1757,6 +1761,7 @@ public class FacebookSdk {{
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
 Facebook.FacebookSdk.InitializeSDK(this, Java.Lang.Boolean.True);
 Facebook.FacebookSdk.LogEvent(""TestFacebook"");
