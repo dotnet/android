@@ -1565,17 +1565,21 @@ MONO_GC_PARAMS=bridge-implementation=new",
 		}
 
 		[Test]
-		public void MicrosoftIntune ([Values (false, true)] bool isRelease)
+		public void MicrosoftIntune ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
 			Assert.Ignore ("https://github.com/xamarin/xamarin-android/issues/8548");
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 
-			proj = new XamarinAndroidApplicationProject {
+			proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				PackageReferences = {
 					KnownPackages.AndroidXAppCompat,
 					KnownPackages.Microsoft_Intune_Maui_Essentials_android,
 				},
 			};
+			proj.SetRuntime (runtime);
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("Icon = \"@drawable/icon\")]", "Icon = \"@drawable/icon\", Theme = \"@style/Theme.AppCompat.Light.DarkActionBar\")]")
 				.Replace ("public class MainActivity : Activity", "public class MainActivity : AndroidX.AppCompat.App.AppCompatActivity");
