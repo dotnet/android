@@ -68,6 +68,17 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
 			Assert.IsTrue (dotnet.Build ("DeployToDevice"), "`dotnet build -t:DeployToDevice` should succeed");
 
+			// Verify correct targets ran based on FastDev support
+			if (TestEnvironment.CommercialBuildAvailable) {
+				dotnet.AssertTargetIsNotSkipped ("_Upload");
+				dotnet.AssertTargetIsSkipped ("_DeployApk");
+				dotnet.AssertTargetIsSkipped ("_DeployAppBundle");
+			} else {
+				dotnet.AssertTargetIsSkipped ("_Upload");
+				dotnet.AssertTargetIsNotSkipped ("_DeployApk");
+				dotnet.AssertTargetIsNotSkipped ("_DeployAppBundle");
+			}
+
 			// Launch the app using adb
 			ClearAdbLogcat ();
 			var result = AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");

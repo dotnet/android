@@ -14,11 +14,11 @@ This file contains targets specific for Android application projects.
 
   <PropertyGroup>
     <!-- If Xamarin.Android.Common.Debugging.targets exists, we can rely on _Run for debugging. -->
-    <_RunDependsOn Condition=" '$(_XASupportsFastDev)' == 'true' ">
+    <_RunDependsOn Condition=" '$(_AndroidFastDeploymentSupported)' == 'true' ">
       Install;
       _Run;
     </_RunDependsOn>
-    <_RunDependsOn Condition=" '$(_XASupportsFastDev)' != 'true' ">
+    <_RunDependsOn Condition=" '$(_AndroidFastDeploymentSupported)' != 'true' ">
       Install;
       StartAndroidActivity;
     </_RunDependsOn>
