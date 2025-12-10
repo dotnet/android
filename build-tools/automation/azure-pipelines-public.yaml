@@ -147,7 +147,9 @@ stages:
 # Linux Tests Stage
 - stage: linux_tests
   displayName: Linux Tests
-  dependsOn: linux_build
+  dependsOn: 
+  - mac_build
+  - linux_build
   jobs:
   - job: linux_tests_smoke_1
     displayName: Linux > Tests > MSBuild 1
