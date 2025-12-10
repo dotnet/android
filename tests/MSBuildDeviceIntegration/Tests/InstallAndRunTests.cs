@@ -83,13 +83,16 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[TestCase (true)]
-		[TestCase (false)]
-		public void DeployToDevice (bool isRelease)
+		public void DeployToDevice ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject {
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease
 			};
+			proj.SetRuntime (runtime);
 			using var builder = CreateApkBuilder ();
 			builder.Save (proj);
 
