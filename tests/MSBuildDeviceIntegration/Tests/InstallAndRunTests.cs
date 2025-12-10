@@ -625,7 +625,7 @@ namespace Library1 {
 			StreamReader sr = new StreamReader (stream);
 
 			Console.WriteLine ($""JSON Person representation: {sr.ReadToEnd ()}"");
-
+/
 			stream.Position = 0;
 			Person p2 = (Person) serializer.ReadObject (stream);
 
@@ -1311,9 +1311,18 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void TypeAndMemberRemapping ([Values (false, true)] bool isRelease)
+		public void TypeAndMemberRemapping ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject () {
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// TODO: fix for NativeAOT, if possible
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("Type and member mapping is currently unsupported under NativeAOT");
+			}
+
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
 				OtherBuildItems = {
@@ -1330,6 +1339,7 @@ namespace UnnamedProject
 					},
 				},
 			};
+			proj.SetRuntime (runtime);
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": global::Example.RemapActivity");
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
