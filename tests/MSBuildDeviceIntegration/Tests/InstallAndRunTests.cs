@@ -1506,10 +1506,14 @@ MONO_GC_PARAMS=bridge-implementation=new",
 		}
 
 		[Test]
-		public void FixLegacyResourceDesignerStep ([Values (true, false)] bool isRelease)
+		public void FixLegacyResourceDesignerStep ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
-			string previousTargetFramework = $"{XABuildConfig.PreviousDotNetTargetFramework}-android";
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			string previousTargetFramework = "net9.0-android";
 
+			// Don't call SetRuntime on library projects (at least until "previous" framework bumps to at least 10.0)
 			var library1 = new XamarinAndroidLibraryProject {
 				IsRelease = isRelease,
 				TargetFramework = previousTargetFramework,
@@ -1536,10 +1540,11 @@ MONO_GC_PARAMS=bridge-implementation=new",
 			library2.AndroidResources.Clear ();
 			library2.SetProperty ("AndroidGenerateResourceDesigner", "false"); // Disable Android Resource Designer generation
 			library2.AddReference (library1);
-			proj = new XamarinAndroidApplicationProject {
+			proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				ProjectName = "MyApp",
 			};
+			proj.SetRuntime (runtime);
 			proj.AddReference (library2);
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "Console.WriteLine(Foo.Hello);");
 
