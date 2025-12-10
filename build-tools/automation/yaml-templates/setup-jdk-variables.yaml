@@ -4,6 +4,16 @@ parameters:
 
 steps:
 - pwsh: |
+    Write-Host "=== JAVA environment variables ==="
+    Write-Host "Agent.OS: $(Agent.OS)"
+    Write-Host "Agent.OSArchitecture: $(Agent.OSArchitecture)"
+    Write-Host ""
+    Write-Host "Checking various JAVA_HOME environment variables:"
+    Get-ChildItem env: | Where-Object { $_.Name -like "JAVA*" } | ForEach-Object {
+      Write-Host "  $($_.Name) = $($_.Value)"
+    }
+    Write-Host ""
+    
     $agentOS="$(Agent.OS)"
     $agentArch="$(Agent.OSArchitecture)" -eq "ARM64" ? "arm64" : "$(Agent.OSArchitecture)"
     $jdkMajorVersion="${{ parameters.jdkMajorVersion }}"
