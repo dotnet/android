@@ -100,11 +100,13 @@ stages:
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         artifactName: Test Results - APKs .NET $(XA.Build.Configuration) - macOS 1
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         artifactName: Test Results - APKs .NET Debug - macOS 1
         configuration: Debug
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
 
@@ -239,10 +241,12 @@ stages:
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         artifactName: Test Results - APKs .NET $(XA.Build.Configuration) - macOS 2
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         artifactName: Test Results - APKs .NET Debug - macOS 2
         configuration: Debug
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
