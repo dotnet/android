@@ -125,11 +125,11 @@ properties that determine build ordering.
       $(_MinimalSignAndroidPackageDependsOn);
     </SignAndroidPackageDependsOn>
     <!-- This should function similar to SignAndroidPackage inside VS plus also deploy -->
-    <DeployToDeviceDependsOnTargets Condition=" '$(_XASupportsFastDev)' == 'true' ">
+    <DeployToDeviceDependsOnTargets Condition=" '$(_AndroidFastDeploymentSupported)' == 'true' ">
       $(_MinimalSignAndroidPackageDependsOn);
       _Upload;
     </DeployToDeviceDependsOnTargets>
-    <DeployToDeviceDependsOnTargets Condition=" '$(_XASupportsFastDev)' != 'true' ">
+    <DeployToDeviceDependsOnTargets Condition=" '$(_AndroidFastDeploymentSupported)' != 'true' ">
       $(_MinimalSignAndroidPackageDependsOn);
       _DeployApk;
       _DeployAppBundle;
