@@ -65,7 +65,7 @@ partial class StoreReader_V2 : AssemblyStoreReader
 				root = LibDirName;
 			}
 			parts.Add (abi);
-			parts.Add (GetBlobName (abi));
+			parts.Add ("libassembly-store.so");
 
 			return MonoAndroidHelper.MakeZipArchivePath (root, parts);
 		}
@@ -81,8 +81,6 @@ partial class StoreReader_V2 : AssemblyStoreReader
 			ASSEMBLY_STORE_FORMAT_VERSION_32BIT | ASSEMBLY_STORE_ABI_X86,
 		};
 	}
-
-	static string GetBlobName (string abi) => $"libassemblies.{abi}.blob.so";
 
 	protected override ulong GetStoreStartDataOffset () => elfOffset;
 

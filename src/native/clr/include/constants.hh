@@ -102,14 +102,8 @@ namespace xamarin::android {
 	private:
 		static constexpr size_t split_config_abi_apk_name_size = calc_size (split_config_prefix, android_abi, split_config_extension);
 
-		static constexpr std::string_view assembly_store_prefix { "libassemblies." };
-		static constexpr std::string_view assembly_store_extension { ".blob" };
-		static constexpr size_t assembly_store_file_name_size = calc_size (assembly_store_prefix, android_lib_abi, assembly_store_extension, dso_suffix);
-		static constexpr auto assembly_store_file_name_array = concat_string_views<assembly_store_file_name_size> (assembly_store_prefix, android_lib_abi, assembly_store_extension, dso_suffix);
-
 	public:
-		// .data() must be used otherwise string_view length will include the trailing \0 in the array
-		static constexpr std::string_view assembly_store_file_name { assembly_store_file_name_array.data () };
+		static constexpr std::string_view assembly_store_file_name { "libassembly-store.so" };
 
 		static constexpr auto split_config_abi_apk_name = concat_string_views<split_config_abi_apk_name_size> (split_config_prefix, android_abi, split_config_extension);
 
