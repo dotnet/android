@@ -21,6 +21,14 @@ pr:
 parameters:
 - name: macTestAgentsUseCleanImages   # Test agents we do not need to clean up when finished because they are not reused
   default: true
+- name: skipTests                      # Skip all test stages (builds only). Leave blank to auto-skip for non-fork PRs.
+  displayName: Skip Tests
+  type: string
+  default: ''
+  values:
+  - ''
+  - 'true'
+  - 'false'
 
 # Repository resources - checkout android-tools to force multi-repo checkout behavior
 resources:
@@ -48,6 +56,16 @@ variables:
   value: windows.vs2022.amd64.open
 - name: LinuxPoolImageNetCorePublic
   value: build.Ubuntu.2204.amd64.open
+# Skip tests for non-fork PRs (they should use DevDiv pipeline) unless explicitly requested
+- name: SkipTestStages
+  ${{ if eq(parameters.skipTests, 'true') }}:
+    value: true
+  ${{ elseif eq(parameters.skipTests, 'false') }}:
+    value: false
+  ${{ elseif and(eq(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.IsFork'], 'True')) }}:
+    value: true
+  ${{ else }}:
+    value: false
 
 # Public builds don't use 1ES templates - just plain stages
 stages:
@@ -145,10 +163,11 @@ stages:
         use1ESTemplate: false
 
 # Package Tests Stage
-- template: /build-tools/automation/yaml-templates/stage-package-tests.yaml
-  parameters:
-    macTestAgentsUseCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
-    use1ESTemplate: false
+- ${{ if ne(variables.SkipTestStages, 'true') }}:
+  - template: /build-tools/automation/yaml-templates/stage-package-tests.yaml
+    parameters:
+      macTestAgentsUseCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
+      use1ESTemplate: false
 
 # Linux Tests Stage
 - stage: linux_tests
@@ -156,6 +175,7 @@ stages:
   dependsOn: 
   - mac_build
   - linux_build
+  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
   jobs:
   - job: linux_tests_smoke_1
     displayName: Linux > Tests > MSBuild 1
@@ -247,6 +267,7 @@ stages:
 - stage: msbuild_dotnet
   displayName: MSBuild Tests
   dependsOn: mac_build
+  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
   jobs:
   - job: mac_msbuild_tests
     strategy:
