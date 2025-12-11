@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -17,6 +18,25 @@ namespace Xamarin.Android.Build.Tests
 		ProjectBuilder builder;
 		XamarinAndroidApplicationProject proj;
 		string tzFileSuffix;
+		readonly AndroidRuntime runtime;
+		readonly bool isRelease;
+
+		static IEnumerable<object[]> Get_Fixture_Args ()
+		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				ret.Add (new object[] { runtime });
+			}
+
+			return ret;
+		}
+
+		public TimeZoneInfoTests (AndroidRuntime runtime)
+		{
+			this.runtime = runtime;
+			isRelease = runtime == AndroidRuntime.NativeAOT;
+		}
 
 		[OneTimeSetUp]
 		public void BeforeAllTests ()
@@ -30,13 +50,16 @@ namespace Xamarin.Android.Build.Tests
 			// Disable auto timezone
 			RunAdbCommand ("shell settings put global auto_time_zone 0");
 
-			proj = new XamarinAndroidApplicationProject (packageName: "TimeZoneInfoTests");
+			proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime, "TimeZoneInfoTests")) {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"button.Text = $""TimeZoneInfo={TimeZoneInfo.Local.Id}"";
 			Console.WriteLine ($""TimeZoneInfoNative={Java.Util.TimeZone.Default.ID}"");
 			Console.WriteLine ($""TimeZoneInfoTests.TimeZoneInfo={TimeZoneInfo.Local.Id}"");
 ");
 
-			builder = CreateApkBuilder (Path.Combine ("temp", "TimeZoneInfoTests"));
+			builder = CreateApkBuilder (Path.Combine ("temp", TestName));
 			builder.BuildLogFile = "onetimesetup-install.log";
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 		}
