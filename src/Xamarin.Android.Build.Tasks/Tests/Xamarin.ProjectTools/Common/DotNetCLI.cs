@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -25,6 +26,37 @@ namespace Xamarin.ProjectTools
 		}
 
 		/// <summary>
+		/// Creates and starts a `dotnet` process with the specified arguments.
+		/// </summary>
+		/// <param name="args">command arguments</param>
+		/// <returns>A started Process instance. Caller is responsible for disposing.</returns>
+		protected Process ExecuteProcess (params string [] args)
+		{
+			var p = new Process ();
+			p.StartInfo.FileName = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet");
+			p.StartInfo.Arguments = string.Join (" ", args);
+			p.StartInfo.CreateNoWindow = true;
+			p.StartInfo.UseShellExecute = false;
+			p.StartInfo.RedirectStandardOutput = true;
+			p.StartInfo.RedirectStandardError = true;
+			p.StartInfo.SetEnvironmentVariable ("DOTNET_MULTILEVEL_LOOKUP", "0");
+			p.StartInfo.SetEnvironmentVariable ("PATH", TestEnvironment.DotNetPreviewDirectory + Path.PathSeparator + Environment.GetEnvironmentVariable ("PATH"));
+			if (TestEnvironment.UseLocalBuildOutput) {
+				p.StartInfo.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_MANIFEST_ROOTS", TestEnvironment.WorkloadManifestOverridePath);
+				p.StartInfo.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_PACK_ROOTS", TestEnvironment.WorkloadPackOverridePath);
+			}
+			if (Directory.Exists (AndroidSdkPath)) {
+				p.StartInfo.SetEnvironmentVariable ("AndroidSdkDirectory", AndroidSdkPath.TrimEnd ('\\'));
+			}
+			if (Directory.Exists (JavaSdkPath)) {
+				p.StartInfo.SetEnvironmentVariable ("JavaSdkDirectory", JavaSdkPath.TrimEnd ('\\'));
+			}
+
+			p.Start ();
+			return p;
+		}
+
+		/// <summary>
 		/// Runs the `dotnet` tool with the specified arguments.
 		/// </summary>
 		/// <param name="args">command arguments</param>
@@ -39,33 +71,19 @@ namespace Xamarin.ProjectTools
 			var procOutput = new StringBuilder ();
 			bool succeeded;
 
-			using (var p = new Process ()) {
-				p.StartInfo.FileName = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet");
-				p.StartInfo.Arguments = string.Join (" ", args);
-				p.StartInfo.CreateNoWindow = true;
-				p.StartInfo.UseShellExecute = false;
-				p.StartInfo.RedirectStandardOutput = true;
-				p.StartInfo.RedirectStandardError = true;
-				p.StartInfo.SetEnvironmentVariable ("DOTNET_MULTILEVEL_LOOKUP", "0");
-				p.StartInfo.SetEnvironmentVariable ("PATH", TestEnvironment.DotNetPreviewDirectory + Path.PathSeparator + Environment.GetEnvironmentVariable ("PATH"));
-				if (TestEnvironment.UseLocalBuildOutput) {
-					p.StartInfo.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_MANIFEST_ROOTS", TestEnvironment.WorkloadManifestOverridePath);
-					p.StartInfo.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_PACK_ROOTS", TestEnvironment.WorkloadPackOverridePath);
-				}
-
+			using (var p = ExecuteProcess (args)) {
 				p.ErrorDataReceived += (sender, e) => {
 					if (e.Data != null) {
 						procOutput.AppendLine (e.Data);
 					}
 				};
-				p.ErrorDataReceived += (sender, e) => {
+				p.OutputDataReceived += (sender, e) => {
 					if (e.Data != null) {
 						procOutput.AppendLine (e.Data);
 					}
 				};
 
 				procOutput.AppendLine ($"Running: {p.StartInfo.FileName} {p.StartInfo.Arguments}");
-				p.Start ();
 				p.BeginOutputReadLine ();
 				p.BeginErrorReadLine ();
 				bool completed = p.WaitForExit ((int) new TimeSpan (0, 15, 0).TotalMilliseconds);
@@ -111,16 +129,36 @@ namespace Xamarin.ProjectTools
 			return Execute (arguments.ToArray ());
 		}
 
-		public bool Run ()
+		public bool Run (bool waitForExit = false)
 		{
 			string binlog = Path.Combine (Path.GetDirectoryName (projectOrSolution), "run.binlog");
 			var arguments = new List<string> {
 				"run",
 				"--project", $"\"{projectOrSolution}\"",
 				"--no-build",
-				$"/bl:\"{binlog}\""
+				$"/bl:\"{binlog}\"",
+				$"/p:WaitForExit={waitForExit.ToString (CultureInfo.InvariantCulture)}"
 			};
 			return Execute (arguments.ToArray ());
+		}
+
+		/// <summary>
+		/// Starts `dotnet run` and returns a running Process that can be monitored and killed.
+		/// </summary>
+		/// <param name="waitForExit">Whether to use Microsoft.Android.Run tool which waits for app exit and streams logcat.</param>
+		/// <returns>A running Process instance. Caller is responsible for disposing.</returns>
+		public Process StartRun (bool waitForExit = true)
+		{
+			string binlog = Path.Combine (Path.GetDirectoryName (projectOrSolution), "run.binlog");
+			var arguments = new List<string> {
+				"run",
+				"--project", $"\"{projectOrSolution}\"",
+				"--no-build",
+				$"/bl:\"{binlog}\"",
+				$"/p:WaitForExit={waitForExit.ToString (CultureInfo.InvariantCulture)}"
+			};
+
+			return ExecuteProcess (arguments.ToArray ());
 		}
 
 		public IEnumerable<string> LastBuildOutput {
