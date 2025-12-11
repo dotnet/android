@@ -57,12 +57,23 @@ This file contains targets specific for Android application projects.
       <Output TaskParameter="ActivityName" PropertyName="AndroidLaunchActivity" />
     </GetAndroidActivityName>
     <PropertyGroup>
-      <RunCommand>$(AdbToolExe)</RunCommand>
-      <RunCommand Condition=" $(RunCommand) == '' and $([MSBuild]::IsOSPlatform('windows')) ">adb.exe</RunCommand>
-      <RunCommand Condition=" $(RunCommand) == '' and !$([MSBuild]::IsOSPlatform('windows')) ">adb</RunCommand>
-      <RunCommand>$([System.IO.Path]::Combine ('$(AdbToolPath)', '$(RunCommand)'))</RunCommand>
-      <RunArguments>$(AdbTarget) shell am start -S -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;</RunArguments>
+      <_AdbToolPath>$(AdbToolExe)</_AdbToolPath>
+      <_AdbToolPath Condition=" '$(_AdbToolPath)' == '' and $([MSBuild]::IsOSPlatform('windows')) ">adb.exe</_AdbToolPath>
+      <_AdbToolPath Condition=" '$(_AdbToolPath)' == '' and !$([MSBuild]::IsOSPlatform('windows')) ">adb</_AdbToolPath>
+      <_AdbToolPath>$([System.IO.Path]::Combine ('$(AdbToolPath)', '$(_AdbToolPath)'))</_AdbToolPath>
       <RunWorkingDirectory>$(MSBuildProjectDirectory)</RunWorkingDirectory>
+    </PropertyGroup>
+    <!-- By default, use `Microsoft.Android.Run` tool to stream logcat and handle Ctrl+C -->
+    <PropertyGroup Condition=" '$(WaitForExit)' != 'false' ">
+      <_AndroidRunPath Condition=" '$(_AndroidRunPath)' == '' ">$(MSBuildThisFileDirectory)..\tools\Microsoft.Android.Run.dll</_AndroidRunPath>
+      <_AndroidRunLogcatArgs Condition=" '$(_AndroidRunLogcatArgs)' == '' ">monodroid-assembly:S</_AndroidRunLogcatArgs>
+      <RunCommand>dotnet</RunCommand>
+      <RunArguments>exec &quot;$(_AndroidRunPath)&quot; --adb &quot;$(_AdbToolPath)&quot; --package &quot;$(_AndroidPackage)&quot; --activity &quot;$(AndroidLaunchActivity)&quot; --logcat-args &quot;$(_AndroidRunLogcatArgs)&quot; $(_AndroidRunExtraArgs)</RunArguments>
+    </PropertyGroup>
+    <!-- When WaitForExit is false, use direct adb command (no logcat streaming) -->
+    <PropertyGroup Condition=" '$(WaitForExit)' == 'false' ">
+      <RunCommand>$(_AdbToolPath)</RunCommand>
+      <RunArguments>$(AdbTarget) shell am start -S -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;</RunArguments>
     </PropertyGroup>
   </Target>
 

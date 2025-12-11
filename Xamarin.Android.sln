@@ -25,6 +25,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.Aidl"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Build.Tasks", "src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj", "{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Android.Run", "src\Microsoft.Android.Run\Microsoft.Android.Run.csproj", "{A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Android.Sdk.ILLink", "src\Microsoft.Android.Sdk.ILLink\Microsoft.Android.Sdk.ILLink.csproj", "{71FE54FA-0BF5-48EF-ACAA-17557B28C9F4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.Bytecode", "external\Java.Interop\src\Xamarin.Android.Tools.Bytecode\Xamarin.Android.Tools.Bytecode.csproj", "{B17475BC-45A2-47A3-B8FC-62F3A0959EE0}"
@@ -169,6 +171,10 @@ Global
 		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}.Release|AnyCPU.ActiveCfg = Release|Any CPU
 		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D}.Release|AnyCPU.Build.0 = Release|Any CPU
 		{71FE54FA-0BF5-48EF-ACAA-17557B28C9F4}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
 		{71FE54FA-0BF5-48EF-ACAA-17557B28C9F4}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{71FE54FA-0BF5-48EF-ACAA-17557B28C9F4}.Release|AnyCPU.ActiveCfg = Release|Any CPU
