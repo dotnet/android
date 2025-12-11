@@ -18,12 +18,16 @@ namespace Xamarin.Android.Build.Tests
 	{
 		[Test]
 		public void MonoAndroidExportReferencedAppStarts (
-			[Values (true, false)] bool embedAssemblies,
-			[Values (true, false)] bool isRelease,
-			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.MonoVM)] AndroidRuntime runtime)
+			[Values] bool embedAssemblies,
+			[Values] bool isRelease,
+			[Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			AssertCommercialBuild ();
-			var proj = new XamarinAndroidApplicationProject () {
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				References = {
 					new BuildItem.Reference ("Mono.Android.Export"),
