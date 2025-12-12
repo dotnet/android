@@ -9,10 +9,12 @@ using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using Xamarin.ProjectTools;
 using Humanizer;
+using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
+	[TestFixtureSource (nameof (Get_Fixture_Args))]
 	[Category ("Localization")]
 	[NonParallelizable]
 	public class LocalizationTests : DeviceTest
@@ -20,6 +22,25 @@ namespace Xamarin.Android.Build.Tests
 		ProjectBuilder builder;
 		XamarinAndroidApplicationProject proj;
 		string localeFileSuffix;
+		readonly AndroidRuntime runtime;
+		readonly bool isRelease;
+
+		static IEnumerable<object[]> Get_Fixture_Args ()
+		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				ret.Add (new object[] { runtime });
+			}
+
+			return ret;
+		}
+
+		public LocalizationTests (AndroidRuntime runtime)
+		{
+			this.runtime = runtime;
+			isRelease = runtime == AndroidRuntime.NativeAOT;
+		}
 
 		[OneTimeSetUp]
 		public void BeforeAllTests ()
@@ -31,7 +52,11 @@ namespace Xamarin.Android.Build.Tests
 				Assert.Fail ("LocalizationTests need to use `su root` and this device does not support that feature. Try using an emulator.");
 			}
 
-			proj = new XamarinAndroidApplicationProject (packageName: "LocalizationTests");
+			proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime, "LocalizationTests")) {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+
 			proj.PackageReferences.Add (new Package {
 				Id = "Humanizer",
 				Version = "2.14.1",
@@ -49,7 +74,7 @@ using System.Globalization;");
 			InlineData.AddCultureResourcesToProject (proj, "Strings", "SomeString");
 			InlineData.AddCultureResourceDesignerToProject (proj, proj.RootNamespace ?? proj.ProjectName, "Strings", "SomeString");
 
-			builder = CreateApkBuilder (Path.Combine ("temp", "LocalizationTests"));
+			builder = CreateApkBuilder (Path.Combine ("temp", TestName));
 			builder.BuildLogFile = "onetimesetup-install.log";
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 		}

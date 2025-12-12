@@ -7,6 +7,7 @@ using Microsoft.Build.Framework;
 using System.Text;
 using System.Xml.Linq;
 using System.Collections.Generic;
+using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -16,14 +17,19 @@ namespace Xamarin.Android.Build.Tests
 	{
 		// All Tests here require the emulator to be started with -writable-system
 		[Test, Category ("SystemApplication")]
-		public void SystemApplicationCanInstall ()
+		public void SystemApplicationCanInstall ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = false;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			AssertCommercialBuild ();
 
-			var proj = new XamarinAndroidApplicationProject () {
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = false,
 				EmbedAssembliesIntoApk = false,
 			};
+			proj.SetRuntime (runtime);
 			proj.OtherBuildItems.Add (new BuildItem ("None", "platform.pk8") {
 				WebContent = "https://github.com/aosp-mirror/platform_build/raw/master/target/product/security/platform.pk8"
 			});
