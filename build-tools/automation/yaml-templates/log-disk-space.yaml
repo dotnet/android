@@ -1,0 +1,21 @@
+# Template to log disk space usage on Windows, macOS, and Linux agents
+# Useful for diagnosing disk space issues during builds
+
+steps:
+- pwsh: |
+    Write-Host "=== Disk Space Report ==="
+    if ($IsWindows) {
+      Get-PSDrive -PSProvider FileSystem | Where-Object { $_.Used -ne $null } | ForEach-Object {
+        $total = $_.Used + $_.Free
+        $usedPercent = ($_.Used / $total) * 100
+        Write-Host "$($_.Name):\ - Total: $([math]::Round($total/1GB, 2)) GB, Used: $([math]::Round($_.Used/1GB, 2)) GB ($([math]::Round($usedPercent, 2))%), Free: $([math]::Round($_.Free/1GB, 2)) GB"
+      }
+    } else {
+      # Unix (macOS/Linux)
+      $dfOutput = df -h / /tmp /home 2>/dev/null | Select-Object -Skip 1
+      $dfOutput | ForEach-Object {
+        Write-Host $_
+      }
+    }
+    Write-Host "========================="
+  displayName: Log Disk Space Usage

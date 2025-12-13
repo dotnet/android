@@ -21,13 +21,15 @@ jobs:
     workspace:
       clean: all
     steps:
-    - template: agent-cleanser/v1.yml@yaml-templates
+    - ${{ if eq(parameters.use1ESTemplate, true) }}:
+      - template: agent-cleanser/v1.yml@yaml-templates
 
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
         xaprepareScenario: EmulatorTestDependencies
         jdkMajorVersion: ${{ parameters.jdkMajorVersion }}
         useAgentJdkPath: ${{ parameters.useAgentJdkPath }}
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - task: DownloadPipelineArtifact@2
       inputs:

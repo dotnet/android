@@ -175,11 +175,8 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
-			// Ignore NDK property setting if not installing the NDK
-			if (!DependencyTypeToInstall.HasFlag (AndroidToolchainComponentType.BuildDependency))
-				return true;
-			else
-				return context.BuildInfo.GatherNDKInfo (context);
+			// Always install the NDK, as NativeAOT-based tests require it
+			return context.BuildInfo.GatherNDKInfo (context);
 		}
 
 		bool CopyRedistributableFiles (Context context)
