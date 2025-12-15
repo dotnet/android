@@ -242,6 +242,7 @@ stages:
       parameters:
         configuration: $(XA.Build.Configuration)
         artifactName: Test Results - MSBuild - Linux 2
+        includeBuildResults: true
         use1ESTemplate: false
 
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
