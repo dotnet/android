@@ -84,7 +84,7 @@ stages:
         scriptPath: dotnet-local.sh
         args: >-
           build samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj
-          -p:AndroidSdkDirectory="$HOME/android-toolchain/sdk"
+          -p:AndroidSdkDirectory="$(HOME)/android-toolchain/sdk"
           -bl:$(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/build-helloworld.binlog
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
