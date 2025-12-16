@@ -21,11 +21,12 @@ pr:
 parameters:
 - name: macTestAgentsUseCleanImages   # Test agents we do not need to clean up when finished because they are not reused
   default: true
-- name: skipTests                      # Skip all test stages (builds only). Leave blank to auto-skip for non-fork PRs.
+- name: skipTests                      # Skip all test stages (builds only). Use 'auto' to auto-skip for non-fork PRs.
   displayName: Skip Tests
   type: string
-  default: ''
+  default: 'auto'
   values:
+  - 'auto'
   - 'true'
   - 'false'
 
