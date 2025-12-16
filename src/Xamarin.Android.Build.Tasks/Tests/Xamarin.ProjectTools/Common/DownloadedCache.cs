@@ -2,8 +2,10 @@
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
+using NUnit.Framework;
 
 namespace Xamarin.ProjectTools
 {
@@ -35,15 +37,44 @@ namespace Xamarin.ProjectTools
 				if (File.Exists (filename))
 					return filename;
 				// FIXME: should be clever enough to resolve name conflicts.
-				using (var response = httpClient.GetAsync (url).GetAwaiter ().GetResult ()) {
-					response.EnsureSuccessStatusCode ();
-					using (var fileStream = File.Create (filename))
-					using (var httpStream = response.Content.ReadAsStreamAsync ().GetAwaiter ().GetResult ()) {
-						httpStream.CopyTo (fileStream);
+				try {
+					using (var response = httpClient.GetAsync (url).GetAwaiter ().GetResult ()) {
+						response.EnsureSuccessStatusCode ();
+						using (var fileStream = File.Create (filename))
+						using (var httpStream = response.Content.ReadAsStreamAsync ().GetAwaiter ().GetResult ()) {
+							httpStream.CopyTo (fileStream);
+						}
 					}
+				} catch (HttpRequestException ex) when (IsTransientError (ex)) {
+					TestContext.WriteLine ($"Transient network error downloading '{url}':");
+					TestContext.WriteLine ($"  Message: {ex.Message}");
+					if (ex.StatusCode.HasValue) {
+						TestContext.WriteLine ($"  HTTP Status Code: {(int)ex.StatusCode.Value} ({ex.StatusCode.Value})");
+					}
+					TestContext.WriteLine ($"  URL: {url}");
+					TestContext.WriteLine ($"  Stack Trace: {ex.StackTrace}");
+					Assert.Inconclusive ($"Test skipped due to transient network error: {ex.Message}");
 				}
 				return filename;
 			}
+		}
+
+		static bool IsTransientError (HttpRequestException ex)
+		{
+			// Check for timeout errors
+			if (ex.Message.Contains ("504") || ex.Message.Contains ("Gateway Time-out"))
+				return true;
+			
+			// Check for other common transient errors
+			if (ex.StatusCode.HasValue) {
+				var statusCode = ex.StatusCode.Value;
+				return statusCode == HttpStatusCode.RequestTimeout ||
+				       statusCode == HttpStatusCode.GatewayTimeout ||
+				       statusCode == HttpStatusCode.ServiceUnavailable ||
+				       statusCode == HttpStatusCode.BadGateway;
+			}
+			
+			return false;
 		}
 	}
 }
