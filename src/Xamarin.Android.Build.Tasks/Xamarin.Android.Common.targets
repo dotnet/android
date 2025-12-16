@@ -154,8 +154,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <!-- Version/fx properties -->
 <PropertyGroup>
 	<_XAMajorVersionNumber>1</_XAMajorVersionNumber>
-	<_XASupportsFastDev Condition=" Exists ('$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets') ">True</_XASupportsFastDev>
-	<_XASupportsFastDev Condition=" '$(_XASupportsFastDev)' == '' ">False</_XASupportsFastDev>
 	<AndroidUseInterpreter Condition=" '$(AndroidUseInterpreter)' == '' ">$(UseInterpreter)</AndroidUseInterpreter>
 	<AndroidUseInterpreter Condition=" '$(AndroidUseInterpreter)' == '' ">False</AndroidUseInterpreter>
 	<AndroidApplication Condition="'$(AndroidApplication)' == ''">false</AndroidApplication>
@@ -165,8 +163,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<TargetFrameworkIdentifier Condition="'$(TargetFrameworkIdentifier)' == ''">MonoAndroid</TargetFrameworkIdentifier>
 	<MonoAndroidVersion>v$(_XAMajorVersionNumber).0</MonoAndroidVersion>
 	<AndroidUpdateResourceReferences Condition="'$(AndroidUpdateResourceReferences)' == ''">True</AndroidUpdateResourceReferences>
-	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' And '$(Optimize)' != 'True' And '$(_XASupportsFastDev)' == 'True' ">False</EmbedAssembliesIntoApk>
-	<EmbedAssembliesIntoApk Condition=" '$(_XASupportsFastDev)' == 'False' ">True</EmbedAssembliesIntoApk>
+	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' And '$(Optimize)' != 'True' And '$(_AndroidFastDeploymentSupported)' == 'True' ">False</EmbedAssembliesIntoApk>
+	<EmbedAssembliesIntoApk Condition=" '$(_AndroidFastDeploymentSupported)' == 'False' ">True</EmbedAssembliesIntoApk>
 	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">True</EmbedAssembliesIntoApk>
   <AndroidPreferNativeLibrariesWithDebugSymbols Condition=" '$(AndroidPreferNativeLibrariesWithDebugSymbols)' == '' ">False</AndroidPreferNativeLibrariesWithDebugSymbols>
 	<AndroidSkipJavacVersionCheck Condition="'$(AndroidSkipJavacVersionCheck)' == ''">False</AndroidSkipJavacVersionCheck>
@@ -570,7 +568,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidWarning Code="XA1040"
       ResourceName="XA1040"
       FormatArguments="$(_AndroidRuntime)"
-      Condition=" '$(_AndroidRuntime)' != 'MonoVM' and '$(EnablePreviewFeatures)' != 'true' "
+      Condition=" '$(_AndroidRuntime)' == 'NativeAOT' and '$(EnablePreviewFeatures)' != 'true' "
   />
 </Target>
 
@@ -821,6 +819,11 @@ because xbuild doesn't support framework reference assemblies.
 		<AndroidApplicationJavaClass Condition="'$(AndroidApplicationJavaClass)' == ''">android.app.Application</AndroidApplicationJavaClass>
 	</PropertyGroup>
 	<Message Text="Application Java class: $(AndroidApplicationJavaClass)" />
+
+	<!-- Setup $(AdbTarget) from $(Device) property for device selection support -->
+	<PropertyGroup Condition=" '$(Device)' != '' ">
+		<AdbTarget>-s &quot;$(Device)&quot;</AdbTarget>
+	</PropertyGroup>
 </Target>
 
 <Target Name="AndroidPrepareForBuild" DependsOnTargets="$(_OnResolveMonoAndroidSdks);$(AndroidPrepareForBuildDependsOn)" />
@@ -2795,28 +2798,10 @@ because xbuild doesn't support framework reference assemblies.
   <UnzipToFolder Sources="$(_UniversalApkSetIntermediate)" DestinationDirectories="$(OutDir)" Files="@(_FilestoExtract)" />
 </Target>
 
-<PropertyGroup>
-  <SignAndroidPackageDependsOn Condition=" '$(BuildingInsideVisualStudio)' != 'True' ">
-    Build;
-    Package;
-    _Sign;
-    _CreateUniversalApkFromBundle;
-  </SignAndroidPackageDependsOn>
-  <!-- When inside an IDE, Build has just been run. This is a minimal list of targets for SignAndroidPackage. -->
-  <SignAndroidPackageDependsOn Condition=" '$(BuildingInsideVisualStudio)' == 'True' ">
-    BuildOnlySettings;
-    _CreatePropertiesCache;
-    ResolveReferences;
-    PrepareResources;
-    CreateSatelliteAssemblies;
-    _CopyPackage;
-    _Sign;
-    _CreateUniversalApkFromBundle;
-  </SignAndroidPackageDependsOn>
-</PropertyGroup>
 <Target Name="SignAndroidPackage" DependsOnTargets="$(SignAndroidPackageDependsOn)">
 </Target>
 
+<Target Name="DeployToDevice" DependsOnTargets="$(DeployToDeviceDependsOnTargets)" />
 
 <!-- Callable targets -->
 <PropertyGroup>
@@ -2932,18 +2917,6 @@ because xbuild doesn't support framework reference assemblies.
   <WriteLinesToFile File="$(_LldbConfigFile)" Lines="PKG=$(_AndroidPackage)" Overwrite="true"/>
   <WriteLinesToFile File="$(_LldbConfigFile)" Lines="MANIFEST=$(IntermediateOutputPath)android\AndroidManifest.xml"/>
 </Target>
-
-<PropertyGroup>
-  <InstallDependsOnTargets>
-    SignAndroidPackage;
-    _DeployApk;
-    _DeployAppBundle;
-  </InstallDependsOnTargets>
-  <UninstallDependsOnTargets>
-    AndroidPrepareForBuild;
-    _Uninstall
-  </UninstallDependsOnTargets>
-</PropertyGroup>
 
 <Target Name="_DeployApk"
     Condition=" '$(AndroidPackageFormat)' != 'aab' ">

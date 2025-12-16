@@ -48,6 +48,8 @@ steps:
     ignoreLASTEXITCODE: true
     workingDirectory: ${{ parameters.xaSourcePath }}
 
+  - template: /build-tools/automation/yaml-templates/diagnose-hanging-processes.yaml
+
   - pwsh: |
       $(Agent.ToolsDirectory)/dotnet-test-slicer `
         retry `

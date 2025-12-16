@@ -264,6 +264,7 @@ void Host::gather_assemblies_and_libraries (jstring_array_wrapper& runtimeApks, 
 
 	int64_t apk_count = static_cast<int64_t>(runtimeApks.get_length ());
 	bool got_split_config_abi_apk = false;
+	std::string_view base_apk{};
 
 	for (int64_t i = 0; i < apk_count; i++) {
 		std::string_view apk_file = runtimeApks [static_cast<size_t>(i)].get_string_view ();
@@ -272,9 +273,11 @@ void Host::gather_assemblies_and_libraries (jstring_array_wrapper& runtimeApks, 
 			bool scan_apk = false;
 
 			// With split configs we need to scan only the abi apk, because both the assembly stores and the runtime
-			// configuration blob are in `lib/{ARCH}`, which in turn lives in the split config APK
+			// configuration blob **should be** in `lib/{ARCH}`, which in turn lives in the split config APK
 			if (!got_split_config_abi_apk && apk_file.ends_with (Constants::split_config_abi_apk_name.data ())) {
 				got_split_config_abi_apk = scan_apk = true;
+			} else if (base_apk.empty () && apk_file.ends_with (Constants::base_apk_name)) {
+				base_apk = apk_file;
 			}
 
 			if (!scan_apk) {
@@ -283,6 +286,14 @@ void Host::gather_assemblies_and_libraries (jstring_array_wrapper& runtimeApks, 
 		}
 
 		Zip::scan_archive (apk_file, zip_scan_callback);
+	}
+
+	// This apparently can happen now... It seems that sometimes (when and why? No idea) when AAB format is used, bundletool
+	// won't put the native libraries in a separate split config file, but it will instead put **all** of the ABIs
+	// in base.apk
+	if (have_split_apks && !got_split_config_abi_apk) {
+		abort_unless (!base_apk.empty (), "Split config APKs are used, but no ABI config was found and no base.apk was encountered.");
+		Zip::scan_archive (base_apk, zip_scan_callback);
 	}
 }
 
@@ -421,6 +432,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	AndroidSystem::set_primary_override_dir (files_dir);
 	AndroidSystem::create_update_dir (AndroidSystem::get_primary_override_dir ());
 	AndroidSystem::setup_environment ();
+	Logger::init_reference_logging (AndroidSystem::get_primary_override_dir ());
 
 	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
 	AndroidSystem::setup_app_library_directories (runtimeApks, applicationDirs, haveSplitApks);

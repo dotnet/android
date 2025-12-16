@@ -26,13 +26,13 @@ namespace xamarin::android {
 		}
 
 		static void _monodroid_gref_log (const char *message) noexcept;
-		static auto _monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable) noexcept -> int;
-		static void _monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable) noexcept;
-		static void _monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable);
-		static void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable);
+		static auto _monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from) noexcept -> int;
+		static void _monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from) noexcept;
+		static void _monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from);
+		static void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from);
 
-		static void _monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable);
-		static void _monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable);
+		static void _monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from);
+		static void _monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from);
 
 		static auto ensure_jnienv () noexcept -> JNIEnv*
 		{
@@ -53,8 +53,8 @@ namespace xamarin::android {
 	private:
 		static auto _monodroid_gref_inc () noexcept -> int;
 		static auto _monodroid_gref_dec () noexcept -> int;
-		static auto _get_stack_trace_line_end (char *m) noexcept -> char*;
-		static void _write_stack_trace (FILE *to, char *from, LogCategories = LOG_NONE) noexcept;
+		static void _write_stack_trace (FILE *to, const char *const from, LogCategories = LOG_NONE) noexcept;
+		static void log_it (LogCategories category, std::string const& line, FILE *to, const char *const from, bool logcat_enabled) noexcept;
 
 	private:
 		static inline JavaVM *jvm = nullptr;
