@@ -77,22 +77,27 @@ namespace Xamarin.Android.Build.Tests
 			// Start dotnet run with WaitForExit=true, which uses Microsoft.Android.Run
 			using var process = dotnet.StartRun ();
 
+			var locker = new Lock ();
 			var output = new StringBuilder ();
 			var outputReceived = new ManualResetEventSlim (false);
 			bool foundMessage = false;
 
 			process.OutputDataReceived += (sender, e) => {
 				if (e.Data != null) {
-					output.AppendLine (e.Data);
-					if (e.Data.Contains (logcatMessage)) {
-						foundMessage = true;
-						outputReceived.Set ();
+					lock (locker) {
+						output.AppendLine (e.Data);
+						if (e.Data.Contains (logcatMessage)) {
+							foundMessage = true;
+							outputReceived.Set ();
+						}
 					}
 				}
 			};
 			process.ErrorDataReceived += (sender, e) => {
 				if (e.Data != null) {
-					output.AppendLine ($"STDERR: {e.Data}");
+					lock (locker) {
+						output.AppendLine ($"STDERR: {e.Data}");
+					}
 				}
 			};
 

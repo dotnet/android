@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace Xamarin.ProjectTools
 {
@@ -68,19 +69,20 @@ namespace Xamarin.ProjectTools
 				ProcessLogFile = Path.Combine (ProjectDirectory, $"dotnet{DateTime.Now.ToString ("yyyyMMddHHmmssff")}-process.log");
 			}
 
+			var locker = new Lock ();
 			var procOutput = new StringBuilder ();
 			bool succeeded;
 
 			using (var p = ExecuteProcess (args)) {
 				p.ErrorDataReceived += (sender, e) => {
-					if (e.Data != null) {
-						procOutput.AppendLine (e.Data);
-					}
+					if (e.Data != null)
+						lock (locker)
+							procOutput.AppendLine (e.Data);
 				};
 				p.OutputDataReceived += (sender, e) => {
-					if (e.Data != null) {
-						procOutput.AppendLine (e.Data);
-					}
+					if (e.Data != null)
+						lock (locker)
+							procOutput.AppendLine (e.Data);
 				};
 
 				procOutput.AppendLine ($"Running: {p.StartInfo.FileName} {p.StartInfo.Arguments}");

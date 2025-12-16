@@ -227,6 +227,7 @@ void StartLogcat ()
 	if (verbose)
 		Console.WriteLine ($"Running: adb {logcatArguments}");
 
+	var locker = new Lock();
 	var psi = new ProcessStartInfo {
 		FileName = adbPath,
 		Arguments = logcatArguments,
@@ -240,12 +241,14 @@ void StartLogcat ()
 
 	logcatProcess.OutputDataReceived += (s, e) => {
 		if (e.Data != null)
-			Console.WriteLine (e.Data);
+			lock (locker)
+				Console.WriteLine (e.Data);
 	};
 
 	logcatProcess.ErrorDataReceived += (s, e) => {
 		if (e.Data != null)
-			Console.Error.WriteLine (e.Data);
+			lock (locker)
+				Console.Error.WriteLine (e.Data);
 	};
 
 	logcatProcess.Start ();
