@@ -765,12 +765,15 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (firstAppConfig.android_package_name, secondAppConfig.android_package_name, $"Field 'android_package_name' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
 		}
 
-		public static List<EnvironmentFile> GatherEnvironmentFiles (string outputDirectoryRoot, string supportedAbis, bool required)
+		// TODO: remove the default from the `runtime` parameter once all tests are updated
+		public static List<EnvironmentFile> GatherEnvironmentFiles (string outputDirectoryRoot, string supportedAbis, bool required, AndroidRuntime runtime = AndroidRuntime.CoreCLR)
 		{
 			var environmentFiles = new List <EnvironmentFile> ();
+			bool isNativeAOT = runtime == AndroidRuntime.NativeAOT;
 
 			foreach (string abi in supportedAbis.Split (';')) {
-				string envFilePath = Path.Combine (outputDirectoryRoot, "android", $"environment.{abi}.ll");
+				string prefixDir = isNativeAOT ? MonoAndroidHelper.AbiToRid (abi) : String.Empty;
+				string envFilePath = Path.Combine (outputDirectoryRoot, prefixDir, "android", $"environment.{abi}.ll");
 
 				Assert.IsTrue (File.Exists (envFilePath), $"Environment file {envFilePath} does not exist");
 				environmentFiles.Add (new EnvironmentFile (envFilePath, abi));

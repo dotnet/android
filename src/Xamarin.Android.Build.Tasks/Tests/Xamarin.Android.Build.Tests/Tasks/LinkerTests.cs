@@ -167,12 +167,17 @@ namespace Xamarin.Android.Build.Tests
 				string handlerAssembly,
 				string testProjectName,
 				string assemblyPath,
-				TrimMode trimMode)
+				TrimMode trimMode,
+				AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			testProjectName += trimMode.ToString ();
 
 			var class_library = new XamarinAndroidLibraryProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 				ProjectName = "MyClassLibrary",
 				Sources = {
 					new BuildItem.Source ("MyCustomHandler.cs") {
@@ -189,13 +194,14 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 			};
+			class_library.SetRuntime (runtime);
 			using (var libBuilder = CreateDllBuilder ($"{testProjectName}/{class_library.ProjectName}")) {
 				Assert.IsTrue (libBuilder.Build (class_library), $"Build for {class_library.ProjectName} should have succeeded.");
 			}
 
 			var proj = new XamarinAndroidApplicationProject {
 				ProjectName = "MyApp",
-				IsRelease = true,
+				IsRelease = isRelease,
 				TrimModeRelease = trimMode,
 				Sources = {
 					new BuildItem.Source ("Foo.cs") {
@@ -203,6 +209,7 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 			};
+			proj.SetRuntime (runtime);
 			proj.AddReference (class_library);
 			proj.AddReferences ("System.Net.Http");
 			string handlerTypeFullName = string.IsNullOrEmpty(handlerAssembly) ? handlerType : handlerType + ", " + handlerAssembly;
@@ -218,19 +225,22 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void PreserveCustomHttpClientHandlers ([Values (TrimMode.Partial, TrimMode.Full)] TrimMode trimMode)
+		public void PreserveCustomHttpClientHandlers ([Values (TrimMode.Partial, TrimMode.Full)] TrimMode trimMode, [Values] AndroidRuntime runtime)
 		{
 			PreserveCustomHttpClientHandler ("Xamarin.Android.Net.AndroidMessageHandler", "",
-				"temp/PreserveAndroidMessageHandler", "android-arm64/linked/Mono.Android.dll", trimMode);
+				$"temp/PreserveAndroidMessageHandler{trimMode}{runtime}", "android-arm64/linked/Mono.Android.dll", trimMode, runtime);
 			PreserveCustomHttpClientHandler ("System.Net.Http.SocketsHttpHandler", "System.Net.Http",
-				"temp/PreserveSocketsHttpHandler", "android-arm64/linked/System.Net.Http.dll", trimMode);
+				$"temp/PreserveSocketsHttpHandler{trimMode}{runtime}", "android-arm64/linked/System.Net.Http.dll", trimMode, runtime);
 			PreserveCustomHttpClientHandler ("MyCustomHandler", "MyClassLibrary",
-				"temp/MyCustomHandler", "android-arm64/linked/MyClassLibrary.dll", trimMode);
+				$"temp/MyCustomHandler{trimMode}{runtime}", "android-arm64/linked/MyClassLibrary.dll", trimMode, runtime);
 		}
 
 		[Test]
-		public void WarnAboutAppDomains ([Values (true, false)] bool isRelease)
+		public void WarnAboutAppDomains ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			if (isRelease) {
 				// NOTE: trimmer warnings are hidden by default in .NET 7 rc1
 				Assert.Ignore("https://github.com/dotnet/linker/issues/2982");
@@ -246,8 +256,10 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 			};
+			lib.SetRuntime (runtime);
 
 			var app = new XamarinAndroidApplicationProject { IsRelease = isRelease };
+			app.SetRuntime (runtime);
 			app.SetAndroidSupportedAbis ("arm64-v8a");
 			app.AddReference (lib);
 			using var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName));
@@ -366,10 +378,14 @@ $@"<linker>
 		}
 
 		[Test]
-		public void LinkWithNullAttribute ()
+		public void LinkWithNullAttribute ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 				OtherBuildItems = {
 					new BuildItem ("Compile", "NullAttribute.cs") { TextContent = () => @"
 using System;
@@ -402,6 +418,7 @@ namespace UnnamedProject {
 				}
 			};
 
+			proj.SetRuntime (runtime);
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
 $@"			var myButton = new AttributedButtonStub (this);
 			myButton.Text = ""Bug #35710"";
@@ -416,7 +433,7 @@ $@"			var myButton = new AttributedButtonStub (this);
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR }) {
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
 				// Debug configuration
 				AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: false, setLinkModeNone: false, shouldAddKeepAlives: false, runtime);
 
@@ -448,6 +465,10 @@ $@"			var myButton = new AttributedButtonStub (this);
 		[TestCaseSource (nameof (Get_AndroidAddKeepAlivesData))]
 		public void AndroidAddKeepAlives (bool isRelease, bool setAndroidAddKeepAlivesTrue, bool setLinkModeNone, bool shouldAddKeepAlives, AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			if (runtime == AndroidRuntime.CoreCLR && isRelease && !setAndroidAddKeepAlivesTrue && setLinkModeNone && shouldAddKeepAlives) {
 				// This currently fails with the following exception:
 				//
@@ -512,7 +533,12 @@ namespace UnnamedProject {
 				var assemblyFile = "UnnamedProject.dll";
 				if (!isRelease || setLinkModeNone) {
 					foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
-						CheckAssembly (b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", abi, assemblyFile)), projectDir);
+						string assemblyDir = runtime switch {
+							AndroidRuntime.NativeAOT => Path.Combine (MonoAndroidHelper.AbiToRid (abi), "linked"),
+							_ => Path.Combine ("android", "assets", abi)
+						};
+
+						CheckAssembly (b.Output.GetIntermediaryPath (Path.Combine (assemblyDir, assemblyFile)), projectDir);
 					}
 				} else {
 					CheckAssembly (BuildTest.GetLinkedPath (b,  true, assemblyFile), projectDir);
@@ -553,9 +579,15 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void AndroidUseNegotiateAuthentication ([Values (true, false, null)] bool? useNegotiateAuthentication)
+		public void AndroidUseNegotiateAuthentication ([Values (true, false, null)] bool? useNegotiateAuthentication, [Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
+			proj.SetRuntime (runtime);
 			proj.AddReferences ("System.Net.Http");
 			proj.MainActivity = proj.DefaultMainActivity.Replace (
 				"base.OnCreate (bundle);",
@@ -585,9 +617,14 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void PreserveIX509TrustManagerSubclasses ([Values(true, false)] bool hasServerCertificateCustomValidationCallback)
+		public void PreserveIX509TrustManagerSubclasses ([Values] bool hasServerCertificateCustomValidationCallback, [Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease };
+			proj.SetRuntime (runtime);
 			proj.AddReferences ("System.Net.Http");
 			proj.MainActivity = proj.DefaultMainActivity.Replace (
 				"base.OnCreate (bundle);",
@@ -619,15 +656,21 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void PreserveServices ()
+		public void PreserveServices ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 				TrimModeRelease = TrimMode.Full,
 				PackageReferences = {
 					new Package { Id = "Plugin.Firebase.CloudMessaging", Version = "3.0.0" },
 				}
 			};
+			proj.SetRuntime (runtime);
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("//${FIELDS}",
 					"""
@@ -759,9 +802,15 @@ public abstract class MyRunner {
 		}
 
 		[Test]
-		public void WarnWithReferenceToPreserveAttribute ()
+		public void WarnWithReferenceToPreserveAttribute ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease };
+			proj.SetRuntime (runtime);
 			proj.AddReferences ("System.Net.Http");
 			proj.MainActivity = proj.DefaultMainActivity.Replace (
 				"protected override void OnCreate",
