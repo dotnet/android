@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Microsoft.VisualStudio.TestPlatform.Utilities;
@@ -51,6 +52,73 @@ namespace Xamarin.Android.Build.Tests
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
 			Assert.IsTrue (didLaunch, "Activity should have started.");
+		}
+
+		[Test]
+		public void DotNetRunWaitForExit ()
+		{
+			const string logcatMessage = "DOTNET_RUN_TEST_MESSAGE_12345";
+			var proj = new XamarinAndroidApplicationProject ();
+
+			// Enable verbose output from Microsoft.Android.Run for debugging
+			proj.SetProperty ("_AndroidRunExtraArgs", "--verbose");
+
+			// Add a Console.WriteLine that will appear in logcat
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}",
+				$"Console.WriteLine (\"{logcatMessage}\");");
+
+			using var builder = CreateApkBuilder ();
+			builder.Save (proj);
+
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+
+			// Start dotnet run with WaitForExit=true, which uses Microsoft.Android.Run
+			using var process = dotnet.StartRun ();
+
+			var locker = new Lock ();
+			var output = new StringBuilder ();
+			var outputReceived = new ManualResetEventSlim (false);
+			bool foundMessage = false;
+
+			process.OutputDataReceived += (sender, e) => {
+				if (e.Data != null) {
+					lock (locker) {
+						output.AppendLine (e.Data);
+						if (e.Data.Contains (logcatMessage)) {
+							foundMessage = true;
+							outputReceived.Set ();
+						}
+					}
+				}
+			};
+			process.ErrorDataReceived += (sender, e) => {
+				if (e.Data != null) {
+					lock (locker) {
+						output.AppendLine ($"STDERR: {e.Data}");
+					}
+				}
+			};
+
+			process.BeginOutputReadLine ();
+			process.BeginErrorReadLine ();
+
+			// Wait for the expected message or timeout
+			bool messageFound = outputReceived.Wait (TimeSpan.FromSeconds (60));
+
+			// Kill the process (simulating Ctrl+C)
+			if (!process.HasExited) {
+				process.Kill (entireProcessTree: true);
+				process.WaitForExit ();
+			}
+
+			// Write the output to a log file for debugging
+			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-run-output.log");
+			File.WriteAllText (logPath, output.ToString ());
+			TestContext.AddTestAttachment (logPath);
+
+			Assert.IsTrue (foundMessage, $"Expected message '{logcatMessage}' was not found in output. See {logPath} for details.");
 		}
 
 		[Test]
