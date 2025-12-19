@@ -525,4 +525,20 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		}
 		return base.TryUnboxPeerObject (value, out result);
 	}
+
+	public override IJavaPeerable? CreatePeer (
+		ref JniObjectReference reference,
+		JniObjectReferenceOptions options,
+		[DynamicallyAccessedMembers (
+			DynamicallyAccessedMemberTypes.PublicConstructors |
+			DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		Type? targetType)
+	{
+		if (!reference.IsValid)
+			return null;
+
+		var peer = Java.Interop.TypeManager.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer, targetType) as IJavaPeerable;
+		JniObjectReference.Dispose (ref reference, options);
+		return peer;
+	}
 }
