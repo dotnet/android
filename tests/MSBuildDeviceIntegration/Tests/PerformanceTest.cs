@@ -6,10 +6,12 @@ using System.Runtime.CompilerServices;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging.StructuredLogger;
 using NUnit.Framework;
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
+	// TODO: update for NativeAOT and CoreCLR
 	[TestFixture]
 	[Category ("Performance")]
 	public class PerformanceTest : DeviceTest
@@ -61,7 +63,7 @@ namespace Xamarin.Android.Build.Tests
 				action (builder);
 				var actual = GetDurationFromBinLog (builder);
 				TestContext.Out.WriteLine ($"run {i} took: {actual}ms");
-				total += actual; 
+				total += actual;
 				if (afterRun is not null)
 					afterRun (builder);
 			}
