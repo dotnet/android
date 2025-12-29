@@ -557,6 +557,20 @@ void Host::Java_mono_android_Runtime_initInternal (
 		}
 	);
 
+	log_debug (LOG_ASSEMBLY, "Creating UCO delegate to {}.PropagateUncaughtException"sv, Constants::JNIENVINIT_FULL_TYPE_NAME);
+	delegate = FastTiming::time_call ("create_delegate for PropagateUncaughtException"sv, create_delegate, Constants::MONO_ANDROID_ASSEMBLY_NAME, Constants::JNIENVINIT_FULL_TYPE_NAME, "PropagateUncaughtException"sv);
+	jnienv_propagate_uncaught_exception = reinterpret_cast<jnienv_propagate_uncaught_exception_fn> (delegate);
+	abort_unless (
+		jnienv_propagate_uncaught_exception != nullptr,
+		[] {
+			return detail::_format_message (
+				"Failed to obtain unmanaged-callers-only pointer to the %s.%s.PropagateUncaughtException method.",
+				Constants::MONO_ANDROID_ASSEMBLY_NAME,
+				Constants::JNIENVINIT_FULL_TYPE_NAME
+			);
+		}
+	);
+
 	log_debug (LOG_DEFAULT, "Calling into managed runtime init"sv);
 	FastTiming::time_call ("JNIEnv.Initialize UCO"sv, initialize, &init);
 
@@ -612,4 +626,14 @@ auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) n
 
 	AndroidSystem::init_max_gref_count ();
 	return JNI_VERSION_1_6;
+}
+
+void Host::propagate_uncaught_exception (JNIEnv *env, jobject javaThread, jthrowable javaException) noexcept
+{
+	if (jnienv_propagate_uncaught_exception == nullptr) {
+		log_warn (LOG_DEFAULT, "propagate_uncaught_exception called before JNIEnvInit.PropagateUncaughtException was initialized"sv);
+		return;
+	}
+
+	jnienv_propagate_uncaught_exception (env, javaThread, javaException);
 }

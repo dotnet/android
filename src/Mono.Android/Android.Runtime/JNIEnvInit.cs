@@ -50,6 +50,12 @@ namespace Android.Runtime
 		internal static JniRuntime? androidRuntime;
 
 		[UnmanagedCallersOnly]
+		static void PropagateUncaughtException (IntPtr env, IntPtr javaThread, IntPtr javaException)
+		{
+			JNIEnv.PropagateUncaughtException (env, javaThread, javaException);
+		}
+
+		[UnmanagedCallersOnly]
 		static unsafe void RegisterJniNatives (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
 		{
 			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724

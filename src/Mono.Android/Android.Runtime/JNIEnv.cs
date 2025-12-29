@@ -104,7 +104,9 @@ namespace Android.Runtime {
 				if (RuntimeFeature.IsMonoRuntime) {
 					MonoDroidUnhandledException (innerException ?? javaException);
 				} else if (RuntimeFeature.IsCoreClrRuntime) {
-					// TODO: what to do here?
+					// CoreCLR doesn't have mono_unhandled_exception, so we use Environment.FailFast
+					// to terminate the process with proper exception information.
+					Environment.FailFast ("Unhandled Java exception", innerException ?? javaException);
 				} else {
 					throw new NotSupportedException ("Internal error: unknown runtime not supported");
 				}

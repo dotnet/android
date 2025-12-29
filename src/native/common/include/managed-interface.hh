@@ -44,4 +44,5 @@ namespace xamarin::android {
 
 	using jnienv_initialize_fn = void (*) (JnienvInitializeArgs*);
 	using jnienv_register_jni_natives_fn = void (*)(const jchar *typeName_ptr, int32_t typeName_len, jclass jniClass, const jchar *methods_ptr, int32_t methods_len);
+	using jnienv_propagate_uncaught_exception_fn = void (*)(JNIEnv *env, jobject javaThread, jthrowable javaException);
 }
