@@ -35,6 +35,7 @@ namespace Android.Runtime
 			public bool            marshalMethodsEnabled;
 			public IntPtr          grefGCUserPeerable;
 			public bool            managedMarshalMethodsLookupEnabled;
+			public IntPtr          propagateUncaughtExceptionFn;
 		}
 #pragma warning restore 0649
 
@@ -48,6 +49,12 @@ namespace Android.Runtime
 		internal static IntPtr java_class_loader;
 
 		internal static JniRuntime? androidRuntime;
+
+		[UnmanagedCallersOnly]
+		static void PropagateUncaughtException (IntPtr env, IntPtr javaThread, IntPtr javaException)
+		{
+			JNIEnv.PropagateUncaughtException (env, javaThread, javaException);
+		}
 
 		[UnmanagedCallersOnly]
 		static unsafe void RegisterJniNatives (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
@@ -156,6 +163,8 @@ namespace Android.Runtime
 				delegate* unmanaged <int, int, int, IntPtr*, void> getFunctionPointer = &ManagedMarshalMethodsLookupTable.GetFunctionPointer;
 				xamarin_app_init (args->env, getFunctionPointer);
 			}
+
+			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
 
 			SetSynchronizationContext ();
 		}
