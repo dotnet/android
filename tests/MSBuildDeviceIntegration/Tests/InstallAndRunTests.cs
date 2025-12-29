@@ -213,15 +213,9 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 60), $"Output did not contain {expectedLogcatOutput}!");
 		}
 
-		// TODO: check if AppDomain.CurrentDomain.UnhandledException even works in CoreCLR
 		[Test]
 		public void SubscribeToAppDomainUnhandledException ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			if (runtime == AndroidRuntime.CoreCLR) {
-				Assert.Ignore ("AppDomain.CurrentDomain.UnhandledException doesn't work in CoreCLR");
-				return;
-			}
-
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
