@@ -45,7 +45,8 @@ namespace Xamarin.Android.Prepare
 			var runner = new ProcessRunner (Configurables.Paths.DotNetPreviewTool, "restore",
 				ProcessRunner.QuoteArgument (packageDownloadProj),
 				"--configfile", Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "NuGet.config"),
-				ProcessRunner.QuoteArgument ($"-bl:{logPath}")
+				ProcessRunner.QuoteArgument ($"-bl:{logPath}"),
+				"--verbosity", "normal"
 			) {
 				EchoStandardOutput = true,
 				EchoStandardError = true,
