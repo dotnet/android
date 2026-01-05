@@ -213,15 +213,9 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 60), $"Output did not contain {expectedLogcatOutput}!");
 		}
 
-		// TODO: check if AppDomain.CurrentDomain.UnhandledException even works in CoreCLR
 		[Test]
 		public void SubscribeToAppDomainUnhandledException ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			if (runtime == AndroidRuntime.CoreCLR) {
-				Assert.Ignore ("AppDomain.CurrentDomain.UnhandledException doesn't work in CoreCLR");
-				return;
-			}
-
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
@@ -243,7 +237,13 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			RunProjectAndAssert (proj, builder);
 
-			string expectedLogcatOutput = "# Unhandled Exception: sender=System.Object; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
+			string? expectedSender = runtime switch
+			{
+				AndroidRuntime.MonoVM => "System.Object", // MonoVM passes the current domain as the sender
+				AndroidRuntime.CoreCLR => null, // CoreCLR explicitly passes a `null` sender
+				_ => throw new NotImplementedException($"Test does not support runtime {runtime}"),
+			};
+			string expectedLogcatOutput = $"# Unhandled Exception: sender={expectedSender}; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
 			Assert.IsTrue (
 				MonitorAdbLogcat (CreateLineChecker (expectedLogcatOutput),
 					logcatFilePath: Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), timeout: 60),
