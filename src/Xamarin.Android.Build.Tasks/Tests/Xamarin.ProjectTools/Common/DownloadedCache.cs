@@ -54,6 +54,11 @@ namespace Xamarin.ProjectTools
 					TestContext.WriteLine ($"  URL: {url}");
 					TestContext.WriteLine ($"  Stack Trace: {ex.StackTrace}");
 					Assert.Inconclusive ($"Test skipped due to transient network error: {ex.Message}");
+					try {
+						File.Delete (filename);
+					} catch {
+						// Ignore any errors cleaning up the partially written file.
+					}
 				}
 				return filename;
 			}
@@ -61,19 +66,13 @@ namespace Xamarin.ProjectTools
 
 		static bool IsTransientError (HttpRequestException ex)
 		{
-			// Check for timeout errors
-			if (ex.Message.Contains ("504") || ex.Message.Contains ("Gateway Time-out"))
-				return true;
-			
-			// Check for other common transient errors
-			if (ex.StatusCode.HasValue) {
-				var statusCode = ex.StatusCode.Value;
+			// Check for common transient errors
+			if (ex.StatusCode is HttpStatusCode statusCode) {
 				return statusCode == HttpStatusCode.RequestTimeout ||
-				       statusCode == HttpStatusCode.GatewayTimeout ||
-				       statusCode == HttpStatusCode.ServiceUnavailable ||
-				       statusCode == HttpStatusCode.BadGateway;
+						statusCode == HttpStatusCode.GatewayTimeout ||
+						statusCode == HttpStatusCode.ServiceUnavailable ||
+						statusCode == HttpStatusCode.BadGateway;
 			}
-			
 			return false;
 		}
 	}
