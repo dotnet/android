@@ -7,7 +7,7 @@
     <MicrosoftNETCoreAppRefPackageVersion>11.0.0-alpha.1.25619.109</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
     <MicrosoftDotNetBuildTasksFeedPackageVersion>11.0.0-beta.25619.109</MicrosoftDotNetBuildTasksFeedPackageVersion>
-    <MicrosoftNETWorkloadMonoToolchainCurrentManifest110100alpha1PackageVersion>11.0.100-alpha.1.25619.109</MicrosoftNETWorkloadMonoToolchainCurrentManifest110100alpha1PackageVersion>
+    <MicrosoftNETWorkloadMonoToolChainCurrentManifest110100alpha1PackageVersion>11.0.0-alpha.1.25619.109</MicrosoftNETWorkloadMonoToolChainCurrentManifest110100alpha1PackageVersion>
     <MicrosoftNETWorkloadEmscriptenCurrentManifest110100alpha1PackageVersion>11.0.100-alpha.1.25619.109</MicrosoftNETWorkloadEmscriptenCurrentManifest110100alpha1PackageVersion>
     <MicrosoftNETWorkloadMonoToolChainPackageVersion>$(MicrosoftNETWorkloadMonoToolChainCurrentManifest110100alpha1PackageVersion)</MicrosoftNETWorkloadMonoToolChainPackageVersion>
     <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenCurrentManifest110100alpha1PackageVersion)</MicrosoftNETWorkloadEmscriptenPackageVersion>
