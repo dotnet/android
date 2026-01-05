@@ -26,7 +26,7 @@
     -->
     <_GetChildProjectCopyToPublishDirectoryItems>false</_GetChildProjectCopyToPublishDirectoryItems>
     <_AndroidRuntime Condition=" '$(PublishAot)' == 'true' ">NativeAOT</_AndroidRuntime>
-    <_AndroidRuntime Condition=" '$(PublishAot)' != 'true' and '$(UseMonoRuntime)' == 'true' ">MonoVM</_AndroidRuntime>
+    <_AndroidRuntime Condition=" '$(PublishAot)' != 'true' and ('$(UseMonoRuntime)' == 'true' or '$(Configuration)' == 'Debug') ">MonoVM</_AndroidRuntime>
     <_AndroidRuntime Condition=" '$(_AndroidRuntime)' == '' ">CoreCLR</_AndroidRuntime>
     <PublishAotUsingRuntimePack Condition=" '$(PublishAotUsingRuntimePack)' == '' and '$(_AndroidRuntime)' == 'NativeAOT' ">true</PublishAotUsingRuntimePack>
 
