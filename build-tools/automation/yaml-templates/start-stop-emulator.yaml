@@ -37,6 +37,26 @@ steps:
           -p:AvdLaunchTimeoutMinutes=${{ parameters.launchTimeoutMin }}
           -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
 
+  # Set a variable to track emulator start status for subsequent steps
+  # When continueOnError is true, succeeded() is true even if the task had issues
+  - ${{ if eq(parameters.startContinueOnError, true) }}:
+    - pwsh: |
+        # Check if the previous step had issues by looking at Agent.JobStatus
+        # succeededWithIssues means the emulator step failed but we continued
+        if ("$(Agent.JobStatus)" -eq "SucceededWithIssues" -or "$(Agent.JobStatus)" -eq "Failed") {
+            Write-Host "##vso[task.logissue type=warning]Emulator failed to start. Subsequent emulator-dependent tests will be skipped."
+            Write-Host "##vso[task.setvariable variable=EMULATOR_STARTED]false"
+        } else {
+            Write-Host "##vso[task.setvariable variable=EMULATOR_STARTED]true"
+        }
+      displayName: Check emulator start status
+      condition: always()
+  - ${{ else }}:
+    - pwsh: |
+        Write-Host "##vso[task.setvariable variable=EMULATOR_STARTED]true"
+      displayName: Set emulator started flag
+      condition: succeeded()
+
 - ${{ if eq(parameters.command, 'stop') }}:
   - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
     parameters:

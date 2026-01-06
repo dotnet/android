@@ -4,6 +4,7 @@ parameters:
   testRunTitle: ''        # Title of the test run
   xaSourcePath: $(System.DefaultWorkingDirectory)
   retryFailedTests: true  # Retry failed tests once
+  condition: succeeded()  # Condition to run tests
 
 steps:
 - ${{if parameters.testFilter}}:
@@ -16,6 +17,7 @@ steps:
       --outfile="${{ parameters.testAssembly }}.runsettings"
     displayName: Slice unit tests with filter
     failOnStderr: true
+    condition: ${{ parameters.condition }}
 - ${{ else }}:
   - pwsh: >-
       $(Agent.ToolsDirectory)/dotnet-test-slicer slice
@@ -25,6 +27,7 @@ steps:
       --outfile="${{ parameters.testAssembly }}.runsettings"
     displayName: Slice unit tests
     failOnStderr: true
+    condition: ${{ parameters.condition }}
 
 - ${{ if eq(parameters.retryFailedTests, 'false') }}:
   # If we aren't using auto-retry logic, then this is just a simple template call
@@ -34,6 +37,7 @@ steps:
       testAssembly: ${{ parameters.testAssembly }}
       dotNetTestExtraArgs: --settings "${{ parameters.testAssembly }}.runsettings"
       xaSourcePath: ${{ parameters.xaSourcePath }}
+      condition: ${{ parameters.condition }}
 
 - ${{ if eq(parameters.retryFailedTests, 'true') }}:
   # We need a custom dotnet test invocation here that does not trigger a task failure on failed tests
@@ -47,6 +51,7 @@ steps:
     displayName: Run tests
     ignoreLASTEXITCODE: true
     workingDirectory: ${{ parameters.xaSourcePath }}
+    condition: ${{ parameters.condition }}
 
   - template: /build-tools/automation/yaml-templates/diagnose-hanging-processes.yaml
 
@@ -57,6 +62,7 @@ steps:
         --outfile="${{ parameters.testAssembly }}.runsettings"
     displayName: Look for failed tests
     workingDirectory: ${{ parameters.xaSourcePath }}
+    condition: ${{ parameters.condition }}
 
     # dotnet-test-slicer removed the failed tests from our results file, so it's safe to publish it now
   - task: PublishTestResults@2
@@ -64,6 +70,7 @@ steps:
       testResultsFormat: VSTest
       testResultsFiles: $(Agent.TempDirectory)/*.trx
       testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase)
+    condition: ${{ parameters.condition }}
 
   - task: DotNetCoreCLI@2
     displayName: Shut down existing dotnet daemons
@@ -71,6 +78,7 @@ steps:
       command: custom
       custom: build-server
       arguments: shutdown
+    condition: ${{ parameters.condition }}
 
   - pwsh: |
       $filePath = "${{ parameters.testAssembly }}.runsettings"
@@ -84,6 +92,7 @@ steps:
       }
     displayName: Determine if we need to rerun failed tests
     workingDirectory: ${{ parameters.xaSourcePath }}  
+    condition: ${{ parameters.condition }}
   
   - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
     parameters:
@@ -91,4 +100,4 @@ steps:
       testAssembly: ${{ parameters.testAssembly }}
       dotNetTestExtraArgs: --settings "${{ parameters.testAssembly }}.runsettings"
       xaSourcePath: ${{ parameters.xaSourcePath }}
-      condition: and(succeeded(), eq(variables['ShouldRetryTests'], 'true'))
+      condition: and(${{ parameters.condition }}, eq(variables['ShouldRetryTests'], 'true'))

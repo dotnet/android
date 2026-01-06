@@ -20,6 +20,9 @@
     <_AndroidFastDeploymentSupported Condition=" Exists ('$(MSBuildThisFileDirectory)../tools/Xamarin.Android.Common.Debugging.targets') ">true</_AndroidFastDeploymentSupported>
     <_AndroidFastDeploymentSupported Condition=" '$(_AndroidFastDeploymentSupported)' == '' ">False</_AndroidFastDeploymentSupported>
 
+    <!-- TODO: remove when we have debugger support for CoreCLR -->
+    <UseMonoRuntime Condition=" '$(UseMonoRuntime)' == '' and '$(Configuration)' == 'Debug' ">true</UseMonoRuntime>
+
     <!--
       Disable @(Content) from referenced projects
       See: https://github.com/dotnet/sdk/blob/955c0fc7b06e2fa34bacd076ed39f61e4fb61716/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Publish.targets#L16
