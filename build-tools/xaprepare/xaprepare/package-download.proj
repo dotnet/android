@@ -27,13 +27,11 @@ Otherwise, $(MicrosoftNETCoreAppRefPackageVersion) from eng/Versions.props will 
     <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.net7.Manifest-$(DotNetMonoManifestVersionBand)" Version="[$(MicrosoftNETWorkloadMonoToolChainPackageVersion)]" />
     <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.net8.Manifest-$(DotNetMonoManifestVersionBand)" Version="[$(MicrosoftNETWorkloadMonoToolChainPackageVersion)]" />
     <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.net9.Manifest-$(DotNetMonoManifestVersionBand)" Version="[$(MicrosoftNETWorkloadMonoToolChainPackageVersion)]" />
-    <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.net10.Manifest-$(DotNetMonoManifestVersionBand)" Version="[$(MicrosoftNETWorkloadMonoToolChainPackageVersion)]" />
     <PackageDownload Include="Microsoft.NET.Workload.Emscripten.Current.Manifest-$(DotNetEmscriptenManifestVersionBand)" Version="[$(MicrosoftNETWorkloadEmscriptenPackageVersion)]" />
     <PackageDownload Include="Microsoft.NET.Workload.Emscripten.net6.Manifest-$(DotNetEmscriptenManifestVersionBand)" Version="[$(MicrosoftNETWorkloadEmscriptenPackageVersion)]" />
     <PackageDownload Include="Microsoft.NET.Workload.Emscripten.net7.Manifest-$(DotNetEmscriptenManifestVersionBand)" Version="[$(MicrosoftNETWorkloadEmscriptenPackageVersion)]" />
     <PackageDownload Include="Microsoft.NET.Workload.Emscripten.net8.Manifest-$(DotNetEmscriptenManifestVersionBand)" Version="[$(MicrosoftNETWorkloadEmscriptenPackageVersion)]" />
     <PackageDownload Include="Microsoft.NET.Workload.Emscripten.net9.Manifest-$(DotNetEmscriptenManifestVersionBand)" Version="[$(MicrosoftNETWorkloadEmscriptenPackageVersion)]" />
-    <PackageDownload Include="Microsoft.NET.Workload.Emscripten.net10.Manifest-$(DotNetEmscriptenManifestVersionBand)" Version="[$(MicrosoftNETWorkloadEmscriptenPackageVersion)]" />
     <!-- TODO: doesn't exist yet -->
     <!-- <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.net10.Manifest-$(DotNetMonoManifestVersionBand)" Version="[$(MicrosoftNETWorkloadMonoToolChainPackageVersion)]" /> -->
     <!-- <PackageDownload Include="Microsoft.NET.Workload.Emscripten.net10.Manifest-$(DotNetEmscriptenManifestVersionBand)" Version="[$(MicrosoftNETWorkloadEmscriptenPackageVersion)]" /> -->
