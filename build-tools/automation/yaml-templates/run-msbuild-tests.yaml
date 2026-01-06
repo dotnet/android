@@ -41,6 +41,7 @@ jobs:
       xaSourcePath: ${{ parameters.xaSourcePath }}
       repositoryAlias: ${{ parameters.repositoryAlias }}
       commit: ${{ parameters.commit }}
+      use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
   - task: DownloadPipelineArtifact@2
     inputs:
