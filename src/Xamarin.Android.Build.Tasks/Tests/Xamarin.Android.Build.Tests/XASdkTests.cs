@@ -58,19 +58,19 @@ namespace Xamarin.Android.Build.Tests
 					runtime: runtime);
 
 				AddTestData (
-					dotnetVersion: "net9.0",
-					platform: "android35",
-					apiLevel: new Version (35, 0),
+					dotnetVersion: XABuildConfig.PreviousDotNetTargetFramework,
+					platform: "android36",
+					apiLevel: new Version (36, 0),
 					runtime: runtime);
 
 				AddTestData (
-					dotnetVersion: "net10.0",
+					dotnetVersion: XABuildConfig.LatestDotNetTargetFramework,
 					platform: "android",
 					apiLevel: XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 					runtime: runtime);
 
 				AddTestData (
-					dotnetVersion: "net10.0",
+					dotnetVersion: XABuildConfig.LatestDotNetTargetFramework,
 					platform: $"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
 					apiLevel: XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 					runtime: runtime);
@@ -180,20 +180,17 @@ public class JavaSourceTest {
 			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}/baz.aar");
 			nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}/_Microsoft.Android.Resource.Designer.dll");
 
-			// NOTE: this is not fixed yet in .NET 9
-			if (dotnetVersion == "net10.0") {
-				using var aarStream = new MemoryStream ();
-				var aarEntry = nupkg.ReadEntry (aarPath);
-				aarEntry.Extract (aarStream);
-				aarStream.Seek (0, SeekOrigin.Begin);
+			using var aarStream = new MemoryStream ();
+			var aarEntry = nupkg.ReadEntry (aarPath);
+			aarEntry.Extract (aarStream);
+			aarStream.Seek (0, SeekOrigin.Begin);
 
-				// Look for libs/29CAF121D5FD8E3D.jar, libs/A1AFA985571E728E.jar
-				using var aar = ZipArchive.Open (aarStream);
-				int count = aar.Count (e =>
-					e.FullName.StartsWith ("libs/", StringComparison.OrdinalIgnoreCase) &&
-					e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase));
-				Assert.AreEqual (2, count, $"There should be 2 .jar files in the {aarPath} archive, but found {count}.");
-			}
+			// Look for libs/29CAF121D5FD8E3D.jar, libs/A1AFA985571E728E.jar
+			using var aar = ZipArchive.Open (aarStream);
+			int count = aar.Count (e =>
+				e.FullName.StartsWith ("libs/", StringComparison.OrdinalIgnoreCase) &&
+				e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase));
+			Assert.AreEqual (2, count, $"There should be 2 .jar files in the {aarPath} archive, but found {count}.");
 		}
 
 		static IEnumerable<object[]> Get_DotNetTargetFrameworks_Data ()
@@ -202,42 +199,42 @@ public class JavaSourceTest {
 
 			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
 				AddTestData (
-					dotnetVersion: "net9.0",
+					dotnetVersion: XABuildConfig.PreviousDotNetTargetFramework,
 					platform: "android",
-					apiLevel: new Version (35, 0),
+					apiLevel: new Version (36, 0),
 					runtime: runtime
 				);
 
 				AddTestData (
-					dotnetVersion: "net10.0",
+					dotnetVersion: XABuildConfig.LatestDotNetTargetFramework,
 					platform: "android",
 					apiLevel: XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 					runtime: runtime
 				);
 
 				AddTestData (
-					dotnetVersion: "net10.0",
+					dotnetVersion: XABuildConfig.LatestDotNetTargetFramework,
 					platform: $"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major}",
 					apiLevel: XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 					runtime: runtime
 				);
 
 				AddTestData (
-					dotnetVersion: "net10.0",
+					dotnetVersion: XABuildConfig.LatestDotNetTargetFramework,
 					platform: $"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
 					apiLevel: XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
 					runtime: runtime
 				);
 
 				AddTestData (
-					dotnetVersion: "net10.0",
+					dotnetVersion: XABuildConfig.LatestDotNetTargetFramework,
 					platform: XABuildConfig.AndroidLatestStableApiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel ? null : $"android{XABuildConfig.AndroidLatestStableApiLevel}",
 					apiLevel: XABuildConfig.AndroidLatestStableApiLevel,
 					runtime: runtime
 				);
 
 				AddTestData (
-					dotnetVersion: "net10.0",
+					dotnetVersion: XABuildConfig.LatestDotNetTargetFramework,
 					platform: XABuildConfig.AndroidLatestUnstableApiLevel == XABuildConfig.AndroidLatestStableApiLevel ? null : $"android{XABuildConfig.AndroidLatestUnstableApiLevel}",
 					apiLevel: XABuildConfig.AndroidLatestUnstableApiLevel,
 					runtime: runtime
@@ -302,7 +299,7 @@ public class JavaSourceTest {
 			}
 
 			//FIXME: will revisit this in a future PR
-			if (dotnetVersion != "net10.0") {
+			if (dotnetVersion != XABuildConfig.LatestDotNetTargetFramework) {
 				Assert.Ignore ("error NETSDK1185: The Runtime Pack for FrameworkReference 'Microsoft.Android.Runtime.34.android-arm' was not available. This may be because DisableTransitiveFrameworkReferenceDownloads was set to true.");
 			}
 
@@ -345,7 +342,7 @@ public class JavaSourceTest {
 			}
 
 			// Only check latest TFM, as previous or preview TFMs will come from NuGet
-			if (dotnetVersion == "net10.0" && !preview) {
+			if (dotnetVersion == XABuildConfig.LatestDotNetTargetFramework && !preview) {
 				var versionString = apiLevel.Minor == 0 ? $"{apiLevel.Major}" : $"{apiLevel.Major}.{apiLevel.Minor}";
 				var refDirectory = Directory.GetDirectories (Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Ref.{versionString}")).LastOrDefault ();
 				var expectedMonoAndroidRefPath = Path.Combine (refDirectory, "ref", dotnetVersion, "Mono.Android.dll");

@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging.StructuredLogger;
 using NUnit.Framework;
+using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -333,7 +334,7 @@ namespace Xamarin.Android.Build.Tests
 			var lib = new DotNetStandard {
 				ProjectName = "MyLibrary",
 				Sdk = "Microsoft.NET.Sdk",
-				TargetFramework = "net10.0", // Vanilla project
+				TargetFramework = XABuildConfig.LatestDotNetTargetFramework, // Vanilla project
 				Sources = {
 					new BuildItem.Source ("Bar.cs") {
 						TextContent = () => "public class Bar { public Bar () { System.Console.WriteLine (" + count++ + "); } }"

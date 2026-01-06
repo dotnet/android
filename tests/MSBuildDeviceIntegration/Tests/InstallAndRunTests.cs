@@ -1026,11 +1026,10 @@ namespace UnnamedProject
 		[Test]
 		[Category ("WearOS")]
 		public void DotNetInstallAndRunPreviousSdk (
-				[Values (false, true)] bool isRelease,
-				[Values ("net9.0-android")] string targetFramework)
+				[Values (false, true)] bool isRelease)
 		{
 			var proj = new XamarinFormsAndroidApplicationProject () {
-				TargetFramework = targetFramework,
+				TargetFramework = $"{XABuildConfig.PreviousDotNetTargetFramework}-android",
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
 			};
@@ -1263,7 +1262,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 		[Test]
 		public void FixLegacyResourceDesignerStep ([Values (true, false)] bool isRelease)
 		{
-			string previousTargetFramework = "net9.0-android";
+			string previousTargetFramework = $"{XABuildConfig.PreviousDotNetTargetFramework}-android";
 
 			var library1 = new XamarinAndroidLibraryProject {
 				IsRelease = isRelease,
