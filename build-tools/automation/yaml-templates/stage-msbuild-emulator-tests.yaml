@@ -207,6 +207,8 @@ stages:
         xaSourcePath: ${{ parameters.xaSourcePath }}
         use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
+    # Only fail on issues if the emulator started successfully
+    # If the emulator failed to start on Windows, we skip tests and don't fail the job
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
       parameters:
-        condition: ${{ parameters.shouldFailOnIssue }}
+        condition: and(${{ parameters.shouldFailOnIssue }}, eq(variables['EMULATOR_STARTED'], 'true'))
