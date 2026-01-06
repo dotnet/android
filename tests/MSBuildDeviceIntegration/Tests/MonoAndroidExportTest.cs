@@ -22,6 +22,9 @@ namespace Xamarin.Android.Build.Tests
 			[Values] bool isRelease,
 			[Values] AndroidRuntime runtime)
 		{
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT does not support Mono.Android.Export");
+			}
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
