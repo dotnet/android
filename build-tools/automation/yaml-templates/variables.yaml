@@ -24,7 +24,7 @@ variables:
 - name: NUnit.NumberOfTestWorkers
   value: 4
 - name: DotNetSdkVersion
-  value: 9.0
+  value: 10.0
 - name: DotNetSdkQuality
   value: GA
 - name: DotNetPreviewSdkVersion
