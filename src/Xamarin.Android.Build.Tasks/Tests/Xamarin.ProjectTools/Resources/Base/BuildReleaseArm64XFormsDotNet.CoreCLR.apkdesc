@@ -31,7 +31,7 @@
     "kotlin/reflect/reflect.kotlin_builtins": {
       "Size": 2396
     },
-    "lib/arm64-v8a/libassemblies.arm64-v8a.blob.so": {
+    "lib/arm64-v8a/libassembly-store.so": {
       "Size": 14221080
     },
     "lib/arm64-v8a/libclrjit.so": {

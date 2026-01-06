@@ -10,6 +10,7 @@ using NUnit.Framework;
 using Xamarin.ProjectTools;
 using System.Collections.Generic;
 using Microsoft.Build.Framework;
+using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -52,13 +53,30 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ApplicationRunsWithoutDebugger ([Values (false, true)] bool isRelease, [Values (false, true)] bool extractNativeLibs, [Values (false, true)] bool useEmbeddedDex)
+		public void ApplicationRunsWithoutDebugger ([Values] bool isRelease, [Values] bool extractNativeLibs, [Values] bool useEmbeddedDex, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// TODO: NativeAOT fails with the following exception:
+			//
+			// FATAL UNHANDLED EXCEPTION: System.InvalidCastException: Unable to convert instance of type 'AndroidX.AppCompat.Widget.AppCompatImageButton' to type 'AndroidX.AppCompat.Widget.Toolbar'.
+			//    at Java.Interop.JavaObjectExtensions._JavaCast[TResult](IJavaObject) + 0x190
+			//    at Android.Runtime.Extensions.JavaCast[TResult](IJavaObject) + 0x18
+			//    at Xamarin.Forms.Platform.Android.FormsAppCompatActivity.OnCreate(Bundle, ActivationFlags) + 0x5bc
+			//    at UnnamedProject.MainActivity.OnCreate(Bundle savedInstanceState) + 0x4c
+			//    at Android.App.Activity.n_OnCreate_Landroid_os_Bundle_(IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState) + 0x7c
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT currently crashes with an exception.");
+			}
+
 			SwitchUser ();
 
 			var proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			if (isRelease || !TestEnvironment.CommercialBuildAvailable) {
 				proj.SetAndroidSupportedAbis (DeviceAbi);
 			}
@@ -82,15 +100,44 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ClassLibraryMainLauncherRuns ([Values (true, false)] bool preloadAssemblies)
+		public void ClassLibraryMainLauncherRuns ([Values] bool preloadAssemblies, [Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// TODO: NativeAOT currently dies with a Java android.os.DeadObjectException exception (GC issue?):
+			//
+			// Exception thrown during dispatchAppVisibility Window{74689fa u0 com.xamarin.classlibrarymainlauncherruns/com.xamarin.classlibrarymainlauncherruns.MainActivity EXITING}
+			// android.os.DeadObjectException
+			//         at android.os.BinderProxy.transactNative(Native Method)
+			//         at android.os.BinderProxy.transact(BinderProxy.java:592)
+			//         at android.view.IWindow$Stub$Proxy.dispatchAppVisibility(IWindow.java:538)
+			//         at com.android.server.wm.WindowState.sendAppVisibilityToClients(WindowState.java:3183)
+			//         at com.android.server.wm.WindowContainer.sendAppVisibilityToClients(WindowContainer.java:1233)
+			//         at com.android.server.wm.WindowToken.setClientVisible(WindowToken.java:394)
+			//         at com.android.server.wm.ActivityRecord.commitVisibility(ActivityRecord.java:5546)
+			//         at com.android.server.wm.Transition.finishTransition(Transition.java:1485)
+			//         at com.android.server.wm.TransitionController.finishTransition(TransitionController.java:1048)
+			//         at com.android.server.wm.WindowOrganizerController.finishTransition(WindowOrganizerController.java:514)
+			//         at android.window.IWindowOrganizerController$Stub.onTransact(IWindowOrganizerController.java:270)
+			//         at com.android.server.wm.WindowOrganizerController.onTransact(WindowOrganizerController.java:230)
+			//         at android.os.Binder.execTransactInternal(Binder.java:1446)
+			//         at android.os.Binder.execTransact(Binder.java:1385)
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT currently dies at startup with a Java android.os.DeadObjectException exception");
+			}
+
 			SwitchUser ();
 
 			var path = Path.Combine ("temp", TestName);
 
 			var app = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				ProjectName = "MyApp",
 			};
+			app.SetRuntime (runtime);
 			if (!TestEnvironment.CommercialBuildAvailable) {
 				app.SetAndroidSupportedAbis (DeviceAbi);
 			}
@@ -134,36 +181,69 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-#pragma warning disable 414
-		static object [] DebuggerCustomAppTestCases = new object [] {
-			new object[] {
-				/* embedAssemblies */    true,
-				/* activityStarts */     true,
-				/* packageFormat */      "apk",
-			},
-			new object[] {
-				/* embedAssemblies */    false,
-				/* activityStarts */     true,
-				/* packageFormat */      "apk",
-			},
-			new object[] {
-				/* embedAssemblies */    true,
-				/* activityStarts */     true,
-				/* packageFormat */      "aab",
-			},
-			new object[] {
-				/* embedAssemblies */    false,
-				/* activityStarts */     true,
-				/* packageFormat */      "aab",
-			},
-		};
-#pragma warning restore 414
-
-		[Test, Category ("Debugger")]
-		[TestCaseSource (nameof (DebuggerCustomAppTestCases))]
-		[Retry(5)]
-		public void CustomApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, bool activityStarts, string packageFormat)
+		static IEnumerable<object[]> Get_CustomApplicationRunsWithDebuggerAndBreaks_Data ()
 		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				// TODO: once CoreCLR debugging works, this needs to be adjusted accordingly
+				if (runtime != AndroidRuntime.MonoVM) {
+					continue;
+				}
+
+				AddTestData (
+					embedAssemblies: true,
+					activityStarts:  true,
+					packageFormat:   "apk",
+					runtime:         runtime
+				);
+
+				AddTestData (
+					embedAssemblies: false,
+					activityStarts:  true,
+					packageFormat:   "apk",
+					runtime:         runtime
+				);
+
+				AddTestData (
+					embedAssemblies: true,
+					activityStarts:  true,
+					packageFormat:   "aab",
+					runtime:         runtime
+				);
+
+				AddTestData (
+					embedAssemblies: false,
+					activityStarts:  true,
+					packageFormat:   "aab",
+					runtime:         runtime
+				);
+			}
+
+			return ret;
+
+			void AddTestData (bool embedAssemblies, bool activityStarts, string packageFormat, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					embedAssemblies,
+					activityStarts,
+					packageFormat,
+					runtime,
+				});
+			}
+		}
+
+		// MonoVM-only test for the moment.
+		[Test, Category ("Debugger")]
+		[TestCaseSource (nameof (Get_CustomApplicationRunsWithDebuggerAndBreaks_Data))]
+		[Retry(5)]
+		public void CustomApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, bool activityStarts, string packageFormat, AndroidRuntime runtime)
+		{
+			const bool isRelease = false;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			AssertCommercialBuild ();
 			SwitchUser ();
 
@@ -174,10 +254,10 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = false,
+				IsRelease = isRelease,
 			};
-			// MonoVM-only test
-			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
+
+			proj.SetRuntime (runtime);
 			proj.SetAndroidSupportedAbis (DeviceAbi);
 			proj.SetProperty ("EmbedAssembliesIntoApk", embedAssemblies.ToString ());
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
@@ -281,70 +361,114 @@ namespace ${ROOT_NAMESPACE} {
 			}
 		}
 
-#pragma warning disable 414
-		static object [] DebuggerTestCases = new object [] {
-			new object[] {
-				/* embedAssemblies */    true,
-				/* user */		 null,
-				/* packageFormat */      "apk",
-				/* useLatestSdk */       true,
-			},
-			new object[] {
-				/* embedAssemblies */    true,
-				/* user */		 null,
-				/* packageFormat */      "apk",
-				/* useLatestSdk */       false,
-			},
-			new object[] {
-				/* embedAssemblies */    false,
-				/* user */		 null,
-				/* packageFormat */      "apk",
-				/* useLatestSdk */       true,
-			},
-			new object[] {
-				/* embedAssemblies */    true,
-				/* user */		 DeviceTest.GuestUserName,
-				/* packageFormat */      "apk",
-				/* useLatestSdk */       true,
-			},
-			new object[] {
-				/* embedAssemblies */    false,
-				/* user */		 DeviceTest.GuestUserName,
-				/* packageFormat */      "apk",
-				/* useLatestSdk */       true,
-			},
-			new object[] {
-				/* embedAssemblies */    true,
-				/* user */		 null,
-				/* packageFormat */      "aab",
-				/* useLatestSdk */       true,
-			},
-			new object[] {
-				/* embedAssemblies */    false,
-				/* user */		 null,
-				/* packageFormat */      "aab",
-				/* useLatestSdk */       true,
-			},
-			new object[] {
-				/* embedAssemblies */    true,
-				/* user */		 DeviceTest.GuestUserName,
-				/* packageFormat */      "aab",
-				/* useLatestSdk */       true,
-			},
-			new object[] {
-				/* embedAssemblies */    false,
-				/* user */		 DeviceTest.GuestUserName,
-				/* packageFormat */      "aab",
-				/* useLatestSdk */       true,
-			},
-		};
-#pragma warning restore 414
-
-		[Test, Category ("Debugger"), Category ("WearOS")]
-		[TestCaseSource (nameof(DebuggerTestCases))]
-		[Retry (5)]
-		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string username, string packageFormat, bool useLatestSdk)
+		static IEnumerable<object[]> Get_ApplicationRunsWithDebuggerAndBreaks_Data ()
 		{
+			var ret = new List<object[]> ();
+
+			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				// TODO: once CoreCLR debugging works, this needs to be adjusted accordingly
+				if (runtime != AndroidRuntime.MonoVM) {
+					continue;
+				}
+
+				AddTestData (
+					embedAssemblies: true,
+					username:	 null,
+					packageFormat:   "apk",
+					useLatestSdk:    true,
+					runtime:         runtime
+				);
+
+				AddTestData (
+					embedAssemblies: true,
+					username:	 null,
+					packageFormat:   "apk",
+					useLatestSdk:    false,
+					runtime:         runtime
+				);
+
+				AddTestData (
+					embedAssemblies: false,
+					username:	 null,
+					packageFormat:   "apk",
+					useLatestSdk:    true,
+					runtime:         runtime
+				);
+
+				AddTestData (
+					embedAssemblies: true,
+					username:	 DeviceTest.GuestUserName,
+					packageFormat:   "apk",
+					useLatestSdk:    true,
+					runtime:         runtime
+				);
+
+				AddTestData (
+					embedAssemblies: false,
+					username:	 DeviceTest.GuestUserName,
+					packageFormat:   "apk",
+					useLatestSdk:    true,
+					runtime:         runtime
+				);
+
+				AddTestData (
+					embedAssemblies: true,
+					username:	 null,
+					packageFormat:   "aab",
+					useLatestSdk:    true,
+					runtime:         runtime
+				);
+
+				AddTestData (
+					embedAssemblies: false,
+					username:	 null,
+					packageFormat:   "aab",
+					useLatestSdk:    true,
+					runtime:         runtime
+				);
+
+				AddTestData (
+					embedAssemblies: true,
+					username:	 DeviceTest.GuestUserName,
+					packageFormat:   "aab",
+					useLatestSdk:    true,
+					runtime:         runtime
+				);
+
+				AddTestData (
+					embedAssemblies: false,
+					username:	 DeviceTest.GuestUserName,
+					packageFormat:   "aab",
+					useLatestSdk:    true,
+					runtime:         runtime
+				);
+			}
+
+			return ret;
+
+			void AddTestData (bool embedAssemblies, string username, string packageFormat, bool useLatestSdk, AndroidRuntime runtime)
+			{
+				ret.Add (new object[] {
+					embedAssemblies,
+					username,
+					packageFormat,
+					useLatestSdk,
+					runtime,
+				});
+			}
+		}
+
+		// MonoVM-only test for the moment.
+		[Test, Category ("Debugger"), Category ("WearOS")]
+		[TestCaseSource (nameof(Get_ApplicationRunsWithDebuggerAndBreaks_Data))]
+		[Retry (5)]
+		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string username, string packageFormat, bool useLatestSdk, AndroidRuntime runtime)
+		{
+			const bool isRelease = false;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			AssertCommercialBuild ();
 			SwitchUser ();
 			WaitFor (5000);
@@ -366,6 +490,7 @@ namespace ${ROOT_NAMESPACE} {
 			}
 
 			var lib = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
 				ProjectName = "Library1",
 				Sources = {
 					new BuildItem.Source ("Foo.cs") {
@@ -382,11 +507,11 @@ namespace ${ROOT_NAMESPACE} {
 
 			var app = new XamarinFormsAndroidApplicationProject {
 				ProjectName = "App",
-				IsRelease = false,
+				IsRelease = isRelease,
 				EmbedAssembliesIntoApk = embedAssemblies,
 			};
-			// MonoVM-only test
-			app.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
+
+			app.SetRuntime (runtime);
 			if (!useLatestSdk) {
 				lib.TargetFramework = "net9.0-android";
 				app.TargetFramework = "net9.0-android";
