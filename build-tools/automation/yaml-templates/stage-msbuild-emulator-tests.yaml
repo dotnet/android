@@ -43,6 +43,7 @@ stages:
         repositoryAlias: ${{ parameters.repositoryAlias }}
         commit: ${{ parameters.commit }}
         xaprepareScenario: EmulatorTestDependencies
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -110,6 +111,7 @@ stages:
         repositoryAlias: ${{ parameters.repositoryAlias }}
         commit: ${{ parameters.commit }}
         xaprepareScenario: EmulatorTestDependencies
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -173,6 +175,7 @@ stages:
         repositoryAlias: ${{ parameters.repositoryAlias }}
         commit: ${{ parameters.commit }}
         xaprepareScenario: EmulatorTestDependencies
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - task: DownloadPipelineArtifact@2
       inputs:
