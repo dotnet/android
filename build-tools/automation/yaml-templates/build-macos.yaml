@@ -83,10 +83,6 @@ stages:
         path: s/android/external/android-platform-support
         persistCredentials: true
 
-      - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
-        workingDirectory: ${{ parameters.xaSourcePath }}
-        displayName: make prepare-external-git-dependencies
-
     - task: CodeQL3000Init@0
       displayName: CodeQL 3000 Init
       condition: and(succeeded(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
@@ -101,6 +97,11 @@ stages:
         windowsToolchainPdbArtifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
         buildResultArtifactName: ${{ parameters.buildResultArtifactName }}
         use1ESTemplate: ${{ parameters.use1ESTemplate }}
+
+    - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
+      - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
+        workingDirectory: ${{ parameters.xaSourcePath }}
+        displayName: make prepare-external-git-dependencies
 
     - task: CodeQL3000Finalize@0
       displayName: CodeQL 3000 Finalize
