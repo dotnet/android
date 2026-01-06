@@ -63,7 +63,7 @@ variables:
 - name: IsRelOrTargetingRel
   value: $[or(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), startsWith(variables['System.PullRequest.TargetBranch'], 'release/'))]
 - name: DefaultTestSdkPlatforms  # Comma-separated SDK Platform(s) to install on test agents (no spaces)
-  value: 36,CANARY
+  value: 35,36,36.1
 - name: DefaultJavaSdkMajorVersion
   value: 17
 - name: LatestJavaSdkMajorVersion
@@ -73,4 +73,6 @@ variables:
 - name: RunMAUITestJob
   value: true
 - name: DOTNET_SYSTEM_NET_SECURITY_NOREVOCATIONCHECKBYDEFAULT
+  value: true
+- name: DOTNET_CLI_TELEMETRY_OPTOUT
   value: true

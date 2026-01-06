@@ -1,11 +1,16 @@
 #pragma once
 
+#include <jni.h>
+
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
 #include <string_view>
 
+#include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
+#include <runtime-base/strings.hh>
+#include <runtime-base/util.hh>
 
 struct AppEnvironmentVariable;
 
@@ -18,16 +23,19 @@ namespace xamarin::android {
 		[[gnu::flatten, gnu::always_inline]]
 		static void set_variable (const char *name, const char *value) noexcept
 		{
-			log_debug (LOG_DEFAULT, " Variable {} = '{}'", optional_string (name), optional_string (value));
-			if (::setenv (name, value, 1) < 0) {
-				log_warn (LOG_DEFAULT, "Failed to set environment variable '{}': {}", name, ::strerror (errno));
-			}
+			Util::set_environment_variable (name, value);
 		}
 
 		[[gnu::flatten, gnu::always_inline]]
 		static void set_variable (std::string_view const& name, std::string_view const& value) noexcept
 		{
-			set_variable (name.data (), value.data ());
+			Util::set_environment_variable (name.data (), value.data ());
+		}
+
+		[[gnu::flatten, gnu::always_inline]]
+		static void set_variable (std::string_view const& name, jstring_wrapper &value) noexcept
+		{
+			Util::set_environment_variable (name.data (), value);
 		}
 
 		[[gnu::flatten, gnu::always_inline]]
@@ -71,6 +79,48 @@ namespace xamarin::android {
 
 				setter (var_name, var_value);
 			}
+		}
+
+	private:
+		[[gnu::flatten, gnu::always_inline]]
+		static void create_xdg_directory (jstring_wrapper &home, size_t home_len, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept
+		{
+			static_local_string<SENSIBLE_PATH_MAX> dir (home_len + relative_path.length ());
+			Util::path_combine (dir, home.get_string_view (), relative_path);
+
+			log_debug (LOG_DEFAULT, "Creating XDG directory: {}"sv, optional_string (dir.get ()));
+			int rv = Util::create_directory (dir.get (), Constants::DEFAULT_DIRECTORY_MODE);
+			if (rv < 0 && errno != EEXIST) {
+				log_warn (LOG_DEFAULT, "Failed to create XDG directory {}. {}"sv, optional_string (dir.get ()), strerror (errno));
+			}
+
+			if (!environment_variable_name.empty ()) {
+				set_variable (environment_variable_name.data (), dir.get ());
+			}
+		}
+
+		[[gnu::flatten, gnu::always_inline]]
+		static void create_xdg_directories_and_environment (jstring_wrapper &homeDir) noexcept
+		{
+			size_t home_len = strlen (homeDir.get_cstr ());
+
+			constexpr auto XDG_DATA_HOME = "XDG_DATA_HOME"sv;
+			constexpr auto HOME_PATH = ".local/share"sv;
+			create_xdg_directory (homeDir, home_len, HOME_PATH, XDG_DATA_HOME);
+
+			constexpr auto XDG_CONFIG_HOME = "XDG_CONFIG_HOME"sv;
+			constexpr auto CONFIG_PATH = ".config"sv;
+			create_xdg_directory (homeDir, home_len, CONFIG_PATH, XDG_CONFIG_HOME);
+		}
+
+	public:
+		[[gnu::flatten, gnu::always_inline]]
+		static void setup_environment (jstring_wrapper &language, jstring_wrapper &files_dir, jstring_wrapper &cache_dir) noexcept
+		{
+			set_variable ("LANG"sv, language);
+			Util::set_environment_variable_for_directory ("TMPDIR"sv, cache_dir);
+			Util::set_environment_variable_for_directory ("HOME"sv, files_dir);
+			create_xdg_directories_and_environment (files_dir);
 		}
 	};
 }

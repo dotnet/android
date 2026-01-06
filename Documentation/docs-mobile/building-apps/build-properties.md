@@ -1535,6 +1535,22 @@ If `DebugType` is not set or is the empty string, then the
 `DebugSymbols` property controls whether or not the Application is
 debuggable.
 
+## Device
+
+Specifies which Android device or emulator to target when using
+`dotnet run --device <Device>` or MSBuild targets that interact with
+devices (such as `Run`, `Install`, or `Uninstall`).
+
+The value must be the full device serial number or identifier as
+returned by `adb devices`. For example, if the device serial is
+`emulator-5554`, you must use `-p:Device=emulator-5554`.
+
+When set, this property is used to initialize the
+[`AdbTarget`](#adbtarget) property with the value `-s "<Device>"`.
+
+For more information about device selection, see the
+[.NET SDK device selection specification](https://github.com/dotnet/sdk/blob/2b9fc02a265c735f2132e4e3626e94962e48bdf5/documentation/specs/dotnet-run-for-maui.md).
+
 ## DiagnosticAddress
 
 A value provided by `dotnet-dsrouter` such as `127.0.0.1`, the IP

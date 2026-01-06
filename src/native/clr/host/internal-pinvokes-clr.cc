@@ -65,29 +65,3 @@ void monodroid_timing_stop (managed_timing_sequence *sequence, const char *messa
 	Timing::info (sequence, message == nullptr ? DEFAULT_MESSAGE.data () : message);
 	timing->release_sequence (sequence);
 }
-
-void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
-{
-	OSBridge::_monodroid_weak_gref_delete (handle, type, threadName, threadId, from, from_writable);
-}
-
-void* _monodroid_timezone_get_default_id ()
-{
-	JNIEnv *env			 = OSBridge::ensure_jnienv ();
-	jmethodID getDefault = env->GetStaticMethodID (Host::get_java_class_TimeZone (), "getDefault", "()Ljava/util/TimeZone;");
-	jmethodID getID		 = env->GetMethodID (Host::get_java_class_TimeZone (), "getID",		 "()Ljava/lang/String;");
-	jobject d			 = env->CallStaticObjectMethod (Host::get_java_class_TimeZone (), getDefault);
-	jstring id			 = reinterpret_cast<jstring> (env->CallObjectMethod (d, getID));
-	const char *mutf8	 = env->GetStringUTFChars (id, nullptr);
-	if (mutf8 == nullptr) {
-		log_error (LOG_DEFAULT, "Failed to convert Java TimeZone ID to UTF8 (out of memory?)"sv);
-		env->DeleteLocalRef (id);
-		env->DeleteLocalRef (d);
-		return nullptr;
-	}
-	char *def_id		 = strdup (mutf8);
-	env->ReleaseStringUTFChars (id, mutf8);
-	env->DeleteLocalRef (id);
-	env->DeleteLocalRef (d);
-	return def_id;
-}

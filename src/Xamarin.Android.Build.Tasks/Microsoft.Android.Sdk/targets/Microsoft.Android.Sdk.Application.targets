@@ -9,15 +9,16 @@ This file contains targets specific for Android application projects.
 <Project>
   <UsingTask TaskName="Xamarin.Android.Tasks.AndroidAdb" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidActivityName" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GetAvailableAndroidDevices" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.BuildTools.PrepTasks.XASleepInternal" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
     <!-- If Xamarin.Android.Common.Debugging.targets exists, we can rely on _Run for debugging. -->
-    <_RunDependsOn Condition=" '$(_XASupportsFastDev)' == 'true' ">
+    <_RunDependsOn Condition=" '$(_AndroidFastDeploymentSupported)' == 'true' ">
       Install;
       _Run;
     </_RunDependsOn>
-    <_RunDependsOn Condition=" '$(_XASupportsFastDev)' != 'true' ">
+    <_RunDependsOn Condition=" '$(_AndroidFastDeploymentSupported)' != 'true' ">
       Install;
       StartAndroidActivity;
     </_RunDependsOn>
@@ -25,6 +26,27 @@ This file contains targets specific for Android application projects.
       Install;
     </_AndroidComputeRunArgumentsDependsOn>
   </PropertyGroup>
+
+  <!--
+  ***********************************************************************************************
+  ComputeAvailableDevices
+
+  Target that queries available Android devices and emulators.
+  This target is called by 'dotnet run' to support device selection.
+  Returns @(Devices) items with metadata: Description, Type, Status
+
+  See: https://github.com/dotnet/sdk/blob/2b9fc02a265c735f2132e4e3626e94962e48bdf5/documentation/specs/dotnet-run-for-maui.md
+  ***********************************************************************************************
+  -->
+  <Target Name="ComputeAvailableDevices"
+      DependsOnTargets="_ResolveMonoAndroidSdks"
+      Returns="@(Devices)">
+    <GetAvailableAndroidDevices
+        ToolExe="$(AdbToolExe)"
+        ToolPath="$(AdbToolPath)">
+      <Output TaskParameter="Devices" ItemName="Devices" />
+    </GetAvailableAndroidDevices>
+  </Target>
 
   <Target Name="_AndroidComputeRunArguments"
       BeforeTargets="ComputeRunArguments"

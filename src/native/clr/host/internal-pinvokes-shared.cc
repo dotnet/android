@@ -19,14 +19,19 @@ void _monodroid_gref_log (const char *message) noexcept
 	OSBridge::_monodroid_gref_log (message);
 }
 
-int _monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable) noexcept
+int _monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, [[maybe_unused]] int from_writable) noexcept
 {
-	return OSBridge::_monodroid_gref_log_new (curHandle, curType, newHandle, newType, threadName, threadId, from, from_writable);
+	return OSBridge::_monodroid_gref_log_new (curHandle, curType, newHandle, newType, threadName, threadId, from);
 }
 
-void _monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable) noexcept
+void _monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, [[maybe_unused]] int from_writable) noexcept
 {
-	OSBridge::_monodroid_gref_log_delete (handle, type, threadName, threadId, from, from_writable);
+	OSBridge::_monodroid_gref_log_delete (handle, type, threadName, threadId, from);
+}
+
+void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, [[maybe_unused]] int from_writable)
+{
+	OSBridge::_monodroid_weak_gref_delete (handle, type, threadName, threadId, from);
 }
 
 BridgeProcessingFtn clr_initialize_gc_bridge (
@@ -79,9 +84,9 @@ void monodroid_free (void *ptr) noexcept
 	free (ptr);
 }
 
-void _monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable)
+void _monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, [[maybe_unused]] int from_writable)
 {
-	OSBridge::_monodroid_weak_gref_new (curHandle, curType, newHandle, newType, threadName, threadId, from, from_writable);
+	OSBridge::_monodroid_weak_gref_new (curHandle, curType, newHandle, newType, threadName, threadId, from);
 }
 
 int _monodroid_weak_gref_get ()
@@ -94,14 +99,14 @@ int _monodroid_max_gref_get ()
 	return static_cast<int>(AndroidSystem::get_max_gref_count ());
 }
 
-void _monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
+void _monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, [[maybe_unused]] int from_writable)
 {
-	OSBridge::_monodroid_lref_log_new (lrefc, handle, type, threadName, threadId, from, from_writable);
+	OSBridge::_monodroid_lref_log_new (lrefc, handle, type, threadName, threadId, from);
 }
 
-void _monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
+void _monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, [[maybe_unused]] int from_writable)
 {
-	OSBridge::_monodroid_lref_log_delete (lrefc, handle, type, threadName, threadId, from, from_writable);
+	OSBridge::_monodroid_lref_log_delete (lrefc, handle, type, threadName, threadId, from);
 }
 
 void _monodroid_gc_wait_for_bridge_processing ()

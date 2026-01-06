@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.IO;
 using System.Globalization;
@@ -18,29 +20,34 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		/// @(AndroidApiInfo) from .\bin\Build$(Configuration)\Mono.Android.Apis.projitems
 		/// </summary>
 		[Required]
-		public ITaskItem [] AndroidApiInfo { get; set; }
+		public ITaskItem [] AndroidApiInfo { get; set; } = [];
 
 		/// <summary>
 		/// The output file to generate
 		/// </summary>
 		[Required]
-		public string OutputFile { get; set; }
+		public string OutputFile { get; set; } = "";
 
 		/// <summary>
 		/// $(AndroidMinimumDotNetApiLevel) from Configuration.props
 		/// </summary>
 		[Required]
-		public int MinimumApiLevel { get; set; }
+		public string? MinimumApiLevel { get; set; }
 
 		/// <summary>
 		/// Default value for $(TargetPlatformVersion), defaults to MaxStableVersion.ApiLevel
 		/// </summary>
-		public int TargetApiLevel { get; set; }
+		public string? TargetApiLevel { get; set; }
 
 		public override bool Execute ()
 		{
-			var versions = new AndroidVersions (AndroidApiInfo.Select (ToVersion));
-			int targetApiLevel = TargetApiLevel > 0 ? TargetApiLevel : versions.MaxStableVersion.ApiLevel;
+
+			var minVersion        = ToVersion (MinimumApiLevel);
+			var targetVersion     = ToVersion (TargetApiLevel);
+			var versions          = new AndroidVersions (AndroidApiInfo.Select (ToAndroidVersion));
+			var targetApiLevel    = targetVersion != null && targetVersion.Major > 0
+				? targetVersion
+				: versions.MaxStableVersion!.VersionCodeFull;
 			var settings = new XmlWriterSettings {
 				OmitXmlDeclaration = true,
 				Indent = true,
@@ -63,23 +70,25 @@ Specifies the supported Android platform versions for this SDK.
 				writer.WriteEndElement (); // </TargetPlatformSupported>
 				writer.WriteStartElement ("TargetPlatformVersion");
 				writer.WriteAttributeString ("Condition", " '$(TargetPlatformVersion)' == '' ");
-				writer.WriteString (targetApiLevel.ToString ("0.0", CultureInfo.InvariantCulture));
+				writer.WriteString (targetApiLevel.Major.ToString ());
+				writer.WriteString (".");
+				writer.WriteString (targetApiLevel.Minor.ToString ());
 				writer.WriteEndElement (); // </TargetPlatformVersion>
 				writer.WriteStartElement ("AndroidMinimumSupportedApiLevel");
 				writer.WriteAttributeString ("Condition", " '$(AndroidMinimumSupportedApiLevel)' == '' ");
-				writer.WriteString (MinimumApiLevel.ToString ());
+				writer.WriteString (MinimumApiLevel?.ToString () ?? "");
 				writer.WriteEndElement (); // </AndroidMinimumSupportedApiLevel>
 				writer.WriteEndElement (); // </PropertyGroup>
 
 				writer.WriteStartElement ("ItemGroup");
 				foreach (Version versionCode in versions.InstalledBindingVersions
-						.Where (v => v.ApiLevel >= MinimumApiLevel)
+						.Where (v => v.VersionCodeFull >= minVersion)
 						.Select (v => v.VersionCodeFull)
 						.Distinct ()
 						.OrderBy (v => v)) {
 					writer.WriteStartElement ("AndroidSdkSupportedTargetPlatformVersion");
 					writer.WriteAttributeString ("Include", versionCode.ToString ());
-					if (versionCode.Major < TargetApiLevel) {
+					if (versionCode < targetVersion) {
 						writer.WriteAttributeString ("DefineConstantsOnly", "true");
 					}
 					writer.WriteEndElement (); // </AndroidSdkSupportedTargetPlatformVersion>
@@ -93,7 +102,21 @@ Specifies the supported Android platform versions for this SDK.
 			return !Log.HasLoggedErrors;
 		}
 
-		static AndroidVersion ToVersion (ITaskItem item)
+		static Version? ToVersion (string? value)
+		{
+			if (string.IsNullOrEmpty (value)) {
+				return null;
+            }
+			if (Version.TryParse (value, out var version)) {
+				return version;
+			}
+			if (int.TryParse (value, out var major)) {
+				return new Version (major, 0);
+			}
+			return null;
+		}
+
+		static AndroidVersion ToAndroidVersion (ITaskItem item)
 		{
 			/*
 			<AndroidApiInfo Include="v16.0.99">

@@ -25,7 +25,7 @@ resources:
   - repository: maui
     type: github
     name: dotnet/maui
-    ref: refs/heads/net10.0
+    ref: net11.0
     endpoint: xamarin
 
 parameters:
@@ -47,14 +47,9 @@ variables:
 - ${{ if ne(variables['Build.DefinitionName'], 'Xamarin.Android-Private') }}:
   - name: DotNetFeedCredential
     value: dnceng-dotnet9
-- name: MicroBuildSignType
-  ${{ if and(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.DefinitionName'], 'Xamarin.Android')) }}:
-    value: Real
-  ${{ else }}:
-    value: Test
 
 extends:
-  ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
+  ${{ if and(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.DefinitionName'], 'Xamarin.Android')) }}:
     template: azure-pipelines/MicroBuild.1ES.Official.yml@1esPipelines
   ${{ else }}:
     template: azure-pipelines/MicroBuild.1ES.Unofficial.yml@1esPipelines
@@ -257,7 +252,10 @@ extends:
           name: sign_net_mac_win
           poolName: $(VSEngMicroBuildPool)
           artifactName: $(NuGetArtifactName)
-          signType: $(MicroBuildSignType)
+          ${{ if and(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.DefinitionName'], 'Xamarin.Android')) }}:
+            signType: Real
+          ${{ else }}:
+            signType: Test
           signedArtifactName: nuget-signed
           usePipelineArtifactTasks: true
           uploadPrefix: sign-mac-win
@@ -271,7 +269,10 @@ extends:
           displayName: Sign Linux Archive
           poolName: $(VSEngMicroBuildPool)
           artifactName: $(LinuxNuGetArtifactName)
-          signType: $(MicroBuildSignType)
+          ${{ if and(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.DefinitionName'], 'Xamarin.Android')) }}:
+            signType: Real
+          ${{ else }}:
+            signType: Test
           signedArtifactName: nuget-linux-signed
           usePipelineArtifactTasks: true
           uploadPrefix: sign-linux
@@ -287,7 +288,10 @@ extends:
           artifactPatterns: |
             !*Darwin*
           propsArtifactName: $(NuGetArtifactName)
-          signType: $(MicroBuildSignType)
+          ${{ if and(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.DefinitionName'], 'Xamarin.Android')) }}:
+            signType: Real
+          ${{ else }}:
+            signType: Test
           preConvertSteps:
           - task: DownloadPipelineArtifact@2
             inputs:

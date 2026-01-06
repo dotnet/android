@@ -10,22 +10,18 @@ using Xamarin.Tools.Zip;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[TestFixtureSource(nameof(FixtureArgs))]
+	[TestFixtureSource(nameof(Get_FixtureArgs))]
 	[Category ("XamarinBuildDownload")]
 	public class BundleToolTests : DeviceTest
 	{
-		static readonly object[] FixtureArgs = {
-			new object[] { false },
-			new object[] { true },
-		};
-
-		static readonly string [] Abis = new [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
+		static readonly string [] Abis = ["arm64-v8a", "x86_64"];
 		XamarinAndroidLibraryProject lib;
 		XamarinAndroidApplicationProject app;
 		ProjectBuilder libBuilder, appBuilder;
 		string intermediate;
 		string bin;
 		bool usesAssemblyBlobs;
+		readonly AndroidRuntime runtime;
 
 		// Disable split by language
 		const string BuildConfig = @"{
@@ -46,18 +42,44 @@ namespace Xamarin.Android.Build.Tests
 	}
 }";
 
-		public BundleToolTests (bool usesAssemblyBlobs)
+		static IEnumerable<object[]> Get_FixtureArgs ()
+		{
+			object[] fixtureArgs = {
+				new object[] { false },
+				new object[] { true },
+			};
+			var ret = new List<object[]> ();
+
+			foreach (object[] args in fixtureArgs) {
+				foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+					ret.Add (new object[] {
+						args[0],
+						runtime,
+					});
+				}
+			}
+
+			return ret;
+		}
+
+		public BundleToolTests (bool usesAssemblyBlobs, AndroidRuntime runtime)
 		{
 			this.usesAssemblyBlobs = usesAssemblyBlobs;
+			this.runtime = runtime;
 		}
 
 		[OneTimeSetUp]
 		public void OneTimeSetUp ()
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var path = Path.Combine ("temp", TestName);
 			lib = new XamarinAndroidLibraryProject {
 				ProjectName = "Localization",
-				IsRelease = true,
+				IsRelease = isRelease,
 				OtherBuildItems = {
 					new BuildItem ("EmbeddedResource", "Foo.resx") {
 						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
@@ -68,14 +90,16 @@ namespace Xamarin.Android.Build.Tests
 				}
 			};
 
+			lib.SetRuntime (runtime);
 			lib.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 
 			var bytes = new byte [1024];
 			app = new XamarinFormsMapsApplicationProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 				AotAssemblies = false, // Release defaults to Profiled AOT for .NET 6
 				PackageName = "com.xamarin.bundletooltests",
 			};
+			app.SetRuntime (runtime);
 			app.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("foo.bar") {
 				BinaryContent = () => bytes,
 			});
@@ -138,6 +162,11 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void BaseZip ()
 		{
+			if (runtime == AndroidRuntime.CoreCLR && !usesAssemblyBlobs) {
+				Assert.Ignore ("CoreCLR does not support builds without assembly stores");
+				return;
+			}
+
 			var baseZip = Path.Combine (intermediate, "android", "bin", "base.zip");
 			var contents = ListArchiveContents (baseZip, usesAssemblyBlobs);
 			var expectedFiles = new List<string> {
@@ -161,6 +190,11 @@ namespace Xamarin.Android.Build.Tests
 			expectedFiles.Add ("root/play-services-tasks.properties");
 
 			foreach (var abi in Abis) {
+				if (runtime == AndroidRuntime.NativeAOT) {
+					expectedFiles.Add ($"lib/{abi}/libUnnamedProject.so");
+					continue;
+				}
+
 				// All assemblies are in per-abi directories now
 				if (usesAssemblyBlobs) {
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Java.Interop.dll.so");
@@ -177,7 +211,6 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				expectedFiles.Add ($"lib/{abi}/libmonodroid.so");
-				expectedFiles.Add ($"lib/{abi}/libmonosgen-2.0.so");
 				expectedFiles.Add ($"lib/{abi}/libxamarin-app.so");
 				if (usesAssemblyBlobs) {
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_System.Private.CoreLib.dll.so");
@@ -195,6 +228,11 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void AppBundle ()
 		{
+			if (runtime == AndroidRuntime.CoreCLR && !usesAssemblyBlobs) {
+				Assert.Ignore ("CoreCLR does not support builds without assembly stores");
+				return;
+			}
+
 			var aab = Path.Combine (intermediate, "android", "bin", $"{app.PackageName}.aab");
 			FileAssert.Exists (aab);
 			var contents = ListArchiveContents (aab, usesAssemblyBlobs);
@@ -221,6 +259,11 @@ namespace Xamarin.Android.Build.Tests
 			expectedFiles.Add ("base/root/play-services-tasks.properties");
 
 			foreach (var abi in Abis) {
+				if (runtime == AndroidRuntime.NativeAOT) {
+					expectedFiles.Add ($"base/lib/{abi}/libUnnamedProject.so");
+					continue;
+				}
+
 				// All assemblies are in per-abi directories now
 				if (usesAssemblyBlobs) {
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Java.Interop.dll.so");
@@ -237,7 +280,6 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				expectedFiles.Add ($"base/lib/{abi}/libmonodroid.so");
-				expectedFiles.Add ($"base/lib/{abi}/libmonosgen-2.0.so");
 				expectedFiles.Add ($"base/lib/{abi}/libxamarin-app.so");
 				if (usesAssemblyBlobs) {
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_System.Private.CoreLib.dll.so");

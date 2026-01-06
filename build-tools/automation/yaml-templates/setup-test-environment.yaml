@@ -13,80 +13,35 @@ parameters:
   repositoryAlias: 'self'
   commit: ''
   xaprepareScenario: AndroidTestDependencies        # Use 'EmulatorTestDependencies' for agents that need the emulator installed
+  use1ESTemplate: true
 
 steps:
-- template: sdk-unified/steps/checkout/v1.yml@yaml-templates
-  parameters:
-    resource: ${{ parameters.repositoryAlias }}
-    commit: ${{ parameters.commit }}
+- ${{ if eq(parameters.use1ESTemplate, true) }}:
+  - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
+    parameters:
+      resource: ${{ parameters.repositoryAlias }}
+      commit: ${{ parameters.commit }}
+      clean: true
+      submodules: recursive
+- ${{ if ne(parameters.use1ESTemplate, true) }}:
+  - checkout: ${{ parameters.repositoryAlias }}
+    ${{ if ne(parameters.commit, '') }}:
+      ref: ${{ parameters.commit }}
     clean: true
     submodules: recursive
 
-- template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml
+- template: /build-tools/automation/yaml-templates/setup-test-environment-steps.yaml
   parameters:
+    configuration: ${{ parameters.configuration }}
+    xaSourcePath: ${{ parameters.xaSourcePath }}
     jdkMajorVersion: ${{ parameters.jdkMajorVersion }}
     useAgentJdkPath: ${{ parameters.useAgentJdkPath }}
-
-# Install latest .NET
-- template: /build-tools/automation/yaml-templates/use-dot-net.yaml
-  parameters:
-    version: ${{ parameters.dotnetVersion }}
-    quality: ${{ parameters.dotnetQuality }}
     remove_dotnet: ${{ parameters.remove_dotnet }}
-
-- task: DotNetCoreCLI@2
-  displayName: shut down existing build daemons
-  inputs:
-    command: custom
-    custom: build-server
-    arguments: shutdown
-
-- ${{ if eq(parameters.updateMono, true) }}:
-  - template: /build-tools/automation/yaml-templates/run-xaprepare.yaml
-    parameters:
-      displayName: run xaprepare-UpdateMono
-      arguments: --s=UpdateMono --auto-provision=yes --auto-provision-uses-sudo=yes
-      condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
-      xaSourcePath: ${{ parameters.xaSourcePath }}
-
-- template: /build-tools/automation/yaml-templates/run-xaprepare.yaml
-  parameters:
-    arguments: --s=${{ parameters.xaprepareScenario }}  --android-sdk-platforms="${{ parameters.androidSdkPlatforms }}"
-    xaSourcePath: ${{ parameters.xaSourcePath }}
-
-- task: DotNetCoreCLI@2
-  displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
-  inputs:
-    projects: ${{ parameters.xaSourcePath }}/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-    arguments: -c ${{ parameters.configuration }} -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/BootstrapTasks.binlog
-
-# Download and install .NET nupkgs
-- task: DownloadPipelineArtifact@2
-  inputs:
-    artifactName: $(NuGetArtifactName)
-    downloadPath: ${{ parameters.xaSourcePath }}/bin/Build${{ parameters.configuration }}/nuget-unsigned
-
-- task: DownloadPipelineArtifact@2
-  inputs:
-    artifactName: $(LinuxNuGetArtifactName)
-    downloadPath: ${{ parameters.xaSourcePath }}/bin/Build${{ parameters.configuration }}/nuget-unsigned
-  condition: and(succeeded(), eq(variables['agent.os'], 'Linux'))
-
-- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
-  parameters:
-    displayName: extract workload packs
-    xaSourcePath: ${{ parameters.xaSourcePath }}
-    project: ${{ parameters.xaSourcePath }}/build-tools/create-packs/Microsoft.Android.Sdk.proj
-    arguments: -t:ExtractWorkloadPacks -c ${{ parameters.configuration }} -v:n -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/extract-workloads.binlog
-
-- ${{ if eq(parameters.installApkDiff, true) }}:
-  - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml
-    parameters:
-      toolName: apkdiff
-      version: $(ApkDiffToolVersion)
-
-- ${{ if eq(parameters.installTestSlicer, true) }}:
-  - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml
-    parameters:
-      toolName: dotnet-test-slicer
-      version: $(TestSlicerToolVersion)
+    dotnetVersion: ${{ parameters.dotnetVersion }}
+    dotnetQuality: ${{ parameters.dotnetQuality }}
+    installTestSlicer: ${{ parameters.installTestSlicer }}
+    installApkDiff: ${{ parameters.installApkDiff }}
+    updateMono: ${{ parameters.updateMono }}
+    androidSdkPlatforms: ${{ parameters.androidSdkPlatforms }}
+    xaprepareScenario: ${{ parameters.xaprepareScenario }}
+    use1ESTemplate: ${{ parameters.use1ESTemplate }}

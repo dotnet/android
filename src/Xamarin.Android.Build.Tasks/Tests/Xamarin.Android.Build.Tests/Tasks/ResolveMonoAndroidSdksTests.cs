@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -40,9 +41,17 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void NormalInputs ()
+		public void NormalInputs ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("MonoAndroidToolsDirectory", "xat");
 			proj.SetProperty ("_JavaSdkDirectory", "jdk");
 			proj.SetProperty ("_AndroidSdkDirectory", "sdk");
@@ -63,9 +72,17 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void MissingAndroidNDK ()
+		public void MissingAndroidNDK ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("MonoAndroidToolsDirectory", "xat");
 			proj.SetProperty ("_JavaSdkDirectory", "jdk");
 			proj.SetProperty ("_AndroidSdkDirectory", "sdk");
@@ -86,9 +103,16 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void HasTrailingSlash ()
+		public void HasTrailingSlash ([Values] AndroidRuntime runtime)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
 			proj.SetProperty ("MonoAndroidToolsDirectory", $"xat{Path.DirectorySeparatorChar}");
 			proj.SetProperty ("_JavaSdkDirectory", $"jdk{Path.DirectorySeparatorChar}");
 			proj.SetProperty ("_AndroidSdkDirectory", $"sdk{Path.DirectorySeparatorChar}");

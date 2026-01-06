@@ -17,16 +17,20 @@
     <GenerateDependencyFile Condition=" '$(GenerateDependencyFile)' == '' ">false</GenerateDependencyFile>
     <CopyLocalLockFileAssemblies Condition=" '$(CopyLocalLockFileAssemblies)' == '' ">false</CopyLocalLockFileAssemblies>
     <ComputeNETCoreBuildOutputFiles Condition=" '$(ComputeNETCoreBuildOutputFiles)' == '' ">false</ComputeNETCoreBuildOutputFiles>
+    <_AndroidFastDeploymentSupported Condition=" Exists ('$(MSBuildThisFileDirectory)../tools/Xamarin.Android.Common.Debugging.targets') ">true</_AndroidFastDeploymentSupported>
+    <_AndroidFastDeploymentSupported Condition=" '$(_AndroidFastDeploymentSupported)' == '' ">False</_AndroidFastDeploymentSupported>
+
+    <!-- TODO: remove when we have debugger support for CoreCLR -->
+    <UseMonoRuntime Condition=" '$(UseMonoRuntime)' == '' and '$(Configuration)' == 'Debug' ">true</UseMonoRuntime>
+
     <!--
       Disable @(Content) from referenced projects
       See: https://github.com/dotnet/sdk/blob/955c0fc7b06e2fa34bacd076ed39f61e4fb61716/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Publish.targets#L16
     -->
     <_GetChildProjectCopyToPublishDirectoryItems>false</_GetChildProjectCopyToPublishDirectoryItems>
-    <UseMonoRuntime Condition=" '$(PublishAot)' == 'true' and '$(UseMonoRuntime)' == '' ">false</UseMonoRuntime>
-    <UseMonoRuntime Condition=" '$(UseMonoRuntime)' == '' ">true</UseMonoRuntime>
-    <_AndroidRuntime Condition=" '$(PublishAot)' == 'true' and '$(UseMonoRuntime)' != 'true' ">NativeAOT</_AndroidRuntime>
-    <_AndroidRuntime Condition=" '$(PublishAot)' != 'true' and '$(UseMonoRuntime)' != 'true' ">CoreCLR</_AndroidRuntime>
-    <_AndroidRuntime Condition=" '$(_AndroidRuntime)' == '' ">MonoVM</_AndroidRuntime>
+    <_AndroidRuntime Condition=" '$(PublishAot)' == 'true' ">NativeAOT</_AndroidRuntime>
+    <_AndroidRuntime Condition=" '$(PublishAot)' != 'true' and '$(UseMonoRuntime)' == 'true' ">MonoVM</_AndroidRuntime>
+    <_AndroidRuntime Condition=" '$(_AndroidRuntime)' == '' ">CoreCLR</_AndroidRuntime>
     <PublishAotUsingRuntimePack Condition=" '$(PublishAotUsingRuntimePack)' == '' and '$(_AndroidRuntime)' == 'NativeAOT' ">true</PublishAotUsingRuntimePack>
 
     <!-- Use $(AndroidMinimumSupportedApiLevel) for $(SupportedOSPlatformVersion) if unset -->

@@ -35,6 +35,7 @@ namespace Android.Runtime
 			public bool            marshalMethodsEnabled;
 			public IntPtr          grefGCUserPeerable;
 			public bool            managedMarshalMethodsLookupEnabled;
+			public IntPtr          propagateUncaughtExceptionFn;
 		}
 #pragma warning restore 0649
 
@@ -48,6 +49,12 @@ namespace Android.Runtime
 		internal static IntPtr java_class_loader;
 
 		internal static JniRuntime? androidRuntime;
+
+		[UnmanagedCallersOnly]
+		static void PropagateUncaughtException (IntPtr env, IntPtr javaThread, IntPtr javaException)
+		{
+			JNIEnv.PropagateUncaughtException (env, javaThread, javaException);
+		}
 
 		[UnmanagedCallersOnly]
 		static unsafe void RegisterJniNatives (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
@@ -86,9 +93,17 @@ namespace Android.Runtime
 			}
 		}
 
+		// This is needed to initialize e.g. logging before anything else (useful with e.g. gref
+		// logging where runtime creation causes several grefs to be created and logged without
+		// stack traces because logging categories on the managed side aren't yet set)
+		internal static void InitializeJniRuntimeEarly (JnienvInitializeArgs args)
+		{
+			Logger.SetLogCategories ((LogCategories)args.logCategories);
+		}
+
 		// NOTE: should have different name than `Initialize` to avoid:
 		// * Assertion at /__w/1/s/src/mono/mono/metadata/icall.c:6258, condition `!only_unmanaged_callers_only' not met
-		internal static void InitializeJniRuntime (JniRuntime runtime)
+		internal static void InitializeJniRuntime (JniRuntime runtime, JnienvInitializeArgs args)
 		{
 			androidRuntime = runtime;
 			SetSynchronizationContext ();
@@ -148,6 +163,8 @@ namespace Android.Runtime
 				delegate* unmanaged <int, int, int, IntPtr*, void> getFunctionPointer = &ManagedMarshalMethodsLookupTable.GetFunctionPointer;
 				xamarin_app_init (args->env, getFunctionPointer);
 			}
+
+			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
 
 			SetSynchronizationContext ();
 		}

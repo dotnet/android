@@ -9,11 +9,11 @@ using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestFixtureSource (nameof (Get_ConstructorParameters))]
 	[Category ("UsesDevice")]
 	public class BundleToolNoAbiSplitTests : DeviceTest
 	{
-		static readonly string [] Abis = new [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
+		static readonly string [] Abis = ["arm64-v8a", "x86_64"];
 
 		XamarinAndroidApplicationProject app;
 		ProjectBuilder appBuilder;
@@ -34,6 +34,17 @@ namespace Xamarin.Android.Build.Tests
       }
     }
 }";
+		readonly AndroidRuntime runtime;
+
+		static Array Get_ConstructorParameters ()
+		{
+			return Enum.GetValues (typeof (AndroidRuntime));
+		}
+
+		public BundleToolNoAbiSplitTests (AndroidRuntime runtime)
+		{
+			this.runtime = runtime;
+		}
 
 		AndroidItem.AndroidAsset MakeAndroidAsset (string include, string content, string? assetPack = null, string? deliveryType = null)
 		{
@@ -62,6 +73,7 @@ namespace Xamarin.Android.Build.Tests
 				AotAssemblies = false, // Release defaults to Profiled AOT for .NET 6
 				PackageName = "com.xamarin.bundletoolnoabisplittests",
 			};
+			app.SetRuntime (runtime);
 			app.OtherBuildItems.Add (
 				MakeAndroidAsset (
 					include: "Assets\\Textures\\asset1.txt",
@@ -119,12 +131,22 @@ namespace Xamarin.Android.Build.Tests
                         List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (
                                 objPath,
                                 String.Join (";", Abis),
-                                true
+                                true,
+				runtime
                         );
-                        EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
 
-			Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
-                        Assert.AreEqual (app_config.ignore_split_configs, true, $"App config should indicate that split configs must be ignored");
+			if (runtime != AndroidRuntime.NativeAOT) { // NAOT doesn't have ApplicationConfig
+				EnvironmentHelper.IApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles, runtime);
+
+				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
+
+				bool ignoreSplitConfigs = runtime switch {
+					AndroidRuntime.MonoVM  => ((EnvironmentHelper.ApplicationConfig_MonoVM)app_config).ignore_split_configs,
+					AndroidRuntime.CoreCLR => ((EnvironmentHelper.ApplicationConfig_CoreCLR)app_config).ignore_split_configs,
+					_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
+				};
+				Assert.AreEqual (ignoreSplitConfigs, true, $"App config should indicate that split configs must be ignored");
+			}
 		}
 
 		[TearDown]
@@ -146,6 +168,18 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void InstallAndRun ()
 		{
+			// TODO: fix under NativeAOT. Currently fails with an exception at run time:
+			//
+			// FATAL UNHANDLED EXCEPTION: System.InvalidCastException: Unable to convert instance of type 'AndroidX.AppCompat.Widget.AppCompatImageButton' to type 'AndroidX.AppCompat.Widget.Toolbar'.
+			//    at Java.Interop.JavaObjectExtensions._JavaCast[TResult](IJavaObject) + 0x165
+			//    at Android.Runtime.Extensions.JavaCast[TResult](IJavaObject) + 0x10
+			//    at Xamarin.Forms.Platform.Android.FormsAppCompatActivity.OnCreate(Bundle, ActivationFlags) + 0x601
+			//    at UnnamedProject.MainActivity.OnCreate(Bundle savedInstanceState) + 0x3c
+			//    at Android.App.Activity.n_OnCreate_Landroid_os_Bundle_(IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState) + 0x72
+			//
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT crashes with an InvalidCastException exception");
+			}
 			Assert.IsTrue (appBuilder.Install (app), "Install should have succeeded.");
 			RunProjectAndAssert (app, appBuilder);
 			Assert.True (

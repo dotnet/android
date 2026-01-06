@@ -43,7 +43,7 @@ public class CollectRuntimeConfigFilesForArchive : AndroidTask
 		// ABI-specific data+code.
 		if (!RuntimeConfigBinFilePath.IsNullOrEmpty () && File.Exists (RuntimeConfigBinFilePath)) {
 			foreach (var abi in SupportedAbis) {
-				// Prefix it with `a` because bundletool sorts entries alphabetically, and this will place it right next to `assemblies.*.blob.so`, which is what we
+				// Prefix it with `a` because bundletool sorts entries alphabetically, and this will place it right next to `assembly-store.so`, which is what we
 				// like since we can finish scanning the zip central directory earlier at startup.
 				var inArchivePath = MakeArchiveLibPath (abi, "libarc.bin.so");
 				var wrappedSourcePath = DSOWrapperGenerator.WrapIt (Log, dsoWrapperConfig, MonoAndroidHelper.AbiToTargetArch (abi), RuntimeConfigBinFilePath, Path.GetFileName (inArchivePath));

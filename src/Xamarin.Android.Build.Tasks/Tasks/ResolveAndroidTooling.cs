@@ -81,7 +81,11 @@ namespace Xamarin.Android.Tasks
 		{
 			// This should be 31.0, 32.0, etc.
 			if (Version.TryParse (TargetPlatformVersion, out Version v)) {
-				AndroidApiLevel = v.Major.ToString ();
+				if (v.Minor == 0) {
+					AndroidApiLevel = v.Major.ToString (CultureInfo.InvariantCulture);
+				} else {
+					AndroidApiLevel = v.ToString ();
+				}
 			} else {
 				AndroidApiLevel = GetMaxStableApiLevel ().ToString ();
 			}

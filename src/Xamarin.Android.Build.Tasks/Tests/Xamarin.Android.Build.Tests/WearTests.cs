@@ -1,5 +1,6 @@
 using System.IO;
 using NUnit.Framework;
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -8,24 +9,36 @@ namespace Xamarin.Android.Build.Tests
 	public class WearTests : BaseTest
 	{
 		[Test]
-		public void BasicProject ([Values (true, false)] bool isRelease)
+		public void BasicProject ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidWearApplicationProject {
 				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
 
 		[Test]
-		public void BundledWearApp ()
+		public void BundledWearApp ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				ProjectName = "MyApp",
 				EmbedAssembliesIntoApk = true,
 			};
+			app.SetRuntime (runtime);
+
 			var wear = new XamarinAndroidWearApplicationProject {
 				EmbedAssembliesIntoApk = true,
 			};
@@ -43,10 +56,15 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void WearProjectJavaBuildFailure ()
+		public void WearProjectJavaBuildFailure ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 				EnableDefaultItems = true,
 				PackageReferences = {
 					KnownPackages.XamarinAndroidXWear,
@@ -56,6 +74,7 @@ namespace Xamarin.Android.Build.Tests
 				},
 				SupportedOSPlatformVersion = "23",
 			};
+			proj.SetRuntime (runtime);
 			var builder = CreateApkBuilder ();
 			builder.ThrowOnBuildFailure = false;
 			Assert.IsFalse (builder.Build (proj), $"{proj.ProjectName} should fail.");

@@ -70,7 +70,7 @@ This file contains .NET 6+ calls to the <ValidateJavaVersion/> and
   <Target Name="_CheckGoogleSdkRequirements"
       Condition="Exists('$(IntermediateOutputPath)android\AndroidManifest.xml') And '$(AndroidEnableGooglePlayStoreChecks)' == 'true' ">
     <CheckGoogleSdkRequirements
-        ApiLevel="$(_AndroidApiLevel)"
+        AndroidApiLevel="$(_AndroidApiLevel)"
         ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
     />
   </Target>
