@@ -1819,3 +1819,21 @@ This MSBuild property replaces the
 Xamarin.Android. This is the same property used for [Blazor WASM][blazor].
 
 [blazor]: /aspnet/core/blazor/host-and-deploy/webassembly/#ahead-of-time-aot-compilation
+
+## WaitForExit
+
+A boolean property that controls the behavior of `dotnet run` when launching
+Android applications.
+
+When `$(WaitForExit)` not `false` (the default), `dotnet run` will:
+
+* Launch the Android application
+* Stream `logcat` output filtered to the application's process
+* Wait for the application to exit or for the user to press Ctrl+C
+* Force-stop the application when Ctrl+C is pressed
+
+When `$(WaitForExit)` is `false`, `dotnet run` will simply launch the
+application using `adb shell am start` and return immediately without
+waiting for the application to exit or streaming any output.
+
+Introduced in .NET 11.

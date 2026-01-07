@@ -2,6 +2,7 @@
 
   <!-- NuGet Package Versions -->
   <ItemGroup>
+    <PackageReference Update="Microsoft.SourceLink.GitHub"                  Version="8.0.0" />
     <PackageReference Update="Microsoft.Win32.Registry"                     Version="5.0.0" />
     <PackageReference Update="System.CodeDom"                               Version="9.0.8" />
     <PackageReference Update="Irony"                                        Version="1.1.0" />
