@@ -22,7 +22,11 @@ This file contains targets specific for Android application projects.
       Install;
       StartAndroidActivity;
     </_RunDependsOn>
-    <_AndroidComputeRunArgumentsDependsOn>
+    <_AndroidComputeRunArgumentsDependsOn Condition=" '$(_AndroidComputeRunArgumentsDependsOn)' == '' and $([MSBuild]::VersionGreaterThanOrEquals($(NetCoreSdkVersion), 10.0.300)) ">
+      _ResolveMonoAndroidSdks;
+      _GetAndroidPackageName;
+    </_AndroidComputeRunArgumentsDependsOn>
+    <_AndroidComputeRunArgumentsDependsOn Condition=" '$(_AndroidComputeRunArgumentsDependsOn)' == '' ">
       Install;
     </_AndroidComputeRunArgumentsDependsOn>
   </PropertyGroup>
