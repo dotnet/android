@@ -22,8 +22,9 @@ This file contains targets specific for Android application projects.
       Install;
       StartAndroidActivity;
     </_RunDependsOn>
-    <_AndroidComputeRunArgumentsDependsOn>
-      Install;
+    <_AndroidComputeRunArgumentsDependsOn Condition=" '$(_AndroidComputeRunArgumentsDependsOn)' == '' ">
+      _ResolveMonoAndroidSdks;
+      _GetAndroidPackageName;
     </_AndroidComputeRunArgumentsDependsOn>
   </PropertyGroup>
 
