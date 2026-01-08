@@ -24,9 +24,21 @@ class RuntimePropertiesParser
 		JsonElement properties = runtimeOptions.GetProperty ("configProperties");
 		var ret = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
 		foreach (JsonProperty prop in properties.EnumerateObject ()) {
-			ret[prop.Name] = prop.Value.GetRawText ();
+			string? value = GetJsonValueAsString (prop.Value);
+			if (value is not null) {
+				ret[prop.Name] = value;
+			}
 		}
 
 		return ret;
 	}
+
+	static string? GetJsonValueAsString (JsonElement element) =>
+		element.ValueKind switch {
+			JsonValueKind.String => element.GetString (),
+			JsonValueKind.True => bool.TrueString,
+			JsonValueKind.False => bool.FalseString,
+			JsonValueKind.Number or JsonValueKind.Object or JsonValueKind.Array => element.GetRawText (),
+			_ => null, // Null or Undefined
+		};
 }
