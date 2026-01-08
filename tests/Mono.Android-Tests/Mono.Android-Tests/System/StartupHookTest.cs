@@ -5,7 +5,6 @@ using NUnit.Framework;
 namespace SystemTests
 {
 	[TestFixture]
-	[Category ("FOO")]
 	public class StartupHookTest
 	{
 		[Test]
