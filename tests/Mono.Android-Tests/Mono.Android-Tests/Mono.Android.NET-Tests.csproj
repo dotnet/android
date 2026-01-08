@@ -31,7 +31,7 @@
         NetworkInterfaces excluded: https://github.com/dotnet/runtime/issues/75155
     -->
     <!-- TODO: https://github.com/dotnet/android/issues/10069 -->
-    <ExcludeCategories Condition=" '$(UseMonoRuntime)' == 'false' ">$(ExcludeCategories):CoreCLRIgnore:SSL:NTLM:RuntimeConfig</ExcludeCategories>
+    <ExcludeCategories Condition=" '$(UseMonoRuntime)' == 'false' ">$(ExcludeCategories):CoreCLRIgnore:SSL:NTLM</ExcludeCategories>
     <!-- TODO: https://github.com/dotnet/android/issues/10079 -->
     <ExcludeCategories Condition=" '$(PublishAot)' == 'true' ">$(ExcludeCategories):NativeAOTIgnore:SSL:NTLM:AndroidClientHandler:Export:NativeTypeMap</ExcludeCategories>
     <!-- FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190 -->
