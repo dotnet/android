@@ -36,8 +36,8 @@ class RuntimePropertiesParser
 	static string? GetJsonValueAsString (JsonElement element) =>
 		element.ValueKind switch {
 			JsonValueKind.String => element.GetString (),
-			JsonValueKind.True => bool.TrueString,
-			JsonValueKind.False => bool.FalseString,
+			JsonValueKind.True => "true",
+			JsonValueKind.False => "false",
 			JsonValueKind.Number or JsonValueKind.Object or JsonValueKind.Array => element.GetRawText (),
 			_ => null, // Null or Undefined
 		};
