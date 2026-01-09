@@ -9,6 +9,8 @@ This file contains the .NET 5-specific targets to customize ILLink
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <UsingTask TaskName="Xamarin.Android.Tasks.CheckForObsoletePreserveAttribute" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+
   <Target Name="_PrepareLinking"
       Condition=" '$(PublishTrimmed)' == 'true' "
       AfterTargets="ComputeResolvedFilesToPublishList"
@@ -39,10 +41,6 @@ This file contains the .NET 5-specific targets to customize ILLink
           Value="$(_ProguardProjectConfiguration)"
       />
       <_TrimmerCustomData Include="SystemIOHashingAssemblyPath" Value="$(_SystemIOHashingAssemblyPath)" />
-      <_TrimmerCustomSteps
-        Include="$(_AndroidLinkerCustomStepAssembly)"
-        BeforeStep="MarkStep"
-        Type="Microsoft.Android.Sdk.ILLink.WarnOnPreserveAttribute" />
 
       <!--
         Used for the <ILLink CustomSteps="@(_TrimmerCustomSteps)" /> value:
@@ -100,6 +98,10 @@ This file contains the .NET 5-specific targets to customize ILLink
       <TrimmerRootDescriptor Include="@(LinkDescription)" />
       <TrimmerRootAssembly Include="Microsoft.Android.Runtime.NativeAOT" Condition=" '$(_AndroidRuntime)' == 'NativeAOT' " RootMode="All" />
     </ItemGroup>
+  </Target>
+
+  <Target Name="_CheckForObsoletePreserveAttribute" BeforeTargets="_RunILLink">
+    <CheckForObsoletePreserveAttribute Assemblies="@(ManagedAssemblyToLink)" />
   </Target>
 
   <Target Name="_FixRootAssembly" AfterTargets="PrepareForILLink">
