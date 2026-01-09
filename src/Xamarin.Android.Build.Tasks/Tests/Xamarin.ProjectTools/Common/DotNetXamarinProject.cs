@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using Microsoft.Build.Construction;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.ProjectTools
 {
@@ -27,7 +28,7 @@ namespace Xamarin.ProjectTools
 			SetProperty ("RootNamespace", () => RootNamespace ?? ProjectName);
 			SetProperty ("AssemblyName", () => AssemblyName ?? ProjectName);
 
-			TargetFramework = "net10.0-android";
+			TargetFramework = $"{XABuildConfig.LatestDotNetTargetFramework}-android";
 			EnableDefaultItems = false;
 			AppendTargetFrameworkToOutputPath = false;
 

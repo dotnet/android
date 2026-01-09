@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <DirectoryBuildPropsImported>true</DirectoryBuildPropsImported>
-    <DotNetTargetFrameworkVersion>10.0</DotNetTargetFrameworkVersion>
+    <DotNetTargetFrameworkVersion>11.0</DotNetTargetFrameworkVersion>
     <DotNetTargetFramework>net$(DotNetTargetFrameworkVersion)</DotNetTargetFramework>
     <DotNetAndroidTargetFramework>$(DotNetTargetFramework)-android</DotNetAndroidTargetFramework>
     <!-- Used for bootstrap, command-line tooling, and desktop NUnit projects -->
-    <DotNetStableTargetFramework>net9.0</DotNetStableTargetFramework>
+    <DotNetStableTargetFramework>net10.0</DotNetStableTargetFramework>
     <TargetFrameworkNETStandard>netstandard2.0</TargetFrameworkNETStandard>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <BuildOutputDirectory>$(MSBuildThisFileDirectory)bin\$(Configuration)\</BuildOutputDirectory>
@@ -27,6 +27,9 @@
     <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
     <!-- Disables the transitive restore of packages like Microsoft.AspNetCore.App.Ref, Microsoft.WindowsDesktop.App.Ref -->
     <DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
+    <!-- Setting TargetsCurrent=true is necessary until we get https://github.com/dotnet/sdk/pull/52031 -->
+    <!-- Ref: https://github.com/dotnet/macios/issues/24418 -->
+    <TargetsCurrent>true</TargetsCurrent>
   </PropertyGroup>
 
   <PropertyGroup>

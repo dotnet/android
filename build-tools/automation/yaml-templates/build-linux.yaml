@@ -62,13 +62,14 @@ stages:
         path: s/android/external/android-platform-support
         persistCredentials: true
 
-      - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
-        workingDirectory: ${{ parameters.xaSourcePath }}
-        displayName: make prepare-external-git-dependencies
-
     - template: /build-tools/automation/yaml-templates/build-linux-steps.yaml
       parameters:
         buildResultArtifactName: ${{ parameters.buildResultArtifactName }}
         xaSourcePath: ${{ parameters.xaSourcePath }}
         nugetArtifactName: ${{ parameters.nugetArtifactName }}
         use1ESTemplate: ${{ parameters.use1ESTemplate }}
+
+    - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
+      - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
+        workingDirectory: ${{ parameters.xaSourcePath }}
+        displayName: make prepare-external-git-dependencies

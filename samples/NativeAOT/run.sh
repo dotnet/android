@@ -1,6 +1,6 @@
 #!/bin/bash -e
 CONFIG=Release
-APK="bin/${CONFIG}/net10.0-android/net.dot.hellonativeaot-Signed.apk"
+APK="bin/${CONFIG}/net11.0-android/net.dot.hellonativeaot-Signed.apk"
 PACKAGE="net.dot.hellonativeaot"
 ACTIVITY="my.MainActivity"
 

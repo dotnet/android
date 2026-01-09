@@ -32,6 +32,9 @@ Otherwise, $(MicrosoftNETCoreAppRefPackageVersion) from eng/Versions.props will 
     <PackageDownload Include="Microsoft.NET.Workload.Emscripten.net7.Manifest-$(DotNetEmscriptenManifestVersionBand)" Version="[$(MicrosoftNETWorkloadEmscriptenPackageVersion)]" />
     <PackageDownload Include="Microsoft.NET.Workload.Emscripten.net8.Manifest-$(DotNetEmscriptenManifestVersionBand)" Version="[$(MicrosoftNETWorkloadEmscriptenPackageVersion)]" />
     <PackageDownload Include="Microsoft.NET.Workload.Emscripten.net9.Manifest-$(DotNetEmscriptenManifestVersionBand)" Version="[$(MicrosoftNETWorkloadEmscriptenPackageVersion)]" />
+    <!-- TODO: doesn't exist yet -->
+    <!-- <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.net10.Manifest-$(DotNetMonoManifestVersionBand)" Version="[$(MicrosoftNETWorkloadMonoToolChainPackageVersion)]" /> -->
+    <!-- <PackageDownload Include="Microsoft.NET.Workload.Emscripten.net10.Manifest-$(DotNetEmscriptenManifestVersionBand)" Version="[$(MicrosoftNETWorkloadEmscriptenPackageVersion)]" /> -->
   </ItemGroup>
 
 </Project>

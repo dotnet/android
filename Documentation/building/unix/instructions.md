@@ -77,7 +77,7 @@ Create a new project with `./dotnet-local.sh new android`:
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0-android</TargetFramework>
+    <TargetFramework>net11.0-android</TargetFramework>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 </Project>
