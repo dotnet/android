@@ -70,6 +70,7 @@
 
   <ItemGroup>
     <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" />
+    <TrimmerRootAssembly Include="StartupHook" RootMode="All" />
     <_AndroidRemapMembers Include="Remaps.xml" />
     <_AndroidRemapMembers Include="IsAssignableFromRemaps.xml" Condition=" '$(_AndroidIsAssignableFromCheck)' == 'false' " />
     <ProguardConfiguration Include="proguard.cfg" />
