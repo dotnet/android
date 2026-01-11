@@ -136,6 +136,7 @@ namespace Xamarin.Android.Tasks
 					sb.AppendLine (entry);
 				}
 			}
+			sb.AppendLine ("--lenientUsesSdkInManifestHandling");
 			sb.AppendLine ("--out");
 			sb.AppendLine (tempFile);
 			File.WriteAllText (responseFile, sb.ToString ());
