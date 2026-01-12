@@ -131,7 +131,6 @@
     <UseSystemResourceKeys Condition="'$(UseSystemResourceKeys)' == '' and '$(PublishTrimmed)' == 'true'">true</UseSystemResourceKeys>
     <Http3Support Condition="'$(Http3Support)' == ''">false</Http3Support>
     <InvariantGlobalization Condition="'$(InvariantGlobalization)' == ''">false</InvariantGlobalization>
-    <StartupHookSupport Condition="'$(StartupHookSupport)' == ''">false</StartupHookSupport>
     <UseSizeOptimizedLinq Condition="'$(UseSizeOptimizedLinq)' == ''">true</UseSizeOptimizedLinq>
     <UseNativeHttpHandler Condition=" $(AndroidHttpClientHandlerType.Contains ('System.Net.Http.SocketsHttpHandler')) And '$(UseNativeHttpHandler)' == '' ">false</UseNativeHttpHandler>
     <UseNativeHttpHandler Condition="'$(UseNativeHttpHandler)' == ''">true</UseNativeHttpHandler>
@@ -156,6 +155,8 @@
   <!-- Trimmer switches that default to OFF in Release mode -->
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' and '$(Optimize)' == 'true' ">
     <DebuggerSupport Condition=" '$(DebuggerSupport)' == '' ">false</DebuggerSupport>
+    <!-- Used for Hot Reload -->
+    <StartupHookSupport Condition=" '$(StartupHookSupport)' == '' ">false</StartupHookSupport>
     <HttpActivityPropagationSupport Condition=" '$(HttpActivityPropagationSupport)' == '' ">false</HttpActivityPropagationSupport>
     <!-- Only set if *not* using $(EnableDiagnostics) -->
     <MetricsSupport Condition=" '$(MetricsSupport)' == '' and '$(AndroidEnableProfiler)' != 'true' ">false</MetricsSupport>
