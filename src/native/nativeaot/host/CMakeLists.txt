@@ -16,6 +16,7 @@ endif()
 
 # Extra source directories
 set(LIBCXX_SOURCE_DIR "${THIRD_PARTY_SOURCE_DIR}/llvm/libcxx/src")
+set(BIONIC_SOURCE_DIR "${THIRD_PARTY_SOURCE_DIR}/bionic")
 set(CXXABI_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../cxx-abi)
 
 # Library directories
@@ -38,6 +39,9 @@ set(XAMARIN_MONODROID_SOURCES
   internal-pinvoke-stubs.cc
 
   ../runtime-base/android-system.cc
+
+  # Bionic sources
+  ${BIONIC_SOURCE_DIR}//cxa_guard.cc
 
   # libc++ sources
   ${LIBCXX_SOURCE_DIR}/verbose_abort.cpp
