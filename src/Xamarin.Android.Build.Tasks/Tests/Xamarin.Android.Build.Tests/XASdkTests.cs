@@ -54,7 +54,7 @@ namespace Xamarin.Android.Build.Tests
 				AddTestData (
 					dotnetVersion: XABuildConfig.PreviousDotNetTargetFramework,
 					platform: "android",
-					apiLevel: new Version (35, 0),
+					apiLevel: new Version (36, 0),
 					runtime: runtime);
 
 				AddTestData (
