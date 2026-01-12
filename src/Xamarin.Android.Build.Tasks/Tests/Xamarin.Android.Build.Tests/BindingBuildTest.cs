@@ -1144,9 +1144,16 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 
 			using var a = CreateDllBuilder ();
 			using var b = CreateDllBuilder ();
+			a.ThrowOnBuildFailure = false;
+			b.ThrowOnBuildFailure = false;
 
-			Assert.IsTrue (a.Build (proj), "ProjectReference build should have succeeded.");
-			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			Assert.IsTrue (a.Build (collection), "ProjectReference project build should have succeeded.");
+			if (!b.Build (proj)) {
+				if (b.LastBuildOutput.ContainsText ("404 (Not Found)")) {
+					Assert.Inconclusive ("Test skipped due to transient Maven repository error (404 Not Found).");
+				}
+				Assert.Fail ("Build should have succeeded.");
+			}
 		}
 	}
 }
