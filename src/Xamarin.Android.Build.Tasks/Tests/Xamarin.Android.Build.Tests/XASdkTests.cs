@@ -52,7 +52,7 @@ namespace Xamarin.Android.Build.Tests
 
 			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
 				AddTestData (
-					dotnetVersion: "net9.0",
+					dotnetVersion: XABuildConfig.PreviousDotNetTargetFramework,
 					platform: "android",
 					apiLevel: new Version (35, 0),
 					runtime: runtime);
