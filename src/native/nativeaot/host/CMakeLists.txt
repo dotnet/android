@@ -40,7 +40,6 @@ set(XAMARIN_MONODROID_SOURCES
   ../runtime-base/android-system.cc
 
   # libc++ sources
-  ${LIBCXX_SOURCE_DIR}/thread.cpp
   ${LIBCXX_SOURCE_DIR}/verbose_abort.cpp
 
   # C++ ABI sources
