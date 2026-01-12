@@ -14,6 +14,10 @@ if(DEBUG_BUILD)
   set(CMAKE_CXX_FLAGS_DEBUG ${XA_COMPILER_FLAGS_DEBUG})
 endif()
 
+# Extra source directories
+set(LIBCXX_SOURCE_DIR "${THIRD_PARTY_SOURCE_DIR}/llvm/libcxx/src")
+set(CXXABI_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../cxx-abi)
+
 # Library directories
 set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/lib/${ANDROID_RID}")
 
@@ -34,6 +38,15 @@ set(XAMARIN_MONODROID_SOURCES
   internal-pinvoke-stubs.cc
 
   ../runtime-base/android-system.cc
+
+  # libc++ sources
+  ${LIBCXX_SOURCE_DIR}/thread.cpp
+  ${LIBCXX_SOURCE_DIR}/verbose_abort.cpp
+
+  # C++ ABI sources
+  ${CXXABI_SOURCE_DIR}/new.cc
+  ${CXXABI_SOURCE_DIR}/string.cc
+  ${CXXABI_SOURCE_DIR}/terminate.cc
 
   # Sources from CoreCLR host
   ${CLR_SOURCES_PATH}/host/bridge-processing.cc
