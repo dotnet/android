@@ -39,6 +39,7 @@
       Outputs="@(_TemplatesOutputs)">
     <ItemGroup>
       <_PackProps Include="-v:n -c $(Configuration)" />
+      <_PackProps Condition=" '$(LocalizeTemplates)' != '' " Include="-p:LocalizeTemplates=$(LocalizeTemplates)" />
       <_PackProps Include="-p:IncludeSymbols=False" />
       <_PackProps Include="-p:OutputPath=$(BuildOutputDirectory)lib\template-packs" />
       <_PackProps Include="-p:TemplatePackVersion=$(AndroidPackVersion)" />

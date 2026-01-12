@@ -15,6 +15,7 @@ PREPARE_SCENARIO =
 PREPARE_CI_PR ?= 0
 PREPARE_CI ?= 0
 PREPARE_AUTOPROVISION ?= 0
+LOCALIZE_TEMPLATES ?= 0
 
 _PREPARE_CI_MODE_PR_ARGS = --no-emoji --run-mode=CI
 _PREPARE_CI_MODE_ARGS = $(_PREPARE_CI_MODE_PR_ARGS) -a
@@ -22,7 +23,7 @@ _PREPARE_ARGS =
 
 all:
 	$(call DOTNET_BINLOG,all) $(MSBUILD_FLAGS) $(SOLUTION)
-	$(call DOTNET_BINLOG,setup-workload) -t:ConfigureLocalWorkload build-tools/create-packs/Microsoft.Android.Sdk.proj
+	$(call DOTNET_BINLOG,setup-workload) $(MSBUILD_FLAGS) -t:ConfigureLocalWorkload build-tools/create-packs/Microsoft.Android.Sdk.proj
 
 
 ifeq ($(OS_NAME),)
@@ -72,6 +73,10 @@ include build-tools/scripts/msbuild.mk
 ifeq ($(USE_MSBUILD),1)
 _SLN_BUILD  = $(MSBUILD)
 endif   # $(USE_MSBUILD) == 1
+
+ifneq ($(LOCALIZE_TEMPLATES),0)
+MSBUILD_FLAGS += -p:LocalizeTemplates=true
+endif
 
 ifneq ($(API_LEVEL),)
 MSBUILD_FLAGS += /p:AndroidApiLevel=$(API_LEVEL) /p:AndroidFrameworkVersion=$(word $(API_LEVEL), $(ALL_FRAMEWORKS)) /p:AndroidPlatformId=$(word $(a), $(ALL_PLATFORM_IDS))

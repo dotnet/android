@@ -8,8 +8,9 @@
     <Description>Templates for Android platforms.</Description>
     <IncludeContentInPack>true</IncludeContentInPack>
     <IncludeBuildOutput>false</IncludeBuildOutput>
-    <!-- Only localize templates on CI builds to avoid verbose template localizer output during local development -->
-    <LocalizeTemplates Condition=" '$(RunningOnCI)' == 'true' ">true</LocalizeTemplates>
+    <!-- Only localize templates on demand avoid verbose template localizer output during local development -->
+    <!-- Set this property to `true` on command line, or uncomment it below, to enable localization -->
+    <!-- LocalizeTemplates>true</LocalizeTemplates -->
     <ContentTargetFolders>content</ContentTargetFolders>
     <OutputPath>..\..\bin\Build$(Configuration)\nuget-unsigned\</OutputPath>
     <!-- Remove the `<group targetFramework=".NETStandard2.0" />` entry from the .nuspec. -->
@@ -25,7 +26,7 @@
     <Compile Remove="**\*" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(RunningOnCI)' == 'true' ">
+  <ItemGroup Condition=" '$(LocalizeTemplates)' == 'true' ">
     <PackageReference Include="Microsoft.TemplateEngine.Authoring.Tasks" Version="$(MicrosoftTemplateEngineAuthoringTasksPackageVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
   </ItemGroup>
 
