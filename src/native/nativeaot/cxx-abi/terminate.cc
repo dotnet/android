@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include <android/log.h>
 
-#include "helpers.hh"
+#include <shared/helpers.hh>
 
 namespace std {
        [[noreturn]] void
