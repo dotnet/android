@@ -118,6 +118,7 @@
           Inputs="@(_ConfigureRuntimesInputs)"
           Outputs="@(_ConfigureRuntimesOutputs)">
     <PropertyGroup>
+      <_PresetPrefix Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">nativeaot-</_PresetPrefix>
       <_NoInline Condition=" '$(DoNotInlineMonodroid)' == 'true' ">-DDONT_INLINE=ON</_NoInline>
       <_NoStrip Condition=" '$(DoNotStripMonodroid)' == 'true' ">-DSTRIP_DEBUG=OFF</_NoStrip>
       <_LocalDotNetRuntimePath Condition=" '$(CLRLocalRuntimePath)' != '' And '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">-DLOCAL_CORECLR_PATH="$(CLRLocalRuntimePath)"</_LocalDotNetRuntimePath>
@@ -128,13 +129,13 @@
     <ItemGroup>
       <_ConfigureRuntimeCommands Include="@(AndroidSupportedTargetJitAbi)">
         <Command>$(CmakePath)</Command>
-        <Arguments>--preset default-debug-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
+        <Arguments>--preset $(_PresetPrefix)default-debug-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
         <WorkingDirectory>$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Debug</WorkingDirectory>
       </_ConfigureRuntimeCommands>
 
       <_ConfigureRuntimeCommands Include="@(AndroidSupportedTargetJitAbi)">
         <Command>$(CmakePath)</Command>
-        <Arguments>--preset default-release-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
+        <Arguments>--preset $(_PresetPrefix)default-release-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
         <WorkingDirectory>$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Release</WorkingDirectory>
       </_ConfigureRuntimeCommands>
     </ItemGroup>
@@ -142,25 +143,25 @@
     <ItemGroup Condition=" '$(EnableNativeAnalyzers)' == 'true' And '$(CMakeRuntimeFlavor)' == 'MonoVM' " >
       <_ConfigureRuntimeCommands Include="@(AndroidSupportedTargetJitAbi)">
         <Command>$(CmakePath)</Command>
-        <Arguments>--preset asan-debug-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
+        <Arguments>--preset $(_PresetPrefix)asan-debug-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
         <WorkingDirectory>$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-asan-Debug</WorkingDirectory>
       </_ConfigureRuntimeCommands>
 
       <_ConfigureRuntimeCommands Include="@(AndroidSupportedTargetJitAbi)">
         <Command>$(CmakePath)</Command>
-        <Arguments>--preset asan-release-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
+        <Arguments>--preset $(_PresetPrefix)asan-release-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
         <WorkingDirectory>$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-asan-Release</WorkingDirectory>
       </_ConfigureRuntimeCommands>
 
       <_ConfigureRuntimeCommands Include="@(AndroidSupportedTargetJitAbi)">
         <Command>$(CmakePath)</Command>
-        <Arguments>--preset ubsan-debug-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
+        <Arguments>--preset $(_PresetPrefix)ubsan-debug-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
         <WorkingDirectory>$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-ubsan-Debug</WorkingDirectory>
       </_ConfigureRuntimeCommands>
 
       <_ConfigureRuntimeCommands Include="@(AndroidSupportedTargetJitAbi)">
         <Command>$(CmakePath)</Command>
-        <Arguments>--preset ubsan-release-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
+        <Arguments>--preset $(_PresetPrefix)ubsan-release-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
         <WorkingDirectory>$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-ubsan-Release</WorkingDirectory>
       </_ConfigureRuntimeCommands>
     </ItemGroup>

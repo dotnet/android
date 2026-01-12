@@ -155,7 +155,15 @@ include(CheckLinkerFlag)
 #
 # General config
 #
+file(REAL_PATH "../../" REPO_ROOT_DIR)
+set(EXTERNAL_DIR "${REPO_ROOT_DIR}/external")
+set(JAVA_INTEROP_SRC_PATH "${EXTERNAL_DIR}/Java.Interop/src/java-interop")
+set(LIBUNWIND_SOURCE_DIR "${EXTERNAL_DIR}/libunwind")
+set(ROBIN_MAP_DIR "${EXTERNAL_DIR}/robin-map")
+
 set(XA_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../bin/Build${XA_BUILD_CONFIGURATION}")
+set(THIRD_PARTY_SOURCE_DIR "${REPO_ROOT_DIR}/src-ThirdParty")
+
 include("${XA_BUILD_DIR}/xa_build_configuration.cmake")
 
 #
@@ -221,13 +229,6 @@ else()
   message(FATAL "${ANDROID_ABI} is not supported for .NET 6+ builds")
 endif()
 
-
-file(REAL_PATH "../../" REPO_ROOT_DIR)
-set(EXTERNAL_DIR "${REPO_ROOT_DIR}/external")
-set(JAVA_INTEROP_SRC_PATH "${EXTERNAL_DIR}/Java.Interop/src/java-interop")
-set(LIBUNWIND_SOURCE_DIR "${EXTERNAL_DIR}/libunwind")
-set(ROBIN_MAP_DIR "${EXTERNAL_DIR}/robin-map")
-
 #
 # Include directories
 #
@@ -243,7 +244,7 @@ else()
     set(CLR_REPO_ROOT_PATH "${LOCAL_CORECLR_PATH}/../..")
     set(RUNTIME_INCLUDE_DIR "${CLR_REPO_ROOT_PATH}/src/native/corehost;${CLR_REPO_ROOT_PATH}/src/coreclr/hosts/inc")
   else()
-    set(RUNTIME_INCLUDE_DIR ${REPO_ROOT_DIR}/src-ThirdParty/dotnet/runtime)
+    set(RUNTIME_INCLUDE_DIR ${THIRD_PARTY_SOURCE_DIR}/dotnet/runtime)
   endif()
 endif()
 
