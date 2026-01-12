@@ -10,7 +10,7 @@
 
   <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '10.0')) ">
     <KnownFrameworkReference
-        Update="Microsoft.Android"
+        Update="Microsoft.Android;Microsoft.Android.Runtimes"
         LatestRuntimeFrameworkVersion="@NET_PREVIOUS_VERSION@"
         TargetingPackVersion="@NET_PREVIOUS_VERSION@"
     />
