@@ -575,7 +575,7 @@ download the incorrect manifest pack.
 
 Note that this will not provision the `maui-ios`, `maui-maccatalyst`,
 or `maui-windows` parts of .NET MAUI. Simply specify a single
-`<TargetFramework>net9.0-android</TargetFramework>` in MAUI projects
+`<TargetFramework>net11.0-android</TargetFramework>` in MAUI projects
 to build them.
 
 [maui-feed]: https://dev.azure.com/dnceng/public/_packaging?_a=feed&feed=dotnet6%40Local
