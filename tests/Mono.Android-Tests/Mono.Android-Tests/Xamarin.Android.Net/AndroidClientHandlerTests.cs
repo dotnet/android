@@ -120,7 +120,10 @@ namespace Xamarin.Android.NetTests {
 			if (IgnoreIfConnectionFailed (aex.InnerException as HttpRequestException, out connectionFailed))
 				return true;
 
-			return IgnoreIfConnectionFailed (aex.InnerException as WebException, out connectionFailed);
+			if (IgnoreIfConnectionFailed (aex.InnerException as WebException, out connectionFailed))
+				return true;
+
+			return IgnoreIfSocketException (aex, out connectionFailed);
 		}
 
 		bool IgnoreIfConnectionFailed (HttpRequestException hrex, out bool connectionFailed)
@@ -143,6 +146,26 @@ namespace Xamarin.Android.NetTests {
 					return true;
 			}
 
+			return false;
+		}
+
+		bool IgnoreIfSocketException (Exception ex, out bool connectionFailed)
+		{
+			connectionFailed = false;
+			// Check the exception and all inner exceptions for transient socket errors
+			var current = ex;
+			while (current != null) {
+				if (current is Java.Net.SocketException socketEx) {
+					var message = socketEx.Message ?? "";
+					if (message.Contains ("Broken pipe", StringComparison.OrdinalIgnoreCase) ||
+							message.Contains ("Connection reset", StringComparison.OrdinalIgnoreCase)) {
+						connectionFailed = true;
+						Assert.Ignore ($"Ignoring transient socket error: {socketEx}");
+						return true;
+					}
+				}
+				current = current.InnerException;
+			}
 			return false;
 		}
 	}
