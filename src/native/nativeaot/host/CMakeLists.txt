@@ -47,9 +47,12 @@ set(XAMARIN_MONODROID_SOURCES
   # libc++ sources
   ${LIBCXX_SOURCE_DIR}/condition_variable.cpp
   ${LIBCXX_SOURCE_DIR}/condition_variable_destructor.cpp
+  ${LIBCXX_SOURCE_DIR}/error_category.cpp
+  ${LIBCXX_SOURCE_DIR}/future.cpp
   ${LIBCXX_SOURCE_DIR}/memory.cpp
   ${LIBCXX_SOURCE_DIR}/mutex.cpp
   ${LIBCXX_SOURCE_DIR}/mutex_destructor.cpp
+  ${LIBCXX_SOURCE_DIR}/system_error.cpp
   ${LIBCXX_SOURCE_DIR}/thread.cpp
   ${LIBCXX_SOURCE_DIR}/verbose_abort.cpp
 
@@ -57,7 +60,9 @@ set(XAMARIN_MONODROID_SOURCES
   ${LIBCXXABI_SOURCE_DIR}/stdlib_exception.cpp
 
   # Local versions of C++ ABI sources
+  ${LOCAL_CXXABI_SOURCE_DIR}/cxa_virtual.cc
   ${LOCAL_CXXABI_SOURCE_DIR}/new.cc
+  ${LOCAL_CXXABI_SOURCE_DIR}/no_exceptions.cc
   ${LOCAL_CXXABI_SOURCE_DIR}/stdexcept.cc
   ${LOCAL_CXXABI_SOURCE_DIR}/string.cc
   ${LOCAL_CXXABI_SOURCE_DIR}/system_error.cc
@@ -76,6 +81,18 @@ set(XAMARIN_MONODROID_SOURCES
   ${CLR_SOURCES_PATH}/runtime-base/util.cc
   ${CLR_SOURCES_PATH}/shared/helpers.cc
   ${CLR_SOURCES_PATH}/shared/log_functions.cc
+)
+
+set_source_files_properties (
+  ${LIBCXX_SOURCE_DIR}/exception.cpp
+  PROPERTIES
+  COMPILE_DEFINITIONS "LIBCXXRT"
+)
+
+set_source_files_properties (
+  ${LOCAL_CXXABI_SOURCE_DIR}/stdexcept.cc
+  PROPERTIES
+  INCLUDE_DIRECTORIES "${LIBCXX_SOURCE_DIR}"
 )
 
 list(APPEND LOCAL_CLANG_CHECK_SOURCES

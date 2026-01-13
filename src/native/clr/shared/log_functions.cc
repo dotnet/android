@@ -73,12 +73,26 @@ log_error (LogCategories category, const char *format, ...)
 	DO_LOG (ANDROID_LOG_ERROR, category, format, args);
 }
 
+void log_error_printf (LogCategories category, const char *format, ...) noexcept
+{
+	va_list args;
+
+	DO_LOG (ANDROID_LOG_ERROR, category, format, args);
+}
+
 void
 log_fatal (LogCategories category, const char *format, ...)
 {
 	va_list args;
 
 	DO_LOG (ANDROID_LOG_FATAL, category, format, args);
+}
+
+void log_fatal_printf (LogCategories category, const char *format, ...) noexcept
+{
+	va_list args;
+
+	DO_LOG (ANDROID_LOG_ERROR, category, format, args);
 }
 
 void
@@ -100,6 +114,13 @@ log_warn (LogCategories category, const char *format, ...)
 
 	DO_LOG (ANDROID_LOG_WARN, category, format, args);
 }
+
+// void log_warn_printf (LogCategories category, const char *format, ...) noexcept
+// {
+// 	va_list args;
+
+// 	DO_LOG (ANDROID_LOG_ERROR, category, format, args);
+// }
 
 void
 log_debug_nocheck (LogCategories category, const char *format, ...)

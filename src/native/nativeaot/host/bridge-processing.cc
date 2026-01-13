@@ -1,4 +1,4 @@
-#include <format>
+#include <string>
 
 #include <host/bridge-processing.hh>
 #include <runtime-base/logger.hh>
@@ -24,14 +24,14 @@ void BridgeProcessing::naot_initialize_on_runtime_init (JNIEnv *env) noexcept
 		constexpr auto ABSENT = "absent"sv;
 		constexpr auto PRESENT = "present"sv;
 
-		Helpers::abort_application (
-			LOG_DEFAULT,
-			std::format (
-				"Failed to find GCUserPeerable method(s): jiAddManagedReference ({}); jiClearManagedReferences ({})"sv,
-				GCUserPeerable_jiAddManagedReference == nullptr ? ABSENT : PRESENT,
-				GCUserPeerable_jiClearManagedReferences == nullptr ? ABSENT : PRESENT
-			)
-		);
+		// This is fugly, but more type safe than printf format parsing
+		std::string err_msg { "Failed to find GCUserPeerable method(s): jiAddManagedReference ("sv };
+		err_msg.append (GCUserPeerable_jiAddManagedReference == nullptr ? ABSENT : PRESENT);
+		err_msg.append ("); jiClearManagedReferences ("sv);
+		err_msg.append (GCUserPeerable_jiClearManagedReferences == nullptr ? ABSENT : PRESENT);
+		err_msg.append (")"sv);
+
+		Helpers::abort_application (LOG_DEFAULT, err_msg);
 	}
 }
 

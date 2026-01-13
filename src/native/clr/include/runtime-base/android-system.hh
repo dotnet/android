@@ -91,7 +91,16 @@ namespace xamarin::android {
 				}
 			}
 
-			log_debug (LOG_DEFAULT, "Creating public update directory: `{}`", override_dir);
+			log_debug (
+				LOG_DEFAULT,
+#if defined(XA_HOST_NATIVEAOT)
+				"Creating public update directory: `%s`",
+				override_dir.data ()
+#else
+				"Creating public update directory: `{}`"sv,
+				override_dir
+#endif
+			);
 			Util::create_public_directory (override_dir);
 		}
 

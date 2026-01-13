@@ -88,10 +88,27 @@ namespace xamarin::android {
 			static_local_string<SENSIBLE_PATH_MAX> dir (home_len + relative_path.length ());
 			Util::path_combine (dir, home.get_string_view (), relative_path);
 
-			log_debug (LOG_DEFAULT, "Creating XDG directory: {}"sv, optional_string (dir.get ()));
+			log_debug (
+				LOG_DEFAULT,
+#if defined(XA_HOST_NATIVEAOT)
+				"Creating XDG directory: %s",
+#else
+				"Creating XDG directory: {}"sv,
+#endif
+				optional_string (dir.get ())
+			);
 			int rv = Util::create_directory (dir.get (), Constants::DEFAULT_DIRECTORY_MODE);
 			if (rv < 0 && errno != EEXIST) {
-				log_warn (LOG_DEFAULT, "Failed to create XDG directory {}. {}"sv, optional_string (dir.get ()), strerror (errno));
+				log_warn (
+					LOG_DEFAULT,
+#if defined(XA_HOST_NATIVEAOT)
+					"Failed to create XDG directory %s. %s",
+#else
+					"Failed to create XDG directory {}. {}"sv,
+#endif
+					optional_string (dir.get ()),
+					strerror (errno)
+				);
 			}
 
 			if (!environment_variable_name.empty ()) {
