@@ -16,8 +16,9 @@ endif()
 
 # Extra source directories
 set(LIBCXX_SOURCE_DIR "${THIRD_PARTY_SOURCE_DIR}/llvm/libcxx/src")
+set(LIBCXXABI_SOURCE_DIR "${THIRD_PARTY_SOURCE_DIR}/llvm/libcxxabi/src")
 set(BIONIC_SOURCE_DIR "${THIRD_PARTY_SOURCE_DIR}/bionic")
-set(CXXABI_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../cxx-abi)
+set(LOCAL_CXXABI_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../cxx-abi")
 
 # Library directories
 set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/lib/${ANDROID_RID}")
@@ -44,12 +45,23 @@ set(XAMARIN_MONODROID_SOURCES
   ${BIONIC_SOURCE_DIR}//cxa_guard.cc
 
   # libc++ sources
+  ${LIBCXX_SOURCE_DIR}/condition_variable.cpp
+  ${LIBCXX_SOURCE_DIR}/condition_variable_destructor.cpp
+  ${LIBCXX_SOURCE_DIR}/memory.cpp
+  ${LIBCXX_SOURCE_DIR}/mutex.cpp
+  ${LIBCXX_SOURCE_DIR}/mutex_destructor.cpp
+  ${LIBCXX_SOURCE_DIR}/thread.cpp
   ${LIBCXX_SOURCE_DIR}/verbose_abort.cpp
 
-  # C++ ABI sources
-  ${CXXABI_SOURCE_DIR}/new.cc
-  ${CXXABI_SOURCE_DIR}/string.cc
-  ${CXXABI_SOURCE_DIR}/terminate.cc
+  # libc++abi sources
+  ${LIBCXXABI_SOURCE_DIR}/stdlib_exception.cpp
+
+  # Local versions of C++ ABI sources
+  ${LOCAL_CXXABI_SOURCE_DIR}/new.cc
+  ${LOCAL_CXXABI_SOURCE_DIR}/stdexcept.cc
+  ${LOCAL_CXXABI_SOURCE_DIR}/string.cc
+  ${LOCAL_CXXABI_SOURCE_DIR}/system_error.cc
+  ${LOCAL_CXXABI_SOURCE_DIR}/terminate.cc
 
   # Sources from CoreCLR host
   ${CLR_SOURCES_PATH}/host/bridge-processing.cc
