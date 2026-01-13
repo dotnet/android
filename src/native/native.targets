@@ -40,10 +40,10 @@
       <_ConfigureRuntimesInputs  Include="common\lz4\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="common\runtime-base\CMakeLists.txt" />
 
-      <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-Debug\CMakeCache.txt')" />
+      <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-Debug\CMakeCache.txt')" Condition=" '$(CMakeRuntimeFlavor)' != 'NativeAOT' " />
       <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-Release\CMakeCache.txt')" />
 
-      <_OutputDirsToCreate       Include="$(FlavorIntermediateOutputPath)\%(AndroidSupportedTargetJitAbi.AndroidRID)-Debug" />
+      <_OutputDirsToCreate       Include="$(FlavorIntermediateOutputPath)\%(AndroidSupportedTargetJitAbi.AndroidRID)-Debug" Condition=" '$(CMakeRuntimeFlavor)' != 'NativeAOT' " />
       <_OutputDirsToCreate       Include="$(FlavorIntermediateOutputPath)\%(AndroidSupportedTargetJitAbi.AndroidRID)-Release" />
     </ItemGroup>
 
@@ -127,7 +127,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <_ConfigureRuntimeCommands Include="@(AndroidSupportedTargetJitAbi)">
+      <_ConfigureRuntimeCommands Include="@(AndroidSupportedTargetJitAbi)" Condition=" '$(CMakeRuntimeFlavor)' != 'NativeAOT' ">
         <Command>$(CmakePath)</Command>
         <Arguments>--preset $(_PresetPrefix)default-debug-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
         <WorkingDirectory>$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Debug</WorkingDirectory>
@@ -248,6 +248,7 @@
           Inputs="@(_BuildAndroidRuntimesInputs)"
           Outputs="@(_BuildAndroidRuntimesOutputs)">
     <Exec
+        Condition=" '$(CMakeRuntimeFlavor)' != 'NativeAOT' "
         Command="$(NinjaPath) -v"
         WorkingDirectory="$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Debug" />
 
