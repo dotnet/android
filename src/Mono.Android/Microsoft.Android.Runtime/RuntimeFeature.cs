@@ -9,8 +9,10 @@ static class RuntimeFeature
 	const bool IsMonoRuntimeEnabledByDefault = true;
 	const bool IsCoreClrRuntimeEnabledByDefault = false;
 	const bool IsAssignableFromCheckEnabledByDefault = true;
+	const bool StartupHookSupportEnabledByDefault = true;
 
 	const string FeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
+	const string StartupHookProviderSwitch = "System.StartupHookProvider.IsSupported";
 
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (ManagedTypeMap)}")]
 	internal static bool ManagedTypeMap { get; } =
@@ -27,4 +29,9 @@ static class RuntimeFeature
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (IsAssignableFromCheck)}")]
 	internal static bool IsAssignableFromCheck { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (IsAssignableFromCheck)}", out bool isEnabled) ? isEnabled : IsAssignableFromCheckEnabledByDefault;
+
+	[FeatureSwitchDefinition (StartupHookProviderSwitch)]
+	[FeatureGuard (typeof (RequiresUnreferencedCodeAttribute))]
+	internal static bool StartupHookSupport { get; } =
+		AppContext.TryGetSwitch (StartupHookProviderSwitch, out bool isEnabled) ? isEnabled : StartupHookSupportEnabledByDefault;
 }
