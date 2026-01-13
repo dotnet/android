@@ -111,13 +111,20 @@ This file contains the .NET 5-specific targets to customize ILLink
     <Touch Files="$(_AndroidLinkFlag)" AlwaysCreate="true" />
   </Target>
 
-  <Target Name="_GenerateProguardConfiguration"
+  <Target Name="_PrepareLinkedAssembliesForProguard"
       AfterTargets="ILLink"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' ">
     <ItemGroup>
       <_LinkedAssemblyForProguard Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')"
                                    Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" />
     </ItemGroup>
+  </Target>
+
+  <Target Name="_GenerateProguardConfiguration"
+      AfterTargets="_PrepareLinkedAssembliesForProguard"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
+      Inputs="@(_LinkedAssemblyForProguard)"
+      Outputs="$(_ProguardProjectConfiguration)">
     <GenerateProguardConfiguration
         LinkedAssemblies="@(_LinkedAssemblyForProguard)"
         OutputFile="$(_ProguardProjectConfiguration)" />
