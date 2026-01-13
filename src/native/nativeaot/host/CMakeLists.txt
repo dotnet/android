@@ -84,12 +84,6 @@ set(XAMARIN_MONODROID_SOURCES
 )
 
 set_source_files_properties (
-  ${LIBCXX_SOURCE_DIR}/exception.cpp
-  PROPERTIES
-  COMPILE_DEFINITIONS "LIBCXXRT"
-)
-
-set_source_files_properties (
   ${LOCAL_CXXABI_SOURCE_DIR}/stdexcept.cc
   PROPERTIES
   INCLUDE_DIRECTORIES "${LIBCXX_SOURCE_DIR}"
