@@ -1,5 +1,8 @@
 #include <cstdio>
 #include <stdexcept>
+#include <string>
+
+#include <support/runtime/stdexcept_default.ipp>
 
 #include <shared/helpers.hh>
 
