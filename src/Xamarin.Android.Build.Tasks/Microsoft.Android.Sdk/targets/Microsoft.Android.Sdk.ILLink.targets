@@ -9,6 +9,8 @@ This file contains the .NET 5-specific targets to customize ILLink
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+
   <Target Name="_PrepareLinking"
       Condition=" '$(PublishTrimmed)' == 'true' "
       AfterTargets="ComputeResolvedFilesToPublishList"
@@ -33,11 +35,6 @@ This file contains the .NET 5-specific targets to customize ILLink
         -->
       <_TrimmerCustomData Include="AndroidHttpClientHandlerType" Value="$(AndroidHttpClientHandlerType)" />
       <_TrimmerCustomData Include="AndroidCustomViewMapFile" Value="$(_OuterCustomViewMapFile)" />
-      <_TrimmerCustomData
-          Condition=" '$(_ProguardProjectConfiguration)' != '' "
-          Include="ProguardConfiguration"
-          Value="$(_ProguardProjectConfiguration)"
-      />
       <_TrimmerCustomData Include="SystemIOHashingAssemblyPath" Value="$(_SystemIOHashingAssemblyPath)" />
       <_TrimmerCustomSteps
         Include="$(_AndroidLinkerCustomStepAssembly)"
@@ -57,13 +54,6 @@ This file contains the .NET 5-specific targets to customize ILLink
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="Microsoft.Android.Sdk.ILLink.PreserveRegistrations" />
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="Microsoft.Android.Sdk.ILLink.PreserveJavaInterfaces" />
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="MonoDroid.Tuner.FixAbstractMethodsStep" />
-      <!-- Custom steps that run after MarkStep -->
-      <_TrimmerCustomSteps
-          Condition=" '$(_ProguardProjectConfiguration)' != '' "
-          Include="$(_AndroidLinkerCustomStepAssembly)"
-          AfterStep="CleanStep"
-          Type="Mono.Linker.Steps.GenerateProguardConfiguration"
-      />
       <_TrimmerCustomSteps
           Condition=" '$(AndroidAddKeepAlives)' == 'true' "
           Include="$(_AndroidLinkerCustomStepAssembly)"
@@ -119,6 +109,18 @@ This file contains the .NET 5-specific targets to customize ILLink
       Outputs="$(_AndroidLinkFlag)">
     <!-- This file is an input for _RemoveRegisterAttribute -->
     <Touch Files="$(_AndroidLinkFlag)" AlwaysCreate="true" />
+  </Target>
+
+  <Target Name="_GenerateProguardConfiguration"
+      AfterTargets="ILLink"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' ">
+    <ItemGroup>
+      <_LinkedAssemblyForProguard Include="@(ManagedAssemblyToLink->'$(IntermediateLinkDir)%(Filename)%(Extension)')"
+                                   Condition="Exists('$(IntermediateLinkDir)%(Filename)%(Extension)')" />
+    </ItemGroup>
+    <GenerateProguardConfiguration
+        LinkedAssemblies="@(_LinkedAssemblyForProguard)"
+        OutputFile="$(_ProguardProjectConfiguration)" />
   </Target>
 
 </Project>
