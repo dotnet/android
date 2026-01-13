@@ -39,12 +39,22 @@ so when adding a new message, follow these steps:
 
  6. The [OneLocBuild][oneloc] task will manage handoff and handback for string translations.
 
-### Templates
+## Templates
 
 All updates to `src/Microsoft.Android.Templates` should be built locally to update the
 `templatestrings.*.json` used for localization.  The [OneLocBuild][oneloc] task
 will manage handoff and handback for string translations after the
 `templatestrings.*.json` changes are committed.
+
+Templates localization files are *NOT* rebuilt by default. In order to rebuild them it is
+necessary to build the templates project in one of the following ways:
+
+   * On Unix systems run `make LOCALIZE_TEMPLATES=true prepare all` (the `prepare` parameter
+     can be omitted if it was ran previously)
+   * On all systems run `dotnet-local.sh -p:LocalizeTemplates=true -t:ConfigureLocalWorkload build-tools/create-packs/Microsoft.Android.Sdk.proj`
+
+This will generate all the changed localization files, which then need to be comitted and pushed
+to the repository.
 
 ## Guidelines
 
