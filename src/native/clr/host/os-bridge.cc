@@ -95,7 +95,16 @@ void OSBridge::_write_stack_trace (FILE *to, const char *const from, LogCategori
 
 		if ((category == LOG_GREF && Logger::gref_to_logcat ()) ||
 			(category == LOG_LREF && Logger::lref_to_logcat ())) {
-				log_debug (category, "{}"sv, line);
+				log_debug (
+					category,
+#if defined(XA_HOST_NATIVEAOT)
+					"%s",
+					line.data ()
+#else
+					"{}"sv,
+					line
+#endif
+				);
 		}
 
 		if (to == nullptr) {
@@ -111,7 +120,15 @@ void OSBridge::_write_stack_trace (FILE *to, const char *const from, LogCategori
 void OSBridge::_monodroid_gref_log (const char *message) noexcept
 {
 	if (Logger::gref_to_logcat ()) {
-		log_debug (LOG_GREF, "{}"sv, optional_string (message));
+		log_debug (
+			LOG_GREF,
+#if defined(XA_HOST_NATIVEAOT)
+			"%s",
+#else
+			"{}"sv,
+#endif
+			optional_string (message)
+		);
 	}
 
 	if (Logger::gref_log () == nullptr) {
