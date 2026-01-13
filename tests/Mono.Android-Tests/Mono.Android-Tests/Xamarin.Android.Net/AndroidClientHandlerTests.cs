@@ -115,7 +115,7 @@ namespace Xamarin.Android.NetTests {
 			}
 		}
 
-		bool IgnoreIfConnectionFailed (AggregateException aex, out bool connectionFailed)
+		protected bool IgnoreIfConnectionFailed (AggregateException aex, out bool connectionFailed)
 		{
 			if (IgnoreIfConnectionFailed (aex.InnerException as HttpRequestException, out connectionFailed))
 				return true;
