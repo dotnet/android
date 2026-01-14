@@ -10,6 +10,7 @@
 #include <type_traits>
 #include <unistd.h>
 
+#include <shared/log_types.hh>
 #include <shared/helpers.hh>
 
 #if defined(XA_HOST_MONOVM)
