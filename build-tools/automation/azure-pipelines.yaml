@@ -407,7 +407,6 @@ extends:
                 dotnet build $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
                 -t:PushManifestToBuildAssetRegistry
                 -p:OutputPath=$(Build.StagingDirectory)\nuget-signed\
-                -p:TargetFramework=$(DotNetStableTargetFramework)
                 -c $(XA.Build.Configuration) -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\push-bar-manifest.binlog
             condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 
