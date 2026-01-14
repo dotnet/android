@@ -9476,8 +9476,8 @@ E,30,android/os/Vibrator.VIBRATION_EFFECT_SUPPORT_NO,2,Android.OS.VibrationEffec
 E,30,android/os/Vibrator.VIBRATION_EFFECT_SUPPORT_UNKNOWN,0,Android.OS.VibrationEffectSupport,Unknown,remove,
 E,30,android/os/Vibrator.VIBRATION_EFFECT_SUPPORT_YES,1,Android.OS.VibrationEffectSupport,Yes,remove,
 I,0,android/preference/Preference.DEFAULT_ORDER,2147483647,,,,
-E,19,android/print/PrintAttributes.COLOR_MODE_COLOR,2,Android.Print.PrintColorMode,Color,remove,
-E,19,android/print/PrintAttributes.COLOR_MODE_MONOCHROME,1,Android.Print.PrintColorMode,Monochrome,remove,
+E,19,android/print/PrintAttributes.COLOR_MODE_COLOR,2,Android.Print.PrintColorMode,Color,remove,flags
+E,19,android/print/PrintAttributes.COLOR_MODE_MONOCHROME,1,Android.Print.PrintColorMode,Monochrome,remove,flags
 E,23,android/print/PrintAttributes.DUPLEX_MODE_LONG_EDGE,2,Android.Print.DuplexMode,LongEdge,keep,
 E,23,android/print/PrintAttributes.DUPLEX_MODE_NONE,1,Android.Print.DuplexMode,None,keep,
 E,23,android/print/PrintAttributes.DUPLEX_MODE_SHORT_EDGE,4,Android.Print.DuplexMode,ShortEdge,keep,
