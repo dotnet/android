@@ -359,10 +359,32 @@ void BridgeProcessingShared::log_weak_to_gref (jobject weak, jobject handle) noe
 		return;
 	}
 
-	OSBridge::_monodroid_gref_log (
-		std::format ("take_global_ref wref={:#x} -> handle={:#x}\n"sv,
-			reinterpret_cast<intptr_t> (weak),
-			reinterpret_cast<intptr_t> (handle)).data ());
+	auto weak_p = reinterpret_cast<intptr_t> (weak);
+	auto handle_p = reinterpret_cast<intptr_t> (handle);
+
+	if constexpr (Constants::is_nativeaot) {
+		constexpr size_t BufferSize = 128;
+		dynamic_local_string<BufferSize> message;
+		bool formatted = format_printf (
+			message,
+			"take_global_ref wref={:#x} -> handle={:#x}\n",
+			weak_p, handle_p
+		);
+
+		if (formatted) [[likely]] {
+			OSBridge::_monodroid_gref_log (message.get ());
+		} else {
+			OSBridge::_monodroid_gref_log ("take_global_ref: failed to format log message\n");
+		}
+	} else {
+		OSBridge::_monodroid_gref_log (
+			std::format (
+				"take_global_ref wref={:#x} -> handle={:#x}\n"sv,
+				weak_p,
+				handle_p
+			).c_str ()
+		);
+	}
 }
 
 [[gnu::always_inline]]
@@ -372,8 +394,26 @@ void BridgeProcessingShared::log_weak_ref_collected (jobject weak) noexcept
 		return;
 	}
 
-	OSBridge::_monodroid_gref_log (
-		std::format ("handle {:#x}/W; was collected by a Java GC"sv, reinterpret_cast<intptr_t> (weak)).data ());
+	auto weak_p = reinterpret_cast<intptr_t> (weak);
+	if constexpr (Constants::is_nativeaot) {
+		constexpr size_t BufferSize = 128;
+		dynamic_local_string<BufferSize> message;
+		bool formatted = format_printf (
+			message,
+			"handle 0x%x/W; was collected by a Java GC",
+			weak_p
+		);
+
+		if (formatted) [[likely]] {
+			OSBridge::_monodroid_gref_log (message.get ());
+		} else {
+			OSBridge::_monodroid_gref_log ("handle was collected by a Java GC, failed to format full message");
+		}
+	} else {
+		OSBridge::_monodroid_gref_log (
+			std::format ("handle {:#x}/W; was collected by a Java GC"sv, weak_p).c_str ()
+		);
+	}
 }
 
 [[gnu::always_inline]]
@@ -383,7 +423,24 @@ void BridgeProcessingShared::log_take_weak_global_ref (jobject handle) noexcept
 		return;
 	}
 
-	OSBridge::_monodroid_gref_log (std::format ("take_weak_global_ref handle={:#x}\n"sv, reinterpret_cast<intptr_t> (handle)).data ());
+	auto handle_p = reinterpret_cast<intptr_t> (handle);
+	if constexpr (Constants::is_nativeaot) {
+		constexpr size_t BufferSize = 128;
+		dynamic_local_string<BufferSize> message;
+		bool formatted = format_printf (
+			message,
+			"take_weak_global_ref handle={:#x}\n",
+			handle_p
+		);
+
+		if (formatted) [[likely]] {
+			OSBridge::_monodroid_gref_log (message.get ());
+		} else {
+			OSBridge::_monodroid_gref_log ("take_weak_global_ref handle taken, failed to format full message");
+		}
+	} else {
+		OSBridge::_monodroid_gref_log (std::format ("take_weak_global_ref handle={:#x}\n"sv, handle_p).c_str ());
+	}
 }
 
 [[gnu::always_inline]]
@@ -432,5 +489,14 @@ void BridgeProcessingShared::log_gc_summary () noexcept
 		}
 	}
 
-	log_info (LOG_GC, "GC cleanup summary: {} objects tested - resurrecting {}.", total, alive);
+	log_info (
+		LOG_GC,
+#if defined(XA_HOST_NATIVEAOT)
+		"GC cleanup summary: %z objects tested - resurrecting %z.",
+#else
+		"GC cleanup summary: {} objects tested - resurrecting {}."sv,
+#endif
+		total,
+		alive
+	);
 }

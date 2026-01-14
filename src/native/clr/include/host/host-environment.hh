@@ -42,7 +42,16 @@ namespace xamarin::android {
 		static void set_system_property (const char *name, const char *value) noexcept
 		{
 			// TODO: should we **actually** try to set the system property here? Would that even work? Needs testing
-			log_debug (LOG_DEFAULT, " System property {} = '{}'", optional_string (name), optional_string (value));
+			log_debug (
+				LOG_DEFAULT,
+#if defined(XA_HOST_NATIVEAOT)
+				" System property %s = '%s'",
+#else
+				" System property {} = '{}'"sv,
+#endif
+				optional_string (name),
+				optional_string (value)
+			);
 		}
 
 		[[gnu::flatten, gnu::always_inline]]

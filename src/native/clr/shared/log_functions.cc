@@ -107,6 +107,9 @@ log_info_nocheck (LogCategories category, const char *format, ...)
 	DO_LOG (ANDROID_LOG_INFO, category, format, args);
 }
 
+[[gnu::alias ("_Z16log_info_nocheck14_LogCategoriesPKcz")]]
+void log_info_nocheck_printf (LogCategories category, const char *format, ...) noexcept;
+
 void
 log_warn (LogCategories category, const char *format, ...)
 {
@@ -115,12 +118,8 @@ log_warn (LogCategories category, const char *format, ...)
 	DO_LOG (ANDROID_LOG_WARN, category, format, args);
 }
 
-// void log_warn_printf (LogCategories category, const char *format, ...) noexcept
-// {
-// 	va_list args;
-
-// 	DO_LOG (ANDROID_LOG_ERROR, category, format, args);
-// }
+[[gnu::alias ("_Z8log_warn14_LogCategoriesPKcz")]]
+void log_warn_printf (LogCategories category, const char *format, ...) noexcept;
 
 void
 log_debug_nocheck (LogCategories category, const char *format, ...)
@@ -133,6 +132,9 @@ log_debug_nocheck (LogCategories category, const char *format, ...)
 
 	DO_LOG (ANDROID_LOG_DEBUG, category, format, args);
 }
+
+[[gnu::alias ("_Z17log_debug_nocheck14_LogCategoriesPKcz")]]
+void log_debug_nocheck_printf (LogCategories category, const char *format, ...) noexcept;
 
 namespace xamarin::android {
 	void

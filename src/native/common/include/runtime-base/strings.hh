@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cstdio>
 #include <cstring>
 #include <cerrno>
 #include <expected>
@@ -945,6 +946,7 @@ namespace xamarin::android {
 			}
 		}
 
+	public:
 		[[gnu::always_inline]]
 		void resize_for_extra (size_t needed_space) noexcept
 		{
@@ -1017,4 +1019,35 @@ namespace xamarin::android {
 	// Useful aliases
 	using dynamic_local_property_string = dynamic_local_string<Constants::PROPERTY_VALUE_BUFFER_LEN>;
 	using dynamic_local_path_string = dynamic_local_string<SENSIBLE_PATH_MAX>;
+
+	// helpers
+	template<size_t MaxStackSize>
+	static inline auto format_printf (dynamic_local_string<MaxStackSize>& dest, const char* format, ...)  noexcept -> bool
+	{
+		va_list args;
+		va_start (args, format);
+		int n = vsnprintf (dest.get (), dest.size (), format, args);
+		va_end (args);
+
+		if (n < 0) {
+			return false;
+		}
+
+		auto res = static_cast<size_t>(n);
+		if (res < dest.size ()) {
+			return true;
+		}
+
+		// resize_for_extra adds one more byte for the NUL character
+		dest.resize_for_extra (res - dest.size ());
+		if (dest.size () <= res) {
+			return false;
+		}
+
+		va_start (args, format);
+		n = vsnprintf (dest.get (), dest.size (), format, args);
+		va_end (args);
+
+		return n != -1;
+	}
 }
