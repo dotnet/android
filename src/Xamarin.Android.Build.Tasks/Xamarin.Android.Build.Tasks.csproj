@@ -55,6 +55,7 @@
     <Compile Include="Linker\MonoDroid.Tuner\FixLegacyResourceDesignerStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\LinkDesignerBase.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\RemoveResourceDesignerStep.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\StripEmbeddedLibrariesStep.cs" />
     <Compile Include="Linker\External\Linker\Annotations.cs" />
     <Compile Include="Linker\External\Linker\AssemblyAction.cs" />
     <Compile Include="Linker\External\Linker\AssemblyResolver.cs" />
