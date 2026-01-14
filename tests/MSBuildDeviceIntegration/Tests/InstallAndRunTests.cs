@@ -1573,14 +1573,10 @@ MONO_GC_PARAMS=bridge-implementation=new",
 		[Test]
 		public void FixLegacyResourceDesignerStep ([Values] bool isRelease, [Values] AndroidRuntime runtime)
 		{
-<<<<<<< HEAD
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			string previousTargetFramework = "net9.0-android";
-=======
 			string previousTargetFramework = $"{XABuildConfig.PreviousDotNetTargetFramework}-android";
->>>>>>> main
 
 			// Don't call SetRuntime on library projects (at least until "previous" framework bumps to at least 10.0)
 			var library1 = new XamarinAndroidLibraryProject {
