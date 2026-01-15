@@ -60,8 +60,9 @@ namespace Xamarin.Android.Tasks
 					var type = reader.GetTypeDefinition (typeHandle);
 					ProcessType (reader, type, writer);
 				}
-			} catch (BadImageFormatException) {
+			} catch (BadImageFormatException ex) {
 				// Skip non-managed assemblies
+				Log.LogDebugMessage ($"Could not read assembly '{assemblyPath}': {ex.Message}");
 			}
 		}
 
