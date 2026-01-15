@@ -12,7 +12,15 @@ auto HostCommon::get_java_class_name_for_TypeManager (jclass klass) noexcept -> 
 	JNIEnv *env = OSBridge::ensure_jnienv ();
 	jstring name = reinterpret_cast<jstring> (env->CallObjectMethod (klass, Class_getName));
 	if (name == nullptr) {
-		log_error (LOG_DEFAULT, "Failed to obtain Java class name for object at {:p}", reinterpret_cast<void*>(klass));
+		log_error (
+			LOG_DEFAULT,
+#if defined(XA_HOST_NATIVEAOT)
+			"Failed to obtain Java class name for object at %p  "  ,
+#else
+			"Failed to obtain Java class name for object at {:p}"sv,
+#endif
+			reinterpret_cast<void*>(klass)
+		);
 		return nullptr;
 	}
 
