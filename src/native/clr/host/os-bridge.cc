@@ -4,6 +4,7 @@
 #include <host/runtime-util.hh>
 #include <runtime-base/logger.hh>
 #include <shared/cpp-util.hh>
+#include <shared/format-helpers.hh>
 #include <shared/helpers.hh>
 
 using namespace xamarin::android;
@@ -80,13 +81,13 @@ auto OSBridge::_monodroid_gref_dec () noexcept -> int
 void OSBridge::_write_stack_trace (FILE *to, const char *const from, LogCategories category) noexcept
 {
 	if (from == nullptr) [[unlikely]] {
-		log_warn (category, "Unable to write stack trace, managed runtime passed a NULL string.");
+		log_warn (category, "Unable to write stack trace, managed runtime passed a NULL string."sv);
 		return;
 	}
 
 	const std::string_view trace { from };
 	if (trace.empty ()) [[unlikely]] {
-		log_warn (category, "Empty stack trace passed by the managed runtime.");
+		log_warn (category, "Empty stack trace passed by the managed runtime."sv);
 		return;
 	}
 
@@ -167,8 +168,12 @@ auto OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject
 		return c;
 	}
 
-	const std::string log_line = std::format (
+	const std::string log_line = format_string (
+#if defined(XA_HOST_NATIVEAOT)
+		"+g+ grefc %d gwrefc %d obj-handle %p/%c -> new-handle %p/%c from thread '%s'(%d)",
+#else
 		"+g+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})"sv,
+#endif
 		c,
 		gc_weak_gref_count,
 		reinterpret_cast<void*>(curHandle),
@@ -190,8 +195,12 @@ void OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char
 		return;
 	}
 
-	const std::string log_line = std::format (
+	const std::string log_line = format_string (
+#if defined(XA_HOST_NATIVEAOT)
+		"-g- grefc %d gwrefc %d handle %p/%c from thread '%s'(%d)",
+#else
 		"-g- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})"sv,
+#endif
 		c,
 		gc_weak_gref_count,
 		reinterpret_cast<void*>(handle),
@@ -210,8 +219,12 @@ void OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobjec
 		return;
 	}
 
-	const std::string log_line = std::format (
+	const std::string log_line = format_string (
+#if defined(XA_HOST_NATIVEAOT)
+		"+w+ grefc %d gwrefc %d obj-handle %p/%c -> new-handle %p/%c from thread '%s'(%d)",
+#else
 		"+w+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})"sv,
+#endif
 		gc_gref_count,
 		gc_weak_gref_count,
 		reinterpret_cast<void*>(curHandle),
@@ -232,8 +245,12 @@ OSBridge::_monodroid_lref_log_new (int lrefc, jobject handle, char type, const c
 		return;
 	}
 
-	const std::string log_line = std::format (
+	const std::string log_line = format_string (
+#if defined(XA_HOST_NATIVEAOT)
+		"+l+ lrefc %d handle %p/%c from thread '%s'(%d)",
+#else
 		"+l+ lrefc {} handle {:p}/{} from thread '{}'({})"sv,
+#endif
 		lrefc,
 		reinterpret_cast<void*>(handle),
 		type,
@@ -251,8 +268,12 @@ void OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const cha
 		return;
 	}
 
-	const std::string log_line = std::format (
+	const std::string log_line = format_string (
+#if defined(XA_HOST_NATIVEAOT)
+		"-w- grefc %d gwrefc %d handle %p/%c from thread '%s'(%d)",
+#else
 		"-w- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})"sv,
+#endif
 		gc_gref_count,
 		gc_weak_gref_count,
 		reinterpret_cast<void*>(handle),
@@ -270,8 +291,12 @@ void OSBridge::_monodroid_lref_log_delete (int lrefc, jobject handle, char type,
 		return;
 	}
 
-	const std::string log_line = std::format (
+	const std::string log_line = format_string (
+#if defined(XA_HOST_NATIVEAOT)
+		"-l- lrefc %d handle %p/%c from thread '%s'(%d)",
+#else
 		"-l- lrefc {} handle {:p}/{} from thread '{}'({})"sv,
+#endif
 		lrefc,
 		reinterpret_cast<void*>(handle),
 		type,

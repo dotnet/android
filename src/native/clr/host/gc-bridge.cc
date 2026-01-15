@@ -45,7 +45,7 @@ void GCBridge::trigger_java_gc (JNIEnv *env) noexcept
 
 	env->ExceptionDescribe ();
 	env->ExceptionClear ();
-	log_error (LOG_DEFAULT, "Java GC failed");
+	log_error (LOG_DEFAULT, "Java GC failed"sv);
 }
 
 void GCBridge::mark_cross_references (MarkCrossReferencesArgs *args) noexcept
@@ -85,10 +85,19 @@ void GCBridge::log_mark_cross_references_args_if_enabled (MarkCrossReferencesArg
 		return;
 	}
 
-	log_info (LOG_GC, "cross references callback invoked with {} sccs and {} xrefs.", args->ComponentCount, args->CrossReferenceCount);
+	log_info (
+		LOG_GC,
+#if defined(XA_HOST_NATIVEAOT)
+		"cross references callback invoked with %z sccs and %z xrefs.",
+#else
+		"cross references callback invoked with {} sccs and {} xrefs."sv,
+#endif
+		args->ComponentCount,
+		args->CrossReferenceCount
+	);
 
 	JNIEnv *env = OSBridge::ensure_jnienv ();
-	
+
 	for (size_t i = 0; i < args->ComponentCount; ++i) {
 		const StronglyConnectedComponent &scc = args->Components [i];
 		log_info (LOG_GC, "group {} with {} objects", i, scc.Count);
@@ -104,7 +113,11 @@ void GCBridge::log_mark_cross_references_args_if_enabled (MarkCrossReferencesArg
 	for (size_t i = 0; i < args->CrossReferenceCount; ++i) {
 		size_t source_index = args->CrossReferences [i].SourceGroupIndex;
 		size_t dest_index = args->CrossReferences [i].DestinationGroupIndex;
+#if defined(XA_HOST_NATIVEAOT)
+		log_info_nocheck_printf (LOG_GC, "xref [%z] %z -> %z", i, source_index, dest_index);
+#else
 		log_info_nocheck_fmt (LOG_GC, "xref [{}] {} -> {}", i, source_index, dest_index);
+#endif
 	}
 }
 
@@ -118,9 +131,26 @@ void GCBridge::log_handle_context (JNIEnv *env, HandleContext *ctx) noexcept
 	jclass java_class = env->GetObjectClass (handle);
 	if (java_class != nullptr) {
 		char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
-		log_info (LOG_GC, "gref {:#x} [{}]", reinterpret_cast<intptr_t> (handle), class_name);
+		log_info (
+			LOG_GC,
+#if defined(XA_HOST_NATIVEAOT)
+			"gref %p [%s]",
+#else
+			"gref {:#x} [{}]"sv,
+#endif
+			reinterpret_cast<intptr_t> (handle),
+			class_name
+		);
 		free (class_name);
 	} else {
-		log_info (LOG_GC, "gref {:#x} [unknown class]", reinterpret_cast<intptr_t> (handle));
+		log_info (
+			LOG_GC,
+#if defined(XA_HOST_NATIVEAOT)
+			"gref %p [unknown class]",
+#else
+			"gref {:#x} [unknown class]"sv,
+#endif
+			reinterpret_cast<intptr_t> (handle)
+		);
 	}
 }
