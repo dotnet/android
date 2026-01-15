@@ -42,13 +42,16 @@ set(XAMARIN_MONODROID_SOURCES
   ../runtime-base/android-system.cc
 
   # Bionic sources
-  ${BIONIC_SOURCE_DIR}//cxa_guard.cc
+  ${BIONIC_SOURCE_DIR}/cxa_guard.cc
 
   # libc++ sources
+  ${LIBCXX_SOURCE_DIR}/atomic.cpp
+  ${LIBCXX_SOURCE_DIR}/chrono.cpp
   ${LIBCXX_SOURCE_DIR}/condition_variable.cpp
   ${LIBCXX_SOURCE_DIR}/condition_variable_destructor.cpp
   ${LIBCXX_SOURCE_DIR}/error_category.cpp
   ${LIBCXX_SOURCE_DIR}/future.cpp
+  ${LIBCXX_SOURCE_DIR}/hash.cpp
   ${LIBCXX_SOURCE_DIR}/memory.cpp
   ${LIBCXX_SOURCE_DIR}/mutex.cpp
   ${LIBCXX_SOURCE_DIR}/mutex_destructor.cpp
@@ -62,6 +65,7 @@ set(XAMARIN_MONODROID_SOURCES
   # Local versions of C++ ABI sources
   ${LOCAL_CXXABI_SOURCE_DIR}/cxa_virtual.cc
   ${LOCAL_CXXABI_SOURCE_DIR}/new.cc
+  ${LOCAL_CXXABI_SOURCE_DIR}/new_helpers.cc
   ${LOCAL_CXXABI_SOURCE_DIR}/no_exceptions.cc
   ${LOCAL_CXXABI_SOURCE_DIR}/stdexcept.cc
   ${LOCAL_CXXABI_SOURCE_DIR}/string.cc
