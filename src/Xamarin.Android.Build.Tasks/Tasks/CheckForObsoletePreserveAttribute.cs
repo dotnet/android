@@ -30,7 +30,7 @@ namespace Xamarin.Android.Tasks
 			return true; // Warnings don't fail the build
 		}
 
-		static bool HasObsoletePreserveAttribute (string assemblyPath, out string? assemblyName)
+		bool HasObsoletePreserveAttribute (string assemblyPath, out string? assemblyName)
 		{
 			assemblyName = null;
 
@@ -53,7 +53,8 @@ namespace Xamarin.Android.Tasks
 						return true;
 				}
 				return false;
-			} catch (BadImageFormatException) {
+			} catch (BadImageFormatException ex) {
+				Log.LogDebugMessage ($"Could not read assembly '{assemblyPath}': {ex.Message}");
 				return false;
 			}
 		}
