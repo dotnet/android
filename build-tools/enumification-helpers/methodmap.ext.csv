@@ -900,6 +900,9 @@
 19, android.nfc, NfcAdapter, enableReaderMode, flags, Android.Nfc.NfcReaderFlags
 19, android.print, PrintAttributes, getColorMode, return, Android.Print.PrintColorMode
 19, android.print, PrintAttributes.Builder, setColorMode, colorMode, Android.Print.PrintColorMode
+23, android.print, PrinterCapabilitiesInfo.Builder, setColorModes, colorModes, Android.Print.PrintColorMode
+23, android.print, PrinterCapabilitiesInfo.Builder, setColorModes, defaultColorMode, Android.Print.PrintColorMode
+23, android.print, PrinterCapabilitiesInfo, getColorModes, return, Android.Print.PrintColorMode
 19, android.print, PrintDocumentInfo, getContentType, return, Android.Print.PrintContentType
 19, android.print, PrintDocumentInfo.Builder, setContentType, type, Android.Print.PrintContentType
 19, android.print, PrintJobInfo, getState, return, Android.Print.PrintJobState

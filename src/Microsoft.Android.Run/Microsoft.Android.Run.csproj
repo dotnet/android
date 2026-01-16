@@ -5,11 +5,12 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
     <OutputType>Exe</OutputType>
-    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <RootNamespace>Microsoft.Android.Run</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <DebugType>portable</DebugType>
+    <RollForward>Major</RollForward>
   </PropertyGroup>
 
   <ItemGroup>

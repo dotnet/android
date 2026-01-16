@@ -385,6 +385,13 @@ namespace Xamarin.Android.NetTests
 			try {
 				await client.SendAsync (request, tcs.Token).ConfigureAwait (false);
 				// If we get here without exception, that's also OK for this test
+			} catch (AggregateException ex) {
+				if (IgnoreIfConnectionFailed (ex, out _))
+					return;
+				// Expected - cancellation or connection error
+				// We catch all exceptions to ensure the test doesn't fail due to unhandled exceptions
+				Console.WriteLine ($"Exception during first request (expected): {ex}");
+				exceptionThrown = true;
 			} catch (Exception ex) {
 				// Expected - cancellation or connection error
 				// We catch all exceptions to ensure the test doesn't fail due to unhandled exceptions
