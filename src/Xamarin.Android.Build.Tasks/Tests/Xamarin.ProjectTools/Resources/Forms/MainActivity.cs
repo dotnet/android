@@ -22,7 +22,7 @@ namespace ${ROOT_NAMESPACE}
 			global::Xamarin.Forms.Forms.Init (this, savedInstanceState);
 			//${AFTER_FORMS_INIT}
 			LoadApplication (new App ());
+			//${AFTER_ONCREATE}
 		}
-		//${AFTER_ONCREATE}
 	}
 }
