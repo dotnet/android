@@ -231,7 +231,7 @@
     <RuntimeHostConfigurationOption Include="test_bool"    Value="true" />
     <RuntimeHostConfigurationOption Include="test_integer" Value="42" />
     <RuntimeHostConfigurationOption Include="test_string"  Value="foo" />
-    <RuntimeHostConfigurationOption Include="STARTUP_HOOKS" Value="StartupHook" />
+    <RuntimeHostConfigurationOption Include="STARTUP_HOOKS" Value="StartupHook" Condition=" '$(UseMonoRuntime)' == 'true' " />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(AndroidPackageFormat)' != 'aab' ">

@@ -1,0 +1,84 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Sdk.HotReload.targets
+
+This file contains targets for Hot Reload support in .NET for Android.
+These targets are invoked by dotnet-watch/IDE when Hot Reload starts.
+
+See: https://github.com/dotnet/sdk/issues/52492
+
+***********************************************************************************************
+-->
+
+<Project>
+
+  <!-- Always enable startup hooks support when Hot Reload agent is configured -->
+  <PropertyGroup Condition=" '$(DotNetHotReloadAgentStartupHook)' != '' ">
+    <StartupHookSupport>true</StartupHookSupport>
+  </PropertyGroup>
+
+  <!--
+    _AndroidHotReloadAgentConfiguration:
+    Configures the Hot Reload agent by:
+    a) Adding the Hot Reload agent DLL as a reference
+    b) Setting up STARTUP_HOOKS via RuntimeHostConfigurationOption (for MonoVM)
+    c) Setting up DOTNET_STARTUP_HOOKS environment variable (for CoreCLR)
+    d) Adding additional environment variables from DotNetHotReloadAgentEnvironment
+  -->
+  <Target Name="_AndroidHotReloadAgentConfiguration"
+          Condition=" '$(DotNetHotReloadAgentStartupHook)' != '' ">
+
+    <PropertyGroup>
+      <_HotReloadAgentAssemblyName>$([System.IO.Path]::GetFileNameWithoutExtension('$(DotNetHotReloadAgentStartupHook)'))</_HotReloadAgentAssemblyName>
+    </PropertyGroup>
+
+    <!-- Add the Hot Reload agent DLL as a reference so it gets deployed -->
+    <ItemGroup>
+      <Reference Include="$(DotNetHotReloadAgentStartupHook)" Condition=" Exists('$(DotNetHotReloadAgentStartupHook)') " />
+    </ItemGroup>
+
+    <!-- Set STARTUP_HOOKS via RuntimeHostConfigurationOption for MonoVM (read by Mono runtime) -->
+    <ItemGroup Condition=" '$(UseMonoRuntime)' == 'true' ">
+      <RuntimeHostConfigurationOption Include="STARTUP_HOOKS" Value="$(_HotReloadAgentAssemblyName)" />
+    </ItemGroup>
+
+    <!-- Generate Hot Reload environment file for other runtimes -->
+    <ItemGroup>
+      <_HotReloadEnvironment Include="DOTNET_STARTUP_HOOKS=$(_HotReloadAgentAssemblyName)" />
+    </ItemGroup>
+
+    <!-- Parse DotNetHotReloadAgentEnvironment (semicolon-separated KEY=VALUE pairs) -->
+    <ItemGroup Condition=" '$(DotNetHotReloadAgentEnvironment)' != '' ">
+      <_HotReloadEnvironment Include="$(DotNetHotReloadAgentEnvironment)" />
+    </ItemGroup>
+
+    <WriteLinesToFile
+        File="$(IntermediateOutputPath)__hotreload_environment__.txt"
+        Lines="@(_HotReloadEnvironment)"
+        Overwrite="True"
+        WriteOnlyWhenDifferent="True"
+    />
+
+    <ItemGroup>
+      <AndroidEnvironment Include="$(IntermediateOutputPath)__hotreload_environment__.txt" />
+      <FileWrites         Include="$(IntermediateOutputPath)__hotreload_environment__.txt" />
+    </ItemGroup>
+
+  </Target>
+
+  <!--
+    DeployHotReloadAgentConfiguration:
+    Entry point target invoked by dotnet-watch/IDE.
+    Sets up the Hot Reload agent configuration and deploys to the device.
+
+    This target is discovered by checking if the project has a target named
+    "DeployHotReloadAgentConfiguration". If found, dotnet-watch/IDE will
+    evaluate it with the following global properties:
+    - DotNetHotReloadAgentStartupHook: Path to Microsoft.Extensions.DotNetDeltaApplier.dll
+    - DotNetHotReloadAgentEnvironment: Semicolon-separated environment variables (KEY=VALUE;KEY2=VALUE2)
+  -->
+  <Target Name="DeployHotReloadAgentConfiguration"
+          DependsOnTargets="_AndroidHotReloadAgentConfiguration;DeployToDevice" />
+
+</Project>
+

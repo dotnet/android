@@ -8,6 +8,13 @@ namespace SystemTests
 	public class StartupHookTest
 	{
 		[Test]
+		public void StartupHookSupportFeatureFlagIsEnabled ()
+		{
+			// NOTE: this is set to true in tests\Mono.Android-Tests\Mono.Android-Tests\Mono.Android.NET-Tests.csproj
+			Assert.IsTrue (Microsoft.Android.Runtime.RuntimeFeature.StartupHookSupport, "RuntimeFeature.StartupHookSupport should be true");
+		}
+
+		[Test]
 		public void IsInitialized ()
 		{
 			var type = Type.GetType ("StartupHook, StartupHook", throwOnError: true);
