@@ -1582,5 +1582,86 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
 			Assert.IsTrue (didLaunch, "Activity should have started.");
 		}
+
+		[Test]
+		public void DeployHotReloadAgentConfiguration ()
+		{
+			// Create a simple "startup hook" assembly that sets an env var we can check
+			var startupHookCode = @"
+using System;
+
+internal static class StartupHook
+{
+	public static void Initialize ()
+	{
+		Console.WriteLine (""HOTRELOAD_TEST_HOOK_INITIALIZED=true"");
+	}
+}
+";
+			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = nameof (DeployHotReloadAgentConfiguration),
+				IsRelease = false,
+			};
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
+		Console.WriteLine (""DOTNET_STARTUP_HOOKS="" + Environment.GetEnvironmentVariable(""DOTNET_STARTUP_HOOKS""));
+		Console.WriteLine (""HOTRELOAD_TEST_VAR="" + Environment.GetEnvironmentVariable(""HOTRELOAD_TEST_VAR""));
+		Console.WriteLine (""ANOTHER_VAR="" + Environment.GetEnvironmentVariable(""ANOTHER_VAR""));
+");
+			proj.Sources.Add (new BuildItem.Source ("StartupHook.cs") { TextContent = () => startupHookCode });
+
+			using var builder = CreateApkBuilder ();
+			builder.Save (proj);
+
+			var projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
+			var dotnet = new DotNetCLI (Path.Combine (projectDirectory, proj.ProjectFilePath));
+
+			// Build normally first
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+
+			// Simulate what dotnet-watch/IDE would do: set the hot reload properties and run the target
+			var hotReloadProperties = new [] {
+				"DotNetHotReloadAgentStartupHook=StartupHook",
+				"DotNetHotReloadAgentEnvironment=HOTRELOAD_TEST_VAR=TestValue123;ANOTHER_VAR=AnotherValue456",
+			};
+			Assert.IsTrue (dotnet.Build ("DeployHotReloadAgentConfiguration", hotReloadProperties),
+				"`dotnet build -t:DeployHotReloadAgentConfiguration` should succeed");
+
+			// Launch the app using adb
+			ClearAdbLogcat ();
+			var result = AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+			Assert.IsTrue (result.Contains ("Starting: Intent"), $"Activity should have launched. adb output:\n{result}");
+
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (projectDirectory, "logcat.log"), 30);
+			Assert.IsTrue (didLaunch, "Activity should have started.");
+
+			var logcatOutput = File.ReadAllText (Path.Combine (projectDirectory, "logcat.log"));
+
+			// Verify the startup hook was set via DOTNET_STARTUP_HOOKS
+			StringAssert.Contains (
+				"DOTNET_STARTUP_HOOKS=StartupHook",
+				logcatOutput,
+				"DOTNET_STARTUP_HOOKS should be set to StartupHook"
+			);
+
+			// Verify the startup hook was called
+			StringAssert.Contains (
+				"HOTRELOAD_TEST_HOOK_INITIALIZED=true",
+				logcatOutput,
+				"StartupHook.Initialize() should have been called"
+			);
+
+			// Verify the additional env vars from DotNetHotReloadAgentEnvironment were set
+			StringAssert.Contains (
+				"HOTRELOAD_TEST_VAR=TestValue123",
+				logcatOutput,
+				"HOTRELOAD_TEST_VAR should be set from DotNetHotReloadAgentEnvironment"
+			);
+			StringAssert.Contains (
+				"ANOTHER_VAR=AnotherValue456",
+				logcatOutput,
+				"ANOTHER_VAR should be set from DotNetHotReloadAgentEnvironment"
+			);
+		}
 	}
 }
