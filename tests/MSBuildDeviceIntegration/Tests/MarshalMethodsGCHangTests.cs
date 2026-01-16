@@ -84,12 +84,21 @@ public class MainActivity : Activity
 ";
 
 	[Test]
-	public void MarshalMethodsAppRuns ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.MonoVM)] AndroidRuntime runtime)
+	public void MarshalMethodsAppRuns ([Values] AndroidRuntime runtime)
 	{
-		var proj = new XamarinAndroidApplicationProject (packageName: "marshal2") {
-			IsRelease = true,
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+
+		if (runtime == AndroidRuntime.NativeAOT) {
+			Assert.Ignore ("Not supported with NativeAOT");
+		}
+
+		var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime, "marshal2")) {
+			IsRelease = isRelease,
 			EnableMarshalMethods = true,
-			SupportedOSPlatformVersion = "23",
+			SupportedOSPlatformVersion = "24", // Minimum 24 to be able to test on Android 16
 			TrimModeRelease = TrimMode.Full,
 			ProjectName = "marshal2",
 		};

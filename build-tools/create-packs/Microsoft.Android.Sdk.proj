@@ -12,6 +12,11 @@ core workload SDK packs imported by WorkloadManifest.targets.
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateUnixFilePermissions" />
 
   <PropertyGroup>
+    <!-- Use stable TFM since CI only has the stable .NET SDK installed -->
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <PackageId>Microsoft.Android.Sdk.$(HostOS)</PackageId>
     <OverridePackageId>$(PackageId)</OverridePackageId>
     <PlatformPackageType>ToolPack</PlatformPackageType>
@@ -65,6 +70,9 @@ core workload SDK packs imported by WorkloadManifest.targets.
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)generator.dll" TargetPath="tools" />
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)generator.pdb" TargetPath="..\tools" IsSymbolFile="true" />
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)generator.runtimeconfig.json" TargetPath="tools" />
+      <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Run.dll" TargetPath="tools" />
+      <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Run.pdb" TargetPath="..\tools" IsSymbolFile="true" />
+      <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Run.runtimeconfig.json" TargetPath="tools" />
       <FilesToPackage Include="@(VersionFiles)" TargetPath="tools" />
       <FilesToPackage Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\Sdk\**" TargetPath="Sdk" />
       <FilesToPackage Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Sdk.ILLink\PreserveLists\**" TargetPath="PreserveLists" />

@@ -945,9 +945,8 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		public void InvalidTargetPlatformVersion ([Values ("android33", "android99.0")] string platformVersion)
 		{
 			// This test runs on the default runtime, it's testing a runtime-agnostic feature.
-			const string targetFramework = "net9.0";
 			var project = new XamarinAndroidApplicationProject {
-				TargetFramework = $"{targetFramework}-{platformVersion}",
+				TargetFramework = $"{XABuildConfig.LatestDotNetTargetFramework}-{platformVersion}",
 			};
 			using var builder = CreateApkBuilder ();
 			builder.ThrowOnBuildFailure = false;
@@ -1207,9 +1206,9 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 				EmbedAssembliesIntoApk = false,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("_XASupportsFastDev", "True");
+			proj.SetProperty ("_AndroidFastDeploymentSupported", "true");
 			using (var b = CreateApkBuilder ()) {
-				//NOTE: build will fail, due to $(_XASupportsFastDev)
+				//NOTE: build will fail, due to $(_AndroidFastDeploymentSupported)
 				b.ThrowOnBuildFailure = false;
 				b.Build (proj);
 
@@ -2181,6 +2180,37 @@ public class ToolbarEx {
 				"first build should have succeeded.");
 			Assert.IsTrue (builder.Build (proj, parameters: [ "_SingleRID=android-x64", "_SingleABI=x86_64" ], doNotCleanupOnUpdate: true),
 				"second build should have succeeded.");
+		}
+
+		[Test]
+		public void SystemIOHashing ([Values] AndroidRuntime runtime)
+		{
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("https://github.com/dotnet/android/issues/10606");
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				PackageReferences = {
+					new Package { Id = "System.IO.Hashing", Version = "10.0.0" }
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"base.OnCreate (bundle);",
+				"""
+				base.OnCreate (bundle);
+				
+				// Use System.IO.Hashing to compute a hash
+				var crc32 = new System.IO.Hashing.Crc32 ();
+				var data = System.Text.Encoding.UTF8.GetBytes ("Hello World");
+				crc32.Append (data);
+				var hash = crc32.GetCurrentHash ();
+				Console.WriteLine ($"CRC32 Hash: {BitConverter.ToString (hash)}");
+				"""
+			);
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "build should have succeeded.");
 		}
 	}
 }

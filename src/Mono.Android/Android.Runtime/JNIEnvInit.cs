@@ -35,6 +35,7 @@ namespace Android.Runtime
 			public bool            marshalMethodsEnabled;
 			public IntPtr          grefGCUserPeerable;
 			public bool            managedMarshalMethodsLookupEnabled;
+			public IntPtr          propagateUncaughtExceptionFn;
 		}
 #pragma warning restore 0649
 
@@ -48,6 +49,12 @@ namespace Android.Runtime
 		internal static IntPtr java_class_loader;
 
 		internal static JniRuntime? androidRuntime;
+
+		[UnmanagedCallersOnly]
+		static void PropagateUncaughtException (IntPtr env, IntPtr javaThread, IntPtr javaException)
+		{
+			JNIEnv.PropagateUncaughtException (env, javaThread, javaException);
+		}
 
 		[UnmanagedCallersOnly]
 		static unsafe void RegisterJniNatives (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
@@ -157,11 +164,50 @@ namespace Android.Runtime
 				xamarin_app_init (args->env, getFunctionPointer);
 			}
 
+			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
+			RunStartupHooksIfNeeded ();
 			SetSynchronizationContext ();
 		}
 
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		static extern unsafe void xamarin_app_init (IntPtr env, delegate* unmanaged <int, int, int, IntPtr*, void> get_function_pointer);
+
+		static void RunStartupHooksIfNeeded ()
+		{
+			// Return if startup hooks are disabled or not CoreCLR
+			if (!RuntimeFeature.IsCoreClrRuntime)
+				return;
+			if (!RuntimeFeature.StartupHookSupport)
+				return;
+
+			RunStartupHooks ();
+		}
+
+		[RequiresUnreferencedCode ("Uses reflection to access System.StartupHookProvider.")]
+		static void RunStartupHooks ()
+		{
+			const string typeName = "System.StartupHookProvider";
+			const string methodName = "ProcessStartupHooks";
+
+			var type = typeof(object).Assembly.GetType (typeName, throwOnError: false);
+			if (type is null) {
+				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default,
+					$"Could not load type '{typeName}'. Skipping startup hooks.");
+				return;
+			}
+
+			var method = type.GetMethod (methodName, 
+				BindingFlags.NonPublic | BindingFlags.Static, null, [ typeof(string) ], null);
+			if (method is null) {
+				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default,
+					$"Could not load method '{typeName}.{methodName}'. Skipping startup hooks.");
+				return;
+			}
+
+			// Pass empty string for diagnosticStartupHooks parameter
+			// The method will read STARTUP_HOOKS from AppContext internally
+			method.Invoke (null, [ "" ]);
+		}
 
 		static void SetSynchronizationContext () =>
 			SynchronizationContext.SetSynchronizationContext (Android.App.Application.SynchronizationContext);

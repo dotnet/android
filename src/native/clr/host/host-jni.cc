@@ -47,9 +47,9 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 }
 
 JNIEXPORT void
-JNICALL Java_mono_android_Runtime_propagateUncaughtException ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] jclass klass, [[maybe_unused]] jobject javaThread, [[maybe_unused]] jthrowable javaException)
+JNICALL Java_mono_android_Runtime_propagateUncaughtException (JNIEnv *env, [[maybe_unused]] jclass klass, jobject javaThread, jthrowable javaException)
 {
-	// TODO: implement or remove
+	Host::propagate_uncaught_exception (env, javaThread, javaException);
 }
 
 JNIEXPORT void

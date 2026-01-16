@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Microsoft.VisualStudio.TestPlatform.Utilities;
@@ -47,6 +48,109 @@ namespace Xamarin.Android.Build.Tests
 			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
 			Assert.IsTrue (dotnet.Run (), "`dotnet run --no-build` should succeed");
+
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+			Assert.IsTrue (didLaunch, "Activity should have started.");
+		}
+
+		[Test]
+		public void DotNetRunWaitForExit ()
+		{
+			const string logcatMessage = "DOTNET_RUN_TEST_MESSAGE_12345";
+			var proj = new XamarinAndroidApplicationProject ();
+
+			// Enable verbose output from Microsoft.Android.Run for debugging
+			proj.SetProperty ("_AndroidRunExtraArgs", "--verbose");
+
+			// Add a Console.WriteLine that will appear in logcat
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}",
+				$"Console.WriteLine (\"{logcatMessage}\");");
+
+			using var builder = CreateApkBuilder ();
+			builder.Save (proj);
+
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+
+			// Start dotnet run with WaitForExit=true, which uses Microsoft.Android.Run
+			using var process = dotnet.StartRun ();
+
+			var locker = new Lock ();
+			var output = new StringBuilder ();
+			var outputReceived = new ManualResetEventSlim (false);
+			bool foundMessage = false;
+
+			process.OutputDataReceived += (sender, e) => {
+				if (e.Data != null) {
+					lock (locker) {
+						output.AppendLine (e.Data);
+						if (e.Data.Contains (logcatMessage)) {
+							foundMessage = true;
+							outputReceived.Set ();
+						}
+					}
+				}
+			};
+			process.ErrorDataReceived += (sender, e) => {
+				if (e.Data != null) {
+					lock (locker) {
+						output.AppendLine ($"STDERR: {e.Data}");
+					}
+				}
+			};
+
+			process.BeginOutputReadLine ();
+			process.BeginErrorReadLine ();
+
+			// Wait for the expected message or timeout
+			bool messageFound = outputReceived.Wait (TimeSpan.FromSeconds (60));
+
+			// Kill the process (simulating Ctrl+C)
+			if (!process.HasExited) {
+				process.Kill (entireProcessTree: true);
+				process.WaitForExit ();
+			}
+
+			// Write the output to a log file for debugging
+			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-run-output.log");
+			File.WriteAllText (logPath, output.ToString ());
+			TestContext.AddTestAttachment (logPath);
+
+			Assert.IsTrue (foundMessage, $"Expected message '{logcatMessage}' was not found in output. See {logPath} for details.");
+		}
+
+		[Test]
+		[TestCase (true)]
+		[TestCase (false)]
+		public void DeployToDevice (bool isRelease)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease
+			};
+			using var builder = CreateApkBuilder ();
+			builder.Save (proj);
+
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+			Assert.IsTrue (dotnet.Build ("DeployToDevice"), "`dotnet build -t:DeployToDevice` should succeed");
+
+			// Verify correct targets ran based on FastDev support
+			if (TestEnvironment.CommercialBuildAvailable) {
+				dotnet.AssertTargetIsNotSkipped ("_Upload");
+				dotnet.AssertTargetIsSkipped ("_DeployApk", defaultIfNotUsed: true);
+				dotnet.AssertTargetIsSkipped ("_DeployAppBundle", defaultIfNotUsed: true);
+			} else {
+				dotnet.AssertTargetIsSkipped ("_Upload", defaultIfNotUsed: true);
+				dotnet.AssertTargetIsNotSkipped ("_DeployApk");
+				dotnet.AssertTargetIsNotSkipped ("_DeployAppBundle");
+			}
+
+			// Launch the app using adb
+			ClearAdbLogcat ();
+			var result = AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+			Assert.IsTrue (result.Contains ("Starting: Intent"), $"Activity should have launched. adb output:\n{result}");
 
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
@@ -177,15 +281,9 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 60), $"Output did not contain {expectedLogcatOutput}!");
 		}
 
-		// TODO: check if AppDomain.CurrentDomain.UnhandledException even works in CoreCLR
 		[Test]
 		public void SubscribeToAppDomainUnhandledException ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			if (runtime == AndroidRuntime.CoreCLR) {
-				Assert.Ignore ("AppDomain.CurrentDomain.UnhandledException doesn't work in CoreCLR");
-				return;
-			}
-
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
@@ -207,7 +305,13 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			RunProjectAndAssert (proj, builder);
 
-			string expectedLogcatOutput = "# Unhandled Exception: sender=System.Object; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
+			string? expectedSender = runtime switch
+			{
+				AndroidRuntime.MonoVM => "System.Object", // MonoVM passes the current domain as the sender
+				AndroidRuntime.CoreCLR => null, // CoreCLR explicitly passes a `null` sender
+				_ => throw new NotImplementedException($"Test does not support runtime {runtime}"),
+			};
+			string expectedLogcatOutput = $"# Unhandled Exception: sender={expectedSender}; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
 			Assert.IsTrue (
 				MonitorAdbLogcat (CreateLineChecker (expectedLogcatOutput),
 					logcatFilePath: Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), timeout: 60),
@@ -990,11 +1094,10 @@ namespace UnnamedProject
 		[Test]
 		[Category ("WearOS")]
 		public void DotNetInstallAndRunPreviousSdk (
-				[Values (false, true)] bool isRelease,
-				[Values ("net9.0-android")] string targetFramework)
+				[Values (false, true)] bool isRelease)
 		{
 			var proj = new XamarinFormsAndroidApplicationProject () {
-				TargetFramework = targetFramework,
+				TargetFramework = $"{XABuildConfig.PreviousDotNetTargetFramework}-android",
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
 			};
@@ -1227,7 +1330,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 		[Test]
 		public void FixLegacyResourceDesignerStep ([Values (true, false)] bool isRelease)
 		{
-			string previousTargetFramework = "net9.0-android";
+			string previousTargetFramework = $"{XABuildConfig.PreviousDotNetTargetFramework}-android";
 
 			var library1 = new XamarinAndroidLibraryProject {
 				IsRelease = isRelease,

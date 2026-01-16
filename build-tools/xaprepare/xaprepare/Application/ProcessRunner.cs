@@ -21,8 +21,8 @@ namespace Xamarin.Android.Prepare
 			ExitCodeNotZero,
 		};
 
-		static readonly TimeSpan DefaultProcessTimeout = TimeSpan.FromMinutes (5);
-		static readonly TimeSpan DefaultOutputTimeout = TimeSpan.FromSeconds (10);
+		static readonly TimeSpan DefaultProcessTimeout = TimeSpan.FromMinutes (10);
+		static readonly TimeSpan DefaultOutputTimeout = TimeSpan.FromSeconds (15);
 
 		sealed class WriterGuard
 		{

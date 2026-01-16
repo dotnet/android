@@ -42,12 +42,16 @@ namespace Xamarin.Android.Prepare
 			// Install runtime packs associated with the SDK previously installed.
 			var packageDownloadProj = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "build-tools", "xaprepare", "xaprepare", "package-download.proj");
 			var logPath = Path.Combine (Configurables.Paths.BuildBinDir, $"msbuild-{context.BuildTimeStamp}-download-runtime-packs.binlog");
-			var restoreArgs = new string [] { "restore",
+			var runner = new ProcessRunner (Configurables.Paths.DotNetPreviewTool, "restore",
 				ProcessRunner.QuoteArgument (packageDownloadProj),
 				"--configfile", Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "NuGet.config"),
 				ProcessRunner.QuoteArgument ($"-bl:{logPath}"),
+				"--verbosity", "normal"
+			) {
+				EchoStandardOutput = true,
+				EchoStandardError = true,
 			};
-			if (!Utilities.RunCommand (Configurables.Paths.DotNetPreviewTool, restoreArgs)) {
+			if (!runner.Run ()) {
 				Log.ErrorLine ($"Failed to restore runtime packs using '{packageDownloadProj}'.");
 				return false;
 			}
@@ -55,7 +59,7 @@ namespace Xamarin.Android.Prepare
 			var sdk_manifests = Path.Combine (dotnetPath, "sdk-manifests");
 
 			// Copy the WorkloadManifest.* files from the latest Microsoft.NET.Workload.* listed in package-download.proj
-			var dotnets = new [] { "net6", "net7", "net8", "net9", "current" };
+			var dotnets = new [] { "net6", "net7", "net8", "net9", "net10", "current" };
 			foreach (var dotnet in dotnets) {
 				var destination = Path.Combine (sdk_manifests,
 					context.Properties.GetRequiredValue (KnownProperties.DotNetMonoManifestVersionBand),

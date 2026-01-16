@@ -16,18 +16,29 @@ namespace Xamarin.Android.Build.Tests
 	{
 		[Test]
 		[NonParallelizable]
-		public void BuildApplicationWithMonoEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode,
-		                                                 [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void BuildApplicationWithMonoEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode, [Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			// TODO: NativeAOT fails all the tests, `MONO_DEBUG` is not found in the environment. Question is - should we fix it for backward compatibility,
+			//       even though NativeAOT won't use it (and CoreCLR passes the tests), or should we just ignore this test for NativeAOT?
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT doesn't currently export the MONO_DEBUG environment variable");
+			}
+
 			string supportedAbis = runtime switch {
 				AndroidRuntime.MonoVM  => "armeabi-v7a;x86",
 				AndroidRuntime.CoreCLR => "arm64-v8a;x86_64",
+				AndroidRuntime.NativeAOT => "arm64-v8a;x86_64",
 				_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 			};
 
 			var lib = new XamarinAndroidLibraryProject {
 				ProjectName = "Library1",
-				IsRelease = true,
+				IsRelease = isRelease,
 				OtherBuildItems = { new AndroidItem.AndroidEnvironment ("Mono.env") {
 						TextContent = () => "MONO_DEBUG=soft-breakpoints"
 					},
@@ -35,7 +46,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			lib.SetRuntime (runtime);
 			var app = new XamarinFormsAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 				AndroidLinkModeRelease = AndroidLinkMode.Full,
 				References = {
 					new BuildItem ("ProjectReference","..\\Library1\\Library1.csproj"),
@@ -53,7 +64,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (appb.Build (app), "App should have succeeded.");
 
 				string intermediateOutputDir = Path.Combine (Root, appb.ProjectDirectory, app.IntermediateOutputPath);
-				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
+				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, runtime);
 				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, runtime);
 				Assert.IsTrue (envvars.Count > 0, $"No environment variables defined");
 
@@ -99,7 +110,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				string intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
+				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, AndroidRuntime.MonoVM);
 				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, AndroidRuntime.MonoVM);
 				Assert.IsTrue (envvars.Count > 0, $"No environment variables defined");
 
@@ -122,6 +133,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
+
 			var gcVarName = "MONO_GC_PARAMS";
 			var expectedDefaultValue = "major=marksweep";
 			var expectedUpdatedValue = "major=marksweep-conc";
@@ -135,14 +147,14 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				// AndroidEnableSGenConcurrent=False by default
-				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
+				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, AndroidRuntime.MonoVM);
 				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, AndroidRuntime.MonoVM);
 				Assert.IsTrue (envvars.ContainsKey (gcVarName), $"Environment should contain '{gcVarName}'.");
 				Assert.AreEqual (expectedDefaultValue, envvars[gcVarName], $"'{gcVarName}' should have been '{expectedDefaultValue}' when concurrent GC is disabled.");
 
 				proj.SetProperty ("AndroidEnableSGenConcurrent", "True");
 				Assert.IsTrue (b.Build (proj), "Second build should have succeeded.");
-				envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
+				envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, AndroidRuntime.MonoVM);
 				envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, AndroidRuntime.MonoVM);
 				Assert.IsTrue (envvars.ContainsKey (gcVarName), $"Environment should contain '{gcVarName}'.");
 				Assert.AreEqual (expectedUpdatedValue, envvars[gcVarName], $"'{gcVarName}' should have been '{expectedUpdatedValue}' when concurrent GC is enabled.");
@@ -150,11 +162,16 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckForInvalidHttpClientHandlerType ()
+		public void CheckForInvalidHttpClientHandlerType ([Values] AndroidRuntime runtime)
 		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				proj.SetProperty ("AndroidHttpClientHandlerType", "Android.App.Application");
@@ -164,10 +181,14 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckHttpClientHandlerType ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void CheckHttpClientHandlerType ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
 			var httpClientHandlerVarName = "XA_HTTP_CLIENT_HANDLER_TYPE";
 			var expectedDefaultValue = "System.Net.Http.SocketsHttpHandler, System.Net.Http";
@@ -176,6 +197,7 @@ namespace Xamarin.Android.Build.Tests
 			string supportedAbis = runtime switch {
 				AndroidRuntime.MonoVM  => "armeabi-v7a;arm64-v8a",
 				AndroidRuntime.CoreCLR => "arm64-v8a;x86_64",
+				AndroidRuntime.NativeAOT => "arm64-v8a;x86_64",
 				_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 			};
 			proj.SetRuntime (runtime);
@@ -187,14 +209,14 @@ namespace Xamarin.Android.Build.Tests
 				proj.SetProperty ("AndroidHttpClientHandlerType", expectedDefaultValue);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
+				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, runtime);
 				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, runtime);
 				Assert.IsTrue (envvars.ContainsKey (httpClientHandlerVarName), $"Environment should contain '{httpClientHandlerVarName}'.");
 				Assert.AreEqual (expectedDefaultValue, envvars[httpClientHandlerVarName]);
 
 				proj.SetProperty ("AndroidHttpClientHandlerType", expectedUpdatedValue);
 				Assert.IsTrue (b.Build (proj), "Second build should have succeeded.");
-				envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
+				envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, runtime);
 				envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, runtime);
 				Assert.IsTrue (envvars.ContainsKey (httpClientHandlerVarName), $"Environment should contain '{httpClientHandlerVarName}'.");
 				Assert.AreEqual (expectedUpdatedValue, envvars[httpClientHandlerVarName]);

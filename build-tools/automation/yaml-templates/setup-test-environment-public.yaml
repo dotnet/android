@@ -1,0 +1,42 @@
+# Public version of setup-test-environment template - no private repo references
+# Used by the public pipeline running on dnceng-public
+
+parameters:
+  configuration: $(XA.Build.Configuration)
+  xaSourcePath: $(System.DefaultWorkingDirectory)
+  jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
+  useAgentJdkPath: true
+  remove_dotnet: false
+  dotnetVersion: $(DotNetSdkVersion)
+  dotnetQuality: $(DotNetSdkQuality)
+  installTestSlicer: false
+  installApkDiff: true
+  updateMono: false
+  androidSdkPlatforms: $(DefaultTestSdkPlatforms)
+  repositoryAlias: 'self'
+  commit: ''
+  xaprepareScenario: AndroidTestDependencies        # Use 'EmulatorTestDependencies' for agents that need the emulator installed
+  use1ESTemplate: false
+
+steps:
+- checkout: ${{ parameters.repositoryAlias }}
+  ${{ if ne(parameters.commit, '') }}:
+    ref: ${{ parameters.commit }}
+  clean: true
+  submodules: recursive
+
+- template: /build-tools/automation/yaml-templates/setup-test-environment-steps.yaml
+  parameters:
+    configuration: ${{ parameters.configuration }}
+    xaSourcePath: ${{ parameters.xaSourcePath }}
+    jdkMajorVersion: ${{ parameters.jdkMajorVersion }}
+    useAgentJdkPath: ${{ parameters.useAgentJdkPath }}
+    remove_dotnet: ${{ parameters.remove_dotnet }}
+    dotnetVersion: ${{ parameters.dotnetVersion }}
+    dotnetQuality: ${{ parameters.dotnetQuality }}
+    installTestSlicer: ${{ parameters.installTestSlicer }}
+    installApkDiff: ${{ parameters.installApkDiff }}
+    updateMono: ${{ parameters.updateMono }}
+    androidSdkPlatforms: ${{ parameters.androidSdkPlatforms }}
+    xaprepareScenario: ${{ parameters.xaprepareScenario }}
+    use1ESTemplate: false

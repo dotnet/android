@@ -29,7 +29,6 @@ namespace Xamarin.Android.Prepare
 			new ArchLinuxProgram ("make"),
 			new ArchLinuxProgram ("patch"),
 			new ArchLinuxProgram ("pkg-config"),
-			new ArchLinuxProgram ("referenceassemblies-pcl"),
 			new ArchLinuxProgram ("sed"),
 			new ArchLinuxProgram ("texinfo"),
 			new ArchLinuxProgram ("unzip"),

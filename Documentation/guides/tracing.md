@@ -66,7 +66,7 @@ Tool 'dotnet-trace' was successfully installed.
 Run the following commands to create a memory dump of the app:
 
 1. `dotnet build -c Release -p:AndroidEnableProfiler=true .\MyApp.csproj`
-2. `adb install .\bin\Release\net9.0-android\MyApp-Signed.apk`
+2. `adb install .\bin\Release\net11.0-android\MyApp-Signed.apk`
 3. `dotnet-dsrouter android`
 4. `adb shell setprop debug.mono.profile '127.0.0.1:9000,nosuspend'`
 5. Start the app on your device
