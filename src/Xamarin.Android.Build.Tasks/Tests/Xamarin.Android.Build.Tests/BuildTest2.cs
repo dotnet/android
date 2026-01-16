@@ -500,7 +500,7 @@ namespace Xamarin.Android.Build.Tests
 						// bits of code. Even though this test expects no warnings and the above likely make the app not work
 						// correctly at run time, it is still worth running this test under NativeAOT to test for the absence
 						// of other warnings.
-						numberOfExpectedWarnings = 6;
+						numberOfExpectedWarnings = 8;
 						validateWarnings = true;
 					}
 
