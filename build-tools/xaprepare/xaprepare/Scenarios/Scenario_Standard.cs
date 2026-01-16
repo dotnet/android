@@ -21,6 +21,7 @@ namespace Xamarin.Android.Prepare
 			Steps.Add (new Step_InstallDotNetPreview ());
 			Steps.Add (new Step_InstallMicrosoftOpenJDK ());
 			Steps.Add (new Step_Android_SDK_NDK ());
+			Steps.Add (new Step_Generate_LLVM_UpdateInfo ());
 			Steps.Add (new Step_GenerateFiles (atBuildStart: true));
 			Steps.Add (new Step_PrepareProps ());
 			Steps.Add (new Step_InstallGNUBinutils ());
