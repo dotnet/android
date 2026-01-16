@@ -1543,6 +1543,7 @@ internal static class StartupHook
 				ProjectName = nameof (DeployHotReloadAgentConfiguration),
 				IsRelease = false,
 			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
 		Console.WriteLine (""DOTNET_STARTUP_HOOKS="" + Environment.GetEnvironmentVariable(""DOTNET_STARTUP_HOOKS""));
 		Console.WriteLine (""HOTRELOAD_TEST_VAR="" + Environment.GetEnvironmentVariable(""HOTRELOAD_TEST_VAR""));
