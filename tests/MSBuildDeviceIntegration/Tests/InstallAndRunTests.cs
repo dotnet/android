@@ -1623,7 +1623,7 @@ internal static class StartupHook
 				"DotNetHotReloadAgentStartupHook=StartupHook",
 				"DotNetHotReloadAgentEnvironment=HOTRELOAD_TEST_VAR=TestValue123;ANOTHER_VAR=AnotherValue456",
 			};
-			Assert.IsTrue (dotnet.Build ("DeployHotReloadAgentConfiguration", hotReloadProperties),
+			Assert.IsTrue (dotnet.Build (target: "DeployHotReloadAgentConfiguration", parameters: hotReloadProperties),
 				"`dotnet build -t:DeployHotReloadAgentConfiguration` should succeed");
 
 			// Launch the app using adb
