@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -20,12 +21,18 @@ namespace Xamarin.Android.Build.Tests
 		};
 
 		[Test]
-		public void EnsureUncaughtExceptionWorks ()
+		public void EnsureUncaughtExceptionWorks ([Values] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
 			var lib = new XamarinAndroidBindingProject {
 				ProjectName = "Scratch.Try",
 				AndroidClassParser = "class-parse",
 			};
+			lib.SetRuntime (runtime);
 
 			lib.Imports.Add (
 				new Import (() => "Directory.Build.targets") {
@@ -89,9 +96,11 @@ public final class Run {
 "
 			});
 
-			var app = new XamarinAndroidApplicationProject {
+			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+				IsRelease = isRelease,
 				ProjectName = "Scratch.JMJMException",
 			};
+			app.SetRuntime (runtime);
 
 			app.SetDefaultTargetDevice ();
 			app.AddReference (lib);

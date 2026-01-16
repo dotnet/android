@@ -945,9 +945,8 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		public void InvalidTargetPlatformVersion ([Values ("android33", "android99.0")] string platformVersion)
 		{
 			// This test runs on the default runtime, it's testing a runtime-agnostic feature.
-			const string targetFramework = "net9.0";
 			var project = new XamarinAndroidApplicationProject {
-				TargetFramework = $"{targetFramework}-{platformVersion}",
+				TargetFramework = $"{XABuildConfig.LatestDotNetTargetFramework}-{platformVersion}",
 			};
 			using var builder = CreateApkBuilder ();
 			builder.ThrowOnBuildFailure = false;

@@ -1541,7 +1541,7 @@ namespace UnamedProject
 					AndroidClassParser = "class-parse",
 					Jars = {
 						new AndroidItem.EmbeddedJar ("Jars\\svg-android.jar") {
-							WebContentFileNameFromAzure = "javaBindingIssue.jar"
+							TestResourceFileName = "javaBindingIssue.jar"
 						}
 					}
 				};

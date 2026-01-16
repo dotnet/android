@@ -18,6 +18,16 @@ namespace Xamarin.Android.Tools
 		public static readonly Version AndroidDefaultTargetDotnetApiLevel = new Version (@ANDROID_DEFAULT_TARGET_DOTNET_API_LEVEL@, @ANDROID_DEFAULT_TARGET_DOTNET_API_LEVEL_MINOR@);
 		public static readonly Version NDKVersion = new Version (@NDK_VERSION_MAJOR@, @NDK_VERSION_MINOR@, @NDK_VERSION_MICRO@);
 
+		/// <summary>
+		/// The current .NET target framework version (e.g., "net11.0").
+		/// </summary>
+		public const string LatestDotNetTargetFramework = "net11.0";
+
+		/// <summary>
+		/// The previous .NET target framework version (e.g., "net10.0").
+		/// </summary>
+		public const string PreviousDotNetTargetFramework = "net10.0";
+
 		public static readonly Dictionary <string, int> ArchAPILevels = new Dictionary <string, int> (StringComparer.Ordinal) {
 			{"armeabi-v7a", @NDK_ARMEABI_V7_API@},
 			{        "arm", @NDK_ARMEABI_V7_API@},

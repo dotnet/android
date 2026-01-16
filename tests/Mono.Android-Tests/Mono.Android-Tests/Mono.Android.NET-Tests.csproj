@@ -31,7 +31,7 @@
         NetworkInterfaces excluded: https://github.com/dotnet/runtime/issues/75155
     -->
     <!-- TODO: https://github.com/dotnet/android/issues/10069 -->
-    <ExcludeCategories Condition=" '$(UseMonoRuntime)' != 'true' ">$(ExcludeCategories):CoreCLRIgnore:SSL:NTLM:RuntimeConfig</ExcludeCategories>
+    <ExcludeCategories Condition=" '$(UseMonoRuntime)' != 'true' ">$(ExcludeCategories):CoreCLRIgnore:NTLM</ExcludeCategories>
     <!-- TODO: https://github.com/dotnet/android/issues/10079 -->
     <ExcludeCategories Condition=" '$(PublishAot)' == 'true' ">$(ExcludeCategories):NativeAOTIgnore:SSL:NTLM:AndroidClientHandler:Export:NativeTypeMap</ExcludeCategories>
     <!-- FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190 -->
@@ -49,6 +49,7 @@
     <!-- Trimmer switches required for tests -->
     <JsonSerializerIsReflectionEnabledByDefault Condition="'$(TrimMode)' == 'full'">true</JsonSerializerIsReflectionEnabledByDefault>
     <_DefaultValueAttributeSupport Condition="'$(TrimMode)' == 'full'">true</_DefaultValueAttributeSupport>
+    <StartupHookSupport>true</StartupHookSupport>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -61,6 +62,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\TestRunner.Core\TestRunner.Core.NET.csproj" />
     <ProjectReference Include="..\..\TestRunner.NUnit\TestRunner.NUnit.NET.csproj" />
+    <ProjectReference Include="..\..\StartupHook\StartupHook.csproj" />
     <ProjectReference Include="..\Java.Interop-Tests\Java.Interop-Tests.NET.csproj" />
     <ProjectReference Include="..\Mono.Android-Test.Library\Mono.Android-Test.Library.NET.csproj" />
     <ProjectReference Include="..\..\..\src\Xamarin.Android.NUnitLite\Xamarin.Android.NUnitLite.NET.csproj" />
@@ -68,6 +70,7 @@
 
   <ItemGroup>
     <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" />
+    <TrimmerRootAssembly Include="StartupHook" RootMode="All" />
     <_AndroidRemapMembers Include="Remaps.xml" />
     <_AndroidRemapMembers Include="IsAssignableFromRemaps.xml" Condition=" '$(_AndroidIsAssignableFromCheck)' == 'false' " />
     <ProguardConfiguration Include="proguard.cfg" />
@@ -103,6 +106,7 @@
     <Compile Include="System\AppDomainTest.cs" />
     <Compile Include="System\AssemblyInformationalVersionAttributeTest.cs" />
     <Compile Include="System\ExceptionTest.cs" />
+    <Compile Include="System\StartupHookTest.cs" />
     <Compile Include="System\TimeZoneTest.cs" />
     <Compile Include="System.Drawing\TypeConverterTest.cs" />
     <Compile Include="System.IO\DirectoryTest.cs" />
@@ -227,6 +231,7 @@
     <RuntimeHostConfigurationOption Include="test_bool"    Value="true" />
     <RuntimeHostConfigurationOption Include="test_integer" Value="42" />
     <RuntimeHostConfigurationOption Include="test_string"  Value="foo" />
+    <RuntimeHostConfigurationOption Include="STARTUP_HOOKS" Value="StartupHook" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(AndroidPackageFormat)' != 'aab' ">
