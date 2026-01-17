@@ -135,6 +135,7 @@ namespace xamarin::android {
 			return fstatat (dirfd, file.data (), &sbuf, 0) == 0 && fs_entry_is_mode (sbuf, S_IFREG);
 		}
 
+#if !defined (XA_HOST_NATIVEAOT)
 		static auto get_file_size_at (int dirfd, const char *file_name) noexcept -> std::optional<size_t>
 		{
 			struct stat sbuf;
@@ -150,13 +151,33 @@ namespace xamarin::android {
 		{
 			return get_file_size_at (dirfd, file_name.data ());
 		}
+#endif // ndef XA_HOST_NATIVEAOT
 
 		[[gnu::flatten, gnu::always_inline]]
 		static void set_environment_variable (const char *name, const char *value) noexcept
 		{
-			log_debug (LOG_DEFAULT, "Setting environment variable {} = '{}'", optional_string (name), optional_string (value));
+			log_debug (
+				LOG_DEFAULT,
+#if defined(XA_HOST_NATIVEAOT)
+				"Setting environment variable %s = '%s'",
+#else
+				"Setting environment variable {} = '{}'"sv,
+#endif
+				optional_string (name),
+				optional_string (value)
+			);
+
 			if (::setenv (name, value, 1) < 0) {
-				log_warn (LOG_DEFAULT, "Failed to set environment variable '{}': {}", name, ::strerror (errno));
+				log_warn (
+					LOG_DEFAULT,
+#if defined(XA_HOST_NATIVEAOT)
+					"Failed to set environment variable '%s': %s",
+#else
+					"Failed to set environment variable '{}': {}"sv,
+#endif
+					name,
+					::strerror (errno)
+				);
 			}
 		}
 
@@ -178,7 +199,19 @@ namespace xamarin::android {
 			if (createDirectory) {
 				int rv = create_directory (value.get_cstr (), mode);
 				if (rv < 0 && errno != EEXIST) {
-					log_warn (LOG_DEFAULT, "Failed to create directory '{}' for environment variable '{}'. {}", value.get_string_view (), name, strerror (errno));
+					log_warn (
+						LOG_DEFAULT,
+#if defined(XA_HOST_NATIVEAOT)
+						"Failed to create directory '%s' for environment variable '%s'. %s",
+						value.get_cstr (),
+						name.data (),
+#else
+						"Failed to create directory '{}' for environment variable '{}'. {}"sv,
+						value.get_string_view (),
+						name,
+#endif
+						::strerror (errno)
+					);
 				}
 			}
 			set_environment_variable (name, value);
@@ -195,6 +228,7 @@ namespace xamarin::android {
 			return page_size;
 		}
 
+#if !defined (XA_HOST_NATIVEAOT)
 		static detail::mmap_info mmap_file (int fd, uint32_t offset, size_t size, std::string_view const& filename) noexcept
 		{
 			detail::mmap_info file_info;
@@ -225,7 +259,7 @@ namespace xamarin::android {
 
 			log_info (
 				LOG_ASSEMBLY,
-				"  mmap_start: {:<8p}; mmap_end: {:<8p}	 mmap_len: {:<12}  file_start: {:<8p}  file_end: {:<8p}	 file_len: {:<12}	  apk descriptor: {}  file: {}",
+				"  mmap_start: {:<8p}; mmap_end: {:<8p}	 mmap_len: {:<12}  file_start: {:<8p}  file_end: {:<8p}	 file_len: {:<12}	  apk descriptor: {}  file: {}"sv,
 				mmap_info.area,
 				pointer_add (mmap_info.area, mmap_info.size),
 				mmap_info.size,
@@ -239,7 +273,6 @@ namespace xamarin::android {
 			return file_info;
 		}
 
-#if !defined(XA_HOST_NATIVEAOT)
 		[[gnu::always_inline]]
 		static std::tuple<void*, size_t> get_wrapper_dso_payload_pointer_and_size (detail::mmap_info const& map_info, std::string_view const& file_name) noexcept
 		{
