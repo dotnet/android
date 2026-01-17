@@ -32,8 +32,11 @@ _ResolveAssemblies MSBuild target.
   </PropertyGroup>
 
   <PropertyGroup>
-    <!-- When marshal methods are enabled, AOT needs to run after the GenerateJavaStubs task -->
-    <_RunAotMaybe Condition=" '$(_AndroidUseMarshalMethods)' != 'True' ">_AndroidAot</_RunAotMaybe>
+    <!--
+      When marshal methods are enabled, AOT needs to run after the GenerateJavaStubs task.
+      For NativeAOT, _RunAotMaybe is set in Microsoft.Android.Sdk.NativeAOT.targets.
+    -->
+    <_RunAotMaybe Condition=" '$(_AndroidUseMarshalMethods)' != 'True' and '$(_AndroidRuntime)' != 'NativeAOT' ">_AndroidAot</_RunAotMaybe>
   </PropertyGroup>
 
   <Target Name="_ComputeFilesToPublishForRuntimeIdentifiers"

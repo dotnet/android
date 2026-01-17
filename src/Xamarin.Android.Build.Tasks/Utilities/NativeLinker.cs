@@ -49,6 +49,7 @@ class NativeLinker
 	public bool UseNdkLibraries { get; set; } = false;
 	public bool TargetsCLR { get; set; }
 	public bool UseSymbolic { get; set; }
+	public bool IsNativeAOT { get; set; }
 	public string? NdkRootPath { get; set; }
 	public string? NdkApiLevel { get; set; }
 	public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment64Bit;
@@ -161,6 +162,12 @@ class NativeLinker
 
 		if (UseSymbolic) {
 			sw.WriteLine ("-Bsymbolic");
+		}
+
+		if (IsNativeAOT) {
+			// Required for NativeAOT to handle __start___modules/__stop___modules symbols
+			// Without this flag, lld garbage-collects them and linking fails
+			sw.WriteLine ("-z nostart-stop-gc");
 		}
 
 		// This MUST go before extra args, since the NDK library path must take precedence over the path in extra args set in the ctor

@@ -105,6 +105,20 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
     </ItemGroup>
 
     <ItemGroup Condition=" '$(AndroidRuntime)' == 'NativeAOT' ">
+      <!-- Include sysroot libraries for NativeAOT linking -->
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libc.so" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libdl.so" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\liblog.so" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libm.so" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libz.so" />
+      <!-- C++ runtime and compiler builtins for NativeAOT -->
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\crtbegin_so.o" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\crtend_so.o" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libc++_static.a" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libc++abi.a" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libclang_rt.builtins-$(_ClangArch)-android.a" />
+      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libunwind.a" />
+      <!-- NativeAOT runtime libraries -->
       <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnaot-android.debug-static-debug.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnaot-android.debug-static-debug.a" />
       <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnaot-android.release-static-release.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnaot-android.release-static-release.a" />
       <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\Microsoft.Android.Runtime.NativeAOT.dll" />
