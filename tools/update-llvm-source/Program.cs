@@ -1,3 +1,10 @@
+//
+// This is a quick and dirty utility to update LLVM sources we copied locally
+// for use with the NativeAOT runtime in order to avoid dependency on libc++, which
+// NativeAOT cannot use on NDK r29 and newer, because of symbol conflicts (see https://github.com/dotnet/runtime/issues/121172)
+//
+// The utility is supposed to die fast and loud if anything goes wrong.
+//
 using System;
 using System.IO;
 using System.Net.Http;
@@ -63,16 +70,18 @@ class App
 
 		var fileUrl = uriBuilder.Uri;
 		string? tempFilePath = null;
+		string? decodedFilePath = null;
 
 		try {
 			tempFilePath = DownloadFile (fileUrl);
-			UpdateIfNecessary (localPath, tempFilePath);
+			decodedFilePath = UpdateIfNecessary (localPath, tempFilePath);
 		} finally {
 			DeleteFile (tempFilePath);
+			DeleteFile (decodedFilePath);
 		}
 	}
 
-	static void UpdateIfNecessary (string localPath, string? remotePath)
+	static string UpdateIfNecessary (string localPath, string? remotePath)
 	{
 		if (String.IsNullOrEmpty (remotePath)) {
 			throw new InvalidOperationException ("Remote file not downloaded properly.");
@@ -87,16 +96,66 @@ class App
 			throw new InvalidOperationException ($"Remove file '{remotePath}' is empty.");
 		}
 
-		byte[] localHash = GetFileHash (localPath);
-		byte[] remoteHash = GetFileHash (remotePath);
+		// Remote files are base64-encoded
+		string decodedFilePath = DecodeFile (remotePath);
 
-		if (localHash.Equals (remoteHash)) {
+		byte[] localHash = GetFileHash (localPath);
+		byte[] remoteHash = GetFileHash (decodedFilePath);
+
+		if (ArraysAreEqual (localHash, remoteHash)) {
 			Console.WriteLine ($"   Local file is identical to the remote one. No need to update.");
-			return;
+			return decodedFilePath;
 		}
 
 		Console.WriteLine ($"   Local file is different to the remote one. Updating.");
-		File.Copy (remotePath, localPath, overwrite: true);
+		File.Copy (decodedFilePath, localPath, overwrite: true);
+
+		return decodedFilePath;
+	}
+
+	static bool ArraysAreEqual (byte[] a, byte[] b)
+	{
+		if (a.Length != b.Length) {
+			return false;
+		}
+
+		for (int i = 0; i < a.Length; i++) {
+			if (a[i] != b[i]) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	static string DecodeFile (string remotePath)
+	{
+		string decodedFilePath = Path.GetTempFileName ();
+		using var inFile = File.OpenRead (remotePath);
+		using var outFile = File.OpenWrite (decodedFilePath);
+		using var transform = new FromBase64Transform (FromBase64TransformMode.IgnoreWhiteSpaces);
+		byte[] outputBytes = new byte[transform.OutputBlockSize];
+
+		// Input sources are small, no need to do anything fancy here.
+		byte[] inputBytes = File.ReadAllBytes (remotePath);
+
+		// Transform the data in chunks the size of InputBlockSize.
+		int i = 0;
+		while (inputBytes.Length - i > transform.InputBlockSize) {
+			int bytesWritten = transform.TransformBlock (inputBytes, i, transform.InputBlockSize, outputBytes, 0);
+			i += transform.InputBlockSize;
+			outFile.Write (outputBytes, 0, bytesWritten);
+		}
+
+		// Transform the final block of data.
+		outputBytes = transform.TransformFinalBlock (inputBytes, i, inputBytes.Length - i);
+		outFile.Write (outputBytes, 0, outputBytes.Length);
+		outFile.Flush ();
+		outFile.Close ();
+
+		// Free up any used resources.
+		transform.Clear ();
+		return decodedFilePath;
 	}
 
 	static string DownloadFile (Uri url)
@@ -198,7 +257,9 @@ class App
 	static byte[] GetFileHash (string path)
 	{
 		using Stream fs = File.OpenRead (path);
-		return SHA512.HashData (fs);
+		using var sha256 = SHA256.Create ();
+
+		return sha256.ComputeHash (fs);
 	}
 
 	static void WaitAWhile (string what, int which, ref TimeSpan delay)
