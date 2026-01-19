@@ -59,8 +59,31 @@ class Step_Generate_LLVM_UpdateInfo : Step
 			return false;
 		}
 
+		string? llvmProjectVersion = null;
+		string androidVersionPath = Path.Combine (Configurables.Paths.AndroidToolchainRootDirectory, "AndroidVersion.txt");
+		if (Path.Exists (androidVersionPath)) {
+			try {
+				foreach (string line in File.ReadLines (androidVersionPath)) {
+					// In NDK r29 LLVM version was on the first line
+					llvmProjectVersion = line.Trim ();
+					break;
+				}
+			} catch (Exception ex) {
+				Log.DebugLine ($"Failed to read LLVM Android version file '{androidVersionPath}'");
+				Log.DebugLine ("Exception was thrown:");
+				Log.DebugLine (ex.ToString ());
+			}
+		} else {
+			Log.WarningLine ($"LLVM Android version file not found at {androidVersionPath}");
+		}
+
+		if (String.IsNullOrEmpty (llvmProjectVersion)) {
+			llvmProjectVersion = "<unknown>";
+		}
+
 		Log.InfoLine ("LLVM project path: ", llvmProjectPath);
 		Log.InfoLine ("LLVM project revision: ", llvmProjectRevision);
+		Log.InfoLine ("LLVM project version: ", llvmProjectVersion);
 
 		// Manifest uses https://googleplex-android.googlesource.com/ which is not accessible for mere mortals,
 		// therefore we need to use the public URL
@@ -72,11 +95,13 @@ class Step_Generate_LLVM_UpdateInfo : Step
 		string updateInfoSourceInputPath = Path.Combine (Configurables.Paths.BuildToolsScriptsDir, updateSourcesInputName);
 		string updateInfoSourceOutputPath = Path.Combine (Configurables.Paths.BuildBinDir, Path.GetFileNameWithoutExtension (updateSourcesInputName));
 
+		Log.InfoLine ();
 		Log.InfoLine ($"Generating LLVM update info sources.");
 		var updateInfoSource = new GeneratedPlaceholdersFile (
 			new Dictionary <string, string> (StringComparer.Ordinal) {
-				{ "@LLVM_PROJECT_REVISION@", llvmProjectRevision },
 				{ "@LLVM_PROJECT_BASE_URL@", baseURI.ToString () },
+				{ "@LLVM_PROJECT_REVISION@", llvmProjectRevision },
+				{ "@LLVM_PROJECT_VERSION@", llvmProjectVersion },
 			},
 			updateInfoSourceInputPath,
 			updateInfoSourceOutputPath

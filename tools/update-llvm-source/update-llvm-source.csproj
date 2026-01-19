@@ -8,7 +8,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>../../bin/$(Configuration)/bin/update-llvm-source</OutputPath>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>$(DotNetStableTargetFramework)</TargetFrameworks>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <RootNamespace>Xamarin.Android.Tools</RootNamespace>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -17,5 +17,6 @@
 
   <ItemGroup>
     <Compile Include="../../bin/Build$(Configuration)/LlvmUpdateInfo.cs" />
+    <Compile Include="../../bin/Build$(Configuration)/XABuildConfig.cs" />
   </ItemGroup>
 </Project>
