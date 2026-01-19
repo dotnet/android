@@ -5,5 +5,6 @@ namespace Xamarin.Android.Tools;
 static class LlvmUpdateInfo
 {
 	public const string Revision = "@LLVM_PROJECT_REVISION@";
+    public const string Version = "@LLVM_PROJECT_VERSION@";
 	public static readonly Uri BaseUrl = new Uri ("@LLVM_PROJECT_BASE_URL@");
 }
