@@ -47,9 +47,9 @@ See: https://github.com/dotnet/sdk/issues/52492
       <_HotReloadEnvironment Include="DOTNET_STARTUP_HOOKS=$(_HotReloadAgentAssemblyName)" />
     </ItemGroup>
 
-    <!-- Parse DotNetHotReloadAgentEnvironment (semicolon-separated KEY=VALUE pairs) -->
-    <ItemGroup Condition=" '$(DotNetHotReloadAgentEnvironment)' != '' ">
-      <_HotReloadEnvironment Include="$(DotNetHotReloadAgentEnvironment)" />
+    <!-- <DotNetHotReloadAgentEnvironment Include="<name>" Value="<value>"/> -->
+    <ItemGroup>
+      <_HotReloadEnvironment Include="@(DotNetHotReloadAgentEnvironment->'%(Identity)=%(Value)')" />
     </ItemGroup>
 
     <WriteLinesToFile
@@ -73,9 +73,9 @@ See: https://github.com/dotnet/sdk/issues/52492
 
     This target is discovered by checking if the project has a target named
     "DeployHotReloadAgentConfiguration". If found, dotnet-watch/IDE will
-    evaluate it with the following global properties:
-    - DotNetHotReloadAgentStartupHook: Path to Microsoft.Extensions.DotNetDeltaApplier.dll
-    - DotNetHotReloadAgentEnvironment: Semicolon-separated environment variables (KEY=VALUE;KEY2=VALUE2)
+    set the following:
+    - DotNetHotReloadAgentStartupHook (Property): Path to Microsoft.Extensions.DotNetDeltaApplier.dll
+    - DotNetHotReloadAgentEnvironment (ItemGroup): Environment variables as <DotNetHotReloadAgentEnvironment Include="name" Value="value" />
   -->
   <Target Name="DeployHotReloadAgentConfiguration"
           DependsOnTargets="_AndroidHotReloadAgentConfiguration;DeployToDevice" />
