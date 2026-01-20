@@ -52,11 +52,12 @@
     <StartupHookSupport>true</StartupHookSupport>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(Configuration)' == 'Debug' ">
+  <ItemGroup>
     <!-- trying to track:
       JNI ERROR (app bug): accessed deleted Global 0x3056
     -->
-    <AndroidEnvironment Include="env.txt" />
+    <AndroidEnvironment Include="env.txt" Condition=" '$(Configuration)' == 'Debug' " />
+    <AndroidEnvironment Include="hotreload.env" />
   </ItemGroup>
 
   <ItemGroup>
