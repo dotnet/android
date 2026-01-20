@@ -1542,6 +1542,20 @@ internal static class StartupHook
 			var proj = new XamarinAndroidApplicationProject {
 				ProjectName = nameof (DeployHotReloadAgentConfiguration),
 				IsRelease = false,
+				Imports = {
+					// Add a .targets file that simulates what dotnet-watch/IDE would inject
+					new Import (() => "HotReload.targets") {
+						TextContent = () => @"<Project xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
+	<PropertyGroup>
+		<DotNetHotReloadAgentStartupHook>StartupHook</DotNetHotReloadAgentStartupHook>
+	</PropertyGroup>
+	<ItemGroup>
+		<DotNetHotReloadAgentEnvironment Include=""HOTRELOAD_TEST_VAR"" Value=""TestValue123"" />
+		<DotNetHotReloadAgentEnvironment Include=""ANOTHER_VAR"" Value=""AnotherValue456"" />
+	</ItemGroup>
+</Project>"
+					},
+				}
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
@@ -1560,12 +1574,8 @@ internal static class StartupHook
 			// Build normally first
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
 
-			// Simulate what dotnet-watch/IDE would do: set the hot reload properties and run the target
-			var hotReloadProperties = new [] {
-				"DotNetHotReloadAgentStartupHook=StartupHook",
-				"DotNetHotReloadAgentEnvironment=HOTRELOAD_TEST_VAR=TestValue123;ANOTHER_VAR=AnotherValue456",
-			};
-			Assert.IsTrue (dotnet.Build (target: "DeployHotReloadAgentConfiguration", parameters: hotReloadProperties),
+			// Run the DeployHotReloadAgentConfiguration target (hot reload properties come from HotReload.targets)
+			Assert.IsTrue (dotnet.Build (target: "DeployHotReloadAgentConfiguration"),
 				"`dotnet build -t:DeployHotReloadAgentConfiguration` should succeed");
 
 			// Launch the app using adb
