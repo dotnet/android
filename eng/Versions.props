@@ -7,10 +7,10 @@
     <MicrosoftNETCoreAppRefPackageVersion>11.0.0-preview.1.26067.103</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
     <MicrosoftDotNetBuildTasksFeedPackageVersion>11.0.0-beta.26067.103</MicrosoftDotNetBuildTasksFeedPackageVersion>
-    <MicrosoftNETWorkloadMonoToolChainCurrentManifest110100alpha1PackageVersion>11.0.0-preview.1.26067.103</MicrosoftNETWorkloadMonoToolChainCurrentManifest110100alpha1PackageVersion>
-    <MicrosoftNETWorkloadEmscriptenCurrentManifest110100alpha1PackageVersion>11.0.100-alpha.1.26064.107</MicrosoftNETWorkloadEmscriptenCurrentManifest110100alpha1PackageVersion>
-    <MicrosoftNETWorkloadMonoToolChainPackageVersion>$(MicrosoftNETWorkloadMonoToolChainCurrentManifest110100alpha1PackageVersion)</MicrosoftNETWorkloadMonoToolChainPackageVersion>
-    <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenCurrentManifest110100alpha1PackageVersion)</MicrosoftNETWorkloadEmscriptenPackageVersion>
+    <MicrosoftNETWorkloadMonoToolchainCurrentManifest110100preview1PackageVersion>11.0.100-preview.1.26067.103</MicrosoftNETWorkloadMonoToolchainCurrentManifest110100preview1PackageVersion>
+    <MicrosoftNETWorkloadEmscriptenCurrentManifest110100preview1PackageVersion>11.0.100-preview.1.26067.103</MicrosoftNETWorkloadEmscriptenCurrentManifest110100preview1PackageVersion>
+    <MicrosoftNETWorkloadMonoToolChainPackageVersion>$(MicrosoftNETWorkloadMonoToolChainCurrentManifest110100preview1PackageVersion)</MicrosoftNETWorkloadMonoToolChainPackageVersion>
+    <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenCurrentManifest110100preview1PackageVersion)</MicrosoftNETWorkloadEmscriptenPackageVersion>
     <MicrosoftTemplateEngineAuthoringTasksPackageVersion>11.0.100-preview.1.26067.103</MicrosoftTemplateEngineAuthoringTasksPackageVersion>
     <MicrosoftDotNetCecilPackageVersion>0.11.5-preview.26067.103</MicrosoftDotNetCecilPackageVersion>
     <SystemIOHashingPackageVersion>9.0.4</SystemIOHashingPackageVersion>
