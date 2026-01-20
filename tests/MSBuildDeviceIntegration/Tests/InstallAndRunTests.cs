@@ -1527,8 +1527,12 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		[Test]
 		public void DeployHotReloadAgentConfiguration ()
 		{
-			// Create a simple "startup hook" assembly that sets an env var we can check
-			var startupHookCode = @"
+			// Create a library project that contains the startup hook
+			var startupHookLib = new XamarinAndroidLibraryProject {
+				ProjectName = "StartupHook",
+				Sources = {
+					new BuildItem.Source ("StartupHook.cs") {
+						TextContent = () => @"
 using System;
 
 internal static class StartupHook
@@ -1538,7 +1542,11 @@ internal static class StartupHook
 		Console.WriteLine (""HOTRELOAD_TEST_HOOK_INITIALIZED=true"");
 	}
 }
-";
+"
+					}
+				}
+			};
+
 			var proj = new XamarinAndroidApplicationProject {
 				ProjectName = nameof (DeployHotReloadAgentConfiguration),
 				IsRelease = false,
@@ -1558,17 +1566,21 @@ internal static class StartupHook
 				}
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.AddReference (startupHookLib);
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
 		Console.WriteLine (""DOTNET_STARTUP_HOOKS="" + Environment.GetEnvironmentVariable(""DOTNET_STARTUP_HOOKS""));
 		Console.WriteLine (""HOTRELOAD_TEST_VAR="" + Environment.GetEnvironmentVariable(""HOTRELOAD_TEST_VAR""));
 		Console.WriteLine (""ANOTHER_VAR="" + Environment.GetEnvironmentVariable(""ANOTHER_VAR""));
 ");
-			proj.Sources.Add (new BuildItem.Source ("StartupHook.cs") { TextContent = () => startupHookCode });
 
-			using var builder = CreateApkBuilder ();
+			var rootPath = Path.Combine (Root, "temp", TestName);
+			using var libBuilder = CreateDllBuilder (Path.Combine (rootPath, startupHookLib.ProjectName));
+			Assert.IsTrue (libBuilder.Build (startupHookLib), "Library build should have succeeded.");
+
+			using var builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName));
 			builder.Save (proj);
 
-			var projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
+			var projectDirectory = Path.Combine (rootPath, proj.ProjectName);
 			var dotnet = new DotNetCLI (Path.Combine (projectDirectory, proj.ProjectFilePath));
 
 			// Build normally first
