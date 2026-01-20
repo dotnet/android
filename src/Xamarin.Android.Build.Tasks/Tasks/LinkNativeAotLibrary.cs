@@ -76,7 +76,7 @@ public class LinkNativeAotLibrary : AndroidTask
 			SaveDebugSymbols = SaveDebugSymbols,
 			AllowUndefinedSymbols = false,
 			UseNdkLibraries = false,
-			TargetsCLR = false, // NativeAOT doesn't need --eh-frame-hdr like CoreCLR does
+			TargetsCLR = false, // NativeAOT uses its own runtime, not CoreCLR
 			UseSymbolic = true,
 			IsNativeAOT = true, // Enable NativeAOT-specific linker flags
 		};

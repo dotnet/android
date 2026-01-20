@@ -156,8 +156,8 @@ class NativeLinker
 			sw.WriteLine ("--no-undefined");
 		}
 
-		if (TargetsCLR) {
-			sw.WriteLine ("--eh-frame-hdr"); // CoreCLR needs it for its exception stack unwinding
+		if (TargetsCLR || IsNativeAOT) {
+			sw.WriteLine ("--eh-frame-hdr"); // CoreCLR and NativeAOT need it for DWARF-based stack unwinding
 		}
 
 		if (UseSymbolic) {
