@@ -635,14 +635,15 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		writer.WriteLine ();
 
 		// Global variable holding the get_function_pointer callback (set during app init)
+		// NOTE: Must NOT use dso_local for external symbols when generating PIC code
 		writer.WriteLine ("; External get_function_pointer callback - resolves UCO wrapper by class name and method index");
-		writer.WriteLine ("@get_function_pointer = external dso_local local_unnamed_addr global ptr, align 8");
+		writer.WriteLine ("@get_function_pointer = external local_unnamed_addr global ptr, align 8");
 		writer.WriteLine ();
 
 		// Cached function pointer variables (one per method)
 		writer.WriteLine ("; Cached function pointers for marshal methods");
 		for (int i = 0; i < marshalMethods.Count; i++) {
-			writer.WriteLine ($"@fn_ptr_{i} = internal dso_local unnamed_addr global ptr null, align 8");
+			writer.WriteLine ($"@fn_ptr_{i} = internal unnamed_addr global ptr null, align 8");
 		}
 		writer.WriteLine ();
 
@@ -669,7 +670,8 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 			writer.WriteLine ();
 			writer.WriteLine ($"; Method: {method.JniName}{method.JniSignature}");
-			writer.WriteLine ($"define dso_local {llvmRetType} @{nativeSymbol}(ptr %env, ptr %obj{llvmParams}) #0 {{");
+			// NOTE: Don't use dso_local for PIC code compatibility
+			writer.WriteLine ($"define {llvmRetType} @{nativeSymbol}(ptr %env, ptr %obj{llvmParams}) #0 {{");
 			writer.WriteLine ("entry:");
 
 			// Load cached function pointer
