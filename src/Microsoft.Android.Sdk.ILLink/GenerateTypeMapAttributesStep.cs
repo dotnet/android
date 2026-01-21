@@ -562,6 +562,68 @@ public class GenerateTypeMapAttributesStep : BaseStep
 			// Generate LLVM IR file only
 			GenerateLlvmIrFile (llvmIrOutputPath, targetArch, targetType, jniTypeName, marshalMethods);
 		}
+
+		// Generate the initialization file that defines get_function_pointer and xamarin_app_init
+		GenerateLlvmIrInitFile (llvmIrOutputPath, targetArch);
+	}
+
+	/// <summary>
+	/// Generates the marshal_methods_init.ll file that defines the get_function_pointer global
+	/// and xamarin_app_init function. This file is required because all other .ll files
+	/// reference get_function_pointer as external, so we need exactly one definition.
+	/// </summary>
+	void GenerateLlvmIrInitFile (string outputPath, string targetArch)
+	{
+		Directory.CreateDirectory (outputPath);
+		string llFilePath = Path.Combine (outputPath, "marshal_methods_init.ll");
+
+		using var writer = new StreamWriter (llFilePath);
+
+		// LLVM IR header
+		writer.WriteLine ($"; ModuleID = 'marshal_methods_init.ll'");
+		writer.WriteLine ($"source_filename = \"marshal_methods_init.ll\"");
+		writer.WriteLine ("target datalayout = \"e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128\"");
+		writer.WriteLine ($"target triple = \"aarch64-unknown-linux-android21\"");
+		writer.WriteLine ();
+
+		// Define get_function_pointer global variable (initialized to null)
+		// This is the global that all marshal method stubs reference
+		writer.WriteLine ("; Global get_function_pointer callback - set by xamarin_app_init during app startup");
+		writer.WriteLine ("@get_function_pointer = local_unnamed_addr global ptr null, align 8");
+		writer.WriteLine ();
+
+		// Define xamarin_app_init function that stores the callback pointer
+		// Signature: void xamarin_app_init(JNIEnv* env, void (*fn)(char*, int, int, void**))
+		writer.WriteLine ("; xamarin_app_init - stores the get_function_pointer callback");
+		writer.WriteLine ("define void @xamarin_app_init(ptr noundef %env, ptr noundef %fn) local_unnamed_addr #0 {");
+		writer.WriteLine ("entry:");
+		writer.WriteLine ("  ; Check if fn is null");
+		writer.WriteLine ("  %is_null = icmp eq ptr %fn, null");
+		writer.WriteLine ("  br i1 %is_null, label %error, label %store");
+		writer.WriteLine ();
+		writer.WriteLine ("error:");
+		writer.WriteLine ("  ; fn is null - abort (this should never happen)");
+		writer.WriteLine ("  call void @abort() #1");
+		writer.WriteLine ("  unreachable");
+		writer.WriteLine ();
+		writer.WriteLine ("store:");
+		writer.WriteLine ("  ; Store the function pointer in the global");
+		writer.WriteLine ("  store ptr %fn, ptr @get_function_pointer, align 8");
+		writer.WriteLine ("  ret void");
+		writer.WriteLine ("}");
+		writer.WriteLine ();
+
+		// Declare abort as external
+		writer.WriteLine ("; External functions");
+		writer.WriteLine ("declare void @abort() #1");
+		writer.WriteLine ();
+
+		// Function attributes
+		writer.WriteLine ("; Function attributes");
+		writer.WriteLine ("attributes #0 = { nounwind mustprogress }");
+		writer.WriteLine ("attributes #1 = { noreturn nounwind }");
+
+		Context.LogMessage (MessageContainer.CreateInfoMessage ($"Generated LLVM IR init file: {llFilePath}"));
 	}
 
 	/// <summary>
