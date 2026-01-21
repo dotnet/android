@@ -26,7 +26,6 @@ namespace {
 		{0xae3df96dda0143bd, "_monodroid_gref_log", reinterpret_cast<void*>(&_monodroid_gref_log)},
 		{0xb6222d90af401865, "_monodroid_weak_gref_get", reinterpret_cast<void*>(&_monodroid_weak_gref_get)},
 		{0xb8306f71b963cd3d, "monodroid_log", reinterpret_cast<void*>(&monodroid_log)},
-		{0xb9bae9c43fb05089, "xamarin_app_init", reinterpret_cast<void*>(&xamarin_app_init)},
 		{0xc2a21d3f6c8ccc24, "_monodroid_lookup_replacement_method_info", reinterpret_cast<void*>(&_monodroid_lookup_replacement_method_info)},
 		{0xc5b4690e13898fa3, "monodroid_timing_start", reinterpret_cast<void*>(&monodroid_timing_start)},
 		{0xd1e121b94ea63f2e, "_monodroid_gref_get", reinterpret_cast<void*>(&_monodroid_gref_get)},
@@ -565,7 +564,6 @@ constexpr hash_t system_globalization_native_library_hash = 0x28b5c8fca080abd5;
 		{0xe215a17c, "_monodroid_weak_gref_delete", reinterpret_cast<void*>(&_monodroid_weak_gref_delete)},
 		{0xe7e77ca5, "_monodroid_gref_log", reinterpret_cast<void*>(&_monodroid_gref_log)},
 		{0xea2184e3, "_monodroid_gc_wait_for_bridge_processing", reinterpret_cast<void*>(&_monodroid_gc_wait_for_bridge_processing)},
-		{0xeac7f6e3, "xamarin_app_init", reinterpret_cast<void*>(&xamarin_app_init)},
 		{0xfa1832a6, "_monodroid_detect_cpu_and_architecture", reinterpret_cast<void*>(&_monodroid_detect_cpu_and_architecture)},
 		{0xfa4e32ca, "monodroid_log", reinterpret_cast<void*>(&monodroid_log)},
 	}};

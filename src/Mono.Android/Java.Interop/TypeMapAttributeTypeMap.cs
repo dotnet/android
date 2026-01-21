@@ -332,8 +332,8 @@ namespace Android.Runtime
 				// Get the JavaPeerProxy attribute for this type
 				JavaPeerProxy? proxy = GetProxyForType (type);
 				if (proxy == null) {
-					Log ($"GetFunctionPointer: No JavaPeerProxy attribute on {type.FullName}");
-					*targetPtr = IntPtr.Zero;
+					Log ($"GetFunctionPointer: No JavaPeerProxy attribute on {type.FullName}, attempting reflection fallback...");
+					*targetPtr = ResolveUserTypeMethod (type, methodIndex);
 					return;
 				}
 
@@ -346,6 +346,38 @@ namespace Android.Runtime
 				Log ($"GetFunctionPointer: Exception - {ex}");
 				*targetPtr = IntPtr.Zero;
 			}
+		}
+
+		static IntPtr ResolveUserTypeMethod (Type type, int index)
+		{
+			var candidates = new List<RegisterAttribute> ();
+			// Assumption: Reflection returns methods in definition order (matching Cecil)
+			foreach (var m in type.GetMethods (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly)) {
+				var attr = m.GetCustomAttribute<RegisterAttribute> ();
+				if (attr != null && !string.IsNullOrEmpty (attr.Name) && !string.IsNullOrEmpty (attr.Signature)) {
+					candidates.Add (attr);
+				}
+			}
+
+			if (index < 0 || index >= candidates.Count) {
+				Log ($"ResolveUserTypeMethod: Index {index} out of range (count {candidates.Count})");
+				return IntPtr.Zero;
+			}
+
+			var regAttr = candidates [index];
+			string callbackName = regAttr.Connector;
+			if (string.IsNullOrEmpty (callbackName)) {
+				callbackName = "n_" + regAttr.Name;
+			}
+
+			var callbackMethod = type.GetMethod (callbackName, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+			if (callbackMethod == null) {
+				Log ($"ResolveUserTypeMethod: Callback method '{callbackName}' not found on {type.FullName}");
+				return IntPtr.Zero;
+			}
+
+			Log ($"ResolveUserTypeMethod: Resolved index {index} to {callbackName}");
+			return callbackMethod.MethodHandle.GetFunctionPointer ();
 		}
 
 		#endregion

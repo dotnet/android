@@ -364,6 +364,7 @@ extern "C" {
 }
 
 using get_function_pointer_fn = void(*)(uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr);
+// Legacy initialization function (not used with Type Mapping API)
 extern "C" [[gnu::visibility("default")]] void xamarin_app_init (JNIEnv *env, get_function_pointer_fn fn) noexcept;
 
 // Type Mapping API marshal methods callback (CoreCLR/NativeAOT)
@@ -371,3 +372,6 @@ extern "C" [[gnu::visibility("default")]] void xamarin_app_init (JNIEnv *env, ge
 // Parameters: class_name (UTF-8), class_name_length, method_index, target_ptr (out)
 using get_function_pointer_typemap_fn = void(*)(const char* class_name, int32_t class_name_length, int32_t method_index, void** target_ptr);
 extern "C" [[gnu::visibility("default")]] get_function_pointer_typemap_fn get_function_pointer;
+
+// New initialization function for Type Mapping API
+extern "C" [[gnu::visibility("default")]] void xamarin_typemap_init (JNIEnv *env, get_function_pointer_typemap_fn fn) noexcept;

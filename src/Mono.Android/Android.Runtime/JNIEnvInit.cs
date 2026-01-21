@@ -119,6 +119,9 @@ namespace Android.Runtime
 				throw new NotSupportedException ("Internal error: both RuntimeFeature.IsMonoRuntime and RuntimeFeature.IsCoreClrRuntime are enabled");
 			}
 
+			RuntimeNativeMethods.monodroid_log (LogLevel.Info, LogCategories.Default,
+				$"JNIEnvInit: IsCoreClrRuntime={RuntimeFeature.IsCoreClrRuntime}, IsMonoRuntime={RuntimeFeature.IsMonoRuntime}");
+
 			IntPtr total_timing_sequence = IntPtr.Zero;
 			IntPtr partial_timing_sequence = IntPtr.Zero;
 
@@ -159,6 +162,11 @@ namespace Android.Runtime
 			// For CoreCLR/NativeAOT, provide the GetFunctionPointer callback for Type Mapping API marshal methods
 			if (RuntimeFeature.IsCoreClrRuntime) {
 				args->getFunctionPointerFn = (IntPtr)(delegate* unmanaged<byte*, int, int, IntPtr*, void>)&TypeMapAttributeTypeMap.GetFunctionPointer;
+				RuntimeNativeMethods.monodroid_log (LogLevel.Info, LogCategories.Default,
+					$"JNIEnvInit: Set getFunctionPointerFn to 0x{args->getFunctionPointerFn:x}");
+			} else {
+				RuntimeNativeMethods.monodroid_log (LogLevel.Info, LogCategories.Default,
+					"JNIEnvInit: Not CoreCLR, skipping getFunctionPointerFn");
 			}
 
 			RunStartupHooksIfNeeded ();

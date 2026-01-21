@@ -35,6 +35,26 @@ namespace HelloWorld
 			};
 		}
 
+		protected override void OnResume ()
+		{
+			base.OnResume ();
+
+			// Test TypeMap Marshal Method Stub
+			try {
+				Android.Util.Log.Info ("monodroid-test", "Calling native stub Java_example_MainActivity_n_1onCreate__Landroid_os_Bundle_2V...");
+				native_invoke_onCreate (
+					JniEnvironment.EnvironmentPointer,
+					this.Handle,
+					IntPtr.Zero);
+				Android.Util.Log.Info ("monodroid-test", "Called native stub successfully!");
+			} catch (Exception ex) {
+				Android.Util.Log.Error ("monodroid-test", $"Error calling native stub: {ex}");
+			}
+		}
+
+		[DllImport ("xamarin-app", EntryPoint = "Java_example_MainActivity_n_1onCreate__Landroid_os_Bundle_2V")]
+		static extern void native_invoke_onCreate (IntPtr jnienv, IntPtr thiz, IntPtr bundle);
+
 		[System.Runtime.InteropServices.UnmanagedCallersOnly]
 		static void n_onCreate (IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState)
 		{

@@ -626,10 +626,10 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		writer.WriteLine ("@get_function_pointer = local_unnamed_addr global ptr null, align 8");
 		writer.WriteLine ();
 
-		// Define xamarin_app_init function that stores the callback pointer
-		// Signature: void xamarin_app_init(JNIEnv* env, void (*fn)(char*, int, int, void**))
-		writer.WriteLine ("; xamarin_app_init - stores the get_function_pointer callback");
-		writer.WriteLine ("define void @xamarin_app_init(ptr noundef %env, ptr noundef %fn) local_unnamed_addr #0 {");
+		// Define xamarin_typemap_init function that stores the callback pointer
+		// Signature: void xamarin_typemap_init(JNIEnv* env, void (*fn)(char*, int, int, void**))
+		writer.WriteLine ("; xamarin_typemap_init - stores the get_function_pointer callback");
+		writer.WriteLine ("define void @xamarin_typemap_init(ptr noundef %env, ptr noundef %fn) local_unnamed_addr #0 {");
 		writer.WriteLine ("entry:");
 		writer.WriteLine ("  ; Check if fn is null");
 		writer.WriteLine ("  %is_null = icmp eq ptr %fn, null");
@@ -1296,8 +1296,9 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		// Generate UCO wrappers and GetFunctionPointer if there are marshal methods
 		if (marshalMethods.Count > 0) {
 			GenerateUcoWrappers (proxyType, mappedType, marshalMethods);
-			GenerateGetFunctionPointerMethod (proxyType, mappedType, marshalMethods);
 		}
+		// Always generate GetFunctionPointer as it is abstract in JavaPeerProxy
+		GenerateGetFunctionPointerMethod (proxyType, mappedType, marshalMethods);
 
 		return proxyType;
 	}
@@ -1658,7 +1659,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 			intPtrType);
 
 		method.Parameters.Add (new ParameterDefinition ("methodIndex", ParameterAttributes.None,
-			AssemblyToInjectTypeMap.MainModule.TypeSystem.Int32));
+			AssemblyToInjectTypeMap.MainModule.ImportReference (Context.GetType ("System.Int32"))));
 
 		var il = method.Body.GetILProcessor ();
 

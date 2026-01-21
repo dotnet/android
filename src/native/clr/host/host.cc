@@ -565,9 +565,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	if (init.getFunctionPointerFn != nullptr) {
 		get_function_pointer = init.getFunctionPointerFn;
 		// Initialize the function pointer in the application DSO
-		// We cast to get_function_pointer_fn (old signature) because xamarin_app_init takes that type,
-		// but the implementation (LLVM IR) treats it as a generic pointer, so it's safe.
-		xamarin_app_init (env, reinterpret_cast<get_function_pointer_fn>(init.getFunctionPointerFn));
+		xamarin_typemap_init (env, init.getFunctionPointerFn);
 		log_debug (LOG_DEFAULT, "Type Mapping API get_function_pointer callback set"sv);
 	}
 

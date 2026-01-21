@@ -171,6 +171,11 @@ void xamarin_app_init ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] get_functi
 	// Dummy
 }
 
+void xamarin_typemap_init ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] get_function_pointer_typemap_fn fn) noexcept
+{
+	get_function_pointer = fn;
+}
+
 static const JniRemappingIndexMethodEntry some_java_type_one_methods[] = {
 	{
 		.name = {
