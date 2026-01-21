@@ -104,6 +104,7 @@
     <Compile Include="Android.Telephony.Mbms\StreamingService.cs" />
     <Compile Include="Android.Telephony\MbmsDownloadSession.cs" />
     <Compile Include="Android.Views\WindowManagerLayoutParams.cs" />
+<<<<<<< HEAD
     <Compile Include="Java.Interop\AndroidTypeManager.cs" />
     <Compile Include="Java.Interop\AndroidValueManager.cs" />
     <Compile Include="Java.Interop\DynamicNativeMembersRegistration.cs" />
@@ -120,6 +121,19 @@
     <Compile Include="Java.Interop\JavaInteropAliasesAttribute.cs" />
     <Compile Include="Java.Interop\PeerCreationHelper.cs" />
     <Compile Include="Java.Interop\TypeMapException.cs" />
+||||||| parent of e75b3973c (WIP: type mapping API experiment work in progress)
+=======
+    <Compile Include="Java.Interop\AndroidTypeManager.cs" />
+    <Compile Include="Java.Interop\AndroidValueManager.cs" />
+    <Compile Include="Java.Interop\DynamicNativeMembersRegistration.cs" />
+    <Compile Include="Java.Interop\ITypeMap.cs" />
+    <Compile Include="Java.Interop\LlvmIrTypeMap.cs" />
+    <Compile Include="Java.Interop\TypeMapAttributeTypeMap.cs" />
+    <Compile Include="Java.Interop\TypeMapProxyAttribute.cs" />
+    <Compile Include="Java.Interop\JavaPeerProxy.cs" />
+    <Compile Include="Java.Interop\InvokerUniverse.cs" />
+    <Compile Include="Java.Interop\JavaInteropAliasesAttribute.cs" />
+>>>>>>> e75b3973c (WIP: type mapping API experiment work in progress)
     <Compile Include="Java.Lang.Invoke\MethodType.cs" />
     <Compile Include="Java.Time.Chrono\AbstractChronology.cs" />
     <Compile Include="Java.Time\ZonedDateTime.cs" />

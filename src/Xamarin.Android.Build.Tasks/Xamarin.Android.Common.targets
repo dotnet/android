@@ -1667,7 +1667,12 @@ because xbuild doesn't support framework reference assemblies.
       RunCheckedBuild="$(_AndroidJLOCheckedBuild)"
       SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)"
       SupportedAbis="@(_BuildTargetAbis)"
+<<<<<<< HEAD
       TypemapImplementation="$(_AndroidTypemapImplementation)"
+||||||| parent of e75b3973c (WIP: type mapping API experiment work in progress)
+      TypemapImplementation="$(_AndroidTypeMapImplementation)"
+=======
+>>>>>>> e75b3973c (WIP: type mapping API experiment work in progress)
       TypemapOutputDirectory="$(_NativeAssemblySourceDir)">
   </GenerateTypeMappings>
 
@@ -1965,7 +1970,12 @@ because xbuild doesn't support framework reference assemblies.
   <GenerateNativeMarshalMethodSources
       AndroidRuntime="$(_AndroidRuntime)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
+<<<<<<< HEAD
       UseTypemapV3="$(AndroidEnableTypeMaps)"
+||||||| parent of e75b3973c (WIP: type mapping API experiment work in progress)
+      EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
+=======
+>>>>>>> e75b3973c (WIP: type mapping API experiment work in progress)
       EnableNativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)"
       MonoComponents="@(_MonoComponent)"
       EnvironmentOutputDirectory="$(IntermediateOutputPath)android"

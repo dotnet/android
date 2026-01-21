@@ -12,11 +12,17 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
 
   <PropertyGroup>
     <_BinaryRuntimeConfigPath>$(IntermediateOutputPath)$(ProjectRuntimeConfigFileName).bin</_BinaryRuntimeConfigPath>
+<<<<<<< HEAD
     <!-- The TypeMappingEntryAssembly tells the .NET Type Mapping API which assembly to scan first
          for TypeMapAttribute entries. We use the generated _Microsoft.Android.TypeMaps assembly
          which contains all Java-to-.NET type mappings. This assembly is generated BEFORE ILLink
          by the GenerateTypeMapAssembly MSBuild task. -->
     <TypeMapEntryAssembly Condition="'$(TypeMapEntryAssembly)' == ''">_Microsoft.Android.TypeMaps</TypeMapEntryAssembly>
+||||||| parent of e75b3973c (WIP: type mapping API experiment work in progress)
+    <_AndroidUseManagedTypeMap Condition=" '$(_AndroidTypeMapImplementation)' == 'managed' ">true</_AndroidUseManagedTypeMap>
+=======
+    <TypeMapEntryAssembly Condition="'$(TypeMapEntryAssembly)' == ''">Mono.Android</TypeMapEntryAssembly>
+>>>>>>> e75b3973c (WIP: type mapping API experiment work in progress)
   </PropertyGroup>
 
   <ItemGroup>
@@ -51,12 +57,22 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
         Value="$(AndroidAvoidEmitForPerformance)"
         Trim="true"
     />
+<<<<<<< HEAD
     <!-- NOTE: Do NOT set Trim="true" here - TypeMappingEntryAssembly is NOT a boolean feature switch.
          ILLink receives this via the dedicated - -typemap-entry-assembly flag (set via $(TypeMapEntryAssembly) property).
          This RuntimeHostConfigurationOption is only for runtime configuration. -->
     <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
         Value="$(TypeMapEntryAssembly)"
         Condition="'$(TypeMapEntryAssembly)' != ''"
+||||||| parent of e75b3973c (WIP: type mapping API experiment work in progress)
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.ManagedTypeMap"
+        Value="$([MSBuild]::ValueOrDefault('$(_AndroidUseManagedTypeMap)', 'false'))"
+        Trim="true"
+=======
+    <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
+        Value="$(TypeMapEntryAssembly)"
+        Condition="'$(TypeMapEntryAssembly)' != ''"
+>>>>>>> e75b3973c (WIP: type mapping API experiment work in progress)
     />
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsAssignableFromCheck"
         Condition="'$(_AndroidIsAssignableFromCheck)' != ''"
