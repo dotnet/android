@@ -822,7 +822,7 @@ because xbuild doesn't support framework reference assemblies.
 
 	<!-- Setup $(AdbTarget) from $(Device) property for device selection support -->
 	<PropertyGroup Condition=" '$(Device)' != '' ">
-		<AdbTarget>-s &quot;$(Device)&quot;</AdbTarget>
+		<AdbTarget>-s $(Device)</AdbTarget>
 	</PropertyGroup>
 </Target>
 
