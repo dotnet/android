@@ -124,6 +124,7 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 	/// </remarks>
 	public override bool RunTask ()
 	{
+		Log.LogWarning ($"DEBUG: EnableMarshalMethods={EnableMarshalMethods}, AndroidRuntime={AndroidRuntime}");
 		NativeCodeGenStateCollection? nativeCodeGenStates = null;
 		androidRuntime = MonoAndroidHelper.ParseAndroidRuntime (AndroidRuntime);
 

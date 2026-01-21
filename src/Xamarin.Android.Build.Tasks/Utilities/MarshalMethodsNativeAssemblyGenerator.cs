@@ -582,7 +582,12 @@ namespace Xamarin.Android.Tasks
 			AddClassNames (module);
 
 			AddMarshalMethodNames (module, acs);
-			(LlvmIrVariable getFunctionPtrVariable, LlvmIrFunction getFunctionPtrFunction) = AddXamarinAppInitFunction (module);
+			LlvmIrVariable getFunctionPtrVariable = null;
+			LlvmIrFunction getFunctionPtrFunction = null;
+
+			if (!GenerateEmptyCode) {
+				(getFunctionPtrVariable, getFunctionPtrFunction) = AddXamarinAppInitFunction (module);
+			}
 
 			AddMarshalMethods (module, acs, getFunctionPtrVariable, getFunctionPtrFunction);
 		}
