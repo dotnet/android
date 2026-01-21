@@ -130,6 +130,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <PropertyGroup>
       <!-- Turn trimmer warnings back to original value -->
       <SuppressTrimAnalysisWarnings>$(_OriginalSuppressTrimAnalysisWarnings)</SuppressTrimAnalysisWarnings>
+      <_XANativeAotHostName>libnaot-android.$(Configuration.ToLower())-static-$(Configuration.ToLower()).a</_XANativeAotHostName>
     </PropertyGroup>
     <ItemGroup>
       <!-- Android needs a proper soname property or it will refuse to load the library -->
@@ -154,12 +155,13 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <!-- Satellite assemblies -->
       <IlcSatelliteAssembly Include="$(_OuterIntermediateSatelliteAssembliesWithTargetPath)" />
 
-      <_NdkLibs Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnaot-android.$(Configuration.ToLower())-static-$(Configuration.ToLower())'))" />
+      <!-- Attempt to find our NativeAOT runtime static library using different approaches. It seems
+           that the `Filename` metadata isn't always present on `RuntimePackAsset` items
+      -->
+      <_XANativeAotHost Include="@(RuntimePackAsset->WithMetadataValue('Filename', '$(_XANativeAotHostName)'))" />
+      <_XANativeAotHost Include="@(RuntimePackAsset->WithMetadataValue('DestinationSubPath', '$(_XANativeAotHostName)'))" />
+      <_NdkLibs Include="@(_XANativeAotHost)" />
 
-      <!-- Include libc++ -->
-      <!-- _NdkLibs Include="$(_NdkSysrootDir)libc++_static.a" / -->
-      <!-- _NdkLibs Include="$(_NdkSysrootDir)libc++abi.a" / -->
-      
       <LinkerArg Include="&quot;%(_NdkLibs.Identity)&quot;" />
 
       <!-- This library conflicts with static libc++ -->
@@ -169,6 +171,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <!-- Every p/invoke using the `xa-internal-api` "library" will be called directly -->
       <DirectPInvoke Include="xa-internal-api" />
     </ItemGroup>
+
+    <Error Condition=" '@(_XANativeAotHost)' == '' " Text="NativeAOT host library '$(_XANativeAotHostName)' not found." />
   </Target>
 
   <Target Name="_PrepareNativeAotAndroidAppInputs">
