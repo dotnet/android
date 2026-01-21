@@ -23,16 +23,27 @@ namespace Android.Runtime
 		static readonly Dictionary<Type, JavaPeerProxy?> s_proxyInstances = new ();
 		static readonly Lock s_proxyInstancesLock = new ();
 
+		static bool LogTypemapTrace => Logger.LogTypemapTrace;
+
+		static void Log (string message)
+		{
+			if (LogTypemapTrace)
+				Logger.Log (LogLevel.Info, "monodroid-typemap", message);
+		}
+
 		public TypeMapAttributeTypeMap ()
 		{
+			Log ("TypeMapAttributeTypeMap: Initializing...");
 			_externalTypeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
 			_invokerTypeMap = TypeMapping.GetOrCreateProxyTypeMapping<InvokerUniverse> ();
+			Log ("TypeMapAttributeTypeMap: Initialized external and invoker type mappings");
 		}
 
 		/// <inheritdoc/>
 		public bool TryGetTypesForJniName (string jniSimpleReference, [NotNullWhen (true)] out IEnumerable<Type>? types)
 		{
 			if (!_externalTypeMap.TryGetValue (jniSimpleReference, out Type? type)) {
+				Log ($"TryGetTypesForJniName: '{jniSimpleReference}' -> NOT FOUND");
 				types = null;
 				return false;
 			}
@@ -47,12 +58,14 @@ namespace Android.Runtime
 					}
 				}
 				if (aliasedTypes.Count > 0) {
+					Log ($"TryGetTypesForJniName: '{jniSimpleReference}' -> {aliasedTypes.Count} aliased types");
 					types = aliasedTypes;
 					return true;
 				}
 			}
 
 			// Not an alias type, just return it directly
+			Log ($"TryGetTypesForJniName: '{jniSimpleReference}' -> {type.FullName}");
 			types = [type];
 			return true;
 		}
@@ -60,7 +73,9 @@ namespace Android.Runtime
 		/// <inheritdoc/>
 		public bool TryGetInvokerType (Type type, [NotNullWhen (true)] out Type? invokerType)
 		{
-			return _invokerTypeMap.TryGetValue (type, out invokerType);
+			var result = _invokerTypeMap.TryGetValue (type, out invokerType);
+			Log ($"TryGetInvokerType: {type.FullName} -> {(result ? invokerType!.FullName : "NOT FOUND")}");
+			return result;
 		}
 
 		/// <inheritdoc/>
@@ -71,11 +86,21 @@ namespace Android.Runtime
 			var attrs = type.GetCustomAttributes (typeof (IJniNameProviderAttribute), inherit: false);
 			if (attrs.Length > 0 && attrs[0] is IJniNameProviderAttribute jniNameProvider && !string.IsNullOrEmpty (jniNameProvider.Name)) {
 				jniName = jniNameProvider.Name.Replace ('.', '/');
+				Log ($"TryGetJniNameForType: {type.FullName} -> '{jniName}' (from [Register])");
 				return true;
 			}
 
-			// 2. Fallback: derive JNI name using naming conventions for types without explicit [Register]
+			// 2. Fallback: use [JniTypeSignature] if present
+			var sigAttr = type.GetCustomAttribute<JniTypeSignatureAttribute> (inherit: false);
+			if (sigAttr != null && !string.IsNullOrEmpty (sigAttr.SimpleReference)) {
+				jniName = sigAttr.SimpleReference;
+				Log ($"TryGetJniNameForType: {type.FullName} -> '{jniName}' (from [JniTypeSignature])");
+				return true;
+			}
+
+			// 3. Fallback: derive JNI name using naming conventions for types without explicit [Register]
 			jniName = JavaNativeTypeManager.ToJniName (type);
+			Log ($"TryGetJniNameForType: {type.FullName} -> '{jniName}' (derived)");
 			return !string.IsNullOrEmpty (jniName);
 		}
 
@@ -115,17 +140,22 @@ namespace Android.Runtime
 			[DynamicallyAccessedMembers (Constructors)]
 			Type? targetType)
 		{
+			Log ($"CreatePeer: handle=0x{handle:x}, targetType={targetType?.FullName ?? "null"}");
+			
 			Type? type = null;
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
 			string? class_name = GetClassNameFromJavaClassHandle (class_ptr);
+			string? original_class_name = class_name;
 
 			lock (TypeManagerMapDictionaries.AccessLock) {
 				while (class_ptr != IntPtr.Zero) {
 					if (class_name != null) {
 						_externalTypeMap.TryGetValue (class_name, out type);
 						if (type != null) {
+							Log ($"CreatePeer: Found type {type.FullName} for Java class '{class_name}'");
 							break;
 						}
+						Log ($"CreatePeer: No mapping for '{class_name}', checking superclass...");
 					}
 
 					IntPtr super_class_ptr = JNIEnv.GetSuperclass (class_ptr);
@@ -146,11 +176,13 @@ namespace Android.Runtime
 			if (targetType != null &&
 					(type == null ||
 					 !targetType.IsAssignableFrom (type))) {
+				Log ($"CreatePeer: Using targetType {targetType.FullName} instead of {type?.FullName ?? "null"}");
 				type = targetType;
 			}
 
 			if (type == null) {
 				class_name = JNIEnv.GetClassNameFromInstance (handle);
+				Log ($"CreatePeer: FAILED - No wrapper class for '{class_name}'");
 				JNIEnv.DeleteRef (handle, transfer);
 				throw new NotSupportedException (
 						FormattableString.Invariant ($"Internal error finding wrapper class for '{class_name}'. (Where is the Java.Lang.Object wrapper?!)"),
@@ -158,6 +190,7 @@ namespace Android.Runtime
 			}
 
 			if (type.IsInterface || type.IsAbstract) {
+				Log ($"CreatePeer: Type {type.FullName} is interface/abstract, looking for invoker...");
 				if (!TryGetInvokerType (type, out var invokerType)) {
 					throw new InvalidOperationException (
 						FormattableString.Invariant ($"Cannot create instance of interface or abstract type '{type.FullName}'. No invoker type found."),
@@ -166,11 +199,11 @@ namespace Android.Runtime
 				if (invokerType == null)
 					throw new NotSupportedException ("Unable to find Invoker for type '" + type.FullName + "'. Was it linked away?",
 						CreateJavaLocationException ());
+				Log ($"CreatePeer: Using invoker type {invokerType.FullName}");
 				type = invokerType;
 			}
 
-			var typeSig = JNIEnvInit.androidRuntime?.TypeManager.GetTypeSignature (type) ?? default;
-			if (!typeSig.IsValid || typeSig.SimpleReference == null) {
+			if (!TryGetJniNameForType (type, out string? jniName) || string.IsNullOrEmpty (jniName)) {
 				throw new ArgumentException ($"Could not determine Java type corresponding to `{type.AssemblyQualifiedName}`.", nameof (targetType));
 			}
 
@@ -178,15 +211,16 @@ namespace Android.Runtime
 			JniObjectReference handleClass = default;
 			try {
 				try {
-					typeClass = JniEnvironment.Types.FindClass (typeSig.SimpleReference);
+					typeClass = JniEnvironment.Types.FindClass (jniName);
 				} catch (Exception e) {
-					throw new ArgumentException ($"Could not find Java class `{typeSig.SimpleReference}`.",
+					throw new ArgumentException ($"Could not find Java class `{jniName}`.",
 							nameof (targetType),
 							e);
 				}
 
 				handleClass = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
 				if (!JniEnvironment.Types.IsAssignableFrom (handleClass, typeClass)) {
+					Log ($"CreatePeer: Handle class is not assignable to {jniName}, returning null");
 					return null;
 				}
 			} finally {
@@ -194,6 +228,7 @@ namespace Android.Runtime
 				JniObjectReference.Dispose (ref typeClass);
 			}
 
+			Log ($"CreatePeer: Activating instance of {type.FullName}...");
 			if (!TryCreateInstance (type, handle, transfer, out var result)) {
 				var key_handle = JNIEnv.IdentityHash (handle);
 				JNIEnv.DeleteRef (handle, transfer);
@@ -201,6 +236,7 @@ namespace Android.Runtime
 					$"Unable to activate instance of type {type} from native handle 0x{handle:x} (key_handle 0x{key_handle:x})."));
 			}
 
+			Log ($"CreatePeer: SUCCESS - Created {result!.GetType ().FullName} for Java class '{original_class_name}'");
 			if (Java.Interop.Runtime.IsGCUserPeer (result!.PeerReference.Handle)) {
 				result.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
 			}

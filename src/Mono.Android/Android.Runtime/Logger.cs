@@ -43,6 +43,8 @@ namespace Android.Runtime {
 			get {return (Categories & LogCategories.Netlink) != 0;}
 		}
 
+		internal static bool LogTypemapTrace => true; // TODO: gate once LOG_TYPEMAP exists in native log categories
+
 		[DllImport ("liblog")]
 		static extern void __android_log_print (LogLevel level, string appname, string format, string args, IntPtr zero);
 

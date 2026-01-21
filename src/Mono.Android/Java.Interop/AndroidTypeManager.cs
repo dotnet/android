@@ -176,7 +176,7 @@ namespace Android.Runtime
 				string? methods) =>
 			RegisterNativeMembers (nativeClass, type, methods.AsSpan ());
 
-		[RequiresUnreferencedCode ("Dynamic native member registration requires unreferenced code.")]
+		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "DynamicNativeMembersRegistration is needed for TypeManager.JavaTypeManager activation.")]
 		public override void RegisterNativeMembers (
 				JniType nativeClass,
 				[DynamicallyAccessedMembers (MethodsAndPrivateNested)] Type type,
@@ -189,6 +189,7 @@ namespace Android.Runtime
 					return;
 				}
 
+				Logger.Log (LogLevel.Info, "monodroid", $"RegisterNativeMembers: type={type.FullName}, methods={methods.ToString ()}");
 				DynamicNativeMembersRegistration.RegisterNativeMembers (nativeClass, type, methods);
 			} catch (Exception e) {
 				JniEnvironment.Runtime.RaisePendingException (e);

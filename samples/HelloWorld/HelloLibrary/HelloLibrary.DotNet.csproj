@@ -2,5 +2,6 @@
   <PropertyGroup>
     <TargetFramework>net11.0-android</TargetFramework>
     <RootNamespace>HelloLibrary</RootNamespace>
+    <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
   </PropertyGroup>
 </Project>

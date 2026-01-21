@@ -3,6 +3,7 @@
     <TargetFramework>net11.0-android</TargetFramework>
     <OutputType>Exe</OutputType>
     <RootNamespace>HelloWorld</RootNamespace>
+    <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\HelloLibrary\HelloLibrary.DotNet.csproj" />

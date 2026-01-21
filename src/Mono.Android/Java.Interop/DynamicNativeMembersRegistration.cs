@@ -108,6 +108,7 @@ namespace Java.Interop
 					if (callback != null) {
 						needToRegisterNatives = true;
 						natives [nativesIndex++] = new JniNativeMethodRegistration (name.ToString (), signature.ToString (), callback);
+						Android.Runtime.Logger.Log (Android.Runtime.LogLevel.Info, "monodroid", $"DynamicNativeMembersRegistration: registered {name.ToString ()} for {type.FullName}");
 					}
 				}
 
@@ -115,6 +116,7 @@ namespace Java.Interop
 			}
 
 			if (needToRegisterNatives) {
+				Android.Runtime.Logger.Log (Android.Runtime.LogLevel.Info, "monodroid", $"DynamicNativeMembersRegistration: calling RegisterNatives with {nativesIndex} methods");
 				JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, natives, nativesIndex);
 			}
 		}
