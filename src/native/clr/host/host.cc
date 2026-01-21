@@ -561,6 +561,12 @@ void Host::Java_mono_android_Runtime_initInternal (
 	jnienv_propagate_uncaught_exception = init.propagateUncaughtExceptionFn;
 	abort_unless (jnienv_propagate_uncaught_exception != nullptr, "Failed to obtain unmanaged-callers-only function pointer to the PropagateUncaughtException method.");
 
+	// Store the Type Mapping API get_function_pointer callback (may be null for Mono runtime)
+	if (init.getFunctionPointerFn != nullptr) {
+		get_function_pointer = init.getFunctionPointerFn;
+		log_debug (LOG_DEFAULT, "Type Mapping API get_function_pointer callback set"sv);
+	}
+
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.end_event (); // native to managed
 		internal_timing.end_event (); // total init time

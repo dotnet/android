@@ -305,5 +305,49 @@ namespace Android.Runtime
 				return false;
 			}
 		}
+
+		#region Marshal Method Function Pointer Resolution
+
+		/// <summary>
+		/// Resolves a marshal method function pointer by JNI class name and method index.
+		/// Called from native code (LLVM IR stubs) via the get_function_pointer callback.
+		/// </summary>
+		[UnmanagedCallersOnly]
+		internal static unsafe void GetFunctionPointer (byte* classNamePtr, int classNameLength, int methodIndex, IntPtr* targetPtr)
+		{
+			try {
+				string className = System.Text.Encoding.UTF8.GetString (classNamePtr, classNameLength);
+				Log ($"GetFunctionPointer: class='{className}', methodIndex={methodIndex}");
+
+				// Look up type directly from the external type map
+				var typeMap = JNIEnvInit.TypeMap as TypeMapAttributeTypeMap;
+				if (typeMap == null || !typeMap._externalTypeMap.TryGetValue (className, out Type? type)) {
+					Log ($"GetFunctionPointer: No type found for '{className}'");
+					*targetPtr = IntPtr.Zero;
+					return;
+				}
+
+				Log ($"GetFunctionPointer: Found type {type.FullName}");
+
+				// Get the JavaPeerProxy attribute for this type
+				JavaPeerProxy? proxy = GetProxyForType (type);
+				if (proxy == null) {
+					Log ($"GetFunctionPointer: No JavaPeerProxy attribute on {type.FullName}");
+					*targetPtr = IntPtr.Zero;
+					return;
+				}
+
+				// Get the function pointer from the proxy
+				IntPtr fnPtr = proxy.GetFunctionPointer (methodIndex);
+				Log ($"GetFunctionPointer: Got function pointer 0x{fnPtr:x} for method index {methodIndex}");
+
+				*targetPtr = fnPtr;
+			} catch (Exception ex) {
+				Log ($"GetFunctionPointer: Exception - {ex}");
+				*targetPtr = IntPtr.Zero;
+			}
+		}
+
+		#endregion
 	}
 }

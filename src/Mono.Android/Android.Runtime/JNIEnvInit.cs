@@ -35,6 +35,8 @@ namespace Android.Runtime
 			public bool            marshalMethodsEnabled;
 			public IntPtr          grefGCUserPeerable;
 			public IntPtr          propagateUncaughtExceptionFn;
+			// OUT: Function pointer for get_function_pointer callback (Type Mapping API marshal methods)
+			public IntPtr          getFunctionPointerFn;
 		}
 #pragma warning restore 0649
 
@@ -153,6 +155,12 @@ namespace Android.Runtime
 			JavaNativeTypeManager.PackageNamingPolicy = (PackageNamingPolicy)args->packageNamingPolicy;
 
 			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
+
+			// For CoreCLR/NativeAOT, provide the GetFunctionPointer callback for Type Mapping API marshal methods
+			if (RuntimeFeature.IsCoreClrRuntime) {
+				args->getFunctionPointerFn = (IntPtr)(delegate* unmanaged<byte*, int, int, IntPtr*, void>)&TypeMapAttributeTypeMap.GetFunctionPointer;
+			}
+
 			RunStartupHooksIfNeeded ();
 			SetSynchronizationContext ();
 		}

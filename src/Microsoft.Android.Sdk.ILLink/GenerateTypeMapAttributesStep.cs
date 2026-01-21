@@ -622,7 +622,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		writer.WriteLine ();
 
 		// Global variable holding the get_function_pointer callback (set during app init)
-		writer.WriteLine ("; External get_function_pointer callback - resolves UCO wrapper by class name hash and method index");
+		writer.WriteLine ("; External get_function_pointer callback - resolves UCO wrapper by class name and method index");
 		writer.WriteLine ("@get_function_pointer = external dso_local local_unnamed_addr global ptr, align 8");
 		writer.WriteLine ();
 
@@ -633,10 +633,15 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		}
 		writer.WriteLine ();
 
-		// Class name hash constant (xxhash of jniTypeName)
-		ulong classNameHash = ComputeXxHash64 (jniTypeName);
-		writer.WriteLine ($"; Class name hash for \"{jniTypeName}\"");
-		writer.WriteLine ($"@class_name_hash = internal constant i64 {classNameHash}, align 8");
+		// Class name constant (null-terminated string)
+		byte[] classNameBytes = System.Text.Encoding.UTF8.GetBytes (jniTypeName);
+		int classNameLength = classNameBytes.Length;
+		writer.WriteLine ($"; Class name for \"{jniTypeName}\" (length={classNameLength})");
+		writer.Write ($"@class_name = internal constant [{classNameLength} x i8] c\"");
+		foreach (byte b in classNameBytes) {
+			writer.Write ($"\\{b:X2}");
+		}
+		writer.WriteLine ("\", align 1");
 		writer.WriteLine ();
 
 		// Generate JNI native functions
@@ -663,8 +668,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 			// Resolve block - call get_function_pointer to get UCO wrapper
 			writer.WriteLine ("resolve:");
 			writer.WriteLine ("  %get_fn = load ptr, ptr @get_function_pointer, align 8");
-			writer.WriteLine ($"  %class_hash = load i64, ptr @class_name_hash, align 8");
-			writer.WriteLine ($"  call void %get_fn(i64 %class_hash, i32 {i}, ptr @fn_ptr_{i})");
+			writer.WriteLine ($"  call void %get_fn(ptr @class_name, i32 {classNameLength}, i32 {i}, ptr @fn_ptr_{i})");
 			writer.WriteLine ($"  %resolved_ptr = load ptr, ptr @fn_ptr_{i}, align 8");
 			writer.WriteLine ("  br label %call");
 			writer.WriteLine ();
@@ -693,19 +697,6 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		writer.WriteLine ("!0 = !{i32 1, !\"wchar_size\", i32 4}");
 
 		Context.LogMessage (MessageContainer.CreateInfoMessage ($"Generated LLVM IR: {llFilePath}"));
-	}
-
-	/// <summary>
-	/// Simple xxHash64 implementation for class name hashing.
-	/// </summary>
-	static ulong ComputeXxHash64 (string input)
-	{
-		// Use a simple hash for PoC - in production this should match MonoAndroidHelper.GetXxHash
-		ulong hash = 0;
-		foreach (char c in input) {
-			hash = hash * 31 + c;
-		}
-		return hash;
 	}
 
 	/// <summary>

@@ -16,6 +16,11 @@ namespace xamarin::android {
 
 	using jnienv_propagate_uncaught_exception_fn = void (*)(JNIEnv *env, jobject javaThread, jthrowable javaException);
 
+	// Callback signature for Type Mapping API marshal methods (CoreCLR/NativeAOT)
+	// Called from LLVM IR stubs to resolve UCO wrapper function pointers
+	// Parameters: class_name (UTF-8), class_name_length, method_index, target_ptr (out)
+	using get_function_pointer_typemap_fn = void (*)(const char* class_name, int32_t class_name_length, int32_t method_index, void** target_ptr);
+
 	// NOTE: Keep this in sync with managed side in src/Mono.Android/Android.Runtime/JNIEnvInit.cs
 	struct JnienvInitializeArgs {
 		JavaVM         *javaVm;
@@ -35,6 +40,8 @@ namespace xamarin::android {
 		bool            marshalMethodsEnabled;
 		jobject         grefGCUserPeerable;
 		jnienv_propagate_uncaught_exception_fn propagateUncaughtExceptionFn;
+		// OUT: Function pointer for get_function_pointer callback (Type Mapping API marshal methods)
+		get_function_pointer_typemap_fn getFunctionPointerFn;
 	};
 
 	// Keep the enum values in sync with those in src/Mono.Android/AndroidRuntime/BoundExceptionType.cs
