@@ -2134,7 +2134,7 @@ because xbuild doesn't support framework reference assemblies.
    <Touch Files="$(_AndroidApkPerAbiFlagFile)" Condition="'$(AndroidCreatePackagePerAbi)' == 'true'" AlwaysCreate="True" />
 </Target>
 
-<Target Name="_PrepareNativeAssemblyItems" DependsOnTargets="_GenerateJavaStubs">
+<Target Name="_PrepareNativeAssemblyItems" DependsOnTargets="_GenerateJavaStubs;_CollectTypeMapMarshalMethodSources">
   <ItemGroup>
     <_NativeAssemblyTarget Include="@(_TypeMapAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
       <abi>%(_TypeMapAssemblySource.abi)</abi>
@@ -2180,7 +2180,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CompileNativeAssemblySources"
-    DependsOnTargets="_PrepareNativeAssemblyItems;_GenerateCompressedAssembliesNativeSourceFiles"
+    DependsOnTargets="_PrepareNativeAssemblyItems;_GenerateCompressedAssembliesNativeSourceFiles;_CollectTypeMapMarshalMethodSources"
     Inputs="@(_TypeMapAssemblySource);@(_TypeMapAssemblyInclude);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_MarshalMethodsAssemblySource);@(_TypeMapMarshalMethodsSource);@(_AndroidRemapAssemblySource);@(_RuntimeLinkingAssemblySource)"
     Outputs="@(_NativeAssemblyTarget)">
   <CompileNativeAssembly

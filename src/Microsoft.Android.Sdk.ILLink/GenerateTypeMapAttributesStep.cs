@@ -264,6 +264,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 	List<MarshalMethodInfo> CollectMarshalMethods (TypeDefinition type)
 	{
 		var methods = new List<MarshalMethodInfo> ();
+		var seen = new HashSet<string> (); // Track JniName+JniSignature to dedupe
 
 		foreach (var method in type.Methods) {
 			if (!CecilExtensions.HasMethodRegistrationAttributes (method)) {
@@ -274,6 +275,11 @@ public class GenerateTypeMapAttributesStep : BaseStep
 				// Must have JNI name, signature, and connector (3 arguments)
 				if (string.IsNullOrEmpty (attr.Name) || string.IsNullOrEmpty (attr.Signature)) {
 					continue;
+				}
+
+				string key = $"{attr.Name}{attr.Signature}";
+				if (seen.Contains (key)) {
+					continue; // Skip duplicates
 				}
 
 				// Find the native callback method (n_* method) based on connector naming pattern
@@ -288,6 +294,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 					continue;
 				}
 
+				seen.Add (key);
 				methods.Add (new MarshalMethodInfo (attr.Name, attr.Signature, nativeCallback, method));
 				Context.LogMessage (MessageContainer.CreateInfoMessage (
 					$"Found marshal method: {type.FullName}.{nativeCallback.Name} -> {attr.Name}{attr.Signature}"));
@@ -301,11 +308,17 @@ public class GenerateTypeMapAttributesStep : BaseStep
 					continue;
 				}
 
+				string key = $"<init>{attr.Signature}";
+				if (seen.Contains (key)) {
+					continue; // Skip duplicates
+				}
+
 				// For constructors, look for n_<init> or activation patterns
 				var nativeCallback = type.Methods.FirstOrDefault (m =>
 					m.IsStatic && (m.Name == "n_<init>" || m.Name.StartsWith ("n_", StringComparison.Ordinal)));
 
 				if (nativeCallback != null) {
+					seen.Add (key);
 					methods.Add (new MarshalMethodInfo ("<init>", attr.Signature, nativeCallback, ctor));
 					Context.LogMessage (MessageContainer.CreateInfoMessage (
 						$"Found marshal constructor: {type.FullName}.{nativeCallback.Name}"));
@@ -648,7 +661,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		writer.WriteLine ("; JNI native method stubs");
 		for (int i = 0; i < marshalMethods.Count; i++) {
 			var method = marshalMethods [i];
-			string nativeSymbol = MakeJniNativeSymbol (jniTypeName, method.JniName);
+			string nativeSymbol = MakeJniNativeSymbol (jniTypeName, method.JniName, method.JniSignature);
 			string llvmParams = JniSignatureToLlvmParams (method.JniSignature);
 			string llvmParamTypes = JniSignatureToLlvmParamTypes (method.JniSignature);
 			string llvmArgs = JniSignatureToLlvmArgs (method.JniSignature);
@@ -709,39 +722,49 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		int i = 1; // Skip opening '('
 
 		while (i < jniSignature.Length && jniSignature [i] != ')') {
-			args.Append (", ");
-
 			char c = jniSignature [i];
-			// Add the type
+
+			// Determine the type
+			string llvmType;
 			switch (c) {
-				case 'Z': args.Append ("i8"); break;  // boolean
-				case 'B': args.Append ("i8"); break;  // byte
-				case 'C': args.Append ("i16"); break; // char
-				case 'S': args.Append ("i16"); break; // short
-				case 'I': args.Append ("i32"); break; // int
-				case 'J': args.Append ("i64"); break; // long
-				case 'F': args.Append ("float"); break;
-				case 'D': args.Append ("double"); break;
+				case 'Z': llvmType = "i8"; i++; break;  // boolean
+				case 'B': llvmType = "i8"; i++; break;  // byte
+				case 'C': llvmType = "i16"; i++; break; // char
+				case 'S': llvmType = "i16"; i++; break; // short
+				case 'I': llvmType = "i32"; i++; break; // int
+				case 'J': llvmType = "i64"; i++; break; // long
+				case 'F': llvmType = "float"; i++; break;
+				case 'D': llvmType = "double"; i++; break;
 				case 'L':
-					args.Append ("ptr");
+					llvmType = "ptr";
 					while (i < jniSignature.Length && jniSignature [i] != ';') i++;
+					i++; // Skip ';'
 					break;
 				case '[':
-					args.Append ("ptr");
-					i++;
-					if (i < jniSignature.Length && jniSignature [i] == 'L') {
-						while (i < jniSignature.Length && jniSignature [i] != ';') i++;
+					llvmType = "ptr";
+					// Skip all array dimensions
+					while (i < jniSignature.Length && jniSignature [i] == '[') i++;
+					// Skip the element type
+					if (i < jniSignature.Length) {
+						if (jniSignature [i] == 'L') {
+							while (i < jniSignature.Length && jniSignature [i] != ';') i++;
+							i++; // Skip ';'
+						} else {
+							i++; // Skip primitive type
+						}
 					}
 					break;
 				default:
-					args.Append ("ptr");
+					llvmType = "ptr";
+					i++;
 					break;
 			}
 
+			args.Append (", ");
+			args.Append (llvmType);
 			args.Append (" %p");
 			args.Append (paramIndex);
 			paramIndex++;
-			i++;
 		}
 
 		return args.ToString ();
@@ -756,43 +779,55 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		int i = 1; // Skip opening '('
 
 		while (i < jniSignature.Length && jniSignature [i] != ')') {
-			types.Append (", ");
 			char c = jniSignature [i];
+			string llvmType;
 
 			switch (c) {
-				case 'Z': types.Append ("i8"); break;  // boolean
-				case 'B': types.Append ("i8"); break;  // byte
-				case 'C': types.Append ("i16"); break; // char
-				case 'S': types.Append ("i16"); break; // short
-				case 'I': types.Append ("i32"); break; // int
-				case 'J': types.Append ("i64"); break; // long
-				case 'F': types.Append ("float"); break;
-				case 'D': types.Append ("double"); break;
+				case 'Z': llvmType = "i8"; i++; break;  // boolean
+				case 'B': llvmType = "i8"; i++; break;  // byte
+				case 'C': llvmType = "i16"; i++; break; // char
+				case 'S': llvmType = "i16"; i++; break; // short
+				case 'I': llvmType = "i32"; i++; break; // int
+				case 'J': llvmType = "i64"; i++; break; // long
+				case 'F': llvmType = "float"; i++; break;
+				case 'D': llvmType = "double"; i++; break;
 				case 'L':
-					types.Append ("ptr");
+					llvmType = "ptr";
 					while (i < jniSignature.Length && jniSignature [i] != ';') i++;
+					i++; // Skip ';'
 					break;
 				case '[':
-					types.Append ("ptr");
-					i++;
-					if (i < jniSignature.Length && jniSignature [i] == 'L') {
-						while (i < jniSignature.Length && jniSignature [i] != ';') i++;
+					llvmType = "ptr";
+					// Skip all array dimensions
+					while (i < jniSignature.Length && jniSignature [i] == '[') i++;
+					// Skip the element type
+					if (i < jniSignature.Length) {
+						if (jniSignature [i] == 'L') {
+							while (i < jniSignature.Length && jniSignature [i] != ';') i++;
+							i++; // Skip ';'
+						} else {
+							i++; // Skip primitive type
+						}
 					}
 					break;
 				default:
-					types.Append ("ptr");
+					llvmType = "ptr";
+					i++;
 					break;
 			}
-			i++;
+
+			types.Append (", ");
+			types.Append (llvmType);
 		}
 
 		return types.ToString ();
 	}
 
 	/// <summary>
-	/// Creates a JNI native symbol name from the type name and method name.
+	/// Creates a JNI native symbol name from the type name, method name, and signature.
+	/// For overloaded methods, the signature is mangled and appended to make the symbol unique.
 	/// </summary>
-	static string MakeJniNativeSymbol (string jniTypeName, string methodName)
+	static string MakeJniNativeSymbol (string jniTypeName, string methodName, string jniSignature)
 	{
 		// Replace <init> with _ctor for valid JNI symbol
 		string sanitizedMethodName = methodName.Replace ("<init>", "_ctor").Replace ("<clinit>", "_cctor");
@@ -800,6 +835,39 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		sb.Append (MangleForJni (jniTypeName));
 		sb.Append ('_');
 		sb.Append (MangleForJni ($"n_{sanitizedMethodName}"));
+		// Always append mangled signature to handle overloads
+		sb.Append ("__");
+		sb.Append (MangleJniSignature (jniSignature));
+		return sb.ToString ();
+	}
+
+	/// <summary>
+	/// Mangles a JNI signature for use in native symbol names.
+	/// Converts (Ljava/lang/String;)V to Ljava_lang_String_2V
+	/// </summary>
+	static string MangleJniSignature (string signature)
+	{
+		var sb = new StringBuilder ();
+		foreach (char c in signature) {
+			switch (c) {
+				case '(':
+				case ')':
+					// Skip parentheses
+					break;
+				case '/':
+					sb.Append ('_');
+					break;
+				case ';':
+					sb.Append ("_2");
+					break;
+				case '[':
+					sb.Append ("_3");
+					break;
+				default:
+					sb.Append (c);
+					break;
+			}
+		}
 		return sb.ToString ();
 	}
 
@@ -946,15 +1014,24 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 			if (c == 'L') {
 				while (idx < paramSig.Length && paramSig [idx] != ';') idx++;
+				idx++; // Skip ';'
 			} else if (c == '[') {
+				// Skip all array dimensions
 				while (idx < paramSig.Length && paramSig [idx] == '[') idx++;
-				if (idx < paramSig.Length && paramSig [idx] == 'L') {
-					while (idx < paramSig.Length && paramSig [idx] != ';') idx++;
+				// Skip the element type
+				if (idx < paramSig.Length) {
+					if (paramSig [idx] == 'L') {
+						while (idx < paramSig.Length && paramSig [idx] != ';') idx++;
+						idx++; // Skip ';'
+					} else {
+						idx++; // Skip primitive type
+					}
 				}
+			} else {
+				idx++;
 			}
 
 			@params.Add ($", {type} %p{paramNum++}");
-			idx++;
 		}
 
 		return string.Concat (@params);
