@@ -66,7 +66,7 @@ class NativeLinker
 		ld = Path.Combine (binutilsDir, MonoAndroidHelper.GetExecutablePath (binutilsDir, "ld"));
 		objcopy = Path.Combine (binutilsDir, MonoAndroidHelper.GetExecutablePath (binutilsDir, "llvm-objcopy"));
 
-		extraArgs.Add ($"-soname {soname}");
+		extraArgs.Add ($"-soname {MonoAndroidHelper.QuoteFileNameArgument (soname)}");
 
 		string? elfArch = null;
 		uint maxPageSize;
