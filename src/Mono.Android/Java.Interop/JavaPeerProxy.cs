@@ -39,5 +39,13 @@ namespace Java.Interop
 		/// </summary>
 		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 		public abstract Type TargetType { get; }
+
+		/// <summary>
+		/// Gets a function pointer for a marshal method at the specified index.
+		/// This is used to resolve [UnmanagedCallersOnly] method pointers for JNI callbacks.
+		/// </summary>
+		/// <param name="methodIndex">The index of the marshal method within this type's method table.</param>
+		/// <returns>A function pointer to the UCO method, or <see cref="IntPtr.Zero"/> if the index is invalid.</returns>
+		public abstract IntPtr GetFunctionPointer (int methodIndex);
 	}
 }

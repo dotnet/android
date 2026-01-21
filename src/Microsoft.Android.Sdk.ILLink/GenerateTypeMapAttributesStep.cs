@@ -4,9 +4,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Android.Runtime;
 using Java.Interop.Tools.Cecil;
+using Java.Interop.Tools.JavaCallableWrappers.Utilities;
 using Java.Interop.Tools.TypeNameMappings;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 using Mono.Linker;
 using Mono.Linker.Steps;
@@ -56,6 +59,13 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 	TypeReference SystemTypeType { get; set; }
 	TypeReference SystemStringType { get; set; }
+	TypeReference SystemExceptionType { get; set; }
+	TypeReference SystemIntPtrType { get; set; }
+
+	// UCO wrapper generation imports
+	MethodReference UnmanagedCallersOnlyAttributeCtor { get; set; }
+	MethodReference WaitForBridgeProcessingMethod { get; set; }
+	MethodReference UnhandledExceptionMethod { get; set; }
 
 	AssemblyDefinition AssemblyToInjectTypeMap { get; set; }
 	AssemblyDefinition MonoAndroidAssembly { get; set; }
@@ -157,6 +167,52 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 		SystemTypeType = AssemblyToInjectTypeMap.MainModule.ImportReference (Context.GetType ("System.Type"));
 		SystemStringType = AssemblyToInjectTypeMap.MainModule.ImportReference (Context.GetType ("System.String"));
+		SystemExceptionType = AssemblyToInjectTypeMap.MainModule.ImportReference (Context.GetType ("System.Exception"));
+		SystemIntPtrType = AssemblyToInjectTypeMap.MainModule.ImportReference (Context.GetType ("System.IntPtr"));
+
+		// Initialize UCO wrapper generation imports
+		InitializeUcoImports ();
+	}
+
+	/// <summary>
+	/// Initialize imports needed for generating [UnmanagedCallersOnly] wrapper methods.
+	/// </summary>
+	void InitializeUcoImports ()
+	{
+		// Find UnmanagedCallersOnlyAttribute constructor
+		var ucoAttrTypeDef = Context.GetType ("System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute");
+		var ucoAttrCtor = ucoAttrTypeDef.Methods.FirstOrDefault (m => m.IsConstructor && !m.IsStatic && !m.HasParameters)
+			?? throw new InvalidOperationException ("Could not find UnmanagedCallersOnlyAttribute constructor");
+		UnmanagedCallersOnlyAttributeCtor = AssemblyToInjectTypeMap.MainModule.ImportReference (ucoAttrCtor);
+
+		// Find AndroidRuntimeInternal.WaitForBridgeProcessing
+		var runtimeInternalTypeDef = MonoAndroidAssembly.MainModule.Types
+			.FirstOrDefault (t => t.FullName == "Android.Runtime.AndroidRuntimeInternal");
+		if (runtimeInternalTypeDef != null) {
+			var waitMethod = runtimeInternalTypeDef.Methods.FirstOrDefault (m => m.Name == "WaitForBridgeProcessing");
+			if (waitMethod != null) {
+				WaitForBridgeProcessingMethod = AssemblyToInjectTypeMap.MainModule.ImportReference (waitMethod);
+			}
+		}
+
+		// Find AndroidEnvironmentInternal.UnhandledException
+		var envInternalTypeDef = MonoAndroidAssembly.MainModule.Types
+			.FirstOrDefault (t => t.FullName == "Android.Runtime.AndroidEnvironmentInternal");
+		if (envInternalTypeDef != null) {
+			var unhandledMethod = envInternalTypeDef.Methods.FirstOrDefault (m => m.Name == "UnhandledException");
+			if (unhandledMethod != null) {
+				UnhandledExceptionMethod = AssemblyToInjectTypeMap.MainModule.ImportReference (unhandledMethod);
+			}
+		}
+
+		if (WaitForBridgeProcessingMethod == null) {
+			Context.LogMessage (MessageContainer.CreateInfoMessage (
+				"Could not find AndroidRuntimeInternal.WaitForBridgeProcessing - UCO wrappers will be simplified"));
+		}
+		if (UnhandledExceptionMethod == null) {
+			Context.LogMessage (MessageContainer.CreateInfoMessage (
+				"Could not find AndroidEnvironmentInternal.UnhandledException - UCO wrappers will be simplified"));
+		}
 	}
 
 
@@ -178,6 +234,109 @@ public class GenerateTypeMapAttributesStep : BaseStep
 	Dictionary<TypeDefinition, TypeDefinition> invokerMappings = new ();
 	// Cache of all types in each module for quick lookup
 	Dictionary<ModuleDefinition, Dictionary<string, TypeDefinition>> moduleTypesCache = new ();
+	// Maps target type -> list of marshal method info for GetFunctionPointer generation
+	Dictionary<TypeDefinition, List<MarshalMethodInfo>> marshalMethodMappings = new ();
+
+	/// <summary>
+	/// Information about a marshal method that can be called from native code via GetFunctionPointer.
+	/// </summary>
+	class MarshalMethodInfo
+	{
+		public string JniName { get; }
+		public string JniSignature { get; }
+		public MethodDefinition NativeCallback { get; }
+		public MethodDefinition? RegisteredMethod { get; }
+		public MethodDefinition? UcoWrapper { get; set; }
+
+		public MarshalMethodInfo (string jniName, string jniSignature, MethodDefinition nativeCallback, MethodDefinition? registeredMethod)
+		{
+			JniName = jniName;
+			JniSignature = jniSignature;
+			NativeCallback = nativeCallback;
+			RegisteredMethod = registeredMethod;
+		}
+	}
+
+	/// <summary>
+	/// Collects marshal methods from a type that have [Register] attributes with connector methods.
+	/// These are methods that can be converted to [UnmanagedCallersOnly] callbacks.
+	/// </summary>
+	List<MarshalMethodInfo> CollectMarshalMethods (TypeDefinition type)
+	{
+		var methods = new List<MarshalMethodInfo> ();
+
+		foreach (var method in type.Methods) {
+			if (!CecilExtensions.HasMethodRegistrationAttributes (method)) {
+				continue;
+			}
+
+			foreach (var attr in CecilExtensions.GetMethodRegistrationAttributes (method)) {
+				// Must have JNI name, signature, and connector (3 arguments)
+				if (string.IsNullOrEmpty (attr.Name) || string.IsNullOrEmpty (attr.Signature)) {
+					continue;
+				}
+
+				// Find the native callback method (n_* method) based on connector naming pattern
+				string? nativeCallbackName = GetNativeCallbackName (attr.Connector, attr.Name, attr.Signature);
+				MethodDefinition? nativeCallback = nativeCallbackName != null
+					? type.Methods.FirstOrDefault (m => m.Name == nativeCallbackName && m.IsStatic)
+					: null;
+
+				if (nativeCallback == null) {
+					Context.LogMessage (MessageContainer.CreateInfoMessage (
+						$"Could not find native callback '{nativeCallbackName}' for method '{method.FullName}'"));
+					continue;
+				}
+
+				methods.Add (new MarshalMethodInfo (attr.Name, attr.Signature, nativeCallback, method));
+				Context.LogMessage (MessageContainer.CreateInfoMessage (
+					$"Found marshal method: {type.FullName}.{nativeCallback.Name} -> {attr.Name}{attr.Signature}"));
+			}
+		}
+
+		// Also collect exported constructors
+		foreach (var ctor in type.Methods.Where (m => m.IsConstructor && !m.IsStatic)) {
+			foreach (var attr in CecilExtensions.GetMethodRegistrationAttributes (ctor)) {
+				if (string.IsNullOrEmpty (attr.Signature)) {
+					continue;
+				}
+
+				// For constructors, look for n_<init> or activation patterns
+				var nativeCallback = type.Methods.FirstOrDefault (m =>
+					m.IsStatic && (m.Name == "n_<init>" || m.Name.StartsWith ("n_", StringComparison.Ordinal)));
+
+				if (nativeCallback != null) {
+					methods.Add (new MarshalMethodInfo ("<init>", attr.Signature, nativeCallback, ctor));
+					Context.LogMessage (MessageContainer.CreateInfoMessage (
+						$"Found marshal constructor: {type.FullName}.{nativeCallback.Name}"));
+				}
+			}
+		}
+
+		return methods;
+	}
+
+	/// <summary>
+	/// Extracts the native callback method name from a connector string.
+	/// Connector format is typically "GetMethodName_Handler" and the callback is "n_MethodName".
+	/// </summary>
+	static string? GetNativeCallbackName (string? connector, string jniName, string jniSignature)
+	{
+		if (string.IsNullOrEmpty (connector)) {
+			return null;
+		}
+
+		// Standard pattern: connector is "GetOnCreate_Landroid_os_Bundle_Handler" -> callback is "n_onCreate"
+		// Try to extract from connector pattern
+		if (connector!.StartsWith ("Get", StringComparison.Ordinal) && connector.EndsWith ("Handler", StringComparison.Ordinal)) {
+			// Extract method name part: "GetOnCreate_Landroid_os_Bundle_Handler" -> find the method name
+			// The callback is typically "n_" + jniName
+			return $"n_{jniName}";
+		}
+
+		// Fallback: just prepend n_
+		return $"n_{jniName}";
+	}
 
 	/// <summary>
 	/// Iterates through all types to find types that map to/from java types, and stores
@@ -193,8 +352,14 @@ public class GenerateTypeMapAttributesStep : BaseStep
 			}
 			typeList.Add (type);
 
-			Context.LogMessage (MessageContainer.CreateInfoMessage ($"Type '{type.FullName}' has peer '{javaName}'"));
-			var proxyType = GenerateTypeMapProxyType (javaName, type);
+			// Collect marshal methods for this type
+			var marshalMethods = CollectMarshalMethods (type);
+			if (marshalMethods.Count > 0) {
+				marshalMethodMappings [type] = marshalMethods;
+			}
+
+			Context.LogMessage (MessageContainer.CreateInfoMessage ($"Type '{type.FullName}' has peer '{javaName}', {marshalMethods.Count} marshal methods"));
+			var proxyType = GenerateTypeMapProxyType (javaName, type, marshalMethods);
 			typesToInject.Add (proxyType);
 			proxyMappings.Add (type, proxyType);
 
@@ -345,6 +510,489 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		MonoAndroidAssembly.Write (Path.Combine (
 			Path.GetDirectoryName (Context.GetAssemblyLocation (AssemblyToInjectTypeMap)),
 			"Mono.Android." + Random.Shared.GetHexString (4) + ".injected.dll"));
+
+		// Generate JCW (Java Callable Wrappers) and LLVM IR files for marshal methods
+		GenerateJcwAndLlvmIrFiles ();
+	}
+
+	/// <summary>
+	/// Generates Java Callable Wrapper (.java) and LLVM IR (.ll) files for types with marshal methods.
+	/// </summary>
+	void GenerateJcwAndLlvmIrFiles ()
+	{
+		// Get output paths from custom data
+		if (!Context.TryGetCustomData ("JavaOutputPath", out string? javaOutputPath) ||
+		    !Context.TryGetCustomData ("LlvmIrOutputPath", out string? llvmIrOutputPath)) {
+			Context.LogMessage (MessageContainer.CreateInfoMessage (
+				"JavaOutputPath or LlvmIrOutputPath not set, skipping JCW/LLVM IR generation"));
+			return;
+		}
+
+		Context.TryGetCustomData ("TargetArch", out string? targetArch);
+		targetArch ??= "unknown";
+
+		Context.LogMessage (MessageContainer.CreateInfoMessage (
+			$"Generating JCW files to {javaOutputPath}, LLVM IR to {llvmIrOutputPath}"));
+
+		// Generate files for each type with marshal methods
+		foreach (var kvp in marshalMethodMappings) {
+			var targetType = kvp.Key;
+			var marshalMethods = kvp.Value;
+
+			if (marshalMethods.Count == 0) {
+				continue;
+			}
+
+			string jniTypeName = JavaNativeTypeManager.ToJniName (targetType, Context);
+
+			// Generate JCW Java file
+			GenerateJcwJavaFile (javaOutputPath, targetType, jniTypeName, marshalMethods);
+
+			// Generate LLVM IR file
+			GenerateLlvmIrFile (llvmIrOutputPath, targetArch, targetType, jniTypeName, marshalMethods);
+		}
+	}
+
+	/// <summary>
+	/// Generates a Java Callable Wrapper file for the given type.
+	/// </summary>
+	void GenerateJcwJavaFile (string outputPath, TypeDefinition type, string jniTypeName, List<MarshalMethodInfo> marshalMethods)
+	{
+		// Convert JNI type name to Java package and class name
+		// e.g., "helloworld/MainActivity" -> package "helloworld", class "MainActivity"
+		int lastSlash = jniTypeName.LastIndexOf ('/');
+		string package = lastSlash > 0 ? jniTypeName.Substring (0, lastSlash).Replace ('/', '.') : "";
+		string className = lastSlash > 0 ? jniTypeName.Substring (lastSlash + 1) : jniTypeName;
+		className = className.Replace ('$', '_'); // Handle nested classes
+
+		// Create directory structure
+		string packageDir = Path.Combine (outputPath, package.Replace ('.', Path.DirectorySeparatorChar));
+		Directory.CreateDirectory (packageDir);
+
+		string javaFilePath = Path.Combine (packageDir, className + ".java");
+
+		using var writer = new StreamWriter (javaFilePath);
+
+		// Package declaration
+		if (!string.IsNullOrEmpty (package)) {
+			writer.WriteLine ($"package {package};");
+			writer.WriteLine ();
+		}
+
+		// Class declaration
+		writer.WriteLine ($"public class {className}");
+		writer.WriteLine ("\textends java.lang.Object");
+		writer.WriteLine ("\timplements mono.android.IGCUserPeer");
+		writer.WriteLine ("{");
+
+		// Static block for method registration
+		writer.WriteLine ("\t/** @hide */");
+		writer.WriteLine ("\tpublic static final String __md_methods;");
+		writer.WriteLine ("\tstatic {");
+		writer.WriteLine ("\t\t__md_methods =");
+
+		for (int i = 0; i < marshalMethods.Count; i++) {
+			var method = marshalMethods [i];
+			string connector = $"Get{method.JniName}_Handler"; // Simplified connector name
+			string methodLine = $"n_{method.JniName}:{method.JniSignature}:{connector}";
+			string suffix = i < marshalMethods.Count - 1 ? " +" : ";";
+			writer.WriteLine ($"\t\t\t\"{methodLine}\\n\"{suffix}");
+		}
+
+		// Registration call
+		string assemblyQualifiedName = $"{type.FullName}, {type.Module.Assembly.Name.Name}";
+		writer.WriteLine ($"\t\tmono.android.Runtime.register (\"{assemblyQualifiedName}\", {className}.class, __md_methods);");
+		writer.WriteLine ("\t}");
+		writer.WriteLine ();
+
+		// Generate native method declarations
+		foreach (var method in marshalMethods) {
+			string returnType = JniSignatureToJavaType (method.JniSignature, returnOnly: true);
+			string parameters = JniSignatureToJavaParameters (method.JniSignature);
+
+			writer.WriteLine ($"\tprivate native {returnType} n_{method.JniName} ({parameters});");
+		}
+
+		writer.WriteLine ("}");
+
+		Context.LogMessage (MessageContainer.CreateInfoMessage ($"Generated JCW: {javaFilePath}"));
+	}
+
+	/// <summary>
+	/// Generates an LLVM IR file for the given type's marshal methods.
+	/// Each native JNI method stub calls get_function_pointer to resolve the UCO wrapper,
+	/// caches it, and forwards the call to the managed method.
+	/// </summary>
+	void GenerateLlvmIrFile (string outputPath, string targetArch, TypeDefinition type, string jniTypeName, List<MarshalMethodInfo> marshalMethods)
+	{
+		// Create output directory
+		Directory.CreateDirectory (outputPath);
+
+		// Sanitize type name for filename
+		string sanitizedName = type.FullName.Replace ('.', '_').Replace ('/', '_').Replace ('+', '_');
+		string llFilePath = Path.Combine (outputPath, $"marshal_methods_{sanitizedName}.ll");
+
+		using var writer = new StreamWriter (llFilePath);
+
+		// LLVM IR header
+		writer.WriteLine ($"; ModuleID = 'marshal_methods_{sanitizedName}.ll'");
+		writer.WriteLine ($"source_filename = \"marshal_methods_{sanitizedName}.ll\"");
+		writer.WriteLine ("target datalayout = \"e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128\"");
+		writer.WriteLine ($"target triple = \"aarch64-unknown-linux-android21\"");
+		writer.WriteLine ();
+
+		// Global variable holding the get_function_pointer callback (set during app init)
+		writer.WriteLine ("; External get_function_pointer callback - resolves UCO wrapper by class name hash and method index");
+		writer.WriteLine ("@get_function_pointer = external dso_local local_unnamed_addr global ptr, align 8");
+		writer.WriteLine ();
+
+		// Cached function pointer variables (one per method)
+		writer.WriteLine ("; Cached function pointers for marshal methods");
+		for (int i = 0; i < marshalMethods.Count; i++) {
+			writer.WriteLine ($"@fn_ptr_{i} = internal dso_local unnamed_addr global ptr null, align 8");
+		}
+		writer.WriteLine ();
+
+		// Class name hash constant (xxhash of jniTypeName)
+		ulong classNameHash = ComputeXxHash64 (jniTypeName);
+		writer.WriteLine ($"; Class name hash for \"{jniTypeName}\"");
+		writer.WriteLine ($"@class_name_hash = internal constant i64 {classNameHash}, align 8");
+		writer.WriteLine ();
+
+		// Generate JNI native functions
+		writer.WriteLine ("; JNI native method stubs");
+		for (int i = 0; i < marshalMethods.Count; i++) {
+			var method = marshalMethods [i];
+			string nativeSymbol = MakeJniNativeSymbol (jniTypeName, method.JniName);
+			string llvmParams = JniSignatureToLlvmParams (method.JniSignature);
+			string llvmParamTypes = JniSignatureToLlvmParamTypes (method.JniSignature);
+			string llvmArgs = JniSignatureToLlvmArgs (method.JniSignature);
+			string llvmRetType = JniSignatureToLlvmReturnType (method.JniSignature);
+
+			writer.WriteLine ();
+			writer.WriteLine ($"; Method: {method.JniName}{method.JniSignature}");
+			writer.WriteLine ($"define dso_local {llvmRetType} @{nativeSymbol}(ptr %env, ptr %obj{llvmParams}) #0 {{");
+			writer.WriteLine ("entry:");
+
+			// Load cached function pointer
+			writer.WriteLine ($"  %cached_ptr = load ptr, ptr @fn_ptr_{i}, align 8");
+			writer.WriteLine ("  %is_null = icmp eq ptr %cached_ptr, null");
+			writer.WriteLine ("  br i1 %is_null, label %resolve, label %call");
+			writer.WriteLine ();
+
+			// Resolve block - call get_function_pointer to get UCO wrapper
+			writer.WriteLine ("resolve:");
+			writer.WriteLine ("  %get_fn = load ptr, ptr @get_function_pointer, align 8");
+			writer.WriteLine ($"  %class_hash = load i64, ptr @class_name_hash, align 8");
+			writer.WriteLine ($"  call void %get_fn(i64 %class_hash, i32 {i}, ptr @fn_ptr_{i})");
+			writer.WriteLine ($"  %resolved_ptr = load ptr, ptr @fn_ptr_{i}, align 8");
+			writer.WriteLine ("  br label %call");
+			writer.WriteLine ();
+
+			// Call block - invoke the UCO wrapper
+			writer.WriteLine ("call:");
+			writer.WriteLine ("  %fn = phi ptr [ %cached_ptr, %entry ], [ %resolved_ptr, %resolve ]");
+
+			if (llvmRetType == "void") {
+				writer.WriteLine ($"  tail call void %fn(ptr %env, ptr %obj{llvmArgs})");
+				writer.WriteLine ("  ret void");
+			} else {
+				writer.WriteLine ($"  %result = tail call {llvmRetType} %fn(ptr %env, ptr %obj{llvmArgs})");
+				writer.WriteLine ($"  ret {llvmRetType} %result");
+			}
+
+			writer.WriteLine ("}");
+		}
+
+		writer.WriteLine ();
+		writer.WriteLine ("; Function attributes");
+		writer.WriteLine ("attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read) uwtable }");
+		writer.WriteLine ();
+		writer.WriteLine ("; Metadata");
+		writer.WriteLine ("!llvm.module.flags = !{!0}");
+		writer.WriteLine ("!0 = !{i32 1, !\"wchar_size\", i32 4}");
+
+		Context.LogMessage (MessageContainer.CreateInfoMessage ($"Generated LLVM IR: {llFilePath}"));
+	}
+
+	/// <summary>
+	/// Simple xxHash64 implementation for class name hashing.
+	/// </summary>
+	static ulong ComputeXxHash64 (string input)
+	{
+		// Use a simple hash for PoC - in production this should match MonoAndroidHelper.GetXxHash
+		ulong hash = 0;
+		foreach (char c in input) {
+			hash = hash * 31 + c;
+		}
+		return hash;
+	}
+
+	/// <summary>
+	/// Converts JNI signature parameters to LLVM IR argument references (e.g., ", %p0, %p1").
+	/// </summary>
+	static string JniSignatureToLlvmArgs (string jniSignature)
+	{
+		var args = new StringBuilder ();
+		int paramIndex = 0;
+		int i = 1; // Skip opening '('
+
+		while (i < jniSignature.Length && jniSignature [i] != ')') {
+			args.Append (", %p");
+			args.Append (paramIndex);
+			paramIndex++;
+
+			char c = jniSignature [i];
+			if (c == 'L') {
+				// Object type - skip to ';'
+				while (i < jniSignature.Length && jniSignature [i] != ';') i++;
+			} else if (c == '[') {
+				// Array - skip the element type
+				i++;
+				if (i < jniSignature.Length && jniSignature [i] == 'L') {
+					while (i < jniSignature.Length && jniSignature [i] != ';') i++;
+				}
+			}
+			i++;
+		}
+
+		return args.ToString ();
+	}
+
+	/// <summary>
+	/// Converts JNI signature parameters to LLVM IR type list (e.g., ", ptr, ptr").
+	/// </summary>
+	static string JniSignatureToLlvmParamTypes (string jniSignature)
+	{
+		var types = new StringBuilder ();
+		int i = 1; // Skip opening '('
+
+		while (i < jniSignature.Length && jniSignature [i] != ')') {
+			types.Append (", ");
+			char c = jniSignature [i];
+
+			switch (c) {
+				case 'Z': types.Append ("i8"); break;  // boolean
+				case 'B': types.Append ("i8"); break;  // byte
+				case 'C': types.Append ("i16"); break; // char
+				case 'S': types.Append ("i16"); break; // short
+				case 'I': types.Append ("i32"); break; // int
+				case 'J': types.Append ("i64"); break; // long
+				case 'F': types.Append ("float"); break;
+				case 'D': types.Append ("double"); break;
+				case 'L':
+					types.Append ("ptr");
+					while (i < jniSignature.Length && jniSignature [i] != ';') i++;
+					break;
+				case '[':
+					types.Append ("ptr");
+					i++;
+					if (i < jniSignature.Length && jniSignature [i] == 'L') {
+						while (i < jniSignature.Length && jniSignature [i] != ';') i++;
+					}
+					break;
+				default:
+					types.Append ("ptr");
+					break;
+			}
+			i++;
+		}
+
+		return types.ToString ();
+	}
+
+	/// <summary>
+	/// Creates a JNI native symbol name from the type name and method name.
+	/// </summary>
+	static string MakeJniNativeSymbol (string jniTypeName, string methodName)
+	{
+		var sb = new StringBuilder ("Java_");
+		sb.Append (MangleForJni (jniTypeName));
+		sb.Append ('_');
+		sb.Append (MangleForJni ($"n_{methodName}"));
+		return sb.ToString ();
+	}
+
+	/// <summary>
+	/// Mangles a string for use in JNI native symbol names.
+	/// </summary>
+	static string MangleForJni (string name)
+	{
+		var sb = new StringBuilder (name.Length);
+		foreach (char c in name) {
+			switch (c) {
+				case '/':
+				case '.':
+					sb.Append ('_');
+					break;
+				case '_':
+					sb.Append ("_1");
+					break;
+				case ';':
+					sb.Append ("_2");
+					break;
+				case '[':
+					sb.Append ("_3");
+					break;
+				case '$':
+					sb.Append ("_00024");
+					break;
+				default:
+					sb.Append (c);
+					break;
+			}
+		}
+		return sb.ToString ();
+	}
+
+	/// <summary>
+	/// Converts JNI signature return type to Java type.
+	/// </summary>
+	static string JniSignatureToJavaType (string signature, bool returnOnly)
+	{
+		int parenEnd = signature.LastIndexOf (')');
+		if (parenEnd < 0) return "void";
+
+		char returnChar = signature [parenEnd + 1];
+		return returnChar switch {
+			'V' => "void",
+			'Z' => "boolean",
+			'B' => "byte",
+			'C' => "char",
+			'S' => "short",
+			'I' => "int",
+			'J' => "long",
+			'F' => "float",
+			'D' => "double",
+			'L' => "Object", // Simplified
+			'[' => "Object[]", // Simplified
+			_ => "Object",
+		};
+	}
+
+	/// <summary>
+	/// Converts JNI signature parameters to Java parameter list.
+	/// </summary>
+	static string JniSignatureToJavaParameters (string signature)
+	{
+		// Simplified: just return empty or generic parameter list
+		int parenStart = signature.IndexOf ('(');
+		int parenEnd = signature.IndexOf (')');
+		if (parenStart < 0 || parenEnd < 0 || parenEnd == parenStart + 1) {
+			return "";
+		}
+
+		// Very simplified parameter extraction
+		string paramSig = signature.Substring (parenStart + 1, parenEnd - parenStart - 1);
+		var @params = new List<string> ();
+		int idx = 0;
+		int paramNum = 0;
+
+		while (idx < paramSig.Length) {
+			char c = paramSig [idx];
+			string type = c switch {
+				'Z' => "boolean",
+				'B' => "byte",
+				'C' => "char",
+				'S' => "short",
+				'I' => "int",
+				'J' => "long",
+				'F' => "float",
+				'D' => "double",
+				'L' => "Object",
+				'[' => "Object[]",
+				_ => "Object",
+			};
+
+			if (c == 'L') {
+				// Skip to semicolon
+				while (idx < paramSig.Length && paramSig [idx] != ';') idx++;
+			} else if (c == '[') {
+				// Skip array and element type
+				while (idx < paramSig.Length && paramSig [idx] == '[') idx++;
+				if (idx < paramSig.Length && paramSig [idx] == 'L') {
+					while (idx < paramSig.Length && paramSig [idx] != ';') idx++;
+				}
+			}
+
+			@params.Add ($"{type} p{paramNum++}");
+			idx++;
+		}
+
+		return string.Join (", ", @params);
+	}
+
+	/// <summary>
+	/// Converts JNI signature to LLVM IR parameter types.
+	/// </summary>
+	static string JniSignatureToLlvmParams (string signature)
+	{
+		int parenStart = signature.IndexOf ('(');
+		int parenEnd = signature.IndexOf (')');
+		if (parenStart < 0 || parenEnd < 0 || parenEnd == parenStart + 1) {
+			return "";
+		}
+
+		string paramSig = signature.Substring (parenStart + 1, parenEnd - parenStart - 1);
+		var @params = new List<string> ();
+		int idx = 0;
+		int paramNum = 0;
+
+		while (idx < paramSig.Length) {
+			char c = paramSig [idx];
+			string type = c switch {
+				'Z' => "i8",
+				'B' => "i8",
+				'C' => "i16",
+				'S' => "i16",
+				'I' => "i32",
+				'J' => "i64",
+				'F' => "float",
+				'D' => "double",
+				'L' => "ptr",
+				'[' => "ptr",
+				_ => "ptr",
+			};
+
+			if (c == 'L') {
+				while (idx < paramSig.Length && paramSig [idx] != ';') idx++;
+			} else if (c == '[') {
+				while (idx < paramSig.Length && paramSig [idx] == '[') idx++;
+				if (idx < paramSig.Length && paramSig [idx] == 'L') {
+					while (idx < paramSig.Length && paramSig [idx] != ';') idx++;
+				}
+			}
+
+			@params.Add ($", {type} %p{paramNum++}");
+			idx++;
+		}
+
+		return string.Concat (@params);
+	}
+
+	/// <summary>
+	/// Converts JNI signature return type to LLVM IR type.
+	/// </summary>
+	static string JniSignatureToLlvmReturnType (string signature)
+	{
+		int parenEnd = signature.LastIndexOf (')');
+		if (parenEnd < 0 || parenEnd + 1 >= signature.Length) return "void";
+
+		char returnChar = signature [parenEnd + 1];
+		return returnChar switch {
+			'V' => "void",
+			'Z' => "i8",
+			'B' => "i8",
+			'C' => "i16",
+			'S' => "i16",
+			'I' => "i32",
+			'J' => "i64",
+			'F' => "float",
+			'D' => "double",
+			'L' => "ptr",
+			'[' => "ptr",
+			_ => "ptr",
+		};
 	}
 
 	/// <summary>
@@ -436,10 +1084,11 @@ public class GenerateTypeMapAttributesStep : BaseStep
 	/// sealed class AssemblyName._.mappedTypeFullName_Proxy : JavaPeerProxy
 	/// {
 	///     public override Type TargetType => typeof(MappedType);
+	///     public override IntPtr GetFunctionPointer(int methodIndex) => methodIndex switch { 0 => ..., _ => IntPtr.Zero };
 	/// }
 	/// </code>
 	/// </summary>
-	TypeDefinition GenerateTypeMapProxyType (string javaClassName, TypeDefinition mappedType)
+	TypeDefinition GenerateTypeMapProxyType (string javaClassName, TypeDefinition mappedType, List<MarshalMethodInfo> marshalMethods)
 	{
 		StringBuilder mappedName = new (mappedType.Name);
 		TypeDefinition? declaringType = mappedType;
@@ -478,6 +1127,12 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 		// Add the TargetType property with [return: DynamicallyAccessedMembers] annotation
 		GenerateTargetTypeProperty (proxyType, mappedType);
+
+		// Generate UCO wrappers and GetFunctionPointer if there are marshal methods
+		if (marshalMethods.Count > 0) {
+			GenerateUcoWrappers (proxyType, mappedType, marshalMethods);
+			GenerateGetFunctionPointerMethod (proxyType, mappedType, marshalMethods);
+		}
 
 		return proxyType;
 	}
@@ -529,5 +1184,360 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		var property = new PropertyDefinition ("TargetType", PropertyAttributes.None, SystemTypeType);
 		property.GetMethod = getter;
 		proxyType.Properties.Add (property);
+	}
+
+	/// <summary>
+	/// Generates [UnmanagedCallersOnly] wrapper methods for marshal methods.
+	/// These wrappers are added to the proxy type and call the original native callbacks.
+	/// </summary>
+	void GenerateUcoWrappers (TypeDefinition proxyType, TypeDefinition mappedType, List<MarshalMethodInfo> marshalMethods)
+	{
+		for (int i = 0; i < marshalMethods.Count; i++) {
+			var methodInfo = marshalMethods [i];
+			var callback = methodInfo.NativeCallback;
+
+			// Check if it already has [UnmanagedCallersOnly]
+			if (HasUnmanagedCallersOnlyAttribute (callback)) {
+				methodInfo.UcoWrapper = callback;
+				Context.LogMessage (MessageContainer.CreateInfoMessage (
+					$"Method {callback.FullName} already has [UnmanagedCallersOnly]"));
+				continue;
+			}
+
+			// Generate a UCO wrapper method in the proxy type
+			string wrapperName = $"n_{methodInfo.JniName}_mm_{i}";
+			var wrapper = GenerateUcoWrapperMethod (proxyType, callback, wrapperName);
+			if (wrapper != null) {
+				methodInfo.UcoWrapper = wrapper;
+				proxyType.Methods.Add (wrapper);
+				Context.LogMessage (MessageContainer.CreateInfoMessage (
+					$"Generated UCO wrapper {proxyType.FullName}.{wrapperName} for {callback.FullName}"));
+			} else {
+				// Fallback to original callback if wrapper generation fails
+				methodInfo.UcoWrapper = callback;
+				Context.LogMessage (MessageContainer.CreateInfoMessage (
+					$"Failed to generate UCO wrapper for {callback.FullName}, using original"));
+			}
+		}
+	}
+
+	static bool HasUnmanagedCallersOnlyAttribute (MethodDefinition method)
+	{
+		foreach (CustomAttribute ca in method.CustomAttributes) {
+			if (ca.Constructor.DeclaringType.FullName == "System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute") {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/// <summary>
+	/// Generates a single [UnmanagedCallersOnly] wrapper method that calls the original native callback.
+	/// The wrapper handles exception propagation and type conversions for non-blittable types.
+	/// </summary>
+	MethodDefinition? GenerateUcoWrapperMethod (TypeDefinition proxyType, MethodDefinition callback, string wrapperName)
+	{
+		try {
+			// Map return type to blittable
+			TypeReference retType = MapToBlittableTypeIfNecessary (callback.ReturnType, out bool returnTypeMapped);
+			bool hasReturnValue = callback.ReturnType.FullName != "System.Void";
+
+			var wrapperMethod = new MethodDefinition (
+				wrapperName,
+				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+				AssemblyToInjectTypeMap.MainModule.ImportReference (retType));
+
+			// Add [UnmanagedCallersOnly] attribute
+			wrapperMethod.CustomAttributes.Add (new CustomAttribute (UnmanagedCallersOnlyAttributeCtor));
+
+			var body = wrapperMethod.Body;
+			body.InitLocals = true;
+			var il = body.GetILProcessor ();
+
+			// Add return value variable if needed
+			VariableDefinition? retval = null;
+			if (hasReturnValue) {
+				retval = new VariableDefinition (AssemblyToInjectTypeMap.MainModule.ImportReference (retType));
+				body.Variables.Add (retval);
+			}
+
+			// Call WaitForBridgeProcessing if available
+			if (WaitForBridgeProcessingMethod != null) {
+				il.Emit (Mono.Cecil.Cil.OpCodes.Call, WaitForBridgeProcessingMethod);
+			}
+
+			// Set up exception handler
+			var exceptionHandler = new ExceptionHandler (ExceptionHandlerType.Catch) {
+				CatchType = SystemExceptionType,
+			};
+			body.ExceptionHandlers.Add (exceptionHandler);
+
+			// Load parameters and call the original callback
+			Instruction? firstTryInstruction = null;
+			int paramIndex = 0;
+			foreach (var pdef in callback.Parameters) {
+				TypeReference newType = MapToBlittableTypeIfNecessary (pdef.ParameterType, out bool paramMapped);
+				wrapperMethod.Parameters.Add (new ParameterDefinition (pdef.Name, pdef.Attributes,
+					AssemblyToInjectTypeMap.MainModule.ImportReference (newType)));
+
+				var loadInst = GetLoadArgInstruction (paramIndex++);
+				if (firstTryInstruction == null) {
+					firstTryInstruction = loadInst;
+				}
+				il.Append (loadInst);
+
+				// Handle non-blittable parameter conversion (e.g., byte -> bool)
+				if (paramMapped && pdef.ParameterType.FullName == "System.Boolean") {
+					// Convert byte to bool: param != 0
+					il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_I4_0);
+					il.Emit (Mono.Cecil.Cil.OpCodes.Cgt_Un);
+				}
+			}
+
+			// Call the original callback
+			var callInst = Mono.Cecil.Cil.Instruction.Create (Mono.Cecil.Cil.OpCodes.Call,
+				AssemblyToInjectTypeMap.MainModule.ImportReference (callback));
+			if (firstTryInstruction == null) {
+				firstTryInstruction = callInst;
+			}
+			il.Append (callInst);
+
+			exceptionHandler.TryStart = firstTryInstruction;
+
+			// Handle return value
+			if (hasReturnValue) {
+				if (returnTypeMapped && callback.ReturnType.FullName == "System.Boolean") {
+					// Convert bool to byte
+					var insLoadOne = Mono.Cecil.Cil.Instruction.Create (Mono.Cecil.Cil.OpCodes.Ldc_I4_1);
+					var insConvert = Mono.Cecil.Cil.Instruction.Create (Mono.Cecil.Cil.OpCodes.Conv_U1);
+					il.Emit (Mono.Cecil.Cil.OpCodes.Brtrue_S, insLoadOne);
+					il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_I4_0);
+					il.Emit (Mono.Cecil.Cil.OpCodes.Br_S, insConvert);
+					il.Append (insLoadOne);
+					il.Append (insConvert);
+				}
+				il.Emit (Mono.Cecil.Cil.OpCodes.Stloc, retval);
+			}
+
+			// Leave try block
+			var ret = Mono.Cecil.Cil.Instruction.Create (Mono.Cecil.Cil.OpCodes.Ret);
+			Instruction leaveTarget;
+			Instruction? retValLoadInst = null;
+			if (hasReturnValue) {
+				retValLoadInst = Mono.Cecil.Cil.Instruction.Create (Mono.Cecil.Cil.OpCodes.Ldloc, retval);
+				leaveTarget = retValLoadInst;
+			} else {
+				leaveTarget = ret;
+			}
+			il.Emit (Mono.Cecil.Cil.OpCodes.Leave_S, leaveTarget);
+
+			// Exception handler
+			var exceptionVar = new VariableDefinition (SystemExceptionType);
+			body.Variables.Add (exceptionVar);
+
+			var catchStartInst = Mono.Cecil.Cil.Instruction.Create (Mono.Cecil.Cil.OpCodes.Stloc, exceptionVar);
+			exceptionHandler.HandlerStart = catchStartInst;
+			exceptionHandler.TryEnd = catchStartInst;
+
+			il.Append (catchStartInst);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_0); // jnienv
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloc, exceptionVar);
+
+			if (UnhandledExceptionMethod != null) {
+				il.Emit (Mono.Cecil.Cil.OpCodes.Call, UnhandledExceptionMethod);
+				// Set default return value
+				if (hasReturnValue) {
+					AddSetDefaultValueInstructions (il, retType, retval!);
+				}
+			} else {
+				// If no unhandled exception method, just rethrow
+				il.Emit (Mono.Cecil.Cil.OpCodes.Pop); // pop jnienv
+				il.Emit (Mono.Cecil.Cil.OpCodes.Throw);
+			}
+
+			il.Emit (Mono.Cecil.Cil.OpCodes.Leave_S, leaveTarget);
+
+			// Return
+			if (hasReturnValue) {
+				il.Append (retValLoadInst);
+				exceptionHandler.HandlerEnd = retValLoadInst;
+			} else {
+				exceptionHandler.HandlerEnd = ret;
+			}
+			il.Append (ret);
+
+			return wrapperMethod;
+		} catch (Exception ex) {
+			Context.LogMessage (MessageContainer.CreateInfoMessage (
+				$"Failed to generate UCO wrapper for {callback.FullName}: {ex.Message}"));
+			return null;
+		}
+	}
+
+	static Instruction GetLoadArgInstruction (int paramIndex)
+	{
+		return paramIndex switch {
+			0 => Mono.Cecil.Cil.Instruction.Create (Mono.Cecil.Cil.OpCodes.Ldarg_0),
+			1 => Mono.Cecil.Cil.Instruction.Create (Mono.Cecil.Cil.OpCodes.Ldarg_1),
+			2 => Mono.Cecil.Cil.Instruction.Create (Mono.Cecil.Cil.OpCodes.Ldarg_2),
+			3 => Mono.Cecil.Cil.Instruction.Create (Mono.Cecil.Cil.OpCodes.Ldarg_3),
+			_ => Mono.Cecil.Cil.Instruction.Create (Mono.Cecil.Cil.OpCodes.Ldarg_S, (byte)paramIndex),
+		};
+	}
+
+	TypeReference MapToBlittableTypeIfNecessary (TypeReference type, out bool typeMapped)
+	{
+		if (type.FullName == "System.Void" || IsBlittable (type)) {
+			typeMapped = false;
+			return type;
+		}
+
+		if (type.FullName == "System.Boolean") {
+			typeMapped = true;
+			return AssemblyToInjectTypeMap.MainModule.TypeSystem.Byte;
+		}
+
+		// For other non-blittable types, just return as-is and hope for the best
+		typeMapped = false;
+		return type;
+	}
+
+	static bool IsBlittable (TypeReference type)
+	{
+		return type.FullName switch {
+			"System.Void" => true,
+			"System.Boolean" => false, // Not blittable!
+			"System.Byte" => true,
+			"System.SByte" => true,
+			"System.Int16" => true,
+			"System.UInt16" => true,
+			"System.Int32" => true,
+			"System.UInt32" => true,
+			"System.Int64" => true,
+			"System.UInt64" => true,
+			"System.IntPtr" => true,
+			"System.UIntPtr" => true,
+			"System.Single" => true,
+			"System.Double" => true,
+			_ => type.IsValueType,
+		};
+	}
+
+	void AddSetDefaultValueInstructions (ILProcessor il, TypeReference type, VariableDefinition retval)
+	{
+		switch (type.FullName) {
+			case "System.Boolean":
+			case "System.Byte":
+			case "System.Int16":
+			case "System.Int32":
+			case "System.SByte":
+			case "System.UInt16":
+			case "System.UInt32":
+				il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_I4_0);
+				break;
+
+			case "System.Int64":
+			case "System.UInt64":
+				il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_I4_0);
+				il.Emit (Mono.Cecil.Cil.OpCodes.Conv_I8);
+				break;
+
+			case "System.IntPtr":
+			case "System.UIntPtr":
+				il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_I4_0);
+				il.Emit (Mono.Cecil.Cil.OpCodes.Conv_I);
+				break;
+
+			case "System.Single":
+				il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_R4, 0.0f);
+				break;
+
+			case "System.Double":
+				il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_R8, 0.0);
+				break;
+
+			default:
+				// For other types, just load 0
+				il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_I4_0);
+				break;
+		}
+		il.Emit (Mono.Cecil.Cil.OpCodes.Stloc, retval);
+	}
+
+	/// <summary>
+	/// Generates the GetFunctionPointer method override that returns function pointers for marshal methods:
+	/// <code>
+	/// public override IntPtr GetFunctionPointer(int methodIndex)
+	///     => methodIndex switch {
+	///         0 => (IntPtr)(delegate*&lt;IntPtr, IntPtr, ...&gt;)&amp;TargetType.n_Method0,
+	///         1 => (IntPtr)(delegate*&lt;IntPtr, IntPtr, ...&gt;)&amp;TargetType.n_Method1,
+	///         _ => IntPtr.Zero,
+	///     };
+	/// </code>
+	/// </summary>
+	void GenerateGetFunctionPointerMethod (TypeDefinition proxyType, TypeDefinition mappedType, List<MarshalMethodInfo> marshalMethods)
+	{
+		// Get IntPtr type
+		var intPtrTypeDef = Context.GetType ("System.IntPtr");
+		var intPtrType = AssemblyToInjectTypeMap.MainModule.ImportReference (intPtrTypeDef);
+
+		// Get IntPtr.Zero field
+		var intPtrZeroField = intPtrTypeDef.Fields.FirstOrDefault (f => f.Name == "Zero")
+			?? throw new InvalidOperationException ("Could not find IntPtr.Zero");
+		var intPtrZeroRef = AssemblyToInjectTypeMap.MainModule.ImportReference (intPtrZeroField);
+
+		// Create the override method
+		var method = new MethodDefinition (
+			"GetFunctionPointer",
+			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
+			intPtrType);
+
+		method.Parameters.Add (new ParameterDefinition ("methodIndex", ParameterAttributes.None,
+			AssemblyToInjectTypeMap.MainModule.TypeSystem.Int32));
+
+		var il = method.Body.GetILProcessor ();
+
+		// For now, generate a simple switch using if/else pattern
+		// if (methodIndex == 0) return (IntPtr)&TargetType.n_Method0;
+		// if (methodIndex == 1) return (IntPtr)&TargetType.n_Method1;
+		// return IntPtr.Zero;
+
+		var returnZeroLabel = il.Create (Mono.Cecil.Cil.OpCodes.Ldsfld, intPtrZeroRef);
+
+		for (int i = 0; i < marshalMethods.Count; i++) {
+			var methodInfo = marshalMethods [i];
+
+			// Skip if no wrapper was generated
+			if (methodInfo.UcoWrapper == null) {
+				continue;
+			}
+
+			// Load methodIndex argument
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_1);
+			// Load constant i
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_I4, i);
+			// Compare: if (methodIndex != i) goto next
+			var nextLabel = il.Create (Mono.Cecil.Cil.OpCodes.Nop);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Bne_Un, nextLabel);
+
+			// Load function pointer for the UCO wrapper method
+			// ldftn ProxyType::n_MethodName_mm_N
+			var ucoWrapperRef = AssemblyToInjectTypeMap.MainModule.ImportReference (methodInfo.UcoWrapper);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldftn, ucoWrapperRef);
+			// Return it (function pointer is already an IntPtr-sized value)
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
+
+			// next:
+			il.Append (nextLabel);
+		}
+
+		// return IntPtr.Zero
+		il.Append (returnZeroLabel);
+		il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
+
+		proxyType.Methods.Add (method);
+
+		Context.LogMessage (MessageContainer.CreateInfoMessage (
+			$"Generated GetFunctionPointer for {proxyType.FullName} with {marshalMethods.Count} methods"));
 	}
 }
