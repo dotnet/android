@@ -105,11 +105,38 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 	protected override void Process ()
 	{
+		try {
+		Context.LogMessage (MessageContainer.CreateInfoMessage ("GenerateTypeMapAttributesStep running..."));
 		var javaTypeMapUniverseTypeDefinition = Context.GetType (JavaTypeMapUniverseTypeName);
-
-		// AssemblyToInjectTypeMap = Context.Annotations.GetType ().GetMethod ("GetEntryPointAssembly")?.Invoke (Context.Annotations, null) as AssemblyDefinition ?? throw new NotImplementedException ("asdfasdf NoEntryPoint");
 		MonoAndroidAssembly = javaTypeMapUniverseTypeDefinition.Module.Assembly;
-        AssemblyToInjectTypeMap = MonoAndroidAssembly;
+
+		// Try to find the entry assembly to inject types into
+		// This avoids circular dependencies when proxies need to reference user types
+		// 1. Try internal Linker API via reflection
+		var getEntryPoint = Context.Annotations.GetType ().GetMethod ("GetAction", new Type[] { typeof (MethodDefinition) }) == null ? 
+			Context.Annotations.GetType ().GetMethod ("GetEntryPointAssembly") : null;
+		
+		if (getEntryPoint != null)
+			AssemblyToInjectTypeMap = getEntryPoint.Invoke (Context.Annotations, null) as AssemblyDefinition;
+
+		// 2. Try to find assembly with EntryPoint
+		// if (AssemblyToInjectTypeMap == null) {
+		// 	foreach (var asm in Context.GetAssemblies ()) {
+		// 		if (asm.EntryPoint != null) {
+		// 			AssemblyToInjectTypeMap = asm;
+		// 			break;
+		// 		}
+		// 	}
+		// }
+
+		// 3. Fallback to Mono.Android (will fail for user types if they need UCO wrappers)
+		if (AssemblyToInjectTypeMap == null) {
+			Context.LogMessage (MessageContainer.CreateInfoMessage ("Could not find EntryPoint assembly, falling back to Mono.Android"));
+			AssemblyToInjectTypeMap = MonoAndroidAssembly;
+		} else {
+			Context.LogMessage (MessageContainer.CreateInfoMessage ($"Injecting TypeMap into entry assembly: {AssemblyToInjectTypeMap.Name}"));
+		}
+
 		JavaTypeMapUniverseType = AssemblyToInjectTypeMap.MainModule.ImportReference (javaTypeMapUniverseTypeDefinition);
 
 		var invokerUniverseTypeDefinition = Context.GetType (InvokerUniverseTypeName);
@@ -172,6 +199,11 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 		// Initialize UCO wrapper generation imports
 		InitializeUcoImports ();
+
+		base.Process ();
+		} catch (Exception ex) {
+			throw new InvalidOperationException ($"GenerateTypeMapAttributesStep crashed: {ex}");
+		}
 	}
 
 	/// <summary>
@@ -457,6 +489,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 	protected override void EndProcess ()
 	{
+		try {
 		// HACK ALERT
 		// We override the entry_assembly so that the TypeMapHandler in illink can have a starting point for TypeMapTargetAssemblies.
 		// Mono.Android should be the entrypoint assembly so that we can call Assembly.SetEntryAssembly() during application initialization.
@@ -514,18 +547,19 @@ public class GenerateTypeMapAttributesStep : BaseStep
 			AssemblyToInjectTypeMap.CustomAttributes.Add (attr);
 		}
 
-		AssemblyToInjectTypeMap.Write (Context.GetAssemblyLocation (AssemblyToInjectTypeMap) + Random.Shared.GetHexString (4) + ".injected.dll");
-
 		// JNIEnvInit sets Mono.Android as the entrypoint assembly. Forward the typemap logic to the user/custom assembly;
 		CustomAttribute targetAssembly = new (TypeMapAssemblyTargetAttributeCtor);
 		targetAssembly.ConstructorArguments.Add (new (SystemStringType, AssemblyToInjectTypeMap.Name.FullName));
 		MonoAndroidAssembly.CustomAttributes.Add (targetAssembly);
-		MonoAndroidAssembly.Write (Path.Combine (
-			Path.GetDirectoryName (Context.GetAssemblyLocation (AssemblyToInjectTypeMap)),
-			"Mono.Android." + Random.Shared.GetHexString (4) + ".injected.dll"));
+
+		// Force the Linker to write the modified Mono.Android assembly
+		Context.Annotations.SetAction (MonoAndroidAssembly, AssemblyAction.Save);
 
 		// Generate JCW (Java Callable Wrappers) and LLVM IR files for marshal methods
 		GenerateJcwAndLlvmIrFiles ();
+		} catch (Exception ex) {
+			throw new InvalidOperationException ($"GenerateTypeMapAttributesStep.EndProcess crashed: {ex}");
+		}
 	}
 
 	/// <summary>
@@ -1653,8 +1687,20 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 			// Load function pointer for the UCO wrapper method
 			// ldftn ProxyType::n_MethodName_mm_N
-			// No need to import - UCO wrapper is on the same proxyType we're generating into
-			il.Emit (Mono.Cecil.Cil.OpCodes.Ldftn, methodInfo.UcoWrapper);
+			// Import the reference as it might be in a different assembly (e.g. user assembly with [UCO])
+			MethodReference ucoWrapperRef;
+			if (methodInfo.UcoWrapper.DeclaringType?.Module == null) {
+				// Generated wrapper in the new proxy type (not yet added to module)
+				// Use the definition directly
+				ucoWrapperRef = methodInfo.UcoWrapper;
+			} else {
+				try {
+					ucoWrapperRef = AssemblyToInjectTypeMap.MainModule.ImportReference (methodInfo.UcoWrapper);
+				} catch (Exception ex) {
+					throw new InvalidOperationException ($"Failed to import reference for {methodInfo.UcoWrapper?.FullName ?? "null"} into {AssemblyToInjectTypeMap?.Name?.Name ?? "null"}", ex);
+				}
+			}
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldftn, ucoWrapperRef);
 			// Return it (function pointer is already an IntPtr-sized value)
 			il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
 
