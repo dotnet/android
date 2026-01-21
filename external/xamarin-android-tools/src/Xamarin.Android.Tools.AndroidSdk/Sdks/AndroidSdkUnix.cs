@@ -111,8 +111,14 @@ namespace Xamarin.Android.Tools
 			}
 
 			// Check some hardcoded paths for good measure
+			// macOS: ~/Library/Android/sdk
 			var macSdkPath = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "Library", "Android", "sdk");
-			yield return macSdkPath;
+			if (Directory.Exists (macSdkPath))
+				yield return macSdkPath;
+			// Linux: ~/Android/Sdk
+			var linuxSdkPath = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "Android", "Sdk");
+			if (Directory.Exists (linuxSdkPath))
+				yield return linuxSdkPath;
 		}
 
 		protected override string GetShortFormPath (string path)
