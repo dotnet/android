@@ -5,7 +5,6 @@ namespace Microsoft.Android.Runtime;
 
 static class RuntimeFeature
 {
-	const bool ManagedTypeMapEnabledByDefault = false;
 	const bool IsMonoRuntimeEnabledByDefault = true;
 	const bool IsCoreClrRuntimeEnabledByDefault = false;
 	const bool IsAssignableFromCheckEnabledByDefault = true;
@@ -13,10 +12,6 @@ static class RuntimeFeature
 
 	const string FeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
 	const string StartupHookProviderSwitch = "System.StartupHookProvider.IsSupported";
-
-	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (ManagedTypeMap)}")]
-	internal static bool ManagedTypeMap { get; } =
-		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (ManagedTypeMap)}", out bool isEnabled) ? isEnabled : ManagedTypeMapEnabledByDefault;
 
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (IsMonoRuntime)}")]
 	internal static bool IsMonoRuntime { get; } =

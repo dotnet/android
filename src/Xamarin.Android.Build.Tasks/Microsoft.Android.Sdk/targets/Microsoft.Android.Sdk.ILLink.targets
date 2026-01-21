@@ -17,6 +17,8 @@ This file contains the .NET 5-specific targets to customize ILLink
       <TrimmerRemoveSymbols Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' ">true</TrimmerRemoveSymbols>
       <_ExtraTrimmerArgs Condition=" '$(_EnableSerializationDiscovery)' != 'false' ">--enable-serialization-discovery $(_ExtraTrimmerArgs)</_ExtraTrimmerArgs>
       <_ExtraTrimmerArgs Condition=" '$(_AndroidEnableUnusedTypeChecks)' != 'true' ">--disable-opt unusedtypechecks $(_ExtraTrimmerArgs)</_ExtraTrimmerArgs>
+      <!-- Set the TypeMap entry assembly to Mono.Android where the type map attributes are generated -->
+      <TypeMapEntryAssembly>Mono.Android</TypeMapEntryAssembly>
       <!--
         Used for the <ILLink DumpDependencies="$(_TrimmerDumpDependencies)" /> value:
         https://github.com/dotnet/sdk/blob/a5393731b5b7b225692fff121f747fbbc9e8b140/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.ILLink.targets#L150
@@ -45,6 +47,10 @@ This file contains the .NET 5-specific targets to customize ILLink
         https://github.com/dotnet/sdk/blob/a5393731b5b7b225692fff121f747fbbc9e8b140/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.ILLink.targets#L131
         -->
       <!-- add our custom steps -->
+      <!-- Steps to run before MarkStep -->
+      <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)"
+          Type="Microsoft.Android.Sdk.ILLink.GenerateTypeMapAttributesStep"
+          BeforeStep="MarkStep" />
       <!-- Custom MarkHandlers that run during MarkStep -->
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="Microsoft.Android.Sdk.ILLink.PreserveSubStepDispatcher" />
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="MonoDroid.Tuner.MarkJavaObjects" />
@@ -86,12 +92,7 @@ This file contains the .NET 5-specific targets to customize ILLink
           BeforeStep="MarkStep"
           Type="MonoDroid.Tuner.FixLegacyResourceDesignerStep"
       />
-      <_TrimmerCustomSteps
-          Condition=" '$(_AndroidTypeMapImplementation)' == 'managed' "
-          Include="$(_AndroidLinkerCustomStepAssembly)"
-          AfterStep="CleanStep"
-          Type="Microsoft.Android.Sdk.ILLink.TypeMappingStep"
-      />
+
       <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)..\PreserveLists\*.xml" />
       <TrimmerRootDescriptor Include="@(LinkDescription)" />
       <TrimmerRootAssembly Include="Microsoft.Android.Runtime.NativeAOT" Condition=" '$(_AndroidRuntime)' == 'NativeAOT' " RootMode="All" />

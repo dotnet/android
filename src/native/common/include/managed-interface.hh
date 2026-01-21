@@ -34,7 +34,6 @@ namespace xamarin::android {
 		bool            jniRemappingInUse;
 		bool            marshalMethodsEnabled;
 		jobject         grefGCUserPeerable;
-		bool            managedMarshalMethodsLookupEnabled;
 		jnienv_propagate_uncaught_exception_fn propagateUncaughtExceptionFn;
 	};
 

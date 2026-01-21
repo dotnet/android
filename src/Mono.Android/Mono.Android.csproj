@@ -104,6 +104,16 @@
     <Compile Include="Android.Telephony.Mbms\StreamingService.cs" />
     <Compile Include="Android.Telephony\MbmsDownloadSession.cs" />
     <Compile Include="Android.Views\WindowManagerLayoutParams.cs" />
+    <Compile Include="Java.Interop\AndroidTypeManager.cs" />
+    <Compile Include="Java.Interop\AndroidValueManager.cs" />
+    <Compile Include="Java.Interop\DynamicNativeMembersRegistration.cs" />
+    <Compile Include="Java.Interop\ITypeMap.cs" />
+    <Compile Include="Java.Interop\LlvmIrTypeMap.cs" />
+    <Compile Include="Java.Interop\TypeMapAttributeTypeMap.cs" />
+    <Compile Include="Java.Interop\TypeMapProxyAttribute.cs" />
+    <Compile Include="Java.Interop\JavaPeerProxy.cs" />
+    <Compile Include="Java.Interop\InvokerUniverse.cs" />
+    <Compile Include="Java.Interop\JavaInteropAliasesAttribute.cs" />
     <Compile Include="Java.Lang.Invoke\MethodType.cs" />
     <Compile Include="Java.Time.Chrono\AbstractChronology.cs" />
     <Compile Include="Java.Time\ZonedDateTime.cs" />
@@ -314,7 +324,6 @@
     <Compile Include="Java.Interop\JavaLocationException.cs" />
     <Compile Include="Java.Interop\JavaObjectExtensions.cs" />
     <Compile Include="Java.Interop\JavaTypeParametersAttribute.cs" />
-    <Compile Include="Java.Interop\ManagedMarshalMethodsLookupTable.cs" />
     <Compile Include="Java.Interop\Runtime.cs" />
     <Compile Include="Java.Interop\TypeManager.cs" />
     <Compile Include="Java.Lang\Boolean.cs" />
@@ -351,8 +360,6 @@
     <Compile Include="Java.Util.Concurrent.Atomic\AtomicInteger.cs" />
     <Compile Include="Java.Util.Concurrent.Atomic\AtomicLong.cs" />
     <Compile Include="Javax.Microedition.Khronos.Egl\EGLContext.cs" />
-    <Compile Include="Microsoft.Android.Runtime\ManagedTypeManager.cs" />
-    <Compile Include="Microsoft.Android.Runtime\ManagedTypeMapping.cs" />
     <Compile Include="Microsoft.Android.Runtime\ManagedValueManager.cs" />
     <Compile Include="Microsoft.Android.Runtime\RuntimeFeature.cs" />
     <Compile Include="Microsoft.Android.Runtime\SimpleValueManager.cs" />

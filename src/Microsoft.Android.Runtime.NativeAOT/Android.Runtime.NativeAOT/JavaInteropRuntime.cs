@@ -58,11 +58,13 @@ static partial class JavaInteropRuntime
 			var settings    = new DiagnosticSettings ();
 			settings.AddDebugDotnetLog ();
 
+			var typeMap = new TypeMapAttributeTypeMap ();
+
 			var options = new NativeAotRuntimeOptions {
 				EnvironmentPointer          = jnienv,
 				ClassLoader                 = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
-				TypeManager                 = new ManagedTypeManager (),
-				ValueManager                = ManagedValueManager.GetOrCreateInstance (),
+				TypeManager                 = new AndroidTypeManager (typeMap, jniAddNativeMethodRegistrationAttributePresent: false), // TODO ??
+				ValueManager                = new ManagedValueManager (typeMap),
 				UseMarshalMemberBuilder     = false,
 				JniGlobalReferenceLogWriter = settings.GrefLog,
 				JniLocalReferenceLogWriter  = settings.LrefLog,

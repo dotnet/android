@@ -22,19 +22,34 @@ class ManagedValueManager : JniRuntime.JniValueManager
 {
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
+	readonly ITypeMap typeMap;
+
 	readonly Dictionary<int, List<ReferenceTrackingHandle>> RegisteredInstances = new ();
 	readonly ConcurrentQueue<IntPtr> CollectedContexts = new ();
 
 	bool disposed;
 
 	static readonly SemaphoreSlim bridgeProcessingSemaphore = new (1, 1);
+	static bool gcBridgeInitialized = false;
 
-	static Lazy<ManagedValueManager> s_instance = new (() => new ManagedValueManager ());
-	public static ManagedValueManager GetOrCreateInstance () => s_instance.Value;
-
-	unsafe ManagedValueManager ()
+	public ManagedValueManager (ITypeMap typeMap)
 	{
-		// There can only be one instance of ManagedValueManager because we can call JavaMarshal.Initialize only once.
+		ArgumentNullException.ThrowIfNull (typeMap);
+		this.typeMap = typeMap;
+
+		InitializeGCBridge ();
+	}
+
+	static unsafe void InitializeGCBridge ()
+	{
+		lock (bridgeProcessingSemaphore) {
+			if (gcBridgeInitialized) {
+				throw new InvalidOperationException ("GC bridge has already been initialized.");
+			}
+
+			gcBridgeInitialized = true;
+		}
+
 		var mark_cross_references_ftn = RuntimeNativeMethods.clr_initialize_gc_bridge (&BridgeProcessingStarted, &BridgeProcessingFinished);
 		JavaMarshal.Initialize (mark_cross_references_ftn);
 	}
@@ -449,16 +464,18 @@ class ManagedValueManager : JniRuntime.JniValueManager
 			throw new ArgumentNullException (nameof (mcr), "MarkCrossReferencesArgs should never be null.");
 		}
 
-		ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (mcr);
+		var instance = JNIEnvInit.androidRuntime?.ValueManager as ManagedValueManager
+			?? throw new InvalidOperationException ("The ManagedValueManager instance is not available.");
+
+		ReadOnlySpan<GCHandle> handlesToFree = instance.ProcessCollectedContexts (mcr);
 		JavaMarshal.FinishCrossReferenceProcessing (mcr, handlesToFree);
 
 		bridgeProcessingSemaphore.Release ();
 	}
 
-	static unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)
+	unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)
 	{
 		List<GCHandle> handlesToFree = [];
-		ManagedValueManager instance = GetOrCreateInstance ();
 
 		for (int i = 0; (nuint)i < mcr->ComponentCount; i++) {
 			StronglyConnectedComponent component = mcr->Components [i];
@@ -483,37 +500,13 @@ class ManagedValueManager : JniRuntime.JniValueManager
 			// Note: modifying the RegisteredInstances dictionary while processing the collected contexts
 			// is tricky and can lead to deadlocks, so we remember which contexts were collected and we will free
 			// them later outside of the bridge processing loop.
-			instance.CollectedContexts.Enqueue ((IntPtr)context);
+			CollectedContexts.Enqueue ((IntPtr)context);
 
 			// important: we must not free the handle before passing it to JavaMarshal.FinishCrossReferenceProcessing
 			handlesToFree.Add (handle);
 		}
 
 		return CollectionsMarshal.AsSpan (handlesToFree);
-	}
-
-	const BindingFlags ActivationConstructorBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-
-	static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
-
-	protected override bool TryConstructPeer (
-			IJavaPeerable self,
-			ref JniObjectReference reference,
-			JniObjectReferenceOptions options,
-			[DynamicallyAccessedMembers (Constructors)]
-			Type type)
-	{
-		var c = type.GetConstructor (ActivationConstructorBindingFlags, null, XAConstructorSignature, null);
-		if (c != null) {
-			var args = new object[] {
-				reference.Handle,
-				JniHandleOwnership.DoNotTransfer,
-			};
-			c.Invoke (self, args);
-			JniObjectReference.Dispose (ref reference, options);
-			return true;
-		}
-		return base.TryConstructPeer (self, ref reference, options, type);
 	}
 
 	protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)] out object? result)
@@ -524,5 +517,21 @@ class ManagedValueManager : JniRuntime.JniValueManager
 			return true;
 		}
 		return base.TryUnboxPeerObject (value, out result);
+	}
+
+	public override IJavaPeerable? CreatePeer (
+		ref JniObjectReference reference,
+		JniObjectReferenceOptions options,
+		[DynamicallyAccessedMembers (
+			DynamicallyAccessedMemberTypes.PublicConstructors |
+			DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		Type? targetType)
+	{
+		if (!reference.IsValid)
+			return null;
+
+		var peer = typeMap.CreatePeer (reference.Handle, JniHandleOwnership.DoNotTransfer, targetType) as IJavaPeerable;
+		JniObjectReference.Dispose (ref reference, options);
+		return peer;
 	}
 }

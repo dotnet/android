@@ -57,7 +57,7 @@ public class GenerateTypeMappings : AndroidTask
 
 		androidRuntime = MonoAndroidHelper.ParseAndroidRuntime (AndroidRuntime);
 		if (androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
-			// NativeAOT typemaps are generated in `Microsoft.Android.Sdk.ILLink.TypeMappingStep`
+			// NativeAOT typemaps are generated in `GenerateTypeMapAttributesStep`
 			Log.LogDebugMessage ("Skipping type maps for NativeAOT.");
 			return !Log.HasLoggedErrors;
 		}
@@ -133,16 +133,11 @@ public class GenerateTypeMappings : AndroidTask
 	void GenerateTypeMapFromNativeState (NativeCodeGenState state, bool useMarshalMethods)
 	{
 		if (androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
-			// NativeAOT typemaps are generated in `Microsoft.Android.Sdk.ILLink.TypeMappingStep`
+			// NativeAOT typemaps are generated in `GenerateTypeMapAttributesStep`
 			Log.LogDebugMessage ("Skipping type maps for NativeAOT.");
 			return;
 		}
 		Log.LogDebugMessage ($"Generating type maps from native state for architecture '{state.TargetArch}' (RunCheckedBuild = {RunCheckedBuild})");
-
-		if (TypemapImplementation != "llvm-ir") {
-			Log.LogDebugMessage ($"TypemapImplementation='{TypemapImplementation}' will write an empty native typemap.");
-			state = new NativeCodeGenState (state.TargetArch, new TypeDefinitionCache (), state.Resolver, [], [], state.Classifier);
-		}
 
 		var tmg = new TypeMapGenerator (Log, new NativeCodeGenStateAdapter (state), androidRuntime) { RunCheckedBuild = RunCheckedBuild && !useMarshalMethods };
 		tmg.Generate (Debug, SkipJniAddNativeMethodRegistrationAttributeScan, TypemapOutputDirectory);

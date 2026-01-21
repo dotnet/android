@@ -61,7 +61,7 @@ class MarshalMethodCecilAdapter
 			var methods = new List<MarshalMethodEntryObject> (group.Value.Count);
 
 			foreach (var method in group.Value) {
-				var entry = CreateEntry (method, state.ManagedMarshalMethodsLookupInfo);
+				var entry = CreateEntry (method);
 				methods.Add (entry);
 			}
 
@@ -71,7 +71,7 @@ class MarshalMethodCecilAdapter
 		return obj;
 	}
 
-	static MarshalMethodEntryObject CreateEntry (MarshalMethodEntry entry, ManagedMarshalMethodsLookupInfo? info)
+	static MarshalMethodEntryObject CreateEntry (MarshalMethodEntry entry)
 	{
 		var obj = new MarshalMethodEntryObject (
 			declaringType: CreateDeclaringType (entry.DeclaringType),
@@ -83,14 +83,6 @@ class MarshalMethodCecilAdapter
 			nativeCallback: CreateMethod (entry.NativeCallback),
 			registeredMethod: CreateMethodBase (entry.RegisteredMethod)
 		);
-
-		if (info is not null) {
-			(uint assemblyIndex, uint classIndex, uint methodIndex) = info.GetIndex (entry.NativeCallback);
-
-			obj.NativeCallback.AssemblyIndex = assemblyIndex;
-			obj.NativeCallback.ClassIndex = classIndex;
-			obj.NativeCallback.MethodIndex = methodIndex;
-		}
 
 		return obj;
 	}

@@ -12,7 +12,7 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
 
   <PropertyGroup>
     <_BinaryRuntimeConfigPath>$(IntermediateOutputPath)$(ProjectRuntimeConfigFileName).bin</_BinaryRuntimeConfigPath>
-    <_AndroidUseManagedTypeMap Condition=" '$(_AndroidTypeMapImplementation)' == 'managed' ">true</_AndroidUseManagedTypeMap>
+    <TypeMapEntryAssembly Condition="'$(TypeMapEntryAssembly)' == ''">Mono.Android</TypeMapEntryAssembly>
   </PropertyGroup>
 
   <ItemGroup>
@@ -47,9 +47,9 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
         Value="$(AndroidAvoidEmitForPerformance)"
         Trim="true"
     />
-    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.ManagedTypeMap"
-        Value="$([MSBuild]::ValueOrDefault('$(_AndroidUseManagedTypeMap)', 'false'))"
-        Trim="true"
+    <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
+        Value="$(TypeMapEntryAssembly)"
+        Condition="'$(TypeMapEntryAssembly)' != ''"
     />
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsAssignableFromCheck"
         Condition="'$(_AndroidIsAssignableFromCheck)' != ''"

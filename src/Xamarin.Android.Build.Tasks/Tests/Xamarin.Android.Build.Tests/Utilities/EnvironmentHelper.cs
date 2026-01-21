@@ -61,10 +61,9 @@ namespace Xamarin.Android.Build.Tests
 			public uint   jni_remapping_replacement_type_count;
 			public uint   jni_remapping_replacement_method_index_entry_count;
 			public string android_package_name = String.Empty;
-			public bool   managed_marshal_methods_lookup_enabled;
 		}
 
-		const uint ApplicationConfigFieldCount_CoreCLR = 20;
+		const uint ApplicationConfigFieldCount_CoreCLR = 19;
 
 		// This must be identical to the ApplicationConfig structure in src/native/mono/xamarin-app-stub/xamarin-app.hh
 		public sealed class ApplicationConfig_MonoVM : IApplicationConfig
@@ -95,10 +94,9 @@ namespace Xamarin.Android.Build.Tests
 			public uint   jni_remapping_replacement_method_index_entry_count;
 			public uint   mono_components_mask;
 			public string android_package_name = String.Empty;
-			public bool   managed_marshal_methods_lookup_enabled;
 		}
 
-		const uint ApplicationConfigFieldCount_MonoVM = 27;
+		const uint ApplicationConfigFieldCount_MonoVM = 26;
 
 		const string ApplicationConfigSymbolName = "application_config";
 		const string AppEnvironmentVariablesSymbolName = "app_environment_variables";
@@ -361,10 +359,6 @@ namespace Xamarin.Android.Build.Tests
 						pointers.Add (field [1].Trim ());
 						break;
 
-					case 19: // managed_marshal_methods_lookup_enabled: bool / .byte
-						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
-						ret.managed_marshal_methods_lookup_enabled = ConvertFieldToBool ("managed_marshal_methods_lookup_enabled", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
 				}
 				fieldCount++;
 			}
@@ -534,10 +528,6 @@ namespace Xamarin.Android.Build.Tests
 						pointers.Add (field [1].Trim ());
 						break;
 
-					case 26: // managed_marshal_methods_lookup_enabled: bool / .byte
-						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
-						ret.managed_marshal_methods_lookup_enabled = ConvertFieldToBool ("managed_marshal_methods_lookup_enabled", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
 				}
 				fieldCount++;
 			}

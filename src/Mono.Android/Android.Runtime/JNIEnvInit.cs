@@ -34,7 +34,6 @@ namespace Android.Runtime
 			public bool            jniRemappingInUse;
 			public bool            marshalMethodsEnabled;
 			public IntPtr          grefGCUserPeerable;
-			public bool            managedMarshalMethodsLookupEnabled;
 			public IntPtr          propagateUncaughtExceptionFn;
 		}
 #pragma warning restore 0649
@@ -49,6 +48,7 @@ namespace Android.Runtime
 		internal static IntPtr java_class_loader;
 
 		internal static JniRuntime? androidRuntime;
+		internal static ITypeMap? TypeMap;
 
 		[UnmanagedCallersOnly]
 		static void PropagateUncaughtException (IntPtr env, IntPtr javaThread, IntPtr javaException)
@@ -129,20 +129,13 @@ namespace Android.Runtime
 			java_class_loader = args->grefLoader;
 
 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
-			JniRuntime.JniTypeManager typeManager;
-			JniRuntime.JniValueManager valueManager;
-			if (RuntimeFeature.ManagedTypeMap) {
-				typeManager     = new ManagedTypeManager ();
-			} else {
-				typeManager     = new AndroidTypeManager (args->jniAddNativeMethodRegistrationAttributePresent != 0);
-			}
-			if (RuntimeFeature.IsMonoRuntime) {
-				valueManager = new AndroidValueManager ();
-			} else if (RuntimeFeature.IsCoreClrRuntime) {
-				valueManager = ManagedValueManager.GetOrCreateInstance ();
-			} else {
-				throw new NotSupportedException ("Internal error: unknown runtime not supported");
-			}
+
+			TypeMap = GetTypeMap();
+
+			// Create unified managers using the type map
+			var typeManager = new AndroidTypeManager (TypeMap, args->jniAddNativeMethodRegistrationAttributePresent != 0);
+			var valueManager = CreateValueManager (TypeMap);
+
 			androidRuntime = new AndroidRuntime (
 					args->env,
 					args->javaVm,
@@ -159,18 +152,10 @@ namespace Android.Runtime
 
 			JavaNativeTypeManager.PackageNamingPolicy = (PackageNamingPolicy)args->packageNamingPolicy;
 
-			if (args->managedMarshalMethodsLookupEnabled) {
-				delegate* unmanaged <int, int, int, IntPtr*, void> getFunctionPointer = &ManagedMarshalMethodsLookupTable.GetFunctionPointer;
-				xamarin_app_init (args->env, getFunctionPointer);
-			}
-
 			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
 			RunStartupHooksIfNeeded ();
 			SetSynchronizationContext ();
 		}
-
-		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
-		static extern unsafe void xamarin_app_init (IntPtr env, delegate* unmanaged <int, int, int, IntPtr*, void> get_function_pointer);
 
 		static void RunStartupHooksIfNeeded ()
 		{
@@ -207,6 +192,32 @@ namespace Android.Runtime
 			// Pass empty string for diagnosticStartupHooks parameter
 			// The method will read STARTUP_HOOKS from AppContext internally
 			method.Invoke (null, [ "" ]);
+		}
+
+		private static ITypeMap GetTypeMap ()
+		{
+			if (RuntimeFeature.IsCoreClrRuntime) {
+				// TypeMapping API requires an entry assembly to find TypeMap attributes.
+				// Android apps don't have a traditional Main() entry point, so we set it explicitly.
+				Assembly.SetEntryAssembly (typeof (Java.Lang.Object).Assembly);
+				return new TypeMapAttributeTypeMap ();
+			} else if (RuntimeFeature.IsMonoRuntime) {
+				return new LlvmIrTypeMap ();
+			} else {
+				throw new NotSupportedException ("Internal error: unknown runtime not supported");
+			}
+		}
+
+		private static JniRuntime.JniValueManager CreateValueManager (ITypeMap typeMap)
+		{
+			if (RuntimeFeature.IsCoreClrRuntime) {
+				// CoreCLR and NativeAOT both use ManagedValueManager with the CLR GC bridge
+				return new ManagedValueManager (typeMap);
+			} else if (RuntimeFeature.IsMonoRuntime) {
+				return new AndroidValueManager (typeMap);
+			} else {
+				throw new NotSupportedException ("Internal error: unknown runtime not supported");
+			}
 		}
 
 		static void SetSynchronizationContext () =>

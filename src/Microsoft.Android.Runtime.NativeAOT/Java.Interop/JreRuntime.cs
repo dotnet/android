@@ -10,6 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Android.Runtime;
 using Microsoft.Android.Runtime;
 
 namespace Java.Interop {
@@ -58,10 +59,12 @@ namespace Java.Interop {
 				throw new InvalidOperationException ($"Member `{nameof (NativeAotRuntimeOptions)}.{nameof (NativeAotRuntimeOptions.JvmLibraryPath)}` must be set.");
 
 #if NET
-			builder.TypeManager     ??= new ManagedTypeManager ();
+			// Create type map and managers for NativeAOT
+			var typeMap = new TypeMapAttributeTypeMap ();
+			builder.TypeManager     ??= new Android.Runtime.AndroidTypeManager (typeMap, jniAddNativeMethodRegistrationAttributePresent: false);
+			builder.ValueManager    ??= new ManagedValueManager (typeMap);
 #endif  // NET
 
-			builder.ValueManager            ??= ManagedValueManager.GetOrCreateInstance();
 			builder.ObjectReferenceManager  ??= new Android.Runtime.AndroidObjectReferenceManager ();
 
 			if (builder.InvocationPointer != IntPtr.Zero || builder.EnvironmentPointer != IntPtr.Zero)

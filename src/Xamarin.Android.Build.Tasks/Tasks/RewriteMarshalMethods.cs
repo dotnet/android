@@ -33,13 +33,6 @@ public class RewriteMarshalMethods : AndroidTask
 	public override string TaskPrefix => "RMM";
 
 	/// <summary>
-	/// Gets or sets whether to enable managed marshal methods lookup tables.
-	/// When enabled, generates runtime lookup structures that allow dynamic resolution
-	/// of marshal methods without string comparisons, improving runtime performance.
-	/// </summary>
-	public bool EnableManagedMarshalMethodsLookup { get; set; }
-
-	/// <summary>
 	/// Gets or sets the environment files to parse for configuration settings.
 	/// These files may contain settings like XA_BROKEN_EXCEPTION_TRANSITIONS that
 	/// affect how marshal method wrappers are generated.
@@ -100,19 +93,9 @@ public class RewriteMarshalMethods : AndroidTask
 				return false;
 			}
 
-			// Handle the ordering dependency between special case methods and managed lookup tables
-			if (!EnableManagedMarshalMethodsLookup) {
-				// Standard path: rewrite first, then add special cases
-				RewriteMethods (state, brokenExceptionTransitionsEnabled);
-				state.Classifier.AddSpecialCaseMethods ();
-			} else {
-				// Managed lookup path: add special cases first so they appear in lookup tables
-				// We need to run `AddSpecialCaseMethods` before `RewriteMarshalMethods` so that we can see the special case
-				// methods (such as TypeManager.n_Activate_mm) when generating the managed lookup tables.
-				state.Classifier.AddSpecialCaseMethods ();
-				state.ManagedMarshalMethodsLookupInfo = new ManagedMarshalMethodsLookupInfo (Log);
-				RewriteMethods (state, brokenExceptionTransitionsEnabled);
-			}
+			// Rewrite methods and add special cases
+			RewriteMethods (state, brokenExceptionTransitionsEnabled);
+			state.Classifier.AddSpecialCaseMethods ();
 
 			// Report statistics on marshal method generation
 			Log.LogDebugMessage ($"[{state.TargetArch}] Number of generated marshal methods: {state.Classifier.MarshalMethods.Count}");
@@ -156,7 +139,7 @@ public class RewriteMarshalMethods : AndroidTask
 			return;
 		}
 
-		var rewriter = new MarshalMethodsAssemblyRewriter (Log, state.TargetArch, state.Classifier, state.Resolver, state.ManagedMarshalMethodsLookupInfo);
+		var rewriter = new MarshalMethodsAssemblyRewriter (Log, state.TargetArch, state.Classifier, state.Resolver);
 		rewriter.Rewrite (brokenExceptionTransitionsEnabled);
 	}
 }

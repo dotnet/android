@@ -42,12 +42,6 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 	public override string TaskPrefix => "GNM";
 
 	/// <summary>
-	/// Gets or sets whether to generate managed marshal methods lookup tables.
-	/// When enabled, creates runtime data structures for efficient marshal method resolution.
-	/// </summary>
-	public bool EnableManagedMarshalMethodsLookup { get; set; }
-
-	/// <summary>
 	/// Gets or sets whether marshal methods generation is enabled.
 	/// When false, generates empty placeholder files to maintain build consistency.
 	/// </summary>
@@ -241,8 +235,7 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 					Log,
 					assemblyCount,
 					uniqueAssemblyNames,
-					EnsureCodeGenState (nativeCodeGenStates, targetArch),
-					EnableManagedMarshalMethodsLookup
+					EnsureCodeGenState (nativeCodeGenStates, targetArch)
 				);
 			}
 
@@ -266,8 +259,7 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 				return new MarshalMethodsNativeAssemblyGeneratorCoreCLR (
 					Log,
 					uniqueAssemblyNames,
-					EnsureCodeGenState (nativeCodeGenStates, targetArch),
-					EnableManagedMarshalMethodsLookup
+					EnsureCodeGenState (nativeCodeGenStates, targetArch)
 				);
 			}
 
