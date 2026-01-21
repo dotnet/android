@@ -1588,7 +1588,7 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		{
 			// Create a library project that contains the startup hook
 			var startupHookLib = new XamarinAndroidLibraryProject {
-				ProjectName = "StartupHook",
+				ProjectName = "MyStartupHook",
 				Sources = {
 					new BuildItem.Source ("StartupHook.cs") {
 						TextContent = () => @"
@@ -1614,7 +1614,7 @@ internal static class StartupHook
 					new Import (() => "HotReload.targets") {
 						TextContent = () => @"<Project xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
 	<PropertyGroup>
-		<DotNetHotReloadAgentStartupHook>StartupHook</DotNetHotReloadAgentStartupHook>
+		<DotNetHotReloadAgentStartupHook>MyStartupHook</DotNetHotReloadAgentStartupHook>
 	</PropertyGroup>
 	<ItemGroup>
 		<DotNetHotReloadAgentEnvironment Include=""HOTRELOAD_TEST_VAR"" Value=""TestValue123"" />
@@ -1662,9 +1662,9 @@ internal static class StartupHook
 
 			// Verify the startup hook was set via DOTNET_STARTUP_HOOKS
 			StringAssert.Contains (
-				"DOTNET_STARTUP_HOOKS=StartupHook",
+				"DOTNET_STARTUP_HOOKS=MyStartupHook",
 				logcatOutput,
-				"DOTNET_STARTUP_HOOKS should be set to StartupHook"
+				"DOTNET_STARTUP_HOOKS should be set to MyStartupHook"
 			);
 
 			// Verify the startup hook was called
