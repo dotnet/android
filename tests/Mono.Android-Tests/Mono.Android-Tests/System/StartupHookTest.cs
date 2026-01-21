@@ -8,10 +8,17 @@ namespace SystemTests
 	public class StartupHookTest
 	{
 		[Test]
-		public void StartupHookSupportFeatureFlagIsEnabled ()
+		public void FeatureFlagIsEnabled ()
 		{
 			// NOTE: this is set to true in tests\Mono.Android-Tests\Mono.Android-Tests\Mono.Android.NET-Tests.csproj
 			Assert.IsTrue (Microsoft.Android.Runtime.RuntimeFeature.StartupHookSupport, "RuntimeFeature.StartupHookSupport should be true");
+		}
+
+		[Test]
+		public void EnvironmentVariableIsSet ()
+		{
+			var value = Environment.GetEnvironmentVariable ("DOTNET_STARTUP_HOOKS");
+			Assert.AreEqual ("StartupHook", value, "DOTNET_STARTUP_HOOKS should be set to 'StartupHook'");
 		}
 
 		[Test]
