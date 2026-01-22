@@ -664,8 +664,10 @@ source_filename = "marshal_methods_init.ll"
 target datalayout = "e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128"
 target triple = "aarch64-unknown-linux-android21"
 
-; Global get_function_pointer callback - set by xamarin_app_init
-@get_function_pointer = local_unnamed_addr global ptr null, align 8
+; Global get_function_pointer callback - initialized to null, set at runtime
+; For CLR: set from JNIEnvInit.Initialize out parameter via host.cc
+; For Mono: set via xamarin_app_init call from libmonodroid.so
+@get_function_pointer = default local_unnamed_addr global ptr null, align 8
 
 ; External puts and abort for error handling
 declare i32 @puts(ptr nocapture readonly) local_unnamed_addr
@@ -674,22 +676,20 @@ declare void @abort() noreturn
 ; Error message for null function pointer
 @.str.error = private unnamed_addr constant [40 x i8] c"get_function_pointer MUST be specified\0A\00", align 1
 
-; xamarin_app_init - called by libmonodroid.so to initialize the function pointer callback
+; xamarin_app_init - called by libmonodroid.so (Mono) or host.cc (CLR) to initialize the function pointer callback
 ; Parameters:
 ;   %env - JNIEnv* (unused but required for JNI signature compatibility)
 ;   %fn - the get_function_pointer callback function
 define default void @xamarin_app_init(ptr nocapture readnone %env, ptr %fn) local_unnamed_addr {
 entry:
   %is_null = icmp eq ptr %fn, null
-  br i1 %is_null, label %error, label %store
-
-error:
-  %puts_result = call i32 @puts(ptr @.str.error)
-  call void @abort()
-  unreachable
+  br i1 %is_null, label %done, label %store
 
 store:
   store ptr %fn, ptr @get_function_pointer, align 8
+  br label %done
+
+done:
   ret void
 }
 
@@ -730,35 +730,74 @@ store:
 
 		using var writer = new StreamWriter (javaFilePath);
 
+		// Separate constructors from regular methods
+		var constructors = new List<MarshalMethodInfo> ();
+		var regularMethods = new List<MarshalMethodInfo> ();
+
+		foreach (var method in marshalMethods) {
+			if (method.JniName == "<init>") {
+				constructors.Add (method);
+			} else if (method.JniName != "<clinit>") {
+				regularMethods.Add (method);
+			}
+		}
+
+		// Build constructor declarations
+		var constructorDeclarations = new StringBuilder ();
+		var nativeCtorDeclarations = new StringBuilder ();
+		int ctorIndex = 0;
+
+		// If no constructors with marshal methods, generate a default constructor
+		// TEMPORARILY: Don't call nc_activate, just call super() - for investigating ILLink error
+		if (constructors.Count == 0) {
+			constructorDeclarations.AppendLine ($$"""
+    // Default constructor - TEMP: no native activation
+    public {{className}} ()
+    {
+        super ();
+        // TEMP DISABLED: if (getClass () == {{className}}.class) { nc_activate_0 (); }
+    }
+""");
+			// TEMP DISABLED: nativeCtorDeclarations.AppendLine ("    private native void nc_activate_0 ();");
+		} else {
+			// Generate each constructor
+			foreach (var ctor in constructors) {
+				string parameters = JniSignatureToJavaParameters (ctor.JniSignature);
+				string parameterNames = JniSignatureToJavaParameterNames (ctor.JniSignature);
+
+				constructorDeclarations.AppendLine ($$"""
+    public {{className}} ({{parameters}})
+    {
+        super ();
+        // TEMP DISABLED: if (getClass () == {{className}}.class) { nc_activate_{{ctorIndex}} ({{parameterNames}}); }
+    }
+""");
+				// TEMP DISABLED: nativeCtorDeclarations.AppendLine ($"    private native void nc_activate_{ctorIndex} ({parameters});");
+				ctorIndex++;
+			}
+		}
+
 		// Build method declarations - both public wrappers and private native methods
 		var publicMethods = new StringBuilder ();
 		var nativeMethods = new StringBuilder ();
 
-		foreach (var method in marshalMethods) {
+		foreach (var method in regularMethods) {
 			string returnType = JniSignatureToJavaType (method.JniSignature, returnOnly: true);
 			string parameters = JniSignatureToJavaParameters (method.JniSignature);
 			string parameterNames = JniSignatureToJavaParameterNames (method.JniSignature);
 
-			// Replace <init> with _ctor for valid Java identifier
-			string javaMethodName = method.JniName.Replace ("<init>", "_ctor").Replace ("<clinit>", "_cctor");
-
-			// Skip constructor methods for now - they need special handling
-			if (method.JniName == "<init>" || method.JniName == "<clinit>") {
-				continue;
-			}
-
 			// Generate public wrapper method
 			string returnStatement = returnType == "void" ? "" : "return ";
 			publicMethods.AppendLine ($$"""
-			    public {{returnType}} {{method.JniName}} ({{parameters}})
-			    {
-			        {{returnStatement}}n_{{javaMethodName}} ({{parameterNames}});
-			    }
+    public {{returnType}} {{method.JniName}} ({{parameters}})
+    {
+        {{returnStatement}}n_{{method.JniName}} ({{parameterNames}});
+    }
 
-			""".Replace ("\t", ""));
+""");
 
 			// Generate private native declaration
-			nativeMethods.AppendLine ($"    private native {returnType} n_{javaMethodName} ({parameters});");
+			nativeMethods.AppendLine ($"    private native {returnType} n_{method.JniName} ({parameters});");
 		}
 
 		// Generate package declaration and class
@@ -770,34 +809,30 @@ store:
 		}
 
 		sb.AppendLine ($$"""
-			public class {{className}}
-			    extends {{baseClassName}}
-			    implements mono.android.IGCUserPeer
-			{
-			    // Default constructor - calls native activation via get_function_pointer
-			    public {{className}} ()
-			    {
-			        super ();
-			    }
+public class {{className}}
+    extends {{baseClassName}}
+    implements mono.android.IGCUserPeer
+{
+{{constructorDeclarations}}
+{{publicMethods}}
+{{nativeCtorDeclarations}}
+{{nativeMethods}}
+    // IGCUserPeer implementation for preventing premature GC
+    private java.util.ArrayList refList;
+    public void monodroidAddReference (java.lang.Object obj)
+    {
+        if (refList == null)
+            refList = new java.util.ArrayList ();
+        refList.add (obj);
+    }
 
-			{{publicMethods}}
-			{{nativeMethods}}
-			    // IGCUserPeer implementation for preventing premature GC
-			    private java.util.ArrayList refList;
-			    public void monodroidAddReference (java.lang.Object obj)
-			    {
-			        if (refList == null)
-			            refList = new java.util.ArrayList ();
-			        refList.add (obj);
-			    }
-
-			    public void monodroidClearReferences ()
-			    {
-			        if (refList != null)
-			            refList.clear ();
-			    }
-			}
-			""".Replace ("\t", ""));
+    public void monodroidClearReferences ()
+    {
+        if (refList != null)
+            refList.clear ();
+    }
+}
+""");
 
 		writer.Write (sb.ToString ());
 	}
@@ -859,6 +894,16 @@ store:
 
 		using var writer = new StreamWriter (llFilePath);
 
+		// Separate constructors from regular methods for nc_activate generation
+		var constructors = marshalMethods.Where (m => m.JniName == "<init>").ToList ();
+		var regularMethods = marshalMethods.Where (m => m.JniName != "<init>" && m.JniName != "<clinit>").ToList ();
+
+		// If no constructors, we still need one nc_activate for the default constructor
+		int numActivateMethods = constructors.Count > 0 ? constructors.Count : 1;
+
+		// Total function pointers: regular methods + activation methods
+		int totalFnPointers = regularMethods.Count + numActivateMethods;
+
 		// LLVM IR header
 		writer.Write ($"""
 			; ModuleID = 'marshal_methods_{sanitizedName}.ll'
@@ -869,7 +914,7 @@ store:
 			; External get_function_pointer callback - resolves UCO wrapper by class name and method index
 			@get_function_pointer = external local_unnamed_addr global ptr, align 8
 
-			; Cached function pointers for marshal methods
+			; Cached function pointers for marshal methods and activation
 
 			""");
 
@@ -878,9 +923,9 @@ store:
 		string classNameBytesEncoded = string.Join("", classNameBytes.Select(b => $"\\{b:X2}"));
 		int classNameLength = classNameBytes.Length;
 
-		// Cached function pointers for marshal methods
+		// Cached function pointers for all methods (regular + activation)
 		var fnPointers = new StringBuilder ();
-		for (int i = 0; i < marshalMethods.Count; i++) {
+		for (int i = 0; i < totalFnPointers; i++) {
 			fnPointers.AppendLine ($"@fn_ptr_{i} = internal unnamed_addr global ptr null, align 8");
 		}
 
@@ -890,8 +935,9 @@ store:
 		writer.WriteLine ();
 		writer.WriteLine ("; JNI native method stubs");
 
-		for (int i = 0; i < marshalMethods.Count; i++) {
-			var method = marshalMethods [i];
+		// Generate regular method stubs (indices 0..regularMethods.Count-1)
+		for (int i = 0; i < regularMethods.Count; i++) {
+			var method = regularMethods [i];
 			string nativeSymbol = MakeJniNativeSymbol (jniTypeName, method.JniName, method.JniSignature);
 			string llvmParams = JniSignatureToLlvmParams (method.JniSignature);
 			string llvmArgs = JniSignatureToLlvmArgs (method.JniSignature);
@@ -945,6 +991,76 @@ store:
 					""");
 			}
 		}
+
+		// Generate nc_activate stubs for constructors
+		// These use indices starting at regularMethods.Count
+		// TEMP DISABLED: Don't generate nc_activate LLVM IR stubs
+		// writer.WriteLine ();
+		// writer.WriteLine ("; Native constructor activation stubs");
+
+		// int activateBaseIndex = regularMethods.Count;
+		
+		/*
+		if (constructors.Count == 0) {
+			// Generate default nc_activate_0 with no parameters
+			string nativeSymbol = MakeJniActivateSymbol (jniTypeName, "nc_activate_0", "()V");
+			int fnPtrIndex = activateBaseIndex;
+			
+			writer.Write ($$"""
+
+				; nc_activate_0 - default constructor activation
+				define default void @{{nativeSymbol}}(ptr %env, ptr %obj) #0 {
+				entry:
+				  %cached_ptr = load ptr, ptr @fn_ptr_{{fnPtrIndex}}, align 8
+				  %is_null = icmp eq ptr %cached_ptr, null
+				  br i1 %is_null, label %resolve, label %call
+
+				resolve:
+				  %get_fn = load ptr, ptr @get_function_pointer, align 8
+				  call void %get_fn(ptr @class_name, i32 {{classNameLength}}, i32 {{fnPtrIndex}}, ptr @fn_ptr_{{fnPtrIndex}})
+				  %resolved_ptr = load ptr, ptr @fn_ptr_{{fnPtrIndex}}, align 8
+				  br label %call
+
+				call:
+				  %fn = phi ptr [ %cached_ptr, %entry ], [ %resolved_ptr, %resolve ]
+				  tail call void %fn(ptr %env, ptr %obj)
+				  ret void
+				}
+
+				""");
+		} else {
+			for (int ctorIdx = 0; ctorIdx < constructors.Count; ctorIdx++) {
+				var ctor = constructors [ctorIdx];
+				string nativeSymbol = MakeJniActivateSymbol (jniTypeName, $"nc_activate_{ctorIdx}", ctor.JniSignature);
+				string llvmParams = JniSignatureToLlvmParams (ctor.JniSignature);
+				string llvmArgs = JniSignatureToLlvmArgs (ctor.JniSignature);
+				int fnPtrIndex = activateBaseIndex + ctorIdx;
+				
+				writer.Write ($$"""
+
+					; nc_activate_{{ctorIdx}} - constructor activation for {{ctor.JniSignature}}
+					define default void @{{nativeSymbol}}(ptr %env, ptr %obj{{llvmParams}}) #0 {
+					entry:
+					  %cached_ptr = load ptr, ptr @fn_ptr_{{fnPtrIndex}}, align 8
+					  %is_null = icmp eq ptr %cached_ptr, null
+					  br i1 %is_null, label %resolve, label %call
+
+					resolve:
+					  %get_fn = load ptr, ptr @get_function_pointer, align 8
+					  call void %get_fn(ptr @class_name, i32 {{classNameLength}}, i32 {{fnPtrIndex}}, ptr @fn_ptr_{{fnPtrIndex}})
+					  %resolved_ptr = load ptr, ptr @fn_ptr_{{fnPtrIndex}}, align 8
+					  br label %call
+
+					call:
+					  %fn = phi ptr [ %cached_ptr, %entry ], [ %resolved_ptr, %resolve ]
+					  tail call void %fn(ptr %env, ptr %obj{{llvmArgs}})
+					  ret void
+					}
+
+					""");
+			}
+		}
+		*/ // END TEMP DISABLED
 
 		writer.Write ("""
 
@@ -1084,6 +1200,24 @@ store:
 		// Always append mangled signature to handle overloads
 		sb.Append ("__");
 		sb.Append (MangleJniSignature (jniSignature));
+		return sb.ToString ();
+	}
+
+	/// <summary>
+	/// Creates a JNI native symbol name for nc_activate methods.
+	/// These don't have the n_ prefix and use signature only for overloads.
+	/// </summary>
+	static string MakeJniActivateSymbol (string jniTypeName, string methodName, string jniSignature)
+	{
+		var sb = new StringBuilder ("Java_");
+		sb.Append (MangleForJni (jniTypeName));
+		sb.Append ('_');
+		sb.Append (MangleForJni (methodName));
+		// Add signature for overloaded constructors
+		if (!string.IsNullOrEmpty (jniSignature) && jniSignature != "()V") {
+			sb.Append ("__");
+			sb.Append (MangleJniSignature (jniSignature));
+		}
 		return sb.ToString ();
 	}
 
@@ -1442,12 +1576,22 @@ store:
 		ctorIl.Emit (Mono.Cecil.Cil.OpCodes.Ret);
 		proxyType.Methods.Add (ctor);
 
-		// Generate UCO wrappers and GetFunctionPointer if there are marshal methods
-		if (marshalMethods.Count > 0) {
-			GenerateUcoWrappers (proxyType, mappedType, marshalMethods);
+		// Separate constructors and regular methods - need to track for activation UCOs
+		var constructors = marshalMethods.Where (m => m.JniName == "<init>").ToList ();
+		var regularMethods = marshalMethods.Where (m => m.JniName != "<init>" && m.JniName != "<clinit>").ToList ();
+
+		// Generate UCO wrappers for regular marshal methods
+		if (regularMethods.Count > 0) {
+			GenerateUcoWrappers (proxyType, mappedType, regularMethods);
 		}
+
+		// Generate activation UCO wrappers for constructors
+		// TEMPORARILY DISABLED - investigating IL generation issue
+		// GenerateActivationUcoWrappers (proxyType, mappedType, constructors);
+
 		// Always generate GetFunctionPointer as it is abstract in JavaPeerProxy
-		GenerateGetFunctionPointerMethod (proxyType, mappedType, marshalMethods);
+		// Pass both regular methods and constructor count for proper indexing
+		GenerateGetFunctionPointerMethod (proxyType, mappedType, regularMethods, constructors.Count > 0 ? constructors.Count : 1);
 
 		// Generate CreateInstance for AOT-safe instance creation without reflection
 		GenerateCreateInstanceMethod (proxyType, mappedType);
@@ -1487,6 +1631,204 @@ store:
 				// Context.LogMessage (MessageContainer.CreateInfoMessage (
 					// $"Failed to generate UCO wrapper for {callback.FullName}, method will use dynamic registration"));
 			}
+		}
+	}
+
+	/// <summary>
+	/// Generates [UnmanagedCallersOnly] activation wrapper methods for constructors.
+	/// These wrappers create the managed object and call the constructor:
+	/// 1. RuntimeHelpers.GetUninitializedObject(typeof(T))
+	/// 2. ((IJavaPeerable)instance).SetPeerReference(new JniObjectReference(jobject))
+	/// 3. instance..ctor(args...)
+	/// </summary>
+	void GenerateActivationUcoWrappers (TypeDefinition proxyType, TypeDefinition mappedType, List<MarshalMethodInfo> constructors)
+	{
+		File.AppendAllText ("/tmp/illink-debug.log",
+			$"GenerateActivationUcoWrappers: ENTRY {mappedType.FullName}, constructors.Count={constructors.Count}\n");
+
+		// Clear previous wrappers
+		activationUcoWrappers.Clear ();
+
+		// Get types we need
+		var intPtrType = AssemblyToInjectTypeMap.MainModule.ImportReference (Context.GetType ("System.IntPtr"));
+		var voidType = AssemblyToInjectTypeMap.MainModule.TypeSystem.Void;
+		var typeType = AssemblyToInjectTypeMap.MainModule.ImportReference (Context.GetType ("System.Type"));
+		var objectType = AssemblyToInjectTypeMap.MainModule.ImportReference (Context.GetType ("System.Object"));
+
+		// Get RuntimeHelpers.GetUninitializedObject
+		var runtimeHelpersType = Context.GetType ("System.Runtime.CompilerServices.RuntimeHelpers");
+		var getUninitializedObjectMethod = runtimeHelpersType.Methods.FirstOrDefault (m =>
+			m.Name == "GetUninitializedObject" && m.Parameters.Count == 1 && m.Parameters [0].ParameterType.FullName == "System.Type");
+
+		if (getUninitializedObjectMethod == null) {
+			File.AppendAllText ("/tmp/illink-debug.log",
+				$"GenerateActivationUcoWrappers: SKIP - no GetUninitializedObject for {mappedType.FullName}\n");
+			return;
+		}
+		var getUninitializedObjectRef = AssemblyToInjectTypeMap.MainModule.ImportReference (getUninitializedObjectMethod);
+
+		// Get IJavaPeerable.SetPeerReference
+		var iJavaPeerableType = Context.GetType ("Java.Interop.IJavaPeerable");
+		var setPeerReferenceMethod = iJavaPeerableType.Methods.FirstOrDefault (m =>
+			m.Name == "SetPeerReference" && m.Parameters.Count == 1);
+
+		if (setPeerReferenceMethod == null) {
+			File.AppendAllText ("/tmp/illink-debug.log",
+				$"GenerateActivationUcoWrappers: SKIP - no SetPeerReference for {mappedType.FullName}\n");
+			return;
+		}
+		var setPeerReferenceRef = AssemblyToInjectTypeMap.MainModule.ImportReference (setPeerReferenceMethod);
+
+		// Get JniObjectReference constructor that takes IntPtr (and optional JniObjectReferenceType)
+		var jniObjectRefType = Context.GetType ("Java.Interop.JniObjectReference");
+		var jniObjectRefCtor = jniObjectRefType.Methods.FirstOrDefault (m =>
+			m.IsConstructor && !m.IsStatic && m.Parameters.Count >= 1 && m.Parameters [0].ParameterType.FullName == "System.IntPtr");
+
+		if (jniObjectRefCtor == null) {
+			File.AppendAllText ("/tmp/illink-debug.log",
+				$"GenerateActivationUcoWrappers: SKIP - no JniObjectReference ctor for {mappedType.FullName}, available ctors: {string.Join(", ", jniObjectRefType.Methods.Where(m => m.IsConstructor).Select(m => $"{m.Name}({string.Join(", ", m.Parameters.Select(p => p.ParameterType.FullName))})"))}\\n");
+			return;
+		}
+		var jniObjectRefCtorRef = AssemblyToInjectTypeMap.MainModule.ImportReference (jniObjectRefCtor);
+		var jniObjectRefTypeRef = AssemblyToInjectTypeMap.MainModule.ImportReference (jniObjectRefType);
+
+		// Import the mapped type reference
+		var mappedTypeRef = AssemblyToInjectTypeMap.MainModule.ImportReference (mappedType);
+
+		File.AppendAllText ("/tmp/illink-debug.log",
+			$"GenerateActivationUcoWrappers: Looking for ctors on {mappedType.FullName}, constructors.Count={constructors.Count}\n");
+
+		// If no constructors, generate a default activation for parameterless ctor
+		if (constructors.Count == 0) {
+			// Find the default constructor on mappedType
+			var defaultCtor = mappedType.Methods.FirstOrDefault (m =>
+				m.IsConstructor && !m.IsStatic && m.Parameters.Count == 0);
+
+			if (defaultCtor != null) {
+				File.AppendAllText ("/tmp/illink-debug.log",
+					$"Found default ctor on {mappedType.FullName}: {defaultCtor.FullName}\n");
+				var wrapper = GenerateSingleActivationUco (
+					proxyType, mappedType, mappedTypeRef, defaultCtor,
+					intPtrType, voidType, typeType, objectType,
+					getUninitializedObjectRef, setPeerReferenceRef, jniObjectRefCtorRef, jniObjectRefTypeRef,
+					0, "()V");
+				if (wrapper != null) {
+					activationUcoWrappers.Add (wrapper);
+					proxyType.Methods.Add (wrapper);
+					File.AppendAllText ("/tmp/illink-debug.log",
+						$"Generated activation UCO for {mappedType.FullName}, activationUcoWrappers.Count={activationUcoWrappers.Count}\n");
+				} else {
+					File.AppendAllText ("/tmp/illink-debug.log",
+						$"GenerateSingleActivationUco returned null for {mappedType.FullName}\n");
+				}
+			} else {
+				File.AppendAllText ("/tmp/illink-debug.log",
+					$"No default ctor found on {mappedType.FullName}, methods: {string.Join(", ", mappedType.Methods.Select(m => m.Name))}\n");
+			}
+		} else {
+			// Generate activation for each constructor
+			for (int i = 0; i < constructors.Count; i++) {
+				var ctorInfo = constructors [i];
+
+				// Find the matching constructor on mappedType
+				var targetCtor = ctorInfo.RegisteredMethod as MethodDefinition;
+				if (targetCtor == null || !targetCtor.IsConstructor) {
+					// Try to find by signature match
+					// For now, just use the registered method if it's a constructor
+					continue;
+				}
+
+				var wrapper = GenerateSingleActivationUco (
+					proxyType, mappedType, mappedTypeRef, targetCtor,
+					intPtrType, voidType, typeType, objectType,
+					getUninitializedObjectRef, setPeerReferenceRef, jniObjectRefCtorRef, jniObjectRefTypeRef,
+					i, ctorInfo.JniSignature);
+				if (wrapper != null) {
+					activationUcoWrappers.Add (wrapper);
+					proxyType.Methods.Add (wrapper);
+				}
+			}
+		}
+	}
+
+	/// <summary>
+	/// Generates a single activation UCO wrapper method.
+	/// </summary>
+	MethodDefinition? GenerateSingleActivationUco (
+		TypeDefinition proxyType, TypeDefinition mappedType, TypeReference mappedTypeRef, MethodDefinition targetCtor,
+		TypeReference intPtrType, TypeReference voidType, TypeReference typeType, TypeReference objectType,
+		MethodReference getUninitializedObjectRef, MethodReference setPeerReferenceRef,
+		MethodReference jniObjectRefCtorRef, TypeReference jniObjectRefTypeRef,
+		int ctorIndex, string jniSignature)
+	{
+		try {
+			string wrapperName = $"nc_activate_{ctorIndex}";
+
+			var wrapperMethod = new MethodDefinition (
+				wrapperName,
+				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+				voidType);
+
+			// Add [UnmanagedCallersOnly] attribute
+			wrapperMethod.CustomAttributes.Add (new CustomAttribute (UnmanagedCallersOnlyAttributeCtor));
+
+			// Parameters: (IntPtr jnienv, IntPtr jobject, ...constructor params...)
+			wrapperMethod.Parameters.Add (new ParameterDefinition ("jnienv", ParameterAttributes.None, intPtrType));
+			wrapperMethod.Parameters.Add (new ParameterDefinition ("jobject", ParameterAttributes.None, intPtrType));
+
+			// Add constructor parameters (skip for default ctor)
+			// For now, we only support default constructors - TODO: marshal parameters
+			// foreach (var param in targetCtor.Parameters) { ... }
+
+			var body = wrapperMethod.Body;
+			body.InitLocals = true;
+			var il = body.GetILProcessor ();
+
+			// Local variables
+			// [0] instance : T (the newly created object)
+			// [1] jniObjectRef : JniObjectReference
+			var instanceVar = new VariableDefinition (mappedTypeRef);
+			body.Variables.Add (instanceVar);
+			var jniObjectRefVar = new VariableDefinition (jniObjectRefTypeRef);
+			body.Variables.Add (jniObjectRefVar);
+
+			// 1. var instance = (T)RuntimeHelpers.GetUninitializedObject(typeof(T));
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldtoken, mappedTypeRef);
+			// Call Type.GetTypeFromHandle
+			var getTypeFromHandleMethod = Context.GetType ("System.Type").Methods.FirstOrDefault (m =>
+				m.Name == "GetTypeFromHandle" && m.Parameters.Count == 1);
+			if (getTypeFromHandleMethod == null) {
+				return null;
+			}
+			il.Emit (Mono.Cecil.Cil.OpCodes.Call, AssemblyToInjectTypeMap.MainModule.ImportReference (getTypeFromHandleMethod));
+			il.Emit (Mono.Cecil.Cil.OpCodes.Call, getUninitializedObjectRef);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Castclass, mappedTypeRef);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Stloc, instanceVar);
+
+			// 2. ((IJavaPeerable)instance).SetPeerReference(new JniObjectReference(jobject, JniObjectReferenceType.Local));
+			// First, initialize the struct variable
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloca, jniObjectRefVar);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_1); // jobject (IntPtr)
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_I4_1); // JniObjectReferenceType.Local = 1
+			il.Emit (Mono.Cecil.Cil.OpCodes.Call, jniObjectRefCtorRef);
+			// Now call SetPeerReference
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloc, instanceVar);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloc, jniObjectRefVar);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Callvirt, setPeerReferenceRef);
+
+			// 3. instance..ctor(args...)
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloc, instanceVar);
+			// TODO: Load constructor arguments if any
+			var targetCtorRef = AssemblyToInjectTypeMap.MainModule.ImportReference (targetCtor);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Call, targetCtorRef);
+
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
+
+			return wrapperMethod;
+		} catch (Exception ex) {
+			Context.LogMessage (MessageContainer.CreateInfoMessage (
+				$"Failed to generate activation UCO for {mappedType.FullName}..ctor: {ex.Message}"));
+			return null;
 		}
 	}
 
@@ -1744,8 +2086,14 @@ store:
 	///     };
 	/// </code>
 	/// </summary>
-	void GenerateGetFunctionPointerMethod (TypeDefinition proxyType, TypeDefinition mappedType, List<MarshalMethodInfo> marshalMethods)
+	// Store activation UCO wrappers for use in GetFunctionPointer
+	List<MethodDefinition> activationUcoWrappers = new ();
+
+	void GenerateGetFunctionPointerMethod (TypeDefinition proxyType, TypeDefinition mappedType, List<MarshalMethodInfo> marshalMethods, int numActivationMethods)
 	{
+		File.AppendAllText ("/tmp/illink-debug.log",
+			$"GenerateGetFunctionPointerMethod: {mappedType.FullName}, marshalMethods={marshalMethods.Count}, numActivationMethods={numActivationMethods}, activationUcoWrappers.Count={activationUcoWrappers.Count}\n");
+
 		// Get IntPtr type
 		var intPtrTypeDef = Context.GetType ("System.IntPtr");
 		var intPtrType = AssemblyToInjectTypeMap.MainModule.ImportReference (intPtrTypeDef);
@@ -1812,14 +2160,40 @@ store:
 			il.Append (nextLabel);
 		}
 
+		// Add activation method entries (indices start after regular methods)
+		int activateBaseIndex = marshalMethods.Count;
+		for (int i = 0; i < activationUcoWrappers.Count; i++) {
+			var wrapper = activationUcoWrappers [i];
+			int methodIndex = activateBaseIndex + i;
+
+			// Load methodIndex argument
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_1);
+			// Load constant methodIndex
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_I4, methodIndex);
+			// Compare: if (methodIndex != index) goto next
+			var nextLabel = il.Create (Mono.Cecil.Cil.OpCodes.Nop);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Bne_Un, nextLabel);
+
+			// Load function pointer for the activation UCO wrapper method
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldftn, wrapper);
+			// Return it
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
+
+			// next:
+			il.Append (nextLabel);
+		}
+
 		// return IntPtr.Zero
 		il.Append (returnZeroLabel);
 		il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
 
 		proxyType.Methods.Add (method);
 
+		// Clear the activation wrappers for the next type
+		activationUcoWrappers.Clear ();
+
 		// Context.LogMessage (MessageContainer.CreateInfoMessage (
-			// $"Generated GetFunctionPointer for {proxyType.FullName} with {marshalMethods.Count} methods"));
+			// $"Generated GetFunctionPointer for {proxyType.FullName} with {marshalMethods.Count} methods + {numActivationMethods} activation methods"));
 	}
 
 	/// <summary>

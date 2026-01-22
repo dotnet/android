@@ -132,10 +132,7 @@ namespace Android.Runtime
 
 		/// <inheritdoc/>
 		/// TODO: This needs to use JavaPeerProxy to create the instance through generated factory method
-		public IJavaPeerable? CreatePeer (
-			IntPtr handle,
-			JniHandleOwnership transfer,
-			Type? targetType)
+		public IJavaPeerable? CreatePeer (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{
 			Log ($"CreatePeer: handle=0x{handle:x}, targetType={targetType?.FullName ?? "null"}");
 			
@@ -261,11 +258,7 @@ namespace Android.Runtime
 		/// Uses the generated proxy's CreateInstance method to avoid reflection.
 		/// </summary>
 		/// <returns>true if the instance was created successfully; false if no proxy or factory was found.</returns>
-		bool TryCreateInstance (
-			Type type,
-			IntPtr handle,
-			JniHandleOwnership transfer,
-			[NotNullWhen (true)] out IJavaPeerable? result)
+		bool TryCreateInstance (Type type, IntPtr handle, JniHandleOwnership transfer, [NotNullWhen (true)] out IJavaPeerable? result)
 		{
 			// Get the proxy for this type - it has the AOT-safe CreateInstance factory method
 			JavaPeerProxy? proxy = GetProxyForType (type);

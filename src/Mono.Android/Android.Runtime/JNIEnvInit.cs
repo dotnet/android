@@ -182,10 +182,19 @@ namespace Android.Runtime
 		[UnmanagedCallersOnly]
 		internal static unsafe void GetFunctionPointer (byte* classNamePtr, int classNameLength, int methodIndex, IntPtr* targetPtr)
 		{
+			Logger.Log (LogLevel.Info, "monodroid-typemap",
+				$"GetFunctionPointer: ENTRY classNameLength={classNameLength}, methodIndex={methodIndex}");
 			string className = System.Text.Encoding.UTF8.GetString (classNamePtr, classNameLength);
+			Logger.Log (LogLevel.Info, "monodroid-typemap",
+				$"GetFunctionPointer: class='{className}', methodIndex={methodIndex}");
 			*targetPtr = TypeMap.GetFunctionPointer (className, methodIndex);
-			Debug.Assert (*targetPtr != IntPtr.Zero,
-				$"GetFunctionPointer: No function pointer found for class='{className}', methodIndex={methodIndex}");
+			if (*targetPtr == IntPtr.Zero) {
+				Logger.Log (LogLevel.Error, "monodroid-typemap",
+					$"GetFunctionPointer: No function pointer found for class='{className}', methodIndex={methodIndex}");
+			} else {
+				Logger.Log (LogLevel.Info, "monodroid-typemap",
+					$"GetFunctionPointer: Returning 0x{(*targetPtr):X} for class='{className}', methodIndex={methodIndex}");
+			}
 		}
 
 		static void RunStartupHooksIfNeeded ()
