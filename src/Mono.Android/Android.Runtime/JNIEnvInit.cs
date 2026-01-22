@@ -161,16 +161,32 @@ namespace Android.Runtime
 
 			// For CoreCLR/NativeAOT, provide the GetFunctionPointer callback for Type Mapping API marshal methods
 			if (RuntimeFeature.IsCoreClrRuntime) {
-				args->getFunctionPointerFn = (IntPtr)(delegate* unmanaged<byte*, int, int, IntPtr*, void>)&TypeMapAttributeTypeMap.GetFunctionPointer;
+				args->getFunctionPointerFn = (IntPtr)(delegate* unmanaged<byte*, int, int, IntPtr*, void>)&GetFunctionPointer;
 				RuntimeNativeMethods.monodroid_log (LogLevel.Info, LogCategories.Default,
 					$"JNIEnvInit: Set getFunctionPointerFn to 0x{args->getFunctionPointerFn:x}");
 			} else {
+				// Even for Mono (where it's unused), we can set it to a stub or keep it null.
+				// For now, consistent with review feedback, let's just initialize it to something safe or null.
+				// But actually, we want to move the UCO here.
+				args->getFunctionPointerFn = IntPtr.Zero;
 				RuntimeNativeMethods.monodroid_log (LogLevel.Info, LogCategories.Default,
-					"JNIEnvInit: Not CoreCLR, skipping getFunctionPointerFn");
+					"JNIEnvInit: Not CoreCLR, getFunctionPointerFn set to null");
 			}
 
 			RunStartupHooksIfNeeded ();
 			SetSynchronizationContext ();
+		}
+
+		[UnmanagedCallersOnly]
+		internal static unsafe void GetFunctionPointer (byte* classNamePtr, int classNameLength, int methodIndex, IntPtr* targetPtr)
+		{
+			// Redirect to the global TypeMap
+			// Use the static field to avoid casting in hot path
+			if (TypeMapAttributeTypeMap.s_TypeMap != null) {
+				*targetPtr = TypeMapAttributeTypeMap.s_TypeMap.GetFunctionPointer (classNamePtr, classNameLength, methodIndex);
+			} else {
+				*targetPtr = IntPtr.Zero;
+			}
 		}
 
 		static void RunStartupHooksIfNeeded ()

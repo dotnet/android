@@ -373,5 +373,5 @@ extern "C" [[gnu::visibility("default")]] void xamarin_app_init (JNIEnv *env, ge
 using get_function_pointer_typemap_fn = void(*)(const char* class_name, int32_t class_name_length, int32_t method_index, void** target_ptr);
 extern "C" [[gnu::visibility("default")]] get_function_pointer_typemap_fn get_function_pointer;
 
-// New initialization function for Type Mapping API
-extern "C" [[gnu::visibility("default")]] void xamarin_typemap_init (JNIEnv *env, get_function_pointer_typemap_fn fn) noexcept;
+// Initialization function for Type Mapping API (sets the get_function_pointer callback)
+extern "C" [[gnu::visibility("default")]] void typemap_init (JNIEnv *env, get_function_pointer_typemap_fn fn) noexcept;

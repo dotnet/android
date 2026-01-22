@@ -53,11 +53,9 @@ namespace Java.Interop
 				[DynamicallyAccessedMembers (MethodsAndPrivateNested)] Type type,
 				ReadOnlySpan<char> methods)
 		{
-			// Disable dynamic registration on CoreCLR for Mono.Android assembly as it uses TypeMaps
-			// Other assemblies (User code, Java.Interop) continue to use Dynamic Registration for now
-			if (Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime &&
-					type.Assembly.GetName ().Name == "Mono.Android" &&
-					type.Namespace != "Java.Interop")
+			// Disable dynamic registration on CoreCLR as we use TypeMaps
+			// EXCEPT for Java.Interop types which don't have static stubs yet (e.g. [Export])
+			if (Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime && type.Namespace != "Java.Interop")
 				return;
 
 			int methodCount = CountMethods (methods);

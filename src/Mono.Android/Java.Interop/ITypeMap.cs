@@ -49,5 +49,11 @@ namespace Android.Runtime
 			JniHandleOwnership transfer,
 			[DynamicallyAccessedMembers (Constructors)]
 			Type? targetType);
+
+		/// <summary>
+		/// Resolves a marshal method function pointer by JNI class name and method index.
+		/// Used by Type Mapping API stubs.
+		/// </summary>
+		unsafe IntPtr GetFunctionPointer (byte* classNamePtr, int classNameLength, int methodIndex);
 	}
 }

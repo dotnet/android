@@ -22,6 +22,8 @@ namespace Android.Runtime
 		// Cache of JavaPeerProxy instances keyed by the target type
 		static readonly Dictionary<Type, JavaPeerProxy?> s_proxyInstances = new ();
 		static readonly Lock s_proxyInstancesLock = new ();
+		
+		internal static TypeMapAttributeTypeMap? s_TypeMap;
 
 		static bool LogTypemapTrace => Logger.LogTypemapTrace;
 
@@ -33,6 +35,7 @@ namespace Android.Runtime
 
 		public TypeMapAttributeTypeMap ()
 		{
+			s_TypeMap = this;
 			Log ("TypeMapAttributeTypeMap: Initializing...");
 			_externalTypeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
 			_invokerTypeMap = TypeMapping.GetOrCreateProxyTypeMapping<InvokerUniverse> ();
@@ -308,76 +311,35 @@ namespace Android.Runtime
 
 		#region Marshal Method Function Pointer Resolution
 
-		/// <summary>
-		/// Resolves a marshal method function pointer by JNI class name and method index.
-		/// Called from native code (LLVM IR stubs) via the get_function_pointer callback.
-		/// </summary>
-		[UnmanagedCallersOnly]
-		internal static unsafe void GetFunctionPointer (byte* classNamePtr, int classNameLength, int methodIndex, IntPtr* targetPtr)
+		/// <inheritdoc/>
+		public unsafe IntPtr GetFunctionPointer (byte* classNamePtr, int classNameLength, int methodIndex)
 		{
-			try {
-				string className = System.Text.Encoding.UTF8.GetString (classNamePtr, classNameLength);
-				Log ($"GetFunctionPointer: class='{className}', methodIndex={methodIndex}");
+			// Note: No try-catch here. If this crashes, the app should crash.
+			// It's a critical infrastructure failure.
 
-				// Look up type directly from the external type map
-				var typeMap = JNIEnvInit.TypeMap as TypeMapAttributeTypeMap;
-				if (typeMap == null || !typeMap._externalTypeMap.TryGetValue (className, out Type? type)) {
-					Log ($"GetFunctionPointer: No type found for '{className}'");
-					*targetPtr = IntPtr.Zero;
-					return;
-				}
+			string className = System.Text.Encoding.UTF8.GetString (classNamePtr, classNameLength);
+			Log ($"GetFunctionPointer: class='{className}', methodIndex={methodIndex}");
 
-				Log ($"GetFunctionPointer: Found type {type.FullName}");
-
-				// Get the JavaPeerProxy attribute for this type
-				JavaPeerProxy? proxy = GetProxyForType (type);
-				if (proxy == null) {
-					Log ($"GetFunctionPointer: No JavaPeerProxy attribute on {type.FullName}, attempting reflection fallback...");
-					*targetPtr = ResolveUserTypeMethod (type, methodIndex);
-					return;
-				}
-
-				// Get the function pointer from the proxy
-				IntPtr fnPtr = proxy.GetFunctionPointer (methodIndex);
-				Log ($"GetFunctionPointer: Got function pointer 0x{fnPtr:x} for method index {methodIndex}");
-
-				*targetPtr = fnPtr;
-			} catch (Exception ex) {
-				Log ($"GetFunctionPointer: Exception - {ex}");
-				*targetPtr = IntPtr.Zero;
-			}
-		}
-
-		static IntPtr ResolveUserTypeMethod (Type type, int index)
-		{
-			var candidates = new List<RegisterAttribute> ();
-			// Assumption: Reflection returns methods in definition order (matching Cecil)
-			foreach (var m in type.GetMethods (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly)) {
-				var attr = m.GetCustomAttribute<RegisterAttribute> ();
-				if (attr != null && !string.IsNullOrEmpty (attr.Name) && !string.IsNullOrEmpty (attr.Signature)) {
-					candidates.Add (attr);
-				}
-			}
-
-			if (index < 0 || index >= candidates.Count) {
-				Log ($"ResolveUserTypeMethod: Index {index} out of range (count {candidates.Count})");
+			// Look up type directly from the external type map
+			if (s_TypeMap == null || !s_TypeMap._externalTypeMap.TryGetValue (className, out Type? type)) {
+				Log ($"GetFunctionPointer: No type found for '{className}'");
 				return IntPtr.Zero;
 			}
 
-			var regAttr = candidates [index];
-			string callbackName = regAttr.Connector;
-			if (string.IsNullOrEmpty (callbackName)) {
-				callbackName = "n_" + regAttr.Name;
-			}
+			Log ($"GetFunctionPointer: Found type {type.FullName}");
 
-			var callbackMethod = type.GetMethod (callbackName, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-			if (callbackMethod == null) {
-				Log ($"ResolveUserTypeMethod: Callback method '{callbackName}' not found on {type.FullName}");
+			// Get the JavaPeerProxy attribute for this type
+			JavaPeerProxy? proxy = GetProxyForType (type);
+			if (proxy == null) {
+				Log ($"GetFunctionPointer: No JavaPeerProxy attribute on {type.FullName}, failing...");
 				return IntPtr.Zero;
 			}
 
-			Log ($"ResolveUserTypeMethod: Resolved index {index} to {callbackName}");
-			return callbackMethod.MethodHandle.GetFunctionPointer ();
+			// Get the function pointer from the proxy
+			IntPtr fnPtr = proxy.GetFunctionPointer (methodIndex);
+			Log ($"GetFunctionPointer: Got function pointer 0x{fnPtr:x} for method index {methodIndex}");
+
+			return fnPtr;
 		}
 
 		#endregion

@@ -78,7 +78,7 @@ const std::vector<std::string> internal_pinvoke_names = {
 //	"send_uninterrupted",
 //	"set_world_accessable",
 //	"xamarin_app_init",
-	"xamarin_typemap_init",
+	"typemap_init",
 
 // We can treat liblog as "internal", since we link against it
 	"__android_log_print",
