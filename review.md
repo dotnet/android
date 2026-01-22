@@ -7,7 +7,7 @@
 - [X] JNIEnvInit
     - [X] let's add the UCO for `GetFunctionPointer` here and let it redirect to the typemap the same way we do it for PropageteUnhandledException. The `ITypeMap` interface should have a method called `GetFunctionPointer(...)` that this will just call on the global typemap. the TypeMapAttributeTypeMap won't have the UCO attribute and it won't be static anymore, good!
     - [X] we should init it anyway. in Mono, we would just ignore the out parameter and bind to the old way of doing things. we will use the same out fnptr for nativeaot too later.
-    - [~] I thought we could directly set `get_function_pointer` value after `JNIEnvInit.Initialize` from the out param of args and there should really be no need for the `typemap_init` method. would that be viable? would it break some encapsluation?
+    - [X] I thought we could directly set `get_function_pointer` value after `JNIEnvInit.Initialize` from the out param of args and there should really be no need for the `typemap_init` method. would that be viable? would it break some encapsluation?
 - [X] GenerateTypeMapAttributesStep
     - [X] I would prefer merging bunch of WriteLine into a single one with `"""` C# string code blocks
     - [X] you said "When MainActivity loads, RegisterNativeMembers is called but does nothing." -- why is it called? do we call it from generated Java code? let's not please.
