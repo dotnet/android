@@ -583,9 +583,9 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		Context.TryGetCustomData ("TargetArch", out string? targetArch);
 		targetArch ??= "unknown";
 
-		// PoC: Output JCW files to a separate subdirectory so we can verify our codegen
-		// without breaking the existing build. In production, these would replace the existing JCW files.
-		string typeMapJcwOutputPath = Path.Combine (javaOutputPath, "typemap_jcw");
+		// Output JCW files to the staging directory - these will be copied after GenerateJavaStubs
+		// to overwrite the old-style JCW that calls TypeManager.Activate
+		string typeMapJcwOutputPath = javaOutputPath;
 
 		Context.LogMessage (MessageContainer.CreateInfoMessage (
 			$"Generating JCW files to {typeMapJcwOutputPath}, LLVM IR to {llvmIrOutputPath}, marshalMethodMappings.Count={marshalMethodMappings.Count}"));
@@ -601,7 +601,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 			string jniTypeName = JavaNativeTypeManager.ToJniName (targetType, Context);
 
-			// Generate JCW Java file - independent of the existing JCW generator
+			// Generate JCW Java file - replaces the existing JCW generator output
 			GenerateJcwJavaFile (typeMapJcwOutputPath, targetType, jniTypeName, marshalMethods);
 
 			// Generate LLVM IR file for native JNI method stubs

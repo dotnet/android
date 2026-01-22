@@ -21,7 +21,7 @@
 - [X] JavaPeerProxy
     - [X] do we need TargetType in JavaPeerProxy?
     - [X] if we need TargetType, does it need DynamicallyAccessedMembers? if not, drop it + drop it from the TypeMap class
-- [ ] I see this runtime crash:
+- [~] I see this runtime crash:
     ```
     --------- beginning of crash
     01-22 09:54:59.566 18667 18667 E AndroidRuntime: FATAL EXCEPTION: main
