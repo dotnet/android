@@ -575,11 +575,8 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		    !Context.TryGetCustomData ("LlvmIrOutputPath", out string? llvmIrOutputPath)) {
 			Context.LogMessage (MessageContainer.CreateInfoMessage (
 				"JavaOutputPath or LlvmIrOutputPath not set, skipping JCW/LLVM IR generation"));
-			File.WriteAllText ("/tmp/linker-debug.txt", "JavaOutputPath or LlvmIrOutputPath not set");
 			return;
 		}
-
-		File.WriteAllText ("/tmp/linker-debug.txt", $"JavaOutputPath={javaOutputPath}, LlvmIrOutputPath={llvmIrOutputPath}, marshalMethodMappings.Count={marshalMethodMappings.Count}\n");
 
 		Context.LogMessage (MessageContainer.CreateInfoMessage (
 			$"DEBUG: JavaOutputPath={javaOutputPath}, LlvmIrOutputPath={llvmIrOutputPath}"));
@@ -598,8 +595,6 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		Context.LogMessage (MessageContainer.CreateInfoMessage (
 			$"Generating JCW files to {typeMapJcwOutputPath}, LLVM IR to {llvmIrOutputPath}, marshalMethodMappings.Count={marshalMethodMappings.Count}"));
 
-		File.AppendAllText ("/tmp/linker-debug.txt", $"Generating JCW to {typeMapJcwOutputPath}, mappings={marshalMethodMappings.Count}\n");
-
 		// Generate JCW Java and LLVM IR files for each type with marshal methods
 		// Only generate JCW for user types, not for framework types (Mono.Android bindings)
 		foreach (var kvp in marshalMethodMappings) {
@@ -614,16 +609,13 @@ public class GenerateTypeMapAttributesStep : BaseStep
 			// Framework types like Java.Lang.Object already have their Java implementations
 			string assemblyName = targetType.Module.Assembly.Name.Name;
 			if (IsFrameworkAssembly (assemblyName)) {
-				File.AppendAllText ("/tmp/linker-debug.txt", $"  SKIP framework type: {targetType.FullName} from {assemblyName}\n");
 				continue;
 			}
 
 			string jniTypeName = JavaNativeTypeManager.ToJniName (targetType, Context);
 
-			File.AppendAllText ("/tmp/linker-debug.txt", $"  {targetType.FullName} -> {jniTypeName} with {marshalMethods.Count} methods\n");
-
 			Context.LogMessage (MessageContainer.CreateInfoMessage (
-				$"DEBUG: Generating JCW for {targetType.FullName} -> {jniTypeName} with {marshalMethods.Count} methods"));
+				$"Generating JCW for {targetType.FullName} -> {jniTypeName} with {marshalMethods.Count} methods"));
 
 			// Generate JCW Java file - replaces the existing JCW generator output
 			GenerateJcwJavaFile (typeMapJcwOutputPath, targetType, jniTypeName, marshalMethods);
