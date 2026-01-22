@@ -1826,12 +1826,14 @@ public class GenerateTypeMapAttributesStep : BaseStep
 			m.Parameters [0].ParameterType.FullName == "System.IntPtr" &&
 			m.Parameters [1].ParameterType.FullName == "Android.Runtime.JniHandleOwnership");
 
+		bool isJIConstructor = false;
 		if (ctor == null) {
-			// Try to find (JniObjectReference, JniObjectReferenceOptions) constructor
+			// Try to find (ref JniObjectReference, JniObjectReferenceOptions) constructor
 			ctor = mappedType.Methods.FirstOrDefault (m =>
 				m.IsConstructor && !m.IsStatic &&
 				m.Parameters.Count == 2 &&
-				m.Parameters [0].ParameterType.FullName == "Java.Interop.JniObjectReference" &&
+				m.Parameters [0].ParameterType.IsByReference &&
+				m.Parameters [0].ParameterType.GetElementType ().FullName == "Java.Interop.JniObjectReference" &&
 				m.Parameters [1].ParameterType.FullName == "Java.Interop.JniObjectReferenceOptions");
 
 			if (ctor == null) {
@@ -1840,6 +1842,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 				//     $"No suitable constructor for CreateInstance on {mappedType.FullName}"));
 				return;
 			}
+			isJIConstructor = true;
 		}
 
 		// Get the return type (IJavaPeerable)
@@ -1864,16 +1867,86 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		// Import the constructor reference
 		var ctorRef = AssemblyToInjectTypeMap.MainModule.ImportReference (ctor);
 
-		if (ctor.Parameters [0].ParameterType.FullName == "System.IntPtr") {
+		if (!isJIConstructor) {
 			// Direct XA constructor: new MappedType(handle, transfer)
 			il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_1); // handle
 			il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_2); // transfer
 			il.Emit (Mono.Cecil.Cil.OpCodes.Newobj, ctorRef);
 		} else {
-			// JI constructor: new MappedType(new JniObjectReference(handle), JniObjectReferenceOptions.Copy)
-			// This is more complex - for now just generate null return for JI types
-			// TODO: Implement proper JI constructor support
-			il.Emit (Mono.Cecil.Cil.OpCodes.Ldnull);
+			// JI constructor: new MappedType(ref new JniObjectReference(handle), JniObjectReferenceOptions.Copy)
+			// Then call JNIEnv.DeleteRef(handle, transfer)
+			
+			// Get types we need
+			var jniObjRefTypeDef = Context.GetType ("Java.Interop.JniObjectReference");
+			var jniObjRefType = AssemblyToInjectTypeMap.MainModule.ImportReference (jniObjRefTypeDef);
+			var jniObjRefOptionsTypeDef = Context.GetType ("Java.Interop.JniObjectReferenceOptions");
+			
+			// Find JniObjectReference(IntPtr) constructor
+			var jniObjRefCtor = jniObjRefTypeDef.Methods.FirstOrDefault (m =>
+				m.IsConstructor && !m.IsStatic &&
+				m.Parameters.Count == 1 &&
+				m.Parameters [0].ParameterType.FullName == "System.IntPtr");
+			
+			if (jniObjRefCtor == null) {
+				// Try with optional second parameter
+				jniObjRefCtor = jniObjRefTypeDef.Methods.FirstOrDefault (m =>
+					m.IsConstructor && !m.IsStatic &&
+					m.Parameters.Count == 2 &&
+					m.Parameters [0].ParameterType.FullName == "System.IntPtr" &&
+					m.Parameters [1].ParameterType.FullName == "Java.Interop.JniObjectReferenceType");
+			}
+
+			if (jniObjRefCtor == null) {
+				// Fallback: just return null if we can't find the constructor
+				il.Emit (Mono.Cecil.Cil.OpCodes.Ldnull);
+				il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
+				proxyType.Methods.Add (method);
+				return;
+			}
+			
+			var jniObjRefCtorRef = AssemblyToInjectTypeMap.MainModule.ImportReference (jniObjRefCtor);
+			
+			// Declare local for JniObjectReference
+			method.Body.InitLocals = true;
+			var jniRefLocal = new Mono.Cecil.Cil.VariableDefinition (jniObjRefType);
+			method.Body.Variables.Add (jniRefLocal);
+			
+			// Create JniObjectReference: local = new JniObjectReference(handle)
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloca_S, jniRefLocal);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_1); // handle
+			if (jniObjRefCtor.Parameters.Count == 2) {
+				// Need to pass JniObjectReferenceType.Invalid (0)
+				il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_I4_0);
+			}
+			il.Emit (Mono.Cecil.Cil.OpCodes.Call, jniObjRefCtorRef);
+			
+			// Call constructor: new MappedType(ref local, JniObjectReferenceOptions.Copy)
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloca_S, jniRefLocal); // ref jniObjRef
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_I4_1); // JniObjectReferenceOptions.Copy = 1
+			il.Emit (Mono.Cecil.Cil.OpCodes.Newobj, ctorRef);
+			
+			// Store result in local variable (we need it after DeleteRef)
+			var resultLocal = new Mono.Cecil.Cil.VariableDefinition (iJavaPeerableRef);
+			method.Body.Variables.Add (resultLocal);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Stloc, resultLocal);
+			
+			// Call JNIEnv.DeleteRef(handle, transfer)
+			var jniEnvTypeDef = Context.GetType ("Android.Runtime.JNIEnv");
+			var deleteRefMethod = jniEnvTypeDef.Methods.FirstOrDefault (m =>
+				m.Name == "DeleteRef" && m.IsStatic &&
+				m.Parameters.Count == 2 &&
+				m.Parameters [0].ParameterType.FullName == "System.IntPtr" &&
+				m.Parameters [1].ParameterType.FullName == "Android.Runtime.JniHandleOwnership");
+			
+			if (deleteRefMethod != null) {
+				var deleteRefRef = AssemblyToInjectTypeMap.MainModule.ImportReference (deleteRefMethod);
+				il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_1); // handle
+				il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_2); // transfer
+				il.Emit (Mono.Cecil.Cil.OpCodes.Call, deleteRefRef);
+			}
+			
+			// Load result and return
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloc, resultLocal);
 		}
 
 		il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
