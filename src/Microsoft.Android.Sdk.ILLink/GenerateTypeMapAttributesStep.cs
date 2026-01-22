@@ -612,21 +612,16 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 		using var writer = new StreamWriter (llFilePath);
 
-		// LLVM IR header
-		writer.WriteLine ($"; ModuleID = 'marshal_methods_init.ll'");
-		writer.WriteLine ($"source_filename = \"marshal_methods_init.ll\"");
-		writer.WriteLine ("target datalayout = \"e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128\"");
-		writer.WriteLine ($"target triple = \"aarch64-unknown-linux-android21\"");
-		writer.WriteLine ();
+		writer.Write ("""
+			; ModuleID = 'marshal_methods_init.ll'
+			source_filename = "marshal_methods_init.ll"
+			target datalayout = "e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128"
+			target triple = "aarch64-unknown-linux-android21"
 
-		// Define get_function_pointer global variable (initialized to null)
-		// This is the global that all marshal method stubs reference
-		// It will be set by typemap_init in C++
-		writer.WriteLine ("; Global get_function_pointer callback - set by typemap_init during app startup");
-		writer.WriteLine ("@get_function_pointer = local_unnamed_addr global ptr null, align 8");
-		writer.WriteLine ();
+			; Global get_function_pointer callback - set by typemap_init during app startup
+			@get_function_pointer = local_unnamed_addr global ptr null, align 8
 
-		// Context.LogMessage (MessageContainer.CreateInfoMessage ($"Generated LLVM IR init file: {llFilePath}"));
+			""".Replace ("\t", ""));
 	}
 
 	/// <summary>
@@ -651,27 +646,32 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 		// Package declaration
 		if (!string.IsNullOrEmpty (package)) {
-			writer.WriteLine ($"package {package};");
-			writer.WriteLine ();
+			writer.Write ($"""
+				package {package};
+
+
+				""".Replace ("\t", ""));
 		}
 
-		// Class declaration
-		writer.WriteLine ($"public class {className}");
-		writer.WriteLine ("\textends java.lang.Object");
-		writer.WriteLine ("\timplements mono.android.IGCUserPeer");
-		writer.WriteLine ("{");
-
 		// Generate native method declarations - no dynamic registration needed
+		var nativeMethods = new StringBuilder ();
 		foreach (var method in marshalMethods) {
 			string returnType = JniSignatureToJavaType (method.JniSignature, returnOnly: true);
 			string parameters = JniSignatureToJavaParameters (method.JniSignature);
 			// Replace <init> with _ctor for valid Java identifier
 			string javaMethodName = method.JniName.Replace ("<init>", "_ctor").Replace ("<clinit>", "_cctor");
 
-			writer.WriteLine ($"\tprivate native {returnType} n_{javaMethodName} ({parameters});");
+			nativeMethods.AppendLine ($"    private native {returnType} n_{javaMethodName} ({parameters});");
 		}
 
-		writer.WriteLine ("}");
+		// Class declaration
+		writer.Write ($"""
+			public class {className}
+			    extends java.lang.Object
+			    implements mono.android.IGCUserPeer
+			{{
+			{nativeMethods}}}
+			""".Replace ("\t", ""));
 
 		// Context.LogMessage (MessageContainer.CreateInfoMessage ($"Generated JCW: {javaFilePath}"));
 	}
@@ -693,91 +693,104 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		using var writer = new StreamWriter (llFilePath);
 
 		// LLVM IR header
-		writer.WriteLine ($"; ModuleID = 'marshal_methods_{sanitizedName}.ll'");
-		writer.WriteLine ($"source_filename = \"marshal_methods_{sanitizedName}.ll\"");
-		writer.WriteLine ("target datalayout = \"e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128\"");
-		writer.WriteLine ($"target triple = \"aarch64-unknown-linux-android21\"");
-		writer.WriteLine ();
+		writer.Write ($"""
+			; ModuleID = 'marshal_methods_{sanitizedName}.ll'
+			source_filename = "marshal_methods_{sanitizedName}.ll"
+			target datalayout = "e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128"
+			target triple = "aarch64-unknown-linux-android21"
 
-		// Global variable holding the get_function_pointer callback (set during app init)
-		// NOTE: Must NOT use dso_local for external symbols when generating PIC code
-		writer.WriteLine ("; External get_function_pointer callback - resolves UCO wrapper by class name and method index");
-		writer.WriteLine ("@get_function_pointer = external local_unnamed_addr global ptr, align 8");
-		writer.WriteLine ();
+			; External get_function_pointer callback - resolves UCO wrapper by class name and method index
+			@get_function_pointer = external local_unnamed_addr global ptr, align 8
 
-		// Cached function pointer variables (one per method)
-		writer.WriteLine ("; Cached function pointers for marshal methods");
-		for (int i = 0; i < marshalMethods.Count; i++) {
-			writer.WriteLine ($"@fn_ptr_{i} = internal unnamed_addr global ptr null, align 8");
-		}
-		writer.WriteLine ();
+			; Cached function pointers for marshal methods
+
+			""");
 
 		// Class name constant (null-terminated string)
 		byte[] classNameBytes = System.Text.Encoding.UTF8.GetBytes (jniTypeName);
+		string classNameBytesEncoded = string.Join("", classNameBytes.Select(b => $"\\{b:X2}"));
 		int classNameLength = classNameBytes.Length;
-		writer.WriteLine ($"; Class name for \"{jniTypeName}\" (length={classNameLength})");
-		writer.Write ($"@class_name = internal constant [{classNameLength} x i8] c\"");
-		foreach (byte b in classNameBytes) {
-			writer.Write ($"\\{b:X2}");
-		}
-		writer.WriteLine ("\", align 1");
-		writer.WriteLine ();
 
-		// Generate JNI native functions
-		writer.WriteLine ("; JNI native method stubs");
+		// Cached function pointers for marshal methods
+		var fnPointers = new StringBuilder ();
+		for (int i = 0; i < marshalMethods.Count; i++) {
+			fnPointers.AppendLine ($"@fn_ptr_{i} = internal unnamed_addr global ptr null, align 8");
+		}
+
+		writer.Write ($"""
+			{fnPointers}
+			; Class name for \"{jniTypeName}\" (length={classNameLength})
+			@class_name = internal constant [{classNameLength} x i8] c\"{classNameBytesEncoded}\", align 1
+
+			; JNI native method stubs
+			""");
+
 		for (int i = 0; i < marshalMethods.Count; i++) {
 			var method = marshalMethods [i];
 			string nativeSymbol = MakeJniNativeSymbol (jniTypeName, method.JniName, method.JniSignature);
 			string llvmParams = JniSignatureToLlvmParams (method.JniSignature);
-			string llvmParamTypes = JniSignatureToLlvmParamTypes (method.JniSignature);
 			string llvmArgs = JniSignatureToLlvmArgs (method.JniSignature);
 			string llvmRetType = JniSignatureToLlvmReturnType (method.JniSignature);
 
-			writer.WriteLine ();
-			writer.WriteLine ($"; Method: {method.JniName}{method.JniSignature}");
-			// NOTE: Don't use dso_local for PIC code compatibility
-			// Use 'default' visibility to ensure the symbol is exported even if -fvisibility=hidden is used
-			writer.WriteLine ($"define default {llvmRetType} @{nativeSymbol}(ptr %env, ptr %obj{llvmParams}) #0 {{");
-			writer.WriteLine ("entry:");
-
-			// Load cached function pointer
-			writer.WriteLine ($"  %cached_ptr = load ptr, ptr @fn_ptr_{i}, align 8");
-			writer.WriteLine ("  %is_null = icmp eq ptr %cached_ptr, null");
-			writer.WriteLine ("  br i1 %is_null, label %resolve, label %call");
-			writer.WriteLine ();
-
-			// Resolve block - call get_function_pointer to get UCO wrapper
-			writer.WriteLine ("resolve:");
-			writer.WriteLine ("  %get_fn = load ptr, ptr @get_function_pointer, align 8");
-			writer.WriteLine ($"  call void %get_fn(ptr @class_name, i32 {classNameLength}, i32 {i}, ptr @fn_ptr_{i})");
-			writer.WriteLine ($"  %resolved_ptr = load ptr, ptr @fn_ptr_{i}, align 8");
-			writer.WriteLine ("  br label %call");
-			writer.WriteLine ();
-
-			// Call block - invoke the UCO wrapper
-			writer.WriteLine ("call:");
-			writer.WriteLine ("  %fn = phi ptr [ %cached_ptr, %entry ], [ %resolved_ptr, %resolve ]");
-
 			if (llvmRetType == "void") {
-				writer.WriteLine ($"  tail call void %fn(ptr %env, ptr %obj{llvmArgs})");
-				writer.WriteLine ("  ret void");
-			} else {
-				writer.WriteLine ($"  %result = tail call {llvmRetType} %fn(ptr %env, ptr %obj{llvmArgs})");
-				writer.WriteLine ($"  ret {llvmRetType} %result");
-			}
+				writer.Write ($$"""
 
-			writer.WriteLine ("}");
+					; Method: {{method.JniName}}{{method.JniSignature}}
+					define default {{llvmRetType}} @{{nativeSymbol}}(ptr %env, ptr %obj{{llvmParams}}) #0 {
+					entry:
+					  %cached_ptr = load ptr, ptr @fn_ptr_{{i}}, align 8
+					  %is_null = icmp eq ptr %cached_ptr, null
+					  br i1 %is_null, label %resolve, label %call
+
+					resolve:
+					  %get_fn = load ptr, ptr @get_function_pointer, align 8
+					  call void %get_fn(ptr @class_name, i32 {{classNameLength}}, i32 {{i}}, ptr @fn_ptr_{{i}})
+					  %resolved_ptr = load ptr, ptr @fn_ptr_{{i}}, align 8
+					  br label %call
+
+					call:
+					  %fn = phi ptr [ %cached_ptr, %entry ], [ %resolved_ptr, %resolve ]
+					  tail call void %fn(ptr %env, ptr %obj{{llvmArgs}})
+					  ret void
+					}
+
+					""");
+			} else {
+				writer.Write ($$"""
+
+					; Method: {{method.JniName}}{{method.JniSignature}}
+					define default {{llvmRetType}} @{{nativeSymbol}}(ptr %env, ptr %obj{{llvmParams}}) #0 {
+					entry:
+					  %cached_ptr = load ptr, ptr @fn_ptr_{{i}}, align 8
+					  %is_null = icmp eq ptr %cached_ptr, null
+					  br i1 %is_null, label %resolve, label %call
+
+					resolve:
+					  %get_fn = load ptr, ptr @get_function_pointer, align 8
+					  call void %get_fn(ptr @class_name, i32 {{classNameLength}}, i32 {{i}}, ptr @fn_ptr_{{i}})
+					  %resolved_ptr = load ptr, ptr @fn_ptr_{{i}}, align 8
+					  br label %call
+
+					call:
+					  %fn = phi ptr [ %cached_ptr, %entry ], [ %resolved_ptr, %resolve ]
+					  %result = tail call {{llvmRetType}} %fn(ptr %env, ptr %obj{{llvmArgs}})
+					  ret {{llvmRetType}} %result
+					}
+
+					""");
+			}
 		}
 
-		writer.WriteLine ();
-		writer.WriteLine ("; Function attributes");
-		writer.WriteLine ("attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read) uwtable }");
-		writer.WriteLine ();
-		writer.WriteLine ("; Metadata");
-		writer.WriteLine ("!llvm.module.flags = !{!0}");
-		writer.WriteLine ("!0 = !{i32 1, !\"wchar_size\", i32 4}");
+		writer.Write ("""
 
-		// Context.LogMessage (MessageContainer.CreateInfoMessage ($"Generated LLVM IR: {llFilePath}"));
+			; Function attributes
+			attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read) uwtable }
+
+			; Metadata
+			!llvm.module.flags = !{!0}
+			!0 = !{i32 1, !"wchar_size", i32 4}
+
+			""");
 	}
 
 	/// <summary>
