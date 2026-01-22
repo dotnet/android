@@ -53,10 +53,14 @@ namespace Java.Interop
 				[DynamicallyAccessedMembers (MethodsAndPrivateNested)] Type type,
 				ReadOnlySpan<char> methods)
 		{
-			// Disable dynamic registration on CoreCLR as we use TypeMaps
-			// EXCEPT for Java.Interop types which don't have static stubs yet (e.g. [Export])
-			if (Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime && type.Namespace != "Java.Interop")
+			// POC: Completely disable dynamic registration on CoreCLR
+			// All native methods are resolved via TypeMaps and get_function_pointer
+			// TODO: [Export] support needs to be revisited in a future iteration
+			if (Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime) {
+				Android.Runtime.Logger.Log (Android.Runtime.LogLevel.Debug, "monodroid", 
+					$"DynamicNativeMembersRegistration: DISABLED for {type.FullName} (CoreCLR uses TypeMaps)");
 				return;
+			}
 
 			int methodCount = CountMethods (methods);
 			if (methodCount < 1) {
