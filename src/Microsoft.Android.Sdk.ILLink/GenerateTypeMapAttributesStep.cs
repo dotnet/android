@@ -105,6 +105,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 	protected override void Process ()
 	{
+		File.WriteAllText ("/tmp/linker-process.txt", $"Process started at {DateTime.Now}\n");
 		try {
 		// Context.LogMessage (MessageContainer.CreateInfoMessage ("GenerateTypeMapAttributesStep running..."));
 		var javaTypeMapUniverseTypeDefinition = Context.GetType (JavaTypeMapUniverseTypeName);
@@ -403,7 +404,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 				marshalMethodMappings [type] = marshalMethods;
 			}
 
-			// Context.LogMessage (MessageContainer.CreateInfoMessage ($"Type '{type.FullName}' has peer '{javaName}', {marshalMethods.Count} marshal methods"));
+			Context.LogMessage (MessageContainer.CreateInfoMessage ($"DEBUG: Type '{type.FullName}' has peer '{javaName}', {marshalMethods.Count} marshal methods"));
 			var proxyType = GenerateTypeMapProxyType (javaName, type, marshalMethods);
 			typesToInject.Add (proxyType);
 			proxyMappings.Add (type, proxyType);
@@ -489,6 +490,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 	protected override void EndProcess ()
 	{
+		File.WriteAllText ("/tmp/linker-endprocess.txt", $"EndProcess started at {DateTime.Now}\n");
 		try {
 		// NOTE: We override the entry_assembly so that the TypeMapHandler in illink can have a starting point for TypeMapTargetAssemblies.
 		// This is critical because Mono.Android should be the entrypoint assembly so that we can call Assembly.SetEntryAssembly()
@@ -573,8 +575,14 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		    !Context.TryGetCustomData ("LlvmIrOutputPath", out string? llvmIrOutputPath)) {
 			Context.LogMessage (MessageContainer.CreateInfoMessage (
 				"JavaOutputPath or LlvmIrOutputPath not set, skipping JCW/LLVM IR generation"));
+			File.WriteAllText ("/tmp/linker-debug.txt", "JavaOutputPath or LlvmIrOutputPath not set");
 			return;
 		}
+
+		File.WriteAllText ("/tmp/linker-debug.txt", $"JavaOutputPath={javaOutputPath}, LlvmIrOutputPath={llvmIrOutputPath}, marshalMethodMappings.Count={marshalMethodMappings.Count}\n");
+
+		Context.LogMessage (MessageContainer.CreateInfoMessage (
+			$"DEBUG: JavaOutputPath={javaOutputPath}, LlvmIrOutputPath={llvmIrOutputPath}"));
 
 		// Normalize paths for the current platform
 		javaOutputPath = javaOutputPath.Replace ('\\', Path.DirectorySeparatorChar);
@@ -590,6 +598,8 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		Context.LogMessage (MessageContainer.CreateInfoMessage (
 			$"Generating JCW files to {typeMapJcwOutputPath}, LLVM IR to {llvmIrOutputPath}, marshalMethodMappings.Count={marshalMethodMappings.Count}"));
 
+		File.AppendAllText ("/tmp/linker-debug.txt", $"Generating JCW to {typeMapJcwOutputPath}, mappings={marshalMethodMappings.Count}\n");
+
 		// Generate JCW Java and LLVM IR files for each type with marshal methods
 		foreach (var kvp in marshalMethodMappings) {
 			var targetType = kvp.Key;
@@ -600,6 +610,11 @@ public class GenerateTypeMapAttributesStep : BaseStep
 			}
 
 			string jniTypeName = JavaNativeTypeManager.ToJniName (targetType, Context);
+
+			File.AppendAllText ("/tmp/linker-debug.txt", $"  {targetType.FullName} -> {jniTypeName} with {marshalMethods.Count} methods\n");
+
+			Context.LogMessage (MessageContainer.CreateInfoMessage (
+				$"DEBUG: Generating JCW for {targetType.FullName} -> {jniTypeName} with {marshalMethods.Count} methods"));
 
 			// Generate JCW Java file - replaces the existing JCW generator output
 			GenerateJcwJavaFile (typeMapJcwOutputPath, targetType, jniTypeName, marshalMethods);

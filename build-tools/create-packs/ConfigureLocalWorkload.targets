@@ -115,7 +115,6 @@
     />
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; workload install android-deps --configfile &quot;$(XamarinAndroidSourcePath)NuGet.config&quot; --skip-manifest-update --skip-sign-check --verbosity diag"
-        EnvironmentVariables="DOTNETSDK_WORKLOAD_MANIFEST_ROOTS=$(BuildOutputDirectory)lib\sdk-manifests"
         WorkingDirectory="$(XamarinAndroidSourcePath)"
     />
      <RemoveDir Directories="$(_EmptyWorkloadDir)" />

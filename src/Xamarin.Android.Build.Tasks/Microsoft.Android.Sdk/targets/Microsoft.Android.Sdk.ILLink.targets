@@ -43,7 +43,7 @@ This file contains the .NET 5-specific targets to customize ILLink
       <_TrimmerCustomData Include="SystemIOHashingAssemblyPath" Value="$(_SystemIOHashingAssemblyPath)" />
       <!-- TypeMap PoC: Output paths for JCW and LLVM IR generation -->
       <!-- Write JCW to a temporary directory, will be copied after GenerateJavaStubs -->
-      <_TrimmerCustomData Include="JavaOutputPath" Value="$(IntermediateOutputPath)android\typemap_jcw_staging" />
+      <_TrimmerCustomData Include="JavaOutputPath" Value="$(IntermediateOutputPath)android/typemap_jcw_staging" />
       <_TrimmerCustomData Include="LlvmIrOutputPath" Value="$(IntermediateOutputPath)android" />
       <_TrimmerCustomData Include="TargetArch" Value="$(RuntimeIdentifier)" />
 
@@ -148,17 +148,17 @@ This file contains the .NET 5-specific targets to customize ILLink
   -->
   <Target Name="_CopyTypeMapJcwFiles" 
       AfterTargets="_GenerateJavaStubs"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(_AndroidRuntime)' != 'MonoVM' and Exists('$(IntermediateOutputPath)android\typemap_jcw_staging') ">
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_AndroidRuntime)' != 'MonoVM' and Exists('$(IntermediateOutputPath)android/typemap_jcw_staging') ">
     <PropertyGroup>
-      <_TypeMapJcwStagingDir>$(IntermediateOutputPath)android\typemap_jcw_staging</_TypeMapJcwStagingDir>
-      <_TypeMapJcwDestDir>$(IntermediateOutputPath)android\src</_TypeMapJcwDestDir>
+      <_TypeMapJcwStagingDir>$(IntermediateOutputPath)android/typemap_jcw_staging</_TypeMapJcwStagingDir>
+      <_TypeMapJcwDestDir>$(IntermediateOutputPath)android/src</_TypeMapJcwDestDir>
     </PropertyGroup>
     <ItemGroup>
-      <_TypeMapJcwFiles Include="$(_TypeMapJcwStagingDir)\**\*.java" />
+      <_TypeMapJcwFiles Include="$(_TypeMapJcwStagingDir)/**/*.java" />
     </ItemGroup>
     <Message Condition=" '@(_TypeMapJcwFiles)' != '' " Importance="high" Text="Copying @(_TypeMapJcwFiles->Count()) TypeMap JCW files to $(_TypeMapJcwDestDir)" />
     <Copy SourceFiles="@(_TypeMapJcwFiles)" 
-          DestinationFiles="@(_TypeMapJcwFiles->'$(_TypeMapJcwDestDir)\%(RecursiveDir)%(Filename)%(Extension)')"
+          DestinationFiles="@(_TypeMapJcwFiles->'$(_TypeMapJcwDestDir)/%(RecursiveDir)%(Filename)%(Extension)')"
           OverwriteReadOnlyFiles="true"
           SkipUnchangedFiles="false" />
   </Target>

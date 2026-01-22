@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Java.Interop;
@@ -240,8 +241,6 @@ namespace Android.Runtime
 					JniObjectReference.Dispose (ref handleClass);
 					JniObjectReference.Dispose (ref typeClass);
 				}
-
-				return true;
 			}
 
 			static string? GetClassNameFromJavaClassHandle (IntPtr class_ptr)
