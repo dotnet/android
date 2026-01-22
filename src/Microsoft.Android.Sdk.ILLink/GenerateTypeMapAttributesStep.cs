@@ -571,10 +571,14 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		// Get output paths from custom data
 		if (!Context.TryGetCustomData ("JavaOutputPath", out string? javaOutputPath) ||
 		    !Context.TryGetCustomData ("LlvmIrOutputPath", out string? llvmIrOutputPath)) {
-			// Context.LogMessage (MessageContainer.CreateInfoMessage (
-				// "JavaOutputPath or LlvmIrOutputPath not set, skipping JCW/LLVM IR generation"));
+			Context.LogMessage (MessageContainer.CreateInfoMessage (
+				"JavaOutputPath or LlvmIrOutputPath not set, skipping JCW/LLVM IR generation"));
 			return;
 		}
+
+		// Normalize paths for the current platform
+		javaOutputPath = javaOutputPath.Replace ('\\', Path.DirectorySeparatorChar);
+		llvmIrOutputPath = llvmIrOutputPath.Replace ('\\', Path.DirectorySeparatorChar);
 
 		Context.TryGetCustomData ("TargetArch", out string? targetArch);
 		targetArch ??= "unknown";
@@ -583,8 +587,8 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		// without breaking the existing build. In production, these would replace the existing JCW files.
 		string typeMapJcwOutputPath = Path.Combine (javaOutputPath, "typemap_jcw");
 
-		// Context.LogMessage (MessageContainer.CreateInfoMessage (
-			// $"Generating JCW files to {typeMapJcwOutputPath}, LLVM IR to {llvmIrOutputPath}"));
+		Context.LogMessage (MessageContainer.CreateInfoMessage (
+			$"Generating JCW files to {typeMapJcwOutputPath}, LLVM IR to {llvmIrOutputPath}, marshalMethodMappings.Count={marshalMethodMappings.Count}"));
 
 		// Generate JCW Java and LLVM IR files for each type with marshal methods
 		foreach (var kvp in marshalMethodMappings) {
