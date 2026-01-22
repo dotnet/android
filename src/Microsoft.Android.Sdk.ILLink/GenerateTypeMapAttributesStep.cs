@@ -513,7 +513,8 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 			if (types.Count == 1) {
 				// Single type - simple mapping
-				var attr = GenerateTypeMapAttribute (types [0], javaName);
+				var proxyType = proxyMappings [types [0]];
+				var attr = GenerateTypeMapAttribute (types [0], proxyType, javaName);
 				// Context.LogMessage (MessageContainer.CreateInfoMessage ($"Injecting [{attr.AttributeType.FullName}({string.Join (", ", attr.ConstructorArguments.Select (caa => caa.ToString ()))})] into {AssemblyToInjectTypeMap.Name}"));
 				AssemblyToInjectTypeMap.CustomAttributes.Add (attr);
 			} else {
@@ -523,7 +524,8 @@ public class GenerateTypeMapAttributesStep : BaseStep
 					aliasKeys [i] = $"{javaName}[{i}]";
 
 					// Generate TypeMap for each aliased type: "javaName[i]" -> type
-					var attr = GenerateTypeMapAttribute (types [i], aliasKeys [i]);
+					var proxyType = proxyMappings [types [i]];
+					var attr = GenerateTypeMapAttribute (types [i], proxyType, aliasKeys [i]);
 					// Context.LogMessage (MessageContainer.CreateInfoMessage ($"Injecting aliased [{attr.AttributeType.FullName}({string.Join (", ", attr.ConstructorArguments.Select (caa => caa.ToString ()))})] into {AssemblyToInjectTypeMap.Name}"));
 					AssemblyToInjectTypeMap.CustomAttributes.Add (attr);
 				}
@@ -532,16 +534,19 @@ public class GenerateTypeMapAttributesStep : BaseStep
 				var aliasType = GenerateAliasType (javaName, aliasKeys);
 				AssemblyToInjectTypeMap.MainModule.Types.Add (aliasType);
 
-				// Generate TypeMap for the main Java name -> alias type
-				var mainAttr = GenerateTypeMapAttribute (aliasType, javaName);
+				// Generate TypeMap for the main Java name -> alias type (alias types don't have proxies, use alias type itself)
+				var mainAttr = GenerateTypeMapAttribute (aliasType, aliasType, javaName);
 				// Context.LogMessage (MessageContainer.CreateInfoMessage ($"Injecting alias [{mainAttr.AttributeType.FullName}({string.Join (", ", mainAttr.ConstructorArguments.Select (caa => caa.ToString ()))})] into {AssemblyToInjectTypeMap.Name}"));
 				AssemblyToInjectTypeMap.CustomAttributes.Add (mainAttr);
 			}
 		}
 
 		// Apply proxy attributes directly to target types (AOT-safe: uses GetCustomAttribute instead of Activator.CreateInstance)
+		// Track which assemblies are modified so we can force them to be saved
+		var modifiedAssemblies = new HashSet<AssemblyDefinition> ();
 		foreach (var mapping in proxyMappings) {
 			ApplyProxyAttributeToTargetType (mapping.Key, mapping.Value);
+			modifiedAssemblies.Add (mapping.Key.Module.Assembly);
 		}
 		// Generate TypeMapAssociation<InvokerUniverse> for interface-to-invoker mappings
 		foreach (var mapping in invokerMappings) {
@@ -558,6 +563,12 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		// Force the Linker to write the modified Mono.Android assembly
 		Context.Annotations.SetAction (MonoAndroidAssembly, AssemblyAction.Save);
 
+		// Force the Linker to write all assemblies we modified by adding proxy attributes
+		foreach (var assembly in modifiedAssemblies) {
+			Context.LogMessage (MessageContainer.CreateInfoMessage ($"Marking assembly '{assembly.Name.Name}' for saving due to proxy attribute modifications"));
+			Context.Annotations.SetAction (assembly, AssemblyAction.Save);
+		}
+
 		// Generate JCW (Java Callable Wrappers) and LLVM IR files for marshal methods
 		GenerateJcwAndLlvmIrFiles ();
 		} catch (Exception ex) {
@@ -570,14 +581,18 @@ public class GenerateTypeMapAttributesStep : BaseStep
 	/// </summary>
 	void GenerateJcwAndLlvmIrFiles ()
 	{
+		File.AppendAllText ("/tmp/linker-jcw.txt", $"GenerateJcwAndLlvmIrFiles called at {DateTime.Now}\n");
+
 		// Get output paths from custom data
 		if (!Context.TryGetCustomData ("JavaOutputPath", out string? javaOutputPath) ||
 		    !Context.TryGetCustomData ("LlvmIrOutputPath", out string? llvmIrOutputPath)) {
+			File.AppendAllText ("/tmp/linker-jcw.txt", $"JavaOutputPath or LlvmIrOutputPath not set\n");
 			Context.LogMessage (MessageContainer.CreateInfoMessage (
 				"JavaOutputPath or LlvmIrOutputPath not set, skipping JCW/LLVM IR generation"));
 			return;
 		}
 
+		File.AppendAllText ("/tmp/linker-jcw.txt", $"JavaOutputPath={javaOutputPath}, LlvmIrOutputPath={llvmIrOutputPath}\n");
 		Context.LogMessage (MessageContainer.CreateInfoMessage (
 			$"DEBUG: JavaOutputPath={javaOutputPath}, LlvmIrOutputPath={llvmIrOutputPath}"));
 
@@ -592,6 +607,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		// to overwrite the old-style JCW that calls TypeManager.Activate
 		string typeMapJcwOutputPath = javaOutputPath;
 
+		File.AppendAllText ("/tmp/linker-jcw.txt", $"marshalMethodMappings.Count={marshalMethodMappings.Count}\n");
 		Context.LogMessage (MessageContainer.CreateInfoMessage (
 			$"Generating JCW files to {typeMapJcwOutputPath}, LLVM IR to {llvmIrOutputPath}, marshalMethodMappings.Count={marshalMethodMappings.Count}"));
 
@@ -651,47 +667,32 @@ public class GenerateTypeMapAttributesStep : BaseStep
 	/// </summary>
 	void GenerateLlvmIrInitFile (string outputPath, string targetArch)
 	{
+		File.AppendAllText ("/tmp/linker-jcw.txt", $"GenerateLlvmIrInitFile: outputPath={outputPath}\n");
 		Directory.CreateDirectory (outputPath);
 		string llFilePath = Path.Combine (outputPath, "marshal_methods_init.ll");
+		File.AppendAllText ("/tmp/linker-jcw.txt", $"Writing to {llFilePath}\n");
 
 		using var writer = new StreamWriter (llFilePath);
 
 		// Write the LLVM IR init file with xamarin_app_init function
-		// This function is called by libmonodroid.so to set the get_function_pointer callback
+		// This function is called by libmonodroid.so to set the typemap_get_function_pointer callback
 		writer.Write ("""
 ; ModuleID = 'marshal_methods_init.ll'
 source_filename = "marshal_methods_init.ll"
 target datalayout = "e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128"
 target triple = "aarch64-unknown-linux-android21"
 
-; Global get_function_pointer callback - initialized to null, set at runtime
+; Global typemap_get_function_pointer callback - initialized to null, set at runtime
 ; For CLR: set from JNIEnvInit.Initialize out parameter via host.cc
-; For Mono: set via xamarin_app_init call from libmonodroid.so
-@get_function_pointer = default local_unnamed_addr global ptr null, align 8
+; Note: Named typemap_get_function_pointer to avoid conflict with legacy get_function_pointer symbol
+@typemap_get_function_pointer = default local_unnamed_addr global ptr null, align 8
 
 ; External puts and abort for error handling
 declare i32 @puts(ptr nocapture readonly) local_unnamed_addr
 declare void @abort() noreturn
 
 ; Error message for null function pointer
-@.str.error = private unnamed_addr constant [40 x i8] c"get_function_pointer MUST be specified\0A\00", align 1
-
-; xamarin_app_init - called by libmonodroid.so (Mono) or host.cc (CLR) to initialize the function pointer callback
-; Parameters:
-;   %env - JNIEnv* (unused but required for JNI signature compatibility)
-;   %fn - the get_function_pointer callback function
-define default void @xamarin_app_init(ptr nocapture readnone %env, ptr %fn) local_unnamed_addr {
-entry:
-  %is_null = icmp eq ptr %fn, null
-  br i1 %is_null, label %done, label %store
-
-store:
-  store ptr %fn, ptr @get_function_pointer, align 8
-  br label %done
-
-done:
-  ret void
-}
+@.str.error = private unnamed_addr constant [48 x i8] c"typemap_get_function_pointer MUST be specified\0A\00", align 1
 
 """);
 	}
@@ -911,8 +912,8 @@ public class {{className}}
 			target datalayout = "e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128"
 			target triple = "aarch64-unknown-linux-android21"
 
-			; External get_function_pointer callback - resolves UCO wrapper by class name and method index
-			@get_function_pointer = external local_unnamed_addr global ptr, align 8
+			; External typemap_get_function_pointer callback - resolves UCO wrapper by class name and method index
+			@typemap_get_function_pointer = external local_unnamed_addr global ptr, align 8
 
 			; Cached function pointers for marshal methods and activation
 
@@ -954,7 +955,7 @@ public class {{className}}
 					  br i1 %is_null, label %resolve, label %call
 
 					resolve:
-					  %get_fn = load ptr, ptr @get_function_pointer, align 8
+					  %get_fn = load ptr, ptr @typemap_get_function_pointer, align 8
 					  call void %get_fn(ptr @class_name, i32 {{classNameLength}}, i32 {{i}}, ptr @fn_ptr_{{i}})
 					  %resolved_ptr = load ptr, ptr @fn_ptr_{{i}}, align 8
 					  br label %call
@@ -977,7 +978,7 @@ public class {{className}}
 					  br i1 %is_null, label %resolve, label %call
 
 					resolve:
-					  %get_fn = load ptr, ptr @get_function_pointer, align 8
+					  %get_fn = load ptr, ptr @typemap_get_function_pointer, align 8
 					  call void %get_fn(ptr @class_name, i32 {{classNameLength}}, i32 {{i}}, ptr @fn_ptr_{{i}})
 					  %resolved_ptr = load ptr, ptr @fn_ptr_{{i}}, align 8
 					  br label %call
@@ -1016,7 +1017,7 @@ public class {{className}}
 				  br i1 %is_null, label %resolve, label %call
 
 				resolve:
-				  %get_fn = load ptr, ptr @get_function_pointer, align 8
+				  %get_fn = load ptr, ptr @typemap_get_function_pointer, align 8
 				  call void %get_fn(ptr @class_name, i32 {{classNameLength}}, i32 {{fnPtrIndex}}, ptr @fn_ptr_{{fnPtrIndex}})
 				  %resolved_ptr = load ptr, ptr @fn_ptr_{{fnPtrIndex}}, align 8
 				  br label %call
@@ -1312,19 +1313,16 @@ public class {{className}}
 
 	/// <summary>
 	/// Converts JNI signature parameters to Java parameter list.
+	/// Uses exact Java type names to ensure JNI symbol resolution matches correctly.
 	/// </summary>
 	static string JniSignatureToJavaParameters (string signature)
 	{
-		// NOTE: Mapping parameters to generic Object types is sufficient for native method resolution.
-		// The JNI runtime only needs the method signature to match at the native layer; the .java stubs
-		// don't need exact type information for JNI resolution to work correctly.
 		int parenStart = signature.IndexOf ('(');
 		int parenEnd = signature.IndexOf (')');
 		if (parenStart < 0 || parenEnd < 0 || parenEnd == parenStart + 1) {
 			return "";
 		}
 
-		// Simplified parameter extraction
 		string paramSig = signature.Substring (parenStart + 1, parenEnd - parenStart - 1);
 		var @params = new List<string> ();
 		int idx = 0;
@@ -1332,33 +1330,95 @@ public class {{className}}
 
 		while (idx < paramSig.Length) {
 			char c = paramSig [idx];
-			string type = c switch {
-				'Z' => "boolean",
-				'B' => "byte",
-				'C' => "char",
-				'S' => "short",
-				'I' => "int",
-				'J' => "long",
-				'F' => "float",
-				'D' => "double",
-				'L' => "Object",
-				'[' => "Object[]",
-				_ => "Object",
-			};
-
-			if (c == 'L') {
-				// Skip to semicolon
-				while (idx < paramSig.Length && paramSig [idx] != ';') idx++;
-			} else if (c == '[') {
-				// Skip array and element type
-				while (idx < paramSig.Length && paramSig [idx] == '[') idx++;
-				if (idx < paramSig.Length && paramSig [idx] == 'L') {
-					while (idx < paramSig.Length && paramSig [idx] != ';') idx++;
-				}
+			string type;
+			
+			switch (c) {
+				case 'Z':
+					type = "boolean";
+					idx++;
+					break;
+				case 'B':
+					type = "byte";
+					idx++;
+					break;
+				case 'C':
+					type = "char";
+					idx++;
+					break;
+				case 'S':
+					type = "short";
+					idx++;
+					break;
+				case 'I':
+					type = "int";
+					idx++;
+					break;
+				case 'J':
+					type = "long";
+					idx++;
+					break;
+				case 'F':
+					type = "float";
+					idx++;
+					break;
+				case 'D':
+					type = "double";
+					idx++;
+					break;
+				case 'L':
+					// Extract the full class name: Ljava/lang/String; -> java.lang.String
+					int start = idx + 1;
+					while (idx < paramSig.Length && paramSig[idx] != ';') idx++;
+					string className = paramSig.Substring (start, idx - start);
+					type = className.Replace ('/', '.');
+					idx++; // Skip the semicolon
+					break;
+				case '[':
+					// Handle arrays: count dimensions and get element type
+					int arrayDims = 0;
+					while (idx < paramSig.Length && paramSig[idx] == '[') {
+						arrayDims++;
+						idx++;
+					}
+					
+					string elementType;
+					if (idx < paramSig.Length) {
+						char elementChar = paramSig[idx];
+						switch (elementChar) {
+							case 'Z': elementType = "boolean"; idx++; break;
+							case 'B': elementType = "byte"; idx++; break;
+							case 'C': elementType = "char"; idx++; break;
+							case 'S': elementType = "short"; idx++; break;
+							case 'I': elementType = "int"; idx++; break;
+							case 'J': elementType = "long"; idx++; break;
+							case 'F': elementType = "float"; idx++; break;
+							case 'D': elementType = "double"; idx++; break;
+							case 'L':
+								int elemStart = idx + 1;
+								while (idx < paramSig.Length && paramSig[idx] != ';') idx++;
+								string elemClassName = paramSig.Substring (elemStart, idx - elemStart);
+								elementType = elemClassName.Replace ('/', '.');
+								idx++; // Skip the semicolon
+								break;
+							default:
+								elementType = "Object";
+								idx++;
+								break;
+						}
+					} else {
+						elementType = "Object";
+					}
+					
+					// Append array brackets
+					type = elementType + new string ('[', arrayDims) + new string (']', arrayDims);
+					break;
+				default:
+					type = "Object";
+					idx++;
+					break;
 			}
 
 			@params.Add ($"{type} p{paramNum++}");
-			idx++;
 		}
 
 		return string.Join (", ", @params);
@@ -1497,14 +1557,15 @@ public class {{className}}
 	}
 
 	/// <summary>
-	/// Generates <code>[TypeMap("javaName", typeof(type), typeof(type))]</code>
+	/// Generates <code>[TypeMap("javaName", typeof(proxyType), typeof(type))]</code>
+	/// where proxyType is the runtime target (returned by typemap lookup) and type is the trim target (preserved by linker).
 	/// </summary>
-	CustomAttribute GenerateTypeMapAttribute (TypeDefinition type, string javaName)
+	CustomAttribute GenerateTypeMapAttribute (TypeDefinition type, TypeDefinition proxyType, string javaName)
 	{
 		CustomAttribute ca = new (TypeMapAttributeCtor);
 		ca.ConstructorArguments.Add (new (SystemStringType, javaName));
-		ca.ConstructorArguments.Add (new (SystemTypeType, AssemblyToInjectTypeMap.MainModule.ImportReference(type)));
-		ca.ConstructorArguments.Add (new (SystemTypeType, AssemblyToInjectTypeMap.MainModule.ImportReference(type)));
+		ca.ConstructorArguments.Add (new (SystemTypeType, AssemblyToInjectTypeMap.MainModule.ImportReference(proxyType)));  // target: runtime lookup returns proxy
+		ca.ConstructorArguments.Add (new (SystemTypeType, AssemblyToInjectTypeMap.MainModule.ImportReference(type)));       // trimTarget: linker preserves original type
 		return ca;
 	}
 
@@ -1553,10 +1614,11 @@ public class {{className}}
 
 		// Create the proxy type extending JavaPeerProxy (which extends Attribute)
 		// Note: JavaPeerProxy already has [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = false)]
+		// The proxy type MUST be public so that the runtime can instantiate it when loading attributes from other assemblies
 		var proxyType = new TypeDefinition (
 			mappedType.Module.Assembly.Name.Name + "._." + declaringType.Namespace,
 			mappedName.ToString () + "_Proxy",
-			TypeAttributes.Class | TypeAttributes.NotPublic | TypeAttributes.Sealed,
+			TypeAttributes.Class | TypeAttributes.Public | TypeAttributes.Sealed,
 			JavaPeerProxyType);
 
 		// Add [TypeMapProxy("javaClassName")] attribute
@@ -1586,7 +1648,7 @@ public class {{className}}
 		}
 
 		// Generate activation UCO wrappers for constructors
-		// TEMPORARILY DISABLED - investigating IL generation issue
+		// TEMP DISABLED: Activation UCO wrappers have more complex IL generation issues
 		// GenerateActivationUcoWrappers (proxyType, mappedType, constructors);
 
 		// Always generate GetFunctionPointer as it is abstract in JavaPeerProxy
@@ -1689,6 +1751,8 @@ public class {{className}}
 				$"GenerateActivationUcoWrappers: SKIP - no JniObjectReference ctor for {mappedType.FullName}, available ctors: {string.Join(", ", jniObjectRefType.Methods.Where(m => m.IsConstructor).Select(m => $"{m.Name}({string.Join(", ", m.Parameters.Select(p => p.ParameterType.FullName))})"))}\\n");
 			return;
 		}
+		File.AppendAllText ("/tmp/illink-debug.log",
+			$"Using JniObjectReference ctor with {jniObjectRefCtor.Parameters.Count} params: {string.Join(", ", jniObjectRefCtor.Parameters.Select(p => p.ParameterType.FullName))}\n");
 		var jniObjectRefCtorRef = AssemblyToInjectTypeMap.MainModule.ImportReference (jniObjectRefCtor);
 		var jniObjectRefTypeRef = AssemblyToInjectTypeMap.MainModule.ImportReference (jniObjectRefType);
 
@@ -1816,6 +1880,43 @@ public class {{className}}
 			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloc, jniObjectRefVar);
 			il.Emit (Mono.Cecil.Cil.OpCodes.Callvirt, setPeerReferenceRef);
 
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
+
+			return wrapperMethod;
+
+			/* FULL IMPLEMENTATION - DISABLED FOR TESTING
+			// Local variables
+			// [0] instance : T (the newly created object)
+			// [1] jniObjectRef : JniObjectReference
+			var instanceVar2 = new VariableDefinition (mappedTypeRef);
+			body.Variables.Add (instanceVar2);
+			var jniObjectRefVar2 = new VariableDefinition (jniObjectRefTypeRef);
+			body.Variables.Add (jniObjectRefVar2);
+
+			// 1. var instance = (T)RuntimeHelpers.GetUninitializedObject(typeof(T));
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldtoken, mappedTypeRef);
+			// Call Type.GetTypeFromHandle
+			var getTypeFromHandleMethod2 = Context.GetType ("System.Type").Methods.FirstOrDefault (m =>
+				m.Name == "GetTypeFromHandle" && m.Parameters.Count == 1);
+			if (getTypeFromHandleMethod2 == null) {
+				return null;
+			}
+			il.Emit (Mono.Cecil.Cil.OpCodes.Call, AssemblyToInjectTypeMap.MainModule.ImportReference (getTypeFromHandleMethod2));
+			il.Emit (Mono.Cecil.Cil.OpCodes.Call, getUninitializedObjectRef);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Castclass, mappedTypeRef);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Stloc, instanceVar2);
+
+			// 2. ((IJavaPeerable)instance).SetPeerReference(new JniObjectReference(jobject, JniObjectReferenceType.Local));
+			// First, initialize the struct variable
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloca, jniObjectRefVar);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_1); // jobject (IntPtr)
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_I4_1); // JniObjectReferenceType.Local = 1
+			il.Emit (Mono.Cecil.Cil.OpCodes.Call, jniObjectRefCtorRef);
+			// Now call SetPeerReference
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloc, instanceVar);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloc, jniObjectRefVar);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Callvirt, setPeerReferenceRef);
+
 			// 3. instance..ctor(args...)
 			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloc, instanceVar);
 			// TODO: Load constructor arguments if any
@@ -1825,6 +1926,7 @@ public class {{className}}
 			il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
 
 			return wrapperMethod;
+			*/
 		} catch (Exception ex) {
 			Context.LogMessage (MessageContainer.CreateInfoMessage (
 				$"Failed to generate activation UCO for {mappedType.FullName}..ctor: {ex.Message}"));

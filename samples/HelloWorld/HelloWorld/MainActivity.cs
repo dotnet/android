@@ -1,4 +1,4 @@
-﻿using Android.App;
+using Android.App;
 using Android.Widget;
 using Android.OS;
 using System;
@@ -16,6 +16,16 @@ namespace HelloWorld
 	public class MainActivity : Activity
 	{
 		int count = 1;
+
+		// Activation constructor for AOT-safe peer creation
+		protected MainActivity (IntPtr javaReference, JniHandleOwnership transfer)
+			: base (javaReference, transfer)
+		{
+		}
+
+		public MainActivity ()
+		{
+		}
 
 		// Manual connector to test TypeMaps marshal methods
 		[Register ("onCreate", "(Landroid/os/Bundle;)V", "n_onCreate")]
