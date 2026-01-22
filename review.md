@@ -16,4 +16,35 @@
         - we want to be completely independent of the existing codegen which might have unexpected sideeffects
         - we WANT to call constructors through java native methods with `get_function_pointer` resolution of a special UCO which calls the constructors, as described in the spec
     - [X] `xamarin_typemap_init` method should be renamed, let's not use the `xamarin` prefix in new code. also, why is this declared in LLVM IR and not in C++ code?
-    - [ ] implement "// TODO: Implement proper JI constructor support"
+    - [X] implement "// TODO: Implement proper JI constructor support"
+    - [X] if ctor for `GenerateCreateInstanceMethod` is not found, we should definitely have logging and possibly throw exception -- with the exception of STATIC classes, I don't think there's a scenario where there isn't a ctor? maybe we should still generate the method, but when called, it would throw an exception?
+- [~] JavaPeerProxy
+    - [~] do we need TargetType in JavaPeerProxy?
+    - [ ] if we need TargetType, does it need DynamicallyAccessedMembers? if not, drop it + drop it from the TypeMap class
+- [ ] I see this runtime crash:
+    ```
+    --------- beginning of crash
+    01-22 09:54:59.566 18667 18667 E AndroidRuntime: FATAL EXCEPTION: main
+    01-22 09:54:59.566 18667 18667 E AndroidRuntime: Process: com.xamarin.android.helloworld, PID: 18667
+    01-22 09:54:59.566 18667 18667 E AndroidRuntime: java.lang.UnsatisfiedLinkError: No implementation found for void mono.android.TypeManager.n_activate(java.lang.String, java.lang.String, java.lang.Object, java.lang.Object[]) (tried Java_mono_android_TypeManager_n_1activate and Java_mono_android_TypeManager_n_1activate__Ljava_lang_String_2Ljava_lang_String_2Ljava_lang_Object_2_3Ljava_lang_Object_2)
+    01-22 09:54:59.566 18667 18667 E AndroidRuntime:        at mono.android.TypeManager.n_activate(Native Method)
+    01-22 09:54:59.566 18667 18667 E AndroidRuntime:        at mono.android.TypeManager.Activate(TypeManager.java:7)
+    01-22 09:54:59.566 18667 18667 E AndroidRuntime:        at example.MainActivity.<init>(MainActivity.java:23)
+    01-22 09:54:59.566 18667 18667 E AndroidRuntime:        at java.lang.Class.newInstance(Native Method)
+    01-22 09:54:59.566 18667 18667 E AndroidRuntime:        at android.app.AppComponentFactory.instantiateActivity(AppComponentFactory.java:95)
+    01-22 09:54:59.566 18667 18667 E AndroidRuntime:        at android.app.Instrumentation.newActivity(Instrumentation.java:1339)
+    01-22 09:54:59.566 18667 18667 E AndroidRuntime:        at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:3538)
+    01-22 09:54:59.566 18667 18667 E AndroidRuntime:        at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:3782)
+    01-22 09:54:59.566 18667 18667 E AndroidRuntime:        at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:101)
+    01-22 09:54:59.566 18667 18667 E AndroidRuntime:        at android.app.servertransaction.TransactionExecutor.executeCallbacks(TransactionExecutor.java:138)
+    01-22 09:54:59.566 18667 18667 E AndroidRuntime:        at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:95)
+    01-22 09:54:59.566 18667 18667 E AndroidRuntime:        at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2307)
+    01-22 09:54:59.566 18667 18667 E AndroidRuntime:        at android.os.Handler.dispatchMessage(Handler.java:106)
+    01-22 09:54:59.566 18667 18667 E AndroidRuntime:        at android.os.Looper.loopOnce(Looper.java:201)
+    01-22 09:54:59.566 18667 18667 E AndroidRuntime:        at android.os.Looper.loop(Looper.java:288)
+    01-22 09:54:59.566 18667 18667 E AndroidRuntime:        at android.app.ActivityThread.main(ActivityThread.java:7924)
+    01-22 09:54:59.566 18667 18667 E AndroidRuntime:        at java.lang.reflect.Method.invoke(Native Method)
+    01-22 09:54:59.566 18667 18667 E AndroidRuntime:        at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:548)
+    01-22 09:54:59.566 18667 18667 E AndroidRuntime:        at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:936)
+    ```
+    - it appears that the TypeManager.java class is included in the app even though we're using the new typemap. this type manager class is not compatible with our changes

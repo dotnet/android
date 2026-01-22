@@ -1819,6 +1819,12 @@ public class GenerateTypeMapAttributesStep : BaseStep
 	/// </summary>
 	void GenerateCreateInstanceMethod (TypeDefinition proxyType, TypeDefinition mappedType)
 	{
+		// Skip static classes - they can't have instances
+		if (mappedType.IsAbstract && mappedType.IsSealed) {
+			// Static class in C# is abstract sealed - no need for CreateInstance
+			return;
+		}
+
 		// Find the (IntPtr, JniHandleOwnership) constructor on the mapped type
 		var ctor = mappedType.Methods.FirstOrDefault (m =>
 			m.IsConstructor && !m.IsStatic &&
@@ -1836,13 +1842,9 @@ public class GenerateTypeMapAttributesStep : BaseStep
 				m.Parameters [0].ParameterType.GetElementType ().FullName == "Java.Interop.JniObjectReference" &&
 				m.Parameters [1].ParameterType.FullName == "Java.Interop.JniObjectReferenceOptions");
 
-			if (ctor == null) {
-				// No suitable constructor found - skip generation
-				// Context.LogMessage (MessageContainer.CreateInfoMessage (
-				//     $"No suitable constructor for CreateInstance on {mappedType.FullName}"));
-				return;
+			if (ctor != null) {
+				isJIConstructor = true;
 			}
-			isJIConstructor = true;
 		}
 
 		// Get the return type (IJavaPeerable)
@@ -1863,6 +1865,30 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		method.Parameters.Add (new ParameterDefinition ("transfer", ParameterAttributes.None, jniHandleOwnershipType));
 
 		var il = method.Body.GetILProcessor ();
+
+		// No suitable constructor found - generate method that throws
+		if (ctor == null) {
+			// throw new NotSupportedException($"No suitable constructor found for {mappedType.FullName}")
+			var notSupportedExTypeDef = Context.GetType ("System.NotSupportedException");
+			var notSupportedExCtor = notSupportedExTypeDef.Methods.FirstOrDefault (m =>
+				m.IsConstructor && !m.IsStatic &&
+				m.Parameters.Count == 1 &&
+				m.Parameters [0].ParameterType.FullName == "System.String");
+			
+			if (notSupportedExCtor != null) {
+				var notSupportedExCtorRef = AssemblyToInjectTypeMap.MainModule.ImportReference (notSupportedExCtor);
+				il.Emit (Mono.Cecil.Cil.OpCodes.Ldstr, $"No suitable constructor found for type '{mappedType.FullName}'. Expected (IntPtr, JniHandleOwnership) or (ref JniObjectReference, JniObjectReferenceOptions) constructor.");
+				il.Emit (Mono.Cecil.Cil.OpCodes.Newobj, notSupportedExCtorRef);
+				il.Emit (Mono.Cecil.Cil.OpCodes.Throw);
+			} else {
+				// Fallback: just return null
+				il.Emit (Mono.Cecil.Cil.OpCodes.Ldnull);
+				il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
+			}
+			
+			proxyType.Methods.Add (method);
+			return;
+		}
 
 		// Import the constructor reference
 		var ctorRef = AssemblyToInjectTypeMap.MainModule.ImportReference (ctor);

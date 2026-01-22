@@ -78,7 +78,6 @@ const std::vector<std::string> internal_pinvoke_names = {
 //	"send_uninterrupted",
 //	"set_world_accessable",
 //	"xamarin_app_init",
-// "typemap_init", // No longer needed - get_function_pointer is set directly from JNIEnvInit.Initialize
 
 // We can treat liblog as "internal", since we link against it
 	"__android_log_print",
