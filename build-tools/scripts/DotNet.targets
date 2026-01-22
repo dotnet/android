@@ -111,6 +111,10 @@
       <_WLManifest Condition=" '$(MauiUseLocalPacks)' != 'true' " Include="$(_TempDirectory)\microsoft.net.sdk.maui.manifest-$(MauiVersionBand)\$(MauiVersion)\data\WorkloadManifest.*" />
       <_WLManifest Condition=" '$(MauiUseLocalPacks)' == 'true' " Include="$(_TempDirectory)\data\*" />
     </ItemGroup>
+    <Message Importance="High" Text="InstallMaui: Found manifest nupkg(s): @(_WLManifestPack)" />
+    <Message Importance="High" Text="InstallMaui: Copying WorkloadManifest files: @(_WLManifest)" />
+    <!-- Copy manifest to diagnostics folder if specified -->
+    <Copy Condition=" '$(MauiManifestDiagnosticsPath)' != '' " SourceFiles="@(_WLManifest)" DestinationFolder="$(MauiManifestDiagnosticsPath)" />
     <Copy SourceFiles="@(_WLManifest)" DestinationFolder="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\microsoft.net.sdk.maui" />
 
     <!-- Parse NuGet.config -->
