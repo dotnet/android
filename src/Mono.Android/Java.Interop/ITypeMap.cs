@@ -10,8 +10,6 @@ namespace Android.Runtime
 	/// </summary>
 	interface ITypeMap
 	{
-		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-
 		/// <summary>
 		/// Tries to get all .NET types for a given JNI type name.
 		/// Returns true if at least one type was found.
@@ -21,7 +19,7 @@ namespace Android.Runtime
 		/// <summary>
 		/// Tries to get the invoker type for an interface or abstract type.
 		/// </summary>
-		bool TryGetInvokerType (Type type, [NotNullWhen (true)][DynamicallyAccessedMembers (Constructors)] out Type? invokerType);
+		bool TryGetInvokerType (Type type, [NotNullWhen (true)] out Type? invokerType);
 
 		/// <summary>
 		/// Tries to get the JNI type name for a given .NET type.
@@ -47,7 +45,6 @@ namespace Android.Runtime
 		IJavaPeerable? CreatePeer (
 			IntPtr handle,
 			JniHandleOwnership transfer,
-			[DynamicallyAccessedMembers (Constructors)]
 			Type? targetType);
 
 		/// <summary>

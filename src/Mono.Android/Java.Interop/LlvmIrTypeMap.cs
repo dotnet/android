@@ -18,9 +18,6 @@ namespace Java.Interop
 	{
 		[ThreadStatic]
 		static byte[]? mvid_bytes;
-
-		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-
 		static readonly Type[] XAConstructorSignature = [typeof (IntPtr), typeof (JniHandleOwnership)];
 		static readonly Type[] JIConstructorSignature = [typeof (JniObjectReference).MakeByRefType (), typeof (JniObjectReferenceOptions)];
 
@@ -173,7 +170,6 @@ namespace Java.Interop
 		public IJavaPeerable? CreatePeer (
 			IntPtr handle,
 			JniHandleOwnership transfer,
-			[DynamicallyAccessedMembers (Constructors)]
 			Type? targetType)
 		{
 			Type? type = null;
@@ -274,7 +270,6 @@ namespace Java.Interop
 		}
 
 		static IJavaPeerable CreateProxy (
-				[DynamicallyAccessedMembers (Constructors)]
 				Type type,
 				IntPtr handle,
 				JniHandleOwnership transfer)
@@ -301,9 +296,7 @@ namespace Java.Interop
 					"No constructor found for " + type.FullName + "::.ctor(System.IntPtr, Android.Runtime.JniHandleOwnership)",
 					TypeManager.CreateJavaLocationException ());
 
-			static IJavaPeerable GetUninitializedObject (
-					[DynamicallyAccessedMembers (Constructors)]
-					Type type)
+			static IJavaPeerable GetUninitializedObject (Type type)
 			{
 				var v = (IJavaPeerable) RuntimeHelpers.GetUninitializedObject (type);
 				v.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);

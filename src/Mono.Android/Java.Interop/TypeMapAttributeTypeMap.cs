@@ -129,14 +129,11 @@ namespace Android.Runtime
 			}
 		}
 
-		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-
 		/// <inheritdoc/>
 		/// TODO: This needs to use JavaPeerProxy to create the instance through generated factory method
 		public IJavaPeerable? CreatePeer (
 			IntPtr handle,
 			JniHandleOwnership transfer,
-			[DynamicallyAccessedMembers (Constructors)]
 			Type? targetType)
 		{
 			Log ($"CreatePeer: handle=0x{handle:x}, targetType={targetType?.FullName ?? "null"}");
@@ -206,25 +203,9 @@ namespace Android.Runtime
 				throw new ArgumentException ($"Could not determine Java type corresponding to `{type.AssemblyQualifiedName}`.", nameof (targetType));
 			}
 
-			JniObjectReference typeClass = default;
-			JniObjectReference handleClass = default;
-			try {
-				try {
-					typeClass = JniEnvironment.Types.FindClass (jniName);
-				} catch (Exception e) {
-					throw new ArgumentException ($"Could not find Java class `{jniName}`.",
-							nameof (targetType),
-							e);
-				}
-
-				handleClass = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
-				if (!JniEnvironment.Types.IsAssignableFrom (handleClass, typeClass)) {
-					Log ($"CreatePeer: Handle class is not assignable to {jniName}, returning null");
-					return null;
-				}
-			} finally {
-				JniObjectReference.Dispose (ref handleClass);
-				JniObjectReference.Dispose (ref typeClass);
+			if (!IsJavaTypeAssignableFrom (handle, jniName)) {
+				Log ($"CreatePeer: Handle class is not assignable to {jniName}, returning null");
+				return null;
 			}
 
 			Log ($"CreatePeer: Activating instance of {type.FullName}...");
@@ -241,6 +222,27 @@ namespace Android.Runtime
 			}
 
 			return result;
+
+			static bool IsJavaTypeAssignableFrom (IntPtr handle, string jniName)
+			{
+				JniObjectReference typeClass = default;
+				try {
+					typeClass = JniEnvironment.Types.FindClass (jniName);
+				} catch (Exception e) {
+					throw new ArgumentException ($"Could not find Java class `{jniName}`.", nameof (targetType), e);
+				}
+
+				JniObjectReference handleClass = default;
+				try {
+					handleClass = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
+					return JniEnvironment.Types.IsAssignableFrom (handleClass, typeClass);
+				} finally {
+					JniObjectReference.Dispose (ref handleClass);
+					JniObjectReference.Dispose (ref typeClass);
+				}
+
+				return true;
+			}
 
 			static string? GetClassNameFromJavaClassHandle (IntPtr class_ptr)
 			{
@@ -261,7 +263,6 @@ namespace Android.Runtime
 		/// </summary>
 		/// <returns>true if the instance was created successfully; false if no proxy or factory was found.</returns>
 		bool TryCreateInstance (
-			[DynamicallyAccessedMembers (Constructors)]
 			Type type,
 			IntPtr handle,
 			JniHandleOwnership transfer,
