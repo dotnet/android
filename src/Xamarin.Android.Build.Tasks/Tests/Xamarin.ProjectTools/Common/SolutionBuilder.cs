@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
@@ -31,7 +31,7 @@ namespace Xamarin.ProjectTools
 			sb.AppendFormat ("Microsoft Visual Studio Solution File, Format Version {0}\r\n", "12.00");
 			sb.AppendFormat ("# Visual Studio {0}\r\n", "2012");
 			foreach (var p in Projects) {
-				sb.AppendFormat ("Project(\"{{{0}}}\") = \"{1}\", \"{2}\", \"{{{3}}}\"\r\n", p.ProjectTypeGuid, p.ProjectName, 
+				sb.AppendFormat ("Project(\"{{{0}}}\") = \"{1}\", \"{2}\", \"{{{3}}}\"\r\n", p.ProjectTypeGuid, p.ProjectName,
 					Path.Combine(p.ProjectName,p.ProjectFilePath), p.ProjectGuid);
 				sb.Append ("EndProject\r\n");
 			}
@@ -102,4 +102,3 @@ namespace Xamarin.ProjectTools
 		}
 	}
 }
-
