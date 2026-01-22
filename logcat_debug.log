@@ -1,0 +1,1118 @@
+--------- beginning of kernel
+01-21 22:50:06.835   157   157 I logd    : logdr: UID=2000 GID=2000 PID=5449 b tail=0 logMask=99 pid=0 start=0ns deadline=0ns
+--------- beginning of system
+01-21 22:50:11.732   551  1360 D CompatibilityChangeReporter: Compat change id reported: 161252188; UID 10176; state: DISABLED
+01-21 22:50:11.733   551  1360 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=com.xamarin.android.helloworld/example.MainActivity} from uid 2000
+01-21 22:50:11.733   551  1360 D CompatibilityChangeReporter: Compat change id reported: 265464455; UID 10176; state: DISABLED
+01-21 22:50:11.733   551  1360 D CompatibilityChangeReporter: Compat change id reported: 265452344; UID 10176; state: DISABLED
+01-21 22:50:11.733   551  1360 D CompatibilityChangeReporter: Compat change id reported: 266124927; UID 10176; state: DISABLED
+01-21 22:50:11.733   551  1360 D CompatibilityChangeReporter: Compat change id reported: 265451093; UID 10176; state: DISABLED
+01-21 22:50:11.733   551  1360 D CompatibilityChangeReporter: Compat change id reported: 265456536; UID 10176; state: DISABLED
+01-21 22:50:11.733   551  1360 D CompatibilityChangeReporter: Compat change id reported: 255940284; UID 10176; state: DISABLED
+01-21 22:50:11.733   551  1360 D CompatibilityChangeReporter: Compat change id reported: 236283604; UID 10176; state: DISABLED
+01-21 22:50:11.733   551  1360 D CompatibilityChangeReporter: Compat change id reported: 263959004; UID 10176; state: DISABLED
+01-21 22:50:11.733   551  1360 D CompatibilityChangeReporter: Compat change id reported: 264304459; UID 10176; state: DISABLED
+01-21 22:50:11.734   551  1360 D CompatibilityChangeReporter: Compat change id reported: 264301586; UID 10176; state: DISABLED
+01-21 22:50:11.734   551  1360 D CompatibilityChangeReporter: Compat change id reported: 254631730; UID 10176; state: DISABLED
+01-21 22:50:11.734   551  1360 D CompatibilityChangeReporter: Compat change id reported: 273509367; UID 10176; state: DISABLED
+01-21 22:50:11.734   551  1360 D CompatibilityChangeReporter: Compat change id reported: 263259275; UID 10176; state: DISABLED
+01-21 22:50:11.734   551  1360 D CompatibilityChangeReporter: Compat change id reported: 194480991; UID 10176; state: ENABLED
+01-21 22:50:11.734   551  1360 D CompatibilityChangeReporter: Compat change id reported: 174042980; UID 10176; state: DISABLED
+01-21 22:50:11.760   551  1360 D CompatibilityChangeReporter: Compat change id reported: 184838306; UID 10176; state: DISABLED
+01-21 22:50:11.761   551  1360 D CompatibilityChangeReporter: Compat change id reported: 185004937; UID 10176; state: DISABLED
+01-21 22:50:11.762   551  1360 D CompatibilityChangeReporter: Compat change id reported: 181136395; UID 10176; state: DISABLED
+01-21 22:50:11.762   551  1360 D CompatibilityChangeReporter: Compat change id reported: 174042936; UID 10176; state: DISABLED
+01-21 22:50:11.763   551  1360 D CompatibilityChangeReporter: Compat change id reported: 197654537; UID 10176; state: ENABLED
+01-21 22:50:11.764   551  1360 D CompatibilityChangeReporter: Compat change id reported: 205907456; UID 10176; state: ENABLED
+01-21 22:50:11.776   551   596 D CompatibilityChangeReporter: Compat change id reported: 135634846; UID 10176; state: DISABLED
+01-21 22:50:11.776   551   596 D CompatibilityChangeReporter: Compat change id reported: 177438394; UID 10176; state: DISABLED
+01-21 22:50:11.776   551   596 D CompatibilityChangeReporter: Compat change id reported: 135772972; UID 10176; state: DISABLED
+01-21 22:50:11.776   551   596 D CompatibilityChangeReporter: Compat change id reported: 135754954; UID 10176; state: ENABLED
+01-21 22:50:11.776   551   607 D CompatibilityChangeReporter: Compat change id reported: 143937733; UID 10176; state: ENABLED
+--------- beginning of main
+01-21 22:50:11.799   337   337 I BpBinder: onLastStrongRef automatically unlinking death recipients: <uncached descriptor>
+01-21 22:50:11.801   833  1105 W Parcel  : Expecting binder but got null!
+01-21 22:50:11.807   294   294 D Zygote  : Forked child process 5458
+01-21 22:50:11.808  1201  1201 D MainContentCaptureSession: Flushing 1 event(s) for act:com.google.android.apps.nexuslauncher/.NexusLauncherActivity [state=2 (ACTIVE), disabled=false], reason=FULL
+01-21 22:50:11.812   551   607 I ActivityManager: Start proc 5458:com.xamarin.android.helloworld/u0a176 for next-top-activity {com.xamarin.android.helloworld/example.MainActivity}
+01-21 22:50:11.816   551   661 D CompatibilityChangeReporter: Compat change id reported: 168419799; UID 10176; state: DISABLED
+01-21 22:50:11.816   551   661 D CompatibilityChangeReporter: Compat change id reported: 273564678; UID 10176; state: DISABLED
+01-21 22:50:11.816   833  1089 D SplashScreenView: Build android.window.SplashScreenView{e599923 V.E...... ......ID 0,0-0,0}
+01-21 22:50:11.816   833  1089 D SplashScreenView: Icon: view: android.widget.ImageView{ce10e20 V.ED..... ......I. 0,0-0,0 #10204dd android:id/splashscreen_icon_view} drawable: com.android.wm.shell.startingsurface.SplashscreenIconDrawableFactory$ImmobileIconDrawable@ae0f3d9 size: 440
+01-21 22:50:11.816   833  1089 D SplashScreenView: Branding: view: android.view.View{eea219e G.ED..... ......I. 0,0-0,0 #10204dc android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+01-21 22:50:11.827  5458  5458 I roid.helloworld: Using CollectorTypeCC GC.
+01-21 22:50:11.832   551  1360 D CoreBackPreview: Window{15f1c6 u0 Splash Screen com.xamarin.android.helloworld}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@b995cb4, mPriority=0}
+01-21 22:50:11.859  1201  1613 D EGL_emulation: app_time_stats: avg=21498.98ms min=8.39ms max=150253.12ms count=7
+01-21 22:50:11.876   365   430 I adbd    : jdwp connection from 5458
+01-21 22:50:11.883   833  1105 E OpenGLRenderer: Unable to match the desired swap behavior.
+01-21 22:50:11.938  5458  5458 D CompatibilityChangeReporter: Compat change id reported: 171979766; UID 10176; state: ENABLED
+01-21 22:50:11.955   551   661 W ActivityTaskManager: takeTaskSnapshot: taskId=13 not found or not visible
+01-21 22:50:11.980  5458  5458 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~s__UGu3z7UpQF60eUdrA1Q==/com.xamarin.android.helloworld-9ASKHy_GHjd9malbU1i6Zw==/base.apk. target_sdk_version=36, uses_libraries=, library_path=/data/app/~~s__UGu3z7UpQF60eUdrA1Q==/com.xamarin.android.helloworld-9ASKHy_GHjd9malbU1i6Zw==/lib/arm64:/data/app/~~s__UGu3z7UpQF60eUdrA1Q==/com.xamarin.android.helloworld-9ASKHy_GHjd9malbU1i6Zw==/base.apk!/lib/arm64-v8a, permitted_path=/data:/mnt/expand:/data/user/0/com.xamarin.android.helloworld
+01-21 22:50:12.020  5458  5458 V GraphicsEnvironment: ANGLE Developer option for 'com.xamarin.android.helloworld' set to: 'default'
+01-21 22:50:12.022  5458  5458 V GraphicsEnvironment: ANGLE GameManagerService for com.xamarin.android.helloworld: false
+01-21 22:50:12.022  5458  5458 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+01-21 22:50:12.026  5458  5458 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+01-21 22:50:12.027  5458  5458 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+01-21 22:50:12.029   551   918 D CompatibilityChangeReporter: Compat change id reported: 161145287; UID 10176; state: DISABLED
+01-21 22:50:12.161   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622e79f0
+01-21 22:50:12.255  5458  5458 D DOTNET  : AndroidCryptoNative_InitLibraryOnLoad: jint AndroidCryptoNative_InitLibraryOnLoad(JavaVM *, void *) in /__w/1/s/src/runtime/src/native/libs/System.Security.Cryptography.Native.Android/pal_jni.c
+01-21 22:50:12.256  5458  5458 D DOTNET  : GetOptionalClassGRef: optional class com/android/org/conscrypt/OpenSSLEngineImpl was not found
+01-21 22:50:12.285   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622ea570
+01-21 22:50:12.285   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622eab10
+01-21 22:50:12.285   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622eab10
+01-21 22:50:12.285   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622ea570
+01-21 22:50:12.300   833  1105 D EGL_emulation: app_time_stats: avg=8796.70ms min=3.16ms max=149252.38ms count=17
+01-21 22:50:12.378   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622eaa50
+01-21 22:50:12.378   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622eaa50
+01-21 22:50:12.378   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622eaa50
+01-21 22:50:12.414  5458  5458 I monodroid-typemap: TypeMapAttributeTypeMap: Initializing...
+01-21 22:50:12.461  5458  5458 I monodroid-typemap: TypeMapAttributeTypeMap: Initialized external and invoker type mappings
+01-21 22:50:12.509  5458  5484 D libEGL  : loaded /vendor/lib64/egl/libEGL_emulation.so
+01-21 22:50:12.511  5458  5484 D libEGL  : loaded /vendor/lib64/egl/libGLESv1_CM_emulation.so
+01-21 22:50:12.514  5458  5484 D libEGL  : loaded /vendor/lib64/egl/libGLESv2_emulation.so
+01-21 22:50:12.561  5458  5458 I monodroid-typemap: TryGetJniNameForType: HelloWorld.MainActivity -> 'example/MainActivity' (from [Register])
+01-21 22:50:12.562  5458  5458 I monodroid: RegisterNativeMembers: type=HelloWorld.MainActivity, methods=n_onCreate:(Landroid/os/Bundle;)V:GetOnCreate_Landroid_os_Bundle_Handler
+01-21 22:50:12.562  5458  5458 I monodroid: n_onResume:()V:GetOnResumeHandler
+01-21 22:50:12.562  5458  5458 I monodroid: 
+01-21 22:50:12.563  5458  5458 I monodroid: DynamicNativeMembersRegistration: registered n_onCreate for HelloWorld.MainActivity
+01-21 22:50:12.563  5458  5458 I monodroid: DynamicNativeMembersRegistration: registered n_onResume for HelloWorld.MainActivity
+01-21 22:50:12.563  5458  5458 I monodroid: DynamicNativeMembersRegistration: calling RegisterNatives with 2 methods
+01-21 22:50:12.567  5458  5458 I monodroid-typemap: TryGetJniNameForType: Java.Interop.TypeManager+JavaTypeManager -> 'mono/android/TypeManager' (from [Register])
+01-21 22:50:12.567  5458  5458 I monodroid: RegisterNativeMembers: type=Java.Interop.TypeManager+JavaTypeManager, methods=n_activate:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;[Ljava/lang/Object;)V:GetActivateHandler
+01-21 22:50:12.568  5458  5458 I monodroid: 
+01-21 22:50:12.568  5458  5458 I monodroid: DynamicNativeMembersRegistration: registered n_activate for Java.Interop.TypeManager+JavaTypeManager
+01-21 22:50:12.568  5458  5458 I monodroid: DynamicNativeMembersRegistration: calling RegisterNatives with 1 methods
+01-21 22:50:12.669  5458  5458 D CompatibilityChangeReporter: Compat change id reported: 210923482; UID 10176; state: ENABLED
+01-21 22:50:12.673  5458  5458 I monodroid-typemap: CreatePeer: handle=0xcd, targetType=Android.Views.View
+01-21 22:50:12.674  5458  5458 I monodroid-typemap: CreatePeer: Found type Android.Widget.Button for Java class 'android/widget/Button'
+01-21 22:50:12.674  5458  5458 I monodroid-typemap: TryGetJniNameForType: Android.Widget.Button -> 'android/widget/Button' (from [Register])
+01-21 22:50:12.674  5458  5458 I monodroid-typemap: CreatePeer: Activating instance of Android.Widget.Button...
+01-21 22:50:12.675  5458  5458 I monodroid-typemap: CreatePeer: SUCCESS - Created Android.Widget.Button for Java class 'android/widget/Button'
+01-21 22:50:12.701  5458  5458 I monodroid-typemap: TryGetJniNameForType: Android.Views.View+IOnClickListenerImplementor -> 'mono/android/view/View_OnClickListenerImplementor' (from [Register])
+01-21 22:50:12.702  5458  5458 I monodroid-typemap: TryGetJniNameForType: Android.Views.View+IOnClickListenerImplementor -> 'mono/android/view/View_OnClickListenerImplementor' (from [Register])
+01-21 22:50:12.702  5458  5458 I monodroid: RegisterNativeMembers: type=Android.Views.View+IOnClickListenerImplementor, methods=n_onClick:(Landroid/view/View;)V:GetOnClick_Landroid_view_View_Handler:Android.Views.View+IOnClickListenerInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+01-21 22:50:12.702  5458  5458 I monodroid: 
+01-21 22:50:12.702  5458  5458 I monodroid: DynamicNativeMembersRegistration: registered n_onClick for Android.Views.View+IOnClickListenerImplementor
+01-21 22:50:12.702  5458  5458 I monodroid: DynamicNativeMembersRegistration: calling RegisterNatives with 1 methods
+01-21 22:50:12.720  5458  5458 I monodroid-test: Calling native stub Java_example_MainActivity_n_1onCreate__Landroid_os_Bundle_2V...
+--------- beginning of crash
+01-21 22:50:12.721  5458  5458 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0 in tid 5458 (roid.helloworld), pid 5458 (roid.helloworld)
+01-21 22:50:12.812  5487  5487 I crash_dump64: obtaining output fd from tombstoned, type: kDebuggerdTombstoneProto
+01-21 22:50:12.812   195   195 I tombstoned: received crash request for pid 5458
+01-21 22:50:12.815  5487  5487 I crash_dump64: performing dump of process 5458 (target tid = 5458)
+01-21 22:50:13.160   157   157 I logd    : logdr: UID=10176 GID=10176 PID=5487 n tail=0 logMask=8 pid=5458 start=0ns deadline=0ns
+01-21 22:50:13.163   157   157 I logd    : logdr: UID=10176 GID=10176 PID=5487 n tail=0 logMask=1 pid=5458 start=0ns deadline=0ns
+01-21 22:50:13.126  5487  5487 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+01-21 22:50:13.126  5487  5487 F DEBUG   : Build fingerprint: 'google/sdk_gphone64_arm64/emu64a:13/TE1A.240213.009/12342917:userdebug/dev-keys'
+01-21 22:50:13.126  5487  5487 F DEBUG   : Revision: '0'
+01-21 22:50:13.126  5487  5487 F DEBUG   : ABI: 'arm64'
+01-21 22:50:13.126  5487  5487 F DEBUG   : Timestamp: 2026-01-21 22:50:12.824362956+0100
+01-21 22:50:13.126  5487  5487 F DEBUG   : Process uptime: 2s
+01-21 22:50:13.126  5487  5487 F DEBUG   : Cmdline: com.xamarin.android.helloworld
+01-21 22:50:13.126  5487  5487 F DEBUG   : pid: 5458, tid: 5458, name: roid.helloworld  >>> com.xamarin.android.helloworld <<<
+01-21 22:50:13.126  5487  5487 F DEBUG   : uid: 10176
+01-21 22:50:13.126  5487  5487 F DEBUG   : tagged_addr_ctrl: 0000000000000001 (PR_TAGGED_ADDR_ENABLE)
+01-21 22:50:13.126  5487  5487 F DEBUG   : pac_enabled_keys: 000000000000000f (PR_PAC_APIAKEY, PR_PAC_APIBKEY, PR_PAC_APDAKEY, PR_PAC_APDBKEY)
+01-21 22:50:13.126  5487  5487 F DEBUG   : signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0000000000000000
+01-21 22:50:13.126  5487  5487 F DEBUG   : Cause: null pointer dereference
+01-21 22:50:13.126  5487  5487 F DEBUG   :     x0  0000006ef9ba5635  x1  0000000000000014  x2  0000000000000000  x3  0000006f01fd5130
+01-21 22:50:13.126  5487  5487 F DEBUG   :     x4  00000000000000e1  x5  0000006f7449dd7a  x6  646b6f6c6077645e  x7  7f7f7f7f7f7f7f7f
+01-21 22:50:13.126  5487  5487 F DEBUG   :     x8  0000006ef9ba5635  x9  0000000000000000  x10 0000000000000050  x11 000000000000000a
+01-21 22:50:13.126  5487  5487 F DEBUG   :     x12 0000006ef9c05894  x13 0056325f656c646e  x14 db979083e96dd4de  x15 ffffffffffffffff
+01-21 22:50:13.126  5487  5487 F DEBUG   :     x16 0000006f02b8b760  x17 0000007227d588a4  x18 00000072401b2000  x19 0000006f01fd5130
+01-21 22:50:13.126  5487  5487 F DEBUG   :     x20 b400007038b47f50  x21 00000000000039e6  x22 0000000000000000  x23 0000000000001070
+01-21 22:50:13.126  5487  5487 F DEBUG   :     x24 0000006f77a00880  x25 0000007ffbf15e30  x26 0000000018380001  x27 0000000000000000
+01-21 22:50:13.126  5487  5487 F DEBUG   :     x28 0000007ffbf15d30  x29 0000007ffbf15b50
+01-21 22:50:13.126  5487  5487 F DEBUG   :     lr  0000006ef9c058ec  sp  0000007ffbf15b20  pc  0000000000000000  pst 0000000060001000
+01-21 22:50:13.126  5487  5487 F DEBUG   : backtrace:
+01-21 22:50:13.126  5487  5487 F DEBUG   :       #00 pc 0000000000000000  <unknown>
+01-21 22:50:13.126  5487  5487 F DEBUG   :       #01 pc 00000000001ad8e8  /data/app/~~s__UGu3z7UpQF60eUdrA1Q==/com.xamarin.android.helloworld-9ASKHy_GHjd9malbU1i6Zw==/base.apk!libxamarin-app-clr.so (offset 0x28a4000) (Java_example_MainActivity_n_1onCreate__Landroid_os_Bundle_2V+84) (BuildId: 7e8e444fb44f1c2d8902033cce7676f1d94a5004)
+01-21 22:50:13.126  5487  5487 F DEBUG   :       #02 pc 0000000000000dac  <anonymous:6eb65f0000>
+01-21 22:50:13.150   195   195 E tombstoned: Tombstone written to: tombstone_19
+01-21 22:50:13.156   551  5493 I DropBoxManagerService: add tag=data_app_native_crash isTagEnabled=true flags=0x2
+01-21 22:50:13.156   551  5492 W ActivityTaskManager:   Force finishing activity com.xamarin.android.helloworld/example.MainActivity
+01-21 22:50:13.157   551   692 I BootReceiver: Copying /data/tombstones/tombstone_19 to DropBox (SYSTEM_TOMBSTONE)
+01-21 22:50:13.157   551   692 I DropBoxManagerService: add tag=SYSTEM_TOMBSTONE isTagEnabled=true flags=0x6
+01-21 22:50:13.200     1     1 I init    : Untracked pid 5487 exited with status 0
+01-21 22:50:13.200     1     1 I init    : Untracked pid 5487 did not have an associated service entry and will not be reaped
+01-21 22:50:13.219     1     1 I init    : Untracked pid 5489 exited with status 0
+01-21 22:50:13.219     1     1 I init    : Untracked pid 5489 did not have an associated service entry and will not be reaped
+01-21 22:50:13.185   551   692 I DropBoxManagerService: add tag=SYSTEM_TOMBSTONE_PROTO isTagEnabled=true flags=0x4
+01-21 22:50:13.220   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.stats.service.DropBoxEntryAddedReceiver
+01-21 22:50:13.222   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.chimera.GmsIntentOperationService$PersistentTrustedReceiver
+01-21 22:50:13.223   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.stats.service.DropBoxEntryAddedReceiver
+01-21 22:50:13.223   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.chimera.GmsIntentOperationService$PersistentTrustedReceiver
+01-21 22:50:13.223   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.stats.service.DropBoxEntryAddedReceiver
+01-21 22:50:13.223   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.chimera.GmsIntentOperationService$PersistentTrustedReceiver
+01-21 22:50:13.318    43    43 I binder  : undelivered transaction 251081, process died.
+01-21 22:50:13.276   337   337 I BpBinder: onLastStrongRef automatically unlinking death recipients: <uncached descriptor>
+01-21 22:50:13.278   551  2376 I ActivityManager: Process com.xamarin.android.helloworld (pid 5458) has died: fg  TOP 
+01-21 22:50:13.278   551   610 I libprocessgroup: Successfully killed process cgroup uid 10176 pid 5458 in 0ms
+01-21 22:50:13.321   294   294 I Zygote  : Process 5458 exited due to signal 11 (Segmentation fault)
+01-21 22:50:13.330   833  1105 D EGL_emulation: app_time_stats: avg=8.05ms min=2.37ms max=19.92ms count=49
+01-21 22:50:13.341  1201  1201 D MainContentCaptureSession: Flushing 1 event(s) for act:com.google.android.apps.nexuslauncher/.NexusLauncherActivity [state=2 (ACTIVE), disabled=false], reason=FULL
+01-21 22:50:13.426   551  3877 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_native_sync_v3 ANDROID_EMU_native_sync_v4 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+01-21 22:50:13.500   551  1548 W AppSearchIcing: icing-search-engine.cc:217: Error: 5, Message: Document (com.google.android.googlequicksearchbox$OneSearchZeroStateGoogleSuggestions/default, zp) not found.
+01-21 22:50:13.500  1201  1718 D OneSearchSuggestProvider: Established or reuse existing binder channel authority=com.google.android.googlequicksearchbox
+01-21 22:50:13.505   551   661 W system_server: Long monitor contention with owner android.anim (597) at void com.android.server.wm.WindowAnimator.lambda$new$1(long)(WindowAnimator.java:110) waiters=0 in android.content.res.CompatibilityInfo com.android.server.wm.ActivityTaskManagerService$LocalService.compatibilityInfoForPackage(android.content.pm.ApplicationInfo) for 121ms
+01-21 22:50:13.506   551   596 W system_server: Long monitor contention with owner binder:551_19 (2376) at void com.android.server.am.ActivityManagerService$AppDeathRecipient.binderDied()(ActivityManagerService.java:1479) waiters=1 in void com.android.server.am.ProcessRecord.updateProcessInfo(boolean, boolean, boolean) for 169ms
+01-21 22:50:13.546  1201  1613 E OpenGLRenderer: Unable to match the desired swap behavior.
+01-21 22:50:13.566   551  3877 W OpenGLRenderer: Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+01-21 22:50:13.570   551  3877 W OpenGLRenderer: Failed to initialize 101010-2 format, error = EGL_SUCCESS
+01-21 22:50:13.572   551  3877 D EGL_emulation: eglCreateContext: 0xb400007008b7aad0: maj 3 min 0 rcv 3
+01-21 22:50:13.587   551  3877 D EGL_emulation: eglMakeCurrent: 0xb400007008b7aad0: ver 3 0 (tinfo 0x7236d60080) (first time)
+01-21 22:50:13.616  1754  2094 E OpenGLRenderer: Unable to match the desired swap behavior.
+01-21 22:50:13.632  1538  2102 I AiAiEcho: Predicting[0]: 
+01-21 22:50:13.632  1538  2102 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata: 
+01-21 22:50:13.633  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface lockscreen with targets# 0
+01-21 22:50:13.633  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface home with targets# 0
+01-21 22:50:13.633  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface media_data_manager with targets# 0
+01-21 22:50:13.634   833   833 D SsMediaDataProvider: Forwarding Smartspace updates []
+01-21 22:50:13.684   551   596 W ActivityTaskManager: Activity top resumed state loss timeout for ActivityRecord{4003225 u0 com.xamarin.android.helloworld/example.MainActivity} t30 f} isExiting}
+01-21 22:50:13.729   551  2379 D CoreBackPreview: Window{15f1c6 u0 Splash Screen com.xamarin.android.helloworld EXITING}: Setting back callback null
+01-21 22:50:13.781   551   597 W InputManager-JNI: Input channel object '15f1c6 Splash Screen com.xamarin.android.helloworld (client)' was disposed without first being removed with the input manager!
+01-21 22:50:13.799   833  1105 D EGL_emulation: app_time_stats: avg=13734.13ms min=13734.13ms max=13734.13ms count=1
+01-21 22:50:13.804   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622e8890
+01-21 22:50:13.804   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622e9730
+01-21 22:50:13.804   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622ec2b0
+01-21 22:50:13.804   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622ec1f0
+01-21 22:50:13.804   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622ec2b0
+01-21 22:50:13.804   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622e8890
+01-21 22:50:13.819   551  1360 W WindowManager: Failed looking up window session=Session{79d51bc 833:u0a10157} callers=com.android.server.wm.WindowManagerService.windowForClientLocked:6050 com.android.server.wm.WindowManagerService.removeWindow:2076 com.android.server.wm.Session.remove:230 
+01-21 22:50:13.875  2899  2899 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3227 
+01-21 22:50:13.882  2899  2899 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2087 repeatCheckTimes = 0, unlocked = true
+01-21 22:50:13.883  2899  2899 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1877 onStartInput(EditorInfo{inputType=0x0(NULL) imeOptions=0x0 privateImeOptions=null actionName=UNSPECIFIED actionLabel=null actionId=0 initialSelStart=-1 initialSelEnd=-1 initialCapsMode=0x0 hintText=null label=null packageName=com.google.android.apps.nexuslauncher fieldId=-1 fieldName=null extras=null}, false)
+01-21 22:50:13.883  2899  2899 I GoogleInputMethodService: GoogleInputMethodService.shouldHideHeaderOnInitialState():4008 ShouldHideHeaderOnInitialState = false
+01-21 22:50:13.883  2899  2899 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2087 repeatCheckTimes = 2, unlocked = true
+01-21 22:50:14.333   833  1105 D EGL_emulation: app_time_stats: avg=13.85ms min=2.07ms max=122.58ms count=36
+01-21 22:50:15.338   833  1105 D EGL_emulation: app_time_stats: avg=9.93ms min=1.74ms max=63.13ms count=51
+01-21 22:50:37.235   551  2379 D WifiNl80211Manager: Scan result ready event
+01-21 22:50:37.235   551  2379 D WifiNative: Scan result ready event
+01-21 22:50:53.672   833  1105 D EGL_emulation: app_time_stats: avg=39845.08ms min=39845.08ms max=39845.08ms count=1
+01-21 22:51:00.008  1538  2102 I AiAiEcho: Predicting[0]: 
+01-21 22:51:00.009  1538  2102 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata: 
+01-21 22:51:00.012  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface lockscreen with targets# 0
+01-21 22:51:00.012  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface home with targets# 0
+01-21 22:51:00.014  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface media_data_manager with targets# 0
+01-21 22:51:00.045   833   833 D SsMediaDataProvider: Forwarding Smartspace updates []
+01-21 22:51:00.062   833  1105 D EGL_emulation: app_time_stats: avg=6388.98ms min=6388.98ms max=6388.98ms count=1
+01-21 22:51:56.050   318   318 E android.hardware.power.stats@1.0-service-mock: Failed to getEnergyData
+01-21 22:52:00.008  1538  2102 I AiAiEcho: Predicting[0]: 
+01-21 22:52:00.009  1538  2102 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata: 
+01-21 22:52:00.010  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface lockscreen with targets# 0
+01-21 22:52:00.010  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface home with targets# 0
+01-21 22:52:00.010  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface media_data_manager with targets# 0
+01-21 22:52:00.035   833   833 D SsMediaDataProvider: Forwarding Smartspace updates []
+01-21 22:52:00.046   833  1105 D EGL_emulation: app_time_stats: avg=59983.74ms min=59983.74ms max=59983.74ms count=1
+01-21 22:52:33.671   833  1105 D EGL_emulation: app_time_stats: avg=33624.42ms min=33624.42ms max=33624.42ms count=1
+01-21 22:52:39.799   551   551 W Looper  : Slow delivery took 981ms main h=android.os.Handler c=com.android.internal.os.BinderCallsStats$1@962fc2d m=0
+01-21 22:52:44.802   551   551 W Looper  : Drained
+01-21 22:53:00.012  1538  2102 I AiAiEcho: Predicting[0]: 
+01-21 22:53:00.013  1538  2102 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata: 
+01-21 22:53:00.014  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface lockscreen with targets# 0
+01-21 22:53:00.014  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface home with targets# 0
+01-21 22:53:00.015  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface media_data_manager with targets# 0
+01-21 22:53:00.041   833   833 D SsMediaDataProvider: Forwarding Smartspace updates []
+01-21 22:53:00.054   833  1105 D EGL_emulation: app_time_stats: avg=26383.12ms min=26383.12ms max=26383.12ms count=1
+01-21 22:53:05.845  4835  4835 I         : kworker/dying (4835) used greatest stack depth: 9008 bytes left
+01-21 22:53:13.691   833  1105 D EGL_emulation: app_time_stats: avg=13637.10ms min=13637.10ms max=13637.10ms count=1
+01-21 22:53:17.269   551  1360 D WifiNl80211Manager: Scan result ready event
+01-21 22:53:17.269   551  1360 D WifiNative: Scan result ready event
+01-21 22:53:20.760   551  1360 D ConnectivityService: requestNetwork for uid/pid:10111/2009 activeRequest: null callbackRequest: 159 [NetworkRequest [ REQUEST id=160, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10111 RequestorUid: 10111 RequestorPkg: com.google.android.apps.messaging UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647
+01-21 22:53:20.762   551   756 D ConnectivityService: NetReassign [160 : null → 101] [c 0] [a 0] [i 1]
+01-21 22:53:20.762   551   747 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=160, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10111 RequestorUid: 10111 RequestorPkg: com.google.android.apps.messaging UnderlyingNetworks: Null] ]
+01-21 22:53:20.762   551   747 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=160, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10111 RequestorUid: 10111 RequestorPkg: com.google.android.apps.messaging UnderlyingNetworks: Null] ]
+01-21 22:53:20.762   551   747 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=160, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10111 RequestorUid: 10111 RequestorPkg: com.google.android.apps.messaging UnderlyingNetworks: Null] ]
+01-21 22:53:20.762   551   747 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=160, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10111 RequestorUid: 10111 RequestorPkg: com.google.android.apps.messaging UnderlyingNetworks: Null] ]
+01-21 22:53:20.781  2009  5511 D MddListenableWorkerFactory: createWorker for class: com.google.android.apps.messaging.rcsprovisioning.RcsProvisioningListenableWorker
+01-21 22:53:20.807  2009  2009 I BugleRcsWorker: [seqId=0] RCS provisioning task has started
+01-21 22:53:20.889  2009  5512 I BugleRcsEngine: [133] bfyb.d: (PEv2-SM-Bugle-18230731): start PEv2 [null]
+01-21 22:53:20.894  2009  5512 I BugleRcsEngine: [133] bghb.g: Created new RcsProvisioningProtoDataStorage for sim redacted-pii:sim_id[chars:20,last3:897]
+01-21 22:53:20.897  2009  5512 I BugleRcsEngine: [133] bfyb.d: (PEv2-SM-Bugle-18230731): start [null]
+01-21 22:53:20.898  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): Enter EnabledState [null]
+01-21 22:53:20.904  2009  5513 W BugleRcsEngine: [134] bemz.x: Unable to send diagnostic log
+01-21 22:53:20.914  2009  5513 I BugleRcsEngine: [134] bfwp.c: Sending ProvisioningEvent to Bugle [Send Provisioning Session ID (18)], redacted-pii:[chars:65]
+01-21 22:53:20.917  2009  5513 I BugleRcsEngine: [134] bhdm.b: EngineBroadcaster: Broadcasting provisioning intent com.google.android.ims.provisioning.engine.provisioningEventAction to Bugle with extras redacted-pii:[chars:223] from source PROVISIONING_EVENT
+01-21 22:53:20.936  2009  2019 W .apps.messaging: Reducing the number of considered missed Gc histogram windows from 139 to 100
+01-21 22:53:20.963  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): Start a new provisioning session [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:20.967  2009  5513 I BugleRcsEngine: [134] bgck.b: RcsAvailabilityManager: Calculating Rcs Availability
+01-21 22:53:20.967  2009  5511 I BugleRcsProvisioning: RcsProvisioningEventReceiver: Received ProvisioningEvent: Send Provisioning Session ID
+01-21 22:53:20.968  2009  2151 I Bugle   : BroadcastReceiverAsyncWorkTracker: Acknowledging broadcast of com.google.android.apps.messaging.shared.receiver.RcsProvisioningEventReceiver@975d0b4
+01-21 22:53:20.971  2009  5513 I BugleRcsEngine: [134] bgfx.B: Bugle is default SMS app: true
+01-21 22:53:20.972  2009  5513 I BugleRcsEngine: [134] bgck.b: Bugle has minimum required RCS permissions: true
+01-21 22:53:20.972  2009  5513 I BugleRcsEngine: [134] bgfx.A: Rcs is enabled from user settings: true
+01-21 22:53:20.972  2009  5513 I BugleRcsEngine: [134] bghl.b: Using config server URL from beqz
+01-21 22:53:20.991  2009  5513 I BugleRcsEngine: [134] bgck.b: Config state is not ACCEPTED, provisioning still in progress
+01-21 22:53:20.992  2009  5513 I BugleRcsEngine: [134] bgck.b: RcsAvailabilityManager: Updating Rcs Availability to CARRIER_SETUP_PENDING (Carrier RCS is not set up), sim id changed: true
+01-21 22:53:20.992  2009  5513 I BugleRcsEngine: [134] bghl.b: Using config server URL from beqz
+01-21 22:53:20.992  2009  5513 W BugleRcsEngine: [134] bemz.x: Unable to send diagnostic log
+01-21 22:53:20.992  2009  5513 I BugleRcsEngine: [134] bfwp.c: Sending ProvisioningEvent to Bugle [Availability updated (12)], redacted-pii:[chars:145]
+01-21 22:53:20.992  2009  5513 I BugleRcsEngine: [134] bhdm.b: EngineBroadcaster: Broadcasting provisioning intent com.google.android.ims.provisioning.engine.provisioningEventAction to Bugle with extras redacted-pii:[chars:303] from source PROVISIONING_EVENT
+01-21 22:53:20.995  2009  5513 I BugleRcsEngine: [134] bgck.b: Sending ProvisioningEvent Internal [Availability updated (12)], redacted-pii:[chars:145]
+01-21 22:53:21.000  2009  5512 I BugleRcsProvisioning: RcsProvisioningEventReceiver: Received ProvisioningEvent: Availability updated
+01-21 22:53:21.000  2009  5512 I BugleRcsProvisioning: RcsProvisioningEventReceiver: Bugle receives rcs availability update to: 10
+01-21 22:53:21.012  2009  5513 I BugleRcsEngine: [134] bgfx.s: Rcs Configuration was updated
+01-21 22:53:21.012  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): transitionViaMessage, srcState=EnabledState, destState = CheckPreconditionsState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.013  2009  5513 I BugleRcsEngine: [134] bfwp.c: Sending ProvisioningEvent to Bugle [Update provisioning status (11)], redacted-pii:[chars:85]
+01-21 22:53:21.013  2009  5513 I BugleRcsEngine: [134] bhdm.b: EngineBroadcaster: Broadcasting provisioning intent com.google.android.ims.provisioning.engine.provisioningEventAction to Bugle with extras redacted-pii:[chars:243] from source PROVISIONING_EVENT
+01-21 22:53:21.017  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): EnabledState: Transition to check preconditions [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.017  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): transitionTo: destState=CheckPreconditionsState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.017  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): onTransitionRequested EnabledState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.018  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): Enter CheckPreconditionsState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.026  2009  5512 W BugleRcsEngine: [133] bfvz.c: [SR]: Single Registration is disabled. Skipping Single Registration capability check for subId: 1, OS.isAtLeastS:[true], enableSingleRegistrationProvisioning:[false]
+01-21 22:53:21.028  2009  5512 I BugleRcsProvisioning: RcsAvailabilityUpdaterLocal: RcsAvailability configuration availability and enabled status: simId: redacted-pii:sim_id[chars:20,last3:897], SipConnectionType: DUAL_REG, isConfigurationAvailableAndEnabled: false
+01-21 22:53:21.028  2009  5512 I BugleRcsEngine: [133] bghl.b: Using config server URL from beqz
+01-21 22:53:21.029  2009  5513 W BugleRcsEngine: [134] bemz.x: Unable to send diagnostic log
+01-21 22:53:21.029  2009  5512 I BugleRcsProvisioning: RcsAvailabilityUpdaterLocal: RcsAvailability subscription{id:1}, simId: redacted-pii:sim_id[chars:20,last3:897], sipConnectionType: DUAL_REG, isRcsAvailable: false
+01-21 22:53:21.029  2009  5512 I BugleRcsProvisioning: RcsAvailabilityUpdaterLocal: updateRcsAvailability, currentAvailability: 10, newAvailability: 10, hint: NO_HINT
+01-21 22:53:21.031  2009  5515 I BugleRcsProvisioning: RcsProvisioningTrigger: onRcsAvailabilityUpdate : availability is updated to Carrier RCS is not set up, lastAvailability is Carrier RCS is not set up, simId hash = -8552008464381461012, isPev3Enabled = true
+01-21 22:53:21.033  2009  2152 I Bugle   : BroadcastReceiverAsyncWorkTracker: Acknowledging broadcast of com.google.android.apps.messaging.shared.receiver.RcsProvisioningEventReceiver@ad7d281
+01-21 22:53:21.034  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): Battery optimization is not required. [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.038  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): transitionViaMessage, srcState=CheckPreconditionsState, destState = ReadyState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.038  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): CheckPreconditionsState: Transition to ready [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.038  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): transitionTo: destState=ReadyState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.038  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): onTransitionRequested CheckPreconditionsState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.039  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): Exit CheckPreconditionsState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.040  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): Exit EnabledState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.040  2009  5513 W BugleRcsEngine: [134] bemz.x: Unable to send diagnostic log
+01-21 22:53:21.040  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): Enter InProgressState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.052  2009  5513 W BugleRcsEngine: [134] bemz.x: Unable to send diagnostic log
+01-21 22:53:21.052  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): Enter ReadyState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.068  2009  5513 W BugleRcsEngine: [134] bemz.x: Unable to send diagnostic log
+01-21 22:53:21.086  2009  2048 W BugleRcsEngine: [41] bemz.x: Unable to send diagnostic log
+01-21 22:53:21.089  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): transitionViaMessage, srcState=ReadyState, destState = RequestWithImsiState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.090  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): ReadyState: Transition to request with imsi [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.090  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): transitionTo: destState=RequestWithImsiState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.090  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): onTransitionRequested ReadyState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.090  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): Exit ReadyState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.090  2009  5513 W BugleRcsEngine: [134] bemz.x: Unable to send diagnostic log
+01-21 22:53:21.090  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): Enter RequestWithImsiState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.113  2009  5513 W BugleRcsEngine: [134] bemz.x: Unable to send diagnostic log
+01-21 22:53:21.114  2009  5513 I BugleRcsEngine: [134] bgfx.z: ProvisioningConsent from user settings: false
+01-21 22:53:21.121  2009  5513 I BugleRcsEngine: [134] bghl.b: Using config server URL from beqz
+01-21 22:53:21.126  2009  5513 I BugleRcsEngine: [134] bgfx.z: ProvisioningConsent from user settings: false
+01-21 22:53:21.163  2009  5513 I BugleRcsEngine: [134] bgfx.z: ProvisioningConsent from user settings: false
+01-21 22:53:21.188  2009  5513 W BugleRcsEngine: [134] bfyb.e: (PEv2-SM-Bugle-18230731): Could not retrieve MSISDN from configuration. Configuration is empty. [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.188  2009  5513 W BugleRcsEngine: [134] bfyb.e: (PEv2-SM-Bugle-18230731): Skipping adding Tachyon identity key to request. Null/empty RCS msisdn from configuration for sim ID: 89860318640220133897. [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.190  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): RequestWithImsiState: event Send config request [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.191  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): InProgressState: event Send config request [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:21.191  2009  5513 W BugleRcsEngine: [134] bemz.x: Unable to send diagnostic log
+01-21 22:53:21.214  2009  2048 W BugleRcsEngine: [41] bemz.x: Unable to send diagnostic log
+01-21 22:53:21.232  2009  5519 W BugleRcsEngine: [139] bemz.x: Unable to send diagnostic log
+01-21 22:53:21.243   293  5520 I resolv  : GetAddrInfoHandler::run: {101 786533 101 983141 10111 0}
+01-21 22:53:21.244   293  5522 I resolv  : res_nmkquery: (QUERY, IN, A)
+01-21 22:53:21.244   293  5521 I resolv  : res_nmkquery: (QUERY, IN, AAAA)
+01-21 22:53:21.292   293  5522 I resolv  : res_nsend: used send_dg 64 terrno: 0
+01-21 22:53:21.292   293  5522 I resolv  : doQuery: rcode=0, ancount=1, return value=64
+01-21 22:53:21.292   293  5521 I resolv  : res_nsend: used send_dg 76 terrno: 0
+01-21 22:53:21.292   293  5521 I resolv  : doQuery: rcode=0, ancount=1, return value=76
+01-21 22:53:21.310  2009  5519 D TrafficStats: tagSocket(118) with statsTag=0x7d9, statsUid=-1
+01-21 22:53:21.344  2009  5517 I BugleRcsProvisioning: RcsProvisioningEventReceiver: Received ProvisioningEvent: Update provisioning status
+01-21 22:53:21.351  2009  2152 I Bugle   : BroadcastReceiverAsyncWorkTracker: Acknowledging broadcast of com.google.android.apps.messaging.shared.receiver.RcsProvisioningEventReceiver@8b8a8d1
+01-21 22:53:21.406  2009  2048 W BugleRcsEngine: [41] bemz.x: Unable to send diagnostic log
+01-21 22:53:22.423  2009  5519 W BugleRcsEngine: [139] bemz.x: Unable to send diagnostic log
+01-21 22:53:22.424  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): RequestWithImsiState: event HTTP Response [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:22.425  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): InProgressState: event HTTP Response [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:22.425  2009  5513 W BugleRcsEngine: [134] bemz.x: Unable to send diagnostic log
+01-21 22:53:22.425  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): RequestWithImsiState: event HTTP 200 (OK) [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:22.425  2009  5513 W BugleRcsEngine: [134] bfyw.d: Couldn't find cookies
+01-21 22:53:22.430  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): transitionTo: destState=ProcessConfigurationState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:22.430  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): onTransitionRequested RequestWithImsiState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:22.430  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): Exit RequestWithImsiState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:22.431  2009  5513 W BugleRcsEngine: [134] bemz.x: Unable to send diagnostic log
+01-21 22:53:22.431  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): Enter ProcessConfigurationState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:22.436  2009  2056 W BugleRcsEngine: [45] bemz.x: Unable to send diagnostic log
+01-21 22:53:22.447  2009  5513 W BugleRcsEngine: [134] bemz.x: Unable to send diagnostic log
+01-21 22:53:22.448  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): ProcessConfigurationState: event Config document received [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:22.451  2009  5513 I BugleRcsEngine: [134] bfyj.d: Configuration update received. Updating 
+01-21 22:53:22.451  2009  5513 I BugleRcsEngine: from [Type: 0, Version: -1, Validity: -1, Last updated: 1769030337, Remaining validity: 0, Reconfiguration requested: false, Messaging technology: SIMPLE_IM] 
+01-21 22:53:22.451  2009  5513 I BugleRcsEngine: to [Type: 2, Version: -1, Validity: -1, Last updated: 0, Remaining validity: 0, Reconfiguration requested: false, Messaging technology: SIMPLE_IM]
+01-21 22:53:22.452  2009  5513 W BugleRcsEngine: [134] bfyj.d: Received configuration with no token or invalid token during refresh.
+01-21 22:53:22.466  2009  5513 I BugleRcsEngine: [134] bgfx.s: Rcs Configuration was updated
+01-21 22:53:22.469  2009  5513 W BugleRcsEngine: [134] bemz.x: Unable to send diagnostic log
+01-21 22:53:22.469  2009  5513 I BugleRcsEngine: [134] bfyj.d: Provisioning refreshed with partial configuration.
+01-21 22:53:22.478  2009  5513 W BugleRcsEngine: [134] bemz.x: Unable to send diagnostic log
+01-21 22:53:22.482  2009  5513 W BugleRcsEngine: [134] bemz.x: Unable to send diagnostic log
+01-21 22:53:22.482  2009  5513 I BugleRcsEngine: [134] bghl.b: Using config server URL from beqz
+01-21 22:53:22.504  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): transitionTo: destState=ConfiguredState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:22.505  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): onTransitionRequested ProcessConfigurationState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:22.505  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): Exit ProcessConfigurationState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:22.505  2009  5513 W BugleRcsEngine: [134] bemz.x: Unable to send diagnostic log
+01-21 22:53:22.505  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): Exit InProgressState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:22.505  2009  5513 W BugleRcsEngine: [134] bemz.x: Unable to send diagnostic log
+01-21 22:53:22.506  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): Enter ConfiguredState [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:22.518  2009  2056 W BugleRcsEngine: [45] bemz.x: Unable to send diagnostic log
+01-21 22:53:22.528  2009  5513 W BugleRcsEngine: [134] bemz.x: Unable to send diagnostic log
+01-21 22:53:22.529  2009  5513 I BugleRcsEngine: [134] bgck.b: RcsAvailabilityManager: Calculating Rcs Availability
+01-21 22:53:22.532  2009  5513 I BugleRcsEngine: [134] bgfx.B: Bugle is default SMS app: true
+01-21 22:53:22.532  2009  5513 I BugleRcsEngine: [134] bgck.b: Bugle has minimum required RCS permissions: true
+01-21 22:53:22.538  2009  5513 I BugleRcsEngine: [134] bgfx.A: Rcs is enabled from user settings: true
+01-21 22:53:22.538  2009  5513 I BugleRcsEngine: [134] bghl.b: Using config server URL from beqz
+01-21 22:53:22.556  2009  5513 I BugleRcsEngine: [134] bgck.b: Config state is not ACCEPTED, provisioning still in progress
+01-21 22:53:22.556  2009  5513 I BugleRcsEngine: [134] bgck.b: RcsAvailabilityManager: Rcs Availability still CARRIER_SETUP_PENDING (Carrier RCS is not set up)
+01-21 22:53:22.560  2009  5513 W BugleRcsEngine: [134] bemz.x: Unable to send diagnostic log
+01-21 22:53:22.560  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): Provisioned with invalid config. Invoke failure [2add1f1f-2609-4606-a781-aed98d71a038]
+01-21 22:53:22.561  2009  5513 W BugleRcsEngine: [134] bemz.x: Unable to send diagnostic log
+01-21 22:53:22.561  2009  5513 I BugleRcsEngine: [134] bfwp.c: Sending ProvisioningEvent to Bugle [Update provisioning status (11)], redacted-pii:[chars:85]
+01-21 22:53:22.562  2009  5513 I BugleRcsEngine: [134] bhdm.b: EngineBroadcaster: Broadcasting provisioning intent com.google.android.ims.provisioning.engine.provisioningEventAction to Bugle with extras redacted-pii:[chars:243] from source PROVISIONING_EVENT
+01-21 22:53:22.568  2009  5513 I BugleRcsEngine: [134] bgck.b: RcsAvailabilityManager: Calculating Rcs Availability
+01-21 22:53:22.568  2009  5513 I BugleRcsEngine: [134] bgfx.B: Bugle is default SMS app: true
+01-21 22:53:22.569  2009  5513 I BugleRcsEngine: [134] bgck.b: Bugle has minimum required RCS permissions: true
+01-21 22:53:22.569  2009  5513 I BugleRcsEngine: [134] bgfx.A: Rcs is enabled from user settings: true
+01-21 22:53:22.570  2009  5513 I BugleRcsEngine: [134] bghl.b: Using config server URL from beqz
+01-21 22:53:22.579  2009  5516 I BugleRcsProvisioning: RcsProvisioningEventReceiver: Received ProvisioningEvent: Update provisioning status
+01-21 22:53:22.579  2009  2152 I Bugle   : BroadcastReceiverAsyncWorkTracker: Acknowledging broadcast of com.google.android.apps.messaging.shared.receiver.RcsProvisioningEventReceiver@b20cb46
+01-21 22:53:22.593  2009  5513 I BugleRcsEngine: [134] bgck.b: Config state is not ACCEPTED, provisioning still in progress
+01-21 22:53:22.593  2009  5513 I BugleRcsEngine: [134] bgck.b: RcsAvailabilityManager: Rcs Availability still CARRIER_SETUP_PENDING (Carrier RCS is not set up)
+01-21 22:53:22.636  2009  2050 W BugleRcsEngine: [43] bemz.x: Unable to send diagnostic log
+01-21 22:53:22.636  2009  2050 W BugleRcsEngine: [43] bemz.x: Unable to send diagnostic log
+01-21 22:53:53.724   833  1105 D EGL_emulation: app_time_stats: avg=40031.75ms min=40031.75ms max=40031.75ms count=1
+01-21 22:53:56.052   318   318 E android.hardware.power.stats@1.0-service-mock: Failed to getEnergyData
+01-21 22:54:00.017  1538  2102 I AiAiEcho: Predicting[0]: 
+01-21 22:54:00.018  1538  2102 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata: 
+01-21 22:54:00.020  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface lockscreen with targets# 0
+01-21 22:54:00.021  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface home with targets# 0
+01-21 22:54:00.022  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface media_data_manager with targets# 0
+01-21 22:54:00.046   833   833 D SsMediaDataProvider: Forwarding Smartspace updates []
+01-21 22:54:00.063   833  1105 D EGL_emulation: app_time_stats: avg=6339.34ms min=6339.34ms max=6339.34ms count=1
+01-21 22:54:04.054   551   661 W BatteryExternalStatsWorker: error reading Bluetooth stats: 11
+01-21 22:54:04.076   551   661 D TelephonyManager: requestModemActivityInfo: Sending result to app: ModemActivityInfo{ mTimestamp=197927 mSleepTimeMs=0 mIdleTimeMs=197837 mActivityStatsTechSpecificInfo=[{mRat=UNKNOWN,mFrequencyRange=UNKNOWN,mTxTimeMs[]=[0, 0, 0, 0, 0],mRxTimeMs=0}]}
+01-21 22:54:04.158   293   293 I netd    : tetherGetStats() -> {[]} <3.64ms>
+01-21 22:54:14.750   314   314 W healthd : battery l=100 v=5000 t=25.0 h=2 st=4 c=900000 fc=3000000 cc=10 chg=
+01-21 22:54:32.405  1341  5359 I AlarmManager: setExactAndAllowWhileIdle [name: GCM_HB_ALARM type: 2 triggerAtMillis: 2448409]
+01-21 22:54:32.407  1341  5359 I AlarmManager: setExactAndAllowWhileIdle [name: GCM_HB_ALARM type: 2 triggerAtMillis: 2448411]
+01-21 22:54:32.410  1341  1341 D BoundBrokerSvc: onBind: Intent { act=com.google.android.gms.scheduler.ACTION_PROXY_SCHEDULE dat=chimera-action:/... cmp=com.google.android.gms/.chimera.PersistentApiService }
+01-21 22:54:32.411  1341  1341 D BoundBrokerSvc: Loading bound service for intent: Intent { act=com.google.android.gms.scheduler.ACTION_PROXY_SCHEDULE dat=chimera-action:/... cmp=com.google.android.gms/.chimera.PersistentApiService }
+01-21 22:54:47.458  1341  1341 D BoundBrokerSvc: onUnbind: Intent { act=com.google.android.gms.scheduler.ACTION_PROXY_SCHEDULE dat=chimera-action:/... cmp=com.google.android.gms/.chimera.PersistentApiService }
+01-21 22:54:50.699   551   551 W Looper  : Slow delivery took 757ms main h=android.os.Handler c=com.android.internal.os.BinderCallsStats$1@962fc2d m=0
+01-21 22:55:02.568  1538  2102 I AiAiEcho: Predicting[0]: 
+01-21 22:55:02.571   551   551 W Looper  : Drained
+01-21 22:55:02.572  1538  2102 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata: 
+01-21 22:55:02.580  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface lockscreen with targets# 0
+01-21 22:55:02.580  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface home with targets# 0
+01-21 22:55:02.581  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface media_data_manager with targets# 0
+01-21 22:55:02.606   833   833 D SsMediaDataProvider: Forwarding Smartspace updates []
+01-21 22:55:02.626   833  1105 D EGL_emulation: app_time_stats: avg=62562.77ms min=62562.77ms max=62562.77ms count=1
+01-21 22:55:07.825   551   551 W Looper  : Slow delivery took 287ms main h=android.os.Handler c=com.android.internal.os.BinderCallsStats$1@962fc2d m=0
+01-21 22:55:12.826   551   551 W Looper  : Drained
+01-21 22:55:34.920   833  1105 D EGL_emulation: app_time_stats: avg=32293.92ms min=32293.92ms max=32293.92ms count=1
+01-21 22:55:56.054   318   318 E android.hardware.power.stats@1.0-service-mock: Failed to getEnergyData
+01-21 22:55:56.109   833  1107 D ControlsListingControllerImpl: Subscribing callback, service count: 0
+01-21 22:55:56.120   833  1107 D ControlsListingControllerImpl: Unsubscribing callback
+01-21 22:55:57.271   551  2379 D WifiNl80211Manager: Scan result ready event
+01-21 22:55:57.273   551  2379 D WifiNative: Scan result ready event
+01-21 22:56:00.207  1538  2102 I AiAiEcho: Predicting[0]: 
+01-21 22:56:00.208  1538  2102 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata: 
+01-21 22:56:00.210  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface lockscreen with targets# 0
+01-21 22:56:00.212  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface home with targets# 0
+01-21 22:56:00.214  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface media_data_manager with targets# 0
+01-21 22:56:00.221   833   833 D SsMediaDataProvider: Forwarding Smartspace updates []
+01-21 22:56:00.238   833  1105 D EGL_emulation: app_time_stats: avg=25317.02ms min=25317.02ms max=25317.02ms count=1
+01-21 22:56:07.590   935  1176 I bluetooth: packages/modules/Bluetooth/system/gd/hci/le_address_manager.cc:257 ack_pause: Client already in paused state
+01-21 22:56:07.620   935  1176 I bluetooth: packages/modules/Bluetooth/system/gd/hci/le_address_manager.cc:576 OnCommandComplete: Received command complete with op_code LE_SET_RANDOM_ADDRESS
+01-21 22:56:07.620   935  1176 I bluetooth: packages/modules/Bluetooth/system/gd/hci/le_address_manager.cc:595 OnCommandComplete: update random address : 7b:be:c2:03:af:c0
+01-21 22:56:07.621   935  1176 I bluetooth: packages/modules/Bluetooth/system/gd/hci/le_address_manager.cc:286 resume_registered_clients: Resuming registered clients
+01-21 22:56:14.918   833  1105 D EGL_emulation: app_time_stats: avg=14679.92ms min=14679.92ms max=14679.92ms count=1
+01-21 22:56:19.783   551   551 W Looper  : Slow delivery took 1915ms main h=android.os.Handler c=com.android.internal.os.BinderCallsStats$1@962fc2d m=0
+01-21 22:56:19.864   551   551 W Looper  : Drained
+01-21 22:56:19.879   935  1155 D BtGatt.ScanManager: uid 10112 isForeground true scanMode -1
+01-21 22:56:48.218  1341  5360 I NetworkScheduler.Stats: Task com.google.android.gms/com.google.android.gms.tapandpay.gcmtask.TapAndPayGcmTaskService started execution. cause:4 exec_start_elapsed_seconds: 1964 [CONTEXT service_id=218 ]
+01-21 22:56:48.223   293   293 I netd    : tetherGetStats() -> {[]} <5.21ms>
+01-21 22:56:48.238  1341  5526 W TapAndPay: NfcAdapter is null while obtaining CardEmulation instance. [CONTEXT service_id=79 ]
+01-21 22:56:48.238  1341  5526 W TapAndPay: java.lang.NullPointerException: NfcAdapter is null
+01-21 22:56:48.238  1341  5526 W TapAndPay: 	at android.nfc.cardemulation.CardEmulation.getInstance(CardEmulation.java:154)
+01-21 22:56:48.238  1341  5526 W TapAndPay: 	at cdoy.<init>(:com.google.android.gms@231818044@23.18.18 (190400-535401451):0)
+01-21 22:56:48.238  1341  5526 W TapAndPay: 	at com.google.android.gms.tapandpay.hce.task.TapAndPayAidRegistrationTaskOperation.a(:com.google.android.gms@231818044@23.18.18 (190400-535401451):5)
+01-21 22:56:48.238  1341  5526 W TapAndPay: 	at com.google.android.gms.tapandpay.gcmtask.TapAndPayGcmTaskChimeraService.a(:com.google.android.gms@231818044@23.18.18 (190400-535401451):4)
+01-21 22:56:48.238  1341  5526 W TapAndPay: 	at avzs.call(:com.google.android.gms@231818044@23.18.18 (190400-535401451):4)
+01-21 22:56:48.238  1341  5526 W TapAndPay: 	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+01-21 22:56:48.238  1341  5526 W TapAndPay: 	at aced.c(:com.google.android.gms@231818044@23.18.18 (190400-535401451):6)
+01-21 22:56:48.238  1341  5526 W TapAndPay: 	at aced.run(:com.google.android.gms@231818044@23.18.18 (190400-535401451):7)
+01-21 22:56:48.238  1341  5526 W TapAndPay: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1137)
+01-21 22:56:48.238  1341  5526 W TapAndPay: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:637)
+01-21 22:56:48.238  1341  5526 W TapAndPay: 	at acjn.run(:com.google.android.gms@231818044@23.18.18 (190400-535401451):0)
+01-21 22:56:48.238  1341  5526 W TapAndPay: 	at java.lang.Thread.run(Thread.java:1012)
+01-21 22:56:48.251   293   293 I netd    : bandwidthSetGlobalAlert(2097152) <2.09ms>
+01-21 22:56:48.254  1341  5526 I NetworkScheduler.Stats: Task com.google.android.gms/com.google.android.gms.tapandpay.gcmtask.TapAndPayGcmTaskService finished executing. cause:4 result: 3 elapsed_millis: 76 uptime_millis: 76 exec_start_elapsed_seconds: 1964 [CONTEXT service_id=218 ]
+01-21 22:56:48.264   293   293 I netd    : bandwidthRemoveInterfaceQuota(eth0) <8.63ms>
+01-21 22:56:48.282   293   293 I netd    : bandwidthSetInterfaceQuota(eth0, 9223372036854775807) <17.69ms>
+01-21 22:56:48.295   293   293 I netd    : bandwidthRemoveInterfaceQuota(eth0) <1.82ms>
+01-21 22:56:48.298   293   293 I netd    : bandwidthSetInterfaceQuota(eth0, 9223372036854775807) <1.77ms>
+01-21 22:56:48.312   551   832 D NetworkStatsObservers: Unregistering RequestInfo from pid/uid:551/1000(android) for DataUsageRequest [ requestId=5, networkTemplate=NetworkTemplate: matchRule=MOBILE, matchSubscriberIds=[310260...], matchWifiNetworkKeys=[], metered=YES, defaultNetwork=NO, thresholdInBytes=3337967 ] accessLevel:3
+01-21 22:56:48.313   551   743 D NetworkStatsObservers: Registering observer for RequestInfo from pid/uid:551/1000(android) for DataUsageRequest [ requestId=6, networkTemplate=NetworkTemplate: matchRule=MOBILE, matchSubscriberIds=[310260...], matchWifiNetworkKeys=[], metered=YES, defaultNetwork=NO, thresholdInBytes=3333665 ] accessLevel:3
+01-21 22:56:48.345   293   293 I netd    : tetherGetStats() -> {[]} <2.65ms>
+01-21 22:56:48.369  1341  5360 I NetworkScheduler.Stats: Task com.google.android.gms/com.google.android.gms.checkin.EventLogService started execution. cause:5 exec_start_elapsed_seconds: 1964 [CONTEXT service_id=218 ]
+01-21 22:56:48.390  1645  5357 I Checkin : [EventLogChimeraService] Opted in for usage reporting: false
+01-21 22:56:48.406  1645  5357 I Checkin : [EventLogChimeraService] Aggregate from 1769031087244 (log), 1769030909570 (data)
+01-21 22:56:48.493   157   157 I logd    : logdr: UID=10112 GID=10112 PID=1645 n tail=0 logMask=4 pid=0 start=0ns deadline=0ns
+01-21 22:56:48.484   551  2369 I DropBoxManagerService: add tag=event_data isTagEnabled=true flags=0x2
+01-21 22:56:48.487   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.stats.service.DropBoxEntryAddedReceiver
+01-21 22:56:48.489   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.chimera.GmsIntentOperationService$PersistentTrustedReceiver
+01-21 22:56:48.548  1341  5526 I NetworkScheduler.Stats: Task com.google.android.gms/com.google.android.gms.checkin.EventLogService finished executing. cause:5 result: 1 elapsed_millis: 218 uptime_millis: 218 exec_start_elapsed_seconds: 1964 [CONTEXT service_id=218 ]
+01-21 22:56:56.902   833  1105 D EGL_emulation: app_time_stats: avg=41984.50ms min=41984.50ms max=41984.50ms count=1
+01-21 22:56:59.944   935  1155 D BtGatt.ScanManager: uid 10112 isForeground true scanMode -1
+01-21 22:57:00.036  1538  2102 I AiAiEcho: Predicting[0]: 
+01-21 22:57:00.036  1538  2102 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata: 
+01-21 22:57:00.038  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface lockscreen with targets# 0
+01-21 22:57:00.039  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface home with targets# 0
+01-21 22:57:00.052  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface media_data_manager with targets# 0
+01-21 22:57:00.083   833   833 D SsMediaDataProvider: Forwarding Smartspace updates []
+01-21 22:57:00.088   833  1105 D EGL_emulation: app_time_stats: avg=3185.87ms min=3185.87ms max=3185.87ms count=1
+01-21 22:57:15.020   935  1155 D BtGatt.ScanManager: uid 10112 isForeground true scanMode -1
+01-21 22:57:19.605   551  1360 W BatteryExternalStatsWorker: error reading Bluetooth stats: 11
+01-21 22:57:19.612   551  1360 D TelephonyManager: requestModemActivityInfo: Sending result to app: ModemActivityInfo{ mTimestamp=1995614 mSleepTimeMs=0 mIdleTimeMs=393382 mActivityStatsTechSpecificInfo=[{mRat=UNKNOWN,mFrequencyRange=UNKNOWN,mTxTimeMs[]=[0, 0, 0, 0, 0],mRxTimeMs=0}]}
+01-21 22:57:19.727   293   293 I netd    : tetherGetStats() -> {[]} <1.27ms>
+01-21 22:57:19.733   551   618 W CpuPowerCalculator: UID 50176 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.733   551   618 W CpuPowerCalculator: UID 50176 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.733   551   618 W CpuPowerCalculator: UID 10176 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.733   551   618 W CpuPowerCalculator: UID 10176 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10176 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10176 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10171 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10171 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10171 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10171 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10165 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10165 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10165 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10165 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10165 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10160 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10160 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10160 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10160 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10160 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10158 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10158 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10158 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10158 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10157 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10157 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10157 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10157 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10156 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10156 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.734   551   618 W CpuPowerCalculator: UID 10156 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10152 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10152 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10152 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10152 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10151 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10151 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10151 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10151 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10151 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10150 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10150 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10150 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10150 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10146 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10146 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10146 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10146 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10145 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10145 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10145 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10145 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10144 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10144 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10144 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10144 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10144 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10143 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.735   551   618 W CpuPowerCalculator: UID 10143 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.738   551   618 W CpuPowerCalculator: UID 10143 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.738   551   618 W CpuPowerCalculator: UID 10143 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.738   551   618 W CpuPowerCalculator: UID 10142 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.738   551   618 W CpuPowerCalculator: UID 10142 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.738   551   618 W CpuPowerCalculator: UID 10142 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.738   551   618 W CpuPowerCalculator: UID 10142 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.738   551   618 W CpuPowerCalculator: UID 10138 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.738   551   618 W CpuPowerCalculator: UID 10138 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10138 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10138 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10138 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10134 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10134 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10134 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10134 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10133 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10133 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10133 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10131 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10131 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10131 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10131 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10131 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10129 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10129 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10129 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10129 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10129 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10127 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10127 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10127 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.739   551   618 W CpuPowerCalculator: UID 10127 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.740   551   618 W CpuPowerCalculator: UID 10126 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.749   551   618 W CpuPowerCalculator: UID 10126 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10126 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10126 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10125 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10125 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10125 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10125 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10122 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10122 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10122 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10122 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10120 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10120 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10120 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10120 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10120 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10118 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10118 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10118 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10118 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10118 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10117 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10117 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10117 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10117 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10116 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10116 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10116 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10116 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10115 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10115 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10115 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10115 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.750   551   618 W CpuPowerCalculator: UID 10113 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10113 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10113 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10113 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10112 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10112 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10112 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10112 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10112 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10112 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10111 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10111 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10111 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10111 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10111 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10110 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10110 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10110 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10110 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10110 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10109 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10109 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10109 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10109 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10109 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10109 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10108 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.751   551   618 W CpuPowerCalculator: UID 10108 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.752   551   618 W CpuPowerCalculator: UID 10108 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.752   551   618 W CpuPowerCalculator: UID 10108 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.752   551   618 W CpuPowerCalculator: UID 10107 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.752   551   618 W CpuPowerCalculator: UID 10107 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.752   551   618 W CpuPowerCalculator: UID 10107 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.752   551   618 W CpuPowerCalculator: UID 10107 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.752   551   618 W CpuPowerCalculator: UID 10107 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.752   551   618 W CpuPowerCalculator: UID 10106 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.753   551   618 W CpuPowerCalculator: UID 10106 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.753   551   618 W CpuPowerCalculator: UID 10106 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.753   551   618 W CpuPowerCalculator: UID 10106 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.753   551   618 W CpuPowerCalculator: UID 10105 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.753   551   618 W CpuPowerCalculator: UID 10105 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.753   551   618 W CpuPowerCalculator: UID 10105 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.753   551   618 W CpuPowerCalculator: UID 10105 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.753   551   618 W CpuPowerCalculator: UID 10104 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.754   551   618 W CpuPowerCalculator: UID 10104 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.754   551   618 W CpuPowerCalculator: UID 10104 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.754   551   618 W CpuPowerCalculator: UID 10104 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.754   551   618 W CpuPowerCalculator: UID 10101 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.754   551   618 W CpuPowerCalculator: UID 10101 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.754   551   618 W CpuPowerCalculator: UID 10101 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.755   551   618 W CpuPowerCalculator: UID 10101 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.755   551   618 W CpuPowerCalculator: UID 10100 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.755   551   618 W CpuPowerCalculator: UID 10100 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.755   551   618 W CpuPowerCalculator: UID 10100 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.755   551   618 W CpuPowerCalculator: UID 10100 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.755   551   618 W CpuPowerCalculator: UID 10100 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.755   551   618 W CpuPowerCalculator: UID 10095 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.755   551   618 W CpuPowerCalculator: UID 10095 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.755   551   618 W CpuPowerCalculator: UID 10095 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.755   551   618 W CpuPowerCalculator: UID 10095 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.755   551   618 W CpuPowerCalculator: UID 10079 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.755   551   618 W CpuPowerCalculator: UID 10079 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.755   551   618 W CpuPowerCalculator: UID 10079 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.755   551   618 W CpuPowerCalculator: UID 10079 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.755   551   618 W CpuPowerCalculator: UID 10077 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.755   551   618 W CpuPowerCalculator: UID 10077 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.755   551   618 W CpuPowerCalculator: UID 10077 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.755   551   618 W CpuPowerCalculator: UID 10077 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.755   551   618 W CpuPowerCalculator: UID 10077 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.755   551   618 W CpuPowerCalculator: UID 10075 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.756   551   618 W CpuPowerCalculator: UID 10075 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.756   551   618 W CpuPowerCalculator: UID 10075 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.756   551   618 W CpuPowerCalculator: UID 10075 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.756   551   618 W CpuPowerCalculator: UID 10074 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.756   551   618 W CpuPowerCalculator: UID 10074 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.756   551   618 W CpuPowerCalculator: UID 10074 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.756   551   618 W CpuPowerCalculator: UID 10074 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.756   551   618 W CpuPowerCalculator: UID 10074 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.756   551   618 W CpuPowerCalculator: UID 10074 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.756   551   618 W CpuPowerCalculator: UID 10073 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.756   551   618 W CpuPowerCalculator: UID 10073 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.756   551   618 W CpuPowerCalculator: UID 10073 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.756   551   618 W CpuPowerCalculator: UID 10073 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.756   551   618 W CpuPowerCalculator: UID 10071 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.756   551   618 W CpuPowerCalculator: UID 10071 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.756   551   618 W CpuPowerCalculator: UID 10071 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.756   551   618 W CpuPowerCalculator: UID 10071 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.756   551   618 W CpuPowerCalculator: UID 10070 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.756   551   618 W CpuPowerCalculator: UID 10070 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 10070 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 10070 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 10070 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 9999 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 9999 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 2000 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 2000 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 2000 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 2000 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1092 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1092 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1073 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1073 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1073 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1073 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1072 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1072 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1069 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1069 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1068 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1068 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1068 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1068 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1067 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1067 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1066 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1066 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1058 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1058 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1053 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1053 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1047 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1047 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1046 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1046 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1041 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1041 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1040 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1040 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1036 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1036 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.757   551   618 W CpuPowerCalculator: UID 1021 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1021 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1020 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1020 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1019 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1019 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1017 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1017 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1013 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1013 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1010 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1010 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1003 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1003 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1002 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1002 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1002 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1002 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1002 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1001 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1001 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1001 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1001 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1000 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1000 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1000 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 1000 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 0 CPU cluster # mismatch: Power Profile # 2 actual # 4
+01-21 22:57:19.758   551   618 W CpuPowerCalculator: UID 0 CPU freq # mismatch: Power Profile # 2 actual # 8
+01-21 22:57:25.058   551   551 W Looper  : Slow delivery took 245ms main h=android.os.Handler c=com.android.internal.os.BinderCallsStats$1@962fc2d m=0
+01-21 22:57:30.061   551   551 W Looper  : Drained
+01-21 22:57:41.202   551   699 D ActivityManager: freezing 1730 android.process.acore
+01-21 22:57:41.244   551   699 D ActivityManager: freezing 4461 com.google.android.gms.ui
+01-21 22:57:41.248   551   699 D ActivityManager: freezing 4678 com.android.remoteprovisioner
+01-21 22:57:41.249   551   699 D ActivityManager: freezing 3393 com.google.android.gms.unstable
+01-21 22:57:41.250   551   699 D ActivityManager: freezing 2101 com.google.process.gapps
+01-21 22:57:41.252   551   699 D ActivityManager: freezing 4748 com.google.android.partnersetup
+01-21 22:57:41.282   551   699 D ActivityManager: freezing 4937 com.google.android.projection.gearhead:shared
+01-21 22:57:41.286   551   699 D ActivityManager: freezing 4938 com.google.android.dialer
+01-21 22:57:41.287   551   699 D ActivityManager: freezing 1616 com.google.android.apps.photos
+01-21 22:57:41.290   551   699 D ActivityManager: freezing 4040 com.google.android.configupdater
+01-21 22:57:41.291   551   699 D ActivityManager: freezing 2459 com.google.android.permissioncontroller
+01-21 22:57:41.317   551   699 D ActivityManager: freezing 5056 com.google.android.apps.wellbeing
+01-21 22:57:41.355  1538  2128 I ogle.android.as: oneway function results for code 2 on binder at 0xb400006f98be9aa0 will be dropped but finished with status UNKNOWN_TRANSACTION
+01-21 22:57:42.717   551   699 D ActivityManager: freezing 5037 com.android.keychain
+01-21 22:57:46.407  2830  2840 W .android.as.oss: Reducing the number of considered missed Gc histogram windows from 182 to 100
+01-21 22:57:54.480  2314  2314 I abb     : StartCommandInProcess(73657474696e67730067657400676c6f settings.get.glo [truncated])
+01-21 22:57:54.488   551   551 W binder:551_17: type=1400 audit(0.0:44): avc: denied { getopt } for scontext=u:r:system_server:s0 tcontext=u:r:shell:s0 tclass=unix_stream_socket permissive=0
+01-21 22:57:54.488   551   551 W binder:551_17: type=1400 audit(0.0:45): avc: denied { getopt } for scontext=u:r:system_server:s0 tcontext=u:r:shell:s0 tclass=unix_stream_socket permissive=0
+01-21 22:57:54.488   551   551 W binder:551_17: type=1400 audit(0.0:46): avc: denied { getopt } for scontext=u:r:system_server:s0 tcontext=u:r:shell:s0 tclass=unix_stream_socket permissive=0
+01-21 22:57:54.508  2314  2314 I abb     : StartCommandInProcess(7061636b61676500696e7374616c6c00 package.install. [truncated])
+01-21 22:57:55.840   551   551 W binder:551_17: type=1400 audit(0.0:47): avc: denied { getopt } for scontext=u:r:system_server:s0 tcontext=u:r:shell:s0 tclass=unix_stream_socket permissive=0
+01-21 22:57:56.033   551   637 I PackageManager: Integrity check passed for file:///data/app/vmdl1248836509.tmp
+01-21 22:57:56.061   551   606 I ActivityManager: Force stopping com.xamarin.android.helloworld appid=10176 user=-1: installPackageLI
+01-21 22:57:56.067   318   318 E android.hardware.power.stats@1.0-service-mock: Failed to getEnergyData
+01-21 22:57:56.073   551   637 I PackageManager: Update package com.xamarin.android.helloworld code path from /data/app/~~s__UGu3z7UpQF60eUdrA1Q==/com.xamarin.android.helloworld-9ASKHy_GHjd9malbU1i6Zw== to /data/app/~~tk5HQebqB3miOZ_CThKtog==/com.xamarin.android.helloworld-xm5xS6Wh0YbTjYmxyffhzw==; Retain data and using new
+01-21 22:57:56.073   551   637 I AppsFilter: interaction: PackageSetting{18a492c com.companyname.testminandroidapilevel/10174} -> PackageSetting{4541686 com.xamarin.android.helloworld/10176} BLOCKED
+01-21 22:57:56.073   551   637 I AppsFilter: interaction: PackageSetting{18a492c com.companyname.testminandroidapilevel/10174} -> PackageSetting{b70918a com.xamarin.android.helloworld/10176} BLOCKED
+01-21 22:57:56.148  3514  3514 I logd    : start watching /data/system/packages.list ...
+01-21 22:57:56.149  3514  3514 I logd    : ReadPackageList, total packages: 183
+01-21 22:57:56.116   551   637 D PackageManager: Instant App installer not found with android.intent.action.INSTALL_INSTANT_APP_PACKAGE
+01-21 22:57:56.116   551   637 D PackageManager: Clear ephemeral installer activity
+01-21 22:57:56.143   551   637 W ziparchive: Unable to open '/data/app/~~tk5HQebqB3miOZ_CThKtog==/com.xamarin.android.helloworld-xm5xS6Wh0YbTjYmxyffhzw==/base.dm': No such file or directory
+01-21 22:57:56.143   551   637 I PackageDexOptimizer: Running dexopt (dexoptNeeded=1) on: /data/app/~~tk5HQebqB3miOZ_CThKtog==/com.xamarin.android.helloworld-xm5xS6Wh0YbTjYmxyffhzw==/base.apk pkg=com.xamarin.android.helloworld isa=arm64 dexoptFlags=boot_complete,profile_guided,public,enable_hidden_api_checks targetFilter=speed-profile oatDir=/data/app/~~tk5HQebqB3miOZ_CThKtog==/com.xamarin.android.helloworld-xm5xS6Wh0YbTjYmxyffhzw==/oat classLoaderContext=PCL[]{}
+01-21 22:57:56.146   388   388 V installd: DexInv: --- BEGIN '/data/app/~~tk5HQebqB3miOZ_CThKtog==/com.xamarin.android.helloworld-xm5xS6Wh0YbTjYmxyffhzw==/base.apk' ---
+01-21 22:57:56.146   388   388 V installd: Running /apex/com.android.art/bin/dex2oat64 in=base.apk out=/data/app/~~tk5HQebqB3miOZ_CThKtog==/com.xamarin.android.helloworld-xm5xS6Wh0YbTjYmxyffhzw==/oat/arm64/base.odex
+01-21 22:57:56.215  5543  5543 W dex2oat64: Mismatch between dex2oat instruction set features to use (ISA: Arm64 Feature string: a53,crc,-lse,-fp16,-dotprod,-sve) and those from CPP defines (ISA: Arm64 Feature string: -a53,-crc,-lse,-fp16,-dotprod,-sve) for the command line:
+01-21 22:57:56.215  5543  5543 W dex2oat64: /apex/com.android.art/bin/dex2oat64 --zip-fd=7 --zip-location=base.apk --oat-fd=8 --oat-location=/data/app/~~tk5HQebqB3miOZ_CThKtog==/com.xamarin.android.helloworld-xm5xS6Wh0YbTjYmxyffhzw==/oat/arm64/base.odex --input-vdex-fd=-1 --output-vdex-fd=9 --swap-fd=10 --classpath-dir=/data/app/~~tk5HQebqB3miOZ_CThKtog==/com.xamarin.android.helloworld-xm5xS6Wh0YbTjYmxyffhzw== --class-loader-context=PCL[]{} --compact-dex-level=none --instruction-set=arm64 --instruction-set-features=default --instruction-set-variant=generic --compiler-filter=speed-profile --compilation-reason=install --max-image-block-size=524288 --resolve-startup-const-strings=true --generate-mini-debug-info --runtime-arg -Xtarget-sdk-version:36 --runtime-arg -Xhidden-api-policy:enabled --runtime-arg -Xms64m --runtime-arg -Xmx512m
+01-21 22:57:56.215  5543  5543 I dex2oat64: /apex/com.android.art/bin/dex2oat64 --input-vdex-fd=-1 --output-vdex-fd=9 --classpath-dir=/data/app/~~tk5HQebqB3miOZ_CThKtog==/com.xamarin.android.helloworld-xm5xS6Wh0YbTjYmxyffhzw== --class-loader-context=PCL[]{} --compact-dex-level=none --compiler-filter=speed-profile --compilation-reason=install --max-image-block-size=524288 --resolve-startup-const-strings=true --generate-mini-debug-info
+01-21 22:57:56.226  5543  5543 I dex2oat64: Using CollectorTypeCC GC.
+01-21 22:57:56.483  5543  5543 I dex2oat64: dex2oat took 273.251ms (252.973ms cpu) (threads: 4) arena alloc=0B (0B) java alloc=432KB (442944B) native alloc=1247KB (1277008B) free=1185KB (1214016B)
+01-21 22:57:56.489   388   388 V installd: DexInv: --- END '/data/app/~~tk5HQebqB3miOZ_CThKtog==/com.xamarin.android.helloworld-xm5xS6Wh0YbTjYmxyffhzw==/base.apk' (success) ---
+01-21 22:57:56.492   551   637 I AppsFilter: interaction: PackageSetting{18a492c com.companyname.testminandroidapilevel/10174} -> PackageSetting{b70918a com.xamarin.android.helloworld/10176} BLOCKED
+01-21 22:57:56.499   551   637 I ActivityManager: Force stopping com.xamarin.android.helloworld appid=10176 user=0: pkg removed
+01-21 22:57:56.542   551   637 D CompatibilityChangeReporter: Compat change id reported: 168419799; UID 10176; state: DISABLED
+01-21 22:57:56.542   551   637 D CompatibilityChangeReporter: Compat change id reported: 273564678; UID 10176; state: DISABLED
+01-21 22:57:56.559   551   637 D PackageInstallerSession: Marking session 1248836509 as applied
+01-21 22:57:56.561   388   388 E installd: Couldn't opendir /data/app/vmdl1248836509.tmp: No such file or directory
+01-21 22:57:56.561   388   388 E installd: Failed to delete /data/app/vmdl1248836509.tmp: No such file or directory
+01-21 22:57:56.574  1518  1518 W MediaProvider: WorkProfileOwnerApps cache is empty
+01-21 22:57:56.596   551   551 W binder:551_17: type=1400 audit(0.0:48): avc: denied { getopt } for scontext=u:r:system_server:s0 tcontext=u:r:shell:s0 tclass=unix_stream_socket permissive=0
+01-21 22:57:56.596   551   551 W binder:551_17: type=1400 audit(0.0:49): avc: denied { getopt } for scontext=u:r:system_server:s0 tcontext=u:r:shell:s0 tclass=unix_stream_socket permissive=0
+01-21 22:57:56.596   551   551 W binder:551_17: type=1400 audit(0.0:50): avc: denied { getopt } for scontext=u:r:system_server:s0 tcontext=u:r:shell:s0 tclass=unix_stream_socket permissive=0
+01-21 22:57:56.634  1201  1213 I s.nexuslauncher: Background concurrent copying GC freed 32279(1505KB) AllocSpace objects, 6(304KB) LOS objects, 49% free, 5243KB/10MB, paused 54us,20us total 133.507ms
+01-21 22:57:56.641   935   935 V MediaPlayerList: mPackageChangedBroadcastReceiver: action: android.intent.action.PACKAGE_REMOVED
+01-21 22:57:56.642   935   935 V MediaPlayerList: mPackageChangedBroadcastReceiver: action: android.intent.action.PACKAGE_REMOVED
+01-21 22:57:56.648   551   606 D ActivityManager: sync unfroze 1730 android.process.acore
+01-21 22:57:56.687   551   712 I InputReader: Reconfiguring input devices, changes=KEYBOARD_LAYOUTS | 
+01-21 22:57:56.694   833   833 D ControlsListingControllerImpl: ServiceConfig reloaded, count: 0
+01-21 22:57:56.706   551   799 I SdkSandboxManager: No SDKs used. Skipping SDK data reconcilation for CallingInfo{mUid=10176, mPackageName='com.xamarin.android.helloworld'}
+01-21 22:57:56.748  1545  1545 I GsaVoiceInteractionSrv: (REDACTED) O received %s
+01-21 22:57:56.760   935   935 V MediaPlayerList: mPackageChangedBroadcastReceiver: action: android.intent.action.PACKAGE_ADDED
+01-21 22:57:56.769  1545  1545 I GsaVoiceInteractionSrv: (REDACTED) O received %s
+01-21 22:57:56.770   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.PACKAGE_REMOVED dat=package: flg=0x4000010 (has extras) } to com.google.android.gms/.games.chimera.GamesSystemBroadcastReceiverProxy
+01-21 22:57:56.770   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.PACKAGE_REMOVED dat=package: flg=0x4000010 (has extras) } to com.google.android.gms/.chimera.GmsIntentOperationService$PersistentTrustedReceiver
+01-21 22:57:56.770   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.PACKAGE_REMOVED dat=package: flg=0x4000010 (has extras) } to com.google.android.googlequicksearchbox/com.google.android.apps.gsa.googlequicksearchbox.GelStubAppWatcher
+01-21 22:57:56.771   551  2376 D ActivityManager: sync unfroze 5056 com.google.android.apps.wellbeing
+01-21 22:57:56.781   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.PACKAGE_ADDED dat=package: flg=0x4000010 (has extras) } to com.google.android.packageinstaller/com.android.packageinstaller.PackageInstalledReceiver
+01-21 22:57:56.781   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.PACKAGE_ADDED dat=package: flg=0x4000010 (has extras) } to com.google.android.gms/.games.chimera.GamesSystemBroadcastReceiverProxy
+01-21 22:57:56.781   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.PACKAGE_ADDED dat=package: flg=0x4000010 (has extras) } to com.google.android.gms/.gass.chimera.PackageChangeBroadcastReceiver
+01-21 22:57:56.781   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.PACKAGE_ADDED dat=package: flg=0x4000010 (has extras) } to com.google.android.gms/.chimera.GmsIntentOperationService$PersistentTrustedReceiver
+01-21 22:57:56.781   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.PACKAGE_ADDED dat=package: flg=0x4000010 (has extras) } to com.google.android.googlequicksearchbox/com.google.android.apps.gsa.googlequicksearchbox.GelStubAppWatcher
+01-21 22:57:56.781   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.PACKAGE_REPLACED dat=package: flg=0x4000010 (has extras) } to com.google.android.gms/.gass.chimera.PackageChangeBroadcastReceiver
+01-21 22:57:56.781   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.PACKAGE_REPLACED dat=package: flg=0x4000010 (has extras) } to com.google.android.gms/.chimera.GmsIntentOperationService$PersistentTrustedReceiver
+01-21 22:57:56.781   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.PACKAGE_REPLACED dat=package: flg=0x4000010 (has extras) } to com.google.android.googlequicksearchbox/com.google.android.apps.gsa.googlequicksearchbox.GelStubAppWatcher
+01-21 22:57:56.838   935  1155 D BtGatt.ScanManager: uid 10112 isForeground true scanMode -1
+01-21 22:57:56.838   935   935 D MediaPlayerList: Name of package changed: com.xamarin.android.helloworld
+01-21 22:57:56.838   935   935 V MediaPlayerList: mPackageChangedBroadcastReceiver: action: android.intent.action.PACKAGE_ADDED
+01-21 22:57:56.838   935   935 D MediaPlayerList: Name of package changed: com.xamarin.android.helloworld
+01-21 22:57:56.871   551   712 I InputReader: Reconfiguring input devices, changes=KEYBOARD_LAYOUTS | 
+01-21 22:57:56.919   551   712 I InputReader: Reconfiguring input devices, changes=KEYBOARD_LAYOUTS | 
+01-21 22:57:56.919   551   799 I SdkSandboxManager: No SDKs used. Skipping SDK data reconcilation for CallingInfo{mUid=10176, mPackageName='com.xamarin.android.helloworld'}
+01-21 22:57:57.500   551   551 D ActivityManager: sync unfroze 5037 com.android.keychain
+01-21 22:57:57.501   551   551 W Looper  : Slow dispatch took 900ms main h=android.app.ActivityThread$H c=android.app.LoadedApk$ReceiverDispatcher$Args$$ExternalSyntheticLambda0@20ec32b m=0
+01-21 22:57:57.501   551   551 W Looper  : Slow delivery took 923ms main h=android.app.ActivityThread$H c=android.app.LoadedApk$ReceiverDispatcher$Args$$ExternalSyntheticLambda0@e026388 m=0
+01-21 22:57:57.502   551   914 W system_server: Long monitor contention with owner binder:551_8 (918) at android.content.ComponentName com.android.server.am.ActivityManagerService.startService(android.app.IApplicationThread, android.content.Intent, java.lang.String, boolean, java.lang.String, java.lang.String, int)(ActivityManagerService.java:12593) waiters=2 in int com.android.server.am.ActivityManagerService.bindServiceInstance(android.app.IApplicationThread, android.os.IBinder, android.content.Intent, java.lang.String, android.app.IServiceConnection, int, java.lang.String, boolean, int, java.lang.String, java.lang.String, int) for 215ms
+01-21 22:57:57.504   551   551 I Telecom : CarModeTracker: Package com.xamarin.android.helloworld is not tracked.: SSH.oR@Acs
+01-21 22:57:57.504   551   551 I Telecom : InCallController: updateCarModeForConnections: car mode apps: : SSH.oR@Acs
+01-21 22:57:57.519   551   551 I Telecom : DefaultDialerCache: Refreshing default dialer for user 0: now com.google.android.dialer: DDC.oR@Acw
+01-21 22:57:57.534   551   551 V BackupManagerConstants: getFullBackupIntervalMilliseconds(...) returns 86400000
+01-21 22:57:57.534   551   551 V BackupManagerConstants: getFullBackupRequiredNetworkType(...) returns 2
+01-21 22:57:57.534   551   551 V BackupManagerConstants: getFullBackupRequireCharging(...) returns true
+01-21 22:57:57.543   551   551 D CompatibilityChangeReporter: Compat change id reported: 218533173; UID 10176; state: ENABLED
+01-21 22:57:57.544   551   551 D CompatibilityChangeReporter: Compat change id reported: 171306433; UID 10176; state: ENABLED
+01-21 22:57:57.544   551   551 W AlarmManager: Package com.xamarin.android.helloworld, uid 10176 lost permission to set exact alarms!
+01-21 22:57:57.544   551   551 W Looper  : Drained
+01-21 22:57:57.560   551   593 D ActivityManager: sync unfroze 2459 com.google.android.permissioncontroller
+01-21 22:57:57.566  5056  5069 I .apps.wellbeing: Background concurrent copying GC freed 4430(384KB) AllocSpace objects, 0(0B) LOS objects, 49% free, 3942KB/7885KB, paused 52us,13us total 322.073ms
+01-21 22:57:57.641   833   833 D ControlsListingControllerImpl: ServiceConfig reloaded, count: 0
+01-21 22:57:57.642  1545  1545 I GsaVoiceInteractionSrv: (REDACTED) O received %s
+01-21 22:57:57.737  1014  1014 D CarrierSvcBindHelper: onPackageUpdateFinished: com.xamarin.android.helloworld
+01-21 22:57:57.740  1014  1014 D CarrierSvcBindHelper: No carrier app for: 0
+01-21 22:57:57.741  1014  1014 D CarrierSvcBindHelper: onPackageModified: com.xamarin.android.helloworld
+01-21 22:57:57.741  1014  1014 D CarrierSvcBindHelper: No carrier app for: 0
+01-21 22:57:57.738   551   593 W Looper  : Slow dispatch took 115ms android.fg h=android.os.Handler c=<recycled PooledLambda@e12f25c> m=0
+01-21 22:57:57.774   551  4855 D IntervalStats: Unable to parse usage stats packages: [196]
+01-21 22:57:57.800  1754  2441 W SearchServiceCore: Abort, client detached.
+01-21 22:57:57.800  1754  2441 W SearchServiceCore: Abort, client detached.
+01-21 22:57:57.829   551   593 W Looper  : Slow delivery took 206ms android.fg h=android.os.Handler c=<recycled PooledLambda@4781566> m=0
+01-21 22:57:57.832  1754  2441 W SearchServiceCore: Abort, client detached.
+01-21 22:57:57.837   833   833 D ControlsListingControllerImpl: ServiceConfig reloaded, count: 0
+01-21 22:57:57.874   551   634 E VerityUtils: Failed to measure fs-verity, errno 1: /data/app/~~tk5HQebqB3miOZ_CThKtog==/com.xamarin.android.helloworld-xm5xS6Wh0YbTjYmxyffhzw==/base.apk
+01-21 22:57:57.909  1014  1014 D ImsResolver: maybeAddedImsService, packageName: com.xamarin.android.helloworld
+01-21 22:57:57.941  2459  3716 I PermissionControllerServiceImpl: Updating user sensitive for uid 10176
+01-21 22:57:57.978  1341  5576 I ProximityAuth: [RecentAppsMediator] Package added: (user=UserHandle{0}) com.xamarin.android.helloworld
+01-21 22:57:58.006  1645  5560 I Auth    : [SupervisedAccountIntentOperation] onHandleIntent(): android.intent.action.PACKAGE_ADDED
+01-21 22:57:58.025   551  2376 D CompatibilityChangeReporter: Compat change id reported: 161252188; UID 10176; state: DISABLED
+01-21 22:57:58.033  1645  5569 W SQLiteLog: (28) double-quoted string literal: "com.xamarin.android.helloworld"
+01-21 22:57:58.034  1645  1645 D BoundBrokerSvc: onBind: Intent { act=com.google.android.gms.common.BIND_SHARED_PREFS pkg=com.google.android.gms }
+01-21 22:57:58.034  1645  1645 D BoundBrokerSvc: Loading bound service for intent: Intent { act=com.google.android.gms.common.BIND_SHARED_PREFS pkg=com.google.android.gms }
+01-21 22:57:58.068  1341  5582 I Fitness : FitCleanupIntentOperation received Intent android.intent.action.PACKAGE_REMOVED [CONTEXT service_id=17 ]
+01-21 22:57:58.104  1341  1354 I .gms.persistent: Background concurrent copying GC freed 73739(3507KB) AllocSpace objects, 4(152KB) LOS objects, 49% free, 13MB/26MB, paused 70us,25us total 1.566s
+01-21 22:57:58.111  1341  1423 W ChimeraUtils: Module com.google.android.gms.nearby_en missing resource null(0)
+01-21 22:57:58.117   833   843 I ndroid.systemui: Background concurrent copying GC freed 105666(5816KB) AllocSpace objects, 68(2840KB) LOS objects, 49% free, 15MB/30MB, paused 88us,40us total 1.597s
+01-21 22:57:58.129  1645  1645 D BoundBrokerSvc: onUnbind: Intent { act=com.google.android.gms.common.BIND_SHARED_PREFS pkg=com.google.android.gms }
+01-21 22:57:58.143  1341  1423 W ChimeraUtils: Module com.google.android.gms.nearby_en missing resource null(0)
+01-21 22:57:58.486   551   565 I system_server: Background concurrent copying GC freed 511120(23MB) AllocSpace objects, 55(4508KB) LOS objects, 49% free, 23MB/46MB, paused 96us,82us total 1.970s
+01-21 22:57:58.487  1645  2752 I Icing   : IndexChimeraService.getServiceInterface callingPackage=com.google.android.gms componentName=AppsCorpus serviceId=36
+01-21 22:57:58.493  1645  1645 D BoundBrokerSvc: onBind: Intent { act=com.google.android.gms.feedback.internal.IFeedbackService dat=chimera-action:/... cmp=com.google.android.gms/.chimera.GmsBoundBrokerService }
+01-21 22:57:58.493  1645  1645 D BoundBrokerSvc: Loading bound service for intent: Intent { act=com.google.android.gms.feedback.internal.IFeedbackService dat=chimera-action:/... cmp=com.google.android.gms/.chimera.GmsBoundBrokerService }
+01-21 22:57:58.502  1341  1341 D BoundBrokerSvc: onBind: Intent { act=com.google.android.gms.icing.LIGHTWEIGHT_INDEX_SERVICE dat=chimera-action:/... cmp=com.google.android.gms/.chimera.PersistentApiService }
+01-21 22:57:58.502  1341  1341 D BoundBrokerSvc: Loading bound service for intent: Intent { act=com.google.android.gms.icing.LIGHTWEIGHT_INDEX_SERVICE dat=chimera-action:/... cmp=com.google.android.gms/.chimera.PersistentApiService }
+01-21 22:57:58.628   551   594 W Looper  : Slow dispatch took 118ms android.ui h=com.android.server.am.ActivityManagerService$UiHandler c=com.android.server.am.UidObserverController$$ExternalSyntheticLambda0@8867a7e m=0
+01-21 22:57:58.643   551   634 E VerityUtils: Failed to measure fs-verity, errno 1: /data/app/~~tk5HQebqB3miOZ_CThKtog==/com.xamarin.android.helloworld-xm5xS6Wh0YbTjYmxyffhzw==/base.apk
+01-21 22:57:58.700  1645  5357 I Icing   : Usage reports ok 1, Failed Usage reports 0, indexed 0, rejected 0
+01-21 22:57:58.854  1645  2752 I Icing   : IndexChimeraService.getServiceInterface callingPackage=com.google.android.gms componentName=null serviceId=30
+01-21 22:57:58.975  1645  5357 I Icing   : Usage reports ok 0, Failed Usage reports 0, indexed 0, rejected 0
+01-21 22:57:58.997  1645  5357 I Icing   : Indexing com.google.android.gms-apps from com.google.android.gms
+01-21 22:57:59.009  1645  5357 I Icing   : Indexing done com.google.android.gms-apps
+01-21 22:58:00.022  1538  2102 I AiAiEcho: Predicting[0]: 
+01-21 22:58:00.025  1538  2102 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata: 
+01-21 22:58:00.026  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface lockscreen with targets# 0
+01-21 22:58:00.027  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface home with targets# 0
+01-21 22:58:00.028  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface media_data_manager with targets# 0
+01-21 22:58:00.044   833   833 D SsMediaDataProvider: Forwarding Smartspace updates []
+01-21 22:58:00.063   833  1105 D EGL_emulation: app_time_stats: avg=59974.15ms min=59974.15ms max=59974.15ms count=1
+01-21 22:58:05.014   551   593 W Looper  : Drained
+01-21 22:58:05.014   935  1155 D BtGatt.ScanManager: uid 10112 isForeground true scanMode -1
+01-21 22:58:12.241   157   157 I logd    : logdr: UID=2000 GID=2000 PID=5589 b tail=0 logMask=99 pid=0 start=0ns deadline=0ns
+01-21 22:58:13.853  1645  1645 D BoundBrokerSvc: onUnbind: Intent { act=com.google.android.gms.feedback.internal.IFeedbackService dat=chimera-action:/... cmp=com.google.android.gms/.chimera.GmsBoundBrokerService }
+01-21 22:58:13.943  1341  1341 D BoundBrokerSvc: onUnbind: Intent { act=com.google.android.gms.icing.LIGHTWEIGHT_INDEX_SERVICE dat=chimera-action:/... cmp=com.google.android.gms/.chimera.PersistentApiService }
+01-21 22:58:18.341   551  2381 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=com.xamarin.android.helloworld/example.MainActivity} from uid 2000
+01-21 22:58:18.345   551  2381 D CompatibilityChangeReporter: Compat change id reported: 265464455; UID 10176; state: DISABLED
+01-21 22:58:18.348   551  2381 D CompatibilityChangeReporter: Compat change id reported: 265452344; UID 10176; state: DISABLED
+01-21 22:58:18.348   551  2381 D CompatibilityChangeReporter: Compat change id reported: 266124927; UID 10176; state: DISABLED
+01-21 22:58:18.349   551  2381 D CompatibilityChangeReporter: Compat change id reported: 265451093; UID 10176; state: DISABLED
+01-21 22:58:18.349   551  2381 D CompatibilityChangeReporter: Compat change id reported: 265456536; UID 10176; state: DISABLED
+01-21 22:58:18.349   551  2381 D CompatibilityChangeReporter: Compat change id reported: 255940284; UID 10176; state: DISABLED
+01-21 22:58:18.349   551  2381 D CompatibilityChangeReporter: Compat change id reported: 236283604; UID 10176; state: DISABLED
+01-21 22:58:18.349   551  2381 D CompatibilityChangeReporter: Compat change id reported: 263959004; UID 10176; state: DISABLED
+01-21 22:58:18.350   551  2381 D CompatibilityChangeReporter: Compat change id reported: 264304459; UID 10176; state: DISABLED
+01-21 22:58:18.350   551  2381 D CompatibilityChangeReporter: Compat change id reported: 264301586; UID 10176; state: DISABLED
+01-21 22:58:18.350   551  2381 D CompatibilityChangeReporter: Compat change id reported: 254631730; UID 10176; state: DISABLED
+01-21 22:58:18.350   551  2381 D CompatibilityChangeReporter: Compat change id reported: 273509367; UID 10176; state: DISABLED
+01-21 22:58:18.350   551  2381 D CompatibilityChangeReporter: Compat change id reported: 263259275; UID 10176; state: DISABLED
+01-21 22:58:18.360   551  2381 D CompatibilityChangeReporter: Compat change id reported: 194480991; UID 10176; state: ENABLED
+01-21 22:58:18.361   551  2381 D CompatibilityChangeReporter: Compat change id reported: 174042980; UID 10176; state: DISABLED
+01-21 22:58:18.373   551  2381 D CompatibilityChangeReporter: Compat change id reported: 184838306; UID 10176; state: DISABLED
+01-21 22:58:18.375   551  2381 D CompatibilityChangeReporter: Compat change id reported: 185004937; UID 10176; state: DISABLED
+01-21 22:58:18.377   551  2381 D CompatibilityChangeReporter: Compat change id reported: 181136395; UID 10176; state: DISABLED
+01-21 22:58:18.377   551  2381 D CompatibilityChangeReporter: Compat change id reported: 174042936; UID 10176; state: DISABLED
+01-21 22:58:18.391   551  2381 D CompatibilityChangeReporter: Compat change id reported: 197654537; UID 10176; state: ENABLED
+01-21 22:58:18.393   551  2381 D CompatibilityChangeReporter: Compat change id reported: 205907456; UID 10176; state: ENABLED
+01-21 22:58:18.431   551   596 D CompatibilityChangeReporter: Compat change id reported: 135634846; UID 10176; state: DISABLED
+01-21 22:58:18.431   551   596 D CompatibilityChangeReporter: Compat change id reported: 177438394; UID 10176; state: DISABLED
+01-21 22:58:18.431   551   596 D CompatibilityChangeReporter: Compat change id reported: 135772972; UID 10176; state: DISABLED
+01-21 22:58:18.431   551   596 D CompatibilityChangeReporter: Compat change id reported: 135754954; UID 10176; state: ENABLED
+01-21 22:58:18.434   551   607 D CompatibilityChangeReporter: Compat change id reported: 143937733; UID 10176; state: ENABLED
+01-21 22:58:18.438  1201  1201 D MainContentCaptureSession: Flushing 1 event(s) for act:com.google.android.apps.nexuslauncher/.NexusLauncherActivity [state=2 (ACTIVE), disabled=false], reason=FULL
+01-21 22:58:18.450   833  1105 W Parcel  : Expecting binder but got null!
+01-21 22:58:18.471   337   337 I BpBinder: onLastStrongRef automatically unlinking death recipients: <uncached descriptor>
+01-21 22:58:18.490   294   294 D Zygote  : Forked child process 5597
+01-21 22:58:18.490   551   607 W ActivityManager: Slow operation: 69ms so far, now at startProcess: returned from zygote!
+01-21 22:58:18.491   551   607 W ActivityManager: Slow operation: 69ms so far, now at startProcess: done updating battery stats
+01-21 22:58:18.491   551   607 W ActivityManager: Slow operation: 69ms so far, now at startProcess: building log message
+01-21 22:58:18.491   551   607 I ActivityManager: Start proc 5597:com.xamarin.android.helloworld/u0a176 for next-top-activity {com.xamarin.android.helloworld/example.MainActivity}
+01-21 22:58:18.491   551   607 W ActivityManager: Slow operation: 69ms so far, now at startProcess: starting to update pids map
+01-21 22:58:18.492   833   978 W Looper  : Slow delivery took 39ms wmshell.main h=android.os.Handler c=null m=16
+01-21 22:58:18.493   833   978 W Looper  : Drained
+01-21 22:58:18.502   833  1089 D SplashScreenView: Build android.window.SplashScreenView{de5667a V.E...... ......ID 0,0-0,0}
+01-21 22:58:18.502   833  1089 D SplashScreenView: Icon: view: android.widget.ImageView{c41fe2b V.ED..... ......I. 0,0-0,0 #10204dd android:id/splashscreen_icon_view} drawable: com.android.wm.shell.startingsurface.SplashscreenIconDrawableFactory$ImmobileIconDrawable@3cc8288 size: 440
+01-21 22:58:18.502   833  1089 D SplashScreenView: Branding: view: android.view.View{b093421 G.ED..... ......I. 0,0-0,0 #10204dc android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+01-21 22:58:18.516   551  2379 D CoreBackPreview: Window{2e493a8 u0 Splash Screen com.xamarin.android.helloworld}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@4bfb666, mPriority=0}
+01-21 22:58:18.522  5597  5597 I roid.helloworld: Using CollectorTypeCC GC.
+01-21 22:58:18.528  1201  1613 D EGL_emulation: app_time_stats: avg=60604.06ms min=9.09ms max=484518.22ms count=8
+01-21 22:58:18.554   365   430 I adbd    : jdwp connection from 5597
+01-21 22:58:18.555   551   607 W ActivityManager: Slow operation: 133ms so far, now at startProcess: done updating pids map
+01-21 22:58:18.556   551  2381 W Binder  : Caught a RuntimeException from the binder stub implementation.
+01-21 22:58:18.556   551  2381 W Binder  : java.lang.ArrayIndexOutOfBoundsException: Array index out of range: 0
+01-21 22:58:18.556   551  2381 W Binder  : 	at android.util.ArraySet.valueAt(ArraySet.java:422)
+01-21 22:58:18.556   551  2381 W Binder  : 	at com.android.server.contentcapture.ContentCapturePerUserService$ContentCaptureServiceRemoteCallback.updateContentCaptureOptions(ContentCapturePerUserService.java:733)
+01-21 22:58:18.556   551  2381 W Binder  : 	at com.android.server.contentcapture.ContentCapturePerUserService$ContentCaptureServiceRemoteCallback.setContentCaptureWhitelist(ContentCapturePerUserService.java:646)
+01-21 22:58:18.556   551  2381 W Binder  : 	at android.service.contentcapture.IContentCaptureServiceCallback$Stub.onTransact(IContentCaptureServiceCallback.java:115)
+01-21 22:58:18.556   551  2381 W Binder  : 	at android.os.Binder.execTransactInternal(Binder.java:1285)
+01-21 22:58:18.556   551  2381 W Binder  : 	at android.os.Binder.execTransact(Binder.java:1244)
+01-21 22:58:18.577   833  1105 E OpenGLRenderer: Unable to match the desired swap behavior.
+01-21 22:58:18.639   551  2379 W ActivityTaskManager: takeTaskSnapshot: taskId=13 not found or not visible
+01-21 22:58:18.641  5597  5597 D CompatibilityChangeReporter: Compat change id reported: 171979766; UID 10176; state: ENABLED
+01-21 22:58:18.713  5597  5597 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~tk5HQebqB3miOZ_CThKtog==/com.xamarin.android.helloworld-xm5xS6Wh0YbTjYmxyffhzw==/base.apk. target_sdk_version=36, uses_libraries=, library_path=/data/app/~~tk5HQebqB3miOZ_CThKtog==/com.xamarin.android.helloworld-xm5xS6Wh0YbTjYmxyffhzw==/lib/arm64:/data/app/~~tk5HQebqB3miOZ_CThKtog==/com.xamarin.android.helloworld-xm5xS6Wh0YbTjYmxyffhzw==/base.apk!/lib/arm64-v8a, permitted_path=/data:/mnt/expand:/data/user/0/com.xamarin.android.helloworld
+01-21 22:58:18.775  5597  5597 V GraphicsEnvironment: ANGLE Developer option for 'com.xamarin.android.helloworld' set to: 'default'
+01-21 22:58:18.787  5597  5597 V GraphicsEnvironment: ANGLE GameManagerService for com.xamarin.android.helloworld: false
+01-21 22:58:18.787  5597  5597 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+01-21 22:58:18.807  5597  5597 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+01-21 22:58:18.807  5597  5597 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+01-21 22:58:18.811   551  2381 D CompatibilityChangeReporter: Compat change id reported: 161145287; UID 10176; state: DISABLED
+01-21 22:58:19.006   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622ec430
+01-21 22:58:19.007   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622eb2f0
+01-21 22:58:19.020   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622ec070
+01-21 22:58:19.039   833  1105 D EGL_emulation: app_time_stats: avg=120925.22ms min=33.05ms max=483541.72ms count=4
+01-21 22:58:19.305  5597  5597 D DOTNET  : AndroidCryptoNative_InitLibraryOnLoad: jint AndroidCryptoNative_InitLibraryOnLoad(JavaVM *, void *) in /__w/1/s/src/runtime/src/native/libs/System.Security.Cryptography.Native.Android/pal_jni.c
+01-21 22:58:19.306  5597  5597 D DOTNET  : GetOptionalClassGRef: optional class com/android/org/conscrypt/OpenSSLEngineImpl was not found
+01-21 22:58:19.721  5597  5597 I monodroid: JNIEnvInit: IsCoreClrRuntime=True, IsMonoRuntime=False
+01-21 22:58:19.768  5597  5597 I monodroid-typemap: TypeMapAttributeTypeMap: Initializing...
+01-21 22:58:20.016  5597  5597 I monodroid-typemap: TypeMapAttributeTypeMap: Initialized external and invoker type mappings
+01-21 22:58:20.054   833  1105 D EGL_emulation: app_time_stats: avg=16.33ms min=2.49ms max=104.39ms count=38
+01-21 22:58:20.072  5597  5597 I monodroid: JNIEnvInit: Set getFunctionPointerFn to 0x6eb91a2988
+01-21 22:58:20.131  5597  5625 D libEGL  : loaded /vendor/lib64/egl/libEGL_emulation.so
+01-21 22:58:20.143  5597  5625 D libEGL  : loaded /vendor/lib64/egl/libGLESv1_CM_emulation.so
+01-21 22:58:20.145  5597  5625 D libEGL  : loaded /vendor/lib64/egl/libGLESv2_emulation.so
+01-21 22:58:20.188  5597  5597 I monodroid-typemap: TryGetJniNameForType: HelloWorld.MainActivity -> 'example/MainActivity' (from [Register])
+01-21 22:58:20.189  5597  5597 I monodroid: RegisterNativeMembers: type=HelloWorld.MainActivity, methods=n_onCreate:(Landroid/os/Bundle;)V:GetOnCreate_Landroid_os_Bundle_Handler
+01-21 22:58:20.190  5597  5597 I monodroid: n_onResume:()V:GetOnResumeHandler
+01-21 22:58:20.190  5597  5597 I monodroid: 
+01-21 22:58:20.190  5597  5597 I monodroid: DynamicNativeMembersRegistration: registered n_onCreate for HelloWorld.MainActivity
+01-21 22:58:20.191  5597  5597 I monodroid: DynamicNativeMembersRegistration: registered n_onResume for HelloWorld.MainActivity
+01-21 22:58:20.192  5597  5597 I monodroid: DynamicNativeMembersRegistration: calling RegisterNatives with 2 methods
+01-21 22:58:20.195  5597  5597 I monodroid-typemap: TryGetJniNameForType: Java.Interop.TypeManager+JavaTypeManager -> 'mono/android/TypeManager' (from [Register])
+01-21 22:58:20.195  5597  5597 I monodroid: RegisterNativeMembers: type=Java.Interop.TypeManager+JavaTypeManager, methods=n_activate:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;[Ljava/lang/Object;)V:GetActivateHandler
+01-21 22:58:20.195  5597  5597 I monodroid: 
+01-21 22:58:20.196  5597  5597 I monodroid: DynamicNativeMembersRegistration: registered n_activate for Java.Interop.TypeManager+JavaTypeManager
+01-21 22:58:20.196  5597  5597 I monodroid: DynamicNativeMembersRegistration: calling RegisterNatives with 1 methods
+01-21 22:58:20.358  5597  5597 D CompatibilityChangeReporter: Compat change id reported: 210923482; UID 10176; state: ENABLED
+01-21 22:58:20.360  5597  5597 I monodroid-typemap: CreatePeer: handle=0xd1, targetType=Android.Views.View
+01-21 22:58:20.361  5597  5597 I monodroid-typemap: CreatePeer: Found type Android.Widget.Button for Java class 'android/widget/Button'
+01-21 22:58:20.361  5597  5597 I monodroid-typemap: TryGetJniNameForType: Android.Widget.Button -> 'android/widget/Button' (from [Register])
+01-21 22:58:20.361  5597  5597 I monodroid-typemap: CreatePeer: Activating instance of Android.Widget.Button...
+01-21 22:58:20.365  5597  5597 I monodroid-typemap: CreatePeer: SUCCESS - Created Android.Widget.Button for Java class 'android/widget/Button'
+01-21 22:58:20.378  5597  5597 I monodroid-typemap: TryGetJniNameForType: Android.Views.View+IOnClickListenerImplementor -> 'mono/android/view/View_OnClickListenerImplementor' (from [Register])
+01-21 22:58:20.379  5597  5597 I monodroid-typemap: TryGetJniNameForType: Android.Views.View+IOnClickListenerImplementor -> 'mono/android/view/View_OnClickListenerImplementor' (from [Register])
+01-21 22:58:20.379  5597  5597 I monodroid: RegisterNativeMembers: type=Android.Views.View+IOnClickListenerImplementor, methods=n_onClick:(Landroid/view/View;)V:GetOnClick_Landroid_view_View_Handler:Android.Views.View+IOnClickListenerInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+01-21 22:58:20.379  5597  5597 I monodroid: 
+01-21 22:58:20.380  5597  5597 I monodroid: DynamicNativeMembersRegistration: registered n_onClick for Android.Views.View+IOnClickListenerImplementor
+01-21 22:58:20.380  5597  5597 I monodroid: DynamicNativeMembersRegistration: calling RegisterNatives with 1 methods
+01-21 22:58:20.400  5597  5597 I monodroid-test: Calling native stub Java_example_MainActivity_n_1onCreate__Landroid_os_Bundle_2V...
+01-21 22:58:20.401  5597  5597 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0 in tid 5597 (roid.helloworld), pid 5597 (roid.helloworld)
+01-21 22:58:20.756  5628  5628 I crash_dump64: obtaining output fd from tombstoned, type: kDebuggerdTombstoneProto
+01-21 22:58:20.763   195   195 I tombstoned: received crash request for pid 5597
+01-21 22:58:20.764  5628  5628 I crash_dump64: performing dump of process 5597 (target tid = 5597)
+01-21 22:58:21.271   157   157 I logd    : logdr: UID=10176 GID=10176 PID=5628 n tail=0 logMask=8 pid=5597 start=0ns deadline=0ns
+01-21 22:58:21.272   157   157 I logd    : logdr: UID=10176 GID=10176 PID=5628 n tail=0 logMask=1 pid=5597 start=0ns deadline=0ns
+01-21 22:58:21.234  5628  5628 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+01-21 22:58:21.234  5628  5628 F DEBUG   : Build fingerprint: 'google/sdk_gphone64_arm64/emu64a:13/TE1A.240213.009/12342917:userdebug/dev-keys'
+01-21 22:58:21.234  5628  5628 F DEBUG   : Revision: '0'
+01-21 22:58:21.234  5628  5628 F DEBUG   : ABI: 'arm64'
+01-21 22:58:21.234  5628  5628 F DEBUG   : Timestamp: 2026-01-21 22:58:20.780136105+0100
+01-21 22:58:21.234  5628  5628 F DEBUG   : Process uptime: 3s
+01-21 22:58:21.234  5628  5628 F DEBUG   : Cmdline: com.xamarin.android.helloworld
+01-21 22:58:21.234  5628  5628 F DEBUG   : pid: 5597, tid: 5597, name: roid.helloworld  >>> com.xamarin.android.helloworld <<<
+01-21 22:58:21.234  5628  5628 F DEBUG   : uid: 10176
+01-21 22:58:21.234  5628  5628 F DEBUG   : tagged_addr_ctrl: 0000000000000001 (PR_TAGGED_ADDR_ENABLE)
+01-21 22:58:21.234  5628  5628 F DEBUG   : pac_enabled_keys: 000000000000000f (PR_PAC_APIAKEY, PR_PAC_APIBKEY, PR_PAC_APDAKEY, PR_PAC_APDBKEY)
+01-21 22:58:21.234  5628  5628 F DEBUG   : signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0000000000000000
+01-21 22:58:21.234  5628  5628 F DEBUG   : Cause: null pointer dereference
+01-21 22:58:21.234  5628  5628 F DEBUG   :     x0  0000006ef9792635  x1  0000000000000014  x2  0000000000000000  x3  0000006f01bd2730
+01-21 22:58:21.234  5628  5628 F DEBUG   :     x4  00000000000000e1  x5  0000006f7449dd7a  x6  646b6f6c6077645e  x7  7f7f7f7f7f7f7f7f
+01-21 22:58:21.234  5628  5628 F DEBUG   :     x8  0000006ef9792635  x9  0000000000000000  x10 0000000000000050  x11 0000000000000005
+01-21 22:58:21.234  5628  5628 F DEBUG   :     x12 0000006ef97f2894  x13 0056325f656c646e  x14 db979083e96dd4de  x15 ffffffffffffffff
+01-21 22:58:21.234  5628  5628 F DEBUG   :     x16 0000006ef8586760  x17 0000007227d588a4  x18 00000072401b2000  x19 0000006f01bd2730
+01-21 22:58:21.234  5628  5628 F DEBUG   :     x20 b400007038b47f50  x21 00000000000039e6  x22 0000000000000000  x23 0000000000001070
+01-21 22:58:21.234  5628  5628 F DEBUG   :     x24 0000006f77a00880  x25 0000007ffbf15e30  x26 0000000018380001  x27 0000000000000000
+01-21 22:58:21.234  5628  5628 F DEBUG   :     x28 0000007ffbf15d30  x29 0000007ffbf15b50
+01-21 22:58:21.234  5628  5628 F DEBUG   :     lr  0000006ef97f28ec  sp  0000007ffbf15b20  pc  0000000000000000  pst 0000000060001000
+01-21 22:58:21.234  5628  5628 F DEBUG   : backtrace:
+01-21 22:58:21.234  5628  5628 F DEBUG   :       #00 pc 0000000000000000  <unknown>
+01-21 22:58:21.234  5628  5628 F DEBUG   :       #01 pc 00000000001ad8e8  /data/app/~~tk5HQebqB3miOZ_CThKtog==/com.xamarin.android.helloworld-xm5xS6Wh0YbTjYmxyffhzw==/base.apk!libxamarin-app-clr.so (offset 0x28a4000) (Java_example_MainActivity_n_1onCreate__Landroid_os_Bundle_2V+84) (BuildId: caec7d633856887bcf876b3ea5b994d64143a084)
+01-21 22:58:21.234  5628  5628 F DEBUG   :       #02 pc 0000000000000dac  <anonymous:6eb65f0000>
+01-21 22:58:21.268   195   195 E tombstoned: Tombstone written to: tombstone_20
+01-21 22:58:21.277   551  5633 W ActivityTaskManager:   Force finishing activity com.xamarin.android.helloworld/example.MainActivity
+01-21 22:58:21.284   551  5634 I DropBoxManagerService: add tag=data_app_native_crash isTagEnabled=true flags=0x2
+01-21 22:58:21.298   551   692 I BootReceiver: Copying /data/tombstones/tombstone_20 to DropBox (SYSTEM_TOMBSTONE)
+01-21 22:58:21.299   551   692 I DropBoxManagerService: add tag=SYSTEM_TOMBSTONE isTagEnabled=true flags=0x6
+01-21 22:58:21.349     1     1 I init    : Untracked pid 5628 exited with status 0
+01-21 22:58:21.349     1     1 I init    : Untracked pid 5628 did not have an associated service entry and will not be reaped
+01-21 22:58:21.333   551   692 I DropBoxManagerService: add tag=SYSTEM_TOMBSTONE_PROTO isTagEnabled=true flags=0x4
+01-21 22:58:21.336   294   294 I Zygote  : Process 5597 exited due to signal 11 (Segmentation fault)
+01-21 22:58:21.430     1     1 I init    : Untracked pid 5630 exited with status 0
+01-21 22:58:21.430     1     1 I init    : Untracked pid 5630 did not have an associated service entry and will not be reaped
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: Exception thrown during pause
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: android.os.DeadObjectException
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at android.os.BinderProxy.transactNative(Native Method)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at android.os.BinderProxy.transact(BinderProxy.java:584)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at android.app.IApplicationThread$Stub$Proxy.scheduleTransaction(IApplicationThread.java:1900)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at android.app.servertransaction.ClientTransaction.schedule(ClientTransaction.java:136)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.wm.ClientLifecycleManager.scheduleTransaction(ClientLifecycleManager.java:47)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.wm.ClientLifecycleManager.scheduleTransaction(ClientLifecycleManager.java:69)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.wm.TaskFragment.schedulePauseActivity(TaskFragment.java:1725)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.wm.TaskFragment.startPausing(TaskFragment.java:1664)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.wm.ActivityRecord.finishIfPossible(ActivityRecord.java:3520)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.wm.ActivityRecord.finishIfPossible(ActivityRecord.java:3410)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.wm.Task.finishTopCrashedActivityLocked(Task.java:5334)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.wm.RootWindowContainer.lambda$finishTopCrashedActivities$17(RootWindowContainer.java:2236)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.wm.RootWindowContainer.$r8$lambda$tU3uq54E6s47P2cFrn4v86Si-94(Unknown Source:0)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.wm.RootWindowContainer$$ExternalSyntheticLambda44.accept(Unknown Source:10)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.wm.Task.forAllTasks(Task.java:3192)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.wm.WindowContainer.forAllTasks(WindowContainer.java:2041)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.wm.WindowContainer.forAllTasks(WindowContainer.java:2041)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.wm.WindowContainer.forAllTasks(WindowContainer.java:2041)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.wm.WindowContainer.forAllTasks(WindowContainer.java:2041)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.wm.WindowContainer.forAllTasks(WindowContainer.java:2041)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.wm.WindowContainer.forAllTasks(WindowContainer.java:2041)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.wm.WindowContainer.forAllTasks(WindowContainer.java:2041)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.wm.WindowContainer.forAllTasks(WindowContainer.java:2034)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.wm.RootWindowContainer.finishTopCrashedActivities(RootWindowContainer.java:2235)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.wm.ActivityTaskManagerService$LocalService.finishTopCrashedActivities(ActivityTaskManagerService.java:6586)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.am.AppErrors.handleAppCrashLSPB(AppErrors.java:934)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.am.AppErrors.makeAppCrashingLocked(AppErrors.java:766)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.am.AppErrors.crashApplicationInner(AppErrors.java:641)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.am.AppErrors.crashApplication(AppErrors.java:569)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.am.ActivityManagerService.handleApplicationCrashInner(ActivityManagerService.java:8558)
+01-21 22:58:21.442   551  5633 W ActivityTaskManager: 	at com.android.server.am.NativeCrashListener$NativeCrashReporter.run(NativeCrashListener.java:88)
+01-21 22:58:21.461  1201  1201 D MainContentCaptureSession: Flushing 1 event(s) for act:com.google.android.apps.nexuslauncher/.NexusLauncherActivity [state=2 (ACTIVE), disabled=false], reason=FULL
+01-21 22:58:21.472   551  1548 W AppSearchIcing: icing-search-engine.cc:217: Error: 5, Message: Document (com.google.android.googlequicksearchbox$OneSearchZeroStateGoogleSuggestions/default, zp) not found.
+01-21 22:58:21.476  1201  1718 D OneSearchSuggestProvider: Established or reuse existing binder channel authority=com.google.android.googlequicksearchbox
+01-21 22:58:21.498   337   337 I BpBinder: onLastStrongRef automatically unlinking death recipients: <uncached descriptor>
+01-21 22:58:21.514   551  2369 I ActivityManager: Process com.xamarin.android.helloworld (pid 5597) has died: fg  TOP 
+01-21 22:58:21.516   551   610 I libprocessgroup: Successfully killed process cgroup uid 10176 pid 5597 in 0ms
+01-21 22:58:21.542   551   593 W Looper  : Slow dispatch took 255ms android.fg h=com.android.server.DropBoxManagerService$DropBoxManagerBroadcastHandler c=null m=1
+01-21 22:58:21.542   551   593 W Looper  : Slow delivery took 232ms android.fg h=com.android.server.DropBoxManagerService$DropBoxManagerBroadcastHandler c=null m=1
+01-21 22:58:21.549  1538  2102 I AiAiEcho: Predicting[0]: 
+01-21 22:58:21.549  1538  2102 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata: 
+01-21 22:58:21.550  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface lockscreen with targets# 0
+01-21 22:58:21.550  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface home with targets# 0
+01-21 22:58:21.550  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface media_data_manager with targets# 0
+01-21 22:58:21.559  1201  1613 E OpenGLRenderer: Unable to match the desired swap behavior.
+01-21 22:58:21.593  1754  2094 E OpenGLRenderer: Unable to match the desired swap behavior.
+01-21 22:58:21.604   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.stats.service.DropBoxEntryAddedReceiver
+01-21 22:58:21.608   551   593 W Looper  : Drained
+01-21 22:58:21.610   551  1152 W InputManager-JNI: Input channel object '2e493a8 Splash Screen com.xamarin.android.helloworld (client)' was disposed without first being removed with the input manager!
+01-21 22:58:21.618   833   833 D SsMediaDataProvider: Forwarding Smartspace updates []
+01-21 22:58:21.647   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622eacf0
+01-21 22:58:21.647   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622ea5d0
+01-21 22:58:21.666   551  2379 W WindowManager: Failed looking up window session=Session{79d51bc 833:u0a10157} callers=com.android.server.wm.WindowManagerService.windowForClientLocked:6050 com.android.server.wm.Session.setOnBackInvokedCallbackInfo:943 android.view.IWindowSession$Stub.onTransact:1180 
+01-21 22:58:21.667   551  2379 E WindowManager: setOnBackInvokedCallback(): No window state for package:com.android.systemui
+01-21 22:58:21.678   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.chimera.GmsIntentOperationService$PersistentTrustedReceiver
+01-21 22:58:21.679   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.stats.service.DropBoxEntryAddedReceiver
+01-21 22:58:21.680   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.chimera.GmsIntentOperationService$PersistentTrustedReceiver
+01-21 22:58:21.680   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.stats.service.DropBoxEntryAddedReceiver
+01-21 22:58:21.680   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.chimera.GmsIntentOperationService$PersistentTrustedReceiver
+01-21 22:58:21.789   551   596 W ActivityTaskManager: Activity top resumed state loss timeout for ActivityRecord{695b7bc u0 com.xamarin.android.helloworld/example.MainActivity} t31 f} isExiting}
+01-21 22:58:21.930   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622ea690
+01-21 22:58:21.930   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622eb110
+01-21 22:58:21.964  2899  2899 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3227 
+01-21 22:58:21.968  2899  2899 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2087 repeatCheckTimes = 0, unlocked = true
+01-21 22:58:21.981   833  1105 D EGL_emulation: app_time_stats: avg=50.60ms min=2.68ms max=1236.78ms count=31
+01-21 22:58:21.987  2899  2899 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1877 onStartInput(EditorInfo{inputType=0x0(NULL) imeOptions=0x0 privateImeOptions=null actionName=UNSPECIFIED actionLabel=null actionId=0 initialSelStart=-1 initialSelEnd=-1 initialCapsMode=0x0 hintText=null label=null packageName=com.google.android.apps.nexuslauncher fieldId=-1 fieldName=null extras=null}, false)
+01-21 22:58:21.987  2899  2899 I GoogleInputMethodService: GoogleInputMethodService.shouldHideHeaderOnInitialState():4008 ShouldHideHeaderOnInitialState = false
+01-21 22:58:21.987  2899  2899 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2087 repeatCheckTimes = 2, unlocked = true
+01-21 22:58:22.600  2009  5513 I BugleRcsEngine: [134] bfyb.d: (PEv2-SM-Bugle-18230731): ConfiguredState: event Timeout [null]
+01-21 22:58:22.989   833  1105 D EGL_emulation: app_time_stats: avg=9.00ms min=1.73ms max=31.50ms count=45

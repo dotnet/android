@@ -1,0 +1,191 @@
+--------- beginning of system
+01-22 00:47:42.204   551  2369 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=com.xamarin.android.helloworld/example.MainActivity} from uid 2000
+01-22 00:47:42.205   551  2369 D CompatibilityChangeReporter: Compat change id reported: 265464455; UID 10179; state: DISABLED
+01-22 00:47:42.205   551  2369 D CompatibilityChangeReporter: Compat change id reported: 265452344; UID 10179; state: DISABLED
+01-22 00:47:42.205   551  2369 D CompatibilityChangeReporter: Compat change id reported: 266124927; UID 10179; state: DISABLED
+01-22 00:47:42.205   551  2369 D CompatibilityChangeReporter: Compat change id reported: 265451093; UID 10179; state: DISABLED
+01-22 00:47:42.205   551  2369 D CompatibilityChangeReporter: Compat change id reported: 265456536; UID 10179; state: DISABLED
+01-22 00:47:42.205   551  2369 D CompatibilityChangeReporter: Compat change id reported: 255940284; UID 10179; state: DISABLED
+01-22 00:47:42.205   551  2369 D CompatibilityChangeReporter: Compat change id reported: 236283604; UID 10179; state: DISABLED
+01-22 00:47:42.206   551  2369 D CompatibilityChangeReporter: Compat change id reported: 263959004; UID 10179; state: DISABLED
+01-22 00:47:42.206   551  2369 D CompatibilityChangeReporter: Compat change id reported: 264304459; UID 10179; state: DISABLED
+01-22 00:47:42.206   551  2369 D CompatibilityChangeReporter: Compat change id reported: 264301586; UID 10179; state: DISABLED
+01-22 00:47:42.206   551  2369 D CompatibilityChangeReporter: Compat change id reported: 254631730; UID 10179; state: DISABLED
+01-22 00:47:42.206   551  2369 D CompatibilityChangeReporter: Compat change id reported: 273509367; UID 10179; state: DISABLED
+01-22 00:47:42.206   551  2369 D CompatibilityChangeReporter: Compat change id reported: 263259275; UID 10179; state: DISABLED
+01-22 00:47:42.206   551  2369 D CompatibilityChangeReporter: Compat change id reported: 194480991; UID 10179; state: ENABLED
+01-22 00:47:42.207   551  2369 D CompatibilityChangeReporter: Compat change id reported: 174042980; UID 10179; state: DISABLED
+01-22 00:47:42.215   551  2369 D CompatibilityChangeReporter: Compat change id reported: 184838306; UID 10179; state: DISABLED
+01-22 00:47:42.215   551  2369 D CompatibilityChangeReporter: Compat change id reported: 185004937; UID 10179; state: DISABLED
+01-22 00:47:42.215   551  2369 D CompatibilityChangeReporter: Compat change id reported: 181136395; UID 10179; state: DISABLED
+01-22 00:47:42.215   551  2369 D CompatibilityChangeReporter: Compat change id reported: 174042936; UID 10179; state: DISABLED
+01-22 00:47:42.218   551  2369 D CompatibilityChangeReporter: Compat change id reported: 197654537; UID 10179; state: ENABLED
+01-22 00:47:42.219   551  2369 D CompatibilityChangeReporter: Compat change id reported: 205907456; UID 10179; state: ENABLED
+--------- beginning of main
+01-22 00:47:42.287   833  1089 D SplashScreenView: Build android.window.SplashScreenView{81ae1b7 V.E...... ......ID 0,0-0,0}
+01-22 00:47:42.287   833  1089 D SplashScreenView: Icon: view: android.widget.ImageView{ec20d24 V.ED..... ......I. 0,0-0,0 #10204dd android:id/splashscreen_icon_view} drawable: com.android.wm.shell.startingsurface.SplashscreenIconDrawableFactory$ImmobileIconDrawable@678c08d size: 440
+01-22 00:47:42.287   833  1089 D SplashScreenView: Branding: view: android.view.View{6232242 G.ED..... ......I. 0,0-0,0 #10204dc android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+01-22 00:47:42.355  1201  1201 D MainContentCaptureSession: Flushing 1 event(s) for act:com.google.android.apps.nexuslauncher/.NexusLauncherActivity [state=2 (ACTIVE), disabled=false], reason=FULL
+01-22 00:47:42.378   551   596 D CompatibilityChangeReporter: Compat change id reported: 135634846; UID 10179; state: DISABLED
+01-22 00:47:42.378   337   337 I BpBinder: onLastStrongRef automatically unlinking death recipients: <uncached descriptor>
+01-22 00:47:42.379   551   596 D CompatibilityChangeReporter: Compat change id reported: 177438394; UID 10179; state: DISABLED
+01-22 00:47:42.379   551   596 D CompatibilityChangeReporter: Compat change id reported: 135772972; UID 10179; state: DISABLED
+01-22 00:47:42.379   551   596 D CompatibilityChangeReporter: Compat change id reported: 135754954; UID 10179; state: ENABLED
+01-22 00:47:42.383   833  1105 W Parcel  : Expecting binder but got null!
+01-22 00:47:42.384   551   607 D CompatibilityChangeReporter: Compat change id reported: 143937733; UID 10179; state: ENABLED
+01-22 00:47:42.388   551  2392 D CompatibilityChangeReporter: Compat change id reported: 168419799; UID 10179; state: DISABLED
+01-22 00:47:42.388   551  2392 D CompatibilityChangeReporter: Compat change id reported: 273564678; UID 10179; state: DISABLED
+01-22 00:47:42.394   551  2392 D CoreBackPreview: Window{e5991a8 u0 Splash Screen com.xamarin.android.helloworld}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@487e466, mPriority=0}
+01-22 00:47:42.398   294   294 D Zygote  : Forked child process 7788
+01-22 00:47:42.419   551   607 I ActivityManager: Start proc 7788:com.xamarin.android.helloworld/u0a179 for next-top-activity {com.xamarin.android.helloworld/example.MainActivity}
+01-22 00:47:42.420  1201  1613 D EGL_emulation: app_time_stats: avg=3792.68ms min=4.58ms max=22608.34ms count=6
+01-22 00:47:42.421   833  1105 E OpenGLRenderer: Unable to match the desired swap behavior.
+01-22 00:47:42.429  7788  7788 I roid.helloworld: Using CollectorTypeCC GC.
+01-22 00:47:42.490   551  2375 W ActivityTaskManager: takeTaskSnapshot: taskId=13 not found or not visible
+01-22 00:47:42.490   365   430 I adbd    : jdwp connection from 7788
+01-22 00:47:42.550  7788  7788 D CompatibilityChangeReporter: Compat change id reported: 171979766; UID 10179; state: ENABLED
+01-22 00:47:42.569  7788  7788 W ziparchive: Unable to open '/data/app/~~0nHVLs6JCbaY4j8EL8UJ2Q==/com.xamarin.android.helloworld-G_fIyxJ21PhiD5rMBXXJSA==/split_config.arm64_v8a.dm': No such file or directory
+01-22 00:47:42.569  7788  7788 W ziparchive: Unable to open '/data/app/~~0nHVLs6JCbaY4j8EL8UJ2Q==/com.xamarin.android.helloworld-G_fIyxJ21PhiD5rMBXXJSA==/split_config.arm64_v8a.dm': No such file or directory
+01-22 00:47:42.569  7788  7788 W roid.helloworld: Entry not found
+01-22 00:47:42.570  7788  7788 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~0nHVLs6JCbaY4j8EL8UJ2Q==/com.xamarin.android.helloworld-G_fIyxJ21PhiD5rMBXXJSA==/base.apk:/data/app/~~0nHVLs6JCbaY4j8EL8UJ2Q==/com.xamarin.android.helloworld-G_fIyxJ21PhiD5rMBXXJSA==/split_config.arm64_v8a.apk. target_sdk_version=36, uses_libraries=, library_path=/data/app/~~0nHVLs6JCbaY4j8EL8UJ2Q==/com.xamarin.android.helloworld-G_fIyxJ21PhiD5rMBXXJSA==/lib/arm64:/data/app/~~0nHVLs6JCbaY4j8EL8UJ2Q==/com.xamarin.android.helloworld-G_fIyxJ21PhiD5rMBXXJSA==/base.apk!/lib/arm64-v8a:/data/app/~~0nHVLs6JCbaY4j8EL8UJ2Q==/com.xamarin.android.helloworld-G_fIyxJ21PhiD5rMBXXJSA==/split_config.arm64_v8a.apk!/lib/arm64-v8a, permitted_path=/data:/mnt/expand:/data/user/0/com.xamarin.android.helloworld
+01-22 00:47:42.571  7788  7788 W roid.helloworld: JIT profile information will not be recorded: profile file does not exist.
+01-22 00:47:42.606  7788  7788 V GraphicsEnvironment: ANGLE Developer option for 'com.xamarin.android.helloworld' set to: 'default'
+01-22 00:47:42.609  7788  7788 V GraphicsEnvironment: ANGLE GameManagerService for com.xamarin.android.helloworld: false
+01-22 00:47:42.609  7788  7788 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+01-22 00:47:42.641  7788  7788 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+01-22 00:47:42.642  7788  7788 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+01-22 00:47:42.649   551  2392 D CompatibilityChangeReporter: Compat change id reported: 161145287; UID 10179; state: DISABLED
+01-22 00:47:42.761   833  1105 D EGL_emulation: app_time_stats: avg=1209.53ms min=1.95ms max=21440.64ms count=18
+01-22 00:47:42.787   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622ea7b0
+01-22 00:47:42.787   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622ea450
+01-22 00:47:42.787   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622ea450
+01-22 00:47:42.787   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622ea7b0
+01-22 00:47:42.819   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622e93d0
+01-22 00:47:42.819   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622e93d0
+01-22 00:47:42.985  7788  7788 D DOTNET  : AndroidCryptoNative_InitLibraryOnLoad: jint AndroidCryptoNative_InitLibraryOnLoad(JavaVM *, void *) in /__w/1/s/src/runtime/src/native/libs/System.Security.Cryptography.Native.Android/pal_jni.c
+01-22 00:47:42.986  7788  7788 D DOTNET  : GetOptionalClassGRef: optional class com/android/org/conscrypt/OpenSSLEngineImpl was not found
+01-22 00:47:43.113  7788  7788 I monodroid: JNIEnvInit: IsCoreClrRuntime=True, IsMonoRuntime=False
+01-22 00:47:43.126  7788  7788 I monodroid-typemap: TypeMapAttributeTypeMap: Initializing...
+01-22 00:47:43.203  7788  7788 I monodroid-typemap: TypeMapAttributeTypeMap: Initialized external and invoker type mappings
+01-22 00:47:43.257  7788  7788 I monodroid: JNIEnvInit: Set getFunctionPointerFn to 0x6eb6702958
+01-22 00:47:43.308  7788  7815 D libEGL  : loaded /vendor/lib64/egl/libEGL_emulation.so
+01-22 00:47:43.310  7788  7815 D libEGL  : loaded /vendor/lib64/egl/libGLESv1_CM_emulation.so
+01-22 00:47:43.313  7788  7815 D libEGL  : loaded /vendor/lib64/egl/libGLESv2_emulation.so
+01-22 00:47:43.382  7788  7788 I monodroid-typemap: TryGetJniNameForType: HelloWorld.MainActivity -> 'example/MainActivity' (from [Register])
+01-22 00:47:43.383  7788  7788 I monodroid: RegisterNativeMembers: type=HelloWorld.MainActivity, methods=n_onCreate:(Landroid/os/Bundle;)V:GetOnCreate_Landroid_os_Bundle_Handler
+01-22 00:47:43.383  7788  7788 I monodroid: n_onResume:()V:GetOnResumeHandler
+01-22 00:47:43.383  7788  7788 I monodroid: 
+01-22 00:47:43.384  7788  7788 I monodroid: DynamicNativeMembersRegistration check: type=HelloWorld.MainActivity, assembly=HelloWorld.DotNet
+01-22 00:47:43.386  7788  7788 I monodroid-typemap: TryGetJniNameForType: Java.Interop.TypeManager+JavaTypeManager -> 'mono/android/TypeManager' (from [Register])
+01-22 00:47:43.387  7788  7788 I monodroid: RegisterNativeMembers: type=Java.Interop.TypeManager+JavaTypeManager, methods=n_activate:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;[Ljava/lang/Object;)V:GetActivateHandler
+01-22 00:47:43.387  7788  7788 I monodroid: 
+01-22 00:47:43.387  7788  7788 I monodroid: DynamicNativeMembersRegistration check: type=Java.Interop.TypeManager+JavaTypeManager, assembly=Mono.Android
+01-22 00:47:43.388  7788  7788 E roid.helloworld: No implementation found for void mono.android.TypeManager.n_activate(java.lang.String, java.lang.String, java.lang.Object, java.lang.Object[]) (tried Java_mono_android_TypeManager_n_1activate and Java_mono_android_TypeManager_n_1activate__Ljava_lang_String_2Ljava_lang_String_2Ljava_lang_Object_2_3Ljava_lang_Object_2)
+01-22 00:47:43.388  7788  7788 D AndroidRuntime: Shutting down VM
+--------- beginning of crash
+01-22 00:47:43.390  7788  7788 E AndroidRuntime: FATAL EXCEPTION: main
+01-22 00:47:43.390  7788  7788 E AndroidRuntime: Process: com.xamarin.android.helloworld, PID: 7788
+01-22 00:47:43.390  7788  7788 E AndroidRuntime: java.lang.UnsatisfiedLinkError: No implementation found for void mono.android.TypeManager.n_activate(java.lang.String, java.lang.String, java.lang.Object, java.lang.Object[]) (tried Java_mono_android_TypeManager_n_1activate and Java_mono_android_TypeManager_n_1activate__Ljava_lang_String_2Ljava_lang_String_2Ljava_lang_Object_2_3Ljava_lang_Object_2)
+01-22 00:47:43.390  7788  7788 E AndroidRuntime: 	at mono.android.TypeManager.n_activate(Native Method)
+01-22 00:47:43.390  7788  7788 E AndroidRuntime: 	at mono.android.TypeManager.Activate(TypeManager.java:7)
+01-22 00:47:43.390  7788  7788 E AndroidRuntime: 	at example.MainActivity.<init>(MainActivity.java:23)
+01-22 00:47:43.390  7788  7788 E AndroidRuntime: 	at java.lang.Class.newInstance(Native Method)
+01-22 00:47:43.390  7788  7788 E AndroidRuntime: 	at android.app.AppComponentFactory.instantiateActivity(AppComponentFactory.java:95)
+01-22 00:47:43.390  7788  7788 E AndroidRuntime: 	at android.app.Instrumentation.newActivity(Instrumentation.java:1339)
+01-22 00:47:43.390  7788  7788 E AndroidRuntime: 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:3538)
+01-22 00:47:43.390  7788  7788 E AndroidRuntime: 	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:3782)
+01-22 00:47:43.390  7788  7788 E AndroidRuntime: 	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:101)
+01-22 00:47:43.390  7788  7788 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeCallbacks(TransactionExecutor.java:138)
+01-22 00:47:43.390  7788  7788 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:95)
+01-22 00:47:43.390  7788  7788 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2307)
+01-22 00:47:43.390  7788  7788 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:106)
+01-22 00:47:43.390  7788  7788 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:201)
+01-22 00:47:43.390  7788  7788 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:288)
+01-22 00:47:43.390  7788  7788 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:7924)
+01-22 00:47:43.390  7788  7788 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+01-22 00:47:43.390  7788  7788 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:548)
+01-22 00:47:43.390  7788  7788 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:936)
+01-22 00:47:43.392  7788  7788 I monodroid-typemap: CreatePeer: handle=0x7ffbf161fc, targetType=Java.Lang.Throwable
+01-22 00:47:43.393  7788  7788 I monodroid-typemap: CreatePeer: Found type Java.Lang.UnsatisfiedLinkError for Java class 'java/lang/UnsatisfiedLinkError'
+01-22 00:47:43.393  7788  7788 I monodroid-typemap: TryGetJniNameForType: Java.Lang.UnsatisfiedLinkError -> 'java/lang/UnsatisfiedLinkError' (from [Register])
+01-22 00:47:43.393  7788  7788 I monodroid-typemap: CreatePeer: Activating instance of Java.Lang.UnsatisfiedLinkError...
+01-22 00:47:43.405  7788  7788 I monodroid-typemap: CreatePeer: SUCCESS - Created Java.Lang.UnsatisfiedLinkError for Java class 'java/lang/UnsatisfiedLinkError'
+01-22 00:47:43.405  7788  7788 I MonoDroid: UNHANDLED EXCEPTION:
+01-22 00:47:43.405  7788  7788 I MonoDroid: Java.Lang.UnsatisfiedLinkError: No implementation found for void mono.android.TypeManager.n_activate(java.lang.String, java.lang.String, java.lang.Object, java.lang.Object[]) (tried Java_mono_android_TypeManager_n_1activate and Java_mono_android_TypeManager_n_1activate__Ljava_lang_String_2Ljava_lang_String_2Ljava_lang_Object_2_3Ljava_lang_Object_2)
+01-22 00:47:43.405  7788  7788 I MonoDroid: 
+01-22 00:47:43.405  7788  7788 I MonoDroid:   --- End of managed Java.Lang.UnsatisfiedLinkError stack trace ---
+01-22 00:47:43.405  7788  7788 I MonoDroid: java.lang.UnsatisfiedLinkError: No implementation found for void mono.android.TypeManager.n_activate(java.lang.String, java.lang.String, java.lang.Object, java.lang.Object[]) (tried Java_mono_android_TypeManager_n_1activate and Java_mono_android_TypeManager_n_1activate__Ljava_lang_String_2Ljava_lang_String_2Ljava_lang_Object_2_3Ljava_lang_Object_2)
+01-22 00:47:43.405  7788  7788 I MonoDroid: 	at mono.android.TypeManager.n_activate(Native Method)
+01-22 00:47:43.405  7788  7788 I MonoDroid: 	at mono.android.TypeManager.Activate(TypeManager.java:7)
+01-22 00:47:43.405  7788  7788 I MonoDroid: 	at example.MainActivity.<init>(MainActivity.java:23)
+01-22 00:47:43.405  7788  7788 I MonoDroid: 	at java.lang.Class.newInstance(Native Method)
+01-22 00:47:43.405  7788  7788 I MonoDroid: 	at android.app.AppComponentFactory.instantiateActivity(AppComponentFactory.java:95)
+01-22 00:47:43.406  7788  7788 I MonoDroid: 	at android.app.Instrumentation.newActivity(Instrumentation.java:1339)
+01-22 00:47:43.406  7788  7788 I MonoDroid: 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:3538)
+01-22 00:47:43.406  7788  7788 I MonoDroid: 	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:3782)
+01-22 00:47:43.406  7788  7788 I MonoDroid: 	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:101)
+01-22 00:47:43.406  7788  7788 I MonoDroid: 	at android.app.servertransaction.TransactionExecutor.executeCallbacks(TransactionExecutor.java:138)
+01-22 00:47:43.406  7788  7788 I MonoDroid: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:95)
+01-22 00:47:43.406  7788  7788 I MonoDroid: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2307)
+01-22 00:47:43.406  7788  7788 I MonoDroid: 	at android.os.Handler.dispatchMessage(Handler.java:106)
+01-22 00:47:43.406  7788  7788 I MonoDroid: 	at android.os.Looper.loopOnce(Looper.java:201)
+01-22 00:47:43.406  7788  7788 I MonoDroid: 	at android.os.Looper.loop(Looper.java:288)
+01-22 00:47:43.406  7788  7788 I MonoDroid: 	at android.app.ActivityThread.main(ActivityThread.java:7924)
+01-22 00:47:43.406  7788  7788 I MonoDroid: 	at java.lang.reflect.Method.invoke(Native Method)
+01-22 00:47:43.406  7788  7788 I MonoDroid: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:548)
+01-22 00:47:43.406  7788  7788 I MonoDroid: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:936)
+01-22 00:47:43.406  7788  7788 I MonoDroid: 
+01-22 00:47:43.416   551  2382 W ActivityTaskManager:   Force finishing activity com.xamarin.android.helloworld/example.MainActivity
+01-22 00:47:43.418   551  7816 I DropBoxManagerService: add tag=data_app_crash isTagEnabled=true flags=0x2
+01-22 00:47:43.554   551   594 I ActivityManager: Showing crash dialog for package com.xamarin.android.helloworld u0
+01-22 00:47:43.568   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.stats.service.DropBoxEntryAddedReceiver
+01-22 00:47:43.570   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.chimera.GmsIntentOperationService$PersistentTrustedReceiver
+01-22 00:47:43.576   337   337 I BpBinder: onLastStrongRef automatically unlinking death recipients: <uncached descriptor>
+01-22 00:47:43.594   551  3877 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_native_sync_v3 ANDROID_EMU_native_sync_v4 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+01-22 00:47:43.602   551  3877 W OpenGLRenderer: Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+01-22 00:47:43.616   551  3877 W OpenGLRenderer: Failed to initialize 101010-2 format, error = EGL_SUCCESS
+01-22 00:47:43.624   551  3877 D EGL_emulation: eglCreateContext: 0xb400007008b6c550: maj 3 min 0 rcv 3
+01-22 00:47:43.634   551  3877 D EGL_emulation: eglMakeCurrent: 0xb400007008b6c550: ver 3 0 (tinfo 0x7236d60080) (first time)
+01-22 00:47:43.671   551   594 D CompatibilityChangeReporter: Compat change id reported: 210923482; UID 1000; state: ENABLED
+01-22 00:47:43.672   551   594 D CompatibilityChangeReporter: Compat change id reported: 171228096; UID 1000; state: ENABLED
+01-22 00:47:43.774   833  1105 D EGL_emulation: app_time_stats: avg=12.64ms min=3.96ms max=54.71ms count=37
+01-22 00:47:43.836   551   594 D CompatibilityChangeReporter: Compat change id reported: 161145287; UID 1000; state: DISABLED
+01-22 00:47:43.867   551  2309 D WifiNl80211Manager: Scan result ready event
+01-22 00:47:43.867   551  2309 D WifiNative: Scan result ready event
+01-22 00:47:43.917   551   596 W ActivityTaskManager: Activity top resumed state loss timeout for ActivityRecord{816d5bc u0 com.xamarin.android.helloworld/example.MainActivity} t39 f}}
+01-22 00:47:43.925   551  3877 W Parcel  : Expecting binder but got null!
+01-22 00:47:44.001   551   596 W ActivityTaskManager: Activity pause timeout for ActivityRecord{816d5bc u0 com.xamarin.android.helloworld/example.MainActivity} t39 f}}
+01-22 00:47:44.021   551   594 D CoreBackPreview: Window{263c60c u0 Application Error: com.xamarin.android.helloworld}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.WindowOnBackInvokedDispatcher$OnBackInvokedCallbackWrapper@2be700d, mPriority=0}
+01-22 00:47:44.024   551   594 W Looper  : Slow dispatch took 449ms android.ui h=com.android.server.am.ActivityManagerService$UiHandler c=com.android.server.am.ErrorDialogController$$ExternalSyntheticLambda3@84bed10 m=0
+01-22 00:47:44.025   551   594 W Looper  : Slow delivery took 379ms android.ui h=com.android.server.am.ActivityManagerService$UiHandler c=null m=31
+01-22 00:47:44.120  1754  2094 E OpenGLRenderer: Unable to match the desired swap behavior.
+01-22 00:47:44.133  1201  1613 E OpenGLRenderer: Unable to match the desired swap behavior.
+01-22 00:47:44.142   149   149 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.allocator@4.0::IAllocator/default in either framework or device VINTF manifest.
+01-22 00:47:44.143   148   148 I servicemanager: Could not find android.hardware.graphics.allocator.IAllocator/default in the VINTF manifest.
+01-22 00:47:44.143   551  3877 W Gralloc4: allocator 4.x is not supported
+01-22 00:47:44.198  1201  1201 D MainContentCaptureSession: Flushing 1 event(s) for act:com.google.android.apps.nexuslauncher/.NexusLauncherActivity [state=2 (ACTIVE), disabled=false], reason=FULL
+01-22 00:47:44.200   551  3877 E OpenGLRenderer: Unable to match the desired swap behavior.
+01-22 00:47:44.220   551  2309 W ActivityTaskManager: takeTaskSnapshot: taskId=13 not found or not visible
+01-22 00:47:44.251   551  1548 W AppSearchIcing: icing-search-engine.cc:217: Error: 5, Message: Document (com.google.android.googlequicksearchbox$OneSearchZeroStateGoogleSuggestions/default, zp) not found.
+01-22 00:47:44.255  1538  2102 I AiAiEcho: Predicting[0]: 
+01-22 00:47:44.255  1538  2102 I AiAiEcho: Ranked targets strategy: SORT, count: 0, ranking metadata: 
+01-22 00:47:44.261  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface lockscreen with targets# 0
+01-22 00:47:44.262  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface home with targets# 0
+01-22 00:47:44.262  1538  2102 I AiAiEcho: #postPredictionTargets: Sending updates to UISurface media_data_manager with targets# 0
+01-22 00:47:44.268   551   597 W InputManager-JNI: Input channel object 'e5991a8 Splash Screen com.xamarin.android.helloworld (client)' was disposed without first being removed with the input manager!
+01-22 00:47:44.286  1201  1718 D OneSearchSuggestProvider: Established or reuse existing binder channel authority=com.google.android.googlequicksearchbox
+01-22 00:47:44.305   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622eb170
+01-22 00:47:44.317   833   833 D SsMediaDataProvider: Forwarding Smartspace updates []
+01-22 00:47:44.319   551  2374 W WindowManager: Failed looking up window session=Session{79d51bc 833:u0a10157} callers=com.android.server.wm.WindowManagerService.windowForClientLocked:6050 com.android.server.wm.WindowManagerService.relayoutWindow:2293 com.android.server.wm.Session.relayout:253 
+01-22 00:47:44.442  1754  1771 I earchbox:search: Background young concurrent copying GC freed 43343(2310KB) AllocSpace objects, 196(3584KB) LOS objects, 47% free, 18MB/35MB, paused 87us,25us total 124.262ms
+01-22 00:47:44.442  1754  1771 W earchbox:search: Reducing the number of considered missed Gc histogram windows from 103 to 100
+01-22 00:47:44.460   551  2309 W WindowManager: Failed looking up window session=Session{79d51bc 833:u0a10157} callers=com.android.server.wm.WindowManagerService.windowForClientLocked:6050 com.android.server.wm.WindowManagerService.relayoutWindow:2293 com.android.server.wm.Session.relayout:253 
+01-22 00:47:44.498   551   594 W Looper  : Slow dispatch took 468ms android.ui h=android.view.Choreographer$FrameHandler c=android.view.Choreographer$FrameDisplayEventReceiver@4834e6 m=0
+01-22 00:47:44.569   833  1105 D EGL_emulation: app_time_stats: avg=13084.01ms min=13084.01ms max=13084.01ms count=1
+01-22 00:47:44.674   551  2374 W WindowManager: Failed looking up window session=Session{79d51bc 833:u0a10157} callers=com.android.server.wm.WindowManagerService.windowForClientLocked:6050 com.android.server.wm.WindowManagerService.relayoutWindow:2293 com.android.server.wm.Session.relayout:253 
+01-22 00:47:44.675   551  2309 W WindowManager: Failed looking up window session=Session{79d51bc 833:u0a10157} callers=com.android.server.wm.WindowManagerService.windowForClientLocked:6050 com.android.server.wm.WindowManagerService.removeWindow:2076 com.android.server.wm.Session.remove:230 
+01-22 00:47:44.675   551  2374 W WindowManager: Failed looking up window session=Session{79d51bc 833:u0a10157} callers=com.android.server.wm.WindowManagerService.windowForClientLocked:6050 com.android.server.wm.Session.setOnBackInvokedCallbackInfo:943 android.view.IWindowSession$Stub.onTransact:1180 
+01-22 00:47:44.675   551  2374 E WindowManager: setOnBackInvokedCallback(): No window state for package:com.android.systemui
+01-22 00:47:44.713   551   594 W Looper  : Drained
+01-22 00:47:44.851   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622e9010
+01-22 00:47:44.852   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622e9010

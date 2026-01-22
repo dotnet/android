@@ -1,0 +1,215 @@
+--------- beginning of main
+01-22 00:55:52.216  7010  8159 W oid.documentsui: Long monitor contention with owner pool-26-thread-1 (8154) at void com.android.documentsui.roots.ProvidersCache$MultiProviderUpdateTask.handleDocumentsProvider(android.content.pm.ProviderInfo, com.android.documentsui.base.UserId)(ProvidersCache.java:646) waiters=3 in void com.android.documentsui.roots.ProvidersCache$MultiProviderUpdateTask.handleDocumentsProvider(android.content.pm.ProviderInfo, com.android.documentsui.base.UserId) for 646ms
+01-22 00:55:52.220  7010  8155 W oid.documentsui: Long monitor contention with owner pool-26-thread-1 (8154) at void com.android.documentsui.roots.ProvidersCache$MultiProviderUpdateTask.handleDocumentsProvider(android.content.pm.ProviderInfo, com.android.documentsui.base.UserId)(ProvidersCache.java:646) waiters=4 in void com.android.documentsui.roots.ProvidersCache$MultiProviderUpdateTask.handleDocumentsProvider(android.content.pm.ProviderInfo, com.android.documentsui.base.UserId) for 651ms
+--------- beginning of system
+01-22 00:55:52.225   551  2377 D CompatibilityChangeReporter: Compat change id reported: 161252188; UID 10181; state: DISABLED
+01-22 00:55:52.295  1645  8109 I Auth    : [SupervisedAccountIntentOperation] onHandleIntent(): android.intent.action.PACKAGE_ADDED
+01-22 00:55:52.333  1645  1645 D BoundBrokerSvc: onBind: Intent { act=com.google.android.gms.common.BIND_SHARED_PREFS pkg=com.google.android.gms }
+01-22 00:55:52.333  1645  1645 D BoundBrokerSvc: Loading bound service for intent: Intent { act=com.google.android.gms.common.BIND_SHARED_PREFS pkg=com.google.android.gms }
+01-22 00:55:52.349  1341  8104 I ProximityAuth: [RecentAppsMediator] Package added: (user=UserHandle{0}) com.xamarin.android.helloworld
+01-22 00:55:52.358  1341  8187 I Fitness : OnPackageChangedOperation got intent: Intent { act=android.intent.action.PACKAGE_CHANGED dat=package: flg=0x5000010 pkg=com.google.android.gms cmp=com.google.android.gms/.chimera.PersistentIntentOperationService (has extras) } [CONTEXT service_id=17 ]
+01-22 00:55:52.359   551   570 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=com.xamarin.android.helloworld/example.MainActivity} from uid 2000
+01-22 00:55:52.359  1341  8184 W GCM     : Unexpected forwarded intent: Intent { act=android.intent.action.PACKAGE_ADDED dat=package: flg=0x4000010 pkg=com.google.android.gms cmp=com.google.android.gms/.chimera.PersistentIntentOperationService (has extras) }
+01-22 00:55:52.359   551   570 D CompatibilityChangeReporter: Compat change id reported: 265464455; UID 10181; state: DISABLED
+01-22 00:55:52.359   551   570 D CompatibilityChangeReporter: Compat change id reported: 265452344; UID 10181; state: DISABLED
+01-22 00:55:52.361  1341  8184 W GCM     : Unexpected forwarded intent: Intent { act=android.intent.action.PACKAGE_ADDED dat=package: flg=0x4000010 pkg=com.google.android.gms cmp=com.google.android.gms/.chimera.PersistentIntentOperationService (has extras) }
+01-22 00:55:52.361   551   570 D CompatibilityChangeReporter: Compat change id reported: 266124927; UID 10181; state: DISABLED
+01-22 00:55:52.361   551   570 D CompatibilityChangeReporter: Compat change id reported: 265451093; UID 10181; state: DISABLED
+01-22 00:55:52.361   551   570 D CompatibilityChangeReporter: Compat change id reported: 265456536; UID 10181; state: DISABLED
+01-22 00:55:52.361   551   570 D CompatibilityChangeReporter: Compat change id reported: 255940284; UID 10181; state: DISABLED
+01-22 00:55:52.361   551   570 D CompatibilityChangeReporter: Compat change id reported: 236283604; UID 10181; state: DISABLED
+01-22 00:55:52.361   551   570 D CompatibilityChangeReporter: Compat change id reported: 263959004; UID 10181; state: DISABLED
+01-22 00:55:52.361   551   570 D CompatibilityChangeReporter: Compat change id reported: 264304459; UID 10181; state: DISABLED
+01-22 00:55:52.362   551   570 D CompatibilityChangeReporter: Compat change id reported: 264301586; UID 10181; state: DISABLED
+01-22 00:55:52.362   551   570 D CompatibilityChangeReporter: Compat change id reported: 254631730; UID 10181; state: DISABLED
+01-22 00:55:52.362   551   570 D CompatibilityChangeReporter: Compat change id reported: 273509367; UID 10181; state: DISABLED
+01-22 00:55:52.362   551   570 D CompatibilityChangeReporter: Compat change id reported: 263259275; UID 10181; state: DISABLED
+01-22 00:55:52.363   551   570 D CompatibilityChangeReporter: Compat change id reported: 194480991; UID 10181; state: ENABLED
+01-22 00:55:52.363   551   570 D CompatibilityChangeReporter: Compat change id reported: 174042980; UID 10181; state: DISABLED
+01-22 00:55:52.400  1201  1613 D EGL_emulation: app_time_stats: avg=548.60ms min=6.32ms max=4632.46ms count=9
+01-22 00:55:52.451   551   634 E VerityUtils: Failed to measure fs-verity, errno 1: /data/app/~~pbWuK7gKhCcZL9gNpVw3lQ==/com.xamarin.android.helloworld-5Xi28-HKzXd8l_aZz4aIWg==/base.apk
+01-22 00:55:52.465  1645  8176 I BlockstoreStorage: Clearing Blockstore Data for package com.xamarin.android.helloworld [CONTEXT service_id=258 ]
+01-22 00:55:52.466  1645  8176 I BlockstoreStorage: Keyless data not found or its IsLastInstallationData = false. [CONTEXT service_id=258 ]
+01-22 00:55:52.466   551   570 D CompatibilityChangeReporter: Compat change id reported: 184838306; UID 10181; state: DISABLED
+01-22 00:55:52.466   551   570 D CompatibilityChangeReporter: Compat change id reported: 185004937; UID 10181; state: DISABLED
+01-22 00:55:52.466   551   570 D CompatibilityChangeReporter: Compat change id reported: 181136395; UID 10181; state: DISABLED
+01-22 00:55:52.467   551   570 D CompatibilityChangeReporter: Compat change id reported: 174042936; UID 10181; state: DISABLED
+01-22 00:55:52.467   551   570 D CompatibilityChangeReporter: Compat change id reported: 197654537; UID 10181; state: ENABLED
+01-22 00:55:52.470  1645  8176 I Dck     : doesDeviceHaveSupportedWirelessCapabilities: wccSysProp:0, wccMendel:3, deviceWccOverride:false [CONTEXT service_id=289 ]
+01-22 00:55:52.470  1645  8176 I Dck     : isDckModuleEligible: isAtLeastR:true, hasWccSupport:false, downloadAllowed:false [CONTEXT service_id=289 ]
+01-22 00:55:52.470  1645  8176 W Dck     : Dck module not eligible for asynchronous downloading [CONTEXT service_id=289 ]
+01-22 00:55:52.519   551   570 D CompatibilityChangeReporter: Compat change id reported: 205907456; UID 10181; state: ENABLED
+01-22 00:55:52.525   551   698 I RoleService: Granting default roles...
+01-22 00:55:52.529  1341  4656 W ChimeraUtils: Module com.google.android.gms.nearby_en missing resource null(0)
+01-22 00:55:52.554   551   596 W system_server: Long monitor contention with owner binder:551_2 (570) at com.android.server.wm.StartingSurfaceController$StartingSurface com.android.server.wm.StartingSurfaceController.createSplashScreenStartingSurface(com.android.server.wm.ActivityRecord, int)(StartingSurfaceController.java:87) waiters=1 in void com.android.server.wm.RootWindowContainer$RankTaskLayersRunnable.run() for 168ms
+01-22 00:55:52.554   551   597 W system_server: Long monitor contention with owner binder:551_2 (570) at com.android.server.wm.StartingSurfaceController$StartingSurface com.android.server.wm.StartingSurfaceController.createSplashScreenStartingSurface(com.android.server.wm.ActivityRecord, int)(StartingSurfaceController.java:87) waiters=2 in void com.android.server.wm.WindowAnimator.lambda$new$1(long) for 152ms
+01-22 00:55:52.560  1341  4656 W ChimeraUtils: Module com.google.android.gms.nearby_en missing resource null(0)
+01-22 00:55:52.567   551   596 D CompatibilityChangeReporter: Compat change id reported: 135634846; UID 10181; state: DISABLED
+01-22 00:55:52.567   551   596 D CompatibilityChangeReporter: Compat change id reported: 177438394; UID 10181; state: DISABLED
+01-22 00:55:52.567   551   596 D CompatibilityChangeReporter: Compat change id reported: 135772972; UID 10181; state: DISABLED
+01-22 00:55:52.567   551   596 D CompatibilityChangeReporter: Compat change id reported: 135754954; UID 10181; state: ENABLED
+01-22 00:55:52.572   551   607 D CompatibilityChangeReporter: Compat change id reported: 143937733; UID 10181; state: ENABLED
+01-22 00:55:52.608   294   294 D Zygote  : Forked child process 8193
+01-22 00:55:52.618  1645  2192 D SharedPreferencesImpl: Time required to fsync /data/user/0/com.google.android.gms/shared_prefs/proxy-apps-corpus.xml: [<1: 0, <2: 0, <4: 1, <8: 1, <16: 2, <32: 8, <64: 11, <128: 10, <256: 4, <512: 4, <1024: 0, <2048: 0, <4096: 0, <8192: 0, <16384: 0, >=16384: 0]
+01-22 00:55:52.639  8193  8193 I roid.helloworld: Using CollectorTypeCC GC.
+01-22 00:55:52.645   833  1089 D SplashScreenView: Build android.window.SplashScreenView{22cc528 V.E...... ......ID 0,0-0,0}
+01-22 00:55:52.645   833  1089 D SplashScreenView: Icon: view: android.widget.ImageView{6125241 V.ED..... ......I. 0,0-0,0 #10204dd android:id/splashscreen_icon_view} drawable: com.android.wm.shell.startingsurface.SplashscreenIconDrawableFactory$ImmobileIconDrawable@a2303e6 size: 440
+01-22 00:55:52.645   833  1089 D SplashScreenView: Branding: view: android.view.View{5fced27 G.ED..... ......I. 0,0-0,0 #10204dc android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+01-22 00:55:52.658   365   430 I adbd    : jdwp connection from 8193
+01-22 00:55:52.674   551   607 W ActivityManager: Slow operation: 113ms so far, now at startProcess: returned from zygote!
+01-22 00:55:52.676   833  1105 W Parcel  : Expecting binder but got null!
+01-22 00:55:52.679   551  2367 D CoreBackPreview: Window{c77651a u0 Splash Screen com.xamarin.android.helloworld}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@21a3228, mPriority=0}
+01-22 00:55:52.767   833  1105 E OpenGLRenderer: Unable to match the desired swap behavior.
+01-22 00:55:52.789  1201  1201 D MainContentCaptureSession: Flushing 1 event(s) for act:com.google.android.apps.nexuslauncher/.NexusLauncherActivity [state=2 (ACTIVE), disabled=false], reason=FULL
+01-22 00:55:52.838   551  2369 W Binder  : Caught a RuntimeException from the binder stub implementation.
+01-22 00:55:52.838   551  2369 W Binder  : java.lang.ArrayIndexOutOfBoundsException: Array index out of range: 0
+01-22 00:55:52.838   551  2369 W Binder  : 	at android.util.ArraySet.valueAt(ArraySet.java:422)
+01-22 00:55:52.838   551  2369 W Binder  : 	at com.android.server.contentcapture.ContentCapturePerUserService$ContentCaptureServiceRemoteCallback.updateContentCaptureOptions(ContentCapturePerUserService.java:733)
+01-22 00:55:52.838   551  2369 W Binder  : 	at com.android.server.contentcapture.ContentCapturePerUserService$ContentCaptureServiceRemoteCallback.setContentCaptureWhitelist(ContentCapturePerUserService.java:646)
+01-22 00:55:52.838   551  2369 W Binder  : 	at android.service.contentcapture.IContentCaptureServiceCallback$Stub.onTransact(IContentCaptureServiceCallback.java:115)
+01-22 00:55:52.838   551  2369 W Binder  : 	at android.os.Binder.execTransactInternal(Binder.java:1285)
+01-22 00:55:52.838   551  2369 W Binder  : 	at android.os.Binder.execTransact(Binder.java:1244)
+01-22 00:55:52.911   551   594 W Looper  : Slow delivery took 262ms android.ui h=com.android.server.am.ActivityManagerService$UiHandler c=null m=31
+01-22 00:55:52.953   551   593 W Looper  : Slow delivery took 291ms android.fg h=android.os.Handler c=<recycled PooledLambda@99b7a0f> m=0
+01-22 00:55:52.965   551   594 W Looper  : Drained
+01-22 00:55:52.986   833   978 W Looper  : Slow delivery took 43ms wmshell.main h=android.os.Handler c=android.window.TaskOrganizer$1$$ExternalSyntheticLambda6@c3e0879 m=0
+01-22 00:55:53.039   833   978 W Looper  : Drained
+01-22 00:55:53.084   551   593 W Looper  : Drained
+01-22 00:55:53.086   551   607 W ActivityManager: Slow operation: 525ms so far, now at startProcess: done updating battery stats
+01-22 00:55:53.089   551   607 W ActivityManager: Slow operation: 528ms so far, now at startProcess: building log message
+01-22 00:55:53.089   551   607 I ActivityManager: Start proc 8193:com.xamarin.android.helloworld/u0a181 for next-top-activity {com.xamarin.android.helloworld/example.MainActivity}
+01-22 00:55:53.089   551   607 W ActivityManager: Slow operation: 528ms so far, now at startProcess: starting to update pids map
+01-22 00:55:53.089   551   607 W ActivityManager: Slow operation: 528ms so far, now at startProcess: done updating pids map
+01-22 00:55:53.098  1645  1645 D BoundBrokerSvc: onUnbind: Intent { act=com.google.android.gms.common.BIND_SHARED_PREFS pkg=com.google.android.gms }
+01-22 00:55:53.146  8193  8193 D CompatibilityChangeReporter: Compat change id reported: 171979766; UID 10181; state: ENABLED
+01-22 00:55:53.151  1341  8105 I Fitness : FitCleanupIntentOperation received Intent android.intent.action.PACKAGE_CHANGED [CONTEXT service_id=17 ]
+01-22 00:55:53.330   551   551 W Looper  : Slow dispatch took 170ms main h=com.android.server.job.JobSchedulerService$JobHandler c=null m=3
+01-22 00:55:53.331  1645  2212 W gle.android.gms: Long monitor contention with owner lowpool[11] (6265) at void asac.d()(:com.google.android.gms@231818044@23.18.18 (190400-535401451):2) waiters=0 in void asac.g(asae, long) for 689ms
+01-22 00:55:53.337  8193  8193 W ziparchive: Unable to open '/data/app/~~pbWuK7gKhCcZL9gNpVw3lQ==/com.xamarin.android.helloworld-5Xi28-HKzXd8l_aZz4aIWg==/split_config.arm64_v8a.dm': No such file or directory
+01-22 00:55:53.337  8193  8193 W ziparchive: Unable to open '/data/app/~~pbWuK7gKhCcZL9gNpVw3lQ==/com.xamarin.android.helloworld-5Xi28-HKzXd8l_aZz4aIWg==/split_config.arm64_v8a.dm': No such file or directory
+01-22 00:55:53.337  8193  8193 W roid.helloworld: Entry not found
+01-22 00:55:53.338  8193  8193 D nativeloader: Configuring classloader-namespace for other apk /data/app/~~pbWuK7gKhCcZL9gNpVw3lQ==/com.xamarin.android.helloworld-5Xi28-HKzXd8l_aZz4aIWg==/base.apk:/data/app/~~pbWuK7gKhCcZL9gNpVw3lQ==/com.xamarin.android.helloworld-5Xi28-HKzXd8l_aZz4aIWg==/split_config.arm64_v8a.apk. target_sdk_version=36, uses_libraries=, library_path=/data/app/~~pbWuK7gKhCcZL9gNpVw3lQ==/com.xamarin.android.helloworld-5Xi28-HKzXd8l_aZz4aIWg==/lib/arm64:/data/app/~~pbWuK7gKhCcZL9gNpVw3lQ==/com.xamarin.android.helloworld-5Xi28-HKzXd8l_aZz4aIWg==/base.apk!/lib/arm64-v8a:/data/app/~~pbWuK7gKhCcZL9gNpVw3lQ==/com.xamarin.android.helloworld-5Xi28-HKzXd8l_aZz4aIWg==/split_config.arm64_v8a.apk!/lib/arm64-v8a, permitted_path=/data:/mnt/expand:/data/user/0/com.xamarin.android.helloworld
+01-22 00:55:53.339  8193  8193 W roid.helloworld: JIT profile information will not be recorded: profile file does not exist.
+01-22 00:55:53.340  1201  1258 W s.nexuslauncher: Long monitor contention with owner binder:1201_3 (1221) at boolean android.os.MessageQueue.enqueueMessage(android.os.Message, long)(MessageQueue.java:600) waiters=1 in android.os.Message android.os.MessageQueue.next() for 166ms
+01-22 00:55:53.431   833  1105 D EGL_emulation: app_time_stats: avg=6624.19ms min=2.09ms max=237913.91ms count=36
+01-22 00:55:53.491   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622ea690
+01-22 00:55:53.505   833   978 W Looper  : Slow dispatch took 129ms wmshell.main h=android.os.Handler c=com.android.keyguard.CarrierTextManager$$ExternalSyntheticLambda0@8f85a1f m=0
+01-22 00:55:53.507   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622ea690
+01-22 00:55:53.532  8193  8193 V GraphicsEnvironment: ANGLE Developer option for 'com.xamarin.android.helloworld' set to: 'default'
+01-22 00:55:53.533  8193  8193 V GraphicsEnvironment: ANGLE GameManagerService for com.xamarin.android.helloworld: false
+01-22 00:55:53.533  8193  8193 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+01-22 00:55:53.572  8193  8193 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+01-22 00:55:53.572  8193  8193 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+01-22 00:55:53.592   551  2367 W ActivityTaskManager: takeTaskSnapshot: taskId=13 not found or not visible
+01-22 00:55:53.607  1341  8105 I Fitness : OnPackageChangedOperation got intent: Intent { act=android.intent.action.PACKAGE_CHANGED dat=package: flg=0x5000010 pkg=com.google.android.gms cmp=com.google.android.gms/.chimera.PersistentIntentOperationService (has extras) } [CONTEXT service_id=17 ]
+01-22 00:55:53.609   551  1152 D CompatibilityChangeReporter: Compat change id reported: 161145287; UID 10181; state: DISABLED
+01-22 00:55:53.641  1341  4656 W ChimeraUtils: Module com.google.android.gms.nearby_en missing resource null(0)
+01-22 00:55:53.642  1341  4656 W ChimeraUtils: Module com.google.android.gms.nearby_en missing resource null(0)
+01-22 00:55:53.666  1341  8105 I Fitness : FitCleanupIntentOperation received Intent android.intent.action.PACKAGE_CHANGED [CONTEXT service_id=17 ]
+01-22 00:55:53.708   551  2369 D CompatibilityChangeReporter: Compat change id reported: 161252188; UID 10181; state: DISABLED
+01-22 00:55:53.761   551   565 I system_server: Background concurrent copying GC freed 395628(17MB) AllocSpace objects, 40(1668KB) LOS objects, 48% free, 25MB/49MB, paused 18.706ms,111us total 2.254s
+01-22 00:55:53.851  1341  5964 W ChimeraUtils: Module com.google.android.gms.nearby_en missing resource null(0)
+01-22 00:55:53.870  1341  5964 W ChimeraUtils: Module com.google.android.gms.nearby_en missing resource null(0)
+01-22 00:55:53.916   551   661 I ActivityManager: Background started FGS: Allowed [callingPackage: com.google.android.apps.wellbeing; callingUid: 10107; uidState: BTOP; intent: Intent { cmp=com.google.android.apps.wellbeing/com.google.apps.tiktok.concurrent.InternalForegroundService (has extras) }; code:BACKGROUND_ACTIVITY_PERMISSION; tempAllowListReason:<null>; targetSdkVersion:33; callerTargetSdkVersion:33; startForegroundCount:0; bindFromPackage:null]
+01-22 00:55:53.929   551   606 I DropBoxManagerService: add tag=system_server_wtf isTagEnabled=true flags=0x2
+01-22 00:55:53.950   551   605 D IntervalStats: Unable to parse usage stats packages: [196]
+01-22 00:55:54.117  8193  8193 D DOTNET  : AndroidCryptoNative_InitLibraryOnLoad: jint AndroidCryptoNative_InitLibraryOnLoad(JavaVM *, void *) in /__w/1/s/src/runtime/src/native/libs/System.Security.Cryptography.Native.Android/pal_jni.c
+01-22 00:55:54.117  8193  8193 D DOTNET  : GetOptionalClassGRef: optional class com/android/org/conscrypt/OpenSSLEngineImpl was not found
+01-22 00:55:54.269  6113  8093 W Role    : Default holder doesn't have required signing certificate: com.google.android.apps.work.clouddpc:23962F4B43B9857638EA66F4D419518EAE282491ACDA4B94707BD59003C45E58
+01-22 00:55:54.347  8193  8193 I monodroid: JNIEnvInit: IsCoreClrRuntime=True, IsMonoRuntime=False
+01-22 00:55:54.369  8193  8193 I monodroid-typemap: TypeMapAttributeTypeMap: Initializing...
+01-22 00:55:54.382   833  1105 D EGL_emulation: app_time_stats: avg=54297.65ms min=54297.65ms max=54297.65ms count=1
+01-22 00:55:54.401  1645  6265 I Icing   : Indexing com.google.android.gms-apps from com.google.android.gms
+01-22 00:55:54.445  1645  6265 I Icing   : Indexing done com.google.android.gms-apps
+01-22 00:55:54.446  1645  6265 I Icing   : Indexing com.google.android.gms-apps from com.google.android.gms
+01-22 00:55:54.447  1645  6265 I Icing   : Indexing done com.google.android.gms-apps
+01-22 00:55:54.470  8193  8193 I monodroid-typemap: TypeMapAttributeTypeMap: Initialized external and invoker type mappings
+01-22 00:55:54.474   833  1105 D EGL_emulation: app_time_stats: avg=18.42ms min=4.45ms max=78.42ms count=31
+01-22 00:55:54.520  8193  8193 I monodroid: JNIEnvInit: Set getFunctionPointerFn to 0x6eb8f12958
+01-22 00:55:54.553  8193  8220 D libEGL  : loaded /vendor/lib64/egl/libEGL_emulation.so
+01-22 00:55:54.569  8193  8220 D libEGL  : loaded /vendor/lib64/egl/libGLESv1_CM_emulation.so
+01-22 00:55:54.572  8193  8220 D libEGL  : loaded /vendor/lib64/egl/libGLESv2_emulation.so
+01-22 00:55:54.593  8193  8193 I monodroid-typemap: TryGetJniNameForType: HelloWorld.MainActivity -> 'example/MainActivity' (from [Register])
+01-22 00:55:54.593  8193  8193 I monodroid: RegisterNativeMembers: type=HelloWorld.MainActivity, methods=n_onCreate:(Landroid/os/Bundle;)V:GetOnCreate_Landroid_os_Bundle_Handler
+01-22 00:55:54.593  8193  8193 I monodroid: n_onResume:()V:GetOnResumeHandler
+01-22 00:55:54.593  8193  8193 I monodroid: 
+01-22 00:55:54.595  8193  8193 I monodroid: DynamicNativeMembersRegistration: registered n_onCreate for HelloWorld.MainActivity
+01-22 00:55:54.595  8193  8193 I monodroid: DynamicNativeMembersRegistration: registered n_onResume for HelloWorld.MainActivity
+01-22 00:55:54.595  8193  8193 I monodroid: DynamicNativeMembersRegistration: calling RegisterNatives with 2 methods
+01-22 00:55:54.598  8193  8193 I monodroid-typemap: TryGetJniNameForType: Java.Interop.TypeManager+JavaTypeManager -> 'mono/android/TypeManager' (from [Register])
+01-22 00:55:54.598  8193  8193 I monodroid: RegisterNativeMembers: type=Java.Interop.TypeManager+JavaTypeManager, methods=n_activate:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;[Ljava/lang/Object;)V:GetActivateHandler
+01-22 00:55:54.598  8193  8193 I monodroid: 
+01-22 00:55:54.598  8193  8193 I monodroid: DynamicNativeMembersRegistration: registered n_activate for Java.Interop.TypeManager+JavaTypeManager
+01-22 00:55:54.598  8193  8193 I monodroid: DynamicNativeMembersRegistration: calling RegisterNatives with 1 methods
+01-22 00:55:54.785  8193  8193 D CompatibilityChangeReporter: Compat change id reported: 210923482; UID 10181; state: ENABLED
+01-22 00:55:54.789  8193  8193 I monodroid-typemap: CreatePeer: handle=0xc1, targetType=Android.Views.View
+01-22 00:55:54.789  8193  8193 I monodroid-typemap: CreatePeer: Found type Android.Widget.Button for Java class 'android/widget/Button'
+01-22 00:55:54.789  8193  8193 I monodroid-typemap: TryGetJniNameForType: Android.Widget.Button -> 'android/widget/Button' (from [Register])
+01-22 00:55:54.789  8193  8193 I monodroid-typemap: CreatePeer: Activating instance of Android.Widget.Button...
+01-22 00:55:54.797  8193  8193 I monodroid-typemap: CreatePeer: SUCCESS - Created Android.Widget.Button for Java class 'android/widget/Button'
+01-22 00:55:54.809  8193  8193 I monodroid-typemap: TryGetJniNameForType: Android.Views.View+IOnClickListenerImplementor -> 'mono/android/view/View_OnClickListenerImplementor' (from [Register])
+01-22 00:55:54.809  8193  8193 I monodroid-typemap: TryGetJniNameForType: Android.Views.View+IOnClickListenerImplementor -> 'mono/android/view/View_OnClickListenerImplementor' (from [Register])
+01-22 00:55:54.810  8193  8193 I monodroid: RegisterNativeMembers: type=Android.Views.View+IOnClickListenerImplementor, methods=n_onClick:(Landroid/view/View;)V:GetOnClick_Landroid_view_View_Handler:Android.Views.View+IOnClickListenerInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+01-22 00:55:54.810  8193  8193 I monodroid: 
+01-22 00:55:54.862  8193  8193 I monodroid-test: Calling native stub Java_example_MainActivity_n_1onCreate__Landroid_os_Bundle_2V...
+01-22 00:55:54.872  8193  8193 I monodroid-typemap: GetFunctionPointer: class='example/MainActivity', methodIndex=0
+01-22 00:55:54.872  8193  8193 I monodroid-typemap: GetFunctionPointer: Found type HelloWorld.MainActivity
+01-22 00:55:54.872  8193  8193 I monodroid-typemap: GetFunctionPointer: No JavaPeerProxy attribute on HelloWorld.MainActivity, attempting reflection fallback...
+01-22 00:55:54.881  8193  8193 I monodroid-typemap: ResolveUserTypeMethod: Resolved index 0 to n_onCreate
+01-22 00:55:54.893  8193  8193 I monodroid-typemap: CreatePeer: handle=0xf9, targetType=Android.Views.View
+01-22 00:55:54.893  8193  8193 I monodroid-typemap: CreatePeer: Found type Android.Widget.Button for Java class 'android/widget/Button'
+01-22 00:55:54.893  8193  8193 I monodroid-typemap: TryGetJniNameForType: Android.Widget.Button -> 'android/widget/Button' (from [Register])
+01-22 00:55:54.893  8193  8193 I monodroid-typemap: CreatePeer: Activating instance of Android.Widget.Button...
+01-22 00:55:54.893  8193  8193 I monodroid-typemap: CreatePeer: SUCCESS - Created Android.Widget.Button for Java class 'android/widget/Button'
+01-22 00:55:54.894  8193  8193 I monodroid-test: Called native stub successfully!
+01-22 00:55:54.952  8193  8193 D CompatibilityChangeReporter: Compat change id reported: 237531167; UID 10181; state: DISABLED
+01-22 00:55:54.972  8193  8218 W Parcel  : Expecting binder but got null!
+01-22 00:55:54.988   551   661 D CoreBackPreview: Window{e819497 u0 com.xamarin.android.helloworld/example.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@ff2de6d, mPriority=0}
+01-22 00:55:55.026   337   502 W ServiceManager: Permission failure: android.permission.ACCESS_SURFACE_FLINGER from uid=10181 pid=8193
+01-22 00:55:55.026   337   502 D PermissionCache: checking android.permission.ACCESS_SURFACE_FLINGER for uid=10181 => denied (1586 us)
+01-22 00:55:55.030   337   502 W ServiceManager: Permission failure: android.permission.ROTATE_SURFACE_FLINGER from uid=10181 pid=8193
+01-22 00:55:55.030   337   502 D PermissionCache: checking android.permission.ROTATE_SURFACE_FLINGER for uid=10181 => denied (3590 us)
+01-22 00:55:55.030   337   502 W ServiceManager: Permission failure: android.permission.INTERNAL_SYSTEM_WINDOW from uid=10181 pid=8193
+01-22 00:55:55.030   337   502 D PermissionCache: checking android.permission.INTERNAL_SYSTEM_WINDOW for uid=10181 => denied (104 us)
+01-22 00:55:55.032   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622eaa50
+01-22 00:55:55.032   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622e8710
+01-22 00:55:55.036  8193  8218 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_native_sync_v3 ANDROID_EMU_native_sync_v4 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+01-22 00:55:55.050  8193  8218 W OpenGLRenderer: Failed to choose config with EGL_SWAP_BEHAVIOR_PRESERVED, retrying without...
+01-22 00:55:55.054  8193  8218 W OpenGLRenderer: Failed to initialize 101010-2 format, error = EGL_SUCCESS
+01-22 00:55:55.056  8193  8218 D EGL_emulation: eglCreateContext: 0xb400007008b56650: maj 3 min 0 rcv 3
+01-22 00:55:55.062  8193  8218 D EGL_emulation: eglMakeCurrent: 0xb400007008b56650: ver 3 0 (tinfo 0x7236da7080) (first time)
+01-22 00:55:55.099   149   149 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+01-22 00:55:55.100  8193  8218 I Gralloc4: mapper 4.x is not supported
+01-22 00:55:55.115   149   149 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.allocator@4.0::IAllocator/default in either framework or device VINTF manifest.
+01-22 00:55:55.117   148   148 I servicemanager: Could not find android.hardware.graphics.allocator.IAllocator/default in the VINTF manifest.
+01-22 00:55:55.117  8193  8218 W Gralloc4: allocator 4.x is not supported
+01-22 00:55:55.137  8193  8218 D HostConnection: HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_native_sync_v3 ANDROID_EMU_native_sync_v4 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_null_optional_strings ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_YUV_Cache ANDROID_EMU_vulkan_ignored_handles ANDROID_EMU_has_shared_slots_host_memory_allocator ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_vulkan_queue_submit_with_commands ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_read_color_buffer_dma ANDROID_EMU_hwc_multi_configs GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+01-22 00:55:55.138  8193  8218 E OpenGLRenderer: Unable to match the desired swap behavior.
+01-22 00:55:55.337   551   593 I ActivityTaskManager: Displayed com.xamarin.android.helloworld/example.MainActivity: +2s912ms
+01-22 00:55:55.384  1201  1718 D OneSearchSuggestProvider: Shut down the binder channel
+01-22 00:55:55.390  1201  1383 I s.nexuslauncher: oneway function results for code 2 on binder at 0xb400006f98ba8640 will be dropped but finished with status UNKNOWN_TRANSACTION
+01-22 00:55:55.393   935  1155 D BtGatt.ScanManager: uid 10112 isForeground true scanMode -1
+01-22 00:55:55.413   551  2375 D CompatibilityChangeReporter: Compat change id reported: 214016041; UID 10181; state: ENABLED
+01-22 00:55:55.440   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622eb410
+01-22 00:55:55.440   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622ea510
+01-22 00:55:55.454   833  1105 D EGL_emulation: app_time_stats: avg=113.48ms min=3.35ms max=668.90ms count=9
+01-22 00:55:55.469  2899  2899 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():3227 
+01-22 00:55:55.476  2899  2899 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2087 repeatCheckTimes = 0, unlocked = true
+01-22 00:55:55.476  2899  2899 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1877 onStartInput(EditorInfo{inputType=0x0(NULL) imeOptions=0x0 privateImeOptions=null actionName=UNSPECIFIED actionLabel=null actionId=0 initialSelStart=-1 initialSelEnd=-1 initialCapsMode=0x0 hintText=null label=null packageName=com.xamarin.android.helloworld fieldId=-1 fieldName=null extras=null}, false)
+01-22 00:55:55.476  2899  2899 I GoogleInputMethodService: GoogleInputMethodService.shouldHideHeaderOnInitialState():4008 ShouldHideHeaderOnInitialState = false
+01-22 00:55:55.487  2899  2899 I GoogleInputMethodService: GoogleInputMethodService.updateDeviceLockedStatus():2087 repeatCheckTimes = 2, unlocked = true
+01-22 00:55:55.681   551   661 D CoreBackPreview: Window{c77651a u0 Splash Screen com.xamarin.android.helloworld EXITING}: Setting back callback null
+01-22 00:55:55.683   551  2375 W InputManager-JNI: Input channel object 'c77651a Splash Screen com.xamarin.android.helloworld (client)' was disposed without first being removed with the input manager!
+01-22 00:55:55.719   833  1105 D EGL_emulation: app_time_stats: avg=40.66ms min=2.97ms max=621.47ms count=24
+01-22 00:55:55.848   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622ebad0
+01-22 00:55:55.849   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622eacf0
+01-22 00:55:55.849   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622e8c50
+01-22 00:55:55.850   337   432 W TransactionTracing: Could not find layer handle 0xb4000073622e8c50
+01-22 00:55:55.941   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.stats.service.DropBoxEntryAddedReceiver
+01-22 00:55:55.941   551   606 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.chimera.GmsIntentOperationService$PersistentTrustedReceiver
+--------- beginning of kernel
+01-22 00:55:56.194  3514  3514 I logd    : start watching /data/system/packages.list ...
+01-22 00:55:56.194  3514  3514 I logd    : ReadPackageList, total packages: 183
+01-22 00:55:56.325   318   318 E android.hardware.power.stats@1.0-service-mock: Failed to getEnergyData
+01-22 00:55:56.736   833  1105 D EGL_emulation: app_time_stats: avg=7.47ms min=1.83ms max=40.21ms count=49
+01-22 00:55:57.716   157   157 I logd    : logdr: UID=2000 GID=2000 PID=8227 n tail=0 logMask=99 pid=0 start=0ns deadline=0ns

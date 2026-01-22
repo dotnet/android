@@ -162,6 +162,14 @@ namespace Java.Interop
 		}
 
 		/// <inheritdoc/>
+		public IntPtr GetFunctionPointer (string className, int methodIndex)
+		{
+			// LlvmIrTypeMap doesn't use the attribute-based GetFunctionPointer mechanism.
+			// This is only implemented in TypeMapAttributeTypeMap for CoreCLR.
+			throw new NotSupportedException ("LlvmIrTypeMap does not support this GetFunctionPointer shape.");
+		}
+
+		/// <inheritdoc/>
 		public IJavaPeerable? CreatePeer (
 			IntPtr handle,
 			JniHandleOwnership transfer,

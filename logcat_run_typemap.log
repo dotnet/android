@@ -1,0 +1,5 @@
+--------- beginning of system
+01-22 00:24:49.602   551   917 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=com.xamarin.android.helloworld/.MainActivity} from uid 2000
+--------- beginning of main
+01-22 00:24:53.887  1645  1645 D BoundBrokerSvc: onUnbind: Intent { act=com.google.android.gms.feedback.internal.IFeedbackService dat=chimera-action:/... cmp=com.google.android.gms/.chimera.GmsBoundBrokerService }
+01-22 00:24:53.914  1341  1341 D BoundBrokerSvc: onUnbind: Intent { act=com.google.android.gms.icing.LIGHTWEIGHT_INDEX_SERVICE dat=chimera-action:/... cmp=com.google.android.gms/.chimera.PersistentApiService }

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -34,8 +35,9 @@ namespace Android.Runtime
 			public bool            jniRemappingInUse;
 			public bool            marshalMethodsEnabled;
 			public IntPtr          grefGCUserPeerable;
+			// OUT
 			public IntPtr          propagateUncaughtExceptionFn;
-			// OUT: Function pointer for get_function_pointer callback (Type Mapping API marshal methods)
+			// OUT
 			public IntPtr          getFunctionPointerFn;
 		}
 #pragma warning restore 0649
@@ -135,7 +137,7 @@ namespace Android.Runtime
 
 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
 
-			TypeMap = GetTypeMap();
+			TypeMap = CreateTypeMap ();
 
 			// Create unified managers using the type map
 			var typeManager = new AndroidTypeManager (TypeMap, args->jniAddNativeMethodRegistrationAttributePresent != 0);
@@ -180,13 +182,10 @@ namespace Android.Runtime
 		[UnmanagedCallersOnly]
 		internal static unsafe void GetFunctionPointer (byte* classNamePtr, int classNameLength, int methodIndex, IntPtr* targetPtr)
 		{
-			// Redirect to the global TypeMap
-			// Use the static field to avoid casting in hot path
-			if (TypeMapAttributeTypeMap.s_TypeMap != null) {
-				*targetPtr = TypeMapAttributeTypeMap.s_TypeMap.GetFunctionPointer (classNamePtr, classNameLength, methodIndex);
-			} else {
-				*targetPtr = IntPtr.Zero;
-			}
+			string className = System.Text.Encoding.UTF8.GetString (classNamePtr, classNameLength);
+			*targetPtr = TypeMap.GetFunctionPointer (className, methodIndex);
+			Debug.Assert (*targetPtr != IntPtr.Zero,
+				$"GetFunctionPointer: No function pointer found for class='{className}', methodIndex={methodIndex}");
 		}
 
 		static void RunStartupHooksIfNeeded ()
@@ -226,12 +225,12 @@ namespace Android.Runtime
 			method.Invoke (null, [ "" ]);
 		}
 
-		private static ITypeMap GetTypeMap ()
+		private static ITypeMap CreateTypeMap ()
 		{
 			if (RuntimeFeature.IsCoreClrRuntime) {
 				// TypeMapping API requires an entry assembly to find TypeMap attributes.
 				// Android apps don't have a traditional Main() entry point, so we set it explicitly.
-				Assembly.SetEntryAssembly (typeof (Java.Lang.Object).Assembly);
+				Assembly.SetEntryAssembly (typeof (Java.Lang.Object).Assembly); // TODO is this really still necessary?
 				return new TypeMapAttributeTypeMap ();
 			} else if (RuntimeFeature.IsMonoRuntime) {
 				return new LlvmIrTypeMap ();

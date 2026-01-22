@@ -562,10 +562,9 @@ void Host::Java_mono_android_Runtime_initInternal (
 	abort_unless (jnienv_propagate_uncaught_exception != nullptr, "Failed to obtain unmanaged-callers-only function pointer to the PropagateUncaughtException method.");
 
 	// Store the Type Mapping API get_function_pointer callback (may be null for Mono runtime)
+	// Set directly from JNIEnvInit.Initialize out parameter - no need for separate typemap_init call
 	if (init.getFunctionPointerFn != nullptr) {
 		get_function_pointer = init.getFunctionPointerFn;
-		// Initialize the function pointer in the application DSO
-		typemap_init (env, init.getFunctionPointerFn);
 		log_debug (LOG_DEFAULT, "Type Mapping API get_function_pointer callback set"sv);
 	}
 
