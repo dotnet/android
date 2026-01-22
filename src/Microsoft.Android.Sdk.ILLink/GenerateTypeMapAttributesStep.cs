@@ -1388,6 +1388,9 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		// Always generate GetFunctionPointer as it is abstract in JavaPeerProxy
 		GenerateGetFunctionPointerMethod (proxyType, mappedType, marshalMethods);
 
+		// Generate CreateInstance for AOT-safe instance creation without reflection
+		GenerateCreateInstanceMethod (proxyType, mappedType);
+
 		return proxyType;
 	}
 
@@ -1805,5 +1808,76 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 		// Context.LogMessage (MessageContainer.CreateInfoMessage (
 			// $"Generated GetFunctionPointer for {proxyType.FullName} with {marshalMethods.Count} methods"));
+	}
+
+	/// <summary>
+	/// Generates the CreateInstance factory method for AOT-safe instance creation:
+	/// <code>
+	/// public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
+	///     => new MappedType(handle, transfer);
+	/// </code>
+	/// </summary>
+	void GenerateCreateInstanceMethod (TypeDefinition proxyType, TypeDefinition mappedType)
+	{
+		// Find the (IntPtr, JniHandleOwnership) constructor on the mapped type
+		var ctor = mappedType.Methods.FirstOrDefault (m =>
+			m.IsConstructor && !m.IsStatic &&
+			m.Parameters.Count == 2 &&
+			m.Parameters [0].ParameterType.FullName == "System.IntPtr" &&
+			m.Parameters [1].ParameterType.FullName == "Android.Runtime.JniHandleOwnership");
+
+		if (ctor == null) {
+			// Try to find (JniObjectReference, JniObjectReferenceOptions) constructor
+			ctor = mappedType.Methods.FirstOrDefault (m =>
+				m.IsConstructor && !m.IsStatic &&
+				m.Parameters.Count == 2 &&
+				m.Parameters [0].ParameterType.FullName == "Java.Interop.JniObjectReference" &&
+				m.Parameters [1].ParameterType.FullName == "Java.Interop.JniObjectReferenceOptions");
+
+			if (ctor == null) {
+				// No suitable constructor found - skip generation
+				// Context.LogMessage (MessageContainer.CreateInfoMessage (
+				//     $"No suitable constructor for CreateInstance on {mappedType.FullName}"));
+				return;
+			}
+		}
+
+		// Get the return type (IJavaPeerable)
+		var iJavaPeerableType = Context.GetType ("Java.Interop.IJavaPeerable");
+		var iJavaPeerableRef = AssemblyToInjectTypeMap.MainModule.ImportReference (iJavaPeerableType);
+
+		// Get parameter types
+		var intPtrType = AssemblyToInjectTypeMap.MainModule.ImportReference (Context.GetType ("System.IntPtr"));
+		var jniHandleOwnershipType = AssemblyToInjectTypeMap.MainModule.ImportReference (Context.GetType ("Android.Runtime.JniHandleOwnership"));
+
+		// Create the method
+		var method = new MethodDefinition (
+			"CreateInstance",
+			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
+			iJavaPeerableRef);
+
+		method.Parameters.Add (new ParameterDefinition ("handle", ParameterAttributes.None, intPtrType));
+		method.Parameters.Add (new ParameterDefinition ("transfer", ParameterAttributes.None, jniHandleOwnershipType));
+
+		var il = method.Body.GetILProcessor ();
+
+		// Import the constructor reference
+		var ctorRef = AssemblyToInjectTypeMap.MainModule.ImportReference (ctor);
+
+		if (ctor.Parameters [0].ParameterType.FullName == "System.IntPtr") {
+			// Direct XA constructor: new MappedType(handle, transfer)
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_1); // handle
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_2); // transfer
+			il.Emit (Mono.Cecil.Cil.OpCodes.Newobj, ctorRef);
+		} else {
+			// JI constructor: new MappedType(new JniObjectReference(handle), JniObjectReferenceOptions.Copy)
+			// This is more complex - for now just generate null return for JI types
+			// TODO: Implement proper JI constructor support
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldnull);
+		}
+
+		il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
+
+		proxyType.Methods.Add (method);
 	}
 }

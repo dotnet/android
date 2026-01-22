@@ -1,8 +1,8 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Java.Interop;
@@ -22,8 +22,6 @@ namespace Android.Runtime
 		// Cache of JavaPeerProxy instances keyed by the target type
 		static readonly Dictionary<Type, JavaPeerProxy?> s_proxyInstances = new ();
 		static readonly Lock s_proxyInstancesLock = new ();
-		
-		internal static TypeMapAttributeTypeMap? s_TypeMap;
 
 		static bool LogTypemapTrace => Logger.LogTypemapTrace;
 
@@ -35,7 +33,6 @@ namespace Android.Runtime
 
 		public TypeMapAttributeTypeMap ()
 		{
-			s_TypeMap = this;
 			Log ("TypeMapAttributeTypeMap: Initializing...");
 			_externalTypeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
 			_invokerTypeMap = TypeMapping.GetOrCreateProxyTypeMapping<InvokerUniverse> ();
@@ -133,10 +130,9 @@ namespace Android.Runtime
 		}
 
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-		static readonly Type[] XAConstructorSignature = [typeof (IntPtr), typeof (JniHandleOwnership)];
-		static readonly Type[] JIConstructorSignature = [typeof (JniObjectReference).MakeByRefType (), typeof (JniObjectReferenceOptions)];
 
 		/// <inheritdoc/>
+		/// TODO: This needs to use JavaPeerProxy to create the instance through generated factory method
 		public IJavaPeerable? CreatePeer (
 			IntPtr handle,
 			JniHandleOwnership transfer,
@@ -260,9 +256,10 @@ namespace Android.Runtime
 		}
 
 		/// <summary>
-		/// Tries to create an instance of the specified type using AOT-safe reflection.
+		/// Tries to create an instance of the specified type using AOT-safe factory method.
+		/// Uses the generated proxy's CreateInstance method to avoid reflection.
 		/// </summary>
-		/// <returns>true if the instance was created successfully; false if no suitable constructor was found.</returns>
+		/// <returns>true if the instance was created successfully; false if no proxy or factory was found.</returns>
 		bool TryCreateInstance (
 			[DynamicallyAccessedMembers (Constructors)]
 			Type type,
@@ -270,58 +267,28 @@ namespace Android.Runtime
 			JniHandleOwnership transfer,
 			[NotNullWhen (true)] out IJavaPeerable? result)
 		{
-			const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-
-			var peer = (IJavaPeerable) RuntimeHelpers.GetUninitializedObject (type);
-			peer.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
-
-			if (TryInvokeXAConstructor () || TryInvokeJIConstructor ())
-			{
-				result = peer;
-				return true;
-			}
-
-			GC.SuppressFinalize (peer);
-			result = null;
-			return false;
-
-			bool TryInvokeXAConstructor ()
-			{
-				var c = type.GetConstructor (flags, null, XAConstructorSignature, null);
-				if (c != null) {
-					c.Invoke (peer, [handle, transfer]);
-					return true;
-				}
-
+			// Get the proxy for this type - it has the AOT-safe CreateInstance factory method
+			JavaPeerProxy? proxy = GetProxyForType (type);
+			if (proxy == null) {
+				Log ($"TryCreateInstance: No JavaPeerProxy attribute on {type.FullName}");
+				result = null;
 				return false;
 			}
 
-			bool TryInvokeJIConstructor ()
-			{
-				var c = type.GetConstructor (flags, null, JIConstructorSignature, null);
-				if (c != null) {
-					c.Invoke (peer, [new JniObjectReference (handle), JniObjectReferenceOptions.Copy]);
-					JNIEnv.DeleteRef (handle, transfer);
-					return true;
-				}
-
-				return false;
-			}
+			// Use the generated factory method - no reflection needed!
+			result = proxy.CreateInstance (handle, transfer);
+			return result != null;
 		}
 
-		#region Marshal Method Function Pointer Resolution
-
 		/// <inheritdoc/>
-		public unsafe IntPtr GetFunctionPointer (byte* classNamePtr, int classNameLength, int methodIndex)
+		public unsafe IntPtr GetFunctionPointer (string className, int methodIndex)
 		{
 			// Note: No try-catch here. If this crashes, the app should crash.
 			// It's a critical infrastructure failure.
-
-			string className = System.Text.Encoding.UTF8.GetString (classNamePtr, classNameLength);
 			Log ($"GetFunctionPointer: class='{className}', methodIndex={methodIndex}");
 
 			// Look up type directly from the external type map
-			if (s_TypeMap == null || !s_TypeMap._externalTypeMap.TryGetValue (className, out Type? type)) {
+			if (!_externalTypeMap.TryGetValue (className, out Type? type)) {
 				Log ($"GetFunctionPointer: No type found for '{className}'");
 				return IntPtr.Zero;
 			}
@@ -341,7 +308,5 @@ namespace Android.Runtime
 
 			return fnPtr;
 		}
-
-		#endregion
 	}
 }

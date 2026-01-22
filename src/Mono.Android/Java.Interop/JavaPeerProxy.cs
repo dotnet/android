@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using Android.Runtime;
 
 namespace Java.Interop
 {
@@ -27,6 +28,8 @@ namespace Java.Interop
 	/// sealed class ActivityProxy : JavaPeerProxy
 	/// {
 	///     public override Type TargetType => typeof(Activity);
+	///     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
+	///         => new Activity(handle, transfer);
 	/// }
 	/// </code>
 	/// </remarks>
@@ -47,5 +50,14 @@ namespace Java.Interop
 		/// <param name="methodIndex">The index of the marshal method within this type's method table.</param>
 		/// <returns>A function pointer to the UCO method, or <see cref="IntPtr.Zero"/> if the index is invalid.</returns>
 		public abstract IntPtr GetFunctionPointer (int methodIndex);
+
+		/// <summary>
+		/// Creates an instance of the target type using the JNI handle and ownership semantics.
+		/// This is used for AOT-safe instance creation without reflection.
+		/// </summary>
+		/// <param name="handle">The JNI object reference handle.</param>
+		/// <param name="transfer">How to handle JNI reference ownership.</param>
+		/// <returns>A new instance of the target type wrapping the JNI handle.</returns>
+		public abstract IJavaPeerable CreateInstance (IntPtr handle, JniHandleOwnership transfer);
 	}
 }
