@@ -767,7 +767,8 @@ public class GenerateTypeMapAttributesStep : BaseStep
 			writer.WriteLine ();
 			writer.WriteLine ($"; Method: {method.JniName}{method.JniSignature}");
 			// NOTE: Don't use dso_local for PIC code compatibility
-			writer.WriteLine ($"define {llvmRetType} @{nativeSymbol}(ptr %env, ptr %obj{llvmParams}) #0 {{");
+			// Use 'default' visibility to ensure the symbol is exported even if -fvisibility=hidden is used
+			writer.WriteLine ($"define default {llvmRetType} @{nativeSymbol}(ptr %env, ptr %obj{llvmParams}) #0 {{");
 			writer.WriteLine ("entry:");
 
 			// Load cached function pointer
@@ -947,10 +948,12 @@ public class GenerateTypeMapAttributesStep : BaseStep
 	{
 		var sb = new StringBuilder ();
 		foreach (char c in signature) {
+			if (c == ')')
+				break; // Stop at closing parenthesis (return type is not part of signature in symbol name)
+			
 			switch (c) {
 				case '(':
-				case ')':
-					// Skip parentheses
+					// Skip opening parenthesis
 					break;
 				case '/':
 					sb.Append ('_');
