@@ -1,7 +1,9 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Java.Interop.Tools.JavaCallableWrappers;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -71,14 +73,22 @@ public class GenerateAdditionalProviderSources : AndroidTask
 			Files.CopyIfStringChanged (contents, real_provider);
 		}
 
-		// For NativeAOT, generate JavaInteropRuntime.java
+		// For NativeAOT, generate JavaInteropRuntime.java and NativeAotEnvironmentVars.java
 		if (androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
 			const string fileName = "JavaInteropRuntime.java";
-			string template = GetResource (fileName);
-			var contents = template.Replace ("@MAIN_ASSEMBLY_NAME@", TargetName);
-			var path = Path.Combine (OutputDirectory, "src", "net", "dot", "jni", "nativeaot", fileName);
-			Log.LogDebugMessage ($"Writing: {path}");
-			Files.CopyIfStringChanged (contents, path);
+			GenerateJavaSource (
+				"JavaInteropRuntime.java",
+				new Dictionary<string, string> (StringComparer.Ordinal) {
+					{ "@MAIN_ASSEMBLY_NAME@", TargetName },
+				}
+			);
+
+			// TODO: actually put envvars here
+			GenerateJavaSource (
+				"NativeAotEnvironmentVars.java",
+				new Dictionary<string, string> (StringComparer.Ordinal) {
+				}
+			);
 		}
 
 		// Create additional application java sources.
@@ -105,6 +115,19 @@ public class GenerateAdditionalProviderSources : AndroidTask
 			real_app_dir,
 			template => template.Replace ("// REGISTER_APPLICATION_AND_INSTRUMENTATION_CLASSES_HERE", regCallsWriter.ToString ())
 		);
+
+		void GenerateJavaSource (string fileName, Dictionary<string, string> replacements)
+		{
+			var template = new StringBuilder (GetResource (fileName));
+
+			foreach (var kvp in replacements) {
+				template.Replace (kvp.Key, kvp.Value);
+			}
+
+			var path = Path.Combine (OutputDirectory, "src", "net", "dot", "jni", "nativeaot", fileName);
+			Log.LogDebugMessage ($"Writing: {path}");
+			Files.CopyIfStringChanged (template.ToString (), path);
+		}
 	}
 
 	string GetResource (string resource)
