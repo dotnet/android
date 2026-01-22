@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 using Android.Runtime;
 
 namespace Java.Interop
@@ -27,7 +26,6 @@ namespace Java.Interop
 	/// [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 	/// sealed class ActivityProxy : JavaPeerProxy
 	/// {
-	///     public override Type TargetType => typeof(Activity);
 	///     public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
 	///         => new Activity(handle, transfer);
 	/// }
@@ -36,13 +34,6 @@ namespace Java.Interop
 	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
 	abstract class JavaPeerProxy : Attribute
 	{
-		/// <summary>
-		/// Gets the .NET type that this proxy maps to.
-		/// The return value has DynamicallyAccessedMembers annotation to preserve constructor metadata for AOT scenarios.
-		/// </summary>
-		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-		public abstract Type TargetType { get; }
-
 		/// <summary>
 		/// Gets a function pointer for a marshal method at the specified index.
 		/// This is used to resolve [UnmanagedCallersOnly] method pointers for JNI callbacks.

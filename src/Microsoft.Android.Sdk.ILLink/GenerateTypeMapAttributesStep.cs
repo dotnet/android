@@ -1378,9 +1378,6 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		ctorIl.Emit (Mono.Cecil.Cil.OpCodes.Ret);
 		proxyType.Methods.Add (ctor);
 
-		// Add the TargetType property with [return: DynamicallyAccessedMembers] annotation
-		GenerateTargetTypeProperty (proxyType, mappedType);
-
 		// Generate UCO wrappers and GetFunctionPointer if there are marshal methods
 		if (marshalMethods.Count > 0) {
 			GenerateUcoWrappers (proxyType, mappedType, marshalMethods);
@@ -1392,55 +1389,6 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		GenerateCreateInstanceMethod (proxyType, mappedType);
 
 		return proxyType;
-	}
-
-	/// <summary>
-	/// Generates the TargetType property:
-	/// <code>
-	/// [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-	/// public override Type TargetType => typeof(MappedType);
-	/// </code>
-	/// </summary>
-	void GenerateTargetTypeProperty (TypeDefinition proxyType, TypeDefinition mappedType)
-	{
-		// Create the getter method
-		var getter = new MethodDefinition (
-			"get_TargetType",
-			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.SpecialName,
-			SystemTypeType);
-
-		// Add [return: DynamicallyAccessedMembers(PublicConstructors | NonPublicConstructors)]
-		var damAttrTypeDef = Context.GetType ("System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute");
-		var damAttrCtor = damAttrTypeDef.Methods.Single (m => m.IsConstructor && !m.IsStatic && m.HasParameters);
-		var damAttrCtorRef = AssemblyToInjectTypeMap.MainModule.ImportReference (damAttrCtor);
-
-		var damtEnumTypeDef = Context.GetType ("System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes");
-		var damtEnumTypeRef = AssemblyToInjectTypeMap.MainModule.ImportReference (damtEnumTypeDef);
-
-		// PublicConstructors = 1, NonPublicConstructors = 4
-		const int Constructors = 1 | 4;
-
-		var returnAttr = new CustomAttribute (damAttrCtorRef);
-		returnAttr.ConstructorArguments.Add (new CustomAttributeArgument (damtEnumTypeRef, Constructors));
-		getter.MethodReturnType.CustomAttributes.Add (returnAttr);
-
-		// Generate: return typeof(MappedType);
-		var il = getter.Body.GetILProcessor ();
-		var mappedTypeRef = AssemblyToInjectTypeMap.MainModule.ImportReference (mappedType);
-		il.Emit (Mono.Cecil.Cil.OpCodes.Ldtoken, mappedTypeRef);
-
-		var getTypeFromHandleMethod = Context.GetType ("System.Type").Methods
-			.Single (m => m.Name == "GetTypeFromHandle" && m.IsStatic && m.Parameters.Count == 1);
-		var getTypeFromHandleRef = AssemblyToInjectTypeMap.MainModule.ImportReference (getTypeFromHandleMethod);
-		il.Emit (Mono.Cecil.Cil.OpCodes.Call, getTypeFromHandleRef);
-		il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
-
-		proxyType.Methods.Add (getter);
-
-		// Create the property
-		var property = new PropertyDefinition ("TargetType", PropertyAttributes.None, SystemTypeType);
-		property.GetMethod = getter;
-		proxyType.Properties.Add (property);
 	}
 
 	/// <summary>

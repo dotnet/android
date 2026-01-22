@@ -18,9 +18,9 @@
     - [X] `xamarin_typemap_init` method should be renamed, let's not use the `xamarin` prefix in new code. also, why is this declared in LLVM IR and not in C++ code?
     - [X] implement "// TODO: Implement proper JI constructor support"
     - [X] if ctor for `GenerateCreateInstanceMethod` is not found, we should definitely have logging and possibly throw exception -- with the exception of STATIC classes, I don't think there's a scenario where there isn't a ctor? maybe we should still generate the method, but when called, it would throw an exception?
-- [~] JavaPeerProxy
-    - [~] do we need TargetType in JavaPeerProxy?
-    - [ ] if we need TargetType, does it need DynamicallyAccessedMembers? if not, drop it + drop it from the TypeMap class
+- [X] JavaPeerProxy
+    - [X] do we need TargetType in JavaPeerProxy?
+    - [X] if we need TargetType, does it need DynamicallyAccessedMembers? if not, drop it + drop it from the TypeMap class
 - [ ] I see this runtime crash:
     ```
     --------- beginning of crash
