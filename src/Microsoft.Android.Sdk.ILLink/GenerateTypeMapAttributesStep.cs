@@ -106,7 +106,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 	protected override void Process ()
 	{
 		try {
-		Context.LogMessage (MessageContainer.CreateInfoMessage ("GenerateTypeMapAttributesStep running..."));
+		// Context.LogMessage (MessageContainer.CreateInfoMessage ("GenerateTypeMapAttributesStep running..."));
 		var javaTypeMapUniverseTypeDefinition = Context.GetType (JavaTypeMapUniverseTypeName);
 		MonoAndroidAssembly = javaTypeMapUniverseTypeDefinition.Module.Assembly;
 
@@ -131,10 +131,10 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 		// 3. Fallback to Mono.Android (will fail for user types if they need UCO wrappers)
 		if (AssemblyToInjectTypeMap == null) {
-			Context.LogMessage (MessageContainer.CreateInfoMessage ("Could not find EntryPoint assembly, falling back to Mono.Android"));
+			// Context.LogMessage (MessageContainer.CreateInfoMessage ("Could not find EntryPoint assembly, falling back to Mono.Android"));
 			AssemblyToInjectTypeMap = MonoAndroidAssembly;
 		} else {
-			Context.LogMessage (MessageContainer.CreateInfoMessage ($"Injecting TypeMap into entry assembly: {AssemblyToInjectTypeMap.Name}"));
+			// Context.LogMessage (MessageContainer.CreateInfoMessage ($"Injecting TypeMap into entry assembly: {AssemblyToInjectTypeMap.Name}"));
 		}
 
 		JavaTypeMapUniverseType = AssemblyToInjectTypeMap.MainModule.ImportReference (javaTypeMapUniverseTypeDefinition);
@@ -238,12 +238,12 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		}
 
 		if (WaitForBridgeProcessingMethod == null) {
-			Context.LogMessage (MessageContainer.CreateInfoMessage (
-				"Could not find AndroidRuntimeInternal.WaitForBridgeProcessing - UCO wrappers will be simplified"));
+			// Context.LogMessage (MessageContainer.CreateInfoMessage (
+			// 	"Could not find AndroidRuntimeInternal.WaitForBridgeProcessing - UCO wrappers will be simplified"));
 		}
 		if (UnhandledExceptionMethod == null) {
-			Context.LogMessage (MessageContainer.CreateInfoMessage (
-				"Could not find AndroidEnvironmentInternal.UnhandledException - UCO wrappers will be simplified"));
+			// Context.LogMessage (MessageContainer.CreateInfoMessage (
+			// 	"Could not find AndroidEnvironmentInternal.UnhandledException - UCO wrappers will be simplified"));
 		}
 	}
 
@@ -321,15 +321,15 @@ public class GenerateTypeMapAttributesStep : BaseStep
 					: null;
 
 				if (nativeCallback == null) {
-					Context.LogMessage (MessageContainer.CreateInfoMessage (
-						$"Could not find native callback '{nativeCallbackName}' for method '{method.FullName}'"));
+					// Context.LogMessage (MessageContainer.CreateInfoMessage (
+						// $"Could not find native callback '{nativeCallbackName}' for method '{method.FullName}'"));
 					continue;
 				}
 
 				seen.Add (key);
 				methods.Add (new MarshalMethodInfo (attr.Name, attr.Signature, nativeCallback, method));
-				Context.LogMessage (MessageContainer.CreateInfoMessage (
-					$"Found marshal method: {type.FullName}.{nativeCallback.Name} -> {attr.Name}{attr.Signature}"));
+				// Context.LogMessage (MessageContainer.CreateInfoMessage (
+					// $"Found marshal method: {type.FullName}.{nativeCallback.Name} -> {attr.Name}{attr.Signature}"));
 			}
 		}
 
@@ -352,8 +352,8 @@ public class GenerateTypeMapAttributesStep : BaseStep
 				if (nativeCallback != null) {
 					seen.Add (key);
 					methods.Add (new MarshalMethodInfo ("<init>", attr.Signature, nativeCallback, ctor));
-					Context.LogMessage (MessageContainer.CreateInfoMessage (
-						$"Found marshal constructor: {type.FullName}.{nativeCallback.Name}"));
+					// Context.LogMessage (MessageContainer.CreateInfoMessage (
+						// $"Found marshal constructor: {type.FullName}.{nativeCallback.Name}"));
 				}
 			}
 		}
@@ -403,7 +403,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 				marshalMethodMappings [type] = marshalMethods;
 			}
 
-			Context.LogMessage (MessageContainer.CreateInfoMessage ($"Type '{type.FullName}' has peer '{javaName}', {marshalMethods.Count} marshal methods"));
+			// Context.LogMessage (MessageContainer.CreateInfoMessage ($"Type '{type.FullName}' has peer '{javaName}', {marshalMethods.Count} marshal methods"));
 			var proxyType = GenerateTypeMapProxyType (javaName, type, marshalMethods);
 			typesToInject.Add (proxyType);
 			proxyMappings.Add (type, proxyType);
@@ -413,11 +413,11 @@ public class GenerateTypeMapAttributesStep : BaseStep
 				var invokerType = GetInvokerType (type);
 				if (invokerType != null) {
 					invokerMappings [type] = invokerType;
-					Context.LogMessage (MessageContainer.CreateInfoMessage ($"Found invoker '{invokerType.FullName}' for type '{type.FullName}'"));
+					// Context.LogMessage (MessageContainer.CreateInfoMessage ($"Found invoker '{invokerType.FullName}' for type '{type.FullName}'"));
 				}
 			}
 		} else {
-			Context.LogMessage (MessageContainer.CreateInfoMessage ($"Type '{type.FullName}' has no peer"));
+			// Context.LogMessage (MessageContainer.CreateInfoMessage ($"Type '{type.FullName}' has no peer"));
 		}
 
 		if (!type.HasNestedTypes)
@@ -490,9 +490,10 @@ public class GenerateTypeMapAttributesStep : BaseStep
 	protected override void EndProcess ()
 	{
 		try {
-		// HACK ALERT
-		// We override the entry_assembly so that the TypeMapHandler in illink can have a starting point for TypeMapTargetAssemblies.
-		// Mono.Android should be the entrypoint assembly so that we can call Assembly.SetEntryAssembly() during application initialization.
+		// NOTE: We override the entry_assembly so that the TypeMapHandler in illink can have a starting point for TypeMapTargetAssemblies.
+		// This is critical because Mono.Android should be the entrypoint assembly so that we can call Assembly.SetEntryAssembly()
+		// during application initialization. Without this override, the TypeMapHandler would not be able to correctly identify which
+		// assemblies need TypeMap attributes.
 		// TODO:
 		// - Add support for "EntryPointAssembly"s that don't have a .entrypoint or Main() method
 		// - Use MSBuild logic to set the EntryPointAssembly to Mono.Android
@@ -511,7 +512,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 			if (types.Count == 1) {
 				// Single type - simple mapping
 				var attr = GenerateTypeMapAttribute (types [0], javaName);
-				Context.LogMessage (MessageContainer.CreateInfoMessage ($"Injecting [{attr.AttributeType.FullName}({string.Join (", ", attr.ConstructorArguments.Select (caa => caa.ToString ()))})] into {AssemblyToInjectTypeMap.Name}"));
+				// Context.LogMessage (MessageContainer.CreateInfoMessage ($"Injecting [{attr.AttributeType.FullName}({string.Join (", ", attr.ConstructorArguments.Select (caa => caa.ToString ()))})] into {AssemblyToInjectTypeMap.Name}"));
 				AssemblyToInjectTypeMap.CustomAttributes.Add (attr);
 			} else {
 				// Multiple types - generate alias type and indexed mappings
@@ -521,7 +522,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 					// Generate TypeMap for each aliased type: "javaName[i]" -> type
 					var attr = GenerateTypeMapAttribute (types [i], aliasKeys [i]);
-					Context.LogMessage (MessageContainer.CreateInfoMessage ($"Injecting aliased [{attr.AttributeType.FullName}({string.Join (", ", attr.ConstructorArguments.Select (caa => caa.ToString ()))})] into {AssemblyToInjectTypeMap.Name}"));
+					// Context.LogMessage (MessageContainer.CreateInfoMessage ($"Injecting aliased [{attr.AttributeType.FullName}({string.Join (", ", attr.ConstructorArguments.Select (caa => caa.ToString ()))})] into {AssemblyToInjectTypeMap.Name}"));
 					AssemblyToInjectTypeMap.CustomAttributes.Add (attr);
 				}
 
@@ -531,7 +532,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 				// Generate TypeMap for the main Java name -> alias type
 				var mainAttr = GenerateTypeMapAttribute (aliasType, javaName);
-				Context.LogMessage (MessageContainer.CreateInfoMessage ($"Injecting alias [{mainAttr.AttributeType.FullName}({string.Join (", ", mainAttr.ConstructorArguments.Select (caa => caa.ToString ()))})] into {AssemblyToInjectTypeMap.Name}"));
+				// Context.LogMessage (MessageContainer.CreateInfoMessage ($"Injecting alias [{mainAttr.AttributeType.FullName}({string.Join (", ", mainAttr.ConstructorArguments.Select (caa => caa.ToString ()))})] into {AssemblyToInjectTypeMap.Name}"));
 				AssemblyToInjectTypeMap.CustomAttributes.Add (mainAttr);
 			}
 		}
@@ -543,7 +544,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		// Generate TypeMapAssociation<InvokerUniverse> for interface-to-invoker mappings
 		foreach (var mapping in invokerMappings) {
 			var attr = GenerateInvokerTypeMapAssociationAttribute (mapping.Key, mapping.Value);
-			Context.LogMessage (MessageContainer.CreateInfoMessage ($"Injecting [{attr.AttributeType.FullName}({string.Join (", ", attr.ConstructorArguments.Select (caa => caa.ToString ()))})] into {AssemblyToInjectTypeMap.Name}"));
+			// Context.LogMessage (MessageContainer.CreateInfoMessage ($"Injecting [{attr.AttributeType.FullName}({string.Join (", ", attr.ConstructorArguments.Select (caa => caa.ToString ()))})] into {AssemblyToInjectTypeMap.Name}"));
 			AssemblyToInjectTypeMap.CustomAttributes.Add (attr);
 		}
 
@@ -570,16 +571,16 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		// Get output paths from custom data
 		if (!Context.TryGetCustomData ("JavaOutputPath", out string? javaOutputPath) ||
 		    !Context.TryGetCustomData ("LlvmIrOutputPath", out string? llvmIrOutputPath)) {
-			Context.LogMessage (MessageContainer.CreateInfoMessage (
-				"JavaOutputPath or LlvmIrOutputPath not set, skipping JCW/LLVM IR generation"));
+			// Context.LogMessage (MessageContainer.CreateInfoMessage (
+				// "JavaOutputPath or LlvmIrOutputPath not set, skipping JCW/LLVM IR generation"));
 			return;
 		}
 
 		Context.TryGetCustomData ("TargetArch", out string? targetArch);
 		targetArch ??= "unknown";
 
-		Context.LogMessage (MessageContainer.CreateInfoMessage (
-			$"Generating JCW files to {javaOutputPath}, LLVM IR to {llvmIrOutputPath}"));
+		// Context.LogMessage (MessageContainer.CreateInfoMessage (
+			// $"Generating JCW files to {javaOutputPath}, LLVM IR to {llvmIrOutputPath}"));
 
 		// Generate LLVM IR files for each type with marshal methods
 		// Note: JCW Java files are generated by the existing JCW generator - we only need native stubs
@@ -657,7 +658,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		writer.WriteLine ("attributes #0 = { nounwind mustprogress }");
 		writer.WriteLine ("attributes #1 = { noreturn nounwind }");
 
-		Context.LogMessage (MessageContainer.CreateInfoMessage ($"Generated LLVM IR init file: {llFilePath}"));
+		// Context.LogMessage (MessageContainer.CreateInfoMessage ($"Generated LLVM IR init file: {llFilePath}"));
 	}
 
 	/// <summary>
@@ -704,7 +705,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 		writer.WriteLine ("}");
 
-		Context.LogMessage (MessageContainer.CreateInfoMessage ($"Generated JCW: {javaFilePath}"));
+		// Context.LogMessage (MessageContainer.CreateInfoMessage ($"Generated JCW: {javaFilePath}"));
 	}
 
 	/// <summary>
@@ -808,7 +809,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		writer.WriteLine ("!llvm.module.flags = !{!0}");
 		writer.WriteLine ("!0 = !{i32 1, !\"wchar_size\", i32 4}");
 
-		Context.LogMessage (MessageContainer.CreateInfoMessage ($"Generated LLVM IR: {llFilePath}"));
+		// Context.LogMessage (MessageContainer.CreateInfoMessage ($"Generated LLVM IR: {llFilePath}"));
 	}
 
 	/// <summary>
@@ -1023,8 +1024,8 @@ public class GenerateTypeMapAttributesStep : BaseStep
 			'J' => "long",
 			'F' => "float",
 			'D' => "double",
-			'L' => "Object", // Simplified
-			'[' => "Object[]", // Simplified
+			'L' => "Object", // Mapping non-primitive types to Object is sufficient for native method resolution
+			'[' => "Object[]", // Mapping arrays to Object[] is sufficient for native method resolution
 			_ => "Object",
 		};
 	}
@@ -1034,14 +1035,16 @@ public class GenerateTypeMapAttributesStep : BaseStep
 	/// </summary>
 	static string JniSignatureToJavaParameters (string signature)
 	{
-		// Simplified: just return empty or generic parameter list
+		// NOTE: Mapping parameters to generic Object types is sufficient for native method resolution.
+		// The JNI runtime only needs the method signature to match at the native layer; the .java stubs
+		// don't need exact type information for JNI resolution to work correctly.
 		int parenStart = signature.IndexOf ('(');
 		int parenEnd = signature.IndexOf (')');
 		if (parenStart < 0 || parenEnd < 0 || parenEnd == parenStart + 1) {
 			return "";
 		}
 
-		// Very simplified parameter extraction
+		// Simplified parameter extraction
 		string paramSig = signature.Substring (parenStart + 1, parenEnd - parenStart - 1);
 		var @params = new List<string> ();
 		int idx = 0;
@@ -1240,7 +1243,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		var attr = new CustomAttribute (proxyCtorRef);
 		targetType.CustomAttributes.Add (attr);
 
-		Context.LogMessage (MessageContainer.CreateInfoMessage ($"Applied [{proxyType.FullName}] attribute to {targetType.FullName}"));
+		// Context.LogMessage (MessageContainer.CreateInfoMessage ($"Applied [{proxyType.FullName}] attribute to {targetType.FullName}"));
 	}
 
 	/// <summary>
@@ -1368,8 +1371,8 @@ public class GenerateTypeMapAttributesStep : BaseStep
 			// Check if it already has [UnmanagedCallersOnly]
 			if (HasUnmanagedCallersOnlyAttribute (callback)) {
 				methodInfo.UcoWrapper = callback;
-				Context.LogMessage (MessageContainer.CreateInfoMessage (
-					$"Method {callback.FullName} already has [UnmanagedCallersOnly]"));
+				// Context.LogMessage (MessageContainer.CreateInfoMessage (
+					// $"Method {callback.FullName} already has [UnmanagedCallersOnly]"));
 				continue;
 			}
 
@@ -1379,13 +1382,13 @@ public class GenerateTypeMapAttributesStep : BaseStep
 			if (wrapper != null) {
 				methodInfo.UcoWrapper = wrapper;
 				proxyType.Methods.Add (wrapper);
-				Context.LogMessage (MessageContainer.CreateInfoMessage (
-					$"Generated UCO wrapper {proxyType.FullName}.{wrapperName} for {callback.FullName}"));
+				// Context.LogMessage (MessageContainer.CreateInfoMessage (
+					// $"Generated UCO wrapper {proxyType.FullName}.{wrapperName} for {callback.FullName}"));
 			} else {
 				// Don't set UcoWrapper - it will remain null and be skipped in GetFunctionPointer
 				// The original callback is in a different assembly and cannot be imported
-				Context.LogMessage (MessageContainer.CreateInfoMessage (
-					$"Failed to generate UCO wrapper for {callback.FullName}, method will use dynamic registration"));
+				// Context.LogMessage (MessageContainer.CreateInfoMessage (
+					// $"Failed to generate UCO wrapper for {callback.FullName}, method will use dynamic registration"));
 			}
 		}
 	}
@@ -1537,8 +1540,8 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 			return wrapperMethod;
 		} catch (Exception ex) {
-			Context.LogMessage (MessageContainer.CreateInfoMessage (
-				$"Failed to generate UCO wrapper for {callback.FullName}: {ex.Message}"));
+			// Context.LogMessage (MessageContainer.CreateInfoMessage (
+				// $"Failed to generate UCO wrapper for {callback.FullName}: {ex.Message}"));
 			return null;
 		}
 	}
@@ -1718,7 +1721,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 		proxyType.Methods.Add (method);
 
-		Context.LogMessage (MessageContainer.CreateInfoMessage (
-			$"Generated GetFunctionPointer for {proxyType.FullName} with {marshalMethods.Count} methods"));
+		// Context.LogMessage (MessageContainer.CreateInfoMessage (
+			// $"Generated GetFunctionPointer for {proxyType.FullName} with {marshalMethods.Count} methods"));
 	}
 }
