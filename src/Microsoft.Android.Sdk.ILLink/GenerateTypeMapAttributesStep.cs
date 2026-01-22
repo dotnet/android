@@ -601,11 +601,20 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		File.AppendAllText ("/tmp/linker-debug.txt", $"Generating JCW to {typeMapJcwOutputPath}, mappings={marshalMethodMappings.Count}\n");
 
 		// Generate JCW Java and LLVM IR files for each type with marshal methods
+		// Only generate JCW for user types, not for framework types (Mono.Android bindings)
 		foreach (var kvp in marshalMethodMappings) {
 			var targetType = kvp.Key;
 			var marshalMethods = kvp.Value;
 
 			if (marshalMethods.Count == 0) {
+				continue;
+			}
+
+			// Skip framework assemblies - JCW should only be generated for user types
+			// Framework types like Java.Lang.Object already have their Java implementations
+			string assemblyName = targetType.Module.Assembly.Name.Name;
+			if (IsFrameworkAssembly (assemblyName)) {
+				File.AppendAllText ("/tmp/linker-debug.txt", $"  SKIP framework type: {targetType.FullName} from {assemblyName}\n");
 				continue;
 			}
 
@@ -628,7 +637,25 @@ public class GenerateTypeMapAttributesStep : BaseStep
 	}
 
 	/// <summary>
-	/// Generates the marshal_methods_init.ll file that defines the get_function_pointer global.
+	/// Checks if an assembly is a framework assembly that should not have JCW generated.
+	/// Framework assemblies contain bindings to existing Java types, not user-defined types.
+	/// </summary>
+	static bool IsFrameworkAssembly (string assemblyName)
+	{
+		return assemblyName switch {
+			"Mono.Android" => true,
+			"Java.Interop" => true,
+			"System.Private.CoreLib" => true,
+			_ when assemblyName.StartsWith ("System.", StringComparison.Ordinal) => true,
+			_ when assemblyName.StartsWith ("Microsoft.", StringComparison.Ordinal) => true,
+			_ when assemblyName.StartsWith ("Xamarin.", StringComparison.Ordinal) => true,
+			_ => false,
+		};
+	}
+
+	/// <summary>
+	/// Generates the marshal_methods_init.ll file that defines the get_function_pointer global
+	/// and the xamarin_app_init function required by libmonodroid.so.
 	/// </summary>
 	void GenerateLlvmIrInitFile (string outputPath, string targetArch)
 	{
@@ -637,16 +664,44 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 		using var writer = new StreamWriter (llFilePath);
 
+		// Write the LLVM IR init file with xamarin_app_init function
+		// This function is called by libmonodroid.so to set the get_function_pointer callback
 		writer.Write ("""
-			; ModuleID = 'marshal_methods_init.ll'
-			source_filename = "marshal_methods_init.ll"
-			target datalayout = "e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128"
-			target triple = "aarch64-unknown-linux-android21"
+; ModuleID = 'marshal_methods_init.ll'
+source_filename = "marshal_methods_init.ll"
+target datalayout = "e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128"
+target triple = "aarch64-unknown-linux-android21"
 
-			; Global get_function_pointer callback - set directly from JNIEnvInit.Initialize
-			@get_function_pointer = local_unnamed_addr global ptr null, align 8
+; Global get_function_pointer callback - set by xamarin_app_init
+@get_function_pointer = local_unnamed_addr global ptr null, align 8
 
-			""".Replace ("\t", ""));
+; External puts and abort for error handling
+declare i32 @puts(ptr nocapture readonly) local_unnamed_addr
+declare void @abort() noreturn
+
+; Error message for null function pointer
+@.str.error = private unnamed_addr constant [40 x i8] c"get_function_pointer MUST be specified\0A\00", align 1
+
+; xamarin_app_init - called by libmonodroid.so to initialize the function pointer callback
+; Parameters:
+;   %env - JNIEnv* (unused but required for JNI signature compatibility)
+;   %fn - the get_function_pointer callback function
+define default void @xamarin_app_init(ptr nocapture readnone %env, ptr %fn) local_unnamed_addr {
+entry:
+  %is_null = icmp eq ptr %fn, null
+  br i1 %is_null, label %error, label %store
+
+error:
+  %puts_result = call i32 @puts(ptr @.str.error)
+  call void @abort()
+  unreachable
+
+store:
+  store ptr %fn, ptr @get_function_pointer, align 8
+  ret void
+}
+
+""");
 	}
 
 	/// <summary>
@@ -837,13 +892,11 @@ public class GenerateTypeMapAttributesStep : BaseStep
 			fnPointers.AppendLine ($"@fn_ptr_{i} = internal unnamed_addr global ptr null, align 8");
 		}
 
-		writer.Write ($"""
-			{fnPointers}
-			; Class name for \"{jniTypeName}\" (length={classNameLength})
-			@class_name = internal constant [{classNameLength} x i8] c\"{classNameBytesEncoded}\", align 1
-
-			; JNI native method stubs
-			""");
+		writer.WriteLine (fnPointers);
+		writer.WriteLine ($"; Class name for \"{jniTypeName}\" (length={classNameLength})");
+		writer.WriteLine ($"@class_name = internal constant [{classNameLength} x i8] c\"{classNameBytesEncoded}\", align 1");
+		writer.WriteLine ();
+		writer.WriteLine ("; JNI native method stubs");
 
 		for (int i = 0; i < marshalMethods.Count; i++) {
 			var method = marshalMethods [i];

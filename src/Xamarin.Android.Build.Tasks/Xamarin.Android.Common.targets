@@ -1516,8 +1516,8 @@ because xbuild doesn't support framework reference assemblies.
 
 <!-- _PrepareAssemblies lives in Microsoft.Android.Sdk.AssemblyResolution.targets -->
 
-<!-- TypeMap PoC: Skip old typemap preparation for CoreCLR - we use TypeMapAttributeTypeMap instead -->
-<Target Name="_PrepareNativeAssemblySources" Condition=" '$(_AndroidRuntime)' != 'NativeAOT' And '$(_AndroidRuntime)' != 'CoreCLR' ">
+<!-- Prepare typemap assembly sources for all runtimes except NativeAOT -->
+<Target Name="_PrepareNativeAssemblySources" Condition=" '$(_AndroidRuntime)' != 'NativeAOT' ">
   <PrepareAbiItems
       BuildTargetAbis="@(_BuildTargetAbis)"
       NativeSourcesDir="$(_NativeAssemblySourceDir)"
@@ -1615,8 +1615,7 @@ because xbuild doesn't support framework reference assemblies.
   </RewriteMarshalMethods>
   -->
 
-  <!-- TypeMap PoC: Commenting out old typemap generation - replaced by GenerateTypeMapAttributesStep linker step -->
-  <!--
+  <!-- TypeMap PoC: Keep GenerateTypeMappings enabled to generate native symbols needed by libmonodroid.so -->
   <GenerateTypeMappings
       AndroidRuntime="$(_AndroidRuntime)"
       Debug="$(AndroidIncludeDebugSymbols)"
@@ -1628,7 +1627,6 @@ because xbuild doesn't support framework reference assemblies.
       SupportedAbis="@(_BuildTargetAbis)"
       TypemapOutputDirectory="$(_NativeAssemblySourceDir)">
   </GenerateTypeMappings>
-  -->
 
   <GenerateACWMap
       Condition=" '$(_AndroidJLOCheckedBuild)' == 'true' "
