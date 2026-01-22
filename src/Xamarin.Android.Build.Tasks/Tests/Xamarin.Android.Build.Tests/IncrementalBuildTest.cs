@@ -278,6 +278,7 @@ namespace Xamarin.Android.Build.Tests
 			var testPath = Path.Combine ("temp", TestName);
 			var sb = new SolutionBuilder ("AllProjectsHaveSameOutputDirectory.sln") {
 				SolutionPath = Path.Combine (Root, testPath),
+				Configuration = isRelease ? "Release" : "Debug", // MUST be set for NativeAOT builds
 			};
 
 			var app1 = new XamarinAndroidApplicationProject () {
@@ -313,6 +314,7 @@ namespace Xamarin.Android.Build.Tests
 			var sb = new SolutionBuilder("BuildSolutionWithMultipleProjects.sln") {
 				SolutionPath = Path.Combine (Root, testPath),
 				MaxCpuCount = 4,
+				Configuration = "Release", // MUST be set for NativeAOT builds
 			};
 
 			bool aotAssemblies = runtime switch {
