@@ -22,7 +22,6 @@ namespace Java.Interop
 	/// class Activity : Java.Lang.Object { ... }
 	/// 
 	/// // Generated proxy attribute type
-	/// [TypeMapProxy("android/app/Activity")]
 	/// [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 	/// sealed class ActivityProxy : JavaPeerProxy
 	/// {

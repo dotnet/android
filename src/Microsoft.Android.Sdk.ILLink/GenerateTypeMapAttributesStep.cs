@@ -17,16 +17,16 @@ using Mono.Linker.Steps;
 namespace Microsoft.Android.Sdk.ILLink;
 
 /// <summary>
-/// Generates TypeMap attributes using the .NET 10 TypeMapAttribute and TypeMapAssociationAttribute
-/// Find the best .NET type that maps to each Java type, and create the following code:
+/// Generates TypeMap attributes using the .NET 10 TypeMapAttribute and TypeMapAssociationAttribute.
+/// Finds the best .NET type that maps to each Java type, and generates:
 /// <code>
-/// [assembly: TypeMapAttribute("java/lang/JavaClas", typeof(Java.Lang.JavaClass), typeof(Java.Lang.JavaClass))]
+/// [assembly: TypeMapAttribute("java/lang/JavaClass", typeof(Java.Lang.JavaClass), typeof(Java.Lang.JavaClassProxy))]
 /// [assembly: TypeMapAssociationAttribute(typeof(Java.Lang.JavaClass), typeof(Java.Lang.JavaClassProxy))]
 ///
-/// [TypeMapProxy("java/lang/JavaClass")]
-/// class JavaClassProxy {
-/// Target
-/// }
+/// [Java.Lang.JavaClassProxy] // Applied as attribute to target type
+/// class Java.Lang.JavaClass : Java.Lang.Object { ... }
+///
+/// class Java.Lang.JavaClassProxy : JavaPeerProxy { ... } // Generated proxy type
 /// </code>
 /// </summary>
 public class GenerateTypeMapAttributesStep : BaseStep
@@ -36,9 +36,6 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 	const string TypeMapAssociationAttributeTypeName = "System.Runtime.InteropServices.TypeMapAssociationAttribute`1";
 	MethodReference TypeMapAssociationAttributeCtor;
-
-	const string TypeMapProxyAttributeTypeName = "Java.Interop.TypeMapProxyAttribute";
-	MethodReference TypeMapProxyAttributeCtor;
 
 	const string JavaPeerProxyTypeName = "Java.Interop.JavaPeerProxy";
 	TypeReference JavaPeerProxyType { get; set; }
@@ -167,11 +164,6 @@ public class GenerateTypeMapAttributesStep : BaseStep
 			MonoAndroidAssembly,
 			JavaTypeMapUniverseType,
 			out TypeMapAssemblyTargetAttributeCtor);
-
-		var typeMapProxyAttrTypeDef = Context.GetType (TypeMapProxyAttributeTypeName);
-		var typeMapProxyAttribute = AssemblyToInjectTypeMap.MainModule.ImportReference (typeMapProxyAttrTypeDef);
-		var typeMapProxyAttrCtor = typeMapProxyAttrTypeDef.Methods.Single (m => m.IsConstructor && !m.IsStatic);
-		TypeMapProxyAttributeCtor = AssemblyToInjectTypeMap.MainModule.ImportReference (typeMapProxyAttrCtor);
 
 		var javaPeerProxyTypeDef = Context.GetType (JavaPeerProxyTypeName);
 		JavaPeerProxyType = AssemblyToInjectTypeMap.MainModule.ImportReference (javaPeerProxyTypeDef);
@@ -1827,7 +1819,6 @@ public class {{className}}
 	/// The proxy is an attribute that will be applied to the target type.
 	/// <code>
 	/// [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = false)]
-	/// [TypeMapProxy("javaClassName")]
 	/// sealed class AssemblyName._.mappedTypeFullName_Proxy : JavaPeerProxy
 	/// {
 	///     public override Type TargetType => typeof(MappedType);
@@ -1855,11 +1846,6 @@ public class {{className}}
 			mappedName.ToString () + "_Proxy",
 			TypeAttributes.Class | TypeAttributes.Public | TypeAttributes.Sealed,
 			JavaPeerProxyType);
-
-		// Add [TypeMapProxy("javaClassName")] attribute
-		var ca = new CustomAttribute (TypeMapProxyAttributeCtor);
-		ca.ConstructorArguments.Add (new CustomAttributeArgument (SystemStringType, javaClassName));
-		proxyType.CustomAttributes.Add (ca);
 
 		// Add default constructor that calls base()
 		var ctor = new MethodDefinition (
@@ -2090,20 +2076,21 @@ public class {{className}}
 	///     var instance = (T)RuntimeHelpers.GetUninitializedObject(typeof(T));
 	///     ((IJavaPeerable)instance).SetPeerReference(new JniObjectReference(jobject));
 	///     
-	///     // Call the actual constructor
-	///     instance..ctor(args...);
+	///     // Call the activation constructor
+	///     instance..ctor(jobject, JniHandleOwnership.DoNotTransfer);  // XI style
+	///     // OR: instance..ctor(ref jniObjectRef, JniObjectReferenceOptions.Copy);  // JI style
 	/// }
 	/// </code>
 	/// </summary>
 	MethodDefinition? GenerateSingleActivationUco (
-		TypeDefinition proxyType, TypeDefinition mappedType, TypeReference mappedTypeRef, MethodDefinition targetCtor,
+		TypeDefinition proxyType, TypeDefinition mappedType, TypeReference mappedTypeRef,
+		MethodDefinition activationCtor, TypeDefinition activationCtorType, TypeReference activationCtorTypeRef,
 		TypeReference intPtrType, TypeReference voidType, TypeReference typeType, TypeReference objectType,
 		MethodReference getUninitializedObjectRef, MethodReference setPeerReferenceRef,
-		MethodReference jniObjectRefCtorRef, TypeReference jniObjectRefTypeRef,
-		int ctorIndex, string jniSignature)
+		MethodReference jniObjectRefCtorRef, TypeReference jniObjectRefTypeRef)
 	{
 		try {
-			string wrapperName = $"nc_activate_{ctorIndex}";
+			string wrapperName = "nc_activate_0";
 
 			var wrapperMethod = new MethodDefinition (
 				wrapperName,
@@ -2113,17 +2100,18 @@ public class {{className}}
 			// Add [UnmanagedCallersOnly] attribute
 			wrapperMethod.CustomAttributes.Add (new CustomAttribute (UnmanagedCallersOnlyAttributeCtor));
 
-			// Parameters: (IntPtr jnienv, IntPtr jobject, ...constructor params...)
+			// Parameters: (IntPtr jnienv, IntPtr jobject)
 			wrapperMethod.Parameters.Add (new ParameterDefinition ("jnienv", ParameterAttributes.None, intPtrType));
 			wrapperMethod.Parameters.Add (new ParameterDefinition ("jobject", ParameterAttributes.None, intPtrType));
-
-			// Add additional constructor parameters (skip first 2 params of ctor: IntPtr handle, JniHandleOwnership)
-			// Activation constructors typically have (IntPtr, JniHandleOwnership) signature
-			// Additional constructor params would be passed from Java, but for now we just handle the base case
 
 			var body = wrapperMethod.Body;
 			body.InitLocals = true;
 			var il = body.GetILProcessor ();
+
+			// Determine if this is XI style (IntPtr, JniHandleOwnership) or JI style (ref JniObjectReference, JniObjectReferenceOptions)
+			bool isXiStyle = activationCtor.Parameters.Count == 2 &&
+				activationCtor.Parameters [0].ParameterType.FullName == "System.IntPtr" &&
+				activationCtor.Parameters [1].ParameterType.FullName == "Android.Runtime.JniHandleOwnership";
 
 			// Local variables we'll need
 			var instanceVar = new VariableDefinition (objectType);
@@ -2168,38 +2156,23 @@ public class {{className}}
 			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloc, jniObjectRefVar);
 			il.Emit (Mono.Cecil.Cil.OpCodes.Callvirt, setPeerReferenceRef);
 
-			// Call the constructor on the instance
-			// For activation constructors, they typically take (IntPtr handle, JniHandleOwnership transfer)
-			// We need to check the targetCtor signature and pass appropriate arguments
+			// Call the activation constructor on the instance
+			// Cast to the type that declares the constructor (may be base class)
 			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloc, instanceVar);
-			il.Emit (Mono.Cecil.Cil.OpCodes.Castclass, mappedTypeRef);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Castclass, activationCtorTypeRef);
 
-			// Pass constructor arguments based on targetCtor.Parameters
-			foreach (var param in targetCtor.Parameters) {
-				if (param.ParameterType.FullName == "System.IntPtr") {
-					// Pass jobject (arg1)
-					il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_1);
-				} else if (param.ParameterType.FullName == "Android.Runtime.JniHandleOwnership") {
-					// Pass JniHandleOwnership.DoNotTransfer (value = 0)
-					il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_I4_0);
-				} else {
-					// For other parameter types, we'd need to pass from the UCO params
-					// For now, push default value
-					if (param.ParameterType.IsValueType) {
-						// Load default value for value types
-						var tempVar = new VariableDefinition (AssemblyToInjectTypeMap.MainModule.ImportReference (param.ParameterType));
-						body.Variables.Add (tempVar);
-						il.Emit (Mono.Cecil.Cil.OpCodes.Ldloca, tempVar);
-						il.Emit (Mono.Cecil.Cil.OpCodes.Initobj, AssemblyToInjectTypeMap.MainModule.ImportReference (param.ParameterType));
-						il.Emit (Mono.Cecil.Cil.OpCodes.Ldloc, tempVar);
-					} else {
-						il.Emit (Mono.Cecil.Cil.OpCodes.Ldnull);
-					}
-				}
+			if (isXiStyle) {
+				// XI style: (IntPtr handle, JniHandleOwnership transfer)
+				il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_1);  // jobject (IntPtr)
+				il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_I4_0); // JniHandleOwnership.DoNotTransfer = 0
+			} else {
+				// JI style: (ref JniObjectReference, JniObjectReferenceOptions)
+				il.Emit (Mono.Cecil.Cil.OpCodes.Ldloca, jniObjectRefVar);  // ref jniObjectRef
+				il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_I4_0);                  // JniObjectReferenceOptions.Copy = 0
 			}
 
 			// Call the constructor
-			var ctorRef = AssemblyToInjectTypeMap.MainModule.ImportReference (targetCtor);
+			var ctorRef = AssemblyToInjectTypeMap.MainModule.ImportReference (activationCtor);
 			il.Emit (Mono.Cecil.Cil.OpCodes.Call, ctorRef);
 
 			// Return
