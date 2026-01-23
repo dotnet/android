@@ -975,6 +975,12 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
 {1} - The HttpClient reported download exception message
 </comment>
   </data>
+  <data name="XA4238" xml:space="preserve">
+    <value>Could not load Java callable wrapper XML file '{0}': {1}</value>
+    <comment>The following are literal names and should not be translated: Java callable wrapper, XML.
+{0} - Path to XML file
+{1} - Exception message</comment>
+  </data>
   <data name="XA4239" xml:space="preserve">
     <value>Unknown Maven repository: '{0}'.</value>
     <comment>The following are literal names and should not be translated: Maven

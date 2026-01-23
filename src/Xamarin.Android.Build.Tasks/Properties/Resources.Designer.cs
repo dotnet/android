@@ -1301,6 +1301,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Could not load Java callable wrapper XML file &apos;{0}&apos;: {1}.
+        /// </summary>
+        public static string XA4238 {
+            get {
+                return ResourceManager.GetString("XA4238", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Unknown Maven repository: &apos;{0}&apos;..
         /// </summary>
         public static string XA4239 {
