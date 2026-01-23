@@ -24,9 +24,9 @@
     <VersionSuffixRegex>\-(preview|rc|alpha).\d+</VersionSuffixRegex>
     <DotNetPreviewVersionBand Condition=" '$(DotNetPreviewVersionBand)' == '' ">$(VersionBand)$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftDotnetSdkInternalPackageVersion), $(VersionSuffixRegex)))</DotNetPreviewVersionBand>
     <DotNetSdkManifestsFolder>$(DotNetPreviewVersionBand)</DotNetSdkManifestsFolder>
-    <DotNetMonoManifestVersionBand>$(VersionBand)$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftNETWorkloadMonoToolChainPackageVersion), $(VersionSuffixRegex)))</DotNetMonoManifestVersionBand>
-    <DotNetEmscriptenManifestVersionBand>$(VersionBand)$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftNETWorkloadEmscriptenPackageVersion), $(VersionSuffixRegex)))</DotNetEmscriptenManifestVersionBand>
-    <!-- NOTE: sometimes we hardcode this when transitioning to new version bands -->
-    <DotNetAndroidManifestVersionBand>$(DotNetPreviewVersionBand)</DotNetAndroidManifestVersionBand>
+    <!-- NOTE: sometimes we hardcode these when transitioning to new version bands -->
+    <DotNetMonoManifestVersionBand>10.0.100</DotNetMonoManifestVersionBand>
+    <DotNetEmscriptenManifestVersionBand>10.0.100</DotNetEmscriptenManifestVersionBand>
+    <DotNetAndroidManifestVersionBand>10.0.100</DotNetAndroidManifestVersionBand>
   </PropertyGroup>
 </Project>
