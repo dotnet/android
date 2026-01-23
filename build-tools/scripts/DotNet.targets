@@ -87,7 +87,7 @@
     <PropertyGroup>
       <_TempDirectory>$(DotNetPreviewPath)..\.xa-workload-temp-$([System.IO.Path]::GetRandomFileName())</_TempDirectory>
       <MauiVersionBand Condition=" '$(MauiVersionBand)' == '' ">$(DotNetSdkManifestsFolder)</MauiVersionBand>
-      <_ManifestGlobPattern>$(MauiPackagePath)\Microsoft.NET.Sdk.Maui.Manifest-$(MauiVersionBand.Substring (0,3))*.nupkg</_ManifestGlobPattern>
+      <_ManifestGlobPattern>$(MauiPackagePath)\**\Microsoft.NET.Sdk.Maui.Manifest-$(MauiVersionBand.Substring (0,3))*.nupkg</_ManifestGlobPattern>
     </PropertyGroup>
     <Message Importance="High" Text="InstallMaui: MauiPackagePath = $(MauiPackagePath)" />
     <Message Importance="High" Text="InstallMaui: MauiVersionBand = $(MauiVersionBand)" />
@@ -102,9 +102,10 @@
         EnvironmentVariables="NUGET_PACKAGES=$(_TempDirectory);DOTNET_MULTILEVEL_LOOKUP=0"
     />
     <!-- List contents of MauiPackagePath for diagnostics -->
-    <Exec Condition=" '$(MauiUseLocalPacks)' == 'true' " Command="dir &quot;$(MauiPackagePath)&quot;" IgnoreExitCode="true" />
+    <Exec Condition=" '$(MauiUseLocalPacks)' == 'true' " Command="dir /s &quot;$(MauiPackagePath)\*.nupkg&quot;" IgnoreExitCode="true" />
     <ItemGroup>
-      <_WLManifestPack Include="$(MauiPackagePath)\Microsoft.NET.Sdk.Maui.Manifest-$(MauiVersionBand.Substring (0,3))*.nupkg" />
+      <!-- Search recursively for manifest nupkg as Arcade SDK places packages in subdirectories -->
+      <_WLManifestPack Include="$(MauiPackagePath)\**\Microsoft.NET.Sdk.Maui.Manifest-$(MauiVersionBand.Substring (0,3))*.nupkg" />
     </ItemGroup>
     <Unzip
         Condition=" '$(MauiUseLocalPacks)' == 'true' "
