@@ -87,7 +87,11 @@
     <PropertyGroup>
       <_TempDirectory>$(DotNetPreviewPath)..\.xa-workload-temp-$([System.IO.Path]::GetRandomFileName())</_TempDirectory>
       <MauiVersionBand Condition=" '$(MauiVersionBand)' == '' ">$(DotNetSdkManifestsFolder)</MauiVersionBand>
+      <_ManifestGlobPattern>$(MauiPackagePath)\Microsoft.NET.Sdk.Maui.Manifest-$(MauiVersionBand.Substring (0,3))*.nupkg</_ManifestGlobPattern>
     </PropertyGroup>
+    <Message Importance="High" Text="InstallMaui: MauiPackagePath = $(MauiPackagePath)" />
+    <Message Importance="High" Text="InstallMaui: MauiVersionBand = $(MauiVersionBand)" />
+    <Message Importance="High" Text="InstallMaui: Glob pattern = $(_ManifestGlobPattern)" />
     <MakeDir Directories="$(_TempDirectory)" />
 
     <!-- Restore or extract WorkloadManifest.* files-->
@@ -97,6 +101,8 @@
         WorkingDirectory="$(MSBuildThisFileDirectory)"
         EnvironmentVariables="NUGET_PACKAGES=$(_TempDirectory);DOTNET_MULTILEVEL_LOOKUP=0"
     />
+    <!-- List contents of MauiPackagePath for diagnostics -->
+    <Exec Condition=" '$(MauiUseLocalPacks)' == 'true' " Command="dir &quot;$(MauiPackagePath)&quot;" IgnoreExitCode="true" />
     <ItemGroup>
       <_WLManifestPack Include="$(MauiPackagePath)\Microsoft.NET.Sdk.Maui.Manifest-$(MauiVersionBand.Substring (0,3))*.nupkg" />
     </ItemGroup>
