@@ -1877,8 +1877,7 @@ because xbuild doesn't support framework reference assemblies.
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
       MainAssembly="$(TargetPath)"
-      OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)mono"
-      ResolvedUserAssemblies="@(_ResolvedUserAssemblies)">
+      OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)mono">
   </GeneratePackageManagerJava>
 
   <GenerateNativeApplicationConfigSources
