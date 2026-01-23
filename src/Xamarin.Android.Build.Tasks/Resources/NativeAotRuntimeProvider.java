@@ -13,7 +13,7 @@ public class NativeAotRuntimeProvider
 
     public NativeAotRuntimeProvider() {
         Log.d(TAG, "NativeAotRuntimeProvider()");
-	NativeAotEnvironmentVars.Initialize ();
+	    NativeAotEnvironmentVars.Initialize ();
     }
 
     @Override
