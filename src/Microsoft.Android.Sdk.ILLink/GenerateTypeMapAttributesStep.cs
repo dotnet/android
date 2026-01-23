@@ -54,6 +54,10 @@ public class GenerateTypeMapAttributesStep : BaseStep
 	TypeReference InvokerUniverseType { get; set; }
 	MethodReference InvokerTypeMapAssociationAttributeCtor;
 
+	const string AliasesUniverseTypeName = "Java.Interop.AliasesUniverse";
+	TypeReference AliasesUniverseType { get; set; }
+	MethodReference AliasesTypeMapAssociationAttributeCtor;
+
 	TypeReference SystemTypeType { get; set; }
 	TypeReference SystemStringType { get; set; }
 	TypeReference SystemExceptionType { get; set; }
@@ -129,6 +133,9 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		var invokerUniverseTypeDefinition = Context.GetType (InvokerUniverseTypeName);
 		InvokerUniverseType = AssemblyToInjectTypeMap.MainModule.ImportReference (invokerUniverseTypeDefinition);
 
+		var aliasesUniverseTypeDefinition = Context.GetType (AliasesUniverseTypeName);
+		AliasesUniverseType = AssemblyToInjectTypeMap.MainModule.ImportReference (aliasesUniverseTypeDefinition);
+
 		GetTypeMapAttributeReferences (TypeMapAttributeTypeName,
 			m => m.IsConstructor
 				&& m.Parameters is [
@@ -157,6 +164,16 @@ public class GenerateTypeMapAttributesStep : BaseStep
 			AssemblyToInjectTypeMap,
 			InvokerUniverseType,
 			out InvokerTypeMapAssociationAttributeCtor);
+
+		// TypeMapAssociation<AliasesUniverse> for linking aliased types to their alias holder
+		GetTypeMapAttributeReferences (TypeMapAssociationAttributeTypeName,
+			m => m.IsConstructor
+				&& m.Parameters is [
+				{ ParameterType.FullName: "System.Type" },
+				{ ParameterType.FullName: "System.Type" }],
+			AssemblyToInjectTypeMap,
+			AliasesUniverseType,
+			out AliasesTypeMapAssociationAttributeCtor);
 
 		GetTypeMapAttributeReferences (TypeMapAssemblyTargetAttributeTypeName,
 			m => m.IsConstructor
@@ -698,6 +715,13 @@ public class GenerateTypeMapAttributesStep : BaseStep
 				// Generate TypeMap for the main Java name -> alias type (alias types don't have proxies, use alias type itself)
 				var mainAttr = GenerateTypeMapAttribute (aliasType, aliasType, javaName);
 				AssemblyToInjectTypeMap.CustomAttributes.Add (mainAttr);
+
+				// Generate TypeMapAssociation<AliasesUniverse> for each aliased type, linking it to the alias holder
+				// This allows the trimmer to preserve all aliased types when any one of them is referenced
+				foreach (var type in types) {
+					var aliasAssocAttr = GenerateAliasesTypeMapAssociationAttribute (type, aliasType);
+					AssemblyToInjectTypeMap.CustomAttributes.Add (aliasAssocAttr);
+				}
 			}
 		}
 
@@ -1780,6 +1804,18 @@ public class {{className}}
 		var ca = new CustomAttribute (InvokerTypeMapAssociationAttributeCtor);
 		ca.ConstructorArguments.Add (new (SystemTypeType, AssemblyToInjectTypeMap.MainModule.ImportReference (interfaceType)));
 		ca.ConstructorArguments.Add (new (SystemTypeType, AssemblyToInjectTypeMap.MainModule.ImportReference (invokerType)));
+		return ca;
+	}
+
+	/// <summary>
+	/// Generates <code>[TypeMapAssociation&lt;AliasesUniverse&gt;(typeof(targetType), typeof(aliasHolderType))]</code>
+	/// This links each aliased type to its alias holder, allowing the trimmer to preserve all related types.
+	/// </summary>
+	CustomAttribute GenerateAliasesTypeMapAssociationAttribute (TypeDefinition targetType, TypeDefinition aliasHolderType)
+	{
+		var ca = new CustomAttribute (AliasesTypeMapAssociationAttributeCtor);
+		ca.ConstructorArguments.Add (new (SystemTypeType, AssemblyToInjectTypeMap.MainModule.ImportReference (targetType)));
+		ca.ConstructorArguments.Add (new (SystemTypeType, AssemblyToInjectTypeMap.MainModule.ImportReference (aliasHolderType)));
 		return ca;
 	}
 
