@@ -181,14 +181,7 @@ extends:
           retryCountOnTaskFailure: 3
           inputs:
             projects: $(Build.SourcesDirectory)/android/Xamarin.Android.sln
-            arguments: -t:InstallMaui -p:MauiUseLocalPacks=true -p:MauiWorkloadToInstall=maui -p:MauiManifestDiagnosticsPath=$(Build.StagingDirectory)/maui-manifest-diagnostics -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/install-maui.binlog
-
-        - task: PublishBuildArtifacts@1
-          displayName: Publish MAUI WorkloadManifest for diagnostics
-          condition: always()
-          inputs:
-            pathToPublish: $(Build.StagingDirectory)/maui-manifest-diagnostics
-            artifactName: MauiWorkloadManifest
+            arguments: -t:InstallMaui -p:MauiUseLocalPacks=true -p:MauiWorkloadToInstall=maui -p:MauiManifestDiagnosticsPath=$(Build.StagingDirectory)/logs/maui-manifest -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/install-maui.binlog
 
         - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
           parameters:
