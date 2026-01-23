@@ -17,16 +17,6 @@ namespace HelloWorld
 	{
 		int count = 1;
 
-		// Activation constructor for AOT-safe peer creation
-		protected MainActivity (IntPtr javaReference, JniHandleOwnership transfer)
-			: base (javaReference, transfer)
-		{
-		}
-
-		public MainActivity ()
-		{
-		}
-
 		// Manual connector to test TypeMaps marshal methods
 		[Register ("onCreate", "(Landroid/os/Bundle;)V", "n_onCreate")]
 		protected override void OnCreate (Bundle savedInstanceState)
