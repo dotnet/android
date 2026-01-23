@@ -163,7 +163,7 @@ namespace Android.Runtime
 
 			// For CoreCLR/NativeAOT, provide the GetFunctionPointer callback for Type Mapping API marshal methods
 			if (RuntimeFeature.IsCoreClrRuntime) {
-				args->getFunctionPointerFn = (IntPtr)(delegate* unmanaged<byte*, int, int, IntPtr*, void>)&GetFunctionPointer;
+				args->getFunctionPointerFn = (IntPtr)(delegate* unmanaged<char*, int, int, IntPtr*, void>)&GetFunctionPointer;
 				RuntimeNativeMethods.monodroid_log (LogLevel.Info, LogCategories.Default,
 					$"JNIEnvInit: Set getFunctionPointerFn to 0x{args->getFunctionPointerFn:x}");
 			} else {
@@ -180,20 +180,18 @@ namespace Android.Runtime
 		}
 
 		[UnmanagedCallersOnly]
-		internal static unsafe void GetFunctionPointer (byte* classNamePtr, int classNameLength, int methodIndex, IntPtr* targetPtr)
+		internal static unsafe void GetFunctionPointer (char* classNamePtr, int classNameLength, int methodIndex, IntPtr* targetPtr)
 		{
-			Logger.Log (LogLevel.Info, "monodroid-typemap",
-				$"GetFunctionPointer: ENTRY classNameLength={classNameLength}, methodIndex={methodIndex}");
-			string className = System.Text.Encoding.UTF8.GetString (classNamePtr, classNameLength);
-			Logger.Log (LogLevel.Info, "monodroid-typemap",
-				$"GetFunctionPointer: class='{className}', methodIndex={methodIndex}");
-			*targetPtr = TypeMap.GetFunctionPointer (className, methodIndex);
+			// Zero-copy span creation - just wraps the pointer, no allocation
+			ReadOnlySpan<char> classNameSpan = new ReadOnlySpan<char>(classNamePtr, classNameLength);
+
+			*targetPtr = TypeMap.GetFunctionPointer (classNameSpan, methodIndex);
 			if (*targetPtr == IntPtr.Zero) {
 				Logger.Log (LogLevel.Error, "monodroid-typemap",
-					$"GetFunctionPointer: No function pointer found for class='{className}', methodIndex={methodIndex}");
+					$"GetFunctionPointer: No function pointer found for class='{classNameSpan.ToString()}', methodIndex={methodIndex}");
 			} else {
 				Logger.Log (LogLevel.Info, "monodroid-typemap",
-					$"GetFunctionPointer: Returning 0x{(*targetPtr):X} for class='{className}', methodIndex={methodIndex}");
+					$"GetFunctionPointer: Returning 0x{(*targetPtr):X} for class='{classNameSpan.ToString()}', methodIndex={methodIndex}");
 			}
 		}
 

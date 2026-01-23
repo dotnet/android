@@ -176,13 +176,18 @@ namespace Android.Runtime
 				string? methods) =>
 			RegisterNativeMembers (nativeClass, type, methods.AsSpan ());
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "DynamicNativeMembersRegistration is needed for TypeManager.JavaTypeManager activation.")]
 		public override void RegisterNativeMembers (
 				JniType nativeClass,
 				[DynamicallyAccessedMembers (MethodsAndPrivateNested)] Type type,
 				ReadOnlySpan<char> methods)
 		{
 			try {
+				if (!Microsoft.Android.Runtime.RuntimeFeature.IsDynamicMemberRegistrationEnabled) {
+					throw new NotSupportedException (
+						$"Dynamic member registration is not supported when the 'Microsoft.Android.Runtime.RuntimeFeature.IsDynamicMemberRegistrationEnabled' feature switch is disabled. " +
+						$"Type: {type.FullName}");
+				}
+
 				if (methods.IsEmpty) {
 					if (_jniAddNativeMethodRegistrationAttributePresent)
 						base.RegisterNativeMembers (nativeClass, type, methods);

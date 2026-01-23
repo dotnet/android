@@ -159,7 +159,7 @@ namespace Java.Interop
 		}
 
 		/// <inheritdoc/>
-		public IntPtr GetFunctionPointer (string className, int methodIndex)
+		public IntPtr GetFunctionPointer (ReadOnlySpan<char> className, int methodIndex)
 		{
 			// LlvmIrTypeMap doesn't use the attribute-based GetFunctionPointer mechanism.
 			// This is only implemented in TypeMapAttributeTypeMap for CoreCLR.

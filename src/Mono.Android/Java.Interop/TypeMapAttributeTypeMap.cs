@@ -141,8 +141,8 @@ namespace Android.Runtime
 
 		/// <summary>
 		/// Gets or creates a JavaPeerProxy instance for the given type.
-		/// If the type itself is a JavaPeerProxy subclass (proxy type from typemap), instantiate it directly.
-		/// Otherwise, look for a JavaPeerProxy attribute on the type (original type with proxy attribute).
+		/// The type should be the original type (e.g., Activity) which has the proxy applied as an attribute.
+		/// Using GetCustomAttribute is AOT and trimming safe, unlike Activator.CreateInstance.
 		/// </summary>
 		internal static JavaPeerProxy? GetOrCreateProxyInstance (Type type)
 		{
@@ -151,23 +151,17 @@ namespace Android.Runtime
 					return cached;
 				}
 
-				JavaPeerProxy? proxy = null;
+				// Use GetCustomAttribute to get the proxy instance - this is AOT and trimming safe
+				// The proxy type extends JavaPeerProxy (which extends Attribute) and is applied to the original type
+				Log ($"GetOrCreateProxyInstance: Looking for JavaPeerProxy attribute on {type.FullName}");
+				JavaPeerProxy? proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
 
-				// Check if the type itself is a JavaPeerProxy subclass (proxy type from typemap)
-				if (typeof (JavaPeerProxy).IsAssignableFrom (type)) {
-					Log ($"GetOrCreateProxyInstance: {type.FullName} is a JavaPeerProxy subclass, instantiating directly");
-					try {
-						proxy = (JavaPeerProxy?) Activator.CreateInstance (type);
-					} catch (Exception ex) {
-						Log ($"GetOrCreateProxyInstance: Failed to instantiate {type.FullName}: {ex.Message}");
-					}
+				if (proxy == null) {
+					Log ($"GetOrCreateProxyInstance: No JavaPeerProxy attribute found on {type.FullName}");
 				} else {
-					// Fall back to looking for a JavaPeerProxy attribute on the type
-					Log ($"GetOrCreateProxyInstance: {type.FullName} is not a JavaPeerProxy, looking for attribute");
-					proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+					Log ($"GetOrCreateProxyInstance: Found {proxy.GetType ().FullName} on {type.FullName}");
 				}
 
-				Log ($"GetOrCreateProxyInstance: Returning {(proxy != null ? proxy.GetType ().FullName : "null")} for {type.FullName}");
 				return s_proxyInstances [type] = proxy;
 			}
 		}
@@ -316,25 +310,29 @@ namespace Android.Runtime
 		}
 
 		/// <inheritdoc/>
-		public unsafe IntPtr GetFunctionPointer (string className, int methodIndex)
+		public unsafe IntPtr GetFunctionPointer (ReadOnlySpan<char> className, int methodIndex)
 		{
 			// Note: No try-catch here. If this crashes, the app should crash.
 			// It's a critical infrastructure failure.
-			Log ($"GetFunctionPointer: class='{className}', methodIndex={methodIndex}");
 
-			// Special case: TypeManager.n_activate is used by framework JCWs to activate managed peers
-			// These JCWs (like View_OnClickListenerImplementor) call TypeManager.Activate() in their constructors.
-			// We need to provide the function pointer for the [UnmanagedCallersOnly] n_Activate_mm method.
-			if (className == "mono/android/TypeManager" && methodIndex == 0) {
-				IntPtr activateFnPtr = GetTypeManagerActivateFunctionPointer ();
-				Log ($"GetFunctionPointer: TypeManager special case, returning 0x{activateFnPtr:x}");
-				return activateFnPtr;
+			// Convert to string for dictionary lookup
+			// TODO: Use Dictionary.GetAlternateLookup<ReadOnlySpan<char>>() to avoid this allocation
+			string classNameStr = className.ToString();
+			Log ($"GetFunctionPointer: class='{classNameStr}', methodIndex={methodIndex}");
+
+			// Special case: TypeManager.n_Activate is called by framework JCWs in mono.android.jar
+			// These JCWs don't have generated proxies, so we handle them directly here.
+			// methodIndex 0 = n_Activate
+			if (classNameStr == "mono/android/TypeManager" && methodIndex == 0) {
+				IntPtr activatePtr = Java.Interop.TypeManager.GetActivateFunctionPointer ();
+				Log ($"GetFunctionPointer: Special case TypeManager.n_Activate -> 0x{activatePtr:x}");
+				return activatePtr;
 			}
 
 			// Look up type directly from the external type map
 			// The typemap now returns the proxy type directly (not the original type)
-			if (!_externalTypeMap.TryGetValue (className, out Type? type)) {
-				Log ($"GetFunctionPointer: No type found for '{className}'");
+			if (!_externalTypeMap.TryGetValue (classNameStr, out Type? type)) {
+				Log ($"GetFunctionPointer: No type found for '{classNameStr}'");
 				return IntPtr.Zero;
 			}
 
@@ -352,20 +350,6 @@ namespace Android.Runtime
 			IntPtr fnPtr = proxy.GetFunctionPointer (methodIndex);
 			Log ($"GetFunctionPointer: Got function pointer 0x{fnPtr:x} for method index {methodIndex}");
 
-			return fnPtr;
-		}
-
-		/// <summary>
-		/// Gets the function pointer for TypeManager.JavaTypeManager.n_Activate_mm.
-		/// This is the [UnmanagedCallersOnly] method that handles activation of managed peers
-		/// from Java callable wrapper constructors that call TypeManager.Activate().
-		/// </summary>
-		static IntPtr GetTypeManagerActivateFunctionPointer ()
-		{
-			// Use the new direct method that doesn't rely on reflection
-			// Fully qualify to avoid ambiguity with Android.Runtime.TypeManager
-			IntPtr fnPtr = Java.Interop.TypeManager.GetActivateFunctionPointer ();
-			Log ($"GetTypeManagerActivateFunctionPointer: Got function pointer 0x{fnPtr:x} for n_Activate_mm");
 			return fnPtr;
 		}
 	}

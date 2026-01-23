@@ -9,6 +9,7 @@ static class RuntimeFeature
 	const bool IsCoreClrRuntimeEnabledByDefault = false;
 	const bool IsAssignableFromCheckEnabledByDefault = true;
 	const bool StartupHookSupportEnabledByDefault = true;
+	const bool IsDynamicMemberRegistrationEnabledByDefault = true;
 
 	const string FeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
 	const string StartupHookProviderSwitch = "System.StartupHookProvider.IsSupported";
@@ -29,4 +30,9 @@ static class RuntimeFeature
 	[FeatureGuard (typeof (RequiresUnreferencedCodeAttribute))]
 	internal static bool StartupHookSupport { get; } =
 		AppContext.TryGetSwitch (StartupHookProviderSwitch, out bool isEnabled) ? isEnabled : StartupHookSupportEnabledByDefault;
+
+	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (IsDynamicMemberRegistrationEnabled)}")]
+	[FeatureGuard (typeof (RequiresUnreferencedCodeAttribute))]
+	internal static bool IsDynamicMemberRegistrationEnabled { get; } =
+		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (IsDynamicMemberRegistrationEnabled)}", out bool isEnabled) ? isEnabled : IsDynamicMemberRegistrationEnabledByDefault;
 }

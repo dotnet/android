@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -15,82 +15,6 @@ using Mono.Linker;
 using Mono.Linker.Steps;
 
 namespace Microsoft.Android.Sdk.ILLink;
-
-/// <summary>
-/// Simple timing helper for profiling GenerateTypeMapAttributesStep performance.
-/// </summary>
-static class TimingLog
-{
-	const string LogPath = "/tmp/illink-timing.log";
-	static readonly Stopwatch _globalStopwatch = Stopwatch.StartNew ();
-	static readonly object _lock = new ();
-	static readonly Dictionary<string, (long totalMs, int count)> _aggregates = new ();
-
-	static TimingLog ()
-	{
-		File.WriteAllText (LogPath, $"=== ILLink Timing Log Started at {DateTime.Now} ===\n");
-	}
-
-	public static void Log (string message)
-	{
-		lock (_lock) {
-			File.AppendAllText (LogPath, $"[{_globalStopwatch.ElapsedMilliseconds,6}ms] {message}\n");
-		}
-	}
-
-	public static void LogAggregate (string operation, long elapsedMs)
-	{
-		lock (_lock) {
-			if (!_aggregates.TryGetValue (operation, out var current)) {
-				current = (0, 0);
-			}
-			_aggregates[operation] = (current.totalMs + elapsedMs, current.count + 1);
-		}
-	}
-
-	public static void DumpAggregates ()
-	{
-		lock (_lock) {
-			File.AppendAllText (LogPath, "\n=== AGGREGATE TIMING SUMMARY ===\n");
-			foreach (var kvp in _aggregates.OrderByDescending (x => x.Value.totalMs)) {
-				var avg = kvp.Value.count > 0 ? kvp.Value.totalMs / kvp.Value.count : 0;
-				File.AppendAllText (LogPath, $"  {kvp.Key}: {kvp.Value.totalMs}ms total, {kvp.Value.count} calls, {avg}ms avg\n");
-			}
-			File.AppendAllText (LogPath, "=== END SUMMARY ===\n");
-		}
-	}
-
-	public static Timing Start (string operation) => new Timing (operation);
-
-	public struct Timing : IDisposable
-	{
-		readonly string _operation;
-		readonly Stopwatch _sw;
-		readonly bool _aggregate;
-
-		public Timing (string operation, bool aggregate = false)
-		{
-			_operation = operation;
-			_aggregate = aggregate;
-			_sw = Stopwatch.StartNew ();
-			if (!aggregate) {
-				Log ($"START: {operation}");
-			}
-		}
-
-		public void Dispose ()
-		{
-			_sw.Stop ();
-			if (_aggregate) {
-				LogAggregate (_operation, _sw.ElapsedMilliseconds);
-			} else {
-				Log ($"END: {_operation} ({_sw.ElapsedMilliseconds}ms)");
-			}
-		}
-	}
-
-	public static Timing StartAggregate (string operation) => new Timing (operation, aggregate: true);
-}
 
 /// <summary>
 /// Generates TypeMap attributes using the .NET 10 TypeMapAttribute and TypeMapAssociationAttribute
@@ -181,9 +105,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 	protected override void Process ()
 	{
-		using var _ = TimingLog.Start ("Process");
 		try {
-		using (TimingLog.Start ("Process.Initialization")) {
 		var javaTypeMapUniverseTypeDefinition = Context.GetType (JavaTypeMapUniverseTypeName);
 		MonoAndroidAssembly = javaTypeMapUniverseTypeDefinition.Module.Assembly;
 
@@ -276,11 +198,8 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 		// Initialize UCO wrapper generation imports
 		InitializeUcoImports ();
-		} // end Process.Initialization timing block
 
-		using (TimingLog.Start ("Process.BaseProcess")) {
 		base.Process ();
-		}
 		} catch (Exception ex) {
 			throw new InvalidOperationException ($"GenerateTypeMapAttributesStep crashed: {ex}");
 		}
@@ -330,8 +249,6 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 	protected override void ProcessAssembly (AssemblyDefinition assembly)
 	{
-		using var _ = TimingLog.StartAggregate ($"ProcessAssembly");
-		TimingLog.Log ($"ProcessAssembly: {assembly.Name.Name} ({assembly.MainModule.Types.Count} types)");
 		foreach (var type in assembly.MainModule.Types) {
 			ProcessType (assembly, type);
 		}
@@ -452,21 +369,6 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		// IMPORTANT: Only do this for Implementor types, NOT for Invoker types.
 		// Invoker types (DoNotGenerateAcw=true) already have all callback methods they need.
 		// Implementor types have JNI class names starting with "mono/android/" (custom JCWs).
-		bool isOnClickListenerImplementor = type.FullName.Contains ("IOnClickListenerImplementor");
-		if (isOnClickListenerImplementor) {
-			File.AppendAllText ("/tmp/typemap-debug.log", 
-				$"CollectMarshalMethods: {type.FullName} HasInterfaces={type.HasInterfaces}, IsImplementorType={IsImplementorType (type)}\n");
-			foreach (var attr in type.CustomAttributes) {
-				if (attr.AttributeType.FullName == "Android.Runtime.RegisterAttribute") {
-					File.AppendAllText ("/tmp/typemap-debug.log", 
-						$"CollectMarshalMethods: [Register] args count={attr.ConstructorArguments.Count}\n");
-					if (attr.ConstructorArguments.Count > 0) {
-						File.AppendAllText ("/tmp/typemap-debug.log", 
-							$"CollectMarshalMethods: [Register] arg0='{attr.ConstructorArguments [0].Value}'\n");
-					}
-				}
-			}
-		}
 		if (type.HasInterfaces && IsImplementorType (type)) {
 			CollectInterfaceMarshalMethods (type, methods, seen);
 		}
@@ -503,25 +405,10 @@ public class GenerateTypeMapAttributesStep : BaseStep
 	/// </summary>
 	void CollectInterfaceMarshalMethods (TypeDefinition type, List<MarshalMethodInfo> methods, HashSet<string> seen)
 	{
-		bool isOnClickListenerImplementor = type.FullName.Contains ("IOnClickListenerImplementor");
-		if (isOnClickListenerImplementor) {
-			File.AppendAllText ("/tmp/typemap-debug.log",
-				$"CollectInterfaceMarshalMethods: Processing {type.FullName} with {type.Interfaces.Count} interfaces\n");
-		}
-
 		foreach (var iface in type.Interfaces) {
 			var ifaceType = iface.InterfaceType.Resolve ();
 			if (ifaceType == null) {
-				if (isOnClickListenerImplementor) {
-					File.AppendAllText ("/tmp/typemap-debug.log",
-						$"CollectInterfaceMarshalMethods: Could not resolve interface {iface.InterfaceType.FullName}\n");
-				}
 				continue;
-			}
-
-			if (isOnClickListenerImplementor) {
-				File.AppendAllText ("/tmp/typemap-debug.log",
-					$"CollectInterfaceMarshalMethods: Checking interface {ifaceType.FullName} with {ifaceType.Methods.Count} methods\n");
 			}
 
 			foreach (var method in ifaceType.Methods) {
@@ -530,57 +417,26 @@ public class GenerateTypeMapAttributesStep : BaseStep
 				}
 
 				foreach (var attr in CecilExtensions.GetMethodRegistrationAttributes (method)) {
-					if (isOnClickListenerImplementor) {
-						File.AppendAllText ("/tmp/typemap-debug.log",
-							$"CollectInterfaceMarshalMethods: Found [Register] on {method.Name}: Name={attr.Name}, Sig={attr.Signature}, Connector={attr.Connector}\n");
-					}
-
 					if (string.IsNullOrEmpty (attr.Name) || string.IsNullOrEmpty (attr.Signature) || string.IsNullOrEmpty (attr.Connector)) {
-						if (isOnClickListenerImplementor) {
-							File.AppendAllText ("/tmp/typemap-debug.log",
-								$"CollectInterfaceMarshalMethods: Skipping due to empty Name/Signature/Connector\n");
-						}
 						continue;
 					}
 
 					string key = $"{attr.Name}{attr.Signature}";
 					if (seen.Contains (key)) {
-						if (isOnClickListenerImplementor) {
-							File.AppendAllText ("/tmp/typemap-debug.log",
-								$"CollectInterfaceMarshalMethods: Skipping duplicate key={key}\n");
-						}
 						continue;
 					}
 
 					// Parse connector to find the Invoker type: "GetOnClick_Handler:Type.Name, Assembly"
 					var invokerInfo = ParseConnectorToInvokerType (attr.Connector, type.Module);
 					if (invokerInfo == null) {
-						if (isOnClickListenerImplementor) {
-							File.AppendAllText ("/tmp/typemap-debug.log",
-								$"CollectInterfaceMarshalMethods: ParseConnectorToInvokerType returned null for Connector={attr.Connector}\n");
-						}
 						continue;
 					}
 
 					var (invokerType, handlerMethodName) = invokerInfo.Value;
-					
-					if (isOnClickListenerImplementor) {
-						File.AppendAllText ("/tmp/typemap-debug.log",
-							$"CollectInterfaceMarshalMethods: Found invoker type {invokerType.FullName}, handlerMethodName={handlerMethodName}\n");
-					}
 
 					// Find the native callback in the Invoker type
 					// The callback name follows the pattern from the handler method
 					string? nativeCallbackName = GetNativeCallbackNameFromHandler (handlerMethodName, attr.Name, attr.Signature);
-					
-					if (isOnClickListenerImplementor) {
-						File.AppendAllText ("/tmp/typemap-debug.log",
-							$"CollectInterfaceMarshalMethods: Looking for nativeCallbackName={nativeCallbackName} in {invokerType.FullName}\n");
-						foreach (var m in invokerType.Methods.Where (m => m.IsStatic && m.Name.StartsWith ("n_", StringComparison.Ordinal))) {
-							File.AppendAllText ("/tmp/typemap-debug.log",
-								$"CollectInterfaceMarshalMethods: Available static n_ method: {m.Name}\n");
-						}
-					}
 
 					MethodDefinition? nativeCallback = nativeCallbackName != null
 						? invokerType.Methods.FirstOrDefault (m => m.Name == nativeCallbackName && m.IsStatic)
@@ -594,16 +450,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 					}
 
 					if (nativeCallback == null) {
-						if (isOnClickListenerImplementor) {
-							File.AppendAllText ("/tmp/typemap-debug.log",
-								$"CollectInterfaceMarshalMethods: Could not find native callback for {attr.Name}\n");
-						}
 						continue;
-					}
-
-					if (isOnClickListenerImplementor) {
-						File.AppendAllText ("/tmp/typemap-debug.log",
-							$"CollectInterfaceMarshalMethods: SUCCESS - Found native callback {nativeCallback.Name} for {attr.Name}\n");
 					}
 
 					seen.Add (key);
@@ -619,15 +466,9 @@ public class GenerateTypeMapAttributesStep : BaseStep
 	/// </summary>
 	(TypeDefinition invokerType, string handlerMethodName)? ParseConnectorToInvokerType (string connector, ModuleDefinition module)
 	{
-		bool debug = connector.Contains ("OnClickListener");
-		if (debug) {
-			File.AppendAllText ("/tmp/typemap-debug.log", $"ParseConnectorToInvokerType: connector={connector}\n");
-		}
-
 		// Split by colon to get handler method and type info
 		int colonIdx = connector.IndexOf (':');
 		if (colonIdx < 0) {
-			if (debug) File.AppendAllText ("/tmp/typemap-debug.log", $"ParseConnectorToInvokerType: no colon found\n");
 			return null;
 		}
 
@@ -637,7 +478,6 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		// Parse type info: "Android.Views.View/IOnClickListenerInvoker, Mono.Android, ..."
 		int commaIdx = typeInfo.IndexOf (',');
 		if (commaIdx < 0) {
-			if (debug) File.AppendAllText ("/tmp/typemap-debug.log", $"ParseConnectorToInvokerType: no comma found\n");
 			return null;
 		}
 
@@ -647,24 +487,13 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		// Cecil uses / for nested types in FullName, but the connector string already uses /
 		// So we don't need to replace anything - the connector string format matches Cecil's format
 
-		if (debug) {
-			File.AppendAllText ("/tmp/typemap-debug.log", $"ParseConnectorToInvokerType: typeName={typeName}, assemblyName={assemblyName}\n");
-			File.AppendAllText ("/tmp/typemap-debug.log", $"ParseConnectorToInvokerType: module.Assembly.Name.Name={module.Assembly.Name.Name}\n");
-			File.AppendAllText ("/tmp/typemap-debug.log", $"ParseConnectorToInvokerType: AssemblyReferences count={module.AssemblyReferences.Count}\n");
-			foreach (var asmRef in module.AssemblyReferences) {
-				File.AppendAllText ("/tmp/typemap-debug.log", $"ParseConnectorToInvokerType: AssemblyReference={asmRef.Name}\n");
-			}
-		}
-
 		// Find the assembly
 		AssemblyDefinition? assembly = null;
 		foreach (var asmRef in module.AssemblyReferences) {
 			if (asmRef.Name == assemblyName) {
 				try {
 					assembly = Context.Resolve (asmRef);
-					if (debug) File.AppendAllText ("/tmp/typemap-debug.log", $"ParseConnectorToInvokerType: Resolved assembly {asmRef.Name}\n");
-				} catch (Exception ex) {
-					if (debug) File.AppendAllText ("/tmp/typemap-debug.log", $"ParseConnectorToInvokerType: Failed to resolve {asmRef.Name}: {ex.Message}\n");
+				} catch {
 					continue;
 				}
 				break;
@@ -673,11 +502,9 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 		if (assembly == null && module.Assembly.Name.Name == assemblyName) {
 			assembly = module.Assembly;
-			if (debug) File.AppendAllText ("/tmp/typemap-debug.log", $"ParseConnectorToInvokerType: Using module.Assembly\n");
 		}
 
 		if (assembly == null) {
-			if (debug) File.AppendAllText ("/tmp/typemap-debug.log", $"ParseConnectorToInvokerType: Assembly not found\n");
 			return null;
 		}
 
@@ -686,13 +513,11 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		foreach (var mod in assembly.Modules) {
 			invokerType = FindTypeInModule (mod, typeName);
 			if (invokerType != null) {
-				if (debug) File.AppendAllText ("/tmp/typemap-debug.log", $"ParseConnectorToInvokerType: Found type {invokerType.FullName}\n");
 				break;
 			}
 		}
 
 		if (invokerType == null) {
-			if (debug) File.AppendAllText ("/tmp/typemap-debug.log", $"ParseConnectorToInvokerType: Type {typeName} not found in assembly\n");
 			return null;
 		}
 
@@ -744,20 +569,8 @@ public class GenerateTypeMapAttributesStep : BaseStep
 	/// </summary>
 	private void ProcessType (AssemblyDefinition assembly, TypeDefinition type)
 	{
-		bool isOnClickListenerImplementor = type.FullName.Contains ("IOnClickListenerImplementor");
-		if (isOnClickListenerImplementor) {
-			File.AppendAllText ("/tmp/typemap-debug.log", $"ProcessType: FOUND {type.FullName}, HasJavaPeer={type.HasJavaPeer (Context)}\n");
-		}
-
 		if (type.HasJavaPeer (Context)) {
-			using var _ = TimingLog.StartAggregate ("ProcessType.HasJavaPeer");
-			string javaName;
-			using (TimingLog.StartAggregate ("ProcessType.ToJniName")) {
-				javaName = JavaNativeTypeManager.ToJniName (type, Context);
-			}
-			if (isOnClickListenerImplementor) {
-				File.AppendAllText ("/tmp/typemap-debug.log", $"ProcessType: {type.FullName} -> javaName={javaName}\n");
-			}
+			string javaName = JavaNativeTypeManager.ToJniName (type, Context);
 			if (!externalMappings.TryGetValue (javaName, out var typeList)) {
 				typeList = new List<TypeDefinition> ();
 				externalMappings.Add (javaName, typeList);
@@ -765,31 +578,20 @@ public class GenerateTypeMapAttributesStep : BaseStep
 			typeList.Add (type);
 
 			// Collect marshal methods for this type
-			List<MarshalMethodInfo> marshalMethods;
-			using (TimingLog.StartAggregate ("ProcessType.CollectMarshalMethods")) {
-				marshalMethods = CollectMarshalMethods (type);
-			}
-			if (isOnClickListenerImplementor) {
-				File.AppendAllText ("/tmp/typemap-debug.log", $"ProcessType: {type.FullName} collected {marshalMethods.Count} marshal methods\n");
-			}
+			List<MarshalMethodInfo> marshalMethods = CollectMarshalMethods (type);
 			if (marshalMethods.Count > 0) {
 				marshalMethodMappings [type] = marshalMethods;
 			}
 
-			TypeDefinition proxyType;
-			using (TimingLog.StartAggregate ("ProcessType.GenerateTypeMapProxyType")) {
-				proxyType = GenerateTypeMapProxyType (javaName, type, marshalMethods);
-			}
+			TypeDefinition proxyType = GenerateTypeMapProxyType (javaName, type, marshalMethods);
 			typesToInject.Add (proxyType);
 			proxyMappings.Add (type, proxyType);
 
 			// For interfaces and abstract types, find their Invoker type
 			if (type.IsInterface || type.IsAbstract) {
-				using (TimingLog.StartAggregate ("ProcessType.GetInvokerType")) {
-					var invokerType = GetInvokerType (type);
-					if (invokerType != null) {
-						invokerMappings [type] = invokerType;
-					}
+				var invokerType = GetInvokerType (type);
+				if (invokerType != null) {
+					invokerMappings [type] = invokerType;
 				}
 			}
 		}
@@ -863,11 +665,8 @@ public class GenerateTypeMapAttributesStep : BaseStep
 
 	protected override void EndProcess ()
 	{
-		using var _ = TimingLog.Start ("EndProcess");
 		try {
-		TimingLog.Log ($"EndProcess: {typesToInject.Count} types to inject, {externalMappings.Count} external mappings, {proxyMappings.Count} proxy mappings");
 
-		using (TimingLog.Start ("EndProcess.InjectTypes")) {
 		// NOTE: We override the entry_assembly so that the TypeMapHandler in illink can have a starting point for TypeMapTargetAssemblies.
 		// This is critical because Mono.Android should be the entrypoint assembly so that we can call Assembly.SetEntryAssembly()
 		// during application initialization. Without this override, the TypeMapHandler would not be able to correctly identify which
@@ -878,11 +677,8 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		Context.Annotations.GetType ().GetField ("entry_assembly", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue (Context.Annotations, MonoAndroidAssembly);
 		foreach (var type in typesToInject) {
 			AssemblyToInjectTypeMap.MainModule.Types.Add (type);
-			Debug.Assert (type.Module.Assembly is not null);
-		}
 		}
 
-		using (TimingLog.Start ("EndProcess.GenerateTypeMapAttributes")) {
 		// Generate TypeMap attributes for external mappings
 		// When multiple types share the same Java name, generate an alias type
 		foreach (var mapping in externalMappings) {
@@ -915,9 +711,7 @@ public class GenerateTypeMapAttributesStep : BaseStep
 				AssemblyToInjectTypeMap.CustomAttributes.Add (mainAttr);
 			}
 		}
-		}
 
-		using (TimingLog.Start ("EndProcess.ApplyProxyAttributes")) {
 		// Apply proxy attributes directly to target types (AOT-safe: uses GetCustomAttribute instead of Activator.CreateInstance)
 		// Track which assemblies are modified so we can force them to be saved
 		var modifiedAssemblies = new HashSet<AssemblyDefinition> ();
@@ -944,14 +738,10 @@ public class GenerateTypeMapAttributesStep : BaseStep
 			Context.LogMessage (MessageContainer.CreateInfoMessage ($"Marking assembly '{assembly.Name.Name}' for saving due to proxy attribute modifications"));
 			Context.Annotations.SetAction (assembly, AssemblyAction.Save);
 		}
-		}
 
 		// Generate JCW (Java Callable Wrappers) and LLVM IR files for marshal methods
-		using (TimingLog.Start ("EndProcess.GenerateJcwAndLlvmIrFiles")) {
 		GenerateJcwAndLlvmIrFiles ();
-		}
 
-		TimingLog.DumpAggregates ();
 		} catch (Exception ex) {
 			throw new InvalidOperationException ($"GenerateTypeMapAttributesStep.EndProcess crashed: {ex}");
 		}
@@ -965,11 +755,9 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		// Get output paths from custom data
 		if (!Context.TryGetCustomData ("JavaOutputPath", out string? javaOutputPath) ||
 		    !Context.TryGetCustomData ("LlvmIrOutputPath", out string? llvmIrOutputPath)) {
-			TimingLog.Log ("GenerateJcwAndLlvmIrFiles: JavaOutputPath or LlvmIrOutputPath not set, skipping");
 			return;
 		}
 
-		TimingLog.Log ($"GenerateJcwAndLlvmIrFiles: javaOutputPath={javaOutputPath}, llvmIrOutputPath={llvmIrOutputPath}");
 
 		// Normalize paths for the current platform
 		javaOutputPath = javaOutputPath.Replace ('\\', Path.DirectorySeparatorChar);
@@ -978,15 +766,12 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		Context.TryGetCustomData ("TargetArch", out string? targetArch);
 		targetArch ??= "unknown";
 
-		// Output JCW files to the staging directory - these will be copied after GenerateJavaStubs
-		// to overwrite the old-style JCW that calls TypeManager.Activate
+		// Output JCW files to the staging directory
 		string typeMapJcwOutputPath = javaOutputPath;
 
-		TimingLog.Log ($"GenerateJcwAndLlvmIrFiles: marshalMethodMappings.Count={marshalMethodMappings.Count}");
 
 		// Generate JCW Java and LLVM IR files for each type with marshal methods
-		// JCW Java files are only generated for user types (framework JCWs come from mono.android.jar)
-		// LLVM IR stubs are generated for ALL types (needed for native method binding)
+		// Both JCW Java files and LLVM IR stubs are generated for ALL types
 		int jcwGeneratedCount = 0;
 		int llvmGeneratedCount = 0;
 		foreach (var kvp in marshalMethodMappings) {
@@ -998,53 +783,44 @@ public class GenerateTypeMapAttributesStep : BaseStep
 			}
 
 			string assemblyName = targetType.Module.Assembly.Name.Name;
-			bool isFrameworkAssembly = IsFrameworkAssembly (assemblyName);
 			string jniTypeName = JavaNativeTypeManager.ToJniName (targetType, Context);
 
-			// Generate JCW Java file only for user types - framework types already have JCWs in mono.android.jar
-			if (!isFrameworkAssembly) {
-				jcwGeneratedCount++;
-				using (TimingLog.StartAggregate ("GenerateJcwJavaFile")) {
-					GenerateJcwJavaFile (typeMapJcwOutputPath, targetType, jniTypeName, marshalMethods);
+			// Skip JCW generation for framework types that bind Android platform classes
+			// (e.g., android/app/Activity, java/lang/Object) - these already exist in Android.
+			// However, we MUST generate JCWs for Implementor types (e.g., mono/android/view/View_OnClickListenerImplementor)
+			// because they have custom JCWs that don't exist in Android, and the JCWs in mono.android.jar
+			// use TypeManager.Activate() which is not compatible with our TypeMap approach.
+			bool isFrameworkAssembly = assemblyName == "Mono.Android" || assemblyName == "Java.Interop";
+			bool isImplementorType = jniTypeName.StartsWith ("mono/android/", StringComparison.Ordinal) && 
+			                         jniTypeName.EndsWith ("Implementor", StringComparison.Ordinal);
+			
+			// For implementor types, check if any marshal methods have complex signatures
+			// that our simple JCW generator cannot handle correctly:
+			// - Inner class references ($) - these need import statements in Java,
+			//   and we don't generate those. E.g., android/hardware/Camera$Face needs "import android.hardware.Camera.Face;"
+			bool hasComplexSignatures = false;
+			if (isImplementorType) {
+				foreach (var method in marshalMethods) {
+					// Skip inner class references - would need imports
+					if (method.JniSignature.Contains ("$")) {
+						hasComplexSignatures = true;
+						break;
+					}
 				}
 			}
 
-			// Generate LLVM IR file for ALL types - framework JCWs from mono.android.jar
-			// need native method stubs too (e.g., View_OnClickListenerImplementor.n_onClick)
-			llvmGeneratedCount++;
-			using (TimingLog.StartAggregate ("GenerateLlvmIrFile")) {
-				GenerateLlvmIrFile (llvmIrOutputPath, targetArch, targetType, jniTypeName, marshalMethods);
+			if (!isFrameworkAssembly || (isImplementorType && !hasComplexSignatures)) {
+				jcwGeneratedCount++;
+				GenerateJcwJavaFile (typeMapJcwOutputPath, targetType, jniTypeName, marshalMethods);
 			}
-		}
 
-		TimingLog.Log ($"GenerateJcwAndLlvmIrFiles: generated {jcwGeneratedCount} JCW files (user types) and {llvmGeneratedCount} LLVM IR files (all types)");
+			// Generate LLVM IR file for ALL types
+			llvmGeneratedCount++;
+			GenerateLlvmIrFile (llvmIrOutputPath, targetArch, targetType, jniTypeName, marshalMethods);
+		}
 
 		// Generate the initialization file that defines get_function_pointer
-		using (TimingLog.StartAggregate ("GenerateLlvmIrInitFile")) {
-			GenerateLlvmIrInitFile (llvmIrOutputPath, targetArch);
-		}
-
-		// Generate the TypeManager.Activate stub for framework JCWs
-		using (TimingLog.StartAggregate ("GenerateTypeManagerActivateStub")) {
-			GenerateTypeManagerActivateStub (llvmIrOutputPath, targetArch);
-		}
-	}
-
-	/// <summary>
-	/// Checks if an assembly is a framework assembly that should not have JCW generated.
-	/// Framework assemblies contain bindings to existing Java types, not user-defined types.
-	/// </summary>
-	static bool IsFrameworkAssembly (string assemblyName)
-	{
-		return assemblyName switch {
-			"Mono.Android" => true,
-			"Java.Interop" => true,
-			"System.Private.CoreLib" => true,
-			_ when assemblyName.StartsWith ("System.", StringComparison.Ordinal) => true,
-			_ when assemblyName.StartsWith ("Microsoft.", StringComparison.Ordinal) => true,
-			_ when assemblyName.StartsWith ("Xamarin.", StringComparison.Ordinal) => true,
-			_ => false,
-		};
+		GenerateLlvmIrInitFile (llvmIrOutputPath, targetArch);
 	}
 
 	/// <summary>
@@ -1192,10 +968,38 @@ declare void @abort() noreturn
 			sb.AppendLine ();
 		}
 
+		// For implementor types, we need to add the Java interface they implement
+		string implementsClause = "mono.android.IGCUserPeer";
+		bool isImplementorType = jniTypeName.StartsWith ("mono/android/", StringComparison.Ordinal) && 
+		                         jniTypeName.EndsWith ("Implementor", StringComparison.Ordinal);
+		if (isImplementorType && type.HasInterfaces) {
+			// Find the Java interface this implementor is for
+			foreach (var iface in type.Interfaces) {
+				var ifaceType = iface.InterfaceType.Resolve ();
+				if (ifaceType == null) {
+					continue;
+				}
+				// Skip marker interfaces
+				if (ifaceType.FullName == "Android.Runtime.IJavaObject" || 
+				    ifaceType.FullName == "Java.Interop.IJavaPeerable" ||
+				    ifaceType.FullName == "System.IDisposable") {
+					continue;
+				}
+				// Get the Java name of the interface
+				string? ifaceJniName = JavaNativeTypeManager.ToJniName (ifaceType, Context);
+				if (!string.IsNullOrEmpty (ifaceJniName)) {
+					// Convert JNI name to Java class name (e.g., android/view/View$OnClickListener -> android.view.View.OnClickListener)
+					string ifaceJavaName = ifaceJniName.Replace ('/', '.').Replace ('$', '.');
+					implementsClause = $"mono.android.IGCUserPeer, {ifaceJavaName}";
+					break; // Implementors typically implement one interface
+				}
+			}
+		}
+
 		sb.AppendLine ($$"""
 public class {{className}}
     extends {{baseClassName}}
-    implements mono.android.IGCUserPeer
+    implements {{implementsClause}}
 {
 {{constructorDeclarations}}
 {{publicMethods}}
@@ -1302,10 +1106,12 @@ public class {{className}}
 
 			""");
 
-		// Class name constant (null-terminated string)
-		byte[] classNameBytes = System.Text.Encoding.UTF8.GetBytes (jniTypeName);
+		// Class name constant as UTF-16LE bytes (matches .NET's internal string representation)
+		// This avoids UTF-8 to UTF-16 conversion overhead in the managed callback
+		byte[] classNameBytes = System.Text.Encoding.Unicode.GetBytes (jniTypeName);
 		string classNameBytesEncoded = string.Join("", classNameBytes.Select(b => $"\\{b:X2}"));
-		int classNameLength = classNameBytes.Length;
+		int classNameByteLength = classNameBytes.Length; // Byte count for LLVM array size
+		int classNameCharLength = jniTypeName.Length; // Character count passed to callback
 
 		// Cached function pointers for all methods (regular + activation)
 		var fnPointers = new StringBuilder ();
@@ -1314,8 +1120,8 @@ public class {{className}}
 		}
 
 		writer.WriteLine (fnPointers);
-		writer.WriteLine ($"; Class name for \"{jniTypeName}\" (length={classNameLength})");
-		writer.WriteLine ($"@class_name = internal constant [{classNameLength} x i8] c\"{classNameBytesEncoded}\", align 1");
+		writer.WriteLine ($"; Class name for \"{jniTypeName}\" as UTF-16LE (charLength={classNameCharLength}, byteLength={classNameByteLength})");
+		writer.WriteLine ($"@class_name = internal constant [{classNameByteLength} x i8] c\"{classNameBytesEncoded}\", align 2");
 		writer.WriteLine ();
 		writer.WriteLine ("; JNI native method stubs");
 
@@ -1339,7 +1145,7 @@ public class {{className}}
 
 					resolve:
 					  %get_fn = load ptr, ptr @typemap_get_function_pointer, align 8
-					  call void %get_fn(ptr @class_name, i32 {{classNameLength}}, i32 {{i}}, ptr @fn_ptr_{{i}})
+					  call void %get_fn(ptr @class_name, i32 {{classNameCharLength}}, i32 {{i}}, ptr @fn_ptr_{{i}})
 					  %resolved_ptr = load ptr, ptr @fn_ptr_{{i}}, align 8
 					  br label %call
 
@@ -1362,7 +1168,7 @@ public class {{className}}
 
 					resolve:
 					  %get_fn = load ptr, ptr @typemap_get_function_pointer, align 8
-					  call void %get_fn(ptr @class_name, i32 {{classNameLength}}, i32 {{i}}, ptr @fn_ptr_{{i}})
+					  call void %get_fn(ptr @class_name, i32 {{classNameCharLength}}, i32 {{i}}, ptr @fn_ptr_{{i}})
 					  %resolved_ptr = load ptr, ptr @fn_ptr_{{i}}, align 8
 					  br label %call
 
@@ -1399,7 +1205,7 @@ public class {{className}}
 
 				resolve:
 				  %get_fn = load ptr, ptr @typemap_get_function_pointer, align 8
-				  call void %get_fn(ptr @class_name, i32 {{classNameLength}}, i32 {{fnPtrIndex}}, ptr @fn_ptr_{{fnPtrIndex}})
+				  call void %get_fn(ptr @class_name, i32 {{classNameCharLength}}, i32 {{fnPtrIndex}}, ptr @fn_ptr_{{fnPtrIndex}})
 				  %resolved_ptr = load ptr, ptr @fn_ptr_{{fnPtrIndex}}, align 8
 				  br label %call
 
@@ -1429,7 +1235,7 @@ public class {{className}}
 
 					resolve:
 					  %get_fn = load ptr, ptr @typemap_get_function_pointer, align 8
-					  call void %get_fn(ptr @class_name, i32 {{classNameLength}}, i32 {{fnPtrIndex}}, ptr @fn_ptr_{{fnPtrIndex}})
+					  call void %get_fn(ptr @class_name, i32 {{classNameCharLength}}, i32 {{fnPtrIndex}}, ptr @fn_ptr_{{fnPtrIndex}})
 					  %resolved_ptr = load ptr, ptr @fn_ptr_{{fnPtrIndex}}, align 8
 					  br label %call
 
@@ -1452,86 +1258,6 @@ public class {{className}}
 			!llvm.module.flags = !{!0}
 			!0 = !{i32 1, !"wchar_size", i32 4}
 
-""");
-	}
-
-	/// <summary>
-	/// Generates the TypeManager activation stub LLVM IR file.
-	/// This stub provides the native JNI function Java_mono_android_TypeManager_n_1activate
-	/// which is called by framework JCWs (like View_OnClickListenerImplementor) when they
-	/// need to activate managed peers using TypeManager.Activate().
-	/// </summary>
-	void GenerateTypeManagerActivateStub (string outputPath, string targetArch)
-	{
-		Directory.CreateDirectory (outputPath);
-		string llFilePath = Path.Combine (outputPath, "marshal_methods_typemanager.ll");
-
-		using var writer = new StreamWriter (llFilePath);
-
-		// The class name for TypeManager in JNI format
-		const string TypeManagerClassName = "mono/android/TypeManager";
-		byte[] classNameBytes = System.Text.Encoding.UTF8.GetBytes (TypeManagerClassName);
-		string classNameBytesEncoded = string.Join ("", classNameBytes.Select (b => $"\\{b:X2}"));
-		int classNameLength = classNameBytes.Length;
-
-		// The JNI signature for TypeManager.n_activate:
-		// native void n_activate(String typename, String signature, Object jobject, Object[] params)
-		// JNI symbol: Java_mono_android_TypeManager_n_1activate (underscores in method name become _1)
-		//
-		// Native function parameters:
-		// - ptr %env (JNIEnv*)
-		// - ptr %cls (jclass - the TypeManager class)
-		// - ptr %typename (jstring - the managed type name)
-		// - ptr %sig (jstring - constructor signature)
-		// - ptr %jobject (jobject - the Java object being activated)
-		// - ptr %params (jobjectArray - constructor parameters)
-
-		writer.Write ($$"""
-; ModuleID = 'marshal_methods_typemanager.ll'
-source_filename = "marshal_methods_typemanager.ll"
-target datalayout = "e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128"
-target triple = "aarch64-unknown-linux-android21"
-
-; External typemap_get_function_pointer callback - resolves UCO wrapper by class name and method index
-@typemap_get_function_pointer = external local_unnamed_addr global ptr, align 8
-
-; Cached function pointer for TypeManager.n_Activate_mm
-@typemanager_activate_fn_ptr = internal unnamed_addr global ptr null, align 8
-
-; Class name for "mono/android/TypeManager" (length={{classNameLength}})
-@typemanager_class_name = internal constant [{{classNameLength}} x i8] c"{{classNameBytesEncoded}}", align 1
-
-; Java_mono_android_TypeManager_n_1activate - Native JNI stub for TypeManager.Activate
-; Called by framework JCWs to activate managed peers
-; Parameters match TypeManager.JavaTypeManager.n_Activate_mm signature:
-;   - ptr %env: JNIEnv*
-;   - ptr %cls: jclass (TypeManager class)
-;   - ptr %typename: jstring (managed type name like "Example.MainActivity, HelloWorld")
-;   - ptr %sig: jstring (constructor signature)
-;   - ptr %jobject: jobject (the Java object being activated)
-;   - ptr %params: jobjectArray (constructor parameters)
-define default void @Java_mono_android_TypeManager_n_1activate(ptr %env, ptr %cls, ptr %typename, ptr %sig, ptr %jobject, ptr %params) #0 {
-entry:
-  %cached_ptr = load ptr, ptr @typemanager_activate_fn_ptr, align 8
-  %is_null = icmp eq ptr %cached_ptr, null
-  br i1 %is_null, label %resolve, label %call
-
-resolve:
-  ; Call typemap_get_function_pointer to resolve TypeManager.JavaTypeManager.n_Activate_mm
-  ; Method index 0 is special-cased in TypeMapAttributeTypeMap.GetFunctionPointer
-  %get_fn = load ptr, ptr @typemap_get_function_pointer, align 8
-  call void %get_fn(ptr @typemanager_class_name, i32 {{classNameLength}}, i32 0, ptr @typemanager_activate_fn_ptr)
-  %resolved_ptr = load ptr, ptr @typemanager_activate_fn_ptr, align 8
-  br label %call
-
-call:
-  %fn = phi ptr [ %cached_ptr, %entry ], [ %resolved_ptr, %resolve ]
-  ; Forward all 6 parameters to the resolved n_Activate_mm function
-  tail call void %fn(ptr %env, ptr %cls, ptr %typename, ptr %sig, ptr %jobject, ptr %params)
-  ret void
-}
-
-attributes #0 = { nounwind }
 """);
 	}
 
@@ -1754,21 +1480,69 @@ attributes #0 = { nounwind }
 		int parenEnd = signature.LastIndexOf (')');
 		if (parenEnd < 0) return "void";
 
-		char returnChar = signature [parenEnd + 1];
-		return returnChar switch {
-			'V' => "void",
-			'Z' => "boolean",
-			'B' => "byte",
-			'C' => "char",
-			'S' => "short",
-			'I' => "int",
-			'J' => "long",
-			'F' => "float",
-			'D' => "double",
-			'L' => "Object", // Mapping non-primitive types to Object is sufficient for native method resolution
-			'[' => "Object[]", // Mapping arrays to Object[] is sufficient for native method resolution
-			_ => "Object",
-		};
+		string returnSig = signature.Substring (parenEnd + 1);
+		if (string.IsNullOrEmpty (returnSig)) return "void";
+
+		char returnChar = returnSig [0];
+		switch (returnChar) {
+			case 'V': return "void";
+			case 'Z': return "boolean";
+			case 'B': return "byte";
+			case 'C': return "char";
+			case 'S': return "short";
+			case 'I': return "int";
+			case 'J': return "long";
+			case 'F': return "float";
+			case 'D': return "double";
+			case 'L':
+				// Extract the full class name: Ljava/lang/String; -> java.lang.String
+				int semiIdx = returnSig.IndexOf (';');
+				if (semiIdx > 1) {
+					string className = returnSig.Substring (1, semiIdx - 1);
+					return className.Replace ('/', '.');
+				}
+				return "Object";
+			case '[':
+				// Handle arrays: count dimensions and get element type
+				int arrayDims = 0;
+				int idx = 0;
+				while (idx < returnSig.Length && returnSig [idx] == '[') {
+					arrayDims++;
+					idx++;
+				}
+				
+				string elementType;
+				if (idx < returnSig.Length) {
+					char elementChar = returnSig [idx];
+					switch (elementChar) {
+						case 'Z': elementType = "boolean"; break;
+						case 'B': elementType = "byte"; break;
+						case 'C': elementType = "char"; break;
+						case 'S': elementType = "short"; break;
+						case 'I': elementType = "int"; break;
+						case 'J': elementType = "long"; break;
+						case 'F': elementType = "float"; break;
+						case 'D': elementType = "double"; break;
+						case 'L':
+							int semi = returnSig.IndexOf (';', idx);
+							if (semi > idx + 1) {
+								elementType = returnSig.Substring (idx + 1, semi - idx - 1).Replace ('/', '.');
+							} else {
+								elementType = "Object";
+							}
+							break;
+						default:
+							elementType = "Object";
+							break;
+					}
+				} else {
+					elementType = "Object";
+				}
+				
+				return elementType + new string ('[', arrayDims) + new string (']', arrayDims);
+			default:
+				return "Object";
+		}
 	}
 
 	/// <summary>
@@ -1869,8 +1643,12 @@ attributes #0 = { nounwind }
 						elementType = "Object";
 					}
 					
-					// Append array brackets
-					type = elementType + new string ('[', arrayDims) + new string (']', arrayDims);
+					// Append array brackets (e.g., "int[][]" for 2D array)
+					var arrayBrackets = new StringBuilder ();
+					for (int d = 0; d < arrayDims; d++) {
+						arrayBrackets.Append ("[]");
+					}
+					type = elementType + arrayBrackets.ToString ();
 					break;
 				default:
 					type = "Object";
@@ -2024,8 +1802,8 @@ attributes #0 = { nounwind }
 	{
 		CustomAttribute ca = new (TypeMapAttributeCtor);
 		ca.ConstructorArguments.Add (new (SystemStringType, javaName));
-		ca.ConstructorArguments.Add (new (SystemTypeType, AssemblyToInjectTypeMap.MainModule.ImportReference(proxyType)));  // target: runtime lookup returns proxy
-		ca.ConstructorArguments.Add (new (SystemTypeType, AssemblyToInjectTypeMap.MainModule.ImportReference(type)));       // trimTarget: linker preserves original type
+		ca.ConstructorArguments.Add (new (SystemTypeType, AssemblyToInjectTypeMap.MainModule.ImportReference(type)));       // target: runtime lookup returns original type (use GetCustomAttribute to get proxy)
+		ca.ConstructorArguments.Add (new (SystemTypeType, AssemblyToInjectTypeMap.MainModule.ImportReference(proxyType)));  // trimTarget: linker preserves proxy type
 		return ca;
 	}
 
@@ -2104,26 +1882,18 @@ attributes #0 = { nounwind }
 
 		// Generate UCO wrappers for regular marshal methods
 		if (regularMethods.Count > 0) {
-			using (TimingLog.StartAggregate ("GenerateUcoWrappers")) {
-				GenerateUcoWrappers (proxyType, mappedType, regularMethods);
-			}
+			GenerateUcoWrappers (proxyType, mappedType, regularMethods);
 		}
 
 		// Generate activation UCO wrappers for constructors
-		using (TimingLog.StartAggregate ("GenerateActivationUcoWrappers")) {
-			GenerateActivationUcoWrappers (proxyType, mappedType, constructors);
-		}
+		GenerateActivationUcoWrappers (proxyType, mappedType, constructors);
 
 		// Always generate GetFunctionPointer as it is abstract in JavaPeerProxy
 		// Pass both regular methods and constructor count for proper indexing
-		using (TimingLog.StartAggregate ("GenerateGetFunctionPointerMethod")) {
-			GenerateGetFunctionPointerMethod (proxyType, mappedType, regularMethods, constructors.Count > 0 ? constructors.Count : 1);
-		}
+		GenerateGetFunctionPointerMethod (proxyType, mappedType, regularMethods, constructors.Count > 0 ? constructors.Count : 1);
 
 		// Generate CreateInstance for AOT-safe instance creation without reflection
-		using (TimingLog.StartAggregate ("GenerateCreateInstanceMethod")) {
-			GenerateCreateInstanceMethod (proxyType, mappedType);
-		}
+		GenerateCreateInstanceMethod (proxyType, mappedType);
 
 		return proxyType;
 	}
@@ -2177,10 +1947,16 @@ attributes #0 = { nounwind }
 			return;
 		}
 
-		// Skip Mono.Android and Java.Interop framework types for now - we only need activation UCOs for user types with JCWs
-		// Framework JCWs use the TypeManager.Activate path which we'll handle separately
+		// Skip Mono.Android and Java.Interop framework types EXCEPT for Implementor types.
+		// Implementor types (e.g., View+IOnClickListenerImplementor) need activation wrappers
+		// because they are instantiated from Java via their JCW constructors.
+		// Regular binding types (e.g., View, Activity) don't need this - they're created
+		// from managed code and never activated from Java.
 		string? assemblyName = mappedType.Module?.Assembly?.Name?.Name;
-		if (assemblyName == "Mono.Android" || assemblyName == "Java.Interop") {
+		bool isFrameworkAssembly = assemblyName == "Mono.Android" || assemblyName == "Java.Interop";
+		bool isImplementorType = mappedType.Name.EndsWith ("Implementor", StringComparison.Ordinal);
+		
+		if (isFrameworkAssembly && !isImplementorType) {
 			return;
 		}
 
@@ -2234,8 +2010,6 @@ attributes #0 = { nounwind }
 				m.IsConstructor && !m.IsStatic && m.Parameters.Count == 0);
 
 			if (defaultCtor != null) {
-				File.AppendAllText ("/tmp/illink-debug.log",
-					$"Found default ctor on {mappedType.FullName}: {defaultCtor.FullName}\n");
 				var wrapper = GenerateSingleActivationUco (
 					proxyType, mappedType, mappedTypeRef, defaultCtor,
 					intPtrType, voidType, typeType, objectType,
@@ -2244,15 +2018,7 @@ attributes #0 = { nounwind }
 				if (wrapper != null) {
 					activationUcoWrappers.Add (wrapper);
 					proxyType.Methods.Add (wrapper);
-					File.AppendAllText ("/tmp/illink-debug.log",
-						$"Generated activation UCO for {mappedType.FullName}, activationUcoWrappers.Count={activationUcoWrappers.Count}\n");
-				} else {
-					File.AppendAllText ("/tmp/illink-debug.log",
-						$"GenerateSingleActivationUco returned null for {mappedType.FullName}\n");
 				}
-			} else {
-				File.AppendAllText ("/tmp/illink-debug.log",
-					$"No default ctor found on {mappedType.FullName}, methods: {string.Join(", ", mappedType.Methods.Select(m => m.Name))}\n");
 			}
 		} else {
 			// Generate activation for each constructor
@@ -2714,6 +2480,10 @@ attributes #0 = { nounwind }
 	/// public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
 	///     => new MappedType(handle, transfer);
 	/// </code>
+	/// If the mapped type lacks an activation constructor, walks up the type hierarchy
+	/// to find one and uses [UnsafeAccessor] to call the base class constructor.
+	/// Supports both XI-style (IntPtr, JniHandleOwnership) and JI-style 
+	/// (ref JniObjectReference, JniObjectReferenceOptions) constructors.
 	/// </summary>
 	void GenerateCreateInstanceMethod (TypeDefinition proxyType, TypeDefinition mappedType)
 	{
@@ -2723,26 +2493,26 @@ attributes #0 = { nounwind }
 			return;
 		}
 
-		// Find the (IntPtr, JniHandleOwnership) constructor on the mapped type
-		var ctor = mappedType.Methods.FirstOrDefault (m =>
-			m.IsConstructor && !m.IsStatic &&
-			m.Parameters.Count == 2 &&
-			m.Parameters [0].ParameterType.FullName == "System.IntPtr" &&
-			m.Parameters [1].ParameterType.FullName == "Android.Runtime.JniHandleOwnership");
+		// Find activation constructor by walking up the type hierarchy
+		if (!TryFindActivationCtor (mappedType, out var ctor, out var declaringType, out var ctorKind)) {
+			// No activation constructor found in entire hierarchy - generate throwing method
+			GenerateThrowingCreateInstanceMethod (proxyType, mappedType);
+			return;
+		}
 
-		bool isJIConstructor = false;
-		if (ctor == null) {
-			// Try to find (ref JniObjectReference, JniObjectReferenceOptions) constructor
-			ctor = mappedType.Methods.FirstOrDefault (m =>
-				m.IsConstructor && !m.IsStatic &&
-				m.Parameters.Count == 2 &&
-				m.Parameters [0].ParameterType.IsByReference &&
-				m.Parameters [0].ParameterType.GetElementType ().FullName == "Java.Interop.JniObjectReference" &&
-				m.Parameters [1].ParameterType.FullName == "Java.Interop.JniObjectReferenceOptions");
+		bool isOnBaseType = declaringType != mappedType;
+		bool isJIConstructor = ctorKind == ActivationCtorKind.JI;
 
-			if (ctor != null) {
-				isJIConstructor = true;
-			}
+		// Check if the declaring type (where the ctor is defined) is from a framework assembly
+		// If so, we can't use UnsafeAccessor pattern because ImportReference fails for cross-assembly types
+		string? declaringAssemblyName = declaringType.Module?.Assembly?.Name?.Name;
+		bool isCtorInFrameworkAssembly = declaringAssemblyName == "Mono.Android" || declaringAssemblyName == "Java.Interop";
+
+		if (isOnBaseType && isCtorInFrameworkAssembly) {
+			// Constructor is in a framework assembly - we can't use UnsafeAccessor pattern
+			// Generate a throwing method since activation should be handled via the type map
+			GenerateThrowingCreateInstanceMethod (proxyType, mappedType);
+			return;
 		}
 
 		// Get the return type (IJavaPeerable)
@@ -2763,32 +2533,72 @@ attributes #0 = { nounwind }
 		method.Parameters.Add (new ParameterDefinition ("transfer", ParameterAttributes.None, jniHandleOwnershipType));
 
 		var il = method.Body.GetILProcessor ();
+		method.Body.InitLocals = true;
 
-		// No suitable constructor found - generate method that throws
-		if (ctor == null) {
-			// throw new NotSupportedException($"No suitable constructor found for {mappedType.FullName}")
-			var notSupportedExTypeDef = Context.GetType ("System.NotSupportedException");
-			var notSupportedExCtor = notSupportedExTypeDef.Methods.FirstOrDefault (m =>
-				m.IsConstructor && !m.IsStatic &&
-				m.Parameters.Count == 1 &&
-				m.Parameters [0].ParameterType.FullName == "System.String");
-			
-			if (notSupportedExCtor != null) {
-				var notSupportedExCtorRef = AssemblyToInjectTypeMap.MainModule.ImportReference (notSupportedExCtor);
-				il.Emit (Mono.Cecil.Cil.OpCodes.Ldstr, $"No suitable constructor found for type '{mappedType.FullName}'. Expected (IntPtr, JniHandleOwnership) or (ref JniObjectReference, JniObjectReferenceOptions) constructor.");
-				il.Emit (Mono.Cecil.Cil.OpCodes.Newobj, notSupportedExCtorRef);
-				il.Emit (Mono.Cecil.Cil.OpCodes.Throw);
-			} else {
-				// Fallback: just return null
-				il.Emit (Mono.Cecil.Cil.OpCodes.Ldnull);
-				il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
-			}
-			
-			proxyType.Methods.Add (method);
-			return;
+		// Import mapped type reference
+		var mappedTypeRef = AssemblyToInjectTypeMap.MainModule.ImportReference (mappedType);
+
+		if (isOnBaseType) {
+			// Constructor is on a base type - use RuntimeHelpers.GetUninitializedObject + UnsafeAccessor pattern
+			GenerateCreateInstanceWithUnsafeAccessor (proxyType, method, il, mappedType, mappedTypeRef, ctor, declaringType, isJIConstructor, iJavaPeerableRef);
+		} else {
+			// Constructor is on the mapped type itself - use direct newobj
+			GenerateCreateInstanceDirect (method, il, ctor, isJIConstructor, iJavaPeerableRef);
 		}
 
-		// Import the constructor reference
+		proxyType.Methods.Add (method);
+	}
+
+	/// <summary>
+	/// Generates a throwing CreateInstance method for types without any activation constructor in their hierarchy.
+	/// </summary>
+	void GenerateThrowingCreateInstanceMethod (TypeDefinition proxyType, TypeDefinition mappedType)
+	{
+		var iJavaPeerableType = Context.GetType ("Java.Interop.IJavaPeerable");
+		var iJavaPeerableRef = AssemblyToInjectTypeMap.MainModule.ImportReference (iJavaPeerableType);
+		var intPtrType = AssemblyToInjectTypeMap.MainModule.ImportReference (Context.GetType ("System.IntPtr"));
+		var jniHandleOwnershipType = AssemblyToInjectTypeMap.MainModule.ImportReference (Context.GetType ("Android.Runtime.JniHandleOwnership"));
+
+		var method = new MethodDefinition (
+			"CreateInstance",
+			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
+			iJavaPeerableRef);
+
+		method.Parameters.Add (new ParameterDefinition ("handle", ParameterAttributes.None, intPtrType));
+		method.Parameters.Add (new ParameterDefinition ("transfer", ParameterAttributes.None, jniHandleOwnershipType));
+
+		var il = method.Body.GetILProcessor ();
+
+		var notSupportedExTypeDef = Context.GetType ("System.NotSupportedException");
+		var notSupportedExCtor = notSupportedExTypeDef.Methods.FirstOrDefault (m =>
+			m.IsConstructor && !m.IsStatic &&
+			m.Parameters.Count == 1 &&
+			m.Parameters [0].ParameterType.FullName == "System.String");
+
+		if (notSupportedExCtor != null) {
+			var notSupportedExCtorRef = AssemblyToInjectTypeMap.MainModule.ImportReference (notSupportedExCtor);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldstr, $"No activation constructor found for type '{mappedType.FullName}'. Expected (IntPtr, JniHandleOwnership) or (ref JniObjectReference, JniObjectReferenceOptions) constructor in type hierarchy.");
+			il.Emit (Mono.Cecil.Cil.OpCodes.Newobj, notSupportedExCtorRef);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Throw);
+		} else {
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldnull);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
+		}
+
+		proxyType.Methods.Add (method);
+	}
+
+	/// <summary>
+	/// Generates CreateInstance body that directly calls the constructor using newobj.
+	/// Used when the activation constructor is on the mapped type itself.
+	/// </summary>
+	void GenerateCreateInstanceDirect (
+		MethodDefinition method,
+		ILProcessor il,
+		MethodDefinition ctor,
+		bool isJIConstructor,
+		TypeReference iJavaPeerableRef)
+	{
 		var ctorRef = AssemblyToInjectTypeMap.MainModule.ImportReference (ctor);
 
 		if (!isJIConstructor) {
@@ -2796,85 +2606,351 @@ attributes #0 = { nounwind }
 			il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_1); // handle
 			il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_2); // transfer
 			il.Emit (Mono.Cecil.Cil.OpCodes.Newobj, ctorRef);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
 		} else {
 			// JI constructor: new MappedType(ref new JniObjectReference(handle), JniObjectReferenceOptions.Copy)
-			// Then call JNIEnv.DeleteRef(handle, transfer)
-			
-			// Get types we need
+			GenerateJIConstructorCall (method, il, ctorRef, iJavaPeerableRef, useNewobj: true);
+		}
+	}
+
+	/// <summary>
+	/// Generates CreateInstance body that uses RuntimeHelpers.GetUninitializedObject + UnsafeAccessor
+	/// to call a base class constructor on a derived type instance.
+	/// Used when the activation constructor is on a base type.
+	/// </summary>
+	void GenerateCreateInstanceWithUnsafeAccessor (
+		TypeDefinition proxyType,
+		MethodDefinition method,
+		ILProcessor il,
+		TypeDefinition mappedType,
+		TypeReference mappedTypeRef,
+		MethodDefinition ctor,
+		TypeDefinition declaringType,
+		bool isJIConstructor,
+		TypeReference iJavaPeerableRef)
+	{
+		// Generate an [UnsafeAccessor] method to call the base class constructor
+		var accessorMethod = GenerateUnsafeAccessorForCtor (proxyType, ctor, declaringType, isJIConstructor);
+		var accessorRef = AssemblyToInjectTypeMap.MainModule.ImportReference (accessorMethod);
+
+		// Get RuntimeHelpers.GetUninitializedObject
+		var runtimeHelpersType = Context.GetType ("System.Runtime.CompilerServices.RuntimeHelpers");
+		var getUninitializedObjectMethod = runtimeHelpersType.Methods.FirstOrDefault (m =>
+			m.Name == "GetUninitializedObject" && m.Parameters.Count == 1 && m.Parameters [0].ParameterType.FullName == "System.Type");
+		var getUninitializedObjectRef = AssemblyToInjectTypeMap.MainModule.ImportReference (getUninitializedObjectMethod);
+
+		// var instance = (MappedType)RuntimeHelpers.GetUninitializedObject(typeof(MappedType));
+		var instanceLocal = new Mono.Cecil.Cil.VariableDefinition (mappedTypeRef);
+		method.Body.Variables.Add (instanceLocal);
+
+		il.Emit (Mono.Cecil.Cil.OpCodes.Ldtoken, mappedTypeRef);
+		var getTypeFromHandleMethod = Context.GetType ("System.Type").Methods.FirstOrDefault (m =>
+			m.Name == "GetTypeFromHandle" && m.IsStatic && m.Parameters.Count == 1);
+		var getTypeFromHandleRef = AssemblyToInjectTypeMap.MainModule.ImportReference (getTypeFromHandleMethod);
+		il.Emit (Mono.Cecil.Cil.OpCodes.Call, getTypeFromHandleRef);
+		il.Emit (Mono.Cecil.Cil.OpCodes.Call, getUninitializedObjectRef);
+		il.Emit (Mono.Cecil.Cil.OpCodes.Castclass, mappedTypeRef);
+		il.Emit (Mono.Cecil.Cil.OpCodes.Stloc, instanceLocal);
+
+		if (!isJIConstructor) {
+			// CallBaseActivationCtor(instance, handle, transfer);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloc, instanceLocal);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_1); // handle
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_2); // transfer
+			il.Emit (Mono.Cecil.Cil.OpCodes.Call, accessorRef);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloc, instanceLocal);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
+		} else {
+			// JI-style: need to create JniObjectReference first
+			GenerateJIUnsafeAccessorCall (method, il, accessorRef, instanceLocal, iJavaPeerableRef);
+		}
+	}
+
+	/// <summary>
+	/// Generates an [UnsafeAccessor] method to call a base class constructor.
+	/// </summary>
+	MethodDefinition GenerateUnsafeAccessorForCtor (
+		TypeDefinition proxyType,
+		MethodDefinition ctor,
+		TypeDefinition declaringType,
+		bool isJIConstructor)
+	{
+		var declaringTypeRef = AssemblyToInjectTypeMap.MainModule.ImportReference (declaringType);
+		var voidType = AssemblyToInjectTypeMap.MainModule.TypeSystem.Void;
+
+		// Create method: static extern void CallBaseActivationCtor_{hash}(DeclaringType instance, ...)
+		var methodName = $"CallBaseActivationCtor_{declaringType.Name.GetHashCode ():X8}";
+		var accessorMethod = new MethodDefinition (
+			methodName,
+			MethodAttributes.Private | MethodAttributes.Static | MethodAttributes.HideBySig,
+			voidType);
+
+		// First parameter is the instance (the base type, not mapped type - UnsafeAccessor requirement)
+		accessorMethod.Parameters.Add (new ParameterDefinition ("instance", ParameterAttributes.None, declaringTypeRef));
+
+		if (!isJIConstructor) {
+			// XA-style: (IntPtr, JniHandleOwnership)
+			var intPtrType = AssemblyToInjectTypeMap.MainModule.ImportReference (Context.GetType ("System.IntPtr"));
+			var jniHandleOwnershipType = AssemblyToInjectTypeMap.MainModule.ImportReference (Context.GetType ("Android.Runtime.JniHandleOwnership"));
+			accessorMethod.Parameters.Add (new ParameterDefinition ("handle", ParameterAttributes.None, intPtrType));
+			accessorMethod.Parameters.Add (new ParameterDefinition ("transfer", ParameterAttributes.None, jniHandleOwnershipType));
+		} else {
+			// JI-style: (ref JniObjectReference, JniObjectReferenceOptions)
 			var jniObjRefTypeDef = Context.GetType ("Java.Interop.JniObjectReference");
 			var jniObjRefType = AssemblyToInjectTypeMap.MainModule.ImportReference (jniObjRefTypeDef);
-			var jniObjRefOptionsTypeDef = Context.GetType ("Java.Interop.JniObjectReferenceOptions");
-			
-			// Find JniObjectReference(IntPtr) constructor
-			var jniObjRefCtor = jniObjRefTypeDef.Methods.FirstOrDefault (m =>
-				m.IsConstructor && !m.IsStatic &&
-				m.Parameters.Count == 1 &&
-				m.Parameters [0].ParameterType.FullName == "System.IntPtr");
-			
-			if (jniObjRefCtor == null) {
-				// Try with optional second parameter
-				jniObjRefCtor = jniObjRefTypeDef.Methods.FirstOrDefault (m =>
-					m.IsConstructor && !m.IsStatic &&
-					m.Parameters.Count == 2 &&
-					m.Parameters [0].ParameterType.FullName == "System.IntPtr" &&
-					m.Parameters [1].ParameterType.FullName == "Java.Interop.JniObjectReferenceType");
-			}
+			var jniObjRefByRef = new ByReferenceType (jniObjRefType);
+			var jniObjRefOptionsType = AssemblyToInjectTypeMap.MainModule.ImportReference (Context.GetType ("Java.Interop.JniObjectReferenceOptions"));
+			accessorMethod.Parameters.Add (new ParameterDefinition ("reference", ParameterAttributes.None, jniObjRefByRef));
+			accessorMethod.Parameters.Add (new ParameterDefinition ("options", ParameterAttributes.None, jniObjRefOptionsType));
+		}
 
-			if (jniObjRefCtor == null) {
-				// Fallback: just return null if we can't find the constructor
-				il.Emit (Mono.Cecil.Cil.OpCodes.Ldnull);
-				il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
-				proxyType.Methods.Add (method);
-				return;
+		// Add [UnsafeAccessor(UnsafeAccessorKind.Method, Name = ".ctor")]
+		var unsafeAccessorAttrType = Context.GetType ("System.Runtime.CompilerServices.UnsafeAccessorAttribute");
+		var unsafeAccessorKindType = Context.GetType ("System.Runtime.CompilerServices.UnsafeAccessorKind");
+		var unsafeAccessorCtor = unsafeAccessorAttrType.Methods.FirstOrDefault (m =>
+			m.IsConstructor && !m.IsStatic && m.Parameters.Count == 1 &&
+			m.Parameters [0].ParameterType.FullName == "System.Runtime.CompilerServices.UnsafeAccessorKind");
+
+		if (unsafeAccessorCtor != null) {
+			var unsafeAccessorCtorRef = AssemblyToInjectTypeMap.MainModule.ImportReference (unsafeAccessorCtor);
+			var attr = new CustomAttribute (unsafeAccessorCtorRef);
+			// UnsafeAccessorKind.Method = 1
+			attr.ConstructorArguments.Add (new CustomAttributeArgument (
+				AssemblyToInjectTypeMap.MainModule.ImportReference (unsafeAccessorKindType), 1));
+			// Name = ".ctor"
+			var nameProperty = unsafeAccessorAttrType.Properties.FirstOrDefault (p => p.Name == "Name");
+			if (nameProperty != null) {
+				attr.Properties.Add (new CustomAttributeNamedArgument ("Name",
+					new CustomAttributeArgument (AssemblyToInjectTypeMap.MainModule.TypeSystem.String, ".ctor")));
 			}
-			
-			var jniObjRefCtorRef = AssemblyToInjectTypeMap.MainModule.ImportReference (jniObjRefCtor);
-			
-			// Declare local for JniObjectReference
-			method.Body.InitLocals = true;
-			var jniRefLocal = new Mono.Cecil.Cil.VariableDefinition (jniObjRefType);
-			method.Body.Variables.Add (jniRefLocal);
-			
-			// Create JniObjectReference: local = new JniObjectReference(handle)
-			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloca_S, jniRefLocal);
+			accessorMethod.CustomAttributes.Add (attr);
+		}
+
+		// Method is extern (no body - runtime provides implementation)
+		accessorMethod.ImplAttributes = MethodImplAttributes.InternalCall;
+
+		proxyType.Methods.Add (accessorMethod);
+		return accessorMethod;
+	}
+
+	/// <summary>
+	/// Generates IL for calling a JI-style constructor using newobj.
+	/// </summary>
+	void GenerateJIConstructorCall (
+		MethodDefinition method,
+		ILProcessor il,
+		MethodReference ctorRef,
+		TypeReference iJavaPeerableRef,
+		bool useNewobj)
+	{
+		var jniObjRefTypeDef = Context.GetType ("Java.Interop.JniObjectReference");
+		var jniObjRefType = AssemblyToInjectTypeMap.MainModule.ImportReference (jniObjRefTypeDef);
+
+		// Find JniObjectReference constructor
+		var jniObjRefCtor = jniObjRefTypeDef.Methods.FirstOrDefault (m =>
+			m.IsConstructor && !m.IsStatic &&
+			m.Parameters.Count == 1 &&
+			m.Parameters [0].ParameterType.FullName == "System.IntPtr");
+
+		if (jniObjRefCtor == null) {
+			jniObjRefCtor = jniObjRefTypeDef.Methods.FirstOrDefault (m =>
+				m.IsConstructor && !m.IsStatic &&
+				m.Parameters.Count == 2 &&
+				m.Parameters [0].ParameterType.FullName == "System.IntPtr" &&
+				m.Parameters [1].ParameterType.FullName == "Java.Interop.JniObjectReferenceType");
+		}
+
+		if (jniObjRefCtor == null) {
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldnull);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
+			return;
+		}
+
+		var jniObjRefCtorRef = AssemblyToInjectTypeMap.MainModule.ImportReference (jniObjRefCtor);
+
+		// Declare local for JniObjectReference
+		var jniRefLocal = new Mono.Cecil.Cil.VariableDefinition (jniObjRefType);
+		method.Body.Variables.Add (jniRefLocal);
+
+		// Create JniObjectReference: local = new JniObjectReference(handle)
+		il.Emit (Mono.Cecil.Cil.OpCodes.Ldloca_S, jniRefLocal);
+		il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_1); // handle
+		if (jniObjRefCtor.Parameters.Count == 2) {
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_I4_0); // JniObjectReferenceType.Invalid
+		}
+		il.Emit (Mono.Cecil.Cil.OpCodes.Call, jniObjRefCtorRef);
+
+		// Call constructor: new MappedType(ref local, JniObjectReferenceOptions.Copy)
+		il.Emit (Mono.Cecil.Cil.OpCodes.Ldloca_S, jniRefLocal);
+		il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_I4_1); // JniObjectReferenceOptions.Copy
+		il.Emit (Mono.Cecil.Cil.OpCodes.Newobj, ctorRef);
+
+		// Store result
+		var resultLocal = new Mono.Cecil.Cil.VariableDefinition (iJavaPeerableRef);
+		method.Body.Variables.Add (resultLocal);
+		il.Emit (Mono.Cecil.Cil.OpCodes.Stloc, resultLocal);
+
+		// Call JNIEnv.DeleteRef(handle, transfer)
+		var jniEnvTypeDef = Context.GetType ("Android.Runtime.JNIEnv");
+		var deleteRefMethod = jniEnvTypeDef.Methods.FirstOrDefault (m =>
+			m.Name == "DeleteRef" && m.IsStatic &&
+			m.Parameters.Count == 2 &&
+			m.Parameters [0].ParameterType.FullName == "System.IntPtr" &&
+			m.Parameters [1].ParameterType.FullName == "Android.Runtime.JniHandleOwnership");
+
+		if (deleteRefMethod != null) {
+			var deleteRefRef = AssemblyToInjectTypeMap.MainModule.ImportReference (deleteRefMethod);
 			il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_1); // handle
-			if (jniObjRefCtor.Parameters.Count == 2) {
-				// Need to pass JniObjectReferenceType.Invalid (0)
-				il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_I4_0);
-			}
-			il.Emit (Mono.Cecil.Cil.OpCodes.Call, jniObjRefCtorRef);
-			
-			// Call constructor: new MappedType(ref local, JniObjectReferenceOptions.Copy)
-			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloca_S, jniRefLocal); // ref jniObjRef
-			il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_I4_1); // JniObjectReferenceOptions.Copy = 1
-			il.Emit (Mono.Cecil.Cil.OpCodes.Newobj, ctorRef);
-			
-			// Store result in local variable (we need it after DeleteRef)
-			var resultLocal = new Mono.Cecil.Cil.VariableDefinition (iJavaPeerableRef);
-			method.Body.Variables.Add (resultLocal);
-			il.Emit (Mono.Cecil.Cil.OpCodes.Stloc, resultLocal);
-			
-			// Call JNIEnv.DeleteRef(handle, transfer)
-			var jniEnvTypeDef = Context.GetType ("Android.Runtime.JNIEnv");
-			var deleteRefMethod = jniEnvTypeDef.Methods.FirstOrDefault (m =>
-				m.Name == "DeleteRef" && m.IsStatic &&
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_2); // transfer
+			il.Emit (Mono.Cecil.Cil.OpCodes.Call, deleteRefRef);
+		}
+
+		il.Emit (Mono.Cecil.Cil.OpCodes.Ldloc, resultLocal);
+		il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
+	}
+
+	/// <summary>
+	/// Generates IL for calling a JI-style base class constructor via UnsafeAccessor.
+	/// </summary>
+	void GenerateJIUnsafeAccessorCall (
+		MethodDefinition method,
+		ILProcessor il,
+		MethodReference accessorRef,
+		Mono.Cecil.Cil.VariableDefinition instanceLocal,
+		TypeReference iJavaPeerableRef)
+	{
+		var jniObjRefTypeDef = Context.GetType ("Java.Interop.JniObjectReference");
+		var jniObjRefType = AssemblyToInjectTypeMap.MainModule.ImportReference (jniObjRefTypeDef);
+
+		// Find JniObjectReference constructor
+		var jniObjRefCtor = jniObjRefTypeDef.Methods.FirstOrDefault (m =>
+			m.IsConstructor && !m.IsStatic &&
+			m.Parameters.Count == 1 &&
+			m.Parameters [0].ParameterType.FullName == "System.IntPtr");
+
+		if (jniObjRefCtor == null) {
+			jniObjRefCtor = jniObjRefTypeDef.Methods.FirstOrDefault (m =>
+				m.IsConstructor && !m.IsStatic &&
+				m.Parameters.Count == 2 &&
+				m.Parameters [0].ParameterType.FullName == "System.IntPtr" &&
+				m.Parameters [1].ParameterType.FullName == "Java.Interop.JniObjectReferenceType");
+		}
+
+		if (jniObjRefCtor == null) {
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldnull);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
+			return;
+		}
+
+		var jniObjRefCtorRef = AssemblyToInjectTypeMap.MainModule.ImportReference (jniObjRefCtor);
+
+		// Declare local for JniObjectReference
+		var jniRefLocal = new Mono.Cecil.Cil.VariableDefinition (jniObjRefType);
+		method.Body.Variables.Add (jniRefLocal);
+
+		// Create JniObjectReference: local = new JniObjectReference(handle)
+		il.Emit (Mono.Cecil.Cil.OpCodes.Ldloca_S, jniRefLocal);
+		il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_1); // handle
+		if (jniObjRefCtor.Parameters.Count == 2) {
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_I4_0); // JniObjectReferenceType.Invalid
+		}
+		il.Emit (Mono.Cecil.Cil.OpCodes.Call, jniObjRefCtorRef);
+
+		// CallBaseActivationCtor(instance, ref jniRef, JniObjectReferenceOptions.Copy);
+		il.Emit (Mono.Cecil.Cil.OpCodes.Ldloc, instanceLocal);
+		il.Emit (Mono.Cecil.Cil.OpCodes.Ldloca_S, jniRefLocal);
+		il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_I4_1); // JniObjectReferenceOptions.Copy
+		il.Emit (Mono.Cecil.Cil.OpCodes.Call, accessorRef);
+
+		// Call JNIEnv.DeleteRef(handle, transfer)
+		var jniEnvTypeDef = Context.GetType ("Android.Runtime.JNIEnv");
+		var deleteRefMethod = jniEnvTypeDef.Methods.FirstOrDefault (m =>
+			m.Name == "DeleteRef" && m.IsStatic &&
+			m.Parameters.Count == 2 &&
+			m.Parameters [0].ParameterType.FullName == "System.IntPtr" &&
+			m.Parameters [1].ParameterType.FullName == "Android.Runtime.JniHandleOwnership");
+
+		if (deleteRefMethod != null) {
+			var deleteRefRef = AssemblyToInjectTypeMap.MainModule.ImportReference (deleteRefMethod);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_1); // handle
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_2); // transfer
+			il.Emit (Mono.Cecil.Cil.OpCodes.Call, deleteRefRef);
+		}
+
+		// Return instance
+		il.Emit (Mono.Cecil.Cil.OpCodes.Ldloc, instanceLocal);
+		il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
+	}
+
+	/// <summary>
+	/// Result of searching for an activation constructor in the type hierarchy.
+	/// </summary>
+	enum ActivationCtorKind
+	{
+		None,
+		/// <summary>XI-style: (IntPtr, JniHandleOwnership)</summary>
+		XA,
+		/// <summary>JI-style: (ref JniObjectReference, JniObjectReferenceOptions)</summary>
+		JI
+	}
+
+	/// <summary>
+	/// Finds an activation constructor by walking up the type hierarchy.
+	/// Searches for both XI-style (IntPtr, JniHandleOwnership) and JI-style
+	/// (ref JniObjectReference, JniObjectReferenceOptions) constructors.
+	/// </summary>
+	/// <param name="startType">The type to start searching from</param>
+	/// <param name="ctor">The found constructor, or null if not found</param>
+	/// <param name="declaringType">The type that declares the constructor (may be a base type)</param>
+	/// <param name="kind">The kind of constructor found</param>
+	/// <returns>True if a constructor was found, false otherwise</returns>
+	bool TryFindActivationCtor (
+		TypeDefinition startType,
+		[NotNullWhen (true)] out MethodDefinition? ctor,
+		[NotNullWhen (true)] out TypeDefinition? declaringType,
+		out ActivationCtorKind kind)
+	{
+		TypeDefinition? current = startType;
+
+		while (current != null) {
+			// First try XI-style: (IntPtr, JniHandleOwnership)
+			ctor = current.Methods.FirstOrDefault (m =>
+				m.IsConstructor && !m.IsStatic &&
 				m.Parameters.Count == 2 &&
 				m.Parameters [0].ParameterType.FullName == "System.IntPtr" &&
 				m.Parameters [1].ParameterType.FullName == "Android.Runtime.JniHandleOwnership");
-			
-			if (deleteRefMethod != null) {
-				var deleteRefRef = AssemblyToInjectTypeMap.MainModule.ImportReference (deleteRefMethod);
-				il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_1); // handle
-				il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_2); // transfer
-				il.Emit (Mono.Cecil.Cil.OpCodes.Call, deleteRefRef);
+
+			if (ctor != null) {
+				declaringType = current;
+				kind = ActivationCtorKind.XA;
+				return true;
 			}
-			
-			// Load result and return
-			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloc, resultLocal);
+
+			// Then try JI-style: (ref JniObjectReference, JniObjectReferenceOptions)
+			ctor = current.Methods.FirstOrDefault (m =>
+				m.IsConstructor && !m.IsStatic &&
+				m.Parameters.Count == 2 &&
+				m.Parameters [0].ParameterType.IsByReference &&
+				m.Parameters [0].ParameterType.GetElementType ().FullName == "Java.Interop.JniObjectReference" &&
+				m.Parameters [1].ParameterType.FullName == "Java.Interop.JniObjectReferenceOptions");
+
+			if (ctor != null) {
+				declaringType = current;
+				kind = ActivationCtorKind.JI;
+				return true;
+			}
+
+			// Move to base type
+			if (current.BaseType == null) {
+				break;
+			}
+
+			current = current.BaseType.Resolve ();
 		}
 
-		il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
-
-		proxyType.Methods.Add (method);
+		ctor = null;
+		declaringType = null;
+		kind = ActivationCtorKind.None;
+		return false;
 	}
 }

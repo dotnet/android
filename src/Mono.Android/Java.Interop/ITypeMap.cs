@@ -51,6 +51,6 @@ namespace Android.Runtime
 		/// Resolves a marshal method function pointer by JNI class name and method index.
 		/// Used by Type Mapping API stubs.
 		/// </summary>
-		IntPtr GetFunctionPointer (string className, int methodIndex);
+		IntPtr GetFunctionPointer (ReadOnlySpan<char> className, int methodIndex);
 	}
 }
