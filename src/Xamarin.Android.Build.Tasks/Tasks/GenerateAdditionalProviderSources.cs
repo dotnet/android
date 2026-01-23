@@ -82,7 +82,6 @@ public class GenerateAdditionalProviderSources : AndroidTask
 
 		// For NativeAOT, generate JavaInteropRuntime.java and NativeAotEnvironmentVars.java
 		if (androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
-			const string fileName = "JavaInteropRuntime.java";
 			GenerateJavaSource (
 				"JavaInteropRuntime.java",
 				new Dictionary<string, string> (StringComparer.Ordinal) {
