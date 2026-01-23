@@ -16,6 +16,8 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "DX8";
 
+		string? responseFilePath;
+
 		[Required]
 		public string JarPath { get; set; } = "";
 
@@ -43,6 +45,17 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem []? MapDiagnostics { get; set; }
 
 		public string? ExtraArguments { get; set; }
+
+		public override bool RunTask ()
+		{
+			try {
+				return base.RunTask ();
+			} finally {
+				if (responseFilePath is { Length: > 0 } && File.Exists (responseFilePath)) {
+					File.Delete (responseFilePath);
+				}
+			}
+		}
 
 		protected override string GenerateCommandLineCommands ()
 		{
@@ -83,6 +96,38 @@ namespace Xamarin.Android.Tasks
 			if (!EnableDesugar)
 				cmd.AppendSwitch ("--no-desugaring");
 
+			cmd.AppendSwitchIfNotNull ("--output ", OutputDirectory);
+
+			// Create response file with jar libraries and inputs to avoid command line length limits
+			responseFilePath = CreateResponseFile ();
+			cmd.AppendSwitch ($"@{responseFilePath}");
+
+			if (MapDiagnostics != null) {
+				foreach (var diagnostic in MapDiagnostics) {
+					var from = diagnostic.ItemSpec;
+					var to = diagnostic.GetMetadata ("To");
+					if (from is not { Length: > 0 } || to is not { Length: > 0 })
+						continue;
+					cmd.AppendSwitch ("--map-diagnostics");
+					cmd.AppendSwitch (from);
+					cmd.AppendSwitch (to);
+				}
+			}
+
+			return cmd;
+		}
+
+		/// <summary>
+		/// Creates a response file containing --lib and input jar arguments for R8/D8.
+		/// This avoids command line length limits that can occur with many jar libraries.
+		/// </summary>
+		protected virtual string CreateResponseFile ()
+		{
+			var responseFile = Path.GetTempFileName ();
+			Log.LogDebugMessage ($"[{MainClass}] response file: {responseFile}");
+
+			using var response = new StreamWriter (responseFile, append: false, encoding: Files.UTF8withoutBOM);
+
 			var injars = new List<string> ();
 			var libjars = new List<string> ();
 			if (AlternativeJarLibrariesToEmbed?.Length > 0) {
@@ -106,25 +151,29 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			cmd.AppendSwitchIfNotNull ("--output ", OutputDirectory);
-			foreach (var jar in libjars)
-				cmd.AppendSwitchIfNotNull ("--lib ", jar);
-			foreach (var jar in injars)
-				cmd.AppendFileNameIfNotNull (jar);
-
-			if (MapDiagnostics != null) {
-				foreach (var diagnostic in MapDiagnostics) {
-					var from = diagnostic.ItemSpec;
-					var to = diagnostic.GetMetadata ("To");
-					if (from is not { Length: > 0 } || to is not { Length: > 0 })
-						continue;
-					cmd.AppendSwitch ("--map-diagnostics");
-					cmd.AppendSwitch (from);
-					cmd.AppendSwitch (to);
-				}
+			foreach (var jar in libjars) {
+				WriteArg (response, "--lib");
+				WriteArg (response, jar);
+			}
+			foreach (var jar in injars) {
+				WriteArg (response, jar);
 			}
 
-			return cmd;
+			return responseFile;
+		}
+
+		/// <summary>
+		/// Writes a single argument to the response file, quoting if necessary for paths with spaces.
+		/// </summary>
+		protected void WriteArg (StreamWriter writer, string arg)
+		{
+			// Quote paths that contain spaces
+			if (arg.Contains (" ")) {
+				writer.WriteLine ($"\"{arg}\"");
+			} else {
+				writer.WriteLine (arg);
+			}
+			Log.LogDebugMessage ($"  {arg}");
 		}
 
 		// Note: We do not want to call the base.LogEventsFromTextOutput as it will incorrectly identify
