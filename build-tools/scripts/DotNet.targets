@@ -4,7 +4,8 @@
     <_BinlogPathPrefix>$(_Root)bin/Build$(Configuration)/msbuild-$([System.DateTime]::Now.ToString("yyyyMMddTHHmmss"))</_BinlogPathPrefix>
     <MauiUseLocalPacks Condition=" '$(MauiUseLocalPacks)' == '' ">false</MauiUseLocalPacks>
     <MauiSourcePath Condition=" '$(MauiSourcePath)' == '' ">$(_Root)..\maui</MauiSourcePath>
-    <MauiPackagePath Condition=" '$(MauiPackagePath)' == '' ">$(MauiSourcePath)\artifacts</MauiPackagePath>
+    <!-- Arcade SDK outputs packages to artifacts/packages/Configuration/Shipping/ -->
+    <MauiPackagePath Condition=" '$(MauiPackagePath)' == '' ">$(MauiSourcePath)\artifacts\packages\$(Configuration)\Shipping</MauiPackagePath>
     <MauiWorkloadToInstall Condition=" '$(MauiWorkloadToInstall)' == '' ">maui-android</MauiWorkloadToInstall>
   </PropertyGroup>
 
@@ -146,6 +147,7 @@
       <_InstallArguments Include="--source &quot;%(_NuGetSources.Identity)&quot;" />
       <_InstallArguments Include="--temp-dir &quot;$(_TempDirectory)&quot;" />
     </ItemGroup>
+    <Message Importance="High" Text="InstallMaui: NuGet sources = @(_NuGetSources)" />
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; workload install $(MauiWorkloadToInstall) @(_InstallArguments, ' ')"
         WorkingDirectory="$(_TempDirectory)"
