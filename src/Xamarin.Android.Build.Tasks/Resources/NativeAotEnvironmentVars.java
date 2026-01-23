@@ -10,11 +10,11 @@ public class NativeAotEnvironmentVars
 	private static final String TAG = "NativeAotEnvironmentVars";
 
 	static String[] envNames = new String[] {
-//		@ENVIRONMENT_VAR_NAMES@
+@ENVIRONMENT_VAR_NAMES@
 	};
 
 	static String[] envValues = new String[] {
-//		@ENVIRONMENT_VAR_VALUES@
+@ENVIRONMENT_VAR_VALUES@
 	};
 
 	public static void Initialize ()
@@ -28,6 +28,7 @@ public class NativeAotEnvironmentVars
 
 		try {
 			for (int i = 0; i < envNames.length; i++) {
+				Log.d (TAG, "Setting env var: '" + envNames[i] + "'='" + envValues[i] + "'");
 				Os.setenv (envNames[i], envValues[i], true /* overwrite */);
 			}
 		} catch (ErrnoException e) {

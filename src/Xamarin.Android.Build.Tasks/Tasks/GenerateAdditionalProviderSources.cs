@@ -30,6 +30,13 @@ public class GenerateAdditionalProviderSources : AndroidTask
 	[Required]
 	public string TargetName { get; set; } = "";
 
+	public ITaskItem[]? Environments { get; set; }
+
+	// We need to pass these two to the environment builder, otherwise not used
+	// by this task. See also GenerateNativeApplicationSources.cs
+	public string? HttpClientHandlerType { get; set; }
+	public bool EnableSGenConcurrent { get; set; }
+
 	AndroidRuntime androidRuntime;
 	JavaPeerStyle codeGenerationTarget;
 
@@ -83,11 +90,27 @@ public class GenerateAdditionalProviderSources : AndroidTask
 				}
 			);
 
-			// TODO: actually put envvars here
+			// We care only about environment variables here
+			var envBuilder = new EnvironmentBuilder (Log);
+			envBuilder.Read (Environments);
+			GenerateNativeApplicationConfigSources.AddDefaultEnvironmentVariables (envBuilder, HttpClientHandlerType, EnableSGenConcurrent);
+
+			var envVarNames = new StringBuilder ();
+			var envVarValues = new StringBuilder ();
+			foreach (var kvp in envBuilder.EnvironmentVariables) {
+				// All the strings already have double-quotes properly quoted, EnvironmentBuilder took care of that
+				AppendEnvVarEntry (envVarNames, kvp.Key);
+				AppendEnvVarEntry (envVarValues, kvp.Value);
+			}
+
+			var envVars = new Dictionary<string, string> (StringComparer.Ordinal) {
+				{ "@ENVIRONMENT_VAR_NAMES@", envVarNames.ToString () },
+				{ "@ENVIRONMENT_VAR_VALUES@", envVarValues.ToString () },
+			};
+
 			GenerateJavaSource (
 				"NativeAotEnvironmentVars.java",
-				new Dictionary<string, string> (StringComparer.Ordinal) {
-				}
+				envVars
 			);
 		}
 
@@ -115,6 +138,13 @@ public class GenerateAdditionalProviderSources : AndroidTask
 			real_app_dir,
 			template => template.Replace ("// REGISTER_APPLICATION_AND_INSTRUMENTATION_CLASSES_HERE", regCallsWriter.ToString ())
 		);
+
+		void AppendEnvVarEntry (StringBuilder sb, string value)
+		{
+			sb.Append ("\t\t\"");
+			sb.Append (value);
+			sb.Append ("\",\n");
+		}
 
 		void GenerateJavaSource (string fileName, Dictionary<string, string> replacements)
 		{
