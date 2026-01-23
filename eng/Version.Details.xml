@@ -1,33 +1,33 @@
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.NET.Sdk" Version="10.0.102-servicing.25612.103">
+    <Dependency Name="Microsoft.NET.Sdk" Version="10.0.103-servicing.26065.102">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>a1b9d991e4596823841f4f9d840e72ac369e3a7e</Sha>
+      <Sha>99f9e99f92d73ade5453ba8edba5d72247f3cd11</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink" Version="10.0.2-servicing.25612.103">
+    <Dependency Name="Microsoft.NET.ILLink" Version="10.0.3-servicing.26065.102">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>a1b9d991e4596823841f4f9d840e72ac369e3a7e</Sha>
+      <Sha>99f9e99f92d73ade5453ba8edba5d72247f3cd11</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NETCore.App.Ref" Version="10.0.2">
+    <Dependency Name="Microsoft.NETCore.App.Ref" Version="10.0.3">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>a1b9d991e4596823841f4f9d840e72ac369e3a7e</Sha>
+      <Sha>99f9e99f92d73ade5453ba8edba5d72247f3cd11</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-alpha.25612.103">
+    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-alpha.26065.102">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>a1b9d991e4596823841f4f9d840e72ac369e3a7e</Sha>
+      <Sha>99f9e99f92d73ade5453ba8edba5d72247f3cd11</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Workload.Mono.Toolchain.Current.Manifest-10.0.100" Version="10.0.102">
+    <Dependency Name="Microsoft.NET.Workload.Mono.Toolchain.Current.Manifest-10.0.100" Version="10.0.103">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>a1b9d991e4596823841f4f9d840e72ac369e3a7e</Sha>
+      <Sha>99f9e99f92d73ade5453ba8edba5d72247f3cd11</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-10.0.100" Version="10.0.102">
+    <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-10.0.100" Version="10.0.103">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>a1b9d991e4596823841f4f9d840e72ac369e3a7e</Sha>
+      <Sha>99f9e99f92d73ade5453ba8edba5d72247f3cd11</Sha>
     </Dependency>
     <!-- Previous .NET version -->
-    <Dependency Name="Microsoft.NET.Workload.Mono.ToolChain.Current.Manifest-9.0.100" Version="9.0.12">
+    <Dependency Name="Microsoft.NET.Workload.Mono.ToolChain.Current.Manifest-9.0.100" Version="9.0.13">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>2b2a06c8a4d45ec0781266ffa3f3852a052f0fbb</Sha>
+      <Sha>e40563274819c19164e4a1f67617b4da37f3a6a4</Sha>
     </Dependency>
     <!-- Previous .NET Android version(s) -->
     <Dependency Name="Microsoft.NET.Sdk.Android.Manifest-9.0.100" Version="35.0.105">
@@ -40,13 +40,13 @@
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="10.0.0-beta.25612.103">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="10.0.0-beta.26065.102">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>a1b9d991e4596823841f4f9d840e72ac369e3a7e</Sha>
+      <Sha>99f9e99f92d73ade5453ba8edba5d72247f3cd11</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="10.0.102">
+    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="10.0.103">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>a1b9d991e4596823841f4f9d840e72ac369e3a7e</Sha>
+      <Sha>99f9e99f92d73ade5453ba8edba5d72247f3cd11</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
