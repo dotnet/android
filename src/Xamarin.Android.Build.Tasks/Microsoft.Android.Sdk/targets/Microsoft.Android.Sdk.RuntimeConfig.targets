@@ -58,9 +58,10 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
     />
   </ItemGroup>
 
+  <!-- Skip RuntimeConfigParserTask for CoreCLR - the task comes from MonoTargets SDK which isn't available for CoreCLR builds -->
   <Target Name="_ParseRuntimeConfigFiles"
       AfterTargets="GenerateBuildRuntimeConfigurationFiles"
-      Condition=" '$(GenerateRuntimeConfigurationFiles)' == 'true' "
+      Condition=" '$(GenerateRuntimeConfigurationFiles)' == 'true' and '$(_AndroidRuntime)' != 'CoreCLR' "
       Inputs="$(ProjectRuntimeConfigFilePath)"
       Outputs="$(_BinaryRuntimeConfigPath)">
     <RuntimeConfigParserTask

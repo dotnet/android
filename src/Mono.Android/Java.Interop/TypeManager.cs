@@ -302,6 +302,17 @@ namespace Java.Interop {
 			}
 		}
 
+		/// <summary>
+		/// Gets the function pointer for the [UnmanagedCallersOnly] n_Activate_mm method.
+		/// This is used by TypeMapAttributeTypeMap to provide the function pointer for
+		/// framework JCWs that call TypeManager.Activate().
+		/// </summary>
+		internal static unsafe IntPtr GetActivateFunctionPointer ()
+		{
+			delegate* unmanaged<IntPtr, IntPtr, IntPtr, IntPtr, IntPtr, IntPtr, void> fn = &JavaTypeManager.n_Activate_mm;
+			return (IntPtr)fn;
+		}
+
 		[Register ("mono/android/TypeManager", DoNotGenerateAcw = true)]
 		internal class JavaTypeManager : Java.Lang.Object
 		{
@@ -312,7 +323,7 @@ namespace Java.Interop {
 			}
 
 			[UnmanagedCallersOnly]
-			static void n_Activate_mm (IntPtr jnienv, IntPtr jclass, IntPtr typename_ptr, IntPtr signature_ptr, IntPtr jobject, IntPtr parameters_ptr)
+			internal static void n_Activate_mm (IntPtr jnienv, IntPtr jclass, IntPtr typename_ptr, IntPtr signature_ptr, IntPtr jobject, IntPtr parameters_ptr)
 			{
 				// TODO: need a full wrapper code here, a'la JNINativeWrapper.CreateDelegate
 				try {

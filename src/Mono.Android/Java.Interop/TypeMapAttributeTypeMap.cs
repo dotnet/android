@@ -322,6 +322,15 @@ namespace Android.Runtime
 			// It's a critical infrastructure failure.
 			Log ($"GetFunctionPointer: class='{className}', methodIndex={methodIndex}");
 
+			// Special case: TypeManager.n_activate is used by framework JCWs to activate managed peers
+			// These JCWs (like View_OnClickListenerImplementor) call TypeManager.Activate() in their constructors.
+			// We need to provide the function pointer for the [UnmanagedCallersOnly] n_Activate_mm method.
+			if (className == "mono/android/TypeManager" && methodIndex == 0) {
+				IntPtr activateFnPtr = GetTypeManagerActivateFunctionPointer ();
+				Log ($"GetFunctionPointer: TypeManager special case, returning 0x{activateFnPtr:x}");
+				return activateFnPtr;
+			}
+
 			// Look up type directly from the external type map
 			// The typemap now returns the proxy type directly (not the original type)
 			if (!_externalTypeMap.TryGetValue (className, out Type? type)) {
@@ -343,6 +352,20 @@ namespace Android.Runtime
 			IntPtr fnPtr = proxy.GetFunctionPointer (methodIndex);
 			Log ($"GetFunctionPointer: Got function pointer 0x{fnPtr:x} for method index {methodIndex}");
 
+			return fnPtr;
+		}
+
+		/// <summary>
+		/// Gets the function pointer for TypeManager.JavaTypeManager.n_Activate_mm.
+		/// This is the [UnmanagedCallersOnly] method that handles activation of managed peers
+		/// from Java callable wrapper constructors that call TypeManager.Activate().
+		/// </summary>
+		static IntPtr GetTypeManagerActivateFunctionPointer ()
+		{
+			// Use the new direct method that doesn't rely on reflection
+			// Fully qualify to avoid ambiguity with Android.Runtime.TypeManager
+			IntPtr fnPtr = Java.Interop.TypeManager.GetActivateFunctionPointer ();
+			Log ($"GetTypeManagerActivateFunctionPointer: Got function pointer 0x{fnPtr:x} for n_Activate_mm");
 			return fnPtr;
 		}
 	}

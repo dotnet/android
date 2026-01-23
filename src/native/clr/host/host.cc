@@ -564,8 +564,8 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// Store the Type Mapping API get_function_pointer callback (may be null for Mono runtime)
 	// Set directly from JNIEnvInit.Initialize out parameter - no need for separate typemap_init call
 	if (init.getFunctionPointerFn != nullptr) {
-		get_function_pointer = init.getFunctionPointerFn;
-		log_debug (LOG_DEFAULT, "Type Mapping API get_function_pointer callback set"sv);
+		typemap_get_function_pointer = init.getFunctionPointerFn;
+		log_debug (LOG_DEFAULT, "Type Mapping API typemap_get_function_pointer callback set"sv);
 	}
 
 	if (FastTiming::enabled ()) [[unlikely]] {
