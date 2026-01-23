@@ -78,7 +78,7 @@ namespace Xamarin.Android.Build.Tests
 				// Read and verify response file content
 				string [] responseFileContent = File.ReadAllLines (responseFilePath);
 
-				// Should contain --lib entries for platform jar and reference jars
+				// Should contain --lib entries (written as separate lines: --lib on one line, path on next)
 				Assert.IsTrue (responseFileContent.Any (line => line == "--lib"), "Response file should contain --lib switch");
 				Assert.IsTrue (responseFileContent.Any (line => line.Contains ("android.jar")), "Response file should contain android.jar");
 				Assert.IsTrue (responseFileContent.Any (line => line.Contains ("lib1.jar")), "Response file should contain lib1.jar");
@@ -165,6 +165,9 @@ namespace Xamarin.Android.Build.Tests
 			// Find the @filepath argument
 			var startIndex = commandLine.IndexOf ("@", StringComparison.Ordinal);
 			if (startIndex < 0) return null;
+
+			// Check if '@' is the last character
+			if (startIndex + 1 >= commandLine.Length) return null;
 
 			var endIndex = commandLine.IndexOf (" ", startIndex, StringComparison.Ordinal);
 			if (endIndex < 0) endIndex = commandLine.Length;
