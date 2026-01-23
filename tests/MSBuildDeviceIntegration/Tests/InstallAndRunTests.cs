@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.TestPlatform.Utilities;
 using Mono.Cecil;
 using NUnit.Framework;
 
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
@@ -259,7 +260,9 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		}
 
 		[Test]
-		public void SubscribeToAppDomainUnhandledException ()
+		[TestCase (AndroidRuntime.MonoVM)]
+		[TestCase (AndroidRuntime.CoreCLR)]
+		public void SubscribeToAppDomainUnhandledException (AndroidRuntime runtime)
 		{
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
@@ -276,7 +279,13 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			RunProjectAndAssert (proj, builder);
 
-			string expectedLogcatOutput = "# Unhandled Exception: sender=System.Object; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
+			string? expectedSender = runtime switch
+			{
+				AndroidRuntime.MonoVM => "System.Object", // MonoVM passes the current domain as the sender
+				AndroidRuntime.CoreCLR => null, // CoreCLR explicitly passes a `null` sender
+				_ => throw new NotImplementedException($"Test does not support runtime {runtime}"),
+			};
+			string expectedLogcatOutput = $"# Unhandled Exception: sender={expectedSender}; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
 			Assert.IsTrue (
 				MonitorAdbLogcat (CreateLineChecker (expectedLogcatOutput),
 					logcatFilePath: Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), timeout: 60),
