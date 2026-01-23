@@ -9,22 +9,48 @@ This file contains targets specific for Android application projects.
 <Project>
   <UsingTask TaskName="Xamarin.Android.Tasks.AndroidAdb" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidActivityName" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GetAvailableAndroidDevices" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.BuildTools.PrepTasks.XASleepInternal" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
     <!-- If Xamarin.Android.Common.Debugging.targets exists, we can rely on _Run for debugging. -->
-    <_RunDependsOn Condition=" '$(_XASupportsFastDev)' == 'true' ">
+    <_RunDependsOn Condition=" '$(_AndroidFastDeploymentSupported)' == 'true' ">
       Install;
       _Run;
     </_RunDependsOn>
-    <_RunDependsOn Condition=" '$(_XASupportsFastDev)' != 'true' ">
+    <_RunDependsOn Condition=" '$(_AndroidFastDeploymentSupported)' != 'true' ">
       Install;
       StartAndroidActivity;
     </_RunDependsOn>
-    <_AndroidComputeRunArgumentsDependsOn>
+    <_AndroidComputeRunArgumentsDependsOn Condition=" '$(_AndroidComputeRunArgumentsDependsOn)' == '' and $([MSBuild]::VersionGreaterThanOrEquals($(NetCoreSdkVersion), 10.0.300)) ">
+      _ResolveMonoAndroidSdks;
+      _GetAndroidPackageName;
+    </_AndroidComputeRunArgumentsDependsOn>
+    <_AndroidComputeRunArgumentsDependsOn Condition=" '$(_AndroidComputeRunArgumentsDependsOn)' == '' ">
       Install;
     </_AndroidComputeRunArgumentsDependsOn>
   </PropertyGroup>
+
+  <!--
+  ***********************************************************************************************
+  ComputeAvailableDevices
+
+  Target that queries available Android devices and emulators.
+  This target is called by 'dotnet run' to support device selection.
+  Returns @(Devices) items with metadata: Description, Type, Status
+
+  See: https://github.com/dotnet/sdk/blob/2b9fc02a265c735f2132e4e3626e94962e48bdf5/documentation/specs/dotnet-run-for-maui.md
+  ***********************************************************************************************
+  -->
+  <Target Name="ComputeAvailableDevices"
+      DependsOnTargets="_ResolveMonoAndroidSdks"
+      Returns="@(Devices)">
+    <GetAvailableAndroidDevices
+        ToolExe="$(AdbToolExe)"
+        ToolPath="$(AdbToolPath)">
+      <Output TaskParameter="Devices" ItemName="Devices" />
+    </GetAvailableAndroidDevices>
+  </Target>
 
   <Target Name="_AndroidComputeRunArguments"
       BeforeTargets="ComputeRunArguments"
@@ -35,12 +61,23 @@ This file contains targets specific for Android application projects.
       <Output TaskParameter="ActivityName" PropertyName="AndroidLaunchActivity" />
     </GetAndroidActivityName>
     <PropertyGroup>
-      <RunCommand>$(AdbToolExe)</RunCommand>
-      <RunCommand Condition=" $(RunCommand) == '' and $([MSBuild]::IsOSPlatform('windows')) ">adb.exe</RunCommand>
-      <RunCommand Condition=" $(RunCommand) == '' and !$([MSBuild]::IsOSPlatform('windows')) ">adb</RunCommand>
-      <RunCommand>$([System.IO.Path]::Combine ('$(AdbToolPath)', '$(RunCommand)'))</RunCommand>
-      <RunArguments>$(AdbTarget) shell am start -S -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;</RunArguments>
+      <_AdbToolPath>$(AdbToolExe)</_AdbToolPath>
+      <_AdbToolPath Condition=" '$(_AdbToolPath)' == '' and $([MSBuild]::IsOSPlatform('windows')) ">adb.exe</_AdbToolPath>
+      <_AdbToolPath Condition=" '$(_AdbToolPath)' == '' and !$([MSBuild]::IsOSPlatform('windows')) ">adb</_AdbToolPath>
+      <_AdbToolPath>$([System.IO.Path]::Combine ('$(AdbToolPath)', '$(_AdbToolPath)'))</_AdbToolPath>
       <RunWorkingDirectory>$(MSBuildProjectDirectory)</RunWorkingDirectory>
+    </PropertyGroup>
+    <!-- By default, use `Microsoft.Android.Run` tool to stream logcat and handle Ctrl+C -->
+    <PropertyGroup Condition=" '$(WaitForExit)' != 'false' ">
+      <_AndroidRunPath Condition=" '$(_AndroidRunPath)' == '' ">$(MSBuildThisFileDirectory)..\tools\Microsoft.Android.Run.dll</_AndroidRunPath>
+      <_AndroidRunLogcatArgs Condition=" '$(_AndroidRunLogcatArgs)' == '' ">monodroid-assembly:S</_AndroidRunLogcatArgs>
+      <RunCommand>dotnet</RunCommand>
+      <RunArguments>exec &quot;$(_AndroidRunPath)&quot; --adb &quot;$(_AdbToolPath)&quot; --package &quot;$(_AndroidPackage)&quot; --activity &quot;$(AndroidLaunchActivity)&quot; --logcat-args &quot;$(_AndroidRunLogcatArgs)&quot; $(_AndroidRunExtraArgs)</RunArguments>
+    </PropertyGroup>
+    <!-- When WaitForExit is false, use direct adb command (no logcat streaming) -->
+    <PropertyGroup Condition=" '$(WaitForExit)' == 'false' ">
+      <RunCommand>$(_AdbToolPath)</RunCommand>
+      <RunArguments>$(AdbTarget) shell am start -S -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;</RunArguments>
     </PropertyGroup>
   </Target>
 

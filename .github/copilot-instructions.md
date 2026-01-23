@@ -1,6 +1,6 @@
 # Instructions for AIs
 
-**.NET for Android** (formerly Xamarin.Android) - Open-source Android development bindings for .NET languages. `main` branch targets **.NET 10**.
+**.NET for Android** (formerly Xamarin.Android) - Open-source Android development bindings for .NET languages. `main` branch targets **.NET 11**.
 
 ## Architecture
 - `src/Mono.Android/` - Android SDK bindings in C#

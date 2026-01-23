@@ -1093,9 +1093,9 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 			var proj = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = false,
 			};
-			proj.SetProperty ("_XASupportsFastDev", "True");
+			proj.SetProperty ("_AndroidFastDeploymentSupported", "true");
 			using (var b = CreateApkBuilder ()) {
-				//NOTE: build will fail, due to $(_XASupportsFastDev)
+				//NOTE: build will fail, due to $(_AndroidFastDeploymentSupported)
 				b.ThrowOnBuildFailure = false;
 				b.Build (proj);
 
