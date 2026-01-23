@@ -119,5 +119,30 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, "XA0119"), "Output should contain XA0119 warnings");
 			}
 		}
+
+		[Test]
+		public void XA4238 ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.Sources.Add (new BuildItem ("Compile", "CustomView.cs") { TextContent = () => @"
+using Android.Content;
+using Android.Runtime;
+using Android.Views;
+
+namespace UnnamedProject
+{
+	// Register attribute without package prefix should cause XA4238
+	[Register(""CustomView"")]
+	public class CustomView : View
+	{
+		public CustomView (Context context) : base (context) { }
+	}
+}" });
+			using (var builder = CreateApkBuilder ()) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
+				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, "XA4238"), "Output should contain XA4238 error");
+			}
+		}
 	}
 }
