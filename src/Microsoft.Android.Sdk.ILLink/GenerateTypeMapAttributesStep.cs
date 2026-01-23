@@ -67,6 +67,10 @@ public class GenerateTypeMapAttributesStep : BaseStep
 	MethodReference WaitForBridgeProcessingMethod { get; set; }
 	MethodReference UnhandledExceptionMethod { get; set; }
 
+	// Activation UCO imports
+	MethodReference WithinNewObjectScopeGetter { get; set; }
+	MethodReference PeekObjectMethod { get; set; }
+
 	AssemblyDefinition AssemblyToInjectTypeMap { get; set; }
 	AssemblyDefinition MonoAndroidAssembly { get; set; }
 
@@ -118,22 +122,9 @@ public class GenerateTypeMapAttributesStep : BaseStep
 		if (getEntryPoint != null)
 			AssemblyToInjectTypeMap = getEntryPoint.Invoke (Context.Annotations, null) as AssemblyDefinition;
 
-		// 2. Try to find assembly with EntryPoint
-		// if (AssemblyToInjectTypeMap == null) {
-		// 	foreach (var asm in Context.GetAssemblies ()) {
-		// 		if (asm.EntryPoint != null) {
-		// 			AssemblyToInjectTypeMap = asm;
-		// 			break;
-		// 		}
-		// 	}
-		// }
-
-		// 3. Fallback to Mono.Android (will fail for user types if they need UCO wrappers)
+		// Fallback to Mono.Android (will fail for user types if they need UCO wrappers)
 		if (AssemblyToInjectTypeMap == null) {
-			// Context.LogMessage (MessageContainer.CreateInfoMessage ("Could not find EntryPoint assembly, falling back to Mono.Android"));
 			AssemblyToInjectTypeMap = MonoAndroidAssembly;
-		} else {
-			// Context.LogMessage (MessageContainer.CreateInfoMessage ($"Injecting TypeMap into entry assembly: {AssemblyToInjectTypeMap.Name}"));
 		}
 
 		JavaTypeMapUniverseType = AssemblyToInjectTypeMap.MainModule.ImportReference (javaTypeMapUniverseTypeDefinition);
@@ -236,13 +227,25 @@ public class GenerateTypeMapAttributesStep : BaseStep
 			}
 		}
 
-		if (WaitForBridgeProcessingMethod == null) {
-			// Context.LogMessage (MessageContainer.CreateInfoMessage (
-			// 	"Could not find AndroidRuntimeInternal.WaitForBridgeProcessing - UCO wrappers will be simplified"));
+		// Find JniEnvironment.WithinNewObjectScope static property getter
+		var jniEnvTypeDef = Context.GetType ("Java.Interop.JniEnvironment");
+		if (jniEnvTypeDef != null) {
+			var withinNewObjectScopeProp = jniEnvTypeDef.Properties.FirstOrDefault (p => p.Name == "WithinNewObjectScope");
+			if (withinNewObjectScopeProp?.GetMethod != null) {
+				WithinNewObjectScopeGetter = AssemblyToInjectTypeMap.MainModule.ImportReference (withinNewObjectScopeProp.GetMethod);
+			}
 		}
-		if (UnhandledExceptionMethod == null) {
-			// Context.LogMessage (MessageContainer.CreateInfoMessage (
-			// 	"Could not find AndroidEnvironmentInternal.UnhandledException - UCO wrappers will be simplified"));
+
+		// Find Java.Lang.Object.PeekObject(IntPtr, Type) method
+		var javaLangObjectTypeDef = MonoAndroidAssembly.MainModule.Types
+			.FirstOrDefault (t => t.FullName == "Java.Lang.Object");
+		if (javaLangObjectTypeDef != null) {
+			var peekObjectMethod = javaLangObjectTypeDef.Methods.FirstOrDefault (m =>
+				m.Name == "PeekObject" && !m.HasGenericParameters &&
+				m.Parameters.Count >= 1 && m.Parameters [0].ParameterType.FullName == "System.IntPtr");
+			if (peekObjectMethod != null) {
+				PeekObjectMethod = AssemblyToInjectTypeMap.MainModule.ImportReference (peekObjectMethod);
+			}
 		}
 	}
 
@@ -325,15 +328,11 @@ public class GenerateTypeMapAttributesStep : BaseStep
 					: null;
 
 				if (nativeCallback == null) {
-					// Context.LogMessage (MessageContainer.CreateInfoMessage (
-						// $"Could not find native callback '{nativeCallbackName}' for method '{method.FullName}'"));
 					continue;
 				}
 
 				seen.Add (key);
 				methods.Add (new MarshalMethodInfo (attr.Name, attr.Signature, nativeCallback, method));
-				// Context.LogMessage (MessageContainer.CreateInfoMessage (
-					// $"Found marshal method: {type.FullName}.{nativeCallback.Name} -> {attr.Name}{attr.Signature}"));
 			}
 		}
 
@@ -356,8 +355,6 @@ public class GenerateTypeMapAttributesStep : BaseStep
 				if (nativeCallback != null) {
 					seen.Add (key);
 					methods.Add (new MarshalMethodInfo ("<init>", attr.Signature, nativeCallback, ctor));
-					// Context.LogMessage (MessageContainer.CreateInfoMessage (
-						// $"Found marshal constructor: {type.FullName}.{nativeCallback.Name}"));
 				}
 			}
 		}
@@ -2003,47 +2000,73 @@ public class {{className}}
 		// Import the mapped type reference
 		var mappedTypeRef = AssemblyToInjectTypeMap.MainModule.ImportReference (mappedType);
 
-		// If no constructors, generate a default activation for parameterless ctor
-		if (constructors.Count == 0) {
-			// Find the default constructor on mappedType
-			var defaultCtor = mappedType.Methods.FirstOrDefault (m =>
-				m.IsConstructor && !m.IsStatic && m.Parameters.Count == 0);
+		// Find the activation constructor following the search order in spec 7.2:
+		// 1. XI ctor: (IntPtr, JniHandleOwnership) on type
+		// 2. JI ctor: (ref JniObjectReference, JniObjectReferenceOptions) on type
+		// 3. Walk up hierarchy for XI/JI ctor on base classes
+		var (activationCtor, activationCtorType) = FindActivationConstructor (mappedType);
 
-			if (defaultCtor != null) {
-				var wrapper = GenerateSingleActivationUco (
-					proxyType, mappedType, mappedTypeRef, defaultCtor,
-					intPtrType, voidType, typeType, objectType,
-					getUninitializedObjectRef, setPeerReferenceRef, jniObjectRefCtorRef, jniObjectRefTypeRef,
-					0, "()V");
-				if (wrapper != null) {
-					activationUcoWrappers.Add (wrapper);
-					proxyType.Methods.Add (wrapper);
-				}
-			}
-		} else {
-			// Generate activation for each constructor
-			for (int i = 0; i < constructors.Count; i++) {
-				var ctorInfo = constructors [i];
-
-				// Find the matching constructor on mappedType
-				var targetCtor = ctorInfo.RegisteredMethod as MethodDefinition;
-				if (targetCtor == null || !targetCtor.IsConstructor) {
-					// Try to find by signature match
-					// For now, just use the registered method if it's a constructor
-					continue;
-				}
-
-				var wrapper = GenerateSingleActivationUco (
-					proxyType, mappedType, mappedTypeRef, targetCtor,
-					intPtrType, voidType, typeType, objectType,
-					getUninitializedObjectRef, setPeerReferenceRef, jniObjectRefCtorRef, jniObjectRefTypeRef,
-					i, ctorInfo.JniSignature);
-				if (wrapper != null) {
-					activationUcoWrappers.Add (wrapper);
-					proxyType.Methods.Add (wrapper);
-				}
-			}
+		if (activationCtor == null) {
+			// No activation constructor found - skip generation
+			// (Could also generate a throwing wrapper per spec 7.4)
+			return;
 		}
+
+		var activationCtorRef = AssemblyToInjectTypeMap.MainModule.ImportReference (activationCtor);
+		var activationCtorTypeRef = AssemblyToInjectTypeMap.MainModule.ImportReference (activationCtorType);
+
+		// Generate a single activation UCO (nc_activate_0)
+		var wrapper = GenerateSingleActivationUco (
+			proxyType, mappedType, mappedTypeRef, activationCtor, activationCtorType, activationCtorTypeRef,
+			intPtrType, voidType, typeType, objectType,
+			getUninitializedObjectRef, setPeerReferenceRef, jniObjectRefCtorRef, jniObjectRefTypeRef);
+		if (wrapper != null) {
+			activationUcoWrappers.Add (wrapper);
+			proxyType.Methods.Add (wrapper);
+		}
+	}
+
+	/// <summary>
+	/// Finds the activation constructor for a type, following the search order:
+	/// 1. XI ctor (IntPtr, JniHandleOwnership) on type
+	/// 2. JI ctor (ref JniObjectReference, JniObjectReferenceOptions) on type  
+	/// 3. Walk up hierarchy to find XI/JI ctor on base classes
+	/// </summary>
+	(MethodDefinition? ctor, TypeDefinition? declaringType) FindActivationConstructor (TypeDefinition type)
+	{
+		var currentType = type;
+		while (currentType != null) {
+			// Check for XI ctor: (IntPtr, JniHandleOwnership)
+			var xiCtor = currentType.Methods.FirstOrDefault (m =>
+				m.IsConstructor && !m.IsStatic &&
+				m.Parameters.Count == 2 &&
+				m.Parameters [0].ParameterType.FullName == "System.IntPtr" &&
+				m.Parameters [1].ParameterType.FullName == "Android.Runtime.JniHandleOwnership");
+
+			if (xiCtor != null) {
+				return (xiCtor, currentType);
+			}
+
+			// Check for JI ctor: (ref JniObjectReference, JniObjectReferenceOptions)
+			var jiCtor = currentType.Methods.FirstOrDefault (m =>
+				m.IsConstructor && !m.IsStatic &&
+				m.Parameters.Count == 2 &&
+				m.Parameters [0].ParameterType.IsByReference &&
+				m.Parameters [0].ParameterType.GetElementType ().FullName == "Java.Interop.JniObjectReference" &&
+				m.Parameters [1].ParameterType.FullName == "Java.Interop.JniObjectReferenceOptions");
+
+			if (jiCtor != null) {
+				return (jiCtor, currentType);
+			}
+
+			// Walk up the hierarchy
+			if (currentType.BaseType == null) {
+				break;
+			}
+			currentType = currentType.BaseType.Resolve ();
+		}
+
+		return (null, null);
 	}
 
 	/// <summary>
@@ -2094,11 +2117,93 @@ public class {{className}}
 			wrapperMethod.Parameters.Add (new ParameterDefinition ("jnienv", ParameterAttributes.None, intPtrType));
 			wrapperMethod.Parameters.Add (new ParameterDefinition ("jobject", ParameterAttributes.None, intPtrType));
 
+			// Add additional constructor parameters (skip first 2 params of ctor: IntPtr handle, JniHandleOwnership)
+			// Activation constructors typically have (IntPtr, JniHandleOwnership) signature
+			// Additional constructor params would be passed from Java, but for now we just handle the base case
+
 			var body = wrapperMethod.Body;
+			body.InitLocals = true;
 			var il = body.GetILProcessor ();
 
-			// TEMP: Just return for now to test if linker is happy with simple method
-			il.Emit (Mono.Cecil.Cil.OpCodes.Ret);
+			// Local variables we'll need
+			var instanceVar = new VariableDefinition (objectType);
+			body.Variables.Add (instanceVar);
+
+			var jniObjectRefVar = new VariableDefinition (jniObjectRefTypeRef);
+			body.Variables.Add (jniObjectRefVar);
+
+			// Create the return instruction (we'll jump to it from checks)
+			var retInst = Mono.Cecil.Cil.Instruction.Create (Mono.Cecil.Cil.OpCodes.Ret);
+
+			// Check 1: if (JniEnvironment.WithinNewObjectScope) return;
+			if (WithinNewObjectScopeGetter != null) {
+				il.Emit (Mono.Cecil.Cil.OpCodes.Call, WithinNewObjectScopeGetter);
+				il.Emit (Mono.Cecil.Cil.OpCodes.Brtrue, retInst);
+			}
+
+			// Check 2: if (Java.Lang.Object.PeekObject(jobject) != null) return;
+			if (PeekObjectMethod != null) {
+				il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_1); // jobject
+				il.Emit (Mono.Cecil.Cil.OpCodes.Ldnull);  // requiredType = null
+				il.Emit (Mono.Cecil.Cil.OpCodes.Call, PeekObjectMethod);
+				il.Emit (Mono.Cecil.Cil.OpCodes.Brtrue, retInst);
+			}
+
+			// var instance = (T)RuntimeHelpers.GetUninitializedObject(typeof(T));
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldtoken, mappedTypeRef);
+			var getTypeFromHandleRef = AssemblyToInjectTypeMap.MainModule.ImportReference (
+				Context.GetType ("System.Type").Methods.First (m => m.Name == "GetTypeFromHandle"));
+			il.Emit (Mono.Cecil.Cil.OpCodes.Call, getTypeFromHandleRef);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Call, getUninitializedObjectRef);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Stloc, instanceVar);
+
+			// ((IJavaPeerable)instance).SetPeerReference(new JniObjectReference(jobject));
+			// First create the JniObjectReference from jobject
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloca, jniObjectRefVar);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_1); // jobject
+			il.Emit (Mono.Cecil.Cil.OpCodes.Call, jniObjectRefCtorRef);
+
+			// Call SetPeerReference on the instance
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloc, instanceVar);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloc, jniObjectRefVar);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Callvirt, setPeerReferenceRef);
+
+			// Call the constructor on the instance
+			// For activation constructors, they typically take (IntPtr handle, JniHandleOwnership transfer)
+			// We need to check the targetCtor signature and pass appropriate arguments
+			il.Emit (Mono.Cecil.Cil.OpCodes.Ldloc, instanceVar);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Castclass, mappedTypeRef);
+
+			// Pass constructor arguments based on targetCtor.Parameters
+			foreach (var param in targetCtor.Parameters) {
+				if (param.ParameterType.FullName == "System.IntPtr") {
+					// Pass jobject (arg1)
+					il.Emit (Mono.Cecil.Cil.OpCodes.Ldarg_1);
+				} else if (param.ParameterType.FullName == "Android.Runtime.JniHandleOwnership") {
+					// Pass JniHandleOwnership.DoNotTransfer (value = 0)
+					il.Emit (Mono.Cecil.Cil.OpCodes.Ldc_I4_0);
+				} else {
+					// For other parameter types, we'd need to pass from the UCO params
+					// For now, push default value
+					if (param.ParameterType.IsValueType) {
+						// Load default value for value types
+						var tempVar = new VariableDefinition (AssemblyToInjectTypeMap.MainModule.ImportReference (param.ParameterType));
+						body.Variables.Add (tempVar);
+						il.Emit (Mono.Cecil.Cil.OpCodes.Ldloca, tempVar);
+						il.Emit (Mono.Cecil.Cil.OpCodes.Initobj, AssemblyToInjectTypeMap.MainModule.ImportReference (param.ParameterType));
+						il.Emit (Mono.Cecil.Cil.OpCodes.Ldloc, tempVar);
+					} else {
+						il.Emit (Mono.Cecil.Cil.OpCodes.Ldnull);
+					}
+				}
+			}
+
+			// Call the constructor
+			var ctorRef = AssemblyToInjectTypeMap.MainModule.ImportReference (targetCtor);
+			il.Emit (Mono.Cecil.Cil.OpCodes.Call, ctorRef);
+
+			// Return
+			il.Append (retInst);
 
 			return wrapperMethod;
 		} catch (Exception ex) {

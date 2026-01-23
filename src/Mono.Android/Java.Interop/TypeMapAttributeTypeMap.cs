@@ -125,49 +125,15 @@ namespace Android.Runtime
 					return cached;
 				}
 
-				// Debug: Log all custom attributes on the type
-				var allAttrs = type.GetCustomAttributes (inherit: false);
-				Log ($"GetProxyForType: {type.FullName} has {allAttrs.Length} custom attributes");
-				foreach (var attr in allAttrs) {
-					Log ($"  - {attr.GetType ().FullName} (IsJavaPeerProxy: {attr is JavaPeerProxy})");
-				}
-
-				// AOT-safe: GetCustomAttribute uses the runtime's attribute instantiation mechanism
-				var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-				Log ($"GetProxyForType: GetCustomAttribute<JavaPeerProxy> returned {(proxy != null ? proxy.GetType ().FullName : "null")}");
-				return s_proxyInstances [type] = proxy;
-			}
-		}
-
-		/// <summary>
-		/// Gets or creates a JavaPeerProxy instance for the given type.
-		/// The type should be the original type (e.g., Activity) which has the proxy applied as an attribute.
-		/// Using GetCustomAttribute is AOT and trimming safe, unlike Activator.CreateInstance.
-		/// </summary>
-		internal static JavaPeerProxy? GetOrCreateProxyInstance (Type type)
-		{
-			lock (s_proxyInstancesLock) {
-				if (s_proxyInstances.TryGetValue (type, out var cached)) {
-					return cached;
-				}
-
 				// Use GetCustomAttribute to get the proxy instance - this is AOT and trimming safe
 				// The proxy type extends JavaPeerProxy (which extends Attribute) and is applied to the original type
-				Log ($"GetOrCreateProxyInstance: Looking for JavaPeerProxy attribute on {type.FullName}");
-				JavaPeerProxy? proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-
-				if (proxy == null) {
-					Log ($"GetOrCreateProxyInstance: No JavaPeerProxy attribute found on {type.FullName}");
-				} else {
-					Log ($"GetOrCreateProxyInstance: Found {proxy.GetType ().FullName} on {type.FullName}");
-				}
-
+				var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+				Log ($"GetProxyForType: {type.FullName} -> {(proxy != null ? proxy.GetType ().FullName : "null")}");
 				return s_proxyInstances [type] = proxy;
 			}
 		}
 
 		/// <inheritdoc/>
-		/// TODO: This needs to use JavaPeerProxy to create the instance through generated factory method
 		public IJavaPeerable? CreatePeer (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{
 			Log ($"CreatePeer: handle=0x{handle:x}, targetType={targetType?.FullName ?? "null"}");
@@ -340,7 +306,7 @@ namespace Android.Runtime
 
 			// Get or create a JavaPeerProxy instance
 			// The type from typemap is now the proxy type itself, so we instantiate it directly
-			JavaPeerProxy? proxy = GetOrCreateProxyInstance (type);
+			JavaPeerProxy? proxy = GetProxyForType (type);
 			if (proxy == null) {
 				Log ($"GetFunctionPointer: Failed to get proxy for {type.FullName}");
 				return IntPtr.Zero;
