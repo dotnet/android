@@ -1862,6 +1862,16 @@ public class {{className}}
 	publicKey: default,
 	flags: default,
 	hashAlgorithm: AssemblyHashAlgorithm.None);
+
+	// Add the <Module> type (required as first type definition in ECMA-335)
+	// This is the global pseudo-type that holds module-level (global) members
+	_metadata.AddTypeDefinition (
+		attributes: default,
+		@namespace: default,
+		name: _metadata.GetOrAddString ("<Module>"),
+		baseType: default,
+		fieldList: MetadataTokens.FieldDefinitionHandle (1),
+		methodList: MetadataTokens.MethodDefinitionHandle (1));
 	}
 	
 	void AddAssemblyReferences ()
