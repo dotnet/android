@@ -569,8 +569,12 @@ class ManagedValueManager : JniRuntime.JniValueManager
 		if (!reference.IsValid)
 			return null;
 
+		Logger.Log (LogLevel.Error, "ManagedValueManager", $"CreatePeer: calling typeMap.CreatePeer for {targetType?.FullName}");
 		var peer = typeMap.CreatePeer (reference.Handle, JniHandleOwnership.DoNotTransfer, targetType) as IJavaPeerable;
+		Logger.Log (LogLevel.Error, "ManagedValueManager", $"CreatePeer: typeMap.CreatePeer returned {peer?.GetType ()?.FullName ?? "null"}");
+		Logger.Log (LogLevel.Error, "ManagedValueManager", $"CreatePeer: Disposing reference...");
 		JniObjectReference.Dispose (ref reference, options);
+		Logger.Log (LogLevel.Error, "ManagedValueManager", $"CreatePeer: returning peer");
 		return peer;
 	}
 }

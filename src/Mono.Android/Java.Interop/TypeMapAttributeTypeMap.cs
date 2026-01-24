@@ -227,9 +227,17 @@ namespace Android.Runtime
 			}
 
 			Log ($"CreatePeer: SUCCESS - Created {result!.GetType ().FullName} for Java class '{original_class_name}'");
-			if (Java.Interop.Runtime.IsGCUserPeer (result!.PeerReference.Handle)) {
+			Log ($"CreatePeer: Checking PeerReference...");
+			var peerRef = result!.PeerReference;
+			Log ($"CreatePeer: PeerReference.Handle = 0x{peerRef.Handle:x}");
+			if (Java.Interop.Runtime.IsGCUserPeer (peerRef.Handle)) {
+				Log ($"CreatePeer: Setting JniManagedPeerState...");
 				result.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
 			}
+			Log ($"CreatePeer: Returning result...");
+			Log ($"CreatePeer: Stack trace:\n{Environment.StackTrace}");
+			Log ($"CreatePeer: About to return!");
+			Console.Out.Flush ();
 
 			return result;
 
@@ -298,8 +306,15 @@ namespace Android.Runtime
 			}
 
 			// Use the generated factory method - no reflection needed!
-			result = proxy.CreateInstance (handle, transfer);
-			return result != null;
+			Log ($"TryCreateInstance: Calling proxy.CreateInstance for {type.FullName}...");
+			try {
+				result = proxy.CreateInstance (handle, transfer);
+				Log ($"TryCreateInstance: CreateInstance returned {(result != null ? result.GetType().FullName : "null")}");
+				return result != null;
+			} catch (Exception ex) {
+				Log ($"TryCreateInstance: CreateInstance threw {ex.GetType().Name}: {ex.Message}");
+				throw;
+			}
 		}
 
 		/// <inheritdoc/>
