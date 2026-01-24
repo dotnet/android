@@ -93,14 +93,6 @@ namespace Java.Interop
 			return false;
 		}
 
-		/// <inheritdoc/>
-		public bool TryGetInvokerType (Type type, [NotNullWhen (true)] out Type? invokerType)
-		{
-			// Legacy lookup via JavaObjectExtensions
-			invokerType = JavaObjectExtensions.GetInvokerType (type);
-			return invokerType != null;
-		}
-
 		[MethodImplAttribute (MethodImplOptions.InternalCall)]
 		static extern unsafe IntPtr monodroid_typemap_managed_to_java (Type type, byte* mvidptr);
 

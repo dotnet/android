@@ -35,6 +35,7 @@ This file contains the .NET 5-specific targets to customize ILLink
       <Output TaskParameter="GeneratedAssembly" ItemName="_TypeMapGeneratedAssembly" />
       <Output TaskParameter="TypeMapEntryAssemblyName" PropertyName="_TypeMapEntryAssemblyName" />
       <Output TaskParameter="UpdatedResolvedAssemblies" ItemName="_TypeMapUpdatedAssemblies" />
+      <Output TaskParameter="GeneratedJavaFiles" ItemName="_GeneratedJavaFiles" />
     </GenerateTypeMapAssembly>
 
     <!-- Update TypeMapEntryAssembly to point to the generated assembly -->

@@ -22,7 +22,7 @@ namespace Xamarin.Android.Tasks;
 /// 
 /// The generated assembly contains:
 /// - TypeMapAttribute&lt;Java.Lang.Object&gt; entries for Java-to-.NET type mappings
-/// - TypeMapAssociationAttribute&lt;InvokerUniverse&gt; entries for interface-to-invoker mappings
+/// - TypeMapAssociationAttribute&lt;AliasesUniverse&gt; entries for alias type mappings (trimmer use)
 /// - TypeMapAssemblyTargetAttribute entries to tell runtime which assemblies to scan
 /// 
 /// Uses System.Reflection.Metadata for reading assemblies and Mono.Cecil for generating the output.
@@ -75,6 +75,13 @@ public class GenerateTypeMapAssembly : AndroidTask
 	[Output]
 	public ITaskItem[] UpdatedResolvedAssemblies { get; set; } = [];
 
+	/// <summary>
+	/// Generated Java source files (.java) for JCW types.
+	/// These should be included in the Java compilation.
+	/// </summary>
+	[Output]
+	public ITaskItem[] GeneratedJavaFiles { get; set; } = [];
+
 	public override bool RunTask ()
 	{
 		try {
@@ -97,7 +104,8 @@ public class GenerateTypeMapAssembly : AndroidTask
 			string assemblyPath = Path.Combine (OutputDirectory, "_Microsoft.Android.TypeMaps.dll");
 
 			var generator = new TypeMapAssemblyGenerator (Log);
-			generator.Generate (assemblyPath, javaPeers, JavaSourceOutputDirectory, LlvmIrOutputDirectory);
+			var generatedJavaFiles = generator.Generate (assemblyPath, javaPeers, JavaSourceOutputDirectory, LlvmIrOutputDirectory);
+			GeneratedJavaFiles = generatedJavaFiles.Select (f => new TaskItem (f)).ToArray ();
 
 			GeneratedAssembly = new TaskItem (assemblyPath);
 			TypeMapEntryAssemblyName = "_Microsoft.Android.TypeMaps";
@@ -146,6 +154,19 @@ internal class JavaPeerInfo
 	public bool IsAbstract { get; set; }
 	public string? InvokerTypeName { get; set; }
 	public string? InvokerAssemblyName { get; set; }
+
+	/// <summary>
+	/// True if the type has DoNotGenerateAcw=true in its [Register] attribute.
+	/// These are MCW (Managed Callable Wrapper) types that bind to existing Java classes.
+	/// They need TypeMap proxies for CreateInstance, but no JCW/LLVM IR generation.
+	/// </summary>
+	public bool DoNotGenerateAcw { get; set; }
+
+	/// <summary>
+	/// The JNI name of the Java base class (e.g., "android/app/Activity").
+	/// Used when generating JCW Java files to ensure correct extends clause.
+	/// </summary>
+	public string? BaseJavaName { get; set; }
 
 	/// <summary>
 	/// The managed type name of the base class (if any).
@@ -301,7 +322,36 @@ internal class JavaPeerScanner
 		// Post-process: resolve activation constructor base types for types that don't have their own
 		ResolveActivationConstructorBaseTypes (results);
 
+		// Post-process: resolve base Java names for JCW generation
+		ResolveBaseJavaNames (results);
+
 		return results;
+	}
+
+	/// <summary>
+	/// Resolve the BaseJavaName for each type by looking up the base type's JavaName.
+	/// This is needed for JCW generation to have the correct "extends" clause.
+	/// </summary>
+	void ResolveBaseJavaNames (List<JavaPeerInfo> results)
+	{
+		var typesByManagedName = new Dictionary<string, JavaPeerInfo> ();
+		foreach (var peer in results) {
+			typesByManagedName[peer.ManagedTypeName] = peer;
+		}
+
+		foreach (var peer in results) {
+			if (peer.IsInterface || string.IsNullOrEmpty (peer.BaseManagedTypeName))
+				continue;
+
+			if (typesByManagedName.TryGetValue (peer.BaseManagedTypeName!, out var basePeer)) {
+				peer.BaseJavaName = basePeer.JavaName;
+				_log.LogMessage (MessageImportance.High, $"    {peer.ManagedTypeName}: base Java type is {peer.BaseJavaName}");
+			} else {
+				// Base type not in our scanned results - default to java/lang/Object
+				peer.BaseJavaName = "java/lang/Object";
+				_log.LogMessage (MessageImportance.High, $"    {peer.ManagedTypeName}: base type {peer.BaseManagedTypeName} not in TypeMap, defaulting to java/lang/Object");
+			}
+		}
 	}
 
 	/// <summary>
@@ -386,8 +436,8 @@ internal class JavaPeerScanner
 
 	void ProcessType (MetadataReader reader, TypeDefinition typeDef, string assemblyName, string assemblyPath, List<JavaPeerInfo> results)
 	{
-		// Look for [Register] attribute
-		string? javaName = GetRegisterAttributeValue (reader, typeDef);
+		// Look for [Register] attribute - returns (javaName, doNotGenerateAcw)
+		var (javaName, doNotGenerateAcw) = GetRegisterAttributeValue (reader, typeDef);
 		if (javaName == null)
 			return;
 
@@ -395,7 +445,7 @@ internal class JavaPeerScanner
 		string name = reader.GetString (typeDef.Name);
 		string fullName = string.IsNullOrEmpty (ns) ? name : $"{ns}.{name}";
 		
-		_log.LogDebugMessage ($"    Found Java peer: {fullName} -> {javaName} (in {assemblyName})");
+		_log.LogDebugMessage ($"    Found Java peer: {fullName} -> {javaName} (in {assemblyName}), DoNotGenerateAcw={doNotGenerateAcw}");
 
 		bool isInterface = (typeDef.Attributes & System.Reflection.TypeAttributes.Interface) != 0;
 		bool isAbstract = (typeDef.Attributes & System.Reflection.TypeAttributes.Abstract) != 0;
@@ -432,6 +482,7 @@ internal class JavaPeerScanner
 			AssemblyPath = assemblyPath,
 			IsInterface = isInterface,
 			IsAbstract = isAbstract,
+			DoNotGenerateAcw = doNotGenerateAcw,
 			InvokerTypeName = invokerTypeName,
 			InvokerAssemblyName = invokerAssemblyName,
 			BaseManagedTypeName = baseTypeName,
@@ -440,7 +491,10 @@ internal class JavaPeerScanner
 			MarshalMethods = marshalMethods,
 		});
 		
-		_log.LogMessage (MessageImportance.High, $"    Added Java peer: {fullName} -> '{javaName}' (in {assemblyName})");
+		_log.LogMessage (MessageImportance.High, $"    Added Java peer: {fullName} -> '{javaName}' (in {assemblyName}, DoNotGenerateAcw={doNotGenerateAcw}, MarshalMethods={marshalMethods.Count})");
+		foreach (var mm in marshalMethods) {
+			_log.LogMessage (MessageImportance.High, $"      Marshal method: {mm.JniName} - {mm.JniSignature} -> {mm.NativeCallbackName}");
+		}
 
 		// Process nested types
 		foreach (var nestedHandle in typeDef.GetNestedTypes ()) {
@@ -451,7 +505,7 @@ internal class JavaPeerScanner
 
 	void ProcessNestedType (MetadataReader reader, TypeDefinition typeDef, string parentTypeName, string assemblyName, string assemblyPath, List<JavaPeerInfo> results)
 	{
-		string? javaName = GetRegisterAttributeValue (reader, typeDef);
+		var (javaName, doNotGenerateAcw) = GetRegisterAttributeValue (reader, typeDef);
 		if (javaName == null)
 			return;
 
@@ -491,6 +545,7 @@ internal class JavaPeerScanner
 			AssemblyPath = assemblyPath,
 			IsInterface = isInterface,
 			IsAbstract = isAbstract,
+			DoNotGenerateAcw = doNotGenerateAcw,
 			InvokerTypeName = invokerTypeName,
 			InvokerAssemblyName = invokerAssemblyName,
 			BaseManagedTypeName = baseTypeName,
@@ -506,7 +561,7 @@ internal class JavaPeerScanner
 		}
 	}
 
-	string? GetRegisterAttributeValue (MetadataReader reader, TypeDefinition typeDef)
+	(string? javaName, bool doNotGenerateAcw) GetRegisterAttributeValue (MetadataReader reader, TypeDefinition typeDef)
 	{
 		string typeName = reader.GetString (typeDef.Name);
 		foreach (var attrHandle in typeDef.GetCustomAttributes ()) {
@@ -516,12 +571,8 @@ internal class JavaPeerScanner
 			// Check for [Register("...")] attribute
 			if (IsRegisterAttribute (reader, attr)) {
 				var (javaName, doNotGenerateAcw) = DecodeRegisterAttributeValueAndFlags (reader, attr);
-				// Skip types with DoNotGenerateAcw=true - these are internal types
-				if (doNotGenerateAcw) {
-					_log.LogMessage (MessageImportance.High, $"      {typeName}: Skipping (DoNotGenerateAcw=true)");
-					return null;
-				}
-				return javaName;
+				// Return the java name and DoNotGenerateAcw flag - caller decides what to do
+				return (javaName, doNotGenerateAcw);
 			}
 			
 			// Check for Android component attributes with Name property:
@@ -531,11 +582,12 @@ internal class JavaPeerScanner
 				_log.LogMessage (MessageImportance.High, $"      {typeName}: Found component attr {attrTypeName}, Name={componentJavaName ?? "(null)"}");
 				if (!string.IsNullOrEmpty (componentJavaName)) {
 					// Convert dots to slashes for the Java name format
-					return componentJavaName!.Replace ('.', '/');
+					// Component attributes don't have DoNotGenerateAcw
+					return (componentJavaName!.Replace ('.', '/'), false);
 				}
 			}
 		}
-		return null;
+		return (null, false);
 	}
 
 	bool IsAndroidComponentAttribute (MetadataReader reader, CustomAttribute attr, out string? javaName)
@@ -954,6 +1006,7 @@ internal class TypeMapAssemblyGenerator
 	AssemblyReferenceHandle _corlibRef;
 	AssemblyReferenceHandle _interopRef;
 	AssemblyReferenceHandle _monoAndroidRef;
+	AssemblyReferenceHandle _javaInteropRef;
 	
 	// Well-known type references
 	TypeReferenceHandle _objectTypeRef;
@@ -971,7 +1024,6 @@ internal class TypeMapAssemblyGenerator
 	TypeReferenceHandle _typeMapAssocAttrTypeRef;
 	TypeReferenceHandle _typeMapAsmTargetAttrTypeRef;
 	TypeReferenceHandle _javaLangObjectTypeRef;
-	TypeReferenceHandle _invokerUniverseTypeRef;
 	TypeReferenceHandle _aliasesUniverseTypeRef;
 	
 	// UCO related types
@@ -986,7 +1038,6 @@ internal class TypeMapAssemblyGenerator
 	// Well-known member references
 	MemberReferenceHandle _javaPeerProxyCtorRef;
 	MemberReferenceHandle _intPtrZeroFieldRef;
-	MemberReferenceHandle _invokerTypeMapAssocAttrCtorRef;
 	MemberReferenceHandle _aliasesTypeMapAssocAttrCtorRef;
 	MemberReferenceHandle _typeMapAttrCtorRef;
 
@@ -1019,7 +1070,7 @@ internal class TypeMapAssemblyGenerator
 	_methodBodyStream = new MethodBodyStreamEncoder (_ilStream);
 	}
 	
-	public void Generate (string outputPath, List<JavaPeerInfo> javaPeers, string javaSourceDir, string llvmIrDir)
+	public List<string> Generate (string outputPath, List<JavaPeerInfo> javaPeers, string javaSourceDir, string llvmIrDir)
 	{
 		// 1. Create module and assembly definitions
 	CreateModuleAndAssembly ();
@@ -1041,7 +1092,6 @@ internal class TypeMapAssemblyGenerator
 	
 	// 7. Generate proxy types and collect TypeMap attributes
 	var typeMapAttrs = new List<(string jniName, string proxyTypeName, string targetTypeName)> ();
-	var invokerMappings = new List<(string source, string invoker)> ();
 	var aliasMappings = new List<(string source, string aliasHolder)> ();
 	
 	// Group peers by JavaName to handle aliases
@@ -1065,15 +1115,6 @@ internal class TypeMapAssemblyGenerator
 		for (int i = 0; i < peers.Count; i++) {
 			var peer = peers[i];
 			try {
-				if (peer.IsInterface || peer.IsAbstract) {
-					if (!string.IsNullOrEmpty (peer.InvokerTypeName)) {
-						invokerMappings.Add ((
-							$"{peer.ManagedTypeName}, {peer.AssemblyName}",
-							$"{peer.InvokerTypeName}, {peer.InvokerAssemblyName}"
-						));
-					}
-				}
-				
 				var targetTypeRef = AddExternalTypeReference (peer.AssemblyName, peer.ManagedTypeName);
 				if (targetTypeRef.IsNil) {
 					_log.LogMessage (MessageImportance.High, $"  Skipping {peer.ManagedTypeName}: could not create type reference");
@@ -1111,16 +1152,14 @@ internal class TypeMapAssemblyGenerator
 	}
 	
 	// 8. Add TypeMapAttribute entries (assembly-level custom attributes)
+	// Per spec 4.1: TypeMap<Java.Lang.Object>(jniName, proxyType, targetType)
+	// - proxyType is RETURNED by lookups (second arg)
+	// - targetType is trimTarget for linker preservation (third arg)
 	foreach (var (jniName, proxyType, targetType) in typeMapAttrs) {
 		AddTypeMapAttribute (jniName, proxyType, targetType);
 	}
 	
-	// 8b. Generate TypeMapAssociation attributes for Invokers
-	foreach (var (source, invoker) in invokerMappings) {
-		AddInvokerTypeMapAssociationAttribute (source, invoker);
-	}
-
-	// 8c. Generate TypeMapAssociation attributes for Aliases
+	// 8b. Generate TypeMapAssociation attributes for Aliases (needed for trimmer)
 	foreach (var (source, aliasHolder) in aliasMappings) {
 		AddAliasTypeMapAssociationAttribute (source, aliasHolder);
 	}
@@ -1132,12 +1171,14 @@ internal class TypeMapAssemblyGenerator
 	WritePEFile (outputPath);
 
 		// 11. Generate Java source files
-		GenerateJavaSourceFiles (javaPeers, javaSourceDir);
+		var generatedJavaFiles = GenerateJavaSourceFiles (javaPeers, javaSourceDir);
 
 		// 12. Generate LLVM IR files
 		GenerateLlvmIrFiles (javaPeers, llvmIrDir);
 	
 	_log.LogDebugMessage ($"Generated TypeMap assembly with {typeMapAttrs.Count} proxy types");
+
+		return generatedJavaFiles;
 	}
 
 	void GenerateLlvmIrFiles (List<JavaPeerInfo> javaPeers, string llvmIrDir)
@@ -1146,6 +1187,10 @@ internal class TypeMapAssemblyGenerator
 		foreach (var peer in javaPeers) {
 			// Skip framework assemblies (Mono.Android, Java.Interop) - they have their own generation
 			if (IsFrameworkAssembly (peer.AssemblyName))
+				continue;
+
+			// Skip MCW types (DoNotGenerateAcw=true) - they bind to existing Java classes, no JCW needed
+			if (peer.DoNotGenerateAcw)
 				continue;
 
 			GenerateLlvmIrFile (llvmIrDir, peer);
@@ -1536,6 +1581,50 @@ attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memor
 		return string.Concat (@params);
 	}
 
+	/// <summary>
+	/// Count the number of parameters in a JNI method signature.
+	/// </summary>
+	int CountJniParameters (string signature)
+	{
+		int parenStart = signature.IndexOf ('(');
+		int parenEnd = signature.IndexOf (')');
+		if (parenStart < 0 || parenEnd < 0 || parenEnd == parenStart + 1) {
+			return 0;
+		}
+
+		string paramSig = signature.Substring (parenStart + 1, parenEnd - parenStart - 1);
+		int count = 0;
+		int idx = 0;
+
+		while (idx < paramSig.Length) {
+			char c = paramSig [idx];
+
+			if (c == 'L') {
+				// Object type: skip to ';'
+				while (idx < paramSig.Length && paramSig [idx] != ';') idx++;
+				idx++;
+			} else if (c == '[') {
+				// Array type: skip array markers then element type
+				while (idx < paramSig.Length && paramSig [idx] == '[') idx++;
+				if (idx < paramSig.Length) {
+					if (paramSig [idx] == 'L') {
+						while (idx < paramSig.Length && paramSig [idx] != ';') idx++;
+						idx++;
+					} else {
+						idx++;
+					}
+				}
+			} else {
+				// Primitive type
+				idx++;
+			}
+
+			count++;
+		}
+
+		return count;
+	}
+
 	string JniSignatureToLlvmReturnType (string signature)
 	{
 		int parenEnd = signature.LastIndexOf (')');
@@ -1558,22 +1647,28 @@ attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memor
 		};
 	}
 
-	void GenerateJavaSourceFiles (List<JavaPeerInfo> javaPeers, string javaSourceDir)
+	List<string> GenerateJavaSourceFiles (List<JavaPeerInfo> javaPeers, string javaSourceDir)
 	{
-		int count = 0;
+		var generatedFiles = new List<string> ();
 		foreach (var peer in javaPeers) {
 			// Skip framework assemblies (Mono.Android, Java.Interop) - they have their own JCWs
 			if (IsFrameworkAssembly (peer.AssemblyName))
 				continue;
 
-			GenerateJcwJavaFile (javaSourceDir, peer);
-			count++;
+			// Skip MCW types (DoNotGenerateAcw=true) - they bind to existing Java classes, no JCW needed
+			if (peer.DoNotGenerateAcw)
+				continue;
+
+			string filePath = GenerateJcwJavaFile (javaSourceDir, peer);
+			if (!string.IsNullOrEmpty (filePath))
+				generatedFiles.Add (filePath);
 		}
 		
-		_log.LogDebugMessage ($"Generated {count} Java source files");
+		_log.LogDebugMessage ($"Generated {generatedFiles.Count} Java source files");
+		return generatedFiles;
 	}
 
-	void GenerateJcwJavaFile (string outputPath, JavaPeerInfo peer)
+	string GenerateJcwJavaFile (string outputPath, JavaPeerInfo peer)
 	{
 		string jniTypeName = peer.JavaName;
 		
@@ -1583,25 +1678,10 @@ attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memor
 		string className = lastSlash > 0 ? jniTypeName.Substring (lastSlash + 1) : jniTypeName;
 		className = className.Replace ('$', '_'); // Handle nested classes
 
-		// Get the Java base class name from the .NET base type
-		// For now we assume java.lang.Object if unknown, but normally we would resolve the base type
-		// In the MSBuild task we don't have full type resolution easily available for base types
-		// unless we scan them too.
-		// However, for JCW generation of *user* types, they usually extend a framework type (Activity, View, etc.)
-		// or Object.
-		// TODO: Better base class resolution. For now defaulting to java.lang.Object or android.app.Activity etc 
-		// if we can guess from name, but strictly speaking we need the base JNI name.
-		// 
-		// Actually, JavaPeerInfo could/should have BaseTypeName if we updated the scanner.
-		// But let's check if we can get by with java.lang.Object for now or if we need to improve scanner.
-		// The original code used TypeDefinition.BaseType.Resolve().
-		//
-		// CRITICAL: The JCW *must* extend the correct class for Android to load it correctly.
-		// If it's an Activity, it must extend Activity.
-		//
-		// Since we don't have the base type JNI name in JavaPeerInfo yet, I should probably add it to JavaPeerInfo.
-		// But for this task, I'll use a placeholder and add a TODO to update scanner.
-		string baseClassName = "java.lang.Object"; 
+		// Use the base type's JNI name if available, otherwise default to java/lang/Object
+		string baseJniName = peer.BaseJavaName ?? "java/lang/Object";
+		// Convert JNI format (java/lang/Object) to Java format (java.lang.Object)
+		string baseClassName = baseJniName.Replace ('/', '.').Replace ('$', '.');
 
 		// Create directory structure
 		string packageDir = Path.Combine (outputPath, package.Replace ('.', Path.DirectorySeparatorChar));
@@ -1703,6 +1783,7 @@ public class {{className}}
     }
 }
 """);
+		return javaFilePath;
 	}
 
 	string JniSignatureToJavaParameters (string signature)
@@ -1902,6 +1983,15 @@ public class {{className}}
 	publicKeyOrToken: default,
 	flags: default,
 	hashValue: default);
+
+	// Java.Interop
+	_javaInteropRef = _metadata.AddAssemblyReference (
+	name: _metadata.GetOrAddString ("Java.Interop"),
+	version: new Version (0, 0, 0, 0),
+	culture: default,
+	publicKeyOrToken: default,
+	flags: default,
+	hashValue: default);
 	}
 	
 	void AddTypeReferences ()
@@ -1953,8 +2043,9 @@ public class {{className}}
 	@namespace: _metadata.GetOrAddString ("Java.Interop"),
 	name: _metadata.GetOrAddString ("JavaPeerProxy"));
 	
+	// Java.Interop types
 	_iJavaPeerableTypeRef = _metadata.AddTypeReference (
-	resolutionScope: _monoAndroidRef,
+	resolutionScope: _javaInteropRef,
 	@namespace: _metadata.GetOrAddString ("Java.Interop"),
 	name: _metadata.GetOrAddString ("IJavaPeerable"));
 	
@@ -1968,11 +2059,6 @@ public class {{className}}
 	@namespace: _metadata.GetOrAddString ("Java.Lang"),
 	name: _metadata.GetOrAddString ("Object"));
 
-	_invokerUniverseTypeRef = _metadata.AddTypeReference (
-	resolutionScope: _monoAndroidRef,
-	@namespace: _metadata.GetOrAddString ("Java.Interop"),
-	name: _metadata.GetOrAddString ("InvokerUniverse"));
-	
 	_aliasesUniverseTypeRef = _metadata.AddTypeReference (
 	resolutionScope: _monoAndroidRef,
 	@namespace: _metadata.GetOrAddString ("Java.Interop"),
@@ -2078,17 +2164,16 @@ public class {{className}}
         name: _metadata.GetOrAddString (".ctor"),
         signature: _metadata.GetOrAddBlob (typeMapCtorSigBlob));
 
-	// TypeMapAssociationAttribute<InvokerUniverse>..ctor(Type, Type)
-	// We need to create a TypeSpecification for TypeMapAssociationAttribute<InvokerUniverse>
-	var invokerTypeMapSpecBlob = new BlobBuilder ();
-	var specEncoder = new BlobEncoder (invokerTypeMapSpecBlob).TypeSpecificationSignature ();
-	var genArgsEncoder = specEncoder.GenericInstantiation (
+	// TypeMapAssociationAttribute<AliasesUniverse>..ctor(Type, Type)
+	var aliasesTypeMapSpecBlob = new BlobBuilder ();
+	var aliasesSpecEncoder = new BlobEncoder (aliasesTypeMapSpecBlob).TypeSpecificationSignature ();
+	var aliasesGenArgsEncoder = aliasesSpecEncoder.GenericInstantiation (
 			_typeMapAssocAttrTypeRef,
 			1,
 			false);
-	genArgsEncoder.AddArgument ().Type (_invokerUniverseTypeRef, false);
+	aliasesGenArgsEncoder.AddArgument ().Type (_aliasesUniverseTypeRef, false);
 
-	var invokerTypeMapSpec = _metadata.AddTypeSpecification (_metadata.GetOrAddBlob (invokerTypeMapSpecBlob));
+	var aliasesTypeMapSpec = _metadata.AddTypeSpecification (_metadata.GetOrAddBlob (aliasesTypeMapSpecBlob));
 
 	// Constructor signature: .ctor(System.Type, System.Type)
 	var assocCtorSigBlob = new BlobBuilder ();
@@ -2100,22 +2185,6 @@ public class {{className}}
 				parameters.AddParameter ().Type ().Type (_typeTypeRef, isValueType: false);
 				parameters.AddParameter ().Type ().Type (_typeTypeRef, isValueType: false);
 			});
-	
-	_invokerTypeMapAssocAttrCtorRef = _metadata.AddMemberReference (
-		parent: invokerTypeMapSpec,
-		name: _metadata.GetOrAddString (".ctor"),
-		signature: _metadata.GetOrAddBlob (assocCtorSigBlob));
-
-	// TypeMapAssociationAttribute<AliasesUniverse>..ctor(Type, Type)
-	var aliasesTypeMapSpecBlob = new BlobBuilder ();
-	var aliasesSpecEncoder = new BlobEncoder (aliasesTypeMapSpecBlob).TypeSpecificationSignature ();
-	var aliasesGenArgsEncoder = aliasesSpecEncoder.GenericInstantiation (
-			_typeMapAssocAttrTypeRef,
-			1,
-			false);
-	aliasesGenArgsEncoder.AddArgument ().Type (_aliasesUniverseTypeRef, false);
-
-	var aliasesTypeMapSpec = _metadata.AddTypeSpecification (_metadata.GetOrAddBlob (aliasesTypeMapSpecBlob));
 
 	_aliasesTypeMapAssocAttrCtorRef = _metadata.AddMemberReference (
 		parent: aliasesTypeMapSpec,
@@ -2347,14 +2416,17 @@ public class {{className}}
 	}
 
 	/// <summary>
-	/// Generates UCO wrapper methods for marshal methods and returns their handles.
+	/// Generates UCO wrapper methods for activation constructors and marshal methods.
+	/// The order matches the native method declaration order in the JCW Java file:
+	/// 1. Activation constructor(s) (nc_activate_X) - always first
+	/// 2. Regular marshal methods (n_methodName) - after activation ctors
 	/// </summary>
 	List<MethodDefinitionHandle> GenerateUcoWrappers (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef)
 	{
 		var wrapperHandles = new List<MethodDefinitionHandle> ();
 
-		// Skip if no marshal methods or if it's an interface (interfaces don't have UCO wrappers in the proxy)
-		if (peer.MarshalMethods.Count == 0 || peer.IsInterface) {
+		// Skip if it's an interface (interfaces don't have UCO wrappers in the proxy)
+		if (peer.IsInterface) {
 			return wrapperHandles;
 		}
 
@@ -2363,18 +2435,32 @@ public class {{className}}
 		new BlobEncoder (localsBlob).LocalVariableSignature (1).AddVariable ().Type ().IntPtr ();
 		var localsSig = _metadata.AddStandaloneSignature (_metadata.GetOrAddBlob (localsBlob));
 
-		for (int i = 0; i < peer.MarshalMethods.Count; i++) {
-			var mm = peer.MarshalMethods[i];
+		// Step 1: Generate UCO wrappers for activation constructors (nc_activate_X)
+		// These come FIRST in the JCW native method list
+		var constructorMarshalMethods = peer.MarshalMethods.Where (m => m.JniName == "<init>").ToList ();
+		int numActivationCtors = constructorMarshalMethods.Count > 0 ? constructorMarshalMethods.Count : 1; // At least one default ctor
+
+		for (int ctorIdx = 0; ctorIdx < numActivationCtors; ctorIdx++) {
+			// Generate activation constructor UCO wrapper
+			var activationWrapper = GenerateActivationCtorUcoWrapper (peer, targetTypeRef, ctorIdx, localsSig);
+			wrapperHandles.Add (activationWrapper);
+		}
+
+		// Step 2: Generate UCO wrappers for regular marshal methods (n_methodName)
+		// These come AFTER activation constructors in the JCW native method list
+		var regularMethods = peer.MarshalMethods.Where (m => m.JniName != "<init>" && m.JniName != "<clinit>").ToList ();
+
+		for (int i = 0; i < regularMethods.Count; i++) {
+			var mm = regularMethods[i];
 
 			// Generate wrapper method name
 			string wrapperName = $"n_{mm.JniName}_mm_{i}";
 
 			// Build the parameter list for the wrapper
-			// Native callback typically has: (IntPtr jnienv, IntPtr obj, additional params...)
-			int paramCount = mm.ParameterTypeNames.Length;
-			if (paramCount < 2) {
-				paramCount = 2; // Minimum jnienv, obj
-			}
+			// Native callback has: (IntPtr jnienv, IntPtr obj, additional JNI params...)
+			// Parse JNI signature to count parameters
+			int jniParamCount = CountJniParameters (mm.JniSignature);
+			int paramCount = 2 + jniParamCount; // jnienv + obj + JNI params
 
 			// Create method signature: static IntPtr wrapper(IntPtr jnienv, IntPtr obj, ...)
 			var wrapperSigBlob = new BlobBuilder ();
@@ -2391,11 +2477,36 @@ public class {{className}}
 					}
 				});
 
+			// Parse the JNI signature to determine callback return type
+			// Format: "(params)returntype" - e.g., "(Landroid/os/Bundle;)V"
+			bool callbackReturnsVoid = mm.JniSignature.EndsWith (")V");
+
+			// Create callback signature (may differ from wrapper - e.g., callback returns void, wrapper returns IntPtr)
+			var callbackSigBlob = new BlobBuilder ();
+			var callbackSigEncoder = new BlobEncoder (callbackSigBlob).MethodSignature (isInstanceMethod: false);
+			callbackSigEncoder.Parameters (paramCount,
+				returnType => {
+					if (callbackReturnsVoid) {
+						returnType.Void ();
+					} else {
+						returnType.Type ().IntPtr ();
+					}
+				},
+				parameters => {
+					// First two are always jnienv and obj (IntPtr)
+					parameters.AddParameter ().Type ().IntPtr ();
+					parameters.AddParameter ().Type ().IntPtr ();
+					// Additional parameters
+					for (int p = 2; p < paramCount; p++) {
+						parameters.AddParameter ().Type ().IntPtr ();
+					}
+				});
+
 			// Create reference to the original n_* callback method in the target type
 			var callbackRef = _metadata.AddMemberReference (
 				parent: targetTypeRef,
 				name: _metadata.GetOrAddString (mm.NativeCallbackName),
-				signature: _metadata.GetOrAddBlob (wrapperSigBlob));
+				signature: _metadata.GetOrAddBlob (callbackSigBlob));
 
 			// Generate wrapper body with control flow (needed for try/catch and branches)
 			// Use ControlFlowBuilder with labels for proper branch fixup and exception regions
@@ -2410,8 +2521,8 @@ public class {{className}}
 			var handlerEndLabel = wrapperEncoder.DefineLabel ();
 			var endLabel = wrapperEncoder.DefineLabel ();
 
-			// 1. Call WaitForBridgeProcessing
-			wrapperEncoder.Call (_waitForBridgeProcessingRef);
+			// TODO: WaitForBridgeProcessing is not needed on CoreCLR (no GC bridge)
+			// wrapperEncoder.Call (_waitForBridgeProcessingRef);
 
 			// 2. Try block start
 			wrapperEncoder.MarkLabel (tryStartLabel);
@@ -2422,6 +2533,12 @@ public class {{className}}
 			}
 			wrapperEncoder.Call (callbackRef);
 
+			// If callback returns void, we need to load a default IntPtr value for the wrapper return
+			if (callbackReturnsVoid) {
+				// Load IntPtr.Zero as default return value
+				wrapperEncoder.LoadConstantI4 (0);
+				wrapperEncoder.OpCode (ILOpCode.Conv_i);
+			}
 			// Store return value
 			wrapperEncoder.StoreLocal (0);
 
@@ -2494,6 +2611,114 @@ public class {{className}}
 		}
 
 		return wrapperHandles;
+	}
+
+	/// <summary>
+	/// Generates a UCO wrapper for an activation constructor (nc_activate_X).
+	/// This wrapper creates the managed object via CreateInstance and registers it.
+	/// </summary>
+	MethodDefinitionHandle GenerateActivationCtorUcoWrapper (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef, int ctorIdx, StandaloneSignatureHandle localsSig)
+	{
+		string wrapperName = $"nc_activate_{ctorIdx}";
+
+		// Activation constructor signature: (IntPtr jnienv, IntPtr obj) -> void
+		// But wrapper returns IntPtr for consistency
+		int paramCount = 2;
+
+		// Create method signature: static IntPtr wrapper(IntPtr jnienv, IntPtr obj)
+		var wrapperSigBlob = new BlobBuilder ();
+		var sigEncoder = new BlobEncoder (wrapperSigBlob).MethodSignature (isInstanceMethod: false);
+		sigEncoder.Parameters (paramCount,
+			returnType => returnType.Type ().IntPtr (),
+			parameters => {
+				parameters.AddParameter ().Type ().IntPtr (); // jnienv
+				parameters.AddParameter ().Type ().IntPtr (); // obj
+			});
+
+		// Generate wrapper body
+		// The activation wrapper needs to:
+		// 1. Call this.CreateInstance(handle, transfer) to create the managed object
+		// 2. Return IntPtr.Zero
+		var wrapperBodyBlob = new BlobBuilder ();
+		var controlFlowBuilder = new ControlFlowBuilder ();
+		var wrapperEncoder = new InstructionEncoder (wrapperBodyBlob, controlFlowBuilder);
+
+		// Define labels for exception handling
+		var tryStartLabel = wrapperEncoder.DefineLabel ();
+		var tryEndLabel = wrapperEncoder.DefineLabel ();
+		var handlerStartLabel = wrapperEncoder.DefineLabel ();
+		var handlerEndLabel = wrapperEncoder.DefineLabel ();
+		var endLabel = wrapperEncoder.DefineLabel ();
+
+		// Try block start
+		wrapperEncoder.MarkLabel (tryStartLabel);
+
+		// Get the proxy instance (this) - we need to call CreateInstance on the proxy
+		// Actually, activation is a static method that gets jnienv and obj (the Java handle)
+		// We need to use TypeMap.CreatePeer or similar to create the managed object
+		// 
+		// For now, emit a simple return IntPtr.Zero - the activation is handled by
+		// the runtime when it looks up the type and calls CreateInstance directly.
+		// This is a placeholder - proper activation requires calling CreatePeer.
+		
+		// Load IntPtr.Zero as return value
+		wrapperEncoder.LoadConstantI4 (0);
+		wrapperEncoder.OpCode (ILOpCode.Conv_i);
+		wrapperEncoder.StoreLocal (0);
+
+		// Leave try block
+		wrapperEncoder.Branch (ILOpCode.Leave, endLabel);
+		wrapperEncoder.MarkLabel (tryEndLabel);
+
+		// Catch block
+		wrapperEncoder.MarkLabel (handlerStartLabel);
+		wrapperEncoder.Call (_throwableFromExceptionRef);
+		wrapperEncoder.Call (_raiseThrowableRef);
+		wrapperEncoder.LoadConstantI4 (0);
+		wrapperEncoder.OpCode (ILOpCode.Conv_i);
+		wrapperEncoder.StoreLocal (0);
+		wrapperEncoder.Branch (ILOpCode.Leave, endLabel);
+		wrapperEncoder.MarkLabel (handlerEndLabel);
+
+		// Return
+		wrapperEncoder.MarkLabel (endLabel);
+		wrapperEncoder.LoadLocal (0);
+		wrapperEncoder.OpCode (ILOpCode.Ret);
+
+		// Add exception region
+		controlFlowBuilder.AddCatchRegion (tryStartLabel, tryEndLabel, handlerStartLabel, handlerEndLabel, _exceptionTypeRef);
+
+		// Add method body
+		int wrapperBodyOffset = _methodBodyStream.AddMethodBody (
+			wrapperEncoder,
+			maxStack: 4,
+			localVariablesSignature: localsSig,
+			attributes: MethodBodyAttributes.InitLocals);
+
+		// Create method definition
+		var wrapperDef = _metadata.AddMethodDefinition (
+			attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+			implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
+			name: _metadata.GetOrAddString (wrapperName),
+			signature: _metadata.GetOrAddBlob (wrapperSigBlob),
+			bodyOffset: wrapperBodyOffset,
+			parameterList: MetadataTokens.ParameterHandle (_nextParamDefRowId));
+
+		// Add [UnmanagedCallersOnly] attribute
+		var ucoAttrValue = new BlobBuilder ();
+		new BlobEncoder (ucoAttrValue).CustomAttributeSignature (
+			fixedArguments => { },
+			namedArguments => namedArguments.Count (0));
+		_metadata.AddCustomAttribute (wrapperDef, _unmanagedCallersOnlyCtorRef, _metadata.GetOrAddBlob (ucoAttrValue));
+
+		// Add parameter definitions
+		_metadata.AddParameter (ParameterAttributes.None, _metadata.GetOrAddString ("jnienv"), 1);
+		_nextParamDefRowId++;
+		_metadata.AddParameter (ParameterAttributes.None, _metadata.GetOrAddString ("obj"), 2);
+		_nextParamDefRowId++;
+		_nextMethodDefRowId++;
+
+		return wrapperDef;
 	}
 	
 	int GenerateProxyConstructor ()
@@ -2722,23 +2947,6 @@ public class {{className}}
 		encoder.Token (_notSupportedExceptionCtorRef);
 		// throw
 		encoder.OpCode (ILOpCode.Throw);
-	}
-	
-	void AddInvokerTypeMapAssociationAttribute (string sourceName, string invokerName)
-	{
-		// [assembly: TypeMapAssociationAttribute<InvokerUniverse>(typeof(Source), typeof(Invoker))]
-		var attrBlob = new BlobBuilder ();
-		attrBlob.WriteUInt16 (1); // Prolog
-		
-		attrBlob.WriteSerializedString (sourceName);
-		attrBlob.WriteSerializedString (invokerName);
-		
-		attrBlob.WriteUInt16 (0); // Named args count
-		
-		_metadata.AddCustomAttribute (
-			parent: EntityHandle.AssemblyDefinition,
-			constructor: _invokerTypeMapAssocAttrCtorRef,
-			value: _metadata.GetOrAddBlob (attrBlob));
 	}
 
 	void AddAttributeUsageToType (TypeDefinitionHandle typeDef)

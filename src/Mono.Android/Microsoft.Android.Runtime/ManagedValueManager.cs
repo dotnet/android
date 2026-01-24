@@ -259,6 +259,26 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 	public override void ActivatePeer (IJavaPeerable? self, JniObjectReference reference, ConstructorInfo cinfo, object?[]? argumentValues)
 	{
+		// Check if the type is a JavaPeerProxy (TypeMap v2 proxy type)
+		// If so, use CreateInstance instead of reflection-based activation
+		var declType = cinfo.DeclaringType;
+		if (declType != null && typeof (JavaPeerProxy).IsAssignableFrom (declType)) {
+			try {
+				ActivateViaProxy (reference, declType);
+				return;
+			} catch (Exception e) {
+				var m = string.Format (
+						CultureInfo.InvariantCulture,
+						"Could not activate {{ PeerReference={0} IdentityHashCode=0x{1} Java.Type={2} }} via proxy for managed type '{3}'.",
+						reference,
+						GetJniIdentityHashCode (reference).ToString ("x", CultureInfo.InvariantCulture),
+						JniEnvironment.Types.GetJniTypeNameFromInstance (reference),
+						declType.FullName);
+				Debug.WriteLine (m);
+				throw new NotSupportedException (m, e);
+			}
+		}
+
 		try {
 			ActivateViaReflection (reference, cinfo, argumentValues);
 		} catch (Exception e) {
@@ -273,6 +293,25 @@ class ManagedValueManager : JniRuntime.JniValueManager
 
 			throw new NotSupportedException (m, e);
 		}
+	}
+
+	void ActivateViaProxy (JniObjectReference reference, Type proxyType)
+	{
+		// Get the proxy instance from the proxy type (which has self-applied attribute)
+		var proxy = proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+		if (proxy == null) {
+			throw new InvalidOperationException ($"Proxy type {proxyType.FullName} does not have a JavaPeerProxy attribute.");
+		}
+
+		// Create the peer instance using the proxy's CreateInstance method
+		var handle = reference.Handle;
+		var peer = proxy.CreateInstance (handle, JniHandleOwnership.DoNotTransfer);
+		if (peer == null) {
+			throw new InvalidOperationException ($"Proxy {proxyType.FullName}.CreateInstance returned null.");
+		}
+
+		// The instance should already have its peer reference set by CreateInstance
+		// (via the activation constructor it calls internally)
 	}
 
 	void ActivateViaReflection (JniObjectReference reference, ConstructorInfo cinfo, object?[]? argumentValues)

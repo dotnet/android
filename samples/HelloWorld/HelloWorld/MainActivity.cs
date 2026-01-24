@@ -55,7 +55,9 @@ namespace HelloWorld
 		[DllImport ("xamarin-app", EntryPoint = "Java_example_MainActivity_n_1onCreate__Landroid_os_Bundle_2V")]
 		static extern void native_invoke_onCreate (IntPtr jnienv, IntPtr thiz, IntPtr bundle);
 
-		[System.Runtime.InteropServices.UnmanagedCallersOnly]
+		// Note: This method must NOT have [UnmanagedCallersOnly] because the TypeMap proxy's
+		// UCO wrapper calls this method via IL 'call' instruction. The UCO wrapper handles
+		// the native-to-managed transition; this callback is called from managed code.
 		static void n_onCreate (IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState)
 		{
 			var __this = Java.Lang.Object.GetObject<MainActivity> (native__this, JniHandleOwnership.DoNotTransfer);

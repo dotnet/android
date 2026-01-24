@@ -110,8 +110,8 @@
     <Compile Include="Java.Interop\ITypeMap.cs" />
     <Compile Include="Java.Interop\LlvmIrTypeMap.cs" />
     <Compile Include="Java.Interop\TypeMapAttributeTypeMap.cs" />
+    <Compile Include="Java.Interop\TypeMapTypeManager.cs" />
     <Compile Include="Java.Interop\JavaPeerProxy.cs" />
-    <Compile Include="Java.Interop\InvokerUniverse.cs" />
     <Compile Include="Java.Interop\AliasesUniverse.cs" />
     <Compile Include="Java.Interop\JavaInteropAliasesAttribute.cs" />
     <Compile Include="Java.Lang.Invoke\MethodType.cs" />

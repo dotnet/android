@@ -1574,8 +1574,10 @@ because xbuild doesn't support framework reference assemblies.
       SupportedAbis="@(_BuildTargetAbis)">
   </GenerateACWMap>
 
-  <!-- JCW generation is still required - it generates the .java files that are compiled into classes.dex -->
+  <!-- JCW generation for MonoVM - generates the .java files that are compiled into classes.dex.
+       For CoreCLR, JCW generation is handled by GenerateTypeMapAssembly task instead. -->
   <GenerateJavaCallableWrappers
+      Condition=" '$(_AndroidRuntime)' != 'CoreCLR' "
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       OutputDirectory="$(IntermediateOutputPath)android\src"
       ResolvedAssemblies="@(_ResolvedAssemblies)"

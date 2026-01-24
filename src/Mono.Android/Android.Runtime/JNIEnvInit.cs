@@ -140,7 +140,7 @@ namespace Android.Runtime
 			TypeMap = CreateTypeMap ();
 
 			// Create unified managers using the type map
-			var typeManager = new AndroidTypeManager (TypeMap, args->jniAddNativeMethodRegistrationAttributePresent != 0);
+			var typeManager = CreateTypeManager (TypeMap, args->jniAddNativeMethodRegistrationAttributePresent != 0);
 			var valueManager = CreateValueManager (TypeMap);
 
 			androidRuntime = new AndroidRuntime (
@@ -163,7 +163,7 @@ namespace Android.Runtime
 
 			// For CoreCLR/NativeAOT, provide the GetFunctionPointer callback for Type Mapping API marshal methods
 			if (RuntimeFeature.IsCoreClrRuntime) {
-				args->getFunctionPointerFn = (IntPtr)(delegate* unmanaged<char*, int, int, IntPtr*, void>)&GetFunctionPointer;
+				args->getFunctionPointerFn = (IntPtr)(delegate* unmanaged<byte*, int, int, IntPtr*, void>)&GetFunctionPointer;
 				RuntimeNativeMethods.monodroid_log (LogLevel.Info, LogCategories.Default,
 					$"JNIEnvInit: Set getFunctionPointerFn to 0x{args->getFunctionPointerFn:x}");
 			} else {
@@ -180,18 +180,19 @@ namespace Android.Runtime
 		}
 
 		[UnmanagedCallersOnly]
-		internal static unsafe void GetFunctionPointer (char* classNamePtr, int classNameLength, int methodIndex, IntPtr* targetPtr)
+		internal static unsafe void GetFunctionPointer (byte* classNamePtr, int classNameLength, int methodIndex, IntPtr* targetPtr)
 		{
-			// Zero-copy span creation - just wraps the pointer, no allocation
-			ReadOnlySpan<char> classNameSpan = new ReadOnlySpan<char>(classNamePtr, classNameLength);
+			// The class name comes from LLVM IR as UTF-8 bytes
+			ReadOnlySpan<byte> utf8Bytes = new ReadOnlySpan<byte>(classNamePtr, classNameLength);
+			string className = System.Text.Encoding.UTF8.GetString (utf8Bytes);
 
-			*targetPtr = TypeMap.GetFunctionPointer (classNameSpan, methodIndex);
+			*targetPtr = TypeMap.GetFunctionPointer (className.AsSpan(), methodIndex);
 			if (*targetPtr == IntPtr.Zero) {
 				Logger.Log (LogLevel.Error, "monodroid-typemap",
-					$"GetFunctionPointer: No function pointer found for class='{classNameSpan.ToString()}', methodIndex={methodIndex}");
+					$"GetFunctionPointer: No function pointer found for class='{className}', methodIndex={methodIndex}");
 			} else {
 				Logger.Log (LogLevel.Info, "monodroid-typemap",
-					$"GetFunctionPointer: Returning 0x{(*targetPtr):X} for class='{classNameSpan.ToString()}', methodIndex={methodIndex}");
+					$"GetFunctionPointer: Returning 0x{(*targetPtr):X} for class='{className}', methodIndex={methodIndex}");
 			}
 		}
 
@@ -246,16 +247,32 @@ namespace Android.Runtime
 			}
 		}
 
+		private static JniRuntime.JniTypeManager CreateTypeManager (ITypeMap typeMap, bool jniAddNativeMethodRegistrationAttributePresent)
+		{
+			if (RuntimeFeature.IsCoreClrRuntime) {
+				// CoreCLR and NativeAOT both use ManagedTypeManager
+				return new TypeMapTypeManager (typeMap);
+			}
+
+			if (RuntimeFeature.IsMonoRuntime) {
+				return new AndroidTypeManager (typeMap, jniAddNativeMethodRegistrationAttributePresent);
+			}
+
+			throw new NotSupportedException ("Internal error: unknown runtime not supported");
+		}
+
 		private static JniRuntime.JniValueManager CreateValueManager (ITypeMap typeMap)
 		{
 			if (RuntimeFeature.IsCoreClrRuntime) {
 				// CoreCLR and NativeAOT both use ManagedValueManager with the CLR GC bridge
 				return new ManagedValueManager (typeMap);
-			} else if (RuntimeFeature.IsMonoRuntime) {
-				return new AndroidValueManager (typeMap);
-			} else {
-				throw new NotSupportedException ("Internal error: unknown runtime not supported");
 			}
+			
+			if (RuntimeFeature.IsMonoRuntime) {
+				return new AndroidValueManager (typeMap);
+			}
+			
+			throw new NotSupportedException ("Internal error: unknown runtime not supported");
 		}
 
 		static void SetSynchronizationContext () =>

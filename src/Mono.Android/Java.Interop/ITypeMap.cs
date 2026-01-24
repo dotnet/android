@@ -17,11 +17,6 @@ namespace Android.Runtime
 		bool TryGetTypesForJniName (string jniSimpleReference, [NotNullWhen (true)] out IEnumerable<Type>? types);
 
 		/// <summary>
-		/// Tries to get the invoker type for an interface or abstract type.
-		/// </summary>
-		bool TryGetInvokerType (Type type, [NotNullWhen (true)] out Type? invokerType);
-
-		/// <summary>
 		/// Tries to get the JNI type name for a given .NET type.
 		/// </summary>
 		bool TryGetJniNameForType (Type type, [NotNullWhen (true)] out string? jniName);

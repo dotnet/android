@@ -30,9 +30,4 @@ static class RuntimeFeature
 	[FeatureGuard (typeof (RequiresUnreferencedCodeAttribute))]
 	internal static bool StartupHookSupport { get; } =
 		AppContext.TryGetSwitch (StartupHookProviderSwitch, out bool isEnabled) ? isEnabled : StartupHookSupportEnabledByDefault;
-
-	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (IsDynamicMemberRegistrationEnabled)}")]
-	[FeatureGuard (typeof (RequiresUnreferencedCodeAttribute))]
-	internal static bool IsDynamicMemberRegistrationEnabled { get; } =
-		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (IsDynamicMemberRegistrationEnabled)}", out bool isEnabled) ? isEnabled : IsDynamicMemberRegistrationEnabledByDefault;
 }

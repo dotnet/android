@@ -3,7 +3,7 @@ namespace Java.Interop
 	/// <summary>
 	/// A type map universe used for linking aliased types to their alias holder.
 	/// This is separate from the main <see cref="Java.Lang.Object"/> universe
-	/// and <see cref="InvokerUniverse"/> to prevent key collisions.
+	/// to prevent key collisions.
 	/// </summary>
 	/// <remarks>
 	/// This type is used as a generic parameter for <c>TypeMapAssociationAttribute&lt;AliasesUniverse&gt;</c>

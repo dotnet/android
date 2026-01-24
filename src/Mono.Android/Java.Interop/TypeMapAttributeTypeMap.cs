@@ -18,7 +18,6 @@ namespace Android.Runtime
 	class TypeMapAttributeTypeMap : ITypeMap
 	{
 		readonly IReadOnlyDictionary<string, Type> _externalTypeMap;
-		readonly IReadOnlyDictionary<Type, Type> _invokerTypeMap;
 
 		// Cache of JavaPeerProxy instances keyed by the target type
 		static readonly Dictionary<Type, JavaPeerProxy?> s_proxyInstances = new ();
@@ -55,14 +54,6 @@ namespace Android.Runtime
 				Log ($"TypeMapAttributeTypeMap: EXCEPTION creating external type map: {ex.GetType ().Name}: {ex.Message}");
 				throw;
 			}
-			try {
-				// Per spec section 4.2 and 9.1: use Java.Lang.Object for invoker mappings
-				_invokerTypeMap = TypeMapping.GetOrCreateProxyTypeMapping<Java.Lang.Object> ();
-			} catch (Exception ex) {
-				Log ($"TypeMapAttributeTypeMap: EXCEPTION creating invoker type map: {ex.GetType ().Name}: {ex.Message}");
-				throw;
-			}
-			Log ("TypeMapAttributeTypeMap: Initialized external and invoker type mappings");
 		}
 
 		/// <inheritdoc/>
@@ -94,14 +85,6 @@ namespace Android.Runtime
 			Log ($"TryGetTypesForJniName: '{jniSimpleReference}' -> {type.FullName}");
 			types = [type];
 			return true;
-		}
-
-		/// <inheritdoc/>
-		public bool TryGetInvokerType (Type type, [NotNullWhen (true)] out Type? invokerType)
-		{
-			var result = _invokerTypeMap.TryGetValue (type, out invokerType);
-			Log ($"TryGetInvokerType: {type.FullName} -> {(result ? invokerType!.FullName : "NOT FOUND")}");
-			return result;
 		}
 
 		/// <inheritdoc/>
@@ -164,6 +147,7 @@ namespace Android.Runtime
 			Log ($"CreatePeer: handle=0x{handle:x}, targetType={targetType?.FullName ?? "null"}");
 			
 			Type? type = null;
+			Type? proxyType = null;
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
 			string? class_name = GetClassNameFromJavaClassHandle (class_ptr);
 			string? original_class_name = class_name;
@@ -174,6 +158,11 @@ namespace Android.Runtime
 						_externalTypeMap.TryGetValue (class_name, out type);
 						if (type != null) {
 							Log ($"CreatePeer: Found type {type.FullName} for Java class '{class_name}'");
+							// If the found type is a JavaPeerProxy, it's our generated proxy
+							if (typeof (JavaPeerProxy).IsAssignableFrom (type)) {
+								proxyType = type;
+								Log ($"CreatePeer: {type.FullName} is a JavaPeerProxy");
+							}
 							break;
 						}
 						Log ($"CreatePeer: No mapping for '{class_name}', checking superclass...");
@@ -194,7 +183,17 @@ namespace Android.Runtime
 				class_ptr = IntPtr.Zero;
 			}
 
-			if (targetType != null &&
+			// If we found a proxy type, get the target type from it
+			// If we have a targetType hint and it's assignable, prefer it
+			if (proxyType != null) {
+				if (targetType != null) {
+					Log ($"CreatePeer: Using targetType {targetType.FullName} with proxy {proxyType.FullName}");
+					type = targetType;
+				} else {
+					// Use the proxy's target type (we'll create instance via proxy)
+					type = proxyType;
+				}
+			} else if (targetType != null &&
 					(type == null ||
 					 !targetType.IsAssignableFrom (type))) {
 				Log ($"CreatePeer: Using targetType {targetType.FullName} instead of {type?.FullName ?? "null"}");
@@ -210,20 +209,6 @@ namespace Android.Runtime
 						CreateJavaLocationException ());
 			}
 
-			if (type.IsInterface || type.IsAbstract) {
-				Log ($"CreatePeer: Type {type.FullName} is interface/abstract, looking for invoker...");
-				if (!TryGetInvokerType (type, out var invokerType)) {
-					throw new InvalidOperationException (
-						FormattableString.Invariant ($"Cannot create instance of interface or abstract type '{type.FullName}'. No invoker type found."),
-						CreateJavaLocationException ());
-				}
-				if (invokerType == null)
-					throw new NotSupportedException ("Unable to find Invoker for type '" + type.FullName + "'. Was it linked away?",
-						CreateJavaLocationException ());
-				Log ($"CreatePeer: Using invoker type {invokerType.FullName}");
-				type = invokerType;
-			}
-
 			if (!TryGetJniNameForType (type, out string? jniName) || string.IsNullOrEmpty (jniName)) {
 				throw new ArgumentException ($"Could not determine Java type corresponding to `{type.AssemblyQualifiedName}`.", nameof (targetType));
 			}
@@ -234,7 +219,7 @@ namespace Android.Runtime
 			}
 
 			Log ($"CreatePeer: Activating instance of {type.FullName}...");
-			if (!TryCreateInstance (type, handle, transfer, out var result)) {
+			if (!TryCreateInstance (type, proxyType, handle, transfer, out var result)) {
 				var key_handle = JNIEnv.IdentityHash (handle);
 				JNIEnv.DeleteRef (handle, transfer);
 				throw new NotSupportedException (FormattableString.Invariant (
@@ -284,13 +269,30 @@ namespace Android.Runtime
 		/// Tries to create an instance of the specified type using AOT-safe factory method.
 		/// Uses the generated proxy's CreateInstance method to avoid reflection.
 		/// </summary>
+		/// <param name="type">The target type to create (e.g., HelloWorld.MainActivity)</param>
+		/// <param name="proxyType">The proxy type from TypeMap lookup, or null to look it up via attributes</param>
 		/// <returns>true if the instance was created successfully; false if no proxy or factory was found.</returns>
-		bool TryCreateInstance (Type type, IntPtr handle, JniHandleOwnership transfer, [NotNullWhen (true)] out IJavaPeerable? result)
+		bool TryCreateInstance (Type type, Type? proxyType, IntPtr handle, JniHandleOwnership transfer, [NotNullWhen (true)] out IJavaPeerable? result)
 		{
-			// Get the proxy for this type - it has the AOT-safe CreateInstance factory method
-			JavaPeerProxy? proxy = GetProxyForType (type);
+			JavaPeerProxy? proxy = null;
+
+			// If we have a proxy type from the TypeMap, instantiate it
+			if (proxyType != null && typeof (JavaPeerProxy).IsAssignableFrom (proxyType)) {
+				try {
+					proxy = (JavaPeerProxy?) Activator.CreateInstance (proxyType);
+					Log ($"TryCreateInstance: Instantiated proxy {proxyType.FullName} for {type.FullName}");
+				} catch (Exception ex) {
+					Log ($"TryCreateInstance: Failed to instantiate proxy {proxyType.FullName}: {ex.Message}");
+				}
+			}
+
+			// Fallback: try to get proxy from type's attributes
 			if (proxy == null) {
-				Log ($"TryCreateInstance: No JavaPeerProxy attribute on {type.FullName}");
+				proxy = GetProxyForType (type);
+			}
+
+			if (proxy == null) {
+				Log ($"TryCreateInstance: No JavaPeerProxy found for {type.FullName}");
 				result = null;
 				return false;
 			}

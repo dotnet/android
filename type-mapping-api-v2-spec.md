@@ -268,31 +268,23 @@ public interface IOnClickListener : IJavaObject { ... }
 internal class IOnClickListenerInvoker : Java.Lang.Object, IOnClickListener { ... }
 ```
 
-**Solution:** Use `TypeMapAssociation<Java.Lang.Object>` to map interfaces to their invokers:
+**Solution:** The interface proxy's `CreateInstance` method directly instantiates the invoker:
 
 ```csharp
-[assembly: TypeMapAssociation<Java.Lang.Object>(typeof(IOnClickListener), typeof(IOnClickListenerInvoker))]
-```
-
-This uses `Java.Lang.Object` as the universe because invokers ARE `Java.Lang.Object` subclasses - they're concrete types that wrap Java objects. The `GetOrCreateProxyTypeMapping<T>()` method name ("proxy type mapping") reflects this - invokers are proxy types for interfaces.
-
-**Why this is needed for trimming:**
-
-The `TypeMapAssociation` ensures that whenever `IOnClickListener` is preserved by the trimmer, the `IOnClickListenerInvoker` is also preserved. Without this association:
-- The app uses `IOnClickListener` (e.g., as a parameter type)
-- The trimmer preserves `IOnClickListener`
-- But `IOnClickListenerInvoker` is never directly referenced, so it gets trimmed
-- At runtime, when Java returns an `OnClickListener` object, we can't wrap it - crash!
-
-**Runtime usage:**
-```csharp
-// When we need to wrap a Java object that implements IOnClickListener:
-if (_invokerTypeMap.TryGetValue(typeof(IOnClickListener), out Type invokerType))
+// Interface proxy - no TypeMapAssociation needed
+[IOnClickListener_Proxy]
+public sealed class IOnClickListener_Proxy : JavaPeerProxy
 {
-    // invokerType == typeof(IOnClickListenerInvoker)
-    // Use proxy to create instance...
+    public override IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer)
+        => new IOnClickListenerInvoker(handle, transfer);  // Direct instantiation
 }
 ```
+
+> **EXPERIMENTAL (2026-01-24):** We removed `TypeMapAssociation<InvokerUniverse>` for interface-to-invoker mappings. The invoker type is baked directly into the interface proxy's `CreateInstance` method at build time, eliminating the need for runtime lookup. This simplifies the architecture but may need to be rolled back if trimming issues arise (e.g., if the invoker gets trimmed because it's only referenced from generated code). The trimmer should preserve the invoker via the proxy's `CreateInstance` body, but this needs validation.
+
+**Why this works for trimming:**
+
+The interface proxy references the invoker type directly in its `CreateInstance` method body. When the trimmer preserves the interface proxy (via the `TypeMap` attribute's `trimTarget`), it follows the method body and preserves the invoker constructor call. This is simpler than using `TypeMapAssociation` and avoids maintaining a separate invoker lookup table at runtime.
 
 ### 4.2.1 Proxy Attributes for Interfaces, Invokers, and Implementors
 
@@ -1291,7 +1283,8 @@ class MyActivityA : Activity { ... }
 
 ```csharp
 [assembly: TypeMap<Java.Lang.Object>("com/example/MainActivity", typeof(com_example_MainActivity_Proxy), typeof(MainActivity))]
-[assembly: TypeMapAssociation<Java.Lang.Object>(typeof(View.IOnClickListener), typeof(View.IOnClickListenerInvoker))]
+// Note: Interface-to-invoker mappings are handled directly in the interface proxy's CreateInstance method,
+// not via TypeMapAssociation attributes
 ```
 
 ### B.2 Java JCW (com/example/MainActivity.java)
@@ -1370,6 +1363,6 @@ attributes #0 = { noinline nounwind "frame-pointer"="non-leaf" }
 
 ---
 
-*Document version: 2.18*
-*Last updated: 2026-01-23*
+*Document version: 2.19*
+*Last updated: 2026-01-24*
 *Based on PoC implementation in dotnet/android repository*
