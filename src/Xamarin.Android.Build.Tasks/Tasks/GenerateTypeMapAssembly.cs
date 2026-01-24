@@ -44,6 +44,18 @@ public class GenerateTypeMapAssembly : AndroidTask
 	public string OutputDirectory { get; set; } = "";
 
 	/// <summary>
+	/// Output directory for generated Java source files (.java).
+	/// </summary>
+	[Required]
+	public string JavaSourceOutputDirectory { get; set; } = "";
+
+	/// <summary>
+	/// Output directory for generated LLVM IR files (.ll).
+	/// </summary>
+	[Required]
+	public string LlvmIrOutputDirectory { get; set; } = "";
+
+	/// <summary>
 	/// The generated TypeMap assembly path.
 	/// </summary>
 	[Output]
@@ -84,7 +96,7 @@ public class GenerateTypeMapAssembly : AndroidTask
 			string assemblyPath = Path.Combine (OutputDirectory, "_Microsoft.Android.TypeMaps.dll");
 
 			var generator = new TypeMapAssemblyGenerator (Log);
-			generator.Generate (assemblyPath, javaPeers);
+			generator.Generate (assemblyPath, javaPeers, JavaSourceOutputDirectory, LlvmIrOutputDirectory);
 
 			GeneratedAssembly = new TaskItem (assemblyPath);
 			TypeMapEntryAssemblyName = "_Microsoft.Android.TypeMaps";
@@ -133,6 +145,11 @@ internal class JavaPeerInfo
 	public bool IsAbstract { get; set; }
 	public string? InvokerTypeName { get; set; }
 	public string? InvokerAssemblyName { get; set; }
+
+	/// <summary>
+	/// The managed type name of the base class (if any).
+	/// </summary>
+	public string? BaseManagedTypeName { get; set; }
 
 	/// <summary>
 	/// True if the type has an activation constructor (IntPtr, JniHandleOwnership).
@@ -312,6 +329,11 @@ internal class JavaPeerScanner
 		bool isInterface = (typeDef.Attributes & System.Reflection.TypeAttributes.Interface) != 0;
 		bool isAbstract = (typeDef.Attributes & System.Reflection.TypeAttributes.Abstract) != 0;
 
+		string? baseTypeName = null;
+		if (!isInterface && !typeDef.BaseType.IsNil) {
+			baseTypeName = GetFullTypeName (reader, typeDef.BaseType);
+		}
+
 		// For interfaces and abstract types, try to find the Invoker type
 		string? invokerTypeName = null;
 		string? invokerAssemblyName = null;
@@ -340,6 +362,7 @@ internal class JavaPeerScanner
 			IsAbstract = isAbstract,
 			InvokerTypeName = invokerTypeName,
 			InvokerAssemblyName = invokerAssemblyName,
+			BaseManagedTypeName = baseTypeName,
 			HasActivationConstructor = hasActivationCtor,
 			MarshalMethods = marshalMethods,
 		});
@@ -362,6 +385,11 @@ internal class JavaPeerScanner
 
 		bool isInterface = (typeDef.Attributes & System.Reflection.TypeAttributes.Interface) != 0;
 		bool isAbstract = (typeDef.Attributes & System.Reflection.TypeAttributes.Abstract) != 0;
+
+		string? baseTypeName = null;
+		if (!isInterface && !typeDef.BaseType.IsNil) {
+			baseTypeName = GetFullTypeName (reader, typeDef.BaseType);
+		}
 
 		string? invokerTypeName = null;
 		string? invokerAssemblyName = null;
@@ -389,6 +417,7 @@ internal class JavaPeerScanner
 			IsAbstract = isAbstract,
 			InvokerTypeName = invokerTypeName,
 			InvokerAssemblyName = invokerAssemblyName,
+			BaseManagedTypeName = baseTypeName,
 			HasActivationConstructor = hasActivationCtor,
 			MarshalMethods = marshalMethods,
 		});
@@ -736,6 +765,26 @@ internal class JavaPeerScanner
 		// For simplicity, we use n_{jniName} as the callback name
 		return $"n_{jniName}";
 	}
+
+	string? GetFullTypeName (MetadataReader reader, EntityHandle handle)
+	{
+		try {
+			if (handle.Kind == HandleKind.TypeReference) {
+				var typeRef = reader.GetTypeReference ((TypeReferenceHandle)handle);
+				string ns = reader.GetString (typeRef.Namespace);
+				string name = reader.GetString (typeRef.Name);
+				return string.IsNullOrEmpty (ns) ? name : $"{ns}.{name}";
+			} else if (handle.Kind == HandleKind.TypeDefinition) {
+				var typeDef = reader.GetTypeDefinition ((TypeDefinitionHandle)handle);
+				string ns = reader.GetString (typeDef.Namespace);
+				string name = reader.GetString (typeDef.Name);
+				return string.IsNullOrEmpty (ns) ? name : $"{ns}.{name}";
+			}
+		} catch {
+			// Ignore errors, return null
+		}
+		return null;
+	}
 }
 
 /// <summary>
@@ -774,6 +823,8 @@ internal class TypeMapAssemblyGenerator
 	TypeReferenceHandle _typeMapAssocAttrTypeRef;
 	TypeReferenceHandle _typeMapAsmTargetAttrTypeRef;
 	TypeReferenceHandle _javaLangObjectTypeRef;
+	TypeReferenceHandle _invokerUniverseTypeRef;
+	TypeReferenceHandle _aliasesUniverseTypeRef;
 	
 	// UCO related types
 	TypeReferenceHandle _unmanagedCallersOnlyAttrTypeRef;
@@ -781,16 +832,21 @@ internal class TypeMapAssemblyGenerator
 	TypeReferenceHandle _throwableTypeRef;
 	TypeReferenceHandle _androidEnvironmentTypeRef;
 	TypeReferenceHandle _androidRuntimeInternalTypeRef;
+	TypeReferenceHandle _notSupportedExceptionTypeRef;
 
 	// Well-known member references
 	MemberReferenceHandle _javaPeerProxyCtorRef;
 	MemberReferenceHandle _intPtrZeroFieldRef;
+	MemberReferenceHandle _invokerTypeMapAssocAttrCtorRef;
+	MemberReferenceHandle _aliasesTypeMapAssocAttrCtorRef;
+	MemberReferenceHandle _typeMapAttrCtorRef;
 
 	// UCO related member references
 	MemberReferenceHandle _unmanagedCallersOnlyCtorRef;
 	MemberReferenceHandle _waitForBridgeProcessingRef;
 	MemberReferenceHandle _raiseThrowableRef;
 	MemberReferenceHandle _throwableFromExceptionRef;
+	MemberReferenceHandle _notSupportedExceptionCtorRef;
 	
 	// Signature blobs (cached)
 	BlobHandle _voidMethodSig;
@@ -813,9 +869,9 @@ internal class TypeMapAssemblyGenerator
 	_methodBodyStream = new MethodBodyStreamEncoder (_ilStream);
 	}
 	
-	public void Generate (string outputPath, List<JavaPeerInfo> javaPeers)
+	public void Generate (string outputPath, List<JavaPeerInfo> javaPeers, string javaSourceDir, string llvmIrDir)
 	{
-	// 1. Create module and assembly definitions
+		// 1. Create module and assembly definitions
 	CreateModuleAndAssembly ();
 	
 	// 2. Add assembly references
@@ -834,49 +890,804 @@ internal class TypeMapAssemblyGenerator
 	AddAssemblyAttribute ();
 	
 	// 7. Generate proxy types and collect TypeMap attributes
-	var typeMapAttrs = new List<(string jniName, TypeDefinitionHandle proxyType, TypeReferenceHandle targetType)> ();
-	var invokerMappings = new List<(TypeReferenceHandle source, TypeReferenceHandle invoker)> ();
+	var typeMapAttrs = new List<(string jniName, string proxyTypeName, string targetTypeName)> ();
+	var invokerMappings = new List<(string source, string invoker)> ();
+	var aliasMappings = new List<(string source, string aliasHolder)> ();
 	
-	foreach (var peer in javaPeers) {
-	try {
-	if (peer.IsInterface || peer.IsAbstract) {
-	// For interfaces/abstract, we don't generate proxy types yet
-	// TODO: Add interface handling with invoker delegation
-	continue;
-	}
+	// Group peers by JavaName to handle aliases
+	var peersByJavaName = javaPeers.GroupBy (p => p.JavaName).ToList ();
 	
-	// Create type reference for the target type
-	var targetTypeRef = AddExternalTypeReference (peer.AssemblyName, peer.ManagedTypeName);
-	if (targetTypeRef.IsNil) {
-	_log.LogDebugMessage ($"  Skipping {peer.ManagedTypeName}: could not create type reference");
-	continue;
-	}
-	
-	// Generate the proxy type
-	var proxyTypeDef = GenerateProxyType (peer, targetTypeRef);
-	if (proxyTypeDef.IsNil) {
-	_log.LogDebugMessage ($"  Skipping {peer.ManagedTypeName}: could not generate proxy type");
-	continue;
-	}
-	
-	typeMapAttrs.Add ((peer.JavaName, proxyTypeDef, targetTypeRef));
-	} catch (Exception ex) {
-	_log.LogDebugMessage ($"  Error processing {peer.ManagedTypeName}: {ex.Message}");
-	}
+	foreach (var group in peersByJavaName) {
+		var peers = group.ToList ();
+		string jniName = group.Key;
+		string? aliasHolderName = null;
+
+		// Handle aliases holder if multiple
+		if (peers.Count > 1) {
+			// Generate Alias holder type using first peer's managed name as base
+			aliasHolderName = peers[0].ManagedTypeName.Replace ('.', '_').Replace ('+', '_') + "_Aliases";
+			GenerateAliasHolderType (aliasHolderName);
+			
+			// [assembly: TypeMap<Java.Lang.Object>(JavaName, typeof(AliasHolder), typeof(AliasHolder))]
+			typeMapAttrs.Add ((jniName, aliasHolderName, aliasHolderName));
+		}
+
+		for (int i = 0; i < peers.Count; i++) {
+			var peer = peers[i];
+			try {
+				if (peer.IsInterface || peer.IsAbstract) {
+					if (!string.IsNullOrEmpty (peer.InvokerTypeName)) {
+						invokerMappings.Add ((
+							$"{peer.ManagedTypeName}, {peer.AssemblyName}",
+							$"{peer.InvokerTypeName}, {peer.InvokerAssemblyName}"
+						));
+					}
+				}
+				
+				var targetTypeRef = AddExternalTypeReference (peer.AssemblyName, peer.ManagedTypeName);
+				if (targetTypeRef.IsNil) {
+					_log.LogDebugMessage ($"  Skipping {peer.ManagedTypeName}: could not create type reference");
+					continue;
+				}
+				
+				// Calculate proxy name based on MANAGED type to ensure uniqueness (especially for aliases)
+				string proxyTypeName = peer.ManagedTypeName.Replace ('.', '_').Replace ('+', '_') + "_Proxy";
+				
+				var proxyTypeDef = GenerateProxyType (peer, targetTypeRef, proxyTypeName);
+				if (proxyTypeDef.IsNil) {
+					_log.LogDebugMessage ($"  Skipping {peer.ManagedTypeName}: could not generate proxy type");
+					continue;
+				}
+				
+				string entryJniName = peers.Count > 1 ? $"{jniName}[{i}]" : jniName;
+				string targetTypeName = $"{peer.ManagedTypeName}, {peer.AssemblyName}";
+				
+				typeMapAttrs.Add ((entryJniName, proxyTypeName, targetTypeName));
+				
+				if (aliasHolderName != null) {
+					aliasMappings.Add ((targetTypeName, aliasHolderName));
+				}
+				
+			} catch (Exception ex) {
+				_log.LogDebugMessage ($"  Error processing {peer.ManagedTypeName}: {ex.Message}");
+			}
+		}
 	}
 	
 	// 8. Add TypeMapAttribute entries (assembly-level custom attributes)
 	foreach (var (jniName, proxyType, targetType) in typeMapAttrs) {
-	AddTypeMapAttribute (jniName, proxyType, targetType);
+		AddTypeMapAttribute (jniName, proxyType, targetType);
 	}
 	
+	// 8b. Generate TypeMapAssociation attributes for Invokers
+	foreach (var (source, invoker) in invokerMappings) {
+		AddInvokerTypeMapAssociationAttribute (source, invoker);
+	}
+
+	// 8c. Generate TypeMapAssociation attributes for Aliases
+	foreach (var (source, aliasHolder) in aliasMappings) {
+		AddAliasTypeMapAssociationAttribute (source, aliasHolder);
+	}
+
 	// 9. Apply self-attribute to each proxy type
 	ApplySelfAttributes ();
 	
 	// 10. Write the PE file
 	WritePEFile (outputPath);
+
+	// 11. Generate Java source files
+	GenerateJavaSourceFiles (javaPeers, javaSourceDir);
+
+	// 12. Generate LLVM IR files
+	GenerateLlvmIrFiles (javaPeers, llvmIrDir);
 	
 	_log.LogDebugMessage ($"Generated TypeMap assembly with {typeMapAttrs.Count} proxy types");
+	}
+
+	void GenerateLlvmIrFiles (List<JavaPeerInfo> javaPeers, string llvmIrDir)
+	{
+		int count = 0;
+		foreach (var peer in javaPeers) {
+			// Skip framework assemblies (Mono.Android, Java.Interop) - they have their own generation
+			if (IsFrameworkAssembly (peer.AssemblyName))
+				continue;
+
+			GenerateLlvmIrFile (llvmIrDir, peer);
+			count++;
+		}
+		
+		GenerateLlvmIrInitFile (llvmIrDir);
+		
+		_log.LogDebugMessage ($"Generated {count} LLVM IR files");
+	}
+	
+	bool IsFrameworkAssembly (string assemblyName)
+	{
+		return assemblyName switch {
+			"Mono.Android" => true,
+			"Java.Interop" => true,
+			"System.Private.CoreLib" => true,
+			_ when assemblyName.StartsWith ("System.", StringComparison.Ordinal) => true,
+			_ when assemblyName.StartsWith ("Microsoft.", StringComparison.Ordinal) => true,
+			_ when assemblyName.StartsWith ("Xamarin.", StringComparison.Ordinal) => true,
+			_ => false,
+		};
+	}
+
+	void GenerateLlvmIrInitFile (string outputPath)
+	{
+		Directory.CreateDirectory (outputPath);
+		string llFilePath = Path.Combine (outputPath, "marshal_methods_init.ll");
+
+		using var writer = new StreamWriter (llFilePath);
+
+		writer.Write ("""
+; ModuleID = 'marshal_methods_init.ll'
+source_filename = "marshal_methods_init.ll"
+target datalayout = "e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128"
+target triple = "aarch64-unknown-linux-android21"
+
+; Global typemap_get_function_pointer callback - initialized to null, set at runtime
+@typemap_get_function_pointer = default local_unnamed_addr global ptr null, align 8
+
+; External puts and abort for error handling
+declare i32 @puts(ptr nocapture readonly) local_unnamed_addr
+declare void @abort() noreturn
+
+; Error message for null function pointer
+@.str.error = private unnamed_addr constant [48 x i8] c"typemap_get_function_pointer MUST be specified\0A\00", align 1
+
+""");
+	}
+
+	void GenerateLlvmIrFile (string outputPath, JavaPeerInfo peer)
+	{
+		Directory.CreateDirectory (outputPath);
+
+		// Sanitize type name for filename
+		string sanitizedName = peer.ManagedTypeName.Replace ('.', '_').Replace ('/', '_').Replace ('+', '_');
+		string llFilePath = Path.Combine (outputPath, $"marshal_methods_{sanitizedName}.ll");
+
+		using var writer = new StreamWriter (llFilePath);
+
+		// Separate constructors from regular methods
+		var constructors = peer.MarshalMethods.Where (m => m.JniName == "<init>").ToList ();
+		var regularMethods = peer.MarshalMethods.Where (m => m.JniName != "<init>" && m.JniName != "<clinit>").ToList ();
+
+		// If no constructors, we still need one nc_activate for the default constructor
+		int numActivateMethods = constructors.Count > 0 ? constructors.Count : 1;
+
+		// Total function pointers: regular methods + activation methods
+		int totalFnPointers = regularMethods.Count + numActivateMethods;
+
+		writer.Write ($"""""
+; ModuleID = 'marshal_methods_{sanitizedName}.ll'
+source_filename = "marshal_methods_{sanitizedName}.ll"
+target datalayout = "e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128"
+target triple = "aarch64-unknown-linux-android21"
+
+; External typemap_get_function_pointer callback
+@typemap_get_function_pointer = external local_unnamed_addr global ptr, align 8
+
+; Cached function pointers
+""""");
+		writer.WriteLine ();
+
+		for (int i = 0; i < totalFnPointers; i++) {
+			writer.WriteLine ($"@fn_ptr_{i} = internal unnamed_addr global ptr null, align 8");
+		}
+
+		// Class name constant (null-terminated string)
+		byte[] classNameBytes = System.Text.Encoding.UTF8.GetBytes (peer.JavaName);
+		string classNameBytesEncoded = string.Join("", classNameBytes.Select(b => $"\\{b:X2}"));
+		int classNameLength = classNameBytes.Length;
+
+		writer.WriteLine ();
+		writer.WriteLine ($"; Class name for \"{peer.JavaName}\" (length={classNameLength})");
+		writer.WriteLine ($"@class_name = internal constant [{classNameLength} x i8] c\"{classNameBytesEncoded}\", align 1");
+		writer.WriteLine ();
+		writer.WriteLine ("; JNI native method stubs");
+
+		// Generate regular method stubs
+		for (int i = 0; i < regularMethods.Count; i++) {
+			var method = regularMethods [i];
+			string nativeSymbol = MakeJniNativeSymbol (peer.JavaName, method.JniName, method.JniSignature);
+			string llvmParams = JniSignatureToLlvmParams (method.JniSignature);
+			string llvmArgs = JniSignatureToLlvmArgs (method.JniSignature);
+			string llvmRetType = JniSignatureToLlvmReturnType (method.JniSignature);
+
+			if (llvmRetType == "void") {
+				writer.Write ($$"""
+
+; Method: {{method.JniName}}{{method.JniSignature}}
+define default {{llvmRetType}} @{{nativeSymbol}}(ptr %env, ptr %obj{{llvmParams}}) #0 {
+entry:
+  %cached_ptr = load ptr, ptr @fn_ptr_{{i}}, align 8
+  %is_null = icmp eq ptr %cached_ptr, null
+  br i1 %is_null, label %resolve, label %call
+
+resolve:
+  %get_fn = load ptr, ptr @typemap_get_function_pointer, align 8
+  call void %get_fn(ptr @class_name, i32 {{classNameLength}}, i32 {{i}}, ptr @fn_ptr_{{i}})
+  %resolved_ptr = load ptr, ptr @fn_ptr_{{i}}, align 8
+  br label %call
+
+call:
+  %fn = phi ptr [ %cached_ptr, %entry ], [ %resolved_ptr, %resolve ]
+  tail call void %fn(ptr %env, ptr %obj{{llvmArgs}})
+  ret void
+}
+""");
+			} else {
+				writer.Write ($$"""
+
+; Method: {{method.JniName}}{{method.JniSignature}}
+define default {{llvmRetType}} @{{nativeSymbol}}(ptr %env, ptr %obj{{llvmParams}}) #0 {
+entry:
+  %cached_ptr = load ptr, ptr @fn_ptr_{{i}}, align 8
+  %is_null = icmp eq ptr %cached_ptr, null
+  br i1 %is_null, label %resolve, label %call
+
+resolve:
+  %get_fn = load ptr, ptr @typemap_get_function_pointer, align 8
+  call void %get_fn(ptr @class_name, i32 {{classNameLength}}, i32 {{i}}, ptr @fn_ptr_{{i}})
+  %resolved_ptr = load ptr, ptr @fn_ptr_{{i}}, align 8
+  br label %call
+
+call:
+  %fn = phi ptr [ %cached_ptr, %entry ], [ %resolved_ptr, %resolve ]
+  %result = tail call {{llvmRetType}} %fn(ptr %env, ptr %obj{{llvmArgs}})
+  ret {{llvmRetType}} %result
+}
+""");
+			}
+		}
+
+		// Generate nc_activate stubs
+		writer.WriteLine ();
+		writer.WriteLine ("; Native constructor activation stubs");
+
+		int activateBaseIndex = regularMethods.Count;
+
+		if (constructors.Count == 0) {
+			string nativeSymbol = MakeJniActivateSymbol (peer.JavaName, "nc_activate_0", "()V");
+			int fnPtrIndex = activateBaseIndex;
+			
+			writer.Write ($$"""
+
+; nc_activate_0 - default constructor activation
+define default void @{{nativeSymbol}}(ptr %env, ptr %obj) #0 {
+entry:
+  %cached_ptr = load ptr, ptr @fn_ptr_{{fnPtrIndex}}, align 8
+  %is_null = icmp eq ptr %cached_ptr, null
+  br i1 %is_null, label %resolve, label %call
+
+resolve:
+  %get_fn = load ptr, ptr @typemap_get_function_pointer, align 8
+  call void %get_fn(ptr @class_name, i32 {{classNameLength}}, i32 {{fnPtrIndex}}, ptr @fn_ptr_{{fnPtrIndex}})
+  %resolved_ptr = load ptr, ptr @fn_ptr_{{fnPtrIndex}}, align 8
+  br label %call
+
+call:
+  %fn = phi ptr [ %cached_ptr, %entry ], [ %resolved_ptr, %resolve ]
+  tail call void %fn(ptr %env, ptr %obj)
+  ret void
+}
+""");
+		} else {
+			for (int ctorIdx = 0; ctorIdx < constructors.Count; ctorIdx++) {
+				var ctor = constructors [ctorIdx];
+				string nativeSymbol = MakeJniActivateSymbol (peer.JavaName, $"nc_activate_{ctorIdx}", ctor.JniSignature);
+				string llvmParams = JniSignatureToLlvmParams (ctor.JniSignature);
+				string llvmArgs = JniSignatureToLlvmArgs (ctor.JniSignature);
+				int fnPtrIndex = activateBaseIndex + ctorIdx;
+				
+				writer.Write ($$"""
+
+; nc_activate_{{ctorIdx}} - constructor activation for {{ctor.JniSignature}}
+define default void @{{nativeSymbol}}(ptr %env, ptr %obj{{llvmParams}}) #0 {
+entry:
+  %cached_ptr = load ptr, ptr @fn_ptr_{{fnPtrIndex}}, align 8
+  %is_null = icmp eq ptr %cached_ptr, null
+  br i1 %is_null, label %resolve, label %call
+
+resolve:
+  %get_fn = load ptr, ptr @typemap_get_function_pointer, align 8
+  call void %get_fn(ptr @class_name, i32 {{classNameLength}}, i32 {{fnPtrIndex}}, ptr @fn_ptr_{{fnPtrIndex}})
+  %resolved_ptr = load ptr, ptr @fn_ptr_{{fnPtrIndex}}, align 8
+  br label %call
+
+call:
+  %fn = phi ptr [ %cached_ptr, %entry ], [ %resolved_ptr, %resolve ]
+  tail call void %fn(ptr %env, ptr %obj{{llvmArgs}})
+  ret void
+}
+""");
+			}
+		}
+
+		writer.Write ("""
+
+; Function attributes
+attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read) uwtable }
+
+; Metadata
+!llvm.module.flags = !{!0}
+!0 = !{i32 1, !"wchar_size", i32 4}
+""");
+	}
+
+	string MakeJniNativeSymbol (string jniTypeName, string methodName, string jniSignature)
+	{
+		string sanitizedMethodName = methodName.Replace ("<init>", "_ctor").Replace ("<clinit>", "_cctor");
+		var sb = new StringBuilder ("Java_");
+		sb.Append (MangleForJni (jniTypeName));
+		sb.Append ('_');
+		sb.Append (MangleForJni ($"n_{sanitizedMethodName}"));
+		sb.Append ("__");
+		sb.Append (MangleJniSignature (jniSignature));
+		return sb.ToString ();
+	}
+
+	string MakeJniActivateSymbol (string jniTypeName, string methodName, string jniSignature)
+	{
+		var sb = new StringBuilder ("Java_");
+		sb.Append (MangleForJni (jniTypeName));
+		sb.Append ('_');
+		sb.Append (MangleForJni (methodName));
+		if (!string.IsNullOrEmpty (jniSignature) && jniSignature != "()V") {
+			sb.Append ("__");
+			sb.Append (MangleJniSignature (jniSignature));
+		}
+		return sb.ToString ();
+	}
+
+	string MangleJniSignature (string signature)
+	{
+		var sb = new StringBuilder ();
+		foreach (char c in signature) {
+			if (c == ')')
+				break;
+			
+			switch (c) {
+				case '(': break;
+				case '/': sb.Append ('_'); break;
+				case ';': sb.Append ("_2"); break;
+				case '[': sb.Append ("_3"); break;
+				default: sb.Append (c); break;
+			}
+		}
+		return sb.ToString ();
+	}
+
+	string MangleForJni (string name)
+	{
+		var sb = new StringBuilder (name.Length);
+		foreach (char c in name) {
+			switch (c) {
+				case '/':
+				case '.': sb.Append ('_'); break;
+				case '_': sb.Append ("_1"); break;
+				case ';': sb.Append ("_2"); break;
+				case '[': sb.Append ("_3"); break;
+				case '$': sb.Append ("_00024"); break;
+				default: sb.Append (c); break;
+			}
+		}
+		return sb.ToString ();
+	}
+
+	string JniSignatureToLlvmArgs (string jniSignature)
+	{
+		var args = new StringBuilder ();
+		int paramIndex = 0;
+		int i = 1;
+
+		while (i < jniSignature.Length && jniSignature [i] != ')') {
+			char c = jniSignature [i];
+			string llvmType;
+			switch (c) {
+				case 'Z': llvmType = "i8"; i++; break;
+				case 'B': llvmType = "i8"; i++; break;
+				case 'C': llvmType = "i16"; i++; break;
+				case 'S': llvmType = "i16"; i++; break;
+				case 'I': llvmType = "i32"; i++; break;
+				case 'J': llvmType = "i64"; i++; break;
+				case 'F': llvmType = "float"; i++; break;
+				case 'D': llvmType = "double"; i++; break;
+				case 'L':
+					llvmType = "ptr";
+					while (i < jniSignature.Length && jniSignature [i] != ';') i++;
+					i++;
+					break;
+				case '[':
+					llvmType = "ptr";
+					while (i < jniSignature.Length && jniSignature [i] == '[') i++;
+					if (i < jniSignature.Length) {
+						if (jniSignature [i] == 'L') {
+							while (i < jniSignature.Length && jniSignature [i] != ';') i++;
+							i++;
+						} else {
+							i++;
+						}
+					}
+					break;
+				default:
+					llvmType = "ptr";
+					i++;
+					break;
+			}
+
+			args.Append (", ");
+			args.Append (llvmType);
+			args.Append (" %p");
+			args.Append (paramIndex);
+			paramIndex++;
+		}
+
+		return args.ToString ();
+	}
+
+	string JniSignatureToLlvmParams (string signature)
+	{
+		int parenStart = signature.IndexOf ('(');
+		int parenEnd = signature.IndexOf (')');
+		if (parenStart < 0 || parenEnd < 0 || parenEnd == parenStart + 1) {
+			return "";
+		}
+
+		string paramSig = signature.Substring (parenStart + 1, parenEnd - parenStart - 1);
+		var @params = new List<string> ();
+		int idx = 0;
+		int paramNum = 0;
+
+		while (idx < paramSig.Length) {
+			char c = paramSig [idx];
+			string type = c switch {
+				'Z' => "i8",
+				'B' => "i8",
+				'C' => "i16",
+				'S' => "i16",
+				'I' => "i32",
+				'J' => "i64",
+				'F' => "float",
+				'D' => "double",
+				'L' => "ptr",
+				'[' => "ptr",
+				_ => "ptr",
+			};
+
+			if (c == 'L') {
+				while (idx < paramSig.Length && paramSig [idx] != ';') idx++;
+				idx++;
+			} else if (c == '[') {
+				while (idx < paramSig.Length && paramSig [idx] == '[') idx++;
+				if (idx < paramSig.Length) {
+					if (paramSig [idx] == 'L') {
+						while (idx < paramSig.Length && paramSig [idx] != ';') idx++;
+						idx++;
+					} else {
+						idx++;
+					}
+				}
+			} else {
+				idx++;
+			}
+
+			@params.Add ($", {type} %p{paramNum++}");
+		}
+
+		return string.Concat (@params);
+	}
+
+	string JniSignatureToLlvmReturnType (string signature)
+	{
+		int parenEnd = signature.LastIndexOf (')');
+		if (parenEnd < 0 || parenEnd + 1 >= signature.Length) return "void";
+
+		char returnChar = signature [parenEnd + 1];
+		return returnChar switch {
+			'V' => "void",
+			'Z' => "i8",
+			'B' => "i8",
+			'C' => "i16",
+			'S' => "i16",
+			'I' => "i32",
+			'J' => "i64",
+			'F' => "float",
+			'D' => "double",
+			'L' => "ptr",
+			'[' => "ptr",
+			_ => "ptr",
+		};
+	}
+
+	void GenerateJavaSourceFiles (List<JavaPeerInfo> javaPeers, string javaSourceDir)
+	{
+		int count = 0;
+		foreach (var peer in javaPeers) {
+			// Skip framework assemblies (Mono.Android, Java.Interop) - they have their own JCWs
+			if (IsFrameworkAssembly (peer.AssemblyName))
+				continue;
+
+			GenerateJcwJavaFile (javaSourceDir, peer);
+			count++;
+		}
+		
+		_log.LogDebugMessage ($"Generated {count} Java source files");
+	}
+
+	void GenerateJcwJavaFile (string outputPath, JavaPeerInfo peer)
+	{
+		string jniTypeName = peer.JavaName;
+		
+		// Convert JNI type name to Java package and class name
+		int lastSlash = jniTypeName.LastIndexOf ('/');
+		string package = lastSlash > 0 ? jniTypeName.Substring (0, lastSlash).Replace ('/', '.') : "";
+		string className = lastSlash > 0 ? jniTypeName.Substring (lastSlash + 1) : jniTypeName;
+		className = className.Replace ('$', '_'); // Handle nested classes
+
+		// Get the Java base class name from the .NET base type
+		// For now we assume java.lang.Object if unknown, but normally we would resolve the base type
+		// In the MSBuild task we don't have full type resolution easily available for base types
+		// unless we scan them too.
+		// However, for JCW generation of *user* types, they usually extend a framework type (Activity, View, etc.)
+		// or Object.
+		// TODO: Better base class resolution. For now defaulting to java.lang.Object or android.app.Activity etc 
+		// if we can guess from name, but strictly speaking we need the base JNI name.
+		// 
+		// Actually, JavaPeerInfo could/should have BaseTypeName if we updated the scanner.
+		// But let's check if we can get by with java.lang.Object for now or if we need to improve scanner.
+		// The original code used TypeDefinition.BaseType.Resolve().
+		//
+		// CRITICAL: The JCW *must* extend the correct class for Android to load it correctly.
+		// If it's an Activity, it must extend Activity.
+		//
+		// Since we don't have the base type JNI name in JavaPeerInfo yet, I should probably add it to JavaPeerInfo.
+		// But for this task, I'll use a placeholder and add a TODO to update scanner.
+		string baseClassName = "java.lang.Object"; 
+
+		// Create directory structure
+		string packageDir = Path.Combine (outputPath, package.Replace ('.', Path.DirectorySeparatorChar));
+		Directory.CreateDirectory (packageDir);
+
+		string javaFilePath = Path.Combine (packageDir, className + ".java");
+
+		using var writer = new StreamWriter (javaFilePath);
+
+		// Separate constructors from regular methods
+		var constructors = peer.MarshalMethods.Where (m => m.JniName == "<init>").ToList ();
+		var regularMethods = peer.MarshalMethods.Where (m => m.JniName != "<init>" && m.JniName != "<clinit>").ToList ();
+
+		// Build constructor declarations
+		var constructorDeclarations = new StringBuilder ();
+		var nativeCtorDeclarations = new StringBuilder ();
+		int ctorIndex = 0;
+
+		// If no constructors with marshal methods, generate a default constructor
+		if (constructors.Count == 0) {
+			constructorDeclarations.AppendLine ($$"""
+    // Default constructor with native activation
+    public {{className}} ()
+    {
+        super ();
+        if (getClass () == {{className}}.class) { nc_activate_0 (); }
+    }
+""");
+			nativeCtorDeclarations.AppendLine ("    private native void nc_activate_0 ();");
+		} else {
+			// Generate each constructor
+			foreach (var ctor in constructors) {
+				string parameters = JniSignatureToJavaParameters (ctor.JniSignature);
+				string parameterNames = JniSignatureToJavaParameterNames (ctor.JniSignature);
+
+				constructorDeclarations.AppendLine ($$"""
+    public {{className}} ({{parameters}})
+    {
+        super ({{parameterNames}});
+        if (getClass () == {{className}}.class) { nc_activate_{{ctorIndex}} ({{parameterNames}}); }
+    }
+""");
+				nativeCtorDeclarations.AppendLine ($"    private native void nc_activate_{ctorIndex} ({parameters});");
+				ctorIndex++;
+			}
+		}
+
+		// Build method declarations
+		var publicMethods = new StringBuilder ();
+		var nativeMethods = new StringBuilder ();
+
+		foreach (var method in regularMethods) {
+			string returnType = JniSignatureToJavaType (method.JniSignature, returnOnly: true);
+			string parameters = JniSignatureToJavaParameters (method.JniSignature);
+			string parameterNames = JniSignatureToJavaParameterNames (method.JniSignature);
+
+			// Generate public wrapper method
+			string returnStatement = returnType == "void" ? "" : "return ";
+			publicMethods.AppendLine ($$"""
+    public {{returnType}} {{method.JniName}} ({{parameters}})
+    {
+        {{returnStatement}}n_{{method.JniName}} ({{parameterNames}});
+    }
+
+""");
+
+			// Generate private native declaration
+			nativeMethods.AppendLine ($"    private native {returnType} n_{method.JniName} ({parameters});");
+		}
+
+		// Generate package declaration and class
+		if (!string.IsNullOrEmpty (package)) {
+			writer.WriteLine ($"package {package};");
+			writer.WriteLine ();
+		}
+
+		writer.Write ($$"""
+public class {{className}}
+    extends {{baseClassName}}
+    implements mono.android.IGCUserPeer
+{
+{{constructorDeclarations}}
+{{publicMethods}}
+{{nativeCtorDeclarations}}
+{{nativeMethods}}
+    // IGCUserPeer implementation for preventing premature GC
+    private java.util.ArrayList refList;
+    public void monodroidAddReference (java.lang.Object obj)
+    {
+        if (refList == null)
+            refList = new java.util.ArrayList ();
+        refList.add (obj);
+    }
+
+    public void monodroidClearReferences ()
+    {
+        if (refList != null)
+            refList.clear ();
+    }
+}
+""");
+	}
+
+	string JniSignatureToJavaParameters (string signature)
+	{
+		int parenStart = signature.IndexOf ('(');
+		int parenEnd = signature.IndexOf (')');
+		if (parenStart < 0 || parenEnd < 0 || parenEnd == parenStart + 1) {
+			return "";
+		}
+
+		string paramSig = signature.Substring (parenStart + 1, parenEnd - parenStart - 1);
+		var @params = new List<string> ();
+		int idx = 0;
+		int paramNum = 0;
+
+		while (idx < paramSig.Length) {
+			char c = paramSig [idx];
+			string type;
+			
+			switch (c) {
+				case 'Z': type = "boolean"; idx++; break;
+				case 'B': type = "byte"; idx++; break;
+				case 'C': type = "char"; idx++; break;
+				case 'S': type = "short"; idx++; break;
+				case 'I': type = "int"; idx++; break;
+				case 'J': type = "long"; idx++; break;
+				case 'F': type = "float"; idx++; break;
+				case 'D': type = "double"; idx++; break;
+				case 'L':
+					int start = idx + 1;
+					while (idx < paramSig.Length && paramSig[idx] != ';') idx++;
+					string className = paramSig.Substring (start, idx - start);
+					type = className.Replace ('/', '.');
+					idx++; 
+					break;
+				case '[':
+					int arrayDims = 0;
+					while (idx < paramSig.Length && paramSig[idx] == '[') {
+						arrayDims++;
+						idx++;
+					}
+					
+					string elementType;
+					if (idx < paramSig.Length) {
+						char elementChar = paramSig[idx];
+						switch (elementChar) {
+							case 'Z': elementType = "boolean"; idx++; break;
+							case 'B': elementType = "byte"; idx++; break;
+							case 'C': elementType = "char"; idx++; break;
+							case 'S': elementType = "short"; idx++; break;
+							case 'I': elementType = "int"; idx++; break;
+							case 'J': elementType = "long"; idx++; break;
+							case 'F': elementType = "float"; idx++; break;
+							case 'D': elementType = "double"; idx++; break;
+							case 'L':
+								int elemStart = idx + 1;
+								while (idx < paramSig.Length && paramSig[idx] != ';') idx++;
+								string elemClassName = paramSig.Substring (elemStart, idx - elemStart);
+								elementType = elemClassName.Replace ('/', '.');
+								idx++;
+								break;
+							default:
+								elementType = "Object";
+								idx++;
+								break;
+						}
+					} else {
+						elementType = "Object";
+					}
+					
+					type = elementType + new string ('[', arrayDims) + new string (']', arrayDims);
+					break;
+				default:
+					type = "Object";
+					idx++;
+					break;
+			}
+
+			@params.Add ($"{type} p{paramNum++}");
+		}
+
+		return string.Join (", ", @params);
+	}
+
+	string JniSignatureToJavaParameterNames (string jniSignature)
+	{
+		var result = new StringBuilder ();
+		int paramIndex = 0;
+		int i = 1;
+
+		while (i < jniSignature.Length && jniSignature [i] != ')') {
+			if (paramIndex > 0) {
+				result.Append (", ");
+			}
+			result.Append ($"p{paramIndex}");
+			paramIndex++;
+
+			char c = jniSignature [i];
+			switch (c) {
+				case 'L':
+					while (i < jniSignature.Length && jniSignature [i] != ';') i++;
+					i++;
+					break;
+				case '[':
+					while (i < jniSignature.Length && jniSignature [i] == '[') i++;
+					if (i < jniSignature.Length && jniSignature [i] == 'L') {
+						while (i < jniSignature.Length && jniSignature [i] != ';') i++;
+						i++;
+					} else {
+						i++;
+					}
+					break;
+				default:
+					i++;
+					break;
+			}
+		}
+
+		return result.ToString ();
+	}
+
+	string JniSignatureToJavaType (string signature, bool returnOnly)
+	{
+		int parenEnd = signature.LastIndexOf (')');
+		if (parenEnd < 0) return "void";
+
+		char returnChar = signature [parenEnd + 1];
+		return returnChar switch {
+			'V' => "void",
+			'Z' => "boolean",
+			'B' => "byte",
+			'C' => "char",
+			'S' => "short",
+			'I' => "int",
+			'J' => "long",
+			'F' => "float",
+			'D' => "double",
+			'L' => "Object",
+			'[' => "Object[]",
+			_ => "Object",
+		};
 	}
 	
 	void CreateModuleAndAssembly ()
@@ -985,6 +1796,16 @@ internal class TypeMapAssemblyGenerator
 	resolutionScope: _monoAndroidRef,
 	@namespace: _metadata.GetOrAddString ("Java.Lang"),
 	name: _metadata.GetOrAddString ("Object"));
+
+	_invokerUniverseTypeRef = _metadata.AddTypeReference (
+	resolutionScope: _monoAndroidRef,
+	@namespace: _metadata.GetOrAddString ("Java.Interop"),
+	name: _metadata.GetOrAddString ("InvokerUniverse"));
+	
+	_aliasesUniverseTypeRef = _metadata.AddTypeReference (
+	resolutionScope: _monoAndroidRef,
+	@namespace: _metadata.GetOrAddString ("Java.Interop"),
+	name: _metadata.GetOrAddString ("AliasesUniverse"));
 	
 	// TypeMap attributes (from System.Runtime.InteropServices)
 	_typeMapAttrTypeRef = _metadata.AddTypeReference (
@@ -1026,6 +1847,11 @@ internal class TypeMapAssemblyGenerator
 	resolutionScope: _monoAndroidRef,
 	@namespace: _metadata.GetOrAddString ("Android.Runtime"),
 	name: _metadata.GetOrAddString ("AndroidRuntimeInternal"));
+
+	_notSupportedExceptionTypeRef = _metadata.AddTypeReference (
+	resolutionScope: _corlibRef,
+	@namespace: _metadata.GetOrAddString ("System"),
+	name: _metadata.GetOrAddString ("NotSupportedException"));
 	}
 	
 	void AddMemberReferences ()
@@ -1050,6 +1876,75 @@ internal class TypeMapAssemblyGenerator
 	parent: _intPtrTypeRef,
 	name: _metadata.GetOrAddString ("Zero"),
 	signature: _metadata.GetOrAddBlob (intPtrFieldSig));
+
+	// TypeMapAttribute<Java.Lang.Object>..ctor(string, Type, Type)
+	var typeMapSpecBlob = new BlobBuilder ();
+	var typeMapSpecEncoder = new BlobEncoder (typeMapSpecBlob).TypeSpecificationSignature ();
+	var typeMapGenArgsEncoder = typeMapSpecEncoder.GenericInstantiation (
+			_typeMapAttrTypeRef,
+			1,
+			false);
+	typeMapGenArgsEncoder.AddArgument ().Type (_javaLangObjectTypeRef, false);
+
+	var typeMapSpec = _metadata.AddTypeSpecification (_metadata.GetOrAddBlob (typeMapSpecBlob));
+    
+    // Constructor signature: .ctor(string, Type, Type)
+    var typeMapCtorSigBlob = new BlobBuilder ();
+    new BlobEncoder (typeMapCtorSigBlob).MethodSignature (isInstanceMethod: true)
+        .Parameters (3, returnType => returnType.Void (), parameters => {
+            parameters.AddParameter ().Type ().String ();
+            parameters.AddParameter ().Type ().Type (_typeTypeRef, false);
+            parameters.AddParameter ().Type ().Type (_typeTypeRef, false);
+        });
+
+    _typeMapAttrCtorRef = _metadata.AddMemberReference (
+        parent: typeMapSpec,
+        name: _metadata.GetOrAddString (".ctor"),
+        signature: _metadata.GetOrAddBlob (typeMapCtorSigBlob));
+
+	// TypeMapAssociationAttribute<InvokerUniverse>..ctor(Type, Type)
+	// We need to create a TypeSpecification for TypeMapAssociationAttribute<InvokerUniverse>
+	var invokerTypeMapSpecBlob = new BlobBuilder ();
+	var specEncoder = new BlobEncoder (invokerTypeMapSpecBlob).TypeSpecificationSignature ();
+	var genArgsEncoder = specEncoder.GenericInstantiation (
+			_typeMapAssocAttrTypeRef,
+			1,
+			false);
+	genArgsEncoder.AddArgument ().Type (_invokerUniverseTypeRef, false);
+
+	var invokerTypeMapSpec = _metadata.AddTypeSpecification (_metadata.GetOrAddBlob (invokerTypeMapSpecBlob));
+
+	// Constructor signature: .ctor(System.Type, System.Type)
+	var assocCtorSigBlob = new BlobBuilder ();
+	new BlobEncoder (assocCtorSigBlob)
+		.MethodSignature (isInstanceMethod: true)
+		.Parameters (2,
+			returnType => returnType.Void (),
+			parameters => {
+				parameters.AddParameter ().Type ().Type (_typeTypeRef, isValueType: false);
+				parameters.AddParameter ().Type ().Type (_typeTypeRef, isValueType: false);
+			});
+	
+	_invokerTypeMapAssocAttrCtorRef = _metadata.AddMemberReference (
+		parent: invokerTypeMapSpec,
+		name: _metadata.GetOrAddString (".ctor"),
+		signature: _metadata.GetOrAddBlob (assocCtorSigBlob));
+
+	// TypeMapAssociationAttribute<AliasesUniverse>..ctor(Type, Type)
+	var aliasesTypeMapSpecBlob = new BlobBuilder ();
+	var aliasesSpecEncoder = new BlobEncoder (aliasesTypeMapSpecBlob).TypeSpecificationSignature ();
+	var aliasesGenArgsEncoder = aliasesSpecEncoder.GenericInstantiation (
+			_typeMapAssocAttrTypeRef,
+			1,
+			false);
+	aliasesGenArgsEncoder.AddArgument ().Type (_aliasesUniverseTypeRef, false);
+
+	var aliasesTypeMapSpec = _metadata.AddTypeSpecification (_metadata.GetOrAddBlob (aliasesTypeMapSpecBlob));
+
+	_aliasesTypeMapAssocAttrCtorRef = _metadata.AddMemberReference (
+		parent: aliasesTypeMapSpec,
+		name: _metadata.GetOrAddString (".ctor"),
+		signature: _metadata.GetOrAddBlob (assocCtorSigBlob));
 
 	// UnmanagedCallersOnlyAttribute..ctor()
 	var ucoCtorSigBlob = new BlobBuilder ();
@@ -1098,6 +1993,19 @@ internal class TypeMapAssemblyGenerator
 		parent: _androidEnvironmentTypeRef,
 		name: _metadata.GetOrAddString ("RaiseThrowable"),
 		signature: _metadata.GetOrAddBlob (raiseSigBlob));
+
+	// NotSupportedException..ctor(string)
+	var nseCtorSigBlob = new BlobBuilder ();
+	new BlobEncoder (nseCtorSigBlob)
+		.MethodSignature (isInstanceMethod: true)
+		.Parameters (1, 
+			returnType => returnType.Void (),
+			parameters => parameters.AddParameter ().Type ().String ());
+
+	_notSupportedExceptionCtorRef = _metadata.AddMemberReference (
+		parent: _notSupportedExceptionTypeRef,
+		name: _metadata.GetOrAddString (".ctor"),
+		signature: _metadata.GetOrAddBlob (nseCtorSigBlob));
 	}
 	
 	void CreateSignatureBlobs ()
@@ -1166,11 +2074,8 @@ internal class TypeMapAssemblyGenerator
 	name: _metadata.GetOrAddString (name));
 	}
 	
-	TypeDefinitionHandle GenerateProxyType (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef)
+	TypeDefinitionHandle GenerateProxyType (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef, string proxyTypeName)
 	{
-		// Generate proxy type name: replace slashes with underscores, add _Proxy suffix
-		string proxyTypeName = peer.JavaName.Replace ('/', '_').Replace ('$', '_') + "_Proxy";
-
 		_log.LogDebugMessage ($"  Generating proxy type: {proxyTypeName} for {peer.ManagedTypeName}");
 
 		// Track the method list start for this type
@@ -1193,7 +2098,7 @@ internal class TypeMapAssemblyGenerator
 		var ucoWrapperHandles = GenerateUcoWrappers (peer, targetTypeRef);
 
 		// 3. GetFunctionPointer override - now with UCO wrapper handles
-		int getFnPtrBodyOffset = GenerateGetFunctionPointerBody (ucoWrapperHandles);
+		int getFnPtrBodyOffset = GenerateGetFunctionPointerBody (peer, ucoWrapperHandles);
 		var getFnPtrDef = _metadata.AddMethodDefinition (
 			attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
 			implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
@@ -1259,8 +2164,8 @@ internal class TypeMapAssemblyGenerator
 	{
 		var wrapperHandles = new List<MethodDefinitionHandle> ();
 
-		// Skip if no marshal methods
-		if (peer.MarshalMethods.Count == 0) {
+		// Skip if no marshal methods or if it's an interface (interfaces don't have UCO wrappers in the proxy)
+		if (peer.MarshalMethods.Count == 0 || peer.IsInterface) {
 			return wrapperHandles;
 		}
 
@@ -1354,16 +2259,15 @@ internal class TypeMapAssemblyGenerator
 				localVariablesSignature: localsSig,
 				attributes: MethodBodyAttributes.InitLocals);
 				/*
+				// TODO: Fix ExceptionRegionEncoder usage (API mismatch)
 				exceptionRegions: new ExceptionRegionEncoder[] {
 					new ExceptionRegionEncoder (
-						kind: ExceptionRegionKind.Catch,
-						tryOffset: tryStart,
-						tryLength: tryEnd - tryStart,
-						handlerOffset: handlerStart,
-						handlerLength: handlerEnd - handlerStart,
-						catchType: _exceptionTypeRef,
-						filterOffset: 0,
-						filterLength: 0)
+						ExceptionRegionKind.Catch,
+						tryStart,
+						tryEnd - tryStart,
+						handlerStart,
+						handlerEnd - handlerStart,
+						_exceptionTypeRef)
 				});
 				*/
 
@@ -1416,12 +2320,16 @@ internal class TypeMapAssemblyGenerator
 	return _methodBodyStream.AddMethodBody (encoder);
 	}
 	
-	int GenerateGetFunctionPointerBody (List<MethodDefinitionHandle> ucoWrapperHandles)
+	int GenerateGetFunctionPointerBody (JavaPeerInfo peer, List<MethodDefinitionHandle> ucoWrapperHandles)
 	{
 		var codeBuilder = new BlobBuilder ();
 		var encoder = new InstructionEncoder (codeBuilder);
 
-		if (ucoWrapperHandles.Count == 0) {
+		if (peer.IsInterface || peer.IsAbstract) {
+			// For Interfaces/Abstract types, GetFunctionPointer should throw NotSupportedException
+			// (Use CreateInstance -> Invoker for actual behavior)
+			EmitThrowNotSupported (encoder, $"GetFunctionPointer not supported for interface/abstract type {peer.ManagedTypeName}");
+		} else if (ucoWrapperHandles.Count == 0) {
 			// No UCO wrappers - return IntPtr.Zero
 			encoder.OpCode (ILOpCode.Ldsfld);
 			encoder.Token (_intPtrZeroFieldRef);
@@ -1509,37 +2417,76 @@ internal class TypeMapAssemblyGenerator
 			encoder.Token (targetCtorRef);
 			// ret
 			encoder.OpCode (ILOpCode.Ret);
+		} else if ((peer.IsInterface || peer.IsAbstract) && !string.IsNullOrEmpty (peer.InvokerTypeName)) {
+			// For Interfaces/Abstract types, we need to instantiate the Invoker
+			// Add Invoker type reference
+			var invokerTypeRef = AddExternalTypeReference (peer.InvokerAssemblyName!, peer.InvokerTypeName!);
+			if (invokerTypeRef.IsNil) {
+				// Fallback to throw if invoker not found (shouldn't happen if validated)
+				EmitThrowNotSupported (encoder, $"Invoker type {peer.InvokerTypeName} not found for {peer.ManagedTypeName}");
+			} else {
+				// Invokers MUST have activation constructor: .ctor(IntPtr, JniHandleOwnership)
+				var ctorSigBlob = new BlobBuilder ();
+				new BlobEncoder (ctorSigBlob)
+					.MethodSignature (isInstanceMethod: true)
+					.Parameters (2,
+						returnType => returnType.Void (),
+						parameters => {
+							parameters.AddParameter ().Type ().IntPtr ();
+							parameters.AddParameter ().Type ().Type (_jniHandleOwnershipTypeRef, isValueType: true);
+						});
+
+				var invokerCtorRef = _metadata.AddMemberReference (
+					parent: invokerTypeRef,
+					name: _metadata.GetOrAddString (".ctor"),
+					signature: _metadata.GetOrAddBlob (ctorSigBlob));
+
+				// ldarg.1 (handle)
+				encoder.OpCode (ILOpCode.Ldarg_1);
+				// ldarg.2 (transfer)
+				encoder.OpCode (ILOpCode.Ldarg_2);
+				// newobj InvokerType::.ctor(IntPtr, JniHandleOwnership)
+				encoder.OpCode (ILOpCode.Newobj);
+				encoder.Token (invokerCtorRef);
+				// ret
+				encoder.OpCode (ILOpCode.Ret);
+			}
 		} else {
 			// No activation constructor - throw NotSupportedException
-			var notSupportedTypeRef = _metadata.AddTypeReference (
-				resolutionScope: _corlibRef,
-				@namespace: _metadata.GetOrAddString ("System"),
-				name: _metadata.GetOrAddString ("NotSupportedException"));
-
-			var exCtorSigBlob = new BlobBuilder ();
-			new BlobEncoder (exCtorSigBlob)
-				.MethodSignature (isInstanceMethod: true)
-				.Parameters (1,
-					returnType => returnType.Void (),
-					parameters => parameters.AddParameter ().Type ().String ());
-
-			var exCtorRef = _metadata.AddMemberReference (
-				parent: notSupportedTypeRef,
-				name: _metadata.GetOrAddString (".ctor"),
-				signature: _metadata.GetOrAddBlob (exCtorSigBlob));
-
-			// ldstr "No activation constructor found"
-			encoder.LoadString (_metadata.GetOrAddUserString ($"No activation constructor found for {peer.ManagedTypeName}"));
-			// newobj NotSupportedException::.ctor(string)
-			encoder.OpCode (ILOpCode.Newobj);
-			encoder.Token (exCtorRef);
-			// throw
-			encoder.OpCode (ILOpCode.Throw);
+			EmitThrowNotSupported (encoder, $"No activation constructor found for {peer.ManagedTypeName}");
 		}
 
 		return _methodBodyStream.AddMethodBody (encoder);
 	}
+
+	void EmitThrowNotSupported (InstructionEncoder encoder, string message)
+	{
+		// ldstr message
+		encoder.LoadString (_metadata.GetOrAddUserString (message));
+		// newobj NotSupportedException::.ctor(string)
+		encoder.OpCode (ILOpCode.Newobj);
+		encoder.Token (_notSupportedExceptionCtorRef);
+		// throw
+		encoder.OpCode (ILOpCode.Throw);
+	}
 	
+	void AddInvokerTypeMapAssociationAttribute (string sourceName, string invokerName)
+	{
+		// [assembly: TypeMapAssociationAttribute<InvokerUniverse>(typeof(Source), typeof(Invoker))]
+		var attrBlob = new BlobBuilder ();
+		attrBlob.WriteUInt16 (1); // Prolog
+		
+		attrBlob.WriteSerializedString (sourceName);
+		attrBlob.WriteSerializedString (invokerName);
+		
+		attrBlob.WriteUInt16 (0); // Named args count
+		
+		_metadata.AddCustomAttribute (
+			parent: EntityHandle.AssemblyDefinition,
+			constructor: _invokerTypeMapAssocAttrCtorRef,
+			value: _metadata.GetOrAddBlob (attrBlob));
+	}
+
 	void AddAttributeUsageToType (TypeDefinitionHandle typeDef)
 	{
 	// [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = false)]
@@ -1579,11 +2526,51 @@ internal class TypeMapAssemblyGenerator
 	// For now, skip - this is complex with S.R.M.E generics
 	}
 	
-	void AddTypeMapAttribute (string jniName, TypeDefinitionHandle proxyType, TypeReferenceHandle targetType)
+	void AddTypeMapAttribute (string jniName, string proxyTypeName, string targetTypeName)
 	{
-	// [assembly: TypeMapAttribute<Java.Lang.Object>(jniName, typeof(proxyType), typeof(targetType))]
-	// TODO: Implement generic attribute with TypeSpec
-	// This requires creating a TypeSpec for the generic instantiation
+		// [assembly: TypeMapAttribute<Java.Lang.Object>(jniName, typeof(proxyType), typeof(targetType))]
+		var attrBlob = new BlobBuilder ();
+		attrBlob.WriteUInt16 (1); // Prolog
+		
+		attrBlob.WriteSerializedString (jniName);
+		attrBlob.WriteSerializedString (proxyTypeName);
+		attrBlob.WriteSerializedString (targetTypeName);
+		
+		attrBlob.WriteUInt16 (0); // Named args count
+		
+		_metadata.AddCustomAttribute (
+			parent: EntityHandle.AssemblyDefinition,
+			constructor: _typeMapAttrCtorRef,
+			value: _metadata.GetOrAddBlob (attrBlob));
+	}
+
+	void AddAliasTypeMapAssociationAttribute (string sourceName, string aliasHolderName)
+	{
+		// [assembly: TypeMapAssociationAttribute<AliasesUniverse>(typeof(Source), typeof(AliasHolder))]
+		var attrBlob = new BlobBuilder ();
+		attrBlob.WriteUInt16 (1); // Prolog
+		
+		attrBlob.WriteSerializedString (sourceName);
+		attrBlob.WriteSerializedString (aliasHolderName);
+		
+		attrBlob.WriteUInt16 (0); // Named args count
+		
+		_metadata.AddCustomAttribute (
+			parent: EntityHandle.AssemblyDefinition,
+			constructor: _aliasesTypeMapAssocAttrCtorRef,
+			value: _metadata.GetOrAddBlob (attrBlob));
+	}
+
+	TypeDefinitionHandle GenerateAliasHolderType (string typeName)
+	{
+		// public sealed class typeName { }
+		return _metadata.AddTypeDefinition (
+			attributes: TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class,
+			@namespace: default,
+			name: _metadata.GetOrAddString (typeName),
+			baseType: _objectTypeRef,
+			fieldList: MetadataTokens.FieldDefinitionHandle (_nextFieldDefRowId),
+			methodList: MetadataTokens.MethodDefinitionHandle (_nextMethodDefRowId));
 	}
 	
 	void ApplySelfAttributes ()
