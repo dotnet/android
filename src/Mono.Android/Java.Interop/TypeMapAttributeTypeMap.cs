@@ -36,22 +36,10 @@ namespace Android.Runtime
 		{
 			Log ("TypeMapAttributeTypeMap: Initializing...");
 			
-			// Debug: Try to explicitly load the TypeMaps assembly first
-			try {
-				var typeMapAsm = System.Reflection.Assembly.Load ("_Microsoft.Android.TypeMaps");
-				Log ($"TypeMapAttributeTypeMap: Loaded TypeMaps assembly: {typeMapAsm?.FullName ?? "null"}");
-				
-				// Check what attributes are on the assembly
-				if (typeMapAsm != null) {
-					var attrs = typeMapAsm.GetCustomAttributes (inherit: false);
-					Log ($"TypeMapAttributeTypeMap: TypeMaps assembly has {attrs.Length} custom attributes");
-					foreach (var attr in attrs) {
-						Log ($"TypeMapAttributeTypeMap:   - {attr.GetType ().FullName}");
-					}
-				}
-			} catch (Exception ex) {
-				Log ($"TypeMapAttributeTypeMap: Failed to load TypeMaps assembly: {ex.GetType ().Name}: {ex.Message}");
-			}
+			// Note: We intentionally don't enumerate custom attributes here.
+			// The TypeMaps assembly references types from user assemblies in proxy method bodies.
+			// Those assemblies may not be loaded yet during early initialization.
+			// TypeMapping.GetOrCreate* methods handle lazy loading correctly.
 			
 			try {
 				_externalTypeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
