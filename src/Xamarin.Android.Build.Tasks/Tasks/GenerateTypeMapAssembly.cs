@@ -2274,15 +2274,23 @@ public class {{className}}
 				signature: _metadata.GetOrAddBlob (wrapperSigBlob));
 
 			// Generate wrapper body with control flow (needed for try/catch and branches)
+			// Use ControlFlowBuilder with labels for proper branch fixup and exception regions
 			var wrapperBodyBlob = new BlobBuilder ();
 			var controlFlowBuilder = new ControlFlowBuilder ();
 			var wrapperEncoder = new InstructionEncoder (wrapperBodyBlob, controlFlowBuilder);
+
+			// Define labels for exception handling
+			var tryStartLabel = wrapperEncoder.DefineLabel ();
+			var tryEndLabel = wrapperEncoder.DefineLabel ();
+			var handlerStartLabel = wrapperEncoder.DefineLabel ();
+			var handlerEndLabel = wrapperEncoder.DefineLabel ();
+			var endLabel = wrapperEncoder.DefineLabel ();
 
 			// 1. Call WaitForBridgeProcessing
 			wrapperEncoder.Call (_waitForBridgeProcessingRef);
 
 			// 2. Try block start
-			int tryStart = wrapperEncoder.Offset;
+			wrapperEncoder.MarkLabel (tryStartLabel);
 
 			// Load arguments and call callback
 			for (int p = 0; p < paramCount; p++) {
@@ -2294,12 +2302,11 @@ public class {{className}}
 			wrapperEncoder.StoreLocal (0);
 
 			// Leave try block
-			var endLabel = wrapperEncoder.DefineLabel ();
 			wrapperEncoder.Branch (ILOpCode.Leave, endLabel);
-			int tryEnd = wrapperEncoder.Offset;
+			wrapperEncoder.MarkLabel (tryEndLabel);
 
 			// 3. Catch block start
-			int handlerStart = wrapperEncoder.Offset;
+			wrapperEncoder.MarkLabel (handlerStartLabel);
 
 			// Exception is on stack. Convert to Throwable and Raise
 			wrapperEncoder.Call (_throwableFromExceptionRef);
@@ -2311,40 +2318,23 @@ public class {{className}}
 			wrapperEncoder.StoreLocal (0);
 
 			wrapperEncoder.Branch (ILOpCode.Leave, endLabel);
-			int handlerEnd = wrapperEncoder.Offset;
+			wrapperEncoder.MarkLabel (handlerEndLabel);
 
 			// 4. Return
 			wrapperEncoder.MarkLabel (endLabel);
 			wrapperEncoder.LoadLocal (0);
 			wrapperEncoder.OpCode (ILOpCode.Ret);
 
-			// Add method body with exception handling
-			int tryLength = tryEnd - tryStart;
-			int handlerLength = handlerEnd - handlerStart;
-			bool hasSmallExceptionRegions = 
-				ExceptionRegionEncoder.IsSmallExceptionRegion (tryStart, tryLength) &&
-				ExceptionRegionEncoder.IsSmallExceptionRegion (handlerStart, handlerLength);
+			// Add exception region using labels (ControlFlowBuilder resolves offsets)
+			controlFlowBuilder.AddCatchRegion (tryStartLabel, tryEndLabel, handlerStartLabel, handlerEndLabel, _exceptionTypeRef);
 
-			var methodBody = _methodBodyStream.AddMethodBody (
-				codeSize: wrapperBodyBlob.Count,
+			// Add method body using InstructionEncoder overload - this properly resolves branch targets
+			// and exception regions through the ControlFlowBuilder
+			int wrapperBodyOffset = _methodBodyStream.AddMethodBody (
+				wrapperEncoder,
 				maxStack: paramCount + 2,
-				exceptionRegionCount: 1,
-				hasSmallExceptionRegions: hasSmallExceptionRegions,
 				localVariablesSignature: localsSig,
 				attributes: MethodBodyAttributes.InitLocals);
-
-			// Write the instructions to the stream
-			wrapperBodyBlob.WriteContentTo (_methodBodyStream.Builder);
-
-			// Add the Catch region
-			methodBody.ExceptionRegions.AddCatch (
-				tryOffset: tryStart,
-				tryLength: tryLength,
-				handlerOffset: handlerStart,
-				handlerLength: handlerLength,
-				catchType: _exceptionTypeRef);
-
-			int wrapperBodyOffset = methodBody.Offset;
 
 			// Create method definition
 			var wrapperDef = _metadata.AddMethodDefinition (
@@ -2359,7 +2349,7 @@ public class {{className}}
 			var ucoAttrValue = new BlobBuilder ();
 			new BlobEncoder (ucoAttrValue).CustomAttributeSignature (
 				fixedArguments => { },
-				namedArguments => { });
+				namedArguments => namedArguments.Count (0));
 			_metadata.AddCustomAttribute (wrapperDef, _unmanagedCallersOnlyCtorRef, _metadata.GetOrAddBlob (ucoAttrValue));
 
 			// Add parameter definitions
