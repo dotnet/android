@@ -153,9 +153,26 @@ internal class JavaPeerInfo
 	public string? BaseManagedTypeName { get; set; }
 
 	/// <summary>
+	/// The assembly name of the base class (if any).
+	/// </summary>
+	public string? BaseAssemblyName { get; set; }
+
+	/// <summary>
 	/// True if the type has an activation constructor (IntPtr, JniHandleOwnership).
 	/// </summary>
 	public bool HasActivationConstructor { get; set; }
+
+	/// <summary>
+	/// If this type doesn't have its own activation constructor, this contains
+	/// the name of the base type that has the activation constructor.
+	/// Used for GetUninitializedObject + base ctor call pattern.
+	/// </summary>
+	public string? ActivationCtorBaseTypeName { get; set; }
+
+	/// <summary>
+	/// Assembly name containing the activation ctor base type.
+	/// </summary>
+	public string? ActivationCtorBaseAssemblyName { get; set; }
 
 	/// <summary>
 	/// Marshal methods that can be called from native code via GetFunctionPointer.
@@ -281,7 +298,57 @@ internal class JavaPeerScanner
 			}
 		}
 
+		// Post-process: resolve activation constructor base types for types that don't have their own
+		ResolveActivationConstructorBaseTypes (results);
+
 		return results;
+	}
+
+	/// <summary>
+	/// For types that don't have their own activation constructor, find a base type that does.
+	/// This enables using GetUninitializedObject + base ctor call pattern.
+	/// </summary>
+	void ResolveActivationConstructorBaseTypes (List<JavaPeerInfo> results)
+	{
+		// Build a lookup by managed type name
+		var typesByName = new Dictionary<string, JavaPeerInfo> ();
+		foreach (var peer in results) {
+			typesByName[peer.ManagedTypeName] = peer;
+		}
+
+		foreach (var peer in results) {
+			if (peer.HasActivationConstructor)
+				continue; // Already has its own ctor
+			if (peer.IsInterface)
+				continue; // Interfaces use invokers
+			if (string.IsNullOrEmpty (peer.BaseManagedTypeName))
+				continue; // No base type
+
+			// Walk up the class hierarchy to find a base with activation ctor
+			string? currentBase = peer.BaseManagedTypeName;
+			string? currentBaseAssembly = peer.BaseAssemblyName;
+			
+			while (currentBase is not null) {
+				if (typesByName.TryGetValue (currentBase, out var basePeer)) {
+					if (basePeer.HasActivationConstructor) {
+						peer.ActivationCtorBaseTypeName = basePeer.ManagedTypeName;
+						peer.ActivationCtorBaseAssemblyName = basePeer.AssemblyName;
+						_log.LogMessage (MessageImportance.High, $"    {peer.ManagedTypeName}: will use base ctor from {basePeer.ManagedTypeName}");
+						break;
+					}
+					currentBase = basePeer.BaseManagedTypeName;
+					currentBaseAssembly = basePeer.BaseAssemblyName;
+				} else {
+					// Base type not in our scanned results - might be framework type
+					// For now, assume framework base types (like Activity) have activation ctors
+					// The caller will need to resolve the actual type reference
+					peer.ActivationCtorBaseTypeName = currentBase;
+					peer.ActivationCtorBaseAssemblyName = currentBaseAssembly;
+					_log.LogMessage (MessageImportance.High, $"    {peer.ManagedTypeName}: will use base ctor from {currentBase} (framework type)");
+					break;
+				}
+			}
+		}
 	}
 
 	void ScanAssembly (string assemblyPath, List<JavaPeerInfo> results)
@@ -334,8 +401,9 @@ internal class JavaPeerScanner
 		bool isAbstract = (typeDef.Attributes & System.Reflection.TypeAttributes.Abstract) != 0;
 
 		string? baseTypeName = null;
+		string? baseAssemblyName = null;
 		if (!isInterface && !typeDef.BaseType.IsNil) {
-			baseTypeName = GetFullTypeName (reader, typeDef.BaseType);
+			(baseTypeName, baseAssemblyName) = GetFullTypeNameAndAssembly (reader, typeDef.BaseType);
 		}
 
 		// For interfaces and abstract types, try to find the Invoker type
@@ -367,6 +435,7 @@ internal class JavaPeerScanner
 			InvokerTypeName = invokerTypeName,
 			InvokerAssemblyName = invokerAssemblyName,
 			BaseManagedTypeName = baseTypeName,
+			BaseAssemblyName = baseAssemblyName,
 			HasActivationConstructor = hasActivationCtor,
 			MarshalMethods = marshalMethods,
 		});
@@ -393,8 +462,9 @@ internal class JavaPeerScanner
 		bool isAbstract = (typeDef.Attributes & System.Reflection.TypeAttributes.Abstract) != 0;
 
 		string? baseTypeName = null;
+		string? baseAssemblyName = null;
 		if (!isInterface && !typeDef.BaseType.IsNil) {
-			baseTypeName = GetFullTypeName (reader, typeDef.BaseType);
+			(baseTypeName, baseAssemblyName) = GetFullTypeNameAndAssembly (reader, typeDef.BaseType);
 		}
 
 		string? invokerTypeName = null;
@@ -424,6 +494,7 @@ internal class JavaPeerScanner
 			InvokerTypeName = invokerTypeName,
 			InvokerAssemblyName = invokerAssemblyName,
 			BaseManagedTypeName = baseTypeName,
+			BaseAssemblyName = baseAssemblyName,
 			HasActivationConstructor = hasActivationCtor,
 			MarshalMethods = marshalMethods,
 		});
@@ -828,22 +899,38 @@ internal class JavaPeerScanner
 
 	string? GetFullTypeName (MetadataReader reader, EntityHandle handle)
 	{
+		var (name, _) = GetFullTypeNameAndAssembly (reader, handle);
+		return name;
+	}
+
+	(string? TypeName, string? AssemblyName) GetFullTypeNameAndAssembly (MetadataReader reader, EntityHandle handle)
+	{
 		try {
 			if (handle.Kind == HandleKind.TypeReference) {
 				var typeRef = reader.GetTypeReference ((TypeReferenceHandle)handle);
 				string ns = reader.GetString (typeRef.Namespace);
 				string name = reader.GetString (typeRef.Name);
-				return string.IsNullOrEmpty (ns) ? name : $"{ns}.{name}";
+				string fullName = string.IsNullOrEmpty (ns) ? name : $"{ns}.{name}";
+				
+				// Get assembly name from resolution scope
+				string? assemblyName = null;
+				if (typeRef.ResolutionScope.Kind == HandleKind.AssemblyReference) {
+					var asmRef = reader.GetAssemblyReference ((AssemblyReferenceHandle)typeRef.ResolutionScope);
+					assemblyName = reader.GetString (asmRef.Name);
+				}
+				return (fullName, assemblyName);
 			} else if (handle.Kind == HandleKind.TypeDefinition) {
 				var typeDef = reader.GetTypeDefinition ((TypeDefinitionHandle)handle);
 				string ns = reader.GetString (typeDef.Namespace);
 				string name = reader.GetString (typeDef.Name);
-				return string.IsNullOrEmpty (ns) ? name : $"{ns}.{name}";
+				string fullName = string.IsNullOrEmpty (ns) ? name : $"{ns}.{name}";
+				// TypeDefinition is in the current assembly
+				return (fullName, GetAssemblyName (reader));
 			}
 		} catch {
 			// Ignore errors, return null
 		}
-		return null;
+		return (null, null);
 	}
 }
 
@@ -874,6 +961,7 @@ internal class TypeMapAssemblyGenerator
 	TypeReferenceHandle _intPtrTypeRef;
 	TypeReferenceHandle _int32TypeRef;
 	TypeReferenceHandle _typeTypeRef;
+	TypeReferenceHandle _runtimeTypeHandleTypeRef;
 	TypeReferenceHandle _attributeUsageTypeRef;
 	TypeReferenceHandle _attributeTargetsTypeRef;
 	TypeReferenceHandle _javaPeerProxyTypeRef;
@@ -893,6 +981,7 @@ internal class TypeMapAssemblyGenerator
 	TypeReferenceHandle _androidEnvironmentTypeRef;
 	TypeReferenceHandle _androidRuntimeInternalTypeRef;
 	TypeReferenceHandle _notSupportedExceptionTypeRef;
+	TypeReferenceHandle _runtimeHelpersTypeRef;
 
 	// Well-known member references
 	MemberReferenceHandle _javaPeerProxyCtorRef;
@@ -907,6 +996,7 @@ internal class TypeMapAssemblyGenerator
 	MemberReferenceHandle _raiseThrowableRef;
 	MemberReferenceHandle _throwableFromExceptionRef;
 	MemberReferenceHandle _notSupportedExceptionCtorRef;
+	MemberReferenceHandle _getUninitializedObjectRef;
 	
 	// Signature blobs (cached)
 	BlobHandle _voidMethodSig;
@@ -1830,6 +1920,11 @@ public class {{className}}
 	resolutionScope: _corlibRef,
 	@namespace: _metadata.GetOrAddString ("System"),
 	name: _metadata.GetOrAddString ("Type"));
+
+	_runtimeTypeHandleTypeRef = _metadata.AddTypeReference (
+	resolutionScope: _corlibRef,
+	@namespace: _metadata.GetOrAddString ("System"),
+	name: _metadata.GetOrAddString ("RuntimeTypeHandle"));
 	
 	_attributeUsageTypeRef = _metadata.AddTypeReference (
 	resolutionScope: _corlibRef,
@@ -1917,6 +2012,11 @@ public class {{className}}
 	resolutionScope: _corlibRef,
 	@namespace: _metadata.GetOrAddString ("System"),
 	name: _metadata.GetOrAddString ("NotSupportedException"));
+
+	_runtimeHelpersTypeRef = _metadata.AddTypeReference (
+	resolutionScope: _corlibRef,
+	@namespace: _metadata.GetOrAddString ("System.Runtime.CompilerServices"),
+	name: _metadata.GetOrAddString ("RuntimeHelpers"));
 	}
 	
 	void AddMemberReferences ()
@@ -2071,6 +2171,19 @@ public class {{className}}
 		parent: _notSupportedExceptionTypeRef,
 		name: _metadata.GetOrAddString (".ctor"),
 		signature: _metadata.GetOrAddBlob (nseCtorSigBlob));
+
+	// RuntimeHelpers.GetUninitializedObject(Type) -> object
+	var getUninitSigBlob = new BlobBuilder ();
+	new BlobEncoder (getUninitSigBlob)
+		.MethodSignature (isInstanceMethod: false)
+		.Parameters (1,
+			returnType => returnType.Type ().Object (),
+			parameters => parameters.AddParameter ().Type ().Type (_typeTypeRef, isValueType: false));
+
+	_getUninitializedObjectRef = _metadata.AddMemberReference (
+		parent: _runtimeHelpersTypeRef,
+		name: _metadata.GetOrAddString ("GetUninitializedObject"),
+		signature: _metadata.GetOrAddBlob (getUninitSigBlob));
 	}
 	
 	void CreateSignatureBlobs ()
@@ -2484,6 +2597,69 @@ public class {{className}}
 			encoder.Token (targetCtorRef);
 			// ret
 			encoder.OpCode (ILOpCode.Ret);
+		} else if (!string.IsNullOrEmpty (peer.ActivationCtorBaseTypeName)) {
+			// Type doesn't have its own activation ctor, but a base class does.
+			// Use GetUninitializedObject + call base ctor pattern:
+			//   var obj = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
+			//   BaseType..ctor(obj, handle, transfer); // Call base ctor as instance method
+			//   return obj;
+			
+			var baseTypeRef = AddExternalTypeReference (peer.ActivationCtorBaseAssemblyName!, peer.ActivationCtorBaseTypeName!);
+			if (baseTypeRef.IsNil) {
+				EmitThrowNotSupported (encoder, $"Base type {peer.ActivationCtorBaseTypeName} not found for {peer.ManagedTypeName}");
+			} else {
+				// Create base ctor reference: BaseType(IntPtr, JniHandleOwnership)
+				var ctorSigBlob = new BlobBuilder ();
+				new BlobEncoder (ctorSigBlob)
+					.MethodSignature (isInstanceMethod: true)
+					.Parameters (2,
+						returnType => returnType.Void (),
+						parameters => {
+							parameters.AddParameter ().Type ().IntPtr ();
+							parameters.AddParameter ().Type ().Type (_jniHandleOwnershipTypeRef, isValueType: true);
+						});
+
+				var baseCtorRef = _metadata.AddMemberReference (
+					parent: baseTypeRef,
+					name: _metadata.GetOrAddString (".ctor"),
+					signature: _metadata.GetOrAddBlob (ctorSigBlob));
+
+				// typeof(TargetType)
+				encoder.OpCode (ILOpCode.Ldtoken);
+				encoder.Token (targetTypeRef);
+				// Type.GetTypeFromHandle(RuntimeTypeHandle) - we need a reference to this method
+				var getTypeFromHandleSig = new BlobBuilder ();
+				new BlobEncoder (getTypeFromHandleSig)
+					.MethodSignature (isInstanceMethod: false)
+					.Parameters (1,
+						returnType => returnType.Type ().Type (_typeTypeRef, isValueType: false),
+						parameters => parameters.AddParameter ().Type ().Type (_runtimeTypeHandleTypeRef, isValueType: true));
+				var getTypeFromHandleRef = _metadata.AddMemberReference (
+					parent: _typeTypeRef,
+					name: _metadata.GetOrAddString ("GetTypeFromHandle"),
+					signature: _metadata.GetOrAddBlob (getTypeFromHandleSig));
+				encoder.Call (getTypeFromHandleRef);
+
+				// RuntimeHelpers.GetUninitializedObject(type)
+				encoder.Call (_getUninitializedObjectRef);
+
+				// Cast to TargetType
+				encoder.OpCode (ILOpCode.Castclass);
+				encoder.Token (targetTypeRef);
+
+				// Duplicate object reference (one for ctor call, one for return)
+				encoder.OpCode (ILOpCode.Dup);
+
+				// ldarg.1 (handle)
+				encoder.OpCode (ILOpCode.Ldarg_1);
+				// ldarg.2 (transfer)
+				encoder.OpCode (ILOpCode.Ldarg_2);
+				// call BaseType::.ctor(IntPtr, JniHandleOwnership) - note: call, not callvirt, and not newobj
+				encoder.Call (baseCtorRef);
+
+				// ret (the duplicated object reference is already on stack)
+				encoder.OpCode (ILOpCode.Ret);
+			}
 		} else if ((peer.IsInterface || peer.IsAbstract) && !string.IsNullOrEmpty (peer.InvokerTypeName)) {
 			// For Interfaces/Abstract types, we need to instantiate the Invoker
 			// Add Invoker type reference
