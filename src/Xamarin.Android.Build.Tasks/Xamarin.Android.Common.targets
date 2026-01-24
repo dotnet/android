@@ -1574,8 +1574,7 @@ because xbuild doesn't support framework reference assemblies.
       SupportedAbis="@(_BuildTargetAbis)">
   </GenerateACWMap>
 
-  <!-- TypeMap PoC: Commenting out old JCW generation - replaced by GenerateTypeMapAttributesStep linker step -->
-  <!--
+  <!-- JCW generation is still required - it generates the .java files that are compiled into classes.dex -->
   <GenerateJavaCallableWrappers
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       OutputDirectory="$(IntermediateOutputPath)android\src"
@@ -1584,7 +1583,6 @@ because xbuild doesn't support framework reference assemblies.
       SupportedAbis="@(_BuildTargetAbis)">
     <Output TaskParameter="GeneratedJavaFilesOutput" ItemName="_GeneratedJavaFiles" />
   </GenerateJavaCallableWrappers>
-  -->
 
   <!-- TypeMap PoC: Keep GenerateJavaStubs for NativeCodeGenState, but it won't generate JCW files 
        (JCW generation only happens when RunCheckedBuild is true, which we set to false) -->

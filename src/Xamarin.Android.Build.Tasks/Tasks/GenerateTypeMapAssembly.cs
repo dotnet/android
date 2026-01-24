@@ -1081,85 +1081,174 @@ internal class TypeMapAssemblyGenerator
 	
 	TypeDefinitionHandle GenerateProxyType (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef)
 	{
-	// Generate proxy type name: replace slashes with underscores, add _Proxy suffix
-	string proxyTypeName = peer.JavaName.Replace ('/', '_').Replace ('$', '_') + "_Proxy";
-	
-	_log.LogDebugMessage ($"  Generating proxy type: {proxyTypeName} for {peer.ManagedTypeName}");
-	
-	// Track the method list start for this type
-	var firstMethodHandle = MetadataTokens.MethodDefinitionHandle (_nextMethodDefRowId);
-	var firstFieldHandle = MetadataTokens.FieldDefinitionHandle (_nextFieldDefRowId);
-	
-	// Generate methods first (before type definition)
-	// 1. Constructor
-	int ctorBodyOffset = GenerateProxyConstructor ();
-	var ctorDef = _metadata.AddMethodDefinition (
-	attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
-	implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
-	name: _metadata.GetOrAddString (".ctor"),
-	signature: _voidMethodSig,
-	bodyOffset: ctorBodyOffset,
-	parameterList: MetadataTokens.ParameterHandle (_nextParamDefRowId));
-	_nextMethodDefRowId++;
-	
-	// 2. GetFunctionPointer override
-	int getFnPtrBodyOffset = GenerateGetFunctionPointerBody ();
-	var getFnPtrDef = _metadata.AddMethodDefinition (
-	attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
-	implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
-	name: _metadata.GetOrAddString ("GetFunctionPointer"),
-	signature: _getFunctionPointerSig,
-	bodyOffset: getFnPtrBodyOffset,
-	parameterList: MetadataTokens.ParameterHandle (_nextParamDefRowId));
-	
-	// Add parameter definition for methodIndex
-	_metadata.AddParameter (
-	attributes: ParameterAttributes.None,
-	name: _metadata.GetOrAddString ("methodIndex"),
-	sequenceNumber: 1);
-	_nextParamDefRowId++;
-	_nextMethodDefRowId++;
-	
-	// 3. CreateInstance override
-	int createInstanceBodyOffset = GenerateCreateInstanceBody (peer, targetTypeRef);
-	var createInstanceDef = _metadata.AddMethodDefinition (
-	attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
-	implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
-	name: _metadata.GetOrAddString ("CreateInstance"),
-	signature: _createInstanceSig,
-	bodyOffset: createInstanceBodyOffset,
-	parameterList: MetadataTokens.ParameterHandle (_nextParamDefRowId));
-	
-	// Add parameter definitions
-	_metadata.AddParameter (
-	attributes: ParameterAttributes.None,
-	name: _metadata.GetOrAddString ("handle"),
-	sequenceNumber: 1);
-	_nextParamDefRowId++;
-	
-	_metadata.AddParameter (
-	attributes: ParameterAttributes.None,
-	name: _metadata.GetOrAddString ("transfer"),
-	sequenceNumber: 2);
-	_nextParamDefRowId++;
-	_nextMethodDefRowId++;
-	
-	// Create the type definition
-	var typeDef = _metadata.AddTypeDefinition (
-	attributes: TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-	@namespace: _metadata.GetOrAddString ("_Microsoft.Android.TypeMaps"),
-	name: _metadata.GetOrAddString (proxyTypeName),
-	baseType: _javaPeerProxyTypeRef,
-	fieldList: firstFieldHandle,
-	methodList: firstMethodHandle);
-	
-	// Add AttributeUsage attribute
-	AddAttributeUsageToType (typeDef);
-	
-	// Track for self-application later
-	_proxyTypes.Add ((typeDef, _voidMethodSig));
-	
-	return typeDef;
+		// Generate proxy type name: replace slashes with underscores, add _Proxy suffix
+		string proxyTypeName = peer.JavaName.Replace ('/', '_').Replace ('$', '_') + "_Proxy";
+
+		_log.LogDebugMessage ($"  Generating proxy type: {proxyTypeName} for {peer.ManagedTypeName}");
+
+		// Track the method list start for this type
+		var firstMethodHandle = MetadataTokens.MethodDefinitionHandle (_nextMethodDefRowId);
+		var firstFieldHandle = MetadataTokens.FieldDefinitionHandle (_nextFieldDefRowId);
+
+		// Generate methods first (before type definition)
+		// 1. Constructor
+		int ctorBodyOffset = GenerateProxyConstructor ();
+		var ctorDef = _metadata.AddMethodDefinition (
+			attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
+			implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
+			name: _metadata.GetOrAddString (".ctor"),
+			signature: _voidMethodSig,
+			bodyOffset: ctorBodyOffset,
+			parameterList: MetadataTokens.ParameterHandle (_nextParamDefRowId));
+		_nextMethodDefRowId++;
+
+		// 2. Generate UCO wrapper methods for marshal methods
+		var ucoWrapperHandles = GenerateUcoWrappers (peer, targetTypeRef);
+
+		// 3. GetFunctionPointer override - now with UCO wrapper handles
+		int getFnPtrBodyOffset = GenerateGetFunctionPointerBody (ucoWrapperHandles);
+		var getFnPtrDef = _metadata.AddMethodDefinition (
+			attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+			implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
+			name: _metadata.GetOrAddString ("GetFunctionPointer"),
+			signature: _getFunctionPointerSig,
+			bodyOffset: getFnPtrBodyOffset,
+			parameterList: MetadataTokens.ParameterHandle (_nextParamDefRowId));
+
+		// Add parameter definition for methodIndex
+		_metadata.AddParameter (
+			attributes: ParameterAttributes.None,
+			name: _metadata.GetOrAddString ("methodIndex"),
+			sequenceNumber: 1);
+		_nextParamDefRowId++;
+		_nextMethodDefRowId++;
+
+		// 4. CreateInstance override
+		int createInstanceBodyOffset = GenerateCreateInstanceBody (peer, targetTypeRef);
+		var createInstanceDef = _metadata.AddMethodDefinition (
+			attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+			implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
+			name: _metadata.GetOrAddString ("CreateInstance"),
+			signature: _createInstanceSig,
+			bodyOffset: createInstanceBodyOffset,
+			parameterList: MetadataTokens.ParameterHandle (_nextParamDefRowId));
+
+		// Add parameter definitions
+		_metadata.AddParameter (
+			attributes: ParameterAttributes.None,
+			name: _metadata.GetOrAddString ("handle"),
+			sequenceNumber: 1);
+		_nextParamDefRowId++;
+
+		_metadata.AddParameter (
+			attributes: ParameterAttributes.None,
+			name: _metadata.GetOrAddString ("transfer"),
+			sequenceNumber: 2);
+		_nextParamDefRowId++;
+		_nextMethodDefRowId++;
+
+		// Create the type definition
+		var typeDef = _metadata.AddTypeDefinition (
+			attributes: TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+			@namespace: _metadata.GetOrAddString ("_Microsoft.Android.TypeMaps"),
+			name: _metadata.GetOrAddString (proxyTypeName),
+			baseType: _javaPeerProxyTypeRef,
+			fieldList: firstFieldHandle,
+			methodList: firstMethodHandle);
+
+		// Add AttributeUsage attribute
+		AddAttributeUsageToType (typeDef);
+
+		// Track for self-application later
+		_proxyTypes.Add ((typeDef, _voidMethodSig));
+
+		return typeDef;
+	}
+
+	/// <summary>
+	/// Generates UCO wrapper methods for marshal methods and returns their handles.
+	/// </summary>
+	List<MethodDefinitionHandle> GenerateUcoWrappers (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef)
+	{
+		var wrapperHandles = new List<MethodDefinitionHandle> ();
+
+		// Skip if no marshal methods
+		if (peer.MarshalMethods.Count == 0) {
+			return wrapperHandles;
+		}
+
+		// Get UnmanagedCallersOnlyAttribute type reference
+		var ucoAttrTypeRef = _metadata.AddTypeReference (
+			resolutionScope: _interopRef,
+			@namespace: _metadata.GetOrAddString ("System.Runtime.InteropServices"),
+			name: _metadata.GetOrAddString ("UnmanagedCallersOnlyAttribute"));
+
+		// Get UCO attribute constructor (parameterless)
+		var ucoCtorSigBlob = new BlobBuilder ();
+		new BlobEncoder (ucoCtorSigBlob)
+			.MethodSignature (isInstanceMethod: true)
+			.Parameters (0, returnType => returnType.Void (), parameters => { });
+
+		var ucoCtorRef = _metadata.AddMemberReference (
+			parent: ucoAttrTypeRef,
+			name: _metadata.GetOrAddString (".ctor"),
+			signature: _metadata.GetOrAddBlob (ucoCtorSigBlob));
+
+		for (int i = 0; i < peer.MarshalMethods.Count; i++) {
+			var mm = peer.MarshalMethods[i];
+
+			// Generate wrapper method name
+			string wrapperName = $"n_{mm.JniName}_mm_{i}";
+
+			// Create method signature: static void wrapper(IntPtr jnienv, IntPtr obj, ...)
+			// For simplicity, start with just the basic JNI parameters
+			var wrapperSigBlob = new BlobBuilder ();
+			new BlobEncoder (wrapperSigBlob)
+				.MethodSignature (isInstanceMethod: false) // static
+				.Parameters (2, // jnienv, obj for now
+					returnType => returnType.Void (),
+					parameters => {
+						parameters.AddParameter ().Type ().IntPtr (); // jnienv
+						parameters.AddParameter ().Type ().IntPtr (); // obj
+					});
+
+			// Generate wrapper body - for now, just return
+			// TODO: Call the actual n_* callback method
+			var wrapperBodyBlob = new BlobBuilder ();
+			var wrapperEncoder = new InstructionEncoder (wrapperBodyBlob);
+			wrapperEncoder.OpCode (ILOpCode.Ret);
+			int wrapperBodyOffset = _methodBodyStream.AddMethodBody (wrapperEncoder);
+
+			// Create method definition
+			var wrapperDef = _metadata.AddMethodDefinition (
+				attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+				implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
+				name: _metadata.GetOrAddString (wrapperName),
+				signature: _metadata.GetOrAddBlob (wrapperSigBlob),
+				bodyOffset: wrapperBodyOffset,
+				parameterList: MetadataTokens.ParameterHandle (_nextParamDefRowId));
+
+			// Add parameter definitions
+			_metadata.AddParameter (ParameterAttributes.None, _metadata.GetOrAddString ("jnienv"), 1);
+			_nextParamDefRowId++;
+			_metadata.AddParameter (ParameterAttributes.None, _metadata.GetOrAddString ("obj"), 2);
+			_nextParamDefRowId++;
+			_nextMethodDefRowId++;
+
+			// Add [UnmanagedCallersOnly] attribute
+			var ucoAttrBlob = new BlobBuilder ();
+			ucoAttrBlob.WriteUInt16 (1); // Prolog
+			ucoAttrBlob.WriteUInt16 (0); // No named args
+
+			_metadata.AddCustomAttribute (
+				parent: wrapperDef,
+				constructor: ucoCtorRef,
+				value: _metadata.GetOrAddBlob (ucoAttrBlob));
+
+			wrapperHandles.Add (wrapperDef);
+		}
+
+		return wrapperHandles;
 	}
 	
 	int GenerateProxyConstructor ()
@@ -1175,19 +1264,65 @@ internal class TypeMapAssemblyGenerator
 	return _methodBodyStream.AddMethodBody (encoder);
 	}
 	
-	int GenerateGetFunctionPointerBody ()
+	int GenerateGetFunctionPointerBody (List<MethodDefinitionHandle> ucoWrapperHandles)
 	{
-	// For now: return IntPtr.Zero
-	// TODO: Generate switch statement with UCO wrapper function pointers
-	var codeBuilder = new BlobBuilder ();
-	var encoder = new InstructionEncoder (codeBuilder);
-	
-	// ldsfld IntPtr.Zero
-	encoder.OpCode (ILOpCode.Ldsfld);
-	encoder.Token (_intPtrZeroFieldRef);
-	encoder.OpCode (ILOpCode.Ret);
-	
-	return _methodBodyStream.AddMethodBody (encoder);
+		var codeBuilder = new BlobBuilder ();
+		var encoder = new InstructionEncoder (codeBuilder);
+
+		if (ucoWrapperHandles.Count == 0) {
+			// No UCO wrappers - return IntPtr.Zero
+			encoder.OpCode (ILOpCode.Ldsfld);
+			encoder.Token (_intPtrZeroFieldRef);
+			encoder.OpCode (ILOpCode.Ret);
+		} else {
+			// Generate switch statement:
+			// switch (methodIndex) {
+			//     case 0: return (IntPtr)(delegate*<...>)&wrapper0;
+			//     case 1: return (IntPtr)(delegate*<...>)&wrapper1;
+			//     ...
+			//     default: return IntPtr.Zero;
+			// }
+
+			// For now, generate a simple if-else chain (switch IL is more complex)
+			// ldarg.1 (methodIndex)
+			// ldc.i4.0
+			// beq case0
+			// ldarg.1
+			// ldc.i4.1
+			// beq case1
+			// ... default: ldsfld IntPtr.Zero; ret
+			// case0: ldftn wrapper0; ret
+			// case1: ldftn wrapper1; ret
+
+			var defaultLabel = encoder.DefineLabel ();
+			var caseLabels = new LabelHandle[ucoWrapperHandles.Count];
+			for (int i = 0; i < ucoWrapperHandles.Count; i++) {
+				caseLabels[i] = encoder.DefineLabel ();
+			}
+
+			// Check each case
+			for (int i = 0; i < ucoWrapperHandles.Count; i++) {
+				encoder.OpCode (ILOpCode.Ldarg_1); // methodIndex
+				encoder.LoadConstantI4 (i);
+				encoder.Branch (ILOpCode.Beq, caseLabels[i]);
+			}
+
+			// Default case - return IntPtr.Zero
+			encoder.MarkLabel (defaultLabel);
+			encoder.OpCode (ILOpCode.Ldsfld);
+			encoder.Token (_intPtrZeroFieldRef);
+			encoder.OpCode (ILOpCode.Ret);
+
+			// Case labels - each returns ldftn of wrapper
+			for (int i = 0; i < ucoWrapperHandles.Count; i++) {
+				encoder.MarkLabel (caseLabels[i]);
+				encoder.OpCode (ILOpCode.Ldftn);
+				encoder.Token (ucoWrapperHandles[i]);
+				encoder.OpCode (ILOpCode.Ret);
+			}
+		}
+
+		return _methodBodyStream.AddMethodBody (encoder);
 	}
 	
 	int GenerateCreateInstanceBody (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef)

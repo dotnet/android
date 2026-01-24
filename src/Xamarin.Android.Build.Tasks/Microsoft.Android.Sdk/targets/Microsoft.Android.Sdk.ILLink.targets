@@ -9,16 +9,55 @@ This file contains the .NET 5-specific targets to customize ILLink
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateTypeMapAssembly" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+
+  <!--
+    Generate the TypeMap assembly BEFORE ILLink runs.
+    This task scans assemblies for [Register] attributes and generates _Microsoft.Android.TypeMaps.dll
+    containing TypeMapAttribute entries. The generated assembly is included in the ILLink input
+    so that type mappings affect trimming decisions.
+  -->
+  <Target Name="_GenerateTypeMapAssembly"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_AndroidRuntime)' != 'MonoVM' "
+      AfterTargets="ComputeResolvedFilesToPublishList"
+      BeforeTargets="_PrepareLinking">
+    <PropertyGroup>
+      <_TypeMapAssemblyOutputDir>$(IntermediateOutputPath)typemap\</_TypeMapAssemblyOutputDir>
+    </PropertyGroup>
+    
+    <GenerateTypeMapAssembly
+        ResolvedAssemblies="@(ResolvedFileToPublish)"
+        OutputDirectory="$(_TypeMapAssemblyOutputDir)">
+      <Output TaskParameter="GeneratedAssembly" ItemName="_TypeMapGeneratedAssembly" />
+      <Output TaskParameter="TypeMapEntryAssemblyName" PropertyName="_TypeMapEntryAssemblyName" />
+      <Output TaskParameter="UpdatedResolvedAssemblies" ItemName="_TypeMapUpdatedAssemblies" />
+    </GenerateTypeMapAssembly>
+
+    <!-- Update TypeMapEntryAssembly to point to the generated assembly -->
+    <PropertyGroup Condition=" '$(_TypeMapEntryAssemblyName)' != '' ">
+      <TypeMapEntryAssembly>$(_TypeMapEntryAssemblyName)</TypeMapEntryAssembly>
+    </PropertyGroup>
+
+    <!-- Replace ResolvedFileToPublish with the updated list that includes the TypeMap assembly -->
+    <ItemGroup Condition=" '@(_TypeMapUpdatedAssemblies)' != '' ">
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" />
+      <ResolvedFileToPublish Include="@(_TypeMapUpdatedAssemblies)" />
+    </ItemGroup>
+
+    <Message Condition=" '@(_TypeMapGeneratedAssembly)' != '' " Importance="high" 
+             Text="Generated TypeMap assembly: @(_TypeMapGeneratedAssembly) (TypeMapEntryAssembly=$(TypeMapEntryAssembly))" />
+  </Target>
+
   <Target Name="_PrepareLinking"
       Condition=" '$(PublishTrimmed)' == 'true' "
       AfterTargets="ComputeResolvedFilesToPublishList"
-      DependsOnTargets="GetReferenceAssemblyPaths;_CreatePropertiesCache">
+      DependsOnTargets="GetReferenceAssemblyPaths;_CreatePropertiesCache;_GenerateTypeMapAssembly">
     <PropertyGroup>
       <TrimmerRemoveSymbols Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' ">true</TrimmerRemoveSymbols>
       <_ExtraTrimmerArgs Condition=" '$(_EnableSerializationDiscovery)' != 'false' ">--enable-serialization-discovery $(_ExtraTrimmerArgs)</_ExtraTrimmerArgs>
       <_ExtraTrimmerArgs Condition=" '$(_AndroidEnableUnusedTypeChecks)' != 'true' ">--disable-opt unusedtypechecks $(_ExtraTrimmerArgs)</_ExtraTrimmerArgs>
-      <!-- Set the TypeMap entry assembly to Mono.Android where the type map attributes are generated -->
-      <TypeMapEntryAssembly>Mono.Android</TypeMapEntryAssembly>
+      <!-- TypeMapEntryAssembly is set by _GenerateTypeMapAssembly, or defaults to Mono.Android for MonoVM -->
+      <TypeMapEntryAssembly Condition=" '$(TypeMapEntryAssembly)' == '' ">Mono.Android</TypeMapEntryAssembly>
       <!--
         Used for the <ILLink DumpDependencies="$(_TrimmerDumpDependencies)" /> value:
         https://github.com/dotnet/sdk/blob/a5393731b5b7b225692fff121f747fbbc9e8b140/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.ILLink.targets#L150
@@ -41,18 +80,18 @@ This file contains the .NET 5-specific targets to customize ILLink
           Value="$(_ProguardProjectConfiguration)"
       />
       <_TrimmerCustomData Include="SystemIOHashingAssemblyPath" Value="$(_SystemIOHashingAssemblyPath)" />
-      <!-- TypeMap PoC: Output paths for JCW and LLVM IR generation -->
-      <!-- Write JCW to a temporary directory, will be copied after GenerateJavaStubs -->
-      <_TrimmerCustomData Include="JavaOutputPath" Value="$(IntermediateOutputPath)android/typemap_jcw_staging" />
+      <!-- TypeMap: Output path for LLVM IR generation (JCW is handled by GenerateJavaStubs) -->
       <_TrimmerCustomData Include="LlvmIrOutputPath" Value="$(IntermediateOutputPath)android" />
       <_TrimmerCustomData Include="TargetArch" Value="$(RuntimeIdentifier)" />
+      <!-- TypeMap assembly name - the ILLink step reads type mapping info from this assembly -->
+      <_TrimmerCustomData Include="TypeMapEntryAssembly" Value="$(TypeMapEntryAssembly)" />
 
       <!--
         Used for the <ILLink CustomSteps="@(_TrimmerCustomSteps)" /> value:
         https://github.com/dotnet/sdk/blob/a5393731b5b7b225692fff121f747fbbc9e8b140/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.ILLink.targets#L131
         -->
       <!-- add our custom steps -->
-      <!-- Steps to run before MarkStep -->
+      <!-- Steps to run before MarkStep - reads TypeMap attributes from pre-generated assembly -->
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)"
           Type="Microsoft.Android.Sdk.ILLink.GenerateTypeMapAttributesStep"
           BeforeStep="MarkStep" />
@@ -140,27 +179,6 @@ This file contains the .NET 5-specific targets to customize ILLink
       </_TypeMapMarshalMethodsSource>
     </ItemGroup>
     <Message Condition=" '@(_TypeMapMarshalMethodsSource)' != '' " Importance="high" Text="Found @(_TypeMapMarshalMethodsSource->Count()) Type Map marshal method .ll files for ABI $(_TypeMapMarshalMethodsAbi)" />
-  </Target>
-
-  <!-- 
-    TypeMap PoC: Copy our JCW files AFTER GenerateJavaStubs runs, so we overwrite the old-style JCW
-    that calls TypeManager.Activate with our new JCW that uses native method resolution.
-  -->
-  <Target Name="_CopyTypeMapJcwFiles" 
-      AfterTargets="_GenerateJavaStubs"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(_AndroidRuntime)' != 'MonoVM' and Exists('$(IntermediateOutputPath)android/typemap_jcw_staging') ">
-    <PropertyGroup>
-      <_TypeMapJcwStagingDir>$(IntermediateOutputPath)android/typemap_jcw_staging</_TypeMapJcwStagingDir>
-      <_TypeMapJcwDestDir>$(IntermediateOutputPath)android/src</_TypeMapJcwDestDir>
-    </PropertyGroup>
-    <ItemGroup>
-      <_TypeMapJcwFiles Include="$(_TypeMapJcwStagingDir)/**/*.java" />
-    </ItemGroup>
-    <Message Condition=" '@(_TypeMapJcwFiles)' != '' " Importance="high" Text="Copying @(_TypeMapJcwFiles->Count()) TypeMap JCW files to $(_TypeMapJcwDestDir)" />
-    <Copy SourceFiles="@(_TypeMapJcwFiles)" 
-          DestinationFiles="@(_TypeMapJcwFiles->'$(_TypeMapJcwDestDir)/%(RecursiveDir)%(Filename)%(Extension)')"
-          OverwriteReadOnlyFiles="true"
-          SkipUnchangedFiles="false" />
   </Target>
 
 </Project>

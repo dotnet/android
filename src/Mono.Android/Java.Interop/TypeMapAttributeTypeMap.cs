@@ -35,8 +35,41 @@ namespace Android.Runtime
 		public TypeMapAttributeTypeMap ()
 		{
 			Log ("TypeMapAttributeTypeMap: Initializing...");
-			_externalTypeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
-			_invokerTypeMap = TypeMapping.GetOrCreateProxyTypeMapping<InvokerUniverse> ();
+			
+			// Debug: Try to explicitly load the TypeMaps assembly first
+			try {
+				var typeMapAsm = System.Reflection.Assembly.Load ("_Microsoft.Android.TypeMaps");
+				Log ($"TypeMapAttributeTypeMap: Loaded TypeMaps assembly: {typeMapAsm?.FullName ?? "null"}");
+				
+				// Check what attributes are on the assembly
+				if (typeMapAsm != null) {
+					var attrs = typeMapAsm.GetCustomAttributes (inherit: false);
+					Log ($"TypeMapAttributeTypeMap: TypeMaps assembly has {attrs.Length} custom attributes");
+					foreach (var attr in attrs) {
+						Log ($"TypeMapAttributeTypeMap:   - {attr.GetType ().FullName}");
+					}
+				}
+			} catch (Exception ex) {
+				Log ($"TypeMapAttributeTypeMap: Failed to load TypeMaps assembly: {ex.GetType ().Name}: {ex.Message}");
+			}
+			
+			try {
+				_externalTypeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
+				Log ($"TypeMapAttributeTypeMap: External type map created, testing TryGetValue...");
+				// Test lookup to verify map is populated
+				bool found = _externalTypeMap.TryGetValue ("example/MainActivity", out var testType);
+				Log ($"TypeMapAttributeTypeMap: Direct test lookup 'example/MainActivity' -> found={found}, type={testType?.FullName ?? "null"}");
+			} catch (Exception ex) {
+				Log ($"TypeMapAttributeTypeMap: EXCEPTION creating external type map: {ex.GetType ().Name}: {ex.Message}");
+				throw;
+			}
+			try {
+				// Per spec section 4.2 and 9.1: use Java.Lang.Object for invoker mappings
+				_invokerTypeMap = TypeMapping.GetOrCreateProxyTypeMapping<Java.Lang.Object> ();
+			} catch (Exception ex) {
+				Log ($"TypeMapAttributeTypeMap: EXCEPTION creating invoker type map: {ex.GetType ().Name}: {ex.Message}");
+				throw;
+			}
 			Log ("TypeMapAttributeTypeMap: Initialized external and invoker type mappings");
 		}
 
