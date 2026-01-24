@@ -1092,14 +1092,15 @@ internal class TypeMapAssemblyGenerator
 				
 				string entryJniName = peers.Count > 1 ? $"{jniName}[{i}]" : jniName;
 				string targetTypeName = $"{peer.ManagedTypeName}, {peer.AssemblyName}";
-				// Qualify proxy type with the TypeMaps assembly so runtime can find it
-				string qualifiedProxyTypeName = $"{proxyTypeName}, _Microsoft.Android.TypeMaps";
+				// Qualify proxy type with namespace and assembly so runtime can find it
+				// The proxy types are in the _Microsoft.Android.TypeMaps namespace within the _Microsoft.Android.TypeMaps assembly
+				string qualifiedProxyTypeName = $"_Microsoft.Android.TypeMaps.{proxyTypeName}, _Microsoft.Android.TypeMaps";
 				
 				typeMapAttrs.Add ((entryJniName, qualifiedProxyTypeName, targetTypeName));
 				
 				if (aliasHolderName != null) {
-					// Qualify alias holder with the TypeMaps assembly
-					string qualifiedAliasHolderName = $"{aliasHolderName}, _Microsoft.Android.TypeMaps";
+					// Qualify alias holder with namespace and assembly
+					string qualifiedAliasHolderName = $"_Microsoft.Android.TypeMaps.{aliasHolderName}, _Microsoft.Android.TypeMaps";
 					aliasMappings.Add ((targetTypeName, qualifiedAliasHolderName));
 				}
 				

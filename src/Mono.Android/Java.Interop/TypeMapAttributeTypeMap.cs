@@ -32,15 +32,19 @@ namespace Android.Runtime
 				Logger.Log (LogLevel.Info, "monodroid-typemap", message);
 		}
 
+		const string TypeMapsAssemblyName = "_Microsoft.Android.TypeMaps";
+
 		public TypeMapAttributeTypeMap ()
 		{
 			Log ("TypeMapAttributeTypeMap: Initializing...");
-			
-			// Note: We intentionally don't enumerate custom attributes here.
-			// The TypeMaps assembly references types from user assemblies in proxy method bodies.
-			// Those assemblies may not be loaded yet during early initialization.
-			// TypeMapping.GetOrCreate* methods handle lazy loading correctly.
-			
+
+			// Load the TypeMaps assembly and set it as the entry assembly so the TypeMapping API
+			// knows where to look for TypeMap attributes. Android apps don't have a traditional
+			// entry point assembly, so we need to set this explicitly.
+			var typeMapAssembly = Assembly.Load (TypeMapsAssemblyName);
+			Assembly.SetEntryAssembly (typeMapAssembly);
+			Log ($"TypeMapAttributeTypeMap: Set entry assembly to {typeMapAssembly.FullName}");
+
 			try {
 				_externalTypeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
 				Log ($"TypeMapAttributeTypeMap: External type map created, testing TryGetValue...");
