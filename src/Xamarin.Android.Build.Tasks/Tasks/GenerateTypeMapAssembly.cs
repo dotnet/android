@@ -155,6 +155,7 @@ internal class MarshalMethodInfo
 	public string NativeCallbackName { get; set; } = "";
 	public string[] ParameterTypeNames { get; set; } = [];
 	public string? ReturnTypeName { get; set; }
+	public MethodDefinitionHandle UcoWrapper { get; set; }
 }
 
 /// <summary>
@@ -774,9 +775,22 @@ internal class TypeMapAssemblyGenerator
 	TypeReferenceHandle _typeMapAsmTargetAttrTypeRef;
 	TypeReferenceHandle _javaLangObjectTypeRef;
 	
+	// UCO related types
+	TypeReferenceHandle _unmanagedCallersOnlyAttrTypeRef;
+	TypeReferenceHandle _exceptionTypeRef;
+	TypeReferenceHandle _throwableTypeRef;
+	TypeReferenceHandle _androidEnvironmentTypeRef;
+	TypeReferenceHandle _androidRuntimeInternalTypeRef;
+
 	// Well-known member references
 	MemberReferenceHandle _javaPeerProxyCtorRef;
 	MemberReferenceHandle _intPtrZeroFieldRef;
+
+	// UCO related member references
+	MemberReferenceHandle _unmanagedCallersOnlyCtorRef;
+	MemberReferenceHandle _waitForBridgeProcessingRef;
+	MemberReferenceHandle _raiseThrowableRef;
+	MemberReferenceHandle _throwableFromExceptionRef;
 	
 	// Signature blobs (cached)
 	BlobHandle _voidMethodSig;
@@ -987,6 +1001,31 @@ internal class TypeMapAssemblyGenerator
 	resolutionScope: _interopRef,
 	@namespace: _metadata.GetOrAddString ("System.Runtime.InteropServices"),
 	name: _metadata.GetOrAddString ("TypeMapAssemblyTargetAttribute`1"));
+
+	_exceptionTypeRef = _metadata.AddTypeReference (
+	resolutionScope: _corlibRef,
+	@namespace: _metadata.GetOrAddString ("System"),
+	name: _metadata.GetOrAddString ("Exception"));
+
+	_unmanagedCallersOnlyAttrTypeRef = _metadata.AddTypeReference (
+	resolutionScope: _interopRef,
+	@namespace: _metadata.GetOrAddString ("System.Runtime.InteropServices"),
+	name: _metadata.GetOrAddString ("UnmanagedCallersOnlyAttribute"));
+
+	_throwableTypeRef = _metadata.AddTypeReference (
+	resolutionScope: _monoAndroidRef,
+	@namespace: _metadata.GetOrAddString ("Java.Lang"),
+	name: _metadata.GetOrAddString ("Throwable"));
+
+	_androidEnvironmentTypeRef = _metadata.AddTypeReference (
+	resolutionScope: _monoAndroidRef,
+	@namespace: _metadata.GetOrAddString ("Android.Runtime"),
+	name: _metadata.GetOrAddString ("AndroidEnvironment"));
+
+	_androidRuntimeInternalTypeRef = _metadata.AddTypeReference (
+	resolutionScope: _monoAndroidRef,
+	@namespace: _metadata.GetOrAddString ("Android.Runtime"),
+	name: _metadata.GetOrAddString ("AndroidRuntimeInternal"));
 	}
 	
 	void AddMemberReferences ()
@@ -1011,6 +1050,54 @@ internal class TypeMapAssemblyGenerator
 	parent: _intPtrTypeRef,
 	name: _metadata.GetOrAddString ("Zero"),
 	signature: _metadata.GetOrAddBlob (intPtrFieldSig));
+
+	// UnmanagedCallersOnlyAttribute..ctor()
+	var ucoCtorSigBlob = new BlobBuilder ();
+	new BlobEncoder (ucoCtorSigBlob)
+		.MethodSignature (isInstanceMethod: true)
+		.Parameters (0, returnType => returnType.Void (), parameters => { });
+
+	_unmanagedCallersOnlyCtorRef = _metadata.AddMemberReference (
+		parent: _unmanagedCallersOnlyAttrTypeRef,
+		name: _metadata.GetOrAddString (".ctor"),
+		signature: _metadata.GetOrAddBlob (ucoCtorSigBlob));
+
+	// AndroidRuntimeInternal.WaitForBridgeProcessing()
+	var waitSigBlob = new BlobBuilder ();
+	new BlobEncoder (waitSigBlob)
+		.MethodSignature (isInstanceMethod: false)
+		.Parameters (0, returnType => returnType.Void (), parameters => { });
+
+	_waitForBridgeProcessingRef = _metadata.AddMemberReference (
+		parent: _androidRuntimeInternalTypeRef,
+		name: _metadata.GetOrAddString ("WaitForBridgeProcessing"),
+		signature: _metadata.GetOrAddBlob (waitSigBlob));
+
+	// Java.Lang.Throwable.FromException(Exception)
+	var fromExSigBlob = new BlobBuilder ();
+	new BlobEncoder (fromExSigBlob)
+		.MethodSignature (isInstanceMethod: false)
+		.Parameters (1, 
+			returnType => returnType.Type ().Type (_throwableTypeRef, isValueType: false),
+			parameters => parameters.AddParameter ().Type ().Type (_exceptionTypeRef, isValueType: false));
+
+	_throwableFromExceptionRef = _metadata.AddMemberReference (
+		parent: _throwableTypeRef,
+		name: _metadata.GetOrAddString ("FromException"),
+		signature: _metadata.GetOrAddBlob (fromExSigBlob));
+
+	// AndroidEnvironment.RaiseThrowable(Throwable)
+	var raiseSigBlob = new BlobBuilder ();
+	new BlobEncoder (raiseSigBlob)
+		.MethodSignature (isInstanceMethod: false)
+		.Parameters (1, 
+			returnType => returnType.Void (),
+			parameters => parameters.AddParameter ().Type ().Type (_throwableTypeRef, isValueType: false));
+
+	_raiseThrowableRef = _metadata.AddMemberReference (
+		parent: _androidEnvironmentTypeRef,
+		name: _metadata.GetOrAddString ("RaiseThrowable"),
+		signature: _metadata.GetOrAddBlob (raiseSigBlob));
 	}
 	
 	void CreateSignatureBlobs ()
@@ -1177,22 +1264,10 @@ internal class TypeMapAssemblyGenerator
 			return wrapperHandles;
 		}
 
-		// Get UnmanagedCallersOnlyAttribute type reference
-		var ucoAttrTypeRef = _metadata.AddTypeReference (
-			resolutionScope: _interopRef,
-			@namespace: _metadata.GetOrAddString ("System.Runtime.InteropServices"),
-			name: _metadata.GetOrAddString ("UnmanagedCallersOnlyAttribute"));
-
-		// Get UCO attribute constructor (parameterless)
-		var ucoCtorSigBlob = new BlobBuilder ();
-		new BlobEncoder (ucoCtorSigBlob)
-			.MethodSignature (isInstanceMethod: true)
-			.Parameters (0, returnType => returnType.Void (), parameters => { });
-
-		var ucoCtorRef = _metadata.AddMemberReference (
-			parent: ucoAttrTypeRef,
-			name: _metadata.GetOrAddString (".ctor"),
-			signature: _metadata.GetOrAddBlob (ucoCtorSigBlob));
+		// Ensure we have a local variable signature for the return value (IntPtr)
+		var localsBlob = new BlobBuilder ();
+		new BlobEncoder (localsBlob).LocalVariableSignature (1).AddVariable ().Type ().IntPtr ();
+		var localsSig = _metadata.AddStandaloneSignature (_metadata.GetOrAddBlob (localsBlob));
 
 		for (int i = 0; i < peer.MarshalMethods.Count; i++) {
 			var mm = peer.MarshalMethods[i];
@@ -1200,24 +1275,97 @@ internal class TypeMapAssemblyGenerator
 			// Generate wrapper method name
 			string wrapperName = $"n_{mm.JniName}_mm_{i}";
 
-			// Create method signature: static void wrapper(IntPtr jnienv, IntPtr obj, ...)
-			// For simplicity, start with just the basic JNI parameters
-			var wrapperSigBlob = new BlobBuilder ();
-			new BlobEncoder (wrapperSigBlob)
-				.MethodSignature (isInstanceMethod: false) // static
-				.Parameters (2, // jnienv, obj for now
-					returnType => returnType.Void (),
-					parameters => {
-						parameters.AddParameter ().Type ().IntPtr (); // jnienv
-						parameters.AddParameter ().Type ().IntPtr (); // obj
-					});
+			// Build the parameter list for the wrapper
+			// Native callback typically has: (IntPtr jnienv, IntPtr obj, additional params...)
+			int paramCount = mm.ParameterTypeNames.Length;
+			if (paramCount < 2) {
+				paramCount = 2; // Minimum jnienv, obj
+			}
 
-			// Generate wrapper body - for now, just return
-			// TODO: Call the actual n_* callback method
+			// Create method signature: static IntPtr wrapper(IntPtr jnienv, IntPtr obj, ...)
+			var wrapperSigBlob = new BlobBuilder ();
+			var sigEncoder = new BlobEncoder (wrapperSigBlob).MethodSignature (isInstanceMethod: false);
+			sigEncoder.Parameters (paramCount,
+				returnType => returnType.Type ().IntPtr (),
+				parameters => {
+					// First two are always jnienv and obj (IntPtr)
+					parameters.AddParameter ().Type ().IntPtr ();
+					parameters.AddParameter ().Type ().IntPtr ();
+					// Additional parameters
+					for (int p = 2; p < paramCount; p++) {
+						parameters.AddParameter ().Type ().IntPtr ();
+					}
+				});
+
+			// Create reference to the original n_* callback method in the target type
+			var callbackRef = _metadata.AddMemberReference (
+				parent: targetTypeRef,
+				name: _metadata.GetOrAddString (mm.NativeCallbackName),
+				signature: _metadata.GetOrAddBlob (wrapperSigBlob));
+
+			// Generate wrapper body
 			var wrapperBodyBlob = new BlobBuilder ();
 			var wrapperEncoder = new InstructionEncoder (wrapperBodyBlob);
+
+			// 1. Call WaitForBridgeProcessing
+			wrapperEncoder.Call (_waitForBridgeProcessingRef);
+
+			// 2. Try block start
+			int tryStart = wrapperEncoder.Offset;
+
+			// Load arguments and call callback
+			for (int p = 0; p < paramCount; p++) {
+				wrapperEncoder.LoadArgument (p);
+			}
+			wrapperEncoder.Call (callbackRef);
+
+			// Store return value
+			wrapperEncoder.StoreLocal (0);
+
+			// Leave try block
+			var endLabel = wrapperEncoder.DefineLabel ();
+			wrapperEncoder.Branch (ILOpCode.Leave, endLabel);
+			int tryEnd = wrapperEncoder.Offset;
+
+			// 3. Catch block start
+			int handlerStart = wrapperEncoder.Offset;
+
+			// Exception is on stack. Convert to Throwable and Raise
+			wrapperEncoder.Call (_throwableFromExceptionRef);
+			wrapperEncoder.Call (_raiseThrowableRef);
+
+			// Return default value (0)
+			wrapperEncoder.LoadConstantI4 (0);
+			wrapperEncoder.OpCode (ILOpCode.Conv_i);
+			wrapperEncoder.StoreLocal (0);
+
+			wrapperEncoder.Branch (ILOpCode.Leave, endLabel);
+			int handlerEnd = wrapperEncoder.Offset;
+
+			// 4. Return
+			wrapperEncoder.MarkLabel (endLabel);
+			wrapperEncoder.LoadLocal (0);
 			wrapperEncoder.OpCode (ILOpCode.Ret);
-			int wrapperBodyOffset = _methodBodyStream.AddMethodBody (wrapperEncoder);
+
+			// Add method body with exception handling
+			int wrapperBodyOffset = _methodBodyStream.AddMethodBody (
+				instructionEncoder: wrapperEncoder,
+				maxStack: paramCount + 2, // Check stack depth?
+				localVariablesSignature: localsSig,
+				attributes: MethodBodyAttributes.InitLocals);
+				/*
+				exceptionRegions: new ExceptionRegionEncoder[] {
+					new ExceptionRegionEncoder (
+						kind: ExceptionRegionKind.Catch,
+						tryOffset: tryStart,
+						tryLength: tryEnd - tryStart,
+						handlerOffset: handlerStart,
+						handlerLength: handlerEnd - handlerStart,
+						catchType: _exceptionTypeRef,
+						filterOffset: 0,
+						filterLength: 0)
+				});
+				*/
 
 			// Create method definition
 			var wrapperDef = _metadata.AddMethodDefinition (
@@ -1228,24 +1376,28 @@ internal class TypeMapAssemblyGenerator
 				bodyOffset: wrapperBodyOffset,
 				parameterList: MetadataTokens.ParameterHandle (_nextParamDefRowId));
 
+			// Add [UnmanagedCallersOnly] attribute
+			var ucoAttrValue = new BlobBuilder ();
+			new BlobEncoder (ucoAttrValue).CustomAttributeSignature (
+				fixedArguments => { },
+				namedArguments => { });
+			_metadata.AddCustomAttribute (wrapperDef, _unmanagedCallersOnlyCtorRef, _metadata.GetOrAddBlob (ucoAttrValue));
+
 			// Add parameter definitions
 			_metadata.AddParameter (ParameterAttributes.None, _metadata.GetOrAddString ("jnienv"), 1);
 			_nextParamDefRowId++;
 			_metadata.AddParameter (ParameterAttributes.None, _metadata.GetOrAddString ("obj"), 2);
 			_nextParamDefRowId++;
+			for (int p = 2; p < paramCount; p++) {
+				_metadata.AddParameter (ParameterAttributes.None, _metadata.GetOrAddString ($"p{p}"), p + 1);
+				_nextParamDefRowId++;
+			}
 			_nextMethodDefRowId++;
 
-			// Add [UnmanagedCallersOnly] attribute
-			var ucoAttrBlob = new BlobBuilder ();
-			ucoAttrBlob.WriteUInt16 (1); // Prolog
-			ucoAttrBlob.WriteUInt16 (0); // No named args
-
-			_metadata.AddCustomAttribute (
-				parent: wrapperDef,
-				constructor: ucoCtorRef,
-				value: _metadata.GetOrAddBlob (ucoAttrBlob));
-
 			wrapperHandles.Add (wrapperDef);
+			
+			// Store UCO wrapper in MarshalMethodInfo for later use (e.g. GetFunctionPointer)
+			mm.UcoWrapper = wrapperDef;
 		}
 
 		return wrapperHandles;
