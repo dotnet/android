@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using System.Text;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -975,11 +976,11 @@ internal class TypeMapAssemblyGenerator
 	// 10. Write the PE file
 	WritePEFile (outputPath);
 
-	// 11. Generate Java source files
-	GenerateJavaSourceFiles (javaPeers, javaSourceDir);
+		// 11. Generate Java source files
+		GenerateJavaSourceFiles (javaPeers, javaSourceDir);
 
-	// 12. Generate LLVM IR files
-	GenerateLlvmIrFiles (javaPeers, llvmIrDir);
+		// 12. Generate LLVM IR files
+		GenerateLlvmIrFiles (javaPeers, llvmIrDir);
 	
 	_log.LogDebugMessage ($"Generated TypeMap assembly with {typeMapAttrs.Count} proxy types");
 	}
@@ -2253,23 +2254,32 @@ public class {{className}}
 			wrapperEncoder.OpCode (ILOpCode.Ret);
 
 			// Add method body with exception handling
-			int wrapperBodyOffset = _methodBodyStream.AddMethodBody (
-				instructionEncoder: wrapperEncoder,
-				maxStack: paramCount + 2, // Check stack depth?
+			int tryLength = tryEnd - tryStart;
+			int handlerLength = handlerEnd - handlerStart;
+			bool hasSmallExceptionRegions = 
+				ExceptionRegionEncoder.IsSmallExceptionRegion (tryStart, tryLength) &&
+				ExceptionRegionEncoder.IsSmallExceptionRegion (handlerStart, handlerLength);
+
+			var methodBody = _methodBodyStream.AddMethodBody (
+				codeSize: wrapperBodyBlob.Count,
+				maxStack: paramCount + 2,
+				exceptionRegionCount: 1,
+				hasSmallExceptionRegions: hasSmallExceptionRegions,
 				localVariablesSignature: localsSig,
 				attributes: MethodBodyAttributes.InitLocals);
-				/*
-				// TODO: Fix ExceptionRegionEncoder usage (API mismatch)
-				exceptionRegions: new ExceptionRegionEncoder[] {
-					new ExceptionRegionEncoder (
-						ExceptionRegionKind.Catch,
-						tryStart,
-						tryEnd - tryStart,
-						handlerStart,
-						handlerEnd - handlerStart,
-						_exceptionTypeRef)
-				});
-				*/
+
+			// Write the instructions to the stream
+			wrapperBodyBlob.WriteContentTo (_methodBodyStream.Builder);
+
+			// Add the Catch region
+			methodBody.ExceptionRegions.AddCatch (
+				tryOffset: tryStart,
+				tryLength: tryLength,
+				handlerOffset: handlerStart,
+				handlerLength: handlerLength,
+				catchType: _exceptionTypeRef);
+
+			int wrapperBodyOffset = methodBody.Offset;
 
 			// Create method definition
 			var wrapperDef = _metadata.AddMethodDefinition (
