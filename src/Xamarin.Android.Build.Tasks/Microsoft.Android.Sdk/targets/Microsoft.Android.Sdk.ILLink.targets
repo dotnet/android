@@ -204,6 +204,4 @@ This file contains the .NET 5-specific targets to customize ILLink
     <Delete Files="$(_AndroidMarshalMethodsDir)$([System.IO.Path]::DirectorySeparatorChar)marshal_methods_typemap.o" ContinueOnError="true" />
   </Target>
 
-  <Message Condition=" '@(_TypeMapMarshalMethodsSource)' != '' " Importance="high" Text="Found @(_TypeMapMarshalMethodsSource->Count()) Type Map marshal method .ll files for ABI $(_TypeMapMarshalMethodsAbi)" />
-
 </Project>
