@@ -263,8 +263,10 @@ internal class JavaPeerScanner
 	{
 		var results = new List<JavaPeerInfo> ();
 
+		_log.LogMessage (MessageImportance.High, $"GenerateTypeMapAssembly: Scanning {assemblies.Length} assemblies for Java peer types...");
 		foreach (var assembly in assemblies) {
 			string path = assembly.ItemSpec;
+			_log.LogMessage (MessageImportance.High, $"  Checking: {Path.GetFileName (path)}");
 			if (!File.Exists (path))
 				continue;
 
@@ -296,12 +298,13 @@ internal class JavaPeerScanner
 		// Check if this assembly references Mono.Android (has Java peer types)
 		bool referencesMonoAndroid = ReferencesMonoAndroid (metadataReader);
 		bool isMonoAndroid = assemblyName == "Mono.Android";
-		_log.LogDebugMessage ($"  Checking assembly {assemblyName}: ReferencesMonoAndroid={referencesMonoAndroid}, IsMonoAndroid={isMonoAndroid}");
-
-		if (!referencesMonoAndroid && !isMonoAndroid)
+		
+		if (!referencesMonoAndroid && !isMonoAndroid) {
+			_log.LogMessage (MessageImportance.High, $"  Skipping {assemblyName}: does not reference Mono.Android");
 			return;
+		}
 
-		_log.LogDebugMessage ($"  Scanning assembly {assemblyName} for Java peer types...");
+		_log.LogMessage (MessageImportance.High, $"  Scanning {assemblyName} for Java peer types...");
 
 		foreach (var typeDefHandle in metadataReader.TypeDefinitions) {
 			var typeDef = metadataReader.GetTypeDefinition (typeDefHandle);
@@ -367,6 +370,8 @@ internal class JavaPeerScanner
 			HasActivationConstructor = hasActivationCtor,
 			MarshalMethods = marshalMethods,
 		});
+		
+		_log.LogMessage (MessageImportance.High, $"    Added Java peer: {fullName} -> '{javaName}' (in {assemblyName})");
 
 		// Process nested types
 		foreach (var nestedHandle in typeDef.GetNestedTypes ()) {
@@ -432,18 +437,27 @@ internal class JavaPeerScanner
 
 	string? GetRegisterAttributeValue (MetadataReader reader, TypeDefinition typeDef)
 	{
+		string typeName = reader.GetString (typeDef.Name);
 		foreach (var attrHandle in typeDef.GetCustomAttributes ()) {
 			var attr = reader.GetCustomAttribute (attrHandle);
+			string? attrTypeName = GetAttributeTypeName (reader, attr);
 			
 			// Check for [Register("...")] attribute
 			if (IsRegisterAttribute (reader, attr)) {
-				return DecodeRegisterAttributeValue (reader, attr);
+				var (javaName, doNotGenerateAcw) = DecodeRegisterAttributeValueAndFlags (reader, attr);
+				// Skip types with DoNotGenerateAcw=true - these are internal types
+				if (doNotGenerateAcw) {
+					_log.LogMessage (MessageImportance.High, $"      {typeName}: Skipping (DoNotGenerateAcw=true)");
+					return null;
+				}
+				return javaName;
 			}
 			
 			// Check for Android component attributes with Name property:
 			// [Activity(Name = "...")], [Service(Name = "...")], 
 			// [BroadcastReceiver(Name = "...")], [ContentProvider(Name = "...")]
 			if (IsAndroidComponentAttribute (reader, attr, out string? componentJavaName)) {
+				_log.LogMessage (MessageImportance.High, $"      {typeName}: Found component attr {attrTypeName}, Name={componentJavaName ?? "(null)"}");
 				if (!string.IsNullOrEmpty (componentJavaName)) {
 					// Convert dots to slashes for the Java name format
 					return componentJavaName!.Replace ('.', '/');
@@ -577,18 +591,63 @@ internal class JavaPeerScanner
 		return false;
 	}
 
-	string? DecodeRegisterAttributeValue (MetadataReader reader, CustomAttribute attr)
+	(string? javaName, bool doNotGenerateAcw) DecodeRegisterAttributeValueAndFlags (MetadataReader reader, CustomAttribute attr)
 	{
 		// The first constructor argument is the Java type name
 		var valueBlob = reader.GetBlobReader (attr.Value);
 		
 		// Skip prolog (2 bytes: 0x0001)
 		if (valueBlob.Length < 2)
-			return null;
+			return (null, false);
 		valueBlob.ReadUInt16 ();
 
 		// Read the first string argument (Java name)
-		return ReadSerializedString (ref valueBlob);
+		string? javaName = ReadSerializedString (ref valueBlob);
+		
+		// Skip remaining constructor args (there may be 2 more string args for connector method/connector type)
+		// Then look for named args including DoNotGenerateAcw
+		bool doNotGenerateAcw = false;
+		
+		// Try to find the DoNotGenerateAcw named property
+		// Skip past any remaining constructor arguments
+		while (valueBlob.RemainingBytes > 0) {
+			// Look for the NumNamed field (2 bytes)
+			if (valueBlob.RemainingBytes >= 2) {
+				// Try to position at the named args count
+				// Format after ctor args: [NumNamed:2bytes][named args...]
+				int numNamed = valueBlob.ReadUInt16 ();
+				
+				// Read named arguments
+				for (int i = 0; i < numNamed && valueBlob.RemainingBytes >= 3; i++) {
+					byte kind = valueBlob.ReadByte (); // 0x53 = FIELD, 0x54 = PROPERTY
+					byte type = valueBlob.ReadByte (); // Element type
+					
+					string? propName = ReadSerializedString (ref valueBlob);
+					if (propName == null)
+						break;
+					
+					if (type == 0x02) { // ELEMENT_TYPE_BOOLEAN
+						if (valueBlob.RemainingBytes < 1)
+							break;
+						byte boolValue = valueBlob.ReadByte ();
+						if (propName == "DoNotGenerateAcw") {
+							doNotGenerateAcw = boolValue != 0;
+						}
+					} else if (type == 0x0E) { // ELEMENT_TYPE_STRING
+						ReadSerializedString (ref valueBlob); // skip value
+					} else if (type == 0x08 || type == 0x09) { // ELEMENT_TYPE_I4 or ELEMENT_TYPE_U4
+						if (valueBlob.RemainingBytes >= 4)
+							valueBlob.ReadInt32 ();
+					} else {
+						break; // Unknown type
+					}
+				}
+				break;
+			}
+			break;
+		}
+		
+		return (javaName, doNotGenerateAcw);
 	}
 
 	static string? ReadSerializedString (ref BlobReader reader)
@@ -927,30 +986,35 @@ internal class TypeMapAssemblyGenerator
 				
 				var targetTypeRef = AddExternalTypeReference (peer.AssemblyName, peer.ManagedTypeName);
 				if (targetTypeRef.IsNil) {
-					_log.LogDebugMessage ($"  Skipping {peer.ManagedTypeName}: could not create type reference");
+					_log.LogMessage (MessageImportance.High, $"  Skipping {peer.ManagedTypeName}: could not create type reference");
 					continue;
 				}
 				
 				// Calculate proxy name based on MANAGED type to ensure uniqueness (especially for aliases)
 				string proxyTypeName = peer.ManagedTypeName.Replace ('.', '_').Replace ('+', '_') + "_Proxy";
 				
+				_log.LogMessage (MessageImportance.High, $"  Generating proxy: {proxyTypeName} for {peer.ManagedTypeName} (jni: {jniName})");
 				var proxyTypeDef = GenerateProxyType (peer, targetTypeRef, proxyTypeName);
 				if (proxyTypeDef.IsNil) {
-					_log.LogDebugMessage ($"  Skipping {peer.ManagedTypeName}: could not generate proxy type");
+					_log.LogMessage (MessageImportance.High, $"  Skipping {peer.ManagedTypeName}: could not generate proxy type");
 					continue;
 				}
 				
 				string entryJniName = peers.Count > 1 ? $"{jniName}[{i}]" : jniName;
 				string targetTypeName = $"{peer.ManagedTypeName}, {peer.AssemblyName}";
+				// Qualify proxy type with the TypeMaps assembly so runtime can find it
+				string qualifiedProxyTypeName = $"{proxyTypeName}, _Microsoft.Android.TypeMaps";
 				
-				typeMapAttrs.Add ((entryJniName, proxyTypeName, targetTypeName));
+				typeMapAttrs.Add ((entryJniName, qualifiedProxyTypeName, targetTypeName));
 				
 				if (aliasHolderName != null) {
-					aliasMappings.Add ((targetTypeName, aliasHolderName));
+					// Qualify alias holder with the TypeMaps assembly
+					string qualifiedAliasHolderName = $"{aliasHolderName}, _Microsoft.Android.TypeMaps";
+					aliasMappings.Add ((targetTypeName, qualifiedAliasHolderName));
 				}
 				
 			} catch (Exception ex) {
-				_log.LogDebugMessage ($"  Error processing {peer.ManagedTypeName}: {ex.Message}");
+				_log.LogMessage (MessageImportance.High, $"  Error processing {peer.ManagedTypeName}: {ex.Message}\n{ex.StackTrace}");
 			}
 		}
 	}
@@ -2209,9 +2273,10 @@ public class {{className}}
 				name: _metadata.GetOrAddString (mm.NativeCallbackName),
 				signature: _metadata.GetOrAddBlob (wrapperSigBlob));
 
-			// Generate wrapper body
+			// Generate wrapper body with control flow (needed for try/catch and branches)
 			var wrapperBodyBlob = new BlobBuilder ();
-			var wrapperEncoder = new InstructionEncoder (wrapperBodyBlob);
+			var controlFlowBuilder = new ControlFlowBuilder ();
+			var wrapperEncoder = new InstructionEncoder (wrapperBodyBlob, controlFlowBuilder);
 
 			// 1. Call WaitForBridgeProcessing
 			wrapperEncoder.Call (_waitForBridgeProcessingRef);
@@ -2333,7 +2398,9 @@ public class {{className}}
 	int GenerateGetFunctionPointerBody (JavaPeerInfo peer, List<MethodDefinitionHandle> ucoWrapperHandles)
 	{
 		var codeBuilder = new BlobBuilder ();
-		var encoder = new InstructionEncoder (codeBuilder);
+		// Use ControlFlowBuilder for branch operations when we have UCO wrappers
+		var controlFlowBuilder = (ucoWrapperHandles.Count > 0) ? new ControlFlowBuilder () : null;
+		var encoder = new InstructionEncoder (codeBuilder, controlFlowBuilder);
 
 		if (peer.IsInterface || peer.IsAbstract) {
 			// For Interfaces/Abstract types, GetFunctionPointer should throw NotSupportedException
