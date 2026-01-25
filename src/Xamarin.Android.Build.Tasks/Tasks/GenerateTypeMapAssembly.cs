@@ -1372,8 +1372,23 @@ internal class TypeMapAssemblyGenerator
 		if (IsImplementorType (peer))
 			return true;
 		
+		// Special framework types that need JCW generation (not in mono.android.jar for CoreCLR)
+		if (IsSpecialFrameworkType (peer))
+			return true;
+		
 		// Other framework types (abstract MCW classes, etc.) don't need JCW generation
 		return false;
+	}
+
+	/// <summary>
+	/// Returns true for special framework types that need JCW generation for CoreCLR/JavaInterop1.
+	/// These are types that exist in mono.android.jar for MonoVM but need to be generated for CoreCLR.
+	/// </summary>
+	bool IsSpecialFrameworkType (JavaPeerInfo peer)
+	{
+		// JavaProxyThrowable wraps .NET exceptions as Java exceptions
+		// It needs a JCW because there's no mono.android.jar for CoreCLR
+		return peer.JavaName == "android/runtime/JavaProxyThrowable";
 	}
 
 	bool IsFrameworkAssembly (string assemblyName)
@@ -2798,10 +2813,15 @@ public class {{className}}
 				callbackTypeRef = targetTypeRef;
 			}
 			
-			var callbackRef = _metadata.AddMemberReference (
-				parent: callbackTypeRef,
-				name: _metadata.GetOrAddString (mm.NativeCallbackName),
-				signature: _metadata.GetOrAddBlob (callbackSigBlob));
+			// Generate an UnsafeAccessor to call the private static callback method
+			// This is needed because the callback may be private/internal in another assembly
+			string accessorName = $"{wrapperName}_accessor";
+			var unsafeAccessorDef = GenerateUnsafeAccessorForStaticMethod (
+				accessorName,
+				mm.NativeCallbackName,
+				callbackTypeRef,
+				paramCount,
+				callbackReturnsVoid);
 
 			// Generate wrapper body with control flow (needed for try/catch and branches)
 			// Use ControlFlowBuilder with labels for proper branch fixup and exception regions
@@ -2819,11 +2839,14 @@ public class {{className}}
 			// Try block start
 			wrapperEncoder.MarkLabel (tryStartLabel);
 
-			// Load arguments and call callback
+			// Call the UnsafeAccessor which will call the actual callback
+			// First argument to UnsafeAccessor is null (type marker for static method)
+			wrapperEncoder.OpCode (ILOpCode.Ldnull);
+			// Then load the actual callback arguments
 			for (int p = 0; p < paramCount; p++) {
 				wrapperEncoder.LoadArgument (p);
 			}
-			wrapperEncoder.Call (callbackRef);
+			wrapperEncoder.Call (unsafeAccessorDef);
 
 			// If callback returns void, we need to load a default IntPtr value for the wrapper return
 			if (callbackReturnsVoid) {
@@ -3169,7 +3192,112 @@ public class {{className}}
 
 		return methodDef;
 	}
-	
+
+	/// <summary>
+	/// Generates a static method with [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)] attribute
+	/// that can call a private/internal static method in another type.
+	/// For StaticMethod, the first parameter must be the type containing the target method.
+	/// </summary>
+	MethodDefinitionHandle GenerateUnsafeAccessorForStaticMethod (
+		string accessorName,
+		string targetMethodName,
+		EntityHandle containingTypeRef,
+		int callbackParamCount,
+		bool returnsVoid)
+	{
+		// Method signature for UnsafeAccessor StaticMethod:
+		// static extern ReturnType AccessorName(ContainingType _, params...)
+		// The first parameter identifies the type, remaining params match the target method
+		int totalParamCount = 1 + callbackParamCount; // type + callback params
+		
+		var sigBlob = new BlobBuilder ();
+		var sigEncoder = new BlobEncoder (sigBlob).MethodSignature (isInstanceMethod: false);
+		sigEncoder.Parameters (totalParamCount,
+			returnType => {
+				if (returnsVoid) {
+					returnType.Void ();
+				} else {
+					returnType.Type ().IntPtr ();
+				}
+			},
+			parameters => {
+				// First parameter: the containing type (used to identify which type's method to call)
+				parameters.AddParameter ().Type ().Type (containingTypeRef, isValueType: false);
+				// Remaining parameters match the callback signature
+				for (int p = 0; p < callbackParamCount; p++) {
+					parameters.AddParameter ().Type ().IntPtr ();
+				}
+			});
+
+		// UnsafeAccessor methods have no body - the runtime fills it in at JIT time
+		var methodDef = _metadata.AddMethodDefinition (
+			attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
+			implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
+			name: _metadata.GetOrAddString (accessorName),
+			signature: _metadata.GetOrAddBlob (sigBlob),
+			bodyOffset: -1, // No body - UnsafeAccessor is implemented by the runtime
+			parameterList: MetadataTokens.ParameterHandle (_nextParamDefRowId));
+
+		// Add parameter definitions
+		_metadata.AddParameter (
+			attributes: ParameterAttributes.None,
+			name: _metadata.GetOrAddString ("_"), // First param is the type marker
+			sequenceNumber: 1);
+		_nextParamDefRowId++;
+		
+		for (int p = 0; p < callbackParamCount; p++) {
+			_metadata.AddParameter (
+				attributes: ParameterAttributes.None,
+				name: _metadata.GetOrAddString ($"p{p}"),
+				sequenceNumber: p + 2);
+			_nextParamDefRowId++;
+		}
+		_nextMethodDefRowId++;
+
+		// Add [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "methodName")] attribute
+		// UnsafeAccessorKind.StaticMethod = 3
+		var unsafeAccessorCtorSig = new BlobBuilder ();
+		new BlobEncoder (unsafeAccessorCtorSig)
+			.MethodSignature (isInstanceMethod: true)
+			.Parameters (1,
+				returnType => returnType.Void (),
+				parameters => {
+					parameters.AddParameter ().Type ().Type (_unsafeAccessorKindTypeRef, isValueType: true);
+				});
+
+		var unsafeAccessorCtorRef = _metadata.AddMemberReference (
+			parent: _unsafeAccessorAttrTypeRef,
+			name: _metadata.GetOrAddString (".ctor"),
+			signature: _metadata.GetOrAddBlob (unsafeAccessorCtorSig));
+
+		// Attribute blob: prolog + UnsafeAccessorKind.StaticMethod (2) + 1 named arg (Name)
+		var attrBlob = new BlobBuilder ();
+		attrBlob.WriteUInt16 (1); // Prolog
+		attrBlob.WriteInt32 (2);  // UnsafeAccessorKind.StaticMethod = 2
+		attrBlob.WriteUInt16 (1); // Named args count = 1
+		attrBlob.WriteByte (0x54); // PROPERTY (0x54)
+		attrBlob.WriteByte (0x0E); // ELEMENT_TYPE_STRING
+		attrBlob.WriteByte ((byte) "Name".Length);
+		attrBlob.WriteBytes (System.Text.Encoding.UTF8.GetBytes ("Name"));
+		// Write the target method name as SerString
+		byte[] nameBytes = System.Text.Encoding.UTF8.GetBytes (targetMethodName);
+		if (nameBytes.Length < 128) {
+			attrBlob.WriteByte ((byte) nameBytes.Length);
+		} else {
+			// Handle longer names with compressed int encoding
+			attrBlob.WriteByte ((byte) ((nameBytes.Length >> 8) | 0x80));
+			attrBlob.WriteByte ((byte) (nameBytes.Length & 0xFF));
+		}
+		attrBlob.WriteBytes (nameBytes);
+
+		_metadata.AddCustomAttribute (
+			parent: methodDef,
+			constructor: unsafeAccessorCtorRef,
+			value: _metadata.GetOrAddBlob (attrBlob));
+
+		return methodDef;
+	}
+
 	int GenerateCreateInstanceBody (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef, MethodDefinitionHandle? unsafeAccessorMethod)
 	{
 		var codeBuilder = new BlobBuilder ();
