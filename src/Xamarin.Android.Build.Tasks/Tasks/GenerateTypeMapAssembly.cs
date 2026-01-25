@@ -1163,6 +1163,7 @@ internal class TypeMapAssemblyGenerator
 	
 	// Well-known type references
 	TypeReferenceHandle _objectTypeRef;
+	TypeReferenceHandle _attributeTypeRef;
 	TypeReferenceHandle _voidTypeRef;
 	TypeReferenceHandle _intPtrTypeRef;
 	TypeReferenceHandle _int32TypeRef;
@@ -2217,6 +2218,11 @@ public class {{className}}
 	@namespace: _metadata.GetOrAddString ("System"),
 	name: _metadata.GetOrAddString ("Object"));
 	
+	_attributeTypeRef = _metadata.AddTypeReference (
+	resolutionScope: _corlibRef,
+	@namespace: _metadata.GetOrAddString ("System"),
+	name: _metadata.GetOrAddString ("Attribute"));
+	
 	_voidTypeRef = _metadata.AddTypeReference (
 	resolutionScope: _corlibRef,
 	@namespace: _metadata.GetOrAddString ("System"),
@@ -3257,9 +3263,84 @@ public class {{className}}
 	
 	void AddAssemblyAttribute ()
 	{
-	// [assembly: TypeMapAssemblyTargetAttribute<Java.Lang.Object>("_Microsoft.Android.TypeMaps")]
-	// TODO: Implement generic attribute instantiation
-	// For now, skip - this is complex with S.R.M.E generics
+	// Add [assembly: IgnoresAccessChecksTo("Mono.Android")] to allow access to internal members
+	// This attribute is needed because the generated TypeMaps assembly calls internal constructors
+	// in Mono.Android, and Mono.Android is strong-named while TypeMaps is unsigned.
+	
+	// First, define the IgnoresAccessChecksToAttribute type in our assembly
+	// It's a simple attribute with a string constructor
+	var nextMethodHandle = MetadataTokens.MethodDefinitionHandle (_metadata.GetRowCount (TableIndex.MethodDef) + 1);
+	var nextFieldHandle = MetadataTokens.FieldDefinitionHandle (_metadata.GetRowCount (TableIndex.Field) + 1);
+	
+	var ignoresAccessAttrTypeDef = _metadata.AddTypeDefinition (
+		attributes: TypeAttributes.NotPublic | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+		@namespace: _metadata.GetOrAddString ("System.Runtime.CompilerServices"),
+		name: _metadata.GetOrAddString ("IgnoresAccessChecksToAttribute"),
+		baseType: _attributeTypeRef,
+		fieldList: nextFieldHandle,
+		methodList: nextMethodHandle);
+
+	// Add the attribute's constructor with proper body
+	var ignoresCtorSig = new BlobBuilder ();
+	new BlobEncoder (ignoresCtorSig)
+		.MethodSignature (isInstanceMethod: true)
+		.Parameters (1,
+			returnType => returnType.Void (),
+			parameters => {
+				parameters.AddParameter ().Type ().String ();
+			});
+
+	// Create constructor body: just call base() and return
+	var ctorBodyBlob = new BlobBuilder ();
+	var ctorEncoder = new InstructionEncoder (ctorBodyBlob);
+	
+	// ldarg.0 (this)
+	ctorEncoder.OpCode (ILOpCode.Ldarg_0);
+	
+	// call System.Attribute::.ctor()
+	var attrCtorSig = new BlobBuilder ();
+	new BlobEncoder (attrCtorSig)
+		.MethodSignature (isInstanceMethod: true)
+		.Parameters (0, returnType => returnType.Void (), _ => {});
+	var attrCtorRef = _metadata.AddMemberReference (
+		parent: _attributeTypeRef,
+		name: _metadata.GetOrAddString (".ctor"),
+		signature: _metadata.GetOrAddBlob (attrCtorSig));
+	
+	ctorEncoder.Call (attrCtorRef);
+	ctorEncoder.OpCode (ILOpCode.Ret);
+	
+	int ctorBodyOffset = _methodBodyStream.AddMethodBody (ctorEncoder);
+
+	var ignoresCtor = _metadata.AddMethodDefinition (
+		attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
+		implAttributes: MethodImplAttributes.IL,
+		name: _metadata.GetOrAddString (".ctor"),
+		signature: _metadata.GetOrAddBlob (ignoresCtorSig),
+		bodyOffset: ctorBodyOffset,
+		parameterList: MetadataTokens.ParameterHandle (_metadata.GetRowCount (TableIndex.Param) + 1));
+
+	// Now add [assembly: IgnoresAccessChecksTo("Mono.Android")]
+	var attrBlob = new BlobBuilder ();
+	attrBlob.WriteUInt16 (1); // Prolog
+	attrBlob.WriteSerializedString ("Mono.Android");
+	attrBlob.WriteUInt16 (0); // Named args count
+
+	_metadata.AddCustomAttribute (
+		parent: EntityHandle.AssemblyDefinition,
+		constructor: ignoresCtor,
+		value: _metadata.GetOrAddBlob (attrBlob));
+
+	// Also add [assembly: IgnoresAccessChecksTo("Java.Interop")]
+	var attrBlob2 = new BlobBuilder ();
+	attrBlob2.WriteUInt16 (1); // Prolog
+	attrBlob2.WriteSerializedString ("Java.Interop");
+	attrBlob2.WriteUInt16 (0); // Named args count
+
+	_metadata.AddCustomAttribute (
+		parent: EntityHandle.AssemblyDefinition,
+		constructor: ignoresCtor,
+		value: _metadata.GetOrAddBlob (attrBlob2));
 	}
 	
 	void AddTypeMapAttribute (string jniName, string proxyTypeName, string targetTypeName)

@@ -31,7 +31,7 @@ namespace Java.Interop
 	/// </code>
 	/// </remarks>
 	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
-	abstract class JavaPeerProxy : Attribute
+	public abstract class JavaPeerProxy : Attribute
 	{
 		/// <summary>
 		/// Gets a function pointer for a marshal method at the specified index.
