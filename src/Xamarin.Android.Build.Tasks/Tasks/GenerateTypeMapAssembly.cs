@@ -1373,6 +1373,7 @@ internal class TypeMapAssemblyGenerator
 	TypeReferenceHandle _typeMapAsmTargetAttrTypeRef;
 	TypeReferenceHandle _javaLangObjectTypeRef;
 	TypeReferenceHandle _aliasesUniverseTypeRef;
+	TypeReferenceHandle _assemblyMetadataAttrTypeRef;
 	
 	// UCO related types
 	TypeReferenceHandle _unmanagedCallersOnlyAttrTypeRef;
@@ -1390,6 +1391,7 @@ internal class TypeMapAssemblyGenerator
 	MemberReferenceHandle _intPtrZeroFieldRef;
 	MemberReferenceHandle _aliasesTypeMapAssocAttrCtorRef;
 	MemberReferenceHandle _typeMapAttrCtorRef;
+	MemberReferenceHandle _assemblyMetadataAttrCtorRef;
 
 	// UCO related member references
 	MemberReferenceHandle _unmanagedCallersOnlyCtorRef;
@@ -2557,6 +2559,11 @@ public class {{className}}
 	@namespace: _metadata.GetOrAddString ("System.Runtime.InteropServices"),
 	name: _metadata.GetOrAddString ("TypeMapAssemblyTargetAttribute`1"));
 
+	_assemblyMetadataAttrTypeRef = _metadata.AddTypeReference (
+	resolutionScope: _corlibRef,
+	@namespace: _metadata.GetOrAddString ("System.Reflection"),
+	name: _metadata.GetOrAddString ("AssemblyMetadataAttribute"));
+
 	_exceptionTypeRef = _metadata.AddTypeReference (
 	resolutionScope: _corlibRef,
 	@namespace: _metadata.GetOrAddString ("System"),
@@ -2751,6 +2758,20 @@ public class {{className}}
 		parent: _unmanagedCallersOnlyAttrTypeRef,
 		name: _metadata.GetOrAddString (".ctor"),
 		signature: _metadata.GetOrAddBlob (ucoCtorSigBlob));
+
+	// AssemblyMetadataAttribute..ctor(string, string)
+	var asmMetaCtorSigBlob = new BlobBuilder ();
+	new BlobEncoder (asmMetaCtorSigBlob)
+		.MethodSignature (isInstanceMethod: true)
+		.Parameters (2, returnType => returnType.Void (), parameters => {
+			parameters.AddParameter ().Type ().String ();
+			parameters.AddParameter ().Type ().String ();
+		});
+
+	_assemblyMetadataAttrCtorRef = _metadata.AddMemberReference (
+		parent: _assemblyMetadataAttrTypeRef,
+		name: _metadata.GetOrAddString (".ctor"),
+		signature: _metadata.GetOrAddBlob (asmMetaCtorSigBlob));
 
 	// AndroidRuntimeInternal.WaitForBridgeProcessing()
 	var waitSigBlob = new BlobBuilder ();
@@ -3710,8 +3731,29 @@ public class {{className}}
 	
 	void AddAssemblyAttribute ()
 	{
-		// No assembly-level attributes needed now that we use UnsafeAccessor
-		// for calling protected constructors.
+		// NOTE: We intentionally do NOT add IsTrimmable=true here.
+		// The TypeMaps assembly needs special handling because:
+		// 1. TypeMapAttribute entries reference types that the trimmer may remove
+		// 2. The runtime uses JNI name strings to look up types at runtime
+		// 3. The trimmer can't see this usage pattern
+		//
+		// Future improvement: Generate TypeMap entries AFTER trimming, 
+		// only for types that survived. This requires restructuring the build.
+	}
+	
+	void AddAssemblyMetadataAttribute (string key, string value)
+	{
+		// [assembly: AssemblyMetadataAttribute(key, value)]
+		var attrBlob = new BlobBuilder ();
+		attrBlob.WriteUInt16 (1); // Prolog
+		attrBlob.WriteSerializedString (key);
+		attrBlob.WriteSerializedString (value);
+		attrBlob.WriteUInt16 (0); // Named args count
+		
+		_metadata.AddCustomAttribute (
+			parent: EntityHandle.AssemblyDefinition,
+			constructor: _assemblyMetadataAttrCtorRef,
+			value: _metadata.GetOrAddBlob (attrBlob));
 	}
 	
 	void AddTypeMapAttribute (string jniName, string proxyTypeName, string targetTypeName)
