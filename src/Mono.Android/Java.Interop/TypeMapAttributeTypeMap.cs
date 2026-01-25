@@ -23,44 +23,24 @@ namespace Android.Runtime
 		static readonly Dictionary<Type, JavaPeerProxy?> s_proxyInstances = new ();
 		static readonly Lock s_proxyInstancesLock = new ();
 
-		static bool LogTypemapTrace => Logger.LogTypemapTrace;
-
-		static void Log (string message)
-		{
-			if (LogTypemapTrace)
-				Logger.Log (LogLevel.Info, "monodroid-typemap", message);
-		}
-
 		const string TypeMapsAssemblyName = "_Microsoft.Android.TypeMaps";
 
 		public TypeMapAttributeTypeMap ()
 		{
-			Log ("TypeMapAttributeTypeMap: Initializing...");
-
 			// Load the TypeMaps assembly and set it as the entry assembly so the TypeMapping API
 			// knows where to look for TypeMap attributes. Android apps don't have a traditional
 			// entry point assembly, so we need to set this explicitly.
 			var typeMapAssembly = Assembly.Load (TypeMapsAssemblyName);
 			Assembly.SetEntryAssembly (typeMapAssembly);
-			Log ($"TypeMapAttributeTypeMap: Set entry assembly to {typeMapAssembly.FullName}");
 
-			try {
-				_externalTypeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
-				Log ($"TypeMapAttributeTypeMap: External type map created, testing TryGetValue...");
-				// Test lookup to verify map is populated
-				bool found = _externalTypeMap.TryGetValue ("example/MainActivity", out var testType);
-				Log ($"TypeMapAttributeTypeMap: Direct test lookup 'example/MainActivity' -> found={found}, type={testType?.FullName ?? "null"}");
-			} catch (Exception ex) {
-				Log ($"TypeMapAttributeTypeMap: EXCEPTION creating external type map: {ex.GetType ().Name}: {ex.Message}");
-				throw;
-			}
+			_externalTypeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
+			Logger.Log (LogLevel.Info, "monodroid-typemap", "TypeMapAttributeTypeMap initialized");
 		}
 
 		/// <inheritdoc/>
 		public bool TryGetTypesForJniName (string jniSimpleReference, [NotNullWhen (true)] out IEnumerable<Type>? types)
 		{
 			if (!_externalTypeMap.TryGetValue (jniSimpleReference, out Type? type)) {
-				Log ($"TryGetTypesForJniName: '{jniSimpleReference}' -> NOT FOUND");
 				types = null;
 				return false;
 			}
@@ -75,14 +55,11 @@ namespace Android.Runtime
 					}
 				}
 				if (aliasedTypes.Count > 0) {
-					Log ($"TryGetTypesForJniName: '{jniSimpleReference}' -> {aliasedTypes.Count} aliased types");
 					types = aliasedTypes;
 					return true;
 				}
 			}
 
-			// Not an alias type, just return it directly
-			Log ($"TryGetTypesForJniName: '{jniSimpleReference}' -> {type.FullName}");
 			types = [type];
 			return true;
 		}
@@ -91,11 +68,9 @@ namespace Android.Runtime
 		public bool TryGetJniNameForType (Type type, [NotNullWhen (true)] out string? jniName)
 		{
 			// 1. Try to get explicit JNI name from [Register] attribute (or any IJniNameProviderAttribute)
-			//    Use inherit: false because each type must have its own JNI name!
 			var attrs = type.GetCustomAttributes (typeof (IJniNameProviderAttribute), inherit: false);
 			if (attrs.Length > 0 && attrs[0] is IJniNameProviderAttribute jniNameProvider && !string.IsNullOrEmpty (jniNameProvider.Name)) {
 				jniName = jniNameProvider.Name.Replace ('.', '/');
-				Log ($"TryGetJniNameForType: {type.FullName} -> '{jniName}' (from [Register])");
 				return true;
 			}
 
@@ -103,13 +78,11 @@ namespace Android.Runtime
 			var sigAttr = type.GetCustomAttribute<JniTypeSignatureAttribute> (inherit: false);
 			if (sigAttr != null && !string.IsNullOrEmpty (sigAttr.SimpleReference)) {
 				jniName = sigAttr.SimpleReference;
-				Log ($"TryGetJniNameForType: {type.FullName} -> '{jniName}' (from [JniTypeSignature])");
 				return true;
 			}
 
-			// 3. Fallback: derive JNI name using naming conventions for types without explicit [Register]
+			// 3. Fallback: derive JNI name using naming conventions
 			jniName = JavaNativeTypeManager.ToJniName (type);
-			Log ($"TryGetJniNameForType: {type.FullName} -> '{jniName}' (derived)");
 			return !string.IsNullOrEmpty (jniName);
 		}
 
@@ -124,7 +97,6 @@ namespace Android.Runtime
 
 		/// <summary>
 		/// Gets or creates a cached JavaPeerProxy instance for the given type.
-		/// Uses GetCustomAttribute which is AOT-safe (the runtime knows how to instantiate attributes).
 		/// </summary>
 		internal static JavaPeerProxy? GetProxyForType (Type type)
 		{
@@ -133,10 +105,7 @@ namespace Android.Runtime
 					return cached;
 				}
 
-				// Use GetCustomAttribute to get the proxy instance - this is AOT and trimming safe
-				// The proxy type extends JavaPeerProxy (which extends Attribute) and is applied to the original type
 				var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-				Log ($"GetProxyForType: {type.FullName} -> {(proxy != null ? proxy.GetType ().FullName : "null")}");
 				return s_proxyInstances [type] = proxy;
 			}
 		}
@@ -144,28 +113,21 @@ namespace Android.Runtime
 		/// <inheritdoc/>
 		public IJavaPeerable? CreatePeer (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{
-			Log ($"CreatePeer: handle=0x{handle:x}, targetType={targetType?.FullName ?? "null"}");
-			
 			Type? type = null;
 			Type? proxyType = null;
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
 			string? class_name = GetClassNameFromJavaClassHandle (class_ptr);
-			string? original_class_name = class_name;
 
 			lock (TypeManagerMapDictionaries.AccessLock) {
 				while (class_ptr != IntPtr.Zero) {
 					if (class_name != null) {
 						_externalTypeMap.TryGetValue (class_name, out type);
 						if (type != null) {
-							Log ($"CreatePeer: Found type {type.FullName} for Java class '{class_name}'");
-							// If the found type is a JavaPeerProxy, it's our generated proxy
 							if (typeof (JavaPeerProxy).IsAssignableFrom (type)) {
 								proxyType = type;
-								Log ($"CreatePeer: {type.FullName} is a JavaPeerProxy");
 							}
 							break;
 						}
-						Log ($"CreatePeer: No mapping for '{class_name}', checking superclass...");
 					}
 
 					IntPtr super_class_ptr = JNIEnv.GetSuperclass (class_ptr);
@@ -180,33 +142,25 @@ namespace Android.Runtime
 
 			if (class_ptr != IntPtr.Zero) {
 				JNIEnv.DeleteLocalRef (class_ptr);
-				class_ptr = IntPtr.Zero;
 			}
 
-			// If we found a proxy type, get the target type from it
-			// If we have a targetType hint and it's assignable, prefer it
+			// If we found a proxy type, prefer targetType if provided
 			if (proxyType != null) {
 				if (targetType != null) {
-					Log ($"CreatePeer: Using targetType {targetType.FullName} with proxy {proxyType.FullName}");
 					type = targetType;
 				} else {
-					// Use the proxy's target type (we'll create instance via proxy)
 					type = proxyType;
 				}
-			} else if (targetType != null &&
-					(type == null ||
-					 !targetType.IsAssignableFrom (type))) {
-				Log ($"CreatePeer: Using targetType {targetType.FullName} instead of {type?.FullName ?? "null"}");
+			} else if (targetType != null && (type == null || !targetType.IsAssignableFrom (type))) {
 				type = targetType;
 			}
 
 			if (type == null) {
 				class_name = JNIEnv.GetClassNameFromInstance (handle);
-				Log ($"CreatePeer: FAILED - No wrapper class for '{class_name}'");
 				JNIEnv.DeleteRef (handle, transfer);
 				throw new NotSupportedException (
-						FormattableString.Invariant ($"Internal error finding wrapper class for '{class_name}'. (Where is the Java.Lang.Object wrapper?!)"),
-						CreateJavaLocationException ());
+						FormattableString.Invariant ($"Internal error finding wrapper class for '{class_name}'."),
+						Java.Interop.TypeManager.CreateJavaLocationException ());
 			}
 
 			if (!TryGetJniNameForType (type, out string? jniName) || string.IsNullOrEmpty (jniName)) {
@@ -214,11 +168,9 @@ namespace Android.Runtime
 			}
 
 			if (!IsJavaTypeAssignableFrom (handle, jniName)) {
-				Log ($"CreatePeer: Handle class is not assignable to {jniName}, returning null");
 				return null;
 			}
 
-			Log ($"CreatePeer: Activating instance of {type.FullName}...");
 			if (!TryCreateInstance (type, proxyType, handle, transfer, out var result)) {
 				var key_handle = JNIEnv.IdentityHash (handle);
 				JNIEnv.DeleteRef (handle, transfer);
@@ -226,18 +178,9 @@ namespace Android.Runtime
 					$"Unable to activate instance of type {type} from native handle 0x{handle:x} (key_handle 0x{key_handle:x})."));
 			}
 
-			Log ($"CreatePeer: SUCCESS - Created {result!.GetType ().FullName} for Java class '{original_class_name}'");
-			Log ($"CreatePeer: Checking PeerReference...");
-			var peerRef = result!.PeerReference;
-			Log ($"CreatePeer: PeerReference.Handle = 0x{peerRef.Handle:x}");
-			if (Java.Interop.Runtime.IsGCUserPeer (peerRef.Handle)) {
-				Log ($"CreatePeer: Setting JniManagedPeerState...");
+			if (Java.Interop.Runtime.IsGCUserPeer (result!.PeerReference.Handle)) {
 				result.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
 			}
-			Log ($"CreatePeer: Returning result...");
-			Log ($"CreatePeer: Stack trace:\n{Environment.StackTrace}");
-			Log ($"CreatePeer: About to return!");
-			Console.Out.Flush ();
 
 			return result;
 
@@ -260,104 +203,50 @@ namespace Android.Runtime
 				}
 			}
 
-			static string? GetClassNameFromJavaClassHandle (IntPtr class_ptr)
-			{
-				// TODO could we move this code elsewhere so we don't need to reference TypeManager at all?
-				return Java.Interop.TypeManager.GetClassName (class_ptr);
-			}
-
-			static Exception CreateJavaLocationException ()
-			{
-				// TODO could we move this code elsewhere so we don't need to reference TypeManager at all?
-				return Java.Interop.TypeManager.CreateJavaLocationException ();
-			}
+			static string? GetClassNameFromJavaClassHandle (IntPtr class_ptr) =>
+				Java.Interop.TypeManager.GetClassName (class_ptr);
 		}
 
-		/// <summary>
-		/// Tries to create an instance of the specified type using AOT-safe factory method.
-		/// Uses the generated proxy's CreateInstance method to avoid reflection.
-		/// </summary>
-		/// <param name="type">The target type to create (e.g., HelloWorld.MainActivity)</param>
-		/// <param name="proxyType">The proxy type from TypeMap lookup, or null to look it up via attributes</param>
-		/// <returns>true if the instance was created successfully; false if no proxy or factory was found.</returns>
 		bool TryCreateInstance (Type type, Type? proxyType, IntPtr handle, JniHandleOwnership transfer, [NotNullWhen (true)] out IJavaPeerable? result)
 		{
 			JavaPeerProxy? proxy = null;
 
-			// If we have a proxy type from the TypeMap, instantiate it
 			if (proxyType != null && typeof (JavaPeerProxy).IsAssignableFrom (proxyType)) {
-				try {
-					proxy = (JavaPeerProxy?) Activator.CreateInstance (proxyType);
-					Log ($"TryCreateInstance: Instantiated proxy {proxyType.FullName} for {type.FullName}");
-				} catch (Exception ex) {
-					Log ($"TryCreateInstance: Failed to instantiate proxy {proxyType.FullName}: {ex.Message}");
-				}
+				proxy = (JavaPeerProxy?) Activator.CreateInstance (proxyType);
 			}
 
-			// Fallback: try to get proxy from type's attributes
-			if (proxy == null) {
-				proxy = GetProxyForType (type);
-			}
+			proxy ??= GetProxyForType (type);
 
 			if (proxy == null) {
-				Log ($"TryCreateInstance: No JavaPeerProxy found for {type.FullName}");
 				result = null;
 				return false;
 			}
 
-			// Use the generated factory method - no reflection needed!
-			Log ($"TryCreateInstance: Calling proxy.CreateInstance for {type.FullName}...");
-			try {
-				result = proxy.CreateInstance (handle, transfer);
-				Log ($"TryCreateInstance: CreateInstance returned {(result != null ? result.GetType().FullName : "null")}");
-				return result != null;
-			} catch (Exception ex) {
-				Log ($"TryCreateInstance: CreateInstance threw {ex.GetType().Name}: {ex.Message}");
-				throw;
-			}
+			result = proxy.CreateInstance (handle, transfer);
+			return result != null;
 		}
 
 		/// <inheritdoc/>
-		public unsafe IntPtr GetFunctionPointer (ReadOnlySpan<char> className, int methodIndex)
+		public IntPtr GetFunctionPointer (ReadOnlySpan<char> className, int methodIndex)
 		{
-			// Note: No try-catch here. If this crashes, the app should crash.
-			// It's a critical infrastructure failure.
+			string classNameStr = className.ToString ();
 
-			// Convert to string for dictionary lookup
-			// TODO: Use Dictionary.GetAlternateLookup<ReadOnlySpan<char>>() to avoid this allocation
-			string classNameStr = className.ToString();
-			Log ($"GetFunctionPointer: class='{classNameStr}', methodIndex={methodIndex}");
-
-			// Special case: TypeManager.n_Activate is called by framework JCWs in mono.android.jar
-			// These JCWs don't have generated proxies, so we handle them directly here.
-			// methodIndex 0 = n_Activate
+			// Special case: TypeManager.n_Activate is called by framework JCWs
 			if (classNameStr == "mono/android/TypeManager" && methodIndex == 0) {
-				IntPtr activatePtr = Java.Interop.TypeManager.GetActivateFunctionPointer ();
-				Log ($"GetFunctionPointer: Special case TypeManager.n_Activate -> 0x{activatePtr:x}");
-				return activatePtr;
+				return Java.Interop.TypeManager.GetActivateFunctionPointer ();
 			}
 
-			// Look up type directly from the external type map
-			// The typemap now returns the proxy type directly (not the original type)
 			if (!_externalTypeMap.TryGetValue (classNameStr, out Type? type)) {
-				Log ($"GetFunctionPointer: No type found for '{classNameStr}'");
 				return IntPtr.Zero;
 			}
 
-			Log ($"GetFunctionPointer: Found type {type.FullName}");
-
-			// Get or create a JavaPeerProxy instance
-			// The type from typemap is now the proxy type itself, so we instantiate it directly
 			JavaPeerProxy? proxy = GetProxyForType (type);
 			if (proxy == null) {
-				Log ($"GetFunctionPointer: Failed to get proxy for {type.FullName}");
 				return IntPtr.Zero;
 			}
 
-			// Get the function pointer from the proxy
 			IntPtr fnPtr = proxy.GetFunctionPointer (methodIndex);
-			Log ($"GetFunctionPointer: Got function pointer 0x{fnPtr:x} for method index {methodIndex}");
-
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetFunctionPointer: class='{classNameStr}', methodIndex={methodIndex} -> 0x{fnPtr:X}");
 			return fnPtr;
 		}
 	}

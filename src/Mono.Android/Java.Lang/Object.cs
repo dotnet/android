@@ -170,12 +170,8 @@ namespace Java.Lang {
 			if (handle == IntPtr.Zero)
 				return null;
 
-			Android.Runtime.Logger.Log (Android.Runtime.LogLevel.Error, "Java.Lang.Object", $"GetObject: calling GetPeer for handle=0x{handle:x}");
 			var r = GetPeer (handle, type);
-			Android.Runtime.Logger.Log (Android.Runtime.LogLevel.Error, "Java.Lang.Object", $"GetObject: GetPeer returned {r?.GetType ()?.FullName ?? "null"}");
-			Android.Runtime.Logger.Log (Android.Runtime.LogLevel.Error, "Java.Lang.Object", $"GetObject: calling DeleteRef...");
 			JNIEnv.DeleteRef (handle, transfer);
-			Android.Runtime.Logger.Log (Android.Runtime.LogLevel.Error, "Java.Lang.Object", $"GetObject: returning r");
 			return r;
 
 			// FIXME: should use [DynamicallyAccessedMembers (Constructors)] in the future

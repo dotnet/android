@@ -1201,14 +1201,12 @@ internal class TypeMapAssemblyGenerator
 	MemberReferenceHandle _throwableFromExceptionRef;
 	MemberReferenceHandle _notSupportedExceptionCtorRef;
 	MemberReferenceHandle _getUninitializedObjectRef;
-	MemberReferenceHandle _logInfoRef;
-	TypeReferenceHandle _androidLogTypeRef;
-	
+
 	// Signature blobs (cached)
 	BlobHandle _voidMethodSig;
 	BlobHandle _getFunctionPointerSig;
 	BlobHandle _createInstanceSig;
-	
+
 	// Tracking for type/method definition order
 	int _nextFieldDefRowId = 1;
 	int _nextMethodDefRowId = 1;
@@ -1923,17 +1921,11 @@ attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memor
 			string parameters = JniSignatureToJavaParameters (method.JniSignature);
 			string parameterNames = JniSignatureToJavaParameterNames (method.JniSignature);
 
-			// Generate public wrapper method
 			string returnStatement = returnType == "void" ? "" : "return ";
-			string afterLog = returnType == "void" 
-				? $"android.util.Log.i(\"JCW-DEBUG\", \"AFTER calling n_{method.JniName}\");" 
-				: "";
 			publicMethods.AppendLine ($$"""
     public {{returnType}} {{method.JniName}} ({{parameters}})
     {
-        android.util.Log.i("JCW-DEBUG", "BEFORE calling n_{{method.JniName}}");
         {{returnStatement}}n_{{method.JniName}} ({{parameterNames}});
-        {{afterLog}}
     }
 
 """);
@@ -2323,11 +2315,6 @@ public class {{className}}
 	@namespace: _metadata.GetOrAddString ("Android.Runtime"),
 	name: _metadata.GetOrAddString ("AndroidEnvironment"));
 
-	_androidLogTypeRef = _metadata.AddTypeReference (
-	resolutionScope: _monoAndroidRef,
-	@namespace: _metadata.GetOrAddString ("Android.Util"),
-	name: _metadata.GetOrAddString ("Log"));
-
 	_androidRuntimeInternalTypeRef = _metadata.AddTypeReference (
 	resolutionScope: _monoAndroidRef,
 	@namespace: _metadata.GetOrAddString ("Android.Runtime"),
@@ -2555,24 +2542,8 @@ public class {{className}}
 		parent: _runtimeHelpersTypeRef,
 		name: _metadata.GetOrAddString ("GetUninitializedObject"),
 		signature: _metadata.GetOrAddBlob (getUninitSigBlob));
-
-	// Android.Util.Log.Info(string, string) -> int
-	var logInfoSigBlob = new BlobBuilder ();
-	new BlobEncoder (logInfoSigBlob)
-		.MethodSignature (isInstanceMethod: false)
-		.Parameters (2,
-			returnType => returnType.Type ().Int32 (),
-			parameters => {
-				parameters.AddParameter ().Type ().String ();
-				parameters.AddParameter ().Type ().String ();
-			});
-
-	_logInfoRef = _metadata.AddMemberReference (
-		parent: _androidLogTypeRef,
-		name: _metadata.GetOrAddString ("Info"),
-		signature: _metadata.GetOrAddBlob (logInfoSigBlob));
 	}
-	
+
 	void CreateSignatureBlobs ()
 	{
 	// void .ctor() signature
@@ -2827,14 +2798,8 @@ public class {{className}}
 			var handlerEndLabel = wrapperEncoder.DefineLabel ();
 			var endLabel = wrapperEncoder.DefineLabel ();
 
-			// TODO: WaitForBridgeProcessing is not needed on CoreCLR (no GC bridge)
-			// wrapperEncoder.Call (_waitForBridgeProcessingRef);
-
-			// 2. Try block start
+			// Try block start
 			wrapperEncoder.MarkLabel (tryStartLabel);
-
-			// DEBUG: Log before callback
-			EmitLogCall (wrapperEncoder, "UCO-wrapper", $"ENTER {wrapperName}");
 
 			// Load arguments and call callback
 			for (int p = 0; p < paramCount; p++) {
@@ -2842,61 +2807,40 @@ public class {{className}}
 			}
 			wrapperEncoder.Call (callbackRef);
 
-			// DEBUG: Log after callback
-			EmitLogCall (wrapperEncoder, "UCO-wrapper", $"AFTER CALLBACK {wrapperName}");
-
 			// If callback returns void, we need to load a default IntPtr value for the wrapper return
 			if (callbackReturnsVoid) {
-				// Load IntPtr.Zero as default return value
 				wrapperEncoder.LoadConstantI4 (0);
 				wrapperEncoder.OpCode (ILOpCode.Conv_i);
 			}
-			// Store return value
 			wrapperEncoder.StoreLocal (0);
-
-			// DEBUG: Log before leave
-			EmitLogCall (wrapperEncoder, "UCO-wrapper", $"BEFORE LEAVE {wrapperName}");
 
 			// Leave try block
 			wrapperEncoder.Branch (ILOpCode.Leave, endLabel);
 			wrapperEncoder.MarkLabel (tryEndLabel);
 
-			// 3. Catch block start
+			// Catch block
 			wrapperEncoder.MarkLabel (handlerStartLabel);
-
-			// Exception is on stack. Convert to Throwable and Raise
 			wrapperEncoder.Call (_throwableFromExceptionRef);
 			wrapperEncoder.Call (_raiseThrowableRef);
-
-			// Return default value (0)
 			wrapperEncoder.LoadConstantI4 (0);
 			wrapperEncoder.OpCode (ILOpCode.Conv_i);
 			wrapperEncoder.StoreLocal (0);
-
 			wrapperEncoder.Branch (ILOpCode.Leave, endLabel);
 			wrapperEncoder.MarkLabel (handlerEndLabel);
 
-			// 4. Return
+			// Return
 			wrapperEncoder.MarkLabel (endLabel);
-
-			// DEBUG: Log before return
-			EmitLogCall (wrapperEncoder, "UCO-wrapper", $"BEFORE RET {wrapperName}");
-
 			wrapperEncoder.LoadLocal (0);
 			wrapperEncoder.OpCode (ILOpCode.Ret);
 
-			// Add exception region using labels (ControlFlowBuilder resolves offsets)
 			controlFlowBuilder.AddCatchRegion (tryStartLabel, tryEndLabel, handlerStartLabel, handlerEndLabel, _exceptionTypeRef);
 
-			// Add method body using InstructionEncoder overload - this properly resolves branch targets
-			// and exception regions through the ControlFlowBuilder
 			int wrapperBodyOffset = _methodBodyStream.AddMethodBody (
 				wrapperEncoder,
-				maxStack: paramCount + 4, // Increased for logging calls
+				maxStack: paramCount + 2,
 				localVariablesSignature: localsSig,
 				attributes: MethodBodyAttributes.InitLocals);
 
-			// Create method definition
 			var wrapperDef = _metadata.AddMethodDefinition (
 				attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 				implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
@@ -3277,15 +3221,6 @@ public class {{className}}
 		encoder.Token (_notSupportedExceptionCtorRef);
 		// throw
 		encoder.OpCode (ILOpCode.Throw);
-	}
-
-	void EmitLogCall (InstructionEncoder encoder, string tag, string message)
-	{
-		// Android.Util.Log.Info(tag, message) returns int, which we need to pop
-		encoder.LoadString (_metadata.GetOrAddUserString (tag));
-		encoder.LoadString (_metadata.GetOrAddUserString (message));
-		encoder.Call (_logInfoRef);
-		encoder.OpCode (ILOpCode.Pop); // Discard the return value
 	}
 
 	void AddAttributeUsageToType (TypeDefinitionHandle typeDef)
