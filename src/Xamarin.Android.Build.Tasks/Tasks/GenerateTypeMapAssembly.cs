@@ -1163,7 +1163,6 @@ internal class TypeMapAssemblyGenerator
 	
 	// Well-known type references
 	TypeReferenceHandle _objectTypeRef;
-	TypeReferenceHandle _attributeTypeRef;
 	TypeReferenceHandle _voidTypeRef;
 	TypeReferenceHandle _intPtrTypeRef;
 	TypeReferenceHandle _int32TypeRef;
@@ -1182,6 +1181,8 @@ internal class TypeMapAssemblyGenerator
 	
 	// UCO related types
 	TypeReferenceHandle _unmanagedCallersOnlyAttrTypeRef;
+	TypeReferenceHandle _unsafeAccessorAttrTypeRef;
+	TypeReferenceHandle _unsafeAccessorKindTypeRef;
 	TypeReferenceHandle _exceptionTypeRef;
 	TypeReferenceHandle _throwableTypeRef;
 	TypeReferenceHandle _androidEnvironmentTypeRef;
@@ -2218,11 +2219,6 @@ public class {{className}}
 	@namespace: _metadata.GetOrAddString ("System"),
 	name: _metadata.GetOrAddString ("Object"));
 	
-	_attributeTypeRef = _metadata.AddTypeReference (
-	resolutionScope: _corlibRef,
-	@namespace: _metadata.GetOrAddString ("System"),
-	name: _metadata.GetOrAddString ("Attribute"));
-	
 	_voidTypeRef = _metadata.AddTypeReference (
 	resolutionScope: _corlibRef,
 	@namespace: _metadata.GetOrAddString ("System"),
@@ -2310,6 +2306,16 @@ public class {{className}}
 	resolutionScope: _interopRef,
 	@namespace: _metadata.GetOrAddString ("System.Runtime.InteropServices"),
 	name: _metadata.GetOrAddString ("UnmanagedCallersOnlyAttribute"));
+
+	_unsafeAccessorAttrTypeRef = _metadata.AddTypeReference (
+	resolutionScope: _corlibRef,
+	@namespace: _metadata.GetOrAddString ("System.Runtime.CompilerServices"),
+	name: _metadata.GetOrAddString ("UnsafeAccessorAttribute"));
+
+	_unsafeAccessorKindTypeRef = _metadata.AddTypeReference (
+	resolutionScope: _corlibRef,
+	@namespace: _metadata.GetOrAddString ("System.Runtime.CompilerServices"),
+	name: _metadata.GetOrAddString ("UnsafeAccessorKind"));
 
 	_throwableTypeRef = _metadata.AddTypeReference (
 	resolutionScope: _monoAndroidRef,
@@ -2657,8 +2663,14 @@ public class {{className}}
 		_nextParamDefRowId++;
 		_nextMethodDefRowId++;
 
-		// 4. CreateInstance override
-		int createInstanceBodyOffset = GenerateCreateInstanceBody (peer, targetTypeRef);
+		// 4. UnsafeAccessor static method for calling protected constructor
+		MethodDefinitionHandle? unsafeAccessorMethodDef = null;
+		if (peer.HasActivationConstructor) {
+			unsafeAccessorMethodDef = GenerateUnsafeAccessorMethod (peer, targetTypeRef);
+		}
+
+		// 5. CreateInstance override
+		int createInstanceBodyOffset = GenerateCreateInstanceBody (peer, targetTypeRef, unsafeAccessorMethodDef);
 		var createInstanceDef = _metadata.AddMethodDefinition (
 			attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
 			implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
@@ -3080,37 +3092,99 @@ public class {{className}}
 
 		return _methodBodyStream.AddMethodBody (encoder);
 	}
+
+	/// <summary>
+	/// Generates a static method with [UnsafeAccessor(UnsafeAccessorKind.Constructor)] attribute
+	/// that can call the protected activation constructor.
+	/// </summary>
+	MethodDefinitionHandle GenerateUnsafeAccessorMethod (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef)
+	{
+		// Method signature: static extern TargetType CreateInstanceUnsafe(IntPtr handle, JniHandleOwnership transfer)
+		var sigBlob = new BlobBuilder ();
+		new BlobEncoder (sigBlob)
+			.MethodSignature (isInstanceMethod: false)
+			.Parameters (2,
+				returnType => returnType.Type ().Type (targetTypeRef, isValueType: false),
+				parameters => {
+					parameters.AddParameter ().Type ().IntPtr ();
+					parameters.AddParameter ().Type ().Type (_jniHandleOwnershipTypeRef, isValueType: true);
+				});
+
+		// UnsafeAccessor methods have no body - the runtime fills it in at JIT time
+		var methodDef = _metadata.AddMethodDefinition (
+			attributes: MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static,
+			implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
+			name: _metadata.GetOrAddString ("CreateInstanceUnsafe"),
+			signature: _metadata.GetOrAddBlob (sigBlob),
+			bodyOffset: -1, // No body - UnsafeAccessor is implemented by the runtime
+			parameterList: MetadataTokens.ParameterHandle (_nextParamDefRowId));
+
+		// Add parameter definitions
+		_metadata.AddParameter (
+			attributes: ParameterAttributes.None,
+			name: _metadata.GetOrAddString ("handle"),
+			sequenceNumber: 1);
+		_nextParamDefRowId++;
+
+		_metadata.AddParameter (
+			attributes: ParameterAttributes.None,
+			name: _metadata.GetOrAddString ("transfer"),
+			sequenceNumber: 2);
+		_nextParamDefRowId++;
+		_nextMethodDefRowId++;
+
+		// Add [UnsafeAccessor(UnsafeAccessorKind.Constructor)] attribute
+		// UnsafeAccessorKind.Constructor = 1
+		// Attribute blob format from the IL sample:
+		// 01 00 01 00 00 00 01 00 54 0e 04 4e 61 6d 65 01 59
+		// Prolog (01 00), enum value (01 00 00 00 = Constructor), named args count (01 00),
+		// T_Field (54), ELEMENT_TYPE_STRING (0e), "Name" length (04), "Name", value...
+		
+		// We need: [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
+		// Constructor of UnsafeAccessorAttribute takes UnsafeAccessorKind enum
+		var unsafeAccessorCtorSig = new BlobBuilder ();
+		new BlobEncoder (unsafeAccessorCtorSig)
+			.MethodSignature (isInstanceMethod: true)
+			.Parameters (1,
+				returnType => returnType.Void (),
+				parameters => {
+					parameters.AddParameter ().Type ().Type (_unsafeAccessorKindTypeRef, isValueType: true);
+				});
+
+		var unsafeAccessorCtorRef = _metadata.AddMemberReference (
+			parent: _unsafeAccessorAttrTypeRef,
+			name: _metadata.GetOrAddString (".ctor"),
+			signature: _metadata.GetOrAddBlob (unsafeAccessorCtorSig));
+
+		// Attribute blob: prolog + UnsafeAccessorKind.Constructor (0) + no named args
+		var attrBlob = new BlobBuilder ();
+		attrBlob.WriteUInt16 (1); // Prolog
+		attrBlob.WriteInt32 (0);  // UnsafeAccessorKind.Constructor = 0
+		attrBlob.WriteUInt16 (0); // Named args count
+
+		_metadata.AddCustomAttribute (
+			parent: methodDef,
+			constructor: unsafeAccessorCtorRef,
+			value: _metadata.GetOrAddBlob (attrBlob));
+
+		return methodDef;
+	}
 	
-	int GenerateCreateInstanceBody (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef)
+	int GenerateCreateInstanceBody (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef, MethodDefinitionHandle? unsafeAccessorMethod)
 	{
 		var codeBuilder = new BlobBuilder ();
 		var encoder = new InstructionEncoder (codeBuilder);
 
-		if (peer.HasActivationConstructor) {
-			// Generate: return new TargetType(handle, transfer);
-			// Create constructor reference: TargetType(IntPtr, JniHandleOwnership)
-			var ctorSigBlob = new BlobBuilder ();
-			new BlobEncoder (ctorSigBlob)
-				.MethodSignature (isInstanceMethod: true)
-				.Parameters (2,
-					returnType => returnType.Void (),
-					parameters => {
-						parameters.AddParameter ().Type ().IntPtr ();
-						parameters.AddParameter ().Type ().Type (_jniHandleOwnershipTypeRef, isValueType: true);
-					});
-
-			var targetCtorRef = _metadata.AddMemberReference (
-				parent: targetTypeRef,
-				name: _metadata.GetOrAddString (".ctor"),
-				signature: _metadata.GetOrAddBlob (ctorSigBlob));
-
+		if (peer.HasActivationConstructor && unsafeAccessorMethod.HasValue) {
+			// Generate: return CreateInstanceUnsafe(handle, transfer);
+			// The UnsafeAccessor method handles calling the protected constructor
+			
 			// ldarg.1 (handle)
 			encoder.OpCode (ILOpCode.Ldarg_1);
 			// ldarg.2 (transfer)
 			encoder.OpCode (ILOpCode.Ldarg_2);
-			// newobj TargetType::.ctor(IntPtr, JniHandleOwnership)
-			encoder.OpCode (ILOpCode.Newobj);
-			encoder.Token (targetCtorRef);
+			// call static CreateInstanceUnsafe(IntPtr, JniHandleOwnership)
+			encoder.Call (unsafeAccessorMethod.Value);
 			// ret
 			encoder.OpCode (ILOpCode.Ret);
 		} else if (!string.IsNullOrEmpty (peer.ActivationCtorBaseTypeName)) {
@@ -3263,84 +3337,8 @@ public class {{className}}
 	
 	void AddAssemblyAttribute ()
 	{
-	// Add [assembly: IgnoresAccessChecksTo("Mono.Android")] to allow access to internal members
-	// This attribute is needed because the generated TypeMaps assembly calls internal constructors
-	// in Mono.Android, and Mono.Android is strong-named while TypeMaps is unsigned.
-	
-	// First, define the IgnoresAccessChecksToAttribute type in our assembly
-	// It's a simple attribute with a string constructor
-	var nextMethodHandle = MetadataTokens.MethodDefinitionHandle (_metadata.GetRowCount (TableIndex.MethodDef) + 1);
-	var nextFieldHandle = MetadataTokens.FieldDefinitionHandle (_metadata.GetRowCount (TableIndex.Field) + 1);
-	
-	var ignoresAccessAttrTypeDef = _metadata.AddTypeDefinition (
-		attributes: TypeAttributes.NotPublic | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-		@namespace: _metadata.GetOrAddString ("System.Runtime.CompilerServices"),
-		name: _metadata.GetOrAddString ("IgnoresAccessChecksToAttribute"),
-		baseType: _attributeTypeRef,
-		fieldList: nextFieldHandle,
-		methodList: nextMethodHandle);
-
-	// Add the attribute's constructor with proper body
-	var ignoresCtorSig = new BlobBuilder ();
-	new BlobEncoder (ignoresCtorSig)
-		.MethodSignature (isInstanceMethod: true)
-		.Parameters (1,
-			returnType => returnType.Void (),
-			parameters => {
-				parameters.AddParameter ().Type ().String ();
-			});
-
-	// Create constructor body: just call base() and return
-	var ctorBodyBlob = new BlobBuilder ();
-	var ctorEncoder = new InstructionEncoder (ctorBodyBlob);
-	
-	// ldarg.0 (this)
-	ctorEncoder.OpCode (ILOpCode.Ldarg_0);
-	
-	// call System.Attribute::.ctor()
-	var attrCtorSig = new BlobBuilder ();
-	new BlobEncoder (attrCtorSig)
-		.MethodSignature (isInstanceMethod: true)
-		.Parameters (0, returnType => returnType.Void (), _ => {});
-	var attrCtorRef = _metadata.AddMemberReference (
-		parent: _attributeTypeRef,
-		name: _metadata.GetOrAddString (".ctor"),
-		signature: _metadata.GetOrAddBlob (attrCtorSig));
-	
-	ctorEncoder.Call (attrCtorRef);
-	ctorEncoder.OpCode (ILOpCode.Ret);
-	
-	int ctorBodyOffset = _methodBodyStream.AddMethodBody (ctorEncoder);
-
-	var ignoresCtor = _metadata.AddMethodDefinition (
-		attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
-		implAttributes: MethodImplAttributes.IL,
-		name: _metadata.GetOrAddString (".ctor"),
-		signature: _metadata.GetOrAddBlob (ignoresCtorSig),
-		bodyOffset: ctorBodyOffset,
-		parameterList: MetadataTokens.ParameterHandle (_metadata.GetRowCount (TableIndex.Param) + 1));
-
-	// Now add [assembly: IgnoresAccessChecksTo("Mono.Android")]
-	var attrBlob = new BlobBuilder ();
-	attrBlob.WriteUInt16 (1); // Prolog
-	attrBlob.WriteSerializedString ("Mono.Android");
-	attrBlob.WriteUInt16 (0); // Named args count
-
-	_metadata.AddCustomAttribute (
-		parent: EntityHandle.AssemblyDefinition,
-		constructor: ignoresCtor,
-		value: _metadata.GetOrAddBlob (attrBlob));
-
-	// Also add [assembly: IgnoresAccessChecksTo("Java.Interop")]
-	var attrBlob2 = new BlobBuilder ();
-	attrBlob2.WriteUInt16 (1); // Prolog
-	attrBlob2.WriteSerializedString ("Java.Interop");
-	attrBlob2.WriteUInt16 (0); // Named args count
-
-	_metadata.AddCustomAttribute (
-		parent: EntityHandle.AssemblyDefinition,
-		constructor: ignoresCtor,
-		value: _metadata.GetOrAddBlob (attrBlob2));
+		// No assembly-level attributes needed now that we use UnsafeAccessor
+		// for calling protected constructors.
 	}
 	
 	void AddTypeMapAttribute (string jniName, string proxyTypeName, string targetTypeName)
