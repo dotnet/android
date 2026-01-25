@@ -9,7 +9,7 @@ using StackTraceElement = Java.Lang.StackTraceElement;
 
 namespace Android.Runtime {
 
-	[Register ("android/runtime/JavaProxyThrowable", DoNotGenerateAcw = true)]
+	[Register ("android/runtime/JavaProxyThrowable")]
 	sealed class JavaProxyThrowable : Java.Lang.Error {
 
 		public  readonly Exception InnerException;

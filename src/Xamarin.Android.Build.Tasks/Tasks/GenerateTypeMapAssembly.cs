@@ -1440,8 +1440,16 @@ internal class TypeMapAssemblyGenerator
 	var typeMapAttrs = new List<(string jniName, string proxyTypeName, string targetTypeName)> ();
 	var aliasMappings = new List<(string source, string aliasHolder)> ();
 	
+	// Filter out Invokers - they don't need TypeMap entries
+	// (they share JNI names with interfaces and are only instantiated by CreateInstance)
+	int invokerCount = javaPeers.Count (p => IsInvokerType (p));
+	var filteredPeers = javaPeers.Where (p => !IsInvokerType (p)).ToList ();
+	if (invokerCount > 0) {
+		_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] Skipped {invokerCount} Invoker types from TypeMap (no JCW/proxy needed)");
+	}
+	
 	// Group peers by JavaName to handle aliases
-	var peersByJavaName = javaPeers.GroupBy (p => p.JavaName).ToList ();
+	var peersByJavaName = filteredPeers.GroupBy (p => p.JavaName).ToList ();
 	int proxyCount = 0;
 	long slowestProxyMs = 0;
 	string? slowestProxyName = null;
@@ -1568,6 +1576,26 @@ internal class TypeMapAssemblyGenerator
 		
 		// Must end with "Implementor" to be an event callback implementor
 		return peer.JavaName.EndsWith ("Implementor", StringComparison.Ordinal);
+	}
+
+	/// <summary>
+	/// Returns true if this type is an Invoker type.
+	/// Invokers have DoNotGenerateAcw=true and their managed name ends with "Invoker".
+	/// 
+	/// Invokers do NOT need TypeMap entries because:
+	/// 1. They share the same JNI name as their interface (creates unnecessary aliases)
+	/// 2. They are only instantiated by the interface proxy's CreateInstance method
+	/// 3. When Java calls .NET with an interface type, it uses the interface's JNI name,
+	///    and the runtime creates the Invoker directly (not via TypeMap lookup)
+	/// </summary>
+	bool IsInvokerType (JavaPeerInfo peer)
+	{
+		// Invokers always have DoNotGenerateAcw=true (they wrap existing Java objects)
+		if (!peer.DoNotGenerateAcw)
+			return false;
+		
+		// Check if the managed type name ends with "Invoker"
+		return peer.ManagedTypeName.EndsWith ("Invoker", StringComparison.Ordinal);
 	}
 
 	/// <summary>
