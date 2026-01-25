@@ -187,13 +187,6 @@ namespace Android.Runtime
 			string className = System.Text.Encoding.UTF8.GetString (utf8Bytes);
 
 			*targetPtr = TypeMap.GetFunctionPointer (className.AsSpan(), methodIndex);
-			if (*targetPtr == IntPtr.Zero) {
-				Logger.Log (LogLevel.Error, "monodroid-typemap",
-					$"GetFunctionPointer: No function pointer found for class='{className}', methodIndex={methodIndex}");
-			} else {
-				Logger.Log (LogLevel.Info, "monodroid-typemap",
-					$"GetFunctionPointer: Returning 0x{(*targetPtr):X} for class='{className}', methodIndex={methodIndex}");
-			}
 		}
 
 		static void RunStartupHooksIfNeeded ()

@@ -225,21 +225,20 @@ namespace Android.Runtime
 		public IntPtr GetFunctionPointer (ReadOnlySpan<char> className, int methodIndex)
 		{
 			string classNameStr = className.ToString ();
+			IntPtr result;
 
 			if (classNameStr == "mono/android/TypeManager" && methodIndex == 0) {
-				return Java.Interop.TypeManager.GetActivateFunctionPointer ();
+				result = Java.Interop.TypeManager.GetActivateFunctionPointer ();
+			} else if (!_externalTypeMap.TryGetValue (classNameStr, out Type? type)) {
+				result = IntPtr.Zero;
+			} else {
+				JavaPeerProxy? proxy = GetProxyForType (type);
+				result = proxy?.GetFunctionPointer (methodIndex) ?? IntPtr.Zero;
 			}
 
-			if (!_externalTypeMap.TryGetValue (classNameStr, out Type? type)) {
-				return IntPtr.Zero;
-			}
-
-			JavaPeerProxy? proxy = GetProxyForType (type);
-			if (proxy == null) {
-				return IntPtr.Zero;
-			}
-
-			return proxy.GetFunctionPointer (methodIndex);
+			Logger.Log (LogLevel.Info, "monodroid-typemap",
+				$"GetFunctionPointer: class='{classNameStr}', methodIndex={methodIndex}, result=0x{result:X}");
+			return result;
 		}
 	}
 }
