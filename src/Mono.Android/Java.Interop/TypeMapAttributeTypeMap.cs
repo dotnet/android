@@ -27,14 +27,9 @@ namespace Android.Runtime
 
 		public TypeMapAttributeTypeMap ()
 		{
-			// Load the TypeMaps assembly and set it as the entry assembly so the TypeMapping API
-			// knows where to look for TypeMap attributes. Android apps don't have a traditional
-			// entry point assembly, so we need to set this explicitly.
 			var typeMapAssembly = Assembly.Load (TypeMapsAssemblyName);
 			Assembly.SetEntryAssembly (typeMapAssembly);
-
 			_externalTypeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
-			Logger.Log (LogLevel.Info, "monodroid-typemap", "TypeMapAttributeTypeMap initialized");
 		}
 
 		/// <inheritdoc/>
@@ -231,7 +226,6 @@ namespace Android.Runtime
 		{
 			string classNameStr = className.ToString ();
 
-			// Special case: TypeManager.n_Activate is called by framework JCWs
 			if (classNameStr == "mono/android/TypeManager" && methodIndex == 0) {
 				return Java.Interop.TypeManager.GetActivateFunctionPointer ();
 			}
@@ -245,9 +239,7 @@ namespace Android.Runtime
 				return IntPtr.Zero;
 			}
 
-			IntPtr fnPtr = proxy.GetFunctionPointer (methodIndex);
-			Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetFunctionPointer: class='{classNameStr}', methodIndex={methodIndex} -> 0x{fnPtr:X}");
-			return fnPtr;
+			return proxy.GetFunctionPointer (methodIndex);
 		}
 	}
 }
