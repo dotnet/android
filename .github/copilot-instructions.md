@@ -159,3 +159,18 @@ try {
 - **MSBuild:** Test in isolation, validate inputs
 - **Device:** Use update directories for rapid Debug iteration
 - **Performance:** See `../Documentation/guides/profiling.md` and `../Documentation/guides/tracing.md`
+
+## Debugging JNI/Native Crashes
+
+When debugging SIGSEGV or other native crashes at the JNI boundary:
+
+1. **Log argument values, not just "I'm here"** - Print actual IntPtr/handle values to see data flow
+2. **Compare values across log lines** - Look for the same hex value appearing with different meanings (e.g., a function pointer being passed as an object reference)
+3. **Consistent fault addresses suggest data corruption** - The crash location is deterministic but the root cause is earlier
+4. **Check index synchronization** - When multiple code generators (IL, LLVM IR, Java) must produce matching indices, verify they use the same ordering
+
+### Code Generation Best Practices
+
+- **Avoid multiple independent loops that must stay synchronized** - If IL and LLVM IR both need matching method indices, generate them together in one loop
+- **Document index ordering contracts** - Add comments like "method indices: regular methods 0..n-1, activation ctors n..m-1"
+- **Add conditional debug logging** - Use flags like `TYPEMAP_DEBUG` instead of adding/removing logging each time
