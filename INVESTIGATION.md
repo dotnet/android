@@ -94,3 +94,61 @@ adb logcat -d | grep -E "(UCO-wrapper|n_onCreate|monodroid)"
 - Must use `-c Release` to get CoreCLR (Debug defaults to MonoVM)
 - Package name is `com.xamarin.android.helloworld`, activity is `example.MainActivity`
 - The sample's Click handler is disabled because `View_OnClickListenerImplementor` JCW is not generated yet
+
+---
+
+# Button Click Investigation (2025-01-25)
+
+## ✅ RESOLVED - Event Handlers Work!
+
+The standard `button.Click += handler` pattern works correctly with TypeMap v2!
+
+### What Was Tested
+
+**Working case - Using standard event pattern:**
+```csharp
+button.Click += Button_Click;
+
+void Button_Click (object? sender, EventArgs e)
+{
+    // This works!
+    if (sender is Button btn)
+        btn.Text = $"{count++} clicks!";
+}
+```
+
+**Log output when button is clicked:**
+```
+I JCW-DEBUG: BEFORE calling n_onClick
+I monodroid-typemap: GetFunctionPointer: class='mono/android/view/View_OnClickListenerImplementor', methodIndex=0
+I monodroid-typemap: GetFunctionPointer: Found type _Microsoft.Android.TypeMaps.Android_Views_View_IOnClickListenerImplementor_Proxy
+I monodroid-typemap: GetFunctionPointer: Returning 0x7BD07D26E8
+I UCO-wrapper: ENTER n_onClick_mm_0
+E Java.Lang.Object: GetObject: GetPeer returned Android.Views.View+IOnClickListenerImplementor
+E BUTTON_CLICK: Button_Click called! sender=Android.Widget.Button
+I UCO-wrapper: AFTER CALLBACK n_onClick_mm_0
+I JCW-DEBUG: AFTER calling n_onClick
+```
+
+### What DOESN'T Work (Known Limitation)
+
+**Custom classes implementing interfaces WITHOUT JCW generation:**
+```csharp
+class MyClickListener : Java.Lang.Object, Android.Views.View.IOnClickListener
+{
+    public void OnClick(Android.Views.View? v) { ... }
+}
+
+button.SetOnClickListener(new MyClickListener());  // FAILS!
+```
+
+This fails with `java.lang.ClassNotFoundException: example.MainActivity_MyClickListener`
+
+**Reason:** The TypeMap v2 system generates JCWs for types in Mono.Android (like `View_OnClickListenerImplementor`)
+but user-defined types that implement Java interfaces need their own JCW generation, which may not be happening
+for nested classes or classes without explicit `[Register]` attributes.
+
+### Recommendation
+
+For now, use the standard event pattern (`button.Click += handler`) rather than implementing interfaces directly.
+If custom interface implementations are needed, they need explicit JCW generation.

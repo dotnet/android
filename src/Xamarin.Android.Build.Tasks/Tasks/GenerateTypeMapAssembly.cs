@@ -199,6 +199,12 @@ internal class JavaPeerInfo
 	/// Marshal methods that can be called from native code via GetFunctionPointer.
 	/// </summary>
 	public List<MarshalMethodInfo> MarshalMethods { get; set; } = new ();
+
+	/// <summary>
+	/// JNI names of Java interfaces implemented by this type (for JCW generation).
+	/// e.g., "android/view/View$OnClickListener"
+	/// </summary>
+	public List<string> ImplementedJavaInterfaces { get; set; } = new ();
 }
 
 /// <summary>
@@ -212,6 +218,17 @@ internal class MarshalMethodInfo
 	public string[] ParameterTypeNames { get; set; } = [];
 	public string? ReturnTypeName { get; set; }
 	public MethodDefinitionHandle UcoWrapper { get; set; }
+	
+	/// <summary>
+	/// For interface methods, this is the type containing the actual callback method.
+	/// Parsed from the connector string (e.g., "GetOnClick...:Android.Views.View/IOnClickListenerInvoker").
+	/// </summary>
+	public string? CallbackTypeName { get; set; }
+	
+	/// <summary>
+	/// Assembly containing the callback type.
+	/// </summary>
+	public string? CallbackAssemblyName { get; set; }
 }
 
 /// <summary>
@@ -472,8 +489,8 @@ internal class JavaPeerScanner
 		// Check for activation constructor: (IntPtr, JniHandleOwnership)
 		bool hasActivationCtor = HasActivationConstructor (reader, typeDef);
 
-		// Collect marshal methods
-		var marshalMethods = CollectMarshalMethods (reader, typeDef);
+		// Collect marshal methods and implemented interfaces
+		var (marshalMethods, implementedInterfaces) = CollectMarshalMethodsAndInterfaces (reader, typeDef);
 
 		results.Add (new JavaPeerInfo {
 			JavaName = javaName,
@@ -489,11 +506,15 @@ internal class JavaPeerScanner
 			BaseAssemblyName = baseAssemblyName,
 			HasActivationConstructor = hasActivationCtor,
 			MarshalMethods = marshalMethods,
+			ImplementedJavaInterfaces = implementedInterfaces,
 		});
 		
-		_log.LogMessage (MessageImportance.High, $"    Added Java peer: {fullName} -> '{javaName}' (in {assemblyName}, DoNotGenerateAcw={doNotGenerateAcw}, MarshalMethods={marshalMethods.Count})");
+		_log.LogMessage (MessageImportance.High, $"    Added Java peer: {fullName} -> '{javaName}' (in {assemblyName}, DoNotGenerateAcw={doNotGenerateAcw}, MarshalMethods={marshalMethods.Count}, Interfaces={implementedInterfaces.Count})");
 		foreach (var mm in marshalMethods) {
 			_log.LogMessage (MessageImportance.High, $"      Marshal method: {mm.JniName} - {mm.JniSignature} -> {mm.NativeCallbackName}");
+		}
+		foreach (var iface in implementedInterfaces) {
+			_log.LogMessage (MessageImportance.High, $"      Implements: {iface}");
 		}
 
 		// Process nested types
@@ -535,8 +556,8 @@ internal class JavaPeerScanner
 		// Check for activation constructor
 		bool hasActivationCtor = HasActivationConstructor (reader, typeDef);
 
-		// Collect marshal methods
-		var marshalMethods = CollectMarshalMethods (reader, typeDef);
+		// Collect marshal methods and implemented interfaces
+		var (marshalMethods, implementedInterfaces) = CollectMarshalMethodsAndInterfaces (reader, typeDef);
 
 		results.Add (new JavaPeerInfo {
 			JavaName = javaName,
@@ -552,6 +573,7 @@ internal class JavaPeerScanner
 			BaseAssemblyName = baseAssemblyName,
 			HasActivationConstructor = hasActivationCtor,
 			MarshalMethods = marshalMethods,
+			ImplementedJavaInterfaces = implementedInterfaces,
 		});
 
 		// Recursively process nested types
@@ -871,10 +893,12 @@ internal class JavaPeerScanner
 	/// <summary>
 	/// Collects marshal methods from a type that have [Register] attributes with connector methods.
 	/// </summary>
-	List<MarshalMethodInfo> CollectMarshalMethods (MetadataReader reader, TypeDefinition typeDef)
+	(List<MarshalMethodInfo> Methods, List<string> Interfaces) CollectMarshalMethodsAndInterfaces (MetadataReader reader, TypeDefinition typeDef)
 	{
 		var methods = new List<MarshalMethodInfo> ();
+		var interfaces = new List<string> ();
 
+		// Collect methods directly on the type
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var method = reader.GetMethodDefinition (methodHandle);
 			
@@ -906,7 +930,101 @@ internal class JavaPeerScanner
 			});
 		}
 
-		return methods;
+		// Also collect methods from implemented interfaces (for Implementor types)
+		// Implementors implement interfaces like IOnClickListener which have [Register] on their methods
+		CollectInterfaceMarshalMethods (reader, typeDef, methods, interfaces);
+
+		return (methods, interfaces);
+	}
+
+	/// <summary>
+	/// Collects marshal methods from interfaces implemented by the type.
+	/// This is needed for Implementor types that implement Java interfaces - the interface
+	/// methods have [Register] attributes that we need for JCW generation.
+	/// Also collects the Java interface names for the JCW implements clause.
+	/// </summary>
+	void CollectInterfaceMarshalMethods (MetadataReader reader, TypeDefinition typeDef, List<MarshalMethodInfo> methods, List<string> interfaces)
+	{
+		foreach (var ifaceHandle in typeDef.GetInterfaceImplementations ()) {
+			var iface = reader.GetInterfaceImplementation (ifaceHandle);
+			
+			// Get the interface type - it could be a TypeDefinition (same assembly) or TypeReference (different assembly)
+			if (iface.Interface.Kind == HandleKind.TypeDefinition) {
+				var ifaceTypeDef = reader.GetTypeDefinition ((TypeDefinitionHandle)iface.Interface);
+				string? javaInterface = CollectMethodsFromInterfaceType (reader, ifaceTypeDef, methods);
+				if (javaInterface != null) {
+					interfaces.Add (javaInterface);
+				}
+			} else if (iface.Interface.Kind == HandleKind.TypeReference) {
+				// Interface is in a different assembly - we'd need to resolve it
+				// For now, we only handle interfaces in the same assembly
+				// This covers the case of IOnClickListener and IOnClickListenerImplementor both in Mono.Android
+			}
+		}
+	}
+
+	/// <summary>
+	/// Collects marshal methods from an interface TypeDefinition.
+	/// Returns the Java interface name if any methods were found (for the JCW implements clause).
+	/// </summary>
+	string? CollectMethodsFromInterfaceType (MetadataReader reader, TypeDefinition ifaceTypeDef, List<MarshalMethodInfo> methods)
+	{
+		string? javaInterfaceName = null;
+		
+		// First, check if the interface has a [Register] attribute to get its Java name
+		var (ifaceJavaName, _) = GetRegisterAttributeValue (reader, ifaceTypeDef);
+		
+		foreach (var methodHandle in ifaceTypeDef.GetMethods ()) {
+			var method = reader.GetMethodDefinition (methodHandle);
+			
+			// Look for [Register] attribute on the interface method
+			var registerInfo = GetMethodRegisterAttribute (reader, method);
+			if (registerInfo == null)
+				continue;
+
+			var (jniName, jniSignature, connector) = registerInfo.Value;
+			if (string.IsNullOrEmpty (jniName) || string.IsNullOrEmpty (jniSignature) || string.IsNullOrEmpty (connector))
+				continue;
+
+			// Skip constructors and static initializers
+			if (jniName == "<init>" || jniName == "<clinit>")
+				continue;
+
+			// Find the native callback method name
+			string? nativeCallbackName = GetNativeCallbackName (connector, jniName);
+			if (nativeCallbackName == null)
+				continue;
+
+			// Get parameter types
+			var signature = method.DecodeSignature (new SignatureTypeProvider (reader), genericContext: null);
+			var paramTypes = signature.ParameterTypes.ToArray ();
+			string? returnType = signature.ReturnType;
+
+			// Check if we already have this method (avoid duplicates)
+			bool alreadyExists = methods.Any (m => m.JniName == jniName && m.JniSignature == jniSignature);
+			if (alreadyExists)
+				continue;
+
+			// Parse the connector to get the callback type (e.g., IOnClickListenerInvoker)
+			var (callbackTypeName, callbackAssemblyName) = ParseConnectorType (connector);
+
+			methods.Add (new MarshalMethodInfo {
+				JniName = jniName,
+				JniSignature = jniSignature,
+				NativeCallbackName = nativeCallbackName,
+				ParameterTypeNames = paramTypes,
+				ReturnTypeName = returnType,
+				CallbackTypeName = callbackTypeName,
+				CallbackAssemblyName = callbackAssemblyName,
+			});
+			
+			// If we found at least one method, use the interface's Java name
+			if (ifaceJavaName != null) {
+				javaInterfaceName = ifaceJavaName;
+			}
+		}
+		
+		return javaInterfaceName;
 	}
 
 	/// <summary>
@@ -943,10 +1061,45 @@ internal class JavaPeerScanner
 	/// </summary>
 	string? GetNativeCallbackName (string connector, string jniName)
 	{
-		// Connector format is typically: "GetOnClickHandler:Android.Views.View+IOnClickListener, Mono.Android"
-		// The native callback is typically n_{MethodName}
-		// For simplicity, we use n_{jniName} as the callback name
+		// Connector format: "Get{MethodName}Handler:Type, Assembly"
+		// Example: "GetOnClick_Landroid_view_View_Handler:Android.Views.View+IOnClickListenerInvoker, Mono.Android"
+		// We extract the method name from between "Get" and "Handler:"
+		// The native callback is n_{MethodName}
+		
+		if (connector.StartsWith ("Get") && connector.Contains ("Handler:")) {
+			int handlerIndex = connector.IndexOf ("Handler:");
+			if (handlerIndex > 3) {
+				string methodName = connector.Substring (3, handlerIndex - 3);
+				return $"n_{methodName}";
+			}
+		}
+		
+		// Fallback to simple jniName-based callback (may not work for interface methods)
 		return $"n_{jniName}";
+	}
+
+	/// <summary>
+	/// Parses the connector string to extract the callback type and assembly.
+	/// Connector format: "GetHandler:TypeName, AssemblyName, Version=..., Culture=..., PublicKeyToken=..."
+	/// </summary>
+	(string? TypeName, string? AssemblyName) ParseConnectorType (string connector)
+	{
+		// Format: "GetXxx:Type/NestedType, Assembly, ..."
+		int colonIndex = connector.IndexOf (':');
+		if (colonIndex < 0)
+			return (null, null);
+		
+		string typeAndAssembly = connector.Substring (colonIndex + 1);
+		
+		// Split by comma to get type and assembly parts
+		string[] parts = typeAndAssembly.Split (',');
+		if (parts.Length < 2)
+			return (null, null);
+		
+		string typeName = parts [0].Trim ().Replace ('/', '+');
+		string assemblyName = parts [1].Trim ();
+		
+		return (typeName, assemblyName);
 	}
 
 	string? GetFullTypeName (MetadataReader reader, EntityHandle handle)
@@ -1183,27 +1336,46 @@ internal class TypeMapAssemblyGenerator
 		return generatedJavaFiles;
 	}
 
-	void GenerateLlvmIrFiles (List<JavaPeerInfo> javaPeers, string llvmIrDir)
+	/// <summary>
+	/// Returns true if this is an Implementor type (a .NET-created callback that Java will call back into).
+	/// Implementors are generated classes that implement Java interfaces for event callbacks.
+	/// They have names ending in "Implementor" (e.g., View_OnClickListenerImplementor).
+	/// Note: We exclude other mono/* types like InputStreamAdapter which are runtime adapters
+	/// with different requirements.
+	/// </summary>
+	bool IsImplementorType (JavaPeerInfo peer)
 	{
-		int count = 0;
-		foreach (var peer in javaPeers) {
-			// Skip framework assemblies (Mono.Android, Java.Interop) - they have their own generation
-			if (IsFrameworkAssembly (peer.AssemblyName))
-				continue;
-
-			// Skip MCW types (DoNotGenerateAcw=true) - they bind to existing Java classes, no JCW needed
-			if (peer.DoNotGenerateAcw)
-				continue;
-
-			GenerateLlvmIrFile (llvmIrDir, peer);
-			count++;
-		}
+		// Implementors have Java names in the mono.* namespace AND end with "Implementor"
+		if (!peer.JavaName.StartsWith ("mono/", StringComparison.Ordinal) &&
+		    !peer.JavaName.StartsWith ("mono.", StringComparison.Ordinal))
+			return false;
 		
-		GenerateLlvmIrInitFile (llvmIrDir);
-		
-		_log.LogDebugMessage ($"Generated {count} LLVM IR files");
+		// Must end with "Implementor" to be an event callback implementor
+		return peer.JavaName.EndsWith ("Implementor", StringComparison.Ordinal);
 	}
-	
+
+	/// <summary>
+	/// Returns true if this peer needs JCW and LLVM IR generation.
+	/// This includes user types and framework Implementors, but excludes MCW types.
+	/// </summary>
+	bool NeedsJcwGeneration (JavaPeerInfo peer)
+	{
+		// Types with DoNotGenerateAcw=true are MCW bindings to existing Java classes
+		if (peer.DoNotGenerateAcw)
+			return false;
+		
+		// User types always need JCW generation
+		if (!IsFrameworkAssembly (peer.AssemblyName))
+			return true;
+		
+		// Framework Implementors (mono.android.* types) need JCW generation for TypeMap v2
+		if (IsImplementorType (peer))
+			return true;
+		
+		// Other framework types (abstract MCW classes, etc.) don't need JCW generation
+		return false;
+	}
+
 	bool IsFrameworkAssembly (string assemblyName)
 	{
 		return assemblyName switch {
@@ -1215,6 +1387,22 @@ internal class TypeMapAssemblyGenerator
 			_ when assemblyName.StartsWith ("Xamarin.", StringComparison.Ordinal) => true,
 			_ => false,
 		};
+	}
+
+	void GenerateLlvmIrFiles (List<JavaPeerInfo> javaPeers, string llvmIrDir)
+	{
+		int count = 0;
+		foreach (var peer in javaPeers) {
+			if (!NeedsJcwGeneration (peer))
+				continue;
+
+			GenerateLlvmIrFile (llvmIrDir, peer);
+			count++;
+		}
+		
+		GenerateLlvmIrInitFile (llvmIrDir);
+		
+		_log.LogDebugMessage ($"Generated {count} LLVM IR files");
 	}
 
 	void GenerateLlvmIrInitFile (string outputPath)
@@ -1653,12 +1841,7 @@ attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memor
 	{
 		var generatedFiles = new List<string> ();
 		foreach (var peer in javaPeers) {
-			// Skip framework assemblies (Mono.Android, Java.Interop) - they have their own JCWs
-			if (IsFrameworkAssembly (peer.AssemblyName))
-				continue;
-
-			// Skip MCW types (DoNotGenerateAcw=true) - they bind to existing Java classes, no JCW needed
-			if (peer.DoNotGenerateAcw)
+			if (!NeedsJcwGeneration (peer))
 				continue;
 
 			string filePath = GenerateJcwJavaFile (javaSourceDir, peer);
@@ -1742,10 +1925,15 @@ attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memor
 
 			// Generate public wrapper method
 			string returnStatement = returnType == "void" ? "" : "return ";
+			string afterLog = returnType == "void" 
+				? $"android.util.Log.i(\"JCW-DEBUG\", \"AFTER calling n_{method.JniName}\");" 
+				: "";
 			publicMethods.AppendLine ($$"""
     public {{returnType}} {{method.JniName}} ({{parameters}})
     {
+        android.util.Log.i("JCW-DEBUG", "BEFORE calling n_{{method.JniName}}");
         {{returnStatement}}n_{{method.JniName}} ({{parameterNames}});
+        {{afterLog}}
     }
 
 """);
@@ -1753,6 +1941,17 @@ attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memor
 			// Generate private native declaration
 			nativeMethods.AppendLine ($"    private native {returnType} n_{method.JniName} ({parameters});");
 		}
+
+		// Build implements clause with additional Java interfaces
+		var implementsList = new List<string> { "mono.android.IGCUserPeer" };
+		foreach (var javaInterface in peer.ImplementedJavaInterfaces) {
+			// Convert JNI format (android/view/View$OnClickListener) to Java format (android.view.View.OnClickListener)
+			string javaInterfaceName = javaInterface.Replace ('/', '.').Replace ('$', '.');
+			if (!implementsList.Contains (javaInterfaceName)) {
+				implementsList.Add (javaInterfaceName);
+			}
+		}
+		string implementsClause = string.Join (", ", implementsList);
 
 		// Generate package declaration and class
 		if (!string.IsNullOrEmpty (package)) {
@@ -1763,7 +1962,7 @@ attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memor
 		writer.Write ($$"""
 public class {{className}}
     extends {{baseClassName}}
-    implements mono.android.IGCUserPeer
+    implements {{implementsClause}}
 {
 {{constructorDeclarations}}
 {{publicMethods}}
@@ -1818,7 +2017,7 @@ public class {{className}}
 					int start = idx + 1;
 					while (idx < paramSig.Length && paramSig[idx] != ';') idx++;
 					string className = paramSig.Substring (start, idx - start);
-					type = className.Replace ('/', '.');
+					type = className.Replace ('/', '.').Replace ('$', '.');
 					idx++; 
 					break;
 				case '[':
@@ -1844,7 +2043,7 @@ public class {{className}}
 								int elemStart = idx + 1;
 								while (idx < paramSig.Length && paramSig[idx] != ';') idx++;
 								string elemClassName = paramSig.Substring (elemStart, idx - elemStart);
-								elementType = elemClassName.Replace ('/', '.');
+								elementType = elemClassName.Replace ('/', '.').Replace ('$', '.');
 								idx++;
 								break;
 							default:
@@ -1912,21 +2111,43 @@ public class {{className}}
 		int parenEnd = signature.LastIndexOf (')');
 		if (parenEnd < 0) return "void";
 
-		char returnChar = signature [parenEnd + 1];
-		return returnChar switch {
-			'V' => "void",
-			'Z' => "boolean",
-			'B' => "byte",
-			'C' => "char",
-			'S' => "short",
-			'I' => "int",
-			'J' => "long",
-			'F' => "float",
-			'D' => "double",
-			'L' => "Object",
-			'[' => "Object[]",
-			_ => "Object",
-		};
+		// Get the return type portion of the signature (everything after ')')
+		string returnSig = signature.Substring (parenEnd + 1);
+		if (string.IsNullOrEmpty (returnSig)) return "void";
+		
+		return ParseJniType (returnSig);
+	}
+	
+	string ParseJniType (string typeSig)
+	{
+		if (string.IsNullOrEmpty (typeSig)) return "void";
+		
+		char c = typeSig [0];
+		switch (c) {
+			case 'V': return "void";
+			case 'Z': return "boolean";
+			case 'B': return "byte";
+			case 'C': return "char";
+			case 'S': return "short";
+			case 'I': return "int";
+			case 'J': return "long";
+			case 'F': return "float";
+			case 'D': return "double";
+			case 'L':
+				// Reference type: Lfully/qualified/ClassName;
+				int semicolon = typeSig.IndexOf (';');
+				if (semicolon > 1) {
+					string className = typeSig.Substring (1, semicolon - 1);
+					return className.Replace ('/', '.').Replace ('$', '.');
+				}
+				return "java.lang.Object";
+			case '[':
+				// Array type: [element
+				string elementType = ParseJniType (typeSig.Substring (1));
+				return elementType + "[]";
+			default:
+				return "java.lang.Object";
+		}
 	}
 	
 	void CreateModuleAndAssembly ()
@@ -2121,6 +2342,69 @@ public class {{className}}
 	resolutionScope: _corlibRef,
 	@namespace: _metadata.GetOrAddString ("System.Runtime.CompilerServices"),
 	name: _metadata.GetOrAddString ("RuntimeHelpers"));
+	}
+
+	// Cache for dynamically created type references
+	Dictionary<string, TypeReferenceHandle> _typeRefCache = new ();
+
+	/// <summary>
+	/// Gets or creates a type reference for a type name.
+	/// Handles nested types (e.g., "Android.Views.View+IOnClickListenerInvoker").
+	/// </summary>
+	TypeReferenceHandle GetOrAddTypeReference (string typeName, string assemblyName)
+	{
+		string cacheKey = $"{typeName}, {assemblyName}";
+		if (_typeRefCache.TryGetValue (cacheKey, out var existing))
+			return existing;
+		
+		// Get or add assembly reference
+		AssemblyReferenceHandle asmRef;
+		if (assemblyName == "Mono.Android") {
+			asmRef = _monoAndroidRef;
+		} else {
+			// For other assemblies, create a new reference
+			// This is a simplified version - in practice we might need to match versions
+			asmRef = _metadata.AddAssemblyReference (
+				name: _metadata.GetOrAddString (assemblyName),
+				version: new Version (0, 0, 0, 0),
+				culture: default,
+				publicKeyOrToken: default,
+				flags: default,
+				hashValue: default);
+		}
+		
+		// Parse type name - handle nested types (separated by +)
+		int plusIndex = typeName.LastIndexOf ('+');
+		if (plusIndex > 0) {
+			// Nested type: first get reference to parent type, then nested type
+			string parentTypeName = typeName.Substring (0, plusIndex);
+			string nestedTypeName = typeName.Substring (plusIndex + 1);
+			
+			// Recursively get the parent type reference
+			var parentTypeRef = GetOrAddTypeReference (parentTypeName, assemblyName);
+			
+			// Create nested type reference with parent as resolution scope
+			var typeRef = _metadata.AddTypeReference (
+				resolutionScope: parentTypeRef,
+				@namespace: default, // Nested types don't have namespace
+				name: _metadata.GetOrAddString (nestedTypeName));
+			
+			_typeRefCache [cacheKey] = typeRef;
+			return typeRef;
+		}
+		
+		// Regular type (not nested)
+		int lastDot = typeName.LastIndexOf ('.');
+		string ns = lastDot > 0 ? typeName.Substring (0, lastDot) : "";
+		string name = lastDot > 0 ? typeName.Substring (lastDot + 1) : typeName;
+		
+		var regularTypeRef = _metadata.AddTypeReference (
+			resolutionScope: asmRef,
+			@namespace: _metadata.GetOrAddString (ns),
+			name: _metadata.GetOrAddString (name));
+		
+		_typeRefCache [cacheKey] = regularTypeRef;
+		return regularTypeRef;
 	}
 	
 	void AddMemberReferences ()
@@ -2514,9 +2798,19 @@ public class {{className}}
 					}
 				});
 
-			// Create reference to the original n_* callback method in the target type
+			// Create reference to the original n_* callback method
+			// For interface methods (from Implementors), the callback is in the Invoker type, not the Implementor
+			EntityHandle callbackTypeRef;
+			if (!mm.CallbackTypeName.IsNullOrEmpty () && !mm.CallbackAssemblyName.IsNullOrEmpty ()) {
+				// Callback is in a different type (e.g., IOnClickListenerInvoker for Implementor's onClick)
+				callbackTypeRef = GetOrAddTypeReference (mm.CallbackTypeName!, mm.CallbackAssemblyName!);
+			} else {
+				// Callback is in the target type itself
+				callbackTypeRef = targetTypeRef;
+			}
+			
 			var callbackRef = _metadata.AddMemberReference (
-				parent: targetTypeRef,
+				parent: callbackTypeRef,
 				name: _metadata.GetOrAddString (mm.NativeCallbackName),
 				signature: _metadata.GetOrAddBlob (callbackSigBlob));
 

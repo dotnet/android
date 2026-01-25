@@ -16,7 +16,7 @@ namespace HelloWorld
 	public class MainActivity : Activity
 	{
 		int count = 1;
-
+		
 		// Manual connector to test TypeMaps marshal methods
 		[Register ("onCreate", "(Landroid/os/Bundle;)V", "n_onCreate")]
 		protected override void OnCreate (Bundle savedInstanceState)
@@ -28,13 +28,21 @@ namespace HelloWorld
 
 			// Get our button from the layout resource
 			Button button = FindViewById<Button> (Resource.Id.myButton);
+			
+			Android.Util.Log.Info ("BUTTON_SETUP", $"Button found: {button != null}, button.Handle=0x{button?.Handle ?? IntPtr.Zero:X}");
 
-			// Note: Click handler disabled for TypeMap v2 testing
-			// (requires View_OnClickListenerImplementor JCW which is not yet generated)
-			// button.Click += delegate {
-			// 	button.Text = string.Format ("{0} clicks!", count++);
-			// };
-			button.Text = "TypeMap v2 works!";
+			// Test the standard Click event pattern - this uses View_OnClickListenerImplementor internally
+			Android.Util.Log.Info ("BUTTON_SETUP", "Adding Click event handler...");
+			button.Click += Button_Click;
+			Android.Util.Log.Info ("BUTTON_SETUP", "Click event handler added!");
+		}
+		
+		void Button_Click (object? sender, EventArgs e)
+		{
+			Android.Util.Log.Error ("BUTTON_CLICK", $"Button_Click called! sender={sender?.GetType().FullName ?? "null"}");
+			if (sender is Button btn) {
+				btn.Text = $"{count++} clicks!";
+			}
 		}
 
 		protected override void OnResume ()
