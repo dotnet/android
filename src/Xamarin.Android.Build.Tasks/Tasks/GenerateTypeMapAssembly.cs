@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -84,27 +85,34 @@ public class GenerateTypeMapAssembly : AndroidTask
 
 	public override bool RunTask ()
 	{
+		var totalStopwatch = Stopwatch.StartNew ();
+		JavaPeerScanner? scanner = null;
 		try {
-			Log.LogDebugMessage ($"Scanning {ResolvedAssemblies.Length} assemblies for Java peer types...");
+			Log.LogMessage (MessageImportance.High, $"[GTMA] Starting TypeMap generation for {ResolvedAssemblies.Length} assemblies...");
 
 			// Scan assemblies for Java peer types
-			var scanner = new JavaPeerScanner (Log);
+			var scanStopwatch = Stopwatch.StartNew ();
+			scanner = new JavaPeerScanner (Log);
 			var javaPeers = scanner.ScanAssemblies (ResolvedAssemblies);
+			scanStopwatch.Stop ();
+			Log.LogMessage (MessageImportance.High, $"[GTMA] Assembly scanning completed in {scanStopwatch.ElapsedMilliseconds}ms, found {javaPeers.Count} Java peer types");
 
 			if (javaPeers.Count == 0) {
-				Log.LogDebugMessage ("No Java peer types found. Skipping TypeMap assembly generation.");
+				Log.LogMessage (MessageImportance.High, "[GTMA] No Java peer types found. Skipping TypeMap assembly generation.");
 				UpdatedResolvedAssemblies = ResolvedAssemblies;
 				return true;
 			}
-
-			Log.LogDebugMessage ($"Found {javaPeers.Count} Java peer types");
 
 			// Generate the assembly
 			Directory.CreateDirectory (OutputDirectory);
 			string assemblyPath = Path.Combine (OutputDirectory, "_Microsoft.Android.TypeMaps.dll");
 
+			var genStopwatch = Stopwatch.StartNew ();
 			var generator = new TypeMapAssemblyGenerator (Log);
 			var generatedJavaFiles = generator.Generate (assemblyPath, javaPeers, JavaSourceOutputDirectory, LlvmIrOutputDirectory);
+			genStopwatch.Stop ();
+			Log.LogMessage (MessageImportance.High, $"[GTMA] Code generation completed in {genStopwatch.ElapsedMilliseconds}ms");
+			
 			GeneratedJavaFiles = generatedJavaFiles.Select (f => new TaskItem (f)).ToArray ();
 
 			GeneratedAssembly = new TaskItem (assemblyPath);
@@ -130,13 +138,18 @@ public class GenerateTypeMapAssembly : AndroidTask
 			updatedList.Add (generatedItem);
 			UpdatedResolvedAssemblies = updatedList.ToArray ();
 
-			Log.LogDebugMessage ($"Generated TypeMap assembly: {assemblyPath}");
-			Log.LogDebugMessage ($"TypeMapEntryAssemblyName: {TypeMapEntryAssemblyName}");
+			totalStopwatch.Stop ();
+			Log.LogMessage (MessageImportance.High, $"[GTMA] TypeMap generation completed in {totalStopwatch.ElapsedMilliseconds}ms total");
+			Log.LogMessage (MessageImportance.High, $"[GTMA]   - Generated {javaPeers.Count} type mappings");
+			Log.LogMessage (MessageImportance.High, $"[GTMA]   - Generated {generatedJavaFiles.Count} Java files");
+			Log.LogMessage (MessageImportance.High, $"[GTMA]   - Output assembly: {assemblyPath}");
 
 			return !Log.HasLoggedErrors;
 		} catch (Exception ex) {
 			Log.LogErrorFromException (ex, showStackTrace: true);
 			return false;
+		} finally {
+			scanner?.Dispose ();
 		}
 	}
 }
@@ -309,40 +322,127 @@ internal class JavaPeerScanner
 	// Well-known attribute type names
 	const string RegisterAttributeFullName = "Android.Runtime.RegisterAttribute";
 
+	// Cache of loaded assemblies for cross-assembly type resolution
+	readonly Dictionary<string, (FileStream Stream, PEReader PeReader, MetadataReader MetadataReader)> _assemblyCache = new ();
+
 	public JavaPeerScanner (TaskLoggingHelper log)
 	{
 		_log = log;
 	}
 
+	/// <summary>
+	/// Disposes all cached assembly readers.
+	/// </summary>
+	public void Dispose ()
+	{
+		foreach (var entry in _assemblyCache.Values) {
+			entry.PeReader.Dispose ();
+			entry.Stream.Dispose ();
+		}
+		_assemblyCache.Clear ();
+	}
+
+	/// <summary>
+	/// Gets or loads the metadata reader for an assembly by name.
+	/// </summary>
+	MetadataReader? GetMetadataReader (string assemblyName)
+	{
+		if (_assemblyCache.TryGetValue (assemblyName, out var cached))
+			return cached.MetadataReader;
+		return null;
+	}
+
 	public List<JavaPeerInfo> ScanAssemblies (ITaskItem[] assemblies)
 	{
+		var totalStopwatch = Stopwatch.StartNew ();
 		var results = new List<JavaPeerInfo> ();
 
-		_log.LogMessage (MessageImportance.High, $"GenerateTypeMapAssembly: Scanning {assemblies.Length} assemblies for Java peer types...");
+		_log.LogMessage (MessageImportance.High, $"[GTMA-Scan] Starting scan of {assemblies.Length} assemblies...");
+		
+		// First pass: load all assemblies into cache
+		var loadStopwatch = Stopwatch.StartNew ();
+		int loadedCount = 0;
 		foreach (var assembly in assemblies) {
 			string path = assembly.ItemSpec;
-			_log.LogMessage (MessageImportance.High, $"  Checking: {Path.GetFileName (path)}");
-			if (!File.Exists (path))
-				continue;
-
-			// Skip non-.NET assemblies
-			if (!path.EndsWith (".dll", StringComparison.OrdinalIgnoreCase))
+			if (!File.Exists (path) || !path.EndsWith (".dll", StringComparison.OrdinalIgnoreCase))
 				continue;
 
 			try {
+				LoadAssemblyIntoCache (path);
+				loadedCount++;
+			} catch (Exception ex) {
+				_log.LogDebugMessage ($"Failed to load assembly {path}: {ex.Message}");
+			}
+		}
+		loadStopwatch.Stop ();
+		_log.LogMessage (MessageImportance.High, $"[GTMA-Scan] Loaded {loadedCount} assemblies into cache ({_assemblyCache.Count} unique) in {loadStopwatch.ElapsedMilliseconds}ms");
+		
+		// Second pass: scan for Java peers
+		var scanStopwatch = Stopwatch.StartNew ();
+		long totalTypeProcessingMs = 0;
+		int assembliesWithPeers = 0;
+		
+		foreach (var assembly in assemblies) {
+			string path = assembly.ItemSpec;
+			if (!File.Exists (path) || !path.EndsWith (".dll", StringComparison.OrdinalIgnoreCase))
+				continue;
+
+			try {
+				var asmStopwatch = Stopwatch.StartNew ();
+				int beforeCount = results.Count;
 				ScanAssembly (path, results);
+				asmStopwatch.Stop ();
+				
+				int typesFound = results.Count - beforeCount;
+				if (typesFound > 0) {
+					assembliesWithPeers++;
+					totalTypeProcessingMs += asmStopwatch.ElapsedMilliseconds;
+					_log.LogMessage (MessageImportance.High, $"[GTMA-Scan]   {Path.GetFileNameWithoutExtension (path)}: {typesFound} types in {asmStopwatch.ElapsedMilliseconds}ms ({(double)asmStopwatch.ElapsedMilliseconds / typesFound:F2}ms/type)");
+				}
 			} catch (Exception ex) {
 				_log.LogDebugMessage ($"Failed to scan assembly {path}: {ex.Message}");
 			}
 		}
+		scanStopwatch.Stop ();
+		_log.LogMessage (MessageImportance.High, $"[GTMA-Scan] Assembly scanning: {scanStopwatch.ElapsedMilliseconds}ms ({assembliesWithPeers} assemblies with peers)");
 
 		// Post-process: resolve activation constructor base types for types that don't have their own
+		var resolveStopwatch = Stopwatch.StartNew ();
 		ResolveActivationConstructorBaseTypes (results);
-
-		// Post-process: resolve base Java names for JCW generation
 		ResolveBaseJavaNames (results);
+		resolveStopwatch.Stop ();
+		_log.LogMessage (MessageImportance.High, $"[GTMA-Scan] Post-processing: {resolveStopwatch.ElapsedMilliseconds}ms");
+
+		totalStopwatch.Stop ();
+		_log.LogMessage (MessageImportance.High, $"[GTMA-Scan] Total scan time: {totalStopwatch.ElapsedMilliseconds}ms, found {results.Count} types");
 
 		return results;
+	}
+
+	/// <summary>
+	/// Loads an assembly into the cache without processing it.
+	/// </summary>
+	void LoadAssemblyIntoCache (string assemblyPath)
+	{
+		var stream = File.OpenRead (assemblyPath);
+		var peReader = new PEReader (stream);
+
+		if (!peReader.HasMetadata) {
+			peReader.Dispose ();
+			stream.Dispose ();
+			return;
+		}
+
+		var metadataReader = peReader.GetMetadataReader ();
+		string assemblyName = GetAssemblyName (metadataReader);
+
+		if (!_assemblyCache.ContainsKey (assemblyName)) {
+			_assemblyCache[assemblyName] = (stream, peReader, metadataReader);
+		} else {
+			// Already cached, dispose this one
+			peReader.Dispose ();
+			stream.Dispose ();
+		}
 	}
 
 	/// <summary>
@@ -420,25 +520,34 @@ internal class JavaPeerScanner
 
 	void ScanAssembly (string assemblyPath, List<JavaPeerInfo> results)
 	{
-		using var stream = File.OpenRead (assemblyPath);
-		using var peReader = new PEReader (stream);
-
-		if (!peReader.HasMetadata)
+		// Get the cached reader - assembly should already be loaded
+		string fileName = Path.GetFileNameWithoutExtension (assemblyPath);
+		
+		// Find the cached entry by matching the assembly name
+		MetadataReader? metadataReader = null;
+		string? assemblyName = null;
+		
+		foreach (var kvp in _assemblyCache) {
+			// Check if this cache entry matches the file we're looking for
+			if (kvp.Key.Equals (fileName, StringComparison.OrdinalIgnoreCase) ||
+			    kvp.Value.Stream.Name.Equals (assemblyPath, StringComparison.OrdinalIgnoreCase)) {
+				metadataReader = kvp.Value.MetadataReader;
+				assemblyName = kvp.Key;
+				break;
+			}
+		}
+		
+		if (metadataReader == null || assemblyName == null) {
 			return;
-
-		var metadataReader = peReader.GetMetadataReader ();
-		string assemblyName = GetAssemblyName (metadataReader);
+		}
 
 		// Check if this assembly references Mono.Android (has Java peer types)
 		bool referencesMonoAndroid = ReferencesMonoAndroid (metadataReader);
 		bool isMonoAndroid = assemblyName == "Mono.Android";
 		
 		if (!referencesMonoAndroid && !isMonoAndroid) {
-			_log.LogMessage (MessageImportance.High, $"  Skipping {assemblyName}: does not reference Mono.Android");
 			return;
 		}
-
-		_log.LogMessage (MessageImportance.High, $"  Scanning {assemblyName} for Java peer types...");
 
 		foreach (var typeDefHandle in metadataReader.TypeDefinitions) {
 			var typeDef = metadataReader.GetTypeDefinition (typeDefHandle);
@@ -451,12 +560,12 @@ internal class JavaPeerScanner
 		}
 	}
 
-	void ProcessType (MetadataReader reader, TypeDefinition typeDef, string assemblyName, string assemblyPath, List<JavaPeerInfo> results)
+	bool ProcessType (MetadataReader reader, TypeDefinition typeDef, string assemblyName, string assemblyPath, List<JavaPeerInfo> results)
 	{
 		// Look for [Register] attribute - returns (javaName, doNotGenerateAcw)
 		var (javaName, doNotGenerateAcw) = GetRegisterAttributeValue (reader, typeDef);
 		if (javaName == null)
-			return;
+			return false;
 
 		string ns = reader.GetString (typeDef.Namespace);
 		string name = reader.GetString (typeDef.Name);
@@ -522,6 +631,8 @@ internal class JavaPeerScanner
 			var nestedDef = reader.GetTypeDefinition (nestedHandle);
 			ProcessNestedType (reader, nestedDef, fullName, assemblyName, assemblyPath, results);
 		}
+		
+		return true;
 	}
 
 	void ProcessNestedType (MetadataReader reader, TypeDefinition typeDef, string parentTypeName, string assemblyName, string assemblyPath, List<JavaPeerInfo> results)
@@ -956,11 +1067,95 @@ internal class JavaPeerScanner
 					interfaces.Add (javaInterface);
 				}
 			} else if (iface.Interface.Kind == HandleKind.TypeReference) {
-				// Interface is in a different assembly - we'd need to resolve it
-				// For now, we only handle interfaces in the same assembly
-				// This covers the case of IOnClickListener and IOnClickListenerImplementor both in Mono.Android
+				// Interface is in a different assembly - resolve it using the cached assemblies
+				var typeRef = reader.GetTypeReference ((TypeReferenceHandle)iface.Interface);
+				string? javaInterface = ResolveAndCollectInterfaceMethods (reader, typeRef, methods);
+				if (javaInterface != null) {
+					interfaces.Add (javaInterface);
+				}
 			}
 		}
+	}
+
+	/// <summary>
+	/// Resolves a TypeReference to an interface in another assembly and collects its marshal methods.
+	/// </summary>
+	string? ResolveAndCollectInterfaceMethods (MetadataReader currentReader, TypeReference typeRef, List<MarshalMethodInfo> methods)
+	{
+		// Get the assembly reference
+		var resolutionScopeKind = typeRef.ResolutionScope.Kind;
+		string? targetAssemblyName = null;
+		string typeName = currentReader.GetString (typeRef.Name);
+		string? typeNamespace = typeRef.Namespace.IsNil ? null : currentReader.GetString (typeRef.Namespace);
+		
+		if (resolutionScopeKind == HandleKind.AssemblyReference) {
+			var asmRef = currentReader.GetAssemblyReference ((AssemblyReferenceHandle)typeRef.ResolutionScope);
+			targetAssemblyName = currentReader.GetString (asmRef.Name);
+		} else if (resolutionScopeKind == HandleKind.TypeReference) {
+			// Nested type - get the enclosing type's assembly
+			var enclosingRef = currentReader.GetTypeReference ((TypeReferenceHandle)typeRef.ResolutionScope);
+			if (enclosingRef.ResolutionScope.Kind == HandleKind.AssemblyReference) {
+				var asmRef = currentReader.GetAssemblyReference ((AssemblyReferenceHandle)enclosingRef.ResolutionScope);
+				targetAssemblyName = currentReader.GetString (asmRef.Name);
+			}
+		}
+		
+		if (targetAssemblyName == null) {
+			_log.LogDebugMessage ($"      [InterfaceResolve] Could not determine assembly for {typeNamespace}.{typeName} (scope kind: {resolutionScopeKind})");
+			return null;
+		}
+			
+		// Get the cached metadata reader for the target assembly
+		var targetReader = GetMetadataReader (targetAssemblyName);
+		if (targetReader == null) {
+			_log.LogDebugMessage ($"      [InterfaceResolve] Assembly {targetAssemblyName} not in cache for {typeNamespace}.{typeName}");
+			_log.LogDebugMessage ($"      [InterfaceResolve] Available assemblies: {string.Join (", ", _assemblyCache.Keys.Take (10))}...");
+			return null;
+		}
+		
+		// Handle nested types (e.g., View.IOnClickListener -> View+IOnClickListener)
+		string? enclosingTypeName = null;
+		if (typeRef.ResolutionScope.Kind == HandleKind.TypeReference) {
+			var enclosingRef = currentReader.GetTypeReference ((TypeReferenceHandle)typeRef.ResolutionScope);
+			enclosingTypeName = currentReader.GetString (enclosingRef.Name);
+			if (!enclosingRef.Namespace.IsNil) {
+				typeNamespace = currentReader.GetString (enclosingRef.Namespace);
+			}
+		}
+		
+		_log.LogDebugMessage ($"      [InterfaceResolve] Looking for {typeNamespace}.{(enclosingTypeName != null ? enclosingTypeName + "+" : "")}{typeName} in {targetAssemblyName}");
+		
+		// Search for the type in the target assembly
+		foreach (var typeDefHandle in targetReader.TypeDefinitions) {
+			var typeDef = targetReader.GetTypeDefinition (typeDefHandle);
+			
+			string defName = targetReader.GetString (typeDef.Name);
+			string? defNamespace = typeDef.Namespace.IsNil ? null : targetReader.GetString (typeDef.Namespace);
+			
+			if (enclosingTypeName != null) {
+				// Looking for a nested type - check if this is the enclosing type
+				if (defName == enclosingTypeName && defNamespace == typeNamespace) {
+					// Search nested types
+					foreach (var nestedHandle in typeDef.GetNestedTypes ()) {
+						var nestedDef = targetReader.GetTypeDefinition (nestedHandle);
+						string nestedName = targetReader.GetString (nestedDef.Name);
+						if (nestedName == typeName) {
+							_log.LogDebugMessage ($"      [InterfaceResolve] Found nested type {typeNamespace}.{enclosingTypeName}+{typeName}");
+							return CollectMethodsFromInterfaceType (targetReader, nestedDef, methods);
+						}
+					}
+				}
+			} else {
+				// Looking for a top-level type
+				if (defName == typeName && defNamespace == typeNamespace) {
+					_log.LogDebugMessage ($"      [InterfaceResolve] Found type {typeNamespace}.{typeName}");
+					return CollectMethodsFromInterfaceType (targetReader, typeDef, methods);
+				}
+			}
+		}
+		
+		_log.LogDebugMessage ($"      [InterfaceResolve] Could not find {typeNamespace}.{(enclosingTypeName != null ? enclosingTypeName + "+" : "")}{typeName} in {targetAssemblyName}");
+		return null;
 	}
 
 	/// <summary>
@@ -1227,30 +1422,29 @@ internal class TypeMapAssemblyGenerator
 	
 	public List<string> Generate (string outputPath, List<JavaPeerInfo> javaPeers, string javaSourceDir, string llvmIrDir)
 	{
+		var totalStopwatch = Stopwatch.StartNew ();
+		
 		// 1. Create module and assembly definitions
-	CreateModuleAndAssembly ();
-	
-	// 2. Add assembly references
-	AddAssemblyReferences ();
-	
-	// 3. Add type references for well-known types
-	AddTypeReferences ();
-	
-	// 4. Add member references
-	AddMemberReferences ();
-	
-	// 5. Create signature blobs
-	CreateSignatureBlobs ();
-	
-	// 6. Add TypeMapAssemblyTargetAttribute to assembly
-	AddAssemblyAttribute ();
+		var setupStopwatch = Stopwatch.StartNew ();
+		CreateModuleAndAssembly ();
+		AddAssemblyReferences ();
+		AddTypeReferences ();
+		AddMemberReferences ();
+		CreateSignatureBlobs ();
+		AddAssemblyAttribute ();
+		setupStopwatch.Stop ();
+		_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] Setup (module, refs, sigs): {setupStopwatch.ElapsedMilliseconds}ms");
 	
 	// 7. Generate proxy types and collect TypeMap attributes
+	var proxyStopwatch = Stopwatch.StartNew ();
 	var typeMapAttrs = new List<(string jniName, string proxyTypeName, string targetTypeName)> ();
 	var aliasMappings = new List<(string source, string aliasHolder)> ();
 	
 	// Group peers by JavaName to handle aliases
 	var peersByJavaName = javaPeers.GroupBy (p => p.JavaName).ToList ();
+	int proxyCount = 0;
+	long slowestProxyMs = 0;
+	string? slowestProxyName = null;
 	
 	foreach (var group in peersByJavaName) {
 		var peers = group.ToList ();
@@ -1270,22 +1464,29 @@ internal class TypeMapAssemblyGenerator
 		for (int i = 0; i < peers.Count; i++) {
 			var peer = peers[i];
 			try {
+				var peerStopwatch = Stopwatch.StartNew ();
+				
 				var targetTypeRef = AddExternalTypeReference (peer.AssemblyName, peer.ManagedTypeName);
 				if (targetTypeRef.IsNil) {
-					_log.LogMessage (MessageImportance.High, $"  Skipping {peer.ManagedTypeName}: could not create type reference");
 					continue;
 				}
 				
 				// Calculate proxy name based on MANAGED type to ensure uniqueness (especially for aliases)
 				string proxyTypeName = peer.ManagedTypeName.Replace ('.', '_').Replace ('+', '_') + "_Proxy";
 				
-				_log.LogMessage (MessageImportance.High, $"  Generating proxy: {proxyTypeName} for {peer.ManagedTypeName} (jni: {jniName})");
 				var proxyTypeDef = GenerateProxyType (peer, targetTypeRef, proxyTypeName);
+				peerStopwatch.Stop ();
+				
+				if (peerStopwatch.ElapsedMilliseconds > slowestProxyMs) {
+					slowestProxyMs = peerStopwatch.ElapsedMilliseconds;
+					slowestProxyName = proxyTypeName;
+				}
+				
 				if (proxyTypeDef.IsNil) {
-					_log.LogMessage (MessageImportance.High, $"  Skipping {peer.ManagedTypeName}: could not generate proxy type");
 					continue;
 				}
 				
+				proxyCount++;
 				string entryJniName = peers.Count > 1 ? $"{jniName}[{i}]" : jniName;
 				string targetTypeName = $"{peer.ManagedTypeName}, {peer.AssemblyName}";
 				// Qualify proxy type with namespace and assembly so runtime can find it
@@ -1305,11 +1506,14 @@ internal class TypeMapAssemblyGenerator
 			}
 		}
 	}
+	proxyStopwatch.Stop ();
+	_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] Proxy generation: {proxyStopwatch.ElapsedMilliseconds}ms ({proxyCount} proxies, {(double)proxyStopwatch.ElapsedMilliseconds / Math.Max (1, proxyCount):F2}ms/proxy)");
+	if (slowestProxyName != null) {
+		_log.LogMessage (MessageImportance.High, $"[GTMA-Gen]   Slowest proxy: {slowestProxyName} ({slowestProxyMs}ms)");
+	}
 	
 	// 8. Add TypeMapAttribute entries (assembly-level custom attributes)
-	// Per spec 4.1: TypeMap<Java.Lang.Object>(jniName, proxyType, targetType)
-	// - proxyType is RETURNED by lookups (second arg)
-	// - targetType is trimTarget for linker preservation (third arg)
+	var attrStopwatch = Stopwatch.StartNew ();
 	foreach (var (jniName, proxyType, targetType) in typeMapAttrs) {
 		AddTypeMapAttribute (jniName, proxyType, targetType);
 	}
@@ -1321,17 +1525,29 @@ internal class TypeMapAssemblyGenerator
 
 	// 9. Apply self-attribute to each proxy type
 	ApplySelfAttributes ();
+	attrStopwatch.Stop ();
+	_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] Attributes: {attrStopwatch.ElapsedMilliseconds}ms ({typeMapAttrs.Count} type maps, {aliasMappings.Count} aliases)");
 	
 	// 10. Write the PE file
+	var peStopwatch = Stopwatch.StartNew ();
 	WritePEFile (outputPath);
+	peStopwatch.Stop ();
+	_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] PE file write: {peStopwatch.ElapsedMilliseconds}ms");
 
 		// 11. Generate Java source files
+		var javaStopwatch = Stopwatch.StartNew ();
 		var generatedJavaFiles = GenerateJavaSourceFiles (javaPeers, javaSourceDir);
+		javaStopwatch.Stop ();
+		_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] Java files: {javaStopwatch.ElapsedMilliseconds}ms ({generatedJavaFiles.Count} files)");
 
 		// 12. Generate LLVM IR files
+		var llvmStopwatch = Stopwatch.StartNew ();
 		GenerateLlvmIrFiles (javaPeers, llvmIrDir);
+		llvmStopwatch.Stop ();
+		_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] LLVM IR files: {llvmStopwatch.ElapsedMilliseconds}ms");
 	
-	_log.LogDebugMessage ($"Generated TypeMap assembly with {typeMapAttrs.Count} proxy types");
+	totalStopwatch.Stop ();
+	_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] Total generation: {totalStopwatch.ElapsedMilliseconds}ms");
 
 		return generatedJavaFiles;
 	}
@@ -1942,6 +2158,7 @@ attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memor
 			publicMethods.AppendLine ($$"""
     public {{returnType}} {{method.JniName}} ({{parameters}})
     {
+        android.util.Log.i("JCW-TRACE", "{{peer.JavaName}}.{{method.JniName}} called, invoking native n_{{method.JniName}}");
         {{returnStatement}}n_{{method.JniName}} ({{parameterNames}});
     }
 
