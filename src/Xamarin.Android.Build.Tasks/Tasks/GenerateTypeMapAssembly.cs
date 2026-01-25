@@ -1048,6 +1048,8 @@ internal class TypeMapAssemblyGenerator
 	MemberReferenceHandle _throwableFromExceptionRef;
 	MemberReferenceHandle _notSupportedExceptionCtorRef;
 	MemberReferenceHandle _getUninitializedObjectRef;
+	MemberReferenceHandle _logInfoRef;
+	TypeReferenceHandle _androidLogTypeRef;
 	
 	// Signature blobs (cached)
 	BlobHandle _voidMethodSig;
@@ -2100,6 +2102,11 @@ public class {{className}}
 	@namespace: _metadata.GetOrAddString ("Android.Runtime"),
 	name: _metadata.GetOrAddString ("AndroidEnvironment"));
 
+	_androidLogTypeRef = _metadata.AddTypeReference (
+	resolutionScope: _monoAndroidRef,
+	@namespace: _metadata.GetOrAddString ("Android.Util"),
+	name: _metadata.GetOrAddString ("Log"));
+
 	_androidRuntimeInternalTypeRef = _metadata.AddTypeReference (
 	resolutionScope: _monoAndroidRef,
 	@namespace: _metadata.GetOrAddString ("Android.Runtime"),
@@ -2264,6 +2271,22 @@ public class {{className}}
 		parent: _runtimeHelpersTypeRef,
 		name: _metadata.GetOrAddString ("GetUninitializedObject"),
 		signature: _metadata.GetOrAddBlob (getUninitSigBlob));
+
+	// Android.Util.Log.Info(string, string) -> int
+	var logInfoSigBlob = new BlobBuilder ();
+	new BlobEncoder (logInfoSigBlob)
+		.MethodSignature (isInstanceMethod: false)
+		.Parameters (2,
+			returnType => returnType.Type ().Int32 (),
+			parameters => {
+				parameters.AddParameter ().Type ().String ();
+				parameters.AddParameter ().Type ().String ();
+			});
+
+	_logInfoRef = _metadata.AddMemberReference (
+		parent: _androidLogTypeRef,
+		name: _metadata.GetOrAddString ("Info"),
+		signature: _metadata.GetOrAddBlob (logInfoSigBlob));
 	}
 	
 	void CreateSignatureBlobs ()
@@ -2417,9 +2440,9 @@ public class {{className}}
 
 	/// <summary>
 	/// Generates UCO wrapper methods for activation constructors and marshal methods.
-	/// The order matches the native method declaration order in the JCW Java file:
-	/// 1. Activation constructor(s) (nc_activate_X) - always first
-	/// 2. Regular marshal methods (n_methodName) - after activation ctors
+	/// The order matches the LLVM IR native method stub index order:
+	/// 1. Regular marshal methods (n_methodName) - indices 0..n-1
+	/// 2. Activation constructor(s) (nc_activate_X) - indices n..m-1
 	/// </summary>
 	List<MethodDefinitionHandle> GenerateUcoWrappers (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef)
 	{
@@ -2435,19 +2458,8 @@ public class {{className}}
 		new BlobEncoder (localsBlob).LocalVariableSignature (1).AddVariable ().Type ().IntPtr ();
 		var localsSig = _metadata.AddStandaloneSignature (_metadata.GetOrAddBlob (localsBlob));
 
-		// Step 1: Generate UCO wrappers for activation constructors (nc_activate_X)
-		// These come FIRST in the JCW native method list
-		var constructorMarshalMethods = peer.MarshalMethods.Where (m => m.JniName == "<init>").ToList ();
-		int numActivationCtors = constructorMarshalMethods.Count > 0 ? constructorMarshalMethods.Count : 1; // At least one default ctor
-
-		for (int ctorIdx = 0; ctorIdx < numActivationCtors; ctorIdx++) {
-			// Generate activation constructor UCO wrapper
-			var activationWrapper = GenerateActivationCtorUcoWrapper (peer, targetTypeRef, ctorIdx, localsSig);
-			wrapperHandles.Add (activationWrapper);
-		}
-
-		// Step 2: Generate UCO wrappers for regular marshal methods (n_methodName)
-		// These come AFTER activation constructors in the JCW native method list
+		// Step 1: Generate UCO wrappers for regular marshal methods (n_methodName)
+		// These come FIRST in the LLVM IR stub index order (indices 0..n-1)
 		var regularMethods = peer.MarshalMethods.Where (m => m.JniName != "<init>" && m.JniName != "<clinit>").ToList ();
 
 		for (int i = 0; i < regularMethods.Count; i++) {
@@ -2527,11 +2539,17 @@ public class {{className}}
 			// 2. Try block start
 			wrapperEncoder.MarkLabel (tryStartLabel);
 
+			// DEBUG: Log before callback
+			EmitLogCall (wrapperEncoder, "UCO-wrapper", $"ENTER {wrapperName}");
+
 			// Load arguments and call callback
 			for (int p = 0; p < paramCount; p++) {
 				wrapperEncoder.LoadArgument (p);
 			}
 			wrapperEncoder.Call (callbackRef);
+
+			// DEBUG: Log after callback
+			EmitLogCall (wrapperEncoder, "UCO-wrapper", $"AFTER CALLBACK {wrapperName}");
 
 			// If callback returns void, we need to load a default IntPtr value for the wrapper return
 			if (callbackReturnsVoid) {
@@ -2541,6 +2559,9 @@ public class {{className}}
 			}
 			// Store return value
 			wrapperEncoder.StoreLocal (0);
+
+			// DEBUG: Log before leave
+			EmitLogCall (wrapperEncoder, "UCO-wrapper", $"BEFORE LEAVE {wrapperName}");
 
 			// Leave try block
 			wrapperEncoder.Branch (ILOpCode.Leave, endLabel);
@@ -2563,6 +2584,10 @@ public class {{className}}
 
 			// 4. Return
 			wrapperEncoder.MarkLabel (endLabel);
+
+			// DEBUG: Log before return
+			EmitLogCall (wrapperEncoder, "UCO-wrapper", $"BEFORE RET {wrapperName}");
+
 			wrapperEncoder.LoadLocal (0);
 			wrapperEncoder.OpCode (ILOpCode.Ret);
 
@@ -2573,7 +2598,7 @@ public class {{className}}
 			// and exception regions through the ControlFlowBuilder
 			int wrapperBodyOffset = _methodBodyStream.AddMethodBody (
 				wrapperEncoder,
-				maxStack: paramCount + 2,
+				maxStack: paramCount + 4, // Increased for logging calls
 				localVariablesSignature: localsSig,
 				attributes: MethodBodyAttributes.InitLocals);
 
@@ -2608,6 +2633,17 @@ public class {{className}}
 			
 			// Store UCO wrapper in MarshalMethodInfo for later use (e.g. GetFunctionPointer)
 			mm.UcoWrapper = wrapperDef;
+		}
+
+		// Step 2: Generate UCO wrappers for activation constructors (nc_activate_X)
+		// These come AFTER regular methods in the LLVM IR stub index order (indices n..m-1)
+		var constructorMarshalMethods = peer.MarshalMethods.Where (m => m.JniName == "<init>").ToList ();
+		int numActivationCtors = constructorMarshalMethods.Count > 0 ? constructorMarshalMethods.Count : 1; // At least one default ctor
+
+		for (int ctorIdx = 0; ctorIdx < numActivationCtors; ctorIdx++) {
+			// Generate activation constructor UCO wrapper
+			var activationWrapper = GenerateActivationCtorUcoWrapper (peer, targetTypeRef, ctorIdx, localsSig);
+			wrapperHandles.Add (activationWrapper);
 		}
 
 		return wrapperHandles;
@@ -2947,6 +2983,15 @@ public class {{className}}
 		encoder.Token (_notSupportedExceptionCtorRef);
 		// throw
 		encoder.OpCode (ILOpCode.Throw);
+	}
+
+	void EmitLogCall (InstructionEncoder encoder, string tag, string message)
+	{
+		// Android.Util.Log.Info(tag, message) returns int, which we need to pop
+		encoder.LoadString (_metadata.GetOrAddUserString (tag));
+		encoder.LoadString (_metadata.GetOrAddUserString (message));
+		encoder.Call (_logInfoRef);
+		encoder.OpCode (ILOpCode.Pop); // Discard the return value
 	}
 
 	void AddAttributeUsageToType (TypeDefinitionHandle typeDef)

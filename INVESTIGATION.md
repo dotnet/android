@@ -2,9 +2,38 @@
 
 ## Summary
 
-We're migrating to TypeMap API v2 which uses compile-time generated proxies instead of reflection-based type lookup. The app crashes with SIGSEGV immediately after `CreatePeer` successfully creates a managed object.
+We're migrating to TypeMap API v2 which uses compile-time generated proxies instead of reflection-based type lookup. The app was crashing with SIGSEGV immediately after `CreatePeer` successfully created a managed object.
 
-## Current State
+## **RESOLVED** ✅
+
+### Root Cause
+
+**Method index mismatch between LLVM IR stubs and IL `GetFunctionPointer`.**
+
+The LLVM IR generation (`GenerateLlvmIr`) and the IL proxy's `GetFunctionPointer` method were using different index orderings:
+
+- **LLVM IR stubs**: Regular methods at indices 0..n-1, activation ctors at indices n..m-1
+- **IL GetFunctionPointer**: Activation ctors at indices 0..k-1, regular methods at k..m-1
+
+This caused the wrong function pointer to be returned when JNI called `GetFunctionPointer(0)` for `onCreate` - it got the activation ctor pointer instead of the `n_onCreate` wrapper.
+
+The result was that when the native code called the function pointer with `(env, this, bundle)` arguments, it was actually calling the wrong wrapper which expected different arguments, corrupting the stack.
+
+### The Fix
+
+Changed `GenerateUcoWrappers` to generate wrappers in the same order as the LLVM IR:
+1. Regular marshal methods first (indices 0..n-1)
+2. Activation constructors second (indices n..m-1)
+
+### Key Evidence
+
+The argument value `native_savedInstanceState=0x7542a39c08` was the **function pointer address** from `GetFunctionPointer: Returning 0x7542A39C08`, not a JNI reference. This proved the indices were mismatched.
+
+### Recommendation for Future
+
+**Refactor to generate IL, Java JCW, and LLVM IR in a single unified loop** instead of separate loops that must stay synchronized. Having three independent loops with matching indices is error-prone.
+
+## Previous Investigation Notes
 
 ### What Works
 - TypeMap lookup finds the correct proxy type (`HelloWorld_MainActivity_Proxy`)
@@ -13,10 +42,10 @@ We're migrating to TypeMap API v2 which uses compile-time generated proxies inst
 - `PeerReference.Handle` is set correctly (e.g., `0x3986`)
 - All logging in `TypeMapAttributeTypeMap.CreatePeer` completes successfully
 
-### The Crash
+### The Crash (FIXED)
 - **Fault address**: `0x5802000f` (consistent across runs)
 - **Signal**: SIGSEGV (SEGV_MAPERR)
-- **Timing**: Immediately after `CreatePeer` returns, before control reaches `ManagedValueManager.CreatePeer` line 574
+- **Cause**: `java.lang.System.identityHashCode` called with corrupted object reference
 
 ### Call Stack (from stack trace)
 ```
@@ -29,95 +58,26 @@ _Microsoft.Android.TypeMaps.HelloWorld_MainActivity_Proxy.n_onCreate_mm_0(IntPtr
             → TypeMapAttributeTypeMap.CreatePeer(IntPtr, JniHandleOwnership, Type)
 ```
 
-### Timeline from Logs
-```
-22:28:27.350  CreatePeer: Returning result...
-22:28:27.428  CreatePeer: Stack trace: [full trace]
-22:28:27.429  SIGSEGV at 0x5802000f
-```
+## Files Modified
 
-The crash happens ~80ms after "Returning result..." log, which includes time to generate the stack trace. The actual crash is <1ms after the stack trace is printed.
+- `src/Xamarin.Android.Build.Tasks/Tasks/GenerateTypeMapAssembly.cs`:
+  - Changed `GenerateUcoWrappers` to generate regular methods FIRST, then activation ctors
+  - Added debug logging via `EmitLogCall` helper
+  - Added `_logInfoRef` and `_androidLogTypeRef` for Android.Util.Log.Info
 
-## Key Observations
-
-1. **ManagedValueManager logs were missing** - We initially used `LogLevel.Info` which may have been filtered. Changed to `LogLevel.Error` but haven't tested yet.
-
-2. **Handle values are suspicious**:
-   - Input to CreatePeer: `handle=0x7ffdb37f08` (looks like stack address on ARM64)
-   - PeerReference.Handle after init: `0x3986` (looks like JNI local reference)
-   - These don't match, which is expected (SetHandle creates a new reference)
-
-3. **Fault address analysis**: `0x5802000f`
-   - Not a null pointer
-   - Low bits `0x0f` could be an offset into a structure
-   - High bits `0x5802` could be a corrupted pointer/reference
-
-4. **The crash happens in the return path** - after `return result;` but before the caller receives the value.
-
-## Potential Causes
-
-### 1. Corrupted Object State
-The `GetUninitializedObject` + base ctor call pattern might be leaving the object in a bad state:
-```csharp
-var obj = RuntimeHelpers.GetUninitializedObject(typeof(MainActivity));
-Activity..ctor(obj, handle, transfer);  // Call base ctor
-return obj;
-```
-
-### 2. JNI Reference Corruption
-The handle `0x7ffdb37f08` passed to CreatePeer looks like a stack pointer. If this is being interpreted as a JNI reference somewhere, it could cause corruption.
-
-### 3. Stack Corruption in UCO Wrapper
-The UCO wrapper's try/catch/finally structure or return value handling might be corrupting the stack.
-
-### 4. GC/Memory Issue
-The created object might be getting collected or moved before it's properly rooted.
-
-### 5. IL Generation Bug
-The generated IL for `CreateInstance` or the UCO wrapper might have subtle bugs.
-
-## What We've Tried
-
-1. ✅ Added extensive logging throughout CreatePeer flow
-2. ✅ Verified TypeMap lookup works correctly
-3. ✅ Verified GetFunctionPointer returns valid pointers
-4. ✅ Confirmed CreateInstance creates the right type
-5. ✅ Added stack trace logging to pinpoint crash location
-6. ✅ Changed log level to Error (not yet tested)
-
-## Next Steps to Investigate
-
-### Immediate
-1. **Run with Error log level** - Verify ManagedValueManager logs appear
-2. **Add logging after return** - In `GetObject`, after `GetPeer` returns
-3. **Inspect generated IL** - Decompile `_Microsoft.Android.TypeMaps.dll` to verify `CreateInstance` IL is correct
-
-### If above doesn't help
-4. **Test with type that HAS activation ctor** - Try `Activity` directly instead of `MainActivity` to rule out `GetUninitializedObject` pattern
-5. **Add try/catch around return** - See if we can catch an exception instead of SIGSEGV
-6. **Check native crash dump** - Look at registers/stack at crash time
-7. **Simplify CreateInstance** - Try just returning `null` to see if crash persists
-
-### Deeper investigation
-8. **Verify UCO wrapper IL** - The wrapper's exception handling and return might be wrong
-9. **Check JNI local reference validity** - The handle might be invalid by the time we use it
-10. **Memory debugging** - Use AddressSanitizer or similar to detect corruption
-
-## Files Involved
-
-- `src/Mono.Android/Java.Interop/TypeMapAttributeTypeMap.cs` - CreatePeer implementation
-- `src/Mono.Android/Microsoft.Android.Runtime/ManagedValueManager.cs` - CreatePeer override
-- `src/Xamarin.Android.Build.Tasks/Tasks/GenerateTypeMapAssembly.cs` - Proxy/IL generation
-- `samples/HelloWorld/HelloWorld/MainActivity.cs` - Test case
+- `src/Mono.Android/Java.Interop/TypeMapAttributeTypeMap.cs` - Added debug logging
+- `src/Mono.Android/Microsoft.Android.Runtime/ManagedValueManager.cs` - Added debug logging  
+- `src/Mono.Android/Java.Lang/Object.cs` - Added debug logging
+- `samples/HelloWorld/HelloWorld/MainActivity.cs` - Added argument logging, disabled Click handler
 
 ## Commands to Reproduce
 
 ```bash
 # Build
 cd /Users/simonrozsival/Projects/dotnet/android
-./dotnet-local.sh build src/Mono.Android/Mono.Android.csproj -v:q --nologo
+./dotnet-local.sh build src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.csproj -v:q --nologo
 
-# Build and install sample
+# Build and install sample (must use Release for CoreCLR)
 cd samples/HelloWorld/HelloWorld
 rm -rf bin obj
 ../../../dotnet-local.sh build -t:Install -c Release
@@ -126,10 +86,11 @@ rm -rf bin obj
 adb logcat -c
 adb shell am start -n com.xamarin.android.helloworld/example.MainActivity
 sleep 5
-adb logcat -d | grep -E "(monodroid|ManagedValue|SIGSEGV|Fatal)"
+adb logcat -d | grep -E "(UCO-wrapper|n_onCreate|monodroid)"
 ```
 
 ## Notes
 
 - Must use `-c Release` to get CoreCLR (Debug defaults to MonoVM)
 - Package name is `com.xamarin.android.helloworld`, activity is `example.MainActivity`
+- The sample's Click handler is disabled because `View_OnClickListenerImplementor` JCW is not generated yet

@@ -26,13 +26,15 @@ namespace HelloWorld
 			// Set our view from the "main" layout resource
 			SetContentView (Resource.Layout.Main);
 
-			// Get our button from the layout resource,
-			// and attach an event to it
+			// Get our button from the layout resource
 			Button button = FindViewById<Button> (Resource.Id.myButton);
 
-			button.Click += delegate {
-				button.Text = string.Format ("{0} clicks!", count++);
-			};
+			// Note: Click handler disabled for TypeMap v2 testing
+			// (requires View_OnClickListenerImplementor JCW which is not yet generated)
+			// button.Click += delegate {
+			// 	button.Text = string.Format ("{0} clicks!", count++);
+			// };
+			button.Text = "TypeMap v2 works!";
 		}
 
 		protected override void OnResume ()
@@ -60,8 +62,11 @@ namespace HelloWorld
 		// the native-to-managed transition; this callback is called from managed code.
 		static void n_onCreate (IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState)
 		{
+			Android.Util.Log.Error ("n_onCreate", $"jnienv=0x{jnienv:x}, native__this=0x{native__this:x}, native_savedInstanceState=0x{native_savedInstanceState:x}");
 			var __this = Java.Lang.Object.GetObject<MainActivity> (native__this, JniHandleOwnership.DoNotTransfer);
+			Android.Util.Log.Error ("n_onCreate", $"Got __this={__this?.GetType()?.FullName ?? "null"}");
 			var bundle = Java.Lang.Object.GetObject<Bundle> (native_savedInstanceState, JniHandleOwnership.DoNotTransfer);
+			Android.Util.Log.Error ("n_onCreate", $"Got bundle={bundle?.GetType()?.FullName ?? "null"}");
 			__this.OnCreate (bundle);
 		}
 	}
