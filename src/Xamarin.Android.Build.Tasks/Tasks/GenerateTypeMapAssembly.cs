@@ -1622,52 +1622,30 @@ internal class TypeMapAssemblyGenerator
 
 	/// <summary>
 	/// Returns true if this peer needs JCW and LLVM IR generation.
-	/// This includes user types and framework Implementors, but excludes MCW types.
+	/// Rules:
+	/// - DoNotGenerateAcw=true means no JCW (MCW bindings to existing Java classes)
+	/// - Interfaces don't need JCW (Java interfaces already exist)
+	/// - mono/android/* framework types already have JCWs in mono.android.jar
+	/// - Everything else needs JCW (user types, Implementors, etc.)
 	/// </summary>
 	bool NeedsJcwGeneration (JavaPeerInfo peer)
 	{
-		// Types with DoNotGenerateAcw=true are MCW bindings to existing Java classes
+		// Types with DoNotGenerateAcw=true are MCW bindings to existing Java classes - no JCW needed
 		if (peer.DoNotGenerateAcw)
 			return false;
 		
-		// User types always need JCW generation
-		if (!IsFrameworkAssembly (peer.AssemblyName))
-			return true;
+		// Interfaces don't need JCW - the Java interface already exists in the SDK
+		// (User implementations of interfaces DO need JCW, but they're not marked as IsInterface)
+		if (peer.IsInterface)
+			return false;
 		
-		// Framework Implementors (mono.android.* types) need JCW generation for TypeMap v2
-		if (IsImplementorType (peer))
-			return true;
+		// Framework infrastructure types (mono/android/*) already have JCWs in mono.android.jar
+		// Exception: Implementors (mono/android/view/*Implementor) need new JCWs for TypeMap v2
+		if (peer.JavaName.StartsWith ("mono/android/", StringComparison.Ordinal) && !IsImplementorType (peer))
+			return false;
 		
-		// Special framework types that need JCW generation (not in mono.android.jar for CoreCLR)
-		if (IsSpecialFrameworkType (peer))
-			return true;
-		
-		// Other framework types (abstract MCW classes, etc.) don't need JCW generation
-		return false;
-	}
-
-	/// <summary>
-	/// Returns true for special framework types that need JCW generation for CoreCLR/JavaInterop1.
-	/// These are types that exist in mono.android.jar for MonoVM but need to be generated for CoreCLR.
-	/// </summary>
-	bool IsSpecialFrameworkType (JavaPeerInfo peer)
-	{
-		// JavaProxyThrowable wraps .NET exceptions as Java exceptions
-		// It needs a JCW because there's no mono.android.jar for CoreCLR
-		return peer.JavaName == "android/runtime/JavaProxyThrowable";
-	}
-
-	bool IsFrameworkAssembly (string assemblyName)
-	{
-		return assemblyName switch {
-			"Mono.Android" => true,
-			"Java.Interop" => true,
-			"System.Private.CoreLib" => true,
-			_ when assemblyName.StartsWith ("System.", StringComparison.Ordinal) => true,
-			_ when assemblyName.StartsWith ("Microsoft.", StringComparison.Ordinal) => true,
-			_ when assemblyName.StartsWith ("Xamarin.", StringComparison.Ordinal) => true,
-			_ => false,
-		};
+		// Everything else needs JCW generation (user types, Implementors, etc.)
+		return true;
 	}
 
 	void GenerateLlvmIrFiles (List<JavaPeerInfo> javaPeers, string llvmIrDir)
@@ -3202,16 +3180,47 @@ public class {{className}}
 
 		// Step 2: Generate UCO wrappers for activation constructors (nc_activate_X)
 		// These come AFTER regular methods in the LLVM IR stub index order (indices n..m-1)
-		var constructorMarshalMethods = peer.MarshalMethods.Where (m => m.JniName == "<init>").ToList ();
-		int numActivationCtors = constructorMarshalMethods.Count > 0 ? constructorMarshalMethods.Count : 1; // At least one default ctor
+		// Only generate if the type has a valid activation path (own ctor, base ctor, or invoker)
+		if (HasActivationPath (peer)) {
+			var constructorMarshalMethods = peer.MarshalMethods.Where (m => m.JniName == "<init>").ToList ();
+			int numActivationCtors = constructorMarshalMethods.Count > 0 ? constructorMarshalMethods.Count : 1; // At least one default ctor
 
-		for (int ctorIdx = 0; ctorIdx < numActivationCtors; ctorIdx++) {
-			// Generate activation constructor UCO wrapper
-			var activationWrapper = GenerateActivationCtorUcoWrapper (peer, targetTypeRef, ctorIdx, localsSig);
-			wrapperHandles.Add (activationWrapper);
+			for (int ctorIdx = 0; ctorIdx < numActivationCtors; ctorIdx++) {
+				// Generate activation constructor UCO wrapper
+				var activationWrapper = GenerateActivationCtorUcoWrapper (peer, targetTypeRef, ctorIdx, localsSig);
+				wrapperHandles.Add (activationWrapper);
+			}
 		}
 
 		return wrapperHandles;
+	}
+	
+	/// <summary>
+	/// Returns true if the type has a valid activation path (can be instantiated from Java).
+	/// Types with DoNotGenerateAcw=true that have no activation constructor and no invoker
+	/// cannot be activated and should not have nc_activate stubs generated.
+	/// </summary>
+	bool HasActivationPath (JavaPeerInfo peer)
+	{
+		// Type has its own activation constructor
+		if (peer.HasActivationConstructor)
+			return true;
+		
+		// Type has a base class with activation constructor
+		if (!string.IsNullOrEmpty (peer.ActivationCtorBaseTypeName))
+			return true;
+		
+		// Interface/abstract type with invoker
+		if ((peer.IsInterface || peer.IsAbstract) && !string.IsNullOrEmpty (peer.InvokerTypeName))
+			return true;
+		
+		// Types without DoNotGenerateAcw may have JCW generated that calls activation
+		// (e.g., user types, Implementors)
+		if (!peer.DoNotGenerateAcw)
+			return true;
+		
+		// DoNotGenerateAcw=true types with no activation path should not have activation stubs
+		return false;
 	}
 
 	/// <summary>
