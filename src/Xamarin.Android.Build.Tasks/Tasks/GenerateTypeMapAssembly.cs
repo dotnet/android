@@ -60,6 +60,12 @@ public class GenerateTypeMapAssembly : AndroidTask
 	public string LlvmIrOutputDirectory { get; set; } = "";
 
 	/// <summary>
+	/// Whether to error (true) or warn (false) when a type implements IJavaObject
+	/// without inheriting from Java.Lang.Object or Java.Lang.Throwable.
+	/// </summary>
+	public bool ErrorOnCustomJavaObject { get; set; }
+
+	/// <summary>
 	/// The generated TypeMap assembly path.
 	/// </summary>
 	[Output]
@@ -94,7 +100,7 @@ public class GenerateTypeMapAssembly : AndroidTask
 
 			// Scan assemblies for Java peer types
 			var scanStopwatch = Stopwatch.StartNew ();
-			scanner = new JavaPeerScanner (Log);
+			scanner = new JavaPeerScanner (Log, ErrorOnCustomJavaObject);
 			var javaPeers = scanner.ScanAssemblies (ResolvedAssemblies);
 			scanStopwatch.Stop ();
 			Log.LogMessage (MessageImportance.High, $"[GTMA] Assembly scanning completed in {scanStopwatch.ElapsedMilliseconds}ms, found {javaPeers.Count} Java peer types");
@@ -320,6 +326,7 @@ internal class SignatureTypeProvider : ISignatureTypeProvider<string, object?>
 internal class JavaPeerScanner
 {
 	readonly TaskLoggingHelper _log;
+	readonly bool _errorOnCustomJavaObject;
 
 	// Well-known attribute type names
 	const string RegisterAttributeFullName = "Android.Runtime.RegisterAttribute";
@@ -330,9 +337,10 @@ internal class JavaPeerScanner
 	// Cache of type names per assembly for fast lookups (avoids O(n) scans, thread-safe)
 	readonly ConcurrentDictionary<string, HashSet<string>> _typeNameCache = new ();
 
-	public JavaPeerScanner (TaskLoggingHelper log)
+	public JavaPeerScanner (TaskLoggingHelper log, bool errorOnCustomJavaObject)
 	{
 		_log = log;
+		_errorOnCustomJavaObject = errorOnCustomJavaObject;
 	}
 
 	/// <summary>
@@ -547,10 +555,13 @@ internal class JavaPeerScanner
 		}
 
 		// Check if this assembly references Mono.Android (has Java peer types)
+		// Special assemblies that should always be scanned even without explicit Mono.Android reference
+		bool isSpecialAssembly = assemblyName == "Mono.Android" || 
+		                         assemblyName == "Java.Interop" ||
+		                         assemblyName == "Mono.Android.Runtime";
 		bool referencesMonoAndroid = ReferencesMonoAndroid (metadataReader);
-		bool isMonoAndroid = assemblyName == "Mono.Android";
 		
-		if (!referencesMonoAndroid && !isMonoAndroid) {
+		if (!referencesMonoAndroid && !isSpecialAssembly) {
 			return results;
 		}
 
@@ -571,16 +582,33 @@ internal class JavaPeerScanner
 	{
 		// Look for [Register] attribute - returns (javaName, doNotGenerateAcw)
 		var (javaName, doNotGenerateAcw) = GetRegisterAttributeValue (reader, typeDef);
-		if (javaName == null)
-			return false;
+		
+		bool isClass = (typeDef.Attributes & System.Reflection.TypeAttributes.Interface) == 0;
+		bool isInterface = !isClass;
 
 		string ns = reader.GetString (typeDef.Namespace);
 		string name = reader.GetString (typeDef.Name);
 		string fullName = string.IsNullOrEmpty (ns) ? name : $"{ns}.{name}";
 		
+		if (javaName == null) {
+			// Check for invalid IJavaObject implementation (XA4212)
+			// Type implements IJavaObject but doesn't inherit from Java.Lang.Object/Throwable
+			// This catches developer mistakes like: class MyClass : IJavaObject { ... }
+			if (isClass && 
+			    !IsSubclassOf (reader, typeDef, "System.Exception") && 
+			    ImplementsInterface (reader, typeDef, "Android.Runtime.IJavaObject")) {
+				string message = $"XA4212: Type `{fullName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.";
+				if (_errorOnCustomJavaObject) {
+					_log.LogError (message);
+				} else {
+					_log.LogWarning (message);
+				}
+			}
+			return false;
+		}
+		
 		_log.LogDebugMessage ($"    Found Java peer: {fullName} -> {javaName} (in {assemblyName}), DoNotGenerateAcw={doNotGenerateAcw}");
 
-		bool isInterface = (typeDef.Attributes & System.Reflection.TypeAttributes.Interface) != 0;
 		bool isAbstract = (typeDef.Attributes & System.Reflection.TypeAttributes.Abstract) != 0;
 
 		string? baseTypeName = null;
@@ -658,6 +686,13 @@ internal class JavaPeerScanner
 		string? baseAssemblyName = null;
 		if (!isInterface && !typeDef.BaseType.IsNil) {
 			(baseTypeName, baseAssemblyName) = GetFullTypeNameAndAssembly (reader, typeDef.BaseType);
+		}
+
+		// Skip non-static inner classes - these are nested types whose Java base class
+		// has constructors with __self parameter (indicating Java non-static inner class pattern)
+		if (!isInterface && IsNonStaticInnerClass (reader, typeDef, baseTypeName, baseAssemblyName)) {
+			_log.LogDebugMessage ($"    Skipping non-static inner class: {fullName}");
+			return;
 		}
 
 		string? invokerTypeName = null;
@@ -1018,24 +1053,299 @@ internal class JavaPeerScanner
 	}
 
 	/// <summary>
+	/// Checks if a nested type is a "non-static inner class" in Java terms.
+	/// This is detected by the presence of a constructor with __self parameter in the base type's
+	/// [Register] constructor attributes. Such types should be skipped for JCW generation.
+	/// </summary>
+	bool IsNonStaticInnerClass (MetadataReader currentReader, TypeDefinition typeDef, string? baseTypeName, string? baseAssemblyName)
+	{
+		// Only nested types can be non-static inner classes
+		if (!typeDef.IsNested)
+			return false;
+
+		// Need a base type to check
+		if (string.IsNullOrEmpty (baseTypeName) || string.IsNullOrEmpty (baseAssemblyName))
+			return false;
+
+		// Get the declaring type and check if it has a Java peer
+		var declaringTypeHandle = typeDef.GetDeclaringType ();
+		var declaringType = currentReader.GetTypeDefinition (declaringTypeHandle);
+		var (declaringJavaName, _) = GetRegisterAttributeValue (currentReader, declaringType);
+		if (declaringJavaName == null)
+			return false; // Declaring type doesn't have Java peer
+
+		// Resolve the base type to check for __self constructor
+		MetadataReader? baseReader = baseAssemblyName == null || baseAssemblyName == GetAssemblyName (currentReader)
+			? currentReader 
+			: GetMetadataReader (baseAssemblyName);
+		
+		if (baseReader == null)
+			return false;
+
+		// Find the base type and check its constructors for __self parameter
+		return HasSelfConstructor (baseReader, baseTypeName!);
+	}
+
+	/// <summary>
+	/// Checks if a type has any constructor with a parameter named "__self".
+	/// This indicates a Java non-static inner class pattern.
+	/// </summary>
+	bool HasSelfConstructor (MetadataReader reader, string typeName)
+	{
+		foreach (var typeDefHandle in reader.TypeDefinitions) {
+			var typeDef = reader.GetTypeDefinition (typeDefHandle);
+			string ns = reader.GetString (typeDef.Namespace);
+			string name = reader.GetString (typeDef.Name);
+			string fullName = string.IsNullOrEmpty (ns) ? name : $"{ns}.{name}";
+
+			if (fullName != typeName)
+				continue;
+
+			// Check if this type has [Register] attribute (it's a Java peer)
+			var (javaName, _) = GetRegisterAttributeValue (reader, typeDef);
+			if (javaName == null)
+				continue;
+
+			// Check constructors for __self parameter
+			foreach (var methodHandle in typeDef.GetMethods ()) {
+				var method = reader.GetMethodDefinition (methodHandle);
+				string methodName = reader.GetString (method.Name);
+
+				if (methodName != ".ctor")
+					continue;
+
+				// Check parameter names for __self
+				foreach (var paramHandle in method.GetParameters ()) {
+					var param = reader.GetParameter (paramHandle);
+					string paramName = reader.GetString (param.Name);
+					if (paramName == "__self")
+						return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/// <summary>
+	/// Checks if a type is a subclass of a given base type name (walks inheritance chain).
+	/// </summary>
+	bool IsSubclassOf (MetadataReader reader, TypeDefinition typeDef, string baseTypeName)
+	{
+		EntityHandle currentBaseHandle = typeDef.BaseType;
+		while (!currentBaseHandle.IsNil) {
+			var (currentBaseName, currentBaseAssembly) = GetFullTypeNameAndAssembly (reader, currentBaseHandle);
+			if (currentBaseName == null)
+				break;
+
+			if (currentBaseName == baseTypeName)
+				return true;
+
+			// Move to next base type
+			MetadataReader? baseReader = currentBaseAssembly == null || currentBaseAssembly == GetAssemblyName (reader)
+				? reader
+				: GetMetadataReader (currentBaseAssembly);
+
+			if (baseReader == null)
+				break;
+
+			currentBaseHandle = GetBaseTypeHandle (baseReader, currentBaseName);
+		}
+
+		return false;
+	}
+
+	/// <summary>
+	/// Checks if a type implements a given interface (checks direct interfaces only, not inherited).
+	/// </summary>
+	bool ImplementsInterface (MetadataReader reader, TypeDefinition typeDef, string interfaceName)
+	{
+		foreach (var ifaceHandle in typeDef.GetInterfaceImplementations ()) {
+			var iface = reader.GetInterfaceImplementation (ifaceHandle);
+			var (ifaceName, _) = GetFullTypeNameAndAssembly (reader, iface.Interface);
+			if (ifaceName == interfaceName)
+				return true;
+		}
+
+		// TODO: Also check inherited interfaces from base types for complete validation
+		return false;
+	}
+
+	/// <summary>
+	/// For a method that doesn't have [Register] directly, check if it overrides a registered method
+	/// in a base type and add the marshal method entry if so.
+	/// This handles user types that override Activity.OnCreate, etc.
+	/// </summary>
+	void CollectBaseRegisteredMethod (MetadataReader reader, TypeDefinition typeDef, System.Reflection.Metadata.MethodDefinition method, List<MarshalMethodInfo> methods)
+	{
+		string methodName = reader.GetString (method.Name);
+		
+		// Skip constructors, static methods, and non-virtual methods
+		if (methodName == ".ctor" || methodName == ".cctor")
+			return;
+		if ((method.Attributes & System.Reflection.MethodAttributes.Static) != 0)
+			return;
+		if ((method.Attributes & System.Reflection.MethodAttributes.Virtual) == 0)
+			return;
+		// NewSlot methods don't override base methods
+		if ((method.Attributes & System.Reflection.MethodAttributes.NewSlot) != 0)
+			return;
+
+		// Get the method signature for matching
+		var signature = method.DecodeSignature (new SignatureTypeProvider (reader), genericContext: null);
+		var paramTypes = signature.ParameterTypes;
+
+		// Walk up the base type chain looking for a registered method with matching signature
+		EntityHandle currentBaseHandle = typeDef.BaseType;
+		while (!currentBaseHandle.IsNil) {
+			var (baseTypeName, baseAssemblyName) = GetFullTypeNameAndAssembly (reader, currentBaseHandle);
+			if (baseTypeName == null)
+				break;
+
+			// Try to find and check this base type
+			MetadataReader? baseReader = baseAssemblyName == GetAssemblyName (reader)
+				? reader
+				: GetMetadataReader (baseAssemblyName!);
+
+			if (baseReader == null)
+				break;
+
+			var registerInfo = FindRegisteredMethodInType (baseReader, baseTypeName, methodName, paramTypes);
+			if (registerInfo != null) {
+				var (jniName, jniSignature, connector) = registerInfo.Value;
+				
+				// Skip Kotlin-mangled methods
+				if (!IsKotlinMangledMethod (jniName)) {
+					string? nativeCallbackName = GetNativeCallbackName (connector, jniName);
+					if (nativeCallbackName != null) {
+						// Check if we already have this method (avoid duplicates)
+						bool alreadyExists = methods.Any (m => m.JniName == jniName && m.JniSignature == jniSignature);
+						if (!alreadyExists) {
+							var (callbackTypeName, callbackAssemblyName) = ParseConnectorType (connector);
+							methods.Add (new MarshalMethodInfo {
+								JniName = jniName,
+								JniSignature = jniSignature,
+								NativeCallbackName = nativeCallbackName,
+								ParameterTypeNames = paramTypes.ToArray (),
+								ReturnTypeName = signature.ReturnType,
+								CallbackTypeName = callbackTypeName,
+								CallbackAssemblyName = callbackAssemblyName,
+							});
+						}
+					}
+				}
+				return; // Found it, stop searching
+			}
+
+			// Move to the next base type
+			currentBaseHandle = GetBaseTypeHandle (baseReader, baseTypeName);
+			if (currentBaseHandle.IsNil)
+				break;
+		}
+	}
+
+	/// <summary>
+	/// Finds a registered method in a type by name and parameter types.
+	/// </summary>
+	(string JniName, string JniSignature, string Connector)? FindRegisteredMethodInType (
+		MetadataReader reader, 
+		string typeName, 
+		string methodName, 
+		System.Collections.Immutable.ImmutableArray<string> paramTypes)
+	{
+		foreach (var typeDefHandle in reader.TypeDefinitions) {
+			var typeDef = reader.GetTypeDefinition (typeDefHandle);
+			string ns = reader.GetString (typeDef.Namespace);
+			string name = reader.GetString (typeDef.Name);
+			string fullName = string.IsNullOrEmpty (ns) ? name : $"{ns}.{name}";
+
+			if (fullName != typeName)
+				continue;
+
+			// Search methods in this type
+			foreach (var methodHandle in typeDef.GetMethods ()) {
+				var method = reader.GetMethodDefinition (methodHandle);
+				string mName = reader.GetString (method.Name);
+				
+				if (mName != methodName)
+					continue;
+
+				// Check parameter compatibility
+				var sig = method.DecodeSignature (new SignatureTypeProvider (reader), genericContext: null);
+				if (sig.ParameterTypes.Length != paramTypes.Length)
+					continue;
+
+				bool paramsMatch = true;
+				for (int i = 0; i < paramTypes.Length; i++) {
+					if (sig.ParameterTypes[i] != paramTypes[i]) {
+						paramsMatch = false;
+						break;
+					}
+				}
+				if (!paramsMatch)
+					continue;
+
+				// Found a matching method, check for [Register] attribute
+				var registerInfo = GetMethodRegisterAttribute (reader, method);
+				if (registerInfo != null) {
+					var (jniName, jniSignature, connector) = registerInfo.Value;
+					if (!string.IsNullOrEmpty (jniName) && !string.IsNullOrEmpty (jniSignature) && !string.IsNullOrEmpty (connector)) {
+						return registerInfo;
+					}
+				}
+			}
+			break; // Found the type, no need to continue
+		}
+
+		return null;
+	}
+
+	/// <summary>
+	/// Gets the base type handle from a type by its name.
+	/// </summary>
+	EntityHandle GetBaseTypeHandle (MetadataReader reader, string typeName)
+	{
+		foreach (var typeDefHandle in reader.TypeDefinitions) {
+			var typeDef = reader.GetTypeDefinition (typeDefHandle);
+			string ns = reader.GetString (typeDef.Namespace);
+			string name = reader.GetString (typeDef.Name);
+			string fullName = string.IsNullOrEmpty (ns) ? name : $"{ns}.{name}";
+
+			if (fullName == typeName) {
+				return typeDef.BaseType;
+			}
+		}
+		return default;
+	}
+
+	/// <summary>
 	/// Collects marshal methods from a type that have [Register] attributes with connector methods.
+	/// Also collects registered methods from base types that this type overrides.
 	/// </summary>
 	(List<MarshalMethodInfo> Methods, List<string> Interfaces) CollectMarshalMethodsAndInterfaces (MetadataReader reader, TypeDefinition typeDef)
 	{
 		var methods = new List<MarshalMethodInfo> ();
 		var interfaces = new List<string> ();
 
-		// Collect methods directly on the type
+		// Collect methods directly on the type that have [Register]
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var method = reader.GetMethodDefinition (methodHandle);
 			
 			// Look for [Register] attribute on the method
 			var registerInfo = GetMethodRegisterAttribute (reader, method);
-			if (registerInfo == null)
+			if (registerInfo == null) {
+				// Method doesn't have [Register] directly - check if it overrides a registered method
+				CollectBaseRegisteredMethod (reader, typeDef, method, methods);
 				continue;
+			}
 
 			var (jniName, jniSignature, connector) = registerInfo.Value;
 			if (string.IsNullOrEmpty (jniName) || string.IsNullOrEmpty (jniSignature) || string.IsNullOrEmpty (connector))
+				continue;
+
+			// Skip Kotlin-mangled methods that cannot be overridden
+			// These methods have names ending with "-impl" or contain a hyphen 8 characters from the end
+			if (IsKotlinMangledMethod (jniName))
 				continue;
 
 			// Find the native callback method name
@@ -1201,6 +1511,10 @@ internal class JavaPeerScanner
 			if (jniName == "<init>" || jniName == "<clinit>")
 				continue;
 
+			// Skip Kotlin-mangled methods that cannot be overridden
+			if (IsKotlinMangledMethod (jniName))
+				continue;
+
 			// Find the native callback method name
 			string? nativeCallbackName = GetNativeCallbackName (connector, jniName);
 			if (nativeCallbackName == null)
@@ -1287,6 +1601,20 @@ internal class JavaPeerScanner
 		
 		// Fallback to simple jniName-based callback (may not work for interface methods)
 		return $"n_{jniName}";
+	}
+
+	/// <summary>
+	/// Checks if a JNI method name is Kotlin-mangled and should be skipped.
+	/// Kotlin-mangled methods have names ending with "-impl" or contain a hyphen 8 characters from the end.
+	/// These methods cannot be properly overridden.
+	/// </summary>
+	static bool IsKotlinMangledMethod (string jniName)
+	{
+		if (jniName.Contains ("-impl"))
+			return true;
+		if (jniName.Length > 7 && jniName [jniName.Length - 8] == '-')
+			return true;
+		return false;
 	}
 
 	/// <summary>
