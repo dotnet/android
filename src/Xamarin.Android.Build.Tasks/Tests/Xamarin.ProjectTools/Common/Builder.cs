@@ -256,8 +256,7 @@ namespace Xamarin.ProjectTools
 			args.Append ("build ");
 
 			if (!String.IsNullOrEmpty (Configuration)) {
-				args.Append ("-c ");
-				args.Append (Configuration);
+				args.Append ($"-c {Configuration} ");
 			}
 
 			if (TestEnvironment.UseLocalBuildOutput) {
