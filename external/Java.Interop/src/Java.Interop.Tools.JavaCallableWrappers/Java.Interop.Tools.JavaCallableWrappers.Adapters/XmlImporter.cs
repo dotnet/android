@@ -6,6 +6,7 @@ using System.Xml;
 using System.Xml.Linq;
 using Java.Interop.Tools.JavaCallableWrappers.CallableWrapperMembers;
 using Java.Interop.Tools.JavaCallableWrappers.Extensions;
+using Java.Interop.Tools.TypeNameMappings;
 
 namespace Java.Interop.Tools.JavaCallableWrappers.Adapters;
 
@@ -51,6 +52,10 @@ public static class XmlImporter
 		var name = xml.GetRequiredAttribute ("name");
 		var package = xml.GetAttributeOrDefault ("package", (string?) "");
 		var partial_assembly_qualified_name = xml.GetRequiredAttribute ("partial_assembly_qualified_name");
+
+		// If package is empty, generate a crc64 package name from the assembly qualified name
+		if (string.IsNullOrEmpty (package))
+			package = GeneratePackageFromAssemblyQualifiedName (partial_assembly_qualified_name);
 
 		var type = new CallableWrapperType (name, package ?? "", partial_assembly_qualified_name) {
 			ApplicationJavaClass = xml.GetAttributeOrDefault ("application_java_class", (string?) null),
@@ -197,5 +202,36 @@ public static class XmlImporter
 		ImportAnnotations (field.Annotations, xml.Element ("annotations"));
 
 		return field;
+	}
+
+	/// <summary>
+	/// Generates a package name from a partial assembly qualified name.
+	/// This is used when the package attribute is missing or empty in the XML.
+	/// </summary>
+	/// <param name="partialAssemblyQualifiedName">The partial assembly qualified name in format "Namespace.TypeName, AssemblyName"</param>
+	/// <returns>A package name based on the current <see cref="JavaNativeTypeManager.PackageNamingPolicy"/></returns>
+	static string GeneratePackageFromAssemblyQualifiedName (string partialAssemblyQualifiedName)
+	{
+		// Format: "Namespace.TypeName, AssemblyName" or "Namespace.TypeName+NestedType, AssemblyName"
+		var commaIndex = partialAssemblyQualifiedName.IndexOf (',');
+		if (commaIndex < 0)
+			return "";
+
+		var fullTypeName = partialAssemblyQualifiedName.Substring (0, commaIndex).Trim ();
+		var assemblyName = partialAssemblyQualifiedName.Substring (commaIndex + 1).Trim ();
+
+		// Extract namespace from full type name
+		// Handle nested types by using '+' as separator
+		var plusIndex = fullTypeName.IndexOf ('+');
+		var typeNameWithoutNested = plusIndex >= 0 ? fullTypeName.Substring (0, plusIndex) : fullTypeName;
+
+		var lastDotIndex = typeNameWithoutNested.LastIndexOf ('.');
+		var ns = lastDotIndex >= 0 ? typeNameWithoutNested.Substring (0, lastDotIndex) : "";
+
+		// If no namespace, return empty (will use default package)
+		if (string.IsNullOrEmpty (ns))
+			return "";
+
+		return JavaNativeTypeManager.GetPackageName (ns, assemblyName);
 	}
 }

@@ -221,13 +221,24 @@ namespace Java.Interop.Tools.TypeNameMappings
 			string assemblyName = GetAssemblyName (type.Assembly);
 			if (IsPackageNamePreservedForAssembly (assemblyName))
 				return type.Namespace!.ToLowerInvariant ();
+			return GetPackageName (type.Namespace ?? "", assemblyName);
+		}
+
+		/// <summary>
+		/// Generates a package name from a namespace and assembly name.
+		/// </summary>
+		/// <param name="ns">The namespace of the type.</param>
+		/// <param name="assemblyName">The assembly name.</param>
+		/// <returns>A package name based on the current <see cref="PackageNamingPolicy"/>.</returns>
+		public static string GetPackageName (string ns, string assemblyName)
+		{
 			switch (PackageNamingPolicy) {
 			case PackageNamingPolicy.Lowercase:
-				return type.Namespace!.ToLowerInvariant ();
+				return ns.ToLowerInvariant ();
 			case PackageNamingPolicy.LowercaseWithAssemblyName:
-				return "assembly_" + (assemblyName.Replace ('.', '_') + "." + type.Namespace).ToLowerInvariant ();
+				return "assembly_" + (assemblyName.Replace ('.', '_') + "." + ns).ToLowerInvariant ();
 			case PackageNamingPolicy.LowercaseCrc64:
-				return CRC_PREFIX + ToCrc64 (type.Namespace + ":" + assemblyName);
+				return CRC_PREFIX + ToCrc64 (ns + ":" + assemblyName);
 			default:
 					throw new NotSupportedException ($"PackageNamingPolicy.{PackageNamingPolicy} is no longer supported.");
 			}
@@ -672,16 +683,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 		{
 			if (IsPackageNamePreservedForAssembly (type.GetPartialAssemblyName (resolver)))
 				return type.Namespace.ToLowerInvariant ();
-			switch (PackageNamingPolicy) {
-			case PackageNamingPolicy.Lowercase:
-				return type.Namespace.ToLowerInvariant ();
-			case PackageNamingPolicy.LowercaseWithAssemblyName:
-				return "assembly_" + (type.GetPartialAssemblyName (resolver).Replace ('.', '_') + "." + type.Namespace).ToLowerInvariant ();
-			case PackageNamingPolicy.LowercaseCrc64:
-				return CRC_PREFIX + ToCrc64 (type.Namespace + ":" + type.GetPartialAssemblyName (resolver));
-			default:
-					throw new NotSupportedException ($"PackageNamingPolicy.{PackageNamingPolicy} is no longer supported.");
-			}
+			return GetPackageName (type.Namespace, type.GetPartialAssemblyName (resolver));
 		}
 #endif
 
