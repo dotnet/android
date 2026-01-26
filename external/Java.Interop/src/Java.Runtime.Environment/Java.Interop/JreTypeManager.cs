@@ -111,6 +111,7 @@ namespace Java.Interop {
 		// FIXME: https://github.com/dotnet/java-interop/issues/1192
 		[UnconditionalSuppressMessage ("Trimming", "IL2062", Justification = NotUsedInAndroid)]
 		[UnconditionalSuppressMessage ("Trimming", "IL2070", Justification = NotUsedInAndroid)]
+		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = NotUsedInAndroid)]
 		[UnconditionalSuppressMessage ("Trimming", "IL2078", Justification = NotUsedInAndroid)]
 		static void AddInterfaceMethods (JniMethodMap toRegister, Type type)
 		{

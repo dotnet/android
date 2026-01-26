@@ -19,8 +19,8 @@ pr:
 variables:
   RunningOnCI: true
   Build.Configuration: Release
-  DotNetCoreVersion: 9.0.200
-  DotNetTargetFramework: net9.0
+  DotNetCoreVersion: 10.0.100
+  DotNetTargetFramework: net10.0
   NetCoreTargetFrameworkPathSuffix: -$(DotNetTargetFramework)
   HostedPoolName: Azure Pipelines
   HostedWinImage: windows-2022
