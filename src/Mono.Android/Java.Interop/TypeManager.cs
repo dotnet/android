@@ -40,6 +40,10 @@ namespace Java.Interop {
 	}
 
 	public static partial class TypeManager {
+		// Internal call for Mono runtime - registered by native code as Java.Interop.TypeManager::monodroid_typemap_java_to_managed
+		[MethodImplAttribute (MethodImplOptions.InternalCall)]
+		internal static extern Type monodroid_typemap_java_to_managed (string java_type_name);
+
 		internal static string GetClassName (IntPtr class_ptr)
 		{
 			IntPtr ptr = RuntimeNativeMethods.monodroid_TypeManager_get_java_class_name (class_ptr);

@@ -18,7 +18,7 @@ This file contains the .NET 5-specific targets to customize ILLink
     so that type mappings affect trimming decisions.
   -->
   <Target Name="_GenerateTypeMapAssembly"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(_AndroidRuntime)' != 'MonoVM' "
+      Condition=" '$(PublishTrimmed)' == 'true' "
       AfterTargets="ComputeResolvedFilesToPublishList"
       BeforeTargets="_PrepareLinking">
     <PropertyGroup>

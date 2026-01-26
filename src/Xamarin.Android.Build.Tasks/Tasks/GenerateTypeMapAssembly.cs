@@ -330,6 +330,7 @@ internal class JavaPeerScanner
 
 	// Well-known attribute type names
 	const string RegisterAttributeFullName = "Android.Runtime.RegisterAttribute";
+	const string ExportAttributeFullName = "Java.Interop.ExportAttribute";
 
 	// Cache of loaded assemblies for cross-assembly type resolution (thread-safe)
 	readonly ConcurrentDictionary<string, (FileStream Stream, PEReader PeReader, MetadataReader MetadataReader)> _assemblyCache = new ();
@@ -594,7 +595,9 @@ internal class JavaPeerScanner
 			// Check for invalid IJavaObject implementation (XA4212)
 			// Type implements IJavaObject but doesn't inherit from Java.Lang.Object/Throwable
 			// This catches developer mistakes like: class MyClass : IJavaObject { ... }
+			// Skip Mono.Android types - they have special internal types that are allowed to do this
 			if (isClass && 
+			    assemblyName != "Mono.Android" &&
 			    !IsSubclassOf (reader, typeDef, "System.Exception") && 
 			    ImplementsInterface (reader, typeDef, "Android.Runtime.IJavaObject")) {
 				string message = $"XA4212: Type `{fullName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.";
@@ -885,6 +888,26 @@ internal class JavaPeerScanner
 			string ns = reader.GetString (declaringType.Namespace);
 			string name = reader.GetString (declaringType.Name);
 			return ns == "Android.Runtime" && name == "RegisterAttribute";
+		}
+		return false;
+	}
+
+	bool IsExportAttribute (MetadataReader reader, CustomAttribute attr)
+	{
+		if (attr.Constructor.Kind == HandleKind.MemberReference) {
+			var memberRef = reader.GetMemberReference ((MemberReferenceHandle)attr.Constructor);
+			if (memberRef.Parent.Kind == HandleKind.TypeReference) {
+				var typeRef = reader.GetTypeReference ((TypeReferenceHandle)memberRef.Parent);
+				string ns = reader.GetString (typeRef.Namespace);
+				string name = reader.GetString (typeRef.Name);
+				return ns == "Java.Interop" && name == "ExportAttribute";
+			}
+		} else if (attr.Constructor.Kind == HandleKind.MethodDefinition) {
+			var methodDef = reader.GetMethodDefinition ((MethodDefinitionHandle)attr.Constructor);
+			var declaringType = reader.GetTypeDefinition (methodDef.GetDeclaringType ());
+			string ns = reader.GetString (declaringType.Namespace);
+			string name = reader.GetString (declaringType.Name);
+			return ns == "Java.Interop" && name == "ExportAttribute";
 		}
 		return false;
 	}
@@ -1191,6 +1214,12 @@ internal class JavaPeerScanner
 		if ((method.Attributes & System.Reflection.MethodAttributes.NewSlot) != 0)
 			return;
 
+		// PERF: Skip base type scanning for types in Mono.Android - they're already fully annotated
+		// This avoids O(n²) scanning for thousands of types
+		string assemblyName = GetAssemblyName (reader);
+		if (assemblyName == "Mono.Android")
+			return;
+
 		// Get the method signature for matching
 		var signature = method.DecodeSignature (new SignatureTypeProvider (reader), genericContext: null);
 		var paramTypes = signature.ParameterTypes;
@@ -1327,49 +1356,91 @@ internal class JavaPeerScanner
 		var methods = new List<MarshalMethodInfo> ();
 		var interfaces = new List<string> ();
 
-		// Collect methods directly on the type that have [Register]
+		string typeName = reader.GetString (typeDef.Name);
+		_log.LogMessage (MessageImportance.High, $"      [SCAN] Starting method scan for type: {typeName}");
+
+		// Collect methods directly on the type that have [Register] or [Export]
+		int methodIndex = 0;
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var method = reader.GetMethodDefinition (methodHandle);
+			string methodName = reader.GetString (method.Name);
+			
+			if (methodIndex % 50 == 0) {
+				_log.LogMessage (MessageImportance.High, $"      [SCAN] Processing method #{methodIndex}: {methodName}");
+			}
+			methodIndex++;
 			
 			// Look for [Register] attribute on the method
 			var registerInfo = GetMethodRegisterAttribute (reader, method);
-			if (registerInfo == null) {
-				// Method doesn't have [Register] directly - check if it overrides a registered method
-				CollectBaseRegisteredMethod (reader, typeDef, method, methods);
+			if (registerInfo != null) {
+				var (jniName, jniSignature, connector) = registerInfo.Value;
+				if (string.IsNullOrEmpty (jniName) || string.IsNullOrEmpty (jniSignature) || string.IsNullOrEmpty (connector))
+					continue;
+
+				// Skip Kotlin-mangled methods that cannot be overridden
+				// These methods have names ending with "-impl" or contain a hyphen 8 characters from the end
+				if (IsKotlinMangledMethod (jniName))
+					continue;
+
+				// Find the native callback method name
+				string? nativeCallbackName = GetNativeCallbackName (connector, jniName);
+				if (nativeCallbackName == null)
+					continue;
+
+				// Get parameter types
+				var signature = method.DecodeSignature (new SignatureTypeProvider (reader), genericContext: null);
+				var paramTypes = signature.ParameterTypes.ToArray ();
+				string? returnType = signature.ReturnType;
+
+				methods.Add (new MarshalMethodInfo {
+					JniName = jniName,
+					JniSignature = jniSignature,
+					NativeCallbackName = nativeCallbackName,
+					ParameterTypeNames = paramTypes,
+					ReturnTypeName = returnType,
+				});
 				continue;
 			}
-
-			var (jniName, jniSignature, connector) = registerInfo.Value;
-			if (string.IsNullOrEmpty (jniName) || string.IsNullOrEmpty (jniSignature) || string.IsNullOrEmpty (connector))
+			
+			// Look for [Export] attribute on the method
+			string? exportName = GetMethodExportAttribute (reader, method);
+			if (exportName != null) {
+				_log.LogMessage (MessageImportance.High, $"    Found [Export] method: {reader.GetString (method.Name)} -> {exportName}");
+				
+				// For [Export], we need to derive the JNI signature from the method signature
+				var signature = method.DecodeSignature (new SignatureTypeProvider (reader), genericContext: null);
+				var paramTypes = signature.ParameterTypes.ToArray ();
+				string? returnType = signature.ReturnType;
+				
+				// Build JNI signature from the managed types
+				string jniSignature = BuildJniMethodSignature (paramTypes, returnType ?? "System.Void");
+				
+				// Native callback name is n_{exportName}
+				string nativeCallbackName = $"n_{exportName}";
+				
+				_log.LogMessage (MessageImportance.High, $"      Export method: {exportName} - {jniSignature} -> {nativeCallbackName}");
+				
+				methods.Add (new MarshalMethodInfo {
+					JniName = exportName,
+					JniSignature = jniSignature,
+					NativeCallbackName = nativeCallbackName,
+					ParameterTypeNames = paramTypes,
+					ReturnTypeName = returnType,
+				});
 				continue;
-
-			// Skip Kotlin-mangled methods that cannot be overridden
-			// These methods have names ending with "-impl" or contain a hyphen 8 characters from the end
-			if (IsKotlinMangledMethod (jniName))
-				continue;
-
-			// Find the native callback method name
-			string? nativeCallbackName = GetNativeCallbackName (connector, jniName);
-			if (nativeCallbackName == null)
-				continue;
-
-			// Get parameter types
-			var signature = method.DecodeSignature (new SignatureTypeProvider (reader), genericContext: null);
-			var paramTypes = signature.ParameterTypes.ToArray ();
-			string? returnType = signature.ReturnType;
-
-			methods.Add (new MarshalMethodInfo {
-				JniName = jniName,
-				JniSignature = jniSignature,
-				NativeCallbackName = nativeCallbackName,
-				ParameterTypeNames = paramTypes,
-				ReturnTypeName = returnType,
-			});
+			}
+			
+			// Method doesn't have [Register] or [Export] directly - check if it overrides a registered method
+			CollectBaseRegisteredMethod (reader, typeDef, method, methods);
 		}
+
+		_log.LogMessage (MessageImportance.High, $"      [SCAN] Finished method scan for {typeName}: {methodIndex} methods, {methods.Count} marshal methods");
 
 		// Also collect methods from implemented interfaces (for Implementor types)
 		// Implementors implement interfaces like IOnClickListener which have [Register] on their methods
+		_log.LogMessage (MessageImportance.High, $"      [SCAN] Starting interface scan for {typeName}");
 		CollectInterfaceMarshalMethods (reader, typeDef, methods, interfaces);
+		_log.LogMessage (MessageImportance.High, $"      [SCAN] Finished interface scan for {typeName}: {interfaces.Count} interfaces");
 
 		return (methods, interfaces);
 	}
@@ -1582,6 +1653,37 @@ internal class JavaPeerScanner
 	}
 
 	/// <summary>
+	/// Gets the [Export] attribute from a method, returning the exported method name (or null if not present).
+	/// </summary>
+	string? GetMethodExportAttribute (MetadataReader reader, MethodDefinition method)
+	{
+		foreach (var attrHandle in method.GetCustomAttributes ()) {
+			var attr = reader.GetCustomAttribute (attrHandle);
+			if (!IsExportAttribute (reader, attr))
+				continue;
+
+			// Decode the attribute arguments
+			var valueBlob = reader.GetBlobReader (attr.Value);
+			if (valueBlob.Length < 2)
+				return reader.GetString (method.Name); // Default to method name if no explicit name
+
+			valueBlob.ReadUInt16 (); // Skip prolog
+
+			// The first (optional) string argument is the Java method name
+			string? exportName = ReadSerializedString (ref valueBlob);
+			
+			// If no name specified, use the .NET method name (with lowercase first letter for Java convention)
+			if (string.IsNullOrEmpty (exportName)) {
+				string methodName = reader.GetString (method.Name);
+				exportName = char.ToLowerInvariant (methodName[0]) + methodName.Substring (1);
+			}
+			
+			return exportName;
+		}
+		return null;
+	}
+
+	/// <summary>
 	/// Derives the native callback method name from the connector string.
 	/// </summary>
 	string? GetNativeCallbackName (string connector, string jniName)
@@ -1601,6 +1703,75 @@ internal class JavaPeerScanner
 		
 		// Fallback to simple jniName-based callback (may not work for interface methods)
 		return $"n_{jniName}";
+	}
+
+	/// <summary>
+	/// Converts a .NET type name (from SignatureTypeProvider) to a JNI type signature.
+	/// </summary>
+	string TypeNameToJniType (string typeName)
+	{
+		// Handle primitives
+		return typeName switch {
+			"System.Void" => "V",
+			"System.Boolean" => "Z",
+			"System.Byte" => "B",
+			"System.SByte" => "B",
+			"System.Char" => "C",
+			"System.Int16" => "S",
+			"System.UInt16" => "S",
+			"System.Int32" => "I",
+			"System.UInt32" => "I",
+			"System.Int64" => "J",
+			"System.UInt64" => "J",
+			"System.Single" => "F",
+			"System.Double" => "D",
+			"System.String" => "Ljava/lang/String;",
+			"System.Object" => "Ljava/lang/Object;",
+			_ => TypeNameToJniObject (typeName)
+		};
+	}
+
+	/// <summary>
+	/// Converts a non-primitive .NET type name to a JNI object type signature.
+	/// </summary>
+	string TypeNameToJniObject (string typeName)
+	{
+		// Handle arrays
+		if (typeName.EndsWith ("[]")) {
+			string elementType = typeName.Substring (0, typeName.Length - 2);
+			return "[" + TypeNameToJniType (elementType);
+		}
+
+		// Handle Android types - map to Java equivalents
+		if (typeName.StartsWith ("Android.") || typeName.StartsWith ("Java.")) {
+			// Convert Android.Widget.Button -> android/widget/Button
+			// Convert Java.Lang.Object -> java/lang/Object
+			string javaName = typeName
+				.Replace ("Android.", "android/")
+				.Replace ("Java.Lang.", "java/lang/")
+				.Replace ("Java.Util.", "java/util/")
+				.Replace ("Java.", "java/")
+				.Replace (".", "/");
+			return $"L{javaName};";
+		}
+
+		// Default: treat as java.lang.Object (for unknown types)
+		return "Ljava/lang/Object;";
+	}
+
+	/// <summary>
+	/// Builds a complete JNI method signature from parameter types and return type.
+	/// </summary>
+	string BuildJniMethodSignature (string[] parameterTypes, string returnType)
+	{
+		var sb = new StringBuilder ();
+		sb.Append ('(');
+		foreach (var param in parameterTypes) {
+			sb.Append (TypeNameToJniType (param));
+		}
+		sb.Append (')');
+		sb.Append (TypeNameToJniType (returnType));
+		return sb.ToString ();
 	}
 
 	/// <summary>

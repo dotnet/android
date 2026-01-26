@@ -4,6 +4,8 @@ using Android.OS;
 using System;
 using Android.Runtime;
 using Android.Views;
+using System.Runtime.InteropServices;
+using Java.Interop;
 
 namespace HelloWorld
 {
@@ -32,6 +34,35 @@ namespace HelloWorld
 		}
 	}
 
+	// Test: Class with [Export] attribute for dynamic method registration
+	[Register ("example/ExportedMethodsClass")]
+	public class ExportedMethodsClass : Java.Lang.Object
+	{
+		public ExportedMethodsClass ()
+		{
+			Android.Util.Log.Info ("EXPORT_TEST", "ExportedMethodsClass created");
+		}
+
+		public ExportedMethodsClass (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+
+		[Export ("exportedMethod")]
+		public void ExportedMethod ()
+		{
+			Android.Util.Log.Info ("EXPORT_TEST", "ExportedMethod called successfully!");
+		}
+
+		[Export ("exportedMethodWithArgs")]
+		public int ExportedMethodWithArgs (int a, int b)
+		{
+			int result = a + b;
+			Android.Util.Log.Info ("EXPORT_TEST", $"ExportedMethodWithArgs({a}, {b}) = {result}");
+			return result;
+		}
+	}
+
 	[Activity (
 		Icon            = "@mipmap/icon",
 		Label           = "HelloWorld",
@@ -50,6 +81,19 @@ namespace HelloWorld
 		{
 		}
 
+		// TRIMMER TRAP: This method is never called but roots types for the trimmer.
+		// The trimmer sees [UnmanagedCallersOnly] with EntryPoint and keeps the method.
+		// The method body references activation constructors which roots the type hierarchy.
+		[UnmanagedCallersOnly (EntryPoint = "_trimmer_trap_do_not_call")]
+		static void TrimmerTrap ()
+		{
+			// These constructor calls root the types for the trimmer.
+			// The trimmer will follow the type hierarchy and keep base classes too.
+			_ = new MainActivity (IntPtr.Zero, JniHandleOwnership.DoNotTransfer);
+			_ = new MyClickListener (IntPtr.Zero, JniHandleOwnership.DoNotTransfer);
+			_ = new ExportedMethodsClass (IntPtr.Zero, JniHandleOwnership.DoNotTransfer);
+		}
+
 		[Register ("onCreate", "(Landroid/os/Bundle;)V", "n_onCreate")]
 		protected override void OnCreate (Bundle savedInstanceState)
 		{
@@ -65,6 +109,13 @@ namespace HelloWorld
 			button.SetOnClickListener (new MyClickListener ());
 			
 			Android.Util.Log.Info ("BUTTON_SETUP", "Custom click listener set!");
+
+			// Test [Export] attribute functionality
+			Android.Util.Log.Info ("EXPORT_TEST", "Testing [Export] attribute...");
+			var exportTest = new ExportedMethodsClass ();
+			exportTest.ExportedMethod ();
+			int result = exportTest.ExportedMethodWithArgs (3, 7);
+			Android.Util.Log.Info ("EXPORT_TEST", $"Export test complete! Result = {result}");
 		}
 
 		static void n_onCreate (IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState)

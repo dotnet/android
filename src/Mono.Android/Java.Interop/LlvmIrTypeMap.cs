@@ -21,12 +21,9 @@ namespace Java.Interop
 		static readonly Type[] XAConstructorSignature = [typeof (IntPtr), typeof (JniHandleOwnership)];
 		static readonly Type[] JIConstructorSignature = [typeof (JniObjectReference).MakeByRefType (), typeof (JniObjectReferenceOptions)];
 
-		[MethodImplAttribute (MethodImplOptions.InternalCall)]
-		static extern Type monodroid_typemap_java_to_managed (string java_type_name);
-
 		static Type monovm_typemap_java_to_managed (string java_type_name)
 		{
-			return monodroid_typemap_java_to_managed (java_type_name);
+			return TypeManager.monodroid_typemap_java_to_managed (java_type_name);
 		}
 
 		static Type? clr_typemap_java_to_managed (string java_type_name)
@@ -93,12 +90,9 @@ namespace Java.Interop
 			return false;
 		}
 
-		[MethodImplAttribute (MethodImplOptions.InternalCall)]
-		static extern unsafe IntPtr monodroid_typemap_managed_to_java (Type type, byte* mvidptr);
-
 		static unsafe IntPtr monovm_typemap_managed_to_java (Type type, byte* mvidptr)
 		{
-			return monodroid_typemap_managed_to_java (type, mvidptr);
+			return JNIEnv.monovm_typemap_managed_to_java (type, mvidptr);
 		}
 
 		/// <inheritdoc/>
