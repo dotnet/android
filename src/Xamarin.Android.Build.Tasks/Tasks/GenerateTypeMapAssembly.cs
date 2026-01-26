@@ -222,10 +222,39 @@ internal class JavaPeerInfo
 	public List<MarshalMethodInfo> MarshalMethods { get; set; } = new ();
 
 	/// <summary>
+	/// Constructor marshal methods (JniName == "&lt;init&gt;").
+	/// Pre-partitioned for performance - avoids repeated LINQ filtering.
+	/// </summary>
+	public List<MarshalMethodInfo> ConstructorMarshalMethods { get; } = new ();
+
+	/// <summary>
+	/// Regular (non-constructor, non-static-initializer) marshal methods.
+	/// Pre-partitioned for performance - avoids repeated LINQ filtering.
+	/// </summary>
+	public List<MarshalMethodInfo> RegularMarshalMethods { get; } = new ();
+
+	/// <summary>
 	/// JNI names of Java interfaces implemented by this type (for JCW generation).
 	/// e.g., "android/view/View$OnClickListener"
 	/// </summary>
 	public List<string> ImplementedJavaInterfaces { get; set; } = new ();
+
+	/// <summary>
+	/// Partitions MarshalMethods into ConstructorMarshalMethods and RegularMarshalMethods.
+	/// Call this after populating MarshalMethods.
+	/// </summary>
+	public void PartitionMarshalMethods ()
+	{
+		ConstructorMarshalMethods.Clear ();
+		RegularMarshalMethods.Clear ();
+		foreach (var m in MarshalMethods) {
+			if (m.JniName == "<init>") {
+				ConstructorMarshalMethods.Add (m);
+			} else if (m.JniName != "<clinit>") {
+				RegularMarshalMethods.Add (m);
+			}
+		}
+	}
 }
 
 /// <summary>
@@ -337,6 +366,12 @@ internal class JavaPeerScanner
 	
 	// Cache of type names per assembly for fast lookups (avoids O(n) scans, thread-safe)
 	readonly ConcurrentDictionary<string, HashSet<string>> _typeNameCache = new ();
+
+	// Cache of type name -> TypeDefinitionHandle per assembly (avoids O(n) scans)
+	readonly ConcurrentDictionary<string, Dictionary<string, TypeDefinitionHandle>> _typeDefCache = new ();
+
+	// Cache of whether assembly references Mono.Android
+	readonly ConcurrentDictionary<string, bool> _referencesMonoAndroidCache = new ();
 
 	public JavaPeerScanner (TaskLoggingHelper log, bool errorOnCustomJavaObject)
 	{
@@ -639,7 +674,7 @@ internal class JavaPeerScanner
 		// Collect marshal methods and implemented interfaces
 		var (marshalMethods, implementedInterfaces) = CollectMarshalMethodsAndInterfaces (reader, typeDef);
 
-		results.Add (new JavaPeerInfo {
+		var newPeer = new JavaPeerInfo {
 			JavaName = javaName,
 			ManagedTypeName = fullName,
 			AssemblyName = assemblyName,
@@ -654,15 +689,12 @@ internal class JavaPeerScanner
 			HasActivationConstructor = hasActivationCtor,
 			MarshalMethods = marshalMethods,
 			ImplementedJavaInterfaces = implementedInterfaces,
-		});
+		};
+		newPeer.PartitionMarshalMethods ();
+		results.Add (newPeer);
 		
-		_log.LogMessage (MessageImportance.High, $"    Added Java peer: {fullName} -> '{javaName}' (in {assemblyName}, DoNotGenerateAcw={doNotGenerateAcw}, MarshalMethods={marshalMethods.Count}, Interfaces={implementedInterfaces.Count})");
-		foreach (var mm in marshalMethods) {
-			_log.LogMessage (MessageImportance.High, $"      Marshal method: {mm.JniName} - {mm.JniSignature} -> {mm.NativeCallbackName}");
-		}
-		foreach (var iface in implementedInterfaces) {
-			_log.LogMessage (MessageImportance.High, $"      Implements: {iface}");
-		}
+		// Use Low importance to reduce logging overhead - only shows with -v:detailed
+		_log.LogMessage (MessageImportance.Low, $"    Added Java peer: {fullName} -> '{javaName}' (in {assemblyName}, DoNotGenerateAcw={doNotGenerateAcw}, MarshalMethods={marshalMethods.Count}, Interfaces={implementedInterfaces.Count})");
 
 		// Process nested types
 		foreach (var nestedHandle in typeDef.GetNestedTypes ()) {
@@ -715,7 +747,7 @@ internal class JavaPeerScanner
 		// Collect marshal methods and implemented interfaces
 		var (marshalMethods, implementedInterfaces) = CollectMarshalMethodsAndInterfaces (reader, typeDef);
 
-		results.Add (new JavaPeerInfo {
+		var nestedPeer = new JavaPeerInfo {
 			JavaName = javaName,
 			ManagedTypeName = fullName,
 			AssemblyName = assemblyName,
@@ -730,7 +762,9 @@ internal class JavaPeerScanner
 			HasActivationConstructor = hasActivationCtor,
 			MarshalMethods = marshalMethods,
 			ImplementedJavaInterfaces = implementedInterfaces,
-		});
+		};
+		nestedPeer.PartitionMarshalMethods ();
+		results.Add (nestedPeer);
 
 		// Recursively process nested types
 		foreach (var nestedHandle in typeDef.GetNestedTypes ()) {
@@ -1039,13 +1073,38 @@ internal class JavaPeerScanner
 
 	bool ReferencesMonoAndroid (MetadataReader reader)
 	{
-		foreach (var asmRefHandle in reader.AssemblyReferences) {
-			var asmRef = reader.GetAssemblyReference (asmRefHandle);
-			string name = reader.GetString (asmRef.Name);
-			if (name == "Mono.Android")
-				return true;
-		}
-		return false;
+		string assemblyName = GetAssemblyName (reader);
+		return _referencesMonoAndroidCache.GetOrAdd (assemblyName, _ => {
+			foreach (var asmRefHandle in reader.AssemblyReferences) {
+				var asmRef = reader.GetAssemblyReference (asmRefHandle);
+				string name = reader.GetString (asmRef.Name);
+				if (name == "Mono.Android")
+					return true;
+			}
+			return false;
+		});
+	}
+
+	/// <summary>
+	/// Gets or builds a cache of type name -> TypeDefinitionHandle for fast lookups.
+	/// </summary>
+	Dictionary<string, TypeDefinitionHandle> GetTypeDefinitionCache (MetadataReader reader)
+	{
+		string assemblyName = GetAssemblyName (reader);
+		return _typeDefCache.GetOrAdd (assemblyName, _ => {
+			var cache = new Dictionary<string, TypeDefinitionHandle> (StringComparer.Ordinal);
+			foreach (var typeDefHandle in reader.TypeDefinitions) {
+				var typeDef = reader.GetTypeDefinition (typeDefHandle);
+				string ns = reader.GetString (typeDef.Namespace);
+				string name = reader.GetString (typeDef.Name);
+				string fullName = string.IsNullOrEmpty (ns) ? name : $"{ns}.{name}";
+				// Use indexer assignment - only first one wins since we don't overwrite
+				if (!cache.ContainsKey (fullName)) {
+					cache[fullName] = typeDefHandle;
+				}
+			}
+			return cache;
+		});
 	}
 
 	/// <summary>
@@ -1199,7 +1258,7 @@ internal class JavaPeerScanner
 	/// in a base type and add the marshal method entry if so.
 	/// This handles user types that override Activity.OnCreate, etc.
 	/// </summary>
-	void CollectBaseRegisteredMethod (MetadataReader reader, TypeDefinition typeDef, System.Reflection.Metadata.MethodDefinition method, List<MarshalMethodInfo> methods)
+	void CollectBaseRegisteredMethod (MetadataReader reader, TypeDefinition typeDef, System.Reflection.Metadata.MethodDefinition method, List<MarshalMethodInfo> methods, HashSet<(string, string)> existingMethods, SignatureTypeProvider sigProvider)
 	{
 		string methodName = reader.GetString (method.Name);
 		
@@ -1221,7 +1280,7 @@ internal class JavaPeerScanner
 			return;
 
 		// Get the method signature for matching
-		var signature = method.DecodeSignature (new SignatureTypeProvider (reader), genericContext: null);
+		var signature = method.DecodeSignature (sigProvider, genericContext: null);
 		var paramTypes = signature.ParameterTypes;
 
 		// Walk up the base type chain looking for a registered method with matching signature
@@ -1239,7 +1298,9 @@ internal class JavaPeerScanner
 			if (baseReader == null)
 				break;
 
-			var registerInfo = FindRegisteredMethodInType (baseReader, baseTypeName, methodName, paramTypes);
+			// Use or create SignatureTypeProvider for base reader
+			var baseSigProvider = baseReader == reader ? sigProvider : new SignatureTypeProvider (baseReader);
+			var registerInfo = FindRegisteredMethodInType (baseReader, baseTypeName, methodName, paramTypes, baseSigProvider);
 			if (registerInfo != null) {
 				var (jniName, jniSignature, connector) = registerInfo.Value;
 				
@@ -1247,9 +1308,10 @@ internal class JavaPeerScanner
 				if (!IsKotlinMangledMethod (jniName)) {
 					string? nativeCallbackName = GetNativeCallbackName (connector, jniName);
 					if (nativeCallbackName != null) {
-						// Check if we already have this method (avoid duplicates)
-						bool alreadyExists = methods.Any (m => m.JniName == jniName && m.JniSignature == jniSignature);
-						if (!alreadyExists) {
+						// Check if we already have this method (avoid duplicates) - O(1) with HashSet
+						var key = (jniName, jniSignature);
+						if (!existingMethods.Contains (key)) {
+							existingMethods.Add (key);
 							var (callbackTypeName, callbackAssemblyName) = ParseConnectorType (connector);
 							methods.Add (new MarshalMethodInfo {
 								JniName = jniName,
@@ -1275,55 +1337,52 @@ internal class JavaPeerScanner
 
 	/// <summary>
 	/// Finds a registered method in a type by name and parameter types.
+	/// Uses cached type lookup for O(1) type finding instead of O(n) scan.
 	/// </summary>
 	(string JniName, string JniSignature, string Connector)? FindRegisteredMethodInType (
 		MetadataReader reader, 
 		string typeName, 
 		string methodName, 
-		System.Collections.Immutable.ImmutableArray<string> paramTypes)
+		System.Collections.Immutable.ImmutableArray<string> paramTypes,
+		SignatureTypeProvider sigProvider)
 	{
-		foreach (var typeDefHandle in reader.TypeDefinitions) {
-			var typeDef = reader.GetTypeDefinition (typeDefHandle);
-			string ns = reader.GetString (typeDef.Namespace);
-			string name = reader.GetString (typeDef.Name);
-			string fullName = string.IsNullOrEmpty (ns) ? name : $"{ns}.{name}";
+		var typeDefCache = GetTypeDefinitionCache (reader);
+		if (!typeDefCache.TryGetValue (typeName, out var typeDefHandle))
+			return null;
 
-			if (fullName != typeName)
+		var typeDef = reader.GetTypeDefinition (typeDefHandle);
+
+		// Search methods in this type
+		foreach (var methodHandle in typeDef.GetMethods ()) {
+			var method = reader.GetMethodDefinition (methodHandle);
+			string mName = reader.GetString (method.Name);
+			
+			if (mName != methodName)
 				continue;
 
-			// Search methods in this type
-			foreach (var methodHandle in typeDef.GetMethods ()) {
-				var method = reader.GetMethodDefinition (methodHandle);
-				string mName = reader.GetString (method.Name);
-				
-				if (mName != methodName)
-					continue;
+			// Check parameter compatibility
+			var sig = method.DecodeSignature (sigProvider, genericContext: null);
+			if (sig.ParameterTypes.Length != paramTypes.Length)
+				continue;
 
-				// Check parameter compatibility
-				var sig = method.DecodeSignature (new SignatureTypeProvider (reader), genericContext: null);
-				if (sig.ParameterTypes.Length != paramTypes.Length)
-					continue;
-
-				bool paramsMatch = true;
-				for (int i = 0; i < paramTypes.Length; i++) {
-					if (sig.ParameterTypes[i] != paramTypes[i]) {
-						paramsMatch = false;
-						break;
-					}
-				}
-				if (!paramsMatch)
-					continue;
-
-				// Found a matching method, check for [Register] attribute
-				var registerInfo = GetMethodRegisterAttribute (reader, method);
-				if (registerInfo != null) {
-					var (jniName, jniSignature, connector) = registerInfo.Value;
-					if (!string.IsNullOrEmpty (jniName) && !string.IsNullOrEmpty (jniSignature) && !string.IsNullOrEmpty (connector)) {
-						return registerInfo;
-					}
+			bool paramsMatch = true;
+			for (int i = 0; i < paramTypes.Length; i++) {
+				if (sig.ParameterTypes[i] != paramTypes[i]) {
+					paramsMatch = false;
+					break;
 				}
 			}
-			break; // Found the type, no need to continue
+			if (!paramsMatch)
+				continue;
+
+			// Found a matching method, check for [Register] attribute
+			var registerInfo = GetMethodRegisterAttribute (reader, method);
+			if (registerInfo != null) {
+				var (jniName, jniSignature, connector) = registerInfo.Value;
+				if (!string.IsNullOrEmpty (jniName) && !string.IsNullOrEmpty (jniSignature) && !string.IsNullOrEmpty (connector)) {
+					return registerInfo;
+				}
+			}
 		}
 
 		return null;
@@ -1331,20 +1390,16 @@ internal class JavaPeerScanner
 
 	/// <summary>
 	/// Gets the base type handle from a type by its name.
+	/// Uses cached type lookup for O(1) instead of O(n) scan.
 	/// </summary>
 	EntityHandle GetBaseTypeHandle (MetadataReader reader, string typeName)
 	{
-		foreach (var typeDefHandle in reader.TypeDefinitions) {
-			var typeDef = reader.GetTypeDefinition (typeDefHandle);
-			string ns = reader.GetString (typeDef.Namespace);
-			string name = reader.GetString (typeDef.Name);
-			string fullName = string.IsNullOrEmpty (ns) ? name : $"{ns}.{name}";
+		var typeDefCache = GetTypeDefinitionCache (reader);
+		if (!typeDefCache.TryGetValue (typeName, out var typeDefHandle))
+			return default;
 
-			if (fullName == typeName) {
-				return typeDef.BaseType;
-			}
-		}
-		return default;
+		var typeDef = reader.GetTypeDefinition (typeDefHandle);
+		return typeDef.BaseType;
 	}
 
 	/// <summary>
@@ -1355,20 +1410,20 @@ internal class JavaPeerScanner
 	{
 		var methods = new List<MarshalMethodInfo> ();
 		var interfaces = new List<string> ();
+		var existingMethods = new HashSet<(string, string)> (); // For O(1) deduplication
 
 		string typeName = reader.GetString (typeDef.Name);
-		_log.LogMessage (MessageImportance.High, $"      [SCAN] Starting method scan for type: {typeName}");
+		
+		// For Mono.Android, all methods are already annotated with [Register] - skip base type scanning
+		string assemblyName = GetAssemblyName (reader);
+		bool skipBaseTypeScanning = assemblyName == "Mono.Android";
+
+		// Reuse SignatureTypeProvider for all signature decoding in this type
+		var sigProvider = new SignatureTypeProvider (reader);
 
 		// Collect methods directly on the type that have [Register] or [Export]
-		int methodIndex = 0;
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var method = reader.GetMethodDefinition (methodHandle);
-			string methodName = reader.GetString (method.Name);
-			
-			if (methodIndex % 50 == 0) {
-				_log.LogMessage (MessageImportance.High, $"      [SCAN] Processing method #{methodIndex}: {methodName}");
-			}
-			methodIndex++;
 			
 			// Look for [Register] attribute on the method
 			var registerInfo = GetMethodRegisterAttribute (reader, method);
@@ -1388,10 +1443,11 @@ internal class JavaPeerScanner
 					continue;
 
 				// Get parameter types
-				var signature = method.DecodeSignature (new SignatureTypeProvider (reader), genericContext: null);
+				var signature = method.DecodeSignature (sigProvider, genericContext: null);
 				var paramTypes = signature.ParameterTypes.ToArray ();
 				string? returnType = signature.ReturnType;
 
+				existingMethods.Add ((jniName, jniSignature));
 				methods.Add (new MarshalMethodInfo {
 					JniName = jniName,
 					JniSignature = jniSignature,
@@ -1405,10 +1461,8 @@ internal class JavaPeerScanner
 			// Look for [Export] attribute on the method
 			string? exportName = GetMethodExportAttribute (reader, method);
 			if (exportName != null) {
-				_log.LogMessage (MessageImportance.High, $"    Found [Export] method: {reader.GetString (method.Name)} -> {exportName}");
-				
 				// For [Export], we need to derive the JNI signature from the method signature
-				var signature = method.DecodeSignature (new SignatureTypeProvider (reader), genericContext: null);
+				var signature = method.DecodeSignature (sigProvider, genericContext: null);
 				var paramTypes = signature.ParameterTypes.ToArray ();
 				string? returnType = signature.ReturnType;
 				
@@ -1418,8 +1472,7 @@ internal class JavaPeerScanner
 				// Native callback name is n_{exportName}
 				string nativeCallbackName = $"n_{exportName}";
 				
-				_log.LogMessage (MessageImportance.High, $"      Export method: {exportName} - {jniSignature} -> {nativeCallbackName}");
-				
+				existingMethods.Add ((exportName, jniSignature));
 				methods.Add (new MarshalMethodInfo {
 					JniName = exportName,
 					JniSignature = jniSignature,
@@ -1431,16 +1484,15 @@ internal class JavaPeerScanner
 			}
 			
 			// Method doesn't have [Register] or [Export] directly - check if it overrides a registered method
-			CollectBaseRegisteredMethod (reader, typeDef, method, methods);
+			// Skip for Mono.Android - all methods are already annotated
+			if (!skipBaseTypeScanning) {
+				CollectBaseRegisteredMethod (reader, typeDef, method, methods, existingMethods, sigProvider);
+			}
 		}
-
-		_log.LogMessage (MessageImportance.High, $"      [SCAN] Finished method scan for {typeName}: {methodIndex} methods, {methods.Count} marshal methods");
 
 		// Also collect methods from implemented interfaces (for Implementor types)
 		// Implementors implement interfaces like IOnClickListener which have [Register] on their methods
-		_log.LogMessage (MessageImportance.High, $"      [SCAN] Starting interface scan for {typeName}");
-		CollectInterfaceMarshalMethods (reader, typeDef, methods, interfaces);
-		_log.LogMessage (MessageImportance.High, $"      [SCAN] Finished interface scan for {typeName}: {interfaces.Count} interfaces");
+		CollectInterfaceMarshalMethods (reader, typeDef, methods, interfaces, existingMethods);
 
 		return (methods, interfaces);
 	}
@@ -1451,7 +1503,7 @@ internal class JavaPeerScanner
 	/// methods have [Register] attributes that we need for JCW generation.
 	/// Also collects the Java interface names for the JCW implements clause.
 	/// </summary>
-	void CollectInterfaceMarshalMethods (MetadataReader reader, TypeDefinition typeDef, List<MarshalMethodInfo> methods, List<string> interfaces)
+	void CollectInterfaceMarshalMethods (MetadataReader reader, TypeDefinition typeDef, List<MarshalMethodInfo> methods, List<string> interfaces, HashSet<(string, string)> existingMethods)
 	{
 		foreach (var ifaceHandle in typeDef.GetInterfaceImplementations ()) {
 			var iface = reader.GetInterfaceImplementation (ifaceHandle);
@@ -1459,14 +1511,14 @@ internal class JavaPeerScanner
 			// Get the interface type - it could be a TypeDefinition (same assembly) or TypeReference (different assembly)
 			if (iface.Interface.Kind == HandleKind.TypeDefinition) {
 				var ifaceTypeDef = reader.GetTypeDefinition ((TypeDefinitionHandle)iface.Interface);
-				string? javaInterface = CollectMethodsFromInterfaceType (reader, ifaceTypeDef, methods);
+				string? javaInterface = CollectMethodsFromInterfaceType (reader, ifaceTypeDef, methods, existingMethods);
 				if (javaInterface != null) {
 					interfaces.Add (javaInterface);
 				}
 			} else if (iface.Interface.Kind == HandleKind.TypeReference) {
 				// Interface is in a different assembly - resolve it using the cached assemblies
 				var typeRef = reader.GetTypeReference ((TypeReferenceHandle)iface.Interface);
-				string? javaInterface = ResolveAndCollectInterfaceMethods (reader, typeRef, methods);
+				string? javaInterface = ResolveAndCollectInterfaceMethods (reader, typeRef, methods, existingMethods);
 				if (javaInterface != null) {
 					interfaces.Add (javaInterface);
 				}
@@ -1477,7 +1529,7 @@ internal class JavaPeerScanner
 	/// <summary>
 	/// Resolves a TypeReference to an interface in another assembly and collects its marshal methods.
 	/// </summary>
-	string? ResolveAndCollectInterfaceMethods (MetadataReader currentReader, TypeReference typeRef, List<MarshalMethodInfo> methods)
+	string? ResolveAndCollectInterfaceMethods (MetadataReader currentReader, TypeReference typeRef, List<MarshalMethodInfo> methods, HashSet<(string, string)> existingMethods)
 	{
 		// Get the assembly reference
 		var resolutionScopeKind = typeRef.ResolutionScope.Kind;
@@ -1538,7 +1590,7 @@ internal class JavaPeerScanner
 						string nestedName = targetReader.GetString (nestedDef.Name);
 						if (nestedName == typeName) {
 							_log.LogDebugMessage ($"      [InterfaceResolve] Found nested type {typeNamespace}.{enclosingTypeName}+{typeName}");
-							return CollectMethodsFromInterfaceType (targetReader, nestedDef, methods);
+							return CollectMethodsFromInterfaceType (targetReader, nestedDef, methods, existingMethods);
 						}
 					}
 				}
@@ -1546,7 +1598,7 @@ internal class JavaPeerScanner
 				// Looking for a top-level type
 				if (defName == typeName && defNamespace == typeNamespace) {
 					_log.LogDebugMessage ($"      [InterfaceResolve] Found type {typeNamespace}.{typeName}");
-					return CollectMethodsFromInterfaceType (targetReader, typeDef, methods);
+					return CollectMethodsFromInterfaceType (targetReader, typeDef, methods, existingMethods);
 				}
 			}
 		}
@@ -1559,12 +1611,15 @@ internal class JavaPeerScanner
 	/// Collects marshal methods from an interface TypeDefinition.
 	/// Returns the Java interface name if any methods were found (for the JCW implements clause).
 	/// </summary>
-	string? CollectMethodsFromInterfaceType (MetadataReader reader, TypeDefinition ifaceTypeDef, List<MarshalMethodInfo> methods)
+	string? CollectMethodsFromInterfaceType (MetadataReader reader, TypeDefinition ifaceTypeDef, List<MarshalMethodInfo> methods, HashSet<(string, string)>? existingMethods = null)
 	{
 		string? javaInterfaceName = null;
 		
 		// First, check if the interface has a [Register] attribute to get its Java name
 		var (ifaceJavaName, _) = GetRegisterAttributeValue (reader, ifaceTypeDef);
+		
+		// Reuse SignatureTypeProvider for all signature decoding
+		var sigProvider = new SignatureTypeProvider (reader);
 		
 		foreach (var methodHandle in ifaceTypeDef.GetMethods ()) {
 			var method = reader.GetMethodDefinition (methodHandle);
@@ -1591,15 +1646,18 @@ internal class JavaPeerScanner
 			if (nativeCallbackName == null)
 				continue;
 
+			// Check if we already have this method (avoid duplicates) - O(1) with HashSet
+			var key = (jniName, jniSignature);
+			if (existingMethods != null) {
+				if (existingMethods.Contains (key))
+					continue;
+				existingMethods.Add (key);
+			}
+
 			// Get parameter types
-			var signature = method.DecodeSignature (new SignatureTypeProvider (reader), genericContext: null);
+			var signature = method.DecodeSignature (sigProvider, genericContext: null);
 			var paramTypes = signature.ParameterTypes.ToArray ();
 			string? returnType = signature.ReturnType;
-
-			// Check if we already have this method (avoid duplicates)
-			bool alreadyExists = methods.Any (m => m.JniName == jniName && m.JniSignature == jniSignature);
-			if (alreadyExists)
-				continue;
 
 			// Parse the connector to get the callback type (e.g., IOnClickListenerInvoker)
 			var (callbackTypeName, callbackAssemblyName) = ParseConnectorType (connector);
@@ -2199,9 +2257,9 @@ declare void @abort() noreturn
 
 		using var writer = new StreamWriter (llFilePath);
 
-		// Separate constructors from regular methods
-		var constructors = peer.MarshalMethods.Where (m => m.JniName == "<init>").ToList ();
-		var regularMethods = peer.MarshalMethods.Where (m => m.JniName != "<init>" && m.JniName != "<clinit>").ToList ();
+		// Use pre-partitioned lists for performance
+		var constructors = peer.ConstructorMarshalMethods;
+		var regularMethods = peer.RegularMarshalMethods;
 
 		// If no constructors, we still need one nc_activate for the default constructor
 		int numActivateMethods = constructors.Count > 0 ? constructors.Count : 1;
@@ -2634,9 +2692,9 @@ attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memor
 
 		using var writer = new StreamWriter (javaFilePath);
 
-		// Separate constructors from regular methods
-		var constructors = peer.MarshalMethods.Where (m => m.JniName == "<init>").ToList ();
-		var regularMethods = peer.MarshalMethods.Where (m => m.JniName != "<init>" && m.JniName != "<clinit>").ToList ();
+		// Use pre-partitioned lists for performance
+		var constructors = peer.ConstructorMarshalMethods;
+		var regularMethods = peer.RegularMarshalMethods;
 
 		// Build constructor declarations
 		var constructorDeclarations = new StringBuilder ();
@@ -3511,7 +3569,8 @@ public class {{className}}
 
 		// Step 1: Generate UCO wrappers for regular marshal methods (n_methodName)
 		// These come FIRST in the LLVM IR stub index order (indices 0..n-1)
-		var regularMethods = peer.MarshalMethods.Where (m => m.JniName != "<init>" && m.JniName != "<clinit>").ToList ();
+		// Use pre-partitioned list for performance
+		var regularMethods = peer.RegularMarshalMethods;
 
 		for (int i = 0; i < regularMethods.Count; i++) {
 			var mm = regularMethods[i];
@@ -3681,7 +3740,8 @@ public class {{className}}
 		// These come AFTER regular methods in the LLVM IR stub index order (indices n..m-1)
 		// Only generate if the type has a valid activation path (own ctor, base ctor, or invoker)
 		if (HasActivationPath (peer)) {
-			var constructorMarshalMethods = peer.MarshalMethods.Where (m => m.JniName == "<init>").ToList ();
+			// Use pre-partitioned list for performance
+			var constructorMarshalMethods = peer.ConstructorMarshalMethods;
 			int numActivationCtors = constructorMarshalMethods.Count > 0 ? constructorMarshalMethods.Count : 1; // At least one default ctor
 
 			for (int ctorIdx = 0; ctorIdx < numActivationCtors; ctorIdx++) {
