@@ -209,15 +209,30 @@ namespace Xamarin.Android.Build.Tests
 				proj.SetProperty ("AndroidHttpClientHandlerType", expectedDefaultValue);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, runtime);
-				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, runtime);
+
+				List<EnvironmentHelper.EnvironmentFile>? envFiles = null;
+				Dictionary<string, string> envvars;
+
+				if (runtime == AndroidRuntime.NativeAOT) {
+					envvars = EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediateOutputDir);
+				} else {
+					envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, runtime);
+					envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, runtime);
+				}
+
 				Assert.IsTrue (envvars.ContainsKey (httpClientHandlerVarName), $"Environment should contain '{httpClientHandlerVarName}'.");
 				Assert.AreEqual (expectedDefaultValue, envvars[httpClientHandlerVarName]);
 
 				proj.SetProperty ("AndroidHttpClientHandlerType", expectedUpdatedValue);
 				Assert.IsTrue (b.Build (proj), "Second build should have succeeded.");
-				envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, runtime);
-				envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, runtime);
+
+				if (runtime == AndroidRuntime.NativeAOT) {
+					envvars = EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediateOutputDir);
+				} else {
+					envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, runtime);
+					envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, runtime);
+				}
+
 				Assert.IsTrue (envvars.ContainsKey (httpClientHandlerVarName), $"Environment should contain '{httpClientHandlerVarName}'.");
 				Assert.AreEqual (expectedUpdatedValue, envvars[httpClientHandlerVarName]);
 			}
