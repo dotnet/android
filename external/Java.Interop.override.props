@@ -6,7 +6,6 @@
     <RestoreAdditionalProjectSources>
       https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-2b2a06c8/nuget/v3/index.json;
     </RestoreAdditionalProjectSources>
-    <UseDefaultPublishRuntimeIdentifier>false</UseDefaultPublishRuntimeIdentifier>
   </PropertyGroup>
 
 </Project>
