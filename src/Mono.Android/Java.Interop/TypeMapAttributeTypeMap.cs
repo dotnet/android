@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
@@ -19,9 +20,20 @@ namespace Android.Runtime
 	{
 		readonly IReadOnlyDictionary<string, Type> _externalTypeMap;
 
-		// Cache of JavaPeerProxy instances keyed by the target type
-		static readonly Dictionary<Type, JavaPeerProxy?> s_proxyInstances = new ();
-		static readonly Lock s_proxyInstancesLock = new ();
+		// Cache of JavaPeerProxy instances keyed by the target type (lock-free)
+		readonly ConcurrentDictionary<Type, JavaPeerProxy?> _proxyInstances = new ();
+
+		// Cache of alias lookups: Type -> resolved alias types (or null if no aliases)
+		readonly ConcurrentDictionary<Type, Type[]?> _aliasCache = new ();
+
+		// Cache of JNI name lookups: Type -> JNI name (or empty string if not found)
+		readonly ConcurrentDictionary<Type, string> _jniNameCache = new ();
+
+		// Cache of Java class name -> .NET type resolution (from hierarchy walks)
+		readonly ConcurrentDictionary<string, Type?> _classToTypeCache = new ();
+
+		// Cache of JNI class references (global refs) for FindClass calls
+		readonly ConcurrentDictionary<string, IntPtr> _jniClassCache = new ();
 
 		const string TypeMapsAssemblyName = "_Microsoft.Android.TypeMaps";
 
@@ -40,45 +52,58 @@ namespace Android.Runtime
 				return false;
 			}
 
-			// Check if this is an alias type (multiple .NET types map to same Java name)
-			var aliasesAttr = type.GetCustomAttribute<JavaInteropAliasesAttribute> ();
-			if (aliasesAttr != null) {
+			// Use GetOrAdd for thread-safe caching
+			var cachedAliases = _aliasCache.GetOrAdd (type, t => ResolveAliases (t, _externalTypeMap));
+			types = cachedAliases ?? [type];
+			return true;
+
+			static Type[]? ResolveAliases (Type type, IReadOnlyDictionary<string, Type> externalTypeMap)
+			{
+				var aliasesAttr = type.GetCustomAttribute<JavaInteropAliasesAttribute> ();
+				if (aliasesAttr == null) {
+					return null;
+				}
+
 				var aliasedTypes = new List<Type> ();
 				foreach (var aliasKey in aliasesAttr.AliasKeys) {
-					if (_externalTypeMap.TryGetValue (aliasKey, out Type? aliasedType)) {
+					if (externalTypeMap.TryGetValue (aliasKey, out Type? aliasedType)) {
 						aliasedTypes.Add (aliasedType);
 					}
 				}
-				if (aliasedTypes.Count > 0) {
-					types = aliasedTypes;
-					return true;
-				}
+				return aliasedTypes.Count > 0 ? aliasedTypes.ToArray () : null;
 			}
-
-			types = [type];
-			return true;
 		}
 
 		/// <inheritdoc/>
 		public bool TryGetJniNameForType (Type type, [NotNullWhen (true)] out string? jniName)
 		{
+			// Use GetOrAdd for thread-safe caching (empty string = not found)
+			var cached = _jniNameCache.GetOrAdd (type, ComputeJniNameForType);
+			if (cached.Length == 0) {
+				jniName = null;
+				return false;
+			}
+			jniName = cached;
+			return true;
+		}
+
+		string ComputeJniNameForType (Type type)
+		{
 			// 1. Try to get explicit JNI name from [Register] attribute (or any IJniNameProviderAttribute)
 			var attrs = type.GetCustomAttributes (typeof (IJniNameProviderAttribute), inherit: false);
 			if (attrs.Length > 0 && attrs[0] is IJniNameProviderAttribute jniNameProvider && !string.IsNullOrEmpty (jniNameProvider.Name)) {
-				jniName = jniNameProvider.Name.Replace ('.', '/');
-				return true;
+				return jniNameProvider.Name.Replace ('.', '/');
 			}
 
 			// 2. Fallback: use [JniTypeSignature] if present
 			var sigAttr = type.GetCustomAttribute<JniTypeSignatureAttribute> (inherit: false);
 			if (sigAttr != null && !string.IsNullOrEmpty (sigAttr.SimpleReference)) {
-				jniName = sigAttr.SimpleReference;
-				return true;
+				return sigAttr.SimpleReference;
 			}
 
 			// 3. Fallback: derive JNI name using naming conventions
-			jniName = JavaNativeTypeManager.ToJniName (type);
-			return !string.IsNullOrEmpty (jniName);
+			var jniName = JavaNativeTypeManager.ToJniName (type);
+			return string.IsNullOrEmpty (jniName) ? "" : jniName;
 		}
 
 		/// <inheritdoc/>
@@ -93,16 +118,11 @@ namespace Android.Runtime
 		/// <summary>
 		/// Gets or creates a cached JavaPeerProxy instance for the given type.
 		/// </summary>
-		internal static JavaPeerProxy? GetProxyForType (Type type)
+		JavaPeerProxy? GetProxyForType (Type type)
 		{
-			lock (s_proxyInstancesLock) {
-				if (s_proxyInstances.TryGetValue (type, out var cached)) {
-					return cached;
-				}
-
-				var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-				return s_proxyInstances [type] = proxy;
-			}
+			// Lock-free lookup using ConcurrentDictionary.GetOrAdd
+			return _proxyInstances.GetOrAdd (type, static t =>
+				t.GetCustomAttribute<JavaPeerProxy> (inherit: false));
 		}
 
 		/// <inheritdoc/>
@@ -113,28 +133,15 @@ namespace Android.Runtime
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
 			string? class_name = GetClassNameFromJavaClassHandle (class_ptr);
 
-			lock (TypeManagerMapDictionaries.AccessLock) {
-				while (class_ptr != IntPtr.Zero) {
-					if (class_name != null) {
-						_externalTypeMap.TryGetValue (class_name, out type);
-						if (type != null) {
-							if (typeof (JavaPeerProxy).IsAssignableFrom (type)) {
-								proxyType = type;
-							}
-							break;
-						}
-					}
+			if (class_name != null) {
+				type = _classToTypeCache.GetOrAdd (class_name, _ => FindTypeInHierarchy (class_ptr, class_name));
 
-					IntPtr super_class_ptr = JNIEnv.GetSuperclass (class_ptr);
-					JNIEnv.DeleteLocalRef (class_ptr);
-					class_name = null;
-					class_ptr = super_class_ptr;
-					if (class_ptr != IntPtr.Zero) {
-						class_name = GetClassNameFromJavaClassHandle (class_ptr);
-					}
+				if (type != null && typeof (JavaPeerProxy).IsAssignableFrom (type)) {
+					proxyType = type;
 				}
 			}
 
+			// Always clean up the original class_ptr
 			if (class_ptr != IntPtr.Zero) {
 				JNIEnv.DeleteLocalRef (class_ptr);
 			}
@@ -179,37 +186,85 @@ namespace Android.Runtime
 
 			return result;
 
-			static bool IsJavaTypeAssignableFrom (IntPtr handle, string jniName)
-			{
-				JniObjectReference typeClass = default;
-				try {
-					typeClass = JniEnvironment.Types.FindClass (jniName);
-				} catch (Exception e) {
-					throw new ArgumentException ($"Could not find Java class `{jniName}`.", nameof (targetType), e);
+			static string? GetClassNameFromJavaClassHandle (IntPtr class_ptr) =>
+				Java.Interop.TypeManager.GetClassName (class_ptr);
+		}
+
+		/// <summary>
+		/// Walks the Java class hierarchy starting from <paramref name="class_ptr"/> to find a registered .NET type.
+		/// </summary>
+		/// <param name="class_ptr">The starting Java class pointer (not deleted by this method).</param>
+		/// <param name="class_name">The JNI name of the starting class.</param>
+		/// <returns>The found .NET type, or null if no type is registered for any class in the hierarchy.</returns>
+		Type? FindTypeInHierarchy (IntPtr class_ptr, string class_name)
+		{
+			Type? foundType = null;
+			IntPtr currentPtr = class_ptr;
+			string? currentName = class_name;
+
+			while (currentPtr != IntPtr.Zero) {
+				if (currentName != null) {
+					_externalTypeMap.TryGetValue (currentName, out foundType);
+					if (foundType != null) {
+						break;
+					}
 				}
 
-				JniObjectReference handleClass = default;
-				try {
-					handleClass = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
-					return JniEnvironment.Types.IsAssignableFrom (handleClass, typeClass);
-				} finally {
-					JniObjectReference.Dispose (ref handleClass);
-					JniObjectReference.Dispose (ref typeClass);
+				IntPtr super_class_ptr = JNIEnv.GetSuperclass (currentPtr);
+				if (currentPtr != class_ptr) {
+					// Only delete refs we created, not the original
+					JNIEnv.DeleteLocalRef (currentPtr);
+				}
+				currentName = null;
+				currentPtr = super_class_ptr;
+				if (currentPtr != IntPtr.Zero) {
+					currentName = Java.Interop.TypeManager.GetClassName (currentPtr);
 				}
 			}
 
-			static string? GetClassNameFromJavaClassHandle (IntPtr class_ptr) =>
-				Java.Interop.TypeManager.GetClassName (class_ptr);
+			// Clean up the last pointer if it's not the original
+			if (currentPtr != IntPtr.Zero && currentPtr != class_ptr) {
+				JNIEnv.DeleteLocalRef (currentPtr);
+			}
+
+			return foundType;
+		}
+
+		bool IsJavaTypeAssignableFrom (IntPtr handle, string jniName)
+		{
+			// Use cached global reference for the type class to avoid repeated FindClass JNI calls
+			IntPtr typeClassPtr = _jniClassCache.GetOrAdd (jniName, static name => {
+				var classRef = JniEnvironment.Types.FindClass (name);
+				// Convert to global reference so it persists beyond this call
+				IntPtr globalRef = JNIEnv.NewGlobalRef (classRef.Handle);
+				JniObjectReference.Dispose (ref classRef);
+				return globalRef;
+			});
+
+			if (typeClassPtr == IntPtr.Zero) {
+				throw new ArgumentException ($"Could not find Java class `{jniName}`.", "jniName");
+			}
+
+			JniObjectReference handleClass = default;
+			try {
+				handleClass = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
+				return JniEnvironment.Types.IsAssignableFrom (handleClass, new JniObjectReference (typeClassPtr));
+			} finally {
+				JniObjectReference.Dispose (ref handleClass);
+				// Don't dispose typeClassPtr - it's a cached global reference
+			}
 		}
 
 		bool TryCreateInstance (Type type, Type? proxyType, IntPtr handle, JniHandleOwnership transfer, [NotNullWhen (true)] out IJavaPeerable? result)
 		{
 			JavaPeerProxy? proxy = null;
 
+			// First try to get cached proxy for the specific proxy type (if provided)
 			if (proxyType != null && typeof (JavaPeerProxy).IsAssignableFrom (proxyType)) {
-				proxy = (JavaPeerProxy?) Activator.CreateInstance (proxyType);
+				proxy = GetOrCreateProxyInstance (proxyType);
 			}
 
+			// Fall back to cached proxy for the target type
 			proxy ??= GetProxyForType (type);
 
 			if (proxy == null) {
@@ -221,12 +276,28 @@ namespace Android.Runtime
 			return result != null;
 		}
 
+		/// <summary>
+		/// Gets or creates a cached JavaPeerProxy instance for the given proxy type.
+		/// Uses Activator.CreateInstance only on first access; subsequent calls return cached instance.
+		/// </summary>
+		JavaPeerProxy? GetOrCreateProxyInstance (Type proxyType)
+		{
+			return _proxyInstances.GetOrAdd (proxyType, static t => {
+				if (!typeof (JavaPeerProxy).IsAssignableFrom (t)) {
+					return null;
+				}
+				return (JavaPeerProxy?) Activator.CreateInstance (t);
+			});
+		}
+
 		/// <inheritdoc/>
 		public IntPtr GetFunctionPointer (ReadOnlySpan<char> className, int methodIndex)
 		{
 			string classNameStr = className.ToString ();
-			IntPtr result;
 
+			// Called once per function pointer during native method registration.
+			// Result is cached in LLVM IR globals, so no managed-side caching needed.
+			IntPtr result;
 			if (classNameStr == "mono/android/TypeManager" && methodIndex == 0) {
 				result = Java.Interop.TypeManager.GetActivateFunctionPointer ();
 			} else if (!_externalTypeMap.TryGetValue (classNameStr, out Type? type)) {
@@ -236,8 +307,6 @@ namespace Android.Runtime
 				result = proxy?.GetFunctionPointer (methodIndex) ?? IntPtr.Zero;
 			}
 
-			Logger.Log (LogLevel.Info, "monodroid-typemap",
-				$"GetFunctionPointer: class='{classNameStr}', methodIndex={methodIndex}, result=0x{result:X}");
 			return result;
 		}
 	}
