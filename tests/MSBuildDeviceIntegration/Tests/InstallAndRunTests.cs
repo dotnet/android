@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.TestPlatform.Utilities;
 using Mono.Cecil;
 using NUnit.Framework;
 
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
@@ -259,11 +260,14 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		}
 
 		[Test]
-		public void SubscribeToAppDomainUnhandledException ()
+		[TestCase (AndroidRuntime.MonoVM)]
+		[TestCase (AndroidRuntime.CoreCLR)]
+		public void SubscribeToAppDomainUnhandledException (AndroidRuntime runtime)
 		{
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
+			proj.SetRuntime (runtime);
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
 @"			AppDomain.CurrentDomain.UnhandledException += (sender, e) => {
