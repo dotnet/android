@@ -177,6 +177,8 @@ $@"<Project>
 	<PropertyGroup>
 		<Configuration>{Configuration}</Configuration>
 		<DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
+		<!-- Workaround analyzer errors in .NET 11 -->
+		<NoWarn>$(NoWarn);AD0001</NoWarn>
 	</PropertyGroup>
 </Project>"
 			});
