@@ -146,7 +146,7 @@
     <LibUnwindSourceFullPath>$([System.IO.Path]::GetFullPath ('$(LibUnwindSourceDirectory)'))</LibUnwindSourceFullPath>
     <LibUnwindGeneratedHeadersFullPath>$([System.IO.Path]::GetFullPath ('$(LibUnwindGeneratedHeadersDirectory)'))</LibUnwindGeneratedHeadersFullPath>
     <LZ4SourceFullPath>$([System.IO.Path]::GetFullPath ('$(LZ4SourceDirectory)'))</LZ4SourceFullPath>
-    <JavaInteropTargetFrameworkVersion>net9.0</JavaInteropTargetFrameworkVersion>
+    <JavaInteropTargetFrameworkVersion>net10.0</JavaInteropTargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup>
     <AdbToolPath Condition=" '$(AdbToolPath)' == '' ">$(AndroidSdkFullPath)\platform-tools\</AdbToolPath>
