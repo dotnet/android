@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -10,6 +11,7 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -322,8 +324,11 @@ internal class JavaPeerScanner
 	// Well-known attribute type names
 	const string RegisterAttributeFullName = "Android.Runtime.RegisterAttribute";
 
-	// Cache of loaded assemblies for cross-assembly type resolution
-	readonly Dictionary<string, (FileStream Stream, PEReader PeReader, MetadataReader MetadataReader)> _assemblyCache = new ();
+	// Cache of loaded assemblies for cross-assembly type resolution (thread-safe)
+	readonly ConcurrentDictionary<string, (FileStream Stream, PEReader PeReader, MetadataReader MetadataReader)> _assemblyCache = new ();
+	
+	// Cache of type names per assembly for fast lookups (avoids O(n) scans, thread-safe)
+	readonly ConcurrentDictionary<string, HashSet<string>> _typeNameCache = new ();
 
 	public JavaPeerScanner (TaskLoggingHelper log)
 	{
@@ -355,54 +360,53 @@ internal class JavaPeerScanner
 	public List<JavaPeerInfo> ScanAssemblies (ITaskItem[] assemblies)
 	{
 		var totalStopwatch = Stopwatch.StartNew ();
-		var results = new List<JavaPeerInfo> ();
 
 		_log.LogMessage (MessageImportance.High, $"[GTMA-Scan] Starting scan of {assemblies.Length} assemblies...");
 		
-		// First pass: load all assemblies into cache
+		// First pass: load all assemblies into cache (parallelized)
 		var loadStopwatch = Stopwatch.StartNew ();
-		int loadedCount = 0;
-		foreach (var assembly in assemblies) {
-			string path = assembly.ItemSpec;
-			if (!File.Exists (path) || !path.EndsWith (".dll", StringComparison.OrdinalIgnoreCase))
-				continue;
-
+		var validPaths = assemblies
+			.Select (a => a.ItemSpec)
+			.Where (path => File.Exists (path) && path.EndsWith (".dll", StringComparison.OrdinalIgnoreCase))
+			.ToList ();
+		
+		Parallel.ForEach (validPaths, path => {
 			try {
 				LoadAssemblyIntoCache (path);
-				loadedCount++;
-			} catch (Exception ex) {
-				_log.LogDebugMessage ($"Failed to load assembly {path}: {ex.Message}");
+			} catch {
+				// Ignore failures during parallel load
 			}
-		}
+		});
 		loadStopwatch.Stop ();
-		_log.LogMessage (MessageImportance.High, $"[GTMA-Scan] Loaded {loadedCount} assemblies into cache ({_assemblyCache.Count} unique) in {loadStopwatch.ElapsedMilliseconds}ms");
+		_log.LogMessage (MessageImportance.High, $"[GTMA-Scan] Loaded {_assemblyCache.Count} assemblies into cache in {loadStopwatch.ElapsedMilliseconds}ms");
 		
-		// Second pass: scan for Java peers
+		// Second pass: scan for Java peers (parallelized)
 		var scanStopwatch = Stopwatch.StartNew ();
-		long totalTypeProcessingMs = 0;
-		int assembliesWithPeers = 0;
+		var scanResults = new ConcurrentBag<(string Path, List<JavaPeerInfo> Peers, long ElapsedMs)> ();
 		
-		foreach (var assembly in assemblies) {
-			string path = assembly.ItemSpec;
-			if (!File.Exists (path) || !path.EndsWith (".dll", StringComparison.OrdinalIgnoreCase))
-				continue;
-
+		Parallel.ForEach (validPaths, path => {
 			try {
 				var asmStopwatch = Stopwatch.StartNew ();
-				int beforeCount = results.Count;
-				ScanAssembly (path, results);
+				var peers = ScanAssembly (path);
 				asmStopwatch.Stop ();
 				
-				int typesFound = results.Count - beforeCount;
-				if (typesFound > 0) {
-					assembliesWithPeers++;
-					totalTypeProcessingMs += asmStopwatch.ElapsedMilliseconds;
-					_log.LogMessage (MessageImportance.High, $"[GTMA-Scan]   {Path.GetFileNameWithoutExtension (path)}: {typesFound} types in {asmStopwatch.ElapsedMilliseconds}ms ({(double)asmStopwatch.ElapsedMilliseconds / typesFound:F2}ms/type)");
+				if (peers.Count > 0) {
+					scanResults.Add ((path, peers, asmStopwatch.ElapsedMilliseconds));
 				}
-			} catch (Exception ex) {
-				_log.LogDebugMessage ($"Failed to scan assembly {path}: {ex.Message}");
+			} catch {
+				// Ignore failures during parallel scan
 			}
+		});
+		
+		// Merge results and log
+		var results = new List<JavaPeerInfo> ();
+		int assembliesWithPeers = 0;
+		foreach (var (path, peers, elapsedMs) in scanResults.OrderByDescending (r => r.Peers.Count)) {
+			results.AddRange (peers);
+			assembliesWithPeers++;
+			_log.LogMessage (MessageImportance.High, $"[GTMA-Scan]   {Path.GetFileNameWithoutExtension (path)}: {peers.Count} types in {elapsedMs}ms ({(double)elapsedMs / peers.Count:F2}ms/type)");
 		}
+		
 		scanStopwatch.Stop ();
 		_log.LogMessage (MessageImportance.High, $"[GTMA-Scan] Assembly scanning: {scanStopwatch.ElapsedMilliseconds}ms ({assembliesWithPeers} assemblies with peers)");
 
@@ -436,10 +440,9 @@ internal class JavaPeerScanner
 		var metadataReader = peReader.GetMetadataReader ();
 		string assemblyName = GetAssemblyName (metadataReader);
 
-		if (!_assemblyCache.ContainsKey (assemblyName)) {
-			_assemblyCache[assemblyName] = (stream, peReader, metadataReader);
-		} else {
-			// Already cached, dispose this one
+		// Thread-safe cache addition
+		if (!_assemblyCache.TryAdd (assemblyName, (stream, peReader, metadataReader))) {
+			// Already cached by another thread, dispose this one
 			peReader.Dispose ();
 			stream.Dispose ();
 		}
@@ -518,8 +521,10 @@ internal class JavaPeerScanner
 		}
 	}
 
-	void ScanAssembly (string assemblyPath, List<JavaPeerInfo> results)
+	List<JavaPeerInfo> ScanAssembly (string assemblyPath)
 	{
+		var results = new List<JavaPeerInfo> ();
+		
 		// Get the cached reader - assembly should already be loaded
 		string fileName = Path.GetFileNameWithoutExtension (assemblyPath);
 		
@@ -538,7 +543,7 @@ internal class JavaPeerScanner
 		}
 		
 		if (metadataReader == null || assemblyName == null) {
-			return;
+			return results;
 		}
 
 		// Check if this assembly references Mono.Android (has Java peer types)
@@ -546,7 +551,7 @@ internal class JavaPeerScanner
 		bool isMonoAndroid = assemblyName == "Mono.Android";
 		
 		if (!referencesMonoAndroid && !isMonoAndroid) {
-			return;
+			return results;
 		}
 
 		foreach (var typeDefHandle in metadataReader.TypeDefinitions) {
@@ -558,6 +563,8 @@ internal class JavaPeerScanner
 
 			ProcessType (metadataReader, typeDef, assemblyName, assemblyPath, results);
 		}
+		
+		return results;
 	}
 
 	bool ProcessType (MetadataReader reader, TypeDefinition typeDef, string assemblyName, string assemblyPath, List<JavaPeerInfo> results)
@@ -945,16 +952,25 @@ internal class JavaPeerScanner
 
 	bool TypeExistsInAssembly (MetadataReader reader, string typeName)
 	{
-		// Simple check - just look for the type by name
-		foreach (var typeDefHandle in reader.TypeDefinitions) {
-			var typeDef = reader.GetTypeDefinition (typeDefHandle);
-			string ns = reader.GetString (typeDef.Namespace);
-			string name = reader.GetString (typeDef.Name);
-			string fullName = string.IsNullOrEmpty (ns) ? name : $"{ns}.{name}";
-			if (fullName == typeName)
-				return true;
+		// Use cached type names if available
+		string assemblyName = GetAssemblyName (reader);
+		if (_typeNameCache.TryGetValue (assemblyName, out var typeNames)) {
+			return typeNames.Contains (typeName);
 		}
-		return false;
+		
+		// Build cache for this assembly (thread-safe via GetOrAdd pattern)
+		var cache = _typeNameCache.GetOrAdd (assemblyName, _ => {
+			var newCache = new HashSet<string> (StringComparer.Ordinal);
+			foreach (var typeDefHandle in reader.TypeDefinitions) {
+				var typeDef = reader.GetTypeDefinition (typeDefHandle);
+				string ns = reader.GetString (typeDef.Namespace);
+				string name = reader.GetString (typeDef.Name);
+				string fullName = string.IsNullOrEmpty (ns) ? name : $"{ns}.{name}";
+				newCache.Add (fullName);
+			}
+			return newCache;
+		});
+		return cache.Contains (typeName);
 	}
 
 	static string GetAssemblyName (MetadataReader reader)
@@ -1535,22 +1551,26 @@ internal class TypeMapAssemblyGenerator
 
 	// 9. Apply self-attribute to each proxy type
 	ApplySelfAttributes ();
+	
+	// TODO: 10. Generate trimmer trap method that roots all proxy types (deferred until trimming issue is solved)
+	// GenerateTrimmerTrapMethod ();
+	
 	attrStopwatch.Stop ();
 	_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] Attributes: {attrStopwatch.ElapsedMilliseconds}ms ({typeMapAttrs.Count} type maps, {aliasMappings.Count} aliases)");
 	
-	// 10. Write the PE file
+	// 11. Write the PE file
 	var peStopwatch = Stopwatch.StartNew ();
 	WritePEFile (outputPath);
 	peStopwatch.Stop ();
 	_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] PE file write: {peStopwatch.ElapsedMilliseconds}ms");
 
-		// 11. Generate Java source files
+		// 12. Generate Java source files
 		var javaStopwatch = Stopwatch.StartNew ();
 		var generatedJavaFiles = GenerateJavaSourceFiles (javaPeers, javaSourceDir);
 		javaStopwatch.Stop ();
 		_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] Java files: {javaStopwatch.ElapsedMilliseconds}ms ({generatedJavaFiles.Count} files)");
 
-		// 12. Generate LLVM IR files
+		// 13. Generate LLVM IR files
 		var llvmStopwatch = Stopwatch.StartNew ();
 		GenerateLlvmIrFiles (javaPeers, llvmIrDir);
 		llvmStopwatch.Stop ();
@@ -3731,14 +3751,12 @@ public class {{className}}
 	
 	void AddAssemblyAttribute ()
 	{
-		// NOTE: We intentionally do NOT add IsTrimmable=true here.
-		// The TypeMaps assembly needs special handling because:
-		// 1. TypeMapAttribute entries reference types that the trimmer may remove
-		// 2. The runtime uses JNI name strings to look up types at runtime
-		// 3. The trimmer can't see this usage pattern
+		// TODO: Don't mark as IsTrimmable until we solve the trimming issue properly.
+		// Currently, the trimmer removes all TypeMap entries because nothing references the 
+		// target types via code (they're accessed via runtime JNI string lookups).
+		// See INVOKERS_MAYBE_NOT_NEEDED_IN_TYPEMAP.md for investigation details.
 		//
-		// Future improvement: Generate TypeMap entries AFTER trimming, 
-		// only for types that survived. This requires restructuring the build.
+		// AddAssemblyMetadataAttribute ("IsTrimmable", "True");
 	}
 	
 	void AddAssemblyMetadataAttribute (string key, string value)
