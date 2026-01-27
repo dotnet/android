@@ -58,12 +58,12 @@ This file contains the .NET 5-specific targets to customize ILLink
     </PropertyGroup>
 
     <!-- Add the generated TypeMaps assembly to ManagedAssemblyToLink so ILLink processes it.
-         Use TrimMode="copy" for PoC because ILLink doesn't yet have typemap-entry-assembly support.
-         When the SDK with dotnet/runtime#121513 is available, use the typemap-entry-assembly flag. -->
+         ILLink uses the typemap-entry-assembly flag to know which assembly contains TypeMapAttribute entries
+         and will trim unused proxy types based on the 3-arg TypeMapAttribute trimTarget parameter. -->
     <Message Importance="high" Text="DEBUG: _TypeMapGeneratedAssembly='@(_TypeMapGeneratedAssembly)'" />
     <Message Importance="high" Text="DEBUG: ManagedAssemblyToLink count BEFORE adding TypeMaps: @(ManagedAssemblyToLink->Count())" />
     <ItemGroup Condition=" '@(_TypeMapGeneratedAssembly)' != '' ">
-      <ManagedAssemblyToLink Include="@(_TypeMapGeneratedAssembly)" TrimMode="copy" />
+      <ManagedAssemblyToLink Include="@(_TypeMapGeneratedAssembly)" />
     </ItemGroup>
     <Message Importance="high" Text="DEBUG: ManagedAssemblyToLink count AFTER adding TypeMaps: @(ManagedAssemblyToLink->Count())" />
 
