@@ -965,93 +965,270 @@ class MainActivity_Proxy {
 
 ---
 
-### 15.7 Legacy Trimmer Step Semantics (IMPORTANT)
+### 15.7 Legacy Trimmer Steps: Complete Analysis
 
-Understanding how the legacy ILLink custom steps work is critical for migration. There are two fundamentally different operations:
+This section provides a comprehensive analysis of ALL legacy ILLink custom steps, explaining what they do, why they exist, and how TypeMap V3 replaces them.
 
-#### Marking vs Preserving
+#### 15.7.1 Two Fundamentally Different Operations
 
 | Operation | Method | Effect | When Called |
 |-----------|--------|--------|-------------|
 | **Mark** | `Annotations.Mark(type)` | Roots a type - it WILL be in final output | Unconditionally during assembly processing |
 | **Preserve** | `Annotations.AddPreservedMethod(type, method)` | Keeps method IF type is already marked | Only after type is already marked |
 
-**Key Insight:** Most legacy steps do NOT mark types unconditionally. They only preserve additional members on types that are ALREADY marked through normal code references.
+**Critical Insight:** Most legacy steps only call `AddPreservedMethod()`, NOT `Mark()`. They don't root new types - they only preserve additional members on types that are ALREADY marked through normal code references.
 
-#### MarkJavaObjects: The Only Unconditional Marker
+#### 15.7.2 Complete Step Inventory
 
-`MarkJavaObjects` is the only step that calls `Annotations.Mark()` to unconditionally root types:
+| Step | Category | Calls Mark()? | What It Does |
+|------|----------|---------------|--------------|
+| `MarkJavaObjects` | MarkHandler | **YES** | Unconditionally marks types with component attributes and custom views |
+| `PreserveJavaInterfaces` | MarkHandler | No | Preserves all methods on already-marked IJavaObject interfaces |
+| `PreserveRegistrations` | MarkHandler | No | Preserves handler/connector methods when [Register] methods are marked |
+| `PreserveApplications` | MarkHandler | No | Preserves BackupAgent/ManageSpaceActivity from [Application] |
+| `PreserveJavaExceptions` | MarkHandler | No | Preserves string(message) constructor on exception types |
+| `PreserveExportedTypes` | SubStep | **YES** | Marks [Export] and [ExportField] attributed members |
+| `FixAbstractMethodsStep` | Step | No | Fixes abstract method implementations (not related to preservation) |
+| `StripEmbeddedLibraries` | Step | No | Removes embedded native libraries (not related to preservation) |
+| `GenerateProguardConfiguration` | Step | No | Generates ProGuard config (not related to preservation) |
+
+#### 15.7.3 Detailed Analysis: MarkJavaObjects (THE Key Step)
+
+`MarkJavaObjects` is the ONLY step that unconditionally marks types. It has TWO entry points:
+
+**Entry Point 1: `ProcessAssembly` (Unconditional Marking)**
+
+Called once when an assembly is processed. Unconditionally marks types:
 
 ```csharp
-// ProcessAssembly - called once per assembly, unconditionally marks types
 public void ProcessAssembly(AssemblyDefinition assembly, ...) {
     foreach (var type in assembly.MainModule.Types) {
-        // 1. Custom HttpMessageHandler from settings
-        if (assemblyQualifiedName == androidHttpClientHandlerType) {
+        // 1. Types with [Activity], [Service], etc. attributes
+        if (ShouldPreserveBasedOnAttributes(type)) {
             Annotations.Mark(type);  // UNCONDITIONAL!
+            PreserveJavaObjectImplementation(type);
             continue;
         }
         
         // 2. Custom views from layout XML files
         if (customViewMap.ContainsKey(type.FullName)) {
             Annotations.Mark(type);  // UNCONDITIONAL!
-            continue;
-        }
-        
-        // 3. Types with [Activity], [Service], etc. attributes
-        if (ShouldPreserveBasedOnAttributes(type)) {
-            Annotations.Mark(type);  // UNCONDITIONAL!
+            PreserveJavaObjectImplementation(type);
             continue;
         }
     }
 }
+```
 
-// ProcessType - called when type is ALREADY MARKED, preserves members
+**Entry Point 2: `ProcessType` (Preservation Only)**
+
+Called when a type is ALREADY marked (through code references or ProcessAssembly):
+
+```csharp
 public void ProcessType(TypeDefinition type) {
     // Only called if type is already marked!
-    PreserveJavaObjectImplementation(type);  // Uses AddPreservedMethod
+    PreserveJavaObjectImplementation(type);  // AddPreservedMethod, not Mark
     if (IsImplementor(type))
-        PreserveImplementor(type);  // Uses AddPreservedMethod
+        PreserveImplementor(type);
 }
 ```
 
-**Attributes that trigger unconditional marking (`ShouldPreserveBasedOnAttributes`):**
-- `Android.App.ActivityAttribute`
-- `Android.App.ApplicationAttribute`
-- `Android.App.InstrumentationAttribute`
-- `Android.App.ServiceAttribute`
-- `Android.Content.BroadcastReceiverAttribute`
-- `Android.Content.ContentProviderAttribute`
+**V3 Replacement:**
+- Entry Point 1 → Use **unconditional TypeMapAttribute** (2-arg) for types with component attributes
+- Entry Point 2 → **Proxy types have hard references** to activation ctors, so they're preserved automatically
 
-#### Other Steps: Preserve Only, Don't Mark
+#### 15.7.4 Detailed Analysis: PreserveJavaInterfaces
 
-| Step | Does it Mark? | What it does |
-|------|---------------|--------------|
-| `PreserveJavaInterfaces` | NO | Preserves interface methods on already-marked interfaces |
-| `PreserveRegistrations` | NO | Preserves handler/connector methods on already-marked methods |
-| `PreserveApplications` | NO | Preserves backup agent types referenced in [Application] |
-| `PreserveJavaExceptions` | NO | Preserves string ctor on exception types |
+**What it does:** When an IJavaObject interface is marked, preserves ALL its methods.
 
-**This means:** If a type like `IContentHandler` or `OnClickListenerImplementor` is NOT referenced by user code, it is NOT marked, and none of these preservation steps run for it. The type is trimmed away.
-
-#### Custom Views from Layout XML
-
-**CRITICAL:** `MarkJavaObjects` unconditionally marks types found in Android layout XML files:
-
-```xml
-<!-- layout.xml -->
-<com.example.MyCustomView
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content" />
+```csharp
+void ProcessType(TypeDefinition type) {
+    if (!type.IsInterface) return;
+    if (!type.ImplementsIJavaObject(cache)) return;
+    
+    foreach (MethodReference method in type.Methods)
+        Annotations.AddPreservedMethod(type, method.Resolve());
+}
 ```
 
-The build process:
-1. `GenerateLayoutBindings` task parses layout XML files
-2. Creates `AndroidCustomViewMapFile` with type names
-3. `MarkJavaObjects.ProcessAssembly` reads this file
-4. Calls `Annotations.Mark()` for each type in the map
+**Why it exists:** Interface methods can be called from Java via the Invoker. If the interface is marked but methods are trimmed, Java calls would fail.
 
-**V3 Requirement:** The TypeMap generator must also process layout files and generate unconditional TypeMapAttribute entries for custom views.
+**V3 Replacement:** Proxy types for interfaces have marshal methods that call the interface methods:
+```csharp
+class IContentHandler_Proxy {
+    public static void n_Characters(IntPtr jnienv, IntPtr native__this, ...) {
+        ((IContentHandler)obj).Characters(...);  // Hard reference to interface method!
+    }
+}
+```
+When the proxy is preserved, the interface method is preserved through the direct call.
+
+#### 15.7.5 Detailed Analysis: PreserveRegistrations
+
+**What it does:** When a method with `[Register]` is marked, preserves its handler/connector method.
+
+```csharp
+void ProcessMethod(MethodDefinition method) {
+    if (!method.TryGetRegisterMember(out var member, out var nativeMethod, out var signature))
+        return;
+    
+    // Preserve the handler method (e.g., GetOnCreateHandler)
+    PreserveRegisteredMethod(method.DeclaringType, member, method);
+}
+```
+
+**Why it exists:** Java calls the native method which invokes the handler. If the handler is trimmed, the call fails.
+
+**V3 Replacement:** Proxy types use `GetFunctionPointer()` or direct calls:
+```csharp
+class MainActivity_Proxy {
+    static nint GetOnCreatePointer() => 
+        (nint)(delegate* <IntPtr, IntPtr, IntPtr, void>)&n_OnCreate;
+    
+    public static void n_OnCreate(IntPtr jnienv, IntPtr native__this, IntPtr bundle) {
+        var __this = GetObject<MainActivity>(native__this);
+        __this.OnCreate(...);  // Hard reference to overridden method!
+    }
+}
+```
+
+#### 15.7.6 Detailed Analysis: PreserveApplications
+
+**What it does:** When `[Application]` attribute is found, preserves BackupAgent and ManageSpaceActivity types.
+
+```csharp
+void PreserveApplicationAttribute(CustomAttribute attribute) {
+    PreserveTypeProperty(attribute, "BackupAgent");      // Preserve default ctor
+    PreserveTypeProperty(attribute, "ManageSpaceActivity");  // Preserve default ctor
+}
+```
+
+**Why it exists:** Android creates these types at runtime. If they're trimmed, app crashes.
+
+**V3 Replacement:** When generating the Application proxy, include references:
+```csharp
+class MyApp_Proxy {
+    // Reference to BackupAgent type ensures it's preserved
+    static Type GetBackupAgentType() => typeof(MyBackupAgent);
+}
+```
+
+**TODO:** This is NOT YET IMPLEMENTED in the generator.
+
+#### 15.7.7 Detailed Analysis: PreserveJavaExceptions
+
+**What it does:** When an exception type inheriting from `Java.Lang.Throwable` is marked, preserves its `string(message)` constructor.
+
+```csharp
+void ProcessType(TypeDefinition type) {
+    if (type.IsJavaException(cache))
+        PreserveStringConstructor(type);  // Preserve .ctor(string)
+}
+```
+
+**Why it exists:** Java exceptions are wrapped with a message. If the string ctor is trimmed, wrapping fails.
+
+**V3 Replacement:** Exception proxy types call the string constructor:
+```csharp
+class MyException_Proxy {
+    public static MyException CreateWithMessage(string message) {
+        return new MyException(message);  // Hard reference to string ctor!
+    }
+}
+```
+
+#### 15.7.8 Detailed Analysis: PreserveExportedTypes
+
+**What it does:** Marks methods/fields with `[Export]` or `[ExportField]` attributes.
+
+```csharp
+void ProcessExports(ICustomAttributeProvider provider) {
+    foreach (var attribute in provider.CustomAttributes) {
+        if (attribute is "Java.Interop.ExportAttribute") {
+            Annotations.Mark(provider);  // MARKS the method/field!
+            // Also marks exception types from Throws property
+        }
+    }
+}
+```
+
+**Why it exists:** Exported methods are called from Java. They must be preserved even if not called from .NET.
+
+**V3 Replacement:** The proxy generator must detect `[Export]` methods and include them:
+```csharp
+class MyClass_Proxy {
+    // Export method pointers
+    static nint GetExportedMethodPointer() => 
+        (nint)(delegate* <...>)&MyClass.ExportedMethod;
+}
+```
+
+**TODO:** Export support is NOT YET IMPLEMENTED in the generator.
+
+#### 15.7.9 Summary: V3 Replacement Strategy
+
+| Legacy Step | V3 Replacement | Status |
+|-------------|----------------|--------|
+| `MarkJavaObjects.ProcessAssembly` (component attrs) | Unconditional TypeMapAttribute for types with [Activity], etc. | ✅ Implemented |
+| `MarkJavaObjects.ProcessAssembly` (custom views) | Read customview-map.txt, generate unconditional TypeMapAttribute | ❌ TODO |
+| `MarkJavaObjects.ProcessType` | Proxy refs activation ctor → automatic preservation | ✅ Implemented |
+| `PreserveJavaInterfaces` | Proxy marshal methods call interface methods → automatic | ✅ Implemented |
+| `PreserveRegistrations` | Proxy uses GetFunctionPointer/calls handler → automatic | ✅ Implemented |
+| `PreserveApplications` | Proxy refs BackupAgent type | ❌ TODO |
+| `PreserveJavaExceptions` | Proxy calls string ctor | ✅ Implemented |
+| `PreserveExportedTypes` | Proxy includes Export method pointers | ❌ TODO |
+
+#### 15.7.10 Why Proxy References Replace Preservation Steps
+
+The key insight is that **proxy types create hard code references** to everything that needs preservation:
+
+```
+User code uses MainActivity
+    ↓
+[assembly: TypeMap("example/MainActivity", typeof(MainActivity_Proxy))]
+    is UNCONDITIONAL (2-arg constructor)
+    ↓
+Trimmer ALWAYS preserves MainActivity_Proxy
+    ↓
+MainActivity_Proxy contains:
+    - new MainActivity(IntPtr, JniHandleOwnership)  → preserves activation ctor
+    - __this.OnCreate(bundle)                        → preserves OnCreate override
+    - ((IMyInterface)obj).DoSomething()             → preserves interface method
+    - typeof(MyBackupAgent)                          → preserves backup agent type
+    ↓
+All required types and methods are preserved through NORMAL trimmer dependency analysis!
+```
+
+This is fundamentally different from the legacy approach where custom steps had to explicitly call `AddPreservedMethod()` during the mark phase. The V3 approach leverages the trimmer's existing dependency tracking.
+
+#### 15.7.11 Custom Views from Layout XML
+
+**CRITICAL:** The build process extracts custom view types from Android layout XML files:
+
+1. `ConvertCustomView` task parses layout XML files
+2. Creates `customview-map.txt` with format: `TypeName;path/to/layout.xml`
+3. Legacy `MarkJavaObjects` reads this file and unconditionally marks types
+
+**V3 Requirement:** The `GenerateTypeMapAssembly` task must:
+1. Accept `CustomViewMapFile` as an input
+2. Parse the file to get custom view type names
+3. Generate **unconditional TypeMapAttribute** for each custom view
+
+```xml
+<!-- MSBuild -->
+<GenerateTypeMapAssembly
+    CustomViewMapFile="$(IntermediateOutputPath)customview-map.txt"
+    ... />
+```
+
+```csharp
+// In generator
+var customViewTypes = LoadCustomViewMapFile(CustomViewMapFile);
+foreach (var peer in javaPeers) {
+    bool isCustomView = customViewTypes.Contains(peer.ManagedTypeName);
+    bool isUnconditional = isCustomView || /* other rules */;
+}
+```
 
 ---
 
