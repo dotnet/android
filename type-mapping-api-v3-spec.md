@@ -1105,13 +1105,47 @@ void PreserveApplicationAttribute(CustomAttribute attribute) {
 
 **Why it exists:** Android creates these types at runtime. If they're trimmed, app crashes.
 
-**V3 Replacement:** When generating the Application proxy, include references:
+**V3 Replacement - Two-Phase Approach:**
+
+The generator scans all types first, THEN generates code. This allows cross-reference analysis:
+
+1. **Phase 1: Scan** - When scanning, collect `[Application]` attributes and extract their `BackupAgent` and `ManageSpaceActivity` type references into a "forced unconditional" set.
+
+2. **Phase 2: Generate** - When generating TypeMapAttribute for each type, check if it's in the "forced unconditional" set. If so, generate 2-arg unconditional TypeMapAttribute instead of 3-arg trimmable.
+
 ```csharp
-class MyApp_Proxy {
-    // Reference to BackupAgent type ensures it's preserved
-    static Type GetBackupAgentType() => typeof(MyBackupAgent);
+// During scanning phase:
+HashSet<string> forcedUnconditionalTypes = new();
+foreach (var type in allTypes) {
+    var appAttr = type.GetCustomAttribute<ApplicationAttribute>();
+    if (appAttr?.BackupAgent != null) {
+        forcedUnconditionalTypes.Add(appAttr.BackupAgent.FullName);
+    }
+    if (appAttr?.ManageSpaceActivity != null) {
+        forcedUnconditionalTypes.Add(appAttr.ManageSpaceActivity.FullName);
+    }
+}
+
+// During generation phase:
+foreach (var type in allTypes) {
+    bool isUnconditional = 
+        hasComponentAttribute ||                          // [Activity], etc.
+        isCustomView ||                                   // from layout XML
+        forcedUnconditionalTypes.Contains(type.FullName); // BackupAgent/ManageSpaceActivity
+    
+    if (isUnconditional) {
+        // 2-arg: always preserved
+        emit TypeMapAttribute(jniName, proxyType);
+    } else {
+        // 3-arg: only if trimTarget used
+        emit TypeMapAttribute(jniName, proxyType, type);
+    }
 }
 ```
+
+**Key insight:** Each type gets exactly ONE TypeMapAttribute. The BackupAgent type is marked unconditional based on cross-reference analysis during scanning, not via a separate attribute.
+
+**Alternative considered (rejected):** Using `TypeMapAssociationAttribute` to bind Application→BackupAgent. This was rejected because `TypeMapAssociationAttribute` only triggers on ALLOCATION (newobj), but Application types are created by Android (not .NET allocation), so the association would never trigger.
 
 **TODO:** This is NOT YET IMPLEMENTED in the generator.
 
@@ -1154,29 +1188,46 @@ void ProcessExports(ICustomAttributeProvider provider) {
 
 **Why it exists:** Exported methods are called from Java. They must be preserved even if not called from .NET.
 
-**V3 Replacement:** The proxy generator must detect `[Export]` methods and include them:
+**V3 Replacement:** The generator detects `[Export]` and `[ExportField]` methods during scanning and includes them as marshal methods:
+
 ```csharp
-class MyClass_Proxy {
-    // Export method pointers
-    static nint GetExportedMethodPointer() => 
-        (nint)(delegate* <...>)&MyClass.ExportedMethod;
+// [Export] method detection - handled identically to [Register]
+string? exportName = GetMethodExportAttribute(reader, method);
+if (exportName != null) {
+    methods.Add(new MarshalMethodInfo {
+        JniName = exportName,
+        JniSignature = BuildJniMethodSignature(paramTypes, returnType),
+        NativeCallbackName = $"n_{exportName}",
+        ...
+    });
+}
+
+// [ExportField] method detection - returns a field value
+string? exportFieldName = GetMethodExportFieldAttribute(reader, method);
+if (exportFieldName != null) {
+    methods.Add(new MarshalMethodInfo {
+        JniName = exportFieldName,
+        JniSignature = BuildJniMethodSignature([], returnType),  // No params
+        NativeCallbackName = $"n_get_{exportFieldName}",
+        ...
+    });
 }
 ```
 
-**TODO:** Export support is NOT YET IMPLEMENTED in the generator.
+**Status:** ✅ `[Export]` and `[ExportField]` are now handled in the generator.
 
 #### 15.7.9 Summary: V3 Replacement Strategy
 
 | Legacy Step | V3 Replacement | Status |
 |-------------|----------------|--------|
 | `MarkJavaObjects.ProcessAssembly` (component attrs) | Unconditional TypeMapAttribute for types with [Activity], etc. | ✅ Implemented |
-| `MarkJavaObjects.ProcessAssembly` (custom views) | Read customview-map.txt, generate unconditional TypeMapAttribute | ❌ TODO |
+| `MarkJavaObjects.ProcessAssembly` (custom views) | Read customview-map.txt, generate unconditional TypeMapAttribute | ✅ Implemented (wiring pending) |
 | `MarkJavaObjects.ProcessType` | Proxy refs activation ctor → automatic preservation | ✅ Implemented |
 | `PreserveJavaInterfaces` | Proxy marshal methods call interface methods → automatic | ✅ Implemented |
 | `PreserveRegistrations` | Proxy uses GetFunctionPointer/calls handler → automatic | ✅ Implemented |
-| `PreserveApplications` | Proxy refs BackupAgent type | ❌ TODO |
+| `PreserveApplications` | Cross-reference analysis: BackupAgent types get unconditional TypeMap | ❌ TODO |
 | `PreserveJavaExceptions` | Proxy calls string ctor | ✅ Implemented |
-| `PreserveExportedTypes` | Proxy includes Export method pointers | ❌ TODO |
+| `PreserveExportedTypes` | Generator collects [Export] and [ExportField] methods | ✅ Implemented |
 
 #### 15.7.10 Why Proxy References Replace Preservation Steps
 
@@ -1194,9 +1245,13 @@ MainActivity_Proxy contains:
     - new MainActivity(IntPtr, JniHandleOwnership)  → preserves activation ctor
     - __this.OnCreate(bundle)                        → preserves OnCreate override
     - ((IMyInterface)obj).DoSomething()             → preserves interface method
-    - typeof(MyBackupAgent)                          → preserves backup agent type
     ↓
 All required types and methods are preserved through NORMAL trimmer dependency analysis!
+
+BackupAgent/ManageSpaceActivity types are handled differently:
+    - Cross-reference analysis during scanning finds types in [Application] attribute
+    - Those types get unconditional TypeMapAttribute (2-arg)
+    - No proxy reference needed - the TypeMapAttribute itself ensures preservation
 ```
 
 This is fundamentally different from the legacy approach where custom steps had to explicitly call `AddPreservedMethod()` during the mark phase. The V3 approach leverages the trimmer's existing dependency tracking.
@@ -1419,11 +1474,6 @@ The proxy types must contain direct references to all methods/constructors that 
 The proxy types naturally reference everything that needs preservation:
 
 ```csharp
-// Application proxy references BackupAgent
-class MyApp_Proxy {
-    static Type GetBackupAgentType() => typeof(MyBackupAgent);  // Direct reference!
-}
-
 // Exception proxy references string ctor
 class MyException_Proxy {
     public static MyException CreateWithMessage(string message) {
@@ -1439,13 +1489,26 @@ class IMyInterface_Proxy {
 }
 ```
 
+#### BackupAgent/ManageSpaceActivity Preservation
+
+BackupAgent and ManageSpaceActivity types referenced in `[Application]` attributes are preserved via **cross-reference analysis**, not via proxy references:
+
+1. During scanning, we find `[Application(BackupAgent = typeof(MyBackupAgent))]`
+2. We add `MyBackupAgent` to a "forced unconditional" set
+3. When generating TypeMapAttribute for `MyBackupAgent`, we use the 2-arg (unconditional) variant
+
+This is cleaner than embedding `typeof(MyBackupAgent)` in the Application proxy because:
+- Each type gets exactly ONE TypeMapAttribute
+- The analysis is done during the scanning phase (no code generation dependency)
+- It's clear and explicit in the generated metadata
+
 #### ILLink Step Replacements
 
 | ILLink Step | Replacement |
 |-------------|-------------|
-| `PreserveApplications` | unconditional TypeMap to proxy (proxy refs BackupAgent directly) |
-| `PreserveJavaExceptions` | unconditional TypeMap to proxy (proxy refs string ctor directly) |
-| `PreserveJavaInterfaces` | unconditional TypeMap to proxy (proxy refs all methods directly) |
+| `PreserveApplications` | Cross-reference analysis: BackupAgent/ManageSpaceActivity types from [Application] get unconditional TypeMapAttribute |
+| `PreserveJavaExceptions` | Proxy refs string ctor directly - exception types get unconditional TypeMap |
+| `PreserveJavaInterfaces` | Proxy refs all interface methods directly - no separate preservation needed |
 | `MarkJavaObjects` | ✅ Already done (proxy refs activation ctor) |
 | `PreserveRegistrations` | ✅ Already done (unconditional TypeMap to proxy) |
 

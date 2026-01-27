@@ -60,6 +60,13 @@ public class GenerateTypeMapAssembly : AndroidTask
 	public string LlvmIrOutputDirectory { get; set; } = "";
 
 	/// <summary>
+	/// Path to the custom view map file (customview-map.txt).
+	/// This file contains custom view types from layout XML files that must be preserved unconditionally.
+	/// Format: TypeName;path/to/layout.xml
+	/// </summary>
+	public string? CustomViewMapFile { get; set; }
+
+	/// <summary>
 	/// Whether to error (true) or warn (false) when a type implements IJavaObject
 	/// without inheriting from Java.Lang.Object or Java.Lang.Throwable.
 	/// </summary>
@@ -111,12 +118,26 @@ public class GenerateTypeMapAssembly : AndroidTask
 				return true;
 			}
 
+			// Load custom view types from layout XML (if provided)
+			HashSet<string> customViewTypes = new HashSet<string> (StringComparer.Ordinal);
+			if (!string.IsNullOrEmpty (CustomViewMapFile) && File.Exists (CustomViewMapFile)) {
+				foreach (var line in File.ReadLines (CustomViewMapFile)) {
+					var parts = line.Split (';');
+					if (parts.Length >= 1 && !string.IsNullOrEmpty (parts[0])) {
+						customViewTypes.Add (parts[0]);
+					}
+				}
+				if (customViewTypes.Count > 0) {
+					Log.LogMessage (MessageImportance.High, $"[GTMA] Loaded {customViewTypes.Count} custom view types from layout XML");
+				}
+			}
+
 			// Generate the assembly
 			Directory.CreateDirectory (OutputDirectory);
 			string assemblyPath = Path.Combine (OutputDirectory, "_Microsoft.Android.TypeMaps.dll");
 
 			var genStopwatch = Stopwatch.StartNew ();
-			var generator = new TypeMapAssemblyGenerator (Log);
+			var generator = new TypeMapAssemblyGenerator (Log, customViewTypes);
 			var generatedJavaFiles = generator.Generate (assemblyPath, javaPeers, JavaSourceOutputDirectory, LlvmIrOutputDirectory);
 			genStopwatch.Stop ();
 			Log.LogMessage (MessageImportance.High, $"[GTMA] Code generation completed in {genStopwatch.ElapsedMilliseconds}ms");
@@ -360,6 +381,7 @@ internal class JavaPeerScanner
 	// Well-known attribute type names
 	const string RegisterAttributeFullName = "Android.Runtime.RegisterAttribute";
 	const string ExportAttributeFullName = "Java.Interop.ExportAttribute";
+	const string ExportFieldAttributeFullName = "Java.Interop.ExportFieldAttribute";
 
 	// Cache of loaded assemblies for cross-assembly type resolution (thread-safe)
 	readonly ConcurrentDictionary<string, (FileStream Stream, PEReader PeReader, MetadataReader MetadataReader)> _assemblyCache = new ();
@@ -933,6 +955,26 @@ internal class JavaPeerScanner
 		return false;
 	}
 
+	bool IsExportFieldAttribute (MetadataReader reader, CustomAttribute attr)
+	{
+		if (attr.Constructor.Kind == HandleKind.MemberReference) {
+			var memberRef = reader.GetMemberReference ((MemberReferenceHandle)attr.Constructor);
+			if (memberRef.Parent.Kind == HandleKind.TypeReference) {
+				var typeRef = reader.GetTypeReference ((TypeReferenceHandle)memberRef.Parent);
+				string ns = reader.GetString (typeRef.Namespace);
+				string name = reader.GetString (typeRef.Name);
+				return ns == "Java.Interop" && name == "ExportFieldAttribute";
+			}
+		} else if (attr.Constructor.Kind == HandleKind.MethodDefinition) {
+			var methodDef = reader.GetMethodDefinition ((MethodDefinitionHandle)attr.Constructor);
+			var declaringType = reader.GetTypeDefinition (methodDef.GetDeclaringType ());
+			string ns = reader.GetString (declaringType.Namespace);
+			string name = reader.GetString (declaringType.Name);
+			return ns == "Java.Interop" && name == "ExportFieldAttribute";
+		}
+		return false;
+	}
+
 	(string? javaName, bool doNotGenerateAcw) DecodeRegisterAttributeValueAndFlags (MetadataReader reader, CustomAttribute attr)
 	{
 		// The first constructor argument is the Java type name
@@ -1470,6 +1512,31 @@ internal class JavaPeerScanner
 				continue;
 			}
 			
+			// Look for [ExportField] attribute on the method
+			// ExportField is applied to a method that returns the field value (no parameters)
+			string? exportFieldName = GetMethodExportFieldAttribute (reader, method);
+			if (exportFieldName != null) {
+				// ExportField methods have no parameters and return a value
+				var signature = method.DecodeSignature (sigProvider, genericContext: null);
+				string? returnType = signature.ReturnType;
+				
+				// Build JNI signature - no parameters, just return type
+				string jniSignature = BuildJniMethodSignature (Array.Empty<string> (), returnType ?? "System.Object");
+				
+				// Native callback name for the field getter
+				string nativeCallbackName = $"n_get_{exportFieldName}";
+				
+				existingMethods.Add ((exportFieldName, jniSignature));
+				methods.Add (new MarshalMethodInfo {
+					JniName = exportFieldName,
+					JniSignature = jniSignature,
+					NativeCallbackName = nativeCallbackName,
+					ParameterTypeNames = Array.Empty<string> (),
+					ReturnTypeName = returnType,
+				});
+				continue;
+			}
+			
 			// Method doesn't have [Register] or [Export] directly - check if it overrides a registered method
 			// Skip for Mono.Android - all methods are already annotated
 			if (!skipBaseTypeScanning) {
@@ -1729,6 +1796,34 @@ internal class JavaPeerScanner
 	}
 
 	/// <summary>
+	/// Gets the [ExportField] attribute from a method, returning the field name (or null if not present).
+	/// ExportField is applied to a method that returns the field value.
+	/// </summary>
+	string? GetMethodExportFieldAttribute (MetadataReader reader, MethodDefinition method)
+	{
+		foreach (var attrHandle in method.GetCustomAttributes ()) {
+			var attr = reader.GetCustomAttribute (attrHandle);
+			if (!IsExportFieldAttribute (reader, attr))
+				continue;
+
+			// Decode the attribute arguments - first argument is the field name (required)
+			var valueBlob = reader.GetBlobReader (attr.Value);
+			if (valueBlob.Length < 2)
+				continue;
+
+			valueBlob.ReadUInt16 (); // Skip prolog
+
+			// The first string argument is the Java field name
+			string? fieldName = ReadSerializedString (ref valueBlob);
+			
+			if (!string.IsNullOrEmpty (fieldName)) {
+				return fieldName;
+			}
+		}
+		return null;
+	}
+
+	/// <summary>
 	/// Derives the native callback method name from the connector string.
 	/// </summary>
 	string? GetNativeCallbackName (string connector, string jniName)
@@ -1975,9 +2070,13 @@ internal class TypeMapAssemblyGenerator
 	// Generated proxy type definitions (for self-application)
 	readonly List<(TypeDefinitionHandle TypeDef, BlobHandle CtorSig)> _proxyTypes = new ();
 	
-	public TypeMapAssemblyGenerator (TaskLoggingHelper log)
+	// Custom view types from layout XML that should be preserved unconditionally
+	readonly HashSet<string> _customViewTypes;
+	
+	public TypeMapAssemblyGenerator (TaskLoggingHelper log, HashSet<string>? customViewTypes = null)
 	{
 	_log = log;
+	_customViewTypes = customViewTypes ?? new HashSet<string> (StringComparer.Ordinal);
 	_metadata = new MetadataBuilder ();
 	_ilStream = new BlobBuilder ();
 	_methodBodyStream = new MethodBodyStreamEncoder (_ilStream);
@@ -2074,13 +2173,20 @@ internal class TypeMapAssemblyGenerator
 				//   - Must have DoNotGenerateAcw=false (generates Java Callable Wrapper)
 				//   - Must NOT be an interface (interfaces don't generate JCWs, they have Invokers)
 				//   - Must NOT be an Implementor (these are only needed if C# event is used)
+				//   - OR: Custom view types referenced in layout XML (Android inflates these)
 				//
 				// Trimmable types: Only preserved if .NET code references them
 				//   - All interfaces (they wrap existing Java interfaces)
 				//   - Types with DoNotGenerateAcw=true (MCW - wrap existing Java classes)
 				//   - Implementor types (only needed if corresponding C# event is used)
 				bool isImplementor = peer.ManagedTypeName.EndsWith ("Implementor", StringComparison.Ordinal);
-				bool isUnconditional = !peer.DoNotGenerateAcw && !peer.IsInterface && !isImplementor;
+				bool isCustomView = _customViewTypes.Contains (peer.ManagedTypeName);
+				bool isUnconditional = isCustomView || (!peer.DoNotGenerateAcw && !peer.IsInterface && !isImplementor);
+				
+				if (isCustomView) {
+					_log.LogMessage (MessageImportance.Low, $"[GTMA-Attr] UNCONDITIONAL (custom view): {jniName}");
+				}
+				
 				typeMapAttrs.Add ((entryJniName, qualifiedProxyTypeName, isUnconditional ? null : targetTypeName, isUnconditional));
 				
 				if (aliasHolderName != null) {

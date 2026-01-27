@@ -44,6 +44,7 @@ This file contains the .NET 5-specific targets to customize ILLink
         OutputDirectory="$(_TypeMapAssemblyOutputDir)"
         JavaSourceOutputDirectory="$(_TypeMapJavaSourceOutputDir)"
         LlvmIrOutputDirectory="$(_TypeMapLlvmIrOutputDir)"
+        CustomViewMapFile="$(_OuterCustomViewMapFile)"
         ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)">
       <Output TaskParameter="GeneratedAssembly" ItemName="_TypeMapGeneratedAssembly" />
       <Output TaskParameter="TypeMapEntryAssemblyName" PropertyName="_TypeMapEntryAssemblyName" />
