@@ -56,10 +56,15 @@ This file contains the .NET 5-specific targets to customize ILLink
       <TypeMapEntryAssembly>$(_TypeMapEntryAssemblyName)</TypeMapEntryAssembly>
     </PropertyGroup>
 
-    <!-- Replace ResolvedFileToPublish with the updated list that includes the TypeMap assembly -->
+    <!-- Replace only the assembly items in ResolvedFileToPublish, preserve non-assembly items (native libs, etc.) -->
     <ItemGroup Condition=" '@(_TypeMapUpdatedAssemblies)' != '' ">
+      <!-- Save non-assembly items (native libs, config files, etc.) -->
+      <_ResolvedFileToPublishNonAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' != '.dll' " />
+      <!-- Remove all items -->
       <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" />
+      <!-- Re-add: updated assemblies + preserved non-assemblies -->
       <ResolvedFileToPublish Include="@(_TypeMapUpdatedAssemblies)" />
+      <ResolvedFileToPublish Include="@(_ResolvedFileToPublishNonAssembly)" />
     </ItemGroup>
 
     <Message Condition=" '@(_TypeMapGeneratedAssembly)' != '' " Importance="high" 
