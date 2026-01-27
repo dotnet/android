@@ -1203,7 +1203,7 @@ This table lists ALL custom ILLink steps used in .NET for Android and their V3 r
 | **Preservation Steps:** | | | | |
 | `MarkJavaObjects.ProcessAssembly` (custom views) | Marking | During MarkStep | TypeMap unconditional attr | V3 reads customview-map.txt |
 | `MarkJavaObjects.ProcessAssembly` (HttpHandler) | Marking | During MarkStep | TypeMap unconditional attr | **TODO:** Handle `AndroidHttpClientHandlerType` |
-| `MarkJavaObjects.ProcessAssembly` (IJniNameProvider) | Marking | During MarkStep | TypeMap unconditional attr | **TODO:** Scan for `IJniNameProviderAttribute` |
+| `MarkJavaObjects.ProcessAssembly` (IJniNameProvider) | Marking | During MarkStep | TypeMap unconditional attr | Already handled - these ARE the component attrs |
 | `MarkJavaObjects.ProcessType` | Marking | During MarkStep | Proxy class refs | Proxy refs activation ctor → automatic |
 | `PreserveJavaInterfaces` | Marking | During MarkStep | Proxy class refs | Proxy marshal methods call interface methods |
 | `PreserveRegistrations` | Marking | During MarkStep | Proxy class refs | Proxy uses GetFunctionPointer/calls handler |
