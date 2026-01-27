@@ -51,19 +51,17 @@ namespace Xamarin.Android.Build.Tests
 			var ret = new List<object[]> ();
 
 			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
-				// https://github.com/dotnet/android/issues/10722
-				// AddTestData (
-				// 	dotnetVersion: XABuildConfig.PreviousDotNetTargetFramework,
-				// 	platform: "android",
-				// 	apiLevel: new Version (36, 0),
-				// 	runtime: runtime);
+				AddTestData (
+					dotnetVersion: XABuildConfig.PreviousDotNetTargetFramework,
+					platform: "android",
+					apiLevel: new Version (36, 0),
+					runtime: runtime);
 
-				// https://github.com/dotnet/android/issues/10722
-				// AddTestData (
-				// 	dotnetVersion: XABuildConfig.PreviousDotNetTargetFramework,
-				// 	platform: "android36",
-				// 	apiLevel: new Version (36, 0),
-				// 	runtime: runtime);
+				AddTestData (
+					dotnetVersion: XABuildConfig.PreviousDotNetTargetFramework,
+					platform: "android36",
+					apiLevel: new Version (36, 0),
+					runtime: runtime);
 
 				AddTestData (
 					dotnetVersion: XABuildConfig.LatestDotNetTargetFramework,
@@ -200,13 +198,12 @@ public class JavaSourceTest {
 			var ret = new List<object[]> ();
 
 			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
-				// https://github.com/dotnet/android/issues/10722
-				// AddTestData (
-				// 	dotnetVersion: XABuildConfig.PreviousDotNetTargetFramework,
-				// 	platform: "android",
-				// 	apiLevel: new Version (36, 0),
-				// 	runtime: runtime
-				// );
+				AddTestData (
+					dotnetVersion: XABuildConfig.PreviousDotNetTargetFramework,
+					platform: "android",
+					apiLevel: new Version (36, 0),
+					runtime: runtime
+				);
 
 				AddTestData (
 					dotnetVersion: XABuildConfig.LatestDotNetTargetFramework,
