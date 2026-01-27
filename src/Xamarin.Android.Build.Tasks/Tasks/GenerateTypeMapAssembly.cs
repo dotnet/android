@@ -276,6 +276,13 @@ internal class JavaPeerInfo
 			}
 		}
 	}
+
+	/// <summary>
+	/// Types that should be associated with this type via TypeMapAssociationAttribute.
+	/// For [Application] types, this includes BackupAgent and ManageSpaceActivity types.
+	/// When this type is instantiated, the associated types will be preserved.
+	/// </summary>
+	public List<string> AssociatedTypes { get; set; } = new ();
 }
 
 /// <summary>
@@ -638,8 +645,8 @@ internal class JavaPeerScanner
 
 	bool ProcessType (MetadataReader reader, TypeDefinition typeDef, string assemblyName, string assemblyPath, List<JavaPeerInfo> results)
 	{
-		// Look for [Register] attribute - returns (javaName, doNotGenerateAcw)
-		var (javaName, doNotGenerateAcw) = GetRegisterAttributeValue (reader, typeDef);
+		// Look for [Register] attribute - returns (javaName, doNotGenerateAcw, associatedTypes)
+		var (javaName, doNotGenerateAcw, associatedTypes) = GetRegisterAttributeValue (reader, typeDef);
 		
 		bool isClass = (typeDef.Attributes & System.Reflection.TypeAttributes.Interface) == 0;
 		bool isInterface = !isClass;
@@ -698,12 +705,13 @@ internal class JavaPeerScanner
 			HasActivationConstructor = hasActivationCtor,
 			MarshalMethods = marshalMethods,
 			ImplementedJavaInterfaces = implementedInterfaces,
+			AssociatedTypes = associatedTypes,
 		};
 		newPeer.PartitionMarshalMethods ();
 		results.Add (newPeer);
 		
 		// Use Low importance to reduce logging overhead - only shows with -v:detailed
-		_log.LogMessage (MessageImportance.Low, $"    Added Java peer: {fullName} -> '{javaName}' (in {assemblyName}, DoNotGenerateAcw={doNotGenerateAcw}, MarshalMethods={marshalMethods.Count}, Interfaces={implementedInterfaces.Count})");
+		_log.LogMessage (MessageImportance.Low, $"    Added Java peer: {fullName} -> '{javaName}' (in {assemblyName}, DoNotGenerateAcw={doNotGenerateAcw}, MarshalMethods={marshalMethods.Count}, Interfaces={implementedInterfaces.Count}, AssociatedTypes={associatedTypes.Count})");
 
 		// Process nested types
 		foreach (var nestedHandle in typeDef.GetNestedTypes ()) {
@@ -716,7 +724,7 @@ internal class JavaPeerScanner
 
 	void ProcessNestedType (MetadataReader reader, TypeDefinition typeDef, string parentTypeName, string assemblyName, string assemblyPath, List<JavaPeerInfo> results)
 	{
-		var (javaName, doNotGenerateAcw) = GetRegisterAttributeValue (reader, typeDef);
+		var (javaName, doNotGenerateAcw, associatedTypes) = GetRegisterAttributeValue (reader, typeDef);
 		if (javaName == null)
 			return;
 
@@ -771,6 +779,7 @@ internal class JavaPeerScanner
 			HasActivationConstructor = hasActivationCtor,
 			MarshalMethods = marshalMethods,
 			ImplementedJavaInterfaces = implementedInterfaces,
+			AssociatedTypes = associatedTypes,
 		};
 		nestedPeer.PartitionMarshalMethods ();
 		results.Add (nestedPeer);
@@ -782,7 +791,7 @@ internal class JavaPeerScanner
 		}
 	}
 
-	(string? javaName, bool doNotGenerateAcw) GetRegisterAttributeValue (MetadataReader reader, TypeDefinition typeDef)
+	(string? javaName, bool doNotGenerateAcw, List<string> associatedTypes) GetRegisterAttributeValue (MetadataReader reader, TypeDefinition typeDef)
 	{
 		string typeName = reader.GetString (typeDef.Name);
 		foreach (var attrHandle in typeDef.GetCustomAttributes ()) {
@@ -793,27 +802,28 @@ internal class JavaPeerScanner
 			if (IsRegisterAttribute (reader, attr)) {
 				var (javaName, doNotGenerateAcw) = DecodeRegisterAttributeValueAndFlags (reader, attr);
 				// Return the java name and DoNotGenerateAcw flag - caller decides what to do
-				return (javaName, doNotGenerateAcw);
+				return (javaName, doNotGenerateAcw, new List<string> ());
 			}
 			
 			// Check for Android component attributes with Name property:
 			// [Activity(Name = "...")], [Service(Name = "...")], 
 			// [BroadcastReceiver(Name = "...")], [ContentProvider(Name = "...")]
-			if (IsAndroidComponentAttribute (reader, attr, out string? componentJavaName)) {
-				_log.LogMessage (MessageImportance.High, $"      {typeName}: Found component attr {attrTypeName}, Name={componentJavaName ?? "(null)"}");
+			if (IsAndroidComponentAttribute (reader, attr, out string? componentJavaName, out List<string> associatedTypes)) {
+				_log.LogMessage (MessageImportance.High, $"      {typeName}: Found component attr {attrTypeName}, Name={componentJavaName ?? "(null)"}, AssociatedTypes={associatedTypes.Count}");
 				if (!string.IsNullOrEmpty (componentJavaName)) {
 					// Convert dots to slashes for the Java name format
 					// Component attributes don't have DoNotGenerateAcw
-					return (componentJavaName!.Replace ('.', '/'), false);
+					return (componentJavaName!.Replace ('.', '/'), false, associatedTypes);
 				}
 			}
 		}
-		return (null, false);
+		return (null, false, new List<string> ());
 	}
 
-	bool IsAndroidComponentAttribute (MetadataReader reader, CustomAttribute attr, out string? javaName)
+	bool IsAndroidComponentAttribute (MetadataReader reader, CustomAttribute attr, out string? javaName, out List<string> associatedTypes)
 	{
 		javaName = null;
+		associatedTypes = new List<string> ();
 		string? attrTypeName = GetAttributeTypeName (reader, attr);
 		if (attrTypeName == null)
 			return false;
@@ -831,6 +841,12 @@ internal class JavaPeerScanner
 
 		// Extract the Name property from the attribute
 		javaName = GetNamedPropertyValue (reader, attr, "Name");
+		
+		// For ApplicationAttribute, also extract BackupAgent and ManageSpaceActivity type references
+		if (attrTypeName == "Android.App.ApplicationAttribute") {
+			associatedTypes = GetTypePropertyValues (reader, attr, "BackupAgent", "ManageSpaceActivity");
+		}
+		
 		return true;
 	}
 
@@ -913,6 +929,72 @@ internal class JavaPeerScanner
 		}
 
 		return null;
+	}
+
+	/// <summary>
+	/// Gets Type property values from an attribute (e.g., BackupAgent, ManageSpaceActivity from [Application]).
+	/// Returns full type names for the specified properties.
+	/// </summary>
+	List<string> GetTypePropertyValues (MetadataReader reader, CustomAttribute attr, params string[] propertyNames)
+	{
+		var results = new List<string> ();
+		var propertySet = new HashSet<string> (propertyNames, StringComparer.Ordinal);
+		
+		// Decode the attribute blob
+		var valueBlob = reader.GetBlobReader (attr.Value);
+
+		// Skip prolog (2 bytes: 0x0001)
+		if (valueBlob.Length < 2)
+			return results;
+		valueBlob.ReadUInt16 ();
+
+		// Read number of named arguments
+		if (valueBlob.RemainingBytes < 2)
+			return results;
+		int numNamed = valueBlob.ReadUInt16 ();
+
+		for (int i = 0; i < numNamed; i++) {
+			if (valueBlob.RemainingBytes < 2)
+				break;
+
+			byte kind = valueBlob.ReadByte (); // 0x53 = FIELD, 0x54 = PROPERTY
+			byte type = valueBlob.ReadByte (); // Element type
+
+			// Type properties use ELEMENT_TYPE_CLASS (0x50) in custom attribute blobs
+			if (type == 0x50) {
+				// Read property name
+				string? propName = ReadSerializedString (ref valueBlob);
+				if (propName == null)
+					break;
+
+				// Read type name (assembly-qualified or simple)
+				string? typeName = ReadSerializedString (ref valueBlob);
+				
+				if (typeName != null && propertySet.Contains (propName)) {
+					// Extract just the type name (remove assembly qualification if present)
+					int commaIndex = typeName.IndexOf (',');
+					if (commaIndex > 0) {
+						typeName = typeName.Substring (0, commaIndex).Trim ();
+					}
+					results.Add (typeName);
+				}
+			} else if (type == 0x0E) { // ELEMENT_TYPE_STRING
+				ReadSerializedString (ref valueBlob); // Skip name
+				ReadSerializedString (ref valueBlob); // Skip value
+			} else if (type == 0x02) { // ELEMENT_TYPE_BOOLEAN
+				ReadSerializedString (ref valueBlob); // Skip name
+				if (valueBlob.RemainingBytes >= 1) valueBlob.ReadByte ();
+			} else if (type == 0x08 || type == 0x09) { // ELEMENT_TYPE_I4 or ELEMENT_TYPE_U4
+				ReadSerializedString (ref valueBlob); // Skip name
+				if (valueBlob.RemainingBytes >= 4) valueBlob.ReadInt32 ();
+			} else {
+				// Unknown type, try to skip the name and break
+				ReadSerializedString (ref valueBlob);
+				break;
+			}
+		}
+
+		return results;
 	}
 
 	bool IsRegisterAttribute (MetadataReader reader, CustomAttribute attr)
@@ -1181,7 +1263,7 @@ internal class JavaPeerScanner
 		// Get the declaring type and check if it has a Java peer
 		var declaringTypeHandle = typeDef.GetDeclaringType ();
 		var declaringType = currentReader.GetTypeDefinition (declaringTypeHandle);
-		var (declaringJavaName, _) = GetRegisterAttributeValue (currentReader, declaringType);
+		var (declaringJavaName, _, _) = GetRegisterAttributeValue (currentReader, declaringType);
 		if (declaringJavaName == null)
 			return false; // Declaring type doesn't have Java peer
 
@@ -1213,7 +1295,7 @@ internal class JavaPeerScanner
 				continue;
 
 			// Check if this type has [Register] attribute (it's a Java peer)
-			var (javaName, _) = GetRegisterAttributeValue (reader, typeDef);
+			var (javaName, _, _) = GetRegisterAttributeValue (reader, typeDef);
 			if (javaName == null)
 				continue;
 
@@ -1670,7 +1752,7 @@ internal class JavaPeerScanner
 		string? javaInterfaceName = null;
 		
 		// First, check if the interface has a [Register] attribute to get its Java name
-		var (ifaceJavaName, _) = GetRegisterAttributeValue (reader, ifaceTypeDef);
+		var (ifaceJavaName, _, _) = GetRegisterAttributeValue (reader, ifaceTypeDef);
 		
 		// Reuse SignatureTypeProvider for all signature decoding
 		var sigProvider = new SignatureTypeProvider (reader);
@@ -2225,6 +2307,21 @@ internal class TypeMapAssemblyGenerator
 	// 8b. Generate TypeMapAssociation attributes for Aliases (needed for trimmer)
 	foreach (var (source, aliasHolder) in aliasMappings) {
 		AddAliasTypeMapAssociationAttribute (source, aliasHolder);
+	}
+	
+	// 8c. Generate TypeMapAssociation attributes for BackupAgent/ManageSpaceActivity from [Application]
+	// When an Application type has BackupAgent or ManageSpaceActivity, we emit:
+	// [assembly: TypeMapAssociation<Application>(typeof(MyApp), typeof(MyBackupAgent))]
+	// This ensures when MyApp is activated, the BackupAgent is also preserved by trimmer
+	int associationCount = 0;
+	foreach (var peer in javaPeers) {
+		if (peer.AssociatedTypes.Count > 0) {
+			foreach (var associatedType in peer.AssociatedTypes) {
+				AddApplicationAssociationAttribute (peer.ManagedTypeName, associatedType);
+				associationCount++;
+				_log.LogMessage (MessageImportance.High, $"[GTMA-Assoc] {peer.ManagedTypeName} -> {associatedType}");
+			}
+		}
 	}
 
 	// 9. Apply self-attribute to each proxy type
@@ -4520,6 +4617,31 @@ public class {{className}}
 		attrBlob.WriteSerializedString (sourceName);
 		attrBlob.WriteSerializedString (aliasHolderName);
 		
+		attrBlob.WriteUInt16 (0); // Named args count
+		
+		_metadata.AddCustomAttribute (
+			parent: EntityHandle.AssemblyDefinition,
+			constructor: _aliasesTypeMapAssocAttrCtorRef,
+			value: _metadata.GetOrAddBlob (attrBlob));
+	}
+
+	/// <summary>
+	/// Adds a TypeMapAssociationAttribute for BackupAgent/ManageSpaceActivity from [Application].
+	/// [assembly: TypeMapAssociationAttribute<AliasesUniverse>(typeof(TriggerType), typeof(AssociatedType))]
+	/// When TriggerType (the Application) is activated, AssociatedType (BackupAgent) is preserved.
+	/// 
+	/// Note: We reuse TypeMapAssociationAttribute<AliasesUniverse> for simplicity - the trimmer
+	/// processes the (source, target) pair regardless of the generic type argument.
+	/// </summary>
+	void AddApplicationAssociationAttribute (string triggerTypeName, string associatedTypeName)
+	{
+		// Reuse the same attribute type as aliases - both are TypeMapAssociationAttribute<T>(Type, Type)
+		// The generic type argument is just for organizing different use cases; the association
+		// behavior is the same - when source is allocated, target is preserved.
+		var attrBlob = new BlobBuilder ();
+		attrBlob.WriteUInt16 (1); // Prolog
+		attrBlob.WriteSerializedString (triggerTypeName);
+		attrBlob.WriteSerializedString (associatedTypeName);
 		attrBlob.WriteUInt16 (0); // Named args count
 		
 		_metadata.AddCustomAttribute (

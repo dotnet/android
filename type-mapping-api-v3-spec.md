@@ -1105,49 +1105,29 @@ void PreserveApplicationAttribute(CustomAttribute attribute) {
 
 **Why it exists:** Android creates these types at runtime. If they're trimmed, app crashes.
 
-**V3 Replacement - Two-Phase Approach:**
+**V3 Replacement - TypeMapAssociationAttribute:**
 
-The generator scans all types first, THEN generates code. This allows cross-reference analysis:
-
-1. **Phase 1: Scan** - When scanning, collect `[Application]` attributes and extract their `BackupAgent` and `ManageSpaceActivity` type references into a "forced unconditional" set.
-
-2. **Phase 2: Generate** - When generating TypeMapAttribute for each type, check if it's in the "forced unconditional" set. If so, generate 2-arg unconditional TypeMapAttribute instead of 3-arg trimmable.
+When the generator finds an `[Application]` attribute with `BackupAgent` or `ManageSpaceActivity` properties, it generates `TypeMapAssociationAttribute` to create a dependency between the Application type and the associated types:
 
 ```csharp
 // During scanning phase:
-HashSet<string> forcedUnconditionalTypes = new();
-foreach (var type in allTypes) {
-    var appAttr = type.GetCustomAttribute<ApplicationAttribute>();
-    if (appAttr?.BackupAgent != null) {
-        forcedUnconditionalTypes.Add(appAttr.BackupAgent.FullName);
-    }
-    if (appAttr?.ManageSpaceActivity != null) {
-        forcedUnconditionalTypes.Add(appAttr.ManageSpaceActivity.FullName);
-    }
+if (IsApplicationAttribute(attr)) {
+    associatedTypes = GetTypePropertyValues(attr, "BackupAgent", "ManageSpaceActivity");
 }
 
 // During generation phase:
-foreach (var type in allTypes) {
-    bool isUnconditional = 
-        hasComponentAttribute ||                          // [Activity], etc.
-        isCustomView ||                                   // from layout XML
-        forcedUnconditionalTypes.Contains(type.FullName); // BackupAgent/ManageSpaceActivity
-    
-    if (isUnconditional) {
-        // 2-arg: always preserved
-        emit TypeMapAttribute(jniName, proxyType);
-    } else {
-        // 3-arg: only if trimTarget used
-        emit TypeMapAttribute(jniName, proxyType, type);
-    }
+foreach (var associatedType in peer.AssociatedTypes) {
+    // Generates: [assembly: TypeMapAssociation<AliasesUniverse>(typeof(MyApp), typeof(MyBackupAgent))]
+    AddApplicationAssociationAttribute(peer.ManagedTypeName, associatedType);
 }
 ```
 
-**Key insight:** Each type gets exactly ONE TypeMapAttribute. The BackupAgent type is marked unconditional based on cross-reference analysis during scanning, not via a separate attribute.
+**How it works:**
+1. When `MyApp` is activated (via JNI → proxy → activation ctor), it's an allocation from .NET's perspective
+2. The trimmer sees `TypeMapAssociationAttribute<AliasesUniverse>(typeof(MyApp), typeof(MyBackupAgent))`
+3. Because `MyApp` is allocated, `MyBackupAgent` is preserved
 
-**Alternative considered (rejected):** Using `TypeMapAssociationAttribute` to bind Application→BackupAgent. This was rejected because `TypeMapAssociationAttribute` only triggers on ALLOCATION (newobj), but Application types are created by Android (not .NET allocation), so the association would never trigger.
-
-**TODO:** This is NOT YET IMPLEMENTED in the generator.
+**Status:** ✅ Implemented in the generator.
 
 #### 15.7.7 Detailed Analysis: PreserveJavaExceptions
 
@@ -1225,7 +1205,7 @@ if (exportFieldName != null) {
 | `MarkJavaObjects.ProcessType` | Proxy refs activation ctor → automatic preservation | ✅ Implemented |
 | `PreserveJavaInterfaces` | Proxy marshal methods call interface methods → automatic | ✅ Implemented |
 | `PreserveRegistrations` | Proxy uses GetFunctionPointer/calls handler → automatic | ✅ Implemented |
-| `PreserveApplications` | Cross-reference analysis: BackupAgent types get unconditional TypeMap | ❌ TODO |
+| `PreserveApplications` | TypeMapAssociationAttribute for BackupAgent/ManageSpaceActivity | ✅ Implemented |
 | `PreserveJavaExceptions` | Proxy calls string ctor | ✅ Implemented |
 | `PreserveExportedTypes` | Generator collects [Export] and [ExportField] methods | ✅ Implemented |
 
@@ -1538,7 +1518,7 @@ Does the type have DoNotGenerateAcw = true?
 └─ NO → unconditional (JCW) - Java code might instantiate it
 
 Is this type referenced in [Application] BackupAgent/ManageSpaceActivity?
-└─ YES → unconditional - Android creates these at runtime (TODO: implement)
+└─ YES → TypeMapAssociationAttribute preserves it when Application is activated ✅
 ```
 
 #### Benefits
