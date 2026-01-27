@@ -1092,6 +1092,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		[Ignore ("https://github.com/dotnet/android/issues/10722")]
 		[Category ("WearOS")]
 		public void DotNetInstallAndRunPreviousSdk (
 				[Values (false, true)] bool isRelease)
@@ -1118,6 +1119,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		[Ignore ("https://github.com/dotnet/android/issues/10722")]
 		public void DotNetInstallAndRunMinorAPILevels (
 				[Values (false, true)] bool isRelease,
 				[Values ("net10.0-android36.1")] string targetFramework)
@@ -1328,6 +1330,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 		}
 
 		[Test]
+		[Ignore ("https://github.com/dotnet/android/issues/10722")]
 		public void FixLegacyResourceDesignerStep ([Values (true, false)] bool isRelease)
 		{
 			string previousTargetFramework = $"{XABuildConfig.PreviousDotNetTargetFramework}-android";

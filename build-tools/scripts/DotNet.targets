@@ -4,7 +4,8 @@
     <_BinlogPathPrefix>$(_Root)bin/Build$(Configuration)/msbuild-$([System.DateTime]::Now.ToString("yyyyMMddTHHmmss"))</_BinlogPathPrefix>
     <MauiUseLocalPacks Condition=" '$(MauiUseLocalPacks)' == '' ">false</MauiUseLocalPacks>
     <MauiSourcePath Condition=" '$(MauiSourcePath)' == '' ">$(_Root)..\maui</MauiSourcePath>
-    <MauiPackagePath Condition=" '$(MauiPackagePath)' == '' ">$(MauiSourcePath)\artifacts</MauiPackagePath>
+    <!-- Arcade SDK outputs packages to artifacts/packages/Configuration/Shipping/ -->
+    <MauiPackagePath Condition=" '$(MauiPackagePath)' == '' ">$(MauiSourcePath)\artifacts\packages\$(Configuration)\Shipping</MauiPackagePath>
     <MauiWorkloadToInstall Condition=" '$(MauiWorkloadToInstall)' == '' ">maui-android</MauiWorkloadToInstall>
   </PropertyGroup>
 
@@ -111,6 +112,8 @@
       <_WLManifest Condition=" '$(MauiUseLocalPacks)' != 'true' " Include="$(_TempDirectory)\microsoft.net.sdk.maui.manifest-$(MauiVersionBand)\$(MauiVersion)\data\WorkloadManifest.*" />
       <_WLManifest Condition=" '$(MauiUseLocalPacks)' == 'true' " Include="$(_TempDirectory)\data\*" />
     </ItemGroup>
+    <!-- Copy manifest to diagnostics folder if specified -->
+    <Copy Condition=" '$(MauiManifestDiagnosticsPath)' != '' " SourceFiles="@(_WLManifest)" DestinationFolder="$(MauiManifestDiagnosticsPath)" />
     <Copy SourceFiles="@(_WLManifest)" DestinationFolder="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\microsoft.net.sdk.maui" />
 
     <!-- Parse NuGet.config -->
