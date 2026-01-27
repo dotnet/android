@@ -34,14 +34,6 @@ namespace Java.Interop
 	public abstract class JavaPeerProxy : Attribute
 	{
 		/// <summary>
-		/// Gets a function pointer for a marshal method at the specified index.
-		/// This is used to resolve [UnmanagedCallersOnly] method pointers for JNI callbacks.
-		/// </summary>
-		/// <param name="methodIndex">The index of the marshal method within this type's method table.</param>
-		/// <returns>A function pointer to the UCO method, or <see cref="IntPtr.Zero"/> if the index is invalid.</returns>
-		public abstract IntPtr GetFunctionPointer (int methodIndex);
-
-		/// <summary>
 		/// Creates an instance of the target type using the JNI handle and ownership semantics.
 		/// This is used for AOT-safe instance creation without reflection.
 		/// </summary>

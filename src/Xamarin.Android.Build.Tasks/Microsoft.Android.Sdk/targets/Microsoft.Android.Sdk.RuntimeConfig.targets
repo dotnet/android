@@ -51,6 +51,9 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
         Value="$(AndroidAvoidEmitForPerformance)"
         Trim="true"
     />
+    <!-- NOTE: Do NOT set Trim="true" here - TypeMappingEntryAssembly is NOT a boolean feature switch.
+         ILLink receives this via the dedicated - -typemap-entry-assembly flag (set via $(TypeMapEntryAssembly) property).
+         This RuntimeHostConfigurationOption is only for runtime configuration. -->
     <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
         Value="$(TypeMapEntryAssembly)"
         Condition="'$(TypeMapEntryAssembly)' != ''"

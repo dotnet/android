@@ -112,6 +112,7 @@
     <Compile Include="Java.Interop\TypeMapAttributeTypeMap.cs" />
     <Compile Include="Java.Interop\TypeMapTypeManager.cs" />
     <Compile Include="Java.Interop\JavaPeerProxy.cs" />
+    <Compile Include="Java.Interop\IAndroidCallableWrapper.cs" />
     <Compile Include="Java.Interop\AliasesUniverse.cs" />
     <Compile Include="Java.Interop\JavaInteropAliasesAttribute.cs" />
     <Compile Include="Java.Lang.Invoke\MethodType.cs" />

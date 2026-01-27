@@ -25,6 +25,10 @@ This specification defines the architecture for enabling Java-to-.NET interopera
 - Debug builds using Mono (continue to use existing reflection-based TypeManager)
 - Non-shipping code (desktop JVM targets in java-interop repo)
 
+### 1.4 Prerequisites
+
+This specification requires .NET 11 SDK with [dotnet/runtime#121513](https://github.com/dotnet/runtime/pull/121513) merged. This PR adds the `--typemap-entry-assembly` ILLink flag that enables the `TypeMapping.GetOrCreateExternalTypeMapping<T>()` intrinsic to work correctly with trimming. See [Section 19: Toolchain Requirements](#19-toolchain-requirements) for details.
+
 ---
 
 ## 2. Background
@@ -1886,7 +1890,110 @@ Both generators must enumerate methods in identical order.
 - Two-layer caching: native (LLVM IR globals) + managed (Dictionary with Lock)
 - Exclude Invokers: 20% fewer proxies to generate
 
+### A.9 ILLink TypeMap Intrinsic Requirements
+
+**Original Design:** Use `TypeMapping.GetOrCreateExternalTypeMapping<T>()` intrinsic for AOT-safe type map lookup.
+
+**What Happened:** This intrinsic requires ILLink to:
+1. Recognize the `--typemap-entry-assembly` command-line flag
+2. Replace the intrinsic call with inline code that builds a dictionary from `TypeMapAttribute` entries
+3. Without this flag, ILLink leaves the call unchanged
+4. At runtime, the fallback `TypeMapLazyDictionary` tries to scan assemblies
+5. With trimming enabled, required types may be removed → crash
+
+**Resolution:** This feature requires .NET runtime with PR dotnet/runtime#121513 merged. The PR adds:
+- `--typemap-entry-assembly NAME` flag to ILLink
+- MSBuild target that passes `$(TypeMapEntryAssembly)` to ILLink
+- Runtime support for the `TypeMappingEntryAssembly` runtimeconfig property
+
+**Impact:** Critical dependency - TypeMap API v3 cannot function without this ILLink feature.
+
+### A.10 Interface Split Optimization (DoNotGenerateAcw)
+
+**Original Design:** Generate UCO methods and `GetFunctionPointer` switch for ALL proxy types.
+
+**What Happened:** Analysis revealed:
+- ~95% of types are **MCW types** (Managed Callable Wrappers) with `DoNotGenerateAcw = true`
+- These types wrap existing Java classes - Java never calls back into them
+- Only ~5% are **ACW types** that override Java methods and need callbacks
+- Generating UCO stubs and LLVM IR for all types is wasteful
+
+**Resolution:** Split `IJavaPeerProxy` interface:
+
+```csharp
+// For ALL Java peer types - creates managed wrapper from Java reference
+public interface IJavaPeerProxy 
+{
+    IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer);
+}
+
+// ONLY for types that generate ACW (override Java methods)
+public interface IAndroidCallableWrapper
+{
+    IntPtr GetFunctionPointer(int methodIndex);
+}
+```
+
+Decision logic:
+- `DoNotGenerateAcw = true` → Implement only `IJavaPeerProxy` (no UCO, no LLVM IR)
+- `DoNotGenerateAcw = false` → Implement both interfaces (full UCO + LLVM IR)
+
+**Impact:**
+- ~95% fewer UCO methods generated
+- ~95% less LLVM IR code
+- Faster codegen and smaller binaries
+- Runtime only checks for callbacks on types that actually have them
+
 ---
 
-*Document version: 1.0*
-*Last updated: 2026-01-26*
+## 19. Toolchain Requirements
+
+### 19.1 .NET SDK Version
+
+The Type Mapping API v3 requires a .NET SDK version that includes:
+
+| Requirement | Minimum Version | PR/Issue |
+|-------------|-----------------|----------|
+| ILLink `--typemap-entry-assembly` flag | .NET 11 (post PR #121513) | [dotnet/runtime#121513](https://github.com/dotnet/runtime/pull/121513) |
+| `TypeMapping.GetOrCreateExternalTypeMapping<T>()` intrinsic | .NET 11 | Same PR |
+| `TypeMappingEntryAssembly` runtimeconfig property | .NET 11 | Same PR |
+
+### 19.2 Build Configuration
+
+The following MSBuild properties must be set:
+
+```xml
+<PropertyGroup>
+  <!-- Set the TypeMap entry assembly for ILLink -->
+  <TypeMapEntryAssembly>_Microsoft.Android.TypeMaps</TypeMapEntryAssembly>
+</PropertyGroup>
+
+<!-- RuntimeHostConfigurationOption for runtime to find the assembly -->
+<ItemGroup>
+  <RuntimeHostConfigurationOption 
+    Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
+    Value="$(TypeMapEntryAssembly)" />
+  <!-- NOTE: Do NOT set Trim="true" - this is an assembly name, not a feature switch -->
+</ItemGroup>
+```
+
+### 19.3 ILLink Targets
+
+The .NET SDK's `Microsoft.NET.ILLink.targets` automatically adds the flag:
+```xml
+<_ExtraTrimmerArgs>
+  $(_ExtraTrimmerArgs) --typemap-entry-assembly "$(TypeMapEntryAssembly)"
+</_ExtraTrimmerArgs>
+```
+
+### 19.4 Version Compatibility Matrix
+
+| .NET for Android | .NET SDK Required | Notes |
+|------------------|-------------------|-------|
+| 36.x (TypeMap v3) | .NET 11 (post-#121513) | Full TypeMap API support |
+| 35.x and earlier | .NET 10+ | Legacy LLVM IR TypeMap |
+
+---
+
+*Document version: 1.1*
+*Last updated: 2026-01-27*

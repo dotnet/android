@@ -20,28 +20,23 @@ namespace Android.Runtime
 	{
 		readonly IReadOnlyDictionary<string, Type> _externalTypeMap;
 
-		// Cache of JavaPeerProxy instances keyed by the target type (lock-free)
 		readonly ConcurrentDictionary<Type, JavaPeerProxy?> _proxyInstances = new ();
-
-		// Cache of alias lookups: Type -> resolved alias types (or null if no aliases)
 		readonly ConcurrentDictionary<Type, Type[]?> _aliasCache = new ();
-
-		// Cache of JNI name lookups: Type -> JNI name (or empty string if not found)
 		readonly ConcurrentDictionary<Type, string> _jniNameCache = new ();
-
-		// Cache of Java class name -> .NET type resolution (from hierarchy walks)
 		readonly ConcurrentDictionary<string, Type?> _classToTypeCache = new ();
-
-		// Cache of JNI class references (global refs) for FindClass calls
 		readonly ConcurrentDictionary<string, IntPtr> _jniClassCache = new ();
-
-		const string TypeMapsAssemblyName = "_Microsoft.Android.TypeMaps";
 
 		public TypeMapAttributeTypeMap ()
 		{
-			// TypeMapping.GetOrCreateExternalTypeMapping is an intrinsic that the trimmer/ILC
-			// replaces with the actual type map data at compile time. No Assembly.Load needed.
+			WorkaroundForTheTimeBeing ();
 			_externalTypeMap = TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object> ();
+
+			static void WorkaroundForTheTimeBeing ()
+			{
+				var typeMappingEntryAssembly = AppContext.GetData ("System.Runtime.InteropServices.TypeMappingEntryAssembly");
+				var asm = System.Reflection.Assembly.Load (typeMappingEntryAssembly);
+				Assembly.SetExecutingAssembly (asm);
+			}
 		}
 
 		/// <inheritdoc/>
@@ -120,9 +115,8 @@ namespace Android.Runtime
 		/// </summary>
 		JavaPeerProxy? GetProxyForType (Type type)
 		{
-			// Lock-free lookup using ConcurrentDictionary.GetOrAdd
-			return _proxyInstances.GetOrAdd (type, static t =>
-				t.GetCustomAttribute<JavaPeerProxy> (inherit: false));
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetProxyForType: Looking for proxy on type {type.FullName}");
+			return _proxyInstances.GetOrAdd (type, static t => t.GetCustomAttribute<JavaPeerProxy> (inherit: false));
 		}
 
 		/// <inheritdoc/>
@@ -295,16 +289,34 @@ namespace Android.Runtime
 		{
 			string classNameStr = className.ToString ();
 
+			Logger.Log (LogLevel.Info, "monodroid-typemap", $"GetFunctionPointer called: className='{classNameStr}', methodIndex={methodIndex}");
+
 			// Called once per function pointer during native method registration.
 			// Result is cached in LLVM IR globals, so no managed-side caching needed.
 			IntPtr result;
-			if (classNameStr == "mono/android/TypeManager" && methodIndex == 0) {
-				result = Java.Interop.TypeManager.GetActivateFunctionPointer ();
-			} else if (!_externalTypeMap.TryGetValue (classNameStr, out Type? type)) {
+			if (!_externalTypeMap.TryGetValue (classNameStr, out Type? type)) {
+				Logger.Log (LogLevel.Warn, "monodroid-typemap", $"  -> Class NOT FOUND in _externalTypeMap!");
 				result = IntPtr.Zero;
 			} else {
-				JavaPeerProxy? proxy = GetProxyForType (type);
-				result = proxy?.GetFunctionPointer (methodIndex) ?? IntPtr.Zero;
+				Logger.Log (LogLevel.Info, "monodroid-typemap", $"  -> Found type: {type?.FullName ?? "NULL"}");
+				JavaPeerProxy? proxy = GetProxyForType (type!);
+				if (proxy == null) {
+					Logger.Log (LogLevel.Warn, "monodroid-typemap", $"  -> GetProxyForType returned NULL!");
+					result = IntPtr.Zero;
+				} else if (proxy is IAndroidCallableWrapper acw) {
+					// Only ACW types have GetFunctionPointer - they have generated Java classes that call back
+					Logger.Log (LogLevel.Info, "monodroid-typemap", $"  -> Got ACW proxy: {proxy.GetType ().FullName}");
+					result = acw.GetFunctionPointer (methodIndex);
+					Logger.Log (LogLevel.Info, "monodroid-typemap", $"  -> Function pointer: 0x{result:X}");
+				} else {
+					// MCW types don't have GetFunctionPointer - they only wrap existing Java classes
+					Logger.Log (LogLevel.Warn, "monodroid-typemap", $"  -> Proxy {proxy.GetType ().FullName} is MCW (no GetFunctionPointer)!");
+					result = IntPtr.Zero;
+				}
+			}
+
+			if (result == IntPtr.Zero) {
+				Logger.Log (LogLevel.Error, "monodroid-typemap", $"  -> RETURNING NULL POINTER! This will crash!");
 			}
 
 			return result;

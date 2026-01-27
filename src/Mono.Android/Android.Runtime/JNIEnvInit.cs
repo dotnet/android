@@ -116,13 +116,15 @@ namespace Android.Runtime
 		[UnmanagedCallersOnly]
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
+			// VERY FIRST log - before anything else
+			RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, "JNIEnvInit: Initialize ENTRY POINT");
+
 			// Should not be allowed
 			if (RuntimeFeature.IsMonoRuntime && RuntimeFeature.IsCoreClrRuntime) {
 				throw new NotSupportedException ("Internal error: both RuntimeFeature.IsMonoRuntime and RuntimeFeature.IsCoreClrRuntime are enabled");
 			}
 
-			RuntimeNativeMethods.monodroid_log (LogLevel.Info, LogCategories.Default,
-				$"JNIEnvInit: IsCoreClrRuntime={RuntimeFeature.IsCoreClrRuntime}, IsMonoRuntime={RuntimeFeature.IsMonoRuntime}");
+			RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, "JNIEnvInit: After RuntimeFeature check");
 
 			IntPtr total_timing_sequence = IntPtr.Zero;
 			IntPtr partial_timing_sequence = IntPtr.Zero;
@@ -137,7 +139,17 @@ namespace Android.Runtime
 
 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
 
-			TypeMap = CreateTypeMap ();
+			try {
+				RuntimeNativeMethods.monodroid_log (LogLevel.Info, LogCategories.Default, "JNIEnvInit: About to CreateTypeMap");
+				TypeMap = CreateTypeMap ();
+				RuntimeNativeMethods.monodroid_log (LogLevel.Info, LogCategories.Default, "JNIEnvInit: CreateTypeMap succeeded");
+			} catch (Exception ex) {
+				RuntimeNativeMethods.monodroid_log (LogLevel.Error, LogCategories.Default,
+					$"JNIEnvInit: CreateTypeMap FAILED: {ex.GetType ().FullName}: {ex.Message}");
+				RuntimeNativeMethods.monodroid_log (LogLevel.Error, LogCategories.Default,
+					$"JNIEnvInit: Stack: {ex.StackTrace}");
+				throw;
+			}
 
 			// Create unified managers using the type map
 			var typeManager = CreateTypeManager (TypeMap, args->jniAddNativeMethodRegistrationAttributePresent != 0);

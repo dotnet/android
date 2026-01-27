@@ -554,8 +554,9 @@ void Host::Java_mono_android_Runtime_initInternal (
 		}
 	);
 
-	log_debug (LOG_DEFAULT, "Calling into managed runtime init"sv);
+	log_warn (LOG_DEFAULT, "About to call managed runtime init"sv);
 	FastTiming::time_call ("JNIEnv.Initialize UCO"sv, initialize, &init);
+	log_warn (LOG_DEFAULT, "Back from managed runtime init"sv);
 
 	// PropagateUncaughtException is returned from Initialize to avoid an extra create_delegate call
 	jnienv_propagate_uncaught_exception = init.propagateUncaughtExceptionFn;

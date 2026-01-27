@@ -25,6 +25,32 @@ The implementation covers most of the core specification features but has some n
 | **UTF-16 Class Names** | ❌ Not Implemented | Uses UTF-8 instead (minor perf impact) |
 | **Blittable Params** | ⚠️ Simplified | Uses IntPtr for all params |
 | **Exception String Ctor** | ⚠️ Unverified | Spec mentions explicit preservation |
+| **ILLink Integration** | ✅ Working | Requires ILLink with `--typemap-entry-assembly` (dotnet/runtime#121513) |
+| **Interface Split** | ✅ Implemented | MCW: `CreateInstance` only; ACW: adds `GetFunctionPointer` via `IAndroidCallableWrapper` |
+
+---
+
+## ILLink and Runtime Integration
+
+The TypeMap system requires integration with both ILLink (at build time) and the .NET runtime (at execution time):
+
+### Build Time: ILLink `--typemap-entry-assembly` Flag
+
+ILLink must be told which assembly contains the `TypeMapAttribute<T>` entries via the `--typemap-entry-assembly` flag. This is implemented in:
+- **ILLink**: dotnet/runtime#121513 adds the `--typemap-entry-assembly` command-line option
+- **MSBuild targets**: `Microsoft.Android.Sdk.ILLink.targets` passes `--typemap-entry-assembly $(TypeMapEntryAssembly)` to ILLink
+
+Without this flag, ILLink doesn't know which assembly to scan for TypeMap entries, and the `TypeMapping.GetOrCreateExternalTypeMapping<T>()` intrinsic returns an empty dictionary.
+
+### Runtime: AppContext Switch
+
+The runtime's `TypeMapping.GetOrCreateExternalTypeMapping<T>()` uses `AppContext.GetData("System.Runtime.InteropServices.TypeMappingEntryAssembly")` to determine which assembly to scan. This is configured via:
+- **RuntimeHostConfigurationOption** in `Microsoft.Android.Sdk.RuntimeConfig.targets`
+- Compiled into `libxamarin-app.so` via LLVM IR generation
+
+### Workaround for Older Runtimes
+
+For .NET runtimes that don't have dotnet/runtime#121513 support, a workaround loads the TypeMaps assembly directly based on the AppContext switch and calls `Assembly.SetExecutingAssembly()` before invoking the intrinsic.
 
 ---
 
@@ -682,6 +708,124 @@ Based on the spec's Section 17 Implementation Checklist:
 - [ ] Full trimming validation (`TrimMode=full`)
 - [ ] Performance benchmarks
 - [ ] Test suite
+
+---
+
+## 21. Proposed Optimization: Interface Split (IJavaPeerProxy vs IAndroidCallableWrapper)
+
+**User Insight (2026-01-27):**
+
+The current implementation generates UCO methods and `GetFunctionPointer` for ALL proxy types, but this is wasteful:
+- ~95% of types are **MCW types** (Managed Callable Wrappers) that wrap existing Java classes
+- Only ~5% are **ACW types** (Android Callable Wrappers) that are called FROM Java TO .NET
+- MCW types don't need UCO stubs or LLVM IR function pointers at all!
+
+**Proposed Architecture:**
+
+```csharp
+// For ALL Java peer types - just creates managed wrapper from Java reference
+public interface IJavaPeerProxy 
+{
+    IJavaPeerable CreateInstance(IntPtr handle, JniHandleOwnership transfer);
+}
+
+// ONLY for types that generate ACW (user types, custom subclasses that override Java methods)
+public interface IAndroidCallableWrapper
+{
+    IntPtr GetFunctionPointer(int methodIndex);
+}
+```
+
+**Decision Logic:**
+- `DoNotGenerateAcw = true` → Only implement `IJavaPeerProxy` (no UCO, no LLVM IR)
+- `DoNotGenerateAcw = false` (user types with overrides) → Implement BOTH interfaces
+
+**Benefits:**
+1. **~95% fewer UCO methods** - only user types need them
+2. **~95% less LLVM IR code** - no function pointer tables for wrapper-only types
+3. **Faster codegen** - skip UCO generation for most types
+4. **Faster runtime** - type lookup doesn't check for callbacks on most types
+5. **Smaller binaries** - dramatically less native code
+
+**Implementation Changes Required:**
+1. Define `IAndroidCallableWrapper` interface in `Java.Interop` namespace
+2. Modify `GenerateTypeMapAssembly.GenerateProxyType()` to conditionally implement interfaces
+3. Update `TypeMapAttributeTypeMap.GetFunctionPointer()` to check for `IAndroidCallableWrapper`
+4. Skip UCO and LLVM IR generation for types with `DoNotGenerateAcw=true`
+
+**Current Status:** Not yet implemented. This is a **major optimization opportunity**.
+
+---
+
+## 22. ILLink/Runtime Version Requirements (Critical Blocker)
+
+**Discovery Date:** 2026-01-27
+
+The current PoC uses .NET 11.0.0-alpha.1.26064.107, which was released **BEFORE** PR dotnet/runtime#121513 was merged. This PR adds the `--typemap-entry-assembly` ILLink flag that is **required** for the TypeMap intrinsics to work.
+
+### Problem
+1. `TypeMapping.GetOrCreateExternalTypeMapping<T>()` is an ILLink intrinsic
+2. At link time, ILLink should replace this call with inline code that builds a dictionary from `TypeMapAttribute` entries
+3. The `--typemap-entry-assembly` flag tells ILLink which assembly contains the TypeMap entries
+4. Without this flag, the intrinsic isn't replaced, and runtime falls back to `TypeMapLazyDictionary`
+5. The lazy dictionary scans assemblies at runtime, but with trimming, the types may be removed → crash
+
+### Evidence
+```bash
+# ILLink 26064.107 help shows no typemap-entry-assembly flag
+$ dotnet illink.dll --help | grep typemap
+# (no output)
+
+# ILLink targets file also missing the flag
+$ grep "typemap-entry" Microsoft.NET.ILLink.targets
+# (no output)
+
+# Compare with local runtime build (has PR #121513)
+$ grep "typemap-entry-assembly" src/tools/illink/src/linker/Linker/Driver.cs
+case "--typemap-entry-assembly":
+```
+
+### Current Crash Flow
+1. Native code calls `JNIEnvInit.Initialize`
+2. Initialize calls `CreateTypeMap()` → `new TypeMapAttributeTypeMap()`
+3. Constructor calls `TypeMapping.GetOrCreateExternalTypeMapping<Java.Lang.Object>()`
+4. ILLink didn't replace the intrinsic, so it calls `TypeMapLazyDictionary.CreateExternalTypeMap()`
+5. Lazy dictionary tries to scan assemblies for TypeMapAttribute but fails
+6. Exception thrown before `propagateUncaughtExceptionFn` is set
+7. Native code sees null → `abort_application()`
+
+### Solution Options
+1. **Use .NET 11 preview with PR #121513** (Recommended)
+   - Wait for a newer .NET 11 preview build that includes the PR
+   - Or build .NET 11 SDK from source with the changes
+
+2. **Build custom ILLink**
+   - Build ILLink from the local runtime repo
+   - Replace the NuGet package with the custom build
+   - Requires matching .NET runtime version
+
+3. **Bypass the intrinsic temporarily**
+   - Modify `TypeMapAttributeTypeMap` to not use `GetOrCreateExternalTypeMapping`
+   - Instead, scan for `TypeMapAttribute` at runtime (like the lazy dictionary)
+   - This would work but defeats the purpose of static linking
+
+### Runtime Pack Version Matrix
+
+| Component | Current Version | Required For TypeMap |
+|-----------|-----------------|----------------------|
+| .NET SDK | 11.0.0-alpha.1.26064.107 | ≥ PR #121513 merge point |
+| ILLink.Tasks | 11.0.0-alpha.1.26064.107 | ≥ PR #121513 merge point |
+| CoreCLR runtime | 36.1.2 NuGet | 36.1.99 local build ✅ |
+| Mono.Android | 36.1.99 local | 36.1.99 local ✅ |
+| libnet-android.so | 36.1.99 local | 36.1.99 local ✅ |
+
+### Configuration Currently Working
+- ✅ TypeMaps assembly (_Microsoft.Android.TypeMaps.dll) is generated
+- ✅ TypeMapAttribute entries are in the assembly (verified with `strings`)
+- ✅ runtimeconfig.json has `TypeMappingEntryAssembly` set
+- ✅ Native code has `xamarin_app_init` and `get_function_pointer`
+- ❌ ILLink doesn't know about the entry assembly → intrinsic not replaced
+- ❌ Runtime fallback fails → crash
 
 ---
 

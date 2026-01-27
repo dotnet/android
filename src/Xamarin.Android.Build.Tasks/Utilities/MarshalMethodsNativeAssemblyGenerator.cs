@@ -215,6 +215,12 @@ namespace Xamarin.Android.Tasks
 
 		protected bool GenerateEmptyCode => generateEmptyCode;
 		protected List<MarshalMethodInfo> Methods => methods;
+		
+		/// <summary>
+		/// When true, always generate xamarin_app_init even when marshal methods are disabled.
+		/// CoreCLR needs this for runtime initialization.
+		/// </summary>
+		protected virtual bool AlwaysGenerateXamarinAppInit => false;
 
 		/// <summary>
 		/// Constructor to be used ONLY when marshal methods are DISABLED
@@ -585,7 +591,8 @@ namespace Xamarin.Android.Tasks
 			LlvmIrVariable getFunctionPtrVariable = null;
 			LlvmIrFunction getFunctionPtrFunction = null;
 
-			if (!GenerateEmptyCode) {
+			// Generate xamarin_app_init if marshal methods are enabled OR if runtime requires it (CoreCLR)
+			if (!GenerateEmptyCode || AlwaysGenerateXamarinAppInit) {
 				(getFunctionPtrVariable, getFunctionPtrFunction) = AddXamarinAppInitFunction (module);
 			}
 

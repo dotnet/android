@@ -12,6 +12,7 @@ using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading.Tasks;
+using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -487,8 +488,9 @@ internal class JavaPeerScanner
 				if (peers.Count > 0) {
 					scanResults.Add ((path, peers, asmStopwatch.ElapsedMilliseconds));
 				}
-			} catch {
-				// Ignore failures during parallel scan
+			} catch (Exception ex) {
+				// Log exceptions instead of silently ignoring
+				_log.LogMessage (MessageImportance.High, $"[GTMA-Scan] Exception scanning {Path.GetFileName (path)}: {ex.Message}");
 			}
 		});
 		
@@ -646,6 +648,8 @@ internal class JavaPeerScanner
 		                         assemblyName == "Java.Interop" ||
 		                         assemblyName == "Mono.Android.Runtime";
 		bool referencesMonoAndroid = ReferencesMonoAndroid (metadataReader);
+		
+		_log.LogDebugMessage ($"[GTMA-Scan-DEBUG] {assemblyName}: isSpecial={isSpecialAssembly}, refsMono={referencesMonoAndroid}");
 		
 		if (!referencesMonoAndroid && !isSpecialAssembly) {
 			return results;
@@ -835,12 +839,22 @@ internal class JavaPeerScanner
 			// [Activity(Name = "...")], [Service(Name = "...")], 
 			// [BroadcastReceiver(Name = "...")], [ContentProvider(Name = "...")]
 			if (IsAndroidComponentAttribute (reader, attr, out string? componentJavaName, out List<string> associatedTypes)) {
-				_log.LogMessage (MessageImportance.High, $"      {typeName}: Found component attr {attrTypeName}, Name={componentJavaName ?? "(null)"}, AssociatedTypes={associatedTypes.Count}");
-				if (!string.IsNullOrEmpty (componentJavaName)) {
+				string ns = reader.GetString (typeDef.Namespace);
+				string assemblyName = GetAssemblyName (reader);
+				
+				if (string.IsNullOrEmpty (componentJavaName)) {
+					// Generate the crc64 package name like GenerateJavaStubs does
+					// Format: crc64{hash}/{ClassName} where hash is crc64(namespace:assemblyName)
+					string packageName = GenerateCrc64PackageName (ns, assemblyName);
+					componentJavaName = packageName + "/" + typeName;
+				} else {
 					// Convert dots to slashes for the Java name format
-					// Component attributes don't have DoNotGenerateAcw
-					return (componentJavaName!.Replace ('.', '/'), false, associatedTypes);
+					componentJavaName = componentJavaName!.Replace ('.', '/');
 				}
+				
+				_log.LogMessage (MessageImportance.High, $"      {typeName}: Found component attr {attrTypeName}, JavaName={componentJavaName}, AssociatedTypes={associatedTypes.Count}");
+				// Component attributes don't have DoNotGenerateAcw
+				return (componentJavaName, false, associatedTypes);
 			}
 		}
 		return (null, false, new List<string> ());
@@ -1206,6 +1220,26 @@ internal class JavaPeerScanner
 	{
 		var asmDef = reader.GetAssemblyDefinition ();
 		return reader.GetString (asmDef.Name);
+	}
+
+	/// <summary>
+	/// Generates the crc64 package name for a type following the same logic as GenerateJavaStubs.
+	/// Format: crc64{hash} where hash is ToCrc64(namespace:assemblyName)
+	/// </summary>
+	static string GenerateCrc64PackageName (string ns, string assemblyName)
+	{
+		// Use the same crc64 algorithm as JavaNativeTypeManager
+		string input = ns + ":" + assemblyName;
+		var data = Encoding.UTF8.GetBytes (input);
+		
+		// Use the public Crc64 class from Java.Interop.Tools.JavaCallableWrappers
+		using var crc64 = new Java.Interop.Tools.JavaCallableWrappers.Crc64 ();
+		var hash = crc64.ComputeHash (data);
+		
+		var buf = new StringBuilder ("crc64");
+		foreach (var b in hash)
+			buf.AppendFormat ("{0:x2}", b);
+		return buf.ToString ();
 	}
 
 	bool ReferencesMonoAndroid (MetadataReader reader)
@@ -2165,6 +2199,7 @@ internal class TypeMapAssemblyGenerator
 	TypeReferenceHandle _javaPeerProxyTypeRef;
 	TypeReferenceHandle _iJavaPeerableTypeRef;
 	TypeReferenceHandle _jniHandleOwnershipTypeRef;
+	TypeReferenceHandle _androidCallableWrapperInterfaceRef;
 	TypeReferenceHandle _jniObjectReferenceTypeRef;
 	TypeReferenceHandle _jniObjectReferenceOptionsTypeRef;
 	TypeReferenceHandle _typeMapAttrTypeRef;
@@ -3371,6 +3406,11 @@ public class {{className}}
 	@namespace: _metadata.GetOrAddString ("Android.Runtime"),
 	name: _metadata.GetOrAddString ("JniHandleOwnership"));
 
+	_androidCallableWrapperInterfaceRef = _metadata.AddTypeReference (
+	resolutionScope: _monoAndroidRef,
+	@namespace: _metadata.GetOrAddString ("Java.Interop"),
+	name: _metadata.GetOrAddString ("IAndroidCallableWrapper"));
+
 	// Java.Interop JI-style constructor types
 	_jniObjectReferenceTypeRef = _metadata.AddTypeReference (
 	resolutionScope: _javaInteropRef,
@@ -3800,7 +3840,13 @@ public class {{className}}
 	
 	TypeDefinitionHandle GenerateProxyType (JavaPeerInfo peer, TypeReferenceHandle targetTypeRef, string proxyTypeName)
 	{
-		_log.LogDebugMessage ($"  Generating proxy type: {proxyTypeName} for {peer.ManagedTypeName}");
+		_log.LogDebugMessage ($"  Generating proxy type: {proxyTypeName} for {peer.ManagedTypeName} (DoNotGenerateAcw={peer.DoNotGenerateAcw})");
+
+		// MCW types (DoNotGenerateAcw=true) don't need UCO wrappers or GetFunctionPointer
+		// because Java never calls back into them - they only wrap existing Java classes.
+		// ACW types (DoNotGenerateAcw=false) need UCO wrappers and GetFunctionPointer
+		// because we generate a Java class that calls back into .NET.
+		bool isAcwType = !peer.DoNotGenerateAcw && !peer.IsInterface;
 
 		// Track the method list start for this type
 		var firstMethodHandle = MetadataTokens.MethodDefinitionHandle (_nextMethodDefRowId);
@@ -3818,26 +3864,34 @@ public class {{className}}
 			parameterList: MetadataTokens.ParameterHandle (_nextParamDefRowId));
 		_nextMethodDefRowId++;
 
-		// 2. Generate UCO wrapper methods for marshal methods
-		var ucoWrapperHandles = GenerateUcoWrappers (peer, targetTypeRef);
+		// 2. Generate UCO wrapper methods for marshal methods (ACW types only)
+		List<MethodDefinitionHandle> ucoWrapperHandles;
+		if (isAcwType) {
+			ucoWrapperHandles = GenerateUcoWrappers (peer, targetTypeRef);
+		} else {
+			ucoWrapperHandles = new List<MethodDefinitionHandle> ();
+		}
 
-		// 3. GetFunctionPointer override - now with UCO wrapper handles
-		int getFnPtrBodyOffset = GenerateGetFunctionPointerBody (peer, ucoWrapperHandles);
-		var getFnPtrDef = _metadata.AddMethodDefinition (
-			attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
-			implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
-			name: _metadata.GetOrAddString ("GetFunctionPointer"),
-			signature: _getFunctionPointerSig,
-			bodyOffset: getFnPtrBodyOffset,
-			parameterList: MetadataTokens.ParameterHandle (_nextParamDefRowId));
+		// 3. GetFunctionPointer - only for ACW types (implements IAndroidCallableWrapper)
+		MethodDefinitionHandle? getFnPtrDef = null;
+		if (isAcwType) {
+			int getFnPtrBodyOffset = GenerateGetFunctionPointerBody (peer, ucoWrapperHandles);
+			getFnPtrDef = _metadata.AddMethodDefinition (
+				attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual | MethodAttributes.NewSlot | MethodAttributes.Final,
+				implAttributes: MethodImplAttributes.IL | MethodImplAttributes.Managed,
+				name: _metadata.GetOrAddString ("GetFunctionPointer"),
+				signature: _getFunctionPointerSig,
+				bodyOffset: getFnPtrBodyOffset,
+				parameterList: MetadataTokens.ParameterHandle (_nextParamDefRowId));
 
-		// Add parameter definition for methodIndex
-		_metadata.AddParameter (
-			attributes: ParameterAttributes.None,
-			name: _metadata.GetOrAddString ("methodIndex"),
-			sequenceNumber: 1);
-		_nextParamDefRowId++;
-		_nextMethodDefRowId++;
+			// Add parameter definition for methodIndex
+			_metadata.AddParameter (
+				attributes: ParameterAttributes.None,
+				name: _metadata.GetOrAddString ("methodIndex"),
+				sequenceNumber: 1);
+			_nextParamDefRowId++;
+			_nextMethodDefRowId++;
+		}
 
 		// 4. UnsafeAccessor static method for calling protected constructor
 		MethodDefinitionHandle? unsafeAccessorMethodDef = null;
@@ -3880,6 +3934,11 @@ public class {{className}}
 
 		// Add AttributeUsage attribute
 		AddAttributeUsageToType (typeDef);
+
+		// Add IAndroidCallableWrapper interface implementation for ACW types
+		if (isAcwType) {
+			AddInterfaceImplementation (typeDef, _androidCallableWrapperInterfaceRef);
+		}
 
 		// Track for self-application later
 		_proxyTypes.Add ((typeDef, _voidMethodSig));
@@ -4717,6 +4776,11 @@ public class {{className}}
 	parent: typeDef,
 	constructor: attrUsageCtorRef,
 	value: _metadata.GetOrAddBlob (attrBlob));
+	}
+
+	void AddInterfaceImplementation (TypeDefinitionHandle typeDef, TypeReferenceHandle interfaceRef)
+	{
+		_metadata.AddInterfaceImplementation (typeDef, interfaceRef);
 	}
 	
 	void AddAssemblyAttribute ()

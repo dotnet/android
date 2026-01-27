@@ -3,7 +3,7 @@
   <PropertyGroup>
     <MicrosoftNETSdkPackageVersion>11.0.100-alpha.1.26064.107</MicrosoftNETSdkPackageVersion>
     <MicrosoftDotnetSdkInternalPackageVersion>$(MicrosoftNETSdkPackageVersion)</MicrosoftDotnetSdkInternalPackageVersion>
-    <MicrosoftNETILLinkPackageVersion>11.0.0-alpha.1.26064.107</MicrosoftNETILLinkPackageVersion>
+    <MicrosoftNETILLinkPackageVersion>11.0.0-dev</MicrosoftNETILLinkPackageVersion>
     <MicrosoftNETCoreAppRefPackageVersion>11.0.0-alpha.1.26064.107</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
     <MicrosoftDotNetBuildTasksFeedPackageVersion>11.0.0-beta.26064.107</MicrosoftDotNetBuildTasksFeedPackageVersion>
