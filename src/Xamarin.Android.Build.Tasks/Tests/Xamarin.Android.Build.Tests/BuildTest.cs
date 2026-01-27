@@ -2212,5 +2212,27 @@ public class ToolbarEx {
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "build should have succeeded.");
 		}
+
+		[Test]
+		public void CustomView_NoPackage ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.Sources.Add (new BuildItem ("Compile", "CustomView.cs") { TextContent = () => @"
+using Android.Content;
+using Android.Runtime;
+using Android.Views;
+
+namespace UnnamedProject
+{
+	// Register attribute without package prefix should cause XA4238
+	[Register(""CustomView"")]
+	public class CustomView : View
+	{
+		public CustomView (Context context) : base (context) { }
+	}
+}" });
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+		}
 	}
 }
