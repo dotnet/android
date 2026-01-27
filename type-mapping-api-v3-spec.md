@@ -924,7 +924,7 @@ string typeHash = ComputeHash(javaClassName);  // e.g., "com/example/MainActivit
 
 ### 15.6 TypeMap Attributes and Trimming
 
-The TypeMap V3 system uses `TypeMapAttribute` to point to **proxy types**, which have direct references to the real types.
+The trimmable type map system uses `TypeMapAttribute` to point to **proxy types**, which have direct references to the real types.
 
 #### Key Design: TypeMapAttribute Points to PROXY Types
 
@@ -967,7 +967,7 @@ class MainActivity_Proxy {
 
 ### 15.7 Legacy Trimmer Steps: Complete Analysis
 
-This section provides a comprehensive analysis of ALL legacy ILLink custom steps, explaining what they do, why they exist, and how TypeMap V3 replaces them.
+This section provides a comprehensive analysis of ALL legacy ILLink custom steps, explaining what they do, why they exist, and how trimmable type map replaces them.
 
 #### 15.7.1 Two Fundamentally Different Operations
 
@@ -985,7 +985,7 @@ ILLink custom steps fall into two categories:
 1. **Preservation Steps** - Call `Annotations.Mark()` or `AddPreservedMethod()` to affect trimming
 2. **Non-Preservation Steps** - Modify assemblies or generate outputs, but don't affect what gets trimmed
 
-Only preservation steps need V3 replacements. Non-preservation steps either:
+Only preservation steps need trimmable type map replacements. Non-preservation steps either:
 - Become post-trimming MSBuild tasks (work on already-trimmed assemblies)
 - Are deemed unnecessary for modern scenarios
 - Are unrelated to TypeMap and continue to work as-is
@@ -1031,7 +1031,7 @@ public void ProcessType(TypeDefinition type) {
 }
 ```
 
-**V3 Replacement:**
+**Trimmable type map replacement:**
 - Entry Point 1 → Use **unconditional TypeMapAttribute** (2-arg) for types with component attributes
 - Entry Point 2 → **Proxy types have hard references** to activation ctors, so they're preserved automatically
 
@@ -1051,7 +1051,7 @@ void ProcessType(TypeDefinition type) {
 
 **Why it exists:** Interface methods can be called from Java via the Invoker. If the interface is marked but methods are trimmed, Java calls would fail.
 
-**V3 Replacement:** Proxy types for interfaces have marshal methods that call the interface methods:
+**Trimmable type map replacement:** Proxy types for interfaces have marshal methods that call the interface methods:
 ```csharp
 class IContentHandler_Proxy {
     public static void n_Characters(IntPtr jnienv, IntPtr native__this, ...) {
@@ -1077,7 +1077,7 @@ void ProcessMethod(MethodDefinition method) {
 
 **Why it exists:** Java calls the native method which invokes the handler. If the handler is trimmed, the call fails.
 
-**V3 Replacement:** Proxy types use `GetFunctionPointer()` or direct calls:
+**Trimmable type map replacement:** Proxy types use `GetFunctionPointer()` or direct calls:
 ```csharp
 class MainActivity_Proxy {
     static nint GetOnCreatePointer() => 
@@ -1103,7 +1103,7 @@ void PreserveApplicationAttribute(CustomAttribute attribute) {
 
 **Why it exists:** Android creates these types at runtime. If they're trimmed, app crashes.
 
-**V3 Replacement - TypeMapAssociationAttribute:**
+**Trimmable type map replacement - TypeMapAssociationAttribute:**
 
 When the generator finds an `[Application]` attribute with `BackupAgent` or `ManageSpaceActivity` properties, it generates `TypeMapAssociationAttribute` to create a dependency between the Application type and the associated types:
 
@@ -1140,7 +1140,7 @@ void ProcessType(TypeDefinition type) {
 
 **Why it exists:** Java exceptions are wrapped with a message. If the string ctor is trimmed, wrapping fails.
 
-**V3 Replacement:** Exception proxy types call the string constructor:
+**Trimmable type map replacement:** Exception proxy types call the string constructor:
 ```csharp
 class MyException_Proxy {
     public static MyException CreateWithMessage(string message) {
@@ -1166,7 +1166,7 @@ void ProcessExports(ICustomAttributeProvider provider) {
 
 **Why it exists:** Exported methods are called from Java. They must be preserved even if not called from .NET.
 
-**V3 Replacement:** The generator detects `[Export]` and `[ExportField]` methods during scanning and includes them as marshal methods:
+**Trimmable type map replacement:** The generator detects `[Export]` and `[ExportField]` methods during scanning and includes them as marshal methods:
 
 ```csharp
 // [Export] method detection - handled identically to [Register]
@@ -1196,12 +1196,12 @@ if (exportFieldName != null) {
 
 #### 15.7.9 Complete ILLink Custom Steps Inventory
 
-This table lists ALL custom ILLink steps used in .NET for Android and their V3 replacement strategy:
+This table lists ALL custom ILLink steps used in .NET for Android and their trimmable type map replacement strategy:
 
 | Step | Type | Phase | Replacement | Notes |
 |------|------|-------|-------------|-------|
 | **Preservation Steps:** | | | | |
-| `MarkJavaObjects.ProcessAssembly` (custom views) | Marking | During MarkStep | TypeMap unconditional attr | V3 reads customview-map.txt |
+| `MarkJavaObjects.ProcessAssembly` (custom views) | Marking | During MarkStep | TypeMap unconditional attr | Trimmable type map reads customview-map.txt |
 | `MarkJavaObjects.ProcessAssembly` (HttpHandler) | Marking | During MarkStep | TypeMap unconditional attr | **TODO:** Handle `AndroidHttpClientHandlerType` |
 | `MarkJavaObjects.ProcessAssembly` (IJniNameProvider) | Marking | During MarkStep | TypeMap unconditional attr | Already handled - these ARE the component attrs |
 | `MarkJavaObjects.ProcessType` | Marking | During MarkStep | Proxy class refs | Proxy refs activation ctor → automatic |
@@ -1235,7 +1235,7 @@ This table lists ALL custom ILLink steps used in .NET for Android and their V3 r
 - **Proxy class refs**: Proxy type has hard code references → normal trimmer dependency tracking
 - **TypeMapAssociationAttr**: Preserves associated type when primary type is activated
 - **Likely unnecessary**: Legacy compatibility, start without and add back only if customers report issues
-- **Unrelated - post-trimming**: Works on already-trimmed assemblies, not related to V3 type preservation
+- **Unrelated - post-trimming**: Works on already-trimmed assemblies, not related to trimmable type map preservation
 - **Unrelated - not trimming**: These steps handle resource optimization, not type preservation
 
 #### 15.7.10 Why Proxy References Replace Preservation Steps
@@ -1263,7 +1263,7 @@ BackupAgent/ManageSpaceActivity types are handled differently:
     - No proxy reference needed - the TypeMapAttribute itself ensures preservation
 ```
 
-This is fundamentally different from the legacy approach where custom steps had to explicitly call `AddPreservedMethod()` during the mark phase. The V3 approach leverages the trimmer's existing dependency tracking.
+This is fundamentally different from the legacy approach where custom steps had to explicitly call `AddPreservedMethod()` during the mark phase. The trimmable type map approach leverages the trimmer's existing dependency tracking.
 
 #### 15.7.11 Custom Views from Layout XML
 
@@ -1273,7 +1273,7 @@ This is fundamentally different from the legacy approach where custom steps had 
 2. Creates `customview-map.txt` with format: `TypeName;path/to/layout.xml`
 3. Legacy `MarkJavaObjects` reads this file and unconditionally marks types
 
-**V3 Requirement:** The `GenerateTypeMapAssembly` task must:
+**Trimmable type map requirement:** The `GenerateTypeMapAssembly` task must:
 1. Accept `CustomViewMapFile` as an input
 2. Parse the file to get custom view type names
 3. Generate **unconditional TypeMapAttribute** for each custom view
@@ -1366,7 +1366,7 @@ Types referenced in Android layout XML files are marked UNCONDITIONALLY:
 public class MyCustomButton : Button { }
 ```
 
-**V3 Requirement:** The TypeMap generator must process the custom view map file and generate unconditional entries.
+**Trimmable type map requirement:** The TypeMap generator must process the custom view map file and generate unconditional entries.
 
 ##### Rule 3: Interfaces → TRIMMABLE
 
@@ -1560,7 +1560,7 @@ Is this type referenced in [Application] BackupAgent/ManageSpaceActivity?
 
 ### 15.9 Non-Preservation ILLink Steps
 
-These steps are NOT related to type/method preservation and are NOT replaced by TypeMap V3:
+These steps are NOT related to type/method preservation and are NOT replaced by trimmable type map:
 
 #### 15.9.1 AddKeepAlivesStep
 
@@ -1604,7 +1604,7 @@ if (MonoAndroidHelper.IsDotNetAndroidAssembly(assembly))
 
 **Customer fix:** Rebuild the library with the current .NET for Android SDK. The MCW generator will automatically include `GC.KeepAlive` calls.
 
-**V3 Strategy:** Start WITHOUT this step. If customers report issues with legacy libraries, implement as a separate post-restore assembly rewriting step (outside of ILLink).
+**Trimmable type map strategy:** Start WITHOUT this step. If customers report issues with legacy libraries, implement as a separate post-restore assembly rewriting step (outside of ILLink).
 
 #### 15.9.2 FixAbstractMethodsStep
 
@@ -1628,23 +1628,23 @@ if (MonoAndroidHelper.IsDotNetAndroidAssembly(assembly))
 - Modern bindings may use DIM for new interface members
 - The step already implements `IAssemblyModifierPipelineStep` for use outside ILLink
 
-**V3 Strategy:** Start WITHOUT this step. This is a legacy compatibility feature from 9+ years ago. If customers report `TypeLoadException` with older libraries:
+**Trimmable type map strategy:** Start WITHOUT this step. This is a legacy compatibility feature from 9+ years ago. If customers report `TypeLoadException` with older libraries:
 1. First recommendation: Rebuild the library with current SDK
 2. If not possible: Implement as a separate post-restore assembly rewriting step (outside of ILLink)
 
-The step can be added back as needed - it's IL modification, not preservation, so it's independent of TypeMap V3.
+The step can be added back as needed - it's IL modification, not preservation, so it's independent of trimmable type map.
 
 #### 15.9.3 StripEmbeddedLibraries
 
 **Purpose:** Removes embedded native libraries (.so files) from assemblies after they've been extracted.
 
-**V3 Impact:** Still needed. Can be converted to MSBuild task.
+**Trimmable type map impact:** Still needed. Can be converted to MSBuild task.
 
 #### 15.9.4 GenerateProguardConfiguration
 
 **Purpose:** Generates ProGuard/R8 configuration to keep Java classes that have .NET bindings.
 
-**V3 Plan:** Convert to post-trimming MSBuild task that:
+**Trimmable type map plan:** Convert to post-trimming MSBuild task that:
 1. Scans trimmed assemblies for surviving types with `[Register]`
 2. Generates `-keep class` rules only for surviving types
 3. Also generates list of `.o` files to link (same surviving types list)
@@ -1655,7 +1655,7 @@ See section 15.3 "Post-Trimming Filtering" for details.
 
 **Purpose:** Handles Resource.designer.cs optimization and legacy compatibility.
 
-**V3 Impact:** Still needed. Not related to TypeMap.
+**Trimmable type map impact:** Still needed. Not related to TypeMap.
 
 ---
 
