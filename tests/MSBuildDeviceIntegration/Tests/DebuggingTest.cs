@@ -380,14 +380,13 @@ namespace ${ROOT_NAMESPACE} {
 					runtime:         runtime
 				);
 
-				// https://github.com/dotnet/android/issues/10722
-				// AddTestData (
-				// 	embedAssemblies: true,
-				// 	username:	 null,
-				// 	packageFormat:   "apk",
-				// 	useLatestSdk:    false,
-				// 	runtime:         runtime
-				// );
+				AddTestData (
+					embedAssemblies: true,
+					username:	 null,
+					packageFormat:   "apk",
+					useLatestSdk:    false,
+					runtime:         runtime
+				);
 
 				AddTestData (
 					embedAssemblies: false,
