@@ -4333,12 +4333,10 @@ public class {{className}}
 	
 	void AddAssemblyAttribute ()
 	{
-		// TODO: Don't mark as IsTrimmable until we solve the trimming issue properly.
-		// Currently, the trimmer removes all TypeMap entries because nothing references the 
-		// target types via code (they're accessed via runtime JNI string lookups).
-		// See INVOKERS_MAYBE_NOT_NEEDED_IN_TYPEMAP.md for investigation details.
-		//
-		// AddAssemblyMetadataAttribute ("IsTrimmable", "True");
+		// Mark assembly as trimmable - the TypeMapAttribute handles preservation:
+		// - Unconditional (2-arg): proxy always preserved for JCW types
+		// - Trimmable (3-arg): proxy preserved only if target type is used for MCW types
+		AddAssemblyMetadataAttribute ("IsTrimmable", "True");
 	}
 	
 	void AddAssemblyMetadataAttribute (string key, string value)
