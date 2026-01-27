@@ -953,6 +953,9 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				TargetFramework = $"{XABuildConfig.LatestDotNetTargetFramework}-android{apiLevel}.1",
+				ExtraNuGetConfigSources = {
+					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
+				},
 			};
 
 			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
@@ -977,6 +980,9 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				TargetFramework = $"{XABuildConfig.LatestDotNetTargetFramework}-android{apiLevel}.1",
+				ExtraNuGetConfigSources = {
+					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
+				},
 				Sources = {
 					new BuildItem.Source ("DeviceLockedStateListenerImpl.cs") {
 						TextContent = () => @"
