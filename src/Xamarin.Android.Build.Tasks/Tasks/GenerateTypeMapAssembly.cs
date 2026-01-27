@@ -2066,9 +2066,13 @@ internal class TypeMapAssemblyGenerator
 				// The proxy types are in the _Microsoft.Android.TypeMaps namespace within the _Microsoft.Android.TypeMaps assembly
 				string qualifiedProxyTypeName = $"_Microsoft.Android.TypeMaps.{proxyTypeName}, _Microsoft.Android.TypeMaps";
 				
-				// JCW types (DoNotGenerateAcw=false): Unconditional - Android may create them anytime
-				// MCW types (DoNotGenerateAcw=true): Trimmable - only if .NET code uses them
-				bool isUnconditional = !peer.DoNotGenerateAcw;
+				// JCW types: Unconditional - Android may create them anytime via reflection
+				//   - Must have DoNotGenerateAcw=false (generates Java Callable Wrapper)
+				//   - Must NOT be an interface (interfaces don't generate JCWs, they have Invokers)
+				// MCW types: Trimmable - only needed if .NET code references them
+				//   - All interfaces (they wrap existing Java interfaces)
+				//   - Types with DoNotGenerateAcw=true (wrap existing Java classes)
+				bool isUnconditional = !peer.DoNotGenerateAcw && !peer.IsInterface;
 				typeMapAttrs.Add ((entryJniName, qualifiedProxyTypeName, isUnconditional ? null : targetTypeName, isUnconditional));
 				
 				if (aliasHolderName != null) {
@@ -2092,21 +2096,15 @@ internal class TypeMapAssemblyGenerator
 	var attrStopwatch = Stopwatch.StartNew ();
 	int unconditionalCount = 0;
 	int trimmableCount = 0;
-	var unconditionalExamples = new List<string> ();
-	var trimmableExamples = new List<string> ();
 	foreach (var (jniName, proxyType, targetType, isUnconditional) in typeMapAttrs) {
 		if (isUnconditional) {
 			AddTypeMapAttributeUnconditional (jniName, proxyType);
 			unconditionalCount++;
-			if (unconditionalExamples.Count < 5) {
-				unconditionalExamples.Add (jniName);
-			}
+			_log.LogMessage (MessageImportance.Low, $"[GTMA-Attr] UNCONDITIONAL: {jniName}");
 		} else {
 			AddTypeMapAttributeTrimmable (jniName, proxyType, targetType!);
 			trimmableCount++;
-			if (trimmableExamples.Count < 5) {
-				trimmableExamples.Add (jniName);
-			}
+			_log.LogMessage (MessageImportance.Low, $"[GTMA-Attr] TRIMMABLE: {jniName} -> {targetType}");
 		}
 	}
 	
@@ -2123,12 +2121,6 @@ internal class TypeMapAssemblyGenerator
 	
 	attrStopwatch.Stop ();
 	_log.LogMessage (MessageImportance.High, $"[GTMA-Gen] Attributes: {attrStopwatch.ElapsedMilliseconds}ms ({unconditionalCount} unconditional, {trimmableCount} trimmable, {aliasMappings.Count} aliases)");
-	if (unconditionalExamples.Count > 0) {
-		_log.LogMessage (MessageImportance.High, $"[GTMA-Gen]   Unconditional examples (JCW - Android creates): {string.Join (", ", unconditionalExamples)}");
-	}
-	if (trimmableExamples.Count > 0) {
-		_log.LogMessage (MessageImportance.High, $"[GTMA-Gen]   Trimmable examples (MCW - .NET uses): {string.Join (", ", trimmableExamples)}");
-	}
 	
 	// 11. Write the PE file
 	var peStopwatch = Stopwatch.StartNew ();
